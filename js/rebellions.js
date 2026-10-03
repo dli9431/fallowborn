@@ -302,7 +302,7 @@ window.FB = window.FB || {};
         ruler:{ name:countyName(pid), mar:0, age:30 }, liege:null };
     }
     join(state, group, pid, true);
-    if (FB.tournaments) FB.tournaments.reconcile(state);
+    if (FB.tournaments && FB.systemAvailable(state, 'tournaments')) FB.tournaments.reconcile(state);
     var row = state.collectiveDemands && state.collectiveDemands.uprising;
     if (!row && target === 'player' && FB.station.rulesRealm(state.player, state)) {
       var demands = state.collectiveDemands || (state.collectiveDemands = {});

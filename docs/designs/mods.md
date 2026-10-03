@@ -254,6 +254,8 @@ replaces definitions, projections, and id indexes together. The stable action id
 the save-format-3 focus and cooldown identities. This authoring boundary changes no
 baseline gameplay eligibility, so it requires no technology-impact ledger entry.
 
+Rebuilding action catalogues preserves protected handler identity when a definition declares no optional system requirement. Definitions with system or systems requirements receive execution guards as well as visibility and eligibility guards, including guards on focus ticks.
+
 Phase 4C permits appended deed ids through one fixed `declarative_deed` adapter. Each
 complete record is manual-only and derives its immediate/no-day flow from `spendsDay`.
 Pure static visibility and eligibility compose with technology, cooldown, and affordable

@@ -2364,8 +2364,7 @@ window.FB = window.FB || {};
       if (reigningRealm && reigningRealm.capital && FB.world &&
           FB.world.byId[reigningRealm.capital]) return reigningRealm.capital;
     }
-    const abbey = (c.id !== state.player.charId && FB.abbeyOf && FB.abbeyOf(state, c)) ||
-      (FB.abbeyResidentHouse && FB.abbeyResidentHouse(state, c.id));
+    const abbey = FB.abbeyResidenceHouse && FB.abbeyResidenceHouse(state, c.id);
     if (abbey) return abbey.provinceId;
     if (c.id === state.player.charId ||
         (FB.isHouseholdCharacter && FB.isHouseholdCharacter(state, c.id))) {

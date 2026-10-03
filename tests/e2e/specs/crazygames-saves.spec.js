@@ -48,7 +48,7 @@ for (const mode of ['sdk', 'localstorage']) {
         return written;
       })).toBe(true);
       await page.reload();
-      await page.waitForFunction(function () { return FB.game.bootReady; });
+      await page.waitForFunction(function () { return window.FB && FB.game && FB.game.bootReady; });
       expect(await page.evaluate(function () { return FB.save.read('auto').v; })).toBe(3);
       await page.locator('#btn-continue').click();
       await expect.poll(function () {
@@ -56,7 +56,7 @@ for (const mode of ['sdk', 'localstorage']) {
       }).toBe(4321);
       expect(await save(page)).toBe(true);
       await page.reload();
-      await page.waitForFunction(function () { return FB.game.bootReady; });
+      await page.waitForFunction(function () { return window.FB && FB.game && FB.game.bootReady; });
       expect(await page.evaluate(function () {
         const data = FB.save.read('auto');
         return { version:data.v, schema:data.authoritySchema,
@@ -77,7 +77,7 @@ test('CrazyGames saves a campaign and earned starts across reload without local 
   expect(await page.evaluate(function () { return FB.save.storageBackend(); })).toBe('crazygames');
   expect(await page.evaluate(function () { return window.__cgTest.data.fb_cg_campaign_v1.slice(0,5); })).toBe('FBG1.');
   await page.reload();
-  await page.waitForFunction(function () { return FB.game.bootReady; });
+  await page.waitForFunction(function () { return window.FB && FB.game && FB.game.bootReady; });
   const result = await page.evaluate(function () {
     return { gold:FB.save.read('auto').state.player.gold,
       tier:FB.startProgression.snapshot().highestAchievedTier,
@@ -190,7 +190,7 @@ test('CrazyGames localStorage mode saves one compressed life and earned starts w
   await page.evaluate(function () { FB.ui.showSaveLoad(true); });
   await expect(page.locator('#gm-body')).toContainText('Automatic Progress Save may back it up');
   await page.reload();
-  await page.waitForFunction(function () { return FB.game.bootReady; });
+  await page.waitForFunction(function () { return window.FB && FB.game && FB.game.bootReady; });
   const after = await page.evaluate(function () {
     return { gold:FB.save.read('auto').state.player.gold,
       tier:FB.startProgression.snapshot().highestAchievedTier,
@@ -218,7 +218,7 @@ test('CrazyGames localStorage mode migrates a legacy gzip save on the next write
     return value;
   });
   await page.reload();
-  await page.waitForFunction(function () { return FB.game.bootReady; });
+  await page.waitForFunction(function () { return window.FB && FB.game && FB.game.bootReady; });
   expect(await page.evaluate(function () { return FB.save.read('auto').state.player.gold; })).toBe(9876);
   expect(await page.evaluate(function () { return localStorage.getItem('fb_cg_aps_campaign_v1'); })).toBe(legacy);
   await page.evaluate(function () { FB.game.loadSlot('auto'); });
@@ -238,7 +238,7 @@ test('CrazyGames keeps a damaged save and offers recovery without blocking the t
   });
   await page.reload();
   await expect(page.locator('#gm-title')).toContainText('Save recovery');
-  expect(await page.evaluate(function () { return FB.game.bootReady; })).toBe(true);
+  expect(await page.evaluate(function () { return window.FB && FB.game && FB.game.bootReady; })).toBe(true);
   await expect(page.locator('#btn-newgame')).toBeEnabled();
   await expect(page.locator('#btn-save-recovery')).toBeVisible();
   expect(await page.evaluate(function () { return localStorage.getItem('fb_cg_aps_campaign_v1'); })).toBe(damaged);
@@ -249,7 +249,7 @@ test('CrazyGames keeps a damaged save and offers recovery without blocking the t
   await expect(page.locator('#recovery-text')).toHaveValue(await page.evaluate(function () { return FB.crazySave.recoveryText(); }));
   await page.locator('#recovery-review').click();
   await page.locator('#recovery-reset').click();
-  await page.waitForFunction(function () { return FB.game.bootReady && !FB.crazySave.recovery(); });
+  await page.waitForFunction(function () { return window.FB && FB.game && FB.game.bootReady && !FB.crazySave.recovery(); });
   const result = await page.evaluate(function () {
     return { campaign:localStorage.getItem('fb_cg_aps_campaign_v1'),
       backup:JSON.parse(localStorage.getItem('fb_cg_aps_recovery_v1')).records.fb_cg_aps_campaign_v1,
@@ -328,7 +328,7 @@ test('packed gzip round-trips every length remainder and crosses chunk and lengt
   expect(result.remainders).toEqual(Array.from({ length:15 }, function (_, i) { return i; }));
   expect(result.lengths[16]).toBeGreaterThan(32768);
   await page.reload();
-  await page.waitForFunction(function () { return FB.game.bootReady; });
+  await page.waitForFunction(function () { return window.FB && FB.game && FB.game.bootReady; });
   expect(await page.evaluate(function () { return FB.crazySave.read(); })).toBe(result.last);
 });
 
@@ -362,7 +362,7 @@ for (const scenario of [
     await startDeterministicGame(page);
     expect(await save(page)).toBe(true);
     await page.reload();
-    await page.waitForFunction(function () { return FB.game.bootReady; });
+    await page.waitForFunction(function () { return window.FB && FB.game && FB.game.bootReady; });
     expect(await page.evaluate(function () { return !!FB.save.read('auto') && FB.save.available; })).toBe(true);
   });
 }
@@ -386,7 +386,7 @@ test('missing compression APIs use compact synchronous saves and still read lega
   expect(await save(page)).toBe(true);
   expect(await page.evaluate(function () { return localStorage.getItem('fb_cg_aps_campaign_v1').slice(0, 5); })).toBe('FBL2.');
   await page.reload();
-  await page.waitForFunction(function () { return FB.game.bootReady; });
+  await page.waitForFunction(function () { return window.FB && FB.game && FB.game.bootReady; });
   expect(await page.evaluate(function () { return !!FB.save.read('auto'); })).toBe(true);
   await page.evaluate(function () { FB.game.loadSlot('auto'); });
   await page.waitForFunction(function () { return !!FB.state; });
@@ -394,7 +394,7 @@ test('missing compression APIs use compact synchronous saves and still read lega
     localStorage.setItem('fb_cg_aps_campaign_v1', 'FBL1.' + FB.save.exportState().slice(5));
   });
   await page.reload();
-  await page.waitForFunction(function () { return FB.game.bootReady; });
+  await page.waitForFunction(function () { return window.FB && FB.game && FB.game.bootReady; });
   expect(await page.evaluate(function () { return !!FB.save.read('auto'); })).toBe(true);
 });
 
@@ -433,7 +433,7 @@ test('unreadable progression does not block a healthy campaign and recovery rese
   await page.locator('#recovery-review').click();
   await expect(page.locator('#gm-body')).toContainText('The saved campaign will be kept');
   await page.locator('#recovery-reset').click();
-  await page.waitForFunction(function () { return FB.game.bootReady && !FB.crazySave.recovery(); });
+  await page.waitForFunction(function () { return window.FB && FB.game && FB.game.bootReady && !FB.crazySave.recovery(); });
   expect(await page.evaluate(function () { return FB.save.read('auto').state.player.gold; })).toBe(789);
 });
 
@@ -457,7 +457,7 @@ test('failed recovery backup preserves original bytes until an explicit discard'
   await expect(page.locator('#recovery-error')).toContainText('original records are unchanged');
   expect(await page.evaluate(function () { return localStorage.getItem('fb_cg_aps_campaign_v1'); })).toBe('unreadable');
   await page.locator('#recovery-discard').click();
-  await page.waitForFunction(function () { return FB.game.bootReady && !FB.crazySave.recovery(); });
+  await page.waitForFunction(function () { return window.FB && FB.game && FB.game.bootReady && !FB.crazySave.recovery(); });
   expect(await page.evaluate(function () { return localStorage.getItem('fb_cg_aps_campaign_v1'); })).toBeNull();
 });
 
@@ -468,7 +468,8 @@ test('blocked localStorage allows unsaved play and file export', async function 
   });
   await bootLocal(page, testInfo, { missingSdk:true });
   await expect(page.locator('#gm-body')).toContainText('blocking save storage');
-  await page.locator('#recovery-back').click();
+  await expect(page.locator('#recovery-back')).toBeDisabled();
+  await page.getByRole('button', { name:'Close', exact:true }).click();
   await page.locator('#btn-newgame').click();
   await page.waitForFunction(function () { return !!FB.state; });
   expect(await page.evaluate(function () { return FB.save.exportState().slice(0, 5); })).toBe('FBS2.');
@@ -543,7 +544,7 @@ test('pagehide alone saves the pending life in compact LZ and it reloads without
     window.CompressionStream = undefined; window.DecompressionStream = undefined;
   });
   await page.reload();
-  await page.waitForFunction(function () { return FB.game.bootReady; });
+  await page.waitForFunction(function () { return window.FB && FB.game && FB.game.bootReady; });
   expect(await page.evaluate(function () { return FB.save.read('auto').state.player.gold; })).toBe(9182);
 });
 
@@ -565,7 +566,7 @@ for (const scenario of [
     await page.addInitScript(function () { window.FB_DISTRIBUTION = 'crazygames'; });
     await page.goto(targetUrl(testInfo), { waitUntil:'domcontentloaded' });
     await expect(page.locator('#title-boot-status')).toContainText(scenario.message);
-    expect(await page.evaluate(function () { return FB.game.bootReady; })).toBe(false);
+    expect(await page.evaluate(function () { return window.FB && FB.game && FB.game.bootReady; })).toBe(false);
     await expect(page.locator('#btn-newgame')).toBeDisabled();
     expect(await page.evaluate(function () {
       return window.__cgTest.calls.filter(function (c) { return c.indexOf('set:') === 0; });

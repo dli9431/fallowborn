@@ -1648,7 +1648,7 @@ window.FB = window.FB || {};
   };
 
   FB.travelTick = function (state) {
-    if (FB.tournaments) FB.tournaments.reconcile(state);
+    if (FB.tournaments && FB.systemAvailable(state, 'tournaments')) FB.tournaments.reconcile(state);
     const p = state.player;
     const t = FB.travelEnsure(state);
     if (!t) return;
@@ -2161,7 +2161,7 @@ window.FB = window.FB || {};
   };
 
   FB.travelValidate = function (state) {
-    if (FB.tournaments) FB.tournaments.reconcile(state);
+    if (FB.tournaments && FB.systemAvailable(state, 'tournaments')) FB.tournaments.reconcile(state);
     const t = FB.travelEnsure(state);
     if (!t) return true;
     const p = state.player;

@@ -169,9 +169,11 @@ test('the start picker and family presets follow scenario data',
     await expect(page.locator('input[name=cg-family][value="standard"]')).toBeChecked();
     await page.locator('#btn-cg-back').click();
     const cards = page.locator('#scenariolist .scencard');
-    await expect(cards).toHaveCount(1);
-    await expect(cards).toContainText('Federate Soldier');
-    await expect(cards).not.toHaveClass(/locked/);
+    await expect(cards).toHaveCount(2);
+    const federate = cards.filter({ hasText:'Federate Soldier' });
+    await expect(federate).toHaveCount(1);
+    await expect(federate).not.toHaveClass(/locked/);
+    await expect(cards.filter({ hasText:'Observe' })).toHaveCount(1);
 
     for (const code of ['STORIES-476-serf-ravenna-m-Marcus',
       'STORIES-476-federate_476-ravenna-m-Marcus-elder-0-gothic.homoian',

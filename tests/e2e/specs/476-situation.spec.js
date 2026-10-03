@@ -87,7 +87,9 @@ test('476 bookmark and free federate start preserve 867 and 1066 data',
               return c.religion !== 'sunni' && c.religion !== 'shia';
             });
         }),
-        sites:FB.world.sitesByProv.ravenna.list.map(function (site) {
+        sites:FB.world.sitesByProv.ravenna.list.filter(function (site) {
+          return site.authored;
+        }).map(function (site) {
           return site.site;
         }),
         stories:FB.stories.attached(s),

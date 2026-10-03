@@ -1,5 +1,7 @@
 # UI: keyboard & mobile
 
+Settings resolves the current campaign state when opened, including a null state on the title screen. Its root sheet keeps Back disabled and Close enabled; nested settings sheets retain their return route.
+
 CrazyGames household objectives and returning players
 
 The CrazyGames checklist includes a persistent current-objective block for courtship, the first enterprise, freedom funding or final service, and the first land plot. It reads the same live status and quote functions as the normal reviews. Natural-day refreshes update its text without replacing the checklist or its controls; enterprise progress reprices the displayed recommendation rather than scanning every business on each day. Exact refreshes and review clicks choose a current recommendation again. Dismiss and Disable guide hints retain their existing effect. This is presentation only, with no technology or eligibility change.

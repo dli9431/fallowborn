@@ -457,12 +457,14 @@ test('first soundtrack boot, title pause, and background playback preserve state
     expect(shortcutLayout).toEqual({
       descriptionDisplay:'block', descriptionBelow:true, contained:true
     });
-    await page.locator('#gm-back').click();
+    await expect(page.locator('#gm-back')).toBeDisabled();
+    await page.getByRole('button', { name:'Close', exact:true }).click();
 
     await page.setViewportSize({ width:390, height:740 });
     await page.locator('#btn-settings').click();
     await expect(page.locator('#set-shortcuts')).toHaveCount(0);
-    await page.locator('#gm-back').click();
+    await expect(page.locator('#gm-back')).toBeDisabled();
+    await page.getByRole('button', { name:'Close', exact:true }).click();
     await page.evaluate(function () {
       FB.game.uiPrefs.musicChoice = null;
       window.__bootPlayEvents = [];

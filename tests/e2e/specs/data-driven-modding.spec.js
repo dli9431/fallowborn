@@ -1018,7 +1018,7 @@ test('milestone-four phase A projects protected baseline action catalogues and r
         });
 
       const focusIndex = 2;
-      const deedIndex = 0;
+      const deedIndex = 1;
       const originalFocusDef = FBDATA.focuses[focusIndex];
       const originalDeedDef = FBDATA.deeds[deedIndex];
       const originalFocus = FB.focuses[focusIndex];
@@ -1033,7 +1033,7 @@ test('milestone-four phase A projects protected baseline action catalogues and r
           label:'Indexed Rest', desc:'A rebuilt focus description.'
         });
         FBDATA.deeds[deedIndex] = Object.assign({}, originalDeedDef, {
-          label:'Indexed Poach', desc:'A rebuilt deed description.'
+          label:'Indexed Scheme', desc:'A rebuilt deed description.'
         });
         FB.rebuildActionCatalogs();
         const projectedFocus = FB.focuses[focusIndex];
@@ -1053,7 +1053,7 @@ test('milestone-four phase A projects protected baseline action catalogues and r
           deedLabel:projectedDeed.label,
           deedDesc:projectedDeed.desc(FB.state),
           focusIndexFresh:focusIndexFresh,
-          deedIndexFresh:FB.instantStatus(FB.state, 'poach').action === projectedDeed,
+          deedIndexFresh:FB.instantStatus(FB.state, 'scheme_rival').action === projectedDeed,
           focusHandlerStable:projectedFocus.show === originalFocusShow &&
             projectedFocus.tick === originalFocus.tick,
           deedHandlerStable:projectedDeed.show === originalDeed.show &&
@@ -1097,14 +1097,15 @@ test('milestone-four phase A projects protected baseline action catalogues and r
       revision:true,
       focusLabel:'Indexed Rest',
       focusDesc:'A rebuilt focus description.',
-      deedLabel:'Indexed Poach',
+      deedLabel:'Indexed Scheme',
       deedDesc:'A rebuilt deed description.',
       focusIndexFresh:true,
       deedIndexFresh:true,
       focusHandlerStable:true,
       deedHandlerStable:true
     });
-    expect(result.restored).toEqual(['🛌 Rest and mend', '🗡 Desperate measures…']);
+    expect(result.restored[0]).toBe('🛌 Rest and mend');
+    expect(result.restored[1]).toContain('Scheme against');
   });
 
 test('milestone-four phase A rejects malformed internal action data without mutation',

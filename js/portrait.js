@@ -700,14 +700,14 @@ window.FB = window.FB || {};
     if (red < profile.red) family = HAIR_RGB.auburn;
     else if (fair < profile.fair) family = roll < .6 ? HAIR_RGB.blond
       : (roll < .8 ? HAIR_RGB.ash : HAIR_RGB.chestnut);
-    /* ash on a child reads as an old woman's gray, not as fair hair */
-    if (spec.child && family === HAIR_RGB.ash) {
-      family = roll < .5 ? HAIR_RGB.blond : HAIR_RGB.chestnut;
-    }
     else family = spec.pigment > 1.6
       ? (roll < .67 ? HAIR_RGB.black : HAIR_RGB.darkBrown)
       : (roll < .25 ? HAIR_RGB.black : roll < .55 ? HAIR_RGB.darkBrown
         : roll < .82 ? HAIR_RGB.brown : HAIR_RGB.chestnut);
+    /* ash on a child reads as an old woman's gray, not as fair hair */
+    if (spec.child && family === HAIR_RGB.ash) {
+      family = roll < .5 ? HAIR_RGB.blond : HAIR_RGB.chestnut;
+    }
     if (naturalColor && HAIR_RGB[naturalColor]) family = HAIR_RGB[naturalColor];
     var gray = smoothV2(44,74,spec.age +
       (saltedUnit(identity,'identity-gray',0)*2-1)*9);

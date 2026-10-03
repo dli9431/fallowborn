@@ -104,6 +104,18 @@ window.FB = window.FB || {};
   }
   FB.abbeyHouses = houses;
   FB.abbeyAt = record;
+  /* Residence is a saved physical fact, not permission to use the institution.
+     Availability resolves government from residence and must not call itself. */
+  FB.abbeyResidenceHouse = function (s, id) {
+    const records = s && s.abbeys && s.abbeys.houses;
+    if (!id || !Array.isArray(records)) return null;
+    for (const h of records) {
+      if (h && (h.holderId === id || (Array.isArray(h.residents) ? h.residents : []).some(function (r) {
+        return r && r.charId === id;
+      }))) return h;
+    }
+    return null;
+  };
   FB.abbeyOf = function (s, c) {
     c = c || me(s);
     return c && !c.dead && FB.systemEnabled(s, 'abbeys', { character:c }) && houses(s).filter(function (h) {

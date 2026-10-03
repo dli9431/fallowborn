@@ -37,7 +37,9 @@ window.FB = window.FB || {};
     var rid = homeRealm(s, object(o) ? o : s && s.player);
     var rows = s && s.authority && s.authority.governments;
     var row = rid && rows && own(rows, rid) && rows[rid];
-    return row && row.formId || s && s.start && s.start.defaultGovernment || 'territorial';
+    return row && row.formId || s && s.start && s.start.defaultGovernment ||
+      (FB.political && FB.political.defaultGovernmentForm
+        ? FB.political.defaultGovernmentForm(s || {}) : null);
   }
   function layers(o, s) {
     s = stateOf(s);

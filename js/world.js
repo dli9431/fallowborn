@@ -2073,7 +2073,7 @@ window.FB = window.FB || {};
       } else if (counties.length >= 2) {
         const dname = (FBDATA.duchies[did] || {}).name || did;
         const dr = FB.makeVassalRealm(state, {
-          id: did, name: 'Duchy of ' + dname, capital: counties[0].id,
+          id: 'd_' + did, name: 'Duchy of ' + dname, capital: counties[0].id,
           rank: 2, liege: rid, culture: counties[0].culture
         });
         state.holder[counties[0].id] = dr.id;

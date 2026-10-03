@@ -11,6 +11,7 @@ dependsOnRuntime(__filename, [
   'js/main.js', 'js/actions.js', 'js/economy.js', 'js/events.js', 'js/politics.js',
   'js/institutions.js', 'js/council.js', 'js/parliament.js', 'js/papacy.js',
   'js/holywar.js', 'js/abbeys.js', 'js/tournaments.js', 'js/save.js',
+  'js/travel.js', 'js/wars.js', 'js/rebellions.js',
   'js/mods.js', 'js/ui_panels.js', 'js/ui_modals.js', 'js/ui_topbar.js',
   'js/ui_misc.js', 'js/ui_tournaments.js', 'js/mapview.js'
 ]);
@@ -64,6 +65,40 @@ test('system rules resolve default, era, government, faith, then bookmark withou
     });
     expect(result).toEqual({ answers:[true, false, true, false, true],
       inheritedPapacy:true, errors:[], pure:true });
+  });
+
+test('availability scopes abbey residents without querying abbey eligibility or changing residence',
+  async function ({ page }, testInfo) {
+    await openGame(page, testInfo);
+    await startDeterministicGame(page);
+    const result = await page.evaluate(function () {
+      const s = FB.state, home = s.player.provinceId;
+      const holder = Object.assign({}, s.chars[s.player.charId], {
+        id:'e2e_abbey_holder', role:'contact', homeProvinceId:home
+      });
+      const resident = Object.assign({}, holder, { id:'e2e_abbey_resident' });
+      s.chars[holder.id] = holder;
+      s.chars[resident.id] = resident;
+      const county = Object.keys(s.owner).find(function (pid) { return pid !== home; });
+      s.abbeys = { houses:[{ provinceId:county, holderId:holder.id,
+        residents:[{ charId:resident.id }] }] };
+      const before = JSON.stringify(s), rng = FB.getRngState(), uid = FB.getUidCounter();
+      const queries = [holder, resident].map(function (c) {
+        return FB.systemEnabled(s, 'abbeys', { character:c, bookmark:{} });
+      });
+      const expected = FB.systemEnabled(s, 'abbeys', {
+        realm:s.holder[county] || s.owner[county], faith:holder.religion, bookmark:{}
+      });
+      const pure = before === JSON.stringify(s) && rng === FB.getRngState() && uid === FB.getUidCounter();
+      FB.bookmark(s.start.id).systems = { disable:['abbeys'] };
+      return { queries:queries, expected:expected, pure:pure,
+        residence:[FB.characterResidence(s, holder), FB.characterResidence(s, resident)],
+        county:county, disabledOffice:FB.abbeyOf(s, holder) };
+    });
+    expect(result.queries).toEqual([result.expected, result.expected]);
+    expect(result.residence).toEqual([result.county, result.county]);
+    expect(result.pure).toBe(true);
+    expect(result.disabledOffice).toBeNull();
   });
 
 test('unknown and malformed system requirements fail before a mod mutates data',
@@ -231,7 +266,9 @@ test('disabled lifecycle hooks stay idle across season and year boundaries and o
       return { calls:calls, advanced:advanced };
     });
     expect(result.advanced).toBe(true);
-    expect(Object.values(result.calls)).toEqual(Object.keys(result.calls).map(function () { return 0; }));
+    expect(result.calls).toEqual(Object.fromEntries(Object.keys(result.calls).map(function (key) {
+      return [key, 0];
+    })));
   });
 
 test('disabled saved institutions stay dormant and their traits contribute no effects',

@@ -355,7 +355,7 @@ window.FB = window.FB || {};
 
   function activeElectionValid(state, active) {
     var def = active && electionDef(active.definitionId);
-    if (def && !FB.systemContentEnabled(state, def, active.kind === 'guild'
+    if (def && !FB.systemContentEnabled(state, def, active.candidateId
         ? { character:active.candidateId } : undefined)) return false;
     if (!def || !active.id || active.kind !== def.kind ||
         active.office !== def.office || !isFinite(Number(active.startedTurn)) ||
@@ -391,7 +391,7 @@ window.FB = window.FB || {};
 
   function expireActiveElection(state, store, silent) {
     var definition = store.active && electionDef(store.active.definitionId);
-    if (definition && !FB.systemContentEnabled(state, definition, store.active.kind === 'guild'
+    if (definition && !FB.systemContentEnabled(state, definition, store.active.candidateId
         ? { character:store.active.candidateId } : undefined)) return;
     var active = store.active;
     if (!active) return;

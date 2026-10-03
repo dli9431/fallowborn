@@ -1180,7 +1180,7 @@ window.FB = window.FB || {};
     });
     campaign.leaderRealm = sovereignAttackers[0];
     campaign.phase = 'active';
-    if (FB.tournaments) FB.tournaments.reconcile(state);
+    if (FB.tournaments && FB.systemAvailable(state, 'tournaments')) FB.tournaments.reconcile(state);
     campaign.launchedTurn = state.turn;
     campaign.deadlineTurn = state.turn + B('greatHolyWarDeadlineDays', 2880);
     /* armyTick has already run on the launch day. Queue the second announcement

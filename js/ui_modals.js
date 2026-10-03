@@ -12396,7 +12396,7 @@ window.FB = window.FB || {};
       ? charterId : 'customary_service';
     if (FB.feudalCharterStatus &&
         !FB.feudalCharterStatus(s, charterId).ready) {
-      charterId = 'customary_service';
+      charterId = FB.defaultFeudalCharterId();
     }
     tenure = serviceEnabled && (tenure === 'life' || tenure === 'term')
       ? tenure : 'hereditary';
@@ -29807,6 +29807,7 @@ window.FB = window.FB || {};
 
   UI.showSettings = function () {
     const G = FB.game;
+    const s = FB.state || null;
     const WORDS = ['slowest', 'slow', 'medium', 'fast', 'fastest'];
     const desktopKeyboard = !FB.isTouch && !FB.isSmallScreen();
     const mainTextColor = G.uiPrefs.mainTextColor ||

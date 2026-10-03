@@ -7,6 +7,7 @@
     { "table": "lexicons", "reason": "Display vocabulary; its keys are lexicon layers (base, eras, governments, faiths, cultures), not content records." }
   ],
   "hooks": [
+    { "id": "feudal", "reason": "Interaction navigation category; quoted engine uses name the UI group, not a station ladder. The ladder shares its spelling." },
     { "id": "seafaring_raids", "reason": "Technology capability; raiding asks for it instead of a technology id." },
     { "id": "oceanic_navigation", "reason": "Technology capability; raid sea reach counts its grants instead of naming navigation technologies." },
     { "id": "mounted_reach", "reason": "Technology capability; raid overland reach counts its grants instead of naming cavalry technologies." },

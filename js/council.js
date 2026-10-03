@@ -138,6 +138,7 @@ window.FB = window.FB || {};
   };
 
   FB.councilMembers = function (state) {
+    if (!FB.councilActive(state)) return [];
     const c = FB.councilEnsure(state);
     const out = [];
     if (!c) return out;

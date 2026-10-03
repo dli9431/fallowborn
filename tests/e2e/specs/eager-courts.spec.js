@@ -1271,6 +1271,31 @@ test('a ruler character sheet materializes its court on first open',
       .toBe(report.expectedFaces);
   });
 
+test('generated duchies preserve authored realm identities and an acyclic liege hierarchy',
+  async function ({ page }) {
+    const result = await page.evaluate(function () {
+      const s = FB.state, authored = FB.bookmark('867').realms.find(function (r) {
+        return r.id === 'burgundy';
+      });
+      const realm = s.realms.burgundy, faults = [];
+      Object.keys(s.realms).forEach(function (rid) {
+        const seen = {};
+        let current = rid;
+        while (current && s.realms[current]) {
+          if (seen[current]) { faults.push(rid + ':' + current); break; }
+          seen[current] = true;
+          current = s.realms[current].liege;
+        }
+      });
+      return { authored:[authored.name, authored.capital, authored.rank, authored.liege],
+        saved:[realm.name, realm.capital, realm.rank, realm.liege],
+        duchy:!!s.realms.d_essex, faults:faults };
+    });
+    expect(result.saved).toEqual(result.authored);
+    expect(result.duchy).toBe(true);
+    expect(result.faults).toEqual([]);
+  });
+
 test('the fixed seed keeps its stored non-court world state',
   async function ({ page }) {
     expect(nonCourtWorldFixture.sourceRevision).toBe('249b935');

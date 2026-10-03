@@ -20,7 +20,7 @@ const BASE_WORDS = {
 };
 const TERM = /\{([Tt])erm:([a-z_]+)(?:\.(one|other|title))?\}/g;
 function englishOf(text) {
-  return text.replace(TERM, function (whole, t, id, form) {
+  return text.replace(/\{money:(\d+)\}/g, '$1 gold').replace(TERM, function (whole, t, id, form) {
     const words = BASE_WORDS[id];
     if (!words) return whole;
     let word = form === 'other' ? words[1]

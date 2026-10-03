@@ -95,7 +95,7 @@ test('a test culture with a data profile renders its own palette',
   async function ({ page }) {
     const result = await page.evaluate(function () {
       const state = { start:{ id:'867' }, date:{ year:867, season:0, day:1 } };
-      const added = ['palette_dark', 'palette_fair', 'palette_bare', 'palette_child'];
+      const added = ['palette_dark', 'palette_fair', 'palette_red', 'palette_bare', 'palette_child'];
       FBDATA.cultures.palette_dark = { name:'Palette Dark', tradition:'other', dyn:'of_place',
         appearance:{ tone:3.9, fair:0, red:0 }, male:['Dark'], female:['Dark'] };
       FBDATA.cultures.palette_fair = { name:'Palette Fair', tradition:'other', dyn:'of_place',
@@ -103,6 +103,8 @@ test('a test culture with a data profile renders its own palette',
           tends:['furHat'] }, male:['Fair'], female:['Fair'] };
       FBDATA.cultures.palette_bare = { name:'Palette Bare', tradition:'other', dyn:'of_place',
         male:['Bare'], female:['Bare'] };
+      FBDATA.cultures.palette_red = { name:'Palette Red', tradition:'other', dyn:'of_place',
+        appearance:{ tone:1, fair:0, red:1 }, male:['Red'], female:['Red'] };
       FBDATA.cultures.palette_child = { name:'Palette Child', parent:'palette_dark',
         tradition:'other', dyn:'of_place', male:['Child'], female:['Child'] };
       FB.invalidateCultureData();
@@ -119,16 +121,17 @@ test('a test culture with a data profile renders its own palette',
         const fairFamilies = [[196,158,102], [148,138,120], [124,86,50]].map(function (rgb) {
           return rgb.join(',');
         });
-        let fairCount = 0;
+        let fairCount = 0, redCount = 0;
         for (let i = 0; i < 20; i++) {
           if (fairFamilies.indexOf(look('palette_fair', 'hair-' + i).hair.base.join(',')) >= 0) {
             fairCount++;
           }
+          if (look('palette_red', 'hair-' + i).hair.base.join(',') === '138,74,40') redCount++;
         }
         return {
           darkPigment:dark.pigment > 3.4, fairPigment:fair.pigment < .6,
           darkerSkin:dark.skin.base[0] < fair.skin.base[0],
-          fairHair:fairCount >= 15,
+          fairHair:fairCount >= 15, redHair:redCount >= 15,
           hairTendency:fair.hairStyle,
           borrowsEraCulture:bare.pigment === frankish.pigment &&
             bare.hair.base.join(',') === frankish.hair.base.join(','),
@@ -148,7 +151,7 @@ test('a test culture with a data profile renders its own palette',
       }
     });
     expect(result).toEqual({
-      darkPigment:true, fairPigment:true, darkerSkin:true, fairHair:true,
+      darkPigment:true, fairPigment:true, darkerSkin:true, fairHair:true, redHair:true,
       hairTendency:'braids', borrowsEraCulture:true, inheritsParent:true,
       tendsReachWardrobe:true, valid:[]
     });

@@ -14,7 +14,7 @@ async function start(page, testInfo, bookmark) {
   await openGame(page, testInfo);
   await page.getByRole('button', { name:'New Game', exact:true }).click();
   await page.locator('#btn-bm-seed').click();
-  await page.locator('#ng-seed').fill('TITLE-MIGRATION-' + bookmark + '-serf-london-f-Ada');
+  await page.locator('#ng-seed').fill('TITLEMIGRATION-' + bookmark + '-serf-london-f-Ada');
   await page.locator('#ng-seed').press('Enter');
   await expect(page.locator('#chargen:not(.hidden)')).toBeVisible();
   await page.getByRole('button', { name:'Begin Your Story', exact:true }).click();
@@ -175,13 +175,13 @@ for (const bookmark of ['867','1066']) {
           region:FB.state.realms[titleRealmId].ambitionTitleRegion,
           history:FB.state.greatHolyWarHistory.campaigns[0].target,
           settlement:FB.state.titleMigrationFixture,
-          facts:JSON.stringify({
+          facts:{ before:JSON.parse(before), after:{
             owner:FB.state.owner, holder:FB.state.holder,
             charId:FB.state.player.charId, family:(function () { const c = FB.state.chars[FB.state.player.charId];
               return [c.born,c.culture,c.religion,c.fatherId,c.motherId]; })(),
             population:FB.state.population, gold:FB.state.player.gold,
             provs:FB.state.player.provs, treasury:FB.state.treasuryAccounting
-          }) === before,
+          } },
           rng:FB.getRngState() === rng,
           ordinaryVersion:JSON.parse(FB.save.serialize()).v
         };
@@ -196,7 +196,7 @@ for (const bookmark of ['867','1066']) {
         claims:[{ asset:'duchy:d_essex', claimant:'d_essex' }],
         selection:{ kind:'duchy', id:'essex' }
       });
-      expect(result.facts).toBe(true);
+      expect(result.facts.after).toEqual(result.facts.before);
       expect(result.rng).toBe(true);
       expect(result.ordinaryVersion).toBe(4);
     });

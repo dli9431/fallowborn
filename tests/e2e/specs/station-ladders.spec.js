@@ -2,7 +2,7 @@
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
   'data/eras.js', 'data/political_institutions.js', 'data/lexicons.js',
-  'data/actions.js', 'data/bookmarks.js', 'data/map_data.js', 'data/starts.js', 'data/religions.js',
+  'data/actions.js', 'data/bookmarks.js', 'data/map_data.js', 'data/starts.js', 'data/cultures.js',
   'js/station.js', 'js/governments.js', 'js/authority.js', 'js/world.js',
   'js/model.js', 'js/events.js', 'js/main.js', 'js/actions.js',
   'js/council.js', 'js/parliament.js', 'js/justice.js', 'js/armies.js',
@@ -167,8 +167,8 @@ test('focus and deed restrictions use named permissions and the form eligibility
         { ladder:'e2e_action_ladder' });
       FB.authoritySetGovernment(s, p.liege, 'e2e_action');
       FB.mods.apply({
-        focuses:[{ id:'rest', eligibility:{ station:'mayCommand', tierMin:6 } }],
-        deeds:[{ id:'give_alms', eligibility:{ station:'mayCommand', tierMin:6 } }]
+        focuses:[{ id:'rest', eligibility:{ station:'mayCommand', tierMin:6, reason:'Military command is required.' } }],
+        deeds:[{ id:'give_alms', eligibility:{ station:'mayCommand', tierMin:6, reason:'Military command is required.' } }]
       });
       p.gold = 100;
       function visible() {

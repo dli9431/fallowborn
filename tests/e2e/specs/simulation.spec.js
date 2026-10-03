@@ -408,7 +408,7 @@ test('annual AI construction snapshots holdings before development invalidation'
         const treasury = s.realms[rid] && s.realms[rid].treasury;
         if (treasury && treasury.version === 1) treasury.gold = 1000000;
       }
-      FBDATA.buildings = { mill:{ dev:1 } };
+      FBDATA.buildings = { mill:{ dev:1, aiBuildOrder:1 } };
       FB.settlementsOf = function () {
         return [{ site:'test', name:'Test', kind:'village' }];
       };

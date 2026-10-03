@@ -4,7 +4,7 @@ dependsOnRuntime(__filename, [
   'data/eras.js', 'data/bookmarks.js', 'data/bookmark_476.js',
   'data/political_institutions.js', 'data/cultures.js',
   'js/governments.js', 'js/world.js', 'js/authority.js', 'js/politics.js',
-  'js/armies.js', 'js/stories.js', 'js/story_western_court_476.js', 'js/main.js',
+  'js/armies.js', 'js/wars.js', 'js/stories.js', 'js/story_western_court_476.js', 'js/main.js',
   'js/save.js', 'js/save_v4.js'
 ]);
 const { test, expect } = require('../support/fixture');
@@ -289,6 +289,8 @@ test('scenario hosts follow their own standing and escort flags',
       s.turn++;
       FB.armyTick(s);
       const standing = !!host('host_476_italy') && !!host('host_476_federates');
+      FB.repairWars(s);
+      const restoredStanding = !!host('host_476_italy') && !!host('host_476_federates');
       host('host_476_federates').scenarioEndTurn = s.turn;
       s.turn++;
       FB.armyTick(s);
@@ -299,9 +301,9 @@ test('scenario hosts follow their own standing and escort flags',
       s.owner.pavia = 'aquitaine';
       FB.invalidateRealmCache();
       FB.stories.day(s);
-      return { standing:standing, released:released, move:sc.courtMove,
+      return { standing:standing, restoredStanding:restoredStanding, released:released, move:sc.courtMove,
         escort:escort.scenarioCourtEscort };
     });
-    expect(result).toEqual({ standing:true, released:true,
+    expect(result).toEqual({ standing:true, restoredStanding:true, released:true,
       move:'interrupted', escort:false });
   });

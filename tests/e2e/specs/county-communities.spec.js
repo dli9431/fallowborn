@@ -355,7 +355,8 @@ test('regional cultures seed their historical bookmark cores and supporting syst
           northeastAfrican:FBDATA.techTraditions.northeast_african.cultures
         },
         khazarHorseArchers:
-          FBDATA.unitClasses.horsearcher.cultures.indexOf('khazar') >= 0
+          FB.cultureValue(FB.state, 'khazar', 'doctrines.military').value ===
+            FBDATA.unitClasses.horsearcher.cultureDoctrine
       };
     });
 

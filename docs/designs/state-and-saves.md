@@ -1,5 +1,7 @@
 # Game state & saves
 
+Restore preserves unexpired scenario standing hosts using the daily army phase's living-realm and end-turn rules. An absent legacy wars table repairs to an empty table without declaring a campaign. Preservation tests compare structured facts rather than JSON property order, retaining exact checks on ownership, holders, population, family, treasury and hosts.
+
 ## Save v4 and 476 integration (Phase 6)
 
 The [authority contract](authority.md) separates appointments, contracts,

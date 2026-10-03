@@ -63,6 +63,7 @@
   function defaultForm(s) {
     return s.start && s.start.defaultGovernment || 'territorial';
   }
+  Q.defaultGovernmentForm = defaultForm;
   Q.government = function (s, realmRef) {
     if (!realmRef || realmRef.kind !== 'realm' || !Q.actor(s, realmRef)) return null;
     var a = records(s), stored = a && a.governments &&

@@ -3,6 +3,7 @@ const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
   'index.html', 'js/save.js', 'js/save_v4.js', 'js/title_ids.js',
   'js/main.js', 'js/world.js', 'js/model.js', 'js/mods.js', 'js/messages.js',
+  'js/armies.js', 'js/wars.js',
   'js/authority.js', 'js/politics.js', 'js/stories.js',
   'js/story_western_court_476.js', 'js/story_federate_track_476.js', 'js/ui_modals.js',
   'data/bookmarks.js', 'data/bookmark_476.js', 'data/political_institutions.js',
@@ -47,7 +48,7 @@ for (const bookmark of ['476', '867', '1066']) {
             population:state.population, buildings:state.buildings,
             treasury:state.treasuryAccounting, authority:state.authority,
             stories:state.stories, armies:state.armies,
-            wars:state.wars,
+            wars:state.wars || {},
             family:Object.keys(state.chars).sort().map(function (id) {
               const c = state.chars[id];
               return [id, c.born, c.culture, c.religion, c.fatherId,
@@ -75,7 +76,7 @@ for (const bookmark of ['476', '867', '1066']) {
           serializerPure:serializerPure,
           immutable:original === JSON.stringify(legacy),
           idempotent:JSON.stringify(migrated) === JSON.stringify(twice),
-          facts:first === expected && second === first,
+          facts:{ expected:JSON.parse(expected), first:JSON.parse(first), second:JSON.parse(second) },
           rng:(FB.getRngState() >>> 0) === (source.rng >>> 0),
           uid:FB.getUidCounter() === source.uid,
           saved:saved, slotVersion:slot.v, exportVersion:exported.v,
@@ -84,14 +85,17 @@ for (const bookmark of ['476', '867', '1066']) {
           chronicle:!!chronicle && chronicle.format === 'fallowborn-chronicle'
         };
       });
+      expect(result.facts.first).toEqual(result.facts.expected);
+      expect(result.facts.second).toEqual(result.facts.first);
+      delete result.facts;
       expect(result).toEqual({
         header:[4, 1, 4, 1], migratedHeader:1, serializerPure:true, immutable:true,
-        idempotent:true, facts:true,
+        idempotent:true,
         rng:true, uid:true, saved:true, slotVersion:4, exportVersion:4,
         bookmark:bookmark, authority:bookmark === '476', chronicle:true
       });
       await page.reload({ waitUntil:'domcontentloaded' });
-      await page.waitForFunction(function () { return FB.game.bootReady; });
+      await page.waitForFunction(function () { return window.FB && FB.game && FB.game.bootReady; });
       expect(await page.evaluate(function () {
         const saved = FB.save.read(1);
         return { v:saved.v, bookmark:saved.state.start.id };
@@ -306,7 +310,7 @@ test('localStorage v3 Continue upgrades only on a successful v4 save',
       return raw;
     });
     await page.reload({ waitUntil:'domcontentloaded' });
-    await page.waitForFunction(function () { return FB.game.bootReady; });
+    await page.waitForFunction(function () { return window.FB && FB.game && FB.game.bootReady; });
     expect(await page.evaluate(function () { return localStorage.getItem('fb_auto'); })).toBe(legacy);
     await page.locator('#btn-continue').click();
     await expect.poll(function () {

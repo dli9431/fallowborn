@@ -203,7 +203,7 @@
     });
     state.wars[id] = war;
     invalidateWars(state);
-    if (FB.tournaments) FB.tournaments.reconcile(state);
+    if (FB.tournaments && FB.systemAvailable(state, 'tournaments')) FB.tournaments.reconcile(state);
     return war;
   };
   FB.ordinaryWarParticipants = function (state, owner, war) {
@@ -268,6 +268,7 @@
     });
     state.armies = (state.armies || []).filter(function (a) {
       if (!a) return false;
+      if (FB.scenarioHostStanding(state, a)) return true;
       const uprising = a.rebellionId && FB.rebellionById && FB.rebellionById(state, a.rebellionId);
       return !!(uprising && uprising.faction === a.realm) || FB.isRealmAtWar(state, a.realm);
     });

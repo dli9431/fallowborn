@@ -5390,22 +5390,24 @@ window.FB = window.FB || {};
           ? true : actionEligibilityReason(state, kind, def);
       };
     }
-    const systemShow = out.show, systemCan = out.can, systemRun = out.run, systemTick = out.tick;
-    out.show = function (state) {
-      return FB.systemContentEnabled(state, def) && (!systemShow || systemShow(state));
-    };
-    out.can = function (state) {
-      if (!FB.systemContentEnabled(state, def)) return FB.T('This institution is not available.');
-      return systemCan ? systemCan(state) : true;
-    };
-    if (systemRun) out.run = function (state, options) {
-      if (!FB.systemContentEnabled(state, def)) return false;
-      return systemRun(state, options);
-    };
-    if (systemTick) out.tick = function (state) {
-      if (!FB.systemContentEnabled(state, def)) return;
-      return systemTick(state);
-    };
+    if (def.system || def.systems) {
+      const systemShow = out.show, systemCan = out.can, systemRun = out.run, systemTick = out.tick;
+      out.show = function (state) {
+        return FB.systemContentEnabled(state, def) && (!systemShow || systemShow(state));
+      };
+      out.can = function (state) {
+        if (!FB.systemContentEnabled(state, def)) return FB.T('This institution is not available.');
+        return systemCan ? systemCan(state) : true;
+      };
+      if (systemRun) out.run = function (state, options) {
+        if (!FB.systemContentEnabled(state, def)) return false;
+        return systemRun(state, options);
+      };
+      if (systemTick) out.tick = function (state) {
+        if (!FB.systemContentEnabled(state, def)) return;
+        return systemTick(state);
+      };
+    }
     return out;
   }
 
@@ -5863,6 +5865,7 @@ window.FB = window.FB || {};
     return 'hereditary';
   }
 
+  FB.defaultFeudalCharterId = function () { return 'customary_service'; };
   FB.feudalCharterDef = function (charterId) {
     return FBDATA.feudalServiceCharters[charterId] ||
       FBDATA.feudalServiceCharters.customary_service;
@@ -5915,7 +5918,7 @@ window.FB = window.FB || {};
       return {
         liegeId:saved.liegeId || realm.liege || null,
         charterId:FB.systemContentEnabled(state, FBDATA.feudalServiceCharters[saved.charterId], { realm:rid })
-          ? saved.charterId : 'customary_service',
+          ? saved.charterId : FB.defaultFeudalCharterId(),
         tenure:tenure,
         grantTurn:grantTurn,
         expiryTurn:expiryTurn,
@@ -5924,7 +5927,7 @@ window.FB = window.FB || {};
     }
     return {
       liegeId:realm ? realm.liege || null : null,
-      charterId:'customary_service', tenure:'hereditary',
+      charterId:FB.defaultFeudalCharterId(), tenure:'hereditary',
       grantTurn:0, expiryTurn:null, renewal:null
     };
   };

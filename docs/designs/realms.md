@@ -14,6 +14,8 @@ prices and confirmation signatures remain with their owning subsystems.
 Phase 2 adds scoped Ban, Peace, Revenue and Consent in authority.js, with
 separate appointments, recognition, federate commitments and customary rights.
 
+Generated duchy realms use d_ followed by the canonical duchy id. Generated county realms use c_ followed by the county id. These opaque realm identities remain separate from canonical title ids, preserving authored kingdoms such as Burgundy when a duchy has the same name and preventing replacement of their sovereign hierarchy.
+
 ## Eras and government forms
 
 Every bookmark declares an `era` from `FBDATA.eras` (`data/eras.js`):

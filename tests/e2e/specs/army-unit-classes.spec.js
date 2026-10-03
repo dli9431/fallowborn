@@ -250,17 +250,17 @@ test('culture-gated classes muster only for their own cultures',
       const p = state.player;
       const me = state.chars[p.charId];
       const keptCulture = me.culture;
-      const keptProvs = p.provs;
 
       me.culture = 'frankish';
+      p.tier = 4;
       p.provs = [p.provinceId];
+      FB.foundPlayerRealm(state);
       const frankComp = FB.playerCompositionBreakdown(state, true).units;
 
       me.culture = 'norse';
       const norseComp = FB.playerCompositionBreakdown(state, true).units;
 
       me.culture = keptCulture;
-      p.provs = keptProvs;
       return {
         frankLevy:frankComp.levy,
         frankHuscarl:frankComp.huscarl || 0,

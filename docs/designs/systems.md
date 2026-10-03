@@ -10,6 +10,8 @@ Context can identify a realm, faith or character. A character supplies their fai
 
 FB.systemAvailable is the world-hook query. It checks the unscoped rule, static and generated faiths and living realms for potential availability. A non-Catholic protagonist therefore does not stop the medieval world's papal elections. Personal content and scoped mutations still use FB.systemEnabled. Both queries are read-only and consume no RNG or ids; their answers are never saved.
 
+Character residence reads saved abbey holders and residents directly through FB.abbeyResidenceHouse. Physical residence remains recorded when abbeys are disabled. This read never asks whether abbeys are available, so government scoping cannot recurse through institution eligibility.
+
 Content and lifecycle
 
 FB.systemContentEnabled checks every requirement in a definition's systems list, or its single system field. Disabled Deeds and focuses, events and options, policies, privileges, elections, paths, traits and political blocs are absent from their live projections. Validation covers nested event requirements and action definitions before application. Event filtering happens before context binding and random selection. Shared action and option mutations recheck requirements so a stale UI or saved choice cannot invoke disabled content.

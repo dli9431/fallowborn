@@ -64,6 +64,11 @@ window.FB = window.FB || {};
        join a host resting on home land or the realm's next fresh muster, and
        the premium ends exactly when the last pending batch completes. The
        ledger survives host dismissal, de-muster, and peace untouched. */
+  FB.scenarioHostStanding = function (state, host) {
+    const realm = host && state.realms[host.realm];
+    return !!(host && host.scenarioStanding && state.turn < host.scenarioEndTurn &&
+      realm && realm.alive);
+  };
   FB.armiesEnsure = function (state) {
     if (!state.armies) state.armies = [];
     if (!state.armyDown) state.armyDown = {};
@@ -4562,8 +4567,7 @@ window.FB = window.FB || {};
           disband(state, a); continue;
         }
         // a scenario host is not disbanded at peace before its own end turn
-        if (a.scenarioStanding && state.turn < a.scenarioEndTurn &&
-            r && r.alive) continue;
+        if (FB.scenarioHostStanding(state, a)) continue;
         if (!r || !r.alive || !warring[a.realm]) disband(state, a);
       }
 
