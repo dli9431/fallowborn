@@ -7,8 +7,13 @@ dependsOnRuntime(__filename, [
   'js/wars.js',
   'js/world.js',
   'js/ui_modals.js',
+  'js/ui_misc.js',
+  'js/settlement.js',
+  'js/lordships.js',
+  'js/technology.js',
   'data/map_data.js',
-  'data/technology.js'
+  'data/technology.js',
+  'css/style.css'
 ]);
 
 /* Strategic fortifications. These tests are authored for the owner-run
@@ -27,6 +32,120 @@ test.beforeEach(async function ({ page }, testInfo) {
   await openGame(page, testInfo);
   await startDeterministicGame(page);
 });
+
+test('fort construction and upgrades stay in the selected noncapital settlement and charge once',
+  async function ({ page }) {
+    for (const level of [0, 1]) {
+      const setup = await page.evaluate(function (level) {
+        const s = FB.state, p = s.player, capital = p.provinceId;
+        const pid = 'york', idx = 1;
+        FB.ui.closeModal();
+        p.tier = 5; p.liege = null; p.provs = [capital, pid]; p.gold = 10000;
+        s.owner[capital] = s.holder[capital] = 'player';
+        s.owner[pid] = s.holder[pid] = 'player';
+        s.dev[pid] = 10;
+        s.wars = {};
+        FB.foundPlayerRealm(s);
+        const tech = FB.realmTechRecord(s);
+        ['ringworks', 'castle_towers'].forEach(function (id) {
+          if (tech.completed.indexOf(id) < 0) tech.completed.push(id);
+        });
+        s.buildings[capital] = [{ s:0, id:'walls', level:1 }];
+        s.buildings[pid] = level ? [{ s:idx, id:'walls', level:level }] : [];
+        FB.invalidateFortIndex();
+        FB.invalidateSettlementLordships(s);
+        FB.ui.showSettlement(pid, idx);
+        const status = FB.fortProjectStatus(s, pid, idx, level + 1);
+        return { pid:pid, idx:idx, capital:capital, level:level,
+          name:FB.settlementsOf(s, pid)[idx].name, cost:status.cost, gold:p.gold };
+      }, level);
+      const start = page.locator('#gm-body [data-fort-start]');
+      await expect(start).toBeVisible();
+      await expect(start).toHaveAttribute('data-fort-pid', setup.pid);
+      await expect(start).toHaveAttribute('data-fort-idx', String(setup.idx));
+      await page.locator('[aria-controls="settlement-development-details"]').click();
+      await start.focus();
+      const scroll = await page.locator('#gm-body').evaluate(function (body) { return body.scrollTop; });
+      await page.keyboard.press('Enter');
+      await expect(page.locator('#fort-project-confirm')).toBeVisible();
+      await expect(page.locator('#gm-body')).toContainText(setup.name);
+      await expect(page.locator('#gm-body')).toContainText('York');
+      await page.locator('#fort-project-back').click();
+      await expect(page.locator('#gm-title')).toContainText(setup.name);
+      await expect(start).toBeFocused();
+      await expect(page.locator('#settlement-development-details')).toBeVisible();
+      await expect.poll(function () {
+        return page.locator('#gm-body').evaluate(function (body) { return body.scrollTop; });
+      }).toBe(scroll);
+      await page.keyboard.press('Enter');
+      await page.keyboard.press('Escape');
+      await expect(page.locator('#gm-title')).toContainText(setup.name);
+      await expect(start).toBeFocused();
+      await expect(page.locator('#settlement-development-details')).toBeVisible();
+      await page.keyboard.press('Enter');
+      await page.locator('#fort-project-confirm').click();
+      await expect(page.locator('#gm-title')).toContainText(setup.name);
+      const result = await page.evaluate(function (config) {
+        const s = FB.state;
+        return { fort:FB.fortAt(s, config.pid), capital:FB.fortAt(s, config.capital), gold:s.player.gold };
+      }, setup);
+      expect(result.fort.s).toBe(setup.idx);
+      expect(result.fort.level).toBe(level);
+      expect(result.fort.targetLevel).toBe(level + 1);
+      expect(result.capital.targetLevel).toBeUndefined();
+      expect(result.gold).toBeCloseTo(setup.gold - setup.cost, 8);
+    }
+  });
+
+test('the capital household settlement links to its legacy county-seat fort', async function ({ page }) {
+  const setup = await page.evaluate(function () {
+    const s = FB.state, p = s.player, pid = p.provinceId;
+    p.tier = 5; p.provs = [pid]; p.homeSettlement = 1; p.gold = 10000;
+    s.owner[pid] = s.holder[pid] = 'player'; s.dev[pid] = 10;
+    s.buildings[pid] = [{ id:'walls', level:1 }];
+    FB.repairForts(s);
+    FB.invalidateSettlementLordships(s);
+    FB.ui.showSettlement(pid, p.homeSettlement);
+    return { home:FB.settlementsOf(s, pid)[1].name, fort:FB.settlementsOf(s, pid)[0].name };
+  });
+  await expect(page.locator('#gm-title')).toContainText(setup.home);
+  await expect(page.locator('.fort-asset-row')).toHaveCount(0);
+  await page.locator('#settlement-county-fort').click();
+  await expect(page.locator('#gm-title')).toContainText(setup.fort);
+  await expect(page.locator('.fort-asset-row')).toBeVisible();
+  await expect(page.locator('.fort-next-tier')).toContainText('Towered Stronghold');
+  await page.getByRole('button', { name:'Back', exact:true }).click();
+  await expect(page.locator('#gm-title')).toContainText(setup.home);
+  await expect(page.locator('#settlement-county-fort')).toBeFocused();
+});
+
+test('locked upgrades stay visible and technology Back returns to the noncapital fort site',
+  async function ({ page }) {
+    const setup = await page.evaluate(function () {
+      const s = FB.state, p = s.player, pid = 'york';
+      p.tier = 5; p.liege = null; p.provs = [p.provinceId, pid]; p.gold = 10000;
+      s.owner[pid] = s.holder[pid] = 'player'; s.dev[pid] = 10; s.wars = {};
+      FB.foundPlayerRealm(s);
+      const tech = FB.realmTechRecord(s);
+      tech.completed = tech.completed.filter(function (id) { return id !== 'stone_castles'; });
+      s.buildings[pid] = [{ s:1, id:'walls', level:2 }];
+      FB.invalidateFortIndex(); FB.invalidateSettlementLordships(s);
+      FB.ui.showSettlement(pid, 1);
+      return { name:FB.settlementsOf(s, pid)[1].name, gold:p.gold };
+    });
+    const locked = page.locator('#gm-body [data-fort-tech="stone_castles"]');
+    await expect(locked).toBeVisible();
+    await expect(page.locator('.fort-asset-row .settcard-details')).toBeHidden();
+    await locked.focus();
+    const scroll = await page.locator('#gm-body').evaluate(function (body) { return body.scrollTop; });
+    await page.keyboard.press('Enter');
+    await expect(page.locator('#gm-title')).toContainText('Stone Castles');
+    await page.locator('#tech-back').click();
+    await expect(page.locator('#gm-title')).toContainText(setup.name);
+    await expect(locked).toBeFocused();
+    expect(await page.locator('#gm-body').evaluate(function (body) { return body.scrollTop; })).toBe(scroll);
+    expect(await page.evaluate(function () { return FB.state.player.gold; })).toBe(setup.gold);
+  });
 
 test('ruined forts restore their recorded tier after paid work without repeating prestige', async function ({ page }) {
   const result = await page.evaluate(function () {

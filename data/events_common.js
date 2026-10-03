@@ -671,7 +671,9 @@ FBDATA.events.push(
         effects:{ rivalContact:{role:'rival', score:1, cause:'inherited'} } } }
   ]},
 { id:'friend_in_need', title:'A Friend in Need',
-  trigger:{ societalRoles:['serf','commoner','gentry'], chance:0.15, hasRole:'friend', goldMin:5 }, weight:5, cooldown:12,
+  participants:[{ slot:'friend', source:'role', role:'friend', required:true }],
+  trigger:{ societalRoles:['serf','commoner','gentry'], chance:0.15, hasRole:'friend', goldMin:5, custom:'friend_lowborn_valid' }, weight:5, cooldown:12,
+  contextValidator:'friend_lowborn_valid',
   text:'{friend} comes to you at dusk, shame-faced. A debt is due, and the collector is not a patient man.',
   options:[
     { label:'Pay it. ({money:5})', desc:'A debt forgotten is a friend kept.', effects:{ gold:-5, opinion:{role:'friend', amt:25}, prestige:3 } },
@@ -679,6 +681,7 @@ FBDATA.events.push(
   ]},
 
 { id:'sworn_aid', title:'The Oath Remembered',
+  participants:[{ slot:'friend', source:'role', role:'friend', required:true }],
   trigger:{ societalRoles:['serf','commoner','gentry'], flags:['sworn_friend'], hasRole:'friend', goldMax:3, chance:0.4 }, weight:12, cooldown:12,
   text:'Word of your hard times reaches {friend}. The oath you swore was not words only: they arrive with a purse and no speeches.',
   options:[
@@ -686,6 +689,7 @@ FBDATA.events.push(
     { label:'Refuse, with thanks.', desc:'Pride costs more than coin, and feeds less.', effects:{ prestige:3, opinion:{role:'friend', amt:10} } }
   ]},
 { id:'devoted_friend', title:'A Friend’s Warning',
+  participants:[{ slot:'friend', source:'role', role:'friend', required:true }],
   trigger:{ hasRole:'friend', roleOpinionAbove:{role:'friend', value:60}, chance:0.2 }, weight:6, cooldown:12,
   text:'{friend} catches you alone at dusk, glancing over a shoulder. “You have enemies, and I hear things. Watch your back — and take this. You would do the same for me.”',
   options:[

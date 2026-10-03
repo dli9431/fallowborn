@@ -225,6 +225,14 @@ The settlement-scoped `walls` id is the county's one strategic fortification rat
 an ordinary repeatable building. It is deliberately absent from Raise Next and autobuild:
 the player opens an exact settlement sheet and raises the next tier there. The four
 sequential tiers are Ringwork, Towered Stronghold, Stone Castle, and Concentric Fortress.
+The fort card keeps its next tier, quote, duration, requirements and action visible;
+siege calculations remain in Details. Every fort action carries the exact county and
+settlement, and tooltip delegation handles only tooltip copies, so an inline action
+cannot also trigger a capital fallback. Other settlements in a directly held county
+link to the fort's physical site, including the county seat of legacy saves and ruins.
+Fort reviews name the settlement and county and return to that site with its scroll,
+expanded details and focus retained.
+This is a navigation and presentation fix; the existing technology gates are unchanged.
 They cost 120/220/400/750 gold up front, take 2/3/5/8 seasons, cost 2/4/8/14 gold each
 season after completion, retain 40/80/140/220 men from the field levy, award
 10/25/60/150 prestige once, and grant 5%/10%/15%/20% defense in that county.

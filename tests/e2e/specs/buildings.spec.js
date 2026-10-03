@@ -470,7 +470,7 @@ test('deeds icon grid includes every held settlement including empty sites',
     await expect(page.locator('#gm-title')).toContainText(names.homeSettlement);
   });
 
-test('settlement modal encapsulates fort siege details and upgrade actions inside the fort info tooltip',
+test('settlement modal keeps fort upgrades visible and siege details behind disclosure',
   async function ({ page }, testInfo) {
     await openGame(page, testInfo);
     await startDeterministicGame(page);
@@ -496,14 +496,16 @@ test('settlement modal encapsulates fort siege details and upgrade actions insid
 
     await expect(page.locator('#gm-title')).toContainText(setup.settlement);
 
-    // fort card is compact; siege burden and upgrade actions are inside the hidden details
+    // Upgrade requirements are visible without opening the supplementary siege details.
     const fortCard = page.locator('#gm-body .fort-asset-row');
     await expect(fortCard).toBeVisible();
     const fortDetails = fortCard.locator('.settcard-details');
     await expect(fortDetails).toBeHidden();
     await expect(fortCard.locator('.fort-detail')).toBeHidden();
+    await expect(fortCard.locator('.fort-next-tier')).toBeVisible();
+    await expect(fortCard.locator('[data-fort-tech="stone_castles"]')).toBeVisible();
 
-    // clicking ? reveals the siege burden, next tier, and upgrade/tech actions
+    // Clicking ? reveals the supplementary siege burden.
     const fortInfo = fortCard.locator('.settcard-info');
     await fortInfo.click();
     await expect(fortDetails).toBeVisible();
@@ -616,7 +618,7 @@ test.describe('building ledger keyboard and tooltip access', function () {
       }
     });
 
-  test('tooltip remains interactive on hover and buttons inside tooltip can be clicked',
+  test('fort tooltip remains open on hover while upgrade requirements are accessible on the card',
     async function ({ page }, testInfo) {
       await openGame(page, testInfo);
       await startDeterministicGame(page);
@@ -661,8 +663,8 @@ test.describe('building ledger keyboard and tooltip access', function () {
       expect(boundsAfter.width).toBeCloseTo(widthBefore, 1);
       expect(boundsAfter.bottom).toBeLessThanOrEqual(boundsAfter.vh);
 
-      // clicking a technology requirement button inside the tooltip opens the tech sheet
-      const techBtn = tip.locator('button[data-fort-tech]');
+      // The technology requirement stays on the card face, outside the tooltip.
+      const techBtn = fortCard.locator('button[data-fort-tech]');
       await expect(techBtn).toBeVisible();
       await techBtn.click();
 

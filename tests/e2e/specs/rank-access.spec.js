@@ -56,7 +56,7 @@ test('warm ruler contacts retain class distance and a serf needs exceptional Sta
     friendMultiplier:0.25, ordinaryThreshold:40, ordinaryReady:true });
 });
 
-test('Standing Surety excludes the local ruler and invalidates previously queued testimony', async function ({ page }) {
+test('Standing Surety excludes all rulers and invalidates previously queued testimony', async function ({ page }) {
   const result = await page.evaluate(function () {
     const s = FB.state, p = s.player, pid = p.provinceId;
     p.tier = 0;
@@ -92,7 +92,7 @@ test('Standing Surety excludes the local ruler and invalidates previously queued
       unchanged:JSON.stringify(before) === JSON.stringify({ gold:p.gold,
         prestige:p.prestige, standing:ordinary.opinion, rng:FB.getRngState() }) };
   });
-  expect(result).toEqual({ localBlocked:true, localStale:true, foreignEligible:true, eligible:true,
+  expect(result).toEqual({ localBlocked:true, localStale:true, foreignEligible:false, eligible:true,
     promotedStale:true, rejected:true, unchanged:true });
 });
 

@@ -5216,20 +5216,18 @@ window.FB = window.FB || {};
           hideTipImmediately();
           return;
         }
-        const fortTech = e.target.closest('[data-fort-tech]');
+        const fortTech = e.target.closest('#tooltip [data-fort-tech]');
         if (fortTech && fortTech.dataset.fortTech) {
           hideTipImmediately();
-          const bpid = fortTech.dataset.fortPid || (FB.state && FB.state.player && FB.state.player.provinceId);
-          const bidx = fortTech.dataset.fortIdx !== undefined ? Number(fortTech.dataset.fortIdx) : 0;
-          UI.showTechDetail(fortTech.dataset.fortTech, function () {
-            UI.showSettlement(bpid, bidx);
-          });
+          const bpid = fortTech.dataset.fortPid;
+          const bidx = Number(fortTech.dataset.fortIdx);
+          UI.showFortTechnology(bpid, bidx, fortTech.dataset.fortTech);
           return;
         }
-        const fortStart = e.target.closest('[data-fort-start]');
+        const fortStart = e.target.closest('#tooltip [data-fort-start]');
         if (fortStart && fortStart.dataset.fortStart) {
-          const pid = fortStart.dataset.fortPid || (FB.state && FB.state.player && FB.state.player.provinceId);
-          const idx = fortStart.dataset.fortIdx !== undefined ? Number(fortStart.dataset.fortIdx) : 0;
+          const pid = fortStart.dataset.fortPid;
+          const idx = Number(fortStart.dataset.fortIdx);
           const targetLevel = Number(fortStart.dataset.fortStart);
           hideTipImmediately();
           UI.showFortProject(pid, idx, targetLevel);

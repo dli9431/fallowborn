@@ -131,7 +131,9 @@ FBDATA.events.push(
     { label:'Guard the {temple} door.', desc:'No coin in it, but the priests will remember.', effects:{ piety:12, prestige:6, opinion:{role:'priest', amt:10} } }
   ]},
 { id:'wardeath_friend', title:'An Empty Place at the Fire',
-  trigger:{ professions:['soldier'], flags:['seen_battle'], hasRole:'friend', chance:0.15 }, wartime:true, weight:5, once:true,
+  participants:[{ slot:'friend', source:'role', role:'friend', required:true }],
+  trigger:{ professions:['soldier'], flags:['seen_battle'], hasRole:'friend', custom:'friend_lowborn_valid', chance:0.15 }, wartime:true, weight:5, once:true,
+  contextValidator:'friend_lowborn_valid',
   text:'{friend} does not answer the roll. You find them at last among the rows of the dead, looking almost surprised.',
   options:[
     { label:'Dig the grave yourself.', desc:'Hard labor, and a little peace beside it.', effects:{ killRole:'friend', piety:5, health:-1, log:'Buried a friend after battle.' } },

@@ -1,6 +1,22 @@
 # Events are data
 
-Standing Surety keeps its ordinary friend testimony story, but excludes a friend who holds the event's county, an overlord in that county's liege chain, or the player's local settlement lordship. The custom trigger and context validator share the same read-only authority check. The friend is an exact required role participant. Queued events and open decisions revalidate before resolution, so acquiring local authority invalidates the old testimony without consuming rewards or RNG. This eligibility correction adds no technology dependency.
+Friend stories check the friend's own station independently of the player's tier.
+A Friend in Need, Standing Surety, and the enlisted-companion death story require
+a living Lowborn or Freeholder friend and exclude every reigning ruler, including
+foreign rulers and records whose personal station has not caught up with their title.
+Standing Surety retains its additional local-authority exclusions. These stories
+bind an exact required friend and recheck eligibility before display or resolution;
+promotion or replacement expires the old decision without rewards, deaths, or RNG.
+The Oath Remembered and A Friend's Warning remain suitable at every station and
+also bind the original friend, so aid never redirects to a replacement.
+
+The swarm's optional shared-work choice requires a local Lowborn or Freeholder
+friend. Its other choices remain available without a suitable friend; manual and
+automated resolution reject stale requests for help. Local neighbor and witness
+selectors also exclude Gentry, nobles, royalty, and reigning rulers before choosing
+from friends, rivals, contacts, or kin. Flight assistance keeps its existing local
+friend/rival rules: a higher-status friend can credibly help someone escape.
+These casting corrections add no capability or technology dependency.
 
 `household_service_duty` is explicitly queued after each 180 completed working
 days. Its localized forms follow the service path; exact saved protagonist,

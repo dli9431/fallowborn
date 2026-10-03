@@ -527,7 +527,9 @@ selection reuses an eligible local friend, rival, cultivated contact, or witness
 before materializing the one bounded `state.roles.notable` fallback. That notable is
 an adult local peer (station 0 for a serf household and never above station 1 later),
 persists under the ordinary residence and death rules, and appears in Network as a
-Neighbor only after being created. A neighbor selector excludes kin and authority
+Neighbor only after being created. Neighbor and witness selectors require Lowborn
+or Freeholder station and exclude all reigning rulers, including foreign rulers.
+A neighbor selector excludes kin and authority
 roles; a witness selector may additionally reuse an eligible resident manageable
 relative. Events never generate a friend or rival, and changing an office does not
 silently substitute a new holder for an already bound participant.

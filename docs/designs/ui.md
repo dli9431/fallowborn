@@ -996,9 +996,10 @@ charter, tenure, political terms, council office, and exceptional levy into the
 details. On desktop (fine pointer, wider than 1100 px and taller than 520 px) the `?`
 button stays hidden and hovering or focusing the card opens the shared `#tooltip`
 side panel just right of the card (flipping left near the viewport edge); the pointer
-may move onto the tooltip without closing it, so buttons rendered inside it — the
-fort card's `data-fort-tech` technology link and `data-fort-start` construction
-button — stay clickable from the tooltip itself. Every shared tooltip uses Georgia,
+may move onto the tooltip without closing it, so any supplementary controls rendered
+inside it stay clickable. Fort upgrade and requirement actions stay visible on the
+card face alongside the next tier and its quote; the siege audit and supporting terms move into
+Details. Every shared tooltip uses Georgia,
 14 px primary copy, and 13 px supporting copy with one line-height, spacing rhythm,
 and semantic palette: gold for headings, green for benefits, rose for danger, and
 the configured helper color for context. Copied disclosure HTML keeps its source
@@ -2915,6 +2916,13 @@ and the next sequential tier. Those owned sheets provide keyboard-focusable, mob
 project and demolition controls; commoner and foreign sheets omit county building and
 fortification information. A locked tier stays visible to the holder and its action opens
 the exact technology detail.
+The next tier, current quote, duration and requirements stay on the fort card face
+with its action at every viewport size. Each construction/upgrade action carries
+its exact county and settlement; inline and tooltip handlers cannot both dispatch
+the same click. Other settlements in the directly held county expose a named link
+to the fort's actual site, including ruins, with Back retaining the originating
+sheet. Fort reviews name the settlement and county. Back and Escape preserve the site, scroll, expanded Details
+and action focus; technology Back retains the same origin.
 
 Labels reject
 deterministically on rectangle overlap in priority order (kind, head status,
@@ -2936,7 +2944,8 @@ development history move behind its hover/focus tooltip on desktop and inline de
 disclosure on touch/tablet layouts. The sheet shows matching household plots, manor, and
 enterprises when present. For the county's tier-3+ player holder, it also lists the
 buildings and ruins of the exact slot. Each building, ruin, or fort renders as a compact
-card with an icon, name, and one-line effect. Its concise stakes summary and description
+card with an icon, name, and one-line effect. Fort cards also keep the next-tier
+quote, requirements and action visible. Supplementary stakes and description
 sit behind a per-card details disclosure (a hover/focus tooltip on desktop, an inline tap
 toggle elsewhere, one or the other per layout), and demolition rides inside the owned
 card as an icon button. Authorization lives inside the sheet, so foreign, non-demesne,

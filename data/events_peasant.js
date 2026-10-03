@@ -1187,13 +1187,14 @@ FBDATA.events.push(
   ]},
 
 { id:'swarm_in_eaves', title:'A Swarm in the Eaves',
+  participants:[{ slot:'friend', source:'role', role:'friend' }],
   trigger:{ tierMax:2, minAge:16, seasons:[0,1], chance:0.1 }, weight:5, cooldown:16,
   text:'A cloud of bees settles beneath the eaves, heavy with promise and noise. Honey keeps; wax sells; stings swell.',
   options:[
     { label:'Hive them with smoke and patience.', desc:'Sweet gold hangs heavy — and stings.', chance:'swarm',
       success:{ text:'The queen settles into the basket. By autumn there is honey enough to sell.', effects:{ gold:5, skills:{ste:1} } },
       failure:{ text:'The swarm takes offense and then takes flight.', effects:{ health:-1 } } },
-    { label:'Ask {friend} to help.', require:{ hasRole:'friend' }, desc:'Shared work, shared honey, stronger friendship.', effects:{ gold:3, opinion:{role:'friend', amt:5} } },
+    { label:'Ask {friend} to help.', require:{ hasRole:'friend', custom:'friend_local_lowborn_valid' }, desc:'Shared work, shared honey, stronger friendship.', effects:{ gold:3, opinion:{role:'friend', amt:5} } },
     { label:'Give the first wax and honey to the {temple}.', desc:'The first sweetness goes to {god}.', effects:{ piety:6, opinion:{role:'priest', amt:5} } },
     { label:'Drive them away.', desc:'Some gifts are more trouble than honey.', effects:{ } }
   ]},

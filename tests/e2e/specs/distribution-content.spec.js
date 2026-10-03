@@ -26,6 +26,33 @@ async function restrictedBoot(page, testInfo) {
 }
 
 for (const distribution of ['standard', 'crazygames']) {
+  test(distribution + ' preserves friend station checks through the battle remembrance overlay', async function ({ page }, testInfo) {
+    if (distribution === 'crazygames') {
+      await page.addInitScript(function () { window.FB_DISTRIBUTION = 'crazygames'; });
+    }
+    await openGame(page, testInfo);
+    await startDeterministicGame(page);
+    const result = await page.evaluate(function () {
+      const s = FB.state, p = s.player;
+      p.profession = 'soldier'; p.flags.seen_battle = 1;
+      const friend = FB.makeCharacter(s, { name:'Campaign Friend',
+        born:s.date.year - 30, station:1, traitsN:0 });
+      s.roles.friend = friend.id;
+      const ev = FB.eventById('wardeath_friend');
+      const ctx = FB.eventContextFor(s, ev, {});
+      const eligible = FB.checkTrigger(s, ev.trigger, ctx);
+      friend.station = 2;
+      const before = JSON.stringify({ player:p, friend:friend, rng:FB.getRngState() });
+      const blocked = !FB.checkTrigger(s, ev.trigger, ctx);
+      const rejected = FB.resolveEventOption(s, ev, ev.options[1], ctx, { automated:true }) === false;
+      return { eligible:eligible, blocked:blocked, rejected:rejected,
+        unchanged:before === JSON.stringify({ player:p, friend:friend, rng:FB.getRngState() }) };
+    });
+    expect(result).toEqual({ eligible:true, blocked:true, rejected:true, unchanged:true });
+  });
+}
+
+for (const distribution of ['standard', 'crazygames']) {
   test(distribution + ' resolves the camp activity with its own mechanics', async function ({ page }, testInfo) {
     if (distribution === 'crazygames') {
       await page.addInitScript(function () { window.FB_DISTRIBUTION = 'crazygames'; });

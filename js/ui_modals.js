@@ -8482,7 +8482,7 @@ window.FB = window.FB || {};
       const next = FB.fortLevelDef(currentLevel + 1);
       const status = own
         ? FB.fortProjectStatus(s, pid, idx, currentLevel + 1) : null;
-      detailsHtml += '<div class="fort-next-tier"><b>' + esc(FB.T('Next: {fort}', {
+      h += '<div class="fort-next-tier"><b>' + esc(FB.T('Next: {fort}', {
         fort:fortName(s, currentLevel + 1)
       })) + '</b><span class="adesc">' + esc(FB.T(
         '{money:cost} upfront · {seasons} seasons · {upkeep} upkeep · {garrison} garrison · requires {technology}', {
@@ -8490,8 +8490,8 @@ window.FB = window.FB || {};
           garrison:next.garrison, technology:fortRequirementNames(s, next)
         })) + '</span></div>';
       if (own && status && status.ok) {
-        detailsHtml += '<button class="actionbtn fort-project-action" data-fort-start="' +
-          (currentLevel + 1) + '">🏰 ' + esc(FB.T('Begin {fort}…', {
+        h += '<button class="actionbtn fort-project-action" data-fort-start="' +
+          (currentLevel + 1) + '" data-fort-pid="' + esc(pid) + '" data-fort-idx="' + esc(idx) + '">🏰 ' + esc(FB.T('Begin {fort}…', {
             fort:fortName(s, currentLevel + 1)
           })) + '<span class="adesc">' + esc(FB.T(
             'Pay {money:cost} now; completes in {seasons} seasons.', {
@@ -8500,14 +8500,14 @@ window.FB = window.FB || {};
       } else if (own && status && status.reason === 'technology' &&
           status.missingTech.length) {
         for (const missingTech of status.missingTech) {
-          detailsHtml += '<button class="actionbtn fort-tech-action" data-fort-tech="' +
+          h += '<button class="actionbtn fort-tech-action" data-fort-tech="' +
             esc(missingTech) + '" data-fort-pid="' + esc(pid) + '" data-fort-idx="' + esc(idx) + '">' + esc(FB.T('Requires {technology}.', {
               technology:technologyName(s, missingTech)
             })) + '<span class="adesc">' +
             esc(FB.T('Open the technology entry.')) + '</span></button>';
         }
       } else if (own && status) {
-        detailsHtml += '<button class="actionbtn" disabled>' + esc(FB.T('Begin {fort}', {
+        h += '<button class="actionbtn" disabled>' + esc(FB.T('Begin {fort}', {
           fort:fortName(s, currentLevel + 1)
         })) + '<span class="adesc">' + esc(fortProjectReason(s, status, next)) +
           '</span></button>';
@@ -8524,7 +8524,9 @@ window.FB = window.FB || {};
     const def = FB.fortLevelDef(targetLevel);
     if (!status.ok || !def) return UI.showSettlement(pid, idx);
     const finish = fortDateText(s, status.completeTurn);
-    const body = '<div class="gm-body-text"><p>' + esc(FB.T(
+    const site = FB.settlementsOf(s, pid)[idx];
+    const body = '<div class="gm-body-text">' + kv('Settlement', esc(site.name)) +
+      kv('County', esc(FB.L(FB.world.byId[pid].name))) + '<p>' + esc(FB.T(
       'Pay {money:cost} now to begin {fort}. Work cannot be cancelled or refunded; it survives succession and conquest and completes {finish}.', {
         cost:status.cost, fort:fortName(s, targetLevel), finish:finish
       })) + '</p><p>' + esc(FB.T(
@@ -8536,14 +8538,49 @@ window.FB = window.FB || {};
         fort:fortName(s, targetLevel), cost:status.cost
       })) + '</button></div><button class="btn" id="fort-project-back">' +
       esc(FB.T('Back')) + '</button>';
-    openModal(FB.T('Raise {fort}?', { fort:fortName(s, targetLevel) }), body);
+    const returnToSettlement = settlementFortReturn(pid, idx);
+    openModal(FB.T('Raise {fort}?', { fort:fortName(s, targetLevel) }), body, {
+      historyView:true, historyBackRender:returnToSettlement
+    });
     $('fort-project-confirm').addEventListener('click', function () {
       if (FB.startFortProject(FB.state, pid, idx, targetLevel)) UI.refresh();
-      UI.showSettlement(pid, idx);
+      modalHistoryBack(returnToSettlement);
     });
     $('fort-project-back').addEventListener('click', function () {
-      UI.showSettlement(pid, idx);
+      modalHistoryBack(returnToSettlement);
     });
+  };
+
+  function settlementFortReturn(pid, idx) {
+    const root = $('gm-body');
+    const scroll = root.scrollTop;
+    const expanded = Array.prototype.map.call(root.querySelectorAll(
+      '.settcard-details:not(.hidden)'), function (detail) { return detail.id; });
+    const control = document.activeElement;
+    const start = control && control.getAttribute('data-fort-start');
+    const tech = control && control.getAttribute('data-fort-tech');
+    return function () {
+      UI.showSettlement(pid, idx);
+      expanded.forEach(function (id) {
+        const detail = $(id);
+        if (detail) detail.classList.remove('hidden');
+        $('gm-body').querySelectorAll('[aria-controls]').forEach(function (button) {
+          if (button.getAttribute('aria-controls') === id) button.setAttribute('aria-expanded', 'true');
+        });
+      });
+      const buttons = $('gm-body').querySelectorAll('[data-fort-start], [data-fort-tech]');
+      let focus = $('gm-cancel');
+      for (const button of buttons) {
+        if ((start && button.getAttribute('data-fort-start') === start) ||
+            (tech && button.getAttribute('data-fort-tech') === tech)) focus = button;
+      }
+      if (focus) focus.focus({ preventScroll:true });
+      $('gm-body').scrollTop = scroll;
+    };
+  }
+
+  UI.showFortTechnology = function (pid, idx, id) {
+    UI.showTechDetail(id, settlementFortReturn(pid, idx));
   };
 
   function settlementCommunityAxisHtml(s, communities, kind, dominantId) {
@@ -9079,7 +9116,8 @@ window.FB = window.FB || {};
           technology:fortRequirementNames(s, firstFort)
         })) + '</span></div>';
       if (fortStatus.ok) {
-        h += '<button class="actionbtn fort-project-action" data-fort-start="1">🏰 ' +
+        h += '<button class="actionbtn fort-project-action" data-fort-start="1" data-fort-pid="' +
+          esc(pid) + '" data-fort-idx="' + esc(idx) + '">🏰 ' +
           esc(FB.T('Begin {fort}…', { fort:fortName(s, 1) })) + '</button>';
       } else if (fortStatus.reason === 'technology' && fortStatus.missingTech.length) {
         h += '<button class="actionbtn fort-tech-action" data-fort-tech="' +
@@ -9093,6 +9131,14 @@ window.FB = window.FB || {};
         })) + '<span class="adesc">' + esc(fortProjectReason(s, fortStatus, firstFort)) +
           '</span></button>';
       }
+    }
+    const countyFort = managesCounty && FB.fortAt(s, pid, true);
+    const countyFortSite = countyFort && FB.settlementsOf(s, pid)[countyFort.s];
+    if (countyFortSite && countyFort.s !== idx) {
+      h += '<button type="button" class="actionbtn" id="settlement-county-fort">🏰 ' +
+        esc(FB.T('Manage the county fort in {settlement}…', {
+          settlement:countyFortSite.name
+        })) + '</button>';
     }
     const localLocationId = FB.localFolkCurrentLocationId
       ? FB.localFolkCurrentLocationId(s) : null;
@@ -9266,18 +9312,19 @@ window.FB = window.FB || {};
     if (canRaise) {
       $('gm-raise').addEventListener('click', function () { UI.showBuildings(pid, idx); });
     }
-    document.querySelectorAll('[data-fort-start]').forEach(function (button) {
+    if ($('settlement-county-fort')) $('settlement-county-fort').onclick = function () {
+      UI.showSettlement(pid, countyFort.s, { historyView:true });
+    };
+    $('gm-body').querySelectorAll('[data-fort-start]').forEach(function (button) {
       button.addEventListener('click', function () {
         UI.showFortProject(pid, idx, Number(button.dataset.fortStart));
       });
     });
-    document.querySelectorAll('[data-fort-tech]').forEach(function (button) {
+    $('gm-body').querySelectorAll('[data-fort-tech]').forEach(function (button) {
       button.addEventListener('click', function () {
         const bpid = button.dataset.fortPid || pid;
         const bidx = button.dataset.fortIdx !== undefined ? Number(button.dataset.fortIdx) : idx;
-        UI.showTechDetail(button.dataset.fortTech, function () {
-          UI.showSettlement(bpid, bidx);
-        });
+        UI.showFortTechnology(bpid, bidx, button.dataset.fortTech);
       });
     });
     bindCardInfoToggles($('gm-body'));

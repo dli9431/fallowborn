@@ -10,8 +10,12 @@ window.FB = window.FB || {};
   G.bootReady = false;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-FB.VERSION = '1.188.3';
+FB.VERSION = '1.188.4';
 FB.CHANGELOG = [
+  { v: '1.188.4', date: '2026-10-03', changes: [
+    'Friend events now respect the friend’s station and keep pending choices tied to the original person.',
+    'Fort upgrade actions stay visible, target the selected settlement, and preserve the settlement view when returning.'
+  ] },
   { v: '1.188.3', date: '2026-10-02', changes: [
     'Ruined settlement buildings and forts can now be repaired from their settlement sheets. Serfs need stronger relationships to befriend rulers, and local rulers no longer appear as defendants in Standing Surety.'
   ] },

@@ -1498,6 +1498,12 @@ may use `allowDead:true`. `participantCards` is an optional unique subset of dec
 Binding occurs only after selection. Exact caller/story ids are preserved; otherwise the
 engine considers local friend, rival, current personal attention, cultivated contacts in
 relationship order, manageable resident kin for witnesses, and the existing notable.
+Local neighbor and witness candidates must be Lowborn or Freeholders (station 0 or 1)
+and cannot be reigning realm rulers. This also applies to friends, rivals, cultivated
+contacts, and witness kin; the flight-contact source retains its separate local rules.
+Core friend debt, surety, and enlisted-companion death stories additionally use
+read-only station/authority custom triggers and context validators. Friendship itself,
+warnings, and sworn aid remain available across stations.
 The saved `ctx.participants` ids and optional normalized `ctx.participantKinds` never reroll
 on reopen, restore, preview, or autoresolve. A required participant who dies, moves, loses
 their required authority, or belongs to a previous protagonist expires the event before a

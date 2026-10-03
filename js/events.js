@@ -1576,8 +1576,13 @@ window.FB = window.FB || {};
       FB.characterResidence(state, c) === homeId);
   }
 
+  function eventLowbornCharacter(state, c) {
+    return !!(c && !c.dead && FB.stationOf(c) < 2 &&
+      !FB.realmIdForRulerCharacter(state, c));
+  }
+
   function participantSelectorEligible(state, c, source, homeId) {
-    if (!c || c.dead || c.id === state.player.charId ||
+    if (!eventLowbornCharacter(state, c) || c.id === state.player.charId ||
         FB.ageOf(c, state.date.year) < 16 ||
         !participantResident(state, c, homeId)) return false;
     const roles = state.roles || {};
@@ -11964,6 +11969,8 @@ window.FB = window.FB || {};
             (option.effects.custom === 'freedom_accept_offer' ||
              option.effects.custom === 'rank_elevation_claim' ||
              option.effects.custom === 'military_settlement_grant') &&
+            !optionStatus.ready) ||
+          (option.require && option.require.custom === 'friend_local_lowborn_valid' &&
             !optionStatus.ready)) return false;
     }
 
@@ -12484,9 +12491,10 @@ window.FB = window.FB || {};
     return !!FB.formalizeAttentionFriend(state);
   };
   FB.fns.friend_vouch_valid = function (state, ctx) {
-    const friend = FB.eventParticipant(state, ctx, 'friend') ||
-      FB.getRole(state, 'friend', false);
-    if (!friend) return false;
+    const friend = ctx && ctx.participants
+      ? FB.eventParticipant(state, ctx, 'friend')
+      : FB.getRole(state, 'friend', false);
+    if (!eventLowbornCharacter(state, friend)) return false;
     const pid = ctx && ctx.locationId || state.player.provinceId;
     const holder = FB.settlementCountyHolder(state, pid);
     const ruler = FB.realmIdForRulerCharacter(state, friend);
@@ -12497,6 +12505,19 @@ window.FB = window.FB || {};
     const slot = state.player.homeSettlement;
     const barony = typeof slot === 'number' && FB.settlementLordship(state, pid, slot);
     return !barony || barony.holderId !== friend.id;
+  };
+  FB.fns.friend_lowborn_valid = function (state, ctx) {
+    const friend = ctx && ctx.participants
+      ? FB.eventParticipant(state, ctx, 'friend')
+      : FB.getRole(state, 'friend', false);
+    return eventLowbornCharacter(state, friend);
+  };
+  FB.fns.friend_local_lowborn_valid = function (state, ctx) {
+    const friend = ctx && ctx.participants
+      ? FB.eventParticipant(state, ctx, 'friend')
+      : FB.getRole(state, 'friend', false);
+    return eventLowbornCharacter(state, friend) &&
+      participantResident(state, friend, participantHome(state, ctx));
   };
   FB.fns.friendship_kindled_ready = function (state) {
     const c = FB.attentionFriendCandidate(state);
