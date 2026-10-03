@@ -8,7 +8,7 @@ FBDATA.events = FBDATA.events || [];
 FBDATA.events.push(
 
 /* ================= GENTRY (tier 2) ================= */
-{ id:'tournament_invitation', title:'An Invitation to the Lists',
+{ id:'tournament_invitation', systems:['tournaments'], title:'An Invitation to the Lists',
   trigger:{ never:true },
   weight:8, cooldown:12,
   text:{ default:'Word rides ahead of the heralds: {lord} proclaims a tourney for the dry roads — bright harness, blunted lances, a melee for the young swords, and a champion’s purse. Every ambitious blade in the province means to be there. Will you ride in the lists?',
@@ -52,7 +52,7 @@ FBDATA.events.push(
   ]},
 
 /* ================= LANDED (tier 3+) ================= */
-{ id:'tournament_invitation_lord', title:'A Great Tourney',
+{ id:'tournament_invitation_lord', systems:['tournaments'], title:'A Great Tourney',
   trigger:{ never:true },
   weight:6, cooldown:16,
   text:{ default:'{lord} proclaims a great tourney and begs the honor of your presence: two days of lances when the spring roads dry, a melee for the young swords, and a champion’s purse of {money:40}. Landless knights and lords’ heirs will ride from three provinces away. Will you enter the lists?',
@@ -97,14 +97,14 @@ FBDATA.events.push(
 );
 
 FBDATA.events.push(
-  { id:'scheduled_games_invitation', title:'Games on the Calendar', trigger:{never:true},
+  { id:'scheduled_games_invitation', systems:['tournaments'], title:'Games on the Calendar', trigger:{never:true},
     contextValidator:'scheduled_games_valid',
     text:'{tournamentHost} has funded games at {venue}. The calendar gives the dates, admission terms and funded purses.',
     options:[
       {label:'Review the gathering.', effects:{custom:'scheduled_games_open'}},
       {label:'Leave it on the calendar.', effects:{}}
     ] },
-  { id:'scheduled_games_round', title:'The Next Round', trigger:{never:true},
+  { id:'scheduled_games_round', systems:['tournaments'], title:'The Next Round', trigger:{never:true},
     contextValidator:'scheduled_games_valid',
     text:'Round {roundNumber} at {venue}. Your preparation, individual skill, health and fatigue face a named field. Balanced tactics carry a {injuryRisk}% injury risk, including a {severeRisk}% chance of a severe wound. Severe wounds can be fatal.',
     desc:'Conservative tactics reduce fatigue and injury risk. Aggressive tactics increase performance, fatigue and risk. Assisting a teammate is useful in the team melee. There is no land or army-size bonus. Unanswered rounds use conservative tactics the following day.',
@@ -121,6 +121,7 @@ FBDATA.events.push(
 FBDATA.events.push(
 {
   "id": "scheduled_games_rival",
+  "systems": ["tournaments"],
   "title": "A Familiar Challenger",
   "text": "At {venue}, a competitor remembers your last meeting. There is time for a civil exchange before the next activity.",
   "trigger": {
@@ -152,6 +153,7 @@ FBDATA.events.push(
 },
 {
   "id": "scheduled_games_equipment",
+  "systems": ["tournaments"],
   "title": "A Fraying Strap",
   "text": "A fastening needs attention before the next activity at {venue}. Hurrying saves practice time but leaves you tired.",
   "trigger": {
@@ -183,6 +185,7 @@ FBDATA.events.push(
 },
 {
   "id": "scheduled_games_result",
+  "systems": ["tournaments"],
   "title": "A Contested Result",
   "text": "Voices rise around the judges at {venue}. You can hear the other side or press your own account before returning to the games.",
   "trigger": {
@@ -214,6 +217,7 @@ FBDATA.events.push(
 },
 {
   "id": "scheduled_games_injury",
+  "systems": ["tournaments"],
   "title": "At the Treatment Tent",
   "text": "A hard fall brings you to the treatment tent at {venue}. A pause may spare you further fatigue.",
   "trigger": {
@@ -245,6 +249,7 @@ FBDATA.events.push(
 },
 {
   "id": "scheduled_games_commission",
+  "systems": ["tournaments"],
   "title": "A Prestigious Commission",
   "text": "The stewards at {venue} ask for careful work. Your signed contract remains fixed; reputation depends on how you complete it.",
   "trigger": {
@@ -276,6 +281,7 @@ FBDATA.events.push(
 },
 {
   "id": "scheduled_games_recruitment",
+  "systems": ["tournaments"],
   "title": "An Offer of Service",
   "text": "A visiting household at {venue} asks about your experience. A patient introduction may lead to future service, without binding you to a new profession.",
   "trigger": {
@@ -307,6 +313,7 @@ FBDATA.events.push(
 },
 {
   "id": "scheduled_games_patron",
+  "systems": ["tournaments"],
   "title": "An Introduction to a Patron",
   "text": "A guest offers an introduction to {tournamentHost}. You can make time for the meeting or remain intent on preparation.",
   "trigger": {
@@ -338,6 +345,7 @@ FBDATA.events.push(
 },
 {
   "id": "scheduled_games_celebration",
+  "systems": ["tournaments"],
   "title": "The Closing Celebration",
   "text": "The last evening at {venue} brings competitors and workers together. There is time to recover and remember the people met here.",
   "trigger": {
@@ -369,6 +377,7 @@ FBDATA.events.push(
 },
 {
   "id": "scheduled_games_preparation",
+  "systems": ["tournaments"],
   "title": "A Dispute over Preparations",
   "text": "At {venue}, the stewards disagree about access to the field. Your instructions can protect local goodwill.",
   "trigger": {
@@ -400,6 +409,7 @@ FBDATA.events.push(
 },
 {
   "id": "scheduled_games_field",
+  "systems": ["tournaments"],
   "title": "Damage to the Field",
   "text": "Rain and traffic have damaged the field at {venue}. The workforce awaits instructions about the remaining preparations.",
   "trigger": {
@@ -431,6 +441,7 @@ FBDATA.events.push(
 },
 {
   "id": "scheduled_games_security",
+  "systems": ["tournaments"],
   "title": "Security at the Games",
   "text": "The guards at {venue} report a quarrel among arriving guests. The manner of your response will be remembered.",
   "trigger": {

@@ -4671,6 +4671,7 @@ window.FB = window.FB || {};
       UI.setMarketLens(!FB.map.marketGood);
     });
     $('btn-events').addEventListener('click', function () {
+      if (!FB.systemEnabled(FB.state, 'tournaments')) return;
       FB.map.eventsOverlay = !FB.map.eventsOverlay;
       this.setAttribute('aria-pressed', String(FB.map.eventsOverlay));
       this.classList.toggle('on', FB.map.eventsOverlay);

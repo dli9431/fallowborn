@@ -454,7 +454,7 @@ FBDATA.religions = {
   catholic: { name:'Latin Christianity', group:'christian',
     relationToParent:'schismatic', icon:'✝',
     properties:{
-      systems:{ papacy:true },
+      systems:{ papacy:true, excommunication:true },
       religiousPaths:{
         lay:'catholic_lay',
         professions:{ monk:'catholic_monastic', priest:'catholic_clerical' }

@@ -1342,3 +1342,7 @@ See [abbeys.md](abbeys.md) for the separate technology decisions and lifecycle.
 
 
 Scheduled games retain bounded protagonist circuit totals and at most eight recurring contact snapshots, without a permanent career. Major victories and completed hosting add tournament and games_hosted life facts. Individual performance uses skills, traits, worn equipment, health and fatigue; acreage and troop numbers confer no bonus. Tournament health damage uses ordinary health effects, and skill gain is capped to one per completed edition. See tournaments.md.
+
+Optional trait requirements
+
+A trait's system requirements apply before random selection, inheritance, acquisition, progress, effect aggregation and chip rendering. A saved disabled trait stays in the record but contributes no effects and is omitted from character UI. Excommunicated requires excommunication. See docs/designs/systems.md.

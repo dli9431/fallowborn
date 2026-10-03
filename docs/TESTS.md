@@ -564,3 +564,7 @@ station-ladders.spec.js adds 867/1066 eight-band eligibility and restore checks,
 Faith-id allowance
 
 faith-id-ratchet.spec.js scans exact engine string literals against the registered faith ids. tests/e2e/fixtures/engine-ids/faith-id-allowlist.json records each remaining file/id count and its reason. Only durable message selectors, existing legal strategy identifiers and authored historical actor identities remain allowed. Both new uses and stale allowances fail. religious-head-strategies.spec.js covers seeded parity, independent data-only offices, character succession, save restoration, custom costs, contested-office persistence and inherited tradition overrides.
+
+Systems availability coverage
+
+systems-availability.spec.js covers layer precedence, generated faith inheritance, pure reads, unknown requirements, 867/1066 membership, disabled actions and event options, dormant records, lifecycle scheduling and restore. tests/e2e/fixtures/systems-476.json is the declarative 476 absence baseline. The intentional 476 disable set changes the generated world and RNG trajectory, so the owner must recapture fresh-476-federate_476 with the existing parity:capture workflow and review those differences. Preserve all 867 and 1066 parity snapshots for comparison. The shared parity snapshot helper is unchanged.

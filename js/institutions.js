@@ -40,11 +40,12 @@ window.FB = window.FB || {};
   }
   FB.electionDef = electionDef;
 
-  FB.electionList = function () {
+  FB.electionList = function (state) {
     var out = [];
     var defs = FBDATA.elections || {};
     for (var id in defs) {
       if (!own(defs, id) || !electionDef(id)) continue;
+      if (state && !FB.systemContentEnabled(state, defs[id])) continue;
       out.push({ id:id, def:defs[id] });
     }
     out.sort(function (a, b) {
@@ -60,11 +61,12 @@ window.FB = window.FB || {};
   }
   FB.privilegeDef = privilegeDef;
 
-  FB.privilegeList = function () {
+  FB.privilegeList = function (state) {
     var out = [];
     var defs = FBDATA.privileges || {};
     for (var id in defs) {
       if (!own(defs, id) || !privilegeDef(id)) continue;
+      if (state && !FB.systemContentEnabled(state, defs[id])) continue;
       out.push({ id:id, def:defs[id] });
     }
     out.sort(function (a, b) {
@@ -168,6 +170,7 @@ window.FB = window.FB || {};
   }
 
   function expireGuildTerms(state, store, silent) {
+    if (!FB.systemAvailable(state, 'guild_elections')) return;
     for (var key in store.guildScopes) {
       if (!own(store.guildScopes, key)) continue;
       var scope = store.guildScopes[key];
@@ -187,6 +190,7 @@ window.FB = window.FB || {};
         var valid = validTerm(term);
         if (valid && term.holderKind === 'character') {
           var holder = state.chars[term.holderId];
+          if (holder && !FB.systemEnabled(state, 'guild_elections', { character:holder })) continue;
           var current = holder && !holder.dead ? guildCurrentScope(state, holder) : null;
           valid = !!(current && current.key === key);
         }
@@ -207,6 +211,7 @@ window.FB = window.FB || {};
   }
 
   function grandfatherGuildTerms(state, store) {
+    if (!FB.systemAvailable(state, 'guild_elections')) return;
     if (!FB.householdWorkers || !FB.careerOf) return;
     /* Cheap probe before the household-wide character scans: an officer rank
        only ever exists on an already-created career record (elections set it
@@ -228,6 +233,7 @@ window.FB = window.FB || {};
     for (var i = 0; i < workers.length; i++) {
       var c = workers[i];
       if (!c || c.dead) continue;
+      if (!FB.systemEnabled(state, 'guild_elections', { character:c })) continue;
       var current = guildCurrentScope(state, c);
       var career = current && current.career;
       if (!career || GUILD_ORDER[career.guildRank] < GUILD_ORDER.officer) continue;
@@ -261,6 +267,7 @@ window.FB = window.FB || {};
   }
 
   function electiveCouncilSeatIds(state) {
+    if (!FB.systemEnabled(state, 'royal_council')) return [];
     var record = activeOfficeConfirmationRecord(state);
     var def = record && privilegeDef(record.defId);
     var seats = def && def.effect && def.effect.seats;
@@ -278,6 +285,7 @@ window.FB = window.FB || {};
   }
 
   function ensureCouncilTerms(state, store) {
+    if (!FB.systemEnabled(state, 'royal_council')) return;
     var seats = electiveCouncilSeatIds(state);
     var council = state.council;
     if (!council || !council.seats) return;
@@ -300,6 +308,7 @@ window.FB = window.FB || {};
   }
 
   function expireCouncilTerms(state, store, silent) {
+    if (!FB.systemEnabled(state, 'royal_council')) return;
     var council = state.council;
     for (var seatId in store.councilTerms) {
       if (!own(store.councilTerms, seatId)) continue;
@@ -346,6 +355,8 @@ window.FB = window.FB || {};
 
   function activeElectionValid(state, active) {
     var def = active && electionDef(active.definitionId);
+    if (def && !FB.systemContentEnabled(state, def, active.kind === 'guild'
+        ? { character:active.candidateId } : undefined)) return false;
     if (!def || !active.id || active.kind !== def.kind ||
         active.office !== def.office || !isFinite(Number(active.startedTurn)) ||
         !isFinite(Number(active.expiresTurn))) return false;
@@ -379,6 +390,9 @@ window.FB = window.FB || {};
   }
 
   function expireActiveElection(state, store, silent) {
+    var definition = store.active && electionDef(store.active.definitionId);
+    if (definition && !FB.systemContentEnabled(state, definition, store.active.kind === 'guild'
+        ? { character:store.active.candidateId } : undefined)) return;
     var active = store.active;
     if (!active) return;
     if (activeElectionValid(state, active) &&
@@ -430,10 +444,13 @@ window.FB = window.FB || {};
 
   function baseGuildElectionStatus(state, c, definitionId) {
     var def = electionDef(definitionId);
+    if (!def || !FB.systemContentEnabled(state, def, { character:c })) {
+      return { ready:false, missing:[FB.T('No valid guild electorate is available.')] };
+    }
     var career = c && FB.careerOf ? FB.careerOf(state, c) : null;
     var current = c && guildCurrentScope(state, c);
     var missing = [];
-    if (!def || !career || !current || !FBDATA.careers[career.profession] ||
+    if (!career || !current || !FBDATA.careers[career.profession] ||
         !FBDATA.careers[career.profession].guild) {
       return { ready:false, missing:[FB.T('No valid guild electorate is available.')] };
     }
@@ -535,7 +552,9 @@ window.FB = window.FB || {};
 
   FB.guildElectionStep = function (state, c, step) {
     if (!step || (step.to !== 'officer' && step.to !== 'guildmaster')) return step;
+    if (!FB.systemEnabled(state, 'guild_elections', { character:c })) return null;
     var status = FB.guildElectionStatus(state, c, step.to);
+    if (!status.def) return null;
     var out = {};
     for (var key in step) if (own(step, key)) out[key] = step[key];
     out.election = true;
@@ -1253,6 +1272,7 @@ window.FB = window.FB || {};
   FB.privilegeSummary = function (state) {
     var records = privilegeStore(state, false).filter(function (record) {
       return !!(record && privilegeDef(record.defId) &&
+        FB.systemContentEnabled(state, privilegeDef(record.defId)) &&
         (!isFinite(Number(record.endTurn)) || state.turn < record.endTurn));
     }).map(function (record) {
       return {
@@ -1291,6 +1311,7 @@ window.FB = window.FB || {};
   };
 
   FB.hasPrivilege = function (state, defId, scopeId) {
+    if (!FB.systemContentEnabled(state, privilegeDef(defId))) return false;
     var records = privilegeStore(state, false);
     for (var i = 0; i < records.length; i++) {
       var record = records[i];
@@ -1303,7 +1324,7 @@ window.FB = window.FB || {};
 
   FB.privilegeGrantStatus = function (state, defId) {
     var def = privilegeDef(defId);
-    if (!def || !def.effect) {
+    if (!def || !def.effect || !FB.systemContentEnabled(state, def)) {
       return {
         ready:false,
         reason:FB.T('That privilege is not recognized.'),
@@ -2304,7 +2325,7 @@ window.FB = window.FB || {};
      proclamation never rewrites a county's faith or moves a population
      record. See docs/designs/council.md. */
 
-  function realmPolicyEntryList() {
+  function realmPolicyEntryList(state) {
     var out = [];
     var defs = FBDATA.policies || {};
     for (var id in defs) {
@@ -2313,6 +2334,7 @@ window.FB = window.FB || {};
       if (!def || typeof def !== 'object' || Array.isArray(def) ||
           def.institution !== 'crown' ||
           !Array.isArray(def.levels) || !def.levels.length) continue;
+      if (state && !FB.systemContentEnabled(state, def)) continue;
       out.push({ id:id, def:def });
     }
     out.sort(function (a, b) {
@@ -2366,6 +2388,10 @@ window.FB = window.FB || {};
       var id = entries[i].id;
       var def = entries[i].def;
       var record = store[id];
+      if (!FB.systemContentEnabled(state, def)) {
+        if (record) valid[id] = record;
+        continue;
+      }
       if (!record || typeof record !== 'object' || Array.isArray(record) ||
           !realmPolicyLevelDef(def, record.level)) {
         record = store[id] = { level:realmPolicyDefaultLevel(def) };
@@ -2389,14 +2415,16 @@ window.FB = window.FB || {};
   };
 
   FB.realmPolicyRecord = function (state, policyId) {
+    if (!FB.systemContentEnabled(state, FBDATA.policies[policyId])) return null;
     var store = realmPolicyStore(state, false);
     return (store && store[policyId]) || null;
   };
 
   FB.realmPolicyLevelId = function (state, policyId) {
+    if (!FB.systemContentEnabled(state, FBDATA.policies[policyId])) return null;
     var record = FB.realmPolicyRecord(state, policyId);
     if (record && typeof record.level === 'string') return record.level;
-    var entries = realmPolicyEntryList();
+    var entries = realmPolicyEntryList(state);
     for (var i = 0; i < entries.length; i++) {
       if (entries[i].id === policyId) {
         return realmPolicyDefaultLevel(entries[i].def);
@@ -2451,9 +2479,8 @@ window.FB = window.FB || {};
      itself carries the Chronicle notice. */
   FB.realmPolicySync = function (state) {
     if (!state || !state.player || !FB.world || !FB.world.byId) return;
-    var entries = realmPolicyEntryList();
-    if (!entries.length) return;
-    var managed = realmPolicyManagedModifierIds(entries);
+    var entries = realmPolicyEntryList(state);
+    var managed = realmPolicyManagedModifierIds(realmPolicyEntryList());
     var desired = {};
     if (FB.realmPolicyActive(state)) {
       var minority = null;
@@ -2525,12 +2552,12 @@ window.FB = window.FB || {};
      exact blocked reasons, the proclamation cost, and the protected-term
      warning when leaving a chartered level early. */
   FB.realmPolicyStatus = function (state, policyId, levelId) {
-    var entries = realmPolicyEntryList();
+    var entries = realmPolicyEntryList(state);
     var def = null;
     for (var i = 0; i < entries.length; i++) {
       if (entries[i].id === policyId) def = entries[i].def;
     }
-    if (!def) {
+    if (!def || !FB.systemContentEnabled(state, def)) {
       return { ready:false, reason:FB.T('That royal policy is not recognized.') };
     }
     var level = realmPolicyLevelDef(def, levelId);
@@ -2633,7 +2660,7 @@ window.FB = window.FB || {};
     var status = FB.realmPolicyStatus(state, policyId, levelId);
     if (!status.ready) return false;
     var store = repairRealmPolicies(state);
-    var entries = realmPolicyEntryList();
+    var entries = realmPolicyEntryList(state);
     var def = null;
     for (var i = 0; i < entries.length; i++) {
       if (entries[i].id === policyId) def = entries[i].def;
@@ -2690,7 +2717,7 @@ window.FB = window.FB || {};
   /* Locale-neutral, RNG-free projection for Governance and the royal-policy
      sheet; opening those surfaces never heals or writes simulation state. */
   FB.realmPolicySummary = function (state) {
-    var entries = realmPolicyEntryList();
+    var entries = realmPolicyEntryList(state);
     var policies = [];
     for (var i = 0; i < entries.length; i++) {
       var id = entries[i].id;
@@ -2750,7 +2777,7 @@ window.FB = window.FB || {};
      settler development growth of Encouraged Settlement. */
   FB.realmPolicySeason = function (state) {
     if (!FB.realmPolicyActive(state)) return;
-    var entries = realmPolicyEntryList();
+    var entries = realmPolicyEntryList(state);
     for (var i = 0; i < entries.length; i++) {
       var level = realmPolicyLevelDef(entries[i].def,
         FB.realmPolicyLevelId(state, entries[i].id));
@@ -2790,7 +2817,7 @@ window.FB = window.FB || {};
   FB.realmPolicyResearchFactor = function (state, realmId) {
     if (realmId !== 'player' || !FB.realmPolicyActive(state)) return 0;
     var factor = 0;
-    var entries = realmPolicyEntryList();
+    var entries = realmPolicyEntryList(state);
     for (var i = 0; i < entries.length; i++) {
       var level = realmPolicyLevelDef(entries[i].def,
         FB.realmPolicyLevelId(state, entries[i].id));
@@ -2804,7 +2831,7 @@ window.FB = window.FB || {};
      conserved migration itself is untouched. */
   FB.realmPolicySettlementAttraction = function (state) {
     if (!FB.realmPolicyActive(state)) return 0;
-    var entries = realmPolicyEntryList();
+    var entries = realmPolicyEntryList(state);
     for (var i = 0; i < entries.length; i++) {
       var level = realmPolicyLevelDef(entries[i].def,
         FB.realmPolicyLevelId(state, entries[i].id));

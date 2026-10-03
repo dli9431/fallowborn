@@ -277,3 +277,7 @@ These are rights of the house and survive a change of abbess. See [abbeys.md](ab
 Office strategy scope
 
 The detailed model resolves its office through head.succession papal_election rather than a named faith. FB.withPapalOffice selects an exact office for synchronous operations; FB.papacyState is a read-only lookup for that model. Additional offices store their model at state.religiousOfficeStates[officeId].papacy, while the original office keeps state.papacy. Daily, seasonal, yearly, death and territory hooks visit each office once. Colleges admit followers recognizing the selected office and obey its holderSex restriction. Restoration resolves the authored province or site seat. Queued petitions preserve religiousOfficeId so later decisions use the originating office. Existing election laws, name seeds and college tuning remain the shared strategy data in data/papacy.js.
+
+Availability boundary
+
+The papacy system gates initialization, restore repair, world hooks, office queries, player decisions and the Papacy sheet. A disabled Papacy creates no college and consumes no election RNG. Excommunication is a separate system: sentences, absolution, sanctioned traits and AI sanction rolls stop when it is disabled, while an enabled Papacy may continue its other work. Transfer and extinction callbacks tolerate an unavailable Papacy. Existing saved records remain dormant when their institution is disabled. See docs/designs/systems.md.

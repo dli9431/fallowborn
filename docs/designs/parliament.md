@@ -354,3 +354,7 @@ This baseline recovery capability has technology impact **none**.
 Government ladder membership
 
 parliamentActive asks sitsInEstates on the player's era/form ladder and independently requires a living immediate liege. The feudal data admits bands 3 to 5. Another form may admit different bands or no bands, without changing assembly code or equating membership with land ownership. Existing obligations, yearly agendas, policy technology gates and pending vote records retain their ordinary rules. This is an internal refactor, with no new technology gate.
+
+Availability boundary
+
+The estates system gates membership, assembly events, motions, policies and consent privileges. Scutage additionally requires the scutage system; a saved scutage vote supplies no silver-for-service entitlement while disabled. Policy listings and motion forecasts filter content requirements before calculating or presenting a vote. See docs/designs/systems.md.

@@ -53,3 +53,7 @@ All three new scripts are classic local scripts registered in index.html. Offlin
 Faith programme traditions
 
 Default programmes and their UI projection read the effective tournamentTradition property. furusiyya selects the existing mounted programme; other traditions retain the existing default. Descendants inherit the selector and may override it without changing their faith ancestry. Venue, technology, equipment and invitation qualifications are unchanged.
+
+Availability boundary
+
+The tournaments system gates scheduling, daily work, seasonal sampling, restore repair, invitations, Deeds, calendar sheets and the map Events control. World hooks use FB.systemAvailable, while host and participant eligibility use their own scopes. A disabled saved edition or annual intention remains dormant; it is not cancelled, charged or refunded. See docs/designs/systems.md.

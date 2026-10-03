@@ -1,0 +1,16 @@
+{
+  "disabled": [
+    "crown_bloc",
+    "excommunication",
+    "feudal_service",
+    "great_holy_wars",
+    "manorial_tenure",
+    "papacy",
+    "scutage",
+    "tournaments"
+  ],
+  "papacy": false,
+  "tenure": false,
+  "tournaments": false,
+  "crown": false
+}

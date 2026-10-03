@@ -470,12 +470,14 @@ FBDATA.localCouncilMotions = {
    on legacy vassals resolve to customary_service + hereditary in the engine. */
 FBDATA.feudalServiceCharters = {
   customary_service: {
+    systems:['feudal_service'],
     name:'Customary Service', icon:'📜',
     desc:'A balanced settlement of ordinary rents and military service.',
     taxShare:0.20, levyShare:0.15, standingBonus:0,
     breakawayMultiplier:1, extraordinaryTaxExempt:false
   },
   scutage_compact: {
+    systems:['feudal_service','scutage'],
     name:'Scutage Compact', icon:'💰',
     desc:'Cash replaces all ordinary military service.',
     requiresTech:'scutage',
@@ -483,12 +485,14 @@ FBDATA.feudalServiceCharters = {
     breakawayMultiplier:1, extraordinaryTaxExempt:false
   },
   host_duty: {
+    systems:['feudal_service'],
     name:'Host Duty', icon:'⚔',
     desc:'Maximum military service brings greater yearly breakaway pressure.',
     taxShare:0.05, levyShare:0.30, standingBonus:0,
     breakawayMultiplier:1.25, extraordinaryTaxExempt:false
   },
   charter_of_liberties: {
+    systems:['feudal_service'],
     name:'Charter of Liberties', icon:'🕊',
     desc:'Lower dues and legal exemptions buy lasting political security.',
     requiresTech:['customary_law','authenticated_seals'],
@@ -945,7 +949,7 @@ FBDATA.householdStandards = {
    permanent-home environment, settlement, and starting development. */
 FBDATA.tenureArchetypes = {
   latin_manorial: {
-    id: 'latin_manorial',
+    id: 'latin_manorial', systems:['manorial_tenure'],
     priority: 300,
     name: 'Manorial customary tenure',
     desc: 'A cottage and household strips held by custom in return for work and local dues.',
@@ -988,7 +992,7 @@ FBDATA.tenureArchetypes = {
     transitionTerms: { commutableDuties: ['week_work'] }
   },
   irrigated_fellah: {
-    id: 'irrigated_fellah',
+    id: 'irrigated_fellah', systems:['manorial_tenure'],
     priority: 300,
     name: 'Irrigated fellah tenure',
     desc: 'Household fields held through village custom, with shared waterwork and crop obligations.',
@@ -1018,7 +1022,7 @@ FBDATA.tenureArchetypes = {
     transitionTerms: { commutableDuties: ['irrigation_labor'] }
   },
   norse_coastal_service: {
-    id: 'norse_coastal_service',
+    id: 'norse_coastal_service', systems:['manorial_tenure'],
     priority: 550,
     name: 'Coastal household-service tenure',
     desc: 'A dependent household place held through shore work, boat service, and seasonal dues.',
@@ -1055,7 +1059,7 @@ FBDATA.tenureArchetypes = {
     }
   },
   pastoral_steppe: {
-    id: 'pastoral_steppe',
+    id: 'pastoral_steppe', systems:['manorial_tenure'],
     priority: 500,
     name: 'Pastoral dependent tenure',
     desc: 'A household place among the herds, held through pasture custom and seasonal service.',
@@ -1092,7 +1096,7 @@ FBDATA.tenureArchetypes = {
     }
   },
   woodland_dependence: {
-    id: 'woodland_dependence',
+    id: 'woodland_dependence', systems:['manorial_tenure'],
     priority: 450,
     name: 'Woodland customary tenure',
     desc: 'A household clearing held through woodland labor, seasonal dues, and limited customary use.',
@@ -1124,7 +1128,7 @@ FBDATA.tenureArchetypes = {
     transitionTerms: { commutableDuties: ['woodland_service'] }
   },
   pagan_household_service: {
-    id: 'pagan_household_service',
+    id: 'pagan_household_service', systems:['manorial_tenure'],
     priority: 300,
     name: 'Household-service tenure',
     desc: 'A dwelling and subsistence use held under the authority of a master’s household.',
@@ -1168,7 +1172,7 @@ FBDATA.tenureArchetypes = {
     }
   },
   dependent_farming: {
-    id: 'dependent_farming',
+    id: 'dependent_farming', systems:['manorial_tenure'],
     priority: 0,
     name: 'Dependent farming tenure',
     desc: 'A household holding used by local custom in return for labor and seasonal service.',

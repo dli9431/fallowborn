@@ -268,3 +268,7 @@ privilege. Fiscal concessions are ungated recovery (`fiscal_settlements`: **none
 Government ladder eligibility
 
 Built-in councilSeats declare station: mayHoldCouncil. Seat discovery asks that named permission on the player's own era/form ladder, so a council need not be tied to the sixth saved band. Older mod seats without station keep tierMin, interpreted through the ladder's eligibilityTier as well as mayHoldCouncil. Seat definitions may name another supported station meaning. No-state catalogue reads still return every seat. Existing appointment records, holder eligibility, confirmation, Standing and bonuses retain their normal rules. Changing a form immediately changes active seats without creating territorial ownership or rewriting the saved tier. This is an internal refactor, with no technology change.
+
+Availability boundary
+
+The royal_council system gates seats, office confirmation elections, formation, bonuses, yearly authority drift, council events and the Council sheet. Disabled offices supply no bonuses and old seats are not filled by repair. The estates and scutage systems separately control assembly motions and silver-for-service terms. A guild election can likewise exist only where guild_elections is enabled; ordinary guild membership and mastery remain career mechanics. See docs/designs/systems.md.

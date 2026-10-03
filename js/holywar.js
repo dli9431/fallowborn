@@ -14,16 +14,22 @@ window.FB = window.FB || {};
   }
 
   function config(state, religionId) {
+    if (!FB.systemEnabled(state, 'great_holy_wars', { faith:religionId })) return null;
     var religion = FB.religionOf(religionId, state);
     return religion && religion.head && religion.head.holderKind !== 'character' &&
       religion.head.greatHolyWar || null;
   }
 
   FB.greatHolyWarsEnabled = function (state) {
-    var bookmark = state && state.start && FB.bookmark
-      ? FB.bookmark(state.start.id) : FB.activeBookmark;
-    return !bookmark || bookmark.greatHolyWars !== false;
+    return FB.systemAvailable(state, 'great_holy_wars');
   };
+
+  function enabledCampaign(state) {
+    var campaign = state && state.greatHolyWar;
+    return campaign && FB.systemEnabled(state, 'great_holy_wars', {
+      faith:campaign.callingReligion, realm:campaign.callerRealm
+    }) ? campaign : null;
+  }
 
   function papalFaith(state, religionId) {
     return FB.faithHasSystem && FB.faithHasSystem(religionId, 'papacy', state);
@@ -140,7 +146,7 @@ window.FB = window.FB || {};
   }
 
   FB.addGreatHolyWarContribution = function (state, rid, points) {
-    var campaign = state && state.greatHolyWar;
+    var campaign = enabledCampaign(state);
     if (!campaign) return false;
     addContribution(state, campaign, rid, points);
     return true;
@@ -182,6 +188,8 @@ window.FB = window.FB || {};
   }
 
   FB.ensureGreatHolyWar = function (state) {
+    if (!FB.systemAvailable(state, 'great_holy_wars') ||
+        state && state.greatHolyWar && !enabledCampaign(state)) return null;
     if (!state) return null;
     ensureHistory(state);
     ensurePlayerState(state);
@@ -295,7 +303,7 @@ window.FB = window.FB || {};
   }
 
   FB.canCallGreatHolyWar = function (state, religionId, kingdomId, callerRealm) {
-    if (!FB.greatHolyWarsEnabled(state)) return false;
+    if (!FB.systemEnabled(state, 'great_holy_wars', { faith:religionId, realm:callerRealm })) return false;
     if (callerRealm === 'player' && FB.fiscalRestriction && FB.fiscalRestriction(state)) return false;
     if (!state || state.greatHolyWar || !config(state, religionId)) return false;
     if (callerRealm === 'player' && FB.intrigueCaptivityOf &&
@@ -519,7 +527,7 @@ window.FB = window.FB || {};
   };
 
   FB.greatHolyWarDesireTargets = function (state, kind) {
-    var campaign = state && state.greatHolyWar, out = [];
+    var campaign = enabledCampaign(state), out = [];
     if (!campaign) return out;
     if (kind === 'duchy') {
       var duchies = objectiveDuchies(campaign);
@@ -758,7 +766,7 @@ window.FB = window.FB || {};
   }
 
   FB.playerGreatHolyWarJoinCamp = function (state) {
-    var campaign = state && state.greatHolyWar;
+    var campaign = enabledCampaign(state);
     if (!campaign || campaign.phase !== 'preparation') return null;
     var camp = playerCompatibleCamp(state, campaign);
     return camp === 'attackers' && FB.fiscalRestriction && FB.fiscalRestriction(state) ? null : camp;
@@ -766,13 +774,13 @@ window.FB = window.FB || {};
 
   FB.playerGreatHolyWarCamp = function (state) {
     var pledge = state && state.player && state.player.greatHolyWar;
-    var campaign = state && state.greatHolyWar;
+    var campaign = enabledCampaign(state);
     return pledge && campaign && pledge.campaignId === campaign.id && !pledge.withdrawn
       ? pledge.camp : null;
   };
 
   FB.joinGreatHolyWar = function (state, camp, realmId, vowTerms) {
-    var campaign = state && state.greatHolyWar;
+    var campaign = enabledCampaign(state);
     if (!campaign || campaign.phase !== 'preparation') return false;
     realmId = realmId || 'player';
     if (realmId === 'player') {
@@ -889,7 +897,7 @@ window.FB = window.FB || {};
   };
 
   FB.withdrawGreatHolyWar = function (state) {
-    var campaign = state && state.greatHolyWar;
+    var campaign = enabledCampaign(state);
     var pledge = state && state.player.greatHolyWar;
     if (!campaign || !pledge || pledge.campaignId !== campaign.id || pledge.withdrawn) return false;
     var cost = FB.greatHolyWarWithdrawalCost(state);
@@ -916,7 +924,7 @@ window.FB = window.FB || {};
   };
 
   FB.renewGreatHolyWarVow = function (state) {
-    var campaign = state && state.greatHolyWar;
+    var campaign = enabledCampaign(state);
     var pledge = state && state.player.greatHolyWar;
     if (!campaign || !pledge || pledge.campaignId !== campaign.id ||
         !pledge.renewalRequired) return false;
@@ -933,7 +941,7 @@ window.FB = window.FB || {};
   };
 
   FB.greatHolyWarSuccession = function (state) {
-    var campaign = state && state.greatHolyWar;
+    var campaign = enabledCampaign(state);
     var pledge = state && state.player.greatHolyWar;
     if (!campaign || !pledge || pledge.campaignId !== campaign.id ||
         pledge.withdrawn || (campaign.phase !== 'preparation' && campaign.phase !== 'active')) {
@@ -947,7 +955,7 @@ window.FB = window.FB || {};
   };
 
   FB.greatHolyWarCamp = function (state, rid) {
-    var campaign = state && state.greatHolyWar;
+    var campaign = enabledCampaign(state);
     if (!campaign || (campaign.phase !== 'preparation' && campaign.phase !== 'active')) {
       return null;
     }
@@ -962,7 +970,7 @@ window.FB = window.FB || {};
   };
 
   FB.greatHolyWarEnemies = function (state, rid) {
-    var campaign = state && state.greatHolyWar;
+    var campaign = enabledCampaign(state);
     var camp = FB.greatHolyWarCamp(state, rid);
     if (!campaign || !camp) return [];
     var enemyCamp = camp === 'attackers' ? 'defenders' : 'attackers';
@@ -978,7 +986,7 @@ window.FB = window.FB || {};
      reads greatHolyWarEnemies(...)[0], so it asks once per camp instead of
      building the full validated list per participant per day. */
   FB.greatHolyWarFirstEnemy = function (state, camp) {
-    var campaign = state && state.greatHolyWar;
+    var campaign = enabledCampaign(state);
     if (!campaign || !camp) return null;
     var enemyCamp = camp === 'attackers' ? 'defenders' : 'attackers';
     var list = campaign.participants[enemyCamp] || [];
@@ -991,7 +999,7 @@ window.FB = window.FB || {};
   };
 
   FB.playerGreatHolyWarHostActive = function (state) {
-    var campaign = state && state.greatHolyWar;
+    var campaign = enabledCampaign(state);
     var pledge = state && state.player.greatHolyWar;
     if (!campaign || campaign.phase !== 'active' || !FB.isPlayerSovereign(state)) {
       return false;
@@ -1004,7 +1012,7 @@ window.FB = window.FB || {};
   };
 
   FB.playerGreatHolyWarActive = function (state) {
-    var campaign = state && state.greatHolyWar;
+    var campaign = enabledCampaign(state);
     var pledge = state && state.player.greatHolyWar;
     if (campaign && campaign.phase === 'active') {
       var mandatory = participantOf(campaign, 'defenders', 'player');
@@ -1102,13 +1110,13 @@ window.FB = window.FB || {};
   }
 
   FB.greatHolyWarStrength = function (state, camp) {
-    var campaign = state && state.greatHolyWar;
+    var campaign = enabledCampaign(state);
     return campaign ? campaignStrength(state, campaign, camp,
       campaign.phase === 'active') : 0;
   };
 
   function collapse(state, reason) {
-    var campaign = state.greatHolyWar;
+    var campaign = enabledCampaign(state);
     if (!campaign) return;
     var history = ensureHistory(state);
     history.cooldownUntil[campaign.callingReligion] = state.turn +
@@ -1143,7 +1151,7 @@ window.FB = window.FB || {};
   }
 
   FB.cancelGreatHolyWar = function (state, reason) {
-    var campaign = state && state.greatHolyWar;
+    var campaign = enabledCampaign(state);
     if (!campaign || campaign.phase !== 'preparation') return false;
     collapse(state, reason || 'cancelled');
     return true;
@@ -1219,7 +1227,7 @@ window.FB = window.FB || {};
   }
 
   FB.greatHolyWarArmyGoal = function (state, rid, fromPid) {
-    var campaign = state && state.greatHolyWar;
+    var campaign = enabledCampaign(state);
     var camp = FB.greatHolyWarCamp(state, rid);
     if (!campaign || campaign.phase !== 'active' || !camp) return null;
     var ids = [];
@@ -1393,7 +1401,7 @@ window.FB = window.FB || {};
 
   FB.greatHolyWarBattle = function (state, pid, winner, loser, winnerLoss, loserLoss,
       playerBattle) {
-    var campaign = state && state.greatHolyWar;
+    var campaign = enabledCampaign(state);
     if (!campaign || campaign.phase !== 'active') return false;
     var winnerCamp = FB.greatHolyWarCamp(state, winner.realm);
     var loserCamp = FB.greatHolyWarCamp(state, loser.realm);
@@ -1451,7 +1459,7 @@ window.FB = window.FB || {};
   }
 
   FB.greatHolyWarPlayerShare = function (state) {
-    var campaign = state && state.greatHolyWar;
+    var campaign = enabledCampaign(state);
     var pledge = state && state.player.greatHolyWar;
     if (!campaign || !pledge || pledge.campaignId !== campaign.id) return 0;
     var total = totalContribution(campaign, pledge.camp);
@@ -1474,7 +1482,7 @@ window.FB = window.FB || {};
   }
 
   FB.greatHolyWarPlayerRewardBand = function (state) {
-    var campaign = state && state.greatHolyWar;
+    var campaign = enabledCampaign(state);
     var pledge = state && state.player.greatHolyWar;
     if (!campaign || !pledge || pledge.campaignId !== campaign.id) return 'none';
     var settlement = campaign.settlement;
@@ -1504,7 +1512,7 @@ window.FB = window.FB || {};
   };
 
   FB.greatHolyWarMarkMuster = function (state, rid) {
-    var campaign = state && state.greatHolyWar;
+    var campaign = enabledCampaign(state);
     if (!campaign || campaign.phase !== 'active' || !rid) return false;
     if (rid === 'player') {
       var pledge = playerPledgeFor(state, campaign);
@@ -2115,7 +2123,7 @@ window.FB = window.FB || {};
   }
 
   FB.greatHolyWarPlayerClaimProjection = function (state) {
-    var campaign = state && state.greatHolyWar;
+    var campaign = enabledCampaign(state);
     if (!campaign) return null;
     var settlement = campaign.settlement;
     var settlementCase = settlement && settlement.case;
@@ -2236,7 +2244,7 @@ window.FB = window.FB || {};
   }
 
   FB.resolveGreatHolyWar = function (state, outcome, reason) {
-    var campaign = state && state.greatHolyWar;
+    var campaign = enabledCampaign(state);
     if (!campaign || campaign.phase === 'settlement') return false;
     outcome = outcome === 'attackers' ? 'attackers' : 'defenders';
     campaign.phase = 'settlement';
@@ -2799,7 +2807,7 @@ window.FB = window.FB || {};
   }
 
   FB.greatHolyWarSettlementNeedsPlayer = function (state) {
-    var campaign = state && state.greatHolyWar;
+    var campaign = enabledCampaign(state);
     var settlement = campaign && campaign.phase === 'settlement' &&
       campaign.settlement;
     if (!settlement) return false;
@@ -2810,7 +2818,7 @@ window.FB = window.FB || {};
   };
 
   FB.greatHolyWarSettlementMove = function (state, move) {
-    var campaign = state && state.greatHolyWar;
+    var campaign = enabledCampaign(state);
     var settlement = campaign && campaign.settlement;
     var settlementCase = settlement && settlement.case;
     if (!campaign || campaign.phase !== 'settlement' || !settlementCase ||
@@ -2822,7 +2830,7 @@ window.FB = window.FB || {};
   };
 
   FB.greatHolyWarSettlementChoice = function (state, accept) {
-    var campaign = state && state.greatHolyWar;
+    var campaign = enabledCampaign(state);
     var settlement = campaign && campaign.settlement;
     var award = settlement && settlement.pendingPlayer;
     if (!campaign || campaign.phase !== 'settlement' || !award) return false;
@@ -2965,7 +2973,8 @@ window.FB = window.FB || {};
      global call, uses the saved RNG, and leaves player-controlled heads to
      their explicit deed. */
   FB.greatHolyWarYearly = function (state) {
-    if (!FB.greatHolyWarsEnabled(state) && !state.greatHolyWar) return;
+    if (!FB.systemAvailable(state, 'great_holy_wars') ||
+        state && state.greatHolyWar && !enabledCampaign(state)) return null;
     FB.ensureGreatHolyWar(state);
     trackSacredLosses(state);
     if (state.greatHolyWar) return;
@@ -2996,6 +3005,8 @@ window.FB = window.FB || {};
   };
 
   FB.sacredCustodySeason = function (state) {
+    if (!FB.systemAvailable(state, 'great_holy_wars') ||
+        state && state.greatHolyWar && !enabledCampaign(state)) return null;
     if (!state || !state.player || !state.realms) return 0;
     for (var rid in state.realms) {
       var realm = state.realms[rid], custody = realm && realm.sacredCustody;
@@ -3017,7 +3028,9 @@ window.FB = window.FB || {};
   };
 
   FB.greatHolyWarSeason = function (state) {
-    var campaign = state && state.greatHolyWar;
+    if (!FB.systemAvailable(state, 'great_holy_wars') ||
+        state && state.greatHolyWar && !enabledCampaign(state)) return null;
+    var campaign = enabledCampaign(state);
     if (!campaign || campaign.phase !== 'active') return;
     /* Holy war progress is earned daily, but abandoned works decay and
        a fort's sortie attrition both pulse only at the seasonal boundary. */
@@ -3088,7 +3101,7 @@ window.FB = window.FB || {};
 
   FB.fns = FB.fns || {};
   function playerGreatHolyWarFieldHost(state) {
-    var campaign = state && state.greatHolyWar;
+    var campaign = enabledCampaign(state);
     if (!campaign || campaign.phase !== 'active' ||
         !FB.playerGreatHolyWarHostActive ||
         !FB.playerGreatHolyWarHostActive(state) ||
@@ -3137,19 +3150,20 @@ window.FB = window.FB || {};
   };
 
   FB.fns.ghw_service_safe = function (state) {
-    var campaign = state.greatHolyWar;
+    var campaign = enabledCampaign(state);
     if (campaign) addContribution(state, campaign, 'player', 1);
   };
   FB.fns.ghw_service_danger = function (state) {
-    var campaign = state.greatHolyWar;
+    var campaign = enabledCampaign(state);
     if (campaign) addContribution(state, campaign, 'player', 3);
   };
 
   FB.greatHolyWarTick = function (state) {
+    if (!FB.systemAvailable(state, 'great_holy_wars') ||
+        state && state.greatHolyWar && !enabledCampaign(state)) return null;
     FB.ensureGreatHolyWar(state);
-    if (!FB.greatHolyWarsEnabled(state) && !state.greatHolyWar) return;
     var sacredControlChanged = trackSacredLosses(state);
-    var campaign = state.greatHolyWar;
+    var campaign = enabledCampaign(state);
     if (!campaign) {
       var history = ensureHistory(state);
       if (!sacredControlChanged && idleCheckState === state &&
@@ -3291,9 +3305,11 @@ window.FB = window.FB || {};
   };
 
   FB.repairGreatHolyWar = function (state) {
+    if (!FB.systemAvailable(state, 'great_holy_wars') ||
+        state && state.greatHolyWar && !enabledCampaign(state)) return;
     if (!state || !state.player || !state.realms) return;
     FB.ensureGreatHolyWar(state);
-    var campaign = state.greatHolyWar;
+    var campaign = enabledCampaign(state);
     if (!campaign) return;
     var validPhase = campaign.phase === 'preparation' || campaign.phase === 'active' ||
       campaign.phase === 'settlement';
@@ -3437,7 +3453,7 @@ window.FB = window.FB || {};
   /* Screen-space campaign markers: a gold ring for frozen objectives, camp
      color for temporary occupation, and a siege arc for active works. */
   FB.renderGreatHolyWar = function (ctx, toScreen, zoom, dpr) {
-    var state = FB.state, campaign = state && state.greatHolyWar;
+    var state = FB.state, campaign = enabledCampaign(state);
     if (!campaign || (campaign.phase !== 'preparation' && campaign.phase !== 'active')) return;
     var objectiveMap = {};
     for (var objectiveIndex = 0;

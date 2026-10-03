@@ -1026,6 +1026,7 @@ window.FB = window.FB || {};
      office does not. The sentence's cause is 'apostasy'; absolutionRemedyMet
      in js/papacy.js remedies it only by returning to the fold. */
   function conversionExcommunicationObedience(state, fromReligion, toReligion) {
+    if (!FB.systemEnabled(state, 'excommunication', { faith:fromReligion })) return null;
     if (!FB.faithHasSystem(fromReligion, 'papacy', state)) return null;
     const fromOffice = FB.faithOfficeId(fromReligion, state);
     if (fromOffice && FB.faithOfficeId(toReligion, state) === fromOffice) {
@@ -4667,7 +4668,7 @@ window.FB = window.FB || {};
     const seen = {};
     const allowed = {
       id:1, label:1, desc:1, requiresTech:1, visibility:1,
-      eligibility:1, costs:1, effects:1, queueEvent:1
+      eligibility:1, costs:1, effects:1, queueEvent:1, system:1, systems:1
     };
     for (let i = 0; i < choices.length; i++) {
       const choice = choices[i];
@@ -4868,11 +4869,12 @@ window.FB = window.FB || {};
       const declarativeDeed = kind === 'deed' && !baseline &&
         def.handler === 'declarative_deed';
       const declarative = declarativeFocus || declarativeDeed;
+      errors.push.apply(errors, FB.systems.validateContent(def, path));
       const allowedFields = declarativeFocus ? declarativeFocusFields
         : (declarativeDeed ? declarativeDeedFields : baselineFields);
       for (const key in def) {
         if (Object.prototype.hasOwnProperty.call(def, key) &&
-            !actionOwn(allowedFields, key)) {
+            !actionOwn(allowedFields, key) && key !== 'systems' && key !== 'system') {
           errors.push(path + '.' + key + ' is not recognized.');
         }
       }
@@ -5140,7 +5142,8 @@ window.FB = window.FB || {};
   }
 
   function declarativeChoiceVisible(state, choice) {
-    return !choice.visibility || actionEligibilityMet(state, choice.visibility);
+    return FB.systemContentEnabled(state, choice) &&
+      (!choice.visibility || actionEligibilityMet(state, choice.visibility));
   }
 
   function declarativeChoiceText(state, def, choice, path) {
@@ -5153,7 +5156,7 @@ window.FB = window.FB || {};
       choice:null, shown:false, can:false, reason:'', preview:null,
       label:'', desc:''
     };
-    const shown = declarativeChoiceVisible(state, choice);
+    const shown = FB.systemContentEnabled(state, def) && declarativeChoiceVisible(state, choice);
     let can = shown;
     let reason = '';
     if (can && choice.requiresTech &&
@@ -5387,6 +5390,22 @@ window.FB = window.FB || {};
           ? true : actionEligibilityReason(state, kind, def);
       };
     }
+    const systemShow = out.show, systemCan = out.can, systemRun = out.run, systemTick = out.tick;
+    out.show = function (state) {
+      return FB.systemContentEnabled(state, def) && (!systemShow || systemShow(state));
+    };
+    out.can = function (state) {
+      if (!FB.systemContentEnabled(state, def)) return FB.T('This institution is not available.');
+      return systemCan ? systemCan(state) : true;
+    };
+    if (systemRun) out.run = function (state, options) {
+      if (!FB.systemContentEnabled(state, def)) return false;
+      return systemRun(state, options);
+    };
+    if (systemTick) out.tick = function (state) {
+      if (!FB.systemContentEnabled(state, def)) return;
+      return systemTick(state);
+    };
     return out;
   }
 
@@ -5850,6 +5869,9 @@ window.FB = window.FB || {};
   };
 
   FB.feudalCharterStatus = function (state, charterId) {
+    if (!FB.systemContentEnabled(state, FBDATA.feudalServiceCharters[charterId])) {
+      return { ready:false, reason:FB.T('This service charter is not available.'), missingTech:[] };
+    }
     const def = FBDATA.feudalServiceCharters[charterId];
     if (!def) {
       return {
@@ -5878,7 +5900,10 @@ window.FB = window.FB || {};
 
   FB.feudalContractOf = function (state, rid) {
     const realm = state.realms && state.realms[rid];
-    const saved = realm && realm.feudalContract;
+    const record = realm && realm.feudalContract;
+    const saved = FB.systemEnabled(state, 'feudal_service', { realm:rid }) && record &&
+      (!FBDATA.feudalServiceCharters[record.charterId] ||
+        FB.systemContentEnabled(state, FBDATA.feudalServiceCharters[record.charterId], { realm:rid })) && record;
     if (saved && typeof saved === 'object' && !Array.isArray(saved)) {
       const tenure = feudalTenure(saved.tenure);
       const grantTurn = typeof saved.grantTurn === 'number' &&
@@ -5889,7 +5914,7 @@ window.FB = window.FB || {};
         : null;
       return {
         liegeId:saved.liegeId || realm.liege || null,
-        charterId:FBDATA.feudalServiceCharters[saved.charterId]
+        charterId:FB.systemContentEnabled(state, FBDATA.feudalServiceCharters[saved.charterId], { realm:rid })
           ? saved.charterId : 'customary_service',
         tenure:tenure,
         grantTurn:grantTurn,
@@ -5905,12 +5930,16 @@ window.FB = window.FB || {};
   };
 
   FB.ensureFeudalContracts = function (state) {
+    if (!FB.systemEnabled(state, 'feudal_service')) return;
     for (const rid of FB.playerVassals(state)) {
+      if (!FB.systemEnabled(state, 'feudal_service', { realm:rid })) continue;
       const realm = state.realms[rid];
       if (!realm.feudalContract || typeof realm.feudalContract !== 'object' ||
           Array.isArray(realm.feudalContract)) {
         realm.feudalContract = FB.feudalContractOf(state, rid);
       } else {
+        const savedCharter = FBDATA.feudalServiceCharters[realm.feudalContract.charterId];
+        if (savedCharter && !FB.systemContentEnabled(state, savedCharter, { realm:rid })) continue;
         const normalized = FB.feudalContractOf(state, rid);
         realm.feudalContract.liegeId = normalized.liegeId;
         realm.feudalContract.charterId = normalized.charterId;
@@ -5959,6 +5988,7 @@ window.FB = window.FB || {};
   };
 
   function installFeudalContract(state, rid, charterId, tenure) {
+    if (!FB.systemEnabled(state, 'feudal_service', { realm:rid })) return null;
     const realm = state.realms[rid];
     tenure = feudalTenure(tenure);
     charterId = FBDATA.feudalServiceCharters[charterId]
@@ -5974,6 +6004,7 @@ window.FB = window.FB || {};
   }
 
   FB.feudalRenewalValid = function (state, rid) {
+    if (!FB.systemEnabled(state, 'feudal_service', { realm:rid })) return false;
     const realm = state.realms[rid];
     if (!realm || !realm.alive || realm.liege !== 'player') return false;
     const contract = FB.feudalContractOf(state, rid);
@@ -6068,7 +6099,7 @@ window.FB = window.FB || {};
     /* Common and gentle households cannot have direct feudal vassals. Avoid
        asking the realm hierarchy for an empty index on every ordinary day;
        their two personal offices above remain validated when present. */
-    if (!FB.station.isLanded(p, state)) return;
+    if (!FB.station.isLanded(p, state) || !FB.systemEnabled(state, 'feudal_service')) return;
     const realmRevision = FB.realmStateRevision
       ? FB.realmStateRevision() : state.turn;
     if (localGovernmentDayState === state &&
@@ -6078,6 +6109,7 @@ window.FB = window.FB || {};
     const vassals = FB.playerVassals(state).slice();
     let nextDue = Infinity;
     for (const rid of vassals) {
+      if (!FB.systemEnabled(state, 'feudal_service', { realm:rid })) continue;
       const realm = state.realms[rid];
       if (!realm.feudalContract || typeof realm.feudalContract !== 'object' ||
           Array.isArray(realm.feudalContract)) {
@@ -8143,7 +8175,11 @@ window.FB = window.FB || {};
       charterOrTenure, tenure) {
     const options = feudalGrantOptions(
       recipientOrOptions, charterOrTenure, tenure);
-    if (!FB.feudalCharterStatus(state, options.charterId).ready) return false;
+    if (FB.systemEnabled(state, 'feudal_service')) {
+      if (!FB.feudalCharterStatus(state, options.charterId).ready) return false;
+    } else {
+      if (options.charterId !== 'customary_service' || options.tenure !== 'hereditary') return false;
+    }
     const p = state.player;
     const pr = FB.world.byId[pid];
     if (!pr || !p.provs || p.provs.indexOf(pid) < 0 || p.provs.length < 2) {
@@ -8221,7 +8257,11 @@ window.FB = window.FB || {};
       charterOrTenure, tenure) {
     const options = feudalGrantOptions(
       recipientOrOptions, charterOrTenure, tenure);
-    if (!FB.feudalCharterStatus(state, options.charterId).ready) return false;
+    if (FB.systemEnabled(state, 'feudal_service')) {
+      if (!FB.feudalCharterStatus(state, options.charterId).ready) return false;
+    } else {
+      if (options.charterId !== 'customary_service' || options.tenure !== 'hereditary') return false;
+    }
     const p = state.player;
     if (!p.provs) return false;
     const cs = [];

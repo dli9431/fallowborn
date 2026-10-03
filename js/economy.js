@@ -803,9 +803,7 @@ window.FB = window.FB || {};
     if (Array.isArray(def.faiths) && !def.faiths.some(function (faithId) {
       return FB.faithIsA(c.religion, faithId, state);
     })) return false;
-    if (Array.isArray(def.systems) && !def.systems.every(function (systemId) {
-      return FB.faithHasSystem(c.religion, systemId, state);
-    })) return false;
+    if (!FB.systemContentEnabled(state, def, { character:c })) return false;
     const career = FB.careerOf(state, c);
     return !Array.isArray(def.professions) || !!(career &&
       def.professions.indexOf(career.profession) >= 0);
@@ -1237,6 +1235,7 @@ window.FB = window.FB || {};
   };
 
   function bishopCandidateExcommunicated(state, c, obedienceId) {
+    if (!FB.systemEnabled(state, 'excommunication', { character:c })) return false;
     if (c.traits && c.traits.indexOf('excommunicated') >= 0) return true;
     return !!(FB.excommunicationOf &&
       FB.excommunicationOf(state, c.id, obedienceId));

@@ -35,13 +35,14 @@ window.FB = window.FB || {};
   }
 
   /* Ordered catalog entries ({ id, def }) for UI pickers. */
-  FB.policyList = function () {
+  FB.policyList = function (state) {
     var defs = policyCatalog();
     var out = [];
     for (var id in defs) {
       if (!own(defs, id)) continue;
       var def = defs[id];
       if (!def || typeof def !== 'object') continue;
+      if (state && !FB.systemContentEnabled(state, def)) continue;
       out.push({ id:id, def:def });
     }
     out.sort(function (a, b) {
@@ -549,6 +550,8 @@ window.FB = window.FB || {};
   }
 
   function evaluateCourt(state, court, stored) {
+    var crownEnabled = FB.systemEnabled(state, 'crown_bloc', { realm:court.polityId }) &&
+      FB.systemContentEnabled(state, FBDATA.politicalBlocs.crown, { realm:court.polityId });
     var crown = {};
     var mercantile = {};
     var i;
@@ -558,7 +561,7 @@ window.FB = window.FB || {};
     var rulerHouse = byId[court.rulerHouseId];
     for (i = 0; i < court.houses.length; i++) {
       var house = court.houses[i];
-      crown[house.id] = crownInterest(state, court, house, rulerHouse);
+      crown[house.id] = crownEnabled ? crownInterest(state, court, house, rulerHouse) : { score:0, reasons:[] };
       mercantile[house.id] = mercantileInterest(state, house);
     }
     var leaderIds = chooseMagnateLeaders(
@@ -570,6 +573,7 @@ window.FB = window.FB || {};
         crown:crown[member.id],
         mercantile:mercantile[member.id]
       };
+      if (!crownEnabled) delete options.crown;
       for (var j = 0; j < leaderIds.length; j++) {
         options[MAGNATE_PREFIX + leaderIds[j]] =
           magnateInterest(state, member, byId[leaderIds[j]]);
@@ -629,7 +633,7 @@ window.FB = window.FB || {};
   function validAllegiance(house, blocId, evaluation) {
     if (!blocId || !evaluation.interests[house.id] ||
         !evaluation.interests[house.id][blocId]) return false;
-    if (house.isRuler) return blocId === 'crown';
+    if (house.isRuler && evaluation.interests[house.id].crown) return blocId === 'crown';
     if (blocId === 'mercantile') {
       return evaluation.interests[house.id][blocId].score > 0;
     }
@@ -691,7 +695,7 @@ window.FB = window.FB || {};
   }
 
   function pendingValid(state, court, pending) {
-    return !!(pending && policyDef(pending.motionId) &&
+    return !!(pending && FB.systemContentEnabled(state, policyDef(pending.motionId)) &&
       pending.id && pending.polityId === court.polityId &&
       isFinite(Number(pending.startedTurn)) &&
       isFinite(Number(pending.expiresTurn)) &&
@@ -774,6 +778,7 @@ window.FB = window.FB || {};
         monopolies.outgoing.id) || '',
       Number(p.liegeOp) || 0,
       JSON.stringify(state.council || null),
+      FB.systemEnabled(state, 'crown_bloc', { realm:p.liege || 'player' }) ? 1 : 0,
       politicsInputRevision,
       FB.modifierStateRevision ? FB.modifierStateRevision() : state.turn
     ].join('|');
@@ -934,6 +939,7 @@ window.FB = window.FB || {};
       var house = court.houses[i];
       var blocId = snapshot.ids[house.id];
       var archetypeId = archetypeOf(blocId);
+      if (!FB.systemContentEnabled(state, blocDef(archetypeId), { realm:court.polityId })) continue;
       if (!groups[blocId]) {
         groups[blocId] = {
           id:blocId,
@@ -1132,6 +1138,7 @@ window.FB = window.FB || {};
 
   FB.politicalMotionForecast = function (state, motionId) {
     var motionDef = policyDef(motionId);
+    if (!FB.systemContentEnabled(state, motionDef)) return null;
     if (!motionDef) return null;
     /* Crown-side royal policy is proclaimed, not moved before the Estates;
        it never enters the bloc forecast. */

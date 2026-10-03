@@ -67,7 +67,7 @@ window.FB = window.FB || {};
 
   function catholicFaith(state, c) {
     return !!(c && FB.faithHasSystem &&
-      FB.faithHasSystem(c.religion, 'papacy', state) &&
+      FB.systemEnabled(state, 'papacy', { character:c }) &&
       FB.faithOfficeId(c.religion, state) === officeId(state));
   }
 
@@ -122,7 +122,9 @@ window.FB = window.FB || {};
     for (var rid in state.realms) {
       var realm = state.realms[rid];
       if (!realm || !realm.alive || realm.liege || rid === 'player') continue;
-      if (catholicReligion(state, realmReligion(state, rid))) out.push(rid);
+      var faith = realmReligion(state, rid);
+      if (faith && FB.systemEnabled(state, 'papacy', { realm:rid, faith:faith }) &&
+          FB.faithOfficeId(faith, state) === officeId(state)) out.push(rid);
     }
     if (FB.isPlayerSovereign && FB.isPlayerSovereign(state) &&
         catholicFaith(state, playerChar(state))) {
@@ -585,6 +587,7 @@ window.FB = window.FB || {};
      strength check — can therefore trust the saved record directly instead of
      rescanning every Catholic sovereign once per query. */
   function savedPapacy(state) {
+    if (!FB.systemAvailable(state, 'papacy')) return null;
     var saved = state && papacyState(state);
     return saved && typeof saved === 'object' && !Array.isArray(saved) &&
       saved.romanObedience && saved.obediences && saved.realmObedience &&
@@ -592,6 +595,7 @@ window.FB = window.FB || {};
   }
 
   FB.ensurePapacy = function (state) {
+    if (!FB.systemAvailable(state, 'papacy')) return null;
     if (!state || !state.date || !state.player || !state.chars || !state.realms || !office(state)) return null;
     if (!papacyState(state) || typeof papacyState(state) !== 'object' ||
         Array.isArray(papacyState(state))) {
@@ -1414,6 +1418,7 @@ window.FB = window.FB || {};
 
   function installPope(state, election, charId, name) {
     var papacy = FB.ensurePapacy(state);
+    if (!papacy) return false;
     var obedience = papacy.obediences[election.obedienceId];
     var c = state.chars[charId];
     if (!obedience || !c || c.dead) return false;
@@ -1839,7 +1844,9 @@ window.FB = window.FB || {};
   }
 
   FB.addPapalGround = function (state, target, cause, obedienceId) {
+    if (!FB.systemAvailable(state, 'excommunication')) return false;
     var papacy = FB.ensurePapacy(state);
+    if (!papacy) return false;
     var charId = null, rid = null;
     if (typeof target === 'string' && state.realms[target]) {
       rid = realmSovereign(state, target);
@@ -1873,6 +1880,7 @@ window.FB = window.FB || {};
   };
 
   FB.excommunicationOf = function (state, charId, obedienceId) {
+    if (!FB.systemEnabled(state, 'excommunication', { character:charId })) return null;
     var papacy = savedPapacy(state) || FB.ensurePapacy(state);
     if (!papacy || !charId) return null;
     if (obedienceId) {
@@ -1897,6 +1905,7 @@ window.FB = window.FB || {};
   };
 
   function syncPlayerExcommunicationTrait(state) {
+    if (!FB.systemEnabled(state, 'excommunication')) return;
     var me = playerChar(state);
     var papacy = state && papacyState(state);
     if (!me || !papacy) return;
@@ -1936,6 +1945,9 @@ window.FB = window.FB || {};
   }
 
   FB.papalSanctionStatus = function (state, target, obedienceId, arbitrary) {
+    if (!FB.systemAvailable(state, 'excommunication')) {
+      return { ready:false, reason:FB.T('Excommunication is not available.') };
+    }
     var papacy = FB.ensurePapacy(state);
     var obedience = papacy && papacy.obediences[
       obedienceId || papacy.romanObedience
@@ -1944,10 +1956,13 @@ window.FB = window.FB || {};
       ? state.chars[target]
       : typeof target === 'string' && state.realms[target]
         ? rulerCharacter(state, realmSovereign(state, target), true) : target;
+    if (c && !FB.systemEnabled(state, 'excommunication', { character:c })) {
+      return { ready:false, reason:FB.T('Excommunication is not available.') };
+    }
     var conf = definition().excommunication;
-    var cause = c && sanctionCause(state, c.id, obedience && obedience.id);
+    var cause = c && papacy && sanctionCause(state, c.id, obedience && obedience.id);
     var cost = arbitrary ? conf.arbitraryPiety : conf.justifiedPiety;
-    var last = c && papacy.excommunications[
+    var last = c && papacy && papacy.excommunications[
       (obedience && obedience.id) + ':' + c.id
     ];
     var cooldown = last && last.issuedTurn !== undefined
@@ -1992,6 +2007,7 @@ window.FB = window.FB || {};
   };
 
   FB.papalExcommunicate = function (state, target, obedienceId, arbitrary) {
+    if (!FB.systemAvailable(state, 'excommunication')) return false;
     var status = FB.papalSanctionStatus(state, target, obedienceId, arbitrary);
     if (!status.ready) return false;
     var obedience = status.obedience, c = status.target;
@@ -2059,6 +2075,9 @@ window.FB = window.FB || {};
   }
 
   FB.papalAbsolutionStatus = function (state, charId) {
+    if (!FB.systemEnabled(state, 'excommunication', { character:charId })) {
+      return { ready:false, reason:FB.T('Excommunication is not available.') };
+    }
     var c = state.chars[charId];
     var recognizesPapacy = catholicFaith(state, c);
     var obedienceId = recognizesPapacy &&
@@ -2181,6 +2200,7 @@ window.FB = window.FB || {};
 
   function createRivalObedience(state, election, sponsor) {
     var papacy = FB.ensurePapacy(state);
+    if (!papacy) return false;
     var original = papacy.obediences[election.obedienceId];
     var leaders = leadingCounts(election.lastCounts || {});
     if (!original || leaders.length < 2) return false;
@@ -2358,6 +2378,7 @@ window.FB = window.FB || {};
 
   FB.reunifyPapacy = function (state, winnerId, method, deposeAll) {
     var papacy = FB.ensurePapacy(state);
+    if (!papacy) return false;
     winnerId = chooseReunificationWinner(state, winnerId);
     var winner = winnerId && papacy.obediences[winnerId];
     var displacedWinnerPlayer = null;
@@ -2723,6 +2744,7 @@ window.FB = window.FB || {};
   };
 
   FB.papacyDay = function (state) {
+    if (!FB.systemAvailable(state, 'papacy')) return null;
     /* A settled Papacy has no daily work. Creation/load performs the full
        repair; only an election whose next ballot is due needs it here. */
     var saved = state && papacyState(state);
@@ -2768,6 +2790,7 @@ window.FB = window.FB || {};
   };
 
   FB.papacyPendingDecision = function (state) {
+    if (!FB.systemAvailable(state, 'papacy')) return null;
     /* The common path has neither a pending Papal demand nor a live
        conclave. Read that normalized save shape directly instead of scanning
        and resynchronizing every Catholic sovereign before every day. */
@@ -2824,6 +2847,7 @@ window.FB = window.FB || {};
   };
 
   FB.papacySeason = function (state) {
+    if (!FB.systemAvailable(state, 'papacy')) return null;
     var papacy = FB.ensurePapacy(state);
     if (!papacy) return;
     var investiturePiety = FB.papacyInvestiturePiety(state);
@@ -2854,7 +2878,8 @@ window.FB = window.FB || {};
       }
       if (lay.length) FB.papalInvestitureDemand(state, FB.pick(lay), obedience.id);
     }
-    if (obedience.authority >= definition().authority.gates.sanctions &&
+    if (FB.systemAvailable(state, 'excommunication') &&
+        obedience.authority >= definition().authority.gates.sanctions &&
         FB.chance(0.15)) {
       var targets = FB.papalRulerTargets(state);
       for (i = 0; i < targets.length; i++) {
@@ -2870,6 +2895,7 @@ window.FB = window.FB || {};
   }
 
   FB.papacyYearly = function (state) {
+    if (!FB.systemAvailable(state, 'papacy')) return null;
     /* Creation/load normalized this model, and the mutation paths preserve
        it. Avoid making the annual pass scan Catholic sovereigns once in the
        general repair and immediately again in supporter synchronization. */
@@ -2907,6 +2933,7 @@ window.FB = window.FB || {};
   FB.papacyProvinceTransferred = function (state, pid, fromRealm, toRealm) {
     if (pid !== officeSeat(state)) return;
     var papacy = FB.ensurePapacy(state);
+    if (!papacy) return false;
     var formerRoman = papacy.obediences[papacy.romanObedience];
     var canonicalRealm = FB.religiousHeadDefaultRealm &&
       FB.religiousHeadDefaultRealm(state, officeFaith(state));
@@ -2988,6 +3015,7 @@ window.FB = window.FB || {};
   FB.papacyRealmDied = function (state, rid) {
     if (!state || !papacyState(state)) return;
     var papacy = FB.ensurePapacy(state);
+    if (!papacy) return false;
     delete papacy.realmObedience[rid];
     syncObedienceSupporters(state, papacy);
     if (!FB.papacyInSchism(state)) return;
@@ -3118,6 +3146,7 @@ window.FB = window.FB || {};
   };
 
   function queuePlayerPopeAbsolution(state, obedience) {
+    if (!FB.systemEnabled(state, 'excommunication')) return false;
     if (!obedience || obedience.claimantId !== state.player.charId ||
         !FB.queueEvent) return false;
     var queue = state.eventQueue || [];
@@ -3172,6 +3201,7 @@ window.FB = window.FB || {};
   /* Legacy trait-only sentences acquire a recognized-obedience record on
      migration, while an elective incumbent is never replaced mid-reign. */
   FB.ensureLegacyPapalSentence = function (state) {
+    if (!FB.systemAvailable(state, 'excommunication')) return;
     var papacy = FB.ensurePapacy(state);
     var me = playerChar(state);
     if (!papacy || !me || !me.traits ||
@@ -3195,6 +3225,7 @@ window.FB = window.FB || {};
 
   /* Finish the lazy migration only after all public helpers exist. */
   FB.ensurePapacyState = function (state) {
+    if (!FB.systemAvailable(state, 'papacy')) return null;
     var papacy = FB.ensurePapacy(state);
     if (papacy) FB.ensureLegacyPapalSentence(state);
     return papacy;

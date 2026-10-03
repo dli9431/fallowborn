@@ -578,3 +578,5 @@ The [spring 476 prototype](situation-476.md) uses the existing period-seeded tec
 
 
 Scheduled games, circuit travel, regional open games, event sponsorship and festival livelihoods each have a none impact decision in FBDATA.techImpactReviews. Formal jousting retains the hard cavalry_lances gate under the venue sovereign; accepted entries are grandfathered. Melee, archery, wrestling, work, performance and company remain alternatives. Existing specialist career and equipment-production requirements are unchanged. See tournaments.md.
+
+Optional system availability is reviewed as none in FBDATA.techImpactReviews. Institution membership follows the authored era, government, faith and bookmark rather than research. Existing technology requirements still gate content when its institution is enabled; disabled content is omitted from reverse unlock descriptions.

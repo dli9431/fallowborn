@@ -128,6 +128,7 @@
     return SH.reviewActionCardHtml({ id:'games-' + e.id, label:T.venueName(e), note:note, details:details, warn:!eligibility.ok });
   }
   UI.showGames = function (filter, replace, ids, back) {
+    if (!FB.systemEnabled(FB.state, 'tournaments')) return;
     filter = filter || 'upcoming';
     var s = FB.state, rows = T.list(s, filter), h = '<label for="games-filter">' + esc(FB.T('Calendar filter')) + '</label><select id="games-filter">';
     function self() { UI.showGames(filter, false, ids, back); }
@@ -193,6 +194,7 @@
     return SH.reviewPeopleHtml(rows) + (names.length ? '<ul><li>' + names.map(esc).join('</li><li>') + '</li></ul>' : '');
   }
   UI.showTournament = function (id, replace, back) {
+    if (!FB.systemEnabled(FB.state, 'tournaments')) return;
     var s = FB.state, e = T.get(s, id);
     if (!e) { UI.toast(FB.T('That edition has left the calendar.')); return; }
     function self() { UI.showTournament(id, false, back); }
@@ -277,6 +279,7 @@
     });
   };
   UI.showGamesActivities = function (id, back) {
+    if (!FB.systemEnabled(FB.state, 'tournaments')) return;
     var s = FB.state, e = T.get(s, id), quotes = [], h = '', cards = '';
     if (!e) return;
     function self() { UI.showGamesActivities(id, back); }
@@ -304,6 +307,7 @@
     }); });
   };
   UI.showGamesTravel = function (id, back) {
+    if (!FB.systemEnabled(FB.state, 'tournaments')) return;
     var q = T.travelQuote(FB.state,id);
     if (!q.ok) { UI.toast(q.reasons.join(' ')); return; }
     confirmation(FB.T('Tournament journey'),fact(FB.T('Estimated arrival'),date(q.arrivalTurn)) + fact(FB.T('Pay now'),money(q.cost)) + fact(FB.T('Return allowance'),money(q.returnReserve)),
@@ -312,6 +316,7 @@
       back, function () { return T.depart(FB.state,q); });
   };
   UI.showGamesRound = function (id, back) {
+    if (!FB.systemEnabled(FB.state, 'tournaments')) return;
     var s = FB.state, choices = [], cards = '';
     Object.keys(D.tactics).forEach(function (tactic) {
       var q = T.roundPreview(s,id,s.player.charId,tactic);
@@ -331,6 +336,7 @@
     }); });
   };
   UI.showHostGames = function (pid, slot, back, draft) {
+    if (!FB.systemEnabled(FB.state, 'tournaments')) return;
     var s = FB.state, sites = FB.directSettlements(s,'player');
     if (!sites.length) { show(FB.T('Host games'),text(FB.T('Direct ownership of an established settlement is required.')),{ back:back }); return; }
     draft = draft || {};
@@ -388,6 +394,7 @@
     });
   };
   UI.reviewHostGames = function (spec, back, replace) {
+    if (!FB.systemEnabled(FB.state, 'tournaments')) return;
     var q = T.quote(FB.state, spec), f = q.funding;
     var h = fact(FB.T('Venue'),T.venueName(q)) + fact(FB.T('Opening'),date(q.startTurn)) + fact(FB.T('Current recurring net / season'),money(q.income.projection)) +
       fact(FB.T('Recorded seasonal average'),money(q.income.average)) + fact(FB.T('Reference income'),money(q.income.reference));

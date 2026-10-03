@@ -1960,7 +1960,7 @@ window.FB = window.FB || {};
       let flat = '';
       for (const id of c.traits) {
         const trait = FBDATA.traits[id];
-        if (trait) flat += traitChip(s, id, trait);
+        if (trait && FB.systemContentEnabled(s, trait, { character:c })) flat += traitChip(s, id, trait);
       }
       return flat || '<span class="cmeta">' + esc(FB.T('No notable traits.')) + '</span>';
     }
@@ -1969,7 +1969,7 @@ window.FB = window.FB || {};
     };
     for (const id of c.traits) {
       const trait = FBDATA.traits[id];
-      if (trait) groups[traitClassId(trait)].push({ id:id, trait:trait });
+      if (trait && FB.systemContentEnabled(s, trait, { character:c })) groups[traitClassId(trait)].push({ id:id, trait:trait });
     }
     let h = '<div class="traitgroups">';
     for (const classId of TRAIT_CLASS_ORDER) {
@@ -4949,7 +4949,7 @@ window.FB = window.FB || {};
           }
         } else if (politics.forecasts) {
           let shown = 0;
-          const policies = FB.policyList ? FB.policyList() : [];
+          const policies = FB.policyList ? FB.policyList(s) : [];
           for (const entry of policies) {
             if (shown >= 2) break;
             const forecast = politics.forecasts[entry.id];

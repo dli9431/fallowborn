@@ -22,9 +22,16 @@ window.FB = window.FB || {};
   FB.msg('news.abbey.school', '⛪ {name} funds instruction for the pupils at {house}.');
   function cfg() { return FBDATA.abbeys; }
   function me(s) { return s.chars[s.player.charId]; }
-  function houses(s) { return s.abbeys && s.abbeys.houses || []; }
+  function houses(s) {
+    if (!FB.systemAvailable(s, 'abbeys')) return [];
+    return (s.abbeys && s.abbeys.houses || []).filter(function (h) {
+      if (!h) return false;
+      const rid = s.holder && s.holder[h.provinceId] || s.owner && s.owner[h.provinceId];
+      return FB.systemEnabled(s, 'abbeys', { realm:rid, faith:h.religion });
+    });
+  }
   function catholic(s, c) {
-    return !!(c && !c.dead && FB.faithHasSystem(c.religion, 'papacy', s));
+    return !!(c && !c.dead && FB.systemEnabled(s, 'abbeys', { character:c }) && FB.systemEnabled(s, 'papacy', { character:c }));
   }
   function standing(s, id) {
     return id && s.chars[id] && !s.chars[id].dead
@@ -99,7 +106,7 @@ window.FB = window.FB || {};
   FB.abbeyAt = record;
   FB.abbeyOf = function (s, c) {
     c = c || me(s);
-    return c && !c.dead && houses(s).filter(function (h) {
+    return c && !c.dead && FB.systemEnabled(s, 'abbeys', { character:c }) && houses(s).filter(function (h) {
       return h.holderId === c.id;
     })[0] || null;
   };
@@ -186,7 +193,7 @@ window.FB = window.FB || {};
     check(c && unmarried(s, c), FB.T('Unmarried or widowed, without a betrothal'), missing);
     check(c && FB.skillOf(c, 'lea') >= 9, FB.T('Learning 9'), missing);
     check(vocation || mature || rank >= 3, FB.T('Ten monastic years as a prioress, an existing abbess, or age 35 with noble standing and Stewardship 10'), missing);
-    check(c && !(c.traits || []).includes('excommunicated'), FB.T('Good standing with the Church'), missing);
+    check(c && (!FB.systemEnabled(s, 'excommunication', { character:c }) || !(c.traits || []).includes('excommunicated')), FB.T('Good standing with the Church'), missing);
     check(c && !FB.abbeyOf(s, c) && !(FB.hasBishopric && FB.hasBishopric(s, c)), FB.T('No other religious office'), missing);
     check(c && (c.id === s.player.charId || !FB.realmIdForRulerCharacter(s, c)), FB.T('Available to reside at the abbey'), missing);
     if (h) check(!h.holderId, FB.T('A vacant abbacy'), missing);
@@ -463,6 +470,7 @@ window.FB = window.FB || {};
     c.station = Math.max(FB.stationOf(c), h.privileges.length ? 4 : 3);
   };
   FB.abbeySeason = function (s) {
+    if (!FB.systemAvailable(s, 'abbeys')) return null;
     houses(s).forEach(function (h) {
       if (h.lastSeason === s.turn) return;
       h.lastSeason = s.turn;
@@ -515,13 +523,16 @@ window.FB = window.FB || {};
     });
   };
   FB.repairAbbeys = function (s) {
+    if (!FB.systemAvailable(s, 'abbeys')) return null;
     if (!s.abbeys) return;
     if (!Array.isArray(s.abbeys.houses)) { delete s.abbeys; return; }
-    const playerHeldOffice = s.abbeys.houses.some(function (h) { return h && h.holderId === s.player.charId; });
+    const playerHeldOffice = houses(s).some(function (h) { return h && h.holderId === s.player.charId; });
     const seen = {}, holders = {}, residents = {};
     s.abbeys.houses = s.abbeys.houses.filter(function (h) {
       if (!h || !FB.world.byId[h.provinceId] || seen[h.provinceId]) return false;
       seen[h.provinceId] = true;
+      const rid = s.holder && s.holder[h.provinceId] || s.owner && s.owner[h.provinceId];
+      if (!FB.systemEnabled(s, 'abbeys', { realm:rid, faith:h.religion })) return true;
       h.id = 'abbey:' + h.provinceId;
       if (typeof h.religion !== 'string' || !FB.faithHasSystem(h.religion, 'papacy', s)) h.religion = (FB.religiousOfficeForStrategy(s, 'papal_election') || {}).religionId || me(s).religion;
       if (typeof h.culture !== 'string') h.culture = me(s).culture;

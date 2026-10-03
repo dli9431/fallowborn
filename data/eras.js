@@ -39,8 +39,11 @@
            finds skip an item whose own production window (yearMin, yearMax)
            lies wholly outside it
 
+     systems: optional enable/disable lists or boolean overrides for known
+       FBDATA.systems ids, beneath government, faith and bookmark rules
+
    The remaining slots are declared here and filled by later systems:
-   vocabulary, systems, eventEras, currency and architecture. null
+   vocabulary, eventEras, currency and architecture. null
    means the era adds nothing and today's shared behavior applies.
    vocabulary stays null: an era's words and rank labels are its entry in
    FBDATA.lexicons.eras (data/lexicons.js). ladder is the permission definition
@@ -82,7 +85,9 @@ FBDATA.eras = {
   late_antique:{
     from:375, to:649,
     defaultGovernment:'regnum', defaultCulture:'roman',
-    costume:'late_antique', vocabulary:null, ladder:FBDATA.stationLadders.feudal, systems:null,
+    costume:'late_antique', vocabulary:null, ladder:FBDATA.stationLadders.feudal,
+    systems:{ disable:['papacy','scutage','manorial_tenure','excommunication',
+      'feudal_service','crown_bloc','tournaments','great_holy_wars'] },
     technology:{ from:476, to:649, startingKnowledge:'historical' },
     military:null, eventEras:null, currency:null, architecture:null,
     balance:null
@@ -90,7 +95,8 @@ FBDATA.eras = {
   early_medieval:{
     from:650, to:999,
     defaultGovernment:'territorial', defaultCulture:'frankish',
-    costume:'medieval', vocabulary:null, ladder:FBDATA.stationLadders.feudal, systems:null,
+    costume:'medieval', vocabulary:null, ladder:FBDATA.stationLadders.feudal, systems:{ enable:['manorial_tenure','feudal_service','scutage','crown_bloc',
+      'excommunication','abbeys','tournaments','great_holy_wars','guild_elections','royal_council','estates'] },
     technology:{ from:650, to:999, startingKnowledge:'historical' },
     military:null, eventEras:null, currency:null, architecture:null,
     balance:null
@@ -98,7 +104,8 @@ FBDATA.eras = {
   high_medieval:{
     from:1000, to:1300,
     defaultGovernment:'territorial', defaultCulture:'frankish',
-    costume:'medieval', vocabulary:null, ladder:FBDATA.stationLadders.feudal, systems:null,
+    costume:'medieval', vocabulary:null, ladder:FBDATA.stationLadders.feudal, systems:{ enable:['manorial_tenure','feudal_service','scutage','crown_bloc',
+      'excommunication','abbeys','tournaments','great_holy_wars','guild_elections','royal_council','estates'] },
     technology:{ from:1000, to:1300, startingKnowledge:'historical' },
     military:null, eventEras:null, currency:null, architecture:null,
     balance:null

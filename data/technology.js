@@ -113,6 +113,7 @@ window.FBDATA = window.FBDATA || {};
     features:{
       religious_head_appointment:{ mode:'none', rationale:'Religious office appointment is an institutional relationship, independent of research.' },
       religious_head_hereditary:{ mode:'none', rationale:'Hereditary religious office succession follows kinship and eligibility, independent of research.' },
+      optional_system_availability:{ mode:'none', rationale:'Institution membership follows authored campaign, government and faith rules. Availability is not a discovery; enabled institutions retain their existing technology requirements.' },
       period_476_civic_career:{ mode:'none', rationale:'Late antique civic clerk work and a local judicial appointment depend on living council actors, county control and civic recognition. Baseline public service has no credible discovery gate.' },
       period_476_clerical_mediation:{ mode:'none', rationale:'Service within a local congregation and mediation between living bishops are social and religious choices. Existing education and faith progression still govern later rank.' },
       period_476_conditional_campaigns:{ mode:'none', rationale:'Frankish, Gothic and eastern reconquest campaigns use ordinary armies, territorial ownership and living rulers. Their political timing is not an invention.' },

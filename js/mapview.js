@@ -1416,7 +1416,7 @@ window.FB = window.FB || {};
     // overland journeys: valid destination rings, route, and traveler
     if (FB.state && FB.renderTravel) FB.renderTravel(ctx, toScreen, z, M.dpr);
     M.visibleEvents.length = 0;
-    if (FB.state && M.eventsOverlay && FB.tournaments) {
+    if (FB.state && M.eventsOverlay && FB.tournaments && FB.systemEnabled(FB.state, 'tournaments')) {
       const clusters = {};
       FB.tournaments.active(FB.state).forEach(function (event) {
         const group = FB.world.sitesByProv[event.provinceId];

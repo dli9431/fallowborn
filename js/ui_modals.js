@@ -3044,7 +3044,9 @@ window.FB = window.FB || {};
         FB.T('Opposes you and defends the incumbent, even if you have a claim.') : FB.T('Independent county: no superior to petition.'))) +
       kv('Victory', esc(q.superior && !q.authorized ? FB.T('Control of this county under its superior; recognition must be petitioned afterward.') : FB.T('Recognized control of this county.'))) +
       kv('Defeat', esc(FB.T('Ordinary campaign peace and capture rules apply. Your barony and unrelated private property are not automatically confiscated.')));
-    if (q.sacrilege) h += '<p class="warnote">' + esc(FB.T('Sacrilege: lose all piety, lose {standing} Standing with living Catholic rulers, and become excommunicated.', { standing:Math.abs(FBDATA.balance.religiousHeadWarOpinion === undefined ? -40 : FBDATA.balance.religiousHeadWarOpinion) })) + '</p>';
+    if (q.sacrilege) h += '<p class="warnote">' + esc(FB.T(FB.systemEnabled(s, 'excommunication')
+      ? 'Sacrilege: lose all piety, lose {standing} Standing with living Catholic rulers, and become excommunicated.'
+      : 'Sacrilege: lose all piety and lose {standing} Standing with living Catholic rulers.', { standing:Math.abs(FBDATA.balance.religiousHeadWarOpinion === undefined ? -40 : FBDATA.balance.religiousHeadWarOpinion) })) + '</p>';
     if (q.standingCost) h += kv('Superior Standing', esc(FB.T('Lose up to {amount}', { amount:-q.standingCost })));
     h += kv('Enemy Standing', esc(FB.T('Becomes Hostile')));
     if (q.aggression) h += kv('Standing penalties', esc(FB.T('{Term:vassal.other} {vassal}; foreign rulers {foreign}', {
@@ -6620,7 +6622,9 @@ window.FB = window.FB || {};
     }
     if (cause.sacrilegious) {
       h += '<div class="progressnote warnote">' + esc(FB.T(
-        'Sacrilege: all piety is lost and the current ruler is excommunicated.')) +
+        FB.systemEnabled(s, 'excommunication')
+          ? 'Sacrilege: all piety is lost and the current ruler is excommunicated.'
+          : 'Sacrilege: all piety is lost.')) +
         '</div>';
     }
     return h + '</div>';
@@ -12387,13 +12391,14 @@ window.FB = window.FB || {};
   UI.showGrantTerms = function (kind, id, returnContext, recipientId,
       charterId, tenure, replaceView) {
     const s = FB.state;
+    const serviceEnabled = FB.systemEnabled(s, 'feudal_service');
     charterId = FBDATA.feudalServiceCharters[charterId]
       ? charterId : 'customary_service';
     if (FB.feudalCharterStatus &&
         !FB.feudalCharterStatus(s, charterId).ready) {
       charterId = 'customary_service';
     }
-    tenure = tenure === 'life' || tenure === 'term'
+    tenure = serviceEnabled && (tenure === 'life' || tenure === 'term')
       ? tenure : 'hereditary';
     const selected = FB.feudalGrantPreview(s, kind, id, charterId, tenure);
     if (!selected.countyIds.length) {
@@ -12411,6 +12416,7 @@ window.FB = window.FB || {};
       esc(charterLabel) + '">';
     for (const cid in FBDATA.feudalServiceCharters) {
       const def = FBDATA.feudalServiceCharters[cid];
+      if (!FB.systemContentEnabled(s, def)) continue;
       const preview = FB.feudalGrantPreview(s, kind, id, cid, tenure);
       const status = FB.feudalCharterStatus
         ? FB.feudalCharterStatus(s, cid) : { ready:true, missingTech:[] };
@@ -12456,7 +12462,8 @@ window.FB = window.FB || {};
         esc(item.desc) + '</span></button>';
     }
     const selectedDef = FBDATA.feudalServiceCharters[charterId];
-    h += '</div>' + reviewFactsCard(FB.T('Grant preview'),
+    if (!serviceEnabled) h = '';
+    h += (serviceEnabled ? '</div>' : '') + reviewFactsCard(FB.T('Grant preview'),
       kv('Tax', esc(FB.T('{money:gold} each season', { gold:Math.round(selected.tax * 100) / 100 }))) +
       kv('Levy', esc(FB.T('{men} soldiers', { men:Math.round(selected.levy) }))) +
       kv('Initial Standing', esc('+' + selected.initialStanding)) +
@@ -12465,13 +12472,14 @@ window.FB = window.FB || {};
         ? kv('Extraordinary taxes', esc(FB.T('Exempt'))) : ''), ' data-grant-terms-preview') +
       reviewActionsHtml(reviewActionCardHtml({
         id:'grant-terms-confirm', label:FB.T('Confirm grant'),
-        note:FB.T('Service and tenure cannot be renegotiated after the grant.')
+        note:serviceEnabled ? FB.T('Service and tenure cannot be renegotiated after the grant.') :
+          FB.T('Transfers the land to the chosen recipient under ordinary hereditary rules.')
       })) +
       '<div class="gm-footer"><button type="button" class="btn" ' +
       'id="grant-terms-back">' + esc(FB.T('Back')) + '</button></div>';
     openModal(FB.T('Terms for {target}', { target:target }), h, {
-      titleDetailsHtml:'<p>' + esc(FB.T(
-        'Choose what this {term:vassal} chiefly provides. Service and tenure are separate and cannot be renegotiated after the grant.')) + '</p>',
+      titleDetailsHtml:serviceEnabled ? '<p>' + esc(FB.T(
+        'Choose what this {term:vassal} chiefly provides. Service and tenure are separate and cannot be renegotiated after the grant.')) + '</p>' : '',
       historyView:!replaceView,
       replaceView:!!replaceView,
       historyBackRender:function () {
@@ -13247,7 +13255,7 @@ window.FB = window.FB || {};
         'No political court applies to the current position.')) + '</div>';
     }
     const forecast = politics.motion;
-    const policies = FB.policyList ? FB.policyList() : [];
+    const policies = FB.policyList ? FB.policyList(s) : [];
     const readyForecasts = [];
     if (!forecast && politics.forecasts) {
       for (const entry of policies) {
@@ -13863,7 +13871,7 @@ window.FB = window.FB || {};
       kv('Banner obligation', esc(terms.scutage
         ? FB.T('Scutage — silver may answer the summons')
         : FB.T('Personal service or the ordinary buy-out'))) +
-      kv('Your tenure', esc(ownTenure)) +
+      (FB.systemEnabled(s, 'feudal_service') ? kv('Your tenure', esc(ownTenure)) : '') +
       kv('Lifetime war service', esc(String(summary.warService))) +
       kv('Current summons', esc(service));
     return h;
@@ -13988,10 +13996,10 @@ window.FB = window.FB || {};
         '</div>' +
         '<div class="settcard-details hidden" id="gov-vassal-det-' +
         esc(item.realmId) + '"><div class="governance-vassal-stats">' +
-        kv('Service charter', esc(feudalCharterName(s, item.charterId))) +
-        kv('Tenure', esc(tenure)) +
+        (FB.systemEnabled(s, 'feudal_service', { realm:item.realmId })
+          ? kv('Service charter', esc(feudalCharterName(s, item.charterId))) + kv('Tenure', esc(tenure)) : '') +
         kv('Political terms', esc(political)) +
-        kv('Council office', esc(office)) +
+        (FB.systemEnabled(s, 'royal_council') ? kv('Council office', esc(office)) : '') +
         kv('Exceptional levy', esc(promise)) +
         '</div></div><div class="governance-vassal-actions">' +
         '<div class="governance-inline-actions">' +
@@ -14054,11 +14062,11 @@ window.FB = window.FB || {};
       const activeForecast = estates.motionForecast;
       const forecasts = summary.politics && summary.politics.forecasts
         ? summary.politics.forecasts : {};
-      const policies = FB.policyList ? FB.policyList() : [];
+      const policies = FB.policyList ? FB.policyList(s) : [];
       let h = kv('The {term:liege}’s aid', esc(FB.T('{percent}%', {
         percent:Math.round(estates.aid * 100)
       }))) +
-        kv('Scutage', esc(estates.scutage ? FB.T('In force') : FB.T('Not granted'))) +
+        (FB.systemEnabled(s, 'scutage') ? kv('Scutage', esc(estates.scutage ? FB.T('In force') : FB.T('Not granted'))) : '') +
         kv('Session status', esc(estates.pendingEventIds.length
           ? FB.T('A session or motion is pending')
           : FB.T('{chance}% yearly chance; no sitting is currently pending', {
@@ -15752,7 +15760,7 @@ window.FB = window.FB || {};
     const pending = projection.pendingMotion;
     const activeForecast = projection.motionForecast;
     const politics = FB.politicalSummary(s);
-    const policies = FB.policyList ? FB.policyList() : [];
+    const policies = FB.policyList ? FB.policyList(s) : [];
     const forecasts = politics && politics.forecasts ? politics.forecasts : {};
     let overviewHtml = '<p>' + esc(FB.T(
       '{liege}’s Estates vote by bloc. Influence sets the tally; uncertain blocs follow their interests.',
@@ -20888,7 +20896,7 @@ window.FB = window.FB || {};
 
   UI.showPapacy = function (obedienceId) {
     const s = FB.state;
-    if (!s || !FB.ensurePapacy) return;
+    if (!s || !FB.ensurePapacy || !FB.systemEnabled(s, 'papacy')) return;
     const papacy = FB.ensurePapacy(s);
     const me = s.chars[s.player.charId];
     const recognizedId = FB.papalObedienceForCharacter(s, me) ||
@@ -21132,6 +21140,7 @@ window.FB = window.FB || {};
 
     const activeSentences = [];
     for (const key in papacy.excommunications) {
+      if (!FB.systemEnabled(s, 'excommunication')) break;
       const sentence = papacy.excommunications[key];
       if (sentence &&
           (sentence.clearedTurn === null ||
@@ -21179,11 +21188,11 @@ window.FB = window.FB || {};
           'Choose a Catholic sovereign who still uses lay investiture. Reform date, Papal authority, faith, and current policy are checked before the demand is sent.'),
         s.date.year < FBDATA.papacy.investiture.reformFrom ||
           obedience.authority < FBDATA.papacy.authority.gates.investiture);
-      h += papalActionCardHtml('papal-sanctions', '⛓',
+      if (FB.systemEnabled(s, 'excommunication')) h += papalActionCardHtml('papal-sanctions', '⛓',
         FB.T('Issue an excommunication'), FB.T(
           'Choose a ruler and review justified or arbitrary sentences, their recorded grounds, piety cost, authority requirement, and cooldown.'),
         obedience.authority < FBDATA.papacy.authority.gates.sanctions);
-      h += papalActionCardHtml('papal-great-holy-war', '📯',
+      if (FB.systemEnabled(s, 'great_holy_wars')) h += papalActionCardHtml('papal-great-holy-war', '📯',
         FB.T('Call a great holy war'), FB.T(
           'Open the holy war target review. Authority, schism, faith, campaign, and target eligibility are checked before the call.'),
         !FB.canCallGreatHolyWar(s, FB.playerHeadFaith(s), null, 'player'));
@@ -21566,6 +21575,7 @@ window.FB = window.FB || {};
   };
 
   UI.showPapalSanctionTargets = function (obedienceId) {
+    if (!FB.systemEnabled(FB.state, 'excommunication')) return;
     const s = FB.state;
     let h = '<div class="gm-body-text"><p>' + esc(FB.T(
       'A justified sentence needs a recorded ground. An arbitrary sentence needs 50 authority, costs 300 piety, and damages authority and Standing with Catholic rulers.')) +
@@ -22663,6 +22673,7 @@ window.FB = window.FB || {};
       kind === 'fort' ? 'fort' :
       'householdStandard';
     if (table && table[target]) {
+      if (!FB.systemContentEnabled(s, table[target])) return '';
       const content = dt(s, dataKind, target, table[target], 'name');
       if (kind === 'item') {
         return FB.T('Allows production of {content} in its historical period and region.', { content:content });

@@ -3610,3 +3610,7 @@ Shared story card. This flow is now the shared presentation for every registered
 Religious office review facts
 
 Religious head claim, restoration and absolution reviews use the effective localized office title, resolved seat and referenced prices. Papal absolution shows the actual rank-scaled offering from the eligibility quote. These sheets retain the shared facts, decision cards, Details controls and modal return behavior; opening or cancelling a review never spends resources or transfers an office. Conversion group labels come from effective conversionCategory data.
+
+Optional institution visibility
+
+Navigation, map controls, Deeds entries, event options, policy and privilege lists, trait chips and technology unlock descriptions omit content whose system requirements are disabled. Apply FB.systemContentEnabled before building a preview or evaluating eligibility. A disabled institution does not show a locked card with a requirement explanation. Direct modal calls and action mutations recheck availability. In a campaign without feudal service, county and duchy grants use the ordinary hereditary transfer review without service-charter or tenure selectors.

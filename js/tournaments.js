@@ -16,7 +16,7 @@ window.FB = window.FB || {};
   function copy(v) { return JSON.parse(JSON.stringify(v)); }
   function num(v) { return typeof v === 'number' && isFinite(v) ? v : 0; }
   function own(o, k) { return !!o && Object.prototype.hasOwnProperty.call(o, k); }
-  function root(s) { return s.tournaments || { events:[], annual:[], samples:{}, starts:{}, summaries:[] }; }
+  function root(s) { return FB.systemAvailable(s, 'tournaments') && s.tournaments || { events:[], annual:[], samples:{}, starts:{}, summaries:[] }; }
   function live(e) { return e && (e.status === 'announced' || e.status === 'running'); }
   function character(s, id) { return id && s.chars[id]; }
   function player(s, id) { return id === s.player.charId; }
@@ -72,10 +72,13 @@ window.FB = window.FB || {};
   }
   T.get = function (s, id) {
     var list = root(s).events;
-    for (var i = 0; i < list.length; i++) if (list[i].id === id) return list[i];
+    for (var i = 0; i < list.length; i++) if (list[i].id === id && eventEnabled(s, list[i])) return list[i];
     return null;
   };
-  T.active = function (s) { return root(s).events.filter(live); };
+  function eventEnabled(s, e) {
+    return FB.systemEnabled(s, 'tournaments', { character:e.hostId, realm:e.hostRealm });
+  }
+  T.active = function (s) { return root(s).events.filter(function (e) { return live(e) && eventEnabled(s, e); }); };
   T.available = function (s, id) { return available(s, id); };
   T.venueName = function (e) {
     var site = settlement(e), county = FB.world.byId[e.provinceId];
@@ -88,6 +91,7 @@ window.FB = window.FB || {};
     return 'martial';
   };
   T.ensure = function (s) {
+    if (!FB.systemAvailable(s, 'tournaments')) return null;
     if (!s.tournaments) s.tournaments = { version:1, nextId:1, events:[], annual:[], samples:{}, starts:{}, summaries:[], cursors:{} };
     var r = s.tournaments;
     r.nextId = Math.max(1, num(r.nextId));
@@ -149,6 +153,7 @@ window.FB = window.FB || {};
     });
   }
   T.eligibility = function (s, id, e) {
+    if (!FB.systemEnabled(s, 'tournaments', { character:id })) return status(false, FB.T('Games are not available.'));
     var c = character(s, id);
     if (!c || c.dead || c.health <= 0 || (player(s, id) && s.player.dead)) return status(false, FB.T('The participant is no longer living.'));
     if (FB.ageOf(c, s.date.year) < 16) return status(false, FB.T('Games are open to adults.'));
@@ -306,6 +311,7 @@ window.FB = window.FB || {};
     return e;
   };
   T.stopAnnual = function (s, id) {
+    if (!FB.systemEnabled(s, 'tournaments', { character:id })) return false;
     var r = T.ensure(s), before = r.annual.length;
     r.annual = r.annual.filter(function (a) { return a.hostId !== id; });
     return r.annual.length !== before;
@@ -658,6 +664,7 @@ window.FB = window.FB || {};
     return T.active(s).some(function (e) { return e.hostId === id || (e.guests || []).indexOf(id) >= 0 || e.participants.some(function (p) { return p.charId === id && p.status === 'active'; }); });
   };
   T.reconcile = function (s) {
+    if (!FB.systemAvailable(s, 'tournaments')) return;
     if (!s.tournaments) return;
     T.ensure(s);
     T.active(s).forEach(function (e) {
@@ -713,12 +720,14 @@ window.FB = window.FB || {};
     }
   };
   T.samplePlayer = function (s) {
+    if (!FB.systemEnabled(s, 'tournaments')) return;
     var r = T.ensure(s), id = s.player.charId, period = Math.floor(s.turn / 90), rows = r.samples[id] || [];
     if (rows.length && rows[rows.length - 1].season === period) return;
     rows.push({ season:period, net:T.projection(s, id) });
     r.samples[id] = rows.slice(-4);
   };
   T.season = function (s) {
+    if (!FB.systemAvailable(s, 'tournaments')) return;
     var r = T.ensure(s), period = Math.floor(s.turn / 90);
     if (r.lastSeason === period) return;
     r.lastSeason = period;
@@ -730,6 +739,7 @@ window.FB = window.FB || {};
     Object.keys(s.settlementLordships && s.settlementLordships.accounts || {}).sort().forEach(function (id) {
       if (character(s, id) && !character(s, id).dead && ids.indexOf(id) < 0) ids.push(id);
     });
+    ids = ids.filter(function (id) { return FB.systemEnabled(s, 'tournaments', { character:id }); });
     var nets = {};
     ids.forEach(function (id) {
       nets[id] = T.projection(s, id, fiscal);
@@ -771,9 +781,11 @@ window.FB = window.FB || {};
     });
   };
   T.tick = function (s) {
+    if (!FB.systemAvailable(s, 'tournaments')) return;
     var r = T.ensure(s);
     T.reconcile(s);
     r.annual.slice().forEach(function (a) {
+      if (!FB.systemEnabled(s, 'tournaments', { character:a.hostId })) return;
       if (s.turn < a.nextTurn - 60) return;
       var next = a.nextTurn; a.nextTurn += 360;
       var q = T.quote(s, { hostId:a.hostId, provinceId:a.provinceId, settlement:a.settlement,
@@ -814,7 +826,7 @@ window.FB = window.FB || {};
       });
       if (!onward && (!edition || s.turn >= edition.closeTurn + 3)) T.returnHome(s, false);
     }
-    r.events = r.events.filter(function (e) { return live(e) || s.turn < e.closeTurn + 4 || (s.player.travel && s.player.travel.tournamentId === e.id); });
+    r.events = r.events.filter(function (e) { return !eventEnabled(s, e) || live(e) || s.turn < e.closeTurn + 4 || (s.player.travel && s.player.travel.tournamentId === e.id); });
     if (!(FB.game && FB.game.observe) && s.turn % 90 === 1) {
       var invitation = T.list(s, 'upcoming').filter(function (e) {
         return e.hostId !== s.player.charId && e.invited !== s.player.charId && T.eligibility(s, s.player.charId, e).ok;
@@ -896,6 +908,7 @@ window.FB = window.FB || {};
     return true;
   };
   T.list = function (s, filter) {
+    if (!FB.systemEnabled(s, 'tournaments')) return [];
     return T.active(s).filter(function (e) {
       if (filter === 'local') return e.provinceId === s.player.provinceId;
       if (filter === 'bookings') return e.hostId === s.player.charId || !!T.participant(e, s.player.charId) || (s.player.travel && s.player.travel.tournamentId === e.id);

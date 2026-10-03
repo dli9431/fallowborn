@@ -1938,3 +1938,7 @@ The 476 prototype (situation-476.md) stores its world facts (actors, offices, co
 Religious office persistence
 
 state.religiousHeads and state.religiousHeadVacancies remain keyed by stable officeId. Pointers may refer to realms or characters according to the compiled head.holderKind. The original Papal office retains state.papacy; additional papal_election offices persist their independent model at state.religiousOfficeStates[officeId].papacy. Missing extra models initialize lazily, without replacing incumbent or election records from a save. These additive JSON records use the existing save envelope. A succession war saves casus.officeId; older caliphate causes without that key resolve the configured legacy office. Derived office tables and strategy functions are not serialized.
+
+Derived system availability
+
+System availability is derived from the campaign's existing start stamp and scoped government and faith definitions, with the bookmark as the final layer. It adds no save field or format change. Load repair skips disabled Papacy, abbey and tournament initialization; their existing records remain dormant. Disabled tenure, office and contract queries expose inert results rather than reactivating records. Existing greatHolyWars bookmark flags remain compatible with the resolver. See docs/designs/systems.md.

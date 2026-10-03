@@ -333,3 +333,5 @@ Maternal-custom discovery shares kin, household, realm-county, and liege-chain r
 within one synchronous pass. Learning records the source from that same lookup rather
 than repeating discovery. Each later pass reads live state again, including changes
 made on the same day; no discovery cache enters saves or outlives the calculation.
+
+Papal apostasy sanctions require the excommunication system for the former faith. A final bookmark disable prevents conversion from reviving a disabled institution. Conversion costs and ordinary community reactions continue to use their existing rules. See docs/designs/systems.md.

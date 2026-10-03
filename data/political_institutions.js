@@ -42,13 +42,13 @@ FBDATA.customaryBases = {
    sits over the era layer and beneath the bookmark and mod layers. */
 FBDATA.governmentForms = {
   territorial:{ holders:'feudal_vassals', succession:'dynastic',
-    territory:'fixed', consent:'territorial' },
+    territory:'fixed', consent:'territorial', systems:{ enable:['feudal_service'] } },
   regnum:{ holders:'direct', succession:'dynastic',
-    territory:'fixed', consent:'territorial' },
+    territory:'fixed', consent:'territorial', systems:{ disable:['feudal_service'] } },
   roman_civic:{ holders:'direct', succession:'office',
-    territory:'fixed', consent:'delegated' },
+    territory:'fixed', consent:'delegated', systems:{ disable:['feudal_service'] } },
   federate_polity:{ holders:'direct', succession:'acclamation',
-    territory:'non_territorial', consent:'delegated' }
+    territory:'non_territorial', consent:'delegated', systems:{ disable:['feudal_service'] } }
 };
 
 /* Great offices are stable save ids. Added seats receive the Council's
@@ -56,30 +56,35 @@ FBDATA.governmentForms = {
    special institutional/event consumers continue to name their core ids. */
 FBDATA.councilSeats = {
   seneschal: {
+    systems:['royal_council'],
     name:'Seneschal', icon:'⚖',
     desc:'+10% taxes while he serves',
     bonusKey:'tax', bonusAmount:0.10,
     station:'mayHoldCouncil', tierMin:6, holderEligibility:'direct_vassal'
   },
   constable: {
+    systems:['royal_council'],
     name:'Constable', icon:'🗡',
     desc:'+10% levy while he serves',
     bonusKey:'levy', bonusAmount:0.10,
     station:'mayHoldCouncil', tierMin:6, holderEligibility:'direct_vassal'
   },
   treasurer: {
+    systems:['royal_council'],
     name:'Treasurer', icon:'💰',
     desc:'Buildings cost 15% less while he serves',
     bonusKey:'build', bonusAmount:0.15,
     station:'mayHoldCouncil', tierMin:6, holderEligibility:'direct_vassal'
   },
   almoner: {
+    systems:['royal_council'],
     name:'Almoner', icon:'🕯',
     desc:'+1 piety a season while he serves',
     bonusKey:'piety', bonusAmount:1,
     station:'mayHoldCouncil', tierMin:6, holderEligibility:'direct_vassal'
   },
   chamberlain: {
+    systems:['royal_council'],
     name:'Chamberlain', icon:'🗝',
     desc:'Watches for schemes against you; your own plots weave faster',
     bonusKey:'plot', bonusAmount:0.08,
@@ -95,7 +100,7 @@ FBDATA.councilRules = {
 
 FBDATA.elections = {
   guild_officer: {
-    name:'Guild Officer Election', icon:'🏅', kind:'guild', office:'officer',
+    name:'Guild Officer Election', icon:'🏅', systems:['guild_elections'], kind:'guild', office:'officer',
     desc:'The masters choose who will sit among the guild’s officers for a fixed term.',
     order:0, termDays:1440, campaignDays:90, nominationCost:25,
     defeatCooldownDays:720, requiredRank:'master', stewardship:10,
@@ -128,7 +133,7 @@ FBDATA.elections = {
     }
   },
   guildmaster: {
-    name:'Guildmaster Election', icon:'🏅', kind:'guild', office:'guildmaster',
+    name:'Guildmaster Election', icon:'🏅', systems:['guild_elections'], kind:'guild', office:'guildmaster',
     desc:'The guild’s constituencies elect a guildmaster from proven officers for a fixed term.',
     order:1, termDays:1800, campaignDays:120, nominationCost:50,
     defeatCooldownDays:1080, requiredRank:'officer', minimumOfficeDays:360,
@@ -162,7 +167,7 @@ FBDATA.elections = {
     }
   },
   council_treasurer_confirmation: {
-    name:'Confirmation of the Treasurer', icon:'💰', kind:'council',
+    name:'Confirmation of the Treasurer', icon:'💰', systems:['royal_council'], kind:'council',
     office:'treasurer', desc:'A chartered council weighs the crown’s nominee before the treasury changes hands.',
     order:2, termDays:1440, campaignDays:60, nominationCost:0,
     defeatCooldownDays:360,
@@ -191,7 +196,7 @@ FBDATA.elections = {
     }
   },
   council_constable_confirmation: {
-    name:'Confirmation of the Constable', icon:'🗡', kind:'council',
+    name:'Confirmation of the Constable', icon:'🗡', systems:['royal_council'], kind:'council',
     office:'constable', desc:'A chartered council weighs the crown’s nominee before command of the host changes hands.',
     order:3, termDays:1440, campaignDays:60, nominationCost:0,
     defeatCooldownDays:360,
@@ -281,6 +286,7 @@ FBDATA.privileges = {
     effect:{ kind:'modifier', id:'tax_concession' }
   },
   consent_of_estates: {
+    systems:['estates'],
     name:'Consent of the Estates', icon:'🗳', order:6,
     desc:'The liege is sworn to seek the assembly’s consent before new aids.',
     requiresTech:'representative_estates',
@@ -300,7 +306,7 @@ FBDATA.privileges = {
     exemptions:['Confirmed holders cannot be dismissed during the protected term.'],
     obligations:['The crown nominates one eligible direct vassal at a time.'],
     duration:'indefinite', revocation:'council_consent',
-    effect:{ kind:'council_confirmation', seats:['treasurer','constable'] }
+    systems:['royal_council'], effect:{ kind:'council_confirmation', seats:['treasurer','constable'] }
   },
   protected_worship: {
     name:'Protected Worship', icon:'📜', order:8,

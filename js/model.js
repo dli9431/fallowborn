@@ -719,6 +719,11 @@ window.FB = window.FB || {};
       const properties = parent ? cloneFaithValue(parent.properties) : {};
       const sources = parent ? cloneFaithValue(parent._faithSources) : {};
       const localProperties = localFaithProperties(local);
+      if (FB.systems) {
+        const systemErrors = FB.systems.validateLayer(localProperties.systems, 'Faith ' + id);
+        errors.push.apply(errors, systemErrors);
+        if (localProperties.systems) localProperties.systems = FB.systems.layerMap(localProperties.systems);
+      }
       mergeFaithValues(properties, localProperties, sources, id, '');
       /* A faith founded during play is a new institution, even when it keeps
          friendly relations with its parent. Doctrines continue to inherit,
@@ -1314,8 +1319,7 @@ window.FB = window.FB || {};
 
   FB.faithHasSystem = function (id, systemId, state) {
     if (!FB.faithExists(id, state)) return false;
-    const rel = FB.religionOf(id, state);
-    return !!(rel && rel.systems && rel.systems[systemId]);
+    return FB.systemEnabled(state === undefined ? FB.state : state, systemId, { faith:id });
   };
 
   FB.faithOfficeId = function (id, state) {
@@ -2009,10 +2013,10 @@ window.FB = window.FB || {};
     for (const s of SKILLS) c.skills[s] = Math.max(0, FB.ri(0, 6) + q);
     if (!opts.traits) {
       const pool = Object.keys(FBDATA.traits).filter(function (t) {
-        return !FBDATA.traits[t].noRandom;
+        return !FBDATA.traits[t].noRandom && FB.systemContentEnabled(state, FBDATA.traits[t], { character:c });
       });
       const n = opts.traitsN !== undefined ? opts.traitsN : FB.ri(1, 3);
-      for (let i = 0; i < n; i++) FB.addTrait(c, FB.pick(pool));
+      for (let i = 0; i < n && pool.length; i++) FB.addTrait(c, FB.pick(pool), state);
     }
     if (state) {
       state.chars[c.id] = c;
@@ -2021,9 +2025,10 @@ window.FB = window.FB || {};
     return c;
   };
 
-  FB.addTrait = function (c, traitId) {
+  FB.addTrait = function (c, traitId, state) {
     const t = FBDATA.traits[traitId];
-    if (!t || c.traits.indexOf(traitId) >= 0) return false;
+    if (!t || ((t.system || t.systems) && !FB.systemContentEnabled(state || FB.state, t, { character:c })) ||
+        c.traits.indexOf(traitId) >= 0) return false;
     if (t.opposite && c.traits.indexOf(t.opposite) >= 0) {
       c.traits.splice(c.traits.indexOf(t.opposite), 1);
     }
@@ -2045,6 +2050,7 @@ window.FB = window.FB || {};
     let total = 0;
     for (const id of c.traits) {
       const def = FBDATA.traits[id];
+      if (def && !FB.systemContentEnabled(FB.state, def, { character:c })) continue;
       const effects = def && def[group];
       if (!effects || effects[key] === undefined) continue;
       const value = Number(effects[key]);
@@ -2082,7 +2088,7 @@ window.FB = window.FB || {};
     const threshold = def && def.earn && Number(def.earn.threshold);
     if (!isFinite(threshold) || threshold <= 0) return false;
     const c = state.chars && state.chars[state.player.charId];
-    if (!c) return false;
+    if (!c || !FB.systemContentEnabled(state, def, { character:c })) return false;
     const progress = FB.ensureTraitProgress(state);
     let delta = amount === undefined ? 1 : Number(amount);
     if (!isFinite(delta)) delta = 0;
@@ -2158,11 +2164,11 @@ window.FB = window.FB || {};
     return pool.length ? FB.pick(pool) : null;
   };
 
-  FB.traitAgg = function (c) {
+  FB.traitAgg = function (c, state) {
     const agg = { dip: 0, mar: 0, ste: 0, int: 0, lea: 0, health: 0, fert: 1, opinion: 0 };
     for (const id of c.traits) {
       const t = FBDATA.traits[id];
-      if (!t) continue;
+      if (!t || ((t.system || t.systems) && !FB.systemContentEnabled(state || FB.state, t, { character:c }))) continue;
       for (const s of SKILLS) if (t[s]) agg[s] += t[s];
       if (t.health) agg.health += t.health;
       if (t.fert) agg.fert *= t.fert;
@@ -2406,7 +2412,7 @@ window.FB = window.FB || {};
     for (const p of parents) {
       for (const id of p.traits) {
         const t = FBDATA.traits[id];
-        if (t && t.inherit && FB.chance(t.inherit) && traits.indexOf(id) < 0) traits.push(id);
+        if (t && t.inherit && FB.systemContentEnabled(FB.state, t, { character:p }) && FB.chance(t.inherit) && traits.indexOf(id) < 0) traits.push(id);
       }
     }
     if (FB.chance(0.02)) traits.push('genius');

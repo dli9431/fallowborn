@@ -887,6 +887,8 @@ window.FBDATA = window.FBDATA || {};
 
   var bookmark867 = {
     id:'867',
+    systems:{ enable:['manorial_tenure','feudal_service','scutage','crown_bloc',
+      'excommunication','abbeys','tournaments','great_holy_wars','guild_elections','royal_council','estates'] },
     name:'The Viking Age',
     desc:'The old kingdoms stand divided while raiders, caliphs, and emperors contend.',
     date:{ year:867, season:0, day:1 },
@@ -905,6 +907,8 @@ window.FBDATA = window.FBDATA || {};
 
   var bookmark1066 = {
     id:'1066',
+    systems:{ enable:['manorial_tenure','feudal_service','scutage','crown_bloc',
+      'excommunication','abbeys','tournaments','great_holy_wars','guild_elections','royal_council','estates'] },
     name:'The Three Claimants',
     desc:'Harold wears England’s crown; Normandy and Norway have not yet crossed the sea.',
     date:{ year:1066, season:0, day:1 },

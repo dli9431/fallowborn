@@ -6,6 +6,7 @@ window.FBDATA = window.FBDATA || {};
 
 FBDATA.politicalBlocs = {
   crown: {
+    systems:['crown_bloc'],
     name:'Crown',
     icon:'♛',
     color:'#b88a3b',

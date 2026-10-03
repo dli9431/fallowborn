@@ -25,7 +25,7 @@ FBDATA.events.push(
   ]},
 
 /* ---------- authority and customary tenure ---------- */
-{ id:'serf_tenure_review',
+{ id:'serf_tenure_review', systems:['manorial_tenure'],
   title:{ forms:{ select:'value', param:'proposalKind', cases:{
     add_duty:'A New Burden in the Custom',
     commute_duty:'Labor Reckoned in Coin',
@@ -92,7 +92,7 @@ FBDATA.events.push(
       effects:{ custom:'serf_transition_decline_restore' } }
   ]},
 
-{ id:'serf_commuted_due', title:'The Commuted Labor Due',
+{ id:'serf_commuted_due', systems:['manorial_tenure'], title:'The Commuted Labor Due',
   trigger:{ never:true }, contextValidator:'serf_tenure_context_valid',
   text:'The customary labor recorded as {duty} now falls due in coin. The saved agreement demands {money:commutationGold}, though work or an appeal can still answer an empty purse.',
   options:[
@@ -152,7 +152,7 @@ FBDATA.events.push(
       success:{ text:'Venison in the pot, and none the wiser.', effects:{ clearFlag:'lean_winter', skills:{int:1} } },
       failure:{ text:'The forester catches you red-handed over the carcass.', effects:{ clearFlag:'lean_winter', queue:'caught_poaching' } } }
   ]},
-{ id:'serf_desperate_measures', title:'Desperate Measures', trigger:{ never:true },
+{ id:'serf_desperate_measures', systems:['manorial_tenure'], title:'Desperate Measures', trigger:{ never:true },
   text:'Your household’s bonds leave little lawful room to climb. Choose what to take from the lord’s land, stores, or dues — and how much danger to accept.',
   options:[
     { label:'Cut and sell forbidden wood.',
@@ -197,7 +197,7 @@ FBDATA.events.push(
   ]},
 
 /* ---------- the lord's shadow (serfs) ---------- */
-{ id:'corvee', title:'The Lord’s Due', tenureAware:true,
+{ id:'corvee', systems:['manorial_tenure'], title:'The Lord’s Due', tenureAware:true,
   trigger:{ tierMax:0, chance:0.35 }, weight:10, cooldown:4,
   participants:[
     {slot:'lord', source:'role', role:'lord', required:true, create:true, authorityRole:'lord', sameHome:true},
@@ -217,7 +217,7 @@ FBDATA.events.push(
     { label:'Bribe {officer} to overlook you.', require:{ goldMin:3 }, desc:'A few coins, and the dawn knock is not for you.', effects:{ gold:-3, standingCharacter:{participant:'officer', amt:5} } }
   ]},
 /* ---------- customary burdens (serfs) ---------- */
-{ id:'serf_boon_harvest',
+{ id:'serf_boon_harvest', systems:['manorial_tenure'],
   title:{ forms:{ select:'value', param:'dutyId', cases:{
     seasonal_catch_share:'The Shore Share First',
     other:{ select:'value', param:'archetypeId', cases:{
@@ -275,7 +275,7 @@ FBDATA.events.push(
       }}},
       effects:{ health:-2, prestige:2, standingCharacter:{participant:'neighbor', amt:12} } }
   ]},
-{ id:'serf_weekwork_tally',
+{ id:'serf_weekwork_tally', systems:['manorial_tenure'],
   title:{ forms:{ select:'value', param:'dutyId', cases:{
     herd_service:'Another Turn with the Herds',
     woodland_service:'Another Woodland Turn',
@@ -330,7 +330,7 @@ FBDATA.events.push(
           herd_service:'{witness}’s memory bends under {officer}’s questions. The added herd turn stands.', woodland_service:'{witness}’s memory bends under {officer}’s questions. The added woodland turn stands.', boat_service:'{witness}’s memory bends under {officer}’s questions. The added boat turn stands.', other:'{witness}’s memory bends under {officer}’s questions. The new tally stands.'
         }}}, effects:{ health:-1, prestige:-3, standingCharacter:[{participant:'officer', amt:-5},{participant:'witness', amt:-3}] } } }
   ]},
-{ id:'serf_mill_multure',
+{ id:'serf_mill_multure', systems:['manorial_tenure'],
   title:{ forms:{ select:'value', param:'archetypeId', cases:{
     latin_manorial:'The Miller’s Share',
     irrigated_fellah:'The Mill Multure',
@@ -357,7 +357,7 @@ FBDATA.events.push(
       failure:{ text:'The flour is still warm from your quern. He seizes the sack and adds a fine.',
         effects:{ gold:-5, standingCharacter:{participant:'officer', amt:-6} } } }
   ]},
-{ id:'serf_pannage_due',
+{ id:'serf_pannage_due', systems:['manorial_tenure'],
   title:{ forms:{ select:'value', param:'dutyId', cases:{
     pasture_due:'The Pasture Due',
     mast_due:'The Woodland Mast Due',
@@ -402,7 +402,7 @@ FBDATA.events.push(
         }}},
         effects:{ gold:-5, opinion:{role:'lord', amt:-8} } } }
   ]},
-{ id:'serf_marriage_leave',
+{ id:'serf_marriage_leave', systems:['manorial_tenure'],
   title:{ forms:{ select:'value', param:'archetypeId', cases:{
     latin_manorial:'Leave to Wed',
     irrigated_fellah:'The Marriage Custom',
@@ -426,7 +426,7 @@ FBDATA.events.push(
       failure:{ text:'The petition is called ingratitude. The full fine grows by another coin.',
         effects:{ gold:-6, opinion:{role:'lord', amt:-5} } } }
   ]},
-{ id:'serf_tithe_sheaf',
+{ id:'serf_tithe_sheaf', systems:['manorial_tenure'],
   title:{ forms:{ select:'value', param:'archetypeId', cases:{
     latin_manorial:'The Tenth Sheaf',
     irrigated_fellah:'The Harvest Tithe',
@@ -449,7 +449,7 @@ FBDATA.events.push(
       failure:{ text:'A fork strikes the hidden bundle. The grain goes to the church with an amercement besides.',
         effects:{ gold:-5, piety:-4 } } }
   ]},
-{ id:'serf_bridge_cartage',
+{ id:'serf_bridge_cartage', systems:['manorial_tenure'],
   title:{ forms:{ select:'value', param:'dutyId', cases:{
     seasonal_drove:'The Seasonal Drove',
     timber_cartage:'Timber from the Woodland',
@@ -506,7 +506,7 @@ FBDATA.events.push(
         seasonal_drove:'Their household takes the road; yours pays the coin.', timber_cartage:'Their household takes the woodland road; yours pays the coin.', shore_transport:'Their household takes the water and shore; yours pays the coin.', other:'Their household takes the mud; yours pays the coin.'
       }}}, effects:{ gold:-3, standingCharacter:{participant:'neighbor', amt:5} } }
   ]},
-{ id:'serf_common_oven',
+{ id:'serf_common_oven', systems:['manorial_tenure'],
   title:{ forms:{ select:'value', param:'archetypeId', cases:{
     latin_manorial:'The Lord’s Oven',
     irrigated_fellah:'The Communal Bakery',
@@ -529,7 +529,7 @@ FBDATA.events.push(
       failure:{ text:'Smoke curls above the roof. The baker arrives before the loaf is cool.',
         effects:{ gold:-4, opinion:{role:'lord', amt:-5} } } }
   ]},
-{ id:'serf_deadwood_amerced',
+{ id:'serf_deadwood_amerced', systems:['manorial_tenure'],
   title:{ forms:{ select:'value', param:'dutyId', cases:{
     deadwood_due:'The Boundary of Fallen Wood',
     other:{ select:'value', param:'archetypeId', cases:{
@@ -572,7 +572,7 @@ FBDATA.events.push(
         }}},
         effects:{ gold:-4, opinion:{role:'lord', amt:-5} } } }
   ]},
-{ id:'serf_officers_quartered', tenureAware:true,
+{ id:'serf_officers_quartered', systems:['manorial_tenure'], tenureAware:true,
   title:{ forms:{ select:'value', param:'tenureArchetypeId', cases:{
     pastoral_steppe:'Riders Beside the Herds',
     woodland_dependence:'Warriors in the Clearing',
@@ -635,7 +635,7 @@ FBDATA.events.push(
       effects:{ prestige:-3, popularOpinion:-2, standingCharacter:{participant:'neighbor', amt:-15}, rivalContact:{participant:'neighbor', score:2, cause:'shifted_quartering'}, custom:'serf_neighbor_shifted' } }
   ]},
 
-{ id:'serf_neighbor_reckoning', title:'The Burden Comes Home',
+{ id:'serf_neighbor_reckoning', systems:['manorial_tenure'], title:'The Burden Comes Home',
   trigger:{ never:true }, contextValidator:'serf_neighbor_context_valid',
   participants:[
     {slot:'neighbor', source:'context', required:true, sameHome:true},
@@ -652,7 +652,7 @@ FBDATA.events.push(
   ]},
 
 /* ---------- extraordinary burdens: every road costs something ---------- */
-{ id:'serf_extraordinary_tallage', title:'Tallage Without Measure', once:true,
+{ id:'serf_extraordinary_tallage', systems:['manorial_tenure'], title:'Tallage Without Measure', once:true,
   trigger:{ tierMax:0, minAge:16, goldMin:4, chance:0.035 }, weight:2, cooldown:32,
   participants:[
     {slot:'lord', source:'role', role:'lord', required:true, create:true, authorityRole:'lord', sameHome:true},
@@ -667,7 +667,7 @@ FBDATA.events.push(
     { label:'Refuse before the manor court.', desc:'Keep coin and strength; let defiance become the next debt.',
       effects:{ prestige:-8, standingCharacter:[{participant:'lord', amt:-15},{participant:'officer', amt:-10}] } }
   ]},
-{ id:'serf_seed_grain_requisition', tenureAware:true,
+{ id:'serf_seed_grain_requisition', systems:['manorial_tenure'], tenureAware:true,
   title:{ forms:{ select:'value', param:'tenureArchetypeId', cases:{
     pastoral_steppe:'The Herd Stores Are Opened', woodland_dependence:'The Woodland Stores Are Opened', norse_coastal_service:'The Shore Stores Are Opened', other:'The Granary Is Opened'
   }}}, once:true, wartime:true,
@@ -700,7 +700,7 @@ FBDATA.events.push(
       effects:{ health:-2, prestige:-5, opinion:{role:'lord', amt:-15} } }
   ]},
 
-{ id:'tax_collector', title:'The Taxman Cometh',
+{ id:'tax_collector', systems:['manorial_tenure'], title:'The Taxman Cometh',
   trigger:{ tierMax:1, seasonKinds:['autumn'], chance:0.4 }, weight:12, cooldown:3,
   text:'The lord’s man arrives with his ledger and his soldiers, tallying hearths and hens alike.',
   options:[
@@ -712,7 +712,7 @@ FBDATA.events.push(
       success:{ text:'The collector sighs and moves on.', effects:{ } },
       failure:{ text:'He takes your goods in lieu of coin.', effects:{ gold:-4 } } }
   ]},
-{ id:'lord_squeezes', title:'A Tally With Your Name On It', tenureAware:true,
+{ id:'lord_squeezes', systems:['manorial_tenure'], title:'A Tally With Your Name On It', tenureAware:true,
   trigger:{ tierMax:2, roleOpinionBelow:{role:'lord', value:-40}, chance:0.25 }, weight:7, cooldown:8,
   participants:[
     {slot:'lord', source:'role', role:'lord', required:true, create:true, authorityRole:'lord', sameHome:true},
@@ -732,7 +732,7 @@ FBDATA.events.push(
       success:{ text:'{witness} names the custom. {officer} scratches out the line, scowling.', effects:{ prestige:3, skills:{lea:1}, standingCharacter:[{participant:'officer', amt:-8},{participant:'witness', amt:5}] } },
       failure:{ text:'“Custom is what the lord says it is.” The tally stands — and there is a fine for arguing.', effects:{ gold:-4, health:-1, standingCharacter:[{participant:'lord', amt:-5},{participant:'witness', amt:-3}] } } }
   ]},
-{ id:'lords_notice', title:'The Lord’s Eye', tenureAware:true,
+{ id:'lords_notice', systems:['manorial_tenure'], title:'The Lord’s Eye', tenureAware:true,
   trigger:{ tierMax:0, roleOpinionAbove:{role:'lord', value:25}, chance:0.001 }, weight:10, once:true,
   text:{ forms:{ select:'value', param:'tenureArchetypeId', cases:{
     pastoral_steppe:'{lord} reins in beside the household herds. “You. You’re the one who works like two people. What is it you want in this life?”',
@@ -745,7 +745,7 @@ FBDATA.events.push(
     { label:'“Only to serve, lord.”', desc:'Humility pleases the powerful, and asks for nothing.', effects:{ opinion:{role:'lord', amt:10} } },
     { label:'“Land of my own, someday.”', desc:'An honest ambition, honestly confessed.', effects:{ opinion:{role:'lord', amt:3} } }
   ]},
-{ id:'manumission', title:'A Man of Your Own',
+{ id:'manumission', systems:['manorial_tenure'], title:'A Man of Your Own',
   trigger:{ never:true }, weight:20,
   contextValidator:'freedom_offer_context_valid',
   text:'The {holy} drafts the exact terms by candlelight. {lord} asks {money:price} now; the record names {serviceDays} days of final service.',
@@ -834,7 +834,7 @@ FBDATA.events.push(
   ]},
 
 /* ---------- serf flight ---------- */
-{ id:'flee_serfdom', title:'The Open Road',
+{ id:'flee_serfdom', systems:['manorial_tenure'], title:'The Open Road',
   trigger:{ tierMax:0, chance:0.001, roleOpinionBelow:{role:'lord', value:-20} }, weight:6, cooldown:12,
   participants:[
     {slot:'lord', source:'role', role:'lord', required:true, create:true, authorityRole:'lord', sameHome:true},
@@ -857,7 +857,7 @@ FBDATA.events.push(
   ]},
 
 /* ================= THE OLD CUSTOM — five-part landmark chain ================= */
-{ id:'old_custom_stakes', title:'Stakes in the Common',
+{ id:'old_custom_stakes', systems:['manorial_tenure'], title:'Stakes in the Common',
   trigger:{ tierMax:0, minAge:16, chance:0.001 }, weight:15, once:true,
   participants:[
     {slot:'lord', source:'role', role:'lord', required:true, create:true, authorityRole:'lord', sameHome:true},
@@ -880,7 +880,7 @@ FBDATA.events.push(
       failure:{ text:'{officer} takes the names, keeps the coin, and looks at you with contempt.', effects:{ standingCharacter:[{participant:'officer', amt:-5},{participant:'witness', amt:-8}], prestige:-2, custom:'serf_old_custom_sync' } } }
   ]},
 
-{ id:'old_custom_memory', title:'What the Old Folk Remember',
+{ id:'old_custom_memory', systems:['manorial_tenure'], title:'What the Old Folk Remember',
   trigger:{ flags:['old_custom_1'], custom:'serf_old_custom_ready' }, weight:50, once:true,
   participants:[
     {slot:'lord', source:'story', storyId:'old_custom', required:true, authorityRole:'lord', sameHome:true},
@@ -905,7 +905,7 @@ FBDATA.events.push(
       failure:{ text:'The clerk recognizes his predecessor’s hand — and knows this is not it.', effects:{ prestige:-5, standingCharacter:{participant:'lord', amt:-10}, piety:-3, custom:'serf_old_custom_sync' } } }
   ]},
 
-{ id:'old_custom_reeve', title:'The Reeve Comes at Dusk',
+{ id:'old_custom_reeve', systems:['manorial_tenure'], title:'The Reeve Comes at Dusk',
   trigger:{ flags:['old_custom_2'], custom:'serf_old_custom_ready' }, weight:50, once:true,
   participants:[
     {slot:'lord', source:'story', storyId:'old_custom', required:true, authorityRole:'lord', sameHome:true},
@@ -931,7 +931,7 @@ FBDATA.events.push(
       effects:{ piety:-5, clearFlag:'old_custom_2', setFlag:'old_custom_3', setFlag2:'rights_evidence', custom:'serf_old_custom_sync' } }
   ]},
 
-{ id:'old_custom_hearing', title:'Before the Lord’s Bench',
+{ id:'old_custom_hearing', systems:['manorial_tenure'], title:'Before the Lord’s Bench',
   trigger:{ flags:['old_custom_3'], custom:'serf_old_custom_ready' }, weight:60, once:true,
   participants:[
     {slot:'lord', source:'story', storyId:'old_custom', required:true, authorityRole:'lord', sameHome:true},
@@ -958,7 +958,7 @@ FBDATA.events.push(
       effects:{ gold:8, clearFlag:'old_custom_3', setFlag:'old_custom_resolve', setFlag2:'old_custom_betrayed', standingCharacter:[{participant:'lord', amt:10},{participant:'officer', amt:10},{participant:'witness', amt:-12}], popularOpinion:-10, custom:'serf_old_custom_sync' } }
   ]},
 
-{ id:'old_custom_end', title:'What Is Remembered',
+{ id:'old_custom_end', systems:['manorial_tenure'], title:'What Is Remembered',
   trigger:{ flags:['old_custom_resolve'], custom:'serf_old_custom_ready' }, weight:80, once:true,
   participants:[
     {slot:'lord', source:'story', storyId:'old_custom', required:true, authorityRole:'lord', sameHome:true},
@@ -998,7 +998,7 @@ FBDATA.events.push(
       effects:{ piety:8, popularOpinion:10, prestige:-4, standingCharacter:[{participant:'lord', amt:-15},{participant:'officer', amt:-12},{participant:'witness', amt:8}], clearFlag:'old_custom_resolve', clearFlag2:'old_custom_betrayed', custom:'serf_old_custom_sync' } }
   ]},
 
-{ id:'old_custom_officer_changed', title:'A New Hand on the Tally',
+{ id:'old_custom_officer_changed', systems:['manorial_tenure'], title:'A New Hand on the Tally',
   trigger:{never:true}, contextValidator:'serf_old_custom_replacement_valid',
   participants:[
     {slot:'formerOfficer', source:'context', allowDead:true},

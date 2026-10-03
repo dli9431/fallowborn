@@ -16,6 +16,18 @@
     { "id": "customary_law_courts", "reason": "Technology capability; the written confirmation of custom before the Estates asks for it instead of a technology id." },
     { "id": "permanent_markets", "reason": "Technology capability; town shops and market charters ask for it instead of a technology id." },
     { "id": "sealed_documents", "reason": "Technology capability; market charters ask for it instead of a technology id." },
-    { "id": "parallel_research", "reason": "Technology capability; research slots count its grants instead of naming learning technologies." }
+    { "id": "parallel_research", "reason": "Technology capability; research slots count its grants instead of naming learning technologies." },
+    {"id": "manorial_tenure", "reason": "Optional system capability; its owning engine and scheduler use this registry id to gate work."},
+    {"id": "feudal_service", "reason": "Optional system capability; its owning engine and scheduler use this registry id to gate work."},
+    {"id": "scutage", "reason": "Optional system capability; its owning engine and scheduler use this registry id to gate work."},
+    {"id": "crown_bloc", "reason": "Optional system capability; its owning engine and scheduler use this registry id to gate work."},
+    {"id": "papacy", "reason": "Optional system capability; its owning engine and scheduler use this registry id to gate work."},
+    {"id": "excommunication", "reason": "Optional system capability; its owning engine and scheduler use this registry id to gate work."},
+    {"id": "abbeys", "reason": "Optional system capability; its owning engine and scheduler use this registry id to gate work."},
+    {"id": "tournaments", "reason": "Optional system capability; its owning engine and scheduler use this registry id to gate work."},
+    {"id": "great_holy_wars", "reason": "Optional system capability; its owning engine and scheduler use this registry id to gate work."},
+    {"id": "guild_elections", "reason": "Optional system capability; its owning engine and scheduler use this registry id to gate work."},
+    {"id": "royal_council", "reason": "Optional system capability; its owning engine and scheduler use this registry id to gate work."},
+    {"id": "estates", "reason": "Optional system capability; its owning engine and scheduler use this registry id to gate work."}
   ]
 }

@@ -1063,3 +1063,7 @@ English fallback. Technology impact is none; this is a distribution policy.
 
 
 Scheduled games use exact edition, protagonist, track and round/incident contexts from js/tournaments.js. The two legacy instant invitations now have never triggers but keep their ids and option indices for queued saves. Scheduled custom handlers validate before effects and register preview/report adapters; war invalidates both queued records and retained modal copies. See tournaments.md and ../plans/tournaments-and-regional-games.md.
+
+Optional system requirements
+
+Events, their triggers, options and option requirements may name registered systems. Queuing and random selection reject disabled events before participant binding or chance evaluation. Previously queued disabled events fail the normal context-validity check. Disabled options are hidden and the shared resolution entry point refuses them for both manual and automated choices. Unknown tags are authoring errors, including tags on nested options. See docs/designs/systems.md.
