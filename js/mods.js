@@ -701,8 +701,8 @@ window.FBMODS = window.FBMODS || [];
       if (career.maleOnly && scenario.sex !== 'm') {
         fail(path + '.profession', 'requires a male-only scenario.');
       }
-      if ((!FB.station.reaches(scenario, career.tierMin)) ||
-          (FB.station.exceeds(scenario, career.tierMax))) {
+      if ((!FB.station.reaches(scenario, career.tierMin, null)) ||
+          (FB.station.exceeds(scenario, career.tierMax, null))) {
         fail(path + '.profession', 'is unavailable at tier ' + scenario.tier + '.');
       }
       for (const resource of ['gold','prestige','piety']) {
@@ -1172,7 +1172,7 @@ window.FBMODS = window.FBMODS || [];
       const def = seats[seatId];
       onlyFields(def, {
         name:true, desc:true, icon:true, bonusKey:true, bonusAmount:true,
-        tierMin:true, holderEligibility:true
+        station:true, tierMin:true, holderEligibility:true
       }, path);
       requiredText(def.name, path + '.name');
       requiredText(def.desc, path + '.desc');
@@ -1186,7 +1186,11 @@ window.FBMODS = window.FBMODS || [];
           def.bonusAmount > 100) {
         fail(path + '.bonusAmount', 'must be a number from 0 to 100.');
       }
-      integerRange(def.tierMin, 0, 7, path + '.tierMin');
+      if (def.station !== undefined && FB.station.meanings.indexOf(def.station) < 0)
+        fail(path + '.station', 'must name a station permission.');
+      if (def.tierMin !== undefined) integerRange(def.tierMin, 0, 7, path + '.tierMin');
+      if (def.station === undefined && def.tierMin === undefined)
+        fail(path, 'needs station or tierMin.');
       if (def.holderEligibility !== 'direct_vassal') {
         fail(path + '.holderEligibility', 'must be direct_vassal.');
       }

@@ -2115,3 +2115,7 @@ conquest. The 476 bookmark alone has a Syracuse–Carthage open crossing for the
 African route.
 
 Hosting and every scheduled-games attendance track require peace throughout personal, home, host and venue ruling chains. Ordinary campaigns, active holy wars and armed revolts count; holy-war preparation, threats and truces do not. War cancels an ineligible host edition or withdraws only affected visitors, releases reserved capacity, preserves earned rewards and refunds unused commitments. Tournament travellers physically return using their prepaid allowance before generic travel cancellation. See tournaments.md.
+
+Government ladder command
+
+Muster review and campaign navigation read mayCommand from the player's era/form ladder separately from isLanded. Raising a host requires that band permission or an existing explicit military command. Actual rally counties, troop pools, supply and ordinary scoped command grants retain their current contracts. Existing permission checks elsewhere ask the same named station and realm-rank meanings with their subject's campaign state. Tier/rank mappings and relative dignity come from the ladder resolver; a command permission never creates a county or an army. All shipped forms retain the feudal answers, with no technology change.

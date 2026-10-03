@@ -40,7 +40,7 @@
     return h;
   };
   UI.campaignsHtml = function (s) {
-    if (!FB.station.isLanded(s.player)) return '';
+    if (!FB.station.mayCommand(s.player, s)) return '';
     let h = '<section class="land-section" data-campaign-list><h3>' + esc(FB.T('Campaigns')) + '</h3>';
     FB.realmWars(s, 'player').forEach(function (w) {
       const occupied = w.objectives.filter(function (o) { return w.occupations[o.target] && w.occupations[o.target].occupied; }).length;
@@ -425,7 +425,7 @@
   UI.showWarLaws = function (view) {
     const s = FB.state, sovereign = FB.playerRealmId(s) || 'player';
     const ruler = s.realms.player;
-    const canProclaim = ruler && ruler.alive && !ruler.liege && !s.player.liege && FB.station.isDucal(s.player);
+    const canProclaim = ruler && ruler.alive && !ruler.liege && !s.player.liege && FB.station.isDucal(s.player, s);
     let h = '<div class="war-sheet war-laws-sheet">' + fact(FB.T('Governing realm'), name(s, sovereign));
     ['internal_peace', 'external_campaigns'].forEach(function (id) {
       const def = FBDATA.policies[id], current = FB.realmPolicyLevelId(s, id);

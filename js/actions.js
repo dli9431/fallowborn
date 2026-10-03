@@ -217,7 +217,7 @@ window.FB = window.FB || {};
   { id: 'toil',
     show: function (s) {
       const service = FB.householdServiceRecord(s);
-      return adult(s) && (FB.station.isSerf(s.player) || service && service.status === 'active');
+      return adult(s) && (FB.station.isSerf(s.player, s) || service && service.status === 'active');
     },
     can: function (s) {
       const service = FB.householdServiceRecord(s);
@@ -243,7 +243,7 @@ window.FB = window.FB || {};
     } },
   { id: 'militia',
     show: function (s) {
-      return !FB.station.isGentle(s.player) && adult(s) &&
+      return !FB.station.isGentle(s.player, s) && adult(s) &&
         !FB.professionHasRole(s.player.profession, 'cloister') && !female(s) &&
         !qualifiedRole(s, 'arms');
     },
@@ -251,7 +251,7 @@ window.FB = window.FB || {};
 
   { id: 'work_land',
     show: function (s) {
-      return FB.station.isFreeholder(s.player) && FB.professionHasRole(s.player.profession, 'labor');
+      return FB.station.isFreeholder(s.player, s) && FB.professionHasRole(s.player.profession, 'labor');
     },
     tick: function (s) {
       let g = FB.rf(FBDATA.balance.freeWage[0], FBDATA.balance.freeWage[1]);
@@ -264,14 +264,14 @@ window.FB = window.FB || {};
       return { gold: g };
     } },
   { id: 'market',
-    show: function (s) { return FB.station.isFreeholder(s.player) && adult(s); },
+    show: function (s) { return FB.station.isFreeholder(s.player, s) && adult(s); },
     tick: function (s) {
       s.player.gold += (1 + FB.skillOf(me(s), 'ste') / 3) / D;
       if (skillDch(0.35)) skillUp(s, 'ste');
     },
     gain: function (s) { return { gold: 1 + FB.skillOf(me(s), 'ste') / 3 }; } },
   { id: 'keep_house',
-    show: function (s) { return female(s) && adult(s) && !FB.station.isLanded(s.player); },
+    show: function (s) { return female(s) && adult(s) && !FB.station.isLanded(s.player, s); },
     tick: function (s) {
       s.player.gold += (1 + FB.skillOf(me(s), 'ste') / 3) / D;
       if (skillDch(0.4)) skillUp(s, FB.pick(['ste', 'dip']));
@@ -280,7 +280,7 @@ window.FB = window.FB || {};
 
   { id: 'craft_work',
     show: function (s) {
-      return FB.professionHasRole(s.player.profession, 'craft') && !FB.station.isLanded(s.player);
+      return FB.professionHasRole(s.player.profession, 'craft') && !FB.station.isLanded(s.player, s);
     },
     tick: function (s) {
       s.player.gold += (FB.rf(2, 5) + (s.player.flags.guild_member ? 1 : 0) +
@@ -294,7 +294,7 @@ window.FB = window.FB || {};
   { id: 'trade_run',
     desc: function (s) { return s.player.gold < 10 ? 'Little stock, little profit — but a start.' : 'Buy low here, sell high there.'; },
     show: function (s) {
-      return FB.professionHasRole(s.player.profession, 'trading') && !FB.station.isLanded(s.player);
+      return FB.professionHasRole(s.player.profession, 'trading') && !FB.station.isLanded(s.player, s);
     },
     tick: function (s) {
       const ste = FB.skillOf(me(s), 'ste');
@@ -314,7 +314,7 @@ window.FB = window.FB || {};
 
   { id: 'keep_records',
     show: function (s) {
-      return !FB.station.isLanded(s.player) && qualifiedCareer(s, 'administration');
+      return !FB.station.isLanded(s.player, s) && qualifiedCareer(s, 'administration');
     },
     tick: function (s) {
       s.player.gold += administrationGold(s) / D;
@@ -330,7 +330,7 @@ window.FB = window.FB || {};
 
   { id: 'practice_physic',
     show: function (s) {
-      return !FB.station.isLanded(s.player) && qualifiedCareer(s, 'physician');
+      return !FB.station.isLanded(s.player, s) && qualifiedCareer(s, 'physician');
     },
     tick: function (s) {
       s.player.gold += medicineGold(s) / D;
@@ -340,7 +340,7 @@ window.FB = window.FB || {};
 
   { id: 'scholarly_work',
     show: function (s) {
-      return !FB.station.isLanded(s.player) && qualifiedCareer(s, 'scholar');
+      return !FB.station.isLanded(s.player, s) && qualifiedCareer(s, 'scholar');
     },
     tick: function (s) {
       const fx = specializationFx(s);
@@ -359,7 +359,7 @@ window.FB = window.FB || {};
   { id: 'drill',
     show: function (s) {
       return afield(s) ||
-        (!FB.station.isLanded(s.player) && qualifiedRole(s, 'arms') && !female(s));
+        (!FB.station.isLanded(s.player, s) && qualifiedRole(s, 'arms') && !female(s));
     },
     tick: function (s) {
       s.player.gold += 1 / D;
@@ -368,7 +368,7 @@ window.FB = window.FB || {};
     gain: function () { return { gold: 1 }; } },
   { id: 'stand_guard',
     show: function (s) {
-      return !FB.station.isLanded(s.player) && qualifiedRole(s, 'arms') && !female(s);
+      return !FB.station.isLanded(s.player, s) && qualifiedRole(s, 'arms') && !female(s);
     },
     tick: function (s) {
       s.player.gold += 2 / D;
@@ -380,7 +380,7 @@ window.FB = window.FB || {};
 
   { id: 'copy_books',
     show: function (s) {
-      return !!(FB.abbeyOf && FB.abbeyOf(s)) || (!FB.station.isLanded(s.player) &&
+      return !!(FB.abbeyOf && FB.abbeyOf(s)) || (!FB.station.isLanded(s.player, s) &&
         FB.professionHasRole(s.player.profession, ['cloister', 'clergy']));
     },
     tick: function (s) {
@@ -391,7 +391,7 @@ window.FB = window.FB || {};
     gain: function () { return { piety: 2 }; } },
   { id: 'serve_church',
     show: function (s) {
-      return !!(FB.abbeyOf && FB.abbeyOf(s)) || (!FB.station.isLanded(s.player) &&
+      return !!(FB.abbeyOf && FB.abbeyOf(s)) || (!FB.station.isLanded(s.player, s) &&
         FB.professionHasRole(s.player.profession, ['cloister', 'clergy']));
     },
     tick: function (s) {
@@ -402,7 +402,7 @@ window.FB = window.FB || {};
     gain: function () { return { piety: 4, prestige: 2 }; } },
 
   { id: 'manage_manor',
-    show: function (s) { return FB.station.isGentry(s.player); },
+    show: function (s) { return FB.station.isGentry(s.player, s); },
     tick: function (s) {
       const B = FBDATA.balance;
       s.player.gold += (FB.rf(B.manorIncome[0], B.manorIncome[1]) + FB.skillOf(me(s), 'ste') / 4) / D;
@@ -412,7 +412,7 @@ window.FB = window.FB || {};
       return { gold: (B.manorIncome[0] + B.manorIncome[1]) / 2 + FB.skillOf(me(s), 'ste') / 4 };
     } },
   { id: 'serve_lord',
-    show: function (s) { return FB.station.isGentry(s.player); },
+    show: function (s) { return FB.station.isGentry(s.player, s); },
     tick: function (s) {
       const lord = FB.getRole(s, 'lord', true);
       if (lord) FB.adjustStanding(s, { kind:'character', id:lord.id }, 6 / D,
@@ -430,7 +430,7 @@ window.FB = window.FB || {};
         recipient:recipient ? recipient.name : FB.T('your local lord')
       });
     },
-    show: function (s) { return female(s) && adult(s) && FB.station.isGentle(s.player); },
+    show: function (s) { return female(s) && adult(s) && FB.station.isGentle(s.player, s); },
     tick: function (s) {
       if (s.player.liege) {
         FB.adjustStanding(s, { kind:'realm', id:s.player.liege }, 4 / D,
@@ -447,8 +447,8 @@ window.FB = window.FB || {};
     gain: function () { return { prestige: 2 }; } },
   { id: 'train_arms',
     show: function (s) {
-      return FB.station.isGentle(s.player) && adult(s) && !female(s) &&
-        !(!FB.station.isLanded(s.player) && qualifiedRole(s, 'arms'));
+      return FB.station.isGentle(s.player, s) && adult(s) && !female(s) &&
+        !(!FB.station.isLanded(s.player, s) && qualifiedRole(s, 'arms'));
     },
     tick: function (s) { if (skillDch(0.6)) skillUp(s, 'mar'); } },
   { id: 'lead_host',
@@ -564,7 +564,7 @@ window.FB = window.FB || {};
     gain: function (s) { return { gold:FB.bishopricIncome(s) * 0.15 }; } },
   { id: 'govern',
     show: function (s) {
-      return FB.station.isLanded(s.player) &&
+      return FB.station.isLanded(s.player, s) &&
         !(FB.playerChurchOfficeOnly && FB.playerChurchOfficeOnly(s));
     },
     tick: function (s) {
@@ -584,7 +584,7 @@ window.FB = window.FB || {};
         })
         : FB.T('Fund learned people; their work is banked until the nation begins a technology.');
     },
-    show: function (s) { return FB.station.isLanded(s.player) && adult(s); },
+    show: function (s) { return FB.station.isLanded(s.player, s) && adult(s); },
     tick: function (s) {
       FB.addResearch(s, patronageResearch(s) / D);
       s.player.gold -= 2 / D;
@@ -1346,7 +1346,7 @@ window.FB = window.FB || {};
     }
     if (scope === 'realm') {
       const realm = state.realms && state.realms.player;
-      if (!FB.station.isLanded(p) || !realm || !realm.alive) {
+      if (!FB.station.isLanded(p, state) || !realm || !realm.alive) {
         out.reason = FB.T('Only a landed ruler may proclaim a realm conversion.');
         return out;
       }
@@ -1411,7 +1411,7 @@ window.FB = window.FB || {};
         out.foldStanding = conversionBalance('cultureAdoptionHouseholdRealmStanding', -15);
       }
     }
-    if (FB.station.isLanded(p) && (kind === 'faith' ? scope === 'realm' : scope === 'household')) {
+    if (FB.station.isLanded(p, state) && (kind === 'faith' ? scope === 'realm' : scope === 'household')) {
       out.vassalIds = conversionVassalIds(state);
       out.vassalStanding = conversionBalance(
         kind === 'faith' ? 'faithConversionVassalStanding' : 'cultureAdoptionVassalStanding',
@@ -1578,7 +1578,7 @@ window.FB = window.FB || {};
       out.reason = FB.T('Only a living ruler may direct county conversion.');
       return out;
     }
-    if (!province || province.wasteland || !FB.station.holdsCounty(p) ||
+    if (!province || province.wasteland || !FB.station.holdsCounty(p, state) ||
         !FB.playerDirectlyHoldsCounty ||
         !FB.playerDirectlyHoldsCounty(state, pid)) {
       out.reason = FB.T('You must directly hold this county as a count or higher.');
@@ -1628,7 +1628,7 @@ window.FB = window.FB || {};
   };
 
   FB.cancelCountyCommunityProject = function (state, pid, kind) {
-    if (!state || !state.player || !FB.station.rulesRealm(state.player) ||
+    if (!state || !state.player || !FB.station.rulesRealm(state.player, state) ||
         !FB.playerDirectlyHoldsCounty ||
         !FB.playerDirectlyHoldsCounty(state, pid) ||
         !FB.stopCountyCommunityProject) return false;
@@ -1637,7 +1637,7 @@ window.FB = window.FB || {};
 
   FB.playerControlsSettlementCommunity = function (state, pid, settlement) {
     const p = state && state.player;
-    if (!p || !FB.station.isLanded(p)) return false;
+    if (!p || !FB.station.isLanded(p, state)) return false;
     return FB.settlementConstructionAuthority(state, pid, Number(settlement)).direct;
   };
 
@@ -2072,7 +2072,7 @@ window.FB = window.FB || {};
       gold:state && state.player ? Math.floor(state.player.gold) : 0,
       affordable:false, lord:null, lordStanding:0
     };
-    if (!state || !state.player || !FB.station.isSerf(state.player)) {
+    if (!state || !state.player || !FB.station.isSerf(state.player, state)) {
       out.reason = FB.T('Only a {term:serf} household needs to purchase freedom.');
       return out;
     }
@@ -2160,7 +2160,7 @@ window.FB = window.FB || {};
   }
 
   FB.inviteFreedomOffer = function (state, source) {
-    if (!state || !state.player || !FB.station.isSerf(state.player)) return false;
+    if (!state || !state.player || !FB.station.isSerf(state.player, state)) return false;
     source = source === 'legacy_invitation' ? source : 'lords_notice';
     state.player.freedomInvitation = {
       version:1, source:source,
@@ -2317,7 +2317,7 @@ window.FB = window.FB || {};
 
   FB.freedomAdvocates = function (state) {
     const out = [];
-    if (!state || !state.player || !FB.station.isSerf(state.player) ||
+    if (!state || !state.player || !FB.station.isSerf(state.player, state) ||
         !FB.activeSerfTenure || !FB.activeSerfTenure(state)) return out;
     const p = state.player;
     const tenure = FB.activeSerfTenure(state);
@@ -2409,7 +2409,7 @@ window.FB = window.FB || {};
     if (!protagonist || protagonist.dead || record.protagonistId !== p.charId) {
       out.reason = FB.T('The offer was made to the previous head of the household.'); return out;
     }
-    if (!FB.station.isSerf(p)) {
+    if (!FB.station.isSerf(p, state)) {
       out.reason = FB.T('The household is no longer held in serfdom.'); return out;
     }
     const tenure = FB.activeSerfTenure && FB.activeSerfTenure(state);
@@ -2466,7 +2466,7 @@ window.FB = window.FB || {};
     const p = state.player;
     out.offer = p.freedomOffer || null;
     out.invitation = freedomInvitation(state);
-    if (!FB.station.isSerf(p)) {
+    if (!FB.station.isSerf(p, state)) {
       out.reason = FB.T('Only a {term:serf} household needs terms of freedom.'); return out;
     }
     const protagonist = state.chars[p.charId];
@@ -2767,7 +2767,7 @@ window.FB = window.FB || {};
     out.character = c;
     out.kind = kind;
     out.price = familyManumissionCost(state, kind);
-    if (!FB.station.isFree(state.player)) {
+    if (!FB.station.isFree(state.player, state)) {
       out.reason = FB.T(
         'Secure your own lawful freedom before redeeming relatives separately.');
       return out;
@@ -2885,7 +2885,7 @@ window.FB = window.FB || {};
     const home = freedomHome(state);
     const tenure = FB.activeSerfTenure && FB.activeSerfTenure(state);
     const term = FB.freedomTermDefinition(offer.termId);
-    return !!(FB.station.isSerf(p) && protagonist && !protagonist.dead &&
+    return !!(FB.station.isSerf(p, state) && protagonist && !protagonist.dead &&
       p.charId === offer.protagonistId && (state.turn || 0) <= offer.expiryTurn &&
       lord && lord.id === offer.lordId && tenure &&
       tenure.formedTurn === offer.tenureFormedTurn &&
@@ -2929,7 +2929,7 @@ window.FB = window.FB || {};
 
   { id: 'poach', opensChoices:true, noConsume:true, deferCooldown:true,
     requiresAdult:true,
-    show: function (s) { return FB.station.isSerf(s.player); },
+    show: function (s) { return FB.station.isSerf(s.player, s); },
     run: function () {
       if (FB.ui && FB.ui.showSerfHostileDeeds) {
         FB.ui.showSerfHostileDeeds();
@@ -3038,7 +3038,7 @@ window.FB = window.FB || {};
         // her intended is swept into the levy before he can answer, opening the
         // disguise-at-war chain (events_peasant.js, docs/designs/events.md). Same
         // female + low-station + once-per-life gate as the random opener.
-        if (m.sex === 'f' && !FB.station.isLanded(p) && FB.ageOf(m, s.date.year) <= 35 &&
+        if (m.sex === 'f' && !FB.station.isLanded(p, s) && FB.ageOf(m, s.date.year) <= 35 &&
           !p.flags.polly_ever && FB.chance(0.25)) {
           FB.queueEvent(s, 'polly_propose_war', {});
         } else {
@@ -3059,7 +3059,7 @@ window.FB = window.FB || {};
     desc: function (s) {
       let description = FB.T(
         'Attend a bounded market auction for one rare lot. Three bids decide the sale; losing spends no coin.');
-      const claimTechnology = FB.station.rulesRealm(s.player) && FB.auctionLotTypeStatus
+      const claimTechnology = FB.station.rulesRealm(s.player, s) && FB.auctionLotTypeStatus
         ? FB.auctionLotTypeStatus(s, 'claim') : null;
       if (claimTechnology && !claimTechnology.ready) {
         description += ' ' + FB.T('Auctioned title rights are locked: {requirement}', {
@@ -3108,13 +3108,13 @@ window.FB = window.FB || {};
     run:function () { FB.ui.showGames(); } },
   { id:'host_games', opensChoices:true, noConsume:true, requiresAdult:true,
     desc:function () { return FB.T('Fund a seven-day gathering at a settlement you directly own.'); },
-    show:function (s) { return FB.station.isLanded(s.player); },
+    show:function (s) { return FB.station.isLanded(s.player, s); },
     can:function (s) { var q = FB.tournaments.eligibility(s,s.player.charId); return q.ok || q.reason; },
     run:function () { FB.ui.showHostGames(); } },
   { id: 'take_road', opensChoices:true, noConsume: true, requiresAdult:true,
     desc: function () { return FB.T('Choose a purpose and travel county by county over game time.'); },
     show: function (s) {
-      return !s.player.travel && FB.station.isFree(s.player);
+      return !s.player.travel && FB.station.isFree(s.player, s);
     },
     can: function (s) {
       return FB.travelAnyPurposeEligible
@@ -3138,7 +3138,7 @@ window.FB = window.FB || {};
         : (s.player.travel && s.player.travel.phase === 'arrived'
           ? (s.player.travel.purpose === 'relationship'
             ? FB.T('Return along the saved route after the required visit. You may remain together as long as you like.')
-            : (FB.station.isLanded(s.player)
+            : (FB.station.isLanded(s.player, s)
               ? FB.T('Return along the saved route after the required residence. You may remain as a guest as long as you like.')
               : FB.T('Return along the saved route after the required stay. You may remain and keep finding local work as long as you like.')))
           : FB.T('Abandon the journey and retrace the road. Nothing is refunded.'));
@@ -3217,7 +3217,7 @@ window.FB = window.FB || {};
     show: function (s) {
       return !!(s.player.travel && s.player.travel.phase === 'arrived' &&
         s.player.travel.purpose !== 'frontier' &&
-        FB.station.isFreeUnlanded(s.player) &&
+        FB.station.isFreeUnlanded(s.player, s) &&
         !s.player.travelSettlement);
     },
     can: function (s) {
@@ -3238,7 +3238,7 @@ window.FB = window.FB || {};
     show: function (s) {
       return !!(s.player.travel && s.player.travel.purpose === 'frontier' &&
         s.player.travel.phase === 'arrived' &&
-        FB.station.isFreeUnlanded(s.player) &&
+        FB.station.isFreeUnlanded(s.player, s) &&
         !s.player.travelSettlement);
     },
     can: function (s) {
@@ -3319,7 +3319,7 @@ window.FB = window.FB || {};
       if (FB.ui && FB.ui.showAbsolution) FB.ui.showAbsolution();
     } },
   { id:'historical_ambitions', opensChoices:true, noConsume:true,
-    show:function (s) { return FB.station.rulesRealm(s.player); },
+    show:function (s) { return FB.station.rulesRealm(s.player, s); },
     run:function () { if (FB.ui && FB.ui.showHistoricalAmbitions) FB.ui.showHistoricalAmbitions(); } },
   { id: 'papacy', opensChoices:true, noConsume: true, requiresAdult:true,
     desc: function () {
@@ -3332,7 +3332,7 @@ window.FB = window.FB || {};
         // Only roles that actually deal with the Church: landed rulers
         // (investiture, sanctions), the ordained (monks/priests), and
         // office-holding clergy (bishops, cardinals, popes).
-        (FB.station.isLanded(s.player) ||
+        (FB.station.isLanded(s.player, s) ||
           FB.professionHasRole(s.player.profession, ['cloister', 'clergy']) ||
           !!(FB.hasBishopric && FB.hasBishopric(s, c)) ||
           !!(FB.papalOfficeOf && FB.papalOfficeOf(s, c)));
@@ -3390,7 +3390,7 @@ window.FB = window.FB || {};
     },
     show: function (s) {
       return FB.faithOfficeId(me(s).religion, s) === 'sunni' &&
-        FB.station.isRoyal(s.player) &&
+        FB.station.isRoyal(s.player, s) &&
         (!!FB.religiousHeadVacancy(s, 'sunni') || !!FB.caliphateWarCause(s));
     },
     can: function (s) {
@@ -3598,7 +3598,7 @@ window.FB = window.FB || {};
       if (FB.ui && FB.ui.showIntrigueAssets) FB.ui.showIntrigueAssets();
     } },
   { id: 'mediate', requiresAdult:true,
-    show: function (s) { return !FB.station.isLanded(s.player); },
+    show: function (s) { return !FB.station.isLanded(s.player, s); },
     run: function (s) {
       const dip = FB.skillOf(me(s), 'dip');
       if (FB.chance(0.4 + dip * 0.03)) {
@@ -3633,14 +3633,14 @@ window.FB = window.FB || {};
         'Swore an oath of brotherhood.', {}));
     } },
   { id: 'send_envoy', opensChoices:true, noConsume: true,
-    show: function (s) { return FB.station.rulesRealm(s.player) && FB.isPlayerSovereign(s); },
+    show: function (s) { return FB.station.rulesRealm(s.player, s) && FB.isPlayerSovereign(s); },
     can: function (s) {
       return s.player.gold >= 10 ? true :
         FB.T('An envoy without {money:10} in gifts insults his host.');
     },
     run: function (s) { if (FB.ui && FB.ui.showEnvoys) FB.ui.showEnvoys(); } },
   { id: 'foreign_policy', opensChoices:true, noConsume: true,
-    show: function (s) { return FB.station.rulesRealm(s.player) && FB.isPlayerSovereign(s); },
+    show: function (s) { return FB.station.rulesRealm(s.player, s) && FB.isPlayerSovereign(s); },
     run: function () { if (FB.ui && FB.ui.showForeignPolicy) FB.ui.showForeignPolicy(); } },
 
   { id: 'better_household', opensChoices:true, noConsume: true,
@@ -3663,7 +3663,7 @@ window.FB = window.FB || {};
 
   { id: 'livelihoods', opensChoices:true, noConsume: true,
     desc: function (s) {
-      return FB.station.isLanded(s.player)
+      return FB.station.isLanded(s.player, s)
         ? 'Manage household occupations, apprenticeships, workers, and family businesses.'
         : 'Choose occupations, arrange apprenticeships, staff shops, and grow family businesses.';
     },
@@ -3706,7 +3706,7 @@ window.FB = window.FB || {};
         'Review your station, home, current lord, and lawful routes to freedom.');
     },
     show:function (s) {
-      return FB.station.isSerf(s.player) && !!(FB.activeSerfTenure &&
+      return FB.station.isSerf(s.player, s) && !!(FB.activeSerfTenure &&
         FB.activeSerfTenure(s));
     },
     run:function () {
@@ -3718,7 +3718,7 @@ window.FB = window.FB || {};
       const r = FB.householdServiceRecord(s);
       return r && r.status !== 'ended' ? FB.T('Review household service…') : FB.T('Offer household service…');
     },
-    show:function (s) { return !FB.station.isLanded(s.player); },
+    show:function (s) { return !FB.station.isLanded(s.player, s); },
     run:function (s) {
       if (FB.ui && FB.ui.showHouseholdService) FB.ui.showHouseholdService();
     } },
@@ -3743,7 +3743,7 @@ window.FB = window.FB || {};
     desc: function () {
       return FB.T('Review recognition from Freeholder to Gentry.');
     },
-    show: function (s) { return FB.station.isFreeholder(s.player); },
+    show: function (s) { return FB.station.isFreeholder(s.player, s); },
     run: function () {
       if (FB.ui && FB.ui.showRankElevation) {
         FB.ui.showRankElevation('manor');
@@ -3751,14 +3751,14 @@ window.FB = window.FB || {};
     } },
   { id:'found_settlement', opensChoices:true, noConsume:true, deferCooldown:true,
     desc:function () { return FB.T('Fund a hereditary settlement, or review your charter.'); },
-    show:function (s) { return FB.station.isGentry(s.player) || FB.station.rulesRealm(s.player) || !!FB.activeSettlementFounding(s); },
+    show:function (s) { return FB.station.isGentry(s.player, s) || FB.station.rulesRealm(s.player, s) || !!FB.activeSettlementFounding(s); },
     run:function () { FB.ui.showSettlementFounding(); } },
   { id: 'petition_barony', opensChoices:true, noConsume:true,
     deferCooldown:true,
     desc: function () {
       return FB.T('Review a petition from Gentry to {Term:baron}.');
     },
-    show: function (s) { return FB.station.isGentry(s.player); },
+    show: function (s) { return FB.station.isGentry(s.player, s); },
     run: function () {
       if (FB.ui && FB.ui.showRankElevation) {
         FB.ui.showRankElevation('barony');
@@ -3848,13 +3848,13 @@ window.FB = window.FB || {};
 
   { id: 'hold_court',
     show: function (s) {
-      return FB.station.isLanded(s.player) &&
+      return FB.station.isLanded(s.player, s) &&
         !(FB.playerChurchOfficeOnly && FB.playerChurchOfficeOnly(s));
     },
     run: function (s) { FB.queueEvent(s, 'hold_court_event', {}); } },
   { id: 'squeeze_taxes',
     show: function (s) {
-      return FB.station.isLanded(s.player) &&
+      return FB.station.isLanded(s.player, s) &&
         !(FB.playerChurchOfficeOnly && FB.playerChurchOfficeOnly(s));
     },
     run: function (s) {
@@ -3876,7 +3876,7 @@ window.FB = window.FB || {};
         });
     },
     show: function (s) {
-      return FB.station.isLanded(s.player) &&
+      return FB.station.isLanded(s.player, s) &&
         !(FB.playerChurchOfficeOnly && FB.playerChurchOfficeOnly(s));
     },
     can: function (s) {
@@ -3955,7 +3955,7 @@ window.FB = window.FB || {};
       return FB.faithIsA(me(s).religion, 'muslim', s)
         ? 'Meat, sherbet, and politics.' : 'Meat, mead, and politics.';
     },
-    show: function (s) { return FB.station.isLanded(s.player); },
+    show: function (s) { return FB.station.isLanded(s.player, s); },
     can: function (s) { return s.player.gold >= 5 ? true : 'Too poor to feast anyone.'; },
     run: function (s) { FB.queueEvent(s, 'court_feast', {}); } },
   { id:'county_challenge', opensChoices:true, noConsume:true, deferCooldown:true,
@@ -3964,27 +3964,27 @@ window.FB = window.FB || {};
     run:function () { FB.ui.showCountyProgression(); } },
   { id:'county_recognition', opensChoices:true, noConsume:true, deferCooldown:true,
     desc:function () { return FB.T('Ask your superior to recognize a disputed county.'); },
-    show:function (s) { return FB.station.rulesRealm(s.player) && !!s.player.liege && Object.keys(s.settlementLordships.disputedCounties || {}).some(function (pid) { return FB.settlementCountyHolder(s, pid) === 'player'; }); },
+    show:function (s) { return FB.station.rulesRealm(s.player, s) && !!s.player.liege && Object.keys(s.settlementLordships.disputedCounties || {}).some(function (pid) { return FB.settlementCountyHolder(s, pid) === 'player'; }); },
     run:function () { FB.ui.showCountyProgression(); } },
   { id: 'petition_liege', opensChoices:true, noConsume:true,
     deferCooldown:true,
     desc: function (s) {
       const liege = s.player.liege && s.realms[s.player.liege];
-      if (FB.station.isBaron(s.player)) {
+      if (FB.station.isBaron(s.player, s)) {
         return FB.T('Review a petition from {Term:baron} to Count.');
       }
-      if (FB.station.rulesRealm(s.player) && liege && liege.alive && !FB.realmRank.isRoyal(liege)) {
+      if (FB.station.rulesRealm(s.player, s) && liege && liege.alive && !FB.realmRank.isRoyal(liege, s)) {
         return FB.T('Ask for greater lands. Only the crown can raise you to duke.');
       }
       return FB.T('Ask for greater lands and higher style.');
     },
     show: function (s) {
-      return FB.station.isLanded(s.player) && !FB.station.isRoyal(s.player) &&
-        (FB.station.isBaron(s.player) || !!s.player.liege) &&
+      return FB.station.isLanded(s.player, s) && !FB.station.isRoyal(s.player, s) &&
+        (FB.station.isBaron(s.player, s) || !!s.player.liege) &&
         !(FB.playerChurchOfficeOnly && FB.playerChurchOfficeOnly(s));
     },
     can: function (s) {
-      if (FB.station.isBaron(s.player)) return true;
+      if (FB.station.isBaron(s.player, s)) return true;
       const last = s.player.cooldowns && s.player.cooldowns.petition_liege;
       if (last !== undefined &&
           s.turn - last < RANK_PETITION_DAYS.county) {
@@ -4001,19 +4001,19 @@ window.FB = window.FB || {};
       if (s.player.prestige < 400) return FB.T(
         'You need at least 400 prestige (now {current}).',
         { current: Math.round(s.player.prestige) });
-      if (FB.station.rulesRealm(s.player) && !FB.liegeGrantCandidates(s).length) {
+      if (FB.station.rulesRealm(s.player, s) && !FB.liegeGrantCandidates(s).length) {
         return FB.T('Your {term:liege} holds no adjoining land in his gift.');
       }
       return true;
     },
     statusReadyTurn: function (s) {
-      if (FB.station.isBaron(s.player)) return null;
+      if (FB.station.isBaron(s.player, s)) return null;
       const last = s.player.cooldowns && s.player.cooldowns.petition_liege;
       return last === undefined
         ? null : last + RANK_PETITION_DAYS.county;
     },
     run: function (s) {
-      if (FB.station.isBaron(s.player)) {
+      if (FB.station.isBaron(s.player, s)) {
         if (FB.ui && FB.ui.showRankElevation) {
           FB.ui.showCountyProgression();
         }
@@ -4030,7 +4030,7 @@ window.FB = window.FB || {};
       return FB.T('Review the next supported noble dignity.');
     },
     show: function (s) {
-      return FB.station.rulesRealm(s.player) && !FB.station.isImperial(s.player);
+      return FB.station.rulesRealm(s.player, s) && !FB.station.isImperial(s.player, s);
     },
     run: function () {
       if (FB.ui && FB.ui.showRankElevation) {
@@ -4042,7 +4042,7 @@ window.FB = window.FB || {};
       return FB.T('Ask the {term:liege} to strip a disgraced neighbor and invest you with his county. Service in the {term:liege}’s wars: {service}.',
         { service: s.player.warService || 0 });
     },
-    show: function (s) { return FB.station.rulesRealm(s.player) && !!s.player.liege; },
+    show: function (s) { return FB.station.rulesRealm(s.player, s) && !!s.player.liege; },
     can: function (s) {
       const B = FBDATA.balance;
       const standing = FB.standingOf(s, {
@@ -4072,7 +4072,7 @@ window.FB = window.FB || {};
       }
     } },
   { id: 'buy_county', opensChoices:true, noConsume: true,
-    show: function (s) { return FB.station.rulesRealm(s.player) && !!s.player.liege; },
+    show: function (s) { return FB.station.rulesRealm(s.player, s) && !!s.player.liege; },
     can: function (s) {
       const standing = FB.standingOf(s, {
         kind:'realm', id:s.player.liege
@@ -4090,7 +4090,7 @@ window.FB = window.FB || {};
     } },
   { id: 'settle_waste', opensChoices:true, noConsume: true,
     show: function (s) {
-      return FB.station.rulesRealm(s.player) && FB.wastelandCandidates(s).length > 0;
+      return FB.station.rulesRealm(s.player, s) && FB.wastelandCandidates(s).length > 0;
     },
     can: function (s) {
       const B = FBDATA.balance;
@@ -4211,7 +4211,7 @@ window.FB = window.FB || {};
     show: function (s) {
       const me = s.chars[s.player.charId];
       return !(FB.playerChurchOfficeOnly && FB.playerChurchOfficeOnly(s)) &&
-        (FB.station.isLanded(s.player) || !!(me && me.restorationRight));
+        (FB.station.isLanded(s.player, s) || !!(me && me.restorationRight));
     },
     can: function (s) {
       return true;
@@ -4272,7 +4272,7 @@ window.FB = window.FB || {};
         : FB.T('Renounce your {term:liege} and raise your own banner — it means war.');
     },
     show: function (s) {
-      return FB.station.isLanded(s.player) && !!s.player.liege &&
+      return FB.station.isLanded(s.player, s) && !!s.player.liege &&
         !(FB.playerChurchOfficeOnly && FB.playerChurchOfficeOnly(s));
     },
     can: function (s) {
@@ -4289,7 +4289,7 @@ window.FB = window.FB || {};
       }
     } },
   { id: 'pay_homage', opensChoices:true, noConsume: true,
-    show: function (s) { return FB.station.isLanded(s.player) && !!s.player.liege && !s.player.war; },
+    show: function (s) { return FB.station.isLanded(s.player, s) && !!s.player.liege && !s.player.war; },
     run: function (s, options) {
       if (FB.ui && FB.ui.showHomage) {
         FB.ui.showHomage(options && options.returnContext);
@@ -4297,7 +4297,7 @@ window.FB = window.FB || {};
     } },
   { id: 'appeal_lord', opensChoices:true, noConsume: true,
     show: function (s) {
-      return FB.station.rulesRealm(s.player) && !!s.player.liege && !s.player.war &&
+      return FB.station.rulesRealm(s.player, s) && !!s.player.liege && !s.player.war &&
         FB.liegeChain(s, s.player.liege).length >= 2;
     },
     run: function (s, options) {
@@ -4306,7 +4306,7 @@ window.FB = window.FB || {};
       }
     } },
   { id: 'swear_fealty', opensChoices:true, noConsume: true,
-    show: function (s) { return FB.station.holdsCounty(s.player) && s.player.provs && s.player.provs.length && !s.player.war; },
+    show: function (s) { return FB.station.holdsCounty(s.player, s) && s.player.provs && s.player.provs.length && !s.player.war; },
     run: function (s, options) {
       if (FB.ui && FB.ui.showFealty) {
         FB.ui.showFealty(options && options.returnContext);
@@ -4376,7 +4376,7 @@ window.FB = window.FB || {};
     show: function (s) { return FB.financeUiRelevant(s); },
     run: function () { if (FB.ui && FB.ui.showFinance) FB.ui.showFinance(); } },
   { id: 'debase_coinage', opensChoices:true, noConsume: true,
-    show: function (s) { return FB.station.isRoyal(s.player) && !s.player.liege; },
+    show: function (s) { return FB.station.isRoyal(s.player, s) && !s.player.liege; },
     can: function (s) {
       return FB.financeCanDebase(s) ? true :
         'The last debasement is still remembered. Five years must pass.';
@@ -4395,7 +4395,7 @@ window.FB = window.FB || {};
     } },
   { id: 'royal_council', opensChoices:true, noConsume: true,
     compatibilityAlias:true,
-    show: function (s) { return FB.station.isRoyal(s.player); },
+    show: function (s) { return FB.station.isRoyal(s.player, s); },
     run: function (s) { if (FB.ui && FB.ui.showCouncil) FB.ui.showCouncil(); } }
   ];
 
@@ -4477,11 +4477,15 @@ window.FB = window.FB || {};
       return;
     }
     const allowed = {
-      reason:1, ageMin:1, ageMax:1, tierMin:1, tierMax:1, sex:1,
+      reason:1, ageMin:1, ageMax:1, tierMin:1, tierMax:1, station:1, sex:1,
       professions:1, careerRoles:1, traitsAll:1, traitsAny:1, traitsNone:1,
       faiths:1, cultures:1, flagsAll:1, flagsAny:1, flagsNone:1,
       atWar:1, independent:1, traveling:1
     };
+    if (value.station !== undefined &&
+        (typeof value.station !== 'string' || FB.station.meanings.indexOf(value.station) < 0)) {
+      errors.push(path + '.station must name a station permission.');
+    }
     let restrictions = 0;
     for (const key in value) {
       if (!actionOwn(value, key)) continue;
@@ -5010,8 +5014,9 @@ window.FB = window.FB || {};
     const flags = state.player.flags || {};
     if (eligibility.ageMin !== undefined && age < eligibility.ageMin) return false;
     if (eligibility.ageMax !== undefined && age > eligibility.ageMax) return false;
-    if (!FB.station.reaches(state.player, eligibility.tierMin)) return false;
-    if (FB.station.exceeds(state.player, eligibility.tierMax)) return false;
+    if (eligibility.station && !FB.station.has(state.player, eligibility.station, state)) return false;
+    if (!FB.station.reaches(state.player, eligibility.tierMin, state)) return false;
+    if (FB.station.exceeds(state.player, eligibility.tierMax, state)) return false;
     if (eligibility.sex && character.sex !== eligibility.sex) return false;
     if (eligibility.professions &&
         eligibility.professions.indexOf(state.player.profession) < 0) return false;
@@ -5444,7 +5449,7 @@ window.FB = window.FB || {};
 
   function contextualTenureFocusText(state, focus, field, keyField) {
     focus = focusDefinitionRecord(focus);
-    if (!state || !state.player || !FB.station.isSerf(state.player) ||
+    if (!state || !state.player || !FB.station.isSerf(state.player, state) ||
         !focus || focus.id !== 'toil' || !FB.activeSerfTenure) return '';
     const tenure = FB.activeSerfTenure(state);
     const arch = tenure && FBDATA.tenureArchetypes &&
@@ -5479,7 +5484,7 @@ window.FB = window.FB || {};
       FB.dataText(state, state && state.player && state.player.charId,
         'focus', focus.id, focus, 'desc', {}));
     if (contextual) desc += ' ' + FB.T('Earns harvest income; does not train skills.');
-    if (state && FB.station.isSerf(state.player) &&
+    if (state && FB.station.isSerf(state.player, state) &&
         ['toil', 'militia', 'keep_house'].indexOf(focus.id) >= 0) {
       desc += ' ' + FB.T('Choosing another daily focus does not cancel the work or payments you owe your lord.');
     }
@@ -5565,7 +5570,7 @@ window.FB = window.FB || {};
     const holder = state.chars && state.chars[p.charId];
     if (seat.holderCharId !== p.charId || p.dead || !holder || holder.dead ||
         p.provinceId !== seat.provinceId ||
-        !FB.station.isFreeUnlanded(p) || !localCouncilCareer(p.profession)) {
+        !FB.station.isFreeUnlanded(p, state) || !localCouncilCareer(p.profession)) {
       FB.endLocalCouncil(state, 'ineligible', silent);
       return null;
     }
@@ -5654,7 +5659,7 @@ window.FB = window.FB || {};
     const standing = patronId ? FB.standingOf(state, {
       kind:'realm', id:patronId
     }) : 0;
-    const visible = FB.station.isGentry(p) && !(p.provs && p.provs.length) &&
+    const visible = FB.station.isGentry(p, state) && !(p.provs && p.provs.length) &&
       !FB.castellanyOf(state);
     let reason = '';
     if (!visible) reason = FB.T('Only landless gentry may seek this appointment.');
@@ -5775,8 +5780,8 @@ window.FB = window.FB || {};
     const province = FB.world.byId[record.provinceId];
     delete state.player.castellany;
     if (!(state.player.provs && state.player.provs.length) &&
-        !FB.station.rulesRealm(state.player)) {
-      if (FB.station.isBaron(state.player)) {
+        !FB.station.rulesRealm(state.player, state)) {
+      if (FB.station.isBaron(state.player, state)) {
         FB.setPlayerTier(state, Math.max(2, record.previousTier || 2), {
           attachLiege:false, stationFarewell:false
         });
@@ -5818,7 +5823,7 @@ window.FB = window.FB || {};
       reason = 'control_lost';
     } else if (record.tenure === 'term' && state.turn >= record.expiryTurn) {
       reason = 'expiry';
-    } else if (!FB.station.isBaron(p)) reason = 'rank_changed';
+    } else if (!FB.station.isBaron(p, state)) reason = 'rank_changed';
     if (reason) {
       FB.endCastellany(state, reason, silent);
       return null;
@@ -6056,7 +6061,7 @@ window.FB = window.FB || {};
     /* Common and gentle households cannot have direct feudal vassals. Avoid
        asking the realm hierarchy for an empty index on every ordinary day;
        their two personal offices above remain validated when present. */
-    if (!FB.station.isLanded(p)) return;
+    if (!FB.station.isLanded(p, state)) return;
     const realmRevision = FB.realmStateRevision
       ? FB.realmStateRevision() : state.turn;
     if (localGovernmentDayState === state &&
@@ -6165,7 +6170,7 @@ window.FB = window.FB || {};
     const p = state.player;
     const fiscal = FB.settlementActorFiscal(state, 'player');
     let rents = fiscal.tax;
-    if (FB.station.isBaron(p) && FB.castellanyOf && FB.castellanyOf(state)) {
+    if (FB.station.isBaron(p, state) && FB.castellanyOf && FB.castellanyOf(state)) {
       rents += 6 * Math.max(0, 1 + FB.modBonus(state, 'tax', p.provinceId));
     }
     const bishopric = FB.bishopricIncome ? FB.bishopricIncome(state) : 0;
@@ -6413,17 +6418,17 @@ window.FB = window.FB || {};
         titled:progress.titled !== false
       });
     }
-    if (!FB.station.isDucal(tier)) {
+    if (!FB.station.isDucal(tier, state)) {
       for (const did in FBDATA.duchies) {
         const progress = FB.duchyProgress(state, did);
         if (progress.have) offer('duchy', did, progress);
       }
-    } else if (FB.station.isDuke(tier)) {
+    } else if (FB.station.isDuke(tier, state)) {
       for (const kid in FBDATA.kingdoms) {
         const progress = FB.kingdomProgress(state, kid);
         if (progress.have) offer('kingdom', kid, progress);
       }
-    } else if (FB.station.isKing(tier)) {
+    } else if (FB.station.isKing(tier, state)) {
       for (const eid in FBDATA.empires) {
         const progress = FB.empireProgress(state, eid);
         if (progress.have) offer('empire', eid, progress);
@@ -6444,7 +6449,7 @@ window.FB = window.FB || {};
     if (!state || !state.player || !state.realms ||
         (FB.game && FB.game.observe)) return false;
     const p = state.player;
-    if (p.dead || !FB.station.isLanded(p)) return false;
+    if (p.dead || !FB.station.isLanded(p, state)) return false;
     if (p.provs && p.provs.length) return true;
     if (FB.playerAbbeyOnly && FB.playerAbbeyOnly(state)) return false;
     const me = state.chars && state.chars[p.charId];
@@ -6459,7 +6464,7 @@ window.FB = window.FB || {};
          (p.flags && p.flags.bishop)))));
     if (seeOnly) return false;
     if (p.flags && p.flags.chief_qadi) return false;
-    if (!FB.station.isBaron(p) || !p.liege || !FB.landedBaron(state)) return false;
+    if (!FB.station.isBaron(p, state) || !p.liege || !FB.landedBaron(state)) return false;
     const holder = (state.holder && state.holder[p.provinceId]) ||
       (state.owner && state.owner[p.provinceId]);
     return holder === p.liege && !!(state.realms[p.liege] &&
@@ -6584,7 +6589,7 @@ window.FB = window.FB || {};
       }
     }
     return {
-      role:p.liege ? 'vassal' : (FB.station.isRoyal(p) ? 'crowned' : 'sovereign'),
+      role:p.liege ? 'vassal' : (FB.station.isRoyal(p, state) ? 'crowned' : 'sovereign'),
       playerRealmId:playerRealm ? 'player' : null,
       liegeId:p.liege || null,
       sovereignId:sovereignId,
@@ -6648,7 +6653,7 @@ window.FB = window.FB || {};
     let total = -FB.householdUpkeep(state) - FB.playerGovernmentCosts(state).total;
     if (FB.householdStandardsUpkeep) total -= FB.householdStandardsUpkeep(state);
     if (FB.modifierUpkeep) total -= FB.modifierUpkeep(state, 'gold');
-    if (FB.station.isLanded(p)) {
+    if (FB.station.isLanded(p, state)) {
       const tax = FB.playerTax(state); total += tax; receipts += Math.max(0, tax);
       total -= FB.buildingBonus(state, 'upkeep');
       if (FB.fortUpkeep) total -= FB.fortUpkeep(state);
@@ -6730,7 +6735,7 @@ window.FB = window.FB || {};
     /* noble revenue (playerTax, unrounded so the lines tell the truth):
        demesne rents, vassal dues, tolls — grown by national technology,
        cut by a liege */
-    if (FB.station.isLanded(p)) {
+    if (FB.station.isLanded(p, state)) {
       const tax = FB.playerTaxParts(state);
       add('gold', FB.castellanyOf && FB.castellanyOf(state)
         ? FB.T('Castellan’s stipend and revenues')
@@ -7704,7 +7709,7 @@ window.FB = window.FB || {};
   FB.fealtyTargets = function (state) {
     const p = state.player;
     const cur = FB.playerRealmId(state);
-    const playerRank = Math.max(1, p.tier - 3);
+    const playerRank = Math.max(1, FB.station.realmRank(p, state));
     const out = [];
     if (cur && FB.isRealmAtWar(state, cur)) return out;
     for (const pid of (p.provs || [])) {
@@ -8312,7 +8317,7 @@ window.FB = window.FB || {};
     const B = FBDATA.balance, out = [];
     for (const c of FB.sameRealmNeighbors(state)) {
       const hr = state.realms[c.holder];
-      if (!FB.realmRank.isCounty(hr)) continue;
+      if (!FB.realmRank.isCounty(hr, state)) continue;
       let hasVassals = false;
       for (const vid in state.realms) if (state.realms[vid].liege === c.holder) { hasVassals = true; break; }
       if (hasVassals) continue;
@@ -8405,9 +8410,9 @@ window.FB = window.FB || {};
   /* ================= envoys & pacts (the diplomacy game) ================= */
   FB.politicalAttentionCapacity = function (state) {
     const p = state.player, B = FBDATA.balance;
-    if (!FB.station.rulesRealm(p) || !FB.isPlayerSovereign(state)) return 0;
-    if (FB.station.isImperial(p)) return B.politicalAttentionEmperor;
-    if (FB.station.isRoyal(p)) return B.politicalAttentionKing;
+    if (!FB.station.rulesRealm(p, state) || !FB.isPlayerSovereign(state)) return 0;
+    if (FB.station.isImperial(p, state)) return B.politicalAttentionEmperor;
+    if (FB.station.isRoyal(p, state)) return B.politicalAttentionKing;
     return B.politicalAttentionCount;
   };
 
@@ -8631,7 +8636,7 @@ window.FB = window.FB || {};
     const out = [];
     const p = state.player;
     const c = state.chars[p.charId];
-    if (!c || FB.station.isLanded(p) || !FB.world || !FB.world.provs) return out;
+    if (!c || FB.station.isLanded(p, state) || !FB.world || !FB.world.provs) return out;
     let profile = historicRaidProfile(state);
     const home = FB.world.byId[p.provinceId];
     let candidates = FB.world.provs.filter(function (pr) {
@@ -8919,10 +8924,10 @@ window.FB = window.FB || {};
   FB.allianceOfferTargets = function (state) {
     const out = [];
     const mine = state.realms.player;
-    if (!FB.isPlayerSovereign(state) || !mine || !FB.realmRank.isRoyal(mine) || FB.allianceOf(state, 'player')) return out;
+    if (!FB.isPlayerSovereign(state) || !mine || !FB.realmRank.isRoyal(mine, state) || FB.allianceOf(state, 'player')) return out;
     for (const rid in state.realms) {
       const r = state.realms[rid];
-      if (rid === 'player' || !r.alive || r.liege || !FB.realmRank.isRoyal(r) || r.war) continue;
+      if (rid === 'player' || !r.alive || r.liege || !FB.realmRank.isRoyal(r, state) || r.war) continue;
       if (FB.allianceOf(state, rid) ||
           FB.standingOf(state, { kind:'realm', id:rid }) < 60) continue;
       if (!FB.realmsAdjacent(state, 'player', rid)) continue;
@@ -8987,13 +8992,13 @@ window.FB = window.FB || {};
     status.baseChance = realm ? FB.envoyChance(state, rid) : 0;
     status.dynasticBonus = status.tie.bonus;
     status.chance = Math.min(0.9, status.baseChance + status.dynasticBonus);
-    if (!FB.isPlayerSovereign(state) || !mine || !FB.realmRank.isRoyal(mine)) {
+    if (!FB.isPlayerSovereign(state) || !mine || !FB.realmRank.isRoyal(mine, state)) {
       status.reason = FB.T(
         'Only an independent king or emperor may offer a defensive alliance.');
       return status;
     }
     if (!realm || !realm.alive || rid === 'player' || realm.liege ||
-        !FB.realmRank.isRoyal(realm)) {
+        !FB.realmRank.isRoyal(realm, state)) {
       status.reason = FB.T(
         'A defensive alliance requires another sovereign king or emperor.');
       return status;
@@ -9050,8 +9055,8 @@ window.FB = window.FB || {};
   FB.maybeRoyalMarriageAlliance = function (state, royalRealmId) {
     const mine = state.realms.player;
     const royal = state.realms[royalRealmId];
-    if (!FB.isPlayerSovereign(state) || !mine || !FB.realmRank.isRoyal(mine) || !royal ||
-        !royal.alive || royal.liege || !FB.realmRank.isRoyal(royal)) return false;
+    if (!FB.isPlayerSovereign(state) || !mine || !FB.realmRank.isRoyal(mine, state) || !royal ||
+        !royal.alive || royal.liege || !FB.realmRank.isRoyal(royal, state)) return false;
     if (!FB.realmsAdjacent(state, 'player', royalRealmId)) return false;
     if (!FB.formAlliance(state, 'player', royalRealmId, 'royal_marriage')) return false;
     FB.news(state, FB.msg('news.action.marriage_alliance',
@@ -9084,8 +9089,8 @@ window.FB = window.FB || {};
       const def = FBDATA.holdings[id];
       if (def.eventOnly) continue;
       if (done.indexOf(id) >= 0) continue;
-      if (!FB.station.reaches(p, def.tierMin)) continue;
-      if (FB.station.exceeds(p, def.tierMax)) continue;
+      if (!FB.station.reaches(p, def.tierMin, state)) continue;
+      if (FB.station.exceeds(p, def.tierMax, state)) continue;
       if (def.professions && def.professions.indexOf(p.profession) < 0) continue;
       if (def.careerRoles && !FB.professionHasRole(p.profession, def.careerRoles)) continue;
       if (def.req && done.indexOf(def.req) < 0) continue;
@@ -9121,7 +9126,7 @@ window.FB = window.FB || {};
      to heirs. Contiguous holdings are worked more efficiently; five plots in
      one place may be declared a manor and raise the family into the gentry. */
   function canBuyFreeholdLand(state) {
-    return FB.station.isFreeholder(state.player) || FB.station.isGentry(state.player);
+    return FB.station.isFreeholder(state.player, state) || FB.station.isGentry(state.player, state);
   }
 
   FB.landPlotCost = function (state, quantity) {
@@ -9143,7 +9148,7 @@ window.FB = window.FB || {};
       if (p.flags && p.flags.has_farm && !p.landPlots.length) {
         p.landPlots.push({ provinceId:p.provinceId, settlement:0 });
         delete p.flags.has_farm;
-      } else if (FB.station.isGentry(p) && !p.landPlots.length &&
+      } else if (FB.station.isGentry(p, state) && !p.landPlots.length &&
           !(p.flags && (p.flags.abbot || p.flags.qadi))) {
         const need = FBDATA.balance.manorPlotRequirement || 5;
         for (let i = 0; i < need; i++) {
@@ -9272,7 +9277,9 @@ window.FB = window.FB || {};
     const from = FB.clamp(Math.floor(Number(fromTier) || 0), 0, 7);
     const to = FB.clamp(Math.floor(Number(toTier) || 0), 0, 7);
     const cost = { gold:0, prestige:0, piety:0 };
-    for (let tier = Math.max(2, from + 1); tier <= to; tier++) {
+    for (let tier = 2; tier < FB.station.bandCount; tier++) {
+      if (!FB.station.reaches(tier, 0, state) || !FB.station.above(tier, from, state) ||
+          FB.station.above(tier, to, state)) continue;
       cost.gold += rankElevationAmount(B.rankElevationGoldByTier, tier);
       cost.prestige += rankElevationAmount(
         B.rankElevationPrestigeByTier, tier);
@@ -9296,11 +9303,15 @@ window.FB = window.FB || {};
     const rows = [];
     const from = FB.clamp(Math.floor(Number(fromTier) || 0), 0, 7);
     const to = FB.clamp(Math.floor(Number(toTier) || 0), 0, 7);
-    for (let tier = Math.max(2, from + 1); tier <= to; tier++) {
+    for (let tier = 2; tier < FB.station.bandCount; tier++) {
+      if (!FB.station.reaches(tier, 0, state) || !FB.station.above(tier, from, state) ||
+          FB.station.above(tier, to, state)) continue;
       rows.push({ tier:tier, name:FB.titleWordFor(state, tier),
-        cost:FB.rankElevationCost(state, tier - 1, tier) });
+        cost:FB.rankElevationCost(state, FB.station.previous(tier, state), tier) });
     }
-    return rows;
+    return rows.sort(function (a, b) {
+      return FB.station.above(a, b, state) ? 1 : FB.station.above(b, a, state) ? -1 : 0;
+    });
   };
 
   function rankElevationShortage(state, cost) {
@@ -9322,43 +9333,41 @@ window.FB = window.FB || {};
 
   function highestRankElevationTarget(state) {
     const p = state.player;
-    if (!FB.station.rulesRealm(p) || FB.station.isImperial(p)) return null;
+    if (!FB.station.rulesRealm(p, state) || FB.station.isImperial(p, state)) return null;
     const liege = p.liege && state.realms[p.liege];
-    const duchyBlocked = !!(liege && liege.alive && !FB.realmRank.isRoyal(liege));
+    const duchyBlocked = !!(liege && liege.alive && !FB.realmRank.isRoyal(liege, state));
     let target = p.tier;
-    if (FB.playerDuchy(state) && !duchyBlocked) target = Math.max(target, 5);
+    if (FB.playerDuchy(state) && !duchyBlocked) target = FB.station.higherTier(target, FB.station.tierFor('isDuke', p, state) || target, state);
     if (FB.isPlayerSovereign(state) && FB.playerKingdom(state)) {
-      target = Math.max(target, 6);
+      target = FB.station.higherTier(target, FB.station.tierFor('isKing', p, state) || target, state);
     }
     if (FB.isPlayerSovereign(state) && FB.playerEmpire(state)) {
-      target = Math.max(target, 7);
+      target = FB.station.higherTier(target, FB.station.tierFor('isEmperor', p, state) || target, state);
     }
-    return target > p.tier ? target : null;
+    return FB.station.above(target, p, state) ? target : null;
   }
 
   function rankElevationTitleData(state, targetTier) {
     let place = '';
-    if (FB.station.isBaron(targetTier) || FB.station.isCount(targetTier)) {
+    if (FB.station.isBaron(targetTier, state) || FB.station.isCount(targetTier, state)) {
       const home = FB.world && FB.world.byId[state.player.provinceId];
       place = home ? home.name : state.player.provinceId;
-    } else if (FB.station.isDuke(targetTier)) {
+    } else if (FB.station.isDuke(targetTier, state)) {
       const did = FB.playerDuchy(state);
       place = did && FBDATA.duchies[did] ? FBDATA.duchies[did].name : '';
-    } else if (FB.station.isKing(targetTier)) {
+    } else if (FB.station.isKing(targetTier, state)) {
       const kid = FB.playerKingdom(state);
       place = kid && FBDATA.kingdoms[kid] ? FBDATA.kingdoms[kid].name : '';
-    } else if (FB.station.isEmperor(targetTier)) {
+    } else if (FB.station.isEmperor(targetTier, state)) {
       const eid = FB.playerEmpire(state);
       place = eid && FBDATA.empires[eid] ? FBDATA.empires[eid].name : '';
     }
     return FB.rankTitleSnapshot(state, targetTier, place || null);
   }
 
-  function rankElevationRouteVisible(player, route) {
-    if (route === 'manor') return FB.station.isFreeholder(player);
-    if (route === 'barony') return FB.station.isGentry(player);
-    if (route === 'county') return FB.station.isBaron(player);
-    return route === 'higher' && FB.station.rulesRealm(player) && !FB.station.isImperial(player);
+  function rankElevationRouteVisible(player, route, state) {
+    const rule = FB.station.promotion(player, state);
+    return !!(rule && rule.route === route && FB.station.next(player, state) !== null);
   }
 
   function rankElevationActionId(route) {
@@ -9387,25 +9396,25 @@ window.FB = window.FB || {};
       cost:{ gold:0, prestige:0, piety:0 }
     };
     let route = options.route || '';
-    if (!route) route = FB.station.rulesRealm(p) ? 'higher' :
-      (FB.station.isBaron(p) ? 'county' : (FB.station.isGentry(p) ? 'barony' : 'manor'));
+    const promotion = FB.station.promotion(p, state);
+    if (!route) route = promotion && promotion.route || '';
     let expectedTarget = route === 'higher'
       ? (options.region ? null : highestRankElevationTarget(state))
-      : ({ manor:2, barony:3, county:4 })[route];
+      : promotion && promotion.route === route ? FB.station.next(p, state) : null;
     if (route === 'higher' && options.region) {
       const duchy = FBDATA.duchies[options.region], kingdom = FBDATA.kingdoms[options.region];
       const progress = duchy ? FB.duchyProgress(state, options.region) :
         kingdom ? FB.kingdomProgress(state, options.region) : null;
       const liege = p.liege && state.realms[p.liege];
-      expectedTarget = FB.station.rulesRealm(p) && !FB.station.isImperial(p) && progress && progress.total && progress.have >= progress.need &&
-        (duchy ? progress.titled && (!liege || !liege.alive || FB.realmRank.isRoyal(liege)) : FB.isPlayerSovereign(state))
-        ? (duchy ? 5 : 6) : null;
+      expectedTarget = FB.station.rulesRealm(p, state) && !FB.station.isImperial(p, state) && progress && progress.total && progress.have >= progress.need &&
+        (duchy ? progress.titled && (!liege || !liege.alive || FB.realmRank.isRoyal(liege, state)) : FB.isPlayerSovereign(state))
+        ? FB.station.tierFor(duchy ? 'isDuke' : 'isKing', p, state) : null;
     }
     const target = targetTier === undefined || targetTier === null
-      ? (expectedTarget || (route === 'higher' && FB.station.rulesRealm(p) && !FB.station.isImperial(p)
-        ? p.tier + 1 : null))
+      ? (expectedTarget || (route === 'higher' && FB.station.rulesRealm(p, state) && !FB.station.isImperial(p, state)
+        ? FB.station.next(p, state) : null))
       : Math.floor(Number(targetTier));
-    let eligible = !!target && target > p.tier && target === expectedTarget;
+    let eligible = !!target && FB.station.above(target, p, state) && target === expectedTarget;
     let reason = '';
     let site = null;
     let grantorId = null;
@@ -9414,7 +9423,7 @@ window.FB = window.FB || {};
       reason = FB.T('Return home before seeking recognition at a new rank.');
     } else if (route === 'manor') {
       site = FB.manorSite(state);
-      if (!FB.station.isFreeholder(p)) {
+      if (!FB.station.isFreeholder(p, state)) {
         eligible = false;
         reason = FB.T('Only a freeholder may declare a first {term:manor}.');
       } else if (!FB.freeholderEstablished(state)) {
@@ -9440,7 +9449,7 @@ window.FB = window.FB || {};
       grantorId = lord && lord.id || null;
       const standing = lord
         ? FB.standingOf(state, { kind:'character', id:lord.id }) : 0;
-      if (!FB.station.isGentry(p) || !FB.gentryEstablished(state)) {
+      if (!FB.station.isGentry(p, state) || !FB.gentryEstablished(state)) {
         eligible = false;
         reason = FB.T('Only an established gentle house may accept this barony.');
       } else if (!site) {
@@ -9491,7 +9500,7 @@ window.FB = window.FB || {};
     const shortage = eligible && !cooldown
       ? rankElevationShortage(state, cost) : '';
     return {
-      visible:rankElevationRouteVisible(p, route),
+      visible:rankElevationRouteVisible(p, route, state),
       eligible:eligible,
       ready:eligible && !cooldown && !shortage,
       reason:reason || cooldown || shortage,
@@ -9589,14 +9598,14 @@ window.FB = window.FB || {};
       FB.foundPlayerRealm(state);
       if (status.region) {
         state.realms.player.ambitionTitleRegion = status.region;
-        state.realms.player.name = (FB.station.isDuke(status.targetTier) ? 'Duchy of ' : 'Kingdom of ') +
+        state.realms.player.name = (FB.station.isDuke(status.targetTier, state) ? 'Duchy of ' : 'Kingdom of ') +
           (FBDATA.duchies[status.region] || FBDATA.kingdoms[status.region]).name;
       }
-      if (FB.station.mayHoldCouncil(status.targetTier) && FB.councilEnsure) FB.councilEnsure(state);
+      if (FB.station.mayHoldCouncil(status.targetTier, state) && FB.councilEnsure) FB.councilEnsure(state);
     }
     const titleData = FB.titleSnapshot(state);
     if (FB.notePlayerStatus) FB.notePlayerStatus(state, titleData);
-    if (state.peakTier === undefined || p.tier > state.peakTier) {
+    if (state.peakTier === undefined || FB.station.above(p, state.peakTier, state)) {
       state.peakTier = p.tier;
       state.peakTitleData = titleData;
     }
@@ -9699,7 +9708,7 @@ window.FB = window.FB || {};
   FB.fns.liege_land_grant = function (state) {
     /* The ordinary Baron -> Count route is the paid county offer above.
        This handler belongs to the established Count+ land-petition event. */
-    return FB.station.rulesRealm(state.player) && FB.grantByLiege(state);
+    return FB.station.rulesRealm(state.player, state) && FB.grantByLiege(state);
   };
 
   FB.declareManor = function (state) {
@@ -9744,12 +9753,12 @@ window.FB = window.FB || {};
 
   // Residence is household scope, not authority over the county's works.
   FB.canManageCountyBuildings = function (state, pid) {
-    return !!(state.player && FB.station.isLanded(state.player) &&
+    return !!(state.player && FB.station.isLanded(state.player, state) &&
       ((state.holder && state.holder[pid]) || (state.owner && state.owner[pid])) === 'player');
   };
 
   FB.buildingCounties = function (state) {
-    if (!state.player || !FB.station.isLanded(state.player)) return [];
+    if (!state.player || !FB.station.isLanded(state.player, state)) return [];
     const counties = {};
     for (const site of FB.directSettlements(state)) counties[site.provinceId] = true;
     return Object.keys(counties).sort();
@@ -10237,9 +10246,9 @@ window.FB = window.FB || {};
 
   function heldTitleSets(state) {
     const p = state.player, d = {}, k = {}, e = {};
-    if (FB.station.isDucal(p)) for (const id of FB.playerDuchies(state)) d[id] = 1;
-    if (FB.station.isRoyal(p)) for (const id of FB.playerKingdoms(state)) k[id] = 1;
-    if (FB.station.isImperial(p)) for (const id of FB.playerEmpires(state)) e[id] = 1;
+    if (FB.station.isDucal(p, state)) for (const id of FB.playerDuchies(state)) d[id] = 1;
+    if (FB.station.isRoyal(p, state)) for (const id of FB.playerKingdoms(state)) k[id] = 1;
+    if (FB.station.isImperial(p, state)) for (const id of FB.playerEmpires(state)) e[id] = 1;
     return { duchy: d, kingdom: k, empire: e };
   }
 
@@ -10282,7 +10291,7 @@ window.FB = window.FB || {};
     return !!(c && !c.dead && FB.faithOfficeId(c.religion, state) === 'sunni' &&
       FB.religiousHeadHolderEligible &&
       FB.religiousHeadHolderEligible(state, 'sunni', 'player') &&
-      FB.station.isRoyal(p) &&
+      FB.station.isRoyal(p, state) &&
       FB.isPlayerSovereign(state));
   };
 
@@ -10585,7 +10594,7 @@ window.FB = window.FB || {};
       }
     }
     const mine = playerBorderLands(state);
-    if (!mine.length || !FB.station.rulesRealm(p)) return out;
+    if (!mine.length || !FB.station.rulesRealm(p, state)) return out;
     const mySovereign = FB.playerRealmId(state);
     const titles = heldTitleSets(state);
     const claim = fabricatedClaimRecord(state, !readOnly);
@@ -10737,7 +10746,7 @@ window.FB = window.FB || {};
       return FB.T('Sworn peace pacts protect every reachable neighboring target.');
     }
     const me = state.chars[state.player.charId];
-    if (!FB.station.rulesRealm(state.player) && !(me && me.restorationRight)) {
+    if (!FB.station.rulesRealm(state.player, state) && !(me && me.restorationRight)) {
       return FB.castellanyOf && FB.castellanyOf(state)
         ? FB.T('An appointed Castellan holds no county from which to wage a foreign war.')
         : FB.T('A {term:baron} must first hold a county before waging a foreign war.');
@@ -10761,7 +10770,7 @@ window.FB = window.FB || {};
       });
       return out.sort();
     }
-    if (!FB.station.rulesRealm(state.player)) return out;
+    if (!FB.station.rulesRealm(state.player, state)) return out;
     const mine = playerBorderLands(state), mySovereign = FB.playerRealmId(state);
     const titles = heldTitleSets(state);
     for (const pid of mine) {
@@ -10800,7 +10809,7 @@ window.FB = window.FB || {};
     const currentYear = (state.date && state.date.year) || 867;
     if (FB.ageOf(c, currentYear) < 16) return null;
     if (state.player.flags && state.player.flags.in_prison) return null;
-    if (!FB.station.isLanded(state.player)) return null;
+    if (!FB.station.isLanded(state.player, state)) return null;
     return c;
   }
 
@@ -10847,7 +10856,7 @@ window.FB = window.FB || {};
     const faithRaiding = FB.hasFaithRaidingTradition &&
       FB.hasFaithRaidingTradition(c.religion, state);
     if (!campaignCulture || faithRaiding) return pids;
-    if (FB.station.isBaron(p)) {
+    if (FB.station.isBaron(p, state)) {
       const home = p.homeSettlement !== undefined
         ? p.homeSettlement : (p.settlement !== undefined ? p.settlement : 0);
       return FB.settlementCultureShare && FB.settlementCultureShare(
@@ -10870,7 +10879,7 @@ window.FB = window.FB || {};
       Object.prototype.hasOwnProperty.call(state.cultures, c.culture);
     if (!campaignCulture) return true;
     if (originPid) {
-      if (FB.station.isBaron(state.player) && originPid === state.player.provinceId) {
+      if (FB.station.isBaron(state.player, state) && originPid === state.player.provinceId) {
         const home = state.player.homeSettlement !== undefined
           ? state.player.homeSettlement
           : (state.player.settlement !== undefined ? state.player.settlement : 0);
@@ -12316,8 +12325,8 @@ window.FB = window.FB || {};
     else if (FB.playerBishopricOnly && FB.playerBishopricOnly(state)) {
       want = 'shepherd_diocese';
     }
-    else if (FB.station.isLanded(p)) want = 'govern';
-    else if (FB.station.isGentry(p)) want = 'manage_manor';
+    else if (FB.station.isLanded(p, state)) want = 'govern';
+    else if (FB.station.isGentry(p, state)) want = 'manage_manor';
     else if (FB.professionHasRole(p.profession, 'cloister')) want = 'copy_books';
     else if (FB.professionHasRole(p.profession, 'clergy')) want = 'serve_church';
     else if (FB.professionHasRole(p.profession, 'arms') && p.professionBack) want = 'militia';
@@ -12325,14 +12334,14 @@ window.FB = window.FB || {};
       /* Each learned career has its own focus; other careers work by role. */
       want = ({ administration:'keep_records', physician:'practice_physic',
         scholar:'scholarly_work' })[p.profession] ||
-        ({ labor: FB.station.isSerf(p) ? 'toil' : 'work_land', craft: 'craft_work',
+        ({ labor: FB.station.isSerf(p, state) ? 'toil' : 'work_land', craft: 'craft_work',
           trading: 'trade_run', arms: 'drill', noble: 'train_arms'
         })[FB.professionRole(p.profession)];
       /* martial training is gated male: women are steered to the household or
          the court instead of drill/train_arms (validateFocus self-heals saves
          where a female heir still holds a now-hidden martial focus) */
       if (female(state) && (want === 'drill' || want === 'train_arms')) {
-        want = FB.station.isGentle(p) ? 'courtly_graces' : 'keep_house';
+        want = FB.station.isGentle(p, state) ? 'courtly_graces' : 'keep_house';
       }
     }
     const shown = FB.listFocuses(state);

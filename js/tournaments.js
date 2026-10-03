@@ -24,7 +24,13 @@ window.FB = window.FB || {};
     if (player(s,id)) return s.player.tier;
     var c = character(s,id), rid = c && FB.realmIdForRulerCharacter(s,c);
     // Character station is a social class (0-4); realm rank is count-emperor (1-4).
-    return rid ? FB.clamp((s.realms[rid].rank || 1) + 3,4,7) : c ? Math.min(3,FB.stationOf(c)) : -1;
+    return rid ? FB.realmRank.tier(s.realms[rid], s) : c ? Math.min(3,FB.stationOf(c)) : -1;
+  }
+  function stationSubject(s, id) {
+    if (player(s, id)) return s.player;
+    var context = FB.station.context(character(s, id), s);
+    context.tier = tier(s, id);
+    return context;
   }
   function home(s, id) { return player(s, id) ? s.player.provinceId : FB.characterResidence(s, character(s, id)); }
   function realm(s, id) {
@@ -162,7 +168,7 @@ window.FB = window.FB || {};
         var hostEligibility = T.eligibility(s,e.hostId);
         if (!hostEligibility.ok) return status(false,FB.T('The host cannot hold games: {reason}',{reason:hostEligibility.reason}));
       }
-      if (e.scale && (!FB.station.reaches(tier(s,e.hostId), D.scales[e.scale].tier) ||
+      if (e.scale && (!FB.station.reaches(stationSubject(s,e.hostId), D.scales[e.scale].tier, s) ||
           !FB.settlementConstructionAuthority(s,e.provinceId,e.settlement,actor(s,e.hostId)).direct)) {
         return status(false,FB.T('The host no longer qualifies or directly owns the venue.'));
       }
@@ -225,7 +231,7 @@ window.FB = window.FB || {};
     var site = settlement(e), income = T.income(s, id, fiscal), funding = T.funding(spec.scale, income.reference);
     var authority = FB.settlementConstructionAuthority(s, e.provinceId, e.settlement, actor(s, id));
     if (!eligibility.ok) reasons.push(eligibility.reason);
-    if (!scale || tier(s, id) < scale.tier) reasons.push(FB.T('Your rank does not permit this scale.'));
+    if (!scale || !FB.station.reaches(stationSubject(s, id), scale.tier, s)) reasons.push(FB.T('Your rank does not permit this scale.'));
     if (!site || !authority.direct) reasons.push(FB.T('The host must directly own this established settlement.'));
     var presentation = site && FB.settlementsOf(s, e.provinceId)[e.settlement];
     var kind = presentation && presentation.kind || site && site.kind;
@@ -383,7 +389,7 @@ window.FB = window.FB || {};
     if (d && d.career) {
       var careerDef = FBDATA.careers[d.career];
       if (!trained(c,d.career)) reasons.push(FB.T('Complete training in the required career first.'));
-      if (careerDef && (!FB.station.reaches(tier(s,id), num(careerDef.tierMin)) || careerDef.maleOnly && c && c.sex !== 'm')) {
+      if (careerDef && (!FB.station.reaches(stationSubject(s,id), num(careerDef.tierMin), s) || careerDef.maleOnly && c && c.sex !== 'm')) {
         reasons.push(FB.T('The existing career rank and sex requirements still apply.'));
       }
     }
@@ -669,7 +675,7 @@ window.FB = window.FB || {};
         var inheritedHouse = (e.hostRealm === 'player' || e.fundingAccount && e.fundingAccount.kind === 'realm' && e.fundingAccount.id === 'player') &&
           successor && successor.id === s.player.charId && e.hostId !== s.player.charId;
         var successorEvent = Object.assign({}, e, {hostId:successor && successor.id});
-        if ((!c || c.dead || inheritedHouse) && successor && tier(s, successor.id) >= D.scales[e.scale].tier && T.eligibility(s, successor.id, successorEvent).ok) {
+        if ((!c || c.dead || inheritedHouse) && successor && FB.station.reaches(stationSubject(s, successor.id), D.scales[e.scale].tier, s) && T.eligibility(s, successor.id, successorEvent).ok) {
           var oldId = e.hostId; e.hostId = successor.id; e.hostRealm = realm(s, successor.id);
           e.fundingAccount = copy(actor(s,successor.id));
           clearContexts(s,e.id,oldId); e.incidents.pending = null;
@@ -680,16 +686,16 @@ window.FB = window.FB || {};
           close(s, e, true); return;
         }
       }
-      if (!FB.station.reaches(tier(s, e.hostId), D.scales[e.scale].tier) || !T.eligibility(s, e.hostId, e).ok) { close(s, e, true); return; }
+      if (!FB.station.reaches(stationSubject(s, e.hostId), D.scales[e.scale].tier, s) || !T.eligibility(s, e.hostId, e).ok) { close(s, e, true); return; }
       e.participants.forEach(function (p) {
         if (p.status === 'active' && ((p.household && p.charId !== s.player.charId) || !T.eligibility(s, p.charId, e).ok ||
-            (FB.station.isSerf(tier(s, p.charId)) && home(s, p.charId) !== e.provinceId))) T.withdraw(s, e.id, p.charId, true);
+            (FB.station.isSerf(stationSubject(s, p.charId), s) && home(s, p.charId) !== e.provinceId))) T.withdraw(s, e.id, p.charId, true);
       });
       e.guests = (e.guests || []).filter(function (id) { return T.eligibility(s,id,e).ok; });
     });
     root(s).annual = root(s).annual.filter(function (a) {
       if (a.household && a.hostId !== s.player.charId) {
-        if (!FB.station.reaches(tier(s,s.player.charId), D.scales[a.scale].tier) ||
+        if (!FB.station.reaches(stationSubject(s,s.player.charId), D.scales[a.scale].tier, s) ||
             !FB.settlementConstructionAuthority(s,a.provinceId,a.settlement,'player').direct) return false;
         a.hostId = s.player.charId;
       }
@@ -697,7 +703,7 @@ window.FB = window.FB || {};
       if (c && !c.dead) return true;
       var h = FB.settlementHolder(s,a.provinceId,a.settlement);
       var heir = h && (h.kind === 'character' ? character(s,h.id) : h.id === 'player' ? character(s,s.player.charId) : FB.realmRulerCharacterSnapshot(s,h.id));
-      if (!heir || tier(s,heir.id) < D.scales[a.scale].tier) return false;
+      if (!heir || !FB.station.reaches(stationSubject(s,heir.id), D.scales[a.scale].tier, s)) return false;
       a.hostId = heir.id; return true;
     });
     var t = s.player.travel;
@@ -825,7 +831,7 @@ window.FB = window.FB || {};
     if (!live(e)) { out.reasons.push(FB.T('This edition has closed.')); return out; }
     var el = T.eligibility(s, id, e), origin = t ? t.currentId : s.player.provinceId;
     if (!el.ok) out.reasons.push(el.reason);
-    if (!FB.station.isFree(s.player)) out.reasons.push(FB.T('{Term:serf.other} cannot take to the road.'));
+    if (!FB.station.isFree(s.player, s)) out.reasons.push(FB.T('{Term:serf.other} cannot take to the road.'));
     if (t && (t.purpose !== 'tournament' || t.phase !== 'arrived')) out.reasons.push(FB.T('Finish the current journey before booking this road.'));
     var p = t && T.participant(T.get(s, t.tournamentId), id);
     if (p && p.status === 'active' && t.tournamentId !== eventId) out.reasons.push(FB.T('Withdraw from the current activity before travelling onward.'));

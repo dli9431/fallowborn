@@ -59,31 +59,31 @@ FBDATA.councilSeats = {
     name:'Seneschal', icon:'⚖',
     desc:'+10% taxes while he serves',
     bonusKey:'tax', bonusAmount:0.10,
-    tierMin:6, holderEligibility:'direct_vassal'
+    station:'mayHoldCouncil', tierMin:6, holderEligibility:'direct_vassal'
   },
   constable: {
     name:'Constable', icon:'🗡',
     desc:'+10% levy while he serves',
     bonusKey:'levy', bonusAmount:0.10,
-    tierMin:6, holderEligibility:'direct_vassal'
+    station:'mayHoldCouncil', tierMin:6, holderEligibility:'direct_vassal'
   },
   treasurer: {
     name:'Treasurer', icon:'💰',
     desc:'Buildings cost 15% less while he serves',
     bonusKey:'build', bonusAmount:0.15,
-    tierMin:6, holderEligibility:'direct_vassal'
+    station:'mayHoldCouncil', tierMin:6, holderEligibility:'direct_vassal'
   },
   almoner: {
     name:'Almoner', icon:'🕯',
     desc:'+1 piety a season while he serves',
     bonusKey:'piety', bonusAmount:1,
-    tierMin:6, holderEligibility:'direct_vassal'
+    station:'mayHoldCouncil', tierMin:6, holderEligibility:'direct_vassal'
   },
   chamberlain: {
     name:'Chamberlain', icon:'🗝',
     desc:'Watches for schemes against you; your own plots weave faster',
     bonusKey:'plot', bonusAmount:0.08,
-    tierMin:6, holderEligibility:'direct_vassal'
+    station:'mayHoldCouncil', tierMin:6, holderEligibility:'direct_vassal'
   }
 };
 

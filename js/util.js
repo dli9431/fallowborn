@@ -87,7 +87,7 @@ window.FB = window.FB || {};
     const tier = typeof stateOrTier === 'number'
       ? stateOrTier
       : (stateOrTier && stateOrTier.player ? stateOrTier.player.tier : 0);
-    return FB.station.societalRole(tier);
+    return FB.station.societalRole(tier, typeof stateOrTier === 'number' ? undefined : stateOrTier);
   };
 
   /* deterministic 2D hash noise in [0,1), independent of the RNG stream */

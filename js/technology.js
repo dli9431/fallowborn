@@ -163,7 +163,7 @@ window.FB = window.FB || {};
         !Object.prototype.hasOwnProperty.call(state.cultures, culture)) {
       return culture;
     }
-    if (rid === 'player' && state.player && FB.station.isBaron(state.player) &&
+    if (rid === 'player' && state.player && FB.station.isBaron(state.player, state) &&
         FB.settlementCulture) {
       var home = state.player.homeSettlement !== undefined
         ? state.player.homeSettlement
@@ -1494,7 +1494,7 @@ window.FB = window.FB || {};
 
   FB.canAdvocateTech = function (state, id) {
     var p = state.player, def = FBDATA.tech[id];
-    if (!p || !def || !FB.station.isLanded(p) || !p.liege || FB.isPlayerSovereign(state)) return false;
+    if (!p || !def || !FB.station.isLanded(p, state) || !p.liege || FB.isPlayerSovereign(state)) return false;
     var rid = FB.techRealmId(state);
     if (FB.hasTech(state, id, rid) || !FB.techPrerequisitesMet(state, id, rid)) return false;
     if (FB.realmTechRecord(state, rid).active.indexOf(id) >= 0) return false;
@@ -1508,7 +1508,7 @@ window.FB = window.FB || {};
      advocate at court; common households only need the concrete prerequisite
      named where national knowledge gates one of their own choices. */
   FB.techUiRelevant = function (state) {
-    return !!(state && state.player && FB.station.isLanded(state.player));
+    return !!(state && state.player && FB.station.isLanded(state.player, state));
   };
 
   FB.advocateTech = function (state, id) {

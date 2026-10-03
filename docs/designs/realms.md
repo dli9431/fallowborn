@@ -85,22 +85,19 @@ Validation. Override tables may name existing keys only. FB.balanceLayers.proble
 
 ## Station and rank queries
 
-Engine code never compares a tier or a realm rank with a number. Every such check
-asks a named query in `js/station.js` (loaded after `model.js`) that says what the
-check means: `FB.station` for a household's ladder tier and `FB.realmRank` for a
-realm's rank. Each query is exactly the numeric comparison it replaced, so 867, 1066
-and 476 behave as before; a later change can answer the same questions from a
-government form's ladder without touching the callers again. A query takes a
-subject with a `tier` (or `rank`) field, such as `state.player`, a scenario, a
-portrait spec or a holy-war crown award, or a bare tier or rank number read on the
-same ladder. The source lint in `tests/e2e/specs/station-queries.spec.js` fails on
-any `.tier` or `.rank` member compared with a number outside `js/station.js`,
-except lines on its save and validation allowlist
-(`tests/e2e/fixtures/engine-ids/station-allowlist.json`, empty today).
+Engine eligibility reads FB.station, FB.realmRank and FB.socialStation from js/station.js. Each era declares a ladder in data/eras.js. All three shipped eras currently use FBDATA.stationLadders.feudal, preserving the existing 867, 1066 and 476 permissions. A government form may name a registered ladder strategy containing partial bands, ranks and social tables; supplied fields override the era row, including explicit false flags. Era and strategy validation rejects unknown fields, malformed flags, invalid scale references and promotion routes before activation.
 
-The ladder: tier 0 serf, 1 freeholder, 2 gentry, 3 baron, 4 count, 5 duke, 6 king,
-7 emperor. Realm rank: 0 a non-territorial rebel or holy-war faction, 1 county,
-2 duchy, 3 kingdom, 4 empire.
+The saved station scale remains eight bands, 0 through 7. Each band declares used, order, eligibilityTier, socialStation, realmRank, role, succession, promotion and previous. Named boolean meanings describe freedom, gentle standing, land, county control, realm rule, Estates membership, council eligibility and rank identity. Military command, justice and dynastic marriage have separate meanings, so permission need not imply land ownership. An unused band answers no permission, fails a supplied minimum and exceeds a supplied maximum. Numeric thresholds still address the abstract eligibilityTier; they no longer compare the saved tier directly.
+
+Queries accept the subject followed by an optional state, or a threshold followed by state for reaches and exceeds. Omitted state uses FB.state; null uses the shared baseline. Explicit state is passed by simulation consumers, including creation, succession, restoration and inactive campaign reads. The subject's own realm form wins, then a landless player's immediate liege or home holder, then the campaign's stamped default. NPCs resolve their own ruling realm or residence. The resolver reads authority government rows without invoking political actor queries or repairing saved state. Bare tiers are prospective player bands; a realmId or formId supplies another subject's context. Portrait descriptors retain formId and era, without retaining a campaign reference.
+
+Realm rank rows hold order, tier and their named meanings. FB.station.realmRank and FB.realmRank.tier replace the former tier-minus-three and rank-plus-three conversions. Relative dignity checks use above, higherTier and higherRank; same tests persisted identity. Promotion reviews read the band's promotion route and next band, higher claims resolve their named target band and skip unused bands, title lapse reads previous, and household succession reads personal or dynastic. Crossed recognition costs and their displayed order follow ladder ordering, while prices and de jure substance remain with the existing promotion system. Form-specific careers and political offices remain separate consumers of this contract.
+
+NPC social station remains the independent five-class saved scale. FB.stationOf keeps its legacy lord/notable inference; FB.socialStation reads the era/form social rows for free, gentle, noble and royal eligibility, relative gaps and policy thresholds. Player social class comes from its band mapping, with the existing papal/cardinal override. Changing a ladder does not rewrite existing NPC class identities.
+
+Rank labels are indexed by the same stable bands. Labels for used bands are required; unused bands may have null or omitted labels, including a shorter array when only trailing bands are unused. Per-band lexicon fallback preserves an old saved band instead of clamping it to the final supplied label. The base and general faith/culture lexicon layers retain labels for all shared bands; government and era lexicon layers validate against their corresponding effective ladder. Legacy faith rankTitles validate against the campaign's effective ladder when a campaign is supplied, without binding the cached faith compilation to a government form.
+
+The source lint in tests/e2e/specs/station-queries.spec.js rejects numeric member tier, rank and station comparisons and direct stationOf/playerStation numeric comparisons outside the resolver. Its save/validation allowlist remains empty. The following inventory records the feudal baseline and call-site counts from the original wrapper conversion; other forms answer through their overrides.
 
 | Query | Today's answer | Meaning | Call sites (count by file) |
 | --- | --- | --- | --- |
@@ -134,14 +131,11 @@ The ladder: tier 0 serf, 1 freeholder, 2 gentry, 3 baron, 4 count, 5 duke, 6 kin
 | `realmRank.isRoyal` | rank 3+ | a crown: kingdom or empire | holywar 12, world 11, actions 9, ui_modals 6, agency 2, ambitions, events, model, wars |
 | `realmRank.isImperial` | rank 4 | an empire | wars |
 
-Data thresholds stay data: `councilSeats` `tierMin`, action and event `tierMin` and
-`tierMax`, career and venture minimums, travel purpose ranges and tournament scales
-are read through `reaches` and `exceeds`, and an absent threshold never blocks.
-Relative comparisons between two tiers or two ranks (an outranking liege, a
-promotion target above the current tier) and tier arithmetic (realm rank plus
-three, title array indexes) remain ordinary code. Non-player character `station`
-values, a 0 to 4 social class, are not ladder tiers and are not routed through
-these queries.
+Action, event, career, venture, travel and tournament thresholds pass through reaches and exceeds; an absent threshold never blocks. Actions may additionally name an eligibility.station permission. Built-in council seats declare mayHoldCouncil, while older mod seats retain their tierMin gate. Estates membership still also requires a living liege. World territory, physical holdings, offices and explicit grants remain separate facts; a station flag alone never creates counties or an appointment.
+
+Technology impact: this is an internal eligibility refactor with parity data for all shipped forms. It introduces no shipped gameplay option or research gate, so no technology-impact ledger entry is required.
+
+Coverage: station-ladders.spec.js covers both medieval bookmarks across the eight bands, save restoration, an isolated landless command form, unrelated realms and inactive campaigns, era overrides, malformed ladder data, unused bands and sparse rank-label fallback. station-queries.spec.js covers baseline query answers and the source lint. The existing full fresh, save-corpus and portrait parity journeys remain the owner-run comparison coverage.
 
 ## Canonical de jure title IDs (476 Phase 3)
 

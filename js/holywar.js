@@ -746,7 +746,7 @@ window.FB = window.FB || {};
 
   function playerCompatibleCamp(state, campaign) {
     var character = state.chars[state.player.charId];
-    if (!character || FB.ageOf(character, state.date.year) < 16 || !FB.station.isFree(state.player)) {
+    if (!character || FB.ageOf(character, state.date.year) < 16 || !FB.station.isFree(state.player, state)) {
       return null;
     }
     if (papalFaith(state, character.religion) &&
@@ -1491,7 +1491,7 @@ window.FB = window.FB || {};
           var asset = settlementCase.assets[a];
           if (asset.id !== award.asset || asset.kind === 'sacred') continue;
           return asset.kind === 'crown'
-            ? (FB.realmRank.isRoyal(asset) ? 'kingdom' : FB.realmRank.isDuchy(asset) ? 'duchy' : 'county')
+            ? (FB.realmRank.isRoyal(asset, state) ? 'kingdom' : FB.realmRank.isDuchy(asset, state) ? 'duchy' : 'county')
             : asset.kind;
         }
       }
@@ -1500,7 +1500,7 @@ window.FB = window.FB || {};
       ? FB.greatHolyWarPlayerClaimProjection(state) : null;
     if (!projection || projection.likely === false) return 'honor';
     return projection.kind === 'crown'
-      ? (FB.realmRank.isRoyal(projection) ? 'kingdom' : FB.realmRank.isDuchy(projection) ? 'duchy' : 'county')
+      ? (FB.realmRank.isRoyal(projection, state) ? 'kingdom' : FB.realmRank.isDuchy(projection, state) ? 'duchy' : 'county')
       : projection.kind;
   };
 
@@ -1558,9 +1558,9 @@ window.FB = window.FB || {};
     var identity = sponsorIdentity(state, sponsor);
     var kingdom = FBDATA.kingdoms[campaign.targetKingdom];
     var dejure = FB.dejureOf(capital);
-    var name = FB.realmRank.isRoyal(rank)
+    var name = FB.realmRank.isRoyal(rank, state)
       ? 'Kingdom of ' + (kingdom ? kingdom.name : campaign.targetKingdom)
-      : FB.realmRank.isDuchy(rank)
+      : FB.realmRank.isDuchy(rank, state)
         ? 'Duchy of ' + (dejure.duchy && FBDATA.duchies[dejure.duchy]
           ? FBDATA.duchies[dejure.duchy].name : FB.world.byId[capital].name)
         : 'County of ' + FB.world.byId[capital].name;
@@ -1574,7 +1574,7 @@ window.FB = window.FB || {};
     realm.religion = campaign.callingReligion;
     realm.dynasty = identity.dynasty;
     realm.sponsorRealm = sponsor;
-    realm.color = FB.realmRank.isRoyal(rank) ? '#b99035' : realm.color;
+    realm.color = FB.realmRank.isRoyal(rank, state) ? '#b99035' : realm.color;
     return realm;
   }
 
@@ -2289,9 +2289,9 @@ window.FB = window.FB || {};
     var player = state.player;
     var hadLand = !!(player.provs && player.provs.length);
     var wasSovereign = FB.isPlayerSovereign(state);
-    if (!FB.realmRank.isRoyal(award) && player.liege) exchangeOldPlayerLands(state);
+    if (!FB.realmRank.isRoyal(award, state) && player.liege) exchangeOldPlayerLands(state);
     FB.changePlayerLiege(state, null, 'holy_war:sovereign_award');
-    FB.setPlayerTier(state, Math.max(player.tier, award.rank + 3), {
+    FB.setPlayerTier(state, FB.station.higherTier(player, FB.realmRank.tier(award, state), state), {
       attachLiege:false
     });
     player.provs = player.provs || [];
@@ -2302,12 +2302,12 @@ window.FB = window.FB || {};
       state.holder[pid] = 'player';
       if (player.provs.indexOf(pid) < 0) player.provs.push(pid);
     }
-    if (award.counties.length && (!FB.realmRank.isRoyal(award) || !hadLand)) {
+    if (award.counties.length && (!FB.realmRank.isRoyal(award, state) || !hadLand)) {
       player.provinceId = settlement.capital;
     }
     FB.foundPlayerRealm(state);
     state.realms.player.religion = campaign.callingReligion;
-    if (!wasSovereign || FB.realmRank.isRoyal(award)) {
+    if (!wasSovereign || FB.realmRank.isRoyal(award, state)) {
       state.realms.player.capital = settlement.capital;
     }
     if (FB.localFolkArrive) FB.localFolkArrive(state, player.provinceId);
@@ -2349,9 +2349,9 @@ window.FB = window.FB || {};
     if (!sovereign && player.provs && player.provs.length) exchangeOldPlayerLands(state);
     if (!sovereign) {
       FB.changePlayerLiege(state,
-        main && main.rank > award.rank ? main.id : null,
+        main && FB.realmRank.above(main, award, state) ? main.id : null,
         'holy_war:secondary_award');
-      FB.setPlayerTier(state, Math.max(player.tier, award.rank + 3), {
+      FB.setPlayerTier(state, FB.station.higherTier(player, FB.realmRank.tier(award, state), state), {
         attachLiege:false
       });
       player.provs = [];
@@ -2424,7 +2424,7 @@ window.FB = window.FB || {};
         sovereign:asset.kind === 'crown',
         rank:asset.rank,
         kind:asset.kind === 'crown'
-          ? (FB.realmRank.isRoyal(asset) ? 'kingdom' : FB.realmRank.isDuchy(asset) ? 'duchy' : 'county')
+          ? (FB.realmRank.isRoyal(asset, state) ? 'kingdom' : FB.realmRank.isDuchy(asset, state) ? 'duchy' : 'county')
           : asset.kind,
         counties:asset.awardIds.slice(),
         share:FB.greatHolyWarPlayerShare(state)
@@ -2453,9 +2453,9 @@ window.FB = window.FB || {};
     var hadLand = !!(player.provs && player.provs.length);
     var wasSovereign = FB.isPlayerSovereign(state);
     var liege = terms && terms.kind === 'vassal' ? terms.liege : null;
-    if (!FB.realmRank.isRoyal(asset) && player.liege) exchangeOldPlayerLands(state);
+    if (!FB.realmRank.isRoyal(asset, state) && player.liege) exchangeOldPlayerLands(state);
     FB.changePlayerLiege(state, liege, 'holy_war:crown_award');
-    FB.setPlayerTier(state, Math.max(player.tier, asset.rank + 3), {
+    FB.setPlayerTier(state, FB.station.higherTier(player, FB.realmRank.tier(asset, state), state), {
       attachLiege:false
     });
     player.provs = player.provs || [];
@@ -2464,14 +2464,14 @@ window.FB = window.FB || {};
         player.provs.push(asset.awardIds[i]);
       }
     }
-    if (asset.awardIds.length && (!FB.realmRank.isRoyal(asset) || !hadLand)) {
+    if (asset.awardIds.length && (!FB.realmRank.isRoyal(asset, state) || !hadLand)) {
       player.provinceId = asset.seat || asset.awardIds[0];
     }
     FB.foundPlayerRealm(state);
-    state.realms.player.rank = Math.max(state.realms.player.rank || 1, asset.rank);
+    state.realms.player.rank = FB.realmRank.higherRank(state.realms.player, asset, state);
     state.realms.player.liege = liege;
     state.realms.player.religion = campaign.callingReligion;
-    if (!wasSovereign || FB.realmRank.isRoyal(asset)) {
+    if (!wasSovereign || FB.realmRank.isRoyal(asset, state)) {
       state.realms.player.capital = asset.seat || asset.awardIds[0];
     }
     if (FB.localFolkArrive) FB.localFolkArrive(state, player.provinceId);
@@ -2483,7 +2483,7 @@ window.FB = window.FB || {};
     var sovereign = FB.isPlayerSovereign(state);
     if (sovereign && terms && terms.kind === 'vassal' &&
         state.realms[terms.liege] &&
-        state.realms[terms.liege].rank > state.realms.player.rank) {
+        FB.realmRank.above(state.realms[terms.liege], state.realms.player, state)) {
       FB.changePlayerLiege(state, terms.liege,
         'holy_war:package_vassalage');
     }
@@ -2492,9 +2492,9 @@ window.FB = window.FB || {};
       var proposed = terms && terms.kind === 'vassal' ? terms.liege : mainId;
       FB.changePlayerLiege(state,
         proposed && state.realms[proposed] &&
-          state.realms[proposed].rank > asset.rank ? proposed : mainId,
+          FB.realmRank.above(state.realms[proposed], asset, state) ? proposed : mainId,
         'holy_war:package_award');
-      FB.setPlayerTier(state, Math.max(player.tier, asset.rank + 3), {
+      FB.setPlayerTier(state, FB.station.higherTier(player, FB.realmRank.tier(asset, state), state), {
         attachLiege:false
       });
       player.provs = [];
@@ -2507,7 +2507,7 @@ window.FB = window.FB || {};
     }
     if (!sovereign && asset.awardIds.length) player.provinceId = asset.awardIds[0];
     FB.foundPlayerRealm(state);
-    state.realms.player.rank = Math.max(state.realms.player.rank || 1, asset.rank);
+    state.realms.player.rank = FB.realmRank.higherRank(state.realms.player, asset, state);
     state.realms.player.religion = campaign.callingReligion;
     if (FB.localFolkArrive) FB.localFolkArrive(state, player.provinceId);
     return 'player';
@@ -2736,9 +2736,9 @@ window.FB = window.FB || {};
     FB.invalidateRealmCache();
     if (mainId === 'player') {
       FB.foundPlayerRealm(state);
-      state.realms.player.rank = Math.max(state.realms.player.rank || 1,
-        crownAsset.rank);
-      if (!personalCrownWasSovereign || FB.realmRank.isRoyal(crownAsset)) {
+      state.realms.player.rank = FB.realmRank.higherRank(state.realms.player,
+        crownAsset, state);
+      if (!personalCrownWasSovereign || FB.realmRank.isRoyal(crownAsset, state)) {
         state.realms.player.capital = crownAsset.seat;
       }
     }

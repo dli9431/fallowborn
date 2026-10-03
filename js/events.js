@@ -200,7 +200,7 @@ window.FB = window.FB || {};
       return {
         kind:'realm', id:target.id, realmId:target.id,
         character:ruler,
-        station:FB.realmRank.isRoyal(realm) ? 4 : 3
+        station:FB.realmRank.isRoyal(realm, state) ? 4 : 3
       };
     }
     if (kind !== 'character') return null;
@@ -348,7 +348,7 @@ window.FB = window.FB || {};
         : FB.T('Within ordinary social reach.');
       return status;
     }
-    if (info.station <= ceiling) {
+    if (FB.socialStation.reaches(ceiling, info.station, state)) {
       status.ready = true;
       status.mode = rawSteps ? 'brokered' : 'direct';
       status.description = rawSteps
@@ -957,7 +957,7 @@ window.FB = window.FB || {};
     else if (role === 'notable') {
       opts.quality = 1;
       opts.born = state.date.year - FB.ri(25, 55);
-      opts.station = FB.station.isSerf(state.player) ? 0 :
+      opts.station = FB.station.isSerf(state.player, state) ? 0 :
         Math.min(1, FB.playerStation(state));
     }
     else if (role === 'rival') {
@@ -2202,7 +2202,7 @@ window.FB = window.FB || {};
         (FB.isReigningRealmRuler &&
           (FB.isReigningRealmRuler(state, a) ||
             FB.isReigningRealmRuler(state, b)))) return true;
-    if (!FB.station.isLanded(state.player) || !FB.kinOf) return false;
+    if (!FB.station.isLanded(state.player, state) || !FB.kinOf) return false;
     const children = FB.kinOf(state).children || [];
     for (let i = 0; i < children.length; i++) {
       if (!children[i].c.dead && children[i].c.dyn === a.dyn) return false;
@@ -3172,7 +3172,7 @@ window.FB = window.FB || {};
     state.player.suitorIds = [];
     for (const m of out) {
       if (!m.career && FB.applyMarriageBackground) {
-        FB.applyMarriageBackground(m, FB.stationOf(m), m.epithetMsg);
+        FB.applyMarriageBackground(m, FB.stationOf(m), m.epithetMsg, state);
       }
       state.player.suitorIds.push(m.id);
     }
@@ -3197,7 +3197,7 @@ window.FB = window.FB || {};
       c.suitorProfile = i;
       c.suitorProvinceId = pr.id;
       c.epithetMsg = FB.pick(SUITOR_EPITHETS[st][c.sex]);
-      if (FB.applyMarriageBackground) FB.applyMarriageBackground(c, st, c.epithetMsg);
+      if (FB.applyMarriageBackground) FB.applyMarriageBackground(c, st, c.epithetMsg, state);
       out.push(c);
       state.player.suitorIds.push(c.id);
     }
@@ -3351,7 +3351,7 @@ window.FB = window.FB || {};
      never disable a manual choice. */
   FB.kinMatchPrestigeNeed = function (state, cand) {
     const station = cand ? FB.stationOf(cand) : 0;
-    return Math.max(0, station - FB.playerStation(state)) * 20;
+    return Math.max(0, FB.socialStation.gap(station, FB.playerStation(state), state)) * 20;
   };
 
   FB.kinMatchTerms = function (state, child, cand, options) {
@@ -3399,7 +3399,7 @@ window.FB = window.FB || {};
         Math.abs(age - childAge) > 5) return 'age-gap';
     if (policy.agePreference === 'same' && age !== childAge) return 'same-age';
     if (policy.agePreference === 'younger' && age >= childAge) return 'younger-only';
-    if (terms.station < policy.minStation) return 'minimum-station';
+    if (!FB.socialStation.reaches(candidate, policy.minStation, state)) return 'minimum-station';
     if (policy.maxDowry !== null &&
         terms.dowry > policy.maxDowry + 0.0001) return 'maximum-dowry';
     if (policy.maxGold !== null &&
@@ -3590,7 +3590,7 @@ window.FB = window.FB || {};
     for (const m of out) {
       if (!m.career && FB.ageOf(m, y) >= 16 &&
           FB.applyMarriageBackground) {
-        FB.applyMarriageBackground(m, FB.stationOf(m), m.epithetMsg);
+        FB.applyMarriageBackground(m, FB.stationOf(m), m.epithetMsg, state);
       }
       child.matchIds.push(m.id);
     }
@@ -3604,7 +3604,7 @@ window.FB = window.FB || {};
       });
       m.epithetMsg = FB.pick(SUITOR_EPITHETS[st][m.sex]);
       if (FB.ageOf(m, y) >= 16 && FB.applyMarriageBackground) {
-        FB.applyMarriageBackground(m, st, m.epithetMsg);
+        FB.applyMarriageBackground(m, st, m.epithetMsg, state);
       }
       const sum = Math.round((FBDATA.balance.dowryByStation[st] || 0) * FB.rf(0.7, 1.3));
       const marriage = FB.marriageTerms(state, child, m, sum);
@@ -3780,7 +3780,7 @@ window.FB = window.FB || {};
     const descendantKind = FB.playerDescendantKind(state, k.id);
     const collateralKind = FB.arrangedMatchKind(state, k.id);
     if (!sp.career && sp.epithetMsg && FB.applyMarriageBackground) {
-      FB.applyMarriageBackground(sp, FB.stationOf(sp), sp.epithetMsg);
+      FB.applyMarriageBackground(sp, FB.stationOf(sp), sp.epithetMsg, state);
     }
     /* A managed kinsman (descendant or resident unwed sibling) establishing
        another household leaves work and equipment assignments behind. The
@@ -3840,7 +3840,7 @@ window.FB = window.FB || {};
     }
     delete sp.dowryAsk; // settled at the pledge; nothing owed back once wed
     if (sp.station != null) {
-      const gap = sp.station - FB.playerStation(state);
+      const gap = FB.socialStation.gap(sp, FB.playerStation(state), state);
       if (gap > 0) {
         p.prestige += Math.round(gap * B.marryUpPrestige / 2);
         FB.news(state, FB.msg('news.event.match_above',
@@ -4645,7 +4645,7 @@ window.FB = window.FB || {};
             FB.proposalStatus(state, s).ready) return 1;
         let c = 0.3 + characterStanding(state, s) / 180 +
           p.prestige / 600 + p.tier * 0.05;
-        const gap = s ? FB.stationOf(s) - FB.playerStation(state) : 0;
+        const gap = s ? FB.socialStation.gap(s, FB.playerStation(state), state) : 0;
         if (gap > 0) c -= gap * FBDATA.balance.proposalStationPenalty; // marrying up is hard
         else c += Math.min(0.1, -gap * 0.05); // marrying down is easy
         if (me.traits.indexOf('comely') >= 0) c += 0.08;
@@ -4818,8 +4818,8 @@ window.FB = window.FB || {};
       }
       case 'liege_grant': {
         // no land adjoining the player's to give → the suit fails outright
-        if (FB.station.isBaron(p) && !FB.liegeHomeCountyGrantAuthority(state)) return 0;
-        if (FB.station.rulesRealm(p) && !FB.liegeGrantCandidates(state).length) return 0;
+        if (FB.station.isBaron(p, state) && !FB.liegeHomeCountyGrantAuthority(state)) return 0;
+        if (FB.station.rulesRealm(p, state) && !FB.liegeGrantCandidates(state).length) return 0;
         const aim = p.liege && FB.rulerAimSnapshot &&
           FB.rulerAimSnapshot(state, p.liege);
         const aimValue = aim && aim.id === 'expand_realm' ? 0.04 :
@@ -5029,17 +5029,17 @@ window.FB = window.FB || {};
     const provinceId = ctx && ctx.locationId || p.provinceId;
     const pr = FB.world.byId[provinceId];
 
-    if (!FB.station.reaches(p, tg.tierMin)) return false;
-    if (FB.station.exceeds(p, tg.tierMax)) return false;
+    if (!FB.station.reaches(p, tg.tierMin, state)) return false;
+    if (FB.station.exceeds(p, tg.tierMax, state)) return false;
     if (tg.societalRoles && tg.societalRoles.indexOf(
       triggerSnapshotValue(snapshot, 'societalRole', function () {
         return FB.societalRole(state);
       })) < 0) return false;
     /* Profession requirements describe personally practicing a vocation.
        Landed careers survive as biography, but no longer satisfy work gates. */
-    if (tg.professions && (FB.station.isLanded(p) ||
+    if (tg.professions && (FB.station.isLanded(p, state) ||
       tg.professions.indexOf(p.profession) < 0)) return false;
-    if (tg.careerRoles && (FB.station.isLanded(p) ||
+    if (tg.careerRoles && (FB.station.isLanded(p, state) ||
       !FB.professionHasRole(p.profession, tg.careerRoles))) return false;
     /* A specialty path is an active vocation requirement, deliberately
        separate from broad profession gates. It is evaluated only by events
@@ -5050,7 +5050,7 @@ window.FB = window.FB || {};
         return FB.careerOf ? FB.careerOf(state, me) : null;
       });
       const guildOrder = { none:0, member:1, master:2, officer:3, guildmaster:4 };
-      if (FB.station.isLanded(p) || !career || !career.chosen ||
+      if (FB.station.isLanded(p, state) || !career || !career.chosen ||
           career.rank === 'unassigned' || career.rank === 'apprentice') return false;
       if (requirement.profession && career.profession !== requirement.profession) return false;
       if (requirement.specialization &&
@@ -5305,7 +5305,7 @@ window.FB = window.FB || {};
      freedom records the generation that actually acquired it. */
   FB.freeholderEstablished = function (state) {
     const p = state.player;
-    if (!p || !FB.station.isFree(p)) return false;
+    if (!p || !FB.station.isFree(p, state)) return false;
     if (p.freeholderGeneration === undefined) return true;
     if (p.freeholderGeneration === null) return false;
     if (p.lineDepth !== undefined) {
@@ -5333,7 +5333,7 @@ window.FB = window.FB || {};
      number keep the original counter comparison. */
   FB.gentryEstablished = function (state) {
     const p = state.player;
-    if (!p || !FB.station.isGentle(p)) return false;
+    if (!p || !FB.station.isGentle(p, state)) return false;
     if (p.gentryGeneration === undefined) return true;
     if (p.gentryGeneration === null) return false;
     if (p.lineDepth !== undefined) {
@@ -5508,7 +5508,7 @@ window.FB = window.FB || {};
     const record = state.player.stationFarewell;
     if (!record || record.queued || record.charId !== state.player.charId ||
       (state.player.fired && state.player.fired.station_farewell) ||
-      !FB.station.isLanded(state.player) || lowerStationStoryActive(state)) return false;
+      !FB.station.isLanded(state.player, state) || lowerStationStoryActive(state)) return false;
     FB.queueEvent(state, 'station_farewell', {
       societalRole:record.fromRole,
       formerProfession:record.formerProfession
@@ -5527,7 +5527,7 @@ window.FB = window.FB || {};
     seen[protagonist.id] = 1;
     function release(c) {
       if (!c || c.dead) return;
-      if (FB.stationOf(c) < 1) c.station = 1;
+      if (!FB.socialStation.isFree(c, state)) c.station = 1;
       delete c.unfree;
     }
     release(protagonist);
@@ -5562,11 +5562,11 @@ window.FB = window.FB || {};
     }
     const current = state.chars && state.chars[p.charId];
     if (current) {
-      current.station = FB.clamp(tier, 0, 4);
-      if (FB.station.isSerf(tier)) current.unfree = true;
+      current.station = FB.station.socialClass(tier, state);
+      if (FB.station.isSerf(tier, state)) current.unfree = true;
       else delete current.unfree;
     }
-    if (FB.station.isSerf(tier) && current) {
+    if (FB.station.isSerf(tier, state) && current) {
       const seen = {};
       const queue = [current];
       for (let i = 0; i < queue.length; i++) {
@@ -5586,14 +5586,14 @@ window.FB = window.FB || {};
         }
       }
     }
-    if (FB.station.isSerf(oldTier) && FB.station.isFree(tier)) {
+    if (FB.station.isSerf(oldTier, state) && FB.station.isFree(tier, state)) {
       releaseSerfFamilyOnPromotion(state, current);
     }
     if (tier === oldTier) return false;
-    const oldRole = FB.societalRole(oldTier);
-    const newRole = FB.societalRole(tier);
+    const oldRole = FB.station.societalRole(oldTier, state);
+    const newRole = FB.station.societalRole(tier, state);
     p.tier = tier;
-    if (tier > oldTier && FB.startProgression) {
+    if (FB.station.above(tier, oldTier, state) && FB.startProgression) {
       const unlocked = FB.startProgression.noteTier(tier);
       if (unlocked.startsChanged && FB.ui) {
         const names = ['{Term:serf}', 'Freeholder', 'Gentry', '{Term:baron}'];
@@ -5603,13 +5603,13 @@ window.FB = window.FB || {};
         });
       }
     }
-    if (FB.station.isGentry(oldTier) && !FB.station.isGentry(tier) && p.militaryCommand) {
+    if (FB.station.isGentry(oldTier, state) && !FB.station.isGentry(tier, state) && p.militaryCommand) {
       delete p.militaryCommand;
     }
-    if (!FB.station.isFree(oldTier) && FB.station.isFree(tier)) FB.markFreeholderRise(state);
-    if (!FB.station.isGentle(oldTier) && FB.station.isGentle(tier)) FB.markGentryRise(state);
+    if (!FB.station.isFree(oldTier, state) && FB.station.isFree(tier, state)) FB.markFreeholderRise(state);
+    if (!FB.station.isGentle(oldTier, state) && FB.station.isGentle(tier, state)) FB.markGentryRise(state);
 
-    if (!FB.station.isLanded(oldTier) && FB.station.isLanded(tier) && opts.stationFarewell !== false) {
+    if (!FB.station.isLanded(oldTier, state) && FB.station.isLanded(tier, state) && opts.stationFarewell !== false) {
       p.stationFarewell = p.fired && p.fired.station_farewell ? null : {
           charId:p.charId,
           fromRole:oldRole,
@@ -5621,20 +5621,20 @@ window.FB = window.FB || {};
       if (FB.unassignEnterpriseWorker) {
         FB.unassignEnterpriseWorker(state, p.charId);
       }
-    } else if (FB.station.isLanded(oldTier) && !FB.station.isLanded(tier)) {
+    } else if (FB.station.isLanded(oldTier, state) && !FB.station.isLanded(tier, state)) {
       p.stationFarewell = null;
       state.eventQueue = (state.eventQueue || []).filter(function (item) {
         return item.id !== 'station_farewell';
       });
     }
 
-    if (FB.station.isLanded(tier) && !p.liege && opts.attachLiege !== false) {
+    if (FB.station.isLanded(tier, state) && !p.liege && opts.attachLiege !== false) {
       const rid = (state.holder && state.holder[p.provinceId]) || state.owner[p.provinceId];
       if (rid && rid !== 'player') {
         FB.changePlayerLiege(state, rid, 'tier:attach_liege');
       }
     }
-    if (FB.station.isSerf(oldTier) && FB.station.isFree(tier)) {
+    if (FB.station.isSerf(oldTier, state) && FB.station.isFree(tier, state)) {
       if (FB.closeSerfTenure) FB.closeSerfTenure(state, opts.tenureEndReason || 'rank_change');
       if (FB.serfParticipantRankChanged) {
         FB.serfParticipantRankChanged(state, !!opts.freedomResolution);
@@ -5645,7 +5645,7 @@ window.FB = window.FB || {};
             freedomOffer.status === 'service')) {
         freedomOffer.status = 'invalid';
       }
-    } else if (FB.station.isFree(oldTier) && FB.station.isSerf(tier)) {
+    } else if (FB.station.isFree(oldTier, state) && FB.station.isSerf(tier, state)) {
       if (opts.formTenure !== false && FB.ensureSerfTenure) {
         FB.ensureSerfTenure(state, opts.tenureFormationReason || 'rank_change');
       }
@@ -6430,7 +6430,7 @@ window.FB = window.FB || {};
   }
 
   FB.ensureSerfTenure = function (state, formedBy) {
-    if (!state || !state.player || !FB.station.isSerf(state.player)) return null;
+    if (!state || !state.player || !FB.station.isSerf(state.player, state)) return null;
     const p = state.player;
     if (p.tenure && p.tenure.status === 'active') {
       normalizeSerfTenure(state, p.tenure);
@@ -6554,7 +6554,7 @@ window.FB = window.FB || {};
   };
 
   FB.activeSerfTenure = function (state) {
-    return (state && state.player && FB.station.isSerf(state.player) &&
+    return (state && state.player && FB.station.isSerf(state.player, state) &&
       state.player.tenure && state.player.tenure.status === 'active')
       ? state.player.tenure : null;
   };
@@ -7388,7 +7388,7 @@ window.FB = window.FB || {};
   };
 
   FB.replaceSerfTenure = function (state, formedBy, priorReason) {
-    if (!state || !state.player || !FB.station.isSerf(state.player)) return null;
+    if (!state || !state.player || !FB.station.isSerf(state.player, state)) return null;
     const old = state.player.tenure;
     let priorClosure = null;
     if (old && old.status === 'active') {
@@ -7742,7 +7742,7 @@ window.FB = window.FB || {};
   }
 
   FB.tenureDay = function (state) {
-    if (!state || !state.player || !FB.station.isSerf(state.player)) return;
+    if (!state || !state.player || !FB.station.isSerf(state.player, state)) return;
     if (state.player.travel) return;
 
     if (!state.player.tenure || state.player.tenure.status !== 'active') {
@@ -7971,14 +7971,14 @@ window.FB = window.FB || {};
       }
       for (let j = 0; j < entry.memberIds.length; j++) {
         const member = state.chars && state.chars[entry.memberIds[j]];
-        if (member && FB.stationOf(member) < 1) member.station = 1;
+        if (member && !FB.socialStation.isFree(member, state)) member.station = 1;
         if (member) delete member.unfree;
       }
     }
     if (repairedLegacyMembership && state.chars) {
       for (const id in state.chars) {
         const relative = state.chars[id];
-        if (!relative || relative.dead || FB.stationOf(relative) !== 0) continue;
+        if (!relative || relative.dead || !FB.socialStation.isLowborn(relative, state)) continue;
         if (relative.role === 'parent' || relative.role === 'grandparent' ||
             relative.role === 'sibling') relative.unfree = true;
       }
@@ -8109,7 +8109,7 @@ window.FB = window.FB || {};
     if (!protagonist || protagonist.dead) {
       out.reason = 'invalid_protagonist'; return out;
     }
-    if (!FB.station.isSerf(p)) { out.reason = 'not_serf'; return out; }
+    if (!FB.station.isSerf(p, state)) { out.reason = 'not_serf'; return out; }
     const tenure = FB.activeSerfTenure && FB.activeSerfTenure(state);
     const home = serfFreedomHome(state);
     if (!tenure || tenure.provinceId !== home.provinceId ||
@@ -8349,7 +8349,7 @@ window.FB = window.FB || {};
     });
     for (let i = 0; i < frozen.memberIds.length; i++) {
       const member = state.chars[frozen.memberIds[i]];
-      if (member && !member.dead && FB.stationOf(member) < 1) {
+      if (member && !member.dead && !FB.socialStation.isFree(member, state)) {
         member.station = 1;
       }
       if (member) delete member.unfree;
@@ -8385,7 +8385,7 @@ window.FB = window.FB || {};
         return;
       }
       const lord = serfFreedomLord(state);
-      if (!FB.station.isSerf(p) || offer.protagonistId !== p.charId ||
+      if (!FB.station.isSerf(p, state) || offer.protagonistId !== p.charId ||
           !tenure || tenure.formedTurn !== offer.tenureFormedTurn ||
           home.provinceId !== offer.provinceId ||
           home.settlementIndex !== offer.settlementIndex ||
@@ -8393,7 +8393,7 @@ window.FB = window.FB || {};
           term.serviceDays !== offer.serviceDays) offer.status = 'invalid';
       return;
     }
-    if (!FB.station.isSerf(p) || !tenure ||
+    if (!FB.station.isSerf(p, state) || !tenure ||
         tenure.formedTurn !== offer.tenureFormedTurn ||
         home.provinceId !== offer.provinceId ||
         home.settlementIndex !== offer.settlementIndex ||
@@ -8569,7 +8569,7 @@ window.FB = window.FB || {};
     const witness = story && story.participants &&
       state.chars[story.participants.witness];
     return !!(oldCustomRecordValid(state, story) && pending && tenure &&
-      FB.station.isSerf(state.player) &&
+      FB.station.isSerf(state.player, state) &&
       tenure.formedTurn === story.tenureFormedTurn &&
       tenure.provinceId === story.homeProvinceId &&
       state.player.provinceId === story.homeProvinceId &&
@@ -8650,7 +8650,7 @@ window.FB = window.FB || {};
         !state.chars[story.lordId] || state.chars[story.lordId].dead) {
       clearOldCustom(state, 'authority'); return;
     }
-    if (!FB.station.isSerf(p)) {
+    if (!FB.station.isSerf(p, state)) {
       clearOldCustom(state, 'rank'); return;
     }
     const witness = state.chars[story.participants.witness];
@@ -8765,7 +8765,7 @@ window.FB = window.FB || {};
       clearNeighborConsequence(state, null); return;
     }
     const tenure = FB.activeSerfTenure(state);
-    if (!FB.station.isSerf(state.player) || !tenure ||
+    if (!FB.station.isSerf(state.player, state) || !tenure ||
         tenure.formedTurn !== record.tenureFormedTurn ||
         state.player.provinceId !== record.homeProvinceId) {
       clearNeighborConsequence(state, 'tenure'); return;
@@ -8825,7 +8825,7 @@ window.FB = window.FB || {};
 
   FB.fns = FB.fns || {};
   FB.fns.serf_tenure_context_valid = function (state, ctx, ev) {
-    if (!state || !state.player || !FB.station.isSerf(state.player)) return false;
+    if (!state || !state.player || !FB.station.isSerf(state.player, state)) return false;
     if (state.player.travel) return false;
     const tenure = state.player.tenure;
     if (!tenure || typeof tenure !== 'object' || tenure.status !== 'active') return false;
@@ -11062,7 +11062,7 @@ window.FB = window.FB || {};
           g = Math.round(g * 1.6);
         }
       }
-      if (fx.clearHarvestFlags && FB.station.isSerf(p) && FB.serfHarvestQuote) {
+      if (fx.clearHarvestFlags && FB.station.isSerf(p, state) && FB.serfHarvestQuote) {
         g = FB.serfHarvestQuote(state, g).gold;
       }
       if (fx.goldCounterparty === 'context') {
@@ -11267,7 +11267,7 @@ window.FB = window.FB || {};
       p.professionBack = null;
       if (FB.syncPlayerCareer) FB.syncPlayerCareer(state);
     }
-    if (fx.tierSet !== undefined && fx.tierSet > p.tier) {
+    if (fx.tierSet !== undefined && FB.station.above(fx.tierSet, p, state)) {
       FB.setPlayerTier(state, fx.tierSet);
     }
     if (fx.tierUp) {
@@ -12022,7 +12022,7 @@ window.FB = window.FB || {};
     if (ctx && ctx.dutyId) {
       ctx._tenureResolved = true;
       const tenure = state.player && state.player.tenure;
-      if (tenure && tenure.status === 'active' && FB.station.isSerf(state.player)) {
+      if (tenure && tenure.status === 'active' && FB.station.isSerf(state.player, state)) {
         let regularDuty = null;
         for (let i = 0; i < (tenure.duties || []).length; i++) {
           if (tenure.duties[i].id === ctx.dutyId) {
@@ -12148,7 +12148,7 @@ window.FB = window.FB || {};
     const legacyPledge = me.betrothedId === s.id && s.betrothedId === me.id &&
       !FB.marriageLineageContract(me, s);
     if (!legacyPledge && !FB.sealMarriageLineage(state, me, s, lineage)) return false;
-    const weddingTravel = p.travel && FB.station.isLanded(p) &&
+    const weddingTravel = p.travel && FB.station.isLanded(p, state) &&
       p.travel.purpose === 'relationship' &&
       p.travel.phase === 'arrived' &&
       p.travel.currentId === p.travel.destinationId &&
@@ -12265,7 +12265,7 @@ window.FB = window.FB || {};
     }
     // the match settles a dowry, and rank rubs off both ways
     const B = FBDATA.balance;
-    const gap = FB.stationOf(s) - FB.playerStation(state);
+    const gap = FB.socialStation.gap(s, FB.playerStation(state), state);
     if (marriageTerms.amount > 0) {
       p.gold += marriageTerms.playerDelta;
       FB.news(state, marriageTerms.playerPays
@@ -12302,7 +12302,7 @@ window.FB = window.FB || {};
         promptPending:true
       };
     }
-    if (FB.station.isSerf(p) && p.tenure && p.tenure.status === 'active' && p.tenure.conditional) {
+    if (FB.station.isSerf(p, state) && p.tenure && p.tenure.status === 'active' && p.tenure.conditional) {
       for (let c = 0; c < p.tenure.conditional.length; c++) {
         const cd = p.tenure.conditional[c];
         if (cd.id === 'marriage_leave') {
@@ -12491,15 +12491,15 @@ window.FB = window.FB || {};
   };
   FB.fns.suitor_above_station = function (state) {
     const su = FB.getRole(state, 'suitor');
-    return !!su && FB.stationOf(su) > FB.playerStation(state);
+    return !!su && FB.socialStation.exceeds(su, FB.playerStation(state), state);
   };
   FB.fns.wed_above_station = function (state) {
     const sp = FB.spouseOf(state, state.chars[state.player.charId]);
-    return !!sp && sp.station != null && sp.station > FB.playerStation(state);
+    return !!sp && sp.station != null && FB.socialStation.exceeds(sp, FB.playerStation(state), state);
   };
   FB.fns.wed_below_station = function (state) {
     const sp = FB.spouseOf(state, state.chars[state.player.charId]);
-    return !!sp && sp.station != null && sp.station < FB.playerStation(state);
+    return !!sp && sp.station != null && !FB.socialStation.reaches(sp, FB.playerStation(state), state);
   };
 
   /* ---------- student education decisions (events_common.js) ---------- */
@@ -12536,7 +12536,7 @@ window.FB = window.FB || {};
       let hasLivingNoble = false;
       for (let j = 0; j < ids.length; j++) {
         const c = state.chars[ids[j]];
-        if (!c || c.dead || c.role !== 'notable' || FB.stationOf(c) < 3) continue;
+        if (!c || c.dead || c.role !== 'notable' || !FB.socialStation.isNoble(c, state)) continue;
         hasLivingNoble = true;
         if (!contacts[c.id] && c.id !== state.player.charId) existing.push(c);
       }
@@ -12545,7 +12545,7 @@ window.FB = window.FB || {};
     if (existing.length) return FB.pick(existing);
     if (!ungenerated.length) return null;
     const generated = FB.provNotables(state, FB.pick(ungenerated)).filter(function (c) {
-      return c && !c.dead && c.role === 'notable' && FB.stationOf(c) >= 3 &&
+      return c && !c.dead && c.role === 'notable' && FB.socialStation.isNoble(c, state) &&
         !contacts[c.id] && c.id !== state.player.charId;
     });
     return generated.length ? FB.pick(generated) : null;
@@ -12576,7 +12576,7 @@ window.FB = window.FB || {};
     let result = 'new';
     if (!c) {
       const warm = FB.friendConnections(state).filter(function (candidate) {
-        return FB.stationOf(candidate) >= 3;
+        return FB.socialStation.isNoble(candidate, state);
       });
       c = warm.length ? warm[0] : null;
       result = c ? 'existing' : 'none';
@@ -12681,7 +12681,7 @@ window.FB = window.FB || {};
       role: 'suitor', opinion: FB.ri(10, 30), station: st, quality: st + FB.ri(0, 1)
     });
     if (SUITOR_EPITHETS[st] && SUITOR_EPITHETS[st].m) c.epithetMsg = FB.pick(SUITOR_EPITHETS[st].m);
-    if (FB.applyMarriageBackground) FB.applyMarriageBackground(c, st, c.epithetMsg);
+    if (FB.applyMarriageBackground) FB.applyMarriageBackground(c, st, c.epithetMsg, state);
     p.courtingId = c.id;
   };
   /* the losing side of the shield-wall: the grave wound itself is the data
@@ -12704,7 +12704,7 @@ window.FB = window.FB || {};
   FB.spouseDied = function (state, sp) {
     FB.endRoyalCompact(state, sp);
     if (sp.station === undefined || sp.station === null) return;
-    if (sp.station - FB.playerStation(state) <= 0) return;
+    if (FB.socialStation.gap(sp, FB.playerStation(state), state) <= 0) return;
     const me = state.chars[state.player.charId];
     let heir = null;
     for (const id of me.childrenIds) {
@@ -12759,7 +12759,7 @@ window.FB = window.FB || {};
   };
   FB.fns.military_settlement_available = function (state, ctx) {
     const q = ctx && ctx.settlementGrant;
-    if (!q || ctx.protagonistId !== state.player.charId || !FB.station.isGentry(state.player)) return false;
+    if (!q || ctx.protagonistId !== state.player.charId || !FB.station.isGentry(state.player, state)) return false;
     const current = FB.settlementGrantQuote(state, q.provinceId, q.settlement, q.recipientId, q.realmId);
     return !!current && JSON.stringify(current) === JSON.stringify(q);
   };
@@ -12781,7 +12781,7 @@ window.FB = window.FB || {};
   FB.fns.historic_raid_context_valid = function (state, ctx) {
     const p = state.player;
     const target = ctx && ctx.destinationId && FB.world.byId[ctx.destinationId];
-    return !!(p && !FB.station.isLanded(p) && ctx &&
+    return !!(p && !FB.station.isLanded(p, state) && ctx &&
       ctx.protagonistId === p.charId && typeof ctx.raidProfile === 'string' &&
       Object.prototype.hasOwnProperty.call(FB.historicRaidProfiles(), ctx.raidProfile) &&
       target && !target.wasteland && target.id !== p.provinceId);
@@ -12940,7 +12940,7 @@ window.FB = window.FB || {};
       }
       const rid = (state.holder && state.holder[dest]) || state.owner[dest];
       FB.changePlayerLiege(state,
-        FB.station.isLanded(p) && rid && rid !== 'player' ? rid : null,
+        FB.station.isLanded(p, state) && rid && rid !== 'player' ? rid : null,
         'travel:permanent_move');
       if (FB.invalidateGuildMonopolies) FB.invalidateGuildMonopolies(state);
       if (FB.enterpriseList) FB.enterpriseList(state);
@@ -12967,7 +12967,7 @@ window.FB = window.FB || {};
       // a baron who renounces his lord seizes the home county he was
       // enfeoffed in — transferProvince buries the old holder if landless
       p.provs = [p.provinceId];
-      if (!FB.station.rulesRealm(p)) FB.setPlayerTier(state, 4, { attachLiege:false });
+      if (!FB.station.rulesRealm(p, state)) FB.setPlayerTier(state, 4, { attachLiege:false });
       FB.transferProvince(state, p.provinceId, 'player');
     }
     FB.changePlayerLiege(state, null, 'realm:independence');
@@ -13017,12 +13017,12 @@ window.FB = window.FB || {};
   FB.grantByLiege = function (state) {
     const p = state.player;
     let granted = false;
-    if (FB.station.isBaron(p)) {
+    if (FB.station.isBaron(p, state)) {
       const offer = FB.countyGrantCandidates(state)[0];
       if (!offer || !FB.countyInvestiture(state, offer.provinceId, offer.grantorId, offer.grantorId)) return false;
       FB.recordLiegeGrant(state);
       granted = true;
-    } else if (FB.station.rulesRealm(p) && p.liege) {
+    } else if (FB.station.rulesRealm(p, state) && p.liege) {
       const cands = FB.liegeGrantCandidates(state);
       if (cands.length) {
         const got = FB.pick(cands);

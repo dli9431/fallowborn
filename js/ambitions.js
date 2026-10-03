@@ -62,8 +62,8 @@ window.FB = window.FB || {};
   FB.historicalAmbitionRelevant = function (state, id, rid) {
     rid = rid || 'player';
     const d = definition(id), r = state.realms[rid];
-    const tier = rid === 'player' ? state.player.tier : r && r.rank + 3;
-    if (!d || !FB.station.rulesRealm(tier) || !tier) return false;
+    const tier = rid === 'player' ? state.player.tier : r && FB.realmRank.tier(r, state);
+    if (!d || !FB.station.rulesRealm({ tier:tier, realmId:rid }, state) || !tier) return false;
     const done = record(state, d);
     if (done && done.realmId === rid) return true;
     if (d.culture && culture(state, rid) !== d.culture) return false;
@@ -74,14 +74,14 @@ window.FB = window.FB || {};
     const d = definition(id);
     if (!d) return null;
     const player = rid === 'player', p = state.player, r = state.realms[rid];
-    const tier = player ? p.tier : r && r.rank + 3 || 0;
+    const tier = player ? p.tier : r && FB.realmRank.tier(r, state) || 0;
     const liegeId = player ? p.liege : r && r.liege;
     const counties = regionCounties(d);
     const have = counties.filter(function (pid) { return holds(state, rid, pid); }).length;
-    const need = Math.max(FB.station.isDuke(d) ? 2 : 1, Math.ceil(counties.length * d.share));
+    const need = Math.max(FB.station.isDuke(d, state) ? 2 : 1, Math.ceil(counties.length * d.share));
     const checks = [];
     function check(label, met, progress) { checks.push({ label:label, met:!!met, progress:!!progress }); }
-    check(FB.T('Count rank or higher'), FB.station.rulesRealm(tier));
+    check(FB.T('Count rank or higher'), FB.station.rulesRealm({ tier:tier, realmId:rid }, state));
     if (d.culture) check(FB.T('Norse ruler'), culture(state, rid) === d.culture);
     check(FB.T('Regional counties: {have}/{need}', { have:have, need:need }),
       counties.length > 0 && have >= need, true);
@@ -97,16 +97,16 @@ window.FB = window.FB || {};
       }));
     }
     check(FB.T('At peace'), !atWar(state, rid));
-    if (FB.station.isKing(d)) check(FB.T('Independent ruler'), !liegeId);
-    if (FB.station.isDuke(d)) check(FB.T('Independent or sworn to a king or emperor'),
-      !liegeId || state.realms[liegeId] && state.realms[liegeId].alive && FB.realmRank.isRoyal(state.realms[liegeId]));
+    if (FB.station.isKing(d, state)) check(FB.T('Independent ruler'), !liegeId);
+    if (FB.station.isDuke(d, state)) check(FB.T('Independent or sworn to a king or emperor'),
+      !liegeId || state.realms[liegeId] && state.realms[liegeId].alive && FB.realmRank.isRoyal(state.realms[liegeId], state));
     let elevation = null, cost = { gold:0, prestige:0, piety:0 };
     if (player) {
       const c = state.chars[p.charId];
       check(FB.T('Adult ruler, alive and at home'), c && !c.dead && !p.dead &&
         FB.ageOf(c, state.date.year) >= 16 && !p.travel);
       check(FB.T('Free from captivity'), !(p.flags && p.flags.in_prison) && !p.captive && !(c && c.captive));
-      if (tier < d.tier) {
+      if (FB.station.above(d, tier, state)) {
         elevation = FB.rankElevationStatus(state, d.tier, { route:'higher', region:d.region });
         cost = elevation.cost;
         check(elevation.ready ? FB.T('Title recognition requirements met') :
@@ -129,11 +129,11 @@ window.FB = window.FB || {};
     if (player && (!state.realms.player || !state.realms.player.alive)) FB.foundPlayerRealm(state);
     const r = state.realms[rid];
     if (!r) return null;
-    if (!player && r.rank < d.tier - 3) r.rank = d.tier - 3;
-    if ((player ? state.player.tier : r.rank + 3) === d.tier) {
+    if (!player && FB.realmRank.above(FB.station.realmRank(d, state), r, state)) r.rank = FB.station.realmRank(d, state);
+    if ((player ? state.player.tier : FB.realmRank.tier(r, state)) === d.tier) {
       r.ambitionTitleRegion = d.region;
-      const place = FB.station.isDuke(d) ? FBDATA.duchies[d.region] : FBDATA.kingdoms[d.region];
-      r.name = (FB.station.isDuke(d) ? 'Duchy of ' : 'Kingdom of ') + place.name;
+      const place = FB.station.isDuke(d, state) ? FBDATA.duchies[d.region] : FBDATA.kingdoms[d.region];
+      r.name = (FB.station.isDuke(d, state) ? 'Duchy of ' : 'Kingdom of ') + place.name;
     }
     const result = { realmId:rid, turn:state.turn, endTurn:state.turn + d.days,
       cost:status.cost, prestige:player ? d.prestige : 0 };
@@ -170,7 +170,7 @@ window.FB = window.FB || {};
       const rec = state.historicalAmbitions && state.historicalAmbitions[d.id];
       const r = rec && state.realms[rec.realmId];
       if (!rec || rec.established || !(state.turn < rec.endTurn) || !r || !r.alive ||
-          FB.dejureOf(pid)[FB.station.isDuke(d) ? 'duchy' : 'kingdom'] !== d.region ||
+          FB.dejureOf(pid)[FB.station.isDuke(d, state) ? 'duchy' : 'kingdom'] !== d.region ||
           !holds(state, rec.realmId, pid)) return;
       sum += d.amount;
     });

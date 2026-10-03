@@ -204,7 +204,7 @@ window.FB = window.FB || {};
     var rulerCharacter = !player && FB.realmRulerCharacterSnapshot
       ? FB.realmRulerCharacterSnapshot(state, houseId) : null;
     var rank = player
-      ? Math.max(0, state.player.tier - 3)
+      ? Math.max(0, FB.station.realmRank(state.player, state))
       : Math.max(0, Number(realm && realm.rank) || 0);
     var seatId = councilSeatId(state, polityId, houseId);
     var influence = 1 + rank * 2 + held.length +
@@ -255,7 +255,7 @@ window.FB = window.FB || {};
      trees, and generated realms without a ruler or territory never enter. */
   FB.politicalCourt = function (state) {
     if (!state || !state.player || !state.realms ||
-        state.player.dead || !FB.station.isLanded(state.player) ||
+        state.player.dead || !FB.station.isLanded(state.player, state) ||
         (FB.game && FB.game.observe)) return null;
     var polityId = state.player.liege || (
       state.realms.player && state.realms.player.alive ? 'player' : null);
@@ -698,7 +698,7 @@ window.FB = window.FB || {};
       (pending.result ||
        state.turn < Number(pending.expiresTurn)) &&
       state.player.liege === court.polityId &&
-      FB.station.sitsInEstates(state.player));
+      FB.station.sitsInEstates(state.player, state));
   }
 
   function repairPendingRecord(pending) {
@@ -850,7 +850,7 @@ window.FB = window.FB || {};
       ? FB.realmStateRevision() : state.turn;
     var expectedPolity = null;
     if (state && state.player && !state.player.dead &&
-        FB.station.isLanded(state.player) && !(FB.game && FB.game.observe)) {
+        FB.station.isLanded(state.player, state) && !(FB.game && FB.game.observe)) {
       expectedPolity = state.player.liege ||
         (state.realms.player && state.realms.player.alive ? 'player' : null);
       var expectedRealm = expectedPolity && state.realms[expectedPolity];

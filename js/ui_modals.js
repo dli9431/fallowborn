@@ -20,7 +20,7 @@ window.FB = window.FB || {};
   }
   UI.showHistoricalAmbitions = function (view) {
     const s = FB.state;
-    if (!s || !FB.station.rulesRealm(s.player)) { UI.closeModal(); return; }
+    if (!s || !FB.station.rulesRealm(s.player, s)) { UI.closeModal(); return; }
     const protagonist = s.player.charId;
     const resume = view ? view.resume : !FB.game.paused;
     FB.game.setPaused(true);
@@ -370,7 +370,7 @@ window.FB = window.FB || {};
   function hasTitleChoice(ev) {
     if (ev && ev.id === 'rank_elevation_result') return true;
     function has(fx) {
-      return !!(fx && (fx.tierSet >= 3 || fx.tierUp || fx.serfFreedom ||
+      return !!(fx && (FB.station.isLanded(fx.tierSet) || fx.tierUp || fx.serfFreedom ||
         fx.custom === 'freedom_accept_offer' ||
         fx.custom === 'rank_elevation_claim' || fx.declareIndependence ||
         fx.travelSettle));
@@ -915,9 +915,9 @@ window.FB = window.FB || {};
     }
     const plots = FB.landPlots(s).length;
     let consequence;
-    if (FB.station.isGentry(s.player)) {
+    if (FB.station.isGentry(s.player, s)) {
       consequence = FB.T('The {term:manor} is forfeited and the house falls to Freeholder.');
-    } else if (FB.station.isFreeholder(s.player)) {
+    } else if (FB.station.isFreeholder(s.player, s)) {
       consequence = FB.T('The debt is extinguished and the household becomes {Term:serf}.');
     } else {
       consequence = FB.T('Extraordinary labor clears the debt; station does not change.');
@@ -2478,7 +2478,7 @@ window.FB = window.FB || {};
     const def = FBDATA.travelPurposes[SH.travelPicker.purpose];
     const pr = FB.world.byId[item.destinationId];
     const minimumStay = FBDATA.balance.travelMinStayDays || 90;
-    const ruler = FB.station.isLanded(s.player);
+    const ruler = FB.station.mayArrangeDynasticMarriage(s.player, s);
     const gateway = SH.travelPicker.purpose === 'frontier' && item.gatewayId
       ? (FB.world.byId[item.gatewayId] || {}).name || item.gatewayId : '';
     let facts = kv('Destination', esc(pr.name)) +
@@ -2570,7 +2570,7 @@ window.FB = window.FB || {};
     const details = '<p>' + esc(estimate) + '</p><p>' + esc(FB.T(
       'Personal attention moves to this person. Standing improves only while together, not on the road.')) + '</p>' +
       (options.courtship ? '<p>' + esc(FB.T('Reaching the required Standing allows a proposal; acceptance is not guaranteed.')) + '</p>' : '') +
-      (options.courtship && FB.station.isLanded(s.player) ? '<p>' + esc(FB.T(
+      (options.courtship && FB.station.mayArrangeDynasticMarriage(s.player, s) ? '<p>' + esc(FB.T(
         'After marriage, you may review abdication and residence choices.')) + '</p>' : '');
     const short = preview.cost > s.player.gold;
     let facts = reviewPeopleHtml(reviewPersonHtml(c, benefit, null)) +
@@ -2707,7 +2707,7 @@ window.FB = window.FB || {};
 
   UI.showFreedomPurchase = function () {
     const s = FB.state;
-    if (!s || !s.player || !FB.station.isSerf(s.player)) return;
+    if (!s || !s.player || !FB.station.isSerf(s.player, s)) return;
     const quote = FB.freedomPurchaseQuote(s);
     const h = '<div class="gm-body-text" data-freedom-purchase-sheet>' +
       rankTransitionHtml(FB.T('{Term:serf}'), FB.T('Freeholder')) +
@@ -2753,7 +2753,7 @@ window.FB = window.FB || {};
   UI.showFreedomPetition = function (options) {
     options = options || {};
     const s = FB.state;
-    if (!s || !s.player || !FB.station.isSerf(s.player)) return;
+    if (!s || !s.player || !FB.station.isSerf(s.player, s)) return;
     const petition = FB.freedomPetitionStatus(s);
     const view = FB.freedomOfferView(s);
     const lord = petition.lord || (view && s.chars[
@@ -3108,7 +3108,7 @@ window.FB = window.FB || {};
 
   UI.showSettlementFounding = function (replace, provinceId) {
     const s = FB.state, status = FB.settlementFoundingStatus(s);
-    const counties = FB.station.holdsCounty(s.player) ? FB.realmHeldCounties(s, 'player') : [];
+    const counties = FB.station.holdsCounty(s.player, s) ? FB.realmHeldCounties(s, 'player') : [];
     const selected = provinceId || (counties.indexOf(s.player.provinceId) >= 0 ? s.player.provinceId : counties[0]) || s.player.provinceId;
     const q = status ? status.project : FB.settlementFoundingEligibility(s, selected);
     const info = FB.world.sitesByProv[q.provinceId];
@@ -3149,7 +3149,7 @@ window.FB = window.FB || {};
     if (reason && reason !== countyReason) h += '<p class="warnote" data-founding-status>' + esc(reason) + '</p>';
     h += '</div></div><div class="modal-body-actions charter-actions">';
     if (status) h += '<button class="btn" id="founding-cancel-review">' + esc(FB.T('Cancel charter...')) + '</button>';
-    else if (FB.station.isGentry(s.player)) h += '<button class="btn" id="founding-petition">' + esc(FB.T('Petition for an existing settlement')) + '</button>';
+    else if (FB.station.isGentry(s.player, s)) h += '<button class="btn" id="founding-petition">' + esc(FB.T('Petition for an existing settlement')) + '</button>';
     h += charterInfo('founding-action-details', '<button class="actionbtn" id="founding-confirm" data-action-tooltip data-tooltip-anchor="control" aria-describedby="founding-action-details"' +
       (ready ? '' : ' disabled') + '>' + esc(status ? FB.T('Establish settlement') : FB.T('Fund charter')) + '</button>', terms) + '</div>';
     if (!status && counties.length) {
@@ -3463,7 +3463,7 @@ window.FB = window.FB || {};
         'If {name} moves the household, these enterprises will lose their workers:', {
           name:FB.fullName(protagonist)
         }));
-    const selfDetail = FB.station.rulesRealm(s.player)
+    const selfDetail = FB.station.rulesRealm(s.player, s)
       ? (heir
         ? FB.T('{heir} receives {realm}; {name} keeps the marriage and household possessions, but becomes landless gentry in {destination}.', {
             heir:heirName,
@@ -3479,7 +3479,7 @@ window.FB = window.FB || {};
           destination:destination.name
         });
     const heirDetail = heir
-      ? (FB.station.rulesRealm(s.player)
+      ? (FB.station.rulesRealm(s.player, s)
         ? FB.T('{heir} keeps the family’s existing realm and home. {former} and {spouse} remain married and live in {destination}.', {
             heir:heirName,
             former:FB.fullName(protagonist),
@@ -5273,8 +5273,8 @@ window.FB = window.FB || {};
       h += kv('Projected claim standing', projection
         ? esc(FB.T('{award} · {weight} weighted claim', {
           award:greatHolyWarRewardName(projection.kind === 'crown'
-            ? (FB.realmRank.isRoyal(projection) ? 'kingdom' :
-              FB.realmRank.isDuchy(projection) ? 'duchy' : 'county')
+            ? (FB.realmRank.isRoyal(projection, s) ? 'kingdom' :
+              FB.realmRank.isDuchy(projection, s) ? 'duchy' : 'county')
             : projection.kind),
           weight:(Math.round(projection.weight * 1000) / 1000).toFixed(3)
         }))
@@ -5497,7 +5497,7 @@ window.FB = window.FB || {};
         return FB.world.byId[pid] ? FB.world.byId[pid].name : pid;
       });
       let consequence;
-      if (pending.sovereign && FB.realmRank.isRoyal(pending)) {
+      if (pending.sovereign && FB.realmRank.isRoyal(pending, s)) {
         consequence = FB.T(
           'Accepting makes you sovereign of the new kingdom and unites it with your existing lands.');
       } else if (FB.isPlayerSovereign(s)) {
@@ -5666,7 +5666,7 @@ window.FB = window.FB || {};
       return FB.world.byId[pid] ? FB.world.byId[pid].name : pid;
     });
     let consequence;
-    if (award.sovereign && FB.realmRank.isRoyal(award)) {
+    if (award.sovereign && FB.realmRank.isRoyal(award, s)) {
       consequence = FB.T(
         'Accepting makes you sovereign of the new kingdom and unites it with your existing lands.');
     } else if (FB.isPlayerSovereign(s)) {
@@ -6203,9 +6203,9 @@ window.FB = window.FB || {};
         const card = row.closest('.war-target-card') || row;
         list.appendChild(card);
         const rankMatch = warTargetView.rank === 'all' ||
-          (warTargetView.rank === 'lower' && model.rank < playerRank) ||
+          (warTargetView.rank === 'lower' && FB.realmRank.above(playerRank, model, s)) ||
           (warTargetView.rank === 'peer' && model.rank === playerRank) ||
-          (warTargetView.rank === 'higher' && model.rank > playerRank);
+          (warTargetView.rank === 'higher' && FB.realmRank.above(model, playerRank, s));
         const show = (warTargetView.package === 'all' ||
           (warTargetView.package === 'multi') === !!combinable[model.cause.target]) &&
           (!query || model.search.indexOf(query) >= 0) &&
@@ -7625,7 +7625,7 @@ window.FB = window.FB || {};
     const top = FB.topRealm(s, s.player.liege);
     const enMen = FB.aiBaseHost(s, top);
     const sovereign = s.realms[top] ? s.realms[top].name : FB.T('Your sovereign');
-    const independenceText = FB.station.isBaron(s.player) && FB.world.byId[s.player.provinceId]
+    const independenceText = FB.station.isBaron(s.player, s) && FB.world.byId[s.player.provinceId]
       ? FB.T('You renounce {liege} and raise your own banner over {province}, seized as your own county. {sovereign} will march to bring you to heel — they can field ~{theirs} against your ~{yours}.', {
         liege: lg ? lg.name : FB.T('your {term:liege}'),
         province: FB.world.byId[s.player.provinceId].name,
@@ -8449,7 +8449,7 @@ window.FB = window.FB || {};
       '<button type="button" class="btn small settcard-info"' +
       ' aria-expanded="false" aria-controls="' + detId + '"' +
       ' aria-label="' + esc(FB.T('Details')) + '">?</button>' +
-      (own && FB.station.isLanded(s.player) ? demolishCardButton(fort.id,
+      (own && FB.station.isLanded(s.player, s) ? demolishCardButton(fort.id,
         dt(s, 'building', fort.id, FBDATA.buildings[fort.id], 'name')) : '') +
       '</span></div>' +
       '<div class="adesc settcard-fx">' + esc(fxLine) + '</div>';
@@ -8911,7 +8911,7 @@ window.FB = window.FB || {};
       esc(FB.T('{kind} in {county} county · held by {holder}', {
         kind:settlementKindName(st.kind), county:FB.L(pr.name), holder:'__settlement_holder__'
       })).replace('__settlement_holder__', holderMarkup) + '</p></div>';
-    if (managesSettlement && FB.station.isLanded(s.player)) h += '<button type="button" class="actionbtn" id="settlement-host-games">' + esc(FB.T('Host games…')) + '</button>';
+    if (managesSettlement && FB.station.isLanded(s.player, s)) h += '<button type="button" class="actionbtn" id="settlement-host-games">' + esc(FB.T('Host games…')) + '</button>';
     const countyRuler = holdId === 'player' ? s.chars[s.player.charId] : FB.realmRulerCharacterSnapshot(s, holdId);
     h += '<div class="gm-body-text">' + kv('Count', esc(countyRuler ? FB.fullName(countyRuler) :
       (s.realms[holdId] ? s.realms[holdId].name : FB.T('None')))) + '</div>';
@@ -9804,7 +9804,7 @@ window.FB = window.FB || {};
 
   UI.showMatchChoices = function () {
     if (!FB.state || UI.eventsBusy()) return;
-    const ruler = FB.station.isLanded(FB.state.player);
+    const ruler = FB.station.mayArrangeDynasticMarriage(FB.state.player, FB.state);
     openModal(FB.T('Seek a match'),
       '<div class="gm-list"><button class="btn actionbtn" id="match-local">' +
       esc(FB.T('Seek a match')) + '</button><p class="hint">' +
@@ -9818,7 +9818,7 @@ window.FB = window.FB || {};
       FB.runInstant(FB.state, 'seek_match', { localMatch:true });
     };
     if ($('match-dynastic')) $('match-dynastic').onclick = function () {
-      if (FB.state && FB.station.isLanded(FB.state.player)) UI.showMarriageFinder(null, null);
+      if (FB.state && FB.station.mayArrangeDynasticMarriage(FB.state.player, FB.state)) UI.showMarriageFinder(null, null);
     };
     $('gm-cancel').onclick = function () { modalHistoryBack(UI.closeModal); };
   };
@@ -10782,8 +10782,8 @@ window.FB = window.FB || {};
       if (isPlayer) {
         profession = s.player.professionBack ||
           s.player.profession || profession;
-      } else if (FB.stationOf(c) >= 2 ||
-          (FB.station.isGentle(s.player) && FB.isHouseholdCharacter(s, c.id))) {
+      } else if (FB.socialStation.isGentle(c, s) ||
+          (FB.station.isGentle(s.player, s) && FB.isHouseholdCharacter(s, c.id))) {
         profession = FB.roleCareer('noble');
       }
       career = {
@@ -11354,7 +11354,7 @@ window.FB = window.FB || {};
     const me = s.chars[p.charId];
     const chain = p.liege ? FB.liegeChain(s, p.liege) : [];
     const royalNeighbor = FB.isPlayerSovereign(s) && s.realms.player &&
-      FB.realmRank.isRoyal(s.realms.player) && !realm.liege && FB.realmRank.isRoyal(realm) &&
+      FB.realmRank.isRoyal(s.realms.player, s) && !realm.liege && FB.realmRank.isRoyal(realm, s) &&
       FB.realmsAdjacent(s, 'player', rid);
     const mayApproach = chain.indexOf(rid) >= 0 || royalNeighbor;
     for (const child of family) {
@@ -13804,7 +13804,7 @@ window.FB = window.FB || {};
           need:progress.need
         })) + '</div>';
     }
-    if (FB.station.rulesRealm(s.player) && !FB.station.isImperial(s.player)) {
+    if (FB.station.rulesRealm(s.player, s) && !FB.station.isImperial(s.player, s)) {
       h += '<button type="button" class="actionbtn" ' +
         'data-governance-action="claim_higher_title">👑 ' +
         esc(FB.T('Review higher dignity…')) + '<span class="adesc">' +
@@ -16024,7 +16024,7 @@ window.FB = window.FB || {};
         asset:financeAssetName(s, contract.collateral)
       });
     }
-    if (!FB.station.isLanded(s.player)) {
+    if (!FB.station.isLanded(s.player, s)) {
       return FB.T('One quarter of regular revenues is assigned until the debt is cleared. If the default remains after {days} days, the lord’s court may seize household holdings and land; a destitute household can lose station. Prestige falls, and lenders refuse the household for four seasons.', {
         days:FBDATA.balance.distraintGraceDays || 90
       });
@@ -16084,7 +16084,7 @@ window.FB = window.FB || {};
       h += '<br><span class="op-bad">' + esc(FB.T('In arrears — the next missed deadline defaults.')) + '</span>';
     } else if (loan.status === 'default') {
       h += '<br><span class="op-bad">' + esc(FB.T('In default — assigned revenues are paying this down.')) + '</span>';
-      if (!FB.station.isLanded(s.player) && FB.financeDistraintDaysRemaining) {
+      if (!FB.station.isLanded(s.player, s) && FB.financeDistraintDaysRemaining) {
         const days = FB.financeDistraintDaysRemaining(s);
         if (days !== null) {
           h += '<br><span class="op-bad">' + esc(days > 0
@@ -16114,7 +16114,7 @@ window.FB = window.FB || {};
   }
 
   function fiscalStatusHtml(s) {
-    if (!FB.fiscalCrisisQuote || !FB.station.isLanded(s.player)) return '';
+    if (!FB.fiscalCrisisQuote || !FB.station.isLanded(s.player, s)) return '';
     const q = FB.fiscalCrisisQuote(s);
     if (!q.warning && !q.active && !q.settlement) return '';
     let h = panelh('Fiscal condition') + '<div class="progressnote warnote" data-fiscal-status>' +
@@ -16123,7 +16123,7 @@ window.FB = window.FB || {};
       kv('Fiscal pressure', esc(FB.T('{stage}/4', { stage:q.stage }))) +
       kv('Popular support in directly held counties', esc(String(-q.stage * FBDATA.balance.fiscalCrisis.supportStep))) +
       kv('Standing with {term:liege} and direct {term:vassal.other}', esc(String(-q.stage * FBDATA.balance.fiscalCrisis.standingStep)));
-    if (FB.station.mayHoldCouncil(s.player)) h += kv('{term:crown_authority.title} adjustment', esc(String(FB.fiscalAuthority(s))));
+    if (FB.station.mayHoldCouncil(s.player, s)) h += kv('{term:crown_authority.title} adjustment', esc(String(FB.fiscalAuthority(s))));
     if (q.nextChange !== null) h += kv(q.recovering ? 'Next recovery step' : 'Next fiscal review',
       esc(FB.T('In {days} days, at the next seasonal settlement', { days:Math.max(0, q.nextChange - s.turn) })));
     h += '<p>' + esc(q.recovering ? FB.T('Fiscal resentment is easing. Existing grievances and armed rebellions still need to be resolved.') :
@@ -16150,7 +16150,7 @@ window.FB = window.FB || {};
       kv('Treasury after acceptance', esc(FB.money(0))) +
       kv('Term', esc(FB.T('Five years, even if the obligation is repaid earlier'))) +
       kv('Assessment', esc(FB.T('25% of positive recurring civilian surplus')));
-    if (FB.station.mayHoldCouncil(s.player)) terms += kv('Council privilege', esc(FB.T('Treasurer and Constable need council confirmation')));
+    if (FB.station.mayHoldCouncil(s.player, s)) terms += kv('Council privilege', esc(FB.T('Treasurer and Constable need council confirmation')));
     const h = reviewFactsCard(FB.T('Terms'), terms, ' data-fiscal-settlement-terms') +
       reviewFactsCard(FB.T('Restrictions for five years'), '<ul class="review-list review-list-risk">' +
         [FB.T('No new offensive wars'), FB.T('No extraordinary taxation'),
@@ -16163,7 +16163,7 @@ window.FB = window.FB || {};
         disabled:!q.ready,
         details:'<p>' + esc(FB.T('Assign 25% of positive recurring civilian surplus, after civilian costs and senior loan assignments, limited to available coin. Field armies do not reduce the assessment. The unpaid remainder is discharged after five years.')) + '</p><p>' +
           esc(FB.T('For five years: no new offensive wars, extraordinary taxation, voluntary revocations, or expansion of paid forces. Defense, ordinary levies, peace, and existing commitments remain available.')) + '</p>' +
-          (FB.station.mayHoldCouncil(s.player) ? '<p>' + esc(FB.T('Kings and emperors also grant council confirmation of the Treasurer and Constable. That privilege remains after the financial term ends.')) + '</p>' : '') +
+          (FB.station.mayHoldCouncil(s.player, s) ? '<p>' + esc(FB.T('Kings and emperors also grant council confirmation of the Treasurer and Constable. That privilege remains after the financial term ends.')) + '</p>' : '') +
           '<p>' + esc(FB.T('Fiscal pressure begins to ease, but existing wars and rebellions continue. Ongoing military costs can put you below zero again. Signed loans are unchanged. No further settlement is available for ten years.')) + '</p>'
       })) +
       '<div class="gm-footer"><button type="button" class="btn" id="fiscal-back">' + esc(FB.T('Back')) + '</button></div>';
@@ -16237,7 +16237,7 @@ window.FB = window.FB || {};
     let h = '';
 
     h += fiscalStatusHtml(s);
-    if (FB.station.isLanded(s.player)) {
+    if (FB.station.isLanded(s.player, s)) {
       const fiscal = FB.fiscalCrisisQuote(s);
       h += '<div class="gm-list"><button class="actionbtn" id="finance-sell-land">' + esc(FB.T('Sell Land')) + '</button>';
       if (fiscal.canSettle) h += '<button class="actionbtn" id="finance-fiscal-settlement">' + esc(FB.T('Review financial settlement')) + '</button>';
@@ -16294,7 +16294,7 @@ window.FB = window.FB || {};
         'Borrowing limits depend on income, standing, debt and collateral. You can pledge eligible treasures, permanent holdings or complete groups of family plots. Household standards cannot be pledged.')) +
       '</div></div>';
 
-    if (FB.station.isLanded(s.player)) {
+    if (FB.station.isLanded(s.player, s)) {
       const government = FB.playerGovernmentCosts(s);
       const distribution = FB.publicDistributionQuote(s, 'player');
       h += '<div class="settcard" id="finance-government" tabindex="-1"><div class="settcard-head"><h4>' +
@@ -16391,7 +16391,7 @@ window.FB = window.FB || {};
       h += '</div>';
     }
 
-    if (FB.station.isRoyal(s.player) && !s.player.liege) {
+    if (FB.station.isRoyal(s.player, s) && !s.player.liege) {
       h += panelh('The crown’s coinage') + '<div class="gm-list">' +
         '<button class="actionbtn" id="finance-debase"' +
         (FB.financeCanDebase(s) ? '' : ' disabled') + '>💰 ' +
@@ -17149,7 +17149,7 @@ window.FB = window.FB || {};
     const settlements = FB.settlementsOf(s, p.provinceId);
     const bonus = Math.round(
       (FBDATA.balance.landConsolidationBonus || 0.10) * 100);
-    const introduction = FB.station.isFreeholder(p)
+    const introduction = FB.station.isFreeholder(p, s)
       ? FB.T(
         'Plots pass to your heirs and earn produce each season. Each additional plot in the same settlement makes the whole holding {bonus}% more productive; gather {needed} together to declare a {term:manor}.',
         { bonus:bonus, needed:FBDATA.balance.manorPlotRequirement })
@@ -18787,7 +18787,7 @@ window.FB = window.FB || {};
       else if (occupied) reason = FB.T('Already held by {name}.', {
         name:occupied.name
       });
-      else if (!FB.station.reaches(s.player, def.minTier || 0)) {
+      else if (!FB.station.reaches(s.player, def.minTier || 0, s)) {
         reason = FB.T('Requires station {station}.', {
           station:FB.stationName(def.minTier || 0)
         });
@@ -18856,7 +18856,7 @@ window.FB = window.FB || {};
     for (const id in FBDATA.positions) {
       const def = FBDATA.positions[id];
       if (def.kind !== 'retainer') continue;
-      const blockedTier = !FB.station.reaches(s.player, def.minTier || 0);
+      const blockedTier = !FB.station.reaches(s.player, def.minTier || 0, s);
       const blockedGold = (def.pay || 0) > 0 &&
         s.player.gold < (def.pay || 0);
       const occupied = FB.retainerOfficeRecord(s, id) ||
@@ -18917,7 +18917,7 @@ window.FB = window.FB || {};
       pay:def.pay || 0
     });
     function hireBlockReason(cid) {
-      if (!FB.station.reaches(s.player, def.minTier || 0)) {
+      if (!FB.station.reaches(s.player, def.minTier || 0, s)) {
         return FB.T('Requires station {station}.', {
           station:FB.stationName(def.minTier || 0)
         });
@@ -19118,7 +19118,7 @@ window.FB = window.FB || {};
       const retainer = FB.retainerRecord(s, c.id);
       const familyOffice = FB.familyOfficeRecord &&
         FB.familyOfficeRecord(s, c.id);
-      const landedSelf = c.id === me.id && FB.station.isLanded(s.player);
+      const landedSelf = c.id === me.id && FB.station.isLanded(s.player, s);
       const choices = FB.careerChoices(s, c);
       const missingChoice = !career || !def || career.rank === 'unassigned';
       const attention = missingChoice && choices.length > 0 && !landedSelf;
@@ -19453,7 +19453,7 @@ window.FB = window.FB || {};
     const age = FB.ageOf(c, s.date.year);
     const career = FB.careerOf(s, c);
     const activeCareerDef = career && FBDATA.careers[career.profession];
-    const landedSelf = c.id === s.player.charId && FB.station.isLanded(s.player);
+    const landedSelf = c.id === s.player.charId && FB.station.isLanded(s.player, s);
     /* Work & Enterprises grammar: a current-work fact card, then option cards
        whose face keeps name, fee and first blocker; descriptions and full
        requirement audits sit behind each card's Details. */
@@ -20281,7 +20281,7 @@ window.FB = window.FB || {};
       } });
     });
     const candidates = Object.keys(s.chars).sort().map(function (id) { return s.chars[id]; }).filter(function (c) {
-      return !c.dead && c.sex === 'f' && c.id !== s.player.charId && FB.stationOf(c) >= 2 &&
+      return !c.dead && c.sex === 'f' && c.id !== s.player.charId && FB.socialStation.isGentle(c, s) &&
         FB.ageOf(c, s.date.year) >= 6 && !FB.abbeyResidentHouse(s, c.id) &&
         FB.characterResidence(s, c) === h.provinceId && !FB.isHouseholdCharacter(s, c.id);
     });
@@ -24779,7 +24779,7 @@ window.FB = window.FB || {};
     h += localFolkSheetHtml(s, c);
     h += '<button type="button" class="btn chronicle-full-link" id="cm-life-history">' +
       esc(FB.T('Life history')) + '</button>';
-    const servicePatron = !FB.station.isLanded(s.player) && FB.householdServiceStatus(s).patron;
+    const servicePatron = !FB.station.isLanded(s.player, s) && FB.householdServiceStatus(s).patron;
     if (!c.dead && servicePatron && (c.id === servicePatron.id || c.id === s.roles.steward || c.id === s.player.charId)) {
       h += '<button type="button" class="actionbtn" id="cm-household-service">' +
         esc(FB.T('Service household…')) + '</button>';
@@ -24794,7 +24794,7 @@ window.FB = window.FB || {};
           return FB.getRole(s, role, false);
         }).filter(function (person) {
           return person && !person.dead && person.id !== c.id &&
-            FB.stationOf(person) === access.neededStation &&
+            FB.socialStation.same(person, access.neededStation) &&
             FB.socialAttentionStatus(s, person).ready &&
             FB.socialAttentionPresence(s, person).status === 'active';
         })[0];
@@ -24947,7 +24947,7 @@ window.FB = window.FB || {};
           if (!status.ready || !status.direct) return;
           actThen(function () {
             const cost = status.cost;
-            const gap = FB.stationOf(c) - FB.playerStation(s);
+            const gap = FB.socialStation.gap(c, FB.playerStation(s), s);
             if (cost) s.player.gold -= cost;
             if (status.piety) s.player.piety = Math.max(0,
               s.player.piety - status.piety);
@@ -25394,11 +25394,11 @@ window.FB = window.FB || {};
         text:title ? FB.renderTitleSnapshot(title) : FB.characterStationName(s, c) };
       const familyRealm = !title && c.royalLine && s.realms[c.royalLine.realmId];
       if (familyRealm && familyRealm.alive) {
-        titles[id].rank = FB.clamp((familyRealm.rank || 1) + 3, 4, 7);
+        titles[id].rank = FB.realmRank.tier(familyRealm, s);
         titles[id].text = FB.T('House of {realm}', { realm:familyRealm.name });
       }
       const custody = FB.justiceCustodyOf(s, id);
-      titles[id].group = custody && custody.captorId === actor ? 9 : kin[id] || FB.station.isRoyal(titles[id].rank) ? 8 : titles[id].rank;
+      titles[id].group = custody && custody.captorId === actor ? 9 : kin[id] || FB.station.isRoyal(titles[id].rank, s) ? 8 : titles[id].rank;
     });
     function compare(a, b) {
       if (titles[a].group === 9 && titles[b].group !== 9) return -1;
@@ -25818,13 +25818,13 @@ window.FB = window.FB || {};
     } else {
       h += kv('Appointment', esc(FB.T('None')));
     }
-    if (FB.station.isSerf(s.player)) h += kv('Family freedom', esc(FB.T('Not granted by service')));
+    if (FB.station.isSerf(s.player, s)) h += kv('Family freedom', esc(FB.T('Not granted by service')));
     if (status.reason) h += '<div class="progressnote warnote">' + esc(status.reason) + '</div>';
-    if (employed || FB.station.isSerf(s.player)) {
+    if (employed || FB.station.isSerf(s.player, s)) {
       h += '<div class="modal-body-actions review-actions">';
       if (employed) h += '<button type="button" class="actionbtn" id="service-leave">' +
         esc(FB.T('Leave appointment…')) + '</button>';
-      if (FB.station.isSerf(s.player)) h += '<button type="button" class="actionbtn" id="service-freedom">' +
+      if (FB.station.isSerf(s.player, s)) h += '<button type="button" class="actionbtn" id="service-freedom">' +
         esc(FB.T('Review freedom terms…')) + '</button>';
       h += '</div>';
     }
@@ -26650,7 +26650,7 @@ window.FB = window.FB || {};
         })) + '</span></button><div class="gm-list">';
     for (const m of cands) {
       if (s.player.courtingId === m.id) continue; // no pledging your own paramour
-      const gap = FB.stationOf(m) - ps;
+      const gap = FB.socialStation.gap(m, ps, s);
       const terms = FB.kinMatchTerms(s, c, m, matchOptions);
       const need = terms.prestigeNeed;
       const ask = terms.dowry;
@@ -27008,7 +27008,7 @@ window.FB = window.FB || {};
       '</p></div><div class="gm-list suitor-list">';
     for (const m of cands) {
       const st = FB.stationOf(m);
-      const gap = st - ps;
+      const gap = FB.socialStation.gap(m, ps, s);
       const age = FB.ageOf(m, s.date.year);
       const detId = 'suitor-details-' + m.id;
       const threshold = FB.courtshipStandingThreshold(s, m);
@@ -29943,13 +29943,13 @@ window.FB = window.FB || {};
       esc(FB.T('Delete all saves...')) + '</button>';
     h += '<div class="gm-body-text" style="margin-top:8px"><p>' +
       esc(FB.T('Beginnings')) + '</p></div><div class="autorow"><b>' +
-      esc(FB.station.isFree(startProgress.highestStartTier)
+      esc(FB.station.isFree(startProgress.highestStartTier, s)
         ? FB.T('Unlocked through {station}', { station:highestStartName })
         : FB.T('{Term:serf} only')) + '</b><span class="adesc">' + esc(FB.T(
         'A character who earns a higher station permanently opens every starting role at that station on this browser.')) +
       '</span></div><button type="button" class="btn danger" ' +
       'id="set-reset-starts"' +
-      (FB.station.isFree(startProgress.highestStartTier) ? '' : ' disabled') + '>' +
+      (FB.station.isFree(startProgress.highestStartTier, s) ? '' : ' disabled') + '>' +
       esc(FB.T('Reset unlocked beginnings…')) + '</button>';
     if (desktopKeyboard) {
       const bindingCount = Object.keys(shortcutBindings()).length;

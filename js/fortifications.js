@@ -270,7 +270,7 @@ window.FB = window.FB || {};
     for (var i = 0; i < ids.length; i++) {
       var rid = ids[i];
       var realm = state.realms[rid];
-      if (rid === 'player' || !realm || !realm.alive || !FB.realmRank.isDucal(realm) ||
+      if (rid === 'player' || !realm || !realm.alive || !FB.realmRank.isDucal(realm, state) ||
           !realm.capital || playerHolds(state, realm.capital) ||
           FB.fortAt(state, realm.capital, true)) continue;
       var level = highestSupportedLevel(state, rid);
@@ -327,7 +327,7 @@ window.FB = window.FB || {};
     var realmId = options.realm || 'player';
     if (realmId === 'player') {
       if (!playerHolds(state, pid)) { result.reason = 'ownership'; return result; }
-      if (!state.player || !FB.station.isLanded(state.player)) { result.reason = 'rank'; return result; }
+      if (!state.player || !FB.station.isLanded(state.player, state)) { result.reason = 'rank'; return result; }
     } else {
       var directHolder = state.holder && state.holder[pid] || state.owner[pid];
       if (directHolder !== realmId) { result.reason = 'ownership'; return result; }

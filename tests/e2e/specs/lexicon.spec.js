@@ -249,7 +249,7 @@ test('lexicon mods merge by layer and invalid entries are refused',
       return out;
     });
     expect(result.unknownTerm).toContain('thane is not a base term');
-    expect(result.badRank).toContain('rank needs m and f arrays with eight tiers');
+    expect(result.badRank).toContain('rank needs m and f labels for every used ladder band');
     expect(result.badLayer).toContain('is not a lexicon layer');
     expect(result.unknownEra).toContain('names an unknown eras id');
     expect(result.applied).toBe('ok');

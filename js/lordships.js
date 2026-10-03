@@ -182,7 +182,7 @@ window.FB = window.FB || {};
     actor = actorRef(state, actor);
     const holder = FB.settlementHolder(state, pid, slot);
     return { holder:holder, countyHolderId:FB.settlementCountyHolder(state, pid),
-      direct:!(actor.kind === 'realm' && actor.id === 'player' && !FB.station.isLanded(state.player)) &&
+      direct:!(actor.kind === 'realm' && actor.id === 'player' && !FB.station.isLanded(state.player, state)) &&
         actorHolds(state, actor, holder), liveAccounting:'settlement', integrated:true };
   };
   function actorRealm(state, actor, pid) {
@@ -384,19 +384,19 @@ window.FB = window.FB || {};
   };
   /* County progression uses the existing realm hierarchy and county campaigns. */
   FB.landedBaron = function (state) {
-    return FB.station.isBaron(state.player) && FB.directSettlements(state).length > 0;
+    return FB.station.isBaron(state.player, state) && FB.directSettlements(state).length > 0;
   };
   FB.countyGrantCandidates = function (state) {
     if (!FB.landedBaron(state)) return [];
     const home = FB.settlementCountyHolder(state, state.player.provinceId);
     const count = state.realms[home], out = [], seen = {};
-    let rid = count && FB.realmRank.isDucal(count) ? home : count && count.liege;
+    let rid = count && FB.realmRank.isDucal(count, state) ? home : count && count.liege;
     while (rid && !seen[rid]) {
       seen[rid] = true;
       const r = state.realms[rid];
       if (!r || !r.alive) break;
       const held = FB.realmHeldCounties(state, rid);
-      if (FB.realmRank.isDucal(r) && held.length > 1) held.slice().sort().forEach(function (pid) {
+      if (FB.realmRank.isDucal(r, state) && held.length > 1) held.slice().sort().forEach(function (pid) {
         if (pid !== r.capital && !FB.countyOccupiedOrBesieged(state, pid)) out.push({ provinceId:pid, grantorId:rid });
       });
       rid = r.liege;
@@ -419,10 +419,10 @@ window.FB = window.FB || {};
     p.provs = p.provs || [];
     if (p.provs.indexOf(pid) < 0) p.provs.push(pid);
     state.holder[pid] = 'player';
-    if (!FB.station.rulesRealm(p)) FB.setPlayerTier(state, 4, { attachLiege:false });
+    if (!FB.station.rulesRealm(p, state)) FB.setPlayerTier(state, 4, { attachLiege:false });
     FB.changePlayerLiege(state, liege || null, 'county:investiture');
     FB.foundPlayerRealm(state);
-    if (state.peakTier === undefined || p.tier > state.peakTier) {
+    if (state.peakTier === undefined || FB.station.above(p, state.peakTier, state)) {
       state.peakTier = p.tier; state.peakTitleData = FB.titleSnapshot(state);
     }
     // Unassigned settlements follow the county title. Delegated records and
@@ -612,9 +612,9 @@ window.FB = window.FB || {};
     if (!root || root.foundingVersion !== 1) reason = FB.T('Settlement founding is unavailable in this save.');
     else if (active) reason = FB.T('Your household already has a funded settlement project.');
     else if (reserved && reserved.status === 'building') reason = FB.T('A charter already reserves this county for founding.');
-    else if (!FB.station.isGentry(p) && !(FB.station.holdsCounty(p) && rid === 'player')) reason = FB.T('Found as Gentry in your home county, or in a county you directly rule.');
-    else if (FB.station.isGentry(p) && !FB.gentryEstablished(state)) reason = FB.T('An heir of a later generation must inherit your Gentry standing before the household can fund a barony charter.');
-    else if (FB.station.isGentry(p) && (p.travel || p.provinceId !== pid)) reason = FB.T('Return to your home county to charter a settlement.');
+    else if (!FB.station.isGentry(p, state) && !(FB.station.holdsCounty(p, state) && rid === 'player')) reason = FB.T('Found as Gentry in your home county, or in a county you directly rule.');
+    else if (FB.station.isGentry(p, state) && !FB.gentryEstablished(state)) reason = FB.T('An heir of a later generation must inherit your Gentry standing before the household can fund a barony charter.');
+    else if (FB.station.isGentry(p, state) && (p.travel || p.provinceId !== pid)) reason = FB.T('Return to your home county to charter a settlement.');
     else if (!living(state, p.charId) || p.dead) reason = FB.T('Choose the next household head before founding.');
     else if (!rid || !info || !count) reason = FB.T('A settled county and its current ruler are required.');
     else if (count >= Math.min(8, info.list.length)) reason = FB.T('All settlement sites in this county are already founded.');
@@ -625,7 +625,7 @@ window.FB = window.FB || {};
     else if (p.gold < cost.gold) reason = FB.T('You need {money:amount} to fund construction.', { amount:cost.gold });
     const grantor = rid === 'player' ? state.chars[p.charId] : FB.realmRulerCharacterSnapshot(state, rid);
     return { provinceId:pid, countyHolderId:rid, grantorId:grantor && grantor.id || null,
-      rulerFounded:FB.station.holdsCounty(p) && rid === 'player',
+      rulerFounded:FB.station.holdsCounty(p, state) && rid === 'player',
       sponsorId:p.charId, settlement:count, site:info && info.list[count] && info.list[count].site || null,
       established:count, capacity:capacity, unusedSlots:Math.max(0, capacity - count),
       gold:cost.gold, prestige:cost.prestige, piety:cost.piety,
@@ -671,7 +671,7 @@ window.FB = window.FB || {};
         project.settlement !== FB.settlementVisibleCount(state, pid)) reason = FB.T('The reserved site is unavailable. The funded charter is retained.');
     else if (!FB.settlementCountyHolder(state, pid)) reason = FB.T('Awaiting a recognized county ruler.');
     else if (project.settlement >= FB.settlementCapacity(state, pid)) reason = FB.T('County development must recover before the site can be established.');
-    else if (!FB.station.isGentle(p)) reason = FB.T('Recover Gentry standing to complete this charter.');
+    else if (!FB.station.isGentle(p, state)) reason = FB.T('Recover Gentry standing to complete this charter.');
     else if (project.rulerFounded && FB.settlementCountyHolder(state, pid) !== 'player') reason = FB.T('Recover direct rule of the charter county to complete construction.');
     else if (!project.rulerFounded && (p.travel || p.provinceId !== pid)) reason = FB.T('Return your household to the charter county to establish its new seat.');
     else if (days) reason = FB.T('Construction: {days} days remaining.', { days:days });
@@ -720,9 +720,9 @@ window.FB = window.FB || {};
     }
     root.founding[pid].status = 'complete';
     root.founding[pid].completedTurn = state.turn;
-    if (!FB.station.isLanded(p)) FB.setPlayerTier(state, 3);
+    if (!FB.station.isLanded(p, state)) FB.setPlayerTier(state, 3);
     if (!(p.provs && p.provs.length)) FB.changePlayerLiege(state, FB.settlementCountyHolder(state, pid), 'settlement:founding');
-    if (state.peakTier === undefined || p.tier > state.peakTier) {
+    if (state.peakTier === undefined || FB.station.above(p, state.peakTier, state)) {
       state.peakTier = p.tier; state.peakTitleData = FB.titleSnapshot(state);
     }
     FB.invalidateSettlementLordships(state, pid);
@@ -773,7 +773,7 @@ window.FB = window.FB || {};
     return sites[0] || null;
   };
   FB.initializeBaronyStart = function (state) {
-    if (!FB.station.isBaron(state.player)) return true;
+    if (!FB.station.isBaron(state.player, state)) return true;
     const site = FB.baronyPetitionSite(state);
     return !!site && FB.assignSettlementLordship(state, site.provinceId,
       site.settlement, state.player.charId);
@@ -789,7 +789,7 @@ window.FB = window.FB || {};
     const c = living(state, cid);
     const family = rid === 'player' && c && !!FB.kinOf(state).byId[cid];
     if (!c || cid === state.player.charId || FB.ageOf(c, state.date.year) < 16 ||
-        FB.stationOf(c) < (family ? 1 : 2) || c.unfree ||
+        !(family ? FB.socialStation.isFree(c, state) : FB.socialStation.isGentle(c, state)) || c.unfree ||
         (FB.realmIdForRulerCharacter && FB.realmIdForRulerCharacter(state, c))) return false;
     const home = FB.characterResidence(state, c);
     return FB.settlementCountyHolder(state, home) === rid ||
@@ -814,7 +814,7 @@ window.FB = window.FB || {};
     }
     const capital = state.realms.player && state.realms.player.capital;
     const eligible = held.filter(function (pid) {
-      return FB.station.holdsCounty(p) && state.holder[pid] === 'player' && pid !== p.provinceId && pid !== capital &&
+      return FB.station.holdsCounty(p, state) && state.holder[pid] === 'player' && pid !== p.provinceId && pid !== capital &&
         !FB.isProtected(state, 'grantCounty', pid) && !protectedCounties[pid] &&
         !FB.countyOccupiedOrBesieged(state, pid);
     }).sort(function (a, b) {
@@ -832,7 +832,7 @@ window.FB = window.FB || {};
     });
     const settlementExcess = Math.max(0, remaining.length - capacity.limit);
     const sites = remaining.filter(function (site) {
-      return FB.station.holdsCounty(p) && site.settlement > 0 && !selected[site.provinceId] && state.holder[site.provinceId] === 'player' &&
+      return FB.station.holdsCounty(p, state) && site.settlement > 0 && !selected[site.provinceId] && state.holder[site.provinceId] === 'player' &&
         !(site.provinceId === p.provinceId && site.settlement === (p.homeSettlement || 0)) &&
         !FB.settlementGrantReserved(state, site.provinceId, site.settlement) &&
         !FB.countyOccupiedOrBesieged(state, site.provinceId);
@@ -885,7 +885,7 @@ window.FB = window.FB || {};
     if (!c || !FB.settlementGrantSites(state, pid, rid).some(function (site) {
       return site.settlement === slot;
     })) return { allowed:false, reason:'unavailable_settlement' };
-    if (cid === state.player.charId ? (!FB.station.isGentry(state.player) || rid === 'player') :
+    if (cid === state.player.charId ? (!FB.station.isGentry(state.player, state) || rid === 'player') :
         !FB.settlementGrantRecipient(state, cid, rid)) {
       return { allowed:false, reason:'ineligible_recipient' };
     }
@@ -1180,7 +1180,7 @@ window.FB = window.FB || {};
   };
   function territorialBaron(state) {
     const p = state.player, c = p && state.chars && state.chars[p.charId];
-    if (!p || !FB.station.isBaron(p) || !c || p.castellany || (p.provs && p.provs.length)) return false;
+    if (!p || !FB.station.isBaron(p, state) || !c || p.castellany || (p.provs && p.provs.length)) return false;
     const flags = p.flags || {}, ranks = c.religiousRanks || {};
     return !(FB.abbeyOf && FB.abbeyOf(state, c)) &&
       !c.bishopric && !c.papalOffice && !flags.bishop && !flags.pope &&

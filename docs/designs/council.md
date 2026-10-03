@@ -264,3 +264,7 @@ undo unrelated changes. Consent, charter and political tactic readers use effect
 authority. A five-year fiscal composition blocks extraordinary taxation and
 voluntary title revocation, and grants the existing enduring office-confirmation
 privilege. Fiscal concessions are ungated recovery (`fiscal_settlements`: **none**).
+
+Government ladder eligibility
+
+Built-in councilSeats declare station: mayHoldCouncil. Seat discovery asks that named permission on the player's own era/form ladder, so a council need not be tied to the sixth saved band. Older mod seats without station keep tierMin, interpreted through the ladder's eligibilityTier as well as mayHoldCouncil. Seat definitions may name another supported station meaning. No-state catalogue reads still return every seat. Existing appointment records, holder eligibility, confirmation, Standing and bonuses retain their normal rules. Changing a form immediately changes active seats without creating territorial ownership or rewriting the saved tier. This is an internal refactor, with no technology change.

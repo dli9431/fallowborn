@@ -495,7 +495,7 @@ window.FB = window.FB || {};
           !career || !FB.professionDoesWork(career.profession, def.profession) ||
           (def.maleOnly && c.sex !== 'm') ||
           (FB.retainerOfficeRecord && FB.retainerOfficeRecord(state, office)) ||
-          !FB.station.reaches(state.player, def.minTier || 0)) {
+          !FB.station.reaches(state.player, def.minTier || 0, state)) {
         delete p.familyOffices[office];
         continue;
       }
@@ -532,7 +532,7 @@ window.FB = window.FB || {};
         (FB.intrigueCaptivityOf && FB.intrigueCaptivityOf(state, c.id)) ||
         !FB.isAgencyFamilyMember(state, cid) ||
         FB.ageOf(c, state.date.year) < 16 ||
-        !FB.station.reaches(state.player, def.minTier || 0) ||
+        !FB.station.reaches(state.player, def.minTier || 0, state) ||
         (def.maleOnly && c.sex !== 'm') ||
         !career || !FB.professionDoesWork(career.profession, def.profession) ||
         FB.familyOfficeRecord(state, cid)) return false;
@@ -585,7 +585,7 @@ window.FB = window.FB || {};
       ? Math.max(FB.stationOf(target), playerStation)
       : playerStation;
     var partnerStation = partner ? FB.stationOf(partner) : 0;
-    var stationGap = Math.max(0, partnerStation - targetStation);
+    var stationGap = Math.max(0, FB.socialStation.gap(partnerStation, targetStation, state));
     var prestigeNeed = partner && FB.kinMatchPrestigeNeed
       ? FB.kinMatchPrestigeNeed(state, partner) : stationGap * 20;
     var reason = !state || !state.player || !partner
@@ -613,8 +613,8 @@ window.FB = window.FB || {};
       (state.player.liege || 'player');
     if (FB.topRealm && FB.topRealm(state, rid) === playerRealm) return true;
     return !!(FB.isPlayerSovereign && FB.isPlayerSovereign(state) &&
-      state.realms.player && FB.realmRank.isRoyal(state.realms.player) &&
-      !realm.liege && FB.realmRank.isRoyal(realm) && FB.realmsAdjacent &&
+      state.realms.player && FB.realmRank.isRoyal(state.realms.player, state) &&
+      !realm.liege && FB.realmRank.isRoyal(realm, state) && FB.realmsAdjacent &&
       FB.realmsAdjacent(state, 'player', rid));
   }
 
@@ -709,8 +709,8 @@ window.FB = window.FB || {};
     var chance = 0;
     if (!reason) {
       var me = state.chars[state.player.charId];
-      var stationGap = FB.stationOf(partner) -
-        Math.max(FB.playerStation(state), FB.stationOf(target));
+      var stationGap = FB.socialStation.gap(partner,
+        Math.max(FB.playerStation(state), FB.stationOf(target)), state);
       chance = 0.30 + FB.rulerRegard(state, rid, 'player') / 400 +
         Number(state.player.prestige || 0) / 600 +
         Number(state.player.tier || 0) * 0.05 +
@@ -1135,7 +1135,7 @@ window.FB = window.FB || {};
       var relevance = FB.rulerPlayerRelevance(state, rid);
       if (!relevance.eligible) continue;
       var marriage = marriagePair(state, rid, familySnapshot);
-      if (!marriage && !FB.station.isLanded(state.player)) continue;
+      if (!marriage && !FB.station.isLanded(state.player, state)) continue;
       candidates.push({ rid:rid, relevance:relevance, marriage:marriage });
     }
     if (!candidates.length) return;
@@ -1388,7 +1388,7 @@ window.FB = window.FB || {};
   function communitySituationCandidates(state) {
     var out = [];
     var p = state.player;
-    if (!p || !FB.station.isLanded(p) || p.war) return out;
+    if (!p || !FB.station.isLanded(p, state) || p.war) return out;
     var held = FB.buildingCounties(state);
     held.sort();
     function add(id, ctx) {
@@ -1470,7 +1470,7 @@ window.FB = window.FB || {};
   };
 
   FB.fns.agency_overture_context_valid = function (state, ctx) {
-    return !!(state.player && FB.station.isLanded(state.player) &&
+    return !!(state.player && FB.station.isLanded(state.player, state) &&
       FB.fns.agency_ruler_context_valid(state, ctx));
   };
 

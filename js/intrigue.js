@@ -106,8 +106,7 @@ window.FB = window.FB || {};
     var pid = context && context.pid;
     var rid = pid && state.owner && state.owner[pid];
     var realm = rid && state.realms && state.realms[rid];
-    return FB.clamp(realm && realm.tier !== undefined ? realm.tier - 1 : 1,
-      0, 4);
+    return realm && realm.tier !== undefined ? FB.station.lowerSocialClass(realm, state) : 1;
   }
 
   function methodCost(state, def, context, method, actorId) {
@@ -118,7 +117,7 @@ window.FB = window.FB || {};
       ? FB.playerStation(state)
       : FB.clamp(actor ? FB.stationOf(actor) : 0, 0, 4);
     var gap = Math.max(0,
-      targetStation(state, context) - actorStation - 1);
+      FB.socialStation.gap(targetStation(state, context), actorStation, state) - 1);
     var step = FBDATA.balance.rankAccessCashCostMult === undefined
       ? 2 : Math.max(1,
         finite(FBDATA.balance.rankAccessCashCostMult, 1));
@@ -2242,7 +2241,7 @@ window.FB = window.FB || {};
 
   FB.fns.intrigue_hearing_can_resist = function (state, ctx) {
     return !!(activeHearing(state, ctx) && state.player.liege &&
-      FB.station.isLanded(state.player) && !state.player.war);
+      FB.station.isLanded(state.player, state) && !state.player.war);
   };
 
   FB.fns.intrigue_hearing_challenge = function (state, ctx) {
