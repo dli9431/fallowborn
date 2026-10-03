@@ -239,7 +239,7 @@
       resaleAfter:state.turn + rules().cooldownSeasons * 90, refunded:false };
     FB.fiscalDay(state);
     FB.news(state, FB.msg('news.fiscal.land_sale',
-      'You receive {money:price} for a hereditary grant of {province}. Its lord remains your vassal.',
+      'You receive {money:price} for a hereditary grant of {province}. Its lord remains your {term:vassal}.',
       { price:q.price, province:FB.world.byId[q.pid].name }));
     return true;
   };
@@ -258,7 +258,7 @@
   FB.fiscalRevocationReason = function (state, rid) {
     const restriction = FB.fiscalRestriction(state);
     if (restriction) return restriction;
-    if (!rid || !state.realms[rid] || !state.realms[rid].alive) return FB.T('This ruler no longer holds the fief.');
+    if (!rid || !state.realms[rid] || !state.realms[rid].alive) return FB.T('This ruler no longer holds the {term:fief}.');
     let refund = 0;
     for (const pid of FB.realmHeldCounties(state, rid)) refund += FB.fiscalRevocationRefund(state, pid);
     return refund > Math.max(0, state.player.gold)

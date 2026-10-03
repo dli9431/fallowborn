@@ -853,7 +853,7 @@
     if (war.attacker === 'player') FB.adjustStanding(state, { kind:'realm', id:preview.law.liege }, -20, 'war:unlawful');
     else if (preview.law.liege === 'player') FB.adjustStanding(state, { kind:'realm', id:war.attacker }, -20, 'war:unlawful');
     else state.realms[war.attacker].favor = FB.clamp((Number(state.realms[war.attacker].favor) || 0) - 20, -100, 100);
-    FB.news(state, FB.msg('news.war.unlawful', '{realm} breaks the sovereign peace. The liege demands an end to the campaign within 90 days.', {
+    FB.news(state, FB.msg('news.war.unlawful', '{realm} breaks the sovereign peace. The {term:liege} demands an end to the campaign within 90 days.', {
       realm:state.realms[war.attacker].name }));
     FB.queuePeaceDemand(state, war);
   };

@@ -272,6 +272,8 @@ globals. **Load order matters** — do not reorder the `<script>` tags casually:
   composition quality, upkeep, casualty order, counters, and tech/culture gates),
   `data/eras.js` (eras: year windows, default government form and culture),
   `data/wardrobes.js` (portrait wardrobes that eras and government forms name),
+  `data/lexicons.js` (political vocabulary and rank ladders by era, government form,
+  faith and culture),
   `data/bookmarks.js` (the atomic 867/1066 world
   definitions), `data/settlements.js` (the shared physical-site table plus the per-bookmark
   county settlement layouts it clones onto those bookmark provinces),
@@ -286,7 +288,7 @@ globals. **Load order matters** — do not reorder the `<script>` tags casually:
   after `events_paths.js`, and
   `events_intrigue.js` after tournament events and before ruler-agency events).
 - Engine second, all writing to `window.FB`: `util → messages → i18n → title_ids →
-  model → station → music → portrait → siteart → balance → governments → world → climate → settlement → fortifications → holywar → population → modifiers →
+  model → station → lexicon → music → portrait → siteart → balance → governments → world → climate → settlement → fortifications → holywar → population → modifiers →
   economy → market → papacy → armies → travel → mapview → events → items → actions → ambitions → intrigue → justice →
   technology → council → agency → politics → authority → parliament → institutions →
   ui (ui_misc → ui_panels → ui_topbar) → keys → save → save_v4 → mods → stories →
@@ -451,6 +453,8 @@ Architecture and locale lifecycle: `docs/designs/i18n.md`. Schema: `docs/MODDING
 - `js/model.js` — characters, dynasties, traits, titles.
 - `js/station.js` — named station (`FB.station`) and realm rank (`FB.realmRank`) queries; the
   only engine code that compares a tier or rank with a number.
+- js/lexicon.js: the lexicon resolver (FB.term, FB.lexicon.rank, FB.lexicon.label) behind
+  {term:...} placeholders, rank titles and period relabels of data text.
 - `js/music.js` - Opus playback, contextual banks, shuffle history, preferences, and offline downloads.
 - `js/portrait.js` — procedural portraits/heraldry.
 - `js/siteart.js` — procedural settlement emblems for the detailed map (deterministic per

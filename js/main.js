@@ -2060,7 +2060,7 @@ FB.CHANGELOG = [
   G.SCENARIOS = FBDATA.startScenarios;
   G.FAMILY_PRESETS = FBDATA.familyPresets;
 
-  const START_TIER_NAMES = ['Serf', 'Freeholder', 'Gentry', 'Baron'];
+  const START_TIER_NAMES = ['{Term:serf}', 'Freeholder', 'Gentry', '{Term:baron}'];
 
   /* A scenario is offered where its data allows: an optional bookmarkIds
      list and an optional eras list, matched against the bookmark's era. */
@@ -2099,7 +2099,7 @@ FB.CHANGELOG = [
   }
 
   function scenarioUnlockText(scenario, startCode) {
-    const station = FB.T(START_TIER_NAMES[Math.min(3, scenario.tier)] || 'Baron');
+    const station = FB.T(START_TIER_NAMES[Math.min(3, scenario.tier)] || '{Term:baron}');
     if (startCode) {
       return FB.T(
         'That beginning is locked. Reach {station} in any life to use this start code.',
@@ -2736,7 +2736,7 @@ FB.CHANGELOG = [
       button.className = 'quickstart-card';
       button.setAttribute('data-quick-start', definition.id);
       button.setAttribute('aria-label', FB.T(
-        'Quick Start as {name}, Serf in {location}, {culture} and {religion}, {season} {year} AD', {
+        'Quick Start as {name}, {Term:serf} in {location}, {culture} and {religion}, {season} {year} AD', {
           name:definition.characterName,
           location:location,
           culture:FB.renderKey(
@@ -2760,7 +2760,7 @@ FB.CHANGELOG = [
       }
       meta('quickstart-name', definition.characterName);
       meta('quickstart-meta quickstart-title-location', FB.T('{title} | {location}', {
-        title:FB.T('Serf'),
+        title:FB.T('{Term:serf}'),
         location:FB.L(details.province.name)
       }));
       meta('quickstart-meta quickstart-home', FB.T('Home: {settlement}', {
@@ -3448,7 +3448,7 @@ FB.CHANGELOG = [
       FB.setRngState(previousRng);
       FB.setUidCounter(previousUid);
       FB.invalidateSettlementLordships(previousState);
-      FB.ui.toast('This county has no settlement available for a baron. Choose another starting rank or county.');
+      FB.ui.toast('This county has no settlement available for a {term:baron}. Choose another starting rank or county.');
       showScenarios();
       return false;
     }
@@ -5741,7 +5741,7 @@ FB.CHANGELOG = [
     if (s.player.prestige >= 400) pool.push(FB.msg('legend.condition.famous',
       'So famous that strangers are mourning professionally.', {}));
     if (FB.station.isSerf(s.player)) pool.push(FB.msg('legend.condition.serf',
-      'Born a serf, died a serf, and outstubborned everyone in between.', {}));
+      'Born a {term:serf}, died a {term:serf}, and outstubborned everyone in between.', {}));
     if (FB.station.isRoyal(s.player)) pool.push(FB.msg('legend.condition.emperor',
       'Ruled an empire; the empire has been formally notified.', {}));
     let best = null, bestV = 0;
@@ -6143,7 +6143,7 @@ FB.CHANGELOG = [
     }
     if (FB.station.isFreeholder(outgoingTier) && FB.station.isSerf(successionTier)) {
       FB.news(s, FB.msg('news.life.unfree_successor',
-        '⛓ {name} was never included in the family’s manumission. Property passes on, but the new household head remains a serf.', {
+        '⛓ {name} was never included in the family’s manumission. Property passes on, but the new household head remains a {term:serf}.', {
           name:FB.fullName(heir)
         }));
     }

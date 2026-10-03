@@ -83,7 +83,7 @@
     const enemy = name(s, w.enemy);
     const terms = options.terms;
     const back = options.returnLiege ? name(s, options.returnLiege) : '';
-    const returnNote = back ? FB.T('You return to {liege} as their vassal.', { liege:back }) : '';
+    const returnNote = back ? FB.T('You return to {liege} as their {term:vassal}.', { liege:back }) : '';
     let cards = SH.reviewActionCardHtml({
       id:'campaign-white-peace', detailsId:'campaign-white-peace-details',
       label:FB.T('Propose white peace'), disabled:!options.white.ready, warn:!options.white.ready,
@@ -124,7 +124,7 @@
       cards += SH.reviewActionCardHtml({
         id:'campaign-submit', detailsId:'campaign-submit-details', danger:true,
         label:FB.T('Submit to {enemy}', { enemy:liege }),
-        note:FB.T('Become their vassal and keep your land · −{prestige} prestige', { prestige:options.submit.prestige }),
+        note:FB.T('Become their {term:vassal} and keep your land · −{prestige} prestige', { prestige:options.submit.prestige }),
         details:'<p>' + esc(FB.T('The war ends at once. Your lands remain yours — held now from {enemy}.', { enemy:liege })) + '</p>'
       });
     }
@@ -215,7 +215,7 @@
       : w.enforcementOf ? FB.T('End the unlawful war; offender loses 50 prestige.')
       : special === 'independence' ? FB.T('Secure independence.')
       : special === 'caliphate' ? FB.T('Gain the Caliphate office.')
-      : special === 'restoration' ? FB.T('Restore the crown and its vassals.')
+      : special === 'restoration' ? FB.T('Restore the crown and its {term:vassal.other}.')
       : FB.T('Occupy all objectives to gain them at peace.');
     h += section('campaign-goal-details', FB.T('Objectives'), objectives + fact(FB.T('Victory'), victory),
       '<p>' + esc(FB.T('Occupation is temporary until peace. All territorial objectives must remain occupied together. Office and independence wars follow their own terms.')) + '</p>' +
@@ -448,7 +448,7 @@
           '<p class="war-law-description">' + esc(desc) + '</p>' +
           '<div class="settcard-details hidden" id="' + detailId + '"><div class="modal-action-terms">' +
           fact(FB.T('Cost'), FB.T('{money:cost}', { cost:status.cost })) +
-          fact(FB.T('Vassal Standing'), i > currentIndex ? FB.T('-10') : FB.T('+10')) + '</div></div>' +
+          fact(FB.T('{Term:vassal} Standing'), i > currentIndex ? FB.T('-10') : FB.T('+10')) + '</div></div>' +
           (!status.ready ? '<p class="warnote">' + esc(status.reason) + '</p>' : '') + '</div>';
       });
       h += '<section class="war-sheet-section" id="war-law-details-' + id + '-section" tabindex="-1"><div class="war-sheet-heading"><h3>' +
@@ -460,7 +460,7 @@
       if (request.liege !== 'player') return;
       h += '<section class="war-sheet-section" data-war-permission-request><div class="war-sheet-heading"><h3>' +
         esc(FB.T('Permission request')) + '</h3></div>' +
-        fact(FB.T('Vassal'), name(s, request.attacker)) +
+        fact(FB.T('{Term:vassal}'), name(s, request.attacker)) +
         fact(FB.T('Enemy'), name(s, request.causes[0].enemy)) +
         fact(FB.T('Objectives'), request.causes.map(objectiveName).join(', ')) +
         SH.reviewActionsHtml(SH.reviewActionCardHtml({
@@ -477,7 +477,7 @@
       if (!w || !w.peaceDemand || w.peaceDemand.liege !== 'player' || w.peaceDemand.status !== 'refused') return;
       h += '<section class="war-sheet-section" data-war-peace-refusal><div class="war-sheet-heading"><h3>' +
         esc(FB.T('Refused peace demand')) + '</h3></div>' +
-        fact(FB.T('Vassal'), name(s, w.attacker)) +
+        fact(FB.T('{Term:vassal}'), name(s, w.attacker)) +
         SH.reviewActionsHtml(SH.reviewActionCardHtml({
           data:{ enforcePeace:id }, danger:true, label:FB.T('Enforce the peace by war'),
           note:FB.T('{realm} refuses the demand for peace. Enforcement victory ends that campaign and costs them 50 prestige.', { realm:name(s, w.attacker) })

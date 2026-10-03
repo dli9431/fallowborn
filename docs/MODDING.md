@@ -1510,6 +1510,38 @@ The shipped zones are northern_temperate (today's seasons), mediterranean, arid 
 
 Engine rules ask for a county's local season kind (FB.localSeason(state, provinceId)) and read the kind's properties; they never compare the calendar index for a climate meaning. Province sheets show the local season with its zone. Zones and local seasons are derived from data and never saved, so a data change applies to running campaigns.
 
+### Lexicons
+
+The lexicon holds the words that name political concepts: vassal, liege, fief, holding, levy, crown authority, council, estates, manor, serf, knight, baron, the title levels (county, duchy, kingdom, empire) and the eight-tier rank ladder. FBDATA.lexicons (data/lexicons.js) has a base entry and four layers: eras (keyed by FBDATA.eras id), governments (FBDATA.governmentForms id), faiths (FBDATA.religions id) and cultures (FBDATA.cultures id). A lookup takes the most specific layer that defines the word: the viewer's culture, then their faith and its ancestors nearest first, then the government form of their sovereign realm, then the campaign's era, then base. Mods merge entries through the top-level lexicons key: terms merge by term id, labels by kind and id, and a supplied rank ladder replaces the old one. The composed table is validated before it is applied.
+
+```json
+{
+  "lexicons": {
+    "eras": {
+      "late_antique": {
+        "terms": { "fief": { "one": "estate", "other": "estates" } },
+        "labels": { "holding": { "warhorse": { "name": "Cavalry mount" } } }
+      }
+    },
+    "faiths": {
+      "norse_pagan": {
+        "rank": {
+          "m": ["Thrall", "Karl", "Huscarl", "Hersir", "Jarl", "High Chief", "King", "High King"],
+          "f": ["Thrall", "Karl", "Shieldmaiden", "Lady", "Jarl", "High Chief", "Queen", "High Queen"]
+        }
+      }
+    }
+  }
+}
+```
+
+Fields of an entry (all optional except base terms and base rank):
+- terms: term id to its noun forms. one is the singular and other the plural; title is the capitalized standalone label (when left out, one with its first letter capitalized). An optional f object holds the same forms for a female viewer. A layer may only override a term the base defines.
+- rank: m and f arrays of exactly eight labels, tiers 0 (serf) to 7 (emperor).
+- labels: display relabels of structured data text, kind to id to field path to English, for example career, soldier, ranks.apprentice. The unitRole kind names a unit role (levy_infantry, missile, cavalry, household, mercenary, polearm) and relabels that role's default unit class.
+
+Running text reaches a term through a placeholder: {term:vassal} for the singular, {term:vassal.other} for the plural, {term:crown_authority.title} for the standalone label, and {Term:...} to capitalize the first letter. Placeholders work in UI text, durable messages and event or data text. Only display text changes; ids, mechanics and saved records never depend on the lexicon.
+
 ## Events
 
 ```json
@@ -2053,6 +2085,7 @@ liege realm; `{rname}` / `{rulername}` are the realm and ruler named by
 `ctx.provinceId` (legacy `ctx.pid` remains accepted). `{newtitle}` renders the semantic
 title snapshot supplied as `ctx.titleData`; core rank-investiture events use it so the
 offered dignity remains grammatically localizable and stable across the transaction.
+Lexicon terms are tokens too: {term:vassal}, {term:vassal.other}, {term:crown_authority.title} and the capitalized {Term:...} form name the campaign's word for a political concept (see Lexicons under The map).
 Any declared participant slot is also a token: `{officer}`, `{witness}`, `{neighbor}`,
 or another valid slot resolves the exact id in `ctx.participants` before a same-named
 legacy role could be considered. Mentioning a living participant adds one event character
@@ -4281,10 +4314,6 @@ spelling. For example:
         },
         "acceptedRelations": ["same", "in_fold"]
       },
-      "rankTitles": {
-        "m": ["Serf", "Freeholder", "Gentry", "Baron", "Count", "Duke", "King", "Emperor"],
-        "f": ["Serf", "Freeholder", "Gentlewoman", "Baroness", "Countess", "Duchess", "Queen", "Empress"]
-      },
       "words": {
         "deity": "God", "cleric": "priest",
         "temple": "church", "landed": "Lord",
@@ -4329,11 +4358,15 @@ therefore author only `properties.marriage.spouseLimit.m:3`, or use
 `properties.head:null` to remove an inherited office; this also disables an inherited
 `systems.papacy` capability. Legacy definitions that put qualities such as `head` at the
 top level still work, but new data should use
-`properties`. `rankTitles.m` and `.f` each contain all eight tiers. `FBDATA.titles` is
-retained only as a compatibility fallback for old mods and saved title snapshots.
+`properties`. Rank titles are not a faith property any more: they live in the lexicon
+(`FBDATA.lexicons`, see Lexicons below), where a faith-layer entry supplies a faith's
+ladder. A modded or runtime faith that still sets `properties.rankTitles` (`m` and `f`,
+each with all eight tiers) is read as a faith-layer entry for that faith. `FBDATA.titles`
+is retained only as a compatibility fallback for old mods and saved title snapshots.
 When a mod supplies one of the historical `titles.christian|muslim|pagan|jewish`
-or `_f` keys, the loader also mirrors it into that root's effective `rankTitles`,
-preserving title-only mods. New mods should edit the faith property directly.
+or `_f` keys, the loader also mirrors it into the lexicon: `christian` replaces the base
+ladder and the other groups replace that faith's entry, preserving title-only mods. New
+mods should use `lexicons`.
 
 `properties.head.holderSex` is optional and accepts `"m"` or `"f"`. When
 set, only a realm whose current ruler has that sex may hold or claim the office.

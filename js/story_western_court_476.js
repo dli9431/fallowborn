@@ -16,39 +16,6 @@
   function plain(o) {
     return !!o && typeof o === 'object' && !Array.isArray(o);
   }
-  /* Display-only vocabulary: internal ids, mechanics and saved records stay stable. */
-  function periodText(s, kind, id, field) {
-    if (kind === 'career' && id === 'soldier') {
-      if (field === 'name') return FB.T('Federate service');
-      if (field === 'ranks.apprentice') return FB.T('New recruit');
-      if (field === 'ranks.journeyman') return FB.T('Federate soldier');
-      if (field === 'ranks.master') return FB.T('Veteran of the host');
-      if (field === 'desc') return FB.T('Drill, guard duty, and paid service in a federate host.');
-    }
-    if (field !== 'name') return null;
-    /* the period name of each role's default class */
-    if (kind === 'unitClass' && FB.unitClassRole) {
-      var role = FB.unitClassRole(id);
-      if (role && FB.unitRoleClass(role) === id) {
-        if (role === 'levy_infantry') return FB.T('Local militia');
-        if (role === 'missile') return FB.T('Bowmen');
-        if (role === 'cavalry') return FB.T('Mounted retainers');
-        if (role === 'household') return FB.T('Household soldiers');
-        if (role === 'mercenary') return FB.T('Contracted bands');
-        if (role === 'polearm') return FB.T('Spearmen');
-      }
-    }
-    if (kind === 'holding') {
-      if (id === 'common_rights') return FB.T('Communal grazing rights');
-      if (id === 'hearth_garden') return FB.T('Household plot');
-      if (id === 'house_shrine') return FB.T('Household oratory');
-      if (id === 'letters') return FB.T('Household letters');
-      if (id === 'press') return FB.T('Oil press');
-      if (id === 'good_mail') return FB.T('Mail shirt');
-      if (id === 'warhorse') return FB.T('Riding horse');
-    }
-    return null;
-  }
   function actor(id) { return { kind:'realm', id:id }; }
   function person(id) { return { kind:'character', id:id }; }
   function host(s, id) {
@@ -584,5 +551,5 @@
     civicPermission:civicPermission, news:news
   };
   FB.stories.register({ id:WORLD, kind:'world', init:init, day:day,
-    text:periodText, validate:validate, migrate:migrate });
+    validate:validate, migrate:migrate });
 })();

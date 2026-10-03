@@ -1217,9 +1217,9 @@ window.FB = window.FB || {};
       const lg = s.player.liege && s.player.liege !== 'player' && s.realms[s.player.liege];
       h += '<div class="progressnote">' + esc(FB.T('💰 Seasonal revenue ~{money:gold} · 🛡 levy ~{men} men', {
         gold: FB.playerTax(s), men: FB.playerLevy(s)
-      })) + (lg ? ' · ' + esc(FB.T('vassal of')) +
+      })) + (lg ? ' · ' + esc(FB.T('{term:vassal} of')) +
         ' <span class="linklike" data-liege="' + esc(s.player.liege) +
-        '" title="' + esc(FB.T('See your liege’s sheet')) + '">' + esc(lg.name) + '</span>' :
+        '" title="' + esc(FB.T('See your {term:liege}’s sheet')) + '">' + esc(lg.name) + '</span>' :
         ' · ' + esc(FB.T('independent'))) + '</div>';
       if (s.player.provs && s.player.provs.length) {
         const dcap = FB.domainCap(s), dheld = s.player.provs.length, dover = dheld > dcap;
@@ -1874,7 +1874,7 @@ window.FB = window.FB || {};
     if (FB.station.isFreeholder(s.player)) {
       const cluster = FB.largestLandCluster(s);
       return '<div class="progressnote path-hint">🧭 ' + esc(FB.T(
-        'Path: an heir of a later generation must inherit Freeholder standing. Assemble {needed} plots in one settlement ({cluster}/{needed}), then reach {prestige} prestige and fund recognition of the manor. Soldiering and the church offer other roads.',
+        'Path: an heir of a later generation must inherit Freeholder standing. Assemble {needed} plots in one settlement ({cluster}/{needed}), then reach {prestige} prestige and fund recognition of the {term:manor}. Soldiering and the church offer other roads.',
         {
           cluster:cluster ? cluster.count : 0,
           needed:FBDATA.balance.manorPlotRequirement,
@@ -1884,9 +1884,9 @@ window.FB = window.FB || {};
     }
     if (FB.station.isGentry(s.player)) {
       const command = FB.militaryCommandStatus && FB.militaryCommandStatus(s);
-      const foundingPath = FB.T('An established gentle house may also fund a new settlement charter to become Baron. Both ordinary routes require an heir of a later generation to inherit Gentry standing.');
+      const foundingPath = FB.T('An established gentle house may also fund a new settlement charter to become {Term:baron}. Both ordinary routes require an heir of a later generation to inherit Gentry standing.');
       const text = FB.gentryEstablished(s)
-        ? FB.T('Path: serve your lord, win renown ({prestige}+ prestige, Standing {standing}+), and petition for investiture as baron.',
+        ? FB.T('Path: serve your lord, win renown ({prestige}+ prestige, Standing {standing}+), and petition for investiture as {term:baron}.',
           {
             prestige:FBDATA.balance.baronyPrestige,
             standing:FBDATA.balance.baronyOpinion
@@ -2579,8 +2579,8 @@ window.FB = window.FB || {};
     if (later.length) h += '<p><b>' + esc(FB.T('Later widespread adoption (examples)')) +
       ':</b><br>' + later.slice(0, detailed ? 2 : 1).map(esc).join('<br>') + '</p>';
     if (!earlier.length && !later.length) h += '<p>' + esc(FB.T('No change to widespread adoption dates compared with your current learning tradition.')) + '</p>';
-    if (!detailed) return h + '<p class="muted">' + esc(FB.T('Requires local dominance at home or the capital. Vassals use sovereign traditions; faith may already provide earlier dates.')) + '</p>';
-    return h + '<p>' + esc(FB.T('Earlier adoption can reduce research costs. Other traditions supplied by the realm’s faith may already provide earlier dates. Completed technology is retained; this grants no technology immediately. A new branch must become locally dominant at the baron’s home settlement or the ruler’s capital before its learning tradition applies. Vassals use their sovereign’s technology.')) + '</p>';
+    if (!detailed) return h + '<p class="muted">' + esc(FB.T('Requires local dominance at home or the capital. {Term:vassal.other} use sovereign traditions; faith may already provide earlier dates.')) + '</p>';
+    return h + '<p>' + esc(FB.T('Earlier adoption can reduce research costs. Other traditions supplied by the realm’s faith may already provide earlier dates. Completed technology is retained; this grants no technology immediately. A new branch must become locally dominant at the {term:baron}’s home settlement or the ruler’s capital before its learning tradition applies. {Term:vassal.other} use their sovereign’s technology.')) + '</p>';
   }
 
   function doctrineRelationText(kind, relation) {
@@ -3132,7 +3132,7 @@ window.FB = window.FB || {};
           held:direct.length, cap:cap
         }))) +
         kv('Realm-wide territory', esc(countyCountText(s, realm.length))) +
-        kv('Direct vassals', esc(String(vassals.length))) +
+        kv('Direct {term:vassal.other}', esc(String(vassals.length))) +
         kv('Seasonal tax', esc(FB.T('about {money:gold}', {
           gold:FB.playerTax(s)
         }))) +
@@ -3415,7 +3415,7 @@ window.FB = window.FB || {};
       selfLiveValueRow('health', 'Health',
         Math.round(me.health) + ' / 10 · ' + healthWord(me.health)) +
       ailmentChips(s, me) +
-      (s.player.liege ? kv('Standing with your liege',
+      (s.player.liege ? kv('Standing with your {term:liege}',
         standingSpan(FB.standingOf(s, {
           kind:'realm', id:s.player.liege
         }))) : '') +
@@ -4081,7 +4081,7 @@ window.FB = window.FB || {};
       const r = s.realms[entry.rid];
       return entry.favored
         ? FB.T('{realm} — exceptional levy', { realm:r ? r.name : entry.rid })
-        : FB.T('{realm} — vassal levy', { realm:r ? r.name : entry.rid });
+        : FB.T('{realm} — {term:vassal} levy', { realm:r ? r.name : entry.rid });
     }
     if (entry.kind === 'barony_retinue') return FB.T('Standing barony household');
     if (entry.kind === 'castellany_retinue') return FB.T('Castellan’s household guard');
@@ -4459,7 +4459,7 @@ window.FB = window.FB || {};
     }
     if (!capacity) {
       householdSummary += '<div class="hint">' + esc(FB.T(
-        'A serf household cannot yet maintain paid servants.')) + '</div>';
+        'A {term:serf} household cannot yet maintain paid servants.')) + '</div>';
     } else if (capacity === retainers.length) {
       householdSummary += '<div class="hint">' + esc(FB.T(
         'The household is at its retainer capacity.')) + '</div>';
@@ -4487,7 +4487,7 @@ window.FB = window.FB || {};
     }
     const attentionTarget = FB.socialAttentionTarget(s);
     const directLiege = networkDirectLiege(s);
-    addConnection(directLiege, FB.T('Direct liege'), -1, false);
+    addConnection(directLiege, FB.T('Direct {term:liege}'), -1, false);
     const friend = FB.getRole(s, 'friend', false);
     addConnection(friend, FB.T('Your friend'), 0,
       attentionTarget && friend && attentionTarget.id === friend.id);
@@ -4601,7 +4601,7 @@ window.FB = window.FB || {};
       if (FB.station.isDuke(tier)) return FB.T('Duke');
       if (FB.station.isKing(tier)) return FB.T('King');
       if (FB.station.isEmperor(tier)) return FB.T('Emperor');
-      return FB.T('Baron');
+      return FB.T('{Term:baron}');
     }
     function monopolyProfessionName(record) {
       const def = record && FBDATA.careers[record.profession];
@@ -4666,7 +4666,7 @@ window.FB = window.FB || {};
           province:province ? province.name : monopoly.scopeId
         }));
       } else if (active && direction === 'incoming') {
-        meta.push(FB.T('Bound to the direct liege relationship with {grantor}', {
+        meta.push(FB.T('Bound to the direct {term:liege} relationship with {grantor}', {
           grantor:issuer
         }));
       } else if (active) {
@@ -5105,7 +5105,7 @@ window.FB = window.FB || {};
         'id="network-governance" data-network-action',
         '🏛 ' + esc(FB.T('Governance…')),
         esc(FB.T(
-          'Open the authoritative view of your political position, domain, obligations, vassals, institution, and realm actions.')));
+          'Open the authoritative view of your political position, domain, obligations, {term:vassal.other}, institution, and realm actions.')));
     }
     if (FB.councilActive && FB.councilActive(s)) {
       const council = s.council;
@@ -5129,7 +5129,7 @@ window.FB = window.FB || {};
         '🏛 ' + esc(FB.T('Royal Council')),
         esc(council
           ? FB.T(
-            '{count} officers · {vacancies} vacancies or inactive seats · crown authority {authority}/100 · open the Council to manage the great offices.', {
+            '{count} officers · {vacancies} vacancies or inactive seats · {term:crown_authority} {authority}/100 · open the Council to manage the great offices.', {
               count:officers, vacancies:vacancies,
               authority:Math.round(council.authority)
             })
@@ -5182,7 +5182,7 @@ window.FB = window.FB || {};
     }
     if (!governance && s.player.liege && s.realms[s.player.liege]) {
       const liegeRecord = realmRecord(s.player.liege, 0);
-      addRealmMeta(liegeRecord, FB.T('Direct liege'));
+      addRealmMeta(liegeRecord, FB.T('Direct {term:liege}'));
       addRealmMeta(liegeRecord, FB.T('Standing {standing}', {
         standing:standingValue(FB.standingOf(s, {
           kind:'realm', id:s.player.liege
@@ -5198,7 +5198,7 @@ window.FB = window.FB || {};
         for (const entry of composition.entries) {
           if (entry.kind === 'vassal' && entry.rid === rid) levy += entry.amount;
         }
-        addRealmMeta(record, FB.T('Direct vassal'));
+        addRealmMeta(record, FB.T('Direct {term:vassal}'));
         addRealmMeta(record, FB.T('Standing {standing}', {
           standing:standingValue(FB.standingOf(s, {
             kind:'realm', id:rid
@@ -5225,7 +5225,7 @@ window.FB = window.FB || {};
                 }))
               })
               : FB.T(
-                'For one year this vassal sends an extra {percent}% of its levy; lowers Standing by 15. (spends the day)', {
+                'For one year this {term:vassal} sends an extra {percent}% of its levy; lowers Standing by 15. (spends the day)', {
                   percent:Math.round(
                     (FBDATA.balance.vassalLevyFavorRate || 0.05) * 100)
                 });
@@ -6296,7 +6296,7 @@ window.FB = window.FB || {};
     return null;
   }
 
-  const MAPMODES = { realm: 'Realm', mine: 'Mine', liege: 'Liege', duchy: 'De jure duchies', kingdom: 'De jure kingdoms', war: 'War', market: 'Market' };
+  const MAPMODES = { realm: 'Realm', mine: 'Mine', liege: '{Term:liege}', duchy: 'De jure duchies', kingdom: 'De jure kingdoms', war: 'War', market: 'Market' };
   const FILTER_MAP_MODES = ['realm', 'mine', 'liege', 'duchy', 'kingdom', 'war'];
   let mapFilterOverlayEventsInitialized = false;
 
@@ -6311,7 +6311,7 @@ window.FB = window.FB || {};
   function mapFilterModeStatus(mode) {
     if (mode === 'realm') return 'Selected realm';
     if (mode === 'mine') return 'Your realm';
-    if (mode === 'liege') return mapFilterModeAvailable(mode) ? 'Liege’s realm' : 'No liege';
+    if (mode === 'liege') return mapFilterModeAvailable(mode) ? '{Term:liege}’s realm' : 'No {term:liege}';
     if (mode === 'duchy' || mode === 'kingdom') return 'De jure';
     if (mode === 'war') return mapFilterModeAvailable(mode) ? 'Active war' : 'At peace';
     return '';
@@ -6346,6 +6346,9 @@ window.FB = window.FB || {};
       const available = mapFilterModeAvailable(mode);
       const statusText = FB.T(mapFilterModeStatus(mode));
       const status = option.querySelector('[data-map-filter-status]');
+      /* a lexicon-named mode label follows the campaign's vocabulary */
+      const label = option.querySelector('[data-map-filter-label]');
+      if (label) label.textContent = FB.T(label.getAttribute('data-map-filter-label'));
       option.disabled = !available;
       option.setAttribute('aria-pressed', mode === filterMode ? 'true' : 'false');
       option.title = statusText;
@@ -6518,7 +6521,7 @@ window.FB = window.FB || {};
     const s = FB.state;
     if (!s || FILTER_MAP_MODES.indexOf(next) < 0) return false;
     if (next === 'liege' && !s.player.liege) {
-      UI.toast(FB.T('🗺 You answer to no one — no liege to show.'));
+      UI.toast(FB.T('🗺 You answer to no one — no {term:liege} to show.'));
       return false;
     }
     if (next === 'war' && !(s.player && s.player.war && s.player.war.enemy)) {
@@ -6776,11 +6779,11 @@ window.FB = window.FB || {};
   }
   function landVassalSummaryHtml(s, summary) {
     let h = '<div class="land-vassal-summary"><div class="land-vassal-summary-head">' +
-      '<div><strong>' + esc(FB.T('Your vassals')) + '</strong><span>' +
-      esc(summary.entries.length === 1 ? FB.T('1 direct vassal') :
-        FB.T('{count} direct vassals', { count:summary.entries.length })) +
+      '<div><strong>' + esc(FB.T('Your {term:vassal.other}')) + '</strong><span>' +
+      esc(summary.entries.length === 1 ? FB.T('1 direct {term:vassal}') :
+        FB.T('{count} direct {term:vassal.other}', { count:summary.entries.length })) +
       '</span></div><button type="button" class="btn small" ' +
-      'data-land-vassals="1">' + esc(FB.T('View all vassals')) +
+      'data-land-vassals="1">' + esc(FB.T('View all {term:vassal.other}')) +
       ' &rarr;</button></div><div class="land-vassal-totals"><span>' +
       esc(FB.T('{levy} levy', { levy:menText(s, summary.levy) })) +
       '</span><span>' + esc(FB.T('{tax} tax per season', {
@@ -6803,7 +6806,7 @@ window.FB = window.FB || {};
     if (summary.entries.length > visibleCount) {
       h += '<button type="button" class="land-vassal-more" ' +
         'data-land-vassal-toggle="1" aria-expanded="false" aria-label="' +
-        esc(FB.T('Show all {count} direct vassals', {
+        esc(FB.T('Show all {count} direct {term:vassal.other}', {
           count:summary.entries.length
         })) + '">' + esc(FB.T('+{count} more', {
           count:summary.entries.length - visibleCount
@@ -6819,7 +6822,7 @@ window.FB = window.FB || {};
         : FB.T('Holds this county · sovereign');
     }
     return landRulerLiege(s, entry.id)
-      ? FB.T('Liege of {realm}', { realm:subject })
+      ? FB.T('{Term:liege} of {realm}', { realm:subject })
       : FB.T('Sovereign over {realm}', { realm:subject });
   }
   function landRulerRow(s, entry) {
@@ -6869,7 +6872,7 @@ window.FB = window.FB || {};
 
   function capitalRelocationTerms(status) {
     return FB.T(
-      '{prestige} prestige · {opinion} popular opinion · {standing} Standing for every direct vassal',
+      '{prestige} prestige · {opinion} popular opinion · {standing} Standing for every direct {term:vassal}',
       {
         prestige:status.prestigeCost,
         opinion:signedNumber(status.popularOpinion),
@@ -6899,10 +6902,10 @@ window.FB = window.FB || {};
     let facts = kv('From', esc(from.name)) + kv('To', esc(destination.name)) +
       kv('Prestige', esc(signedNumber(-status.prestigeCost))) +
       kv('Popular support', esc(signedNumber(status.popularOpinion))) +
-      kv('Standing with every direct vassal', esc(vassalNames.length
-        ? standingValue(status.vassalFavor) : FB.T('No direct vassals')));
+      kv('Standing with every direct {term:vassal}', esc(vassalNames.length
+        ? standingValue(status.vassalFavor) : FB.T('No direct {term:vassal.other}')));
     if (vassalNames.length) {
-      facts += rawKv(FB.T('Affected direct vassals ({count})', { count:vassalNames.length }),
+      facts += rawKv(FB.T('Affected direct {term:vassal.other} ({count})', { count:vassalNames.length }),
         esc(vassalNames.join(', ')));
     }
     if (status.incomingMonopoly) {
@@ -7465,8 +7468,8 @@ window.FB = window.FB || {};
         const cr = s.realms[cid];
         if (!cr) continue;
         let mark = '';
-        if (cid === s.player.liege) mark = FB.T(' — your liege');
-        else if (cr.liege === 'player') mark = FB.T(' — your vassal');
+        if (cid === s.player.liege) mark = FB.T(' — your {term:liege}');
+        else if (cr.liege === 'player') mark = FB.T(' — your {term:vassal}');
         h += '<div class="kv land-kv"><span>' + esc(FB.T('{title} {name}', {
           title: FB.realmRankTitle(s, cr), name: cr.ruler.name
         })) +
@@ -7478,11 +7481,11 @@ window.FB = window.FB || {};
         const parts = [FBDATA.duchies[dj.duchy].name];
         if (dj.kingdom) parts.push(FBDATA.kingdoms[dj.kingdom].name);
         if (dj.empire) parts.push(FBDATA.empires[dj.empire].name);
-        h += landKv('De jure (rightful liege)', esc(parts.join(' › ')), true);
+        h += landKv('De jure (rightful {term:liege})', esc(parts.join(' › ')), true);
         if (s.player.provs && s.player.provs.length) h += dejureNotes(s, dj);
       } else {
         // a colony settled on empty land: owned, but tied to no title
-        h += landKv('De jure (rightful liege)',
+        h += landKv('De jure (rightful {term:liege})',
           esc(FB.T('None — this land feeds no duchy or crown.')), true);
       }
       const sovereignHtml = realm
@@ -7764,9 +7767,9 @@ window.FB = window.FB || {};
       for (const row of extra) row.hidden = expanded;
       landVassalToggle.setAttribute('aria-expanded', expanded ? 'false' : 'true');
       landVassalToggle.setAttribute('aria-label', expanded
-        ? FB.T('Show all {count} direct vassals', {
+        ? FB.T('Show all {count} direct {term:vassal.other}', {
           count:box.querySelectorAll('.land-vassal-summary-row').length
-        }) : FB.T('Show only the top 3 vassals'));
+        }) : FB.T('Show only the top 3 {term:vassal.other}'));
       landVassalToggle.textContent = expanded
         ? FB.T('+{count} more', { count:extra.length })
         : FB.T('Show top 3');

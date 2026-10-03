@@ -626,7 +626,7 @@ window.FB = window.FB || {};
      (state.player.provinceId), the same convention as the session agenda. */
   FB.fns.parliament_gate_redress = function (state) {
     return FB.fns.parliament_redress_possible(state) ? true :
-      FB.T('The liege’s aid is already at its customary minimum.');
+      FB.T('The {term:liege}’s aid is already at its customary minimum.');
   };
   FB.fns.parliament_gate_scutage = function (state) {
     return FB.fns.parliament_scutage_possible(state) ? true :
@@ -634,7 +634,7 @@ window.FB = window.FB || {};
   };
   FB.fns.parliament_gate_emergency_subsidy = function (state) {
     if (!FB.isRealmAtWar(state, state.player.liege)) {
-      return FB.T('An emergency subsidy can only be moved while the liege is at war.');
+      return FB.T('An emergency subsidy can only be moved while the {term:liege} is at war.');
     }
     const gold = (FBDATA.balance.parliamentMotionCost || 15) +
       (FBDATA.balance.parliamentSubsidyGold || 20);
@@ -677,7 +677,7 @@ window.FB = window.FB || {};
   };
   FB.fns.parliament_gate_revocation_consent = function (state) {
     return FB.parliamentTerms(state).revocationConsent ?
-      FB.T('The liege is already sworn to seek the estates’ consent.') : true;
+      FB.T('The {term:liege} is already sworn to seek the estates’ consent.') : true;
   };
   FB.fns.parliament_gate_war_authorization = function (state) {
     return FB.isRealmAtWar(state, state.player.liege) ? true :
@@ -759,7 +759,7 @@ window.FB = window.FB || {};
     const aid = FB.parliamentAidAdjust(state, -1);
     adjustLiegeStanding(state, -12, 'plot_relief');
     FB.news(state, FB.msg('news.parliament.plot_relief',
-      '⚖ Altered service rolls reduce the aid to {pct}%, but the liege knows whose seal is missing.',
+      '⚖ Altered service rolls reduce the aid to {pct}%, but the {term:liege} knows whose seal is missing.',
       { pct:Math.round(aid * 100) }));
     FB.fns.plot_end(state);
     return true;

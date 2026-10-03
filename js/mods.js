@@ -185,7 +185,8 @@ window.FBMODS = window.FBMODS || [];
     policies:true, elections:true, privileges:true, collectiveDemands:true,
     settlementNames:true, settlementSites:true, titles:true, papacy:true,
     currency:true, balance:true, land:true, seas:true, rivers:true,
-    bounds:true, geographies:true, seasonKinds:true, climateZones:true
+    bounds:true, geographies:true, seasonKinds:true, climateZones:true,
+    lexicons:true
   };
 
   function plainObject(value) {
@@ -1393,6 +1394,63 @@ window.FBMODS = window.FBMODS || [];
     }
   }
 
+  /* Lexicon entries merge into FBDATA.lexicons: a layer entry merges its
+     terms by term id and its labels by kind and id, and a supplied rank
+     ladder replaces the old one. The composed table is checked before
+     anything is applied; faiths and cultures the same mod adds count as
+     known. */
+  const LEXICON_LAYERS = ['eras', 'governments', 'faiths', 'cultures'];
+  function mergeLexiconEntry(target, addition) {
+    if (plainObject(addition.terms)) {
+      target.terms = Object.assign({}, target.terms, addition.terms);
+    }
+    if (own(addition, 'rank')) target.rank = addition.rank;
+    if (plainObject(addition.labels)) {
+      const labels = target.labels = Object.assign({}, target.labels);
+      for (const kind in addition.labels) {
+        if (own(addition.labels, kind)) {
+          labels[kind] = Object.assign({}, labels[kind], addition.labels[kind]);
+        }
+      }
+    }
+    return target;
+  }
+  function composeLexicons(base, additions) {
+    const out = { base:mergeLexiconEntry(Object.assign({}, base.base),
+      additions.base || {}) };
+    for (const layer of LEXICON_LAYERS) {
+      out[layer] = Object.assign({}, base[layer]);
+      const extra = additions[layer];
+      if (!plainObject(extra)) continue;
+      for (const id in extra) {
+        if (own(extra, id)) {
+          out[layer][id] = mergeLexiconEntry(Object.assign({}, out[layer][id]), extra[id]);
+        }
+      }
+    }
+    return out;
+  }
+  function validateLexicons(mod) {
+    if (!plainObject(mod.lexicons)) fail('lexicons', 'must be an object keyed by layer.');
+    for (const key in mod.lexicons) {
+      if (own(mod.lexicons, key) && key !== 'base' && LEXICON_LAYERS.indexOf(key) < 0) {
+        fail('lexicons.' + key, 'is not a lexicon layer.');
+      }
+      if (own(mod.lexicons, key) && !plainObject(mod.lexicons[key])) {
+        fail('lexicons.' + key, 'must be an object.');
+      }
+    }
+    const saved = FBDATA.lexicons;
+    let errors = [];
+    try {
+      FBDATA.lexicons = composeLexicons(saved, mod.lexicons);
+      errors = FB.lexicon.validate({ faiths:mod.religions || {}, cultures:mod.cultures || {} });
+    } finally {
+      FBDATA.lexicons = saved;
+    }
+    if (errors.length) fail('lexicons', 'are invalid: ' + errors[0]);
+  }
+
   /* Mod unit classes merge by id, so check the composed table: known roles,
      hired exactly for the mercenary role, and a class for every core role.
      A legacy class without a role is accepted. */
@@ -1483,6 +1541,7 @@ window.FBMODS = window.FBMODS || [];
     if (own(mod, 'seasonKinds') || own(mod, 'climateZones') || own(mod, 'events')) {
       validateClimate(mod);
     }
+    if (own(mod, 'lexicons')) validateLexicons(mod);
     if (own(mod, 'unitClasses')) validateUnitClasses(mod);
     if (own(mod, 'capabilities') || own(mod, 'tech')) validateCapabilities(mod);
     validateCommunityPolicies(mod);
@@ -1804,26 +1863,24 @@ window.FBMODS = window.FBMODS || [];
     if (mod.titles) {
       for (const k in mod.titles) {
         FBDATA.titles[k] = mod.titles[k];
-        /* Title tables predate faith properties. Mirror the four historical
-           group keys into their new roots so an existing title-only mod keeps
-           changing live rulers as well as old saved snapshots. */
+        /* Title tables predate the lexicon. Mirror the historical group keys
+           into its rank ladders so an existing title-only mod keeps changing
+           live rulers as well as old saved snapshots: christian is the base
+           ladder, the other groups are faith-layer entries. */
         const female = k.slice(-2) === '_f';
         const rootId = female ? k.slice(0, -2) : k;
-        const root = FBDATA.religions && FBDATA.religions[rootId];
-        if (root && ['christian','muslim','pagan','jewish'].indexOf(rootId) >= 0) {
-          root.properties = root.properties || {};
-          root.properties.rankTitles = root.properties.rankTitles || {};
-          root.properties.rankTitles[female ? 'f' : 'm'] = mod.titles[k];
-          if (!root.properties.rankTitles.m) {
-            root.properties.rankTitles.m = FBDATA.titles[rootId];
-          }
-          if (!root.properties.rankTitles.f) {
-            root.properties.rankTitles.f = FBDATA.titles[rootId + '_f'] ||
-              FBDATA.titles[rootId];
-          }
-        }
+        if (['christian','muslim','pagan','jewish'].indexOf(rootId) < 0) continue;
+        const lex = FBDATA.lexicons;
+        const owner = rootId === 'christian' ? lex.base
+          : (lex.faiths[rootId] = lex.faiths[rootId] || {});
+        const rank = owner.rank = Object.assign({}, owner.rank);
+        rank[female ? 'f' : 'm'] = mod.titles[k];
+        if (!rank.m) rank.m = FBDATA.titles[rootId];
+        if (!rank.f) rank.f = FBDATA.titles[rootId + '_f'] || FBDATA.titles[rootId];
       }
     }
+    if (mod.lexicons) FBDATA.lexicons = composeLexicons(FBDATA.lexicons, mod.lexicons);
+    if ((mod.lexicons || mod.titles) && FB.lexicon) FB.lexicon.reset();
     if (mod.politicalBlocs) {
       for (const k in mod.politicalBlocs) {
         FBDATA.politicalBlocs[k] = mod.politicalBlocs[k];

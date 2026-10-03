@@ -766,8 +766,11 @@ override the initial realm through `bookmark.religiousHeads`: 867 assigns
 `papacy`/`abbasid`, while 1066 assigns
 `papacy_1066`/`abbasid_1066`. Faiths without `head` metadata, including Shia Islam,
 have no centralized head. Ordinary Muslim emperor-tier rulers use Great Sultan or
-Great Sultana instead. At every rank, male and female AI rulers are styled from their
-effective faith's `rankTitles` arrays, with `FBDATA.titles` retained as a legacy fallback.
+Great Sultana instead. At every rank, male and female AI rulers are styled from the
+lexicon's rank ladder (`FB.lexicon.rank`, `data/lexicons.js`): the realm's culture, its
+faith and that faith's ancestors, the realm's government form, the campaign era, then the
+base ladder, the most specific layer winning. `FBDATA.titles` is retained as a legacy
+fallback for saved snapshots.
 
 A Catholic Bishopric is also an office assignment, but local and personal rather than a
 centralized religious head. `character.bishopric` names an abstract see at the holder's

@@ -1521,7 +1521,7 @@ window.FB = window.FB || {};
     state.player.techAdvocacyYear = state.date.year;
     record.priorities[id] = state.date.year + 4;
     FB.news(state, FB.msg('news.tech.advocated',
-      '📜 Your household advocates {technology} at the liege’s court.', {
+      '📜 Your household advocates {technology} at the {term:liege}’s court.', {
         technology:FB.dataParam('tech', id)
       }));
     return true;

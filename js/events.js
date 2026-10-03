@@ -3049,7 +3049,7 @@ window.FB = window.FB || {};
       FB.msg('fx.epithet.suitor.0.m.0', 'Plowman’s son', {}),
       FB.msg('fx.epithet.suitor.0.m.1', 'Shepherd', {}),
       FB.msg('fx.epithet.suitor.0.m.2', 'Woodcutter’s son', {}),
-      FB.msg('fx.epithet.suitor.0.m.3', 'Hired hand at the manor', {})
+      FB.msg('fx.epithet.suitor.0.m.3', 'Hired hand at the {term:manor}', {})
     ], f: [
       FB.msg('fx.epithet.suitor.0.f.0', 'Plowman’s daughter', {}),
       FB.msg('fx.epithet.suitor.0.f.1', 'Goose girl', {}),
@@ -3070,7 +3070,7 @@ window.FB = window.FB || {};
     { m: [
       FB.msg('fx.epithet.suitor.2.m.0', 'Merchant’s son', {}),
       FB.msg('fx.epithet.suitor.2.m.1', 'Guildmaster’s son', {}),
-      FB.msg('fx.epithet.suitor.2.m.2', 'Steward of a manor', {}),
+      FB.msg('fx.epithet.suitor.2.m.2', 'Steward of a {term:manor}', {}),
       FB.msg('fx.epithet.suitor.2.m.3', 'Rich yeoman’s son', {})
     ], f: [
       FB.msg('fx.epithet.suitor.2.f.0', 'Merchant’s daughter', {}),
@@ -3079,11 +3079,11 @@ window.FB = window.FB || {};
       FB.msg('fx.epithet.suitor.2.f.3', 'Rich yeoman’s daughter', {})
     ] },
     { m: [
-      FB.msg('fx.epithet.suitor.3.m.0', 'Knight’s son', {}),
+      FB.msg('fx.epithet.suitor.3.m.0', '{Term:knight}’s son', {}),
       FB.msg('fx.epithet.suitor.3.m.1', 'Castellan’s son', {}),
       FB.msg('fx.epithet.suitor.3.m.2', 'Of an old noble house', {})
     ], f: [
-      FB.msg('fx.epithet.suitor.3.f.0', 'Knight’s daughter', {}),
+      FB.msg('fx.epithet.suitor.3.f.0', '{Term:knight}’s daughter', {}),
       FB.msg('fx.epithet.suitor.3.f.1', 'Castellan’s daughter', {}),
       FB.msg('fx.epithet.suitor.3.f.2', 'Of an old noble house', {})
     ] }
@@ -4123,7 +4123,7 @@ window.FB = window.FB || {};
         case 'liege': {
           const liege = state.player.liege ? state.realms[state.player.liege] : null;
           out[k] = liege ? liege.name :
-            (semantic ? neutralParam('fx.param.your_liege') : FB.T('your liege'));
+            (semantic ? neutralParam('fx.param.your_liege') : FB.T('your {term:liege}'));
           break;
         }
         case 'rname': {
@@ -5596,7 +5596,7 @@ window.FB = window.FB || {};
     if (tier > oldTier && FB.startProgression) {
       const unlocked = FB.startProgression.noteTier(tier);
       if (unlocked.startsChanged && FB.ui) {
-        const names = ['Serf', 'Freeholder', 'Gentry', 'Baron'];
+        const names = ['{Term:serf}', 'Freeholder', 'Gentry', '{Term:baron}'];
         const unlockedTier = Math.min(3, tier);
         FB.ui.toast('🔓 New beginnings unlocked through {station}.', {
           station:FB.T(names[unlockedTier])
@@ -10391,7 +10391,7 @@ window.FB = window.FB || {};
   function impactTargetName(state, record) {
     if (record.targetKind === 'liege') {
       const liege = state.realms && state.realms[state.player.liege];
-      return liege ? liege.name : FB.T('your liege');
+      return liege ? liege.name : FB.T('your {term:liege}');
     }
     if (record.targetKind === 'realm') {
       const realm = state.realms && state.realms[record.targetId];
@@ -10701,11 +10701,11 @@ window.FB = window.FB || {};
     }
     if (record.type === 'rank') {
       if (record.action === 'independence') return FB.T('Permanent: become independent');
-      if (record.action === 'submission') return FB.T('Permanent: submit to a new liege');
+      if (record.action === 'submission') return FB.T('Permanent: submit to a new {term:liege}');
       if (resolved && record.action === 'liege_changed') {
         const liege = record.after && state.realms && state.realms[record.after];
         return record.after
-          ? FB.T('Liege becomes {realm}', {
+          ? FB.T('{Term:liege} becomes {realm}', {
             realm:liege ? liege.name : record.after
           })
           : FB.T('Become independent');
@@ -13034,7 +13034,7 @@ window.FB = window.FB || {};
         // insurance only: the candidate filter never takes his last county
         FB.realmBuryIfEmpty(state, liegeId);
         FB.news(state, FB.msg('news.event.liege_grants_county',
-          '🏰 The liege grants you {province}.', { province: FB.world.byId[got].name }));
+          '🏰 The {term:liege} grants you {province}.', { province: FB.world.byId[got].name }));
         if (FB.ui && FB.ui.mapDirty) FB.ui.mapDirty();
         granted = true;
       }
@@ -13063,8 +13063,8 @@ window.FB = window.FB || {};
     FB.news(state, FB.msg('news.event.petition_granted', {
       forms: {
         select: 'value', param: 'named', cases: {
-          yes: '🤝 Your liege strips {lord} of {province} and invests you with it.',
-          other: '🤝 Your liege strips the old lord of {province} and invests you with it.'
+          yes: '🤝 Your {term:liege} strips {lord} of {province} and invests you with it.',
+          other: '🤝 Your {term:liege} strips the old lord of {province} and invests you with it.'
         }
       }
     }, {
@@ -13185,7 +13185,7 @@ window.FB = window.FB || {};
     FB.invalidateRealmCache();
     if (FB.councilAuthority) FB.councilAuthority(state, 6); // a fief taken back: the crown reaches, the council notes
     FB.news(state, FB.msg('news.event.fief_reclaimed',
-      '📜 The fief returns to your demesne. {realm} is no more.', { realm: r.name }));
+      '📜 The {term:fief} returns to your demesne. {realm} is no more.', { realm: r.name }));
     FB.checkTierPromotions(state);
   };
   FB.fns.vassal_refuse = function (state, ctx) {

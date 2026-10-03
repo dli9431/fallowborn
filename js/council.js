@@ -581,7 +581,7 @@ window.FB = window.FB || {};
       });
     }
     FB.news(state, FB.msg('news.council.charter_sealed',
-      '📜 You set your seal to the charter of liberties. The barons disperse, satisfied — for now.', {}));
+      '📜 You set your seal to the charter of liberties. The {term:baron.other} disperse, satisfied — for now.', {}));
   };
   FB.fns.council_defy_hold = function (state) {
     FB.councilAuthority(state, 5);

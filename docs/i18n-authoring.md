@@ -81,7 +81,9 @@ though the game still *runs*.
   records containing ids/numbers, and route their display labels through `FB.T`. Receipt
   metadata lives beside a normal durable `msg`, never as rendered prose.
 
-Money is the one typed display placeholder: use `{money:amount}` with a numeric
+Political words are lexicon terms, not English literals. Write {term:vassal}, {term:vassal.other}, {term:crown_authority.title} or {Term:liege} (capitalized) for vassal, liege, fief, holding, levy, crown authority, council, estates, manor, serf, knight, baron, county, duchy, kingdom and empire, for example FB.T('Your {term:liege} grants a {term:fief}.'). The renderer swaps in the campaign's word for the viewer's era, government, faith and culture (data/lexicons.js, designs/i18n.md). A placeholder only works where the text reaches FB.T, FB.TC, a durable message or FB.dataText/FB.eventText; never put one in raw HTML or a string shown through exact-source matching (FB.translateKnown). Rank labels come from FB.titleWordFor or FB.lexicon.rank, and a period relabel of a data name belongs in a lexicon labels entry, not in code. Do not inflect around a term (articles or adjectives that agree with it), because its word changes by period.
+
+The other typed display placeholder is money: use `{money:amount}` with a numeric
 parameter, for example `FB.T('Costs {money:cost}.', { cost: 15 })`. Structured data
 may use a numeric literal such as `{money:2}`. Never add a currency symbol or the
 word "gold" beside the token, and never put an `FB.money` result in a durable
@@ -96,6 +98,7 @@ when displayed.
   Use complete-phrase selector records (`{forms:{select:'value', param:'sex', cases:{…}}}` or a
   numeric plural selector) so the translator owns word order.
 - Call the browser locale renderer from shared simulation code.
+- Hardcode vassal, liege, fief, crown authority, knight, baron, serf or manor in display text; use a lexicon term (tests/e2e/specs/lexicon.spec.js lints engine literals).
 
 ## Regenerate the catalogs (at integration)
 

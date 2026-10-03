@@ -78,10 +78,19 @@ STRUCTURED_DATA = {
 }
 DATA_FIELDS = ("name", "desc")
 EVENT_FIELDS = ("title", "text", "desc")
+LEXICON_FILE = DATA / "lexicons.js"
+LEXICON_LAYERS = ("eras", "governments", "faiths", "cultures")
+LEXICON_FORMS = ("one", "other", "title")
+# {name}, {money:name} or {money:12}, and the lexicon term placeholders
+# {term:id}, {term:id.other}, {term:id.title} and {Term:...} (js/lexicon.js).
+TERM_TOKEN = r"[Tt]erm:[a-z][a-z0-9_]*(?:\.(?:one|other|title))?"
 TOKEN_RE = re.compile(
     r"\{((?:money:(?:[A-Za-z_][A-Za-z0-9_]*|[-+]?(?:\d+(?:\.\d+)?|\.\d+)))"
+    rf"|(?:{TERM_TOKEN})"
     r"|(?:[A-Za-z_][A-Za-z0-9_]*))\}"
 )
+TERM_RE = re.compile(r"\{[Tt]erm:([a-z][a-z0-9_]*)(?:\.(one|other|title))?\}")
+TERM_LIKE_RE = re.compile(r"\{[Tt]erm:[^}]*\}")
 EMOJI_BASE = "[\u2600-\u27bf\U0001f000-\U0001faff]"
 EMOJI_RE = re.compile(
     f"(?:{EMOJI_BASE})(?:[\ufe0e\ufe0f\U0001f3fb-\U0001f3ff]|"
@@ -810,17 +819,6 @@ def extract_structured(inv: Inventory) -> None:
                         f"{namespace} {item_id}, central religious office title, faith branch {branch}.",
                         TOKEN_RE.findall(record["text"]),
                     )
-                rank_titles = node_object(properties.get("rankTitles")) or {}
-                for sex in ("m", "f"):
-                    for index, value in enumerate(node_array(rank_titles.get(sex)) or []):
-                        if value.kind == "string":
-                            inv.add(
-                                f"{namespace}.{item_id}.rankTitles.{sex}.{index}.default",
-                                {"text": value.value},
-                                f"{rel}:{value.line}",
-                                f"{namespace} {item_id}, {sex} rank title, tier {index}.",
-                                ("rank_title",),
-                            )
                 for collection_name in ("words", "roles"):
                     collection = node_object(properties.get(collection_name)) or {}
                     for field, value in collection.items():
@@ -1372,7 +1370,7 @@ def add_core_records(inv: Inventory) -> None:
         "fx.param.a_curiosity": {"text": "a curiosity"},
         "fx.param.the_enemy": {"text": "the enemy"},
         "fx.param.their_lands": {"text": "their lands"},
-        "fx.param.your_liege": {"text": "your liege"},
+        "fx.param.your_liege": {"text": "your {term:liege}"},
         "fx.param.the_lord": {"text": "the lord"},
         "fx.param.the_county": {"text": "the county"},
         "fx.param.your_spouse": {"text": "your spouse"},
@@ -1418,9 +1416,120 @@ def add_core_records(inv: Inventory) -> None:
         )
 
 
+def lexicon_root() -> dict[str, Node]:
+    return node_object(find_assignment(LEXICON_FILE, "FBDATA", "lexicons")) or {}
+
+
+def lexicon_entries() -> list[tuple[str, dict[str, Node]]]:
+    """(source, entry) for the base entry and every layer entry, where source
+    is the catalog prefix the runtime uses: base, eras.late_antique, ..."""
+    root = lexicon_root()
+    out: list[tuple[str, dict[str, Node]]] = []
+    base = node_object(root.get("base"))
+    if base is not None:
+        out.append(("base", base))
+    for layer in LEXICON_LAYERS:
+        for layer_id, entry_node in (node_object(root.get(layer)) or {}).items():
+            entry = node_object(entry_node)
+            if entry is not None:
+                out.append((f"{layer}.{layer_id}", entry))
+    return out
+
+
+def base_terms() -> dict[str, set[str]]:
+    """Base term id -> the forms a placeholder may name for it."""
+    base = node_object(lexicon_root().get("base")) or {}
+    terms: dict[str, set[str]] = {}
+    for term_id, term_node in (node_object(base.get("terms")) or {}).items():
+        term = node_object(term_node) or {}
+        terms[term_id] = {"one", "other", "title"} & set(term) | {"title"}
+    return terms
+
+
+def extract_lexicons(inv: Inventory) -> None:
+    rel = LEXICON_FILE.relative_to(ROOT).as_posix()
+    for source, entry in lexicon_entries():
+        prefix = f"lexicon.{source}"
+        for term_id, term_node in (node_object(entry.get("terms")) or {}).items():
+            term = node_object(term_node) or {}
+            sets = [("", term)]
+            female = node_object(term.get("f"))
+            if female is not None:
+                sets.append((".f", female))
+            for sex_part, forms in sets:
+                for form in LEXICON_FORMS:
+                    value = forms.get(form)
+                    if value is None or value.kind != "string":
+                        continue
+                    label = {"one": "singular noun", "other": "plural noun",
+                             "title": "capitalized standalone label"}[form]
+                    inv.add(
+                        f"{prefix}.terms.{term_id}{sex_part}.{form}.default",
+                        {"text": value.value},
+                        f"{rel}:{value.line}",
+                        f"Lexicon term {term_id} ({source}{', female' if sex_part else ''}), "
+                        f"{label}. Running text inserts it through {{term:{term_id}}}; "
+                        "translate the bare word without articles.",
+                        ("lexicon_term",),
+                    )
+        rank = node_object(entry.get("rank")) or {}
+        for sex in ("m", "f"):
+            for index, value in enumerate(node_array(rank.get(sex)) or []):
+                if value.kind == "string":
+                    inv.add(
+                        f"{prefix}.rank.{sex}.{index}.default",
+                        {"text": value.value},
+                        f"{rel}:{value.line}",
+                        f"Lexicon {source}, {sex} rank title, tier {index}.",
+                        ("rank_title",),
+                    )
+        labels = node_object(entry.get("labels")) or {}
+        for kind, by_id_node in labels.items():
+            for item_id, fields_node in (node_object(by_id_node) or {}).items():
+                for field, value in (node_object(fields_node) or {}).items():
+                    if value.kind != "string":
+                        continue
+                    inv.add(
+                        f"{prefix}.labels.{kind}.{item_id}.{field}.default",
+                        {"text": value.value},
+                        f"{rel}:{value.line}",
+                        f"Lexicon {source} relabel of {kind} {item_id}, {field}.",
+                        TOKEN_RE.findall(value.value),
+                    )
+
+
+def term_placeholder_errors(entries: dict[str, dict[str, Any]]) -> list[str]:
+    """Every {term:...} placeholder must name a base lexicon term and a form
+    it has; a malformed one would render literally."""
+    terms = base_terms()
+    errors: list[str] = []
+
+    def walk(key: str, value: Any) -> None:
+        if isinstance(value, str):
+            for match in TERM_LIKE_RE.finditer(value):
+                found = TERM_RE.fullmatch(match.group(0))
+                if not found:
+                    errors.append(f"{key}: malformed term placeholder {match.group(0)}")
+                elif found.group(1) not in terms:
+                    errors.append(f"{key}: unknown lexicon term {found.group(1)}")
+                elif found.group(2) and found.group(2) not in terms[found.group(1)]:
+                    errors.append(
+                        f"{key}: lexicon term {found.group(1)} has no {found.group(2)} form"
+                    )
+        elif isinstance(value, dict):
+            for child_key, child in value.items():
+                if child_key not in ("select", "param"):
+                    walk(key, child)
+
+    for key, record in entries.items():
+        walk(key, record)
+    return errors
+
+
 def build_inventory() -> Inventory:
     inv = Inventory()
     extract_structured(inv)
+    extract_lexicons(inv)
     extract_literal_aliases(inv)
     add_core_records(inv)
     inv.finish_alias_meta()
@@ -1889,6 +1998,9 @@ def command_extract(args: argparse.Namespace) -> int:
         raise SystemExit(
             "invalid English catalog record shape: " + ", ".join(malformed[:20])
         )
+    term_errors = term_placeholder_errors(inv.entries)
+    if term_errors:
+        raise SystemExit("invalid term placeholders: " + "; ".join(term_errors[:20]))
     path = write_catalog("en", "English", inv.entries, inv.meta)
     manifest_path = ROOT / "tools" / "i18n_manifest.json"
     manifest_path.write_text(
@@ -1993,6 +2105,10 @@ def command_validate(args: argparse.Namespace) -> int:
         return 1
     if original != generated:
         print("data/lang_en.js is stale; run: python tools/i18n_catalog.py extract", file=sys.stderr)
+        return 1
+    term_errors = term_placeholder_errors(inv.entries)
+    if term_errors:
+        print("\n".join(term_errors[:100]), file=sys.stderr)
         return 1
     print(f"English catalog current: {len(inv.entries)} keys")
     for code in args.locales:

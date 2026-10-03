@@ -2073,7 +2073,7 @@ window.FB = window.FB || {};
       const title = FB.characterRankTitleSnapshot(state, c, 0, '');
       if (title) return FB.renderTitleSnapshot(title);
     }
-    return unfree ? FB.T('Serf') : FB.stationName(FB.stationOf(c));
+    return unfree ? FB.T('{Term:serf}') : FB.stationName(FB.stationOf(c));
   };
   /* Political household heads keep authority over their own establishments.
      A generated local lord is recognized through the active role seat or the
@@ -2825,32 +2825,32 @@ window.FB = window.FB || {};
   };
 
   /* ---------- titles ---------- */
-  /* The bare rank word for any tier ("Count", "Emira"…) from the player's
-     effective faith and sex — without profession/clergy overrides. */
-  function rankTitleRecord(state, religionId, sex, tier) {
-    const rel = FB.religionOf(religionId, state);
-    const useSex = sex === 'f' ? 'f' : 'm';
-    const titles = rel && rel.rankTitles && rel.rankTitles[useSex];
-    if (Array.isArray(titles) && titles.length) {
-      const index = FB.clamp(tier, 0, titles.length - 1);
-      const found = FB.faithValue(state, religionId, 'rankTitles.' + useSex);
-      return { religionId:religionId, sourceId:found.sourceId || religionId,
-        sex:useSex, tier:index, word:titles[index] };
-    }
-    let group = FB.faithGroup(religionId, state) || 'christian';
-    if (useSex === 'f' && FBDATA.titles[group + '_f']) group += '_f';
-    const legacy = FBDATA.titles[group] || FBDATA.titles.christian;
-    const index = FB.clamp(tier, 0, legacy.length - 1);
-    return { group:group, tier:index, word:legacy[index] };
+  /* The bare rank word for any tier ("Count", "Emira"...) through the
+     lexicon (js/lexicon.js): era, government form, faith and culture, the
+     most specific layer winning. No profession or clergy overrides. ctx may
+     name the realm whose form applies and the culture; the player's own
+     realm is the default for the player. */
+  function rankTitleRecord(state, religionId, sex, tier, ctx) {
+    return FB.lexicon.rank(state, tier, { faith:religionId, sex:sex === 'f' ? 'f' : 'm',
+      realm:ctx && ctx.realm, culture:ctx && ctx.culture,
+      viewer:ctx && ctx.viewer !== undefined ? ctx.viewer : null });
   }
 
   function renderRankTitle(record) {
-    if (record.sourceId) {
-      return FB.renderKey('religion.' + record.sourceId + '.rankTitles.' +
-        record.sex + '.' + record.tier + '.default', { text:record.word }, {});
-    }
-    return FB.renderKey('title.' + record.group + '.' + record.tier + '.default',
-      { text:record.word }, {});
+    return FB.lexicon.renderRank(record);
+  }
+
+  /* Snapshot fields naming where a rank word came from. titleLexicon is the
+     lexicon source ('base', 'eras.late_antique', 'faiths.muslim', or
+     'religion.<id>' for a faith's own rankTitles property); titleReligion
+     stays for faith sources so older readers keep their key. */
+  function rankSnapshotFields(snap, rank) {
+    snap.titleLexicon = rank.source;
+    snap.titleReligion = rank.faithId || null;
+    snap.titleSex = rank.sex;
+    snap.tier = rank.tier;
+    snap.word = rank.word;
+    return snap;
   }
 
   function faithRoleRecord(state, religionId, profession, sex) {
@@ -2890,7 +2890,8 @@ window.FB = window.FB || {};
 
   FB.titleWordFor = function (state, tier) {
     const me = state.chars[state.player.charId];
-    return renderRankTitle(rankTitleRecord(state, me.religion, me.sex, tier));
+    return renderRankTitle(rankTitleRecord(state, me.religion, me.sex, tier,
+      { viewer:me }));
   };
   FB.titleFor = function (state) {
     const p = state.player;
@@ -2945,17 +2946,10 @@ window.FB = window.FB || {};
   FB.titleSnapshot = function (state) {
     const p = state.player;
     const me = state.chars[p.charId];
-    const rank = rankTitleRecord(state, me.religion, me.sex, p.tier);
+    const rank = rankTitleRecord(state, me.religion, me.sex, p.tier, { viewer:me });
     let group = FB.faithGroup(me.religion, state) || 'christian';
     if (me.sex === 'f' && FBDATA.titles[group + '_f']) group += '_f';
-    const snap = {
-      group:group,
-      religion:me.religion,
-      titleReligion:rank.sourceId || null,
-      titleSex:rank.sex || me.sex,
-      tier:rank.tier,
-      word:rank.word
-    };
+    const snap = rankSnapshotFields({ group:group, religion:me.religion }, rank);
     if (FB.playerPope && FB.playerPope(state)) {
       snap.headReligion = me.religion;
       const head = FB.faithValue(state, me.religion, 'head.title');
@@ -3036,15 +3030,9 @@ window.FB = window.FB || {};
   FB.rankTitleSnapshot = function (state, tier, place) {
     const current = FB.titleSnapshot(state);
     const rank = rankTitleRecord(state, current.religion,
-      current.titleSex || 'm', tier);
-    const snap = {
-      group:current.group,
-      religion:current.religion,
-      titleReligion:rank.sourceId || null,
-      titleSex:rank.sex || current.titleSex,
-      tier:rank.tier,
-      word:rank.word
-    };
+      current.titleSex || 'm', tier, { viewer:state.player.charId });
+    const snap = rankSnapshotFields({ group:current.group,
+      religion:current.religion }, rank);
     if (place) snap.place = place;
     return snap;
   };
@@ -3053,17 +3041,10 @@ window.FB = window.FB || {};
      ruler several generations away from the current head. */
   FB.characterRankTitleSnapshot = function (state, c, tier, place) {
     if (!c) return null;
-    const rank = rankTitleRecord(state, c.religion, c.sex, tier);
+    const rank = rankTitleRecord(state, c.religion, c.sex, tier, { viewer:c });
     let group = FB.faithGroup(c.religion, state) || 'christian';
     if (c.sex === 'f' && FBDATA.titles[group + '_f']) group += '_f';
-    const snap = {
-      group:group,
-      religion:c.religion,
-      titleReligion:rank.sourceId || null,
-      titleSex:rank.sex || c.sex,
-      tier:rank.tier,
-      word:rank.word
-    };
+    const snap = rankSnapshotFields({ group:group, religion:c.religion }, rank);
     if (place) snap.place = place;
     return snap;
   };
@@ -3205,9 +3186,9 @@ window.FB = window.FB || {};
         snapshot.faithRolePath + '.default', { text:snapshot.faithRoleWord }, {})
       : snapshot.special && specialWords[snapshot.special]
       ? (snapshot.special === 'nun' ? FB.T('Nun') : FB.T(specialWords[snapshot.special]))
-      : (snapshot.titleReligion && snapshot.word
-        ? FB.renderKey('religion.' + snapshot.titleReligion + '.rankTitles.' +
-          (snapshot.titleSex === 'f' ? 'f' : 'm') + '.' + index + '.default',
+      : ((snapshot.titleLexicon || snapshot.titleReligion) && snapshot.word
+        ? FB.renderKey(FB.lexicon.rankKey(snapshot.titleLexicon ||
+          'faiths.' + snapshot.titleReligion, snapshot.titleSex, index),
           { text:snapshot.word }, {})
         : (snapshot.word ? FB.T(snapshot.word) :
         FB.renderKey('title.' + snapshot.group + '.' + index + '.default',
@@ -3227,7 +3208,8 @@ window.FB = window.FB || {};
         ? FB.realmReligionId(state, realm.id) : null) ||
       (pr ? pr.religion : 'catholic');
     return renderRankTitle(rankTitleRecord(state, religionId, sex,
-      FB.clamp((realm.rank || 3) + 3, 4, 7)));
+      FB.clamp((realm.rank || 3) + 3, 4, 7), { realm:realm.id,
+        culture:realm.culture || (pr ? pr.culture : null) }));
   }
 
   FB.realmRankTitle = function (state, realm) {

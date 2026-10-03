@@ -458,7 +458,7 @@ window.FB = window.FB || {};
           ? 'Command your host in the holy war. (+martial over time)'
         : (FB.activeMilitaryCommand && FB.activeMilitaryCommand(s))
           ? 'Lead your ruler’s contingent. A field victory may win a barony. (+Martial, +ruler Standing)'
-        : 'Serve in your liege’s host. (+liege Standing)';
+        : FB.T('Serve in your {term:liege}’s host. (+{term:liege} Standing)');
     },
     show: function (s) {
       return !!s.player.war ||
@@ -1190,8 +1190,8 @@ window.FB = window.FB || {};
             return {
               kind:relKind,
               label:relKind === 'trade' ? FB.T('Trade')
-                : relKind === 'vassal' ? FB.T('Vassal')
-                : relKind === 'liege' ? FB.T('Liege')
+                : relKind === 'vassal' ? FB.T('{Term:vassal}')
+                : relKind === 'liege' ? FB.T('{Term:liege}')
                 : relKind === 'war' ? FB.T('War')
                 : FB.T('Diplomacy')
             };
@@ -1202,8 +1202,8 @@ window.FB = window.FB || {};
               return {
                 kind:relKind,
                 label:relKind === 'trade' ? FB.T('Trade')
-                  : relKind === 'vassal' ? FB.T('Vassal')
-                  : relKind === 'liege' ? FB.T('Liege')
+                  : relKind === 'vassal' ? FB.T('{Term:vassal}')
+                  : relKind === 'liege' ? FB.T('{Term:liege}')
                   : relKind === 'war' ? FB.T('War')
                   : FB.T('Diplomacy')
               };
@@ -2073,7 +2073,7 @@ window.FB = window.FB || {};
       affordable:false, lord:null, lordStanding:0
     };
     if (!state || !state.player || !FB.station.isSerf(state.player)) {
-      out.reason = FB.T('Only a serf household needs to purchase freedom.');
+      out.reason = FB.T('Only a {term:serf} household needs to purchase freedom.');
       return out;
     }
     out.affordable = out.gold >= quote.price;
@@ -2467,7 +2467,7 @@ window.FB = window.FB || {};
     out.offer = p.freedomOffer || null;
     out.invitation = freedomInvitation(state);
     if (!FB.station.isSerf(p)) {
-      out.reason = FB.T('Only a serf household needs terms of freedom.'); return out;
+      out.reason = FB.T('Only a {term:serf} household needs terms of freedom.'); return out;
     }
     const protagonist = state.chars[p.charId];
     if (!protagonist || protagonist.dead ||
@@ -3756,7 +3756,7 @@ window.FB = window.FB || {};
   { id: 'petition_barony', opensChoices:true, noConsume:true,
     deferCooldown:true,
     desc: function () {
-      return FB.T('Review a petition from Gentry to Baron.');
+      return FB.T('Review a petition from Gentry to {Term:baron}.');
     },
     show: function (s) { return FB.station.isGentry(s.player); },
     run: function () {
@@ -3971,7 +3971,7 @@ window.FB = window.FB || {};
     desc: function (s) {
       const liege = s.player.liege && s.realms[s.player.liege];
       if (FB.station.isBaron(s.player)) {
-        return FB.T('Review a petition from Baron to Count.');
+        return FB.T('Review a petition from {Term:baron} to Count.');
       }
       if (FB.station.rulesRealm(s.player) && liege && liege.alive && !FB.realmRank.isRoyal(liege)) {
         return FB.T('Ask for greater lands. Only the crown can raise you to duke.');
@@ -3996,13 +3996,13 @@ window.FB = window.FB || {};
         kind:'realm', id:s.player.liege
       });
       if (standing < 65) return FB.T(
-        'Your Standing with your liege must be 65 or more (now {current}).',
+        'Your Standing with your {term:liege} must be 65 or more (now {current}).',
         { current: Math.round(standing) });
       if (s.player.prestige < 400) return FB.T(
         'You need at least 400 prestige (now {current}).',
         { current: Math.round(s.player.prestige) });
       if (FB.station.rulesRealm(s.player) && !FB.liegeGrantCandidates(s).length) {
-        return FB.T('Your liege holds no adjoining land in his gift.');
+        return FB.T('Your {term:liege} holds no adjoining land in his gift.');
       }
       return true;
     },
@@ -4039,7 +4039,7 @@ window.FB = window.FB || {};
     } },
   { id: 'petition_county', opensChoices:true, noConsume: true,
     desc: function (s) {
-      return FB.T('Ask the liege to strip a disgraced neighbor and invest you with his county. Service in the liege’s wars: {service}.',
+      return FB.T('Ask the {term:liege} to strip a disgraced neighbor and invest you with his county. Service in the {term:liege}’s wars: {service}.',
         { service: s.player.warService || 0 });
     },
     show: function (s) { return FB.station.rulesRealm(s.player) && !!s.player.liege; },
@@ -4049,7 +4049,7 @@ window.FB = window.FB || {};
         kind:'realm', id:s.player.liege
       });
       if (standing < B.petitionLiegeOp) {
-        return FB.T('Your Standing with your liege must be {needed} or more (now {current}).', {
+        return FB.T('Your Standing with your {term:liege} must be {needed} or more (now {current}).', {
           needed: B.petitionLiegeOp,
           current: Math.round(standing)
         });
@@ -4060,7 +4060,7 @@ window.FB = window.FB || {};
         });
       }
       if ((s.player.warService || 0) < B.petitionService) {
-        return FB.T('You must first bleed in your liege’s wars (service {needed}+, now {current}).', {
+        return FB.T('You must first bleed in your {term:liege}’s wars (service {needed}+, now {current}).', {
           needed: B.petitionService, current: s.player.warService || 0
         });
       }
@@ -4078,7 +4078,7 @@ window.FB = window.FB || {};
         kind:'realm', id:s.player.liege
       });
       if (standing < 20) {
-        return FB.T('Your liege must at least tolerate you (Standing 20+, now {current}).',
+        return FB.T('Your {term:liege} must at least tolerate you (Standing 20+, now {current}).',
           { current: Math.round(standing) });
       }
       return true;
@@ -4269,7 +4269,7 @@ window.FB = window.FB || {};
       const lg = s.realms[s.player.liege];
       return lg
         ? FB.T('Renounce {liege} and raise your own banner — it means war.', { liege: lg.name })
-        : FB.T('Renounce your liege and raise your own banner — it means war.');
+        : FB.T('Renounce your {term:liege} and raise your own banner — it means war.');
     },
     show: function (s) {
       return FB.station.isLanded(s.player) && !!s.player.liege &&
@@ -4326,12 +4326,12 @@ window.FB = window.FB || {};
       }
     } },
   { id: 'demand_taxes',
-    desc: function (s) { return FB.T('Demand extraordinary taxes from eligible vassals. Their Standing falls by 15. During a fiscal crisis, their directly held counties also lose 10 Popular support for one year; repeated extraction refreshes this penalty.'); },
+    desc: function (s) { return FB.T('Demand extraordinary taxes from eligible {term:vassal.other}. Their Standing falls by 15. During a fiscal crisis, their directly held counties also lose 10 Popular support for one year; repeated extraction refreshes this penalty.'); },
     show: function (s) { return FB.playerVassals(s).length >= 1; },
     can: function (s) {
       if (FB.fiscalRestriction && FB.fiscalRestriction(s)) return FB.fiscalRestriction(s);
       if (FB.councilNeedsConsent && FB.councilNeedsConsent(s)) {
-        return FB.T('Your council will not suffer it — crown authority is too weak ({authority}/100). Win their support, or let the crown’s rights mend with time.',
+        return FB.T('Your council will not suffer it — {term:crown_authority} is too weak ({authority}/100). Win their support, or let the crown’s rights mend with time.',
           { authority: Math.round(FB.effectiveCrownAuthority(s)) });
       }
       return true;
@@ -4342,7 +4342,7 @@ window.FB = window.FB || {};
     can: function (s) {
       if (FB.fiscalRestriction && FB.fiscalRestriction(s)) return FB.fiscalRestriction(s);
       if (FB.councilNeedsConsent && FB.councilNeedsConsent(s)) {
-        return FB.T('Your council will not suffer it — crown authority is too weak ({authority}/100). Win their support, or let the crown’s rights mend with time.',
+        return FB.T('Your council will not suffer it — {term:crown_authority} is too weak ({authority}/100). Win their support, or let the crown’s rights mend with time.',
           { authority: Math.round(FB.effectiveCrownAuthority(s)) });
       }
       return true;
@@ -4354,7 +4354,7 @@ window.FB = window.FB || {};
     } },
   { id: 'governance', opensChoices:true, noConsume: true,
     desc: function () {
-      return FB.T('Your political position, domain, obligations, vassals, institution, and currently available realm actions.');
+      return FB.T('Your political position, domain, obligations, {term:vassal.other}, institution, and currently available realm actions.');
     },
     show: function (s) {
       return FB.governanceEligible && FB.governanceEligible(s);
@@ -4365,7 +4365,7 @@ window.FB = window.FB || {};
   { id: 'the_estates', opensChoices:true, noConsume: true,
     compatibilityAlias:true,
     desc: function () {
-      return FB.T('The assembled lords of the realm — your voice among them, and the terms of your service: the liege’s aid, and silver in place of spears.');
+      return FB.T('The assembled lords of the realm — your voice among them, and the terms of your service: the {term:liege}’s aid, and silver in place of spears.');
     },
     show: function (s) { return FB.parliamentActive && FB.parliamentActive(s); },
     run: function (s) { if (FB.ui && FB.ui.showParliament) FB.ui.showParliament(); } },
@@ -5658,7 +5658,7 @@ window.FB = window.FB || {};
       !FB.castellanyOf(state);
     let reason = '';
     if (!visible) reason = FB.T('Only landless gentry may seek this appointment.');
-    else if (!patron) reason = FB.T('No living local liege can make the appointment.');
+    else if (!patron) reason = FB.T('No living local {term:liege} can make the appointment.');
     else if (p.prestige < 200) reason = FB.T('Requires 200 prestige; currently {current}.', {
       current:Math.round(p.prestige)
     });
@@ -6744,7 +6744,7 @@ window.FB = window.FB || {};
           trait:FB.dataText(state, p.charId, 'trait', source.id, trait, 'name', {})
         }), source.amount);
       }
-      add('gold', FB.T('Vassal dues'), tax.dues);
+      add('gold', FB.T('{Term:vassal} dues'), tax.dues);
       const grossBuildingTax = addBuildings('gold', 'tax');
       add('gold', FB.T('Building income: support and rebellion'), tax.tolls - grossBuildingTax);
       add('gold', FB.T('Tax rounding'), Math.round(tax.total) - tax.total);
@@ -6770,7 +6770,7 @@ window.FB = window.FB || {};
         }
       }
       if (p.liege) {
-        add('gold', FB.T('Liege’s cut'), tax.liege);
+        add('gold', FB.T('{Term:liege}’s cut'), tax.liege);
       }
       goldGroup = 'buildings';
       addBuildings('gold', 'upkeep', -1, true);
@@ -7818,7 +7818,7 @@ window.FB = window.FB || {};
     if (!realm || !realm.alive || realm.liege !== 'player') {
       return {
         ready:false,
-        reason:FB.T('This ruler is not your direct vassal.')
+        reason:FB.T('This ruler is not your direct {term:vassal}.')
       };
     }
     const active = FB.vassalLevyFavor(state, rid);
@@ -7947,7 +7947,7 @@ window.FB = window.FB || {};
       duchies:[]
     };
     if (!relevant) {
-      out.reason = FB.T('Land can be added only to one of your living direct vassals.');
+      out.reason = FB.T('Land can be added only to one of your living direct {term:vassal.other}.');
       return out;
     }
     const held = (p.provs || []).slice();
@@ -8396,7 +8396,7 @@ window.FB = window.FB || {};
       }
       if (FB.councilAuthority) FB.councilAuthority(state, 4); // the crown rules without its council — they notice
       FB.news(state, FB.msg('news.action.extraordinary_taxes',
-        '💰 Your vassals render {money:gold} in extraordinary taxes — grumbling all the while.',
+        '💰 Your {term:vassal.other} render {money:gold} in extraordinary taxes — grumbling all the while.',
         { gold: gold }));
       if (FB.noteTraitProgress) FB.noteTraitProgress(state, 'rent_shrewd', 1);
     }
@@ -9239,7 +9239,7 @@ window.FB = window.FB || {};
       { settlement:site.settlementName }));
     if (FB.ui && FB.ui.maybeTip) {
       FB.ui.maybeTip('first-plot',
-        '💡 Your first plot of land! Plots yield every season and a cluster makes a manor. The Land tab manages them.',
+        '💡 Your first plot of land! Plots yield every season and a cluster makes a {term:manor}. The Land tab manages them.',
         '#sidetabs .tab[data-tab="prov"]');
     }
     return true;
@@ -9416,7 +9416,7 @@ window.FB = window.FB || {};
       site = FB.manorSite(state);
       if (!FB.station.isFreeholder(p)) {
         eligible = false;
-        reason = FB.T('Only a freeholder may declare a first manor.');
+        reason = FB.T('Only a freeholder may declare a first {term:manor}.');
       } else if (!FB.freeholderEstablished(state)) {
         eligible = false;
         reason = FB.T('An heir of a later generation must inherit your Freeholder standing before the household can seek Gentry recognition.');
@@ -9430,7 +9430,7 @@ window.FB = window.FB || {};
         });
       } else if (p.prestige < FBDATA.balance.manorPrestige) {
         eligible = false;
-        reason = FB.T('You need at least {needed} prestige to declare a manor.', {
+        reason = FB.T('You need at least {needed} prestige to declare a {term:manor}.', {
           needed:FBDATA.balance.manorPrestige
         });
       }
@@ -9469,7 +9469,7 @@ window.FB = window.FB || {};
       const standing = grantorId ? FB.standingOf(state, { kind:'realm', id:grantorId }) : 0;
       if (!FB.landedBaron(state) || !candidate) {
         eligible = false;
-        reason = FB.T('No higher ruler can grant a county. Their seat, last personal county and vassals’ counties are protected.');
+        reason = FB.T('No higher ruler can grant a county. Their seat, last personal county and {term:vassal.other}’ counties are protected.');
       } else if (FB.realmWars(state, 'player').length) {
         eligible = false;
         reason = FB.T('Finish your campaign before petitioning for a county.');
@@ -9648,7 +9648,7 @@ window.FB = window.FB || {};
         }, -8, 'deed:petition_liege');
       }
       FB.news(state, FB.msg('news.action.county_title_refused',
-        'The liege postpones the county petition, and the court takes note.', {}));
+        'The {term:liege} postpones the county petition, and the court takes note.', {}));
     }
     FB.queueEvent(state, 'rank_elevation_refused', {
       protagonistId:state.player.charId,
@@ -10545,7 +10545,7 @@ window.FB = window.FB || {};
     }
     if (FB.recordAggressiveWar) FB.recordAggressiveWar(state, cause);
     FB.news(state, FB.msg('news.action.war_aggression_cost',
-      '⚔ The War of Aggression stains your rule: prestige {prestige}, Popular support {voice} in every currently ruled county, and condemnation from direct vassals and foreign courts.', {
+      '⚔ The War of Aggression stains your rule: prestige {prestige}, Popular support {voice} in every currently ruled county, and condemnation from direct {term:vassal.other} and foreign courts.', {
         prestige:consequence.prestigeChange,
         voice:consequence.commonVoiceChange
       }));
@@ -10740,7 +10740,7 @@ window.FB = window.FB || {};
     if (!FB.station.rulesRealm(state.player) && !(me && me.restorationRight)) {
       return FB.castellanyOf && FB.castellanyOf(state)
         ? FB.T('An appointed Castellan holds no county from which to wage a foreign war.')
-        : FB.T('A baron must first hold a county before waging a foreign war.');
+        : FB.T('A {term:baron} must first hold a county before waging a foreign war.');
     }
     if (!playerBorderLands(state).length && !(me && me.restorationRight)) {
       return FB.T('You hold no landed realm from which to wage war.');

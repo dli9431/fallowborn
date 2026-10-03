@@ -2601,7 +2601,7 @@ window.FB = window.FB || {};
         if (realm.liege && state.realms[realm.liege]) {
           params.liege = state.realms[realm.liege].name;
           FB.news(state, FB.msg('news.holywar.award_vassal',
-            'Settlement of {kingdom}: {ruler} rules {realm}, holding {counties} as a vassal of {liege}.', params), { toast:false });
+            'Settlement of {kingdom}: {ruler} rules {realm}, holding {counties} as a {term:vassal} of {liege}.', params), { toast:false });
         } else {
           FB.news(state, FB.msg('news.holywar.award_independent',
             'Settlement of {kingdom}: {ruler} rules independent {realm}, holding {counties}.', params), { toast:false });
