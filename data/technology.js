@@ -75,6 +75,7 @@ window.FBDATA = window.FBDATA || {};
   FBDATA.techImpactReviews = {
     baselineVersion:'1.127.1',
     features:{
+      settlement_ruin_repair:{ mode:'none', rationale:'Repair restores an existing settlement asset rather than unlocking a new building or fort tier. Rank, direct authority, funding and standing-copy limits still apply; inherited construction knowledge is grandfathered for recovery.' },
       scheduled_games:{ mode:'none', rationale:'Hosting civic and courtly games, annual intentions and regional capacity require peace, ownership and funding, not an invention.' },
       tournament_circuit_travel:{ mode:'none', rationale:'Targeted repeatable festival journeys are baseline personal travel with a reserved physical return.' },
       regional_open_games:{ mode:'none', rationale:'Martial exercises, archery and wrestling predate formal western tournaments and remain available from 867.' },

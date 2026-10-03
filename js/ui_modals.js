@@ -7714,7 +7714,7 @@ window.FB = window.FB || {};
   }
 
   function buildingExpiryRule() {
-    return FB.T('Until demolished; permanent ruins keep the site occupied');
+    return FB.T('Until ruined; the site remains occupied and can be repaired');
   }
 
   function buildingUnavailableText(s, pid, id, d) {
@@ -9036,8 +9036,19 @@ window.FB = window.FB || {};
               recurringCost:FB.T('None'),
               effect:FB.T('No current benefit'),
               transferRule:buildingTransferRule(),
-              expiry:FB.T('Permanent ruins; the site remains occupied')
+              expiry:FB.T('Until repaired; the site remains occupied')
             }), null);
+          const repair = FB.repairBuildingStatus(s, pid, idx, id);
+          h += reviewActionsHtml(reviewActionCardHtml({
+            id:'sett-repair-' + cardSeq, data:{ repair:id },
+            label:FB.T('Repair {building} for {money:cost}', { building:name, cost:repair.cost }),
+            disabled:!repair.ready, warn:!repair.ready,
+            note:repair.reason || (repair.fort
+              ? FB.T('No active defenses until repairs complete')
+              : FB.T('Restores the building and its seasonal benefits and upkeep')),
+            details:'<p>' + esc(repair.reason || FB.T(
+              'Repair restores the existing building at half its current replacement cost. Construction rewards are not awarded again.')) + '</p>'
+          }));
         } else {
           h += settAssetCard(detId, d.icon, name,
             buildingEffects(d, id).join(' · '),
@@ -9270,13 +9281,69 @@ window.FB = window.FB || {};
       });
     });
     bindCardInfoToggles($('gm-body'));
+    $('gm-body').querySelectorAll('[data-repair]').forEach(function (button) {
+      button.addEventListener('click', function () {
+        const id = button.dataset.repair;
+        const scroll = $('gm-body').scrollTop;
+        const opened = Array.prototype.map.call($('gm-body').querySelectorAll('.settcard-details:not(.hidden)'), function (el) { return el.id; });
+        const controlId = button.id;
+        function returnToSettlement() {
+          UI.showSettlement(pid, idx, options);
+          opened.forEach(function (detailId) {
+            const el = $(detailId); if (el) el.classList.remove('hidden');
+            $('gm-body').querySelectorAll('[aria-controls]').forEach(function (toggle) {
+              if (toggle.getAttribute('aria-controls') === detailId) toggle.setAttribute('aria-expanded', 'true');
+            });
+          });
+          const control = $(controlId) || $('gm-cancel');
+          if (control) control.focus({ preventScroll:true });
+          $('gm-body').scrollTop = scroll;
+        }
+        function reviewRepair(replacing) {
+          const current = FB.state;
+          const status = FB.repairBuildingStatus(current, pid, idx, id);
+          const def = FBDATA.buildings[id];
+          const name = dt(current, 'building', id, def, 'name');
+          const effect = status.fort
+            ? FB.T('Defenses return when repairs finish {finish}.', {
+              finish:fortDateText(current, status.completeTurn)
+            }) : FB.T('The building resumes its seasonal benefits and upkeep immediately.');
+          const upkeep = status.fort ? (FB.fortLevelDef(status.targetLevel) || {}).upkeep : def.upkeep;
+          const details = '<p>' + esc(FB.T(
+            'Repairs cost half the current replacement price, are not refunded, and do not repeat construction prestige or Popular support.')) + '</p>';
+          const body = '<div class="gm-body-text">' + kv('Settlement', esc(st.name)) +
+            kv('Repair cost', esc(FB.T('{money:cost}', { cost:status.cost }))) +
+            kv('Seasonal upkeep after repair', esc(assetSeasonalMoneyCost(upkeep || 0))) +
+            '<p>' + esc(effect) + '</p></div>' + reviewActionsHtml(reviewActionCardHtml({
+              id:'building-repair-confirm', disabled:!status.ready,
+              label:FB.T('Repair {building} for {money:cost}', { building:name, cost:status.cost }),
+              note:status.reason, warn:!status.ready, details:details
+            })) + '<div class="gm-footer"><button type="button" class="btn" id="building-repair-back">' + esc(FB.T('Back')) + '</button></div>';
+          openModal(FB.T('Repair {building}', { building:name }), body, {
+            historyView:true, replaceView:!!replacing, historyBackRender:returnToSettlement
+          });
+          bindCardInfoToggles($('gm-body'));
+          $('building-repair-back').onclick = UI.backModal;
+          $('building-repair-confirm').onclick = function () {
+            if (!FB.repairBuilding(FB.state, pid, idx, id, status.cost)) {
+              UI.toast('Repair terms changed. Review the settlement again.');
+              reviewRepair(true);
+              return;
+            }
+            UI.refresh();
+            modalHistoryBack(returnToSettlement);
+          };
+        }
+        reviewRepair();
+      });
+    });
     document.querySelectorAll('[data-demolish]').forEach(function (btn) {
       btn.addEventListener('click', function () {
         const id = btn.dataset.demolish;
         const d = FBDATA.buildings[id];
         const name = dt(FB.state, 'building', id, d, 'name');
         let body = '<div class="gm-body-text"><p>' + esc(FB.T(
-          'Demolishing {building} is permanent and gives no refund. Its ongoing benefits and upkeep will end, and ruins will occupy this settlement.',
+          'Demolishing {building} gives no refund. Its ongoing benefits and upkeep will end, and ruins will occupy this settlement until repaired.',
           { building: name })) + '</p></div><div class="gm-list">' +
           '<button class="actionbtn op-bad" id="gm-demolish-confirm">' +
           esc(FB.T('Demolish {building}', { building: name })) + '</button></div>' +

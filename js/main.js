@@ -10,8 +10,11 @@ window.FB = window.FB || {};
   G.bootReady = false;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-FB.VERSION = '1.188.2';
+FB.VERSION = '1.188.3';
 FB.CHANGELOG = [
+  { v: '1.188.3', date: '2026-10-02', changes: [
+    'Ruined settlement buildings and forts can now be repaired from their settlement sheets. Serfs need stronger relationships to befriend rulers, and local rulers no longer appear as defendants in Standing Surety.'
+  ] },
   { v: '1.188.2', date: '2026-10-01', changes: [
     'Rebellion peace now settles rebellion charges, and truces prevent renewed arrests or breakaways. Uncontested player uprisings keep their independence, and AI resistance wars can reach peace.'
   ] },

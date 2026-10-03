@@ -1,5 +1,7 @@
 # Events are data
 
+Standing Surety keeps its ordinary friend testimony story, but excludes a friend who holds the event's county, an overlord in that county's liege chain, or the player's local settlement lordship. The custom trigger and context validator share the same read-only authority check. The friend is an exact required role participant. Queued events and open decisions revalidate before resolution, so acquiring local authority invalidates the old testimony without consuming rewards or RNG. This eligibility correction adds no technology dependency.
+
 `household_service_duty` is explicitly queued after each 180 completed working
 days. Its localized forms follow the service path; exact saved protagonist,
 employer, appointment serial and case number guard all outcomes. A temporarily

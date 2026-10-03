@@ -543,6 +543,8 @@ default (`rankAccessInfluenceMult`, `rankAccessCashCostMult`). A spouse, kinsper
 household member, named friend or rival, warm direct contact, and royal compact is already
 a personal relationship and needs no intermediary chain.
 
+A serf cultivating a reigning landed ruler retains the class-distance Standing and cash-cost multipliers even after becoming a warm contact or named friend. Personal familiarity still grants access, but does not accelerate daily cultivation or cheapen gifts. Ordinary warm contacts retain their existing access behavior. Serf-to-ruler friendship requires serfRulerFriendshipThreshold (+80 by default) rather than the ordinary +40 threshold. Manual naming, friendship stories, candidate selection and progress previews share this gate; existing named friendships remain intact. This is relationship balance with no technology dependency.
+
 This models the institutional routes visible in surviving records rather than pretending
 that medieval ranks never spoke. English manorial courts were presided over by a lord's
 steward, with the bailiff summoning tenants and reporting business ([University of
@@ -774,11 +776,9 @@ landed vassals petition their direct liege with that realm's title-tier terms. A
 independent landed ruler has no superior to petition.
 
 **Friendship requires an intentional relationship.** Assigning personal attention records
-an eligible living, non-family character in `player.friendContacts`. At the shared
-`balance.relationshipOpinionThreshold` (+40 by default), the character sheet offers
+an eligible living, non-family character in player.friendContacts. At the applicable threshold (normally relationshipOpinionThreshold, +40; serf-to-ruler friendship uses +80), the character sheet offers
 **Call friend**; accepting installs that exact character in the compatibility role
-`state.roles.friend` and frees the attention assignment. Existing +40 cultivated contacts
-remain nameable even when attention has moved elsewhere. A friendship story can formalize
+state.roles.friend and frees the attention assignment. Cultivated contacts meeting their applicable friendship threshold remain nameable even when attention has moved elsewhere. A friendship story can formalize
 only the currently assigned, eligible person at the same threshold: `FB.getRole` never
 generates a stranger merely because event text contains `{friend}`. Naming a replacement
 is explicit and clears sworn-friend state. Friendship, its cultivated contacts, and

@@ -1715,7 +1715,8 @@ FBDATA.balance = {
   householdLifestyleMult: [1,1,1,1.25,1.5,2,2.5,3], // higher stations maintain dependants more richly
   socialAttentionCapacity: 1, socialAttentionDailyOpinion: 0.2,
   crazyGamesFounderCourtshipMultiplier: 10, // first protagonist only; ordinary editions and later heads retain normal progress
-  relationshipOpinionThreshold: 40, // shared readiness gate for friendship and marriage proposals
+  relationshipOpinionThreshold: 40, // ordinary readiness gate for friendship and marriage proposals
+  serfRulerFriendshipThreshold: 80, // a serf needs exceptional Standing to name a reigning ruler as friend
   marriageCultureStandingPremium: 20, // extra proposal Standing for a different culture
   marriageFaithStandingPremium: 30, // extra proposal Standing for a different faith
   rankAccessInfluenceMult: 0.5, // each station beyond ordinary one-rank reach halves cultivation and gift Standing

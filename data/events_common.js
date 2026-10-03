@@ -693,7 +693,9 @@ FBDATA.events.push(
     { label:'“I want nothing I cannot repay.”', desc:'Pride keeps the ledger clean between friends.', effects:{ prestige:3, opinion:{role:'friend', amt:10} } }
   ]},
 { id:'friend_vouch', title:'Standing Surety',
-  trigger:{ societalRoles:['serf','commoner','gentry'], hasRole:'friend', roleOpinionAbove:{role:'friend', value:20}, chance:0.15 }, weight:5, cooldown:12,
+  participants:[{ slot:'friend', source:'role', role:'friend', required:true }],
+  trigger:{ societalRoles:['serf','commoner','gentry'], hasRole:'friend', roleOpinionAbove:{role:'friend', value:20}, custom:'friend_vouch_valid', chance:0.15 }, weight:5, cooldown:12,
+  contextValidator:'friend_vouch_valid',
   text:'{friend} stands before the manor court accused of short-measuring grain. One respected voice swearing to their honesty could settle it — and they are looking at you.',
   options:[
     { label:'Swear to their honesty.', desc:'Your good name, wagered on theirs.', chance:0.6,

@@ -4,6 +4,10 @@ dependsOnRuntime(__filename, [
   'data/actions.js',
   'js/actions.js',
   'js/events.js',
+  'js/world.js',
+  'js/lordships.js',
+  'data/map_data.js',
+  'data/events_common.js',
   'js/ui_misc.js',
   'css/style.css',
   'js/model.js',
@@ -17,6 +21,79 @@ const { startDeterministicGame } = require('../support/game/start');
 test.beforeEach(async function ({ page }, testInfo) {
   await openGame(page, testInfo);
   await startDeterministicGame(page);
+});
+
+test('warm ruler contacts retain class distance and a serf needs exceptional Standing for friendship', async function ({ page }) {
+  const result = await page.evaluate(function () {
+    const s = FB.state, p = s.player;
+    p.tier = 0; p.gold = 1000; p.courtingId = null;
+    p.socialAttention = {}; p.friendContacts = {};
+    delete s.roles.friend;
+    const lord = FB.getRole(s, 'lord', true);
+    lord.opinion = 40;
+    FB.noteFriendContact(s, lord);
+    FB.socialAttentionAssign(s, lord);
+    const warm = FB.socialAttentionStatus(s, lord);
+    const gift = FB.characterGiftStatus(s, lord.id);
+    const tooSoon = FB.nameFriend(s, lord);
+    lord.opinion = 79;
+    const automaticTooSoon = FB.attentionFriendCandidate(s);
+    const remaining = FB.socialAttentionDaysToThreshold(s, lord);
+    lord.opinion = 80;
+    const named = FB.nameFriend(s, lord);
+    const friendAccess = FB.rankAccessStatus(s, { kind:'character', id:lord.id });
+    const priest = FB.getRole(s, 'priest', true);
+    priest.opinion = 40; FB.noteFriendContact(s, priest);
+    const ordinary = FB.friendshipStatus(s, priest);
+    return { threshold:FB.friendshipStandingThreshold(s, lord), rate:warm.rate,
+      giftCost:gift.cost, giftStanding:gift.standing, tooSoon:tooSoon,
+      automaticTooSoon:automaticTooSoon === null, remaining:remaining,
+      named:named, friendMultiplier:friendAccess.standingMultiplier,
+      ordinaryThreshold:ordinary.threshold, ordinaryReady:ordinary.ready };
+  });
+  expect(result).toEqual({ threshold:80, rate:0.05, giftCost:20, giftStanding:1,
+    tooSoon:false, automaticTooSoon:true, remaining:20, named:true,
+    friendMultiplier:0.25, ordinaryThreshold:40, ordinaryReady:true });
+});
+
+test('Standing Surety excludes the local ruler and invalidates previously queued testimony', async function ({ page }) {
+  const result = await page.evaluate(function () {
+    const s = FB.state, p = s.player, pid = p.provinceId;
+    p.tier = 0;
+    const event = FB.eventById('friend_vouch');
+    const lord = FB.getRole(s, 'lord', true);
+    s.roles.friend = lord.id; lord.opinion = 80;
+    const localContext = FB.eventContext(s, { locationId:pid });
+    FB.ensureEventParticipants(s, event, localContext);
+    const localBlocked = !FB.checkTrigger(s, event.trigger, localContext);
+    const localStale = !FB.eventContextStillValid(s, event, localContext);
+    const chain = FB.liegeChain(s, FB.homeCountyAuthority(s).realmId);
+    const foreignId = Object.keys(s.realms).find(function (id) {
+      return id !== 'player' && s.realms[id].alive && chain.indexOf(id) < 0;
+    });
+    const foreign = FB.materializeRealmRuler(s, foreignId);
+    s.roles.friend = foreign.id;
+    const foreignEligible = FB.fns.friend_vouch_valid(s, FB.eventContext(s, { locationId:pid }));
+    const ordinary = FB.makeCharacter(s, { name:'Grain Witness', born:s.date.year - 30,
+      station:0, homeCounty:pid, traitsN:0 });
+    ordinary.opinion = 50; s.roles.friend = ordinary.id;
+    const ctx = FB.eventContext(s, { locationId:pid });
+    FB.ensureEventParticipants(s, event, ctx);
+    const eligible = FB.fns.friend_vouch_valid(s, ctx);
+    const rid = FB.homeCountyAuthority(s).realmId;
+    const realm = s.realms[rid], member = realm.succession.members[realm.succession.rulerMemberId];
+    member.charId = ordinary.id;
+    FB.rebuildRulerIndex(s);
+    const promotedStale = !FB.eventContextStillValid(s, event, ctx);
+    const before = { gold:p.gold, prestige:p.prestige, standing:ordinary.opinion, rng:FB.getRngState() };
+    const rejected = FB.resolveEventOption(s, event, event.options[0], ctx) === false;
+    return { localBlocked:localBlocked, localStale:localStale, foreignEligible:foreignEligible, eligible:eligible,
+      promotedStale:promotedStale, rejected:rejected,
+      unchanged:JSON.stringify(before) === JSON.stringify({ gold:p.gold,
+        prestige:p.prestige, standing:ordinary.opinion, rng:FB.getRngState() }) };
+  });
+  expect(result).toEqual({ localBlocked:true, localStale:true, foreignEligible:true, eligible:true,
+    promotedStale:true, rejected:true, unchanged:true });
 });
 
 test('a lowborn household reaches its lord through a warm intermediary ladder',

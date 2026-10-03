@@ -1182,7 +1182,7 @@ parent. A dead or missing mother ends the pregnancy on the next daily birth tick
 `{ s: settlementIndex, id, devGranted?, ruined? }`
 (per-settlement buildings — see [development.md](development.md)); `ruined:true` is an
 optional backwards-compatible tombstone that occupies the slot but provides no bonus and
-charges no upkeep. New construction with a definition-level `dev` effect saves the exact
+charges no upkeep until repaired. New construction with a definition-level dev effect saves the exact
 amount actually applied in `devGranted`, including zero at the county ceiling. Demolition
 reverses only a finite nonzero saved amount. A one-time compatibility pass recalculates
 counties currently in `player.provs` from their bookmark development plus standing
@@ -1194,6 +1194,8 @@ strings are NOT rejected: `FB.builtIn` projects them into the head settlement (`
 without mutating state during reads, and the next construction or demolition in that
 county persists the canonical object entries. This remains a no-version-bump
 compatibility path.
+
+Repair adds no save-version change. Ordinary demolition may retain devRemoved, the actual development taken away; repair restores only that known loss, records the applied result in devGranted and removes devRemoved. Existing raid ruins and older ruins without this field receive no duplicate or inferred development grant. Fort ruins retain ruinedLevel when known, and funded repairs retain targetLevel, completeTurn and repairing until completion. The repairing marker suppresses a second construction prestige award and survives save/restore and conquest.
 
 Livelihood state is additive and does not raise the save-format version. Careers
 live on characters; `character.careerHistory` maps profession ids to complete

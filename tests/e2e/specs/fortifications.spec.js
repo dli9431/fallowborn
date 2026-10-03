@@ -3,6 +3,7 @@ const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
   'js/armies.js',
   'js/fortifications.js',
+  'js/actions.js',
   'js/wars.js',
   'js/world.js',
   'js/ui_modals.js',
@@ -25,6 +26,42 @@ test.use({
 test.beforeEach(async function ({ page }, testInfo) {
   await openGame(page, testInfo);
   await startDeterministicGame(page);
+});
+
+test('ruined forts restore their recorded tier after paid work without repeating prestige', async function ({ page }) {
+  const result = await page.evaluate(function () {
+    const s = FB.state, p = s.player, pid = p.provinceId;
+    p.tier = 4; p.provs = [pid]; p.gold = 10000;
+    s.holder[pid] = 'player';
+    s.buildings[pid] = [{ s:0, id:'walls', level:3 }];
+    FB.invalidateFortIndex(); FB.invalidateBuildingIndex(s, pid);
+    const ruin = s.buildings[pid][0];
+    const demolished = FB.demolishFort(s, pid, 0);
+    const savedTier = ruin.ruinedLevel;
+    FB.realmTechRecord(s, FB.techRealmId(s)).completed = [];
+    const status = FB.repairBuildingStatus(s, pid, 0, 'walls');
+    const prestige = p.prestige, gold = p.gold;
+    const repaired = FB.repairBuilding(s, pid, 0, 'walls', status.cost);
+    const paid = gold - p.gold;
+    const noImmediateDefense = FB.fortAt(s, pid).level === 0;
+    const repeated = FB.repairBuilding(s, pid, 0, 'walls');
+    s.buildings = JSON.parse(JSON.stringify(s.buildings));
+    FB.invalidateFortIndex(); FB.invalidateBuildingIndex(s, pid);
+    const fort = FB.fortAt(s, pid);
+    s.turn = fort.completeTurn - 1;
+    const early = FB.fortificationDay(s);
+    s.turn++;
+    const completed = FB.fortificationDay(s);
+    return { demolished:demolished, savedTier:savedTier, ready:status.ready,
+      target:status.targetLevel, repaired:repaired, paid:paid, quote:status.cost,
+      noImmediateDefense:noImmediateDefense, repeated:repeated, early:early,
+      completed:completed, level:fort.level, sameSite:fort.s === 0,
+      records:s.buildings[pid].length, prestigeUnchanged:p.prestige === prestige };
+  });
+  expect(result.paid).toBe(result.quote);
+  expect(result).toMatchObject({ demolished:true, savedTier:3, ready:true,
+    target:3, repaired:true, noImmediateDefense:true, repeated:false, early:0,
+    completed:1, level:3, sameSite:true, records:1, prestigeUnchanged:true });
 });
 
 test('garrison burden checks recruitment only for the charged holders forts', async function ({ page }) {

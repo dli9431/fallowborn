@@ -4,6 +4,7 @@ dependsOnRuntime(__filename, [
   'js/lordships.js',
   'data/actions.js',
   'js/actions.js',
+  'js/fortifications.js',
   'js/events.js',
   'js/settlement.js',
   'js/technology.js',
@@ -19,6 +20,110 @@ dependsOnRuntime(__filename, [
 const { test, expect } = require('../support/fixture');
 const { openGame } = require('../support/game/navigation');
 const { startDeterministicGame } = require('../support/game/start');
+
+test('ruin repairs reuse the asset, restore effects, and never duplicate construction rewards', async function ({ page }, testInfo) {
+  await openGame(page, testInfo);
+  await startDeterministicGame(page);
+  const result = await page.evaluate(function () {
+    const s = FB.state, pid = s.player.provinceId, p = s.player;
+    p.tier = 4; p.provs = [pid]; p.gold = 10000;
+    FB.foundPlayerRealm(s);
+    s.dev[pid] = 5;
+    FBDATA.buildings.repair_test = {
+      name:'Repair test', icon:'X', cost:100, dev:1, prestige:5, pop:5,
+      upkeep:1, gold:2, requiresTech:'lime_mortar', maxCounty:1
+    };
+    s.buildings[pid] = [{ s:0, id:'repair_test', ruined:true, devGranted:1 }];
+    FB.invalidateBuildingIndex(s, pid);
+    FB.realmTechRecord(s, 'player').completed = [];
+    const record = s.buildings[pid][0];
+    const initial = FB.repairBuildingStatus(s, pid, 0, 'repair_test');
+    const gold = p.gold, prestige = p.prestige, support = FB.countyPopularSupport(s, pid);
+    const staleQuote = FB.repairBuilding(s, pid, 0, 'repair_test', initial.cost + 1);
+    const repaired = FB.repairBuilding(s, pid, 0, 'repair_test', initial.cost);
+    const reused = record === s.buildings[pid][0];
+    const charged = gold - p.gold;
+    const repeated = FB.repairBuilding(s, pid, 0, 'repair_test');
+    const raidDev = s.dev[pid];
+    const standing = FB.buildingCountIn(s, pid, 'repair_test', false);
+    const demolished = FB.demolishBuilding(s, pid, 0, 'repair_test');
+    const afterDemolition = s.dev[pid];
+    // Repair bookkeeping survives ordinary save serialization.
+    s.buildings = JSON.parse(JSON.stringify(s.buildings));
+    FB.invalidateBuildingIndex(s, pid);
+    const restored = FB.repairBuilding(s, pid, 0, 'repair_test');
+    return { initialReady:initial.ready, initialCost:initial.cost, staleQuote:staleQuote,
+      repaired:repaired, charged:charged, repeated:repeated, raidDev:raidDev,
+      standing:standing, demolished:demolished, afterDemolition:afterDemolition,
+      restored:restored, finalDev:s.dev[pid], records:s.buildings[pid].length,
+      reused:reused,
+      rewardsUnchanged:p.prestige === prestige && FB.countyPopularSupport(s, pid) === support,
+      bonus:FB.buildingBonusAt(s, pid, 0, 'gold') };
+  });
+  expect(result.initialReady).toBe(true);
+  expect(result.initialCost).toBeGreaterThan(0);
+  expect(result.charged).toBe(result.initialCost);
+  expect(result).toMatchObject({ staleQuote:false, repaired:true, repeated:false,
+    raidDev:5, standing:1, demolished:true, afterDemolition:4, restored:true,
+    finalDev:5, records:1, reused:true, rewardsUnchanged:true, bonus:2 });
+});
+
+test('repair review retains settlement position and rechecks money, authority and copy limits', async function ({ page }, testInfo) {
+  await openGame(page, testInfo);
+  await startDeterministicGame(page);
+  const result = await page.evaluate(function () {
+    const s = FB.state, pid = s.player.provinceId, p = s.player;
+    const foreign = s.holder[pid] || s.owner[pid];
+    p.tier = 4; p.provs = [pid]; p.gold = 10000;
+    FB.foundPlayerRealm(s);
+    FBDATA.buildings.repair_test = { name:'Repair test', icon:'X', cost:100, maxCounty:1 };
+    s.buildings[pid] = [{ s:0, id:'repair_test', ruined:true }];
+    FB.invalidateBuildingIndex(s, pid);
+    const cost = FB.repairBuildingStatus(s, pid, 0, 'repair_test').cost;
+    p.gold = 0;
+    const poor = FB.repairBuilding(s, pid, 0, 'repair_test');
+    p.gold = 10000; p.tier = 0;
+    const serf = FB.repairBuilding(s, pid, 0, 'repair_test');
+    p.tier = 4; s.holder[pid] = foreign;
+    FB.invalidateRealmCache();
+    const foreignHeld = FB.repairBuilding(s, pid, 0, 'repair_test');
+    s.holder[pid] = 'player'; FB.invalidateRealmCache();
+    s.buildings[pid].push({ s:1, id:'repair_test' });
+    FB.invalidateBuildingIndex(s, pid);
+    const capped = FB.repairBuilding(s, pid, 0, 'repair_test');
+    s.buildings[pid].pop(); FB.invalidateBuildingIndex(s, pid);
+    FB.ui.showSettlement(pid, 0);
+    return { poor:poor, serf:serf, foreignHeld:foreignHeld, capped:capped,
+      unspent:p.gold === 10000, ruined:s.buildings[pid][0].ruined, cost:cost };
+  });
+  expect(result).toMatchObject({ poor:false, serf:false, foreignHeld:false,
+    capped:false, unspent:true, ruined:true });
+  const repair = page.locator('[data-repair="repair_test"]');
+  await expect(repair).toBeEnabled();
+  await page.locator('[aria-controls="settcard-details-1"]').click();
+  await page.evaluate(function () {
+    document.getElementById('gm-body').scrollTop = 100;
+  });
+  await repair.scrollIntoViewIfNeeded();
+  const originScroll = await page.evaluate(function () {
+    return document.getElementById('gm-body').scrollTop;
+  });
+  await repair.click();
+  await expect(page.locator('#building-repair-confirm')).toBeEnabled();
+  await page.locator('#building-repair-back').click();
+  await expect(repair).toBeFocused();
+  await expect(page.locator('#settcard-details-1')).toBeVisible();
+  expect(await page.evaluate(function () {
+    return document.getElementById('gm-body').scrollTop;
+  })).toBe(originScroll);
+  await repair.click();
+  await page.evaluate(function () { FB.state.player.gold = 0; });
+  await page.locator('#building-repair-confirm').click();
+  await expect(page.locator('#building-repair-confirm')).toBeDisabled();
+  expect(await page.evaluate(function () {
+    return FB.state.buildings[FB.state.player.provinceId][0].ruined;
+  })).toBe(true);
+});
 
 test.use({
   viewport:{ width:390, height:844 },

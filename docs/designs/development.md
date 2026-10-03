@@ -307,13 +307,20 @@ on the first fully staffed seasonal boundary after that level is built, and is r
 by the enterprise instance rather than recalculated from the definition.
 
 A tier-3+ ruler can demolish a settlement building in the demesne without a refund.
-Demolition is permanent: the entry gains `ruined:true`, loses every ongoing bonus and
-upkeep charge, and continues to occupy that settlement slot. New construction records the
+Demolition leaves repairable ruins: the entry gains ruined:true, loses every ongoing bonus and upkeep charge, and continues to occupy that settlement slot. New construction records the
 exact applied `dev` amount as
 `devGranted`, including zero when the county was already at its ceiling. Demolition reverses
 only that recorded development. After the bounded legacy repair below, any building record
 still missing the additive field is grandfathered at zero rather than inventing a loss.
 One-time Popular support and prestige are not reversed.
+
+Settlement ruin repair
+
+The directly controlling Baron-or-higher player can repair an ordinary building from its settlement card. County forts require direct county authority. Repair reuses the ruined record, costs half the current replacement quote (excluding that record from the repeat-copy exponent), rechecks authority, funds and standing-copy limits, and does not repeat construction prestige or Popular support. Existing building and fort-tier technology is grandfathered for repair; recovery does not unlock a new asset or tier. Technology review settlement_ruin_repair is none because this is restoration of an existing asset.
+
+Ordinary repairs restore benefits and upkeep immediately. New demolition records devRemoved as the actual development removed and clears devGranted; repair restores only that recorded loss under the live county ceiling and retains the actual restored amount as devGranted. Raid ruins do not replay their already credited development. Older ruins without devRemoved restore their ongoing effects without inventing a development grant. Ruins remain occupied while unrepaired, but no longer permanently prevent restoration.
+
+Fort demolition retains its completed tier in ruinedLevel. Paid repairs take that tier's normal construction duration, with level zero and no defenses until completion. repairing marks the saved project so completion never repeats its prestige award. A previously ruined record with no retained tier restores its remaining positive level, or Ringwork if no tier survives. Repairs cannot start in a contested county or coexist with another active county fort. Succession, conquest and save/restore retain funded repairs and their target tier. Starting an unrelated new fort still follows ordinary sequential technology gates.
 
 Related: [tech.md](tech.md) for the development cap (`FB.devCap`), [war.md](war.md) for
 fort movement, battles, and sieges.

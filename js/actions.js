@@ -9998,10 +9998,14 @@ window.FB = window.FB || {};
      cost × buildingRepeatCostGrowth^(copies standing) — the price climbs
      instead of the bonus shrinking */
   FB.buildCost = function (state, pid, id, realmId) {
+    return buildingCost(state, pid, id, realmId,
+      FB.buildingCountIn(state, pid, id, true), 1);
+  };
+
+  function buildingCost(state, pid, id, realmId, copies, multiplier) {
     const def = FBDATA.buildings[id];
     if (!def || def.fort) return 0;
-    const copies = FB.buildingCountIn(state, pid, id, true);
-    let c = def.cost * Math.pow(FBDATA.balance.buildingRepeatCostGrowth || 1.5, copies) *
+    let c = def.cost * multiplier * Math.pow(FBDATA.balance.buildingRepeatCostGrowth || 1.5, copies) *
       Math.max(0, FB.techCostFactor(state, 'build', realmId) -
         (!realmId && FB.councilBonus ? FB.councilBonus(state, 'build') : 0));
     c *= Math.max(0, 1 +
@@ -10009,7 +10013,7 @@ window.FB = window.FB || {};
     if (!realmId && state.player.flags.mason_visit) c *= 0.75;
     return FB.marketCostQuote ? FB.marketCostQuote(state, c,
       def.marketBasket, pid, 'up') : Math.round(c);
-  };
+  }
 
   FB.canBuildAt = function (state, pid, idx, id, context) {
     const def = FBDATA.buildings[id];
@@ -10164,6 +10168,78 @@ window.FB = window.FB || {};
     return true;
   };
 
+  FB.repairBuildingStatus = function (state, pid, idx, id) {
+    const out = { ready:false, cost:0, reason:'', fort:false, targetLevel:0, completeTurn:null };
+    const def = FBDATA.buildings[id];
+    if (!state || !def || typeof idx !== 'number' || !isFinite(idx) ||
+        Math.floor(idx) !== idx || idx < 0) {
+      out.reason = FB.T('This building cannot be repaired.');
+      return out;
+    }
+    const ruin = FB.builtIn(state, pid).filter(function (entry) {
+      return entry.s === idx && entry.id === id && entry.ruined;
+    })[0];
+    if (!ruin) {
+      out.reason = FB.T('There are no ruins of this building to repair.');
+      return out;
+    }
+    if (id === 'walls') {
+      const fort = FB.fortProjectStatus(state, pid, idx, 0, { repair:true });
+      out.fort = true;
+      out.ready = fort.ok;
+      out.cost = fort.cost;
+      out.targetLevel = fort.targetLevel;
+      out.completeTurn = fort.completeTurn;
+      out.reason = fort.ok ? '' : fort.reason === 'gold'
+        ? FB.T('Requires {money:cost}.', { cost:fort.cost })
+        : fort.reason === 'contested'
+          ? FB.T('Repairs cannot begin while the county is contested.')
+          : FB.T('You must hold the county at Baron rank or higher, with no other active fort.');
+      return out;
+    }
+    const context = FB.buildingContext(state, pid);
+    out.cost = buildingCost(state, pid, id, null,
+      Math.max(0, FB.buildingCountIn(state, pid, id, true) - 1), 0.5);
+    if (!FB.settlementConstructionAuthority(state, pid, idx).direct || idx >= context.visibleCount) {
+      out.reason = FB.T('You must hold this settlement directly at Baron rank or higher.');
+    } else if ((def.maxCounty && FB.buildingCountIn(state, pid, id, false) >= def.maxCounty) ||
+        (def.maxDemesne && buildingContextDemesneCount(state, context, id) >= def.maxDemesne)) {
+      out.reason = FB.T('The standing-building limit has already been reached.');
+    } else if (!isFinite(out.cost) || !isFinite(Number(state.player.gold)) || state.player.gold < out.cost) {
+      out.reason = FB.T('Requires {money:cost}.', { cost:out.cost });
+    } else {
+      out.ready = true;
+    }
+    return out;
+  };
+
+  FB.repairBuilding = function (state, pid, idx, id, quotedCost) {
+    const status = FB.repairBuildingStatus(state, pid, idx, id);
+    if (!status.ready || quotedCost !== undefined && quotedCost !== status.cost) return false;
+    if (status.fort) return !!FB.startFortProject(state, pid, idx,
+      status.targetLevel, { repair:true });
+    const record = builtInForWrite(state, pid).filter(function (entry) {
+      return entry.s === idx && entry.id === id && entry.ruined;
+    })[0];
+    if (!record) return false;
+    state.player.gold -= status.cost;
+    delete state.player.flags.mason_visit;
+    delete record.ruined;
+    const removed = Number(record.devRemoved);
+    if (isFinite(removed) && removed > 0) {
+      record.devGranted = (Number(record.devGranted) || 0) +
+        FB.changeCountyDevelopment(state, pid, removed, 'building_repair');
+    }
+    delete record.devRemoved;
+    FB.invalidateBuildingIndex(state, pid);
+    if (FB.reconcileSettlementCommunities) FB.reconcileSettlementCommunities(state, pid);
+    FB.news(state, FB.msg('news.action.building_repaired',
+      '{building} is repaired in {province}.', {
+        building:FB.dataParam('building', id), province:FB.world.byId[pid].name
+      }));
+    return true;
+  };
+
   FB.demolishBuilding = function (state, pid, idx, id) {
     if (!state) return false;
     if (id !== 'walls' && !FB.settlementConstructionAuthority(state, pid, idx).direct) return false;
@@ -10176,7 +10252,8 @@ window.FB = window.FB || {};
         FB.invalidateBuildingIndex(state, pid);
         const granted = Number(record.devGranted);
         if (isFinite(granted) && granted) {
-          FB.changeCountyDevelopment(state, pid, -granted, 'demolition');
+          record.devRemoved = -FB.changeCountyDevelopment(state, pid, -granted, 'demolition');
+          record.devGranted = 0;
         }
         if (FB.reconcileSettlementCommunities) {
           FB.reconcileSettlementCommunities(state, pid);

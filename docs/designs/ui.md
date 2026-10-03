@@ -2943,6 +2943,8 @@ card as an icon button. Authorization lives inside the sheet, so foreign, non-de
 and commoner sheets omit county works entirely, while a valid tier-3+ held settlement
 keeps their information plus construction and demolition.
 
+Ruined settlement assets expose a Repair action with the current gold quote and first blocker visible. Its review names the settlement, restoration timing and post-repair upkeep, and explains that construction rewards are not repeated. Confirm rechecks the exact reviewed price, current funds, authority and standing-copy limits; changed terms redraw the review without spending. Back and Escape restore the originating settlement's scroll, expanded Details and action focus. Repairs share this flow across ordinary and CrazyGames editions; no distribution-specific assets or rules are added.
+
 ## Localization
 
 Settings exposes English plus French, German, Italian, and Spanish as AI-translated Preview

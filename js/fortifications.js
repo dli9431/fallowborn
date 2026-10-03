@@ -262,13 +262,18 @@ window.FB = window.FB || {};
     }
     var fort = FB.fortAt(state, pid);
     var ruins = FB.fortAtSettlement(state, pid, result.settlement, true);
-    if (ruins && ruins.ruined) { result.reason = 'ruins'; return result; }
+    var repairing = options.repair === true;
+    if (repairing && (!ruins || !ruins.ruined || fort)) {
+      result.reason = fort ? 'other_settlement' : 'ruins'; return result;
+    }
+    if (ruins && ruins.ruined && !repairing) { result.reason = 'ruins'; return result; }
     if (fort) {
       result.currentLevel = Number(fort.level) || 0;
       if (fort.s !== result.settlement) { result.reason = 'other_settlement'; return result; }
       if (fort.targetLevel) { result.reason = 'active_project'; return result; }
     }
-    var expected = fort ? result.currentLevel + 1 : 1;
+    var expected = repairing ? Math.max(1, Math.min(4,
+      Math.floor(Number(ruins.ruinedLevel || ruins.level) || 1))) : fort ? result.currentLevel + 1 : 1;
     result.targetLevel = targetLevel || expected;
     if (result.targetLevel !== expected || result.targetLevel > 4) {
       result.reason = result.currentLevel >= 4 ? 'maximum' : 'sequential';
@@ -276,13 +281,14 @@ window.FB = window.FB || {};
     }
     var def = levelDef(result.targetLevel);
     if (!def) { result.reason = 'maximum'; return result; }
+    var baseCost = def.cost * (repairing ? 0.5 : 1);
     result.cost = realmId === 'player' && FB.marketCostQuote ?
-      FB.marketCostQuote(state, def.cost,
-        { materials:0.80, transport:0.15, wares:0.05 }, pid, 'up') : def.cost;
+      FB.marketCostQuote(state, baseCost,
+        { materials:0.80, transport:0.15, wares:0.05 }, pid, 'up') : baseCost;
     result.seasons = def.seasons;
     result.completeTurn = (Number(state.turn) || 0) + def.seasons * 90;
     for (var i = 0; i < def.requiresTech.length; i++) {
-      if (!FB.hasTech || !FB.hasTech(state, def.requiresTech[i], realmId)) {
+      if (!repairing && (!FB.hasTech || !FB.hasTech(state, def.requiresTech[i], realmId))) {
         result.missingTech.push(def.requiresTech[i]);
       }
     }
@@ -307,7 +313,7 @@ window.FB = window.FB || {};
     var status = projectStatus(state, pid, settlement, targetLevel, options);
     if (!status.ok) return false;
     var realmId = options.realm || 'player';
-    var fort = FB.fortAt(state, pid);
+    var fort = options.repair ? FB.fortAtSettlement(state, pid, settlement, true) : FB.fortAt(state, pid);
     var newRecord = !fort;
     if (realmId === 'player') state.player.gold -= status.cost;
     if (!fort) {
@@ -317,6 +323,7 @@ window.FB = window.FB || {};
     }
     fort.targetLevel = status.targetLevel;
     fort.completeTurn = status.completeTurn;
+    if (options.repair) { fort.level = 0; fort.repairing = true; }
     delete fort.ruined;
     syncIndexedRecord(state, pid, fort, newRecord, true);
     if (FB.reconcileSettlementCommunities) {
@@ -339,11 +346,14 @@ window.FB = window.FB || {};
     if (!playerHolds(state, pid)) return false;
     var fort = FB.fortAtSettlement(state, pid, settlement, false);
     if (!fort) return false;
+    fort.ruinedLevel = Math.max(1, fort.level ||
+      (fort.repairing ? fort.targetLevel : 0) || fort.ruinedLevel || 1);
     fort.ruined = true;
     fort.level = 0;
     delete fort.targetLevel;
     delete fort.completeTurn;
     delete fort.maintenanceGraceUntil;
+    delete fort.repairing;
     syncIndexedRecord(state, pid, fort);
     if (FB.reconcileSettlementCommunities) {
       FB.reconcileSettlementCommunities(state, pid);
@@ -363,10 +373,13 @@ window.FB = window.FB || {};
       if (fort.ruined || !fort.targetLevel || fort.completeTurn > state.turn) continue;
       var target = fort.targetLevel;
       var def = levelDef(target);
+      var repairing = fort.repairing === true;
       fort.level = target;
       delete fort.targetLevel;
       delete fort.completeTurn;
       delete fort.maintenanceGraceUntil;
+      delete fort.repairing;
+      delete fort.ruinedLevel;
       if (FB.invalidateBuildingIndex) {
         FB.invalidateBuildingIndex(state, item.pid);
       }
@@ -375,7 +388,7 @@ window.FB = window.FB || {};
       }
       completed++;
       if (playerHolds(state, item.pid) && def) {
-        state.player.prestige += def.prestige;
+        if (!repairing) state.player.prestige += def.prestige;
         FB.news(state, FB.msg('news.fort.completed',
           '🏰 {fort} is completed in {province}; its defenses command the road.', {
             fort:FB.dataParam('fort', String(target)),
