@@ -286,7 +286,7 @@
       if (D.tracks[track].contest && !e.contests[track]) return;
       var q = T.entry(s,id,s.player.charId,track), risk = riskText(track); quotes.push(q);
       var terms = FB.T('Entry {money:fee} · forfeit reserve {money:forfeit} · trade stake {money:stake} · work contract {money:contract}', q.terms);
-      var details = text(terms) + text(FB.T('One primary activity per edition. Earned payments are retained if war interrupts. Local serf duties continue.'));
+      var details = text(terms) + text(FB.T('One primary activity per edition. Earned payments are retained if war interrupts. Local {term:serf} duties continue.'));
       if (q.reasons.length > 1) details += text(q.reasons.join(' '));
       if (q.sponsored) details += text(FB.T('Event-specific sponsorship provides backing and equipment access without changing rank.'));
       cards += card('games-enter-' + track,label('tracks',track),q.ok ? terms + (risk ? ' · ' + risk : '') : q.reasons[0],details,!q.ok);

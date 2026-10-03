@@ -890,7 +890,7 @@ window.FB = window.FB || {};
       return FB.T('The road is open to freeholders and gentry.');
     }
     if (purposeId !== undefined && !purposeTierAllowed(state, def)) {
-      if (!FB.station.isFree(p)) return FB.T('Serfs cannot take to the road.');
+      if (!FB.station.isFree(p)) return FB.T('{Term:serf.other} cannot take to the road.');
       const range = purposeTierRange(def);
       if (range.min === 1 && range.max === 2) {
         return FB.T('This journey is open to freeholders and gentry.');
@@ -1789,7 +1789,7 @@ window.FB = window.FB || {};
       return FB.T('The marriage that created this choice is no longer in force.');
     }
     if (!FB.station.isLanded(p)) {
-      return FB.T('Only a baron or greater ruler may abdicate through this decision.');
+      return FB.T('Only a {term:baron} or greater ruler may abdicate through this decision.');
     }
     if (!settled(residence.destinationId)) {
       return FB.T('The wedding county can no longer receive the household.');

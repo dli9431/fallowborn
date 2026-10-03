@@ -732,7 +732,7 @@ window.FB = window.FB || {};
     }
     if (active.kind === 'council' && finite(tactic.authority, 0) &&
         (!state.council || FB.effectiveCrownAuthority(state) < tactic.authority)) {
-      missing.push(FB.T('Requires {authority} Crown Authority; currently {current}.', {
+      missing.push(FB.T('Requires {authority} {term:crown_authority.title}; currently {current}.', {
         authority:tactic.authority,
         current:Math.round(FB.effectiveCrownAuthority(state))
       }));
@@ -927,7 +927,7 @@ window.FB = window.FB || {};
       missing.push(FB.T('That great office does not exist.'));
     }
     if (!realm || !realm.alive || realm.liege !== 'player') {
-      missing.push(FB.T('The nominee must be a living direct vassal.'));
+      missing.push(FB.T('The nominee must be a living direct {term:vassal}.'));
     }
     var store = electionStore(state, false);
     if (requires && store && store.active) {

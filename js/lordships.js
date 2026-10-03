@@ -464,7 +464,7 @@ window.FB = window.FB || {};
     const aggression = !claim && !authorized && enemy ? FB.warCausePreview(state, cause).aggression : null;
     let reason = '';
     if (FB.fiscalRestriction && FB.fiscalRestriction(state)) reason = FB.fiscalRestriction(state);
-    else if (!FB.landedBaron(state)) reason = FB.T('You must hold a settlement as Baron to challenge its count.');
+    else if (!FB.landedBaron(state)) reason = FB.T('You must hold a settlement as {Term:baron} to challenge its count.');
     else if (!FB.directSettlements(state).some(function (site) { return site.provinceId === pid; })) reason = FB.T('You must hold a barony in the target county.');
     else if (!count || !count.alive || countId === 'player') reason = FB.T('There is no count to challenge here.');
     else if (p.travel || p.flags.in_prison || p.dead) reason = FB.T('Return home and be free to command.');

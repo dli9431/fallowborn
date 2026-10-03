@@ -609,11 +609,11 @@ window.FB = window.FB || {};
       ? FB.liegeChain(s, s.player.liege) : [];
     if (upward.indexOf(rid) >= 0) {
       return FB.T(
-        'Standing with your liege affects petitions, grants, service, and your voice in the Estates.');
+        'Standing with your {term:liege} affects petitions, grants, service, and your voice in the Estates.');
     }
     if (FB.playerVassals && FB.playerVassals(s).indexOf(rid) >= 0) {
       return FB.T(
-        'Standing with this vassal affects council service, taxation, exceptional levies, and resistance to revocation.');
+        'Standing with this {term:vassal} affects council service, taxation, exceptional levies, and resistance to revocation.');
     }
     const realm = s.realms[rid];
     return realm && !realm.liege
@@ -3052,7 +3052,7 @@ window.FB = window.FB || {};
 
   UI.maybeMapFiltersTip = function () {
     return UI.maybeTip('map-filters',
-      '💡 Open Map filters (R on desktop) to choose realms, your lands, your liege, de jure titles, or wars.',
+      '💡 Open Map filters (R on desktop) to choose realms, your lands, your {term:liege}, de jure titles, or wars.',
       '#btn-mapmode', { noNext:true });
   };
 
@@ -3569,7 +3569,7 @@ window.FB = window.FB || {};
       if (exposed) {
         const osricStart = s.telemetry && s.telemetry.quickStart === 'osric_867';
         return UI.maybeTip('first-deed', osricStart
-          ? '💡 You are Osric, a serf in Barcelona. Try Go into town as your first deed: pick a settlement and what to do there, then press Play to see what happens next.'
+          ? '💡 You are Osric, a {term:serf} in Barcelona. Try Go into town as your first deed: pick a settlement and what to do there, then press Play to see what happens next.'
           : '💡 Try Go into town as your first deed: pick a settlement and what to do there, then press Play to see what happens next.',
           '#tab-actions [data-action-id="go_to_town"]', {
             noNext:true, revealDeed:'go_to_town'

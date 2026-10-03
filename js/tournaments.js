@@ -367,9 +367,9 @@ window.FB = window.FB || {};
     if (!d) reasons.push(FB.T('Choose an activity.'));
     if (old) reasons.push(FB.T('One primary activity is allowed per edition.'));
     if (e.participants.length >= D.participantCap) reasons.push(FB.T('This edition has no participant places left.'));
-    if (tier(s, id) === 0 && home(s, id) !== e.provinceId) reasons.push(FB.T('Serfs may attend only in their home county.'));
+    if (tier(s, id) === 0 && home(s, id) !== e.provinceId) reasons.push(FB.T('{Term:serf.other} may attend only in their home county.'));
     if (tier(s,id) === 0 && ['watch','archery','wrestling','carrying','kitchens','stables','repairs','guarding','treatment'].indexOf(track) < 0) {
-      reasons.push(FB.T('Serfs may spectate, work, or enter open archery and wrestling.'));
+      reasons.push(FB.T('{Term:serf.other} may spectate, work, or enter open archery and wrestling.'));
     }
     if (d && d.male && c && c.sex !== 'm') reasons.push(FB.T('This contest or specialist work is open to adult men.'));
     if (d && d.contest && c && c.health < 3) reasons.push(FB.T('Recover to Health 3 before entering a competition.'));
@@ -825,7 +825,7 @@ window.FB = window.FB || {};
     if (!live(e)) { out.reasons.push(FB.T('This edition has closed.')); return out; }
     var el = T.eligibility(s, id, e), origin = t ? t.currentId : s.player.provinceId;
     if (!el.ok) out.reasons.push(el.reason);
-    if (!FB.station.isFree(s.player)) out.reasons.push(FB.T('Serfs cannot take to the road.'));
+    if (!FB.station.isFree(s.player)) out.reasons.push(FB.T('{Term:serf.other} cannot take to the road.'));
     if (t && (t.purpose !== 'tournament' || t.phase !== 'arrived')) out.reasons.push(FB.T('Finish the current journey before booking this road.'));
     var p = t && T.participant(T.get(s, t.tournamentId), id);
     if (p && p.status === 'active' && t.tournamentId !== eventId) out.reasons.push(FB.T('Withdraw from the current activity before travelling onward.'));

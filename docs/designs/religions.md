@@ -45,7 +45,9 @@ The initial property vocabulary is intentionally extensible rather than a closed
 - `marriage.spouseLimit`, `marriage.divorce`,
   `marriage.acceptedRelations`, and optional
   `marriage.kinship.siblingRite` for a narrowly recognized sibling rite;
-- `rankTitles.m` / `rankTitles.f`;
+- `rankTitles.m` / `rankTitles.f`, read only for modded or runtime faiths; built-in
+  ladders are faith-layer entries in the lexicon (`data/lexicons.js`, see
+  [i18n.md](i18n.md));
 - `words.deity`, `words.cleric`, `words.temple`, `words.landed`, and the
   faith-flavored `words.partnership` label;
 - `roles` for monastic, priestly, episcopal, cardinal, abbatial, and qadi titles,

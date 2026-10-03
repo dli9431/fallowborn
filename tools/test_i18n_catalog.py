@@ -84,6 +84,82 @@ class StructuredDataExtractionTests(unittest.TestCase):
         )
 
 
+class LexiconPlaceholderTests(unittest.TestCase):
+    def test_term_placeholders_are_tokens_protected_from_translation(self):
+        text = 'Your {term:vassal.other} and {Term:liege} owe {money:gold}.'
+
+        self.assertEqual(
+            i18n_catalog.TOKEN_RE.findall(text),
+            ['term:vassal.other', 'Term:liege', 'money:gold'],
+        )
+        protected, saved = i18n_catalog.protect(text)
+        self.assertNotIn('{term:', protected)
+        self.assertEqual(i18n_catalog.restore(protected, saved), text)
+        self.assertTrue(i18n_catalog.leaf_integrity(
+            text, 'Vos {term:vassal.other} et {Term:liege} doivent {money:gold}.'
+        ))
+        self.assertFalse(i18n_catalog.leaf_integrity(
+            text, 'Vos vassaux et {Term:liege} doivent {money:gold}.'
+        ))
+
+    def test_translation_must_keep_each_term_placeholder(self):
+        source = {'text': 'The {term:liege} grants a {term:fief}.'}
+
+        self.assertEqual(i18n_catalog.validate_translation(
+            source, {'text': 'Le {term:liege} accorde un {term:fief}.'}, 'k'
+        ), [])
+        self.assertEqual(i18n_catalog.validate_translation(
+            source, {'text': 'Le suzerain accorde un {term:fief}.'}, 'k'
+        ), ['k: placeholder mismatch'])
+
+    def test_term_placeholders_must_name_a_base_term_and_form(self):
+        errors = i18n_catalog.term_placeholder_errors({
+            'ui:good': {'text': '{Term:vassal.other} and {term:crown_authority.title}'},
+            'ui:unknown': {'text': 'A {term:thane} arrives.'},
+            'ui:form': {'text': 'Two {term:liege.plural}.'},
+            'ui:forms': {'forms': {'select': 'plural', 'param': 'n', 'cases': {
+                'one': '{n} {term:vassal}', 'other': '{n} {term:vassals}'}}},
+        })
+
+        self.assertEqual(errors, [
+            'ui:unknown: unknown lexicon term thane',
+            'ui:form: malformed term placeholder {term:liege.plural}',
+            'ui:forms: unknown lexicon term vassals',
+        ])
+
+    def test_lexicon_terms_ranks_and_labels_extract_under_lexicon_keys(self):
+        inventory = i18n_catalog.Inventory()
+
+        i18n_catalog.extract_lexicons(inventory)
+
+        entries = inventory.entries
+        self.assertEqual(
+            entries['lexicon.base.terms.vassal.other.default']['text'], 'vassals')
+        self.assertEqual(
+            entries['lexicon.base.terms.crown_authority.title.default']['text'],
+            'Crown Authority')
+        self.assertEqual(entries['lexicon.base.rank.f.3.default']['text'], 'Baroness')
+        self.assertEqual(
+            entries['lexicon.faiths.muslim.rank.m.4.default']['text'], 'Emir')
+        self.assertEqual(
+            entries['lexicon.eras.late_antique.rank.m.4.default']['text'], 'Comes')
+        self.assertEqual(
+            entries['lexicon.eras.late_antique.labels.career.soldier.'
+                    'ranks.apprentice.default']['text'],
+            'New recruit')
+        self.assertEqual(
+            entries['lexicon.eras.late_antique.labels.unitRole.household.name.default']
+            ['text'],
+            'Household soldiers')
+
+    def test_religions_no_longer_carry_rank_title_keys(self):
+        inventory = i18n_catalog.Inventory()
+
+        i18n_catalog.extract_structured(inventory)
+
+        self.assertFalse(any('.rankTitles.' in key for key in inventory.entries))
+
+
 class LocaleGenerationTests(unittest.TestCase):
     def test_hyphenated_locale_uses_matching_catalog_key_and_words(self):
         source = {'ui:Language': {'text': 'Language'}}

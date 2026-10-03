@@ -5952,7 +5952,7 @@ window.FB = window.FB || {};
   FB.guildMonopolyIssueStatus = function (state) {
     if (!FB.station.isLanded(state.player)) return {
       ready:false,
-      reason:FB.T('Only a baron or higher ruler may grant a monopoly.')
+      reason:FB.T('Only a {term:baron} or higher ruler may grant a monopoly.')
     };
     const slots = FB.ensureGuildMonopolies(state);
     if (slots.outgoing) return {
@@ -6937,7 +6937,7 @@ window.FB = window.FB || {};
       p.manor = null;
       FB.setPlayerTier(state, 1);
       FB.news(state, FB.msg('news.economy.bondage_gentry',
-        '⛓ The manor passes to the creditor. The debt is extinguished, and the family falls to freeholder.', {}));
+        '⛓ The {term:manor} passes to the creditor. The debt is extinguished, and the family falls to freeholder.', {}));
     } else if (FB.station.isFreeholder(p)) {
       FB.setPlayerTier(state, 0, { tenureFormationReason: 'debt_bondage' });
       FB.news(state, FB.msg('news.economy.bondage',

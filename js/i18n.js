@@ -9,7 +9,9 @@ window.FBDATA = window.FBDATA || {};
   const CATALOG_SCHEMA = 1;
   const HASH_SCHEMA = 1;
   const LANG_KEY = 'fb_lang';
-  const TOKEN_RX = /\{((?:money:(?:[A-Za-z_][A-Za-z0-9_]*|[-+]?(?:\d+(?:\.\d+)?|\.\d+)))|(?:[A-Za-z_][A-Za-z0-9_]*))\}/g;
+  /* {name}, {money:name} or {money:12}, and {term:id}, {term:id.other},
+     {term:id.title} or {Term:...} (a lexicon term, js/lexicon.js). */
+  const TOKEN_RX = /\{((?:money:(?:[A-Za-z_][A-Za-z0-9_]*|[-+]?(?:\d+(?:\.\d+)?|\.\d+)))|(?:[Tt]erm:[a-z][a-z0-9_]*(?:\.(?:one|other|title))?)|(?:[A-Za-z_][A-Za-z0-9_]*))\}/g;
   const MONEY_LITERAL_RX = /^[-+]?(?:\d+(?:\.\d+)?|\.\d+)$/;
   const CURRENCY_DEF_FIELDS = {
     id: 1, label: 1, icon: 1, smallestPerGold: 1, units: 1,
@@ -422,9 +424,11 @@ window.FBDATA = window.FBDATA || {};
     const next = own(leaf.cases, choice) ? leaf.cases[choice] : leaf.cases.other;
     return selectLeaf(next, params, catalog, depth + 1);
   }
-  function renderRecord(record, params, catalog) {
+  /* scope { state, viewer } resolves lexicon terms for that viewer; without
+     it terms resolve for the live game's player. */
+  function renderRecord(record, params, catalog, scope) {
     const text = record.forms ? selectLeaf(record.forms, params || {}, catalog, 0) : record.text;
-    return FB.tsub(text, params);
+    return FB.tsub(text, params, scope);
   }
   function displayMessageParams(params, context) {
     const out = {};
@@ -515,7 +519,7 @@ window.FBDATA = window.FBDATA || {};
       j: 'ĵ', k: 'ķ', l: 'ŀ', m: 'm', n: 'ñ', o: 'ö', p: 'þ', q: 'q', r: 'ŕ',
       s: 'š', t: 'ŧ', u: 'ü', v: 'v', w: 'ŵ', x: 'x', y: 'ÿ', z: 'ž'
     };
-    const chunks = String(text).split(/(\{(?:(?:money:(?:[A-Za-z_][A-Za-z0-9_]*|[-+]?(?:\d+(?:\.\d+)?|\.\d+)))|(?:[A-Za-z_][A-Za-z0-9_]*))\})/g);
+    const chunks = String(text).split(/(\{(?:(?:money:(?:[A-Za-z_][A-Za-z0-9_]*|[-+]?(?:\d+(?:\.\d+)?|\.\d+)))|(?:[Tt]erm:[a-z][a-z0-9_]*(?:\.(?:one|other|title))?)|(?:[A-Za-z_][A-Za-z0-9_]*))\})/g);
     for (let i = 0; i < chunks.length; i += 2) {
       chunks[i] = chunks[i].replace(/[A-Za-z]/g, function (c) { return map[c] || c; });
     }
@@ -606,7 +610,8 @@ window.FBDATA = window.FBDATA || {};
     if (source === undefined || source === null) return '';
     const record = plainRecord(source);
     const params = displayParams(state, viewer, source, ctx);
-    return renderRecord(lookup(key, record), params, activeCatalog);
+    return renderRecord(lookup(key, record), params, activeCatalog,
+      { state:state, viewer:viewer });
   }
 
   FB.i18nHash = function (record) { return sourceHash(plainRecord(record)); };
@@ -616,10 +621,13 @@ window.FBDATA = window.FBDATA || {};
     const cat = locale === FB.locale ? activeCatalog : FBDATA.lang[locale];
     return pluralCategory(cat, n);
   };
-  FB.tsub = function (text, params) {
+  FB.tsub = function (text, params, scope) {
     if (typeof text !== 'string' || text.indexOf('{') < 0) return text;
     params = params || {};
     return text.replace(TOKEN_RX, function (whole, key) {
+      if (key.indexOf('erm:') === 1 && (key.charAt(0) === 't' || key.charAt(0) === 'T')) {
+        return FB.lexicon ? FB.lexicon.token(key.slice(5), key.charAt(0) === 'T', scope) : whole;
+      }
       if (key.indexOf('money:') === 0) {
         const source = key.slice(6);
         if (MONEY_LITERAL_RX.test(source)) return FB.money(Number(source));
@@ -652,7 +660,7 @@ window.FBDATA = window.FBDATA || {};
       FBDATA.lang.en.entries[message.key]);
     if (!source) { note('unknown-message', message.key, ''); return message.key; }
     const params = displayMessageParams(message.params || {}, context || {});
-    return renderRecord(lookup(message.key, source), params, activeCatalog);
+    return renderRecord(lookup(message.key, source), params, activeCatalog, context || null);
   };
   FB.newsText = function (entry, state, viewer) {
     if (!entry) return '';
@@ -681,8 +689,8 @@ window.FBDATA = window.FBDATA || {};
     return FB.message(key, params);
   };
   FB.dataText = function (state, viewer, kind, id, def, path, ctx) {
-    const period = FB.stories && FB.stories.text(state, kind, id, path);
-    if (period !== null && period !== undefined) return period;
+    const relabel = FB.lexicon && FB.lexicon.label(state, viewer, kind, id, path);
+    if (relabel !== null && relabel !== undefined) return relabel;
     const selected = branchOf(state, viewer, path ? getPath(def, path) : def);
     const suffix = path ? '.' + path : '';
     return renderSource(state, viewer,

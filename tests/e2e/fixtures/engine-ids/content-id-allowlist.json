@@ -3,7 +3,8 @@
   "about": "Content-id ratchet exclusions. ignoredTables are FBDATA entries that hold tuning, geometry, catalogs or translations rather than content records (a dotted name also covers its nested tables). hooks are data ids the engine deliberately names, such as an event it triggers by id; their quoted occurrences are not counted. Every entry needs a reason.",
   "ignoredTables": [
     { "table": "balance", "reason": "Tuning knobs, not content records." },
-    { "table": "musicCatalog", "reason": "Generated soundtrack catalog." }
+    { "table": "musicCatalog", "reason": "Generated soundtrack catalog." },
+    { "table": "lexicons", "reason": "Display vocabulary; its keys are lexicon layers (base, eras, governments, faiths, cultures), not content records." }
   ],
   "hooks": [
     { "id": "seafaring_raids", "reason": "Technology capability; raiding asks for it instead of a technology id." },

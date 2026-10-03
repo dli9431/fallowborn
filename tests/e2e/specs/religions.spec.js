@@ -3,11 +3,14 @@ const { seedDoctrineContacts } = require('../support/game/doctrines');
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
   'data/cultures.js',
+  'data/lexicons.js',
   'js/actions.js',
   'js/events.js',
   'js/model.js',
   'js/messages.js',
   'js/i18n.js',
+  'js/lexicon.js',
+  'js/mods.js',
   'js/population.js',
   'js/save.js', 'js/save_v4.js',
   'js/technology.js',
@@ -48,8 +51,8 @@ test('legacy religion heads and title tables compile through compatibility alias
         errors:errors,
         office:faith.head.officeId,
         wives:FB.marriageDoctrine('western_custom', null).wives,
-        king:faith.rankTitles.m[6],
-        female:faith.rankTitles.f[6]
+        king:FB.lexicon.rank(null, 6, { faith:'western_custom', sex:'m', viewer:null }).word,
+        female:FB.lexicon.rank(null, 6, { faith:'western_custom', sex:'f', viewer:null }).word
       };
     });
 

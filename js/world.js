@@ -576,7 +576,8 @@ window.FB = window.FB || {};
       var wardrobeErrors = FB.validateWardrobeData();
       for (var we = 0; we < wardrobeErrors.length; we++) errors.push(wardrobeErrors[we]);
     }
-    var governmentErrors = FB.governments.validate().concat(FB.validateEraData());
+    var governmentErrors = FB.governments.validate().concat(FB.validateEraData(),
+      FB.lexicon.validate());
     for (var ge = 0; ge < governmentErrors.length; ge++) errors.push(governmentErrors[ge]);
     if (!definition.id || !/^[a-z0-9_]+$/i.test(definition.id)) fault('invalid id.');
     var date = definition.date || {};
@@ -6035,7 +6036,7 @@ window.FB = window.FB || {};
         toPlayer = true;
         if (!opts.silent) {
           FB.news(state, FB.msg('news.world.escheat_to_player',
-            '🕯 The lord of {province} dies without an heir — the fief returns to your hand.',
+            '🕯 The lord of {province} dies without an heir — the {term:fief} returns to your hand.',
             { province: pr.name }));
         }
       } else if (!opts.recipientId && FB.station.holdsCounty(p) && p.provs && liege && state.realms[liege] &&
@@ -7994,7 +7995,7 @@ window.FB = window.FB || {};
         }
         p.prestige += 100;
         FB.news(state, FB.msg('news.war.crown_restored',
-          '👑 The usurper’s crown and vassals return intact to your rightful rule.', {}));
+          '👑 The usurper’s crown and {term:vassal.other} return intact to your rightful rule.', {}));
         FB.endPlayerWar(state);
         return true;
       }
@@ -8176,8 +8177,8 @@ window.FB = window.FB || {};
           FB.news(state, FB.msg('news.world.player_fiefs_escheat', {
             forms: {
               select: 'value', param: 'holder', cases: {
-                realm: '📜 Your fiefs escheat to {liege}.',
-                other: '📜 Your fiefs escheat to your liege.'
+                realm: '📜 Your {term:fief.other} escheat to {liege}.',
+                other: '📜 Your {term:fief.other} escheat to your {term:liege}.'
               }
             }
           }, {

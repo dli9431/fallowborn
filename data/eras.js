@@ -42,6 +42,8 @@
    The remaining slots are declared here and filled by later systems:
    vocabulary, ladder, systems, eventEras, currency and architecture. null
    means the era adds nothing and today's shared behavior applies.
+   vocabulary stays null: an era's words and rank ladder are its entry in
+   FBDATA.lexicons.eras (data/lexicons.js).
    ========================================================================= */
 window.FBDATA = window.FBDATA || {};
 

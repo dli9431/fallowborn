@@ -94,7 +94,11 @@ same definition shape in saved state and remain covered by the existing active-m
 fingerprint because their parent and inherited sources must resolve against the same mod
 set. See [religions.md](religions.md) and `docs/MODDING.md`.
 Legacy `titles.christian|muslim|pagan|jewish` and `_f` overrides are mirrored into
-the corresponding root's `rankTitles`, so title-only mods keep their former live effect.
+the lexicon rank ladders (`christian` is the base ladder, the others faith-layer
+entries), so title-only mods keep their former live effect. A top-level `lexicons`
+table merges into `FBDATA.lexicons` by layer and id: terms by term id, labels by kind
+and id, and a supplied rank ladder replaces the old one. The composed table is
+validated before anything is applied.
 
 Livelihood and instruction definitions are moddable data too. Top-level `careers`,
 `schooling`, `enterprises`, `auctionLotTypes`, and `householdStandards` tables

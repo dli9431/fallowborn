@@ -144,7 +144,7 @@ window.FB = window.FB || {};
       // the desktop hover tooltip and the mobile tap sheet
       const teach = {
         gold:'Money pays for land, enterprises, gifts — and freedom.',
-        prestige:'Prestige legitimizes advancement: freedom, a manor, a title.',
+        prestige:'Prestige legitimizes advancement: freedom, a {term:manor}, a title.',
         piety:'Piety opens the church’s roads — blessings, offices, good standing.'
       }[stat];
       if (teach) h += '<div class="bd-note">🌱 ' + esc(FB.T(teach)) + '</div>';

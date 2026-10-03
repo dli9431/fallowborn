@@ -9,7 +9,7 @@
   var registry = [], byId = {}, sealed = false;
   var KINDS = { world:true, track:true };
   var HOOKS = ['appliesTo', 'init', 'day', 'season', 'year', 'title', 'intro',
-    'status', 'choices', 'quote', 'blocker', 'review', 'apply', 'text',
+    'status', 'choices', 'quote', 'blocker', 'review', 'apply',
     'validate', 'migrate'];
   function own(o, key) {
     return !!o && Object.prototype.hasOwnProperty.call(o, key);
@@ -94,17 +94,6 @@
       for (var i = 0; i < registry.length; i++) {
         if (registry[i].migrate) registry[i].migrate(state);
       }
-    },
-    /* Display-only relabels an attached story supplies for data text. */
-    text:function (s, kind, id, field) {
-      if (!s || !s.stories) return null;
-      var list = attachedList(s);
-      for (var i = 0; i < list.length; i++) {
-        if (!list[i].text) continue;
-        var value = list[i].text(s, kind, id, field);
-        if (value !== null && value !== undefined) return value;
-      }
-      return null;
     },
     /* Deeds cards: every attached story whose status hook answers. */
     cards:function (s) {

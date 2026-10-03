@@ -12,7 +12,7 @@ js/stories.js owns FB.stories. Each story module calls FB.stories.register once 
 
 Hooks
 
-init(state) creates the story's record at campaign creation and returns it, or returns nothing to stay detached. appliesTo(state) can veto attachment. day, season and year receive the state and the story's own record. title, intro, status, choices, quote, blocker, review and apply drive the shared story sheet. text supplies display-only relabels for data text while the story is attached. validate checks a saved record before a save is adopted. migrate moves a legacy save field into state.stories on the detached copy before validation.
+init(state) creates the story's record at campaign creation and returns it, or returns nothing to stay detached. appliesTo(state) can veto attachment. day, season and year receive the state and the story's own record. title, intro, status, choices, quote, blocker, review and apply drive the shared story sheet. Period vocabulary is not a story hook: it lives in the lexicon (data/lexicons.js, see i18n.md). validate checks a saved record before a save is adopted. migrate moves a legacy save field into state.stories on the detached copy before validation.
 
 Lifecycle
 
