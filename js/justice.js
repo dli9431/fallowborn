@@ -7,7 +7,7 @@
   function live(s, id) { var c = person(s, id); return !!(c && !c.dead); }
   function cruel(c) { return !!(c && c.traits && c.traits.indexOf('cruel') >= 0); }
   function realmOf(s, id) {
-    return id === s.player.charId ? (FB.station.rulesRealm(s.player) ? 'player' : null) :
+    return id === s.player.charId ? (FB.station.rulesRealm(s.player, s) ? 'player' : null) :
       FB.realmIdForRulerCharacter(s, id);
   }
   function ruler(s, rid) {
@@ -43,27 +43,27 @@
     return j;
   }
   function authorityKey(s, id) {
-    return realmOf(s, id) || (id === s.player.charId && FB.station.isLanded(s.player)
+    return realmOf(s, id) || (id === s.player.charId && FB.station.mayAdministerJustice(s.player, s)
       ? 'barony:' + s.player.provinceId : 'character:' + id);
   }
   function authorityMatches(s, actor, key) {
-    return key === authorityKey(s, actor) || actor === s.player.charId && FB.station.isLanded(s.player) &&
+    return key === authorityKey(s, actor) || actor === s.player.charId && FB.station.mayAdministerJustice(s.player, s) &&
       key === 'barony:' + s.player.provinceId;
   }
   FB.justiceRulerEligible = function (s, id) {
     if (!s || !s.player || !live(s, id)) return false;
-    if (id === s.player.charId) return FB.station.isLanded(s.player) &&
+    if (id === s.player.charId) return FB.station.mayAdministerJustice(s.player, s) &&
       !!(FB.governanceEligible && FB.governanceEligible(s)) ||
       FB.political.grantedCounties(s, { kind:'character', id:id }, 'peace').length > 0;
     var rid = realmOf(s, id), r = rid && s.realms[rid];
-    return !!(r && r.alive && FB.realmRank.isTerritorial(r)) || person(s, id).role === 'lord' ||
+    return !!(r && r.alive && FB.realmRank.isTerritorial(r, s)) || person(s, id).role === 'lord' ||
       FB.political.grantedCounties(s, { kind:'character', id:id }, 'peace').length > 0;
   };
   FB.justiceCounties = function (s, id) {
     if (!FB.justiceRulerEligible(s, id)) return [];
     var rid = realmOf(s, id);
     var counties = rid ? FB.realmTerritory(s, rid).slice() : [];
-    if (!rid && (id === s.player.charId && FB.station.isLanded(s.player) ||
+    if (!rid && (id === s.player.charId && FB.station.mayAdministerJustice(s.player, s) ||
         person(s, id).role === 'lord')) {
       var pid = id === s.player.charId ? s.player.provinceId : location(s, id);
       if (pid) counties.push(pid);
@@ -240,7 +240,7 @@
     var a = person(s, actor), t = person(s, target);
     var counties = FB.justiceCounties(s, actor), offense = caseFor(s, actor, target, offenseId);
     var rid = realmOf(s, target), arid = realmOf(s, actor);
-    var targetBaron = target === s.player.charId && FB.station.isBaron(s.player);
+    var targetBaron = target === s.player.charId && FB.station.isBaron(s.player, s);
     var subordinateBaron = targetBaron && !!arid && under(s, s.player.liege, arid);
     var resistance = subordinateBaron || !!rid && !!arid && under(s, rid, arid);
     var truce = resistance ? arrestTruce(s, target, rid) : 0;
@@ -411,7 +411,7 @@
     var justified = !!(def && (def.level === 0 || offense && offense.severity >= def.level));
     var rid = realmOf(s, target), arid = realmOf(s, actor);
     var localTitle = !!rid && !!arid && rid !== arid && under(s, rid, arid);
-    if (target === s.player.charId && FB.station.isBaron(s.player)) {
+    if (target === s.player.charId && FB.station.isBaron(s.player, s)) {
       localTitle = !!arid && under(s, s.player.liege, arid) &&
         counties.indexOf(s.player.provinceId) >= 0 && actor !== target;
     }
@@ -479,7 +479,7 @@
   }
   function exile(s, p) {
     removeOffices(s, p.targetId);
-    if (p.titleRealmId || p.targetId === s.player.charId && FB.station.isBaron(s.player)) forfeit(s, p);
+    if (p.titleRealmId || p.targetId === s.player.charId && FB.station.isBaron(s.player, s)) forfeit(s, p);
     var c = person(s, p.targetId);
     if (p.targetId === s.player.charId) {
       s.player.travel = null;
@@ -561,7 +561,7 @@
       if (def.maim) {
         FB.addTrait(person(s, target), 'one_eyed');
         FB.addTrait(person(s, target), 'maimed');
-        if (target === s.player.charId && FB.station.isLanded(s.player)) FB.loseAllLand(s, {});
+        if (target === s.player.charId && FB.station.isLanded(s.player, s)) FB.loseAllLand(s, {});
         else if (realmOf(s, target)) FB.advanceRealmSuccession(s, realmOf(s, target));
       }
       if (def.exile) exile(s, p);
@@ -592,7 +592,7 @@
     if (typeof key !== 'string') return null;
     if (key === 'player' && !(s.realms.player && s.realms.player.alive)) return null;
     var successor = key && key.indexOf('barony:') === 0 ?
-      (FB.station.isLanded(s.player) && key === 'barony:' + s.player.provinceId ? person(s, s.player.charId) : null) :
+      (FB.station.mayAdministerJustice(s.player, s) && key === 'barony:' + s.player.provinceId ? person(s, s.player.charId) : null) :
       key && key.indexOf('character:') === 0 ? person(s, key.slice(10)) : key && ruler(s, key);
     if (!successor || successor.dead || !FB.justiceRulerEligible(s, successor.id)) return null;
     row.captorId = successor.id;

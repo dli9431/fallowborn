@@ -556,3 +556,7 @@ input-guard checks use rendered visibility and retain the one-time payment check
 
 
 Scheduled-games coverage is authored in tests/e2e/specs/scheduled-games.spec.js, scheduled-games-lifecycle.spec.js and scheduled-games-ui.spec.js, with a scenario-local support/game/tournaments.js helper. It covers reserved funding, de jure capacity, wartime interruptions, physical return, annual intentions, exact rounds, admissions, technology grandfathering, save compatibility and the calendar/overlay. tournaments.spec.js retains legacy queued-invitation coverage while asserting exclusion from new random selection. Execution remains owner-controlled.
+
+Station ladder coverage
+
+station-ladders.spec.js adds 867/1066 eight-band eligibility and restore checks, isolated government and era overrides, independent landless command/council/justice/marriage meanings, NPC social-class mapping, named action restrictions, unrelated realm/campaign isolation, unused-band behavior, sparse label fallback, campaign-specific faith label validation, reordered promotion costs and malformed-data rejection. station-queries.spec.js extends the numeric comparison lint to NPC station and direct stationOf/playerStation reads. lexicon.spec.js uses the used-band label validation contract. Existing parity-fresh.spec.js, parity-corpus.spec.js and parity-portraits.spec.js cover the complete journeys and appearance comparison.

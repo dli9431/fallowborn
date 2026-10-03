@@ -4358,11 +4358,7 @@ therefore author only `properties.marriage.spouseLimit.m:3`, or use
 `properties.head:null` to remove an inherited office; this also disables an inherited
 `systems.papacy` capability. Legacy definitions that put qualities such as `head` at the
 top level still work, but new data should use
-`properties`. Rank titles are not a faith property any more: they live in the lexicon
-(`FBDATA.lexicons`, see Lexicons below), where a faith-layer entry supplies a faith's
-ladder. A modded or runtime faith that still sets `properties.rankTitles` (`m` and `f`,
-each with all eight tiers) is read as a faith-layer entry for that faith. `FBDATA.titles`
-is retained only as a compatibility fallback for old mods and saved title snapshots.
+properties. Rank titles live in the lexicon (FBDATA.lexicons, see Lexicons below), where a faith-layer entry supplies a faith's labels. A modded or runtime faith that still sets properties.rankTitles (m and f arrays) is read as a faith-layer entry for that faith. Validation requires a label at every band used by the campaign's effective ladder, or every shared feudal band when validating without a campaign. Unused positions may be null or absent. FBDATA.titles is retained only as a compatibility fallback for old mods and saved title snapshots.
 When a mod supplies one of the historical `titles.christian|muslim|pagan|jewish`
 or `_f` keys, the loader also mirrors it into the lexicon: `christian` replaces the base
 ladder and the other groups replace that faith's entry, preserving title-only mods. New
@@ -5185,3 +5181,11 @@ Scheduled games extension interface
 FBDATA.tournaments is loaded from data/tournaments.js. The tournaments runtime-mod root merges fields into existing scales (local, regional, grand), programmes (martial, mounted, lists), tracks (joust, melee, archery, wrestling, perform, trade, carrying, kitchens, stables, repairs, guarding, treatment, watch), and tactics (conservative, balanced, aggressive, assist). Keep ids, prize-bucket mappings, skill keys and character eligibility semantic; localize only name/desc. The duration, notice, world-capacity and record-retention constants are not exposed through this mod root. New activity ids require matching engine implementation.
 
 FB.tournaments exposes pure quote, entry, roundPreview, travelQuote, capacity, eligibility and calendar reads, with separate book, enter, resolveRound, depart, cancel, withdraw, tick and reconcile mutations. Never charge or roll from a preview. Confirmation must pass the exact review signature. Scheduled event records use contextValidator scheduled_games_valid and tournamentId, tournamentCharId, tournamentTrack, tournamentRound, tournamentKind. Each custom effect has its own impact adapter. Legacy invitation ids and option indices remain valid for queued saves. Full schemas and formulas are in designs/tournaments.md and plans/tournaments-and-regional-games.md.
+
+Station ladder definitions
+
+FBDATA.eras entries may declare ladder objects with bands (keys 0 to 7), ranks (keys 0 to 4) and social (keys 0 to 4). FBDATA.stationLadders.feudal supplies the shared complete baseline. Government forms may select a ladder strategy registered through FB.governments.register('ladder', id, overrides); the strategy supplies partial rows over the era definition. Eras and forms remain engine tables, not new runtime-mod roots. A missing or null era ladder and an omitted form ladder retain the shared baseline.
+
+Band fields are used (boolean), order, eligibilityTier, socialStation, realmRank and previous (integer scale mappings), role (serf, commoner, gentry, lord or crowned), succession (personal or dynastic), promotion (null or an object with route and next) and named permission flags. Promotion routes are freedom, manor, barony, county or higher; next is null or a band from 0 to 7. Permissions include the existing FB.station meanings plus mayCommand, mayAdministerJustice and mayArrangeDynasticMarriage. Rank rows declare order, tier and the FB.realmRank meanings. Social rows declare order and isLowborn, isFree, isGentle, isNoble and isRoyal. A supplied false flag overrides inherited true. used:false disables that band's permissions and data-threshold eligibility without changing saved identities.
+
+Action eligibility may declare station, the name of a supported station permission, alongside tierMin/tierMax and the other existing restrictions. Both named and numeric restrictions apply when both are supplied. Council seats may declare station; built-in seats use mayHoldCouncil. A legacy seat without station requires tierMin and the ladder's mayHoldCouncil permission. Sparse era/form rank label arrays must label every used band; unused positions can be null or absent. Missing individual labels fall through to the next lexicon layer, retaining the requested band index.

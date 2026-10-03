@@ -350,3 +350,7 @@ privilege sheets expose its temporary restrictions and remaining obligation.
 Liege Standing receives the capped fiscal contribution while the base remains
 unchanged. Existing incoming Estates obligations and creditor rights still apply.
 This baseline recovery capability has technology impact **none**.
+
+Government ladder membership
+
+parliamentActive asks sitsInEstates on the player's era/form ladder and independently requires a living immediate liege. The feudal data admits bands 3 to 5. Another form may admit different bands or no bands, without changing assembly code or equating membership with land ownership. Existing obligations, yearly agendas, policy technology gates and pending vote records retain their ordinary rules. This is an internal refactor, with no new technology gate.

@@ -1321,7 +1321,7 @@ window.FB = window.FB || {};
       obedienceId:obedience.id,
       enteredTurn:state.turn
     };
-    if (FB.station.rulesRealm(p) && state.realms.player && state.realms.player.alive &&
+    if (FB.station.rulesRealm(p, state) && state.realms.player && state.realms.player.alive &&
         lawful && FB.abdicatePlayerRealmToHeir) {
       var handed = FB.abdicatePlayerRealmToHeir(state, lawful);
       custody.secularRealmId = handed && handed.id || null;
@@ -1329,10 +1329,10 @@ window.FB = window.FB || {};
         FB.loseAllLand(state, { papalTransition:true });
         custody.secularEscheat = true;
       }
-    } else if (FB.station.holdsCounty(p) && FB.loseAllLand) {
+    } else if (FB.station.holdsCounty(p, state) && FB.loseAllLand) {
       FB.loseAllLand(state, { papalTransition:true });
       custody.secularEscheat = true;
-    } else if (FB.station.isLanded(p) && FB.breakAlliance) {
+    } else if (FB.station.isLanded(p, state) && FB.breakAlliance) {
       FB.breakAlliance(state, 'player');
     }
     p.provs = [];

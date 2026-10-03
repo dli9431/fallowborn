@@ -8,8 +8,8 @@
   function active(state, rid) {
     return state.treasuryAccounting && state.treasuryAccounting.mode === 'active' && account(state, rid);
   }
-  function eligible(realm, rid) {
-    return rid !== 'player' && realm && realm.alive && !realm.rebelFaction && FB.realmRank.isTerritorial(realm);
+  function eligible(realm, rid, state) {
+    return rid !== 'player' && realm && realm.alive && !realm.rebelFaction && FB.realmRank.isTerritorial(realm, state);
   }
   function count(key, amount) {
     const timing = FB.game && FB.game._fastForwardTiming;
@@ -22,7 +22,7 @@
   }
   function account(state, rid) {
     const realm = state.realms && state.realms[rid];
-    return eligible(realm, rid) && realm.treasury && realm.treasury.version === 1
+    return eligible(realm, rid, state) && realm.treasury && realm.treasury.version === 1
       && !realm.treasury.retired ? realm.treasury : null;
   }
   function empty(state, gold) {
@@ -91,25 +91,25 @@
   };
 
   // Shared public-government expenses; household and military costs stay separate.
-  FB.governmentCostParts = function (revenue, counties, vassals, tier) {
+  FB.governmentCostParts = function (revenue, counties, vassals, tier, state) {
     const b = FBDATA.balance, r = positive(revenue);
-    if (!FB.station.isLanded(tier)) return { revenue:0, administration:0, court:0, total:0 };
+    if (!FB.station.isLanded(tier, state)) return { revenue:0, administration:0, court:0, total:0 };
     const allowances = b.governmentCourtAllowance;
     const administration = r * b.governmentAdministrationRate + Math.min(
       r * b.governmentScaleRate, (positive(counties) + positive(vassals)) * b.governmentSeatCost);
     const court = r * b.governmentCourtRate + Math.min(r * b.governmentScaleRate,
-      allowances[Math.max(0, Math.min(4, tier - 3))]);
+      allowances[FB.station.realmRank(tier, state)]);
     return { revenue:r, administration:administration, court:court, total:administration + court };
   };
   FB.playerGovernmentCosts = function (state, tax) {
     const p = state.player;
-    if (!FB.station.isLanded(p)) return FB.governmentCostParts(0, 0, 0, p.tier);
+    if (!FB.station.isLanded(p, state)) return FB.governmentCostParts(0, 0, 0, p, state);
     return FB.governmentCostParts(FB.playerTax(state, tax),
-      (p.provs || []).length, FB.playerVassals(state).length, p.tier);
+      (p.provs || []).length, FB.playerVassals(state).length, p, state);
   };
   function governmentCosts(state, rid, fiscal) {
     return FB.governmentCostParts(numeric(fiscal.income) + numeric(fiscal.duesIn) - numeric(fiscal.duesOut),
-      fiscal.counties, fiscal.vassals, ((state.realms[rid] || {}).rank || 0) + 3);
+      fiscal.counties, fiscal.vassals, { tier:FB.realmRank.tier(state.realms[rid], state), realmId:rid }, state);
   }
   function necessary(fiscal) {
     return positive(fiscal.upkeep) + positive(fiscal.duesOut) + positive(fiscal.government);
@@ -129,7 +129,7 @@
       fiscal ? governmentCosts(state, rid, fiscal) :
         governmentCosts(state, rid, FB.treasurySnapshot(state).rows[rid] || {});
     const next = payer && positive(payer.distributionNextTurn);
-    const eligible = !!(payer && counties.length && (rid !== 'player' || FB.station.isLanded(state.player)));
+    const eligible = !!(payer && counties.length && (rid !== 'player' || FB.station.isLanded(state.player, state)));
     return { eligible:eligible, counties:counties,
       minimum:Math.max(FBDATA.balance.distributionMinimum, government.total),
       nextTurn:next || 0, ready:eligible && !(next > state.turn),
@@ -173,7 +173,7 @@
       const sovereigns = sovereignIndex(realms, ids), tech = Object.create(null);
       for (const rid of ids) {
         count('realm reads');
-        if (!eligible(realms[rid], rid)) continue;
+        if (!eligible(realms[rid], rid, state)) continue;
         rows[rid] = { tax:0, buildings:0, income:0, duesIn:0, duesOut:0, upkeep:0, counties:0, countyIds:[], vassals:0 };
       }
       for (const pid of Object.keys(state.owner || {})) {
@@ -606,14 +606,14 @@
     });
   };
   FB.treasuryCreateRealm = function (state, rid, source, share) {
-    if (!state.treasuryAccounting || !eligible(state.realms[rid], rid) || state.realms[rid].treasury) return;
+    if (!state.treasuryAccounting || !eligible(state.realms[rid], rid, state) || state.realms[rid].treasury) return;
     const from = account(state, source);
     const amount = from ? FB.treasuryAvailable(state, source) * Math.max(0, Math.min(1, numeric(share))) : 0;
     if (from) from.gold -= amount;
     state.realms[rid].treasury = empty(state, amount);
   };
   FB.treasuryCreateFromCounties = function (state, rid, provinces) {
-    if (!state.treasuryAccounting || !eligible(state.realms[rid], rid) || state.realms[rid].treasury) return;
+    if (!state.treasuryAccounting || !eligible(state.realms[rid], rid, state) || state.realms[rid].treasury) return;
     const selected = Object.create(null), donors = Object.create(null);
     for (const pid of provinces) selected[pid] = true;
     // Creation is rare. One county pass handles multiple donors without one

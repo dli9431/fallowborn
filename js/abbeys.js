@@ -153,7 +153,7 @@ window.FB = window.FB || {};
   FB.abbeyFoundationStatus = function (s) {
     const missing = [];
     check(FB.abbeyAccess(s) && available(s, me(s)), FB.T('An available Catholic adult'), missing);
-    check(FB.station.isFree(s.player), FB.T('A free household'), missing);
+    check(FB.station.isFree(s.player, s), FB.T('A free household'), missing);
     check(!record(s, s.player.provinceId), FB.T('No existing abbey in this county'), missing);
     check(houses(s).length < cfg().maxHouses, FB.T('Space for another religious house'), missing);
     check(s.player.gold >= cfg().foundationCost, FB.T('Requires {money:cost}', { cost:cfg().foundationCost }), missing);
@@ -180,7 +180,7 @@ window.FB = window.FB || {};
     const age = c ? FB.ageOf(c, s.date.year) : 0;
     const vocation = rank >= 2 && career && FB.professionHasRole(career.profession, 'cloister') &&
       career.experience >= 10;
-    const mature = c && age >= 35 && FB.stationOf(c) >= 2 && FB.skillOf(c, 'ste') >= 10;
+    const mature = c && age >= 35 && FB.socialStation.isGentle(c, s) && FB.skillOf(c, 'ste') >= 10;
     check(c && available(s, c) && c.sex === 'f', FB.T('An available Catholic woman'), missing);
     check(age >= 24, FB.T('Age 24'), missing);
     check(c && unmarried(s, c), FB.T('Unmarried or widowed, without a betrothal'), missing);
@@ -203,7 +203,7 @@ window.FB = window.FB || {};
     check(FB.abbeyCandidateFamily(s, c), FB.T('A candidate from your family'), missing);
     check(s.player.piety >= 100, FB.T('100 piety'), missing);
     check(s.player.prestige >= 40, FB.T('40 prestige'), missing);
-    check(c && !c.unfree && (c.id !== s.player.charId || FB.station.isFree(s.player)), FB.T('A free candidate'), missing);
+    check(c && !c.unfree && (c.id !== s.player.charId || FB.station.isFree(s.player, s)), FB.T('A free candidate'), missing);
     const last = h && c && h.petitions[c.id];
     const remaining = last === undefined || last === null ? 0 : Math.max(0, last + cfg().electionCooldown - s.turn);
     check(!remaining, FB.T('{days} days before another election', { days:remaining }), missing);
@@ -224,7 +224,7 @@ window.FB = window.FB || {};
     if (FB.unassignEnterpriseWorker) FB.unassignEnterpriseWorker(s, c.id);
     if (c.id === s.player.charId) {
       s.player.flags.abbot = 1;
-      if (!FB.station.isLanded(s.player)) FB.setPlayerTier(s, 3, { stationFarewell:false });
+      if (!FB.station.isLanded(s.player, s)) FB.setPlayerTier(s, 3, { stationFarewell:false });
       if (FB.validateFocus) FB.validateFocus(s);
     }
     c.station = Math.max(FB.stationOf(c), h.privileges.length ? 4 : 3);
@@ -274,7 +274,7 @@ window.FB = window.FB || {};
       const manor = s.player.manor;
       if (manor && manor.provinceId === g.provinceId && manor.settlement === g.settlement) {
         s.player.manor = null;
-        if (FB.station.isGentry(s.player) && !s.player.flags.abbot) FB.setPlayerTier(s, 1);
+        if (FB.station.isGentry(s.player, s) && !s.player.flags.abbot) FB.setPlayerTier(s, 1);
       }
     } else h.capital += q.cost;
     h.support = Math.min(100, h.support + cfg().endowmentSupport);
@@ -294,7 +294,7 @@ window.FB = window.FB || {};
     const missing = [];
     check(controller(s, h), FB.T('The acting abbess must be available'), missing);
     check(c && catholic(s, c) && c.sex === 'f' && c.id !== s.player.charId, FB.T('A living Catholic woman or girl'), missing);
-    check(c && FB.stationOf(c) >= 2, FB.T('A noble family'), missing);
+    check(c && FB.socialStation.isGentle(c, s), FB.T('A noble family'), missing);
     check(c && !FB.isHouseholdCharacter(s, c.id) && !FB.realmIdForRulerCharacter(s, c), FB.T('A guest from another household, without a ruling office'), missing);
     check(c && available(s, c) && unmarried(s, c) && !c.abbeyVows && !FB.abbeyOf(s, c) && !FB.abbeyResidentHouse(s, c.id), FB.T('Available for a temporary stay'), missing);
     check(c && (!c.career || !FB.professionHasRole(c.career.profession, ['cloister', 'clergy'])), FB.T('A lay resident'), missing);
@@ -446,7 +446,7 @@ window.FB = window.FB || {};
       !(FB.directSettlements && FB.directSettlements(s).length) &&
       !(FB.castellanyOf && FB.castellanyOf(s));
     h.holderId = null; h.vacancyTurn = s.turn;
-    if (only && FB.station.isBaron(s.player)) {
+    if (only && FB.station.isBaron(s.player, s)) {
       FB.setPlayerTier(s, 2, { attachLiege:false });
       if (FB.validateFocus) FB.validateFocus(s);
     }
@@ -456,7 +456,7 @@ window.FB = window.FB || {};
     const h = FB.abbeyOf(s, c);
     if (!h) return;
     s.player.flags.abbot = 1;
-    if (!FB.station.isLanded(s.player)) {
+    if (!FB.station.isLanded(s.player, s)) {
       if (restoring) s.player.tier = 3;
       else FB.setPlayerTier(s, 3, { stationFarewell:false });
     }
@@ -557,7 +557,7 @@ window.FB = window.FB || {};
       if (h.dispute && !s.chars[h.dispute.lordId]) delete h.dispute;
       return true;
     }).slice(0, cfg().maxHouses);
-    if (playerHeldOffice && !FB.abbeyOf(s) && FB.station.isBaron(s.player) &&
+    if (playerHeldOffice && !FB.abbeyOf(s) && FB.station.isBaron(s.player, s) &&
         !(s.player.provs || []).length && !FB.directSettlements(s).length && !FB.castellanyOf(s)) {
       /* Repair before legacy barony migration. Load must not award a secular
          title or run promotion side effects for a vacated religious office. */

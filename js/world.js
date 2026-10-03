@@ -416,7 +416,8 @@ window.FB = window.FB || {};
       }
       /* the technology and military slots (js/technology.js, js/armies.js) */
       var slotErrors = (FB.validateEraTechnology ? FB.validateEraTechnology(id, era) : [])
-        .concat(FB.validateEraMilitary ? FB.validateEraMilitary(id, era) : []);
+        .concat(FB.validateEraMilitary ? FB.validateEraMilitary(id, era) : [],
+          FB.station.validateLadder(era.ladder, id, false));
       for (var se = 0; se < slotErrors.length; se++) errors.push(slotErrors[se]);
       errors.push.apply(errors, FB.balanceLayers.validate(era.balance,
         FB.T('Era {id}', { id:id })));
@@ -2578,11 +2579,11 @@ window.FB = window.FB || {};
       return false;
     }
     if (rid !== 'player') {
-      return FB.realmRank.isRoyal(realm) &&
+      return FB.realmRank.isRoyal(realm, state) &&
         FB.realmProvinces(state, rid).length >=
           FB.religiousHeadBalance('religiousHeadClaimMinRealm', 6);
     }
-    return FB.isPlayerSovereign(state) && FB.station.isRoyal(state.player) &&
+    return FB.isPlayerSovereign(state) && FB.station.isRoyal(state.player, state) &&
       state.player.prestige >= FB.religiousHeadBalance('religiousHeadClaimPrestige', 500) &&
       state.player.piety >= FB.religiousHeadBalance('religiousHeadClaimPiety', 300) &&
       (state.player.provs ? state.player.provs.length : 0) >=
@@ -2658,7 +2659,7 @@ window.FB = window.FB || {};
         const candidates = [];
         for (const rid in state.realms) {
           if (rid !== 'player' && state.realms[rid] && state.realms[rid].alive &&
-              !state.realms[rid].liege && FB.realmRank.isRoyal(state.realms[rid]) &&
+              !state.realms[rid].liege && FB.realmRank.isRoyal(state.realms[rid], state) &&
               FB.faithInFold(state, FB.realmReligionId(state, rid), religionId) &&
               canClaimReligiousHead(state, religionId, rid, vacancy)) {
             candidates.push(rid);
@@ -3522,7 +3523,7 @@ window.FB = window.FB || {};
         religion: courtReligion(state, r, cap),
         born: m.born,
         dyn: m.dyn || 'of ' + r.name,
-        station: FB.realmRank.isRoyal(r) ? 4 : 3,
+        station: FB.realmRank.isRoyal(r, state) ? 4 : 3,
         quality: Math.max(2, r.rank + 1),
         opinion: FB.ri(-5, 20)
       });
@@ -3589,7 +3590,7 @@ window.FB = window.FB || {};
           religion:courtReligion(state, r, cap),
           born:m.born,
           dyn:m.dyn || 'of ' + r.name,
-          station:FB.realmRank.isRoyal(r) ? 4 : 3,
+          station:FB.realmRank.isRoyal(r, state) ? 4 : 3,
           quality:Math.max(2, r.rank + 1),
           opinion:FB.ri(-5, 20)
         });
@@ -3836,7 +3837,7 @@ window.FB = window.FB || {};
         religion:courtReligion(state, r, cap),
         born:m.born,
         dyn:m.dyn || 'of ' + r.name,
-        station:FB.realmRank.isRoyal(r) ? 4 : 3,
+        station:FB.realmRank.isRoyal(r, state) ? 4 : 3,
         quality:Math.max(2, r.rank + 1),
         traits:trait,
         opinion:standing
@@ -4154,7 +4155,7 @@ window.FB = window.FB || {};
     };
     realm.religion = c.religion || realm.religion;
     realm.dynasty = c.dyn || c.name;
-    c.station = Math.max(c.station || 0, FB.realmRank.isRoyal(realm) ? 4 : 3);
+    c.station = Math.max(c.station || 0, FB.realmRank.isRoyal(realm, state) ? 4 : 3);
     if (!c.royalLine) c.royalLine = { realmId:realmId, memberId:rootId };
     indexRuler(c.id, realmId);
     FB.refreshRealmSuccession(state, realmId);
@@ -4449,7 +4450,7 @@ window.FB = window.FB || {};
     if (outgoingCharacter && FB.noteCharacterStatus &&
         FB.realmRulerTitleSnapshot) {
       FB.noteCharacterStatus(state, outgoingCharacter,
-        FB.clamp((r.rank || 1) + 3, 4, 7),
+        FB.realmRank.tier(r, state, 1),
         FB.realmRulerTitleSnapshot(state, r, outgoingCharacter));
     }
     let heirId = null;
@@ -5315,7 +5316,7 @@ window.FB = window.FB || {};
     out.vassalIds = out.vassals.map(function (vassal) { return vassal.id; });
 
     if (!p || !realm || !realm.alive || !me || me.dead ||
-        p.dead || !FB.station.rulesRealm(p) || !FB.realmRank.isTerritorial(realm)) {
+        p.dead || !FB.station.rulesRealm(p, state) || !FB.realmRank.isTerritorial(realm, state)) {
       out.reason = FB.T('Only a living count or higher ruler may move a capital.');
       return out;
     }
@@ -5559,7 +5560,7 @@ window.FB = window.FB || {};
      grants or transfers the defeated crown — see docs/designs/realms.md. */
   FB.realmKingdomClaim = function (state, rid) {
     const r = state.realms[rid];
-    if (!r || !r.alive || rid === 'player' || !FB.realmRank.isKingdom(r) || r.liege) return null;
+    if (!r || !r.alive || rid === 'player' || !FB.realmRank.isKingdom(r, state) || r.liege) return null;
     for (const kid in FBDATA.kingdoms) {
       if (r.name === 'Kingdom of ' + FBDATA.kingdoms[kid].name) return kid;
     }
@@ -5615,7 +5616,7 @@ window.FB = window.FB || {};
        subtree's sovereignty with him, as in the breakaway path. */
     for (const vid in state.realms) {
       const v = state.realms[vid];
-      if (!v.alive || v.liege !== rid || v.rank < newRank) continue;
+      if (!v.alive || v.liege !== rid || !FB.realmRank.above(v, newRank, state) && !FB.realmRank.same(v, newRank)) continue;
       const vassalTerr = FB.realmTerritory(state, vid);
       v.liege = r.liege || null;
       if (!v.liege) {
@@ -5645,10 +5646,10 @@ window.FB = window.FB || {};
      render, daily tick, or the yearly realm loop. */
   FB.realmMayAssumeDuchy = function (state, rid) {
     const r = state.realms[rid];
-    if (!r || !r.alive || rid === 'player' || !FB.realmRank.isCounty(r)) return false;
+    if (!r || !r.alive || rid === 'player' || !FB.realmRank.isCounty(r, state)) return false;
     if (!r.liege) return true;
     const liege = state.realms[r.liege];
-    return !!(liege && liege.alive && FB.realmRank.isRoyal(liege));
+    return !!(liege && liege.alive && FB.realmRank.isRoyal(liege, state));
   };
 
   FB.completeDuchyForRealm = function (state, rid, preferredDid) {
@@ -5716,7 +5717,7 @@ window.FB = window.FB || {};
     let promoted = 0;
     for (const rid in state.realms) {
       const r = state.realms[rid];
-      if (!r || !r.alive || !FB.realmRank.isCounty(r)) continue;
+      if (!r || !r.alive || !FB.realmRank.isCounty(r, state)) continue;
       if (FB.recognizeCompleteDuchy(state, rid, { silent:true })) promoted++;
     }
     return promoted;
@@ -5949,7 +5950,7 @@ window.FB = window.FB || {};
           // county now; landed vassals
           // reattach upward to the dead liege's own liege
           let nl = fr.liege || null;
-          if (FB.station.isBaron(state.player)) {
+          if (FB.station.isBaron(state.player, state)) {
             const h = (state.holder && state.holder[state.player.provinceId]) || state.owner[state.player.provinceId];
             if (h && h !== 'player' && state.realms[h] && state.realms[h].alive) nl = h;
           }
@@ -5969,7 +5970,7 @@ window.FB = window.FB || {};
     // a tier-3 baron or Bishop is bound to the home county: if it changes
     // hands, the office answers to its new holder even while the old lord's
     // house survives elsewhere
-    if (state.player && FB.station.isBaron(state.player) && state.player.provinceId === pid &&
+    if (state.player && FB.station.isBaron(state.player, state) && state.player.provinceId === pid &&
         state.player.liege !== toRealm && toRealm !== 'player' &&
         state.realms[toRealm] && state.realms[toRealm].alive) {
       FB.changePlayerLiege(state, toRealm, 'realm:home_transfer');
@@ -6039,7 +6040,7 @@ window.FB = window.FB || {};
             '🕯 The lord of {province} dies without an heir — the {term:fief} returns to your hand.',
             { province: pr.name }));
         }
-      } else if (!opts.recipientId && FB.station.holdsCounty(p) && p.provs && liege && state.realms[liege] &&
+      } else if (!opts.recipientId && FB.station.holdsCounty(p, state) && p.provs && liege && state.realms[liege] &&
                  FB.topRealm(state, rid) === FB.playerRealmId(state)) {
         // the scramble: you must border the empty fief and share its sovereign
         let borders = false;
@@ -7024,7 +7025,7 @@ window.FB = window.FB || {};
           const succession = papalClaimantId ? r.succession :
             FB.refreshRealmSuccession(state, id);
           // Escheat is now the last resort for a genuinely exhausted count line.
-          if (!appointedTenureEnds && !papalClaimantId && r.liege && FB.realmRank.isCounty(r) &&
+          if (!appointedTenureEnds && !papalClaimantId && r.liege && FB.realmRank.isCounty(r, state) &&
               (!succession || !succession.heirId) &&
               FB.chance(B.escheatChance || 0) && FB.escheatRealm(state, id)) {
             yearAlliances.rebuild();
@@ -7179,12 +7180,12 @@ window.FB = window.FB || {};
       const courted = {};
       for (const id in state.realms) {
         const r = state.realms[id];
-        if (id === 'player' || !r.alive || r.liege || !FB.realmRank.isRoyal(r) || yearWars.has(id) ||
+        if (id === 'player' || !r.alive || r.liege || !FB.realmRank.isRoyal(r, state) || yearWars.has(id) ||
             courted[id] || yearAlliances.has(id) || !FB.chance(0.08)) continue;
         const choices = [];
         for (const id2 in state.realms) {
           const r2 = state.realms[id2];
-          if (id2 === id || id2 === 'player' || !r2.alive || r2.liege || !FB.realmRank.isRoyal(r2) ||
+          if (id2 === id || id2 === 'player' || !r2.alive || r2.liege || !FB.realmRank.isRoyal(r2, state) ||
               yearWars.has(id2) || courted[id2] || yearAlliances.has(id2)) continue;
           if (!FB.realmsAdjacent(state, id, id2)) continue;
           if (!realmsFaithCompatible(state, id, id2)) continue;
@@ -7300,7 +7301,7 @@ window.FB = window.FB || {};
       countyLevyPenalty += own * (f.amounts.countyPenalty - 1);
       settlementLevyPenalty += own * f.amounts.countyPenalty * (f.amounts.settlementPenalty - 1);
     }
-    if (!territorial.length && FB.station.isLanded(p) && FB.castellanyOf && FB.castellanyOf(state)) {
+    if (!territorial.length && FB.station.isLanded(p, state) && FB.castellanyOf && FB.castellanyOf(state)) {
       add(householdClass, 'castellany_retinue', B.baronyRetinue || 120);
     }
     if (FB.hasBishopric && FB.hasBishopric(state, state.chars[p.charId])) {
@@ -7324,7 +7325,7 @@ window.FB = window.FB || {};
         FB.householdStandardEffect(state, 'retinue'));
     }
 
-    if (FB.station.isLanded(p)) {
+    if (FB.station.isLanded(p, state)) {
       buildingEntries('levy', levyClass);
       for (const site of territorial) {
         const pid = site.provinceId;
@@ -7885,7 +7886,7 @@ window.FB = window.FB || {};
   };
   FB.devastationSeason = function (state) {
     const p = state.player;
-    if (FB.station.isLanded(p) || p.travel || !p.flags) return;
+    if (FB.station.isLanded(p, state) || p.travel || !p.flags) return;
     if (p.flags.lord_protection) return;
     if (!FB.hostileHostAtHome(state)) {
       // the danger passes: the memory of burning fades one step at a time
@@ -7894,7 +7895,7 @@ window.FB = window.FB || {};
       return;
     }
     if (!FB.chance(FBDATA.balance.devastationChance || 0.4)) return;
-    const firstSerfBurn = FB.station.isSerf(p) && !p.flags.home_burned &&
+    const firstSerfBurn = FB.station.isSerf(p, state) && !p.flags.home_burned &&
       !p.flags.home_burned2;
     if (p.flags.home_burned) { delete p.flags.home_burned; p.flags.home_burned2 = 1; }
     else p.flags.home_burned = 1;
@@ -7913,7 +7914,7 @@ window.FB = window.FB || {};
     }
     /* after the second burning the lord's steward makes his offer — but only
        a freeholder has a freedom left to sell */
-    if (p.flags.home_burned2 && FB.station.isFreeholder(p)) {
+    if (p.flags.home_burned2 && FB.station.isFreeholder(p, state)) {
       FB.queueEvent(state, 'devastation_protection', {});
     }
   };
@@ -7936,7 +7937,7 @@ window.FB = window.FB || {};
     delete p.flags.home_burned;
     delete p.flags.home_burned2;
     p.flags.lord_protection = 1;
-    if (FB.station.isFreeholder(p)) {
+    if (FB.station.isFreeholder(p, state)) {
       FB.setPlayerTier(state, 0, { tenureFormationReason: 'commendation' });
       FB.news(state, FB.msg('news.world.commended',
         '🛡 The household goes inside the lord’s wall — his people now, protected and bound.', {}));
@@ -8134,7 +8135,7 @@ window.FB = window.FB || {};
         const uid = 'usurper_' + state.turn;
         const u = FB.makeVassalRealm(state, {
           id: uid, name: old ? old.name : 'Realm of ' + (pr ? pr.name : 'the Usurper'),
-          capital: cap, rank: old ? old.rank : Math.max(1, p.tier - 3), liege: null,
+          capital: cap, rank: old ? old.rank : Math.max(1, FB.station.realmRank(p, state)), liege: null,
           culture:identity && identity.culture ||
             (pr ? pr.culture : FB.eraDefaultCulture(state)),
           religion:identity && identity.religion ||
@@ -8145,7 +8146,7 @@ window.FB = window.FB || {};
           if (FB.mergeRealmTech) FB.mergeRealmTech(state, uid, 'player');
           FB.markRealmDead(state, 'player');
           FB.breakAlliance(state, 'player');
-          if (FB.realmRank.isRoyal(old) && !opts.papalTransition) {
+          if (FB.realmRank.isRoyal(old, state) && !opts.papalTransition) {
             const rightful = state.chars[p.charId];
             rightful.restorationRight = {
               realmId: uid,
@@ -8228,7 +8229,7 @@ window.FB = window.FB || {};
     const p = state.player, w = p.war;
     // The queued offer comes once per war; the player may still ask to kneel.
     if (!w || !w.defending || (w.submissionOffered && !playerInitiated)) return false;
-    if (!FB.station.rulesRealm(p) || (p.flags && p.flags.in_prison)) return false;
+    if (!FB.station.rulesRealm(p, state) || (p.flags && p.flags.in_prison)) return false;
     const enemy = state.realms[w.enemy];
     if (!enemy || !enemy.alive) return false;
     /* Submission changes political control of every directly held county.
@@ -8237,7 +8238,7 @@ window.FB = window.FB || {};
        path, so no active fortified holding can remain when terms are valid. */
     if (FB.fortGarrisonBurden &&
         FB.fortGarrisonBurden(state, 'player') > 0) return false;
-    if ((enemy.rank || 1) <= Math.max(1, p.tier - 3)) return false; // only a greater lord
+    if (!FB.realmRank.above(enemy, Math.max(1, FB.station.realmRank(p, state)), state)) return false; // only a greater lord
     return FB.realmStrength(state, w.enemy) >=
       playerWarStrength(state) * (FBDATA.balance.submissionStrengthRatio || 1.5);
   };
@@ -8256,7 +8257,7 @@ window.FB = window.FB || {};
      war's end (or a dark night) opens the cell. */
   FB.maybeCapturePlayer = function (state, encircled) {
     const p = state.player, w = p.war;
-    if (!w || !FB.station.isLanded(p) || !p.flags || p.flags.in_prison) return;
+    if (!w || !FB.station.isLanded(p, state) || !p.flags || p.flags.in_prison) return;
     const me = state.chars[p.charId];
     /* a host shattered while cut off surrenders its leader far more often —
        there is no rout to slip away in */
@@ -8586,7 +8587,7 @@ window.FB = window.FB || {};
   FB.maybeQueuePlayerSiegeEvent = function (state) {
     const p = state.player;
     const w = p && p.war;
-    if (!(w && !w.defending && FB.station.isLanded(p) && w.target &&
+    if (!(w && !w.defending && FB.station.isLanded(p, state) && w.target &&
         state.owner[w.target] === w.enemy) || w.occupationEventQueued) {
       return false;
     }
@@ -9140,7 +9141,7 @@ window.FB = window.FB || {};
     delete p.flags.felony_mark;
     delete p.flags.felony_doom;
     if (!oldTop || !state.realms[oldTop] || !state.realms[oldTop].alive || FB.ordinaryWarBetween(state, 'player', oldTop)) return;
-    if (FB.station.isBaron(p) && (!p.provs || !p.provs.length)) {
+    if (FB.station.isBaron(p, state) && (!p.provs || !p.provs.length)) {
       // a baron holds his tower against the lord: the home county is the stake
       p.provs = [p.provinceId];
       FB.setPlayerTier(state, 4, { attachLiege:false });
@@ -9171,15 +9172,15 @@ window.FB = window.FB || {};
     const generation = old && old.ruler && old.ruler.generation !== undefined
       ? old.ruler.generation : 1;
     const r = old || { id: 'player', color: '#f0c840', aggression: 0, war: null, op: 0 };
-    r.name = FB.station.isDuke(p) && old && FBDATA.duchies[old.ambitionTitleRegion] &&
+    r.name = FB.station.isDuke(p, state) && old && FBDATA.duchies[old.ambitionTitleRegion] &&
       FB.playerDuchy(state) === old.ambitionTitleRegion
       ? 'Duchy of ' + FBDATA.duchies[old.ambitionTitleRegion].name
-      : FB.station.isKing(p) && old && k === old.ambitionTitleRegion && FBDATA.kingdoms[k]
+      : FB.station.isKing(p, state) && old && k === old.ambitionTitleRegion && FBDATA.kingdoms[k]
         ? 'Kingdom of ' + FBDATA.kingdoms[k].name : nm;
     r.capital = (p.provs && p.provs[0]) || p.provinceId;
     r.religion = me.religion;
     r.alive = true;
-    r.rank = Math.max(1, p.tier - 3);
+    r.rank = Math.max(1, FB.station.realmRank(p, state));
     r.liege = p.liege || null;
     r.ruler = {
       name: me.name, sex: me.sex, culture: me.culture,
@@ -9358,7 +9359,7 @@ window.FB = window.FB || {};
     if (sovereignTitle) {
       FB.changePlayerLiege(state, null, 'realm:inherit_sovereign');
     } else if (inheritedLiege !== 'player' &&
-        (mine.rank < inherited.rank || !mine.liege)) {
+        (FB.realmRank.above(inherited, mine, state) || !mine.liege)) {
       FB.changePlayerLiege(state, inheritedLiege, 'realm:inherit_vassal');
     }
     const demesne = FB.realmHeldCounties(state, rid).slice();
@@ -9378,9 +9379,9 @@ window.FB = window.FB || {};
     /* The realm's temporal inheritance is separate from any religious office:
        markRealmDead leaves the latter explicitly vacant for recovery. */
     FB.breakAlliance(state, rid);
-    const oldRank = mine.rank || Math.max(1, p.tier - 3);
-    mine.rank = Math.max(oldRank, inherited.rank || 1);
-    FB.setPlayerTier(state, Math.max(p.tier, mine.rank + 3), { attachLiege:false });
+    const oldRank = mine.rank || Math.max(1, FB.station.realmRank(p, state));
+    mine.rank = FB.realmRank.higherRank({ rank:oldRank, realmId:mine.id }, inherited, state);
+    FB.setPlayerTier(state, FB.station.higherTier(p, FB.realmRank.tier(mine, state), state), { attachLiege:false });
     if ((inherited.rank || 0) >= oldRank) {
       mine.name = inherited.name;
       mine.ambitionTitleRegion = inherited.ambitionTitleRegion || null;
@@ -9405,7 +9406,7 @@ window.FB = window.FB || {};
     FB.invalidateRealmCache();
     FB.checkTierPromotions(state);
     if (FB.notePlayerStatus) FB.notePlayerStatus(state);
-    if (FB.councilEnsure && FB.station.mayHoldCouncil(p)) FB.councilEnsure(state);
+    if (FB.councilEnsure && FB.station.mayHoldCouncil(p, state)) FB.councilEnsure(state);
     if (FB.ui && FB.ui.mapDirty) FB.ui.mapDirty();
     FB.news(state, FB.msg('news.world.realm_inherited',
       '👑 {realm} joins your rule by rightful succession.', { realm: inherited.name }));
@@ -9531,7 +9532,7 @@ window.FB = window.FB || {};
       title.special = 'abbess';
       out.push({ d:'Abbey', titleData:title, pid:abbey.provinceId });
     }
-    if (FB.station.isBaron(p) && !bishopric && !abbey) {
+    if (FB.station.isBaron(p, state) && !bishopric && !abbey) {
       const pr = FB.world && FB.world.byId[p.provinceId];
       out.push({
         d: 'Barony',
@@ -9540,13 +9541,13 @@ window.FB = window.FB || {};
       });
       return { high: out, counties: [] };
     }
-    if (!FB.station.rulesRealm(p)) return {
+    if (!FB.station.rulesRealm(p, state)) return {
       high:bishopEntry ? [bishopEntry] : out,
       counties:[]
     };
     /* list only styles actually held: a vassal can hold a dignity's substance
        without its style (a duke's man with a duchy majority stays a count) */
-    if (FB.station.isImperial(p)) for (const eid of FB.playerEmpires(state)) {
+    if (FB.station.isImperial(p, state)) for (const eid of FB.playerEmpires(state)) {
       const rawEid = eid.replace(/^e_/, '');
       let empirePid = (state.realms[rawEid] && state.realms[rawEid].capital) || null;
       if (!empirePid && FB.empireKingdoms && FB.kingdomCounties) {
@@ -9563,7 +9564,7 @@ window.FB = window.FB || {};
         pid: empirePid || (p.provs && p.provs[0]) || p.provinceId || null
       });
     }
-    if (FB.station.isRoyal(p)) for (const kid of FB.playerKingdoms(state)) {
+    if (FB.station.isRoyal(p, state)) for (const kid of FB.playerKingdoms(state)) {
       const rawKid = kid.replace(/^k_/, '');
       const kcs = FB.kingdomCounties ? FB.kingdomCounties(kid) : [];
       const kingdomPid = (state.realms[rawKid] && state.realms[rawKid].capital) || kcs[0] || (p.provs && p.provs[0]) || p.provinceId || null;
@@ -9574,7 +9575,7 @@ window.FB = window.FB || {};
         pid: kingdomPid
       });
     }
-    if (FB.station.isDucal(p)) for (const did of FB.playerDuchies(state)) {
+    if (FB.station.isDucal(p, state)) for (const did of FB.playerDuchies(state)) {
       const dcs = FB.duchyCounties ? FB.duchyCounties(did) : [];
       out.push({
         d: 'Duchy',
@@ -9601,7 +9602,7 @@ window.FB = window.FB || {};
     // an older save) or went stale — the county changed hands under a living
     // lord, leaving the office sworn to a lord who no longer holds its home.
     // A tier-3 office is never "independent", nor a foreign lord's man.
-    if (FB.station.isBaron(p)) {
+    if (FB.station.isBaron(p, state)) {
       const bh = (state.holder && state.holder[p.provinceId]) || state.owner[p.provinceId];
       if (bh && bh !== 'player' && state.realms[bh] &&
           state.realms[bh].alive && p.liege !== bh) {
@@ -9609,7 +9610,7 @@ window.FB = window.FB || {};
       }
     }
     const n = p.provs ? p.provs.length : 0;
-    if (n && FB.station.rulesRealm(p) && (!state.realms.player || !state.realms.player.alive)) FB.foundPlayerRealm(state);
+    if (n && FB.station.rulesRealm(p, state) && (!state.realms.player || !state.realms.player.alive)) FB.foundPlayerRealm(state);
     if (state.realms.player && state.realms.player.alive) {
       state.realms.player.liege = p.liege || null;
     }
@@ -9617,12 +9618,12 @@ window.FB = window.FB || {};
     // a liege must outrank his man (a count answers to a duke, a duke to a
     // king): older grants could leave the player kneeling to a mere peer —
     // walk up the chain to the first lord of truly higher rank
-    if (FB.station.rulesRealm(p)) {
-      const pRank = Math.max(1, p.tier - 3);
+    if (FB.station.rulesRealm(p, state)) {
+      const pRank = Math.max(1, FB.station.realmRank(p, state));
       let guard = 0;
       let liege = p.liege;
       while (liege && state.realms[liege] &&
-             state.realms[liege].rank <= pRank &&
+             !FB.realmRank.above(state.realms[liege], pRank, state) &&
              state.realms[liege].liege && guard++ < 10) {
         liege = state.realms[liege].liege;
       }
@@ -9638,7 +9639,7 @@ window.FB = window.FB || {};
     /* A landed record below Count can only come from an old or malformed save:
        every live acquisition path now assigns Count explicitly. Repair the
        impossible combination without charging or announcing an investiture. */
-    if (!FB.station.rulesRealm(p)) {
+    if (!FB.station.rulesRealm(p, state)) {
       FB.setPlayerTier(state, 4, { attachLiege:false });
       FB.foundPlayerRealm(state);
     }
@@ -9646,14 +9647,14 @@ window.FB = window.FB || {};
        not at least a king keeps the land but waits for the style — the duchy
        stays a claim until he answers to a king, an emperor, or no one. */
     const duchyBlocked = !!(p.liege && state.realms[p.liege] &&
-      state.realms[p.liege].alive && !FB.realmRank.isRoyal(state.realms[p.liege]));
+      state.realms[p.liege].alive && !FB.realmRank.isRoyal(state.realms[p.liege], state));
     /* De jure substance no longer grants style by itself. Ordinary Duke,
        King, and Emperor elevations are deliberate paid claims handled by
        rankElevationStatus/claimRankElevation; this pass remains responsible
        for hierarchy repair, claim hints, and title lapse. */
     /* the claim, spoken aloud once per generation: the substance of a duchy
        without the style, while a mere duke sits above him */
-    if (duchyBlocked && FB.station.isCount(p) && !(p.flags && p.flags.duchy_claim_hint)) {
+    if (duchyBlocked && FB.station.isCount(p, state) && !(p.flags && p.flags.duchy_claim_hint)) {
       const claimDid = FB.playerDuchy(state);
       if (claimDid) {
         p.flags = p.flags || {};
@@ -9671,11 +9672,11 @@ window.FB = window.FB || {};
        titleLapseDemoteDays the style falls ONE rung. Substance restored at
        any point clears the slide. Lower falls have their own paths
        (war, attainder, debt) — see docs/designs/descent.md. */
-    if (FB.station.isDucal(p)) {
+    if (FB.station.isDucal(p, state)) {
       const B = FBDATA.balance;
       let holds = true;
-      if (FB.station.isEmperor(p)) holds = !!(indep && FB.playerEmpire(state));
-      else if (FB.station.isKing(p)) holds = !!(indep && FB.playerKingdom(state));
+      if (FB.station.isEmperor(p, state)) holds = !!(indep && FB.playerEmpire(state));
+      else if (FB.station.isKing(p, state)) holds = !!(indep && FB.playerKingdom(state));
       /* a duke kneeling to a mere duke keeps the land but not the style */
       else holds = !!FB.playerDuchy(state) && !duchyBlocked;
       if (holds) {
@@ -9687,17 +9688,17 @@ window.FB = window.FB || {};
           const lapsedDays = state.turn - p.titleLapse.since;
           if (lapsedDays >= (B.titleLapseDemoteDays || 540)) {
             const oldTitle = FB.titleSnapshot(state);
-            const fallenTo = p.tier - 1;
+            const fallenTo = FB.station.previous(p, state);
             delete p.titleLapse;
             FB.setPlayerTier(state, fallenTo, { attachLiege:false });
             p.prestige = Math.max(0, p.prestige - (B.titleLapsePrestigeCost || 40));
             /* vassals of equal or greater rank cannot kneel to a peer:
                reattach them to the player's own liege, or loose them
                independent when the player bows to no one */
-            const newRank = Math.max(1, fallenTo - 3);
+            const newRank = Math.max(1, FB.station.realmRank(fallenTo, state));
             for (const vid of FB.playerVassals(state)) {
               const v = state.realms[vid];
-              if (!v || !v.alive || v.rank < newRank) continue;
+              if (!v || !v.alive || !FB.realmRank.above(v, newRank, state) && !FB.realmRank.same(v, newRank)) continue;
               v.liege = p.liege || null;
               FB.news(state, FB.msg('news.world.vassal_loosed',
                 '🕊 {realm} no longer kneels to a house of equal dignity.',

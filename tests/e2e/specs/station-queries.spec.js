@@ -3,7 +3,7 @@ const fs = require('fs');
 const path = require('path');
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
-  'index.html',
+  'index.html', 'data/eras.js', 'data/political_institutions.js',
   'js'
 ]);
 const { test, expect } = require('../support/fixture');
@@ -15,16 +15,17 @@ const allowlistPath = path.resolve(__dirname, '..', 'fixtures', 'engine-ids',
 const kinds = ['save', 'validation'];
 const operator = '(?:===?|!==?|<=?|>=?)';
 const number = '-?\\d+(?:\\.\\d+)?';
-const member = '\\.\\s*(?:tier|rank)\\b';
+const member = '\\.\\s*(?:tier|rank|station)\\b';
 /* x.tier >= 3, (x.rank || 0) < 1, and the reversed 3 <= x.tier. Comments
    and strings are already masked out of the scanned lines. */
 const comparisons = [
   new RegExp(member + '\\s*(?:\\|\\|\\s*' + number + '\\s*\\)\\s*)?' + operator + '\\s*' + number),
   new RegExp('(?:^|[^\\w$.])' + number + '\\s*' + operator +
-    '\\s*\\(?\\s*[\\w$.\\[\\]()]*' + member)
+    '\\s*\\(?\\s*[\\w$.\\[\\]()]*' + member),
+  new RegExp('FB\\.(?:stationOf|playerStation)\\([^()]*\\)\\s*' + operator + '\\s*' + number)
 ];
 
-/* Every engine line outside js/station.js that compares a .tier or .rank
+/* Every engine line outside js/station.js that compares a .tier, .rank or .station
    member with a number. */
 function findings() {
   const out = new Map();
@@ -91,7 +92,10 @@ test('the lint pattern catches each comparison shape it is meant to reject',
       'if (state.realms[rid].rank < 3) return;',
       'const ok = (realm.rank || 0) < 1;',
       'if (4 <= p.tier) x();',
-      'a = s.player.tier!==2;'
+      'a = s.player.tier!==2;',
+      'if (c.station >= 2) x();',
+      'if (FB.stationOf(c) < 3) x();',
+      'if (FB.playerStation(state) < 2) x();'
     ];
     const accepted = [
       'if (FB.station.isLanded(p)) x();',
@@ -132,7 +136,10 @@ test('station and realm rank queries give the feudal ladder answers',
         isDucal:function (t) { return t >= 5; },
         isRoyal:function (t) { return t >= 6; },
         mayHoldCouncil:function (t) { return t >= 6; },
-        isImperial:function (t) { return t >= 7; }
+        isImperial:function (t) { return t >= 7; },
+        mayCommand:function (t) { return t >= 3; },
+        mayAdministerJustice:function (t) { return t >= 3; },
+        mayArrangeDynasticMarriage:function (t) { return t >= 3; }
       };
       const rankRules = {
         isCounty:function (r) { return r === 1; },
@@ -145,13 +152,15 @@ test('station and realm rank queries give the feudal ladder answers',
         isImperial:function (r) { return r >= 4; }
       };
       const roles = ['serf', 'commoner', 'gentry', 'lord', 'lord', 'lord', 'crowned', 'crowned'];
-      const tierHelpers = ['reaches', 'exceeds', 'societalRole'];
+      const tierHelpers = ['reaches','exceeds','societalRole','bandCount','meanings','has',
+        'socialClass','realmRank','above','higherTier','same','promotion','next','previous','succession',
+        'tierFor','lowerSocialClass','titlesValid','context','definition','validateLadder'];
 
       Object.keys(S).forEach(function (name) {
         if (!tierRules[name] && tierHelpers.indexOf(name) < 0) out.push('untested station query ' + name);
       });
       Object.keys(R).forEach(function (name) {
-        if (!rankRules[name]) out.push('untested realm rank query ' + name);
+        if (!rankRules[name] && ['tier','above','higherRank','same'].indexOf(name) < 0) out.push('untested realm rank query ' + name);
       });
 
       for (let t = 0; t <= 7; t++) {

@@ -40,18 +40,49 @@
            lies wholly outside it
 
    The remaining slots are declared here and filled by later systems:
-   vocabulary, ladder, systems, eventEras, currency and architecture. null
+   vocabulary, systems, eventEras, currency and architecture. null
    means the era adds nothing and today's shared behavior applies.
-   vocabulary stays null: an era's words and rank ladder are its entry in
-   FBDATA.lexicons.eras (data/lexicons.js).
+   vocabulary stays null: an era's words and rank labels are its entry in
+   FBDATA.lexicons.eras (data/lexicons.js). ladder is the permission definition
+   below, separate from those display labels.
    ========================================================================= */
 window.FBDATA = window.FBDATA || {};
+
+/* Eight stable station bands. Permissions, eligibility thresholds, social
+   classes, realm mappings and promotion routes are data, not tier arithmetic.
+   Government ladder strategies may override individual row fields. */
+FBDATA.stationLadders = { feudal:{
+  bands:{
+    0:{'used':true,'order':0,'eligibilityTier':0,'socialStation':0,'realmRank':0,'previous':0,'role':'serf','succession':'personal','promotion':{'route':'freedom','next':1},'isSerf':true},
+    1:{'used':true,'order':1,'eligibilityTier':1,'socialStation':1,'realmRank':0,'previous':0,'role':'commoner','succession':'personal','promotion':{'route':'manor','next':2},'isFreeholder':true,'isFree':true,'isFreeUnlanded':true},
+    2:{'used':true,'order':2,'eligibilityTier':2,'socialStation':2,'realmRank':0,'previous':1,'role':'gentry','succession':'dynastic','promotion':{'route':'barony','next':3},'isGentry':true,'isFree':true,'isGentle':true,'isFreeUnlanded':true},
+    3:{'used':true,'order':3,'eligibilityTier':3,'socialStation':3,'realmRank':0,'previous':2,'role':'lord','succession':'dynastic','promotion':{'route':'county','next':4},'isBaron':true,'isFree':true,'isGentle':true,'isLanded':true,'sitsInEstates':true,'mayCommand':true,'mayAdministerJustice':true,'mayArrangeDynasticMarriage':true},
+    4:{'used':true,'order':4,'eligibilityTier':4,'socialStation':4,'realmRank':1,'previous':3,'role':'lord','succession':'dynastic','promotion':{'route':'higher','next':5},'isCount':true,'isFree':true,'isGentle':true,'isLanded':true,'rulesRealm':true,'holdsCounty':true,'sitsInEstates':true,'mayCommand':true,'mayAdministerJustice':true,'mayArrangeDynasticMarriage':true},
+    5:{'used':true,'order':5,'eligibilityTier':5,'socialStation':4,'realmRank':2,'previous':4,'role':'lord','succession':'dynastic','promotion':{'route':'higher','next':6},'isDuke':true,'isFree':true,'isGentle':true,'isLanded':true,'rulesRealm':true,'holdsCounty':true,'sitsInEstates':true,'isDucal':true,'mayCommand':true,'mayAdministerJustice':true,'mayArrangeDynasticMarriage':true},
+    6:{'used':true,'order':6,'eligibilityTier':6,'socialStation':4,'realmRank':3,'previous':5,'role':'crowned','succession':'dynastic','promotion':{'route':'higher','next':7},'isKing':true,'isFree':true,'isGentle':true,'isLanded':true,'rulesRealm':true,'holdsCounty':true,'isDucal':true,'isRoyal':true,'mayHoldCouncil':true,'mayCommand':true,'mayAdministerJustice':true,'mayArrangeDynasticMarriage':true},
+    7:{'used':true,'order':7,'eligibilityTier':7,'socialStation':4,'realmRank':4,'previous':6,'role':'crowned','succession':'dynastic','promotion':null,'isEmperor':true,'isFree':true,'isGentle':true,'isLanded':true,'rulesRealm':true,'holdsCounty':true,'isDucal':true,'isRoyal':true,'mayHoldCouncil':true,'isImperial':true,'mayCommand':true,'mayAdministerJustice':true,'mayArrangeDynasticMarriage':true}
+  },
+  ranks:{
+    0:{'order':0,'tier':0},
+    1:{'order':1,'tier':4,'isCounty':true,'isTerritorial':true},
+    2:{'order':2,'tier':5,'isDuchy':true,'isTerritorial':true,'isDucal':true},
+    3:{'order':3,'tier':6,'isKingdom':true,'isTerritorial':true,'isDucal':true,'isRoyal':true},
+    4:{'order':4,'tier':7,'isEmpire':true,'isTerritorial':true,'isDucal':true,'isRoyal':true,'isImperial':true}
+  },
+  social:{
+    0:{'order':0,'isLowborn':true},
+    1:{'order':1,'isFree':true},
+    2:{'order':2,'isFree':true,'isGentle':true},
+    3:{'order':3,'isFree':true,'isGentle':true,'isNoble':true},
+    4:{'order':4,'isFree':true,'isGentle':true,'isNoble':true,'isRoyal':true}
+  }
+} };
 
 FBDATA.eras = {
   late_antique:{
     from:375, to:649,
     defaultGovernment:'regnum', defaultCulture:'roman',
-    costume:'late_antique', vocabulary:null, ladder:null, systems:null,
+    costume:'late_antique', vocabulary:null, ladder:FBDATA.stationLadders.feudal, systems:null,
     technology:{ from:476, to:649, startingKnowledge:'historical' },
     military:null, eventEras:null, currency:null, architecture:null,
     balance:null
@@ -59,7 +90,7 @@ FBDATA.eras = {
   early_medieval:{
     from:650, to:999,
     defaultGovernment:'territorial', defaultCulture:'frankish',
-    costume:'medieval', vocabulary:null, ladder:null, systems:null,
+    costume:'medieval', vocabulary:null, ladder:FBDATA.stationLadders.feudal, systems:null,
     technology:{ from:650, to:999, startingKnowledge:'historical' },
     military:null, eventEras:null, currency:null, architecture:null,
     balance:null
@@ -67,7 +98,7 @@ FBDATA.eras = {
   high_medieval:{
     from:1000, to:1300,
     defaultGovernment:'territorial', defaultCulture:'frankish',
-    costume:'medieval', vocabulary:null, ladder:null, systems:null,
+    costume:'medieval', vocabulary:null, ladder:FBDATA.stationLadders.feudal, systems:null,
     technology:{ from:1000, to:1300, startingKnowledge:'historical' },
     military:null, eventEras:null, currency:null, architecture:null,
     balance:null

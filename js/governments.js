@@ -105,6 +105,8 @@ window.FB = window.FB || {};
       }
       var problems = G.problems(formId);
       for (var i = 0; i < problems.length; i++) errors.push(describe(formId, problems[i]));
+      var ladder = forms[formId].ladder && G.strategy('ladder', forms[formId].ladder);
+      errors.push.apply(errors, FB.station.validateLadder(ladder, formId, true));
       errors.push.apply(errors, FB.balanceLayers.validate(forms[formId].balance,
         FB.T('Government form {form}', { form:formId })));
     }

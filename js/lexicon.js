@@ -14,7 +14,6 @@ window.FB = window.FB || {};
   var LAYERS = ['cultures', 'faiths', 'governments', 'eras'];
   var FORMS = { one:true, other:true, title:true };
   var ID = /^[a-z][a-z0-9_]*$/;
-  var TIERS = 8;
   /* termId -> { layer:true } for every non-base layer that defines it, so
      a term no period overrides skips context resolution entirely. Rebuilt
      after mods or tests change FBDATA.lexicons (FB.lexicon.reset). */
@@ -187,6 +186,11 @@ window.FB = window.FB || {};
   L.rank = function (state, tier, ctx) {
     var r = resolver(state, ctx);
     var sex = r('sex') === 'f' ? 'f' : 'm';
+    var bandIndex = Math.max(0, Math.min(FB.station.bandCount - 1, Math.floor(Number(tier) || 0)));
+    function hasBand(titles) {
+      return plain(titles) && Array.isArray(titles[sex]) &&
+        typeof titles[sex][bandIndex] === 'string' && !!titles[sex][bandIndex];
+    }
     var lineage = r('faiths');
     var legacy = lineage.length && FB.faithValue
       ? FB.faithValue(state, lineage[0], 'rankTitles') : null;
@@ -198,17 +202,17 @@ window.FB = window.FB || {};
       var ids = layerIds(r, layer);
       for (var i = 0; i < ids.length && !found; i++) {
         var e = entry(layer, ids[i]);
-        if (e && plain(e.rank)) {
+        if (e && hasBand(e.rank)) {
           found = { source:layer + '.' + ids[i], titles:e.rank,
             faithId:layer === 'faiths' ? ids[i] : null };
-        } else if (layer === 'faiths' && ids[i] === legacySource) {
+        } else if (layer === 'faiths' && ids[i] === legacySource && hasBand(legacy.value)) {
           found = { source:'religion.' + ids[i], titles:legacy.value, faithId:ids[i] };
         }
       }
     }
     if (!found) found = { source:'base', titles:data().base.rank, faithId:null };
     var list = Array.isArray(found.titles[sex]) ? found.titles[sex] : found.titles.m;
-    var index = Math.max(0, Math.min(list.length - 1, Math.floor(Number(tier) || 0)));
+    var index = bandIndex;
     return { source:found.source, faithId:found.faithId, sex:sex, tier:index, word:list[index] };
   };
 
@@ -278,11 +282,10 @@ window.FB = window.FB || {};
         }
       }
     }
-    function checkRank(where, rank) {
+    function checkRank(where, rank, ladder) {
       if (rank === undefined) return;
-      if (!plain(rank) || !Array.isArray(rank.m) || !Array.isArray(rank.f) ||
-          rank.m.length !== TIERS || rank.f.length !== TIERS) {
-        fault(where, 'rank needs m and f arrays with eight tiers.');
+      if (!FB.station.titlesValid(rank, ladder)) {
+        fault(where, 'rank needs m and f labels for every used ladder band.');
       }
     }
     if (!plain(lex) || !plain(lex.base) || !plain(lex.base.terms) || !plain(lex.base.rank)) {
@@ -303,7 +306,8 @@ window.FB = window.FB || {};
           fault(where, 'names an unknown ' + layer + ' id.');
         }
         checkTerms(where, e.terms, false);
-        checkRank(where, e.rank);
+        checkRank(where, e.rank, layer === 'eras' ? FB.station.definition({ era:id }, null) :
+          layer === 'governments' ? FB.station.definition({ formId:id }, null) : undefined);
         if (e.labels !== undefined && !plain(e.labels)) fault(where, 'labels must be an object.');
       }
     }

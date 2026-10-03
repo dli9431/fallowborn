@@ -630,3 +630,7 @@ existing children are never rewritten.
 CrazyGames disables exceptional sibling courtship and proposals at their shared
 status boundaries, including accepted-record and queued-event paths. Its save
 profile rejects ordinary imported lives. See [content profiles](distribution-content.md).
+
+Government ladder and social class
+
+Dynastic match navigation asks mayArrangeDynasticMarriage independently of isLanded. The feudal ladder grants both from band 3. NPC station remains a saved class from 0 to 4 with the legacy lord/notable inference; FB.socialStation resolves gentle/noble eligibility, class gaps and minimum-station policies through the NPC's form and era. Player class comes from its current band mapping, preserving the cardinal/Pope override. Courtship, kinship, doctrine, Standing, dowry and prestige checks remain independent. Ladder changes do not rewrite a pledged marriage or existing NPC station. This is an internal refactor, with no technology change.

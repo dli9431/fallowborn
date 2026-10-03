@@ -102,7 +102,7 @@ window.FB = window.FB || {};
   SP.isTierUnlocked = function (tier) {
     tier = Math.max(0, Math.min(HIGHEST_START_TIER,
       Math.floor(Number(tier) || 0)));
-    return tier <= startProgression.highestAchievedTier;
+    return !FB.station.above(tier, startProgression.highestAchievedTier, null);
   };
   SP.noteTier = function (tier) {
     tier = Math.max(0, Math.min(7, Math.floor(Number(tier) || 0)));
@@ -111,7 +111,7 @@ window.FB = window.FB || {};
       startProgression = stored;
     }
     const previous = startProgression.highestAchievedTier;
-    if (tier <= previous) {
+    if (!FB.station.above(tier, previous, null)) {
       if (crazy && stored.highestAchievedTier < previous) writeStartProgression();
       return {
         changed:false, startsChanged:false, previous:previous, tier:previous
@@ -1577,9 +1577,9 @@ window.FB = window.FB || {};
       const current = player && FB.state.chars &&
         FB.state.chars[player.charId];
       if (current && (current.station === undefined || current.station === null)) {
-        current.station = FB.clamp(player.tier, 0, 4);
+        current.station = FB.station.socialClass(player, FB.state);
       }
-      if (current && FB.station.isSerf(player)) current.unfree = true;
+      if (current && FB.station.isSerf(player, FB.state)) current.unfree = true;
       else if (current) delete current.unfree;
     });
     if (FB.ensureCharacterBynames) restoreRepair('character bynames', function () {

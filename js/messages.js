@@ -553,7 +553,7 @@ window.FB = window.FB || {};
       if (FB.fullName) audienceFamily[FB.fullName(character)] = true;
     }
     const owners = state.owner || {}, holders = state.holder || {}, realms = state.realms || {};
-    const rulingRealm = realms.player && realms.player.alive && FB.station.rulesRealm(player) ? 'player' : player.liege;
+    const rulingRealm = realms.player && realms.player.alive && FB.station.rulesRealm(player, state) ? 'player' : player.liege;
     const sovereign = (rulingRealm && FB.topRealm && FB.topRealm(state, rulingRealm)) || owners[player.provinceId] || 'player';
     for (const id in realms) {
       if (id !== 'player' && id !== sovereign && (!FB.topRealm || FB.topRealm(state, id) !== sovereign)) continue;

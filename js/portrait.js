@@ -567,7 +567,7 @@ window.FB = window.FB || {};
   function stationHolds(name, spec) {
     var query = FB.station && Object.prototype.hasOwnProperty.call(FB.station, name)
       ? FB.station[name] : null;
-    return typeof query === 'function' && !!query(spec);
+    return typeof query === 'function' && !!query(spec, null);
   }
   /* One wardrobe rule against a character (data/wardrobes.js lists the
      conditions). Every condition is a pure read of the descriptor. */
@@ -863,7 +863,9 @@ window.FB = window.FB || {};
           : eyeRoll < .75 ? 'brown' : 'dark')
         : (eyeRoll < .1 ? 'hazel' : eyeRoll < .55 ? 'brown' : 'dark');
     var neutralExpression = saltedUnit(identity,'identity-expression',0)*.36-.18;
+    var ladderContext = FB.station.context(isPlayer ? state.player : c, state);
     var spec = {
+      formId:ladderContext.formId, era:ladderContext.era,
       identity:identity,age:age,child:child,adult:age>=16,
       maturity:smoothV2(3,19,age),elder:smoothV2(48,78,age),
       female:female,sex:c.sex||'m',culture:culture,faith:faith,tier:tier,
@@ -960,12 +962,12 @@ window.FB = window.FB || {};
       ? Math.max(0,saltedUnit(identity,'incidental-freckle',0)*1.4-.7)*
         (spec.child ? 1.6 : 1) : 0;
     spec.hwTrim = clampV2(.2+saltedUnit(identity,'wardrobe-hw-trim',0)*.6+
-      (FB.station.rulesRealm(tier) ? .2 : 0),0,1);
+      (FB.station.rulesRealm(spec, null) ? .2 : 0),0,1);
     spec.headwear = generatedHeadwear(spec,dress);
     spec.neckChain = Array.isArray(dress.wardrobe.chain) &&
       dress.wardrobe.chain.some(function (rule) { return dressRuleHolds(rule,spec,dress); });
     spec.pendant = typeof attire.pendant === 'string' ? attire.pendant : '';
-    if (authored && authored.bareheadedSerf && FB.station.isSerf(tier) &&
+    if (authored && authored.bareheadedSerf && FB.station.isSerf(spec, null) &&
         (FB.professionHasRole(profession, 'labor') || profession === 'none')) {
       spec.headwear = 'none';
     }
@@ -1868,7 +1870,7 @@ window.FB = window.FB || {};
     ctx.strokeStyle=spec.cloth.light;ctx.lineWidth=1.4;
     ctx.beginPath();ctx.moveTo(f.throatX-f.neckBaseW,f.collarY);
     ctx.quadraticCurveTo(f.throatX,f.collarY+18,f.throatX+f.neckBaseW,f.collarY);ctx.stroke();
-    if(FB.station.isLanded(spec)){
+    if(FB.station.isLanded(spec, null)){
       ctx.strokeStyle=spec.cloth.trim;ctx.lineWidth=4;
       ctx.beginPath();ctx.moveTo(f.throatX-f.neckBaseW-2,f.collarY+3);
       ctx.quadraticCurveTo(f.throatX,f.collarY+22,f.throatX+f.neckBaseW+2,f.collarY+3);ctx.stroke();
@@ -3604,12 +3606,12 @@ window.FB = window.FB || {};
       ctx.stroke();
       if(K.studs){
         gemDot(ctx,f.right-4*u,f.hairY+1*u+K.drop,1.8*u,
-          FB.station.rulesRealm(spec)?GOLD_L:[136,62,58],q);
+          FB.station.rulesRealm(spec, null)?GOLD_L:[136,62,58],q);
       }
       return;
     }
     band(ctx,f,f.hairY+1*u+K.drop,5,
-      FB.station.rulesRealm(spec)&&K.studs?GOLD:shadeV2(LINEN,-.08),undefined,q);
+      FB.station.rulesRealm(spec, null)&&K.studs?GOLD:shadeV2(LINEN,-.08),undefined,q);
   }
   function hwWimple(ctx, f, spec, K, vr, q) {
     var u=K.u;
@@ -3645,7 +3647,7 @@ window.FB = window.FB || {};
     ctx.quadraticCurveTo(f.cx+7*u,top+10*u,
       f.cx+2*u,f.hairY+8*u+K.drop);
     ctx.stroke();
-    if(FB.station.isDucal(spec)&&K.studs){
+    if(FB.station.isDucal(spec, null)&&K.studs){
       gemDot(ctx,f.cx+2*u,f.hairY+2*u+K.drop,2.6*u,[42,104,82],q);
     }
   }
@@ -4244,7 +4246,7 @@ window.FB = window.FB || {};
     ctx.quadraticCurveTo(xh,b.kneeY+hh*.035,xh+b.legKnee*.82,
       b.kneeY-hh*.025);
     ctx.stroke();
-    if(!FB.station.isLanded(spec)||FB.professionHasRole(spec.profession,'arms')){
+    if(!FB.station.isLanded(spec, null)||FB.professionHasRole(spec.profession,'arms')){
       ink(ctx,hh*.038,shadeV2(hose,-.36),.85,q);
       for(g=0;g<3;g++){
         t=.18+g*.26;
@@ -4758,8 +4760,8 @@ window.FB = window.FB || {};
       ctx.lineTo(cx+b.waistHalf*.62,b.waistY+b.headH*.38);
       ctx.stroke();
     }else{
-      var beltC=FB.station.rulesRealm(spec)?cl.trim:shadeV2(cl.deep,-.1);
-      var buckle=FB.station.isLanded(spec)?GOLD:null;
+      var beltC=FB.station.rulesRealm(spec, null)?cl.trim:shadeV2(cl.deep,-.1);
+      var buckle=FB.station.isLanded(spec, null)?GOLD:null;
       if(waistItem){
         var wc=hexToRgbV2(pickArt(waistItem,['leathers','cloths'],'#5b402b',2));
         if(wc)beltC=wc;
@@ -4780,7 +4782,7 @@ window.FB = window.FB || {};
         fillStrokeA(ctx,buckle,shadeV2(buckle,-.3),1.2,.9,q);
       }
     }
-    if(FB.station.rulesRealm(spec)){
+    if(FB.station.rulesRealm(spec, null)){
       ink(ctx,2.4,cl.trim,.85,q);
       hemLine(ctx,b,3);
       ctx.stroke();

@@ -291,3 +291,7 @@ removal, issuer succession, recognition loss or conquest invalidates future
 arrests immediately. The existing territorial and local-lord paths retain
 their 867/1066 outcomes. AI arrest attempts use the same projection.
 Baseline judicial appointment has technology impact `none`.
+
+Government ladder eligibility
+
+The player's baseline jurisdiction asks mayAdministerJustice on the era/form ladder and retains the physical governance checks. Existing scoped Peace grants remain an independent route. Realm eligibility resolves its own form's territorial rank meaning. A permission never creates custody, evidence, counties or an office. Ordinary landed punishment still checks actual landed station before removing land. All shipped ladders retain their existing permissions; this internal refactor adds no technology gate.

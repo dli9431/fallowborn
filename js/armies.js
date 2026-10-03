@@ -752,7 +752,7 @@ window.FB = window.FB || {};
     const rid = (state.holder && state.holder[p.provinceId]) ||
       (state.owner && state.owner[p.provinceId]);
     const realm = rid && state.realms && state.realms[rid];
-    if (!realm || !realm.alive || rid === 'player' || !FB.realmRank.isTerritorial(realm)) return null;
+    if (!realm || !realm.alive || rid === 'player' || !FB.realmRank.isTerritorial(realm, state)) return null;
     const sovereignId = FB.topRealm(state, rid);
     const sovereign = sovereignId && state.realms[sovereignId];
     if (!sovereign || !sovereign.alive || sovereignId === 'player') return null;
@@ -762,9 +762,9 @@ window.FB = window.FB || {};
   FB.activeMilitaryCommand = function (state) {
     const p = state && state.player;
     const record = p && p.militaryCommand;
-    if (!record || record.charId !== p.charId || !FB.station.isGentry(p)) return null;
+    if (!record || record.charId !== p.charId || !FB.station.isGentry(p, state)) return null;
     const patron = record.patronRealmId && state.realms[record.patronRealmId];
-    if (!patron || !patron.alive || !FB.realmRank.isTerritorial(patron) ||
+    if (!patron || !patron.alive || !FB.realmRank.isTerritorial(patron, state) ||
         FB.topRealm(state, record.patronRealmId) !== record.sovereignRealmId ||
         !FB.isRealmAtWar(state, record.sovereignRealmId)) return null;
     let host = null;
@@ -811,7 +811,7 @@ window.FB = window.FB || {};
     const active = FB.activeMilitaryCommand(state);
     const firstHead = p.houseFounderId
       ? p.charId === p.houseFounderId : state.generation === 1;
-    const newlyGentle = FB.station.isGentry(p) && p.gentryGeneration !== undefined &&
+    const newlyGentle = FB.station.isGentry(p, state) && p.gentryGeneration !== undefined &&
       p.gentryGeneration !== null && FB.gentryEstablished &&
       !FB.gentryEstablished(state);
     const battlefieldRise = !!(p.flags && p.flags.seen_battle &&
@@ -1701,7 +1701,7 @@ window.FB = window.FB || {};
       return war.status === 'active' && war.countyChallenge &&
         war.countyChallenge.provinceId === pid;
     });
-    const baronRally = challenge && FB.station.isBaron(state.player) &&
+    const baronRally = challenge && FB.station.isBaron(state.player, state) &&
       FB.settlementCountyHolder(state, pid) === challenge.countyChallenge.countId &&
       FB.holdsSettlementInCounty(state, realm, pid);
     const probe = { realm:realm }, forces = {};
@@ -1740,7 +1740,7 @@ window.FB = window.FB || {};
       for (const pid of p.provs || []) if (!included[pid]) {
         counties.push(pid); included[pid] = true;
       }
-      if (!counties.length && FB.station.isLanded(p)) counties.push(p.provinceId);
+      if (!counties.length && FB.station.isLanded(p, state)) counties.push(p.provinceId);
     }
     // This projection is synchronous: index once, discard before armies can move.
     for (const host of countyHostIndex ? [] : state.armies || []) {
@@ -1943,7 +1943,7 @@ window.FB = window.FB || {};
     return hosts.filter(function (entry) { return entry.men > 0; });
   }
   FB.playerMusterSelectionQuote = function (state, selection, formation, rally) {
-    if (!FB.station.isLanded(state.player)) return null;
+    if (!FB.station.mayCommand(state.player, state)) return null;
     const plan = remainingMusterPlan(state, selectedMusterPlan(state, fullPlayerMusterPlan(state, true), selection, rally));
     if (!plan) return null;
     const hosts = musterHosts(state, plan, formation);
@@ -1998,6 +1998,8 @@ window.FB = window.FB || {};
   };
 
   FB.raisePlayerHost = function (state) {
+    if (!FB.station.mayCommand(state.player, state) &&
+        !(FB.activeMilitaryCommand && FB.activeMilitaryCommand(state))) return null;
     FB.armiesEnsure(state);
     const p = state.player, w = p.war;
     const down = state.armyDown['player'];
