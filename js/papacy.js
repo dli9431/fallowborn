@@ -18,6 +18,16 @@ window.FB = window.FB || {};
   }
   function officeId(state) { var record = office(state); return record && record.id; }
   function officeSeat(state) { return FB.religiousHeadSeat(state, officeFaith(state)); }
+  function officeEnabled(state, record, faithId) {
+    record = record || office(state);
+    if (!state || !record) return false;
+    var holder = FB.religiousHeadSnapshot(state, record.religionId);
+    return FB.systemEnabled(state, 'papacy', {
+      faith:faithId || record.religionId,
+      realm:record.head.holderKind === 'realm'
+        ? holder && holder.id || record.head.realm || null : null
+    });
+  }
   function eligibleSex(state, c) {
     var record = office(state), sex = record && record.head.holderSex;
     return !!c && (!sex || c.sex === sex);
@@ -41,7 +51,9 @@ window.FB = window.FB || {};
   FB.withPapalOffice = function (state, faithId, callback) {
     var selected = FB.faithExists(faithId, state) &&
       FB.religiousOfficeForStrategy(state, 'papal_election', faithId);
-    if (!selected || selected.id !== FB.faithOfficeId(faithId, state)) return false;
+    if (!selected || selected.id !== FB.faithOfficeId(faithId, state) ||
+        !officeEnabled(state, selected) ||
+        (faithId !== selected.religionId && !officeEnabled(state, selected, faithId))) return false;
     var previous = activeOffice;
     activeOffice = selected;
     try { return callback(); } finally { activeOffice = previous; }
@@ -575,9 +587,9 @@ window.FB = window.FB || {};
     var target = definition().targetCollege || 12;
     while (obedience.college.length < target) {
       var c = starterCardinalCharacter(state, obedience.college.length);
-      FB.appointCardinal(state, c, obedience.id, obedience.claimantId, {
+      if (!FB.appointCardinal(state, c, obedience.id, obedience.claimantId, {
         silent:true
-      });
+      })) break;
     }
   }
 
@@ -587,7 +599,7 @@ window.FB = window.FB || {};
      strength check — can therefore trust the saved record directly instead of
      rescanning every Catholic sovereign once per query. */
   function savedPapacy(state) {
-    if (!FB.systemAvailable(state, 'papacy')) return null;
+    if (!officeEnabled(state)) return null;
     var saved = state && papacyState(state);
     return saved && typeof saved === 'object' && !Array.isArray(saved) &&
       saved.romanObedience && saved.obediences && saved.realmObedience &&
@@ -595,7 +607,7 @@ window.FB = window.FB || {};
   }
 
   FB.ensurePapacy = function (state) {
-    if (!FB.systemAvailable(state, 'papacy')) return null;
+    if (!officeEnabled(state)) return null;
     if (!state || !state.date || !state.player || !state.chars || !state.realms || !office(state)) return null;
     if (!papacyState(state) || typeof papacyState(state) !== 'object' ||
         Array.isArray(papacyState(state))) {
@@ -1908,7 +1920,9 @@ window.FB = window.FB || {};
     if (!FB.systemEnabled(state, 'excommunication')) return;
     var me = playerChar(state);
     var papacy = state && papacyState(state);
-    if (!me || !papacy) return;
+    /* Every office gets an annual pass; only the office this character
+       recognizes owns their trait projection. Foreign offices stay inert. */
+    if (!me || !papacy || !catholicFaith(state, me)) return;
     var sovereign = realmSovereign(state, FB.playerRealmId(state));
     var obedienceId = papacy.realmObedience[sovereign] ||
       papacy.romanObedience;
@@ -3243,7 +3257,7 @@ window.FB = window.FB || {};
     }
     return playerChar(state) && playerChar(state).religion;
   }
-  function bindOffice(fn, allOffices, contextEvent) {
+  function bindOffice(fn, allOffices, contextEvent, nullWhenDisabled) {
     return function (state) {
       var args = arguments;
       if (activeOffice || !state) return fn.apply(this, args);
@@ -3251,6 +3265,7 @@ window.FB = window.FB || {};
         var offices = FB.religiousOffices(state), result = null;
         for (var id in offices) {
           if (offices[id].head.succession !== 'papal_election') continue;
+          if (!officeEnabled(state, offices[id])) continue;
           var value = FB.withPapalOffice(state, offices[id].religionId, function () {
             return fn.apply(null, args);
           });
@@ -3261,9 +3276,10 @@ window.FB = window.FB || {};
       var selected = contextEvent && args[1] && args[1].religiousOfficeId;
       var records = selected && FB.religiousOffices(state);
       var record = selected && records[selected] || office(state, inferredFaith(state, args));
-      return record ? FB.withPapalOffice(state, record.religionId, function () {
+      var result = record ? FB.withPapalOffice(state, record.religionId, function () {
         return fn.apply(null, args);
       }) : fn.apply(this, args);
+      return nullWhenDisabled && result === false ? null : result;
     };
   }
   var allOfficeCalls = ['ensurePapacyState', 'papacyDay', 'papacyYearly',
@@ -3273,7 +3289,8 @@ window.FB = window.FB || {};
     if (priorExports.indexOf(key) >= 0 || typeof FB[key] !== 'function' ||
         key === 'withPapalOffice' || key === 'papacyState' ||
         key === 'papalElectionLaw' || key === 'papalAuthorityBand') return;
-    FB[key] = bindOffice(FB[key], allOfficeCalls.indexOf(key) >= 0, false);
+    FB[key] = bindOffice(FB[key], allOfficeCalls.indexOf(key) >= 0, false,
+      key === 'ensurePapacy');
   });
   Object.keys(FB.fns).forEach(function (key) {
     if (priorFns.indexOf(key) >= 0) return;

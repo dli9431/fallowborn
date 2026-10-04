@@ -545,16 +545,13 @@ window.FB = window.FB || {};
   function faithAttire(religion) {
     return religion && plainObjectV2(religion.attire) ? religion.attire : {};
   }
-  /* The wardrobe dressing a campaign: its government form's costume, then
+  /* The wardrobe dressing a subject: their government form's costume, then
      its era's, then the first wardrobe declared. */
-  function wardrobeIdOf(state) {
+  function wardrobeIdOf(state, formId) {
     var tables = FBDATA.wardrobes || {}, own = Object.prototype.hasOwnProperty;
     var eras = FBDATA.eras || {}, forms = FBDATA.governmentForms || {};
     var eraId = FB.campaignEra ? FB.campaignEra(state) : null;
     var era = eraId && own.call(eras, eraId) ? eras[eraId] : null;
-    var start = state && state.start;
-    var formId = start && typeof start.defaultGovernment === 'string'
-      ? start.defaultGovernment : era && era.defaultGovernment;
     var form = typeof formId === 'string' && own.call(forms, formId) ? forms[formId] : null;
     if (form && typeof form.costume === 'string' && own.call(tables, form.costume)) {
       return form.costume;
@@ -820,7 +817,8 @@ window.FB = window.FB || {};
     var profile = cultureProfile(state,culture);
     var religion = FB.religionOf ? FB.religionOf(c.religion, state) : null;
     var faith = religion && religion.group || '';
-    var wardrobeId = wardrobeIdOf(state);
+    var ladderContext = FB.station.context(isPlayer ? state.player : c, state);
+    var wardrobeId = wardrobeIdOf(state, ladderContext.formId);
     var attire = faithAttire(religion);
     var dress = {
       wardrobe:plainObjectV2(FBDATA.wardrobes && FBDATA.wardrobes[wardrobeId])
@@ -863,7 +861,6 @@ window.FB = window.FB || {};
           : eyeRoll < .75 ? 'brown' : 'dark')
         : (eyeRoll < .1 ? 'hazel' : eyeRoll < .55 ? 'brown' : 'dark');
     var neutralExpression = saltedUnit(identity,'identity-expression',0)*.36-.18;
-    var ladderContext = FB.station.context(isPlayer ? state.player : c, state);
     var spec = {
       formId:ladderContext.formId, era:ladderContext.era,
       identity:identity,age:age,child:child,adult:age>=16,
@@ -983,7 +980,8 @@ window.FB = window.FB || {};
     var parts = ['portrait-v2',frame,keyToken(c.id),keyToken(portraitName),
       keyToken(c.dyn||''),keyToken(c.sex||''),age,keyToken(culture),
       keyToken(profile.source),keyToken(faith),keyToken(religion && religion.id || ''),
-      tier,keyToken(profession),keyToken(wardrobeId),health,expressionClass,spec.scarred?1:0,
+      tier,keyToken(profession),keyToken(wardrobeId),keyToken(ladderContext.formId),
+      keyToken(ladderContext.era),health,expressionClass,spec.scarred?1:0,
       spec.oneEyed?1:0,ailments.sickness||legacyIll?1:0,markKey,
       keyToken(spec.hairStyle),keyToken(spec.beardKind),keyToken(spec.beardCut),
       equipmentKeys.join(','),opts.transparent?'transparent':'opaque',

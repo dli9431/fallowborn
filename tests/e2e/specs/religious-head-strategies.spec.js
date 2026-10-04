@@ -8,7 +8,8 @@ dependsOnRuntime(__filename, [
   'js/model.js', 'js/world.js', 'js/papacy.js', 'js/actions.js', 'js/events.js',
   'js/mods.js', 'js/save.js', 'js/save_v4.js', 'js/holywar.js', 'js/music.js',
   'js/tournaments.js', 'js/justice.js', 'js/intrigue.js', 'js/ui_modals.js',
-  'js/politics.js', 'js/institutions.js', 'js/fortifications.js', 'js/util.js'
+  'js/politics.js', 'js/institutions.js', 'js/fortifications.js', 'js/util.js',
+  'js/systems.js', 'data/systems.js', 'data/eras.js'
 ]);
 
 test.beforeEach(async function ({ page }, testInfo) {
@@ -68,6 +69,104 @@ test('a data-only Papal office uses its own seat, college, election and saved st
   });
   expect(result).toEqual({ faithId:'test_conclave', seat:'paris', exclusive:true, phase:'vacancy',
     count:12, originalUnchanged:true, sameCollege:true, independent:true, persistedPhase:'vacancy' });
+});
+
+test('disabled custom papal offices remain uninitialized while the original office stays enabled', async function ({ page }) {
+  const result = await page.evaluate(function () {
+    const s = FB.state;
+    const faith = FB.createFaith(s, { id:'test_disabled_conclave', name:'Dormant Conclave', group:'catholic',
+      properties:{ systems:{ papacy:false }, head:{ officeId:'dormant_conclave', realm:'west_francia',
+        seat:{ site:'paris' }, title:'First Pastor', succession:'papal_election', greatHolyWar:null } } });
+    if (!faith) throw new Error('Disabled office failed validation');
+    const before = Object.keys(s.chars).length;
+    FB.ensurePapacyState(s);
+    const direct = FB.withPapalOffice(s, faith, function () { throw new Error('Disabled callback ran'); });
+    return { global:FB.systemAvailable(s, 'papacy'), disabled:FB.systemEnabled(s, 'papacy', { faith:faith }),
+      direct:direct, initialized:!!(s.religiousOfficeStates && s.religiousOfficeStates.dormant_conclave),
+      generated:Object.keys(s.chars).filter(function (id) { return s.chars[id].religion === faith; }).length,
+      unchangedCharacters:Object.keys(s.chars).length === before, original:!!s.papacy };
+  });
+  expect(result).toEqual({ global:true, disabled:false, direct:false, initialized:false,
+    generated:0, unchangedCharacters:true, original:true });
+});
+
+test('starter-college generation stops when an authored appointment limit rejects a candidate', async function ({ page }) {
+  const result = await page.evaluate(function () {
+    const s = FB.state, def = FBDATA.papacy;
+    const original = { target:def.targetCollege, cap:def.hardCap };
+    const faith = FB.createFaith(s, { id:'test_capped_conclave', name:'Small Conclave', group:'catholic',
+      properties:{ head:{ officeId:'capped_conclave', realm:'west_francia', seat:{ site:'paris' },
+        title:'First Pastor', succession:'papal_election', greatHolyWar:null } } });
+    def.targetCollege = 2; def.hardCap = 1;
+    try {
+      FB.withPapalOffice(s, faith, function () { FB.ensurePapacy(s); });
+      const model = s.religiousOfficeStates.capped_conclave.papacy;
+      return model.obediences[model.romanObedience].college.length;
+    } finally { def.targetCollege = original.target; def.hardCap = original.cap; }
+  });
+  expect(result).toBe(1);
+});
+
+test('a disabled saved papal office skips repair, elections and yearly work in a mixed world', async function ({ page }) {
+  const result = await page.evaluate(function () {
+    const s = FB.state;
+    const faith = FB.createFaith(s, { id:'test_sleeping_conclave', name:'Sleeping Conclave', group:'catholic',
+      properties:{ head:{ officeId:'sleeping_conclave', realm:'west_francia', seat:{ site:'paris' },
+        title:'First Pastor', succession:'papal_election', greatHolyWar:null } } });
+    FB.withPapalOffice(s, faith, function () { FB.ensurePapacy(s); });
+    FB.succeedReligiousHead(s, faith, { reason:'death' });
+    const savedOffice = JSON.stringify(s.religiousOfficeStates.sleeping_conclave);
+    s.faiths[faith].properties.systems = { papacy:false };
+    FB.configureReligions(s);
+    s.turn += 400;
+    s.date.year++;
+    FB.ensurePapacyState(s);
+    FB.papacyDay(s);
+    FB.papacySeason(s);
+    FB.papacyYearly(s);
+    const idle = savedOffice === JSON.stringify(s.religiousOfficeStates.sleeping_conclave);
+    const saved = JSON.parse(FB.save.serialize());
+    FB.save.restore(saved);
+    const restored = FB.state;
+    return { idle:idle, restored:savedOffice === JSON.stringify(restored.religiousOfficeStates.sleeping_conclave),
+      global:FB.systemAvailable(restored, 'papacy'), hidden:FB.papacyState(restored, faith) === null,
+      original:!!FB.papacyState(restored, 'catholic') };
+  });
+  expect(result).toEqual({ idle:true, restored:true, global:true, hidden:true, original:true });
+});
+
+test('a foreign papal office cannot clear or add the player sanction trait', async function ({ page }) {
+  const result = await page.evaluate(function () {
+    const s = FB.state, me = s.chars[s.player.charId];
+    me.religion = 'catholic';
+    const faith = FB.createFaith(s, { id:'test_foreign_conclave', name:'Foreign Conclave', group:'catholic',
+      properties:{ head:{ officeId:'foreign_conclave', realm:'west_francia', seat:{ site:'paris' },
+        title:'First Pastor', succession:'papal_election', greatHolyWar:null } } });
+    FB.withPapalOffice(s, faith, function () { FB.ensurePapacy(s); });
+    const papacy = FB.papacyState(s, 'catholic'), oid = papacy.romanObedience;
+    const sentence = { targetId:me.id, targetRealmId:'player', obedienceId:oid,
+      cause:'penance', issuedTurn:s.turn, clearedTurn:null };
+    papacy.excommunications[oid + ':' + me.id] = sentence;
+    FB.addTrait(me, 'excommunicated');
+    const foreign = s.religiousOfficeStates.foreign_conclave.papacy;
+    // Preserve the sanction while both offices dispatch their annual work.
+    FB.papacyYearly(s);
+    const retained = me.traits.indexOf('excommunicated') >= 0;
+    const stillActive = papacy.excommunications[oid + ':' + me.id].clearedTurn === null;
+    // The applicable office may clear it even if an unrelated office has a saved sentence.
+    papacy.excommunications[oid + ':' + me.id].clearedTurn = s.turn;
+    foreign.excommunications[foreign.romanObedience + ':' + me.id] = Object.assign({}, sentence,
+      { obedienceId:foreign.romanObedience, clearedTurn:null });
+    FB.papacyYearly(s);
+    const cleared = me.traits.indexOf('excommunicated') < 0;
+    // With no Papal allegiance, neither office owns a nonpapal head's trait.
+    me.religion = 'orthodox';
+    FB.addTrait(me, 'excommunicated');
+    FB.papacyYearly(s);
+    return { retained:retained, stillActive:stillActive, cleared:cleared,
+      nonpapalRetained:me.traits.indexOf('excommunicated') >= 0 };
+  });
+  expect(result).toEqual({ retained:true, stillActive:true, cleared:true, nonpapalRetained:true });
 });
 
 test('character appointment and hereditary offices succeed deterministically and survive saves', async function ({ page }) {

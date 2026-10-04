@@ -8,7 +8,7 @@
    Layers, from least to most specific:
      base         today's shared vocabulary; every term must exist here
      eras         FBDATA.eras id (the campaign's stamped era)
-     governments  FBDATA.governmentForms id (the viewer's sovereign realm)
+     governments  FBDATA.governmentForms id (the viewer's own realm or immediate liege)
      faiths       FBDATA.religions id; a faith inherits its ancestors'
                   entries (nicene reads christian), nearest first
      cultures     FBDATA.cultures id

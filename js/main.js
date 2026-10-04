@@ -6289,6 +6289,8 @@ FB.CHANGELOG = [
       $('loadmsg').textContent = FB.T(msg);
     }, function (error) {
       if (error) {
+        G.lastLoadError = error;
+        G.lastLoadStage = 'world activation';
         FB.ui.showScreen('title');
         FB.ui.toast('That life’s world could not be activated.');
         return;
@@ -6400,7 +6402,7 @@ FB.CHANGELOG = [
           FB.esc(FB.T('Close')) + '</button>');
         $('gm-go').addEventListener('click', function () { FB.ui.closeModal(); });
       }
-    });
+    }, { geography:data.state && data.state.start && data.state.start.geography });
     return true;
   };
 

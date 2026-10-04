@@ -281,3 +281,5 @@ The detailed model resolves its office through head.succession papal_election ra
 Availability boundary
 
 The papacy system gates initialization, restore repair, world hooks, office queries, player decisions and the Papacy sheet. A disabled Papacy creates no college and consumes no election RNG. Excommunication is a separate system: sentences, absolution, sanctioned traits and AI sanction rolls stop when it is disabled, while an enabled Papacy may continue its other work. Transfer and extinction callbacks tolerate an unavailable Papacy. Existing saved records remain dormant when their institution is disabled. See docs/designs/systems.md.
+
+Papal dispatch checks each office's effective papacy availability before initialization, repair or lifecycle work. A disabled office remains dormant even while another office keeps papacy available in the world; direct office callbacks follow the same guard. Starter-college generation stops if an appointment is rejected. Annual sanction-trait synchronization belongs only to the office recognized by the player's faith, so a foreign office cannot add or clear that trait or overwrite a nonpapal head's sanction.

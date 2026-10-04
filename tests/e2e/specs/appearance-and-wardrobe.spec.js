@@ -91,6 +91,45 @@ test('eras and government forms resolve the wardrobe and it reaches the cache ke
     });
   });
 
+test('wardrobes follow each subject government and invalidate cached portraits on a form change',
+  async function ({ page }, testInfo) {
+    await openGame(page, testInfo);
+    const result = await page.evaluate(function () {
+      const me = { id:'e2e_player', name:'Player', sex:'m', born:840, culture:'frankish',
+        religion:'catholic', station:3, traits:[] };
+      const local = Object.assign({}, me, { id:'e2e_local', homeProvinceId:'e2e_county' });
+      const remote = Object.assign({}, me, { id:'e2e_remote', homeProvinceId:'e2e_remote_county' });
+      const s = { start:{ era:'early_medieval', defaultGovernment:'territorial' },
+        date:{ year:867 }, player:{ charId:me.id, tier:3, liege:'e2e_local_realm', provinceId:'e2e_county' },
+        chars:{ e2e_player:me, e2e_local:local, e2e_remote:remote },
+        realms:{ player:{ id:'player', alive:true, rank:1, liege:'e2e_local_realm' },
+          e2e_local_realm:{ id:'e2e_local_realm', alive:true, rank:1 },
+          e2e_remote_realm:{ id:'e2e_remote_realm', alive:true, rank:1 } },
+        holder:{ e2e_county:'e2e_local_realm', e2e_remote_county:'e2e_remote_realm' },
+        authority:{ governments:{ player:{ formId:'roman_civic' },
+          e2e_local_realm:{ formId:'roman_civic' }, e2e_remote_realm:{ formId:'regnum' } } } };
+      const civic = FBDATA.governmentForms.roman_civic, original = civic.costume;
+      civic.costume = 'late_antique';
+      const opts = { year:867, tier:3, profession:'none', loadout:{} };
+      function wardrobe(c) { return FB.characterLook(c, 867, s, opts).wardrobe; }
+      try {
+        const before = JSON.stringify(s), rng = FB.getRngState(), uid = FB.getUidCounter();
+        const firstKey = FB.characterVisualKey(s, me, opts);
+        const first = [wardrobe(me), wardrobe(local), wardrobe(remote)];
+        const pure = before === JSON.stringify(s) && rng === FB.getRngState() && uid === FB.getUidCounter();
+        s.authority.governments.player.formId = 'regnum';
+        const second = wardrobe(me), secondKey = FB.characterVisualKey(s, me, opts);
+        s.realms.player.alive = false;
+        const liege = wardrobe(me);
+        return { first:first, pure:pure, second:second, cacheChanged:firstKey !== secondKey, liege:liege };
+      } finally {
+        if (original === undefined) delete civic.costume; else civic.costume = original;
+      }
+    });
+    expect(result).toEqual({ first:['late_antique','late_antique','medieval'],
+      pure:true, second:'medieval', cacheChanged:true, liege:'late_antique' });
+  });
+
 test('a test culture with a data profile renders its own palette',
   async function ({ page }) {
     const result = await page.evaluate(function () {

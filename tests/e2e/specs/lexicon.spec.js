@@ -166,6 +166,51 @@ test('867 rank titles keep their faith ladders through the lexicon',
     expect(result.player).toBe('Baroness');
   });
 
+test('titles and station permissions use the subject realm or immediate liege rather than the sovereign',
+  async function ({ page }, testInfo) {
+    await openGame(page, testInfo);
+    const result = await page.evaluate(function () {
+      const me = { id:'e2e_player', sex:'m', religion:'catholic', culture:'frankish' };
+      const npc = { id:'e2e_npc', sex:'f', religion:'catholic', culture:'frankish',
+        homeProvinceId:'e2e_county' };
+      const s = { start:{ era:'early_medieval', defaultGovernment:'territorial' },
+        player:{ charId:me.id, tier:4, liege:'e2e_local', provinceId:'e2e_county' },
+        chars:{ e2e_player:me, e2e_npc:npc },
+        realms:{ player:{ id:'player', alive:true, rank:1, liege:'e2e_sovereign' },
+          e2e_local:{ id:'e2e_local', alive:true, rank:1, liege:'e2e_sovereign' },
+          e2e_sovereign:{ id:'e2e_sovereign', alive:true, rank:3, liege:null } },
+        owner:{ e2e_county:'e2e_sovereign' }, holder:{ e2e_county:'e2e_local' },
+        authority:{ governments:{ player:{ formId:'roman_civic' },
+          e2e_local:{ formId:'regnum' }, e2e_sovereign:{ formId:'territorial' } } } };
+      const lex = FBDATA.lexicons, original = lex.governments;
+      function labels(word) {
+        const rank = JSON.parse(JSON.stringify(lex.base.rank));
+        rank.m[4] = rank.f[4] = word;
+        return { rank:rank };
+      }
+      lex.governments = { roman_civic:labels('Civic Magistrate'),
+        regnum:labels('Local Ruler'), territorial:labels('Sovereign Ruler') };
+      FB.lexicon.reset();
+      try {
+        const before = JSON.stringify(s), rng = FB.getRngState(), uid = FB.getUidCounter();
+        const own = [FB.station.context(s.player, s).formId,
+          FB.lexicon.context(s).government, FB.titleWordFor(s, 4)];
+        const remote = [FB.station.context(npc, s).formId,
+          FB.lexicon.context(s, { viewer:npc }).government,
+          FB.characterRankTitleSnapshot(s, npc, 4).word];
+        const explicit = FB.lexicon.rank(s, 4, { viewer:npc, realm:'e2e_sovereign' }).word;
+        const pure = before === JSON.stringify(s) && rng === FB.getRngState() && uid === FB.getUidCounter();
+        s.realms.player.alive = false;
+        const unlanded = [FB.station.context(s.player, s).formId,
+          FB.lexicon.context(s).government, FB.titleWordFor(s, 4)];
+        return { own:own, remote:remote, explicit:explicit, pure:pure, unlanded:unlanded };
+      } finally { lex.governments = original; FB.lexicon.reset(); }
+    });
+    expect(result).toEqual({ own:['roman_civic','roman_civic','Civic Magistrate'],
+      remote:['regnum','regnum','Local Ruler'], explicit:'Sovereign Ruler', pure:true,
+      unlanded:['regnum','regnum','Local Ruler'] });
+  });
+
 test('the resolver prefers culture, then faith, then government, then era, then base',
   async function ({ page }, testInfo) {
     await start(page, testInfo, '867');

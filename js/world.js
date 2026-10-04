@@ -1407,7 +1407,7 @@ window.FB = window.FB || {};
   /* The one callback-based switcher used by boot, new-game previews, and save
      restoration. Raster results are cached per atomic bookmark for the rest of
      the page session; map input remains wired to the same visible canvas. */
-  FB.activateBookmark = function (id, progress, done) {
+  FB.activateBookmark = function (id, progress, done, options) {
     var requestedId = id === undefined || id === null
       ? defaultBookmarkId() : String(id);
     var definition = bookmarkDefinition(requestedId);
@@ -1416,6 +1416,12 @@ window.FB = window.FB || {};
     if (!definition) {
       setTimeout(function () { done(new Error('Unknown bookmark: ' + requestedId)); }, 0);
       return;
+    }
+    /* A saved campaign retains its physical base even if the bookmark's
+       current declaration changes. Resolve the detached override before
+       validation, preparation and cache lookup; never rewrite the registry. */
+    if (options && options.geography !== undefined) {
+      definition = Object.assign({}, definition, { geography:options.geography });
     }
     var errors = FB.validateBookmark(definition);
     if (errors.length) {
@@ -1427,17 +1433,18 @@ window.FB = window.FB || {};
        bookmark already being built follows its progress and finishes with
        it; any other caller waits until the current one's done has run. */
     if (activation) {
-      if (activation.building && activation.id === definition.id) {
+      if (activation.building && activation.cacheKey === worldCacheKey(definition)) {
         activation.listeners.push(progress);
         activation.callbacks.push(done);
         progress(activation.frac, activation.msg);
       } else {
-        queuedActivations.push([requestedId, progress, done]);
+        queuedActivations.push([requestedId, progress, done, options]);
       }
       return;
     }
     var current = activation = {
-      id:definition.id, building:false, frac:0, msg:'Drawing the known world…',
+      id:definition.id, cacheKey:worldCacheKey(definition),
+      building:false, frac:0, msg:'Drawing the known world…',
       listeners:[progress], callbacks:[done]
     };
     function finish(error) {
@@ -1451,7 +1458,7 @@ window.FB = window.FB || {};
       }
       activation = null;
       var next = queuedActivations.shift();
-      if (next) FB.activateBookmark(next[0], next[1], next[2]);
+      if (next) FB.activateBookmark(next[0], next[1], next[2], next[3]);
     }
     try {
       definition = preparedDefinition(definition);

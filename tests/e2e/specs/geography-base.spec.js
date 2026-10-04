@@ -5,10 +5,11 @@ dependsOnRuntime(__filename, [
   'data/bookmark_476.js', 'data/settlements.js', 'data/settlements_real.js',
   'data/geographies.js', 'data/eras.js', 'data/cultures.js',
   'js/util.js', 'js/world.js', 'js/title_ids.js', 'js/mods.js', 'js/mapview.js',
-  'js/actions.js'
+  'js/actions.js', 'js/main.js', 'js/save.js', 'js/save_v4.js'
 ]);
 const { test, expect } = require('../support/fixture');
 const { openGame } = require('../support/game/navigation');
+const { startDeterministicGame } = require('../support/game/start');
 
 /* Geography bases (docs/designs/provinces.md, Geography bases): every core
    bookmark draws on europe_regional, names follow the start year, layouts
@@ -222,6 +223,90 @@ test('a bookmark without layouts of its own falls back to the default layout',
         delete FBDATA.bookmarks.geo_none;
       });
     }
+  });
+
+test('loading uses the saved geography while new activation uses the edited bookmark and its own cache',
+  async function ({ page }, testInfo) {
+    test.setTimeout(180 * 1000);
+    await openGame(page, testInfo);
+    await startDeterministicGame(page);
+    const result = await page.evaluate(async function () {
+      const saved = JSON.parse(FB.save.serialize()), originalWorld = FB.world;
+      const id = saved.state.start.id, original = saved.state.start.geography;
+      const base = FBDATA.geographies[original];
+      FBDATA.geographies.e2e_changed_base = Object.assign({}, base, {
+        gridWidth:900,
+        names:Object.assign({}, base.names, { provinces:Object.assign({}, base.names.provinces, {
+          london:[{ name:'Changed London' }]
+        }) })
+      });
+      FB.bookmark(id).geography = 'e2e_changed_base';
+      function activate(options) {
+        return new Promise(function (resolve, reject) {
+          FB.activateBookmark(id, null, function (error) {
+            if (error) reject(error); else resolve();
+          }, options);
+        });
+      }
+      await activate();
+      const changedWorld = FB.world;
+      const changed = { geography:FB.activeGeographyId, width:FB.world.W,
+        name:FB.world.byId.london.name };
+      await new Promise(function (resolve, reject) {
+        if (!FB.game.loadData(saved, resolve)) reject(new Error('Load rejected'));
+      });
+      const restored = { geography:FB.activeGeographyId, width:FB.world.W,
+        stamp:FB.state.start.geography, name:FB.world.byId.london.name,
+        sameWorld:FB.world === originalWorld, loadError:FB.game.lastLoadError,
+        roundTrip:JSON.parse(FB.save.serialize()).state.start.geography };
+      await activate();
+      const reused = FB.world === changedWorld;
+      const unknown = await new Promise(function (resolve) {
+        FB.activateBookmark(id, null, function (error) { resolve(error && error.message); },
+          { geography:'e2e_missing_base' });
+      });
+      const unchanged = FB.world === changedWorld;
+      const legacy = JSON.parse(JSON.stringify(saved));
+      delete legacy.state.start.geography;
+      await new Promise(function (resolve, reject) {
+        if (!FB.game.loadData(legacy, resolve)) reject(new Error('Legacy load rejected'));
+      });
+      return { original:original, originalWidth:originalWorld.W, changed:changed,
+        restored:restored, reused:reused, unknown:unknown, unchanged:unchanged,
+        declared:FB.bookmark(id).geography,
+        legacy:[FB.activeGeographyId, FB.state.start.geography] };
+    });
+    expect(result.changed).toEqual({ geography:'e2e_changed_base', width:900, name:'Changed London' });
+    expect(result.restored).toEqual({ geography:result.original, width:result.originalWidth,
+      stamp:result.original, name:'London', sameWorld:true, loadError:null, roundTrip:result.original });
+    expect(result.reused).toBe(true);
+    expect(result.unknown).toContain('unknown geography e2e_missing_base');
+    expect(result.unchanged).toBe(true);
+    expect(result.declared).toBe('e2e_changed_base');
+    expect(result.legacy).toEqual(['e2e_changed_base', 'e2e_changed_base']);
+  });
+
+test('concurrent activations of one bookmark keep different saved bases separate',
+  async function ({ page }, testInfo) {
+    test.setTimeout(180 * 1000);
+    await openGame(page, testInfo);
+    const result = await page.evaluate(async function () {
+      const bm = FB.bookmark('867'), baseId = FB.bookmarkGeography(bm);
+      const base = FBDATA.geographies[baseId];
+      FBDATA.geographies.e2e_queued_base = Object.assign({}, base, { gridWidth:900 });
+      FBDATA.bookmarks.e2e_queued = Object.assign({}, bm, { id:'e2e_queued' });
+      function activate(geography) {
+        return new Promise(function (resolve, reject) {
+          FB.activateBookmark('e2e_queued', null, function (error) {
+            if (error) reject(error);
+            else resolve({ geography:FB.activeGeographyId, width:FB.world.W });
+          }, { geography:geography });
+        });
+      }
+      return Promise.all([activate(baseId), activate('e2e_queued_base')]);
+    });
+    expect(result).toEqual([{ geography:'europe_regional', width:1100 },
+      { geography:'e2e_queued_base', width:900 }]);
   });
 
 test('legacy geometry mods replace the default geography and new bases validate',

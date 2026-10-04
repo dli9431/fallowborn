@@ -56,8 +56,8 @@ window.FB = window.FB || {};
 
   /* The ids each layer reads for one lookup, resolved on first use so a
      lookup pays only for the layers that could answer it. ctx may name
-     viewer (a character or id; default the player, null for none), realm (default the
-     player's sovereign realm when the viewer is the player), faith, culture
+     viewer (a character or id; default the player, null for none), realm,
+     faith, culture
      and sex; explicit values win over the viewer's. */
   function resolver(state, ctx) {
     ctx = ctx || {};
@@ -66,12 +66,12 @@ window.FB = window.FB || {};
       viewer:function () { return viewerChar(state, ctx.viewer); },
       eras:function () { return state && FB.campaignEra ? FB.campaignEra(state) : null; },
       governments:function () {
-        var viewer = r('viewer');
-        var isPlayer = !!(viewer && state && state.player && viewer.id === state.player.charId);
-        var realm = ctx.realm || (isPlayer && FB.playerRealmId ? FB.playerRealmId(state) : null);
-        if (!state || !realm || !FB.political || !FB.political.government) return null;
-        var form = FB.political.government(state, { kind:'realm', id:realm });
-        return form ? form.formId : null;
+        var subject = r('viewer');
+        if (ctx.realm !== undefined && ctx.realm !== null) {
+          subject = typeof ctx.realm === 'string'
+            ? state && state.realms && state.realms[ctx.realm] : ctx.realm;
+        }
+        return state && subject ? FB.station.context(subject, state).formId : null;
       },
       faiths:function () {
         var faith = ctx.faith || ((c = r('viewer')) ? c.religion : null);

@@ -35,8 +35,8 @@ FBDATA.customaryBases = {
    local civic consent follows territorial rule or a delegated office.
    regnum is the late antique kingdom: territorial consent, but its counties
    are held directly by the realm rather than by generated vassals. A form
-   may also name a costume (FBDATA.wardrobes id) that dresses portraits in a
-   campaign of that default government instead of its era's costume.
+   may also name a costume (FBDATA.wardrobes id) that dresses characters of
+   that government instead of its era's costume.
    An optional balance table overrides existing FBDATA.balance keys for
    realms of the form, read through FB.balanceFor at realm-scoped sites; it
    sits over the era layer and beneath the bookmark and mod layers. */

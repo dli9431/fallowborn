@@ -429,7 +429,7 @@ definition, resolves it against its geography base, installs it in the legacy to
 fields, and lazily caches one raster per bookmark and geography base. Switching dates replaces `FB.world` and the map's backing canvases but
 does not install a second set of pointer or keyboard listeners. Activations run one at
 a time, because a build installs its definition and yields between steps: a caller for
-the bookmark already being built follows its progress and finishes with it, and any
+the bookmark and geography already being built follows its progress and finishes with it, and any
 other caller waits until the current activation's callback has run. A step that throws
 ends the build with an error rather than leaving later activations waiting.
 `FB.prepareBookmark` builds a bookmark's raster in the background when nothing is
@@ -571,3 +571,5 @@ modified by the 476 remapping.
 
 
 Scheduled Events markers use compiled settlement coordinates. At distant zoom they cluster within 48-pixel screen cells; detailed zoom retains one marker per funded edition at its exact settlement. Hit targets open an event or matching calendar subset. The overlay has independent session state and does not modify political or market views. Capacity uses settled counties in the active de jure kingdom, independently of current owners. See tournaments.md.
+
+FB.activateBookmark accepts an optional fourth argument, { geography: savedGeographyId }, for campaign loading. The override is applied to a detached bookmark before validation, geography resolution and raster caching. It leaves the bookmark registry unchanged. Pending activations coalesce only when both bookmark and geography match; other requests retain their override in the queue. A missing saved base fails activation before changing the active world.

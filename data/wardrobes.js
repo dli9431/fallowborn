@@ -5,7 +5,7 @@
    and regalia a character wears by station band and career role. Eras name
    one through their costume slot (data/eras.js) and a government form may
    override it with its own costume (data/political_institutions.js); the
-   portrait resolves the campaign's government form first, then its era,
+   portrait resolves the subject's government form first, then its era,
    then the first wardrobe here. Faces are not dressed here: skin and hair
    come from culture appearance profiles (data/cultures.js) and faith attire
    (religion properties.attire).

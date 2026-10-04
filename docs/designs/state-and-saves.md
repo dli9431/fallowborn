@@ -1944,3 +1944,5 @@ state.religiousHeads and state.religiousHeadVacancies remain keyed by stable off
 Derived system availability
 
 System availability is derived from the campaign's existing start stamp and scoped government and faith definitions, with the bookmark as the final layer. It adds no save field or format change. Load repair skips disabled Papacy, abbey and tournament initialization; their existing records remain dormant. Disabled tenure, office and contract queries expose inert results rather than reactivating records. Existing greatHolyWars bookmark flags remain compatible with the resolver. See docs/designs/systems.md.
+
+The save loading path passes state.start.geography into bookmark activation before restoring state. An existing stamp selects the campaign's original base even if the bookmark now declares another one. A legacy save without the stamp uses the current bookmark declaration and gains the migration stamp once. Raster caching and activation queuing distinguish bookmark/geography pairs.
