@@ -1,11 +1,15 @@
 # UI: keyboard & mobile
 
-Recurring deed readiness is an opt-in Settings control. A ready card gets an
-accent border and a textual Ready again status rather than flashing animation.
-Scrolls occur only while Deeds is visible and no dialog, Self drawer or
-fast-forward is active. Opening a collapsed section reuses its disclosure
-handler and leaves other controls and keyboard focus mounted. Further refreshes
-retain the highlight without scrolling again; unavailable cards lose it.
+Recurring deed readiness is an opt-in Settings control. The ready deed button
+itself is restyled (brighter border, warm fill, soft glow) and carries an inline
+Ready again chip, rather than boxing the whole card or flashing.
+Notices switch to Deeds from any panel and close the Self/Kin drawer; dialogs and
+fast-forward defer them. The switch uses ordinary panel navigation so Back can
+return to the previous tab. Opening a collapsed section reuses its disclosure
+handler and leaves other controls mounted. Visible keyboard focus stays in place;
+if the switch hides the focused control, focus moves to the revealed deed. Revealing the notice
+also pauses time; Play resumes it. Further refreshes retain the highlight without
+scrolling or pausing again; unavailable cards lose it.
 
 Automation uses the existing labeled checkbox cards and Details disclosures for
 immediate recurring deeds. Only deeds visible for the current character's role
@@ -1791,6 +1795,17 @@ shared tooltip or touch disclosure. Each picker still computes eligibility and
 performs assignment through its own existing mechanic, so the common presentation does
 not merge the underlying roles. Cards retain modal number keys, native keyboard
 activation, focus styling, and a stacked narrow-screen layout.
+
+Household-office reviews keep the first appointment blocker on each office button and
+list all unmet requirements in its shared Details disclosure. Married adult descendants
+can open a read-only review explaining why leaving the managed household prevents an
+unpaid appointment. Occupied offices name the holder, provide a portrait link, and explain
+how to dismiss a paid retainer or relieve an unpaid family holder. Person-sheet Back or
+Escape restores the office list's scroll, open disclosures and originating control.
+If eligibility changes before confirmation, the review refreshes in place and retains its
+disclosures and scroll without spending a day. Retainer dismissal previews −15 Standing,
+immediate departure and no deed-day cost; Back and Escape return to the retained
+management view and its originating Dismiss control.
 
 Asset and persistent-effect surfaces use the render-only
 `UI.assetEffectSummary`. Detailed views across freehold plots, enterprises,

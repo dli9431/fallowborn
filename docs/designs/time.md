@@ -3,11 +3,15 @@
 ## Recurring deed preferences
 
 Settings can opt into scrolling to and highlighting a recurring deed when it
-becomes available. Notifications wait until Deeds is visible, open the owning
-section in either grouping, and never move keyboard focus or interrupt a modal
-or fast-forward burst. A card remains marked until used or unavailable; repeated
+becomes available, pausing time when the notice is revealed. Use Play to resume;
+the same notice does not pause again. Notifications switch from any tab to Deeds
+and close the Self/Kin drawer, then open the owning section in either grouping.
+Visible keyboard focus stays in place; a control hidden by the switch hands focus
+to the revealed deed. Notifications wait through dialogs and fast-forward bursts.
+A card remains marked until used or unavailable; repeated
 refreshes do not scroll again. A fresh campaign, loaded state or successor starts
-a fresh readiness baseline rather than replaying old notifications.
+a fresh readiness baseline rather than replaying old notifications. The pause
+uses `setPaused(true, {liveTick:true})` so its UI refresh retains mounted controls.
 
 Automation offers independent, initially unchecked selections for immediate
 recurring deeds: rival schemes, alms, mediation, squeezing taxes, mercenaries and

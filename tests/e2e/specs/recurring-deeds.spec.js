@@ -9,6 +9,7 @@ dependsOnRuntime(__filename, [
 const { test, expect } = require('../support/fixture');
 const { openGame } = require('../support/game/navigation');
 const { startDeterministicGame } = require('../support/game/start');
+const { waitForUiRefresh } = require('../support/game/ui');
 
 test.beforeEach(async function ({ page }, testInfo) {
   await openGame(page, testInfo);
@@ -225,14 +226,15 @@ test('automatic ruler taxes preserve the normal payment, political cost and repe
     expect(result.ready).toBe(result.start + 180);
   });
 
-test('fast-forward uses recurring deeds without nested ticks and defers readiness scrolls',
+test('fast-forward uses recurring deeds without nested ticks and defers readiness scrolls and pausing',
   async function ({ page }) {
-    const result = await page.evaluate(function () {
+    const result = await page.evaluate(async function () {
       const s = FB.state, start = s.turn;
       FB.ui.revealDeedAction('mediate');
       s.player.cooldowns.mediate = start - 59;
       FB.game.uiPrefs.highlightReadyDeeds = true;
       FB.ui.refreshRecurringDeedAlerts();
+      FB.game.setPaused(false, { liveTick:true });
       FB.game.auto.recurringDeeds = { give_alms:true };
       const original = Element.prototype.scrollIntoView;
       let scrolls = 0;
@@ -241,17 +243,24 @@ test('fast-forward uses recurring deeds without nested ticks and defers readines
       FB.game.passDay({ deferUi:true });
       FB.ui.refreshRecurringDeedAlerts();
       const during = scrolls;
+      const pausedDuring = FB.game.paused;
       FB.game.passDay({ deferUi:true });
       FB.game.fastForwarding = false;
       FB.ui.fastForwardFinished({ liveTick:true });
+      await new Promise(function (resolve) {
+        requestAnimationFrame(function () { requestAnimationFrame(resolve); });
+      });
       Element.prototype.scrollIntoView = original;
       return { days:s.turn - start, last:s.player.cooldowns.give_alms,
-        start:start, during:during, after:scrolls };
+        start:start, during:during, after:scrolls,
+        pausedDuring:pausedDuring, pausedAfter:FB.game.paused };
     });
     expect(result.days).toBe(2);
     expect(result.last).toBe(result.start);
     expect(result.during).toBe(0);
     expect(result.after).toBe(1);
+    expect(result.pausedDuring).toBe(false);
+    expect(result.pausedAfter).toBe(true);
   });
 
 test('readiness tracking consumes no RNG and resets at campaign and protagonist boundaries',
@@ -287,7 +296,7 @@ test('readiness tracking consumes no RNG and resets at campaign and protagonist 
   { name:'desktop thematic', width:1505, height:900, grouped:false, group:'life' },
   { name:'mobile action type', width:390, height:844, grouped:true, group:'deeds' }
 ].forEach(function (view) {
-  test('readiness opens closed sections once and preserves focus on ' + view.name,
+  test('readiness opens closed sections, pauses once and preserves focus on ' + view.name,
     async function ({ page }) {
       await page.setViewportSize({ width:view.width, height:view.height });
       await page.evaluate(function (grouped) {
@@ -297,6 +306,7 @@ test('readiness tracking consumes no RNG and resets at campaign and protagonist 
         FB.ui.showTab('actions');
         FB.ui.refreshRecurringDeedAlerts();
       }, view.grouped);
+      await waitForUiRefresh(page);
       const toggle = page.locator('[data-action-group="' + view.group + '"]');
       if (await toggle.getAttribute('aria-expanded') === 'true') await toggle.click();
       await page.locator('#btn-endturn').focus();
@@ -308,27 +318,116 @@ test('readiness tracking consumes no RNG and resets at campaign and protagonist 
           if (this.getAttribute('data-action-id') === 'mediate') scrolls++;
           return original.call(this, options);
         };
+        FB.game.setPaused(false, { liveTick:true });
         FB.state.turn++;
-        FB.ui.refresh({ liveTick:true });
-        FB.ui.refresh({ liveTick:true });
+        FB.ui.refreshRecurringDeedAlerts();
+        FB.ui.refreshRecurringDeedAlerts();
         Element.prototype.scrollIntoView = original;
-        return { scrolls:scrolls, focusRetained:document.activeElement === focus };
+        return { scrolls:scrolls, paused:FB.game.paused,
+          focusRetained:document.activeElement === focus };
       });
-      expect(result).toEqual({ scrolls:1, focusRetained:true });
+      expect(result).toEqual({ scrolls:1, paused:true, focusRetained:true });
+      await waitForUiRefresh(page);
+      await expect(page.locator('#btn-endturn')).toBeFocused();
+      await expect(page.locator('#btn-endturn')).toContainText('Play');
       await expect(toggle).toHaveAttribute('aria-expanded', 'true');
       const button = page.locator('[data-action-id="mediate"]');
       await expect(button).toBeEnabled();
       await expect(button.locator('..')).toHaveClass(/deed-ready/);
-      await expect(button.locator('..')).toContainText('Ready again');
+      await expect(button.locator('.deed-ready-label')).toHaveText('Ready again');
+      await expect(button.locator('..').locator('.deed-ready-label')).toHaveCount(1);
+      const resumed = await page.evaluate(function () {
+        FB.game.setPaused(false, { liveTick:true });
+        FB.ui.refreshRecurringDeedAlerts();
+        return !FB.game.paused;
+      });
+      expect(resumed).toBe(true);
+      await waitForUiRefresh(page);
+      await expect(page.locator('#btn-endturn')).toContainText('Pause');
       await page.evaluate(function () {
+        FB.game.setPaused(true);
         FB.state.player.cooldowns.mediate = FB.state.turn;
         FB.ui.refresh({ liveTick:true });
       });
       await expect(button.locator('..')).not.toHaveClass(/deed-ready/);
+      await expect(button.locator('.deed-ready-label')).toHaveCount(0);
     });
+
+  ['network', 'prov', 'log'].forEach(function (origin) {
+    test('readiness switches from ' + origin + ' to Deeds and pauses on ' + view.name,
+      async function ({ page }) {
+        await page.setViewportSize({ width:view.width, height:view.height });
+        await page.evaluate(function (options) {
+          FB.game.uiPrefs.groupDeedsByActionType = options.grouped;
+          FB.game.uiPrefs.highlightReadyDeeds = true;
+          FB.state.player.cooldowns.mediate = FB.state.turn - 59;
+          FB.ui.showTab(options.origin);
+          FB.ui.refreshRecurringDeedAlerts();
+        }, { grouped:view.grouped, origin:origin });
+        await waitForUiRefresh(page);
+        await expect(page.locator('#tab-' + origin)).toHaveClass(/active/);
+        await page.locator('#sidetabs [data-tab="' + origin + '"]').focus();
+        const result = await page.evaluate(async function () {
+          const original = Element.prototype.scrollIntoView;
+          const focus = document.activeElement;
+          let scrolls = 0;
+          Element.prototype.scrollIntoView = function (options) {
+            if (this.getAttribute('data-action-id') === 'mediate') scrolls++;
+            return original.call(this, options);
+          };
+          try {
+            FB.game.setPaused(false, { liveTick:true });
+            FB.state.turn++;
+            FB.ui.refresh({ liveTick:true });
+            await new Promise(function (resolve) {
+              requestAnimationFrame(function () { requestAnimationFrame(resolve); });
+            });
+            FB.ui.refreshRecurringDeedAlerts();
+            return { paused:FB.game.paused, scrolls:scrolls,
+              focusRetained:document.activeElement === focus };
+          } finally {
+            Element.prototype.scrollIntoView = original;
+            FB.game.setPaused(true, { liveTick:true });
+          }
+        });
+        expect(result).toEqual({ paused:true, scrolls:1, focusRetained:true });
+        await expect(page.locator('#tab-actions')).toHaveClass(/active/);
+        await expect(page.locator('#tab-' + origin)).not.toHaveClass(/active/);
+        await expect(page.locator('#btn-endturn')).toContainText('Play');
+        const deed = page.locator('[data-action-id="mediate"]');
+        await expect(deed).toBeVisible();
+        await expect(deed).toBeEnabled();
+        await expect(deed.locator('..')).toHaveClass(/deed-ready/);
+      });
+  });
 });
 
-test('readiness waits through a dialog and another tab, and disabled settings never scroll',
+test('readiness closes the mobile Kin drawer and keeps focus visible without resuming time',
+  async function ({ page }) {
+    await page.setViewportSize({ width:390, height:844 });
+    await page.evaluate(function () {
+      FB.game.uiPrefs.highlightReadyDeeds = true;
+      FB.state.player.cooldowns.mediate = FB.state.turn - 59;
+      FB.ui.refreshRecurringDeedAlerts();
+      FB.game.setPaused(false, { liveTick:true });
+      FB.ui.showTab('family');
+    });
+    await waitForUiRefresh(page);
+    await expect(page.locator('body')).toHaveClass(/showself/);
+    await page.locator('#lefttabs [data-tab="family"]').focus();
+    await page.evaluate(function () {
+      FB.state.turn++;
+      FB.ui.refreshRecurringDeedAlerts();
+    });
+    await waitForUiRefresh(page);
+    await expect(page.locator('body')).not.toHaveClass(/showself/);
+    await expect(page.locator('#tab-actions')).toHaveClass(/active/);
+    await expect(page.locator('[data-action-id="mediate"]')).toBeFocused();
+    await expect(page.locator('#btn-endturn')).toContainText('Play');
+    expect(await page.evaluate(function () { return FB.game.paused; })).toBe(true);
+  });
+
+test('readiness waits through a dialog then switches from Network, and disabled settings never scroll or pause',
   async function ({ page }) {
     const result = await page.evaluate(function () {
       const s = FB.state;
@@ -336,34 +435,47 @@ test('readiness waits through a dialog and another tab, and disabled settings ne
       const original = Element.prototype.scrollIntoView;
       let scrolls = 0;
       Element.prototype.scrollIntoView = function () { scrolls++; };
+      FB.game.setPaused(false, { liveTick:true });
       s.player.cooldowns.mediate = s.turn - 59;
-      FB.ui.refresh({ liveTick:true });
+      FB.ui.refreshRecurringDeedAlerts();
       s.turn++;
-      FB.ui.refresh({ liveTick:true });
+      FB.ui.refreshRecurringDeedAlerts();
       const disabled = scrolls;
+      const disabledPaused = FB.game.paused;
       FB.game.uiPrefs.highlightReadyDeeds = true;
       s.player.cooldowns.mediate = s.turn - 59;
       FB.ui.refreshRecurringDeedAlerts();
+      const baselinePaused = FB.game.paused;
+      FB.ui.showTab('network');
       FB.ui.showAutoResolve();
       const focus = document.activeElement;
       s.turn++;
-      FB.ui.refresh({ liveTick:true });
-      const modal = { scrolls:scrolls, focused:document.activeElement === focus };
+      FB.ui.refreshRecurringDeedAlerts();
+      const modal = { scrolls:scrolls, focused:document.activeElement === focus,
+        paused:FB.game.paused };
       FB.ui.closeModal();
-      FB.ui.showTab('log');
-      const otherTab = scrolls;
-      FB.ui.showTab('actions');
+      FB.ui.refreshRecurringDeedAlerts();
       const returned = scrolls;
-      FB.ui.refresh({ liveTick:true });
+      const returnedPaused = FB.game.paused;
+      const deedsActive = document.getElementById('tab-actions').classList.contains('active');
+      FB.game.setPaused(false, { liveTick:true });
+      FB.ui.refreshRecurringDeedAlerts();
       const repeated = scrolls;
+      const repeatedPaused = FB.game.paused;
       FB.game.uiPrefs.highlightReadyDeeds = false;
       FB.ui.refreshRecurringDeedAlerts();
       const marked = document.querySelectorAll('.deed-ready').length;
       Element.prototype.scrollIntoView = original;
-      return { disabled:disabled, modal:modal, otherTab:otherTab, returned:returned, repeated:repeated, marked:marked };
+      return { disabled:disabled, modal:modal, returned:returned,
+        repeated:repeated, marked:marked, disabledPaused:disabledPaused,
+        baselinePaused:baselinePaused, deedsActive:deedsActive,
+        returnedPaused:returnedPaused,
+        repeatedPaused:repeatedPaused };
     });
-    expect(result).toEqual({ disabled:0, modal:{ scrolls:0, focused:true },
-      otherTab:0, returned:1, repeated:1, marked:0 });
+    expect(result).toEqual({ disabled:0, modal:{ scrolls:0, focused:true, paused:false },
+      returned:1, repeated:1, marked:0, disabledPaused:false,
+      baselinePaused:false, deedsActive:true, returnedPaused:true,
+      repeatedPaused:false });
   });
 
 test('settings persistence and malformed automation preferences are bounded at boot',

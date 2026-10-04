@@ -142,9 +142,7 @@ window.FB = window.FB || {};
           delete recurringNotices[id];
         }
       }
-      if (!revealingRecurringDeed && SH.activeTab === 'actions' &&
-          !document.body.classList.contains('showself') &&
-          !g.fastForwarding && !UI.deedInteractionBusy()) {
+      if (!revealingRecurringDeed && !g.fastForwarding && !UI.deedInteractionBusy()) {
         for (const action of FB.recurringDeeds(s)) {
           if (!recurringNotices[action.id]) continue;
           revealingRecurringDeed = true;
@@ -156,6 +154,8 @@ window.FB = window.FB || {};
           }
           if (revealed) {
             delete recurringNotices[action.id];
+            // Keep the mounted controls and keyboard focus during the pause refresh.
+            if (!g.paused) g.setPaused(true, { liveTick:true });
             break; // one scroll per refresh; other ready cards remain queued
           }
         }
@@ -172,7 +172,7 @@ window.FB = window.FB || {};
         badge = document.createElement('span');
         badge.className = 'deed-ready-label';
         badge.setAttribute('role', 'status');
-        row.appendChild(badge);
+        button.appendChild(badge); // styles the deed button as ready again
       }
       if (highlighted) {
         const label = FB.T('Ready again');
@@ -379,8 +379,13 @@ window.FB = window.FB || {};
       }
     }
     const group = deedGroupForAction(action);
-    const toggle = document.querySelector('#tab-actions [data-action-group="' + group + '"]');
-    if (options && options.preserveMounted && SH.activeTab === 'actions') {
+    if (options && options.preserveMounted) {
+      if (SH.activeTab !== 'actions' || document.body.classList.contains('showself')) {
+        // This notice owns the pause; closing the drawer must not resume time.
+        selfDrawerResumePlay = false;
+        setTab('actions', { reuse:true });
+      }
+      const toggle = document.querySelector('#tab-actions [data-action-group="' + group + '"]');
       if (!toggle) return false; // wait for the normal catalogue shape refresh
       if (toggle.getAttribute('aria-expanded') !== 'true') toggle.click();
     } else {
@@ -392,6 +397,12 @@ window.FB = window.FB || {};
       '#tab-actions [data-action-id="' + id + '"]');
     if (!target) return false;
     target.scrollIntoView({ block:'center' });
+    // A tab switch can hide the previous control. Keep focus visible in that case.
+    const focused = document.activeElement;
+    if (options && options.preserveMounted && focused &&
+        focused !== document.body && !focused.getClientRects().length) {
+      target.focus({ preventScroll:true });
+    }
     return true;
   };
 

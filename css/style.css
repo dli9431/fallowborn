@@ -985,14 +985,6 @@ a.actionbtn { text-decoration: none; }
   display: grid; grid-template-columns: minmax(0, 1fr) auto;
   align-items: stretch; gap: 7px; margin-bottom: 7px;
 }
-.deed-entry.deed-ready {
-  border-color: var(--ui-accent-color);
-  box-shadow: inset 0 0 0 1px var(--ui-accent-color);
-}
-.deed-ready-label {
-  grid-column: 1 / -1; color: var(--ui-accent-color);
-  font-size: var(--ui-label-size); font-weight: 600;
-}
 .deed-entry .deed-main-action,
 .network-action-entry .network-main-action {
   min-width: 0; margin-bottom: 0; font-size: 16px; font-weight: 600;
@@ -1037,6 +1029,20 @@ body:not(.picking) #game:not(.hidden) #btn-endturn.has-focus-art .focus-art.is-p
 .deed-entry[data-deed-flow="now"] .deed-main-action:hover { border-color: #e0b64f; }
 .deed-entry[data-deed-flow="choices"] .deed-main-action:hover { border-color: #a9c779; }
 .deed-entry[data-deed-flow="no-day"] .deed-main-action:hover { border-color: #91bdc2; }
+/* A recurring deed that is ready again lights the deed button itself: a
+   brighter border, warm fill, soft glow and an inline Ready again chip. */
+.deed-entry.deed-ready .deed-main-action {
+  display: flex; align-items: center; gap: 8px;
+  border-color: #e0b64f; color: #fff3d6;
+  background: linear-gradient(90deg, #4a3a1c, #2a2216 80%);
+  box-shadow: inset 4px 0 0 #f0c75e, 0 0 10px rgba(224, 182, 79, .35);
+}
+.deed-entry.deed-ready .deed-main-action:hover { border-color: #f0c75e; }
+.deed-ready-label {
+  flex: 0 0 auto; margin-left: auto; padding: 1px 8px; border-radius: 999px;
+  background: var(--ui-accent-color); color: #1a140c;
+  font-size: var(--ui-label-size); font-weight: 700; white-space: nowrap;
+}
 .deed-entry .settcard-actions { align-self: center; }
 .deed-entry .deed-details { grid-column: 1 / -1; }
 .deed-entry .deed-details > b { color: var(--ui-accent-color); }

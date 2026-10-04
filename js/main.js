@@ -10,8 +10,11 @@ window.FB = window.FB || {};
   G.bootReady = false;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-FB.VERSION = '1.189.1';
+FB.VERSION = '1.189.2';
 FB.CHANGELOG = [
+  { v: '1.189.2', date: '2026-10-04', changes: [
+    'Household office reviews explain unmet requirements and how to replace current holders. Ready recurring deeds can bring you to Deeds, highlight their button and pause time.'
+  ] },
   { v: '1.189.1', date: '2026-10-04', changes: [
     'Sibling heirs keep their family relationships after succession. Minor rulers no longer gain invented children, and affected generated heirs are repaired on load.'
   ] },
@@ -4698,10 +4701,10 @@ FB.CHANGELOG = [
       '🌱 The first lessons are behind you — the chronicle is yours to write.', {}));
   };
 
-  G.setPaused = function (v) {
+  G.setPaused = function (v, options) {
     G.paused = !!v;
     if (!v) notePlayerTimeStarted(); // First steps: let the days flow
-    if (FB.state && FB.ui && FB.ui.refresh) FB.ui.refresh();
+    if (FB.state && FB.ui && FB.ui.refresh) FB.ui.refresh(options);
   };
   G.togglePause = function () { G.setPaused(!G.paused); };
 

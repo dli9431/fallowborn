@@ -18952,14 +18952,44 @@ window.FB = window.FB || {};
     });
   };
 
-  UI.showFamilyOffice = function (cid, returnContext) {
+  function familyOfficeReasonText(s, reason) {
+    if (reason.type === 'dead') return FB.T('A deceased person cannot hold a household office.');
+    if (reason.type === 'captivity') return FB.T('They cannot serve while captive.');
+    if (reason.type === 'married_descendant') return FB.T('Married children and grandchildren leave the managed household and cannot hold an unpaid family office.');
+    if (reason.type === 'household') return FB.T('They must belong to your managed family to hold an unpaid household office.');
+    if (reason.type === 'age') return FB.T('Requires age {age} or older.', { age:reason.age });
+    if (reason.type === 'station') return FB.T('Requires station {station}.', { station:FB.stationName(reason.tier) });
+    if (reason.type === 'custom') return FB.T('This office is restricted by the realm’s custom.');
+    if (reason.type === 'career') {
+      const career = FBDATA.careers[reason.profession];
+      return FB.T('Requires the {career} occupation.', {
+        career:career ? dt(s, 'career', reason.profession, career, 'name') : reason.profession
+      });
+    }
+    if (reason.type === 'current') return FB.T('Relieve them of {office} before assigning another office.', { office:positionName(s, reason.office) });
+    if (reason.type === 'occupied') {
+      const holder = s.chars[reason.charId];
+      return FB.T(reason.paid
+        ? 'Already held by {name}. Open their character sheet, then Manage household service to dismiss them before appointing a replacement.'
+        : 'Already held by {name}. Relieve them of this family office before appointing a replacement.',
+      { name:holder ? FB.fullName(holder) : FB.T('Unknown holder') });
+    }
+    return FB.T('This household office is unavailable.');
+  }
+
+  UI.showFamilyOffice = function (cid, returnContext, replaceView) {
     const s = FB.state;
     const c = s && s.chars[cid];
     if (!c || !FB.isAgencyFamilyMember ||
-        !FB.isAgencyFamilyMember(s, cid)) return;
+        (!FB.isAgencyFamilyMember(s, cid) && !FB.playerDescendantKind(s, cid))) return;
+    const oldScroll = replaceView ? $('gm-body').scrollTop : 0;
+    const oldFocus = document.activeElement;
+    const focusedOffice = replaceView && oldFocus && oldFocus.getAttribute('data-family-office');
+    const openDetails = replaceView ? Array.prototype.map.call(
+      $('gm-body').querySelectorAll('.settcard-details:not(.hidden)'), function (detail) { return detail.id; }) : [];
     const current = FB.familyOfficeRecord(s, cid);
     let h = UI.charCardHtml(s, c) + '<p class="hint">' + esc(FB.T(
-      'Family offices are unpaid duties. The holder keeps their occupation, but leaves enterprise work while serving. One person and one holder per office.')) +
+      'Family offices are unpaid duties for managed family members. Married children and grandchildren leave the managed household. The holder keeps their occupation, but leaves enterprise work while serving. Each office has one holder, shared with paid retainers.')) +
       '</p><div class="gm-list">';
     for (const office in FBDATA.positions) {
       const def = FBDATA.positions[office];
@@ -18969,36 +18999,26 @@ window.FB = window.FB || {};
       const occupied = retainer
         ? s.chars[retainer.charId] : familyHolder;
       const already = current && current.office === office;
-      const eligible = already || FB.canAppointFamilyOffice(s, office, cid);
-      let reason = '';
-      if (already) reason = FB.T('This is their current household office.');
-      else if (current) reason = FB.T(
-        'Relieve them of {office} before assigning another office.', {
-          office:positionName(s, current.office)
-        });
-      else if (occupied) reason = FB.T('Already held by {name}.', {
-        name:occupied.name
-      });
-      else if (s.player.tier < (def.minTier || 0)) {
-        reason = FB.T('Requires station {station}.', {
-          station:FB.stationName(def.minTier || 0)
-        });
-      } else if (def.maleOnly && c.sex !== 'm') {
-        reason = FB.T('This office is restricted by the realm’s custom.');
-      } else {
-        reason = FB.T('Requires the {career} occupation.', {
-          career:FBDATA.careers[def.profession]
-            ? dt(s, 'career', def.profession,
-              FBDATA.careers[def.profession], 'name') : def.profession
-        });
+      const status = FB.familyOfficeStatus(s, office, cid);
+      const reasons = status.reasons.map(function (reason) { return familyOfficeReasonText(s, reason); });
+      let details = '<p>' + esc(positionDesc(s, office)) + '</p>';
+      if (!already && reasons.length) {
+        details += '<b>' + esc(FB.T('Requirements not met')) + '</b><ul>';
+        for (const reason of reasons) details += '<li>' + esc(reason) + '</li>';
+        details += '</ul>';
       }
-      h += '<button class="actionbtn" data-family-office="' + esc(office) + '"' +
-        (!eligible || already ? ' disabled' : '') + '>' +
-        esc(def.icon + ' ' + positionName(s, office)) +
-        '<span class="adesc">' + esc(positionDesc(s, office)) + ' ' +
-        esc(eligible && !already
-          ? (positionEffectText(office) || FB.T('Provides its listed household benefit.'))
-          : reason) + '</span></button>';
+      h += reviewActionCardHtml({
+        data:{ familyOffice:office }, detailsId:'family-office-details-' + office,
+        disabled:!status.can || already, warn:!status.can && !already,
+        labelHtml:esc(def.icon + ' ' + positionName(s, office)),
+        note:already ? FB.T('This is their current household office.') : status.can
+          ? FB.T('{benefit} · unpaid family duty · spends one day · replaces enterprise work', {
+            benefit:positionEffectText(office) || FB.T('Provides its listed household benefit.')
+          }) : reasons[0],
+        details:details
+      });
+      if (occupied && !already) h += reviewPeopleHtml(reviewPersonHtml(occupied,
+        FB.T('Current holder: {office}', { office:positionName(s, office) }), 'family-office-holder-' + office));
     }
     if (current) {
       h += '<button class="actionbtn danger" id="family-office-remove">' +
@@ -19012,15 +19032,40 @@ window.FB = window.FB || {};
       esc(FB.T('Back')) + '</button></div>';
     openModal(FB.T('Household office for {name}', { name:c.name }), h, {
       historyView:true,
-      noFocus:true,
-      historyBackRender:function () {
-        UI.showCharModal(cid, returnContext && returnContext.returnContext);
-      }
+      replaceView:!!replaceView,
+      noFocus:true
     });
     FB.paintFaces($('gm-body'), s);
+    for (const office in FBDATA.positions) {
+      const holderButton = $('family-office-holder-' + office);
+      if (!holderButton) continue;
+      const record = FB.retainerOfficeRecord(s, office);
+      const holder = record ? s.chars[record.charId] : FB.familyOfficeHolder(s, office);
+      if (holder) holderButton.addEventListener('click', function () {
+        UI.showCharModal(holder.id, { view:'family-office', characterId:cid, returnContext:returnContext });
+      });
+    }
+    if (replaceView) {
+      for (const id of openDetails) {
+        const detail = $(id);
+        if (!detail) continue;
+        detail.classList.remove('hidden');
+        const toggle = document.querySelector('[aria-controls="' + id + '"]');
+        if (toggle) toggle.setAttribute('aria-expanded', 'true');
+      }
+      if (focusedOffice) {
+        const button = document.querySelector('[data-family-office="' + focusedOffice + '"]');
+        if (button) (button.disabled ? button.closest('.review-action-card') : button).focus({ preventScroll:true });
+      }
+      $('gm-body').scrollTop = oldScroll;
+    }
     document.querySelectorAll('[data-family-office]').forEach(function (button) {
       button.addEventListener('click', function () {
-        if (!FB.appointFamilyOffice(s, button.dataset.familyOffice, cid)) return;
+        if (!FB.appointFamilyOffice(FB.state, button.dataset.familyOffice, cid)) {
+          UI.showFamilyOffice(cid, returnContext, true);
+          UI.toast(FB.T('The appointment is unavailable. Review the current requirements.'));
+          return;
+        }
         UI.closeModal();
         FB.game.passDay({ skipFocus:true });
         resumeManagementAfterDay(returnContext);
@@ -19051,10 +19096,11 @@ window.FB = window.FB || {};
       const blockedTier = s.player.tier < (def.minTier || 0);
       const blockedGold = (def.pay || 0) > 0 &&
         s.player.gold < (def.pay || 0);
-      const occupied = FB.retainerOfficeRecord(s, id) ||
+      const paidHolder = FB.retainerOfficeRecord(s, id);
+      const occupied = paidHolder ||
         (FB.familyOfficeHolder && FB.familyOfficeHolder(s, id));
       const blocker = occupied
-        ? FB.T('This household office is already filled.')
+        ? familyOfficeReasonText(s, { type:'occupied', charId:occupied.charId || occupied.id, paid:!!paidHolder })
         : blockedTier
           ? FB.T('Requires station {station}.', { station:FB.stationName(def.minTier || 0) })
           : blockedGold
@@ -19117,9 +19163,12 @@ window.FB = window.FB || {};
       if (FB.retainerRecords(s).length >= FB.retainerCapacity(s)) {
         return FB.T('Household retainer capacity is full.');
       }
-      if (FB.retainerOfficeRecord(s, office) ||
-          (FB.familyOfficeHolder && FB.familyOfficeHolder(s, office))) {
-        return FB.T('This household office is already filled.');
+      const paidHolder = FB.retainerOfficeRecord(s, office);
+      const holder = paidHolder || (FB.familyOfficeHolder && FB.familyOfficeHolder(s, office));
+      if (holder) {
+        return familyOfficeReasonText(s, {
+          type:'occupied', charId:holder.charId || holder.id, paid:!!paidHolder
+        });
       }
       if ((def.pay || 0) > 0 && s.player.gold < (def.pay || 0)) {
         return FB.T('Requires the first seasonal pay of {money:pay}.', {
@@ -19215,7 +19264,7 @@ window.FB = window.FB || {};
       }) + reviewActionCardHtml({
         id:'retainer-dismiss', danger:true,
         labelHtml:esc(FB.T('Dismiss from household service…')),
-        note:FB.T('The retainer leaves immediately and remembers the slight.')
+        note:FB.T('Leaves immediately · −15 Standing · spends no day')
       })) +
       '<div class="gm-footer"><button type="button" class="btn" id="gm-cancel">' +
       esc(FB.T('Back')) + '</button></div>';
@@ -19262,14 +19311,14 @@ window.FB = window.FB || {};
       reviewActionsHtml(reviewActionCardHtml({
         id:'retainer-dismiss-confirm', danger:true,
         label:FB.T('Dismiss {name}', { name:c.name }),
-        note:FB.T('The retainer leaves immediately and remembers the slight.'),
+        note:FB.T('Leaves immediately · −15 Standing · spends no day'),
         details:'<p>' + esc(FB.T(
           'Dismiss {name} as {position}? Enterprise work, tutoring, and household equipment assignments will end.',
           { name:c.name, position:positionName(s, record.office) })) + '</p>'
       })) +
       '<div class="gm-footer"><button type="button" class="btn" id="gm-cancel">' +
       esc(FB.T('Keep in service')) + '</button></div>';
-    openModal(FB.T('Dismiss Retainer'), h);
+    openModal(FB.T('Dismiss Retainer'), h, { historyView:true });
     FB.paintFaces($('gm-body'), s);
     $('retainer-dismiss-confirm').addEventListener('click', function () {
       if (!FB.removeRetainer(s, cid, 'dismissed')) return;
@@ -19277,7 +19326,7 @@ window.FB = window.FB || {};
       UI.refresh();
     });
     $('gm-cancel').addEventListener('click', function () {
-      UI.showRetainerManage(cid, returnContext);
+      modalHistoryBack(function () { UI.showRetainerManage(cid, returnContext); });
     });
   };
 
@@ -24367,22 +24416,24 @@ window.FB = window.FB || {};
         consequence:FB.T('Guidance changes their yearly personal progress and family requests.'),
         route:'family-ambition'
       });
-      if (FB.ageOf(c, s.date.year) >= 16) {
-        addInteractionAction(model, {
-          id:'management.family.office',
-          group:'management',
-          label:FB.T('Assign a household office…'),
-          detail:familyOffice
-            ? FB.T('Currently serving as {office}.', {
-              office:positionName(s, familyOffice.office)
-            })
-            : FB.T('Match their occupation to an available household office.'),
-          enabled:true,
-          blockedReason:null,
-          consequence:FB.T('An office replaces enterprise work and spends the day.'),
-          route:'family-office'
-        });
-      }
+    }
+    if (!c.dead && FB.ageOf(c, s.date.year) >= 16 && (agencyFamily || descendantKind)) {
+      addInteractionAction(model, {
+        id:'management.family.office',
+        group:'management',
+        label:FB.T(agencyFamily ? 'Assign a household office…' : 'Review household offices…'),
+        detail:!agencyFamily ? familyOfficeReasonText(s, {
+          type:FB.spousesOf(s, c).length ? 'married_descendant' : 'household'
+        }) : familyOffice
+          ? FB.T('Currently serving as {office}.', {
+            office:positionName(s, familyOffice.office)
+          })
+          : FB.T('Match their occupation to an available household office.'),
+        enabled:true,
+        blockedReason:null,
+        consequence:FB.T(agencyFamily ? 'An office replaces enterprise work and spends the day.' : 'Review requirements without changing appointments.'),
+        route:'family-office'
+      });
     }
     if (retainer) {
       addInteractionAction(model, {
@@ -25025,6 +25076,7 @@ window.FB = window.FB || {};
       replaceView:!!replaceView,
       historyBackRender:returnContext && (returnContext.view === 'marriage-finder' ||
         returnContext.view === 'abbeys' ||
+        returnContext.view === 'family-office' ||
         returnContext.view === 'religious-office-result' ||
         returnContext.view === 'settlement-founding')
         ? null : function () {
@@ -30125,7 +30177,7 @@ window.FB = window.FB || {};
         G.uiPrefs.groupDeedsByActionType) + settingsDetailToggle(
         'set-highlight-ready-deeds',
         'Scroll to ready recurring deeds',
-        'When a recurring deed becomes available, open its section, scroll to it and highlight it on Deeds. Notifications wait while another tab or dialog is open. Keyboard focus stays where it is. Off by default.',
+        'When a recurring deed becomes available, switch to Deeds, open its section, scroll to it, highlight it and pause time. Notifications wait while a dialog or fast-forward is active. Use Play to continue. Keyboard focus stays where it is unless the previous control is hidden by the tab switch. Off by default.',
         G.uiPrefs.highlightReadyDeeds);
     h += '<div class="gm-body-text" style="margin-top:8px"><p>' +
       esc(FB.T('Guidance')) + '</p></div>' +

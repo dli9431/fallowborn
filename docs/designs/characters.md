@@ -919,6 +919,17 @@ non-head holder before the ordinary household transfer. The character card owns
 the ambition-guidance and family-office sheets; the Household Plan and Work view
 derive the resulting commitment from the same records.
 
+`FB.familyOfficeStatus` supplies locale-neutral reasons to both appointment eligibility
+and its review. The review lists every unmet requirement, including marriage out of the
+managed household, minimum age and player station, occupation, captivity, and an occupied
+office. Adult children and grandchildren outside the household retain a read-only office
+review on their character sheet; this does not extend appointment eligibility. Occupied
+offices name and link their current holder. Paid holders are dismissed through Manage
+household service (immediate, no deed day, −15 Standing); unpaid family holders are relieved
+through their office review (one deed day). Failed confirmation refreshes the requirements
+without spending a day or silently replacing a holder. These are presentation changes to
+existing household rules, with no new technology dependency.
+
 **The Household Plan is a derived overview, not character state.** Network → Household
 opens one row for the living household head, each resident family member, and each paid
 retainer, in that order. The row reads the existing education, instruction, career, guild,

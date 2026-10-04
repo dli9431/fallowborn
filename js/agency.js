@@ -524,20 +524,47 @@ window.FB = window.FB || {};
     return null;
   };
 
-  FB.canAppointFamilyOffice = function (state, office, cid) {
+  /* Semantic requirements feed both confirmation and the read-only review.
+     Keep every blocker so matching occupation never masks household status. */
+  FB.familyOfficeStatus = function (state, office, cid) {
     var def = FB.positionDef && FB.positionDef(office);
     var c = state.chars[cid];
     var career = c && FB.careerOf ? FB.careerOf(state, c) : null;
-    if (!def || def.kind !== 'retainer' || !c || c.dead ||
-        (FB.intrigueCaptivityOf && FB.intrigueCaptivityOf(state, c.id)) ||
-        !FB.isAgencyFamilyMember(state, cid) ||
-        FB.ageOf(c, state.date.year) < 16 ||
-        state.player.tier < (def.minTier || 0) ||
-        (def.maleOnly && c.sex !== 'm') ||
-        !career || career.profession !== def.profession ||
-        FB.familyOfficeRecord(state, cid)) return false;
-    if (FB.retainerOfficeRecord && FB.retainerOfficeRecord(state, office)) return false;
-    return !FB.familyOfficeHolder(state, office);
+    var reasons = [];
+    if (!def || def.kind !== 'retainer' || !c) {
+      return { can:false, reasons:[{ type:'unavailable' }] };
+    }
+    if (c.dead) reasons.push({ type:'dead' });
+    if (FB.intrigueCaptivityOf && FB.intrigueCaptivityOf(state, c.id)) {
+      reasons.push({ type:'captivity' });
+    }
+    if (!FB.isAgencyFamilyMember(state, cid)) {
+      var marriedDescendant = FB.playerDescendantKind(state, cid) &&
+        FB.spousesOf(state, c).length > 0;
+      reasons.push({ type:marriedDescendant ? 'married_descendant' : 'household' });
+    }
+    if (FB.ageOf(c, state.date.year) < 16) reasons.push({ type:'age', age:16 });
+    if (state.player.tier < (def.minTier || 0)) {
+      reasons.push({ type:'station', tier:def.minTier || 0 });
+    }
+    if (def.maleOnly && c.sex !== 'm') reasons.push({ type:'custom' });
+    if (!career || career.profession !== def.profession) {
+      reasons.push({ type:'career', profession:def.profession });
+    }
+    var current = FB.familyOfficeRecord(state, cid);
+    if (current) reasons.push({ type:'current', office:current.office });
+    var retainer = FB.retainerOfficeRecord && FB.retainerOfficeRecord(state, office);
+    var holder = retainer ? state.chars[retainer.charId] : FB.familyOfficeHolder(state, office);
+    if (holder && holder.id !== cid) {
+      reasons.push({ type:'occupied', charId:holder.id, paid:!!retainer });
+    } else if (retainer) {
+      reasons.push({ type:'occupied', charId:retainer.charId, paid:true });
+    }
+    return { can:reasons.length === 0, reasons:reasons };
+  };
+
+  FB.canAppointFamilyOffice = function (state, office, cid) {
+    return FB.familyOfficeStatus(state, office, cid).can;
   };
 
   FB.appointFamilyOffice = function (state, office, cid) {
