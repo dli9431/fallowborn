@@ -526,6 +526,16 @@ yearly mortality roll. That repair updates the throne and generation-stamped all
 but suppresses diplomacy-story queuing and live household-loadout reconciliation, which
 are in-play succession side effects rather than load migrations.
 
+The non-yearly dynastic ensure pass repairs old generated `gN_heirN` fallback
+members whose recorded parent was younger than sixteen at their birth. They
+become siblings through that parent's recorded parent only when the ancestor's
+dates permit it; otherwise they become parentless collaterals. Both compact
+parent/child links and the corresponding full-character links are reconciled.
+Character ids, names, dates, skills, descendants and succession order are kept.
+Explicit births and adoptions are outside this repair. It consumes no RNG or
+uid, adds no migration field, and is idempotent; the ordinary yearly frontier
+does not scan historical members for it. Save format remains 3.
+
 Death compaction captures its retention answer before relationship cleanup and may
 reuse the year pass's family snapshot. In addition to direct player relationships,
 roles, attention, travel, offices, equipment, and genealogy, a court record is retained

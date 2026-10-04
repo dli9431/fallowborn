@@ -2860,6 +2860,13 @@ Standing is shared. War notices render both realm names as links: in Land they
 open the named ruler's character sheet, while a ruler-sheet link opens the
 opposing ruler or returns to the current realm's capital county.
 
+Court-strip kin labels come from recorded character and compact genealogy,
+relative to the displayed person. Succession order alone never implies Son,
+Daughter, Father or Mother. The designated successor retains their kin label
+alongside Heir; unknown parentage uses Court member. Opening a sibling heir
+therefore still identifies the ruler as their brother or sister. Labels are
+localized display projections and never alter saved relationships.
+
 Modal return context records only the originating view, not simulation state.
 Governance, Council, Estates, Household Plan, and card-to-card routes reconstruct the exact
 source on visible/browser Back and after an in-scope completed management action; Network,

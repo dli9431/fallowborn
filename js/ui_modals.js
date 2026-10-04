@@ -11697,6 +11697,57 @@ window.FB = window.FB || {};
     return h + '</div>';
   }
 
+  /* Succession order includes siblings and other collateral branches. A
+     court place is never evidence of parentage, including on an heir's sheet.
+     Compact members retain the same ancestry when a dead parent was removed. */
+  function realmCourtRelation(s, subject, c, fallback) {
+    if (!subject || !c) return fallback;
+    if (FB.spousesSnapshot(s, subject).some(function (spouse) {
+      return spouse.id === c.id;
+    })) return FB.T(c.sex === 'f' ? 'Wife' : 'Husband');
+    const line = subject.royalLine, otherLine = c.royalLine;
+    const sameCourt = line && otherLine && line.realmId === otherLine.realmId;
+    const realm = sameCourt && s.realms[line.realmId];
+    const members = realm && realm.succession && realm.succession.members;
+    const a = members && members[line.memberId];
+    const b = members && members[otherLine.memberId];
+    function childOf(parent, child) {
+      return child.fatherId === parent.id || child.motherId === parent.id ||
+        (parent.childrenIds || []).indexOf(child.id) >= 0;
+    }
+    if (childOf(c, subject) || (a && b && a.parentId === b.id)) {
+      return FB.T(c.sex === 'f' ? 'Mother' : 'Father');
+    }
+    if (childOf(subject, c) || (a && b && b.parentId === a.id)) {
+      return FB.T(c.sex === 'f' ? 'Daughter' : 'Son');
+    }
+    const degree = FB.kinshipDegreeSnapshot(s, subject, c);
+    if (degree === 'full_sibling' || degree === 'half_sibling') {
+      return FB.T(c.sex === 'f' ? 'Sister' : 'Brother');
+    }
+    if (degree === 'grandparent') {
+      const grandparent = FB.parentsOf(s, subject).some(function (parent) {
+        return childOf(c, parent);
+      }) || (a && b && members[a.parentId] &&
+        members[a.parentId].parentId === b.id);
+      return grandparent
+        ? FB.T(c.sex === 'f' ? 'Grandmother' : 'Grandfather')
+        : FB.T(c.sex === 'f' ? 'Granddaughter' : 'Grandson');
+    }
+    if (degree === 'avuncular') {
+      const auntOrUncle = FB.parentsOf(s, subject).some(function (parent) {
+        const kin = FB.kinshipDegreeSnapshot(s, parent, c);
+        return kin === 'full_sibling' || kin === 'half_sibling';
+      }) || (a && b && members[a.parentId] && b.parentId &&
+        members[a.parentId].parentId === b.parentId);
+      return auntOrUncle
+        ? FB.T(c.sex === 'f' ? 'Aunt' : 'Uncle')
+        : FB.T(c.sex === 'f' ? 'Niece' : 'Nephew');
+    }
+    if (degree === 'cousin') return FB.T('Cousin');
+    return fallback;
+  }
+
   function realmCourtStripHtml(s, rid, subjectId) {
     const rows = [];
     const realm = s.realms[rid];
@@ -11704,24 +11755,11 @@ window.FB = window.FB || {};
     const consort = FB.realmConsortCharacter && FB.realmConsortCharacter(s, rid);
     const succession = s.realms[rid] && s.realms[rid].succession;
     const family = realmFamilySnapshot(s, rid);
-    const childIds = {};
-    for (const member of family) {
-      if (member.charId) childIds[member.charId] = 1;
-    }
-    function parentRelation(parent, fallback) {
-      if (!subjectId || subjectId === parent.id) return fallback;
-      if (ruler && consort && subjectId === ruler.id &&
-          parent.id === consort.id) return fallback;
-      if (ruler && consort && subjectId === consort.id &&
-          parent.id === ruler.id) {
-        return FB.T(parent.sex === 'f' ? 'Wife' : 'Husband');
-      }
-      return FB.T(parent.sex === 'f' ? 'Mother' : 'Father');
-    }
+    const subject = s.chars[subjectId] || ruler;
     if (ruler && ruler.id !== subjectId) {
       rows.push({
         c:ruler,
-        rel:parentRelation(ruler, FB.T('Ruler')),
+        rel:realmCourtRelation(s, subject, ruler, FB.T('Ruler')),
         ruler:true,
         role:'ruler'
       });
@@ -11729,22 +11767,21 @@ window.FB = window.FB || {};
     if (consort && consort.id !== subjectId) {
       rows.push({
         c:consort,
-        rel:parentRelation(consort, FB.T('Consort')),
+        rel:subject === ruler ? FB.T('Consort') :
+          realmCourtRelation(s, subject, consort, FB.T('Consort')),
         role:'consort'
       });
     }
     for (const member of family) {
       const c = member.charId && s.chars[member.charId];
       if (!c || c.dead || c.id === subjectId) continue;
+      const relation = realmCourtRelation(s, subject, c, FB.T('Court member'));
       rows.push({
         c:c,
         heir:succession && succession.heirId === member.id,
         role:'child',
         rel:succession && succession.heirId === member.id
-          ? FB.T('Heir')
-          : (subjectId && childIds[subjectId]
-            ? FB.T(c.sex === 'f' ? 'Sister' : 'Brother')
-            : FB.T(c.sex === 'f' ? 'Daughter' : 'Son'))
+          ? FB.T('{relation} · Heir', { relation:relation }) : relation
       });
     }
     if (!rows.length) return '';

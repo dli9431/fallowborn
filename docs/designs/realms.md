@@ -270,6 +270,21 @@ designated heir dies, that child's living descendants retain the branch's place 
 the heir's siblings. The Papal States instead carry a one-root `papalElective`
 succession whose order remains empty.
 
+Accession changes the crown and succession order, never a sibling's recorded
+parentage. Court strips show relationships relative to the viewed person, with
+Heir added separately: a sibling successor remains Brother or Sister, including
+on their own sheet. Compact ancestry supplies labels when a dead parent has
+been removed; merely sharing a court or lacking parents proves no blood relation.
+
+An empty line still receives a generated fallback. An adult ruler may receive
+a child, with at least sixteen years between their births. A minor instead
+receives a sibling through a plausible recorded parent, or a parentless
+collateral when no such parent exists. Generated siblings cannot be born after
+that parent's recorded death. A minor founding ruler's seeded court likewise
+remains collateral. This fixes genealogy, with no new player capability or
+technology-impact review required. Regression coverage lives in
+`tests/e2e/specs/royal-succession-kinship.spec.js`.
+
 **The living court is materialized eagerly; the dead compact back to members.** A realm
 opens on a real face and a full character card rather than a crest and one line, because
 its ruler, adult consort, and displayed heirs are ordinary `state.chars` records from
@@ -293,7 +308,7 @@ delegates to the same order, so equal-age members cannot differ between loading 
 display.
 
 `FB.materializeRealmRuler` creates or reuses the current `succession.rulerMemberId`,
-reparents the existing compact children beneath that member, and attaches one ordinary
+links plausible initial compact children beneath a newly created root, and attaches one ordinary
 character with the ruler’s saved identity, culture, faith, age, effective Martial,
 trait, station, and current political standing. `FB.realmRulerCharacter`,
 `FB.realmIdForRulerCharacter`, and `FB.isReigningRealmRuler` preserve that identity

@@ -10,8 +10,11 @@ window.FB = window.FB || {};
   G.bootReady = false;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-FB.VERSION = '1.189.0';
+FB.VERSION = '1.189.1';
 FB.CHANGELOG = [
+  { v: '1.189.1', date: '2026-10-04', changes: [
+    'Sibling heirs keep their family relationships after succession. Minor rulers no longer gain invented children, and affected generated heirs are repaired on load.'
+  ] },
   { v: '1.189.0', date: '2026-10-04', changes: [
     'Automation can repeat selected recurring deeds, and Settings can highlight and scroll to deeds when they become ready.',
     'Technology uses symbols supported by older system fonts. Renaming your house leaves unrelated families with the same name unchanged.'
