@@ -145,6 +145,12 @@ Time passes **day by day** (90-day seasons, 360-day years).
    its existing control, or select the ledger title to collapse it.
 2. Act on **deeds** when the moment is right — one-shot acts like desperate measures, scheming, proposing
    marriage, or petitioning your lord. Each spends the day; many need time before repeating.
+   **Settings → Deeds → Scroll to ready recurring deeds** can bring a newly available
+   recurring deed into view and mark its card when Deeds is visible. **⚙ Automation →
+   Automatic recurring deeds** lets you check immediate deeds to repeat while days flow.
+   Each automatic use replaces that day's focus and keeps its usual costs, risks and
+   cooldown. Deeds that open choices remain manual. Both settings default off and are
+   remembered on this browser.
    Households can open **🏠 Better the household…** without spending a day. Five living
    standards and profession-specific work outfits rise through purchased levels with
    seasonal upkeep; the sheet previews the next season before every upgrade. Better food

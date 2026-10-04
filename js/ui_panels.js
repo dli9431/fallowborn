@@ -92,6 +92,95 @@ window.FB = window.FB || {};
   let deedStatusRefreshedTurn = 0;
   let actionsDirty = true;
   const LIVE_DEED_STATUS_DAYS = 7;
+  let recurringAlertState = null;
+  let recurringAlertCharacter = null;
+  let recurringReadiness = {};
+  let recurringHighlights = {};
+  let recurringNotices = {};
+  let revealingRecurringDeed = false;
+
+  /* Independent of mounted accordion rows: closed sections can become ready.
+     All bookkeeping is transient and status checks consume no game RNG. */
+  function refreshRecurringDeedAlerts() {
+    const s = FB.state, g = FB.game;
+    const enabled = s && g && !g.observe && g.uiPrefs.highlightReadyDeeds;
+    if (!enabled && recurringAlertState === null) return;
+    const reset = !enabled || recurringAlertState !== s ||
+      recurringAlertCharacter !== s.player.charId;
+    if (reset) {
+      recurringReadiness = {};
+      recurringHighlights = {};
+      recurringNotices = {};
+      recurringAlertState = enabled ? s : null;
+      recurringAlertCharacter = enabled ? s.player.charId : null;
+    }
+    if (enabled) {
+      const next = {};
+      const visible = {};
+      for (const item of FB.listInstants(s, { deferEligibility:true })) visible[item.a.id] = true;
+      for (const action of FB.recurringDeeds(s)) {
+        const status = FB.instantStatus(s, action.id, {
+          shown:!!visible[action.id], deferPreview:true
+        });
+        const last = (s.player.cooldowns || {})[action.id];
+        const previous = recurringReadiness[action.id];
+        next[action.id] = { ready:status.can, last:last };
+        if (!reset && status.can && previous &&
+            (!previous.ready || previous.last !== last)) {
+          recurringHighlights[action.id] = true;
+          recurringNotices[action.id] = true;
+        }
+        if (!status.can) {
+          delete recurringHighlights[action.id];
+          delete recurringNotices[action.id];
+        }
+      }
+      recurringReadiness = next;
+      for (const id in recurringHighlights) {
+        if (!next[id]) {
+          delete recurringHighlights[id];
+          delete recurringNotices[id];
+        }
+      }
+      if (!revealingRecurringDeed && SH.activeTab === 'actions' &&
+          !document.body.classList.contains('showself') &&
+          !g.fastForwarding && !UI.deedInteractionBusy()) {
+        for (const action of FB.recurringDeeds(s)) {
+          if (!recurringNotices[action.id]) continue;
+          revealingRecurringDeed = true;
+          let revealed = false;
+          try {
+            revealed = UI.revealDeedAction(action.id, { preserveMounted:true });
+          } finally {
+            revealingRecurringDeed = false;
+          }
+          if (revealed) {
+            delete recurringNotices[action.id];
+            break; // one scroll per refresh; other ready cards remain queued
+          }
+        }
+      }
+    }
+    document.querySelectorAll('#tab-actions [data-action-id]').forEach(function (button) {
+      const row = button.closest('.deed-entry');
+      if (!row) return;
+      const highlighted = !!recurringHighlights[button.getAttribute('data-action-id')];
+      row.classList.toggle('deed-ready', highlighted);
+      if (highlighted) patchVisibleDeedStatus(s, button, button.getAttribute('data-action-id'));
+      let badge = row.querySelector('.deed-ready-label');
+      if (highlighted && !badge) {
+        badge = document.createElement('span');
+        badge.className = 'deed-ready-label';
+        badge.setAttribute('role', 'status');
+        row.appendChild(badge);
+      }
+      if (highlighted) {
+        const label = FB.T('Ready again');
+        if (badge.textContent !== label) badge.textContent = label;
+      } else if (badge) badge.remove();
+    });
+  }
+  UI.refreshRecurringDeedAlerts = refreshRecurringDeedAlerts;
   let focusSectionOpen = true;
   function markActionsDirty() {
     actionsDirty = true;
@@ -281,7 +370,7 @@ window.FB = window.FB || {};
   /* Onboarding can teach a deed only if its real section is open and the
      control is on screen. Keep this routing inside the Deeds panel, which
      owns its grouping and retained disclosure state. */
-  UI.revealDeedAction = function (id) {
+  UI.revealDeedAction = function (id, options) {
     let action = null;
     for (const candidate of FB.instants || []) {
       if (candidate.id === id) {
@@ -290,9 +379,15 @@ window.FB = window.FB || {};
       }
     }
     const group = deedGroupForAction(action);
-    actionGroupsOpen[group] = true;
-    activeActionSection = group;
-    setTab('actions', { history:false });
+    const toggle = document.querySelector('#tab-actions [data-action-group="' + group + '"]');
+    if (options && options.preserveMounted && SH.activeTab === 'actions') {
+      if (!toggle) return false; // wait for the normal catalogue shape refresh
+      if (toggle.getAttribute('aria-expanded') !== 'true') toggle.click();
+    } else {
+      actionGroupsOpen[group] = true;
+      activeActionSection = group;
+      setTab('actions', { history:false });
+    }
     const target = document.querySelector(
       '#tab-actions [data-action-id="' + id + '"]');
     if (!target) return false;
@@ -919,6 +1014,7 @@ window.FB = window.FB || {};
       if (SH.activeTab === 'actions') refreshVisibleDeedStatuses();
       else if (SH.activeTab === 'log') renderLog();
       updateTabNudges(FB.state);
+      refreshRecurringDeedAlerts();
       return;
     }
     // on phones Self/Kin is a closed drawer most of the time (display:none →
@@ -929,6 +1025,7 @@ window.FB = window.FB || {};
     }
     renderTab(SH.activeTab);
     updateTabNudges(FB.state);
+    refreshRecurringDeedAlerts();
   }
 
   function renderDeedsWarCard(s) {
@@ -8202,6 +8299,7 @@ window.FB = window.FB || {};
       } else {
         renderTab(name, !!(opts && opts.reuse));
         updateTabNudges(FB.state);
+        refreshRecurringDeedAlerts();
       }
     }
     if (isLeft && !drawerWasOpen) {

@@ -637,6 +637,44 @@ window.FB = window.FB || {};
         'Only a sovereign player chooses national technology; your sovereign selects the project.')) +
         '</div>';
     }
+    const visibleDeeds = {};
+    if (s) {
+      for (const item of FB.listInstants(s, { deferEligibility:true })) {
+        visibleDeeds[item.a.id] = true;
+      }
+    }
+    const character = s && s.chars[s.player.charId];
+    const recurring = s && FB.recurringDeeds ? FB.recurringDeeds(s, true).filter(function (deed) {
+      return visibleDeeds[deed.id] && (!deed.requiresAdult ||
+        (character && FB.ageOf(character, s.date.year) >= 16));
+    }) : [];
+    if (recurring.length) {
+      h += panelh('Automatic recurring deeds');
+      h += '<p class="hint">' + esc(FB.T('Checked deeds run as soon as eligible while days flow, including fast-forward. Each spends one day instead of Daily Focus. If several are ready, they run in the order below on successive days. Deeds that open choices are excluded.')) + '</p>';
+      h += '<p class="ui-control-warning">' + esc(FB.T('Repeated deeds spend their normal resources and carry their normal risks. Travel, captivity and open dialogs suspend automatic use.')) + '</p>';
+      for (const deed of recurring) {
+        const status = FB.instantStatus(s, deed.id, { deferPreview:true });
+        const reason = status.can ? FB.T('Available now') : FB.translateKnown(status.reason);
+        let details = esc(FB.translateKnown(deed.desc(s)));
+        if (deed.id === 'squeeze_taxes') details += '<p>' + esc(FB.T('Each use reduces Popular support by 6.')) + '</p>';
+        if (deed.id === 'demand_taxes') details += '<p>' + esc(FB.T('Each use reduces eligible vassals’ Standing by 15 and may provoke revolt. Fiscal crises also reduce county Popular support.')) + '</p>';
+        if (deed.id === 'mediate') details += '<p>' + esc(FB.T('Success grants 3 Prestige and 3 Popular support, with a chance to train Diplomacy. Failure costs 2 Prestige.')) + '</p>';
+        if (deed.id === 'scheme_rival') details += '<p>' + esc(FB.T('Risks losing 4 Prestige and increases rivalry. Success grants 4 Prestige, with a chance to train Intrigue.')) + '</p>';
+        const days = deed.cooldownDays ? deed.cooldownDays(s) : deed.cd;
+        let consequence = '';
+        if (deed.id === 'give_alms') consequence = FB.T('Costs {money:cost}', { cost:10 });
+        if (deed.id === 'hire_mercs') consequence = FB.T('Costs {money:cost} plus seasonal upkeep', { cost:15 });
+        if (deed.id === 'squeeze_taxes') consequence = FB.T('Popular support −6');
+        if (deed.id === 'demand_taxes') consequence = FB.T('Vassal Standing −15 · revolt risk');
+        if (deed.id === 'mediate') consequence = FB.T('Failure: Prestige −2');
+        if (deed.id === 'scheme_rival') consequence = FB.T('Failure: Prestige −4 · increased rivalry');
+        h += cb('ar-deed-' + deed.id, a.recurringDeeds && a.recurringDeeds[deed.id] === true,
+          '<b>' + esc(actionLabel(s, deed.id, deed)) + '</b>', details);
+        h += '<p class="hint" id="ar-deed-status-' + deed.id + '">' +
+          esc(FB.T('Every {days} days · spends one day', { days:days })) +
+          ' · ' + esc(consequence) + '<br>' + esc(reason) + '</p>';
+      }
+    }
     h += '<div class="gm-footer"><button class="btn primary" id="ar-close">' + esc(FB.T('Close')) + '</button></div>';
     openModal('⚙ Automation', h, {
       modalClass:'fullsheet-modal', modalKey:'v',
@@ -648,6 +686,11 @@ window.FB = window.FB || {};
       a.major = $('ar-major').checked;
       a.war = $('ar-war').checked;
       a.all = $('ar-all').checked;
+      a.recurringDeeds = a.recurringDeeds || {};
+      for (const deed of recurring) {
+        if ($('ar-deed-' + deed.id).checked) a.recurringDeeds[deed.id] = true;
+        else delete a.recurringDeeds[deed.id];
+      }
       const build = $('ar-build');
       if (build) a.build = build.checked;
       const research = $('ar-research');
@@ -688,6 +731,11 @@ window.FB = window.FB || {};
     });
     document.querySelectorAll('input[name=ar-style]').forEach(function (r) { r.addEventListener('change', sync); });
     document.querySelectorAll('input[name=ar-hosts]').forEach(function (r) { r.addEventListener('change', sync); });
+    recurring.forEach(function (deed) {
+      const control = $('ar-deed-' + deed.id);
+      control.setAttribute('aria-describedby', 'ar-deed-status-' + deed.id);
+      control.addEventListener('change', sync);
+    });
     $('ar-close').addEventListener('click', function () { sync(); UI.closeModal(); });
   };
 
@@ -30037,7 +30085,11 @@ window.FB = window.FB || {};
         'set-group-deeds-by-action-type',
         'Group Deeds by action type',
         'Keep Daily Focus first, then group actions into one-shot and recurring deeds, personal decisions, and ruler decisions instead of thematic sections.',
-        G.uiPrefs.groupDeedsByActionType);
+        G.uiPrefs.groupDeedsByActionType) + settingsDetailToggle(
+        'set-highlight-ready-deeds',
+        'Scroll to ready recurring deeds',
+        'When a recurring deed becomes available, open its section, scroll to it and highlight it on Deeds. Notifications wait while another tab or dialog is open. Keyboard focus stays where it is. Off by default.',
+        G.uiPrefs.highlightReadyDeeds);
     h += '<div class="gm-body-text" style="margin-top:8px"><p>' +
       esc(FB.T('Guidance')) + '</p></div>' +
       '<label class="autorow"><input type="checkbox" id="set-hide-beginner-hints"' +
@@ -30223,6 +30275,11 @@ window.FB = window.FB || {};
       G.saveUiPrefs();
       markActionsDirty();
       if (FB.state) renderActions();
+    });
+    $('set-highlight-ready-deeds').addEventListener('change', function () {
+      G.uiPrefs.highlightReadyDeeds = $('set-highlight-ready-deeds').checked;
+      G.saveUiPrefs();
+      if (UI.refreshRecurringDeedAlerts) UI.refreshRecurringDeedAlerts();
     });
     $('set-hide-beginner-hints').addEventListener('change', function () {
       G.uiPrefs.hideBeginnerHints = $('set-hide-beginner-hints').checked;

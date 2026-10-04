@@ -2919,7 +2919,7 @@ window.FB = window.FB || {};
         FB.ui.showSerfHostileDeeds();
       }
     } },
-  { id: 'scheme_rival', requiresAdult:true,
+  { id: 'scheme_rival', requiresAdult:true, automatableRecurring:true,
     desc: function (s) {
       const r = FB.getRole(s, 'rival');
       return r
@@ -3559,7 +3559,7 @@ window.FB = window.FB || {};
         FB.ui.showGreatHolyWarSettlement();
       }
     } },
-  { id: 'give_alms', requiresAdult:true,
+  { id: 'give_alms', requiresAdult:true, automatableRecurring:true,
     desc: function (s) {
       return FB.T('Bread and coin for the poor at the {temple} gate. ({money:10})',
         { temple: FB.templeWord(me(s).religion) });
@@ -3581,7 +3581,7 @@ window.FB = window.FB || {};
     run: function () {
       if (FB.ui && FB.ui.showIntrigueAssets) FB.ui.showIntrigueAssets();
     } },
-  { id: 'mediate', requiresAdult:true,
+  { id: 'mediate', requiresAdult:true, automatableRecurring:true,
     show: function (s) { return s.player.tier <= 2; },
     run: function (s) {
       const dip = FB.skillOf(me(s), 'dip');
@@ -3836,7 +3836,7 @@ window.FB = window.FB || {};
         !(FB.playerChurchOfficeOnly && FB.playerChurchOfficeOnly(s));
     },
     run: function (s) { FB.queueEvent(s, 'hold_court_event', {}); } },
-  { id: 'squeeze_taxes',
+  { id: 'squeeze_taxes', automatableRecurring:true,
     show: function (s) {
       return s.player.tier >= 3 &&
         !(FB.playerChurchOfficeOnly && FB.playerChurchOfficeOnly(s));
@@ -4154,7 +4154,7 @@ window.FB = window.FB || {};
       return !!(FB.playerHost && FB.playerHost(s));
     },
     run: function (s) { if (FB.demusterPlayerHost) FB.demusterPlayerHost(s); } },
-  { id: 'hire_mercs',
+  { id: 'hire_mercs', automatableRecurring:true,
     desc: function (s) {
       const w = s.player.war;
       const n = (w && w.mercCos) || 0;
@@ -4308,7 +4308,7 @@ window.FB = window.FB || {};
         FB.ui.showGrantLand(options && options.returnContext);
       }
     } },
-  { id: 'demand_taxes',
+  { id: 'demand_taxes', automatableRecurring:true,
     desc: function (s) { return FB.T('Demand extraordinary taxes from eligible vassals. Their Standing falls by 15. During a fiscal crisis, their directly held counties also lose 10 Popular support for one year; repeated extraction refreshes this penalty.'); },
     show: function (s) { return FB.playerVassals(s).length >= 1; },
     can: function (s) {
@@ -12301,6 +12301,32 @@ window.FB = window.FB || {};
     return action ? instantStatusReadyTurnForAction(state, action) : null;
   };
 
+  /* Private handler permission: data flow alone cannot identify deeds that
+     resolve without opening choices. Mod-added deeds remain manual-only. */
+  FB.recurringDeeds = function (state, automaticOnly) {
+    return (FB.instants || []).filter(function (action) {
+      const days = Number(actionCooldownDays(state, action));
+      return !action.compatibilityAlias && !action.declarative &&
+        isFinite(days) && days > 0 && (!automaticOnly ||
+          (action.automatableRecurring === true && !action.opensChoices &&
+            !action.noConsume && !action.deferCooldown));
+    });
+  };
+
+  FB.autoRecurringDeed = function (state, selected) {
+    const p = state.player;
+    if (!selected || !Object.keys(selected).some(function (id) { return selected[id] === true; }) ||
+        p.travel || (p.flags && p.flags.in_prison) ||
+        (FB.intrigueCaptivityOf && FB.intrigueCaptivityOf(state, p.charId)) ||
+        (FB.ui && FB.ui.deedInteractionBusy && FB.ui.deedInteractionBusy())) return false;
+    for (const action of FB.recurringDeeds(state, true)) {
+      if (Object.prototype.hasOwnProperty.call(selected, action.id) &&
+          selected[action.id] === true &&
+          FB.runInstant(state, action.id, { automaticDay:true }) === true) return true;
+    }
+    return false;
+  };
+
   FB.listInstants = function (state, options) {
     const deferEligibility = !!(options && options.deferEligibility);
     const out = [];
@@ -12437,6 +12463,10 @@ window.FB = window.FB || {};
   };
 
   FB.runInstant = function (state, id, options) {
+    const automaticDay = !!(options && options.automaticDay);
+    if (automaticDay && !FB.recurringDeeds(state, true).some(function (action) {
+      return action.id === id;
+    })) return false;
     const status = FB.instantStatus(state, id);
     if (!status.shown || !status.can) return;
     if (id === 'seek_match' && !(options && options.localMatch) &&
@@ -12456,6 +12486,10 @@ window.FB = window.FB || {};
       if (declarative && a.cd !== undefined) {
         state.player.cooldowns = state.player.cooldowns || {};
         state.player.cooldowns[id] = state.turn;
+      }
+      if (automaticDay) {
+        if (FB.noteDeedCompleted) FB.noteDeedCompleted(state, id);
+        return true; // passDay owns this day's simulation, not a nested tick
       }
       if (a.noConsume) {
         if (declarative && FB.noteDeedCompleted) {

@@ -641,10 +641,14 @@ missing bynames only where a recorded father makes the relationship unambiguous;
 non-patronymic house naming is unchanged.
 
 **The player can rename the house.** The Self tab's Dynasty panel offers
-*Rename house*, which runs `FB.renameHouse(state, name)`. A house has no record
-of its own — membership is exactly the set of characters whose `c.dyn` equals
-the string — so a rename rewrites `c.dyn` on every character carrying the old
-string (the same rule `FB.dynastyNameSet` uses), and additionally rewrites
+*Rename house*, which runs `FB.renameHouse(state, name)`. A shared `c.dyn`
+label alone does not establish membership: unrelated local households can all
+be named “of Caen,” for example. Renaming rewrites the protagonist and recorded
+blood or adopted relatives from `FB.familyTreeMembers` whose `c.dyn` matches
+the old name, including deceased ancestors and distant collateral branches.
+The existing first-generation sibling fallback also covers older saves without
+parent records. Relatives of another house and unrelated namesakes keep their
+names. Renaming additionally rewrites
 `state.realms.player.name` when it still equals the derived `'Realm of ' + dyn`
 form and `state.realms.player.dynasty` when it matches. Validation
 (`FB.validateHouseName`) trims, then requires 2–20 characters of letters,
@@ -654,10 +658,7 @@ untouched — a patronym still shadows the dyn in `FB.fullName` while the rename
 house remains the identity underneath. Two consequences are accepted as
 realistic: heraldry seeds from the dyn string, so a rename redraws the coat of
 arms, and chronicle/legend entries already written keep the old name — history
-is not rewritten. Generic NPC commoners still carry no family name at all
-(`dyn: null`); closing that gap is left to the later genealogy feature that will
-also design cadet branches and title-derived surnames, rather than bolting a
-general NPC-naming pass onto this increment.
+is not rewritten. No new house record or save migration is required.
 
 ## Careers, training, and work
 

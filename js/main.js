@@ -10,8 +10,12 @@ window.FB = window.FB || {};
   G.bootReady = false;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-FB.VERSION = '1.188.5';
+FB.VERSION = '1.189.0';
 FB.CHANGELOG = [
+  { v: '1.189.0', date: '2026-10-04', changes: [
+    'Automation can repeat selected recurring deeds, and Settings can highlight and scroll to deeds when they become ready.',
+    'Technology uses symbols supported by older system fonts. Renaming your house leaves unrelated families with the same name unchanged.'
+  ] },
   { v: '1.188.5', date: '2026-10-04', changes: [
     'Freeholders and Gentry can now read Technology from Deeds. Adopted foundlings inherit their adopter’s status, and saved foundlings with missing status are repaired on load.'
   ] },
@@ -3857,6 +3861,10 @@ FB.CHANGELOG = [
     }
     const p = s.player;
 
+    const automaticDeed = !G.observe && !(opts && opts.skipFocus) &&
+      FB.autoRecurringDeed && G.auto &&
+      FB.autoRecurringDeed(s, G.auto.recurringDeeds);
+
     /* skipFocus means a player-chosen one-shot deed filled this day. This is
        the authoritative completion point for picker-backed deeds; direct
        deeds also stamp at execution so their feedback does not depend on the
@@ -3869,7 +3877,7 @@ FB.CHANGELOG = [
       FB.learnMaternalCustoms(s);
       if (FB.householdServiceDay) FB.householdServiceDay(s);
       if (!p.travel) {
-        if (!(opts && opts.skipFocus)) FB.tickFocus(s);
+        if (!(opts && opts.skipFocus) && !automaticDeed) FB.tickFocus(s);
         else FB.validateFocus(s);
       }
       FB.tickSocialAttention(s);
@@ -4174,6 +4182,7 @@ FB.CHANGELOG = [
     musicOfflineFallback:null,
     musicOfflineAll:false,
     groupDeedsByActionType:false,
+    highlightReadyDeeds:false,
     repeatDeedSectionHotkeys:false,
     actionBindings:{ q:'action:livelihoods' }
   };
@@ -4263,6 +4272,7 @@ FB.CHANGELOG = [
       G.uiPrefs.musicOfflineAll = !!storedUiPrefs.musicOfflineAll;
       G.uiPrefs.groupDeedsByActionType =
         !!storedUiPrefs.groupDeedsByActionType;
+      G.uiPrefs.highlightReadyDeeds = storedUiPrefs.highlightReadyDeeds === true;
       G.uiPrefs.repeatDeedSectionHotkeys =
         !!storedUiPrefs.repeatDeedSectionHotkeys;
       if (storedUiPrefs.actionBindings &&
@@ -4722,7 +4732,7 @@ FB.CHANGELOG = [
   G.auto = {
     minor:false, major:false, war:false, all:false, style:'safe',
     hosts:'manual', hostResupply:true, buySupplies:true, forceSupplies:false, supplyTarget:75,
-    build:false, research:false, researchMode:'cheapest'
+    build:false, research:false, researchMode:'cheapest', recurringDeeds:{}
   };
   /* NOTE: the settings once shared a key with the AUTOSAVE SLOT (save.js)
      and each overwrote the other; they now live under their own key. */
@@ -4734,6 +4744,15 @@ FB.CHANGELOG = [
       if (storedAuto.on !== undefined && storedAuto.minor === undefined) G.auto.minor = !!storedAuto.on;
     }
   } catch (e) { /* keep defaults */ }
+  const storedRecurringDeeds = G.auto.recurringDeeds;
+  G.auto.recurringDeeds = {};
+  if (storedRecurringDeeds && typeof storedRecurringDeeds === 'object' &&
+      !Array.isArray(storedRecurringDeeds)) {
+    for (const id of ['scheme_rival', 'give_alms', 'mediate', 'squeeze_taxes', 'hire_mercs', 'demand_taxes']) {
+      if (Object.prototype.hasOwnProperty.call(storedRecurringDeeds, id) &&
+          storedRecurringDeeds[id] === true) G.auto.recurringDeeds[id] = true;
+    }
+  }
   if (typeof G.auto.researchMode !== 'string') G.auto.researchMode = 'cheapest';
   G.auto.hostResupply = G.auto.hostResupply !== false;
   G.auto.buySupplies = G.auto.buySupplies !== false;

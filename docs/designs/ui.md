@@ -1,5 +1,21 @@
 # UI: keyboard & mobile
 
+Recurring deed readiness is an opt-in Settings control. A ready card gets an
+accent border and a textual Ready again status rather than flashing animation.
+Scrolls occur only while Deeds is visible and no dialog, Self drawer or
+fast-forward is active. Opening a collapsed section reuses its disclosure
+handler and leaves other controls and keyboard focus mounted. Further refreshes
+retain the highlight without scrolling again; unavailable cards lose it.
+
+Automation uses the existing labeled checkbox cards and Details disclosures for
+immediate recurring deeds. Only deeds visible for the current character's role
+and situation, with any adulthood requirement met, appear. Cooldowns and temporary
+resource shortages remain visible beside the interval and one-day cost. Saved
+selections for hidden deeds are retained; costs and political risks are disclosed
+before choosing. The shared
+Automation indicator includes recurring selections. Settings and checklist use
+the existing modal navigation, scroll restoration and mobile hit targets.
+
 CrazyGames household objectives and returning players
 
 The CrazyGames checklist includes a persistent current-objective block for courtship, the first enterprise, freedom funding or final service, and the first land plot. It reads the same live status and quote functions as the normal reviews. Natural-day refreshes update its text without replacing the checklist or its controls; enterprise progress reprices the displayed recommendation rather than scanning every business on each day. Exact refreshes and review clicks choose a current recommendation again. Dismiss and Disable guide hints retain their existing effect. This is presentation only, with no technology or eligibility change.

@@ -1,5 +1,13 @@
 # Game state & saves
 
+Recurring deed selections live in `fb_automation.recurringDeeds` as a bounded map
+of baseline deed ids to `true`; readiness scrolling lives in
+`fb_ui.highlightReadyDeeds`. Both default off, are browser-local preferences, and
+are absent from campaign exports. Restore accepts only exact booleans and known
+automatic-deed ids. Existing campaign cooldowns remain authoritative. Readiness
+baselines, highlights and pending scroll notices are transient and reset for a
+different state or protagonist. There is no save-version change.
+
 ## Rebellion campaign identity
 
 Ordinary rebellion wars retain optional `casus.rebel`, `casus.formerLiege`, and

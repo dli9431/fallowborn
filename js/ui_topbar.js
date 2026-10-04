@@ -330,7 +330,11 @@ window.FB = window.FB || {};
         (autoAccess.hosts && FB.game.auto.hosts &&
           FB.game.auto.hosts !== 'manual') ||
         (autoAccess.build && FB.game.auto.build) ||
-        (autoAccess.research && FB.game.auto.research)) ? '✓' : '');
+        (autoAccess.research && FB.game.auto.research) ||
+        (FB.game.auto.recurringDeeds && Object.keys(FB.game.auto.recurringDeeds).length &&
+          FB.recurringDeeds && FB.recurringDeeds(s, true).some(function (deed) {
+            return FB.game.auto.recurringDeeds[deed.id] === true;
+          }))) ? '✓' : '');
     renderActiveTab(liveTick ? { liveTick:true } : undefined);
     if (UI.refreshSerfTenureSheet) UI.refreshSerfTenureSheet();
   }

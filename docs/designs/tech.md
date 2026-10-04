@@ -183,8 +183,15 @@ permanent exposure:
   multiply the resulting cost by 0.65
 ```
 
-The main catalogue groups entries by domain and leaves dates off the scanning view. Each
-detail sheet displays the attestation and regional-adoption windows alongside the
+The main catalogue groups entries by domain and leaves dates off the scanning view.
+Each technology's data icon supplies the catalogue, active-project strip, detail title, and
+Guide. Coinage, mint assay, tax assessment, scutage, stone sawing, iron-tired carts,
+anatomy texts, siege engineering, trebuchets, vegetable tanning, and legume rotation
+use older money, tool, gear, book, artillery, ox, and plant symbols in place of
+newer emoji that can render as missing-glyph boxes
+on older system fonts. This is presentation only, with no technology-impact entry.
+
+Each detail sheet displays the attestation and regional-adoption windows alongside the
 effective research cost, exposure discount, and remaining progress. The historical and
 exposure multipliers remain engine inputs rather than UI arithmetic. A far-ahead project
 is therefore possible but expensive. Eligible and active projects also estimate completion

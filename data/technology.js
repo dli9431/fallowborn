@@ -75,6 +75,7 @@ window.FBDATA = window.FBDATA || {};
   FBDATA.techImpactReviews = {
     baselineVersion:'1.127.1',
     features:{
+      recurring_deed_automation:{ mode:'none', rationale:'Repeating existing immediate deeds is a player interface preference, without a credible research prerequisite. Ordinary rank, age, cost, technology and cooldown requirements still apply to each deed.' },
       settlement_ruin_repair:{ mode:'none', rationale:'Repair restores an existing settlement asset rather than unlocking a new building or fort tier. Rank, direct authority, funding and standing-copy limits still apply; inherited construction knowledge is grandfathered for recovery.' },
       scheduled_games:{ mode:'none', rationale:'Hosting civic and courtly games, annual intentions and regional capacity require peace, ownership and funding, not an invention.' },
       tournament_circuit_travel:{ mode:'none', rationale:'Targeted repeatable festival journeys are baseline personal travel with a reserved physical return.' },
@@ -826,7 +827,7 @@ window.FBDATA = window.FBDATA || {};
   add('selective_stockbreeding','Selective Stockbreeding','🐑','agriculture',[1050,1300],[1160,1340],['improved_husbandry'],
     'Breeders keep lines for wool, milk, traction, or hardiness.',
     { leaders:['latin','islamic'], unlocks:['practice:selective_breeding'], fx:{ tax:0.015 } });
-  add('legume_rotation','Legume Rotation','🫘','agriculture',[950,1250],[1080,1300],['three_field'],
+  add('legume_rotation','Legume Rotation','🌿','agriculture',[950,1250],[1080,1300],['three_field'],
     'Beans and peas restore soil while feeding people and animals.',
     { leaders:['islamic','byzantine','latin'], unlocks:['practice:legume_rotation'], fx:{ tax:0.015, populationCapacity:0.02 } });
   add('grafting_manuals','Grafting Manuals','🌳','agriculture',[850,1200],[980,1240],['seed_selection'],
@@ -855,7 +856,7 @@ window.FBDATA = window.FBDATA || {};
   add('glassblowing','Glassblowing','🧪','crafts',[-100,500],[500,650],[],
     'Inflated glass permits thin vessels, lamps, and window pieces.',
     { leaders:['byzantine','islamic','northeast_african'], unlocks:['practice:glasswork'], fx:{ trade:0.005 } });
-  add('tanning','Vegetable Tanning','🦬','crafts',[-500,500],[-100,350],[],
+  add('tanning','Vegetable Tanning','🐂','crafts',[-500,500],[-100,350],[],
     'Bark liquors turn hides into durable leather.',
     { leaders:TRADITIONS, unlocks:['practice:tanning'] });
   add('spindle_whorl','Spindle and Distaff','🧶','crafts',[-1000,500],[-500,250],[],
@@ -912,7 +913,7 @@ window.FBDATA = window.FBDATA || {};
   add('bell_casting','Large Bell Casting','🔔','crafts',[750,1100],[900,1120],['lost_wax_casting','improved_furnaces'],
     'Purpose-built pits and molds allow great bronze bells to be cast.',
     { leaders:['latin','byzantine'], unlocks:['practice:large_bronze_casting'], fx:{ costs:{ build:-0.01 } } });
-  add('stone_sawing','Water-Powered Stone Sawing','🪚','crafts',[600,1100],[820,1120],['water_power','lime_mortar'],
+  add('stone_sawing','Water-Powered Stone Sawing','⚒','crafts',[600,1100],[820,1120],['water_power','lime_mortar'],
     'Reciprocating saws driven by water cut stone for major works.',
     { leaders:['byzantine','islamic'], unlocks:['rule:powered_stonework'], fx:{ costs:{ build:-0.025 } } });
   add('fulling_mill','Fulling Mill','🧵','crafts',[950,1200],[1050,1230],['trip_hammer','horizontal_loom'],
@@ -950,7 +951,7 @@ window.FBDATA = window.FBDATA || {};
   add('stone_bridgebuilding','Stone Bridgebuilding','🌉','commerce',[-500,600],[520,760],['lime_mortar'],
     'Masonry piers and arches carry roads over dangerous crossings.',
     { leaders:TRADITIONS, unlocks:['building:bridge'] });
-  add('standardized_coinage','Standardized Coinage','🪙','commerce',[-600,500],[-150,350],[],
+  add('standardized_coinage','Standardized Coinage','💰','commerce',[-600,500],[-150,350],[],
     'Recognizable weights and types let coined metal circulate beyond one market.',
     { leaders:TRADITIONS, unlocks:['rule:coinage'] });
   add('weights_measures','Public Weights and Measures','⚖','commerce',[-500,500],[-100,350],[],
@@ -962,7 +963,7 @@ window.FBDATA = window.FBDATA || {};
   add('pack_saddles','Pack Saddles','🐴','commerce',[-500,600],[-100,400],[],
     'Balanced frames let animals carry bulky loads over poor roads.',
     { leaders:TRADITIONS, unlocks:['rule:pack_transport'], fx:{ supply:0.05 } });
-  add('wheeled_carts','Iron-Tired Carts','🛞','commerce',[-500,600],[500,700],['bloomery_iron'],
+  add('wheeled_carts','Iron-Tired Carts','⚙','commerce',[-500,600],[500,700],['bloomery_iron'],
     'Iron fittings and durable wheels extend the useful life of carts.',
     { leaders:TRADITIONS, unlocks:['rule:wheeled_transport'], fx:{ supply:0.05 } });
   add('warehouses','Warehouses','🏚','commerce',[-300,600],[500,720],['cooperage'],
@@ -1001,7 +1002,7 @@ window.FBDATA = window.FBDATA || {};
   add('marine_insurance','Marine Insurance','📜','commerce',[1250,1450],[1300,1450],['sea_loans','notarial_contracts'],
     'Underwritten policies separate sea hazard risk from loan capital and merchant voyages.',
     { leaders:['latin','islamic'], unlocks:['rule:marine_insurance'], fx:{ finance:0.025 }, sources:['SPUFFORD','LOPEZ'] });
-  add('mint_assay','Mint Assaying','🪙','commerce',[800,1150],[940,1170],['standardized_coinage','weights_measures'],
+  add('mint_assay','Mint Assaying','💰','commerce',[800,1150],[940,1170],['standardized_coinage','weights_measures'],
     'Touchstones, balances, and cupellation test the fineness of coin.',
     { leaders:['islamic','byzantine','latin'], unlocks:['rule:mint_assay'], fx:{ finance:0.015 } });
   add('paved_causeways','Paved Causeways','🛣','commerce',[850,1200],[1010,1230],['road_surveys','stone_bridgebuilding'],
@@ -1084,7 +1085,7 @@ window.FBDATA = window.FBDATA || {};
   add('legal_studies','Professional Legal Studies','⚖','learning',[1000,1250],[1120,1280],['universities','written_law'],
     'Specialized teachers train practitioners to interpret large bodies of law.',
     { leaders:['latin','byzantine','islamic'], unlocks:['rule:legal_studies'], fx:{ education:0.015 } });
-  add('anatomy_texts','Illustrated Anatomy Texts','🫀','learning',[1050,1300],[1180,1320],['medical_canons','paper_scholarship'],
+  add('anatomy_texts','Illustrated Anatomy Texts','📖','learning',[1050,1300],[1180,1320],['medical_canons','paper_scholarship'],
     'Organized anatomical descriptions guide teaching and surgical memory.',
     { leaders:['islamic','persianate','latin'], unlocks:['rule:anatomy_texts'], fx:{ health:0.002 } });
   add('pharmacology','Compound Pharmacology','⚗','learning',[950,1250],[1080,1280],['medical_canons','distillation'],
@@ -1107,7 +1108,7 @@ window.FBDATA = window.FBDATA || {};
   add('land_registers','Land Registers','📜','governance',[-500,600],[500,700],['written_law'],
     'Written surveys preserve boundaries, tenures, and assessed holdings.',
     { leaders:TRADITIONS, unlocks:['practice:land_records'], fx:{ tax:0.005 } });
-  add('tax_assessment','Regular Tax Assessment','🪙','governance',[-500,600],[520,740],['census_records'],
+  add('tax_assessment','Regular Tax Assessment','💰','governance',[-500,600],[520,740],['census_records'],
     'Recorded categories and schedules make revenue less dependent on ad hoc taking.',
     { leaders:TRADITIONS, unlocks:['practice:tax_assessment'], fx:{ tax:0.01 } });
   add('diplomatic_correspondence','Diplomatic Correspondence','📨','governance',[-500,600],[-50,430],['classical_grammar'],
@@ -1158,7 +1159,7 @@ window.FBDATA = window.FBDATA || {};
   add('urban_communes','Urban Communes','🏙','governance',[1000,1250],[1120,1280],['guild_charters','urban_markets'],
     'Sworn towns negotiate collective jurisdiction and public responsibilities.',
     { leaders:['latin','byzantine'], unlocks:['rule:urban_communes'], fx:{ tax:0.01 } });
-  add('scutage','Scutage','🪙','governance',[1100,1250],[1180,1300],['feudal_oaths','exchequer_accounts'],
+  add('scutage','Scutage','💰','governance',[1100,1250],[1180,1300],['feudal_oaths','exchequer_accounts'],
     'Cash payments commute some personal military service into royal revenue.',
     { leaders:['latin'], unlocks:['rule:scutage'], fx:{ tax:0.01 } });
   add('cadastral_surveys','Cadastral Surveys','📐','governance',[1000,1300],[1150,1320],['land_registers','geometry'],
@@ -1226,7 +1227,7 @@ window.FBDATA = window.FBDATA || {};
   add('crossbows','Military Crossbows','🏹','warfare',[500,1100],[850,1100],['iron_weaponry'],
     'Mechanical bows trade shooting speed for power and modest training demands.',
     { leaders:['byzantine','islamic','latin'], unlocks:['building:archery_butts','rule:crossbow_levies','unit:crossbow'], fx:{ units:{ arch:15 }, aiUnits:{ arch:0.02 } } });
-  add('siege_engineering','Siege Engineering','🪨','warfare',[650,1100],[850,1120],['torsion_artillery','geometry'],
+  add('siege_engineering','Siege Engineering','🎯','warfare',[650,1100],[850,1120],['torsion_artillery','geometry'],
     'Specialists calculate engines, earthworks, approaches, and bombardment.',
     { leaders:['byzantine','islamic','persianate','latin'], unlocks:['rule:siege_engineers'], fx:{ siege:0.04 } });
   add('sapper_corps','Organized Sappers','⛏','warfare',[750,1150],[920,1160],['siege_engineering'],
@@ -1241,7 +1242,7 @@ window.FBDATA = window.FBDATA || {};
   add('pavise_formations','Pavise Formations','🛡','warfare',[1050,1250],[1160,1280],['crossbows','martial_drill'],
     'Large portable shields shelter missile troops while they reload.',
     { leaders:['byzantine','latin','islamic'], unlocks:['rule:pavise_formations'], fx:{ battle:0.008 } });
-  add('counterweight_trebuchet','Counterweight Trebuchet','🪨','warfare',[1050,1250],[1130,1280],['siege_engineering'],
+  add('counterweight_trebuchet','Counterweight Trebuchet','🎯','warfare',[1050,1250],[1130,1280],['siege_engineering'],
     'Gravity-powered throwing arms hurl heavy stones with repeatable force.',
     { leaders:['byzantine','islamic','latin'], unlocks:['rule:counterweight_trebuchet'], fx:{ siege:0.07 }, confidence:'medium', sources:['DEVRIES','HILL'] });
   add('concentric_defenses','Concentric Defenses','🏰','warfare',[1050,1300],[1180,1320],['stone_castles','castle_towers'],

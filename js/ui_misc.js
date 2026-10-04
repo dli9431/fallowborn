@@ -12,6 +12,16 @@ window.FB = window.FB || {};
 
   const UI = {};
   FB.ui = UI;
+
+  UI.deedInteractionBusy = function () {
+    for (const id of ['genmodal', 'eventmodal']) {
+      const modal = document.getElementById(id);
+      if (modal && !modal.classList.contains('hidden')) return true;
+    }
+    return !!((UI.eventsBusy && UI.eventsBusy()) ||
+      (UI.travelPickerOpen && UI.travelPickerOpen()) ||
+      (UI.raidPickerOpen && UI.raidPickerOpen()));
+  };
   /* Cross-file internals of the split UI. Each later file binds what it
      needs at load; mutable shared view state lives here as properties. */
   const SH = UI._shared = {};

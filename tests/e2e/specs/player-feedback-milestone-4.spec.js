@@ -8,9 +8,13 @@ dependsOnRuntime(__filename, [
   'js/main.js',
   'js/save.js',
   'js/model.js',
+  'js/localfolk.js',
   'js/ui_misc.js',
   'js/ui_modals.js',
   'data/economy.js',
+  'data/counties.js',
+  'data/cultures.js',
+  'data/settlements.js',
   'data/starts.js'
 ]);
 
@@ -1136,10 +1140,9 @@ test.describe('house renaming', function () {
         const me = s.chars[s.player.charId];
         const oldDyn = me.dyn;
         const founderId = s.player.houseFounderId;
-        const memberIds = [];
-        for (const id in s.chars) {
-          if (s.chars[id].dyn === oldDyn) memberIds.push(id);
-        }
+        const memberIds = [me].concat(FB.parentsOf(s, me), FB.siblingsOf(s, me))
+          .filter(function (c) { return c.dyn === oldDyn; })
+          .map(function (c) { return c.id; });
         /* a different house sharing the world must stay untouched */
         const outsider = FB.makeCharacter(s, {
           name:'Marta', sex:'f', culture:me.culture, religion:me.religion,
@@ -1176,6 +1179,106 @@ test.describe('house renaming', function () {
       expect(result.realmDynasty).toBe('Nightingale');
       expect(result.founderKept).toBe(true);
       expect(result.news).toBe(true);
+    });
+
+  test('house renaming preserves unrelated local households with the same county name',
+    async function ({ page }) {
+      await startDeterministicGame(page);
+      const result = await page.evaluate(function () {
+        const s = FB.state;
+        const me = s.chars[s.player.charId];
+        const original = me.dyn;
+        const father = s.chars[me.fatherId];
+        const sibling = FB.siblingsOf(s, me)[0];
+        const familyIds = [me.id, father.id, sibling.id];
+        for (const member of FB.familyTreeMembers(s)) {
+          if (member.c.dyn === original) member.c.dyn = 'of Caen';
+        }
+        me.dyn = 'of Caen';
+        father.dead = true; // deceased house members still carry the new name
+        function child(parent, name, dyn, adopted) {
+          const c = FB.makeCharacter(s, {
+            name:name, sex:'m', culture:me.culture, religion:me.religion,
+            born:s.date.year - 18, dyn:dyn, traitsN:0,
+            fatherId:adopted ? null : parent.id
+          });
+          parent.childrenIds.push(c.id);
+          return c;
+        }
+        const nephew = child(sibling, 'Nephew', me.dyn, false);
+        const greatNephew = child(nephew, 'Great Nephew', me.dyn, false);
+        const adopted = child(me, 'Adopted Child', me.dyn, true);
+        const otherHouse = child(me, 'Other House Child', 'Other House', false);
+        familyIds.push(nephew.id, greatNephew.id, adopted.id);
+        FB.localFolkEnsure(s, 'caen');
+        const folk = FB.localFolkAt(s, 'caen');
+        const before = folk.map(function (c) { return JSON.stringify(c); });
+        const namesakes = folk.filter(function (c) { return c.dyn === me.dyn; });
+        const outsider = FB.makeCharacter(s, {
+          name:'Unrelated Namesake', sex:'m', culture:me.culture,
+          religion:me.religion, born:s.date.year - 30, dyn:me.dyn, traitsN:0
+        });
+        FB.touchFamily();
+        const renamed = FB.renameHouse(s, 'Nightingale');
+        const first = familyIds.map(function (id) { return s.chars[id].dyn; });
+        const outsiderFirst = outsider.dyn;
+        // Repeated renames must not absorb a different house with the new label.
+        outsider.dyn = 'Nightingale';
+        FB.touchFamily();
+        const again = FB.renameHouse(s, 'Lark');
+        return {
+          ok:renamed.ok && again.ok,
+          namesakes:namesakes.length,
+          folkUnchanged:folk.every(function (c, i) {
+            return JSON.stringify(c) === before[i];
+          }),
+          first:first,
+          outsiderFirst:outsiderFirst,
+          second:familyIds.map(function (id) { return s.chars[id].dyn; }),
+          outsider:outsider.dyn,
+          otherHouse:otherHouse.dyn
+        };
+      });
+      expect(result.ok).toBe(true);
+      expect(result.namesakes).toBeGreaterThan(0);
+      expect(result.folkUnchanged).toBe(true);
+      expect(result.first).toEqual(Array(6).fill('Nightingale'));
+      expect(result.outsiderFirst).toBe('of Caen');
+      expect(result.second).toEqual(Array(6).fill('Lark'));
+      expect(result.outsider).toBe('Nightingale');
+      expect(result.otherHouse).toBe('Other House');
+    });
+
+  test('older parentless saves still rename recorded siblings without renaming local namesakes',
+    async function ({ page }) {
+      await startDeterministicGame(page);
+      const result = await page.evaluate(function () {
+        const s = FB.state;
+        const me = s.chars[s.player.charId];
+        const siblings = FB.siblingsOf(s, me);
+        delete s.chars[me.fatherId];
+        delete s.chars[me.motherId];
+        me.fatherId = null; me.motherId = null;
+        s.generation = 1;
+        s.player.houseFounderId = me.id;
+        delete s.player.familyParentMigration;
+        const folk = FB.localFolkAt(s, s.player.provinceId);
+        folk.forEach(function (c) { c.dyn = me.dyn; });
+        const original = me.dyn;
+        FB.touchFamily();
+        const renamed = FB.renameHouse(s, 'Nightingale');
+        return {
+          ok:renamed.ok,
+          siblings:siblings.map(function (c) { return c.dyn; }),
+          folkCount:folk.length,
+          folkUnchanged:folk.every(function (c) { return c.dyn === original; })
+        };
+      });
+      expect(result.ok).toBe(true);
+      expect(result.siblings.length).toBeGreaterThan(0);
+      result.siblings.forEach(function (dyn) { expect(dyn).toBe('Nightingale'); });
+      expect(result.folkCount).toBeGreaterThan(0);
+      expect(result.folkUnchanged).toBe(true);
     });
 
   test('renameHouse rejects invalid names without mutating anything',
