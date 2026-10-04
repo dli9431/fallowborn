@@ -89,7 +89,7 @@ test('campaign and muster sheets keep status rows, action cards and footer navig
   await startWarSafety(page, testInfo);
   await page.evaluate(function () { FB.ui.showCampaign(FB.realmWars(FB.state, 'player')[0].id); });
   const sheet = page.locator('[data-campaign-detail]');
-  await expect(sheet.locator('.kv').filter({ hasText:'Field battles' })).toContainText('won');
+  await expect(sheet.locator('.kv').filter({ has:page.locator('span', { hasText:/^Field battles$/ }) })).toContainText('won');
   await expect(sheet.locator('.kv').filter({ hasText:'Duration' })).toContainText('of 32 seasons');
   await expect(sheet.locator('.kv').filter({ hasText:'Victory' })).toHaveCount(1);
   await expect(page.locator('.review-action-card #campaign-peace')).toContainText('always accepted');
@@ -124,8 +124,14 @@ test('war status links keep trailing punctuation on the same line', async functi
       const tail = group.lastChild;
       const range = document.createRange();
       range.selectNodeContents(tail);
-      const linkRects = link.getClientRects(), tailRect = range.getClientRects()[0];
-      rows.push(Math.abs(linkRects[linkRects.length - 1].top - tailRect.top) < 2);
+      const tailRect = range.getClientRects()[0];
+      // Compare the final name glyph with punctuation, rather than the
+      // button box, whose baseline metrics differ from an inline text node.
+      const nameRange = document.createRange();
+      nameRange.setStart(link.firstChild, link.textContent.length - 1);
+      nameRange.setEnd(link.firstChild, link.textContent.length);
+      const nameRect = nameRange.getClientRects()[0];
+      rows.push(Math.abs(nameRect.top - tailRect.top) < 2);
     }
     box.remove();
     return { grouped:/<span class="war-realm-nowrap">[\s\S]*<\/button>\.<\/span>$/.test(html),

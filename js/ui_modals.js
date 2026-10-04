@@ -303,7 +303,7 @@ window.FB = window.FB || {};
     if (!$('eventmodal').contains(e.target) &&
         !(UI.guardedOutcomeOpen() && $('genmodal').contains(e.target))) return;
     // Read-only disclosures do not commit or acknowledge a decision.
-    if (e.target.closest('.event-details-button, .settcard-info')) return;
+    if (e.target.closest('.event-details-button, .settcard-info, .event-duty-help-anchor')) return;
     if (eventInputGuarded() || (e.detail > 0 && pointerEventEpoch !== null &&
         pointerEventEpoch !== (UI.eventInputEpoch || 0))) {
       e.preventDefault(); e.stopImmediatePropagation();

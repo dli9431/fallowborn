@@ -3,7 +3,9 @@ const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
   'js/armies.js', 'js/world.js', 'js/fortifications.js', 'js/ui_panels.js',
   'js/ui_topbar.js', 'js/ui_misc.js', 'js/ui_wars.js', 'js/wars.js',
-  'data/map_data.js', 'data/units.js', 'css/style.css'
+  'data/map_data.js', 'data/units.js', 'css/style.css',
+  'js/logistics.js', 'js/market.js', 'data/markets.js',
+  'js/actions.js', 'js/model.js', 'js/lordships.js'
 ]);
 const { test, expect } = require('../support/fixture');
 const { startWarSafety } = require('../support/game/war-safety');
@@ -59,18 +61,24 @@ for (const width of [1000, 390]) {
     await expect(county.locator('li').first()).toHaveText(fixture.firstName + ': Still to occupy');
 
     await page.evaluate(function () { FB.ui.revealDeedAction('muster_host'); FB.ui.refresh(); });
-    await expect(page.locator('#deeds-war-card .campaign-objectives')).toContainText('0/2 occupied');
-    await page.evaluate(function (f) { FB.ui.showCampaign(f.warId); }, fixture);
-    await expect(page.locator('#campaign-goal-details-section .campaign-objectives li')).toHaveText([
-      fixture.firstName + ': Still to occupy', fixture.secondName + ': Still to occupy'
-    ]);
+    const campaign = page.locator('#tab-actions [data-campaign-open="' + fixture.warId + '"]');
+    await expect(campaign).toContainText('0/2 objectives occupied');
+    await campaign.click();
+    const objectives = page.locator('#campaign-goal-details-section .kv');
+    await expect(objectives.filter({ has:page.locator('span', { hasText:fixture.firstName }) }))
+      .toContainText('Not occupied');
+    await expect(objectives.filter({ has:page.locator('span', { hasText:fixture.secondName }) }))
+      .toContainText('Not occupied');
+    await expect(page.locator('#campaign-goal-details-section')).toContainText(
+      'Occupy all objectives to gain them at peace.');
     const enemyName = await page.evaluate(function (f) {
       const s = FB.state, w = s.wars[f.warId];
       w.attacker = w.enemy; w.defender = 'player'; w.defending = true;
-      FB.ui.showCampaign(w.id);
+      FB.ui.closeModal();
+      FB.ui.selectProvince(f.second);
       return s.realms[w.enemy].name;
     }, fixture);
-    await expect(page.locator('#campaign-goal-details-section .campaign-objectives')).toContainText(
+    await expect(page.locator('[data-war-siege="' + fixture.second + '"] .campaign-objectives')).toContainText(
       'Prevent ' + enemyName + ' from occupying every objective at the same time.');
   });
 }
@@ -111,29 +119,34 @@ test('siege projection reports fractional progress, absence, contested ground an
 
 test('live siege values update without replacing the focused disclosure',
   async function ({ page }, testInfo) {
+    await page.setViewportSize({ width:390, height:800 });
     await startWarSafety(page, testInfo);
     await page.evaluate(function () {
       FB.state.player.war.siegeFortLevel = 0;
       FB.state.player.war.siege = 1;
-      FB.ui.revealDeedAction('muster_host');
+      const host = FB.playerHost(FB.state);
+      host.at = FB.state.player.war.target;
+      host.path = []; host.moveLeft = 0;
+      FB.selectArmy(host.id);
+      FB.ui.selectProvince(host.at);
       FB.ui.refresh();
     });
-    const info = page.locator('#deeds-war-card .settcard-info');
+    const info = page.locator('#land-war-card .settcard-info');
     await expect(info).toBeVisible();
     await info.click();
     await info.focus();
     await page.evaluate(function () {
-      window.warDisclosureControl = document.querySelector('#deeds-war-card .settcard-info');
+      window.warDisclosureControl = document.querySelector('#land-war-card .settcard-info');
       FB.state.player.war.siege = 2.5;
       FB.state.date.day = 90;
       FB.ui.refresh({ liveTick:true });
     });
-    await expect(page.locator('#deeds-war-card progress')).toHaveAttribute('value', '83');
-    await expect(page.locator('#deeds-war-card [data-war-siege]')).toContainText('1 days');
+    await expect(page.locator('#tab-prov [data-war-siege] progress')).toHaveAttribute('value', '83');
+    await expect(page.locator('#tab-prov [data-war-siege]')).toContainText('1 days');
     await expect(info).toBeFocused();
     await expect(info).toHaveAttribute('aria-expanded', 'true');
     expect(await page.evaluate(function () {
-      return window.warDisclosureControl === document.querySelector('#deeds-war-card .settcard-info');
+      return window.warDisclosureControl === document.querySelector('#land-war-card .settcard-info');
     })).toBe(true);
   });
 
@@ -166,6 +179,12 @@ test('low-supply warnings rearm after recovery and starvation loses 0.25 percent
     const ids = await startWarSafety(page, testInfo);
     const result = await page.evaluate(function (ids) {
       const s = FB.state;
+      const market = FB.ensureMarket(s), provisions = market.goods.indexOf('provisions');
+      Object.keys(market.counties).forEach(function (pid) {
+        market.counties[pid][0][provisions] = 0;
+      });
+      FB.game.auto.buySupplies = true;
+      FB.game.auto.forceSupplies = false;
       const host = { id:'supply-safety', realm:'player', at:s.player.war.target,
         men:4000, size:4000, units:{ levy:4000 }, supply:30,
         path:[], moveLeft:0, holdManual:1 };
@@ -176,18 +195,20 @@ test('low-supply warnings rearm after recovery and starvation loses 0.25 percent
           return entry.msg && entry.msg.key === 'news.army.low_supply';
         }).length;
       }
-      FB.armyTick(s);
+      function tick() { s.turn++; FB.armyTick(s); }
+      tick();
       const first = warnings();
-      FB.armyTick(s);
+      tick();
       const repeated = warnings();
       host.at = ids.home; host.supply = 29;
-      FB.armyTick(s);
+      market.counties[ids.home][0][provisions] = 1000000;
+      tick();
       const recovered = !host.lowSupplyWarned;
       host.at = s.player.war.target; host.supply = 30;
-      FB.armyTick(s);
+      tick();
       const rearmed = warnings();
       host.supply = 0;
-      FB.armyTick(s);
+      tick();
       return { first:first, repeated:repeated, recovered:recovered,
         rearmed:rearmed, men:host.men, rate:FBDATA.balance.supplyAttritionPerDay };
     }, ids);
@@ -227,6 +248,10 @@ test('the missing-balance fallback also applies 0.25 percent starvation losses',
     const ids = await startWarSafety(page, testInfo);
     const men = await page.evaluate(function (ids) {
       const s = FB.state, configured = FBDATA.balance.supplyAttritionPerDay;
+      const market = FB.ensureMarket(s), provisions = market.goods.indexOf('provisions');
+      Object.keys(market.counties).forEach(function (pid) {
+        market.counties[pid][0][provisions] = 0;
+      });
       delete FBDATA.balance.supplyAttritionPerDay;
       const host = { id:'fallback-supply', realm:'player', at:s.player.war.target,
         men:4000, size:4000, units:{ levy:4000 }, supply:0, path:[], moveLeft:0 };

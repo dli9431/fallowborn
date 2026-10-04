@@ -437,6 +437,9 @@ test('opening an invitation spends nothing, and withdrawal only cools the host',
     expect(opened.standing).not.toBeNull(); // the named host is materialized
 
     // the last option sends regrets: no coin moves, the host cools a little
+    await expect.poll(function () {
+      return page.evaluate(function () { return FB.ui.eventInputGuarded(); });
+    }).toBe(false);
     await page.locator('#ev-options .evopt').last().click();
     await expect(page.locator('#eventmodal')).toHaveClass(/hidden/);
     const after = await page.evaluate(function () {

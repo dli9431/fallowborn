@@ -1473,6 +1473,11 @@ test('an exported Parliament campaign reloads the same active chamber',
       s.player.gold = 1000;
       s.realms[ids.polityId].ruler.age = 25;
       s.realms[ids.alphaId].ruler.age = 65;
+      // Complete the synthetic compact courts before taking the save baseline.
+      // Restore performs this same normal preparation, including the placeholder.
+      FB.ensureDynasticState(s);
+      FB.ensureAgency(s);
+      FB.repairPolitics(s);
       FB.parliamentBeginMotion(s, 'redress');
       const forecast = FB.politicalMotionForecast(s, 'redress');
       return {

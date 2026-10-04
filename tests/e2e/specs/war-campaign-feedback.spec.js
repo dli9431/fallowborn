@@ -5,6 +5,7 @@ dependsOnRuntime(__filename, [
   'js/actions.js',
   'js/armies.js', 'js/world.js', 'js/wars.js', 'data/map_data.js',
   'js/events.js',
+  'js/lordships.js', 'js/station.js', 'js/ui_wars.js', 'data/units.js',
   'js/ui_modals.js',
   'js/ui_panels.js',
   'data/events_war.js'
@@ -19,6 +20,7 @@ async function startCampaignGame(page, testInfo) {
   await openGame(page, testInfo);
   await startDeterministicGame(page);
   return page.evaluate(function () {
+    FB.game.setPaused(true);
     var s = FB.state;
     var p = s.player;
     var homeId = p.provinceId;
@@ -33,10 +35,13 @@ async function startCampaignGame(page, testInfo) {
     p.prestige = 100;
     s.owner[homeId] = 'player';
     s.holder[homeId] = 'player';
+    s.dev[homeId] = 20;
+    s.buildings[homeId] = [];
     FB.foundPlayerRealm(s);
     s.realms.player.rank = 1;
     s.realms.player.liege = null;
     s.realms.player.capital = homeId;
+    FB.invalidateRealmCache();
     p.war = {
       enemy:enemyId,
       target:s.realms[enemyId].capital,
@@ -66,10 +71,18 @@ async function startCampaignGame(page, testInfo) {
   });
 }
 
-test('Muster Host stays visible through fielded and rearming wartime states',
+test('Muster Host stays visible through fully fielded and rearming wartime states',
   async function ({ page }, testInfo) {
     await startCampaignGame(page, testInfo);
     var fielded = await page.evaluate(function () {
+      var s = FB.state, host = s.armies[0];
+      s.armies = [];
+      var call = FB.playerMusterSelectionQuote(s, null, 'gather');
+      if (!call || !call.valid) throw new Error('The fixture needs an eligible full muster.');
+      host.men = host.size = call.men;
+      host.units = call.units;
+      host.warId = s.player.war.id;
+      s.armies = [host];
       var status = FB.instantStatus(FB.state, 'muster_host');
       FB.ui.revealDeedAction('muster_host');
       return {
@@ -81,13 +94,13 @@ test('Muster Host stays visible through fielded and rearming wartime states',
     expect(fielded).toEqual({
       shown:true,
       can:false,
-      reason:'Your host is already in the field.'
+      reason:'At least 40 men must answer before a field host can form; only 0 are available. Hire mercenaries before mustering again.'
     });
     var muster = page.locator('[data-action-id="muster_host"]');
     await expect(muster).toBeVisible();
     await expect(muster).toBeDisabled();
     await expect(page.locator('#deed-details-muster_host .deed-status-text'))
-      .toContainText('already in the field');
+      .toContainText('only 0 are available');
 
     var rearming = await page.evaluate(function () {
       var s = FB.state;
@@ -312,9 +325,14 @@ test('campaign feedback shares battle, class-loss, effect, and upkeep facts',
     expect(result.summary).not.toContain('Battle record');
     expect(result.summary).not.toContain('Campaign losses');
     expect(result.summary).not.toContain('Campaign effects');
-    await expect(page.locator('#tab-actions')).toContainText('Battle record');
-    await expect(page.locator('#tab-actions')).toContainText(
-      'Campaign losses from the live host');
+    const campaign = page.locator('#tab-actions [data-campaign-open]').first();
+    await expect(campaign).toBeVisible();
+    await campaign.click();
+    await expect(page.locator('[data-campaign-detail] .kv').filter({
+      has:page.locator('span', { hasText:/^Field battles$/ })
+    })).toContainText('0 won · 2 lost');
+    await expect(page.locator('#campaign-host-details-section')).toContainText('Total upkeep');
+    await page.locator('#campaign-back').click();
     await page.evaluate(function () {
       FB.selectArmy('campaign-feedback-host');
       FB.ui.showTab('prov');

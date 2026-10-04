@@ -1,7 +1,7 @@
 'use strict';
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, ['data/events_war.js', 'js/ui_modals.js',
-  'js/ui_misc.js', 'js/i18n.js', 'js/events.js', 'js/wars.js', 'css/style.css']);
+  'js/ui_misc.js', 'js/i18n.js', 'js/events.js', 'js/wars.js', 'js/keys.js', 'css/style.css']);
 const { test, expect } = require('../support/fixture');
 const { startWarSafety } = require('../support/game/war-safety');
 
@@ -36,6 +36,14 @@ for (const compact of [false, true]) {
         await page.keyboard.press('Enter');
         await expect(details).toBeHidden();
         await expect(button).toHaveAttribute('aria-expanded', 'false');
+        await page.keyboard.press('Space');
+        await expect(details).toBeVisible();
+        await expect(button).toHaveAttribute('aria-expanded', 'true');
+        expect(await page.evaluate(function () {
+          return FB.state.log.filter(function (entry) {
+            return entry.receipt && entry.receipt.eventId === 'war_muster';
+          }).length;
+        })).toBe(0);
       } else {
         await card.hover();
         await expect(page.locator('#tooltip')).toBeVisible();

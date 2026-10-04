@@ -4429,9 +4429,16 @@ window.FB = window.FB || {};
         (musterCountyHosts[host.at] || (musterCountyHosts[host.at] = [])).push(host);
       }
       if (p.war && !p.war.defending) defendingRealms[p.war.enemy] = true;
-      for (const rid in state.realms) {
-        const attacker = state.realms[rid];
-        if (attacker && attacker.alive && attacker.war && attacker.war.enemy) defendingRealms[attacker.war.enemy] = true;
+      if (FB.ordinaryWars) {
+        for (const war of FB.ordinaryWars(state)) {
+          const attacker = state.realms[war.attacker];
+          if (attacker && attacker.alive) defendingRealms[war.defender] = true;
+        }
+      } else {
+        for (const rid in state.realms) {
+          const attacker = state.realms[rid];
+          if (attacker && attacker.alive && attacker.war && attacker.war.enemy) defendingRealms[attacker.war.enemy] = true;
+        }
       }
       function musterProjection(rid, reason) {
         if (timing) timing.count('Muster projection requests: ' + reason);

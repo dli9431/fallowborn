@@ -534,7 +534,7 @@ test('war notices lead unified ruler sheets and the Land tab',
       };
       FB.ui.showLiegeModal(data.foreignId);
       return {
-        muster:FB.T('Realm muster: ~{troops}', {
+        muster:'⚔️ ' + FB.T('Realm muster: ~{troops}', {
           troops:FB.ui._shared.menText(s,
             FB.aiBaseHost(s, data.foreignId))
         }),

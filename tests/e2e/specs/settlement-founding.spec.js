@@ -501,6 +501,14 @@ test('charter and elevation actions use full-width plot-style buttons with cost 
   await page.locator('[aria-controls="rank-elevation-confirm-details"]').click();
   await expect(page.locator('#rank-elevation-confirm-details')).toBeVisible();
   await expect(page.locator('#rank-elevation-confirm-details')).toContainText('prestige');
-  await expect(page.locator('#rank-elevation-confirm-details .kv > b')).toHaveCSS('flex-grow', '0');
-  await expect(page.locator('#rank-elevation-confirm-details .kv')).toHaveCSS('margin-bottom', '8px');
+  const rows = page.locator('#rank-elevation-confirm-details .kv');
+  await expect(rows).toHaveCount(2);
+  expect(await rows.evaluateAll(function (rows) {
+    return rows.every(function (row) {
+      const bounds = row.getBoundingClientRect();
+      const value = row.querySelector('b').getBoundingClientRect();
+      return value.width >= 60 && value.left >= bounds.left - 1 &&
+        value.right <= bounds.right + 1 && row.scrollWidth <= row.clientWidth + 1;
+    });
+  })).toBe(true);
 });

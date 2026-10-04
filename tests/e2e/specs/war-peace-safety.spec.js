@@ -25,7 +25,7 @@ async function openPeace(page, id, defending) {
   }, { id:id, defending:defending });
 }
 const choices = [
-  ['war_tribute_offer', 'Take the tribute.', false],
+  ['war_tribute_offer', 'Accept peace.', false],
   ['war_council', 'Seek terms.', false],
   ['war_council', 'Seek terms.', true],
   ['war_negotiated_withdrawal', 'Negotiate the withdrawal.', false],
@@ -90,12 +90,13 @@ test('held activation keys cannot cross a confirmation and stale wars cannot res
     await startWarSafety(page, testInfo);
     await openPeace(page, 'war_tribute_offer', false);
     await ready(page);
-    await page.keyboard.down('1');
+    await expect(page.locator('#ev-options .evopt').first()).toContainText('Accept peace.');
+    await page.keyboard.down('q');
     await expect(page.locator('#war-peace-confirm')).toBeVisible();
     await ready(page);
-    await page.keyboard.down('1');
+    await page.keyboard.down('q');
     expect(await page.evaluate(function () { return !!FB.state.player.war; })).toBe(true);
-    await page.keyboard.up('1');
+    await page.keyboard.up('q');
     await page.evaluate(function () {
       FB.state.player.war = Object.assign({}, FB.state.player.war, { wins:0 });
     });

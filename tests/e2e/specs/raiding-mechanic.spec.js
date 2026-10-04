@@ -5,10 +5,14 @@ dependsOnRuntime(__filename, [
   'data/actions.js',
   'js/actions.js',
   'js/model.js',
+  'js/station.js',
   'js/technology.js',
   'js/market.js',
   'js/population.js',
   'js/world.js',
+  'js/lordships.js',
+  'js/settlement.js',
+  'js/fiscal.js',
   'js/armies.js',
   'js/fortifications.js',
   'js/ui_panels.js',
@@ -20,6 +24,7 @@ dependsOnRuntime(__filename, [
   'css/style.css',
   'data/technology.js',
   'data/map_data.js',
+  'data/units.js',
   'data/cultures.js',
   'data/markets.js'
 ]);
@@ -33,6 +38,62 @@ test.beforeEach(async function ({ page }, testInfo) {
   await openGame(page, testInfo);
   await startDeterministicGame(page);
 });
+
+async function prepareRaidDomain(page, home) {
+  await page.evaluate(function (home) {
+    const s = FB.state, p = s.player, me = s.chars[p.charId];
+    if (!FB.world.byId[home]) throw new Error('Raid fixture needs a valid home county');
+    p.tier = 4;
+    p.liege = null;
+    p.provinceId = home;
+    p.provs = [home];
+    p.travel = null;
+    p.war = null;
+    p.gold = 10000;
+    p.prestige = 100;
+    me.culture = 'norse';
+    me.religion = 'norse_pagan';
+    me.skills.mar = 12;
+    me.skills.ste = 20;
+    me.prowess = 20;
+    s.dev[home] = 20;
+    s.buildings[home] = [];
+    FB.foundPlayerRealm(s);
+    for (let slot = 0; slot < FB.settlementVisibleCount(s, home); slot++) {
+      FB.revertSettlementLordship(s, home, slot);
+    }
+    FB.invalidateBuildingIndex(s, home);
+    FB.invalidateSettlementLordships(s, home);
+    if (s.armyDown) delete s.armyDown.player;
+    if (s.armyDownSurvival) delete s.armyDownSurvival.player;
+  }, home);
+}
+
+async function prepareRaidTarget(page, home) {
+  await prepareRaidDomain(page, home);
+  return page.evaluate(function (home) {
+    const s = FB.state;
+    const target = Object.keys(FB.world.adj[home]).find(function (pid) {
+      return FB.world.byId[pid] && !FB.world.byId[pid].wasteland;
+    });
+    if (!target) throw new Error('Raid fixture needs an adjacent land county');
+    s.realms.raid_fixture = {
+      id:'raid_fixture', name:'Raid Border County', rank:1, alive:true,
+      capital:target, liege:null, religion:'catholic',
+      ruler:{ name:'Border Defender', sex:'m', culture:FB.world.byId[target].culture,
+        age:40, mar:4, generation:1 }
+    };
+    s.owner[target] = 'raid_fixture';
+    s.holder[target] = 'raid_fixture';
+    s.dev[target] = 2;
+    s.buildings[target] = [];
+    s.alliances = [];
+    s.pacts = {};
+    FB.invalidateBuildingIndex(s, target);
+    FB.invalidateSettlementLordships(s, target);
+    return target;
+  }, home);
+}
 
 test('independent raiding requires a landed ruler with a personal tradition',
   async function ({ page }) {
@@ -585,7 +646,8 @@ test('technology tree extends raid reach and unlocks deep overseas raiding',
 
 test('executing a raid impacts population, buildings, market shocks, and yields plunder',
   async function ({ page }) {
-    var result = await page.evaluate(function () {
+    const targetPid = await prepareRaidTarget(page, 'london');
+    var result = await page.evaluate(function (targetPid) {
       var s = FB.state;
       var p = s.player;
       var me = s.chars[p.charId];
@@ -594,17 +656,6 @@ test('executing a raid impacts population, buildings, market shocks, and yields 
       p.prestige = 100;
       me.culture = 'norse';
       me.religion = 'norse_pagan';
-
-      var targets = FB.raidTargets(s);
-      if (!targets.length) {
-        var realmId = FB.playerRealmId ? FB.playerRealmId(s) : 'player';
-        var record = FB.realmTechRecord(s, realmId);
-        record.completed.push('longships');
-        targets = FB.raidTargets(s);
-      }
-
-      var target = targets[0];
-      var targetPid = target.pid;
 
       var initialTargetPop = FB.countyPopulation(s, targetPid);
       var initialHomePop = FB.countyPopulation(s, p.provinceId);
@@ -629,7 +680,8 @@ test('executing a raid impacts population, buildings, market shocks, and yields 
       // Add a building to test potential ruin
       s.buildings = s.buildings || {};
       s.buildings[targetPid] = s.buildings[targetPid] || [];
-      s.buildings[targetPid].push({ s:0, id:'watermill', ruined:false });
+      s.buildings[targetPid].push({ s:0, id:'mill', ruined:false });
+      FB.invalidateBuildingIndex(s, targetPid);
 
       var report = FB.executeRaid(s, targetPid, 'sack', p.charId, 'settle');
 
@@ -658,6 +710,13 @@ test('executing a raid impacts population, buildings, market shocks, and yields 
 
       return {
         targetPid: targetPid,
+        success:report.success,
+        raiderMen:report.raiderMen,
+        casualties:report.casualties,
+        buildingRuined:s.buildings[targetPid][0].ruined,
+        reportedRuin:report.ruinedBuildings.indexOf('mill') >= 0,
+        development:s.dev[targetPid],
+        reportedDevLoss:report.devLoss,
         goldGained: finalGold - initialGold,
         prestigeGained: finalPrestige - initialPrestige,
         targetPopLoss: initialTargetPop - finalTargetPop,
@@ -668,8 +727,10 @@ test('executing a raid impacts population, buildings, market shocks, and yields 
         hasCooldown: hasCooldown,
         goodsLooted: report.goods
       };
-    });
+    }, targetPid);
 
+    expect(result.success).toBe(true);
+    expect(result.raiderMen).toBeGreaterThan(result.casualties);
     expect(result.goldGained).toBeGreaterThan(0);
     expect(result.prestigeGained).toBeGreaterThan(0);
     expect(result.targetPopLoss).toBeGreaterThan(0);
@@ -679,24 +740,20 @@ test('executing a raid impacts population, buildings, market shocks, and yields 
     expect(result.hasRaidShock).toBe(true);
     expect(result.hasCooldown).toBe(true);
     expect(result.goodsLooted.provisions).toBeGreaterThan(0);
+    expect(result.buildingRuined).toBe(result.reportedRuin);
+    expect(result.development).toBe(result.reportedDevLoss ? 1 : 2);
   });
 
 test('captive resolution options function correctly for bonding and ransoming',
   async function ({ page }) {
-    var result = await page.evaluate(function () {
+    const targetPid = await prepareRaidTarget(page, 'london');
+    var result = await page.evaluate(function (targetPid) {
       var s = FB.state;
       var p = s.player;
       var me = s.chars[p.charId];
-      p.tier = 3;
       p.gold = 50;
       me.culture = 'norse';
       me.religion = 'norse_pagan';
-
-      var realmId = FB.playerRealmId ? FB.playerRealmId(s) : 'player';
-      var record = FB.realmTechRecord(s, realmId);
-      record.completed.push('longships');
-      var targets = FB.raidTargets(s);
-      var targetPid = targets[0].pid;
 
       p.bondedWorkers = 0;
       p.raidCooldownUntil = 0;
@@ -704,17 +761,25 @@ test('captive resolution options function correctly for bonding and ransoming',
       var workersAfterBond = p.bondedWorkers;
 
       p.raidCooldownUntil = 0;
+      if (s.armyDown) delete s.armyDown.player;
+      if (s.armyDownSurvival) delete s.armyDownSurvival.player;
       var goldBeforeRansom = p.gold;
       var ransomReport = FB.executeRaid(s, targetPid, 'sack', p.charId, 'ransom');
       var goldAfterRansom = p.gold;
 
       return {
+        bondSuccess:bondReport.success,
+        ransomSuccess:ransomReport.success,
+        bondedCaptives:bondReport.captives,
         workersAfterBond: workersAfterBond,
         ransomGoldPaid: goldAfterRansom - goldBeforeRansom - ransomReport.gold,
         ransomReportExtra: ransomReport.ransomGold
       };
-    });
+    }, targetPid);
 
+    expect(result.bondSuccess).toBe(true);
+    expect(result.ransomSuccess).toBe(true);
+    expect(result.workersAfterBond).toBe(Math.max(1, Math.round(result.bondedCaptives / 25)));
     expect(result.workersAfterBond).toBeGreaterThan(0);
     expect(result.ransomReportExtra).toBeGreaterThan(0);
     expect(result.ransomGoldPaid).toBe(result.ransomReportExtra);
@@ -1094,6 +1159,7 @@ test('raid against overwhelming garrison resistance is repelled with troop casua
 
 test('raid calculates multi-county route passage battles sequentially through intermediate territories',
   async function ({ page }) {
+    await prepareRaidDomain(page, 'london');
     var result = await page.evaluate(function () {
       var s = FB.state;
       var p = s.player;
@@ -1148,9 +1214,17 @@ test('raid calculates multi-county route passage battles sequentially through in
 
       // Setup enemy realm for the territory along the march
       s.owner = s.owner || {};
-      for (var j = 1; j < chain.length; j++) s.owner[chain[j]] = 'france';
+      for (var j = 1; j < chain.length; j++) {
+        s.owner[chain[j]] = 'raid_route_fixture';
+        s.holder[chain[j]] = 'raid_route_fixture';
+        s.dev[chain[j]] = 2;
+      }
       s.realms = s.realms || {};
-      s.realms.france = { id:'france', name:'Kingdom of France', alive:true, military:1200 };
+      s.realms.raid_route_fixture = {
+        id:'raid_route_fixture', name:'March Defenders', rank:1,
+        capital:target, liege:null, alive:true, religion:'catholic',
+        ruler:{ name:'March Defender', sex:'m', age:40, mar:4, generation:1 }
+      };
       if (FB.invalidateRealmCache) FB.invalidateRealmCache();
 
       var spoils = FB.calculateRaidSpoils(s, target, 'sack', p.charId);
@@ -1279,6 +1353,12 @@ test('raid target list and map overlay properly indicate intermediate and destin
 
 test('assaulting fortified counties inflicts significantly higher casualties than raiding unfortified counties',
   async function ({ page }) {
+    const home = await page.evaluate(function () {
+      return Object.keys(FB.world.adj.paris).find(function (pid) {
+        return FB.world.byId[pid] && !FB.world.byId[pid].wasteland;
+      });
+    });
+    await prepareRaidDomain(page, home);
     var result = await page.evaluate(function () {
       var s = FB.state;
       var p = s.player;
@@ -1287,21 +1367,16 @@ test('assaulting fortified counties inflicts significantly higher casualties tha
       me.culture = 'norse';
       me.religion = 'norse_pagan';
 
-      // Keep Paris one land step from home so this defender case does not
-      // depend on the expedition's available naval reach.
-      var homeAdj = FB.world.adj['paris'] || {};
-      for (var hb in homeAdj) {
-        var hpr = FB.world.byId[hb];
-        if (hpr && !hpr.wasteland) { p.provinceId = hb; p.provs = [hb]; break; }
-      }
-
       s.dev = s.dev || {};
-      s.dev[p.provinceId] = 12;
+      s.dev[p.provinceId] = 30;
 
       s.owner = s.owner || {};
       s.owner.paris = 'france';
+      s.holder.paris = 'france';
       s.realms = s.realms || {};
-      s.realms.france = { id:'france', name:'Kingdom of France', alive:true, military:100 };
+      s.realms.france = { id:'france', name:'Kingdom of France', alive:true,
+        rank:1, capital:'paris', liege:null, religion:'catholic',
+        ruler:{ name:'Paris Defender', sex:'m', age:40, mar:4, generation:1 } };
       if (FB.invalidateRealmCache) FB.invalidateRealmCache();
 
       // Unfortified: strip any standing walls from Paris (a fresh buildings
@@ -1320,6 +1395,10 @@ test('assaulting fortified counties inflicts significantly higher casualties tha
       var fortifiedSpoils = FB.calculateRaidSpoils(s, 'paris', 'sack', p.charId);
 
       return {
+        unfortSuccess:unfortifiedSpoils.success,
+        fortSuccess:fortifiedSpoils.success,
+        unfortMen:unfortifiedSpoils.raiderMen,
+        fortMen:fortifiedSpoils.raiderMen,
         unfortCasualties: unfortifiedSpoils.casualties,
         fortCasualties: fortifiedSpoils.casualties,
         unfortGarrison: unfortifiedSpoils.garrisonMen,
@@ -1327,6 +1406,9 @@ test('assaulting fortified counties inflicts significantly higher casualties tha
       };
     });
 
+    expect(result.unfortSuccess).toBe(true);
+    expect(result.fortSuccess).toBe(true);
+    expect(result.fortMen).toBe(result.unfortMen);
     expect(result.fortGarrison).toBeGreaterThan(result.unfortGarrison * 2);
     expect(result.fortCasualties).toBeGreaterThan(result.unfortCasualties * 2);
   });
@@ -1349,6 +1431,7 @@ test('menText rounds floating point values and raid modal provides Find target i
 
 test('land panel realm host renders current and max capacity when recovering or under population capacity',
   async function ({ page }) {
+    await prepareRaidDomain(page, 'london');
     var result = await page.evaluate(function () {
       var s = FB.state;
       var p = s.player;
@@ -1359,22 +1442,15 @@ test('land panel realm host renders current and max capacity when recovering or 
       s.dev.london = 20;
 
       // Set population well below the data-driven baseline to simulate under-capacity
-      s.population = s.population || { counties: {} };
       var base = FB.countyPopulationBaseline(s, 'london');
-      s.population.counties.london = {
-        count: Math.max(100, Math.round(base * 0.6 / 100) * 100),
-        base: base, natural: 0, migration: 0, losses: 0
-      };
-
-      s.owner = s.owner || {};
-      s.owner.london = 'player';
-      s.realms = s.realms || {};
-      s.realms.player = { id: 'player', name: 'Realm of London', alive: true, capital: 'london' };
+      FB.changeCountyPopulation(s, 'london', Math.round(base * 0.6) -
+        FB.countyPopulation(s, 'london'), 'fixture_losses');
 
       // the own-realm card shows the real muster composition: current host
       // (population-factored) against the full-population baseline
-      var expectedCur = FB.playerLevy(s);
-      var expectedMax = Math.max(FB.playerMaxLevy(s), expectedCur);
+      var availability = FB.realmHostAvailability(s, 'player');
+      var expectedCur = availability.current;
+      var expectedMax = availability.maximum;
 
       // Render the Land tab for the county
       FB.ui.selectProvince('london');
@@ -1393,40 +1469,22 @@ test('land panel realm host renders current and max capacity when recovering or 
 
 test('land panel realm host counts the overpopulation bonus in its maximum',
   async function ({ page }) {
+    await prepareRaidDomain(page, 'london');
     var result = await page.evaluate(function () {
       var s = FB.state;
-      var p = s.player;
-      p.tier = 4;
-      p.provinceId = 'london';
-      p.provs = ['london'];
-      s.dev = s.dev || {};
-      s.dev.london = 20;
 
       // Overpopulated county: 2.25x the data-driven baseline rides the 1.5 cap
-      s.population = s.population || { counties: {} };
       var base = FB.countyPopulationBaseline(s, 'london');
-      s.population.counties.london = {
-        count: Math.round(base * 2.25 / 100) * 100,
-        base: base, natural: 0, migration: 0, losses: 0
-      };
-
-      s.owner = s.owner || {};
-      s.owner.london = 'player';
-      s.realms = s.realms || {};
-      s.realms.player = { id: 'player', name: 'Realm of London', alive: true, capital: 'london' };
+      FB.changeCountyPopulation(s, 'london',
+        Math.round(base * 2.25 / 100) * 100 - FB.countyPopulation(s, 'london'), 'fixture');
 
       var factor = FB.countyPopulationFactor(s, 'london');
-
-      // the own-realm card reads the full muster composition; its maximum
-      // never sits below the current host when overpopulation boosts the levy
-      var currentHost = FB.playerLevy(s);
-      var expectedMax = Math.max(FB.playerMaxLevy(s), currentHost);
+      var expectedMax = FB.realmHostAvailability(s, 'player').maximum;
 
       // Fresh out of a raid: the host is inside its rearm window
       s.armyDown = s.armyDown || {};
       s.armyDown.player = s.turn;
-      var rearm = FB.rearmScale(s, 'player');
-      var expectedCur = Math.round(currentHost * rearm);
+      var expectedCur = FB.realmHostAvailability(s, 'player').current;
       FB.ui.selectProvince('london');
       var rearmHtml = document.getElementById('tab-prov').innerHTML;
 
@@ -1446,47 +1504,47 @@ test('land panel realm host counts the overpopulation bonus in its maximum',
         recoveredValue: realmHostValue(recoveredHtml),
         expectedRearm: '~' + expectedCur + '/' + expectedMax + ' men',
         expectedRecovered: '~' + expectedMax + ' men',
-        factor: factor
+        factor: factor,
+        maximum:expectedMax,
+        current:expectedCur
       };
     });
 
     expect(result.factor).toBeGreaterThan(1);
+    expect(result.maximum).toBeGreaterThan(0);
+    expect(result.current).toBeLessThan(result.maximum);
     expect(result.rearmValue).toBe(result.expectedRearm);
     expect(result.recoveredValue).toBe(result.expectedRecovered);
   });
 
 test('raid defenders use the county share of the realm host, not a flat tithe of realm size',
   async function ({ page }) {
-    var result = await page.evaluate(function () {
+    const target = await prepareRaidTarget(page, 'london');
+    var result = await page.evaluate(function (targetPid) {
       var s = FB.state;
       var p = s.player;
-      var me = s.chars[p.charId];
-      p.tier = 4;
-      p.provinceId = 'london';
-      p.provs = ['london'];
-      me.culture = 'norse';
-      me.religion = 'norse_pagan';
-      s.dev = s.dev || {};
       s.dev.london = 30;
 
       // a poor border county adjacent to home, owned by a sprawling kingdom
-      var adj = FB.world.adj['london'] || {};
-      var targetPid = null;
-      for (var nid in adj) {
-        var npr = FB.world.byId[nid];
-        if (npr && !npr.wasteland) { targetPid = nid; break; }
-      }
       s.dev[targetPid] = 3;
-      s.owner = s.owner || {};
       s.owner[targetPid] = 'big_realm';
-      s.realms = s.realms || {};
-      s.realms.big_realm = { id:'big_realm', name:'Great Kingdom', alive:true };
+      s.holder[targetPid] = 'big_realm';
+      s.realms.big_realm = { id:'big_realm', name:'Great Kingdom', alive:true,
+        capital:targetPid, rank:3, liege:null, religion:'catholic',
+        ruler:{ name:'Border Defender', sex:'m', culture:FB.world.byId[targetPid].culture,
+          age:40, mar:4, generation:1 } };
       var assigned = 0;
       for (var j = 0; j < FB.world.provs.length && assigned < 12; j++) {
         var pr2 = FB.world.provs[j];
         if (!pr2 || pr2.wasteland || pr2.id === targetPid || pr2.id === 'london') continue;
         s.owner[pr2.id] = 'big_realm';
+        s.holder[pr2.id] = 'big_realm';
         s.dev[pr2.id] = 15;
+        s.buildings[pr2.id] = [];
+        for (var slot = 0; slot < FB.settlementVisibleCount(s, pr2.id); slot++) {
+          FB.revertSettlementLordship(s, pr2.id, slot);
+        }
+        FB.invalidateBuildingIndex(s, pr2.id);
         assigned++;
       }
       if (FB.invalidateRealmCache) FB.invalidateRealmCache();
@@ -1495,6 +1553,8 @@ test('raid defenders use the county share of the realm host, not a flat tithe of
       for (var key in (s.buildings || {})) plain[key] = s.buildings[key];
       plain[targetPid] = (plain[targetPid] || []).filter(function (b) { return b.id !== 'walls'; });
       s.buildings = plain;
+      FB.invalidateBuildingIndex(s, 'london');
+      FB.invalidateSettlementLordships(s, targetPid);
 
       var host = FB.realmDefensiveStrength(s, 'big_realm');
       var realmDev = FB.realmStrength(s, 'big_realm');
@@ -1508,7 +1568,7 @@ test('raid defenders use the county share of the realm host, not a flat tithe of
         oldFlatTithe: Math.round(host * 0.06),
         realmDev: realmDev
       };
-    });
+    }, target);
 
     expect(result.realmDev).toBeGreaterThan(30);
     expect(result.repelled).toBe(false);

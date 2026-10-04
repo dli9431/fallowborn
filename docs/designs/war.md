@@ -2,6 +2,8 @@
 
 War repair retains a scenario standing host while its saved end turn remains ahead and its realm is alive. FB.scenarioHostStanding supplies the same predicate to restore and the daily army phase. Expired hosts and hosts of extinct realms follow ordinary peace-time dismissal rules.
 
+Daily muster projections identify defending realms from the active ordinary-campaign registry. Peaceful counts and dukes are not polled for legacy war state in this pass; ended campaign history is excluded by the same cached registry query used for host discovery.
+
 Tracked life histories take compact field-battle facts from the resolved camps
 before casualties or host deletion: each ruler's own participating soldiers,
 opposing-camp strength, place, date and outcome. Allied soldiers are not credited

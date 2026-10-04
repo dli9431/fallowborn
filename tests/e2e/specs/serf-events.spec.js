@@ -20,6 +20,7 @@ dependsOnRuntime(__filename, [
   'js/actions.js',
   'js/save.js',
   'js/world.js',
+  'js/lordships.js', 'js/politics.js', 'js/authority.js',
   'js/ui_misc.js',
   'js/ui_panels.js',
   'js/ui_modals.js',
@@ -1868,6 +1869,7 @@ test('Phase 5 local authority succession keeps exact people, queues one review, 
       FB.killChar(state, oldLord);
       const afterDeath = state.player.tenureTransition;
       const deathRevision = afterDeath && afterDeath.revision;
+      const deathCauses = afterDeath && afterDeath.causes.slice();
       const exactFormer = FB.localLordAt(state, oldLord.id, true);
       state.roles.lord = oldLord.id;
       state.eventQueue = [];
@@ -1888,6 +1890,7 @@ test('Phase 5 local authority succession keeps exact people, queues one review, 
         oldLordId:oldLord.id,
         exactFormerDead:!!(exactFormer && exactFormer.dead),
         deathRevision:deathRevision,
+        deathCauses:deathCauses,
         coalescedRevision:record && record.revision,
         oldAuthorityId:record && record.oldAuthority.localLordId,
         newAuthorityId:record && record.newAuthority.localLordId,
@@ -1908,8 +1911,11 @@ test('Phase 5 local authority succession keeps exact people, queues one review, 
 
     expect(result.checkpointLordId).toBe(result.oldLordId);
     expect(result.exactFormerDead).toBe(true);
-    expect(result.deathRevision).toBe(1);
-    expect(result.coalescedRevision).toBe(2);
+    // The reigning county holder's death records both political succession
+    // and the exact local person's replacement in the same review.
+    expect(result.deathRevision).toBe(2);
+    expect(result.deathCauses).toEqual(['local_lord_succession', 'holder_succession']);
+    expect(result.coalescedRevision).toBe(result.deathRevision);
     expect(result.oldAuthorityId).toBe(result.oldLordId);
     expect(result.newAuthorityId).toBe(result.replacementId);
     expect(result.queueCount).toBe(1);
@@ -2016,6 +2022,7 @@ test('Phase 5 authority proposals add and commute bounded duties while preservin
       tenure.rights = [];
       tenure.revision = 0;
       tenure.transitionHistory = [];
+      FB.refreshSerfTenureDueCache(state, tenure);
       tenure.authorityCheckpoint = FB.serfHomeAuthority(state);
       tenure.authorityCheckpoint.acknowledgedTurn = state.turn;
       site.kind = 'village';
@@ -2039,6 +2046,7 @@ test('Phase 5 authority proposals add and commute bounded duties while preservin
         return duty.id === 'authority_cartage';
       })[0];
       const addDelay = added && added.nextDueTurn - state.turn;
+      if (!added) throw new Error('The queued authority amendment must add its named duty.');
       added.nextDueTurn = state.turn + 700;
 
       site.kind = 'town';
@@ -2057,9 +2065,19 @@ test('Phase 5 authority proposals add and commute bounded duties while preservin
       const commuteProposal = commuteRecord.proposal;
       state.eventQueue = [];
       FB.tenureDay(state);
+      const commuteItem = state.eventQueue.find(function (item) {
+        return item.id === 'serf_tenure_review';
+      });
+      const reviewEvent = FB.eventById('serf_tenure_review');
+      const remoteLordId = commuteRecord.newAuthority.localLordId;
+      const remoteLordHome = FB.characterResidence(state, state.chars[remoteLordId]);
+      const remoteReviewValid = !!commuteItem &&
+        FB.eventContextStillValid(state, reviewEvent, commuteItem.ctx);
       const staleRevision = commuteRecord.revision;
       const commuteResolved = FB.resolveSerfTenureTransition(
         state, commuteRecord.revision, 'accept');
+      const consumedReviewValid = !!commuteItem &&
+        FB.eventContextStillValid(state, reviewEvent, commuteItem.ctx);
       const staleResolve = FB.resolveSerfTenureTransition(
         state, staleRevision, 'accept');
 
@@ -2094,6 +2112,10 @@ test('Phase 5 authority proposals add and commute bounded duties while preservin
         commuteDutyId:commuteProposal.dutyId,
         commuteGold:commuteProposal.commutationGold,
         commuteResolved:commuteResolved,
+        remoteLordHome:remoteLordHome,
+        tenureHome:home,
+        remoteReviewValid:remoteReviewValid,
+        consumedReviewValid:consumedReviewValid,
         staleResolve:staleResolve,
         laborEventId:labor.eventId,
         laborMode:labor.mode,
@@ -2128,6 +2150,9 @@ test('Phase 5 authority proposals add and commute bounded duties while preservin
     expect(result.commuteDutyId).toBe('customary_labor');
     expect(result.commuteGold).toBe(3);
     expect(result.commuteResolved).toBe(true);
+    expect(result.remoteLordHome).not.toBe(result.tenureHome);
+    expect(result.remoteReviewValid).toBe(true);
+    expect(result.consumedReviewValid).toBe(false);
     expect(result.staleResolve).toBe(false);
     expect(result.laborEventId).toBe('serf_commuted_due');
     expect(result.laborMode).toBe('coin');

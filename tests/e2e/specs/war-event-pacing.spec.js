@@ -12,7 +12,8 @@ dependsOnRuntime(__filename, [
   'js/main.js',
   'js/technology.js',
   'js/ui_modals.js',
-  'js/world.js'
+  'js/world.js',
+  'js/wars.js'
 ]);
 
 const { test, expect } = require('../support/fixture');
@@ -24,7 +25,20 @@ test.beforeEach(async function ({ page }, testInfo) {
   await startDeterministicGame(page);
 });
 
-test('operational war events expire when their exact war ends or is replaced',
+async function establishPlayerRealm(page) {
+  await page.evaluate(function () {
+    FB.game.setPaused(true);
+    const s = FB.state, p = s.player, home = p.provinceId;
+    p.tier = 4; p.liege = null; p.provs = [home];
+    s.owner[home] = 'player'; s.holder[home] = 'player';
+    FB.foundPlayerRealm(s);
+    s.realms.player.capital = home;
+    s.realms.player.liege = null;
+    FB.invalidateRealmCache();
+  });
+}
+
+test('operational war events stay bound to their exact campaign and expire at peace',
   async function ({ page }) {
     const result = await page.evaluate(function () {
       const s = FB.state;
@@ -48,6 +62,8 @@ test('operational war events expire when their exact war ends or is replaced',
         defending:true
       };
       FB.warFooting(s);
+      const validAlongsideOtherWar = FB.eventContextStillValid(s, council, first.ctx);
+      FB.endPlayerWar(s, false, first.ctx.warId);
       const validAfterReplacement = FB.eventContextStillValid(s, council, first.ctx);
       const second = FB.queueWarEvent(s, 'war_council', {});
       FB.endPlayerWar(s);
@@ -59,6 +75,7 @@ test('operational war events expire when their exact war ends or is replaced',
         firstId:first.ctx.warEventId,
         secondId:second.ctx.warEventId,
         validDuringWar:validDuringWar,
+        validAlongsideOtherWar:validAlongsideOtherWar,
         validAfterReplacement:validAfterReplacement,
         validAfterPeace:validAfterPeace
       };
@@ -68,6 +85,7 @@ test('operational war events expire when their exact war ends or is replaced',
     expect(result.validator).toBe('war_event_context_valid');
     expect(result.firstId).not.toBe(result.secondId);
     expect(result.validDuringWar).toBe(true);
+    expect(result.validAlongsideOtherWar).toBe(true);
     expect(result.validAfterReplacement).toBe(false);
     expect(result.validAfterPeace).toBe(false);
   });
@@ -774,6 +792,7 @@ test('a wiped primary host cannot remuster and repeat its victory event during r
 
 test('a host standing on the war target presses the siege at the season tick',
   async function ({ page }) {
+    await establishPlayerRealm(page);
     const result = await page.evaluate(function () {
       const s = FB.state;
       const p = s.player;
@@ -811,6 +830,7 @@ test('a host standing on the war target presses the siege at the season tick',
 
       // the host marches away: the works stall where they stand
       s.armies[0].at = p.provinceId;
+      s.turn += 90;
       FB.playerWarTick(s);
       const siegeAfterLeaving = p.war && p.war.siege;
 
@@ -821,6 +841,7 @@ test('a host standing on the war target presses the siege at the season tick',
         units:{ levy:900, arch:0, cav:0, ret:0, mercs:0 },
         at:target, from:target, moveLeft:0, path:[], goal:null, supply:100
       });
+      s.turn += 90;
       FB.playerWarTick(s);
       const siegeAfterContest = p.war && p.war.siege;
 
@@ -845,6 +866,7 @@ test('a host standing on the war target presses the siege at the season tick',
 
 test('the season-tick siege breaches, takes the county, and queues no stale council',
   async function ({ page }) {
+    await establishPlayerRealm(page);
     const result = await page.evaluate(function () {
       const s = FB.state;
       const p = s.player;
@@ -1065,6 +1087,7 @@ test('the war council separates movement, reorganization, and peace without simu
 
 test('campaign state tilts field-battle power and a real battle spends the blessing',
   async function ({ page }) {
+    await establishPlayerRealm(page);
     const result = await page.evaluate(function () {
       const s = FB.state;
       const p = s.player;
@@ -1085,7 +1108,7 @@ test('campaign state tilts field-battle power and a real battle spends the bless
         defending:true, strength:1
       };
       const probe = {
-        id:'power_probe', realm:'player', men:1000, size:1000,
+        id:'power_probe', realm:'player', warId:p.war.id, men:1000, size:1000,
         units:{ levy:1000, arch:0, cav:0, ret:0, mercs:0 },
         at:home, from:home, moveLeft:0, path:[], goal:null, supply:100
       };

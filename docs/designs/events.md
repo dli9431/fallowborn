@@ -170,6 +170,8 @@ existing terms, add one archetype-authored duty, commute one safe labor duty, ch
 one recognized right, or restore a previously challenged right. The safe first option
 preserves existing terms, so autoresolve cannot silently worsen them.
 
+The authority review binds the exact current county ruler even when that person resides at a different capital. Its transition validator checks the current home authority and revision; residence is not an additional gate for that ruler. A resident witness keeps the same-home requirement. The holder's death may record both holder succession and local-person replacement in one pending review, without a second queued presentation.
+
 Mechanical amendments increment the active tenure revision once. Ordinary duty contexts
 and freedom offers carry that revision, making an older queued choice stale before any
 effect. A commuted duty uses `serf_commuted_due`, preserves its original schedule, and

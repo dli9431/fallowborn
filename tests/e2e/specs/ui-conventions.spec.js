@@ -89,7 +89,7 @@ for (const width of [390, 1280]) {
   });
 }
 
-test('Network sections match Deeds and expand without an enclosing body border', async function ({ page }, testInfo) {
+test('Network section toggles match Deeds and expand a shared Land-style body card', async function ({ page }, testInfo) {
   await openGame(page, testInfo);
   await startDeterministicGame(page);
   await page.evaluate(function () { FB.ui.showTab('actions'); });
@@ -121,7 +121,9 @@ test('Network sections match Deeds and expand without an enclosing body border',
     const s = getComputedStyle(node);
     return [s.borderTopWidth, s.borderRightWidth, s.borderBottomWidth, s.borderLeftWidth];
   });
-  expect(borders).toEqual(['0px', '0px', '0px', '0px']);
+  expect(borders).toEqual(['1px', '1px', '1px', '1px']);
+  await expect(body).toHaveCSS('border-radius', '8px');
+  await expect(body).toHaveCSS('background-color', 'rgb(28, 23, 16)');
   await expect(network).toBeFocused();
 });
 

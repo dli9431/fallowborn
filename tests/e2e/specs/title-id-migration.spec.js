@@ -5,7 +5,8 @@ dependsOnRuntime(__filename, [
   'data/cultures.js', 'data/ambitions.js', 'data/political_institutions.js',
   'js/title_ids.js', 'js/world.js', 'js/mods.js', 'js/save.js',
   'js/save_v4.js', 'js/authority.js', 'js/holywar.js', 'js/main.js',
-  'js/model.js', 'js/i18n.js', 'js/ambitions.js', 'js/items.js'
+  'js/model.js', 'js/i18n.js', 'js/ambitions.js', 'js/items.js',
+  'js/agency.js', 'js/politics.js'
 ]);
 const { test, expect } = require('../support/fixture');
 const { openGame } = require('../support/game/navigation');
@@ -140,6 +141,10 @@ for (const bookmark of ['867','1066']) {
     async function ({ page }, testInfo) {
       await start(page, testInfo, bookmark);
       const result = await page.evaluate(function () {
+        // Finish additive court repairs before capturing a migration baseline.
+        FB.ensureDynasticState(FB.state);
+        FB.ensureAgency(FB.state);
+        FB.repairPolitics(FB.state);
         const old = JSON.parse(FB.save.serialize());
         old.v = 3;
         delete old.authoritySchema;

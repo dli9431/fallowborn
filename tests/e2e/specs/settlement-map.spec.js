@@ -10,6 +10,7 @@ dependsOnRuntime(__filename, [
   'js/settlement.js',
   'js/siteart.js',
   'js/world.js',
+  'js/mods.js', 'js/title_ids.js', 'data/geographies.js',
   'js/lordships.js',
   'css/style.css',
   'data/settlements.js'
@@ -1589,6 +1590,7 @@ test('mods merge physical sites and compile complete province presentations',
         const definition = {};
         for (const key in FB.bookmark('867')) definition[key] = FB.bookmark('867')[key];
         definition.id = 'e2e_sites';
+        definition.provinces = FBDATA.provinces;
         FBDATA.bookmarks.e2e_sites = definition;
         FB.activateBookmark('e2e_sites', function () {}, function (error) {
           if (error) { resolve({ error:error.message }); return; }
@@ -1600,7 +1602,7 @@ test('mods merge physical sites and compile complete province presentations',
               authored:list[0].authored, index:list[0].index
             },
             second:{
-              site:list[1].site, name:list[1].name, authored:list[1].authored
+              site:list[1].site, name:list[1].name, kind:list[1].kind, authored:list[1].authored
             },
             generatedFill:list.slice(2).map(function (rec) {
               return { site:rec.site, authored:rec.authored };
@@ -1617,7 +1619,7 @@ test('mods merge physical sites and compile complete province presentations',
     expect(result.head).toMatchObject({
       site:'e2e_testton', name:'Testton', kind:'town', authored:true, index:0
     });
-    expect(result.second).toMatchObject({ site:'london', name:'Lunden', authored:true });
+    expect(result.second).toMatchObject({ site:'london', name:'London', kind:'village', authored:true });
     expect(result.generatedFill.length).toBeGreaterThan(0);
     for (const rec of result.generatedFill) {
       expect(rec.authored).toBe(false);
@@ -1654,6 +1656,7 @@ test('a legacy mod without site data keeps deterministic generated settlements',
         const definition = {};
         for (const key in FB.bookmark('867')) definition[key] = FB.bookmark('867')[key];
         definition.id = 'e2e_legacy';
+        definition.provinces = FBDATA.provinces;
         FBDATA.bookmarks.e2e_legacy = definition;
         FB.activateBookmark('e2e_legacy', function () {}, function (error) {
           if (error) { resolve({ error:error.message }); return; }

@@ -7,6 +7,7 @@ dependsOnRuntime(__filename, [
   'js/ui_misc.js',
   'css/style.css',
   'js/model.js',
+  'js/world.js', 'js/lordships.js', 'js/station.js', 'js/politics.js', 'js/authority.js',
   'js/ui_modals.js'
 ]);
 
@@ -39,6 +40,13 @@ test('a lowborn household reaches its lord through a warm intermediary ladder',
       const lord = FB.getRole(s, 'lord', true);
       const steward = FB.getRole(s, 'steward', true);
       const priest = FB.getRole(s, 'priest', true);
+      // Courtship tests access to the actual county ruler, whose eagerly
+      // generated consort must not introduce an unrelated marriage blocker.
+      const spouse = FB.spouseSnapshot(s, lord);
+      if (spouse && spouse.spouseId === lord.id) spouse.spouseId = null;
+      lord.spouseId = null;
+      lord.betrothedId = null;
+      FB.touchFamily();
       priest.opinion = 0;
       steward.opinion = 0;
       lord.opinion = 0;

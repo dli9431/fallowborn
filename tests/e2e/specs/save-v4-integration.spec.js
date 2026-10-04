@@ -3,7 +3,7 @@ const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
   'index.html', 'js/save.js', 'js/save_v4.js', 'js/title_ids.js',
   'js/main.js', 'js/world.js', 'js/model.js', 'js/mods.js', 'js/messages.js',
-  'js/armies.js', 'js/wars.js',
+  'js/armies.js', 'js/wars.js', 'data/units.js',
   'js/authority.js', 'js/politics.js', 'js/stories.js',
   'js/story_western_court_476.js', 'js/story_federate_track_476.js', 'js/ui_modals.js',
   'data/bookmarks.js', 'data/bookmark_476.js', 'data/political_institutions.js',
@@ -41,13 +41,22 @@ for (const bookmark of ['476', '867', '1066']) {
         delete legacy.platformSchema;
         if (legacy.state.authority) delete legacy.state.authority.schema;
         function facts(state) {
+          // Missing legacy classes and explicit zero counts describe the same
+          // host. Preserve all other fields and any unexpected unit keys.
+          const armies = JSON.parse(JSON.stringify(state.armies || []));
+          armies.forEach(function (army) {
+            const units = army.units || (army.units = {});
+            FB.unitClassIds().forEach(function (key) {
+              if (!Object.prototype.hasOwnProperty.call(units, key)) units[key] = 0;
+            });
+          });
           return JSON.stringify({
             owner:state.owner, holder:state.holder,
             player:[state.player.charId, state.player.provinceId,
               state.player.provs, state.player.gold, state.player.tier],
             population:state.population, buildings:state.buildings,
             treasury:state.treasuryAccounting, authority:state.authority,
-            stories:state.stories, armies:state.armies,
+            stories:state.stories, armies:armies,
             wars:state.wars || {},
             family:Object.keys(state.chars).sort().map(function (id) {
               const c = state.chars[id];

@@ -1,9 +1,13 @@
 'use strict';
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename,['index.html','data/actions.js','data/tournaments.js','js/tournaments.js','js/ui_tournaments.js',
-  'js/ui_misc.js','js/ui_modals.js','js/ui_panels.js','js/actions.js','js/mapview.js','js/i18n.js']);
+  'js/ui_misc.js','js/ui_modals.js','js/ui_panels.js','js/actions.js','js/mapview.js','js/i18n.js',
+  'js/util.js','js/crazygames.js','js/main.js']);
 const { test, expect } = require('../support/fixture');
 const { startGames, bookGames } = require('../support/game/tournaments');
+const { openGame } = require('../support/game/navigation');
+const { openCrazyGame } = require('../support/game/crazygames-title');
+const { startDeterministicGame } = require('../support/game/start');
 
 for(const viewport of [{width:1280,height:800},{width:390,height:844}]){
   test('calendar retains filter, focus and scroll at '+viewport.width+' pixels',async function({page},info){
@@ -62,7 +66,9 @@ test('Events is an independent keyboard-accessible overlay with exact settlement
 for(const distribution of ['standard','crazygames']){
   test('scheduled scripts and English fallback are available in '+distribution,async function({page},info){
     if(distribution==='crazygames')await page.addInitScript(function(){window.FB_DISTRIBUTION='crazygames';window.FB_CRAZYGAMES_STORAGE='localstorage';});
-    await startGames(page,info);
+    if(distribution==='crazygames')await openCrazyGame(page,info);
+    else await openGame(page,info);
+    await startDeterministicGame(page);
     const r=await page.evaluate(function(){
       return {data:!!FBDATA.tournaments,engine:!!FB.tournaments,ui:typeof FB.ui.showGames,
         label:FB.dataText(FB.state,FB.state.player.charId,'tournament_tracks','archery',FBDATA.tournaments.tracks.archery,'name',{}),

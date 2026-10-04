@@ -37,7 +37,7 @@ FBDATA.events.push(
   contextValidator:'serf_tenure_transition_valid',
   participants:[
     { slot:'formerLord', source:'context', allowDead:true },
-    { slot:'currentLord', source:'context', sameHome:true },
+    { slot:'currentLord', source:'context' },
     { slot:'witness', source:'context', sameHome:true }
   ],
   participantCards:['formerLord','currentLord','witness'],

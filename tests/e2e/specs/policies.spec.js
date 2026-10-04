@@ -7,7 +7,9 @@ dependsOnRuntime(__filename, [
   'js/technology.js',
   'js/events.js',
   'js/modifiers.js',
+  'js/ui_misc.js',
   'js/ui_modals.js',
+  'css/style.css',
   'data/policies.js',
   'data/events_parliament.js'
 ]);
@@ -481,9 +483,16 @@ test('locked Estates cards deep-link to their exact technology entry',
 
     var locked = page.locator('[data-motion-tech="scutage"]');
     await expect(locked).toBeVisible();
-    await expect(locked).toContainText('Requires Scutage');
-    await expect(locked).toContainText('Open the technology entry');
+    await locked.hover();
+    await expect(page.locator('#tooltip')).toContainText('Requires Scutage');
+    await expect(page.locator('#tooltip')).toContainText('Open the technology entry');
     await expect(page.locator('[data-motion="scutage"]')).toHaveCount(0);
+    await page.setViewportSize({ width:390, height:740 });
+    const card = locked.locator('..');
+    await card.locator('.settcard-info').click();
+    await expect(card.locator('.estates-action-details')).toBeVisible();
+    await expect(card.locator('.estates-action-details')).toContainText('Requires Scutage');
+    await expect(card.locator('.estates-action-details')).toContainText('Open the technology entry');
     await locked.click();
     await expect(page.getByRole('heading', { name:/Scutage/ })).toBeVisible();
     await expect(page.locator('#gm-body')).toContainText(
@@ -511,6 +520,7 @@ test('levy relief trades one aid step for a county exemption',
       FB.ui.runEvents([item]);
     });
     await expect(page.locator('#eventmodal:not(.hidden)')).toBeVisible();
+    await page.waitForFunction(function () { return !FB.ui.eventInputGuarded(); });
     await page.locator('#ev-options .evopt').click();
     var after = await page.evaluate(function () {
       var s = FB.state;
@@ -547,6 +557,7 @@ test('revocation consent removes the unilateral aid demand from the agenda',
       FB.ui.runEvents([item]);
     });
     await expect(page.locator('#eventmodal:not(.hidden)')).toBeVisible();
+    await page.waitForFunction(function () { return !FB.ui.eventInputGuarded(); });
     await page.locator('#ev-options .evopt').click();
     var after = await page.evaluate(function () {
       var s = FB.state;
@@ -571,6 +582,8 @@ test('visible and autoresolved catalog policy outcomes match',
     await configurePolicies(page);
     var setup = await page.evaluate(function () {
       var s = FB.state;
+      FB.game.setPaused(true);
+      FB.game.uiPrefs.autoResumeAfterEvents = false;
       FB.parliamentBeginMotion(s, 'local_custom');
       var forecast = FB.politicalMotionForecast(s, 'local_custom');
       for (var i = 0; i < forecast.blocs.length; i++) {
@@ -598,6 +611,7 @@ test('visible and autoresolved catalog policy outcomes match',
     });
     await expect(page.locator('#eventmodal:not(.hidden)')).toBeVisible();
     await expect(page.locator('#ev-options .evopt')).toHaveCount(1);
+    await page.waitForFunction(function () { return !FB.ui.eventInputGuarded(); });
     await page.locator('#ev-options .evopt').click();
     var visible = await page.evaluate(function () {
       var s = FB.state;
@@ -610,6 +624,7 @@ test('visible and autoresolved catalog policy outcomes match',
       };
     });
 
+    await expect(page.locator('#eventmodal')).toBeHidden();
     var automated = await page.evaluate(function (payload) {
       FB.save.restore(JSON.parse(JSON.stringify(payload)));
       FB.game.auto = FB.game.auto || {};

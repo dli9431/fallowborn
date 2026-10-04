@@ -18,6 +18,7 @@ dependsOnRuntime(__filename, [
   'js/main.js',
   'js/messages.js',
   'js/model.js',
+  'js/lordships.js', 'js/politics.js', 'js/authority.js',
   'js/save.js',
   'js/ui_misc.js',
   'js/ui_modals.js',
@@ -232,6 +233,9 @@ test('first visible duty teaches its cadence and advances the cached schedule on
     await dutyInfo.click();
     await expect(teachingDetails).toHaveClass(/hidden/);
     await expect(page.locator('#ev-options .evopt').first()).toBeInViewport();
+    await expect.poll(function () {
+      return page.evaluate(function () { return FB.ui.eventInputGuarded(); });
+    }).toBe(false);
     await page.locator('#ev-options .evopt:not([disabled])').first().click();
     const after = await page.evaluate(function (dutyId) {
       const s = FB.state;
@@ -415,12 +419,21 @@ test('offer terms, narrow layout, and lawful freedom share semantic hooks and hi
       .toContainText('material change to the named tenure invalidates');
     await expect(page.locator('#ev-options')).toContainText(
       'now and accept ' + terms.serviceDays + ' days of final service');
+    await expect.poll(function () {
+      return page.evaluate(function () { return FB.ui.eventInputGuarded(); });
+    }).toBe(false);
     await page.locator('#ev-options .evopt').last().click();
+    await expect(page.locator('#eventmodal')).toBeHidden();
     const freed = await page.evaluate(function () {
       const s = FB.state;
       delete s.player.freedomOffer;
       s.player.gold = FB.freedomPurchasePrice(s);
       const result = FB.resolveSerfFreedom(s, { route:'purchase' }, {});
+      const outcomes = s.eventQueue.filter(function (item) {
+        return item.id === 'decision_outcome';
+      });
+      s.eventQueue = [];
+      FB.ui.runEvents(outcomes);
       return {
         resolved:!!result,
         tier:s.player.tier,
@@ -435,13 +448,19 @@ test('offer terms, narrow layout, and lawful freedom share semantic hooks and hi
       resolved:true, tier:1, tenure:'closed', taught:true,
       landmark:'purchase'
     });
-    await expect(page.locator('#toasts')).toContainText(
-      'scheduled serf duties and serf-only restrictions no longer apply');
+    await expect(page.locator('#ev-title')).toHaveText('Freedom gained');
+    await expect(page.locator('#ev-text')).toContainText('free of customary service');
+    await expect(page.locator('#outcome-details')).toContainText('Family landmarks');
+    await expect.poll(function () {
+      return page.evaluate(function () { return FB.ui.eventInputGuarded(); });
+    }).toBe(false);
+    await page.locator('#outcome-continue').click();
+    await expect(page.locator('#eventmodal')).toBeHidden();
     await page.evaluate(function () { FB.ui.showTab('family'); });
     await expect(page.locator('[data-family-freedom]')).toBeVisible();
   });
 
-test('lawful manumission keeps its normal receipt and shows first-freedom guidance through event suppression',
+test('lawful manumission keeps its normal receipt and explains first freedom in the outcome',
   async function ({ page }, testInfo) {
     await startSerfFixture(page, testInfo, false);
     await page.evaluate(function () {
@@ -469,9 +488,13 @@ test('lawful manumission keeps its normal receipt and shows first-freedom guidan
         }
       }]);
     });
+    await expect.poll(function () {
+      return page.evaluate(function () { return FB.ui.eventInputGuarded(); });
+    }).toBe(false);
     await page.locator('#ev-options .evopt:not([disabled])').first().click();
-    await expect(page.locator('#toasts')).toContainText(
-      'the first lawful freedom is recorded in Family landmarks');
+    await expect(page.locator('#ev-title')).toHaveText('Freedom gained');
+    await expect(page.locator('#ev-text')).toContainText('free of customary service');
+    await expect(page.locator('#outcome-details')).toContainText('Family landmarks');
     const result = await page.evaluate(function () {
       const s = FB.state;
       return {

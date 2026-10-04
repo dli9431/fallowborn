@@ -2,7 +2,7 @@
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
   'index.html', 'data/bookmarks.js', 'data/map_data.js', 'data/settlements.js', 'data/economy.js',
-  'data/technology.js', 'js/lordships.js', 'js/world.js', 'js/model.js',
+  'data/technology.js', 'js/lordships.js', 'js/world.js', 'js/model.js', 'js/station.js',
   'js/events.js', 'js/actions.js', 'js/main.js', 'js/save.js', 'js/population.js', 'js/technology.js', 'js/modifiers.js'
 ]);
 const { test, expect } = require('../support/fixture');
@@ -83,7 +83,10 @@ test('reads are detached and do not repair saves, generate courts, or consume RN
     await startDeterministicGame(page);
     const result = await page.evaluate(function () {
       const s = FB.state, pid = s.player.provinceId;
-      FB.assignSettlementLordship(s, pid, 1, s.player.charId);
+      FB.setPlayerTier(s, 3);
+      if (!FB.assignSettlementLordship(s, pid, 1, s.player.charId)) {
+        throw new Error('The purity fixture needs a real player settlement holding.');
+      }
       const before = JSON.stringify(s), rng = JSON.stringify(FB.getRngState());
       const holder = FB.settlementHolder(s, pid, 1);
       holder.id = 'changed';

@@ -24,13 +24,22 @@ for (const width of [390, 1280]) {
       }
       const trigger = page.locator('#finance-distribution');
       await trigger.scrollIntoViewIfNeeded();
-      const original = await page.locator('#gm-body').evaluate(function (body) { return body.scrollTop; });
+      // Pointer activation may scroll the control after its earlier layout
+      // settles. Compare returns with the actual position at departure.
+      await page.evaluate(function () {
+        document.addEventListener('click', function (event) {
+          if (event.target.closest('#finance-distribution')) {
+            window.financeDepartureScroll = document.getElementById('gm-body').scrollTop;
+          }
+        }, true);
+      });
       const gold = await page.evaluate(function () { return FB.state.player.gold; });
       // Desktop browser Back navigates the page; only mobile layouts own
       // browser-history entries for modal layers.
       const returnWays = width === 390 ? ['button', 'escape', 'history'] : ['button', 'escape'];
       for (const way of returnWays) {
         await trigger.click();
+        const original = await page.evaluate(function () { return window.financeDepartureScroll; });
         await expect(page.locator('[data-public-distribution]')).toHaveCount(3);
         await expect(page.locator('#gm-body')).toContainText('Larger gifts provide the same benefit');
         if (way === 'button') await page.locator('#distribution-back').click();
@@ -45,6 +54,7 @@ for (const width of [390, 1280]) {
       }
       expect(await page.evaluate(function () { return FB.state.player.gold; })).toBe(gold);
       await trigger.click();
+      const paidDeparture = await page.evaluate(function () { return window.financeDepartureScroll; });
       const amount = Number(await page.locator('[data-public-distribution]').first().getAttribute('data-public-distribution'));
       await page.locator('[data-public-distribution]').first().click();
       await expect(trigger).toBeDisabled();
@@ -52,6 +62,9 @@ for (const width of [390, 1280]) {
       if (width === 390) await expect(page.locator('#finance-government-details')).toBeVisible();
       expect(await page.evaluate(function () { return FB.state.player.gold; })).toBeCloseTo(gold - amount, 8);
       await expect(page.locator('#finance-government')).toBeFocused();
+      await expect.poll(function () {
+        return page.locator('#gm-body').evaluate(function (body) { return body.scrollTop; });
+      }).toBeCloseTo(paidDeparture, 0);
     });
 }
 

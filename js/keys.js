@@ -191,6 +191,10 @@ window.FB = window.FB || {};
         (t.type === 'checkbox' || t.type === 'radio');
       if (!checkable) return;
     }
+    // Read-only disclosures keep native activation while a newly rendered
+    // choice or outcome is guarded against accidental decisions.
+    if ((eventOpen() || guardedOutcomeOpen()) && (k === 'Enter' || k === ' ') &&
+        t && t.closest('.event-details-button, .settcard-info, .event-duty-help-anchor')) return;
     if ((eventOpen() || guardedOutcomeOpen()) && (slot >= 0 || k === 'Enter' || k === ' ')) {
       if (e.repeat || heldEventKeys[keyId] !== (FB.ui.eventInputEpoch || 0) || (FB.ui.eventInputGuarded && FB.ui.eventInputGuarded())) {
         e.preventDefault(); return;

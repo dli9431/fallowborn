@@ -75,13 +75,22 @@ test('Self tab titles section renders high dignities and multi-county rosters wi
       const countiesLabel = countiesBlock ? countiesBlock.querySelector('.self-titles-counties-label') : null;
       const countiesList = countiesBlock ? countiesBlock.querySelector('.self-titles-counties-list') : null;
 
-      const firstDignitySpan = dignityRows.length ? dignityRows[0].querySelector('span') : null;
       const firstDignityB = dignityRows.length ? dignityRows[0].querySelector('b') : null;
 
       const panel = document.getElementById('tab-char');
       return {
         dignityRowCount: dignityRows.length,
-        firstDignitySpanFlexShrink: firstDignitySpan ? getComputedStyle(firstDignitySpan).flexShrink : null,
+        dignityFieldsReadable:Array.from(dignityRows).every(function (row) {
+          const bounds = row.getBoundingClientRect();
+          const label = row.querySelector('span').getBoundingClientRect();
+          const value = row.querySelector('b').getBoundingClientRect();
+          // Whole fields may stack in the narrow sidebar; either arrangement
+          // must retain readable widths and stay inside the row.
+          const separate = label.bottom <= value.top + 1 || value.left >= label.right - 1;
+          return label.width >= 60 && value.width >= 60 && separate &&
+            label.left >= bounds.left - 1 && value.left >= bounds.left - 1 &&
+            label.right <= bounds.right + 1 && value.right <= bounds.right + 1;
+        }),
         firstDignityBTextAlign: firstDignityB ? getComputedStyle(firstDignityB).textAlign : null,
         countiesBlockPresent: !!countiesBlock,
         countiesLabelText: countiesLabel ? countiesLabel.textContent.trim() : null,
@@ -94,7 +103,7 @@ test('Self tab titles section renders high dignities and multi-county rosters wi
 
     expect(layout.dignityRowCount).toBe(titlesData.highCount);
     if (layout.dignityRowCount > 0) {
-      expect(layout.firstDignitySpanFlexShrink).toBe('0');
+      expect(layout.dignityFieldsReadable).toBe(true);
       expect(layout.firstDignityBTextAlign).toBe('right');
     }
     expect(layout.countiesBlockPresent).toBe(true);

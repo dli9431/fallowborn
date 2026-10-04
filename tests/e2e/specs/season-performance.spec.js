@@ -3,7 +3,7 @@ const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
   'js/economy.js', 'js/politics.js', 'js/institutions.js', 'js/events.js',
   'js/travel.js', 'js/market.js', 'js/ui_modals.js', 'js/wars.js',
-  'js/modifiers.js', 'js/model.js', 'js/armies.js', 'js/world.js', 'js/main.js',
+  'js/modifiers.js', 'js/model.js', 'js/armies.js', 'js/world.js', 'js/main.js', 'js/actions.js',
   'data/economy.js', 'data/markets.js', 'data/political_institutions.js'
 ]);
 const { test, expect } = require('../support/fixture');
@@ -309,7 +309,11 @@ test('local autoresolve skips global reconciliation while custom effects and sea
     FB.eventById = function (id) { return id === local.id ? local : id === custom.id ? custom : saved.eventById(id); };
     FB.syncMaterializedRealmRulers = function (state) { syncs++; return saved.syncMaterializedRealmRulers(state); };
     FB.checkTierPromotions = function (state) { promotions++; return saved.checkTierPromotions(state); };
-    FB.fns.perf_ruler_change = function () { ruler.opinion = 17; };
+    let expectedStanding;
+    FB.fns.perf_ruler_change = function () {
+      ruler.opinion = 17;
+      expectedStanding = FB.standingOf(s, { kind:'realm', id:rid });
+    };
     let quiet, changed, boundary, defaultCaller, gold;
     try {
       FB.game.afterEvents({ syncRulers:true }); // establish ordinary daily baseline
@@ -319,7 +323,9 @@ test('local autoresolve skips global reconciliation while custom effects and sea
       quiet = { syncs:syncs, promotions:promotions, gold:p.gold - gold,
         modal:!document.getElementById('eventmodal').classList.contains('hidden') };
       FB.ui.runEvents([{ id:local.id, ctx:{} }, { id:custom.id, ctx:{} }], { syncRulers:false });
-      changed = { syncs:syncs, standing:s.realms[rid].favor };
+      changed = { syncs:syncs, standing:FB.standingOf(s, { kind:'realm', id:rid }),
+        opinion:ruler.opinion, stored:rid === p.liege ? p.liegeOp : p.liegeOps[rid],
+        expectedStanding:expectedStanding };
       FB.ui.runEvents([{ id:local.id, ctx:{} }], { syncRulers:true });
       boundary = syncs;
       FB.ui.runEvents([{ id:local.id, ctx:{} }]);
@@ -331,7 +337,10 @@ test('local autoresolve skips global reconciliation while custom effects and sea
     return { quiet:quiet, changed:changed, boundary:boundary, defaultCaller:defaultCaller };
   });
   expect(result.quiet).toEqual({ syncs:0, promotions:0, gold:4, modal:false });
-  expect(result.changed).toEqual({ syncs:1, standing:17 });
+  expect(result.changed.syncs).toBe(1);
+  expect(result.changed.opinion).toBe(17);
+  expect(result.changed.stored).toBe(17);
+  expect(result.changed.standing).toBe(result.changed.expectedStanding);
   expect(result.boundary).toBe(2);
   expect(result.defaultCaller).toBe(3);
 });
