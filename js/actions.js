@@ -3929,9 +3929,8 @@ window.FB = window.FB || {};
         slots:FB.techSlotCount(s, rid)
       });
     },
-    /* Only landed ranks can use the sheet: sovereigns direct national
-       research, vassals advocate projects at court (FB.canAdvocateTech).
-       Commoners see named household gates, not the national catalogue. */
+    /* Freeholders and gentry read the catalogue; sovereigns direct national
+       research and landed vassals advocate projects at court. */
     show: function (s) { return FB.techUiRelevant(s); },
     run: function (s) { if (FB.ui && FB.ui.showTech) FB.ui.showTech(); } },
   { id: 'hold_feast',

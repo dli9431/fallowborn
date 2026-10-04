@@ -10,8 +10,11 @@ window.FB = window.FB || {};
   G.bootReady = false;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-FB.VERSION = '1.188.4';
+FB.VERSION = '1.188.5';
 FB.CHANGELOG = [
+  { v: '1.188.5', date: '2026-10-04', changes: [
+    'Freeholders and Gentry can now read Technology from Deeds. Adopted foundlings inherit their adopter’s status, and saved foundlings with missing status are repaired on load.'
+  ] },
   { v: '1.188.4', date: '2026-10-03', changes: [
     'Friend events now respect the friend’s station and keep pending choices tied to the original person.',
     'Fort upgrade actions stay visible, target the selected settlement, and preserve the settlement view when returning.'

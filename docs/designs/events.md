@@ -1,5 +1,10 @@
 # Events are data
 
+`adoptChild` gives the foundling the protagonist's recorded station and bondage
+status alongside their dynasty, culture, and faith. Its family link remains only
+in the adopter's `childrenIds`; it never invents biological parents. See
+[characters](characters.md) and [state and saves](state-and-saves.md).
+
 Friend stories check the friend's own station independently of the player's tier.
 A Friend in Need, Standing Surety, and the enlisted-companion death story require
 a living Lowborn or Freeholder friend and exclude every reigning ruler, including

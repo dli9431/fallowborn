@@ -1416,12 +1416,10 @@ window.FB = window.FB || {};
     return FB.standingOf(state, { kind:'realm', id:p.liege }) >= 40;
   };
 
-  /* The national catalogue is an authority surface, not a general-purpose
-     encyclopedia. Landed rulers either choose sovereign research or may
-     advocate at court; common households only need the concrete prerequisite
-     named where national knowledge gates one of their own choices. */
+  /* Freeholders and gentry may read their nation's knowledge and requirements.
+     Research control and court advocacy retain their separate authority gates. */
   FB.techUiRelevant = function (state) {
-    return !!(state && state.player && state.player.tier >= 3);
+    return !!(state && state.player && state.player.tier >= 1);
   };
 
   FB.advocateTech = function (state, id) {

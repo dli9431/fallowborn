@@ -22987,7 +22987,8 @@ window.FB = window.FB || {};
     const record = FB.realmTechRecord(s, rid);
     const traditions = FB.techTraditionsForRealm(s, rid).map(techTraditionName);
     const projects = FB.techCandidates(s, rid);
-    const canControlResearch = rid === 'player' && FB.isPlayerSovereign(s);
+    const canControlResearch = s.player.tier >= 3 &&
+      rid === 'player' && FB.isPlayerSovereign(s);
     const researchAuto = FB.game.auto || {};
     let h = '<div class="tech-summary">' +
       kv('Sovereign nation', esc(realm ? realm.name : rid)) +
@@ -23117,7 +23118,8 @@ window.FB = window.FB || {};
 
   UI.showTechAutomation = function () {
     const s = FB.state;
-    if (!s || !FB.techUiRelevant(s) || !FB.isPlayerSovereign(s)) return false;
+    if (!s || !FB.techUiRelevant(s) || s.player.tier < 3 ||
+        !FB.isPlayerSovereign(s)) return false;
     const auto = FB.game.auto;
     const current = auto.research ? techAutomationMode(auto.researchMode) : 'off';
     function choice(mode, label, desc) {
@@ -23168,7 +23170,8 @@ window.FB = window.FB || {};
     const record = FB.realmTechRecord(s, rid);
     const item = FB.techCandidate(s, id, rid);
     if (!item) return backAction();
-    const canChoose = rid === 'player' && FB.isPlayerSovereign(s);
+    const canChoose = s.player.tier >= 3 &&
+      rid === 'player' && FB.isPlayerSovereign(s);
     const cost = item.breakdown || FB.techCostBreakdown(s, id, rid);
     const tradition = techTraditionName(cost.tradition);
     const exposureDiscount = Math.round((1 - cost.exposureMultiplier) * 100);
@@ -23301,7 +23304,8 @@ window.FB = window.FB || {};
 
   UI.showTechSwitch = function (id, returnContext) {
     const s = FB.state, def = FBDATA.tech[id];
-    if (!def || !FB.techUiRelevant(s) || !FB.isPlayerSovereign(s)) return false;
+    if (!def || !FB.techUiRelevant(s) || s.player.tier < 3 ||
+        !FB.isPlayerSovereign(s)) return false;
     const rid = FB.techRealmId(s);
     const record = FB.realmTechRecord(s, rid);
     const item = FB.techCandidate(s, id, rid);

@@ -93,7 +93,7 @@ window.FB = window.FB || {};
     const activeHost = !!(s && FB.playerHost && FB.playerHost(s));
     const greatHost = !!(s && FB.playerGreatHolyWarHostActive &&
       FB.playerGreatHolyWarHostActive(s));
-    const technology = !!(s && (FB.techUiRelevant
+    const technology = !!(landed && (FB.techUiRelevant
       ? FB.techUiRelevant(s) : landed));
     return {
       hosts:!!(player && (landed || player.war || activeHost || greatHost)),

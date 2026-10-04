@@ -1741,7 +1741,9 @@ event values. Invalid route shapes and generic-rank conflicts reject a runtime m
 any of its data is applied.) ·
 `marry` (`true` settles the current suitor's saved formal courtship transfer;
 `"informal"` uses the same wedding and family-link mechanics without a dowry),
-`clearSuitor`, `focusSet: "<focus id>"` · `adoptChild`, `killChild`,
+`clearSuitor`, `focusSet: "<focus id>"` · `adoptChild` (creates a child in the
+protagonist's dynasty, culture, faith, station, and bondage status, linked through
+`childrenIds` with no invented biological parents), `killChild`,
 `killRole` (optionally accompanied by `kinslayer:true`; this grants Kinslayer only when
 the killed role is the protagonist's spouse or blood relative), `educateChild` · `moveRandom` ·
 `convertToProvince` (changes the protagonist and an existing player realm to the current

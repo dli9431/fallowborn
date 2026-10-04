@@ -1490,6 +1490,33 @@ window.FB = window.FB || {};
     return true;
   }
 
+  /* Old adoptChild effects linked the foundling to one adopter but omitted
+     station. Repair only that missing value; recorded ranks, bondage, and
+     biological parentage remain authoritative. Ambiguous adopters are skipped. */
+  function repairAdoptedChildStations(state) {
+    const chars = state.chars || {}, adopters = {};
+    for (const id in chars) {
+      const parent = chars[id];
+      if (!parent) continue;
+      for (const childId of (parent.childrenIds || [])) {
+        const child = chars[childId];
+        if (!child || child.dead || child.fatherId || child.motherId ||
+            (child.station !== null && child.station !== undefined) ||
+            child.unfree === true || childId === id) continue;
+        if (!Object.prototype.hasOwnProperty.call(adopters, childId)) {
+          adopters[childId] = id;
+        } else if (adopters[childId] !== id) adopters[childId] = null;
+      }
+    }
+    for (const childId in adopters) {
+      const parent = chars[adopters[childId]];
+      if (!parent || parent.station === null || parent.station === undefined) continue;
+      const child = chars[childId];
+      child.station = FB.stationOf(parent);
+      if (FB.isUnfreeCharacter(state, parent)) child.unfree = true;
+    }
+  }
+
   function restoreRepair(stage, callback) {
     try {
       callback();
@@ -1577,6 +1604,9 @@ window.FB = window.FB || {};
       }
       if (current && player.tier === 0) current.unfree = true;
       else if (current) delete current.unfree;
+    });
+    restoreRepair('adopted child station', function () {
+      repairAdoptedChildStations(FB.state);
     });
     if (FB.ensureCharacterBynames) restoreRepair('character bynames', function () {
       FB.ensureCharacterBynames(FB.state);

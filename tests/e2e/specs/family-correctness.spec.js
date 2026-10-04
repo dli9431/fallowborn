@@ -181,6 +181,128 @@ test('a widow succeeding after her son retains her children in Kin and successio
       'No living children');
   });
 
+for (const sex of ['m', 'f']) {
+  for (const tier of [0, 1]) {
+    test('basket adoption inherits ' + (tier ? 'freeholder' : 'serf') +
+      ' status from a ' + (sex === 'f' ? 'female' : 'male') + ' protagonist',
+      async function ({ page }) {
+        await startDeterministicGame(page);
+        const result = await page.evaluate(function (setup) {
+          const s = FB.state;
+          const me = s.chars[s.player.charId];
+          s.player.tier = setup.tier;
+          me.sex = setup.sex;
+          me.station = setup.tier;
+          if (setup.tier === 0) me.unfree = true;
+          else delete me.unfree;
+          const spouse = FB.makeCharacter(s, {
+            sex:me.sex === 'f' ? 'm' : 'f', culture:me.culture,
+            religion:me.religion, born:me.born, station:setup.tier,
+            role:'spouse', traitsN:0
+          });
+          me.spouseId = spouse.id;
+          spouse.spouseId = me.id;
+          s.roles.spouse = spouse.id;
+          const event = FBDATA.events.find(function (entry) {
+            return entry.id === 'foundling';
+          });
+          FB.applyEffects(s, event.options[0].effects, {}, event);
+          const child = s.chars[me.childrenIds[me.childrenIds.length - 1]];
+          const before = {
+            station:FB.stationOf(child), unfree:FB.isUnfreeCharacter(s, child),
+            parents:[child.fatherId, child.motherId],
+            sameHouse:child.dyn === me.dyn,
+            sameCulture:child.culture === me.culture,
+            sameFaith:child.religion === me.religion
+          };
+          const payload = JSON.parse(FB.save.serialize());
+          const rng = JSON.stringify(payload.rng);
+          FB.save.restore(payload);
+          const restored = FB.state;
+          const adopted = restored.chars[child.id];
+          return {
+            before:before, station:FB.stationOf(adopted),
+            unfree:FB.isUnfreeCharacter(restored, adopted),
+            parents:[adopted.fatherId, adopted.motherId],
+            rngStable:JSON.stringify(FB.getRngState()) === rng
+          };
+        }, { sex:sex, tier:tier });
+        expect(result.before).toEqual({
+          station:tier, unfree:tier === 0, parents:[null, null],
+          sameHouse:true, sameCulture:true, sameFaith:true
+        });
+        expect(result).toMatchObject({
+          station:tier, unfree:tier === 0, parents:[null, null], rngStable:true
+        });
+      });
+  }
+}
+
+test('restore repairs only unambiguous unstamped foundlings and preserves freeholder succession',
+  async function ({ page }) {
+    await startDeterministicGame(page);
+    const result = await page.evaluate(function () {
+      const s = FB.state;
+      const me = s.chars[s.player.charId];
+      const adoptedIds = [];
+      for (let i = 0; i < 6; i++) {
+        FB.applyEffects(s, { adoptChild:true }, {}, { id:'e2e_adoption' });
+        adoptedIds.push(me.childrenIds[me.childrenIds.length - 1]);
+      }
+      const payload = JSON.parse(FB.save.serialize());
+      const records = payload.state.chars;
+      delete records[adoptedIds[0]].station;
+      records[adoptedIds[1]].station = 0; // explicit free Lowborn remains so
+      records[adoptedIds[2]].station = 0;
+      records[adoptedIds[2]].unfree = true; // recorded bondage remains so
+      delete records[adoptedIds[3]].station;
+      records[adoptedIds[3]].motherId = me.id; // not evidence of adoption
+      delete records[adoptedIds[4]].station;
+      records[me.fatherId].childrenIds = records[me.fatherId].childrenIds || [];
+      records[me.fatherId].childrenIds.push(adoptedIds[4]); // ambiguous adopters
+      delete records[adoptedIds[5]].station;
+      records[adoptedIds[5]].unfree = true; // even unstamped bondage is authoritative
+      const rng = JSON.stringify(payload.rng);
+      const uid = payload.uid;
+      FB.save.restore(payload);
+      function statuses() {
+        return adoptedIds.map(function (id) {
+          const child = FB.state.chars[id];
+          return {
+            station:child.station, unfree:FB.isUnfreeCharacter(FB.state, child),
+            parents:[child.fatherId, child.motherId]
+          };
+        });
+      }
+      const first = statuses();
+      const again = JSON.parse(FB.save.serialize());
+      FB.save.restore(again);
+      const second = statuses();
+      const stable = JSON.stringify(FB.getRngState()) === rng && again.uid === uid;
+      FB.game.die('Synthetic succession test');
+      FB.ui.closeModal();
+      const succeeded = FB.game.succeedTo(adoptedIds[0]);
+      return {
+        first:first, second:second, stable:stable,
+        succeeded:succeeded, tier:FB.state.player.tier,
+        head:FB.state.player.charId, adoptedId:adoptedIds[0], parentId:me.id
+      };
+    });
+    expect(result.first).toEqual([
+      { station:1, unfree:false, parents:[null, null] },
+      { station:0, unfree:false, parents:[null, null] },
+      { station:0, unfree:true, parents:[null, null] },
+      { station:null, unfree:false, parents:[null, result.parentId] },
+      { station:null, unfree:false, parents:[null, null] },
+      { station:null, unfree:true, parents:[null, null] }
+    ]);
+    expect(result.second).toEqual(result.first);
+    expect(result.stable).toBe(true);
+    expect(result.succeeded).toBe(true);
+    expect(result.tier).toBe(1);
+    expect(result.head).toBe(result.adoptedId);
+  });
+
 test('an adopted successor stays parentless and does not absorb founder siblings on restore',
   async function ({ page }) {
     await startDeterministicGame(page);

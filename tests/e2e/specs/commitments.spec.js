@@ -8,6 +8,8 @@ dependsOnRuntime(__filename, [
   'js/events.js',
   'js/main.js',
   'js/model.js',
+  'js/technology.js',
+  'data/technology.js',
   'js/world.js',
   'js/keys.js',
   'js/ui_misc.js',
@@ -44,8 +46,11 @@ test('ongoing commitments adapt by layout and route to existing controls',
     await expect(summary.locator(
       '[data-commitment="personal-attention"]')).toContainText(
       'Personal attention');
-    // a commoner has no say over national research, so the row stays out
-    await expect(summary.locator('[data-commitment="research"]')).toHaveCount(0);
+    // a freeholder can review the sovereign's national research
+    await expect(summary.locator('[data-commitment="research"]')).toContainText(
+      'National research');
+    await expect(summary.locator('[data-commitment="research"]')).toContainText(
+      'Review');
 
     await page.setViewportSize({ width:360, height:740 });
     await expect(focusCommitment).toBeVisible();
@@ -119,9 +124,82 @@ test('ongoing commitments adapt by layout and route to existing controls',
     await page.getByRole('button', { name:'Close', exact:true }).click();
   });
 
-test('common households do not see ruler-only technology or automation controls',
+for (const tier of [1, 2]) {
+  test((tier === 1 ? 'freeholders' : 'gentry') +
+    ' can read Technology through Deeds without research authority or a day cost',
+    async function ({ page }) {
+      await page.evaluate(function (wantedTier) {
+        const s = FB.state;
+        s.player.tier = wantedTier;
+        s.player.roleOrientationsSeen = s.player.roleOrientationsSeen || {};
+        s.player.roleOrientationsSeen['role-tier-' + wantedTier] = 1;
+        FB.ui.refresh();
+      }, tier);
+      await waitForUiRefresh(page);
+      await page.locator('#sidetabs [data-tab="actions"]').click();
+      await page.locator('[data-action-group="realm"]').click();
+      const deed = page.locator('[data-action-id="adopt_tech"]');
+      await expect(deed).toBeVisible();
+      const before = await page.evaluate(function () {
+        const s = FB.state;
+        const rid = FB.techRealmId(s);
+        return {
+          turn:s.turn, gold:s.player.gold, prestige:s.player.prestige,
+          piety:s.player.piety, rng:JSON.stringify(FB.getRngState()),
+          rid:rid, research:JSON.stringify(FB.realmTechRecord(s, rid))
+        };
+      });
+      await deed.click();
+      await expect(page.getByRole('heading', { name:'Technology', exact:true }))
+        .toBeVisible();
+      await expect(page.locator('.tech-summary')).toContainText(
+        await page.evaluate(function () {
+          return FB.state.realms[FB.techRealmId(FB.state)].name;
+        }));
+      await expect(page.locator('#tech-auto')).toHaveCount(0);
+      await page.locator('#tech-search').fill('a');
+      const entry = page.locator('.tech-entry:not(.hidden)').nth(12);
+      await entry.scrollIntoViewIfNeeded();
+      const catalogueScroll = await page.locator('#gm-body').evaluate(
+        function (body) { return body.scrollTop; });
+      expect(catalogueScroll).toBeGreaterThan(0);
+      await entry.click();
+      await expect(page.locator('#tech-back')).toBeVisible();
+      await expect(page.locator(
+        '#tech-start, #tech-switch, #tech-pause, #tech-advocate, #tech-auto-protection'))
+        .toHaveCount(0);
+      expect(await page.evaluate(function () {
+        return FB.ui.showTechAutomation();
+      })).toBe(false);
+      await page.locator('#tech-back').click();
+      await expect(page.locator('#tech-search')).toHaveValue('a');
+      await expect.poll(function () {
+        return page.locator('#gm-body').evaluate(function (body) {
+          return body.scrollTop;
+        });
+      }).toBe(catalogueScroll);
+      await page.getByRole('button', { name:'Close', exact:true }).click();
+      expect(await page.evaluate(function () {
+        const s = FB.state;
+        const rid = FB.techRealmId(s);
+        return {
+          turn:s.turn, gold:s.player.gold, prestige:s.player.prestige,
+          piety:s.player.piety, rng:JSON.stringify(FB.getRngState()),
+          rid:rid, research:JSON.stringify(FB.realmTechRecord(s, rid))
+        };
+      })).toEqual(before);
+      await expect(deed).toBeVisible();
+      await page.locator('#btn-auto').click();
+      await expect(page.locator('#ar-research, #ar-research-mode')).toHaveCount(0);
+      await expect(page.locator('#gm-body')).not.toContainText(
+        'Only a sovereign player chooses national technology');
+    });
+}
+
+test('serfs do not see technology and common households retain restricted automation',
   async function ({ page }) {
     const access = await page.evaluate(function () {
+      FB.state.player.tier = 0;
       FB.state.player.panelIntrosSeen =
         FB.state.player.panelIntrosSeen || {};
       FB.state.player.panelIntrosSeen.prov = 1;

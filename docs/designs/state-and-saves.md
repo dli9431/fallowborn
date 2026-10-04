@@ -64,6 +64,13 @@ for retention and recording scope.
 
 ## Freeholder establishment
 
+Legacy foundlings with missing station are repaired from the recorded station of
+their sole adopter, identified by a `childrenIds` link and absent biological
+parents. Only living children without an explicit station or bondage marker are
+eligible; biological children, ambiguous adopter links, and recorded statuses
+remain unchanged. Repair does not invent parents, consume RNG, allocate ids,
+or bump save format 3. Repeated restores retain the repaired value.
+
 `player.freeholderGeneration` records the line depth at first freedom, using
 the same genealogical comparison as `gentryGeneration`. A later-generation heir
 may claim ordinary Gentry recognition; sibling succession cannot bypass it.

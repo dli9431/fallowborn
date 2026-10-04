@@ -11500,7 +11500,8 @@ window.FB = window.FB || {};
     if (fx.adoptChild) {
       const baby = FB.makeCharacter(state, {
         culture: me.culture, religion: me.religion, born: state.date.year,
-        traitsN: 0, fatherId: null, motherId: null, dyn: me.dyn
+        traitsN: 0, fatherId: null, motherId: null, dyn: me.dyn,
+        station:FB.stationOf(me), unfree:FB.isUnfreeCharacter(state, me)
       });
       me.childrenIds.push(baby.id);
       FB.touchFamily();

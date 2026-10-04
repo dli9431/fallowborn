@@ -92,6 +92,10 @@ continues to live on ordinary character records, with no additional save field.
 Children always keep their ordinary recorded father and mother. An adopted
 child instead remains linked through the adopter's `childrenIds` without
 inventing biological parents, including after succession and save restore.
+Taking in a foundling records the adopter's personal station and bondage status,
+as well as their dynasty, culture, and faith. A Freeholder's adopted child is
+therefore a Freeholder. This corrects adoption's existing family-status behavior
+and adds no capability or technology dependency.
 `FB.childrenOf` reconciles both directions without mutating saved records; the
 Kin child list and succession review consume that same projection, so a
 surviving `fatherId` or `motherId` cannot leave a later parent-protagonist with
