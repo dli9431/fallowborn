@@ -50,6 +50,10 @@ their existing encounter rules. This is a discovery filter, not a new conversion
 settlement projects, saved followers, and explicit personal return to a generated parent
 remain valid even below that threshold. Faith pickers retain their existing discovery rules.
 
+Picker return navigation
+
+Conversion pickers retain their parent view through shared modal history. Scope changes replace the picker view without adding navigation steps. A conversion review retains the same picker DOM, so Back, Escape and browser Back restore search, scope, scroll and focus without spending resources or advancing time. Explicit parent-identity returns keep their faith or culture details return context. Close exits the complete flow.
+
 ## County and settlement community projects
 
 County conversion is a territorial demographic process, separate from every character
@@ -333,5 +337,7 @@ Maternal-custom discovery shares kin, household, realm-county, and liege-chain r
 within one synchronous pass. Learning records the source from that same lookup rather
 than repeating discovery. Each later pass reads live state again, including changes
 made on the same day; no discovery cache enters saves or outlives the calculation.
+
+Strict local-contact previews read the current travel position directly. They do not normalize travel records or add travel history and settlement fields to older saves. Discovery consumes no RNG and records knowledge only through the learning transaction.
 
 Papal apostasy sanctions require the excommunication system for the former faith. A final bookmark disable prevents conversion from reviving a disabled institution. Conversion costs and ordinary community reactions continue to use their existing rules. See docs/designs/systems.md.

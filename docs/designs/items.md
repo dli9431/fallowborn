@@ -251,6 +251,9 @@ story grants, existing possessions, and already materialized shop/peddler/auctio
 are grandfathered. Relocation never prevents wearing, inheriting, gifting, or selling gear.
 Baseline Padded Jack, Nasal Helm, Ash Spear, Broad Sword, and Round Shield remain ungated.
 
+Lamellar Cuirass has one catalogue definition. Its regional production gates, lamellar artwork, and 0.5% quality steps apply to both fresh copies and existing references; an older ungated definition must not overwrite it under the same id.
+
+
 Each row has its own `equipment_<id>` hard technology-impact review:
 
 | Item | Technology | Earliest year | Production area |

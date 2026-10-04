@@ -223,13 +223,11 @@ test('sovereigns can switch full research slots and pause without losing progres
       return { fromId:fromId, toId:toId };
     });
 
-    await expect(page.getByRole('button', {
-      name:'Switch research', exact:true
-    })).toBeVisible();
-    await expect(page.getByRole('button', {
-      name:'Begin research', exact:true
-    })).toHaveCount(0);
-    await page.getByRole('button', { name:'Switch research', exact:true }).click();
+    await expect(page.locator('#tech-switch')).toHaveText(
+      'Switch researchChoose which active project to replace');
+    await expect(page.locator('#tech-switch')).toBeVisible();
+    await expect(page.locator('#tech-start')).toHaveCount(0);
+    await page.locator('#tech-switch').click();
     await expect(page.locator('#gm-body')).toContainText(
       'Its research progress will be kept.');
     await page.locator('[data-tech-switch-from="' + setup.fromId + '"]').click();

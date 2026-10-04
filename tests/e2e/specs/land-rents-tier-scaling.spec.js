@@ -1,12 +1,9 @@
 'use strict';
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
-  'js/economy.js',
-  'js/population.js',
-  'js/settlement.js',
-  'js/world.js',
-  'data/map_data.js',
-  'data/technology.js'
+  'js/actions.js', 'js/economy.js', 'js/population.js', 'js/settlement.js',
+  'js/lordships.js', 'js/treasury.js', 'js/world.js', 'js/technology.js',
+  'js/modifiers.js', 'data/map_data.js', 'data/technology.js'
 ]);
 
 const { test, expect } = require('../support/fixture');
@@ -19,196 +16,144 @@ test.beforeEach(async function ({ page }, testInfo) {
 });
 
 test.describe('Dynamic Land Rents, Feudal Tier Progression & AI Building Construction', function () {
-  test('Baron seat baseline vs Count starting county land rents progression', async function ({ page }) {
-    const rentComparison = await page.evaluate(function () {
-      // 1. Baron (Tier 3) state with no held counties
-      const stateBaron = {
-        turn: 1,
-        date: { year: 867 },
-        player: {
-          charId: 'p1',
-          tier: 3,
-          provinceId: 'york',
-          provs: [],
-          liege: 'northumbria'
-        },
-        chars: { p1: { id: 'p1', traits: [] } },
-        dev: { york: 4 },
-        realms: {
-          northumbria: { id: 'northumbria', alive: true, rank: 2 },
-          player: { id: 'player', alive: true, liege: 'northumbria' }
-        },
-        buildings: { york: [] }
-      };
+  test('a hereditary barony earns settlement rents while a Count holds the county directly', async function ({ page }) {
+    const result = await page.evaluate(function () {
+      const s = FB.state, p = s.player, pid = 'york';
+      p.tier = 3;
+      p.provs = [];
+      p.provinceId = pid;
+      p.liege = FB.settlementCountyHolder(s, pid);
+      s.dev[pid] = 4;
+      const granted = FB.assignSettlementLordship(s, pid, 1, p.charId);
+      if (!granted) throw new Error('Fixture barony grant failed');
+      const baron = FB.playerTaxParts(s);
+      const baronSites = FB.directSettlements(s);
+      const baronFiscal = FB.settlementFiscalProjection(s, pid, 1).amounts;
 
-      const baronTax = FB.playerTaxParts(stateBaron);
-
-      // 2. Count (Tier 4) state holding York directly
-      const stateCount = {
-        turn: 1,
-        date: { year: 867 },
-        player: {
-          charId: 'p1',
-          tier: 4,
-          provinceId: 'york',
-          provs: ['york'],
-          liege: 'northumbria'
-        },
-        chars: { p1: { id: 'p1', traits: [] } },
-        dev: { york: 4 },
-        realms: {
-          northumbria: { id: 'northumbria', alive: true, rank: 2 },
-          player: { id: 'player', alive: true, liege: 'northumbria' }
-        },
-        buildings: { york: [] }
-      };
-
-      const countTax = FB.playerTaxParts(stateCount);
-      const yorkSettlementTax = FB.countySettlementTax(stateCount, 'york');
-
-      return {
-        baronRentBase: baronTax.rentBase,
-        countRentBase: countTax.rentBase,
-        yorkSettlementTax: yorkSettlementTax,
-        isCountHigher: countTax.rentBase > baronTax.rentBase
-      };
+      FB.revertSettlementLordship(s, pid, 1);
+      p.tier = 4;
+      p.provs = [pid];
+      p.liege = null;
+      FB.foundPlayerRealm(s);
+      const count = FB.playerTaxParts(s);
+      return { baron:baron, count:count, baronSites:baronSites,
+        baronFiscal:baronFiscal, countSites:FB.directSettlements(s).length };
     });
 
-    expect(rentComparison.baronRentBase).toBe(6);
-    expect(rentComparison.isCountHigher).toBe(true);
-    expect(rentComparison.countRentBase).toBeGreaterThanOrEqual(9.0);
+    expect(result.baronSites).toEqual([{ provinceId:'york', settlement:1 }]);
+    expect(result.baron.rentBase).toBeGreaterThan(0);
+    expect(result.baron.rentBase).toBeCloseTo(result.baronFiscal.tax, 8);
+    expect(result.baron.settlementDues).toBeCloseTo(result.baronFiscal.dues, 8);
+    expect(result.countSites).toBeGreaterThan(result.baronSites.length);
+    expect(result.count.rentBase).toBeGreaterThan(result.baron.rentBase);
+    expect(result.count.settlementDues).toBe(0);
   });
 
-  test('Settlement building construction unlocks development and raises land rents', async function ({ page }) {
-    const progression = await page.evaluate(function () {
-      const state = {
-        turn: 1,
-        date: { year: 867 },
-        log: [],
-        player: {
-          charId: 'p1',
-          tier: 4,
-          provinceId: 'york',
-          provs: ['york'],
-          gold: 200,
-          flags: {}
-        },
-        chars: { p1: { id: 'p1', traits: [] } },
-        dev: { york: 4 },
-        realms: {
-          player: { id: 'player', alive: true, liege: null }
-        },
-        buildings: { york: [] },
-        realmTechMigration: 2,
-        realmTech: {
-          player: { completed: ['undershot_watermill', 'water_power'], active: [], exposed: [], progress: {} }
-        }
-      };
-
-      const taxBefore = FB.playerTaxParts(state).rentBase;
-
-      // Raise a Watermill in settlement 0 (+1 dev, +2 tax)
-      const built = FB.build(state, 'york', 0, 'mill');
-      const devAfter = state.dev.york;
-      const taxAfter = FB.playerTaxParts(state).rentBase;
-
-      return {
-        built: built,
-        devBefore: 4,
-        devAfter: devAfter,
-        taxBefore: taxBefore,
-        taxAfter: taxAfter
-      };
+  test('settlement construction raises development, land rents, and local tolls', async function ({ page }) {
+    const result = await page.evaluate(function () {
+      const s = FB.state, p = s.player, pid = 'york';
+      p.tier = 4;
+      p.provinceId = pid;
+      p.provs = [pid];
+      p.liege = null;
+      p.gold = 10000;
+      s.dev[pid] = 4;
+      s.buildings[pid] = [];
+      FB.foundPlayerRealm(s);
+      const tech = FB.realmTechRecord(s, 'player');
+      if (tech.completed.indexOf('undershot_watermill') < 0) tech.completed.push('undershot_watermill');
+      FB.invalidateBuildingIndex(s, pid);
+      const before = FB.playerTaxParts(s);
+      const sitesBefore = FB.settlementVisibleCount(s, pid);
+      const cost = FB.buildCost(s, pid, 'mill');
+      const gold = p.gold;
+      const built = FB.build(s, pid, 0, 'mill');
+      return { built:built, dev:s.dev[pid], before:before, after:FB.playerTaxParts(s),
+        spent:gold - p.gold, cost:cost, sitesBefore:sitesBefore,
+        sitesAfter:FB.settlementVisibleCount(s, pid) };
     });
 
-    expect(progression.built).toBe(true);
-    expect(progression.devAfter).toBe(5);
-    expect(progression.taxAfter).toBeGreaterThan(progression.taxBefore);
+    expect(result.built).toBe(true);
+    expect(result.dev).toBe(5);
+    expect(result.spent).toBeCloseTo(result.cost, 8);
+    expect(result.after.rentBase).toBeGreaterThan(result.before.rentBase);
+    expect(result.after.tolls).toBeGreaterThan(result.before.tolls);
+    // Development unlocks capacity; establishing a new site requires a charter.
+    expect(result.sitesAfter).toBe(result.sitesBefore);
   });
 
-  test('Duke and King demesne rents and vassal charter dues scale comfortably', async function ({ page }) {
-    const feudalData = await page.evaluate(function () {
-      // Duke holding 2 counties and 2 vassal counts
-      const stateDuke = {
-        turn: 1,
-        date: { year: 867 },
-        log: [],
-        player: {
-          charId: 'p1',
-          tier: 5,
-          provinceId: 'york',
-          provs: ['york', 'durham'],
-          liege: null
-        },
-        chars: { p1: { id: 'p1', traits: [] } },
-        dev: { york: 4, durham: 3, lancaster: 3, chester: 3 },
-        holder: { york: 'player', durham: 'player', lancaster: 'vassal1', chester: 'vassal2' },
-        owner: { york: 'player', durham: 'player', lancaster: 'player', chester: 'player' },
-        realms: {
-          player: { id: 'player', alive: true, rank: 2 },
-          vassal1: { id: 'vassal1', alive: true, liege: 'player', rank: 1 },
-          vassal2: { id: 'vassal2', alive: true, liege: 'player', rank: 1 }
-        },
-        buildings: { york: [], durham: [], lancaster: [], chester: [] }
-      };
-
-      const dukeParts = FB.playerTaxParts(stateDuke);
-
-      return {
-        dukeRents: dukeParts.rents,
-        dukeVassalDues: dukeParts.dues,
-        dukeTaxable: dukeParts.taxable
-      };
+  test('Duke and King income combines direct rents with charter dues from vassals', async function ({ page }) {
+    const result = await page.evaluate(function () {
+      const s = FB.state, p = s.player;
+      p.tier = 5;
+      p.provinceId = 'york';
+      p.provs = ['york', 'durham', 'lancaster', 'chester'];
+      p.liege = null;
+      p.provs.forEach(function (pid) {
+        s.dev[pid] = 4;
+        s.buildings[pid] = [];
+        FB.invalidateBuildingIndex(s, pid);
+      });
+      FB.foundPlayerRealm(s);
+      if (!FB.grantCounty(s, 'lancaster') || !FB.grantCounty(s, 'chester')) {
+        throw new Error('Fixture vassal grant failed');
+      }
+      return [5, 6].map(function (tier) {
+        p.tier = tier;
+        FB.foundPlayerRealm(s);
+        const parts = FB.playerTaxParts(s);
+        const fiscal = FB.settlementActorFiscal(s, 'player');
+        const dues = FB.playerVassals(s).reduce(function (sum, rid) {
+          return sum + FB.vassalTaxContribution(s, rid);
+        }, fiscal.duesIn);
+        return { parts:parts, directTax:fiscal.tax, dues:dues,
+          vassals:FB.playerVassals(s).length };
+      });
     });
 
-    expect(feudalData.dukeRents).toBeGreaterThanOrEqual(15.0);
-    expect(feudalData.dukeVassalDues).toBeGreaterThan(0);
-    expect(feudalData.dukeTaxable).toBeGreaterThanOrEqual(20.0);
+    for (const row of result) {
+      expect(row.vassals).toBeGreaterThanOrEqual(2);
+      expect(row.parts.rents).toBeGreaterThan(0);
+      expect(row.parts.rentBase).toBeCloseTo(row.directTax, 8);
+      expect(row.parts.dues).toBeGreaterThan(0);
+      expect(row.parts.dues).toBeCloseTo(row.dues, 8);
+      expect(row.parts.taxable).toBeCloseTo(row.parts.rents + row.parts.tolls, 8);
+    }
   });
 
-  test('AI Building Construction Planner places tangible infrastructure during peace', async function ({ page }) {
-    const aiResults = await page.evaluate(function () {
-      const state = {
-        turn: 360,
-        date: { year: 868 },
-        log: [],
-        dev: {
-          winchester: 3,
-          warwick: 3
-        },
-        owner: { winchester: 'wessex', warwick: 'mercia' },
-        holder: { winchester: 'wessex', warwick: 'mercia' },
-        realms: {
-          wessex: { id: 'wessex', alive: true, capital: 'winchester', rank: 3 },
-          mercia: { id: 'mercia', alive: true, capital: 'warwick', rank: 3 }
-        },
-        buildings: {
-          winchester: [],
-          warwick: []
-        },
-        armies: [],
-        realmTechMigration: 2,
-        realmTech: {
-          wessex: { completed: ['undershot_watermill', 'water_power'], active: [], exposed: [], progress: {} },
-          mercia: { completed: ['undershot_watermill', 'water_power'], active: [], exposed: [], progress: {} }
-        }
-      };
-
-      const devBeforeWessex = state.dev.winchester;
-      FB.aiBuildingsYear(state);
-      const devAfterWessex = state.dev.winchester;
-      const bldgsWessex = state.buildings.winchester;
-
-      return {
-        devBeforeWessex: devBeforeWessex,
-        devAfterWessex: devAfterWessex,
-        bldgsCount: bldgsWessex.length,
-        firstBuildingId: bldgsWessex[0] ? bldgsWessex[0].id : null
-      };
+  test('AI construction spends available treasury on tangible infrastructure during peace', async function ({ page }) {
+    const result = await page.evaluate(function () {
+      const s = FB.state, rid = 'wessex', pid = 'winchester';
+      s.turn = 360;
+      s.date.year = 868;
+      s.owner[pid] = rid;
+      s.holder[pid] = rid;
+      s.realms[rid].capital = pid;
+      s.realms[rid].liege = null;
+      s.realms[rid].war = null;
+      s.dev[pid] = 3;
+      s.buildings[pid] = [];
+      s.armies = [];
+      s.greatHolyWar = null;
+      FB.invalidateBuildingIndex(s, pid);
+      FB.invalidateRealmCache();
+      const tech = FB.realmTechRecord(s, rid);
+      if (tech.completed.indexOf('undershot_watermill') < 0) tech.completed.push('undershot_watermill');
+      FB.treasuryInitialize(s);
+      const treasury = s.realms[rid].treasury;
+      treasury.gold = 100000;
+      treasury.militaryAccrued = 0;
+      const before = treasury.gold;
+      const cost = FB.buildCost(s, pid, 'mill', rid);
+      FB.aiBuildingsYear(s);
+      return { buildings:s.buildings[pid], dev:s.dev[pid], cost:cost,
+        spent:before - treasury.gold, mode:s.treasuryAccounting.mode };
     });
 
-    expect(aiResults.bldgsCount).toBeGreaterThanOrEqual(1);
-    expect(aiResults.firstBuildingId).toBe('mill');
-    expect(aiResults.devAfterWessex).toBe(aiResults.devBeforeWessex + 1);
+    expect(result.mode).toBe('active');
+    expect(result.buildings).toHaveLength(1);
+    expect(result.buildings[0].id).toBe('mill');
+    expect(result.dev).toBe(4);
+    expect(result.spent).toBeCloseTo(result.cost, 8);
   });
 });

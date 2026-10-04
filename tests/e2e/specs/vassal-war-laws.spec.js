@@ -126,13 +126,32 @@ for (const answer of ['comply', 'refuse']) {
       FB.campaignDaily(s); FB.campaignDaily(s);
       const entries = s.eventQueue.filter(function (e) { return e.id === 'war_peace_demand'; });
       const ev = FB.eventById('war_peace_demand'), prestige = s.player.prestige;
-      FB.resolveEventOption(s, ev, ev.options[input.answer === 'comply' ? 0 : 1], entries[0].ctx);
+      const option = ev.options[input.answer === 'comply' ? 0 : 1], ctx = entries[0].ctx;
+      const before = JSON.stringify(s), rng = FB.getRngState();
+      const preview = FB.previewEventOption(s, ev, option, ctx);
+      const previewImpact = preview.sections.reduce(function (out, section) {
+        return out.concat(section.impacts);
+      }, []).filter(function (record) { return record.system === 'war' && record.warId === war.id; });
+      const previewPure = before === JSON.stringify(s) && rng === FB.getRngState();
+      const receipt = FB.resolveEventOption(s, ev, option, ctx);
+      const receiptImpact = receipt.impacts.filter(function (record) {
+        return record.system === 'war' && record.warId === war.id;
+      });
       return { count:entries.length, exact:entries[0].ctx.warId === war.id,
+        previewPure:previewPure, previewCount:previewImpact.length,
+        previewText:FB.eventImpactText(s, previewImpact[0]), receiptCount:receiptImpact.length,
+        receiptText:FB.eventImpactText(s, receiptImpact[0], 'resolved'),
+        stalePreview:FB.eventImpactAdapters[option.effects.custom].preview(s, ctx).length,
         ended:!FB.ordinaryWarById(s, war.id), other:!!FB.ordinaryWarById(s, other.id),
         status:war.peaceDemand.status, noWithdrawalCost:s.player.prestige === prestige,
         stale:!FB.fns.war_peace_demand_valid(s, entries[0].ctx) };
     }, { ids:ids, answer:answer });
     expect(result).toEqual({ count:1, exact:true, ended:answer === 'comply', other:true,
+      previewPure:true, previewCount:1, receiptCount:1, stalePreview:0,
+      previewText:answer === 'comply' ? 'End the demanded war in white peace'
+        : 'Continue this war; the liege may enforce the peace',
+      receiptText:answer === 'comply' ? 'The demanded war ended in white peace'
+        : 'Peace demand refused; this war continues',
       status:answer === 'comply' ? 'complied' : 'refused', noWithdrawalCost:true, stale:true });
   });
 }

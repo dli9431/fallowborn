@@ -2,7 +2,7 @@
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
   'js/localfolk.js', 'data/cultures.js', 'data/counties.js', 'data/bookmarks.js', 'data/map_data.js',
-  'data/technology.js', 'js/model.js', 'js/events.js', 'js/actions.js',
+  'data/technology.js', 'js/model.js', 'js/events.js', 'js/economy.js', 'js/actions.js',
   'js/main.js', 'js/world.js', 'js/agency.js', 'js/save.js', 'js/travel.js',
   'js/ui_modals.js', 'js/ui_misc.js', 'js/population.js', 'css/style.css'
 ]);
@@ -20,10 +20,14 @@ test('maternal reform and adoption require contact, and learned custom survives 
     const s = FB.state, p = s.player, head = s.chars[p.charId];
     head.culture = 'coptic'; p.prestige = 5000; p.piety = 5000;
     p.cooldowns = {}; p.war = null;
+    // A preview must not repair absent travel fields in an older save.
+    delete p.travelSettlement;
+    delete p.travelHistory;
     const before = JSON.stringify(s);
+    const rng = FB.getRngState();
     const blocked = FB.doctrineReformStatus(s, 'culture', 'marriage_lineage', 'maternal');
     const adoption = FB.conversionStatus(s, 'culture', 'nubian', 'self');
-    const pure = JSON.stringify(s) === before;
+    const pure = JSON.stringify(s) === before && FB.getRngState() === rng;
     // Affinity, a campaign culture, and an old visit are not contact evidence.
     const branch = FB.createCulture(s, { name:'Remote custom', parent:'coptic',
       doctrines:{ matrilinealMarriage:true } });
@@ -283,9 +287,16 @@ test('neighboring practitioners alone do not unlock the custom', async function 
     head.culture = 'coptic';
     const neighboring = FB.world.provs.filter(function (province) {
       return !province.wasteland && FB.countyCultureShare(s, province.id, 'nubian') === 0 &&
-        (province.adj || []).some(function (id) { return FB.countyCultureShare(s, id, 'nubian') > 0; });
+        Object.keys(FB.world.adj[province.id] || {}).some(function (id) {
+          return FB.countyCultureShare(s, id, 'nubian') > 0;
+        });
     })[0];
+    if (!neighboring) throw new Error('No county borders a Nubian community without containing one.');
     s.player.provinceId = neighboring.id;
+    s.player.tier = 4;
+    s.player.provs = [neighboring.id];
+    s.player.liege = null;
+    FB.foundPlayerRealm(s);
     const ordinary = FB.conversionTargetPresence(s, 'culture', 'nubian');
     const strict = FB.conversionTargetPresence(s, 'culture', 'nubian', true);
     return { ordinary:!!ordinary, strict:!!strict,

@@ -7487,13 +7487,15 @@ window.FB = window.FB || {};
     const holderRealm = holderRealmId && state.realms && state.realms[holderRealmId];
     const controllerName = holderRealm ? holderRealm.name : FB.T('Local custom');
 
-    const rulerChar = holderRealm && holderRealm.ruler && state.chars ? state.chars[holderRealm.ruler] : null;
-    const existingLordId = state.roles && state.roles.lord;
-    const lord = existingLordId && state.chars ? state.chars[existingLordId] : null;
+    const authority = FB.political.role(state, 'lord', {
+      provinceId:tenure.provinceId
+    });
+    const lord = authority && authority.characterId && state.chars
+      ? state.chars[authority.characterId] : null;
     const lordName = lord && !lord.dead
       ? FB.fullName(lord)
-      : (rulerChar
-          ? FB.fullName(rulerChar)
+      : (authority && holderRealm && holderRealm.ruler && holderRealm.ruler.name
+          ? FB.fullName(holderRealm.ruler)
           : (holderRealm ? holderRealm.name : FB.T('Local authority')));
     const stewardId = state.roles && state.roles.steward;
     const steward = stewardId && state.chars ? state.chars[stewardId] : null;
@@ -9134,7 +9136,7 @@ window.FB = window.FB || {};
      deltas come from before/after state so clamps and soft caps are reported
      as they actually landed. */
   const EVENT_EFFECT_KEYS = [
-    'marriageEnd','gold','pricePressure','pricePressureYears','pricePressureSource','marketShock',
+    'marriageEnd','gold','goldCounterparty','pricePressure','pricePressureYears','pricePressureSource','marketShock',
     'prestige','piety','guildStanding','warService','health','ailment','skills','addTrait',
     'addTraitOnce','removeTrait','traitProgress','setFlag','setFlag2','clearFlag',
     'clearFlag2','clearHarvestFlags','opinion','standingCharacter','rivalContact','rivalHeat',
@@ -10938,9 +10940,16 @@ window.FB = window.FB || {};
         if (sentence) return FB.dataText(state, state.player.charId, 'justiceSentence', record.action, sentence, 'name', {});
         return FB.T('Custody changes');
       }
-      if (record.system === 'war') return record.action === 'ended'
-        ? FB.T('The current war ends')
-        : FB.T('Campaign or host conditions change');
+      if (record.system === 'war') {
+        if (record.action === 'white_peace') return record.resolved
+          ? FB.T('The demanded war ended in white peace')
+          : FB.T('End the demanded war in white peace');
+        if (record.action === 'peace_demand_refused') return record.resolved
+          ? FB.T('Peace demand refused; this war continues')
+          : FB.T('Continue this war; the liege may enforce the peace');
+        return record.action === 'ended' ? FB.T('The current war ends')
+          : FB.T('Campaign or host conditions change');
+      }
       if (record.system === 'diplomacy') return FB.T('A diplomatic relationship changes');
       if (record.system === 'plot') return FB.T('The active plot changes');
       if (record.system === 'politics') return FB.T('Political terms change');

@@ -184,7 +184,7 @@ test('Land uses the war muster for AI realms and exposes a baron’s own force',
     expect(result.expectedRealm).toBe(result.actualAiHost);
     expect(result.realmHost).toBe(result.expectedRealmText);
     expect(result.rulerMuster).toBe(
-      'Realm muster: ' + result.expectedRealmText);
+      '⚔️ Realm muster: ' + result.expectedRealmText);
     expect(result.ownForce).toBe(result.expectedPlayerText);
     expect(result.playerLevy).toBeGreaterThan(0);
     expect(result.grossCountyLevy).toMatch(/^~/);
@@ -286,13 +286,19 @@ test('desktop sidebars scale evenly while preserving the center map',
         const mainBox = main.getBoundingClientRect();
         const leftBody = document.getElementById('leftbody');
         const sideBody = document.getElementById('sidebody');
+        const overview = leftBody.querySelector('.self-overview').getBoundingClientRect();
+        const skillFields = Array.from(leftBody.querySelectorAll('.skillrow .skill-label, .skillrow .num'));
         return {
           left:left.width,
           map:map.width,
           side:side.width,
           fillsMain:Math.abs(left.width + map.width + side.width - mainBox.width) <= 1,
           leftOverflow:leftBody.scrollWidth - leftBody.clientWidth,
-          sideOverflow:sideBody.scrollWidth - sideBody.clientWidth
+          sideOverflow:sideBody.scrollWidth - sideBody.clientWidth,
+          skillsFit:skillFields.every(function (field) {
+            const box = field.getBoundingClientRect();
+            return box.left >= overview.left && box.right <= overview.right + 1;
+          })
         };
       });
     }
@@ -315,6 +321,7 @@ test('desktop sidebars scale evenly while preserving the center map',
       expect(layout.fillsMain).toBe(true);
       expect(layout.leftOverflow).toBeLessThanOrEqual(1);
       expect(layout.sideOverflow).toBeLessThanOrEqual(1);
+      expect(layout.skillsFit).toBe(true);
     }
   });
 

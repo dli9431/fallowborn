@@ -153,6 +153,7 @@ for (const width of [320, 390]) {
     for (let i = 0; i < await cards.count(); i++) {
       const card = cards.nth(i);
       const help = card.locator('.settcard-info');
+      await expect(help).toBeVisible();
       await help.scrollIntoViewIfNeeded();
       const bounds = await card.evaluate(function (card) {
         const info = card.querySelector('.settcard-info').getBoundingClientRect();
@@ -171,7 +172,9 @@ for (const width of [320, 390]) {
       expect(bounds.reachable).toBe(true);
       await help.click();
       await expect(card.locator('.enterprise-purchase-details')).toBeVisible();
+      await expect(help).toHaveAttribute('aria-expanded', 'true');
       await help.click();
+      await expect(card.locator('.enterprise-purchase-details')).toBeHidden();
     }
   });
 }

@@ -50,6 +50,10 @@ below, place it above or beside the chip; without side room, constrain its scrol
 box to the larger vertical gap. Keep viewport margins and pointer access to both
 the source chip and the scrollable tooltip.
 
+Family Tree portrait tooltips keep their scroll box above the modal navigation footer. Hover and keyboard focus retain the character summary while Back and Close remain visible and clickable.
+
+County and duchy grant reviews label their tax and levy amounts as base service before the recipient's domain limits and delegated settlements. Governance shows the actual contribution after those adjustments; the base preview does not create a ruler or consume RNG before confirmation.
+
 Market legend labels wrap inside their grid cells when the center map column is
 narrow; symbols and labels remain distinct without shrinking the shared text size.
 
@@ -87,7 +91,7 @@ Grant settlement recipient cards use a compact identity column beside a visible
 Recipient identity uses the portrait's actual 40px width, with name and standing
 aligned beside it. Details occupies its own grid cell without overlapping the
 selection button or using a raised z-index. No empty bottom row is reserved.
-Enterprise purchase cards likewise reserve a bottom row for compact Details.
+Enterprise purchase cards likewise reserve a bottom row for compact Details. The disclosure participates in positioned painting after the purchase action with an automatic z-index, keeping its touch target above that action without raising it over the modal footer.
 Household Plan's Enterprise Plan entry uses a separate Details column whose touch
 target contributes to row height. These controls stay in the scrolling content,
 without a raised stacking layer that could cover the modal footer.
@@ -338,6 +342,9 @@ touch and keyboard users. Desktop rosters use multiple columns to fit the campai
 on one screen; target, leadership, phase, and side totals stay visible. The two sides
 stack on narrow screens with 44px touch targets. Shared modal history preserves the
 originating sheet and scroll position on Back; Close dismisses the modal chain.
+
+Large rosters use four columns per side on wide desktops so forty combatants per side fit above the shared navigation footer at 1366 by 768. Smaller desktops retain three or two columns; narrow screens keep stacked sides and touch targets.
+
 One 44px sort button applies to both rosters: A↓ for A–Z, 9↓ for descending
 campaign troop totals across each realm's hosts. Its accessible label names the
 current order and next action. Ties use realm name then id; leaders follow the same
@@ -631,6 +638,8 @@ return to the parent through the ordinary conversion preview and show local adop
 territorial benefit availability next to the home-settlement project action. The general
 culture picker lists a generated culture only after it dominates three counties; explicit
 parent returns and territorial project pickers retain their independent scope.
+
+Conversion reviews retain their picker through shared modal history. Back, Escape and browser Back restore its scope, search, scroll and focus; changing scope replaces the picker without adding a return step. Close exits the flow, and returning to a parent identity retains its originating identity-details context.
 
 The character interaction card exposes exceptional sibling courtship only on
 an actual full- or half-sibling target. Its disabled state explains the first
@@ -952,8 +961,7 @@ founder retains the founder role alongside any direct or collateral relationship
 On every initial opening, the canvas and modal body explicitly center and focus the current
 player after layout rather than depending on nested `scrollIntoView` behavior or beginning at
 the founder. This applies equally to desktop and narrow/mobile layouts. Returning from a nested
-character sheet restores the player's later pan position normally. The house founder keeps a
-dedicated copper border accent at every viewport size, independent of their relationship label.
+character sheet restores the player's later pan position normally. The house founder keeps its founder role label at every viewport size. The blue played-life border takes precedence over the copper founder accent when both apply.
 The blood-line, portrait, and panning instructions live behind the title's compact info tooltip
 instead of consuming vertical canvas space; hover, keyboard focus, and tap all expose it.
 
@@ -1055,6 +1063,8 @@ and weight and likewise keep helper, eligibility, cost, and duration prose in th
 tooltip or compact `?` disclosure instead of beneath the button label.
 
 Daily Focus art experiment
+
+On narrow time bars, hiding the scene retains the compact label without its Space keyhint when needed to keep Play and Pause legible. Widening the viewport recalculates the fit and restores the hint and scene when both fit.
 
 The active Daily Focus has one decorative scene at the right end of the Play button, visible across panels on desktop and phones. Thirty eight-frame loops cover every built-in focus, including Rest, childhood play, all professions, noble and clerical duties, command, intrigue, and government. All fourteen household-service roles select matching work scenes. Serf work reflects the active tenure: farming, irrigation, boats, herding, woodland work, or household service. Related focuses share appropriate scenes, such as writing for accounts and manuscripts or training for the household guard. Unsupported mod focuses, unavailable focuses, travel, observation, and the birthplace picker hide the scene. Deeds retains its compact text buttons, selection markers, keyboard shortcuts, eligibility, localized text, and separate Details controls. This is cosmetic and introduces no technology gate, simulation effect, RNG draw, or saved-state field.
 
@@ -1631,8 +1641,7 @@ The modal is centered on desktop
 and becomes a scrolling full-screen sheet with a bottom-pinned close control on mobile.
 Its compact heading explicitly centers its flex content and stacks the character's full
 name above **Equipment**, keeping both lines visually centered on tablet and mobile layouts.
-Self skill labels stay on one line, reserving room for the full name while the bars
-shrink to fit the narrow sidebar. Numeric values retain their own space.
+Self skill labels shrink and wrap beside the portrait as desktop sidebars narrow. Numeric values retain their own space and stay inside the panel, with no horizontal scrolling or clipped numbers.
 The Self overview places its skill bars beside the compact portrait; both the portrait and
 the narrow button directly beneath it open the equipment sheet. Traits sit below the
 overview, before the full identity and household details. Self and full character sheets
@@ -3563,6 +3572,9 @@ religious-office result and receipt, then spend one deed day on acknowledgement.
 Changed terms at confirmation replace the review in place with a warning rather
 than adding a history entry. After the result, the refreshed sheet's Back opens
 its parent (the house list, or Work when opened from Work) instead of closing.
+
+A reopened abbey sheet waits for outcome dismissal to clear the old history, then rebuilds its real parent first. Footer Back, Escape and browser Back restore that retained parent. Ordinary nested navigation restores the existing view. The root house list keeps Back disabled and Close enabled; the completed action never appears in return history.
+
 A blocked action shows its first unmet requirement on the face, and every one in
 Details.
 

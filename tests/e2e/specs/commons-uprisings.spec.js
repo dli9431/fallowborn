@@ -276,10 +276,10 @@ for (const width of [390, 1280]) {
     await expect(page.locator('#ev-text')).toContainText('Popular support above -10');
     await expect(page.locator('#ev-title')).toHaveText('A final petition');
     await expect(page.locator('#ev-text')).toContainText('25 to 100%');
-    await expect(page.locator('#ev-text')).toContainText('180 days');
     await expect(page.locator('#event-choice-details-0 .event-concession-terms')).toHaveCount(2);
     await expect(page.locator('#event-choice-details-1 .event-impact-chip')).toHaveCount(4);
     await expect(page.locator('#event-choice-details-1')).toContainText('If unresolved: tax and levies -25% to -100%');
+    await expect(page.locator('#event-choice-details-1')).toContainText('Disruption: up to 180 days');
     await expect(page.locator('#event-choice-details-0 .event-concession-terms > :not(.event-impact-chip)')).toHaveCount(0);
     await expect(page.locator('#event-choice-details-0')).not.toContainText('No seasonal upkeep');
     await expect(page.locator('#event-choice-details-0')).toContainText('Grievance settled');

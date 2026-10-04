@@ -8,6 +8,7 @@ Applying a household staffing plan keeps Enterprise Plan open with refreshed fig
 and a confirmation. Back retains the original Household Plan or livelihoods return.
 On compact screens, enterprise purchase Details sits below the name and cost,
 while the Household Plan entry gives Details a separate column beside its action.
+The compact purchase disclosure paints after the overlapping action without a raised z-index, so it stays reachable and remains beneath the sticky modal footer.
 
 ## Moving to a founded seat
 
@@ -61,6 +62,8 @@ tenure. It can review at most one named term: preserve everything, add one bound
 archetype-authored service, commute an eligible labor duty to a saved coin due, challenge
 one current right, or restore one historically challenged right. Amendments are recorded
 as semantic tenure history rather than property, modifiers, or hidden ownership changes.
+
+Station & home reads the current county holder and its reigning ruler through the shared political role projection. A former lord retained in the role cache does not override that ruler. The read never synchronizes cached roles, creates a character or changes tenure; compact rulers retain their known name until ordinary materialization supplies a character link.
 
 Tier-0 Toil is harvest and customary household return rather than a fixed hired wage. Its
 player-facing label is Work the fields, with plain regional alternatives for herding,

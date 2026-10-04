@@ -3,7 +3,7 @@ const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, ['js/modifiers.js', 'js/actions.js', 'js/events.js',
   'js/institutions.js', 'js/world.js', 'js/wars.js', 'js/main.js', 'js/save.js',
   'js/ui_panels.js', 'js/justice.js', 'js/intrigue.js', 'data/intrigue.js',
-  'data/modifiers.js', 'data/map_data.js']);
+  'js/lordships.js', 'data/modifiers.js', 'data/map_data.js']);
 const { test, expect } = require('../support/fixture');
 const { startWarSafety } = require('../support/game/war-safety');
 
@@ -121,8 +121,8 @@ test('county support changes real tax receipts and player and AI muster sources'
   const result = await page.evaluate(function (ids) {
     const s = FB.state, home = s.player.provinceId;
     s.countySupport = {}; s.modifiers = { county:{} };
-    s.player.provs = [home];
-    FB.invalidateRealmCache();
+    // Fiscal receipts follow actual holdings, including the fixture's second county.
+    FB.transferProvince(s, ids.second, ids.enemy);
     function levySource() {
       return FB.playerCompositionBreakdown(s).entries.filter(function (entry) {
         return entry.pid === home && entry.unit === 'levy';

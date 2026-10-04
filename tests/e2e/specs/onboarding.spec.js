@@ -6,6 +6,10 @@ dependsOnRuntime(__filename, [
   'js/save.js',
   'js/i18n.js',
   'js/events.js',
+  'js/model.js',
+  'js/world.js',
+  'js/lordships.js',
+  'js/politics.js',
   'js/ui_misc.js',
   'js/ui_panels.js',
   'js/ui_modals.js',
@@ -1352,21 +1356,51 @@ test('Station & home keeps the live lord while hiding right variants and preserv
       // 2. Live direct county controller update (state.holder)
       state.holder = state.holder || {};
       state.holder[state.player.provinceId] = 'vassal_county_realm';
+      const localCount = FB.makeCharacter(state, {
+        name:'Wulfric', sex:'m', born:state.date.year - 35,
+        culture:state.chars[state.player.charId].culture,
+        religion:state.chars[state.player.charId].religion
+      });
       state.realms.vassal_county_realm = {
         id: 'vassal_county_realm',
         name: 'County of Surrey',
-        ruler: 'char_local_count',
+        rank:1, capital:state.player.provinceId,
+        liege:state.owner[state.player.provinceId], generated:true,
         alive: true
       };
-      state.chars.char_local_count = {
-        id: 'char_local_count',
-        name: 'Wulfric',
-        sex: 'm',
-        born: state.date.year - 35,
-        traits: []
-      };
+      results.installedLord = !!FB.assignRealmRulerCharacter(
+        state, 'vassal_county_realm', localCount.id);
+      FB.invalidateRealmCache();
+      const cachedLordId = state.roles.lord;
+      const liveStateBefore = JSON.stringify(state);
+      const liveRngBefore = FB.getRngState();
       const viewWithLocalHolder = FB.tenureView(state);
       results.derivedLocalLord = viewWithLocalHolder && viewWithLocalHolder.lordName;
+      results.derivedLordId = viewWithLocalHolder && viewWithLocalHolder.lordId;
+      results.localCountId = localCount.id;
+      FB.ui.showRankDetails();
+      results.liveStateNeutral = JSON.stringify(state) === liveStateBefore;
+      results.liveRngNeutral = FB.getRngState() === liveRngBefore;
+      results.cachedLordUnchanged = state.roles.lord === cachedLordId;
+
+      // Compact rulers have a name before they have a materialized character.
+      state.realms.compact_county_realm = {
+        id:'compact_county_realm', name:'County of Kent', rank:1,
+        capital:state.player.provinceId, alive:true,
+        liege:state.owner[state.player.provinceId],
+        ruler:{ name:'Leofric', sex:'m', age:40, generation:1 }
+      };
+      state.holder[state.player.provinceId] = 'compact_county_realm';
+      FB.invalidateRealmCache();
+      const compactStateBefore = JSON.stringify(state);
+      const compactRngBefore = FB.getRngState();
+      const compactView = FB.tenureView(state);
+      results.compactLordName = compactView.lordName;
+      results.compactLordId = compactView.lordId;
+      results.compactStateNeutral = JSON.stringify(state) === compactStateBefore;
+      results.compactRngNeutral = FB.getRngState() === compactRngBefore;
+      state.holder[state.player.provinceId] = 'vassal_county_realm';
+      FB.invalidateRealmCache();
 
       // 3. A zero-right internal variant remains valid but has no UI ledger.
       state.player.tenure.rights = [];
@@ -1380,9 +1414,20 @@ test('Station & home keeps the live lord while hiding right variants and preserv
 
     expect(testResults.rngNeutral).toBe(true);
     expect(testResults.stateNeutral).toBe(true);
+    expect(testResults.installedLord).toBe(true);
     expect(testResults.derivedLocalLord).toContain('Wulfric');
+    expect(testResults.derivedLordId).toBe(testResults.localCountId);
+    expect(testResults.liveStateNeutral).toBe(true);
+    expect(testResults.liveRngNeutral).toBe(true);
+    expect(testResults.cachedLordUnchanged).toBe(true);
+    expect(testResults.compactLordName).toBe('Leofric');
+    expect(testResults.compactLordId).toBeNull();
+    expect(testResults.compactStateNeutral).toBe(true);
+    expect(testResults.compactRngNeutral).toBe(true);
     expect(testResults.zeroRightsHandled).toBe(true);
     await expect(page.locator('#gm-body')).toContainText('Wulfric');
+    await expect(page.locator('[data-tenure-character="' +
+      testResults.localCountId + '"]')).toBeVisible();
     await expect(page.locator('#gm-body [data-tenure-right]')).toHaveCount(0);
     await expect(page.locator('#gm-body')).not.toContainText(
       'No recognized customary rights recorded.');

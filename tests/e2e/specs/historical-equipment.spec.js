@@ -37,6 +37,7 @@ test('historical production requires the exact technology, date and county cultu
       s.population.counties[province.id].identity.culture = 'finnic';
       const foreign = !FB.itemAvailability(s, id, province.id).ready;
       return { id:id, missing:locked.missing, ready:ready, tooEarly:tooEarly, foreign:foreign,
+        militaryMarket:def.militaryMarket, art:def.art.kind,
         ledger:FBDATA.techImpactReviews.features['equipment_' + id].mode };
     });
     return { rows:rows, fallback:FB.itemAvailability(s, 'padded_jack').ready };
@@ -47,8 +48,10 @@ test('historical production requires the exact technology, date and county cultu
     expect(row.ready).toBe(true);
     expect(row.tooEarly).toBe(true);
     expect(row.foreign).toBe(true);
+    expect(row.militaryMarket).toBe(true);
     expect(row.ledger).toBe('hard');
   }
+  expect(result.rows.find(function (row) { return row.id === 'lamellar_cuirass'; }).art).toBe('lamellar');
 });
 
 test('stalls sell well-made armor while auctions preserve masterwork lots through save and technology loss', async function ({ page }) {
@@ -254,5 +257,5 @@ test('new knightly head and foot equipment survives save and production-gate los
   expect(result.feet).toBe(true);
   expect(result.head).toBe(true);
   expect(result.owned).toBe(true);
-  expect(result.bonus).toBeGreaterThanOrEqual(0.08);
+  expect(result.bonus).toBeCloseTo(0.08, 10);
 });

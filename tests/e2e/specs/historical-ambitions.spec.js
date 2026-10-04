@@ -5,7 +5,7 @@ dependsOnRuntime(__filename, [
   'data/ambitions.js', 'data/actions.js', 'data/bookmarks.js', 'data/map_data.js',
   'data/counties.js', 'data/technology.js', 'css/style.css',
   'js/ambitions.js', 'js/actions.js', 'js/main.js', 'js/model.js', 'js/world.js',
-  'js/modifiers.js', 'js/armies.js', 'js/save.js', 'js/ui_misc.js',
+  'js/modifiers.js', 'js/armies.js', 'js/lordships.js', 'js/fiscal.js', 'js/save.js', 'js/ui_misc.js',
   'js/ui_modals.js', 'js/ui_panels.js', 'js/messages.js', 'js/i18n.js', 'js/keys.js'
 ]);
 const { test, expect } = require('../support/fixture');
@@ -268,25 +268,33 @@ test('county rewards change actual tax and levy projections and survive rightful
   await ruler(page, ['normandy', 'norway'], 6);
   const result = await page.evaluate(function () {
     const s = FB.state;
+    const norway = FB.kingdomCounties('norway');
+    // Regional bonuses are included in the settlement-backed county sources.
+    function regionalLevy() {
+      return FB.playerCompositionBreakdown(s).entries.filter(function (entry) {
+        return entry.kind === 'county' && norway.indexOf(entry.pid) >= 0;
+      }).reduce(function (sum, entry) { return sum + entry.amount; }, 0);
+    }
+    const regionalBefore = regionalLevy();
     const taxBefore = FB.playerTaxParts(s).total, levyBefore = FB.playerLevy(s);
     FB.completeHistoricalAmbition(s, 'normandy');
     FB.completeHistoricalAmbition(s, 'norway');
     const taxAfter = FB.playerTaxParts(s).total, levyAfter = FB.playerLevy(s);
-    const levyEntries = FB.playerCompositionBreakdown(s).entries.filter(function (entry) {
-      return entry.kind === 'historical_ambition' && entry.amount > 0;
-    }).length;
+    const regionalAfter = regionalLevy();
     const end = s.historicalAmbitions.normandy.endTurn;
     s.historicalAmbitions.normandy.realmId = 'inherited_probe';
     s.realms.inherited_probe = { id:'inherited_probe', alive:true, rank:2, liege:null };
     FB.historicalAmbitionRealmInherited(s, 'inherited_probe', 'player');
     FB.markRealmDead(s, 'inherited_probe');
-    return { taxBefore:taxBefore, taxAfter:taxAfter, levyBefore:levyBefore, levyAfter:levyAfter, levyEntries:levyEntries,
+    return { taxBefore:taxBefore, taxAfter:taxAfter, levyBefore:levyBefore, levyAfter:levyAfter,
+      regionalBefore:regionalBefore, regionalAfter:regionalAfter,
       endUnchanged:s.historicalAmbitions.normandy.endTurn === end,
       inheritedBonus:FB.historicalAmbitionBonus(s, 'rouen', 'tax') };
   });
   expect(result.taxAfter).toBeGreaterThan(result.taxBefore);
   expect(result.levyAfter).toBeGreaterThanOrEqual(result.levyBefore);
-  expect(result.levyEntries).toBeGreaterThan(0);
+  expect(result.regionalBefore).toBeGreaterThan(0);
+  expect(result.regionalAfter).toBeGreaterThan(result.regionalBefore);
   expect(result.endUnchanged).toBe(true);
   expect(result.inheritedBonus).toBe(0.1);
 });

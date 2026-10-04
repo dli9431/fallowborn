@@ -4,12 +4,13 @@ dependsOnRuntime(__filename, [
   'js/crazygames.js', 'index.html', 'js/util.js', 'js/ui_modals.js', 'js/ui_misc.js',
   'js/main.js', 'js/save.js', 'js/model.js', 'js/i18n.js',
   'js/ui_panels.js', 'js/messages.js',
-  'js/technology.js', 'data/technology.js'
+  'js/technology.js', 'data/technology.js', 'js/music.js', 'data/music_catalog.js', 'css/style.css'
 ]);
 const { test, expect } = require('../support/fixture');
 const { mockCrazyGames } = require('../support/crazygames');
 test.beforeEach(async function ({ page }) { await mockCrazyGames(page); });
 const { openGame } = require('../support/game/navigation');
+const { openCrazyGame } = require('../support/game/crazygames-title');
 const { startDeterministicGame } = require('../support/game/start');
 
 for (const distribution of ['standard', 'crazygames']) {
@@ -21,7 +22,8 @@ for (const distribution of ['standard', 'crazygames']) {
           window.FB_DISTRIBUTION = 'crazygames';
         });
       }
-      await openGame(page, testInfo);
+      if (restricted) await openCrazyGame(page, testInfo);
+      else await openGame(page, testInfo);
       expect(await page.evaluate(function () {
         return FB.platform.isCrazyGames;
       })).toBe(restricted);
@@ -132,7 +134,7 @@ test('CrazyGames uses English without catalog requests or a language picker', as
     window.FB_DISTRIBUTION = 'crazygames';
     localStorage.setItem('fb_lang', 'fr');
   });
-  await openGame(page, testInfo);
+  await openCrazyGame(page, testInfo);
   const boot = await page.evaluate(function () {
     return { locale:FB.locale, stored:localStorage.getItem('fb_lang'),
       choices:FB.availableLocales().map(function (item) { return item.code; }),

@@ -8,6 +8,8 @@ dependsOnRuntime(__filename, [
   'js/events.js',
   'js/main.js',
   'js/model.js',
+  'js/lordships.js',
+  'data/economy.js',
   'js/world.js',
   'js/keys.js',
   'js/ui_misc.js',
@@ -593,6 +595,7 @@ test('serfs see neither the commitments ledger nor deeds they cannot use',
     await page.evaluate(function () {
       const s = FB.state;
       s.player.tier = 0;
+      FB.ensureSerfTenure(s, 'rank_change');
       s.player.roleOrientationsSeen = s.player.roleOrientationsSeen || {};
       s.player.roleOrientationsSeen['role-tier-0'] = 1;
       s.player.panelIntrosSeen = s.player.panelIntrosSeen || {};

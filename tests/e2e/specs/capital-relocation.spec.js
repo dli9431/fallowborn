@@ -3,6 +3,7 @@ const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
   'js/save.js', 'js/save_v4.js',
   'js/modifiers.js',
+  'js/events.js', 'js/lordships.js',
   'data/actions.js',
   'js/actions.js',
   'js/mapview.js',
@@ -23,6 +24,14 @@ async function startCapitalRealm(page, testInfo, options) {
     var s = FB.state;
     var p = s.player;
     var counties = ['london', 'canterbury', 'rochester'];
+    // Capture the previous court before the household becomes the county ruler.
+    // A ruling player has no separate local lord in their directly held capital.
+    var oldLord = FB.getRole(s, 'lord', true);
+    var oldSteward = FB.getRole(s, 'steward', true);
+    var oldPriest = FB.getRole(s, 'priest', true);
+    if (!oldLord || !oldSteward || !oldPriest) {
+      throw new Error('Expected the existing London court before founding the realm');
+    }
     p.tier = 4;
     p.prestige = setupOptions && setupOptions.prestige !== undefined
       ? setupOptions.prestige : 500;
@@ -96,9 +105,6 @@ async function startCapitalRealm(page, testInfo, options) {
     ];
     p.manor = { provinceId:'london', settlement:0 };
 
-    var oldLord = FB.getRole(s, 'lord', true);
-    var oldSteward = FB.getRole(s, 'steward', true);
-    var oldPriest = FB.getRole(s, 'priest', true);
     var home = FB.world.byId.london;
     var friend = FB.makeCharacter(s, {
       name:'Edith',
@@ -211,7 +217,8 @@ test('valid capital relocation applies exact consequences without moving land or
         home:p.provinceId,
         capital:s.realms.player.capital,
         prestige:p.prestige,
-        pop:FB.countySupportBase(FB.state, p.provinceId),
+        pop:FB.countySupportBase(s, setup.fromId),
+        destinationSupport:FB.countySupportBase(s, setup.destinationId),
         favorA:FB.realmOpinionOf(s, 'test_vassal_a'),
         favorB:FB.realmOpinionOf(s, 'test_vassal_b'),
         marker:p.capitalRelocation,
@@ -270,7 +277,8 @@ test('valid capital relocation applies exact consequences without moving land or
     expect(result.incoming).toBeNull();
     expect(result.friendRole).toBe(ids.friendId);
     expect(result.friendHome).toBe('london');
-    expect(result.newLord).not.toBe(ids.oldLordId);
+    expect(result.newLord).toBeUndefined();
+    expect(result.destinationSupport).toBe(0);
     expect(result.newSteward).not.toBe(ids.oldStewardId);
     expect(result.newPriest).not.toBe(ids.oldPriestId);
     expect(result.oldLordHome).toBe('london');
@@ -455,7 +463,8 @@ test('losing the capital forces a free synchronized fallback without changing th
       p.capitalRelocation = JSON.parse(JSON.stringify(marker));
       var before = {
         prestige:p.prestige,
-        pop:FB.countySupportBase(FB.state, p.provinceId),
+        pop:FB.countySupportBase(s, 'london'),
+        destinationSupport:FB.countySupportBase(s, 'canterbury'),
         favorA:FB.realmOpinionOf(s, 'test_vassal_a'),
         favorB:FB.realmOpinionOf(s, 'test_vassal_b')
       };
@@ -470,7 +479,8 @@ test('losing the capital forces a free synchronized fallback without changing th
         before:before,
         after:{
           prestige:p.prestige,
-          pop:FB.countySupportBase(FB.state, p.provinceId),
+          pop:FB.countySupportBase(s, 'london'),
+          destinationSupport:FB.countySupportBase(s, 'canterbury'),
           favorA:FB.realmOpinionOf(s, 'test_vassal_a'),
           favorB:FB.realmOpinionOf(s, 'test_vassal_b')
         }

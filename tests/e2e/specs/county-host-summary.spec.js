@@ -26,11 +26,11 @@ test('county totals include every host and the picker changes individual inspect
   const sort = page.locator('#county-host-sort');
   await expect(sort).toHaveAttribute('data-sort', 'name');
   await expect(sort).toHaveText('A↓');
-  await expect(page.locator('#county-host-picker option').nth(1)).toHaveValue('first-summary-host');
+  await expect(page.locator('#county-host-picker option').nth(1)).toHaveAttribute('value', 'first-summary-host');
   await sort.click();
   await expect(sort).toHaveText('9↓');
   await expect(sort).toBeFocused();
-  await expect(page.locator('#county-host-picker option').nth(1)).toHaveValue('second-summary-host');
+  await expect(page.locator('#county-host-picker option').nth(1)).toHaveAttribute('value', 'second-summary-host');
   await page.locator('#county-host-picker').selectOption('second-summary-host');
   await expect(page.locator('#county-host-picker')).toHaveValue('second-summary-host');
   await expect(page.locator('#county-host-picker')).toBeFocused();

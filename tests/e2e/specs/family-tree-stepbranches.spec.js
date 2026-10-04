@@ -39,9 +39,9 @@ for (const scenario of [
         unchanged:before === JSON.stringify(s) && rng === FB.getRngState() };
     }, scenario);
     const canvas = page.locator('.family-tree-primary');
-    await expect(canvas.locator('[data-cid="' + result.child + '"]')).toHaveCount(1);
+    await expect(canvas.locator('.ftchip[data-cid="' + result.child + '"]')).toHaveCount(1);
     await expect(canvas.locator('.ftchip.dup')).toHaveCount(0);
-    if (result.parent) await expect(canvas.locator('[data-cid="' + result.parent + '"]')).toHaveCount(1);
+    if (result.parent) await expect(canvas.locator('.ftchip[data-cid="' + result.parent + '"]')).toHaveCount(1);
     if (scenario.ghost) await expect(canvas).toContainText('Earlier household');
     else await expect(canvas).not.toContainText('Earlier household');
     expect(result.unchanged).toBe(true);

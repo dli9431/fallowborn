@@ -145,9 +145,9 @@ test('Coin and Credit explains and names land and household collateral',
     });
 
     await expect(page.locator('#gm-body')).toContainText(
-      'complete group of family land plots');
+      'complete groups of family plots');
     await expect(page.locator('#gm-body')).toContainText(
-      'Maintained household standards are expenses and cannot be pledged');
+      'Household standards cannot be pledged');
 
     await page.evaluate(function () {
       window.__financeOriginalTechRequirementMet = FB.techRequirementMet;

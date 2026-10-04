@@ -979,6 +979,8 @@ death returns the household to tier 2. Ordinary landed promotion supersedes the
 office rather than transferring or inheriting it. Castellan is the generic first
 office; culture-specific aliases and offices such as the podestà remain future flavor.
 
+Governance eligibility accepts a current Castellan appointment without requiring a hereditary barony. The office must belong to the current character and home county, remain within its fixed term when applicable, and answer to the living county holder. Expired, inherited, or displaced appointment records do not qualify.
+
 **Town council is a local commoner office.** Councilman remains a tier-1–2 earned
 position for merchant, craftsman, and administration careers, worth 0.5 gold per
 season and +5% enterprise income. `player.localCouncil` binds it to the home county;
@@ -1249,8 +1251,7 @@ history. `FB.repairCompleteDuchyRanks` is the restore-only migration boundary;
 `FB.recognizeCompleteDuchy` is the single-realm mutation boundary.
 
 Every grant combines a service charter with a separate tenure. The charter records
-true shares of the county's normal tax and levy bases, so the grant preview can show
-exact gold and soldiers rather than an ambiguous per-development rate:
+true shares of the county's normal tax and levy bases. The grant preview shows base gold and soldiers before the recipient's domain limits and delegated settlements, rather than an ambiguous per-development rate. The review discloses that actual contributions may be lower; Governance uses the recipient's live settlement ledger after the grant.
 
 | Service charter | Tax | Levy | Political term |
 | --- | ---: | ---: | --- |

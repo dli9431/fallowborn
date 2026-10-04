@@ -2,6 +2,11 @@
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
   'js/institutions.js',
+  'js/events.js',
+  'js/ui_modals.js',
+  'js/ui_panels.js',
+  'js/ui_misc.js',
+  'js/save.js',
   'js/modifiers.js',
   'data/modifiers.js',
   'data/political_institutions.js'
@@ -620,13 +625,12 @@ test('Land, Governance, detail, previews, and autoresolve share the same records
     var eventTooltip = page.locator('#tooltip');
     await expect(eventTooltip).toContainText('Market Charter');
     await expect(eventTooltip).toContainText('1440 days');
-    await expect(eventTooltip).toContainText(
-      'Benefits: county tax, construction costs');
+    await expect(eventTooltip).toContainText('Improved county tax');
+    await expect(eventTooltip).toContainText('Improved construction costs');
     await expect(eventTooltip).not.toContainText('+8% county tax');
     await expect(eventTooltip).not.toContainText('-8% construction cost');
     await expect(eventTooltip).toContainText('each season');
-    await expect(eventTooltip).toContainText(
-      'stays with the county after transfer');
+    await expect(eventTooltip).toContainText('Stays with county');
     await firstOption.click();
     var visible = await page.evaluate(function (setup) {
       var s = FB.state;

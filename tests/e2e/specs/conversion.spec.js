@@ -419,7 +419,10 @@ test('soft gates conversion to encountered traditions and unlocks via gameplay i
 
     // Establishing an active trade partner realm soft-unlocks Nubian culture
     state.realms = state.realms || {};
-    state.realms.nubia = { name:'Makuria', alive:true, culture:'nubian' };
+    state.chars.test_nubian_ruler = {
+      id:'test_nubian_ruler', name:'Nubian ruler', culture:'nubian', religion:'coptic'
+    };
+    state.realms.nubia = { name:'Makuria', alive:true, rulerId:'test_nubian_ruler' };
     player.tradePartners = player.tradePartners || [];
     player.tradePartners.push('nubia');
     const nubianAfterEncountered = FB.conversionTargetEncountered(state, 'culture', 'nubian');
@@ -553,9 +556,12 @@ test('faith conversion modal renders grouped traditions, segmented scope control
   await expect(page.locator('#conv-cancel')).toBeVisible();
   await expect(page.locator('#genmodal .keyhint')).toHaveCount(0);
 
-  // Cancel returns to the grouped picker
+  // Back returns to the same grouped picker, scope and search.
+  await expect(page.locator('#conv-cancel')).toHaveText('Back');
   await page.locator('#conv-cancel').click();
   await expect(page.locator('#gm-title')).toHaveText('Convert faith');
+  await expect(page.locator('#conv-search')).toHaveValue('Norse');
+  await expect(page.locator('[data-conv-scope="household"]')).toHaveAttribute('aria-pressed', 'true');
 
   // Anchored close button dismisses the modal
   const closeBtn = page.locator('#conv-close');
@@ -563,6 +569,51 @@ test('faith conversion modal renders grouped traditions, segmented scope control
   await closeBtn.click();
   await expect(page.locator('#genmodal')).toHaveClass(/hidden/);
 });
+
+for (const kind of ['faith', 'culture']) {
+  for (const method of ['back', 'escape', 'browser']) {
+    test(kind + ' conversion review restores picker state with ' + method, async function ({ page }) {
+      await page.setViewportSize({ width:390, height:520 });
+      const before = await page.evaluate(function (kind) {
+        const s = FB.state, me = s.chars[s.player.charId];
+        me.religion = 'catholic'; me.culture = 'frankish';
+        s.player.piety = 3000; s.player.prestige = 3000;
+        FB.ui.showConversionPicker(kind);
+        return { turn:s.turn, piety:s.player.piety, prestige:s.player.prestige,
+          faith:me.religion, culture:me.culture };
+      }, kind);
+      await page.locator('[data-conv-scope="household"]').click();
+      await expect(page.locator('.modal-navigation [data-modal-nav="back"]')).toBeDisabled();
+      const query = kind === 'faith' ? 'Christian' : 'Europe';
+      const target = kind === 'faith' ? 'orthodox' : 'german';
+      await page.locator('#conv-search').fill(query);
+      const scroll = await page.evaluate(function (target) {
+        const body = document.getElementById('gm-body');
+        body.scrollTop = 160;
+        body.querySelector('.conversion-card[data-conv-target="' + target + '"]')
+          .focus({ preventScroll:true });
+        return body.scrollTop;
+      }, target);
+      expect(scroll).toBeGreaterThan(0);
+      await page.keyboard.press('Enter');
+      await expect(page.locator('#conv-confirm')).toBeVisible();
+      if (method === 'back') await page.locator('#conv-cancel').click();
+      else if (method === 'escape') await page.keyboard.press('Escape');
+      else await page.goBack();
+      await expect(page.locator('#gm-title')).toHaveText(
+        kind === 'faith' ? 'Convert faith' : 'Adopt a new culture');
+      await expect(page.locator('#conv-search')).toHaveValue(query);
+      await expect(page.locator('[data-conv-scope="household"]')).toHaveAttribute('aria-pressed', 'true');
+      await expect(page.locator('.conversion-card[data-conv-target="' + target + '"]')).toBeFocused();
+      expect(await page.locator('#gm-body').evaluate(function (body) { return body.scrollTop; })).toBe(scroll);
+      expect(await page.evaluate(function () {
+        const s = FB.state, me = s.chars[s.player.charId];
+        return { turn:s.turn, piety:s.player.piety, prestige:s.player.prestige,
+          faith:me.religion, culture:me.culture };
+      })).toEqual(before);
+    });
+  }
+}
 
 test('culture conversion modal renders grouped regional traditions, scope controls, and naming pattern tooltips without hotkeys',
   async function ({ page }) {
@@ -622,6 +673,7 @@ test('culture conversion grouping reads mod-authored tradition data',
         name:'Rhenish', tradition:'riverlands', dyn:'of_place',
         male:['Otto'], female:['Oda']
       };
+      FB.invalidateCultureData();
       state.player.prestige = 500;
       FB.ui.showConversionPicker('culture');
     });

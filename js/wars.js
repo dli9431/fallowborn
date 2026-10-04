@@ -788,6 +788,28 @@
   FB.fns.war_peace_demand_refuse = function (state, ctx) {
     return FB.fns.war_peace_demand_valid(state, ctx) && FB.answerPeaceDemand(state, ctx.warId, false);
   };
+  ['comply', 'refuse'].forEach(function (answer) {
+    function demandImpact(ctx, resolved) {
+      return { type:'system', system:'war', warId:ctx.warId,
+        action:answer === 'comply' ? 'white_peace' : 'peace_demand_refused',
+        resolved:resolved };
+    }
+    FB.eventImpactAdapters['war_peace_demand_' + answer] = {
+      preview:function (state, ctx) {
+        return FB.fns.war_peace_demand_valid(state, ctx)
+          ? [demandImpact(ctx, false)] : [];
+      },
+      capture:function (state, ctx) {
+        return FB.fns.war_peace_demand_valid(state, ctx)
+          ? FB.ordinaryWarById(state, ctx.warId) : null;
+      },
+      report:function (state, before, ctx) {
+        if (!before || !before.peaceDemand || before.peaceDemand.status !==
+            (answer === 'comply' ? 'complied' : 'refused')) return [];
+        return [demandImpact(ctx, true)];
+      }
+    };
+  });
   FB.queuePeaceDemand = function (state, w) {
     const d = w && w.peaceDemand;
     if (!d || d.eventQueued || w.attacker !== 'player') return;

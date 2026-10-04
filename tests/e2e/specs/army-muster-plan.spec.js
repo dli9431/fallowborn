@@ -450,7 +450,8 @@ for (const exit of ['close', 'escape']) {
     });
     expect(await page.evaluate(function () { return FB.state.player.musterSelection; })).toBeUndefined();
     await expect(page.locator('#muster-save')).toHaveCount(0);
-    await expect(page.locator('#muster-raise')).toHaveText('Muster');
+    await expect(page.locator('#muster-raise')).toHaveText(/^Muster\d+ gold per season · takes 1 day$/);
+    await expect(page.locator('#muster-raise .adesc')).toContainText('takes 1 day');
     await expect(page.locator('#muster-raise')).toHaveClass(/actionbtn/);
     await expect(page.locator('#muster-counties-toggle')).toHaveClass(/large-list-section-toggle/);
     await expect(page.locator('#muster-costs .kv')).toHaveCount(2);

@@ -2,8 +2,14 @@
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
   'js/politics.js',
+  'js/world.js',
+  'js/parliament.js',
+  'js/technology.js',
+  'js/events.js',
+  'js/modifiers.js',
   'js/ui_modals.js',
-  'data/policies.js'
+  'data/policies.js',
+  'data/events_parliament.js'
 ]);
 
 const { test, expect } = require('../support/fixture');
@@ -212,7 +218,8 @@ test('the catalog drives availability, wartime gates, and per-family cooldowns',
       'redress', 'emergency_subsidy', 'scutage', 'levy_relief',
       'market_charter', 'local_custom', 'revocation_consent',
       'war_authorization', 'war_condemnation',
-      'religious_tolerance', 'settlement_policy'
+      'religious_tolerance', 'settlement_policy',
+      'internal_peace', 'external_campaigns'
     ]);
     expect(result.peacetime.redress.ready).toBe(true);
     expect(result.peacetime.scutage.ready).toBe(true);
@@ -225,6 +232,10 @@ test('the catalog drives availability, wartime gates, and per-family cooldowns',
     expect(result.peacetime.war_authorization.ready).toBe(false);
     expect(result.peacetime.war_authorization.reason).toContain('no war');
     expect(result.peacetime.war_condemnation.ready).toBe(false);
+    for (const crownPolicy of ['internal_peace', 'external_campaigns']) {
+      expect(result.peacetime[crownPolicy].ready).toBe(false);
+      expect(result.peacetime[crownPolicy].reason).toContain('proclaimed by the crown');
+    }
     expect(result.beganRedress).toBe(true);
     expect(result.redressAgain.ready).toBe(false);
     expect(result.redressAgain.reason).toContain('aid');
@@ -288,6 +299,7 @@ test('a catalog policy campaign lobbies, tallies, and applies its result event',
     });
     await expect(page.locator('#eventmodal:not(.hidden)')).toBeVisible();
     await expect(page.locator('#ev-options .evopt')).toHaveCount(1);
+    await page.waitForFunction(function () { return !FB.ui.eventInputGuarded(); });
     await page.locator('#ev-options .evopt').click();
     var applied = await page.evaluate(function () {
       var s = FB.state;

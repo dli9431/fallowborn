@@ -3,6 +3,10 @@ const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
   'js/economy.js',
   'js/market.js',
+  'js/title_ids.js',
+  'js/world.js',
+  'js/main.js',
+  'js/save.js',
   'js/modifiers.js',
   'js/technology.js',
   'js/ui_modals.js',
@@ -15,7 +19,8 @@ const { test, expect } = require('../support/fixture');
 const { openGame } = require('../support/game/navigation');
 const { startDeterministicGame } = require('../support/game/start');
 const { waitForUiRefresh } = require('../support/game/ui');
-const COMPLETE_SAVE_BUDGET = 1.6 * 1024 * 1024;
+// Match the complete-state budget in storage.spec.js; market state has its own cap.
+const COMPLETE_SAVE_BUDGET = 1.8 * 1024 * 1024;
 
 test.beforeEach(async function ({ page }, testInfo) {
   await openGame(page, testInfo);
@@ -130,6 +135,9 @@ test('historical endowments are authored, capped, bookmark-safe, and RNG-neutral
       }
       return {
         goods:market.goods,
+        canonicalDuchies:Object.keys(FBDATA.marketEndowments.duchies).every(function (id) {
+          return FB.titleIds.resolve('duchy', id) === id;
+        }),
         brugesTags:bruges.tags,
         brugesProvisions:bruges.production.provisions,
         veneziaTags:venezia.tags,
@@ -152,6 +160,7 @@ test('historical endowments are authored, capped, bookmark-safe, and RNG-neutral
     expect(result.brugesTags).toEqual(expect.arrayContaining([
       'grain','wool_textiles','fisheries','luxury_entrepot'
     ]));
+    expect(result.canonicalDuchies).toBe(true);
     expect(result.brugesProvisions).toBe(0.4);
     expect(result.veneziaTags).not.toContain('grain');
     expect(result.veneziaTags).toEqual(expect.arrayContaining([

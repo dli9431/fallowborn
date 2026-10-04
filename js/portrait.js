@@ -381,7 +381,12 @@ window.FB = window.FB || {};
   var DPR = Math.min(window.devicePixelRatio || 1, 2);
   if (!(DPR >= 1)) DPR = 1;
   var CELL_W = Math.round(96 * DPR), CELL_H = Math.round(108 * DPR), ATLAS_SLOTS = 64;
-  var ATLAS_W = CELL_W * 8, ATLAS_H = CELL_H * 8;
+  // Resampling a source rectangle can read beyond its edges. Keep neighboring
+  // portraits out of that filter footprint, including when an LRU cell changes.
+  var ATLAS_GUTTER = Math.round(2 * DPR);
+  var ATLAS_STRIDE_W = CELL_W + ATLAS_GUTTER * 2;
+  var ATLAS_STRIDE_H = CELL_H + ATLAS_GUTTER * 2;
+  var ATLAS_W = ATLAS_STRIDE_W * 8, ATLAS_H = ATLAS_STRIDE_H * 8;
   var ATLAS_BYTES = ATLAS_W * ATLAS_H * 4;
   var FIGURE_W = Math.round(192 * DPR), FIGURE_H = Math.round(360 * DPR);
   /* Worn slots integrate into the drawing; hand objects show as inset
@@ -4936,7 +4941,8 @@ window.FB = window.FB || {};
     return 0;
   }
   function renderAtlasEntry(descriptor) {
-    ensureAtlas();var slot=atlasSlot(),x=(slot%8)*CELL_W,y=Math.floor(slot/8)*CELL_H;
+    ensureAtlas();var slot=atlasSlot(),x=(slot%8)*ATLAS_STRIDE_W+ATLAS_GUTTER,
+      y=Math.floor(slot/8)*ATLAS_STRIDE_H+ATLAS_GUTTER;
     /* the cell serves 30x34 through 88x100 CSS-pixel targets (cell and
        targets scale by the same DPR, so shrink ratios are unchanged):
        draw it bold enough for the faces it will be shrunk into, but with
@@ -4946,7 +4952,8 @@ window.FB = window.FB || {};
     atlasEntries[descriptor.key]=entry;cacheCounts.coldRenders++;return entry;
   }
   function blitAtlas(canvas,entry,key) {
-    var ctx=canvas.getContext('2d'),x=(entry.slot%8)*CELL_W,y=Math.floor(entry.slot/8)*CELL_H;
+    var ctx=canvas.getContext('2d'),x=(entry.slot%8)*ATLAS_STRIDE_W+ATLAS_GUTTER,
+      y=Math.floor(entry.slot/8)*ATLAS_STRIDE_H+ATLAS_GUTTER;
     ctx.save();ctx.setTransform(1,0,0,1,0,0);ctx.clearRect(0,0,canvas.width,canvas.height);
     ctx.imageSmoothingEnabled=true;
     if('imageSmoothingQuality' in ctx)ctx.imageSmoothingQuality='high';

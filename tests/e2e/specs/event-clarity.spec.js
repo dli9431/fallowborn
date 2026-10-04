@@ -4,12 +4,13 @@ dependsOnRuntime(__filename, [
   'js/save.js', 'js/save_v4.js',
   'css/style.css',
   'js/events.js',
+  'js/wars.js',
   'js/messages.js',
   'js/ui_misc.js',
   'js/ui_modals.js',
   'data/events_common.js',
   'data/events_paths.js',
-  'data/events_world.js'
+  'data/events_world.js', 'data/events_war.js'
 ]);
 
 const { test, expect } = require('../support/fixture');

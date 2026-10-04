@@ -1076,10 +1076,6 @@ FBDATA.items = {
     unique:false, slot:'body', fx:{ prestige:0.5 }, qualityFx:{ prestige:0.5 },
     art:{ kind:'jack', cloths:['#5e4632','#6e5238'], threads:['#c8b490'] },
     desc:'Warm shoulders read as rich shoulders, and rich shoulders get heard.' },
-  lamellar_cuirass:{ name:'Lamellar Cuirass', icon:'⛓', rarity:'famed', value:150,
-    unique:false, slot:'body', ageMin:12, fx:{ battle:0.05 }, qualityFx:{ battle:0.01 },
-    art:{ kind:'jack', cloths:['#6e6a58','#7d7660'], threads:['#3a3430'] },
-    desc:'Laced plates in the eastern fashion, bright as a fish in the sun.' },
 
   kettle_helm:     { name:'Kettle Helm', icon:'⛑', rarity:'fine', value:45,
     unique:false, slot:'head', ageMin:12, fx:{ battle:0.02 }, qualityFx:{ battle:0.01 },

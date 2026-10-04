@@ -8,6 +8,7 @@ dependsOnRuntime(__filename, [
   'js/institutions.js',
   'data/actions.js',
   'js/actions.js',
+  'js/wars.js', 'js/world.js',
   'js/economy.js',
   'js/items.js',
   'js/market.js',
@@ -215,7 +216,8 @@ test('auctioned claims and enterprises use their existing transfer paths',
         claimAuction.rivalMaximum = claimAuction.currentBid;
         const claimWin = FB.placeAuctionBid(state, 1);
         const claim = state.player.fabricatedClaim;
-        const fabricationBlocked = FB.claimCandidates(state).length === 0;
+        const remainingCandidates = FB.claimCandidates(state);
+        const fabricationBlocked = remainingCandidates.indexOf(claim.pid) < 0;
         const lawfulCause = FB.warCauses(state, true).filter(function (cause) {
           return cause.type === 'fabricated' && claim && cause.target === claim.pid;
         })[0];
@@ -281,6 +283,7 @@ test('auctioned claims and enterprises use their existing transfer paths',
           claimWin:claimWin,
           claim:claim,
           fabricationBlocked:fabricationBlocked,
+          otherClaimsAvailable:remainingCandidates.length > 0,
           lawfulCause:lawfulCause && lawfulCause.type,
           claimCleared:claimCleared,
           availableWhileLocked:availableWhileLocked,
@@ -309,6 +312,7 @@ test('auctioned claims and enterprises use their existing transfer paths',
     });
     expect(result.claim).toMatchObject({ source:'auction', madeTurn:expect.any(Number) });
     expect(result.fabricationBlocked).toBe(true);
+    expect(result.otherClaimsAvailable).toBe(true);
     expect(result.lawfulCause).toBe('fabricated');
     expect(result.claimCleared).toBe(true);
     expect(result.availableWhileLocked).toBe(0);
@@ -516,8 +520,10 @@ for (const previousRank of ['none', 'member']) {
       return { gold:s.player.gold, rank:s.chars[s.player.charId].career.guildRank };
     });
     expect(before.gold).toBe(previousRank === 'none' ? 985 : 960);
-    await expect(page.locator('[data-promotion-receipt]')).toContainText('Prestige +8');
-    await expect(page.locator('[data-promotion-receipt]')).toContainText(await page.evaluate(function (gold) {
+    const receipt = page.locator('#gm-body [data-promotion-receipt]');
+    await expect(receipt).toHaveCount(1);
+    await expect(receipt).toContainText('Prestige +8');
+    await expect(receipt).toContainText(await page.evaluate(function (gold) {
       return FB.T('Money {change}', { change:'−' + FB.money(1000 - gold) });
     }, before.gold));
     await expect.poll(function () { return page.evaluate(function () { return !FB.ui.eventInputGuarded(); }); }).toBe(true);

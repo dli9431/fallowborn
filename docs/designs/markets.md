@@ -1,5 +1,7 @@
 # County commodity markets
 
+Regional endowment keys use canonical unprefixed duchy slugs, matching the activated county map and title tables. County additions and suppressions compose with that regional base, so Flanders retains grain and wool production and Veneto retains wine and oil alongside each port's local tags. Existing market stocks are preserved; production changes at the next seasonal update.
+
 Large army concentrations add regional provisions pressure at the seasonal market
 update. Troops from all banners in a county are summed before applying the 2,500-men
 threshold. Reach adds one land-adjacency step per 2,500 men up to 10,000 (four steps).
@@ -269,8 +271,7 @@ more expensive county inputs and edge capacities are each derived only once
 rather than once per endpoint, good, and flow pass. It has no
 daily scans, merchant actors, all-pairs searches, flow pathfinding, or serialized
 reports. The county report shown in the UI is an in-memory view of the last
-season only. The market save target is under 64 KB and the complete long-campaign
-save target remains under 1.6 MB.
+season only. The market save target is under 64 KiB. The complete long-campaign save target is under 1.8 MiB, matching the storage specification's full-state budget; the market's own limit remains separate.
 
 Standing non-fort building counts come from the shared transient county building index
 rather than rescanning every settlement record during market production. Long campaigns can

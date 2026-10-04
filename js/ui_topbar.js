@@ -247,7 +247,8 @@ window.FB = window.FB || {};
         btn.classList.add('has-focus-art');
         if (!fits()) {
           btn.classList.add('focus-art-compact');
-          if (!fits()) btn.classList.remove('has-focus-art', 'focus-art-compact');
+          // The bare label may still need the compact treatment without art.
+          if (!fits()) btn.classList.remove('has-focus-art');
         }
       }
     }

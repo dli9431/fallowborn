@@ -9,6 +9,7 @@ dependsOnRuntime(__filename, [
   'js/mapview.js',
   'js/market.js',
   'js/model.js',
+  'js/keys.js',
   'js/ui_misc.js',
   'js/ui_modals.js',
   'js/ui_panels.js',
@@ -496,9 +497,11 @@ test('family tree highlights and connects founders, opens on you, pans, previews
       '.ftchip[data-cid="' + family.founderId + '"]');
     await expect(founderChip).toHaveCount(1);
     await expect(founderChip).toHaveClass(/founder/);
+    await expect(founderChip).toHaveClass(/ftplayed/);
+    await expect(founderChip.locator('.ftplayed-label')).toHaveText('Played');
     expect(await founderChip.evaluate(function (chip) {
       return getComputedStyle(chip).borderTopColor;
-    })).toBe('rgb(184, 115, 51)');
+    })).toBe('rgb(121, 201, 227)');
     await expect(founderTreeRoot.locator(
       '.ftchip[data-cid="' + family.meId + '"]')).toHaveCount(1);
     await expect(founderTreeRoot.locator(
@@ -703,9 +706,11 @@ test.describe('mobile-sized family tree', function () {
     const founderChip = page.locator('.family-tree-primary .ftchip[data-cid="' +
       family.founderId + '"]').first();
     await expect(founderChip).toHaveClass(/founder/);
+    await expect(founderChip).toHaveClass(/ftplayed/);
+    await expect(founderChip.locator('.ftplayed-label')).toHaveText('Played');
     expect(await founderChip.evaluate(function (chip) {
       return getComputedStyle(chip).borderTopColor;
-    })).toBe('rgb(184, 115, 51)');
+    })).toBe('rgb(121, 201, 227)');
     const opening = await meChip.evaluate(function (chip) {
       const wrapNode = chip.closest('.family-tree-primary');
       const wrap = wrapNode.getBoundingClientRect();
@@ -841,7 +846,8 @@ test('war catalogue searches and filters semantic available and blocked causes',
     await page.locator('#war-target-basis').selectOption('all');
     await page.locator('#war-target-diplomacy').selectOption('blocked');
     await expect(blocked).toBeVisible();
-    await expect(blocked.locator('.keyhint')).toHaveText('1');
+    await expect(page.locator('#war-target-list .keyhint')).toHaveCount(0);
+    await expect(blocked).not.toHaveAttribute('aria-keyshortcuts', /.+/);
     await page.locator('#war-target-rank').selectOption('higher');
     await expect(blocked).toBeVisible();
   });

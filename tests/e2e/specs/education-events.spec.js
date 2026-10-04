@@ -253,9 +253,11 @@ test('New Year reserves one staggered story for every educated descendant',
         extraIds.push(extra.id);
       }
       me.edu = { focus:'lea', storyTerms:{lea:4} };
-      FB.queueEvent(s, 'birth', {});
+      const newborn = make('Newborn', 0, null);
+      const newAdult = make('New Adult', 16, null);
+      const birth = FB.queueEvent(s, 'child_born_flavor', { childId:newborn.id });
       const annual = FB.schoolingYear(s);
-      FB.queueEvent(s, 'child_comes_of_age', { childId:child.id });
+      const comingOfAge = FB.queueEvent(s, 'child_comes_of_age', { childId:newAdult.id });
       const oldChance = FB.chance;
       const oldRng = FB.rng;
       FB.chance = function () { return false; };
@@ -309,6 +311,7 @@ test('New Year reserves one staggered story for every educated descendant',
       FB.rng = oldRng;
       return {
         queued:queued,
+        familyEventsQueued:!!birth && !!comingOfAge,
         order:order,
         scheduled:scheduled,
         playerId:me.id,
@@ -332,8 +335,8 @@ test('New Year reserves one staggered story for every educated descendant',
     });
 
     expect(result.queued).toBe(true);
-    expect(result.order[0]).toBe('birth');
-    expect(result.order[1]).toBe('child_comes_of_age');
+    expect(result.familyEventsQueued).toBe(true);
+    expect(result.order).toEqual(['child_born_flavor', 'child_comes_of_age']);
     expect(result.scheduled).toHaveLength(8);
     expect(result.scheduled.map(function (record) { return record.studentId; }).sort())
       .toEqual(result.allStudentIds.sort());

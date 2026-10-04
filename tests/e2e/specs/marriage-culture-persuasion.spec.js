@@ -2,7 +2,7 @@
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
   'data/actions.js', 'data/events_common.js', 'data/cultures.js', 'data/map_data.js', 'data/technology.js', 'js/events.js',
-  'js/model.js', 'js/actions.js', 'js/world.js', 'js/agency.js', 'js/main.js',
+  'js/model.js', 'js/items.js', 'js/actions.js', 'js/world.js', 'js/agency.js', 'js/main.js',
   'js/save.js', 'js/ui_modals.js', 'js/ui_misc.js'
 ]);
 const { test, expect } = require('../support/fixture');
@@ -111,6 +111,7 @@ test('royal heirs face resistance and accession invalidates an unconfirmed invit
       name:target.name, sex:target.sex, born:target.born, childIds:[] };
     succession.heirId = memberId;
     target.royalLine = { realmId:rid, memberId:memberId };
+    target.homeProvinceId = realm.capital;
     s.player.provinceId = realm.capital; s.player.tier = 4; s.player.liege = rid;
     head.skills.dip = 100;
     const heir = FB.marriageCulturePersuasionStatus(s, target);

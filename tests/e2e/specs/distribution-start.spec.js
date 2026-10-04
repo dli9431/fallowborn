@@ -4,19 +4,13 @@ dependsOnRuntime(__filename, [
   'index.html', 'css/style.css', 'js/main.js', 'js/ui_misc.js',
   'js/ui_panels.js', 'js/ui_topbar.js', 'js/ui_modals.js', 'js/actions.js',
   'js/save.js', 'js/util.js', 'js/world.js', 'js/crazygames.js', 'data/starts.js',
-  'data/actions.js', 'data/bookmarks.js', 'data/events_tutorial.js', 'js/title_ids.js'
+  'data/actions.js', 'data/bookmarks.js', 'data/events_tutorial.js', 'js/title_ids.js',
+  'js/music.js', 'data/music_catalog.js'
 ]);
 const { test, expect } = require('../support/fixture');
 const { mockCrazyGames } = require('../support/crazygames');
-const { openGame, targetUrl } = require('../support/game/navigation');
-
-async function openCrazyGame(page, testInfo) {
-  await page.goto(targetUrl(testInfo), { waitUntil:'domcontentloaded' });
-  await page.waitForFunction(function () {
-    return window.FB && FB.game && FB.game.bootReady;
-  });
-  await expect(page.locator('#btn-newgame')).toContainText('Play as Osric');
-}
+const { openGame } = require('../support/game/navigation');
+const { openCrazyGame } = require('../support/game/crazygames-title');
 
 test.beforeEach(async function ({ page }) { await mockCrazyGames(page); });
 

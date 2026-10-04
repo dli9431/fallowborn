@@ -4097,7 +4097,7 @@ window.FB = window.FB || {};
       return h;
     }
 
-    function render() {
+    function render(replace) {
       const groups = getGroups();
       let h = '<div class="gm-body-text">' +
         '<p>' + esc(kind === 'faith'
@@ -4128,7 +4128,9 @@ window.FB = window.FB || {};
         esc(FB.T('Close')) + '</button></div>';
 
       openModal(kind === 'faith'
-        ? FB.T('Convert faith') : FB.T('Adopt a new culture'), h, { modalClass:'conversion-modal', noHotkeys:true });
+        ? FB.T('Convert faith') : FB.T('Adopt a new culture'), h, {
+          modalClass:'conversion-modal', noHotkeys:true, historyView:true, replaceView:!!replace
+        });
       bindModalEvents();
     }
 
@@ -4148,7 +4150,7 @@ window.FB = window.FB || {};
       modalBody.querySelectorAll('[data-conv-scope]').forEach(function (button) {
         button.addEventListener('click', function () {
           scope = button.getAttribute('data-conv-scope');
-          render();
+          render(true);
         });
       });
 
@@ -4274,7 +4276,13 @@ window.FB = window.FB || {};
         esc(FB.T('Not yet')) + '</button></div>';
       openModal(kind === 'faith'
         ? FB.T('Convert to {target}?', { target:name })
-        : FB.T('Adopt {target}?', { target:name }), h, { noHotkeys:true, noFocus:true });
+        : FB.T('Adopt {target}?', { target:name }), h, {
+          noHotkeys:true, noFocus:true, historyView:true,
+          historyBackRender:returning ? function () {
+            if (kind === 'faith') UI.showFaithDetails(currentId);
+            else UI.showCultureDetails(currentId);
+          } : null
+        });
       $('conv-confirm').addEventListener('click', function () {
         if (!FB.applyConversion(s, kind, targetId, scope)) {
           const failed = FB.conversionStatus(s, kind, targetId, scope);
@@ -4285,12 +4293,6 @@ window.FB = window.FB || {};
         }
         UI.closeModal();
         UI.refresh();
-      });
-      $('conv-cancel').addEventListener('click', function () {
-        if (returning) {
-          if (kind === 'faith') UI.showFaithDetails(currentId);
-          else UI.showCultureDetails(currentId);
-        } else render();
       });
     }
 
@@ -12469,7 +12471,8 @@ window.FB = window.FB || {};
       kv('Initial Standing', esc('+' + selected.initialStanding)) +
       kv('Breakaway risk', esc('×' + selected.breakawayMultiplier)) +
       (selectedDef.extraordinaryTaxExempt
-        ? kv('Extraordinary taxes', esc(FB.T('Exempt'))) : ''), ' data-grant-terms-preview') +
+        ? kv('Extraordinary taxes', esc(FB.T('Exempt'))) : '') +
+      '<p>' + esc(FB.T('Base service before the recipient’s domain limits and delegated settlements. Actual contributions may be lower.')) + '</p>', ' data-grant-terms-preview') +
       reviewActionsHtml(reviewActionCardHtml({
         id:'grant-terms-confirm', label:FB.T('Confirm grant'),
         note:serviceEnabled ? FB.T('Service and tenure cannot be renegotiated after the grant.') :
@@ -20049,9 +20052,13 @@ window.FB = window.FB || {};
       }) : opts.summary;
       religiousOfficeSuccess(opts.person || s.chars[actor], opts.label, outcome, benefit, function () {
         FB.game.passDay({ skipFocus:true });
-        resumeManagementAfterDay(null, function () {
-          if (h) back(); else UI.showAbbeys(target && target.id, null, opts.fromWork);
-        });
+        // Reopen after the outcome's dismissal has cleared its old history.
+        setTimeout(function () {
+          if (FB.state !== s || actor !== s.player.charId) return;
+          resumeManagementAfterDay(null, function () {
+            if (h) back(); else UI.showAbbeys(target && target.id, null, opts.fromWork);
+          });
+        }, 0);
       }, before);
     };
   }
@@ -20079,6 +20086,12 @@ window.FB = window.FB || {};
     const A = FBDATA.abbeys;
     const houses = FB.abbeyHouses(s);
     const h = houses.filter(function (row) { return row.id === houseId; })[0];
+    /* Outcomes close the old stack. Rebuild the real parent before its child
+       so footer, Escape and browser Back all retain the same return route. */
+    if ($('genmodal').classList.contains('hidden') && (h || fromWork)) {
+      if (h) UI.showAbbeys(null, null, fromWork);
+      else UI.showCareerPicker(s.player.charId);
+    }
     const bindings = [];
     function action(id, label, note, run, q) {
       bindings.push({ id:id, run:run });
@@ -20192,7 +20205,7 @@ window.FB = window.FB || {};
     }
     body += '</div>' + abbeyFooter(h || fromWork ? FB.T('Back') : FB.T('Close'));
     openAbbeyModal(h ? abbeyName(h) : FB.T('Abbeys and patronage'), body, {
-      historyView:!!h || !!fromWork, modalClass:'fullsheet-modal',
+      historyView:true, modalClass:'fullsheet-modal',
       titleDetailsHtml:'<p>' + esc(FB.T('The community owns its endowments. The abbacy is a personal office with permanent vows; patrons and temporary residents take no vows. Private family property remains separate. Political privileges grant no county or hereditary title.')) + '</p>'
     });
     bindings.forEach(function (b) { if ($(b.id)) $(b.id).onclick = b.run; });

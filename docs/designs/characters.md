@@ -1,5 +1,7 @@
 # Characters: skills & growing up
 
+Self skill labels wrap within the available space beside the portrait on narrow desktop sidebars, keeping every skill value visible inside the panel.
+
 ## Life histories
 
 Life history is a shared feature of every edition. Character sheets, including
@@ -225,8 +227,8 @@ Portraits choose nothing by culture, faith or bookmark id. Faces come from data:
 
 Natural hair generation keeps the selected red or fair color family for adults. The child ash-color correction runs after that selection, and the dark-family fallback applies only when neither the red nor fair chance succeeds.
 
-Compact opaque busts share one state-local 8×8 atlas of 96×108 cells. Its 64 entries use
-LRU replacement and fixed 2,654,208-byte raw pixel storage. Persistent target canvases
+Compact opaque busts share one state-local 8×8 atlas of 96×108 portrait cells, each surrounded by a two-pixel gutter scaled with device pixel ratio. Resizing samples no neighboring portrait, so previously painted faces and later direct renders of the same character have identical pixels. Its 64 entries use LRU replacement and 2,867,200-byte raw pixel storage at device pixel ratio 1.
+Persistent target canvases
 carry a key-and-backing-size expando stamp, so an unchanged retained face does not even
 acquire a context. `FB.paintFaces` paints one cold key synchronously, groups later
 targets by key, and advances the bounded 128-key queue in animation frames with a

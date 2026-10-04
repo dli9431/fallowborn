@@ -1,5 +1,7 @@
 # Events are data
 
+Liege peace-demand choices have campaign-bound preview and receipt adapters. Comply previews white peace for the demanded war and reports its completion; Refuse previews continued war and possible peace enforcement, then reports the refusal. Stale contexts have no preview, and reading the consequences does not change state or RNG. The goldCounterparty effect key is transfer metadata for the existing gold consequence.
+
 `household_service_duty` is explicitly queued after each 180 completed working
 days. Its localized forms follow the service path; exact saved protagonist,
 employer, appointment serial and case number guard all outcomes. A temporarily

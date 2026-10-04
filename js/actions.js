@@ -1076,9 +1076,9 @@ window.FB = window.FB || {};
     reads = reads || {};
 
     if (strictInteraction && kind === 'culture') {
-      const location = FB.travelLocation ? FB.travelLocation(state) : null;
+      const locationId = p.travel ? p.travel.currentId : p.provinceId;
       if ((!p.travel || p.travel.phase === 'arrived') && countyContainsConversionIdentity(state,
-          location ? location.id : p.provinceId, kind, targetId)) {
+          locationId, kind, targetId)) {
         return { kind:'local', label:FB.T('Local community') };
       }
       if (!reads.contacts) {
@@ -6506,7 +6506,13 @@ window.FB = window.FB || {};
          (p.flags && p.flags.bishop)))));
     if (seeOnly) return false;
     if (p.flags && p.flags.chief_qadi) return false;
-    if (!FB.station.isBaron(p, state) || !p.liege || !FB.landedBaron(state)) return false;
+    const office = FB.castellanyOf(state);
+    const appointed = office && office.provinceId === p.provinceId &&
+      office.holderCharId === p.charId &&
+      office.appointerId === p.liege &&
+      (office.tenure !== 'term' || state.turn < office.expiryTurn);
+    if (!FB.station.isBaron(p, state) || !p.liege ||
+        (!FB.landedBaron(state) && !appointed)) return false;
     const holder = (state.holder && state.holder[p.provinceId]) ||
       (state.owner && state.owner[p.provinceId]);
     return holder === p.liege && !!(state.realms[p.liege] &&

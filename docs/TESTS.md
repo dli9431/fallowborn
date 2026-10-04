@@ -1,5 +1,7 @@
 # Testing Fallowborn
 
+CrazyGames content, links and start specifications use tests/e2e/support/game/crazygames-title.js to wait for boot readiness, resolve the optional music prompt and verify the visible Play as Osric and full-start controls. Callers supply the distribution flag and SDK double before navigation. Standard title journeys continue to use support/game/navigation.js.
+
 CrazyGames onboarding coverage in tests/e2e/specs/crazygames-onboarding.spec.js includes the first-business review at desktop and phone widths, stale quotes, live savings and courtship progress, paid final service, saved-campaign previews, older metadata, optional preview failure and hidden guidance on Continue. tests/e2e/specs/distribution-start.spec.js covers fresh and older preference defaults plus explicitly saved event-resume choices in both distributions. Execution remains owner-controlled.
 
 `ai-treasury-transfers.spec.js` covers paired balances, accrued-bill protection,

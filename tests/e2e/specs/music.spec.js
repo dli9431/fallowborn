@@ -467,6 +467,13 @@ test('first soundtrack boot, title pause, and background playback preserve state
     await page.getByRole('button', { name:'Close', exact:true }).click();
     await page.evaluate(function () {
       FB.game.uiPrefs.musicChoice = null;
+      FB.game.saveUiPrefs();
+    });
+    // The boot prompt belongs to a new document; completed boot disables its controls.
+    await page.reload({ waitUntil:'domcontentloaded' });
+    await expect(page.locator('#music-choice:not(.hidden)')).toBeVisible();
+    await expect(page.locator('#music-choice-play')).toBeEnabled();
+    await page.evaluate(function () {
       window.__bootPlayEvents = [];
       FB.telemetry = {
         enabled:function () { return true; },
@@ -475,7 +482,6 @@ test('first soundtrack boot, title pause, and background playback preserve state
           return true;
         }
       };
-      FB.music.offerBootChoice(function () {});
     });
     await page.locator('#music-choice-play').click();
     expect(await page.evaluate(function () { return window.__bootPlayEvents; })).toEqual([

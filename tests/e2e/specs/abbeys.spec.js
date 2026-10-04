@@ -473,10 +473,38 @@ test('after an estate action the refreshed sheet goes Back to the house list', a
   await page.locator('#office-result-continue').click();
   await expect(page.locator('#abbey-action-relief')).toBeVisible();
   await expect(page.locator('#abbey-back')).toHaveText('Back');
+  await expect(page.locator('#abbey-back')).toBeEnabled();
   await page.locator('#abbey-back').click();
   await expect(page.locator('#gm-title')).toHaveText('Abbeys and patronage');
   await expect(page.locator('#abbey-open-' + pid)).toBeVisible();
+  await expect(page.locator('#abbey-back')).toBeDisabled();
 });
+
+for (const exit of ['escape', 'browser']) {
+  test('acknowledged abbey actions return to their rebuilt parent with ' + exit, async function ({ page }) {
+    await page.setViewportSize({ width:390, height:740 });
+    await page.evaluate(function () {
+      const h = window.abbeyTestElect(); h.treasury = 200;
+      FB.ui.showAbbeys(h.id);
+    });
+    await page.locator('#abbey-action-relief').click();
+    await page.locator('#abbey-confirm').click();
+    await expect(page.locator('[data-religious-office-result]')).toBeVisible();
+    await expect.poll(function () { return page.evaluate(function () { return !FB.ui.eventInputGuarded(); }); }).toBe(true);
+    await page.locator('#office-result-continue').click();
+    await expect(page.locator('#abbey-action-relief')).toBeVisible();
+    const settled = await page.evaluate(function () {
+      return { turn:FB.state.turn, treasury:FB.abbeyOf(FB.state).treasury };
+    });
+    if (exit === 'escape') await page.keyboard.press('Escape');
+    else await page.goBack();
+    await expect(page.locator('#gm-title')).toHaveText('Abbeys and patronage');
+    await expect(page.locator('#abbey-back')).toBeDisabled();
+    expect(await page.evaluate(function () {
+      return { turn:FB.state.turn, treasury:FB.abbeyOf(FB.state).treasury };
+    })).toEqual(settled);
+  });
+}
 
 test('blocked election candidates stay listed, filter by state and review every requirement', async function ({ page }) {
   const cid = await page.evaluate(function () {
@@ -542,5 +570,9 @@ test('the Self entry describes the abbey sheet and opens it', async function ({ 
   await expect(entry.locator('.adesc')).toContainText('Found or endow a religious house');
   await entry.click();
   await expect(page.locator('#gm-title')).toHaveText('Abbeys and patronage');
-  await expect(page.locator('#abbey-back')).toHaveText('Close');
+  await expect(page.locator('#abbey-back')).toHaveText('Back');
+  await expect(page.locator('#abbey-back')).toBeDisabled();
+  await page.locator('#gm-body > .modal-navigation [data-modal-nav="close"]').click();
+  await expect(page.locator('#genmodal')).toBeHidden();
+  await expect(entry).toBeFocused();
 });

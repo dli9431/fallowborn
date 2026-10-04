@@ -125,6 +125,10 @@ prestige. The first privilege raises the holder's station to at least 4 and
 annual religious prestige from 24 to 40. Neither privilege transfers secular
 land, and both remain with the institution when its holder changes.
 
+Outcome return navigation
+
+When an outcome acknowledgement reopens abbey management, it waits for dismissal to clear the completed modal's history, then rebuilds the real parent list or Work sheet before its child. Footer Back, Escape and browser Back restore the same retained parent without reopening the completed action. Ordinary nested reviews retain their existing parent view, scroll, disclosures and focus. The root house list uses the shared disabled Back and enabled Close controls.
+
 Availability boundary
 
 The abbeys system guards houses, office eligibility, repair and seasonal work. House queries resolve the house's faith and county holder; personal candidacy also resolves the candidate's scope. Disabled houses are omitted from live queries and retained on restore. Existing papal-faith eligibility still applies to Catholic houses. See docs/designs/systems.md.

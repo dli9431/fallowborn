@@ -17,6 +17,7 @@ test.beforeEach(async function ({ page }, testInfo) {
     child.fatherId = me.id;
     me.childrenIds = (me.childrenIds || []).concat(child.id);
     child.homeProvinceId = s.player.provinceId;
+    FB.setCareer(s, child, s.player.profession, 'journeyman');
     FB.touchFamily();
     window.discoveryChildId = child.id;
   });

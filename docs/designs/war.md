@@ -614,6 +614,9 @@ troop total; individual heraldry-and-name entries
 put their troop and contribution details in hover/focus tooltips and tap-open sheets.
 Desktop tooltips sit beside the hovered or focused name, within the screen edges.
 The compact desktop overview keeps both rosters together without per-realm stat cards.
+
+Wide desktop rosters use four columns for large coalitions, retaining all combatants above Back and Close in a forty-per-side campaign. Smaller viewports reduce the columns and keep the shared scrolling body.
+
 Both sides share an A–Z / largest-host-first toggle; host size is the realm's
 combined campaign field troops, including split detachments, with names breaking ties.
 Overview activity links use current campaign hosts: opposing camps sharing a county

@@ -397,14 +397,38 @@ test('compact atlas distinguishes target hits, atlas hits, misses, LRU, and stat
         evicted:afterEvicted.entries===64&&afterEvicted.coldRenders===full.coldRenders+1,
         reset:reset};
     })).toEqual({
-      cold:{entries:1,bytes:2654208,targetHits:0,atlasHits:0,coldRenders:1,queued:0},
-      target:{entries:1,bytes:2654208,targetHits:1,atlasHits:0,coldRenders:1,queued:0},
-      atlas:{entries:1,bytes:2654208,targetHits:1,atlasHits:1,coldRenders:1,queued:0},
-      resized:{entries:1,bytes:2654208,targetHits:1,atlasHits:2,coldRenders:1,queued:0},
-      full:expect.objectContaining({entries:64,bytes:2654208}),
+      cold:{entries:1,bytes:2867200,targetHits:0,atlasHits:0,coldRenders:1,queued:0},
+      target:{entries:1,bytes:2867200,targetHits:1,atlasHits:0,coldRenders:1,queued:0},
+      atlas:{entries:1,bytes:2867200,targetHits:1,atlasHits:1,coldRenders:1,queued:0},
+      resized:{entries:1,bytes:2867200,targetHits:1,atlasHits:2,coldRenders:1,queued:0},
+      full:expect.objectContaining({entries:64,bytes:2867200}),
       evicted:true,
-      reset:{entries:1,bytes:2654208,targetHits:0,atlasHits:0,coldRenders:1,queued:0}
+      reset:{entries:1,bytes:2867200,targetHits:0,atlasHits:0,coldRenders:1,queued:0}
     });
+  });
+
+test('compact portrait pixels stay stable when neighboring atlas cells are painted',
+  async function ({ page }) {
+    expect(await page.evaluate(function () {
+      const s = FB.state, me = s.chars[s.player.charId];
+      function canvas() {
+        const face = document.createElement('canvas');
+        FB.sizeFaceCanvas(face, 64, 72);
+        return face;
+      }
+      FB.clearPortraitCache();
+      const first = canvas();
+      FB.paintPortrait(first, me, s.date.year, { state:s });
+      const original = first.toDataURL();
+      for (let i = 0; i < 3; i++) {
+        const other = Object.assign({}, me, { id:'portrait-neighbor-' + i, name:'Neighbor ' + i });
+        FB.paintPortrait(canvas(), other, s.date.year, { state:s });
+      }
+      const reference = canvas();
+      FB.paintPortrait(reference, me, s.date.year, { state:s });
+      return { stable:first.toDataURL() === original,
+        sameCharacter:reference.toDataURL() === original };
+    })).toEqual({ stable:true, sameCharacter:true });
   });
 
 test('cold face bursts group keys, discard stale waiters, and support immediate mode',
@@ -732,7 +756,8 @@ test('portrait backing stores scale by the capped device pixel ratio',
       FB.clearPortraitCache();
       FB.paintPortrait(probe,me,s.date.year,{state:s});
       var stats=FB.portraitCacheStats();
-      var atlasW=Math.round(96*dpr)*8,atlasH=Math.round(108*dpr)*8;
+      var gutter=Math.round(2*dpr)*2;
+      var atlasW=(Math.round(96*dpr)+gutter)*8,atlasH=(Math.round(108*dpr)+gutter)*8;
       return {
         dprClamped:dpr===raw,
         faceBacking:face.width===Math.round(44*dpr)&&face.height===Math.round(50*dpr),

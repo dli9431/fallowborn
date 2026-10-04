@@ -6,6 +6,7 @@ dependsOnRuntime(__filename, [
   'js/model.js',
   'js/ui_modals.js',
   'js/ui_panels.js',
+  'js/ui_misc.js', 'css/style.css',
   'js/world.js',
   'js/events.js',
   'js/actions.js',
@@ -596,7 +597,20 @@ test('records ordinary and royal stepchildren without changing inheritance',
     await expect(page.locator(
       '.family-tree-primary .ftchip[data-cid="' + ordinary.childId + '"]'))
       .toHaveCount(1);
+    const treeChild = page.locator('.family-tree-primary .ftchip[data-cid="' + ordinary.childId + '"]');
+    await treeChild.focus();
+    await expect(page.locator('#tooltip')).toBeVisible();
+    const navigationClear = await page.evaluate(function () {
+      const tip = document.getElementById('tooltip').getBoundingClientRect();
+      const footer = document.querySelector('#gm-body > .modal-navigation').getBoundingClientRect();
+      const close = document.querySelector('#gm-body > .modal-navigation [data-modal-nav="close"]');
+      const rect = close.getBoundingClientRect();
+      return { above:tip.bottom <= footer.top - 8,
+        clickable:document.elementFromPoint(rect.left + rect.width / 2, rect.top + rect.height / 2) === close };
+    });
+    expect(navigationClear).toEqual({ above:true, clickable:true });
     await page.getByRole('button', { name:'Close', exact:true }).click();
+    await expect(page.locator('#genmodal')).toBeHidden();
 
     await page.reload({ waitUntil:'domcontentloaded' });
     await startDeterministicGame(page);

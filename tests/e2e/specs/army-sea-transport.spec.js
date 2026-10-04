@@ -2,6 +2,9 @@
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
   'js/armies.js',
+  'js/wars.js', 'js/technology.js', 'js/holywar.js',
+  'js/treasury.js', 'js/logistics.js', 'js/fortifications.js',
+  'data/technology.js', 'data/units.js',
   'js/travel.js',
   'js/ui_panels.js',
   'js/world.js',
@@ -289,6 +292,10 @@ test('quotes land and every crossing class at capacity boundaries and campaign s
       FB.campaignHostModBonus = function (liveState, key) {
         return key === 'marchSpeed' ? 0.5 : 0;
       };
+      // An ordinary host must not inherit a holy-war campaign's modifiers.
+      const ordinaryLand = FB.armyLegQuote(state, army, 'a', 'b');
+      const ordinaryOpen = FB.armyLegQuote(state, army, 'a', 'o');
+      army.warId = 'holy';
       const campaignLand = FB.armyLegQuote(state, army, 'a', 'b');
       const campaignOpen = FB.armyLegQuote(state, army, 'a', 'o');
 
@@ -300,6 +307,8 @@ test('quotes land and every crossing class at capacity boundaries and campaign s
         narrowAbove:narrowAbove,
         coastal:coastal,
         open:open,
+        ordinaryLand:ordinaryLand,
+        ordinaryOpen:ordinaryOpen,
         campaignLand:campaignLand,
         campaignOpen:campaignOpen
       };
@@ -320,6 +329,8 @@ test('quotes land and every crossing class at capacity boundaries and campaign s
     expect(result.open).toMatchObject({
       effectiveCapacity:188, cycles:2, cycleDays:7, totalDays:14
     });
+    expect(result.ordinaryLand).toEqual(result.land);
+    expect(result.ordinaryOpen).toEqual(result.open);
     expect(result.campaignLand.totalDays).toBe(4);
     expect(result.campaignOpen.cycleDays).toBe(5);
     expect(result.campaignOpen.totalDays).toBe(10);
@@ -460,7 +471,8 @@ test('AI, player automation, prey hunts, and battle routs share weighted timing'
 
       state.realms[first].war = { enemy:second };
       const ai = host('ai_first', first, 1500, 'a');
-      const aiEnemy = host('ai_second', second, 1500, 'd');
+      // Give the attacker a clear advantage so pursuit passes its safety gate.
+      const aiEnemy = host('ai_second', second, 500, 'd');
       state.armies = [ai, aiEnemy];
       FB.armyTick(state);
       const aiRoute = {
@@ -472,12 +484,16 @@ test('AI, player automation, prey hunts, and battle routs share weighted timing'
       state.player.war = { enemy:second, defending:false, target:'d' };
       FB.game.auto.hosts = 'manual';
       const hunter = host('player_hunt', 'player', 1500, 'a');
-      hunter.huntPrey = second;
       const hunted = host('hunt_target', second, 1500, 'd');
       state.armies = [hunter, hunted];
+      // Manual control keeps the hand-issued route, but drops automatic tracking.
+      FB.orderArmy(state, hunter, hunted.at);
+      hunter.manual = 1;
+      hunter.huntPrey = second;
       FB.armyTick(state);
       const huntRoute = {
-        path:hunter.path.slice(), moveLeft:hunter.moveLeft
+        path:hunter.path.slice(), moveLeft:hunter.moveLeft,
+        huntPrey:hunter.huntPrey
       };
 
       FB.game.auto.hosts = 'off';
@@ -533,7 +549,7 @@ test('AI, player automation, prey hunts, and battle routs share weighted timing'
       path:['b','d'], moveLeft:5
     });
     expect(result.huntRoute).toEqual({
-      path:['b','d'], moveLeft:5
+      path:['b','d'], moveLeft:5, huntPrey:null
     });
     expect(result.automatedRoute).toEqual({
       path:['b','d'], moveLeft:5
@@ -596,9 +612,16 @@ test('saved countdowns survive reload and new orders requote current technology 
         completed:[], exposed:[], active:[], progress:{},
         reserve:0, priorities:{}
       };
+      const sovereign = FB.techRealmId(state, vassal);
+      // The vassal's dormant local record does not set national transport.
+      state.realmTech[sovereign] = {
+        completed:['longships'], exposed:[], active:[], progress:{},
+        reserve:0, priorities:{}
+      };
       army.realm = vassal;
       FB.orderArmy(state, army, 'c');
       const afterAllegiance = army.moveLeft;
+      const allegianceCapacity = FB.armyLegQuote(state, army, 'a', 'b').nationalCapacity;
 
       const failed = FB.orderArmy(state, army, 'z');
       const afterFailure = {
@@ -614,6 +637,7 @@ test('saved countdowns survive reload and new orders requote current technology 
         rerouted:rerouted,
         afterTechnology:afterTechnology,
         afterAllegiance:afterAllegiance,
+        allegianceCapacity:allegianceCapacity,
         failed:failed,
         afterFailure:afterFailure,
         halted:halted,
@@ -627,6 +651,7 @@ test('saved countdowns survive reload and new orders requote current technology 
       next:'b', remainder:['c'], moveLeft:7, from:'a'
     });
     expect(result.afterAllegiance).toBe(14);
+    expect(result.allegianceCapacity).toBe(1500);
     expect(result.failed).toBe(false);
     expect(result.afterFailure).toEqual({
       path:[], goal:null, moveLeft:0

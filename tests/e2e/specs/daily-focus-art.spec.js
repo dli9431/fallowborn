@@ -272,7 +272,8 @@ test('narrow desktop and phone widths never truncate the Play label for the scen
   async function ({ page }) {
     const sizes = [
       { width:821, height:800 }, { width:1100, height:800 }, { width:1920, height:1080 },
-      { width:320, height:640 }, { width:360, height:740 }, { width:844, height:390 }
+      { width:320, height:640 }, { width:360, height:740 }, { width:844, height:390 },
+      { width:821, height:800 }, { width:1920, height:1080 }
     ];
     // Keep the native ticker, but prevent a simulated day while Pause shows.
     await page.evaluate(function () {
@@ -290,6 +291,13 @@ test('narrow desktop and phone widths never truncate the Play label for the scen
         expect(bar.artInside, label).toBe(true);
         expect(bar.clearOfLabel, label).toBe(true);
         expect(bar.hitsButton, label).toBe(true);
+        if (size.width === 821) {
+          await expect(page.locator('#btn-endturn .keyhint')).toBeHidden();
+          await expect(page.locator('#focus-art')).toBeHidden();
+        } else if (size.width === 1920) {
+          await expect(page.locator('#btn-endturn .keyhint')).toBeVisible();
+          await expect(page.locator('#focus-art')).toBeVisible();
+        }
       }
     }
   });

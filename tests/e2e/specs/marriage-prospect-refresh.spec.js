@@ -701,7 +701,7 @@ test('Household Plan arranges a descendant match and can replace its pledge',
     }, firstId);
     expect(firstTerms.dowry).toBeGreaterThan(0);
     await firstChoice.click();
-    await page.locator('#marriage-lineage-confirm').click();
+    await expect(page.locator('#marriage-lineage-confirm')).toHaveCount(0);
 
     await expect(page.getByRole('heading', {
       name:/Household Plan/
@@ -716,6 +716,7 @@ test('Household Plan arranges a descendant match and can replace its pledge',
       return {
         childBetrothedId:child.betrothedId,
         formerBetrothedId:former && former.betrothedId,
+        lineage:FB.marriageLineageContract(child, former).lineage,
         gold:state.player.gold,
         turn:state.turn
       };
@@ -723,6 +724,7 @@ test('Household Plan arranges a descendant match and can replace its pledge',
     expect(firstPledge).toEqual({
       childBetrothedId:firstId,
       formerBetrothedId:family.childId,
+      lineage:'paternal',
       gold:firstTerms.gold - firstTerms.dowry,
       turn:1
     });
@@ -765,7 +767,7 @@ test('Household Plan arranges a descendant match and can replace its pledge',
       };
     }, replacementId);
     await replacementChoice.click();
-    await page.locator('#marriage-lineage-confirm').click();
+    await expect(page.locator('#marriage-lineage-confirm')).toHaveCount(0);
 
     await expect(page.getByRole('heading', {
       name:/Household Plan/
@@ -777,6 +779,7 @@ test('Household Plan arranges a descendant match and can replace its pledge',
       return {
         childBetrothedId:child.betrothedId,
         replacementBetrothedId:replacement && replacement.betrothedId,
+        lineage:FB.marriageLineageContract(child, replacement).lineage,
         formerStillTracked:!!state.chars[ids.formerId],
         gold:state.player.gold,
         turn:state.turn,
@@ -794,6 +797,7 @@ test('Household Plan arranges a descendant match and can replace its pledge',
     expect(replaced).toEqual({
       childBetrothedId:replacementId,
       replacementBetrothedId:family.childId,
+      lineage:'paternal',
       formerStillTracked:false,
       gold:replacementTerms.gold - replacementTerms.dowry,
       turn:2,
@@ -862,7 +866,11 @@ test('a descendant can be pledged from birth and the pledge can be ended without
     }, partnerId);
     expect(dowry).toBeGreaterThan(0);
     await choice.click();
-    await page.locator('#marriage-lineage-confirm').click();
+    await expect(page.locator('#marriage-lineage-confirm')).toHaveCount(0);
+    expect(await page.evaluate(function (ids) {
+      const s = FB.state;
+      return FB.marriageLineageContract(s.chars[ids.childId], s.chars[ids.partnerId]).lineage;
+    }, { childId:setup.childId, partnerId:partnerId })).toBe('paternal');
     await expect(page.locator('#gm-title')).toContainText(setup.childName);
     await page.evaluate(function () { FB.ui.showHouseholdPlan(); });
     await expect(page.getByRole('heading', { name:/Household Plan/ }))

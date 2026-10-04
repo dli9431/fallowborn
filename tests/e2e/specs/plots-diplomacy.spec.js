@@ -4,6 +4,7 @@ dependsOnRuntime(__filename, [
   'data/actions.js',
   'data/map_data.js',
   'js/model.js',
+  'js/station.js',
   'js/world.js',
   'js/events.js',
   'js/actions.js',
@@ -747,7 +748,10 @@ test('alliance offers use their displayed final chance and retain diplomatic gat
     const standing = FB.allianceOfferStatus(s, rid);
     FB.adjustStanding(s, { kind:'realm', id:rid }, 1, 'test');
     r.liege = 'player'; const vassal = FB.allianceOfferStatus(s, rid); r.liege = null;
-    p.tier = 2; const rank = FB.allianceOfferStatus(s, rid); p.tier = 6;
+    const royalRank = s.realms.player.rank;
+    s.realms.player.rank = 1;
+    const rank = FB.allianceOfferStatus(s, rid);
+    s.realms.player.rank = royalRank;
     r.war = { enemy:'player' }; const war = FB.allianceOfferStatus(s, rid); r.war = null;
     FB.ui.showEnvoys(rid);
     window.allianceTestRealm = rid;

@@ -9,28 +9,31 @@ dependsOnRuntime(__filename, [
   'data/events_politics.js', 'data/events_communities.js', 'data/traits.js',
   'data/intrigue.js', 'data/map_data.js', 'js/util.js', 'js/events.js',
   'js/justice.js', 'js/intrigue.js', 'js/model.js', 'js/mods.js', 'js/save.js',
-  'js/main.js', 'js/i18n.js', 'js/ui_modals.js', 'js/world.js',
-  'data/lang_en.js', 'data/lang_fr.js'
+  'js/main.js', 'js/i18n.js', 'js/ui_modals.js', 'js/world.js', 'js/lordships.js',
+  'data/lang_en.js', 'data/lang_fr.js', 'js/music.js', 'data/music_catalog.js', 'css/style.css'
 ]);
 const { test, expect } = require('../support/fixture');
 const { mockCrazyGames } = require('../support/crazygames');
 test.beforeEach(async function ({ page }) { await mockCrazyGames(page); });
 const { openGame } = require('../support/game/navigation');
+const { openCrazyGame } = require('../support/game/crazygames-title');
 const { startDeterministicGame } = require('../support/game/start');
-const { startWarSafety } = require('../support/game/war-safety');
+
+async function openRestrictedGame(page, testInfo) {
+  await page.addInitScript(function () { window.FB_DISTRIBUTION = 'crazygames'; });
+  await openCrazyGame(page, testInfo);
+}
 
 async function restrictedBoot(page, testInfo) {
-  await page.addInitScript(function () { window.FB_DISTRIBUTION = 'crazygames'; });
-  await openGame(page, testInfo);
+  await openRestrictedGame(page, testInfo);
   await startDeterministicGame(page);
 }
 
 for (const distribution of ['standard', 'crazygames']) {
   test(distribution + ' resolves the camp activity with its own mechanics', async function ({ page }, testInfo) {
     if (distribution === 'crazygames') {
-      await page.addInitScript(function () { window.FB_DISTRIBUTION = 'crazygames'; });
-    }
-    await openGame(page, testInfo);
+      await openRestrictedGame(page, testInfo);
+    } else await openGame(page, testInfo);
     if (distribution === 'crazygames') await expect(page.locator('#btn-mods')).toBeHidden();
     else await expect(page.locator('#btn-mods')).toBeVisible();
     await startDeterministicGame(page);
@@ -155,16 +158,20 @@ test('CrazyGames blocks forced sibling and assassination routes', async function
 });
 
 test('CrazyGames sentencing preview and execution both use imprisonment', async function ({ page }, testInfo) {
-  await page.addInitScript(function () { window.FB_DISTRIBUTION = 'crazygames'; });
-  const ids = await startWarSafety(page, testInfo);
-  const result = await page.evaluate(function (ids) {
-    const s = FB.state;
-    FB.endPlayerWar(s, true);
+  await restrictedBoot(page, testInfo);
+  const result = await page.evaluate(function () {
+    const s = FB.state, p = s.player, home = p.provinceId;
+    p.tier = 4; p.provs = [home]; p.liege = null;
+    p.gold = 500; p.prestige = 100;
+    FB.foundPlayerRealm(s);
+    s.realms.player.capital = home; s.realms.player.liege = null;
+    s.owner[home] = 'player'; s.holder[home] = 'player';
+    FB.invalidateRealmCache();
     s.eventQueue = [];
     const actor = s.player.charId;
     const target = FB.makeCharacter(s, { name:'Prisoner', sex:'m',
       culture:'frankish', religion:'catholic', born:s.date.year - 30, station:1, traitsN:0 });
-    target.homeProvinceId = ids.home;
+    target.homeProvinceId = home;
     target.traits = [];
     FB.captureIntrigue(s, actor, target.id, 'abduction', 'player');
     const options = FB.justiceSentenceOptions(s, actor, target.id).map(function (p) { return p.sentence; });
@@ -181,7 +188,7 @@ test('CrazyGames sentencing preview and execution both use imprisonment', async 
       held:!!custody, endTurn:custody && custody.endTurn, turn:s.turn,
       intrigue:intrigue.outcome
     };
-  }, ids);
+  });
   expect(result.options).not.toContain('execution');
   expect(result.options).not.toContain('qisas');
   expect(result.options).not.toContain('blinding_deposition');

@@ -44,7 +44,10 @@ test('enterprise income batches contracts and sees later deaths and assignments'
     const recovered = FB.livelihoodBreakdown(s);
     return { firstReads:firstReads, secondReads:secondReads,
       stable:JSON.stringify(first) === JSON.stringify(second), deadRemoved:deadRemoved,
-      yieldAfterDeath:yieldAfterDeath, hired:hired, yieldAfterHire:yieldAfterHire,
+      yieldAfterDeath:yieldAfterDeath, hired:!!hired, yieldAfterHire:yieldAfterHire,
+      hireRecorded:!!hired && s.player.enterpriseLabor.some(function (r) {
+        return r.charId === hired.id && r.enterpriseUid === empty.uid;
+      }),
       recovered:recovered.length > 0, after:after.length > 0,
       rngStable:readRngStable };
   });
@@ -52,6 +55,7 @@ test('enterprise income batches contracts and sees later deaths and assignments'
   expect(result.secondReads).toBeLessThanOrEqual(24);
   expect(result.rngStable).toBe(true); expect(result.stable).toBe(true); expect(result.deadRemoved).toBe(true);
   expect(result.yieldAfterDeath).toBe(0); expect(result.hired).toBe(true);
+  expect(result.hireRecorded).toBe(true);
   expect(result.yieldAfterHire).toBeGreaterThan(0); expect(result.recovered).toBe(true);
 });
 

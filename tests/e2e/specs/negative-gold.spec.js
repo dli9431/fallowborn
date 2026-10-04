@@ -13,10 +13,12 @@ dependsOnRuntime(__filename, [
   'js/economy.js',
   'js/events.js',
   'js/intrigue.js',
+  'js/justice.js',
   'js/i18n.js',
   'js/main.js',
   'js/market.js',
   'js/model.js',
+  'js/treasury.js',
   'js/ui_misc.js',
   'js/ui_modals.js',
   'js/ui_panels.js',
@@ -74,27 +76,6 @@ test('mandatory losses create a persistent shortfall that later income repays',
       FB.fns.devastation_lose_holding(s);
       out.devastationShortfall = p.gold;
 
-      const me = s.chars[p.charId];
-      const home = FB.world.byId[p.provinceId];
-      const victim = FB.makeCharacter(s, {
-        name:'Fine Claimant', sex:me.sex === 'm' ? 'f' : 'm',
-        culture:home.culture, religion:home.religion,
-        born:s.date.year - 30, station:1, traitsN:0
-      });
-      const hearing = {
-        id:'negative-gold-hearing', accusedId:me.id,
-        accusedGeneration:s.generation, targetId:victim.id,
-        plotId:'blackmail', context:{ characterId:victim.id },
-        evidence:'testimony', severity:1, successful:true,
-        authority:FB.playerRealmId(s)
-      };
-      FB.ensureIntrigue(s).hearing = hearing;
-      const fine = FB.intrigueSentenceProjection(s, hearing).fine;
-      p.gold = 1;
-      FB.fns.intrigue_hearing_submit(s, { hearingId:hearing.id });
-      out.imposedFine = fine;
-      out.imposedFineBalance = p.gold;
-
       const economy = FB.ensureEconomy(s);
       economy.lastYear = s.date.year - 1;
       p.gold = -7;
@@ -124,12 +105,39 @@ test('mandatory losses create a persistent shortfall that later income repays',
     expect(result.livelihoodRecovery).toBe(-2);
     expect(result.patronageShortfall).toBeLessThan(0);
     expect(result.devastationShortfall).toBe(-3);
-    expect(result.imposedFineBalance).toBe(1 - result.imposedFine);
-    expect(result.imposedFineBalance).toBeLessThan(0);
     expect(result.yearlyShortfall).toBe(-7);
     expect(result.yearlyAdjustment).toBe(0);
     expect(result.raidShortfall).toBe(-9);
   });
+
+test('judicial fines require custody and collect only available money', async function ({ page }) {
+  const result = await page.evaluate(function () {
+    const s = FB.state, p = s.player, me = s.chars[p.charId];
+    const rid = s.holder[p.provinceId] || s.owner[p.provinceId];
+    const custodian = FB.realmRulerCharacterSnapshot(s, rid);
+    if (!custodian) throw new Error('The home county must have a living ruler.');
+    const offense = FB.justiceRecordOffense(s, custodian.id, me.id,
+      'blackmail', 'testimony', true, custodian.id, 'negative-gold-fine');
+    p.gold = 1;
+    const remote = FB.justiceApplyPunishment(s, custodian.id, me.id, 'fine', offense.id);
+    const remoteBalance = p.gold;
+    const captured = FB.captureIntrigue(s, custodian.id, me.id, 'judicial', rid);
+    const quote = FB.justicePunishmentProjection(s, custodian.id, me.id, 'fine', offense.id);
+    const review = FB.justiceApplyPunishment(s, custodian.id, me.id, 'fine', offense.id);
+    const reviewBalance = p.gold;
+    const pending = s.justice.pending;
+    const applied = pending && FB.fns.justice_submit(s, { justiceId:pending.id });
+    return { remote:remote, remoteBalance:remoteBalance, captured:!!captured,
+      ready:quote.ready, fine:quote.fine, amount:quote.amount, review:review.pending,
+      reviewBalance:reviewBalance, applied:applied,
+      gold:p.gold, released:!FB.justiceCustodyOf(s, me.id), closed:offense.closed };
+  });
+  expect(result.remote).toMatchObject({ ok:false, blocker:'custody' });
+  expect(result).toMatchObject({ remoteBalance:1, captured:true, ready:true, amount:1, review:true,
+    reviewBalance:1,
+    applied:true, gold:0, released:true, closed:true });
+  expect(result.fine).toBeGreaterThan(result.amount);
+});
 
 test('cash-gated choices stay blocked while zero-cost choices remain available',
   async function ({ page }) {
@@ -229,5 +237,7 @@ test('the topbar and Coin & Credit explain a negative balance',
     await expect(page.locator('#gm-body')).toContainText('Cash shortfall');
     await expect(page.locator('#gm-body')).toContainText('7 gold below zero');
     await expect(page.locator('#gm-body')).toContainText(
-      'It is not a signed loan, accrues no interest');
+      'It is not a signed loan and accrues no interest.');
+    await expect(page.locator('#gm-body')).toContainText(
+      'signed loans retain their separate default rules');
   });

@@ -4,6 +4,11 @@ dependsOnRuntime(__filename, [
   'data/actions.js',
   'js/actions.js',
   'js/model.js',
+  'js/events.js',
+  'js/lordships.js',
+  'js/economy.js',
+  'js/items.js',
+  'js/technology.js',
   'js/ui_modals.js'
 ]);
 
@@ -162,6 +167,8 @@ test('retainer normalization repairs an invalid legacy local-lord contract',
         savedRetainers:player.retainers.length,
         normalizedRole:normalizedRole,
         resolvedId:resolved && resolved.id,
+        originalLordId:lord.id,
+        authorityId:FB.homeCountyAuthority(state).characterId,
         resolvedRole:lord.role,
         enterpriseWorker:player.enterprises[0].workerId,
         enterpriseLocked:player.enterprises[0].workerLocked,
@@ -179,8 +186,10 @@ test('retainer normalization repairs an invalid legacy local-lord contract',
     expect(result.activeRetainers).toBe(0);
     expect(result.savedRetainers).toBe(0);
     expect(result.normalizedRole).toBe('lord');
-    expect(result.resolvedId).toBeTruthy();
-    expect(result.resolvedRole).toBe('lord');
+    expect(result.resolvedId).toBe(result.originalLordId);
+    expect(result.resolvedId).toBe(result.authorityId);
+    // A read resolves the reigning holder without rewriting their NPC role.
+    expect(result.resolvedRole).toBeNull();
     expect(result.enterpriseWorker).toBeNull();
     expect(result.enterpriseLocked).toBeUndefined();
     expect(result.tutorId).toBeNull();

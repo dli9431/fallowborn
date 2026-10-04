@@ -2,6 +2,10 @@
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
   'js/modifiers.js',
+  'js/actions.js',
+  'js/lordships.js',
+  'js/technology.js',
+  'data/map_data.js',
   'js/politics.js',
   'js/world.js',
   'js/ui_misc.js',
@@ -136,6 +140,8 @@ test('four service charters produce exact distinct tax, levy, and political term
         s.owner[pid] = 'player';
         s.holder[pid] = 'player';
         s.dev[pid] = 10;
+        s.buildings[pid] = [];
+        FB.invalidateBuildingIndex(s, pid);
       });
       FB.foundPlayerRealm(s);
       s.realms.player.alive = true;
@@ -170,11 +176,13 @@ test('four service charters produce exact distinct tax, levy, and political term
           charterId, 'hereditary');
         FB.grantCounty(s, pid, charterId, 'hereditary');
         var rid = 'pv_' + pid;
+        var capacity = FB.settlementCapacityProjection(s, rid);
         rows[charterId] = {
           previewTax:preview.tax,
           previewLevy:preview.levy,
           tax:FB.vassalTaxContribution(s, rid),
           levy:FB.vassalLevyContribution(s, rid),
+          domainMultiplier:capacity.multiplier * FB.settlementCountyPenalty(s, rid),
           standing:preview.initialStanding,
           breakaway:FB.feudalCharterBreakawayMultiplier(s, rid),
           breakawayChance:FB.vassalBreakawayChance(s, rid),
@@ -242,8 +250,8 @@ test('four service charters produce exact distinct tax, levy, and political term
     expect(result.rows.charter_of_liberties.levy).toBeGreaterThan(0);
     Object.keys(result.rows).forEach(function (charterId) {
       var row = result.rows[charterId];
-      expect(row.previewTax).toBeCloseTo(row.tax, 8);
-      expect(row.previewLevy).toBeCloseTo(row.levy, 8);
+      expect(row.tax).toBeCloseTo(row.previewTax * row.domainMultiplier, 8);
+      expect(row.levy).toBeCloseTo(row.previewLevy * row.domainMultiplier, 8);
       expect(row.contract.charterId).toBe(charterId);
       expect(row.contract.tenure).toBe('hereditary');
     });
@@ -576,6 +584,7 @@ test('Castellan is an appointed tier-three office with renewal and clean demotio
       FB.setRealmRulerStanding(s, patronId, 60);
       FB.appointCastellan(s, 'term');
       s.turn = p.castellany.expiryTurn;
+      var expiredGovernance = FB.governanceEligible(s);
       FB.castellanyValidate(s, true);
       var expired = {
         tier:p.tier, record:p.castellany || null, liege:p.liege || null
@@ -613,6 +622,7 @@ test('Castellan is an appointed tier-three office with renewal and clean demotio
         lostControl:lostControl,
         diedInOffice:diedInOffice,
         expired:expired,
+        expiredGovernance:expiredGovernance,
         superseded:superseded
       };
     });
@@ -636,6 +646,7 @@ test('Castellan is an appointed tier-three office with renewal and clean demotio
     expect(result.lostControl).toEqual({ tier:2, record:null, liege:null });
     expect(result.diedInOffice).toEqual({ tier:2, record:null, liege:null });
     expect(result.expired).toEqual({ tier:2, record:null, liege:null });
+    expect(result.expiredGovernance).toBe(false);
     expect(result.superseded).toBeNull();
   });
 
@@ -724,7 +735,8 @@ test('grant terms and local council state are visible before and after confirmat
         if (technology.exposed.indexOf(id) < 0) technology.exposed.push(id);
       });
       FB.ui.showGrantLand();
-      return { county:county };
+      var preview = FB.feudalGrantPreview(s, 'county', county, 'customary_service', 'hereditary');
+      return { county:county, taxText:FB.money(preview.tax) + '/season' };
     });
     await page.locator('[data-pid="' + setup.county + '"]').click();
     await expect(page.getByRole('heading', {
@@ -754,7 +766,9 @@ test('grant terms and local council state are visible before and after confirmat
     expect(await page.locator('#gm-body button').evaluateAll(function (buttons) {
       return buttons.every(function (button) { return button.type === 'button'; });
     })).toBe(true);
-    await expect(page.locator('#gm-body')).toContainText('3 gold/season');
+    await expect(page.locator('[data-grant-charter="customary_service"]')).toContainText(setup.taxText);
+    await expect(page.locator('[data-grant-terms-preview]')).toContainText(
+      'Base service before the recipient’s domain limits and delegated settlements');
     await expect(page.locator('#gm-body')).toContainText('135 soldiers');
     await page.locator('[data-grant-charter="host_duty"]').click();
     await page.locator('[data-grant-tenure="term"]').click();

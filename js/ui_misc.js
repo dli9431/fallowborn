@@ -4938,7 +4938,12 @@ window.FB = window.FB || {};
         tip.style.boxSizing = 'border-box';
         tip.style.width = width + 'px';
         tip.style.maxWidth = width + 'px';
-        const maxH = Math.max(120, window.innerHeight - edge * 2);
+        const navigation = opts.avoidFooter && anchorEl.closest('.modalcard');
+        const footer = navigation && navigation.querySelector('.modal-navigation');
+        const bottom = footer ? Math.min(window.innerHeight - edge,
+          footer.getBoundingClientRect().top - gap) : window.innerHeight - edge;
+        const maxH = footer ? Math.max(0, bottom - edge)
+          : Math.max(120, window.innerHeight - edge * 2);
         tip.style.maxHeight = maxH + 'px';
         tip.style.overflowY = 'auto';
         tip.innerHTML = tooltipContentHtml(detailsHtml, opts.contentClass);
@@ -4961,8 +4966,8 @@ window.FB = window.FB || {};
         left = Math.max(edge, Math.min(
           window.innerWidth - edge - tr.width, left));
         let top = Math.max(edge, Math.min(r.top,
-          window.innerHeight - edge - tr.height));
-        if (tr.height + edge * 2 >= window.innerHeight) {
+          bottom - tr.height));
+        if (tr.height + edge >= bottom) {
           top = edge;
         }
         tip.style.left = left + 'px';
@@ -5031,7 +5036,7 @@ window.FB = window.FB || {};
           '<div class="family-tree-character-tooltip">' +
           UI.charCardHtml(FB.state, c, false, true) +
           (UI.familyTreeStatusHtml
-            ? UI.familyTreeStatusHtml(FB.state, c) : '') + '</div>');
+            ? UI.familyTreeStatusHtml(FB.state, c) : '') + '</div>', { avoidFooter:true });
       }
       let focusedCardTip = false;
       let tipPointerX = null, tipPointerY = null;

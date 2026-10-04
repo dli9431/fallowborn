@@ -3,7 +3,7 @@ const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
   'data/actions.js',
   'js/actions.js',
-  'js/world.js'
+  'js/world.js', 'js/ui_modals.js', 'js/ui_misc.js', 'js/armies.js'
 ]);
 
 const { test, expect } = require('../support/fixture');
@@ -85,7 +85,14 @@ test('Swear Fealty only offers and accepts rulers above the player title rank',
       p.tier = 7;
       s.realms.player.rank = 4;
       var emperorTargets = FB.fealtyTargets(s);
-      var blockedWithoutHigher = FB.instantStatus(s, 'swear_fealty');
+      var emptyPickerStatus = FB.instantStatus(s, 'swear_fealty');
+      var rejectedEqualRank = FB.swearFealty(s, emperorId);
+      var equalOathUntouched = !p.liege && s.realms.player.liege === null &&
+        s.owner[center.id] === ownerBeforeRejectedOath;
+      FB.ui.showFealty();
+      var emptyPickerReason = document.getElementById('gm-body').textContent;
+      var emptyPickerTargets = document.querySelectorAll('#gm-body [data-rid]').length;
+      FB.ui.closeModal();
       p.tier = 6;
       s.realms.player.rank = 3;
       var acceptedHigherRank = FB.swearFealty(s, emperorId);
@@ -96,8 +103,11 @@ test('Swear Fealty only offers and accepts rulers above the player title rank',
         rejectedLowerRank:rejectedLowerRank,
         rejectedOathUntouched:rejectedOathUntouched,
         emperorTargets:emperorTargets,
-        blockedWithoutHigher:blockedWithoutHigher.can,
-        blockedReason:blockedWithoutHigher.reason,
+        emptyPickerOpens:emptyPickerStatus.can,
+        rejectedEqualRank:rejectedEqualRank,
+        equalOathUntouched:equalOathUntouched,
+        emptyPickerReason:emptyPickerReason.indexOf('No higher-ranked neighboring sovereign would take your oath.') >= 0,
+        emptyPickerTargets:emptyPickerTargets,
         acceptedHigherRank:acceptedHigherRank,
         directLiege:p.liege,
         realmLiege:s.realms.player.liege,
@@ -111,8 +121,11 @@ test('Swear Fealty only offers and accepts rulers above the player title rank',
       rejectedLowerRank:false,
       rejectedOathUntouched:true,
       emperorTargets:[],
-      blockedWithoutHigher:false,
-      blockedReason:'No higher-ranked neighboring sovereign would take your oath.',
+      emptyPickerOpens:true,
+      rejectedEqualRank:false,
+      equalOathUntouched:true,
+      emptyPickerReason:true,
+      emptyPickerTargets:0,
       acceptedHigherRank:true,
       directLiege:'fealty_emperor',
       realmLiege:'fealty_emperor',

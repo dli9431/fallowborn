@@ -1,7 +1,7 @@
 'use strict';
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, ['js/ui_modals.js', 'js/ui_panels.js', 'js/ui_misc.js',
-  'js/holywar.js', 'js/fortifications.js', 'js/mapview.js', 'js/world.js', 'js/model.js', 'js/i18n.js', 'js/messages.js', 'js/util.js', 'css/style.css']);
+  'js/holywar.js', 'js/armies.js', 'js/wars.js', 'js/fortifications.js', 'js/mapview.js', 'js/world.js', 'js/model.js', 'js/i18n.js', 'js/messages.js', 'js/util.js', 'css/style.css']);
 const { test, expect } = require('../support/fixture');
 const { openGame } = require('../support/game/navigation');
 const { startDeterministicGame } = require('../support/game/start');
@@ -73,6 +73,7 @@ test('ruler holy-war card summarizes coalitions without the expanded opponent li
       { id:'defender-ally', realm:ids[3], men:500, warId:'holy' },
       { id:'other-war', realm:ids[0], men:9000, warId:'unrelated' }
     ];
+    s.armies.forEach(function (host) { host.at = s.realms[host.realm].capital; });
     const ordinary = FB.registerOrdinaryWar(s, ids[0], {
       enemy:ids[4], target:s.realms[ids[4]].capital, casus:{ type:'aggression' }
     });
@@ -173,11 +174,14 @@ test('holy-war overview lists both full coalitions and sums campaign detachments
   await expect(leaderRow.locator('.hidden')).toBeHidden();
   const desktop = await page.locator('#gm-body').evaluate(function (body) {
     const card = body.closest('.modalcard');
+    const footer = body.querySelector('.modal-navigation').getBoundingClientRect();
+    const rows = Array.from(body.querySelectorAll('.holy-war-combatant'));
     return { bodyFits:body.scrollHeight <= body.clientHeight + 1,
       cardFits:card.scrollHeight <= card.clientHeight + 1,
-      screenFits:card.getBoundingClientRect().bottom <= window.innerHeight };
+      screenFits:card.getBoundingClientRect().bottom <= window.innerHeight,
+      rosterFits:rows.every(function (row) { return row.getBoundingClientRect().bottom <= footer.top; }) };
   });
-  expect(desktop).toEqual({ bodyFits:true, cardFits:true, screenFits:true });
+  expect(desktop).toEqual({ bodyFits:true, cardFits:true, screenFits:true, rosterFits:true });
   await leaderRow.locator('button').hover();
   await expect(page.locator('#tooltip')).toBeVisible();
   await expect(page.locator('#tooltip')).toContainText('3000');
