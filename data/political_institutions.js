@@ -16,7 +16,6 @@ FBDATA.localInstitutions = {
   milan_council:{ city:'Mediolanum', kind:'council', provinceId:'milano', site:'milano_476', religion:'nicene', culture:'roman' },
   carthage_council:{ city:'Carthage', kind:'council', provinceId:'tunis', site:'carthage_476', religion:'nicene', culture:'roman' },
   salona_council:{ city:'Salona', kind:'council', provinceId:'split', site:'salona_476', religion:'nicene', culture:'roman' },
-  arles_council:{ city:'Arles', kind:'council', provinceId:'arles', site:'arles_476', religion:'nicene', culture:'roman' },
   constantinople_senate:{ city:'Constantinople', kind:'senate', provinceId:'constantinople', site:'constantinople', religion:'chalcedonian', culture:'greek' },
   rome_see:{ city:'Rome', kind:'see', provinceId:'roma', site:'roma', religion:'nicene', culture:'roman', officeId:'rome_bishop', historicalName:'Simplicius' },
   ravenna_see:{ city:'Ravenna', kind:'see', provinceId:'ravenna', site:'ravenna_476', religion:'nicene', culture:'roman', officeId:'ravenna_nicene_bishop', historicalName:'Exuperantius' },
@@ -24,12 +23,15 @@ FBDATA.localInstitutions = {
   milan_see:{ city:'Mediolanum', kind:'see', provinceId:'milano', site:'milano_476', religion:'nicene', culture:'roman', officeId:'milan_bishop' },
   carthage_see:{ city:'Carthage', kind:'see', provinceId:'tunis', site:'carthage_476', religion:'nicene', culture:'roman', officeId:'carthage_bishop', vacant:true },
   salona_see:{ city:'Salona', kind:'see', provinceId:'split', site:'salona_476', religion:'nicene', culture:'roman', officeId:'salona_bishop', historicalName:'Glycerius' },
-  arles_see:{ city:'Arles', kind:'see', provinceId:'arles', site:'arles_476', religion:'nicene', culture:'roman', officeId:'arles_bishop' },
   constantinople_see:{ city:'Constantinople', kind:'patriarchate', provinceId:'constantinople', site:'constantinople', religion:'chalcedonian', culture:'greek', officeId:'constantinople_patriarch', historicalName:'Acacius' },
   alexandria_see:{ city:'Alexandria', kind:'patriarchate', provinceId:null, site:null, religion:'miaphysite', culture:'greek', officeId:'alexandria_patriarch', historicalName:'Timothy Aelurus' },
   antioch_see:{ city:'Antioch', kind:'patriarchate', provinceId:null, site:null, religion:'miaphysite', culture:'greek', officeId:'antioch_patriarch', historicalName:'Peter the Fuller' },
   jerusalem_see:{ city:'Jerusalem', kind:'see', provinceId:null, site:null, religion:'chalcedonian', culture:'greek', officeId:'jerusalem_bishop', historicalName:'Anastasius' }
 };
+
+/* Regional authors own their city and church content. Keep the catalogue's
+   existing ids and the generic institution lifecycle. */
+Object.assign(FBDATA.localInstitutions, FBDATA.bookmarkRegions476.gaul_iberia.localInstitutions);
 
 /* Phase 2 authority records name legal capacities rather than landed titles.
    The institution and scope on each appointment remain separate from owner

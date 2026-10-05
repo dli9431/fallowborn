@@ -5365,3 +5365,8 @@ Example registration data for a later bookmark:
 { id:'coastal_campaign', type:'campaign', name:'A Coastal Campaign', desc:'The court may contest the current coastal ruler.', firstYear:867, lastYear:875, durationDays:2880, actor:{realmId:'byzantium'}, target:{provinceId:'siracusa'}, conditions:[{kind:'owner',provinceId:'constantinople',realmId:'byzantium'}] }
 
 A classic script passes that record to FB.stories.registerData and the bookmark lists coastal_campaign in stories. No historical selector is added to the shared engine. See docs/designs/stories.md for lifecycle ordering and docs/designs/state-and-saves.md for validation and migration.
+
+
+476 regional content composition
+
+The gaul_iberia declaration additionally groups cultures, romanJurisdiction, legalTraditions, settlementSites, settlementLayouts, localInstitutions and storyCampaigns alongside provinces and realms. These are ordinary existing-schema records, not automatically interpreted extension keys. Explicit data composition installs cultures and physical sites immediately, appends layouts only to the 476 table, merges institutions after the shared catalogue and merges legal traditions after shared sentences load. romanJurisdiction extends Gothic personal-law mappings. data/story_campaigns.js references the regional Clovis definition while retaining registration order. The regional file appends ordinary literal event records with a declared late antique pack. Other authors must preserve the same script dependencies and avoid overwriting a shared catalogue or another bookmark's layouts. County names may use existing year-keyed names lists; source labels sharing the same province and dated index must agree with the geography's source record.

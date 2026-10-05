@@ -9,20 +9,7 @@ FBDATA.storyActors476 = {
     station:4, role:'commander', home:'ikonion' }
 };
 FBDATA.storyCampaigns = {
-  clovis_syagrius_476:{ id:'clovis_syagrius_476', type:'campaign',
-    requires:['western_court_476'], name:'The Roman Domain at Soissons',
-    desc:'Clovis may contest Syagrius after inheriting the Frankish court. Their living courts and an ordinary campaign decide the outcome.',
-    firstYear:486, lastYear:500, durationDays:2880,
-    actor:{ realmId:'franks_476', character:{ storyId:'western_court_476', field:'clovisId' } },
-    target:{ provinceId:'laon', ownerIds:['west_francia'],
-      character:{ storyId:'western_court_476', field:'syagriusId' } },
-    news:{
-      started:{ key:'news.476.clovis_campaign', text:'⚔ Clovis contests the Roman domain around Soissons. Its actual war will decide the county.' },
-      won:{ key:'news.476.clovis_won', text:'🏛 The Frankish court secures Soissons through its campaign.' },
-      failed:{ key:'news.476.clovis_failed', text:'🏳 The Frankish attempt at Soissons ends without its objective.' },
-      diverted:{ key:'news.476.clovis_diverted', text:'📜 The courts around Soissons have taken another course; the Clovis opportunity closes.' },
-      interrupted:{ key:'news.476.clovis_interrupted', text:'📜 The living actors of the Soissons campaign no longer hold their original positions.' }
-    } },
+  clovis_syagrius_476:FBDATA.bookmarkRegions476.gaul_iberia.storyCampaigns.clovis_syagrius_476,
   theoderic_italy_476:{ id:'theoderic_italy_476', type:'campaign',
     requires:['western_court_476'], name:'The Amal Commission for Italy',
     desc:'Theoderic the Amal can receive Zeno’s commission and lead his existing host and court toward Ravenna. Theoderic Strabo’s Thracian host remains a separate body.',

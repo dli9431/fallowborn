@@ -26,7 +26,7 @@ JS = ROOT / "js"
 I18N = ROOT / "i18n"
 HASH_SCHEMA = 1
 CATALOG_SCHEMA = 1
-EVENT_FILES = sorted(DATA.glob("events_*.js"))
+EVENT_FILES = sorted([*DATA.glob("events_*.js"), *DATA.glob("bookmark_476_*.js")])
 BOOKMARK_FILE = DATA / "bookmarks.js"
 STARTS_FILE = DATA / "starts.js"
 TECHNOLOGY_FILE = DATA / "technology.js"
@@ -1069,6 +1069,43 @@ def extract_structured(inv: Inventory) -> None:
         declaration = node_object(find_keyed_assignment(
             region_path, "FBDATA", "bookmarkRegions476", region
         )) or {}
+        for province_node in node_array(declaration.get("provinces")) or []:
+            province = node_object(province_node) or {}
+            province_id = node_string(province.get("id"))
+            if not province_id:
+                continue
+            for index, dated_node in enumerate(node_array(province.get("names")) or []):
+                dated = node_object(dated_node) or {}
+                for _, record, line in branch_records(dated.get("name")):
+                    inv.add(f"province.{province_id}.name.dated.{index}", record,
+                            f"{region_rel}:{line}",
+                            f"Dated county name for {province_id}.", ())
+        for province_id, layout_node in (node_object(declaration.get("settlementLayouts")) or {}).items():
+            for slot, site_node in enumerate(node_array(layout_node) or []):
+                site = node_object(site_node) or {}
+                for _, record, line in branch_records(site.get("name")):
+                    inv.add(f"settlementLayout.476.{province_id}.{slot}.name.default", record,
+                            f"{region_rel}:{line}",
+                            f"476 settlement in {province_id}, slot {slot}.", ())
+        for table, namespace in (("cultures", "culture"), ("legalTraditions", "legalTradition"),
+                                 ("storyCampaigns", "storyCampaign")):
+            for item_id, item_node in (node_object(declaration.get(table)) or {}).items():
+                item = node_object(item_node) or {}
+                for field in DATA_FIELDS:
+                    for branch, record, line in branch_records(item.get(field)):
+                        inv.add(f"{namespace}.{item_id}.{field}.{branch}", record,
+                                f"{region_rel}:{line}",
+                                f"{namespace} {item_id}, {field}, faith branch {branch}.",
+                                TOKEN_RE.findall(record["text"]))
+                if table == "storyCampaigns":
+                    for outcome, message_node in (node_object(item.get("news")) or {}).items():
+                        message = node_object(message_node) or {}
+                        key = node_string(message.get("key"))
+                        for _, record, line in branch_records(message.get("text")):
+                            if key:
+                                inv.add(key, record, f"{region_rel}:{line}",
+                                        f"Campaign {item_id}, {outcome} durable news.",
+                                        TOKEN_RE.findall(record["text"]))
         for realm_node in node_array(declaration.get("realms")) or []:
             realm = node_object(realm_node) or {}
             realm_id = node_string(realm.get("id"))

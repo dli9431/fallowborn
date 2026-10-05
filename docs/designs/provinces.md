@@ -587,3 +587,8 @@ FB.activateBookmark accepts an optional fourth argument, { geography: savedGeogr
 476 authored geography
 
 The 476 bookmark declares inhabited ownership and communities in four regional files on europe_regional. Its settlementLayout names the ordinary 476 layout; no later bookmark supplies its politics or settlement lists. Dated names remain on the physical base, while its optional climate layer overrides base assignments for that campaign only. Wasteland entries preserve ids and physical seeds without authored owners or communities.
+
+
+Gaul and Iberia in 476
+
+The gaul_iberia declaration owns period names, community weights, development and all 117 county settlement heads. Its settlementSites and settlementLayouts are composed into the ordinary physical-site and 476-layout tables before bookmark registration; activation still clones the layout and resolves year-keyed names. Existing Soissons, Tournai and other site ids remain stable. Uncertain city identifications use geographic labels and village presentations. A generated Upper Rhine Alamannic court occupies the strasbourg cell; this is a coarse political approximation, not a surveyed frontier. Medieval layouts and province records retain their own presentations.

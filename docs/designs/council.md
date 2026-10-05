@@ -286,3 +286,8 @@ Built-in councilSeats declare station: mayHoldCouncil. Seat discovery asks that 
 Availability boundary
 
 The royal_council system gates seats, office confirmation elections, formation, bonuses, yearly authority drift, council events and the Council sheet. Disabled offices supply no bonuses and old seats are not filled by repair. The estates and scutage systems separately control assembly motions and silver-for-service terms. A guild election can likewise exist only where guild_elections is enabled; ordinary guild membership and mastery remain career mechanics. See docs/designs/systems.md.
+
+
+Gallic and Iberian city institutions in 476
+
+The regional declaration contributes councils and episcopal sees through the existing local-institution catalogue. Southern Gaul has the denser set, including Arles, Lyon, Toulouse, Bordeaux, Narbonne, Marseille, Vienne and Geneva. Soissons, Reims, Tarragona, Merida and Lugo provide selected northern and Iberian actors. Leontius, Patiens, Graecus and Remigius have named profiles; uncertain officeholders are generated. Bordeaux begins vacant, and Toulouse has separate Nicene and Homoian sees. Existing appointment, mediation, voting and saved-ledger rules apply; councils and sees neither own counties nor change their communities. Technology impact remains none for local_institution_bargains and episcopal_institution_mediation: living representatives, protected worship, consent and resources govern these existing capabilities.
