@@ -3168,6 +3168,7 @@ window.FB = window.FB || {};
     options = options || {};
     const s = FB.state;
     if (!s || !s.player) return;
+    if (s.start && s.start.onboarding === 'ruler') s.player.flags.tut_ruler_governance = 1;
     const landed = FB.station.isLanded(s.player, s);
     const replacing = !!options.replaceView;
     const oldBody = replacing ? $('gm-body') : null;

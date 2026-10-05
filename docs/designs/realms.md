@@ -1607,3 +1607,7 @@ The 476 administrative groups use independent d_476_, k_476_ and e_476_ ids in R
 Nonterritorial federate courts
 
 The non_territorial territory strategy now supplies a moving court and migration transaction through js/federates.js. A moving realm starts with no county ownership. Its capital is a court location on inhabited foreign ground, follows its actual host and becomes a territorial seat only after a claims settlement. A county award sets owner and direct holder through the ordinary territorial transaction. Ordinary rank, private property, communities and title ids retain their separate meaning. Government ai dispatch handles explicitly template-backed federate bargains for any pair of living realms; existing untemplated household and story bargains keep their own consent path.
+
+Adopting an authored court
+
+js/starts.js performs existing-ruler adoption only during new-campaign creation. The source realm retains its government, rank, governing identity, court, territorial boundaries and active host while becoming the ordinary player realm. The scenario's tier must map to the source realm's rank. The source key is removed and typed political references resolve to player. A nonterritorial host starts with no county holdings; becoming a player court does not territorialize it. The full seeded household replaces compact NPC succession so ordinary player family rules have one owner.

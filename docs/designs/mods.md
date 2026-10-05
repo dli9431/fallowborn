@@ -347,3 +347,7 @@ existing mod lifecycle. See [content profiles](distribution-content.md).
 The tournaments runtime-mod root can override existing ids within scales, programmes, tracks and tactics. Definitions are merged into the existing tables so engine and UI share the effective values. Structural duration, notice, capacity and retention bounds remain engine-owned. New track ids require an engine extension rather than being silently admitted. Structured display fields localize through tournament_scales, tournament_programmes, tournament_tracks and tournament_tactics. See ../MODDING.md and tournaments.md.
 
 Optional system requirements validate before a runtime mod is applied. Bookmarks and faith properties may override the registered availability rules; action and content tags must name known systems, including nested event options and requirements. Invalid layers leave the live catalogues untouched. See docs/MODDING.md and docs/designs/systems.md.
+
+Existing-ruler scenario validation
+
+The start-scenario schema admits hidden, rulerRealmId, governmentForm, characterName and onboarding. A ruler scenario must name a fixed bookmark/county, match the bookmark's named ruler, sex, culture, faith and government, and use only the standard existing-court family label. Its tier may span the registered station bands; ordinary scenario tiers remain bounded to 0-3. Unknown governments, mismatched identities and partial ruler declarations reject before catalogue mutation. See ../MODDING.md.

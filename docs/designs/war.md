@@ -2158,3 +2158,7 @@ Period class membership
 A unit class may declare eras independently of its role. FB.unitClassEraAllowed checks this membership before the era-wide excludeRoles rule, and existing unlock, muster and culture-sheet consumers share the result. Validators reject unknown or repeated eras and prevent a core default class from disappearing in any era. Saved hosts and existing compositions are retained; membership controls new recruitment. Household troops display as Bucellarii in late antique campaigns, while their existing class id, quality, capacity, upkeep and casualty order remain unchanged.
 
 Technology impact: content_period_membership is none for these class restrictions. Historical membership does not replace existing technology gates. Core troops remain the ungated fallback for a class outside its period.
+
+Player-controlled opening hosts
+
+The peaceful-player disband pass honors scenarioHostStanding and federateHostStanding just as the NPC pass does. Adopting an authored host does not erase its remaining standing term or effective service contract. Existing recruitment, provisions, upkeep, orders and expiry remain authoritative; a declined political opening does not grant an indefinite free army.

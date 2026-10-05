@@ -7,7 +7,10 @@
   var CAMPAIGNS = { clovis:'clovis_syagrius_476', theoderic:'theoderic_italy_476',
     africa:'eastern_africa_476', italy:'eastern_italy_476' };
   function plain(row) { return !!row && typeof row === 'object' && !Array.isArray(row); }
-  function ruler(s, id) { return FB.realmRulerCharacterSnapshot(s, id); }
+  function ruler(s, id) {
+    id = FB.startRealmId(s, id);
+    return id === 'player' ? s.chars[s.player.charId] : FB.realmRulerCharacterSnapshot(s, id);
+  }
   function politicalRecord() { return { phase:'pending', result:null, reason:null, outcomeTurn:null }; }
   function end(s, rec, result, reason) {
     rec.phase = 'resolved'; rec.result = result; rec.reason = reason; rec.outcomeTurn = s.turn;
@@ -113,10 +116,11 @@
 
   function restoreOffice(s, w) {
     if (w.westOfficeId) FB.authorityAppointmentTransition(s, w.westOfficeId, 'remove');
-    var claim = X.recognizeOrExisting(s, 'dynastic_succession', X.actor(WEST_REALM), X.person(w.westRulerId));
-    var office = claim && X.appointment(s, 'imperial_office', WEST_REALM,
-      X.person(w.westRulerId), X.actor(WEST_REALM), claim.id);
+    var claim = X.recognizeOrExisting(s, 'dynastic_succession', X.actor(FB.startRealmId(s, WEST_REALM)), X.person(w.westRulerId));
+    var office = claim && X.appointment(s, 'imperial_office', FB.startRealmId(s, WEST_REALM),
+      X.person(w.westRulerId), X.actor(FB.startRealmId(s, WEST_REALM)), claim.id);
     if (!office) return false;
+    delete w.restoredClaimantId; delete w.restoredCourtId; delete w.restoredOfficeId;
     w.westOfficeId = office.id; w.westernOfficeResolved = 'restored';
     FB.news(s, FB.msg('news.476.office_restored',
       '🏛 Romulus returns to the western office after Ravenna returns to his court.', {}));
@@ -128,21 +132,33 @@
     var result = w.westernOfficeResolved || null, reason = 'reviewed_office';
     /* Loss of the capital removes only the original western appointment.
        A separately recognized Nepos claim does not pretend to own Ravenna. */
-    if (s.owner.ravenna !== WEST_REALM && (!w.romulusDeposed || w.westernOfficeResolved === 'restored')) {
+    if (s.owner.ravenna !== FB.startRealmId(s, WEST_REALM) && (!w.romulusDeposed || w.westernOfficeResolved === 'restored' && !w.restoredClaimantId)) {
       if (w.westOfficeId) FB.authorityAppointmentTransition(s, w.westOfficeId, 'remove');
       w.romulusDeposed = true;
-      if (w.westernOfficeResolved === 'restored') { w.westernOfficeResolved = false; result = null; }
+      if (w.westernOfficeResolved === 'restored' && !w.restoredClaimantId) { w.westernOfficeResolved = false; result = null; }
+    }
+    if (w.restoredClaimantId && w.restoredOfficeId && w.westernOfficeResolved === 'restored') {
+      var liveClaim = X.alive(s, w.restoredClaimantId) &&
+        FB.political.offices(s, X.person(w.restoredClaimantId)).some(function (row) {
+          return row.ref.appointmentId === w.restoredOfficeId && row.status === 'active';
+        });
+      if (s.owner.ravenna !== w.restoredCourtId || !liveClaim) {
+        if (s.owner.ravenna !== w.restoredCourtId)
+          FB.authorityAppointmentTransition(s, w.restoredOfficeId, 'remove');
+        result = s.owner.ravenna !== w.restoredCourtId ? 'deposed' : 'interrupted';
+        w.westernOfficeResolved = result;
+      }
     }
     if (!result && w.romulusDeposed) { result = 'deposed'; reason = 'capital_lost'; }
     var independent = !t || t.role === 'outside';
-    if (independent && w.romulusDeposed && s.owner.ravenna === WEST_REALM &&
-        X.alive(s, w.westRulerId) && s.realms[WEST_REALM].alive &&
-        w.westernOfficeResolved !== 'restored' && ruler(s, WEST_REALM) &&
-        ruler(s, WEST_REALM).id === w.westRulerId && restoreOffice(s, w)) result = 'restored';
+    if (independent && w.romulusDeposed && s.owner.ravenna === FB.startRealmId(s, WEST_REALM) &&
+        X.alive(s, w.westRulerId) && s.realms[FB.startRealmId(s, WEST_REALM)].alive &&
+        w.westernOfficeResolved !== 'restored' && ruler(s, FB.startRealmId(s, WEST_REALM)) &&
+        ruler(s, FB.startRealmId(s, WEST_REALM)).id === w.westRulerId && restoreOffice(s, w)) result = 'restored';
     if (!result && rec.phase === 'pending') {
-      if (!X.alive(s, w.westRulerId) || !s.realms[WEST_REALM].alive) {
+      if (!X.alive(s, w.westRulerId) || !s.realms[FB.startRealmId(s, WEST_REALM)].alive) {
         result = 'interrupted'; reason = 'holder_or_court_lost';
-      } else if (ruler(s, WEST_REALM) && ruler(s, WEST_REALM).id !== w.westRulerId) {
+      } else if (ruler(s, FB.startRealmId(s, WEST_REALM)) && ruler(s, FB.startRealmId(s, WEST_REALM)).id !== w.westRulerId) {
         result = 'diverted'; reason = 'court_succeeded';
       } else if (s.turn >= 361) {
         var active = FB.political.offices(s, X.person(w.westRulerId)).some(function (row) {
@@ -152,10 +168,11 @@
       }
     }
     if (!result || rec.result === result) return;
-    rec.history.push({ result:result, turn:s.turn, officeId:w.westOfficeId || null });
+    rec.history.push({ result:result, turn:s.turn,
+      officeId:w.restoredOfficeId || w.westOfficeId || null });
     if (rec.history.length > 12) rec.history.shift();
     end(s, rec, result, reason);
-    rec.officeId = w.westOfficeId || null;
+    rec.officeId = w.restoredOfficeId || w.westOfficeId || null;
     if (result === 'deposed') FB.news(s, FB.msg('news.476.office_deposed',
       '📜 Loss of Ravenna displaces the western office. Territorial possession and rival office claims remain separate.', {}));
     if (result === 'survived') FB.news(s, FB.msg('news.476.office_survived',

@@ -48,6 +48,7 @@
     return out;
   }
   FB.treasuryAvailable = function (state, rid) {
+    if (rid === 'player') return Math.max(0, numeric(state.player.gold));
     const row = account(state, rid);
     return row ? Math.max(0, numeric(row.gold) - positive(row.militaryAccrued)) : 0;
   };
