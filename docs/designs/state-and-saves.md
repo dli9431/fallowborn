@@ -1959,3 +1959,11 @@ The save loading path passes state.start.geography into bookmark activation befo
 Legal court scope persistence
 
 Judicial custody and pending justice responses store courtKind as secular or religious. Captive normalization retains that field; legacy records without it resolve to secular. Government and faith declarations select current tradition at query/commit time, so tables and rendered legal labels never enter saves. Already imposed custody deadlines and sentence history survive a declaration change. The additive court scope uses the existing save envelope without replaying a judgment.
+
+Federate migration persistence
+
+The existing v4 authority projection accepts optional migrations, using the shared nextId sequence with migration- ids. Each row stores parties, its exact host, origin, current county, target, territorial settlement form, court ids, choice and status, deadline, contract and ordinary-war references, and its claims session. Status is encamped, service, marching, arrived, settled or failed. Settled rows require a resolved session and settledTurn. Historical rows may retain an ended war or lost host reference. Duplicate active polity or host identities, invalid forms, malformed court ids, inconsistent sessions and reused sequence ids are rejected before adoption.
+
+Contracts optionally store templateId, initialPay, initialPaidTurn, transitionReason and fulfilledCountyIds. Numeric terms and once-only stamps survive template changes, succession and restore. A fulfilled county must belong to that contract's promised list. A settlement closes the service commitment; it never recharges initial pay or replays a county transfer. A migration's court references retain active characters through ordinary compact-court pruning. Neither load repair nor serialization creates a migration, a host, an office or a land award for an older save.
+
+War repair retains a saved peaceful host only when it belongs to a live, unexpired moving court, so an encamped or negotiated land march resumes without synthesizing another banner. Older saves with an already-declared Gothic campaign retain that war's normal outcome and do not acquire a migration or another commission.

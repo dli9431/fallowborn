@@ -3,7 +3,7 @@ const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
   'data/eras.js', 'data/bookmarks.js', 'data/bookmark_476.js',
   'data/political_institutions.js', 'data/cultures.js',
-  'js/governments.js', 'js/world.js', 'js/authority.js', 'js/politics.js',
+  'js/governments.js', 'js/world.js', 'js/authority.js', 'js/federates.js', 'js/politics.js',
   'js/armies.js', 'js/wars.js', 'js/stories.js', 'js/story_western_court_476.js', 'js/main.js',
   'js/save.js', 'js/save_v4.js'
 ]);
@@ -56,7 +56,7 @@ test('every bookmark declares an era and resolves each realm form',
       era:'high_medieval', faults:[], errors:[] });
     expect(result['476']).toMatchObject({ declared:'late_antique',
       era:'late_antique', faults:[], errors:[],
-      forms:{ regnum:10, roman_civic:3, federate_polity:1 } });
+      forms:{ regnum:10, roman_civic:3, federate_polity:2 } });
     expect(Object.keys(result['867'].forms)).toEqual(['territorial']);
     expect(Object.keys(result['1066'].forms)).toEqual(['territorial']);
     expect(result.named476).toEqual({ italy:'roman_civic', croatia:'roman_civic',
@@ -66,7 +66,7 @@ test('every bookmark declares an era and resolves each realm form',
     expect(result.territorial).toEqual({ holders:'feudal_vassals',
       succession:'dynastic', territory:'fixed', consent:'territorial',
       levy:'engine_default', revenue:'engine_default', council:'engine_default',
-      diplomacy:'engine_default', ai:'engine_default',
+      diplomacy:'engine_default', ai:'federate_contracts',
       vocabulary:'engine_default', ladder:'engine_default' });
     expect(result.regnum).toBe('direct');
   });
@@ -235,6 +235,7 @@ test('476 seeds its forms from bookmark data and holds counties directly',
         italy:{ formId:'roman_civic', sinceTurn:0 },
         croatia:{ formId:'roman_civic', sinceTurn:0 },
         byzantium:{ formId:'roman_civic', sinceTurn:0 },
+        pannonia:{ formId:'federate_polity', sinceTurn:0 },
         federates_476:{ formId:'federate_polity', sinceTurn:0 }
       },
       franks:'regnum', italy:'roman_civic', federates:'federate_polity',

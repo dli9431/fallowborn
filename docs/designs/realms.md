@@ -1580,3 +1580,7 @@ Where a county has no title hierarchy, FB.political.territorialClaims projects e
 Coverage is in title-levels-and-hierarchy.spec.js, lexicon.spec.js,
 realm-names.spec.js and crown-recognition.spec.js, with the existing medieval
 title migration and parity journeys retained.
+
+Nonterritorial federate courts
+
+The non_territorial territory strategy now supplies a moving court and migration transaction through js/federates.js. A moving realm starts with no county ownership. Its capital is a court location on inhabited foreign ground, follows its actual host and becomes a territorial seat only after a claims settlement. A county award sets owner and direct holder through the ordinary territorial transaction. Ordinary rank, private property, communities and title ids retain their separate meaning. Government ai dispatch handles explicitly template-backed federate bargains for any pair of living realms; existing untemplated household and story bargains keep their own consent path.

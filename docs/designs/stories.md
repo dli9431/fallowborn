@@ -35,3 +35,7 @@ The 476 stories
 The 476 bookmark lists the western court world story (js/story_western_court_476.js). It authors the court's actors and standing hosts, moves displaced courts, runs Zeno's conditional return, lets the courts settle the federate dispute when the household declines, and runs the conditional historical campaigns. The Federate Soldier scenario attaches the federate track (js/story_federate_track_476.js): the delegate, commission, contract, civic, church, claimant, court and contest choices. Each bargain record belongs to whoever made it, the track or the courts. The two modules share helpers through FB.story476, which engine code does not use. See situation-476.md.
 
 Technology impact: none. The registry and scenario fields change no gameplay eligibility.
+
+Authored migration consumer
+
+The western court world story reads theoderic_italy from FBDATA.federateMigrations. Its historical hook supplies the living Amal ruler and eastern issuer, obtains a commission, begins one generic moving polity and offers the data-defined equipment-and-service terms through government AI. It stores the migration, commission and ordinary-war ids. Its later status follows the migration's failed or settled outcome. General host movement, contracts, court retention, claims settlement and cleanup live in js/federates.js; no shared engine dispatch names this story or a historical ruler.

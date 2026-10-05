@@ -2142,3 +2142,13 @@ Customary objectives use the ordinary claim review, frontier connectivity, defen
 Global great-holy-war sacred and crisis targets missing from a bookmark's kingdom table are inactive. A missing first target cannot prevent consideration of present targets. No kingdom counties means no holy-war objective or title award. Saved faith configuration may retain inactive canonical targets, while actual saved campaign and title references must still resolve.
 
 Technology impact customary_territorial_claims is none: recovery of existing jurisdiction is a baseline legal and military choice. This adds no research prerequisite and does not change medieval de jure rights or their costs.
+
+Moving federate hosts
+
+A host can carry a moving polity through its migrationId, linked to state.authority.migrations. The non_territorial strategy supplies its court and one bounded standing host. It remains mustered at peace until settlement, failure or its deadline; ordinary provision payments and starvation still apply. Encampment, service and negotiated land marches keep the polity's order, while an active force campaign uses ordinary war AI. After victorious peace the court still has to march to the awarded county before settling. main.js reconciles lapsed commitments before army movement and court position and settlement afterward, in both observed and household play.
+
+An active federate service contract makes only its named host friendly in the patron's territory. A sibling banner receives no access from it. The supply cache includes effective contract identities in its diplomatic signature and distinguishes the contracted host from other banners of its realm. Breach, expiry, succession, host loss and recognition loss change that signature before another supply read. No alliance, liege relation, recruitment pool, territorial tax right or private property is synthesized.
+
+Force requests use registerOrdinaryWar with an exact county objective. Defeat does not create a holding, and a destroyed host never respawns through migration. Deadline or extinction retires a failed landless polity and its remaining hosts. Settlement resolves through the shared claims engine and a reviewed transaction, not a dated conquest shortcut. The original Odoacer standing-host and escort flags keep their existing first-year behavior.
+
+Technology impact: federate_moving_court and federate_claims_settlement are none. Existing military, supply, settlement and current political consent rules remain the constraints.

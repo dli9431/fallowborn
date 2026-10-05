@@ -11,7 +11,7 @@ window.FBDATA = window.FBDATA || {};
     italy:'italy', papacy:'italy', benevento:'italy', venice:'italy',
     sardinia:'italy', croatia:'croatia', byzantium:'byzantium',
     aquitaine:'aquitaine', west_francia:'west_francia', burgundy:'burgundy',
-    aghlabids:'aghlabids', pannonia:'pannonia',
+    aghlabids:'aghlabids', pannonia:'pannonian_476',
     brittany:'armorica_476', asturias:'aquitaine', navarra:'aquitaine',
     cordoba:'aquitaine', rustamids:'mauri_476',
     idrisids:'mauri_476', lotharingia:'west_francia',
@@ -58,8 +58,12 @@ window.FBDATA = window.FBDATA || {};
     { id:'aghlabids', name:'Vandal Kingdom', color:'#b59b48', capital:'tunis',
       aggression:1, rank:3, religion:'homoian', techTraditions:['latin'],
       ruler:{ name:'Gaiseric', sex:'m', culture:'gothic', born:389, mar:12, trait:'ambitious' } },
-    { id:'pannonia', name:'Ostrogothic Confederation', color:'#809b73', capital:'szekesfehervar',
-      aggression:1, rank:3, religion:'homoian',
+    { id:'pannonian_476', name:'Pannonian Communities', color:'#7e886b', capital:'szekesfehervar',
+      aggression:0, rank:2, religion:'nicene',
+      ruler:{ name:'Pannonian Delegate', sex:'m', culture:'roman', born:440, mar:6, trait:'patient' } },
+    { id:'pannonia', name:'Ostrogothic Confederation', color:'#809b73', capital:'thessaloniki',
+      nonTerritorial:true, government:'federate_polity',
+      aggression:0, rank:3, religion:'homoian',
       ruler:{ name:'Theoderic the Amal', sex:'m', culture:'gothic', born:454, mar:12, trait:'ambitious' } },
     { id:'suebi_476', name:'Suevic Kingdom', color:'#667b59', capital:'coruna',
       aggression:0, rank:3, religion:'homoian',
@@ -104,14 +108,12 @@ window.FBDATA = window.FBDATA || {};
     p.settlements = undefined;
     p.culture = p.realm === 'franks_476' ||
       p.realm === 'rhein_franks_476' ? 'frankish' :
-      p.realm === 'pannonia' ? 'gothic' :
       p.realm === 'armorica_476' ? 'brezhon' :
       p.realm === 'mauri_476' ? 'berber' :
       p.realm === 'byzantium' ? 'greek' : 'roman';
     p.religion = p.realm === 'franks_476' ||
       p.realm === 'rhein_franks_476' ? 'germanic_pagan' :
       p.realm === 'mauri_476' ? 'berber_traditional' :
-      p.realm === 'pannonia' ? 'homoian' :
       p.realm === 'byzantium' ? 'chalcedonian' : 'nicene';
     p.communities = [{ culture:p.culture, religion:p.religion,
       populationShare0:10000 }];

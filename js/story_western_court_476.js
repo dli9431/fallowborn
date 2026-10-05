@@ -75,7 +75,7 @@
         africa:'pending', italy:'pending' },
       courtAnchors:{ italy:'ravenna', croatia:'split',
         byzantium:'constantinople', west_francia:'paris',
-        aghlabids:'tunis', pannonia:'szekesfehervar' }
+        aghlabids:'tunis', pannonia:'thessaloniki' }
     };
     var orestes = made(s, 'Orestes', 'roman', 'nicene', 50, 4,
       'commander', 'ravenna');
@@ -354,23 +354,7 @@
           s.owner.paris === 'west_francia';
       }, 'news.476.clovis_campaign',
       '⚔ Clovis contests the Roman domain around Paris. Its actual war will decide the county.');
-    campaign476(s, w, 'theoderic', 489, 493, 'pannonia', 'ravenna',
-      function () {
-        var gothic = ruler(s, 'pannonia');
-        var eastern = ruler(s, 'byzantium');
-        return gothic && gothic.id === w.theodericId &&
-          alive(s, w.theodericId) && eastern &&
-          eastern.id === w.zenoId &&
-          s.owner.constantinople === 'byzantium' &&
-          (s.owner.ravenna === 'italy' ||
-            s.owner.ravenna === 'federates_476');
-      }, 'news.476.theoderic_campaign',
-      '⚔ With a living eastern patron, Theoderic marches toward Ravenna. The war can fail or change course.');
-    if (h.theoderic === 'started' && !h.theodericCommissionId) {
-      var commission = recognize(s, 'imperial_commission',
-        actor('byzantium'), actor('pannonia'), actor('pannonia'));
-      h.theodericCommissionId = commission && commission.id;
-    }
+    theodericMigration(s, w);
     if (h.theoderic === 'won' && !h.theodericSettlement &&
         s.owner.ravenna === 'pannonia') {
       s.realms.pannonia.capital = 'ravenna';
@@ -398,6 +382,55 @@
       'news.476.italy_campaign',
       '⚔ The eastern court opens an Italian reconquest campaign against the current ruler of Ravenna.');
   }
+  function theodericMigration(s, w) {
+    var h = w.historical, def = FBDATA.federateMigrations.theoderic_italy;
+    /* Already-declared wars in older 476 saves retain their normal outcome.
+       Restore never creates a moving court or a second commission for them. */
+    if (!h.theodericMigrationId && h.theoderic === 'started') {
+      if (s.owner[def.target] === def.realmId) h.theoderic = 'won';
+      else if (!FB.ordinaryWarById(s, h.theodericWarId)) h.theoderic = 'failed';
+      return;
+    }
+    var moving = h.theodericMigrationId && FB.political.movingPolity(s, h.theodericMigrationId);
+    if (moving) {
+      if (moving.status === 'encamped' && !moving.choice && moving.contractId &&
+          FB.federateNegotiateContract(s, moving.contractId))
+        FB.federateRequest(s, moving.id, 'force');
+      moving = FB.political.movingPolity(s, moving.id);
+      h.theoderic = moving.status === 'settled' ? 'won' :
+        moving.status === 'failed' ? 'failed' : moving.choice ? 'started' : 'negotiating';
+      h.theodericWarId = moving.warId;
+      return;
+    }
+    if (['won','failed','diverged','started'].indexOf(h.theoderic) >= 0 ||
+        s.date.year < def.firstYear) return;
+    if (s.date.year > def.lastYear) { h.theoderic = 'diverged'; return; }
+    var gothic = ruler(s, def.realmId), eastern = ruler(s, def.patronRealmId);
+    if (!gothic || gothic.id !== w.theodericId || !alive(s, w.theodericId) ||
+        !eastern || eastern.id !== w.zenoId ||
+        s.owner.constantinople !== def.patronRealmId ||
+        ['italy','federates_476'].indexOf(s.owner[def.target]) < 0 ||
+        FB.isRealmAtWar(s, def.realmId) || FB.isRealmAtWar(s, s.owner[def.target]) ||
+        FB.realmTerritory(s, def.realmId).length) return;
+    var commission = recognizeOrExisting(s, 'imperial_commission',
+      actor(def.patronRealmId), actor(def.realmId), actor(def.realmId));
+    if (!commission) return;
+    var created = FB.federateBeginMigration(s, Object.assign({}, def, {
+      endTurn:s.turn + def.durationDays }));
+    if (!created) return;
+    h.theodericMigrationId = created.id;
+    h.theodericCommissionId = commission.id;
+    var offered = FB.authorityOfferContractTemplate(s, def.templateId, {
+      patronRealmId:def.patronRealmId, federateRealmId:def.realmId,
+      hostId:def.hostId, recognitionId:commission.id });
+    if (offered) {
+      var record = s.authority.migrations.find(function (row) { return row.id === created.id; });
+      record.contractId = offered.id;
+      if (FB.federateNegotiateContract(s, offered.id) && FB.federateRequest(s, created.id, 'force')) {
+        h.theoderic = 'started'; h.theodericWarId = record.warId;
+      }
+    }
+  }
   function reaffirmDelegates(s, w) {
     if (w.civicProofId && alive(s, w.civicDelegateId) &&
         s.owner.ravenna === 'italy')
@@ -416,6 +449,7 @@
         'aghlabids','pannonia']) {
       var realm = s.realms[rid];
       var anchor = w.courtAnchors && w.courtAnchors[rid];
+      if (realm && realm.nonTerritorial) continue;
       if (anchor && s.owner[anchor] !== rid)
         w.displacedCourts[rid] = realm && realm.alive &&
           s.owner[realm.capital] === rid ? realm.capital : 'exiled';

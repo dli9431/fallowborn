@@ -7,7 +7,7 @@ dependsOnRuntime(__filename, [
   'data/technology.js', 'data/political_institutions.js', 'data/units.js',
   'data/economy.js', 'data/systems.js', 'js/systems.js',
   'js/main.js', 'js/stories.js', 'js/story_western_court_476.js',
-  'js/story_federate_track_476.js', 'js/authority.js', 'js/world.js',
+  'js/story_federate_track_476.js', 'js/authority.js', 'js/federates.js', 'js/world.js',
   'js/holywar.js', 'js/actions.js',
   'js/armies.js', 'js/treasury.js', 'js/lordships.js', 'js/model.js',
   'js/politics.js', 'js/technology.js', 'js/settlement.js',

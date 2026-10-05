@@ -4102,6 +4102,7 @@ window.FB = window.FB || {};
      so the check errs toward keeping the record. */
   FB.courtRecordRetained = function (state, c, kinById, familyLinks) {
     if (!state || !c || !state.player) return false;
+    if (FB.federateReferencesCharacter && FB.federateReferencesCharacter(state, c.id)) return true;
     if (FB.settlementLordshipReferencesCharacter &&
         FB.settlementLordshipReferencesCharacter(state, c.id)) return true;
     if (FB.tournaments && FB.tournaments.referencesCharacter(state, c.id)) return true;
@@ -6577,7 +6578,8 @@ window.FB = window.FB || {};
        every host of a warring or crusading realm survives this repair. */
     const armies = Array.isArray(state.armies) ? state.armies : [];
     state.armies = armies.filter(function (army) {
-      return !!(army && activeHosts[army.realm]);
+      return !!(army && (activeHosts[army.realm] ||
+        FB.federateHostStanding && FB.federateHostStanding(state, army)));
     });
   };
 

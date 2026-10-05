@@ -3953,7 +3953,9 @@ FB.CHANGELOG = [
         if (FB.authorityYear) FB.authorityYear(s);
         if (FB.stories) FB.stories.year(s);
       }
+      if (FB.federatePrepareDay) FB.federatePrepareDay(s);
       FB.armyTick(s);
+      if (FB.federateDay) FB.federateDay(s);
       if (FB.stories) FB.stories.day(s);
       if (FB.greatHolyWarTick && FB.systemAvailable(s, 'great_holy_wars')) FB.greatHolyWarTick(s);
       if (FB.tournaments && FB.systemAvailable(s, 'tournaments')) {
@@ -4060,7 +4062,9 @@ FB.CHANGELOG = [
 
     FB.fiscalDay(s);
     birthTick(s);
+    if (FB.federatePrepareDay) FB.federatePrepareDay(s);
     FB.armyTick(s); // hosts march and fight on the map every day
+    if (FB.federateDay) FB.federateDay(s);
     if (FB.stories) FB.stories.day(s);
     if (FB.greatHolyWarTick && FB.systemAvailable(s, 'great_holy_wars')) FB.greatHolyWarTick(s);
     if (FB.tournaments && FB.systemAvailable(s, 'tournaments')) FB.tournaments.reconcile(s);

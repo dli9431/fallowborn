@@ -98,7 +98,7 @@
         !Number.isInteger(authority.lastCustomYear)) invalid('authority');
     var allowed = { schema:1, nextId:1, appointments:1, recognitions:1,
       contracts:1, rights:1, receipts:1, governments:1, lastCustomYear:1,
-      civicActors:1 };
+      civicActors:1, migrations:1 };
     for (var key in authority) if (own(authority, key) && !own(allowed, key))
       invalid('authority.' + key);
     var seen = {};
@@ -161,7 +161,71 @@
             award.fulfilled && !Number.isInteger(award.fulfilledTurn))
           invalid(where + '.settlementAwards[' + index + ']');
       });
+      if (value.templateId !== undefined &&
+          !own(FBDATA.federateContractTerms, value.templateId)) invalid(where + '.templateId');
+      if (value.initialPay !== undefined &&
+          (!Number.isFinite(value.initialPay) || value.initialPay < 0) ||
+          value.initialPaidTurn !== undefined && !Number.isInteger(value.initialPaidTurn) ||
+          value.status === 'active' && value.initialPay &&
+            value.initialPaidTurn === undefined) invalid(where + '.initialPay');
+      if (value.transitionReason !== undefined &&
+          ['ruler_succession','renewed','breached','unpaid','term_ended','party_lost',
+            'recognition_lost','host_lost','settled'].indexOf(value.transitionReason) < 0)
+        invalid(where + '.transitionReason');
+      if (value.fulfilledCountyIds !== undefined &&
+          (!Array.isArray(value.fulfilledCountyIds) || value.fulfilledCountyIds.some(function (id, index) {
+            return typeof id !== 'string' || value.settlementCountyIds.indexOf(id) < 0 ||
+              value.fulfilledCountyIds.indexOf(id) !== index;
+          }))) invalid(where + '.fulfilledCountyIds');
     });
+    if (authority.migrations !== undefined) {
+      var movingRealms = {}, movingHosts = {};
+      rows(authority, 'migrations', seen, function (value, where) {
+        if (typeof value.realmId !== 'string' || typeof value.patronRealmId !== 'string' ||
+            !own(state.realms, value.realmId) || !own(state.realms, value.patronRealmId) ||
+            value.realmId === value.patronRealmId ||
+            typeof value.hostId !== 'string' || !value.hostId ||
+            !['encamped','service','marching','arrived','settled','failed'].includes(value.status) ||
+            ![null,'land','service','force'].includes(value.choice) ||
+            !Number.isInteger(value.startTurn) || !Number.isInteger(value.endTurn) ||
+            value.endTurn <= value.startTurn ||
+            !known('government', value.settlementForm) ||
+            FB.governments.resolve(value.settlementForm).use.territory.movingCourt ||
+            !Array.isArray(value.courtIds) || !value.courtIds.length ||
+            value.courtIds.some(function (id, index) {
+              return typeof id !== 'string' || !id || value.courtIds.indexOf(id) !== index;
+            }) || [value.origin, value.at, value.target].some(function (id) {
+              return typeof id !== 'string' || !own(state.owner, id) || !state.owner[id];
+            }) || value.contractId !== null &&
+              !authority.contracts.some(function (deal) {
+                return deal.id === value.contractId && deal.federateRealmId === value.realmId &&
+                  deal.patronRealmId === value.patronRealmId && deal.hostId === value.hostId;
+              }) || value.warId !== null && typeof value.warId !== 'string') invalid(where);
+        if (value.status === 'settled' && !Number.isInteger(value.settledTurn)) invalid(where);
+        if (value.session !== null) {
+          var session = value.session;
+          if (!plain(session) || session.schema !== 1 || session.kind !== 'federate_migration' ||
+              !Array.isArray(session.seats) || !Array.isArray(session.assets) || session.assets.length !== 1 ||
+              !plain(session.assets[0]) || session.assets[0].id !== value.target ||
+              session.assets[0].kind !== 'county' ||
+              !Array.isArray(session.claims) || session.claims.length !== 1 ||
+              !plain(session.claims[0]) || session.claims[0].asset !== value.target ||
+              session.claims[0].claimant !== value.realmId ||
+              !Array.isArray(session.awards) ||
+              !Number.isInteger(session.step) || session.step < 0 || session.step > 1 ||
+              !['open','resolved'].includes(session.status) ||
+              session.status !== (session.step === 1 ? 'resolved' : 'open') ||
+              value.status === 'settled' && (session.status !== 'resolved' ||
+                session.awards.length !== 1 || !plain(session.awards[0]) ||
+                session.awards[0].asset !== value.target ||
+                session.awards[0].claimant !== value.realmId)) invalid(where + '.session');
+        } else if (value.status === 'settled') invalid(where + '.session');
+        if (['settled','failed'].indexOf(value.status) < 0) {
+          if (movingRealms[value.realmId] || movingHosts[value.hostId]) invalid(where);
+          movingRealms[value.realmId] = true; movingHosts[value.hostId] = true;
+        }
+      });
+    }
     rows(authority, 'rights', seen, function (value, where) {
       if (!FBDATA.customaryBases[value.basis] ||
           ['peace','revenue','consent'].indexOf(value.power) < 0 ||
@@ -205,7 +269,7 @@
       });
     }
     for (var id in seen) if (own(seen, id)) {
-      var serial = /^(?:appointment|recognition|federate|custom|render)-(\d+)$/.exec(id);
+      var serial = /^(?:appointment|recognition|federate|custom|render|migration)-(\d+)$/.exec(id);
       if (serial && Number(serial[1]) >= authority.nextId) invalid('authority.nextId');
     }
     return true;
