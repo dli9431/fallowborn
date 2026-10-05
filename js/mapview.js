@@ -1176,10 +1176,14 @@ window.FB = window.FB || {};
         if (detail && FB.siteArt) {
           const scale = rank === 2 ? 1 : (rank === 1 ? 0.9 : 0.8);
           half = Math.round(FB.clamp(z * 1.1, 12, 24) * scale * u);
-          const province = FB.world.byId[site.pid];
-          const culture = province && province.culture;
-          if (!countyArt[site.pid]) countyArt[site.pid] = FB.siteArtPresentation(culture, FB.state);
-          const img = FB.siteArt(rank, site.site, culture, FB.state, countyArt[site.pid]);
+          if (!countyArt[site.pid]) {
+            const culture = FB.countyCulture(FB.state, site.pid);
+            countyArt[site.pid] = {
+              culture:culture, presentation:FB.siteArtPresentation(culture, FB.state)
+            };
+          }
+          const art = countyArt[site.pid];
+          const img = FB.siteArt(rank, site.site, art.culture, FB.state, art.presentation);
           ctx.globalAlpha = focused ? 1 : 0.45;
           ctx.drawImage(img, scrX - half, scrY - half, half * 2, half * 2);
           ctx.globalAlpha = 1;

@@ -25,6 +25,12 @@ De jure IDs are slugs scoped by rank: `duchies.essex`, `kingdoms.england`,
 `empires.britannia`. Legacy `d_essex`, `k_england` and `e_britannia` are
 resolved only where a field is typed as a title. Realm IDs, character IDs and
 other strings retain their exact bytes even when they resemble a title alias.
+Generated realm names persist as `nameStyle: {kind, place}` plus optional typed
+`titleKind` / `titleId` claims. Their non-enumerable `name` display getter is
+rebound on restore before dynastic repairs; localized names are not serialized
+as realm fields. Legacy matching English generated title names acquire their
+canonical claim at this repair boundary. Repeated repairs do not consume RNG or
+UIDs. Custom realm names and already-declared claims remain independent.
 Bookmark activation resolves aliases before validation and rejects missing or
 ambiguous county–duchy, duchy–kingdom and kingdom–empire links. Migration copies
 the input before rewriting typed state references, including regional ambitions,

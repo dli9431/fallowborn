@@ -180,6 +180,97 @@ test('careers follow stamped era and live dates while saved careers remain recor
   expect(result).toEqual({ civic:true, accepted:true, expired:false, hidden:true, retained:'civic_clerk' });
 });
 
+test('eligible events cannot acquire unavailable careers or discard a civilian backup on rejection', async function ({ page }, testInfo) {
+  await openGame(page, testInfo); await startDeterministicGame(page);
+  const result = await page.evaluate(function () {
+    const s = FB.state, p = s.player, c = s.chars[p.charId], year = s.date.year;
+    const career = FB.careerOf(s,c);
+    career.experience = 17;
+    c.careerHistory = { merchant:{ profession:'merchant', rank:'master', experience:31,
+      startedYear:year - 4, guildRank:'member', guildStanding:24, chosen:true } };
+    // Retained campaign service must survive a failed permanent acquisition.
+    p.professionBack = career.profession;
+    p.profession = 'soldier';
+    const event = { id:'e2e_career_acquisition', eras:[FB.campaignEra(s)],
+      trigger:{ minAge:0 }, title:'Career offer', text:'Career offer',
+      options:[{ label:'Accept', effects:{ profession:'e2e_period_career', gold:3 } }] };
+    FBDATA.events.push(event);
+    FB.invalidateEventIndex();
+    function snapshot() {
+      return JSON.stringify({ profession:p.profession, back:p.professionBack,
+        career:c.career, history:c.careerHistory, guild:p.flags.guild_member || null });
+    }
+    const base = Object.assign({}, FBDATA.careers.farmer, { requiresTech:null });
+    const trials = [
+      { yearMin:year + 1 }, { yearMax:year - 1 }, { eras:['late_antique'] },
+      { maleOnly:true }, { bookmarkIds:['missing_bookmark'] }
+    ].map(function (gate) {
+      FBDATA.careers.e2e_period_career = Object.assign({}, base, gate);
+      const before = snapshot(), gold = p.gold;
+      const receipt = FB.resolveEventOption(s,event,event.options[0],{});
+      return { resolved:!!receipt, preserved:snapshot() === before, gold:p.gold - gold,
+        professionImpact:receipt.impacts.some(function (row) { return row.type === 'profession'; }) };
+    });
+    FBDATA.careers.e2e_period_career = Object.assign({}, base, { yearMin:year, yearMax:year });
+    const receipt = FB.resolveEventOption(s,event,event.options[0],{});
+    return { trials:trials, accepted:!!receipt, profession:p.profession,
+      recorded:c.career.profession, back:p.professionBack, rank:c.career.rank,
+      archived:c.careerHistory[career.profession].experience };
+  });
+  expect(result.trials).toEqual(Array(5).fill({ resolved:true, preserved:true, gold:3, professionImpact:false }));
+  expect(result.accepted).toBe(true);
+  expect(result.profession).toBe('e2e_period_career');
+  expect(result.recorded).toBe(result.profession);
+  expect(result.back).toBeNull();
+  expect(result.rank).toBe('journeyman');
+  expect(result.archived).toBe(17);
+});
+
+test('campaign profession effects respect career periods and restore the unchanged civilian career', async function ({ page }, testInfo) {
+  await openGame(page, testInfo); await startDeterministicGame(page);
+  const result = await page.evaluate(function () {
+    const s = FB.state, p = s.player, c = s.chars[p.charId], year = s.date.year;
+    FB.careerOf(s,c).experience = 23;
+    const civilian = JSON.stringify(c.career), profession = p.profession;
+    const base = Object.assign({}, FBDATA.careers.soldier, { requiresTech:null });
+    const results = ['setFlag','setFlag2'].map(function (flagKey) {
+      const fx = { profession:'e2e_period_service' };
+      fx[flagKey] = 'on_campaign';
+      const blocked = [{ yearMin:year + 1 }, { yearMax:year - 1 }, { eras:['late_antique'] }].map(function (gate) {
+        FBDATA.careers.e2e_period_service = Object.assign({}, base, gate);
+        const back = p.professionBack;
+        const ledger = FB.applyEffects(s,fx,{});
+        return p.profession === profession && p.professionBack === back &&
+          JSON.stringify(c.career) === civilian &&
+          !ledger.some(function (row) { return row.type === 'profession'; });
+      });
+      FBDATA.careers.e2e_period_service = Object.assign({}, base, { yearMin:year, yearMax:year });
+      FB.applyEffects(s,fx,{});
+      const accepted = p.profession === 'e2e_period_service' && p.professionBack === profession &&
+        JSON.stringify(c.career) === civilian;
+      // An acquired occupation remains restorable after its service window closes.
+      FBDATA.careers.e2e_period_service.yearMax = year - 1;
+      FB.applyEffects(s,{ restoreProfession:true, clearFlag:'on_campaign' },{});
+      return { blocked:blocked, accepted:accepted, restored:p.profession === profession &&
+        p.professionBack === null && JSON.stringify(c.career) === civilian };
+    });
+    // Lazy career creation must record the old profession before acquisition.
+    delete c.career;
+    c.careerHistory = {};
+    FBDATA.careers.e2e_period_service = base;
+    FB.applyEffects(s,{ profession:'e2e_period_service' },{});
+    return { results:results, lazyArchived:c.careerHistory[profession].profession,
+      lazyRecorded:c.career.profession, lazyMirror:p.profession };
+  });
+  expect(result.results).toEqual([
+    { blocked:[true,true,true], accepted:true, restored:true },
+    { blocked:[true,true,true], accepted:true, restored:true }
+  ]);
+  expect(result.lazyArchived).toBe('farmer');
+  expect(result.lazyRecorded).toBe('e2e_period_service');
+  expect(result.lazyMirror).toBe(result.lazyRecorded);
+});
+
 test('year tables, papal institution milestones and tournament thresholds read authored dates', async function ({ page }, testInfo) {
   await openGame(page, testInfo); await startDeterministicGame(page);
   const result = await page.evaluate(function () {

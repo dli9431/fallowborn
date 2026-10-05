@@ -4,7 +4,7 @@ dependsOnRuntime(__filename, [
   'js/justice.js', 'js/intrigue.js', 'js/model.js', 'js/station.js', 'js/authority.js',
   'js/governments.js', 'js/world.js', 'js/mods.js', 'js/economy.js', 'js/events.js',
   'js/i18n.js', 'js/messages.js', 'js/save.js', 'js/ui_modals.js',
-  'data/intrigue.js', 'data/cultures.js', 'data/political_institutions.js',
+  'data/intrigue.js', 'data/events_intrigue.js', 'data/cultures.js', 'data/political_institutions.js',
   'data/technology.js', 'data/bookmarks.js', 'data/lexicons.js'
 ]);
 const { test, expect } = require('../support/fixture');
@@ -263,6 +263,109 @@ test('custom labels use the shared review flow and lexicon without sentencing on
   await page.locator('#justice-cancel').click();
   await expect(page.locator('[data-justice-sentence="restitution"]')).toBeFocused();
   expect(await page.evaluate(function () { return !FB.state.justice || !FB.state.justice.last; })).toBe(true);
+});
+
+for (const scenario of [
+  { sentence:'detention', name:'Detention', term:180, served:30, remaining:150 },
+  { sentence:'imprisonment', name:'Imprisonment', term:540, served:75, remaining:465 },
+  { sentence:'detention', name:'Detention', term:180, served:120, existing:15, remaining:195 }
+]) {
+  test('prisoner hearing projects ' + scenario.sentence + (scenario.existing ? ' extensions' : ' authored terms'), async function ({ page }, testInfo) {
+    await startCourt(page, testInfo, '867'); await installTestCourt(page);
+    const result = await page.evaluate(function (scenario) {
+      let s = FB.state;
+      const rid = Object.keys(s.realms).sort().filter(function (id) {
+        return id !== 'player' && s.realms[id].alive && FB.realmRank.isTerritorial(s.realms[id], s);
+      })[0];
+      FB.authoritySetGovernment(s, rid, scenario.sentence === 'detention' ? 'test_court' : 'territorial');
+      const actor = FB.materializeRealmRuler(s, rid);
+      actor.culture = 'frankish'; actor.religion = 'catholic';
+      FBDATA.justiceSentences[scenario.sentence].termDays = scenario.term;
+      const target = s.player.charId;
+      s.turn += scenario.served;
+      const offense = FB.justiceRecordOffense(s, actor.id, target, 'assassination', 'redhanded', true, actor.id);
+      const row = FB.captureIntrigue(s, actor.id, target, 'judicial', rid);
+      row.captureTurn = s.turn - scenario.served;
+      if (scenario.existing) { row.sentenced = true; row.endTurn = s.turn + scenario.existing; }
+      const queued = FB.justiceApplyPunishment(s, actor.id, target, scenario.sentence, offense.id);
+      // Legacy contexts need only the pending response identity, even after reload.
+      const ctx = { justiceId:s.justice.pending.id, studentId:actor.id };
+      FB.save.restore(FB.save.parseExport(FB.save.exportState())); s = FB.state;
+      const ev = FB.eventById('justice_hearing'), before = JSON.stringify(s), rng = FB.getRngState();
+      const text = FB.eventText(s, target, ev, 'text', ctx);
+      const semantic = FB.textParams(s, target, ev.text, ctx, true);
+      const pure = before === JSON.stringify(s) && rng === FB.getRngState();
+      // A definition change after queueing must agree with the committing projection.
+      FBDATA.justiceSentences[scenario.sentence].termDays = scenario.term + 30;
+      const updated = FB.eventText(s, target, ev, 'text', ctx);
+      const applied = FB.fns.justice_submit(s, ctx);
+      return { queued:queued.pending, text:text, updated:updated, pure:pure,
+        label:semantic.sentenceName, applied:applied,
+        remaining:FB.justiceCustodyOf(s, target).endTurn - s.turn };
+    }, scenario);
+    expect(result.queued).toBe(true);
+    expect(result.text).toContain('The proposed sentence is ' + scenario.name);
+    expect(result.text).toContain(scenario.existing ? 'add ' + scenario.term + ' days' : scenario.term + '-day prison term');
+    expect(result.text).toContain('Release is due in ' + scenario.remaining + ' days.');
+    expect(result.text).not.toContain('a year in prison');
+    expect(result.updated).toContain('Release is due in ' + (scenario.remaining + 30) + ' days.');
+    expect(result).toMatchObject({ pure:true, applied:true, remaining:scenario.remaining + 30,
+      label:{ $data:'justiceSentence', id:scenario.sentence, path:'name' } });
+  });
+}
+
+test('custom prisoner hearings display sentence labels, payment and penance costs', async function ({ page }, testInfo) {
+  await startCourt(page, testInfo, '867'); await installTestCourt(page);
+  const rows = await page.evaluate(function () {
+    const s = FB.state, rid = Object.keys(s.realms).sort().filter(function (id) {
+      return id !== 'player' && s.realms[id].alive && FB.realmRank.isTerritorial(s.realms[id], s);
+    })[0];
+    FB.authoritySetGovernment(s, rid, 'test_court');
+    const actor = FB.materializeRealmRuler(s, rid), target = s.player.charId;
+    const ev = FB.eventById('justice_hearing');
+    return ['restitution','atonement'].map(function (sentence) {
+      FB.captureIntrigue(s, actor.id, target, 'judicial', rid);
+      s.player.gold = 7;
+      s.player.piety = 100; s.player.prestige = 100;
+      const piety = s.player.piety, prestige = s.player.prestige;
+      FB.justiceApplyPunishment(s, actor.id, target, sentence);
+      const ctx = s.eventQueue.filter(function (item) { return item.id === 'justice_hearing'; }).slice(-1)[0].ctx;
+      const quote = FB.justicePunishmentProjection(s, actor.id, target, sentence);
+      const text = FB.eventText(s, target, ev, 'text', ctx);
+      const applied = FB.fns.justice_submit(s, ctx);
+      return { sentence:sentence, text:text, amount:FB.money(quote.amount), applied:applied,
+        gold:s.player.gold, pietyLoss:piety - s.player.piety, prestigeLoss:prestige - s.player.prestige,
+        released:!FB.justiceCustodyOf(s, target) };
+    });
+  });
+  expect(rows[0].text).toContain('The proposed sentence is Restitution: pay ' + rows[0].amount + ' and be released.');
+  expect(rows[0]).toMatchObject({ applied:true, gold:0, released:true });
+  expect(rows[1].text).toContain('The proposed sentence is Atonement: lose 10 piety and 5 prestige, then be released.');
+  expect(rows[1]).toMatchObject({ applied:true, released:true, pietyLoss:10, prestigeLoss:5 });
+});
+
+test('restricted prisoner hearings announce the normalized custody sentence', async function ({ page }, testInfo) {
+  await startCourt(page, testInfo, '867');
+  const result = await page.evaluate(function () {
+    const s = FB.state, rid = Object.keys(s.realms).sort().filter(function (id) {
+      return id !== 'player' && s.realms[id].alive && FB.realmRank.isTerritorial(s.realms[id], s);
+    })[0];
+    FB.authoritySetGovernment(s, rid, 'territorial');
+    const actor = FB.materializeRealmRuler(s, rid), target = s.player.charId;
+    actor.culture = 'frankish'; actor.religion = 'catholic';
+    FB.captureIntrigue(s, actor.id, target, 'judicial', rid);
+    const original = FB.platform.isCrazyGames;
+    try {
+      FB.platform.isCrazyGames = true;
+      FB.justiceApplyPunishment(s, actor.id, target, 'execution');
+      const ctx = s.eventQueue.filter(function (item) { return item.id === 'justice_hearing'; })[0].ctx;
+      return { sentence:s.justice.pending.sentence,
+        text:FB.eventText(s, target, FB.eventById('justice_hearing'), 'text', ctx) };
+    } finally { FB.platform.isCrazyGames = original; }
+  });
+  expect(result.sentence).toBe('imprisonment');
+  expect(result.text).toContain('The proposed sentence is Imprisonment: a 360-day prison term');
+  expect(result.text).not.toContain('death');
 });
 
 test('legal mod validation rejects bad references atomically', async function ({ page }, testInfo) {

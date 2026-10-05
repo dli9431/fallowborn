@@ -2,7 +2,7 @@
 
 Period presentation
 
-FBDATA.architectureStyles in data/eras.js owns settlement palettes and named shapes. FB.architectureStyle reads the county's culture, including inherited and campaign-founded culture definitions, then the campaign's stamped era, then manuscript. The map passes the county's principal culture rather than its ruler's culture. This changes only drawing, with no technology or gameplay eligibility effect.
+FBDATA.architectureStyles in data/eras.js owns settlement palettes and named shapes. FB.architectureStyle reads the county's culture, including inherited and campaign-founded culture definitions, then the campaign's stamped era, then manuscript. The map resolves the live principal culture through FB.countyCulture once per visible county per detailed frame, so community-driven identity changes update settlement art while the bookmark province retains its original culture. This changes only drawing, with no technology or gameplay eligibility effect.
 
 The shape library in js/siteart.js supplies pitched and flat dwellings, spire, dome and basilica worship roofs, and crenellated or palisade fortifications. A style can override only the palettes or shapes it needs; the rest retain manuscript defaults. One fixed canvas is cached per physical slug, live kind, resolved style and effective palette/shape data. Zoom remains outside the cache key. Live style edits and period switches cannot reuse old art. The default palettes, drawing paths and slug hash retain the original 867/1066 pixels; presentation consumes no gameplay RNG.
 

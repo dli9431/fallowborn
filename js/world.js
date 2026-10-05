@@ -2102,6 +2102,68 @@ window.FB = window.FB || {};
     return state.start.defaultGovernment;
   }
 
+  /* Generated names are a display projection, not a title identifier or saved
+     translation. Keep name readable for existing consumers, but serialize only
+     the naming record and the separately typed de jure claim. */
+  FB.bindRealmName = function (state, realm) {
+    if (!realm || !realm.nameStyle) return;
+    Object.defineProperty(realm, 'name', {
+      configurable:true, enumerable:false,
+      get:function () {
+        const style = realm.nameStyle;
+        if (style.kind === 'realm') return FB.T('Realm of {name}', { name:style.place });
+        const word = FB.term(state, style.kind, { viewer:null, realm:realm,
+          faith:realm.religion, culture:realm.ruler && realm.ruler.culture, form:'title' });
+        return FB.T('{style} of {name}', { style:word, name:style.place });
+      },
+      set:function (name) {
+        // A mod can still give a realm a custom proper name without changing its claim.
+        delete realm.nameStyle;
+        Object.defineProperty(realm, 'name', {
+          configurable:true, enumerable:true, writable:true, value:name
+        });
+      }
+    });
+  };
+
+  FB.setRealmTitle = function (state, realm, kind, id, place) {
+    const canonical = FB.titleIds.resolve(kind, id);
+    const title = canonical && FB.titleLevels.table(kind)[canonical];
+    if (canonical) {
+      realm.titleKind = kind;
+      realm.titleId = canonical;
+    } else {
+      delete realm.titleKind;
+      delete realm.titleId;
+    }
+    realm.nameStyle = { kind:kind, place:place || (title && title.name) || id };
+    FB.bindRealmName(state, realm);
+  };
+
+  /* Only creation/restore interprets legacy English generated names. Normal
+     recognition reads the typed claim, even after a custom name or lexicon edit. */
+  FB.repairRealmNames = function (state, onlyId) {
+    const realms = onlyId ? [state.realms[onlyId]] : state.realms;
+    for (const rid in realms) {
+      const realm = realms[rid];
+      if (!realm) continue;
+      if (realm.nameStyle) { FB.bindRealmName(state, realm); continue; }
+      const name = realm.name;
+      for (const kind of FB.titleLevels.kinds) {
+        const prefix = { duchy:'Duchy of ', kingdom:'Kingdom of ', empire:'Empire of ' }[kind];
+        if (typeof name !== 'string' || name.indexOf(prefix) !== 0) continue;
+        const table = FB.titleLevels.table(kind);
+        for (const id in table) {
+          if (table[id].name === name.slice(prefix.length)) {
+            if (!realm.titleKind && !realm.titleId) FB.setRealmTitle(state, realm, kind, id);
+            break;
+          }
+        }
+        break;
+      }
+    }
+  };
+
   FB.initPolitics = function (state) {
     state.owner = {}; state.dev = {}; state.realms = {}; state.holder = {};
     state.wastelandSettlements = {};
@@ -2124,10 +2186,15 @@ window.FB = window.FB || {};
           state.date.year, state),
         war: null, op: 0
       };
+      if (r.titleKind && r.titleId) {
+        state.realms[r.id].titleKind = r.titleKind;
+        state.realms[r.id].titleId = r.titleId;
+      }
       forms[r.id] = r.government !== undefined ? r.government : defaultForm;
     }
     // a realm whose form differs from the campaign default keeps a saved row
     if (FB.authoritySeedGovernments) FB.authoritySeedGovernments(state, forms);
+    FB.repairRealmNames(state);
     // sovereignty (map color) = the top of each county's realm chain
     for (const pr of FB.world.provs) {
       if (pr.wasteland) continue;
@@ -2164,22 +2231,23 @@ window.FB = window.FB || {};
       if (did === capDuchy) {
         for (const pr of counties) state.holder[pr.id] = rid;
       } else if (counties.length >= 2) {
-        const dname = (FBDATA.duchies[did] || {}).name || did;
         const dr = FB.makeVassalRealm(state, {
-          id: 'd_' + did, name: 'Duchy of ' + dname, capital: counties[0].id,
+          id: 'd_' + did, titleKind:'duchy', titleId:did, capital: counties[0].id,
           rank: 2, liege: rid, culture: counties[0].culture
         });
         state.holder[counties[0].id] = dr.id;
         for (let i = 1; i < counties.length; i++) {
           const cr = FB.makeVassalRealm(state, {
-            id: 'c_' + counties[i].id, name: 'County of ' + counties[i].name,
+            id: 'c_' + counties[i].id, titleKind:'county', titleId:counties[i].id,
+            titlePlace:counties[i].name,
             capital: counties[i].id, rank: 1, liege: dr.id, culture: counties[i].culture
           });
           state.holder[counties[i].id] = cr.id;
         }
       } else {
         const cr = FB.makeVassalRealm(state, {
-          id: 'c_' + counties[0].id, name: 'County of ' + counties[0].name,
+          id: 'c_' + counties[0].id, titleKind:'county', titleId:counties[0].id,
+          titlePlace:counties[0].name,
           capital: counties[0].id, rank: 1, liege: rid, culture: counties[0].culture
         });
         state.holder[counties[0].id] = cr.id;
@@ -2222,6 +2290,14 @@ window.FB = window.FB || {};
       op: 0, generated: true, favor: FB.ri(-15, 15) // the house's standing at its liege's court
     };
     state.realms[r.id] = r;
+    if (opts.titleKind) FB.setRealmTitle(state, r, opts.titleKind, opts.titleId, opts.titlePlace);
+    else if (opts.nameStyle) {
+      r.nameStyle = { kind:opts.nameStyle.kind, place:opts.nameStyle.place };
+      FB.bindRealmName(state, r);
+    }
+    if (!opts.titleKind && opts.claimKind && opts.claimId) {
+      r.titleKind = opts.claimKind; r.titleId = opts.claimId;
+    }
     if (FB.treasuryCreateFromCounties) FB.treasuryCreateFromCounties(state, r.id, [opts.capital]);
     if (state.date) FB.ensureRealmSuccession(state, r.id);
     FB.invalidateRealmCache();
@@ -2889,7 +2965,8 @@ window.FB = window.FB || {};
     return {
       id:courtMemberId(realm, opts.key),
       name: person.name,
-      dyn:dynastySource ? dynastySource.dyn : (realm.dynasty || 'of ' + realm.name),
+      dyn:dynastySource ? dynastySource.dyn : (realm.dynasty ||
+        'of ' + (realm.nameStyle ? realm.nameStyle.place : realm.name)),
       sex: person.sex,
       born: person.born,
       alive: true,
@@ -3632,7 +3709,7 @@ window.FB = window.FB || {};
         culture: r.ruler.culture,
         religion: courtReligion(state, r, cap),
         born: m.born,
-        dyn: m.dyn || 'of ' + r.name,
+        dyn: m.dyn || 'of ' + (r.nameStyle ? r.nameStyle.place : r.name),
         station: FB.realmRank.isRoyal(r, state) ? 4 : 3,
         quality: Math.max(2, r.rank + 1),
         opinion: FB.ri(-5, 20)
@@ -3699,7 +3776,7 @@ window.FB = window.FB || {};
           culture:r.ruler.culture,
           religion:courtReligion(state, r, cap),
           born:m.born,
-          dyn:m.dyn || 'of ' + r.name,
+          dyn:m.dyn || 'of ' + (r.nameStyle ? r.nameStyle.place : r.name),
           station:FB.realmRank.isRoyal(r, state) ? 4 : 3,
           quality:Math.max(2, r.rank + 1),
           opinion:FB.ri(-5, 20)
@@ -3946,7 +4023,7 @@ window.FB = window.FB || {};
         culture:r.ruler.culture || (cap && cap.culture),
         religion:courtReligion(state, r, cap),
         born:m.born,
-        dyn:m.dyn || 'of ' + r.name,
+        dyn:m.dyn || 'of ' + (r.nameStyle ? r.nameStyle.place : r.name),
         station:FB.realmRank.isRoyal(r, state) ? 4 : 3,
         quality:Math.max(2, r.rank + 1),
         traits:trait,
@@ -5665,7 +5742,7 @@ window.FB = window.FB || {};
   /* ---- crown recognition ---------------------------------------------------
      An anointed crown is sticky: an independent realm styled as a kingdom
      keeps the royal style while it holds even one county inside the de jure
-     kingdom its name claims — rival kings of one kingdom may coexist for
+     kingdom its typed title claims — rival kings of one kingdom may coexist for
      years. But a "king" with no land left in his kingdom is recognized by no
      one: the world restyles his house at its true dignity (duke of his best
      duchy majority, else count of his capital county). Conquest still never
@@ -5673,10 +5750,8 @@ window.FB = window.FB || {};
   FB.realmKingdomClaim = function (state, rid) {
     const r = state.realms[rid];
     if (!r || !r.alive || rid === 'player' || !FB.realmRank.isKingdom(r, state) || r.liege) return null;
-    for (const kid in FBDATA.kingdoms) {
-      if (r.name === 'Kingdom of ' + FBDATA.kingdoms[kid].name) return kid;
-    }
-    return null;
+    return r.titleKind === 'kingdom' && FB.titleLevels.has('kingdom', r.titleId)
+      ? r.titleId : null;
   };
 
   FB.checkCrownRecognition = function (state, rid) {
@@ -5713,10 +5788,11 @@ window.FB = window.FB || {};
       FB.realmRulerTitleSnapshot(state, r, state.chars[oldLifeRuler]);
     let newRank;
     if (bestDuchy) {
-      r.name = 'Duchy of ' + (FBDATA.duchies[bestDuchy].name || bestDuchy);
+      FB.setRealmTitle(state, r, 'duchy', bestDuchy);
       newRank = 2;
     } else {
-      r.name = 'County of ' + ((FB.world.byId[r.capital] || {}).name || r.capital);
+      FB.setRealmTitle(state, r, 'county', r.capital,
+        (FB.world.byId[r.capital] || {}).name || r.capital);
       newRank = 1;
     }
     r.rank = newRank;
@@ -5802,7 +5878,7 @@ window.FB = window.FB || {};
     const duchy = FBDATA.duchies[did] || {};
     const duchyName = duchy.name || did;
     realm.rank = 2;
-    realm.name = 'Duchy of ' + duchyName;
+    FB.setRealmTitle(state, realm, 'duchy', did);
     if (!options.silent) {
       const rulerId = FB.lifeHistoryRulerId(state, rid);
       if (rulerId) FB.noteLifeAccession(state, state.chars[rulerId],
@@ -6541,6 +6617,11 @@ window.FB = window.FB || {};
               (cap ? cap.culture : 'arabic'),
             ev.newRealm.ruler, state.date.year, state), war: null, op: 0
         };
+        if (ev.newRealm.titleKind && ev.newRealm.titleId) {
+          state.realms[rid].titleKind = ev.newRealm.titleKind;
+          state.realms[rid].titleId = ev.newRealm.titleId;
+        }
+        FB.repairRealmNames(state, rid);
         FB.ensureRealmSuccession(state, rid);
         if (FB.treasuryCreateFromCounties) FB.treasuryCreateFromCounties(state, rid,
           ev.targets.filter(function (pid) { return state.owner[pid] !== 'player'; }));
@@ -8249,7 +8330,9 @@ window.FB = window.FB || {};
           ? FB.countyDominantCommunity(state, cap) : null;
         const uid = 'usurper_' + state.turn;
         const u = FB.makeVassalRealm(state, {
-          id: uid, name: old ? old.name : 'Realm of ' + (pr ? pr.name : 'the Usurper'),
+          id: uid, name: old && !old.nameStyle ? old.name : undefined,
+          nameStyle:old ? old.nameStyle : { kind:'realm', place:pr ? pr.name : uid },
+          claimKind:old && old.titleKind, claimId:old && old.titleId,
           capital: cap, rank: old ? old.rank : Math.max(1, FB.station.realmRank(p, state)), liege: null,
           culture:identity && identity.culture ||
             (pr ? pr.culture : FB.eraDefaultCulture(state)),
@@ -9280,18 +9363,10 @@ window.FB = window.FB || {};
     const p = state.player;
     const k = FB.playerKingdom(state), e = FB.playerEmpire(state);
     const dynName = (me.dyn || me.name || '').replace(/^of\s+/i, '').trim();
-    const nm = e ? 'Empire of ' + FBDATA.empires[e].name
-             : k ? 'Kingdom of ' + FBDATA.kingdoms[k].name
-             : 'Realm of ' + (dynName || me.name);
     const old = state.realms.player;
     const generation = old && old.ruler && old.ruler.generation !== undefined
       ? old.ruler.generation : 1;
     const r = old || { id: 'player', color: '#f0c840', aggression: 0, war: null, op: 0 };
-    r.name = FB.station.isDuke(p, state) && old && FBDATA.duchies[old.ambitionTitleRegion] &&
-      FB.playerDuchy(state) === old.ambitionTitleRegion
-      ? 'Duchy of ' + FBDATA.duchies[old.ambitionTitleRegion].name
-      : FB.station.isKing(p, state) && old && k === old.ambitionTitleRegion && FBDATA.kingdoms[k]
-        ? 'Kingdom of ' + FBDATA.kingdoms[k].name : nm;
     r.capital = (p.provs && p.provs[0]) || p.provinceId;
     r.religion = me.religion;
     r.alive = true;
@@ -9308,6 +9383,14 @@ window.FB = window.FB || {};
     r.succession.rulerGeneration = generation;
     r.succession.heirCharId = playerHeirs.length ? playerHeirs[0].id : null;
     state.realms.player = r;
+    const duchy = FB.station.isDuke(p, state) && old &&
+      FB.playerDuchy(state) === old.ambitionTitleRegion && old.ambitionTitleRegion;
+    if (duchy && FB.titleLevels.has('duchy', duchy)) FB.setRealmTitle(state, r, 'duchy', duchy);
+    else if (FB.station.isKing(p, state) && old && k === old.ambitionTitleRegion &&
+        FB.titleLevels.has('kingdom', k)) FB.setRealmTitle(state, r, 'kingdom', k);
+    else if (e) FB.setRealmTitle(state, r, 'empire', e);
+    else if (k) FB.setRealmTitle(state, r, 'kingdom', k);
+    else FB.setRealmTitle(state, r, 'realm', null, dynName || me.name);
     if (FB.seedRealmTechnology) FB.seedRealmTechnology(state, 'player');
     const sovereign = r.liege ? FB.topRealm(state, r.liege) : 'player';
     for (const pid of (p.provs || [])) {

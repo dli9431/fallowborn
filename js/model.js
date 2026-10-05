@@ -1985,7 +1985,9 @@ window.FB = window.FB || {};
     }
     const realm = state.realms && state.realms.player;
     if (realm) {
-      if (realm.name === 'Realm of ' + oldDyn) realm.name = 'Realm of ' + nm;
+      if (realm.nameStyle && realm.nameStyle.kind === 'realm' && realm.nameStyle.place === oldDyn) {
+        realm.nameStyle.place = nm;
+      } else if (!realm.nameStyle && realm.name === 'Realm of ' + oldDyn) realm.name = 'Realm of ' + nm;
       if (realm.dynasty === oldDyn) realm.dynasty = nm;
     }
     FB.touchFamily();
@@ -3302,9 +3304,7 @@ window.FB = window.FB || {};
       const did = FB.playerDuchy(state);
       if (did && FBDATA.duchies[did]) snap.place = FBDATA.duchies[did].name;
     } else if (FB.station.isRoyal(p, state) && state.realms.player && state.realms.player.alive) {
-      const rn = state.realms.player.name;
-      if (rn.indexOf('Kingdom of ') === 0) snap.place = rn.slice(11);
-      else if (rn.indexOf('Empire of ') === 0) snap.place = rn.slice(10);
+      snap.place = FB.realmTitlePlace(state.realms.player);
     }
     return snap;
   };
@@ -3331,6 +3331,10 @@ window.FB = window.FB || {};
   };
 
   FB.realmTitlePlace = function (realm) {
+    if (realm && realm.nameStyle) return realm.nameStyle.place || '';
+    if (realm && FB.titleLevels.has(realm.titleKind, realm.titleId)) {
+      return FB.titleLevels.table(realm.titleKind)[realm.titleId].name;
+    }
     if (!realm || !realm.name) return '';
     return realm.name.replace(
       /^(?:County|Duchy|Kingdom|Empire|Realm) of\s+/i, '');

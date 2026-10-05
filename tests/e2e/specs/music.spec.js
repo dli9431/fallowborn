@@ -3,11 +3,13 @@ const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
   'index.html',
   'js/music.js',
+  'js/world.js',
   'js/main.js',
   'js/save.js',
   'js/ui_misc.js',
   'js/ui_modals.js',
   'css/style.css',
+  'data/eras.js',
   'data/music_catalog.js'
 ]);
 
@@ -487,6 +489,124 @@ test('first soundtrack boot, title pause, and background playback preserve state
     expect(await page.evaluate(function () { return window.__bootPlayEvents; })).toEqual([
       ['sound-choice', 'on', 'on']
     ]);
+  });
+
+test('campaigns without eligible era banks stop audio and recover when a bank becomes eligible',
+  async function ({ page }, testInfo) {
+    test.skip(!testInfo.project.name.endsWith('-served'),
+      'Synthetic soundtrack responses require the served-origin project.');
+    await page.addInitScript(function () {
+      localStorage.setItem('fb_ui', JSON.stringify({
+        musicChoice:'on', musicVolume:0.55, musicPreferred:{},
+        musicRatings:{}, musicOfflineBanks:{}
+      }));
+      HTMLMediaElement.prototype.canPlayType = function () { return 'probably'; };
+      window.__eraMusicSession = {
+        playbackState:'none', metadata:null, setActionHandler:function () {}
+      };
+      Object.defineProperty(navigator, 'mediaSession', {
+        configurable:true, value:window.__eraMusicSession
+      });
+      window.MediaMetadata = function (data) {
+        for (const key in data) this[key] = data[key];
+      };
+      window.__eraMusicAudio = [];
+      function FakeAudio() {
+        this.currentTime = 0;
+        this.listeners = {};
+        this.loop = false;
+        this.paused = true;
+        this.readyState = 4;
+        this.src = '';
+        window.__eraMusicAudio.push(this);
+      }
+      FakeAudio.prototype.addEventListener = function (name, callback) {
+        this.listeners[name] = this.listeners[name] || [];
+        this.listeners[name].push(callback);
+      };
+      FakeAudio.prototype.load = function () {};
+      FakeAudio.prototype.pause = function () { this.paused = true; };
+      FakeAudio.prototype.play = function () {
+        this.paused = false;
+        return Promise.resolve();
+      };
+      FakeAudio.prototype.removeAttribute = function (name) {
+        if (name === 'src') this.src = '';
+      };
+      window.Audio = FakeAudio;
+    });
+    await routeSyntheticSoundtrack(page);
+    await openGame(page, testInfo);
+    await expect.poll(function () {
+      return page.evaluate(function () {
+        return window.__eraMusicAudio.some(function (item) {
+          return item.src && !item.paused && item.loop;
+        });
+      });
+    }).toBe(true);
+
+    const silent = { track:null, bank:null, released:true, metadata:null, mediaState:'none' };
+    const titleFallback = await page.evaluate(function () {
+      // Pass the partial music context directly rather than installing it as FB.state.
+      window.__eraMusicState = {
+        seed:'music-era-test', start:{ era:'early_medieval' },
+        player:{ charId:'me', tier:1, profession:'farmer', flags:{}, liege:'lord' },
+        chars:{ me:{ id:'me', religion:'christian', culture:'anglo_saxon' } },
+        realms:{ lord:{ id:'lord', alive:true, liege:null, war:null } }
+      };
+      window.__eraMusicSnapshot = function () {
+        return {
+          track:FB.music.current(), bank:FB.music.currentBank(),
+          released:window.__eraMusicAudio.every(function (item) {
+            return item.paused && !item.src;
+          }),
+          metadata:window.__eraMusicSession.metadata,
+          mediaState:window.__eraMusicSession.playbackState
+        };
+      };
+      FB.music.banks().forEach(function (bank) { bank.eras = ['high_medieval']; });
+      FB.music.sync(window.__eraMusicState);
+      return { resolved:FB.music.resolveBank(window.__eraMusicState),
+        playback:window.__eraMusicSnapshot(), choice:FB.game.uiPrefs.musicChoice };
+    });
+    expect(titleFallback).toEqual({ resolved:null, playback:silent, choice:'on' });
+
+    await page.evaluate(function () {
+      FB.music.banks().forEach(function (bank) { bank.eras = ['early_medieval']; });
+      FB.music.sync(window.__eraMusicState);
+    });
+    await expect.poll(function () {
+      return page.evaluate(function () {
+        return FB.music.currentBank() && FB.music.currentBank().role === 'folk' &&
+          window.__eraMusicAudio.some(function (item) { return item.src && !item.paused; });
+      });
+    }).toBe(true);
+
+    const gameplayFallback = await page.evaluate(function () {
+      const state = window.__eraMusicState;
+      state.player.profession = 'soldier';
+      FB.music.sync(state); // Queue a bank change behind the current gameplay song.
+      FB.music.setRepeat(true);
+      state.start.era = 'high_medieval';
+      FB.music.sync(state);
+      // An ended event from the released element must not start the queued war bank.
+      window.__eraMusicAudio.forEach(function (item) {
+        (item.listeners.ended || []).forEach(function (callback) { callback(); });
+      });
+      return { playback:window.__eraMusicSnapshot(), repeating:FB.music.isRepeating() };
+    });
+    expect(gameplayFallback).toEqual({ playback:silent, repeating:false });
+
+    await page.evaluate(function () {
+      window.__eraMusicState.start.era = 'early_medieval';
+      FB.music.sync(window.__eraMusicState);
+    });
+    await expect.poll(function () {
+      return page.evaluate(function () {
+        return FB.music.currentBank() && FB.music.currentBank().role === 'war' &&
+          window.__eraMusicAudio.some(function (item) { return item.src && !item.paused; });
+      });
+    }).toBe(true);
   });
 
 test('context banks, playback controls, and listening history stay consistent',

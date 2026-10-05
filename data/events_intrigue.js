@@ -19,15 +19,19 @@ FBDATA.events.push(
   ] },
 { id:'justice_hearing', title:'Judgment in Captivity',
   trigger:{ never:true }, contextValidator:'justice_response_valid',
-  text:{ select:'value', param:'sentence', cases:{
-    fine:'You are held in {student}’s custody. The proposed sentence is a fine and release.',
-    imprisonment:'You are held in {student}’s custody. The proposed sentence is a year in prison, with time already served credited.',
-    execution:'You are held in {student}’s custody. The ruler proposes your execution. Your response is heard before judgment is carried out.',
-    blinding_deposition:'You are held in {student}’s custody. The ruler proposes blinding and deposition, leaving permanent injuries and removing you from rule.',
-    qisas:'You are held in {student}’s custody. The ruler proposes execution under qisas for a proven killing; compensation may still be offered.',
-    exile:'You are held in {student}’s custody. The ruler proposes exile and the loss of local titles and offices.',
-    monastic_exile:'You are held in {student}’s custody. The ruler proposes monastic exile and the loss of local titles and offices.',
-    forfeiture:'You are held in {student}’s custody. The ruler proposes forfeiture of titles and lands within their authority.',
+  text:{ select:'value', param:'sentenceKind', cases:{
+    fine:'You are held in {student}’s custody. The proposed sentence is {sentenceName}: pay {money:sentenceAmount} and be released.',
+    ransom:'You are held in {student}’s custody. The proposed sentence is {sentenceName}: pay {money:sentenceAmount} and be released without pardoning unresolved offenses.',
+    penance:'You are held in {student}’s custody. The proposed sentence is {sentenceName}: lose {sentencePietyCost} piety and {sentencePrestigeCost} prestige, then be released.',
+    custody:{ select:'value', param:'sentenceCustodyMode', cases:{
+      extension:'You are held in {student}’s custody. The proposed sentence is {sentenceName}: add {sentenceTermDays} days to your prison term. Release is due in {sentenceRemainingDays} days.',
+      other:'You are held in {student}’s custody. The proposed sentence is {sentenceName}: a {sentenceTermDays}-day prison term, with time already served credited. Release is due in {sentenceRemainingDays} days.'
+    } },
+    death:'You are held in {student}’s custody. The proposed sentence is {sentenceName}: death. Your response is heard before judgment is carried out.',
+    corporal:'You are held in {student}’s custody. The proposed sentence is {sentenceName}: permanent injury and deposition, then release.',
+    exile:'You are held in {student}’s custody. The proposed sentence is {sentenceName}: exile for five years and the loss of local titles and offices.',
+    forfeiture:'You are held in {student}’s custody. The proposed sentence is {sentenceName}: forfeiture of titles and lands within the ruler’s authority, then release.',
+    pardon:'You are held in {student}’s custody. The proposed sentence is {sentenceName}: release.',
     other:'You are held in {student}’s custody. The ruler will hear your answer before passing sentence.'
   } },
   options:[

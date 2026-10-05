@@ -1171,7 +1171,10 @@ window.FB = window.FB || {};
     } else {
       bank = M.resolveBank(state);
     }
-    if (!bank) return;
+    if (!bank) {
+      stopAudio();
+      return;
+    }
     if (FB.platform.isPlay && (networkUnavailable || navigator.onLine === false)) {
       const fallback = offlineBank(bank.id === '__all__' ? null : bank);
       if (!fallback) return;

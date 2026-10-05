@@ -1563,17 +1563,16 @@ window.FB = window.FB || {};
 
   function makeCampaignRealm(state, campaign, sponsor, rank, capital, liege, suffix) {
     var identity = sponsorIdentity(state, sponsor);
-    var kingdom = FBDATA.kingdoms[campaign.targetKingdom];
     var dejure = FB.dejureOf(capital);
-    var name = FB.realmRank.isRoyal(rank, state)
-      ? 'Kingdom of ' + (kingdom ? kingdom.name : campaign.targetKingdom)
-      : FB.realmRank.isDuchy(rank, state)
-        ? 'Duchy of ' + (dejure.duchy && FBDATA.duchies[dejure.duchy]
-          ? FBDATA.duchies[dejure.duchy].name : FB.world.byId[capital].name)
-        : 'County of ' + FB.world.byId[capital].name;
+    var kind = FB.realmRank.isRoyal(rank, state) ? 'kingdom'
+      : FB.realmRank.isDuchy(rank, state) ? 'duchy' : 'county';
+    var titleId = kind === 'kingdom' ? campaign.targetKingdom
+      : kind === 'duchy' ? dejure.duchy : capital;
     var id = uniqueRealmId(state, campaign.id + '_' + (suffix || 'realm'));
     var realm = FB.makeVassalRealm(state, {
-      id:id, name:name, capital:capital, rank:rank, liege:liege || null,
+      id:id, titleKind:kind, titleId:titleId,
+      titlePlace:FB.titleLevels.has(kind, titleId) ? null : FB.world.byId[capital].name,
+      capital:capital, rank:rank, liege:liege || null,
       culture:identity.culture, religion:campaign.callingReligion
     });
     realm.rank = rank;

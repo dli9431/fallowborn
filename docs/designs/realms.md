@@ -578,9 +578,8 @@ sovereign rulers; sworn territorial rulers as vassals.
 
 ## Crown recognition (AI kingdoms)
 
-An anointed crown is sticky, but it is not landless. An independent AI realm styled
-as a kingdom (`rank 3`, named `Kingdom of <de jure kingdom name>` — the claim is
-derived from the name by `FB.realmKingdomClaim`, so no data or save schema changes)
+An anointed crown is sticky, but it is not landless. An independent AI realm
+with kingdom rank and a canonical `titleKind: 'kingdom'` / `titleId` claim
 keeps the royal style while it holds even one county inside its claimed de jure
 kingdom. This is the **rival phase**: when the player takes the de jure majority of
 England and is styled King, the old king remains a legitimate rival King of England
@@ -1547,7 +1546,26 @@ Feudal service contracts and the crown political bloc now consult the availabili
 
 Optional title levels
 
-The mechanical levels duchy, kingdom and empire, their slug namespaces and legacy d_, k_ and e_ aliases remain stable. FB.titleLevels supplies level tables, presence, lexicon names and holder labels. Level words come from data/lexicons.js using the campaign era and scoped government context; holder labels use the existing rank resolver, including faith and sex. Stored generated realm styles remain locale-neutral identities, distinct from the localized level and holder labels.
+The mechanical levels duchy, kingdom and empire, their slug namespaces and legacy d_, k_ and e_ aliases remain stable. FB.titleLevels supplies level tables, presence, lexicon names and holder labels. Level words come from data/lexicons.js using the campaign era and scoped government context; holder labels use the existing rank resolver, including faith and sex.
+
+Generated realms save `nameStyle: {kind, place}` containing the mechanical naming
+kind and proper place name, with a separate canonical `titleKind` / `titleId`
+for a de jure claim. `FB.setRealmTitle` owns creation and restyling for vassals,
+player realms, recognition, historical foundations and holy-war awards.
+`FB.bindRealmName` supplies the existing string `realm.name` as a non-enumerable
+display getter. It resolves the realm's own government, faith and ruler culture
+through the lexicon and the localized naming template; it never borrows the
+player's terminology. A Roman district reads Province and a Roman kingdom reads
+Diocese. Custom proper names can replace the getter without changing the claim.
+Title snapshots read the proper place from the record or typed title, never
+strip a translated prefix. Generated dynasty fallback names use the proper place
+so a locale change cannot alter family identity.
+
+Creation and restore recover matching legacy English generated title names once
+and rebind saved naming records without RNG or UID changes. Crown recognition
+only reads the canonical kingdom claim. A display name alone never creates or
+changes that claim during a query. Naming and identity fixes add no capability or
+technology gate.
 
 A bookmark can omit any level table. A county can omit duchy or set it to null; a district can omit kingdom, and a kingdom can omit empire. A supplied reference must still resolve in its typed table: empty strings, wrong prefixes, missing ids and alias collisions fail activation. A chain ends at its first absent parent. Mixed regions work without a bookmark-wide switch. Feudal generation keeps counties without a district in their sovereign's direct hand, without creating a synthetic shared district.
 
@@ -1555,4 +1573,6 @@ Recognition, grants and historical foundations count only actual title counties.
 
 Where a county has no title hierarchy, FB.political.territorialClaims projects effective customary Peace rights held by the realm or, for the player, the current character. Each claim retains the exact right id and legal basis. Revenue rights and appointments never imply a territorial recovery claim. The war system revalidates that evidence on declaration. Technology impact customary_territorial_claims is none: enforcing existing jurisdiction is ordinary legal and military practice, with ordinary county warfare and aggression still available.
 
-Coverage is in title-levels-and-hierarchy.spec.js and lexicon.spec.js, with the existing medieval title migration and parity journeys retained.
+Coverage is in title-levels-and-hierarchy.spec.js, lexicon.spec.js,
+realm-names.spec.js and crown-recognition.spec.js, with the existing medieval
+title migration and parity journeys retained.

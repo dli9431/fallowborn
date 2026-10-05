@@ -1,5 +1,9 @@
 # Historical ambitions
 
+Foundation restyling uses `FB.setRealmTitle`: the canonical title kind and region
+remain separate from the realm's lexicon-resolved naming record. Roman province
+and diocese terminology therefore applies to foundations as well as promotions.
+
 Successful foundations also append one locale-neutral highlight to the founder's
 life history when that person is tracked. Failed previews and repeated completion
 attempts record nothing; history retention does not alter rewards or eligibility.

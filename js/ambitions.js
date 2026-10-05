@@ -138,8 +138,7 @@ window.FB = window.FB || {};
     if (!player && FB.realmRank.above(FB.station.realmRank(d, state), r, state)) r.rank = FB.station.realmRank(d, state);
     if ((player ? state.player.tier : FB.realmRank.tier(r, state)) === d.tier) {
       r.ambitionTitleRegion = d.region;
-      const place = FB.station.isDuke(d, state) ? FBDATA.duchies[d.region] : FBDATA.kingdoms[d.region];
-      r.name = (FB.station.isDuke(d, state) ? 'Duchy of ' : 'Kingdom of ') + place.name;
+      FB.setRealmTitle(state, r, FB.station.isDuke(d, state) ? 'duchy' : 'kingdom', d.region);
     }
     const result = { realmId:rid, turn:state.turn, endTurn:state.turn + d.days,
       cost:status.cost, prestige:player ? d.prestige : 0 };

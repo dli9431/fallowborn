@@ -8361,7 +8361,7 @@ window.FB = window.FB || {};
       const identity = FB.countyDominantCommunity
         ? FB.countyDominantCommunity(state, pid) : null;
       FB.makeVassalRealm(state, {
-        id:vid, name:'County of ' + pr.name, capital:pid, rank:1,
+        id:vid, titleKind:'county', titleId:pid, titlePlace:pr.name, capital:pid, rank:1,
         liege:'player',
         culture:identity && identity.culture || pr.culture,
         religion:identity && identity.religion || pr.religion
@@ -8450,7 +8450,7 @@ window.FB = window.FB || {};
       const identity = FB.countyDominantCommunity
         ? FB.countyDominantCommunity(state, seat) : null;
       FB.makeVassalRealm(state, {
-        id:vid, name:'Duchy of ' + dname, capital:seat, rank:2,
+        id:vid, titleKind:'duchy', titleId:did, capital:seat, rank:2,
         liege:'player',
         culture:identity && identity.culture || seatProvince.culture,
         religion:identity && identity.religion || seatProvince.religion
@@ -9806,8 +9806,8 @@ window.FB = window.FB || {};
       FB.foundPlayerRealm(state);
       if (status.region) {
         state.realms.player.ambitionTitleRegion = status.region;
-        state.realms.player.name = (FB.station.isDuke(status.targetTier, state) ? 'Duchy of ' : 'Kingdom of ') +
-          (FBDATA.duchies[status.region] || FBDATA.kingdoms[status.region]).name;
+        FB.setRealmTitle(state, state.realms.player,
+          FB.station.isDuke(status.targetTier, state) ? 'duchy' : 'kingdom', status.region);
       }
       if (FB.station.mayHoldCouncil(status.targetTier, state) && FB.councilEnsure) FB.councilEnsure(state);
     }

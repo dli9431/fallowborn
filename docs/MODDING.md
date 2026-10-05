@@ -167,6 +167,8 @@ custom effects `justice_submit`, `justice_resist`, `justice_challenge`,
 `justice_plead`, `justice_pay`, and `justice_penance`, with matching impact adapters.
 `justice_can_pay` and `justice_can_penance` gate the applicable alternatives.
 
+Prisoner hearing text may use sentenceKind, sentenceName, sentenceTermDays, sentenceRemainingDays, sentenceCustodyMode (initial or extension), sentenceAmount, sentencePietyCost and sentencePrestigeCost. FB.justiceHearingParams(state, context) derives these read-only parameters from the valid pending sentence matched by context.justiceId; invalid or arrest responses return an empty object. FB.textParams supplies them to event rendering without storing them in the event context. sentenceName is a typed justiceSentence name reference for localized data and lexicon labels. The other values come from the current definition and punishment projection, including distribution normalization, affordable payments, credited custody and extensions.
+
 `FB.justiceRecordOffense` accepts `(state, authorityCharacterId, accusedId,
 kind, evidence, successful, victimId, sourceId)`. Reusing a source id within the
 same court does not create another cause. This is a trusted simulation-authoring
@@ -1278,6 +1280,13 @@ to all three maps.
 
 - `rank` — 1 count, 2 duke (also petty kings, chiefs, doges), 3 king, 4 emperor.
 - `liege` — optional; the realm id this realm answers to. Omit for sovereign realms.
+- `titleKind` / `titleId` — optional de jure claim, independent of `name`.
+  `titleKind` is `duchy`, `kingdom` or `empire`; `titleId` is its canonical slug.
+  The typed boundary also accepts matching legacy prefixes. Independent kingdoms
+  use this identity for crown recognition even with a custom name or Roman
+  diocese terminology. The same fields are copied for scripted `newRealm` records.
+  Engine-generated realms store a `nameStyle` kind and proper place, exposing
+  their lexicon-resolved display through `realm.name`; that display is not a title ID.
 - `religion` — optional religion id for the ruling house and realm identity. It defaults
   to the capital county's population faith. Set it when the ruler's faith differs from
   the capital population; this field does not convert any county.

@@ -4281,6 +4281,10 @@ window.FB = window.FB || {};
           if (ctx && ctx[k] !== undefined) out[k] = ctx[k];
       }
     }
+    if (ctx && ctx.justiceId && FB.justiceHearingParams) {
+      const hearing = FB.justiceHearingParams(state, ctx);
+      for (const key in hearing) out[key] = hearing[key];
+    }
     return out;
   };
 
@@ -11346,14 +11350,19 @@ window.FB = window.FB || {};
       }
       FB.adjustCountySupport(state, ctx && ctx.locationId || state.player.provinceId, amount);
     }
-    if (fx.profession) {
-      if (!p.professionBack && !FB.professionHasRole(p.profession, 'arms')) {
-        p.professionBack = p.profession;
-      }
-      p.profession = fx.profession;
-      if (fx.setFlag !== 'on_campaign' && fx.setFlag2 !== 'on_campaign' && FB.setCareer) {
-        p.professionBack = null;
-        FB.setCareer(state, me, fx.profession, 'journeyman');
+    if (fx.profession && FB.contentPeriodEnabled(state, FBDATA.careers[fx.profession])) {
+      const temporaryService = fx.setFlag === 'on_campaign' || fx.setFlag2 === 'on_campaign';
+      if (!temporaryService && FB.setCareer) {
+        // Acquire before changing the mirror or discarding a civilian career.
+        if (FB.setCareer(state, me, fx.profession, 'journeyman')) {
+          p.professionBack = null;
+          FB.syncPlayerCareer(state);
+        }
+      } else {
+        if (!p.professionBack && !FB.professionHasRole(p.profession, 'arms')) {
+          p.professionBack = p.profession;
+        }
+        p.profession = fx.profession;
       }
     }
     if (fx.focusSet) p.focus = fx.focusSet;

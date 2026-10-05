@@ -179,7 +179,7 @@ window.FB = window.FB || {};
   }
 
   function realmRecord(o) {
-    return !!(o && typeof o.id === 'string' && typeof o.name === 'string' &&
+    return !!(o && typeof o.id === 'string' && (o.nameStyle || typeof o.name === 'string') &&
       own(o, 'capital') && own(o, 'ruler') && own(o, 'alive'));
   }
 
@@ -1550,6 +1550,9 @@ window.FB = window.FB || {};
     });
     if (FB.configureCultures) restoreRepair('culture definitions', function () {
       FB.configureCultures(FB.state);
+    });
+    if (FB.repairRealmNames) restoreRepair('realm names and title claims', function () {
+      FB.repairRealmNames(FB.state);
     });
     if (FB.restoreWastelandSettlements) restoreRepair('wasteland settlements', function () {
       FB.restoreWastelandSettlements(FB.state);

@@ -4,7 +4,7 @@ const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
   'data/eras.js', 'data/geographies.js', 'data/cultures.js', 'data/map_data.js',
   'js/siteart.js', 'js/util.js', 'js/model.js', 'js/world.js', 'js/mods.js',
-  'js/i18n.js', 'js/music.js', 'js/mapview.js', 'js/armies.js',
+  'js/i18n.js', 'js/music.js', 'js/mapview.js', 'js/armies.js', 'js/population.js',
   'js/ui_topbar.js', 'js/ui_misc.js'
 ]);
 const { test, expect } = require('../support/fixture');
@@ -219,7 +219,7 @@ test('music prefers the era and retains exact, lineage, role and general fallbac
     ]);
   });
 
-test('map art follows county culture and player-host badges refresh when the era form changes',
+test('map art follows live county culture and player-host badges refresh when the era form changes',
   async function ({ page }, testInfo) {
     await openGame(page, testInfo);
     await startDeterministicGame(page);
@@ -232,17 +232,33 @@ test('map art follows county culture and player-host badges refresh when the era
       s.start.era = 'late_antique';
       FBDATA.eras.late_antique.architecture = 'period';
       const province = FB.world.byId[home];
-      province.culture = 'roman';
+      const baseCulture = province.culture;
+      const initialCulture = FB.countyCulture(s, home);
       const site = FB.world.sitesByProv[home].list[0];
       FB.map.zoom = 20;
       FB.map.viewX = site.x - FB.map.canvas.width / FB.map.zoom / 2;
       FB.map.viewY = site.y - FB.map.canvas.height / FB.map.zoom / 2;
-      const originalArt = FB.siteArt, seen = [];
+      const originalArt = FB.siteArt, seen = [], sitePixels = [], pureRenders = [];
       FB.siteArt = function (rank, slug, culture, state, presentation) {
-        if (slug === site.site) seen.push({ culture:culture, style:presentation.key.split('|')[0], state:state === s });
-        return originalArt.apply(this, arguments);
+        const image = originalArt.apply(this, arguments);
+        if (slug === site.site) {
+          seen.push({ culture:culture, style:presentation.key.split('|')[0], state:state === s });
+          sitePixels.push(image.toDataURL());
+        }
+        return image;
       };
-      try { FB.map.render(); } finally { FB.siteArt = originalArt; }
+      function render() {
+        const saved = JSON.stringify(s), rng = FB.getRngState();
+        FB.map.render();
+        pureRenders.push(JSON.stringify(s) === saved && FB.getRngState() === rng);
+      }
+      try {
+        render();
+        const rec = s.population.counties[home];
+        rec.communities = [{ culture:'roman', religion:province.religion, count:rec.count }];
+        FB.reconcileCountyCommunities(s, home);
+        render();
+      } finally { FB.siteArt = originalArt; }
 
       s.armies = [{ id:'period-host', realm:'player', at:home, from:home,
         men:400, size:400, units:{ levy:400 }, path:[], moveLeft:0, supply:100 }];
@@ -263,9 +279,20 @@ test('map art follows county culture and player-host badges refresh when the era
         matches.push(crests.length === 1 && crests[0] === expected.toDataURL());
         variants.push(crests[0]);
       });
-      return { map:seen, matches:matches, variants:new Set(variants).size };
+      return { map:seen, initialCulture:initialCulture,
+        liveCulture:FB.countyCulture(s, home), baseUnchanged:province.culture === baseCulture,
+        distinct:sitePixels[0] !== sitePixels[1], pureRenders:pureRenders,
+        matches:matches, variants:new Set(variants).size };
     });
-    expect(result.map).toEqual([{ culture:'roman', style:'local', state:true }]);
+    expect(result.initialCulture).not.toBe('roman');
+    expect(result.map).toEqual([
+      { culture:result.initialCulture, style:'period', state:true },
+      { culture:'roman', style:'local', state:true }
+    ]);
+    expect(result.liveCulture).toBe('roman');
+    expect(result.baseUnchanged).toBe(true);
+    expect(result.distinct).toBe(true);
+    expect(result.pureRenders).toEqual([true, true]);
     expect(result.matches).toEqual([true, true, true]);
     expect(result.variants).toBe(3);
   });

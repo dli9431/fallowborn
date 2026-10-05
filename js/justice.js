@@ -877,6 +877,23 @@
       (p.kind === 'arrest' ? FB.justiceArrestProjection(s, p.actorId, p.targetId, p.offenseId, p.courtKind).ready :
         FB.justicePunishmentProjection(s, p.actorId, p.targetId, p.sentence, p.offenseId, p.courtKind).ready) ? p : null;
   }
+  // Display parameters stay live across queued hearings and restored saves.
+  FB.justiceHearingParams = function (s, ctx) {
+    var p = pendingFor(s, ctx);
+    if (!p || p.kind !== 'sentence') return {};
+    var quote = FB.justicePunishmentProjection(s, p.actorId, p.targetId, p.sentence, p.offenseId, p.courtKind);
+    var def = FBDATA.justiceSentences[quote.sentence];
+    return {
+      sentenceKind:def.kind,
+      sentenceName:{ $data:'justiceSentence', id:quote.sentence, path:'name' },
+      sentenceTermDays:num(def.termDays, 360),
+      sentenceRemainingDays:quote.endTurn === null ? 0 : Math.max(0, quote.endTurn - s.turn),
+      sentenceCustodyMode:quote.custody.sentenced ? 'extension' : 'initial',
+      sentenceAmount:quote.amount,
+      sentencePietyCost:num(def.pietyCost, 40),
+      sentencePrestigeCost:num(def.prestigeCost, 20)
+    };
+  };
   FB.fns.justice_response_valid = function (s, ctx) { return !!pendingFor(s, ctx); };
   FB.fns.justice_submit = function (s, ctx) {
     var p = pendingFor(s, ctx);

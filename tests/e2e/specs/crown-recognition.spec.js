@@ -3,6 +3,9 @@ const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
   'js/politics.js',
   'js/world.js',
+  'js/title_ids.js', 'js/lexicon.js', 'js/save.js', 'js/save_v4.js', 'js/model.js',
+  'js/i18n.js', 'js/authority.js', 'js/station.js', 'data/lexicons.js',
+  'data/map_data.js', 'data/counties.js', 'data/bookmarks.js', 'data/eras.js',
   'data/events_politics.js'
 ]);
 
@@ -25,6 +28,7 @@ function arrangeClaimant(page, countyIds, capital) {
     const rid = 'test_claimant';
     s.realms[rid] = {
       id: rid, name: 'Kingdom of ' + FBDATA.kingdoms[kid].name,
+      titleKind:'kingdom', titleId:kid,
       color: '#123456', capital: args.capital, aggression: 1, rank: 3,
       liege: null, religion: null, alive: true,
       ruler: { name: 'Test King', sex: 'm', culture: 'frankish', age: 40,
@@ -226,4 +230,60 @@ test('a realm left with zero counties still dies instead of lapsing',
     expect(result.alive).toBe(false); // realm-death boundary, not a restyle
     expect(result.rank).toBe(3);
     expect(result.name).toContain('Kingdom of');
+  });
+
+test('crown recognition follows the typed kingdom after Roman terminology and custom naming',
+  async function ({ page }) {
+    await startDeterministicGame(page);
+    const geo = await fixtureGeography(page);
+    const claim = await arrangeClaimant(page, geo.outsideCounties, geo.outsideCounties[0]);
+    const result = await page.evaluate(function (args) {
+      const s = FB.state, r = s.realms[args.rid];
+      FB.authoritySeedGovernments(s, { test_claimant:'roman_civic' });
+      FB.setRealmTitle(s, r, 'kingdom', args.kid);
+      const romanName = r.name;
+      const romanClaim = FB.realmKingdomClaim(s, r.id);
+      r.name = 'The Restored Court';
+      const renamedClaim = FB.realmKingdomClaim(s, r.id);
+      const lapsed = FB.checkCrownRecognition(s, r.id);
+      return { romanName:romanName, place:FBDATA.kingdoms[args.kid].name,
+        romanClaim:romanClaim, renamedClaim:renamedClaim, lapsed:lapsed,
+        kind:r.titleKind, id:r.titleId, name:r.name,
+        remainingClaim:FB.realmKingdomClaim(s, r.id) };
+    }, claim);
+    expect(result.romanName).toBe('Diocese of ' + result.place);
+    expect(result.romanClaim).toBe(claim.kid);
+    expect(result.renamedClaim).toBe(claim.kid);
+    expect(result.lapsed).toBe(true);
+    expect(result.kind).toBe('duchy');
+    expect(result.id).toBe(geo.outsideDuchy);
+    expect(result.name).toBe('Province of ' + geo.outsideDuchyName);
+    expect(result.remainingClaim).toBeNull();
+  });
+
+test('legacy generated crown names acquire an id once and repair is deterministic',
+  async function ({ page }) {
+    await startDeterministicGame(page);
+    const geo = await fixtureGeography(page);
+    const claim = await arrangeClaimant(page, [geo.insideCounty], geo.insideCounty);
+    const result = await page.evaluate(function (args) {
+      const s = FB.state, r = s.realms[args.rid];
+      delete r.titleKind; delete r.titleId;
+      const rng = FB.getRngState(), uid = FB.getUidCounter();
+      const before = FB.realmKingdomClaim(s, r.id);
+      FB.repairRealmNames(s);
+      const repaired = FB.realmKingdomClaim(s, r.id);
+      const stored = JSON.stringify(r);
+      FB.repairRealmNames(s);
+      const same = stored === JSON.stringify(r);
+      // A display name alone cannot invent a claim during a normal read.
+      s.realms.e2e_untyped = { id:'e2e_untyped', alive:true, rank:3, liege:null,
+        name:'Kingdom of ' + FBDATA.kingdoms[args.kid].name };
+      const untyped = FB.realmKingdomClaim(s, 'e2e_untyped');
+      return { before:before, repaired:repaired, same:same, untyped:untyped,
+        rngSame:rng === FB.getRngState(), uidSame:uid === FB.getUidCounter(),
+        retained:!FB.checkCrownRecognition(s, r.id), kind:r.titleKind };
+    }, claim);
+    expect(result).toEqual({ before:null, repaired:claim.kid, same:true, untyped:null,
+      rngSame:true, uidSame:true, retained:true, kind:'kingdom' });
   });
