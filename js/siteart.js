@@ -146,6 +146,15 @@ window.FB = window.FB || {};
     SHAPES.dwellings[style.shapes.dwellings](ctx, cx, base, w, h, roofH, wall, roof, style);
   }
 
+  function villa(ctx, cx, base, w, h, roofH, wall, roof, style) {
+    /* A low tiled house with a shaded portico. */
+    pitched(ctx, cx, base, w, h * .8, roofH * .55, wall, roof, style);
+    ctx.fillStyle = style.palettes.ink;
+    ctx.fillRect(cx - w * .4, base - h * .45, w * .8, h * .45);
+    ctx.fillStyle = wall;
+    for (let i = -1; i <= 1; i++) ctx.fillRect(cx + i * w * .32 - .7, base - h * .5, 1.4, h * .5);
+  }
+
   function tree(ctx, cx, base, s, style) {
     ctx.lineWidth = 1.4;
     ctx.strokeStyle = style.palettes.ink;
@@ -192,6 +201,10 @@ window.FB = window.FB || {};
     ctx.fillRect(tx - 3, 17, 17, 5);
     ctx.strokeRect(tx - 3, 17, 17, 5);
   }
+  function castra(ctx, x0, x1, y, step, stone) {
+    ctx.fillStyle = stone;
+    ctx.fillRect(x0, y + 1, x1 - x0, 3);
+  }
   function palisade(ctx, x0, x1, y, step, stone) {
     ctx.fillStyle = stone;
     for (let x = x0; x + step * 0.62 <= x1 + 0.01; x += step) {
@@ -206,10 +219,30 @@ window.FB = window.FB || {};
   /* Data chooses names, never executable functions. Preserve the original
      paths in the default entries to keep medieval pixels identical. */
   const SHAPES = {
-    dwellings:{ pitched:pitched, flat:flat },
+    dwellings:{ pitched:pitched, flat:flat, villa:villa },
     worship:{ spire:spire, dome:dome, basilica:basilica },
-    fortification:{ crenellated:battlement, palisade:palisade }
+    fortification:{ crenellated:battlement, palisade:palisade, castra:castra }
   };
+
+  function basilicaHall(ctx, tx, roof, stone, style) {
+    const cx = tx < 32 ? 18 : 46;
+    pitched(ctx, cx, 55, 23, 23, 6, stone, roof, style);
+    ctx.fillStyle = stone;
+    ctx.fillRect(cx - 7, 25, 14, 9);
+    ctx.strokeRect(cx - 7, 25, 14, 9);
+    pitched(ctx, cx, 34, 14, 9, 5, stone, roof, style);
+    ctx.fillStyle = style.palettes.ink;
+    for (let x = cx - 5; x <= cx + 5; x += 5) ctx.fillRect(x, 28, 2, 3);
+  }
+  /* A registered worship silhouette may replace the whole hall. The
+     existing spire/dome path below remains pixel-identical. */
+  const WORSHIP_HALLS = { basilica:basilicaHall };
+  const FORT_LAYOUTS = {
+    castra:{ keepTop:24, keepHeight:16, parapet:20, flagBase:20, flagTop:12,
+      flagMid:14.5, flagBottom:17, towerTop:29 }
+  };
+  const DEFAULT_FORT_LAYOUT = { keepTop:14, keepHeight:26, parapet:10,
+    flagBase:10, flagTop:2, flagMid:4.5, flagBottom:7, towerTop:24 };
 
   /* village: two or three cottages, sometimes a tree */
   function villageEmblem(ctx, h, style) {
@@ -234,10 +267,14 @@ window.FB = window.FB || {};
     ground(ctx, 26);
     ctx.lineWidth = 1.6;
     ctx.strokeStyle = p.ink;
-    ctx.fillStyle = stone;
-    ctx.fillRect(tx, 22, 11, 34);
-    ctx.strokeRect(tx, 22, 11, 34);
-    SHAPES.worship[style.shapes.worship](ctx, tx, roof);
+    const hall = WORSHIP_HALLS[style.shapes.worship];
+    if (hall) hall(ctx, tx, roof, stone, style);
+    else {
+      ctx.fillStyle = stone;
+      ctx.fillRect(tx, 22, 11, 34);
+      ctx.strokeRect(tx, 22, 11, 34);
+      SHAPES.worship[style.shapes.worship](ctx, tx, roof);
+    }
     const houses = left ? [28, 43, 56] : [8, 21, 36];
     for (let i = 0; i < houses.length; i++) {
       cottage(ctx, houses[i], 55 + (i === 1 ? 1 : 0), 13 - i,
@@ -252,27 +289,28 @@ window.FB = window.FB || {};
     const roof = p.roofs[byte(h, 2) % p.roofs.length];
     const banner = p.banners[byte(h, 6) % p.banners.length];
     const fort = SHAPES.fortification[style.shapes.fortification];
+    const layout = FORT_LAYOUTS[style.shapes.fortification] || DEFAULT_FORT_LAYOUT;
     ground(ctx, 28);
     ctx.lineWidth = 1.6;
     ctx.strokeStyle = p.ink;
     // keep, set back behind the wall
     const kx = 23 + byte(h, 5) % 5;
     ctx.fillStyle = stone;
-    ctx.fillRect(kx, 14, 14, 26);
-    ctx.strokeRect(kx, 14, 14, 26);
-    fort(ctx, kx, kx + 14, 10, 4.5, stone);
+    ctx.fillRect(kx, layout.keepTop, 14, layout.keepHeight);
+    ctx.strokeRect(kx, layout.keepTop, 14, layout.keepHeight);
+    fort(ctx, kx, kx + 14, layout.parapet, 4.5, stone);
     // banner on the keep
     ctx.beginPath();
-    ctx.moveTo(kx + 7, 10); ctx.lineTo(kx + 7, 2);
+    ctx.moveTo(kx + 7, layout.flagBase); ctx.lineTo(kx + 7, layout.flagTop);
     ctx.stroke();
     ctx.beginPath();
-    ctx.moveTo(kx + 7, 2); ctx.lineTo(kx + 16, 4.5); ctx.lineTo(kx + 7, 7);
+    ctx.moveTo(kx + 7, layout.flagTop); ctx.lineTo(kx + 16, layout.flagMid); ctx.lineTo(kx + 7, layout.flagBottom);
     ctx.closePath();
     ctx.fillStyle = banner;
     ctx.fill();
     // flanking towers
-    tower(ctx, 8, 24 + byte(h, 7) % 3, 56, stone, style);
-    tower(ctx, 45, 24 + byte(h, 8) % 3, 56, stone, style);
+    tower(ctx, 8, layout.towerTop + byte(h, 7) % 3, 56, stone, style);
+    tower(ctx, 45, layout.towerTop + byte(h, 8) % 3, 56, stone, style);
     // curtain wall with a gate arch
     ctx.fillStyle = stone;
     ctx.fillRect(14, 38, 36, 18);

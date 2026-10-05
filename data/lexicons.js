@@ -68,12 +68,26 @@ FBDATA.lexicons = {
   eras:{
     late_antique:{
       terms:{
+        vassal:{ one:'subordinate', other:'subordinates' },
+        liege:{ one:'patron', other:'patrons' },
+        fief:{ one:'allotment', other:'allotments' },
+        holding:{ one:'estate', other:'estates' },
+        levy:{ one:'muster', other:'musters' },
+        crown_authority:{ one:'public authority', other:'public authority', title:'Public Authority' },
+        council:{ one:'council', other:'councils' },
+        estates:{ one:'assembly', other:'assemblies', title:'Assembly' },
+        manor:{ one:'villa estate', other:'villa estates' },
+        serf:{ one:'dependent', other:'dependents' },
+        knight:{ one:'mounted retainer', other:'mounted retainers' },
+        baron:{ one:'decurion', other:'decurions' },
+        county:{ one:'civitas', other:'civitates' },
         duchy:{ one:'district', other:'districts' },
         kingdom:{ one:'realm', other:'realms' },
         duke:{ one:'dux', other:'duces' },
         duchess:{ one:'ducissa', other:'ducissae' },
         king:{ one:'rex', other:'reges' },
         queen:{ one:'regina', other:'reginae' },
+        empire:{ one:'empire', other:'empires' },
         emperor:{ one:'augustus', other:'augusti' },
         empress:{ one:'augusta', other:'augustae' }
       },
@@ -95,9 +109,17 @@ FBDATA.lexicons = {
           levy_infantry:{ name:'Local militia' },
           missile:{ name:'Bowmen' },
           cavalry:{ name:'Mounted retainers' },
-          household:{ name:'Household soldiers' },
+          household:{ name:'Bucellarii' },
           mercenary:{ name:'Contracted bands' },
           polearm:{ name:'Spearmen' }
+        },
+        item:{
+          nasal_helm:{ name:'Iron helmet', desc:'An iron helmet for a soldier on campaign.' },
+          padded_jack:{ name:'Padded tunic', desc:'A thick padded tunic worn beneath arms.' },
+          broad_sword:{ name:'Spatha', desc:'A long straight sword carried by foot and mounted soldiers.' },
+          mail_hauberk:{ name:'Mail shirt', desc:'Linked iron rings guard the body without fixing it in place.' },
+          old_grammar:{ name:'Latin grammar', desc:'A worn grammar for the language of records and learned correspondence.' },
+          book_of_hours:{ name:'Prayer codex', desc:'A household collection of prayers copied onto parchment.' }
         },
         holding:{
           common_rights:{ name:'Communal grazing rights' },
@@ -135,6 +157,12 @@ FBDATA.lexicons = {
       rank:{
         m:['Dependent','Free Citizen','Curialis','Decurion','Comes','Dux','Rex','Augustus'],
         f:['Dependent','Free Citizen','Curialis','Decurion','Comitissa','Ducissa','Regina','Augusta']
+      }
+    },
+    berber_traditional:{
+      rank:{
+        m:['Dependent','Free Citizen','Notable','Elder','Comes','Dux','Rex','Augustus'],
+        f:['Dependent','Free Citizen','Notable','Elder','Comitissa','Ducissa','Regina','Augusta']
       }
     },
     muslim:{

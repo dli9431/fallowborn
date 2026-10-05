@@ -5320,3 +5320,15 @@ FBDATA.federateContractTerms is an engine table in data/political_institutions.j
 FBDATA.federateMigrations contains authored story opportunities: realmId, patronRealmId, hostId, inhabited origin and target, firstYear, lastYear, positive durationDays, templateId, territorial settlementForm, men and units summing to men. A story checks its own current historical actors before invoking the general engine; the table never guarantees an outcome. A nonTerritorial realm may declare a foreign inhabited capital and the federate_polity form without owning a county. The existing realm id is independent of that court location. Both tables are engine-owned declarations, not new runtime-mod root keys.
 
 FB.federateBeginMigration receives explicit state and terms with endTurn. FB.federateRequest selects land, service or force; FB.federateDeclineContract releases an existing service choice. Political reads expose detached movingPolity and movingPolities records and a federateSettlementQuote. Confirmation uses FB.federateResolveSettlement with the exact reviewed quote. Land awards and won objectives use the common claims engine and preserve existing population communities and private property. Restore retains once-only payment and settlement stamps.
+
+Period presentation content
+
+Wardrobe rules accept government as a known government-form id, matched against the portrait subject's resolved form. The garment library additionally includes lateCivil and lateMilitary. Registered headwear includes diadem and ridgeHelm; none explicitly suppresses later headwear rules. These additions change only painting.
+
+Cultures may declare appearanceEras as an object keyed by known era id. Each entry supplies the same fields as appearance and overrides only supplied fields of the effective inherited base profile. Parents pass period profiles to children. Names may additionally use nameEras.<era>.family for the family list of a plain dynasty naming pattern. Unspecified lists and nonmatching eras retain base data. Existing saved character names are never replaced.
+
+Architecture styles may select villa dwellings and castra fortifications. Basilica worship uses a low hall with a clerestory rather than a medieval spire. The default manuscript drawing paths remain unchanged.
+
+Items may supply eras as a list of unique known era ids. It restricts new stock and random acquisitions, while existing possessions, explicit story grants and materialized offers remain usable. artEras maps known era ids to partial art objects that merge over the item's base art for portrait and inventory rendering. Late antique ordinary armor can select ridgeHelm or mail without changing its mechanical definition. Art overrides and presentation data do not enter saves.
+
+Unit classes may supply eras with the same unique known ids. This restricts fresh recruitment independently of military.excludeRoles, technology and culture gates. Core role defaults must include every era if they declare membership. Saved army compositions remain valid.

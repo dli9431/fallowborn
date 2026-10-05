@@ -223,7 +223,7 @@ with raw Canvas 2D; it has no mesh vertices, faces, contour cache, external art,
 RNG calls. Identity variations use separately salted hashes, so adding a wardrobe detail
 does not reshuffle wounds or facial DNA.
 
-Portraits choose nothing by culture, faith or bookmark id. Faces come from data: each culture's appearance profile (skin tone, fair and red hair chances, a hair tendency, headwear tendencies) is inherited through its parent cultures, and a culture with none in its lineage borrows the campaign era's default culture. Faith attire, inherited down the faith tree, supplies the tonsure, the pendant, the headwear a faith expects, garment substitutions and beard customs. Clothing comes from a wardrobe (data/wardrobes.js): the portrait subject's government form may name one through its costume, otherwise its era's costume applies. A wardrobe's ordered rules pick the garment and cloth color by career role and station band, the trim and fur colors, the headwear and the neck chain, testing named station queries, career roles, faith attire flags, culture and faith headwear tendencies and salted identity bytes. The garments themselves are named shapes in the portrait's garment library: tunic, robe, cote, court, royal, habit, cassock, gambeson, doublet, lateTunic, lateMantle and lateVestment, with the mail, lamellar and plate shapes reserved for worn armor. Each shape declares its hem length, its identifying detail, drape folds, hem seam, waist cord, court cuffs and quilting, so a new garment is a registry entry rather than a new branch in the painter. The 867 and 1066 wardrobe and data reproduce the earlier tables exactly; the Roman and Gothic profiles keep the palettes those cultures received from the earlier fallback. Validation (FB.validateWardrobeData) runs with bookmark activation.
+Portraits choose nothing by culture, faith or bookmark id. Faces come from data: each culture's appearance profile (skin tone, fair and red hair chances, a hair tendency, headwear tendencies) is inherited through its parent cultures, and a culture with none in its lineage borrows the campaign era's default culture. Faith attire, inherited down the faith tree, supplies the tonsure, the pendant, the headwear a faith expects, garment substitutions and beard customs. Clothing comes from a wardrobe (data/wardrobes.js): the portrait subject's government form may name one through its costume, otherwise its era's costume applies. A wardrobe's ordered rules pick the garment and cloth color by career role and station band, the trim and fur colors, the headwear and the neck chain, testing named station queries, career roles, faith attire flags, culture and faith headwear tendencies and salted identity bytes. The garments themselves are named shapes in the portrait's garment library: tunic, robe, cote, court, royal, habit, cassock, gambeson, doublet, lateTunic, lateCivil, lateMilitary, lateMantle and lateVestment, with the mail, lamellar and plate shapes reserved for worn armor. Each shape declares its hem length, its identifying detail, drape folds, hem seam, waist cord, court cuffs and quilting, so a new garment is a registry entry rather than a new branch in the painter. The 867 and 1066 wardrobe and base appearance profiles reproduce the earlier tables exactly. Period grooming overrides do not alter their palettes. Validation (FB.validateWardrobeData) runs with bookmark activation.
 
 Natural hair generation keeps the selected red or fair color family for adults. The child ash-color correction runs after that selection, and the dark-family fallback applies only when neither the red nor fair chance succeeds.
 
@@ -1318,9 +1318,7 @@ Regression coverage: `tests/e2e/specs/rank-prestige.spec.js`.
 
 ## Spring 476 dress and service
 
-The late antique era's costume is the late_antique wardrobe: tunics with
-vertical clavi, mantles and clerical vestments. Station controls the mantle
-palette and brooch, and only rulers wear a circlet. The visual cache key includes
+The late antique era uses the late_antique wardrobe. Clavi tunics, full-length civil dress, fastened military mantles and clerical vestments distinguish livelihoods and station. Imperial characters wear pearl diadems; Roman civic dignitaries below the imperial band remain bareheaded, while royal regnum and federate characters retain simple circlets. Roman and federate government rules select cloth palettes independently of career. Adult soldiers may wear a ridge helmet. Monastics use subdued cloth and clergy use linen-colored vestments, without medieval mitres. The visual cache key includes
 the resolved wardrobe id, so late antique dress cannot leak into later starts and
 any bookmark of the era (not only 476) dresses the same way. The civic clerk is an ordinary
 career whose local appointment is a separate authority record; the career alone
@@ -1357,4 +1355,22 @@ Career and name periods
 
 Careers may declare eras and inclusive yearMin/yearMax bounds. Both careerChoices and setCareer enforce the campaign's stamped era and live year. The civic_clerk career names late_antique instead of a particular bookmark. A legacy bookmarkIds field remains an additional explicit restriction for mods. Existing career records and experience are retained when their definition is out of period; the selection gate does not erase an occupation. Period membership has technology impact none; existing professional technology requirements are independent.
 
-Cultures may declare nameEras, keyed by a known era, with nonempty male and/or female lists. Ordinary culture inheritance merges partial variants. FB.cultureNamePool selects the campaign's stamped era and falls back separately for each sex to the base pool. Character creation and realm-family generators pass their campaign state; title-screen generation uses the active bookmark's era. Existing saved names never change. Name selection retains the same seeded draw and collision retry rules.
+Cultures may declare nameEras, keyed by a known era, with nonempty male, female and/or family lists. Ordinary culture inheritance merges partial variants. FB.cultureNamePool selects the campaign's stamped era and falls back separately for each personal-name or family-name list to the base pool. Character creation and realm-family generators pass their campaign state; title-screen generation uses the active bookmark's era. Existing saved names never change. Name selection retains the same seeded draw and collision retry rules.
+
+Late antique culture presentation
+
+Roman, Gothic, Frankish and Greek appearanceEras entries supply period grooming without replacing their base appearance. A profile overrides only supplied fields of the inherited appearance for the stamped campaign era. Skin and hair palettes remain broad illustrative distributions, not diagnostic ancestry traits. Vandal, Burgundian and Suevic definitions inherit Gothic rules; Moorish inherits Berber rules. Their 476 communities, elite identities and rulers use the separate definitions while retaining community shares, faith, legal traditions and territorial ownership. Authored Burgundian story actors use the same culture as their court.
+
+Name pools use late antique personal names for Roman, Gothic, Frankish and Greek generation. Greek family pools use late Roman naming forms rather than medieval dynasties. Dynasty generation receives the campaign state, including in local households. New period cultures supply their own personal-name pools; sparsely attested female pools include shared Germanic or Latin African names rather than invented historical rulers. Saved identities are never renamed. Period names span the era rather than representing only people alive in 476.
+
+Wardrobe rules may select a resolved government form with government. Character visual keys include the resolved cloth kind and palette, headwear, neck-chain presence, pigment and hair color, so live content edits cannot reuse a stale portrait. Art remains procedural, read-only and independent of gameplay RNG. These are presentation and naming changes, with no technology-impact entry needed.
+
+Visual reference basis
+
+The garment shapes are small procedural interpretations of late Roman tunics and mantles, not reconstructions of individual finds. Tunic clavi and roundels: https://www.metmuseum.org/art/collection/search/444376
+
+Fifth-century imperial coin portraits and solidus denomination: https://ikmk.smb.museum/object?id=18213856&lang=en&view=rs and https://collections.lacma.org/object/37329
+
+Period Frankish and Burgundian personal names: https://sourcebooks.web.fordham.edu/basis/gregory-hist.asp
+
+Vandal and African personal names: https://sourcebooks.web.fordham.edu/ancient/procopius-vandals.asp

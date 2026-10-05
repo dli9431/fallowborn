@@ -14,7 +14,7 @@
      garments: ordered rules, the first match chooses
        { garment, color:[r,g,b] }. garment names a shape registered in
        js/portrait.js: tunic, robe, cote, court, royal, habit, cassock,
-       gambeson, doublet, lateTunic, lateMantle, lateVestment.
+       gambeson, doublet, lateTunic, lateCivil, lateMilitary, lateMantle, lateVestment.
      trim, fur: ordered rules, the first match chooses { color:[r,g,b] }.
      headwear: ordered rules, the first match chooses { headwear } (a kind
        painted by js/portrait.js) or { faithCover:true }, the headwear the
@@ -26,6 +26,7 @@
    Rule conditions (all must hold; a rule without conditions always does):
      child, female: true or false
      minAge: years
+     government: the subject's resolved government form id
      station / notStation: a FB.station query name (isSerf ... isEmperor,
        isGentle, isLanded, rulesRealm, isRoyal, isImperial)
      role: the career's primary role equals this
@@ -107,13 +108,26 @@ FBDATA.wardrobes = {
   /* Clavi tunics, fastened mantles and vestments mark late antique rank. */
   late_antique:{
     garments:[
-      { roles:['clergy','cloister'], garment:'lateVestment', color:[164,153,126] },
+      { role:'cloister', garment:'lateVestment', color:[105,99,79] },
+      { role:'clergy', garment:'lateVestment', color:[218,209,180] },
+      { station:'isImperial', garment:'lateMantle', color:[92,43,103] },
+      { government:'roman_civic', station:'isRoyal', garment:'lateMantle', color:[125,65,103] },
       { station:'isRoyal', garment:'lateMantle', color:[104,65,118] },
+      { government:'federate_polity', station:'rulesRealm', garment:'lateMantle', color:[84,106,91] },
       { station:'isLanded', garment:'lateMantle', color:[124,81,69] },
+      { roles:['arms'], garment:'lateMilitary', color:[142,111,80] },
+      { roles:['civic'], garment:'lateCivil', color:[216,206,177] },
+      { station:'isGentle', garment:'lateCivil', color:[190,173,144] },
+      { roles:['trading'], garment:'lateTunic', color:[84,111,100] },
+      { roles:['craft'], garment:'lateTunic', color:[113,109,87] },
+      { station:'isSerf', garment:'lateTunic', color:[125,107,80] },
       { garment:'lateTunic', color:[129,117,91] }
     ],
     trim:[
+      { station:'isImperial', color:[211,180,99] },
       { station:'isLanded', color:[190,160,78] },
+      { roles:['clergy'], color:[165,96,79] },
+      { station:'isGentle', color:[134,72,91] },
       { color:[146,126,92] }
     ],
     fur:[
@@ -121,9 +135,11 @@ FBDATA.wardrobes = {
       { color:[122,104,84] }
     ],
     headwear:[
+      { station:'isImperial', headwear:'diadem' },
+      { government:'roman_civic', station:'isRoyal', headwear:'none' },
       { station:'isRoyal', headwear:'circlet' },
       { roles:['arms'], child:false, roll:{ salt:'wardrobe-head', index:2, above:128 },
-        headwear:'helm' },
+        headwear:'ridgeHelm' },
       { female:true, child:false, roll:{ salt:'wardrobe-head', index:1, above:150 },
         headwear:'veil' }
     ],

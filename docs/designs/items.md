@@ -244,12 +244,11 @@ historical floor, an optional `yearMax` is the last production year, and `cultur
 matches the market county (including derived cultures). An era may also declare an
 equipment window (`military.equipment` in data/eras.js); its campaigns never produce an
 item whose own `yearMin`–`yearMax` window lies wholly outside it, and the shop says the
-item is not made in this era. The shipped eras declare no window and no shipped item sets
-`yearMax`, so availability is unchanged.
+item is not made in this era. Late antique campaigns declare a 375-649 equipment window, retaining existing date and technology gates. The medieval eras keep their prior unrestricted window.
 This is a regional production rule, not an ethnic restriction on the wearer. Explicit
 story grants, existing possessions, and already materialized shop/peddler/auction offers
 are grandfathered. Relocation never prevents wearing, inheriting, gifting, or selling gear.
-Baseline Padded Jack, Nasal Helm, Ash Spear, Broad Sword, and Round Shield remain ungated.
+Baseline Padded Jack, Nasal Helm, Ash Spear, Broad Sword, and Round Shield remain ungated. In late antique display their labels include Padded tunic, Iron helmet and Spatha; ordinary mail displays as Mail shirt.
 
 Lamellar Cuirass has one catalogue definition. Its regional production gates, lamellar artwork, and 0.5% quality steps apply to both fresh copies and existing references; an older ungated definition must not overwrite it under the same id.
 
@@ -337,3 +336,11 @@ The current protagonist can edit their personal name using the small pencil besi
 the equipment heading name. The shared personal-name editor returns to that same
 equipment sheet and scroll position. This is cosmetic, free and advances no time;
 its technology decision is the shared `family_personal_names: none` entry.
+
+Late antique item presentation and stock
+
+Optional item eras restrict fresh production and random acquisitions to the stamped campaign era. Falchion, Kite Shield, Dane Axe and Kettle Helm keep medieval availability and do not enter new late antique stock. Existing ownership, explicit grants and already materialized offers remain grandfathered. The item presentation validator rejects unknown or repeated eras before bookmark activation or a mod transaction.
+
+Optional artEras maps known eras to partial procedural-art overrides. It changes no saved item identity, price, quality or effects. The portrait, paper doll and inventory item canvas all resolve the same override. Ordinary Nasal Helm paints as a ridge helmet and ordinary Mail Hauberk paints linked rings in late antique campaigns; their medieval artwork remains unchanged. Equipped-art keys include the resolved art so a retained portrait cannot use another era's equipment image.
+
+Technology impact: content_period_membership remains none. Restricting period stock is historical membership, not a research dependency. Existing production technology gates remain independent and owned items are usable in every era.

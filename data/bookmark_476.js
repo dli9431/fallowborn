@@ -3,7 +3,7 @@
 window.FBDATA = window.FBDATA || {};
 FBDATA.bookmarks['476'] = {
   id:'476', name:'The Last Western Court',
-  desc:'An emperor sits at Ravenna while federate soldiers demand a settlement.',
+  desc:'Roman cities, rival imperial courts and new kingdoms share a changing world. At Ravenna, unpaid federate soldiers demand a settlement from the western court.',
   date:{ year:476, season:0, day:1 }, era:'late_antique',
   geography:'europe_regional', settlementLayout:'476',
   religiousHeads:{},

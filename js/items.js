@@ -23,6 +23,32 @@ window.FB = window.FB || {};
   FB.ITEM_SLOTS = SLOT_ORDER.slice();
   FB.ITEM_HAND_SLOTS = HAND_SLOTS.slice();
 
+  FB.itemPresentationFault = function (def) {
+    const period = FB.contentPeriodFault(def);
+    if (period) return period;
+    if (def.artEras === undefined) return null;
+    if (!def.artEras || typeof def.artEras !== 'object' || Array.isArray(def.artEras)) {
+      return 'artEras must be an object.';
+    }
+    for (const era in def.artEras) {
+      const art = def.artEras[era];
+      if (!own(FBDATA.eras, era) || !art || typeof art !== 'object' || Array.isArray(art) ||
+          (art.kind !== undefined && typeof art.kind !== 'string')) {
+        return 'artEras must name known eras and art objects.';
+      }
+    }
+    return null;
+  };
+
+  FB.validateItemPresentation = function () {
+    const errors = [];
+    for (const id in FBDATA.items) {
+      const fault = FB.itemPresentationFault(FBDATA.items[id]);
+      if (fault) errors.push(FB.T('Item {id} has invalid period presentation: {fault}', { id:id, fault:fault }));
+    }
+    return errors;
+  };
+
   function own(o, k) {
     return !!o && Object.prototype.hasOwnProperty.call(o, k);
   }
@@ -1722,6 +1748,8 @@ window.FB = window.FB || {};
   FB.itemAvailability = function (state, id, pid) {
     const def = FBDATA.items[id];
     if (!def) return { ready:false, reason:FB.T('Unknown item.') };
+    if (def.eras && def.eras.indexOf(FB.campaignEra(state)) < 0) return { ready:false,
+      reason:FB.T('Not made in this era.') };
     const missing = def.requiresTech ? FB.techRequirementStatus(state, def.requiresTech) :
       { ready:true, missing:[] };
     if (!missing.ready) return { ready:false, missing:missing.missing,

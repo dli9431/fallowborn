@@ -11,6 +11,8 @@
      wear kinds the culture's wardrobe rules may pick, data/wardrobes.js).
      A culture with no profile anywhere in its lineage borrows the era's
      default culture.
+   appearanceEras: era id -> partial appearance profile for period grooming.
+   nameEras: era id -> male, female and optional family name pools.
    Religion properties.attire is the matching faith profile: tonsure (male
    monastics are tonsured), pendant ('cross', else a stone), clergyPendant
    (clergy wear the neck chain), covers { m, f } (headwear the faith expects
@@ -35,16 +37,57 @@ FBDATA.cultureTraditions = {
 };
 
 FBDATA.cultures = {
+/* Period identities inherit the prototype's affinity and doctrine rules.
+   Grooming is a visual tendency, not an assertion about ancestry. */
+vandal:{ name:'Vandal', parent:'gothic',
+  appearance:{ tone:.6, fair:.42, red:.07 },
+  appearanceEras:{ late_antique:{ hair:{ style:'longLoose', sex:'m', above:120 } } },
+  nameEras:{ late_antique:{
+    male:['Gaiseric','Huneric','Gunthamund','Thrasamund','Gunderic','Gibamund','Hilderic','Gelimer','Guntarith','Gento'],
+    female:['Gudeliva','Hilda','Eudocia','Amalafrida','Damira','Hildigund'] } } },
+burgundian:{ name:'Burgundian', parent:'gothic',
+  appearance:{ tone:.6, fair:.42, red:.07 },
+  appearanceEras:{ late_antique:{ hair:{ style:'longLoose', sex:'m', above:120 } } },
+  nameEras:{ late_antique:{
+    male:['Gundobad','Godegisel','Chilperic','Gundahar','Gundioc','Sigismund','Godomar','Gislahar','Gundomar'],
+    female:['Clotild','Sedeleuba','Caretene','Guntheuca','Suavegotha','Ostrogotho'] } } },
+suevic:{ name:'Suevic', parent:'gothic',
+  appearance:{ tone:.6, fair:.42, red:.07 },
+  appearanceEras:{ late_antique:{ hair:{ style:'longLoose', sex:'m', above:120 } } },
+  nameEras:{ late_antique:{
+    male:['Hermeric','Rechila','Rechiar','Maldras','Framta','Frumar','Remismund','Miro','Theodemir','Eboric','Audeca','Malaric'],
+    /* Female personal names are poorly attested; shared Germanic forms are
+       deliberately a pool, not fictional historical officeholders. */
+    female:['Giso','Hilda','Ragnahild','Sunigilda','Hildigund','Clotild'] } } },
+moorish:{ name:'Moorish', parent:'berber',
+  appearance:{ tone:2.2, fair:.02, red:.02 },
+  appearanceEras:{ late_antique:{ hair:{ style:'crop', sex:'m', above:120 } } },
+  nameEras:{ late_antique:{
+    male:['Masties','Masuna','Mastigas','Iaudas','Cutzinas','Antalas','Guenfan','Massonas','Ortaias'],
+    /* Latin-speaking African communities also supplied personal names. */
+    female:['Monnica','Nonnica','Salsa','Crispina','Perpetua','Felicitas','Maxima','Victoria'] } } },
 roman: { name:'Roman', tradition:'romance', dyn:'of_place',
   appearance:{ tone:2, fair:.03, red:.02 },
+  appearanceEras:{ late_antique:{ hair:{ style:'crop', sex:'m', above:-1 } } },
+  nameEras:{ late_antique:{
+    male:['Marcellus','Flavius','Paulus','Severus','Valerius','Felix','Victor','Avitus','Sidonius','Symmachus','Cassianus','Asterius','Faustus','Maximus','Vincentius','Prosper','Laurentius','Rufinus','Priscus','Olybrius'],
+    female:['Marcia','Flavia','Aurelia','Paula','Valeria','Galla','Placidia','Licinia','Eudoxia','Rusticiana','Proba','Melania','Demetrias','Fabiola','Eustochium','Marcella','Pelagia','Severa','Victoria','Principia'] } },
   male:['Marcellus','Flavius','Lucius','Julius','Aurelius','Paulus','Severus','Valerius','Felix','Victor'],
   female:['Marcia','Flavia','Julia','Aurelia','Paula','Severa','Valeria','Felicia','Victoria','Galla'] },
 gothic: { name:'Gothic', tradition:'west_european', dyn:'of_place',
   appearance:{ tone:.6, fair:.42, red:.07 },
+  appearanceEras:{ late_antique:{ hair:{ style:'longLoose', sex:'m', above:120 } } },
+  nameEras:{ late_antique:{
+    male:['Theoderic','Valamir','Thiudimir','Vidimer','Euric','Alaric','Thorismund','Fravitta','Gainas','Gesa','Sigeric','Gesalec','Theodahad'],
+    female:['Amalasuntha','Erelieva','Amalafrida','Thiudigotho','Ostrogotho','Ragnahild','Matasuntha','Giso','Sunigilda','Gudeliva'] } },
   male:['Theoderic','Odoacer','Vidimer','Valamir','Thiudimir','Euric','Alaric','Gundobad'],
   female:['Amalasuntha','Erelieva','Galla','Amalafrida','Theodora','Thiudigotho'] },
 frankish: { name:'Frankish', tradition:'west_european', dyn:'of_place',
   appearance:{ tone:.6, fair:.42, red:.07 },
+  appearanceEras:{ late_antique:{ hair:{ style:'longLoose', sex:'m', above:120 } } },
+  nameEras:{ late_antique:{
+    male:['Childeric','Clovis','Chlodio','Merovech','Ragnachar','Chararic','Chlodomer','Childebert','Chlothar','Theuderic','Sigibert','Rignomer','Richar','Sunno','Marcomer'],
+    female:['Basina','Clotild','Albofled','Lanthechild','Aregund','Ingund','Audofled','Radegund','Ultrogotha','Guntheuca','Chlodosind'] } },
   male:['Charles','Louis','Lothair','Odo','Robert','Hugh','Baldwin','Fulk','Geoffrey','Arnulf','Bernard','Pepin','Gerard','Raoul','Carloman','Drogo','Wido','Adalard','Berengar','Childebrand','Einhard','Gozlin','Heribert','Ingelram','Milo','Nibelung','Otger','Raino','Theuderic','Warin','Adalhard','Angilbert','Boso','Ebles','Gauzlin','Giselbert','Hilduin','Hucbert','Lambert','Leuthard','Matfrid','Nithard','Odalric','Ratbod','Reginhard','Richar','Sigebert','Wala','Wibert','Wulfad'],
   female:['Adelaide','Ermentrude','Judith','Gisela','Bertha','Rothild','Emma','Adela','Hildegard','Richilde','Alpaid','Ansgarde','Aelis','Engelberga','Ermengarde','Fastrada','Gersvinda','Guntrude','Imma','Irmentrude','Madalgarde','Oda','Odila','Rotrude','Waldrada','Adalind','Aregund','Audovera','Basina','Beretrude','Burgundofara','Clothild','Deuteria','Engeltrude','Fara','Genovefa','Ghentrude','Gundlind','Himiltrude','Ingeltrude','Landrada','Marcovefa','Nanthild','Plectrude','Radegund','Rigunth','Rosamund','Teutberga','Ultrogothe','Wisigarde'] },
 german: { name:'German', tradition:'west_european', dyn:'of_place',
@@ -101,6 +144,11 @@ lombard: { name:'Lombard', tradition:'romance', dyn:'of_place',
   female:['Sichelgaita','Gaitelgrima','Adeltrude','Adelperga','Ageltrude','Aloara','Gemma','Theodelinda','Radelgarda','Bertila','Ermengarda','Gisla','Liutperga','Rodelinda','Sicheltruda','Adalgunda','Alderuda','Altruda','Ansa','Aurona','Dauferada','Ermelinda','Gundeperga','Guntelda','Liuba','Romilda','Willa','Winiperga','Waldrada','Agneltruda','Maria','Teodora'] },
 greek: { name:'Greek', tradition:'byzantine_caucasian', dyn:'plain',
   appearance:{ tone:1.3, fair:.07, red:.02 },
+  appearanceEras:{ late_antique:{ hair:{ style:'crop', sex:'m', above:-1 } } },
+  nameEras:{ late_antique:{
+    male:['Zenon','Anastasios','Basiliskos','Markos','Leontios','Illos','Longinos','Prokopios','Sergios','Petros','Ioannes','Theodoros','Arkadios','Theodosios','Marinos','Eusebios'],
+    female:['Ariadne','Verina','Aelia','Eudokia','Eudoxia','Pulcheria','Theodora','Antonina','Sophia','Euphemia','Anastasia','Maria','Pelagia','Domnina','Makrina','Helena'],
+    family:['Flavius','Aurelius','Valerius','Claudius','Aelius','Julius'] } },
   family:['Phokas','Doukas','Skleros','Argyros','Maleinos','Kourkouas','Melissenos','Lekapenos','Botaneiates','Dalassenos','Diogenes','Komnenos','Maniakes','Tzimiskes'],
   male:['Basileios','Leon','Konstantinos','Michael','Nikephoros','Ioannes','Theophilos','Romanos','Alexios','Andronikos','Christophoros','Petros','Anastasios','Bardas','Damianos','Demetrios','Eustathios','Georgios','Gregorios','Ignatios','Lazaros','Marianos','Methodios','Nikolaos','Prokopios','Sergios','Stefanos','Symeon','Theodoros','Zenon','Artabasdos','Bardanes','Eudokimos','Himerios','Isaac','Katakalon','Krinites','Ktenas','Leontios','Marinos','Mousikos','Niketas','Ooryphas','Orestes','Photeinos','Priskos','Sisinios','Staurakios','Theoktistos','Theophylaktos'],
   female:['Theodora','Zoe','Eudokia','Anna','Irene','Maria','Helena','Theophano','Pulcheria','Sophia','Agatha','Anastasia','Anthousa','Basilike','Euphemia','Euphrasia','Gregoria','Kale','Kassia','Martina','Paraskeve','Pelagia','Prokopia','Thekla','Thomais','Aikaterine','Anastaso','Antonina','Athanasia','Christina','Domnina','Elisavet','Epiphania','Eudoxia','Eugenia','Eupraxia','Georgia','Hilaria','Ioanna','Iouliane','Kallisto','Makrina','Myrto','Nikarete','Photeine','Platonis','Styliane','Theodote','Theoktiste','Xene'] },

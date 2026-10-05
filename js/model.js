@@ -100,7 +100,7 @@ window.FB = window.FB || {};
       if (!own(FBDATA.eras, era) || !plainObject(def.nameEras[era])) return 'nameEras must name known eras.';
       const names = def.nameEras[era];
       for (const key in names) {
-        if (key !== 'male' && key !== 'female') return 'nameEras accepts only male and female lists.';
+        if (key !== 'male' && key !== 'female' && key !== 'family') return 'nameEras accepts only male, female and family lists.';
         if (!Array.isArray(names[key]) || !names[key].length || names[key].some(function (name) {
           return typeof name !== 'string' || !name.trim();
         })) return 'nameEras lists must contain nonempty names.';
@@ -1888,7 +1888,7 @@ window.FB = window.FB || {};
     const c = FB.cultureOf(cultureId, state);
     const era = state ? FB.campaignEra(state) : FB.activeEra;
     const variant = c.nameEras && c.nameEras[era];
-    const key = sex === 'f' ? 'female' : 'male';
+    const key = sex === 'family' ? 'family' : sex === 'f' ? 'female' : 'male';
     return variant && variant[key] && variant[key].length ? variant[key] : c[key];
   };
   FB.randomName = function (cultureId, sex, avoid, state) {
@@ -1920,15 +1920,18 @@ window.FB = window.FB || {};
     return parentName + (parentName.slice(-1) === 's' ? 'son' : 'sson');
   };
 
-  FB.dynastyName = function (cultureId, founderName, provinceName, founderSex) {
-    const c = FB.cultureOf(cultureId);
+  FB.dynastyName = function (cultureId, founderName, provinceName, founderSex, state) {
+    const c = FB.cultureOf(cultureId, state);
     switch (c.dyn) {
       case 'patronym': return FB.patronym(founderName, founderSex || 'm');
       case 'mac': return 'mac ' + founderName;
       case 'ap': return 'ap ' + founderName;
       case 'ibn': return 'Banu ' + founderName.split(' ').pop();
       case 'ov': return founderName + 'ich';
-      case 'plain': return c.family ? FB.pick(c.family) : ('of ' + provinceName);
+      case 'plain': {
+        const pool = FB.cultureNamePool(cultureId, 'family', state);
+        return pool ? FB.pick(pool) : ('of ' + provinceName);
+      }
       default: return 'of ' + provinceName;
     }
   };

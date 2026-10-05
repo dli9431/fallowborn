@@ -253,6 +253,8 @@ window.FB = window.FB || {};
         errors.push('Unit class ' + id + ' must not share its id with a unit role.');
       }
       const role = definitionRole(def);
+      const periodFault = FB.contentPeriodFault({ eras:def.eras });
+      if (periodFault) errors.push('Unit class ' + id + ': ' + periodFault + '.');
       if (def.role !== undefined && !!def.hired !== !!FB.UNIT_ROLES[role].hired) {
         errors.push('Unit class ' + id + ' must set hired exactly when its role is mercenary.');
       }
@@ -261,6 +263,11 @@ window.FB = window.FB || {};
     for (const role in FB.UNIT_ROLES) {
       if (FB.UNIT_ROLES[role].core && !roles[role]) {
         errors.push('Unit class table needs a class with the ' + role + ' role.');
+      }
+      const baseline = roles[role] && table[roles[role]];
+      if (FB.UNIT_ROLES[role].core && baseline && Array.isArray(baseline.eras) &&
+          Object.keys(FBDATA.eras).some(function (era) { return baseline.eras.indexOf(era) < 0; })) {
+        errors.push('The core unit class ' + roles[role] + ' must be available in every era.');
       }
     }
     return errors;
@@ -341,8 +348,10 @@ window.FB = window.FB || {};
       ? era.military : null;
   };
 
-  /* False when the campaign era never fields the class's role. */
+  /* Fresh recruitment follows class membership and the era's role set. */
   FB.unitClassEraAllowed = function (state, classId) {
+    const def = unitClassDef(classId);
+    if (def && def.eras && def.eras.indexOf(FB.campaignEra(state)) < 0) return false;
     const military = FB.eraMilitary(state);
     const excluded = military && Array.isArray(military.excludeRoles)
       ? military.excludeRoles : null;

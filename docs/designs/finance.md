@@ -561,3 +561,7 @@ redirect the ordinary county tax ledger. Contractual pay and baseline fiscal
 appointments have technology impact `none`.
 
 Tournament funding quotes use recurring civilian seasonal net, excluding focus and temporary military spending. The playerCivilianBudget options.excludeFocus flag leaves ordinary ledgers unchanged. Four bounded recurring samples smooth host quotes; loans, gifts, sales and tournament awards do not enter this history. Funding debits real household, realm or barony accounts and freezes prize/service commitments. Work installments, unused refunds, return reserves and awards settle once under edition-local keys. See tournaments.md.
+
+Late antique purse
+
+The late antique era declares a complete solidus currency definition: Solidi as the purse label, a coin icon, s as the compact unit, and solidus/solidi as the long singular/plural. One internal gold remains one displayed solidus. This is a period presentation unit, not a new exchange system or reconstruction of fifth-century prices. Runtime currency and geography overrides retain their existing precedence; medieval money remains unchanged.
