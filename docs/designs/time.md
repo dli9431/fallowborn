@@ -518,14 +518,14 @@ Institution daily repair tracks transient revisions for the owned policy, electi
 
 ## Calendar and local seasons
 
-The calendar is global. state.date.season counts 0 Spring to 3 Winter for the whole map, the top bar names it, and every date, deadline, due date and season boundary uses it. What a season means is local: each county's climate zone (assigned by its geography base, data/geographies.js) maps the calendar season to a season kind (data/climate.js), and engine rules read the kind's properties instead of the calendar index.
+The calendar is global. state.date.season counts 0 Spring to 3 Winter for the whole map, the top bar names it, and every date, deadline, due date and season boundary uses it. What a season means is local: each county's climate zone (assigned by its geography base, with optional bookmark overrides) maps the calendar season to a season kind (data/climate.js), and engine rules read the kind's properties instead of the calendar index.
 
 - Armies in the field draw extra supply (balance.supplyWinterDrainMult) when the county they stand in, or the county a provision estimate is for, is in a season of hardship.
 - Scheduled games open only in a fair-weather season of the venue's climate; the hosting form lists the dates that qualify for the chosen venue.
 - Event triggers name season kinds with seasonKinds, evaluated at the event's county (the player's county unless the event has a location). The legacy index trigger seasons still reads the calendar for older mods.
 - Province sheets (the Land panel's County section and the governance county sheet) show the local season with its zone.
 
-FB.localSeason(state, provinceId) returns the kind, FB.seasonKindAt(provinceId, calendarSeason) answers for another calendar season, and FB.localSeasonHas / FB.seasonKindHasAt test a property. Zones and kinds are derived from data and never saved. europe_regional assigns northern_temperate to every county, whose kinds are the calendar's own (Spring is spring, Winter is winter), so 867, 1066 and 476 behave exactly as before. southern_temperate turns the calendar half a year around. Authored due dates such as a tenure duty's firstDueSeason name calendar seasons, not local kinds. See MODDING.md, Climate zones and season kinds.
+FB.localSeason(state, provinceId) returns the kind, FB.seasonKindAt(provinceId, calendarSeason) answers for another calendar season, and FB.localSeasonHas / FB.seasonKindHasAt test a property. Zones and kinds are derived from data and never saved. europe_regional assigns northern_temperate to every county, whose kinds are the calendar's own (Spring is spring, Winter is winter), so 867 and 1066 keep their previous seasons. The 476 bookmark assigns regional climates without changing the shared base. Its Mediterranean dry summers and mild winters, continental winters and arid hot dry summers use ordinary season-kind flags. southern_temperate turns the calendar half a year around. Authored due dates such as a tenure duty's firstDueSeason name calendar seasons, not local kinds. See MODDING.md, Climate zones and season kinds.
 
 ## County support recovery
 

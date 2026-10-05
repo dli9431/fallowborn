@@ -1516,13 +1516,13 @@ Season kinds:
 - hardship: armies in the field draw extra supply (balance.supplyWinterDrainMult) where the host stands.
 - fairWeather: scheduled games may open at a venue in this season.
 
-The shipped kinds are spring and summer (fair weather), autumn, and winter (hardship).
+The shipped kinds are spring and summer (fair weather), autumn, winter (hardship), mild_winter, dry_summer (fair weather), hot_dry (hardship), and cool_season.
 
 Climate zones:
 - name (required): the display name shown on province sheets.
 - seasons (required): four season kind ids, for calendar seasons 0 (Spring) to 3 (Winter) in order.
 
-The shipped zones are northern_temperate (today's seasons), mediterranean, arid and steppe (the same four seasons for now; regional variation is content for a bookmark's geography), and southern_temperate, which turns the calendar half a year around (calendar Spring is local autumn). FBDATA.defaultClimateZone (northern_temperate) is the zone of any county no base assigns. europe_regional assigns northern_temperate everywhere, so 867, 1066 and 476 keep their long-standing seasons.
+The shipped zones are northern_temperate (today's seasons), mediterranean (dry summer, mild winter), arid (hot dry summer, cool season), continental (cold winter), and steppe (the four calendar seasons), and southern_temperate, which turns the calendar half a year around (calendar Spring is local autumn). FBDATA.defaultClimateZone (northern_temperate) is the zone of any county no base assigns. europe_regional assigns northern_temperate everywhere, so 867 and 1066 keep their long-standing seasons. The 476 bookmark overrides those assignments regionally.
 
 Engine rules ask for a county's local season kind (FB.localSeason(state, provinceId)) and read the kind's properties; they never compare the calendar index for a climate meaning. Province sheets show the local season with its zone. Zones and local seasons are derived from data and never saved, so a data change applies to running campaigns.
 
@@ -5278,3 +5278,11 @@ Bookmark duchies, kingdoms and empires tables may be omitted or empty. County du
 FB.titleLevels.name(state, kind, context) resolves the level's term with optional realm, viewer and form context. FB.titleLevels.holder uses the corresponding localized rank label. Override duchy, kingdom, empire and the holder terms in data/lexicons.js; the stable mechanical ids and title aliases do not change. FB.dejureOf returns an empty object for a county without a district, and null for absent upper parents. County-list helpers return empty arrays for absent ids.
 
 Outside a county's title hierarchy, effective customary Peace rights can support recovery of county jurisdiction. FB.political.territorialClaims(state, actorRef, provinceId) returns detached effective rights. FB.customaryWarRights supplies ordinary war causes with type customary, target, rightId and basis. Jurisdiction must come from an existing authority right; revenue rights and appointments are not territorial claims. The ordinary declaration gate requires the exact effective right and a connected frontier. In-flight campaigns retain their recorded evidence. Global sacred target definitions outside the bookmark's title map are inactive.
+
+Bookmark climate and generated ruler profiles
+
+An atomic bookmark may declare climate with the same zone and provinces shape as a geography base. Its county exception takes precedence, then its default zone, then the geography's county exception and default zone. Supplied county ids must exist in the bookmark and zone ids must be registered. This override does not mutate the base and follows bookmark activation and save restoration; no derived zone is stored in saves.
+
+A ruler profile may set generated:true and omit name. It still declares sex, culture, born, mar and trait. Initialization draws its name from that culture through the normal seeded name generator and marks the saved profile and materialized character as generated. A named profile keeps its supplied historical name. This authoring flag does not grant an office, county or succession right.
+
+FBDATA.bookmarkRegions476 contains independent declarations for italy, dalmatia_east, gaul_iberia and africa. The bookmark entry composes their provinces, realms, title tables and climate assignments; these are content tables, not an engine requirement for other bookmarks. In this snapshot realm is both the sovereign owner and direct holder under the active government strategies. The standard 476 settlement layout is referenced by settlementLayout, with physical seeds, terrain and dated names supplied by europe_regional.

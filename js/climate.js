@@ -32,10 +32,16 @@ window.FB = window.FB || {};
     return typeof id === 'string' && own(zones, id) && plain(zones[id]) ? zones[id] : null;
   };
 
-  /* The zone of a county on the active base: its own entry in
-     climate.provinces, else the base's climate.zone, else
-     FBDATA.defaultClimateZone. Null only when no zone is registered. */
+  /* Bookmark climate assignments precede those of the shared physical base.
+     Each layer uses its county exception, then its zone; the final fallback
+     is FBDATA.defaultClimateZone. No shared geography record is mutated. */
   FB.climateZoneOf = function (provinceId) {
+    const bookmark = FB.activeBookmark;
+    const local = bookmark && plain(bookmark.climate) ? bookmark.climate : null;
+    const overrides = local && plain(local.provinces) ? local.provinces : null;
+    if (overrides && typeof provinceId === 'string' && own(overrides, provinceId) &&
+        FB.climateZone(overrides[provinceId])) return overrides[provinceId];
+    if (local && FB.climateZone(local.zone)) return local.zone;
     const geography = FB.activeGeography;
     const climate = geography && plain(geography.climate) ? geography.climate : null;
     const assigned = climate && plain(climate.provinces) ? climate.provinces : null;

@@ -6,6 +6,8 @@ dependsOnRuntime(__filename, [
   'js/governments.js', 'js/ambitions.js', 'js/actions.js', 'js/holywar.js',
   'js/main.js', 'js/messages.js', 'js/politics.js',
   'data/lexicons.js', 'data/eras.js', 'data/bookmarks.js', 'data/bookmark_476.js',
+  'data/bookmark_476_italy.js', 'data/bookmark_476_dalmatia_east.js',
+  'data/bookmark_476_gaul_iberia.js', 'data/bookmark_476_africa.js',
   'data/counties.js', 'data/map_data.js', 'data/political_institutions.js'
 ]);
 const { test, expect } = require('../support/fixture');

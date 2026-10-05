@@ -2,7 +2,10 @@
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
   'data/map_data.js', 'data/counties.js', 'data/bookmarks.js',
-  'data/bookmark_476.js', 'data/settlements.js',
+  'data/climate.js', 'data/geographies.js', 'js/climate.js',
+  'data/bookmark_476.js',
+  'data/bookmark_476_italy.js', 'data/bookmark_476_dalmatia_east.js',
+  'data/bookmark_476_gaul_iberia.js', 'data/bookmark_476_africa.js', 'data/settlements.js',
   'data/settlements_real.js', 'data/cultures.js', 'data/starts.js',
   'data/technology.js', 'data/political_institutions.js', 'data/units.js',
   'data/economy.js', 'data/systems.js', 'js/systems.js',
@@ -538,7 +541,7 @@ test('later campaigns register ordinary wars only with their living political pr
         gothicStatus:restored.historical.theoderic };
     });
     expect(result).toEqual({ noForcedClovis:true, clovisInherited:true,
-      frankTarget:'paris',
+      frankTarget:'laon',
       gothicTarget:'ravenna', frankStatus:'started', gothicStatus:'started' });
   });
 

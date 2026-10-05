@@ -6,7 +6,9 @@ dependsOnRuntime(__filename, [
   'js/armies.js', 'js/wars.js', 'data/units.js',
   'js/authority.js', 'js/politics.js', 'js/stories.js',
   'js/story_western_court_476.js', 'js/story_federate_track_476.js', 'js/ui_modals.js',
-  'data/bookmarks.js', 'data/bookmark_476.js', 'data/political_institutions.js',
+  'data/bookmarks.js', 'data/bookmark_476.js',
+  'data/bookmark_476_italy.js', 'data/bookmark_476_dalmatia_east.js',
+  'data/bookmark_476_gaul_iberia.js', 'data/bookmark_476_africa.js', 'data/political_institutions.js',
   'data/eras.js', 'js/governments.js'
 ]);
 const { test, expect } = require('../support/fixture');

@@ -7,6 +7,8 @@ dependsOnRuntime(__filename, [
   'data/units.js',
   'data/bookmarks.js',
   'data/bookmark_476.js',
+  'data/bookmark_476_italy.js', 'data/bookmark_476_dalmatia_east.js',
+  'data/bookmark_476_gaul_iberia.js', 'data/bookmark_476_africa.js',
   'js/world.js',
   'js/technology.js',
   'js/armies.js',

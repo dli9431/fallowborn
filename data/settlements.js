@@ -209,6 +209,24 @@ window.FBDATA = window.FBDATA || {};
     ghazni: { x: 68.42, y: 33.55 },
     tiz: { x: 60.64, y: 25.29 },
 
+    /* Late antique sites are physical anchors shared with every layout. */
+    ravenna_476: { x:12.201, y:44.418 },
+    classis_476: { x:12.24, y:44.38 },
+    salona_476: { x:16.483426, y:43.539561 },
+    carthage_476: { x:10.325, y:36.8528 },
+    sufetula_476: { x:9.12, y:35.24 },
+    toulouse_476: { x:1.44, y:43.6 },
+    arles_476: { x:4.63, y:43.68 },
+    vienne_476: { x:4.87, y:45.53 },
+    arras_476: { x:2.78, y:50.29 },
+    paris_476: { x:2.35, y:48.85 },
+    soissons_476: { x:3.3258515, y:49.380839 },
+    tournai_476: { x:3.388, y:50.606 },
+    lugo_476: { x:-7.55, y:43.0 },
+    altinum_476: { x:12.398, y:45.558 },
+    /* Isaurian court area, not an identification of Zeno's siege fortress. */
+    isauria_476: { x:32.5, y:37.4 },
+    ikonion_476: { x:32.49, y:37.87 },
     /* 476 county heads at the county seed, or at the period site where it
        stood apart from the later town (Volubilis, Abritus) */
     barcelona_476: { x: 2.17, y: 41.39 },
@@ -841,8 +859,25 @@ window.FBDATA = window.FBDATA || {};
       ['tiz', 'Tiz', 'village']
     ]);
 
-  /* 476 county heads under their period names. The rest of the 476 map keeps
-     generated settlements or the presentations data/bookmark_476.js authors. */
+  /* Late antique presentations use the same layout mechanism as any bookmark.
+     No later layouts are inherited by the 476 world. */
+  layout('476', 'ravenna', [['ravenna_476', 'Ravenna', 'city'], ['classis_476', 'Classis', 'town']]);
+  layout('476', 'pavia', [['pavia', 'Ticinum', 'town']]);
+  layout('476', 'split', [['salona_476', 'Salona', 'city'], ['split', 'Spalatum', 'village']]);
+  layout('476', 'tunis', [['carthage_476', 'Carthage', 'city']]);
+  layout('476', 'kairouan', [['sufetula_476', 'Sufetula', 'town']]);
+  layout('476', 'constantinople', [['constantinople', 'Constantinople', 'city']]);
+  layout('476', 'roma', [['roma', 'Rome', 'city'], ['ostia', 'Ostia', 'town']]);
+  layout('476', 'toulouse', [['toulouse_476', 'Tolosa', 'town']]);
+  layout('476', 'arles', [['arles_476', 'Arelate', 'town']]);
+  layout('476', 'vienne', [['vienne_476', 'Vienna', 'town']]);
+  layout('476', 'arras', [['arras_476', 'Atrebates', 'town']]);
+  layout('476', 'paris', [['paris_476', 'Parisii', 'town']]);
+  layout('476', 'laon', [['soissons_476', 'Augusta Suessionum', 'town']]);
+  layout('476', 'ghent', [['tournai_476', 'Tornacum', 'town']]);
+  layout('476', 'lugo', [['lugo_476', 'Lucus Augusti', 'town']]);
+  layout('476', 'venezia', [['altinum_476', 'Altinum', 'town']]);
+  layout('476', 'ikonion', [['ikonion_476', 'Iconium', 'town'], ['isauria_476', 'Isaurian court', 'village']]);
   layout('476', 'barcelona', [['barcelona_476', 'Barcino', 'town']]);
   layout('476', 'tarragona', [['tarragona_476', 'Tarraco', 'town']]);
   layout('476', 'toledo', [['toledo_476', 'Toletum', 'town']]);
@@ -865,7 +900,7 @@ window.FBDATA = window.FBDATA || {};
   layout('476', 'lyon', [['lyon_476', 'Lugdunum', 'town']]);
   layout('476', 'milano', [['milano_476', 'Mediolanum', 'town']]);
   layout('476', 'torino', [['torino_476', 'Augusta Taurinorum', 'town']]);
-  layout('476', 'siracusa', [['siracusa_476', 'Syracuse', 'town']]);
+  layout('476', 'siracusa', [['siracusa_476', 'Syracusae', 'town']]);
   layout('476', 'pliska', [['pliska_476', 'Abritus', 'town']]);
 
   /* ---- attach ------------------------------------------------------------
