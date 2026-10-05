@@ -45,7 +45,10 @@ without consuming the seasonal story slot or excusing cash/extraordinary dues.
 Canceling the Go into town settlement picker clears its provisional cooldown
 through the shared modal dismissal callback, including Close, Escape and browser
 Back. It spends no day and grants no tutorial deed credit. Selecting a settlement
-keeps the cooldown and spends the confirmed visit day.
+opens a dismissible activity review; only choosing an activity keeps the cooldown
+and spends the visit day. Back restores the settlement picker without completing
+the deed. The committed option travels with the ordinary queued visit and resolves
+once after the daily pass, retaining event ordering and final eligibility checks.
 
 Serf daily focuses use plain activity names: Work the fields (with regional
 alternatives), Practice with the levy, and Manage the household. Their shared

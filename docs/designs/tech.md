@@ -270,10 +270,13 @@ technology remains visible and manually selectable, and an explicit manual start
 protection before the project is added to a slot.
 
 Dedicated technology UI follows `FB.techUiRelevant`: Freeholders, Gentry, and landed rulers
-receive the catalogue, Land rating, Guide catalogue, commitment row, contextual
+receive the catalogue, Land rating, Guide catalogue, contextual
 detail links, and direct modal routes. Freeholders and Gentry may read their sovereign
 nation's projects, completed knowledge, effects, and requirements; they receive no
 research, advocacy, or research-automation controls. Serfs do not receive these routes.
+The Ongoing commitments research row appears only for independent rulers who control
+their national projects and policy. Common households and vassals retain their other
+technology routes, including existing vassal advocacy, without this commitment row.
 This is presentation of existing national knowledge, with no gameplay eligibility
 or research change, so the technology-impact ledger's presentation exemption applies.
 When opened from a contextual requirement or tooltip

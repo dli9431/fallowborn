@@ -85,6 +85,137 @@ test.beforeEach(async function ({ page }, testInfo) {
   await page.evaluate(function () { FB.game.setPaused(true); });
 });
 
+for (const layout of [{ width:390, sex:'m' }, { width:1280, sex:'f' }]) {
+  test('court chips identify the ruler’s consort without implying a sibling marriage at ' + layout.width,
+    async function ({ page }) {
+      await page.setViewportSize({ width:layout.width, height:844 });
+      const ids = await installCourt(page, { mode:'accession', sex:'f' });
+      const court = await page.evaluate(function (setup) {
+        const s = FB.state, ids = setup.ids, su = s.realms[ids.rid].succession;
+        function age(cid, mid, years) {
+          s.chars[cid].born = s.date.year - years;
+          su.members[mid].born = s.chars[cid].born;
+        }
+        age(ids.father, ids.fatherMember, 65);
+        age(ids.successor, ids.successorMember, 18);
+        age(ids.sibling, ids.siblingMember, 7);
+        const ruler = s.chars[ids.successor];
+        ruler.sex = setup.sex;
+        ruler.name = setup.sex === 'm' ? 'Ingelram' : 'Ingeltrude';
+        su.members[ids.successorMember].sex = ruler.sex;
+        su.members[ids.successorMember].name = ruler.name;
+        s.realms[ids.rid].ruler.born = s.chars[ids.father].born;
+        s.realms[ids.rid].ruler.age = 65;
+        FB.killChar(s, s.chars[ids.father]);
+        const consort = FB.realmConsortCharacter(s, ids.rid);
+        return { consort:consort.id, consortAge:FB.ageOf(consort, s.date.year) };
+      }, { ids:ids, sex:layout.sex });
+      const rulerName = layout.sex === 'm' ? 'Count Ingelram' : 'Countess Ingeltrude';
+      const before = await page.evaluate(function (ids) {
+        return { save:FB.save.serialize(), rng:FB.getRngState(),
+          siblingSpouses:FB.spousesSnapshot(FB.state, FB.state.chars[ids.sibling]).length };
+      }, ids);
+      expect(before.siblingSpouses).toBe(0);
+      await page.evaluate(function (rid) { FB.ui.showLiegeModal(rid); }, ids.rid);
+      const link = function (cid) {
+        return page.locator('[data-realm-family-cid="' + cid + '"]');
+      };
+      await expect(link(court.consort).locator('.frel')).toHaveText(
+        (layout.sex === 'm' ? 'Wife' : 'Husband') + ' · age ' + court.consortAge);
+      await expect(link(ids.sibling).locator('.frel')).toHaveText('Sister · Heir · age 7');
+      await link(ids.sibling).click();
+      await expect(link(court.consort).locator('.frel')).toHaveText(
+        'Consort of ' + rulerName + ' · age ' + court.consortAge);
+      await expect(link(ids.successor).locator('.frel')).toHaveText(
+        (layout.sex === 'm' ? 'Brother' : 'Sister') + ' · age 18');
+      await link(court.consort).click();
+      await expect(link(ids.successor).locator('.frel')).toHaveText(
+        (layout.sex === 'm' ? 'Husband' : 'Wife') + ' · age 18');
+      await expect(link(ids.sibling).locator('.frel')).toHaveText(
+        'Sister of ' + rulerName + ' · Heir · age 7');
+      await link(ids.successor).click();
+      await expect(link(court.consort).locator('.frel')).toHaveText(
+        (layout.sex === 'm' ? 'Wife' : 'Husband') + ' · age ' + court.consortAge);
+      expect(await page.evaluate(function (ids) {
+        return { save:FB.save.serialize(), rng:FB.getRngState(),
+          siblingSpouses:FB.spousesSnapshot(FB.state, FB.state.chars[ids.sibling]).length };
+      }, ids)).toEqual(before);
+    });
+}
+
+for (const width of [390, 1280]) {
+  test('pledged and direct royal profiles retain court family and return navigation at ' + width,
+    async function ({ page }) {
+      await page.setViewportSize({ width:width, height:600 });
+      const ids = await installCourt(page, { mode:'accession', sex:'m' });
+      const pledgeId = await page.evaluate(function (ids) {
+        const s = FB.state;
+        FB.killChar(s, s.chars[ids.father]);
+        const me = s.chars[s.player.charId];
+        const pledged = FB.makeCharacter(s, {
+          name:'Pledged Contact', sex:'f', born:s.date.year - 24, station:1,
+          culture:me.culture, religion:me.religion, traitsN:0
+        });
+        pledged.betrothedId = ids.sibling;
+        s.chars[ids.sibling].betrothedId = pledged.id;
+        FB.touchFamily();
+        return pledged.id;
+      }, ids);
+      const before = await page.evaluate(function () {
+        return { save:FB.save.serialize(), rng:FB.getRngState() };
+      });
+      await page.evaluate(function (id) { FB.ui.showCharModal(id); }, pledgeId);
+      const pledge = page.locator('[data-interaction-commitment="betrothal"] ' +
+        '[data-interaction-character="' + ids.sibling + '"]');
+      await pledge.focus();
+      const originScroll = await page.locator('#gm-body').evaluate(function (body) {
+        body.scrollTop += 50;
+        return body.scrollTop;
+      });
+      expect(originScroll).toBeGreaterThan(0);
+      await page.keyboard.press('Enter');
+      const link = function (id) {
+        return page.locator('[data-realm-family-cid="' + id + '"]');
+      };
+      await expect(link(ids.successor).locator('.frel')).toHaveText('Brother · age 13');
+      await expect(link(ids.extra).locator('.frel')).toHaveText('Sister · age 1');
+      await expect(page.locator('[data-social-access-route]')).toBeVisible();
+      const title = await page.locator('#gm-title').innerText();
+      const family = await page.locator('.court-strip').innerText();
+      await expect(page.locator('#cm-close')).toHaveText('Back');
+      await page.locator('#cm-close').click();
+      await expect(pledge).toBeFocused();
+      expect(await page.locator('#gm-body').evaluate(function (body) {
+        return body.scrollTop;
+      })).toBeCloseTo(originScroll, 0);
+
+      await page.locator('#cm-close').click();
+      await page.evaluate(function (id) { FB.ui.showCharModal(id); }, ids.sibling);
+      await expect(page.locator('#gm-title')).toHaveText(title);
+      await expect(page.locator('.court-strip')).toHaveText(family);
+      await link(ids.extra).focus();
+      const familyScroll = await page.locator('#gm-body').evaluate(function (body) {
+        return body.scrollTop;
+      });
+      await page.keyboard.press('Enter');
+      await expect(link(ids.sibling).locator('.frel')).toContainText('Brother');
+      await page.locator('#cm-close').click();
+      await expect(link(ids.extra)).toBeFocused();
+      expect(await page.locator('#gm-body').evaluate(function (body) {
+        return body.scrollTop;
+      })).toBeCloseTo(familyScroll, 0);
+
+      await page.locator('#cm-close').click();
+      await page.evaluate(function (rid) { FB.ui.showLiegeModal(rid); }, ids.rid);
+      await link(ids.sibling).click();
+      await expect(page.locator('#gm-title')).toHaveText(title);
+      await expect(page.locator('.court-strip')).toHaveText(family);
+      expect(await page.evaluate(function () {
+        return { save:FB.save.serialize(), rng:FB.getRngState() };
+      })).toEqual(before);
+    });
+}
+
 for (const sex of ['m', 'f']) {
   test('a ' + (sex === 'm' ? 'brother' : 'sister') +
     ' remains a sibling heir after the father dies', async function ({ page }) {

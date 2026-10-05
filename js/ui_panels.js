@@ -945,14 +945,14 @@ window.FB = window.FB || {};
         action:FB.T('Manage…')
       });
     }
-    if (FB.techUiRelevant(s)) {
+    if (FB.techUiRelevant(s) && FB.techRealmId(s) === 'player' &&
+        FB.isPlayerSovereign(s)) {
       h += ongoingCommitmentRow({
         id:'research',
         icon:'💡',
         label:FB.T('National research'),
         status:researchCommitmentText(s),
-        action:FB.techRealmId(s) === 'player' && FB.isPlayerSovereign(s)
-          ? FB.T('Manage…') : FB.T('Review…')
+        action:FB.T('Manage…')
       });
     }
     if (travel) {
@@ -7003,6 +7003,11 @@ window.FB = window.FB || {};
       facts += rawKv(FB.T('Affected direct vassals ({count})', { count:vassalNames.length }),
         esc(vassalNames.join(', ')));
     }
+    if (status.householdOnly) {
+      facts += '<div class="progressnote">' + esc(FB.T(
+        'Your capital is already at {destination}. This move brings your household there.',
+        { destination:destination.name })) + '</div>';
+    }
     if (status.incomingMonopoly) {
       facts += '<div class="progressnote warnote">' + esc(FB.T(
         'Your incoming {profession} monopoly is tied to {province} and will end immediately when the household leaves.',
@@ -7015,17 +7020,21 @@ window.FB = window.FB || {};
     let h = reviewFactsCard(FB.T('Capital and household home'), facts, ' data-capital-relocation') +
       reviewActionsHtml(reviewActionCardHtml({
         id:'capital-relocation-confirm',
-        label:FB.T('Move the capital to {destination}', { destination:destination.name }),
+        label:status.householdOnly
+          ? FB.T('Move the household to {destination}', { destination:destination.name })
+          : FB.T('Move the capital to {destination}', { destination:destination.name }),
         note:FB.T('{prestige} prestige now · this ruler’s only voluntary move', { prestige:status.prestigeCost }),
         details:'<p>' + esc(FB.T(
           'This is this ruler’s only voluntary capital move. Succession gives the next ruler one new choice. County ownership, titles, buildings, and property do not move with the household.')) + '</p>'
       })) +
       '<div class="gm-footer"><button type="button" class="btn" id="capital-relocation-cancel">' +
-      esc(FB.T('Keep the capital in {from}', { from:from.name })) +
+      esc(status.householdOnly
+        ? FB.T('Keep the household in {from}', { from:from.name })
+        : FB.T('Keep the capital in {from}', { from:from.name })) +
       '</button></div>';
-    openModal(FB.T('Move capital to {destination}?', {
-      destination:destination.name
-    }), h);
+    openModal(status.householdOnly
+      ? FB.T('Move household to {destination}?', { destination:destination.name })
+      : FB.T('Move capital to {destination}?', { destination:destination.name }), h);
     $('capital-relocation-confirm').addEventListener('click', function () {
       const live = FB.capitalRelocationStatus(FB.state, destinationId);
       if (!live.ok || !FB.relocatePlayerCapital(FB.state, destinationId)) {
@@ -7458,7 +7467,8 @@ window.FB = window.FB || {};
     const homeLabel = pid === s.player.provinceId
       ? (playerRealm && playerRealm.alive && playerRealm.capital === pid
         ? FB.T('⚑ (capital and home)') : FB.T('⚑ (home)'))
-      : '';
+      : (playerRealm && playerRealm.alive && playerRealm.capital === pid
+        ? FB.T('⚑ (capital)') : '');
     let h = '<div class="panelh">' + esc(pr.name) +
       (homeLabel ? ' ' + esc(homeLabel) : '') + '</div>';
     h += '<div data-war-siege="' + esc(pid) + '">' + siegeFeedbackHtml(s, pid) + '</div>';
@@ -7776,7 +7786,8 @@ window.FB = window.FB || {};
         const capitalStatus = FB.capitalRelocationStatus(s, pid);
         h += '<button type="button" class="actionbtn" id="btn-relocate-capital"' +
           (capitalStatus.ok ? '' : ' disabled') + '>' +
-          esc(FB.T('🏰 Move capital here…')) +
+          esc(capitalStatus.householdOnly
+            ? FB.T('🏰 Move household here…') : FB.T('🏰 Move capital here…')) +
           '<span class="adesc">' + esc(capitalStatus.ok
             ? capitalRelocationTerms(capitalStatus) : capitalStatus.reason) +
           '</span></button>';

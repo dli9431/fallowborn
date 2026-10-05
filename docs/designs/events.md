@@ -45,6 +45,14 @@ Event choices use QWE/ASD/ZXC, then Shift with the same letters, for their
 action shortcuts. Digits are reserved for UI sections. Details remain ordinary
 Tab stops. Input guards cover these letter keys across choices and outcomes.
 
+The Go into town activity review is a dismissible generic modal before the
+outing is committed. Its queued visit context may carry `outingOption`, the
+authored option index selected by the player. The event presenter consumes this
+index once, rechecks eligibility and uses the normal manual resolver after the
+day's simulation. Autoresolve does not substitute another choice. If that option
+became unavailable, the ordinary required visit event asks for a valid choice.
+This navigation fix changes no activity eligibility or technology dependency.
+
 In explicitly flagged CrazyGames builds, choosing an option in `meet_suitor`
 belongs to the opening marriage search and does not mark `tut_event`. A separate
 event choice completes that First steps requirement, keeping the opening in the

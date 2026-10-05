@@ -4831,6 +4831,8 @@ window.FB = window.FB || {};
       reason:'',
       fromId:fromId || null,
       destinationId:typeof destinationId === 'string' ? destinationId : null,
+      householdOnly:!!(realm && destinationId === realm.capital &&
+        destinationId !== fromId),
       prestigeCost:cost,
       popularOpinion:popularOpinion,
       vassalFavor:vassalFavor,
@@ -4851,8 +4853,12 @@ window.FB = window.FB || {};
       out.reason = FB.T('That county cannot become a capital.');
       return out;
     }
-    if (destinationId === p.provinceId || destinationId === realm.capital) {
-      out.reason = FB.T('This county is already your capital and home.');
+    // County investiture can establish a capital while retaining the old
+    // household home. That capital remains a valid relocation destination.
+    if (destinationId === p.provinceId) {
+      out.reason = destinationId === realm.capital
+        ? FB.T('This county is already your capital and home.')
+        : FB.T('Your household already lives in this county.');
       return out;
     }
     var holder = (state.holder && state.holder[destinationId]) ||
@@ -4994,13 +5000,16 @@ window.FB = window.FB || {};
       destinationId:destinationId
     };
     syncPlayerCapitalHome(state, destinationId);
-    FB.news(state, FB.msg('news.world.capital_relocated',
-      '🏰 The seat of {realm} moves from {from} to {destination}; the household follows.',
-      {
-        realm:state.realms.player.name,
-        from:from ? from.name : status.fromId,
-        destination:destination.name
-      }));
+    var params = {
+      realm:state.realms.player.name,
+      from:from ? from.name : status.fromId,
+      destination:destination.name
+    };
+    FB.news(state, status.householdOnly
+      ? FB.msg('news.world.household_to_capital',
+        '🏰 The household of {realm} moves from {from} to its existing capital at {destination}.', params)
+      : FB.msg('news.world.capital_relocated',
+        '🏰 The seat of {realm} moves from {from} to {destination}; the household follows.', params));
     return true;
   };
 

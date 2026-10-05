@@ -149,6 +149,18 @@ are relative to the character being viewed. Each link opens a character sheet;
 Back restores the originating sheet's scroll and link focus at mobile and
 desktop widths. Nieces and nephews expose ordinary arranged-match management
 without acquiring household work or education controls.
+Royal character sheets show the same court-family strip and courtesy title when
+opened directly, from a Pledged to link, or through the ruler's family. Personal
+audience restrictions do not hide family information. Direct-profile family links
+retain the originating sheet, scroll and link focus on Back; the realm sheet keeps
+its existing court navigator.
+Court chips identify relationships to the displayed person first (Wife, Husband,
+Mother, Brother, and so on). If a consort is unrelated to that person, the chip
+names the ruler explicitly: **Consort of Count Ingelram**. Likewise a ruler's
+sister viewed from the consort's sheet reads **Sister of Count Ingelram**, retaining
+the Heir marker when applicable. An unclassified relationship names the ruler's
+court instead of implying a family tie to the displayed person. Courtesy titles
+remain Countess/Duchess and their equivalents; these labels change no relationships.
 
 ## County progression reviews
 
@@ -611,6 +623,14 @@ Generic `historyView` dialogs retain their previous DOM on desktop as well as mo
 Visible Back and Escape restore that view even when browser-history navigation is
 unavailable, including its scroll, focus, and listeners. Explicit `historyBackRender`
 callbacks still own flows requiring refreshed data; root Back is disabled and Close exits safely.
+
+Go into town retains its settlement list while showing the selected village,
+town or city's activity choices in a generic history view. Back, Escape and
+mobile browser Back restore the same list, scroll and settlement control.
+Close cancels the whole outing and clears its provisional cooldown. Browsing
+destinations spends no day and grants no tutorial credit; choosing an activity
+commits one outing day and the exact event option. Existing choice labels and
+consequence disclosures remain localized through the event data renderer.
 
 Every new or changed modal, screen, card, and confirmation must make the decision
 clear at a glance: intended benefit, exact immediate cost, duration or minimum
@@ -1540,9 +1560,13 @@ other desktop panel column: right-side navigation therefore leaves Self/Kin unto
 and Self/Kin navigation leaves Deeds/Land/Network/Chronicle untouched. Exact UI refreshes
 after game-state changes still update both visible columns, while opening the mobile
 Self/Kin drawer renders its selected pane immediately.
-For a count or higher, the selected current seat is marked **capital and home**.
-Every other directly held demesne county shows **Move capital here…**; the native
-button remains visible but disabled with the exact prestige, journey, campaign, or
+For a count or higher, Land distinguishes **home**, **capital**, and
+**capital and home**. If a granted county is already the capital while the
+household still lives at its earlier barony, it shows **Move household here…**.
+The confirmation explains that the capital stays in place and the household
+joins it, with the ordinary costs and capital-relocation lifetime choice.
+Every other directly held demesne county outside the home shows **Move capital here…**;
+the native button remains visible but disabled with the exact prestige, journey, campaign, or
 lifetime-limit reason. Its focus-managed confirmation names both seats, the prestige,
 popular-opinion and direct-vassal Standing changes, every affected vassal, the
 once-per-ruler rule, unchanged county-bound property, and any province-scoped incoming
@@ -1830,9 +1854,9 @@ research say, no political attention — so the ledger is omitted entirely at
 that station. On full desktop layouts the ledger omits the redundant
 daily-focus row; on compact layouts that row appears first and routes to the
 top of the combined focus list. When expanded it shows the personal-attention
-assignment; national research projects/policy appear only at landed rank
-(vassals review, sovereigns manage), since commoners have no voice in the
-sovereign's research;
+assignment; national research projects/policy appear only for independent rulers
+who control their nation's research. Common households and vassals omit this row
+while retaining their Technology routes;
 political attention appears only when the independent ruler has that capacity,
 while travel and financial-contract rows appear only while active. Each native
 row routes to the authoritative existing control: the compact focus-list
@@ -2436,12 +2460,13 @@ tier-scaled fee, tax, enterprise, duration, and Popular support terms, then repe
 in a confirmation sheet before spending the day. While Guild Charters is missing, its
 technology-detail control stays inside the deed's shared desktop hover/focus tooltip or
 compact-layout `?` disclosure instead of occupying a separate Deeds row.
-Rank & Realm keeps the no-day-cost **Technology…** deed at landed rank and above; commoners
-have no research controls (sovereigns direct projects, vassals may advocate
-them), so the deed stays hidden below tier 3. `FB.techUiRelevant` is the shared
-eligibility rule for every dedicated technology route: below tier 3 the
-commitment row, deed, Land rating, Guide category and generated entries,
-contextual detail links, and modal entry points are absent. A common household
+Rank & Realm keeps the no-day-cost **Technology…** deed for Freeholders, Gentry,
+and landed rulers. Commoners can read national knowledge without research controls;
+sovereigns direct projects and vassals may advocate them. `FB.techUiRelevant` gates
+the deed, Land rating, Guide category and generated entries, contextual detail links,
+and modal entry points at tier 1. The Ongoing commitments research row additionally
+requires the player to control the effective sovereign's research. Serfs do not
+receive these dedicated technology routes. A common household
 still sees the exact named national prerequisite where it gates one of its
 careers, standards, schools, or enterprises, because that text explains the
 household choice without presenting an authority surface it cannot use. Its

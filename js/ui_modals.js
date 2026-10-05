@@ -776,6 +776,21 @@ window.FB = window.FB || {};
           !FB.ensureEventParticipants(s, ev, item.ctx)) continue;
       if (FB.eventContextStillValid &&
           !FB.eventContextStillValid(s, ev, item.ctx)) continue;
+      /* A town outing is committed in its dismissible activity picker. Keep
+         the normal daily queue ordering, then resolve that exact choice once. */
+      if (/^visit_(village|town|city)$/.test(item.id) &&
+          Number.isInteger(item.ctx.outingOption)) {
+        const option = ev.options && ev.options[item.ctx.outingOption];
+        delete item.ctx.outingOption;
+        if (option && FB.eventOptionStatus(s, ev, option, item.ctx).ready) {
+          eventBatchNeedsSync = true;
+          eventOpen = true;
+          FB.markFired(s, ev);
+          if (chooseOption(ev, option, item.ctx) !== false) return eventOpen;
+        }
+        showEvent(ev, item.ctx);
+        return true;
+      }
       if (autoWants(ev, item)) {
         if (!autoResolve(ev, item)) eventBatchNeedsSync = true;
         continue;
@@ -8056,19 +8071,53 @@ window.FB = window.FB || {};
           { kind: settlementKindName(st.kind) })) + '</span></button>';
     }
     h += '</div><button class="btn" id="gm-cancel">Stay home</button>';
-    openModal('Where To?', h, { onDismiss:function () {
+    function dismissOuting() {
       if (!visiting && FB.state === s) {
         delete s.player.cooldowns.go_to_town;
         UI.refresh();
       }
-    } });
+    }
+    openModal('Where To?', h, { onDismiss:dismissOuting });
     document.querySelectorAll('[data-visit]').forEach(function (btn) {
       btn.addEventListener('click', function () {
-        visiting = true;
-        FB.queueEvent(FB.state, 'visit_' + btn.dataset.kind,
-          { settlement:btn.dataset.visit });
-        UI.closeModal();
-        FB.game.passDay({ skipFocus: true }); // the outing spends the day
+        const ev = FB.eventById('visit_' + btn.dataset.kind);
+        if (!ev || FB.state !== s) return;
+        const ctx = FB.eventContext(s, { settlement:btn.dataset.visit });
+        let choices = '<p>' + esc(FB.eventText(s, s.player.charId, ev, 'text', ctx)) +
+          '</p><p class="decision-cost">' + esc(FB.T('Spends one day.')) + '</p>';
+        ev.options.forEach(function (option, index) {
+          const status = FB.eventOptionStatus(s, ev, option, ctx);
+          if (!status.visible) return;
+          const detailsId = 'outing-choice-details-' + index;
+          choices += '<div class="settcard declarative-choice-card" tabindex="0" aria-describedby="' + detailsId +
+            '"><button type="button" class="actionbtn" aria-describedby="' + detailsId + '"' +
+            ' data-settlement-option="' + index + '" data-ui-action-hotkey' +
+            (status.ready ? '' : ' disabled') + '>' +
+            esc(FB.eventText(s, s.player.charId, ev, 'options.' + index + '.label', ctx)) +
+            '</button><span class="settcard-actions declarative-choice-actions">' +
+            cardInfoButton(detailsId) + '</span>' +
+            (!status.ready && status.reason ? '<p class="decision-cost">' + esc(status.reason) + '</p>' : '') +
+            '<div class="settcard-details declarative-choice-details hidden" id="' + detailsId + '">' +
+            (option.desc ? '<p>' + esc(FB.eventText(s, s.player.charId, ev,
+              'options.' + index + '.desc', ctx)) + '</p>' : '') +
+            consequenceDetailsHtml(s, FB.previewEventOption(s, ev, option, ctx)) + '</div></div>';
+        });
+        openModal(FB.eventText(s, s.player.charId, ev, 'title', ctx), choices, {
+          historyView:true, noFocus:true, onDismiss:dismissOuting
+        });
+        $('gm-body').querySelectorAll('[data-settlement-option]').forEach(function (choice) {
+          choice.addEventListener('click', function () {
+            const index = Number(choice.dataset.settlementOption);
+            if (visiting || FB.state !== s || s.player.dead ||
+                !FB.eventContextStillValid(s, ev, ctx) ||
+                !FB.eventOptionStatus(s, ev, ev.options[index], ctx).ready) return;
+            visiting = true;
+            ctx.outingOption = index;
+            FB.queueEvent(s, ev.id, ctx);
+            UI.closeModal();
+            FB.game.passDay({ skipFocus:true });
+          });
+        });
       });
     });
     $('gm-cancel').addEventListener('click', UI.closeModal);
@@ -11576,7 +11625,8 @@ window.FB = window.FB || {};
       UI.showCharModal(returnContext.characterId, returnContext.returnContext,
         false, returnContext.realmId || null);
       if (returnContext.familyFocus) {
-        const button = $('gm-body').querySelector('[data-baron-family-cid="' + returnContext.familyFocus + '"]');
+        const button = $('gm-body').querySelector('[data-baron-family-cid="' + returnContext.familyFocus +
+          '"], [data-realm-family-cid="' + returnContext.familyFocus + '"]');
         if (button) button.focus({ preventScroll:true });
         $('gm-body').scrollTop = returnContext.scrollTop || 0;
       }
@@ -11756,6 +11806,9 @@ window.FB = window.FB || {};
     const succession = s.realms[rid] && s.realms[rid].succession;
     const family = realmFamilySnapshot(s, rid);
     const subject = s.chars[subjectId] || ruler;
+    const rulerName = ruler ? FB.T('{title} {name}', {
+      title:FB.realmRankTitle(s, realm), name:ruler.name
+    }) : null;
     if (ruler && ruler.id !== subjectId) {
       rows.push({
         c:ruler,
@@ -11767,15 +11820,22 @@ window.FB = window.FB || {};
     if (consort && consort.id !== subjectId) {
       rows.push({
         c:consort,
-        rel:subject === ruler ? FB.T('Consort') :
-          realmCourtRelation(s, subject, consort, FB.T('Consort')),
+        rel:realmCourtRelation(s, subject, consort, rulerName
+          ? FB.T('Consort of {ruler}', { ruler:rulerName }) : FB.T('Consort')),
         role:'consort'
       });
     }
     for (const member of family) {
       const c = member.charId && s.chars[member.charId];
       if (!c || c.dead || c.id === subjectId) continue;
-      const relation = realmCourtRelation(s, subject, c, FB.T('Court member'));
+      let courtRelation = FB.T('Court member');
+      if (rulerName && subject !== ruler) {
+        const rulerRelation = realmCourtRelation(s, ruler, c, null);
+        courtRelation = rulerRelation
+          ? FB.T('{relation} of {ruler}', { relation:rulerRelation, ruler:rulerName })
+          : FB.T('Member of {ruler}’s court', { ruler:rulerName });
+      }
+      const relation = realmCourtRelation(s, subject, c, courtRelation);
       rows.push({
         c:c,
         heir:succession && succession.heirId === member.id,
@@ -24604,10 +24664,11 @@ window.FB = window.FB || {};
   UI.characterInteractionCard = buildCharacterInteractionCard;
 
   function royalCourtCharacterContext(s, cid, returnContext) {
-    if (!returnContext || !returnContext.realmFamily ||
-        returnContext.view !== 'realm' ||
-        !returnContext.realmId || !s.realms[returnContext.realmId]) return null;
-    const rid = returnContext.realmId;
+    const c = s.chars[cid];
+    const rid = returnContext && returnContext.realmFamily &&
+      returnContext.view === 'realm' ? returnContext.realmId :
+      (c && !c.dead && c.royalLine && c.royalLine.realmId);
+    if (!rid || !s.realms[rid] || !s.realms[rid].alive) return null;
     const ruler = interactionRealmRulerCharacter(s, rid);
     const consort = FB.realmConsortCharacter && FB.realmConsortCharacter(s, rid);
     if (ruler && ruler.id === cid) {
@@ -24628,8 +24689,12 @@ window.FB = window.FB || {};
     const familyButtons = root.querySelectorAll('[data-realm-family-cid]');
     for (let i = 0; i < familyButtons.length; i++) {
       familyButtons[i].addEventListener('click', function () {
+        if (returnContext.view === 'character') {
+          returnContext.scrollTop = root.scrollTop;
+          returnContext.familyFocus = familyButtons[i].getAttribute('data-realm-family-cid');
+        }
         UI.showCharModal(familyButtons[i].getAttribute(
-          'data-realm-family-cid'), returnContext, true);
+          'data-realm-family-cid'), returnContext, returnContext.view === 'realm');
       });
     }
   }
@@ -24981,7 +25046,8 @@ window.FB = window.FB || {};
     const initialRealmId = hintedRealm && hintedRealm.alive
       ? realmIdHint
       : (FB.realmIdForRulerCharacter &&
-        FB.realmIdForRulerCharacter(s, c));
+        FB.realmIdForRulerCharacter(s, c)) ||
+        (!c.dead && c.royalLine && c.royalLine.realmId);
     if (initialRealmId && FB.ensureRealmCourtForDisplay) {
       FB.ensureRealmCourtForDisplay(s, initialRealmId);
     }
@@ -24997,6 +25063,8 @@ window.FB = window.FB || {};
       s.realms.player && s.realms.player.alive ? 'player' : null;
     const displayRealmId = model.realmId || selfRealmId;
     const royalCourt = royalCourtCharacterContext(s, cid, returnContext);
+    const royalFamilyNavigation = royalCourt && returnContext &&
+      returnContext.realmFamily && returnContext.view === 'realm';
     if (royalCourt) model.showContext = false;
     const cardOptions = { skillsGuide:true, mapHome:true, renameFamily:true };
     if (royalCourt) {
@@ -25014,10 +25082,13 @@ window.FB = window.FB || {};
       cardOptions.cardClass = 'realm-ruler-card';
     }
     const courtRealmId = model.realmId || (royalCourt && royalCourt.rid);
-    const familyContext = courtRealmId ? {
+    const familyContext = courtRealmId ? (royalFamilyNavigation || model.realmId ? {
       view:'realm', realmId:courtRealmId, returnContext:returnContext,
       realmFamily:true
-    } : null;
+    } : {
+      view:'character', characterId:c.id, returnContext:returnContext,
+      realmId:realmIdHint
+    }) : null;
     let h = UI.charCardHtml(s, c, false, true, cardOptions);
     if (displayRealmId) h += realmWarNoticeHtml(s, displayRealmId);
     if (courtRealmId) h += realmCourtStripHtml(s, courtRealmId, c.id);
@@ -25058,7 +25129,7 @@ window.FB = window.FB || {};
     /* Back walks the sheet-to-sheet return chain, which can loop between two
        linked rulers; always offer a plain Close that dismisses the modal
        stack outright. */
-    const backable = !royalCourt && !!returnContext;
+    const backable = !royalFamilyNavigation && !!returnContext;
     h += '<div class="gm-footer"><button type="button" class="btn" id="cm-close">' +
       esc(backable ? FB.T('Back') : FB.T('Close')) + '</button>' +
       (backable
@@ -25072,7 +25143,7 @@ window.FB = window.FB || {};
       : FB.fullName(c);
     openModal(modalTitle, h, {
       modalClass:'fullsheet-modal interaction-modal character-interaction-modal',
-      historyView:!!returnContext && !royalCourt,
+      historyView:!!returnContext && !royalFamilyNavigation,
       replaceView:!!replaceView,
       historyBackRender:returnContext && (returnContext.view === 'marriage-finder' ||
         returnContext.view === 'abbeys' ||
@@ -25476,7 +25547,7 @@ window.FB = window.FB || {};
       });
     }
     $('cm-close').addEventListener('click', function () {
-      if (returnContext && !royalCourt) {
+      if (returnContext && !royalFamilyNavigation) {
         modalHistoryBack(function () {
           interactionReturn(returnContext);
         });

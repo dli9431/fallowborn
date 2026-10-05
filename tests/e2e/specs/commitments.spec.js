@@ -46,14 +46,12 @@ test('ongoing commitments adapt by layout and route to existing controls',
     await expect(summary.locator(
       '[data-commitment="personal-attention"]')).toContainText(
       'Personal attention');
-    // a freeholder can review the sovereign's national research
-    await expect(summary.locator('[data-commitment="research"]')).toContainText(
-      'National research');
-    await expect(summary.locator('[data-commitment="research"]')).toContainText(
-      'Review');
+    // The ledger contains research only when the player controls it.
+    await expect(summary.locator('[data-commitment="research"]')).toHaveCount(0);
 
     await page.setViewportSize({ width:360, height:740 });
     await expect(focusCommitment).toBeVisible();
+    await expect(summary.locator('[data-commitment="research"]')).toHaveCount(0);
     await focusCommitment.click();
     const focusList = page.locator('#daily-focus-list');
     await expect(focusList).toBeFocused();
@@ -101,7 +99,7 @@ test('ongoing commitments adapt by layout and route to existing controls',
     await expect(page.locator('#gm-body')).toContainText('Personal attention');
     await page.locator('#cm-close').click();
 
-    // landed ranks get the research row and its route to the Technology sheet
+    // Independent rulers get the research row and its Technology route.
     await page.evaluate(function () {
       const s = FB.state;
       s.player.tier = 4;
@@ -116,6 +114,11 @@ test('ongoing commitments adapt by layout and route to existing controls',
     await page.locator('#sidetabs [data-tab="actions"]').click();
     await expect(summary.locator('[data-commitment="research"]')).toContainText(
       'National research');
+    await expect(summary.locator('[data-commitment="research"]')).toContainText(
+      'Manage');
+    await page.setViewportSize({ width:360, height:740 });
+    await expect(summary.locator('[data-commitment="research"]')).toBeVisible();
+    await page.setViewportSize({ width:1280, height:720 });
     await summary.locator('[data-commitment="research"]').click();
     await expect(page.getByRole('heading', {
       name:'Technology',
@@ -137,6 +140,7 @@ for (const tier of [1, 2]) {
       }, tier);
       await waitForUiRefresh(page);
       await page.locator('#sidetabs [data-tab="actions"]').click();
+      await expect(page.locator('[data-commitment="research"]')).toHaveCount(0);
       await page.locator('[data-action-group="realm"]').click();
       const deed = page.locator('[data-action-id="adopt_tech"]');
       await expect(deed).toBeVisible();
@@ -195,6 +199,36 @@ for (const tier of [1, 2]) {
         'Only a sovereign player chooses national technology');
     });
 }
+
+test('vassal rulers omit national research commitments at every landed rank',
+  async function ({ page }) {
+    const liege = await page.evaluate(function () {
+      return FB.techRealmId(FB.state);
+    });
+    for (const tier of [3, 4, 5, 6, 7]) {
+      const authority = await page.evaluate(function (setup) {
+        const s = FB.state;
+        s.player.tier = setup.tier;
+        s.player.liege = setup.liege;
+        if (setup.tier >= 4) {
+          s.player.provs = [s.player.provinceId];
+          FB.foundPlayerRealm(s);
+        }
+        s.player.roleOrientationsSeen = s.player.roleOrientationsSeen || {};
+        s.player.roleOrientationsSeen['role-tier-' + setup.tier] = 1;
+        FB.ui.refresh();
+        return { relevant:FB.techUiRelevant(s), sovereign:FB.isPlayerSovereign(s) };
+      }, { tier:tier, liege:liege });
+      expect(authority).toEqual({ relevant:true, sovereign:false });
+      await waitForUiRefresh(page);
+      await page.locator('#sidetabs [data-tab="actions"]').click();
+      await expect(page.locator('#ongoing-commitments')).toBeVisible();
+      await expect(page.locator('[data-commitment="research"]')).toHaveCount(0);
+      await page.setViewportSize({ width:360, height:740 });
+      await expect(page.locator('[data-commitment="research"]')).toHaveCount(0);
+      await page.setViewportSize({ width:1280, height:720 });
+    }
+  });
 
 test('serfs do not see technology and common households retain restricted automation',
   async function ({ page }) {

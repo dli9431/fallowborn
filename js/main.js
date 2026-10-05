@@ -10,8 +10,14 @@ window.FB = window.FB || {};
   G.bootReady = false;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-FB.VERSION = '1.189.2';
+FB.VERSION = '1.189.3';
 FB.CHANGELOG = [
+  { v: '1.189.3', date: '2026-10-04', changes: [
+    'Households can move to an existing realm capital when their home is elsewhere. Land distinguishes the capital from the household home.',
+    'Royal character sheets retain court family links and return navigation, and relationship labels identify whose consort or relative is shown.',
+    'Go into town lets you return to the settlement list before choosing an activity and spending the day.',
+    'Ongoing commitments shows national research only for independent rulers who control it.'
+  ] },
   { v: '1.189.2', date: '2026-10-04', changes: [
     'Household office reviews explain unmet requirements and how to replace current holders. Ready recurring deeds can bring you to Deeds, highlight their button and pause time.'
   ] },

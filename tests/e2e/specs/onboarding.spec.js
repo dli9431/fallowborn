@@ -316,6 +316,10 @@ test('a choice-backed deed completes only after its confirmed day',
     })).toEqual({ turn:initialTurn, cooldown:undefined, deed:false });
     await page.locator('[data-action-id="go_to_town"]').click();
     await page.locator('[data-visit]').first().click();
+    expect(await page.evaluate(function () {
+      return { turn:FB.state.turn, deed:!!FB.state.player.flags.tut_deed };
+    })).toEqual({ turn:initialTurn, deed:false });
+    await page.locator('[data-settlement-option]').first().click();
 
     await expect.poll(function () {
       return page.evaluate(function () {
@@ -433,10 +437,11 @@ test('using a highlighted control learns and closes its one-step coachmark',
 
     await page.locator('#tab-actions [data-action-id="go_to_town"]').click();
     await expect(coach).toHaveCount(0);
-    // The deed completes once the player chooses where to spend the day.
+    // The deed completes once the player chooses an activity for the outing.
     await expect(page.getByRole('heading', { name:'Where To?', exact:true }))
       .toBeVisible();
     await page.locator('[data-visit]').first().click();
+    await page.locator('[data-settlement-option]').first().click();
     await expect.poll(function () {
       return page.evaluate(function () {
         return !!FB.state.player.flags.tut_deed;

@@ -321,6 +321,10 @@ the ruler's temporal rank in their own sexed form (for example Duke/Duchess), wh
 count or duke's children use Lord/Lady and royal or imperial children use
 Prince/Princess. These are display-only courtesy styles; they do not alter succession,
 station, or realm rank.
+In the court navigator, relationship labels describe the displayed person's kin
+first. An unrelated consort instead reads **Consort of {ruler}**, and relatives
+without a direct relationship name their kinship to that ruler. Court membership
+never implies that the displayed person is married to the ruler's consort.
 
 **The consort is a succession member with `role: 'consort'`.** One is seeded per
 uncommitted ruler generation, of the opposite sex to the ruler and of a plausible age.
@@ -765,9 +769,9 @@ when a settled county has no resolvable political ruler, so ordinary Land browsi
 neither creates `provChars` nor consumes RNG.
 
 **A count-or-higher protagonist may move the realm seat once per lifetime.**
-`FB.capitalRelocationStatus` accepts only a different county held directly in the
-player's demesne, and blocks a ruler without the required prestige, during personal
-travel, personal war, or active campaign service, or after that character has already
+`FB.capitalRelocationStatus` accepts only a directly held demesne county different
+from the household home, and blocks a ruler without the required prestige, during
+personal travel, personal war, or active campaign service, or after that character has already
 used the choice. `FB.relocatePlayerCapital` revalidates atomically, spends
 `balance.capitalRelocationPrestigeCost`, applies
 `balance.capitalRelocationPopularOpinion`, and applies
@@ -779,6 +783,14 @@ Personal contacts remain intact at their prior residences; only location-scoped 
 and priest roles regenerate at the new household home. Losing the current capital
 instead uses the first surviving directly held county as a free forced fallback, moves
 the household with it, and neither consumes nor resets the lifetime choice.
+
+County investiture preserves the family's old home and barony while establishing
+the realm capital in the granted county. The existing capital remains a valid
+destination when the household lives elsewhere, for any barony/county pair.
+Moving there uses the ordinary costs and capital-relocation lifetime choice;
+the earlier commoner `travelSettlement` choice is separate and does not block it.
+The review and Chronicle describe the household joining its existing capital.
+No ownership, troop entitlement, technology gate or save schema changes.
 
 Realm, ownership, and de jure source data belong to the active start bookmark. The
 867 and 1066 definitions may therefore use different realm ids, liege chains,

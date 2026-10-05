@@ -6,6 +6,7 @@ dependsOnRuntime(__filename, [
   'js/actions.js',
   'js/mapview.js',
   'js/world.js',
+  'js/lordships.js', 'js/travel.js', 'js/save.js', 'js/main.js',
   'js/ui_modals.js',
   'js/ui_panels.js', 'js/ui_misc.js', 'css/style.css'
 ]);
@@ -163,6 +164,217 @@ async function startCapitalRealm(page, testInfo, options) {
     };
   }, options || {});
 }
+
+async function startGrantedCapitalRealm(page, testInfo, places) {
+  await openGame(page, testInfo);
+  await startDeterministicGame(page);
+  return page.evaluate(function (pair) {
+    var s = FB.state;
+    var p = s.player;
+    FB.game.setPaused(true);
+    var grantorId = FB.settlementCountyHolder(s, pair.home);
+    p.tier = 3;
+    p.provinceId = pair.home;
+    p.homeSettlement = 1;
+    p.provs = [];
+    p.liege = grantorId;
+    p.travel = null;
+    p.travelSettlement = { turn:s.turn, destinationId:pair.home };
+    p.capitalRelocation = null;
+    p.prestige = 500;
+    p.landPlots = [{ provinceId:pair.home, settlement:1 }];
+    p.manor = { provinceId:pair.home, settlement:1 };
+    p.panelIntrosSeen = { prov:1 };
+    p.roleOrientationsSeen = { 'role-tier-4':1 };
+    var baronyGranted = FB.assignSettlementLordship(s, pair.home, 1, p.charId);
+    [pair.capital, pair.other].forEach(function (pid) {
+      s.holder[pid] = grantorId;
+      s.owner[pid] = FB.topRealm(s, grantorId);
+    });
+    FB.invalidateSettlementLordships(s);
+    var countyGranted = FB.countyInvestiture(s, pair.capital, grantorId, grantorId);
+    var otherGranted = FB.countyInvestiture(s, pair.other, grantorId, grantorId);
+    FB.map.playerProv = p.provinceId;
+    FB.ui.mapDirty();
+    FB.ui.refresh();
+    return {
+      baronyGranted:baronyGranted,
+      countyGranted:countyGranted,
+      otherGranted:otherGranted,
+      home:p.provinceId,
+      capital:s.realms.player.capital,
+      homeHolder:FB.settlementCountyHolder(s, pair.home),
+      grantorId:grantorId,
+      homeName:FB.world.byId[pair.home].name,
+      capitalName:FB.world.byId[pair.capital].name
+    };
+  }, places);
+}
+
+const grantedCapitalPairs = [
+  { home:'london', capital:'canterbury', other:'rochester' },
+  { home:'paris', capital:'troyes', other:'chalons' }
+];
+
+for (const pair of grantedCapitalPairs) {
+  test('a household in ' + pair.home + ' can join its granted capital in ' + pair.capital,
+    async function ({ page }, testInfo) {
+      var setup = await startGrantedCapitalRealm(page, testInfo, pair);
+      expect(setup.baronyGranted).toBe(true);
+      expect(setup.countyGranted).toBe(true);
+      expect(setup.otherGranted).toBe(true);
+      expect(setup.home).toBe(pair.home);
+      expect(setup.capital).toBe(pair.capital);
+      expect(setup.homeHolder).toBe(setup.grantorId);
+
+      var result = await page.evaluate(function (places) {
+        // Existing split-home saves must be usable without a migration or
+        // clearing the character's earlier commoner settlement choice.
+        FB.save.restore(JSON.parse(FB.save.serialize()));
+        var s = FB.state, p = s.player;
+        function property() {
+          return JSON.stringify([s.owner, s.holder, p.provs, s.buildings,
+            s.settlementLordships.counties[places.home], p.landPlots,
+            p.manor, p.enterprises, p.travelSettlement,
+            FB.directSettlements(s), FB.recruitmentTerritory(s, 'player').counties]);
+        }
+        var before = {
+          home:p.provinceId, capital:s.realms.player.capital, turn:s.turn,
+          prestige:p.prestige, support:FB.countySupportBase(s, places.home),
+          property:property()
+        };
+        var statusBefore = JSON.stringify(s);
+        var status = FB.capitalRelocationStatus(s, places.capital);
+        var readOnly = statusBefore === JSON.stringify(s);
+        var moved = FB.relocatePlayerCapital(s, places.capital);
+        var entry = s.log.find(function (item) {
+          return item.msg && item.msg.key === 'news.world.household_to_capital';
+        });
+        var after = {
+          home:p.provinceId, capital:s.realms.player.capital, turn:s.turn,
+          prestige:p.prestige, support:FB.countySupportBase(s, places.home),
+          property:property()
+        };
+        var locked = FB.capitalRelocationStatus(s, places.other);
+        var repeatedBefore = JSON.stringify(s);
+        var repeated = FB.relocatePlayerCapital(s, places.other);
+        var repeatAtomic = repeatedBefore === JSON.stringify(s);
+        var marker = JSON.parse(JSON.stringify(p.capitalRelocation));
+        FB.save.restore(JSON.parse(FB.save.serialize()));
+        return {
+          before:before, after:after, status:status, readOnly:readOnly,
+          moved:moved, locked:locked, repeated:repeated, repeatAtomic:repeatAtomic,
+          marker:marker, message:entry ? FB.newsText(entry, s, p.charId) : '',
+          restoredMarker:FB.state.player.capitalRelocation,
+          restoredLock:FB.capitalRelocationStatus(FB.state, places.other).ok
+        };
+      }, pair);
+
+      expect(result.before.home).toBe(pair.home);
+      expect(result.before.capital).toBe(pair.capital);
+      expect(result.status.ok).toBe(true);
+      expect(result.status.householdOnly).toBe(true);
+      expect(result.readOnly).toBe(true);
+      expect(result.moved).toBe(true);
+      expect(result.after.home).toBe(pair.capital);
+      expect(result.after.capital).toBe(pair.capital);
+      expect(result.after.turn).toBe(result.before.turn);
+      expect(result.after.prestige).toBe(result.before.prestige - result.status.prestigeCost);
+      expect(result.after.support).toBe(result.before.support + result.status.popularOpinion);
+      expect(result.after.property).toBe(result.before.property);
+      expect(result.message).toContain('from ' + setup.homeName + ' to its existing capital at ' + setup.capitalName);
+      expect(result.locked.reason).toBe('This ruler has already moved the capital once.');
+      expect(result.repeated).toBe(false);
+      expect(result.repeatAtomic).toBe(true);
+      expect(result.marker.fromId).toBe(pair.home);
+      expect(result.marker.destinationId).toBe(pair.capital);
+      expect(result.restoredMarker).toEqual(result.marker);
+      expect(result.restoredLock).toBe(false);
+    });
+
+  test('Land distinguishes home and granted capital for ' + pair.home + ' to ' + pair.capital,
+    async function ({ page }, testInfo) {
+      if (pair.home === 'paris') await page.setViewportSize({ width:390, height:740 });
+      var setup = await startGrantedCapitalRealm(page, testInfo, pair);
+      await waitForUiRefresh(page);
+      await page.evaluate(function (homeId) { FB.ui.selectProvince(homeId); }, pair.home);
+      await expect(page.locator('#tab-prov .panelh').first()).toContainText(setup.homeName + ' ⚑ (home)');
+      await page.evaluate(function (capitalId) { FB.ui.selectProvince(capitalId); }, pair.capital);
+      await expect(page.locator('#tab-prov .panelh').first()).toContainText(setup.capitalName + ' ⚑ (capital)');
+      var move = page.locator('#btn-relocate-capital');
+      await expect(move).toBeEnabled();
+      await expect(move).toContainText('Move household here');
+      await expect(move).toContainText('200 prestige');
+      await move.scrollIntoViewIfNeeded();
+      var beforeCancel = await page.evaluate(function () {
+        return { state:JSON.stringify(FB.state), scroll:document.getElementById('sidebody').scrollTop };
+      });
+      expect(beforeCancel.scroll).toBeGreaterThan(0);
+      await move.click();
+      await expect(page.getByRole('heading', { name:'Move household to ' + setup.capitalName + '?' })).toBeVisible();
+      await expect(page.locator('[data-capital-relocation]')).toContainText('Your capital is already at ' + setup.capitalName);
+      await expect(page.locator('#capital-relocation-confirm')).toContainText('Move the household to ' + setup.capitalName);
+      await expect(page.locator('#capital-relocation-cancel')).toContainText('Keep the household in ' + setup.homeName);
+      await page.locator('#capital-relocation-cancel').click();
+      await expect(page.locator('#genmodal')).toHaveClass(/hidden/);
+      await expect(move).toBeFocused();
+      expect(await page.evaluate(function () { return JSON.stringify(FB.state); })).toBe(beforeCancel.state);
+      await expect.poll(function () {
+        return page.evaluate(function () { return document.getElementById('sidebody').scrollTop; });
+      }).toBe(beforeCancel.scroll);
+      await move.click();
+      await expect(page.locator('#capital-relocation-confirm')).toBeFocused();
+      await page.keyboard.press('Enter');
+      await expect(page.locator('#genmodal')).toHaveClass(/hidden/);
+      await waitForUiRefresh(page);
+      await expect(page.locator('#tab-prov .panelh').first()).toContainText(setup.capitalName + ' ⚑ (capital and home)');
+      await expect(page.locator('#btn-relocate-capital')).toHaveCount(0);
+      await page.evaluate(function (otherId) { FB.ui.selectProvince(otherId); }, pair.other);
+      await expect(page.locator('#btn-relocate-capital')).toBeDisabled();
+      await expect(page.locator('#btn-relocate-capital')).toContainText('This ruler has already moved the capital once.');
+    });
+}
+
+test('joining the existing capital retains ownership, prestige, travel and campaign blockers',
+  async function ({ page }, testInfo) {
+    await startGrantedCapitalRealm(page, testInfo, grantedCapitalPairs[0]);
+    var results = await page.evaluate(function () {
+      var s = FB.state, p = s.player, out = [];
+      function attempt(name, destination) {
+        var before = JSON.stringify(s);
+        var status = FB.capitalRelocationStatus(s, destination || 'canterbury');
+        var moved = FB.relocatePlayerCapital(s, destination || 'canterbury');
+        out.push({ name:name, ok:status.ok, reason:status.reason,
+          moved:moved, unchanged:before === JSON.stringify(s) });
+      }
+      attempt('current-home', 'london');
+      s.holder.canterbury = p.liege;
+      attempt('ownership');
+      s.holder.canterbury = 'player';
+      p.prestige = 199;
+      attempt('prestige');
+      p.prestige = 500;
+      p.travel = { homeId:'london', destinationId:'canterbury', currentId:'london', phase:'outbound' };
+      attempt('travel');
+      p.travel = null;
+      p.flags.on_campaign = 1;
+      attempt('campaign');
+      delete p.flags.on_campaign;
+      p.capitalRelocation = { charId:p.charId, turn:s.turn, fromId:'rochester', destinationId:'london' };
+      attempt('lifetime');
+      return out;
+    });
+    expect(results.map(function (item) { return item.name; })).toEqual([
+      'current-home', 'ownership', 'prestige', 'travel', 'campaign', 'lifetime'
+    ]);
+    expect(results[0].reason).toBe('Your household already lives in this county.');
+    for (const result of results) {
+      expect(result.ok, result.name).toBe(false);
+      expect(result.reason, result.name).not.toBe('This county is already your capital and home.');
+      expect(result.moved, result.name).toBe(false);
+      expect(result.unchanged, result.name).toBe(true);
+    }
+  });
 
 test('valid capital relocation applies exact consequences without moving land or property',
   async function ({ page }, testInfo) {

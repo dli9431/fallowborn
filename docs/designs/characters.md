@@ -60,6 +60,15 @@ parents and siblings relative to the displayed character, deduplicated by id.
 Following a family link opens the same character sheet and preserves parent
 scroll and link focus on Back. Royal courts and local-household sheets retain
 their existing specialized family navigators.
+Royal profiles resolve their court from the character's recorded royal line,
+including when opened through a betrothal or an ordinary character link. Court
+membership, courtesy title and family visibility do not depend on the entry route
+or personal-audience eligibility. Direct profiles retain the originating profile's
+Back navigation; family links within those profiles retain scroll and focus.
+Court-strip relationship labels are relative to the displayed person. An unrelated
+consort is explicitly the named ruler's consort; a court relative without a direct
+kinship label is identified by their relationship to the named ruler or by court
+membership. These are display fallbacks, not new spouse or kinship links.
 
 Succession eligibility text identifies each close relative individually: son or
 daughter, grandson or granddaughter, father or mother, brother or sister,
