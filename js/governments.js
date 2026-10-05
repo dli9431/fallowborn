@@ -120,6 +120,21 @@ window.FB = window.FB || {};
      holder generation. consent.territorial lets a realm's territorial
      rule answer local civic consent; delegated leaves it to an office. */
   var BUILT_IN = {
+    ladder:{
+      roman_civic:{ bands:{
+        2:{ promotion:{ route:'standing', next:3, cost:{ gold:50, prestige:20, piety:0 },
+          paths:[{ roles:['civic'], years:5, wealth:100, prestige:60 }, { office:true, prestige:30 }] } },
+        4:{ succession:'personal' }, 5:{ succession:'personal' },
+        6:{ succession:'personal' }, 7:{ succession:'personal' }
+      } },
+      federate_polity:{ bands:{
+        2:{ succession:'personal', promotion:{ route:'standing', next:3, cost:{ gold:40, prestige:20, piety:0 },
+          paths:[{ roles:['arms'], years:5, prestige:60 }, { office:true, prestige:30 }, { wealth:250, prestige:80 }] } },
+        3:{ succession:'personal' },
+        1:{ promotion:{ route:'standing', next:2, cost:{ gold:20, prestige:10, piety:0 },
+          paths:[{ roles:['arms'], years:2, prestige:20 }, { office:true, prestige:10 }, { wealth:120, prestige:40 }] } }
+      } }
+    },
     succession:{ dynastic:{}, office:{}, acclamation:{} },
     territory:{ fixed:{}, non_territorial:{} },
     consent:{ territorial:{ territorialConsent:true },

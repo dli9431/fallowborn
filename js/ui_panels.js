@@ -1930,6 +1930,13 @@ window.FB = window.FB || {};
   }
 
   function nextStepHint(s) {
+    if (FB.standingProgression(s)) {
+      const q = FB.standingElevationStatus(s);
+      if (!q) return '<div class="progressnote path-hint">' + esc(FB.T('You stand at the summit of the world.')) + '</div>';
+      return '<div class="progressnote path-hint">' + esc(FB.T(
+        'Path: review station recognition in Deeds. Civic means, completed service and effective appointments offer alternative routes; a county needs a living grantor.')) +
+        ' ' + esc(FB.rankElevationCostText(q.cost)) + '</div>';
+    }
     if (FB.station.isSerf(s.player, s)) {
       return '<div class="progressnote path-hint">🧭 ' + esc(FB.T(
         'Path: save {money:gold} to buy freedom outright, or reach +20 Standing with your lord and petition for exact terms.',

@@ -9,7 +9,13 @@
   'use strict';
   var WORLD = 'western_court_476', TRACK = 'federate_track_476';
   function world(s) { return FB.stories.record(s, WORLD); }
-  function track(s) { return FB.stories.record(s, TRACK); }
+  function track(s) {
+    var federate = FB.stories.record(s, TRACK);
+    if (federate) return federate;
+    var civic = FB.stories.record(s, 'curialis_track_476');
+    return civic && civic.phase === 'complete'
+      ? { phase:'complete', role:'outside', result:'declined' } : null;
+  }
   function own(o, key) {
     return !!o && Object.prototype.hasOwnProperty.call(o, key);
   }

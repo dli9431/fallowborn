@@ -78,8 +78,8 @@ FBDATA.lexicons = {
         empress:{ one:'augusta', other:'augustae' }
       },
       rank:{
-        m:['Dependent','Free Citizen','Notable','Estate Holder','Comes','Dux','Rex','Augustus'],
-        f:['Dependent','Free Citizen','Notable','Estate Holder','Comitissa','Ducissa','Regina','Augusta']
+        m:['Dependent','Free Citizen','Curialis','Decurion','Comes','Dux','Rex','Augustus'],
+        f:['Dependent','Free Citizen','Curialis','Decurion','Comitissa','Ducissa','Regina','Augusta']
       },
       labels:{
         career:{
@@ -113,10 +113,17 @@ FBDATA.lexicons = {
   },
 
   governments:{
-    roman_civic:{ terms:{
+    roman_civic:{ rank:{
+      m:['Dependent','Free Citizen','Curialis','Decurion','Comes','Magister militum','Patrician','Augustus'],
+      f:['Dependent','Free Citizen','Curialis','Decurion','Comitissa','Magistra militum','Patrician','Augusta']
+    }, terms:{
       duchy:{ one:'province', other:'provinces' },
       kingdom:{ one:'diocese', other:'dioceses' },
       empire:{ one:'prefecture', other:'prefectures' }
+    } },
+    federate_polity:{ rank:{
+      m:['Dependent','Free Citizen','Host Notable','Veteran','Comes','Dux','Rex','Augustus'],
+      f:['Dependent','Free Citizen','Host Notable','Veteran','Comitissa','Ducissa','Regina','Augusta']
     } },
     regnum:{ terms:{ kingdom:{ one:'kingdom', other:'kingdoms' } } }
   },
@@ -126,8 +133,8 @@ FBDATA.lexicons = {
        ladder to keep it ahead of the pagan entry. */
     germanic_pagan:{
       rank:{
-        m:['Dependent','Free Citizen','Notable','Estate Holder','Comes','Dux','Rex','Augustus'],
-        f:['Dependent','Free Citizen','Notable','Estate Holder','Comitissa','Ducissa','Regina','Augusta']
+        m:['Dependent','Free Citizen','Curialis','Decurion','Comes','Dux','Rex','Augustus'],
+        f:['Dependent','Free Citizen','Curialis','Decurion','Comitissa','Ducissa','Regina','Augusta']
       }
     },
     muslim:{

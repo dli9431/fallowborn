@@ -27,7 +27,8 @@ const { startDeterministicGame } = require('../support/game/start');
 const SHIPPED_ROLES = {
   farmer:'labor', craftsman:'craft', merchant:'trading', civic_clerk:'civic',
   administration:'learned', physician:'learned', scholar:'learned',
-  soldier:'arms', monk:'cloister', priest:'clergy', noble:'noble'
+  soldier:'arms', monk:'cloister', priest:'clergy', noble:'noble',
+  colonus:'labor', curialis:'civic', decurion:'civic'
 };
 const ROLE_DEFAULTS = {
   clergy:'priest', cloister:'monk', labor:'farmer', craft:'craftsman',

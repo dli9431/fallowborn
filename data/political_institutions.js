@@ -49,10 +49,10 @@ FBDATA.governmentForms = {
     territory:'fixed', consent:'territorial', systems:{ disable:['feudal_service'] } },
   roman_civic:{ legalTradition:{ default:'faith', cultures:{ greek:'byzantine' },
     realms:{ byzantium:'byzantine', byzantium_1066:'byzantine' } }, holders:'direct', succession:'office',
-    territory:'fixed', consent:'delegated', systems:{ disable:['feudal_service'] } },
+    territory:'fixed', consent:'delegated', ladder:'roman_civic', systems:{ disable:['feudal_service'] } },
   federate_polity:{ legalTradition:{ default:'faith', cultures:{ greek:'byzantine' },
     realms:{ byzantium:'byzantine', byzantium_1066:'byzantine' } }, holders:'direct', succession:'acclamation',
-    territory:'non_territorial', consent:'delegated', systems:{ disable:['feudal_service'] } }
+    territory:'non_territorial', consent:'delegated', ladder:'federate_polity', systems:{ disable:['feudal_service'] } }
 };
 
 /* Great offices are stable save ids. Added seats receive the Council's

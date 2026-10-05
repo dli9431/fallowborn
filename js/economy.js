@@ -5388,6 +5388,10 @@ window.FB = window.FB || {};
         }
       }
     }
+    for (const member of FB.householdWorkers(state)) {
+      if (member.id !== state.player.charId && FB.standingProgression(state, member))
+        FB.advanceNPCStanding(state, member);
+    }
     FB.syncPlayerCareer(state);
   };
 

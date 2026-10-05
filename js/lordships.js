@@ -387,7 +387,7 @@ window.FB = window.FB || {};
     return FB.station.isBaron(state.player, state) && FB.directSettlements(state).length > 0;
   };
   FB.countyGrantCandidates = function (state) {
-    if (!FB.landedBaron(state)) return [];
+    if (!FB.landedBaron(state) && !FB.station.maySeekCounty(state.player, state)) return [];
     const home = FB.settlementCountyHolder(state, state.player.provinceId);
     const count = state.realms[home], out = [], seen = {};
     let rid = count && FB.realmRank.isDucal(count, state) ? home : count && count.liege;
@@ -611,6 +611,7 @@ window.FB = window.FB || {};
     let reason = '';
     if (!root || root.foundingVersion !== 1) reason = FB.T('Settlement founding is unavailable in this save.');
     else if (active) reason = FB.T('Your household already has a funded settlement project.');
+    else if (FB.station.usesStanding(p, state) && !FB.station.holdsCounty(p, state)) reason = FB.T('Civic standing uses station recognition. A settlement charter requires a county you directly govern.');
     else if (reserved && reserved.status === 'building') reason = FB.T('A charter already reserves this county for founding.');
     else if (!FB.station.isGentry(p, state) && !(FB.station.holdsCounty(p, state) && rid === 'player')) reason = FB.T('Found as Gentry in your home county, or in a county you directly rule.');
     else if (FB.station.isGentry(p, state) && !FB.gentryEstablished(state)) reason = FB.T('An heir of a later generation must inherit your Gentry standing before the household can fund a barony charter.');

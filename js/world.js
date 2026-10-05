@@ -5816,6 +5816,8 @@ window.FB = window.FB || {};
 
   FB.checkCrownRecognition = function (state, rid) {
     const r = state.realms[rid];
+    if (r && FB.station.usesStanding({ tier:FB.realmRank.tier(r, state),
+      formId:FB.station.context(r, state).formId }, state)) return false;
     const kid = FB.realmKingdomClaim(state, rid);
     if (!kid) return false;
     const terr = FB.realmTerritory(state, rid);
@@ -5895,6 +5897,8 @@ window.FB = window.FB || {};
   FB.realmMayAssumeDuchy = function (state, rid) {
     const r = state.realms[rid];
     if (!r || !r.alive || rid === 'player' || !FB.realmRank.isCounty(r, state)) return false;
+    if (FB.station.usesStanding({ tier:FB.realmRank.tier(r, state),
+      formId:FB.station.context(r, state).formId }, state)) return false;
     if (!r.liege) return true;
     const liege = state.realms[r.liege];
     return !!(liege && liege.alive && FB.realmRank.isRoyal(liege, state));
@@ -7225,6 +7229,7 @@ window.FB = window.FB || {};
       if (FB.ensureWars) FB.ensureWars(state);
       FB.ensureDynasticState(state, { yearly:true });
       FB.checkAllCrownRecognition(state);
+      if (FB.realmStandingYearly) FB.realmStandingYearly(state);
       if (timing) { timing.leave(phase); phase = timing.enter('World annual phase: fortifications and population'); }
       if (FB.fortAIYear) FB.fortAIYear(state);
       if (FB.populationYear) FB.populationYear(state);
@@ -9914,6 +9919,13 @@ window.FB = window.FB || {};
     if (!FB.station.rulesRealm(p, state)) {
       FB.setPlayerTier(state, 4, { attachLiege:false });
       FB.foundPlayerRealm(state);
+    }
+    /* Period offices and acclamations are not de jure feudal dignities.
+       Authority handles mandate lapse; ordinary county loss handles land. */
+    if (FB.station.usesStanding(p, state)) {
+      if (p.titleLapse) delete p.titleLapse;
+      if (FB.syncPlayerCareer) FB.syncPlayerCareer(state);
+      return;
     }
     /* Only the crown can recognize a duke: a sworn vassal whose living liege is
        not at least a king keeps the land but waits for the style — the duchy
