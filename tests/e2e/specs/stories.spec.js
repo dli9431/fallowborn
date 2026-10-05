@@ -1,7 +1,7 @@
 'use strict';
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
-  'index.html', 'js/stories.js', 'js/story_campaign.js', 'js/story_476_rails.js',
+  'index.html', 'js/starts.js', 'js/story_nepos_track_476.js', 'js/stories.js', 'js/story_campaign.js', 'js/story_476_rails.js',
   'data/story_campaigns.js', 'js/story_western_court_476.js',
   'js/story_federate_track_476.js', 'js/main.js', 'js/save.js', 'js/save_v4.js',
   'js/i18n.js', 'js/ui_panels.js', 'js/world.js',
@@ -77,13 +77,13 @@ test('stories register in order at load time only and resolve by id',
       };
     });
     expect(result.order).toEqual(WORLD_STORIES.map(function (id) { return id + ':world'; })
-      .concat(['federate_track_476:track','curialis_track_476:track']));
+      .concat(['federate_track_476:track','curialis_track_476:track','nepos_track_476:track']));
     expect(result.world).toBe(true);
     expect(result.unknown).toBeNull();
     expect(result.late).toContain('load time only');
     expect(result.registered).toBe(false);
     expect(result.bookmark).toEqual(WORLD_STORIES);
-    expect(result.tracks).toEqual(['federate_476:federate_track_476','curialis_476:curialis_track_476']);
+    expect(result.tracks).toEqual(['nepos_476:nepos_track_476','federate_476:federate_track_476','curialis_476:curialis_track_476']);
   });
 
 test('a branch save holding state.situation476 migrates once into both story records',

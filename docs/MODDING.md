@@ -592,6 +592,12 @@ retain their original tiers because old-life progression repair derives the star
 station from the saved start code. Other fields may be replaced. Same-mod career,
 holding, item, and item-pool additions resolve before mutation.
 
+Existing-ruler scenario fields
+
+hidden is an optional boolean; true excludes a scenario from the picker, start codes and direct creation. rulerRealmId identifies an existing named realm in every offered bookmark. It requires bookmarkIds, fixedProvinceId, governmentForm, characterName, sex, startCulture, startReligion, onboarding: ruler, and familyPresets containing only standard. The identity and government must match the authored bookmark court. A ruler scenario's tier may span the registered station bands; ordinary scenarios remain 0-3. characterName must fit the existing 20-character start-code limit.
+
+The standard family label describes the existing seeded court household. Adoption reuses its ruler and relatives, treasury, government, direct holdings, authority and hosts; it creates no second named ruler. It removes the source realm key in favor of player and saves the original in state.start.rulerRealmId together with scenarioId and onboarding. These fields are validated on load; already-created review saves remain valid when their definitions are hidden. Optional tracks still name registered executable player tracks. Runtime JSON cannot supply their implementations.
+
 A family preset is presentation plus one supported household shape:
 
 ```json

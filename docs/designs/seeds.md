@@ -138,3 +138,7 @@ Codes reproduce only on the same game version and mod set: any change to `FBDATA
 (realms, cultures, traits, balance) or to generation code shifts the draws. `state.seed`
 rides along in saves automatically; saves from before 1.19.0 have no seed and the menu
 simply hides the row.
+
+Fixed ruler identities
+
+Existing-ruler scenario codes use the normal bookmark, scenario, county, sex, name and optional standard-family/settlement/community fields. They require the authored name and sex, fixed county and settlement slot zero. An omitted community defaults to the scenario's authored ruler community, which may differ from the county's principal community. An explicit community must match that identity. Hidden definitions reject codes before any new campaign is created. Ordinary codes retain their existing defaults and generation order.

@@ -21,7 +21,8 @@
     return { phase:'pending', result:null, reason:null, startedTurn:null,
       outcomeTurn:null, deadline:null, actorId:null, actorGeneration:null,
       targetOwnerId:null, patronGeneration:null, warId:null, migrationId:null,
-      commissionId:null, contractId:null, settlementApplied:false };
+      commissionId:null, contractId:null, settlementApplied:false,
+      playerDecision:null, playerDecisionGeneration:null };
   }
   function closed(s, def) {
     return s.date.year > def.lastYear || s.date.year === def.lastYear &&
@@ -200,6 +201,8 @@
     var check = conditions(s, def);
     if (check.result) { finish(s, rec, def, check.result, check.reason); return; }
     if (!check.allowed || FB.isRealmAtWar(s, rid) || FB.isRealmAtWar(s, s.owner[county])) return;
+    if (playerParty(s, def) && (rec.playerDecision !== 'campaign' ||
+        rec.playerDecisionGeneration !== FB.realmRulerGeneration(s, 'player'))) return;
     if (!commission(s, rec, def)) return;
     if (rec.startedTurn === null) stamp(s, rec, def);
     if (def.migrationId) { migration(s, rec, def); return; }
@@ -208,6 +211,24 @@
       objectives:[{ target:county, type:'border' }] });
     if (!war) return;
     rec.warId = war.id; rec.phase = 'started'; notice(s, def, 'started');
+  }
+  function playerParty(s, def) {
+    return def.actor.realmId === 'player' || s.owner[def.target.provinceId] === 'player' ||
+      def.commission && def.commission.issuerRealmId === 'player';
+  }
+  function playerQuote(s, rec, authored, id) {
+    var def = FB.startRealmDefinition(s, authored), check = conditions(s, def);
+    var facts = { phase:rec.phase, decision:rec.playerDecision || null, turn:s.turn,
+      year:s.date.year, generation:FB.realmRulerGeneration(s, 'player'),
+      actor:ruler(s, def.actor.realmId), target:s.owner[def.target.provinceId],
+      actorGeneration:FB.realmRulerGeneration(s, def.actor.realmId),
+      patronGeneration:def.commission && FB.realmRulerGeneration(s, def.commission.issuerRealmId),
+      check:check, gold:s.player.gold, owner:s.owner[def.target.provinceId],
+      wars:[FB.isRealmAtWar(s, def.actor.realmId), FB.isRealmAtWar(s, s.owner[def.target.provinceId])] };
+    return { id:id, allowed:!!(playerParty(s, def) && rec.phase === 'pending' &&
+      !rec.playerDecision && !s.player.dead && s.date.year >= def.firstYear && !closed(s, def) &&
+      (id === 'leave_campaign' || id === 'face_campaign' && check.allowed && !facts.wars[0] && !facts.wars[1])),
+      reason:'campaign_conditions', facts:facts, stamp:JSON.stringify(facts) };
   }
   function validate(rec, id) {
     function bad(field) { throw new Error(FB.T('Invalid v4 save field at {path}.',
@@ -218,6 +239,9 @@
       if (rec[key] !== null && (!Number.isInteger(rec[key]) || rec[key] < 0)) bad(key);
     for (var field of ['reason','actorId','targetOwnerId','warId','migrationId','commissionId','contractId'])
       if (rec[field] !== null && (typeof rec[field] !== 'string' || !rec[field])) bad(field);
+    if (rec.playerDecision !== undefined && [null,'campaign','declined'].indexOf(rec.playerDecision) < 0) bad('playerDecision');
+    if (rec.playerDecisionGeneration !== undefined && rec.playerDecisionGeneration !== null &&
+        (!Number.isInteger(rec.playerDecisionGeneration) || rec.playerDecisionGeneration < 0)) bad('playerDecisionGeneration');
     if (typeof rec.settlementApplied !== 'boolean') bad('settlementApplied');
     if (rec.phase === 'resolved' && rec.outcomeTurn === null ||
         rec.phase !== 'resolved' && rec.outcomeTurn !== null) bad('outcomeTurn');
@@ -275,13 +299,35 @@
       var msg = def.news[event]; FB.registerMessage(msg.key, { text:msg.text });
     }
     return { id:def.id, kind:'world', requires:def.requires || [], init:fresh,
-      day:function (s, rec) { day(s, rec, def); },
+      day:function (s, rec) { day(s, rec, FB.startRealmDefinition(s, def)); },
+      choices:function (s, rec) {
+        var effective = FB.startRealmDefinition(s, def);
+        if (!playerParty(s, effective) || rec.phase !== 'pending' || rec.playerDecision ||
+            s.date.year < def.firstYear || closed(s, def)) return [];
+        return [
+          { id:'face_campaign', label:FB.T('Face the campaign'), detail:FB.T('Authorize this political opportunity to proceed through ordinary war and its existing conditions. No territory is awarded by this decision.') },
+          { id:'leave_campaign', label:FB.T('Use ordinary diplomacy instead'), detail:FB.T('Close this historical opportunity without a declaration, commission or payment. Neighboring courts retain their ordinary political choices.') }
+        ];
+      },
+      quote:function (s, rec, id) { return playerQuote(s, rec, def, id); },
+      blocker:function () { return FB.T('The campaign needs its living rulers, current territory, date window and peaceful courts. Review the opportunity again when those conditions hold.'); },
+      apply:function (s, rec, id, reviewed) {
+        var q = playerQuote(s, rec, def, id);
+        if (!q.allowed || !reviewed || reviewed.id !== id || reviewed.stamp !== q.stamp) return false;
+        rec.playerDecision = id === 'face_campaign' ? 'campaign' : 'declined';
+        rec.playerDecisionGeneration = FB.realmRulerGeneration(s, 'player');
+        var effective = FB.startRealmDefinition(s, def);
+        if (id === 'leave_campaign') finish(s, rec, effective, 'diverted', 'player_declined');
+        else day(s, rec, effective);
+        return true;
+      },
       validate:function (rec) { validate(rec, def.id); },
       title:function (s) { return FB.dataText(s, null, 'storyCampaign', def.id, def, 'name', {}); },
       intro:function (s) { return FB.dataText(s, null, 'storyCampaign', def.id, def, 'desc', {}); },
       status:function (s, rec) {
         if (rec.phase === 'pending' && s.date.year < def.firstYear) return null;
-        var names = { pending:FB.T('Awaiting the courts'), negotiating:FB.T('Commission and service terms'),
+        var names = { pending:playerParty(s, FB.startRealmDefinition(s, def)) && !rec.playerDecision
+            ? FB.T('Awaiting your decision') : FB.T('Awaiting the courts'), negotiating:FB.T('Commission and service terms'),
           started:FB.T('Campaign underway'), won:FB.T('Objective secured'), failed:FB.T('Campaign ended'),
           diverted:FB.T('History took another course'), interrupted:FB.T('Political opportunity interrupted') };
         return { phase:rec.phase, name:names[rec.result || rec.phase],

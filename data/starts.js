@@ -6,6 +6,9 @@
      bookmarkIds, eras: where it is offered (both optional; eras match the
        bookmark's era)
      alwaysUnlocked: skips the starting-rank progression lock
+     hidden: rejects picker, start-code and direct creation until accepted
+     rulerRealmId, governmentForm, characterName: adopt a fixed existing court
+     onboarding: selects the ruler checklist for an existing-ruler opening
      familyPresets: the allowed family shapes in picker order, each with
        optional authored name and diff labels; the first is the default
      tracks: player-track stories attached at creation (js/stories.js)
@@ -16,6 +19,34 @@ window.FBDATA = window.FBDATA || {};
   'use strict';
 
   FBDATA.startScenarios = [
+    /* Candidates remain hidden until the owner accepts each opening. */
+    { id:'nepos_476', bookmarkIds:['476'], hidden:true, alwaysUnlocked:true,
+      rulerRealmId:'croatia', governmentForm:'roman_civic', fixedProvinceId:'split',
+      characterName:'Julius Nepos', sex:'m', startCulture:'roman', startReligion:'nicene',
+      name:'Julius Nepos at Salona',
+      desc:'Hold Dalmatia while maintaining a contested western imperial claim. Seek recognition without confusing a mandate with possession of Italy.',
+      tier:6, profession:'noble', gold:120, prestige:180, piety:20,
+      familyPresets:{ standard:{ name:'Dalmatian court household', diff:'age 46 - existing court family', desc:'Keep the court’s seeded family. Unattested relatives are generated campaign characters.' } },
+      tracks:['nepos_track_476'], onboarding:'ruler',
+      intro:'You are Julius Nepos at Salona. Dalmatia is in your hands; Italy is not. Your western imperial claim survives alongside Romulus’s office at Ravenna. Review Offices & Legitimacy and the western claim story in Deeds, then decide whether to pursue recognition, restoration through an ordinary campaign, or Dalmatian rule.' },
+    { id:'odoacer_476', bookmarkIds:['476'], hidden:true, alwaysUnlocked:true,
+      rulerRealmId:'federates_476', governmentForm:'federate_polity', fixedProvinceId:'pavia',
+      characterName:'Odoacer', sex:'m', startCulture:'gothic', startReligion:'homoian',
+      name:'Odoacer and the federate host',
+      desc:'Lead an existing host near Ticinum without county ownership. Review paid service or contest Ravenna; civic recognition and territorial rule remain separate.',
+      tier:4, profession:'soldier', gold:0, prestige:120, piety:0,
+      familyPresets:{ standard:{ name:'Federate court household', diff:'age 43 - existing court family', desc:'Keep the host court’s seeded family. Unattested relatives are generated campaign characters.' } },
+      onboarding:'ruler',
+      intro:'You are Odoacer with the federate host near Ticinum. You command its existing soldiers, but hold no county. Open the western court story in Deeds to review paid service or an ordinary campaign for Ravenna. Contracts require both courts’ consent; victory alone supplies neither civic acceptance nor an imperial office. The map’s army controls command your host.' },
+    { id:'syagrius_476', bookmarkIds:['476'], hidden:true, alwaysUnlocked:true,
+      rulerRealmId:'west_francia', governmentForm:'roman_civic', fixedProvinceId:'laon',
+      characterName:'Syagrius', sex:'m', startCulture:'roman', startReligion:'nicene',
+      name:'Syagrius at Soissons',
+      desc:'Govern the northern Gallic Roman domain between Frankish and Gothic courts. Keep local support and decide how to meet a living Frankish challenge.',
+      tier:6, profession:'noble', gold:120, prestige:150, piety:10,
+      familyPresets:{ standard:{ name:'Gallic court household', diff:'age 46 - existing court family', desc:'Keep the court’s seeded family. Unattested relatives are generated campaign characters.' } },
+      onboarding:'ruler',
+      intro:'You are Syagrius at Soissons. Your Roman domain has its own treasury and resident communities. Review Governance and Offices & Legitimacy in Deeds, manage your actual territory and prepare for neighboring courts. If Clovis inherits and challenges your domain, the story offers a decision; no historical date hands over your land.' },
     { id:'federate_476', bookmarkIds:['476'], fixedProvinceId:'ravenna',
       alwaysUnlocked:true,
       name:'Federate Soldier',

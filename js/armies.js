@@ -4574,6 +4574,8 @@ window.FB = window.FB || {};
       for (let i = state.armies.length - 1; i >= 0; i--) {
         const a = state.armies[i];
         if (a.realm === 'player') {
+          if (FB.scenarioHostStanding(state, a) ||
+              FB.federateHostStanding && FB.federateHostStanding(state, a)) continue;
           if (!p.war && !playerGhwHost && !warring.player) {
             disband(state, a);
             FB.news(state, FB.msg('news.army.disbands',

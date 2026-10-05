@@ -7,7 +7,7 @@
    army and lordship transactions directly. */
 (function () {
   'use strict';
-  var WORLD = 'western_court_476', TRACK = 'federate_track_476';
+  var WORLD = 'western_court_476', TRACK = 'federate_track_476', R = FB.startRealmId;
   function world(s) { return FB.stories.record(s, WORLD); }
   function track(s) {
     var federate = FB.stories.record(s, TRACK);
@@ -30,7 +30,8 @@
   }
   function alive(s, id) { return !!(id && s.chars[id] && !s.chars[id].dead); }
   function ruler(s, rid) {
-    return FB.realmRulerCharacterSnapshot(s, rid) || FB.materializeRealmRuler(s, rid);
+    return rid === 'player' ? s.chars[s.player.charId] :
+      FB.realmRulerCharacterSnapshot(s, rid) || FB.materializeRealmRuler(s, rid);
   }
   function recognize(s, source, issuer, subject, at) {
     return FB.authorityRecognize(s, { source:source, issuer:issuer,
@@ -66,8 +67,8 @@
     return c;
   }
   function init(s) {
-    var west = ruler(s, 'italy'), east = ruler(s, 'byzantium');
-    var nepos = ruler(s, 'croatia'), odoacer = ruler(s, 'federates_476');
+    var west = ruler(s, R(s, 'italy')), east = ruler(s, R(s, 'byzantium'));
+    var nepos = ruler(s, R(s, 'croatia')), odoacer = ruler(s, R(s, 'federates_476'));
     if (!west || !east || !nepos || !odoacer) return null;
     var w = {
       courtAt:'ravenna', courtMove:null,
@@ -146,20 +147,20 @@
     w.clovisId = clovis.id;
     w.gundobadId = gundobad.id;
     w.godegiselId = godegisel.id;
-    w.syagriusId = ruler(s, 'west_francia').id;
-    w.theodericId = ruler(s, 'pannonia').id;
+    w.syagriusId = ruler(s, R(s, 'west_francia')).id;
+    w.theodericId = ruler(s, R(s, 'pannonia')).id;
     w.childericId = childeric && childeric.id;
-    var italianHost = { id:'host_476_italy', realm:'italy',
+    var italianHost = { id:'host_476_italy', realm:R(s, 'italy'),
       at:'ravenna', from:'ravenna', men:180, size:180,
       units:{ levy:130, ret:50 }, supply:100, warId:null,
       path:[], goal:null, moveLeft:0,
       scenarioStanding:true, scenarioEndTurn:361 };
-    var federateHost = { id:'host_476_federates', realm:'federates_476',
+    var federateHost = { id:'host_476_federates', realm:R(s, 'federates_476'),
       at:'pavia', from:'pavia', men:120, size:120,
       units:{ levy:70, ret:50 }, supply:100, warId:null,
       path:[], goal:null, moveLeft:0,
       scenarioStanding:true, scenarioEndTurn:361 };
-    var amalHost = { id:'host_476_amal', realm:'pannonia',
+    var amalHost = { id:'host_476_amal', realm:R(s, 'pannonia'),
       at:'thessaloniki', from:'thessaloniki', men:160, size:160,
       units:{ levy:100, ret:60 }, supply:100, warId:null,
       path:[], goal:null, moveLeft:0,
@@ -176,40 +177,40 @@
     }
     s.religiousHeads.rome_bishop = bishop.id;
     s.religiousHeads.ravenna_homoian_bishop = homoianBishop.id;
-    var westClaim = recognize(s, 'dynastic_succession', actor('italy'), person(west.id));
-    var eastClaim = recognize(s, 'dynastic_succession', actor('byzantium'), person(east.id));
-    recognize(s, 'dynastic_succession', actor('croatia'), person(nepos.id));
-    var westOffice = appointment(s, 'imperial_office', 'italy',
-      person(west.id), actor('italy'), westClaim && westClaim.id);
-    var eastOffice = appointment(s, 'imperial_office', 'byzantium',
-      person(east.id), actor('byzantium'), eastClaim && eastClaim.id);
+    var westClaim = recognize(s, 'dynastic_succession', actor(R(s, 'italy')), person(west.id));
+    var eastClaim = recognize(s, 'dynastic_succession', actor(R(s, 'byzantium')), person(east.id));
+    recognize(s, 'dynastic_succession', actor(R(s, 'croatia')), person(nepos.id));
+    var westOffice = appointment(s, 'imperial_office', R(s, 'italy'),
+      person(west.id), actor(R(s, 'italy')), westClaim && westClaim.id);
+    var eastOffice = appointment(s, 'imperial_office', R(s, 'byzantium'),
+      person(east.id), actor(R(s, 'byzantium')), eastClaim && eastClaim.id);
     /* Living rival claims remain visible independently of the household's
        opening. Recognition never replaces the current territorial ruler. */
-    var neposClaim = recognize(s, 'imperial_commission', actor('byzantium'),
-      person(nepos.id), actor('italy'));
-    var zenoClaim = recognize(s, 'dynastic_succession', actor('byzantium'),
-      person(zeno.id), actor('byzantium'));
-    FB.authorityAppoint(s, { officeId:'imperial_office', institutionId:'italy',
-      appointer:actor('italy'), holder:person(nepos.id), scope:actor('italy'),
+    var neposClaim = recognize(s, 'imperial_commission', actor(R(s, 'byzantium')),
+      person(nepos.id), actor(R(s, 'italy')));
+    var zenoClaim = recognize(s, 'dynastic_succession', actor(R(s, 'byzantium')),
+      person(zeno.id), actor(R(s, 'byzantium')));
+    FB.authorityAppoint(s, { officeId:'imperial_office', institutionId:R(s, 'italy'),
+      appointer:actor(R(s, 'italy')), holder:person(nepos.id), scope:actor(R(s, 'italy')),
       recognitionId:neposClaim && neposClaim.id, contested:true });
-    FB.authorityAppoint(s, { officeId:'imperial_office', institutionId:'byzantium',
-      appointer:actor('byzantium'), holder:person(zeno.id), scope:actor('byzantium'),
+    FB.authorityAppoint(s, { officeId:'imperial_office', institutionId:R(s, 'byzantium'),
+      appointer:actor(R(s, 'byzantium')), holder:person(zeno.id), scope:actor(R(s, 'byzantium')),
       recognitionId:zenoClaim && zenoClaim.id, contested:true });
-    appointment(s, 'patricius', 'italy', person(orestes.id), actor('italy'));
-    appointment(s, 'magister_militum', 'italy', person(orestes.id),
+    appointment(s, 'patricius', R(s, 'italy'), person(orestes.id), actor(R(s, 'italy')));
+    appointment(s, 'magister_militum', R(s, 'italy'), person(orestes.id),
       { kind:'host', id:italianHost.id });
-    var military = appointment(s, 'field_command', 'italy',
+    var military = appointment(s, 'field_command', R(s, 'italy'),
       person(orestes.id), { kind:'host', id:italianHost.id }, null, 361);
     var civicProof = recognize(s, 'civic_acceptance',
       { kind:'county', id:'ravenna' }, person(delegate.id),
       { kind:'county', id:'ravenna' });
-    var civicOffice = appointment(s, 'civic_delegate', 'italy',
+    var civicOffice = appointment(s, 'civic_delegate', R(s, 'italy'),
       person(delegate.id), { kind:'county', id:'ravenna' },
       civicProof && civicProof.id);
     var senateProof = recognize(s, 'civic_acceptance',
       { kind:'county', id:'roma' }, person(senator.id),
       { kind:'county', id:'roma' });
-    var senateOffice = appointment(s, 'civic_delegate', 'italy',
+    var senateOffice = appointment(s, 'civic_delegate', R(s, 'italy'),
       person(senator.id), { kind:'county', id:'roma' },
       senateProof && senateProof.id);
     w.westOfficeId = westOffice && westOffice.id;
@@ -219,15 +220,15 @@
     w.civicProofId = civicProof && civicProof.id;
     w.senateProofId = senateProof && senateProof.id;
     w.senateOfficeId = senateOffice && senateOffice.id;
-    if (s.realms.italy.treasury) s.realms.italy.treasury.gold = 120;
-    if (s.realms.federates_476.treasury) s.realms.federates_476.treasury.gold = 0;
+    if (s.realms[R(s, 'italy')].treasury) s.realms[R(s, 'italy')].treasury.gold = 120;
+    if (s.realms[R(s, 'federates_476')].treasury) s.realms[R(s, 'federates_476')].treasury.gold = 0;
     restoreInstitutions(s, w);
     FB.news(s, FB.msg('news.476.opening',
       '🏛 The western court sits at Ravenna. Its federate soldiers seek a spokesman for their arrears.', {}));
     return w;
   }
   function serviceTerms(s, w) {
-    return { patronRealmId:'italy', federateRealmId:'federates_476',
+    return { patronRealmId:R(s, 'italy'), federateRealmId:R(s, 'federates_476'),
       hostId:'host_476_federates', payPerSeason:10, endTurn:s.turn + 361,
       settlementAwards:[{ provinceId:'ravenna', settlement:1,
         recipientId:w.veteranId }] };
@@ -239,17 +240,17 @@
   }
   function hasChurchSupport(s, deal) {
     return !!(deal && deal.churchRecognitionId &&
-      FB.political.legitimacy(s, actor('federates_476'),
+      FB.political.legitimacy(s, actor(R(s, 'federates_476')),
         { kind:'county', id:'ravenna' }, 'church_support').some(function (row) {
           return row.id === deal.churchRecognitionId;
         }));
   }
   function hasCivicConsent(s, deal) {
     var institution = s.localInstitutions && s.localInstitutions.ravenna_council;
-    if (institution && institution.petitions['realm:federates_476'])
-      return FB.localInstitutionConsent(s, 'ravenna_council', actor('federates_476'));
+    if (institution && institution.petitions['realm:' + R(s, 'federates_476')])
+      return FB.localInstitutionConsent(s, 'ravenna_council', actor(R(s, 'federates_476')));
     return !!(deal && deal.civicRecognitionId &&
-      FB.political.legitimacy(s, actor('federates_476'),
+      FB.political.legitimacy(s, actor(R(s, 'federates_476')),
         { kind:'county', id:'ravenna' }, 'civic_acceptance').some(function (row) {
           return row.id === deal.civicRecognitionId;
         }));
@@ -268,7 +269,7 @@
       ravenna_homoian_see:w.homoianBishopId });
   }
   function civicSettlement(s, deal) {
-    return FB.localInstitutionSettle(s, 'ravenna_council', actor('federates_476'),
+    return FB.localInstitutionSettle(s, 'ravenna_council', actor(R(s, 'federates_476')),
       { courts:true, protection:true, tolerance:true, contractId:deal.contractId });
   }
   function civicPermission(s, w) {
@@ -280,6 +281,7 @@
     FB.news(s, FB.msg(key, fallback, params || {}));
   }
   function aiSettlement476(s, w, t) {
+    if (R(s, 'italy') === 'player' || R(s, 'federates_476') === 'player') return;
     if (!t && FB.stories.record(s, 'curialis_track_476')) return;
     if (t && t.result !== 'declined' || s.turn < 90 ||
         w.aiResolution === 'negotiated' ||
@@ -287,9 +289,9 @@
         w.aiResolution === 'failed' ||
         w.aiResolution === 'diverged') return;
     if (w.aiResolution === 'war') {
-      if (s.owner.ravenna === 'federates_476') {
-        s.realms.federates_476.nonTerritorial = false;
-        s.realms.federates_476.capital = 'ravenna';
+      if (s.owner.ravenna === R(s, 'federates_476')) {
+        s.realms[R(s, 'federates_476')].nonTerritorial = false;
+        s.realms[R(s, 'federates_476')].capital = 'ravenna';
         if (w.westOfficeId) FB.authorityAppointmentTransition(
           s, w.westOfficeId, 'remove');
         w.romulusDeposed = true;
@@ -300,9 +302,9 @@
             FB.countyReligionShare(s, 'ravenna', 'nicene') >= 0.5) {
           var support = recognize(s, 'church_support',
             { kind:'religious-office', id:'rome_bishop' },
-            actor('federates_476'), { kind:'county', id:'ravenna' });
-          if (support && cityRights(s, w, 'federates_476')) {
-            FB.authoritySetGovernment(s, 'federates_476', 'roman_civic');
+            actor(R(s, 'federates_476')), { kind:'county', id:'ravenna' });
+          if (support && cityRights(s, w, R(s, 'federates_476'))) {
+            FB.authoritySetGovernment(s, R(s, 'federates_476'), 'roman_civic');
             w.governanceResolved = 'civic';
           }
         }
@@ -314,8 +316,8 @@
       }
       return;
     }
-    if (s.owner.ravenna !== 'italy' || !alive(s, w.odoacerId) ||
-        !s.realms.federates_476.alive) {
+    if (s.owner.ravenna !== R(s, 'italy') || !alive(s, w.odoacerId) ||
+        !s.realms[R(s, 'federates_476')].alive) {
       w.aiResolution = 'diverged'; return;
     }
     var terms = serviceTerms(s, w);
@@ -324,19 +326,19 @@
       s.religiousHeads.rome_bishop === w.bishopId &&
       civicPermission(s, w) &&
       FB.countyReligionShare(s, 'ravenna', 'nicene') >= 0.5 &&
-      FB.treasuryAvailable(s, 'italy') >= 30 &&
+      FB.treasuryAvailable(s, R(s, 'italy')) >= 30 &&
       FB.political.contractQuote(s, terms).allowed;
     if (canAgree) {
       var contract = FB.authorityOfferContract(s, terms);
-      if (contract && FB.authorityConsentContract(s, contract.id, 'italy') &&
-          FB.authorityConsentContract(s, contract.id, 'federates_476') &&
-          FB.treasuryTransfer(s, 'italy', 'federates_476', 30)) {
+      if (contract && FB.authorityConsentContract(s, contract.id, R(s, 'italy')) &&
+          FB.authorityConsentContract(s, contract.id, R(s, 'federates_476')) &&
+          FB.treasuryTransfer(s, R(s, 'italy'), R(s, 'federates_476'), 30)) {
         w.contractId = contract.id;
-        var church = FB.localInstitutionMediate(s, 'rome_see', actor('federates_476'), 'ravenna');
+        var church = FB.localInstitutionMediate(s, 'rome_see', actor(R(s, 'federates_476')), 'ravenna');
         w.churchRecognitionId = church && church.id;
         var civic = civicSettlement(s, w);
         w.civicRecognitionId = civic && civic.recognitionId;
-        if (church && civic && cityRights(s, w, 'italy')) {
+        if (church && civic && cityRights(s, w, R(s, 'italy'))) {
           w.aiResolution = 'negotiated';
           news(s, 'news.476.ai_accord',
             '📜 The western and federate courts agree on paid service while Ravenna keeps its civic Peace.', {});
@@ -344,12 +346,12 @@
         }
       }
       if (contract) FB.authorityContractTransition(
-        s, contract.id, 'breach', 'italy');
+        s, contract.id, 'breach', R(s, 'italy'));
     }
-    if (FB.isRealmAtWar(s, 'italy') ||
-        FB.isRealmAtWar(s, 'federates_476')) return;
-    var war = FB.registerOrdinaryWar(s, 'federates_476', {
-      enemy:'italy', target:'ravenna', legacy:false,
+    if (FB.isRealmAtWar(s, R(s, 'italy')) ||
+        FB.isRealmAtWar(s, R(s, 'federates_476'))) return;
+    var war = FB.registerOrdinaryWar(s, R(s, 'federates_476'), {
+      enemy:R(s, 'italy'), target:'ravenna', legacy:false,
       casus:{ type:'border', target:'ravenna' },
       objectives:[{ target:'ravenna', type:'border' }]
     });
@@ -361,28 +363,28 @@
   }
   function reaffirmDelegates(s, w) {
     if (w.civicProofId && alive(s, w.civicDelegateId) &&
-        s.owner.ravenna === 'italy')
+        s.owner.ravenna === R(s, 'italy'))
       FB.authorityRecognitionTransition(s, w.civicProofId, 'reaffirm');
     if (w.senateProofId && alive(s, w.senatorId) &&
-        s.owner.roma === 'italy')
+        s.owner.roma === R(s, 'italy'))
       FB.authorityRecognitionTransition(s, w.senateProofId, 'reaffirm');
   }
   function displacedCourts476(s, w) {
     w.displacedCourts = w.displacedCourts || {};
-    if (w.courtAt === 'ravenna' && s.owner.ravenna !== 'italy' ||
-        w.courtAt === 'pavia' && s.owner.pavia !== 'italy') {
+    if (w.courtAt === 'ravenna' && s.owner.ravenna !== R(s, 'italy') ||
+        w.courtAt === 'pavia' && s.owner.pavia !== R(s, 'italy')) {
       w.courtAt = 'displaced'; w.courtMove = null;
     }
-    for (var rid of ['italy','croatia','byzantium','west_francia',
-        'aghlabids','pannonia']) {
+    for (var rid of [R(s, 'italy'),R(s, 'croatia'),R(s, 'byzantium'),R(s, 'west_francia'),
+        R(s, 'aghlabids'),R(s, 'pannonia')]) {
       var realm = s.realms[rid];
       var anchor = w.courtAnchors && w.courtAnchors[rid];
       if (realm && realm.nonTerritorial) continue;
       if (anchor && s.owner[anchor] !== rid)
         w.displacedCourts[rid] = realm && realm.alive &&
           s.owner[realm.capital] === rid ? realm.capital : 'exiled';
-      if (rid === 'italy' && realm && !realm.alive) {
-        w.displacedCourts.italy = 'exiled';
+      if (rid === R(s, 'italy') && realm && !realm.alive) {
+        w.displacedCourts[R(s, 'italy')] = 'exiled';
         w.courtAt = 'displaced'; w.courtMove = null;
       }
       if (!realm || !realm.alive || !realm.capital ||
@@ -393,30 +395,107 @@
       }).sort();
       if (!lands.length) {
         w.displacedCourts[rid] = 'exiled';
-        if (rid === 'italy') { w.courtAt = 'displaced'; w.courtMove = null; }
+        if (rid === R(s, 'italy')) { w.courtAt = 'displaced'; w.courtMove = null; }
         continue;
       }
       realm.capital = lands[0];
       w.displacedCourts[rid] = lands[0];
-      if (rid === 'italy') { w.courtAt = 'displaced'; w.courtMove = null; }
+      if (rid === R(s, 'italy')) { w.courtAt = 'displaced'; w.courtMove = null; }
       FB.invalidateRealmCache();
     }
   }
+  function rulerChoices(s, w) {
+    if (R(s, 'federates_476') !== 'player' || s.player.charId !== w.odoacerId ||
+        !alive(s, w.odoacerId) || s.player.dead) return [];
+    if (s.owner.ravenna === 'player' && !w.governanceResolved) return [
+      { id:'accept_civic_rule', label:FB.T('Accept Ravenna’s civic settlement'), detail:FB.T('Protect civic courts and Nicene worship through living delegates and episcopal mediation. Adopt Roman civic government only after those agreements; no new territory is granted.') },
+      { id:'retain_host_rule', label:FB.T('Retain the host’s government'), detail:FB.T('Keep the federate government while civic demands remain unresolved. No new mandate, recognition or territory is granted.') }
+    ];
+    if (w.aiResolution || s.owner.ravenna !== R(s, 'italy')) return [];
+    return [
+      { id:'accept_service', label:FB.T('Review paid service'), detail:FB.T('Agree to {money:pay} per season for 361 days and request {money:arrears} in arrears from the western court. Both courts must consent. The veteran’s Classis settlement promise grants neither Ravenna nor an imperial office.', { pay:10, arrears:30 }) },
+      { id:'contest_ravenna', label:FB.T('Contest Ravenna'), detail:FB.T('Declare an ordinary campaign against the western court. Your existing host must win the objective; no civic recognition or office is granted by declaring war.') },
+      { id:'keep_host', label:FB.T('Keep the host outside the dispute'), detail:FB.T('End this opening without pay, promises or a campaign. Use ordinary diplomacy and contract reviews for later dealings.') }
+    ];
+  }
+  function rulerQuote(s, w, id) {
+    var terms = serviceTerms(s, w), agreement = FB.political.contractQuote(s, terms);
+    var bishop = FB.religiousOfficeSnapshot(s, 'rome_bishop');
+    var council = s.localInstitutions && s.localInstitutions.ravenna_council;
+    var facts = { turn:s.turn, player:s.player.charId, resolution:w.aiResolution || null,
+      governance:w.governanceResolved, owner:s.owner.ravenna, host:host(s, 'host_476_federates'),
+      dead:s.player.dead, living:alive(s, w.odoacerId),
+      west:FB.political.actor(s, actor(R(s, 'italy'))),
+      westGeneration:FB.realmRulerGeneration(s, R(s, 'italy')),
+      funds:FB.treasuryAvailable(s, R(s, 'italy')), agreement:agreement,
+      civic:civicPermission(s, w), bishop:bishop && bishop.id,
+      representative:council && council.representativeId,
+      consent:FB.political.civicConsent(s, 'ravenna'),
+      mediation:FB.localInstitutionMediationQuote(s, 'rome_see', actor('player'), 'ravenna'),
+      institutions:JSON.parse(JSON.stringify(s.localInstitutions)),
+      churchHolder:s.religiousHeads.rome_bishop,
+      majority:FB.countyReligionShare(s, 'ravenna', 'nicene'),
+      wars:[FB.isRealmAtWar(s, 'player'), FB.isRealmAtWar(s, R(s, 'italy'))] };
+    var available = rulerChoices(s, w).some(function (choice) { return choice.id === id; });
+    var allowed = available && (id === 'keep_host' || id === 'retain_host_rule' ||
+      id === 'contest_ravenna' && facts.host && facts.host.men > 0 && !facts.wars[0] && !facts.wars[1] ||
+      id === 'accept_service' && facts.funds >= 30 && facts.agreement.allowed &&
+        facts.civic && facts.bishop && facts.mediation.allowed &&
+        alive(s, w.orestesId) && facts.majority >= 0.5 ||
+      id === 'accept_civic_rule' && alive(s, w.civicDelegateId) &&
+        facts.representative === w.civicDelegateId && facts.consent.allowed &&
+        facts.bishop && facts.mediation.allowed && facts.majority >= 0.5);
+    return { id:id, allowed:!!allowed, reason:'ruler_settlement', facts:facts, stamp:JSON.stringify(facts) };
+  }
+  function rulerApply(s, w, id, reviewed) {
+    var q = rulerQuote(s, w, id);
+    if (!q.allowed || !reviewed || reviewed.id !== id || q.stamp !== reviewed.stamp) return false;
+    if (id === 'accept_service') {
+      var contract = FB.authorityOfferContract(s, serviceTerms(s, w));
+      if (!contract || !FB.authorityConsentContract(s, contract.id, R(s, 'italy')) ||
+          !FB.authorityConsentContract(s, contract.id, 'player') ||
+          !FB.treasuryTransfer(s, R(s, 'italy'), 'player', 30)) return false;
+      w.contractId = contract.id; w.aiResolution = 'negotiated';
+      var church = FB.localInstitutionMediate(s, 'rome_see', actor('player'), 'ravenna');
+      w.churchRecognitionId = church && church.id;
+      var civic = civicSettlement(s, w); w.civicRecognitionId = civic && civic.recognitionId;
+      cityRights(s, w, R(s, 'italy'));
+    } else if (id === 'contest_ravenna') {
+      var war = FB.registerOrdinaryWar(s, 'player', { enemy:R(s, 'italy'), target:'ravenna',
+        legacy:false, casus:{ type:'border', target:'ravenna' }, objectives:[{ type:'border', target:'ravenna' }] });
+      if (!war) return false;
+      w.aiResolution = 'war'; w.aiWarId = war.id;
+    } else if (id === 'accept_civic_rule') {
+      var support = FB.localInstitutionMediate(s, 'rome_see', actor('player'), 'ravenna');
+      if (!support || !cityRights(s, w, 'player') || !FB.authoritySetGovernment(s, 'player', 'roman_civic')) return false;
+      w.governanceResolved = 'civic';
+    } else if (id === 'retain_host_rule') w.governanceResolved = 'federate';
+    else w.aiResolution = 'declined';
+    news(s, 'news.476.ruler_decision', '📜 The federate ruler records a decision on Ravenna. Territory, service and civic authority remain separate.', {});
+    return true;
+  }
   function day(s, w) {
     var t = track(s);
+    if (R(s, 'federates_476') === 'player' && w.aiResolution === 'war') {
+      if (s.owner.ravenna === 'player') {
+        w.aiResolution = 'won';
+        s.realms.player.nonTerritorial = false; s.realms.player.capital = 'ravenna';
+        FB.invalidateRealmCache();
+      } else if (!FB.ordinaryWarById(s, w.aiWarId)) w.aiResolution = 'failed';
+    }
     displacedCourts476(s, w);
     reaffirmDelegates(s, w);
     if (w.courtMove === 'travelling') {
       var escort = host(s, 'host_476_italy');
       if (escort && escort.at === 'pavia' && !escort.moveLeft) {
         w.courtAt = 'pavia'; w.courtMove = null;
-        s.realms.italy.capital = 'pavia';
+        s.realms[R(s, 'italy')].capital = 'pavia';
         FB.invalidateRealmCache();
         if (FB.ui && FB.ui.mapDirty) FB.ui.mapDirty();
         escort.scenarioCourtEscort = false;
         news(s, 'news.476.court_arrives',
           '🏛 The western court reaches Ticinum. Its escort asks for maintenance and a settlement.', {});
-      } else if (!escort || s.owner.pavia !== 'italy') {
+      } else if (!escort || s.owner.pavia !== R(s, 'italy')) {
         w.courtMove = 'interrupted';
         news(s, 'news.476.court_interrupted',
           '🏛 The court’s route is broken; its requested settlement must be reviewed again.', {});
@@ -478,6 +557,12 @@
       if (wanted.indexOf(id) >= 0 && !s.stories[id]) bad('railsSchema');
     if (record.displacedCourts !== undefined && !plain(record.displacedCourts))
       bad('displacedCourts');
+    if (record.aiResolution !== undefined &&
+        ['negotiated','war','won','failed','diverged','declined'].indexOf(record.aiResolution) < 0) bad('aiResolution');
+    if (record.governanceResolved !== undefined && record.governanceResolved !== false &&
+        ['civic','federate'].indexOf(record.governanceResolved) < 0) bad('governanceResolved');
+    for (var field of ['aiWarId','restoredClaimantId','restoredCourtId','restoredOfficeId'])
+      if (record[field] !== undefined && (typeof record[field] !== 'string' || !record[field])) bad(field);
   }
   FB.story476 = {
     world:world, track:track, actor:actor, person:person, host:host, made:made,
@@ -488,5 +573,17 @@
     civicPermission:civicPermission, civicSettlement:civicSettlement, news:news
   };
   FB.stories.register({ id:WORLD, kind:'world', init:init, day:day,
+    title:function () { return FB.T('The federate ruler and Ravenna'); },
+    intro:function () { return FB.T('You decide for the host. Paid service, a campaign and a civic settlement are separate commitments, each using the ordinary authority rules.'); },
+    status:function (s, w) {
+      if (R(s, 'federates_476') !== 'player') return null;
+      return { phase:w.aiResolution || 'opening', name:w.governanceResolved ? FB.T('Government settlement recorded') :
+        w.aiResolution === 'war' ? FB.T('Ravenna is contested') :
+        w.aiResolution === 'negotiated' ? FB.T('Paid service agreed') :
+        w.aiResolution === 'won' ? FB.T('Ravenna awaits civic terms') :
+        w.aiResolution ? FB.T('The host continues') : FB.T('Choose the host’s settlement'), lines:[] };
+    },
+    choices:rulerChoices, quote:rulerQuote, apply:rulerApply,
+    blocker:function () { return FB.T('Review the living host and peaceful courts. Paid service requires thirty available in the western treasury, effective civic consent and a living bishop. Civic government requires surviving delegates and Nicene support.'); },
     validate:validate, migrate:migrate, restore:restoreInstitutions });
 })();

@@ -111,6 +111,8 @@ window.FBDATA = window.FBDATA || {};
   FBDATA.techImpactReviews = {
     baselineVersion:'1.127.1',
     features:{
+      existing_ruler_starts:{ mode:'none', rationale:'Adopting a living authored ruler and the existing court changes initial identity, not discovery or political eligibility.' },
+      western_claim_restoration:{ mode:'none', rationale:'Claimant recognition and restoration reuse living institutional support and ordinary military possession. A baseline political claim has no credible research dependency.' },
       provincial_church_councils:{ mode:'none', rationale:'Gathering living bishops with protected worship and treasury funding is baseline institutional negotiation, independent of discovery. Additional Balkan and Anatolian sees extend the existing living-participant pool without a research gate.' },
       public_ruler_conversion:{ mode:'none', rationale:'Public profession and court allegiance are personal and political decisions. Existing communities, churches, resources and support govern conversion without research.' },
       local_institution_bargains:{ mode:'none', rationale:'Cities and congregations, including the authored Gallic and Iberian seats, bargain over existing courts, protection, provisioning and tax relief. Living counterparties, resources and local consent govern this baseline capability.' },

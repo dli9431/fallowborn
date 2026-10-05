@@ -585,6 +585,31 @@ window.FBMODS = window.FBMODS || [];
     if (own(scenario, 'alwaysUnlocked') && typeof scenario.alwaysUnlocked !== 'boolean') {
       fail(path + '.alwaysUnlocked', 'must be true or false.');
     }
+    if (own(scenario, 'hidden') && typeof scenario.hidden !== 'boolean') fail(path + '.hidden', 'must be true or false.');
+    if (own(scenario, 'onboarding') && scenario.onboarding !== 'ruler') fail(path + '.onboarding', 'must be ruler.');
+    if (own(scenario, 'rulerRealmId')) {
+      if (typeof scenario.rulerRealmId !== 'string' || !scenario.rulerRealmId ||
+          !scenario.bookmarkIds || !scenario.bookmarkIds.length || !scenario.fixedProvinceId ||
+          !scenario.characterName || !scenario.governmentForm ||
+          scenario.onboarding !== 'ruler' || !scenario.familyPresets ||
+          Object.keys(scenario.familyPresets).join(',') !== 'standard')
+        fail(path + '.rulerRealmId', 'needs a fixed bookmark, named identity, government, ruler onboarding and standard court family.');
+      requiredText(scenario.characterName, path + '.characterName');
+      if (scenario.characterName.length > 20 || !FBDATA.governmentForms[scenario.governmentForm])
+        fail(path + '.characterName', 'needs a start-code name and a known government.');
+      for (const bookmarkId of scenario.bookmarkIds) {
+        const bookmark = rules.bookmarks[bookmarkId];
+        const realm = (bookmark.realms || []).filter(function (row) { return row.id === scenario.rulerRealmId; })[0];
+        const ruler = realm && realm.ruler;
+        const eraId = FB.bookmarkEra(bookmark), era = FBDATA.eras[eraId];
+        if (!ruler || ruler.name !== scenario.characterName || ruler.sex !== scenario.sex ||
+            ruler.culture !== scenario.startCulture || realm.religion !== scenario.startReligion ||
+            !era || (realm.government || era.defaultGovernment) !== scenario.governmentForm ||
+            FB.station.realmRank({ tier:scenario.tier, formId:scenario.governmentForm, era:eraId }, {}) !== realm.rank)
+          fail(path + '.rulerRealmId', 'must match the authored ruler and government in every offered bookmark.');
+      }
+    } else if (own(scenario, 'characterName') || own(scenario, 'governmentForm') || own(scenario, 'onboarding'))
+      fail(path + '.rulerRealmId', 'is required for an existing-ruler identity.');
     if (own(scenario, 'startAge')) integerRange(scenario.startAge, 16, 80, path + '.startAge');
     for (const field of ['startCulture', 'startReligion']) {
       if (!own(scenario, field)) continue;
@@ -698,7 +723,8 @@ window.FBMODS = window.FBMODS || [];
         intro:true, intro_f:true, intro_muslim:true, intro_other:true,
         startEffects:true, bookmarkIds:true, eras:true, alwaysUnlocked:true,
         fixedProvinceId:true, startAge:true, startCulture:true,
-        startReligion:true, familyPresets:true, tracks:true
+        startReligion:true, familyPresets:true, tracks:true, hidden:true,
+        rulerRealmId:true, governmentForm:true, characterName:true, onboarding:true
       }, path);
       if (!/^[a-z][a-z0-9_]*$/.test(scenario.id || '')) {
         fail(path + '.id', 'must be a lowercase start-code id.');
@@ -713,7 +739,7 @@ window.FBMODS = window.FBMODS || [];
           requiredText(scenario[introField], path + '.' + introField);
         }
       }
-      integerRange(scenario.tier, 0, 3, path + '.tier');
+      integerRange(scenario.tier, 0, scenario.rulerRealmId ? FB.station.bandCount - 1 : 3, path + '.tier');
       if (typeof scenario.profession !== 'string' ||
           !own(refs.careers, scenario.profession) ||
           !plainObject(refs.careers[scenario.profession])) {

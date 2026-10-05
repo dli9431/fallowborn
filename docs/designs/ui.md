@@ -3681,3 +3681,9 @@ The title subtitle covers late antiquity and the Middle Ages while preserving th
 Independent world-story status cards
 
 Political world stories and date-window campaigns use the existing Deeds story card and shared sheet as read-only status. Pending future campaigns wait until their opening year to show a card; active and resolved outcomes remain readable. They add no confirmation buttons or alternate navigation flow. Household track choices keep their reviewed confirmation, quote revalidation, keyboard activation and retained Deeds scroll/focus return. Closing a world-story sheet returns to its originating status card through the same modal history.
+
+Ruler opening onboarding
+
+Existing-ruler openings pin the authored name, sex and culture/faith pair in character creation, disable name reroll, and offer only the existing court household. Their intro explains the actual court, territory and host before play. The Ruling a court checklist in Deeds replaces commoner First steps: review a court story, review Rank & Realm, and let days advance. It then joins ordinary family guidance. Reviewing a sheet records only onboarding progress and never accepts an agreement.
+
+Ruler choices use the existing story card, quote, confirmation and outcome acknowledgment. Costs, term lengths, territorial prerequisites and the separation of office, service and land appear in the choice detail. A stale review cannot apply. Back, Escape, Close and acknowledgment use the shared scroll and focus return. A future campaign stays out of Deeds until its date window; a live player opportunity identifies that it awaits the player's decision.

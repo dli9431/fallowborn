@@ -164,6 +164,7 @@
     UI.showStorySheet = function (id) {
       var s = FB.state, story = FB.stories.get(id), rec = record(s, id);
       if (!story || !rec) return;
+      if (s.player.flags && s.start && s.start.onboarding === 'ruler') s.player.flags.tut_ruler_story = 1;
       var esc = FB.esc, status = FB.stories.status(s, id);
       var html = '<div class="gm-body-text">';
       if (story.intro) html += '<p>' + esc(story.intro(s, rec)) + '</p>';

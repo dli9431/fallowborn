@@ -2065,8 +2065,19 @@ FB.CHANGELOG = [
   /* A scenario is offered where its data allows: an optional bookmarkIds
      list and an optional eras list, matched against the bookmark's era. */
   function scenarioOffered(scenario, bookmarkId) {
-    if (!scenario) return false;
+    if (!scenario || scenario.hidden) return false;
     if (scenario.bookmarkIds && scenario.bookmarkIds.indexOf(bookmarkId) < 0) return false;
+    if (scenario.rulerRealmId) {
+      const bookmark = FB.bookmark(bookmarkId);
+      const realm = bookmark && (bookmark.realms || []).filter(function (row) {
+        return row.id === scenario.rulerRealmId;
+      })[0];
+      const ruler = realm && realm.ruler;
+      if (!ruler || ruler.name !== scenario.characterName || ruler.sex !== scenario.sex ||
+          ruler.culture !== scenario.startCulture || realm.religion !== scenario.startReligion ||
+          (realm.government || FBDATA.eras[FB.bookmarkEra(bookmark)].defaultGovernment) !== scenario.governmentForm)
+        return false;
+    }
     return !scenario.eras ||
       scenario.eras.indexOf(FB.bookmarkEra(FB.bookmark(bookmarkId))) >= 0;
   }
@@ -2213,7 +2224,8 @@ FB.CHANGELOG = [
       const sex = parts[sexPart].toLowerCase();
       const name = parts[namePart].replace(/_/g, ' ').trim();
       if (!seed || !scen || !prov || prov.wasteland || (sex !== 'm' && sex !== 'f') ||
-        !name || name.length > 20) return { error: bad };
+        !name || name.length > 20 ||
+          scen.characterName && name !== scen.characterName) return { error: bad };
       if (scen.sex && sex !== scen.sex) {
         return { error: 'That start code pairs a scenario and a sex that don’t go together.' };
       }
@@ -2234,7 +2246,8 @@ FB.CHANGELOG = [
         if (!/^\d+$/.test(parts[7])) return { error: bad };
         settlementIdx = parseInt(parts[7], 10);
       }
-      let cultureId = prov.culture, religionId = prov.religion;
+      let cultureId = scen.rulerRealmId ? scen.startCulture : prov.culture;
+      let religionId = scen.rulerRealmId ? scen.startReligion : prov.religion;
       if (!legacy && parts.length === 9) {
         const identity = parts[8].toLowerCase().split('.');
         if (identity.length !== 2 || !identity[0] || !identity[1] ||
@@ -2247,6 +2260,7 @@ FB.CHANGELOG = [
         cultureId = authored.culture;
         religionId = authored.religion;
       }
+      if (scen.rulerRealmId && (cultureId !== scen.startCulture || religionId !== scen.startReligion || settlementIdx !== 0)) return { error:bad };
       return {
         seed:seed, bookmarkId:bookmarkId, scenario:scen,
         provinceId:prov.id, sex:sex, name:name, familyPreset:familyPreset,
@@ -3009,7 +3023,10 @@ FB.CHANGELOG = [
     }
     /* a sex-locked scenario (Man-at-Arms is male-only) pins the matching radio
        and disables the other; any other scenario leaves both free */
+    const fixedIdentity = G.pending.scenario && G.pending.scenario.rulerRealmId;
     const scenSex = G.pending.scenario && G.pending.scenario.sex;
+    $('cg-name').readOnly = !!fixedIdentity;
+    $('cg-reroll').disabled = !!fixedIdentity;
     document.querySelectorAll('input[name=cg-sex]').forEach(function (r) {
       r.disabled = !!(scenSex && r.value !== scenSex);
       if (scenSex) r.checked = r.value === scenSex;
@@ -3019,21 +3036,23 @@ FB.CHANGELOG = [
       document.querySelector('input[name=cg-sex][value="' + G.pending.sex + '"]').checked = true;
     }
     const sex = document.querySelector('input[name=cg-sex]:checked').value;
-    $('cg-name').value = G.pending.name || FB.randomName(G.pending.culture, sex);
+    $('cg-name').value = G.pending.scenario.characterName || G.pending.name ||
+      FB.randomName(G.pending.culture, sex);
     /* Culture and faith are chosen as one authored county community. The
        pending pair survives a trip back to the same county; pickProvince
        restores the principal pair when the county actually changes. */
     const pr = FB.world.byId[G.pending.provinceId];
     const communities = FB.provinceCommunities(pr);
-    const currentCommunity = provinceCommunity(
+    const currentCommunity = fixedIdentity ? { culture:G.pending.scenario.startCulture,
+      religion:G.pending.scenario.startReligion } : provinceCommunity(
       pr, G.pending.culture, G.pending.religion);
     G.pending.culture = currentCommunity.culture;
     G.pending.religion = currentCommunity.religion;
     const communityBox = $('cg-community');
     /* the community choice only exists when the county actually holds more
        than one — a single-community county has nothing to ask */
-    communityBox.classList.toggle('hidden', communities.length < 2);
-    if (communities.length > 1) {
+    communityBox.classList.toggle('hidden', !!fixedIdentity || communities.length < 2);
+    if (!fixedIdentity && communities.length > 1) {
       communityBox.setAttribute('role', 'radiogroup');
       communityBox.setAttribute('aria-label', FB.T('Choose your community'));
       communityBox.innerHTML = '<div class="hint">' +
@@ -3195,7 +3214,7 @@ FB.CHANGELOG = [
     G.observe = false;
     document.body.classList.remove('observing');
     const sc = G.pending && G.pending.scenario;
-    if (!scenarioUnlocked(sc)) {
+    if (!scenarioUnlocked(sc) || sc.rulerRealmId && G.pending.provinceId !== sc.fixedProvinceId) {
       showScenarios();
       return false;
     }
@@ -3215,11 +3234,11 @@ FB.CHANGELOG = [
     const provId = G.pending.provinceId;
     const pr = FB.world.byId[provId];
     const settIdx = clampSettlementIdx(provId, G.pending.settlementIdx);
-    const community = selectedCommunity();
+    const community = sc.rulerRealmId ? { culture:sc.startCulture, religion:sc.startReligion } : selectedCommunity();
     const cultureId = community.culture;
     const religionId = community.religion;
-    const sex = document.querySelector('input[name=cg-sex]:checked').value;
-    const name = ($('cg-name').value || '').trim() || FB.randomName(cultureId, sex);
+    const sex = sc.sex || document.querySelector('input[name=cg-sex]:checked').value;
+    const name = sc.characterName || ($('cg-name').value || '').trim() || FB.randomName(cultureId, sex);
     const preset = selectedFamilyPreset();
     G.pending.name = null; G.pending.sex = null; // a shared code's pre-fill is spent
     G.pending.familyPreset = null;
@@ -3307,13 +3326,20 @@ FB.CHANGELOG = [
     FB.scriptedTick(state);
     scheduleSlots(state);
 
-    const me = FB.makeCharacter(state, {
+    const me = sc.rulerRealmId ? FB.ensureRealmCourt(state, sc.rulerRealmId) : FB.makeCharacter(state, {
       name: name, sex: sex, culture: cultureId, religion: religionId,
       born: start.year - (sc.startAge || preset.age || FBDATA.balance.startAge),
       quality: FB.station.isGentle(sc, state) ? 2 : 0, traitsN: 2,
       station:FB.station.socialClass(sc, state), unfree:FB.station.isSerf(sc, state)
     });
-    me.health = 8;
+    if (sc.rulerRealmId) {
+      FB.materializeRealmConsort(state, sc.rulerRealmId);
+      for (const member of FB.realmFamily(state, sc.rulerRealmId)) {
+        if (member.alive !== false && member.role !== 'consort' && member.charId !== me.id)
+          FB.materializeRoyalChild(state, sc.rulerRealmId, member.id);
+      }
+    }
+    if (!sc.rulerRealmId) me.health = 8;
     /* Match ordinary start-code choices too, so replay preserves the face
        without introducing a second code format or touching the seeded stream. */
     for (const definition of (FBDATA.quickStarts || [])) {
@@ -3328,7 +3354,7 @@ FB.CHANGELOG = [
         break;
       }
     }
-    me.dyn = FB.dynastyName(cultureId, me.name, pr.name, me.sex, state);
+    if (!sc.rulerRealmId) me.dyn = FB.dynastyName(cultureId, me.name, pr.name, me.sex, state);
     for (const skill in (startEffects.skills || {})) {
       if (Object.prototype.hasOwnProperty.call(startEffects.skills, skill)) {
         me.skills[skill] = Math.max(0, me.skills[skill] + startEffects.skills[skill]);
@@ -3346,97 +3372,99 @@ FB.CHANGELOG = [
        the historical item draws; a named pool adds one deliberate seeded pick. */
     grantStartingItems(state, me, startEffects);
 
-    // parents — the first rung of the kin tree
-    const dad = FB.makeCharacter(state, {
-      sex: 'm', culture: cultureId, religion: religionId,
-      born: me.born - FB.ri(20, 40), role: 'parent', quality: 1, dyn: me.dyn,
-      station:FB.station.socialClass(sc, state), unfree:FB.station.isSerf(sc, state)
-    });
-    const mom = FB.makeCharacter(state, {
-      sex: 'f', culture: cultureId, religion: religionId,
-      born: me.born - FB.ri(20, 34), role: 'parent',
-      station:FB.station.socialClass(sc, state), unfree:FB.station.isSerf(sc, state)
-    });
-    dad.health = 8; mom.health = 8;
-    if (FB.permitsMatrilinealMarriage(state, cultureId)) mom.dyn = me.dyn;
-    dad.spouseId = mom.id; mom.spouseId = dad.id;
-    FB.sealMarriageLineage(state, dad, mom, FB.preferredMarriageLineage(state, dad, mom));
-    dad.childrenIds.push(me.id); mom.childrenIds.push(me.id);
-    me.fatherId = dad.id; me.motherId = mom.id;
-
-    /* Patronymic starts record the father whose name each byname actually
-       carries. The house id remains stable even though personal bynames vary. */
-    if (FB.cultureOf(cultureId).dyn === 'patronym') {
-      const granddad = FB.makeCharacter(state, {
-        sex:'m', culture:cultureId, religion:religionId,
-        born:dad.born - FB.ri(20, 40), role:'grandparent',
-        quality:1, dyn:me.dyn, byname:'', station:FB.station.socialClass(sc, state),
-        unfree:FB.station.isSerf(sc, state)
-      });
-      const grandmom = FB.makeCharacter(state, {
-        sex:'f', culture:cultureId, religion:religionId,
-        born:dad.born - FB.ri(18, 34), role:'grandparent',
+    if (!sc.rulerRealmId) {
+      // parents, the first rung of the kin tree
+      const dad = FB.makeCharacter(state, {
+        sex: 'm', culture: cultureId, religion: religionId,
+        born: me.born - FB.ri(20, 40), role: 'parent', quality: 1, dyn: me.dyn,
         station:FB.station.socialClass(sc, state), unfree:FB.station.isSerf(sc, state)
       });
-      granddad.health = 8; grandmom.health = 8;
-      if (FB.permitsMatrilinealMarriage(state, cultureId)) grandmom.dyn = dad.dyn;
-      granddad.spouseId = grandmom.id; grandmom.spouseId = granddad.id;
-      FB.sealMarriageLineage(state, granddad, grandmom, FB.preferredMarriageLineage(state, granddad, grandmom));
-      granddad.childrenIds.push(dad.id); grandmom.childrenIds.push(dad.id);
-      dad.fatherId = granddad.id; dad.motherId = grandmom.id;
-      dad.byname = FB.patronym(granddad.name, dad.sex);
-      me.byname = FB.patronym(dad.name, me.sex);
-    }
-
-    // siblings — a safety net of heirs
-    const nSib = FB.ri(1, 2);
-    for (let i = 0; i < nSib; i++) {
-      const sib = FB.makeCharacter(state, {
-        culture: cultureId, religion: religionId,
-        born: me.born + (FB.ri(-6, 6) || 2), // never a same-year twin
-        role: 'sibling', dyn: me.dyn,
-        fatherId:dad.id, motherId:mom.id,
+      const mom = FB.makeCharacter(state, {
+        sex: 'f', culture: cultureId, religion: religionId,
+        born: me.born - FB.ri(20, 34), role: 'parent',
         station:FB.station.socialClass(sc, state), unfree:FB.station.isSerf(sc, state)
       });
-      sib.health = 8;
-      sib.fatherId = dad.id; sib.motherId = mom.id;
-      dad.childrenIds.push(sib.id); mom.childrenIds.push(sib.id);
-    }
+      dad.health = 8; mom.health = 8;
+      if (FB.permitsMatrilinealMarriage(state, cultureId)) mom.dyn = me.dyn;
+      dad.spouseId = mom.id; mom.spouseId = dad.id;
+      FB.sealMarriageLineage(state, dad, mom, FB.preferredMarriageLineage(state, dad, mom));
+      dad.childrenIds.push(me.id); mom.childrenIds.push(me.id);
+      me.fatherId = dad.id; me.motherId = mom.id;
 
-    /* A preset with a spouse shape adds its family here, in a fixed draw order
-       after the shared kin. Standard and custom unmarried shapes add no draws,
-       so every old standard code reproduces bit-for-bit. */
-    if (preset.spouseAge) {
-      const spouse = FB.makeCharacter(state, {
-        sex: me.sex === 'm' ? 'f' : 'm',
-        culture: cultureId, religion: religionId,
-        born: me.born - FB.ri(preset.spouseAge[0], preset.spouseAge[1]),
-        role: 'spouse', station:FB.station.socialClass(sc, state),
-        unfree:FB.station.isSerf(sc, state)
-      });
-      spouse.health = 8;
-      me.spouseId = spouse.id; spouse.spouseId = me.id;
-      FB.sealMarriageLineage(state, me, spouse, FB.preferredMarriageLineage(state, me, spouse));
-      state.roles.spouse = spouse.id;
-      /* no child predates either parent turning sixteen */
-      const oldestChild = Math.max(1,
-        Math.min(preset.age, start.year - spouse.born) - 16);
-      const nKids = FB.ri(preset.children[0], preset.children[1]);
-      for (let k = 0; k < nKids; k++) {
-        const minChildAge = k === 0 ? Math.min(preset.eldestMin, oldestChild) : 1;
-        const child = FB.makeCharacter(state, {
-          culture: cultureId, religion: religionId,
-          born: start.year - FB.ri(minChildAge, oldestChild),
-          dyn: FB.childDynastySource(state, me, spouse, true).dyn,
-          fatherId: me.sex === 'm' ? me.id : spouse.id,
-          motherId: me.sex === 'm' ? spouse.id : me.id,
+      /* Patronymic starts record the father whose name each byname actually
+         carries. The house id remains stable even though personal bynames vary. */
+      if (FB.cultureOf(cultureId).dyn === 'patronym') {
+        const granddad = FB.makeCharacter(state, {
+          sex:'m', culture:cultureId, religion:religionId,
+          born:dad.born - FB.ri(20, 40), role:'grandparent',
+          quality:1, dyn:me.dyn, byname:'', station:FB.station.socialClass(sc, state),
+          unfree:FB.station.isSerf(sc, state)
+        });
+        const grandmom = FB.makeCharacter(state, {
+          sex:'f', culture:cultureId, religion:religionId,
+          born:dad.born - FB.ri(18, 34), role:'grandparent',
           station:FB.station.socialClass(sc, state), unfree:FB.station.isSerf(sc, state)
         });
-        child.health = 8;
-        me.childrenIds.push(child.id); spouse.childrenIds.push(child.id);
+        granddad.health = 8; grandmom.health = 8;
+        if (FB.permitsMatrilinealMarriage(state, cultureId)) grandmom.dyn = dad.dyn;
+        granddad.spouseId = grandmom.id; grandmom.spouseId = granddad.id;
+        FB.sealMarriageLineage(state, granddad, grandmom, FB.preferredMarriageLineage(state, granddad, grandmom));
+        granddad.childrenIds.push(dad.id); grandmom.childrenIds.push(dad.id);
+        dad.fatherId = granddad.id; dad.motherId = grandmom.id;
+        dad.byname = FB.patronym(granddad.name, dad.sex);
+        me.byname = FB.patronym(dad.name, me.sex);
       }
-    }
 
+      // siblings — a safety net of heirs
+      const nSib = FB.ri(1, 2);
+      for (let i = 0; i < nSib; i++) {
+        const sib = FB.makeCharacter(state, {
+          culture: cultureId, religion: religionId,
+          born: me.born + (FB.ri(-6, 6) || 2), // never a same-year twin
+          role: 'sibling', dyn: me.dyn,
+          fatherId:dad.id, motherId:mom.id,
+          station:FB.station.socialClass(sc, state), unfree:FB.station.isSerf(sc, state)
+        });
+        sib.health = 8;
+        sib.fatherId = dad.id; sib.motherId = mom.id;
+        dad.childrenIds.push(sib.id); mom.childrenIds.push(sib.id);
+      }
+
+      /* A preset with a spouse shape adds its family here, in a fixed draw order
+         after the shared kin. Standard and custom unmarried shapes add no draws,
+         so every old standard code reproduces bit-for-bit. */
+      if (preset.spouseAge) {
+        const spouse = FB.makeCharacter(state, {
+          sex: me.sex === 'm' ? 'f' : 'm',
+          culture: cultureId, religion: religionId,
+          born: me.born - FB.ri(preset.spouseAge[0], preset.spouseAge[1]),
+          role: 'spouse', station:FB.station.socialClass(sc, state),
+          unfree:FB.station.isSerf(sc, state)
+        });
+        spouse.health = 8;
+        me.spouseId = spouse.id; spouse.spouseId = me.id;
+        FB.sealMarriageLineage(state, me, spouse, FB.preferredMarriageLineage(state, me, spouse));
+        state.roles.spouse = spouse.id;
+        /* no child predates either parent turning sixteen */
+        const oldestChild = Math.max(1,
+          Math.min(preset.age, start.year - spouse.born) - 16);
+        const nKids = FB.ri(preset.children[0], preset.children[1]);
+        for (let k = 0; k < nKids; k++) {
+          const minChildAge = k === 0 ? Math.min(preset.eldestMin, oldestChild) : 1;
+          const child = FB.makeCharacter(state, {
+            culture: cultureId, religion: religionId,
+            born: start.year - FB.ri(minChildAge, oldestChild),
+            dyn: FB.childDynastySource(state, me, spouse, true).dyn,
+            fatherId: me.sex === 'm' ? me.id : spouse.id,
+            motherId: me.sex === 'm' ? spouse.id : me.id,
+            station:FB.station.socialClass(sc, state), unfree:FB.station.isSerf(sc, state)
+          });
+          child.health = 8;
+          me.childrenIds.push(child.id); spouse.childrenIds.push(child.id);
+        }
+      }
+
+    } // ordinary generated household
     if (FB.ensurePapacyState && FB.systemAvailable(state, 'papacy')) FB.ensurePapacyState(state);
     if (FB.ensurePopulationState) FB.ensurePopulationState(state);
     if (FB.ensureMarket) FB.ensureMarket(state);
@@ -3460,7 +3488,7 @@ FB.CHANGELOG = [
       if (FB.ensureSerfTenure && FB.systemEnabled(state, 'manorial_tenure')) FB.ensureSerfTenure(state, 'new_game');
     }
 
-    if (FB.station.isLanded(sc, state)) {
+    if (!sc.rulerRealmId && FB.station.isLanded(sc, state)) {
       state.player.liege = (state.holder && state.holder[provId]) || state.owner[provId];
       state.player.liegeOp = 10;
     }
@@ -3470,7 +3498,13 @@ FB.CHANGELOG = [
     if (FB.ensureAgency) FB.ensureAgency(state);
     if (FB.ensureIntrigue) FB.ensureIntrigue(state);
     if (FB.ensurePolitics) FB.ensurePolitics(state);
+    if (sc.rulerRealmId) {
+      if (FB.stories) FB.stories.start(state, {});
+      if (!FB.adoptStartingRealm(state, sc))
+        throw new Error('Starting ruler could not adopt the authored realm.');
+    }
     if (FB.stories) FB.stories.start(state, { tracks:sc.tracks });
+    state.seasonMark.gold = state.player.gold;
     if (FB.ensureInstitutions) FB.ensureInstitutions(state, { silent:true });
     state.player.focus = startEffects.focus || FB.defaultFocus(state);
     const firstPlayerOnboarding = !G.uiPrefs.tipsGrandfathered &&
@@ -3501,7 +3535,9 @@ FB.CHANGELOG = [
     const introHint = !firstPlayerOnboarding ||
       (G.uiPrefs && G.uiPrefs.hideBeginnerHints)
       ? FB.T('The Deeds tab lists your daily focus and one-shot deeds.')
-      : FB.T('Watch the Deeds tab: your First steps are listed there.');
+      : sc.onboarding === 'ruler'
+        ? FB.T('Watch the Deeds tab: your Ruling a court checklist is listed there.')
+        : FB.T('Watch the Deeds tab: your First steps are listed there.');
     const serfIntroPointer = FB.activeSerfTenure &&
       FB.activeSerfTenure(state)
       ? '<p class="hint" data-serf-start-pointer>' + FB.esc(FB.T(
@@ -4403,6 +4439,7 @@ FB.CHANGELOG = [
      completing every eligible track retires the tutorial for this life. */
   const TUTORIAL_TRACKS = [
     { id:'first_steps', icon:'🌱', event:null,
+      when:function (s) { return !s.start || s.start.onboarding !== 'ruler'; },
       title:function () { return FB.T('First steps'); },
       note:function (s) {
         return FB.activeSerfTenure && FB.activeSerfTenure(s)
@@ -4419,6 +4456,15 @@ FB.CHANGELOG = [
         } },
         { id:'unpause', label:function () { return FB.T('Let the days flow'); } },
         { id:'event',   label:function () { return FB.T('Answer an event'); } }
+      ] },
+    { id:'ruler_play', icon:'🏛', event:null,
+      when:function (s) { return s.start && s.start.onboarding === 'ruler'; },
+      title:function () { return FB.T('Ruling a court'); },
+      note:function () { return FB.T('Review Governance, Offices & Legitimacy and your current story in Deeds. An office or contract grants only its named powers; territory follows actual possession.'); },
+      steps:[
+        { id:'ruler_story', label:function () { return FB.T('Review a court story in Deeds'); } },
+        { id:'ruler_governance', label:function () { return FB.T('Review Rank & Realm'); } },
+        { id:'unpause', label:function () { return FB.T('Let the days flow'); } }
       ] },
     { id:'family_legacy', icon:'👪', event:'tut_legacy',
       title:function () { return FB.T('Family & legacy'); },
@@ -4526,6 +4572,8 @@ FB.CHANGELOG = [
     const p = s.player, flags = p.flags || {};
     if (flags.tut_family_established &&
         (id === 'kin_tab' || id === 'wed' || id === 'heir')) return true;
+    if (id === 'ruler_story') return !!flags.tut_ruler_story;
+    if (id === 'ruler_governance') return !!flags.tut_ruler_governance;
     if (id === 'focus') return !!p.focus;
     if (id === 'unpause') return !!flags.tut_unpause;
     if (id === 'deed') {
@@ -4645,7 +4693,7 @@ FB.CHANGELOG = [
     const hidden = !!(G.uiPrefs && G.uiPrefs.hideBeginnerHints);
     const flags = s.player.flags;
     // chapter one of the scripted chain, a couple of days into the life
-    if (!flags.tut_ev_welcome && s.turn >= 2) {
+    if ((!s.start || s.start.onboarding !== 'ruler') && !flags.tut_ev_welcome && s.turn >= 2) {
       flags.tut_ev_welcome = 1;
       if (!hidden) FB.queueEvent(s, 'tut_welcome', {});
     }
@@ -4655,7 +4703,7 @@ FB.CHANGELOG = [
       /* Standard tracks wait for the preceding chapter. CrazyGames opens
          Making a living after marriage while Family & legacy continues. */
       if (track.id === 'family_legacy' &&
-          !flags.tut_track_first_steps) {
+          !flags.tut_track_first_steps && !flags.tut_track_ruler_play) {
         allDone = false;
         continue;
       }
@@ -4668,7 +4716,7 @@ FB.CHANGELOG = [
          Do not reopen Family & legacy when its child later becomes the
          unmarried protagonist, or repeat any earlier completion feedback. */
       if (flags['tut_track_' + track.id]) continue;
-      if (track.id === 'family_legacy' && flags.tut_track_first_steps &&
+      if (track.id === 'family_legacy' && (flags.tut_track_first_steps || flags.tut_track_ruler_play) &&
           !flags.tut_track_family_legacy &&
           !flags.tut_family_guidance_started &&
           !flags.tut_family_established) {

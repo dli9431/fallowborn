@@ -357,3 +357,9 @@ Coverage: tests/e2e/specs/federate-migration.spec.js, authority-phase-2.spec.js,
 
 
 African government identities use vandal_custom and mauro_roman legal declarations owned by the regional data. Vandal defendants use Vandal custom, Roman defendants use late_roman personal jurisdiction, and mixed disputes use the royal custom with a Roman assessor tradition. Moorish courts likewise distinguish customary and Roman parties. Carthage and Byzacena seed tenure-based fiscal rights labeled by the estate institution, separately from private property. Vandal estate preference is represented by the existing discriminatory-taxation support penalty, not tax exemptions or a new revenue stream. These are regional applications of the existing none-reviewed identity and customary-right capabilities.
+
+Authored ruler control
+
+Existing-ruler starts move the source court's ordinary authority references and contract approval keys to player once. Issuers, beneficiaries, scopes, appointment ids and generation stamps keep their meaning. Contracts require explicit player consent; the NPC service loop cannot consent for a player-controlled party. FB.treasuryAvailable reads the real player purse when an authority quote names player.
+
+Nepos's reviewed recognition uses the current eastern ruler and the Roman civic delegate. Restoration requires actual Ravenna ownership and a living imperial recognition before an honor-only appointment in the restored court. The western office observer tracks that claimant and appointment separately from Romulus's original office. No office grants Italy by itself. Technology impact for western_claim_restoration is none: baseline political recovery depends on living recognition and ordinary military possession.
