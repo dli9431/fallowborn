@@ -3,6 +3,8 @@ const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
   'data/actions.js',
   'js/actions.js',
+  'js/authority.js',
+  'data/political_institutions.js',
   'js/model.js',
   'js/world.js',
   'js/modifiers.js',
@@ -188,6 +190,9 @@ test('gates realm conversion to landed rulers and makes it once per ruler',
     state.realms.player = {
       name:'Testdom', alive:true, rank:1, capital:'london', religion:null
     };
+    FB.authoritySetIdentity(state, 'player', { eliteCultureId:me.culture,
+      eliteFaithId:'catholic', legalIdentityId:'latin', tolerance:'preference',
+      taxation:'equal', justicePolicy:'personal' });
     state.realms.vassal_test = { name:'Vassal', alive:true, liege:'player' };
     state.realms.fold_test = {
       name:'Old Fold', alive:true, capital:'roma', religion:'catholic'
@@ -208,6 +213,7 @@ test('gates realm conversion to landed rulers and makes it once per ruler',
       commonerOk:commoner.ok,
       ok:ok,
       realmReligion:state.realms.player.religion,
+      eliteFaith:FB.political.governingIdentity(state, 'player').eliteFaithId,
       religion:me.religion,
       marker:player.realmFaithConversion,
       vassalDelta:vassalAfter - vassalBefore,
@@ -224,6 +230,7 @@ test('gates realm conversion to landed rulers and makes it once per ruler',
   expect(result.commonerOk).toBe(false);
   expect(result.ok).toBe(true);
   expect(result.realmReligion).toBe('sunni');
+  expect(result.eliteFaith).toBe('sunni');
   expect(result.religion).toBe('sunni');
   expect(result.marker && result.marker.to).toBe('sunni');
   expect(result.vassalDelta).toBe(-35);

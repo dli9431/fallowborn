@@ -45,3 +45,14 @@ is an integration candidate, not evidence that those gates have passed.
 Optional institutions in this campaign
 
 The 476 bookmark explicitly disables papacy, scutage, manorial_tenure, excommunication, feudal_service, crown_bloc and tournaments. Its previous greatHolyWars:false rule is now the great_holy_wars disable in the same layer. These institutions stay disabled as campaign years pass, including for an inherited or converted Catholic faith. The shared availability contract is documented in docs/designs/systems.md.
+
+
+Customary rights and institutional identity across the region
+
+The 476 bookmark now authors each court or polity's governing culture, faith and legal tradition separately from its county and settlement populations. Roman institutions use late Roman secular law; Gothic elites use Gothic custom with personal Roman law and mixed-court rules. Other communities retain customary law. The initial treatment defaults are confessional preference, equal taxation and personal law. These defaults are explicit gameplay abstractions, not assertions of identical treatment across all historical courts.
+
+Provincial court tenure seeds Peace and Revenue at Ravenna, Rome, Salona, Paris, Toulouse, Carthage and Constantinople on the current map scaffold. The seeding format remains usable when that geography is revised. Rights elsewhere emerge through annual possession, lawful judgments and scoped legal recognition. Both player and AI use the same transitions and existing rights-based war goals. No new de jure hierarchy is synthesized for a rights claim.
+
+A Homoian elite over a predominantly Nicene population therefore remains distinct from that population, and its treatment has concrete Popular support and civic-consent consequences. Players ruling their own realm can review identity and treatment under Governance, Position. Realm interaction sheets expose declared elite culture, faith and law. Conquest changes owner and holder through the existing transfer boundary and preserves the live county and settlement community partitions. Old saves receive no new identities or historical rights during restore.
+
+Technology impact for identity, mixed courts, community worship, tax treatment and justice policy is none, recorded separately in the forward-review ledger. The implementation uses the existing authority script, legal tables, government rows, support and modal history. It adds no runtime dependencies, asset, script-order change or distribution-specific exemption.

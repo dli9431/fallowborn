@@ -3651,3 +3651,11 @@ Map filter level labels resolve through the campaign lexicon on every render, in
 Settlement council and summary award labels distinguish county, ducal and royal crowns using the active title vocabulary.
 
 Customary war claims use the existing target list, exact-justification review, supporting Details and retained list state. The selected right includes its legal basis and exact right id; declaring after its revocation fails the existing revalidation. Multiple rights to one county remain separate choices.
+
+
+Governing identity review
+
+Governance, Position exposes governing identity for a player realm. The sheet separates current elite culture, faith and law from treatment controls and local community consequences. Native labeled selectors use the shared field skin and full-width 44px controls. The review names the selected institutional identity and policies, each county's current and proposed annual support, and the zero payment and time cost. It uses shared review fact and action cards, with explanatory rules in title Details and action Details. Back, Not now and Escape retain the actual selector nodes, scroll and originating focus through modal history. Stale confirmation leaves the review open and asks for a fresh review. Successful confirmation closes the flow and refreshes ordinary panels. Foreign realm interaction sheets show declared elite identity without changing their communities.
+
+
+Mixed-court sentence reviews also display the selected advisory legal tradition when an assessor is declared.

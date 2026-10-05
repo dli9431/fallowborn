@@ -78,6 +78,15 @@ window.FBDATA = window.FBDATA || {};
       government:'federate_polity',
       ruler:{ name:'Odoacer', sex:'m', culture:'gothic', born:433, mar:12, trait:'ambitious' } }
   ];
+  /* These are ruling institutions, distinct from the community seed below. */
+  realms.forEach(function (r) {
+    r.governingIdentity = { eliteCultureId:r.ruler.culture, eliteFaithId:r.religion,
+      legalIdentityId:r.ruler.culture === 'gothic' ? 'gothic_custom' :
+        r.ruler.culture === 'roman' || r.ruler.culture === 'greek' ? 'late_roman' : 'customary',
+      tolerance:'preference', taxation:'equal', justicePolicy:'personal' };
+  });
+  var provincialCourts = { ravenna:1, roma:1, split:1, paris:1, toulouse:1, tunis:1,
+    constantinople:1 };
   var provinces = base.provinces.map(function (source) {
     var p = Object.assign({}, source);
     if (!regions[source.realm] || source.wasteland) {
@@ -102,6 +111,9 @@ window.FBDATA = window.FBDATA || {};
         terrain:source.terrain, wasteland:true };
     }
     p.settlements = undefined;
+    if (provincialCourts[p.id]) p.customaryRights = ['peace','revenue'].map(function (power) {
+      return { power:power, basis:'tenure', basisRef:'provincial_court_476:' + p.id };
+    });
     p.culture = p.realm === 'franks_476' ||
       p.realm === 'rhein_franks_476' ? 'frankish' :
       p.realm === 'pannonia' ? 'gothic' :

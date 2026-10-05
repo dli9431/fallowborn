@@ -343,3 +343,6 @@ made on the same day; no discovery cache enters saves or outlives the calculatio
 Strict local-contact previews read the current travel position directly. They do not normalize travel records or add travel history and settlement fields to older saves. Discovery consumes no RNG and records knowledge only through the learning transaction.
 
 Papal apostasy sanctions require the excommunication system for the former faith. A final bookmark disable prevents conversion from reviving a disabled institution. Conversion costs and ordinary community reactions continue to use their existing rules. See docs/designs/systems.md.
+
+
+A successful realm-wide faith conversion updates an existing declared eliteFaithId along with the realm official faith. Personal and household conversion leave the institutional declaration unchanged. Community populations remain intact, and the original conversion costs, cooldown and eligibility still apply.

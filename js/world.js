@@ -752,6 +752,9 @@ window.FB = window.FB || {};
           fault('realm ' + rid + ' has an invalid ruler profile.');
         }
       }
+      if (realmDef.governingIdentity !== undefined &&
+          !FB.authorityIdentityValid(null, realmDef.governingIdentity))
+        fault('realm ' + rid + ' has invalid governing identity.');
       if (realmDef.religion !== undefined &&
           (!FB.faithExists(realmDef.religion, null) ||
            !FB.faithAssignable(realmDef.religion, null))) {
@@ -787,6 +790,19 @@ window.FB = window.FB || {};
     for (var pvi = 0; pvi < provinces.length; pvi++) {
       var pr = provinces[pvi];
       if (!pr || !pr.id) continue;
+      if (pr.customaryRights !== undefined) {
+        if (pr.wasteland || !Array.isArray(pr.customaryRights))
+          fault('province ' + pr.id + ' has invalid customary rights.');
+        else for (var seed of pr.customaryRights) {
+          if (!seed || !ownKey(FBDATA.customaryBases, seed.basis) ||
+              ['peace','revenue','consent'].indexOf(seed.power) < 0 ||
+              seed.realmId !== undefined && !realms[seed.realmId] ||
+              seed.basis !== 'possession' &&
+                (typeof seed.basisRef !== 'string' || !seed.basisRef) ||
+              seed.basis === 'recognition')
+            fault('province ' + pr.id + ' has invalid customary right seed.');
+        }
+      }
       if (pr.communities !== undefined && pr.communities !== null) {
         if (pr.wasteland) {
           fault('wasteland ' + pr.id + ' declares communities.');
@@ -2240,6 +2256,8 @@ window.FB = window.FB || {};
     FB.invalidateRealmCache();
     FB.ensureReligiousHeads(state);
     FB.ensureDynasticState(state);
+    if (FB.authoritySeedCommunities)
+      FB.authoritySeedCommunities(state, FBDATA.realms, FBDATA.provinces);
     if (FB.seedRealmTechnologies) FB.seedRealmTechnologies(state);
   };
 

@@ -1754,6 +1754,8 @@ button.ongoing-commitment-row:focus-visible { background: #302619; }
 .enterprise-staffing-option .kv > b { text-align: right; }
 .enterprise-staffing-option .btn { width: 100%; min-height: 44px; margin-top: 4px; }
 [data-enterprise-upgrade-plan] > label { display: block; margin: 12px 0 6px; }
+.governing-identity-fields > label { display: block; margin: 12px 0 6px; }
+.governing-identity-fields > select { width: 100%; min-width: 0; max-width: 100%; min-height: 44px; }
 [data-enterprise-upgrade-plan] > select { width: 100%; min-width: 0; max-width: 100%; min-height: 44px; }
 [data-enterprise-upgrade-plan] > .settcard { margin-top: 8px; }
 [data-enterprise-upgrade-plan] .settcard-head > .actionbtn {

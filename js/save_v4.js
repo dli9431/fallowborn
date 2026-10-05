@@ -193,8 +193,13 @@
             !((FBDATA.religions || {})[form.eliteFaithId] ||
               (state.faiths || {})[form.eliteFaithId]) ||
           form.legalIdentityId !== undefined &&
-            (typeof form.legalIdentityId !== 'string' ||
-              !/^[a-z][a-z0-9_]*$/.test(form.legalIdentityId)))
+            !own(FBDATA.legalTraditions, form.legalIdentityId) ||
+          form.tolerance !== undefined &&
+            ['preference','tolerant','persecution'].indexOf(form.tolerance) < 0 ||
+          form.taxation !== undefined &&
+            ['equal','discriminatory'].indexOf(form.taxation) < 0 ||
+          form.justicePolicy !== undefined &&
+            ['personal','elite'].indexOf(form.justicePolicy) < 0)
         invalid('authority.governments.' + rid);
     }
     if (authority.civicActors !== undefined) {
