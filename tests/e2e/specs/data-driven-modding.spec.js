@@ -1075,6 +1075,14 @@ test('milestone-four phase A projects protected baseline action catalogues and r
           const projected = definition && FB.instants[definition.order];
           return !!projected && projected.id === id && typeof projected.run === 'function';
         }),
+        institutionalDeeds:['city_dealings', 'church_dealings', 'church_council',
+          'offices_legitimacy', 'seek_station'].map(function (id) {
+          const definition = FBDATA.deeds.find(function (def) { return def.id === id; });
+          const projected = definition && FB.instants[definition.order];
+          return !!projected && projected.id === id &&
+            typeof projected.desc(FB.state) === 'string' &&
+            projected.desc(FB.state).trim().length > 0;
+        }),
         initialized:[typeof FB.standingOf, typeof FB.feudalCharterDef, Array.isArray(FB.focuses)],
         validation:FB.validateActionData(),
         focusMetadata:focusMetadata,
@@ -1085,11 +1093,12 @@ test('milestone-four phase A projects protected baseline action catalogues and r
       };
     });
 
-    expect(result.counts).toEqual([28, 87]);
+    expect(result.counts).toEqual([28, 92]);
     expect(result.gamesOrder).toEqual([
       'take_road', 'games_calendar', 'host_games', 'travel_turn_back'
     ]);
     expect(result.lordshipDeeds).toEqual([true, true, true]);
+    expect(result.institutionalDeeds).toEqual([true, true, true, true, true]);
     expect(result.initialized).toEqual(['function', 'function', true]);
     expect(result.validation).toEqual([]);
     expect(result.focusMetadata).toBe(true);

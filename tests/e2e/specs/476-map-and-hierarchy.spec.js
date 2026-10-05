@@ -100,6 +100,50 @@ test('476 owns a complete stable grid and independent Roman hierarchy', async fu
     words:['province','diocese','prefecture'] });
 });
 
+test('476 title chains stay canonical through activation and an immediate save restore', async function ({ page }, testInfo) {
+  await observe(page, testInfo);
+  const result = await page.evaluate(function () {
+    const book = FB.bookmark('476'), before = JSON.stringify(book);
+    const normalization = FB.titleIds.normalizeBookmark(book);
+    const typed = { kind:'duchy', id:'d_476_flaminia_picenum' };
+    const migrated = FB.titleIds.migrateState({ claim:typed }, book);
+    const invalidRank = JSON.parse(JSON.stringify(book));
+    invalidRank.kingdoms.k_476_italia_annonaria.empire = 'k_476_italy';
+    const missingParent = JSON.parse(JSON.stringify(book));
+    missingParent.kingdoms.k_476_italia_annonaria.empire = 'e_476_missing';
+    const ambiguous = JSON.parse(JSON.stringify(book));
+    ambiguous.empires['476_italy'] = ambiguous.empires.e_476_italy;
+    const chains = FB.world.provs.filter(function (p) { return !p.wasteland && p.duchy; })
+      .every(function (p) {
+        const d = normalization.duchies[p.duchy], k = d && normalization.kingdoms[d.kingdom];
+        const dj = FB.dejureOf(p.id);
+        return !!d && !!k && !!normalization.empires[k.empire] &&
+          dj.duchy === p.duchy && dj.kingdom === d.kingdom && dj.empire === k.empire;
+      });
+    const expected = FB.dejureOf('ravenna');
+    FB.setRealmTitle(FB.state, FB.state.realms.italy, 'empire', expected.empire);
+    const saved = JSON.parse(FB.save.serialize());
+    FB.save.restore(saved);
+    return { faults:FB.validateBookmark(book), chains:chains,
+      normalized:['duchies', 'kingdoms', 'empires'].every(function (table) {
+        return Object.keys(normalization[table]).every(function (id) { return /^476_[a-z][a-z0-9_]*$/.test(id); });
+      }),
+      wrongRank:FB.validateBookmark(invalidRank).some(function (error) { return /Missing empire title/.test(error); }),
+      missingParent:FB.validateBookmark(missingParent).some(function (error) { return /Missing empire title/.test(error); }),
+      ambiguous:FB.validateBookmark(ambiguous).some(function (error) { return /Ambiguous empire title aliases/.test(error); }),
+      claim:migrated.claim, ravenna:FB.dejureOf('ravenna'),
+      restoredClaim:[FB.state.realms.italy.titleKind, FB.state.realms.italy.titleId],
+      retained:JSON.stringify(expected) === JSON.stringify(FB.dejureOf('ravenna')),
+      unchanged:before === JSON.stringify(book) };
+  });
+  expect(result).toEqual({ faults:[], chains:true, normalized:true,
+    wrongRank:true, missingParent:true, ambiguous:true,
+    claim:{ kind:'duchy', id:'476_flaminia_picenum' },
+    ravenna:{ duchy:'476_flaminia_picenum', kingdom:'476_italia_annonaria', empire:'476_italy' },
+    restoredClaim:['empire', '476_italy'],
+    retained:true, unchanged:true });
+});
+
 test('period owners, seats, Gothic bodies and generated rulers follow the spring snapshot', async function ({ page }, testInfo) {
   await observe(page, testInfo);
   const result = await page.evaluate(function () {
@@ -239,7 +283,7 @@ test('the authored 476 world runs ten years and restores valid ownership and tit
       valid:FB.world.provs.filter(function (p) { return !p.wasteland; }).every(function (p) {
         return !!restored.realms[restored.owner[p.id]] && !!restored.realms[restored.holder[p.id]] &&
           typeof p.name === 'string' && p.name.length > 0 &&
-          (!p.duchy || /^d_476_/.test(p.duchy));
+          (!p.duchy || /^476_[a-z][a-z0-9_]*$/.test(p.duchy));
       }),
       synthetic:!Object.keys(restored.realms).some(function (id) { return /undefined|null/.test(id); }) };
   });

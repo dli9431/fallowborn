@@ -164,6 +164,9 @@ slug. Bookmarks and mods may still provide old `d_`, `k_` and `e_` IDs at typed
 boundaries. Activation resolves them to canonical slugs and rejects alias
 collisions or missing parents. Realm and character identifiers are separate
 and are never rewritten merely because their spelling resembles a title.
+Title slugs may start with a lowercase letter or a digit, including year-prefixed
+administrative groups. Legacy aliases enforce their rank before removing the
+prefix, so a kingdom alias cannot resolve as an empire even with a numeric slug.
 
 Tracked biographies record genuine royal accessions, living abdication and ducal recognition with
 the person and title at that boundary; repair-only succession does not add a
@@ -1599,7 +1602,7 @@ title migration and parity journeys retained.
 
 476 authored geography
 
-The 476 administrative groups use independent d_476_, k_476_ and e_476_ ids in Roman regions; Roman civic vocabulary names the three levels province, diocese and prefecture. Regional kingdoms outside the surviving administration have no hierarchy. The direct-holder governments keep the explicitly authored realm as both owner and holder. Nonterritorial Amal and Thracian bodies have hosts and court seats inside the eastern sphere without hereditary counties. Profiles with generated:true omit a historical name and receive a seeded name from their specified culture; named profiles and other bookmarks retain their original construction.
+The 476 administrative groups use independent d_476_, k_476_ and e_476_ ids in Roman regions; activation and saved title migration resolve their typed aliases to rank-scoped 476_ slugs. Roman civic vocabulary names the three levels province, diocese and prefecture. Regional kingdoms outside the surviving administration have no hierarchy. The direct-holder governments keep the explicitly authored realm as both owner and holder. Nonterritorial Amal and Thracian bodies have hosts and court seats inside the eastern sphere without hereditary counties. Profiles with generated:true omit a historical name and receive a seeded name from their specified culture; named profiles and other bookmarks retain their original construction.
 
 Nonterritorial federate courts
 

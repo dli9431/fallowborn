@@ -124,11 +124,14 @@ pre-selection phase then runs `FB.reconcileSerfStory` and
 officer bridge or due neighbor reckoning is queued, and stale participant state is cleared,
 before ordinary queue validation or random selection.
 
-The 28 baseline focus records and 79 baseline deed records keep their non-executable
+The 28 baseline focus records and 92 baseline deed records keep their non-executable
 metadata in `data/actions.js`. `js/actions.js` owns private handler registries and validates
 and projects those records into the compatible `FB.focuses` / `FB.instants` shapes. Every
 baseline id, order, and handler binding is protected. Catalogue orders are contiguous
 from zero; removing a baseline record requires renumbering the remaining entries.
+Late antique city, church, council, office and station deeds follow the existing
+baseline records with unique orders. Static institutional descriptions belong to
+the data catalogue so validation and both disclosure layouts share their source.
 Fixed cooldowns, technology
 requirements, group, and explicit `immediate` / `no_day` / `choices` flow are data; day
 consumption, deferred cooldowns, compatibility aliases, modal behavior, callbacks, and RNG

@@ -20,9 +20,9 @@ window.FB = window.FB || {};
   function slug(rank, id) {
     if (typeof id !== 'string' || !prefixes[rank]) return null;
     var prefix = prefixes[rank];
-    if (/^[dke]_[a-z]/.test(id) && id.slice(0, 2) !== prefix) return null;
+    if (/^[dke]_[a-z0-9]/.test(id) && id.slice(0, 2) !== prefix) return null;
     var value = id.slice(0, 2) === prefix ? id.slice(2) : id;
-    return /^[a-z][a-z0-9_]*$/.test(value) ? value : null;
+    return /^[a-z0-9][a-z0-9_]*$/.test(value) ? value : null;
   }
   function resolve(rank, id, table, where) {
     var canonical = slug(rank, id);

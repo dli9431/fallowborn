@@ -1280,6 +1280,7 @@ Counties → duchies → kingdoms → empires, all plain reference data:
 ```
 
 Each level has its own slug namespace, so the same slug may identify a district and a kingdom. Supplied county duchy, district kingdom and kingdom empire references must resolve within their typed level; omitted or null parents end the chain. Old d_, k_ and e_ aliases are accepted and normalized before activation. Duplicate aliases or unknown supplied parents reject the bookmark. Realm ids remain separate. New mods should author canonical slugs.
+Title slugs use lowercase letters, digits and underscores and may start with a letter or digit, such as 476_italy. A legacy alias must match its typed rank, including for year-prefixed slugs.
 
 The engine uses it for the player's rank-claim eligibility (majority of a
 duchy/kingdom/empire), realm naming, and the Land panel's hierarchy display. Mods may add

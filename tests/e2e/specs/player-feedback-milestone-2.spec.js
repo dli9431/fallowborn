@@ -6,6 +6,8 @@ dependsOnRuntime(__filename, [
   'js/world.js',
   'js/lordships.js',
   'js/economy.js',
+  'js/population.js',
+  'js/rebellions.js',
   'js/main.js',
   'js/model.js',
   'js/ui_misc.js',
@@ -147,7 +149,14 @@ test('locked monopoly deed keeps Guild Charters in its shared details surface',
 for (const width of [320, 390]) {
   test('enterprise purchase Details clears costs and the footer at width ' + width, async function ({ page }) {
     await page.setViewportSize({ width:width, height:740 });
-    await page.evaluate(function () { FB.ui.showEnterpriseMarket(0); });
+    const setup = await page.evaluate(function () {
+      const s = FB.state;
+      const capacity = FB.countyBuildingCapacityBonus(s, s.player.provinceId);
+      FB.ui.showEnterpriseMarket(0);
+      return { catalogueFaults:FB.validateActionData(),
+        buildingCapacityReady:typeof capacity === 'number' && isFinite(capacity) };
+    });
+    expect(setup).toEqual({ catalogueFaults:[], buildingCapacityReady:true });
     const cards = page.locator('.enterprise-purchase-shell');
     expect(await cards.count()).toBeGreaterThan(0);
     for (let i = 0; i < await cards.count(); i++) {

@@ -118,15 +118,6 @@ FBDATA.focuses = [
 ];
 
 FBDATA.deeds = [
-  { id:'offices_legitimacy', label:'🏛 Offices and legitimacy…', order:0,
-    desc:'Review held offices, seek a scoped appointment, or recognize and contest an imperial claimant.',
-    section:'offices', group:'offices', flow:'choices', handler:'offices_legitimacy', systems:['roman_offices'] },
-  { id:'church_council', systems:['church_councils','episcopal_sees'], label:'☧ Convene a church council…', order:89,
-    section:'church_dealings', group:'faith', flow:'choices', handler:'church_council' },
-  { id:'city_dealings', system:'civic_institutions', label:'🏛 Councils and senates…', order:87,
-    section:'cities', flow:'choices', handler:'city_dealings' },
-  { id:'church_dealings', system:'episcopal_sees', label:'✝ Bishoprics and mediation…', order:88,
-    section:'church_dealings', flow:'choices', handler:'church_dealings' },
   { id:'poach', systems:['manorial_tenure'], label:'🗡 Desperate measures…', order:0,
     desc:'Choose an illegal way to take food, goods, or coin from the lord.', section:'work', group:'work', flow:'choices', cooldownDays:30, handler:'poach' },
   { id:'scheme_rival', label:'🗡 Scheme against {rival}', order:1,
@@ -209,8 +200,6 @@ FBDATA.deeds = [
     section:'realm', group:'realm', flow:'choices', handler:'buy_land' },
   { id:'declare_manor', availableWhileTraveling:true, label:'🏡 Declare a manor', order:40,
     section:'realm', group:'realm', flow:'choices', handler:'declare_manor' },
-  { id:'seek_station', availableWhileTraveling:true, label:'🏛 Seek station recognition', order:40,
-    section:'realm', group:'realm', flow:'choices', handler:'seek_station' },
   { id:'found_settlement', availableWhileTraveling:true, label:'🏘 Found a settlement', order:41,
     section:'realm', group:'realm', flow:'choices', cooldownDays:0, handler:'found_settlement' },
   { id:'petition_barony', availableWhileTraveling:true, label:'📜 Petition for a barony', order:42,
@@ -302,5 +291,19 @@ FBDATA.deeds = [
     section:'realm', group:'realm', flow:'choices', handler:'historical_ambitions' },
   { id:'household_service', label:'🤝 Offer household service…', order:86,
     desc:'Seek a household appointment, review your service or pursue advancement.',
-    section:'work', group:'work', flow:'choices', handler:'household_service' }
+    section:'work', group:'work', flow:'choices', handler:'household_service' },
+  { id:'city_dealings', system:'civic_institutions', label:'🏛 Councils and senates…', order:87,
+    desc:'Review city representatives, demands and consent, or negotiate a civic agreement.',
+    section:'cities', flow:'choices', handler:'city_dealings' },
+  { id:'church_dealings', system:'episcopal_sees', label:'✝ Bishoprics and mediation…', order:88,
+    desc:'Review living bishops and vacant sees, or seek church mediation and support.',
+    section:'church_dealings', flow:'choices', handler:'church_dealings' },
+  { id:'church_council', systems:['church_councils','episcopal_sees'], label:'☧ Convene a church council…', order:89,
+    desc:'Review a gathering of living bishops, its treasury cost and local church support before convening it.',
+    section:'church_dealings', group:'faith', flow:'choices', handler:'church_council' },
+  { id:'offices_legitimacy', label:'🏛 Offices and legitimacy…', order:90,
+    desc:'Review held offices, seek a scoped appointment, or recognize and contest an imperial claimant.',
+    section:'offices', group:'offices', flow:'choices', handler:'offices_legitimacy', systems:['roman_offices'] },
+  { id:'seek_station', availableWhileTraveling:true, label:'🏛 Seek station recognition', order:91,
+    section:'realm', group:'realm', flow:'choices', handler:'seek_station' }
 ];
