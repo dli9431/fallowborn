@@ -579,7 +579,7 @@ window.FB = window.FB || {};
       for (var we = 0; we < wardrobeErrors.length; we++) errors.push(wardrobeErrors[we]);
     }
     var governmentErrors = FB.governments.validate().concat(FB.validateEraData(),
-      FB.lexicon.validate(), FB.systems.validateCatalogs(),
+      FB.lexicon.validate(), FB.validateLegalTraditions(), FB.systems.validateCatalogs(),
       FB.systems.validateLayer(definition.systems, FB.T('Bookmark {id}', { id:definition.id })));
     for (var ge = 0; ge < governmentErrors.length; ge++) errors.push(governmentErrors[ge]);
     if (!definition.id || !/^[a-z0-9_]+$/i.test(definition.id)) fault('invalid id.');

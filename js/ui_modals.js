@@ -25282,9 +25282,10 @@ window.FB = window.FB || {};
       authority:FB.T('Outside your arrest authority'), cooldown:FB.T('The target recently evaded this ruler’s arrest.'),
       truce:FB.T('A truce with the crown forbids this arrest'),
       case:FB.T('Case no longer available'), custody:FB.T('Requires your custody'),
+      procedure:FB.T('This legal tradition does not permit this procedure'),
       regional:FB.T('Unavailable in this legal tradition'), title:FB.T('No local titles to forfeit'),
       destination:FB.T('No exile destination'), already_sentenced:FB.T('Sentence already imposed'),
-      term:FB.T('Prison term has over 90 days left'), funds:FB.T('Payment unavailable'),
+      term:FB.T('Prison term is not yet eligible for extension'), funds:FB.T('Payment unavailable'),
       sentence:FB.T('Sentence unavailable')
     };
     return labels[code] || FB.T('The situation has changed. Review the current terms.');
@@ -25316,17 +25317,19 @@ window.FB = window.FB || {};
   }
   function justiceSentenceFacts(p) {
     const s = FB.state, def = FBDATA.justiceSentences[p.sentence];
-    let h = kv('Judgment', esc(p.justified ? FB.T('Justified') : FB.T('Unjust or excessive'))) +
+    const tradition = FBDATA.legalTraditions[p.traditionId];
+    let h = (tradition ? kv('Legal tradition', esc(FB.dataText(s, p.actorId, 'legalTradition', p.traditionId, tradition, 'name', {}))) : '') + kv('Judgment', esc(p.justified ? FB.T('Justified') : FB.T('Unjust or excessive'))) +
       (p.support ? kv('Popular support loss', esc(FB.T('{amount} per directly governed county', {
         amount:Math.abs(Math.round(p.support))
       }))) : kv('Popular support', esc(p.justified ? FB.T('No loss — justified action') : FB.T('No additional loss'))));
-    if (def.kill) h += kv('Consequence', esc(FB.T('Death')));
-    else if (def.maim) h += kv('Consequence', esc(FB.T('Permanent injury and deposition')));
-    else if (def.exile) h += kv('Consequence', esc(FB.T('Local titles and offices lost; exile for 5 years')));
-    else if (def.forfeit) h += kv('Consequence', esc(FB.T('Local titles and lands lost; released')));
-    else if (p.sentence === 'penance') h += kv('Consequence', esc(FB.T('-40 piety, -20 prestige; released')));
-    else if (p.sentence !== 'imprisonment') h += kv('Consequence', esc(FB.T('Released')));
-    if (def.money) h += kv('Collect', esc(FB.T('{money:amount}', { amount:p.amount })));
+    if (def.kind === 'death') h += kv('Consequence', esc(FB.T('Death')));
+    else if (def.kind === 'corporal') h += kv('Consequence', esc(FB.T('Permanent injury and deposition')));
+    else if (def.kind === 'exile') h += kv('Consequence', esc(FB.T('Local titles and offices lost; exile for 5 years')));
+    else if (def.kind === 'forfeiture') h += kv('Consequence', esc(FB.T('Local titles and lands lost; released')));
+    else if (def.kind === 'penance') h += kv('Consequence', esc(FB.T('-{piety} piety, -{prestige} prestige; released', {
+      piety:def.pietyCost === undefined ? 40 : def.pietyCost, prestige:def.prestigeCost === undefined ? 20 : def.prestigeCost })));
+    else if (def.kind !== 'custody') h += kv('Consequence', esc(FB.T('Released')));
+    if (['fine','ransom'].indexOf(def.kind) >= 0) h += kv('Collect', esc(FB.T('{money:amount}', { amount:p.amount })));
     if (p.endTurn) h += kv('Release due', esc(fortDateText(s, p.endTurn)));
     if (p.destination) h += kv('Exile to', esc(FB.world.byId[p.destination].name));
     if (!p.ready) h += kv('Unavailable', esc(justiceBlocker(p.blocker)));

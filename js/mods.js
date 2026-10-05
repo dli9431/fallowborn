@@ -179,7 +179,7 @@ window.FBMODS = window.FBMODS || [];
     schooling:true, enterprises:true, auctionLotTypes:true,
     householdStandards:true, marketGoods:true, marketEndowmentTypes:true,
     marketEndowments:true, travelPurposes:true, travelSites:true, tournaments:true,
-    finance:true, plots:true, intrigue:true, items:true, itemPools:true,
+    finance:true, plots:true, intrigue:true, legalTraditions:true, justiceSentences:true, governmentForms:true, items:true, itemPools:true,
     rulerTraits:true, raidingTraditions:true, councilSeats:true,
     councilRules:true, politicalBlocs:true,
     policies:true, elections:true, privileges:true, collectiveDemands:true,
@@ -1519,6 +1519,25 @@ window.FBMODS = window.FBMODS || [];
     }
   }
 
+  function validateJustice(mod) {
+    const traditions = combinedTable(FBDATA.legalTraditions, mod.legalTraditions, 'legalTraditions');
+    const sentences = combinedTable(FBDATA.justiceSentences, mod.justiceSentences, 'justiceSentences');
+    const forms = combinedTable(FBDATA.governmentForms, mod.governmentForms, 'governmentForms');
+    const errors = FB.validateLegalTraditions(traditions, sentences, forms);
+    for (const id in mod.religions || {}) if (own(mod.religions, id)) {
+      const d = mod.religions[id], legal = d && d.properties && d.properties.legalTradition;
+      if (legal !== undefined && !own(traditions, legal)) fail('religions.' + id + '.properties.legalTradition', 'names an unknown tradition.');
+    }
+    if (errors.length) fail('legalTraditions', errors[0]);
+    if (mod.governmentForms) {
+      const saved = FBDATA.governmentForms;
+      let problems;
+      try { FBDATA.governmentForms = forms; problems = FB.governments.validate(); }
+      finally { FBDATA.governmentForms = saved; }
+      if (problems.length) fail('governmentForms', problems[0]);
+    }
+  }
+
   function validateBeforeApply(mod) {
     if (!plainObject(mod)) throw new Error('Mod data must be an object.');
     for (const key in mod) {
@@ -1529,6 +1548,7 @@ window.FBMODS = window.FBMODS || [];
     if (own(mod, 'name') && (typeof mod.name !== 'string' || !mod.name)) {
       fail('name', 'must be a non-empty string.');
     }
+    if (own(mod, 'legalTraditions') || own(mod, 'justiceSentences') || own(mod, 'governmentForms') || own(mod, 'religions')) validateJustice(mod);
     if (own(mod, 'intrigue') || own(mod, 'plots')) validateIntrigue(mod);
     if (own(mod, 'itemPools')) validateItemPools(mod);
     if (own(mod, 'careers')) validateCareers(mod);
@@ -1771,6 +1791,9 @@ window.FBMODS = window.FBMODS || [];
     if (mod.settlementSites) mergeTable(FBDATA.settlementSites, mod.settlementSites);
     if (mod.religiousPaths) mergeTable(FBDATA.religiousPaths,
       mod.religiousPaths);
+    if (mod.legalTraditions) mergeTable(FBDATA.legalTraditions, mod.legalTraditions);
+    if (mod.justiceSentences) mergeTable(FBDATA.justiceSentences, mod.justiceSentences);
+    if (mod.governmentForms) mergeTable(FBDATA.governmentForms, mod.governmentForms);
     if (mod.religions) for (const k in mod.religions) FBDATA.religions[k] = mod.religions[k];
     if (mod.traits) for (const k in mod.traits) FBDATA.traits[k] = mod.traits[k];
     if (mod.ailments) for (const k in mod.ailments) FBDATA.ailments[k] = mod.ailments[k];
