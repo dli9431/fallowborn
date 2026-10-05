@@ -88,6 +88,41 @@ FBDATA.stationLadders = { feudal:{
   }
 } };
 
+/* Late antique standing is distinct from landed lordship. The stable bands
+   keep save identities, while advancement uses civic means, service and
+   living mandates rather than manors or hereditary barony charters. */
+FBDATA.stationLadders.late_antique = JSON.parse(JSON.stringify(FBDATA.stationLadders.feudal));
+(function () {
+  var bands = FBDATA.stationLadders.late_antique.bands;
+  var rules = [
+    { next:1, cost:{ gold:50, prestige:0, piety:0 }, paths:[{ wealth:50, standing:20 }] },
+    { next:2, cost:{ gold:30, prestige:10, piety:0 }, paths:[
+      { wealth:120, prestige:40 }, { roles:['civic','arms','clergy'], years:3, prestige:30 }, { office:true, prestige:10 }] },
+    { next:3, cost:{ gold:50, prestige:20, piety:0 }, paths:[
+      { roles:['civic'], years:6, prestige:60 }, { wealth:250, prestige:80 }, { office:true, prestige:30 }] },
+    { next:4, cost:{ gold:100, prestige:40, piety:0 }, countyGrant:true,
+      paths:[{ prestige:120, standing:50 }] },
+    { next:5, cost:{ gold:150, prestige:60, piety:0 }, paths:[
+      { counties:2, prestige:200, standing:50 }, { counties:2, prestige:150, office:true }] },
+    { next:6, cost:{ gold:250, prestige:100, piety:0 }, paths:[
+      { counties:4, prestige:400, sovereign:true }, { counties:4, prestige:300, source:'imperial_commission' }] },
+    { next:7, cost:{ gold:500, prestige:200, piety:0 }, paths:[
+      { counties:8, prestige:800, sovereign:true, source:'army_acclamation' },
+      { counties:8, prestige:1000, sovereign:true, wealth:1500 }] }
+  ];
+  for (var i = 0; i < 8; i++) {
+    bands[i].promotion = rules[i] ? Object.assign({ route:'standing' }, rules[i]) : null;
+    bands[i].sitsInEstates = false;
+  }
+  bands[3].isBaron = false;
+  bands[3].isLanded = false;
+  bands[3].mayCommand = false;
+  bands[3].mayAdministerJustice = false;
+  bands[3].isFreeUnlanded = true;
+  bands[3].maySeekCounty = true;
+  bands[3].role = 'gentry';
+})();
+
 /* The shared manuscript look is deliberately unchanged. Period-specific
    content can add styles using the registered shapes in js/siteart.js. */
 FBDATA.architectureStyles = {
@@ -107,7 +142,7 @@ FBDATA.eras = {
   late_antique:{
     from:375, to:649,
     defaultGovernment:'regnum', defaultCulture:'roman',
-    costume:'late_antique', vocabulary:null, ladder:FBDATA.stationLadders.feudal,
+    costume:'late_antique', vocabulary:null, ladder:FBDATA.stationLadders.late_antique,
     systems:{ disable:['papacy','scutage','manorial_tenure','excommunication',
       'feudal_service','crown_bloc','tournaments','great_holy_wars'] },
     technology:{ from:476, to:649, startingKnowledge:'historical' },

@@ -29,6 +29,17 @@ window.FBDATA = window.FBDATA || {};
       },
       tracks:['federate_track_476'],
       intro:'You are {name}, a free federate soldier near Ravenna. Orestes owes the host its pay; the court, the city and Odoacer each want a different settlement.' },
+    { id:'curialis_476', bookmarkIds:['476'], fixedProvinceId:'ravenna', alwaysUnlocked:true,
+      name:'Curialis', desc:'A Roman civic household at Ravenna. Serve the council, seek a local mandate, or keep your livelihood outside the court dispute.',
+      tier:2, profession:'curialis', gold:80, prestige:30, piety:10,
+      startAge:30, startCulture:'roman', startReligion:'nicene',
+      startEffects:{ skills:{ ste:2, lea:2 }, careerExperience:5 },
+      familyPresets:{
+        established:{ name:'Civic household', diff:'age 30 · spouse and young children' },
+        standard:{ name:'Unmarried curialis', diff:'age 30 · parents and siblings' }
+      },
+      tracks:['curialis_track_476'],
+      intro:'You are {name}, a curialis of Ravenna. Civic accounts and family obligations fill your days while the court and federate host negotiate. A council mandate can bring standing, but it does not give you the city’s land or treasury.' },
     { id:'serf', eras:['early_medieval','high_medieval'], name:'Serf',
       desc:'Bound to the land, with no property or freedom.',
       tier:0, profession:'farmer', gold:5, prestige:0, piety:0,

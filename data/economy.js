@@ -76,10 +76,10 @@ FBDATA.religiousPaths = {
     kind:'vocation', faiths:['nicene','homoian','chalcedonian','miaphysite'],
     professions:['priest'],
     ranks:[
-      { id:'clerk', name:'Clerk', pietyYield:0.25 },
+      { id:'clerk', name:'Lector', pietyYield:0.25 },
       { id:'deacon', name:'Deacon', age:19, years:3, learning:5,
         piety:30, prestigeGain:4, pietyYield:0.75 },
-      { id:'priest', name:'Priest', age:24, years:5, learning:7,
+      { id:'priest', name:'Presbyter', age:24, years:5, learning:7,
         piety:50, prestigeGain:7, pietyYield:1, station:1 },
       { id:'bishop', name:'Bishop', age:30, years:14, learning:12,
         piety:160, prestige:80, prestigeGain:25, pietyYield:2.5,
@@ -358,6 +358,24 @@ FBDATA.careers = {
     wage:1.5, masterWage:2.5,
     ranks:{ apprentice:'Household page', journeyman:'Estate servant', master:'Steward' },
     desc:'Learn the conduct, accounts, and obligations of a great household.'
+  },
+  colonus: {
+    role:'labor', eras:['late_antique'], name:'Tenant farming', icon:'🌾', skill:'ste',
+    apprenticeAge:10, apprenticeCost:0, wage:1.2, masterWage:2,
+    ranks:{ apprentice:'Farm pupil', journeyman:'Colonus', master:'Experienced tenant' },
+    desc:'Cultivate leased fields. Work does not change your legal freedom or tenure.'
+  },
+  curialis: {
+    role:'civic', eras:['late_antique'], name:'Curial service', icon:'🏛', skill:'ste',
+    apprenticeAge:16, apprenticeCost:0, tierMin:2, wage:2, masterWage:3,
+    ranks:{ apprentice:'Curial pupil', journeyman:'Curialis', master:'Senior curialis' },
+    desc:'Maintain civic accounts, petitions and the obligations of a city household.'
+  },
+  decurion: {
+    role:'civic', eras:['late_antique'], name:'Decurional service', icon:'🏛', skill:'dip',
+    apprenticeAge:16, apprenticeCost:0, tierMin:3, wage:2.5, masterWage:3.5,
+    ranks:{ apprentice:'Council assistant', journeyman:'Decurion', master:'Senior decurion' },
+    desc:'Serve the local council. Judicial power still needs a separate effective appointment.'
   }
 };
 

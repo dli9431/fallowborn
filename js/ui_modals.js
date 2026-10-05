@@ -2946,6 +2946,7 @@ window.FB = window.FB || {};
   };
 
   function rankElevationActionId(route) {
+    if (route === 'standing') return 'seek_station';
     if (route === 'manor') return 'declare_manor';
     if (route === 'barony') return 'petition_barony';
     if (route === 'county') return 'petition_liege';
@@ -2953,6 +2954,8 @@ window.FB = window.FB || {};
   }
 
   function rankElevationBenefit(targetTier) {
+    if (FB.standingProgression(FB.state)) return FB.T(
+      'Recognition at the displayed station. Offices retain their own scope and term; only an explicitly reviewed county investiture transfers land and revenue.');
     const benefits = {
       2:FB.T('Gentry standing and the right to manage a {term:manor}.'),
       3:FB.T('A baronial title, Governance, seasonal tax, and levy.'),
@@ -3223,10 +3226,16 @@ window.FB = window.FB || {};
         })));
     }
     if (status.settlementGrant) h += settlementGrantSummary(s, status.settlementGrant, false);
+    if (status.requirements) {
+      h += kv('Recognition routes', esc(FB.T('Meet every requirement in one of these routes:')));
+      status.requirements.forEach(function (line) { h += '<p class="hint">' + esc(line) + '</p>'; });
+      if (status.site) h += kv('County granted', esc(FB.world.byId[status.site.provinceId].name)) +
+        kv('Granting ruler', esc(s.realms[status.grantorId].name));
+    }
     h += kv(route === 'barony' ? FB.T('Cost if granted') : FB.T('Cost'),
       esc(rankElevationCostValue(status.cost))) +
       kv('Benefits', esc(rankElevationBenefit(status.targetTier)));
-    const crossedRanks = FB.rankElevationBreakdown(s, s.player.tier, status.targetTier);
+    const crossedRanks = route === 'standing' ? [] : FB.rankElevationBreakdown(s, s.player.tier, status.targetTier);
     if (crossedRanks.length > 1) {
       h += '<div data-rank-elevation-breakdown><p>' + esc(FB.T(
         'The total includes recognition at every crossed rank:')) + '</p>';

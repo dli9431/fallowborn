@@ -70,7 +70,7 @@ window.FB = window.FB || {};
   var meanings = ['isSerf','isFreeholder','isGentry','isBaron','isCount','isDuke',
     'isKing','isEmperor','isFree','isGentle','isLanded','isFreeUnlanded',
     'rulesRealm','holdsCounty','sitsInEstates','isDucal','isRoyal','mayHoldCouncil',
-    'isImperial','mayCommand','mayAdministerJustice','mayArrangeDynasticMarriage'];
+    'isImperial','mayCommand','mayAdministerJustice','mayArrangeDynasticMarriage','maySeekCounty'];
   S.meanings = meanings.slice();
   S.has = function (o, meaning, s) { return band(o, meaning, s) === true; };
   meanings.forEach(function (name) {
@@ -89,6 +89,27 @@ window.FB = window.FB || {};
   S.higherTier = function (o, other, s) { return tierOf(S.above(o, other, s) ? o : other); };
   S.same = function (o, other) { return tierOf(o) === tierOf(other); };
   S.promotion = function (o, s) { return band(o, 'promotion', s); };
+  S.usesStanding = function (o, s) {
+    var rule = S.promotion(o, s);
+    if (!rule) rule = S.promotion(atTier(o, S.previous(o, s), s), s);
+    return !!rule && rule.route === 'standing';
+  };
+  /* NPCs retain their independent social scale. Territorial rulers use the
+     realm's rank mapping; other people use the first matching social band. */
+  S.subject = function (c, s) {
+    s = stateOf(s);
+    if (c && c.tier !== undefined && !(c.id && s && s.chars && s.chars[c.id])) return c;
+    if (s && s.player && c && c.id === s.player.charId) return s.player;
+    var context = S.context(c, s), rid = c && c.id && FB.realmIdForRulerCharacter
+      ? FB.realmIdForRulerCharacter(s, c.id) : null;
+    var realm = rid && s.realms[rid], tier = 0;
+    if (realm && realm.alive && R.isTerritorial(realm, s)) tier = R.tier(realm, s);
+    else for (var i = 0; i < S.bandCount; i++) {
+      var candidate = { tier:i, formId:context.formId, era:context.era };
+      if (used(candidate, s) && S.socialClass(candidate, s) === socialOf(c)) { tier = i; break; }
+    }
+    return { tier:tier, formId:context.formId, era:context.era };
+  };
   S.next = function (o, s) {
     var rule = S.promotion(o, s);
     return rule && rule.next !== null && used(atTier(o, rule.next, s), s)
@@ -184,9 +205,32 @@ window.FB = window.FB || {};
             if (!Number.isInteger(n) || n < 0 || n > limit) fault(FB.T('Invalid ladder band reference.'));
           } else if (key === 'bands' && field === 'promotion') {
             var p = row[field];
-            if (p !== null && (!object(p) || ['freedom','manor','barony','county','higher'].indexOf(p.route) < 0 ||
+            if (p !== null && (!object(p) || ['freedom','manor','barony','county','higher','standing'].indexOf(p.route) < 0 ||
                 (p.next !== null && (!Number.isInteger(p.next) || p.next < 0 || p.next >= S.bandCount || p.next === Number(index)))))
               fault(FB.T('Invalid promotion rule.'));
+            if (p && p.route === 'standing') {
+              if (!object(p.cost) || ['gold','prestige','piety'].some(function (k) {
+                return typeof p.cost[k] !== 'number' || !isFinite(p.cost[k]) || p.cost[k] < 0;
+              }) || !Array.isArray(p.paths) || !p.paths.length) fault(FB.T('Invalid standing requirements.'));
+              else p.paths.forEach(function (path) {
+                var numbers = ['wealth','prestige','years','counties','standing'];
+                if (!object(path) || !Object.keys(path).length) { fault(FB.T('Invalid standing requirements.')); return; }
+                Object.keys(path).forEach(function (k) {
+                  if (numbers.indexOf(k) >= 0) {
+                    if (typeof path[k] !== 'number' || !isFinite(path[k]) || path[k] < 0) fault(FB.T('Invalid standing requirements.'));
+                  } else if (k === 'office' || k === 'sovereign') {
+                    if (typeof path[k] !== 'boolean') fault(FB.T('Invalid standing requirements.'));
+                  } else if (k === 'roles') {
+                    if (!Array.isArray(path[k]) || !path[k].length || path[k].some(function (role) {
+                      return ['labor','craft','trading','civic','arms','clergy','cloister','learned','noble'].indexOf(role) < 0;
+                    })) fault(FB.T('Invalid standing requirements.'));
+                  } else if (k === 'source') {
+                    if (!FBDATA.legitimacySources || !own(FBDATA.legitimacySources, path[k])) fault(FB.T('Invalid standing requirements.'));
+                  } else fault(FB.T('Invalid standing requirements.'));
+                });
+              });
+              if (own(p, 'countyGrant') && typeof p.countyGrant !== 'boolean') fault(FB.T('Invalid standing requirements.'));
+            }
           } else if (key === 'bands' && field === 'role') {
             if (['serf','commoner','gentry','lord','crowned'].indexOf(row[field]) < 0) fault(FB.T('Invalid societal role.'));
           } else if (key === 'bands' && field === 'succession') {

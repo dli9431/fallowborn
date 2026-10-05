@@ -821,7 +821,7 @@ window.FB = window.FB || {};
       !FB.gentryEstablished(state);
     const battlefieldRise = !!(p.flags && p.flags.seen_battle &&
       p.flags.lords_favor);
-    const visible = firstHead && newlyGentle && battlefieldRise;
+    const visible = firstHead && newlyGentle && battlefieldRise && !FB.station.usesStanding(p, state);
     const patron = militaryCommandPatron(state);
     const martial = me ? FB.skillOf(me, 'mar') : 0;
     const martialNeeded = B().militaryBaronyMartial === undefined
@@ -914,7 +914,7 @@ window.FB = window.FB || {};
         !FB.armiesHostile(state, winner, loser)) return false;
     delete state.player.militaryCommand;
     if (FB.validateFocus) FB.validateFocus(state);
-    const site = FB.baronyPetitionSite(state);
+    const site = FB.station.usesStanding(state.player, state) ? null : FB.baronyPetitionSite(state);
     const grant = site && FB.settlementGrantQuote(state, site.provinceId, site.settlement,
       state.player.charId, record.patronRealmId);
     if (!grant) {

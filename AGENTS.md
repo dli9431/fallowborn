@@ -290,7 +290,7 @@ globals. **Load order matters** — do not reorder the `<script>` tags casually:
 - Engine second, all writing to `window.FB`: `util → messages → i18n → title_ids →
   model → station → lexicon → music → portrait → siteart → balance → governments → world → climate → settlement → fortifications → holywar → population → modifiers →
   economy → market → papacy → armies → travel → mapview → events → items → actions → ambitions → intrigue → justice →
-  technology → council → agency → politics → authority → parliament → institutions →
+  technology → council → agency → politics → authority → progression → parliament → institutions →
   ui (ui_misc → ui_panels → ui_topbar) → keys → save → save_v4 → mods → stories →
   story modules (each registers itself, a required story first) → main`. The generated English
   catalog is absent from an ordinary English boot; a translated boot dynamically loads it

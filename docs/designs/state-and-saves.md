@@ -1,5 +1,7 @@
 # Game state & saves
 
+Late antique recognition adds a Curialis player track with semantic phase, result, office ID and outcome turn. It attaches only to that chosen start; existing federate and medieval saves gain no new story record. Saving an opening preserves it without executing a choice, and loading a completed opening neither charges again nor creates another appointment. AI realms may also hold stationPrestige and stationStandingYear, additive numeric fields for earned recognition and the last annual accrual; older realms initialize these at their next yearly review. Band identities, authority records, career IDs and existing clerical path indexes retain their saved formats. No save version bump is needed.
+
 Restore preserves unexpired scenario standing hosts using the daily army phase's living-realm and end-turn rules. An absent legacy wars table repairs to an empty table without declaring a campaign. Preservation tests compare structured facts rather than JSON property order, retaining exact checks on ownership, holders, population, family, treasury and hosts.
 
 ## Save v4 and 476 integration (Phase 6)

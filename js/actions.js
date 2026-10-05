@@ -3746,11 +3746,15 @@ window.FB = window.FB || {};
     } },
   /* These rank launchers deliberately have zero catalogue cooldown. The
      on-demand sheet owns attempt eligibility and displays the real cooldown. */
+  { id:'seek_station', opensChoices:true, noConsume:true,
+    desc:function () { return FB.T('Review civic means, completed service and live mandates for the next station.'); },
+    show:function (s) { return FB.standingProgression(s) && FB.station.next(s.player, s) !== null; },
+    run:function () { FB.ui.showRankElevation('standing'); } },
   { id: 'declare_manor', opensChoices:true, noConsume:true,
     desc: function () {
       return FB.T('Review recognition from Freeholder to Gentry.');
     },
-    show: function (s) { return FB.station.isFreeholder(s.player, s); },
+    show: function (s) { return FB.station.isFreeholder(s.player, s) && !FB.standingProgression(s); },
     run: function () {
       if (FB.ui && FB.ui.showRankElevation) {
         FB.ui.showRankElevation('manor');
@@ -3758,14 +3762,14 @@ window.FB = window.FB || {};
     } },
   { id:'found_settlement', opensChoices:true, noConsume:true, deferCooldown:true,
     desc:function () { return FB.T('Fund a hereditary settlement, or review your charter.'); },
-    show:function (s) { return FB.station.isGentry(s.player, s) || FB.station.rulesRealm(s.player, s) || !!FB.activeSettlementFounding(s); },
+    show:function (s) { return (FB.station.isGentry(s.player, s) && !FB.standingProgression(s)) || FB.station.rulesRealm(s.player, s) || !!FB.activeSettlementFounding(s); },
     run:function () { FB.ui.showSettlementFounding(); } },
   { id: 'petition_barony', opensChoices:true, noConsume:true,
     deferCooldown:true,
     desc: function () {
       return FB.T('Review a petition from Gentry to {Term:baron}.');
     },
-    show: function (s) { return FB.station.isGentry(s.player, s); },
+    show: function (s) { return FB.station.isGentry(s.player, s) && !FB.standingProgression(s); },
     run: function () {
       if (FB.ui && FB.ui.showRankElevation) {
         FB.ui.showRankElevation('barony');
@@ -4038,7 +4042,7 @@ window.FB = window.FB || {};
       return FB.T('Review the next supported noble dignity.');
     },
     show: function (s) {
-      return FB.station.rulesRealm(s.player, s) && !FB.station.isImperial(s.player, s);
+      return FB.station.rulesRealm(s.player, s) && !FB.station.isImperial(s.player, s) && !FB.standingProgression(s);
     },
     run: function () {
       if (FB.ui && FB.ui.showRankElevation) {
@@ -9485,6 +9489,18 @@ window.FB = window.FB || {};
     const from = FB.clamp(Math.floor(Number(fromTier) || 0), 0, 7);
     const to = FB.clamp(Math.floor(Number(toTier) || 0), 0, 7);
     const cost = { gold:0, prestige:0, piety:0 };
+    if (FB.station.usesStanding(from, state)) {
+      let current = from;
+      for (let step = 0; step < FB.station.bandCount && FB.station.above(to, current, state); step++) {
+        const rule = FB.station.promotion(current, state);
+        if (!rule || !rule.cost || rule.next === null || FB.station.above(rule.next, to, state)) break;
+        cost.gold += rule.cost.gold;
+        cost.prestige += rule.cost.prestige;
+        cost.piety += rule.cost.piety;
+        current = rule.next;
+      }
+      return cost;
+    }
     for (let tier = 2; tier < FB.station.bandCount; tier++) {
       if (!FB.station.reaches(tier, 0, state) || !FB.station.above(tier, from, state) ||
           FB.station.above(tier, to, state)) continue;
@@ -9579,6 +9595,7 @@ window.FB = window.FB || {};
   }
 
   function rankElevationActionId(route) {
+    if (route === 'standing') return 'seek_station';
     if (route === 'manor') return 'declare_manor';
     if (route === 'barony') return 'petition_barony';
     if (route === 'county') return 'petition_liege';
@@ -9606,6 +9623,13 @@ window.FB = window.FB || {};
     let route = options.route || '';
     const promotion = FB.station.promotion(p, state);
     if (!route) route = promotion && promotion.route || '';
+    if (promotion && promotion.route === 'standing') {
+      if (route !== 'standing') return { visible:false, eligible:false, ready:false,
+        route:route, cost:{ gold:0, prestige:0, piety:0 }, reason:FB.T('Use the current station recognition routes.') };
+      const standing = FB.standingElevationStatus(state, null, options.county);
+      if (targetTier !== undefined && targetTier !== null && targetTier !== standing.targetTier) return null;
+      return standing;
+    }
     let expectedTarget = route === 'higher'
       ? (options.region ? null : highestRankElevationTarget(state))
       : promotion && promotion.route === route ? FB.station.next(p, state) : null;
@@ -9748,7 +9772,8 @@ window.FB = window.FB || {};
       grantChance:status.route === 'county' ? FB.countyPetitionChance(state, status.grantorId) :
         status.route === 'barony' && status.grantorId ? FB.baronyGrantChance(state, status.grantorId) : null,
       siteProvinceId:status.site ? status.site.provinceId : null,
-      siteSettlement:status.site ? status.site.settlement : null
+      siteSettlement:status.site ? status.site.settlement : null,
+      standingStamp:status.stamp || null
     };
   }
 
@@ -9757,9 +9782,9 @@ window.FB = window.FB || {};
         ctx.fromTier !== state.player.tier ||
         ctx.liegeId !== (state.player.liege || null)) return null;
     const status = FB.rankElevationStatus(state, ctx.targetTier, {
-      route:ctx.route, region:ctx.region || null, county:ctx.route === 'county' ? ctx.siteProvinceId : null
+      route:ctx.route, region:ctx.region || null, county:ctx.route === 'county' || ctx.route === 'standing' ? ctx.siteProvinceId : null
     });
-    if (!status.eligible || status.cost.gold !== ctx.goldCost ||
+    if (!status || !status.eligible || (status.stamp || null) !== (ctx.standingStamp || null) || status.cost.gold !== ctx.goldCost ||
         status.cost.prestige !== ctx.prestigeCost ||
         status.cost.piety !== ctx.pietyCost ||
         status.grantorId !== ctx.grantorId ||
@@ -9787,13 +9812,19 @@ window.FB = window.FB || {};
     const status = FB.rankElevationContextStatus(state, ctx);
     if (!status || !status.ready) return false;
     const p = state.player;
+    if (status.route === 'standing' && status.site && !FB.countyInvestiture(state,
+      status.site.provinceId, status.grantorId, status.grantorId)) return false;
     if (status.route === 'county' && !FB.countyInvestiture(state, status.site.provinceId, status.grantorId, status.grantorId)) return false;
     if (status.route === 'barony' && !FB.confirmSettlementGrant(state, status.settlementGrant)) return false;
     if (status.route === 'county') FB.recordLiegeGrant(state);
     p.gold -= status.cost.gold;
     p.prestige -= status.cost.prestige;
     p.piety -= status.cost.piety;
-    if (status.route === 'manor') {
+    if (status.route === 'standing') {
+      if (status.site && status.formId) FB.authoritySetGovernment(state, 'player', status.formId);
+      FB.setPlayerTier(state, status.targetTier, { attachLiege:false });
+      if (FB.station.rulesRealm(p, state)) FB.foundPlayerRealm(state);
+    } else if (status.route === 'manor') {
       p.manor = {
         provinceId:status.site.provinceId,
         settlement:status.site.settlement

@@ -194,6 +194,8 @@ FBDATA.deeds = [
     section:'realm', group:'realm', flow:'choices', handler:'buy_land' },
   { id:'declare_manor', availableWhileTraveling:true, label:'🏡 Declare a manor', order:40,
     section:'realm', group:'realm', flow:'choices', handler:'declare_manor' },
+  { id:'seek_station', availableWhileTraveling:true, label:'🏛 Seek station recognition', order:40,
+    section:'realm', group:'realm', flow:'choices', handler:'seek_station' },
   { id:'found_settlement', availableWhileTraveling:true, label:'🏘 Found a settlement', order:41,
     section:'realm', group:'realm', flow:'choices', cooldownDays:0, handler:'found_settlement' },
   { id:'petition_barony', availableWhileTraveling:true, label:'📜 Petition for a barony', order:42,

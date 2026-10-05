@@ -26,6 +26,12 @@ FRESH_JOURNEYS.push({
   scenario:'federate_476',
   code:PARITY_SEED + '-476-federate_476-ravenna-m-Marcus-standard-0-gothic.homoian'
 });
+FRESH_JOURNEYS.push({
+  id:'fresh-476-curialis_476',
+  bookmark:'476',
+  scenario:'curialis_476',
+  code:PARITY_SEED + '-476-curialis_476-ravenna-m-Marcus-established-0-roman.nicene'
+});
 
 /* Fixed samples. Deeds and focuses are listed whether or not a start can see
    them, so a gating change shows up as a changed status. */
@@ -369,6 +375,7 @@ function expectedScenarioTable() {
   const out = {};
   ORDINARY_SCENARIOS.forEach(function (id) { out[id] = 'any'; });
   out.federate_476 = ['476'];
+  out.curialis_476 = ['476'];
   return out;
 }
 

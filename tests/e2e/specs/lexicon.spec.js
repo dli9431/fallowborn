@@ -130,11 +130,11 @@ test('476 reads its running title terms and period labels from data',
     expect(result.noViewerTroops).toBe('Household soldiers');
     expect(result.holding).toBe('Mail shirt');
     expect(result.plainHolding).toBe('Orchard');
-    expect(result.rank).toMatchObject({ source:'eras.late_antique', word:'Comes', tier:4 });
+    expect(result.rank).toMatchObject({ source:'governments.roman_civic', word:'Comes', tier:4 });
     expect(result.rankF).toBe('Comitissa');
     expect(result.berber).toBe('Jarl');
     expect(result.germanic).toBe('Comes');
-    expect(result.snapshot).toMatchObject({ titleLexicon:'eras.late_antique',
+    expect(result.snapshot).toMatchObject({ titleLexicon:'governments.roman_civic',
       titleReligion:null, word:'Free Citizen' });
   });
 
