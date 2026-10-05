@@ -5,7 +5,7 @@ dependsOnRuntime(__filename, [
   'data/bookmark_476_italy.js', 'data/bookmark_476_dalmatia_east.js',
   'data/bookmark_476_gaul_iberia.js', 'data/bookmark_476_africa.js',
   'data/political_institutions.js', 'data/cultures.js',
-  'js/governments.js', 'js/world.js', 'js/authority.js', 'js/politics.js',
+  'js/governments.js', 'js/world.js', 'js/authority.js', 'js/federates.js', 'js/politics.js',
   'js/armies.js', 'js/wars.js', 'js/stories.js', 'js/story_western_court_476.js', 'js/main.js',
   'js/save.js', 'js/save_v4.js'
 ]);
@@ -49,6 +49,10 @@ test('every bookmark declares an era and resolves each realm form',
         franks_476:forms476.franks_476 };
       out.data = FB.validateEraData().concat(FB.governments.validate());
       out.territorial = FB.governments.resolve('territorial').strategies;
+      out.lateAntique = ['roman_civic','federate_polity'].map(function (id) {
+        const strategies = FB.governments.resolve(id).strategies;
+        return [id, strategies.ladder, strategies.ai];
+      });
       out.regnum = FB.governments.resolve('regnum').strategies.holders;
       return out;
     });
@@ -58,7 +62,7 @@ test('every bookmark declares an era and resolves each realm form',
       era:'high_medieval', faults:[], errors:[] });
     expect(result['476']).toMatchObject({ declared:'late_antique',
       era:'late_antique', faults:[], errors:[],
-      forms:{ regnum:10, roman_civic:3, federate_polity:1 } });
+      forms:{ regnum:10, roman_civic:4, federate_polity:3 } });
     expect(Object.keys(result['867'].forms)).toEqual(['territorial']);
     expect(Object.keys(result['1066'].forms)).toEqual(['territorial']);
     expect(result.named476).toEqual({ italy:'roman_civic', croatia:'roman_civic',
@@ -68,9 +72,13 @@ test('every bookmark declares an era and resolves each realm form',
     expect(result.territorial).toEqual({ holders:'feudal_vassals',
       succession:'dynastic', territory:'fixed', consent:'territorial',
       levy:'engine_default', revenue:'engine_default', council:'engine_default',
-      diplomacy:'engine_default', ai:'engine_default',
+      diplomacy:'engine_default', ai:'federate_contracts',
       vocabulary:'engine_default', ladder:'engine_default' });
     expect(result.regnum).toBe('direct');
+    expect(result.lateAntique).toEqual([
+      ['roman_civic','roman_civic','federate_contracts'],
+      ['federate_polity','federate_polity','federate_contracts']
+    ]);
   });
 
 test('unknown eras, dates outside a declared era and unknown forms are rejected',
@@ -218,9 +226,14 @@ test('476 seeds its forms from bookmark data and holds counties directly',
         { provinceId:'arras' });
       const delegated = Q.power(s, { kind:'realm', id:'italy' }, 'consent',
         { provinceId:'ravenna' });
+      const rows = {};
+      Object.keys(s.authority.governments).forEach(function (rid) {
+        const row = s.authority.governments[rid];
+        rows[rid] = { formId:row.formId, sinceTurn:row.sinceTurn };
+      });
       return {
         era:s.start.era, defaultGovernment:s.start.defaultGovernment,
-        rows:JSON.parse(JSON.stringify(s.authority.governments)),
+        rows:rows,
         franks:form('franks_476'), italy:form('italy'),
         federates:form('federates_476'),
         direct:FB.world.provs.every(function (pr) {
@@ -235,9 +248,22 @@ test('476 seeds its forms from bookmark data and holds counties directly',
       era:'late_antique', defaultGovernment:'regnum',
       rows:{
         italy:{ formId:'roman_civic', sinceTurn:0 },
+        rugi_476:{ formId:'regnum', sinceTurn:0 },
         croatia:{ formId:'roman_civic', sinceTurn:0 },
         byzantium:{ formId:'roman_civic', sinceTurn:0 },
-        federates_476:{ formId:'federate_polity', sinceTurn:0 }
+        pannonia:{ formId:'federate_polity', sinceTurn:0 },
+        gepids_476:{ formId:'regnum', sinceTurn:0 },
+        thracian_goths_476:{ formId:'federate_polity', sinceTurn:0 },
+        federates_476:{ formId:'federate_polity', sinceTurn:0 },
+        west_francia:{ formId:'roman_civic', sinceTurn:0 },
+        franks_476:{ formId:'regnum', sinceTurn:0 },
+        aquitaine:{ formId:'regnum', sinceTurn:0 },
+        burgundy:{ formId:'regnum', sinceTurn:0 },
+        suebi_476:{ formId:'regnum', sinceTurn:0 },
+        armorica_476:{ formId:'regnum', sinceTurn:0 },
+        rhein_franks_476:{ formId:'regnum', sinceTurn:0 },
+        aghlabids:{ formId:'regnum', sinceTurn:0 },
+        mauri_476:{ formId:'regnum', sinceTurn:0 }
       },
       franks:'regnum', italy:'roman_civic', federates:'federate_polity',
       direct:true, consent:'territorial_consent', delegated:false,

@@ -4130,6 +4130,7 @@ window.FB = window.FB || {};
      so the check errs toward keeping the record. */
   FB.courtRecordRetained = function (state, c, kinById, familyLinks) {
     if (!state || !c || !state.player) return false;
+    if (FB.federateReferencesCharacter && FB.federateReferencesCharacter(state, c.id)) return true;
     if (FB.settlementLordshipReferencesCharacter &&
         FB.settlementLordshipReferencesCharacter(state, c.id)) return true;
     if (FB.tournaments && FB.tournaments.referencesCharacter(state, c.id)) return true;
@@ -6605,11 +6606,14 @@ window.FB = window.FB || {};
       }
     }
 
-    /* Detachments are ordinary extra host records since multi-host warfare:
-       every host of a warring or crusading realm survives this repair. */
+    /* Detachments are ordinary extra host records since multi-host warfare.
+       Standing scenario and moving-court hosts also retain their saved
+       banners at peace until their existing commitments end. */
     const armies = Array.isArray(state.armies) ? state.armies : [];
     state.armies = armies.filter(function (army) {
-      return !!(army && activeHosts[army.realm]);
+      return !!(army && (activeHosts[army.realm] ||
+        FB.scenarioHostStanding && FB.scenarioHostStanding(state, army) ||
+        FB.federateHostStanding && FB.federateHostStanding(state, army)));
     });
   };
 

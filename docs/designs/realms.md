@@ -1598,3 +1598,7 @@ title migration and parity journeys retained.
 476 authored geography
 
 The 476 administrative groups use independent d_476_, k_476_ and e_476_ ids in Roman regions; Roman civic vocabulary names the three levels province, diocese and prefecture. Regional kingdoms outside the surviving administration have no hierarchy. The direct-holder governments keep the explicitly authored realm as both owner and holder. Nonterritorial Amal and Thracian bodies have hosts and court seats inside the eastern sphere without hereditary counties. Profiles with generated:true omit a historical name and receive a seeded name from their specified culture; named profiles and other bookmarks retain their original construction.
+
+Nonterritorial federate courts
+
+The non_territorial territory strategy now supplies a moving court and migration transaction through js/federates.js. A moving realm starts with no county ownership. Its capital is a court location on inhabited foreign ground, follows its actual host and becomes a territorial seat only after a claims settlement. A county award sets owner and direct holder through the ordinary territorial transaction. Ordinary rank, private property, communities and title ids retain their separate meaning. Government ai dispatch handles explicitly template-backed federate bargains for any pair of living realms; existing untemplated household and story bargains keep their own consent path.

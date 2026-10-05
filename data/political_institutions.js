@@ -29,6 +29,24 @@ FBDATA.legitimacySources = {
 FBDATA.customaryBases = {
   tenure:{}, judgment:{}, recognition:{}, possession:{}
 };
+/* Realm-neutral terms. A host identifies service, county ids identify land,
+   and an imperial commission identifies recognition. AI negotiates only
+   explicitly template-backed offers; household/story bargains stay manual. */
+FBDATA.federateContractTerms = {
+  paid_service:{ payPerSeason:10, durationDays:360, renewWindowDays:90,
+    service:'host', land:'optional', recognition:'optional', autoRenew:true },
+  commissioned_migration:{ payPerSeason:0, initialPay:40, durationDays:2160, renewWindowDays:90,
+    service:'host', land:'conquest', recognition:'required', autoRenew:false }
+};
+/* County anchors abstract the historical march. Courts travel with the
+   ordinary host; no dated outcome replaces occupation or settlement. */
+FBDATA.federateMigrations = {
+  theoderic_italy:{ realmId:'pannonia', patronRealmId:'byzantium',
+    hostId:'host_476_amal', origin:'thessaloniki', target:'ravenna',
+    firstYear:488, lastYear:493, durationDays:2160,
+    templateId:'commissioned_migration', settlementForm:'regnum',
+    men:160, units:{ levy:100, ret:60 } }
+};
 /* A government form names the registered strategy (js/governments.js) that
    answers each behavior slot for a realm of that form. A slot the form leaves
    out uses its engine default, today's shared code path. consent says whether
@@ -43,16 +61,16 @@ FBDATA.customaryBases = {
 FBDATA.governmentForms = {
   territorial:{ legalTradition:{ default:'faith', cultures:{ greek:'byzantine' },
     realms:{ byzantium:'byzantine', byzantium_1066:'byzantine' } }, holders:'feudal_vassals', succession:'dynastic',
-    territory:'fixed', consent:'territorial', systems:{ enable:['feudal_service'] } },
+    territory:'fixed', consent:'territorial', ai:'federate_contracts', systems:{ enable:['feudal_service'] } },
   regnum:{ legalTradition:{ default:'faith', cultures:{ greek:'byzantine' },
     realms:{ byzantium:'byzantine', byzantium_1066:'byzantine' } }, holders:'direct', succession:'dynastic',
-    territory:'fixed', consent:'territorial', systems:{ disable:['feudal_service'] } },
+    territory:'fixed', consent:'territorial', ai:'federate_contracts', systems:{ disable:['feudal_service'] } },
   roman_civic:{ legalTradition:{ default:'faith', cultures:{ greek:'byzantine' },
     realms:{ byzantium:'byzantine', byzantium_1066:'byzantine' } }, holders:'direct', succession:'office',
-    territory:'fixed', consent:'delegated', ladder:'roman_civic', systems:{ disable:['feudal_service'] } },
+    territory:'fixed', consent:'delegated', ladder:'roman_civic', ai:'federate_contracts', systems:{ disable:['feudal_service'] } },
   federate_polity:{ legalTradition:{ default:'faith', cultures:{ greek:'byzantine' },
     realms:{ byzantium:'byzantine', byzantium_1066:'byzantine' } }, holders:'direct', succession:'acclamation',
-    territory:'non_territorial', consent:'delegated', ladder:'federate_polity', systems:{ disable:['feudal_service'] } }
+    territory:'non_territorial', consent:'delegated', ladder:'federate_polity', ai:'federate_contracts', systems:{ disable:['feudal_service'] } }
 };
 
 /* Great offices are stable save ids. Added seats receive the Council's

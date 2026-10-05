@@ -37,3 +37,7 @@ The 476 bookmark lists the western court world story (js/story_western_court_476
 The Curialis scenario attaches js/story_curialis_track_476.js after the western court story. Its opening keeps the civic household separate from the soldiers' political track. Mandate acceptance reviews registration and the current ladder recognition cost, rechecks living local actors and creates a scoped judicial appointment before using the shared standing transaction. Declining leaves the occupation and household intact. Both outcomes complete the opening and let the world court's independent bargaining proceed. The serialized track records phase, semantic result, office ID and outcome turn; validation does not replay the choice.
 
 Technology impact: none. The registry and scenario fields change no gameplay eligibility.
+
+Authored migration consumer
+
+The western court world story reads theoderic_italy from FBDATA.federateMigrations. Its historical hook supplies the living Amal ruler and eastern issuer, requires the existing opening host, obtains a commission, begins one generic moving polity and offers the data-defined equipment-and-service terms through government AI. It reuses the host's current troops and position and cannot replace a destroyed banner. It stores the migration, commission and ordinary-war ids. Its later status follows the migration's failed or settled outcome. General host movement, contracts, court retention, claims settlement and cleanup live in js/federates.js; no shared engine dispatch names this story or a historical ruler.

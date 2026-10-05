@@ -4050,6 +4050,8 @@ window.FB = window.FB || {};
         parts.push(pid, war.occupations[pid].occupied ? '1' : '0');
       }
     }
+    if (FB.federateSupplyContracts) for (const service of FB.federateSupplyContracts(state))
+      parts.push('federate', service.join(':'));
     return parts.join('|');
   }
 
@@ -4106,7 +4108,7 @@ window.FB = window.FB || {};
       }
       if (supplyCacheState !== state || supplyCacheWorld !== FB.world || supplyCacheAdj !== FB.world.adj) supplyCacheMaps = {};
       const activeMaps = Object.create(null);
-      for (const host of state.armies || []) activeMaps[JSON.stringify([host.realm, host.warId || null])] = true;
+      for (const host of state.armies || []) activeMaps[supplyDistanceKey(state, host)] = true;
       for (const key in supplyCacheMaps) if (!activeMaps[key]) delete supplyCacheMaps[key];
       supplyCacheAdj = FB.world.adj;
       supplySourceRevision++;
@@ -4137,6 +4139,7 @@ window.FB = window.FB || {};
       for (const rid in state.realms) controllerSignature(rid);
       controllerSignature('player'); controllerSignature(undefined);
       const diplomaticParts = [supplyAllies];
+      if (FB.federateSupplyContracts) diplomaticParts.push(FB.federateSupplyContracts(state));
       for (const war of (FB.ordinaryWars ? FB.ordinaryWars(state) : [])) diplomaticParts.push([war.id, war.attacker, war.defender]);
       const holy = state.greatHolyWar;
       if (holy && holy.phase === 'active') diplomaticParts.push([holy.id, holy.participants]);
@@ -4175,9 +4178,15 @@ window.FB = window.FB || {};
     try { return supplyDistanceMapUntimed(state, army, distCache); }
     finally { timing.leave(entry); }
   }
+  function supplyDistanceKey(state, army) {
+    const parts = [army.realm, army.warId || null];
+    const serviceHost = FB.federateSupplyHostKey && FB.federateSupplyHostKey(state, army);
+    if (serviceHost) parts.push(serviceHost);
+    return JSON.stringify(parts);
+  }
   function supplyDistanceMapUntimed(state, army, distCache) {
     const adj = (FB.world && FB.world.adj) || {};
-    const key = JSON.stringify([army.realm, army.warId || null]);
+    const key = supplyDistanceKey(state, army);
     const retained = distCache === supplyCacheMaps && supplyCacheState === state;
     let entry = distCache[key];
     const timing = FB.game && FB.game._fastForwardTiming;
@@ -4575,7 +4584,8 @@ window.FB = window.FB || {};
           disband(state, a); continue;
         }
         // a scenario host is not disbanded at peace before its own end turn
-        if (FB.scenarioHostStanding(state, a)) continue;
+        if (FB.scenarioHostStanding(state, a) ||
+            FB.federateHostStanding && FB.federateHostStanding(state, a)) continue;
         if (!r || !r.alive || !warring[a.realm]) disband(state, a);
       }
 
@@ -4633,6 +4643,9 @@ window.FB = window.FB || {};
           } else if (a.rebellionId && FB.rebelArmyGoal) {
             const goal = FB.rebelArmyGoal(state, a);
             if (goal && (goal !== a.goal || (!a.path.length && goal !== a.at))) FB.orderArmy(state, a, goal);
+          } else if (FB.federateHostTravelling && FB.federateHostTravelling(state, a)) {
+            /* The moving polity owns this route; a force campaign still
+               delegates tactical orders to the ordinary war AI. */
           } else if (a.scenarioCourtEscort && a.goal) {
             /* A court escort follows its quoted ordinary route; the story
                that set the flag clears it when the court stops moving. */

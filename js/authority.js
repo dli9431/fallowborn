@@ -31,10 +31,11 @@
   function next(s, prefix) {
     var a = ensure(s), id;
     do { id = prefix + a.nextId++; }
-    while (a.appointments.concat(a.recognitions, a.contracts, a.rights, a.receipts)
+    while (a.appointments.concat(a.recognitions, a.contracts, a.rights, a.receipts, a.migrations || [])
       .some(function (row) { return row.id === id; }));
     return id;
   }
+  FB.authorityNextId = next;
   function ref(s, value) {
     return value && (value.kind === 'character' || value.kind === 'realm') &&
       typeof value.id === 'string' && Q.actor(s, value) ?
@@ -405,13 +406,41 @@
       (!row.hostId || (host(s, row.hostId) &&
         host(s, row.hostId).realm === row.federateRealmId)));
   }
+  function contractReason(s, row) {
+    if (row.status !== 'active') return row.status;
+    if (row.endTurn <= s.turn) return 'term_ended';
+    if (!Q.actor(s, { kind:'realm', id:row.patronRealmId }) ||
+        !Q.actor(s, { kind:'realm', id:row.federateRealmId })) return 'party_lost';
+    if (row.succession.patron !== FB.realmRulerGeneration(s, row.patronRealmId) ||
+        row.succession.federate !== FB.realmRulerGeneration(s, row.federateRealmId))
+      return 'ruler_succession';
+    if (row.recognitionId && !activeRecognition(s, recognition(s, row.recognitionId)))
+      return 'recognition_lost';
+    if (row.hostId && (!host(s, row.hostId) ||
+        host(s, row.hostId).realm !== row.federateRealmId)) return 'host_lost';
+    return null;
+  }
+  function contractNotice(s, row, reason) {
+    row.changedTurn = s.turn; row.transitionReason = reason;
+    var params = { patron:FB.realmNameParam(s, row.patronRealmId),
+      federate:FB.realmNameParam(s, row.federateRealmId), amount:row.payPerSeason };
+    if (reason === 'ruler_succession') FB.news(s, FB.msg('news.federate.succession',
+      '📜 Service between {patron} and {federate} is suspended after a ruler’s succession. Both courts must consent again.', params));
+    else if (reason === 'renewed') FB.news(s, FB.msg('news.federate.renewal',
+      '📜 {patron} and {federate} review renewed service terms. Command resumes only after both courts consent.', params));
+    else if (reason === 'breached' || reason === 'unpaid') FB.news(s, FB.msg('news.federate.breach',
+      '⚠ Service between {patron} and {federate} is breached. The patron loses command of the federate host.', params));
+    else FB.news(s, FB.msg('news.federate.expired',
+      '📜 Service between {patron} and {federate} has ended. The patron no longer commands the federate host.', params));
+  }
   function contract(s, id) {
     for (var row of list(s, 'contracts')) if (row.id === id) return row;
     return null;
   }
   Q.contract = function (s, id) {
     var row = contract(s, id);
-    return row ? copy(Object.assign({}, row, { effective:activeContract(s, row) })) : null;
+    return row ? copy(Object.assign({}, row, { effective:activeContract(s, row),
+      ineffectiveReason:contractReason(s, row) })) : null;
   };
   Q.contracts = function (s, rid) {
     return list(s, 'contracts').filter(function (row) {
@@ -424,7 +453,16 @@
     var federate = Q.actor(s, { kind:'realm', id:terms.federateRealmId });
     var army = terms.hostId ? host(s, terms.hostId) : null;
     var acknowledged = terms.recognitionId ? recognition(s, terms.recognitionId) : null;
+    var definition = terms.templateId && FBDATA.federateContractTerms[terms.templateId];
     var valid = !!(patron && federate && patron.realmId !== federate.realmId &&
+      (!terms.templateId || definition &&
+        (definition.service !== 'host' || army) &&
+        (definition.service !== 'none' || !terms.hostId) &&
+        (definition.land !== 'none' ||
+          !(terms.settlementCountyIds && terms.settlementCountyIds.length ||
+            terms.settlementAwards && terms.settlementAwards.length)) &&
+        (definition.recognition !== 'none' || !terms.recognitionId) &&
+        (definition.recognition !== 'required' || acknowledged)) &&
       (!terms.recognitionId || acknowledged && activeRecognition(s, acknowledged) &&
         acknowledged.source === 'imperial_commission' &&
         same(acknowledged.issuer, { kind:'realm', id:patron.realmId }) &&
@@ -432,7 +470,8 @@
         (!acknowledged.scope ||
           same(acknowledged.scope, { kind:'realm', id:federate.realmId }))) &&
       Number.isFinite(terms.payPerSeason) && terms.payPerSeason >= 0 &&
-      (!terms.payPerSeason ||
+      (terms.initialPay === undefined || Number.isFinite(terms.initialPay) && terms.initialPay >= 0) &&
+      (!(terms.payPerSeason || terms.initialPay) ||
         FB.treasuryCounterparty(s, patron.realmId) &&
         FB.treasuryCounterparty(s, federate.realmId)) &&
       Number.isInteger(terms.endTurn) && terms.endTurn > s.turn &&
@@ -440,7 +479,9 @@
       (!terms.settlementCountyIds || Array.isArray(terms.settlementCountyIds) &&
         terms.settlementCountyIds.every(function (pid) {
           return scope(s, { kind:'county', id:pid }) &&
-            s.owner[pid] === FB.topRealm(s, patron.realmId);
+            (s.owner[pid] === FB.topRealm(s, patron.realmId) ||
+              terms.id && contract(s, terms.id) === terms &&
+              (terms.fulfilledCountyIds || []).indexOf(pid) >= 0);
         })) &&
       (!terms.settlementAwards || Array.isArray(terms.settlementAwards) &&
         terms.settlementAwards.every(function (award, index) {
@@ -479,6 +520,8 @@
         patron:FB.realmRulerGeneration(s, terms.patronRealmId),
         federate:FB.realmRulerGeneration(s, terms.federateRealmId)
       } };
+    if (terms.templateId) row.templateId = terms.templateId;
+    if (terms.initialPay) row.initialPay = terms.initialPay;
     s.authority.contracts.push(row);
     return copy(row);
   };
@@ -505,6 +548,16 @@
         row.succession.patron !== FB.realmRulerGeneration(s, row.patronRealmId) ||
         row.succession.federate !== FB.realmRulerGeneration(s, row.federateRealmId) ||
         !Q.contractQuote(s, row).allowed || own(row.approvals, rid)) return false;
+    var other = rid === row.patronRealmId ? row.federateRealmId : row.patronRealmId;
+    if (row.approvals[other] === FB.realmRulerGeneration(s, other) &&
+        row.initialPay && row.initialPaidTurn === undefined) {
+      if (!FB.treasuryTransfer(s, row.patronRealmId, row.federateRealmId, row.initialPay)) return false;
+      row.initialPaidTurn = s.turn;
+      FB.news(s, FB.msg('news.federate.initial_payment',
+        '💰 {patron} pays {money:amount} to equip {federate} for the agreed service.',
+        { patron:FB.realmNameParam(s, row.patronRealmId),
+          federate:FB.realmNameParam(s, row.federateRealmId), amount:row.initialPay }));
+    }
     row.approvals[rid] = FB.realmRulerGeneration(s, rid);
     if (row.approvals[row.patronRealmId] === row.succession.patron &&
         row.approvals[row.federateRealmId] === row.succession.federate) {
@@ -518,13 +571,20 @@
         !Q.actor(s, { kind:'realm', id:rid })) return false;
     if (action === 'breach' && (row.status === 'active' || row.status === 'offered'))
       row.status = 'breached';
-    else if (action === 'renew' && row.status === 'active' &&
-        Number.isInteger(endTurn) && endTurn > row.endTurn) {
+    else if (action === 'renew' &&
+        ['active','expired','breached'].indexOf(row.status) >= 0 &&
+        Number.isInteger(endTurn) && endTurn > Math.max(s.turn, row.endTurn) &&
+        Q.contractQuote(s, Object.assign({}, row, { endTurn:endTurn,
+          settlementAwards:row.settlementAwards.filter(function (award) {
+            return !award.fulfilled;
+          }), settlementCountyIds:row.settlementCountyIds.filter(function (pid) {
+            return (row.fulfilledCountyIds || []).indexOf(pid) < 0;
+          }) })).allowed) {
       row.status = 'offered'; row.endTurn = endTurn; row.approvals = {};
       row.succession.patron = FB.realmRulerGeneration(s, row.patronRealmId);
       row.succession.federate = FB.realmRulerGeneration(s, row.federateRealmId);
     } else return false;
-    row.changedTurn = s.turn;
+    contractNotice(s, row, action === 'renew' ? 'renewed' : 'breached');
     return true;
   };
 
@@ -859,6 +919,7 @@
           errors.push(FB.T('Invalid government form {id}.', { id:formId }));
       }
     }
+    if (FB.validateFederateData) errors.push.apply(errors, FB.validateFederateData());
     return errors;
   };
 
@@ -871,7 +932,10 @@
         if (!Q.contractQuote(s, row).allowed ||
             row.succession.patron !== FB.realmRulerGeneration(s, row.patronRealmId) ||
             row.succession.federate !== FB.realmRulerGeneration(s, row.federateRealmId)) {
-          row.status = 'expired'; row.changedTurn = s.turn;
+          var reason = row.succession.patron !== FB.realmRulerGeneration(s, row.patronRealmId) ||
+            row.succession.federate !== FB.realmRulerGeneration(s, row.federateRealmId)
+            ? 'ruler_succession' : 'term_ended';
+          row.status = 'expired'; contractNotice(s, row, reason);
         }
         continue;
       }
@@ -879,7 +943,8 @@
       if (!activeContract(s, row) ||
           row.succession.patron !== FB.realmRulerGeneration(s, row.patronRealmId) ||
           row.succession.federate !== FB.realmRulerGeneration(s, row.federateRealmId)) {
-        row.status = 'expired'; row.changedTurn = s.turn; continue;
+        var ended = contractReason(s, row);
+        row.status = 'expired'; contractNotice(s, row, ended); continue;
       }
       if (period <= row.paidThroughPeriod) continue;
       var payer = FB.treasuryCounterparty(s, row.patronRealmId);
@@ -888,10 +953,14 @@
           !Q.permission(s, { kind:'realm', id:row.federateRealmId },
             'collect_service_pay', { contractId:row.id }).allowed ||
           !FB.treasuryTransfer(s, payer, payee, row.payPerSeason))) {
-        row.status = 'breached'; row.changedTurn = s.turn; continue;
+        row.status = 'breached'; contractNotice(s, row, 'unpaid'); continue;
       }
       row.paidThroughPeriod = period;
       row.serviceThroughPeriod = period;
+      if (row.templateId && row.payPerSeason) FB.news(s, FB.msg('news.federate.payment',
+        '💰 {patron} pays {money:amount} to {federate} for the season’s service.',
+        { patron:FB.realmNameParam(s, row.patronRealmId),
+          federate:FB.realmNameParam(s, row.federateRealmId), amount:row.payPerSeason }));
     }
     for (var office of list(s, 'appointments')) {
       if (office.status === 'active' && FBDATA.authorityOffices[office.officeId] &&
@@ -904,6 +973,7 @@
         office.status = 'expired'; office.changedTurn = s.turn;
       }
     }
+    if (FB.federateContractSeason) FB.federateContractSeason(s);
   };
   FB.authoritySeedCommunities = function (s, realms, provinces) {
     for (var realm of realms) if (realm.governingIdentity)
