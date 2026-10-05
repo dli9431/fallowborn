@@ -3665,3 +3665,7 @@ Governance, Position exposes governing identity for a player realm. The sheet se
 
 
 Mixed-court sentence reviews also display the selected advisory legal tradition when an assessor is declared.
+
+Late antique first impression
+
+The title subtitle covers late antiquity and the Middle Ages while preserving the game's own title crest. The 476 date card describes Roman cities and rival courts. Federate Soldier and Curialis descriptions and opening text introduce household work, the shared Deeds story cards, and the distinction between standing, command and an appointment's powers. Existing start-code, family selection, Back, Begin and focus behavior remains shared with other starts. Period purse labels, crests, portrait dress and settlement art resolve from the same stamped era across the setup preview and campaign. Owner visual review should inspect fresh campaigns at phone size, including diadems, clerical dress, ridge helmets, settlement markers, money and long names.

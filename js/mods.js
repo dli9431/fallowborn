@@ -1562,6 +1562,10 @@ window.FBMODS = window.FBMODS || [];
       const fault = FB.cultureNameErasFault(mod.cultures[id]);
       if (fault) fail('cultures.' + id, fault);
     }
+    for (const id in mod.items || {}) {
+      const fault = FB.itemPresentationFault(mod.items[id]);
+      if (fault) fail('items.' + id, fault);
+    }
     if (own(mod, 'papacy')) {
       const def = mod.papacy;
       if (!plainObject(def)) fail('papacy', 'must be an object.');

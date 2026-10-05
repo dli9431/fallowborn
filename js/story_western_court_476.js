@@ -99,9 +99,9 @@
       'homoian', 46, 3, 'priest', 'ravenna');
     var clovis = made(s, 'Clovis', 'frankish', 'germanic_pagan',
       10, 2, 'heir', 'ghent');
-    var gundobad = made(s, 'Gundobad', 'gothic', 'homoian', 31, 4,
+    var gundobad = made(s, 'Gundobad', 'burgundian', 'homoian', 31, 4,
       'co_ruler', 'vienne');
-    var godegisel = made(s, 'Godegisel', 'gothic', 'homoian', 26, 3,
+    var godegisel = made(s, 'Godegisel', 'burgundian', 'homoian', 26, 3,
       'co_ruler', 'geneva');
     var burgundianSuccession = FB.ensureRealmSuccession(s, 'burgundy');
     if (burgundianSuccession) {

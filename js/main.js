@@ -3328,7 +3328,7 @@ FB.CHANGELOG = [
         break;
       }
     }
-    me.dyn = FB.dynastyName(cultureId, me.name, pr.name, me.sex);
+    me.dyn = FB.dynastyName(cultureId, me.name, pr.name, me.sex, state);
     for (const skill in (startEffects.skills || {})) {
       if (Object.prototype.hasOwnProperty.call(startEffects.skills, skill)) {
         me.skills[skill] = Math.max(0, me.skills[skill] + startEffects.skills[skill]);

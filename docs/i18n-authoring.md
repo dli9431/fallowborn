@@ -180,3 +180,7 @@ Scheduled games structured labels in data/tournaments.js are extracted under tou
 Deeds section labels
 
 Section label, subhead and statusLine fields in data/actions.js use stable deedSection.<id>.<field> owners and render through FB.deeds.text. The static extractor registers all three display fields without executing the registry. Runtime section overrides retain those owners and use the normal current-source English fallback. Section ids, types, order, layout, availability, system requirements and deed membership are locale-neutral.
+
+Late antique presentation text
+
+The late antique purse uses literal label and singular/plural unit names in data/eras.js. Its compact symbol and coin icon are locale-neutral. Era lexicon terms and item/unit relabels remain in data/lexicons.js and render through FB.term or FB.dataText. Never interpolate a rendered political term into a saved record. Period proper-name pools and procedural appearance/art ids are not translated. The expanded title subtitle uses data-i18n; start descriptions and introductions retain scenario structured-data owners. New culture display names retain culture owners. Feature branches keep English fallback and leave catalog regeneration to an explicitly requested integration.

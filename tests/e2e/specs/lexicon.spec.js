@@ -17,6 +17,8 @@ const { engineSources } = require('../support/source-literals');
    be rebuilt independently of the game: {term:vassal.other} -> vassals. */
 const BASE_WORDS = {
   vassal:['vassal', 'vassals'], liege:['liege', 'lieges'], fief:['fief', 'fiefs'],
+  holding:['holding','holdings'], levy:['levy','levies'], council:['council','councils'],
+  estates:['estates','estates','Estates'], county:['county','counties'],
   knight:['knight', 'knights'], baron:['baron', 'barons'], serf:['serf', 'serfs'],
   manor:['manor', 'manors'], crown_authority:['crown authority', 'crown authority', 'Crown Authority'],
   duchy:['duchy','duchies'], kingdom:['kingdom','kingdoms'], empire:['empire','empires'],
@@ -24,13 +26,19 @@ const BASE_WORDS = {
   queen:['queen','queens'], emperor:['emperor','emperors'], empress:['empress','empresses']
 };
 const LATE_WORDS = Object.assign({}, BASE_WORDS, {
+  vassal:['subordinate','subordinates'], liege:['patron','patrons'], fief:['allotment','allotments'],
+  holding:['estate','estates'], levy:['muster','musters'], estates:['assembly','assemblies','Assembly'],
+  county:['civitas','civitates'],
+  knight:['mounted retainer','mounted retainers'], baron:['decurion','decurions'],
+  serf:['dependent','dependents'], manor:['villa estate','villa estates'],
+  crown_authority:['public authority','public authority','Public Authority'],
   duchy:['district','districts'], kingdom:['realm','realms'],
   duke:['dux','duces'], duchess:['ducissa','ducissae'], king:['rex','reges'],
   queen:['regina','reginae'], emperor:['augustus','augusti'], empress:['augusta','augustae']
 });
 const TERM = /\{([Tt])erm:([a-z_]+)(?:\.(one|other|title))?\}/g;
 function englishOf(text, late) {
-  return text.replace(/\{money:(\d+)\}/g, '$1 gold').replace(TERM, function (whole, t, id, form) {
+  return text.replace(/\{money:(\d+)\}/g, late ? '$1 s' : '$1 gold').replace(TERM, function (whole, t, id, form) {
     const words = (late ? LATE_WORDS : BASE_WORDS)[id];
     if (!words) return whole;
     let word = form === 'other' ? words[1]
@@ -128,13 +136,13 @@ test('476 reads its running title terms and period labels from data',
     expect(result.hooks).toBe('undefined');
     expect(result.career).toBe('Federate service');
     expect(result.recruit).toBe('New recruit');
-    expect(result.troops).toBe('Household soldiers');
-    expect(result.noViewerTroops).toBe('Household soldiers');
+    expect(result.troops).toBe('Bucellarii');
+    expect(result.noViewerTroops).toBe('Bucellarii');
     expect(result.holding).toBe('Mail shirt');
     expect(result.plainHolding).toBe('Orchard');
     expect(result.rank).toMatchObject({ source:'governments.roman_civic', word:'Comes', tier:4 });
     expect(result.rankF).toBe('Comitissa');
-    expect(result.berber).toBe('Jarl');
+    expect(result.berber).toBe('Comes');
     expect(result.germanic).toBe('Comes');
     expect(result.snapshot).toMatchObject({ titleLexicon:'governments.roman_civic',
       titleReligion:null, word:'Free Citizen' });

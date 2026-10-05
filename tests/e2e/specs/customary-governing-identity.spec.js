@@ -6,7 +6,7 @@ dependsOnRuntime(__filename, [
   'js/modifiers.js', 'js/model.js', 'js/actions.js', 'js/institutions.js',
   'js/save.js', 'js/save_v4.js', 'js/ui_misc.js', 'js/ui_modals.js',
   'js/governments.js', 'js/station.js', 'js/story_western_court_476.js',
-  'data/bookmark_476.js', 'data/bookmark_476_italy.js',
+  'data/cultures.js', 'data/bookmark_476.js', 'data/bookmark_476_italy.js',
   'data/bookmark_476_dalmatia_east.js', 'data/bookmark_476_gaul_iberia.js',
   'data/bookmark_476_africa.js', 'data/bookmarks.js', 'data/intrigue.js',
   'data/political_institutions.js', 'data/policies.js', 'data/technology.js', 'css/style.css'
@@ -53,7 +53,7 @@ test('476 seeds provincial court rights and elite identities separately from com
     const declared = b.realms.every(function (realm) {
       const authored = realm.governingIdentity;
       const live = FB.political.governingIdentity(s, realm.id);
-      const law = realm.ruler.culture === 'gothic' ? 'gothic_custom' :
+      const law = FB.cultureIsA(realm.ruler.culture, 'gothic', s) ? 'gothic_custom' :
         ['roman','greek'].indexOf(realm.ruler.culture) >= 0 ? 'late_roman' : 'customary';
       return authored && live.declared && authored.eliteCultureId === realm.ruler.culture &&
         authored.eliteFaithId === realm.religion && authored.legalIdentityId === law &&

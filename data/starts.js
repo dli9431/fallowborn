@@ -19,7 +19,7 @@ window.FBDATA = window.FBDATA || {};
     { id:'federate_476', bookmarkIds:['476'], fixedProvinceId:'ravenna',
       alwaysUnlocked:true,
       name:'Federate Soldier',
-      desc:'A free soldier near Ravenna. Seek pay and command while the western court bargains for its future.',
+      desc:'A free soldier in a federate host at Ravenna. Earn wages, maintain your household and seek command while the western court bargains for its future.',
       tier:1, sex:'m', profession:'soldier', gold:20, prestige:5, piety:0,
       startAge:24, startCulture:'gothic', startReligion:'homoian',
       startEffects:{ skills:{ mar:2 },
@@ -28,7 +28,7 @@ window.FBDATA = window.FBDATA || {};
         standard:{ name:'Free household', diff:'age 24 · federate service' }
       },
       tracks:['federate_track_476'],
-      intro:'You are {name}, a free federate soldier near Ravenna. Orestes owes the host its pay; the court, the city and Odoacer each want a different settlement.' },
+      intro:'You are {name}, a free federate soldier near Ravenna. Orestes owes the host its pay; the court, the city and Odoacer each want a different settlement. Your household can work and trade while you decide whom to serve. Open the western court story in Deeds to review the dispute; personal standing and a command are separate rewards.' },
     { id:'curialis_476', bookmarkIds:['476'], fixedProvinceId:'ravenna', alwaysUnlocked:true,
       name:'Curialis', desc:'A Roman civic household at Ravenna. Serve the council, seek a local mandate, or keep your livelihood outside the court dispute.',
       tier:2, profession:'curialis', gold:80, prestige:30, piety:10,
@@ -39,7 +39,7 @@ window.FBDATA = window.FBDATA || {};
         standard:{ name:'Unmarried curialis', diff:'age 30 · parents and siblings' }
       },
       tracks:['curialis_track_476'],
-      intro:'You are {name}, a curialis of Ravenna. Civic accounts and family obligations fill your days while the court and federate host negotiate. A council mandate can bring standing, but it does not give you the city’s land or treasury.' },
+      intro:'You are {name}, a curialis of Ravenna. Civic accounts and family obligations fill your days while the court and federate host negotiate. A council mandate can bring standing, but it does not give you the city’s land or treasury. Open your civic story in Deeds to review the mandate, or keep working for your household. Rank & Realm distinguishes your standing from the powers of an appointment.' },
     { id:'serf', eras:['early_medieval','high_medieval'], name:'Serf',
       desc:'Bound to the land, with no property or freedom.',
       tier:0, profession:'farmer', gold:5, prestige:0, piety:0,

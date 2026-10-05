@@ -135,6 +135,16 @@ FBDATA.architectureStyles = {
       leaf:'#4d7a3f', trunk:'#6b4a2c', ink:'rgba(24,18,10,0.85)'
     },
     shapes:{ dwellings:'pitched', worship:'spire', fortification:'crenellated' }
+  },
+  late_antique:{
+    palettes:{
+      walls:['#e1d5ba','#d5c5a0','#c5b28b','#dfd9ca'],
+      roofs:['#aa583b','#a74b32','#b46a46','#95634d'],
+      stones:['#c7c0af','#b6ad98','#a79e8a'],
+      banners:['#8b3445','#765080','#a68538','#395d70'],
+      leaf:'#57784a', trunk:'#73543b', ink:'rgba(35,29,21,0.85)'
+    },
+    shapes:{ dwellings:'villa', worship:'basilica', fortification:'castra' }
   }
 };
 
@@ -146,7 +156,11 @@ FBDATA.eras = {
     systems:{ enable:['civic_institutions','episcopal_sees'], disable:['papacy','scutage','manorial_tenure','excommunication',
       'feudal_service','crown_bloc','tournaments','great_holy_wars'] },
     technology:{ from:476, to:649, startingKnowledge:'historical' },
-    military:null, currency:null, architecture:null, emblem:'heraldry',
+    military:{ equipment:{ from:375, to:649 } },
+    currency:{ id:'solidus', label:'Solidi', icon:'🪙', smallestPerGold:1,
+      units:[{ id:'solidus', value:1, symbol:'s', singular:'solidus', plural:'solidi',
+        position:'after', space:true }], showZeroMinor:false, maxUnits:1 },
+    architecture:'late_antique', emblem:'standard',
     balance:null
   },
   early_medieval:{

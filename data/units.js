@@ -13,6 +13,8 @@
                      first class declared with a role is the role's default
                      class (the levy pool, the household retinue, the hired
                      companies and so on).
+     eras          - optional campaign-era membership for fresh recruitment;
+                     core default classes must remain in every era
      name          — localized display name (a plural group noun)
      icon          — display emoji
      quality       — battle quality of one man of the class
@@ -81,6 +83,7 @@ FBDATA.unitClasses = {
   /* Mechanical bows punch through armored foot but reload too slowly to
      answer a cavalry rush. */
   crossbow: { role:'missile', name:'Crossbowmen', icon:'🎯', quality:1.5, attack:1.65,
+    eras:['early_medieval','high_medieval'],
     defense:1.35, upkeepPer100:1.2,
     casualtyOrder:3, share:0.15, requiresTech:'crossbows',
     professional:true, replaceDays:100,
@@ -110,6 +113,7 @@ FBDATA.unitClasses = {
     basket:{ provisions:0.40, materials:0.15, transport:0.45 } },
 
   huscarl: { role:'heavy_infantry', name:'Huscarls', icon:'🪓', quality:2.3, attack:2.2,
+    eras:['early_medieval','high_medieval'],
     defense:2.4, upkeepPer100:2,
     casualtyOrder:9, share:0.15, professional:true, replaceDays:130,
     cultureDoctrine:'huscarl',

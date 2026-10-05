@@ -162,6 +162,17 @@ window.FB = window.FB || {};
       for(let y=9;y<25;y+=6)for(let x=-15;x<16;x+=6){
         ctx.beginPath();ctx.arc(x,y,1,0,Math.PI*2);ctx.fill();
       }
+    } else if (kind === 'ridgeHelm') {
+      ctx.fillStyle = metal;
+      ctx.beginPath();ctx.arc(0,0,25,Math.PI,0);ctx.lineTo(23,10);
+      ctx.lineTo(-23,10);ctx.closePath();ctx.fill();ctx.stroke();
+      ctx.strokeStyle = polish;ctx.lineWidth = 4;
+      ctx.beginPath();ctx.moveTo(0,-25);ctx.lineTo(0,8);ctx.stroke();
+      ctx.fillStyle = metal;ctx.strokeStyle = '#30271f';ctx.lineWidth = 1.5;
+      [-1,1].forEach(function (side) {
+        ctx.beginPath();ctx.moveTo(side*24,9);ctx.lineTo(side*26,28);
+        ctx.lineTo(side*14,30);ctx.lineTo(side*13,12);ctx.closePath();ctx.fill();ctx.stroke();
+      });
     } else if (kind === 'helm') {
       ctx.fillStyle = metal;
       ctx.beginPath(); ctx.arc(0, 0, 25, Math.PI, 0); ctx.lineTo(23, 12);
@@ -435,6 +446,7 @@ window.FB = window.FB || {};
   var INK=[48,35,31],GOLD=[207,165,74],GOLD_L=[246,216,132];
   var STEEL=[126,142,151],STEEL_L=[206,215,216],LINEN=[226,218,199];
   var HEADWEAR_VARIANTS = {
+    diadem:['pearled','gemmed'],ridgeHelm:['iron','gilded'],
     circlet:['plain','gemmed'],crown:['points','fleurons'],
     imperial:['arched','mitred'],helm:['nasal','banded'],coif:['linen'],
     veil:['fall','pinned'],wimple:['plain','banded'],
@@ -444,14 +456,14 @@ window.FB = window.FB || {};
     furHat:['round','tall'],mitre:['plain','orphrey'],
     garland:['flowers','laurel'],crespine:['plain','filleted']
   };
-  var HEADWEAR_COVERS = {helm:1,coif:1,veil:1,wimple:1,turban:1,
+  var HEADWEAR_COVERS = {ridgeHelm:1,helm:1,coif:1,veil:1,wimple:1,turban:1,
     kerchief:1,chaperon:1,furHat:1};
   /* How much rises above the skull, in head units: the bust framing
      reserves exactly this much headroom, so a bare head fills the card
      while a mitre still gets its height. */
   var HEADWEAR_RISE = {crown:12,imperial:19,turban:14,mitre:22,strawHat:14,
     furHat:16,cap:11,helm:9,chaperon:9,veil:8,wimple:8,crespine:7,
-    garland:7,kerchief:6,coif:6,fillet:6,circlet:6,none:6};
+    garland:7,kerchief:6,coif:6,fillet:6,circlet:6,diadem:8,ridgeHelm:10,none:6};
   /* The garment library: every body garment the standing figure can paint,
      named by wardrobe data (data/wardrobes.js). length places the hem
      (floor, knee, or short above the hip); detail names the one feature
@@ -472,6 +484,8 @@ window.FB = window.FB || {};
     lateTunic:{length:'knee',detail:'clavi',folds:1,hemLine:1},
     lateMantle:{length:'floor',detail:'clavi',mantle:1,folds:1,hemLine:1},
     lateVestment:{length:'floor',detail:'clavi',folds:1,hemLine:1},
+    lateCivil:{length:'floor',detail:'clavi',folds:1,hemLine:1,cuffs:1},
+    lateMilitary:{length:'knee',detail:'clavi',mantle:1,folds:1,hemLine:1},
     mail:{length:'knee',detail:'armor',hemLine:1},
     lamellar:{length:'knee',detail:'armor',hemLine:1},
     plate:{length:'knee',detail:'armor',hemLine:1}
@@ -524,6 +538,11 @@ window.FB = window.FB || {};
   }
   function cultureAppearance(state, id) {
     var found = FB.cultureValue ? FB.cultureValue(state, id, 'appearance').value : null;
+    var variants = FB.cultureValue ? FB.cultureValue(state, id, 'appearanceEras').value : null;
+    var era = FB.campaignEra ? FB.campaignEra(state) : null;
+    if (plainObjectV2(variants) && plainObjectV2(variants[era])) {
+      found = Object.assign({}, found, variants[era]);
+    }
     return plainObjectV2(found) ? found : null;
   }
   /* A culture's face profile is its appearance data, inherited through its
@@ -578,6 +597,7 @@ window.FB = window.FB || {};
     if (rule.child !== undefined && !!rule.child !== spec.child) return false;
     if (rule.female !== undefined && !!rule.female !== spec.female) return false;
     if (rule.minAge !== undefined && !(spec.age >= rule.minAge)) return false;
+    if (rule.government !== undefined && rule.government !== spec.formId) return false;
     if (rule.station !== undefined && !stationHolds(rule.station, spec)) return false;
     if (rule.notStation !== undefined && stationHolds(rule.notStation, spec)) return false;
     if (rule.role !== undefined && FB.professionRole(spec.profession) !== rule.role) return false;
@@ -654,8 +674,10 @@ window.FB = window.FB || {};
       deep:cssV2(shadeV2(base,-.22)),light:cssV2(shadeV2(base,.11)),
       trim:cssV2(trim),fur:cssV2(fur),raw:base,trimRaw:trim,furRaw:fur};
   }
-  function normalizedArt(item) {
+  function normalizedArt(item, state) {
     var source = item && item.art || {};
+    var eras = item && item.def && item.def.artEras, era = FB.campaignEra ? FB.campaignEra(state) : null;
+    if (plainObjectV2(eras) && plainObjectV2(eras[era])) source = Object.assign({}, source, eras[era]);
     var out = {kind:source.kind || 'generic'};
     var keys = ['metals','gems','cloths','leathers','woods','covers','grips',
       'cords','wraps','threads','trims','pages'];
@@ -671,7 +693,7 @@ window.FB = window.FB || {};
   function normalizedItem(state, loadout, slot) {
     var item = itemFromLoadout(state, loadout, slot);
     if (!item) return null;
-    var art = normalizedArt(item);
+    var art = normalizedArt(item, state);
     var result = {
       ref:item.ref || item.defId || slot,defId:item.defId || item.ref || slot,
       slot:slot,grip:item.grip === 2 ? 2 : 1,
@@ -989,6 +1011,9 @@ window.FB = window.FB || {};
       keyToken(ladderContext.era),health,expressionClass,spec.scarred?1:0,
       spec.oneEyed?1:0,ailments.sickness||legacyIll?1:0,markKey,
       keyToken(spec.hairStyle),keyToken(spec.beardKind),keyToken(spec.beardCut),
+      spec.pigment,spec.hair.base.join(','),keyToken(spec.cloth.kind),
+      keyToken(spec.pendant),spec.cloth.raw.join(','),spec.cloth.trimRaw.join(','),spec.cloth.furRaw.join(','),
+      keyToken(spec.headwear),keyToken(spec.headwearVariant || ''),spec.neckChain?1:0,
       equipmentKeys.join(','),opts.transparent?'transparent':'opaque',
       opts.suppressEquipment?'no-equipment':'equipment',
       opts.suppressHeadwear?'no-headwear':'headwear'];
@@ -1007,7 +1032,7 @@ window.FB = window.FB || {};
       if (own.call(APPEARANCE_BEARD_RENDER, cutId)) beardRenders[APPEARANCE_BEARD_RENDER[cutId]] = 1;
     }
     function knownHeadwear(kind) {
-      return typeof kind === 'string' && own.call(HEADWEAR_VARIANTS, kind);
+      return kind === 'none' || (typeof kind === 'string' && own.call(HEADWEAR_VARIANTS, kind));
     }
     function knownGarment(kind) {
       return typeof kind === 'string' && own.call(GARMENTS, kind) && !ITEM_GARMENTS[kind];
@@ -1021,6 +1046,8 @@ window.FB = window.FB || {};
       if (rule.station !== undefined && !stationName(rule.station)) return false;
       if (rule.notStation !== undefined && !stationName(rule.notStation)) return false;
       if (rule.minAge !== undefined && !isFinite(rule.minAge)) return false;
+      if (rule.government !== undefined &&
+          !own.call(FBDATA.governmentForms || {}, rule.government)) return false;
       if (rule.roles !== undefined && !Array.isArray(rule.roles)) return false;
       if (rule.notRoles !== undefined && !Array.isArray(rule.notRoles)) return false;
       if (rule.roll !== undefined && (!plainObjectV2(rule.roll) ||
@@ -1078,8 +1105,7 @@ window.FB = window.FB || {};
           { id:id, costume:String(FBDATA.governmentForms[id].costume) }));
       }
     });
-    Object.keys(FBDATA.cultures || {}).forEach(function (id) {
-      var look = FBDATA.cultures[id] && FBDATA.cultures[id].appearance;
+    function checkAppearance(id, look) {
       if (look === undefined) return;
       var valid = plainObjectV2(look) &&
         ['tone','fair','red'].every(function (key) {
@@ -1090,6 +1116,22 @@ window.FB = window.FB || {};
         (look.tends === undefined ||
           (Array.isArray(look.tends) && look.tends.every(knownHeadwear)));
       if (!valid) errors.push(FB.T('Culture {id} has an invalid appearance profile.', { id:id }));
+    }
+    Object.keys(FBDATA.cultures || {}).forEach(function (id) {
+      var culture = FBDATA.cultures[id];
+      checkAppearance(id, culture && culture.appearance);
+      var variants = culture && culture.appearanceEras;
+      if (variants === undefined) return;
+      if (!plainObjectV2(variants)) {
+        errors.push(FB.T('Culture {id} has invalid period appearance profiles.', { id:id }));
+        return;
+      }
+      Object.keys(variants).forEach(function (era) {
+        if (!own.call(FBDATA.eras, era)) {
+          errors.push(FB.T('Culture {id} names unknown appearance era {era}.', { id:id, era:era }));
+        }
+        checkAppearance(id, variants[era]);
+      });
     });
     Object.keys(FBDATA.religions || {}).forEach(function (id) {
       var def = FBDATA.religions[id];
@@ -1373,7 +1415,8 @@ window.FB = window.FB || {};
       var head=descriptor.loadout.head;
       var kind=head
         ? (head.art.kind==='crown'?'crown'
-          : (head.art.kind==='helm'||head.art.kind==='coif'||head.art.kind==='bascinet')?'helm':'none')
+          : (head.art.kind==='ridgeHelm'?'ridgeHelm'
+            : (head.art.kind==='helm'||head.art.kind==='coif'||head.art.kind==='bascinet')?'helm':'none'))
         : spec.headwear;
       var riseU=HEADWEAR_RISE[kind]||6;
       if(!head&&!spec.coversHair){
@@ -3496,6 +3539,43 @@ window.FB = window.FB || {};
       gemDot(ctx,f.cx,y,2.6*u,[42,104,108],q);
     }
   }
+  function hwDiadem(ctx, f, spec, K, vr, q) {
+    var u=K.u,y=f.hairY+K.drop,i,t,x,yy;
+    band(ctx,f,y,5,GOLD,shadeV2(GOLD,-.3),q);
+    for(i=0;i<=10;i++){
+      t=i/10;x=mixV2(f.left-2*u,f.right+2*u,t);
+      yy=y-Math.sin(t*Math.PI)*5*u;
+      fEll(ctx,x,yy+1*u,1.4*u,1.4*u,LINEN,.98);
+      fEll(ctx,x,yy+4*u,1.4*u,1.4*u,LINEN,.98);
+    }
+    if(vr==='gemmed')gemDot(ctx,f.cx,y-1*u,2.5*u,[130,57,71],q);
+    /* Short pearl pendants fall beside the temples, without crown arches. */
+    for(i=-1;i<=1;i+=2){
+      x=i<0?f.left-2*u:f.right+2*u;
+      ink(ctx,1*u,GOLD,.9,q);ctx.beginPath();ctx.moveTo(x,y+4*u);
+      ctx.lineTo(x,y+16*u);ctx.stroke();
+      fEll(ctx,x,y+10*u,1.6*u,1.6*u,LINEN,1);
+      fEll(ctx,x,y+16*u,2*u,2.4*u,LINEN,1);
+    }
+  }
+  function hwRidgeHelm(ctx, f, spec, K, vr, q, pal) {
+    var u=K.u,y=f.hairY+8*u+K.drop;
+    var metal=pal&&pal.metal?pal.metal:vr==='gilded'?[176,155,110]:STEEL;
+    domePath(ctx,f,y,6*K.lift);
+    fillStrokeA(ctx,metal,shadeV2(metal,-.3),1.4*u,.95,q);
+    band(ctx,f,y-3*u,5,shadeV2(metal,-.15),undefined,q);
+    ink(ctx,3*u,shadeV2(metal,.22),.9,q);
+    ctx.beginPath();ctx.moveTo(f.crownX,f.top-6*u*K.lift);
+    ctx.lineTo(f.cx,y-3*u);ctx.stroke();
+    [-1,1].forEach(function (side) {
+      var x=side<0?f.left:f.right;
+      ctx.beginPath();ctx.moveTo(x,y+1*u);
+      ctx.lineTo(x+side*3*u,f.jawY+5*u);
+      ctx.lineTo(x-side*7*u,f.jawY+8*u);
+      ctx.lineTo(x-side*5*u,f.eyeY+10*u);ctx.closePath();
+      fillStrokeA(ctx,shadeV2(metal,-.08),shadeV2(metal,-.3),1.2*u,.95,q);
+    });
+  }
   function hwCrown(ctx, f, spec, K, vr, q, pal) {
     var u=K.u,y=f.hairY+1*u+K.drop;
     var gold=pal&&pal.metal?pal.metal:GOLD;
@@ -3862,6 +3942,7 @@ window.FB = window.FB || {};
       vr==='filleted'?GOLD:shadeV2(LINEN,-.06),undefined,q);
   }
   var HEADWEAR_DRAW = {
+    diadem:hwDiadem,ridgeHelm:hwRidgeHelm,
     circlet:hwCirclet,crown:hwCrown,imperial:hwImperial,helm:hwHelm,
     coif:hwCoif,chaperon:hwChaperon,veil:hwVeil,wimple:hwWimple,
     turban:hwTurban,cap:hwCap,kerchief:hwKerchief,fillet:hwFillet,
@@ -3890,6 +3971,12 @@ window.FB = window.FB || {};
      the procedural item art scaled to the head. */
   function paintHeadItem(ctx, scaffold, spec, item, q) {
     var f=scaffold.face,kind=item.art.kind;
+    if(kind==='ridgeHelm'){
+      var ridge=hwKnobs(f,spec);
+      hwRidgeHelm(ctx,f,spec,ridge,item.quality==='masterwork'?'gilded':'iron',q,
+        { metal:hexToRgbV2(pickArt(item,['metals'],'#8e999e',1)) });
+      return;
+    }
     if(kind==='bascinet'){
       drawItemArt(ctx,item,f.cx,(f.top+f.chinBottom)/2,
         (f.chinBottom-f.top)/60,0,false);
@@ -4862,7 +4949,7 @@ window.FB = window.FB || {};
     quality.fine=quality.bold<1.6;
     quality.grow=1+(quality.bold-1)*.38;
     var headItem=descriptor.loadout.head;
-    var coversHair=(headItem&&(headItem.art.kind==='helm'||headItem.art.kind==='coif'||headItem.art.kind==='bascinet'))||
+    var coversHair=(headItem&&(headItem.art.kind==='ridgeHelm'||headItem.art.kind==='helm'||headItem.art.kind==='coif'||headItem.art.kind==='bascinet'))||
       (!headItem&&spec.coversHair);
     /* Attachment order is structural: back hair behind the body, the
        neck under the robe, draped cloth behind the head, then the face
@@ -4998,12 +5085,16 @@ window.FB = window.FB || {};
 
   FB.paintItem = function (canvas, state, value) {
     if (!canvas || !value) return;
-    const item = typeof value === 'object' && value.defId
+    let item = typeof value === 'object' && value.defId
       ? (FB.resolveItemSnapshot ? FB.resolveItemSnapshot(value) : null)
       : (state && FB.resolveItemReadOnly
         ? FB.resolveItemReadOnly(state, value)
         : null);
     if (!item) return;
+    var era = FB.campaignEra ? FB.campaignEra(state) : null;
+    if (item.def && item.def.artEras && item.def.artEras[era]) {
+      item = Object.assign({}, item, { art:normalizedArt(item, state) });
+    }
     const ctx = canvas.getContext('2d');
     const W = canvas.width, H = canvas.height;
     ctx.clearRect(0, 0, W, H);

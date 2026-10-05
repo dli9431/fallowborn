@@ -132,7 +132,7 @@ test('476 bookmark and free federate start preserve 867 and 1066 data',
     expect(result.claimant).toBe('Zeno');
     expect(result.periodCareer).toContain('Federate');
     expect(result.periodRank).toBe('Free Citizen');
-    expect(result.periodTroops).toBe('Household soldiers');
+    expect(result.periodTroops).toBe('Bucellarii');
     expect(result.periodHolding).toBe('Mail shirt');
     expect(result.quotePure).toBe(true);
     expect(result.quoted).toBe(true);
@@ -446,7 +446,7 @@ test('476 regional assignments and dress stay local to the bookmark',
     expect(result.constantine).toBe('mauri_476');
     expect(result.pliska).toBe('byzantium');
     expect(result.faith).toEqual(['nicene','homoian']);
-    expect(result.dress).toEqual(['late_antique','lateTunic','lateMantle']);
+    expect(result.dress).toEqual(['late_antique','lateMilitary','lateMantle']);
     expect(result.strait).toBe(true);
     expect(result.frankHeir).toBe(true);
     expect(result.older[0]).toBe('west_francia');

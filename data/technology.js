@@ -113,7 +113,7 @@ window.FBDATA = window.FBDATA || {};
     features:{
       local_institution_bargains:{ mode:'none', rationale:'Cities and congregations bargain over existing courts, protection, provisioning and tax relief. Living counterparties, resources and local consent govern this baseline capability.' },
       episcopal_institution_mediation:{ mode:'none', rationale:'Mediation between existing congregations depends on a living bishop and guaranteed worship, not a researched technique.' },
-      content_period_membership:{ mode:'none', rationale:'Content belongs to authored historical periods and dates. Period membership is not an invention; eligible events, careers and activities retain their existing technology requirements.' },
+      content_period_membership:{ mode:'none', rationale:'Content belongs to authored historical periods and dates. Period membership is not an invention; eligible events, careers, activities, fresh equipment and new unit recruitment retain their existing technology requirements. Owned equipment and materialized offers remain usable, and existing unit compositions remain intact.' },
       religious_head_appointment:{ mode:'none', rationale:'Religious office appointment is an institutional relationship, independent of research.' },
       religious_head_hereditary:{ mode:'none', rationale:'Hereditary religious office succession follows kinship and eligibility, independent of research.' },
       optional_system_availability:{ mode:'none', rationale:'Institution membership follows authored campaign, government and faith rules. Availability is not a discovery; enabled institutions retain their existing technology requirements.' },

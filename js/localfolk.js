@@ -242,7 +242,7 @@ window.FB = window.FB || {};
           profession:fatherProfession
         }, household, 'adult', 0);
         father.dyn = FB.dynastyName(culture, father.name,
-          pr ? pr.name : pid, father.sex);
+          pr ? pr.name : pid, father.sex, state);
         const motherProfession = professionFor(kind, generation,
           householdIndex, 1);
         const motherStation = stationFor(motherProfession, kind);
@@ -290,7 +290,7 @@ window.FB = window.FB || {};
           }, household, adultCount > 1 ? 'sibling' : 'adult', adultIndex);
           if (!dynasty) {
             dynasty = FB.dynastyName(culture, adult.name,
-              pr ? pr.name : pid, adult.sex);
+              pr ? pr.name : pid, adult.sex, state);
             adult.dyn = dynasty;
           }
         }

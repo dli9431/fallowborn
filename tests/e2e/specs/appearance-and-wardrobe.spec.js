@@ -86,7 +86,7 @@ test('eras and government forms resolve the wardrobe and it reaches the cache ke
     });
     expect(result).toEqual({
       wardrobes:['medieval', 'medieval', 'late_antique', 'late_antique'],
-      garments:['cote', 'lateMantle'],
+      garments:['cote', 'lateCivil'],
       keyStable:true, keyByWardrobe:true,
       formOverride:'late_antique', formGarment:'lateMantle',
       restored:'medieval'

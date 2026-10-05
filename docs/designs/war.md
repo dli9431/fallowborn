@@ -798,7 +798,7 @@ muster, AI musters and the culture sheet all drop it (the sheet says it is not f
 in this era). Only roles that are not core may be excluded: a core role is part of
 every host. The era is stamped at creation, so the restriction holds for the whole
 campaign; content that should arrive or leave by date keeps using technology and
-culture gates. The shipped eras exclude nothing.
+culture gates. The shipped eras exclude no complete unit role. Optional unit classes may separately declare eras. Crossbowmen and Huscarls belong to the medieval eras; the five core defaults remain available in every era. Cataphracts, horse archers and other period-compatible classes retain their technology, culture and doctrine gates.
 
 **Slain professionals are replaced through a realm-owned cohort ledger.**
 `state.armyCohorts[<realmId>][<classId>] = { batches:[{ n, readyTurn }], ready }`
@@ -2152,3 +2152,9 @@ An active federate service contract makes only its named host friendly in the pa
 Force requests use registerOrdinaryWar with an exact county objective. Defeat does not create a holding, and a destroyed host never respawns through migration. Deadline or extinction retires a failed landless polity and its remaining hosts. Settlement resolves through the shared claims engine and a reviewed transaction, not a dated conquest shortcut. The original Odoacer standing-host and escort flags keep their existing first-year behavior. The Amal migration reuses its authored opening host instead of creating a second banner; peaceful save repair retains unexpired scenario-standing hosts before a migration begins.
 
 Technology impact: federate_moving_court and federate_claims_settlement are none. Existing military, supply, settlement and current political consent rules remain the constraints.
+
+Period class membership
+
+A unit class may declare eras independently of its role. FB.unitClassEraAllowed checks this membership before the era-wide excludeRoles rule, and existing unlock, muster and culture-sheet consumers share the result. Validators reject unknown or repeated eras and prevent a core default class from disappearing in any era. Saved hosts and existing compositions are retained; membership controls new recruitment. Household troops display as Bucellarii in late antique campaigns, while their existing class id, quality, capacity, upkeep and casualty order remain unchanged.
+
+Technology impact: content_period_membership is none for these class restrictions. Historical membership does not replace existing technology gates. Core troops remain the ungated fallback for a class outside its period.
