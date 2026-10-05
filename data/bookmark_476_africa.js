@@ -7,12 +7,6 @@ FBDATA.bookmarkRegions476 = FBDATA.bookmarkRegions476 || {};
 FBDATA.bookmarkRegions476['africa'] = {
   provinces:[
     { id:'mallorca', name:'Balearic Islands', names:[{ from:400, to:600, name:'Balearic Islands' }], realm:'aghlabids', culture:'roman', religion:'nicene', dev:3, communities:[{ culture:'roman', religion:'nicene', populationShare0:9500 }, { culture:'vandal', religion:'homoian', paired:true, populationShare0:500 }] },
-    { id:'palermo', name:'Panormus', names:[{ from:400, to:600, name:'Panormus' }], realm:'aghlabids', culture:'roman', religion:'nicene', dev:5, communities:[{ culture:'roman', religion:'nicene', populationShare0:9500 }, { culture:'vandal', religion:'homoian', paired:true, populationShare0:500 }] },
-    { id:'messina', name:'Messana', names:[{ from:400, to:600, name:'Messana' }], realm:'aghlabids', culture:'roman', religion:'nicene', dev:3, communities:[{ culture:'roman', religion:'nicene', populationShare0:9500 }, { culture:'vandal', religion:'homoian', paired:true, populationShare0:500 }] },
-    { id:'siracusa', name:'Syracusae', names:[{ from:400, to:600, name:'Syracusae' }], realm:'aghlabids', culture:'roman', religion:'nicene', dev:4, communities:[{ culture:'roman', religion:'nicene', populationShare0:9500 }, { culture:'vandal', religion:'homoian', paired:true, populationShare0:500 }] },
-    { id:'cagliari', name:'Caralis', names:[{ from:400, to:600, name:'Caralis' }], realm:'aghlabids', culture:'roman', religion:'nicene', dev:3, communities:[{ culture:'roman', religion:'nicene', populationShare0:9500 }, { culture:'vandal', religion:'homoian', paired:true, populationShare0:500 }] },
-    { id:'sassari', name:'Turris Libisonis', names:[{ from:400, to:600, name:'Turris Libisonis' }], realm:'aghlabids', culture:'roman', religion:'nicene', dev:2, communities:[{ culture:'roman', religion:'nicene', populationShare0:9500 }, { culture:'vandal', religion:'homoian', paired:true, populationShare0:500 }] },
-    { id:'ajaccio', name:'Corsica', names:[{ from:400, to:600, name:'Corsica' }], realm:'aghlabids', culture:'roman', religion:'nicene', dev:2, communities:[{ culture:'roman', religion:'nicene', populationShare0:9500 }, { culture:'vandal', religion:'homoian', paired:true, populationShare0:500 }] },
     { id:'tunis', name:'Carthage', names:[{ from:400, to:600, name:'Carthage' }], realm:'aghlabids', culture:'roman', religion:'nicene', dev:7, customaryRights:[
       { power:'peace', basis:'tenure', basisRef:'provincial_court_476:tunis' },
       { power:'revenue', basis:'tenure', basisRef:'vandal_estates_476:tunis' }
@@ -66,10 +60,6 @@ FBDATA.bookmarkRegions476['africa'] = {
     tingis_476:{ x:-5.81, y:35.78, names:[{ from:400, to:600, name:'Tingis' }] },
     oea_476:{ x:13.18, y:32.9, names:[{ from:400, to:600, name:'Oea' }] },
     lepcis_magna_476:{ x:14.29, y:32.64, names:[{ from:400, to:600, name:'Lepcis Magna' }] },
-    siracusa_476:{ x:15.29, y:37.07, names:[{ from:400, to:600, name:'Syracusae' }] },
-    messana_476:{ x:15.55, y:38.19, names:[{ from:400, to:600, name:'Messana' }] },
-    turris_libisonis_476:{ x:8.4, y:40.84, names:[{ from:400, to:600, name:'Turris Libisonis' }] },
-    aleria_476:{ x:9.51, y:42.1, names:[{ from:400, to:600, name:'Aleria' }] },
     palma_476:{ x:2.65, y:39.57, names:[{ from:400, to:600, name:'Palma' }] }
   },
   layouts:{
@@ -84,12 +74,6 @@ FBDATA.bookmarkRegions476['africa'] = {
     tangier:[{ site:'tingis_476', name:'Tingis', kind:'town' }],
     tripoli:[{ site:'oea_476', name:'Oea', kind:'town' }],
     sirte:[{ site:'lepcis_magna_476', name:'Lepcis Magna', kind:'town' }],
-    palermo:[{ site:'palermo', name:'Panormus', kind:'town' }],
-    messina:[{ site:'messana_476', name:'Messana', kind:'town' }],
-    siracusa:[{ site:'siracusa_476', name:'Syracusae', kind:'town' }],
-    cagliari:[{ site:'cagliari', name:'Caralis', kind:'town' }],
-    sassari:[{ site:'turris_libisonis_476', name:'Turris Libisonis', kind:'town' }],
-    ajaccio:[{ site:'aleria_476', name:'Aleria', kind:'town' }],
     mallorca:[{ site:'palma_476', name:'Palma', kind:'town' }]
   },
   institutions:{
@@ -168,12 +152,6 @@ FBDATA.bookmarkRegions476['africa'] = {
   empires:{},
   climate:{
     'mallorca':'mediterranean',
-    'palermo':'mediterranean',
-    'messina':'mediterranean',
-    'siracusa':'mediterranean',
-    'cagliari':'mediterranean',
-    'sassari':'mediterranean',
-    'ajaccio':'mediterranean',
     'tunis':'mediterranean',
     'kairouan':'mediterranean',
     'tripoli':'mediterranean',

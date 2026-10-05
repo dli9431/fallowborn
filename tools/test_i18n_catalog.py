@@ -51,6 +51,23 @@ class StructuredDataExtractionTests(unittest.TestCase):
             self.assertIn(f'news.476.africa_{outcome}', inventory.entries)
         self.assertNotIn(i18n_catalog.source_key('Gaiseric'), inventory.entries)
 
+    def test_regional_events_campaigns_and_county_names_are_extracted(self):
+        inventory = i18n_catalog.Inventory()
+        i18n_catalog.extract_structured(inventory)
+        for event_id in ("grain_roll", "civic_records", "two_congregations"):
+            prefix = f"event.italy_476_{event_id}"
+            self.assertIn(f"{prefix}.title.default", inventory.entries)
+            self.assertIn(f"{prefix}.text.default", inventory.entries)
+            self.assertIn(f"{prefix}.options.0.label.default", inventory.entries)
+        self.assertEqual(inventory.entries[
+            "storyCampaign.rugian_frontier_476.name.default"]["text"], "The Rugian Frontier")
+        for suffix in ("campaign", "won", "failed", "diverted", "interrupted"):
+            self.assertIn(f"news.476.rugian_{suffix}", inventory.entries)
+        for county, name in (("foggia", "Luceria"), ("viterbo", "Volsinii")):
+            self.assertEqual(inventory.entries[
+                f"province.476.{county}.name.dated.0.default"]["text"], name)
+        self.assertNotIn(i18n_catalog.source_key("Epiphanius"), inventory.entries)
+
     def test_campaign_names_and_all_durable_outcomes_are_extracted(self):
         inventory = i18n_catalog.Inventory()
         i18n_catalog.extract_structured(inventory)

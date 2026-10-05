@@ -41,7 +41,8 @@ test('476 seeds provincial court rights and elite identities separately from com
     const rights = s.authority.rights.filter(function (r) { return r.basis === 'tenure'; });
     const local = FB.political.communityGovernance(s, 'toulouse');
     const b = FB.bookmark('476');
-    const counties = ['ravenna','roma','split','laon','toulouse','tunis','kairouan','constantinople',
+    const counties = ['ravenna','roma','milano','pavia','aquileia','firenze','capua','benevento',
+      'bari','cosenza','augsburg','split','laon','toulouse','tunis','kairouan','constantinople',
       'thessaloniki','adrianople','dyrrachion','nicaea','ancyra','caesarea','serdica','sisak','zadar'];
     const estates = ['tunis','kairouan'];
     const seeded = rights.length === counties.length * 2 && counties.every(function (pid) {

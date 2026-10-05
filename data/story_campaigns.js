@@ -61,3 +61,5 @@ FBDATA.storyCampaigns = {
       interrupted:{ key:'news.476.italy_interrupted', text:'📜 A change of eastern court interrupts the Italian campaign.' }
     } }
 };
+
+Object.assign(FBDATA.storyCampaigns, FBDATA.bookmarkRegions476.italy.storyCampaigns);

@@ -791,13 +791,15 @@ def extract_structured(inv: Inventory) -> None:
         root = node_object(find_assignment(path, "FBDATA", data_name)) or {}
         rel = path.relative_to(ROOT).as_posix()
         entries = [(item_id, item_node, rel) for item_id, item_node in root.items()]
-        regional_field = {"legalTraditions": "legalTraditions", "storyCampaigns": "campaigns"}.get(data_name)
-        if regional_field:
-            for region_path, region in REGION_FILES:
-                declaration = node_object(find_keyed_assignment(
-                    region_path, "FBDATA", "bookmarkRegions476", region
-                )) or {}
-                region_rel = region_path.relative_to(ROOT).as_posix()
+        # Regional declarations spell some catalogue fields differently.
+        regional_fields = {"legalTraditions": ("legalTraditions",),
+                           "storyCampaigns": ("campaigns", "storyCampaigns")}.get(data_name, ())
+        for region_path, region in REGION_FILES if regional_fields else ():
+            declaration = node_object(find_keyed_assignment(
+                region_path, "FBDATA", "bookmarkRegions476", region
+            )) or {}
+            region_rel = region_path.relative_to(ROOT).as_posix()
+            for regional_field in regional_fields:
                 entries.extend((item_id, item_node, region_rel) for item_id, item_node in
                                (node_object(declaration.get(regional_field)) or {}).items())
         for item_id, item_node, rel in entries:
@@ -1108,7 +1110,9 @@ def extract_structured(inv: Inventory) -> None:
                 for branch, record, line in branch_records(entry.get("name")):
                     inv.add(f"province.476.{province_id}.name.dated.{index}.{branch}", record,
                             f"{region_rel}:{line}", f"476 province {province_id}, dated name.", ())
-        for province_id, layout_node in (node_object(declaration.get("layouts")) or {}).items():
+        layouts = {**(node_object(declaration.get("layouts")) or {}),
+                   **(node_object(declaration.get("settlementLayouts")) or {})}
+        for province_id, layout_node in layouts.items():
             for index, entry_node in enumerate(node_array(layout_node) or []):
                 entry = node_object(entry_node) or {}
                 site_id = node_string(entry.get("site")) or str(index)

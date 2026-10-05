@@ -11,17 +11,17 @@ FBDATA.rulerFaithTargets = ['nicene','homoian','chalcedonian','miaphysite'];
 /* Physical seats, not territorial realms. Unnamed officeholders are generated;
    Carthage's Nicene see is deliberately vacant in spring 476. */
 FBDATA.localInstitutions = {
-  rome_senate:{ city:'Rome', kind:'senate', provinceId:'roma', site:'roma', religion:'nicene', culture:'roman' },
-  ravenna_council:{ city:'Ravenna', kind:'council', provinceId:'ravenna', site:'ravenna_476', religion:'nicene', culture:'roman' },
-  milan_council:{ city:'Mediolanum', kind:'council', provinceId:'milano', site:'milano_476', religion:'nicene', culture:'roman' },
+  rome_senate:FBDATA.bookmarkRegions476.italy.localInstitutions.rome_senate,
+  ravenna_council:FBDATA.bookmarkRegions476.italy.localInstitutions.ravenna_council,
+  milan_council:FBDATA.bookmarkRegions476.italy.localInstitutions.milan_council,
   carthage_council:FBDATA.bookmarkRegions476.africa.institutions.carthage_council,
   salona_council:FBDATA.bookmarkRegions476.dalmatia_east.institutions.salona_council,
   arles_council:{ city:'Arles', kind:'council', provinceId:'arles', site:'arles_476', religion:'nicene', culture:'roman' },
   constantinople_senate:FBDATA.bookmarkRegions476.dalmatia_east.institutions.constantinople_senate,
-  rome_see:{ city:'Rome', kind:'see', provinceId:'roma', site:'roma', religion:'nicene', culture:'roman', officeId:'rome_bishop', historicalName:'Simplicius' },
-  ravenna_see:{ city:'Ravenna', kind:'see', provinceId:'ravenna', site:'ravenna_476', religion:'nicene', culture:'roman', officeId:'ravenna_nicene_bishop', historicalName:'Exuperantius' },
-  ravenna_homoian_see:{ city:'Ravenna', kind:'see', provinceId:'ravenna', site:'ravenna_476', religion:'homoian', culture:'gothic', officeId:'ravenna_homoian_bishop' },
-  milan_see:{ city:'Mediolanum', kind:'see', provinceId:'milano', site:'milano_476', religion:'nicene', culture:'roman', officeId:'milan_bishop' },
+  rome_see:FBDATA.bookmarkRegions476.italy.localInstitutions.rome_see,
+  ravenna_see:FBDATA.bookmarkRegions476.italy.localInstitutions.ravenna_see,
+  ravenna_homoian_see:FBDATA.bookmarkRegions476.italy.localInstitutions.ravenna_homoian_see,
+  milan_see:FBDATA.bookmarkRegions476.italy.localInstitutions.milan_see,
   carthage_see:FBDATA.bookmarkRegions476.africa.institutions.carthage_see,
   salona_see:FBDATA.bookmarkRegions476.dalmatia_east.institutions.salona_see,
   arles_see:{ city:'Arles', kind:'see', provinceId:'arles', site:'arles_476', religion:'nicene', culture:'roman', officeId:'arles_bishop' },
@@ -34,6 +34,7 @@ FBDATA.localInstitutions = {
    and order so existing institution, office and recognition records remain valid. */
 Object.assign(FBDATA.localInstitutions, FBDATA.bookmarkRegions476.africa.institutions);
 Object.assign(FBDATA.localInstitutions, FBDATA.bookmarkRegions476.dalmatia_east.institutions);
+Object.assign(FBDATA.localInstitutions, FBDATA.bookmarkRegions476.italy.localInstitutions);
 
 /* Phase 2 authority records name legal capacities rather than landed titles.
    The institution and scope on each appointment remain separate from owner

@@ -33,7 +33,7 @@ async function begin(page, testInfo, code) {
 }
 
 const WORLD_STORIES = ['western_court_476','zeno_return_476','clovis_syagrius_476',
-  'theoderic_italy_476','eastern_africa_476','eastern_italy_476','western_office_476'];
+  'theoderic_italy_476','eastern_africa_476','eastern_italy_476','western_office_476','rugian_frontier_476'];
 
 const CODE_476 = 'STORIES-476-federate_476-ravenna-m-Marcus-standard-0-gothic.homoian';
 
