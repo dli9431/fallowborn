@@ -2,6 +2,11 @@
 window.FBDATA = window.FBDATA || {};
 FBDATA.events = FBDATA.events || [];
 
+(function () {
+  var firstEvent = FBDATA.events.length;
+  FBDATA.eventPacks = FBDATA.eventPacks || {};
+  FBDATA.eventPacks.agency = { eras:['late_antique','early_medieval','high_medieval'] };
+
 FBDATA.events.push(
 { id:'ruler_overture', title:'A Letter Between Courts',
   trigger:{ never:true }, contextValidator:'agency_overture_context_valid',
@@ -64,3 +69,10 @@ FBDATA.events.push(
       effects:{ skills:{int:1} } }
   ]}
 );
+
+
+  /* Pack membership is metadata, never a display-field rewrite. */
+  for (var i = firstEvent; i < FBDATA.events.length; i++) {
+    FBDATA.events[i].pack = 'agency';
+  }
+})();

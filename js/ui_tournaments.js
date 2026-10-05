@@ -181,7 +181,7 @@
   function programme(e) {
     var host = FB.state.chars[e.hostId], religion = host && FB.religionOf(host.religion, FB.state);
     if (e.programme === 'mounted' && religion && religion.tournamentTradition === 'furusiyya') return FB.T('Furusiyya and open games');
-    if (e.programme === 'martial' && FB.state.date.year < 1100) return FB.T('Martial exercises and open games');
+    if (e.programme === 'martial' && !FB.contentPeriodEnabled(FB.state, D.programmes.lists)) return FB.T('Martial exercises and open games');
     return label('programmes', e.programme);
   }
   function entrantsHtml(s, f, track) {
@@ -352,7 +352,10 @@
     h += '</select>';
     ['scales','programmes'].forEach(function (group) {
       h += '<label for="games-' + group + '">' + esc(group === 'scales' ? FB.T('Scale') : FB.T('Programme')) + '</label><select id="games-' + group + '">';
-      Object.keys(D[group]).forEach(function (key) { h += option(key, label(group,key), draft[group] === key); });
+      Object.keys(D[group]).forEach(function (key) {
+        if (group === 'programmes' && !FB.contentPeriodEnabled(s, D[group][key])) return;
+        h += option(key, label(group,key), draft[group] === key);
+      });
       h += '</select>';
     });
     function dateOptions(list, selected) {

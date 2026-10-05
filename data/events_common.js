@@ -13,6 +13,15 @@
 window.FBDATA = window.FBDATA || {};
 FBDATA.events = FBDATA.events || [];
 
+(function () {
+  var firstEvent = FBDATA.events.length;
+  FBDATA.eventPacks = FBDATA.eventPacks || {};
+  FBDATA.eventPacks.common = { eras:['late_antique','early_medieval','high_medieval'] };
+  var eventEras = {
+    child_page:['early_medieval','high_medieval'],
+    child_lineage_arms:['early_medieval','high_medieval']
+  };
+
 FBDATA.events.push(
 
 /* Saved presentation only; the originating decision has already resolved. */
@@ -1174,3 +1183,11 @@ FBDATA.events.push(
       effects:{ custom:'bondage_flee', log:'Fled rather than labor for a debt.' } }
   ]}
 );
+
+
+  /* Pack membership is metadata, never a display-field rewrite. */
+  for (var i = firstEvent; i < FBDATA.events.length; i++) {
+    FBDATA.events[i].pack = 'common';
+    if (eventEras[FBDATA.events[i].id]) FBDATA.events[i].eras = eventEras[FBDATA.events[i].id];
+  }
+})();

@@ -89,10 +89,11 @@ window.FB = window.FB || {};
       FB.faithOfficeId(religionId, state) === officeId(state));
   }
 
-  function activeBookmarkId(state) {
-    if (state && state.start && state.start.id) return String(state.start.id);
-    return state && state.date && state.date.year >= 1000 ? '1066' : '867';
-  }
+  FB.papalInstitutionActive = function (state, id) {
+    var period = definition().institutions && definition().institutions[id];
+    return !!period && state.date.year >= period.from &&
+      (period.through === undefined || state.date.year <= period.through);
+  };
 
   function copyObject(source) {
     var out = {};
@@ -205,20 +206,14 @@ window.FB = window.FB || {};
   };
 
   function authorityDefault(state) {
-    var starts = definition().authority && definition().authority.startByBookmark || {};
-    var id = activeBookmarkId(state);
-    if (starts[id] !== undefined) return starts[id];
-    return state.date && state.date.year >= 1000 ? 55 : 65;
+    var entry = FB.yearTableEntry(definition().authority && definition().authority.starts, state.date.year);
+    return entry ? entry.value : 65;
   }
 
   function seedRegnalNames(state, papacy) {
     if (Object.keys(papacy.regnalNameCounts).length) return;
-    var seeds = definition().regnalSeeds || {};
-    papacy.regnalNameCounts = copyObject(
-      seeds[activeBookmarkId(state)] ||
-      (state.date && state.date.year >= 1000 ? seeds['1066'] : seeds['867']) ||
-      {}
-    );
+    var seed = FB.yearTableEntry(definition().regnalSeeds, state.date.year);
+    papacy.regnalNameCounts = copyObject(seed && seed.counts);
   }
 
   function syncObedienceSupporters(state, papacy, knownSovereigns) {
@@ -529,7 +524,7 @@ window.FB = window.FB || {};
     record.appointedBy = appointedBy || obedience.claimantId || null;
     record.appointedTurn = state.turn;
     record.appointedYear = state.date.year;
-    record.romanResident = state.date.year < 1100;
+    record.romanResident = !FB.papalInstitutionActive(state, 'nonresident_cardinals');
     record.familyKey = cardinalKinKey(c);
     papacy.cardinals[c.id] = record;
     if (obedience.college.indexOf(c.id) < 0) obedience.college.push(c.id);
@@ -962,7 +957,7 @@ window.FB = window.FB || {};
   }
 
   function installCollegeOffices(state, obedience) {
-    if (state.date.year < 1150) {
+    if (!FB.papalInstitutionActive(state, 'college_offices')) {
       obedience.deanId = null;
       obedience.camerlengoId = null;
       return;
@@ -1559,7 +1554,7 @@ window.FB = window.FB || {};
     election.phase = 'balloting';
     election.round++;
     if (election.round > (definition().balance.compromiseAfterBallots || 6) &&
-        state.date.year >= 1059) {
+        FB.papalInstitutionActive(state, 'cardinal_shortlist')) {
       makeCompromiseCandidate(state, election, obedience);
     }
     var electors = collegeCharacters(state, obedience);
@@ -1742,7 +1737,7 @@ window.FB = window.FB || {};
     var record = ensureInvestitureRecord(state, sovereign);
     if (!record || !policies[policyId]) return false;
     if (policyId === 'concordat' &&
-        state.date.year < definition().investiture.concordatFrom) return false;
+        !FB.papalInstitutionActive(state, 'investiture_concordat')) return false;
     var former = record.policy;
     record.policy = policyId;
     record.setTurn = state.turn;
@@ -1781,7 +1776,7 @@ window.FB = window.FB || {};
     var record = ensureInvestitureRecord(state, sovereign);
     var gate = definition().authority.gates.investiture || 25;
     if (!obedience || !obedience.claimantId || obedience.authority < gate ||
-        state.date.year < definition().investiture.reformFrom ||
+        !FB.papalInstitutionActive(state, 'investiture_reform') ||
         !record || record.policy !== 'lay' ||
         !catholicReligion(state, realmReligion(state, sovereign))) return false;
     record.demandedTurn = state.turn;
@@ -1800,7 +1795,7 @@ window.FB = window.FB || {};
       FB.rf(-20, 20) >= 45;
     if (accepts) {
       FB.setInvestiturePolicy(state,
-        state.date.year >= definition().investiture.concordatFrom &&
+        FB.papalInstitutionActive(state, 'investiture_concordat') &&
         FB.chance(0.35) ? 'concordat' : 'canonical', sovereign, true);
     } else {
       record.refusedTurn = state.turn;
@@ -1820,7 +1815,7 @@ window.FB = window.FB || {};
     delete papacy.pendingInvestitureDemand;
     if (accept) {
       var policy = policyId === 'concordat' &&
-        state.date.year >= definition().investiture.concordatFrom
+        FB.papalInstitutionActive(state, 'investiture_concordat')
         ? 'concordat' : 'canonical';
       return FB.setInvestiturePolicy(state, policy, 'player', true);
     }
@@ -2879,7 +2874,7 @@ window.FB = window.FB || {};
     if (!obedience.claimantId || obedience.claimantId === state.player.charId) return;
     obedience.piety = (obedience.piety || 0) + 35;
     if (obedience.authority >= definition().authority.gates.investiture &&
-        state.date.year >= definition().investiture.reformFrom &&
+        FB.papalInstitutionActive(state, 'investiture_reform') &&
         FB.chance(0.2)) {
       var lay = [];
       var sovereigns = livingCatholicSovereigns(state);
@@ -3288,7 +3283,8 @@ window.FB = window.FB || {};
   Object.keys(FB).forEach(function (key) {
     if (priorExports.indexOf(key) >= 0 || typeof FB[key] !== 'function' ||
         key === 'withPapalOffice' || key === 'papacyState' ||
-        key === 'papalElectionLaw' || key === 'papalAuthorityBand') return;
+        key === 'papalElectionLaw' || key === 'papalAuthorityBand' ||
+        key === 'papalInstitutionActive') return;
     FB[key] = bindOffice(FB[key], allOfficeCalls.indexOf(key) >= 0, false,
       key === 'ensurePapacy');
   });

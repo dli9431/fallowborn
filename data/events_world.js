@@ -4,6 +4,19 @@
 window.FBDATA = window.FBDATA || {};
 FBDATA.events = FBDATA.events || [];
 
+(function () {
+  var firstEvent = FBDATA.events.length;
+  FBDATA.eventPacks = FBDATA.eventPacks || {};
+  FBDATA.eventPacks.world = { eras:['late_antique','early_medieval','high_medieval'] };
+  var eventEras = {
+    raiders_come:['early_medieval','high_medieval'],
+    historic_raid:['early_medieval','high_medieval'],
+    historic_raid_pursuit:['early_medieval','high_medieval'],
+    historic_raid_captive:['early_medieval','high_medieval'],
+    wandering_skald:['early_medieval','high_medieval'],
+    papal_absolution_petition:['early_medieval','high_medieval']
+  };
+
 FBDATA.events.push(
 
 { id:'raiders_come', title:'Sails on the Horizon',
@@ -532,3 +545,11 @@ FBDATA.events.push(
       effects:{ prestige:3, log:'Refused the lord’s protection.' } }
   ]}
 );
+
+
+  /* Pack membership is metadata, never a display-field rewrite. */
+  for (var i = firstEvent; i < FBDATA.events.length; i++) {
+    FBDATA.events[i].pack = 'world';
+    if (eventEras[FBDATA.events[i].id]) FBDATA.events[i].eras = eventEras[FBDATA.events[i].id];
+  }
+})();

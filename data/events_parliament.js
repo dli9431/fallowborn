@@ -10,6 +10,15 @@
 window.FBDATA = window.FBDATA || {};
 FBDATA.events = FBDATA.events || [];
 
+(function () {
+  var firstEvent = FBDATA.events.length;
+  FBDATA.eventPacks = FBDATA.eventPacks || {};
+  FBDATA.eventPacks.parliament = { eras:['late_antique','early_medieval','high_medieval'] };
+  var eventEras = {
+    parliament_scutage:['early_medieval','high_medieval'],
+    plot_feudal_obligation:['early_medieval','high_medieval']
+  };
+
 FBDATA.events.push(
 
 /* ---- the ordinary sitting: mixed business and court gossip ---- */
@@ -267,3 +276,11 @@ FBDATA.events.push(
         addModifier:{id:'settlement_grudge'} } }
   ]}
 );
+
+
+  /* Pack membership is metadata, never a display-field rewrite. */
+  for (var i = firstEvent; i < FBDATA.events.length; i++) {
+    FBDATA.events[i].pack = 'parliament';
+    if (eventEras[FBDATA.events[i].id]) FBDATA.events[i].eras = eventEras[FBDATA.events[i].id];
+  }
+})();

@@ -1523,6 +1523,9 @@ window.FB = window.FB || {};
     }
     // the active balance follows the stamped era, not the bookmark's current one
     FB.balanceLayers.applyCampaign(FB.state);
+    FB.invalidateEventIndex();
+    FB.compileEventContent(FB.campaignEra(FB.state));
+    FB.eventYearPool(FB.state);
     // Repairs establish present facts, never invented historical achievements.
     if (FB.suspendLifeHistories) FB.suspendLifeHistories(FB.state);
     if (FB.ensureChronicle) restoreRepair('Chronicle archive', function () {

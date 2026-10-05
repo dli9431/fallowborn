@@ -7,6 +7,21 @@
 window.FBDATA = window.FBDATA || {};
 FBDATA.events = FBDATA.events || [];
 
+(function () {
+  var firstEvent = FBDATA.events.length;
+  FBDATA.eventPacks = FBDATA.eventPacks || {};
+  FBDATA.eventPacks.war = { eras:['late_antique','early_medieval','high_medieval'] };
+  var eventEras = {
+    ghw_pilgrims_under_arms:['early_medieval','high_medieval'],
+    ghw_swords_seeking_banner:['early_medieval','high_medieval'],
+    ghw_called:['early_medieval','high_medieval'],
+    ghw_muster_complete:['early_medieval','high_medieval'],
+    ghw_field_battle_won:['early_medieval','high_medieval'],
+    ghw_field_battle_lost:['early_medieval','high_medieval'],
+    ghw_expedition_service:['early_medieval','high_medieval'],
+    ghw_expedition_danger:['early_medieval','high_medieval']
+  };
+
 FBDATA.events.push(
 
 /* ---------- the ruler’s war (tier 4+, own banner) ---------- */
@@ -489,3 +504,11 @@ FBDATA.events.push(
       effects:{ custom:'ghw_service_safe', piety:1 } }
   ]}
 );
+
+
+  /* Pack membership is metadata, never a display-field rewrite. */
+  for (var i = firstEvent; i < FBDATA.events.length; i++) {
+    FBDATA.events[i].pack = 'war';
+    if (eventEras[FBDATA.events[i].id]) FBDATA.events[i].eras = eventEras[FBDATA.events[i].id];
+  }
+})();

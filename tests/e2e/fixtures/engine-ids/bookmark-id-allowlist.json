@@ -4,7 +4,7 @@
   "entries": [
     {
       "file": "js/ambitions.js",
-      "source": "const bookmark = state.start && state.start.id || '867';",
+      "source": "const start = state.start || { id:'867', year:867 };",
       "kind": "legacy_default",
       "reason": "A save without start data belongs to the original 867 bookmark."
     },
@@ -49,18 +49,6 @@
       "source": "if (bookmarkId === '1066') supplies1066 = true;",
       "kind": "legacy_contract",
       "reason": "Legacy mod contract: detects a mod that supplies the 1066 bookmark."
-    },
-    {
-      "file": "js/papacy.js",
-      "source": "return state && state.date && state.date.year >= 1000 ? '1066' : '867';",
-      "kind": "pending",
-      "reason": "Papal seeds fall back to a bookmark chosen by year."
-    },
-    {
-      "file": "js/papacy.js",
-      "source": "(state.date && state.date.year >= 1000 ? seeds['1066'] : seeds['867']) ||",
-      "kind": "pending",
-      "reason": "Papal regnal-name seeds fall back to a bookmark chosen by year."
     },
     {
       "file": "js/save.js",

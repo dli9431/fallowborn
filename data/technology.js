@@ -111,6 +111,7 @@ window.FBDATA = window.FBDATA || {};
   FBDATA.techImpactReviews = {
     baselineVersion:'1.127.1',
     features:{
+      content_period_membership:{ mode:'none', rationale:'Content belongs to authored historical periods and dates. Period membership is not an invention; eligible events, careers and activities retain their existing technology requirements.' },
       religious_head_appointment:{ mode:'none', rationale:'Religious office appointment is an institutional relationship, independent of research.' },
       religious_head_hereditary:{ mode:'none', rationale:'Hereditary religious office succession follows kinship and eligibility, independent of research.' },
       optional_system_availability:{ mode:'none', rationale:'Institution membership follows authored campaign, government and faith rules. Availability is not a discovery; enabled institutions retain their existing technology requirements.' },

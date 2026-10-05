@@ -264,6 +264,7 @@ window.FB = window.FB || {};
   FB.setCareer = function (state, c, profession, rank) {
     const def = FBDATA.careers[profession];
     if (!c || !def) return false;
+    if (!FB.contentPeriodEnabled(state, def)) return false;
     if (def.bookmarkIds && def.bookmarkIds.indexOf(
         state.start && state.start.id) < 0) return false;
     if (def.requiresTech && FB.techRequirementMet &&
@@ -765,7 +766,7 @@ window.FB = window.FB || {};
     const out = [];
     for (const id in FBDATA.careers) {
       const def = FBDATA.careers[id];
-      if (def.hiddenChoice) continue;
+      if (def.hiddenChoice || !FB.contentPeriodEnabled(state, def)) continue;
       if (def.bookmarkIds && def.bookmarkIds.indexOf(
           state.start && state.start.id) < 0) continue;
       if (!FB.station.reaches(state.player, def.tierMin, state)) continue;

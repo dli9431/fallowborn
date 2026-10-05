@@ -4,6 +4,14 @@
 window.FBDATA = window.FBDATA || {};
 FBDATA.events = FBDATA.events || [];
 
+(function () {
+  var firstEvent = FBDATA.events.length;
+  FBDATA.eventPacks = FBDATA.eventPacks || {};
+  FBDATA.eventPacks.noble = { eras:['late_antique','early_medieval','high_medieval'] };
+  var eventEras = {
+    vassal_tenure_renewal:['early_medieval','high_medieval']
+  };
+
 FBDATA.events.push(
 
 { id:'vassal_tenure_renewal', title:'A Term Nears Its End', trigger:{ never:true },
@@ -496,3 +504,11 @@ FBDATA.events.push(
       effects:{ piety:-10, custom:'df_fall_flee', log:'Fled into sanctuary; the lands were seized behind you.' } }
   ]}
 );
+
+
+  /* Pack membership is metadata, never a display-field rewrite. */
+  for (var i = firstEvent; i < FBDATA.events.length; i++) {
+    FBDATA.events[i].pack = 'noble';
+    if (eventEras[FBDATA.events[i].id]) FBDATA.events[i].eras = eventEras[FBDATA.events[i].id];
+  }
+})();

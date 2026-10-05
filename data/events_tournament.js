@@ -5,6 +5,11 @@
 window.FBDATA = window.FBDATA || {};
 FBDATA.events = FBDATA.events || [];
 
+(function () {
+  var firstEvent = FBDATA.events.length;
+  FBDATA.eventPacks = FBDATA.eventPacks || {};
+  FBDATA.eventPacks.tournament = { eras:['early_medieval','high_medieval'] };
+
 FBDATA.events.push(
 
 /* ================= GENTRY (tier 2) ================= */
@@ -472,3 +477,10 @@ FBDATA.events.push(
   ]
 }
 );
+
+
+  /* Pack membership is metadata, never a display-field rewrite. */
+  for (var i = firstEvent; i < FBDATA.events.length; i++) {
+    FBDATA.events[i].pack = 'tournament';
+  }
+})();

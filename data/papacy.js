@@ -46,7 +46,7 @@ window.FBDATA = window.FBDATA || {};
       simonyOfferChance:0.15
     },
     authority:{
-      startByBookmark:{ '867':65, '1066':55 },
+      starts:[{ from:null, value:65 }, { from:1000, value:55 }],
       bands:[
         { min:0, max:24, id:'disputed', name:'Disputed' },
         { min:25, max:49, id:'contested', name:'Contested' },
@@ -177,21 +177,26 @@ window.FBDATA = window.FBDATA || {};
       'Adrian', 'Alexander', 'Clement', 'Innocent', 'Urban',
       'Paschal', 'Eugene', 'Victor', 'Lucius'
     ],
-    regnalSeeds:{
-      '867':{
+    institutions:{
+      cardinal_shortlist:{ from:1059 },
+      nonresident_cardinals:{ from:1100 },
+      college_offices:{ from:1150 },
+      investiture_reform:{ from:1075 },
+      investiture_concordat:{ from:1122 }
+    },
+    regnalSeeds:[
+      { from:867, counts:{
         John:8, Benedict:3, Gregory:4, Leo:4, Stephen:5, Nicholas:1,
         Adrian:1, Alexander:0, Clement:2, Innocent:1, Urban:1,
         Paschal:1, Eugene:2, Victor:2, Lucius:1
-      },
-      '1066':{
+      } },
+      { from:1066, counts:{
         John:19, Benedict:9, Gregory:6, Leo:9, Stephen:9, Nicholas:2,
         Adrian:1, Alexander:2, Clement:2, Innocent:2, Urban:1,
         Paschal:1, Eugene:2, Victor:2, Lucius:2
-      }
-    },
+      } }
+    ],
     investiture:{
-      reformFrom:1075,
-      concordatFrom:1122,
       policies:{
         lay:{
           name:'Lay investiture',

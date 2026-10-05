@@ -1352,3 +1352,9 @@ Optional trait requirements
 A trait's system requirements apply before random selection, inheritance, acquisition, progress, effect aggregation and chip rendering. A saved disabled trait stays in the record but contributes no effects and is omitted from character UI. Excommunicated requires excommunication. See docs/designs/systems.md.
 
 Portrait government scope follows FB.station.context for the subject: the protagonist uses their own living realm or immediate liege, an NPC ruler uses their realm, and other characters use their residence holder. The campaign default remains the fallback. The visual key includes the resolved government and era as well as wardrobe, so changing a subject's government refreshes dress and station-dependent details. Portrait queries remain read-only and consume no RNG.
+
+Career and name periods
+
+Careers may declare eras and inclusive yearMin/yearMax bounds. Both careerChoices and setCareer enforce the campaign's stamped era and live year. The civic_clerk career names late_antique instead of a particular bookmark. A legacy bookmarkIds field remains an additional explicit restriction for mods. Existing career records and experience are retained when their definition is out of period; the selection gate does not erase an occupation. Period membership has technology impact none; existing professional technology requirements are independent.
+
+Cultures may declare nameEras, keyed by a known era, with nonempty male and/or female lists. Ordinary culture inheritance merges partial variants. FB.cultureNamePool selects the campaign's stamped era and falls back separately for each sex to the base pool. Character creation and realm-family generators pass their campaign state; title-screen generation uses the active bookmark's era. Existing saved names never change. Name selection retains the same seeded draw and collision retry rules.

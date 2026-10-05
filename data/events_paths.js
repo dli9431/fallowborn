@@ -5,6 +5,33 @@
 window.FBDATA = window.FBDATA || {};
 FBDATA.events = FBDATA.events || [];
 
+(function () {
+  var firstEvent = FBDATA.events.length;
+  FBDATA.eventPacks = FBDATA.eventPacks || {};
+  FBDATA.eventPacks.paths = { eras:['early_medieval','high_medieval'] };
+  var eventEras = {
+    guild_monopoly_petition:['late_antique','early_medieval','high_medieval'],
+    first_muster:['late_antique','early_medieval','high_medieval'],
+    first_battle:['late_antique','early_medieval','high_medieval'],
+    save_the_lord:['late_antique','early_medieval','high_medieval'],
+    loot_temptation:['late_antique','early_medieval','high_medieval'],
+    wardeath_friend:['late_antique','early_medieval','high_medieval'],
+    sergeant:['late_antique','early_medieval','high_medieval'],
+    scriptorium:['late_antique','early_medieval','high_medieval'],
+    tend_sick:['late_antique','early_medieval','high_medieval'],
+    relic_found:['late_antique','early_medieval','high_medieval'],
+    hunt_with_lord:['late_antique','early_medieval','high_medieval'],
+    feud_gentry:['late_antique','early_medieval','high_medieval'],
+    apprentice_trouble:['late_antique','early_medieval','high_medieval'],
+    iron_shortage:['late_antique','early_medieval','high_medieval'],
+    partner_offer:['late_antique','early_medieval','high_medieval'],
+    wreck_auction:['late_antique','early_medieval','high_medieval'],
+    sparring_challenge:['late_antique','early_medieval','high_medieval'],
+    quiet_garrison:['late_antique','early_medieval','high_medieval'],
+    judgment_at_door:['late_antique','early_medieval','high_medieval'],
+    gentry_feuding_neighbors:['late_antique','early_medieval','high_medieval']
+  };
+
 FBDATA.events.push(
 
 /* ================= CRAFT & TRADE ================= */
@@ -583,3 +610,11 @@ FBDATA.events.push(
     { label:'Send regrets.', desc:'Keep the invitation’s mystery for another market day.', effects:{} }
   ]}
 );
+
+
+  /* Pack membership is metadata, never a display-field rewrite. */
+  for (var i = firstEvent; i < FBDATA.events.length; i++) {
+    FBDATA.events[i].pack = 'paths';
+    if (eventEras[FBDATA.events[i].id]) FBDATA.events[i].eras = eventEras[FBDATA.events[i].id];
+  }
+})();

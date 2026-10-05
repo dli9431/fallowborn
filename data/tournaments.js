@@ -11,7 +11,7 @@ FBDATA.tournaments = {
   programmes:{
     martial:{ name:'Martial games', headline:'melee' },
     mounted:{ name:'Mounted martial games', headline:'melee' },
-    lists:{ name:'Tournament lists', headline:'joust', requiresTech:'cavalry_lances' }
+    lists:{ name:'Tournament lists', headline:'joust', yearMin:1100, requiresTech:'cavalry_lances' }
   },
   tracks:{
     joust:{ name:'Jousting', contest:true, elite:true, male:true, skill:'mar', injury:0.12, severe:0.008 },

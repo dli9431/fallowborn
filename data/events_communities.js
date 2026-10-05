@@ -11,6 +11,11 @@
 window.FBDATA = window.FBDATA || {};
 FBDATA.events = FBDATA.events || [];
 
+(function () {
+  var firstEvent = FBDATA.events.length;
+  FBDATA.eventPacks = FBDATA.eventPacks || {};
+  FBDATA.eventPacks.communities = { eras:['late_antique','early_medieval','high_medieval'] };
+
 FBDATA.events.push(
 { id:'community_peaceful_adoption', title:'Teaching at the Hearth',
   contextValidator:'community_historical_context_valid',
@@ -100,3 +105,10 @@ FBDATA.events.push(
         cause:'coercive backlash' }, popularOpinion:-5 } }
   ]}
 );
+
+
+  /* Pack membership is metadata, never a display-field rewrite. */
+  for (var i = firstEvent; i < FBDATA.events.length; i++) {
+    FBDATA.events[i].pack = 'communities';
+  }
+})();
