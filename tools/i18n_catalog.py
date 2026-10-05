@@ -66,6 +66,7 @@ STRUCTURED_DATA = {
     "items": "item",
     "plots": "plot",
     "justiceSentences": "justiceSentence",
+    "legalTraditions": "legalTradition",
     "techDomains": "techDomain",
     "techTraditions": "techTradition",
     "tech": "tech",
@@ -748,7 +749,7 @@ def extract_structured(inv: Inventory) -> None:
             path = TECHNOLOGY_FILE
         elif data_name in ("marketGoods", "marketEndowmentTypes"):
             path = DATA / "markets.js"
-        elif data_name == "justiceSentences":
+        elif data_name in ("justiceSentences", "legalTraditions"):
             path = DATA / "intrigue.js"
         elif data_name in ("seasonKinds", "climateZones"):
             path = DATA / "climate.js"

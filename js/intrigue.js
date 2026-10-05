@@ -162,6 +162,7 @@ window.FB = window.FB || {};
       source:typeof record.source === 'string' ? record.source : 'abduction',
       captureTurn:Math.max(0, finite(record.captureTurn, state.turn)),
       authority:record.authority || null,
+      courtKind:record.courtKind === 'religious' ? 'religious' : 'secular',
       endTurn:record.source === 'judicial' ? finite(record.endTurn, state.turn + 90) : null,
       offenseId:record.offenseId || null,
       unjustPaid:Math.max(0, finite(record.unjustPaid, 0)),

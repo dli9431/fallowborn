@@ -41,13 +41,17 @@ FBDATA.customaryBases = {
    realms of the form, read through FB.balanceFor at realm-scoped sites; it
    sits over the era layer and beneath the bookmark and mod layers. */
 FBDATA.governmentForms = {
-  territorial:{ holders:'feudal_vassals', succession:'dynastic',
+  territorial:{ legalTradition:{ default:'faith', cultures:{ greek:'byzantine' },
+    realms:{ byzantium:'byzantine', byzantium_1066:'byzantine' } }, holders:'feudal_vassals', succession:'dynastic',
     territory:'fixed', consent:'territorial', systems:{ enable:['feudal_service'] } },
-  regnum:{ holders:'direct', succession:'dynastic',
+  regnum:{ legalTradition:{ default:'faith', cultures:{ greek:'byzantine' },
+    realms:{ byzantium:'byzantine', byzantium_1066:'byzantine' } }, holders:'direct', succession:'dynastic',
     territory:'fixed', consent:'territorial', systems:{ disable:['feudal_service'] } },
-  roman_civic:{ holders:'direct', succession:'office',
+  roman_civic:{ legalTradition:{ default:'faith', cultures:{ greek:'byzantine' },
+    realms:{ byzantium:'byzantine', byzantium_1066:'byzantine' } }, holders:'direct', succession:'office',
     territory:'fixed', consent:'delegated', systems:{ disable:['feudal_service'] } },
-  federate_polity:{ holders:'direct', succession:'acclamation',
+  federate_polity:{ legalTradition:{ default:'faith', cultures:{ greek:'byzantine' },
+    realms:{ byzantium:'byzantine', byzantium_1066:'byzantine' } }, holders:'direct', succession:'acclamation',
     territory:'non_territorial', consent:'delegated', systems:{ disable:['feudal_service'] } }
 };
 

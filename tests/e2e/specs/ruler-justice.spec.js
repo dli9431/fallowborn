@@ -5,7 +5,8 @@ dependsOnRuntime(__filename, [
   'js/events.js', 'js/model.js', 'js/items.js', 'js/i18n.js', 'js/world.js', 'js/wars.js', 'js/actions.js',
   'js/travel.js', 'js/treasury.js', 'js/modifiers.js', 'js/save.js', 'js/save_v4.js',
   'js/ui_modals.js', 'js/ui_misc.js', 'js/ui_panels.js', 'js/keys.js', 'js/portrait.js', 'data/intrigue.js', 'data/events_intrigue.js',
-  'data/technology.js', 'js/agency.js', 'css/style.css']);
+  'data/technology.js', 'data/political_institutions.js', 'data/cultures.js',
+  'js/station.js', 'js/governments.js', 'js/lexicon.js', 'js/agency.js', 'css/style.css']);
 const { test, expect } = require('../support/fixture');
 const { startWarSafety } = require('../support/game/war-safety');
 

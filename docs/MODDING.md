@@ -125,10 +125,24 @@ calling a projection. Those integrations are separate phases of the saved plan.
 
 ## Ruler justice
 
-`FBDATA.justiceSentences` defines sentence ids with display `name`/`desc`, required
-`level` (0–3), unjust support `penalty`, optional regional `form`, and the
-`money`, `exile`, `forfeit`, `maim`, or `kill` effect categories. The shipped
-registry is authored data; ordinary runtime intrigue overrides do not merge it.
+FBDATA.justiceSentences defines stable ids with display name/desc, kind, level (0-3), and unjust support penalty. Kind is custody, fine, penance, corporal, exile, death, pardon, ransom or forfeiture. Kind supplies mechanics; renamed or new ids have the same behavior. Fine and ransom transfer available funds; custody defaults to a 360-day term and 90-day extension window, overridable by termDays and extensionWindow. Penance defaults to costs of 40 piety and 20 prestige, overridable by pietyCost and prestigeCost. Exile may declare careerRole:cloister. A pardon with forgive:true closes all court cases; closesCase:false preserves the cause for release or ransom. The shipped money/exile/forfeit/maim/kill flags remain compatibility metadata, not dispatch. Runtime justiceSentences additions replace complete records by id.
+
+FBDATA.legalTraditions defines complete records keyed by tradition id. Each requires a display name, a nonempty unique sentences array of known sentence ids, procedures, justification and ai. Runtime legalTraditions additions replace complete records by id. Names and sentence display fields use the legalTradition and justiceSentence structured catalogs and normal lexicon labels, including labels.legalTradition.<id>.name and labels.justiceSentence.<id>.name/desc. Custom saved judgments retain a typed sentence data reference rather than rendered prose.
+
+procedures requires boolean arrest, hearing, ransom and pardon fields, plus compensationMaxSeverity and penanceMaxSeverity integers from 0 to 3 for player hearing alternatives. A false procedure blocks its projection and mutation. Release without forgiveness is an independent recovery sentence when included in the sentence list. Hearing gates punitive sentences; it does not confer custody or evidence.
+
+justification.evidence is a nonempty subset of testimony, material and redhanded. Only those recorded evidence forms establish a cause. Optional justification.sentences is keyed by an offered sentence id. Each record may restrict offenseKinds (assassination, abduction, fabricated_charge, sabotage, blackmail, rebellion), successful (boolean), and level (0-3, overriding the sentence severity threshold). Restrictions determine availability, while level determines whether an otherwise available punishment is justified. For example, the Muslim tradition restricts diya and qisas to successful assassination offenses.
+
+ai supplies minor, serious, severe, arbitrary and excessive arrays of offered sentence ids, in preference order. The engine chooses the first ready projection from that list, falling back to the tradition's other sentences. Player and AI use the same authority, custody, cause, procedure and distribution checks.
+
+Faith properties.legalTradition names a tradition and inherits normally. Government forms can declare legalTradition as an id, the string faith, or an object with default (an id or faith), optional realms (realm id to tradition id) and cultures (culture id to tradition id). Secular resolution reads exact realm override, then exact culture override, then default; faith delegates to the effective faith. Religious resolution always uses effective faith. Older forms without a declaration delegate to faith. Older faiths without a property use faithDefaults.legalTradition. Runtime governmentForms records merge by id and retain the normal required registered strategies.
+
+FB.justiceTradition(state, actorId, optionalCourtKind) returns id, definition and source. optionalCourtKind is secular (default) or religious. FB.validateLegalTraditions(optionalTraditions, optionalSentences, optionalForms) returns schema faults. Bookmark validation includes these faults; runtime mods validate composed definitions before mutation. Explicit unknown tradition references fail closed.
+
+Arrest projection/attempt accept courtKind after offenseId. Sentence projection accepts it after offenseId; sentence application accepts it after responseId. Sentence options accept it after targetId. Projections expose traditionId, courtKind and the effective level. Existing form remains a compatibility alias of traditionId. Custody and pending responses preserve courtKind through saves; a missing field is secular. Current court declarations are rechecked before every action. Changing tradition does not erase an already imposed prison term.
+
+CrazyGames filters death/corporal kinds and normalizes an attempted restricted sentence to a ready custody sentence in the resolved tradition. No custody alternative means rejection. Standard distributions keep those sentences.
+
 Existing private abduction and its single-captive limit are unchanged.
 
 Read-only APIs are `FB.justiceRulerEligible(state, actorId)`,
@@ -5200,7 +5214,7 @@ officeId is the stable save key. Faith branches sharing it recognize the origina
 
 Faith tradition properties
 
-Set legalTradition to the existing latin, muslim or customary form; tournamentTradition furusiyya selects mounted tournaments; holyWarTradition selects crusade, jihad or sacred vocabulary. These properties do not grant a head office or bypass campaign qualifications. raidingTradition true grants the faith tradition and false overrides inherited permission; the existing raidingTraditions faiths and faithGroups lists remain supported through compilation. Culture, technology and regional raid qualifications remain separate.
+Set legalTradition to a declared FBDATA.legalTraditions id (the existing latin, byzantine, muslim or customary traditions); tournamentTradition furusiyya selects mounted tournaments; holyWarTradition selects crusade, jihad or sacred vocabulary. These properties do not grant a head office or bypass campaign qualifications. raidingTradition true grants the faith tradition and false overrides inherited permission; the existing raidingTraditions faiths and faithGroups lists remain supported through compilation. Culture, technology and regional raid qualifications remain separate.
 
 music is an object with lineage (an ordered array of bank selectors) and fallback (a general bank selector). The resolver first tries the exact faith, then authored music lineage and remaining faith ancestors, within existing culture and role precedence. intro is an object with path (for example intro_other) and female (whether to prefer intro_f for a woman). conversionCategory supplies localized name, icon and numeric order for conversion groups. feastDescription is optional localized feast copy. Existing marriage, clergyMarriage, religiousPaths, roles and attire properties continue to inherit and accept explicit overrides. New mods should author properties instead of relying on named faith checks.
 

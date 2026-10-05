@@ -102,12 +102,15 @@
     var row = FB.justiceCustodyOf(s, target);
     return row && row.captorId === actor ? row : null;
   }
-  function caseFor(s, actor, target, id) {
+  function caseFor(s, actor, target, id, courtKind) {
+    courtKind = courtKind || (held(s, actor, target) || {}).courtKind;
+    var t = tradition(s, actor, courtKind);
+    var evidence = t && t.justification && t.justification.evidence || [];
     var list = records(s).offenses || [], best = null;
     for (var i = 0; i < list.length; i++) {
       var row = list[i];
       if (row.accusedId !== target || row.closed || !authorityMatches(s, actor, row.authority) ||
-          ['testimony', 'material', 'redhanded'].indexOf(row.evidence) < 0 ||
+          evidence.indexOf(row.evidence) < 0 ||
           id && row.id !== id) continue;
       if (!best || row.severity > best.severity || row.severity === best.severity &&
           row.kind === 'assassination' && row.successful &&
@@ -236,9 +239,9 @@
     if (!liege) return 0;
     return FB.truceExpiry(s, rebel, FB.topRealm(s, liege)) || FB.truceExpiry(s, rebel, liege);
   }
-  FB.justiceArrestProjection = function (s, actor, target, offenseId) {
+  FB.justiceArrestProjection = function (s, actor, target, offenseId, courtKind) {
     var a = person(s, actor), t = person(s, target);
-    var counties = FB.justiceCounties(s, actor), offense = caseFor(s, actor, target, offenseId);
+    var counties = FB.justiceCounties(s, actor), offense = caseFor(s, actor, target, offenseId, courtKind);
     var rid = realmOf(s, target), arid = realmOf(s, actor);
     var targetBaron = target === s.player.charId && FB.station.isBaron(s.player, s);
     var subordinateBaron = targetBaron && !!arid && under(s, s.player.liege, arid);
@@ -246,6 +249,7 @@
     var truce = resistance ? arrestTruce(s, target, rid) : 0;
     var cooldown = (records(s).cooldowns || {})[actor + ':' + target] || 0;
     var blocker = !FB.justiceRulerEligible(s, actor) ? 'ruler' :
+      !procedure(s, actor, 'arrest', courtKind) ? 'procedure' :
       !t || t.dead || actor === target ? 'target' :
       FB.justiceCustodyOf(s, actor) || actor === s.player.charId && s.player.flags.in_prison ? 'confined' :
       FB.justiceCustodyOf(s, target) || target === s.player.charId && s.player.flags.in_prison ? 'already_held' :
@@ -256,7 +260,7 @@
       truce ? 'truce' :
       cooldown > s.turn ? 'cooldown' :
       offenseId && !offense ? 'case' : null;
-    return { ready:!blocker, blocker:blocker, actorId:actor, targetId:target,
+    return { ready:!blocker, blocker:blocker, courtKind:courtKind || 'secular', actorId:actor, targetId:target,
       offenseId:offense && offense.id, evidence:offense && offense.evidence,
       justified:!!offense, counties:counties, supportCounties:FB.justiceSupportCounties(s, actor), cooldownUntil:cooldown,
       truceUntil:truce,
@@ -266,6 +270,16 @@
   };
   function news(s, actor, target, action, effects) {
     var a = person(s, actor), t = person(s, target);
+    // Existing Chronicle selector keys are a compatibility allowlist, not dispatch.
+    var legacy = ['release','pardon','ransom','fine','penance','imprisonment','exile',
+      'forfeiture','monastic_exile','blinding_deposition','diya','qisas','execution'];
+    if (FBDATA.justiceSentences[action] && legacy.indexOf(action) < 0) {
+      FB.news(s, FB.msg('news.justice.sentence', '{ruler}: {sentence} - {target}.', {
+        ruler:a ? FB.fullName(a) : '', target:t ? FB.fullName(t) : '',
+        sentence:{ $data:'justiceSentence', id:action, path:'name' }
+      }), { outcomeImpacts:effects || [] });
+      return;
+    }
     FB.news(s, FB.msg('news.justice.action', '{ruler}: {action} — {target}.', {
       ruler:a ? FB.fullName(a) : '', target:t ? FB.fullName(t) : '',
       action:FB.messageParam(FB.msg('news.justice.action_name', { forms:{ select:'value', param:'action', cases:{
@@ -302,11 +316,12 @@
     row.offenseId = null; row.unjustPaid = 0;
     row.sentenced = false; row.sentenceIds = [];
   };
-  function capture(s, actor, target, offenseId, unjust) {
+  function capture(s, actor, target, offenseId, unjust, courtKind) {
     var row = FB.captureIntrigue(s, actor, target, 'judicial', realmOf(s, actor));
     if (!row) return null;
     row.authority = authorityKey(s, actor);
     row.endTurn = s.turn + 90;
+    row.courtKind = courtKind || 'secular';
     row.offenseId = offenseId || null;
     row.unjustPaid = unjust ? 20 : 0;
     row.sentenced = false;
@@ -346,7 +361,7 @@
     var effects = support(s, p.supportCounties, p.attemptSupport).concat(standingPenalty(s, p.actorId, p.attemptSupport));
     var caught = submit || FB.chance(p.chance);
     if (caught) {
-      var row = capture(s, p.actorId, p.targetId, p.offenseId, !p.justified);
+      var row = capture(s, p.actorId, p.targetId, p.offenseId, !p.justified, p.courtKind);
       if (!row) return { ok:false, blocker:'already_held' };
       effects = effects.concat(support(s, p.supportCounties, p.captureSupport), standingPenalty(s, p.actorId, p.captureSupport));
       news(s, p.actorId, p.targetId, 'arrest', effects);
@@ -357,36 +372,147 @@
     }
     return { ok:true, captured:caught, impacts:effects };
   }
-  function distributionSentence(sentence) {
-    return FB.platform.isCrazyGames &&
-      ['execution', 'qisas', 'blinding_deposition'].indexOf(sentence) >= 0
-      ? 'imprisonment' : sentence;
+  function distributionSentence(s, actor, target, sentence, offenseId, courtKind) {
+    if (!FB.platform.isCrazyGames || ['death','corporal'].indexOf(kind(sentence)) < 0) return sentence;
+    return sentenceOfKind(s, actor, target, 'custody', offenseId, courtKind) || null;
   }
-  function queue(s, actor, target, kind, offenseId, sentence) {
-    sentence = distributionSentence(sentence);
+  function queue(s, actor, target, kind, offenseId, sentence, courtKind) {
+    courtKind = courtKind || (held(s, actor, target) || {}).courtKind || 'secular';
+    sentence = distributionSentence(s, actor, target, sentence, offenseId, courtKind);
+    if (kind === 'sentence' && !sentence) return false;
+    var def = FBDATA.justiceSentences[sentence];
+    var required = kind === 'arrest' ? 'arrest' : def && def.kind === 'ransom' ? 'ransom' :
+      def && def.forgive ? 'pardon' : def && def.kind === 'pardon' ? null : 'hearing';
+    if (required && !procedure(s, actor, required, courtKind)) return false;
     var j = ensure(s);
     if (j.pending) return false;
     j.pending = { id:'justice-response-' + j.nextId++, kind:kind, actorId:actor,
       targetId:target, offenseId:offenseId || null, sentence:sentence || null,
-      generation:s.generation };
+      generation:s.generation, courtKind:courtKind };
     FB.queueEvent(s, kind === 'arrest' ? 'justice_arrest' : 'justice_hearing', {
-      justiceId:j.pending.id, studentId:actor, sentence:sentence || 'imprisonment'
+      justiceId:j.pending.id, studentId:actor, sentence:sentence || null
     });
     return true;
   }
-  FB.justiceAttemptArrest = function (s, actor, target, offenseId) {
-    var p = FB.justiceArrestProjection(s, actor, target, offenseId);
+  FB.justiceAttemptArrest = function (s, actor, target, offenseId, courtKind) {
+    var p = FB.justiceArrestProjection(s, actor, target, offenseId, courtKind);
     if (!p.ready) return { ok:false, blocker:p.blocker };
     if (target === s.player.charId && actor !== target && !(FB.game && FB.game.observe)) {
-      return { ok:queue(s, actor, target, 'arrest', p.offenseId), pending:true };
+      return { ok:queue(s, actor, target, 'arrest', p.offenseId, null, p.courtKind), pending:true };
     }
     return arrestNow(s, p, false);
   };
-  function form(s, actor) {
+  // Secular government declarations precede faith. Religious courts use faith only.
+  FB.justiceTradition = function (s, actor, courtKind) {
     var c = person(s, actor), rid = realmOf(s, actor);
-    var tradition = FB.faithValue(s, c.religion, 'legalTradition').value;
-    if (/greek|byzant/i.test(c.culture || '') || /byzant/i.test(rid || '')) return 'byzantine';
-    return tradition || 'latin';
+    if (!c) return { id:null, definition:null, source:null };
+    var id = FB.faithValue(s, c.religion, 'legalTradition').value || FBDATA.faithDefaults.legalTradition, source = 'faith';
+    if (courtKind !== 'religious') {
+      var formId = FB.station.context(c, s).formId;
+      var government = FBDATA.governmentForms[formId];
+      var declaration = government && government.legalTradition;
+      var secular = typeof declaration === 'string' ? declaration : declaration &&
+        (declaration.realms && declaration.realms[rid] ||
+         declaration.cultures && declaration.cultures[c.culture] || declaration.default);
+      if (secular && secular !== 'faith') { id = secular; source = 'government'; }
+    }
+    return { id:id, definition:Object.prototype.hasOwnProperty.call(FBDATA.legalTraditions, id) ?
+      FBDATA.legalTraditions[id] : null, source:source };
+  };
+  FB.validateLegalTraditions = function (tables, sentences, forms) {
+    tables = tables || FBDATA.legalTraditions;
+    sentences = sentences || FBDATA.justiceSentences;
+    forms = forms || FBDATA.governmentForms;
+    var errors = [], kinds = ['custody','fine','penance','corporal','exile','death','pardon','ransom','forfeiture'];
+    function plain(o) { return !!o && typeof o === 'object' && !Array.isArray(o); }
+    function fault(path) { errors.push(FB.T('Invalid legal definition {id}.', { id:path })); }
+    function integer(n, min, max) { return typeof n === 'number' && isFinite(n) && Math.floor(n) === n && n >= min && n <= max; }
+    function reference(id) { return typeof id === 'string' && Object.prototype.hasOwnProperty.call(tables, id); }
+    if (!plain(tables) || !plain(sentences) || !plain(forms)) { fault('tables'); return errors; }
+    Object.keys(sentences).forEach(function (id) {
+      var d = sentences[id];
+      if (!/^[a-z][a-z0-9_]*$/.test(id) || !plain(d) || kinds.indexOf(d.kind) < 0 ||
+          typeof d.name !== 'string' || !d.name || typeof d.desc !== 'string' ||
+          !integer(d.level, 0, 3) || typeof d.penalty !== 'number' || !isFinite(d.penalty) || d.penalty < 0) { fault('sentence.' + id); return; }
+      ['termDays','extensionWindow','pietyCost','prestigeCost'].forEach(function (key) {
+        if (d[key] !== undefined && !integer(d[key], key === 'termDays' ? 1 : 0, 100000)) fault('sentence.' + id + '.' + key);
+      });
+      ['closesCase','forgive'].forEach(function (key) {
+        if (d[key] !== undefined && typeof d[key] !== 'boolean') fault('sentence.' + id + '.' + key);
+      });
+      if (d.forgive && d.kind !== 'pardon' || d.careerRole !== undefined &&
+          (d.kind !== 'exile' || typeof d.careerRole !== 'string' || !FB.roleCareer(d.careerRole))) fault('sentence.' + id);
+    });
+    Object.keys(tables).forEach(function (id) {
+      var t = tables[id], seen = Object.create(null);
+      if (!/^[a-z][a-z0-9_]*$/.test(id) || !plain(t) || typeof t.name !== 'string' || !t.name ||
+          !Array.isArray(t.sentences) || !t.sentences.length || !plain(t.procedures) ||
+          !plain(t.justification) || !plain(t.ai)) { fault(id); return; }
+      t.sentences.forEach(function (sid) {
+        if (typeof sid !== 'string' || !Object.prototype.hasOwnProperty.call(sentences, sid) || seen[sid]) fault(id + '.sentences');
+        seen[sid] = true;
+      });
+      ['arrest','hearing','ransom','pardon'].forEach(function (key) {
+        if (typeof t.procedures[key] !== 'boolean') fault(id + '.procedures.' + key);
+      });
+      ['compensationMaxSeverity','penanceMaxSeverity'].forEach(function (key) {
+        if (!integer(t.procedures[key], 0, 3)) fault(id + '.procedures.' + key);
+      });
+      var e = t.justification.evidence;
+      if (!Array.isArray(e) || !e.length || e.some(function (value) {
+        return ['testimony','material','redhanded'].indexOf(value) < 0;
+      })) fault(id + '.justification.evidence');
+      var rules = t.justification.sentences;
+      if (rules !== undefined && !plain(rules)) fault(id + '.justification.sentences');
+      else Object.keys(rules || {}).forEach(function (sid) {
+        var rule = rules[sid];
+        if (!seen[sid] || !plain(rule)) { fault(id + '.justification.' + sid); return; }
+        if (rule.level !== undefined && !integer(rule.level, 0, 3) ||
+            rule.successful !== undefined && typeof rule.successful !== 'boolean' ||
+            rule.offenseKinds !== undefined && (!Array.isArray(rule.offenseKinds) || !rule.offenseKinds.length ||
+              rule.offenseKinds.some(function (value) {
+                return ['assassination','abduction','fabricated_charge','sabotage','blackmail','rebellion'].indexOf(value) < 0;
+              }))) fault(id + '.justification.' + sid);
+      });
+      ['minor','serious','severe','arbitrary','excessive'].forEach(function (band) {
+        if (!Array.isArray(t.ai[band]) || t.ai[band].some(function (sid) { return !seen[sid]; })) fault(id + '.ai.' + band);
+      });
+    });
+    Object.keys(forms).forEach(function (id) {
+      var declaration = forms[id] && forms[id].legalTradition;
+      if (declaration === undefined) return; // Older forms intentionally inherit faith.
+      if (typeof declaration === 'string') { if (declaration !== 'faith' && !reference(declaration)) fault('government.' + id); return; }
+      if (!plain(declaration) || declaration.default !== 'faith' && !reference(declaration.default)) { fault('government.' + id); return; }
+      ['cultures','realms'].forEach(function (key) {
+        var values = declaration[key];
+        if (values === undefined) return;
+        if (!plain(values)) { fault('government.' + id + '.' + key); return; }
+        Object.keys(values).forEach(function (value) { if (!reference(values[value])) fault('government.' + id + '.' + key + '.' + value); });
+      });
+    });
+    return errors;
+  };
+  function tradition(s, actor, courtKind) {
+    return FB.justiceTradition(s, actor, courtKind).definition;
+  }
+  function kind(id) { return FBDATA.justiceSentences[id] && FBDATA.justiceSentences[id].kind; }
+  function sentenceAllowed(t, id, offense) {
+    if (!t || t.sentences.indexOf(id) < 0) return false;
+    var rule = t.justification && t.justification.sentences && t.justification.sentences[id];
+    return !rule || !rule.offenseKinds && rule.successful === undefined ||
+      !!(offense && (!rule.offenseKinds || rule.offenseKinds.indexOf(offense.kind) >= 0) &&
+      (rule.successful === undefined || rule.successful === offense.successful));
+  }
+  function procedure(s, actor, name, courtKind) {
+    var t = tradition(s, actor, courtKind);
+    return !!(t && t.procedures && t.procedures[name]);
+  }
+  function sentenceOfKind(s, actor, target, wanted, offenseId, courtKind) {
+    var t = tradition(s, actor, courtKind);
+    var ids = t && t.sentences || [];
+    for (var i = 0; i < ids.length; i++) if (kind(ids[i]) === wanted &&
+        FB.justicePunishmentProjection(s, actor, target, ids[i], offenseId, courtKind).ready) return ids[i];
+    return null;
   }
   function exileDestination(s, counties, origin) {
     var queue = origin ? [origin] : counties.slice(), seen = {};
@@ -401,54 +527,60 @@
     }
     return null;
   }
-  FB.justicePunishmentProjection = function (s, actor, target, sentence, offenseId) {
-    sentence = distributionSentence(sentence);
+  FB.justicePunishmentProjection = function (s, actor, target, sentence, offenseId, courtKind) {
+    courtKind = courtKind || (held(s, actor, target) || {}).courtKind || 'secular';
+    sentence = distributionSentence(s, actor, target, sentence, offenseId, courtKind);
     var def = FBDATA.justiceSentences[sentence], row = held(s, actor, target);
-    var offense = caseFor(s, actor, target, offenseId), counties = FB.justiceCounties(s, actor);
-    var legalForm = live(s, actor) ? form(s, actor) : 'latin';
-    var justified = !!(def && (def.level === 0 || offense && offense.severity >= def.level));
+    var offense = caseFor(s, actor, target, offenseId, courtKind), counties = FB.justiceCounties(s, actor);
+    var legal = FB.justiceTradition(s, actor, courtKind), t = legal.definition, sentenceKind = def && def.kind;
+    var rule = t && t.justification && t.justification.sentences && t.justification.sentences[sentence];
+    var level = rule && rule.level !== undefined ? rule.level : def && def.level;
+    var justified = !!(def && (level === 0 || offense && offense.severity >= level));
     var rid = realmOf(s, target), arid = realmOf(s, actor);
     var localTitle = !!rid && !!arid && rid !== arid && under(s, rid, arid);
     if (target === s.player.charId && FB.station.isBaron(s.player, s)) {
       localTitle = !!arid && under(s, s.player.liege, arid) &&
         counties.indexOf(s.player.provinceId) >= 0 && actor !== target;
     }
-    var regional = def && (!def.form || def.form === legalForm);
-    if (sentence === 'qisas' || sentence === 'diya') regional = legalForm === 'muslim' &&
-      !!(offense && offense.kind === 'assassination' && offense.successful);
-    var destination = def && def.exile ? exileDestination(s, counties, location(s, target)) : null;
+    var regional = def && sentenceAllowed(t, sentence, offense);
+    var needs = sentenceKind === 'ransom' ? 'ransom' : def && def.forgive ? 'pardon' :
+      sentenceKind !== 'pardon' ? 'hearing' : null;
+    var destination = sentenceKind === 'exile' ? exileDestination(s, counties, location(s, target)) : null;
     var pending = records(s).pending;
     var blocker = !def ? 'sentence' : !FB.justiceRulerEligible(s, actor) ? 'ruler' :
       !live(s, target) || actor === target ? 'target' :
       FB.justiceCustodyOf(s, actor) || actor === s.player.charId && s.player.flags.in_prison ? 'confined' :
       !row ? 'custody' : !regional ? 'regional' :
+      needs && !procedure(s, actor, needs, courtKind) ? 'procedure' :
       offenseId && !offense ? 'case' :
-      def.forfeit && !localTitle ? 'title' :
-      def.exile && !destination ? 'destination' :
-      row.sentenceIds && row.sentenceIds.indexOf(sentence) >= 0 && sentence !== 'imprisonment' ? 'already_sentenced' :
-      sentence === 'imprisonment' && row.sentenced && row.endTurn > s.turn + 90 ? 'term' : null;
+      sentenceKind === 'forfeiture' && !localTitle ? 'title' :
+      sentenceKind === 'exile' && !destination ? 'destination' :
+      row.sentenceIds && row.sentenceIds.indexOf(sentence) >= 0 && sentenceKind !== 'custody' ? 'already_sentenced' :
+      sentenceKind === 'custody' && row.sentenced && row.endTurn > s.turn + num(def.extensionWindow, 90) ? 'term' : null;
     var station = target === s.player.charId ? FB.playerStation(s) :
       FB.clamp(live(s, target) ? FB.stationOf(person(s, target)) : 0, 0, 4);
     var fine = Math.max(5, Math.round(((offense ? offense.severity : 1) + 3) * [5,8,12,20,30][station]));
-    if (sentence === 'ransom') fine = row && row.demand ? row.demand.amount :
+    if (sentenceKind === 'ransom') fine = row && row.demand ? row.demand.amount :
       (FBDATA.intrigue.captiveRansoms[station] || 30);
-    var amount = def && def.money ? Math.min(fine, live(s, target) ? available(s, target) : 0) : 0;
+    var amount = def && ['fine','ransom'].indexOf(sentenceKind) >= 0 ? Math.min(fine, live(s, target) ? available(s, target) : 0) : 0;
     var loss = def && !justified ? -def.penalty : 0;
-    if (sentence === 'imprisonment' && row && !row.sentenced) loss = Math.min(0, loss + num(row.unjustPaid, 0));
+    if (sentenceKind === 'custody' && row && !row.sentenced) loss = Math.min(0, loss + num(row.unjustPaid, 0));
     return { ready:!blocker, blocker:blocker, actorId:actor, targetId:target, sentence:sentence,
       custody:row, offenseId:offense && offense.id, evidence:offense && offense.evidence,
-      justified:justified, form:legalForm, amount:amount, fine:fine, counties:counties,
+      justified:justified, level:level, form:legal.id, traditionId:legal.id, courtKind:courtKind, amount:amount, fine:fine, counties:counties,
       supportCounties:FB.justiceSupportCounties(s, actor),
       support:loss, destination:destination, titleRealmId:localTitle ? rid : null,
-      endTurn:sentence === 'imprisonment' && row ? Math.max(s.turn, row.captureTurn + 360,
-        row.sentenced ? row.endTurn + 360 : 0) : null,
+      endTurn:sentenceKind === 'custody' && row ? Math.max(s.turn, row.captureTurn + num(def.termDays, 360),
+        row.sentenced ? row.endTurn + num(def.termDays, 360) : 0) : null,
       pending:!!(pending && pending.targetId === target) };
   };
-  FB.justiceSentenceOptions = function (s, actor, target) {
-    return Object.keys(FBDATA.justiceSentences).filter(function (id) {
-      return distributionSentence(id) === id;
+  FB.justiceSentenceOptions = function (s, actor, target, courtKind) {
+    courtKind = courtKind || (held(s, actor, target) || {}).courtKind || 'secular';
+    var t = tradition(s, actor, courtKind);
+    return (t && t.sentences || []).filter(function (id) {
+      return !FB.platform.isCrazyGames || ['death','corporal'].indexOf(kind(id)) < 0;
     }).map(function (id) {
-      return FB.justicePunishmentProjection(s, actor, target, id);
+      return FB.justicePunishmentProjection(s, actor, target, id, null, courtKind);
     }).filter(function (p) { return p.blocker !== 'regional'; });
   };
   function removeOffices(s, id) {
@@ -500,51 +632,60 @@
     }
     ensure(s).exiles[c.id] = { counties:p.counties.slice(), destination:p.destination, endTurn:s.turn + 1800 };
     if (FB.noteLifeEvent) FB.noteLifeEvent(s, c.id, 'exile', {});
-    if (p.sentence === 'monastic_exile') {
-      c.career = { profession:FB.roleCareer('cloister') };
+    var careerRole = FBDATA.justiceSentences[p.sentence].careerRole;
+    if (careerRole) {
+      c.career = { profession:FB.roleCareer(careerRole) };
       if (c.id === s.player.charId) s.player.profession = c.career.profession;
     }
     if (FB.invalidateSocialVisit) FB.invalidateSocialVisit(s, c.id);
   }
-  FB.justiceApplyPunishment = function (s, actor, target, sentence, offenseId, responseId) {
-    sentence = distributionSentence(sentence);
-    var p = FB.justicePunishmentProjection(s, actor, target, sentence, offenseId);
+  FB.justiceApplyPunishment = function (s, actor, target, sentence, offenseId, responseId, courtKind) {
+    courtKind = courtKind || (held(s, actor, target) || {}).courtKind || 'secular';
+    sentence = distributionSentence(s, actor, target, sentence, offenseId, courtKind);
+    var p = FB.justicePunishmentProjection(s, actor, target, sentence, offenseId, courtKind);
     if (!p.ready) return { ok:false, blocker:p.blocker };
     var j = ensure(s), pending = j.pending;
     if (target === s.player.charId && !(FB.game && FB.game.observe) &&
         (!pending || pending.id !== responseId || pending.kind !== 'sentence' ||
           pending.actorId !== actor || pending.sentence !== sentence)) {
-      return { ok:queue(s, actor, target, 'sentence', p.offenseId, sentence), pending:true };
+      return { ok:queue(s, actor, target, 'sentence', p.offenseId, sentence, courtKind), pending:true };
     }
     var def = FBDATA.justiceSentences[sentence], row = p.custody;
-    if (def.money && !transfer(s, target, actor, p.amount)) return { ok:false, blocker:'funds' };
+    var pietyBefore = target === s.player.charId ? num(s.player.piety, 0) : 0;
+    var prestigeBefore = target === s.player.charId ? num(s.player.prestige, 0) : 0;
+    if (['fine','ransom'].indexOf(def.kind) >= 0 && !transfer(s, target, actor, p.amount)) return { ok:false, blocker:'funds' };
     j.pending = null;
     var effects = support(s, p.supportCounties, p.support).concat(standingPenalty(s, actor, p.support));
     effects.push({ type:'system', system:'justice', action:sentence,
-      days:p.endTurn ? p.endTurn - s.turn : null, lethal:!!def.kill,
-      permanent:!!(def.kill || def.maim || def.forfeit) });
+      days:p.endTurn ? p.endTurn - s.turn : null, lethal:def.kind === 'death',
+      permanent:['death','corporal','forfeiture'].indexOf(def.kind) >= 0 });
     if (target === s.player.charId && p.amount) effects.push({ type:'gold', amount:-p.amount });
     if (actor === s.player.charId && p.amount) effects.push({ type:'gold', amount:p.amount });
-    var offense = caseFor(s, actor, target, p.offenseId);
-    if (offense && sentence !== 'release' && sentence !== 'ransom') { offense.closed = true; offense.sentence = sentence; }
-    if (sentence === 'pardon') (j.offenses || []).forEach(function (o) {
+    var offense = caseFor(s, actor, target, p.offenseId, courtKind);
+    if (offense && def.closesCase !== false) { offense.closed = true; offense.sentence = sentence; }
+    if (def.forgive) (j.offenses || []).forEach(function (o) {
       if (o.accusedId === target && authorityMatches(s, actor, o.authority)) o.closed = true;
     });
     // Claim the sentence before death/succession and any callbacks can re-enter.
     if (!row.sentenceIds) row.sentenceIds = [];
     row.sentenceIds.push(sentence);
+    if (target === s.player.charId && def.kind === 'penance') {
+      effects.push({ type:'piety', amount:-Math.min(pietyBefore, num(def.pietyCost, 40)) },
+        { type:'prestige', amount:-Math.min(prestigeBefore, num(def.prestigeCost, 20)) });
+    }
     j.last = { actorId:actor, targetId:target, sentence:sentence, justified:p.justified,
       amount:p.amount, turn:s.turn, impacts:effects };
     news(s, actor, target, sentence, effects);
-    FB.noteConduct(s, actor, { cruelty:!p.justified && def.level >= 2 ? 1 : 0, public:true });
-    if (def.kill) {
+    FB.noteConduct(s, actor, { cruelty:!p.justified && p.level >= 2 ? 1 : 0, public:true });
+    if (def.kind === 'death') {
       release(s, row);
       if (target === s.player.charId) FB.game.die(FB.msg('legend.death.justice',
         'Executed while held prisoner by a ruler.', {}), { kind:'sentence', eventId:'justice_hearing' });
       else FB.killChar(s, person(s, target));
-    } else if (sentence === 'imprisonment') {
+    } else if (def.kind === 'custody') {
       // Convert identified war or private custody without leaving a second release authority.
       if ((s.intrigue.captives || []).indexOf(row) < 0) s.intrigue.captives.push(row);
+      row.courtKind = courtKind;
       row.source = 'judicial'; row.authority = authorityKey(s, actor);
       row.captorGeneration = actor === s.player.charId ? s.generation : FB.realmRulerGeneration(s, realmOf(s, actor));
       row.endTurn = p.endTurn; row.sentenced = true; row.offenseId = null; row.unjustPaid = 0;
@@ -555,18 +696,18 @@
       }
       if (row.endTurn <= s.turn) release(s, row);
     } else {
-      if (def.forfeit) forfeit(s, p);
-      if (def.maim) {
+      if (def.kind === 'forfeiture') forfeit(s, p);
+      if (def.kind === 'corporal') {
         FB.addTrait(person(s, target), 'one_eyed');
         FB.addTrait(person(s, target), 'maimed');
         if (target === s.player.charId && FB.station.isLanded(s.player, s)) FB.loseAllLand(s, {});
         else if (realmOf(s, target)) FB.advanceRealmSuccession(s, realmOf(s, target));
       }
-      if (def.exile) exile(s, p);
-      if (sentence === 'penance') {
+      if (def.kind === 'exile') exile(s, p);
+      if (def.kind === 'penance') {
         var wallet = target === s.player.charId ? s.player : person(s, target);
-        wallet.piety = Math.max(0, num(wallet.piety, 0) - 40);
-        wallet.prestige = Math.max(0, num(wallet.prestige, 0) - 20);
+        wallet.piety = Math.max(0, num(wallet.piety, 0) - num(def.pietyCost, 40));
+        wallet.prestige = Math.max(0, num(wallet.prestige, 0) - num(def.prestigeCost, 20));
       }
       release(s, row);
     }
@@ -581,9 +722,10 @@
       row.source = 'judicial';
       row.authority = row.captorRealmId || authorityKey(s, row.captorId);
       row.endTurn = num(row.captureTurn, s.turn) + 360;
-      row.sentenced = true; row.sentenceIds = ['imprisonment'];
+      row.sentenced = true; row.sentenceIds = Object.keys(FBDATA.justiceSentences).filter(function (id) { return kind(id) === 'custody'; }).slice(0, 1);
     }
     if (row.source !== 'judicial') return row;
+    row.courtKind = row.courtKind === 'religious' ? 'religious' : 'secular';
     if (row.captorId === s.player.charId && s.player.dead &&
         (row.authority === 'player' || row.authority === 'barony:' + s.player.provinceId)) return row;
     var key = row.authority || row.captorRealmId;
@@ -617,7 +759,8 @@
     });
     if (j.pending && (!FB.justiceRulerEligible(s, j.pending.actorId) || !live(s, j.pending.targetId) ||
         j.pending.generation !== s.generation || j.pending.kind === 'sentence' &&
-        !held(s, j.pending.actorId, j.pending.targetId))) j.pending = null;
+        !FB.justicePunishmentProjection(s, j.pending.actorId, j.pending.targetId, j.pending.sentence,
+          j.pending.offenseId, j.pending.courtKind).ready)) j.pending = null;
   };
   FB.ensureJustice = function (s) {
     if (s.intrigue && s.intrigue.hearing) FB.justiceImportHearing(s, s.intrigue.hearing);
@@ -652,22 +795,30 @@
     if (!row || !FB.justiceRulerEligible(s, row.captorId) || !o ||
         !authorityMatches(s, row.captorId, o.authority)) return;
     // Repair is deterministic: retain the severity, without making an AI cruelty roll.
-    var sentence = o.severity >= 3 ? 'execution' : o.severity === 2 ? 'imprisonment' : 'fine';
-    queue(s, row.captorId, hearing.accusedId, 'sentence', o.id, sentence);
+    var sentence = preferredSentence(s, row.captorId, hearing.accusedId, o);
+    if (sentence) queue(s, row.captorId, hearing.accusedId, 'sentence', o.id, sentence);
   };
+  function preferredSentence(s, actor, target, offense, excessive) {
+    var courtKind = (held(s, actor, target) || {}).courtKind;
+    var t = tradition(s, actor, courtKind);
+    if (!t) return null;
+    var band = excessive ? 'excessive' : !offense ? 'arbitrary' :
+      offense.severity >= 3 ? 'severe' : offense.severity === 2 ? 'serious' : 'minor';
+    var ids = (t.ai && t.ai[band] || []).concat(t.sentences);
+    for (var i = 0; i < ids.length; i++) {
+      // Unsafe choices are replaced by this court's custody sentence in restricted distributions.
+      var id = distributionSentence(s, actor, target, ids[i], offense && offense.id, courtKind);
+      if (id && FB.justicePunishmentProjection(s, actor, target, id, offense && offense.id, courtKind).ready) return id;
+    }
+    return null;
+  }
   function aiSentence(s, actor, target, offense) {
-    var choice = offense && offense.severity >= 3 ? 'execution' :
-      offense && offense.severity === 2 ? 'imprisonment' : 'fine';
-    var legalForm = form(s, actor);
-    if (choice === 'execution' && legalForm === 'byzantine') choice = 'blinding_deposition';
-    if (choice === 'execution' && legalForm === 'muslim' && offense.successful) choice = 'qisas';
-    if (!offense) choice = 'imprisonment';
-    var c = person(s, actor), j = ensure(s);
+    var c = person(s, actor), j = ensure(s), excessive = false;
     if (offense && offense.severity < 3 && cruel(c) &&
         !(j.arbitrary[actor] > s.turn) && FB.chance(0.20)) {
-      choice = 'execution'; j.arbitrary[actor] = s.turn + 1440;
+      excessive = true; j.arbitrary[actor] = s.turn + 1440;
     }
-    return distributionSentence(choice);
+    return preferredSentence(s, actor, target, offense, excessive);
   }
   FB.justiceSeason = function (s) {
     FB.justiceDay(s);
@@ -714,7 +865,7 @@
       if (result.ok) {
         used++; j.arbitrary[id] = s.turn + 1440;
         if (target === s.player.charId) playerFacing = true;
-        else if (result.captured) { FB.justiceApplyPunishment(s, id, target, 'imprisonment'); used++; }
+        else if (result.captured) { FB.justiceApplyPunishment(s, id, target, aiSentence(s, id, target, null)); used++; }
       }
       return false;
     });
@@ -723,17 +874,17 @@
     var p = records(s).pending;
     return p && ctx && p.id === ctx.justiceId && p.generation === s.generation &&
       p.targetId === s.player.charId && FB.justiceRulerEligible(s, p.actorId) &&
-      (p.kind === 'arrest' ? FB.justiceArrestProjection(s, p.actorId, p.targetId, p.offenseId).ready :
-        !!held(s, p.actorId, p.targetId)) ? p : null;
+      (p.kind === 'arrest' ? FB.justiceArrestProjection(s, p.actorId, p.targetId, p.offenseId, p.courtKind).ready :
+        FB.justicePunishmentProjection(s, p.actorId, p.targetId, p.sentence, p.offenseId, p.courtKind).ready) ? p : null;
   }
   FB.fns.justice_response_valid = function (s, ctx) { return !!pendingFor(s, ctx); };
   FB.fns.justice_submit = function (s, ctx) {
     var p = pendingFor(s, ctx);
     if (!p) return false;
     if (p.kind === 'sentence') return FB.justiceApplyPunishment(s, p.actorId, p.targetId,
-      p.sentence, p.offenseId, p.id).ok;
+      p.sentence, p.offenseId, p.id, p.courtKind).ok;
     ensure(s).pending = null;
-    var result = arrestNow(s, FB.justiceArrestProjection(s, p.actorId, p.targetId, p.offenseId), true);
+    var result = arrestNow(s, FB.justiceArrestProjection(s, p.actorId, p.targetId, p.offenseId, p.courtKind), true);
     if (result.captured) queue(s, p.actorId, p.targetId, 'sentence', p.offenseId,
       aiSentence(s, p.actorId, p.targetId, caseFor(s, p.actorId, p.targetId, p.offenseId)));
     ctx.justiceImpacts = result.impacts || [];
@@ -743,24 +894,27 @@
     var p = pendingFor(s, ctx);
     if (!p || p.kind !== 'arrest') return false;
     ensure(s).pending = null;
-    var result = arrestNow(s, FB.justiceArrestProjection(s, p.actorId, p.targetId, p.offenseId), false);
+    var result = arrestNow(s, FB.justiceArrestProjection(s, p.actorId, p.targetId, p.offenseId, p.courtKind), false);
     if (result.captured) queue(s, p.actorId, p.targetId, 'sentence', p.offenseId,
       aiSentence(s, p.actorId, p.targetId, caseFor(s, p.actorId, p.targetId, p.offenseId)));
     ctx.justiceImpacts = result.impacts || [];
     return result.ok;
   };
+  function responseSentence(s, p, wanted) {
+    return p && sentenceOfKind(s, p.actorId, p.targetId, wanted, p.offenseId, p.courtKind);
+  }
   FB.fns.justice_can_pay = function (s, ctx) {
-    var p = pendingFor(s, ctx), o = p && caseFor(s, p.actorId, p.targetId, p.offenseId);
-    if (!p || p.kind !== 'sentence' || o && o.severity >= 3 && form(s, p.actorId) !== 'muslim' &&
-        form(s, p.actorId) !== 'customary') return false;
-    var quote = FB.justicePunishmentProjection(s, p.actorId, p.targetId, 'fine', p.offenseId);
+    var p = pendingFor(s, ctx), o = p && caseFor(s, p.actorId, p.targetId, p.offenseId, p.courtKind);
+    var t = p && tradition(s, p.actorId, p.courtKind), id = responseSentence(s, p, 'fine');
+    if (!p || p.kind !== 'sentence' || !id || o && o.severity > t.procedures.compensationMaxSeverity) return false;
+    var quote = FB.justicePunishmentProjection(s, p.actorId, p.targetId, id, p.offenseId, p.courtKind);
     return quote.ready && available(s, p.targetId) >= quote.fine;
   };
   FB.fns.justice_pay = function (s, ctx) {
     var p = pendingFor(s, ctx);
     if (!p || !FB.fns.justice_can_pay(s, ctx)) return false;
-    p.sentence = 'fine';
-    return FB.justiceApplyPunishment(s, p.actorId, p.targetId, 'fine', p.offenseId, p.id).ok;
+    p.sentence = responseSentence(s, p, 'fine');
+    return FB.justiceApplyPunishment(s, p.actorId, p.targetId, p.sentence, p.offenseId, p.id, p.courtKind).ok;
   };
   FB.fns.justice_plead = function (s, ctx) {
     var p = pendingFor(s, ctx);
@@ -768,8 +922,14 @@
     var o = caseFor(s, p.actorId, p.targetId, p.offenseId);
     var strength = o ? ['suspicion','testimony','material','redhanded'].indexOf(o.evidence) : 0;
     var chance = FB.clamp(0.45 + FB.skillOf(person(s, p.targetId), 'dip') * 0.02 - strength * 0.10, 0.05, 0.80);
-    if (FB.chance(chance)) p.sentence = 'pardon';
-    return FB.justiceApplyPunishment(s, p.actorId, p.targetId, p.sentence, p.offenseId, p.id).ok;
+    var mercy = responseSentence(s, p, 'pardon');
+    if (FB.chance(chance) && mercy) {
+      var t = tradition(s, p.actorId, p.courtKind);
+      mercy = t.sentences.filter(function (id) { return FBDATA.justiceSentences[id].forgive &&
+        FB.justicePunishmentProjection(s, p.actorId, p.targetId, id, p.offenseId, p.courtKind).ready; })[0];
+      if (mercy) p.sentence = mercy;
+    }
+    return FB.justiceApplyPunishment(s, p.actorId, p.targetId, p.sentence, p.offenseId, p.id, p.courtKind).ok;
   };
   FB.fns.justice_challenge = function (s, ctx) {
     var p = pendingFor(s, ctx);
@@ -777,37 +937,47 @@
     var offense = caseFor(s, p.actorId, p.targetId, p.offenseId);
     var evidence = offense ? ['suspicion','testimony','material','redhanded'].indexOf(offense.evidence) : 0;
     var chance = FB.clamp(0.45 + FB.skillOf(person(s, p.targetId), 'int') * 0.025 - evidence * 0.15, 0.05, 0.80);
-    if (FB.chance(chance)) p.sentence = 'pardon';
-    return FB.justiceApplyPunishment(s, p.actorId, p.targetId, p.sentence, p.offenseId, p.id).ok;
+    var mercy = responseSentence(s, p, 'pardon');
+    if (FB.chance(chance) && mercy) {
+      var t = tradition(s, p.actorId, p.courtKind);
+      mercy = t.sentences.filter(function (id) { return FBDATA.justiceSentences[id].forgive &&
+        FB.justicePunishmentProjection(s, p.actorId, p.targetId, id, p.offenseId, p.courtKind).ready; })[0];
+      if (mercy) p.sentence = mercy;
+    }
+    return FB.justiceApplyPunishment(s, p.actorId, p.targetId, p.sentence, p.offenseId, p.id, p.courtKind).ok;
   };
   FB.fns.justice_can_penance = function (s, ctx) {
-    var p = pendingFor(s, ctx), o = p && caseFor(s, p.actorId, p.targetId, p.offenseId);
-    return !!(p && p.kind === 'sentence' && o && o.severity <= 2 &&
-      form(s, p.actorId) === 'latin' && s.player.piety >= 40);
+    var p = pendingFor(s, ctx), o = p && caseFor(s, p.actorId, p.targetId, p.offenseId, p.courtKind);
+    var t = p && tradition(s, p.actorId, p.courtKind), id = responseSentence(s, p, 'penance');
+    return !!(p && p.kind === 'sentence' && o && id && o.severity <= t.procedures.penanceMaxSeverity &&
+      s.player.piety >= num(FBDATA.justiceSentences[id].pietyCost, 40));
   };
   FB.fns.justice_penance = function (s, ctx) {
     var p = pendingFor(s, ctx);
     if (!p || !FB.fns.justice_can_penance(s, ctx)) return false;
-    p.sentence = 'penance';
-    return FB.justiceApplyPunishment(s, p.actorId, p.targetId, 'penance', p.offenseId, p.id).ok;
+    p.sentence = responseSentence(s, p, 'penance');
+    return FB.justiceApplyPunishment(s, p.actorId, p.targetId, p.sentence, p.offenseId, p.id, p.courtKind).ok;
   };
 
   function responseImpacts(s, ctx, action) {
     var p = pendingFor(s, ctx);
     if (!p) return [];
     if (p.kind === 'arrest') {
-      var a = FB.justiceArrestProjection(s, p.actorId, p.targetId, p.offenseId);
+      var a = FB.justiceArrestProjection(s, p.actorId, p.targetId, p.offenseId, p.courtKind);
       return [{ type:'system', system:'justice', action:action === 'justice_resist' ? 'resist' : 'custody',
         chance:action === 'justice_resist' ? a.chance : 1, days:90 }];
     }
-    var sentence = action === 'justice_pay' ? 'fine' : action === 'justice_penance' ? 'penance' : p.sentence;
-    var quote = FB.justicePunishmentProjection(s, p.actorId, p.targetId, sentence, p.offenseId);
+    var sentence = action === 'justice_pay' ? responseSentence(s, p, 'fine') :
+      action === 'justice_penance' ? responseSentence(s, p, 'penance') : p.sentence;
+    var quote = FB.justicePunishmentProjection(s, p.actorId, p.targetId, sentence, p.offenseId, p.courtKind);
     var d = FBDATA.justiceSentences[sentence];
+    if (!d) return [];
     var out = [{ type:'system', system:'justice', action:sentence, days:quote.endTurn ? quote.endTurn - s.turn : null,
-      lethal:!!d.kill, permanent:!!(d.kill || d.maim || d.forfeit),
+      lethal:d.kind === 'death', permanent:['death','corporal','forfeiture'].indexOf(d.kind) >= 0,
       variable:action === 'justice_plead' || action === 'justice_challenge' }];
-    if (d.money) out.push({ type:'gold', amount:-quote.amount });
-    if (sentence === 'penance') out.push({ type:'piety', amount:-40 }, { type:'prestige', amount:-20 });
+    if (['fine','ransom'].indexOf(d.kind) >= 0) out.push({ type:'gold', amount:-quote.amount });
+    if (d.kind === 'penance') out.push({ type:'piety', amount:-num(d.pietyCost, 40) },
+      { type:'prestige', amount:-num(d.prestigeCost, 20) });
     return out;
   }
   ['justice_submit','justice_resist','justice_pay','justice_plead','justice_challenge','justice_penance'].forEach(function (action) {

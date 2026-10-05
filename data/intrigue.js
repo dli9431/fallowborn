@@ -5,19 +5,45 @@ window.FBDATA = window.FBDATA || {};
 FBDATA.plots = FBDATA.plots || {};
 
 FBDATA.justiceSentences = {
-    release:{ name:'Release', desc:'End custody without pardoning unresolved offenses.', level:0, penalty:0 },
-    pardon:{ name:'Pardon and release', desc:'Forgive all unresolved offenses before this court and end custody.', level:0, penalty:0 },
-    ransom:{ name:'Accept ransom and release', desc:'Accept the available portion of the captive’s ransom and release them without pardoning unresolved offenses.', level:0, penalty:0, money:true },
-    fine:{ name:'Fine or compensation', desc:'Take the available portion of the assessed fine and release the prisoner.', level:1, penalty:10, money:true },
-    penance:{ name:'Public penance', desc:'Lose 40 piety and 20 prestige, then go free.', level:1, penalty:10, form:'latin' },
-    imprisonment:{ name:'Imprisonment', desc:'Serve one year, with time already spent in custody credited. An extension requires a new justification.', level:2, penalty:20 },
-    exile:{ name:'Exile', desc:'Lose local titles and offices and leave the domain for five years.', level:2, penalty:30, exile:true },
-    forfeiture:{ name:'Forfeiture', desc:'Surrender titles and lands within the sentencing ruler’s authority, then go free.', level:3, penalty:35, forfeit:true },
-    monastic_exile:{ name:'Monastic exile', desc:'Lose local titles and offices, enter monastic life, and leave the domain for five years.', level:2, penalty:30, exile:true, form:'byzantine' },
-    blinding_deposition:{ name:'Blinding and deposition', desc:'Suffer permanent injury and be removed from current rule, then go free.', level:3, penalty:45, maim:true, form:'byzantine' },
-    diya:{ name:'Diya', desc:'Accept the available blood compensation for a proven killing and release the prisoner.', level:1, penalty:10, money:true, form:'muslim' },
-    qisas:{ name:'Qisas', desc:'Execute a prisoner convicted of a killing.', level:3, penalty:60, kill:true, form:'muslim' },
-    execution:{ name:'Execution', desc:'Put the prisoner to death. Their succession follows the ordinary inheritance rules.', level:3, penalty:60, kill:true }
+    release:{ name:'Release', desc:'End custody without pardoning unresolved offenses.', kind:'pardon', closesCase:false, level:0, penalty:0 },
+    pardon:{ name:'Pardon and release', desc:'Forgive all unresolved offenses before this court and end custody.', kind:'pardon', forgive:true, level:0, penalty:0 },
+    ransom:{ name:'Accept ransom and release', desc:'Accept the available portion of the captive’s ransom and release them without pardoning unresolved offenses.', kind:'ransom', closesCase:false, level:0, penalty:0, money:true },
+    fine:{ name:'Fine or compensation', desc:'Take the available portion of the assessed fine and release the prisoner.', kind:'fine', level:1, penalty:10, money:true },
+    penance:{ name:'Public penance', desc:'Lose 40 piety and 20 prestige, then go free.', kind:'penance', pietyCost:40, prestigeCost:20, level:1, penalty:10 },
+    imprisonment:{ name:'Imprisonment', desc:'Serve one year, with time already spent in custody credited. An extension requires a new justification.', kind:'custody', termDays:360, extensionWindow:90, level:2, penalty:20 },
+    exile:{ name:'Exile', desc:'Lose local titles and offices and leave the domain for five years.', kind:'exile', level:2, penalty:30, exile:true },
+    forfeiture:{ name:'Forfeiture', desc:'Surrender titles and lands within the sentencing ruler’s authority, then go free.', kind:'forfeiture', level:3, penalty:35, forfeit:true },
+    monastic_exile:{ name:'Monastic exile', desc:'Lose local titles and offices, enter monastic life, and leave the domain for five years.', kind:'exile', careerRole:'cloister', level:2, penalty:30, exile:true },
+    blinding_deposition:{ name:'Blinding and deposition', desc:'Suffer permanent injury and be removed from current rule, then go free.', kind:'corporal', level:3, penalty:45, maim:true },
+    diya:{ name:'Diya', desc:'Accept the available blood compensation for a proven killing and release the prisoner.', kind:'fine', level:1, penalty:10, money:true },
+    qisas:{ name:'Qisas', desc:'Execute a prisoner convicted of a killing.', kind:'death', level:3, penalty:60, kill:true },
+    execution:{ name:'Execution', desc:'Put the prisoner to death. Their succession follows the ordinary inheritance rules.', kind:'death', level:3, penalty:60, kill:true }
+};
+
+/* Sentence entries may narrow the common severity rule to a particular cause.
+   Ordered AI lists are preferences, always filtered through the live projection. */
+FBDATA.legalTraditions = {
+  latin:{ name:'Latin law',
+    sentences:['release','pardon','ransom','fine','penance','imprisonment','exile','forfeiture','execution'],
+    procedures:{ arrest:true, hearing:true, ransom:true, pardon:true, compensationMaxSeverity:2, penanceMaxSeverity:2 },
+    justification:{ evidence:['testimony','material','redhanded'] },
+    ai:{ minor:['fine'], serious:['imprisonment'], severe:['execution'], arbitrary:['imprisonment'], excessive:['execution'] } },
+  byzantine:{ name:'Byzantine law',
+    sentences:['release','pardon','ransom','fine','imprisonment','exile','forfeiture','monastic_exile','blinding_deposition','execution'],
+    procedures:{ arrest:true, hearing:true, ransom:true, pardon:true, compensationMaxSeverity:2, penanceMaxSeverity:0 },
+    justification:{ evidence:['testimony','material','redhanded'] },
+    ai:{ minor:['fine'], serious:['imprisonment'], severe:['blinding_deposition'], arbitrary:['imprisonment'], excessive:['execution'] } },
+  muslim:{ name:'Islamic law',
+    sentences:['release','pardon','ransom','fine','imprisonment','exile','forfeiture','diya','qisas','execution'],
+    procedures:{ arrest:true, hearing:true, ransom:true, pardon:true, compensationMaxSeverity:3, penanceMaxSeverity:0 },
+    justification:{ evidence:['testimony','material','redhanded'],
+      sentences:{ diya:{ offenseKinds:['assassination'], successful:true }, qisas:{ offenseKinds:['assassination'], successful:true } } },
+    ai:{ minor:['fine'], serious:['imprisonment'], severe:['qisas','execution'], arbitrary:['imprisonment'], excessive:['execution'] } },
+  customary:{ name:'Customary law',
+    sentences:['release','pardon','ransom','fine','imprisonment','exile','forfeiture','execution'],
+    procedures:{ arrest:true, hearing:true, ransom:true, pardon:true, compensationMaxSeverity:3, penanceMaxSeverity:0 },
+    justification:{ evidence:['testimony','material','redhanded'] },
+    ai:{ minor:['fine'], serious:['imprisonment'], severe:['execution'], arbitrary:['imprisonment'], excessive:['execution'] } }
 };
 
 FBDATA.intrigue = {
