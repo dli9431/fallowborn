@@ -171,7 +171,7 @@ test('period owners, seats, Gothic bodies and generated rulers follow the spring
         return [host.realm, host.at, host.men > 0];
       }),
       zeno:[s.chars[w.zenoId].homeProvinceId, w.zenoCourt.site, s.owner.ikonion],
-      generated:['suebi_476','armorica_476','mauri_476','rhein_franks_476','gepids_476']
+      generated:['suebi_476','armorica_476','mauri_476','altava_476','tingitana_476','rhein_franks_476','gepids_476']
         .every(function (id) {
           const r = realm(id), c = FB.realmRulerCharacterSnapshot(s, id);
           return r.ruler.generated === true && !r.ruler.name && c.generated === true &&
@@ -216,7 +216,7 @@ test('476 layouts and local climates survive save restore without changing medie
   });
   expect(result.layouts).toEqual([
     ['ravenna_476','classis_476'], ['salona_476','split'], ['carthage_476'],
-    ['sufetula_476'], ['roma','ostia'], ['soissons_476'], ['tournai_476']
+    ['sufetula_476','hadrumetum_476'], ['roma','ostia'], ['soissons_476'], ['tournai_476']
   ]);
   expect(result.initial).toEqual([
     ['mediterranean','dry_summer','mild_winter',false],

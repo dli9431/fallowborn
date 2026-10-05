@@ -5365,3 +5365,8 @@ Example registration data for a later bookmark:
 { id:'coastal_campaign', type:'campaign', name:'A Coastal Campaign', desc:'The court may contest the current coastal ruler.', firstYear:867, lastYear:875, durationDays:2880, actor:{realmId:'byzantium'}, target:{provinceId:'siracusa'}, conditions:[{kind:'owner',provinceId:'constantinople',realmId:'byzantium'}] }
 
 A classic script passes that record to FB.stories.registerData and the bookmark lists coastal_campaign in stories. No historical selector is added to the shared engine. See docs/designs/stories.md for lifecycle ordering and docs/designs/state-and-saves.md for validation and migration.
+
+
+476 regional content composition
+
+The Africa region declaration additionally owns sites, layouts, institutions, legalTraditions, straits, crossingClasses, campaigns and events. These use the existing physical-site, settlement-presentation, institution, legal-tradition, crossing, campaign and event schemas. They are composed into the normal FBDATA catalogues in classic-script load order. They are content authoring tables, not additional runtime-mod roots. Province rows use the existing names array; site records use their existing names array. No event trigger/effect key or engine extension is introduced.

@@ -354,3 +354,6 @@ FB.political.federateSettlementQuote includes the current court, host, contract,
 Technology impact: authority_federate_service remains none for general terms and AI negotiation. federate_moving_court is none because ordinary travel, provisions and living actors constrain baseline migration. federate_claims_settlement is none because occupation and consent establish ordinary holdings, without a discovery prerequisite.
 
 Coverage: tests/e2e/specs/federate-migration.spec.js, authority-phase-2.spec.js, 476-situation.spec.js and eras-and-governments.spec.js.
+
+
+African government identities use vandal_custom and mauro_roman legal declarations owned by the regional data. Vandal defendants use Vandal custom, Roman defendants use late_roman personal jurisdiction, and mixed disputes use the royal custom with a Roman assessor tradition. Moorish courts likewise distinguish customary and Roman parties. Carthage and Byzacena seed tenure-based fiscal rights labeled by the estate institution, separately from private property. Vandal estate preference is represented by the existing discriminatory-taxation support penalty, not tax exemptions or a new revenue stream. These are regional applications of the existing none-reviewed identity and customary-right capabilities.

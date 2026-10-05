@@ -58,6 +58,8 @@ FBDATA.legalTraditions.gothic_custom = Object.assign({}, FBDATA.legalTraditions.
     gothic:'gothic_custom' }, mixed:'gothic_custom', assessor:'late_roman' }
 });
 
+Object.assign(FBDATA.legalTraditions, FBDATA.bookmarkRegions476.africa.legalTraditions);
+
 FBDATA.intrigue = {
   maxAiSchemes:6,
   aiStartsPerYear:2,
