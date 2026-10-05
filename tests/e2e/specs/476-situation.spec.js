@@ -4,13 +4,13 @@ dependsOnRuntime(__filename, [
   'data/map_data.js', 'data/counties.js', 'data/bookmarks.js',
   'data/bookmark_476.js', 'data/settlements.js',
   'data/settlements_real.js', 'data/cultures.js', 'data/starts.js',
-  'data/technology.js', 'data/political_institutions.js', 'data/units.js',
+  'data/technology.js', 'data/political_institutions.js', 'data/units.js', 'data/modifiers.js',
   'data/economy.js', 'data/systems.js', 'js/systems.js',
   'js/main.js', 'js/stories.js', 'js/story_western_court_476.js',
   'js/story_federate_track_476.js', 'js/authority.js', 'js/world.js',
   'js/holywar.js', 'js/actions.js',
   'js/armies.js', 'js/treasury.js', 'js/lordships.js', 'js/model.js',
-  'js/politics.js', 'js/technology.js', 'js/settlement.js',
+  'js/politics.js', 'js/institutions.js', 'js/technology.js', 'js/settlement.js',
   'js/population.js', 'js/wars.js',
   'js/i18n.js', 'js/portrait.js', 'data/wardrobes.js', 'js/ui_panels.js', 'js/ui_misc.js',
   'js/ui_modals.js', 'js/save.js', 'js/save_v4.js',
@@ -213,12 +213,13 @@ test('negotiation uses scoped command, treasury, civic consent and saved contrac
           { kind:'character', id:s.player.charId }, 'judge',
           { provinceId:'ravenna' }).allowed,
         westernGold:FB.treasuryAvailable(s, 'italy'),
-        bodyGold:FB.treasuryAvailable(s, 'federates_476')
+        bodyGold:FB.treasuryAvailable(s, 'federates_476'),
+        civicInstitution:s.localInstitutions.ravenna_council.petitions['realm:federates_476'].stage
       };
     });
     expect(beforeArrival).toEqual({ phase:'court', court:'ravenna',
       owner:'italy', command:true, peace:false,
-      westernGold:90, bodyGold:30 });
+      westernGold:90, bodyGold:30, civicInstitution:'ratified' });
     const arrived = await page.evaluate(function () {
       for (let n = 0; n < 75 &&
           FB.state.stories.western_court_476.courtAt !== 'pavia'; n++) {
@@ -574,6 +575,7 @@ test('declining involvement leaves AI courts bound by pay and city rights',
       FB.stories.season(s);
       return { phase:t.phase, result:t.result, ownContract:t.contractId,
         ai:w.aiResolution, contract:FB.political.contract(s, w.contractId).status,
+        civicInstitution:s.localInstitutions.ravenna_council.petitions['realm:federates_476'].stage,
         westernGold:FB.treasuryAvailable(s, 'italy'),
         rights:(w.cityRightIds || []).length,
         status:FB.stories.status(s, 'federate_track_476').lines,
@@ -583,6 +585,7 @@ test('declining involvement leaves AI courts bound by pay and city rights',
     expect(result.result).toBe('declined');
     expect(result.ownContract).toBeNull();
     expect(result.ai).toBe('negotiated');
+    expect(result.civicInstitution).toBe('ratified');
     expect(result.contract).toBe('active');
     expect(result.westernGold).toBe(90);
     expect(result.rights).toBe(2);

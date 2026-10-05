@@ -1,5 +1,11 @@
 # Game state & saves
 
+Local institutional ledger
+
+Optional state.localInstitutions is keyed by definition id. Records hold site, representativeId, counterparty standing, demands, consentRights, rightIds, petitions and at most 24 history entries. Petitions carry subject, stage, normalized terms, representative, controlling/applicant generation stamps, startedTurn, expiresTurn, retryTurn, recognitionId and the ballot. state.localInstitutionPeriod guards seasonal AI replay. Fields are locale-neutral; prose comes from definitions and durable message descriptors.
+
+The v4 platform validator rejects unknown ids, wrong sites, invalid actors, malformed terms, bad turn stamps and invalid ratification results before adoption. Existing records restore without voting or paying again. Missing legacy institutions are seeded after world adoption through the story restore hook, reusing the original cast and preserving vacancies. Generic repair fills missing definitions. Disabled systems retain dormant records; ordinary medieval campaigns allocate no ledger.
+
 Restore preserves unexpired scenario standing hosts using the daily army phase's living-realm and end-turn rules. An absent legacy wars table repairs to an empty table without declaring a campaign. Preservation tests compare structured facts rather than JSON property order, retaining exact checks on ownership, holders, population, family, treasury and hosts.
 
 ## Save v4 and 476 integration (Phase 6)

@@ -9,6 +9,135 @@ window.FB = window.FB || {};
   const UI = FB.ui;
   const SH = UI._shared;
   const $ = SH.$;
+  function localInstitutionSubject(s) {
+    return FB.station.rulesRealm(s.player, s) ? { kind:'realm', id:'player' } :
+      { kind:'character', id:s.player.charId };
+  }
+  function localInstitutionStage(stage) {
+    if (stage === 'petition') return FB.T('Awaiting terms');
+    if (stage === 'bargain') return FB.T('Ready for a vote');
+    if (stage === 'ratified') return FB.T('Ratified');
+    if (stage === 'refused') return FB.T('Refused');
+    return FB.T('No petition');
+  }
+  function localDemandName(id) {
+    if (id === 'provision') return FB.T('Provisioning');
+    if (id === 'protection') return FB.T('Protection');
+    if (id === 'courts') return FB.T('Local courts');
+    if (id === 'tolerance') return FB.T('Protected worship');
+    return FB.T('Tax relief');
+  }
+  UI.showLocalInstitutions = function (kind, view) {
+    const s = FB.state;
+    if (!s) return;
+    FB.game.setPaused(true);
+    const subject = localInstitutionSubject(s), key = subject.kind + ':' + subject.id;
+    let h = '<div data-local-institution-list data-modal-scroll>';
+    FB.localInstitutionList(s, kind).forEach(function (item) {
+      const def = item.def, record = item.record, pending = record.petitions[key];
+      const rep = def.officeId ? FB.religiousOfficeSnapshot(s, def.officeId) : s.chars[record.representativeId];
+      const petition = FB.localInstitutionQuote(s, item.id, subject, 'petition');
+      const action = !petition.allowed && pending && pending.stage === 'petition' ? 'bargain' :
+        !petition.allowed && pending && pending.stage === 'bargain' ? 'ratify' : 'petition';
+      const q = FB.localInstitutionQuote(s, item.id, subject, action);
+      const id = item.id;
+      h += '<section class="governance-card review-fact-card" data-local-institution="' + FB.esc(id) + '"><h4>' +
+        FB.esc(FB.localInstitutionName(id)) + '</h4>' +
+        kv('Representative', FB.esc(rep && !rep.dead ? rep.name : FB.T('Vacant'))) +
+        kv('Faith', FB.esc(FB.dataText(s, s.player.charId, 'religion', def.religion, FB.religionOf(def.religion, s), 'name', {}))) +
+        kv('Standing', String(record.standing[key] || 0)) +
+        kv('Petition', FB.esc(localInstitutionStage(pending && pending.stage))) +
+        kv('Demands', FB.esc(record.demands.map(localDemandName).join(' · '))) +
+        kv('Consent', FB.esc(FB.localInstitutionConsent(s, id, subject) ? FB.T('Current agreement') : FB.T('Not recorded')));
+      if (action === 'bargain') {
+        h += '<label>' + FB.esc(FB.T('Proposed terms')) + '<select data-local-terms="' + FB.esc(id) + '">' +
+          '<option value="charter">' + FB.esc(FB.T('Provision, protect courts and worship')) + '</option>' +
+          '<option value="force">' + FB.esc(FB.T('Demand obedience without guarantees')) + '</option></select></label>';
+      }
+      h += reviewActionCardHtml({ data:{ localReview:id, localAction:action },
+        detailsId:'local-' + id + '-review', disabled:!q.allowed,
+        label:action === 'petition' ? FB.T('Review petition') : action === 'bargain' ? FB.T('Review terms') : FB.T('Review ratification'),
+        note:q.reason || FB.T('Review the exact terms before recording a decision.'), warn:!q.allowed,
+        details:'<p>' + FB.esc(FB.T('Petition and terms are free. Ratification pays provisioning only if the weighted vote passes. Local consent expires after 360 days or a change of ruler, representative, control or service contract.')) + '</p>' });
+      if (pending && ['petition','bargain'].indexOf(pending.stage) >= 0) {
+        h += '<button type="button" class="actionbtn" data-local-review="' + FB.esc(id) +
+          '" data-local-action="refuse">' + FB.esc(FB.T('Review refusal')) + '</button>';
+      }
+      if (def.officeId) {
+        const m = FB.localInstitutionMediationQuote(s, id, subject, s.player.provinceId);
+        h += reviewActionCardHtml({ data:{ localReview:id, localAction:'mediate' }, detailsId:'local-' + id + '-mediation',
+          disabled:!m.allowed, label:FB.T('Review episcopal mediation'), note:m.reason || FB.T('No fee; support in your home county.'),
+          details:'<p>' + FB.esc(FB.T('A living bishop recognizes mediation while congregations retain their faith. This grants no land, command, tax revenue or judicial office. Support lapses when the bishop is replaced.')) + '</p>' });
+      }
+      h += '</section>';
+    });
+    h += '</div>';
+    UI.openModal(kind === 'church' ? FB.T('Bishoprics and patriarchates') : FB.T('Councils and senates'), h,
+      { modalClass:'fullsheet-modal',
+        titleDetailsHtml:'<p>' + FB.esc(FB.T('Cities and congregations have independent standing and consent. A local household may petition its seat; a ruler bargains with the seats it controls. Off-map patriarchs offer mediation without territory.')) + '</p>' });
+    const list = $('gm-body').querySelector('[data-local-institution-list]');
+    if (view) {
+      Object.keys(view.terms).forEach(function (id) {
+        const select = list.querySelector('[data-local-terms="' + id + '"]');
+        if (select) select.value = view.terms[id];
+      });
+      (view.details || []).forEach(function (id) {
+        const info = list.querySelector('[aria-controls="' + id + '"]');
+        if (info) info.click();
+      });
+      list.scrollTop = view.scrollTop;
+      $('gm-body').scrollTop = view.bodyScroll;
+      const focus = list.querySelector('[data-local-review="' + view.id + '"][data-local-action="' + view.action + '"]') ||
+        list.querySelector('[data-local-review="' + view.id + '"]');
+      if (focus) focus.focus({ preventScroll:true });
+    }
+    list.querySelectorAll('[data-local-review]').forEach(function (button) {
+      button.onclick = function () {
+        if (button.disabled) return;
+        const id = button.dataset.localReview, action = button.dataset.localAction;
+        const pos = { scrollTop:list.scrollTop, bodyScroll:$('gm-body').scrollTop, id:id, action:action, terms:{}, details:[] };
+        list.querySelectorAll('[data-local-terms]').forEach(function (select) { pos.terms[select.dataset.localTerms] = select.value; });
+        list.querySelectorAll('.settcard-info[aria-expanded="true"]').forEach(function (info) { pos.details.push(info.getAttribute('aria-controls')); });
+        let terms;
+        if (action === 'bargain') {
+          const charter = pos.terms[id] !== 'force';
+          terms = { provision:charter, protection:true, courts:charter, tolerance:charter,
+            taxRelief:charter && subject.kind === 'realm' };
+        }
+        const q = action === 'mediate' ? FB.localInstitutionMediationQuote(s, id, subject, s.player.provinceId) :
+          FB.localInstitutionQuote(s, id, subject, action, terms);
+        function back() { UI.showLocalInstitutions(kind, pos); }
+        let body = '<section class="governance-card review-fact-card">' +
+          kv('Institution', FB.esc(FB.localInstitutionName(id))) + kv('Cost on acceptance', FB.esc(FB.T('{money:cost}', { cost:q.cost }))) +
+          kv('Decision', FB.esc(action === 'mediate' ? FB.T('Episcopal mediation') : action === 'refuse' ? FB.T('Refuse the petition') : localInstitutionStage(action)));
+        if (q.terms) {
+          body += kv('Provisioning on a passed vote', FB.esc(FB.T('{money:cost}', { cost:q.terms.provision ? 5 : 0 })));
+          ['provision','protection','courts','tolerance','taxRelief'].forEach(function (term) {
+            body += kv(localDemandName(term), FB.esc(q.terms[term] ? FB.T('Guaranteed') : FB.T('Not offered')));
+          });
+          body += kv('Vote forecast', FB.esc(FB.T('{support} support weight; {majority} required.', { support:q.supportWeight, majority:q.majority })));
+          if (q.terms.taxRelief) body += '<p class="hint">' + FB.esc(FB.T('Tax relief applies the ordinary county concession: 8% less tax for its normal term.')) + '</p>';
+        }
+        body += '<p class="hint">' + FB.esc(q.reason || FB.T('No county ownership or resident faith changes. A passed bargain improves institutional Standing by 10; refusal lowers it by 10 and delays a new petition for 90 days.')) + '</p></section>';
+        if (q.allowed) body += '<button type="button" class="btn primary" id="local-confirm">' + FB.esc(FB.T('Confirm decision')) + '</button>';
+        UI.openModal(FB.T('Review institutional decision'), body,
+          { modalClass:'fullsheet-modal', historyView:true, historyBack:true, historyBackRender:back });
+        const confirm = $('local-confirm');
+        if (confirm) confirm.onclick = function () {
+          if (s !== FB.state || subject.id !== localInstitutionSubject(s).id) return;
+          const result = action === 'mediate' ? FB.localInstitutionMediate(s, id, subject, q.provinceId, q) : FB.localInstitutionApply(s, q);
+          confirm.disabled = true;
+          markActionsDirty();
+          UI.openModal(result ? FB.T('Decision recorded') : FB.T('Terms changed'),
+            '<p>' + FB.esc(result ? action === 'mediate' ? FB.T('Episcopal support is recorded in your home county.') :
+              localInstitutionStage(result.stage) : FB.T('Return to the list and review the current terms. Nothing was spent.')) +
+            '</p><button type="button" class="btn primary" id="local-continue">' + FB.esc(FB.T('Continue')) + '</button>',
+            { replaceView:true });
+          $('local-continue').onclick = function () { modalHistoryBack(back); };
+        };
+      };
+    });
+  };
   function ambitionText(d, field) {
     return FB.dataText(FB.state, FB.state.player.charId, 'ambition', d.id, d, field, {});
   }

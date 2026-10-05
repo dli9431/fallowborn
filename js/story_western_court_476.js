@@ -83,7 +83,7 @@
       'claimant', null);
     var delegate = made(s, FB.randomName('roman', 'm', null, s), 'roman',
       'nicene', 42, 2, 'notable', 'ravenna');
-    var bishop = made(s, FB.randomName('roman', 'm', null, s), 'roman',
+    var bishop = made(s, 'Simplicius', 'roman',
       'nicene', 54, 3, 'priest', 'roma');
     var veteran = made(s, FB.randomName('gothic', 'm', null, s), 'gothic',
       'homoian', 38, 2, 'soldier', 'pavia');
@@ -170,6 +170,7 @@
     w.senateOfficeId = senateOffice && senateOffice.id;
     if (s.realms.italy.treasury) s.realms.italy.treasury.gold = 120;
     if (s.realms.federates_476.treasury) s.realms.federates_476.treasury.gold = 0;
+    restoreInstitutions(s, w);
     FB.news(s, FB.msg('news.476.opening',
       '🏛 The western court sits at Ravenna. Its federate soldiers seek a spokesman for their arrears.', {}));
     return w;
@@ -193,6 +194,9 @@
         }));
   }
   function hasCivicConsent(s, deal) {
+    var institution = s.localInstitutions && s.localInstitutions.ravenna_council;
+    if (institution && institution.petitions['realm:federates_476'])
+      return FB.localInstitutionConsent(s, 'ravenna_council', actor('federates_476'));
     return !!(deal && deal.civicRecognitionId &&
       FB.political.legitimacy(s, actor('federates_476'),
         { kind:'county', id:'ravenna' }, 'civic_acceptance').some(function (row) {
@@ -202,28 +206,19 @@
   function cityRights(s, w, issuerId) {
     if (!alive(s, w.civicDelegateId) || s.owner.ravenna !== issuerId ||
         FB.countyReligionShare(s, 'ravenna', 'nicene') < 0.5) return false;
-    var proof = w.civicProofId && FB.political.legitimacy(s,
-      person(w.civicDelegateId), { kind:'county', id:'ravenna' },
-      'civic_acceptance').some(function (row) {
-        return row.id === w.civicProofId;
-      });
-    if (!proof) {
-      var recognized = recognizeOrExisting(s, 'civic_acceptance',
-        { kind:'county', id:'ravenna' }, person(w.civicDelegateId),
-        { kind:'county', id:'ravenna' });
-      w.civicProofId = recognized && recognized.id;
-      if (!recognized) return false;
-    }
-    var rights = [];
-    for (var power of ['peace','consent']) {
-      var right = FB.authorityEstablishRight(s, { issuer:actor(issuerId),
-        beneficiary:person(w.civicDelegateId),
-        scope:{ kind:'county', id:'ravenna' }, power:power,
-        basis:'recognition', basisRef:w.civicProofId });
-      if (right) rights.push(right.id);
-    }
-    w.cityRightIds = (w.cityRightIds || []).concat(rights);
-    return !!w.cityRightIds.length;
+    var rights = FB.localInstitutionRights(s, 'ravenna_council', issuerId);
+    if (!rights) return false;
+    w.cityRightIds = rights;
+    return true;
+  }
+  function restoreInstitutions(s, w) {
+    FB.ensureLocalInstitutions(s, { ravenna_council:w.civicDelegateId,
+      rome_senate:w.senatorId, rome_see:w.bishopId,
+      ravenna_homoian_see:w.homoianBishopId });
+  }
+  function civicSettlement(s, deal) {
+    return FB.localInstitutionSettle(s, 'ravenna_council', actor('federates_476'),
+      { courts:true, protection:true, tolerance:true, contractId:deal.contractId });
   }
   function civicPermission(s, w) {
     return alive(s, w.civicDelegateId) &&
@@ -285,14 +280,10 @@
           FB.authorityConsentContract(s, contract.id, 'federates_476') &&
           FB.treasuryTransfer(s, 'italy', 'federates_476', 30)) {
         w.contractId = contract.id;
-        var church = recognizeOrExisting(s, 'church_support',
-          { kind:'religious-office', id:'rome_bishop' },
-          actor('federates_476'), { kind:'county', id:'ravenna' });
+        var church = FB.localInstitutionMediate(s, 'rome_see', actor('federates_476'), 'ravenna');
         w.churchRecognitionId = church && church.id;
-        var civic = recognizeOrExisting(s, 'civic_acceptance',
-          { kind:'county', id:'ravenna' }, actor('federates_476'),
-          { kind:'county', id:'ravenna' });
-        w.civicRecognitionId = civic && civic.id;
+        var civic = civicSettlement(s, w);
+        w.civicRecognitionId = civic && civic.recognitionId;
         if (church && civic && cityRights(s, w, 'italy')) {
           w.aiResolution = 'negotiated';
           news(s, 'news.476.ai_accord',
@@ -548,8 +539,8 @@
     appointment:appointment, serviceTerms:serviceTerms,
     currentContract:currentContract, hasChurchSupport:hasChurchSupport,
     hasCivicConsent:hasCivicConsent, cityRights:cityRights,
-    civicPermission:civicPermission, news:news
+    civicPermission:civicPermission, civicSettlement:civicSettlement, news:news
   };
   FB.stories.register({ id:WORLD, kind:'world', init:init, day:day,
-    validate:validate, migrate:migrate });
+    validate:validate, migrate:migrate, restore:restoreInstitutions });
 })();

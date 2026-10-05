@@ -1,5 +1,9 @@
 Stories and start scenarios
 
+Institution restore hook
+
+Optional restore(state, record) runs after the saved world and political ledgers are adopted and repaired, before generic institution repair. It binds missing institutions to existing story actors without restarting init, repeating choices or paying commitments. Detached migrate and validate remain separate from this world-dependent boundary.
+
 A story is a registered module with one lifecycle and one shared presentation. A start scenario carries its own rules as data. Engine code calls only the story registry and reads scenario fields; it never names a story or a start.
 
 Story kinds

@@ -3,6 +3,15 @@
 window.FBDATA = window.FBDATA || {};
 
 FBDATA.modifiers = {
+  civic_provisioning:{ name:'Civic Provisioning', icon:'🌾', scope:'county', days:360,
+    desc:'A funded city or congregation distributes supplies under its recorded bargain.',
+    fx:{ marketProvisions:0.10, famine:-0.15, commonVoice:5 } },
+  civic_guarantees:{ name:'Civic Guarantees', icon:'📜', scope:'county', days:360,
+    desc:'The local bargain protects courts and worship without changing ownership or faith.',
+    fx:{ commonVoice:4, unrest:-0.10 } },
+  institutional_resistance:{ name:'Institutional Resistance', icon:'🏛', scope:'county', days:90,
+    desc:'Local institutions resist collection after the ruler refuses their bargain.',
+    fx:{ tax:-0.10, unrest:0.15 } },
   fiscal_extraction:{ name:'Emergency Extraction', icon:'?', scope:'county', days:360,
     desc:'Extraordinary taxes during a fiscal crisis have deepened local resentment.', fx:{ commonVoice:-10 } },
   public_distribution: {

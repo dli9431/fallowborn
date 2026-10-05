@@ -3470,8 +3470,8 @@ FB.CHANGELOG = [
     if (FB.ensureAgency) FB.ensureAgency(state);
     if (FB.ensureIntrigue) FB.ensureIntrigue(state);
     if (FB.ensurePolitics) FB.ensurePolitics(state);
-    if (FB.ensureInstitutions) FB.ensureInstitutions(state, { silent:true });
     if (FB.stories) FB.stories.start(state, { tracks:sc.tracks });
+    if (FB.ensureInstitutions) FB.ensureInstitutions(state, { silent:true });
     state.player.focus = startEffects.focus || FB.defaultFocus(state);
     const firstPlayerOnboarding = !G.uiPrefs.tipsGrandfathered &&
       !G.uiPrefs.onboardingStarted;
@@ -3634,6 +3634,7 @@ FB.CHANGELOG = [
 
     // A watcher has no scenario, so only the bookmark's world stories attach.
     if (FB.stories) FB.stories.start(state, {});
+    if (FB.ensureLocalInstitutions) FB.ensureLocalInstitutions(state);
     G.observe = true;
     G.paused = false;
     document.body.classList.add('observing');

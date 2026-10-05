@@ -1421,7 +1421,7 @@ window.FB = window.FB || {};
   let officeGraph = null, officeDefinitions = null;
   function religiousOfficeDefinitions(state) {
     const graph = compiledFaiths(requestedFaithState(state));
-    if (officeGraph === graph && officeDefinitions) return officeDefinitions;
+    if (officeGraph === graph && officeDefinitions) return withLocalReligiousOffices(state, officeDefinitions);
     const out = {};
     const ids = FB.religionIds(state, false);
     for (let i = 0; i < ids.length; i++) {
@@ -1437,8 +1437,32 @@ window.FB = window.FB || {};
     }
     officeGraph = graph;
     officeDefinitions = out;
+    return withLocalReligiousOffices(state, out);
+  }
+
+  function withLocalReligiousOffices(state, definitions) {
+    const out = Object.assign({}, definitions), local = FBDATA.localInstitutions || {};
+    for (const officeId in out) {
+      if (out[officeId].head.system && (!FB.systemEnabled || !FB.systemEnabled(state, out[officeId].head.system))) delete out[officeId];
+    }
+    if (!FB.systemEnabled || !FB.systemEnabled(state, 'episcopal_sees')) return out;
+    for (const id in local) {
+      const def = local[id];
+      if (!def.officeId || out[def.officeId]) continue;
+      out[def.officeId] = { id:def.officeId, religionId:def.religion,
+        head:{ holderKind:'character', holderSex:'m', succession:'appointment', local:true } };
+    }
     return out;
   }
+
+  /* Local sees share the head-office ledger without pretending that every
+     bishop is the central head of an entire faith. */
+  FB.religiousOfficeSnapshot = function (state, officeId) {
+    const office = religiousOfficeDefinitions(state)[officeId];
+    const holder = office && state.religiousHeads && state.religiousHeads[officeId];
+    return holder && religiousHeadHolderEligible(state, office, holder)
+      ? state.chars[holder] || state.realms[holder] : null;
+  };
 
   FB.religiousOffices = function (state) {
     return religiousOfficeDefinitions(state);
@@ -1509,7 +1533,7 @@ window.FB = window.FB || {};
       state.religiousHeads[id] = null;
       state.religiousHeadVacancies = state.religiousHeadVacancies || {};
       state.religiousHeadVacancies[id] = { turn:state.turn || 0, formerHolder:charId };
-      FB.succeedReligiousHead(state, offices[id].religionId, {
+      if (!offices[id].head.local) FB.succeedReligiousHead(state, offices[id].religionId, {
         formerHolder:charId, reason:'death'
       });
     }
@@ -1584,11 +1608,13 @@ window.FB = window.FB || {};
      than a general succession rule: a woman may inherit the realm without
      becoming Pope or Caliph. */
   function religiousHeadHolderEligible(state, office, realmId) {
+    if (!office) return false;
     const requiredSex = office && office.head && office.head.holderSex;
     if (office && office.head.holderKind === 'character') {
       const c = state && state.chars && state.chars[realmId];
       return !!(c && !c.dead && (!requiredSex || c.sex === requiredSex) &&
-        FB.faithOfficeId(c.religion, state) === office.id);
+        (office.head.local ? c.religion === office.religionId :
+          FB.faithOfficeId(c.religion, state) === office.id));
     }
     if (!requiredSex) return true;
     const realm = state && state.realms && state.realms[realmId];
@@ -1657,7 +1683,7 @@ window.FB = window.FB || {};
       const religionId = office.religionId;
       const rel = FB.religionOf(religionId, state);
       if (!Object.prototype.hasOwnProperty.call(state.religiousHeads, officeId)) {
-        state.religiousHeads[officeId] = bookmarkReligiousHead(state, religionId);
+        state.religiousHeads[officeId] = office.head.local ? null : bookmarkReligiousHead(state, religionId);
       }
       const assigned = state.religiousHeads[officeId];
       const characterOffice = office.head.holderKind === 'character';

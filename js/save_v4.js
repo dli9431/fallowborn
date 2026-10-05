@@ -73,6 +73,7 @@
   /* Optional platform fields (state-and-saves.md, Save v4 platform schema).
      Absent fields stay valid; present ids must resolve. */
   P.validatePlatform = function (state) {
+    if (FB.validateLocalInstitutionState) FB.validateLocalInstitutionState(state);
     if (plain(state.start)) {
       stamp(state.start, 'era', 'era');
       stamp(state.start, 'geography', 'geography');

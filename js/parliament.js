@@ -380,18 +380,10 @@ window.FB = window.FB || {};
     const forecast = FB.politicalMotionForecast &&
       FB.politicalMotionForecast(state, pending.motionId);
     if (!forecast) return false;
-    const outcomes = {};
     const ordered = forecast.blocs.slice().sort(function (a, b) {
       return a.id < b.id ? -1 : (a.id > b.id ? 1 : 0);
     });
-    for (const bloc of ordered) {
-      if (bloc.posture === 'undecided') {
-        outcomes[bloc.id] = FB.chance(bloc.naturalSupportChance)
-          ? 'support' : 'oppose';
-      } else {
-        outcomes[bloc.id] = bloc.posture;
-      }
-    }
+    const outcomes = FB.politicalBallot(ordered).outcomes;
     pending.result = {
       passed:false,
       outcomes:outcomes,

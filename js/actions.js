@@ -4401,6 +4401,12 @@ window.FB = window.FB || {};
         FB.ui.showDebasement(options && options.returnContext);
       }
     } },
+  { id:'city_dealings', opensChoices:true, noConsume:true,
+    show:function (s) { return !!FB.localInstitutionList && FB.localInstitutionList(s, 'city').length > 0; },
+    run:function () { if (FB.ui && FB.ui.showLocalInstitutions) FB.ui.showLocalInstitutions('city'); } },
+  { id:'church_dealings', opensChoices:true, noConsume:true,
+    show:function (s) { return !!FB.localInstitutionList && FB.localInstitutionList(s, 'church').length > 0; },
+    run:function () { if (FB.ui && FB.ui.showLocalInstitutions) FB.ui.showLocalInstitutions('church'); } },
   { id: 'royal_council', opensChoices:true, noConsume: true,
     compatibilityAlias:true,
     show: function (s) { return FB.station.isRoyal(s.player, s); },

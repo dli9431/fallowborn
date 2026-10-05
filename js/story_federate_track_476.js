@@ -43,6 +43,9 @@
       romanBishop:alive(s, w.bishopId),
       homoianBishop:alive(s, w.homoianBishopId),
       senator:alive(s, w.senatorId),
+      institutionReview:FB.localInstitutionQuote(s, 'ravenna_council', actor('federates_476'),
+        'petition', { courts:true, protection:true, tolerance:true, contractId:t.contractId }).stamp,
+      mediationReview:FB.localInstitutionMediationQuote(s, 'rome_see', actor('federates_476'), 'ravenna').stamp,
       westernOffice:w.westernOfficeResolved,
       governance:w.governanceResolved
     };
@@ -297,9 +300,7 @@
     } else if (id === 'refuse_pay') {
       t.phase = 'civic'; t.proposal = 'force';
     } else if (id === 'seek_mediation') {
-      rec = recognize(s, 'church_support',
-        { kind:'religious-office', id:'rome_bishop' },
-        actor('federates_476'), { kind:'county', id:'ravenna' });
+      rec = FB.localInstitutionMediate(s, 'rome_see', actor('federates_476'), 'ravenna');
       if (!rec) return false;
       t.churchRecognitionId = rec.id;
       news(s, 'news.476.mediation',
@@ -309,11 +310,9 @@
     } else if (id === 'renegotiate_pay') {
       t.phase = 'contract';
     } else if (id === 'present_civic') {
-      rec = recognize(s, 'civic_acceptance',
-        { kind:'county', id:'ravenna' }, actor('federates_476'),
-        { kind:'county', id:'ravenna' });
+      rec = X.civicSettlement(s, t);
       if (!rec) return false;
-      t.civicRecognitionId = rec.id;
+      t.civicRecognitionId = rec.recognitionId;
       t.phase = 'recognition';
       news(s, 'news.476.civic',
         '🏛 Ravenna accepts the bargain while its civic courts keep their jurisdiction.', {});

@@ -10,6 +10,25 @@ window.FB = window.FB || {};
   var MAGNATE_PREFIX = 'magnate:';
   var INDEPENDENT_PREFIX = 'independent:';
 
+  /* The same weighted ballot accepts court blocs, election benches and local
+     institutions. Explicit commitments consume no RNG; undecided rows retain
+     the caller's order and exactly one seeded draw each. */
+  FB.politicalBallot = function (rows) {
+    var outcomes = {}, support = 0, total = 0;
+    rows.forEach(function (row) {
+      var weight = row.weight === undefined ? row.influence : row.weight;
+      var posture = row.posture;
+      var committed = posture && posture !== 'undecided';
+      var backed = committed ? posture === 'support' :
+        FB.rng() < (row.supportChance === undefined ? row.naturalSupportChance : row.supportChance);
+      outcomes[row.id] = committed ? posture : backed ? 'support' : 'oppose';
+      total += weight;
+      if (backed) support += weight;
+    });
+    return { outcomes:outcomes, supportWeight:support, totalWeight:total,
+      majority:Math.floor(total / 2) + 1, passed:support > total / 2 };
+  };
+
   /* The Estates policy catalog (data/policies.js). The two original motions
      remain the fallback when the catalog data is absent (stripped by a mod),
      so a pending redress/scutage campaign in an old save still resolves. */
@@ -1393,7 +1412,7 @@ window.FB = window.FB || {};
     for (var headOfficeId in characterOffices) {
       var headOffice = characterOffices[headOfficeId];
       if (headOffice.head.holderKind !== 'character') continue;
-      var characterHead = FB.religiousHeadSnapshot(state, headOffice.religionId);
+      var characterHead = FB.religiousOfficeSnapshot(state, headOfficeId);
       if (characterHead && characterHead.id === c.id) {
         add('religion:' + headOfficeId, headOfficeId, holder,
           { kind:'religious-office', id:headOfficeId }, 'religiousHeads', null, 'active');

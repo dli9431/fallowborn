@@ -10,7 +10,7 @@
   var KINDS = { world:true, track:true };
   var HOOKS = ['appliesTo', 'init', 'day', 'season', 'year', 'title', 'intro',
     'status', 'choices', 'quote', 'blocker', 'review', 'apply',
-    'validate', 'migrate'];
+    'validate', 'migrate', 'restore'];
   function own(o, key) {
     return !!o && Object.prototype.hasOwnProperty.call(o, key);
   }
@@ -89,6 +89,7 @@
     day:function (s) { run(s, 'day'); },
     season:function (s) { run(s, 'season'); },
     year:function (s) { run(s, 'year'); },
+    restore:function (s) { run(s, 'restore'); },
     /* Save migration on the detached copy, before validation. */
     migrate:function (state) {
       for (var i = 0; i < registry.length; i++) {

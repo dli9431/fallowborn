@@ -1,5 +1,11 @@
 # Religions and faith fracture
 
+Late antique local head offices
+
+Nicene, Homoian, Chalcedonian and Miaphysite heads declare the episcopal_sees system requirement and are absent from the active office registry when it is disabled. Local sees supplement that registry by officeId, without inventing a faith for every bishop. FB.religiousOfficeSnapshot checks the exact office's living holder and faith without creating or repairing an assignment. Character office projections use the exact office rather than returning the central faith head for every local see.
+
+The religiousHeads ledger holds episcopal pointers. Local office death records a vacancy without invoking the central faith's succession strategy; central heads retain ordinary appointment succession. Vacant institutions cannot mediate. Mediation issues county-scoped church support through the authority ledger with a living bishop as issuer. It changes no resident faith or political power and has a none technology-impact review.
+
 Religion is one inheritance graph, not a pair of engine concepts for “religion” and
 “religious group.” Seeded definitions live in `FBDATA.religions`; faiths founded during
 a campaign use the same JSON-safe definition shape in `state.faiths`. Characters,
