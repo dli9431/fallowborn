@@ -141,7 +141,9 @@ for (const bookmark of ['867','1066']) {
     async function ({ page }, testInfo) {
       await start(page, testInfo, bookmark);
       const result = await page.evaluate(function () {
-        // Finish additive court repairs before capturing a migration baseline.
+        // Complete additive load repairs before capturing a canonical title
+        // migration baseline, rather than selecting only three repair stages.
+        FB.save.restore(JSON.parse(FB.save.serialize()));
         FB.ensureDynasticState(FB.state);
         FB.ensureAgency(FB.state);
         FB.repairPolitics(FB.state);
@@ -169,12 +171,15 @@ for (const bookmark of ['867','1066']) {
           provs:old.state.player.provs, treasury:old.state.treasuryAccounting
         });
         const input = JSON.stringify(old);
+        const migrationRng = FB.getRngState();
         const v4 = FB.save.v4.migrate(old);
         const twice = FB.save.v4.migrate(v4);
+        const migrationRngUnchanged = FB.getRngState() === migrationRng;
         const rng = FB.getRngState();
         FB.save.restore(old);
         return {
           inputUnchanged:JSON.stringify(old) === input,
+          migrationRngUnchanged:migrationRngUnchanged,
           idempotent:JSON.stringify(v4) === JSON.stringify(twice),
           header:[v4.v,v4.titleIds,v4.authoritySchema],
           region:FB.state.realms[titleRealmId].ambitionTitleRegion,
@@ -192,6 +197,7 @@ for (const bookmark of ['867','1066']) {
         };
       });
       expect(result.inputUnchanged).toBe(true);
+      expect(result.migrationRngUnchanged).toBe(true);
       expect(result.idempotent).toBe(true);
       expect(result.header).toEqual([4,1,4]);
       expect(result.region).toBe('essex');

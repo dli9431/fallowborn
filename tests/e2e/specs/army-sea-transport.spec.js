@@ -293,7 +293,9 @@ test('quotes land and every crossing class at capacity boundaries and campaign s
         return key === 'marchSpeed' ? 0.5 : 0;
       };
       // An ordinary host must not inherit a holy-war campaign's modifiers.
+      army.men = 500;
       const ordinaryLand = FB.armyLegQuote(state, army, 'a', 'b');
+      army.men = 189;
       const ordinaryOpen = FB.armyLegQuote(state, army, 'a', 'o');
       army.warId = 'holy';
       const campaignLand = FB.armyLegQuote(state, army, 'a', 'b');
@@ -619,10 +621,18 @@ test('saved countdowns survive reload and new orders requote current technology 
         reserve:0, priorities:{}
       };
       army.realm = vassal;
+      // Repeating an in-flight order preserves its countdown even when national
+      // technology changes. Halting starts a genuinely new order and quote.
+      FB.orderArmy(state, army, 'c');
+      const repeatedCountdown = army.moveLeft;
+      FB.orderArmy(state, army, 'a');
       FB.orderArmy(state, army, 'c');
       const afterAllegiance = army.moveLeft;
       const allegianceCapacity = FB.armyLegQuote(state, army, 'a', 'b').nationalCapacity;
 
+      const beforeFailure = {
+        path:army.path.slice(), goal:army.goal, moveLeft:army.moveLeft
+      };
       const failed = FB.orderArmy(state, army, 'z');
       const afterFailure = {
         path:army.path.slice(), goal:army.goal, moveLeft:army.moveLeft
@@ -636,9 +646,11 @@ test('saved countdowns survive reload and new orders requote current technology 
         loadedCountdown:loadedCountdown,
         rerouted:rerouted,
         afterTechnology:afterTechnology,
+        repeatedCountdown:repeatedCountdown,
         afterAllegiance:afterAllegiance,
         allegianceCapacity:allegianceCapacity,
         failed:failed,
+        beforeFailure:beforeFailure,
         afterFailure:afterFailure,
         halted:halted,
         afterHalt:afterHalt
@@ -650,12 +662,12 @@ test('saved countdowns survive reload and new orders requote current technology 
     expect(result.afterTechnology).toEqual({
       next:'b', remainder:['c'], moveLeft:7, from:'a'
     });
+    expect(result.repeatedCountdown).toBe(7);
     expect(result.afterAllegiance).toBe(14);
     expect(result.allegianceCapacity).toBe(1500);
     expect(result.failed).toBe(false);
-    expect(result.afterFailure).toEqual({
-      path:[], goal:null, moveLeft:0
-    });
+    expect(result.beforeFailure).toEqual({ path:['b', 'c'], goal:'c', moveLeft:14 });
+    expect(result.afterFailure).toEqual(result.beforeFailure);
     expect(result.halted).toBe(true);
     expect(result.afterHalt).toEqual({
       path:[], goal:null, moveLeft:0

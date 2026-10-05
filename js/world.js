@@ -307,6 +307,12 @@ window.FB = window.FB || {};
         : ownKey(provinceNames, row.id) ? provinceNames[row.id] : null, year, row.culture);
       if (name && name !== row.name) edit().name = name;
       var replaced = sourceRows[index] && sourceRows[index]._legacySettlementPresentation;
+      if (replaced) {
+        Object.defineProperty(edit(), '_legacySettlementPresentation', {
+          configurable:true, writable:true,
+          value:replaced.map(function (entry) { return Object.assign({}, entry); })
+        });
+      }
       if (!next.wasteland && next.settlements === undefined && layout &&
           ownKey(layout, row.id) && Array.isArray(layout[row.id]) && !replaced &&
           seed && next.x === seed.x && next.y === seed.y) {

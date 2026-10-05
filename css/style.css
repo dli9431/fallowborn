@@ -1667,6 +1667,14 @@ button.ongoing-commitment-row:focus-visible { background: #302619; }
 .enterprise-catalogue-summary .kv { margin: 0; }
 .enterprise-catalogue-group { margin-top: 5px; }
 .enterprise-purchase-shell { position: relative; }
+#genmodal.enterprise-market-modal #gm-body { overflow: hidden; padding-right: 0; }
+.enterprise-market-content {
+  flex: 1 1 auto; min-height: 0; overflow-y: auto; padding-right: 10px;
+  -webkit-overflow-scrolling: touch; overscroll-behavior: contain;
+}
+#genmodal.enterprise-market-modal .gm-footer {
+  position: relative; bottom: auto; flex: 0 0 auto;
+}
 .enterprise-purchase-option { position: relative; width: 100%; margin: 0; }
 .enterprise-purchase-option.blocked {
   border-style: dashed; border-color: #704737; opacity: 1;

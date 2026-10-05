@@ -528,10 +528,10 @@ test('war notices lead unified ruler sheets and the Land tab',
       s.player.roleOrientationsSeen =
         s.player.roleOrientationsSeen || {};
       s.player.roleOrientationsSeen['role-tier-' + s.player.tier] = 1;
-      s.realms[data.foreignId].war = {
+      FB.registerOrdinaryWar(s, data.foreignId, {
         enemy:data.enemyId,
         casus:{ type:'border', label:'Border war' }
-      };
+      });
       FB.ui.showLiegeModal(data.foreignId);
       return {
         muster:'⚔️ ' + FB.T('Realm muster: ~{troops}', {

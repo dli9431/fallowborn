@@ -301,7 +301,8 @@ for (const width of [390, 1280]) {
     await expect(page.locator('#commons-uprising-status')).toContainText('90 days to grant the concession');
     await expect(page.locator('#commons-uprising-status')).toContainText('Five-year concessions');
     await page.locator('#commons-uprising-concede').click();
-    await expect(page.locator('[data-uprising-result]')).toContainText('Prestige -2');
+    await expect(page.locator('[data-uprising-result]')).toContainText('Prestige -10');
+    expect(await page.evaluate(function () { return FB.state.player.prestige; })).toBe(90);
     await expect(page.locator('#uprising-result-details')).toBeHidden();
     expect(await page.locator('[data-uprising-result] .event-impact-chip').evaluateAll(function (chips) {
       return chips.length > 0 && chips.every(function (chip) { return !!chip.closest('.settcard-details'); });

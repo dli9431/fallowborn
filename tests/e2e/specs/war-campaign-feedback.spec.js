@@ -42,6 +42,7 @@ async function startCampaignGame(page, testInfo) {
     s.realms.player.liege = null;
     s.realms.player.capital = homeId;
     FB.invalidateRealmCache();
+    FB.ensureWars(s);
     p.war = {
       enemy:enemyId,
       target:s.realms[enemyId].capital,
@@ -64,6 +65,7 @@ async function startCampaignGame(page, testInfo) {
       path:[],
       goal:null
     }];
+    FB.assignCampaignHosts(s);
     s.eventQueue = [];
     FB.ensurePlayerWarFeedback(s);
     FB.ui.refresh();
@@ -276,6 +278,7 @@ test('campaign feedback shares battle, class-loss, effect, and upkeep facts',
       var upkeep = FB.playerHostUpkeepParts(s);
       var summary = FB.warStateText(s);
       FB.ui.showTab('actions');
+      FB.ui.refresh();
       return {
         first:first,
         second:second,

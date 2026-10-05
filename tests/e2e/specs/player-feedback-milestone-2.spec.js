@@ -161,21 +161,38 @@ for (const width of [320, 390]) {
         const action = card.querySelector('.enterprise-purchase-option').getBoundingClientRect();
         const footer = document.querySelector('#gm-body > .gm-footer').getBoundingClientRect();
         const hit = document.elementFromPoint(info.left + info.width / 2, info.top + info.height / 2);
+        const bottomHit = document.elementFromPoint(info.left + info.width / 2, info.bottom - 1);
         return { top:info.top, bottom:info.bottom, right:info.right, costBottom:cost.bottom,
           actionBottom:action.bottom, actionRight:action.right, footerTop:footer.top,
-          reachable:!!hit && card.querySelector('.settcard-info').contains(hit) };
+          reachable:!!hit && card.querySelector('.settcard-info').contains(hit),
+          bottomReachable:!!bottomHit && card.querySelector('.settcard-info').contains(bottomHit) };
       });
       expect(bounds.top).toBeGreaterThanOrEqual(bounds.costBottom);
       expect(bounds.bottom).toBeLessThanOrEqual(bounds.actionBottom);
       expect(bounds.right).toBeLessThanOrEqual(bounds.actionRight);
-      expect(bounds.bottom).toBeLessThanOrEqual(bounds.footerTop);
+      // Fractional text layout and rounded scroll offsets can differ by less
+      // than one CSS pixel. Hit tests still require access at the center and bottom edge.
+      expect(bounds.bottom).toBeLessThanOrEqual(bounds.footerTop + 1);
       expect(bounds.reachable).toBe(true);
+      expect(bounds.bottomReachable).toBe(true);
       await help.click();
       await expect(card.locator('.enterprise-purchase-details')).toBeVisible();
       await expect(help).toHaveAttribute('aria-expanded', 'true');
       await help.click();
       await expect(card.locator('.enterprise-purchase-details')).toBeHidden();
     }
+    // A review returns to the same independently scrolling catalogue.
+    const blocked = page.locator('[data-enterprise-explain]').last();
+    await blocked.scrollIntoViewIfNeeded();
+    const scroller = page.locator('.enterprise-market-content');
+    const beforeReview = await scroller.evaluate(function (content) { return content.scrollTop; });
+    expect(beforeReview).toBeGreaterThan(0);
+    await blocked.click();
+    await page.locator('#enterprise-requirements-back').click();
+    await expect(blocked).toBeFocused();
+    await expect.poll(function () {
+      return scroller.evaluate(function (content) { return content.scrollTop; });
+    }).toBe(beforeReview);
   });
 }
 

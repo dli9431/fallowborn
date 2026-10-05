@@ -1619,13 +1619,14 @@ test('mods merge physical sites and compile complete province presentations',
     expect(result.head).toMatchObject({
       site:'e2e_testton', name:'Testton', kind:'town', authored:true, index:0
     });
-    expect(result.second).toMatchObject({ site:'london', name:'London', kind:'village', authored:true });
+    expect(result.second).toMatchObject({ site:'london', name:'Lunden', kind:'village', authored:true });
     expect(result.generatedFill.length).toBeGreaterThan(0);
     for (const rec of result.generatedFill) {
       expect(rec.authored).toBe(false);
       expect(rec.site).toMatch(/^generated__london__\d+$/);
     }
     expect(result.visible).toContain('Testton');
+    expect(result.visible).toContain('Lunden');
 
     /* restore the base world for later tests on this page */
     await page.evaluate(function () {
@@ -1664,6 +1665,9 @@ test('a legacy mod without site data keeps deterministic generated settlements',
           resolve({
             error:null,
             authored:info.authored,
+            metadataHidden:Object.keys(FBDATA.provinces.find(function (p) {
+              return p.id === 'london';
+            })).indexOf('_legacySettlementPresentation') < 0,
             list:info.list.map(function (rec) {
               return { site:rec.site, name:rec.name, kind:rec.kind, authored:rec.authored };
             }),
@@ -1677,6 +1681,7 @@ test('a legacy mod without site data keeps deterministic generated settlements',
 
     expect(result.error).toBeNull();
     expect(result.authored).toBe(0);
+    expect(result.metadataHidden).toBe(true);
     for (const rec of result.list) {
       expect(rec.authored).toBe(false);
       expect(rec.site).toMatch(/^generated__london__\d+$/);

@@ -265,6 +265,8 @@ landed rulers cannot resume a personal calling, but they can still manage family
 owned businesses, and qualified local hires. Local hiring is a baseline labor contract;
 individual enterprise acquisition and upgrade requirements retain their authored technology
 gates.
+
+The enterprise purchase catalogue has a scrolling content region above its separate Back and Close footer. Compact Details remains reachable on every card without overlapping the footer. Requirements review returns to the retained catalogue position, focus and disclosure state; successful purchases restore the same content region's position after the one deed day.
 The `enterprise_child_labor` technology-impact decision is `none`: a child who
 has reached the matching calling's apprenticeship age may perform ordinary
 family labor without national research, while the enterprise and its upgrades

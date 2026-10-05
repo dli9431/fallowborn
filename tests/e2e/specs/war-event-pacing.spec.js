@@ -834,7 +834,8 @@ test('a host standing on the war target presses the siege at the season tick',
       FB.playerWarTick(s);
       const siegeAfterLeaving = p.war && p.war.siege;
 
-      // back on the target but contested by the enemy host: still no progress
+      // Contested ground cannot add work. After two seasons without a pulse,
+      // the abandoned legacy works lose one step.
       s.armies[0].at = target;
       s.armies.push({
         id:'siege_enemy', realm:enemyId, men:900, size:900,
@@ -860,7 +861,7 @@ test('a host standing on the war target presses the siege at the season tick',
     expect(result.siegeAfterPulse).toBeGreaterThanOrEqual(1);
     expect(result.councilQueued).toBe(true);
     expect(result.siegeAfterLeaving).toBe(result.siegeAfterPulse);
-    expect(result.siegeAfterContest).toBe(result.siegeAfterPulse);
+    expect(result.siegeAfterContest).toBeCloseTo(Math.max(0, result.siegeAfterPulse - 1), 6);
     expect(result.warActive).toBe(true);
   });
 
@@ -1103,6 +1104,7 @@ test('campaign state tilts field-battle power and a real battle spends the bless
       const oldSplit = FBDATA.balance.aiMultiHostStrength;
 
       p.tier = 4;
+      FB.ensureWars(s);
       p.war = {
         enemy:enemyId, target:null, wins:0, losses:0, seasons:0,
         defending:true, strength:1

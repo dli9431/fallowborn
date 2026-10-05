@@ -295,8 +295,14 @@ test('narrow desktop and phone widths never truncate the Play label for the scen
           await expect(page.locator('#btn-endturn .keyhint')).toBeHidden();
           await expect(page.locator('#focus-art')).toBeHidden();
         } else if (size.width === 1920) {
-          await expect(page.locator('#btn-endturn .keyhint')).toBeVisible();
           await expect(page.locator('#focus-art')).toBeVisible();
+          // The sidebar stays fixed-width even on a wide monitor. Its current
+          // font and label decide whether Space fits beside the scene.
+          const compact = await page.locator('#btn-endturn').evaluate(function (button) {
+            return button.classList.contains('focus-art-compact');
+          });
+          if (compact) await expect(page.locator('#btn-endturn .keyhint')).toBeHidden();
+          else await expect(page.locator('#btn-endturn .keyhint')).toBeVisible();
         }
       }
     }

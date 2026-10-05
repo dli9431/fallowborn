@@ -54,6 +54,8 @@ Picker return navigation
 
 Conversion pickers retain their parent view through shared modal history. Scope changes replace the picker view without adding navigation steps. A conversion review retains the same picker DOM, so Back, Escape and browser Back restore search, scope, scroll and focus without spending resources or advancing time. Explicit parent-identity returns keep their faith or culture details return context. Close exits the complete flow.
 
+Conversion card tooltips constrain their scroll box above the modal navigation footer. A retained or hovered card cannot cover Back or Close after returning from review.
+
 ## County and settlement community projects
 
 County conversion is a territorial demographic process, separate from every character

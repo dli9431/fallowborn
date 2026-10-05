@@ -21908,7 +21908,7 @@ window.FB = window.FB || {};
       s, s.player.provinceId, settlement);
     let available = 0;
     for (const status of catalogue) if (status.ready) available++;
-    let h = '<div class="gm-body-text"><p>' + esc(FB.T(
+    let h = '<div class="enterprise-market-content" data-modal-scroll><div class="gm-body-text"><p>' + esc(FB.T(
       'One enterprise of each kind may stand in a settlement. It earns only while an eligible household member works there.')) +
       '</p></div><div class="enterprise-catalogue-summary">' +
       kv('Available now', esc(String(available))) +
@@ -21927,10 +21927,11 @@ window.FB = window.FB || {};
       }
       h += enterprisePurchaseOptionHtml(s, status);
     }
-    h += '</div><button class="btn" id="gm-cancel">' +
+    h += '</div></div><button class="btn" id="gm-cancel">' +
       esc(FB.T('Back')) + '</button>';
     const modalOptions = livelihoodsHistoryOptions(returnContext);
     modalOptions.replaceView = !!replaceView;
+    modalOptions.modalClass = 'enterprise-market-modal';
     openModal(FB.T('Enterprise in {settlement}', { settlement:place }), h,
       modalOptions);
     document.querySelectorAll('[data-enterprise-buy]').forEach(function (b) {
@@ -21944,12 +21945,12 @@ window.FB = window.FB || {};
           UI.showEnterpriseMarket(settlement, returnContext, true);
           return;
         }
-        const scrollTop = $('gm-body').scrollTop;
+        const scrollTop = $('gm-body').querySelector('.enterprise-market-content').scrollTop;
         const purchasedType = b.dataset.enterpriseBuy;
         UI.closeModal();
         FB.game.passDay({ skipFocus:true });
         UI.showEnterpriseMarket(settlement, returnContext);
-        const marketBody = $('gm-body');
+        const marketBody = $('gm-body').querySelector('.enterprise-market-content');
         setTimeout(function () {
           const row = marketBody.querySelector('[data-enterprise-explain="' + purchasedType + '"]');
           if (row) row.focus({ preventScroll:true });

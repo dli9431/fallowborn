@@ -566,6 +566,15 @@ test('faith conversion modal renders grouped traditions, segmented scope control
   // Anchored close button dismisses the modal
   const closeBtn = page.locator('#conv-close');
   await expect(closeBtn).toBeVisible();
+  await page.locator('.conversion-card[data-conv-target="norse_pagan"]').hover();
+  await expect(tip).toBeVisible();
+  const footerBounds = await page.evaluate(function () {
+    return {
+      tooltipBottom:document.getElementById('tooltip').getBoundingClientRect().bottom,
+      footerTop:document.querySelector('#gm-body > .modal-navigation').getBoundingClientRect().top
+    };
+  });
+  expect(footerBounds.tooltipBottom).toBeLessThanOrEqual(footerBounds.footerTop);
   await closeBtn.click();
   await expect(page.locator('#genmodal')).toHaveClass(/hidden/);
 });

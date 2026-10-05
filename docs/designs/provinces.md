@@ -559,6 +559,8 @@ An optional `state.settlementNames` table maps stable site IDs to display overri
 legacy saves need no migration. Geography, county names and site identities remain
 unchanged. Settlement lists, map labels and map search read the saved display name;
 search resolves overrides per query so loading a different save cannot stale names.
+
+Legacy province replacements without settlement data retain their previous slot labels and kinds in non-enumerable presentation metadata. Geography resolution copies that metadata through title normalization before compiling generated physical sites, preserving names, indices and property references without turning those records into authored sites or exporting the internal metadata.
 This is cosmetic naming only and introduces no technology eligibility requirement.
 
 ## Spring 476 bookmark sites and communities

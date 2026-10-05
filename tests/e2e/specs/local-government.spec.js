@@ -782,7 +782,9 @@ test('grant terms and local council state are visible before and after confirmat
     await expect(page.locator(
       '[data-grant-tenure="term"]')).toHaveClass(/focused/);
     await expect(page.locator('#gm-body')).toContainText('270 soldiers');
-    await expect(page.locator('#gm-body')).toContainText('initial Standing +30');
+    await expect(page.locator('#gm-body .kv').filter({
+      has:page.locator('span', { hasText:/^Initial Standing$/ })
+    })).toContainText('+30');
     await page.locator('#grant-terms-confirm').click();
 
     const contract = await page.evaluate(function (pid) {

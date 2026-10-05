@@ -127,7 +127,8 @@ test('holy-war overview lists both full coalitions and sums campaign detachments
     const leader = participants.attackers[10].realm;
     s.greatHolyWar = { id:'overview', callingReligion:'catholic', targetKingdom:'syria',
       callerRealm:participants.attackers[0].realm, leaderRealm:leader,
-      phase:'active', participants:participants, contribution:{} };
+      phase:'active', participants:participants, contribution:{},
+      objectiveCounties:[], occupations:{} };
     s.greatHolyWar.contribution[leader] = 42.5;
     s.armies = [
       { id:'one', realm:leader, men:2000, warId:'holy' },
