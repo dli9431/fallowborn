@@ -3643,3 +3643,11 @@ Each deed names its section and protected handler. FB.deeds supplies section loo
 Accordion bodies remain lazily constructed and retained when collapsed. Modal Back, Cancel, Not now, Close and Escape continue through shared navigation. Exact Deeds redraws retain the scrolling sidebody position, expanded Details and the focused surviving panel control; ordinary modal returns can reuse the mounted panel. A registry revision or availability change invalidates reuse, so a disabled section cannot leave stale visible controls.
 
 Technology impact: this is a presentation and registry refactor of existing actions. No new player capability or research gate is introduced, so no technology review ledger entry is required.
+
+Optional title hierarchy presentation
+
+Map filter level labels resolve through the campaign lexicon on every render, including English. An absent level keeps its filter visible and disabled, with No title hierarchy as the status. Existing keyboard focus, Escape dismissal and map-filter navigation remain in charge. County Land details and progression hints explain customary rights when there is no district chain, instead of promising an unavailable de jure promotion.
+
+Settlement council and summary award labels distinguish county, ducal and royal crowns using the active title vocabulary.
+
+Customary war claims use the existing target list, exact-justification review, supporting Details and retained list state. The selected right includes its legal basis and exact right id; declaring after its revocation fails the existing revalidation. Multiple rights to one county remain separate choices.

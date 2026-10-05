@@ -2957,9 +2957,9 @@ window.FB = window.FB || {};
       2:FB.T('Gentry standing and the right to manage a {term:manor}.'),
       3:FB.T('A baronial title, Governance, seasonal tax, and levy.'),
       4:FB.T('Your home county in your name and a count’s domain.'),
-      5:FB.T('Ducal rank over the qualifying duchy.'),
+      5:FB.T('Ducal rank over the qualifying {term:duchy}.'),
       6:FB.T('Royal rank and access to the Royal Council.'),
-      7:FB.T('Emperor rank — the highest rank. Your imperial title can stand above {term:vassal} kings; the Royal Council remains available.')
+      7:FB.T('{Term:emperor} rank — the highest rank. Your imperial title can stand above {term:vassal} {term:king.other}; the Royal Council remains available.')
     };
     return benefits[targetTier] || FB.T('Recognition at the next station.');
   }
@@ -3407,7 +3407,7 @@ window.FB = window.FB || {};
         note:FB.T('Permanent · uses {name}’s only household move', { name:c.name }),
         warn:true,
         details:'<p>' + esc(FB.T(
-          'The proving is complete: {residence} days lived from this land and {milestones} frontier works endured. {destination} becomes a real frontier county — development 1, of your own culture and faith, belonging to no de jure duchy.', {
+          'The proving is complete: {residence} days lived from this land and {milestones} frontier works endured. {destination} becomes a real frontier county — development 1, of your own culture and faith, belonging to no de jure {term:duchy}.', {
             residence:status ? status.stayDays : 0,
             milestones:status ? status.milestones : 0,
             destination:destination.name
@@ -3687,7 +3687,7 @@ window.FB = window.FB || {};
     const enemy = s.realms[cause.enemy];
     const capital = FB.world.byId[cause.target];
     const warDetails = FB.T(
-      'Declare war on {realm} for the office of {title}. Besiege their capital, {capital}, to transfer the office to your realm. A fort adds siege work, minimum force, and attrition. No land changes hands; the loser keeps their kingdom, but loses the office.', {
+      'Declare war on {realm} for the office of {title}. Besiege their capital, {capital}, to transfer the office to your realm. A fort adds siege work, minimum force, and attrition. No land changes hands; the loser keeps their {term:kingdom}, but loses the office.', {
         realm:enemy ? enemy.name : '',
         title:FB.religiousHeadTitle(s, FB.playerHeadFaith(s)),
         capital:capital ? capital.name : ''
@@ -4751,8 +4751,8 @@ window.FB = window.FB || {};
   }
 
   function greatHolyWarRewardName(band) {
-    if (band === 'kingdom') return FB.T('kingdom crown');
-    if (band === 'duchy') return FB.T('complete duchy');
+    if (band === 'kingdom') return FB.T('{term:kingdom} crown');
+    if (band === 'duchy') return FB.T('complete {term:duchy}');
     if (band === 'county') return FB.T('county');
     if (band === 'sacred') return FB.T('sacred-site custody');
     if (band === 'honor') return FB.T('piety and prestige');
@@ -4766,7 +4766,7 @@ window.FB = window.FB || {};
     if (desire.kind === 'honor') return FB.T('honor rather than land');
     if (desire.kind === 'duchy') {
       const duchy = FBDATA.duchies[desire.id];
-      return FB.T('the Duchy of {name}', {
+      return FB.T('the {Term:duchy} of {name}', {
         name:duchy ? duchy.name : desire.id
       });
     }
@@ -4849,7 +4849,7 @@ window.FB = window.FB || {};
     }
     if (!count) h += '<div class="progressnote">' +
       esc(FB.T(
-        'No lost kingdom is currently eligible. Authority, schism, captivity, and the campaign cooldown can also prevent a call.')) +
+        'No lost {term:kingdom} is currently eligible. Authority, schism, captivity, and the campaign cooldown can also prevent a call.')) +
       '</div>';
     h += '</div><button class="btn" id="gm-cancel">' +
       esc(FB.T('Not now')) + '</button>';
@@ -4919,7 +4919,7 @@ window.FB = window.FB || {};
       const desires = camp === 'attackers' ? [
         { kind:'crown', label:FB.T('The target crown') },
         { kind:'sacred', label:FB.T('Custody of the sacred places') },
-        { kind:'duchy', label:FB.T('An exact objective duchy…') },
+        { kind:'duchy', label:FB.T('An exact objective {term:duchy}…') },
         { kind:'county', label:FB.T('An exact objective county…') },
         { kind:'honor', label:FB.T('Honor rather than land') }
       ] : [
@@ -4979,7 +4979,7 @@ window.FB = window.FB || {};
         '<div class="gm-footer"><button type="button" class="btn" id="ghw-beneficiary-back">' +
         esc(FB.T('Back')) + '</button></div>';
       openModal(title(), h, { titleDetailsHtml:'<p>' + esc(FB.T(
-        'You may name one living adult close relative to rule a won duchy or county. If they die or take another throne before settlement, the grant returns to you.')) +
+        'You may name one living adult close relative to rule a won {term:duchy} or county. If they die or take another throne before settlement, the grant returns to you.')) +
         '</p>' });
       FB.paintFaces($('gm-body'), s);
       document.querySelectorAll('[data-ghw-beneficiary]').forEach(function (button) {
@@ -5382,7 +5382,7 @@ window.FB = window.FB || {};
     if (!asset) return FB.T('Unknown award');
     if (asset.kind === 'crown') {
       return FB.realmRank.isRoyal(asset) ? FB.T('Sovereign crown')
-        : FB.realmRank.isDuchy(asset) ? FB.T('Sovereign duchy')
+        : FB.realmRank.isDuchy(asset) ? FB.T('Sovereign {term:duchy}')
           : FB.T('Sovereign county');
     }
     if (asset.kind === 'sacred') {
@@ -5393,7 +5393,7 @@ window.FB = window.FB || {};
     }
     if (asset.kind === 'duchy') {
       const duchy = FBDATA.duchies[asset.titleId];
-      return FB.T('Duchy of {name}', {
+      return FB.T('{Term:duchy} of {name}', {
         name:duchy ? duchy.name : asset.titleId
       });
     }
@@ -5510,7 +5510,7 @@ window.FB = window.FB || {};
       let consequence;
       if (pending.sovereign && FB.realmRank.isRoyal(pending, s)) {
         consequence = FB.T(
-          'Accepting makes you sovereign of the new kingdom and unites it with your existing lands.');
+          'Accepting makes you sovereign of the new {term:kingdom} and unites it with your existing lands.');
       } else if (FB.isPlayerSovereign(s)) {
         consequence = FB.T(
           'Accepting attaches this foreign grant to your existing sovereign realm.');
@@ -5679,7 +5679,7 @@ window.FB = window.FB || {};
     let consequence;
     if (award.sovereign && FB.realmRank.isRoyal(award, s)) {
       consequence = FB.T(
-        'Accepting makes you sovereign of the new kingdom and unites it with your existing lands.');
+        'Accepting makes you sovereign of the new {term:kingdom} and unites it with your existing lands.');
     } else if (FB.isPlayerSovereign(s)) {
       consequence = FB.T(
         'Accepting attaches this foreign grant to your existing sovereign realm.');
@@ -5854,7 +5854,7 @@ window.FB = window.FB || {};
   function selectedWarClaims() { return warTargetView.claims || []; }
   function packageClaim(causes) {
     return (causes || []).filter(function (c) {
-      return !c.blocked && (c.type === 'dejure' || c.type === 'fabricated');
+      return !c.blocked && (['dejure', 'fabricated', 'customary'].indexOf(c.type) >= 0);
     })[0] || null;
   }
   function claimSelected(cause) {
@@ -6124,7 +6124,7 @@ window.FB = window.FB || {};
         card.classList.toggle('claim-compatible', !!selected.length && claimCanJoin(c));
         list.querySelector('[data-war-claim-status="' + model.index + '"]').textContent = multi ? FB.T('Multi') : FB.T('Single');
         let basis = card.querySelector('[data-war-claim-basis]');
-        const rights = targets[model.index].filter(function (cause) { return !cause.blocked && (cause.type === 'dejure' || cause.type === 'fabricated'); });
+        const rights = targets[model.index].filter(function (cause) { return !cause.blocked && (['dejure', 'fabricated', 'customary'].indexOf(cause.type) >= 0); });
         if (!basis && rights.length > 1) {
           basis = document.createElement('select'); basis.dataset.warClaimBasis = model.index;
           basis.setAttribute('aria-label', FB.T('Claim justification for {province}', { province:model.territoryName }));
@@ -6496,6 +6496,7 @@ window.FB = window.FB || {};
       (a.enemy || '') === (b.enemy || '') &&
       (a.titleKind || '') === (b.titleKind || '') &&
       (a.titleId || '') === (b.titleId || '') &&
+      (a.rightId || '') === (b.rightId || '') &&
       (a.titleName || '') === (b.titleName || '');
   }
 
@@ -9845,7 +9846,7 @@ window.FB = window.FB || {};
     $('gm-body').insertBefore(button, $('gm-body').firstChild);
   }
   function marriageFinderRankLabel(rank) {
-    return [FB.T('Court'), FB.T('Count'), FB.T('Duke'), FB.T('King'), FB.T('Emperor')][rank] || FB.T('Court');
+    return [FB.T('Court'), FB.T('Count'), FB.T('{Term:duke}'), FB.T('{Term:king}'), FB.T('{Term:emperor}')][rank] || FB.T('Court');
   }
   let marriageFinderPreferences = {};
   let marriageFinderPosition = null;
@@ -10081,7 +10082,7 @@ window.FB = window.FB || {};
       esc(FB.T('Not now')) + '</button></div>';
     openModal(FB.T('Alliances & pacts…'), h, {
       titleDetailsHtml:'<p>' + esc(FB.T(
-        'A pact envoy costs {money:10}. Kings and emperors may offer a {money:25} alliance at Standing 60+.')) + '</p>',
+        'A pact envoy costs {money:10}. {Term:king.other} and {term:emperor.other} may offer a {money:25} alliance at Standing 60+.')) + '</p>',
       historyView:!!returnContext,
       historyBackRender:function () {
         interactionReturn(returnContext);
@@ -10388,7 +10389,7 @@ window.FB = window.FB || {};
     const s = FB.state;
     const B = FBDATA.balance;
     let h = '<p class="hint">' + esc(FB.T(
-      '{money:gold} and {prestige} prestige to plant a settlement on empty land. The new county answers to you — and belongs to no de jure duchy.',
+      '{money:gold} and {prestige} prestige to plant a settlement on empty land. The new county answers to you — and belongs to no de jure {term:duchy}.',
       { gold: B.settleGold, prestige: B.settlePrestige })) + '</p><div class="gm-list">';
     const candidates = FB.wastelandCandidates(s);
     for (const pid of candidates) {
@@ -10961,6 +10962,13 @@ window.FB = window.FB || {};
     if (cause.type === 'claims') return FB.T('Combined territorial claims');
     if (cause.type === 'aggression') return FB.T('War of Aggression');
     if (cause.type === 'fabricated') return FB.T('Fabricated county claim');
+    if (cause.type === 'customary') {
+      const bases = { tenure:FB.T('Tenure'), judgment:FB.T('Judgment'),
+        recognition:FB.T('Recognition'), possession:FB.T('Possession') };
+      return FB.T('Customary jurisdiction: {basis}', {
+        basis:bases[cause.basis] || FB.T('Customary right')
+      });
+    }
     if (cause.type === 'restoration') {
       return FB.T('Restore the crown of {title}', {
         title:cause.titleName || FB.T('the lost realm')
@@ -11267,12 +11275,12 @@ window.FB = window.FB || {};
           label:FB.T('Grant land to this ruler…'),
           detail:landGrant.ready
             ? FB.T(
-              'Choose one directly held county, or complete a de jure duchy where this ruler already holds land.')
+              'Choose one directly held county, or complete a de jure {term:duchy} where this ruler already holds land.')
             : landGrant.reason,
           enabled:landGrant.ready,
           blockedReason:landGrant.ready ? null : landGrant.reason,
           consequence:FB.T(
-            'The ruler’s capital, service charter, and tenure remain unchanged; completing a full duchy raises a count to duke. Standing rises by {standing}.', {
+            'The ruler’s capital, service charter, and tenure remain unchanged; completing a full {term:duchy} raises a count to {term:duke}. Standing rises by {standing}.', {
               standing:landGrant.standingGain
             }),
           route:'vassal-land-grant',
@@ -12231,7 +12239,7 @@ window.FB = window.FB || {};
     }
     const contract = FB.feudalContractOf(s, rid);
     let h = '<p class="hint">' + esc(FB.T(
-      'Add land to this ruler’s existing realm. Their capital, service charter, and tenure do not change; completing a full de jure duchy raises a count to duke.')) +
+      'Add land to this ruler’s existing realm. Their capital, service charter, and tenure do not change; completing a full de jure {term:duchy} raises a count to {term:duke}.')) +
       '</p><div class="progressnote"><b>' +
       esc(FB.T('Existing terms')) + '</b><br>' + esc(FB.T(
         '{charter} · {tenure} tenure · Standing +{standing} when confirmed.', {
@@ -12261,9 +12269,9 @@ window.FB = window.FB || {};
           reason = FB.T('This grant would leave you without a county.');
         } else if (duchy.promotesDuchy) {
           reason += ' ' + FB.T(
-            'This completes the duchy and raises the ruler to duke tier.');
+            'This completes the {term:duchy} and raises the ruler to {term:duke} tier.');
         } else if (duchy.completesDuchy) {
-          reason += ' ' + FB.T('This completes the de jure duchy.');
+          reason += ' ' + FB.T('This completes the de jure {term:duchy}.');
         }
         h += '<button type="button" class="actionbtn" ' +
           'data-vassal-grant-duchy="' + esc(duchy.did) + '"' +
@@ -12354,7 +12362,7 @@ window.FB = window.FB || {};
         charter:feudalCharterName(s, contract.charterId),
         tenure:feudalTenureText(contract.tenure)
       }))) +
-      (selection.promotesDuchy ? kv('Rank gained', esc(FB.T('This complete duchy raises the ruler to duke tier.'))) : '') +
+      (selection.promotesDuchy ? kv('Rank gained', esc(FB.T('This complete {term:duchy} raises the ruler to {term:duke} tier.'))) : '') +
       kv('Standing', esc('+' + selection.standingGain)), ' data-vassal-grant-review') +
       reviewActionsHtml(reviewActionCardHtml({
         id:'vassal-grant-confirm', label:FB.T('Confirm grant'), note:summary
@@ -12545,7 +12553,7 @@ window.FB = window.FB || {};
         esc(FB.T('Over your limit — your own income and levy are cut until you grant land away.')) + '</div>' : '');
     const duchies = FB.grantableDuchies(s);
     if (duchies.length) {
-      h += '<div class="panelh">' + esc(FB.T('Grant a duchy you hold in full')) + '</div><div class="gm-list">';
+      h += '<div class="panelh">' + esc(FB.T('Grant a {term:duchy} you hold in full')) + '</div><div class="gm-list">';
       for (const d of duchies) {
         const reserved = d.counties.filter(function (pid) {
           return FB.isProtected(s, 'grantCounty', pid);
@@ -12676,7 +12684,7 @@ window.FB = window.FB || {};
       ? ((FBDATA.duchies[id] || {}).name || id)
       : ((FB.world.byId[id] || {}).name || id);
     const grantLabel = isDuchy
-      ? FB.T('the Duchy of {land}', { land:landName })
+      ? FB.T('the {Term:duchy} of {land}', { land:landName })
       : FB.T('{land} County', { land:landName });
     let h = '<div class="gm-body-text"><p>' + esc(FB.T(
       'Choose who will receive {land}. The new ruler becomes your direct {term:vassal} and gains 40 Standing for the grant.', {
@@ -12813,7 +12821,7 @@ window.FB = window.FB || {};
           (grant.kind === 'duchy' ? '👑' : '🏰') + '</span><span class="large-list-row-copy">' +
           '<span class="large-list-row-title">' + esc(label) + '</span><span class="adesc">' +
           esc(grant.kind === 'duchy'
-            ? FB.T('Grant as a complete duchy · {count} counties', {
+            ? FB.T('Grant as a complete {term:duchy} · {count} counties', {
               count:grant.countyIds.length
             })
             : FB.T('Grant as a county {term:vassal} · development {development}', {
@@ -13791,7 +13799,7 @@ window.FB = window.FB || {};
         h += '<button type="button" class="actionbtn" ' +
           'data-governance-action="grant_land"' +
           (grantStatus.can ? '' : ' disabled') + '>👑 ' +
-          esc(FB.T('Grant the complete Duchy of {duchy}…', {
+          esc(FB.T('Grant the complete {Term:duchy} of {duchy}…', {
             duchy:duchy ? duchy.name : item.id
           })) + '<span class="adesc">' +
           esc(countyCountText(s, item.countyIds.length)) +
@@ -14191,7 +14199,7 @@ window.FB = window.FB || {};
       return h + modifierConsequences + privilegeButton;
     }
     return '<div class="progressnote">' + esc(FB.T(
-      'No simulated institution applies. Independent counts and dukes govern their own domain without the {term:liege}’s Estates or a Royal Council.')) +
+      'No simulated institution applies. Independent counts and {term:duke.other} govern their own domain without the {term:liege}’s Estates or a Royal Council.')) +
       '</div>' + privilegeButton;
   }
 
@@ -16181,7 +16189,7 @@ window.FB = window.FB || {};
         disabled:!q.ready,
         details:'<p>' + esc(FB.T('Assign 25% of positive recurring civilian surplus, after civilian costs and senior loan assignments, limited to available coin. Field armies do not reduce the assessment. The unpaid remainder is discharged after five years.')) + '</p><p>' +
           esc(FB.T('For five years: no new offensive wars, extraordinary taxation, voluntary revocations, or expansion of paid forces. Defense, ordinary levies, peace, and existing commitments remain available.')) + '</p>' +
-          (FB.station.mayHoldCouncil(s.player, s) ? '<p>' + esc(FB.T('Kings and emperors also grant council confirmation of the Treasurer and Constable. That privilege remains after the financial term ends.')) + '</p>' : '') +
+          (FB.station.mayHoldCouncil(s.player, s) ? '<p>' + esc(FB.T('{Term:king.other} and {term:emperor.other} also grant council confirmation of the Treasurer and Constable. That privilege remains after the financial term ends.')) + '</p>' : '') +
           '<p>' + esc(FB.T('Fiscal pressure begins to ease, but existing wars and rebellions continue. Ongoing military costs can put you below zero again. Signed loans are unchanged. No further settlement is available for ten years.')) + '</p>'
       })) +
       '<div class="gm-footer"><button type="button" class="btn" id="fiscal-back">' + esc(FB.T('Back')) + '</button></div>';
@@ -24571,6 +24579,11 @@ window.FB = window.FB || {};
           county:target.name
         });
       }
+      if (type === 'customary') {
+        return FB.T('Recover jurisdiction in {county} under a customary right.', {
+          county:target.name
+        });
+      }
       return FB.T('Conquer {county}.', { county:target.name });
     }
     return attackerGoal
@@ -25490,7 +25503,7 @@ window.FB = window.FB || {};
     openModal(FB.T('Justice and prisoners'), h, { historyView:true,
       modalClass:'intrigue-modal justice-modal justice-roster-modal', titleDetailsHtml:justiceRulesHtml() });
     FB.paintFaces($('gm-body'), s);
-    const groupLabels = { 9:FB.T('Imprisoned'), 8:FB.T('Family and royalty'), 5:FB.T('Dukes'),
+    const groupLabels = { 9:FB.T('Imprisoned'), 8:FB.T('Family and royalty'), 5:FB.T('{Term:duke.other}'),
       4:FB.T('Counts'), 3:FB.T('{Term:baron.other} and other nobles'), 2:FB.T('Gentry'),
       1:FB.T('Freeholders'), 0:FB.T('{Term:serf.other}') };
     function arrangeGroups() {
@@ -29342,11 +29355,11 @@ window.FB = window.FB || {};
         const empName = k.empire && FBDATA.empires && FBDATA.empires[k.empire] ? FBDATA.empires[k.empire].name : '';
         entries.push({
           type:'kingdom',
-          typeLabel:FB.T('Kingdom'),
+          typeLabel:FB.T('{Term:kingdom}'),
           icon:'👑',
           id:'k:' + kid,
           name:k.name,
-          context:empName ? FB.T('Kingdom in {empire}', { empire:empName }) : FB.T('Kingdom · {count} counties', { count:count }),
+          context:empName ? FB.T('{Term:kingdom} in {empire}', { empire:empName }) : FB.T('{Term:kingdom} · {count} counties', { count:count }),
           x:sumX / count,
           y:sumY / count,
           zoom:1.3,
@@ -29371,11 +29384,11 @@ window.FB = window.FB || {};
         const kName = d.kingdom && FBDATA.kingdoms && FBDATA.kingdoms[d.kingdom] ? FBDATA.kingdoms[d.kingdom].name : '';
         entries.push({
           type:'duchy',
-          typeLabel:FB.T('Duchy'),
+          typeLabel:FB.T('{Term:duchy}'),
           icon:'⚜',
           id:'d:' + did,
           name:d.name,
-          context:kName ? FB.T('Duchy in {kingdom}', { kingdom:kName }) : FB.T('Duchy · {count} counties', { count:count }),
+          context:kName ? FB.T('{Term:duchy} in {kingdom}', { kingdom:kName }) : FB.T('{Term:duchy} · {count} counties', { count:count }),
           x:sumX / count,
           y:sumY / count,
           zoom:2.0,
@@ -31034,25 +31047,25 @@ window.FB = window.FB || {};
         summary:FB.T('A county and its settlements now anchor your territorial house.'),
         resources:FB.T('Domain tax, levy, {term:vassal} relations, development, and de jure rights drive expansion.'),
         duties:FB.T('Balance direct land, {term:vassal.other}, {term:liege} demands, and succession.'),
-        actions:[FB.T('Review Governance.'), FB.T('Develop the demesne.'), FB.T('Consolidate the rightful duchy.')]
+        actions:[FB.T('Review Governance.'), FB.T('Develop the demesne.'), FB.T('Consolidate the rightful {term:duchy}.')]
       },
       {
-        title:FB.T('Duke'),
+        title:FB.T('{Term:duke}'),
         summary:FB.T('Several counties now form a regional principality under your rule.'),
-        resources:FB.T('{Term:vassal.other}, domain capacity, de jure duchy rights, councils, and national technology matter together.'),
+        resources:FB.T('{Term:vassal.other}, domain capacity, de jure {term:duchy} rights, councils, and national technology matter together.'),
         duties:FB.T('Keep regional lords useful and contain overextension or factional pressure.'),
-        actions:[FB.T('Review {term:vassal.other} and institutions.'), FB.T('Set political and research priorities.'), FB.T('Consolidate a kingdom and independence.')]
+        actions:[FB.T('Review {term:vassal.other} and institutions.'), FB.T('Set political and research priorities.'), FB.T('Consolidate a {term:kingdom} and independence.')]
       },
       {
-        title:FB.T('King'),
-        summary:FB.T('You are sovereign over a kingdom and its national institutions.'),
+        title:FB.T('{Term:king}'),
+        summary:FB.T('You are sovereign over a {term:kingdom} and its national institutions.'),
         resources:FB.T('{Term:crown_authority}, council support, national research, diplomacy, and the full realm host become strategic resources.'),
         duties:FB.T('Govern institutions, manage great {term:vassal.other}, defend the crown, and secure succession.'),
         actions:[FB.T('Review Governance and Council.'), FB.T('Direct national research.'), FB.T('Build alliances and imperial rights.')]
       },
       {
-        title:FB.T('Emperor'),
-        summary:FB.T('Several kingdoms answer to an imperial crown.'),
+        title:FB.T('{Term:emperor}'),
+        summary:FB.T('Several {term:kingdom.other} answer to an imperial crown.'),
         resources:FB.T('Imperial {term:vassal.other}, national institutions, diplomacy, and succession determine whether the realm endures.'),
         duties:FB.T('Hold the summit: contain powerful subjects, preserve legitimacy, and keep the dynasty playable.'),
         actions:[FB.T('Review every Governance section.'), FB.T('Protect the successor and crown.'), FB.T('Choose long-range diplomatic and research priorities.')]
@@ -31163,7 +31176,7 @@ window.FB = window.FB || {};
     add('roles', 'roles', FB.T('Social and religious roles'),
       FB.T('Rank changes authority and duties; vocations and offices can sit beside it.'),
       guideBody([
-        FB.T('The social ladder runs {Term:serf}, Freeholder, Gentry, {Term:baron}, Count, Duke, King, and Emperor. Rank controls authority and access; it does not erase a livelihood or religious vocation.'),
+        FB.T('The social ladder runs {Term:serf}, Freeholder, Gentry, {Term:baron}, Count, {Term:duke}, {Term:king}, and {Term:emperor}. Rank controls authority and access; it does not erase a livelihood or religious vocation.'),
         FB.T('Religious ranks and offices can coexist with the dynasty’s social station. Select a role entry below to see its orientation.')
       ]), 'rank station promotion vocation office noble church');
     const orientations = roleOrientationDefinitions(s);
@@ -31323,7 +31336,7 @@ window.FB = window.FB || {};
       FB.T('Territorial rank opens Governance; institutions vary by relationship to the crown.'),
       guideBody([
         FB.T('Governance appears for territorial landed rulers. It brings together position, {term:vassal.other}, institutions, political blocs, and available realm actions.'),
-        FB.T('{Term:vassal}-tier estates negotiate aid and scutage. Sovereign kings and emperors instead govern through the royal council, {term:crown_authority}, national research, diplomacy, and other crown systems.'),
+        FB.T('{Term:vassal}-tier estates negotiate aid and scutage. Sovereign {term:king.other} and {term:emperor.other} instead govern through the royal council, {term:crown_authority}, national research, diplomacy, and other crown systems.'),
         FB.T('Unavailable sections state the rank, relationship, office, or current-state reason that keeps them inactive.')
       ]), 'governance realm council parliament estates crown authority vassal king emperor');
     return entries;
@@ -31515,7 +31528,7 @@ window.FB = window.FB || {};
       '<li><b>Deeds</b> are one-shot acts (poach, scheme, propose, petitions…) — each spends the day, and some need time before they can be repeated.</li>' +
       '<li>Press <b>Space</b> (or the Play/Pause button) to set time flowing — days pass on their own — and press it again to pause. <b>F</b> (or ▶▶) skips straight to the next happening. Events halt the days while they await your choice.</li></ul>' +
       '<h4>Climbing the ladder</h4>' +
-      '<p>Serf → Freeholder → Gentry → Baron → Count → Duke → King → Emperor. The Deeds tab shows a hint for your next step by default; Settings can disable guide hints. Wealth, prestige, Standing with your lord, marriage, war-glory, or the church can all raise you.</p>' +
+      FB.T('<p>Serf → Freeholder → Gentry → Baron → Count → {Term:duke} → {Term:king} → {Term:emperor}. The Deeds tab shows a hint for your next step by default; Settings can disable guide hints. Wealth, prestige, Standing with your lord, marriage, war-glory, or the church can all raise you.</p>') +
       '<h4>Dynasty</h4>' +
       '<p>Marry and raise children. When you die, you continue as your heir. No heir — no story. Ruler sheets show royal families and their designated successor. Courting a ruler’s child creates a dynastic tie; the crown passes only through the designated heir’s branch. A royal spouse may reign before your shared child becomes the protagonist, and only then do the realms join.</p>' +
       '<p>Open a child’s sheet (Kin tab) to choose an <b>education focus</b>, then arrange home lessons, school, or a tutor. Every option shows its yearly learning chance; schools and personal masters charge each season, while a named tutor’s own skill and habits shape the child. Gentry households with Scholarly Networks can use the costly Noble Academy: it teaches every focus and opens noble connections, but each completed term adds fatality risk at New Year. A Learning education grants literacy at 16.</p>' +
@@ -31525,21 +31538,21 @@ window.FB = window.FB || {};
       '<h4>Rivalries</h4>' +
       '<p>Named characters remember hostile encounters. If their Standing falls far enough, they may declare you a rival. Feud heat rises through insults and schemes, opening the way to claims and knives; restraint, common cause, compensation, mediation, witnessed oaths, or a duel can cool or end it. An heir chooses whether to inherit an old quarrel.</p>' +
       '<h4>De jure</h4>' +
-      '<p>Every county belongs by ancient right to a duchy, a kingdom, and an empire — its <b>de jure</b> titles. Hold the majority of a title’s counties and you can claim that title for yourself. See the <b>De jure</b> row on any province, and the 🗺 map filters (<b>R</b>).</p>' +
+      FB.T('<p>A county may belong by ancient right to a {term:duchy}, a {term:kingdom}, and an {term:empire} — its <b>de jure</b> titles where that hierarchy exists. Elsewhere, effective customary jurisdiction supports recovery claims. Hold the majority of a title’s counties and you can claim that title for yourself. See the <b>De jure</b> row on any province, and the 🗺 map filters (<b>R</b>).</p>') +
       '<h4>The map</h4>' +
       '<p>Drag to pan; scroll, pinch, or <b>PgUp</b>/<b>PgDn</b> to zoom; tap a province for details. County names appear as you zoom in. Realms wage their own wars; borders shift with the decades.</p>' +
       '<h4>Mobile navigation</h4>' +
       '<p>On a phone, the browser or device Back control steps out of equipment choices, dialogs, and the Self/Kin drawer. It never undoes a decision that changed the game.</p>' +
       '<h4>Map filters</h4>' +
-      '<p>The 🗺 button (or <b>R</b>) opens the map filter chooser: <b>realm</b>, <b>mine</b>, <b>liege</b>, <b>de jure duchies</b>, <b>de jure kingdoms</b>, and <b>war</b>.</p>' +
+      FB.T('<p>The 🗺 button (or <b>R</b>) opens the map filter chooser: <b>realm</b>, <b>mine</b>, <b>liege</b>, <b>de jure {term:duchy.other}</b>, <b>de jure {term:kingdom.other}</b>, and <b>war</b>.</p>') +
       '<h4>War</h4>' +
-      '<p>From baron upward the Deeds tab always shows <b>⚔ Declare war</b>, with the exact reason when it is locked. A county war prefers a bordering <b>de jure right</b> through a duchy, kingdom, or empire you hold, or your one <b>fabricated claim</b> (made through a plot). ' +
+      FB.T('<p>From baron upward the Deeds tab always shows <b>⚔ Declare war</b>, with the exact reason when it is locked. A county war prefers a bordering <b>de jure right</b> through a {term:duchy}, {term:kingdom}, or {term:empire} you hold, or your one <b>fabricated claim</b> (made through a plot). ') +
       esc(FB.T('Where neither right applies, the picker plainly offers a War of Aggression and requires you to review its escalating political costs and the conquered county’s burden before confirming.')) +
       ' A rare crown-restoration right reaches the usurper’s capital without a shared border. Pacts and defensive alliances forbid attacks. Your host musters when war begins — tap it, then a province to march (or let ⚙ automation command it). You may de-muster a raised host from the Deeds tab: the men preserved for your next muster depend on where it stands — all on your own land, half elsewhere in your realm, none abroad — and re-mustering waits out the same rearm window as a shattering. <b>' +
       esc(FB.T('Land is taken only by siege:')) + '</b> ' +
       esc(FB.T('Stand your host on the prize — the works advance each season it holds the ground. An unfortified county takes three steps. A fort pins hostile passage, adds one to four steps, demands enough uncontested besiegers, and inflicts seasonal attrition. Allies send abstract defenders only when you are attacked; they never become separate war participants. Field victories make the enemy sue for peace. Attacked yourself? Keep their host out of your lands, because a fortified county cannot fall before its exact breach. Exhaustion begins after eight seasons, extended by the fort’s added steps.')) + '</p>' +
       '<p>' + esc(FB.T('Water links use local boats at low throughput. A host larger than the available transport needs repeated crossing cycles; national seafaring and naval-organization technologies raise capacity and crossing speed. No separate fleet must be raised.')) + '</p>' +
-      '<p><b>Holy wars</b> are global two-camp campaigns called by an active Pope or Caliph after their historical unlock. Freeholders and greater ranks may answer during the 180-day gathering, promise one to three years of service, and name a hoped-for crown, sacred custody, exact duchy or county, beneficiary, or honor. Sovereigns field their own host, while vassals and unlanded volunteers serve through expedition events. Attackers must occupy the sacred places, at least half the target counties, and 60% of its development before the eight-year deadline. After an attacker victory, a settlement council weighs contribution beside the vow, occupation, rights, local support, and religious standing before any land changes hands.</p>' +
+      FB.T('<p><b>Holy wars</b> are global two-camp campaigns called by an active Pope or Caliph after their historical unlock. Freeholders and greater ranks may answer during the 180-day gathering, promise one to three years of service, and name a hoped-for crown, sacred custody, exact {term:duchy} or county, beneficiary, or honor. Sovereigns field their own host, while vassals and unlanded volunteers serve through expedition events. Attackers must occupy the sacred places, at least half the target counties, and 60% of its development before the eight-year deadline. After an attacker victory, a settlement council weighs contribution beside the vow, occupation, rights, local support, and religious standing before any land changes hands.</p>') +
       '<h4>Keyboard (desktop)</h4>' +
       '<p><b>Arrows</b> pan the map · <b>Shift+arrows</b> hop between neighboring provinces · <b>PgUp/PgDn</b> zoom · <b>H</b> center home · <b>Enter</b> select the province at screen center.</p>' +
       '<p><b>Space</b> plays / pauses the flow of days · <b>−</b>/<b>+</b> slow and quicken the days (also in menu → Settings) · <b>F</b> skips to the next happening (and pauses) · <b>T G B Y N U</b> open the Self / Kin / Deeds / Land / Network / Chronicle panels · in Deeds, <b>1–6</b> select a section and <b>Q W E / A S D / Z X C</b> activate its first nine entries · in Network, <b>1–6</b> select a section and use the same letter grid for management actions only · <b>1–9</b> select UI sections only; section actions and event choices use <b>QWE / ASD / ZXC</b>, then Shift with the same letters; people, titles, and other list entries use Tab and Enter/Space · <b>[</b> and <b>]</b> cycle panels · <b>Esc</b> menu / back / close · <b>Tab</b> moves between buttons.</p>' +

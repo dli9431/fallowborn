@@ -575,7 +575,7 @@
     ];
     if (t.phase === 'recognition') return [
       { id:'petition_basiliscus', label:FB.T('Petition Basiliscus'),
-        detail:FB.T('The sitting eastern emperor may recognize federate service. His commission needs reaffirmation if his rule ends.') },
+        detail:FB.T('The sitting eastern {term:emperor} may recognize federate service. His commission needs reaffirmation if his rule ends.') },
       { id:'back_zeno', label:FB.T('Back the displaced Zeno'),
         detail:FB.T('A displaced claimant cannot issue an imperial commission now. If Zeno regains Constantinople alive, he can recognize the backed service claim.') },
       { id:'uphold_nepos', label:FB.T('Uphold Julius Nepos'),

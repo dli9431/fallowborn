@@ -2132,3 +2132,13 @@ Muster review and campaign navigation read mayCommand from the player's era/form
 Data-defined religious office contests
 
 The legacy caliphate cause now applies to any faith whose registered head strategy permits a contest. casus.officeId preserves the contested office across saves and conversions. Victory assigns that office and applies its referenced warPrestige reward without transferring territory. A claimant changing to another office loses the claim and ends the war; followers of an inherited faith recognizing the same office retain it. Territorial protection and great holy wars require realm-held offices. Papal campaign checks use the calling office's election, authority and obedience state rather than another office's model.
+
+War goals outside title hierarchies
+
+A county without a de jure district has no de jure war right or consolidation region. Territorial rights instead ask FB.political.territorialClaims for effective customary Peace rights. A customary objective records type customary, target county, rightId and basis. Player claims also consider a right held by the current character; AI claims use the realm. No right is inferred from land, rank, an office or revenue permission.
+
+Customary objectives use the ordinary claim review, frontier connectivity, defender resolution, diplomacy, law, occupation and peace rules. They can join a connected package of lawful claims. Declaration rechecks the exact right id and rejects a revoked, lapsed or weakened right before political costs or RNG. Already declared objectives keep their frozen evidence and terms. Unsupported rights leave the ordinary aggression option available. AI expansion gives effective customary claims priority in counties outside the title map.
+
+Global great-holy-war sacred and crisis targets missing from a bookmark's kingdom table are inactive. A missing first target cannot prevent consideration of present targets. No kingdom counties means no holy-war objective or title award. Saved faith configuration may retain inactive canonical targets, while actual saved campaign and title references must still resolve.
+
+Technology impact customary_territorial_claims is none: recovery of existing jurisdiction is a baseline legal and military choice. This adds no research prerequisite and does not change medieval de jure rights or their costs.

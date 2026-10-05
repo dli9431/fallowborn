@@ -852,7 +852,7 @@ window.FB = window.FB || {};
       }
       if (pr.wasteland) continue;
       if (!realms[pr.realm]) fault('province ' + pr.id + ' has invalid realm ' + pr.realm + '.');
-      if (!pr.duchy || !duchies[pr.duchy]) fault('province ' + pr.id + ' has invalid duchy ' + pr.duchy + '.');
+      if (pr.duchy !== undefined && pr.duchy !== null && !duchies[pr.duchy]) fault('province ' + pr.id + ' has invalid duchy ' + pr.duchy + '.');
       if (!FBDATA.cultures[pr.culture]) fault('province ' + pr.id + ' has invalid culture ' + pr.culture + '.');
       if (!FB.faithExists(pr.religion, null) ||
           !FB.faithAssignable(pr.religion, null)) {
@@ -865,13 +865,13 @@ window.FB = window.FB || {};
     }
     for (var did in duchies) {
       if (!Object.prototype.hasOwnProperty.call(duchies, did)) continue;
-      if (!duchies[did].kingdom || !kingdoms[duchies[did].kingdom]) {
+      if (duchies[did].kingdom !== undefined && duchies[did].kingdom !== null && !kingdoms[duchies[did].kingdom]) {
         fault('duchy ' + did + ' has invalid kingdom ' + duchies[did].kingdom + '.');
       }
     }
     for (var kid in kingdoms) {
       if (!Object.prototype.hasOwnProperty.call(kingdoms, kid)) continue;
-      if (!kingdoms[kid].empire || !empires[kingdoms[kid].empire]) {
+      if (kingdoms[kid].empire !== undefined && kingdoms[kid].empire !== null && !empires[kingdoms[kid].empire]) {
         fault('kingdom ' + kid + ' has invalid empire ' + kingdoms[kid].empire + '.');
       }
     }
@@ -976,7 +976,9 @@ window.FB = window.FB || {};
           ghwDate.day < 1 || ghwDate.day > 90) {
         fault('faith ' + ghwReligionId + ' greatHolyWar has an invalid minDate.');
       }
-      if (ghw.firstTarget && !kingdoms[ghw.firstTarget]) {
+      /* Global sacred targets outside this bookmark's title map are inactive. */
+      if (ghw.firstTarget && !kingdoms[ghw.firstTarget] &&
+          !FB.titleIds.known('kingdom', ghw.firstTarget)) {
         fault('faith ' + ghwReligionId + ' greatHolyWar has invalid firstTarget ' +
           ghw.firstTarget + '.');
       }
@@ -991,8 +993,11 @@ window.FB = window.FB || {};
       for (var ghwTargetIndex = 0; ghwTargetIndex < ghwTargets.length; ghwTargetIndex++) {
         var ghwTarget = ghwTargets[ghwTargetIndex] || {};
         if (!kingdoms[ghwTarget.kingdom]) {
-          fault('faith ' + ghwReligionId + ' greatHolyWar has invalid sacred kingdom ' +
-            ghwTarget.kingdom + '.');
+          if (!FB.titleIds.known('kingdom', ghwTarget.kingdom)) {
+            fault('faith ' + ghwReligionId + ' greatHolyWar has invalid sacred kingdom ' +
+              ghwTarget.kingdom + '.');
+          }
+          continue;
         }
         var ghwCounties = Array.isArray(ghwTarget.counties) ? ghwTarget.counties : [];
         if (!ghwCounties.length) {
@@ -1026,7 +1031,8 @@ window.FB = window.FB || {};
       }
       var ghwCrisis = Array.isArray(ghw.crisisKingdoms) ? ghw.crisisKingdoms : [];
       for (var ghwCrisisIndex = 0; ghwCrisisIndex < ghwCrisis.length; ghwCrisisIndex++) {
-        if (!kingdoms[ghwCrisis[ghwCrisisIndex]]) {
+        if (!kingdoms[ghwCrisis[ghwCrisisIndex]] &&
+            !FB.titleIds.known('kingdom', ghwCrisis[ghwCrisisIndex])) {
           fault('faith ' + ghwReligionId + ' greatHolyWar has invalid crisis kingdom ' +
             ghwCrisis[ghwCrisisIndex] + '.');
         }
@@ -2024,15 +2030,17 @@ window.FB = window.FB || {};
   /* de jure ids of a county: {duchy, kingdom, empire} */
   FB.dejureOf = function (pid) {
     const pr = FB.world && FB.world.byId[pid];
-    if (!pr || !pr.duchy) return {};
+    if (!pr || !FB.titleLevels.has('duchy', pr.duchy)) return {};
     const d = FBDATA.duchies[pr.duchy];
     const k = d && FBDATA.kingdoms[d.kingdom];
-    return { duchy: pr.duchy, kingdom: d ? d.kingdom : null, empire: k ? k.empire : null };
+    return { duchy: pr.duchy, kingdom: k ? d.kingdom : null,
+      empire: k && FB.titleLevels.has('empire', k.empire) ? k.empire : null };
   };
 
   /* static de jure county lists, built once */
   let dejureCounties = null;
   FB.duchyCounties = function (did) {
+    if (!FB.titleLevels.has('duchy', did)) return [];
     if (!dejureCounties) {
       dejureCounties = {};
       for (const p of FBDATA.provinces) {
@@ -2045,6 +2053,7 @@ window.FB = window.FB || {};
   let kingdomCountyLists = {}; // static like dejureCounties; rebuilt per kid on demand
   let aiDejureTotals = null;
   FB.kingdomCounties = function (kid) {
+    if (!FB.titleLevels.has('kingdom', kid)) return [];
     if (!kingdomCountyLists[kid]) {
       const out = [];
       for (const did in FBDATA.duchies) {
@@ -2055,6 +2064,7 @@ window.FB = window.FB || {};
     return kingdomCountyLists[kid];
   };
   FB.empireKingdoms = function (eid) {
+    if (!FB.titleLevels.has('empire', eid)) return [];
     const out = [];
     for (const kid in FBDATA.kingdoms) if (FBDATA.kingdoms[kid].empire === eid) out.push(kid);
     return out;
@@ -2144,6 +2154,7 @@ window.FB = window.FB || {};
     const byDuchy = {};
     for (const pr of FB.world.provs) {
       if (pr.wasteland || pr.realm0 !== rid) continue;
+      if (!pr.duchy) { state.holder[pr.id] = rid; continue; }
       (byDuchy[pr.duchy] = byDuchy[pr.duchy] || []).push(pr);
     }
     const capDuchy = (FB.world.byId[realm.capital] || {}).duchy;
@@ -5799,8 +5810,8 @@ window.FB = window.FB || {};
       FB.news(state, FB.msg('news.realm.vassal_promoted_duchy', {
         forms:{
           select:'value', param:'sex', cases:{
-            f:'👑 {ruler} is raised as Duchess of {duchy}; the realm now bears ducal rank.',
-            other:'👑 {ruler} is raised as Duke of {duchy}; the realm now bears ducal rank.'
+            f:'👑 {ruler} is raised as {Term:duchess} of {duchy}; the realm now bears ducal rank.',
+            other:'👑 {ruler} is raised as {Term:duke} of {duchy}; the realm now bears ducal rank.'
           }
         }
       }, {
@@ -5912,6 +5923,10 @@ window.FB = window.FB || {};
       remaining = (totals.empire[dj.empire] || 0) - eHeld;
     } else if (dj.duchy) {
       band = 3;
+    }
+    if (!dj.duchy && FB.customaryWarRights &&
+        FB.customaryWarRights(state, profile.realmId, pid).length) {
+      band = 0; remaining = 1;
     }
     let core = 2;
     if (band === 0) {
@@ -9658,7 +9673,7 @@ window.FB = window.FB || {};
         }
       }
       out.push({
-        d: 'Empire',
+        d: '{Term:empire}',
         titleData: FB.rankTitleSnapshot(state, 7, FBDATA.empires[eid].name),
         eid: eid,
         pid: empirePid || (p.provs && p.provs[0]) || p.provinceId || null
@@ -9669,7 +9684,7 @@ window.FB = window.FB || {};
       const kcs = FB.kingdomCounties ? FB.kingdomCounties(kid) : [];
       const kingdomPid = (state.realms[rawKid] && state.realms[rawKid].capital) || kcs[0] || (p.provs && p.provs[0]) || p.provinceId || null;
       out.push({
-        d: 'Kingdom',
+        d: '{Term:kingdom}',
         titleData: FB.rankTitleSnapshot(state, 6, FBDATA.kingdoms[kid].name),
         kid: kid,
         pid: kingdomPid
@@ -9678,7 +9693,7 @@ window.FB = window.FB || {};
     if (FB.station.isDucal(p, state)) for (const did of FB.playerDuchies(state)) {
       const dcs = FB.duchyCounties ? FB.duchyCounties(did) : [];
       out.push({
-        d: 'Duchy',
+        d: '{Term:duchy}',
         titleData: FB.rankTitleSnapshot(state, 5, FBDATA.duchies[did].name),
         did: did,
         pid: dcs[0] || (p.provs && p.provs[0]) || p.provinceId || null
@@ -9760,7 +9775,7 @@ window.FB = window.FB || {};
         p.flags = p.flags || {};
         p.flags.duchy_claim_hint = 1;
         FB.news(state, FB.msg('news.world.duchy_claim',
-          '🏰 You hold the substance of {duchy}, but only the crown may style you duke.',
+          '🏰 You hold the substance of {duchy}, but only the crown may style you {term:duke}.',
           { duchy: FBDATA.duchies[claimDid].name }));
       }
     }
@@ -9774,6 +9789,17 @@ window.FB = window.FB || {};
        (war, attainder, debt) — see docs/designs/descent.md. */
     if (FB.station.isDucal(p, state)) {
       const B = FBDATA.balance;
+      const kind = FB.station.isEmperor(p, state) ? 'empire' :
+        FB.station.isKing(p, state) ? 'kingdom' : 'duchy';
+      /* Dignities outside the title map are governed by their own authority.
+         Missing de jure geography cannot start a hollow-crown countdown. */
+      if (!FB.dejureOf(p.provinceId)[kind] && !FB.realmTerritory(state, 'player').some(function (pid) {
+        return !!FB.dejureOf(pid)[kind];
+      })) {
+        if (p.titleLapse) delete p.titleLapse;
+        if (FB.syncPlayerCareer) FB.syncPlayerCareer(state);
+        return;
+      }
       let holds = true;
       if (FB.station.isEmperor(p, state)) holds = !!(indep && FB.playerEmpire(state));
       else if (FB.station.isKing(p, state)) holds = !!(indep && FB.playerKingdom(state));

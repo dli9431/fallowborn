@@ -126,6 +126,7 @@ window.FBDATA = window.FBDATA || {};
       authority_recognition:{ mode:'none', rationale:'Army, imperial, dynastic, civic and church recognition are political relationships with explicit issuer continuity, not researched techniques.' },
       authority_federate_service:{ mode:'none', rationale:'Negotiated service, pay, renewal and breach are ordinary political commitments. Both parties consent and existing military and treasury constraints still apply.' },
       authority_customary_rights:{ mode:'none', rationale:'Rights based on tenure, judgment, recognition or possession accrue through social and legal practice rather than an invention.' },
+      customary_territorial_claims:{ mode:'none', rationale:'Recovery of effective customary county jurisdiction outside a title hierarchy is ordinary legal and military practice. Existing county war and aggression choices remain available without research.' },
       authority_civic_consent:{ mode:'none', rationale:'Consent to local acts follows political representation and scope without a research gate.' },
       authority_government_forms:{ mode:'none', rationale:'A realm government form identifies whether local civic consent is territorial or delegated. Choosing a form is a political fact rather than a researched technique.' },
       scheduled_games:{ mode:'none', rationale:'Hosting civic and courtly games, annual intentions and regional capacity require peace, ownership and funding, not an invention.' },

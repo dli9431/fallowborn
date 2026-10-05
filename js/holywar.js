@@ -258,7 +258,7 @@ window.FB = window.FB || {};
     if (!state || !config(state, religionId) ||
         !callingGroup(state, religionId)) return [];
     var history = ensureHistory(state), conf = config(state, religionId), out = [];
-    if (conf.firstTarget && !history.firstLaunched[religionId]) {
+    if (FB.titleLevels.has('kingdom', conf.firstTarget) && !history.firstLaunched[religionId]) {
       var first = objectiveRecord(state, religionId, conf.firstTarget, true);
       if (first && first.holyCounties.length) out.push(first);
       return out;

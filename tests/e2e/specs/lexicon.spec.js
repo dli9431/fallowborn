@@ -16,12 +16,20 @@ const { engineSources } = require('../support/source-literals');
 const BASE_WORDS = {
   vassal:['vassal', 'vassals'], liege:['liege', 'lieges'], fief:['fief', 'fiefs'],
   knight:['knight', 'knights'], baron:['baron', 'barons'], serf:['serf', 'serfs'],
-  manor:['manor', 'manors'], crown_authority:['crown authority', 'crown authority', 'Crown Authority']
+  manor:['manor', 'manors'], crown_authority:['crown authority', 'crown authority', 'Crown Authority'],
+  duchy:['duchy','duchies'], kingdom:['kingdom','kingdoms'], empire:['empire','empires'],
+  duke:['duke','dukes'], duchess:['duchess','duchesses'], king:['king','kings'],
+  queen:['queen','queens'], emperor:['emperor','emperors'], empress:['empress','empresses']
 };
+const LATE_WORDS = Object.assign({}, BASE_WORDS, {
+  duchy:['district','districts'], kingdom:['realm','realms'],
+  duke:['dux','duces'], duchess:['ducissa','ducissae'], king:['rex','reges'],
+  queen:['regina','reginae'], emperor:['augustus','augusti'], empress:['augusta','augustae']
+});
 const TERM = /\{([Tt])erm:([a-z_]+)(?:\.(one|other|title))?\}/g;
-function englishOf(text) {
+function englishOf(text, late) {
   return text.replace(/\{money:(\d+)\}/g, '$1 gold').replace(TERM, function (whole, t, id, form) {
-    const words = BASE_WORDS[id];
+    const words = (late ? LATE_WORDS : BASE_WORDS)[id];
     if (!words) return whole;
     let word = form === 'other' ? words[1]
       : form === 'title' ? (words[2] || words[0][0].toUpperCase() + words[0].slice(1))
@@ -83,7 +91,7 @@ for (const bookmark of ['867', '1066']) {
     });
 }
 
-test('476 keeps its English running text and reads its period labels from data',
+test('476 reads its running title terms and period labels from data',
   async function ({ page }, testInfo) {
     test.skip(testInfo.project.name !== 'chromium-served',
       'The string snapshot reads sources in Node and needs one browser target.');
@@ -91,7 +99,7 @@ test('476 keeps its English running text and reads its period labels from data',
     await start(page, testInfo, '476');
     const rendered = await renderedTerms(page, literals);
     const mismatches = literals.filter(function (text, i) {
-      return rendered[i] !== englishOf(text);
+      return rendered[i] !== englishOf(text, true);
     });
     expect(mismatches).toEqual([]);
     const result = await page.evaluate(function () {
@@ -312,10 +320,21 @@ const ALLOWED = new Map([
   [' has missing liege ', 'bookmark validation fault for authors'],
   [' has a liege cycle.', 'bookmark validation fault for authors'],
   ['World annual phase: vassal breakaways', 'profiler phase name'],
+  ['Duchy of ', 'locale-neutral generated realm identity'],
+  ['Kingdom of ', 'locale-neutral generated realm identity'],
+  ['Empire of ', 'locale-neutral generated realm identity'],
+  ['duchy ', 'bookmark author diagnostic'],
+  ['kingdom ', 'bookmark author diagnostic'],
+  [' has invalid duchy ', 'bookmark author diagnostic'],
+  [' has invalid kingdom ', 'bookmark author diagnostic'],
+  [' has invalid empire ', 'bookmark author diagnostic'],
+  ['market endowment duchies must be an object.', 'market schema diagnostic'],
+  ['market endowments name unknown duchy ', 'market schema diagnostic'],
+  ['market duchy ', 'market schema diagnostic'],
   ['governance realm council parliament estates crown authority vassal king emperor',
     'Guide search keywords, never displayed']
 ]);
-const WORD = /\b(?:vassals?|lieges?|fiefs?|crown authority|knights?|barons?|serfs?|manors?)\b/i;
+const WORD = /\b(?:vassals?|lieges?|fiefs?|crown authority|knights?|barons?|serfs?|manors?|duchy|duchies|kingdoms?|empires?|dukes?|duchess|duchesses|kings?|queens?|emperors?|empress|empresses)\b/i;
 
 test('engine display text names political terms only through the lexicon',
   async function ({}, testInfo) {

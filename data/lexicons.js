@@ -51,7 +51,13 @@ FBDATA.lexicons = {
       county:{ one:'county', other:'counties' },
       duchy:{ one:'duchy', other:'duchies' },
       kingdom:{ one:'kingdom', other:'kingdoms' },
-      empire:{ one:'empire', other:'empires' }
+      empire:{ one:'empire', other:'empires' },
+      duke:{ one:'duke', other:'dukes' },
+      duchess:{ one:'duchess', other:'duchesses' },
+      king:{ one:'king', other:'kings' },
+      queen:{ one:'queen', other:'queens' },
+      emperor:{ one:'emperor', other:'emperors' },
+      empress:{ one:'empress', other:'empresses' }
     },
     rank:{
       m:['Serf','Freeholder','Gentry','Baron','Count','Duke','King','Emperor'],
@@ -61,6 +67,16 @@ FBDATA.lexicons = {
 
   eras:{
     late_antique:{
+      terms:{
+        duchy:{ one:'district', other:'districts' },
+        kingdom:{ one:'realm', other:'realms' },
+        duke:{ one:'dux', other:'duces' },
+        duchess:{ one:'ducissa', other:'ducissae' },
+        king:{ one:'rex', other:'reges' },
+        queen:{ one:'regina', other:'reginae' },
+        emperor:{ one:'augustus', other:'augusti' },
+        empress:{ one:'augusta', other:'augustae' }
+      },
       rank:{
         m:['Dependent','Free Citizen','Notable','Estate Holder','Comes','Dux','Rex','Augustus'],
         f:['Dependent','Free Citizen','Notable','Estate Holder','Comitissa','Ducissa','Regina','Augusta']
@@ -96,7 +112,13 @@ FBDATA.lexicons = {
     }
   },
 
-  governments:{},
+  governments:{
+    roman_civic:{ terms:{
+      duchy:{ one:'province', other:'provinces' },
+      kingdom:{ one:'diocese', other:'dioceses' }
+    } },
+    regnum:{ terms:{ kingdom:{ one:'kingdom', other:'kingdoms' } } }
+  },
 
   faiths:{
     /* germanic_pagan descends from pagan, so it repeats the late antique

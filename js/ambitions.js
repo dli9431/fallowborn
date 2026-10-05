@@ -104,7 +104,7 @@ window.FB = window.FB || {};
     }
     check(FB.T('At peace'), !atWar(state, rid));
     if (FB.station.isKing(d, state)) check(FB.T('Independent ruler'), !liegeId);
-    if (FB.station.isDuke(d, state)) check(FB.T('Independent or sworn to a king or emperor'),
+    if (FB.station.isDuke(d, state)) check(FB.T('Independent or sworn to a {term:king} or {term:emperor}'),
       !liegeId || state.realms[liegeId] && state.realms[liegeId].alive && FB.realmRank.isRoyal(state.realms[liegeId], state));
     let elevation = null, cost = { gold:0, prestige:0, piety:0 };
     if (player) {

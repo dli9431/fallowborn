@@ -4,6 +4,8 @@ dependsOnRuntime(__filename, [
   'js/holywar.js',
   'js/ui_modals.js',
   'js/ui_panels.js',
+  'js/mods.js', 'js/lexicon.js', 'js/station.js',
+  'data/lexicons.js', 'data/eras.js',
   'css/style.css'
 ]);
 
@@ -292,6 +294,35 @@ test('the council explains claims, previews moves, and records prior awards',
       };
     })).toEqual({ step:1, awards:1, move:'acquiesce' });
     await expectOutcomeSurvivesReload(page, 'acquiesce');
+  });
+
+test('settlement summaries distinguish county, ducal and royal crowns using period terms',
+  async function ({ page }) {
+    const pure = await page.evaluate(function () {
+      FB.mods.apply({ lexicons:{ eras:{ early_medieval:{ terms:{
+        duchy:{ one:'district', other:'districts' }
+      } } } } });
+      const before = JSON.stringify(FB.state), rng = FB.getRngState();
+      FB.ui.showGreatHolyWarSettlementSummary({
+        assets:[
+          { id:'county', kind:'crown', rank:1 },
+          { id:'district', kind:'crown', rank:2 },
+          { id:'royal', kind:'crown', rank:3 }
+        ],
+        awards:[
+          { asset:'county', claimant:'player' },
+          { asset:'district', claimant:'player' },
+          { asset:'royal', claimant:'player' }
+        ],
+        claims:[]
+      });
+      return JSON.stringify(FB.state) === before && FB.getRngState() === rng;
+    });
+    const dialog = page.getByRole('dialog');
+    for (const label of ['Sovereign county', 'Sovereign district', 'Sovereign crown']) {
+      await expect(dialog.getByText(label, { exact:true })).toBeVisible();
+    }
+    expect(pure).toBe(true);
   });
 
 test('press and object buttons expose deterministic success and failure journeys',
