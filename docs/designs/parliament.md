@@ -1,5 +1,9 @@
 # The Estates (parliament)
 
+Shared weighted ballots
+
+Council elections, Estates blocs and civic/church institutions use FB.politicalBallot in js/politics.js. The Estates retain blocs sorted by id, explicit postures without RNG, one draw per undecided bloc and the existing influence forecast and result events. Local institutions own their electorate and consent records and require no royal or vassal station.
+
 Settlement barons pay their saved customary-service charter to the actual county
 holder through the settlement ledger. This payment is not charged again as Parliament
 aid. For county-holding player rulers, the assembly's aid applies to personal noble

@@ -1,5 +1,11 @@
 # Modding Fallowborn
 
+Site institution API
+
+FBDATA.localInstitutions definitions contain city (proper place name), kind (council, senate, see or patriarchate), provinceId, physical site, religion and culture. Episcopal definitions add officeId and optional historicalName or vacant. Off-map sees use null provinceId and site. The catalogue is gated by civic_institutions or episcopal_sees and does not add territorial realm nodes.
+
+FB.localInstitutionList returns detached records. FB.localInstitutionQuote(state, id, actorRef, action, terms) accepts petition, bargain, ratify and refuse. Terms contain provision, protection, courts, tolerance and taxRelief booleans and an optional contractId. FB.localInstitutionApply revalidates its stamped quote. FB.localInstitutionSettle uses these same stages for AI and story clients. FB.localInstitutionConsent reads live institutional consent. FB.localInstitutionMediationQuote and FB.localInstitutionMediate review and record episcopal support in an explicit county. FB.localInstitutionRights writes the civic delegate's existing county-scoped Peace and Consent rights separately from ownership. See docs/designs/council.md for voting, fees and effects.
+
 ## County progression API and save additions
 
 `FB.countyGrantCandidates` returns only a higher ruler's eligible direct counties;

@@ -20,6 +20,10 @@ FBDATA.deedSections = [
     label:'🌿 Life & Family', subhead:'One-time deeds' },
   { id:'faith', type:'deeds', order:100, layout:'theme',
     label:'🕯 Faith & Community', subhead:'One-time deeds' },
+  { id:'cities', type:'deeds', order:102, layout:'both', system:'civic_institutions',
+    label:'🏛 City dealings', subhead:'Councils and senates' },
+  { id:'church_dealings', type:'deeds', order:104, layout:'both', system:'episcopal_sees',
+    label:'✝ Church dealings', subhead:'Bishoprics and patriarchates' },
   { id:'realm', type:'deeds', order:110, layout:'theme',
     label:'👑 Rank & Realm', subhead:'One-time deeds' },
   { id:'war', type:'deeds', order:120, layout:'theme',
@@ -112,6 +116,10 @@ FBDATA.focuses = [
 ];
 
 FBDATA.deeds = [
+  { id:'city_dealings', system:'civic_institutions', label:'🏛 Councils and senates…', order:87,
+    section:'cities', flow:'choices', handler:'city_dealings' },
+  { id:'church_dealings', system:'episcopal_sees', label:'✝ Bishoprics and mediation…', order:88,
+    section:'church_dealings', flow:'choices', handler:'church_dealings' },
   { id:'poach', systems:['manorial_tenure'], label:'🗡 Desperate measures…', order:0,
     desc:'Choose an illegal way to take food, goods, or coin from the lord.', section:'work', group:'work', flow:'choices', cooldownDays:30, handler:'poach' },
   { id:'scheme_rival', label:'🗡 Scheme against {rival}', order:1,

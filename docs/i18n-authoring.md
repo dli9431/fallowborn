@@ -1,5 +1,9 @@
 # i18n authoring guide
 
+Local institutional presentation
+
+Institution ids, sites, demands, consent rights, stages, actor references and ballots remain locale-neutral. Physical city and historical person names are proper names. FB.localInstitutionName supplies literal FB.T patterns for each kind, and the Deeds registry owns the section labels. UI term, demand and stage labels use literal FB.T phrases. New county modifier names and descriptions use the existing modifier extraction route; durable outcomes use news.institution.bargain descriptors. No catalogue regeneration is needed on the feature branch.
+
 Period currency labels and full-definition unit singular/plural names in data/eras.js and data/geographies.js are extracted as currency.eras.<era-id>.* and currency.geographies.<geography-id>.*. The currency renderer uses the normal exact-source FB.L lookup. Keep those display strings literal in the data; icons, compact symbols, numbers and saved gold are locale-neutral. A runtime currency mod retains its existing exact-source fallback behavior. Add period content in source without regenerating catalogs on its feature branch.
 
 Practical rules for making every user-facing string reachable by the localization layer — the

@@ -1751,6 +1751,7 @@ window.FB = window.FB || {};
       FB.repairPolitics(FB.state);
     });
     if (FB.ensureRebellions) restoreRepair('rebellions', function () { FB.ensureRebellions(FB.state); });
+    if (FB.stories) restoreRepair('story institutions', function () { FB.stories.restore(FB.state); });
     if (FB.ensureInstitutions) {
       restoreRepair('institutions', function () {
         FB.ensureInstitutions(FB.state, { silent:true });

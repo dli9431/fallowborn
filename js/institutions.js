@@ -873,14 +873,9 @@ window.FB = window.FB || {};
     var def = active && electionDef(active.definitionId);
     if (!active || !def || !active.tacticId) return false;
     var forecast = FB.electionForecast(state, active);
-    var outcomes = {};
-    var support = 0;
-    for (var i = 0; i < forecast.electorates.length; i++) {
-      var electorate = forecast.electorates[i];
-      var backed = FB.rng() < electorate.supportChance;
-      outcomes[electorate.id] = backed ? 'support' : 'oppose';
-      if (backed) support += electorate.weight;
-    }
+    var ballot = FB.politicalBallot(forecast.electorates);
+    var outcomes = ballot.outcomes;
+    var support = ballot.supportWeight;
     var won = support >= forecast.majority;
     var winnerId = won ? forecast.candidate.id : abstractWinner(def, forecast);
     var originalWon = won;
@@ -2977,6 +2972,7 @@ window.FB = window.FB || {};
   FB.ensureInstitutions = function (state, options) {
     if (!state || !state.player) return null;
     options = options || {};
+    if (FB.ensureLocalInstitutions) FB.ensureLocalInstitutions(state);
     /* Royal-policy records and their standing county modifiers repair before
        the privilege roll, so protected-worship records are discovered against
        the modifiers the sync just maintained. */
@@ -2992,6 +2988,7 @@ window.FB = window.FB || {};
   };
 
   FB.institutionsDay = function (state) {
+    if (FB.localInstitutionsSeason) FB.localInstitutionsSeason(state);
     FB.commonsUprisingDay(state);
     if (FB.rebellionsDay) FB.rebellionsDay(state);
     var signature = institutionInputSignature(state);
@@ -3022,5 +3019,377 @@ window.FB = window.FB || {};
     FB.ensureInstitutions(state);
     if (FB.realmPolicyYearly) FB.realmPolicyYearly(state);
     return queueCollectiveDemand(state);
+  };
+})();
+
+/* Site institutions share the weighted voting primitive with council
+   confirmations and the Estates. Reads never create or repair their ledger. */
+(function () {
+  'use strict';
+  function copy(value) { return JSON.parse(JSON.stringify(value)); }
+  function church(def) { return !!def.officeId; }
+  function enabled(s, def) {
+    return !!(def && FB.systemEnabled(s, church(def) ? 'episcopal_sees' : 'civic_institutions'));
+  }
+  function row(s, id) { return s.localInstitutions && s.localInstitutions[id]; }
+  function person(id) { return { kind:'character', id:id }; }
+  function county(def) { return def.provinceId ? { kind:'county', id:def.provinceId } : null; }
+  function subjectKey(subject) { return subject.kind + ':' + subject.id; }
+  function generation(s, subject) {
+    return subject.kind === 'realm' ? FB.realmRulerGeneration(s, subject.id) : subject.id;
+  }
+  function controller(s, def) { return def.provinceId && FB.settlementCountyHolder(s, def.provinceId) || null; }
+  function representative(s, def, record) {
+    if (church(def)) return FB.religiousOfficeSnapshot(s, def.officeId);
+    var c = record && s.chars[record.representativeId];
+    return c && !c.dead ? c : null;
+  }
+  function present(s, def) {
+    if (!def.provinceId) return true;
+    var sites = FB.world.sitesByProv && FB.world.sitesByProv[def.provinceId];
+    return !!(sites && sites.list.some(function (site) { return site.site === def.site; }) && controller(s, def));
+  }
+  function recognition(s, source, issuer, subject, scope) {
+    var existing = FB.political.legitimacy(s, subject, scope, source).filter(function (r) {
+      return r.issuer.kind === issuer.kind && r.issuer.id === issuer.id;
+    })[0];
+    if (existing) return existing;
+    /* A succession can suspend an existing active recognition. Reaffirm it
+       only in this explicit consenting transaction, never in a read. */
+    var old = (s.authority && s.authority.recognitions || []).filter(function (r) {
+      return r.status === 'active' && r.source === source &&
+        r.issuer.kind === issuer.kind && r.issuer.id === issuer.id &&
+        r.subject.kind === subject.kind && r.subject.id === subject.id &&
+        ((!r.scope && !scope) || r.scope && scope && r.scope.kind === scope.kind && r.scope.id === scope.id);
+    })[0];
+    if (old) {
+      FB.authorityRecognitionTransition(s, old.id, 'reaffirm');
+      return FB.political.legitimacy(s, subject, scope, source).filter(function (r) { return r.id === old.id; })[0] || null;
+    }
+    return FB.authorityRecognize(s, { source:source, issuer:issuer, subject:subject, scope:scope });
+  }
+  function makeRepresentative(s, def) {
+    var c = FB.makeCharacter(s, { name:def.historicalName || FB.randomName(def.culture, 'm', null, s),
+      sex:'m', culture:def.culture, religion:def.religion, born:s.date.year - 48,
+      station:church(def) ? 3 : 2, role:church(def) ? 'priest' : 'notable', quality:2, traitsN:1 });
+    c.homeProvinceId = def.provinceId;
+    c.generatedOfficeholder = !def.historicalName;
+    return c.id;
+  }
+  FB.ensureLocalInstitutions = function (s, seeds) {
+    if (!FB.systemAvailable(s, 'civic_institutions') && !FB.systemAvailable(s, 'episcopal_sees')) return null;
+    var defs = FBDATA.localInstitutions || {};
+    for (var id in defs) {
+      var def = defs[id];
+      if (!enabled(s, def) || !present(s, def)) continue;
+      if (!s.localInstitutions) s.localInstitutions = {};
+      if (row(s, id)) continue;
+      var seeded = seeds && seeds[id];
+      var head = church(def) && s.religiousHeads && s.religiousHeads[def.officeId];
+      var vacancy = church(def) && s.religiousHeadVacancies && s.religiousHeadVacancies[def.officeId];
+      var vacant = def.vacant || vacancy && vacancy.formerHolder && !head ||
+        church(def) && seeded && (!s.chars[seeded] || s.chars[seeded].dead);
+      /* Nulls seeded by the initial generic head repair are not historical
+         vacancies unless the definition says so. Restore keeps known vacancies. */
+      var repId = vacant ? null : head || seeded || makeRepresentative(s, def);
+      s.localInstitutions[id] = { id:id, site:def.site, representativeId:repId,
+        standing:{}, demands:['provision','protection','courts','tolerance','taxRelief'],
+        consentRights:church(def) ? ['mediation'] : ['courts','taxation'],
+        petitions:{}, history:[], rightIds:[] };
+      if (church(def)) {
+        s.religiousHeads = s.religiousHeads || {};
+        s.religiousHeads[def.officeId] = repId;
+        s.religiousHeadVacancies = s.religiousHeadVacancies || {};
+        if (repId) delete s.religiousHeadVacancies[def.officeId];
+        else s.religiousHeadVacancies[def.officeId] = vacancy || { turn:s.turn, formerHolder:null };
+      }
+    }
+    return s.localInstitutions || null;
+  };
+  FB.localInstitutionList = function (s, kind) {
+    return Object.keys(FBDATA.localInstitutions || {}).filter(function (id) {
+      var def = FBDATA.localInstitutions[id];
+      return row(s, id) && enabled(s, def) && present(s, def) &&
+        (!kind || (kind === 'church') === church(def));
+    }).map(function (id) { return { id:id, def:copy(FBDATA.localInstitutions[id]), record:copy(row(s, id)) }; });
+  };
+  FB.localInstitutionName = function (id) {
+    var def = FBDATA.localInstitutions[id];
+    if (!def) return '';
+    if (def.kind === 'senate') return FB.T('Senate of {city}', { city:def.city });
+    if (def.kind === 'patriarchate') return FB.T('Patriarchate of {city}', { city:def.city });
+    if (church(def)) return FB.T('See of {city}', { city:def.city });
+    return FB.T('Council of {city}', { city:def.city });
+  };
+  function termsCopy(terms) {
+    terms = terms || {};
+    return { provision:terms.provision === true, protection:terms.protection === true,
+      courts:terms.courts === true, tolerance:terms.tolerance === true,
+      taxRelief:terms.taxRelief === true, contractId:typeof terms.contractId === 'string' ? terms.contractId : null };
+  }
+  function facts(s, id, subject) {
+    var def = FBDATA.localInstitutions[id], record = row(s, id), rep = representative(s, def, record);
+    var owner = controller(s, def);
+    var actor = FB.political.actor(s, subject);
+    var pending = record.petitions[subjectKey(subject)] || null;
+    var offices = FB.religiousOffices(s);
+    var mediationIds = FB.political.legitimacy(s, subject, county(def), 'church_support').filter(function (rec) {
+      return offices[rec.issuer.id] && offices[rec.issuer.id].religionId === def.religion;
+    }).map(function (rec) { return rec.id; });
+    return { representativeId:rep && rep.id || null, owner:owner,
+      faithId:actor && (subject.kind === 'realm' ? actor.realmReligionId : actor.religionId), mediationIds:mediationIds,
+      ownerGeneration:owner ? FB.realmRulerGeneration(s, owner) : null,
+      subjectGeneration:actor ? generation(s, subject) : null,
+      standing:record.standing[subjectKey(subject)] || 0, pending:pending && copy(pending),
+      atWar:owner ? FB.isRealmAtWar(s, owner) : false,
+      extraction:def.provinceId ? FB.hasModifier(s, 'fiscal_extraction', def.provinceId) : false,
+      persecution:def.provinceId ? FB.hasModifier(s, 'persecuted_minorities', def.provinceId) : false,
+      funds:subject.kind === 'character' ? subject.id === s.player.charId ? s.player.gold : 0 :
+        subject.id === 'player' ? s.player.gold : FB.treasuryAvailable(s, subject.id) };
+  }
+  FB.localInstitutionQuote = function (s, id, subject, action, terms) {
+    var def = FBDATA.localInstitutions[id], record = row(s, id);
+    var out = { allowed:false, reason:FB.T('This institution is unavailable.'), action:action,
+      institutionId:id, subject:subject && copy(subject), cost:0, stamp:null };
+    if (!enabled(s, def) || !record || !present(s, def) || !FB.political.actor(s, subject)) return out;
+    var f = facts(s, id, subject), pending = f.pending;
+    out.terms = termsCopy(terms || pending && pending.terms);
+    out.facts = f;
+    out.cost = action === 'ratify' && out.terms.provision ? 5 : 0;
+    var contract = out.terms.contractId && FB.political.contract(s, out.terms.contractId);
+    var localContract = contract && contract.effective && subject.kind === 'realm' &&
+      (contract.patronRealmId === f.owner || contract.federateRealmId === f.owner) &&
+      (contract.federateRealmId === subject.id || contract.patronRealmId === subject.id);
+    var authorized = subject.kind === 'realm' ? subject.id === f.owner :
+      subject.id === s.player.charId && s.player.provinceId === def.provinceId;
+    var pendingLive = pending && pending.representativeId === f.representativeId &&
+      pending.owner === f.owner && pending.ownerGeneration === f.ownerGeneration &&
+      pending.subjectGeneration === f.subjectGeneration && s.turn < pending.expiresTurn;
+    var reason = null;
+    if (!f.representativeId) reason = FB.T('The office is vacant.');
+    else if (action === 'petition') {
+      if (!authorized && !localContract)
+        reason = FB.T('Only the local household, controlling ruler, or a contracted service partner may petition.');
+      else if (pendingLive && (['petition','bargain'].indexOf(pending.stage) >= 0 ||
+          pending.stage === 'ratified' && FB.localInstitutionConsent(s, id, subject)))
+        reason = FB.T('A petition or current agreement already exists.');
+      else if (pending && s.turn < pending.retryTurn) reason = FB.T('Wait until the next season before petitioning again.');
+    } else if (['bargain','ratify','refuse'].indexOf(action) < 0 || !pendingLive ||
+        ['petition','bargain'].indexOf(pending.stage) < 0) reason = FB.T('Petition the institution again; the counterparties or term have changed.');
+    else if (action === 'ratify' && pending.stage !== 'bargain') reason = FB.T('Present terms before calling the vote.');
+    if (!reason && action === 'ratify' && JSON.stringify(out.terms) !== JSON.stringify(pending.terms))
+      reason = FB.T('Revise the bargain before voting on different terms.');
+    if (!reason && out.terms.contractId && !localContract) reason = FB.T('The service contract must be active and bind this city’s controller and the applicant.');
+    if (!reason && action === 'ratify' && out.cost > f.funds) reason = FB.T('Provisioning requires {money:cost}.', { cost:out.cost });
+    if (!reason && action === 'ratify' && !church(def) && f.faithId !== def.religion && !f.mediationIds.length)
+      reason = FB.T('A bishop of the city’s faith must mediate before this interfaith bargain is ratified.');
+    if (!reason && action !== 'refuse' && out.terms.taxRelief && (subject.kind !== 'realm' || subject.id !== f.owner))
+      reason = FB.T('Only the controlling ruler may promise tax relief.');
+    out.allowed = !reason;
+    out.reason = reason;
+    var t = out.terms;
+    out.electorates = [
+      { id:'provision', weight:2, posture:t.provision || localContract ? 'support' : 'oppose' },
+      { id:'protection', weight:2, posture:t.protection && (!f.atWar || f.standing >= 0) ? 'support' : 'oppose' },
+      { id:'courts', weight:3, posture:t.courts && f.standing > -50 ? 'support' : 'oppose' },
+      { id:'tolerance', weight:2, posture:t.tolerance && !f.persecution ? 'support' : 'oppose' },
+      { id:'taxation', weight:1, posture:t.taxRelief && !f.extraction ? 'support' : 'oppose' }
+    ];
+    out.supportWeight = out.electorates.reduce(function (n, e) { return n + (e.posture === 'support' ? e.weight : 0); }, 0);
+    out.majority = 6;
+    out.stamp = JSON.stringify([id, subject, action, out.terms, f, contract]);
+    return out;
+  };
+  FB.localInstitutionConsent = function (s, id, subject) {
+    var def = FBDATA.localInstitutions[id], r = row(s, id);
+    if (!enabled(s, def) || !r || !present(s, def) || !FB.political.actor(s, subject)) return false;
+    var f = facts(s, id, subject), p = f.pending;
+    return !!(p && p.stage === 'ratified' && f.representativeId &&
+      p.representativeId === f.representativeId && p.owner === f.owner &&
+      p.ownerGeneration === f.ownerGeneration && p.subjectGeneration === f.subjectGeneration &&
+      (!p.terms.tolerance || !f.persecution) && (!p.terms.taxRelief || !f.extraction) &&
+      (church(def) || f.faithId === def.religion || f.mediationIds.length > 0) &&
+      s.turn < p.expiresTurn && (!p.terms.contractId || (FB.political.contract(s, p.terms.contractId) || {}).effective) &&
+      FB.political.legitimacy(s, subject, county(def), church(def) ? 'church_support' : 'civic_acceptance')
+        .some(function (r) { return r.id === p.recognitionId; }));
+  };
+  FB.localInstitutionRights = function (s, id, issuerId) {
+    var def = FBDATA.localInstitutions[id], r = row(s, id);
+    var rep = def && r && representative(s, def, r);
+    if (!enabled(s, def) || !rep || church(def) || controller(s, def) !== issuerId) return null;
+    var proof = recognition(s, 'civic_acceptance', county(def), person(rep.id), county(def));
+    if (!proof) return null;
+    ['peace','consent'].forEach(function (power) {
+      var right = FB.authorityEstablishRight(s, { issuer:{ kind:'realm', id:issuerId },
+        beneficiary:person(rep.id), scope:county(def), power:power, basis:'recognition', basisRef:proof.id });
+      if (right && r.rightIds.indexOf(right.id) < 0) r.rightIds.push(right.id);
+    });
+    var live = FB.political.rights(s, person(rep.id)).filter(function (right) {
+      return right.effective && right.issuer.id === issuerId && right.scope.id === def.provinceId &&
+        r.rightIds.indexOf(right.id) >= 0;
+    }).map(function (right) { return right.id; });
+    return live.length ? live : null;
+  };
+  FB.localInstitutionApply = function (s, reviewed) {
+    if (!reviewed || !reviewed.subject) return false;
+    var fresh = FB.localInstitutionQuote(s, reviewed.institutionId, reviewed.subject, reviewed.action, reviewed.terms);
+    if (!fresh.allowed || fresh.stamp !== reviewed.stamp) return false;
+    var id = fresh.institutionId, def = FBDATA.localInstitutions[id], r = row(s, id);
+    var key = subjectKey(fresh.subject), f = fresh.facts, p = r.petitions[key];
+    if (fresh.action === 'petition') {
+      r.petitions[key] = { subject:copy(fresh.subject), stage:'petition', terms:fresh.terms,
+        representativeId:f.representativeId, owner:f.owner, ownerGeneration:f.ownerGeneration,
+        subjectGeneration:f.subjectGeneration, expiresTurn:s.turn + 360, retryTurn:s.turn,
+        startedTurn:s.turn, recognitionId:null };
+    } else if (fresh.action === 'bargain') {
+      p.terms = fresh.terms; p.stage = 'bargain';
+    } else {
+      var ballot = fresh.action === 'refuse' ? null : FB.politicalBallot(fresh.electorates);
+      var passed = !!(ballot && ballot.passed);
+      var rec = passed && recognition(s, church(def) ? 'church_support' : 'civic_acceptance',
+        church(def) ? { kind:'religious-office', id:def.officeId } : county(def), fresh.subject, county(def));
+      if (passed && !rec) return false;
+      if (passed && fresh.cost && !FB.treasuryTransfer(s, fresh.subject.kind === 'character' ? 'player' : fresh.subject.id, null, fresh.cost)) return false;
+      p.stage = passed ? 'ratified' : 'refused';
+      p.recognitionId = rec && rec.id || null;
+      p.retryTurn = s.turn + 90;
+      p.resolvedTurn = s.turn;
+      p.ballot = ballot;
+      r.standing[key] = FB.clamp((r.standing[key] || 0) + (passed ? 10 : -10), -100, 100);
+      r.history.push({ subject:copy(fresh.subject), result:p.stage, turn:s.turn, terms:copy(p.terms) });
+      if (r.history.length > 24) r.history.shift();
+      if (passed && def.provinceId) {
+        if (fresh.terms.provision) FB.addModifier(s, 'civic_provisioning', def.provinceId);
+        if (fresh.terms.protection && fresh.terms.courts && fresh.terms.tolerance) FB.addModifier(s, 'civic_guarantees', def.provinceId);
+        if (fresh.terms.taxRelief) FB.addModifier(s, 'tax_concession', def.provinceId);
+        if (fresh.subject.kind === 'realm' && fresh.subject.id === f.owner && fresh.terms.courts && !church(def))
+          FB.localInstitutionRights(s, id, f.owner);
+      } else if (!passed && def.provinceId && fresh.subject.kind === 'realm' && fresh.subject.id === f.owner) {
+        FB.addModifier(s, 'institutional_resistance', def.provinceId);
+      }
+      FB.news(s, FB.msg('news.institution.bargain',
+        { forms:{ select:'value', param:'result', cases:{
+          ratified:'📜 {city} records the promised terms of an institutional bargain.',
+          other:'🏛 {city} refuses the proposed institutional bargain.' } } },
+        { city:def.city, result:p.stage }));
+    }
+    return copy(r.petitions[key]);
+  };
+  FB.localInstitutionSettle = function (s, id, subject, terms) {
+    if (FB.localInstitutionConsent(s, id, subject)) return copy(row(s, id).petitions[subjectKey(subject)]);
+    var actions = ['petition','bargain','ratify'];
+    for (var i = 0; i < actions.length; i++) {
+      var p = row(s, id) && row(s, id).petitions[subjectKey(subject)];
+      var q = FB.localInstitutionQuote(s, id, subject, actions[i], terms);
+      if (actions[i] === 'petition' && !q.allowed && p && ['petition','bargain'].indexOf(p.stage) >= 0 &&
+          FB.localInstitutionQuote(s, id, subject, 'bargain', terms).allowed) continue;
+      if (!q.allowed || !FB.localInstitutionApply(s, q)) return null;
+    }
+    return FB.localInstitutionConsent(s, id, subject) ? copy(row(s, id).petitions[subjectKey(subject)]) : null;
+  };
+  FB.localInstitutionMediationQuote = function (s, id, subject, provinceId) {
+    var def = FBDATA.localInstitutions[id], r = row(s, id);
+    var rep = def && r && representative(s, def, r);
+    var allowed = !!(enabled(s, def) && church(def) && r && rep && present(s, def) &&
+      FB.political.actor(s, subject) && provinceId && FB.world.byId[provinceId] && s.owner[provinceId] &&
+      !FB.hasModifier(s, 'persecuted_minorities', provinceId));
+    return { allowed:allowed, action:'mediate', institutionId:id, subject:subject && copy(subject),
+      provinceId:provinceId, cost:0, reason:allowed ? null : FB.T('Mediation needs a living bishop and a county where worship is protected.'),
+      stamp:JSON.stringify([id, subject, subject && FB.political.actor(s, subject) && generation(s, subject),
+        provinceId, rep && rep.id, def && controller(s, def), s.owner[provinceId],
+        s.owner[provinceId] && FB.realmRulerGeneration(s, s.owner[provinceId]), allowed]) };
+  };
+  FB.localInstitutionMediate = function (s, id, subject, provinceId, reviewed) {
+    var q = FB.localInstitutionMediationQuote(s, id, subject, provinceId);
+    if (!q.allowed || reviewed && reviewed.stamp !== q.stamp) return null;
+    var def = FBDATA.localInstitutions[id];
+    var scope = { kind:'county', id:provinceId };
+    return recognition(s, 'church_support', { kind:'religious-office', id:def.officeId }, subject, scope);
+  };
+  FB.localInstitutionsSeason = function (s) {
+    if (!s.localInstitutions || !FB.systemAvailable(s, 'civic_institutions') && !FB.systemAvailable(s, 'episcopal_sees')) return;
+    var period = Math.floor(s.turn / 90);
+    if (period < 1) return;
+    if (s.localInstitutionPeriod === period) return;
+    s.localInstitutionPeriod = period;
+    FB.ensureLocalInstitutions(s);
+    FB.localInstitutionList(s).forEach(function (item) {
+      var def = item.def, r = row(s, item.id), owner = controller(s, def);
+      if (!owner || !FB.political.actor(s, { kind:'realm', id:owner })) return;
+      var subject = { kind:'realm', id:owner }, key = subjectKey(subject);
+      var p = r.petitions[key];
+      if (!church(def) && !representative(s, def, r)) r.representativeId = makeRepresentative(s, def);
+      var exposure = (FB.isRealmAtWar(s, owner) ? -2 : 1) +
+        (FB.hasModifier(s, 'civic_provisioning', def.provinceId) ? 3 : 0) +
+        (FB.hasModifier(s, 'civic_guarantees', def.provinceId) ? 2 : 0) +
+        (FB.hasModifier(s, 'tax_concession', def.provinceId) ? 2 : 0) -
+        (FB.hasModifier(s, 'fiscal_extraction', def.provinceId) ? 10 : 0) -
+        (FB.hasModifier(s, 'persecuted_minorities', def.provinceId) ? 8 : 0);
+      r.standing[key] = FB.clamp((r.standing[key] || 0) + exposure, -100, 100);
+      r.demands = ['courts','tolerance'];
+      if (FB.isRealmAtWar(s, owner)) r.demands.push('protection');
+      if (!FB.hasModifier(s, 'civic_provisioning', def.provinceId)) r.demands.push('provision');
+      if (FB.hasModifier(s, 'fiscal_extraction', def.provinceId)) r.demands.push('taxRelief');
+      if (owner === 'player' || p && (FB.localInstitutionConsent(s, item.id, subject) || s.turn < p.retryTurn)) return;
+      if (!church(def) && FB.political.actor(s, subject).realmReligionId !== def.religion) {
+        FB.localInstitutionList(s, 'church').some(function (see) {
+          if (see.def.provinceId !== def.provinceId || see.def.religion !== def.religion) return false;
+          return !!FB.localInstitutionMediate(s, see.id, subject, def.provinceId);
+        });
+      }
+      FB.localInstitutionSettle(s, item.id, subject, { provision:FB.treasuryAvailable(s, owner) >= 5,
+        protection:true, courts:true, tolerance:!FB.hasModifier(s, 'persecuted_minorities', def.provinceId),
+        taxRelief:!FB.hasModifier(s, 'fiscal_extraction', def.provinceId) });
+    });
+  };
+  FB.validateLocalInstitutionState = function (s) {
+    function plain(v) { return !!v && typeof v === 'object' && !Array.isArray(v); }
+    function own(o, key) { return Object.prototype.hasOwnProperty.call(o || {}, key); }
+    function fail(path) { throw new Error(FB.T('Invalid v4 save field at {path}.', { path:path })); }
+    function validTerms(terms) {
+      return plain(terms) && ['provision','protection','courts','tolerance','taxRelief'].every(function (term) {
+        return typeof terms[term] === 'boolean';
+      }) && (terms.contractId === null || typeof terms.contractId === 'string' && !!terms.contractId);
+    }
+    if (s.localInstitutionPeriod !== undefined && (!Number.isInteger(s.localInstitutionPeriod) || s.localInstitutionPeriod < 0)) fail('state.localInstitutionPeriod');
+    if (s.localInstitutions === undefined) return true;
+    if (!plain(s.localInstitutions)) fail('state.localInstitutions');
+    for (var id in s.localInstitutions) if (own(s.localInstitutions, id)) {
+      var def = own(FBDATA.localInstitutions, id) && FBDATA.localInstitutions[id];
+      var r = s.localInstitutions[id], path = 'state.localInstitutions.' + id;
+      if (!def || !plain(r) || r.id !== id || r.site !== def.site ||
+          r.representativeId !== null && (typeof r.representativeId !== 'string' || !own(s.chars, r.representativeId)) ||
+          !plain(r.standing) || !plain(r.petitions) || !Array.isArray(r.demands) || !Array.isArray(r.consentRights) ||
+          !Array.isArray(r.rightIds) || !Array.isArray(r.history) || r.history.length > 24) fail(path);
+      if (r.demands.some(function (d) { return ['provision','protection','courts','tolerance','taxRelief'].indexOf(d) < 0; }) ||
+          r.consentRights.some(function (d) { return ['courts','taxation','mediation'].indexOf(d) < 0; }) ||
+          r.rightIds.some(function (v) { return typeof v !== 'string' || !v; })) fail(path);
+      for (var k in r.standing) if (own(r.standing, k) &&
+          (!Number.isFinite(r.standing[k]) || r.standing[k] < -100 || r.standing[k] > 100)) fail(path + '.standing');
+      for (var key in r.petitions) if (own(r.petitions, key)) {
+        var p = r.petitions[key];
+        if (!plain(p) || !plain(p.subject) || ['character','realm'].indexOf(p.subject.kind) < 0 ||
+            typeof p.subject.id !== 'string' || subjectKey(p.subject) !== key ||
+            !own(p.subject.kind === 'realm' ? s.realms : s.chars, p.subject.id) ||
+            ['petition','bargain','ratified','refused'].indexOf(p.stage) < 0 ||
+            !plain(p.terms) || !Number.isInteger(p.startedTurn) || !Number.isInteger(p.expiresTurn) ||
+            p.expiresTurn <= p.startedTurn || !Number.isInteger(p.retryTurn) ||
+            typeof p.representativeId !== 'string' || !own(s.chars, p.representativeId) ||
+            p.owner !== null && (typeof p.owner !== 'string' || !own(s.realms, p.owner)) ||
+            p.recognitionId !== null && typeof p.recognitionId !== 'string') fail(path + '.petitions.' + key);
+        if (p.owner === null ? p.ownerGeneration !== null : !Number.isInteger(p.ownerGeneration) || p.ownerGeneration < 0)
+          fail(path + '.petitions.' + key + '.ownerGeneration');
+        if (p.subject.kind === 'realm' ? !Number.isInteger(p.subjectGeneration) || p.subjectGeneration < 0 : p.subjectGeneration !== p.subject.id)
+          fail(path + '.petitions.' + key + '.subjectGeneration');
+        if (!validTerms(p.terms)) fail(path + '.petitions.' + key + '.terms');
+        if (p.stage === 'ratified' && (!p.recognitionId || !plain(p.ballot) || p.ballot.passed !== true)) fail(path + '.petitions.' + key + '.result');
+      }
+      if (r.history.some(function (entry) {
+        return !plain(entry) || !plain(entry.subject) || typeof entry.subject.id !== 'string' ||
+          ['character','realm'].indexOf(entry.subject.kind) < 0 || ['ratified','refused'].indexOf(entry.result) < 0 ||
+          !Number.isInteger(entry.turn) || !validTerms(entry.terms);
+      })) fail(path + '.history');
+    }
+    return true;
   };
 })();

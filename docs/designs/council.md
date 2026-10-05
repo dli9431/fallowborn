@@ -1,5 +1,19 @@
 # The Royal Council
 
+Local civic and episcopal institutions
+
+The late antique civic_institutions and episcopal_sees systems use FBDATA.localInstitutions in data/political_institutions.js. Councils, senates, bishoprics and patriarchates have separate identities, representatives, counterparty Standing, demands, consent rights and bounded histories. A physical site anchors each on-map institution; the county remains the existing authority scope for that seat. An institution never becomes a territorial realm. Off-map offices have no invented county or settlement.
+
+js/institutions.js owns petition, bargain, ratify and refuse. A local household, controlling ruler or effective federate contract partner may petition. Quotes are detached and pure; confirmation rechecks representatives, control, generations, funds, contracts and the petition. Only the controlling ruler may promise tax relief. Ratification cannot substitute unbargained terms. Refusal delays another petition for 90 days.
+
+FB.politicalBallot supplies the tally for council confirmations, Estates blocs and local institutions. Explicit commitments consume no RNG; undecided benches draw once in the caller's existing order. Local provision, protection, courts, worship and taxation have weights 2, 2, 3, 2 and 1; six support weight passes. Standing at -50 or below withholds the court bench, and negative Standing during war withholds the protection bench. Persecution and emergency extraction oppose their respective benches. Seasonal AI uses the same transactions and seeks a local bishop's mediation for mixed-faith civic bargains.
+
+Provisioning costs five gold only on a passed vote. The 360-day Civic Provisioning modifier gives provisions +10%, famine pressure -15% and Popular support +5. Combined protection, court and worship guarantees add 360 days of Civic Guarantees, Popular support +4 and unrest -10%. Tax relief uses the existing Tax Concession modifier. A controlling ruler's refused bargain causes 90 days of Institutional Resistance, tax -10% and unrest +15%. Modifiers refresh without stacking across several local bodies. Civic Peace and Consent rights belong to the representative through the ordinary authority ledger, independently of ownership and Revenue.
+
+Consent lasts 360 days and follows the original representative, applicant, controlling generation and optional contract. Persecution suspends a promised worship guarantee; emergency extraction suspends promised tax relief. A different-faith applicant needs a living bishop of the city's faith before civic ratification. Church support grants no land, command or judicial office. Civic representatives may be replaced at a seasonal boundary; episcopal vacancies follow their head-office rules.
+
+Technology impact: local_institution_bargains and episcopal_institution_mediation are each none. Living offices, existing courts and supplies, resources and political consent govern these baseline capabilities; no research prerequisite belongs here.
+
 Council casket gifts debit the selected councillor's treasury and credit the player
 once through the custom effect. The offered 20 remains binding, including when
 the councillor is insolvent. War chests similarly debit each contributing member
