@@ -130,6 +130,12 @@ Sources: Jill Harries, Law and Empire in Late Antiquity (1999); P. D. King, "The
 
 Religious institutions
 
+Provincial council and public profession authoring
+
+The Council of Agde in 506 supplies a later late antique example of Nicene bishops gathering with a Homoian ruler's permission, rather than requiring the king's conversion first. The provincial council mechanic abstracts that possibility; its participant minimum, fee, support reward and cooldown are game rules, and it does not reenact Agde in 476. Sources: https://presbytersproject.ihuw.pl/index.php?SourceID=900&id=6 and https://www.newadvent.org/cathen/03135b.htm.
+
+Gregory of Tours, History of the Franks II.28-31, associates royal conversion with a spouse, a bishop and resistance among followers. His later narrative is evidence for those relationships, not a compulsory simulation outcome. The chronology remains debated: Danuta Shanzer's 1998 study re-examines Avitus's contemporary letter and argues for a later date than the traditional 496. The simulation therefore offers a generic contingent decision and no forced baptism date. Sources: https://sourcebooks.fordham.edu/source/gregory-clovisconv.asp and https://onlinelibrary.wiley.com/doi/abs/10.1111/1468-0254.00017.
+
 - Rome: Pope Simplicius (468-483).
 - Constantinople: Patriarch Acacius (472-489).
 - Alexandria: Timothy Aelurus (miaphysite, restored by Basiliscus 475, died 477).

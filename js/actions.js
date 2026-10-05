@@ -1309,6 +1309,8 @@ window.FB = window.FB || {};
       out.reason = FB.T('That conversion is not possible.');
       return out;
     }
+    if (kind === 'faith' && scope === 'realm' && FB.systemEnabled(state, 'ruler_conversion', { realm:'player' }))
+      return FB.rulerFaithConversionStatus(state, 'player', targetId);
     if (kind === 'faith') {
       if (!targetId || !FB.faithAssignable(targetId, state)) {
         out.reason = FB.T('That faith cannot be adopted.');
@@ -1439,9 +1441,10 @@ window.FB = window.FB || {};
     return out;
   };
 
-  FB.applyConversion = function (state, kind, targetId, scope) {
+  FB.applyConversion = function (state, kind, targetId, scope, reviewed) {
     const status = FB.conversionStatus(state, kind, targetId, scope);
     if (!status.ok) return false;
+    if (status.rulerDecision) return FB.applyRulerFaithConversion(state, 'player', targetId, reviewed);
     FB.learnMaternalCustoms(state);
     const p = state.player;
     const c = state.chars[p.charId];
@@ -4415,6 +4418,9 @@ window.FB = window.FB || {};
   { id:'church_dealings', opensChoices:true, noConsume:true,
     show:function (s) { return !!FB.localInstitutionList && FB.localInstitutionList(s, 'church').length > 0; },
     run:function () { if (FB.ui && FB.ui.showLocalInstitutions) FB.ui.showLocalInstitutions('church'); } },
+  { id:'church_council', opensChoices:true, noConsume:true, requiresAdult:true,
+    show:function (s) { return FB.station.rulesRealm(s.player, s); },
+    run:function () { if (FB.ui && FB.ui.showChurchCouncils) FB.ui.showChurchCouncils(); } },
   { id: 'royal_council', opensChoices:true, noConsume: true,
     compatibilityAlias:true,
     show: function (s) { return FB.station.isRoyal(s.player, s); },

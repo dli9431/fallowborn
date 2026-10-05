@@ -111,6 +111,8 @@ window.FBDATA = window.FBDATA || {};
   FBDATA.techImpactReviews = {
     baselineVersion:'1.127.1',
     features:{
+      provincial_church_councils:{ mode:'none', rationale:'Gathering living bishops with protected worship and treasury funding is baseline institutional negotiation, independent of discovery.' },
+      public_ruler_conversion:{ mode:'none', rationale:'Public profession and court allegiance are personal and political decisions. Existing communities, churches, resources and support govern conversion without research.' },
       local_institution_bargains:{ mode:'none', rationale:'Cities and congregations bargain over existing courts, protection, provisioning and tax relief. Living counterparties, resources and local consent govern this baseline capability.' },
       episcopal_institution_mediation:{ mode:'none', rationale:'Mediation between existing congregations depends on a living bishop and guaranteed worship, not a researched technique.' },
       content_period_membership:{ mode:'none', rationale:'Content belongs to authored historical periods and dates. Period membership is not an invention; eligible events, careers and activities retain their existing technology requirements.' },

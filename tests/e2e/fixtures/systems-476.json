@@ -1,5 +1,6 @@
 {
   "disabled": [
+    "abbeys",
     "crown_bloc",
     "excommunication",
     "feudal_service",

@@ -1631,6 +1631,11 @@ FBDATA.balance = {
      once per ruler. */
   faithConversionSelfPiety: 100,
   faithConversionHouseholdPiety: 250, faithConversionHouseholdPrestige: 150,
+  churchCouncilGold:30, churchCouncilCooldown:720, churchCouncilSupport:8,
+  rulerConversionAIGold:60, rulerConversionSupportGain:20,
+  rulerConversionOldFaithLoss:30, rulerConversionUnrestShare:0.15,
+  rulerConversionAIMinShare:0.35, rulerConversionAIThreshold:24,
+  rulerConversionAIChance:0.06,
   faithConversionRealmPiety: 600, faithConversionRealmPrestige: 400,
   faithConversionInFoldMult: 0.6, faithConversionSchismaticMult: 0.8,
   faithConversionForeignMult: 1.0, faithConversionHostileMult: 1.25,

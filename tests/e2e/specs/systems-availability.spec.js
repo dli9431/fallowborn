@@ -11,7 +11,7 @@ dependsOnRuntime(__filename, [
   'data/events_world.js', 'data/events_war.js', 'data/events_noble.js',
   'js/systems.js', 'js/model.js', 'js/world.js', 'js/governments.js', 'js/authority.js',
   'js/main.js', 'js/actions.js', 'js/economy.js', 'js/events.js', 'js/politics.js',
-  'js/institutions.js', 'js/council.js', 'js/parliament.js', 'js/papacy.js',
+  'js/institutions.js', 'js/religion.js', 'js/council.js', 'js/parliament.js', 'js/papacy.js',
   'js/holywar.js', 'js/abbeys.js', 'js/tournaments.js', 'js/save.js',
   'js/travel.js', 'js/wars.js', 'js/rebellions.js',
   'js/mods.js', 'js/ui_panels.js', 'js/ui_modals.js', 'js/ui_topbar.js',

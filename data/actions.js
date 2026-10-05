@@ -116,6 +116,8 @@ FBDATA.focuses = [
 ];
 
 FBDATA.deeds = [
+  { id:'church_council', systems:['church_councils','episcopal_sees'], label:'☧ Convene a church council…', order:89,
+    section:'church_dealings', group:'faith', flow:'choices', handler:'church_council' },
   { id:'city_dealings', system:'civic_institutions', label:'🏛 Councils and senates…', order:87,
     section:'cities', flow:'choices', handler:'city_dealings' },
   { id:'church_dealings', system:'episcopal_sees', label:'✝ Bishoprics and mediation…', order:88,

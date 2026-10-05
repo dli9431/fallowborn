@@ -656,6 +656,10 @@ window.FB = window.FB || {};
       var religionErrors = FB.validateReligionData(null);
       for (var re = 0; re < religionErrors.length; re++) errors.push(religionErrors[re]);
     }
+    if (FB.validateReligionInstitutionsData) {
+      var institutionFaithErrors = FB.validateReligionInstitutionsData();
+      for (var rf = 0; rf < institutionFaithErrors.length; rf++) errors.push(institutionFaithErrors[rf]);
+    }
     if (FB.validateWardrobeData) {
       var wardrobeErrors = FB.validateWardrobeData();
       for (var we = 0; we < wardrobeErrors.length; we++) errors.push(wardrobeErrors[we]);
@@ -7238,6 +7242,7 @@ window.FB = window.FB || {};
       if (FB.fortAIYear) FB.fortAIYear(state);
       if (FB.populationYear) FB.populationYear(state);
       if (timing) { timing.leave(phase); phase = timing.enter('World annual phase: religion'); }
+      if (FB.religionYear && FB.systemAvailable(state, 'ruler_conversion')) FB.religionYear(state);
       if (FB.papacyYearly && FB.systemAvailable(state, 'papacy')) FB.papacyYearly(state);
       if (FB.greatHolyWarYearly && FB.systemAvailable(state, 'great_holy_wars')) FB.greatHolyWarYearly(state);
       if (timing) { timing.leave(phase); phase = timing.enter('World annual phase: indexes and family links'); }
