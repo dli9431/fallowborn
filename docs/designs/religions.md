@@ -14,6 +14,8 @@ The religiousHeads ledger holds episcopal pointers. Local office death records a
 
 Local mediation and provincial councils use FB.political.worshipProtected for the county's current declared treatment, active player royal worship policy and persecution modifier. A reviewed mediation includes the governing identity and community-support facts; changing those facts invalidates the review before it can issue church recognition. A persecution policy cannot be bypassed by leaving the legacy persecution modifier unset.
 
+The Dalmatia/east declaration adds Chalcedonian local sees at Thessalonica, Dyrrachium, Serdica, Nicaea, Ephesus and Caesarea to the shared institution catalogue. Their incumbents are generated adult priests, independently tracked by officeId and representativeId; Glycerius and Acacius keep their historical identities at Salona and Constantinople. The eastern ruler can now gather multiple living bishops in directly held counties through the existing provincial council decision, while vacancies, protected worship, peace, funds and reviewed counterparties still govern eligibility. These additions extend the none technology reviews for provincial_church_councils and episcopal_institution_mediation. They do not introduce doctrine reform, central heads or a new research gate.
+
 Religion is one inheritance graph, not a pair of engine concepts for “religion” and
 “religious group.” Seeded definitions live in `FBDATA.religions`; faiths founded during
 a campaign use the same JSON-safe definition shape in `state.faiths`. Characters,

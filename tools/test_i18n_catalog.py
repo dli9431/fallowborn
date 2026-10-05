@@ -104,6 +104,24 @@ class StructuredDataExtractionTests(unittest.TestCase):
             inventory.entries,
         )
 
+    def test_dalmatian_eastern_events_and_local_place_labels_are_extracted(self):
+        inventory = i18n_catalog.Inventory()
+        i18n_catalog.extract_structured(inventory)
+        for key, text in (
+            ('event.persian_frontier_dispatch_476.title.default',
+             'A Dispatch from Beyond the Eastern Frontier'),
+            ('event.eastern_commission_forms_476.options.0.success.text.default',
+             'The clerks find the missing clause. Your corrected copy distinguishes the civil mandate from the army commission.'),
+            ('province.476.ioannina.name.dated.0', 'Epirus interior'),
+            ('province.476.zagreb.name.default', 'Andautonia'),
+            ('settlement.476.upper_pannonia_476.name.default', 'Upper Pannonian community'),
+            ('settlement.476.isauria_476.name.default', 'Isaurian court'),
+        ):
+            self.assertEqual(inventory.entries[key]['text'], text)
+            self.assertIn(i18n_catalog.source_key(text), inventory.entries)
+        self.assertNotIn(i18n_catalog.source_key('Glycerius'), inventory.entries)
+        self.assertNotIn(i18n_catalog.source_key('Acacius'), inventory.entries)
+
     def test_privilege_display_fields_use_the_privilege_namespace(self):
         inventory = i18n_catalog.Inventory()
 

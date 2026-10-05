@@ -56,7 +56,7 @@ test('researched civic seats and head offices are distinct, pure and period scop
     };
   });
   expect(result.cities).toEqual(['arles_council','carthage_council','constantinople_senate','milan_council','ravenna_council','rome_senate','salona_council']);
-  expect(result.sees).toBe(11);
+  expect(result.sees).toBe(17);
   expect(result.periodRoute).toBe('standing');
   expect(result.pure).toBe(true);
   expect(result.quote).toBe(true);

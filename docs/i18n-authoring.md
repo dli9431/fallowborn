@@ -192,3 +192,7 @@ The late antique purse uses literal label and singular/plural unit names in data
 Campaign story authoring
 
 FBDATA.storyCampaigns name and desc fields use storyCampaign.<id>.<field>.default through FB.dataText. Their news outcome rows carry key and text; the static extractor registers each text under that opaque message key. Runtime registration supplies English for saved Chronicle descriptors without requiring catalog generation on the feature branch. Political stage labels use literal FB.T calls. The named commanders in FBDATA.storyActors476 are historical proper names and are not translated.
+
+Regional 476 event authoring
+
+The static extractor includes literal event pushes in data/bookmark_476_*.js alongside data/events_*.js. Regional events keep the same event.<id> owners for titles, text, choices, outcomes and log messages. County-local names, dated names and settlement names in regional layouts receive province.476.<id>.name and settlement.476.<site>.name owners plus the ordinary exact-source aliases. Historical ruler and bishop names remain proper names. Source changes continue to use English fallback until separately requested catalog regeneration.

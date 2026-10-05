@@ -26,7 +26,7 @@ JS = ROOT / "js"
 I18N = ROOT / "i18n"
 HASH_SCHEMA = 1
 CATALOG_SCHEMA = 1
-EVENT_FILES = sorted(DATA.glob("events_*.js"))
+EVENT_FILES = sorted([*DATA.glob("events_*.js"), *DATA.glob("bookmark_476_*.js")])
 BOOKMARK_FILE = DATA / "bookmarks.js"
 STARTS_FILE = DATA / "starts.js"
 TECHNOLOGY_FILE = DATA / "technology.js"
@@ -1069,6 +1069,38 @@ def extract_structured(inv: Inventory) -> None:
         declaration = node_object(find_keyed_assignment(
             region_path, "FBDATA", "bookmarkRegions476", region
         )) or {}
+        # County-local dated labels override the geography's names. Register
+        # their exact-source aliases as well as their stable structured keys.
+        for province_node in node_array(declaration.get("provinces")) or []:
+            province = node_object(province_node) or {}
+            province_id = node_string(province.get("id"))
+            if not province_id:
+                continue
+            for branch, record, line in branch_records(province.get("name")):
+                inv.add(
+                    f"province.476.{province_id}.name.{branch}", record,
+                    f"{region_rel}:{line}", f"476 county {province_id}, display name.", ()
+                )
+            for index, entry_node in enumerate(node_array(province.get("names")) or []):
+                entry = node_object(entry_node) or {}
+                name_node = entry.get("name")
+                name = node_string(name_node)
+                if name:
+                    inv.add(
+                        f"province.476.{province_id}.name.dated.{index}", {"text": name},
+                        f"{region_rel}:{name_node.line}",
+                        f"476 county {province_id}, period display name by year.", ()
+                    )
+        for province_id, layout_node in (node_object(declaration.get("layouts")) or {}).items():
+            for index, entry_node in enumerate(node_array(layout_node) or []):
+                entry = node_object(entry_node) or {}
+                site_id = node_string(entry.get("site")) or str(index)
+                for branch, record, line in branch_records(entry.get("name")):
+                    inv.add(
+                        f"settlement.476.{site_id}.name.{branch}", record,
+                        f"{region_rel}:{line}",
+                        f"476 county {province_id}, site {site_id}, display name.", ()
+                    )
         for realm_node in node_array(declaration.get("realms")) or []:
             realm = node_object(realm_node) or {}
             realm_id = node_string(realm.get("id"))

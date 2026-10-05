@@ -111,10 +111,10 @@ window.FBDATA = window.FBDATA || {};
   FBDATA.techImpactReviews = {
     baselineVersion:'1.127.1',
     features:{
-      provincial_church_councils:{ mode:'none', rationale:'Gathering living bishops with protected worship and treasury funding is baseline institutional negotiation, independent of discovery.' },
+      provincial_church_councils:{ mode:'none', rationale:'Gathering living bishops with protected worship and treasury funding is baseline institutional negotiation, independent of discovery. Additional Balkan and Anatolian sees extend the existing living-participant pool without a research gate.' },
       public_ruler_conversion:{ mode:'none', rationale:'Public profession and court allegiance are personal and political decisions. Existing communities, churches, resources and support govern conversion without research.' },
       local_institution_bargains:{ mode:'none', rationale:'Cities and congregations bargain over existing courts, protection, provisioning and tax relief. Living counterparties, resources and local consent govern this baseline capability.' },
-      episcopal_institution_mediation:{ mode:'none', rationale:'Mediation between existing congregations depends on a living bishop and guaranteed worship, not a researched technique.' },
+      episcopal_institution_mediation:{ mode:'none', rationale:'Mediation between existing congregations depends on a living bishop and guaranteed worship, not a researched technique. Regional eastern sees use the same protected-worship and scoped-recognition transaction.' },
       content_period_membership:{ mode:'none', rationale:'Content belongs to authored historical periods and dates. Period membership is not an invention; eligible events, careers, activities, fresh equipment and new unit recruitment retain their existing technology requirements. Owned equipment and materialized offers remain usable, and existing unit compositions remain intact.' },
       religious_head_appointment:{ mode:'none', rationale:'Religious office appointment is an institutional relationship, independent of research.' },
       religious_head_hereditary:{ mode:'none', rationale:'Hereditary religious office succession follows kinship and eligibility, independent of research.' },
