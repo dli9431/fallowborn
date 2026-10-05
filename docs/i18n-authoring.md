@@ -167,3 +167,8 @@ integration.
 
 
 Scheduled games structured labels in data/tournaments.js are extracted under tournament_scales, tournament_programmes, tournament_tracks and tournament_tactics. Render them through FB.dataText. Incident events are individually authored literal records with stable ids and option indices; saved tournament messages register literal news.tournament fallbacks at boot. Ordinary catalog generation remains subject to the separate owner-requested integration workflow.
+
+
+Deeds section labels
+
+Section label, subhead and statusLine fields in data/actions.js use stable deedSection.<id>.<field> owners and render through FB.deeds.text. The static extractor registers all three display fields without executing the registry. Runtime section overrides retain those owners and use the normal current-source English fallback. Section ids, types, order, layout, availability, system requirements and deed membership are locale-neutral.

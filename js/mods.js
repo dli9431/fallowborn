@@ -165,7 +165,7 @@ window.FBMODS = window.FBMODS || [];
   const PUBLIC_KEYS = {
     name:true, bookmarks:true, defaultBookmark:true,
     startScenarios:true, familyPresets:true,
-    focuses:true, deeds:true, countyCommunityPolicies:true,
+    focuses:true, deeds:true, deedSections:true, countyCommunityPolicies:true,
     provinces:true, realms:true, empires:true, kingdoms:true, duchies:true,
     events:true, straits:true, crossingClasses:true, scripted:true,
     cultureTraditions:true, cultures:true, cultureDoctrineDefaults:true,
@@ -274,7 +274,7 @@ window.FBMODS = window.FBMODS || [];
         out[key] = value.map(function (choice) {
           return plainObject(choice) ? cloneActionDefinition(choice) : choice;
         });
-      } else if ((key === 'visibility' || key === 'eligibility' ||
+      } else if ((key === 'availability' || key === 'visibility' || key === 'eligibility' ||
           key === 'costs' || key === 'effects' || key === 'seasonal' ||
           key === 'dailyEffects' || key === 'skillChances') &&
           plainObject(value)) {
@@ -300,11 +300,13 @@ window.FBMODS = window.FBMODS || [];
       ? { id:true, label:true, desc:true, order:true, eligibility:true,
           system:true, systems:true }
       : { id:true, label:true, desc:true, order:true, group:true, layoutGroup:true,
+          section:true, actionTypeSection:true, availableWhileTraveling:true,
           cooldownDays:true, requiresTech:true, eligibility:true,
           system:true, systems:true };
     const declarativeDeedAllowed = {
       id:true, handler:true, label:true, desc:true, order:true, group:true,
       layoutGroup:true,
+      section:true, actionTypeSection:true, availableWhileTraveling:true,
       cooldownDays:true, spendsDay:true, requiresTech:true, visibility:true,
       eligibility:true, costs:true, effects:true, queueEvent:true,
       capability:true, choices:true, system:true, systems:true
@@ -356,7 +358,7 @@ window.FBMODS = window.FBMODS || [];
           const wrappedChoices = {};
           wrappedChoices.choices = override[key];
           next[key] = cloneActionDefinition(wrappedChoices).choices;
-        } else if ((key === 'visibility' || key === 'eligibility' ||
+        } else if ((key === 'availability' || key === 'visibility' || key === 'eligibility' ||
             key === 'costs' || key === 'effects' || key === 'seasonal' ||
             key === 'dailyEffects' || key === 'skillChances') &&
             plainObject(override[key])) {
@@ -372,6 +374,9 @@ window.FBMODS = window.FBMODS || [];
         next.flow = next.capability === 'resource_choice'
           ? 'choices' : (next.spendsDay ? 'immediate' : 'no_day');
       }
+      if (kind === 'deeds' && own(override, 'group') && !own(override, 'section')) {
+        next.section = override.group;
+      }
       if (existing) out[indexes[override.id]] = next;
       else {
         indexes[override.id] = out.length;
@@ -382,13 +387,29 @@ window.FBMODS = window.FBMODS || [];
   }
 
   function prepareActionCatalogs(mod) {
-    if (!own(mod, 'focuses') && !own(mod, 'deeds')) return null;
+    if (!own(mod, 'focuses') && !own(mod, 'deeds') && !own(mod, 'deedSections')) return null;
     if (!FB.validateActionData || !FB.installActionData) {
       fail('actions', 'cannot be configured before the action engine loads.');
     }
     const focuses = actionOverrides(FBDATA.focuses, mod.focuses, 'focuses');
     const deeds = actionOverrides(FBDATA.deeds, mod.deeds, 'deeds');
+    const sections = (FBDATA.deedSections || []).map(cloneActionDefinition);
+    if (own(mod, 'deedSections')) {
+      if (!Array.isArray(mod.deedSections)) fail('deedSections', 'must be an array.');
+      const supplied = {};
+      for (const addition of mod.deedSections) {
+        if (!plainObject(addition) || typeof addition.id !== 'string') {
+          fail('deedSections', 'must contain section records with ids.');
+        }
+        if (own(supplied, addition.id)) fail('deedSections', 'must not repeat ' + addition.id + '.');
+        supplied[addition.id] = true;
+        const index = sections.findIndex(function (section) { return section.id === addition.id; });
+        if (index < 0) sections.push(cloneActionDefinition(addition));
+        else sections[index] = Object.assign(sections[index], cloneActionDefinition(addition));
+      }
+    }
     const references = {
+      deedSections:sections,
       tech:combinedTable(FBDATA.tech, mod.tech, 'tech'),
       careers:combinedTable(FBDATA.careers, mod.careers, 'careers'),
       traits:combinedTable(FBDATA.traits, mod.traits, 'traits'),
@@ -399,7 +420,7 @@ window.FBMODS = window.FBMODS || [];
     };
     const errors = FB.validateActionData(focuses, deeds, references);
     if (errors.length) fail('actions', errors.join(' '));
-    return { focuses:focuses, deeds:deeds };
+    return { focuses:focuses, deeds:deeds, sections:sections };
   }
 
   function requiredText(value, path) {
@@ -1960,7 +1981,7 @@ window.FBMODS = window.FBMODS || [];
     }
     if (own(mod, 'defaultBookmark')) FBDATA.defaultBookmark = mod.defaultBookmark;
     if (prepared.actions) {
-      FB.installActionData(prepared.actions.focuses, prepared.actions.deeds);
+      FB.installActionData(prepared.actions.focuses, prepared.actions.deeds, prepared.actions.sections);
     }
     if ((mod.items || mod.cultures || mod.religions || mod.traits || mod.ailments) &&
         FB.clearPortraitCache) FB.clearPortraitCache();

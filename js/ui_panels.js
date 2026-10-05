@@ -63,23 +63,8 @@ window.FB = window.FB || {};
   let kinRenderedState = null;
   let kinRenderedFamilyRevision = -1;
   const LEFT_TABS = ['char', 'family'];
-  const actionGroupsOpen = {
-    work:true, life:false, faith:false, realm:false, war:false,
-    deeds:true, personal:false, ruler:false
-  };
+  const actionGroupsOpen = {};
   const selfSectionsOpen = { titles:false, possessions:false };
-  const ACTION_GROUPS = [
-    { id:'work', label:'🧰 Work & Wealth' },
-    { id:'life', label:'🌿 Life & Family' },
-    { id:'faith', label:'🕯 Faith & Community' },
-    { id:'realm', label:'👑 Rank & Realm' },
-    { id:'war', label:'⚔ War & Diplomacy' }
-  ];
-  const ACTION_TYPE_GROUPS = [
-    { id:'deeds', label:'⚡ One-shot & recurring deeds' },
-    { id:'personal', label:'🌿 Personal decisions' },
-    { id:'ruler', label:'👑 Ruler decisions' }
-  ];
   const DEED_ITEM_KEYS = ['q', 'w', 'e', 'a', 's', 'd', 'z', 'x', 'c'];
   let activeActionSection = null;
   let activeActionState = null;
@@ -87,6 +72,7 @@ window.FB = window.FB || {};
   let actionsRenderedLocale = '';
   let actionsRenderedGrouping = '';
   let actionsVisibleSignature = '';
+  let actionsSectionsSignature = '';
   let actionsLifeStage = '';
   let deedStatusRefreshedState = null;
   let deedStatusRefreshedTurn = 0;
@@ -110,24 +96,37 @@ window.FB = window.FB || {};
       ? 'action-type' : 'theme';
   }
 
+  function deedPanelSections() {
+    return FB.deeds.sections(FB.state, deedGroupingStyle());
+  }
+
   function deedActionGroups() {
-    return deedGroupingStyle() === 'action-type'
-      ? ACTION_TYPE_GROUPS : ACTION_GROUPS;
+    return deedPanelSections().filter(function (section) {
+      return section.type === 'focus' || section.type === 'deeds';
+    });
+  }
+
+  function focusSectionId() {
+    const section = deedActionGroups().find(function (item) { return item.type === 'focus'; });
+    return section ? section.id : null;
+  }
+
+  function sectionsForFocus() {
+    return deedActionGroups().find(function (section) { return section.type === 'focus'; });
   }
 
   function deedGroupForAction(action) {
-    if (deedGroupingStyle() !== 'action-type') {
-      return action && action.group || 'realm';
-    }
-    if (action && action.layoutGroup) return action.layoutGroup;
-    return action && action.flow === 'choices' ? 'personal' : 'deeds';
+    return FB.deeds.sectionForAction(action, deedGroupingStyle());
   }
 
   function deedGroupForId(id) {
-    for (const action of FB.instants || []) {
-      if (action.id === id) return deedGroupForAction(action);
-    }
-    return deedGroupingStyle() === 'action-type' ? 'personal' : 'realm';
+    return deedGroupForAction(FB.deeds.action(id));
+  }
+
+  function deedSectionsSignature() {
+    return String(FB.actionCatalogRevision) + ':' + deedPanelSections().map(function (section) {
+      return section.id;
+    }).join('|');
   }
   const NETWORK_SECTIONS = [
     'household', 'connections', 'trade', 'politics', 'realm', 'local-folk'
@@ -175,17 +174,16 @@ window.FB = window.FB || {};
   }
 
   function actionSectionIndex(id) {
-    if (id === 'focus') return 0;
     const groups = deedActionGroups();
     for (let i = 0; i < groups.length; i++) {
-      if (groups[i].id === id) return i + 1;
+      if (groups[i].id === id) return i;
     }
     return -1;
   }
 
   function actionSectionHintFor(id) {
     const index = actionSectionIndex(id);
-    if (FB.isTouch || index < 0) return '';
+    if (FB.isTouch || index < 0 || index >= 9) return '';
     return '<span class="keyhint deed-section-keyhint">' +
       (index + 1) + '</span>';
   }
@@ -207,7 +205,7 @@ window.FB = window.FB || {};
   function actionSectionButtons(box, id) {
     const body = box.querySelector('[data-action-group-body="' + id + '"]');
     if (!body || body.hidden) return [];
-    return id === 'focus'
+    return id === focusSectionId()
       ? body.querySelectorAll('[data-focus-id]')
       : body.querySelectorAll('[data-action-id]');
   }
@@ -259,10 +257,10 @@ window.FB = window.FB || {};
 
   UI.activateDeedSection = function (index) {
     const groups = deedActionGroups();
-    if (index < 0 || index > groups.length) return false;
+    if (index < 0 || index >= groups.length) return false;
     const box = $('tab-actions');
     if (!box) return true;
-    const id = index === 0 ? 'focus' : groups[index - 1].id;
+    const id = groups[index].id;
     const header = box.querySelector('[data-action-section="' + id + '"]');
     if (!header) return true;
     const repeatToggles = !!(FB.game && FB.game.uiPrefs &&
@@ -282,13 +280,8 @@ window.FB = window.FB || {};
      control is on screen. Keep this routing inside the Deeds panel, which
      owns its grouping and retained disclosure state. */
   UI.revealDeedAction = function (id) {
-    let action = null;
-    for (const candidate of FB.instants || []) {
-      if (candidate.id === id) {
-        action = candidate;
-        break;
-      }
-    }
+    const action = FB.deeds.action(id);
+    if (!action) return false;
     const group = deedGroupForAction(action);
     actionGroupsOpen[group] = true;
     activeActionSection = group;
@@ -1129,6 +1122,175 @@ window.FB = window.FB || {};
     });
   }
 
+  function deedStaticSectionHtml(s, section) {
+    let h = '';
+    switch (section.type) {
+    case 'tutorial': {
+      if (FB.tutorialActive && FB.tutorialActive(s) &&
+          (!FB.game.uiPrefs || !FB.game.uiPrefs.hideBeginnerHints)) {
+        h += tutorialCardHtml(s);
+      }
+      break;
+    }
+    case 'stories': {
+      /* One shared card per attached story with a status; it opens the
+         shared story sheet. */
+      for (const card of FB.stories ? FB.stories.cards(s) : []) {
+        h += '<button type="button" class="actionbtn" data-story-card="' +
+          esc(card.id) + '"><b>' + esc(card.title) +
+          '</b><br><span class="hint">' + esc(card.name) + '</span></button>';
+      }
+      break;
+    }
+    case 'commitments': {
+      h += ongoingCommitmentsHtml(s);
+      break;
+    }
+    case 'campaigns': {
+      if (FB.station.isLanded(s.player, s)) {
+        h += renderDeedsWarCard(s);
+      }
+      break;
+    }
+    case 'holy_campaign': {
+      if (s.greatHolyWar && FB.playerGreatHolyWarCamp(s)) {
+        const great = s.greatHolyWar;
+        const greatName = FB.holyWarName(s, great.callingReligion);
+        const greatKingdom = FBDATA.kingdoms[great.targetKingdom];
+        let greatStatus;
+        if (great.phase === 'preparation') {
+          greatStatus = FB.T('{days} gathering days remain', {
+            days:Math.max(0, great.launchTurn - s.turn)
+          });
+        } else if (great.phase === 'active') {
+          greatStatus = FB.T('resolve {resolve} · {days} days before the deadline', {
+            resolve:great.resolve,
+            days:Math.max(0, great.deadlineTurn - s.turn)
+          });
+        } else {
+          greatStatus = FB.T('settlement council awaits');
+        }
+        h += '<div class="progressnote warnote">' + esc(FB.T(
+          '📯 {campaign} for {kingdom} · {status}', {
+            campaign:greatName,
+            kingdom:greatKingdom ? greatKingdom.name : great.targetKingdom,
+            status:greatStatus
+          })) + '</div>';
+      }
+      break;
+    }
+    case 'household_summary': {
+      const hl = FB.holdingList(s);
+      if (hl.length) {
+        const hg = FB.holdingBonus(s, 'gold');
+        h += '<div class="progressnote">🏠 ' + hl.map(function (id) {
+          const d = FBDATA.holdings[id];
+          return d ? d.icon : '?';
+        }).join('') + (hg ? ' · ' + esc(FB.T('+{money:amount}/season',
+          { amount: Math.round(hg * 10) / 10 })) : '') + '</div>';
+      }
+      const land = FB.landPlots(s);
+      if (land.length) {
+        const cluster = FB.largestLandCluster(s);
+        h += '<div class="progressnote">' + esc(FB.T(
+          '🌾 {plots} land plots · largest holding {cluster}/{needed} at {settlement} · +{money:gold}/season',
+          {
+            plots:land.length,
+            cluster:cluster ? cluster.count : 0,
+            needed:FBDATA.balance.manorPlotRequirement,
+            settlement:cluster ? cluster.settlementName : '?',
+            gold:Math.round(FB.landYield(s) * 10) / 10
+          })) + '</div>';
+      }
+      if (FB.station.isLanded(s.player, s)) {
+        const lg = s.player.liege && s.player.liege !== 'player' && s.realms[s.player.liege];
+        h += '<div class="progressnote">' + esc(FB.T('💰 Seasonal revenue ~{money:gold} · 🛡 levy ~{men} men', {
+          gold: FB.playerTax(s), men: FB.playerLevy(s)
+        })) + (lg ? ' · ' + esc(FB.T('{term:vassal} of')) +
+          ' <span class="linklike" data-liege="' + esc(s.player.liege) +
+          '" title="' + esc(FB.T('See your {term:liege}’s sheet')) + '">' + esc(lg.name) + '</span>' :
+          ' · ' + esc(FB.T('independent'))) + '</div>';
+        if (s.player.provs && s.player.provs.length) {
+          const dcap = FB.domainCap(s), dheld = s.player.provs.length, dover = dheld > dcap;
+          h += '<div class="progressnote' + (dover ? ' warnote' : '') + '">' +
+            esc(FB.T('🏰 Domain {held}/{cap} held directly', { held: dheld, cap: dcap })) +
+            (dover ? ' · ' + esc(FB.T('overextended — your income & levy cut {pct}%', {
+              pct: Math.round((1 - FB.domainPenalty(s)) * 100)
+            })) : '') + '</div>';
+        }
+        const settlementCap = FB.settlementCapacityProjection(s);
+        h += '<div class="progressnote' + (settlementCap.over ? ' warnote' : '') + '">' +
+          esc(FB.T('Settlements: {held}/{cap}', { held:settlementCap.directCount, cap:settlementCap.limit })) +
+          (settlementCap.over ? ' &middot; ' + esc(FB.T('Settlement income and levy reduced by {percent}%', {
+            percent:Math.round((1 - settlementCap.multiplier) * 100)
+          })) : '') + '</div>';
+        // One row per direct holding, including settlements without buildings.
+        const bldByProv = {};
+        const bldTypes = {};
+        const bldSites = FB.directSettlements(s);
+        for (const site of bldSites) {
+          const bp = site.provinceId, cells = {};
+          for (const e of FB.builtIn(s, bp)) {
+            if (e.s !== site.settlement || e.ruined || !FBDATA.buildings[e.id]) continue;
+            if (FB.isFortificationBuilding(e.id) && !FB.canManageCountyBuildings(s, bp)) continue;
+            cells[e.id] = (cells[e.id] || 0) + 1;
+            bldTypes[e.id] = true;
+          }
+          bldByProv[bp + ':' + site.settlement] = cells;
+        }
+        const bldCols = [];
+        for (const id in FBDATA.buildings) if (bldTypes[id]) bldCols.push(id);
+        if (bldSites.length) {
+          let grid = '<span class="bldprov bldcolhead"></span>';
+          for (const id of bldCols) {
+            const d = FBDATA.buildings[id];
+            grid += '<span class="bldcell bldcolhead" title="' +
+              esc(dt(s, 'building', id, d, 'name')) + '">' + d.icon + '</span>';
+          }
+          for (const site of bldSites) {
+            const bp = site.provinceId;
+            const settlement = FB.settlementsOf(s, bp)[site.settlement];
+            const cells = bldByProv[bp + ':' + site.settlement];
+            grid += '<button type="button" class="bldprov" data-bldprov="' +
+              esc(bp) + '" data-bldsett="' + site.settlement + '" title="' +
+              esc(FB.T('See the buildings of {settlement}', {
+                settlement: settlement.name
+              })) + '">' + esc(settlement.name) + '</button>';
+            for (const id of bldCols) {
+              const d = FBDATA.buildings[id];
+              const name = dt(s, 'building', id, d, 'name');
+              const n = cells[id] || 0;
+              if (n) {
+                grid += '<span class="bldcell" title="' + esc(name) +
+                  (n > 1 ? ' ×' + n : '') + '">' + d.icon +
+                  (n > 1 ? '<span class="bldcnt">' + n + '</span>' : '') +
+                  '</span>';
+              } else {
+                const none = FB.T('No {building}', { building: name });
+                grid += '<span class="bldcell bldmiss" title="' + esc(none) +
+                  '" aria-label="' + esc(none) + '">·</span>';
+              }
+            }
+          }
+          h += '<div class="progressnote bldsummary"><span class="bldhead">🏗 ' +
+            esc(FB.T('Buildings')) + '</span><div class="bldgrid" style="' +
+            'grid-template-columns:minmax(96px,1fr)' + (bldCols.length ? ' repeat(' +
+            bldCols.length + ', 24px)' : '') + '">' + grid + '</div></div>';
+        }
+      }
+      break;
+    }
+    case 'next_steps': {
+      if (!FB.game.uiPrefs || !FB.game.uiPrefs.hideBeginnerHints) {
+        h += nextStepHint(s);
+      }
+      break;
+    }
+    }
+    return h;
+  }
+
+
   function renderActions(reuse) {
     const s = FB.state, box = $('tab-actions');
     /* A player returning to Deeds without an intervening refresh can keep the
@@ -1137,7 +1299,8 @@ window.FB = window.FB || {};
     const groupingStyle = deedGroupingStyle();
     if (reuse && !actionsDirty && actionsRenderedState === s &&
         actionsRenderedLocale === FB.locale &&
-        actionsRenderedGrouping === groupingStyle && box.hasChildNodes()) {
+        actionsRenderedGrouping === groupingStyle &&
+        actionsSectionsSignature === deedSectionsSignature() && box.hasChildNodes()) {
       return;
     }
     /* Give desktop players a complete, stable keyboard map as soon as a life
@@ -1145,183 +1308,32 @@ window.FB = window.FB || {};
        the same life preserve whichever section the player selected. */
     if (activeActionState !== s) {
       activeActionState = s;
-      activeActionSection = FB.isTouch ? null : 'focus';
-      focusSectionOpen = true;
+      activeActionSection = FB.isTouch ? null : focusSectionId();
+      const focusSection = sectionsForFocus();
+      focusSectionOpen = !!(focusSection && focusSection.open);
     } else if (activeActionSection &&
         actionSectionIndex(activeActionSection) < 0) {
-      activeActionSection = FB.isTouch ? null : 'focus';
+      activeActionSection = FB.isTouch ? null : focusSectionId();
     }
-    let h = '';
-    if (FB.tutorialActive && FB.tutorialActive(s) &&
-        (!FB.game.uiPrefs || !FB.game.uiPrefs.hideBeginnerHints)) {
-      h += tutorialCardHtml(s);
-    }
-    /* One shared card per attached story with a status; it opens the
-       shared story sheet. */
-    for (const card of FB.stories ? FB.stories.cards(s) : []) {
-      h += '<button type="button" class="actionbtn" data-story-card="' +
-        esc(card.id) + '"><b>' + esc(card.title) +
-        '</b><br><span class="hint">' + esc(card.name) + '</span></button>';
-    }
-    h += ongoingCommitmentsHtml(s);
-    if (FB.station.isLanded(s.player, s)) {
-      h += renderDeedsWarCard(s);
-    }
-    if (s.greatHolyWar && FB.playerGreatHolyWarCamp(s)) {
-      const great = s.greatHolyWar;
-      const greatName = FB.holyWarName(s, great.callingReligion);
-      const greatKingdom = FBDATA.kingdoms[great.targetKingdom];
-      let greatStatus;
-      if (great.phase === 'preparation') {
-        greatStatus = FB.T('{days} gathering days remain', {
-          days:Math.max(0, great.launchTurn - s.turn)
-        });
-      } else if (great.phase === 'active') {
-        greatStatus = FB.T('resolve {resolve} · {days} days before the deadline', {
-          resolve:great.resolve,
-          days:Math.max(0, great.deadlineTurn - s.turn)
-        });
-      } else {
-        greatStatus = FB.T('settlement council awaits');
-      }
-      h += '<div class="progressnote warnote">' + esc(FB.T(
-        '📯 {campaign} for {kingdom} · {status}', {
-          campaign:greatName,
-          kingdom:greatKingdom ? greatKingdom.name : great.targetKingdom,
-          status:greatStatus
-        })) + '</div>';
-    }
-    const hl = FB.holdingList(s);
-    if (hl.length) {
-      const hg = FB.holdingBonus(s, 'gold');
-      h += '<div class="progressnote">🏠 ' + hl.map(function (id) {
-        const d = FBDATA.holdings[id];
-        return d ? d.icon : '?';
-      }).join('') + (hg ? ' · ' + esc(FB.T('+{money:amount}/season',
-        { amount: Math.round(hg * 10) / 10 })) : '') + '</div>';
-    }
-    const land = FB.landPlots(s);
-    if (land.length) {
-      const cluster = FB.largestLandCluster(s);
-      h += '<div class="progressnote">' + esc(FB.T(
-        '🌾 {plots} land plots · largest holding {cluster}/{needed} at {settlement} · +{money:gold}/season',
-        {
-          plots:land.length,
-          cluster:cluster ? cluster.count : 0,
-          needed:FBDATA.balance.manorPlotRequirement,
-          settlement:cluster ? cluster.settlementName : '?',
-          gold:Math.round(FB.landYield(s) * 10) / 10
-        })) + '</div>';
-    }
-    if (FB.station.isLanded(s.player, s)) {
-      const lg = s.player.liege && s.player.liege !== 'player' && s.realms[s.player.liege];
-      h += '<div class="progressnote">' + esc(FB.T('💰 Seasonal revenue ~{money:gold} · 🛡 levy ~{men} men', {
-        gold: FB.playerTax(s), men: FB.playerLevy(s)
-      })) + (lg ? ' · ' + esc(FB.T('{term:vassal} of')) +
-        ' <span class="linklike" data-liege="' + esc(s.player.liege) +
-        '" title="' + esc(FB.T('See your {term:liege}’s sheet')) + '">' + esc(lg.name) + '</span>' :
-        ' · ' + esc(FB.T('independent'))) + '</div>';
-      if (s.player.provs && s.player.provs.length) {
-        const dcap = FB.domainCap(s), dheld = s.player.provs.length, dover = dheld > dcap;
-        h += '<div class="progressnote' + (dover ? ' warnote' : '') + '">' +
-          esc(FB.T('🏰 Domain {held}/{cap} held directly', { held: dheld, cap: dcap })) +
-          (dover ? ' · ' + esc(FB.T('overextended — your income & levy cut {pct}%', {
-            pct: Math.round((1 - FB.domainPenalty(s)) * 100)
-          })) : '') + '</div>';
-      }
-      const settlementCap = FB.settlementCapacityProjection(s);
-      h += '<div class="progressnote' + (settlementCap.over ? ' warnote' : '') + '">' +
-        esc(FB.T('Settlements: {held}/{cap}', { held:settlementCap.directCount, cap:settlementCap.limit })) +
-        (settlementCap.over ? ' &middot; ' + esc(FB.T('Settlement income and levy reduced by {percent}%', {
-          percent:Math.round((1 - settlementCap.multiplier) * 100)
-        })) : '') + '</div>';
-      // One row per direct holding, including settlements without buildings.
-      const bldByProv = {};
-      const bldTypes = {};
-      const bldSites = FB.directSettlements(s);
-      for (const site of bldSites) {
-        const bp = site.provinceId, cells = {};
-        for (const e of FB.builtIn(s, bp)) {
-          if (e.s !== site.settlement || e.ruined || !FBDATA.buildings[e.id]) continue;
-          if (FB.isFortificationBuilding(e.id) && !FB.canManageCountyBuildings(s, bp)) continue;
-          cells[e.id] = (cells[e.id] || 0) + 1;
-          bldTypes[e.id] = true;
+    const sections = deedPanelSections();
+    const scroller = $('sidebody');
+    const retaining = actionsRenderedState === s;
+    const retainedScroll = retaining ? scroller.scrollTop : 0;
+    const oldFocus = document.activeElement;
+    let retainedFocus = null;
+    if (retaining && oldFocus && box.contains(oldFocus)) {
+      for (const attr of ['id', 'data-action-id', 'data-focus-id', 'data-action-section', 'aria-controls']) {
+        if (oldFocus.hasAttribute(attr)) {
+          retainedFocus = [attr, oldFocus.getAttribute(attr)];
+          break;
         }
-        bldByProv[bp + ':' + site.settlement] = cells;
-      }
-      const bldCols = [];
-      for (const id in FBDATA.buildings) if (bldTypes[id]) bldCols.push(id);
-      if (bldSites.length) {
-        let grid = '<span class="bldprov bldcolhead"></span>';
-        for (const id of bldCols) {
-          const d = FBDATA.buildings[id];
-          grid += '<span class="bldcell bldcolhead" title="' +
-            esc(dt(s, 'building', id, d, 'name')) + '">' + d.icon + '</span>';
-        }
-        for (const site of bldSites) {
-          const bp = site.provinceId;
-          const settlement = FB.settlementsOf(s, bp)[site.settlement];
-          const cells = bldByProv[bp + ':' + site.settlement];
-          grid += '<button type="button" class="bldprov" data-bldprov="' +
-            esc(bp) + '" data-bldsett="' + site.settlement + '" title="' +
-            esc(FB.T('See the buildings of {settlement}', {
-              settlement: settlement.name
-            })) + '">' + esc(settlement.name) + '</button>';
-          for (const id of bldCols) {
-            const d = FBDATA.buildings[id];
-            const name = dt(s, 'building', id, d, 'name');
-            const n = cells[id] || 0;
-            if (n) {
-              grid += '<span class="bldcell" title="' + esc(name) +
-                (n > 1 ? ' ×' + n : '') + '">' + d.icon +
-                (n > 1 ? '<span class="bldcnt">' + n + '</span>' : '') +
-                '</span>';
-            } else {
-              const none = FB.T('No {building}', { building: name });
-              grid += '<span class="bldcell bldmiss" title="' + esc(none) +
-                '" aria-label="' + esc(none) + '">·</span>';
-            }
-          }
-        }
-        h += '<div class="progressnote bldsummary"><span class="bldhead">🏗 ' +
-          esc(FB.T('Buildings')) + '</span><div class="bldgrid" style="' +
-          'grid-template-columns:minmax(96px,1fr)' + (bldCols.length ? ' repeat(' +
-          bldCols.length + ', 24px)' : '') + '">' + grid + '</div></div>';
       }
     }
-    if (!FB.game.uiPrefs || !FB.game.uiPrefs.hideBeginnerHints) {
-      h += nextStepHint(s);
-    }
-    box.innerHTML = h;
-    box.querySelectorAll('[data-story-card]').forEach(function (btn) {
-      btn.addEventListener('click', function () {
-        UI.showStorySheet(btn.getAttribute('data-story-card'));
-      });
+    const retainedDetails = [];
+    box.querySelectorAll('[aria-controls][aria-expanded="true"]').forEach(function (button) {
+      if (retaining) retainedDetails.push(button.getAttribute('aria-controls'));
     });
-    box.querySelectorAll('[data-bldprov]').forEach(function (btn) {
-      btn.addEventListener('click', function () {
-        const pid = btn.dataset.bldprov;
-        FB.map.centerOn(pid);
-        UI.showSettlement(pid, Number(btn.dataset.bldsett));
-      });
-    });
-    if ($('tutorial-dismiss')) {
-      $('tutorial-dismiss').addEventListener('click', function () {
-        delete s.player.flags.tutorial; // per-save opt-out; the card never returns
-        renderActions();
-      });
-    }
-    if ($('tutorial-business-review')) {
-      $('tutorial-business-review').addEventListener('click', function () {
-        UI.showRecommendedEnterprise($('tutorial-business-review'));
-      });
-    }
-    const tutorialTenure = $('tutorial-serf-tenure');
-    if (tutorialTenure) {
-      tutorialTenure.addEventListener('click', function () {
-        UI.showRankDetails();
-      });
-    }
+    box.textContent = '';
     const focuses = FB.listFocusChoices ? FB.listFocusChoices(s)
       : FB.listFocuses(s).map(function (focus) {
         return { action:focus, can:true, reason:'', preview:null };
@@ -1343,18 +1355,20 @@ window.FB = window.FB || {};
       if (flow === 'no-day') return FB.T('Resolves now · no day spent');
       return FB.T('Resolves now · spends one day');
     }
-    function buildActionGroupBody(groupId, items) {
+    function buildActionGroupBody(group, items) {
       const body = document.createElement('div');
       body.className = 'actiongroup-body';
-      body.setAttribute('data-action-group-body', groupId);
+      body.setAttribute('data-action-group-body', group.id);
       const ih = document.createElement('div');
       ih.className = 'actionsubhead';
-      ih.textContent = FB.T(groupingStyle === 'action-type'
-        ? (groupId === 'deeds' ? 'One-shot & recurring deeds'
-          : (groupId === 'personal' ? 'Personal decisions'
-            : 'Ruler decisions'))
-        : 'One-time deeds');
-      body.appendChild(ih);
+      ih.textContent = FB.deeds.text(s, group, 'subhead');
+      if (ih.textContent) body.appendChild(ih);
+      if (group.statusLine) {
+        const status = document.createElement('div');
+        status.className = 'progressnote';
+        status.textContent = FB.deeds.text(s, group, 'statusLine');
+        body.appendChild(status);
+      }
       for (const listedItem of items) {
         let item = listedItem;
         if (listedItem.statusDeferred) {
@@ -1542,22 +1556,23 @@ window.FB = window.FB || {};
         container.appendChild(techButton);
       }
     }
-    if (focuses.length) {
+    function appendFocusSection(group) {
+      if (!focuses.length) return;
       const fh = document.createElement('button');
       fh.className = 'actiongroup-toggle';
       fh.id = 'daily-focus-list';
-      fh.setAttribute('data-action-section', 'focus');
+      fh.setAttribute('data-action-section', group.id);
       fh.setAttribute('aria-expanded', focusSectionOpen ? 'true' : 'false');
-      fh.innerHTML = '<span>' + actionSectionHintFor('focus') +
-        esc(FB.T('Daily Focus — repeats automatically whenever a day passes')) +
+      fh.innerHTML = '<span>' + actionSectionHintFor(group.id) +
+        esc(FB.deeds.text(s, group, 'label')) +
         '</span><span>' + esc(String(focuses.length)) + ' ' +
         (focusSectionOpen ? '▾' : '▸') + '</span>';
       const focusBody = document.createElement('div');
       focusBody.className = 'actiongroup-body';
-      focusBody.setAttribute('data-action-group-body', 'focus');
+      focusBody.setAttribute('data-action-group-body', group.id);
       focusBody.hidden = !focusSectionOpen;
       fh.addEventListener('click', function () {
-        setActiveActionSection('focus');
+        setActiveActionSection(group.id);
         focusSectionOpen = !focusSectionOpen;
         fh.setAttribute('aria-expanded', focusSectionOpen ? 'true' : 'false');
         fh.lastElementChild.textContent = String(focuses.length) + ' ' +
@@ -1569,14 +1584,22 @@ window.FB = window.FB || {};
       for (const item of focuses) appendFocus(item, focusBody);
       box.appendChild(focusBody);
     }
-    const actionGroups = deedActionGroups();
     /* An on-screen lesson's deed stays reachable under either grouping. */
     const lessonDeed = UI.coachmarkDeedId ? UI.coachmarkDeedId() : null;
-    for (const group of actionGroups) {
-      const ga = instants.filter(function (item) {
-        return deedGroupForAction(item.a) === group.id;
-      });
-      if (!ga.length) continue;
+    for (const group of sections) {
+      if (group.type === 'focus') {
+        appendFocusSection(group);
+        continue;
+      }
+      if (group.type !== 'deeds') {
+        box.insertAdjacentHTML('beforeend', deedStaticSectionHtml(s, group));
+        continue;
+      }
+      const ga = FB.deeds.items(s, group, groupingStyle, instants);
+      if (!ga.length && !group.statusLine) continue;
+      if (!Object.prototype.hasOwnProperty.call(actionGroupsOpen, group.id)) {
+        actionGroupsOpen[group.id] = !!group.open;
+      }
       if (lessonDeed && ga.some(function (item) {
         return item.a.id === lessonDeed;
       })) {
@@ -1589,12 +1612,12 @@ window.FB = window.FB || {};
       toggle.setAttribute('data-action-section', group.id);
       toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
       toggle.innerHTML = '<span>' + actionSectionHintFor(group.id) +
-        esc(FB.T(group.label)) + '</span><span>' +
+        esc(FB.deeds.text(s, group, 'label')) + '</span><span>' +
         esc(String(ga.length)) + ' ' +
         (open ? '▾' : '▸') + '</span>';
       let body = null;
       if (open) {
-        body = buildActionGroupBody(group.id, ga);
+        body = buildActionGroupBody(group, ga);
       }
       (function (id, items) {
         toggle.addEventListener('click', function () {
@@ -1609,22 +1632,47 @@ window.FB = window.FB || {};
             (opening ? '▾' : '▸');
           if (opening) {
             if (!body) {
-              body = buildActionGroupBody(id, items);
+              body = buildActionGroupBody(group, items);
               FB.localizeTree(body);
             }
-            let next = toggle.nextElementSibling;
-            while (next && !next.classList.contains('actiongroup-toggle')) {
-              next = next.nextElementSibling;
-            }
-            box.insertBefore(body, next);
+            box.insertBefore(body, toggle.nextSibling);
           } else if (body && body.parentNode === box) {
             box.removeChild(body);
           }
-          refreshDeedPanelShortcuts();
+              refreshDeedPanelShortcuts();
         });
       })(group.id, ga);
       box.appendChild(toggle);
       if (body) box.appendChild(body);
+    }
+    box.querySelectorAll('[data-story-card]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        UI.showStorySheet(btn.getAttribute('data-story-card'));
+      });
+    });
+    box.querySelectorAll('[data-bldprov]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        const pid = btn.dataset.bldprov;
+        FB.map.centerOn(pid);
+        UI.showSettlement(pid, Number(btn.dataset.bldsett));
+      });
+    });
+    if ($('tutorial-dismiss')) {
+      $('tutorial-dismiss').addEventListener('click', function () {
+        delete s.player.flags.tutorial; // per-save opt-out; the card never returns
+        renderActions();
+      });
+    }
+    if ($('tutorial-business-review')) {
+      $('tutorial-business-review').addEventListener('click', function () {
+        UI.showRecommendedEnterprise($('tutorial-business-review'));
+      });
+    }
+    const tutorialTenure = $('tutorial-serf-tenure');
+    if (tutorialTenure) {
+      tutorialTenure.addEventListener('click', function () {
+        UI.showRankDetails();
+      });
     }
     refreshDeedPanelShortcuts();
     function focusActionControl(selector, fallbackGroup, scrollBlock) {
@@ -1662,7 +1710,7 @@ window.FB = window.FB || {};
             UI.showSettlementFounding();
           } else if (commitment === 'focus') {
             if (!focusSectionOpen) $('daily-focus-list').click();
-            else setActiveActionSection('focus');
+            else setActiveActionSection(focusSectionId());
             focusActionControl('#daily-focus-list', null, 'start');
           } else if (commitment === 'personal-attention') {
             const target = FB.socialAttentionTarget(s);
@@ -1681,12 +1729,14 @@ window.FB = window.FB || {};
           } else if (commitment === 'research') {
             UI.showTech();
           } else if (commitment === 'travel') {
-            revealActionControl(deedGroupForId('travel_turn_back'),
-              '[data-action-id="travel_turn_back"], ' +
-              '[data-action-id="travel_return_cargo"], ' +
-              '[data-action-id="travel_marriage_residence"], ' +
-              '[data-action-id="frontier_settle_here"], ' +
-              '[data-action-id="travel_settle_here"]');
+            const travelActions = FB.deeds.commitmentActions(commitment);
+            const visibleTravel = travelActions.find(function (action) {
+              return !!box.querySelector('[data-action-id="' + action.id + '"]') || action.show(s);
+            });
+            if (visibleTravel) revealActionControl(deedGroupForId(visibleTravel.id),
+              travelActions.map(function (action) {
+                return '[data-action-id="' + action.id + '"]';
+              }).join(', '));
           } else if (commitment === 'finance') {
             UI.showFinance();
           } else if (commitment === 'intrigue') {
@@ -1709,6 +1759,16 @@ window.FB = window.FB || {};
     actionsRenderedLocale = FB.locale;
     actionsRenderedGrouping = groupingStyle;
     actionsVisibleSignature = visibleSignature;
+    actionsSectionsSignature = deedSectionsSignature();
+    for (const id of retainedDetails) {
+      const button = box.querySelector('[aria-controls="' + id + '"]');
+      if (button && button.getAttribute('aria-expanded') === 'false') button.click();
+    }
+    scroller.scrollTop = retainedScroll;
+    if (retainedFocus) {
+      const target = box.querySelector('[' + retainedFocus[0] + '="' + retainedFocus[1] + '"]');
+      if (target) target.focus({ preventScroll:true });
+    }
     actionsLifeStage = actionLifeStage(s);
     deedStatusRefreshedState = s;
     deedStatusRefreshedTurn = s.turn;
@@ -1743,6 +1803,10 @@ window.FB = window.FB || {};
     const box = $('tab-actions');
     if (!s || SH.activeTab !== 'actions' || !box || !box.hasChildNodes()) return;
     refreshTutorialObjective(s);
+    if (actionsSectionsSignature !== deedSectionsSignature()) {
+      renderActions();
+      return;
+    }
     const force = !!(options && options.force);
     /* Coming of age changes the focus catalogue and every requiresAdult deed
        at once. It is a lifecycle boundary, not an ordinary cooldown update:

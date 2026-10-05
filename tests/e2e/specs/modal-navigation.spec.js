@@ -3,7 +3,8 @@ const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
   'index.html', 'js/ui_misc.js', 'js/ui_modals.js', 'js/ui_panels.js',
   'js/keys.js', 'js/economy.js', 'js/items.js', 'js/travel.js',
-  'data/economy.js', 'data/map_data.js', 'css/style.css'
+  'data/economy.js', 'data/map_data.js', 'css/style.css',
+  'data/actions.js', 'js/actions.js', 'js/mods.js', 'js/systems.js'
 ]);
 const { test, expect } = require('../support/fixture');
 const { openGame } = require('../support/game/navigation');

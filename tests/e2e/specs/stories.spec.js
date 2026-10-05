@@ -4,7 +4,8 @@ dependsOnRuntime(__filename, [
   'index.html', 'js/stories.js', 'js/story_western_court_476.js',
   'js/story_federate_track_476.js', 'js/main.js', 'js/save.js', 'js/save_v4.js',
   'js/i18n.js', 'js/ui_panels.js', 'js/world.js',
-  'data/starts.js', 'data/bookmarks.js', 'data/bookmark_476.js', 'data/eras.js'
+  'data/starts.js', 'data/bookmarks.js', 'data/bookmark_476.js', 'data/eras.js',
+  'data/actions.js', 'js/actions.js', 'js/systems.js'
 ]);
 const { test, expect } = require('../support/fixture');
 const { openGame } = require('../support/game/navigation');
