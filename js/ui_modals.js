@@ -9,6 +9,187 @@ window.FB = window.FB || {};
   const UI = FB.ui;
   const SH = UI._shared;
   const $ = SH.$;
+  function officeActor(s) {
+    return FB.station.rulesRealm(s.player, s) ? { kind:'realm', id:'player' } :
+      { kind:'character', id:s.player.charId };
+  }
+  function officePowerNames(powers) {
+    const names = { ban:FB.T('Ban: host command'), peace:FB.T('Peace: courts'),
+      revenue:FB.T('Revenue: public receipts'), consent:FB.T('Consent: civic agreement') };
+    return powers.length ? powers.map(function (id) { return names[id]; }).join(' · ') : FB.T('Honor only; no governing powers');
+  }
+  function officeScopeName(s, at) {
+    if (at.kind === 'realm') return FB.T('Court territory: {court}', { court:s.realms[at.id].name });
+    if (at.kind === 'county') return FB.world.byId[at.id].name;
+    const army = (s.armies || []).find(function (row) { return row.id === at.id; });
+    return army ? FB.T('Host of {court} at {place}', { court:s.realms[army.realm].name,
+      place:FB.world.byId[army.at] ? FB.world.byId[army.at].name : army.at }) : FB.T('Host unavailable');
+  }
+  function officeStateName(status) {
+    const names = { active:FB.T('Active'), contested:FB.T('Contested'), expired:FB.T('Expired'), removed:FB.T('Removed') };
+    return names[status] || FB.T('Recorded');
+  }
+  function officeIssuerName(s, issuer) {
+    if (issuer.kind === 'realm') return s.realms[issuer.id] ? s.realms[issuer.id].name : FB.T('Former court');
+    if (issuer.kind === 'county') return FB.world.byId[issuer.id] ? FB.world.byId[issuer.id].name : FB.T('Former city');
+    if (issuer.kind === 'host') return officeScopeName(s, issuer);
+    const head = FB.religiousOfficeSnapshot(s, issuer.id);
+    return head ? head.name : FB.T('Vacant religious office');
+  }
+  function officeTerm(s, def, endTurn) {
+    return endTurn !== null && endTurn !== undefined ? FB.T('{days} days remaining', { days:Math.max(0, endTurn - s.turn) }) :
+      def.succession === 'continues' ? FB.T('Personal term; continues across appointer succession') :
+      FB.T('Requires reaffirmation after appointer succession');
+  }
+  UI.showOffices = function (view) {
+    const s = FB.state;
+    if (!s || !FB.systemEnabled(s, 'roman_offices')) return;
+    FB.game.setPaused(true);
+    view = view || {};
+    const actor = officeActor(s), me = { kind:'character', id:s.player.charId };
+    const courts = FB.officeCourts(s), claims = FB.officeClaimants(s), mandates = FB.officeRecognitionMandates(s, actor);
+    const court = courts.find(function (row) { return row.id === view.court; }) ||
+      courts.find(function (row) { return FB.realmTerritory(s, row.id).includes(s.player.provinceId); }) || courts[0];
+    const officeId = court && court.offices.includes(view.office) ? view.office : court && court.offices[0];
+    const scopes = court ? FB.officeScopes(s, court.id, officeId) : [];
+    const scopeIndex = scopes.findIndex(function (at) { return JSON.stringify(at) === view.scope; });
+    const at = scopes[Math.max(0, scopeIndex)];
+    const held = FB.political.offices(s, me).concat(actor.kind === 'realm' ? FB.political.offices(s, actor) : [])
+      .filter(function (row) { return row.ref.source === 'authority.appointments'; });
+    const decisions = {};
+    function actionCard(q, label, details, key) {
+      const index = key || (q.terms ? 'petition' : q.claimant ?
+        q.claimant.institutionId + '-' + q.claimant.holder.id + '-' + q.action : q.id + '-' + q.action);
+      decisions[index] = q;
+      return reviewActionCardHtml({ data:{ officeReview:index }, detailsId:'office-review-' + index,
+        label:label, disabled:!q || !q.allowed, warn:!q || !q.allowed,
+        note:!q ? FB.T('Only the current court or a resident holder can seek reaffirmation.') :
+          q.reason || FB.T('Review before recording this decision.'), details:details });
+    }
+    let h = '<div data-office-list data-modal-scroll>';
+    h += reviewFactsCard(FB.T('Held offices'), held.length ? held.map(function (row) {
+      const def = FBDATA.authorityOffices[row.ref.officeId], term = row.terms;
+      let body = '<div data-held-office="' + esc(term.id) + '">' +
+        kv('Office', esc(FB.officeText(s, row.ref.officeId, 'name'))) +
+        kv('Scope', esc(officeScopeName(s, row.scope))) + kv('Status', esc(officeStateName(row.status))) +
+        kv('Powers', esc(officePowerNames(def.powers))) + kv('Term', esc(officeTerm(s, def, term.endTurn)));
+      if (row.status === 'contested') {
+        const q = FB.officeTransitionQuote(s, actor, term.id, 'confirm');
+        body += actionCard(q, FB.T('Review reaffirmation'), '<p>' + esc(FB.T('No payment. The current court must reaffirm the same holder, scope and supporting recognition.')) + '</p>', term.id + '-confirm');
+      }
+      return body + '</div>';
+    }).join('') : '<p>' + esc(FB.T('You hold no scoped public appointment. Land and private property remain separate.')) + '</p>');
+    if (court) {
+      let fields = '<div class="governing-identity-fields"><label for="office-court">' + esc(FB.T('Appointing court')) + '</label><select class="select" id="office-court">';
+      courts.forEach(function (row) { fields += '<option value="' + esc(row.id) + '"' + (row.id === court.id ? ' selected' : '') + '>' + esc(s.realms[row.id].name) + '</option>'; });
+      fields += '</select><label for="office-kind">' + esc(FB.T('Office')) + '</label><select class="select" id="office-kind">';
+      court.offices.forEach(function (id) { fields += '<option value="' + esc(id) + '"' + (id === officeId ? ' selected' : '') + '>' + esc(FB.officeText(s, id, 'name')) + '</option>'; });
+      fields += '</select><label for="office-scope">' + esc(FB.T('Scope')) + '</label><select class="select" id="office-scope">';
+      scopes.forEach(function (row, index) { fields += '<option value="' + index + '"' + (row === at ? ' selected' : '') + '>' + esc(officeScopeName(s, row)) + '</option>'; });
+      fields += '</select></div>';
+      const def = FBDATA.authorityOffices[officeId];
+      const q = FB.officeAppointmentQuote(s, me, { institutionId:court.id, officeId:officeId, holder:me, scope:at || null });
+      fields += kv('Powers', esc(officePowerNames(def.powers))) +
+        kv('Fee on acceptance', esc(FB.T('{money:cost}', { cost:q.cost }))) +
+        kv('Required prestige (retained)', String(def.appointment.prestige)) +
+        kv('Required skill', esc(FB.T('{skill} {minimum}', { skill:FB.T(FB.SKILL_NAMES[def.appointment.skill]), minimum:def.appointment.minimum }))) +
+        kv('Term', esc(officeTerm(s, def, q.endTurn))) +
+        actionCard(q, FB.T('Review appointment'), '<p>' + esc(FB.officeText(s, officeId, 'desc')) + '</p><p>' +
+          esc(FB.T('The fee is paid once on acceptance. Prestige is a qualification and is retained. Appointment grants no land, private income or hereditary title.')) + '</p>');
+      h += reviewFactsCard(FB.T('Seek appointment'), fields, ' data-office-petition');
+    }
+    h += '<div class="governing-identity-fields"><label for="office-mandate">' + esc(FB.T('Recognition mandate')) + '</label><select class="select" id="office-mandate">';
+    if (!mandates.length) h += '<option>' + esc(FB.T('No recognition mandate')) + '</option>';
+    mandates.forEach(function (row, index) {
+      const issuer = officeIssuerName(s, row.issuer);
+      h += '<option value="' + index + '"' + (index === (view.mandate || 0) ? ' selected' : '') + '>' +
+        esc(FB.T('{source}: {issuer}', { source:FB.legitimacySourceName(s, row.source), issuer:issuer })) + '</option>';
+    });
+    h += '</select></div>';
+    if (!claims.length) h += reviewFactsCard(FB.T('Imperial claimants'), '<p>' + esc(FB.T('No living imperial claimant is recorded.')) + '</p>');
+    claims.forEach(function (claim, index) {
+      const person = claim.holder.kind === 'character' ? s.chars[claim.holder.id] : FB.realmRulerCharacterSnapshot(s, claim.holder.id);
+      let facts = person ? reviewPeopleHtml(reviewPersonHtml(person, FB.T('Imperial claimant'), null)) : '';
+      facts += kv('Office', esc(s.realms[claim.institutionId].name)) + kv('Status', esc(officeStateName(claim.status)));
+      Object.keys(FBDATA.legitimacySources).forEach(function (source) {
+        const live = claim.legitimacy.filter(function (row) { return row.source === source; });
+        const all = claim.history.filter(function (row) { return row.source === source; });
+        facts += kv(FB.legitimacySourceName(s, source), esc(FB.T('{live} current; {other} withdrawn or awaiting reaffirmation', { live:live.length, other:all.length - live.length })) +
+          (live.length ? '<span class="adesc">' + esc(live.map(function (row) { return officeIssuerName(s, row.issuer); }).join(' · ')) + '</span>' : ''));
+      });
+      const details = '<p>' + esc(FB.T('A declaration costs 5 prestige for a household and no payment. It grants no land or automatic accession. Each mandate supports one claimant to this office; recognizing a rival withdraws that mandate’s previous support. Contesting withdraws only your own recognition. Other armies, courts, cities and churches keep their independent sources.')) + '</p>';
+      const mandate = mandates[view.mandate || 0] || mandates[0];
+      facts += actionCard(FB.officeClaimQuote(s, actor, claim, mandate, 'recognize'), FB.T('Review recognition'), details);
+      facts += actionCard(FB.officeClaimQuote(s, actor, claim, mandate, 'contest'), FB.T('Review contestation'), details);
+      h += reviewFactsCard(FB.T('Imperial claim'), facts, ' data-office-claimant="' + index + '"');
+    });
+    h += '</div>';
+    UI.openModal(FB.T('Offices and legitimacy'), h, { modalClass:'fullsheet-modal',
+      titleDetailsHtml:'<p>' + esc(FB.T('Offices have exact powers and scopes. Honors supply no governing powers. Civil authority follows the court’s current territory; lost territory is excluded immediately. Succession can suspend a mandate until reaffirmed, and an annual consulship ends with the year.')) + '</p>' });
+    const list = $('gm-body').querySelector('[data-office-list]');
+    function position() {
+      const courtSelect = $('office-court'), officeSelect = $('office-kind'), scopeSelect = $('office-scope');
+      return { court:courtSelect && courtSelect.value, office:officeSelect && officeSelect.value,
+        scope:scopeSelect && scopes[Number(scopeSelect.value)] ? JSON.stringify(scopes[Number(scopeSelect.value)]) : null,
+        mandate:Number($('office-mandate').value) || 0, scroll:list.scrollTop, bodyScroll:$('gm-body').scrollTop,
+        details:Array.from(list.querySelectorAll('.settcard-info[aria-expanded="true"]')).map(function (node) { return node.getAttribute('aria-controls'); }),
+        focus:document.activeElement && document.activeElement.id,
+        review:document.activeElement && document.activeElement.dataset.officeReview };
+    }
+    if (view.details) view.details.forEach(function (id) { const node = list.querySelector('[aria-controls="' + id + '"]'); if (node) node.click(); });
+    list.scrollTop = view.scroll || 0;
+    $('gm-body').scrollTop = view.bodyScroll || 0;
+    const focus = view.focus && $(view.focus) || view.review !== undefined && list.querySelector('[data-office-review="' + view.review + '"]');
+    if (focus) focus.focus({ preventScroll:true });
+    ['office-court','office-kind','office-scope','office-mandate'].forEach(function (id) {
+      const input = $(id);
+      if (input) input.onchange = function () { const pos = position(); if (id === 'office-court') { pos.office = null; pos.scope = null; } UI.showOffices(pos); };
+    });
+    list.querySelectorAll('[data-office-review]').forEach(function (button) {
+      button.onclick = function () {
+        if (button.disabled) return;
+        const pos = position(), q = decisions[button.dataset.officeReview];
+        const appointment = !!q.terms, transition = !!q.id;
+        const claimPerson = q.claimant && s.chars[q.claimant.holder.id];
+        const selected = appointment ? FBDATA.authorityOffices[q.terms.officeId] : transition ? FBDATA.authorityOffices[q.officeId] : null;
+        let facts = appointment ? reviewPeopleHtml(reviewPersonHtml(s.chars[s.player.charId], FB.T('Applicant'), null)) :
+          transition && q.holder.kind === 'character' && s.chars[q.holder.id]
+            ? reviewPeopleHtml(reviewPersonHtml(s.chars[q.holder.id], FB.T('Officeholder'), null)) :
+          claimPerson ? reviewPeopleHtml(reviewPersonHtml(claimPerson, FB.T('Imperial claimant'), null)) : '';
+        facts += kv('Payment on acceptance', esc(FB.T('{money:cost}', { cost:q.cost }))) + kv('Prestige spent', String(q.prestige || 0));
+        if (appointment) facts += kv('Office', esc(FB.officeText(s, q.terms.officeId, 'name'))) +
+          kv('Scope', esc(officeScopeName(s, q.terms.scope))) + kv('Powers', esc(officePowerNames(selected.powers))) +
+          kv('Term', esc(officeTerm(s, selected, q.endTurn)));
+        else {
+          if (transition) facts += kv('Office', esc(FB.officeText(s, q.officeId, 'name'))) +
+            kv('Scope', esc(officeScopeName(s, q.scope))) + kv('Powers', esc(officePowerNames(selected.powers))) +
+            kv('Term', esc(officeTerm(s, selected, q.endTurn)));
+          else facts += kv('Office', esc(s.realms[q.claimant.institutionId].name)) +
+            kv('Recognition source', esc(FB.legitimacySourceName(s, q.mandate.source))) +
+            kv('Issuer', esc(officeIssuerName(s, q.mandate.issuer)));
+          facts += kv('Decision', esc(transition ? FB.T('Reaffirm the appointment') : q.action === 'recognize' ? FB.T('Recognize the claimant') : FB.T('Withdraw your recognition')));
+        }
+        const consequences = appointment ? FB.officeText(s, q.terms.officeId, 'desc') :
+          transition ? FB.T('The same appointment becomes effective under the current ruler; no land transfers.') :
+            FB.T('Only this mandate’s support changes. Other legitimacy sources, physical control and competing claims survive.');
+        const body = reviewFactsCard(FB.T('Decision terms'), facts) +
+          reviewActionCardHtml({ id:'office-confirm', label:FB.T('Confirm decision'), note:consequences,
+            detailsId:'office-confirm-details', details:'<p>' + esc(consequences) + '</p>' });
+        function back() { UI.showOffices(pos); }
+        UI.openModal(FB.T('Review office decision'), body, { modalClass:'fullsheet-modal', historyView:true,
+          historyBack:true, historyBackRender:back });
+        $('office-confirm').onclick = function () {
+          if (s !== FB.state || JSON.stringify(actor) !== JSON.stringify(officeActor(s))) return;
+          const result = appointment ? FB.officeSeekAppointment(s, q) : transition ? FB.officeTransition(s, q) : FB.officeDeclareClaim(s, q);
+          markActionsDirty();
+          UI.openModal(result ? FB.T('Decision recorded') : FB.T('Terms changed'),
+            '<p>' + esc(result ? FB.T('The authority record has been updated.') : FB.T('Review the current terms again. Nothing was spent.')) +
+              '</p><button type="button" class="actionbtn" id="office-continue">' + esc(FB.T('Continue')) + '</button>', { replaceView:true });
+          $('office-continue').onclick = function () { modalHistoryBack(back); };
+        };
+      };
+    });
+  };
   function localInstitutionSubject(s) {
     return FB.station.rulesRealm(s.player, s) ? { kind:'realm', id:'player' } :
       { kind:'character', id:s.player.charId };

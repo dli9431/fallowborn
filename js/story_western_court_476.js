@@ -181,6 +181,21 @@
       person(west.id), actor('italy'), westClaim && westClaim.id);
     var eastOffice = appointment(s, 'imperial_office', 'byzantium',
       person(east.id), actor('byzantium'), eastClaim && eastClaim.id);
+    /* Living rival claims remain visible independently of the household's
+       opening. Recognition never replaces the current territorial ruler. */
+    var neposClaim = recognize(s, 'imperial_commission', actor('byzantium'),
+      person(nepos.id), actor('italy'));
+    var zenoClaim = recognize(s, 'dynastic_succession', actor('byzantium'),
+      person(zeno.id), actor('byzantium'));
+    FB.authorityAppoint(s, { officeId:'imperial_office', institutionId:'italy',
+      appointer:actor('italy'), holder:person(nepos.id), scope:actor('italy'),
+      recognitionId:neposClaim && neposClaim.id, contested:true });
+    FB.authorityAppoint(s, { officeId:'imperial_office', institutionId:'byzantium',
+      appointer:actor('byzantium'), holder:person(zeno.id), scope:actor('byzantium'),
+      recognitionId:zenoClaim && zenoClaim.id, contested:true });
+    appointment(s, 'patricius', 'italy', person(orestes.id), actor('italy'));
+    appointment(s, 'magister_militum', 'italy', person(orestes.id),
+      { kind:'host', id:italianHost.id });
     var military = appointment(s, 'field_command', 'italy',
       person(orestes.id), { kind:'host', id:italianHost.id }, null, 361);
     var civicProof = recognize(s, 'civic_acceptance',

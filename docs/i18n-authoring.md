@@ -1,3 +1,7 @@
+Office and legitimacy presentation
+
+Authority office names and descriptions use authorityOffice.<id>.<field>.default; legitimacy source names use legitimacySource.<id>.name.default. The static extractor reads both tables from data/political_institutions.js, and FB.officeText and FB.legitimacySourceName render their FB.dataText paths. Powers, scope, status, eligibility, terms, selectors and review consequences use FB.T. Historical people and physical place names remain proper names. Appointment and recognition outcomes use news.office.appointment, news.office.recognize and news.office.contest message descriptors; no rendered office or source label is saved. Add the source and extraction support on a feature branch without regenerating integration catalogs.
+
 # i18n authoring guide
 
 Local institutional presentation

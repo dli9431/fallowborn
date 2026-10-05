@@ -24,6 +24,8 @@ FBDATA.deedSections = [
     label:'🏛 City dealings', subhead:'Councils and senates' },
   { id:'church_dealings', type:'deeds', order:104, layout:'both', system:'episcopal_sees',
     label:'✝ Church dealings', subhead:'Bishoprics and patriarchates' },
+  { id:'offices', type:'deeds', order:106, layout:'both', system:'roman_offices',
+    label:'🏛 Offices & Legitimacy', subhead:'Appointments and imperial claims' },
   { id:'realm', type:'deeds', order:110, layout:'theme',
     label:'👑 Rank & Realm', subhead:'One-time deeds' },
   { id:'war', type:'deeds', order:120, layout:'theme',
@@ -116,6 +118,9 @@ FBDATA.focuses = [
 ];
 
 FBDATA.deeds = [
+  { id:'offices_legitimacy', label:'🏛 Offices and legitimacy…', order:0,
+    desc:'Review held offices, seek a scoped appointment, or recognize and contest an imperial claimant.',
+    section:'offices', group:'offices', flow:'choices', handler:'offices_legitimacy', systems:['roman_offices'] },
   { id:'city_dealings', system:'civic_institutions', label:'🏛 Councils and senates…', order:87,
     section:'cities', flow:'choices', handler:'city_dealings' },
   { id:'church_dealings', system:'episcopal_sees', label:'✝ Bishoprics and mediation…', order:88,

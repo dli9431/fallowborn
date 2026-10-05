@@ -105,6 +105,11 @@ window.FB = window.FB || {};
       }
       var problems = G.problems(formId);
       for (var i = 0; i < problems.length; i++) errors.push(describe(formId, problems[i]));
+      var catalogue = forms[formId].officeCatalogue;
+      if (catalogue !== undefined && (!Array.isArray(catalogue) || catalogue.some(function (id, index) {
+        var office = FBDATA.authorityOffices && FBDATA.authorityOffices[id];
+        return !office || !office.appointment || catalogue.indexOf(id) !== index;
+      }))) errors.push(FB.T('Invalid office catalogue for government {id}.', { id:formId }));
       var ladder = forms[formId].ladder && G.strategy('ladder', forms[formId].ladder);
       errors.push.apply(errors, FB.station.validateLadder(ladder, formId, true));
       errors.push.apply(errors, FB.systems.validateLayer(forms[formId].systems,
