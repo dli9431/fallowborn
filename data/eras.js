@@ -42,8 +42,15 @@
      systems: optional enable/disable lists or boolean overrides for known
        FBDATA.systems ids, beneath government, faith and bookmark rules
 
+   Presentation slots (js/siteart.js, js/i18n.js, js/util.js):
+     architecture: FBDATA.architectureStyles id; a culture's architecture
+       takes priority, including inherited culture definitions
+     currency: null, a { label, icon } purse label, or a complete currency
+       definition; a geography's currency takes priority, then a runtime mod
+     emblem: heraldry, standard, chi_rho or tamga from the crest shape library
+
    The remaining slots are declared here and filled by later systems:
-   vocabulary, eventEras, currency and architecture. null
+   vocabulary and eventEras. null
    means the era adds nothing and today's shared behavior applies.
    vocabulary stays null: an era's words and rank labels are its entry in
    FBDATA.lexicons.eras (data/lexicons.js). ladder is the permission definition
@@ -81,6 +88,21 @@ FBDATA.stationLadders = { feudal:{
   }
 } };
 
+/* The shared manuscript look is deliberately unchanged. Period-specific
+   content can add styles using the registered shapes in js/siteart.js. */
+FBDATA.architectureStyles = {
+  manuscript:{
+    palettes:{
+      walls:['#ddc99e', '#c9b184', '#b08a58', '#cfc8b8'],
+      roofs:['#a8512f', '#c09a44', '#66717a', '#7d5a33'],
+      stones:['#b7b1a2', '#a39d8e', '#8f8a7d'],
+      banners:['#a83232', '#325fa8', '#3d7a3d', '#c9a227'],
+      leaf:'#4d7a3f', trunk:'#6b4a2c', ink:'rgba(24,18,10,0.85)'
+    },
+    shapes:{ dwellings:'pitched', worship:'spire', fortification:'crenellated' }
+  }
+};
+
 FBDATA.eras = {
   late_antique:{
     from:375, to:649,
@@ -89,7 +111,7 @@ FBDATA.eras = {
     systems:{ disable:['papacy','scutage','manorial_tenure','excommunication',
       'feudal_service','crown_bloc','tournaments','great_holy_wars'] },
     technology:{ from:476, to:649, startingKnowledge:'historical' },
-    military:null, eventEras:null, currency:null, architecture:null,
+    military:null, eventEras:null, currency:null, architecture:null, emblem:'heraldry',
     balance:null
   },
   early_medieval:{
@@ -98,7 +120,7 @@ FBDATA.eras = {
     costume:'medieval', vocabulary:null, ladder:FBDATA.stationLadders.feudal, systems:{ enable:['manorial_tenure','feudal_service','scutage','crown_bloc',
       'excommunication','abbeys','tournaments','great_holy_wars','guild_elections','royal_council','estates'] },
     technology:{ from:650, to:999, startingKnowledge:'historical' },
-    military:null, eventEras:null, currency:null, architecture:null,
+    military:null, eventEras:null, currency:null, architecture:null, emblem:'heraldry',
     balance:null
   },
   high_medieval:{
@@ -107,7 +129,7 @@ FBDATA.eras = {
     costume:'medieval', vocabulary:null, ladder:FBDATA.stationLadders.feudal, systems:{ enable:['manorial_tenure','feudal_service','scutage','crown_bloc',
       'excommunication','abbeys','tournaments','great_holy_wars','guild_elections','royal_council','estates'] },
     technology:{ from:1000, to:1300, startingKnowledge:'historical' },
-    military:null, eventEras:null, currency:null, architecture:null,
+    military:null, eventEras:null, currency:null, architecture:null, emblem:'heraldry',
     balance:null
   }
 };

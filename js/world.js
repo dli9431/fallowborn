@@ -154,6 +154,9 @@ window.FB = window.FB || {};
     var errors = [], geography = FB.geography(id);
     function fault(text) { errors.push('Geography ' + id + ': ' + text); }
     if (!geography) return ['Unknown geography ' + id + '.'];
+    if (FB.currencyPresentationFaults) {
+      FB.currencyPresentationFaults(geography.currency).forEach(fault);
+    }
     var b = geography.bounds;
     if (!plainRecord(b) || !isFinite(b.lonMin) || !isFinite(b.lonMax) ||
         !isFinite(b.latMin) || !isFinite(b.latMax) || b.lonMin >= b.lonMax ||
@@ -397,6 +400,16 @@ window.FB = window.FB || {};
     if (!eras || typeof eras !== 'object' || Array.isArray(eras)) {
       return [FB.T('Eras are missing.')];
     }
+    var styles = FBDATA.architectureStyles || {};
+    if (!plainRecord(styles) || !ownKey(styles, 'manuscript')) {
+      errors.push(FB.T('The default architecture style is missing.'));
+    }
+    for (var styleId in styles) if (ownKey(styles, styleId)) {
+      var styleFaults = FB.architectureStyleFaults(styles[styleId]);
+      if (!/^[a-z][a-z0-9_]*$/.test(styleId) || styleFaults.length) {
+        errors.push(FB.T('Invalid architecture style {id}.', { id:styleId }));
+      }
+    }
     for (var id in eras) {
       if (!ownKey(eras, id)) continue;
       var era = eras[id];
@@ -413,6 +426,16 @@ window.FB = window.FB || {};
       if (!ownKey(FBDATA.cultures, era.defaultCulture)) {
         errors.push(FB.T('Era {id} has unknown default culture {culture}.',
           { id:id, culture:String(era.defaultCulture) }));
+      }
+      if (era.architecture !== null && era.architecture !== undefined &&
+          (typeof era.architecture !== 'string' || !ownKey(styles, era.architecture))) {
+        errors.push(FB.T('Era {id} has an unknown architecture style.', { id:id }));
+      }
+      if (era.emblem !== null && era.emblem !== undefined && !FB.isEmblemStyle(era.emblem)) {
+        errors.push(FB.T('Era {id} has an unknown emblem style.', { id:id }));
+      }
+      if (FB.currencyPresentationFaults(era.currency).length) {
+        errors.push(FB.T('Era {id} has an invalid currency definition.', { id:id }));
       }
       /* the technology and military slots (js/technology.js, js/armies.js) */
       var slotErrors = (FB.validateEraTechnology ? FB.validateEraTechnology(id, era) : [])

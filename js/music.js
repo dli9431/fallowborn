@@ -13,6 +13,7 @@ window.FB = window.FB || {};
   let selectedIntro = null;
   let tracksById = {};
   let banksById = {};
+  let banksBySelector = {};
   let supported = false;
   let initialized = false;
   let mode = 'title';
@@ -252,9 +253,15 @@ window.FB = window.FB || {};
   function buildIndexes() {
     tracksById = {};
     banksById = {};
+    banksBySelector = {};
     if (!catalog) return;
     (catalog.tracks || []).forEach(function (track) { tracksById[track.id] = track; });
-    (catalog.banks || []).forEach(function (bank) { banksById[bank.id] = bank; });
+    (catalog.banks || []).forEach(function (bank) {
+      banksById[bank.id] = bank;
+      const selector = bank.faith + '/' + bank.culture + '/' + bank.role;
+      if (!banksBySelector[selector]) banksBySelector[selector] = [];
+      banksBySelector[selector].push(bank);
+    });
     introTracks().forEach(function (track) { tracksById[track.id] = track; });
   }
 
@@ -398,6 +405,7 @@ window.FB = window.FB || {};
   M.init = function () {
     if (initialized) return;
     initialized = true;
+    if (FB.platform.isCrazyGames) return;
     catalog = FBDATA.musicCatalog || {
       schema:1, intro:null, intros:[], tracks:[], banks:[], totalBytes:0, totalDuration:0
     };
@@ -998,7 +1006,18 @@ window.FB = window.FB || {};
     return candidates;
   }
 
-  function findBank(state, role) {
+  function bankMatchesEra(bank, era, specific) {
+    if (bank.eras === undefined || bank.eras === null) return !specific;
+    return specific && Array.isArray(bank.eras) && bank.eras.indexOf(era) >= 0;
+  }
+  function selectorBank(selector, era, specific) {
+    const candidates = banksBySelector[selector] || [];
+    for (let i = 0; i < candidates.length; i++) {
+      if (bankMatchesEra(candidates[i], era, specific)) return candidates[i];
+    }
+    return null;
+  }
+  function findBankPass(state, role, era, specific) {
     const me = currentCharacter(state);
     if (!me) return null;
     const faiths = faithCandidates(me.religion, state);
@@ -1008,26 +1027,39 @@ window.FB = window.FB || {};
       for (let c = 0; c < cultures.length; c++) {
         for (let f = 0; f < faiths.length; f++) {
           const id = faiths[f] + '/' + cultures[c] + '/' + roles[r];
-          if (banksById[id]) return banksById[id];
+          const bank = selectorBank(id, era, specific);
+          if (bank) return bank;
         }
         const allFaith = 'all/' + cultures[c] + '/' + roles[r];
-        if (banksById[allFaith]) return banksById[allFaith];
+        const bank = selectorBank(allFaith, era, specific);
+        if (bank) return bank;
       }
       const fallback = FB.faithValue(state, me.religion, 'music.fallback').value ||
         FBDATA.faithDefaults.musicFallback;
       const fallbackId = fallback + '/all/' + roles[r];
-      if (banksById[fallbackId]) return banksById[fallbackId];
+      const fallbackBank = selectorBank(fallbackId, era, specific);
+      if (fallbackBank) return fallbackBank;
       const general = FBDATA.faithDefaults.musicFallback + '/all/' + roles[r];
-      if (banksById[general]) return banksById[general];
+      const generalBank = selectorBank(general, era, specific);
+      if (generalBank) return generalBank;
     }
     for (let i = 0; i < (catalog.banks || []).length; i++) {
-      if (catalog.banks[i].role === role) return catalog.banks[i];
+      if (catalog.banks[i].role === role && bankMatchesEra(catalog.banks[i], era, specific)) {
+        return catalog.banks[i];
+      }
     }
-    return (catalog.banks || [])[0] || null;
+    for (let i = 0; i < (catalog.banks || []).length; i++) {
+      if (bankMatchesEra(catalog.banks[i], era, specific)) return catalog.banks[i];
+    }
+    return null;
   }
 
   M.resolveBank = function (state) {
-    return state ? findBank(state, roleFor(state)) : null;
+    if (!state || !catalog || FB.platform.isCrazyGames) return null;
+    const era = FB.campaignEra ? FB.campaignEra(state) : null;
+    const role = roleFor(state);
+    return (era && findBankPass(state, role, era, true)) ||
+      findBankPass(state, role, era, false);
   };
 
   function downloadedBanks() {

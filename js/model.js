@@ -291,6 +291,11 @@ window.FB = window.FB || {};
         }
       }
       effective.id = id;
+      if (effective.architecture !== null && effective.architecture !== undefined &&
+          (typeof effective.architecture !== 'string' ||
+            !own(FBDATA.architectureStyles || {}, effective.architecture))) {
+        fault(id, 'unknown architecture style ' + effective.architecture + '.');
+      }
       effective.name = typeof def.name === 'string' && def.name
         ? def.name : parent && parent.name || id;
       if (!effective.tradition) effective.tradition = 'other';

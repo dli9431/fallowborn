@@ -248,8 +248,56 @@ window.FB = window.FB || {};
     ];
   };
 
-  /* procedural coat of arms drawn onto a canvas ctx */
-  FB.drawCrest = function (canvas, seedStr) {
+  function standard(ctx, hash, c1, c2) {
+    ctx.strokeStyle = '#d8b24a'; ctx.lineWidth = 0.045;
+    ctx.beginPath(); ctx.moveTo(0.2, 0.04); ctx.lineTo(0.2, 0.96); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(0.24, 0.12); ctx.lineTo(0.9, 0.12);
+    ctx.lineTo(0.9, 0.7); ctx.lineTo(0.57, 0.61); ctx.lineTo(0.24, 0.7);
+    ctx.closePath(); ctx.fillStyle = c1; ctx.fill(); ctx.stroke();
+    ctx.fillStyle = c2; ctx.fillRect(0.3, 0.22, 0.54, 0.12);
+    ctx.fillRect(0.3 + (hash >>> 5) % 3 * 0.16, 0.37, 0.14, 0.15);
+  }
+  function medallion(ctx, c1) {
+    ctx.beginPath(); ctx.arc(0.5, 0.5, 0.42, 0, Math.PI * 2);
+    ctx.fillStyle = c1; ctx.fill();
+    ctx.strokeStyle = '#d8b24a'; ctx.lineWidth = 0.045; ctx.stroke();
+  }
+  function chiRho(ctx, hash, c1, c2) {
+    medallion(ctx, c1);
+    ctx.strokeStyle = c2; ctx.lineWidth = 0.055;
+    ctx.beginPath(); ctx.moveTo(0.5, 0.21); ctx.lineTo(0.5, 0.8);
+    ctx.moveTo(0.29, 0.39); ctx.lineTo(0.71, 0.75);
+    ctx.moveTo(0.71, 0.39); ctx.lineTo(0.29, 0.75);
+    ctx.moveTo(0.5, 0.21);
+    ctx.bezierCurveTo(0.79, 0.15, 0.79, 0.46, 0.5, 0.44); ctx.stroke();
+  }
+  function tamga(ctx, hash, c1, c2) {
+    medallion(ctx, c1);
+    ctx.strokeStyle = c2; ctx.lineWidth = 0.055;
+    ctx.beginPath(); ctx.moveTo(0.5, 0.23); ctx.lineTo(0.5, 0.76);
+    ctx.moveTo(0.29, 0.28); ctx.lineTo(0.29, 0.48);
+    ctx.lineTo(0.71, 0.48); ctx.lineTo(0.71, 0.28);
+    const spread = 0.12 + (hash >>> 5) % 3 * 0.035;
+    ctx.moveTo(0.5 - spread, 0.77); ctx.lineTo(0.5, 0.63);
+    ctx.lineTo(0.5 + spread, 0.77); ctx.stroke();
+  }
+  const EMBLEMS = { standard:standard, chi_rho:chiRho, tamga:tamga };
+  FB.isEmblemStyle = function (id) {
+    return id === 'heraldry' || Object.prototype.hasOwnProperty.call(EMBLEMS, id);
+  };
+  FB.emblemStyle = function (state) {
+    if (state === null) return 'heraldry'; // explicit title-shell art
+    if (state === undefined) state = FB.state;
+    const id = FB.campaignEra ? FB.campaignEra(state) : null;
+    const era = id && FBDATA.eras[id];
+    return era && FB.isEmblemStyle(era.emblem) ? era.emblem : 'heraldry';
+  };
+  FB.crestVisualKey = function (seed, state) {
+    return FB.emblemStyle(state) + '|' + String(seed || 'Fallowborn');
+  };
+
+  /* Procedural house art. The default shield's paths and hash stay intact. */
+  FB.drawCrest = function (canvas, seedStr, state) {
     if (!canvas || typeof canvas.getContext !== 'function') return false;
     let ctx;
     try {
@@ -265,6 +313,13 @@ window.FB = window.FB || {};
     const hue1 = ((hsh >>> 3) % 360), hue2 = (hue1 + 120 + ((hsh >>> 9) % 120)) % 360;
     const c1 = 'hsl(' + hue1 + ',55%,38%)', c2 = 'hsl(' + hue2 + ',60%,62%)';
     ctx.clearRect(0, 0, w, h);
+    const style = FB.emblemStyle(state);
+    if (style !== 'heraldry') {
+      ctx.save(); ctx.scale(w, h);
+      EMBLEMS[style](ctx, hsh, c1, c2);
+      ctx.restore();
+      return true;
+    }
     // shield path
     ctx.save();
     ctx.beginPath();

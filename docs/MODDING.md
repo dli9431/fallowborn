@@ -453,6 +453,7 @@ A JSON mod is one object with any of these keys:
   "titles":    { "christian": ["Serf", "..."], "christian_f": ["Serf", "..."] },
   "papacy":    { ...complete Catholic Papacy definition... },
   "currency":  { "id": "sterling", "label": "Sterling", "icon": "£", ... },
+  "architectureStyles": { "regional": { "shapes": { "worship": "dome" } } },
   "balance":   {
     "freedomCost": 30,
     "freedomSpouseFactor": 0.5,
@@ -5217,3 +5218,15 @@ Resolution is registry default, campaign era, scoped government, scoped faith, t
 Content definitions may declare systems as a nonempty array of required ids, or system as one required id. Do not declare both. All requirements must be enabled. Deeds, focuses, events, event triggers, options and option requirements, traits, policies, privileges, elections, political blocs, religious paths, feudal service charters, tenure archetypes and council seats carry these requirements. Content disabled in the current scope is hidden and cannot be invoked directly. Bookmarks and mods reject unknown content requirements, including nested event options, before application. See docs/designs/systems.md for lifecycle and save behavior.
 
 Display government resolution uses FB.station.context consistently for lexicon lookups and portraits. An explicit lexicon realm overrides the viewer; otherwise the player's own living realm or immediate liege applies, NPC rulers use their realm, and other NPCs use their residence holder. A form's costume affects those subjects only, with the era costume as fallback. Campaign loading may call FB.activateBookmark(id, progress, done, { geography: savedGeographyId }) to retain a saved physical base without changing the bookmark registry.
+
+Period presentation data
+
+FBDATA.architectureStyles (data/eras.js) is a style-id table and an accepted runtime-mod root. Mods replace entries by id. Each entry accepts palettes and shapes objects, with omitted properties taking the manuscript defaults. palettes.walls, roofs, stones and banners are non-empty arrays of up to 32 colors; leaf, trunk and ink are single colors. Colors use hexadecimal or numeric rgb/rgba syntax. shapes.dwellings accepts pitched or flat; shapes.worship accepts spire, dome or basilica; shapes.fortification accepts crenellated or palisade. Unknown palette fields, shape slots or shape names reject the mod before it applies. Data selects registered drawing functions and never contains executable drawing code.
+
+A culture can declare architecture as a style id; inheritance and campaign-founded cultures use the normal effective culture lookup. A null architecture clears an inherited selection and uses the era fallback. An era's architecture declares its fallback style id, with null retaining manuscript. The map uses the county's principal culture. Unknown culture/era styles and malformed style tables fail bookmark activation. All existing eras leave architecture null, retaining the original settlement pixels.
+
+An era's emblem declares heraldry, standard, chi_rho or tamga; null or omission retains heraldry. This is the same deterministic house or realm seed in a different registered form, shared across cards, the topbar and player-host markers. The title's game crest always remains heraldry. Eras remain engine data rather than a runtime-mod root; edit data/eras.js to author period defaults. No emblem or architecture fields need to be added to saves.
+
+Era and geography currency can be null, a pair such as { "label": "Solidi", "icon": "S" }, or the complete top-level currency schema documented earlier. Priority is explicit runtime currency mod, stamped geography, stamped era, then built-in currency. A pair changes only the purse label/icon and retains the built-in units. Use a full definition for period unit names and compact symbols. Invalid era or geography declarations fail activation; invalid explicit currency mods retain their existing built-in fallback. balance.coinageSymbol still overrides only the icon when no explicit currency mod is supplied. Stored economic values remain gold.
+
+Gameplay music banks optionally declare eras as a non-empty array of era ids. Resolution first prefers the campaign era and then repeats the existing faith/culture/role fallback over unscoped banks; banks scoped to other eras are excluded. The generated catalog can obtain scopes from an optional era prefix in music/<era>/<faith>/<culture>/<role>/<NNN>-<slug>.opus, or music/banks.json mapping existing bank ids to era-id arrays. Scoped folders have distinct bank and track ids. Build and itch staging retain bank scopes. The CrazyGames distribution remains silent. Music catalogs and era tables are not runtime-mod roots.

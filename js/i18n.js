@@ -51,6 +51,8 @@ window.FBDATA = window.FBDATA || {};
   let englishCatalogCallbacks = [];
   let lastKey = '';
   let activeCurrency = null;
+  let currencyOverride = false;
+  let legacyCurrencyIcon = null;
 
   FBDATA.lang = FBDATA.lang || {};
   FB.locale = 'en';
@@ -166,14 +168,46 @@ window.FBDATA = window.FBDATA || {};
     const normalized = supplied ? normalizeCurrency(raw) : copyCurrency(DEFAULT_CURRENCY);
     const valid = !!normalized;
     activeCurrency = normalized || copyCurrency(DEFAULT_CURRENCY);
+    // Even an invalid explicit mod keeps its established built-in fallback.
+    currencyOverride = !!supplied;
+    legacyCurrencyIcon = !supplied && typeof legacyIcon === 'string' && legacyIcon
+      ? legacyIcon : null;
     if (!supplied && typeof legacyIcon === 'string' && legacyIcon) {
       activeCurrency.icon = legacyIcon;
     }
     FBDATA.currency = copyCurrency(activeCurrency);
     return valid;
   };
-  FB.currencyDef = function () { return copyCurrency(activeCurrency); };
-  FB.currencyLabel = function () { return FB.L(activeCurrency.label); };
+  function presentationCurrency(raw) {
+    if (!plainObject(raw)) return null;
+    if (onlyFields(raw, { label:1, icon:1 })) {
+      if (!currencyText(raw.label, 80, false) || !currencyText(raw.icon, 16, false)) return null;
+      const def = copyCurrency(DEFAULT_CURRENCY);
+      def.label = raw.label; def.icon = raw.icon;
+      return def;
+    }
+    return normalizeCurrency(raw);
+  }
+  FB.currencyPresentationFaults = function (raw) {
+    return raw === null || raw === undefined || presentationCurrency(raw) ? [] :
+      ['currency needs a valid label and icon, or a complete currency definition.'];
+  };
+  function currencyFor(state) {
+    if (currencyOverride) return activeCurrency;
+    if (state === undefined) state = FB.state;
+    const start = state && state.start;
+    const geography = start && start.geography && FB.geography
+      ? FB.geography(start.geography) : FB.activeGeography;
+    const eraId = FB.campaignEra ? FB.campaignEra(state) : null;
+    const era = eraId && FBDATA.eras[eraId];
+    const def = presentationCurrency(geography && geography.currency) ||
+      presentationCurrency(era && era.currency);
+    if (!def) return activeCurrency;
+    if (legacyCurrencyIcon) def.icon = legacyCurrencyIcon;
+    return def;
+  }
+  FB.currencyDef = function (state) { return copyCurrency(currencyFor(state)); };
+  FB.currencyLabel = function (state) { return FB.L(currencyFor(state).label); };
   function moneyStyle(opts) {
     if (typeof opts === 'string') return opts;
     return opts && opts.style ? opts.style : 'compact';
@@ -186,42 +220,43 @@ window.FBDATA = window.FBDATA || {};
       : number + gap + unit.symbol;
   }
   FB.money = function (amount, opts) {
+    const currency = currencyFor(opts && typeof opts === 'object' ? opts.state : undefined);
     const style = moneyStyle(opts);
-    if (style === 'icon') return activeCurrency.icon;
+    if (style === 'icon') return currency.icon;
     if (typeof amount !== 'number' || !isFinite(amount)) return '—';
-    const total = Math.round(Math.abs(amount) * activeCurrency.smallestPerGold);
+    const total = Math.round(Math.abs(amount) * currency.smallestPerGold);
     if (!isFinite(total) || total > 9007199254740991) return '—';
     let terms = [];
     let remainder = total;
     let started = false;
-    for (let i = 0; i < activeCurrency.units.length; i++) {
-      const unit = activeCurrency.units[i];
+    for (let i = 0; i < currency.units.length; i++) {
+      const unit = currency.units[i];
       const count = Math.floor(remainder / unit.value);
       remainder -= count * unit.value;
       const largestZero = total === 0 && i === 0;
-      const zeroMinor = activeCurrency.showZeroMinor && started;
+      const zeroMinor = currency.showZeroMinor && started;
       if (!count && !largestZero && !zeroMinor) continue;
       started = started || count > 0 || largestZero;
       terms.push({ index:i, count:count });
     }
     if (!terms.length) {
-      terms.push({ index:activeCurrency.units.length - 1, count:0 });
+      terms.push({ index:currency.units.length - 1, count:0 });
     }
-    if (terms.length > activeCurrency.maxUnits) {
+    if (terms.length > currency.maxUnits) {
       let represented = 0;
-      for (let i = 0; i < activeCurrency.maxUnits; i++) {
-        represented += terms[i].count * activeCurrency.units[terms[i].index].value;
+      for (let i = 0; i < currency.maxUnits; i++) {
+        represented += terms[i].count * currency.units[terms[i].index].value;
       }
       if (represented === total) {
-        terms = terms.slice(0, activeCurrency.maxUnits);
+        terms = terms.slice(0, currency.maxUnits);
       } else {
-        const exact = terms.slice(0, activeCurrency.maxUnits - 1);
+        const exact = terms.slice(0, currency.maxUnits - 1);
         let consumed = 0;
         for (let i = 0; i < exact.length; i++) {
-          consumed += exact[i].count * activeCurrency.units[exact[i].index].value;
+          consumed += exact[i].count * currency.units[exact[i].index].value;
         }
         exact.push({
-          index:activeCurrency.units.length - 1,
+          index:currency.units.length - 1,
           count:total - consumed
         });
         terms = exact;
@@ -230,7 +265,7 @@ window.FBDATA = window.FBDATA || {};
     const parts = [];
     for (let i = 0; i < terms.length; i++) {
       const term = terms[i];
-      const unit = activeCurrency.units[term.index];
+      const unit = currency.units[term.index];
       const count = term.count;
       if (style === 'long') {
         const name = FB.L(count === 1 ? unit.singular : unit.plural);

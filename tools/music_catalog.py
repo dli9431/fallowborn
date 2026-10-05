@@ -108,11 +108,14 @@ def track_record(path: Path, music_root: Path, intro: bool = False) -> dict:
         return record
 
     parts = path.relative_to(music_root).parts
-    if len(parts) != 4:
+    if len(parts) not in (4, 5):
         raise CatalogError(
-            f"{path}: expected music/<faith>/<culture>/<role>/<file>"
+            f"{path}: expected music/[<era>/]<faith>/<culture>/<role>/<file>"
         )
-    faith, culture, role, _ = parts
+    era = parts[0] if len(parts) == 5 else None
+    faith, culture, role, _ = parts[-4:]
+    if era and (era == "all" or not SELECTOR_RE.fullmatch(era)):
+        raise CatalogError(f"{path}: invalid era selector {era!r}")
     if not SELECTOR_RE.fullmatch(faith):
         raise CatalogError(f"{path}: invalid faith selector {faith!r}")
     if not SELECTOR_RE.fullmatch(culture):
@@ -120,12 +123,14 @@ def track_record(path: Path, music_root: Path, intro: bool = False) -> dict:
     if role not in ROLES:
         raise CatalogError(f"{path}: role must be folk, war, or court")
     record.update({
-        "id": "-".join((faith, culture, role, slug)),
+        "id": "-".join(([era] if era else []) + [faith, culture, role, slug]),
         "faith": faith,
         "culture": culture,
         "role": role,
-        "bankId": "/".join((faith, culture, role)),
+        "bankId": "/".join(([era] if era else []) + [faith, culture, role]),
     })
+    if era:
+        record["eras"] = [era]
     return record
 
 
@@ -174,15 +179,37 @@ def scan(root: Path, selected_sources: set[str] | None = None) -> tuple[list[dic
     return intros, tracks
 
 
-def make_catalog(intros: list[dict], tracks: list[dict]) -> dict:
+def bank_era_metadata(root: Path) -> dict[str, list[str]]:
+    """Optional authored bank scopes, retained in generated/staged catalogs."""
+    path = root / "music" / "banks.json"
+    if not path.exists():
+        return {}
+    raw = json.loads(path.read_text(encoding="utf-8"))
+    if not isinstance(raw, dict):
+        raise CatalogError(f"{path}: expected an object keyed by bank id")
+    for bank_id, eras in raw.items():
+        if (not isinstance(eras, list) or not eras or
+                any(not isinstance(era, str) or era == "all" or
+                    not SELECTOR_RE.fullmatch(era) for era in eras) or
+                len(set(eras)) != len(eras)):
+            raise CatalogError(f"{path}: {bank_id} needs a non-empty unique era id list")
+    return raw
+
+
+def make_catalog(intros: list[dict], tracks: list[dict],
+                 bank_eras: dict[str, list[str]] | None = None) -> dict:
     grouped = defaultdict(list)
     for track in tracks:
         grouped[track["bankId"]].append(track)
+    bank_eras = bank_eras or {}
+    for bank_id in bank_eras:
+        if bank_id not in grouped:
+            raise CatalogError(f"unknown bank in music/banks.json: {bank_id}")
     intro_by_faith = {intro["faith"]: intro for intro in intros}
     banks = []
     for bank_id in sorted(grouped):
         bank_tracks = grouped[bank_id]
-        faith, culture, role = bank_id.split("/")
+        faith, culture, role = bank_id.split("/")[-3:]
         bank_records = bank_tracks[:]
         if faith in intro_by_faith:
             bank_records.append(intro_by_faith[faith])
@@ -195,6 +222,9 @@ def make_catalog(intros: list[dict], tracks: list[dict]) -> dict:
             "bytes": sum(track["bytes"] for track in bank_records),
             "duration": round(sum(track["duration"] for track in bank_records), 3),
         })
+        eras = bank_eras.get(bank_id, bank_tracks[0].get("eras"))
+        if eras:
+            banks[-1]["eras"] = eras[:]
     all_records = intros + tracks
     return {
         "schema": 1,
@@ -235,7 +265,8 @@ def copy_stage(root: Path, stage: Path, intros: list[dict], tracks: list[dict]) 
         target = stage / record["src"]
         target.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(source, target)
-    write_catalog(stage / "data" / "music_catalog.js", make_catalog(intros, tracks))
+    write_catalog(stage / "data" / "music_catalog.js",
+                  make_catalog(intros, tracks, bank_era_metadata(root)))
 
 
 def parse_args() -> argparse.Namespace:
@@ -254,14 +285,15 @@ def main() -> int:
     output = args.output.resolve() if args.output else root / "data" / "music_catalog.js"
     try:
         intros, tracks = scan(root)
+        catalog = make_catalog(intros, tracks, bank_era_metadata(root))
         if args.command == "build":
-            write_catalog(output, make_catalog(intros, tracks))
+            write_catalog(output, catalog)
             print(
                 f"Wrote {output} ({len(intros)} intro themes, "
                 f"{len(tracks)} gameplay tracks)."
             )
         elif args.command == "check":
-            expected = render(make_catalog(intros, tracks))
+            expected = render(catalog)
             actual = output.read_text(encoding="utf-8") if output.exists() else ""
             if actual != expected:
                 raise CatalogError(
