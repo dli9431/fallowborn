@@ -1204,12 +1204,14 @@ def extract_structured(inv: Inventory) -> None:
                         TOKEN_RE.findall(record["text"]),
                     )
 
-    for prop, namespace in (("focuses", "focus"), ("deeds", "action")):
+    for prop, namespace in (("focuses", "focus"), ("deeds", "action"),
+                            ("deedSections", "deedSection")):
         values = node_array(find_assignment(ACTIONS_FILE, "FBDATA", prop)) or []
         for index, item_node in enumerate(values):
             item = node_object(item_node) or {}
             item_id = node_string(item.get("id")) or str(index)
-            for field in ("label", "desc"):
+            fields = ("label", "subhead", "statusLine") if prop == "deedSections" else ("label", "desc")
+            for field in fields:
                 for branch, record, line in branch_records(item.get(field)):
                     inv.add(
                         f"{namespace}.{item_id}.{field}.{branch}",

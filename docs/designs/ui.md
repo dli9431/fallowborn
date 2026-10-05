@@ -3630,3 +3630,14 @@ Religious head claim, restoration and absolution reviews use the effective local
 Optional institution visibility
 
 Navigation, map controls, Deeds entries, event options, policy and privilege lists, trait chips and technology unlock descriptions omit content whose system requirements are disabled. Apply FB.systemContentEnabled before building a preview or evaluating eligibility. A disabled institution does not show a locked card with a requirement explanation. Direct modal calls and action mutations recheck availability. In a campaign without feudal service, county and duchy grants use the ordinary hereditary transfer review without service-charter or tenure selectors.
+
+
+Registered Deeds sections
+
+FBDATA.deedSections owns the complete Deeds layout, including tutorial guidance, attached story cards, ongoing commitments, campaign cards, household summaries, Daily Focus and the deed accordions. The panel dispatches bounded renderer types in declared order rather than naming a section list. Theme and action-type layouts retain their existing order and grouping; a section with layout both participates in either. Equal order values use lexical section id as the deterministic tie breaker. Keyboard section numbers follow the available registry order.
+
+Each deed names its section and protected handler. FB.deeds supplies section lookup, filtered membership, localized section text and trusted registration. A section's optional system requirements and bounded availability conditions determine whether it appears. Unavailable primary sections also hide their deeds and prevent normal deed execution; existing action eligibility and technology checks remain in force. Runtime JSON mods add ordinary deed sections and declarative deeds in the same validated transaction, without executable UI callbacks. Story sections render attached stories through the existing shared story card and sheet.
+
+Accordion bodies remain lazily constructed and retained when collapsed. Modal Back, Cancel, Not now, Close and Escape continue through shared navigation. Exact Deeds redraws retain the scrolling sidebody position, expanded Details and the focused surviving panel control; ordinary modal returns can reuse the mounted panel. A registry revision or availability change invalidates reuse, so a disabled section cannot leave stale visible controls.
+
+Technology impact: this is a presentation and registry refactor of existing actions. No new player capability or research gate is introduced, so no technology review ledger entry is required.

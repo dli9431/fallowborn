@@ -4831,22 +4831,141 @@ window.FB = window.FB || {};
     }
   }
 
+  const DEED_SECTION_TYPES = {
+    tutorial:1, stories:1, commitments:1, campaigns:1, holy_campaign:1,
+    household_summary:1, next_steps:1, focus:1, deeds:1
+  };
+
+  function sectionById(id, sections) {
+    for (const section of sections || FBDATA.deedSections || []) {
+      if (section && section.id === id) return section;
+    }
+    return null;
+  }
+
+  function actionSectionId(action, layout) {
+    if (!action) return null;
+    const defaults = FBDATA.deedSectionDefaults;
+    const primary = action.section || action.group || defaults.theme;
+    if (layout !== 'action-type') return primary;
+    if (action.actionTypeSection) return action.actionTypeSection;
+    /* A section in both layouts keeps its own deeds in both. Legacy theme
+       groups still honor the existing action-type preference. */
+    const section = sectionById(primary);
+    if (section && section.layout === 'both') return primary;
+    return action.layoutGroup ||
+      defaults[action.flow === 'choices' ? 'choices' : 'immediate'];
+  }
+
+  function sectionAvailable(state, section) {
+    return !!section && FB.systemContentEnabled(state, section) &&
+      (!section.availability || actionEligibilityMet(state, section.availability));
+  }
+
+  FB.validateDeedSections = function (sections, references) {
+    const errors = [], seen = {}, singletonTypes = {};
+    const refs = references || FBDATA;
+    const fields = { id:1, type:1, order:1, layout:1, label:1, subhead:1,
+      statusLine:1, availability:1, open:1, system:1, systems:1 };
+    if (!Array.isArray(sections)) return ['deedSections must be an array.'];
+    for (const section of sections) {
+      const path = 'deedSections.' + (section && section.id);
+      if (!section || typeof section !== 'object' || Array.isArray(section)) {
+        errors.push('deedSections entries must be objects.');
+        continue;
+      }
+      for (const key in section) {
+        if (actionOwn(section, key) && !actionOwn(fields, key)) {
+          errors.push(path + '.' + key + ' is not recognized.');
+        }
+      }
+      if (typeof section.id !== 'string' || !/^[a-z][a-z0-9_]*$/.test(section.id) ||
+          actionOwn(Object.prototype, section.id) || actionOwn(seen, section.id)) {
+        errors.push(path + ' must have one unique lowercase id.');
+      }
+      seen[section.id] = true;
+      if (!actionOwn(DEED_SECTION_TYPES, section.type)) {
+        errors.push(path + ' has an unknown renderer type.');
+      } else if (section.type !== 'deeds') {
+        if (singletonTypes[section.type]) errors.push(path + ' repeats a singleton renderer.');
+        singletonTypes[section.type] = true;
+      }
+      if (typeof section.order !== 'number' || !isFinite(section.order) ||
+          Math.floor(section.order) !== section.order) {
+        errors.push(path + ' order must be a finite integer.');
+      }
+      if (['theme', 'action-type', 'both'].indexOf(section.layout) < 0) {
+        errors.push(path + ' has an invalid layout.');
+      }
+      for (const field of ['label', 'subhead', 'statusLine']) {
+        if ((field === 'label' && (section.type === 'deeds' || section.type === 'focus')) ||
+            section[field] !== undefined) {
+          if (typeof section[field] !== 'string' || !section[field].trim()) {
+            errors.push(path + '.' + field + ' must be a non-empty string.');
+          }
+        }
+      }
+      if (section.open !== undefined && typeof section.open !== 'boolean') {
+        errors.push(path + '.open must be a boolean.');
+      }
+      errors.push.apply(errors, FB.systems.validateContent(section, path));
+      if (section.availability !== undefined) {
+        validateActionConditions(section.availability, path + '.availability', refs, errors, false);
+      }
+    }
+    return errors;
+  };
+
+  FB.deeds = {
+    registerSection:function (definition) {
+      const sections = FBDATA.deedSections.slice();
+      if (sectionById(definition && definition.id)) {
+        throw new Error('A Deeds section with that id is already registered.');
+      }
+      sections.push(definition);
+      FB.installActionData(FBDATA.focuses, FBDATA.deeds, sections);
+    },
+    sectionForAction:actionSectionId,
+    action:function (id) { return deedById[id] || null; },
+    sections:function (state, layout) {
+      return (FBDATA.deedSections || []).filter(function (section) {
+        return (section.layout === 'both' || section.layout === layout) &&
+          sectionAvailable(state, section);
+      }).slice().sort(function (a, b) {
+        return a.order - b.order || (a.id < b.id ? -1 : (a.id > b.id ? 1 : 0));
+      });
+    },
+    items:function (state, section, layout, listed) {
+      if (!sectionAvailable(state, section)) return [];
+      return (listed || FB.listInstants(state, { deferEligibility:true })).filter(function (item) {
+        return actionSectionId(item.a, layout) === section.id;
+      });
+    },
+    text:function (state, section, field) {
+      return section[field] ? FB.dataText(state, state.player.charId,
+        'deedSection', section.id, section, field, {}) : '';
+    },
+    commitmentActions:function (name) {
+      return FB.instants.filter(function (action) { return action.commitment === name; });
+    }
+  };
+
   function validateActionRecords(records, handlers, baselineIds, kind, references) {
     const errors = [];
     const seen = {};
     const seenOrders = {};
-    const allowedGroups = { work:1, life:1, faith:1, realm:1, war:1 };
     const allowedFlows = { immediate:1, no_day:1, choices:1 };
     const baselineFields = kind === 'focus'
       ? { id:1, label:1, desc:1, order:1, vocational:1,
           shortcutFamily:1, eligibility:1, handler:1 }
       : { id:1, label:1, desc:1, order:1, group:1, flow:1, layoutGroup:1,
-          cooldownDays:1, requiresTech:1, eligibility:1, handler:1 };
+          cooldownDays:1, requiresTech:1, eligibility:1, handler:1,
+          section:1, actionTypeSection:1, availableWhileTraveling:1, commitment:1 };
     const declarativeDeedFields = {
       id:1, label:1, desc:1, order:1, group:1, flow:1, layoutGroup:1,
       cooldownDays:1, requiresTech:1, visibility:1, eligibility:1,
       costs:1, effects:1, queueEvent:1, spendsDay:1, handler:1,
-      capability:1, choices:1
+      capability:1, choices:1, section:1, actionTypeSection:1, availableWhileTraveling:1
     };
     const declarativeFocusFields = {
       id:1, label:1, desc:1, order:1, handler:1, contexts:1,
@@ -4956,15 +5075,26 @@ window.FB = window.FB || {};
         if (typeof handler.show !== 'function' || typeof handler.run !== 'function') {
           errors.push(kind + '.' + def.id + ' handler is incomplete.');
         }
-        if (!actionOwn(allowedGroups, def.group)) {
-          errors.push(kind + '.' + def.id + ' has an invalid group.');
+        const sections = references.deedSections || FBDATA.deedSections;
+        function validatePlacement(id, layout, field) {
+          const section = sectionById(id, sections);
+          if (!section || section.type !== 'deeds' ||
+              (section.layout !== 'both' && section.layout !== layout)) {
+            errors.push(kind + '.' + def.id + ' has an invalid ' + field + '.');
+          }
         }
+        validatePlacement(def.section || def.group, 'theme', 'section/group');
+        if (def.group !== undefined) validatePlacement(def.group, 'theme', 'group');
         if (!actionOwn(allowedFlows, def.flow)) {
           errors.push(kind + '.' + def.id + ' has an invalid flow.');
         }
-        if (def.layoutGroup !== undefined &&
-            ['deeds', 'personal', 'ruler'].indexOf(def.layoutGroup) < 0) {
-          errors.push(kind + '.' + def.id + ' has an invalid layout group.');
+        if (def.layoutGroup !== undefined) validatePlacement(def.layoutGroup, 'action-type', 'layout group');
+        if (def.actionTypeSection !== undefined) validatePlacement(def.actionTypeSection, 'action-type', 'action-type section');
+        if (def.availableWhileTraveling !== undefined && typeof def.availableWhileTraveling !== 'boolean') {
+          errors.push(kind + '.' + def.id + ' availableWhileTraveling must be a boolean.');
+        }
+        if (def.commitment !== undefined && (typeof def.commitment !== 'string' || !def.commitment)) {
+          errors.push(kind + '.' + def.id + ' commitment must be a non-empty string.');
         }
         const handlerFlow = declarativeDeed
           ? (def.capability === 'resource_choice' ? 'choices'
@@ -5009,10 +5139,11 @@ window.FB = window.FB || {};
 
   FB.validateActionData = function (focusDefinitions, deedDefinitions, references) {
     const refs = references || FBDATA;
-    return validateActionRecords(focusDefinitions || FBDATA.focuses,
-      FOCUS_HANDLER_BY_ID, FOCUS_BASELINE_IDS, 'focus', refs).concat(
-        validateActionRecords(deedDefinitions || FBDATA.deeds,
-          DEED_HANDLER_BY_ID, DEED_BASELINE_IDS, 'deed', refs));
+    return FB.validateDeedSections(refs.deedSections || FBDATA.deedSections, refs).concat(
+      validateActionRecords(focusDefinitions || FBDATA.focuses,
+        FOCUS_HANDLER_BY_ID, FOCUS_BASELINE_IDS, 'focus', refs),
+      validateActionRecords(deedDefinitions || FBDATA.deeds,
+        DEED_HANDLER_BY_ID, DEED_BASELINE_IDS, 'deed', refs));
   };
 
   function actionEligibilityMet(state, eligibility) {
@@ -5156,7 +5287,8 @@ window.FB = window.FB || {};
       choice:null, shown:false, can:false, reason:'', preview:null,
       label:'', desc:''
     };
-    const shown = FB.systemContentEnabled(state, def) && declarativeChoiceVisible(state, choice);
+    const shown = sectionAvailable(state, sectionById(actionSectionId(def, 'theme'))) &&
+      FB.systemContentEnabled(state, def) && declarativeChoiceVisible(state, choice);
     let can = shown;
     let reason = '';
     if (can && choice.requiresTech &&
@@ -5408,6 +5540,23 @@ window.FB = window.FB || {};
         return systemTick(state);
       };
     }
+    if (kind === 'action') {
+      const sectionShow = out.show, sectionCan = out.can, sectionRun = out.run;
+      out.show = function (state) {
+        return sectionAvailable(state, sectionById(actionSectionId(out, 'theme'))) &&
+          sectionShow(state);
+      };
+      out.can = function (state) {
+        if (!sectionAvailable(state, sectionById(actionSectionId(out, 'theme')))) {
+          return FB.T('This institution is not available.');
+        }
+        return sectionCan ? sectionCan(state) : true;
+      };
+      out.run = function (state, options) {
+        if (!sectionAvailable(state, sectionById(actionSectionId(out, 'theme')))) return false;
+        return sectionRun(state, options);
+      };
+    }
     return out;
   }
 
@@ -5439,6 +5588,7 @@ window.FB = window.FB || {};
       nextDeedById[projected.id] = projected;
     }
     return {
+      sections:references.deedSections || FBDATA.deedSections,
       focusDefinitions:orderedFocusDefinitions,
       deedDefinitions:orderedDeedDefinitions,
       focuses:focuses,
@@ -5449,6 +5599,7 @@ window.FB = window.FB || {};
   }
 
   function installActionCatalogs(built) {
+    FBDATA.deedSections = built.sections;
     FBDATA.focuses = built.focusDefinitions;
     FBDATA.deeds = built.deedDefinitions;
     focusById = built.focusById;
@@ -5458,8 +5609,9 @@ window.FB = window.FB || {};
     FB.actionCatalogRevision = (FB.actionCatalogRevision || 0) + 1;
   }
 
-  FB.installActionData = function (focusDefinitions, deedDefinitions) {
-    const built = buildActionCatalogs(focusDefinitions, deedDefinitions, FBDATA);
+  FB.installActionData = function (focusDefinitions, deedDefinitions, sections) {
+    const references = Object.assign({}, FBDATA, { deedSections:sections || FBDATA.deedSections });
+    const built = buildActionCatalogs(focusDefinitions, deedDefinitions, references);
     installActionCatalogs(built);
   };
 
@@ -12347,10 +12499,7 @@ window.FB = window.FB || {};
     const deferEligibility = !!(options && options.deferEligibility);
     const out = [];
     for (const a of FB.instants) {
-      if (state.player.travel &&
-        ['games_calendar', 'host_games', 'travel_turn_back', 'travel_return_cargo', 'travel_marriage_residence',
-          'travel_settle_here', 'frontier_settle_here', 'review_serf_tenure', 'declare_manor', 'petition_barony', 'found_settlement',
-          'petition_liege', 'claim_higher_title'].indexOf(a.id) < 0) continue;
+      if (state.player.travel && !a.availableWhileTraveling) continue;
       if (a.compatibilityAlias) continue;
       const shown = !!a.show(state);
       if (!shown) continue;

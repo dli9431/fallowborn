@@ -627,9 +627,7 @@ separate declarative contracts below.
 }
 ```
 
-A focus override accepts `id` plus any of `label`, `desc`, `order`, and
-`eligibility`. A deed override accepts `id` plus any of `label`, `desc`, `order`,
-`group`, `layoutGroup`, `cooldownDays`, `requiresTech`, and `eligibility`.
+A focus override accepts id plus label, desc, order, eligibility and optional system requirements. A deed override also accepts group, layoutGroup, section, actionTypeSection, availableWhileTraveling, cooldownDays and requiresTech. See Deeds section registry below for placement and availability.
 
 - `label` and `desc` are localized display sources. They replace even a built-in
   state-dependent label or description. Their stable owners remain
@@ -641,9 +639,11 @@ A focus override accepts `id` plus any of `label`, `desc`, `order`, and
   complete effective catalogue must remain a permutation, so moving one action generally
   requires giving the displaced action the old order in the same mod, as in the focus
   example above.
-- A deed `group` is one of `work`, `life`, `faith`, `realm`, or `war`.
-- A deed `layoutGroup` is one of `deeds`, `personal`, or `ruler`; omission derives
-  the action-type layout from the deed's protected flow.
+
+A deed group is a legacy alias for a registered primary Deeds section; the shipped theme groups remain work, life, faith, realm and war. See Deeds section registry below.
+
+A deed layoutGroup names a registered alternate Deeds section; the shipped alternate groups remain deeds, personal and ruler. Omission derives the action-type layout from the protected flow unless the primary section supports both layouts.
+
 - `cooldownDays` is a fixed integer from 0 through 36000. A deed whose core handler
   calculates a dynamic cooldown cannot replace it with a fixed value.
 - `requiresTech` is one technology id or an array of up to 64 unique technology ids;
@@ -5217,3 +5217,16 @@ Resolution is registry default, campaign era, scoped government, scoped faith, t
 Content definitions may declare systems as a nonempty array of required ids, or system as one required id. Do not declare both. All requirements must be enabled. Deeds, focuses, events, event triggers, options and option requirements, traits, policies, privileges, elections, political blocs, religious paths, feudal service charters, tenure archetypes and council seats carry these requirements. Content disabled in the current scope is hidden and cannot be invoked directly. Bookmarks and mods reject unknown content requirements, including nested event options, before application. See docs/designs/systems.md for lifecycle and save behavior.
 
 Display government resolution uses FB.station.context consistently for lexicon lookups and portraits. An explicit lexicon realm overrides the viewer; otherwise the player's own living realm or immediate liege applies, NPC rulers use their realm, and other NPCs use their residence holder. A form's costume affects those subjects only, with the era costume as fallback. Campaign loading may call FB.activateBookmark(id, progress, done, { geography: savedGeographyId }) to retain a saved physical base without changing the bookmark registry.
+
+
+Deeds section registry
+
+FBDATA.deedSections is an ordered array of section definitions. A runtime mod may supply deedSections alongside deeds. Existing section records accept partial overrides; a new section needs a unique lowercase id, type, finite integer order and layout. Layout is theme, action-type or both. Order values may have gaps or ties; ties sort by section id. A missing system requirement means the section is always eligible for the system layer. Use system or systems for the same optional-system requirements as other content.
+
+The ordinary extension type is deeds. It needs a non-empty label and may supply subhead, statusLine, open (a boolean initial disclosure state) and availability. Availability uses the bounded action visibility conditions, including flags, age, station, culture and faith, without an explanation field. label, subhead and statusLine render through the deedSection localization namespace. No section may supply callbacks, executable handlers, arbitrary HTML or unknown fields. Sections of type deeds derive their ordered deed list from deed membership; an empty section stays hidden unless it supplies a statusLine.
+
+The other bounded renderer types are tutorial, stories, commitments, campaigns, holy_campaign, household_summary, next_steps and focus. Each is a singleton in the effective catalogue. These reuse existing UI and do not register new executable renderers. The focus type needs a label. Trusted shipped system modules can call FB.deeds.registerSection with a complete definition; duplicate ids are rejected. JSON mods use deedSections so section additions and their action references are validated together before either registry changes.
+
+A deed's section names a registered deeds section in theme or both. The older group field remains an accepted alias; an override changing group without section updates section too. A deed may supply actionTypeSection for an explicit alternate placement in action-type or both. Without it, a primary section in both retains its deeds in both layouts; a theme-only section uses the older layoutGroup or the existing flow-derived personal/direct defaults. Unknown sections and incompatible layouts are rejected. Built-in handler bindings and all existing flow, cooldown, cost, technology and eligibility protections remain intact.
+
+Disabling a primary section by system or availability hides its deeds and blocks normal execution, including shortcut entry points. Section predicates are pure queries and store nothing in saves. availableWhileTraveling is a boolean deed presentation field selecting deeds for the travelling list; core action handlers still enforce their own context. Built-in travel commitments declare their entry actions in metadata so the panel does not maintain a second list of deed ids. A mod's new action order still participates in the complete existing action-order permutation.
