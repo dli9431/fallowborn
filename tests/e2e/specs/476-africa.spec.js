@@ -9,7 +9,7 @@ dependsOnRuntime(__filename, [
   'js/authority.js', 'js/justice.js', 'js/population.js', 'js/events.js',
   'js/stories.js', 'js/story_campaign.js', 'js/story_476_rails.js',
   'js/story_western_court_476.js', 'js/wars.js', 'js/armies.js',
-  'js/save.js', 'js/save_v4.js', 'js/main.js'
+  'js/save.js', 'js/save_v4.js', 'js/main.js', 'js/modifiers.js', 'js/model.js'
 ]);
 const { test, expect } = require('../support/fixture');
 const { startParityGame } = require('../support/game/parity');
@@ -142,6 +142,59 @@ test('African event content follows local communities, profession and the late a
     expect(result).toEqual({ eligible:true, away:false, market:true, cargo:true,
       now:true, later:false, tagged:true });
   });
+
+for (const crazygames of [false, true]) {
+  test('African household goodwill reaches county support, previews and saved receipts with flag ' + crazygames,
+    async function ({ page }, testInfo) {
+      if (crazygames) await page.addInitScript(function () { window.FB_DISTRIBUTION = 'crazygames'; });
+      await start(page, testInfo);
+      const results = await page.evaluate(function () {
+        const initial = JSON.parse(FB.save.serialize());
+        return [
+          { id:'africa_estate_rolls_476', option:0, county:'tunis', support:2, gold:-2 },
+          { id:'africa_two_congregations_476', option:0, county:'tunis', support:2, gold:-3 },
+          { id:'africa_highland_market_476', option:0, county:'tlemcen', support:2, gold:0 },
+          { id:'africa_highland_market_476', option:1, county:'tlemcen', support:3, gold:-3 }
+        ].map(function (def) {
+          FB.save.restore(JSON.parse(JSON.stringify(initial)));
+          let s = FB.state;
+          const p = s.player, me = s.chars[p.charId];
+          p.provinceId = def.county; p.profession = 'civic_clerk'; p.gold = 100;
+          me.traits = [];
+          FB.setCountySupport(s, def.county, 0);
+          const elsewhere = FB.countySupportBase(s, 'ravenna');
+          const event = FB.eventById(def.id), option = event.options[def.option];
+          const ctx = FB.eventContextFor(s, event, {});
+          const bytes = JSON.stringify(s), rng = FB.getRngState();
+          const preview = FB.previewEventOption(s, event, option, ctx);
+          const pure = bytes === JSON.stringify(s) && rng === FB.getRngState();
+          const disclosed = preview.sections.some(function (section) {
+            return section.impacts.some(function (impact) {
+              return impact.type === 'commonVoice' && impact.amount === def.support;
+            });
+          });
+          const receipt = FB.resolveEventOption(s, event, option, ctx);
+          const support = FB.countySupportBase(s, def.county), gold = p.gold - 100;
+          const reported = receipt.impacts.some(function (impact) {
+            return impact.type === 'commonVoice' && impact.amount === def.support;
+          });
+          const log = JSON.stringify(s.log);
+          FB.save.restore(JSON.parse(FB.save.serialize())); s = FB.state;
+          return { id:def.id, option:def.option, pure:pure, disclosed:disclosed, reported:reported,
+            support:support, gold:gold, local:FB.countySupportBase(s, 'ravenna') === elsewhere,
+            saved:FB.countySupportBase(s, def.county) === support && log === JSON.stringify(s.log) };
+        });
+      });
+      expect(results).toEqual([
+        { id:'africa_estate_rolls_476', option:0, support:2, gold:-2 },
+        { id:'africa_two_congregations_476', option:0, support:2, gold:-3 },
+        { id:'africa_highland_market_476', option:0, support:2, gold:0 },
+        { id:'africa_highland_market_476', option:1, support:3, gold:-3 }
+      ].map(function (row) {
+        return Object.assign(row, { pure:true, disclosed:true, reported:true, local:true, saved:true });
+      }));
+    });
+}
 
 for (const outcome of ['won','failed','diverted']) {
   test('African reconquest resolves ' + outcome + ' against the current coastal ruler and cannot replay',

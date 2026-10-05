@@ -406,9 +406,9 @@
   }
   function rulerChoices(s, w) {
     if (R(s, 'federates_476') !== 'player' || s.player.charId !== w.odoacerId ||
-        !alive(s, w.odoacerId) || s.player.dead) return [];
+        !alive(s, w.odoacerId) || s.player.dead || w.rulerInterruptionTurn !== undefined) return [];
     if (s.owner.ravenna === 'player' && !w.governanceResolved) return [
-      { id:'accept_civic_rule', label:FB.T('Accept Ravenna’s civic settlement'), detail:FB.T('Protect civic courts and Nicene worship through living delegates and episcopal mediation. Adopt Roman civic government only after those agreements; no new territory is granted.') },
+      { id:'accept_civic_rule', label:FB.T('Accept Ravenna’s civic settlement'), detail:FB.T('In Ravenna, use City dealings to obtain episcopal mediation and a ratified council agreement protecting civic courts, public order and Nicene worship. Adopt Roman civic government only while that agreement remains effective; no new territory is granted.') },
       { id:'retain_host_rule', label:FB.T('Retain the host’s government'), detail:FB.T('Keep the federate government while civic demands remain unresolved. No new mandate, recognition or territory is granted.') }
     ];
     if (w.aiResolution || s.owner.ravenna !== R(s, 'italy')) return [];
@@ -422,7 +422,9 @@
     var terms = serviceTerms(s, w), agreement = FB.political.contractQuote(s, terms);
     var bishop = FB.religiousOfficeSnapshot(s, 'rome_bishop');
     var council = s.localInstitutions && s.localInstitutions.ravenna_council;
+    var petition = council && council.petitions['realm:player'];
     var facts = { turn:s.turn, player:s.player.charId, resolution:w.aiResolution || null,
+      interruption:w.rulerInterruptionTurn,
       governance:w.governanceResolved, owner:s.owner.ravenna, host:host(s, 'host_476_federates'),
       dead:s.player.dead, living:alive(s, w.odoacerId),
       west:FB.political.actor(s, actor(R(s, 'italy'))),
@@ -431,6 +433,8 @@
       civic:civicPermission(s, w), bishop:bishop && bishop.id,
       representative:council && council.representativeId,
       consent:FB.political.civicConsent(s, 'ravenna'),
+      councilAgreement:FB.localInstitutionConsent(s, 'ravenna_council', actor('player')),
+      councilTerms:petition && petition.terms,
       mediation:FB.localInstitutionMediationQuote(s, 'rome_see', actor('player'), 'ravenna'),
       institutions:JSON.parse(JSON.stringify(s.localInstitutions)),
       churchHolder:s.religiousHeads.rome_bishop,
@@ -444,6 +448,8 @@
         alive(s, w.orestesId) && facts.majority >= 0.5 ||
       id === 'accept_civic_rule' && alive(s, w.civicDelegateId) &&
         facts.representative === w.civicDelegateId && facts.consent.allowed &&
+        facts.councilAgreement && facts.councilTerms.courts &&
+        facts.councilTerms.protection && facts.councilTerms.tolerance &&
         facts.bishop && facts.mediation.allowed && facts.majority >= 0.5);
     return { id:id, allowed:!!allowed, reason:'ruler_settlement', facts:facts, stamp:JSON.stringify(facts) };
   }
@@ -476,6 +482,13 @@
   }
   function day(s, w) {
     var t = track(s);
+    /* Close the original ruler's unfinished review without ending the
+       dynasty's ordinary contracts or campaign. Completed decisions stand. */
+    if (R(s, 'federates_476') === 'player' && !w.governanceResolved &&
+        (!w.aiResolution || ['war','won'].indexOf(w.aiResolution) >= 0 || s.owner.ravenna === 'player') &&
+        w.rulerInterruptionTurn === undefined &&
+        (!alive(s, w.odoacerId) || s.player.dead || s.player.charId !== w.odoacerId))
+      w.rulerInterruptionTurn = s.turn;
     if (R(s, 'federates_476') === 'player' && w.aiResolution === 'war') {
       if (s.owner.ravenna === 'player') {
         w.aiResolution = 'won';
@@ -561,6 +574,10 @@
         ['negotiated','war','won','failed','diverged','declined'].indexOf(record.aiResolution) < 0) bad('aiResolution');
     if (record.governanceResolved !== undefined && record.governanceResolved !== false &&
         ['civic','federate'].indexOf(record.governanceResolved) < 0) bad('governanceResolved');
+    if (record.rulerInterruptionTurn !== undefined &&
+        (!Number.isInteger(record.rulerInterruptionTurn) || record.rulerInterruptionTurn < 0 ||
+          record.rulerInterruptionTurn > s.turn || record.governanceResolved ||
+          R(s, 'federates_476') !== 'player')) bad('rulerInterruptionTurn');
     for (var field of ['aiWarId','restoredClaimantId','restoredCourtId','restoredOfficeId'])
       if (record[field] !== undefined && (typeof record[field] !== 'string' || !record[field])) bad(field);
   }
@@ -577,6 +594,9 @@
     intro:function () { return FB.T('You decide for the host. Paid service, a campaign and a civic settlement are separate commitments, each using the ordinary authority rules.'); },
     status:function (s, w) {
       if (R(s, 'federates_476') !== 'player') return null;
+      if (w.rulerInterruptionTurn !== undefined) return { phase:'interrupted',
+        name:FB.T('Odoacer’s opening ended'),
+        lines:[FB.T('The original ruler’s unfinished decision ended with death or succession. Existing wars and contracts continue through ordinary dealings.')] };
       return { phase:w.aiResolution || 'opening', name:w.governanceResolved ? FB.T('Government settlement recorded') :
         w.aiResolution === 'war' ? FB.T('Ravenna is contested') :
         w.aiResolution === 'negotiated' ? FB.T('Paid service agreed') :
@@ -584,6 +604,6 @@
         w.aiResolution ? FB.T('The host continues') : FB.T('Choose the host’s settlement'), lines:[] };
     },
     choices:rulerChoices, quote:rulerQuote, apply:rulerApply,
-    blocker:function () { return FB.T('Review the living host and peaceful courts. Paid service requires thirty available in the western treasury, effective civic consent and a living bishop. Civic government requires surviving delegates and Nicene support.'); },
+    blocker:function () { return FB.T('Review the living host and peaceful courts. Paid service requires thirty available in the western treasury, effective civic consent and a living bishop. Civic government requires surviving delegates, Nicene support and an effective Ravenna council agreement for courts, protection and tolerance, ratified through City dealings with episcopal mediation.'); },
     validate:validate, migrate:migrate, restore:restoreInstitutions });
 })();

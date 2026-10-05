@@ -10,7 +10,8 @@ dependsOnRuntime(__filename, [
   'js/main.js', 'js/world.js', 'js/model.js', 'js/armies.js', 'js/wars.js',
   'js/authority.js', 'js/federates.js', 'js/institutions.js', 'js/treasury.js',
   'js/station.js', 'js/governments.js', 'js/technology.js', 'js/logistics.js',
-  'js/mods.js', 'js/save.js', 'js/save_v4.js', 'js/ui_panels.js'
+  'js/mods.js', 'js/save.js', 'js/save_v4.js', 'js/ui_panels.js',
+  'js/modifiers.js', 'js/events.js'
 ]);
 const { test, expect } = require('../support/fixture');
 const { openGame } = require('../support/game/navigation');
@@ -45,6 +46,20 @@ async function start(page, testInfo, def) {
   await expect(page.locator('#cg-community')).toHaveClass(/hidden/);
   await page.getByRole('button', { name:'Begin Your Story', exact:true }).click();
   await page.getByRole('button', { name:'Begin', exact:true }).click();
+}
+
+async function winRavenna(page) {
+  const result = await page.evaluate(function () {
+    const s = FB.state, id = 'western_court_476', w = s.stories[id];
+    const launched = FB.stories.apply(s, id, 'contest_ravenna', FB.stories.quote(s, id, 'contest_ravenna'));
+    const noAward = s.owner.ravenna === 'italy';
+    // Stage the ordinary campaign award boundary, without simulating a siege.
+    FB.transferProvince(s, 'ravenna', 'player');
+    FB.settleOrdinaryWar(s, w.aiWarId, 'victory');
+    FB.stories.day(s);
+    return { launched:launched, noAward:noAward, phase:w.aiResolution };
+  });
+  expect(result).toEqual({ launched:true, noAward:true, phase:'won' });
 }
 
 test('unreviewed ruler starts reject start codes and direct creation', async function ({ page }, testInfo) {
@@ -249,24 +264,200 @@ for (const choice of ['accept_civic_rule','retain_host_rule']) {
   test('Odoacer reviews government after actually winning Ravenna: ' + choice, async function ({ page }, testInfo) {
     await start(page, testInfo, STARTS[1]);
     const result = await page.evaluate(function (choice) {
-      const s = FB.state, id = 'western_court_476', w = s.stories[id];
+      let s = FB.state;
+      const id = 'western_court_476', w = s.stories[id];
       const noSettlement = FB.stories.choices(s, id).every(function (row) { return row.id !== choice; });
       const launched = FB.stories.apply(s, id, 'contest_ravenna', FB.stories.quote(s, id, 'contest_ravenna'));
       const noAward = s.owner.ravenna === 'italy';
       FB.transferProvince(s, 'ravenna', 'player');
       FB.settleOrdinaryWar(s, w.aiWarId, 'victory');
       FB.stories.day(s);
+      if (choice === 'accept_civic_rule') {
+        const subject = { kind:'realm', id:'player' };
+        if (!FB.localInstitutionMediate(s, 'rome_see', subject, 'ravenna') ||
+            !FB.localInstitutionSettle(s, 'ravenna_council', subject,
+              { courts:true, protection:true, tolerance:true })) throw new Error('Council agreement failed');
+      }
+      FB.save.restore(JSON.parse(FB.save.serialize())); s = FB.state;
       const q = FB.stories.quote(s, id, choice);
       const accepted = FB.stories.apply(s, id, choice, q);
+      const bytes = JSON.stringify(s.stories[id]);
+      const counts = [s.authority.recognitions.length, s.authority.rights.length];
+      FB.save.restore(JSON.parse(FB.save.serialize())); s = FB.state;
+      const replay = FB.stories.apply(s, id, choice, q);
       return { noSettlement:noSettlement, launched:launched, noAward:noAward, accepted:accepted,
-        owner:s.owner.ravenna, phase:w.aiResolution, government:w.governanceResolved,
+        owner:s.owner.ravenna, phase:s.stories[id].aiResolution, government:s.stories[id].governanceResolved,
+        durable:bytes === JSON.stringify(s.stories[id]), replay:replay,
+        once:JSON.stringify(counts) === JSON.stringify([s.authority.recognitions.length, s.authority.rights.length]),
         form:FB.political.government(s, { kind:'realm', id:'player' }).formId };
     }, choice);
     expect(result).toEqual({ noSettlement:true, launched:true, noAward:true, accepted:true,
       owner:'player', phase:'won', government:choice === 'accept_civic_rule' ? 'civic' : 'federate',
+      durable:true, replay:false, once:true,
       form:choice === 'accept_civic_rule' ? 'roman_civic' : 'federate_polity' });
   });
 }
+
+test('Odoacer cannot replace a missing, pending or refused council vote with goodwill', async function ({ page }, testInfo) {
+  await start(page, testInfo, STARTS[1]);
+  await winRavenna(page);
+  const result = await page.evaluate(function () {
+    const s = FB.state, id = 'western_court_476', subject = { kind:'realm', id:'player' };
+    FB.setCountySupport(s, 'ravenna', 20);
+    const mediated = !!FB.localInstitutionMediate(s, 'rome_see', subject, 'ravenna');
+    function blockedWithoutMutation() {
+      const bytes = JSON.stringify(s), rng = FB.getRngState();
+      const q = FB.stories.quote(s, id, 'accept_civic_rule');
+      const applied = FB.stories.apply(s, id, 'accept_civic_rule', q);
+      return !q.allowed && !applied && bytes === JSON.stringify(s) && rng === FB.getRngState();
+    }
+    const missing = blockedWithoutMutation();
+    const petition = FB.localInstitutionApply(s, FB.localInstitutionQuote(s, 'ravenna_council', subject, 'petition'));
+    const pending = blockedWithoutMutation();
+    const bargain = FB.localInstitutionApply(s, FB.localInstitutionQuote(s, 'ravenna_council', subject, 'bargain', {}));
+    const unratified = blockedWithoutMutation();
+    const vote = FB.localInstitutionApply(s, FB.localInstitutionQuote(s, 'ravenna_council', subject, 'ratify'));
+    const refused = blockedWithoutMutation();
+    return { mediated:mediated, goodwill:FB.political.civicConsent(s, 'ravenna').allowed,
+      petition:petition.stage, bargain:bargain.stage, vote:vote.stage,
+      missing:missing, pending:pending, unratified:unratified, refused:refused,
+      retainAllowed:FB.stories.quote(s, id, 'retain_host_rule').allowed,
+      government:FB.political.government(s, subject).formId };
+  });
+  expect(result).toEqual({ mediated:true, goodwill:true, petition:'petition', bargain:'bargain', vote:'refused',
+    missing:true, pending:true, unratified:true, refused:true, retainAllowed:true, government:'federate_polity' });
+});
+
+for (const invalidation of ['expired','delegate_dead','incomplete_terms']) {
+  test('Odoacer civic government rejects a council agreement that is ' + invalidation, async function ({ page }, testInfo) {
+    await start(page, testInfo, STARTS[1]);
+    await winRavenna(page);
+    const result = await page.evaluate(function (invalidation) {
+      const s = FB.state, id = 'western_court_476', w = s.stories[id], subject = { kind:'realm', id:'player' };
+      FB.localInstitutionMediate(s, 'rome_see', subject, 'ravenna');
+      const terms = invalidation === 'incomplete_terms' ? { courts:true, protection:true, provision:true } :
+        { courts:true, protection:true, tolerance:true };
+      const agreement = FB.localInstitutionSettle(s, 'ravenna_council', subject, terms);
+      const reviewed = FB.stories.quote(s, id, 'accept_civic_rule');
+      if (invalidation === 'expired') s.turn = agreement.expiresTurn;
+      if (invalidation === 'delegate_dead') FB.killChar(s, s.chars[w.civicDelegateId]);
+      const bytes = JSON.stringify(s), rng = FB.getRngState();
+      const fresh = FB.stories.quote(s, id, 'accept_civic_rule');
+      const applied = FB.stories.apply(s, id, 'accept_civic_rule', reviewed);
+      return { ratified:agreement.stage, originallyAllowed:reviewed.allowed,
+        blocked:!fresh.allowed, applied:applied,
+        pure:bytes === JSON.stringify(s) && rng === FB.getRngState(),
+        unresolved:!w.governanceResolved, government:FB.political.government(s, subject).formId };
+    }, invalidation);
+    expect(result).toEqual({ ratified:'ratified', originallyAllowed:invalidation !== 'incomplete_terms',
+      blocked:true, applied:false, pure:true, unresolved:true, government:'federate_polity' });
+  });
+}
+
+for (const stage of ['opening','campaign','civic']) {
+  for (const transition of ['death','handover']) {
+    test('Odoacer unfinished ' + stage + ' closes durably after ' + transition, async function ({ page }, testInfo) {
+      await start(page, testInfo, STARTS[1]);
+      const result = await page.evaluate(function (params) {
+        let s = FB.state;
+        const id = 'western_court_476', w = s.stories[id];
+        let choice = 'contest_ravenna', reviewed = FB.stories.quote(s, id, choice);
+        if (params.stage !== 'opening') FB.stories.apply(s, id, choice, reviewed);
+        if (params.stage === 'civic') {
+          FB.transferProvince(s, 'ravenna', 'player');
+          FB.settleOrdinaryWar(s, w.aiWarId, 'victory');
+          FB.stories.day(s);
+          const subject = { kind:'realm', id:'player' };
+          FB.localInstitutionMediate(s, 'rome_see', subject, 'ravenna');
+          FB.localInstitutionSettle(s, 'ravenna_council', subject, { courts:true, protection:true, tolerance:true });
+          choice = 'accept_civic_rule'; reviewed = FB.stories.quote(s, id, choice);
+        }
+        const heir = FB.heirsOf(s)[0];
+        if (!heir) throw new Error('Authored court has no eligible successor');
+        const owners = JSON.stringify(s.owner), warId = w.aiWarId, resolution = w.aiResolution;
+        let atDeath = true;
+        if (params.transition === 'death') {
+          FB.game.die('Synthetic Odoacer death'); FB.ui.closeModal();
+          FB.stories.day(s);
+          atDeath = FB.stories.status(s, id).phase === 'interrupted';
+        }
+        const succeeded = FB.game.succeedTo(heir.id, { livingAbdication:params.transition === 'handover' });
+        FB.stories.day(s);
+        const outcomeTurn = w.rulerInterruptionTurn;
+        const stale = FB.stories.apply(s, id, choice, reviewed);
+        FB.save.restore(JSON.parse(FB.save.serialize())); s = FB.state;
+        s.turn++;
+        FB.stories.day(s);
+        const restored = s.stories[id];
+        return { reviewed:reviewed.allowed, atDeath:atDeath, succeeded:succeeded,
+          sameHeir:s.player.charId === heir.id, originalAlive:!s.chars[w.odoacerId].dead,
+          phase:FB.stories.status(s, id).phase, choices:FB.stories.choices(s, id).length, stale:stale,
+          durable:restored.rulerInterruptionTurn === outcomeTurn && Number.isInteger(outcomeTurn),
+          resolutionPreserved:restored.aiResolution === resolution,
+          warPreserved:restored.aiWarId === warId && (params.stage !== 'campaign' || !!FB.ordinaryWarById(s, warId)),
+          host:s.armies.some(function (a) { return a.id === 'host_476_federates' && a.realm === 'player'; }),
+          owners:owners === JSON.stringify(s.owner),
+          government:FB.political.government(s, { kind:'realm', id:'player' }).formId };
+      }, { stage:stage, transition:transition });
+      expect(result).toEqual({ reviewed:true, atDeath:true, succeeded:true, sameHeir:true,
+        originalAlive:transition === 'handover', phase:'interrupted', choices:0, stale:false,
+        durable:true, resolutionPreserved:true, warPreserved:true, host:true, owners:true, government:'federate_polity' });
+      if (stage === 'campaign') {
+        const campaign = await page.evaluate(function () {
+          let s = FB.state;
+          const id = 'western_court_476', w = s.stories[id], outcomeTurn = w.rulerInterruptionTurn;
+          FB.transferProvince(s, 'ravenna', 'player');
+          FB.settleOrdinaryWar(s, w.aiWarId, 'victory');
+          FB.stories.day(s);
+          FB.save.restore(JSON.parse(FB.save.serialize())); s = FB.state;
+          return { resolution:s.stories[id].aiResolution, phase:FB.stories.status(s, id).phase,
+            outcomePreserved:s.stories[id].rulerInterruptionTurn === outcomeTurn,
+            owner:s.owner.ravenna, capital:s.realms.player.capital,
+            territorial:!s.realms.player.nonTerritorial, choices:FB.stories.choices(s, id).length };
+        });
+        expect(campaign).toEqual({ resolution:'won', phase:'interrupted', outcomePreserved:true,
+          owner:'player', capital:'ravenna', territorial:true, choices:0 });
+      }
+    });
+  }
+}
+
+for (const choice of ['accept_service','keep_host','retain_host_rule']) {
+  test('Odoacer completed ' + choice + ' stays recorded after succession', async function ({ page }, testInfo) {
+    await start(page, testInfo, STARTS[1]);
+    if (choice === 'retain_host_rule') await winRavenna(page);
+    const result = await page.evaluate(function (choice) {
+      const s = FB.state, id = 'western_court_476', w = s.stories[id];
+      const accepted = FB.stories.apply(s, id, choice, FB.stories.quote(s, id, choice));
+      const heir = FB.heirsOf(s)[0], resolution = w.aiResolution, governance = w.governanceResolved;
+      FB.game.die('Synthetic Odoacer death'); FB.ui.closeModal();
+      FB.stories.day(s);
+      const succeeded = FB.game.succeedTo(heir.id);
+      FB.stories.day(s);
+      return { accepted:accepted, succeeded:succeeded, interrupted:w.rulerInterruptionTurn !== undefined,
+        recorded:w.aiResolution === resolution && w.governanceResolved === governance,
+        contractPreserved:choice !== 'accept_service' || !!FB.political.contract(s, w.contractId),
+        choices:FB.stories.choices(s, id).length };
+    }, choice);
+    expect(result).toEqual({ accepted:true, succeeded:true, interrupted:false, recorded:true, contractPreserved:true, choices:0 });
+  });
+}
+
+test('malformed Odoacer interruption saves reject without replacing live state', async function ({ page }, testInfo) {
+  await start(page, testInfo, STARTS[1]);
+  const result = await page.evaluate(function () {
+    const original = FB.state, rng = FB.getRngState(), saved = JSON.parse(FB.save.serialize());
+    return [-1, 0.5, '0', saved.state.turn + 1, 'completed'].map(function (value) {
+      const copy = JSON.parse(JSON.stringify(saved)), w = copy.state.stories.western_court_476;
+      w.rulerInterruptionTurn = value === 'completed' ? copy.state.turn : value;
+      if (value === 'completed') w.governanceResolved = 'federate';
+      let rejected = false;
+      try { FB.save.restore(copy); } catch (_) { rejected = true; }
+      return rejected && FB.state === original && rng === FB.getRngState();
+    });
+  });
+  expect(result).toEqual([true,true,true,true,true]);
+});
 
 for (const choice of ['face_campaign','leave_campaign']) {
   test('Syagrius reviews the Frankish opportunity: ' + choice, async function ({ page }, testInfo) {

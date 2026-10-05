@@ -121,22 +121,22 @@ FBDATA.bookmarkRegions476['africa'] = {
       trigger:{ minAge:16, countyCommunityShare:{ kind:'culture', target:'vandal', min:0.03 }, careerRoles:['civic'] },
       text:'The estate rolls distinguish Vandal allotments from provincial farms. A Roman household asks you to copy an old boundary record before the collectors arrive.',
       options:[
-        { label:'Copy the record carefully.', desc:'Spend on the copy and earn local goodwill.', effects:{ gold:-2, skills:{ ste:1 }, popular:2, log:'Copied an old provincial estate record.' } },
+        { label:'Copy the record carefully.', desc:'Spend on the copy and earn local goodwill.', effects:{ gold:-2, skills:{ ste:1 }, popularOpinion:2, log:'Copied an old provincial estate record.' } },
         { label:'Leave the rolls to the collectors.', effects:{ prestige:1 } }
       ] },
     { id:'africa_two_congregations_476', pack:'africa_476', eras:['late_antique'], title:'Two Congregations', weight:2, cooldown:12,
       trigger:{ minAge:16, countyCommunityShare:{ kind:'culture', target:'vandal', min:0.03 }, provinceReligionGroup:'nicene' },
       text:'Nicene neighbors and families of the royal Homoian communion share a street but keep separate worship. A household asks for food while its relatives are away.',
       options:[
-        { label:'Bring food to their door.', desc:'Spend on relief and gain piety and local goodwill.', effects:{ gold:-3, piety:3, popular:2, log:'Brought relief across a divide between congregations.' } },
+        { label:'Bring food to their door.', desc:'Spend on relief and gain piety and local goodwill.', effects:{ gold:-3, piety:3, popularOpinion:2, log:'Brought relief across a divide between congregations.' } },
         { label:'Keep to your own household.', effects:{ piety:1 } }
       ] },
     { id:'africa_highland_market_476', pack:'africa_476', eras:['late_antique'], title:'At the Highland Market', weight:2, cooldown:10,
       trigger:{ minAge:16, countyCommunityShare:{ kind:'culture', target:'moorish', min:0.30 }, atWar:false },
       text:'Moorish families bring animals and produce to market beside Roman-speaking townspeople. An argument over a weight threatens to break up the trading day.',
       options:[
-        { label:'Help them compare the measures.', effects:{ skills:{ dip:1 }, popular:2, log:'Helped settle a dispute over market measures.' } },
-        { label:'Offer a small payment to end the quarrel.', effects:{ gold:-3, popular:3 } },
+        { label:'Help them compare the measures.', effects:{ skills:{ dip:1 }, popularOpinion:2, log:'Helped settle a dispute over market measures.' } },
+        { label:'Offer a small payment to end the quarrel.', effects:{ gold:-3, popularOpinion:3 } },
         { label:'Walk on.', effects:{ prestige:1 } }
       ] },
     { id:'africa_sicilian_cargo_476', pack:'africa_476', eras:['late_antique'], title:'Cargo From Sicily', weight:2, cooldown:10,
