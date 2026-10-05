@@ -209,7 +209,102 @@ test('a stale land award rejects before settlement, property transfer or RNG',
     expect(result).toEqual({ quoted:true, delegated:true, rejected:true, unchanged:true, rng:true, session:null });
   });
 
-test('Theoderic uses data-defined recognition, a paid commission, a real host and settlement',
+test('opening Gothic service pays and renews without replay across save restoration', async function ({ page }, testInfo) {
+  await start(page, testInfo, '476');
+  const result = await page.evaluate(function () {
+    let s = FB.state;
+    const starts = s.authority.contracts.filter(function (row) {
+      return row.patronRealmId === 'byzantium' && row.templateId === 'paid_service';
+    });
+    const before = starts.map(function (row) { return FB.treasuryAvailable(s, row.federateRealmId); });
+    const active = starts.every(function (row) { return FB.political.contract(s, row.id).effective; });
+    s.turn = 90; FB.authoritySeason(s);
+    const paid = starts.map(function (row, i) { return FB.treasuryAvailable(s, row.federateRealmId) - before[i]; });
+    const ledger = JSON.stringify(s.authority.contracts), money = JSON.stringify(starts.map(function (row) {
+      return s.realms[row.federateRealmId].treasury;
+    }));
+    FB.save.restore(JSON.parse(FB.save.serialize())); s = FB.state;
+    FB.authoritySeason(s);
+    const once = ledger === JSON.stringify(s.authority.contracts) && money === JSON.stringify(starts.map(function (row) {
+      return s.realms[row.federateRealmId].treasury;
+    }));
+    s.turn = 270; FB.authoritySeason(s);
+    return { count:starts.length, active:active, paid:paid, once:once,
+      renewed:starts.every(function (row) { return FB.political.contract(s, row.id).endTurn > 360; }),
+      errors:FB.validateFederateData() };
+  });
+  expect(result).toEqual({ count:2, active:true, paid:[10,10], once:true, renewed:true, errors:[] });
+});
+
+test('an unaffordable Italian commission preserves existing paid service until replacement', async function ({ page }, testInfo) {
+  await start(page, testInfo, '476');
+  const result = await page.evaluate(function () {
+    let s = FB.state;
+    s.turn = 180; FB.stories.get('zeno_return_476').day(s, s.stories.zeno_return_476);
+    FB.authoritySeason(s);
+    const old = s.authority.contracts.find(function (row) { return row.hostId === 'host_476_amal'; });
+    s.realms.byzantium.treasury.gold = 0; s.date.year = 488;
+    const story = FB.stories.get('theoderic_italy_476'), rec = s.stories.theoderic_italy_476;
+    const count = s.authority.contracts.length;
+    story.day(s, rec);
+    const waiting = rec.phase === 'negotiating' && !rec.contractId &&
+      FB.political.contract(s, old.id).effective && s.authority.contracts.length === count;
+    s.realms.byzantium.treasury.gold = 1000;
+    const unchanged = JSON.stringify(s), rng = FB.getRngState();
+    const invalid = !FB.federateOfferReplacement(s, 'commissioned_migration', {
+      id:old.id, patronRealmId:'byzantium', federateRealmId:'pannonia', hostId:old.hostId,
+      recognitionId:rec.commissionId }) && unchanged === JSON.stringify(s) && rng === FB.getRngState();
+    const before = s.realms.pannonia.treasury.gold;
+    story.day(s, rec);
+    const paid = s.realms.pannonia.treasury.gold - before;
+    const next = FB.political.contract(s, rec.contractId), contracts = JSON.stringify(s.authority.contracts);
+    FB.save.restore(JSON.parse(FB.save.serialize())); s = FB.state;
+    FB.stories.get('theoderic_italy_476').day(s, s.stories.theoderic_italy_476);
+    FB.federateContractSeason(s);
+    return { waiting:waiting, invalid:invalid, paid:paid, active:next.effective, template:next.templateId,
+      old:FB.political.contract(s, old.id).status, reason:FB.political.contract(s, old.id).transitionReason,
+      once:contracts === JSON.stringify(s.authority.contracts) };
+  });
+  expect(result).toEqual({ waiting:true, invalid:true, paid:40, active:true, template:'commissioned_migration',
+    old:'expired', reason:'service_released', once:true });
+});
+
+test('daily accounting sustains the Amal host to 488 with random risks isolated', async function ({ page }, testInfo) {
+  test.setTimeout(6 * 60 * 1000);
+  await start(page, testInfo, '476');
+  await page.evaluate(function () {
+    FB.game.observe = true;
+    delete FB.state.stories.federate_track_476;
+    // Isolate the funding journey from random mortality and diplomacy. Dates,
+    // treasury, provisions, succession at Zeno's return and armies tick normally.
+    window.wave5OriginalChance = FB.chance;
+    FB.chance = function (probability) { return probability >= 1; };
+  });
+  try {
+    for (let year = 0; year < 12; year++) {
+      await page.evaluate(function () {
+        for (let day = 0; day < 360; day++) FB.game.passDay({ deferUi:true });
+      });
+      if (year === 5) await page.evaluate(function () { FB.save.restore(JSON.parse(FB.save.serialize())); });
+    }
+    const result = await page.evaluate(function () {
+      const s = FB.state, host = s.armies.find(function (row) { return row.id === 'host_476_amal'; });
+      const rec = s.stories.theoderic_italy_476;
+      const old = s.authority.contracts.find(function (row) {
+        return row.hostId === 'host_476_amal' && row.templateId === 'paid_service';
+      });
+      return { year:s.date.year, host:!!host && host.men >= 120, money:FB.treasuryAvailable(s, 'pannonia') > 0,
+        phase:rec.phase, war:!!FB.ordinaryWarById(s, rec.warId), old:old.transitionReason,
+        noAward:s.owner.ravenna !== 'pannonia' };
+    });
+    expect(result).toEqual({ year:488, host:true, money:true, phase:'started', war:true,
+      old:'service_released', noAward:true });
+  } finally {
+    await page.evaluate(function () { FB.chance = window.wave5OriginalChance; delete window.wave5OriginalChance; });
+  }
+});
+
+test('a staged victory verifies Theoderic recognition, paid commission, retained host and settlement',
   async function ({ page }, testInfo) {
     await start(page, testInfo, '476');
     const result = await page.evaluate(function () {

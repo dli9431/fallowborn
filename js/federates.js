@@ -74,6 +74,30 @@
   function playerRules(s, rid) {
     return rid === 'player' || FB.realmIdForRulerCharacter(s, s.chars[s.player.charId]) === rid;
   }
+  FB.federateOfferReplacement = function (s, templateId, parties) {
+    var terms = Q.contractTerms(s, templateId, parties);
+    if (!terms || terms.id) return null;
+    var prior = (s.authority && s.authority.contracts || []).filter(function (row) {
+      var def = (FBDATA.federateContractTerms || {})[row.templateId];
+      return row.hostId === terms.hostId && row.patronRealmId === terms.patronRealmId &&
+        row.federateRealmId === terms.federateRealmId && def && def.recognition !== 'required' &&
+        ['active','offered','expired'].indexOf(row.status) >= 0 && row.transitionReason !== 'service_released';
+    });
+    if (!prior.length) return FB.authorityOfferContractTemplate(s, templateId, terms);
+    /* Preserve ongoing pay while a commission waits for funds or a human
+       ruler's consent. An unrelated patron's service cannot be displaced. */
+    if ([terms.patronRealmId, terms.federateRealmId].some(function (rid) {
+          var form = FB.governments.forRealm(s, rid);
+          return playerRules(s, rid) || !form || typeof form.use.ai.consentContract !== 'function';
+        }) ||
+        FB.treasuryAvailable(s, terms.patronRealmId) < terms.payPerSeason + (terms.initialPay || 0) ||
+        (s.authority.contracts || []).some(function (row) {
+          return row.hostId === terms.hostId && prior.indexOf(row) < 0 &&
+            (row.status === 'offered' && Q.contractQuote(s, row).allowed || Q.contract(s, row.id).effective);
+        })) return null;
+    prior.forEach(function (row) { FB.authorityContractTransition(s, row.id, 'release', row.patronRealmId); });
+    return FB.authorityOfferContractTemplate(s, templateId, terms);
+  };
   function ai(s, rid, row) {
     if (playerRules(s, rid) || !live(s, rid)) return false;
     var due = row.payPerSeason + (row.initialPaidTurn === undefined ? row.initialPay || 0 : 0);
@@ -431,6 +455,13 @@
 
   FB.validateFederateData = function () {
     var errors = [], terms = FBDATA.federateContractTerms || {};
+    for (var storyId in FBDATA.federateServiceStarts || {}) {
+      var starts = FBDATA.federateServiceStarts[storyId];
+      if (!Array.isArray(starts) || starts.some(function (row) {
+        return !row || !terms[row.templateId] || !row.patronRealmId || !row.federateRealmId ||
+          !row.hostId || row.patronRealmId === row.federateRealmId;
+      })) errors.push(FB.T('Invalid opening federate services: {id}.', { id:storyId }));
+    }
     for (var id in terms) if (own(terms, id)) {
       var def = terms[id];
       if (!def || !Number.isFinite(def.payPerSeason) || def.payPerSeason < 0 ||

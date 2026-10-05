@@ -50,7 +50,7 @@ window.FB = window.FB || {};
     return !(g && g.tolerance === 'persecution') &&
       !(local && local.identity && local.realmId === rid &&
         rid === 'player' && FB.realmPolicyActive(s) && FB.realmPolicyLevelId(s, 'religious_tolerance') === 'persecution') &&
-      !FB.hasModifier(s, 'persecuted_minorities', pid);
+      FB.political.worshipProtected(s, pid);
   }
   function recognize(s, officeId, rid, pid) {
     const subject = { kind:'realm', id:rid }, scope = { kind:'county', id:pid };

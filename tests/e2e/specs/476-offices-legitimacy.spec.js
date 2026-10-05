@@ -260,6 +260,38 @@ test('government AI appoints and contests on succession without reversing a depo
   expect(result).toMatchObject({ idempotent:true, depositionKept:true, current:'active', old:'contested', restored:true, stamp:true });
 });
 
+for (const ended of ['death','removal']) {
+  test('imperial succession after every prior claimant ends by ' + ended, async function ({ page }, testInfo) {
+    await start(page, testInfo);
+    const result = await page.evaluate(function (ended) {
+      const s = FB.state, w = s.stories.western_court_476;
+      const prior = s.authority.appointments.filter(function (row) {
+        return row.institutionId === 'byzantium' && row.officeId === 'imperial_office';
+      });
+      for (const row of prior) {
+        if (ended === 'death') s.chars[row.holder.id].dead = true;
+        else FB.authorityAppointmentTransition(s, row.id, 'remove');
+      }
+      const absent = FB.officeClaimants(s).filter(function (row) { return row.institutionId === 'byzantium'; }).length;
+      FB.assignRealmRulerCharacter(s, 'byzantium', w.senatorId, { replaceAuthored:true });
+      s.turn = 90; FB.authoritySeason(s);
+      const current = FB.political.offices(s, { kind:'character', id:w.senatorId }).filter(function (row) {
+        return row.ref.officeId === 'imperial_office' && row.status === 'active';
+      });
+      const count = s.authority.appointments.length;
+      FB.officeCourtAI(s, 'byzantium');
+      FB.save.restore(JSON.parse(FB.save.serialize()));
+      FB.authoritySeason(FB.state);
+      return { absent:absent, current:current.length, once:count === FB.state.authority.appointments.length,
+        restored:FB.officeClaimants(FB.state).some(function (row) {
+          return row.institutionId === 'byzantium' && row.holder.id === w.senatorId && row.status === 'active';
+        }) };
+    }, ended);
+    expect(result).toEqual({ absent:ended === 'death' ? 0 : 2, current:ended === 'death' ? 1 : 0,
+      once:true, restored:ended === 'death' });
+  });
+}
+
 for (const bookmark of ['867','1066']) {
   test(bookmark + ' omits office Deeds and court AI without inventing authority', async function ({ page }, testInfo) {
     await start(page, testInfo, bookmark);

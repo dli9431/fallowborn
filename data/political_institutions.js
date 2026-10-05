@@ -125,6 +125,14 @@ FBDATA.federateContractTerms = {
   commissioned_migration:{ payPerSeason:0, initialPay:40, durationDays:2160, renewWindowDays:90,
     service:'host', land:'conquest', recognition:'required', autoRenew:false }
 };
+/* Opening service supplies landless hosts through ordinary paid commitments.
+   The later campaign replaces service only after its new terms are affordable. */
+FBDATA.federateServiceStarts = {
+  western_court_476:[
+    { templateId:'paid_service', patronRealmId:'byzantium', federateRealmId:'pannonia', hostId:'host_476_amal' },
+    { templateId:'paid_service', patronRealmId:'byzantium', federateRealmId:'thracian_goths_476', hostId:'host_476_thracian' }
+  ]
+};
 /* County anchors abstract the historical march. Courts travel with the
    ordinary host; no dated outcome replaces occupation or settlement. */
 FBDATA.federateMigrations = {

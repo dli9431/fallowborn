@@ -172,7 +172,7 @@
             value.initialPaidTurn === undefined) invalid(where + '.initialPay');
       if (value.transitionReason !== undefined &&
           ['ruler_succession','renewed','breached','unpaid','term_ended','party_lost',
-            'recognition_lost','host_lost','settled'].indexOf(value.transitionReason) < 0)
+            'recognition_lost','host_lost','settled','service_released'].indexOf(value.transitionReason) < 0)
         invalid(where + '.transitionReason');
       if (value.fulfilledCountyIds !== undefined &&
           (!Array.isArray(value.fulfilledCountyIds) || value.fulfilledCountyIds.some(function (id, index) {

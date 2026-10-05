@@ -3127,6 +3127,14 @@ window.FB = window.FB || {};
       courts:terms.courts === true, tolerance:terms.tolerance === true,
       taxRelief:terms.taxRelief === true, contractId:typeof terms.contractId === 'string' ? terms.contractId : null };
   }
+  function treatment(s, pid) {
+    var local = pid && FB.political.communityGovernance(s, pid);
+    return { governance:local || null,
+      consent:!pid || FB.political.civicConsent(s, pid).allowed,
+      extraction:!!pid && (FB.hasModifier(s, 'fiscal_extraction', pid) ||
+        !!(local && local.identity && local.identity.taxation === 'discriminatory' && local.otherCultureShare > 0)),
+      persecution:!!pid && !FB.political.worshipProtected(s, pid) };
+  }
   function facts(s, id, subject) {
     var def = FBDATA.localInstitutions[id], record = row(s, id), rep = representative(s, def, record);
     var owner = controller(s, def);
@@ -3136,14 +3144,15 @@ window.FB = window.FB || {};
     var mediationIds = FB.political.legitimacy(s, subject, county(def), 'church_support').filter(function (rec) {
       return offices[rec.issuer.id] && offices[rec.issuer.id].religionId === def.religion;
     }).map(function (rec) { return rec.id; });
+    var policy = treatment(s, def.provinceId);
     return { representativeId:rep && rep.id || null, owner:owner,
       faithId:actor && (subject.kind === 'realm' ? actor.realmReligionId : actor.religionId), mediationIds:mediationIds,
       ownerGeneration:owner ? FB.realmRulerGeneration(s, owner) : null,
       subjectGeneration:actor ? generation(s, subject) : null,
       standing:record.standing[subjectKey(subject)] || 0, pending:pending && copy(pending),
       atWar:owner ? FB.isRealmAtWar(s, owner) : false,
-      extraction:def.provinceId ? FB.hasModifier(s, 'fiscal_extraction', def.provinceId) : false,
-      persecution:def.provinceId ? FB.hasModifier(s, 'persecuted_minorities', def.provinceId) : false,
+      governance:policy.governance, consent:policy.consent,
+      extraction:policy.extraction, persecution:policy.persecution,
       funds:subject.kind === 'character' ? subject.id === s.player.charId ? s.player.gold : 0 :
         subject.id === 'player' ? s.player.gold : FB.treasuryAvailable(s, subject.id) };
   }
@@ -3181,6 +3190,12 @@ window.FB = window.FB || {};
       reason = FB.T('Revise the bargain before voting on different terms.');
     if (!reason && out.terms.contractId && !localContract) reason = FB.T('The service contract must be active and bind this city’s controller and the applicant.');
     if (!reason && action === 'ratify' && out.cost > f.funds) reason = FB.T('Provisioning requires {money:cost}.', { cost:out.cost });
+    if (!reason && action === 'ratify' && !church(def) && !f.consent)
+      reason = FB.T('The community opposes a civic agreement under its current treatment.');
+    if (!reason && action === 'ratify' && out.terms.tolerance && f.persecution)
+      reason = FB.T('Protect worship before promising religious tolerance.');
+    if (!reason && action === 'ratify' && out.terms.taxRelief && f.extraction)
+      reason = FB.T('End discriminatory taxation and extraordinary extraction before promising tax relief.');
     if (!reason && action === 'ratify' && !church(def) && f.faithId !== def.religion && !f.mediationIds.length)
       reason = FB.T('A bishop of the city’s faith must mediate before this interfaith bargain is ratified.');
     if (!reason && action !== 'refuse' && out.terms.taxRelief && (subject.kind !== 'realm' || subject.id !== f.owner))
@@ -3204,7 +3219,7 @@ window.FB = window.FB || {};
     var def = FBDATA.localInstitutions[id], r = row(s, id);
     if (!enabled(s, def) || !r || !present(s, def) || !FB.political.actor(s, subject)) return false;
     var f = facts(s, id, subject), p = f.pending;
-    return !!(p && p.stage === 'ratified' && f.representativeId &&
+    return !!(p && p.stage === 'ratified' && f.representativeId && (church(def) || f.consent) &&
       p.representativeId === f.representativeId && p.owner === f.owner &&
       p.ownerGeneration === f.ownerGeneration && p.subjectGeneration === f.subjectGeneration &&
       (!p.terms.tolerance || !f.persecution) && (!p.terms.taxRelief || !f.extraction) &&
@@ -3292,12 +3307,13 @@ window.FB = window.FB || {};
     var rep = def && r && representative(s, def, r);
     var allowed = !!(enabled(s, def) && church(def) && r && rep && present(s, def) &&
       FB.political.actor(s, subject) && provinceId && FB.world.byId[provinceId] && s.owner[provinceId] &&
-      !FB.hasModifier(s, 'persecuted_minorities', provinceId));
+      FB.political.worshipProtected(s, provinceId));
     return { allowed:allowed, action:'mediate', institutionId:id, subject:subject && copy(subject),
       provinceId:provinceId, cost:0, reason:allowed ? null : FB.T('Mediation needs a living bishop and a county where worship is protected.'),
       stamp:JSON.stringify([id, subject, subject && FB.political.actor(s, subject) && generation(s, subject),
         provinceId, rep && rep.id, def && controller(s, def), s.owner[provinceId],
-        s.owner[provinceId] && FB.realmRulerGeneration(s, s.owner[provinceId]), allowed]) };
+        s.owner[provinceId] && FB.realmRulerGeneration(s, s.owner[provinceId]),
+        provinceId && FB.political.communityGovernance(s, provinceId), allowed]) };
   };
   FB.localInstitutionMediate = function (s, id, subject, provinceId, reviewed) {
     var q = FB.localInstitutionMediationQuote(s, id, subject, provinceId);
@@ -3318,18 +3334,18 @@ window.FB = window.FB || {};
       if (!owner || !FB.political.actor(s, { kind:'realm', id:owner })) return;
       var subject = { kind:'realm', id:owner }, key = subjectKey(subject);
       var p = r.petitions[key];
+      var policy = treatment(s, def.provinceId);
       if (!church(def) && !representative(s, def, r)) r.representativeId = makeRepresentative(s, def);
       var exposure = (FB.isRealmAtWar(s, owner) ? -2 : 1) +
         (FB.hasModifier(s, 'civic_provisioning', def.provinceId) ? 3 : 0) +
         (FB.hasModifier(s, 'civic_guarantees', def.provinceId) ? 2 : 0) +
         (FB.hasModifier(s, 'tax_concession', def.provinceId) ? 2 : 0) -
-        (FB.hasModifier(s, 'fiscal_extraction', def.provinceId) ? 10 : 0) -
-        (FB.hasModifier(s, 'persecuted_minorities', def.provinceId) ? 8 : 0);
+        (policy.extraction ? 10 : 0) - (policy.persecution ? 8 : 0);
       r.standing[key] = FB.clamp((r.standing[key] || 0) + exposure, -100, 100);
       r.demands = ['courts','tolerance'];
       if (FB.isRealmAtWar(s, owner)) r.demands.push('protection');
       if (!FB.hasModifier(s, 'civic_provisioning', def.provinceId)) r.demands.push('provision');
-      if (FB.hasModifier(s, 'fiscal_extraction', def.provinceId)) r.demands.push('taxRelief');
+      if (policy.extraction) r.demands.push('taxRelief');
       if (owner === 'player' || p && (FB.localInstitutionConsent(s, item.id, subject) || s.turn < p.retryTurn)) return;
       if (!church(def) && FB.political.actor(s, subject).realmReligionId !== def.religion) {
         FB.localInstitutionList(s, 'church').some(function (see) {
@@ -3338,8 +3354,7 @@ window.FB = window.FB || {};
         });
       }
       FB.localInstitutionSettle(s, item.id, subject, { provision:FB.treasuryAvailable(s, owner) >= 5,
-        protection:true, courts:true, tolerance:!FB.hasModifier(s, 'persecuted_minorities', def.provinceId),
-        taxRelief:!FB.hasModifier(s, 'fiscal_extraction', def.provinceId) });
+        protection:true, courts:true, tolerance:!policy.persecution, taxRelief:!policy.extraction });
     });
   };
   FB.validateLocalInstitutionState = function (s) {

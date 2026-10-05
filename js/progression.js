@@ -7,6 +7,24 @@
     c = c || s.chars[s.player.charId];
     return !!c && FB.station.usesStanding(FB.station.subject(c, s), s);
   };
+  function patronStanding(s, c, rid, patron) {
+    if (!patron) return 0;
+    if (c.id === s.player.charId) return FB.standingOf(s, { kind:'realm', id:patron });
+    if (rid && s.realms[rid].liege === patron) return Number(s.realms[rid].favor) || 0;
+    /* A resident's civic standing belongs to that person. Unrecorded patron
+       relationships start neutral, never at the player's reputation. */
+    var rows = s.localInstitutions || {}, key = 'character:' + c.id, best = null;
+    for (var id in rows) {
+      var def = FBDATA.localInstitutions && FBDATA.localInstitutions[id];
+      if (def && def.provinceId && rows[id] && rows[id].standing &&
+          FB.settlementCountyHolder(s, def.provinceId) === patron &&
+          Object.prototype.hasOwnProperty.call(rows[id].standing, key)) {
+        var value = Number(rows[id].standing[key]) || 0;
+        best = best === null ? value : Math.max(best, value);
+      }
+    }
+    return best === null ? 0 : best;
+  }
   function facts(s, c) {
     var isPlayer = c.id === s.player.charId, subject = FB.station.subject(c, s);
     var rid = isPlayer && s.realms.player && s.realms.player.alive ? 'player' :
@@ -31,8 +49,7 @@
       counties:rid ? FB.realmHeldCounties(s, rid).slice().sort() : [],
       sovereign:!!rid && (isPlayer ? FB.isPlayerSovereign(s) : !s.realms[rid].liege),
       patron:patron || null,
-      standing:patron && s.realms[patron] && s.realms[patron].alive
-        ? FB.standingOf(s, { kind:'realm', id:patron }) : 0,
+      standing:patronStanding(s, c, rid, patron),
       patronGeneration:patron ? FB.realmRulerGeneration(s, patron) : null };
   }
   function meets(f, path) {

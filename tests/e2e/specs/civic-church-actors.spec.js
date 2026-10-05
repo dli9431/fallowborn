@@ -8,7 +8,7 @@ dependsOnRuntime(__filename, [
   'data/political_institutions.js', 'data/technology.js', 'data/systems.js',
   'data/modifiers.js', 'js/institutions.js', 'js/politics.js', 'js/parliament.js',
   'js/model.js', 'js/authority.js', 'js/federates.js', 'js/station.js', 'js/governments.js',
-  'js/treasury.js', 'js/modifiers.js',
+  'js/treasury.js', 'js/modifiers.js', 'js/population.js',
   'js/actions.js', 'js/systems.js', 'js/stories.js', 'js/story_western_court_476.js',
   'js/story_federate_track_476.js', 'js/save.js', 'js/save_v4.js', 'js/main.js',
   'js/ui_modals.js', 'js/ui_misc.js', 'js/ui_panels.js', 'css/style.css'
@@ -206,6 +206,65 @@ test('Homoian households need living episcopal mediation, and vacant sees cannot
   });
   expect(result).toEqual({ blocked:false, mediation:true, vote:'ratified', consent:true,
     vacant:false, afterDeath:false, retainedVacancy:true, noCommand:true, noLand:true });
+});
+
+test('governing treatment invalidates civic reviews, mediation and effective consent', async function ({ page }, testInfo) {
+  await start476(page, testInfo);
+  const result = await page.evaluate(function () {
+    const s = FB.state, subject = { kind:'realm', id:'italy' }, city = 'milan_council';
+    const terms = { provision:true, protection:true, courts:true, tolerance:true, taxRelief:true };
+    for (const action of ['petition','bargain'])
+      FB.localInstitutionApply(s, FB.localInstitutionQuote(s, city, subject, action, terms));
+    const vote = FB.localInstitutionQuote(s, city, subject, 'ratify');
+    const mediation = FB.localInstitutionMediationQuote(s, 'milan_see', subject, 'milano');
+    const identity = FB.political.governingIdentity(s, 'italy');
+    const population = JSON.stringify(s.population);
+    FB.authoritySetIdentity(s, 'italy', Object.assign({}, identity,
+      { eliteCultureId:'gothic', tolerance:'persecution', taxation:'discriminatory' }));
+    const before = JSON.stringify(s), rng = FB.getRngState();
+    const staleVote = !FB.localInstitutionApply(s, vote);
+    const staleMediation = !FB.localInstitutionMediate(s, 'milan_see', subject, 'milano', mediation);
+    const protectedWorship = FB.political.worshipProtected(s, 'milano');
+    const clean = before === JSON.stringify(s) && rng === FB.getRngState();
+    FB.authoritySetIdentity(s, 'italy', Object.assign({}, identity,
+      { eliteCultureId:'gothic', tolerance:'tolerant', taxation:'discriminatory' }));
+    const taxes = !FB.localInstitutionQuote(s, city, subject, 'ratify').allowed;
+    FB.authoritySetIdentity(s, 'italy', identity);
+    const accepted = FB.localInstitutionApply(s, FB.localInstitutionQuote(s, city, subject, 'ratify'));
+    const recognition = accepted.recognitionId;
+    FB.setCountySupport(s, 'milano', -100);
+    const opposed = !FB.localInstitutionConsent(s, city, subject);
+    const retained = s.authority.recognitions.some(function (row) { return row.id === recognition && row.status === 'active'; });
+    FB.setCountySupport(s, 'milano', 0);
+    const recovered = FB.localInstitutionConsent(s, city, subject);
+    FB.authoritySetIdentity(s, 'italy', Object.assign({}, identity, { tolerance:'persecution' }));
+    const lapsed = !FB.localInstitutionConsent(s, city, subject);
+    FB.save.restore(JSON.parse(FB.save.serialize()));
+    return { ready:vote.allowed && mediation.allowed, staleVote:staleVote, staleMediation:staleMediation,
+      protectedWorship:protectedWorship, clean:clean, taxes:taxes, accepted:accepted.stage,
+      opposed:opposed, retained:retained, recovered:recovered, lapsed:lapsed,
+      restored:!FB.localInstitutionConsent(FB.state, city, subject),
+      communities:population === JSON.stringify(FB.state.population) };
+  });
+  expect(result).toEqual({ ready:true, staleVote:true, staleMediation:true, protectedWorship:false,
+    clean:true, taxes:true, accepted:'ratified', opposed:true, retained:true, recovered:true,
+    lapsed:true, restored:true, communities:true });
+});
+
+test('seasonal AI uses declared tolerance and tax treatment in its terms and standing', async function ({ page }, testInfo) {
+  await start476(page, testInfo);
+  const result = await page.evaluate(function () {
+    const s = FB.state, identity = FB.political.governingIdentity(s, 'italy');
+    FB.authoritySetIdentity(s, 'italy', Object.assign({}, identity,
+      { eliteCultureId:'gothic', tolerance:'persecution', taxation:'discriminatory' }));
+    s.turn = 90; FB.localInstitutionsSeason(s);
+    const row = s.localInstitutions.milan_council, p = row.petitions['realm:italy'];
+    return { tolerance:p.terms.tolerance, taxRelief:p.terms.taxRelief, standing:row.standing['realm:italy'], stage:p.stage,
+      demand:row.demands.indexOf('taxRelief') >= 0, guarantees:FB.hasModifier(s, 'civic_guarantees', 'milano') };
+  });
+  // Peace gives +1, extraction -10 and persecution -8; the narrower bargain's
+  // successful ballot then restores 10 standing without guaranteeing tolerance.
+  expect(result).toEqual({ tolerance:false, taxRelief:false, standing:-7, stage:'ratified', demand:true, guarantees:false });
 });
 
 test('seasonal AI uses the same ballots, responds to extraction and does not replay a season', async function ({ page }, testInfo) {

@@ -121,7 +121,7 @@
     if (moving.status === 'settled') { finish(s, rec, def, 'won', 'settled'); return; }
     if (moving.status === 'failed') { finish(s, rec, def, 'failed', moving.failureReason || 'migration_failed'); return; }
     if (!rec.contractId) {
-      var offered = FB.authorityOfferContractTemplate(s, spec.templateId, {
+      var offered = FB.federateOfferReplacement(s, spec.templateId, {
         patronRealmId:spec.patronRealmId, federateRealmId:spec.realmId,
         hostId:spec.hostId, recognitionId:rec.commissionId });
       if (!offered) return;

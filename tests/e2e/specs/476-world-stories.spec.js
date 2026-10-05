@@ -296,12 +296,12 @@ for (const cause of ['succession','issuer death']) {
           noAward:owners === JSON.stringify(s.owner), noWar:!rec.warId,
           noPayment:FB.treasuryAvailable(s, 'byzantium') === 0,
           once:contracts === s.authority.contracts.length,
-          contract:deal.status, migration:moving.status,
+          contract:deal ? deal.status : null, migration:moving.status,
           hostSurvived:army.men > 0 && !army.migrationId && s.realms.pannonia.alive };
       }, cause);
       expect(result).toEqual({ phase:'negotiating', restored:true, result:'interrupted', durable:true,
         noAward:true, noWar:true, noPayment:true, once:true,
-        contract:'breached', migration:'failed', hostSurvived:true });
+        contract:null, migration:'failed', hostSurvived:true });
     });
 }
 

@@ -158,8 +158,13 @@
       culture * (g.taxation === 'discriminatory' ? -3 : 0) +
       culture * (g.justicePolicy === 'elite' ? -2 : 0) : 0;
     return { provinceId:pid, realmId:rid, identity:g, otherFaithShare:faith,
-      otherCultureShare:culture, annualSupport:delta,
+      otherCultureShare:culture, tolerance:tolerance, annualSupport:delta,
       consentSupport:FB.countyPopularSupport(s, pid) + delta };
+  };
+  Q.worshipProtected = function (s, pid) {
+    var local = Q.communityGovernance(s, pid);
+    return !!local && local.tolerance !== 'persecution' &&
+      !FB.hasModifier(s, 'persecuted_minorities', pid);
   };
   /* A civic grant remains recorded even when communities refuse the bargain. */
   Q.civicConsent = function (s, pid) {
@@ -580,6 +585,8 @@
         !Q.actor(s, { kind:'realm', id:rid })) return false;
     if (action === 'breach' && (row.status === 'active' || row.status === 'offered'))
       row.status = 'breached';
+    else if (action === 'release' && ['active','offered','expired'].indexOf(row.status) >= 0 &&
+        row.transitionReason !== 'service_released') row.status = 'expired';
     else if (action === 'renew' &&
         ['active','expired','breached'].indexOf(row.status) >= 0 &&
         Number.isInteger(endTurn) && endTurn > Math.max(s.turn, row.endTurn) &&
@@ -593,7 +600,7 @@
       row.succession.patron = FB.realmRulerGeneration(s, row.patronRealmId);
       row.succession.federate = FB.realmRulerGeneration(s, row.federateRealmId);
     } else return false;
-    contractNotice(s, row, action === 'renew' ? 'renewed' : 'breached');
+    contractNotice(s, row, action === 'renew' ? 'renewed' : action === 'release' ? 'service_released' : 'breached');
     return true;
   };
 
@@ -1184,13 +1191,15 @@
       var review = FB.officeTransitionQuote(s, actor, row.id, keep ? 'confirm' : 'contest');
       if (review && review.allowed) FB.officeTransition(s, review);
     }
+    /* Succession follows the durable office ledger. Dead claimants are absent
+       from the display, but their ended tenure can still establish succession. */
+    var successionClaim = list(s, 'appointments').some(function (row) {
+      return row.institutionId === rid && row.officeId === 'imperial_office' && row.status !== 'removed' &&
+        row.appointerGeneration !== FB.realmRulerGeneration(s, rid);
+    });
     var claims = FB.officeClaimants(s).filter(function (row) { return row.institutionId === rid; });
-    if (claims.length) {
+    if (claims.length || successionClaim) {
       var at = { kind:'realm', id:rid }, proof = Q.legitimacy(s, holder, at, 'dynastic_succession')[0];
-      var successionClaim = list(s, 'appointments').some(function (row) {
-        return row.institutionId === rid && row.officeId === 'imperial_office' && row.status !== 'removed' &&
-          row.appointerGeneration !== FB.realmRulerGeneration(s, rid);
-      });
       /* An explicit deposition or vacancy is not undone just because a
          seasonal AI pass found no active emperor. */
       if (successionClaim && !list(s, 'appointments').some(function (row) {

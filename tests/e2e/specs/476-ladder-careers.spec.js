@@ -8,7 +8,7 @@ dependsOnRuntime(__filename, [
   'data/bookmark_476_africa.js', 'data/political_institutions.js',
   'js/station.js', 'js/governments.js', 'js/progression.js', 'js/actions.js',
   'js/economy.js', 'js/events.js', 'js/world.js', 'js/lordships.js',
-  'js/authority.js', 'js/treasury.js', 'js/armies.js', 'js/lexicon.js',
+  'js/authority.js', 'js/treasury.js', 'js/armies.js', 'js/lexicon.js', 'js/institutions.js',
   'js/main.js', 'js/ui_panels.js', 'js/ui_modals.js', 'js/ui_misc.js',
   'js/stories.js', 'js/story_western_court_476.js',
   'js/story_curialis_track_476.js', 'js/story_federate_track_476.js',
@@ -73,7 +73,7 @@ test('period ladder validates, separates civic standing from land and preserves 
     expect(result.tech).toEqual(['none','none','none']);
   });
 
-test('a commoner traverses every period band through reviewed recognition and actual county grants',
+test('staged resources verify every period band and reviewed county-grant boundary',
   async function ({ page }, testInfo) {
     await start(page, testInfo, 'federate_476');
     const result = await page.evaluate(function () {
@@ -264,6 +264,32 @@ test('NPC recognition uses the resident government ladder and careers remain per
     expect(result.choices).not.toContain('decurion');
     expect(result.church).toEqual(['Lector','Deacon','Presbyter','Bishop']);
   });
+
+test('NPC and vassal recognition is independent of player Standing', async function ({ page }, testInfo) {
+  await start(page, testInfo, 'federate_476');
+  const result = await page.evaluate(function () {
+    const s = FB.state, player = s.chars[s.player.charId];
+    const npc = Object.assign({}, player, { id:'e2e_dependent', station:0, gold:80, prestige:0,
+      homeProvinceId:'ravenna', career:null });
+    s.chars[npc.id] = npc;
+    function ready() { return FB.standingElevationStatus(s, npc).ready; }
+    FB.adjustStanding(s, { kind:'realm', id:'italy' }, 100, 'e2e:unrelated');
+    const neutral = ready();
+    s.localInstitutions.ravenna_council.standing['character:' + npc.id] = 30;
+    const respected = ready();
+    FB.adjustStanding(s, { kind:'realm', id:'italy' }, -200, 'e2e:unrelated');
+    const unchanged = ready();
+    const r = s.realms.croatia;
+    r.liege = 'byzantium'; r.rank = 1; r.stationPrestige = 300; r.treasury.gold = 1000; r.favor = 60;
+    FB.invalidateRealmCache();
+    const ruler = FB.realmRulerCharacterSnapshot(s, 'croatia');
+    const favored = FB.standingElevationStatus(s, ruler).ready;
+    r.favor = -60;
+    const disfavored = FB.standingElevationStatus(s, ruler).ready;
+    return { neutral:neutral, respected:respected, unchanged:unchanged, favored:favored, disfavored:disfavored };
+  });
+  expect(result).toEqual({ neutral:false, respected:true, unchanged:true, favored:true, disfavored:false });
+});
 
 test('AI spends its own treasury using the same ladder and accrues prestige once per year',
   async function ({ page }, testInfo) {

@@ -1983,6 +1983,8 @@ The existing v4 authority projection accepts optional migrations, using the shar
 
 Contracts optionally store templateId, initialPay, initialPaidTurn, transitionReason and fulfilledCountyIds. Numeric terms and once-only stamps survive template changes, succession and restore. A fulfilled county must belong to that contract's promised list. A settlement closes the service commitment; it never recharges initial pay or replays a county transfer. A migration's court references retain active characters through ordinary compact-court pruning. Neither load repair nor serialization creates a migration, a host, an office or a land award for an older save.
 
+transitionReason also accepts service_released for an expired commitment replaced by another service bargain. The historical row and its payment stamps remain saved, and automatic renewal skips it. Opening service declarations are consumed only during fresh world-story initialization, never as save repair. This extends the existing optional contract field without changing the envelope version or platform schema number.
+
 War repair retains a saved peaceful host when its existing scenario-standing commitment or moving court is live and unexpired, so opening hosts and encamped or negotiated land marches resume without synthesizing another banner. Expired scenario hosts are removed unless a current war or migration independently retains them. Older saves with an already-declared Gothic campaign retain that war's normal outcome and do not acquire a migration or another commission.
 
 Independent historical story records

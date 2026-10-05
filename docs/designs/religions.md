@@ -12,6 +12,8 @@ Nicene, Homoian, Chalcedonian and Miaphysite heads declare the episcopal_sees sy
 
 The religiousHeads ledger holds episcopal pointers. Local office death records a vacancy without invoking the central faith's succession strategy; central heads retain ordinary appointment succession. Vacant institutions cannot mediate. Mediation issues county-scoped church support through the authority ledger with a living bishop as issuer. It changes no resident faith or political power and has a none technology-impact review.
 
+Local mediation and provincial councils use FB.political.worshipProtected for the county's current declared treatment, active player royal worship policy and persecution modifier. A reviewed mediation includes the governing identity and community-support facts; changing those facts invalidates the review before it can issue church recognition. A persecution policy cannot be bypassed by leaving the legacy persecution modifier unset.
+
 Religion is one inheritance graph, not a pair of engine concepts for “religion” and
 “religious group.” Seeded definitions live in `FBDATA.religions`; faiths founded during
 a campaign use the same JSON-safe definition shape in `state.faiths`. Characters,

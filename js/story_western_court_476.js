@@ -170,6 +170,10 @@
       path:[], goal:null, moveLeft:0,
       scenarioStanding:true, scenarioEndTurn:6 * 360 };
     s.armies.push(italianHost, federateHost, amalHost, thracianHost);
+    for (var service of (FBDATA.federateServiceStarts || {})[WORLD] || []) {
+      var openingContract = FB.authorityOfferContractTemplate(s, service.templateId, service);
+      if (openingContract) FB.federateNegotiateContract(s, openingContract.id);
+    }
     s.religiousHeads.rome_bishop = bishop.id;
     s.religiousHeads.ravenna_homoian_bishop = homoianBishop.id;
     var westClaim = recognize(s, 'dynastic_succession', actor('italy'), person(west.id));
