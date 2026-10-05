@@ -290,3 +290,23 @@ The first playable client of these records is the [spring 476 prototype](situati
 Character-held religious heads
 
 Political office queries include character-held religious head offices once per officeId. Their holders use character references and the same religious-office scope as realm-held heads. Existing recognition issuer and generation checks already accept either living character or living realm pointers. Clergy policy Standing targets the declared holder kind. These projections remain read-only and do not create an office assignment.
+
+
+Dynamic customary rights and governing identity
+
+New worlds can seed province.customaryRights independently of title geography. Seeds name a power, customary basis, optional beneficiary realmId and historical basisRef. The initial 476 data uses provincial court tenure at Ravenna, Rome, Salona, Soissons, Toulouse, Carthage and Constantinople in the authored regional declarations. These are limited abstractions of existing judicial and fiscal institutions, not claims to later county boundaries or invented civic charters. Other counties acquire possession rights through play.
+
+The annual authority boundary creates Peace and Revenue possession rights for each living direct county holder, including player and AI realms. An active possession key is reused after recovery of a county. Rights begin at 50 and gain 10 per year of possession, capped at 100. Lost possession or tenure loses 15 per year. Judgment rights lose 15 per year when their issuer loses jurisdiction; a lawful secular sentence with a consumed proven offense establishes or strengthens its adjudicator's local Peace right. Repeated judgment evidence cannot strengthen it twice. Revoked and lapsed records remain historical records. Existing exact rights-based war causes remain available where title parents are absent.
+
+County-scoped imperial, dynastic and civic recognition records only powers the beneficiary already exercises through territorial rule, appointments or rights. It does not create Ban or invent a new jurisdiction for an otherwise unauthorized person. Renewed legal recognition explicitly replaces the corresponding right's basisRef and records the transition. Annual recognition accrual checks that exact proof, its scope, subject, issuer continuity and expiry; unrelated church approval cannot substitute for it. Church support and army acclamation remain their own legitimacy sources.
+
+Government rows may declare eliteCultureId, eliteFaithId, legalIdentityId, tolerance, taxation and justicePolicy. The identity belongs to the institution and survives a government-form change and ruler succession. A missing declaration projects existing ruler and realm facts without adding records or changing legacy support. New 476 realms declare their identity explicitly. Changing elite identity never converts the household, rewrites county communities or redistributes settlement populations.
+
+Community treatment uses existing Popular support. The annual change is the other-faith population share times -1 for preference, +2 for tolerant worship or -6 for persecution, plus the other-culture share times -3 for discriminatory taxation and -2 for imposed elite law. Equal taxation and personal law add no penalty. Existing active player royal religious policy overrides the local worship choice. These are political-treatment effects; they do not mint tax income or introduce a separate loyalty meter. Taxes, levies and revolt mechanics continue to read ordinary county support.
+
+Civic consent uses current Popular support plus the projected treatment change. Below -25 a community opposes a civic agreement even if the actor still has a recorded consent grant. The grant is preserved and becomes usable again when support recovers. This rule applies equally to territorial and delegated consent and to player and AI callers. Permission reads, identity views and forecasts are detached, deterministic and do not consume RNG.
+
+Governing identity, dual jurisdiction, local tolerance, tax treatment and court policy each have technology impact none. These are baseline institutional and social choices with no credible research dependency; customary rights retain their existing none review. The identity confirmation quote rechecks ruler generation, form, current declaration, turn, directly held territory, live community counts, support and effective royal policy before applying it. Quotes and forecasts are never saved.
+
+
+An explicit realm-wide faith conversion updates a stored elite-faith declaration through the existing conversion transaction. Personal and household conversion leave it alone.

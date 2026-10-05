@@ -1959,3 +1959,8 @@ The save loading path passes state.start.geography into bookmark activation befo
 Legal court scope persistence
 
 Judicial custody and pending justice responses store courtKind as secular or religious. Captive normalization retains that field; legacy records without it resolve to secular. Government and faith declarations select current tradition at query/commit time, so tables and rendered legal labels never enter saves. Already imposed custody deadlines and sentence history survive a declaration change. The additive court scope uses the existing save envelope without replaying a judgment.
+
+
+Governing identity persistence
+
+Optional authority government rows now actively use eliteCultureId, eliteFaithId and legalIdentityId, plus tolerance (preference, tolerant or persecution), taxation (equal or discriminatory) and justicePolicy (personal or elite). Existing rows omitting these fields remain valid and project baseline treatment. Validation resolves legalIdentityId against the legal tradition registry and rejects invalid policy values before adoption. New-world seeds apply only at creation, never during migration or restore. Government-form changes preserve declared identity and policy. Rights retain exact recognition basisRef, transition history and the existing annual lastCustomYear guard. No new envelope version or saved projection is introduced.

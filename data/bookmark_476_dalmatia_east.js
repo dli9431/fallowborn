@@ -9,7 +9,10 @@ FBDATA.bookmarkRegions476['dalmatia_east'] = {
     { id:'moson', name:'Moson', realm:'gepids_476', culture:'roman', religion:'nicene', dev:1, communities:[{ culture:'roman', religion:'nicene', populationShare0:7000 }, { culture:'gothic', religion:'homoian', paired:true, populationShare0:3000 }] },
     { id:'sirmium', name:'Sirmium', realm:'gepids_476', culture:'roman', religion:'nicene', dev:2, communities:[{ culture:'roman', religion:'nicene', populationShare0:7000 }, { culture:'gothic', religion:'homoian', paired:true, populationShare0:3000 }] },
     { id:'osijek', name:'Mursa', realm:'gepids_476', culture:'roman', religion:'nicene', dev:1, communities:[{ culture:'roman', religion:'nicene', populationShare0:7000 }, { culture:'gothic', religion:'homoian', paired:true, populationShare0:3000 }] },
-    { id:'constantinople', name:'Constantinople', realm:'byzantium', culture:'greek', religion:'chalcedonian', dev:9, duchy:'d_476_europa', communities:[{ culture:'greek', religion:'chalcedonian', populationShare0:8500 }, { culture:'greek', religion:'miaphysite', populationShare0:1500 }] },
+    { id:'constantinople', name:'Constantinople', realm:'byzantium', culture:'greek', religion:'chalcedonian', dev:9, duchy:'d_476_europa', customaryRights:[
+      { power:'peace', basis:'tenure', basisRef:'provincial_court_476:constantinople' },
+      { power:'revenue', basis:'tenure', basisRef:'provincial_court_476:constantinople' }
+    ], communities:[{ culture:'greek', religion:'chalcedonian', populationShare0:8500 }, { culture:'greek', religion:'miaphysite', populationShare0:1500 }] },
     { id:'adrianople', name:'Adrianople', realm:'byzantium', culture:'greek', religion:'chalcedonian', dev:4, duchy:'d_476_haemimontus', communities:[{ culture:'greek', religion:'chalcedonian', populationShare0:10000 }] },
     { id:'thessaloniki', name:'Thessalonica', realm:'byzantium', culture:'greek', religion:'chalcedonian', dev:6, duchy:'d_476_macedonia_prima', communities:[{ culture:'greek', religion:'chalcedonian', populationShare0:10000 }] },
     { id:'serres', name:'Serres', realm:'byzantium', culture:'greek', religion:'chalcedonian', dev:2, duchy:'d_476_macedonia_prima', communities:[{ culture:'greek', religion:'chalcedonian', populationShare0:10000 }] },
@@ -41,7 +44,10 @@ FBDATA.bookmarkRegions476['dalmatia_east'] = {
     { id:'ohrid', name:'Ohrid', realm:'byzantium', culture:'greek', religion:'chalcedonian', dev:2, duchy:'d_476_epirus_nova', communities:[{ culture:'greek', religion:'chalcedonian', populationShare0:10000 }] },
     { id:'kotor', name:'Kotor', realm:'croatia', culture:'roman', religion:'nicene', dev:2, duchy:'d_476_dalmatia', communities:[{ culture:'roman', religion:'nicene', populationShare0:10000 }] },
     { id:'knin', name:'Knin', realm:'croatia', culture:'roman', religion:'nicene', dev:2, duchy:'d_476_dalmatia', communities:[{ culture:'roman', religion:'nicene', populationShare0:10000 }] },
-    { id:'split', name:'Split', realm:'croatia', culture:'roman', religion:'nicene', dev:6, duchy:'d_476_dalmatia', communities:[{ culture:'roman', religion:'nicene', populationShare0:10000 }] },
+    { id:'split', name:'Split', realm:'croatia', culture:'roman', religion:'nicene', dev:6, duchy:'d_476_dalmatia', customaryRights:[
+      { power:'peace', basis:'tenure', basisRef:'provincial_court_476:split' },
+      { power:'revenue', basis:'tenure', basisRef:'provincial_court_476:split' }
+    ], communities:[{ culture:'roman', religion:'nicene', populationShare0:10000 }] },
     { id:'zadar', name:'Zadar', realm:'croatia', culture:'roman', religion:'nicene', dev:3, duchy:'d_476_dalmatia', communities:[{ culture:'roman', religion:'nicene', populationShare0:10000 }] },
     { id:'zagreb', name:'Zagreb', realm:'croatia', culture:'roman', religion:'nicene', dev:2, duchy:'d_476_dalmatia', communities:[{ culture:'roman', religion:'nicene', populationShare0:10000 }] },
     { id:'sisak', name:'Sisak', realm:'croatia', culture:'roman', religion:'nicene', dev:1, duchy:'d_476_dalmatia', communities:[{ culture:'roman', religion:'nicene', populationShare0:10000 }] }
@@ -50,16 +56,28 @@ FBDATA.bookmarkRegions476['dalmatia_east'] = {
     { id:'croatia', name:'Dalmatian Roman Court', color:'#7b699b', capital:'split',
       aggression:0, rank:3, religion:'nicene', techTraditions:['latin','byzantine'],
       government:'roman_civic',
+      governingIdentity:{ eliteCultureId:'roman', eliteFaithId:'nicene', legalIdentityId:'late_roman',
+        tolerance:'preference', taxation:'equal', justicePolicy:'personal' },
       ruler:{ name:'Julius Nepos', sex:'m', culture:'roman', born:430, mar:9, trait:'proud' } },
     { id:'byzantium', name:'Eastern Roman Court', color:'#a04fb0', capital:'constantinople',
       aggression:0, rank:4, religion:'chalcedonian', techTraditions:['byzantine'],
       government:'roman_civic',
+      governingIdentity:{ eliteCultureId:'greek', eliteFaithId:'chalcedonian', legalIdentityId:'late_roman',
+        tolerance:'preference', taxation:'equal', justicePolicy:'personal' },
       ruler:{ name:'Basiliscus', sex:'m', culture:'greek', born:430, mar:8, trait:'proud' } },
     { id:'pannonia', name:'Amal Gothic Host', color:'#809b73', capital:'thessaloniki', nonTerritorial:true, government:'federate_polity',
       aggression:1, rank:3, religion:'homoian',
+      governingIdentity:{ eliteCultureId:'gothic', eliteFaithId:'homoian', legalIdentityId:'gothic_custom',
+        tolerance:'preference', taxation:'equal', justicePolicy:'personal' },
       ruler:{ name:'Theoderic the Amal', sex:'m', culture:'gothic', born:454, mar:12, trait:'ambitious' } },
-    { id:'gepids_476', name:'Gepid Kingdom', color:'#6c846c', capital:'sirmium', aggression:0, rank:2, religion:'homoian', techTraditions:['latin'], ruler:{ generated:true, sex:'m', culture:'gothic', born:440, mar:8, trait:'patient' } },
-    { id:'thracian_goths_476', name:'Thracian Gothic Host', color:'#7b846f', capital:'adrianople', aggression:0, rank:3, religion:'homoian', techTraditions:['latin'], nonTerritorial:true, government:'federate_polity', ruler:{ name:'Theoderic Strabo', sex:'m', culture:'gothic', born:430, mar:8, trait:'patient' } }
+    { id:'gepids_476', name:'Gepid Kingdom', color:'#6c846c', capital:'sirmium', aggression:0, rank:2, religion:'homoian', techTraditions:['latin'],
+      governingIdentity:{ eliteCultureId:'gothic', eliteFaithId:'homoian', legalIdentityId:'gothic_custom',
+        tolerance:'preference', taxation:'equal', justicePolicy:'personal' },
+      ruler:{ generated:true, sex:'m', culture:'gothic', born:440, mar:8, trait:'patient' } },
+    { id:'thracian_goths_476', name:'Thracian Gothic Host', color:'#7b846f', capital:'adrianople', aggression:0, rank:3, religion:'homoian', techTraditions:['latin'], nonTerritorial:true, government:'federate_polity',
+      governingIdentity:{ eliteCultureId:'gothic', eliteFaithId:'homoian', legalIdentityId:'gothic_custom',
+        tolerance:'preference', taxation:'equal', justicePolicy:'personal' },
+      ruler:{ name:'Theoderic Strabo', sex:'m', culture:'gothic', born:430, mar:8, trait:'patient' } }
   ],
   duchies:{
     'd_476_dalmatia':{ name:'Dalmatia', kingdom:'k_476_dalmatia' },

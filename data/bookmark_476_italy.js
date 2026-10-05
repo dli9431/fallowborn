@@ -28,7 +28,10 @@ FBDATA.bookmarkRegions476['italy'] = {
     { id:'parma', name:'Parma', realm:'italy', culture:'roman', religion:'nicene', dev:3, duchy:'d_476_aemilia', communities:[{ culture:'roman', religion:'nicene', populationShare0:10000 }] },
     { id:'modena', name:'Modena', realm:'italy', culture:'roman', religion:'nicene', dev:3, duchy:'d_476_aemilia', communities:[{ culture:'roman', religion:'nicene', populationShare0:10000 }] },
     { id:'bologna', name:'Bologna', realm:'italy', culture:'roman', religion:'nicene', dev:3, duchy:'d_476_aemilia', communities:[{ culture:'roman', religion:'nicene', populationShare0:10000 }] },
-    { id:'ravenna', name:'Ravenna', realm:'italy', culture:'roman', religion:'nicene', dev:7, duchy:'d_476_flaminia_picenum', communities:[{ culture:'roman', religion:'nicene', populationShare0:8000 }, { culture:'gothic', religion:'homoian', paired:true, populationShare0:2000 }] },
+    { id:'ravenna', name:'Ravenna', realm:'italy', culture:'roman', religion:'nicene', dev:7, duchy:'d_476_flaminia_picenum', customaryRights:[
+      { power:'peace', basis:'tenure', basisRef:'provincial_court_476:ravenna' },
+      { power:'revenue', basis:'tenure', basisRef:'provincial_court_476:ravenna' }
+    ], communities:[{ culture:'roman', religion:'nicene', populationShare0:8000 }, { culture:'gothic', religion:'homoian', paired:true, populationShare0:2000 }] },
     { id:'firenze', name:'Firenze', realm:'italy', culture:'roman', religion:'nicene', dev:3, duchy:'d_476_tuscia_umbria', communities:[{ culture:'roman', religion:'nicene', populationShare0:10000 }] },
     { id:'pisa', name:'Pisa', realm:'italy', culture:'roman', religion:'nicene', dev:3, duchy:'d_476_tuscia_umbria', communities:[{ culture:'roman', religion:'nicene', populationShare0:10000 }] },
     { id:'siena', name:'Siena', realm:'italy', culture:'roman', religion:'nicene', dev:3, duchy:'d_476_tuscia_umbria', communities:[{ culture:'roman', religion:'nicene', populationShare0:10000 }] },
@@ -36,7 +39,10 @@ FBDATA.bookmarkRegions476['italy'] = {
     { id:'spoleto', name:'Spoleto', realm:'italy', culture:'roman', religion:'nicene', dev:3, duchy:'d_476_tuscia_umbria', communities:[{ culture:'roman', religion:'nicene', populationShare0:10000 }] },
     { id:'perugia', name:'Perugia', realm:'italy', culture:'roman', religion:'nicene', dev:2, duchy:'d_476_tuscia_umbria', communities:[{ culture:'roman', religion:'nicene', populationShare0:10000 }] },
     { id:'ancona', name:'Ancona', realm:'italy', culture:'roman', religion:'nicene', dev:2, duchy:'d_476_flaminia_picenum', communities:[{ culture:'roman', religion:'nicene', populationShare0:10000 }] },
-    { id:'roma', name:'Roma', realm:'italy', culture:'roman', religion:'nicene', dev:8, duchy:'d_476_campania', communities:[{ culture:'roman', religion:'nicene', populationShare0:10000 }] },
+    { id:'roma', name:'Roma', realm:'italy', culture:'roman', religion:'nicene', dev:8, duchy:'d_476_campania', customaryRights:[
+      { power:'peace', basis:'tenure', basisRef:'provincial_court_476:roma' },
+      { power:'revenue', basis:'tenure', basisRef:'provincial_court_476:roma' }
+    ], communities:[{ culture:'roman', religion:'nicene', populationShare0:10000 }] },
     { id:'viterbo', name:'Viterbo', realm:'italy', culture:'roman', religion:'nicene', dev:2, duchy:'d_476_tuscia_umbria', communities:[{ culture:'roman', religion:'nicene', populationShare0:10000 }] },
     { id:'benevento', name:'Benevento', realm:'italy', culture:'roman', religion:'nicene', dev:4, duchy:'d_476_samnium', communities:[{ culture:'roman', religion:'nicene', populationShare0:10000 }] },
     { id:'capua', name:'Capua', realm:'italy', culture:'roman', religion:'nicene', dev:3, duchy:'d_476_campania', communities:[{ culture:'roman', religion:'nicene', populationShare0:10000 }] },
@@ -52,12 +58,19 @@ FBDATA.bookmarkRegions476['italy'] = {
     { id:'italy', name:'Western Roman Court', color:'#9c5647', capital:'ravenna',
       aggression:0, rank:4, religion:'nicene', techTraditions:['latin'],
       government:'roman_civic',
+      governingIdentity:{ eliteCultureId:'roman', eliteFaithId:'nicene', legalIdentityId:'late_roman',
+        tolerance:'preference', taxation:'equal', justicePolicy:'personal' },
       ruler:{ name:'Romulus Augustulus', sex:'m', culture:'roman', born:461, mar:3, trait:'patient' } },
     { id:'federates_476', name:'Federate Host in Italy', color:'#717d65', capital:'pavia',
       nonTerritorial:true, aggression:0, rank:1, religion:'homoian',
       government:'federate_polity',
+      governingIdentity:{ eliteCultureId:'gothic', eliteFaithId:'homoian', legalIdentityId:'gothic_custom',
+        tolerance:'preference', taxation:'equal', justicePolicy:'personal' },
       ruler:{ name:'Odoacer', sex:'m', culture:'gothic', born:433, mar:12, trait:'ambitious' } },
-    { id:'rugi_476', name:'Rugian Kingdom', color:'#87987e', capital:'wien', aggression:0, rank:3, religion:'homoian', techTraditions:['latin'], ruler:{ name:'Feletheus', sex:'m', culture:'gothic', born:440, mar:8, trait:'patient' } }
+    { id:'rugi_476', name:'Rugian Kingdom', color:'#87987e', capital:'wien', aggression:0, rank:3, religion:'homoian', techTraditions:['latin'],
+      governingIdentity:{ eliteCultureId:'gothic', eliteFaithId:'homoian', legalIdentityId:'gothic_custom',
+        tolerance:'preference', taxation:'equal', justicePolicy:'personal' },
+      ruler:{ name:'Feletheus', sex:'m', culture:'gothic', born:440, mar:8, trait:'patient' } }
   ],
   duchies:{
     'd_476_liguria':{ name:'Liguria', kingdom:'k_476_italia_annonaria' },

@@ -46,6 +46,18 @@ FBDATA.legalTraditions = {
     ai:{ minor:['fine'], serious:['imprisonment'], severe:['execution'], arbitrary:['imprisonment'], excessive:['execution'] } }
 };
 
+/* Period legal practice, without later Byzantine deposition penalties.
+   Personal jurisdiction is a bounded abstraction, not a later code backdated. */
+FBDATA.legalTraditions.late_roman = Object.assign({}, FBDATA.legalTraditions.customary, {
+  name:'Late Roman law',
+  procedures:Object.assign({}, FBDATA.legalTraditions.customary.procedures, { compensationMaxSeverity:2 })
+});
+FBDATA.legalTraditions.gothic_custom = Object.assign({}, FBDATA.legalTraditions.customary, {
+  name:'Gothic custom',
+  jurisdiction:{ cultures:{ roman:'late_roman', iberian:'late_roman', greek:'late_roman',
+    gothic:'gothic_custom' }, mixed:'gothic_custom', assessor:'late_roman' }
+});
+
 FBDATA.intrigue = {
   maxAiSchemes:6,
   aiStartsPerYear:2,

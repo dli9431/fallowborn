@@ -1464,6 +1464,10 @@ window.FB = window.FB || {};
     if (kind === 'faith' && scope === 'realm' &&
         state.realms && state.realms.player) {
       state.realms.player.religion = targetId;
+      const governing = state.authority && state.authority.governments &&
+        state.authority.governments.player;
+      if (governing && governing.eliteFaithId !== undefined)
+        governing.eliteFaithId = targetId;
     }
 
     if (status.popularOpinion) {

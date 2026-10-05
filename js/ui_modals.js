@@ -11686,7 +11686,13 @@ window.FB = window.FB || {};
           realmTreasuryHtml(s, rid) + '</div>' : '') + '<div class="ccmeta">' +
         esc(FB.L(realm.name)) +
         '</div></div></div>';
-    let h = header + realmCourtStripHtml(s, rid, rulerCharacter && rulerCharacter.id) + interactionCardHtml(model) +
+    var governing = FB.political.governingIdentity(s, rid);
+    var governingHtml = governing && governing.declared ? '<div class="settcard">' +
+      kv('Elite culture', esc(conversionTargetName(s, 'culture', governing.eliteCultureId))) +
+      kv('Elite faith', esc(religionName(s, governing.eliteFaithId))) +
+      kv('Legal tradition', esc(dt(s, 'legalTradition', governing.legalIdentityId,
+        FBDATA.legalTraditions[governing.legalIdentityId], 'name'))) + '</div>' : '';
+    let h = header + realmCourtStripHtml(s, rid, rulerCharacter && rulerCharacter.id) + governingHtml + interactionCardHtml(model) +
       '<div class="gm-footer"><button type="button" class="btn" id="gm-cancel">' +
       esc(returnContext ? FB.T('Back') : FB.T('Close')) +
       '</button>' +
@@ -13712,6 +13718,11 @@ window.FB = window.FB || {};
         summary.directCounties.indexOf(home.id) >= 0
           ? FB.T('held directly') : FB.T('not held directly')));
     }
+    if (summary.playerRealmId === 'player') h +=
+      '<button type="button" class="actionbtn" id="governance-identity">' +
+      esc(FB.T('Governing identity and communities…')) +
+      '<span class="adesc">' + esc(FB.T('Review elite culture, faith, law and treatment of local communities.')) +
+      '</span></button>';
     h += '<div class="progressnote' +
       (summary.warnings.length ? ' warnote' : '') + '">' +
       esc(constraint) + '</div>';
@@ -14498,12 +14509,112 @@ window.FB = window.FB || {};
     if ($('governance-justice')) $('governance-justice').onclick = function () {
       UI.showJustice();
     };
+    if ($('governance-identity')) $('governance-identity').onclick = function () {
+      UI.showGoverningIdentity('player');
+    };
     $('governance-close').addEventListener('click', UI.closeModal);
     if (sectionId) {
       setTimeout(function () {
         selectGovernanceSection(selectedSection, true);
       }, 0);
     }
+  };
+
+  function governingPolicyName(key, id) {
+    var names = {
+      tolerance:{ preference:FB.T('Confessional preference'), tolerant:FB.T('Protected local worship'),
+        persecution:FB.T('Persecution') },
+      taxation:{ equal:FB.T('Equal treatment'), discriminatory:FB.T('Discriminatory burdens') },
+      justicePolicy:{ personal:FB.T('Respect personal law'), elite:FB.T('Impose elite law') }
+    };
+    return names[key] && names[key][id] || id;
+  }
+  UI.showGoverningIdentity = function (rid) {
+    var s = FB.state, g = FB.political.governingIdentity(s, rid);
+    if (!g) return;
+    var editable = rid === 'player' && FB.governanceEligible(s) && FB.station.rulesRealm(s.player, s);
+    var legal = g.legalIdentityId || FB.justiceTradition(s,
+      rid === 'player' ? s.player.charId : (FB.realmRulerCharacterSnapshot(s, rid) || {}).id).id;
+    var h = '<div class="settcard">' +
+      kv('Elite culture', esc(conversionTargetName(s, 'culture', g.eliteCultureId))) +
+      kv('Elite faith', esc(religionName(s, g.eliteFaithId))) +
+      kv('Legal tradition', esc(dt(s, 'legalTradition', legal, FBDATA.legalTraditions[legal], 'name'))) +
+      '</div>';
+    function select(key, label, entries, current) {
+      var out = '<label for="identity-' + key + '">' + esc(label) + '</label>' +
+        '<select class="select" id="identity-' + key + '">';
+      for (var entry of entries) out += '<option value="' + esc(entry.id) + '"' +
+        (entry.id === current ? ' selected' : '') + '>' + esc(entry.name) + '</option>';
+      return out + '</select>';
+    }
+    if (editable) {
+      h += '<div class="settcard governing-identity-fields">' + select('eliteCultureId', FB.T('Elite culture'), Object.keys(FBDATA.cultures)
+        .map(function (id) { return { id:id, name:conversionTargetName(s, 'culture', id) }; }), g.eliteCultureId) +
+        select('eliteFaithId', FB.T('Elite faith'), Object.keys(FBDATA.religions).concat(Object.keys(s.faiths || {}))
+          .filter(function (id, i, ids) { return ids.indexOf(id) === i && FB.faithAssignable(id, s); })
+          .map(function (id) { return { id:id, name:religionName(s, id) }; }), g.eliteFaithId) +
+        select('legalIdentityId', FB.T('Legal tradition'), Object.keys(FBDATA.legalTraditions)
+          .map(function (id) { return { id:id, name:dt(s, 'legalTradition', id, FBDATA.legalTraditions[id], 'name') }; }), legal);
+      for (var key of ['tolerance','taxation','justicePolicy']) {
+        var ids = key === 'tolerance' ? ['preference','tolerant','persecution'] :
+          key === 'taxation' ? ['equal','discriminatory'] : ['personal','elite'];
+        var label = key === 'tolerance' ? FB.T('Local worship') : key === 'taxation' ? FB.T('Tax treatment') : FB.T('Court policy');
+        h += select(key, label, ids.map(function (id) { return { id:id, name:governingPolicyName(key, id) }; }), g[key]);
+      }
+      h += '</div><div class="progressnote">' + esc(FB.T(
+        'No payment or time cost. Annual support changes with the share of communities treated differently. Royal religious policy takes precedence where active.')) +
+        '</div><div class="modal-body-actions"><button class="actionbtn" type="button" id="identity-review">' +
+        esc(FB.T('Review governing identity…')) + '</button></div>';
+    }
+    h += '<div class="settcard"><h4>' + esc(FB.T('Local communities')) + '</h4>';
+    for (var pid of FB.realmHeldCounties(s, rid)) {
+      var local = FB.political.communityGovernance(s, pid);
+      h += kv(FB.world.byId[pid].name, esc(FB.T('Support each year: {amount}; civic consent: {status}', {
+        amount:Math.round(local.annualSupport * 100) / 100,
+        status:FB.political.civicConsent(s, pid).allowed ? FB.T('available') : FB.T('opposed')
+      })));
+    }
+    h += '</div><div class="gm-footer"><button type="button" class="btn" id="identity-back">' +
+      esc(FB.T('Back')) + '</button></div>';
+    openModal(FB.T('Governing identity'), h, { modalClass:'fullsheet-modal', historyView:true,
+      historyBackRender:function () { UI.showGovernance('position'); },
+      titleDetailsHtml:'<p>' + esc(FB.T(
+        'Elite identity belongs to the governing institution. This decision does not convert people or replace county and settlement communities. Personal law follows the parties; mixed cases use the declared tradition’s mixed court. Civic bargains are opposed below -25 support.')) + '</p>' });
+    $('identity-back').onclick = function () { UI.backModal(); };
+    if ($('identity-review')) $('identity-review').onclick = function () {
+      var value = {};
+      for (var key of ['eliteCultureId','eliteFaithId','legalIdentityId','tolerance','taxation','justicePolicy'])
+        value[key] = $('identity-' + key).value;
+      var quote = FB.political.identityQuote(s, rid, value);
+      if (!quote) return;
+      var facts = kv('Elite culture', esc(conversionTargetName(s, 'culture', value.eliteCultureId))) +
+        kv('Elite faith', esc(religionName(s, value.eliteFaithId))) +
+        kv('Legal tradition', esc(dt(s, 'legalTradition', value.legalIdentityId,
+          FBDATA.legalTraditions[value.legalIdentityId], 'name')));
+      for (var key of ['tolerance','taxation','justicePolicy']) facts +=
+        kv(key === 'tolerance' ? FB.T('Local worship') : key === 'taxation' ? FB.T('Tax treatment') : FB.T('Court policy'),
+          esc(governingPolicyName(key, value[key])));
+      for (var county of quote.counties) facts += kv(FB.world.byId[county.provinceId].name,
+        esc(FB.T('Annual support: {before} to {after}', { before:Math.round(county.before * 100) / 100,
+          after:Math.round(county.after * 100) / 100 })));
+      facts += '<div class="progressnote">' + esc(FB.T(
+        'Each year: confessional preference -1, protected worship +2, persecution -6 per other-faith share; discriminatory burdens -3 and elite law -2 per other-culture share. No payment or time cost.')) + '</div>';
+      openModal(FB.T('Review governing identity'), reviewFactsCard(FB.T('Governing identity'), facts) +
+        reviewActionsHtml(reviewActionCardHtml({ id:'identity-confirm', label:FB.T('Confirm governing identity'),
+          note:FB.T('No payment or time cost'),
+          details:'<p>' + esc(FB.T('Applies to the governing institution and its directly held counties. Existing communities remain intact.')) + '</p>' })) +
+        '<div class="gm-footer">' +
+        '<button type="button" class="btn" id="identity-cancel">' + esc(FB.T('Not now')) + '</button></div>',
+        { historyView:true, modalClass:'fullsheet-modal', historyBackRender:function () { UI.showGoverningIdentity(rid); } });
+      $('identity-cancel').onclick = function () { UI.backModal(); };
+      $('identity-confirm').onclick = function () {
+        if (FB.state !== s || !FB.governanceEligible(s) || !FB.station.rulesRealm(s.player, s) ||
+            !FB.authorityApplyIdentity(s, quote)) {
+          UI.toast(FB.T('The governing identity changed. Review the current terms again.')); return;
+        }
+        UI.closeModal(); UI.refresh();
+      };
+    };
   };
 
   function electionReturn(context) {
@@ -25332,10 +25443,13 @@ window.FB = window.FB || {};
   function justiceSentenceFacts(p) {
     const s = FB.state, def = FBDATA.justiceSentences[p.sentence];
     const tradition = FBDATA.legalTraditions[p.traditionId];
+    const assessor = p.assessorId && FBDATA.legalTraditions[p.assessorId];
     let h = (tradition ? kv('Legal tradition', esc(FB.dataText(s, p.actorId, 'legalTradition', p.traditionId, tradition, 'name', {}))) : '') + kv('Judgment', esc(p.justified ? FB.T('Justified') : FB.T('Unjust or excessive'))) +
       (p.support ? kv('Popular support loss', esc(FB.T('{amount} per directly governed county', {
         amount:Math.abs(Math.round(p.support))
       }))) : kv('Popular support', esc(p.justified ? FB.T('No loss — justified action') : FB.T('No additional loss'))));
+    if (assessor) h += kv('Legal assessor', esc(FB.dataText(s, p.actorId,
+      'legalTradition', p.assessorId, assessor, 'name', {})));
     if (def.kind === 'death') h += kv('Consequence', esc(FB.T('Death')));
     else if (def.kind === 'corporal') h += kv('Consequence', esc(FB.T('Permanent injury and deposition')));
     else if (def.kind === 'exile') h += kv('Consequence', esc(FB.T('Local titles and offices lost; exile for 5 years')));

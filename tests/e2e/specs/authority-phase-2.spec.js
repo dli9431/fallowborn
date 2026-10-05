@@ -267,7 +267,7 @@ for (const bookmark of ['867', '1066']) {
         'judgment:renewed');
       const rightOnce = judgment &&
         !FB.authorityRecordCustom(s, custom.id, 'judgment', 'judgment:renewed') &&
-        q.rights(s, federate)[0].strength === 50;
+        q.rights(s, federate).find(function (r) { return r.id === custom.id; }).strength === 50;
       const rightRestored = q.permission(s, federate, 'collect_render',
         { provinceId:pid }).allowed;
       s.player.gold = 20;

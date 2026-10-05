@@ -71,6 +71,12 @@
     var formId = stored && stored.formId || defaultForm(s);
     var rules = FBDATA.governmentForms[formId];
     return rules ? { realmId:realmRef.id, formId:formId,
+      eliteCultureId:stored && stored.eliteCultureId || null,
+      eliteFaithId:stored && stored.eliteFaithId || null,
+      legalIdentityId:stored && stored.legalIdentityId || null,
+      tolerance:stored && stored.tolerance || 'preference',
+      taxation:stored && stored.taxation || 'equal',
+      justicePolicy:stored && stored.justicePolicy || 'personal',
       rules:copy(rules), sinceTurn:stored && stored.sinceTurn !== undefined
         ? stored.sinceTurn : null } : null;
   };
@@ -78,7 +84,9 @@
     var current = Q.government(s, { kind:'realm', id:rid });
     if (!current || !FBDATA.governmentForms[formId] ||
         current.formId === formId) return false;
-    ensure(s).governments[rid] = { formId:formId, sinceTurn:s.turn };
+    ensure(s).governments[rid] = Object.assign({},
+      s.authority && s.authority.governments && s.authority.governments[rid],
+      { formId:formId, sinceTurn:s.turn });
     return true;
   };
   /* World creation seeds the bookmark's form for each realm (realm id ->
@@ -90,6 +98,93 @@
           !own(FBDATA.governmentForms, forms[rid])) continue;
       ensure(s).governments[rid] = { formId:forms[rid], sinceTurn:s.turn };
     }
+  };
+  /* Identity reads never change community partitions or materialize rulers. */
+  Q.governingIdentity = function (s, rid) {
+    var g = Q.government(s, { kind:'realm', id:rid });
+    if (!g) return null;
+    var actor = Q.actor(s, { kind:'realm', id:rid });
+    return Object.assign({}, g, {
+      eliteCultureId:g.eliteCultureId || actor.cultureId,
+      eliteFaithId:g.eliteFaithId || actor.realmReligionId || actor.religionId,
+      declared:!!g.legalIdentityId
+    });
+  };
+  FB.authorityIdentityValid = function (s, value) {
+    return !!(value && own(FBDATA.cultures, value.eliteCultureId) &&
+      FB.faithExists(value.eliteFaithId, s) &&
+      own(FBDATA.legalTraditions, value.legalIdentityId) &&
+      ['preference','tolerant','persecution'].indexOf(value.tolerance) >= 0 &&
+      ['equal','discriminatory'].indexOf(value.taxation) >= 0 &&
+      ['personal','elite'].indexOf(value.justicePolicy) >= 0);
+  };
+  FB.authoritySetIdentity = function (s, rid, value) {
+    var g = Q.government(s, { kind:'realm', id:rid });
+    if (!g || !FB.authorityIdentityValid(s, value)) return false;
+    var a = ensure(s), prior = a.governments[rid] || { formId:g.formId, sinceTurn:s.turn };
+    var changed = false;
+    for (var key of ['eliteCultureId','eliteFaithId','legalIdentityId','tolerance','taxation','justicePolicy']) {
+      if (prior[key] !== value[key]) changed = true;
+    }
+    if (!changed) return false;
+    a.governments[rid] = Object.assign({}, prior, {
+      eliteCultureId:value.eliteCultureId, eliteFaithId:value.eliteFaithId,
+      legalIdentityId:value.legalIdentityId, tolerance:value.tolerance,
+      taxation:value.taxation, justicePolicy:value.justicePolicy
+    });
+    return true;
+  };
+  Q.communityGovernance = function (s, pid, proposed) {
+    if (!scope(s, { kind:'county', id:pid })) return null;
+    var rid = FB.settlementCountyHolder(s, pid), g = rid && Q.governingIdentity(s, rid);
+    if (g && proposed) g = Object.assign({}, g, proposed, { declared:true });
+    var rows = FB.countyCommunities(s, pid), total = 0, faith = 0, culture = 0;
+    for (var row of rows) {
+      total += row.count;
+      if (g && row.religion !== g.eliteFaithId) faith += row.count;
+      if (g && row.culture !== g.eliteCultureId) culture += row.count;
+    }
+    faith = total ? faith / total : 0; culture = total ? culture / total : 0;
+    var tolerance = g && g.tolerance;
+    /* Existing royal proclamations override the local default for that realm. */
+    if (rid === 'player' && FB.realmPolicyActive(s)) {
+      var level = FB.realmPolicyLevelId(s, 'religious_tolerance');
+      if (level) tolerance = level === 'persecution' ? 'persecution' :
+        level === 'confessional_preference' ? 'preference' : 'tolerant';
+    }
+    var delta = g && g.declared ?
+      faith * (tolerance === 'persecution' ? -6 : tolerance === 'tolerant' ? 2 : -1) +
+      culture * (g.taxation === 'discriminatory' ? -3 : 0) +
+      culture * (g.justicePolicy === 'elite' ? -2 : 0) : 0;
+    return { provinceId:pid, realmId:rid, identity:g, otherFaithShare:faith,
+      otherCultureShare:culture, annualSupport:delta,
+      consentSupport:FB.countyPopularSupport(s, pid) + delta };
+  };
+  /* A civic grant remains recorded even when communities refuse the bargain. */
+  Q.civicConsent = function (s, pid) {
+    var local = Q.communityGovernance(s, pid);
+    if (!local) return { allowed:false, support:null, reason:'missing_scope' };
+    var allowed = !local.identity || !local.identity.declared || local.consentSupport >= -25;
+    return { allowed:allowed, support:local.consentSupport,
+      reason:allowed ? null : 'community_opposition' };
+  };
+  Q.identityQuote = function (s, rid, value) {
+    var current = Q.governingIdentity(s, rid);
+    if (!current || !FB.authorityIdentityValid(s, value)) return null;
+    return { realmId:rid, generation:FB.realmRulerGeneration(s, rid),
+      current:current, value:copy(value), turn:s.turn,
+      counties:FB.realmHeldCounties(s, rid).map(function (pid) {
+        return { provinceId:pid, communities:FB.countyCommunities(s, pid),
+          support:FB.countyPopularSupport(s, pid),
+          before:Q.communityGovernance(s, pid).annualSupport,
+          after:Q.communityGovernance(s, pid, value).annualSupport };
+      }) };
+  };
+  FB.authorityApplyIdentity = function (s, reviewed) {
+    if (!reviewed) return false;
+    var fresh = Q.identityQuote(s, reviewed.realmId, reviewed.value);
+    return !!fresh && JSON.stringify(fresh) === JSON.stringify(reviewed) &&
+      FB.authoritySetIdentity(s, reviewed.realmId, reviewed.value);
   };
   function validIssuer(s, issuer, source) {
     if (!issuer || typeof issuer.id !== 'string') return false;
@@ -165,6 +260,22 @@
       endTurn:terms.endTurn === undefined ? null : terms.endTurn,
       status:'active' };
     s.authority.recognitions.push(row);
+    if (at && at.kind === 'county' &&
+        ['imperial_commission','civic_acceptance','dynastic_succession'].indexOf(row.source) >= 0) {
+      var holder = FB.settlementCountyHolder(s, at.id);
+      if (holder) for (var power of ['peace','revenue','consent']) {
+        if (!Q.power(s, subject, power, { provinceId:at.id }).allowed) continue;
+        var priorRight = list(s, 'rights').filter(function (r) {
+          return r.status === 'active' && r.basis === 'recognition' && r.power === power &&
+            r.scope.id === at.id && r.issuer.id === holder && same(r.beneficiary, subject);
+        })[0];
+        if (priorRight) {
+          FB.authorityRecordCustom(s, priorRight.id, 'recognition', row.id);
+          priorRight.basisRef = row.id;
+        } else FB.authorityEstablishRight(s, { issuer:{ kind:'realm', id:holder },
+          beneficiary:subject, scope:at, power:power, basis:'recognition', basisRef:row.id });
+      }
+    }
     return copy(row);
   };
   FB.authorityRecognitionTransition = function (s, id, action) {
@@ -449,7 +560,9 @@
         at.kind !== 'county' || !FBDATA.customaryBases[terms.basis] ||
         ['peace','revenue','consent'].indexOf(terms.power) < 0 ||
         !within(s, issuer.id, at)) return null;
-    var held = FB.holdsSettlementInCounty(s, beneficiary, at.id);
+    var held = beneficiary.kind === 'realm'
+      ? FB.settlementCountyHolder(s, at.id) === beneficiary.id
+      : FB.holdsSettlementInCounty(s, beneficiary, at.id);
     var proof = recognition(s, terms.basisRef);
     if ((terms.basis === 'possession' && !held) ||
         (terms.basis === 'tenure' && !held &&
@@ -478,7 +591,9 @@
     if ((event === 'tenure' || event === 'judgment') &&
         (typeof evidence !== 'string' || !evidence)) return false;
     if (event === 'possession' &&
-        !FB.holdsSettlementInCounty(s, row.beneficiary, row.scope.id)) return false;
+        !(row.beneficiary.kind === 'realm'
+          ? FB.settlementCountyHolder(s, row.scope.id) === row.beneficiary.id
+          : FB.holdsSettlementInCounty(s, row.beneficiary, row.scope.id))) return false;
     if (event === 'recognition') {
       var proof = recognition(s, evidence);
       if (!activeRecognition(s, proof) || !same(proof.subject, row.beneficiary) ||
@@ -502,6 +617,19 @@
         !same(row.issuer, issuer)) return false;
     row.status = 'revoked'; row.history.push({ turn:s.turn, event:'revoked' });
     return true;
+  };
+  FB.authorityJudgment = function (s, beneficiary, pid, evidence) {
+    var issuer = { kind:'realm', id:FB.settlementCountyHolder(s, pid) };
+    if (!ref(s, issuer) || !ref(s, beneficiary) || !scope(s, { kind:'county', id:pid }) ||
+        !Q.power(s, beneficiary, 'peace', { provinceId:pid }).allowed) return false;
+    var existing = list(s, 'rights').filter(function (row) {
+      return row.status === 'active' && row.basis === 'judgment' && row.power === 'peace' &&
+        row.scope.id === pid && same(row.beneficiary, beneficiary) && same(row.issuer, issuer);
+    })[0];
+    if (existing) return existing.basisRef !== evidence &&
+      FB.authorityRecordCustom(s, existing.id, 'judgment', evidence);
+    return !!FB.authorityEstablishRight(s, { issuer:issuer, beneficiary:beneficiary,
+      scope:{ kind:'county', id:pid }, power:'peace', basis:'judgment', basisRef:evidence });
   };
 
   function basis(kind, id) {
@@ -539,6 +667,8 @@
       ? scope(s, { kind:'host', id:context.hostId })
       : scope(s, { kind:'county', id:context.provinceId });
     if (!at) return denied('missing_scope');
+    if (power === 'consent' && !Q.civicConsent(s, at.id).allowed)
+      return denied('community_opposition');
     for (var office of list(s, 'appointments')) {
       var def = FBDATA.authorityOffices[office.officeId];
       if (same(office.holder, a) && same(office.scope, at) &&
@@ -775,21 +905,58 @@
       }
     }
   };
+  FB.authoritySeedCommunities = function (s, realms, provinces) {
+    for (var realm of realms) if (realm.governingIdentity)
+      FB.authoritySetIdentity(s, realm.id, realm.governingIdentity);
+    for (var pr of provinces) for (var seed of pr.customaryRights || []) {
+      FB.authorityEstablishRight(s, { issuer:{ kind:'realm', id:pr.realm },
+        beneficiary:{ kind:'realm', id:seed.realmId || pr.realm },
+        scope:{ kind:'county', id:pr.id }, power:seed.power, basis:seed.basis,
+        basisRef:seed.basisRef });
+    }
+  };
   FB.authorityYear = function (s) {
     var a = records(s);
-    if (!a || !a.rights || !a.rights.length || a.lastCustomYear === s.date.year) return;
+    if (a && a.lastCustomYear === s.date.year) return;
+    /* Index the yearly possession pass once, rather than scan all saved rights
+       for every county. Repeated annual calls cannot manufacture more rights. */
+    var possessed = {};
+    for (var existing of list(s, 'rights')) if (existing.status === 'active' &&
+        existing.basis === 'possession' && existing.beneficiary.kind === 'realm')
+      possessed[existing.beneficiary.id + '|' + existing.scope.id + '|' + existing.power] = true;
+    for (var pr of FB.world.provs) {
+      if (pr.wasteland) continue;
+      var rid = FB.settlementCountyHolder(s, pr.id), actor = { kind:'realm', id:rid };
+      if (!rid || !Q.actor(s, actor)) continue;
+      for (var power of ['peace','revenue']) {
+        if (possessed[rid + '|' + pr.id + '|' + power]) continue;
+        FB.authorityEstablishRight(s, { issuer:actor, beneficiary:actor,
+          scope:{ kind:'county', id:pr.id }, power:power, basis:'possession' });
+      }
+      var saved = records(s), stored = saved && saved.governments[rid];
+      if (stored && stored.legalIdentityId) {
+        var local = Q.communityGovernance(s, pr.id);
+        if (local.annualSupport) FB.adjustCountySupport(s, pr.id, local.annualSupport);
+      }
+    }
+    a = ensure(s);
     a.lastCustomYear = s.date.year;
     for (var row of list(s, 'rights')) {
-      if (row.status !== 'active' || row.basis === 'judgment') continue;
+      if (row.status !== 'active') continue;
       var held = row.beneficiary.kind === 'realm'
         ? FB.settlementCountyHolder(s, row.scope.id) === row.beneficiary.id
         : FB.holdsSettlementInCounty(s, row.beneficiary, row.scope.id);
       if (row.basis === 'possession' || row.basis === 'tenure') {
         FB.authorityRecordCustom(s, row.id, held ? 'possession' : 'disputed');
       } else if (row.basis === 'recognition') {
-        var recognized = Q.legitimacy(s, row.beneficiary, row.scope)[0];
+        var proof = recognition(s, row.basisRef);
+        var recognized = activeRecognition(s, proof) &&
+          same(proof.subject, row.beneficiary) && (!proof.scope || same(proof.scope, row.scope)) ? proof : null;
         FB.authorityRecordCustom(s, row.id, recognized ? 'recognition' : 'disputed',
           recognized && recognized.id);
+      } else if (row.basis === 'judgment' &&
+          (!ref(s, row.issuer) || !within(s, row.issuer.id, row.scope))) {
+        FB.authorityRecordCustom(s, row.id, 'disputed');
       }
     }
   };
