@@ -381,6 +381,57 @@ window.FB = window.FB || {};
     return FB.bookmarkEra(bookmark || FB.activeBookmark);
   };
 
+  /* Content membership follows the stamped era; dates follow the live year. */
+  FB.contentPeriodFault = function (def) {
+    if (!def || typeof def !== 'object' || Array.isArray(def)) return 'period must be an object';
+    if (def.eras !== undefined) {
+      if (!Array.isArray(def.eras)) return 'eras must be a list';
+      var seen = {};
+      for (var i = 0; i < def.eras.length; i++) {
+        var id = def.eras[i];
+        if (typeof id !== 'string' || !ownKey(FBDATA.eras, id) || seen[id]) return 'eras must name unique known eras';
+        seen[id] = true;
+      }
+    }
+    for (var key of ['yearMin', 'yearMax']) {
+      if (def[key] !== undefined && (typeof def[key] !== 'number' ||
+          !isFinite(def[key]) || Math.floor(def[key]) !== def[key])) return key + ' must be an integer';
+    }
+    if (def.yearMin !== undefined && def.yearMax !== undefined &&
+        def.yearMin > def.yearMax) return 'yearMin must not exceed yearMax';
+    return null;
+  };
+  FB.contentPeriodEnabled = function (state, def) {
+    var year = state && state.date ? state.date.year : FB.activeBookmark && FB.activeBookmark.date.year;
+    var era = state ? FB.campaignEra(state) : FB.activeEra;
+    return !!def && (!def.eras || def.eras.indexOf(era) >= 0) &&
+      (def.yearMin === undefined || year >= def.yearMin) &&
+      (def.yearMax === undefined || year <= def.yearMax);
+  };
+  /* Ascending tables select the last entry effective by this year. A null
+     from is an explicit timeless baseline; no entry is borrowed from the future. */
+  FB.yearTableFault = function (rows) {
+    if (!Array.isArray(rows) || !rows.length) return 'year table must be a nonempty list';
+    var previous = -Infinity;
+    for (var i = 0; i < rows.length; i++) {
+      var row = rows[i], from = row && row.from;
+      if (!row || typeof row !== 'object' || Array.isArray(row) ||
+          (from === null ? i !== 0 : typeof from !== 'number' || !isFinite(from) || Math.floor(from) !== from || from <= previous)) {
+        return 'year table entries must have ascending unique integer from years';
+      }
+      previous = from === null ? -Infinity : from;
+    }
+    return null;
+  };
+  FB.yearTableEntry = function (rows, year) {
+    var selected = null;
+    for (var i = 0; i < (rows || []).length; i++) {
+      if (rows[i].from === null || rows[i].from <= year) selected = rows[i];
+      else break;
+    }
+    return selected;
+  };
+
   /* The culture generation falls back on when the map supplies none. */
   FB.eraDefaultCulture = function (state) {
     var eras = FBDATA.eras || {};
@@ -1080,6 +1131,7 @@ window.FB = window.FB || {};
     FB.activeGeographyId = FB.bookmarkGeography(definition);
     FB.activeGeography = FB.geography(FB.activeGeographyId);
     FB.activeEra = FB.bookmarkEra(definition);
+    if (FB.compileEventContent) FB.compileEventContent(FB.activeEra);
     FB.balanceLayers.activate(FB.activeEra, definition);
     FB.activeBookmarkDiagnostics = FB.communityShareDiagnostics
       ? FB.communityShareDiagnostics(definition) : [];
@@ -2036,7 +2088,7 @@ window.FB = window.FB || {};
         religion: r.religion || (cap ? cap.religion : null),
         alive: true,
         ruler: makeRuler(cap ? cap.culture : FB.eraDefaultCulture(state), r.ruler,
-          state.date.year),
+          state.date.year, state),
         war: null, op: 0
       };
       forms[r.id] = r.government !== undefined ? r.government : defaultForm;
@@ -2132,7 +2184,7 @@ window.FB = window.FB || {};
         (localIdentity && localIdentity.religion) ||
         capitalProvince.religion || null,
       alive: true, ruler: makeRuler(culture, null,
-        state.date && state.date.year), war: null,
+        state.date && state.date.year, state), war: null,
       op: 0, generated: true, favor: FB.ri(-15, 15) // the house's standing at its liege's court
     };
     state.realms[r.id] = r;
@@ -2156,7 +2208,7 @@ window.FB = window.FB || {};
      Runtime mod application refreshes it when the data-backed pool changes. */
   FB.RULER_TRAITS = FBDATA.rulerTraits;
 
-  function makeRuler(culture, authored, year) {
+  function makeRuler(culture, authored, year, state) {
     if (authored) {
       return {
         name: authored.name,
@@ -2171,7 +2223,7 @@ window.FB = window.FB || {};
     }
     const age = FB.ri(20, 55);
     return {
-      name: FB.randomName(culture, 'm'),
+      name: FB.randomName(culture, 'm', null, state),
       sex: 'm',
       culture: culture,
       born: year === undefined ? undefined : year - age,
@@ -2542,7 +2594,7 @@ window.FB = window.FB || {};
       alive:true,
       ruler:makeRuler(FB.countyCulture
         ? FB.countyCulture(state, seatId) : seat.culture,
-        null, state.date.year),
+        null, state.date.year, state),
       war:null,
       op:0
     };
@@ -2785,7 +2837,7 @@ window.FB = window.FB || {};
       const max = Math.max(0, ageMax === undefined ? 28 : ageMax);
       return {
         sex:sex,
-        name:FB.randomName(realm.ruler.culture, sex),
+        name:FB.randomName(realm.ruler.culture, sex, null, state),
         born:state.date.year - FB.ri(0, max)
       };
     };
@@ -2936,7 +2988,7 @@ window.FB = window.FB || {};
         const sex = (r.ruler.sex || 'm') === 'f' ? 'm' : 'f';
         return {
           sex:sex,
-          name:FB.randomName(r.ruler.culture, sex),
+          name:FB.randomName(r.ruler.culture, sex, null, state),
           age:rulerAge < 16
             ? FB.clamp(rulerAge + FB.ri(-2, 2), 0, 15)
             : FB.clamp(rulerAge + FB.ri(-10, 6), 16, 74)
@@ -3114,7 +3166,7 @@ window.FB = window.FB || {};
       const culture = cap && FB.countyCulture
         ? FB.countyCulture(state, r.capital) : cap && cap.culture;
       r.ruler = makeRuler(culture || FB.eraDefaultCulture(state), null,
-        state.date && state.date.year);
+        state.date && state.date.year, state);
     }
     if (r.ruler.generation === undefined) r.ruler.generation = 1;
     if (!r.succession || !r.succession.members) {
@@ -3162,7 +3214,7 @@ window.FB = window.FB || {};
       const culture = cap && FB.countyCulture
         ? FB.countyCulture(state, r.capital) : cap && cap.culture;
       r.ruler = makeRuler(culture || FB.eraDefaultCulture(state), null,
-        state.date && state.date.year);
+        state.date && state.date.year, state);
     }
     if (r.ruler.generation === undefined) r.ruler.generation = 1;
     const generation = r.ruler.generation;
@@ -6449,7 +6501,7 @@ window.FB = window.FB || {};
           alive: true, ruler: makeRuler(
             (localIdentity && localIdentity.culture) ||
               (cap ? cap.culture : 'arabic'),
-            ev.newRealm.ruler, state.date.year), war: null, op: 0
+            ev.newRealm.ruler, state.date.year, state), war: null, op: 0
         };
         FB.ensureRealmSuccession(state, rid);
         if (FB.treasuryCreateFromCounties) FB.treasuryCreateFromCounties(state, rid,

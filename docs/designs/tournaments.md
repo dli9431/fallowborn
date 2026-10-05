@@ -57,3 +57,7 @@ Default programmes and their UI projection read the effective tournamentTraditio
 Availability boundary
 
 The tournaments system gates scheduling, daily work, seasonal sampling, restore repair, invitations, Deeds, calendar sheets and the map Events control. World hooks use FB.systemAvailable, while host and participant eligibility use their own scopes. A disabled saved edition or annual intention remains dormant; it is not cancelled, charged or refunded. See docs/designs/systems.md.
+
+Activity periods
+
+Tournament programmes may declare eras and inclusive yearMin/yearMax windows. lists.yearMin owns the 1100 threshold; default programme selection, booking validation and the early martial-games label read that same declaration. New bookings reject an unavailable programme before payment. Already funded editions retain their saved programme, contests and contracts even when a period declaration changes. The complete scheduled-games activity set remains governed by the tournaments optional system. Period membership has technology impact none; formal lists keep their existing venue-sovereign couched-lance technology requirement.

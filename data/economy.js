@@ -259,7 +259,7 @@ FBDATA.careers = {
   },
   civic_clerk: {
     role:'civic', name:'Civic Service', icon:'🏛', skill:'ste', apprenticeAge:16,
-    bookmarkIds:['476'],
+    eras:['late_antique'],
     apprenticeCost:0, tierMin:1, wage:1.5, masterWage:2.5,
     ranks:{ apprentice:'Council pupil', journeyman:'Civic clerk',
       master:'Senior civic clerk' },

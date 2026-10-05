@@ -7,6 +7,11 @@
 window.FBDATA = window.FBDATA || {};
 FBDATA.events = FBDATA.events || [];
 
+(function () {
+  var firstEvent = FBDATA.events.length;
+  FBDATA.eventPacks = FBDATA.eventPacks || {};
+  FBDATA.eventPacks.council = { eras:['late_antique','early_medieval','high_medieval'] };
+
 FBDATA.events.push(
 
 /* ---- flattery & favor-seeking: the sycophants at the board ---- */
@@ -205,3 +210,10 @@ FBDATA.events.push(
       effects:{ custom:'plot_end' } }
   ]}
 );
+
+
+  /* Pack membership is metadata, never a display-field rewrite. */
+  for (var i = firstEvent; i < FBDATA.events.length; i++) {
+    FBDATA.events[i].pack = 'council';
+  }
+})();

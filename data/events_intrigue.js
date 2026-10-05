@@ -4,6 +4,11 @@
 window.FBDATA = window.FBDATA || {};
 FBDATA.events = FBDATA.events || [];
 
+(function () {
+  var firstEvent = FBDATA.events.length;
+  FBDATA.eventPacks = FBDATA.eventPacks || {};
+  FBDATA.eventPacks.intrigue = { eras:['late_antique','early_medieval','high_medieval'] };
+
 FBDATA.events.push(
 { id:'justice_arrest', title:'An Order for Your Arrest',
   trigger:{ never:true }, contextValidator:'justice_response_valid',
@@ -71,3 +76,10 @@ FBDATA.events.push(
     { label:'Refuse.', desc:'Remain captive and trust to escape or the captor’s death.', effects:{ custom:'intrigue_captive_ransom_refuse' } }
   ] }
 );
+
+
+  /* Pack membership is metadata, never a display-field rewrite. */
+  for (var i = firstEvent; i < FBDATA.events.length; i++) {
+    FBDATA.events[i].pack = 'intrigue';
+  }
+})();

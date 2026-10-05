@@ -64,9 +64,7 @@ requires a separate design, rather than another territorial-reward card.
 ## Lifetime, scope, and AI
 
 There is no earliest historical year or expiry date for an unfinished ambition.
-Each completes once globally per campaign. All four start unfinished in 867;
-Normandy, Norway, and England start established without rewards in 1066. Older
-saves use their starting bookmark, never the current year, to initialize defaults.
+Each completes once globally per campaign. All four start unfinished in 867; Normandy, Norway, and England start established without rewards in 1066. foundedYear supplies the historical starting default: Normandy 911, Norway 872, England 927 and Sicily 1130. Initialization and old-save repair compare the campaign's start.year, never its current year, so merely passing a historical date does not complete an unfinished foundation. A saved completion record remains authoritative. An explicitly present legacy established list overrides foundedYear, including an empty list; new core foundations use only foundedYear.
 
 Bonuses apply to currently controlled counties in the named region, including
 later acquisitions and subordinate vassals. Local tax follows ordinary distribution.

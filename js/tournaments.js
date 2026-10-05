@@ -86,9 +86,10 @@ window.FB = window.FB || {};
   };
   T.defaultProgramme = function (s, id, venue) {
     var c = character(s,id), religion = c && FB.religionOf(c.religion, s), culture = c && FBDATA.cultures[c.culture];
-    if (religion && religion.tournamentTradition === 'furusiyya' || culture && culture.tradition === 'steppe') return 'mounted';
-    if (s.date.year >= 1100 && tech(s, venue)) return 'lists';
-    return 'martial';
+    if ((religion && religion.tournamentTradition === 'furusiyya' || culture && culture.tradition === 'steppe') &&
+        FB.contentPeriodEnabled(s, D.programmes.mounted)) return 'mounted';
+    if (FB.contentPeriodEnabled(s, D.programmes.lists) && tech(s, venue)) return 'lists';
+    return FB.contentPeriodEnabled(s, D.programmes.martial) ? 'martial' : null;
   };
   T.ensure = function (s) {
     if (!FB.systemAvailable(s, 'tournaments')) return null;
@@ -243,6 +244,7 @@ window.FB = window.FB || {};
     if (spec.scale === 'regional' && ['town','city'].indexOf(kind) < 0) reasons.push(FB.T('Regional games require a town or city.'));
     if (spec.scale === 'grand' && kind !== 'city') reasons.push(FB.T('Grand games require a city.'));
     if (!prog) reasons.push(FB.T('Choose a programme.'));
+    if (prog && !FB.contentPeriodEnabled(s, prog)) reasons.push(FB.T('This programme is unavailable in the current period.'));
     if (prog && prog.requiresTech && !tech(s, e)) reasons.push(FB.T('Formal lists require the venue sovereign’s Couched Cavalry Lance.'));
     var start = spec.startTurn, last = root(s).starts[id];
     if (!Number.isInteger(start) || start - s.turn < D.noticeMin || start - s.turn > D.noticeMax || !fairWeather(s, start, e.provinceId)) reasons.push(FB.T('Choose a spring or summer date with 60 to 180 days’ notice.'));

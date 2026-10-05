@@ -93,6 +93,22 @@ window.FB = window.FB || {};
     return table;
   }
 
+  FB.cultureNameErasFault = function (def) {
+    if (def.nameEras === undefined) return null;
+    if (!plainObject(def.nameEras)) return 'nameEras must be an object.';
+    for (const era in def.nameEras) {
+      if (!own(FBDATA.eras, era) || !plainObject(def.nameEras[era])) return 'nameEras must name known eras.';
+      const names = def.nameEras[era];
+      for (const key in names) {
+        if (key !== 'male' && key !== 'female') return 'nameEras accepts only male and female lists.';
+        if (!Array.isArray(names[key]) || !names[key].length || names[key].some(function (name) {
+          return typeof name !== 'string' || !name.trim();
+        })) return 'nameEras lists must contain nonempty names.';
+      }
+    }
+    return null;
+  };
+
   function cultureDefaults(id) {
     const table = FBDATA.cultureDoctrineDefaults || {};
     const out = cloneFaithValue(table.default || {});
@@ -325,6 +341,8 @@ window.FB = window.FB || {};
       const culture = resolved[id];
       if (!slug.test(id)) fault(id, 'id must use lowercase letters, numbers, and underscores.');
       if (!culture.name) fault(id, 'requires a name.');
+      const nameFault = FB.cultureNameErasFault(culture);
+      if (nameFault) fault(id, nameFault);
       if (!own(traditions, culture.tradition)) {
         errors.push('Culture data: culture ' + id +
           ' has invalid tradition ' + culture.tradition + '.');
@@ -1831,9 +1849,15 @@ window.FB = window.FB || {};
   /* avoid (optional): a plain object used as a set of lowercase names,
      e.g. { louis: true } — when provided, re-rolls up to 8 times to dodge
      a collision, then accepts the last roll regardless */
-  FB.randomName = function (cultureId, sex, avoid) {
-    const c = FB.cultureOf(cultureId);
-    const pool = sex === 'f' ? c.female : c.male;
+  FB.cultureNamePool = function (cultureId, sex, state) {
+    const c = FB.cultureOf(cultureId, state);
+    const era = state ? FB.campaignEra(state) : FB.activeEra;
+    const variant = c.nameEras && c.nameEras[era];
+    const key = sex === 'f' ? 'female' : 'male';
+    return variant && variant[key] && variant[key].length ? variant[key] : c[key];
+  };
+  FB.randomName = function (cultureId, sex, avoid, state) {
+    const pool = FB.cultureNamePool(cultureId, sex, state);
     let name = FB.pick(pool);
     if (avoid) {
       for (let tries = 0; tries < 8 && avoid[name.toLowerCase()]; tries++) {
@@ -1974,7 +1998,7 @@ window.FB = window.FB || {};
     const c = {
       id: opts.id || FB.uid(),
       name: opts.name || FB.randomName(opts.culture, sex,
-        opts.dyn ? FB.dynastyNameSet(state, opts.dyn) : null),
+        opts.dyn ? FB.dynastyNameSet(state, opts.dyn) : null, state),
       sex: sex,
       culture: opts.culture,
       religion: opts.religion,

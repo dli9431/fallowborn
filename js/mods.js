@@ -167,7 +167,7 @@ window.FBMODS = window.FBMODS || [];
     startScenarios:true, familyPresets:true,
     focuses:true, deeds:true, deedSections:true, countyCommunityPolicies:true,
     provinces:true, realms:true, empires:true, kingdoms:true, duchies:true,
-    events:true, straits:true, crossingClasses:true, scripted:true,
+    events:true, eventPacks:true, straits:true, crossingClasses:true, scripted:true,
     cultureTraditions:true, cultures:true, cultureDoctrineDefaults:true,
     doctrineCatalogs:true, religions:true, religiousPaths:true,
     traits:true,
@@ -939,6 +939,8 @@ window.FBMODS = window.FBMODS || [];
         fail(path + '.role', 'must be one of ' + Object.keys(known).join(', ') + '.');
       }
       if (own(def, 'roles')) validateIdList(def.roles, path + '.roles', known, true);
+      const periodFault = FB.contentPeriodFault(def);
+      if (periodFault) fail(path, periodFault);
     }
   }
 
@@ -1540,6 +1542,47 @@ window.FBMODS = window.FBMODS || [];
     }
   }
 
+  function validateContentPeriods(mod) {
+    if (own(mod, 'events') && !Array.isArray(mod.events)) fail('events', 'must be an array.');
+    const packs = combinedTable(FBDATA.eventPacks, mod.eventPacks, 'eventPacks');
+    for (const id in packs) {
+      const fault = FB.contentPeriodFault(packs[id]);
+      if (fault || !Array.isArray(packs[id].eras)) fail('eventPacks.' + id, fault || 'eras are required.');
+    }
+    /* A pack edit can invalidate the effective window of an existing event. */
+    const events = (FBDATA.events || []).filter(function (ev) {
+      return !(mod.events || []).some(function (replacement) { return replacement.id === ev.id; });
+    }).concat(mod.events || []);
+    for (const ev of events) {
+      const fault = FB.validateEventPeriod(ev, packs);
+      if (fault) fail('events.' + ev.id, fault);
+    }
+    for (const id in mod.cultures || {}) {
+      if (!plainObject(mod.cultures[id])) fail('cultures.' + id, 'must be an object.');
+      const fault = FB.cultureNameErasFault(mod.cultures[id]);
+      if (fault) fail('cultures.' + id, fault);
+    }
+    if (own(mod, 'papacy')) {
+      const def = mod.papacy;
+      if (!plainObject(def)) fail('papacy', 'must be an object.');
+      for (const rows of [def.regnalSeeds, def.authority && def.authority.starts]) {
+        const fault = FB.yearTableFault(rows);
+        if (fault) fail('papacy', fault);
+      }
+      for (const row of def.regnalSeeds) {
+        if (!plainObject(row.counts)) fail('papacy.regnalSeeds', 'counts must be an object.');
+        for (const name in row.counts) integerRange(row.counts[name], 0, 10000, 'papacy.regnalSeeds.' + name);
+      }
+      for (const row of def.authority.starts) integerRange(row.value, 0, 100, 'papacy.authority.starts.value');
+      if (!plainObject(def.institutions)) fail('papacy.institutions', 'must be an object.');
+      for (const id in def.institutions) {
+        const row = def.institutions[id];
+        const fault = FB.contentPeriodFault({ yearMin:row && row.from, yearMax:row && row.through });
+        if (!plainObject(row) || row.from === undefined || fault) fail('papacy.institutions.' + id, fault || 'from is required.');
+      }
+    }
+  }
+
   function validateBeforeApply(mod) {
     if (!plainObject(mod)) throw new Error('Mod data must be an object.');
     for (const key in mod) {
@@ -1576,6 +1619,7 @@ window.FBMODS = window.FBMODS || [];
     validateSerfFreedomEventEffects(mod);
     validateEventParticipants(mod);
     validateEducationEvents(mod);
+    validateContentPeriods(mod);
     for (const tableId of ['events','traits','policies','privileges','elections',
         'politicalBlocs','religiousPaths','feudalServiceCharters','councilSeats']) {
       const table = mod[tableId] || {};
@@ -1714,6 +1758,10 @@ window.FBMODS = window.FBMODS || [];
       }
     }
     if (changesLegacyWorld && !supplies1066) legacyBookmarkLimited = true;
+    if (mod.eventPacks) {
+      mergeTable(FBDATA.eventPacks, mod.eventPacks);
+      FB.invalidateEventIndex();
+    }
     if (mod.events) {
       mergeById(FBDATA.events, mod.events, 'id');
       if (FB.invalidateEventIndex) FB.invalidateEventIndex();

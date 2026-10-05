@@ -1222,7 +1222,7 @@ window.FB = window.FB || {};
         const inp = $('ev-name');
         inp.value = nc.name;
         $('ev-name-dice').addEventListener('click', function () {
-          inp.value = FB.randomName(nc.culture, nc.sex);
+          inp.value = FB.randomName(nc.culture, nc.sex, null, s);
           inp.focus();
           inp.select();
         });
@@ -21007,7 +21007,7 @@ window.FB = window.FB || {};
         '</p><div class="modal-actions"><button class="btn primary" ' +
         'data-investiture-answer="canonical">' +
         esc(FB.T('Accept canonical investiture')) + '</button>' +
-        (s.date.year >= FBDATA.papacy.investiture.concordatFrom
+        (FB.papalInstitutionActive(s, 'investiture_concordat')
           ? '<button class="btn" data-investiture-answer="concordat">' +
             esc(FB.T('Offer a concordat')) + '</button>' : '') +
         '<button class="btn danger" data-investiture-answer="refuse">' +
@@ -21109,7 +21109,7 @@ window.FB = window.FB || {};
     }
 
     const leans = election ? FB.papalElectionLeans(s, obedience.id) : [];
-    h += panelh(s.date.year >= 1150 ? 'College of Cardinals' : 'Cardinal electors') +
+    h += panelh(FB.papalInstitutionActive(s, 'college_offices') ? 'College of Cardinals' : 'Cardinal electors') +
       papalBallotFlowHtml(s, papacy, obedience, election, leans);
 
     const investitureDetailsId = 'papacy-investiture-details';
@@ -21137,7 +21137,7 @@ window.FB = window.FB || {};
         h += '<div class="papacy-tactics">';
         for (const policyId in FBDATA.papacy.investiture.policies) {
           if (policyId === 'concordat' &&
-              s.date.year < FBDATA.papacy.investiture.concordatFrom) continue;
+              !FB.papalInstitutionActive(s, 'investiture_concordat')) continue;
           const item = FBDATA.papacy.investiture.policies[policyId];
           h += '<button class="btn small" ' + policyAction + '="' +
             esc(policyId) + '"' +
@@ -21199,7 +21199,7 @@ window.FB = window.FB || {};
       h += papalActionCardHtml('papal-investiture-demands', '📜',
         FB.T('Demand canonical investiture'), FB.T(
           'Choose a Catholic sovereign who still uses lay investiture. Reform date, Papal authority, faith, and current policy are checked before the demand is sent.'),
-        s.date.year < FBDATA.papacy.investiture.reformFrom ||
+        !FB.papalInstitutionActive(s, 'investiture_reform') ||
           obedience.authority < FBDATA.papacy.authority.gates.investiture);
       if (FB.systemEnabled(s, 'excommunication')) h += papalActionCardHtml('papal-sanctions', '⛓',
         FB.T('Issue an excommunication'), FB.T(

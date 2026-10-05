@@ -4,6 +4,36 @@
 window.FBDATA = window.FBDATA || {};
 FBDATA.events = FBDATA.events || [];
 
+(function () {
+  var firstEvent = FBDATA.events.length;
+  FBDATA.eventPacks = FBDATA.eventPacks || {};
+  FBDATA.eventPacks.peasant = { eras:['late_antique','early_medieval','high_medieval'] };
+  var eventEras = {
+    serf_tenure_review:['early_medieval','high_medieval'],
+    serf_commuted_due:['early_medieval','high_medieval'],
+    corvee:['early_medieval','high_medieval'],
+    serf_boon_harvest:['early_medieval','high_medieval'],
+    serf_weekwork_tally:['early_medieval','high_medieval'],
+    serf_mill_multure:['early_medieval','high_medieval'],
+    serf_pannage_due:['early_medieval','high_medieval'],
+    serf_marriage_leave:['early_medieval','high_medieval'],
+    serf_tithe_sheaf:['early_medieval','high_medieval'],
+    serf_bridge_cartage:['early_medieval','high_medieval'],
+    serf_common_oven:['early_medieval','high_medieval'],
+    serf_deadwood_amerced:['early_medieval','high_medieval'],
+    serf_officers_quartered:['early_medieval','high_medieval'],
+    serf_extraordinary_tallage:['early_medieval','high_medieval'],
+    serf_seed_grain_requisition:['early_medieval','high_medieval'],
+    old_custom_stakes:['early_medieval','high_medieval'],
+    old_custom_memory:['early_medieval','high_medieval'],
+    old_custom_reeve:['early_medieval','high_medieval'],
+    old_custom_hearing:['early_medieval','high_medieval'],
+    old_custom_end:['early_medieval','high_medieval'],
+    old_custom_officer_changed:['early_medieval','high_medieval'],
+    gentry_rent_arrears:['early_medieval','high_medieval'],
+    gentry_guest_right:['early_medieval','high_medieval']
+  };
+
 FBDATA.events.push(
 
 { id:'household_service_duty', title:'A Household Responsibility',
@@ -1348,3 +1378,11 @@ FBDATA.events.push(
   ]}
 
 );
+
+
+  /* Pack membership is metadata, never a display-field rewrite. */
+  for (var i = firstEvent; i < FBDATA.events.length; i++) {
+    FBDATA.events[i].pack = 'peasant';
+    if (eventEras[FBDATA.events[i].id]) FBDATA.events[i].eras = eventEras[FBDATA.events[i].id];
+  }
+})();

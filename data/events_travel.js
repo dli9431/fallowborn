@@ -2,6 +2,11 @@
 window.FBDATA = window.FBDATA || {};
 FBDATA.events = FBDATA.events || [];
 
+(function () {
+  var firstEvent = FBDATA.events.length;
+  FBDATA.eventPacks = FBDATA.eventPacks || {};
+  FBDATA.eventPacks.travel = { eras:['late_antique','early_medieval','high_medieval'] };
+
 FBDATA.events.push(
 /* ---------- culture mismatch archetypes ---------- */
 { id:'travel_culture_language', title:'A Word Mislaid', trigger:{never:true},
@@ -438,3 +443,10 @@ FBDATA.events.push(
       effects:{ custom:'frontier_go_home', log:'Abandoned the frontier attempt and turned back.' } }
   ]}
 );
+
+
+  /* Pack membership is metadata, never a display-field rewrite. */
+  for (var i = firstEvent; i < FBDATA.events.length; i++) {
+    FBDATA.events[i].pack = 'travel';
+  }
+})();

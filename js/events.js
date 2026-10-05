@@ -13,6 +13,68 @@ window.FB = window.FB || {};
       ? CALENDAR_SEASONS[name] : undefined;
   }
 
+  var compiledEventEra = null, compiledPeriods = null, eraEvents = null;
+  var periodYear = null, yearEvents = null;
+  function eventPeriod(ev, packs) {
+    packs = packs || FBDATA.eventPacks || {};
+    if (ev.pack !== undefined && (typeof ev.pack !== 'string' ||
+        !Object.prototype.hasOwnProperty.call(packs, ev.pack))) {
+      throw new Error('Unknown event pack: ' + ev.pack);
+    }
+    var pack = ev.pack !== undefined && packs[ev.pack];
+    var out = {};
+    for (var key of ['eras','yearMin','yearMax']) {
+      if (ev[key] !== undefined) out[key] = ev[key];
+      else if (pack && pack[key] !== undefined) out[key] = pack[key];
+    }
+    return out;
+  }
+  FB.validateEventPeriod = function (ev, packs) {
+    return FB.contentPeriodFault(eventPeriod(ev, packs));
+  };
+  FB.compileEventContent = function (era) {
+    var periods = Object.create(null), events = [];
+    var packs = FBDATA.eventPacks || {};
+    for (var id in packs) {
+      if (!Object.prototype.hasOwnProperty.call(packs, id)) continue;
+      var fault = FB.contentPeriodFault(packs[id]);
+      if (fault || !Array.isArray(packs[id].eras)) throw new Error('Invalid event pack: ' + id + ': ' + (fault || 'eras are required'));
+    }
+    for (var ev of FBDATA.events) {
+      var period = eventPeriod(ev), problem = FB.contentPeriodFault(period);
+      if (problem) throw new Error('Invalid event period: ' + ev.id + ': ' + problem);
+      periods[ev.id] = period;
+      if (!period.eras || period.eras.indexOf(era) >= 0) events.push(ev);
+    }
+    compiledEventEra = era;
+    compiledPeriods = periods;
+    eraEvents = events;
+    periodYear = null;
+    yearEvents = null;
+    randomEventPools = null;
+  };
+  function ensureEventEra(state) {
+    var era = state ? FB.campaignEra(state) : FB.activeEra;
+    if (!compiledPeriods || compiledEventEra !== era) FB.compileEventContent(era);
+  }
+  FB.eventPeriodEnabled = function (state, ev) {
+    if (!ev) return false;
+    ensureEventEra(state);
+    return FB.contentPeriodEnabled(state, compiledPeriods[ev.id] || eventPeriod(ev));
+  };
+  FB.eventYearPool = function (state) {
+    ensureEventEra(state);
+    var year = state.date.year;
+    if (!yearEvents || periodYear !== year) {
+      periodYear = year;
+      yearEvents = eraEvents.filter(function (ev) {
+        return FB.contentPeriodEnabled(state, compiledPeriods[ev.id]);
+      });
+      randomEventPools = null;
+    }
+    return yearEvents;
+  };
+
   /* ---------- supporting cast (roles) ---------- */
   FB.crazyGamesFirstCharacter = function (state) {
     const p = state && state.player;
@@ -5421,6 +5483,7 @@ window.FB = window.FB || {};
   }
 
   FB.eventContextFor = function (state, ev, ctx) {
+    if (!FB.eventPeriodEnabled(state, ev)) return false;
     const out = FB.eventContext(state, ctx);
     snapshotTenureAwareContext(state, ev, out);
     const bound = FB.bindEventParticipants(state, ev, out);
@@ -5429,7 +5492,7 @@ window.FB = window.FB || {};
   };
 
   FB.ensureEventParticipants = function (state, ev, ctx) {
-    if (ev && !FB.systemContentEnabled(state, ev)) return null;
+    if (ev && (!FB.eventPeriodEnabled(state, ev) || !FB.systemContentEnabled(state, ev))) return null;
     ctx = ctx || {};
     /* Direct UI callers and old queue records can predate the event-context
        defaults as well as participant binding. Repair only missing defaults
@@ -5447,7 +5510,7 @@ window.FB = window.FB || {};
 
   FB.queueEvent = function (state, id, ctx, extra) {
     const ev = FB.eventById(id);
-    if (!FB.systemContentEnabled(state, ev)) return null;
+    if (!FB.eventPeriodEnabled(state, ev) || !FB.systemContentEnabled(state, ev)) return null;
     const eventCtx = FB.eventContextFor(state, ev, ctx);
     if (!eventCtx) return null;
     const item = { id:id, ctx:eventCtx };
@@ -5469,7 +5532,7 @@ window.FB = window.FB || {};
   }
 
   FB.eventContextStillValid = function (state, ev, ctx) {
-    if (!ev || !FB.systemContentEnabled(state, ev)) return false;
+    if (!FB.eventPeriodEnabled(state, ev) || !FB.systemContentEnabled(state, ev)) return false;
     if (!FB.eventParticipantsStillValid(state, ev, ctx || {})) return false;
     if (!tenureAwareContextStillValid(state, ev, ctx || {})) return false;
     if (ev.educationStory) {
@@ -5668,10 +5731,11 @@ window.FB = window.FB || {};
      days" per season (scheduled in main.js), keeping the old seasonal pacing
      while days tick by. Event cooldowns in data are in seasons (90 days). */
   let randomEventPools = null;
-  function randomEventPool(wartime, child) {
+  function randomEventPool(state, wartime, child) {
+    const periodEvents = FB.eventYearPool(state);
     if (!randomEventPools) {
       randomEventPools = { ordinary:[], wartime:[], childhood:[], wartimeChildhood:[] };
-      for (const ev of FBDATA.events) {
+      for (const ev of periodEvents) {
         validateEventSerfFreedomEffects(ev);
         FB.validateEventParticipants(ev);
         FB.validateEducationEvent(ev);
@@ -5760,7 +5824,7 @@ window.FB = window.FB || {};
       }
       return contextOptions[selector];
     }
-    for (const ev of randomEventPool(wartime, child)) {
+    for (const ev of randomEventPool(state, wartime, child)) {
       if (!FB.systemContentEnabled(state, ev)) continue;
       if (ev.once && state.player.fired[ev.id]) continue;
       if (ev.cooldown && state.player.cooldowns[ev.id] !== undefined &&
@@ -5833,6 +5897,10 @@ window.FB = window.FB || {};
   };
   FB.invalidateEventIndex = function () {
     eventIndex = null;
+    compiledPeriods = null;
+    eraEvents = null;
+    yearEvents = null;
+    periodYear = null;
     randomEventPools = null;
     _validatedTenureCatalogue = null;
   };
@@ -11733,7 +11801,7 @@ window.FB = window.FB || {};
 
   FB.eventOptionStatus = function (state, ev, option, ctx) {
     ctx = ctx || {};
-    if (!option || (ev && !FB.systemContentEnabled(state, ev)) ||
+    if (!option || (ev && (!FB.eventPeriodEnabled(state, ev) || !FB.systemContentEnabled(state, ev))) ||
         !FB.systemContentEnabled(state, option) ||
         (option.require && !FB.systemContentEnabled(state, option.require))) {
       return { visible:false, ready:false, systemLocked:true, techLocked:false, missingTech:[] };

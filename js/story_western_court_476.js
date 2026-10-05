@@ -81,15 +81,15 @@
       'commander', 'ravenna');
     var zeno = made(s, 'Zeno', 'greek', 'chalcedonian', 51, 4,
       'claimant', null);
-    var delegate = made(s, FB.randomName('roman', 'm'), 'roman',
+    var delegate = made(s, FB.randomName('roman', 'm', null, s), 'roman',
       'nicene', 42, 2, 'notable', 'ravenna');
-    var bishop = made(s, FB.randomName('roman', 'm'), 'roman',
+    var bishop = made(s, FB.randomName('roman', 'm', null, s), 'roman',
       'nicene', 54, 3, 'priest', 'roma');
-    var veteran = made(s, FB.randomName('gothic', 'm'), 'gothic',
+    var veteran = made(s, FB.randomName('gothic', 'm', null, s), 'gothic',
       'homoian', 38, 2, 'soldier', 'pavia');
-    var senator = made(s, FB.randomName('roman', 'm'), 'roman',
+    var senator = made(s, FB.randomName('roman', 'm', null, s), 'roman',
       'nicene', 58, 3, 'notable', 'roma');
-    var homoianBishop = made(s, FB.randomName('gothic', 'm'), 'gothic',
+    var homoianBishop = made(s, FB.randomName('gothic', 'm', null, s), 'gothic',
       'homoian', 46, 3, 'priest', 'ravenna');
     var clovis = made(s, 'Clovis', 'frankish', 'germanic_pagan',
       10, 2, 'heir', 'arras');

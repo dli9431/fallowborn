@@ -37,8 +37,14 @@ window.FB = window.FB || {};
   function record(state, d) {
     const saved = state.historicalAmbitions && state.historicalAmbitions[d.id];
     if (saved) return saved;
-    const bookmark = state.start && state.start.id || '867';
-    return d.established.indexOf(bookmark) >= 0 ? { established:true } : null;
+    const start = state.start || { id:'867', year:867 };
+    /* An explicitly authored legacy list overrides the date, even when empty. */
+    const bookmark = start.year === undefined && FB.bookmark(start.id);
+    const startYear = start.year === undefined ? bookmark && bookmark.date.year : start.year;
+    const established = Array.isArray(d.established)
+      ? d.established.indexOf(String(start.id)) >= 0
+      : d.foundedYear !== undefined && startYear >= d.foundedYear;
+    return established ? { established:true } : null;
   }
   FB.ensureHistoricalAmbitions = function (state) {
     if (!state.historicalAmbitions || typeof state.historicalAmbitions !== 'object' ||
