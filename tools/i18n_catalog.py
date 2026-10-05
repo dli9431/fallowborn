@@ -1105,6 +1105,33 @@ def extract_structured(inv: Inventory) -> None:
                     TOKEN_RE.findall(record["text"]),
                 )
 
+    # Period presentation keeps currency text in source data too. Register
+    # literal era/geography labels and unit names for the normal exact-source
+    # FB.L lookup; icons, symbols and numeric conversions stay untouched.
+    for table, filename in (("eras", "eras.js"), ("geographies", "geographies.js")):
+        source = DATA / filename
+        owners = node_object(find_assignment(source, "FBDATA", table)) or {}
+        for owner_id, owner_node in owners.items():
+            definition = node_object(owner_node) or {}
+            period_currency = node_object(definition.get("currency")) or {}
+            prefix = f"currency.{table}.{owner_id}"
+            for branch, record, line in branch_records(period_currency.get("label")):
+                inv.add(
+                    f"{prefix}.label.{branch}", record, f"data/{filename}:{line}",
+                    f"{table} {owner_id}, currency label.", TOKEN_RE.findall(record["text"])
+                )
+            for index, unit_node in enumerate(node_array(period_currency.get("units")) or []):
+                unit = node_object(unit_node) or {}
+                unit_id = node_string(unit.get("id")) or str(index)
+                for field in ("singular", "plural"):
+                    for branch, record, line in branch_records(unit.get(field)):
+                        inv.add(
+                            f"{prefix}.units.{unit_id}.{field}.{branch}", record,
+                            f"data/{filename}:{line}",
+                            f"{table} {owner_id}, currency unit {unit_id}, {field}.",
+                            TOKEN_RE.findall(record["text"])
+                        )
+
     titles = node_object(find_assignment(DATA / "map_data.js", "FBDATA", "titles")) or {}
     for group, values_node in titles.items():
         for index, value in enumerate(node_array(values_node) or []):

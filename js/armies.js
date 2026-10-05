@@ -5280,14 +5280,15 @@ window.FB = window.FB || {};
   function playerArmyCrest(state) {
     const me = state.chars[state.player.charId];
     const seed = me && (me.dyn || me.name) || 'Fallowborn';
+    const visualKey = FB.crestVisualKey(seed, state);
     if (!armyCrestCanvas) {
       armyCrestCanvas = document.createElement('canvas');
       armyCrestCanvas.width = 48;
       armyCrestCanvas.height = 56;
     }
-    if (armyCrestSeed !== seed) {
-      if (!FB.drawCrest(armyCrestCanvas, seed)) return null;
-      armyCrestSeed = seed;
+    if (armyCrestSeed !== visualKey) {
+      if (!FB.drawCrest(armyCrestCanvas, seed, state)) return null;
+      armyCrestSeed = visualKey;
     }
     return armyCrestCanvas;
   }

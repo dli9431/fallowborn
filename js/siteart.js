@@ -2,8 +2,8 @@
    Each marker is generated from the physical site slug, so one settlement keeps
    the same little skyline across sessions, bookmarks, and mods without touching
    saved state or gameplay RNG. A site gets ONE fixed-size cached emblem canvas
-   per live kind; the map scales the blit to the current zoom, so panning and
-   zooming never regenerate art. */
+   per live kind and resolved style; the map scales the blit to the current
+   zoom, so panning and zooming never regenerate art. */
 window.FB = window.FB || {};
 
 (function () {
@@ -21,13 +21,74 @@ window.FB = window.FB || {};
     return (x ^ (x >>> 16)) & 255;
   }
 
-  /* Flat manuscript-illumination palettes that stay legible at favicon sizes. */
-  const WALLS = ['#ddc99e', '#c9b184', '#b08a58', '#cfc8b8'];
-  const ROOFS = ['#a8512f', '#c09a44', '#66717a', '#7d5a33'];
-  const STONES = ['#b7b1a2', '#a39d8e', '#8f8a7d'];
-  const BANNERS = ['#a83232', '#325fa8', '#3d7a3d', '#c9a227'];
-  const LEAF = '#4d7a3f', TRUNK = '#6b4a2c';
-  const INK = 'rgba(24,18,10,0.85)';
+  const own = Object.prototype.hasOwnProperty;
+  // Snapshot the fallback so a replaced/malformed data entry cannot break art.
+  const DEFAULT_STYLE = JSON.parse(JSON.stringify(FBDATA.architectureStyles.manuscript));
+  function record(value) { return !!value && typeof value === 'object' && !Array.isArray(value); }
+  function color(value) {
+    if (typeof value !== 'string') return false;
+    if (/^(?:#[0-9a-f]{3}|#[0-9a-f]{6})$/i.test(value)) return true;
+    const channels = /^rgb(a?)\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)(?:\s*,\s*(\d*\.?\d+))?\s*\)$/i.exec(value);
+    return !!channels && +channels[2] <= 255 && +channels[3] <= 255 && +channels[4] <= 255 &&
+      (channels[1] ? channels[5] !== undefined && +channels[5] <= 1 : channels[5] === undefined);
+  }
+
+  FB.architectureStyleFaults = function (style) {
+    const errors = [];
+    if (!record(style)) return ['must be an architecture style object.'];
+    for (const key in style) if (own.call(style, key) && key !== 'palettes' && key !== 'shapes') {
+      errors.push('unknown field ' + key + '.');
+    }
+    if (style.palettes !== undefined) {
+      if (!record(style.palettes)) errors.push('palettes must be an object.');
+      else for (const key in style.palettes) if (own.call(style.palettes, key)) {
+        const value = style.palettes[key], fallback = DEFAULT_STYLE.palettes[key];
+        if (!own.call(DEFAULT_STYLE.palettes, key)) errors.push('unknown palette ' + key + '.');
+        else if (Array.isArray(fallback)) {
+          if (!Array.isArray(value) || !value.length || value.length > 32 || !value.every(color)) {
+            errors.push('palette ' + key + ' needs 1-32 colors.');
+          }
+        } else if (!color(value)) errors.push('palette ' + key + ' needs a color.');
+      }
+    }
+    if (style.shapes !== undefined) {
+      if (!record(style.shapes)) errors.push('shapes must be an object.');
+      else for (const key in style.shapes) if (own.call(style.shapes, key)) {
+        const library = own.call(SHAPES, key) && SHAPES[key];
+        if (!library || typeof style.shapes[key] !== 'string' || !own.call(library, style.shapes[key])) {
+          errors.push('unknown ' + key + ' shape ' + style.shapes[key] + '.');
+        }
+      }
+    }
+    return errors;
+  };
+
+  function usable(id) {
+    const table = FBDATA.architectureStyles || {};
+    return typeof id === 'string' && own.call(table, id) &&
+      !FB.architectureStyleFaults(table[id]).length;
+  }
+  FB.architectureStyle = function (culture, state) {
+    if (state === undefined) state = FB.state;
+    const local = culture && FB.cultureValue ? FB.cultureValue(state, culture, 'architecture').value : null;
+    if (usable(local)) return local;
+    const eraId = FB.campaignEra ? FB.campaignEra(state) : null;
+    const era = eraId && FBDATA.eras[eraId];
+    return era && usable(era.architecture) ? era.architecture : 'manuscript';
+  };
+  function resolvedStyle(id) {
+    const raw = usable(id) ? FBDATA.architectureStyles[id] : DEFAULT_STYLE;
+    return {
+      palettes:Object.assign({}, DEFAULT_STYLE.palettes, raw.palettes),
+      shapes:Object.assign({}, DEFAULT_STYLE.shapes, raw.shapes)
+    };
+  }
+  // The map prepares this once per visible county, rather than validating and
+  // serializing a style for every marker in that county on every frame.
+  FB.siteArtPresentation = function (culture, state) {
+    const id = FB.architectureStyle(culture, state), style = resolvedStyle(id);
+    return { style:style, key:id + '|' + JSON.stringify(style) };
+  };
 
   /* Everything draws in a 64x64 logical box centered on the site point;
      FB.siteArt scales the box once into the site's cached emblem canvas. */
@@ -51,9 +112,9 @@ window.FB = window.FB || {};
     }
   }
 
-  function cottage(ctx, cx, base, w, h, roofH, wall, roof) {
+  function pitched(ctx, cx, base, w, h, roofH, wall, roof, style) {
     ctx.lineWidth = 1.6;
-    ctx.strokeStyle = INK;
+    ctx.strokeStyle = style.palettes.ink;
     ctx.fillStyle = wall;
     ctx.fillRect(cx - w / 2, base - h, w, h);
     ctx.strokeRect(cx - w / 2, base - h, w, h);
@@ -65,57 +126,50 @@ window.FB = window.FB || {};
     ctx.fillStyle = roof;
     ctx.fill();
     ctx.stroke();
-    ctx.fillStyle = INK;
+    ctx.fillStyle = style.palettes.ink;
     ctx.fillRect(cx - 1.6, base - 5, 3.2, 5);
   }
 
-  function tree(ctx, cx, base, s) {
+  function flat(ctx, cx, base, w, h, roofH, wall, roof, style) {
+    ctx.lineWidth = 1.6;
+    ctx.strokeStyle = style.palettes.ink;
+    ctx.fillStyle = wall;
+    ctx.fillRect(cx - w / 2, base - h, w, h);
+    ctx.strokeRect(cx - w / 2, base - h, w, h);
+    ctx.fillStyle = roof;
+    ctx.fillRect(cx - w / 2 - 1, base - h - 3, w + 2, 3);
+    ctx.strokeRect(cx - w / 2 - 1, base - h - 3, w + 2, 3);
+    ctx.fillStyle = style.palettes.ink;
+    ctx.fillRect(cx - 1.6, base - 5, 3.2, 5);
+  }
+  function cottage(ctx, cx, base, w, h, roofH, wall, roof, style) {
+    SHAPES.dwellings[style.shapes.dwellings](ctx, cx, base, w, h, roofH, wall, roof, style);
+  }
+
+  function tree(ctx, cx, base, s, style) {
     ctx.lineWidth = 1.4;
-    ctx.strokeStyle = INK;
-    ctx.fillStyle = TRUNK;
+    ctx.strokeStyle = style.palettes.ink;
+    ctx.fillStyle = style.palettes.trunk;
     ctx.fillRect(cx - 1.6 * s, base - 8 * s, 3.2 * s, 8 * s);
     ctx.strokeRect(cx - 1.6 * s, base - 8 * s, 3.2 * s, 8 * s);
     ctx.beginPath();
     ctx.arc(cx, base - 11 * s, 5.6 * s, 0, 6.2832);
     ctx.arc(cx - 3.4 * s, base - 7.5 * s, 3.6 * s, 0, 6.2832);
     ctx.arc(cx + 3.4 * s, base - 7.5 * s, 3.6 * s, 0, 6.2832);
-    ctx.fillStyle = LEAF;
+    ctx.fillStyle = style.palettes.leaf;
     ctx.fill();
   }
 
-  function tower(ctx, x, top, bottom, stone) {
+  function tower(ctx, x, top, bottom, stone, style) {
     ctx.lineWidth = 1.6;
-    ctx.strokeStyle = INK;
+    ctx.strokeStyle = style.palettes.ink;
     ctx.fillStyle = stone;
     ctx.fillRect(x, top, 11, bottom - top);
     ctx.strokeRect(x, top, 11, bottom - top);
-    battlement(ctx, x, x + 11, top - 4, 4, stone);
+    SHAPES.fortification[style.shapes.fortification](ctx, x, x + 11, top - 4, 4, stone);
   }
 
-  /* village: two or three cottages, sometimes a tree */
-  function villageEmblem(ctx, h) {
-    const wall = WALLS[byte(h, 3) % WALLS.length];
-    const roof = ROOFS[byte(h, 2) % ROOFS.length];
-    ground(ctx, 22);
-    cottage(ctx, 20, 55, 15, 11 + byte(h, 5) % 4, 7, wall, roof);
-    cottage(ctx, 38, 56, 17, 12 + byte(h, 6) % 4, 8, wall, roof);
-    if (byte(h, 4) % 3) cottage(ctx, 51, 56, 11, 8 + byte(h, 7) % 3, 6, wall, roof);
-    else tree(ctx, 52, 56, 1);
-  }
-
-  /* town: a stone hall tower with a spire, cottages gathered around it */
-  function townEmblem(ctx, h) {
-    const wall = WALLS[byte(h, 3) % WALLS.length];
-    const roof = ROOFS[byte(h, 2) % ROOFS.length];
-    const stone = STONES[byte(h, 8) % STONES.length];
-    const left = byte(h, 9) % 2 === 0;
-    const tx = left ? 7 : 46;
-    ground(ctx, 26);
-    ctx.lineWidth = 1.6;
-    ctx.strokeStyle = INK;
-    ctx.fillStyle = stone;
-    ctx.fillRect(tx, 22, 11, 34);
-    ctx.strokeRect(tx, 22, 11, 34);
+  function spire(ctx, tx, roof) {
     ctx.beginPath();
     ctx.moveTo(tx - 2, 22);
     ctx.lineTo(tx + 5.5, 11);
@@ -124,27 +178,89 @@ window.FB = window.FB || {};
     ctx.fillStyle = roof;
     ctx.fill();
     ctx.stroke();
+  }
+  function dome(ctx, tx, roof) {
+    ctx.beginPath();
+    ctx.arc(tx + 5.5, 22, 7.5, Math.PI, 0);
+    ctx.closePath();
+    ctx.fillStyle = roof;
+    ctx.fill();
+    ctx.stroke();
+  }
+  function basilica(ctx, tx, roof) {
+    ctx.fillStyle = roof;
+    ctx.fillRect(tx - 3, 17, 17, 5);
+    ctx.strokeRect(tx - 3, 17, 17, 5);
+  }
+  function palisade(ctx, x0, x1, y, step, stone) {
+    ctx.fillStyle = stone;
+    for (let x = x0; x + step * 0.62 <= x1 + 0.01; x += step) {
+      ctx.beginPath();
+      ctx.moveTo(x, y + 4); ctx.lineTo(x, y + 1);
+      ctx.lineTo(x + step * 0.31, y - 2);
+      ctx.lineTo(x + step * 0.62, y + 1);
+      ctx.lineTo(x + step * 0.62, y + 4); ctx.closePath();
+      ctx.fill();
+    }
+  }
+  /* Data chooses names, never executable functions. Preserve the original
+     paths in the default entries to keep medieval pixels identical. */
+  const SHAPES = {
+    dwellings:{ pitched:pitched, flat:flat },
+    worship:{ spire:spire, dome:dome, basilica:basilica },
+    fortification:{ crenellated:battlement, palisade:palisade }
+  };
+
+  /* village: two or three cottages, sometimes a tree */
+  function villageEmblem(ctx, h, style) {
+    const p = style.palettes;
+    const wall = p.walls[byte(h, 3) % p.walls.length];
+    const roof = p.roofs[byte(h, 2) % p.roofs.length];
+    ground(ctx, 22);
+    cottage(ctx, 20, 55, 15, 11 + byte(h, 5) % 4, 7, wall, roof, style);
+    cottage(ctx, 38, 56, 17, 12 + byte(h, 6) % 4, 8, wall, roof, style);
+    if (byte(h, 4) % 3) cottage(ctx, 51, 56, 11, 8 + byte(h, 7) % 3, 6, wall, roof, style);
+    else tree(ctx, 52, 56, 1, style);
+  }
+
+  /* town: a stone hall tower with a spire, cottages gathered around it */
+  function townEmblem(ctx, h, style) {
+    const p = style.palettes;
+    const wall = p.walls[byte(h, 3) % p.walls.length];
+    const roof = p.roofs[byte(h, 2) % p.roofs.length];
+    const stone = p.stones[byte(h, 8) % p.stones.length];
+    const left = byte(h, 9) % 2 === 0;
+    const tx = left ? 7 : 46;
+    ground(ctx, 26);
+    ctx.lineWidth = 1.6;
+    ctx.strokeStyle = p.ink;
+    ctx.fillStyle = stone;
+    ctx.fillRect(tx, 22, 11, 34);
+    ctx.strokeRect(tx, 22, 11, 34);
+    SHAPES.worship[style.shapes.worship](ctx, tx, roof);
     const houses = left ? [28, 43, 56] : [8, 21, 36];
     for (let i = 0; i < houses.length; i++) {
       cottage(ctx, houses[i], 55 + (i === 1 ? 1 : 0), 13 - i,
-        9 + byte(h, 5 + i) % 4, 6, wall, roof);
+        9 + byte(h, 5 + i) % 4, 6, wall, roof, style);
     }
   }
 
   /* city: crenellated wall and gate before two towers and a bannered keep */
-  function cityEmblem(ctx, h) {
-    const stone = STONES[byte(h, 3) % STONES.length];
-    const roof = ROOFS[byte(h, 2) % ROOFS.length];
-    const banner = BANNERS[byte(h, 6) % BANNERS.length];
+  function cityEmblem(ctx, h, style) {
+    const p = style.palettes;
+    const stone = p.stones[byte(h, 3) % p.stones.length];
+    const roof = p.roofs[byte(h, 2) % p.roofs.length];
+    const banner = p.banners[byte(h, 6) % p.banners.length];
+    const fort = SHAPES.fortification[style.shapes.fortification];
     ground(ctx, 28);
     ctx.lineWidth = 1.6;
-    ctx.strokeStyle = INK;
+    ctx.strokeStyle = p.ink;
     // keep, set back behind the wall
     const kx = 23 + byte(h, 5) % 5;
     ctx.fillStyle = stone;
     ctx.fillRect(kx, 14, 14, 26);
     ctx.strokeRect(kx, 14, 14, 26);
-    battlement(ctx, kx, kx + 14, 10, 4.5, stone);
+    fort(ctx, kx, kx + 14, 10, 4.5, stone);
     // banner on the keep
     ctx.beginPath();
     ctx.moveTo(kx + 7, 10); ctx.lineTo(kx + 7, 2);
@@ -155,25 +271,31 @@ window.FB = window.FB || {};
     ctx.fillStyle = banner;
     ctx.fill();
     // flanking towers
-    tower(ctx, 8, 24 + byte(h, 7) % 3, 56, stone);
-    tower(ctx, 45, 24 + byte(h, 8) % 3, 56, stone);
+    tower(ctx, 8, 24 + byte(h, 7) % 3, 56, stone, style);
+    tower(ctx, 45, 24 + byte(h, 8) % 3, 56, stone, style);
     // curtain wall with a gate arch
     ctx.fillStyle = stone;
     ctx.fillRect(14, 38, 36, 18);
     ctx.strokeRect(14, 38, 36, 18);
-    battlement(ctx, 14, 50, 34, 6, stone);
-    ctx.fillStyle = INK;
+    fort(ctx, 14, 50, 34, 6, stone);
+    ctx.fillStyle = p.ink;
     ctx.fillRect(28, 46, 8, 10);
     ctx.beginPath();
     ctx.arc(32, 46, 4, 3.1416, 0);
     ctx.fill();
     // a roof peeking out over the wall
-    ctx.beginPath();
-    ctx.moveTo(36, 38); ctx.lineTo(42, 31); ctx.lineTo(48, 38);
-    ctx.closePath();
-    ctx.fillStyle = roof;
-    ctx.fill();
-    ctx.stroke();
+    if (style.shapes.dwellings === 'flat') {
+      ctx.fillStyle = roof;
+      ctx.fillRect(36, 35, 12, 3);
+      ctx.strokeRect(36, 35, 12, 3);
+    } else {
+      ctx.beginPath();
+      ctx.moveTo(36, 38); ctx.lineTo(42, 31); ctx.lineTo(48, 38);
+      ctx.closePath();
+      ctx.fillStyle = roof;
+      ctx.fill();
+      ctx.stroke();
+    }
   }
 
   const EMBLEM = 96; // one fixed canvas edge per site; the map scales the blit
@@ -184,14 +306,16 @@ window.FB = window.FB || {};
     cacheCount = 0;
   }
 
-  /* FB.siteArt(rank, slug) -> the site's emblem canvas, deterministic per
+  /* FB.siteArt(rank, slug, culture?, state?) -> the site's emblem canvas, deterministic per
      live kind rank (0 village, 1 town, 2 city) and physical site slug. The
-     cache holds one canvas per rank+site and the map scales it at draw time
-     — sizing must never key this cache, or every zoom tick would regenerate
+     cache holds one canvas per rank+site+resolved style and scales at draw time.
+     Sizing must never key this cache, or every zoom tick would regenerate
      art for the whole viewport. The cap only bounds how much of the map has
      been seen up close in one session, never correctness. */
-  FB.siteArt = function (rank, slug) {
-    const key = rank + '|' + slug;
+  FB.siteArt = function (rank, slug, culture, state, presentation) {
+    presentation = presentation || FB.siteArtPresentation(culture, state);
+    const style = presentation.style;
+    const key = rank + '|' + slug + '|' + presentation.key;
     const hit = cache[key];
     if (hit) return hit;
     if (cacheCount >= 600) wipe();
@@ -200,9 +324,9 @@ window.FB = window.FB || {};
     const ctx = cv.getContext('2d');
     ctx.scale(EMBLEM / 64, EMBLEM / 64);
     const h = hashOf(rank + ':' + slug);
-    if (rank >= 2) cityEmblem(ctx, h);
-    else if (rank === 1) townEmblem(ctx, h);
-    else villageEmblem(ctx, h);
+    if (rank >= 2) cityEmblem(ctx, h, style);
+    else if (rank === 1) townEmblem(ctx, h, style);
+    else villageEmblem(ctx, h, style);
     cache[key] = cv;
     cacheCount++;
     return cv;

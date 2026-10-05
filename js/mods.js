@@ -186,7 +186,7 @@ window.FBMODS = window.FBMODS || [];
     settlementNames:true, settlementSites:true, titles:true, papacy:true,
     currency:true, balance:true, land:true, seas:true, rivers:true,
     bounds:true, geographies:true, seasonKinds:true, climateZones:true,
-    lexicons:true
+    lexicons:true, architectureStyles:true
   };
 
   function plainObject(value) {
@@ -1627,6 +1627,14 @@ window.FBMODS = window.FBMODS || [];
       validateCouncilDefinitions(mod);
     }
     if (own(mod, 'buildings')) validateBuildings(mod);
+    if (own(mod, 'architectureStyles')) {
+      if (!plainObject(mod.architectureStyles)) fail('architectureStyles', 'must be an object keyed by id.');
+      for (const id in mod.architectureStyles) if (own(mod.architectureStyles, id)) {
+        if (!/^[a-z][a-z0-9_]*$/.test(id)) fail('architectureStyles.' + id, 'needs a snake_case id.');
+        const faults = FB.architectureStyleFaults(mod.architectureStyles[id]);
+        if (faults.length) fail('architectureStyles.' + id, faults[0]);
+      }
+    }
     if (own(mod, 'geographies')) validateGeographies(mod);
     if (own(mod, 'seasonKinds') || own(mod, 'climateZones') || own(mod, 'events')) {
       validateClimate(mod);
@@ -2030,6 +2038,7 @@ window.FBMODS = window.FBMODS || [];
     if (mod.seasonKinds) mergeTable(FBDATA.seasonKinds, mod.seasonKinds);
     if (mod.climateZones) mergeTable(FBDATA.climateZones, mod.climateZones);
     if (mod.geographies) mergeTable(FBDATA.geographies, mod.geographies);
+    if (mod.architectureStyles) mergeTable(FBDATA.architectureStyles, mod.architectureStyles);
     /* The legacy top-level geometry keys replace the geometry of the default
        geography base, the base those tables describe, so every bookmark on
        it changes exactly as the shared global geometry did before. */
@@ -2059,7 +2068,7 @@ window.FBMODS = window.FBMODS || [];
     if ((mod.religions || mod.titles || mod.raidingTraditions) && FB.invalidateReligionData) {
       FB.invalidateReligionData();
     }
-    if ((mod.cultures || mod.cultureTraditions || mod.cultureDoctrineDefaults ||
+    if ((mod.cultures || mod.architectureStyles || mod.cultureTraditions || mod.cultureDoctrineDefaults ||
         mod.doctrineCatalogs || mod.techTraditions) && FB.invalidateCultureData) {
       FB.invalidateCultureData();
     }

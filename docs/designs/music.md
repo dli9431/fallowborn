@@ -1,5 +1,13 @@
 # Music
 
+Era selection
+
+Gameplay banks can declare a non-empty eras list. The resolver first searches banks naming the campaign's stamped era, then unscoped banks using the existing role, culture, exact faith, faith lineage, configured faith fallback and general fallback order within each pass. A bank scoped only to another era never participates. If neither pass finds a bank, the campaign stays silent. Existing catalogs without scopes retain their selection order. Title themes, observer playback, manual history and explicitly downloaded offline fallback banks retain their existing behavior. No simulation state or technology eligibility changes.
+
+tools/music_catalog.py supports music/<era>/<faith>/<culture>/<role>/<NNN>-<slug>.opus alongside the original four-part paths. Era folders create distinct bank and track ids and declare the folder era in the bank's eras list. Optional music/banks.json maps existing bank ids to non-empty, unique era-id arrays; it can scope a legacy folder or broaden an era folder's list. Unknown bank ids, malformed lists and duplicate eras fail catalog generation. Build, check and stage-itch all read the same scopes, and staging retains them in the generated catalog. No soundtrack assets or generated catalog changes are required until period content is authored.
+
+The explicit CrazyGames distribution flag skips music initialization and contextual bank resolution even if a catalog is accidentally present. Standard file, itch and hosted builds retain soundtrack initialization and playback.
+
 Fallowborn's soundtrack is optional, self-hosted Opus audio. The core game must still boot when
 the catalog is empty, the browser cannot decode Ogg Opus, a track fails, or the player stays
 silent. Music is not simulation state and never changes deterministic gameplay.

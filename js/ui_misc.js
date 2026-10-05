@@ -1900,7 +1900,7 @@ window.FB = window.FB || {};
   /* ================= screens ================= */
   function paintTitleCrest() {
     const crest = $('titlecrest');
-    return !!(crest && FB.drawCrest && FB.drawCrest(crest, 'Fallowborn'));
+    return !!(crest && FB.drawCrest && FB.drawCrest(crest, 'Fallowborn', null));
   }
   UI.paintTitleCrest = paintTitleCrest;
 

@@ -1,5 +1,11 @@
 # Coin & Credit
 
+Period currency presentation
+
+An era or geography can declare currency as a label/icon pair or as the existing complete currency presentation definition. FB.currencyDef, FB.currencyLabel and FB.money resolve it at display time using the stamped campaign era and geography, so loading another period does not leave a stale purse. FB.money accepts an optional state in its options; the currency helpers accept state directly. Omitted state uses FB.state, and a missing campaign uses the active bookmark preview.
+
+Priority is an explicit runtime currency mod, geography, era, then the built-in currency. Definitions are atomic rather than merged across these sources. An invalid explicit mod keeps the existing complete built-in fallback and warning. Without an explicit currency mod, the deprecated balance.coinageSymbol still overrides only the icon. A label/icon pair changes the purse label and icon while retaining built-in units; use a complete definition to change compact symbols and singular/plural unit names. All labels and unit names continue through the localization layer. Authored costs, balances, saved gold, conversion rates and economy rules are unchanged. This is presentation only and needs no technology review entry.
+
 The Market lens keeps legend labels inside narrow map columns by wrapping text
 beside each price symbol, retaining the shared readable font sizes.
 

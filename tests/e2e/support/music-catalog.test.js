@@ -69,6 +69,49 @@ function readCatalog(filename) {
   return JSON.parse(JSON.stringify(sandbox.FBDATA.musicCatalog));
 }
 
+test('era folders and authored bank scopes survive catalog build and itch staging', function () {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'fallowborn-music-eras-'));
+  try {
+    ['christian', 'muslim', 'pagan'].forEach(function (faith) {
+      writeTrack(root, 'music/intro/000-fallowborn-' + faith + '.opus', 60, 20);
+    });
+    writeTrack(root, 'music/christian/all/folk/001-hammer-and-lute.opus', 180, 70);
+    writeTrack(root, 'music/late_antique/christian/all/folk/001-hammer-and-lute.opus', 180, 70);
+    writeTrack(root, 'music/pagan/all/war/001-oaken-shields.opus', 180, 70);
+    fs.writeFileSync(path.join(root, 'music', 'banks.json'), JSON.stringify({
+      'pagan/all/war':['early_medieval', 'high_medieval']
+    }));
+    runTool(root, ['build', '--root', root]);
+    runTool(root, ['check', '--root', root]);
+    const full = readCatalog(path.join(root, 'data', 'music_catalog.js'));
+    assert.deepEqual(full.banks.map(function (bank) { return [bank.id, bank.eras || null]; }), [
+      ['christian/all/folk', null],
+      ['late_antique/christian/all/folk', ['late_antique']],
+      ['pagan/all/war', ['early_medieval', 'high_medieval']]
+    ]);
+    assert.equal(new Set(full.tracks.map(function (track) { return track.id; })).size, 3);
+    const stage = path.join(root, 'stage');
+    fs.mkdirSync(path.join(stage, 'data'), { recursive:true });
+    fs.writeFileSync(path.join(stage, 'index.html'), '<!doctype html>');
+    runTool(root, ['stage-itch', '--root', root, '--stage', stage]);
+    const staged = readCatalog(path.join(stage, 'data', 'music_catalog.js'));
+    assert.deepEqual(staged, full);
+    full.tracks.forEach(function (track) { assert.ok(fs.existsSync(path.join(stage, track.src))); });
+    fs.writeFileSync(path.join(root, 'music', 'banks.json'), JSON.stringify({
+      'unknown/all/folk':['late_antique']
+    }));
+    assert.match(runToolFailure(root, ['build', '--root', root]).stderr, /unknown bank/);
+    fs.writeFileSync(path.join(root, 'music', 'banks.json'), JSON.stringify({
+      'pagan/all/war':['late_antique', 'late_antique']
+    }));
+    assert.match(runToolFailure(root, ['build', '--root', root]).stderr, /unique era id list/);
+    fs.writeFileSync(path.join(root, 'music', 'banks.json'), JSON.stringify({ 'pagan/all/war':[] }));
+    assert.match(runToolFailure(root, ['build', '--root', root]).stderr, /non-empty/);
+  } finally {
+    fs.rmSync(root, { recursive:true, force:true });
+  }
+});
+
 test('committed soundtrack provides complete contextual faith banks within itch budget', function () {
   runTool(gameRoot, ['check', '--root', gameRoot]);
   const catalog = readCatalog(path.join(gameRoot, 'data', 'music_catalog.js'));

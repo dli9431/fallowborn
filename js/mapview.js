@@ -1148,6 +1148,7 @@ window.FB = window.FB || {};
     ctx.textAlign = 'center';
     for (let rank = 0; rank < 3; rank++) settlementDrawBuckets[rank].length = 0;
     const countyVisibility = {};
+    const countyArt = {};
     for (const site of sites) {
       // Most generated sites cannot appear in the intermediate marker band.
       if (!detail && site.index !== 0 && !site.authored) continue;
@@ -1175,7 +1176,10 @@ window.FB = window.FB || {};
         if (detail && FB.siteArt) {
           const scale = rank === 2 ? 1 : (rank === 1 ? 0.9 : 0.8);
           half = Math.round(FB.clamp(z * 1.1, 12, 24) * scale * u);
-          const img = FB.siteArt(rank, site.site);
+          const province = FB.world.byId[site.pid];
+          const culture = province && province.culture;
+          if (!countyArt[site.pid]) countyArt[site.pid] = FB.siteArtPresentation(culture, FB.state);
+          const img = FB.siteArt(rank, site.site, culture, FB.state, countyArt[site.pid]);
           ctx.globalAlpha = focused ? 1 : 0.45;
           ctx.drawImage(img, scrX - half, scrY - half, half * 2, half * 2);
           ctx.globalAlpha = 1;

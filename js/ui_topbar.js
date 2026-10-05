@@ -293,10 +293,10 @@ window.FB = window.FB || {};
       ? me.papalName || me.name : FB.fullName(me);
     // The portrait's target stamp makes this call a no-op while unchanged;
     // the separate crest key avoids redrawing heraldry on ordinary refreshes.
-    const crestKey = me.dyn || me.name;
+    const crestKey = FB.crestVisualKey(me.dyn || me.name, s);
     if (crestKey !== SH.crestKey) {
       SH.crestKey = crestKey;
-      FB.drawCrest($('crest'), me.dyn || me.name);
+      FB.drawCrest($('crest'), me.dyn || me.name, s);
     }
     /* paintPortrait already derives and checks its visual key. Calling
        characterVisualKey first duplicated the full portrait descriptor on
