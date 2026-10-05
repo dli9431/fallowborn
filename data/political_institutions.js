@@ -4,6 +4,10 @@
    derived by js/institutions.js. */
 window.FBDATA = window.FBDATA || {};
 
+/* Public profession changes the court's allegiance, not its inhabitants.
+   These targets belong to the enabled institution, not engine faith switches. */
+FBDATA.rulerFaithTargets = ['nicene','homoian','chalcedonian','miaphysite'];
+
 /* Physical seats, not territorial realms. Unnamed officeholders are generated;
    Carthage's Nicene see is deliberately vacant in spring 476. */
 FBDATA.localInstitutions = {

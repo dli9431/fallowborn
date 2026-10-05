@@ -1,5 +1,9 @@
 # Game state & saves
 
+Optional religion decisions
+
+state.churchCouncils stores the last provincial council per realm, including its ruler and generation, turn, faith, price, participating office and character ids, counties and recognition ids. state.rulerFaithDecisions stores conversions[realmId] with ruler, generation, turn, from and to, plus optional lastAIYear. Both records are created only by enabled mutations, persist in the ordinary v4 envelope and are validated before adoption. Reads, restore and legacy migration create neither record and repeat no payment, council or conversion. Disabled institutions keep their records dormant. Completed character pointers are historical strings and remain valid after ordinary dead-court compaction. Current eligibility always reads the living ruler and office snapshots rather than those historical pointers.
+
 Late antique recognition adds a Curialis player track with semantic phase, result, office ID and outcome turn. It attaches only to that chosen start; existing federate and medieval saves gain no new story record. Saving an opening preserves it without executing a choice, and loading a completed opening neither charges again nor creates another appointment. AI realms may also hold stationPrestige and stationStandingYear, additive numeric fields for earned recognition and the last annual accrual; older realms initialize these at their next yearly review. Band identities, authority records, career IDs and existing clerical path indexes retain their saved formats. No save version bump is needed.
 
 Local institutional ledger

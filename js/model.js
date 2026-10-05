@@ -925,6 +925,10 @@ window.FB = window.FB || {};
           if (['realm','character'].indexOf(rel.head.holderKind) < 0) {
             fault(id, 'head.holderKind must be realm or character.');
           }
+          if (rel.head.holderRole !== undefined && (typeof rel.head.holderRole !== 'string' || !rel.head.holderRole || rel.head.holderKind !== 'character'))
+            fault(id, 'head.holderRole requires a character office and a nonempty role.');
+          if (rel.head.minAge !== undefined && (!Number.isInteger(rel.head.minAge) || rel.head.minAge < 0 || rel.head.holderKind !== 'character'))
+            fault(id, 'head.minAge requires a character office and a nonnegative integer.');
           if (!headStrategies[rel.head.succession]) {
             fault(id, 'head.succession names an unregistered strategy.');
           }
@@ -1450,7 +1454,7 @@ window.FB = window.FB || {};
       const def = local[id];
       if (!def.officeId || out[def.officeId]) continue;
       out[def.officeId] = { id:def.officeId, religionId:def.religion,
-        head:{ holderKind:'character', holderSex:'m', succession:'appointment', local:true } };
+        head:{ holderKind:'character', holderSex:'m', holderRole:'priest', minAge:18, succession:'appointment', local:true } };
     }
     return out;
   }
@@ -1613,6 +1617,9 @@ window.FB = window.FB || {};
     if (office && office.head.holderKind === 'character') {
       const c = state && state.chars && state.chars[realmId];
       return !!(c && !c.dead && (!requiredSex || c.sex === requiredSex) &&
+        (!office.head.holderRole || c.role === office.head.holderRole ||
+          c.career && c.career.profession === office.head.holderRole) &&
+        (office.head.minAge === undefined || FB.ageOf(c, state.date.year) >= office.head.minAge) &&
         (office.head.local ? c.religion === office.religionId :
           FB.faithOfficeId(c.religion, state) === office.id));
     }

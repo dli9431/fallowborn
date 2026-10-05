@@ -2,6 +2,8 @@ Optional systems
 
 Local institutions
 
+church_councils and ruler_conversion also default to disabled and are enabled by late_antique. js/religion.js guards their direct mutations and annual AI hook and requires episcopal_sees in the acting court's context. Disabled saved decisions remain dormant; reads and restore allocate no new decision ledger. The 476 bookmark explicitly disables abbeys alongside its other medieval institutions. Medieval bookmarks keep their prior availability sets.
+
 civic_institutions and episcopal_sees default to disabled and are enabled by late_antique. They guard site councils, senates, bishoprics and patriarchates, their Deeds sections, active head offices and owning transactions. Disabled records remain dormant. The 867 and 1066 systems layers are unchanged and allocate no local institutional state.
 
 data/systems.js owns the stable optional-institution ids. A definition records id, desc, defaultEnabled and the engine modules responsible for its behavior. The medieval defaults are enabled except papacy, which requires an enabling faith; civic_institutions and episcopal_sees require an enabling campaign layer. Availability is a content rule, separate from an institution's ordinary eligibility and technology requirements.

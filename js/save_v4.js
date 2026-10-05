@@ -74,6 +74,7 @@
      Absent fields stay valid; present ids must resolve. */
   P.validatePlatform = function (state) {
     if (FB.validateLocalInstitutionState) FB.validateLocalInstitutionState(state);
+    if (FB.validateReligionInstitutionState) FB.validateReligionInstitutionState(state);
     if (plain(state.start)) {
       stamp(state.start, 'era', 'era');
       stamp(state.start, 'geography', 'geography');

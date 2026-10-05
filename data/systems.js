@@ -3,6 +3,8 @@
 window.FBDATA = window.FBDATA || {};
 FBDATA.systems = {
   roman_offices:{ id:'roman_offices', desc:'Scoped Roman offices, personal honors and contested imperial recognition.', defaultEnabled:false, modules:['authority'] },
+  church_councils:{ id:'church_councils', desc:'Provincial gatherings of living bishops and protected congregations.', defaultEnabled:false, modules:['religion'] },
+  ruler_conversion:{ id:'ruler_conversion', desc:'Public ruler conversion with court, church and community consequences.', defaultEnabled:false, modules:['religion','actions'] },
   civic_institutions:{ id:'civic_institutions', desc:'Site councils and senates with local bargains and consent.', defaultEnabled:false, modules:['institutions'] },
   episcopal_sees:{ id:'episcopal_sees', desc:'Local bishoprics and patriarchates with mediation and institutional standing.', defaultEnabled:false, modules:['institutions','model'] },
   manorial_tenure:{ id:'manorial_tenure', desc:'Customary dependent tenure and scheduled household duties.', defaultEnabled:true, modules:['events','actions','economy'] },

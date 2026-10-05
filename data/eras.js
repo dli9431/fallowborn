@@ -153,7 +153,7 @@ FBDATA.eras = {
     from:375, to:649,
     defaultGovernment:'regnum', defaultCulture:'roman',
     costume:'late_antique', vocabulary:null, ladder:FBDATA.stationLadders.late_antique,
-    systems:{ enable:['civic_institutions','episcopal_sees','roman_offices'], disable:['papacy','scutage','manorial_tenure','excommunication',
+    systems:{ enable:['civic_institutions','episcopal_sees','roman_offices','church_councils','ruler_conversion'], disable:['papacy','scutage','manorial_tenure','excommunication','abbeys',
       'feudal_service','crown_bloc','tournaments','great_holy_wars'] },
     technology:{ from:476, to:649, startingKnowledge:'historical' },
     military:{ equipment:{ from:375, to:649 } },

@@ -208,6 +208,56 @@ window.FB = window.FB || {};
     if (id === 'tolerance') return FB.T('Protected worship');
     return FB.T('Tax relief');
   }
+  UI.showChurchCouncils = function () {
+    const s = FB.state;
+    if (!s || !FB.systemEnabled(s, 'church_councils', { realm:'player' })) return;
+    FB.game.setPaused(true);
+    let h = '<div data-church-council-list data-modal-scroll>';
+    (FBDATA.rulerFaithTargets || []).forEach(function (faith) {
+      const q = FB.churchCouncilQuote(s, 'player', faith);
+      const name = FB.dataText(s, s.player.charId, 'religion', faith, FB.religionOf(faith, s), 'name', {});
+      h += reviewFactsCard(name, kv('Bishops', String(q.bishops.length)) +
+        kv('Cost', esc(FB.T('{money:cost}', { cost:q.goldCost }))) +
+        kv('Popular support', esc(FB.T('+{amount} in each participating county', { amount:q.support }))),
+        ' data-church-council-faith="' + esc(faith) + '"') +
+        reviewActionsHtml(reviewActionCardHtml({ data:{ churchCouncilReview:faith },
+          detailsId:'church-council-' + faith, label:FB.T('Review council'), disabled:!q.allowed,
+          note:q.reason || FB.T('Church support at {count} sees; another council in 720 days.', { count:q.bishops.length }),
+          details:'<p>' + esc(FB.T('Bishops meet within your lands under protected worship. Their recognition is county-scoped and lapses on replacement. Congregations, doctrine, law and county ownership keep their existing identities.')) + '</p>' }));
+    });
+    h += '</div>';
+    openModal(FB.T('Provincial church councils'), h, { modalClass:'fullsheet-modal',
+      titleDetailsHtml:'<p>' + esc(FB.T('A ruler may protect a council of another communion. Two living bishops of one communion must hold sees in the ruler’s lands. This is a provincial gathering, with no power to impose a universal creed.')) + '</p>' });
+    $('gm-body').querySelectorAll('[data-church-council-review]').forEach(function (button) {
+      button.onclick = function () {
+        const q = FB.churchCouncilQuote(s, 'player', button.dataset.churchCouncilReview);
+        const people = q.bishops.map(function (b) {
+          return reviewPersonHtml(s.chars[b.charId], FB.localInstitutionName(b.institutionId));
+        }).join('');
+        const facts = kv('Cost', esc(FB.T('{money:cost}', { cost:q.goldCost }))) +
+          kv('Counties', esc(q.counties.map(function (pid) { return FB.world.byId[pid].name; }).join(' · '))) +
+          kv('Popular support', esc(FB.T('+{amount} in each participating county', { amount:q.support }))) +
+          kv('Commitment', esc(FB.T('Another council in 720 days.')));
+        const body = reviewFactsCard('', facts, ' data-church-council-review') + reviewPeopleHtml(people) +
+          reviewActionsHtml(reviewActionCardHtml({ id:'church-council-confirm',
+            label:FB.T('Convene council'), disabled:!q.allowed, note:q.reason || FB.T('Record scoped church support.'),
+            details:'<p>' + esc(FB.T('Each participating bishop issues church support in their own county. Replacement of the bishop ends that recognition. No population converts.')) + '</p>' }));
+        openModal(FB.T('Review church council'), body, { modalClass:'fullsheet-modal', historyView:true });
+        $('church-council-confirm').onclick = function () {
+          if (s !== FB.state) return;
+          const result = FB.conveneChurchCouncil(s, q);
+          markActionsDirty();
+          openModal(result ? FB.T('Council concluded') : FB.T('Terms changed'),
+            reviewFactsCard('', result ? kv('Paid', esc(FB.T('{money:cost}', { cost:result.goldCost }))) +
+              kv('Church support', esc(FB.T('{count} sees recognize your protection.', { count:result.recognitionIds.length }))) :
+              esc(FB.T('Return to the council list and review the current bishops and terms. Nothing was spent.'))) +
+            reviewPeopleHtml(people) + reviewActionsHtml(reviewActionCardHtml({ id:'church-council-continue', label:FB.T('Continue') })),
+            { replaceView:true, modalClass:'fullsheet-modal' });
+          $('church-council-continue').onclick = function () { modalHistoryBack(); UI.refresh(); };
+        };
+      };
+    });
+  };
   UI.showLocalInstitutions = function (kind, view) {
     const s = FB.state;
     if (!s) return;
@@ -4309,7 +4359,8 @@ window.FB = window.FB || {};
       const id = ids[i];
       if (kind === 'culture' && id !== currentId && s.cultures && s.cultures[id] &&
           (dominantCount[id] || 0) < 3) continue;
-      if ((id !== currentId || (kind === 'culture' &&
+      if ((id !== currentId || (kind === 'faith' && FB.systemEnabled(s, 'ruler_conversion', { realm:'player' }) &&
+          s.realms.player && s.realms.player.religion !== id) || (kind === 'culture' &&
           FB.permitsMatrilinealMarriage(s, id))) &&
           (!FB.conversionTargetEncountered || FB.conversionTargetEncountered(s, kind, id))) {
         targets.push(id);
@@ -4561,7 +4612,18 @@ window.FB = window.FB || {};
         }));
       }
       if (kind === 'faith') {
-        if (scope === 'realm') {
+        if (st.rulerDecision) {
+          lines.push(FB.T('Church support withdrawn: {count} recognitions. New-faith bishops can recognize protected congregations at their own sees and your capital.', { count:st.lostRecognitionIds.length }));
+          st.counties.forEach(function (row) {
+            lines.push(FB.T('{county}: Popular support {amount}; abandoned faith share {percent}%.', {
+              county:FB.world.byId[row.provinceId].name, amount:row.support,
+              percent:Math.round(row.oldShare * 100)
+            }));
+          });
+          lines.push(FB.T('Zealot unrest lasts 1,440 days in {count} counties with substantial old-faith communities. Each affected county has -12 Popular support, +0.35 unrest, -8% tax and -5% levy capacity.', {
+            count:st.counties.filter(function (row) { return row.unrest; }).length
+          }));
+        } else if (scope === 'realm') {
           lines.push(FB.T('Zealot unrest rises in every county you hold.'));
         } else if (scope === 'household') {
           lines.push(FB.T('Zealot unrest rises in your home county.'));
@@ -4572,7 +4634,7 @@ window.FB = window.FB || {};
       if (st.excommunicates) {
         lines.push(FB.T('The Pope will excommunicate you for apostasy.'));
       }
-      if (kind === 'faith' && scope === 'realm' && st.oldFoldRealmIds.length) {
+      if (kind === 'faith' && scope === 'realm' && st.oldFoldRealmIds.length && FB.systemEnabled(s, 'great_holy_wars')) {
         lines.push(FB.T(
           'Your realm becomes a lawful target for the holy wars of your old faith.'));
       }
@@ -4583,7 +4645,10 @@ window.FB = window.FB || {};
           return '<li>' + esc(line) + '</li>';
         }).join('') + '</ul>';
       }
-      const h = reviewFactsCard('', facts, ' data-conversion-review') +
+      const people = st.rulerDecision ? st.bishops.map(function (b) {
+        return reviewPersonHtml(s.chars[b.charId], FB.localInstitutionName(b.institutionId));
+      }).join('') : '';
+      const h = reviewFactsCard('', facts, ' data-conversion-review') + reviewPeopleHtml(people) +
         reviewActionsHtml(reviewActionCardHtml({
           id:'conv-confirm', label:kind === 'faith' ? FB.T('Convert') : FB.T('Adopt'),
           note:conversionCostText(st),
@@ -4603,11 +4668,30 @@ window.FB = window.FB || {};
           } : null
         });
       $('conv-confirm').addEventListener('click', function () {
-        if (!FB.applyConversion(s, kind, targetId, scope)) {
+        if (s !== FB.state || !FB.applyConversion(s, kind, targetId, scope, st.rulerDecision ? st : null)) {
+          if (st.rulerDecision && s === FB.state) {
+            openModal(FB.T('Terms changed'), '<p>' + esc(FB.T('Return to the faith picker and review the current terms. Nothing was spent.')) + '</p>' +
+              reviewActionsHtml(reviewActionCardHtml({ id:'ruler-conversion-retry', label:FB.T('Continue') })), { replaceView:true });
+            $('ruler-conversion-retry').onclick = function () { modalHistoryBack(); };
+            return;
+          }
           const failed = FB.conversionStatus(s, kind, targetId, scope);
           if (failed.reason) UI.toast(failed.reason);
           UI.closeModal();
           UI.refresh();
+          return;
+        }
+        if (st.rulerDecision) {
+          markActionsDirty();
+          openModal(FB.T('Official faith proclaimed'), reviewFactsCard('',
+            kv('Faith', esc(name)) + kv('Paid', esc(conversionCostText(st))) +
+            kv('Church support withdrawn', String(st.lostRecognitionIds.length)) +
+            kv('Counties with zealot unrest', String(st.counties.filter(function (row) { return row.unrest; }).length))) +
+            reviewPeopleHtml(people) + reviewActionsHtml(reviewActionCardHtml({
+              id:'ruler-conversion-continue', label:FB.T('Continue'),
+              details:'<p>' + esc(FB.T('The ruler, managed household and court’s official faith have changed. County and settlement communities retain their worship. Church support, Popular support and old-fold Standing follow the reviewed terms.')) + '</p>'
+            })), { replaceView:true, modalClass:'fullsheet-modal' });
+          $('ruler-conversion-continue').onclick = function () { UI.closeModal(); UI.refresh(); };
           return;
         }
         UI.closeModal();
