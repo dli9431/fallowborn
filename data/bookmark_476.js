@@ -9,7 +9,8 @@ FBDATA.bookmarks['476'] = {
   religiousHeads:{},
   systems:{ disable:['papacy','scutage','manorial_tenure','excommunication',
     'feudal_service','crown_bloc','tournaments','great_holy_wars'] },
-  stories:['western_court_476'],
+  stories:['western_court_476','zeno_return_476','clovis_syagrius_476',
+    'theoderic_italy_476','eastern_africa_476','eastern_italy_476','western_office_476'],
   provinces:FBDATA.bookmarkRegions476.italy.provinces.concat(
     FBDATA.bookmarkRegions476.dalmatia_east.provinces,
     FBDATA.bookmarkRegions476.gaul_iberia.provinces,

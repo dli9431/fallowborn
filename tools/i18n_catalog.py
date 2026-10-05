@@ -76,6 +76,7 @@ STRUCTURED_DATA = {
     "tenureRights": "tenureRight",
     "seasonKinds": "seasonKind",
     "climateZones": "climateZone",
+    "storyCampaigns": "storyCampaign",
 }
 DATA_FIELDS = ("name", "desc")
 EVENT_FIELDS = ("title", "text", "desc")
@@ -753,6 +754,8 @@ def extract_structured(inv: Inventory) -> None:
             path = DATA / "intrigue.js"
         elif data_name in ("seasonKinds", "climateZones"):
             path = DATA / "climate.js"
+        elif data_name == "storyCampaigns":
+            path = DATA / "story_campaigns.js"
         else:
             path = DATA / ("traits.js" if data_name in ("traits", "ailments") else
                            "modifiers.js" if data_name == "modifiers" else
@@ -787,6 +790,15 @@ def extract_structured(inv: Inventory) -> None:
                         f"{namespace} {item_id}, {field}, faith branch {branch}.",
                         TOKEN_RE.findall(record["text"]),
                     )
+            if data_name == "storyCampaigns":
+                for outcome, message_node in (node_object(item.get("news")) or {}).items():
+                    message = node_object(message_node) or {}
+                    key = node_string(message.get("key"))
+                    for _, record, line in branch_records(message.get("text")):
+                        if key:
+                            inv.add(key, record, f"{rel}:{line}",
+                                    f"Campaign {item_id}, {outcome} durable news.",
+                                    TOKEN_RE.findall(record["text"]))
             if data_name == "tenureArchetypes":
                 explicit_fields = (
                     ("nameKey", "name"),

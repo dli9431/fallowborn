@@ -5,7 +5,8 @@ dependsOnRuntime(__filename, [
   'data/bookmark_476.js',
   'data/bookmark_476_italy.js', 'data/bookmark_476_dalmatia_east.js',
   'data/bookmark_476_gaul_iberia.js', 'data/bookmark_476_africa.js', 'data/eras.js', 'js/actions.js', 'js/mods.js',
-  'js/systems.js', 'js/i18n.js', 'js/stories.js', 'js/story_western_court_476.js',
+  'js/systems.js', 'js/i18n.js', 'js/stories.js', 'js/story_campaign.js',
+  'js/story_476_rails.js', 'data/story_campaigns.js', 'js/story_western_court_476.js',
   'js/story_federate_track_476.js', 'js/ui_panels.js', 'js/ui_modals.js',
   'js/ui_misc.js', 'js/keys.js', 'js/main.js', 'css/style.css'
 ]);
@@ -211,7 +212,7 @@ test('trusted registration and story cards use the same ordered section catalogu
     });
     await waitForUiRefresh(page);
     const cards = page.locator('#tab-actions [data-story-card]');
-    await expect(cards).toHaveCount(2);
+    await expect(cards).toHaveCount(3);
     const ordered = await page.evaluate(function () {
       const card = document.querySelector('[data-story-card]');
       const notice = document.querySelector('[data-action-section="e2e_notice"]');

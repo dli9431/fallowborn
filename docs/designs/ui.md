@@ -3665,3 +3665,7 @@ Governance, Position exposes governing identity for a player realm. The sheet se
 
 
 Mixed-court sentence reviews also display the selected advisory legal tradition when an assessor is declared.
+
+Independent world-story status cards
+
+Political world stories and date-window campaigns use the existing Deeds story card and shared sheet as read-only status. Pending future campaigns wait until their opening year to show a card; active and resolved outcomes remain readable. They add no confirmation buttons or alternate navigation flow. Household track choices keep their reviewed confirmation, quote revalidation, keyboard activation and retained Deeds scroll/focus return. Closing a world-story sheet returns to its originating status card through the same modal history.

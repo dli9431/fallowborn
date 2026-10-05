@@ -119,7 +119,9 @@
           FB.realmRulerCharacterSnapshot(s, 'byzantium').id === w.eastRulerId &&
           s.owner.constantinople === 'byzantium';
       } else if (id === 'back_zeno') {
-        allowed = alive(s, w.zenoId) && !!s.realms.byzantium.alive;
+        var returning = FB.stories.record(s, 'zeno_return_476');
+        allowed = !!returning && returning.result !== 'interrupted' && returning.result !== 'diverted' &&
+          alive(s, w.zenoId) && !!s.realms.byzantium.alive;
       } else if (id === 'uphold_nepos') {
         allowed = alive(s, w.neposId) && s.owner.split === 'croatia';
       } else allowed = id === 'forgo_recognition';
@@ -326,7 +328,7 @@
       t.phase = 'court';
     } else if (id === 'back_zeno') {
       t.backedClaimant = 'zeno'; t.phase = 'court';
-      if (w.easternReturn === 'restored' &&
+      if (FB.stories.record(s, 'zeno_return_476') && FB.stories.record(s, 'zeno_return_476').result === 'restored' &&
           FB.realmRulerCharacterSnapshot(s, 'byzantium') &&
           FB.realmRulerCharacterSnapshot(s, 'byzantium').id === w.zenoId) {
         rec = recognize(s, 'imperial_commission', actor('byzantium'),
@@ -414,18 +416,9 @@
       news(s, 'news.476.office_retired',
         '📜 The host seeks eastern recognition and leaves the western office vacant.', {});
     } else if (id === 'restore_western_office') {
-      if (w.westOfficeId)
-        FB.authorityAppointmentTransition(s, w.westOfficeId, 'remove');
-      rec = recognizeOrExisting(s, 'dynastic_succession', actor('italy'),
-        person(w.westRulerId));
-      if (!rec) return false;
-      office = appointment(s, 'imperial_office', 'italy',
-        person(w.westRulerId), actor('italy'), rec.id);
-      if (!office) return false;
-      w.westOfficeId = office.id; w.westernOfficeResolved = 'restored';
-      news(s, 'news.476.office_restored',
-        '🏛 Romulus returns to the western office after Ravenna returns to his court.', {});
+      if (!X.restoreWestOffice(s, w)) return false;
     } else return false;
+    if (X.syncWestOffice) X.syncWestOffice(s);
     if (FB.ui && FB.ui.mapDirty) FB.ui.mapDirty();
     return true;
   }
@@ -487,6 +480,7 @@
         FB.authorityAppointmentTransition(s, w.westOfficeId, 'remove');
         w.romulusDeposed = true;
       }
+      if (X.syncWestOffice) X.syncWestOffice(s);
       news(s, 'news.476.victory',
         '⚔ The federates take Ravenna. Odoacer is acclaimed; the western office is contested, while the city’s people and property remain.', {});
     }
@@ -664,9 +658,9 @@
     if (w.westernOfficeResolved === 'restored') lines.push(FB.T('Western office: restored to Romulus.'));
     if (w.aiResolution === 'negotiated') lines.push(FB.T('The courts agreed on service after you declined involvement.'));
     if (w.aiResolution === 'war') lines.push(FB.T('The courts are fighting for Ravenna through an ordinary war.'));
-    if (w.historical && w.historical.theoderic === 'started') lines.push(FB.T('Theoderic’s campaign for Ravenna is underway.'));
-    if (w.historical && w.historical.africa === 'started') lines.push(FB.T('The eastern African reconquest campaign is underway.'));
-    if (w.historical && w.historical.italy === 'started') lines.push(FB.T('The eastern Italian reconquest campaign is underway.'));
+    if (FB.stories.record(s, 'theoderic_italy_476') && FB.stories.record(s, 'theoderic_italy_476').phase === 'started') lines.push(FB.T('Theoderic’s campaign for Ravenna is underway.'));
+    if (FB.stories.record(s, 'eastern_africa_476') && FB.stories.record(s, 'eastern_africa_476').phase === 'started') lines.push(FB.T('The eastern African reconquest campaign is underway.'));
+    if (FB.stories.record(s, 'eastern_italy_476') && FB.stories.record(s, 'eastern_italy_476').phase === 'started') lines.push(FB.T('The eastern Italian reconquest campaign is underway.'));
     return lines;
   }
   function status(s, t) {

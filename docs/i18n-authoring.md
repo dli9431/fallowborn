@@ -180,3 +180,7 @@ Scheduled games structured labels in data/tournaments.js are extracted under tou
 Deeds section labels
 
 Section label, subhead and statusLine fields in data/actions.js use stable deedSection.<id>.<field> owners and render through FB.deeds.text. The static extractor registers all three display fields without executing the registry. Runtime section overrides retain those owners and use the normal current-source English fallback. Section ids, types, order, layout, availability, system requirements and deed membership are locale-neutral.
+
+Campaign story authoring
+
+FBDATA.storyCampaigns name and desc fields use storyCampaign.<id>.<field>.default through FB.dataText. Their news outcome rows carry key and text; the static extractor registers each text under that opaque message key. Runtime registration supplies English for saved Chronicle descriptors without requiring catalog generation on the feature branch. Political stage labels use literal FB.T calls. The named commanders in FBDATA.storyActors476 are historical proper names and are not translated.

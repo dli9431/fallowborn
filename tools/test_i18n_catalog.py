@@ -31,6 +31,18 @@ class JavascriptLexerTests(unittest.TestCase):
 
 
 class StructuredDataExtractionTests(unittest.TestCase):
+    def test_campaign_names_and_all_durable_outcomes_are_extracted(self):
+        inventory = i18n_catalog.Inventory()
+        i18n_catalog.extract_structured(inventory)
+        self.assertEqual(inventory.entries[
+            'storyCampaign.theoderic_italy_476.name.default']['text'],
+            'The Amal Commission for Italy')
+        for prefix in ('clovis', 'theoderic', 'africa', 'italy'):
+            for suffix in ('failed', 'diverted', 'interrupted'):
+                self.assertIn(f'news.476.{prefix}_{suffix}', inventory.entries)
+        self.assertIn('news.476.africa_campaign', inventory.entries)
+        self.assertIn('news.476.theoderic_outcome', inventory.entries)
+
     def test_culture_tradition_names_use_their_own_namespace(self):
         inventory = i18n_catalog.Inventory()
 
