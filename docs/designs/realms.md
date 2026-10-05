@@ -1544,3 +1544,15 @@ requires it. Technology impact: the political appointments and rights are
 Optional service and political institutions
 
 Feudal service contracts and the crown political bloc now consult the availability resolver in docs/designs/systems.md. Disabled contracts do not schedule renewals, lapse titles or supply special charter modifiers. Ordinary hereditary title grants remain available through their existing transfer checks. A disabled crown bloc has no scored interest or affiliation; houses retain their ordinary independent, magnate and commercial political relationships. Availability follows the scoped government and faith beneath the bookmark override.
+
+Optional title levels
+
+The mechanical levels duchy, kingdom and empire, their slug namespaces and legacy d_, k_ and e_ aliases remain stable. FB.titleLevels supplies level tables, presence, lexicon names and holder labels. Level words come from data/lexicons.js using the campaign era and scoped government context; holder labels use the existing rank resolver, including faith and sex. Stored generated realm styles remain locale-neutral identities, distinct from the localized level and holder labels.
+
+A bookmark can omit any level table. A county can omit duchy or set it to null; a district can omit kingdom, and a kingdom can omit empire. A supplied reference must still resolve in its typed table: empty strings, wrong prefixes, missing ids and alias collisions fail activation. A chain ends at its first absent parent. Mixed regions work without a bookmark-wide switch. Feudal generation keeps counties without a district in their sovereign's direct hand, without creating a synthetic shared district.
+
+Recognition, grants and historical foundations count only actual title counties. Queries with an absent level or id return no counties and no eligible promotion. Dignities whose territory lies outside the corresponding title level do not acquire a de jure hollow-crown timer; their independent authority remains with its owning system. County holdings, owner/holder relationships and ordinary warfare are unchanged.
+
+Where a county has no title hierarchy, FB.political.territorialClaims projects effective customary Peace rights held by the realm or, for the player, the current character. Each claim retains the exact right id and legal basis. Revenue rights and appointments never imply a territorial recovery claim. The war system revalidates that evidence on declaration. Technology impact customary_territorial_claims is none: enforcing existing jurisdiction is ordinary legal and military practice, with ordinary county warfare and aggression still available.
+
+Coverage is in title-levels-and-hierarchy.spec.js and lexicon.spec.js, with the existing medieval title migration and parity journeys retained.

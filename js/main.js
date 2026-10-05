@@ -5739,7 +5739,7 @@ FB.CHANGELOG = [
     if (FB.station.isSerf(s.player, s)) pool.push(FB.msg('legend.condition.serf',
       'Born a {term:serf}, died a {term:serf}, and outstubborned everyone in between.', {}));
     if (FB.station.isRoyal(s.player, s)) pool.push(FB.msg('legend.condition.emperor',
-      'Ruled an empire; the empire has been formally notified.', {}));
+      'Ruled an {term:empire}; the {term:empire} has been formally notified.', {}));
     let best = null, bestV = 0;
     for (const k of FB.SKILLS) {
       const v = FB.skillOf(me, k);

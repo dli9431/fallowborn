@@ -1901,11 +1901,15 @@ window.FB = window.FB || {};
     }
     const tips = {
       3: 'Path: petition a higher ruler for an available county, inherit one, or challenge a count. A claim does not guarantee superior support.',
-      4: 'Path: hold the majority of a de jure duchy (petition, inherit, or conquer), then claim recognition as duke.',
-      5: 'Path: hold the majority of a de jure kingdom, win independence, then claim its crown.',
-      6: 'Path: hold the majority of two kingdoms of one empire, then claim imperial recognition.',
+      4: 'Path: hold the majority of a de jure {term:duchy} (petition, inherit, or conquer), then claim recognition as {term:duke}.',
+      5: 'Path: hold the majority of a de jure {term:kingdom}, win independence, then claim its crown.',
+      6: 'Path: hold the majority of two {term:kingdom.other} of one {term:empire}, then claim imperial recognition.',
       7: 'You stand at the summit of the world.'
     };
+    if (FB.station.rulesRealm(s.player, s) && !FB.dejureOf(s.player.provinceId).duchy) {
+      return '<div class="progressnote path-hint">' + esc(FB.T(
+        'This land has no title hierarchy. Effective customary jurisdiction can support a territorial claim.')) + '</div>';
+    }
     const nextCost = FB.station.isLanded(s.player, s) && !FB.station.isImperial(s.player, s)
       ? FB.rankElevationCostText(FB.rankElevationCost(
         s, s.player.tier, FB.station.next(s.player, s))) : '';
@@ -4598,9 +4602,9 @@ window.FB = window.FB || {};
 
     function monopolyTierName(tier) {
       if (FB.station.isCount(tier, s)) return FB.T('Count');
-      if (FB.station.isDuke(tier, s)) return FB.T('Duke');
-      if (FB.station.isKing(tier, s)) return FB.T('King');
-      if (FB.station.isEmperor(tier, s)) return FB.T('Emperor');
+      if (FB.station.isDuke(tier, s)) return FB.T('{Term:duke}');
+      if (FB.station.isKing(tier, s)) return FB.T('{Term:king}');
+      if (FB.station.isEmperor(tier, s)) return FB.T('{Term:emperor}');
       return FB.T('{Term:baron}');
     }
     function monopolyProfessionName(record) {
@@ -6296,7 +6300,7 @@ window.FB = window.FB || {};
     return null;
   }
 
-  const MAPMODES = { realm: 'Realm', mine: 'Mine', liege: '{Term:liege}', duchy: 'De jure duchies', kingdom: 'De jure kingdoms', war: 'War', market: 'Market' };
+  const MAPMODES = { realm: 'Realm', mine: 'Mine', liege: '{Term:liege}', duchy: 'De jure {term:duchy.other}', kingdom: 'De jure {term:kingdom.other}', war: 'War', market: 'Market' };
   const FILTER_MAP_MODES = ['realm', 'mine', 'liege', 'duchy', 'kingdom', 'war'];
   let mapFilterOverlayEventsInitialized = false;
 
@@ -6304,6 +6308,7 @@ window.FB = window.FB || {};
     const s = FB.state;
     if (!s) return false;
     if (mode === 'liege') return !!s.player.liege;
+    if (mode === 'duchy' || mode === 'kingdom') return Object.keys(FB.titleLevels.table(mode)).length > 0;
     if (mode === 'war') return !!(s.player && s.player.war && s.player.war.enemy);
     return FILTER_MAP_MODES.indexOf(mode) >= 0;
   }
@@ -6312,7 +6317,7 @@ window.FB = window.FB || {};
     if (mode === 'realm') return 'Selected realm';
     if (mode === 'mine') return 'Your realm';
     if (mode === 'liege') return mapFilterModeAvailable(mode) ? '{Term:liege}’s realm' : 'No {term:liege}';
-    if (mode === 'duchy' || mode === 'kingdom') return 'De jure';
+    if (mode === 'duchy' || mode === 'kingdom') return mapFilterModeAvailable(mode) ? 'De jure' : 'No title hierarchy';
     if (mode === 'war') return mapFilterModeAvailable(mode) ? 'Active war' : 'At peace';
     return '';
   }
@@ -6633,8 +6638,8 @@ window.FB = window.FB || {};
     return FB.renderMessage(FB.msg('fx.ui.of_total_kingdoms', {
       forms: {
         select: 'plural', param: 'total', cases: {
-          one: '{have} of {total} kingdom',
-          other: '{have} of {total} kingdoms'
+          one: '{have} of {total} {term:kingdom}',
+          other: '{have} of {total} {term:kingdom.other}'
         }
       }
     }, { have: have, total: total }), { state: s, viewer: s.player.charId });
@@ -6645,19 +6650,20 @@ window.FB = window.FB || {};
      players with an active stake in that title (have > 0); a landless dreamer or
      uninvolved foreigner has no claim to weigh */
   function dejureNotes(s, dj) {
+    if (!dj.duchy) return '';
     const indep = FB.isPlayerSovereign(s);
     let out = '';
     function note(text) { return '<div class="progressnote">' + esc(text) + '</div>'; }
     const dp = FB.duchyProgress(s, dj.duchy), dname = FBDATA.duchies[dj.duchy].name;
     if (dp.have > 0) {
       if (!dp.titled) {
-        out += note(FB.T('⚜ {name} is one county alone — no duke’s title to claim.',
+        out += note(FB.T('⚜ {name} is one county alone — no {term:duke}’s title to claim.',
           { name: dname }));
       } else if (dp.have >= dp.need) {
         out += note(FB.T('⚜ {name}: you hold the majority, {held}.',
           { name: dname, held: ofCountiesText(s, dp.have, dp.total) }));
       } else {
-        out += note(FB.T('⚜ {name}: you hold {held} — {need} qualify you to claim the duchy.',
+        out += note(FB.T('⚜ {name}: you hold {held} — {need} qualify you to claim the {term:duchy}.',
           { name: dname, held: ofCountiesText(s, dp.have, dp.total), need: dp.need }));
       }
     }
@@ -6686,7 +6692,7 @@ window.FB = window.FB || {};
             : FB.T('🦅 {name}: you rule {share} — independence would let you claim imperial recognition.',
               { name: ename, share: ofKingdomsText(s, ep.have, ep.total) }));
         } else {
-          out += note(FB.T('🦅 {name}: you rule {share} — {need} and independence qualify you to claim the empire.',
+          out += note(FB.T('🦅 {name}: you rule {share} — {need} and independence qualify you to claim the {term:empire}.',
             { name: ename, share: ofKingdomsText(s, ep.have, ep.total), need: ep.need }));
         }
       }
@@ -7430,7 +7436,7 @@ window.FB = window.FB || {};
       h += renderWarCard(s, hostToShow, pr);
     }
     if (pr.wasteland) {
-      h += '<div class="cmeta">' + esc(FB.T('Trackless {terrain}. No lord rules here — it feeds no duchy or crown.',
+      h += '<div class="cmeta">' + esc(FB.T('Trackless {terrain}. No lord rules here — it feeds no {term:duchy} or crown.',
         { terrain: terrainName(pr.terrain) })) + '</div>';
     } else {
       const rid = s.owner[pid];
@@ -7484,9 +7490,7 @@ window.FB = window.FB || {};
         h += landKv('De jure (rightful {term:liege})', esc(parts.join(' › ')), true);
         if (s.player.provs && s.player.provs.length) h += dejureNotes(s, dj);
       } else {
-        // a colony settled on empty land: owned, but tied to no title
-        h += landKv('De jure (rightful {term:liege})',
-          esc(FB.T('None — this land feeds no duchy or crown.')), true);
+        h += landKv('Title hierarchy', esc(FB.T('None - customary rights apply.')), true);
       }
       const sovereignHtml = realm
         ? '<button class="linklike" data-liege="' + esc(rid) + '" title="' +

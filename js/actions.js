@@ -3401,7 +3401,7 @@ window.FB = window.FB || {};
         (!!FB.religiousHeadVacancy(s, FB.playerHeadFaith(s)) || !!FB.caliphateWarCause(s));
     },
     can: function (s) {
-      if (!FB.isPlayerSovereign(s)) return FB.T('Only an independent king or emperor may claim this office.');
+      if (!FB.isPlayerSovereign(s)) return FB.T('Only an independent {term:king} or {term:emperor} may claim this office.');
       if (!(FB.religiousHeadHolderEligible &&
           FB.religiousHeadHolderEligible(s, FB.playerHeadFaith(s), 'player'))) {
         return FB.T('Your ruler does not meet this office’s holder requirements.');
@@ -3488,7 +3488,7 @@ window.FB = window.FB || {};
     } },
   { id: 'call_great_holy_war', opensChoices:true, noConsume: true, requiresAdult:true,
     desc: function () {
-      return FB.T('Summon sovereigns of the faith to a 180-day gathering for a lost sacred kingdom.');
+      return FB.T('Summon sovereigns of the faith to a 180-day gathering for a lost sacred {term:kingdom}.');
     },
     show: function (s) {
       if (s.greatHolyWar || !FB.greatHolyWarsEnabled(s)) return false;
@@ -3982,7 +3982,7 @@ window.FB = window.FB || {};
         return FB.T('Review a petition from {Term:baron} to Count.');
       }
       if (FB.station.rulesRealm(s.player, s) && liege && liege.alive && !FB.realmRank.isRoyal(liege, s)) {
-        return FB.T('Ask for greater lands. Only the crown can raise you to duke.');
+        return FB.T('Ask for greater lands. Only the crown can raise you to {term:duke}.');
       }
       return FB.T('Ask for greater lands and higher style.');
     },
@@ -8323,11 +8323,11 @@ window.FB = window.FB || {};
     FB.invalidateRealmCache();
     if (recipient) {
       FB.news(state, FB.msg('news.action.family_duchy_granted',
-        '🎁 {name}, a member of your family, receives the Duchy of {duchy} and holds {count} counties in your name.',
+        '🎁 {name}, a member of your family, receives the {Term:duchy} of {duchy} and holds {count} counties in your name.',
         { duchy:dname, name:FB.fullName(recipient), count:cs.length }));
     } else {
       FB.news(state, FB.msg('news.action.duchy_granted',
-        '🎁 The Duchy of {duchy} is granted to {name} — {count} counties held in your name.',
+        '🎁 The {Term:duchy} of {duchy} is granted to {name} — {count} counties held in your name.',
         { duchy: dname, name: state.realms[vid].ruler.name, count: cs.length }));
     }
     return true;
@@ -9050,13 +9050,13 @@ window.FB = window.FB || {};
     status.chance = Math.min(0.9, status.baseChance + status.dynasticBonus);
     if (!FB.isPlayerSovereign(state) || !mine || !FB.realmRank.isRoyal(mine, state)) {
       status.reason = FB.T(
-        'Only an independent king or emperor may offer a defensive alliance.');
+        'Only an independent {term:king} or {term:emperor} may offer a defensive alliance.');
       return status;
     }
     if (!realm || !realm.alive || rid === 'player' || realm.liege ||
         !FB.realmRank.isRoyal(realm, state)) {
       status.reason = FB.T(
-        'A defensive alliance requires another sovereign king or emperor.');
+        'A defensive alliance requires another sovereign {term:king} or {term:emperor}.');
       return status;
     }
     if (!FB.realmsAdjacent(state, 'player', rid)) {
@@ -10310,6 +10310,7 @@ window.FB = window.FB || {};
 
   function deJureCauses(state, pid, titles) {
     const dj = FB.dejureOf(pid);
+    if (!dj.duchy) return FB.customaryWarRights(state, 'player', pid);
     const out = [];
     if (dj.duchy && titles.duchy[dj.duchy]) {
       out.push({ type:'dejure', target:pid,
@@ -10673,7 +10674,7 @@ window.FB = window.FB || {};
     }
     // A package can extend beyond the current frontier through other lawful
     // objectives against the same defender. Do not grow aggression this way.
-    const connected = out.filter(function (cause) { return cause.type === 'dejure' || cause.type === 'fabricated'; });
+    const connected = out.filter(function (cause) { return ['dejure', 'fabricated', 'customary'].indexOf(cause.type) >= 0; });
     for (let i = 0; i < connected.length; i++) {
       const previous = connected[i];
       Object.keys(FB.world.adj[previous.target] || {}).sort().forEach(function (pid) {
@@ -10714,7 +10715,7 @@ window.FB = window.FB || {};
     const out = [], seen = {};
     function add(cause) {
       const key = [cause.type, cause.target, cause.titleKind || '',
-        cause.titleId || '', cause.titleName || ''].join('|');
+        cause.titleId || '', cause.titleName || '', cause.rightId || ''].join('|');
       if (seen[key]) return;
       seen[key] = 1;
       const copy = {};
@@ -10726,7 +10727,7 @@ window.FB = window.FB || {};
     }
     const titles = heldTitleSets(state);
     for (const cause of base) {
-      if (cause.type === 'dejure') {
+      if (cause.type === 'dejure' || cause.type === 'customary') {
         for (const right of deJureCauses(state, target, titles)) add(right);
       } else {
         add(cause);
@@ -10734,7 +10735,7 @@ window.FB = window.FB || {};
     }
     const claim = FB.fabricatedClaimsOf(state).filter(function (c) { return c.pid === target; })[0];
     if (claim && claim.pid === target && out.some(function (cause) {
-      return cause.type === 'dejure';
+      return cause.type === 'dejure' || cause.type === 'customary';
     })) {
       add({ type:'fabricated', target:target });
     }
@@ -12113,6 +12114,10 @@ window.FB = window.FB || {};
     // Reject an unconfirmed review without repairing campaign save records.
     if (causeOrTarget && causeOrTarget.type === 'aggression' &&
         !(opts && opts.confirmAggression)) return false;
+    if (causeOrTarget && causeOrTarget.type === 'customary' &&
+        !FB.customaryWarRights(state, 'player', causeOrTarget.target).some(function (right) {
+          return right.rightId === causeOrTarget.rightId;
+        })) return false;
     FB.ensureWars(state);
     if (FB.playerChurchOfficeOnly && FB.playerChurchOfficeOnly(state)) return false;
     opts = opts || {};
@@ -12190,6 +12195,12 @@ window.FB = window.FB || {};
     registered.legacy = false;
     registered.objectives = [{ target:cause.target, type:cause.type,
       titleKind:cause.titleKind || null, titleId:cause.titleId || null }];
+    if (cause.type === 'customary') {
+      registered.casus.rightId = cause.rightId;
+      registered.casus.basis = cause.basis;
+      registered.objectives[0].rightId = cause.rightId;
+      registered.objectives[0].basis = cause.basis;
+    }
     FB.recordWarDeclaration(state, registered, declaration);
     FB.withOrdinaryWar(state, registered.id, function () {
       FB.warFooting(state);

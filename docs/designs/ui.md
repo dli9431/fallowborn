@@ -3630,3 +3630,10 @@ Religious head claim, restoration and absolution reviews use the effective local
 Optional institution visibility
 
 Navigation, map controls, Deeds entries, event options, policy and privilege lists, trait chips and technology unlock descriptions omit content whose system requirements are disabled. Apply FB.systemContentEnabled before building a preview or evaluating eligibility. A disabled institution does not show a locked card with a requirement explanation. Direct modal calls and action mutations recheck availability. In a campaign without feudal service, county and duchy grants use the ordinary hereditary transfer review without service-charter or tenure selectors.
+
+
+Optional title hierarchy presentation
+
+Map filter level labels resolve through the campaign lexicon on every render, including English. An absent level keeps its filter visible and disabled, with No title hierarchy as the status. Existing keyboard focus, Escape dismissal and map-filter navigation remain in charge. County Land details and progression hints explain customary rights when there is no district chain, instead of promising an unavailable de jure promotion.
+
+Customary war claims use the existing target list, exact-justification review, supporting Details and retained list state. The selected right includes its legal basis and exact right id; declaring after its revocation fails the existing revalidation. Multiple rights to one county remain separate choices.

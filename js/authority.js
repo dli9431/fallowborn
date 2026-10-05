@@ -432,6 +432,15 @@
       return copy(Object.assign({}, row, { effective:activeRight(s, row) }));
     });
   };
+  /* Recovery of county jurisdiction, independent of revenue or appointments.
+     Return detached evidence so a war quote can revalidate the exact right. */
+  Q.territorialClaims = function (s, actor, provinceId) {
+    if (!ref(s, actor)) return [];
+    return Q.rights(s, actor).filter(function (row) {
+      return row.effective && row.power === 'peace' && row.scope.kind === 'county' &&
+        (!provinceId || row.scope.id === provinceId);
+    });
+  };
   FB.authorityEstablishRight = function (s, terms) {
     terms = terms || {};
     var issuer = ref(s, terms.issuer), beneficiary = ref(s, terms.beneficiary);

@@ -1152,8 +1152,7 @@ where the province's heart is.
 
 ### Adding a province (a county)
 
-Provinces are **counties**: the map holds ~460 of them, each belonging to a de jure
-duchy. The canonical table lives in `data/counties.js` as compact rows
+Provinces are counties. The medieval map holds roughly 460, each with a de jure district; other bookmarks or regions may omit that link. The canonical table lives in data/counties.js as compact rows
 (`[id, name, lon, lat, duchy, culture, religion, terrain, dev, realm]`) and expands into
 province objects; mods merge full objects as before:
 
@@ -1247,12 +1246,7 @@ Counties → duchies → kingdoms → empires, all plain reference data:
   "duchies":  { "ile": { "name": "Île-de-France", "kingdom": "west_francia" } } }
 ```
 
-Each rank has its own slug namespace, so the same slug may identify a duchy
-and a kingdom. County `duchy`, duchy `kingdom` and kingdom `empire` references
-must resolve within their rank. Old `d_`, `k_` and `e_` aliases are accepted at
-these typed fields and normalized before activation. Alias/canonical duplicate
-keys or missing parents reject the bookmark; realm ids are separate and never
-rewritten by their spelling. New mods should author canonical slugs.
+Each level has its own slug namespace, so the same slug may identify a district and a kingdom. Supplied county duchy, district kingdom and kingdom empire references must resolve within their typed level; omitted or null parents end the chain. Old d_, k_ and e_ aliases are accepted and normalized before activation. Duplicate aliases or unknown supplied parents reject the bookmark. Realm ids remain separate. New mods should author canonical slugs.
 
 The engine uses it for the player's rank-claim eligibility (majority of a
 duchy/kingdom/empire), realm naming, and the Land panel's hierarchy display. Mods may add
@@ -5217,3 +5211,11 @@ Resolution is registry default, campaign era, scoped government, scoped faith, t
 Content definitions may declare systems as a nonempty array of required ids, or system as one required id. Do not declare both. All requirements must be enabled. Deeds, focuses, events, event triggers, options and option requirements, traits, policies, privileges, elections, political blocs, religious paths, feudal service charters, tenure archetypes and council seats carry these requirements. Content disabled in the current scope is hidden and cannot be invoked directly. Bookmarks and mods reject unknown content requirements, including nested event options, before application. See docs/designs/systems.md for lifecycle and save behavior.
 
 Display government resolution uses FB.station.context consistently for lexicon lookups and portraits. An explicit lexicon realm overrides the viewer; otherwise the player's own living realm or immediate liege applies, NPC rulers use their realm, and other NPCs use their residence holder. A form's costume affects those subjects only, with the era costume as fallback. Campaign loading may call FB.activateBookmark(id, progress, done, { geography: savedGeographyId }) to retain a saved physical base without changing the bookmark registry.
+
+Optional title hierarchy contract
+
+Bookmark duchies, kingdoms and empires tables may be omitted or empty. County duchy, district kingdom and kingdom empire may be omitted or null. An absent parent ends the chain. A supplied parent must be a valid canonical slug or a matching legacy d_, k_ or e_ alias in the referenced table. An empty string or unknown supplied id is an error, even when other counties have no hierarchy. This supports mixed regions and worlds without any levels.
+
+FB.titleLevels.name(state, kind, context) resolves the level's term with optional realm, viewer and form context. FB.titleLevels.holder uses the corresponding localized rank label. Override duchy, kingdom, empire and the holder terms in data/lexicons.js; the stable mechanical ids and title aliases do not change. FB.dejureOf returns an empty object for a county without a district, and null for absent upper parents. County-list helpers return empty arrays for absent ids.
+
+Outside a county's title hierarchy, effective customary Peace rights can support recovery of county jurisdiction. FB.political.territorialClaims(state, actorRef, provinceId) returns detached effective rights. FB.customaryWarRights supplies ordinary war causes with type customary, target, rightId and basis. Jurisdiction must come from an existing authority right; revenue rights and appointments are not territorial claims. The ordinary declaration gate requires the exact effective right and a connected frontier. In-flight campaigns retain their recorded evidence. Global sacred target definitions outside the bookmark's title map are inactive.

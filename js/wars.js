@@ -648,6 +648,7 @@
   FB.territorialWarRights = function (state, rid, pid) {
     const out = [], dj = FB.dejureOf(pid), r = state.realms[rid];
     if (!r || !r.alive) return out;
+    if (!dj.duchy) out.push.apply(out, FB.customaryWarRights(state, rid, pid));
     if (rid === 'player') {
       const p = state.player;
       const titles = { duchy:FB.station.isDucal(p, state) ? FB.playerDuchies(state) : [],
@@ -665,6 +666,20 @@
       if (kind && capital[kind] && capital[kind] === dj[kind]) out.push({
         type:'dejure', target:pid, titleKind:kind, titleId:dj[kind] });
     }
+    return out;
+  };
+  FB.customaryWarRights = function (state, rid, pid) {
+    const province = FB.world && FB.world.byId[pid];
+    if (!province || province.wasteland || FB.dejureOf(pid).duchy ||
+        !FB.political.territorialClaims) return [];
+    const actors = [{ kind:'realm', id:rid }];
+    if (rid === 'player') actors.push({ kind:'character', id:state.player.charId });
+    const out = [];
+    actors.forEach(function (actor) {
+      FB.political.territorialClaims(state, actor, pid).forEach(function (right) {
+        out.push({ type:'customary', target:pid, rightId:right.id, basis:right.basis });
+      });
+    });
     return out;
   };
   function territorialRightsForInspection(state, rid, pid, inspection) {
@@ -685,7 +700,11 @@
   };
   function packageKey(attacker, causes) {
     return JSON.stringify([attacker, causes[0] && causes[0].enemy,
-      causes.map(function (c) { return [c.target, c.type, c.titleKind || '', c.titleId || '']; }).sort()]);
+      causes.map(function (c) {
+        const key = [c.target, c.type, c.titleKind || '', c.titleId || ''];
+        if (c.type === 'customary') key.push(c.rightId || '');
+        return key;
+      }).sort()]);
   }
   function liegeOf(state, rid) {
     return rid === 'player' ? state.player.liege : state.realms[rid] && state.realms[rid].liege;
@@ -723,12 +742,14 @@
     const selected = {}, frontier = inspection ? inspection.frontier : FB.realmTerritory(state, rid), starts = [];
     for (const cause of causes) {
       if (cause.enemy !== enemy || selected[cause.target]) return fail(FB.T('Choose distinct objectives against one defender.'));
-      if (causes.length > 1 && ['dejure', 'fabricated'].indexOf(cause.type) < 0) return fail(FB.T('Only lawful territorial claims can be combined.'));
+      if (causes.length > 1 && ['dejure', 'fabricated', 'customary'].indexOf(cause.type) < 0) return fail(FB.T('Only lawful territorial claims can be combined.'));
       if (special && causes.length > 1) return fail(FB.T('This campaign has one distinct outcome.'));
       if (!special) {
         if (FB.warTargetDefender(state, rid, cause.target) !== enemy) return fail(FB.T('An objective is no longer held by that defender.'));
         if (cause.type !== 'aggression' && !territorialRightsForInspection(state, rid, cause.target, inspection).some(function (right) {
-          return right.type === cause.type && (right.titleKind || '') === (cause.titleKind || '') && (right.titleId || '') === (cause.titleId || '');
+          return right.type === cause.type && (right.titleKind || '') === (cause.titleKind || '') && (right.titleId || '') === (cause.titleId || '') &&
+            (right.rightId || '') === (cause.rightId || '') &&
+            (cause.type !== 'customary' || right.basis === cause.basis);
         })) return fail(FB.T('You no longer hold that territorial right.'));
       }
       selected[cause.target] = 1;
@@ -945,7 +966,7 @@
     // AI arrest resistance follows the same occupation/peace path as annual
     // AI breakaways. Player independence keeps its dedicated outcome handler.
     return (!endpoint(w, 'player') && w.casus && w.casus.type === 'independence') ||
-      ['claims', 'dejure', 'fabricated', 'aggression', 'border', 'consolidation', 'enforcement', 'county_replacement'].indexOf(w.casus && w.casus.type || 'border') >= 0;
+      ['claims', 'dejure', 'fabricated', 'customary', 'aggression', 'border', 'consolidation', 'enforcement', 'county_replacement'].indexOf(w.casus && w.casus.type || 'border') >= 0;
   }
   function finishObjectives(state, w) {
     return withPeaceReceipt(state, w, function () { return finishObjectivesApply(state, w); });
@@ -1207,7 +1228,7 @@
     let reason = '';
     if (['customary', 'permission', 'prohibited'].indexOf(level) < 0) reason = FB.T('Unknown law level.');
     else if (currentLevel === level) reason = FB.T('This is already the standing policy.');
-    else if (!r || !r.alive || r.liege || state.player.liege || !FB.station.isDucal(state.player, state)) reason = FB.T('Only an independent duke or crowned sovereign may proclaim war laws.');
+    else if (!r || !r.alive || r.liege || state.player.liege || !FB.station.isDucal(state.player, state)) reason = FB.T('Only an independent {term:duke} or crowned sovereign may proclaim war laws.');
     else if (record && record.setYear === state.date.year) reason = FB.T('This law has already changed this year.');
     else if (state.player.gold < cost) reason = FB.T('Requires {money:cost}.', { cost:cost });
     return { ready:!reason, current:level === currentLevel, reason:reason, cost:cost };

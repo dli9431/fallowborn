@@ -31,10 +31,35 @@ window.FB = window.FB || {};
       { rank:rank, id:id === undefined ? '?' : id, where:where });
     return canonical;
   }
+  function parent(rank, id, table, where) {
+    return id === undefined || id === null ? null : resolve(rank, id, table, where);
+  }
+  /* Stable mechanical levels; their display words belong to the lexicon. */
+  FB.titleLevels = {
+    kinds:['duchy', 'kingdom', 'empire'],
+    table:function (kind) { return FBDATA[plurals[kind]] || {}; },
+    name:function (state, kind, context) { return FB.term(state, kind, context); },
+    holder:function (state, kind, context) {
+      var tier = { duchy:5, kingdom:6, empire:7 }[kind];
+      return FB.lexicon.renderRank(FB.lexicon.rank(state, tier, context));
+    },
+    has:function (kind, id) { return !!id && own(this.table(kind), id); }
+  };
   T.resolve = function (rank, id, table) {
     var canonical = slug(rank, id);
     return canonical && own(table || FBDATA[plurals[rank]], canonical)
       ? canonical : null;
+  };
+  /* Global faith targets may belong to a different bookmark's title map. */
+  T.known = function (rank, id) {
+    var canonical = slug(rank, id), plural = plurals[rank];
+    if (!canonical) return false;
+    if (own(FBDATA[plural], canonical)) return true;
+    for (var bookmarkId in FBDATA.bookmarks || {}) {
+      var table = FBDATA.bookmarks[bookmarkId][plural];
+      if (own(table, canonical) || own(table, prefixes[rank] + canonical)) return true;
+    }
+    return false;
   };
   function normalizeTable(table, rank, where) {
     var out = {};
@@ -77,21 +102,27 @@ window.FB = window.FB || {};
     }
     return out;
   }
-  function holyWarConfig(religions, tables) {
+  function holyWarConfig(religions, tables, inactiveTargets) {
+    function configuredTarget(id, where) {
+      var canonical = slug('kingdom', id);
+      if (inactiveTargets && canonical && !own(tables.kingdoms, canonical) &&
+          T.known('kingdom', canonical)) return canonical;
+      return resolve('kingdom', id, tables.kingdoms, where);
+    }
     for (var religionId in religions) if (own(religions, religionId)) {
       var properties = religions[religionId].properties;
       var head = properties && properties.head || religions[religionId].head;
       var config = head && head.greatHolyWar;
       if (!config) continue;
-      if (config.firstTarget) config.firstTarget = resolve('kingdom',
-        config.firstTarget, tables.kingdoms, 'religions.' + religionId + '.firstTarget');
+      if (config.firstTarget) config.firstTarget = configuredTarget(
+        config.firstTarget, 'religions.' + religionId + '.firstTarget');
       if (Array.isArray(config.crisisKingdoms))
         config.crisisKingdoms = config.crisisKingdoms.map(function (id) {
-          return resolve('kingdom', id, tables.kingdoms,
+          return configuredTarget(id,
             'religions.' + religionId + '.crisisKingdoms');
         });
       for (var target of config.sacredTargets || [])
-        target.kingdom = resolve('kingdom', target.kingdom, tables.kingdoms,
+        target.kingdom = configuredTarget(target.kingdom,
           'religions.' + religionId + '.sacredTargets');
     }
   }
@@ -131,16 +162,16 @@ window.FB = window.FB || {};
     out.kingdoms = normalizeTable(definition.kingdoms, 'kingdom', where);
     out.duchies = normalizeTable(definition.duchies, 'duchy', where);
     for (var kid in out.kingdoms) if (own(out.kingdoms, kid))
-      out.kingdoms[kid].empire = resolve('empire',
+      out.kingdoms[kid].empire = parent('empire',
         out.kingdoms[kid].empire, out.empires, where + '.kingdoms.' + kid);
     for (var did in out.duchies) if (own(out.duchies, did))
-      out.duchies[did].kingdom = resolve('kingdom',
+      out.duchies[did].kingdom = parent('kingdom',
         out.duchies[did].kingdom, out.kingdoms, where + '.duchies.' + did);
     out.provinces = Array.isArray(definition.provinces)
       ? definition.provinces.map(function (province) {
         if (!province || province.wasteland) return province;
         var row = Object.assign({}, province);
-        row.duchy = resolve('duchy', province.duchy, out.duchies,
+        row.duchy = parent('duchy', province.duchy, out.duchies,
           where + '.province.' + (province.id || '?'));
         return row;
       }) : definition.provinces;
@@ -161,13 +192,13 @@ window.FB = window.FB || {};
       Object.assign(tables[plural], out[plural]);
     }
     for (var kid in out.kingdoms || {}) if (own(out.kingdoms, kid))
-      out.kingdoms[kid].empire = resolve('empire', out.kingdoms[kid].empire,
+      out.kingdoms[kid].empire = parent('empire', out.kingdoms[kid].empire,
         tables.empires, 'mod.kingdoms.' + kid);
     for (var did in out.duchies || {}) if (own(out.duchies, did))
-      out.duchies[did].kingdom = resolve('kingdom', out.duchies[did].kingdom,
+      out.duchies[did].kingdom = parent('kingdom', out.duchies[did].kingdom,
         tables.kingdoms, 'mod.duchies.' + did);
     if (Array.isArray(mod.provinces)) out.provinces = mod.provinces.map(function (row) {
-      if (!row || row.wasteland || !row.duchy) return row;
+      if (!row || row.wasteland || row.duchy === undefined || row.duchy === null) return row;
       var result = Object.assign({}, row);
       result.duchy = resolve('duchy', row.duchy, tables.duchies,
         'mod.province.' + (row.id || '?'));
@@ -204,7 +235,7 @@ window.FB = window.FB || {};
   T.migrateState = function (state, definition) {
     var tables = T.normalizeBookmark(definition || FBDATA);
     var result = titleFields(state, tables, 'save.state');
-    if (result.faiths) holyWarConfig(result.faiths, tables);
+    if (result.faiths) holyWarConfig(result.faiths, tables, true);
     if (result.greatHolyWarHistory && Array.isArray(result.greatHolyWarHistory.campaigns))
       for (var call of result.greatHolyWarHistory.campaigns)
         if (call.target) call.target = resolve('kingdom', call.target,
