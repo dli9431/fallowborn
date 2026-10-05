@@ -1744,7 +1744,7 @@ window.FB = window.FB || {};
         FB.news(state, FB.msg('news.religion.head_vacant',
           '⛪ The office of {title} stands vacant after {realm} falls.', {
             title:FB.dataParam('religion', religionId, 'head.title'),
-            realm:realm ? realm.name : realmId
+            realm:realm ? FB.realmNameParam(state, realm) : realmId
           }));
       }
     }

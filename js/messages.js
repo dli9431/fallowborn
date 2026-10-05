@@ -583,6 +583,10 @@ window.FB = window.FB || {};
         // Older notices sometimes contain a list of county names.
         if (value.indexOf(', ') >= 0) value.split(', ').forEach(function (part) { if (audienceRealm[part]) mask |= 2; });
       } else if (typeof value === 'object') {
+        if (value.$realmName) {
+          if (audienceRealm[value.$realmName.realmId]) mask |= 2;
+          return;
+        }
         for (const key in value) inspect(value[key], depth + 1);
       }
     }

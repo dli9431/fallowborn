@@ -1561,6 +1561,10 @@ Title snapshots read the proper place from the record or typed title, never
 strip a translated prefix. Generated dynasty fallback names use the proper place
 so a locale change cannot alter family identity.
 
+Inheritance copies the adopted primary realm's naming record and explicit title claim independently. The copy does not share the inherited realm's mutable naming object. An adopted custom proper name replaces the display getter, and an adopted realm without a claim clears the previous primary claim. A lower-ranked inheritance leaves the player's primary name and claim in place.
+
+Saved news uses FB.realmNameParam for generated realm names. Its detached $realmName record captures realmId, naming kind, proper place and the winning term's catalog key, English source and capitalization. Historical news therefore retains the original style after promotion, renaming or realm death and renders it in the active locale without consulting the current realm. Custom proper names and older string parameters remain supported. Audience classification reads the captured realm id; inheritance notices explicitly retain their personal and realm audience.
+
 Creation and restore recover matching legacy English generated title names once
 and rebind saved naming records without RNG or UID changes. Crown recognition
 only reads the canonical kingdom claim. A display name alone never creates or

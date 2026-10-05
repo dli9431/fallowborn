@@ -4,7 +4,8 @@
    most specific layer that defines a term winning. Running text reaches it
    through {term:...} placeholders (js/i18n.js), rank titles through
    FB.lexicon.rank and structured data relabels through FB.lexicon.label.
-   Every answer is display text; nothing here is saved or simulated. */
+   Saved term snapshots retain the English source and catalog key, never a
+   rendered translation or simulation rule. */
 window.FB = window.FB || {};
 
 (function () {
@@ -153,19 +154,30 @@ window.FB = window.FB || {};
     return head + '.terms.' + found.termId + sexPart + '.' + path + '.default';
   }
 
+  /* Capture the winning word before its realm changes or disappears. */
+  L.termSnapshot = function (state, termId, ctx) {
+    ctx = ctx || {};
+    var found = L.find(state, termId, ctx);
+    if (!found) return { text:termId };
+    var form = own(FORMS, ctx.form) ? ctx.form : 'one';
+    var sex = plain(found.value.f) ? resolver(state, ctx)('sex') : null;
+    var picked = formOf(found.value, form, sex);
+    if (typeof picked.text !== 'string') return { text:termId };
+    return { key:termKey(found, picked.path, sex), text:picked.text,
+      capital:!!(picked.capital || ctx.capital) };
+  };
+  L.renderTermSnapshot = function (snapshot) {
+    if (!snapshot || typeof snapshot.text !== 'string') return '';
+    var text = snapshot.key
+      ? FB.renderKey(snapshot.key, { text:snapshot.text }, {}) : snapshot.text;
+    return snapshot.capital ? capitalize(text) : text;
+  };
+
   /* One term, localized. ctx.form is one (default), other or title;
      ctx.capital capitalizes the first letter. An unknown term renders its
      id so a broken placeholder stays visible. */
   FB.term = function (state, termId, ctx) {
-    ctx = ctx || {};
-    var found = L.find(state, termId, ctx);
-    if (!found) return termId;
-    var form = own(FORMS, ctx.form) ? ctx.form : 'one';
-    var sex = plain(found.value.f) ? resolver(state, ctx)('sex') : null;
-    var picked = formOf(found.value, form, sex);
-    if (typeof picked.text !== 'string') return termId;
-    var text = FB.renderKey(termKey(found, picked.path, sex), { text:picked.text }, {});
-    return picked.capital || ctx.capital ? capitalize(text) : text;
+    return L.renderTermSnapshot(L.termSnapshot(state, termId, ctx));
   };
 
   /* The {term:...} placeholder body after "term:" or "Term:", for example

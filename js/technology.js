@@ -977,7 +977,7 @@ window.FB = window.FB || {};
       var realm = state.realms && state.realms[rid];
       FB.news(state, FB.msg('news.tech.completed',
         '💡 {realm} completes {technology}.', {
-          realm:realm ? realm.name : rid,
+          realm:realm ? FB.realmNameParam(state, realm) : rid,
           technology:FB.dataParam('tech', id)
         }));
       if (FB.ui && FB.ui.toast) {

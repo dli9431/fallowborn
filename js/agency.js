@@ -1583,7 +1583,7 @@ window.FB = window.FB || {};
         'agency:royal_match_refused');
       FB.news(state, FB.msg('news.agency.royal_match_refused',
         'ðŸ“œ The court of {realm} refuses the proposed match between {student} and {partner}.', {
-          realm:realm.name,
+          realm:FB.realmNameParam(state, realm),
           student:target.name,
           partner:partner.name
         }));
@@ -1602,7 +1602,7 @@ window.FB = window.FB || {};
     if (!sealRoyalFamilyMatch(state, ctx, function () {
       FB.news(state, FB.msg('news.agency.royal_match_accepted',
         'ðŸ¤ {realm} accepts the match between {student} and {partner}.', {
-          realm:realm.name,
+          realm:FB.realmNameParam(state, realm),
           student:target.name,
           partner:partner.name
         }));

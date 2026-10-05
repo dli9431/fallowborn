@@ -276,7 +276,7 @@ window.FB = window.FB || {};
         homeCounty:pid, at:pid, from:pid, men:men, size:men, units:{ levy:men },
         moveLeft:0, path:[], goal:null, supply:100 });
       notice(state, 'muster', {
-        county:countyName(pid), men:men, realm:state.realms[group.target].name });
+        county:countyName(pid), men:men, realm:FB.realmNameParam(state, state.realms[group.target]) });
     }
     FB.addModifier(state, 'commons_uprising', pid, { silent:true });
     var effect = FB.countyModifierRecords(state, pid).filter(function (r) { return r.id === 'commons_uprising'; })[0];

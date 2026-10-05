@@ -3949,8 +3949,9 @@ window.FB = window.FB || {};
     if (person.name) return person.name + (person.dyn ? ' ' + person.dyn : '');
     return '';
   }
-  function transitionAuthorityName(state, ctx, former) {
-    if (!ctx) return FB.T('the local authority');
+  function transitionAuthorityName(state, ctx, former, semantic) {
+    if (!ctx) return semantic ? FB.messageParam(FB.msg('fx.param.the_local_authority',
+      'the local authority', {})) : FB.T('the local authority');
     const prefix = former ? 'old' : 'new';
     const localId = ctx[prefix + 'LocalLordId'];
     const local = localId && state.chars && state.chars[localId];
@@ -3973,13 +3974,16 @@ window.FB = window.FB || {};
       const rulerName = authorityPersonName(state, ruler);
       if (rulerName) return rulerName;
       const realm = state.realms && state.realms[realmId];
-      if (realm && realm.name) return realm.name;
+      if (realm && realm.name) return semantic ? FB.realmNameParam(state, realm) : realm.name;
     }
     if (local) return FB.fullName(local);
     const fallbackRealmId = ctx[prefix + 'HolderRealmId'];
     const fallbackRealm = fallbackRealmId && state.realms &&
       state.realms[fallbackRealmId];
-    return fallbackRealm && fallbackRealm.name || FB.T('the local authority');
+    return fallbackRealm && fallbackRealm.name
+      ? (semantic ? FB.realmNameParam(state, fallbackRealm) : fallbackRealm.name)
+      : (semantic ? FB.messageParam(FB.msg('fx.param.the_local_authority',
+        'the local authority', {})) : FB.T('the local authority'));
   }
   function transitionCauseText(cause) {
     if (cause === 'local_lord_succession') {
@@ -3999,38 +4003,53 @@ window.FB = window.FB || {};
     if (cause === 'war_pressure') return FB.T('wartime pressure');
     return FB.T('authority change');
   }
-  function transitionAuthorityChangeText(state, ctx) {
-    const former = transitionAuthorityName(state, ctx, true);
-    const current = transitionAuthorityName(state, ctx, false);
+  function transitionAuthorityChangeText(state, ctx, semantic) {
+    const former = transitionAuthorityName(state, ctx, true, semantic);
+    const current = transitionAuthorityName(state, ctx, false, semantic);
     const causes = ctx && ctx.transitionCauses || [];
     const holderChanged = causes.indexOf('county_transfer') >= 0 ||
       causes.indexOf('holder_succession') >= 0;
     const sovereignChanged = causes.indexOf('sovereign_change') >= 0;
     if (holderChanged) {
+      if (semantic) return FB.messageParam(FB.msg('fx.param.authority_change.holder',
+        'The county’s direct authority has passed from {former} to {current}.',
+        { former:former, current:current }));
       return FB.T(
         'The county’s direct authority has passed from {former} to {current}.',
         { former:former, current:current });
     }
     if (sovereignChanged) {
+      if (semantic) return FB.messageParam(FB.msg('fx.param.authority_change.sovereign',
+        'Sovereign authority above the county has changed from {former} to {current}.',
+        { former:former, current:current }));
       return FB.T(
         'Sovereign authority above the county has changed from {former} to {current}.',
         { former:former, current:current });
     }
     if (ctx && ctx.oldLocalLordId !== ctx.newLocalLordId) {
+      if (semantic) return FB.messageParam(FB.msg('fx.param.authority_change.local',
+        'The household’s local lordship has passed from {former} to {current}.',
+        { former:former, current:current }));
       return FB.T(
         'The household’s local lordship has passed from {former} to {current}.',
         { former:former, current:current });
     }
     if (causes.indexOf('custom_confirmed') >= 0) {
+      if (semantic) return FB.messageParam(FB.msg('fx.param.authority_change.custom_confirmed',
+        'Written custom has been confirmed under {current}.', { current:current }));
       return FB.T('Written custom has been confirmed under {current}.', {
         current:current
       });
     }
     if (causes.indexOf('custom_unconfirmed') >= 0) {
+      if (semantic) return FB.messageParam(FB.msg('fx.param.authority_change.custom_unconfirmed',
+        'Written custom is no longer confirmed under {current}.', { current:current }));
       return FB.T('Written custom is no longer confirmed under {current}.', {
         current:current
       });
     }
+    if (semantic) return FB.messageParam(FB.msg('fx.param.authority_change.reviewed',
+      'The household custom is reviewed under {current}.', { current:current }));
     return FB.T('The household custom is reviewed under {current}.', {
       current:current
     });
@@ -4111,7 +4130,8 @@ window.FB = window.FB || {};
           break;
         }
         case 'realm':
-          out[k] = realm ? realm.name :
+          out[k] = ctx && ctx[k] !== undefined ? ctx[k] :
+            realm ? (semantic ? FB.realmNameParam(state, realm) : realm.name) :
             (semantic ? neutralParam('fx.param.the_realm') : FB.T('the realm'));
           break;
         case 'year': out[k] = String(state.date.year); break;
@@ -4143,7 +4163,8 @@ window.FB = window.FB || {};
         case 'enemy': {
           const war = state.player.war;
           const enemy = war ? state.realms[war.enemy] : null;
-          out[k] = enemy ? enemy.name :
+          out[k] = ctx && ctx[k] !== undefined ? ctx[k] :
+            enemy ? (semantic ? FB.realmNameParam(state, enemy) : enemy.name) :
             (semantic ? neutralParam('fx.param.the_enemy') : FB.T('the enemy'));
           break;
         }
@@ -4185,14 +4206,16 @@ window.FB = window.FB || {};
         }
         case 'liege': {
           const liege = state.player.liege ? state.realms[state.player.liege] : null;
-          out[k] = liege ? liege.name :
+          out[k] = ctx && ctx[k] !== undefined ? ctx[k] :
+            liege ? (semantic ? FB.realmNameParam(state, liege) : liege.name) :
             (semantic ? neutralParam('fx.param.your_liege') : FB.T('your {term:liege}'));
           break;
         }
         case 'rname': {
           const namedRealmId = ctx && (ctx.realmId || ctx.rid);
           const namedRealm = namedRealmId ? state.realms[namedRealmId] : null;
-          out[k] = namedRealm ? namedRealm.name :
+          out[k] = ctx && ctx[k] !== undefined ? ctx[k] :
+            namedRealm ? (semantic ? FB.realmNameParam(state, namedRealm) : namedRealm.name) :
             (semantic ? neutralParam('fx.param.the_realm') : FB.T('the realm'));
           break;
         }
@@ -4211,13 +4234,13 @@ window.FB = window.FB || {};
           break;
         }
         case 'formerAuthority':
-          out[k] = transitionAuthorityName(state, ctx, true);
+          out[k] = transitionAuthorityName(state, ctx, true, semantic);
           break;
         case 'currentAuthority':
-          out[k] = transitionAuthorityName(state, ctx, false);
+          out[k] = transitionAuthorityName(state, ctx, false, semantic);
           break;
         case 'authorityChange':
-          out[k] = transitionAuthorityChangeText(state, ctx);
+          out[k] = transitionAuthorityChangeText(state, ctx, semantic);
           break;
         case 'transitionCauses': {
           const causes = ctx && ctx.transitionCauses || [];
@@ -13085,7 +13108,7 @@ window.FB = window.FB || {};
         defending: true, casus: { type: 'independence', formerLiege: formerLiege } };
       FB.news(state, FB.msg('news.event.independence_war',
         '⚔ {realm} will not let you go without a fight!',
-        { realm: state.realms[oldLiege].name }));
+        { realm: FB.realmNameParam(state, state.realms[oldLiege]) }));
       FB.warFooting(state);
       FB.queueWarEvent(state, 'war_defense_muster', {});
     }
@@ -13175,7 +13198,7 @@ window.FB = window.FB || {};
       }
     }, {
       named: state.realms[old] ? 'yes' : 'other',
-      lord: state.realms[old] ? state.realms[old].name : '',
+      lord: state.realms[old] ? FB.realmNameParam(state, state.realms[old]) : '',
       province: pr.name
     }));
     FB.checkTierPromotions(state);
@@ -13207,8 +13230,8 @@ window.FB = window.FB || {};
       }
     }, {
       named: state.realms[old] ? 'yes' : 'other',
-      new_liege: r.name,
-      old_liege: state.realms[old] ? state.realms[old].name : ''
+      new_liege: FB.realmNameParam(state, r),
+      old_liege: state.realms[old] ? FB.realmNameParam(state, state.realms[old]) : ''
     }));
     if (FB.invalidateGuildMonopolies) FB.invalidateGuildMonopolies(state);
   };
@@ -13236,7 +13259,7 @@ window.FB = window.FB || {};
     FB.invalidateRealmCache();
     if (FB.mergeRealmTech) FB.mergeRealmTech(state, rid, formerSovereign);
     FB.news(state, FB.msg('news.event.vassal_released',
-      '🕊 {realm} goes its own way, released from your fealty.', { realm: r.name }));
+      '🕊 {realm} goes its own way, released from your fealty.', { realm: FB.realmNameParam(state, r) }));
     if (FB.ui && FB.ui.mapDirty) FB.ui.mapDirty();
   };
   /* answer a revolt (or a refused revocation) with war — the rebel stands
@@ -13291,7 +13314,7 @@ window.FB = window.FB || {};
     FB.invalidateRealmCache();
     if (FB.councilAuthority) FB.councilAuthority(state, 6); // a fief taken back: the crown reaches, the council notes
     FB.news(state, FB.msg('news.event.fief_reclaimed',
-      '📜 The {term:fief} returns to your demesne. {realm} is no more.', { realm: r.name }));
+      '📜 The {term:fief} returns to your demesne. {realm} is no more.', { realm: FB.realmNameParam(state, r) }));
     FB.checkTierPromotions(state);
   };
   FB.fns.vassal_refuse = function (state, ctx) {
@@ -13333,7 +13356,7 @@ window.FB = window.FB || {};
     adjustRealmStanding(state, worst, -20, 'event:vassal_insist');
     FB.news(state, FB.msg('news.event.vassal_tax_paid',
       '💰 {realm} pays {money:gold} under protest.',
-      { realm: state.realms[worst].name, gold: g }));
+      { realm: FB.realmNameParam(state, state.realms[worst]), gold: g }));
     if (realmStanding(state, worst) <= -50) {
       FB.queueEvent(state, 'vassal_revolt', { rid:worst });
     }
@@ -13346,7 +13369,7 @@ window.FB = window.FB || {};
       if (r.alive && r.war && state.realms[r.war.enemy] && state.realms[r.war.enemy].alive) {
         wars.push(FB.msg('news.world.random_war',
           '⚔ {attacker} wars against {defender}.',
-          { attacker: r.name, defender: state.realms[r.war.enemy].name }));
+          { attacker: FB.realmNameParam(state, r), defender: FB.realmNameParam(state, state.realms[r.war.enemy]) }));
       }
     }
     if (wars.length) FB.news(state, FB.pick(wars));
@@ -13358,7 +13381,7 @@ window.FB = window.FB || {};
         if (s > bs) { bs = s; big = state.realms[id]; }
       }
       if (big) FB.news(state, FB.msg('news.world.mightiest_realm',
-        '👑 They say {realm} is the mightiest power of the age.', { realm: big.name }));
+        '👑 They say {realm} is the mightiest power of the age.', { realm: FB.realmNameParam(state, big) }));
     }
   };
 })();

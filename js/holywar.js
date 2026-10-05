@@ -69,11 +69,11 @@ window.FB = window.FB || {};
 
   function realmName(state, rid) {
     if (rid === 'player') {
-      if (state.realms.player && state.realms.player.name) return state.realms.player.name;
+      if (state.realms.player && state.realms.player.name) return FB.realmNameParam(state, state.realms.player);
       var pc = state.chars && state.chars[state.player.charId];
       return pc ? FB.fullName(pc) : 'player';
     }
-    return state.realms[rid] ? state.realms[rid].name : rid;
+    return FB.realmNameParam(state, rid);
   }
 
   function ownerFaith(state, pid) {
@@ -2596,16 +2596,16 @@ window.FB = window.FB || {};
       var rid = settlement.awardRealms[asset.id], realm = state.realms[rid];
       var params = {
         kingdom:kingdom ? kingdom.name : campaign.targetKingdom,
-        realm:realm ? realm.name : rid,
+        realm:realm ? FB.realmNameParam(state, realm) : rid,
         ruler:rid === 'player' ? playerName : realm && realm.ruler && realm.ruler.name
       };
       if (realm && asset.land) {
         params.counties = countyNames(settlement.captured.filter(function (pid) {
           return ((state.holder && state.holder[pid]) || state.owner[pid]) === rid;
         }));
-        params.ruler = params.ruler || realm.name;
+        params.ruler = params.ruler || FB.realmNameParam(state, realm);
         if (realm.liege && state.realms[realm.liege]) {
-          params.liege = state.realms[realm.liege].name;
+          params.liege = FB.realmNameParam(state, state.realms[realm.liege]);
           FB.news(state, FB.msg('news.holywar.award_vassal',
             'Settlement of {kingdom}: {ruler} rules {realm}, holding {counties} as a {term:vassal} of {liege}.', params), { toast:false });
         } else {

@@ -472,7 +472,9 @@ window.FBDATA = window.FBDATA || {};
     for (const key in (params || {})) {
       if (!own(params, key)) continue;
       const value = params[key];
-      if (value && typeof value === 'object' && value.$item &&
+      if (value && typeof value === 'object' && value.$realmName && FB.renderRealmNameSnapshot) {
+        out[key] = FB.renderRealmNameSnapshot(value.$realmName);
+      } else if (value && typeof value === 'object' && value.$item &&
         value.$item.defId && FB.itemNameFromSnapshot) {
         out[key] = state
           ? FB.itemNameFromSnapshot(state, viewer, value.$item)

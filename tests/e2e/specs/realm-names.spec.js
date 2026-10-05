@@ -6,7 +6,7 @@ dependsOnRuntime(__filename, [
   'js/governments.js', 'js/ambitions.js', 'js/actions.js', 'js/holywar.js',
   'js/main.js', 'js/messages.js', 'js/politics.js',
   'data/lexicons.js', 'data/eras.js', 'data/bookmarks.js', 'data/bookmark_476.js',
-  'data/counties.js', 'data/map_data.js'
+  'data/counties.js', 'data/map_data.js', 'data/political_institutions.js'
 ]);
 const { test, expect } = require('../support/fixture');
 const { openGame } = require('../support/game/navigation');
@@ -162,4 +162,112 @@ test('scripted realm creation preserves an explicit claim behind a custom proper
   expect(result.kind).toBe('kingdom');
   expect(result.id).toBe(result.expected);
   expect(result.claim).toBe(result.expected);
+});
+
+test('inheriting a generated crown copies its naming record and canonical claim', async function ({ page }) {
+  const result = await page.evaluate(function () {
+    const s = FB.state, p = s.player, me = s.chars[p.charId];
+    p.tier = 5; p.provs = [p.provinceId]; p.liege = null;
+    FB.foundPlayerRealm(s);
+    const mine = s.realms.player;
+    FB.setRealmTitle(s, mine, 'duchy', Object.keys(FBDATA.duchies)[0]);
+    const kid = Object.keys(FBDATA.kingdoms).find(function (id) {
+      return FB.kingdomCounties(id).some(function (pid) { return pid !== p.provinceId; });
+    });
+    const capital = FB.kingdomCounties(kid).find(function (pid) { return pid !== p.provinceId; });
+    const inherited = FB.makeVassalRealm(s, { id:'e2e_inherited_crown', titleKind:'kingdom',
+      titleId:kid, capital:capital, rank:3, liege:null, culture:'frankish', religion:'catholic' });
+    FB.authoritySeedGovernments(s, { player:'roman_civic', e2e_inherited_crown:'regnum' });
+    s.owner[capital] = s.holder[capital] = inherited.id;
+    FB.invalidateRealmCache();
+    const joined = FB.absorbRealm(s, inherited.id, me);
+    const news = s.log.find(function (entry) {
+      return entry.msg && entry.msg.key === 'news.world.realm_inherited';
+    });
+    const independentStyle = mine.nameStyle !== inherited.nameStyle;
+    inherited.nameStyle.place = 'Changed after inheritance';
+    const name = mine.name;
+    const saved = JSON.parse(FB.save.serialize());
+    const stored = saved.state.realms.player;
+    FB.save.restore(FB.save.v4.migrate(saved));
+    const restored = FB.state.realms.player;
+    return { joined:joined, independentStyle:independentStyle, name:name,
+      place:FBDATA.kingdoms[kid].name, kid:kid, style:stored.nameStyle,
+      noRenderedName:!Object.prototype.hasOwnProperty.call(stored, 'name'),
+      kind:restored.titleKind, id:restored.titleId, restoredName:restored.name,
+      titlePlace:FB.realmTitlePlace(restored),
+      newsName:news.msg.params.realm.$realmName, newsAudience:news.audience,
+      newsText:FB.newsText(news, FB.state) };
+  });
+  expect(result.joined).toBe(true);
+  expect(result.independentStyle).toBe(true);
+  expect(result.noRenderedName).toBe(true);
+  expect(result.style).toEqual({ kind:'kingdom', place:result.place });
+  expect(result.kind).toBe('kingdom');
+  expect(result.id).toBe(result.kid);
+  expect(result.titlePlace).toBe(result.place);
+  expect(result.name).toBe('Diocese of ' + result.place);
+  expect(result.restoredName).toBe(result.name);
+  expect(result.newsName.place).toBe(result.place);
+  expect(result.newsName.term.text).toBe('kingdom');
+  expect(result.newsText).toBe('👑 Kingdom of ' + result.place + ' joins your rule by rightful succession.');
+  expect(result.newsAudience).toBe(3);
+});
+
+for (const hasClaim of [true, false]) {
+  test('inheriting a custom realm ' + (hasClaim ? 'copies its explicit claim' : 'clears the previous claim'),
+    async function ({ page }) {
+      const result = await page.evaluate(function (claim) {
+        const s = FB.state, p = s.player;
+        p.tier = 6; p.provs = [p.provinceId]; p.liege = null;
+        FB.foundPlayerRealm(s);
+        const mine = s.realms.player;
+        const kids = Object.keys(FBDATA.kingdoms).filter(function (id) { return FB.kingdomCounties(id).length; });
+        FB.setRealmTitle(s, mine, 'kingdom', kids[0]);
+        const inherited = FB.makeVassalRealm(s, { id:'e2e_custom_inheritance', name:'The New Court',
+          capital:FB.kingdomCounties(kids[1])[0], rank:3, liege:null,
+          culture:'frankish', religion:'catholic', claimKind:claim ? 'kingdom' : null,
+          claimId:claim ? kids[1] : null });
+        s.owner[inherited.capital] = s.holder[inherited.capital] = inherited.id;
+        FB.invalidateRealmCache();
+        const joined = FB.absorbRealm(s, inherited.id, s.chars[p.charId]);
+        const saved = JSON.parse(FB.save.serialize());
+        FB.save.restore(saved);
+        const restored = FB.state.realms.player;
+        return { joined:joined, name:restored.name, generated:!!restored.nameStyle,
+          kind:restored.titleKind || null, id:restored.titleId || null, expected:kids[1] };
+      }, hasClaim);
+      expect(result.joined).toBe(true);
+      expect(result.name).toBe('The New Court');
+      expect(result.generated).toBe(false);
+      expect(result.kind).toBe(hasClaim ? 'kingdom' : null);
+      expect(result.id).toBe(hasClaim ? result.expected : null);
+    });
+}
+
+test('a lesser inheritance preserves the player’s primary naming record and claim', async function ({ page }) {
+  const result = await page.evaluate(function () {
+    const s = FB.state, p = s.player;
+    p.tier = 6; p.provs = [p.provinceId]; p.liege = null;
+    FB.foundPlayerRealm(s);
+    const mine = s.realms.player;
+    const kid = Object.keys(FBDATA.kingdoms)[0];
+    FB.setRealmTitle(s, mine, 'kingdom', kid);
+    const before = JSON.stringify(mine.nameStyle);
+    const did = Object.keys(FBDATA.duchies).find(function (id) {
+      return FB.duchyCounties(id).some(function (pid) { return pid !== p.provinceId; });
+    });
+    const inherited = FB.makeVassalRealm(s, { id:'e2e_lesser_inheritance', titleKind:'duchy',
+      titleId:did, capital:FB.duchyCounties(did).find(function (pid) { return pid !== p.provinceId; }),
+      rank:2, liege:null, culture:'frankish', religion:'catholic' });
+    s.owner[inherited.capital] = s.holder[inherited.capital] = inherited.id;
+    FB.invalidateRealmCache();
+    return { joined:FB.absorbRealm(s, inherited.id, s.chars[p.charId]),
+      preserved:JSON.stringify(mine.nameStyle) === before,
+      kind:mine.titleKind, id:mine.titleId, expected:kid };
+  });
+  expect(result.joined).toBe(true);
+  expect(result.preserved).toBe(true);
+  expect(result.kind).toBe('kingdom');
+  expect(result.id).toBe(result.expected);
 });

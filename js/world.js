@@ -2126,6 +2126,32 @@ window.FB = window.FB || {};
     });
   };
 
+  /* Durable messages capture the historical style and its lexicon source.
+     Rendering needs neither a live realm nor the campaign that created it. */
+  FB.realmNameParam = function (state, realm) {
+    if (typeof realm === 'string') {
+      const id = realm;
+      realm = state && state.realms && state.realms[id];
+      if (!realm) return id;
+    }
+    if (!realm) return '';
+    if (!realm.nameStyle) return realm.name;
+    const style = realm.nameStyle;
+    const snapshot = { realmId:realm.id, kind:style.kind, place:style.place };
+    if (style.kind !== 'realm') {
+      snapshot.term = FB.lexicon.termSnapshot(state, style.kind, { viewer:null, realm:realm,
+        faith:realm.religion, culture:realm.ruler && realm.ruler.culture, form:'title' });
+    }
+    return { $realmName:snapshot };
+  };
+  FB.renderRealmNameSnapshot = function (snapshot) {
+    if (!snapshot || typeof snapshot.place !== 'string') return '';
+    if (snapshot.kind === 'realm') return FB.T('Realm of {name}', { name:snapshot.place });
+    return FB.T('{style} of {name}', {
+      style:FB.lexicon.renderTermSnapshot(snapshot.term), name:snapshot.place
+    });
+  };
+
   FB.setRealmTitle = function (state, realm, kind, id, place) {
     const canonical = FB.titleIds.resolve(kind, id);
     const title = canonical && FB.titleLevels.table(kind)[canonical];
@@ -2572,10 +2598,10 @@ window.FB = window.FB || {};
     FB.news(state, FB.systemEnabled(state, 'excommunication', { character:c })
       ? FB.msg('news.religion.sacrilegious_war',
       '⛓ The faithful condemn your attack upon {realm}. Your piety is forfeit, and you are excommunicated.', {
-        realm:(FB.religiousHeadOf(state, religionId) || {}).name || ''
+        realm:FB.realmNameParam(state, FB.religiousHeadOf(state, religionId))
       }) : FB.msg('news.religion.sacrilegious_war_unsanctioned',
         'The faithful condemn your attack upon {realm}. Your piety is forfeit.', {
-          realm:(FB.religiousHeadOf(state, religionId) || {}).name || ''
+          realm:FB.realmNameParam(state, FB.religiousHeadOf(state, religionId))
         }));
     return true;
   };
@@ -2687,7 +2713,7 @@ window.FB = window.FB || {};
     const definition = activeBookmarkRealmDefinition(state, canonicalId);
     const seat = FB.world.byId[seatId];
     const controller = state.realms[controllerId];
-    const controllerName = controller ? controller.name : controllerId;
+    const controllerName = controller ? FB.realmNameParam(state, controller) : controllerId;
     const controllerSovereign = FB.topRealm(state, controllerId);
     const restored = {
       id:canonicalId,
@@ -2728,7 +2754,7 @@ window.FB = window.FB || {};
       FB.news(state, FB.msg('news.religion.head_restored_player',
         '⛪ You grant {seat} to the restored {realm}. {ruler} is chosen {title}.', {
           seat:seat.name,
-          realm:restored.name,
+          realm:FB.realmNameParam(state, restored),
           ruler:restored.ruler.name,
           title:FB.dataParam('religion', religionId, 'head.title')
         }));
@@ -2737,7 +2763,7 @@ window.FB = window.FB || {};
         '⛪ {controller} grants {seat} to the restored {realm}. {ruler} is chosen {title}.', {
           controller:controllerName,
           seat:seat.name,
-          realm:restored.name,
+          realm:FB.realmNameParam(state, restored),
           ruler:restored.ruler.name,
           title:FB.dataParam('religion', religionId, 'head.title')
         }));
@@ -2788,7 +2814,7 @@ window.FB = window.FB || {};
     } else {
       FB.news(state, FB.msg('news.religion.head_claimed_ai',
         '☪ {realm} claims the vacant office of {title}.', {
-          realm:realm.name,
+          realm:FB.realmNameParam(state, realm),
           title:FB.dataParam('religion', religionId, 'head.title')
         }));
     }
@@ -5139,7 +5165,7 @@ window.FB = window.FB || {};
     if (FB.game.observe || rid === homeRealm || targetPid === state.player.provinceId) {
       FB.news(state, FB.msg('news.world.ai_raid',
         '⚔ Raiders from {attacker} pillage the settlements of {province}!',
-        { attacker: r.name, province: targetPr.name }));
+        { attacker: FB.realmNameParam(state, r), province: targetPr.name }));
     }
   };
 
@@ -5661,7 +5687,7 @@ window.FB = window.FB || {};
     FB.news(state, FB.msg('news.world.capital_relocated',
       '🏰 The seat of {realm} moves from {from} to {destination}; the household follows.',
       {
-        realm:state.realms.player.name,
+        realm:FB.realmNameParam(state, state.realms.player),
         from:from ? from.name : status.fromId,
         destination:destination.name
       }));
@@ -5782,7 +5808,7 @@ window.FB = window.FB || {};
         bestDuchy = did; bestHave = have;
       }
     }
-    const oldName = r.name;
+    const oldName = FB.realmNameParam(state, r);
     const oldLifeRuler = FB.lifeHistoryRulerId && FB.lifeHistoryRulerId(state, rid);
     const oldLifeTitle = oldLifeRuler && state.chars[oldLifeRuler] &&
       FB.realmRulerTitleSnapshot(state, r, state.chars[oldLifeRuler]);
@@ -5813,11 +5839,11 @@ window.FB = window.FB || {};
       }
       FB.news(state, FB.msg('news.world.vassal_loosed',
         '🕊 {realm} no longer kneels to a house of equal dignity.',
-        { realm: v.name }));
+        { realm: FB.realmNameParam(state, v) }));
     }
     FB.news(state, FB.msg('news.world.crown_lapsed',
       '🥀 No land in {kingdom} remains to {realm} — the world ceases to recognize its crown. It is now the {style}.',
-      { kingdom: FBDATA.kingdoms[kid].name, realm: oldName, style: r.name }));
+      { kingdom: FBDATA.kingdoms[kid].name, realm: oldName, style: FB.realmNameParam(state, r) }));
     FB.invalidateRealmCache();
     if (FB.ui && FB.ui.mapDirty) FB.ui.mapDirty();
     return true;
@@ -6249,7 +6275,7 @@ window.FB = window.FB || {};
             if (!opts.silent) {
               FB.news(state, FB.msg('news.world.escheat_granted',
                 '🕯 The lord of {province} dies without an heir — {liege} passes over every other suit and invests you with {province}.',
-                { province: pr.name, liege: state.realms[liege].name }));
+                { province: pr.name, liege: FB.realmNameParam(state, state.realms[liege]) }));
             }
           }
         }
@@ -6272,7 +6298,7 @@ window.FB = window.FB || {};
           }, {
             holder: state.realms[liege] ? 'realm' : 'other',
             province: pr.name,
-            liege: state.realms[liege] ? state.realms[liege].name : ''
+            liege: state.realms[liege] ? FB.realmNameParam(state, state.realms[liege]) : ''
           }));
         }
       }
@@ -7291,7 +7317,7 @@ window.FB = window.FB || {};
                 id === state.player.liege)) {
             FB.news(state, FB.msg('news.world.ruler_succeeds',
               '👑 The ruler of {realm} is dead. {ruler} rises in their place.',
-              { realm: r.name, ruler: r.ruler.name }));
+              { realm: FB.realmNameParam(state, r), ruler: r.ruler.name }));
           }
           if (!r.alive) continue; // the new ruler was the protagonist and joined the realms
         }
@@ -7363,7 +7389,7 @@ window.FB = window.FB || {};
                 other: '🔥 {realm} renounces the suzerainty of the crown!'
               }
             }
-          }, { overlord: tr ? 'realm' : 'other', realm: r.name, liege: tr ? tr.name : '' }));
+          }, { overlord: tr ? 'realm' : 'other', realm: FB.realmNameParam(state, r), liege: tr ? FB.realmNameParam(state, tr) : '' }));
         }
       }
 
@@ -7393,7 +7419,7 @@ window.FB = window.FB || {};
             if (FB.game.observe || id === FB.playerRealmId(state) || partner === FB.playerRealmId(state)) {
               FB.news(state, FB.msg('news.world.alliance_formed',
                 '🤝 {realm} and {ally} bind themselves in a defensive alliance.',
-                { realm: r.name, ally: state.realms[partner].name }));
+                { realm: FB.realmNameParam(state, r), ally: FB.realmNameParam(state, state.realms[partner]) }));
             }
           }
         }
@@ -7726,7 +7752,7 @@ window.FB = window.FB || {};
           }
         }, {
           targeted:target ? 'yes' : 'other',
-          enemy:enemy ? enemy.name : p.war.enemy,
+          enemy:enemy ? FB.realmNameParam(state, enemy) : p.war.enemy,
           province:target ? target.name : ''
         }), { hostileReportId:report.id, toast:false });
       }
@@ -7809,7 +7835,7 @@ window.FB = window.FB || {};
         }
       }, {
         result:report.result || 'peace',
-        enemy:enemy ? enemy.name : report.enemyId
+        enemy:enemy ? FB.realmNameParam(state, enemy) : report.enemyId
       }), { hostileReportId:report.id, toast:false });
     }
     state.player.war = null;
@@ -7869,7 +7895,7 @@ window.FB = window.FB || {};
       delete p.flags.in_prison;
       FB.news(state, FB.msg('news.war.prison_escaped',
         '⛓ A bribed gaoler, a moonless night, a swift horse — you are free of {enemy}.',
-        { enemy: enemy ? enemy.name : '' }));
+        { enemy: enemy ? FB.realmNameParam(state, enemy) : '' }));
     }
     if (!p.flags.in_prison) delete p.captiveWarId;
   };
@@ -7938,7 +7964,7 @@ window.FB = window.FB || {};
         w.independenceSecured = 1;
         FB.news(state, FB.msg('news.war.independence_uncontested',
           '👑 {enemy} never came to bring you to heel. Your independence stands.',
-          { enemy: enemy.name }));
+          { enemy: FB.realmNameParam(state, enemy) }));
         FB.endPlayerWar(state); return;
       }
       FB.news(state, FB.msg('news.war.exhausted',
@@ -7975,7 +8001,7 @@ window.FB = window.FB || {};
           if (status && status.stalled === 'shortage') {
             FB.news(state, FB.msg('news.war.enemy_siege_stalled',
               '🏰 {enemy} lacks {shortage} men to press the fort at {province}.', {
-                enemy:enemy.name, shortage:status.shortage,
+                enemy:FB.realmNameParam(state, enemy), shortage:status.shortage,
                 province:FB.world.byId[invader.at].name
               }));
           }
@@ -7983,7 +8009,7 @@ window.FB = window.FB || {};
         if ((w.enemySiege || 0) >= 2) {
           FB.news(state, FB.msg('news.war.enemy_advance',
             '⚠ {enemy} presses the siege in your lands; only a breach can take the county.',
-            { enemy: enemy.name }));
+            { enemy: FB.realmNameParam(state, enemy) }));
         }
       } else if ((w.enemySiege || 0) > 0) {
         w.enemySiege = Math.max(0, w.enemySiege - 1);
@@ -8169,7 +8195,7 @@ window.FB = window.FB || {};
         FB.news(state, FB.msg('news.religion.head_seized',
           '☪ The office of {title} passes to your realm by right of conquest. {realm} keeps its lands, but loses the office.', {
             title: FB.dataParam('religion', FB.religiousHeadWarFaith(state), 'head.title'),
-            realm: enemy.name
+            realm: FB.realmNameParam(state, enemy)
           }));
         FB.endPlayerWar(state);
         return true;
@@ -8382,7 +8408,7 @@ window.FB = window.FB || {};
             }
           }, {
             holder: state.realms[p.liege] ? 'realm' : 'other',
-            liege: state.realms[p.liege] ? state.realms[p.liege].name : ''
+            liege: state.realms[p.liege] ? FB.realmNameParam(state, state.realms[p.liege]) : ''
           }));
         }
       }
@@ -8469,7 +8495,7 @@ window.FB = window.FB || {};
     p.flags.in_prison = 1;
     FB.news(state, FB.msg('news.war.captured',
       '⛓ Taken in the rout! You are a prisoner of {enemy}.',
-      { enemy: state.realms[w.enemy] ? state.realms[w.enemy].name : '' }));
+      { enemy: state.realms[w.enemy] ? FB.realmNameParam(state, state.realms[w.enemy]) : '' }));
     if (FB.noteLifeEvent) FB.noteLifeEvent(state, p.charId, 'captivity', {});
     FB.queueWarEvent(state, 'prison_ransom', {});
   };
@@ -8589,7 +8615,7 @@ window.FB = window.FB || {};
               other: '🕊 The enemy sues for peace. Your lands are safe.'
             }
           }
-        }, { named: enemy ? 'yes' : 'other', enemy: enemy ? enemy.name : '' }));
+        }, { named: enemy ? 'yes' : 'other', enemy: enemy ? FB.realmNameParam(state, enemy) : '' }));
         p.prestige += 25;
         FB.endPlayerWar(state);
       } else {
@@ -8894,7 +8920,7 @@ window.FB = window.FB || {};
     const host = FB.warPlayerHost(state);
     const prey = FB.hostOf && FB.hostOf(state, w.enemy);
     if (!host || !prey) return;
-    const ename = state.realms[w.enemy] ? state.realms[w.enemy].name : '';
+    const ename = state.realms[w.enemy] ? FB.realmNameParam(state, state.realms[w.enemy]) : '';
     if (FB.orderArmy(state, host, prey.at)) {
       host.huntPrey = w.enemy; // track the prey: re-path onto it each day
       host.eventOrder = 1;
@@ -9176,7 +9202,7 @@ window.FB = window.FB || {};
     for (const pid of FB.realmTerritory(state, 'player')) state.owner[pid] = top;
     FB.invalidateRealmCache();
     FB.news(state, FB.msg('news.war.independence_failed',
-      '🛡 The rebellion ends. You kneel again to {liege}.', { liege:state.realms[rid].name }));
+      '🛡 The rebellion ends. You kneel again to {liege}.', { liege:FB.realmNameParam(state, state.realms[rid]) }));
     if (FB.ui && FB.ui.mapDirty) FB.ui.mapDirty();
     FB.checkTierPromotions(state);
     return true;
@@ -9217,7 +9243,7 @@ window.FB = window.FB || {};
             other: '🕊 Peace is bought from the enemy for {money:cost}.'
           }
         }
-      }, { named: enemy ? 'yes' : 'other', enemy: enemy ? enemy.name : '', cost: cost }));
+      }, { named: enemy ? 'yes' : 'other', enemy: enemy ? FB.realmNameParam(state, enemy) : '', cost: cost }));
     } else {
       p.prestige = Math.max(0, p.prestige - terms.prestige);
       terms.counties.forEach(function (pid) { FB.adjustCountySupport(state, pid, terms.support); });
@@ -9268,7 +9294,7 @@ window.FB = window.FB || {};
     p.prestige = Math.max(0, p.prestige - 15);
     FB.news(state, FB.msg('news.war.submission',
       '🛡 You kneel to {enemy} and swear the oaths. The war is over; your lands remain — under a new banner.',
-      { enemy: enemy.name }));
+      { enemy: FB.realmNameParam(state, enemy) }));
     if (FB.ui && FB.ui.mapDirty) FB.ui.mapDirty();
     FB.checkTierPromotions(state);
   };
@@ -9280,7 +9306,7 @@ window.FB = window.FB || {};
     if (!FB.treasuryTransfer(state, 'player', FB.treasuryCounterparty(state, w.enemy), price)) return false;
     FB.news(state, FB.msg('news.war.submission_tribute',
       '🕊 A conqueror’s tribute buys the peace — {money:price} to {enemy}.',
-      { price: price, enemy: enemy ? enemy.name : '' }));
+      { price: price, enemy: enemy ? FB.realmNameParam(state, enemy) : '' }));
     FB.endPlayerWar(state);
   };
 
@@ -9549,6 +9575,7 @@ window.FB = window.FB || {};
   FB.absorbRealm = function (state, rid, rulerChar) {
     const inherited = state.realms[rid];
     if (!inherited || !inherited.alive || rid === 'player') return false;
+    const inheritedName = FB.realmNameParam(state, inherited);
     const p = state.player;
     const sovereignTitle = !inherited.liege;
     const inheritedLiege = inherited.liege || null;
@@ -9581,7 +9608,19 @@ window.FB = window.FB || {};
     mine.rank = FB.realmRank.higherRank({ rank:oldRank, realmId:mine.id }, inherited, state);
     FB.setPlayerTier(state, FB.station.higherTier(p, FB.realmRank.tier(mine, state), state), { attachLiege:false });
     if ((inherited.rank || 0) >= oldRank) {
-      mine.name = inherited.name;
+      if (inherited.nameStyle) {
+        mine.nameStyle = { kind:inherited.nameStyle.kind, place:inherited.nameStyle.place };
+        FB.bindRealmName(state, mine);
+      } else {
+        mine.name = inherited.name;
+      }
+      if (inherited.titleKind && inherited.titleId) {
+        mine.titleKind = inherited.titleKind;
+        mine.titleId = inherited.titleId;
+      } else {
+        delete mine.titleKind;
+        delete mine.titleId;
+      }
       mine.ambitionTitleRegion = inherited.ambitionTitleRegion || null;
       mine.color = inherited.color || mine.color;
       mine.capital = inherited.capital || mine.capital;
@@ -9607,7 +9646,8 @@ window.FB = window.FB || {};
     if (FB.councilEnsure && FB.station.mayHoldCouncil(p, state)) FB.councilEnsure(state);
     if (FB.ui && FB.ui.mapDirty) FB.ui.mapDirty();
     FB.news(state, FB.msg('news.world.realm_inherited',
-      '👑 {realm} joins your rule by rightful succession.', { realm: inherited.name }));
+      '👑 {realm} joins your rule by rightful succession.',
+      { realm:inheritedName }), { audience:3 });
     return true;
   };
 
@@ -9911,7 +9951,7 @@ window.FB = window.FB || {};
               v.liege = p.liege || null;
               FB.news(state, FB.msg('news.world.vassal_loosed',
                 '🕊 {realm} no longer kneels to a house of equal dignity.',
-                { realm: v.name }));
+                { realm: FB.realmNameParam(state, v) }));
             }
             FB.foundPlayerRealm(state); // restyle at the lower dignity
             FB.news(state, FB.msg('news.world.title_lapsed',

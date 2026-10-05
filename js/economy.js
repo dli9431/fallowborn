@@ -5564,6 +5564,9 @@ window.FB = window.FB || {};
     };
   };
 
+  function monopolyName(value) {
+    return value && value.$realmName ? FB.messageParams({ name:value }).name : String(value || '');
+  }
   function normalizeMonopolyRecord(record, slot, state) {
     if (!record || typeof record !== 'object' || Array.isArray(record)) return null;
     const profession = monopolyProfession(record.profession);
@@ -5590,8 +5593,8 @@ window.FB = window.FB || {};
         ? (record.grantorKind === 'realm' ? 'realm' : 'local')
         : 'player',
       grantorId:record.grantorId || (slot === 'outgoing' ? 'player' : null),
-      grantorName:String(record.grantorName || ''),
-      grantorRulerName:String(record.grantorRulerName || ''),
+      grantorName:monopolyName(record.grantorName),
+      grantorRulerName:monopolyName(record.grantorRulerName),
       recipientKind:slot === 'outgoing' ? 'local_guild' : 'household',
       advocateId:record.advocateId || null,
       advocateName:String(record.advocateName || ''),
@@ -5825,15 +5828,18 @@ window.FB = window.FB || {};
     const status = FB.guildMonopolyPetitionStatus(state, true);
     if (!status.ready) return null;
     const grantor = status.grantor, terms = status.terms;
+    const realm = grantor.kind === 'realm' && state.realms[grantor.id];
+    const grantorName = realm ? FB.realmNameParam(state, realm) : grantor.name;
+    const rulerName = realm && !realm.ruler ? grantorName : grantor.rulerName;
     const typed = monopolyTypedSpec(state, status.career.profession, spec);
     if (typed === false) return null;
     const context = {
       profession:status.career.profession,
       grantorKind:grantor.kind,
       grantorId:grantor.id,
-      grantor:grantor.rulerName,
-      grantorName:grantor.name,
-      grantorRulerName:grantor.rulerName,
+      grantor:rulerName,
+      grantorName:grantorName,
+      grantorRulerName:rulerName,
       rid:grantor.kind === 'realm' ? grantor.id : null,
       scope:grantor.scope,
       scopeId:grantor.scopeId,
@@ -5919,8 +5925,8 @@ window.FB = window.FB || {};
     slots.incoming = monopolyRecord(state, profession, terms, {
       grantorKind:ctx.grantorKind === 'realm' ? 'realm' : 'local',
       grantorId:ctx.grantorId || null,
-      grantorName:String(ctx.grantorName || ctx.grantor || ''),
-      grantorRulerName:String(ctx.grantorRulerName || ctx.grantor || ''),
+      grantorName:monopolyName(ctx.grantorName || ctx.grantor),
+      grantorRulerName:monopolyName(ctx.grantorRulerName || ctx.grantor),
       recipientKind:'household',
       scope:ctx.scope === 'liege' ? 'liege' : 'province',
       scopeId:ctx.scopeId || (ctx.scope === 'liege'

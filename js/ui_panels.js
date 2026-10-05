@@ -4680,8 +4680,10 @@ window.FB = window.FB || {};
     let tradeIndex = 0;
     function monopolyRow(direction, monopoly) {
       const active = !!monopoly;
-      const issuer = active
+      const issuerParam = active
         ? monopoly.grantorName || monopoly.grantorRulerName : '';
+      const issuer = issuerParam && issuerParam.$realmName
+        ? FB.renderRealmNameSnapshot(issuerParam.$realmName) : issuerParam;
       const title = direction === 'incoming'
         ? FB.T('Incoming monopoly') : FB.T('Outgoing monopoly');
       const meta = active ? [

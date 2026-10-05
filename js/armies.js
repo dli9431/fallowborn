@@ -893,7 +893,7 @@ window.FB = window.FB || {};
     const patron = state.realms[status.patronRealmId];
     FB.news(state, FB.msg('news.action.military_command_begins',
       '🚩 {ruler} entrusts you with a contingent of the field host. One true victory could win a banner of your own.', {
-        ruler:patron.ruler && patron.ruler.name || patron.name
+        ruler:patron.ruler && patron.ruler.name || FB.realmNameParam(state, patron)
       }));
     return true;
   };
@@ -2121,7 +2121,7 @@ window.FB = window.FB || {};
     if (state.player.war && state.player.war.enemy === rid) {
       FB.news(state, FB.msg('news.army.enemy_musters',
         '🚩 {realm} takes the field — some {men} spears against you.',
-        { realm: r.name, men: men }));
+        { realm: FB.realmNameParam(state, r), men: men }));
     }
     requestMap();
     return host;
@@ -3869,7 +3869,7 @@ window.FB = window.FB || {};
         }
         const name = host.realm === 'player'
           ? null
-          : (state.realms[host.realm] ? state.realms[host.realm].name : '');
+          : (state.realms[host.realm] ? FB.realmNameParam(state, state.realms[host.realm]) : '');
         if (isStackWipe) {
           if (host.realm === 'player' ||
               (state.player.war && state.player.war.enemy === host.realm)) {
@@ -3908,7 +3908,7 @@ window.FB = window.FB || {};
             if (host === primaryPlayerHost) primaryPlayerShatteredCutOff = true;
             const name = host.realm === 'player'
               ? null
-              : (state.realms[host.realm] ? state.realms[host.realm].name : '');
+              : (state.realms[host.realm] ? FB.realmNameParam(state, state.realms[host.realm]) : '');
             FB.news(state, host.realm === 'player'
               ? FB.msg('news.army.host_destroyed_cornered',
                 '⚔ Cornered with nowhere to retreat — the host at {province} is destroyed.',
@@ -3939,7 +3939,8 @@ window.FB = window.FB || {};
         });
     if (rebelBattle) {
       FB.news(state, FB.msg('news.rebellion.battle', 'A battle against the rebels at {county} ends with {winner} holding the field.', {
-        county:provName(pid), winner:(state.realms[winner.realm] || {}).name || provName(pid) }));
+        county:provName(pid), winner:state.realms[winner.realm]
+          ? FB.realmNameParam(state, state.realms[winner.realm]) : provName(pid) }));
     } else if (greatBattle) {
       /* Coalition resolve and contribution are owned by holywar.js. An
          ordinary bilateral war (if malformed legacy state supplied one)
@@ -3974,8 +3975,8 @@ window.FB = window.FB || {};
     } else {
       trackAIWar(state, winner.realm, loser.realm);
       const p = state.player;
-      const wname = state.realms[winner.realm] ? state.realms[winner.realm].name : winner.realm;
-      const lname = state.realms[loser.realm] ? state.realms[loser.realm].name : loser.realm;
+      const wname = FB.realmNameParam(state, winner.realm);
+      const lname = FB.realmNameParam(state, loser.realm);
       if (FB.game.observe || pid === p.provinceId || (FB.world.adj[p.provinceId] || {})[pid]) {
         FB.news(state, FB.msg('news.army.ai_battle',
           '⚔ Battle at {province} — {winner} breaks the host of {loser}.',
@@ -4546,7 +4547,7 @@ window.FB = window.FB || {};
         if (state.player.war && state.player.war.enemy === id) {
           FB.news(state, FB.msg('news.army.enemy_divides',
             '🚩 {realm} divides its strength — a second host takes the field.',
-            { realm: r.name }));
+            { realm: FB.realmNameParam(state, r) }));
         }
       }
 

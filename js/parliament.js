@@ -543,7 +543,7 @@ window.FB = window.FB || {};
     if (aid === null) return;
     FB.news(state, FB.msg('news.parliament.aid_up',
       '⚖ The estates grant the aid — {liege}’s cut of your revenue rises to {pct}%.',
-      { liege: state.realms[state.player.liege].name, pct: Math.round(aid * 100) }));
+      { liege: FB.realmNameParam(state, state.realms[state.player.liege]), pct: Math.round(aid * 100) }));
   };
   FB.fns.parliament_aid_hike_rebuff = function (state) {
     // the hall refuses the crown's demand; the crown remembers the ringleader
@@ -570,7 +570,7 @@ window.FB = window.FB || {};
     adjustLiegeStanding(state, -5, 'redress_won');
     FB.news(state, FB.msg('news.parliament.aid_down',
       '⚖ The estates vote redress — {liege}’s cut of your revenue falls to {pct}%.',
-      { liege: state.realms[state.player.liege].name, pct: Math.round(aid * 100) }));
+      { liege: FB.realmNameParam(state, state.realms[state.player.liege]), pct: Math.round(aid * 100) }));
     finishPendingMotion(state, ctx || {});
   };
   FB.fns.parliament_redress_lost = function (state, ctx) {
@@ -585,7 +585,7 @@ window.FB = window.FB || {};
     FB.news(state, FB.msg('news.parliament.trade_redress',
       '⚖ The estates bind market charter and redress together — {liege}’s aid falls to {pct}%.',
       {
-        liege:state.realms[state.player.liege].name,
+        liege:FB.realmNameParam(state, state.realms[state.player.liege]),
         pct:Math.round(aid * 100)
       }));
   };
@@ -604,7 +604,7 @@ window.FB = window.FB || {};
     adjustLiegeStanding(state, 5, 'scutage_pass');
     FB.news(state, FB.msg('news.parliament.scutage',
       '🛡 The estates vote scutage — silver, not spears, when {liege} calls the banners (the aid rises to {pct}%).',
-      { liege: state.realms[state.player.liege].name, pct: Math.round(obl.aid * 100) }));
+      { liege: FB.realmNameParam(state, state.realms[state.player.liege]), pct: Math.round(obl.aid * 100) }));
     finishPendingMotion(state, ctx || {});
   };
   FB.fns.parliament_scutage_lost = function (state, ctx) {
@@ -619,7 +619,7 @@ window.FB = window.FB || {};
     adjustLiegeStanding(state, 12, 'subsidy_pay');
     FB.news(state, FB.msg('news.parliament.subsidy',
       '💰 The estates vote {liege} a war subsidy of {money:gold} — your name was spoken warmly in the hall.',
-      { liege: state.realms[state.player.liege].name, gold: gold }));
+      { liege: FB.realmNameParam(state, state.realms[state.player.liege]), gold: gold }));
   };
 
   /* ---------- policy catalog gates ----------
@@ -719,7 +719,7 @@ window.FB = window.FB || {};
     if (obl) obl.revocationConsent = true;
     FB.news(state, FB.msg('news.parliament.revocation_consent',
       '🗳 The estates bind {liege} to seek their consent before any new aid.',
-      { liege:state.realms[state.player.liege].name }));
+      { liege:FB.realmNameParam(state, state.realms[state.player.liege]) }));
     finishPendingMotion(state, ctx || {});
   };
 

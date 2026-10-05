@@ -5874,7 +5874,7 @@ window.FB = window.FB || {};
     if (!FB.chance(status.chance)) {
       FB.news(state, FB.msg('news.castellany.refused',
         '🏰 {liege} declines to entrust the castle of {province} to you.', {
-          liege:status.patron.name,
+          liege:FB.realmNameParam(state, status.patron),
           province:status.provinceName
         }));
       return { accepted:false, chance:status.chance, tenure:status.tenure };
@@ -5897,12 +5897,12 @@ window.FB = window.FB || {};
     const appointmentMessage = status.tenure === 'life'
       ? FB.msg('news.castellany.appointed_life',
         '🏰 {liege} appoints you Castellan of {province} for life.', {
-          liege:status.patron.name,
+          liege:FB.realmNameParam(state, status.patron),
           province:status.provinceName
         })
       : FB.msg('news.castellany.appointed_term',
         '🏰 {liege} appoints you Castellan of {province} for ten years.', {
-        liege:status.patron.name,
+        liege:FB.realmNameParam(state, status.patron),
         province:status.provinceName
       });
     FB.news(state, appointmentMessage);
@@ -6181,7 +6181,7 @@ window.FB = window.FB || {};
     invalidateLocalGovernmentDay();
     FB.news(state, FB.msg('news.feudal.tenure_renewed',
       '📜 The fixed-term grant of {realm} is renewed for another ten years.', {
-        realm:realm.name
+        realm:FB.realmNameParam(state, realm)
       }));
     return true;
   };
@@ -6203,7 +6203,7 @@ window.FB = window.FB || {};
   FB.revertFeudalRealm = function (state, rid, reason) {
     const realm = state.realms[rid];
     if (!realm || !realm.alive || realm.liege !== 'player') return false;
-    const name = realm.name;
+    const name = FB.realmNameParam(state, realm);
     if (state.player.war && state.player.war.enemy === rid) {
       if (FB.endPlayerWar) FB.endPlayerWar(state, true);
       else state.player.war = null;
@@ -6284,8 +6284,8 @@ window.FB = window.FB || {};
         realm.feudalContract.renewal = 'queued';
         FB.queueEvent(state, 'vassal_tenure_renewal', {
           realmId:rid,
-          realm:realm.name,
-          ruler:realm.ruler ? realm.ruler.name : realm.name,
+          realm:FB.realmNameParam(state, realm),
+          ruler:realm.ruler ? realm.ruler.name : FB.realmNameParam(state, realm),
           days:contract.expiryTurn - state.turn
         });
       } else if (!contract.renewal) {
@@ -7877,7 +7877,7 @@ window.FB = window.FB || {};
         '🎁 You offer {money:gold} to {ruler} of {realm}. (Standing {favor})', {
           gold:cost,
           ruler:r.ruler.name,
-          realm:r.name,
+          realm:FB.realmNameParam(state, r),
           favor:Math.round(standing)
         }));
     } else {
@@ -7885,7 +7885,7 @@ window.FB = window.FB || {};
         '🎁 You offer {money:gold} to {ruler} of {realm}. (Standing {opinion})', {
           gold:cost,
           ruler:r.ruler.name,
-          realm:r.name,
+          realm:FB.realmNameParam(state, r),
           opinion:Math.round(standing)
         }));
     }
@@ -7902,7 +7902,7 @@ window.FB = window.FB || {};
       'deed:homage');
     p.prestige += 2;
     FB.news(state, FB.msg('news.action.homage',
-      '🙇 You bend the knee at the court of {realm}.', { realm: r.name }));
+      '🙇 You bend the knee at the court of {realm}.', { realm: FB.realmNameParam(state, r) }));
   };
 
   /* higher-ranked sovereign realms bordering the player's lands */
@@ -7954,14 +7954,14 @@ window.FB = window.FB || {};
     FB.invalidateRealmCache();
     FB.news(state, FB.msg('news.action.fealty',
       '🤝 You swear fealty to {liege}. Your banners now fly under {realm}.',
-      { liege: r.name, realm: state.realms[newTop].name }));
+      { liege: FB.realmNameParam(state, r), realm: FB.realmNameParam(state, state.realms[newTop]) }));
     if (oldTop && oldTop !== newTop && state.realms[oldTop] && state.realms[oldTop].alive && FB.chance(0.5)) {
       p.war = { enemy: oldTop, target: null, wins: 0, losses: 0, seasons: 0,
         defending: true, casus: { type: 'defection' } };
       FB.warFooting(state);
       FB.news(state, FB.msg('news.action.fealty_war',
         '🔥 {realm} names you traitor — war for your defection!',
-        { realm: state.realms[oldTop].name }));
+        { realm: FB.realmNameParam(state, state.realms[oldTop]) }));
     }
     if (FB.invalidateGuildMonopolies) FB.invalidateGuildMonopolies(state);
     if (FB.ui && FB.ui.mapDirty) FB.ui.mapDirty();
@@ -8064,7 +8064,7 @@ window.FB = window.FB || {};
       'deed:exceptional_levy');
     FB.news(state, FB.msg('news.realm.vassal_levy_favor',
       '🛡 {realm} promises an exceptional levy for one year; Standing falls by 15.',
-      { realm:r.name }));
+      { realm:FB.realmNameParam(state, r) }));
     return true;
   };
 
@@ -8262,7 +8262,7 @@ window.FB = window.FB || {};
         count:unique.length,
         duchy:duchy.name || options.duchyId,
         ruler:realm.ruler.name,
-        realm:realm.name,
+        realm:FB.realmNameParam(state, realm),
         standing:standing
       }));
     } else {
@@ -8271,7 +8271,7 @@ window.FB = window.FB || {};
         '🎁 {province} is granted to {ruler} of {realm}; Standing rises by {standing}.', {
           province:province.name,
           ruler:realm.ruler.name,
-          realm:realm.name,
+          realm:FB.realmNameParam(state, realm),
           standing:standing
         }));
     }
@@ -8956,7 +8956,7 @@ window.FB = window.FB || {};
     state.pacts = state.pacts || {};
     state.pacts[realm.id] = state.turn + 8 * 90;
     FB.news(state, FB.msg('news.diplomacy.pact_made',
-      '🕊 {realm} swears a two-year pact of peace.', { realm:realm.name }));
+      '🕊 {realm} swears a two-year pact of peace.', { realm:FB.realmNameParam(state, realm) }));
     return true;
   };
 
@@ -8966,7 +8966,7 @@ window.FB = window.FB || {};
     state.pacts[realm.id] += 4 * 90;
     FB.news(state, FB.msg('news.diplomacy.pact_extended',
       '🕊 The pact with {realm} is renewed for another year.',
-      { realm:realm.name }));
+      { realm:FB.realmNameParam(state, realm) }));
     return true;
   };
 
@@ -8975,7 +8975,7 @@ window.FB = window.FB || {};
     const realm = diplomaticRealm(state, ctx);
     delete state.pacts[realm.id];
     FB.news(state, FB.msg('news.diplomacy.pact_ended',
-      '🕊 The pact with {realm} is allowed to lapse.', { realm:realm.name }));
+      '🕊 The pact with {realm} is allowed to lapse.', { realm:FB.realmNameParam(state, realm) }));
     return true;
   };
 
@@ -8987,7 +8987,7 @@ window.FB = window.FB || {};
     }
     FB.news(state, FB.msg('news.diplomacy.alliance_formed',
       '🤝 Your crown and {realm} enter a defensive alliance.',
-      { realm:realm.name }));
+      { realm:FB.realmNameParam(state, realm) }));
     return true;
   };
 
@@ -8997,7 +8997,7 @@ window.FB = window.FB || {};
     FB.breakAlliance(state, 'player', realm.id);
     FB.news(state, FB.msg('news.diplomacy.alliance_ended',
       '🤝 The defensive alliance with {realm} is ended.',
-      { realm:realm.name }));
+      { realm:FB.realmNameParam(state, realm) }));
     return true;
   };
 
@@ -9121,10 +9121,10 @@ window.FB = window.FB || {};
       state.pacts[rid] = state.turn + 8 * 90; // two years of peace
       FB.applyEffects(state, { prestige: 3, skills: { dip: FB.chance(0.5) ? 1 : 0 } });
       FB.news(state, FB.msg('news.action.envoy_success',
-        '🕊 {realm} swears a pact of peace — two years of quiet borders.', { realm: r.name }));
+        '🕊 {realm} swears a pact of peace — two years of quiet borders.', { realm: FB.realmNameParam(state, r) }));
     } else {
       FB.news(state, FB.msg('news.action.envoy_failure',
-        '🕊 The envoy returns, gifts refused. {realm} is unmoved.', { realm: r.name }));
+        '🕊 The envoy returns, gifts refused. {realm} is unmoved.', { realm: FB.realmNameParam(state, r) }));
     }
     return true;
   };
@@ -9249,11 +9249,11 @@ window.FB = window.FB || {};
     if (FB.chance(status.chance) && FB.formAlliance(state, 'player', rid, 'envoy')) {
       FB.news(state, FB.msg('news.action.alliance_success',
         '🤝 {realm} accepts your envoy: your crowns will defend one another until either ruler dies.',
-        { realm: r.name }));
+        { realm: FB.realmNameParam(state, r) }));
       return true;
     }
     FB.news(state, FB.msg('news.action.alliance_failure',
-      '🕊 {realm} receives the gifts but refuses the defensive compact.', { realm: r.name }));
+      '🕊 {realm} receives the gifts but refuses the defensive compact.', { realm: FB.realmNameParam(state, r) }));
     /* The action was valid and its envoy/gifts were spent even though the
        diplomatic proposal failed. Callers use this result to distinguish an
        executed attempt from a stale or blocked click. */
@@ -9269,7 +9269,7 @@ window.FB = window.FB || {};
     if (!FB.formAlliance(state, 'player', royalRealmId, 'royal_marriage')) return false;
     FB.news(state, FB.msg('news.action.marriage_alliance',
       '🤝 The marriage binds your crown and {realm} in a defensive alliance.',
-      { realm: royal.name }));
+      { realm: FB.realmNameParam(state, royal) }));
     return true;
   };
 
@@ -12010,8 +12010,8 @@ window.FB = window.FB || {};
     FB.news(state, war
       ? FB.msg('news.plot.correspondence_war',
         '✉ Stolen letters show {realm} committed to war with {enemy}.', {
-          realm:realm.name,
-          enemy:state.realms[war.enemy] ? state.realms[war.enemy].name :
+          realm:FB.realmNameParam(state, realm),
+          enemy:state.realms[war.enemy] ? FB.realmNameParam(state, state.realms[war.enemy]) :
             FB.messageParam(FB.message('fx.param.the_enemy', {}))
         })
       : FB.msg('news.plot.correspondence_temper', {
@@ -12023,7 +12023,7 @@ window.FB = window.FB || {};
           }
         }
       }, {
-        realm:realm.name,
+        realm:FB.realmNameParam(state, realm),
         temper:realm.aggression >= 0.65 ? 'bellicose' :
           (realm.aggression <= 0.25 ? 'cautious' : 'watchful')
       }));
@@ -12331,13 +12331,13 @@ window.FB = window.FB || {};
     if (cause.type === 'aggression') {
       FB.news(state, FB.msg('news.action.war_aggression_declared',
         '⚔ You declare a War of Aggression upon {enemy} for {province}!', {
-          enemy: state.realms[enemy] ? state.realms[enemy].name : enemy,
+          enemy: state.realms[enemy] ? FB.realmNameParam(state, state.realms[enemy]) : enemy,
           province: FB.world.byId[cause.target].name
         }));
     } else {
       FB.news(state, FB.msg('news.action.war_declared',
         '⚔ You declare war upon {enemy} for {province}!', {
-          enemy: state.realms[enemy] ? state.realms[enemy].name : enemy,
+          enemy: state.realms[enemy] ? FB.realmNameParam(state, state.realms[enemy]) : enemy,
           province: FB.world.byId[cause.target].name
         }));
       state.player.prestige += FB.warPrestigeReward

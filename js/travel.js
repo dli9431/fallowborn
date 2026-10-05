@@ -719,7 +719,7 @@ window.FB = window.FB || {};
         amount:delivery.amount,
         item:delivery.item,
         recipient:r.ruler.name,
-        realm:r.name,
+        realm:FB.realmNameParam(state, r),
         value:Math.round(standing)
       };
       if (delivery.giftKind === 'cash') {
@@ -1438,7 +1438,7 @@ window.FB = window.FB || {};
       const realm = state.realms[contract.realmId];
       FB.news(state, FB.msg('news.lifepath.merc_pay',
         '⚔ The paymaster of {realm} counts out {money:pay} for the season’s service.', {
-          realm:realm ? realm.name : contract.realmId,
+          realm:realm ? FB.realmNameParam(state, realm) : contract.realmId,
           pay:mercContractPay()
         }));
     }
@@ -1456,7 +1456,7 @@ window.FB = window.FB || {};
     if (!contract) return;
     delete t.contract;
     const realm = contract.realmId && state.realms[contract.realmId];
-    const realmName = realm ? realm.name : contract.realmId;
+    const realmName = realm ? FB.realmNameParam(state, realm) : contract.realmId;
     if (mercContractServed(state, contract) >= mercContractSeasonsTotal()) {
       state.player.gold += mercContractCompletion();
       FB.news(state, FB.msg('news.lifepath.merc_fulfilled',
@@ -1839,7 +1839,7 @@ window.FB = window.FB || {};
       delete t.contract;
       FB.news(state, FB.msg('news.lifepath.merc_released',
         '⚔ The contract with {realm} ends in good order; the camp keeps only your name.', {
-          realm:contractRealm ? contractRealm.name : 'the patron'
+          realm:contractRealm ? FB.realmNameParam(state, contractRealm) : 'the patron'
         }));
     }
     p.provinceId = destination;
@@ -1933,7 +1933,7 @@ window.FB = window.FB || {};
           }
         }, {
           landed:handedRealm ? 'yes' : 'no',
-          realm:handedRealm ? handedRealm.name : '',
+          realm:handedRealm ? FB.realmNameParam(state, handedRealm) : '',
           heir:heir ? FB.fullName(heir) : '',
           spouse:FB.fullName(spouse),
           destination:FB.world.byId[destination].name
@@ -2313,7 +2313,7 @@ window.FB = window.FB || {};
     }
     FB.news(state, FB.msg('news.lifepath.merc_fulfilled',
       '⚔ The contract with {realm} is served out; the final purse of {money:purse} travels home with you.', {
-        realm:realm ? realm.name : contract.realmId,
+        realm:realm ? FB.realmNameParam(state, realm) : contract.realmId,
         purse:mercContractCompletion()
       }));
     if (FB.travelReturnEligible(state) === true) FB.travelReturn(state);
@@ -2331,7 +2331,7 @@ window.FB = window.FB || {};
     const realm = state.realms[contract.realmId];
     FB.news(state, FB.msg('news.lifepath.merc_renewed',
       '⚔ The contract with {realm} is renewed for another term of seasons.', {
-        realm:realm ? realm.name : contract.realmId
+        realm:realm ? FB.realmNameParam(state, realm) : contract.realmId
       }));
     return true;
   };
@@ -2343,7 +2343,7 @@ window.FB = window.FB || {};
     const realm = state.realms[contract.realmId];
     FB.news(state, FB.msg('news.lifepath.merc_released',
       '⚔ The contract with {realm} ends in good order; the camp keeps only your name.', {
-        realm:realm ? realm.name : contract.realmId
+        realm:realm ? FB.realmNameParam(state, realm) : contract.realmId
       }));
     return true;
   };

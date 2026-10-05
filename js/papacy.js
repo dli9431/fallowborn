@@ -2282,7 +2282,7 @@ window.FB = window.FB || {};
       {
         patron:sponsor === 'player'
           ? FB.fullName(playerChar(state))
-          : state.realms[sponsor] ? state.realms[sponsor].name : sponsor
+          : state.realms[sponsor] ? FB.realmNameParam(state, state.realms[sponsor]) : sponsor
       }));
     return rival;
   }
@@ -3148,7 +3148,7 @@ window.FB = window.FB || {};
       ? '⚖ {realm} recognizes {pope} after a bargain over patronage.'
       : '⚖ {realm} refuses to change Papal obedience.', {
         realm:state.realms[sovereign]
-          ? state.realms[sovereign].name : sovereign,
+          ? FB.realmNameParam(state, state.realms[sovereign]) : sovereign,
         pope:FB.papalDisplayName(state, pope)
       }));
     return { accepted:accepted };
@@ -3184,7 +3184,7 @@ window.FB = window.FB || {};
         targetId:target.id,
         obedienceId:obedience.id,
         target:FB.fullName(target),
-        realm:realm ? realm.name : sentence.targetRealmId || FB.T('their realm')
+        realm:realm ? FB.realmNameParam(state, realm) : sentence.targetRealmId || FB.T('their realm')
       });
       return true;
     }

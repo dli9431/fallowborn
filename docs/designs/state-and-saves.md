@@ -777,6 +777,8 @@ render even before live state is restored; an old snapshot still renders through
 A snapshot records the office and title held at that moment; rendering it later does
 not consult the live assignment.
 
+Generated realm names in durable message parameters use an additive $realmName snapshot with realmId, kind and proper place, plus a term record containing its catalog key, English text and capitalization when the style is a title level. The record contains no rendered translation and requires no live realm to display. Guild monopoly grantorName and grantorRulerName fields also accept this typed parameter alongside their legacy proper-name strings. Message cloning, Chronicle archives, ordinary restore and typed title migration preserve these records without changing save version 3.
+
 Dynastic diplomacy is additive and does not change save version 3.
 `realm.succession` holds lightweight royal members and a ruler-generation identity;
 materialized children and rulers point back through `char.royalLine`. Materializing a

@@ -11827,7 +11827,7 @@ window.FB = window.FB || {};
         if (!FB.beginCourtship(s, c)) return;
         FB.news(s, FB.msg('news.social.royal_courting_begins',
           '🌷 You begin courting {name} of {realm}.', {
-            name:FB.fullName(c), realm:realm.name
+            name:FB.fullName(c), realm:FB.realmNameParam(s, realm)
           }));
         FB.game.passDay({ skipFocus:true });
       }
@@ -25200,7 +25200,7 @@ window.FB = window.FB || {};
           FB.news(s, FB.msg('news.social.royal_courting_begins',
             '🌷 You begin courting {name} of {realm}.', {
               name:FB.fullName(royalChild),
-              realm:s.realms[model.realmId].name
+              realm:FB.realmNameParam(s, s.realms[model.realmId])
             }));
           FB.game.passDay({ skipFocus:true });
         } else if (action.route === 'equipment') {

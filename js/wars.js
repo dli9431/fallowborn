@@ -576,7 +576,7 @@
     if (!FB.chance(option.chance)) {
       FB.news(state, FB.msg(kind === 'demand' ? 'news.war.demand_refused' : 'news.war.white_peace_refused',
         kind === 'demand' ? '{enemy} refuses your terms. The war goes on.' : '{enemy} refuses peace. The war goes on.',
-        { enemy:enemy ? enemy.name : '' }));
+        { enemy:enemy ? FB.realmNameParam(state, enemy) : '' }));
       return { accepted:false, kind:kind };
     }
     let gold = 0, prestige = 0;
@@ -585,7 +585,7 @@
       prestige = option.prestige;
       state.player.prestige += prestige;
       FB.news(state, FB.msg('news.war.independence_recognized',
-        '👑 {enemy} recognizes your independence and the war ends.', { enemy:enemy ? enemy.name : '' }));
+        '👑 {enemy} recognizes your independence and the war ends.', { enemy:enemy ? FB.realmNameParam(state, enemy) : '' }));
     } else if (kind === 'demand') {
       gold = option.gold;
       if (gold && !FB.treasuryTransfer(state, FB.treasuryCounterparty(state, options.enemy), 'player', gold)) gold = 0;
@@ -594,10 +594,10 @@
       FB.news(state, FB.msg(option.kind === 'reparations' ? 'news.war.reparations_accepted' : 'news.war.tribute_accepted',
         option.kind === 'reparations' ? '🕊 {enemy} pays {money:gold} in reparations and the war ends.'
           : '🕊 {enemy} pays {money:gold} in tribute and the war ends.',
-        { enemy:enemy ? enemy.name : '', gold:gold }), gold ? { outcomeImpacts:[{ type:'gold', amount:gold }] } : undefined);
+        { enemy:enemy ? FB.realmNameParam(state, enemy) : '', gold:gold }), gold ? { outcomeImpacts:[{ type:'gold', amount:gold }] } : undefined);
     } else {
       FB.news(state, FB.msg('news.war.white_peace_accepted',
-        '🕊 {enemy} accepts white peace. No land changes hands.', { enemy:enemy ? enemy.name : '' }));
+        '🕊 {enemy} accepts white peace. No land changes hands.', { enemy:enemy ? FB.realmNameParam(state, enemy) : '' }));
     }
     FB.settleOrdinaryWar(state, id, 'white_peace');
     return { accepted:true, kind:kind, gold:gold, prestige:prestige };
@@ -610,7 +610,7 @@
     FB.news(state, FB.msg('news.war.objectives_conceded',
       '🏳 You cede {counties} to {enemy} to end the war.', {
         counties:options.concede.counties.map(function (pid) { return FB.world.byId[pid].name; }).join(', '),
-        enemy:state.realms[options.enemy] ? state.realms[options.enemy].name : ''
+        enemy:state.realms[options.enemy] ? FB.realmNameParam(state, state.realms[options.enemy]) : ''
       }));
     w.objectives.forEach(function (o) {
       w.occupations[o.target] = Object.assign({}, w.occupations[o.target], { occupied:true });
@@ -886,7 +886,7 @@
     }
     FB.news(state, FB.msg('news.war.aggressive_rule',
       'A war without right gives {realm} {support} Popular support in every county it currently rules. The penalty recovers yearly over {days} days without another unjust declaration.',
-      { realm:realm.name, support:-hit, days:burden.days }));
+      { realm:FB.realmNameParam(state, realm), support:-hit, days:burden.days }));
   }
   FB.recordWarDeclaration = function (state, war, preview) {
     recordAggressionDeclaration(state, war);
@@ -898,7 +898,7 @@
     else if (preview.law.liege === 'player') FB.adjustStanding(state, { kind:'realm', id:war.attacker }, -20, 'war:unlawful');
     else state.realms[war.attacker].favor = FB.clamp((Number(state.realms[war.attacker].favor) || 0) - 20, -100, 100);
     FB.news(state, FB.msg('news.war.unlawful', '{realm} breaks the sovereign peace. The {term:liege} demands an end to the campaign within 90 days.', {
-      realm:state.realms[war.attacker].name }));
+      realm:FB.realmNameParam(state, state.realms[war.attacker]) }));
     FB.queuePeaceDemand(state, war);
   };
   FB.answerPeaceDemand = function (state, id, comply) {
@@ -933,9 +933,9 @@
     FB.news(state, war.enforcementOf
       ? FB.msg('news.war.enforcement_declared',
         '{realm} declares war to enforce the peace after your refusal to end an unlawful campaign.',
-        { realm:realm ? realm.name : war.attacker })
+        { realm:realm ? FB.realmNameParam(state, realm) : war.attacker })
       : FB.msg('news.war.defense_declared', '{realm} has declared war on you.',
-        { realm:realm ? realm.name : war.attacker }));
+        { realm:realm ? FB.realmNameParam(state, realm) : war.attacker }));
     FB.withOrdinaryWar(state, war.id, function () {
       FB.queueWarEvent(state, war.enforcementOf ? 'war_enforcement_defense' : 'war_defense_muster', {});
     });
@@ -998,7 +998,7 @@
         FB.damageCountyDevelopment(state, o.target);
         if (FB.damageCountyPopulation) FB.damageCountyPopulation(state, o.target, 'conquest');
         FB.news(state, FB.msg('news.war.objective_awarded', '{realm} gains {province} in the peace settlement.', {
-          realm:state.realms[w.attacker].name, province:FB.world.byId[o.target].name }));
+          realm:FB.realmNameParam(state, state.realms[w.attacker]), province:FB.world.byId[o.target].name }));
       });
       FB.invalidateRealmCache();
       if (w.defender === 'player' && !state.player.provs.length) {
@@ -1056,7 +1056,7 @@
       if (pulse && pulse.breached) {
         siege.occupied = !siege.occupied; siege.progress = 0; delete siege.fortLevel;
         FB.news(state, FB.msg('news.war.occupation_changed', '{realm} takes military control of {province}; legal ownership awaits peace.', {
-          realm:state.realms[besieger].name, province:FB.world.byId[o.target].name }));
+          realm:FB.realmNameParam(state, state.realms[besieger]), province:FB.world.byId[o.target].name }));
       }
     }
     if (transitOnly) return false;

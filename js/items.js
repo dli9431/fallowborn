@@ -1703,7 +1703,7 @@ window.FB = window.FB || {};
         '🎁 You give {item} to {ruler} of {realm}. (Standing {favor})', {
           item:itemParam,
           ruler:r.ruler.name,
-          realm:r.name,
+          realm:FB.realmNameParam(state, r),
           favor:Math.round(standing)
         }));
     } else {
@@ -1711,7 +1711,7 @@ window.FB = window.FB || {};
         '🎁 You give {item} to {ruler} of {realm}. (Standing {opinion})', {
           item:itemParam,
           ruler:r.ruler.name,
-          realm:r.name,
+          realm:FB.realmNameParam(state, r),
           opinion:Math.round(standing)
         }));
     }

@@ -310,7 +310,7 @@ window.FB = window.FB || {};
     if (old && old !== rid) adjustStanding(state, old, -8, 'replacement');
     FB.councilAuthority(state, -2); // every appointment embeds a magnate
     FB.news(state, FB.msg('news.council.appointed',
-      '🏛 {ruler} of {realm} is raised to your council.', { ruler: r.ruler.name, realm: r.name }));
+      '🏛 {ruler} of {realm} is raised to your council.', { ruler: r.ruler.name, realm: FB.realmNameParam(state, r) }));
     return { appointed:true, seatId:seatId, holderId:rid };
   };
 
@@ -330,7 +330,7 @@ window.FB = window.FB || {};
     FB.councilAuthority(state, 4); // the crown asserts its prerogative
     FB.news(state, FB.msg('news.council.dismissed',
       '🏛 {ruler} of {realm} is dismissed from your council — and will not forget it.',
-      { ruler: r ? r.ruler.name : '?', realm: r ? r.name : '?' }));
+      { ruler: r ? r.ruler.name : '?', realm: r ? FB.realmNameParam(state, r) : '?' }));
     return true;
   };
 
@@ -553,7 +553,7 @@ window.FB = window.FB || {};
       FB.councilAuthority(state, 3);
       FB.news(state, FB.msg('news.council.scheme_holder_protected',
         '🕸 Evidence stains {ruler} of {realm}, but the charter keeps the confirmed officer at the board for the protected term.',
-        { ruler:m.realm.ruler.name, realm:m.realm.name }));
+        { ruler:m.realm.ruler.name, realm:FB.realmNameParam(state, m.realm) }));
       return;
     }
     if (c && c.seats[m.seat.id] === m.rid) c.seats[m.seat.id] = null;
@@ -561,7 +561,7 @@ window.FB = window.FB || {};
     FB.councilAuthority(state, 3);
     FB.news(state, FB.msg('news.council.scheme_punished',
       '🕸 {ruler} of {realm} is dragged from the council board in disgrace.',
-      { ruler: m.realm.ruler.name, realm: m.realm.name }));
+      { ruler: m.realm.ruler.name, realm: FB.realmNameParam(state, m.realm) }));
   };
   FB.fns.council_scheme_mercy = function (state) {
     const m = schemer(state);
@@ -659,7 +659,7 @@ window.FB = window.FB || {};
       FB.councilAuthority(state, 3);
       FB.news(state, FB.msg('news.council.plot_exposed_protected',
         '🕸 {ruler} of {realm} is exposed before the board, but the charter preserves the confirmed term.',
-        { ruler:member.realm.ruler.name, realm:member.realm.name }));
+        { ruler:member.realm.ruler.name, realm:FB.realmNameParam(state, member.realm) }));
       FB.fns.plot_end(state);
       return true;
     }
@@ -670,7 +670,7 @@ window.FB = window.FB || {};
     FB.councilAuthority(state, 3);
     FB.news(state, FB.msg('news.council.plot_exposed',
       '🕸 {ruler} of {realm} is exposed and driven from the Council board.',
-      { ruler:member.realm.ruler.name, realm:member.realm.name }));
+      { ruler:member.realm.ruler.name, realm:FB.realmNameParam(state, member.realm) }));
     FB.fns.plot_end(state);
     return true;
   };
