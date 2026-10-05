@@ -411,7 +411,11 @@ def parse_events(path: Path) -> list[Node]:
             declaration = node_object(find_keyed_assignment(
                 path, "FBDATA", "bookmarkRegions476", region
             )) or {}
-            return node_array(declaration.get("events")) or []
+            return (node_array(declaration.get("events")) or []) + parse_event_push(path)
+    return parse_event_push(path)
+
+
+def parse_event_push(path: Path) -> list[Node]:
     tokens = lex_js(path.read_text(encoding="utf-8"))
     for i in range(len(tokens) - 2):
         if tokens[i].value == "push" and tokens[i + 1].value == "(":
@@ -1087,16 +1091,33 @@ def extract_structured(inv: Inventory) -> None:
         declaration = node_object(find_keyed_assignment(
             region_path, "FBDATA", "bookmarkRegions476", region
         )) or {}
+        # County-local dated labels override the geography's names. Register
+        # their exact-source aliases as well as their stable structured keys.
         for province_node in node_array(declaration.get("provinces")) or []:
             province = node_object(province_node) or {}
             province_id = node_string(province.get("id"))
             if not province_id:
                 continue
+            for branch, record, line in branch_records(province.get("name")):
+                inv.add(
+                    f"province.476.{province_id}.name.{branch}", record,
+                    f"{region_rel}:{line}", f"476 county {province_id}, display name.", ()
+                )
             for index, entry_node in enumerate(node_array(province.get("names")) or []):
                 entry = node_object(entry_node) or {}
                 for branch, record, line in branch_records(entry.get("name")):
                     inv.add(f"province.476.{province_id}.name.dated.{index}.{branch}", record,
                             f"{region_rel}:{line}", f"476 province {province_id}, dated name.", ())
+        for province_id, layout_node in (node_object(declaration.get("layouts")) or {}).items():
+            for index, entry_node in enumerate(node_array(layout_node) or []):
+                entry = node_object(entry_node) or {}
+                site_id = node_string(entry.get("site")) or str(index)
+                for branch, record, line in branch_records(entry.get("name")):
+                    inv.add(
+                        f"settlement.476.{site_id}.name.{branch}", record,
+                        f"{region_rel}:{line}",
+                        f"476 county {province_id}, site {site_id}, display name.", ()
+                    )
         for realm_node in node_array(declaration.get("realms")) or []:
             realm = node_object(realm_node) or {}
             realm_id = node_string(realm.get("id"))

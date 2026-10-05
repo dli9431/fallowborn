@@ -41,19 +41,24 @@ test('476 seeds provincial court rights and elite identities separately from com
     const rights = s.authority.rights.filter(function (r) { return r.basis === 'tenure'; });
     const local = FB.political.communityGovernance(s, 'toulouse');
     const b = FB.bookmark('476');
-    const counties = ['ravenna','roma','split','laon','toulouse','tunis','constantinople'];
+    const counties = ['ravenna','roma','split','laon','toulouse','tunis','kairouan','constantinople',
+      'thessaloniki','adrianople','dyrrachion','nicaea','ancyra','caesarea','serdica','sisak','zadar'];
+    const estates = ['tunis','kairouan'];
     const seeded = rights.length === counties.length * 2 && counties.every(function (pid) {
       return ['peace','revenue'].every(function (power) {
+        const basis = power === 'revenue' && estates.indexOf(pid) >= 0 ? 'vandal_estates_476:' : 'provincial_court_476:';
         return rights.some(function (r) {
           return r.scope.id === pid && r.power === power && r.beneficiary.kind === 'realm' &&
-            r.beneficiary.id === s.holder[pid] && r.basisRef === 'provincial_court_476:' + pid;
+            r.beneficiary.id === s.holder[pid] && r.basisRef === basis + pid;
         });
       });
     });
     const declared = b.realms.every(function (realm) {
       const authored = realm.governingIdentity;
       const live = FB.political.governingIdentity(s, realm.id);
-      const law = FB.cultureIsA(realm.ruler.culture, 'gothic', s) ? 'gothic_custom' :
+      const law = realm.ruler.culture === 'vandal' ? 'vandal_custom' :
+        realm.ruler.culture === 'moorish' ? 'mauro_roman' :
+        FB.cultureIsA(realm.ruler.culture, 'gothic', s) ? 'gothic_custom' :
         ['roman','greek'].indexOf(realm.ruler.culture) >= 0 ? 'late_roman' : 'customary';
       return authored && live.declared && authored.eliteCultureId === realm.ruler.culture &&
         authored.eliteFaithId === realm.religion && authored.legalIdentityId === law &&

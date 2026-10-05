@@ -58,7 +58,7 @@ test('researched civic seats and head offices are distinct, pure and period scop
   expect(result.cities).toEqual(['altava_council','arles_council','carthage_council',
     'constantinople_senate','hippo_council','milan_council','ravenna_council',
     'rome_senate','salona_council','sufetula_council']);
-  expect(result.sees).toBe(13);
+  expect(result.sees).toBe(19);
   expect(result.periodRoute).toBe('standing');
   expect(result.pure).toBe(true);
   expect(result.quote).toBe(true);
