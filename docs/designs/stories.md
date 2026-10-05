@@ -56,3 +56,7 @@ World-story cards use the existing shared story sheet. Future pending campaign c
 
 
 The eastern_africa_476 instance is authored in data/bookmark_476_africa.js and composed into storyCampaigns by data/story_campaigns.js. Its identity and durable message keys remain stable for saves and localization. It retains the ordinary campaign type, the 533-550 window, an eastern Constantinople condition and Carthage's current sovereign as target. A changed coastal dynasty, including a Moorish owner, does not force the target back to the Vandals. Regional authoring adds no campaign capability or technology gate.
+
+Regional campaign ownership
+
+The Clovis-Syagrius campaign record is authored in data/bookmark_476_gaul_iberia.js and referenced from the first entry in FBDATA.storyCampaigns. Its id, registration order, attached story, named living actors, date window, objective and durable message keys remain stable. Existing opening ownership already includes Euric's gains in Auvergne, Provence and Iberia; this content pass adds no unsupported future Visigothic conquest date. The shared campaign engine still waits for inheritance, declares an ordinary war and observes its outcome. No regional lifecycle code or new engine selector is introduced, and conditional campaigns retain their existing technology decision of none.

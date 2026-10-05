@@ -792,7 +792,8 @@ def extract_structured(inv: Inventory) -> None:
         rel = path.relative_to(ROOT).as_posix()
         entries = [(item_id, item_node, rel) for item_id, item_node in root.items()]
         # Regional declarations spell some catalogue fields differently.
-        regional_fields = {"legalTraditions": ("legalTraditions",),
+        regional_fields = {"cultures": ("cultures",),
+                           "legalTraditions": ("legalTraditions",),
                            "storyCampaigns": ("campaigns", "storyCampaigns")}.get(data_name, ())
         for region_path, region in REGION_FILES if regional_fields else ():
             declaration = node_object(find_keyed_assignment(

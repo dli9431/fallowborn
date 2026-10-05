@@ -43,11 +43,16 @@ test('476 seeds provincial court rights and elite identities separately from com
     const b = FB.bookmark('476');
     const counties = ['ravenna','roma','milano','pavia','aquileia','firenze','capua','benevento',
       'bari','cosenza','augsburg','split','laon','toulouse','tunis','kairouan','constantinople',
-      'thessaloniki','adrianople','dyrrachion','nicaea','ancyra','caesarea','serdica','sisak','zadar'];
+      'thessaloniki','adrianople','dyrrachion','nicaea','ancyra','caesarea','serdica','sisak','zadar',
+      'paris','chartres','sens','orleans','rouen','caen','evreux','bayeux','angers','tours','le_mans',
+      'blois','bourges','troyes','chalons','metz','verdun','nancy'];
     const estates = ['tunis','kairouan'];
-    const seeded = rights.length === counties.length * 2 && counties.every(function (pid) {
+    const settled = FBDATA.bookmarkRegions476.gaul_iberia.provinces.map(function (row) { return row.id; })
+      .filter(function (pid) { return counties.indexOf(pid) < 0; });
+    const seeded = rights.length === (counties.length + settled.length) * 2 && counties.concat(settled).every(function (pid) {
       return ['peace','revenue'].every(function (power) {
-        const basis = power === 'revenue' && estates.indexOf(pid) >= 0 ? 'vandal_estates_476:' : 'provincial_court_476:';
+        const basis = settled.indexOf(pid) >= 0 ? 'settled_tenure_476:' :
+          power === 'revenue' && estates.indexOf(pid) >= 0 ? 'vandal_estates_476:' : 'provincial_court_476:';
         return rights.some(function (r) {
           return r.scope.id === pid && r.power === power && r.beneficiary.kind === 'realm' &&
             r.beneficiary.id === s.holder[pid] && r.basisRef === basis + pid;
@@ -59,6 +64,8 @@ test('476 seeds provincial court rights and elite identities separately from com
       const live = FB.political.governingIdentity(s, realm.id);
       const law = realm.ruler.culture === 'vandal' ? 'vandal_custom' :
         realm.ruler.culture === 'moorish' ? 'mauro_roman' :
+        ({ burgundian:'burgundian_custom', suevic:'suevic_custom', frankish:'frankish_custom',
+          brezhon:'armorican_custom', alamannic:'alamannic_custom' })[realm.ruler.culture] ||
         FB.cultureIsA(realm.ruler.culture, 'gothic', s) ? 'gothic_custom' :
         ['roman','greek'].indexOf(realm.ruler.culture) >= 0 ? 'late_roman' : 'customary';
       return authored && live.declared && authored.eliteCultureId === realm.ruler.culture &&
@@ -80,7 +87,7 @@ test('476 seeds provincial court rights and elite identities separately from com
   });
   expect(result).toMatchObject({ errors:[], seeded:true, declared:true, courtSeat:'laon',
     culture:'gothic', faith:'homoian',
-    law:'gothic_custom', communities:[['roman','nicene'],['gothic','homoian']], pure:true, tech:true });
+    law:'gothic_custom', communities:[['gallo_roman','nicene'],['gothic','homoian']], pure:true, tech:true });
   expect(result.faithShare).toBeCloseTo(0.8, 3);
   expect(result.cultureShare).toBeCloseTo(0.8, 3);
   expect(result.annual).toBeCloseTo(-0.8, 3);

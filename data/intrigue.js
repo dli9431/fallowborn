@@ -57,6 +57,9 @@ FBDATA.legalTraditions.gothic_custom = Object.assign({}, FBDATA.legalTraditions.
   jurisdiction:{ cultures:{ roman:'late_roman', iberian:'late_roman', greek:'late_roman',
     gothic:'gothic_custom' }, mixed:'gothic_custom', assessor:'late_roman' }
 });
+Object.assign(FBDATA.legalTraditions.gothic_custom.jurisdiction.cultures,
+  FBDATA.bookmarkRegions476.gaul_iberia.romanJurisdiction);
+Object.assign(FBDATA.legalTraditions, FBDATA.bookmarkRegions476.gaul_iberia.legalTraditions);
 
 Object.assign(FBDATA.legalTraditions, FBDATA.bookmarkRegions476.africa.legalTraditions);
 

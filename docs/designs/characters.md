@@ -1374,3 +1374,8 @@ Fifth-century imperial coin portraits and solidus denomination: https://ikmk.smb
 Period Frankish and Burgundian personal names: https://sourcebooks.web.fordham.edu/basis/gregory-hist.asp
 
 Vandal and African personal names: https://sourcebooks.web.fordham.edu/ancient/procopius-vandals.asp
+
+
+Regional provincial identities in 476
+
+Gallo-Roman and Hispano-Roman culture definitions are authored in data/bookmark_476_gaul_iberia.js and inherit Roman period name pools, appearance and cultural rules. They describe provincial communities independently of a Gothic, Burgundian, Frankish or Suevic court. Alamannic inherits the Frankish prototype with its own late antique name pool. Historical rulers and the existing Clovis and Burgundian co-ruler cast keep their identities and succession references. Unknown incumbents remain generated; a historical bishop name does not establish a researched birth year, skill or family.

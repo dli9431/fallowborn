@@ -56,11 +56,13 @@ test('researched civic seats and head offices are distinct, pure and period scop
     };
   });
   expect(result.cities).toEqual(['aleria_council','altava_council','aquileia_council',
-    'arles_council','capua_council','carales_council','carthage_council','constantinople_senate',
-    'favianis_council','hippo_council','iuvavum_council','lauriacum_council','milan_council',
-    'neapolis_council','panormus_council','ravenna_council','rome_senate','salona_council',
-    'sufetula_council','syracusae_council','ticinum_council','verona_council']);
-  expect(result.sees).toBe(28);
+    'arles_council','bordeaux_council','capua_council','carales_council','carthage_council',
+    'constantinople_senate','favianis_council','geneva_council','hippo_council','iuvavum_council',
+    'lauriacum_council','lyon_council','marseille_council','merida_council','milan_council',
+    'narbonne_council','neapolis_council','panormus_council','ravenna_council','rome_senate',
+    'salona_council','soissons_council','sufetula_council','syracusae_council','tarragona_council',
+    'ticinum_council','toulouse_council','verona_council','vienne_council']);
+  expect(result.sees).toBe(40);
   expect(result.periodRoute).toBe('standing');
   expect(result.pure).toBe(true);
   expect(result.quote).toBe(true);

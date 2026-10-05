@@ -114,7 +114,7 @@ test('476 resolves its period county names and heads from the date without mutat
     expect(late.names).toEqual(['Barcino', 'Salona', 'Carthage', 'Byzacena',
       'Volubilis', 'Ravenna']);
     expect(late.heads).toEqual([
-      ['barcelona_476', 'Barcino', 'town', true],
+      ['barcelona_476', 'Barcino', 'city', true],
       ['fes_476', 'Volubilis', 'town', true],
       ['pliska_476', 'Abritus', 'town', true],
       ['salona_476', 'Salona', 'city', true]

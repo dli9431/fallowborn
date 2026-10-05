@@ -16,7 +16,7 @@ FBDATA.localInstitutions = {
   milan_council:FBDATA.bookmarkRegions476.italy.localInstitutions.milan_council,
   carthage_council:FBDATA.bookmarkRegions476.africa.institutions.carthage_council,
   salona_council:FBDATA.bookmarkRegions476.dalmatia_east.institutions.salona_council,
-  arles_council:{ city:'Arles', kind:'council', provinceId:'arles', site:'arles_476', religion:'nicene', culture:'roman' },
+  arles_council:FBDATA.bookmarkRegions476.gaul_iberia.localInstitutions.arles_council,
   constantinople_senate:FBDATA.bookmarkRegions476.dalmatia_east.institutions.constantinople_senate,
   rome_see:FBDATA.bookmarkRegions476.italy.localInstitutions.rome_see,
   ravenna_see:FBDATA.bookmarkRegions476.italy.localInstitutions.ravenna_see,
@@ -24,7 +24,7 @@ FBDATA.localInstitutions = {
   milan_see:FBDATA.bookmarkRegions476.italy.localInstitutions.milan_see,
   carthage_see:FBDATA.bookmarkRegions476.africa.institutions.carthage_see,
   salona_see:FBDATA.bookmarkRegions476.dalmatia_east.institutions.salona_see,
-  arles_see:{ city:'Arles', kind:'see', provinceId:'arles', site:'arles_476', religion:'nicene', culture:'roman', officeId:'arles_bishop' },
+  arles_see:FBDATA.bookmarkRegions476.gaul_iberia.localInstitutions.arles_see,
   constantinople_see:FBDATA.bookmarkRegions476.dalmatia_east.institutions.constantinople_see,
   alexandria_see:{ city:'Alexandria', kind:'patriarchate', provinceId:null, site:null, religion:'miaphysite', culture:'greek', officeId:'alexandria_patriarch', historicalName:'Timothy Aelurus' },
   antioch_see:{ city:'Antioch', kind:'patriarchate', provinceId:null, site:null, religion:'miaphysite', culture:'greek', officeId:'antioch_patriarch', historicalName:'Peter the Fuller' },
@@ -35,6 +35,7 @@ FBDATA.localInstitutions = {
 Object.assign(FBDATA.localInstitutions, FBDATA.bookmarkRegions476.africa.institutions);
 Object.assign(FBDATA.localInstitutions, FBDATA.bookmarkRegions476.dalmatia_east.institutions);
 Object.assign(FBDATA.localInstitutions, FBDATA.bookmarkRegions476.italy.localInstitutions);
+Object.assign(FBDATA.localInstitutions, FBDATA.bookmarkRegions476.gaul_iberia.localInstitutions);
 
 /* Phase 2 authority records name legal capacities rather than landed titles.
    The institution and scope on each appointment remain separate from owner

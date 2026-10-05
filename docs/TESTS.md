@@ -578,3 +578,8 @@ Mixed-world integration coverage: geography-base.spec.js covers loading after a 
 Late antique presentation coverage
 
 476-presentation.spec.js covers shipped presentation validation, cached settlement art, medieval defaults, a culture/sex/station portrait matrix, deterministic rendering without simulation mutation, live portrait cache invalidation, stamped-era personal and family pools, saved-identity preservation, political labels, item and unit membership, malformed mod rejection, and Federate Soldier and Curialis openings at phone width. Existing appearance-and-wardrobe, lexicon, customary-governing-identity and 476-situation expectations track the new period dress and labels. presentation-styles.spec.js retains the preexisting medieval pixel reference comparison. Owner visual acceptance includes fresh campaign portraits, crests, purse and map markers at phone size.
+
+
+Gaul and Iberia coverage
+
+476-gaul-and-iberia.spec.js covers a seeded civic smoke journey, authored settlement compilation, community and court separation, successor personal-law selection, vacancies and mediation across save/restore, regional event eligibility and receipts, the Clovis ordinary-war boundary, ten years of daily simulation and medieval isolation. tools/test_i18n_catalog.py additionally checks extraction of the regional source records under stable display and durable message keys. Execution remains owner-controlled.

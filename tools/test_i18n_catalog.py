@@ -68,6 +68,27 @@ class StructuredDataExtractionTests(unittest.TestCase):
                 f"province.476.{county}.name.dated.0.default"]["text"], name)
         self.assertNotIn(i18n_catalog.source_key("Epiphanius"), inventory.entries)
 
+    def test_regional_gaul_iberia_content_keeps_stable_display_and_news_keys(self):
+        inventory = i18n_catalog.Inventory()
+        i18n_catalog.extract_structured(inventory)
+        for key, text in (
+            ('culture.gallo_roman.name.default', 'Gallo-Roman'),
+            ('culture.hispano_roman.name.default', 'Hispano-Roman'),
+            ('legalTradition.burgundian_custom.name.default', 'Burgundian custom'),
+            ('realm.476.alamanni_476.name.default', 'Upper Rhine Alamanni'),
+            ('province.476.ourense.name.dated.0.default', 'Middle Minius'),
+            ('settlement.476.tournai_476.name.default', 'Tornacum'),
+            ('storyCampaign.clovis_syagrius_476.name.default', 'The Roman Domain at Soissons'),
+            ('event.gaul_476_two_laws.title.default', 'Two Customs, One Sale'),
+            ('event.gaul_476_two_laws.options.0.desc.default', 'Spend {money:3} and gain 4 prestige.'),
+        ):
+            self.assertEqual(inventory.entries[key]['text'], text)
+        self.assertIn('news.476.clovis_campaign', inventory.entries)
+        self.assertIn('news.476.clovis_won', inventory.entries)
+        self.assertIn('event.iberia_476_land_register.options.0.success.text.default',
+                      inventory.entries)
+        self.assertNotIn(i18n_catalog.source_key('Leontius'), inventory.entries)
+
     def test_campaign_names_and_all_durable_outcomes_are_extracted(self):
         inventory = i18n_catalog.Inventory()
         i18n_catalog.extract_structured(inventory)
