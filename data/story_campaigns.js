@@ -46,19 +46,7 @@ FBDATA.storyCampaigns = {
       diverted:{ key:'news.476.theoderic_diverted', text:'📜 The Italian opportunity no longer fits the Amal and eastern courts.' },
       interrupted:{ key:'news.476.theoderic_interrupted', text:'📜 The host or living imperial mandate needed for the Amal campaign is lost.' }
     } },
-  eastern_africa_476:{ id:'eastern_africa_476', type:'campaign',
-    requires:['western_court_476'], name:'The Eastern African Campaign',
-    desc:'An eastern court retaining Constantinople may contest Carthage against its current sovereign. The map’s armies decide possession.',
-    firstYear:533, lastYear:550, durationDays:2880,
-    actor:{ realmId:'byzantium' }, target:{ provinceId:'tunis' },
-    conditions:[{ kind:'owner', provinceId:'constantinople', realmId:'byzantium' }],
-    news:{
-      started:{ key:'news.476.africa_campaign', text:'⚔ The eastern court opens an African reconquest campaign against the current ruler of Carthage.' },
-      won:{ key:'news.476.africa_won', text:'🏛 The eastern court secures Carthage through its campaign.' },
-      failed:{ key:'news.476.africa_failed', text:'🏳 The eastern African campaign ends without securing Carthage.' },
-      diverted:{ key:'news.476.africa_diverted', text:'📜 The African reconquest opportunity closes as its political conditions change.' },
-      interrupted:{ key:'news.476.africa_interrupted', text:'📜 A change of eastern court interrupts the African campaign.' }
-    } },
+  eastern_africa_476:FBDATA.bookmarkRegions476.africa.campaigns.eastern_africa_476,
   eastern_italy_476:{ id:'eastern_italy_476', type:'campaign',
     requires:['western_court_476'], name:'The Eastern Italian Campaign',
     desc:'The eastern court may contest the present ruler of Ravenna. No historical date guarantees an Italian conquest.',

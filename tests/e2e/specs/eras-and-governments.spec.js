@@ -263,7 +263,9 @@ test('476 seeds its forms from bookmark data and holds counties directly',
         armorica_476:{ formId:'regnum', sinceTurn:0 },
         rhein_franks_476:{ formId:'regnum', sinceTurn:0 },
         aghlabids:{ formId:'regnum', sinceTurn:0 },
-        mauri_476:{ formId:'regnum', sinceTurn:0 }
+        mauri_476:{ formId:'regnum', sinceTurn:0 },
+        altava_476:{ formId:'regnum', sinceTurn:0 },
+        tingitana_476:{ formId:'regnum', sinceTurn:0 }
       },
       franks:'regnum', italy:'roman_civic', federates:'federate_polity',
       direct:true, consent:'territorial_consent', delegated:false,

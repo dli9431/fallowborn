@@ -587,3 +587,6 @@ FB.activateBookmark accepts an optional fourth argument, { geography: savedGeogr
 476 authored geography
 
 The 476 bookmark declares inhabited ownership and communities in four regional files on europe_regional. Its settlementLayout names the ordinary 476 layout; no later bookmark supplies its politics or settlement lists. Dated names remain on the physical base, while its optional climate layer overrides base assignments for that campaign only. Wasteland entries preserve ids and physical seeds without authored owners or communities.
+
+
+Africa's 476 regional declaration supplies county-level dated names and dated physical site records directly. Its layouts are composed into settlementLayouts.476 after the base layouts load, before bookmark activation. Existing curated head slots remain first; Hadrumetum follows Sufetula and Hippo Regius follows Cirta. New regional sites never replace a medieval layout. The later geography names are retained for 867/1066. Development and population shares are illustrative game values, and the single Numidian cell cannot represent separate coastal and interior sovereignty.

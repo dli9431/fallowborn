@@ -31,6 +31,26 @@ class JavascriptLexerTests(unittest.TestCase):
 
 
 class StructuredDataExtractionTests(unittest.TestCase):
+    def test_regional_africa_content_keeps_stable_display_and_news_owners(self):
+        inventory = i18n_catalog.Inventory()
+        i18n_catalog.extract_structured(inventory)
+        for key, text in (
+            ('realm.476.altava_476.name.default', 'Mauro-Roman Kingdom'),
+            ('realm.476.tingitana_476.name.default', 'Tingitanian Communities'),
+            ('province.476.constantine.name.dated.0.default', 'Numidia and the Aures'),
+            ('legalTradition.vandal_custom.name.default', 'Vandal custom'),
+            ('legalTradition.mauro_roman.name.default', 'Mauro-Roman custom'),
+            ('storyCampaign.eastern_africa_476.name.default', 'The Eastern African Campaign'),
+            ('event.africa_estate_rolls_476.title.default', 'Two Estate Rolls'),
+            ('event.africa_sicilian_cargo_476.options.0.label.default', 'Help account for the cargo.'),
+            ('event.africa_estate_rolls_476.options.0.effects.log.default', 'Copied an old provincial estate record.'),
+        ):
+            self.assertEqual(inventory.entries[key]['text'], text)
+            self.assertIn('bookmark_476_africa.js', inventory.meta[key]['location'])
+        for outcome in ('campaign', 'won', 'failed', 'diverted', 'interrupted'):
+            self.assertIn(f'news.476.africa_{outcome}', inventory.entries)
+        self.assertNotIn(i18n_catalog.source_key('Gaiseric'), inventory.entries)
+
     def test_campaign_names_and_all_durable_outcomes_are_extracted(self):
         inventory = i18n_catalog.Inventory()
         i18n_catalog.extract_structured(inventory)

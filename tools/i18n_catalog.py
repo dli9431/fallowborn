@@ -27,6 +27,8 @@ I18N = ROOT / "i18n"
 HASH_SCHEMA = 1
 CATALOG_SCHEMA = 1
 EVENT_FILES = sorted(DATA.glob("events_*.js"))
+REGION_FILES = [(DATA / f"bookmark_476_{region}.js", region)
+                for region in ("italy", "dalmatia_east", "gaul_iberia", "africa")]
 BOOKMARK_FILE = DATA / "bookmarks.js"
 STARTS_FILE = DATA / "starts.js"
 TECHNOLOGY_FILE = DATA / "technology.js"
@@ -404,6 +406,12 @@ def find_keyed_assignment(path: Path, owner: str, prop: str, key: str) -> Node |
 
 
 def parse_events(path: Path) -> list[Node]:
+    for region_path, region in REGION_FILES:
+        if path == region_path:
+            declaration = node_object(find_keyed_assignment(
+                path, "FBDATA", "bookmarkRegions476", region
+            )) or {}
+            return node_array(declaration.get("events")) or []
     tokens = lex_js(path.read_text(encoding="utf-8"))
     for i in range(len(tokens) - 2):
         if tokens[i].value == "push" and tokens[i + 1].value == "(":
@@ -655,7 +663,7 @@ class Inventory:
 
 
 def extract_structured(inv: Inventory) -> None:
-    for path in EVENT_FILES:
+    for path in EVENT_FILES + [path for path, _ in REGION_FILES]:
         rel = path.relative_to(ROOT).as_posix()
         for event_node in parse_events(path):
             event = node_object(event_node)
@@ -778,7 +786,17 @@ def extract_structured(inv: Inventory) -> None:
                            "map_data.js")
         root = node_object(find_assignment(path, "FBDATA", data_name)) or {}
         rel = path.relative_to(ROOT).as_posix()
-        for item_id, item_node in root.items():
+        entries = [(item_id, item_node, rel) for item_id, item_node in root.items()]
+        regional_field = {"legalTraditions": "legalTraditions", "storyCampaigns": "campaigns"}.get(data_name)
+        if regional_field:
+            for region_path, region in REGION_FILES:
+                declaration = node_object(find_keyed_assignment(
+                    region_path, "FBDATA", "bookmarkRegions476", region
+                )) or {}
+                region_rel = region_path.relative_to(ROOT).as_posix()
+                entries.extend((item_id, item_node, region_rel) for item_id, item_node in
+                               (node_object(declaration.get(regional_field)) or {}).items())
+        for item_id, item_node, rel in entries:
             item = node_object(item_node) or {}
             fields = DATA_FIELDS + (("earned",) if data_name == "traits" else ())
             if data_name == "religions":
@@ -1069,6 +1087,16 @@ def extract_structured(inv: Inventory) -> None:
         declaration = node_object(find_keyed_assignment(
             region_path, "FBDATA", "bookmarkRegions476", region
         )) or {}
+        for province_node in node_array(declaration.get("provinces")) or []:
+            province = node_object(province_node) or {}
+            province_id = node_string(province.get("id"))
+            if not province_id:
+                continue
+            for index, entry_node in enumerate(node_array(province.get("names")) or []):
+                entry = node_object(entry_node) or {}
+                for branch, record, line in branch_records(entry.get("name")):
+                    inv.add(f"province.476.{province_id}.name.dated.{index}.{branch}", record,
+                            f"{region_rel}:{line}", f"476 province {province_id}, dated name.", ())
         for realm_node in node_array(declaration.get("realms")) or []:
             realm = node_object(realm_node) or {}
             realm_id = node_string(realm.get("id"))

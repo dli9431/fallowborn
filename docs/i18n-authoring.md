@@ -192,3 +192,8 @@ The late antique purse uses literal label and singular/plural unit names in data
 Campaign story authoring
 
 FBDATA.storyCampaigns name and desc fields use storyCampaign.<id>.<field>.default through FB.dataText. Their news outcome rows carry key and text; the static extractor registers each text under that opaque message key. Runtime registration supplies English for saved Chronicle descriptors without requiring catalog generation on the feature branch. Political stage labels use literal FB.T calls. The named commanders in FBDATA.storyActors476 are historical proper names and are not translated.
+
+
+476 regional content extraction
+
+The static extractor also reads optional regional events, legalTraditions and campaigns from the literal bookmarkRegions476 declarations. They retain the usual event, legalTradition and storyCampaign owners, including event option indexes and durable campaign news keys. Regional province-row names receive province.476.<id>.name.dated.<index> owners and exact-English aliases; physical-site and person names remain proper names. Composition through Object.assign or concat does not require executing game scripts. Catalog regeneration remains an explicit integration request.

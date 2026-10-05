@@ -261,3 +261,6 @@ Music checks the exact faith, its authored music.lineage, then remaining ancestr
 Optional faith institutions
 
 Faith properties.systems accepts enable and disable lists as well as the existing boolean map. Compilation normalizes the local layer before merging inherited properties, preserving a parent's requirements unless the child overrides them. FB.faithHasSystem delegates to FB.systemEnabled for the named faith, so a final bookmark disable also applies to inherited and generated faiths. Papacy remains faith-enabled; medieval excommunication preserves the existing nonpapal religious-head sanctions. Catholic vocation paths retain their papacy requirement. See docs/designs/systems.md.
+
+
+Africa's regional data declares separate Carthage Nicene and Homoian seats. The Nicene opening remains vacant under Vandal restrictions; the Homoian representative is explicitly generated. Altava's generated Nicene representative belongs to a mixed Mauro-Roman population rather than a universal traditional-faith Moorish identity. These seats use the ordinary local office and mediation ledger; no dated episcopal election or persecution is synthesized. Adding regional seats changes no technology eligibility and uses the existing episcopal_institution_mediation none review.

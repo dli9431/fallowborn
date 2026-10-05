@@ -321,7 +321,7 @@ FBDATA.bookmarks['476'] = {
     FBDATA.bookmarkRegions476.dalmatia_east.climate,
     FBDATA.bookmarkRegions476.gaul_iberia.climate,
     FBDATA.bookmarkRegions476.africa.climate) },
-  straits:[['messina', 'reggio'], ['palermo', 'tunis'], ['malaga', 'tangier'], ['silves', 'tangier'], ['constantinople', 'nicaea'], ['cagliari', 'pisa'], ['ajaccio', 'lucca'], ['ajaccio', 'nice'], ['mallorca', 'valencia'], ['siracusa', 'tunis']],
-  crossingClasses:{ 'messina|reggio':'narrow', 'palermo|tunis':'open', 'malaga|tangier':'narrow', 'silves|tangier':'coastal', 'constantinople|nicaea':'narrow', 'cagliari|pisa':'open', 'ajaccio|lucca':'coastal', 'ajaccio|nice':'coastal', 'mallorca|valencia':'open', 'siracusa|tunis':'open' },
+  straits:[['messina', 'reggio'], ['palermo', 'tunis'], ['malaga', 'tangier'], ['silves', 'tangier'], ['constantinople', 'nicaea'], ['cagliari', 'pisa'], ['ajaccio', 'lucca'], ['ajaccio', 'nice'], ['mallorca', 'valencia']].concat(FBDATA.bookmarkRegions476.africa.straits),
+  crossingClasses:Object.assign({ 'messina|reggio':'narrow', 'palermo|tunis':'open', 'malaga|tangier':'narrow', 'silves|tangier':'coastal', 'constantinople|nicaea':'narrow', 'cagliari|pisa':'open', 'ajaccio|lucca':'coastal', 'ajaccio|nice':'coastal', 'mallorca|valencia':'open' }, FBDATA.bookmarkRegions476.africa.crossingClasses),
   scripted:[]
 };
