@@ -2,6 +2,7 @@
    papal institutions additionally require an enabling faith. */
 window.FBDATA = window.FBDATA || {};
 FBDATA.systems = {
+  roman_offices:{ id:'roman_offices', desc:'Scoped Roman offices, personal honors and contested imperial recognition.', defaultEnabled:false, modules:['authority'] },
   civic_institutions:{ id:'civic_institutions', desc:'Site councils and senates with local bargains and consent.', defaultEnabled:false, modules:['institutions'] },
   episcopal_sees:{ id:'episcopal_sees', desc:'Local bishoprics and patriarchates with mediation and institutional standing.', defaultEnabled:false, modules:['institutions','model'] },
   manorial_tenure:{ id:'manorial_tenure', desc:'Customary dependent tenure and scheduled household duties.', defaultEnabled:true, modules:['events','actions','economy'] },

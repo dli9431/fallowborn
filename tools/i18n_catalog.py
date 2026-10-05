@@ -60,6 +60,8 @@ STRUCTURED_DATA = {
     "marketEndowmentTypes": "marketEndowment",
     "travelPurposes": "travelPurpose",
     "councilSeats": "councilSeat",
+    "authorityOffices": "authorityOffice",
+    "legitimacySources": "legitimacySource",
     "politicalBlocs": "politicalBloc",
     "policies": "policy",
     "privileges": "privilege",
@@ -768,7 +770,7 @@ def extract_structured(inv: Inventory) -> None:
                            "political_blocs.js" if data_name == "politicalBlocs" else
                            "policies.js" if data_name == "policies" else
                            "political_institutions.js" if data_name in (
-                               "councilSeats", "privileges"
+                               "councilSeats", "privileges", "authorityOffices", "legitimacySources"
                            ) else
                            "map_data.js")
         root = node_object(find_assignment(path, "FBDATA", data_name)) or {}

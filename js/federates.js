@@ -88,6 +88,9 @@
     return FB.federateRequest(s, row.id, choice);
   }
   FB.governments.register('ai', 'federate_contracts', { consentContract:ai, proposeMigration:propose });
+  FB.governments.register('ai', 'roman_offices', {
+    consentContract:ai, proposeMigration:propose, offices:FB.officeCourtAI
+  });
   FB.governments.strategy('territory', 'non_territorial').movingCourt = true;
   FB.federateSupplyContracts = function (s) {
     return (s.authority && s.authority.contracts || []).filter(function (row) {

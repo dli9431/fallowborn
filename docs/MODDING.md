@@ -1,3 +1,13 @@
+Roman office interfaces
+
+The optional roman_offices system is off by default and enabled by the late antique era. Government forms may declare officeCatalogue as a duplicate-free list of known authority office ids with appointment metadata, and select the registered roman_offices AI strategy. This strategy retains the existing federate contract callbacks and adds offices(state, realmId). FB.governments.validate rejects unknown office ids before a government-form mod is applied. Authority offices and legitimacy sources remain engine definition tables rather than new runtime JSON mod roots.
+
+An authority office may have host, county or realm scope. Ban requires a host scope. Peace, Revenue and Consent may use county or realm scope; a realm-scoped civil office projects the appointing court's current territory. Honor-only offices have empty powers and realm scope. Optional appointment metadata declares nonnegative gold and prestige, a skill key from FB.SKILLS, nonnegative minimum and optional booleans annual and imperialOnly. imperialOnly requires the appointing ruler to hold a living imperial claim with a current legitimacy source. The registration fee and retained-prestige qualification apply to household petitions; courts nominate officers without either personal expense. Annual terms end at the campaign calendar's next year boundary. Other existing succession and recognition-source policies remain authoritative.
+
+FB.officeCourts(state), officeScopes(state, realmId, officeId), officeClaimants(state) and officeRecognitionMandates(state, actorRef) return detached read models. officeAppointmentQuote(state, actorRef, terms) accepts institutionId, officeId, holder and scope. officeSeekAppointment(state, reviewedQuote) revalidates its signature before committing. officeTransitionQuote(state, actorRef, appointmentId, action) supports confirm, contest and remove; officeTransition applies it. officeClaimQuote(state, actorRef, claimant, mandate, action) accepts a claimant's institutionId and holder, a mandate's source and issuer, and recognize or contest. officeDeclareClaim revalidates before redirecting or withdrawing only that mandate's scoped support. Existing low-level authority APIs remain the story-authoring boundary and never imply a territorial transfer.
+
+No new authority record family or save version is introduced. New starts record rival imperial claims as contested imperial_office appointments. Existing appointments and recognitions preserve their ids, scopes, statuses and generation stamps. Optional state.officeCourtPeriod records the last seasonal court pass and survives normal v4 save/restore. Absent state and optional records remain absent in older campaigns. No event trigger/effect keys or new shipped script files are added.
+
 # Modding Fallowborn
 
 Site institution API
@@ -5159,10 +5169,10 @@ the engine default. `FB.governments.validate` rejects a form that names an
 unregistered strategy or omits a required slot. The `territorial`
 form is required as the legacy fallback. An office ID has
 `powers` (`ban`, `peace`, `revenue`, `consent`), allowed `scopes`
-(`host` or `county`) and `succession` (`reaffirm` or `continues`), plus
+(`host`, `county` or `realm`) and `succession` (`reaffirm` or `continues`), plus
 `recognitionSources` naming which legitimacy sources may support it.
 A Ban office must include host scope; Peace, Revenue and Consent need county
-scope. A legitimacy source specifies whether
+or realm scope. A legitimacy source specifies whether
 issuer succession requires reaffirmation. Customary basis IDs identify the
 recorded legal origin without implying ownership. `FB.validateAuthorityData`
 checks these tables when a bookmark activates. Definitions are semantic; phase
