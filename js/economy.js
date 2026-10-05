@@ -7821,6 +7821,7 @@ window.FB = window.FB || {};
 
   /* Service in another household is one bounded personal appointment. It is
      independent of occupation, freedom and the player's own paid retainers. */
+  const HOUSEHOLD_LETTERED_DAYS = 720;
   function serviceDef(id) {
     return Object.prototype.hasOwnProperty.call(FBDATA.householdServiceRoles, id)
       ? FBDATA.householdServiceRoles[id] : null;
@@ -7838,6 +7839,17 @@ window.FB = window.FB || {};
   FB.householdServiceRecord = function (state) {
     const r = state && state.player && state.player.householdService;
     return r && r.v === 1 && r.charId === state.player.charId && serviceDef(r.roleId) ? r : null;
+  };
+  FB.householdServiceProgress = function (state, roleId) {
+    const r = FB.householdServiceRecord(state);
+    const c = state.chars[state.player.charId];
+    return {
+      roleDays:r && r.experience && r.experience[roleId || r.roleId] || 0,
+      totalDays:r && r.workedDays || 0,
+      learnedDays:r && r.learnedDays || 0,
+      letteredDaysRequired:HOUSEHOLD_LETTERED_DAYS,
+      lettered:!!(c && c.traits.indexOf('literate') >= 0)
+    };
   };
   FB.householdServiceName = function (state, roleId) {
     const def = serviceDef(roleId);
@@ -7927,7 +7939,7 @@ window.FB = window.FB || {};
     else {
       if (r && r.status === 'active' && r.roleId === roleId && matching) out.missing.push(FB.T('You already hold this appointment.'));
       if (def.maleOnly && c && c.sex !== 'm') out.missing.push(FB.T('This household guard appointment is available to men.'));
-      if (def.lettered && c && c.traits.indexOf('literate') < 0) out.missing.push(FB.T('Requires Lettered. Tally assistance teaches letters after 720 working days.'));
+      if (def.lettered && c && c.traits.indexOf('literate') < 0) out.missing.push(FB.T('Requires Lettered. Tally assistance teaches letters after {days} working days.', {days:HOUSEHOLD_LETTERED_DAYS}));
       for (const check of out.qualification.skills) {
         if (!check.met) {
           const names = {ste:FB.T('Stewardship'),lea:FB.T('Learning'),mar:FB.T('Martial'),dip:FB.T('Diplomacy')};
@@ -8045,7 +8057,7 @@ window.FB = window.FB || {};
     r.valueDelivered += value;
     if (def.path === 'letters') {
       r.learnedDays++;
-      if (r.learnedDays >= 720 && state.chars[r.charId].traits.indexOf('literate') < 0) {
+      if (r.learnedDays >= HOUSEHOLD_LETTERED_DAYS && state.chars[r.charId].traits.indexOf('literate') < 0) {
         FB.addTrait(state.chars[r.charId], 'literate');
         FB.news(state, FB.msg('news.service.lettered', 'Household service taught you to read and write.', {}));
       }
@@ -8128,6 +8140,7 @@ window.FB = window.FB || {};
         : FB.countyPopularSupport(state, state.player.provinceId);
     }
     function impacts(state, ctx, amount) {
+      if (choice === 'routine') return [{type:'system',system:'householdService',action:'refer'}];
       amount = amount === undefined ? 3 : amount;
       if (!amount) return [];
       if (choice === 'careful') return [{type:'standing',targetKind:'character',targetId:ctx.serviceEmployerId,amount:amount,reward:amount > 0}];

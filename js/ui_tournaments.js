@@ -16,6 +16,8 @@
     return '<button type="button" class="actionbtn" id="' + id + '"' + (disabled ? ' disabled' : '') + '>' + esc(label) + '</button>';
   }
   function footer() { return '<div class="gm-footer"><button type="button" class="btn" id="games-back">' + esc(FB.T('Back')) + '</button></div>'; }
+  // Stacked label above a full-width native select; callers close </select></label>.
+  function field(id, name) { return '<label class="games-field"><span>' + esc(name) + '</span><select id="' + id + '">'; }
   function people(title, rows) { return rows ? SH.reviewFactsCard(title, SH.reviewPeopleHtml(rows)) : ''; }
   function show(title, h, opts) {
     opts = opts || {};
@@ -125,16 +127,16 @@
     var note = [date(e.startTurn), label('scales', e.scale), FB.T('Headline purse {money:prize}', {prize:e.funding.prizes.headline}), state].join(' · ');
     var details = (host ? SH.reviewPeopleHtml(SH.reviewPersonHtml(host, FB.T('Host'))) : '') + fact(FB.T('Programme'), programme(e)) +
       fact(FB.T('Closing'), date(e.closeTurn)) + fact(FB.T('Funding paid'), money(e.funding.total));
-    return SH.reviewActionCardHtml({ id:'games-' + e.id, label:T.venueName(e), note:note, details:details, warn:!eligibility.ok });
+    return SH.reviewActionCardHtml({ id:'games-' + e.id, label:T.venueName(s, e), note:note, details:details, warn:!eligibility.ok });
   }
   UI.showGames = function (filter, replace, ids, back) {
     filter = filter || 'upcoming';
-    var s = FB.state, rows = T.list(s, filter), h = '<label for="games-filter">' + esc(FB.T('Calendar filter')) + '</label><select id="games-filter">';
+    var s = FB.state, rows = T.list(s, filter), h = field('games-filter', FB.T('Calendar filter'));
     function self() { UI.showGames(filter, false, ids, back); }
     [{id:'upcoming',name:FB.T('Upcoming')},{id:'reachable',name:FB.T('Reachable')},{id:'local',name:FB.T('Local')},{id:'bookings',name:FB.T('My bookings')}].forEach(function (f) {
       h += '<option value="' + f.id + '"' + (filter === f.id ? ' selected' : '') + '>' + esc(f.name) + '</option>';
     });
-    h += '</select>';
+    h += '</select></label>';
     if (ids) {
       rows = rows.filter(function (e) { return ids.indexOf(e.id) >= 0; });
       h += button('games-all', FB.T('Show the full calendar'));
@@ -255,7 +257,7 @@
     h += SH.reviewActionsHtml(actions);
     if (p && p.status === 'active') h += button('games-withdraw', FB.T('Withdraw from this edition…'));
     if (e.hostId === s.player.charId && open) h += button('games-cancel', FB.T('Cancel this edition…'));
-    show(T.venueName(e), h, { replace:replace, back:back });
+    show(T.venueName(s, e), h, { replace:replace, back:back });
     bind('games-activities', function () { UI.showGamesActivities(id, returnTo(self)); });
     bind('games-travel', function () { if (journey.ok) UI.showGamesTravel(id, returnTo(self)); });
     bind('games-round', function () { UI.showGamesRound(id, returnTo(self)); });
@@ -335,23 +337,23 @@
     if (!sites.length) { show(FB.T('Host games'),text(FB.T('Direct ownership of an established settlement is required.')),{ back:back }); return; }
     draft = draft || {};
     function option(value, name, selected) { return '<option value="' + esc(value) + '"' + (selected ? ' selected' : '') + '>' + esc(name) + '</option>'; }
-    var h = '<label for="games-venue">' + esc(FB.T('Venue')) + '</label><select id="games-venue">';
+    var h = '<div class="games-host-form">' + field('games-venue', FB.T('Venue'));
     sites.forEach(function (site,i) {
-      h += option(i, T.venueName(site), draft.venue !== undefined ? draft.venue === String(i) : pid === site.provinceId && slot === site.settlement);
+      h += option(i, T.venueName(s, site), draft.venue !== undefined ? draft.venue === String(i) : pid === site.provinceId && slot === site.settlement);
     });
-    h += '</select>';
+    h += '</select></label>';
     ['scales','programmes'].forEach(function (group) {
-      h += '<label for="games-' + group + '">' + esc(group === 'scales' ? FB.T('Scale') : FB.T('Programme')) + '</label><select id="games-' + group + '">';
+      h += field('games-' + group, group === 'scales' ? FB.T('Scale') : FB.T('Programme'));
       Object.keys(D[group]).forEach(function (key) { h += option(key, label(group,key), draft[group] === key); });
-      h += '</select>';
+      h += '</select></label>';
     });
-    h += '<label for="games-date">' + esc(FB.T('Opening date')) + '</label><select id="games-date">';
+    h += field('games-date', FB.T('Opening date'));
     dates.forEach(function (turn) { h += option(turn, date(turn), draft.date === String(turn)); });
-    h += '</select>';
-    if (!dates.length) h += text(FB.T('No spring or summer date currently meets the notice and host-spacing rules.'));
-    h += '<label><input type="checkbox" id="games-annual"' + (draft.annual ? ' checked' : '') + '> ' + esc(FB.T('Repeat annually, subject to renewal')) + '</label>';
-    h += '<div id="games-ceiling-row"' + (draft.annual ? '' : ' class="hidden"') + '><label for="games-ceiling">' + esc(FB.T('Annual spending ceiling')) +
-      '</label><input id="games-ceiling" type="number" min="0" step="25" value="' + esc(draft.ceiling || '500') + '"></div>';
+    h += '</select></label>';
+    if (!dates.length) h += '<p class="games-host-note">' + esc(FB.T('No spring or summer date currently meets the notice and host-spacing rules.')) + '</p>';
+    h += '<label class="games-host-annual"><input type="checkbox" id="games-annual"' + (draft.annual ? ' checked' : '') + '><span>' + esc(FB.T('Repeat annually, subject to renewal')) + '</span></label>';
+    h += '<label class="games-field" id="games-ceiling-row"' + (draft.annual ? '' : ' hidden') + '><span>' + esc(FB.T('Annual spending ceiling')) +
+      '</span><input id="games-ceiling" type="number" min="0" step="25" inputmode="numeric" value="' + esc(draft.ceiling || '500') + '"></label></div>';
     h += button('games-review',FB.T('Review funding and availability'), !dates.length);
     show(FB.T('Host games'),h,{ back:back });
     var touched = !!draft.programmeTouched;
@@ -361,7 +363,7 @@
       if (!touched) el('games-programmes').value = T.defaultProgramme(FB.state,FB.state.player.charId,venue());
     });
     el('games-programmes').addEventListener('change', function () { touched = true; });
-    el('games-annual').addEventListener('change', function () { el('games-ceiling-row').classList.toggle('hidden', !this.checked); });
+    el('games-annual').addEventListener('change', function () { el('games-ceiling-row').hidden = !this.checked; });
     bind('games-review',function () {
       var site = venue(), current = { venue:el('games-venue').value, scales:el('games-scales').value, programmes:el('games-programmes').value,
         date:el('games-date').value, annual:el('games-annual').checked, ceiling:el('games-ceiling').value, programmeTouched:touched };
@@ -377,7 +379,7 @@
   };
   UI.reviewHostGames = function (spec, back, replace) {
     var q = T.quote(FB.state, spec), f = q.funding;
-    var h = fact(FB.T('Venue'),T.venueName(q)) + fact(FB.T('Opening'),date(q.startTurn)) + fact(FB.T('Current recurring net / season'),money(q.income.projection)) +
+    var h = fact(FB.T('Venue'),T.venueName(FB.state, q)) + fact(FB.T('Opening'),date(q.startTurn)) + fact(FB.T('Current recurring net / season'),money(q.income.projection)) +
       fact(FB.T('Recorded seasonal average'),money(q.income.average)) + fact(FB.T('Reference income'),money(q.income.reference));
     if (f) h += fact(FB.T('Funding due now'),money(f.total)) + fact(FB.T('Headline prize'),money(f.prizes.headline)) + fact(FB.T('Archery prize'),money(f.prizes.archery)) + fact(FB.T('Wrestling prize'),money(f.prizes.wrestling)) +
       fact(FB.T('Performer awards'),money(f.prizes.perform)) + fact(FB.T('Workforce and entertainment'),money(f.services)) + fact(FB.T('Preparation and hospitality'),money(f.preparation)) + fact(FB.T('Treasury remaining'),money(q.treasury-f.total));
@@ -389,7 +391,7 @@
       details += text(FB.T('Renewal is attempted 60 days before each annual start. Failed renewal skips the year without charging.'));
     }
     h += fact(FB.T('All events: occupied / limit'),q.capacity.used[0] + ' / ' + q.capacity.limits[0]) + fact(FB.T('Regional and grand: occupied / limit'),q.capacity.used[1] + ' / ' + q.capacity.limits[1]) + fact(FB.T('Grand: occupied / limit'),q.capacity.used[2] + ' / ' + q.capacity.limits[2]);
-    q.capacity.occupants.forEach(function (e) { h += fact(T.venueName(e),FB.T('Closes {date}',{date:date(e.closeTurn)})); });
+    q.capacity.occupants.forEach(function (e) { h += fact(T.venueName(FB.state, e),FB.T('Closes {date}',{date:date(e.closeTurn)})); });
     q.reasons.forEach(function (reason) { h += text(reason); });
     if (q.ok) h += button('games-fund',FB.T('Fund and announce ({money:cost})',{cost:f.total}));
     show(FB.T('Review games funding'),h,{ back:back, replace:replace, details:details });

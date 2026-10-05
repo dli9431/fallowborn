@@ -1,9 +1,74 @@
 'use strict';
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename,['index.html','data/actions.js','data/tournaments.js','js/tournaments.js','js/ui_tournaments.js',
-  'js/ui_misc.js','js/ui_modals.js','js/ui_panels.js','js/actions.js','js/mapview.js','js/i18n.js']);
+  'js/ui_misc.js','js/ui_modals.js','js/ui_panels.js','js/actions.js','js/mapview.js','js/i18n.js',
+  'js/world.js','js/lordships.js','js/save.js']);
 const { test, expect } = require('../support/fixture');
 const { startGames, bookGames } = require('../support/game/tournaments');
+
+for (const distribution of ['standard','crazygames']) {
+  test('a Baron\'s renamed venue survives loading throughout hosting in '+distribution, async function ({page},info) {
+    if (distribution === 'crazygames') await page.addInitScript(function () {
+      window.FB_DISTRIBUTION = 'crazygames'; window.FB_CRAZYGAMES_STORAGE = 'localstorage';
+    });
+    await page.setViewportSize({width:390,height:844});
+    const ids = await startGames(page,info);
+    await page.evaluate(function (ids) {
+      var s = FB.state, p = s.player;
+      p.tier = 3; p.provs = []; p.homeSettlement = 1; p.liege = ids.hostRealm;
+      s.chars[p.charId].station = 3;
+      s.realms.player.alive = false;
+      s.owner[ids.home] = ids.hostRealm; s.holder[ids.home] = ids.hostRealm;
+      FB.invalidateRealmCache();
+      if (!FB.assignSettlementLordship(s,ids.home,1,p.charId)) throw new Error('Barony was not assigned.');
+      FB.ui.showSettlement(ids.home,1);
+    },ids);
+    await page.locator('#settlement-rename').click();
+    await page.locator('#settlement-name').fill('Houlgate');
+    await page.locator('#settlement-name').press('Enter');
+    await expect(page.locator('#gm-title')).toContainText('Houlgate');
+    await page.evaluate(function (ids) {
+      FB.save.restore(JSON.parse(FB.save.serialize()));
+      FB.game.setPaused(true); FB.ui.showSettlement(ids.home,1);
+    },ids);
+    await page.locator('#settlement-host-games').click();
+    await expect(page.locator('#games-venue option:checked')).toHaveText('Houlgate');
+    await page.locator('#games-review').click();
+    await expect(page.locator('#gm-body')).toContainText('Houlgate');
+    await page.locator('#games-fund').click();
+    await expect(page.locator('#gm-title')).toHaveText('Houlgate');
+    const booked = await page.evaluate(function () {
+      var s = FB.state, e = FB.tournaments.active(s)[0];
+      var announcement = s.log.filter(function (entry) {
+        return entry.msg && entry.msg.key === 'news.tournament.announced';
+      }).pop();
+      var preparation = s.eventQueue.filter(function (entry) {
+        return entry.id === 'scheduled_games_preparation' && entry.ctx.tournamentId === e.id;
+      })[0];
+      return {id:e.id,venue:announcement.msg.params.venue,contextVenue:preparation.ctx.venue,slot:e.settlement};
+    });
+    expect(booked).toMatchObject({venue:'Houlgate',contextVenue:'Houlgate',slot:1});
+    await page.evaluate(function () { FB.ui.showGames('bookings'); });
+    await expect(page.locator('#games-'+booked.id)).toContainText('Houlgate');
+    await page.locator('#games-'+booked.id).click();
+    await expect(page.locator('#gm-title')).toHaveText('Houlgate');
+    await page.evaluate(function (ids) {
+      if (!FB.renameSettlement(FB.state,ids.home,1,'New Haven').ok) throw new Error('Second rename was refused.');
+      FB.ui.showGames('bookings');
+    },ids);
+    await expect(page.locator('#games-'+booked.id)).toContainText('New Haven');
+    await page.locator('#games-'+booked.id).click();
+    await expect(page.locator('#gm-title')).toHaveText('New Haven');
+    const cancelled = await page.evaluate(function (id) {
+      var s = FB.state, ok = FB.tournaments.cancel(s,id,s.player.charId);
+      var notice = s.log.filter(function (entry) {
+        return entry.msg && entry.msg.key === 'news.tournament.cancelled';
+      }).pop();
+      return {ok:ok,venue:notice.msg.params.venue};
+    },booked.id);
+    expect(cancelled).toEqual({ok:true,venue:'New Haven'});
+  });
+}
 
 for(const viewport of [{width:1280,height:800},{width:390,height:844}]){
   test('calendar retains filter, focus and scroll at '+viewport.width+' pixels',async function({page},info){

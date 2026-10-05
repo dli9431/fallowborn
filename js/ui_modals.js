@@ -19468,6 +19468,13 @@ window.FB = window.FB || {};
             ? ' · ' + FB.guildTitle(career) : ''),
         roles.join(' · ')
       ];
+      const service = c.id === me.id && FB.householdServiceRecord(s);
+      if (service && service.status !== 'ended') {
+        metadata[0] = FB.T('Recorded occupation — {career}', {career:metadata[0]});
+        metadata.unshift(FB.T('Household service — {office}', {
+          office:FB.householdServiceName(s, service.roleId)
+        }));
+      }
       if (def && def.guild && career.guildRank !== 'none') {
         metadata.push(FB.T(
           'Guild Standing {standing} · +{gain} per active vocational year · maximum {maximum}', {
@@ -19755,6 +19762,8 @@ window.FB = window.FB || {};
     const career = FB.careerOf(s, c);
     const activeCareerDef = career && FBDATA.careers[career.profession];
     const landedSelf = c.id === s.player.charId && s.player.tier >= 3;
+    const service = c.id === s.player.charId && FB.householdServiceRecord(s);
+    const employed = service && service.status !== 'ended';
     /* Work & Enterprises grammar: a current-work fact card, then option cards
        whose face keeps name, fee and first blocker; descriptions and full
        requirement audits sit behind each card's Details. */
@@ -19764,7 +19773,22 @@ window.FB = window.FB || {};
         ? 'Choose an apprenticeship. It teaches a trade until age sixteen and may cost an entry fee.'
         : 'Choose their occupation. Changing work spends the day; experience in the old trade is set aside.'));
     let currentWork = reviewPeopleHtml(reviewPersonHtml(c, FB.T('Age {age}', { age:age }), null)) +
-      kv(landedSelf ? 'Former calling' : 'Occupation', esc(FB.careerTitle(s, c)));
+      kv(landedSelf ? 'Former calling' : employed ? 'Recorded occupation' : 'Occupation', esc(FB.careerTitle(s, c)));
+    if (career.chosen) currentWork += kv('Vocational experience', esc(FB.T(
+      landedSelf ? 'Completed years: {years}' : 'Completed years: {years} · updates at New Year', {
+        years:career.experience || 0
+      })));
+    if (activeCareerDef && activeCareerDef.learned) {
+      const lettered = c.traits.indexOf('literate') >= 0;
+      const needed = Math.max(1, Number(activeCareerDef.literacyYears) || 2);
+      if (lettered) currentWork += kv('Literacy', esc(FB.T('Lettered')));
+      else if (career.rank === 'apprentice') currentWork += kv('Career letters training', esc(FB.T(
+        '{done} / {needed} trainee years toward Lettered', {
+          done:Math.min(career.experience || 0, needed), needed:needed
+        })));
+    }
+    if (employed) currentWork += kv('Household appointment', esc(FB.householdServiceName(s, service.roleId))) +
+      serviceProgressRows(s, service.roleId, true);
     if (activeCareerDef && activeCareerDef.guild && career.guildRank !== 'none') {
       currentWork += kv('Guild rank', esc(FB.T('{rank} · Guild Standing {standing}', {
         rank:FB.guildTitle(career), standing:Math.round(career.guildStanding || 0)
@@ -26047,6 +26071,23 @@ window.FB = window.FB || {};
   function serviceTraitRule() {
     return FB.T('Role-specific traits adjust each required skill by at most 2 points either way, in addition to their usual stat effects. Experience, literacy and Standing still apply.');
   }
+  function serviceLiteracyProgressText(s) {
+    const progress = FB.householdServiceProgress(s);
+    return progress.lettered ? FB.T('Lettered') : FB.T(
+      '{done} / {needed} working days toward Lettered', {
+        done:Math.min(progress.learnedDays, progress.letteredDaysRequired),
+        needed:progress.letteredDaysRequired
+      });
+  }
+  function serviceProgressRows(s, roleId, includeTotal) {
+    const progress = FB.householdServiceProgress(s, roleId);
+    let h = kv('Days in this role', esc(FB.T('{days} working days', {days:progress.roleDays})));
+    if (includeTotal) h += kv('Total household service', esc(FB.T('{days} working days', {days:progress.totalDays})));
+    if (FBDATA.householdServiceRoles[roleId].path === 'letters') {
+      h += kv('Letters training', esc(serviceLiteracyProgressText(s)));
+    }
+    return h;
+  }
   function serviceQualificationHtml(s, status) {
     const fit = status.qualification;
     if (!fit.skills.length) return '';
@@ -26080,7 +26121,9 @@ window.FB = window.FB || {};
     let state = 'unavailable', label = FB.T('Unavailable'), note;
     if (current) {
       state = 'current'; label = FB.T('Current');
-      note = FB.T('{days} working days completed', { days:record.workedDays });
+      note = FB.T('{days} working days in this role', {
+        days:FB.householdServiceProgress(s, id).roleDays
+      });
     } else if (offer.ready) {
       state = 'available';
       label = offer.renewal ? FB.T('Renewal available') : FB.T('Available');
@@ -26106,7 +26149,9 @@ window.FB = window.FB || {};
       esc(FB.householdServiceName(s, id)) + '</span><span class="adesc">' +
       esc(servicePayText(def)) + '</span><span class="adesc' +
       (state === 'unavailable' ? ' service-blocker' : '') + '">' + esc(note) +
-      '</span></span></span><span class="large-list-face-state' +
+      '</span>' + (def.path === 'letters' ? '<span class="adesc" data-service-literacy>' +
+        esc(serviceLiteracyProgressText(s)) + '</span>' : '') +
+      '</span></span><span class="large-list-face-state' +
       (state === 'current' ? ' service-current' : '') + '">' + esc(label) + '</span></button>' +
       '<span class="settcard-actions large-list-work-actions"><button type="button" ' +
       'class="btn small settcard-info" aria-expanded="false" aria-controls="' + detailsId +
@@ -26132,7 +26177,7 @@ window.FB = window.FB || {};
       const def = FBDATA.householdServiceRoles[r.roleId];
       h += kv('Appointment', esc(serviceRoleIcon(r.roleId) + ' ' + FB.householdServiceName(s, r.roleId))) +
         kv('Pay', esc(servicePayText(def))) +
-        kv('Completed service', esc(FB.T('{days} working days', { days:r.workedDays })));
+        serviceProgressRows(s, r.roleId, true);
       if (!status.reason) h += kv('Status', esc(s.player.focus === 'toil'
         ? FB.T('Working') : FB.T('Paused: your Daily Focus is elsewhere')));
     } else {
@@ -26173,6 +26218,7 @@ window.FB = window.FB || {};
     h += '</div><div class="gm-footer"><button type="button" class="btn" id="service-close">' + esc(FB.T('Close')) + '</button></div>';
     openModal(FB.T('Service household'), h, {modalClass:'fullsheet-modal household-service-modal',historyView:true,replaceView:!!replace,
       noFocus:!!view, titleDetailsHtml:'<p>' + esc(FB.T('Earn a place in your local lord’s household through useful work. Service does not change your station or free your family.')) + '</p><p>' +
+        esc(FB.T('Freedom does not end an accepted household appointment. Your recorded occupation is kept separately. Only completed work with the appointment’s Daily Focus earns service days; rest and other focuses do not. Accounts and teaching work count toward Lettered.')) + '</p><p>' +
         esc(FB.T('Promotions require completed work, relevant skills, trait fit and Standing. Every 90 working days improves Standing with the patron and officer, offers training and covers one ordinary labor duty within the next 180 days. Taxes and extraordinary dues remain payable.')) + '</p><p>' +
         esc(serviceTraitRule()) + '</p><p>' +
         esc(FB.T('Travel, captivity and campaigning pause service. A new patron must renew your appointment. Moving home or becoming a landed ruler ends it. Your heir does not inherit the job.')) + '</p>'});
@@ -26212,13 +26258,14 @@ window.FB = window.FB || {};
       esc(serviceRoleIcon(roleId) + ' ' + FB.householdServiceName(s, roleId)) + '</h4>';
     if (status.patron) h += reviewPeopleHtml(reviewPersonHtml(status.patron, FB.T('Patron'), null));
     if (leaving) {
-      h += kv('Completed service', esc(FB.T('{days} working days', { days:r ? r.workedDays : 0 }))) +
+      h += serviceProgressRows(s, roleId, true) +
         kv('Pay lost', esc(servicePayText(def))) +
         kv('Afterwards', esc(FB.T('Ordinary livelihood'))) +
         kv('Experience', esc(FB.T('Kept for this life')));
     } else {
       h += kv('Pay', esc(servicePayText(def))) +
         kv('Training', esc(serviceTrainingText(def))) +
+        serviceProgressRows(s, roleId, false) +
         kv('Daily Focus', esc(FB.T('Switches to this work'))) +
         kv('Each 90 working days', esc(FB.T('+2 Standing with the patron, +3 with the officer')));
     }
@@ -26244,7 +26291,9 @@ window.FB = window.FB || {};
       esc(FB.T('Value to patron: {money:value} per 90 working days after your pay.', { value:def.value })) + '</p><p>' +
       esc(FB.T('Each 90 working days: +2 Standing with the patron, +3 with the household officer, and a 50% chance of gaining one point in the next training skill.')) + '</p><p>' +
       esc(FB.T('Each completed term covers one ordinary labor duty within 180 days. Taxes and extraordinary dues remain payable. Every 180 working days brings a household responsibility to resolve.')) + '</p>';
-    if (def.path === 'letters') details += '<p>' + esc(FB.T('Complete 720 working days in accounts or teaching to become Lettered.')) + '</p>';
+    if (def.path === 'letters') details += '<p>' + esc(FB.T('Complete {days} working days in accounts or teaching to become Lettered.', {
+      days:FB.householdServiceProgress(s).letteredDaysRequired
+    })) + '</p>';
     if (leaving) details = '<p>' + esc(FB.T('Leave this appointment and return to your ordinary livelihood. Your completed experience remains available during this life.')) + '</p>';
     function back() { UI.showHouseholdService(false, view); }
     openModal(leaving ? FB.T('Leave household service') : FB.T('Review household appointment'), h, {

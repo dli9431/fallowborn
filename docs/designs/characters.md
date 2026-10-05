@@ -851,12 +851,23 @@ Accounts service teaches Lettered after 720 worked days. Tutors also offer
 Learning training to one living child of the patron aged 6–15 per term. No
 appointment grants career licenses, private troops or independent field command.
 
+Service reviews and role cards distinguish experience in the named role from
+total household service across appointments. Accounts and teaching show the saved
+literacy progress out of 720 completed working days, or Lettered once earned.
+Self names appointment work separately from the recorded occupation and keeps its
+role-day count current on live ticks. Work & Enterprises and the occupation picker
+also identify the appointment separately; ordinary career experience still uses
+completed vocational years, and learned trainees show their annual literacy threshold.
+These displays read existing counters without changing progression or saves.
+
 Each completed term supplies one non-stacking credit for an ordinary labor
 duty, expiring after 180 days. It never excuses taxes, cash commutations or
 extraordinary dues. Every 180 worked days brings a bounded household case:
 careful handling improves patron Standing; relief improves county support;
 referral leaves those scores unchanged. The case binds to the exact protagonist,
 patron and appointment revision and can resolve only once.
+Its neutral preview and receipt explicitly say the officer decides and Standing
+and Popular support remain unchanged.
 
 Rest or another focus retains the job but earns no service wage or experience.
 Travel, captivity and campaigning suspend work. Patron replacement/death requires
@@ -927,6 +938,14 @@ and a paid retainer compete for the same unique office slot. Marriage removes a
 non-head holder before the ordinary household transfer. The character card owns
 the ambition-guidance and family-office sheets; the Household Plan and Work view
 derive the resulting commitment from the same records.
+
+Network's Household list also merges valid family-office holders by character id,
+including serving manageable siblings. Each card combines their family relationship,
+office, unpaid duty, career and the same contribution shown for paid retainers.
+Relieving a sibling removes their service row; immediate-family members remain with
+their ordinary family context. This display does not add siblings to the resident
+wage/upkeep set or consume paid-retainer capacity. It changes no eligibility or
+technology dependency.
 
 `FB.familyOfficeStatus` supplies locale-neutral reasons to both appointment eligibility
 and its review. The review lists every unmet requirement, including marriage out of the

@@ -4,6 +4,7 @@ dependsOnRuntime(__filename, [
   'data/actions.js',
   'data/events_noble.js',
   'data/map_data.js',
+  'data/technology.js',
   'js/actions.js',
   'js/economy.js',
   'js/events.js',
@@ -11,6 +12,8 @@ dependsOnRuntime(__filename, [
   'js/model.js',
   'js/ui_misc.js',
   'js/ui_modals.js',
+  'js/ui_panels.js',
+  'js/technology.js',
   'css/style.css'
 ]);
 
@@ -22,6 +25,94 @@ test.beforeEach(async function ({ page }, testInfo) {
   await openGame(page, testInfo);
   await startDeterministicGame(page);
 });
+
+test('every free rank can review plots while broke and buy with the ordinary terms',
+  async function ({ page }) {
+    const result = await page.evaluate(function () {
+      const s = FB.state, p = s.player;
+      const action = FB.instants.find(function (item) { return item.id === 'buy_land'; });
+      p.landPlotMigration = 1;
+      const rows = [];
+      const jurisdiction = JSON.stringify({provs:p.provs,owner:s.owner,holder:s.holder});
+      for (let tier = 1; tier <= 7; tier++) {
+        p.tier = tier; p.gold = 0; p.landPlots = [];
+        const before = {rng:FB.getRngState(),turn:s.turn,gold:p.gold};
+        const visible = action.show(s), ready = action.can(s);
+        const shortage = FB.buyLandPlot(s, 0);
+        const unchanged = p.gold === before.gold && s.turn === before.turn &&
+          FB.getRngState() === before.rng && p.landPlots.length === 0;
+        const cost = FB.landPlotCost(s);
+        p.gold = cost;
+        const bought = FB.buyLandPlot(s, 0);
+        const paid = p.gold === 0 && FB.landCountAt(s, p.provinceId, 0) === 1;
+        const max = FBDATA.balance.landPlotMaxSettlement || FBDATA.balance.manorPlotRequirement;
+        p.landPlots = [];
+        FB.settlementsOf(s, p.provinceId).forEach(function (site, index) {
+          for (let i = 0; i < max; i++) p.landPlots.push({provinceId:p.provinceId,settlement:index});
+        });
+        p.gold = cost;
+        const full = !FB.buyLandPlot(s, 0) && p.gold === cost && !FB.landAvailable(s).length;
+        rows.push({tier:tier,visible:visible,ready:ready,shortage:shortage,unchanged:unchanged,
+          bought:bought,paid:paid,full:full,fullReview:action.can(s),rankUnchanged:p.tier === tier});
+      }
+      p.tier = 0; p.landPlots = [];
+      return {rows:rows,serfHidden:!action.show(s),serfBlocked:!FB.buyLandPlot(s, 0),
+        jurisdictionUnchanged:jurisdiction === JSON.stringify({provs:p.provs,owner:s.owner,holder:s.holder}),
+        technology:FBDATA.techImpactReviews.features.gentry_freehold_expansion.mode,
+        validation:FB.validateTechnologyData()};
+    });
+    for (const row of result.rows) expect(row).toEqual({tier:row.tier,visible:true,ready:true,
+      shortage:false,unchanged:true,bought:true,paid:true,full:true,fullReview:true,rankUnchanged:true});
+    expect(result).toMatchObject({serfHidden:true,serfBlocked:true,jurisdictionUnchanged:true,
+      technology:'none',validation:[]});
+  });
+
+for (const setup of [{tier:1,width:390},{tier:6,width:1360}]) {
+  test('broke rank ' + setup.tier + ' opens the plot deed and keeps purchases blocked at width ' + setup.width,
+    async function ({ page }) {
+      await page.setViewportSize({width:setup.width,height:844});
+      const before = await page.evaluate(function (tier) {
+        const s = FB.state, p = s.player, c = s.chars[p.charId];
+        FB.game.setPaused(true);
+        s.eventQueue = []; s.slotDays = [];
+        p.tier = tier; c.born = s.date.year - 30;
+        p.gold = 0; p.landPlots = []; p.landPlotMigration = 1;
+        p.flags.tutorial_done = 1; delete p.flags.tutorial;
+        p.roleOrientationsSeen = p.roleOrientationsSeen || {};
+        p.roleOrientationsSeen['role-tier-' + tier] = 1;
+        FB.game.uiPrefs.hideTips = true; FB.game.uiPrefs.hideBeginnerHints = true;
+        FB.ui.showTab('actions', {history:false});
+        FB.ui.revealDeedAction('buy_land');
+        return {turn:s.turn,price:FB.money(FB.landPlotCost(s))};
+      }, setup.tier);
+      const deed = page.locator('#tab-actions [data-action-id="buy_land"]');
+      await expect(deed).toBeEnabled();
+      await deed.focus(); await page.keyboard.press('Enter');
+      await expect(page.locator('#gm-title')).toContainText('Buy Freehold Land');
+      const row = page.locator('[data-land-settlement="0"]');
+      await expect(row).toHaveAttribute('aria-disabled', 'true');
+      await expect(row).toContainText(before.price + ' · not affordable');
+      await row.click();
+      expect(await page.evaluate(function () {
+        return {turn:FB.state.turn,gold:FB.state.player.gold,plots:FB.state.player.landPlots.length};
+      })).toEqual({turn:before.turn,gold:0,plots:0});
+      expect(await page.locator('#gm-body').evaluate(function (body) {
+        return body.scrollWidth > body.clientWidth + 1;
+      })).toBe(false);
+      await page.evaluate(function () {
+        FB.state.player.gold = FB.landPlotCost(FB.state);
+        FB.ui.showLandMarket(true);
+      });
+      await expect(row).not.toHaveAttribute('aria-disabled', 'true');
+      await row.click();
+      expect(await page.evaluate(function () {
+        return {turn:FB.state.turn,gold:FB.state.player.gold,plots:FB.state.player.landPlots.length};
+      })).toEqual({turn:before.turn,gold:0,plots:1});
+      await page.locator('#gm-cancel').click();
+      await expect(page.locator('#genmodal')).toHaveClass(/hidden/);
+      await expect(deed).toBeEnabled();
+    });
+}
 
 async function openLandMarket(page, plotCount, gold) {
   return page.evaluate(function (setup) {

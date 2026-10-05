@@ -47,6 +47,105 @@ test.beforeEach(async function ({ page }, testInfo) {
   });
 });
 
+for (const width of [390,1360]) {
+  test('service shows current-role days and literacy progress separately from the occupation at width ' + width,
+    async function ({ page }) {
+      await page.setViewportSize({width:width,height:844});
+      await setServiceTraits(page, [], {lea:8});
+      expect(await accept(page, 'tally')).toBe(true);
+      await page.evaluate(function () {
+        const s = FB.state, p = s.player, r = p.householdService;
+        FB.setPlayerTier(s, 1);
+        s.eventQueue = []; s.slotDays = [];
+        r.workedDays = 690; r.experience.helper = 90; r.experience.tally = 600;
+        r.learnedDays = 600; r.nextCaseDay = 900;
+        p.roleOrientationsSeen = p.roleOrientationsSeen || {};
+        p.roleOrientationsSeen['role-tier-1'] = 1;
+        FB.ui.showTab('char');
+        window.__serviceProgressButton = document.getElementById('self-service');
+      });
+      await expect(page.locator('#self-work')).toContainText('Recorded occupation');
+      await expect(page.locator('#self-service')).toContainText('Work — Tally Assistant');
+      await expect(page.locator('[data-self-service-days]')).toHaveText('600 working days in this role');
+      const tick = await page.evaluate(function () {
+        const s = FB.state, p = s.player;
+        const saved = FB.save.serialize(), rng = FB.getRngState();
+        const progress = FB.householdServiceProgress(s);
+        const readOnly = saved === FB.save.serialize() && rng === FB.getRngState();
+        p.focus = 'rest'; s.turn++; FB.tickHouseholdService(s);
+        const rested = FB.householdServiceProgress(s);
+        p.focus = 'toil'; s.turn++; FB.tickHouseholdService(s);
+        FB.ui.refresh({liveTick:true});
+        return {readOnly:readOnly,progress:progress,rested:rested,
+          retained:window.__serviceProgressButton === document.getElementById('self-service')};
+      });
+      expect(tick.readOnly).toBe(true);
+      expect(tick.progress).toMatchObject({roleDays:600,totalDays:690,learnedDays:600,
+        letteredDaysRequired:720,lettered:false});
+      expect(tick.rested).toEqual(tick.progress);
+      expect(tick.retained).toBe(true);
+      await expect(page.locator('[data-self-service-days]')).toHaveText('601 working days in this role');
+      await page.locator('#self-service').click();
+      const summary = page.locator('.service-status-card');
+      await expect(summary).toContainText('Days in this role601 working days');
+      await expect(summary).toContainText('Total household service691 working days');
+      await expect(summary).toContainText('601 / 720 working days toward Lettered');
+      await expect(page.locator('#service-review-tally')).toContainText('601 working days in this role');
+      await expect(page.locator('#service-review-clerk [data-service-literacy]')).toHaveText(
+        '601 / 720 working days toward Lettered');
+      await page.locator('#service-review-tally').click();
+      await expect(page.locator('[data-service-review-sheet]')).toContainText('601 working days');
+      await expect(page.locator('[data-service-review-sheet]')).toContainText('601 / 720 working days toward Lettered');
+      await page.locator('#service-cancel').click();
+      await expect(page.locator('#service-review-tally')).toBeFocused();
+      expect(await page.locator('#gm-body').evaluate(function (body) {
+        return body.scrollWidth > body.clientWidth + 1;
+      })).toBe(false);
+      await page.evaluate(function () {
+        const s = FB.state, r = s.player.householdService;
+        r.learnedDays = 719; s.turn++; FB.tickHouseholdService(s);
+        FB.ui.showHouseholdService(true);
+      });
+      await expect(page.locator('#service-review-tally [data-service-literacy]')).toHaveText('Lettered');
+      await page.locator('#service-close').click();
+      await page.evaluate(function () { FB.ui.showLivelihoods(); });
+      const playerId = await page.evaluate(function () { return FB.state.player.charId; });
+      const workRow = page.locator('[data-career="' + playerId + '"]');
+      await expect(workRow).toContainText('Household service — Tally Assistant');
+      await expect(workRow).toContainText('Recorded occupation');
+      await workRow.click();
+      await expect(page.locator('[data-career-current]')).toContainText('Household appointmentTally Assistant');
+      await expect(page.locator('[data-career-current]')).toContainText('Total household service');
+      await page.evaluate(function () { delete window.__serviceProgressButton; });
+    });
+}
+
+test('referring a household case previews and receipts the neutral officer decision', async function ({ page }) {
+  expect(await accept(page, 'helper')).toBe(true);
+  const result = await page.evaluate(function () {
+    const s = FB.state, r = s.player.householdService;
+    r.workedDays = 180; FB.householdServiceDay(s);
+    const ctx = s.eventQueue.find(function (entry) { return entry.id === 'household_service_duty'; }).ctx;
+    const ev = FB.eventById('household_service_duty'), option = ev.options[2];
+    const standing = FB.standingOf(s, {kind:'character',id:r.employerId});
+    const support = FB.countyPopularSupport(s, s.player.provinceId);
+    const saved = FB.save.serialize(), rng = FB.getRngState();
+    const preview = FB.previewEventOption(s, ev, option, ctx);
+    const previewText = preview.compact.map(function (record) { return FB.eventImpactText(s, record, 'preview'); });
+    const readOnly = saved === FB.save.serialize() && rng === FB.getRngState();
+    const receipt = FB.resolveEventOption(s, ev, option, ctx, {optionIndex:2});
+    const text = receipt.impacts.map(function (record) { return FB.eventImpactText(s, record, 'resolved'); });
+    return {readOnly:readOnly,preview:previewText,receipt:text,pending:r.pending,
+      duplicate:FB.fns.household_service_routine(s, ctx),
+      standingSame:standing === FB.standingOf(s, {kind:'character',id:r.employerId}),
+      supportSame:support === FB.countyPopularSupport(s, s.player.provinceId)};
+  });
+  expect(result).toMatchObject({readOnly:true,pending:null,duplicate:false,standingSame:true,supportSame:true});
+  expect(result.preview).toContain('Officer decides; Standing and Popular support unchanged');
+  expect(result.receipt).toContain('Officer decides; Standing and Popular support unchanged');
+  expect(result.preview).not.toContain('The story advances');
+});
+
 test('offers are read-only and accepting changes work without changing station, career or freedom', async function ({ page }) {
   const result = await page.evaluate(function () {
     const s = FB.state, p = s.player, c = s.chars[p.charId];

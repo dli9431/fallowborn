@@ -71,9 +71,9 @@ window.FB = window.FB || {};
   };
   T.active = function (s) { return root(s).events.filter(live); };
   T.available = function (s, id) { return available(s, id); };
-  T.venueName = function (e) {
-    var site = settlement(e), county = FB.world.byId[e.provinceId];
-    return site && site.name || county && county.name || e.provinceId;
+  T.venueName = function (s, e) {
+    var name = FB.settlementDisplayName(s, e.provinceId, e.settlement), county = FB.world.byId[e.provinceId];
+    return name || county && county.name || e.provinceId;
   };
   T.defaultProgramme = function (s, id, venue) {
     var c = character(s,id), religion = c && FBDATA.religions[c.religion], culture = c && FBDATA.cultures[c.culture];
@@ -290,7 +290,7 @@ window.FB = window.FB || {};
         scale:q.scale, programme:q.programme, nextTurn:q.startTurn + 360, ceiling:q.ceiling });
     }
     if (player(s, e.hostId)) {
-      notify(s, 'announced', 'Games are announced at {venue}; {money:funding} is committed.', { venue:T.venueName(e), funding:e.funding.total });
+      notify(s, 'announced', 'Games are announced at {venue}; {money:funding} is committed.', { venue:T.venueName(s, e), funding:e.funding.total });
       e.incidents.pending = 1;
       FB.queueEvent(s, 'scheduled_games_preparation', context(s, e, e.hostId, 'host', 1, 'host'));
     }
@@ -484,8 +484,8 @@ window.FB = window.FB || {};
         s.player.circuit.victories++; s.player.circuit.reputation += 4;
         if (track === 'archery' || track === 'wrestling') s.player.circuit.openWins++;
         s.player.prestige += D.scales[e.scale].prestige;
-        notify(s, 'victory', 'Won a competition at the games in {venue}.', { venue:T.venueName(e) });
-        if (FB.noteLifeEvent) FB.noteLifeEvent(s, id, 'tournament', { venue:T.venueName(e) });
+        notify(s, 'victory', 'Won a competition at the games in {venue}.', { venue:T.venueName(s, e) });
+        if (FB.noteLifeEvent) FB.noteLifeEvent(s, id, 'tournament', { venue:T.venueName(s, e) });
       }
     }
   }
@@ -515,7 +515,7 @@ window.FB = window.FB || {};
         p.fatigue += t.fatigue;
         if (roll < risk && player(s, id)) {
           FB.applyEffects(s, { health:roll < d.severe * t.risk ? -6 : -1 }, {}, null);
-          notify(s, 'injury', 'An injury at the games in {venue} requires care.', { venue:T.venueName(e) });
+          notify(s, 'injury', 'An injury at the games in {venue} requires care.', { venue:T.venueName(s, e) });
           if (live(e) && p.status === 'active' && !p.incident) queueIncident(s, e, p, 'injury');
         }
       } else if (!p) {
@@ -607,10 +607,10 @@ window.FB = window.FB || {};
       if (player(s,e.hostId)) (e.guests || []).forEach(function (id) {
         if (T.eligibility(s,id,e).ok) FB.adjustStanding(s,{kind:'character',id:id},FB.clamp(2 + e.quality,1,8));
       });
-      if (FB.noteLifeEvent) FB.noteLifeEvent(s, e.hostId, 'games_hosted', { venue:T.venueName(e) });
+      if (FB.noteLifeEvent) FB.noteLifeEvent(s, e.hostId, 'games_hosted', { venue:T.venueName(s, e) });
     }
     if (player(s, e.hostId) || T.participant(e, s.player.charId)) notify(s, cancelled ? 'cancelled' : 'closed',
-      cancelled ? 'The games at {venue} are cancelled. Unspent funds return to the host.' : 'The games at {venue} close. Unspent funds return to the host.', { venue:T.venueName(e) });
+      cancelled ? 'The games at {venue} are cancelled. Unspent funds return to the host.' : 'The games at {venue} close. Unspent funds return to the host.', { venue:T.venueName(s, e) });
     var r = T.ensure(s);
     r.summaries.push({ id:e.id, hostId:e.hostId, provinceId:e.provinceId, settlement:e.settlement,
       startTurn:e.startTurn, status:e.status, funding:e.funding.total, refunded:refund });
@@ -843,7 +843,7 @@ window.FB = window.FB || {};
       encounters:{ culture:0, road:0 }, seenCultures:{}, seenEvents:{}, completed:false };
     t.seenCultures[character(s, s.player.charId).culture] = 1;
     if (FB.map) FB.map.request();
-    notify(s, 'departed', 'Set out for the games at {venue}; the return journey is funded.', { venue:T.venueName(T.get(s, q.eventId)) });
+    notify(s, 'departed', 'Set out for the games at {venue}; the return journey is funded.', { venue:T.venueName(s, T.get(s, q.eventId)) });
     return true;
   };
   T.returnHome = function (s, forced) {
@@ -927,7 +927,7 @@ window.FB = window.FB || {};
   }
   function context(s, e, id, track, round, kind) {
     return { tournamentId:e.id, tournamentCharId:id, tournamentTrack:track, tournamentRound:round, locationId:e.provinceId,
-      tournamentKind:kind, venue:T.venueName(e), tournamentHost:FB.fullName(character(s, e.hostId)) };
+      tournamentKind:kind, venue:T.venueName(s, e), tournamentHost:FB.fullName(character(s, e.hostId)) };
   }
   function queueRound(s, e, p, round) {
     var q = T.roundPreview(s, e.id, p.charId, 'balanced');

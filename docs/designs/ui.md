@@ -57,6 +57,21 @@ distinction from ordinary trait stat effects belong in the title Details.
 Unmet requirements use the same adjusted totals as acceptance, and stay visible
 on the card face and review. Entry jobs with no skill minima omit the fit card.
 
+Service facts show Days in this role separately from Total household service.
+Accounts and teaching keep the exact completed-working-day progress toward Lettered
+visible on role cards and appointment reviews. Self labels the saved career as
+Recorded occupation and the appointment as Work, with a role-day count patched
+on live ticks. Career reviews show completed vocational years and their New Year
+cadence; learned trainees also show their career literacy threshold in trainee years.
+These displays do not convert calendar time into earned service or career experience.
+
+Buy a plot of land opens the existing Buy Freehold Land sheet at every free rank,
+including rulers, regardless of funds or settlement capacity. Exact affordability
+and complete holdings belong to its existing focusable purchase rows and Details;
+opening the deed spends no day or money. Serfs still need freedom before the deed
+appears. The underlying purchase keeps the same local price, settlement cap and
+family-property rules at every eligible rank.
+
 The map Home control zooms Counts and lower ranks to settlement detail. Counts
 center on their home county; lower ranks center on their exact home settlement,
 falling back to the county at the same detail level if its anchor is unavailable.
@@ -2623,7 +2638,12 @@ explicit bounded bulk review.
 Network keeps Household, Connections, Trade & Guild, Political Blocs, Realm, and Local folk
 distinct. A person or realm
 appears once within a section with combined role labels, but may still appear in another
-section for a genuinely different context. Character and ruler rows open the consolidated
+section for a genuinely different context. Household includes valid unpaid family-office
+holders, including manageable siblings serving the family. Their existing portrait rows
+combine relationship, office, unpaid duty, career and the same benefit text as paid
+retainers; immediate-family holders gain this context without a duplicate row. Resident
+family and paid-retainer counts and costs retain their existing economic scope.
+Character and ruler rows open the consolidated
 authoritative cards; Governance, Household Plan, Council, guild favors, vassal favors, and
 other focused management routes remain separate. Row states such as open slots, warnings,
 commitments, opportunities, and vacancies use the same desktop tooltip or touch/tablet

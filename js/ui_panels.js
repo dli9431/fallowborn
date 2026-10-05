@@ -2108,6 +2108,10 @@ window.FB = window.FB || {};
     if (age) age.textContent = FB.ageOf(me, s.date.year);
     if (health) health.textContent = Math.round(me.health) + ' / 10 ' +
       String.fromCharCode(183) + ' ' + healthWord(me.health);
+    const serviceDays = panel.querySelector('[data-self-service-days]');
+    if (serviceDays) serviceDays.textContent = FB.T('{days} working days in this role', {
+      days:FB.householdServiceProgress(s).roleDays
+    });
     const soft = FBDATA.balance.skillSoftCap || 20;
     for (const key of FB.SKILLS) {
       const row = panel.querySelector('[data-self-skill="' + key + '"]');
@@ -2204,8 +2208,11 @@ window.FB = window.FB || {};
     let detail = FB.careerTitle(s, c);
     if (def.guild) detail += ' · ' + FB.guildTitle(career);
     const former = c.id === s.player.charId && s.player.tier >= 3;
+    const service = c.id === s.player.charId && FB.householdServiceRecord(s);
     const workLabel = esc(former
       ? FB.T('🧰 Former calling — {career}', { career:detail })
+      : service && service.status !== 'ended'
+      ? FB.T('🧰 Recorded occupation — {career}', { career:detail })
       : FB.T('🧰 Work — {career}', { career:detail }));
     let h = interactive
       ? '<button type="button" class="actionbtn" id="self-work">' + workLabel + '</button>'
@@ -3529,7 +3536,10 @@ window.FB = window.FB || {};
     h += panelh('Livelihood') + livelihoodNote(s, me, true);
     const service = FB.householdServiceRecord(s);
     if (service && service.status !== 'ended') h += '<button type="button" class="actionbtn" id="self-service">' +
-      esc(FB.householdServiceName(s, service.roleId)) + '<span class="adesc">' +
+      esc(FB.T('Work — {office}', {office:FB.householdServiceName(s, service.roleId)})) +
+      '<span class="adesc" data-self-service-days>' + esc(FB.T('{days} working days in this role', {
+        days:FB.householdServiceProgress(s).roleDays
+      })) + '</span><span class="adesc">' +
       esc(FB.T('Review household service…')) + '</span></button>';
     if (betrothalStatus && betrothalStatus.ready) {
       h += '<button class="actionbtn" id="self-break-betrothal">💔 ' +
@@ -4432,12 +4442,22 @@ window.FB = window.FB || {};
       if (!c || c.dead) return null;
       if (!householdById[c.id]) {
         householdById[c.id] = {
-          character:c, family:false, retainer:null, index:householdOrder++
+          character:c, family:false, familyOffice:null, retainer:null,
+          index:householdOrder++
         };
       }
       return householdById[c.id];
     }
     for (const c of family) householdRecord(c).family = true;
+    /* Manageable siblings may serve without joining the wage/upkeep family
+       set. Merge their valid offices by character, just like paid retainers. */
+    for (const office of FB.familyOfficeRecords(s)) {
+      const record = householdRecord(s.chars[office.charId]);
+      if (record) {
+        record.family = true;
+        record.familyOffice = office;
+      }
+    }
     for (const retainer of retainers) {
       const c = s.chars[retainer.charId];
       const record = householdRecord(c);
@@ -4454,12 +4474,13 @@ window.FB = window.FB || {};
         meta.push(c.id === me.id ? FB.T('You — Household head') :
           (relationText(s, c) || FB.T('Resident family')));
       }
-      if (source.retainer) {
-        meta.push(positionName(s, source.retainer.office));
-        meta.push(FB.T('{money:pay}/season', {
+      const office = source.retainer || source.familyOffice;
+      if (office) {
+        meta.push(positionName(s, office.office));
+        meta.push(source.retainer ? FB.T('{money:pay}/season', {
           pay:source.retainer.pay || 0
-        }));
-        const officeEffect = positionEffectText(source.retainer.office);
+        }) : FB.T('Unpaid family duty'));
+        const officeEffect = positionEffectText(office.office);
         if (officeEffect) meta.push(officeEffect);
       }
       meta.push(FB.careerTitle(s, c) +

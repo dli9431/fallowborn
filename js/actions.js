@@ -3713,11 +3713,7 @@ window.FB = window.FB || {};
         { gold: FB.landPlotCost(s) });
     },
     show: function (s) { return canBuyFreeholdLand(s); },
-    can: function (s) {
-      if (!FB.landAvailable(s).length) return 'No more land is for sale here.';
-      if (s.player.gold < FB.landPlotCost(s)) return FB.T('Not enough money.');
-      return true;
-    },
+    can: function () { return true; },
     run: function () {
       if (FB.ui && FB.ui.showLandMarket) FB.ui.showLandMarket();
     } },
@@ -9095,7 +9091,7 @@ window.FB = window.FB || {};
      to heirs. Contiguous holdings are worked more efficiently; five plots in
      one place may be declared a manor and raise the family into the gentry. */
   function canBuyFreeholdLand(state) {
-    return state.player.tier === 1 || state.player.tier === 2;
+    return state.player.tier >= 1;
   }
 
   FB.landPlotCost = function (state, quantity) {

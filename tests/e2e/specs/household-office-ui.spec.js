@@ -1,13 +1,14 @@
 'use strict';
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
-  'data/economy.js', 'js/agency.js', 'js/economy.js', 'js/model.js', 'js/events.js',
-  'js/politics.js', 'js/items.js', 'js/ui_misc.js', 'js/ui_modals.js',
-  'js/main.js', 'css/style.css'
+  'data/economy.js', 'data/technology.js', 'js/agency.js', 'js/economy.js', 'js/model.js', 'js/events.js',
+  'js/politics.js', 'js/items.js', 'js/ui_misc.js', 'js/ui_modals.js', 'js/ui_panels.js',
+  'js/main.js', 'js/technology.js', 'css/style.css'
 ]);
 const { test, expect } = require('../support/fixture');
 const { openGame } = require('../support/game/navigation');
 const { startDeterministicGame } = require('../support/game/start');
+const { waitForUiRefresh } = require('../support/game/ui');
 
 async function startHousehold(page, testInfo, options) {
   await openGame(page, testInfo);
@@ -54,6 +55,133 @@ for (const viewport of [
 ]) {
   test.describe(viewport.name + ' household office reviews', function () {
     test.use({ viewport:{ width:viewport.width, height:viewport.height } });
+
+    test('Network merges unpaid family officers with their benefits and retains person navigation',
+      async function ({ page }, testInfo) {
+        const ids = await startHousehold(page, testInfo);
+        const service = await page.evaluate(function (ids) {
+          var s = FB.state;
+          var me = s.chars[s.player.charId];
+          s.player.tier = 2;
+          var technology = FB.realmTechRecord(s, FB.techRealmId(s));
+          for (var techId of ['weights_measures', 'manuscript_codex']) {
+            if (technology.completed.indexOf(techId) < 0) technology.completed.push(techId);
+          }
+          var parent = FB.parentsOf(s, me)[0];
+          if (!parent) {
+            parent = FB.makeCharacter(s, {
+              name:'Network Parent', sex:'m', born:s.date.year - 65,
+              culture:me.culture, religion:me.religion, dyn:me.dyn, traitsN:0
+            });
+            me.fatherId = parent.id;
+          }
+          var sibling = FB.makeCharacter(s, {
+            name:'Network Brother', sex:'m', born:s.date.year - 25,
+            culture:me.culture, religion:me.religion, dyn:me.dyn,
+            station:1, traitsN:0
+          });
+          sibling[parent.sex === 'f' ? 'motherId' : 'fatherId'] = parent.id;
+          parent.childrenIds.push(sibling.id);
+          FB.setCareer(s, sibling, 'merchant', 'journeyman');
+          FB.setCareer(s, s.chars[ids.daughter], 'noble', 'journeyman');
+          FB.setCareer(s, s.chars[ids.factor], 'monk', 'journeyman');
+          s.player.retainers.push({
+            charId:ids.factor, office:'tutor', pay:3,
+            startedTurn:s.turn, unpaid:0
+          });
+          FB.touchFamily();
+          var appointed = [
+            FB.appointFamilyOffice(s, 'factor', sibling.id),
+            FB.appointFamilyOffice(s, 'steward', ids.daughter)
+          ];
+          FB.ui.showTab('network', { history:false });
+          FB.ui.refresh();
+          return {
+            sibling:sibling.id, appointed:appointed,
+            paidCost:FB.money(FB.retainerSeasonCost(s)),
+            paidPay:FB.T('{money:pay}/season', { pay:3 }),
+            stewardGold:FB.T('{money:amount}/season', { amount:1 }),
+            capacity:FB.T('{used} of {capacity}', {
+              used:1, capacity:FB.retainerCapacity(s)
+            })
+          };
+        }, ids);
+        expect(service.appointed).toEqual([true, true]);
+        await waitForUiRefresh(page);
+        const household = page.locator('[data-list-section="household"]');
+        const showAll = household.locator('[data-list-show-all="household"]');
+        if (await showAll.isVisible()) await showAll.click();
+        const sibling = household.locator('[data-list-identity="' + service.sibling + '"]');
+        const daughter = household.locator('[data-list-identity="' + ids.daughter + '"]');
+        const paid = household.locator('[data-list-identity="' + ids.factor + '"]');
+        await expect(sibling).toHaveCount(1);
+        await expect(sibling).toBeVisible();
+        await expect(sibling.locator('.pface')).toHaveCount(1);
+        await expect(sibling.locator('.cmeta')).toContainText('Your sibling');
+        await expect(sibling.locator('.cmeta')).toContainText('Household Factor');
+        await expect(sibling.locator('.cmeta')).toContainText('Unpaid family duty');
+        await expect(sibling.locator('.cmeta')).toContainText('+8% enterprise profit');
+        expect(await sibling.locator('.charrow').evaluate(function (row) {
+          return row.scrollWidth - row.clientWidth;
+        })).toBeLessThanOrEqual(1);
+        await expect(daughter).toHaveCount(1);
+        await expect(daughter.locator('.cmeta')).toContainText('Your child');
+        await expect(daughter.locator('.cmeta')).toContainText('Household Steward');
+        await expect(daughter.locator('.cmeta')).toContainText('Unpaid family duty');
+        await expect(daughter.locator('.cmeta')).toContainText(service.stewardGold);
+        await expect(daughter.locator('.cmeta')).toContainText('+5% enterprise profit');
+        await expect(paid.locator('.cmeta')).toContainText('Household Tutor');
+        await expect(paid.locator('.cmeta')).toContainText(service.paidPay);
+        await expect(paid).not.toContainText('Unpaid family duty');
+        const summary = household.locator('.network-household-summary');
+        await expect(summary.locator('.kv').filter({ hasText:'Paid retainers' }))
+          .toContainText(service.capacity);
+        await expect(summary.locator('.kv').filter({ hasText:'Retainer contracts each season' }))
+          .toContainText(service.paidCost);
+        expect(await page.evaluate(function (cid) {
+          return FB.householdMembers(FB.state).some(function (c) { return c.id === cid; });
+        }, service.sibling)).toBe(false);
+
+        const person = sibling.locator('button[data-cid]');
+        await person.scrollIntoViewIfNeeded();
+        await person.focus();
+        const position = await person.evaluate(function (row) {
+          row.scrollIntoView({ block:'center' });
+          return document.getElementById('sidebody').scrollTop;
+        });
+        expect(position).toBeGreaterThan(0);
+        await person.press('Enter');
+        await expect(page.locator('.character-interaction-modal')).toBeVisible();
+        await page.keyboard.press('Escape');
+        await expect(person).toBeFocused();
+        await expect.poll(function () {
+          return page.locator('#sidebody').evaluate(function (body) { return body.scrollTop; });
+        }).toBe(position);
+        const before = await page.evaluate(function () {
+          return { state:JSON.stringify(FB.state), rng:FB.getRngState(), uid:FB.getUidCounter() };
+        });
+        await page.evaluate(function () { FB.ui.refresh(); });
+        await waitForUiRefresh(page);
+        expect(await page.evaluate(function () {
+          return { state:JSON.stringify(FB.state), rng:FB.getRngState(), uid:FB.getUidCounter() };
+        })).toEqual(before);
+
+        const removed = await page.evaluate(function (officeIds) {
+          var s = FB.state;
+          var result = [FB.removeFamilyOffice(s, officeIds.sibling),
+            FB.removeFamilyOffice(s, officeIds.daughter)];
+          FB.ui.refresh();
+          return result;
+        }, { sibling:service.sibling, daughter:ids.daughter });
+        expect(removed).toEqual([true, true]);
+        await waitForUiRefresh(page);
+        await expect(sibling).toHaveCount(0);
+        await expect(daughter).toHaveCount(1);
+        await expect(daughter.locator('.cmeta')).not.toContainText('Household Steward');
+        await expect(daughter.locator('.cmeta')).not.toContainText('Unpaid family duty');
+        await expect(daughter.locator('.cmeta')).not.toContainText('+5% enterprise profit');
+        await expect(paid.locator('.cmeta')).toContainText(service.paidPay);
+      });
 
     test('married daughter sees membership and named holder blockers with retained navigation',
       async function ({ page }, testInfo) {

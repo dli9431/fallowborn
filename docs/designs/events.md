@@ -69,6 +69,11 @@ Optional top-level `desc` holds supporting instructions separately from narrativ
 shared Details tooltip/disclosure. Choice costs and material consequences remain
 with their choices. This is display-only and does not change event resolution.
 
+Household service referral has an explicit neutral consequence in the custom impact
+adapter: the officer decides, with Standing and Popular support unchanged. The
+same semantic record appears in the preview and settled receipt, replacing the
+generic story-progress fallback without changing the once-only case resolution.
+
 Ordinary war choices describe their actual field effect. `war_supply` refills the
 event campaign's main host immediately; `{warProvisions}` quotes its capped gain.
 It no longer raises campaign strength. Discipline, strain and reorganization keep

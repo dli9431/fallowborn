@@ -4881,6 +4881,32 @@ textarea.modjson, textarea.savetext {
   color: var(--helper-text-color); font-size: var(--ui-label-size); line-height: 1.4;
 }
 
+/* Scheduled games: stacked labels over full-width shared fields. The hosting
+   form pairs fields on roomy sheets and stacks them on compact screens. */
+.games-field { display: grid; gap: 4px; min-width: 0; margin-bottom: 10px; }
+.games-field[hidden] { display: none; }
+.games-field > span { color: var(--helper-text-color); font-size: var(--ui-label-size); }
+.games-field select, .games-field input {
+  box-sizing: border-box; width: 100%; min-width: 0; min-height: 44px;
+}
+.games-host-form {
+  display: grid; grid-template-columns: repeat(2, minmax(0, 1fr));
+  column-gap: 12px; align-items: end; margin-bottom: 4px;
+}
+.games-host-note, .games-host-annual { grid-column: 1 / -1; }
+.games-host-note { margin: 0 0 10px; color: var(--helper-text-color); font-size: var(--ui-label-size); }
+.games-host-annual {
+  display: flex; align-items: center; gap: 10px; min-height: 44px; margin-bottom: 10px;
+  padding: 6px 12px; box-sizing: border-box; cursor: pointer;
+  border: 1px solid var(--ui-border-color); border-radius: 8px; background: var(--ui-surface-color);
+}
+.games-host-annual:hover { border-color: #c9a24a; }
+.games-host-annual input { flex: 0 0 auto; width: 18px; height: 18px; margin: 0; }
+.games-host-annual span { min-width: 0; overflow-wrap: anywhere; }
+@media (max-width: 520px) {
+  .games-host-form { grid-template-columns: minmax(0, 1fr); }
+}
+
 /* Semantic desktop shortcuts are edited as key/action pairs. Status stays on
    its own line so long translated blocking reasons do not squeeze selects. */
 .shortcut-settings-entry {

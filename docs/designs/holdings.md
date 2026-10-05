@@ -173,7 +173,7 @@ or clerical yield, and matching staffed-enterprise output. Soldier outfits affec
 work only. Permanent Pack Mule, Fine Tools, Good Mail, Warhorse, and other holding/item
 effects remain separate productive or combat property.
 
-**Freeholders and gentry assemble family land.** Repeatable plots live in
+**Every free rank may assemble private family land.** Repeatable plots live in
 `player.landPlots` as `{provinceId, settlement}` and pass to heirs. The Buy Freehold Land
 deed places each purchase in one of the home county's stable derived settlements. A
 completed frontier homestead (the *Withdraw into the wastes* journey — see
@@ -196,15 +196,20 @@ purchase alone. The Free Farmer start owns its promised first plot. Legacy `has_
 saves become one plot lazily, and legacy tier-2 saves built around the old assumed manor
 receive a complete holding unless their station came from the abbot/qadi path.
 
-Declaring the first manor does not close the family land market. Gentry may continue
-buying plots one at a time in the home county up to each settlement's ordinary cap.
-Manor declaration remains a one-time Freeholder claim; titled ranks use county domains and
-buildings instead of buying commoner freehold plots. Its recognition cost represents the
+Declaring the first manor or taking landed rank does not close the family land market.
+Every free rank, from Freeholder through Emperor, may continue buying private family
+plots one at a time in the home county up to each settlement's ordinary cap. These
+plots retain the same live prices, produce, consolidation bonus and inheritance;
+they grant no public jurisdiction or county title. The Buy a plot of land deed opens
+even when the purse is short or every settlement is full; the individual purchase
+rows disclose and enforce those limits. Serfs still need freedom before buying.
+Manor declaration remains a one-time Freeholder claim. Its recognition cost represents the
 estate consolidation, gifts, hospitality, and public standing by which a prosperous family
 could be treated as gentle; it is a playable synthesis, not a universal legal tariff. The
 technology impact is **none** (`gentry_freehold_expansion` and
-`rank_elevation_investiture`): ordinary local land purchases and social recognition need
-no credible research gate.
+`rank_elevation_investiture`): ordinary local private land purchases at every free
+rank and social recognition need no credible research gate. Existing plots and
+in-flight recognition retain their records without a migration.
 
 Successful freehold purchases refresh the land market in place, preserving list scroll
 and focus on the purchased settlement, including when it becomes full or unaffordable.

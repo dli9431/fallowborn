@@ -10906,6 +10906,9 @@ window.FB = window.FB || {};
     });
     if (record.type === 'worldNews') return FB.T('World news follows');
     if (record.type === 'system') {
+      if (record.system === 'householdService' && record.action === 'refer') {
+        return FB.T('Officer decides; Standing and Popular support unchanged');
+      }
       if (record.system === 'tournament') {
         if (record.field === 'fatigue') return FB.T('Games fatigue {change}',{change:numberText(amount)});
         if (record.field === 'preparation') return FB.T('Games preparation {change}',{change:numberText(amount)});

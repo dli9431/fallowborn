@@ -10,8 +10,14 @@ window.FB = window.FB || {};
   G.bootReady = false;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-FB.VERSION = '1.189.3';
+FB.VERSION = '1.189.4';
 FB.CHANGELOG = [
+  { v: '1.189.4', date: '2026-10-05', changes: [
+    'Rulers can buy freehold plots, and Buy a plot of land opens even when funds are short.',
+    'Service and career reviews show experience and literacy progress. Household referrals explain their neutral outcome.',
+    'Network shows unpaid family officers and their contributions.',
+    'Games use renamed settlement names, and hosting forms keep labels above responsive fields.'
+  ] },
   { v: '1.189.3', date: '2026-10-04', changes: [
     'Households can move to an existing realm capital when their home is elsewhere. Land distinguishes the capital from the household home.',
     'Royal character sheets retain court family links and return navigation, and relationship labels identify whose consort or relative is shown.',

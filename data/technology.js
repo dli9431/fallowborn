@@ -536,7 +536,7 @@ window.FBDATA = window.FBDATA || {};
       },
       gentry_freehold_expansion:{
         mode:'none',
-        rationale:'Continuing to buy ordinary family plots after declaring a manor extends baseline property accumulation across adjacent commoner ranks; no innovation credibly gates buying land already offered in the local market.'
+        rationale:'Continuing to buy ordinary family plots after declaring a manor or taking landed rank extends baseline private property accumulation; no innovation credibly gates buying land already offered in the home county. All free ranks retain the same prices, settlement caps, yields and inheritance.'
       },
       building_university:{
         mode:'hard', tech:['universities'], fallback:'library',
