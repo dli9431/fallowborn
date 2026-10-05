@@ -2,7 +2,9 @@
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
   'data/climate.js', 'data/geographies.js', 'data/bookmarks.js',
-  'data/bookmark_476.js', 'data/counties.js', 'data/tournaments.js',
+  'data/bookmark_476.js',
+  'data/bookmark_476_italy.js', 'data/bookmark_476_dalmatia_east.js',
+  'data/bookmark_476_gaul_iberia.js', 'data/bookmark_476_africa.js', 'data/counties.js', 'data/tournaments.js',
   'data/events_common.js', 'data/events_noble.js', 'data/events_paths.js',
   'data/events_peasant.js',
   'js/climate.js', 'js/world.js', 'js/events.js', 'js/armies.js',
@@ -15,7 +17,7 @@ const { startDeterministicGame } = require('../support/game/start');
 
 /* Climate zones (docs/designs/time.md, Calendar and local seasons): the
    calendar is global, each county's zone maps it to a local season kind,
-   and engine rules read the kind's properties. europe_regional keeps the
+   and engine rules read the kind's properties. Medieval bookmarks keep the
    long-standing seasons everywhere; a southern zone moves them half a
    year. */
 
@@ -43,7 +45,7 @@ async function activate(page, id) {
   }, id);
 }
 
-test('shipped climate data is valid and every core bookmark keeps the calendar seasons',
+test('shipped climate data is valid and medieval bookmarks keep the calendar seasons',
   async function ({ page }, testInfo) {
     test.setTimeout(180 * 1000);
     await openGame(page, testInfo);
@@ -67,10 +69,12 @@ test('shipped climate data is valid and every core bookmark keeps the calendar s
     expect(data.southern).toEqual(['autumn', 'winter', 'spring', 'summer']);
     expect(data.flags).toEqual([
       ['spring', false, true], ['summer', false, true],
-      ['autumn', false, false], ['winter', true, false]
+      ['autumn', false, false], ['winter', true, false],
+      ['mild_winter', false, false], ['dry_summer', false, true],
+      ['hot_dry', true, false], ['cool_season', false, false]
     ]);
 
-    for (const id of ['867', '1066', '476']) {
+    for (const id of ['867', '1066']) {
       expect(await activate(page, id)).toBe(null);
       const parity = await page.evaluate(function (kinds) {
         const mismatches = [];

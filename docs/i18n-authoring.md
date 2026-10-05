@@ -55,10 +55,10 @@ though the game still *runs*.
   and historical `desc` live in `data/technology.js` and render through `FB.dataText`;
   domain and tradition labels are id-keyed structured data too; cost explanations remain
   UI chrome and use explicit `FB.T` keys.
-- **476 world labels:** `data/bookmark_476.js` has literal bookmark and realm labels.
+- **476 world labels:** data/bookmark_476.js has literal bookmark labels; data/bookmark_476_italy.js, data/bookmark_476_dalmatia_east.js, data/bookmark_476_gaul_iberia.js and data/bookmark_476_africa.js own literal realm and administrative title labels.
   Period county names by year live in the `PROVINCE_NAMES` table of
   `data/geographies.js`, extracted as province.<id>.name.dated.<index>. The static
-  extractor reads both without running the bookmark builder. Keep authored province
+  extractor reads both without running game code. Keep authored province
   display names as quoted strings so exact-source aliases can translate them. Ruler and
   physical-site names remain proper names.
 - Climate labels: season kind and climate zone names in data/climate.js are structured

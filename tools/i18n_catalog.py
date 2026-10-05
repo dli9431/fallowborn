@@ -1036,9 +1036,8 @@ def extract_structured(inv: Inventory) -> None:
                 (),
             )
 
-    # The 476 bookmark builds its province array from the later grid, but its
-    # authored bookmark, realm, and place labels remain literal source data.
-    # Extract only those labels: ruler profiles are generated proper names.
+    # The 476 bookmark composes regional literal declarations. Extract their
+    # labels without evaluating game code; ruler profiles are proper names.
     period_path = DATA / "bookmark_476.js"
     period_rel = period_path.relative_to(ROOT).as_posix()
     period_bookmark = node_object(
@@ -1050,17 +1049,33 @@ def extract_structured(inv: Inventory) -> None:
                 f"bookmark.476.{field}.{branch}", record,
                 f"{period_rel}:{line}", f"Start bookmark 476, {field}.", ()
             )
-    for realm_node in node_array(find_local_assignment(period_path, "realms")) or []:
-        realm = node_object(realm_node) or {}
-        realm_id = node_string(realm.get("id"))
-        if not realm_id:
-            continue
-        for branch, record, line in branch_records(realm.get("name")):
-            inv.add(
-                f"realm.476.{realm_id}.name.{branch}", record,
-                f"{period_rel}:{line}",
-                f"476 realm {realm_id}, display name.", ()
-            )
+    for region in ("italy", "dalmatia_east", "gaul_iberia", "africa"):
+        region_path = DATA / f"bookmark_476_{region}.js"
+        region_rel = region_path.relative_to(ROOT).as_posix()
+        declaration = node_object(find_keyed_assignment(
+            region_path, "FBDATA", "bookmarkRegions476", region
+        )) or {}
+        for realm_node in node_array(declaration.get("realms")) or []:
+            realm = node_object(realm_node) or {}
+            realm_id = node_string(realm.get("id"))
+            if not realm_id:
+                continue
+            for branch, record, line in branch_records(realm.get("name")):
+                inv.add(
+                    f"realm.476.{realm_id}.name.{branch}", record,
+                    f"{region_rel}:{line}",
+                    f"476 realm {realm_id}, display name.", ()
+                )
+        for table, kind in (("duchies", "duchy"), ("kingdoms", "kingdom"),
+                            ("empires", "empire")):
+            for title_id, title_node in (node_object(declaration.get(table)) or {}).items():
+                title = node_object(title_node) or {}
+                for branch, record, line in branch_records(title.get("name")):
+                    inv.add(
+                        f"{kind}.{title_id}.name.{branch}", record,
+                        f"{region_rel}:{line}",
+                        f"476 administrative {kind} {title_id}, display name.", ()
+                    )
     # Dated county names of the geography bases replace a county's display
     # name for the years they cover, so each is a display label of its own.
     geography_path = DATA / "geographies.js"

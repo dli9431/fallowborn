@@ -64,6 +64,29 @@ class StructuredDataExtractionTests(unittest.TestCase):
             inventory.entries["province.split.name.dated.0"]["text"],
             "Salona",
         )
+        for realm, name in (
+            ("italy", "Western Roman Court"),
+            ("pannonia", "Amal Gothic Host"),
+            ("aquitaine", "Visigothic Kingdom"),
+            ("aghlabids", "Vandal Kingdom"),
+            ("thracian_goths_476", "Thracian Gothic Host"),
+        ):
+            self.assertEqual(
+                inventory.entries[f"realm.476.{realm}.name.default"]["text"],
+                name,
+            )
+        for key, name in (
+            ("duchy.d_476_liguria.name.default", "Liguria"),
+            ("kingdom.k_476_pontica.name.default", "Pontica"),
+            ("empire.e_476_illyricum.name.default", "Illyricum"),
+            ("province.laon.name.dated.0", "Augusta Suessionum"),
+            ("seasonKind.mild_winter.name.default", "Mild winter"),
+            ("climateZone.continental.name.default", "Continental"),
+        ):
+            self.assertEqual(inventory.entries[key]["text"], name)
+        self.assertNotIn(
+            i18n_catalog.source_key("Theoderic Strabo"), inventory.entries
+        )
         self.assertNotIn(
             i18n_catalog.source_key("Suevic Court Delegate"),
             inventory.entries,

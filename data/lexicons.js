@@ -115,7 +115,8 @@ FBDATA.lexicons = {
   governments:{
     roman_civic:{ terms:{
       duchy:{ one:'province', other:'provinces' },
-      kingdom:{ one:'diocese', other:'dioceses' }
+      kingdom:{ one:'diocese', other:'dioceses' },
+      empire:{ one:'prefecture', other:'prefectures' }
     } },
     regnum:{ terms:{ kingdom:{ one:'kingdom', other:'kingdoms' } } }
   },

@@ -7,7 +7,9 @@ dependsOnRuntime(__filename, [
   'js/save.js', 'js/save_v4.js', 'js/ambitions.js', 'js/station.js',
   'js/ui_panels.js', 'js/ui_modals.js', 'js/governments.js',
   'data/lexicons.js', 'data/technology.js', 'data/political_institutions.js',
-  'data/bookmarks.js', 'data/bookmark_476.js', 'data/eras.js', 'data/counties.js'
+  'data/bookmarks.js', 'data/bookmark_476.js',
+  'data/bookmark_476_italy.js', 'data/bookmark_476_dalmatia_east.js',
+  'data/bookmark_476_gaul_iberia.js', 'data/bookmark_476_africa.js', 'data/eras.js', 'data/counties.js'
 ]);
 const { test, expect } = require('../support/fixture');
 const { openGame } = require('../support/game/navigation');

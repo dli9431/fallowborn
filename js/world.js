@@ -612,7 +612,9 @@ window.FB = window.FB || {};
   }
 
   function validRulerProfile(ruler) {
-    return !!ruler && !!ruler.name && (ruler.sex === 'm' || ruler.sex === 'f') &&
+    return !!ruler && (ruler.generated === true || !!ruler.name) &&
+      (ruler.generated === undefined || typeof ruler.generated === 'boolean') &&
+      (ruler.sex === 'm' || ruler.sex === 'f') &&
       !!FBDATA.cultures[ruler.culture] && isFinite(ruler.born) &&
       isFinite(ruler.mar) && !!FBDATA.traits[ruler.trait];
   }
@@ -732,6 +734,10 @@ window.FB = window.FB || {};
       if (!realm || !realm.id) { fault('realm at index ' + ri + ' has no id.'); continue; }
       if (realms[realm.id]) fault('duplicate realm id ' + realm.id + '.');
       realms[realm.id] = realm;
+    }
+
+    if (definition.climate !== undefined && FB.climateAssignmentFaults) {
+      FB.climateAssignmentFaults(definition.climate, provinceIds).forEach(fault);
     }
 
     for (var rid in realms) {
@@ -2352,8 +2358,9 @@ window.FB = window.FB || {};
 
   function makeRuler(culture, authored, year, state) {
     if (authored) {
-      return {
-        name: authored.name,
+      const profile = {
+        name: authored.generated === true
+          ? FB.randomName(authored.culture, authored.sex, null, state) : authored.name,
         sex: authored.sex,
         culture: authored.culture,
         born: authored.born,
@@ -2362,6 +2369,8 @@ window.FB = window.FB || {};
         trait: authored.trait,
         generation: 1
       };
+      if (authored.generated === true) profile.generated = true;
+      return profile;
     }
     const age = FB.ri(20, 55);
     return {
@@ -4070,6 +4079,7 @@ window.FB = window.FB || {};
     const generatedBaseMartial = Number(c.skills.mar) || 0;
     const martialBonus = realmMartial(state, c) - generatedBaseMartial;
     c.skills.mar = Math.max(0, projectedMartial - martialBonus);
+    if (r.ruler.generated === true) c.generated = true;
     c.royalLine = { realmId:rid, memberId:m.id };
     c.realmStanding = standing;
     m.charId = c.id;

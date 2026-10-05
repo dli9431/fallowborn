@@ -2,7 +2,9 @@
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
   'index.html', 'data/systems.js', 'data/eras.js', 'data/bookmarks.js',
-  'data/bookmark_476.js', 'data/cultures.js', 'data/political_institutions.js',
+  'data/bookmark_476.js',
+  'data/bookmark_476_italy.js', 'data/bookmark_476_dalmatia_east.js',
+  'data/bookmark_476_gaul_iberia.js', 'data/bookmark_476_africa.js', 'data/cultures.js', 'data/political_institutions.js',
   'data/political_blocs.js', 'data/policies.js', 'data/actions.js', 'data/economy.js',
   'data/traits.js', 'data/events_council.js', 'data/events_parliament.js',
   'data/events_peasant.js', 'data/events_tournament.js', 'data/events_paths.js',

@@ -14,9 +14,9 @@
    Event triggers name kinds with seasonKinds, evaluated at the player's
    county. The legacy index trigger seasons:[0..3] still reads the calendar.
 
-   Zones other than northern_temperate are placeholders that keep today's
-   behavior on the regional Europe base; assigning real regional climates is
-   content work for a bookmark's geography. southern_temperate turns the
+   Bookmarks may override their base's assignments without changing other
+   campaigns. Mediterranean winters are mild and arid summers are hot and dry.
+   The continental plateau keeps cold winters. southern_temperate turns the
    calendar half a year around. Season kinds and zones are derived, never
    saved. See docs/MODDING.md (Climate zones).
    ========================================================================= */
@@ -26,7 +26,11 @@ FBDATA.seasonKinds = {
   spring:{ name:'Spring', fairWeather:true },
   summer:{ name:'Summer', fairWeather:true },
   autumn:{ name:'Autumn' },
-  winter:{ name:'Winter', hardship:true }
+  winter:{ name:'Winter', hardship:true },
+  mild_winter:{ name:'Mild winter' },
+  dry_summer:{ name:'Dry summer', fairWeather:true },
+  hot_dry:{ name:'Hot dry season', hardship:true },
+  cool_season:{ name:'Cool season' }
 };
 
 /* seasons lists the season kind of calendar seasons 0 (Spring) to 3
@@ -35,8 +39,10 @@ FBDATA.climateZones = {
   northern_temperate:{ name:'Northern temperate',
     seasons:['spring', 'summer', 'autumn', 'winter'] },
   mediterranean:{ name:'Mediterranean',
-    seasons:['spring', 'summer', 'autumn', 'winter'] },
+    seasons:['spring', 'dry_summer', 'autumn', 'mild_winter'] },
   arid:{ name:'Arid',
+    seasons:['spring', 'hot_dry', 'autumn', 'cool_season'] },
+  continental:{ name:'Continental',
     seasons:['spring', 'summer', 'autumn', 'winter'] },
   steppe:{ name:'Steppe',
     seasons:['spring', 'summer', 'autumn', 'winter'] },

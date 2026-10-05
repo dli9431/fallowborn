@@ -1580,3 +1580,7 @@ Where a county has no title hierarchy, FB.political.territorialClaims projects e
 Coverage is in title-levels-and-hierarchy.spec.js, lexicon.spec.js,
 realm-names.spec.js and crown-recognition.spec.js, with the existing medieval
 title migration and parity journeys retained.
+
+476 authored geography
+
+The 476 administrative groups use independent d_476_, k_476_ and e_476_ ids in Roman regions; Roman civic vocabulary names the three levels province, diocese and prefecture. Regional kingdoms outside the surviving administration have no hierarchy. The direct-holder governments keep the explicitly authored realm as both owner and holder. Nonterritorial Amal and Thracian bodies have hosts and court seats inside the eastern sphere without hereditary counties. Profiles with generated:true omit a historical name and receive a seeded name from their specified culture; named profiles and other bookmarks retain their original construction.

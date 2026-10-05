@@ -4,7 +4,9 @@ const path = require('path');
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
   'js',
-  'data/bookmarks.js', 'data/bookmark_476.js'
+  'data/bookmarks.js', 'data/bookmark_476.js',
+  'data/bookmark_476_italy.js', 'data/bookmark_476_dalmatia_east.js',
+  'data/bookmark_476_gaul_iberia.js', 'data/bookmark_476_africa.js'
 ]);
 const { test, expect } = require('../support/fixture');
 const { openGame } = require('../support/game/navigation');

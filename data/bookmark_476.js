@@ -1,246 +1,326 @@
-/* Spring 476 regional bookmark. The borrowed county grid is a geographic
-   scaffold, not a claim that later county borders existed in this period.
-   Period county names come from the geography base's names by year
-   (data/geographies.js); the period county heads are the 476 settlement
-   layout in data/settlements.js. */
+/* Spring 476 on europe_regional. Regional declarations own every inhabited
+   cell; uninhabited cells retain stable geography ids and carry no politics. */
 window.FBDATA = window.FBDATA || {};
-(function () {
-  'use strict';
-  var base = FBDATA.bookmarks['867'];
-  var regions = {
-    italy:'italy', papacy:'italy', benevento:'italy', venice:'italy',
-    sardinia:'italy', croatia:'croatia', byzantium:'byzantium',
-    aquitaine:'aquitaine', west_francia:'west_francia', burgundy:'burgundy',
-    aghlabids:'aghlabids', pannonia:'pannonia',
-    brittany:'armorica_476', asturias:'aquitaine', navarra:'aquitaine',
-    cordoba:'aquitaine', rustamids:'mauri_476',
-    idrisids:'mauri_476', lotharingia:'west_francia',
-    bulgaria:'byzantium', serbia:'croatia'
-  };
-  var northernFranks = { bruges:1, ghent:1, boulogne:1, arras:1,
-    reims:1, amiens:1, st_quentin:1, laon:1 };
-  var suebi = { coruna:1, santiago:1, ourense:1, lugo:1 };
-  var easternMarch = { pliska:1, silistra:1, vidin:1, serdica:1,
-    philippopolis:1, skopje:1, ohrid:1 };
-  var dalmatianMarch = { kotor:1 };
-  var romanGaul = { paris:1, chartres:1, sens:1, orleans:1,
-    rouen:1, caen:1, evreux:1, bayeux:1, angers:1, tours:1,
-    le_mans:1, blois:1, bourges:1, troyes:1, chalons:1,
-    metz:1, verdun:1, nancy:1 };
-  var alpineBurgundy = { strasbourg:1, basel:1, geneva:1 };
-  var rhenishFranks = { aachen:1, trier:1, luxembourg:1,
-    liege:1, cologne:1 };
-  var realms = [
-    { id:'italy', name:'Western Roman Court', color:'#9c5647', capital:'ravenna',
-      aggression:0, rank:4, religion:'nicene', techTraditions:['latin'],
-      government:'roman_civic',
-      ruler:{ name:'Romulus Augustulus', sex:'m', culture:'roman', born:461, mar:3, trait:'patient' } },
-    { id:'croatia', name:'Dalmatian Roman Court', color:'#7b699b', capital:'split',
-      aggression:0, rank:3, religion:'nicene', techTraditions:['latin','byzantine'],
-      government:'roman_civic',
-      ruler:{ name:'Julius Nepos', sex:'m', culture:'roman', born:430, mar:9, trait:'proud' } },
-    { id:'byzantium', name:'Eastern Roman Court', color:'#a04fb0', capital:'constantinople',
-      aggression:0, rank:4, religion:'chalcedonian', techTraditions:['byzantine'],
-      government:'roman_civic',
-      ruler:{ name:'Basiliscus', sex:'m', culture:'greek', born:430, mar:8, trait:'proud' } },
-    { id:'west_francia', name:'Roman Domain in Gaul', color:'#758aa0', capital:'paris',
-      aggression:0, rank:3, religion:'nicene', techTraditions:['latin'],
-      ruler:{ name:'Syagrius', sex:'m', culture:'roman', born:430, mar:9, trait:'patient' } },
-    { id:'franks_476', name:'Salian Franks', color:'#5e7b92', capital:'arras',
-      aggression:1, rank:3, religion:'germanic_pagan',
-      ruler:{ name:'Childeric', sex:'m', culture:'frankish', born:440, mar:10, trait:'ambitious' } },
-    { id:'aquitaine', name:'Visigothic Kingdom', color:'#ba8655', capital:'toulouse',
-      aggression:1, rank:3, religion:'homoian', techTraditions:['latin'],
-      ruler:{ name:'Euric', sex:'m', culture:'gothic', born:425, mar:13, trait:'ambitious' } },
-    { id:'burgundy', name:'Burgundian Court', color:'#8c9659', capital:'vienne',
-      aggression:0, rank:3, religion:'homoian',
-      ruler:{ name:'Gundobad', sex:'m', culture:'gothic', born:445, mar:9, trait:'patient' } },
-    { id:'aghlabids', name:'Vandal Kingdom', color:'#b59b48', capital:'tunis',
-      aggression:1, rank:3, religion:'homoian', techTraditions:['latin'],
-      ruler:{ name:'Gaiseric', sex:'m', culture:'gothic', born:389, mar:12, trait:'ambitious' } },
-    { id:'pannonia', name:'Ostrogothic Confederation', color:'#809b73', capital:'szekesfehervar',
-      aggression:1, rank:3, religion:'homoian',
-      ruler:{ name:'Theoderic the Amal', sex:'m', culture:'gothic', born:454, mar:12, trait:'ambitious' } },
-    { id:'suebi_476', name:'Suevic Kingdom', color:'#667b59', capital:'coruna',
-      aggression:0, rank:3, religion:'homoian',
-      ruler:{ name:'Suevic Court Delegate', sex:'m', culture:'gothic', born:440, mar:8, trait:'patient' } },
-    { id:'armorica_476', name:'Armorican Communities', color:'#69908d', capital:'rennes',
-      aggression:0, rank:2, religion:'nicene',
-      ruler:{ name:'Armorican Delegate', sex:'m', culture:'brezhon', born:440, mar:5, trait:'patient' } },
-    { id:'mauri_476', name:'Moorish Communities', color:'#a98255', capital:'constantine',
-      aggression:0, rank:2, religion:'berber_traditional',
-      ruler:{ name:'Moorish Delegate', sex:'m', culture:'berber', born:440, mar:6, trait:'patient' } },
-    { id:'rhein_franks_476', name:'Rhenish Franks', color:'#708f9b', capital:'cologne',
-      aggression:0, rank:2, religion:'germanic_pagan',
-      ruler:{ name:'Rhenish Chieftain', sex:'m', culture:'frankish', born:440, mar:8, trait:'patient' } },
-    { id:'federates_476', name:'Federate Host in Italy', color:'#717d65', capital:'pavia',
-      nonTerritorial:true, aggression:0, rank:1, religion:'homoian',
-      government:'federate_polity',
-      ruler:{ name:'Odoacer', sex:'m', culture:'gothic', born:433, mar:12, trait:'ambitious' } }
-  ];
-  var provinces = base.provinces.map(function (source) {
-    var p = Object.assign({}, source);
-    if (!regions[source.realm] || source.wasteland) {
-      return { id:source.id, name:source.name, x:source.x, y:source.y,
-        terrain:source.terrain, wasteland:true };
-    }
-    p.realm = northernFranks[p.id] ? 'franks_476' :
-      suebi[p.id] ? 'suebi_476' :
-      romanGaul[p.id] ? 'west_francia' :
-      alpineBurgundy[p.id] ? 'burgundy' :
-      rhenishFranks[p.id] ? 'rhein_franks_476' :
-      easternMarch[p.id] ? 'byzantium' :
-      dalmatianMarch[p.id] ? 'croatia' :
-      source.realm === 'west_francia' &&
-        ['barcelona','girona','urgell'].indexOf(p.id) >= 0 ? 'aquitaine' :
-      regions[source.realm];
-    if (source.realm === 'bulgaria' && !easternMarch[p.id] ||
-        source.realm === 'serbia' && !dalmatianMarch[p.id] ||
-        source.realm === 'lotharingia' && !romanGaul[p.id] &&
-          !alpineBurgundy[p.id] && !rhenishFranks[p.id]) {
-      return { id:source.id, name:source.name, x:source.x, y:source.y,
-        terrain:source.terrain, wasteland:true };
-    }
-    p.settlements = undefined;
-    p.culture = p.realm === 'franks_476' ||
-      p.realm === 'rhein_franks_476' ? 'frankish' :
-      p.realm === 'pannonia' ? 'gothic' :
-      p.realm === 'armorica_476' ? 'brezhon' :
-      p.realm === 'mauri_476' ? 'berber' :
-      p.realm === 'byzantium' ? 'greek' : 'roman';
-    p.religion = p.realm === 'franks_476' ||
-      p.realm === 'rhein_franks_476' ? 'germanic_pagan' :
-      p.realm === 'mauri_476' ? 'berber_traditional' :
-      p.realm === 'pannonia' ? 'homoian' :
-      p.realm === 'byzantium' ? 'chalcedonian' : 'nicene';
-    p.communities = [{ culture:p.culture, religion:p.religion,
-      populationShare0:10000 }];
-    if (p.realm === 'aquitaine' || p.realm === 'burgundy' ||
-        p.realm === 'aghlabids' || p.id === 'ravenna' || p.id === 'pavia') {
-      p.communities = [
-        { culture:'roman', religion:'nicene', populationShare0:8000 },
-        { culture:'gothic', religion:'homoian', paired:true,
-          populationShare0:2000 }
-      ];
-      p.culture = 'roman'; p.religion = 'nicene';
-    }
-    if (p.realm === 'suebi_476') {
-      p.communities = [
-        { culture:'roman', religion:'nicene', populationShare0:7500 },
-        { culture:'gothic', religion:'homoian', paired:true, populationShare0:2500 }
-      ];
-      p.culture = 'roman'; p.religion = 'nicene';
-    }
-    if (p.realm === 'mauri_476') {
-      p.communities = [
-        { culture:'berber', religion:'berber_traditional', populationShare0:7000 },
-        { culture:'roman', religion:'nicene', paired:true, populationShare0:3000 }
-      ];
-    }
-    if (p.realm === 'armorica_476') {
-      p.communities = [
-        { culture:'brezhon', religion:'nicene', populationShare0:7000 },
-        { culture:'roman', religion:'nicene', paired:true, populationShare0:3000 }
-      ];
-    }
-    if (p.realm === 'croatia') {
-      p.communities = [
-        { culture:'roman', religion:'nicene', populationShare0:8000 },
-        { culture:'slavic', religion:'slavic_pagan', paired:true,
-          populationShare0:2000 }
-      ];
-    }
-    if (source.realm === 'cordoba' || source.realm === 'asturias' ||
-        source.realm === 'navarra' ||
-        ['barcelona','girona','urgell'].indexOf(p.id) >= 0) {
-      if (p.realm !== 'suebi_476') {
-        p.communities = [
-          { culture:'iberian', religion:'nicene', populationShare0:8000 },
-          { culture:'gothic', religion:'homoian', paired:true, populationShare0:2000 }
-        ];
-        p.culture = 'iberian'; p.religion = 'nicene';
-      }
-    }
-    if (p.id === 'constantinople') {
-      p.communities = [
-        { culture:'greek', religion:'chalcedonian', populationShare0:8500 },
-        { culture:'greek', religion:'miaphysite', populationShare0:1500 }
-      ];
-    }
-    if (p.id === 'ravenna') {
-      p.settlements = [
-        { site:'ravenna_476', name:'Ravenna', kind:'city' },
-        { site:'classis_476', name:'Classis', kind:'town' }
-      ];
-      p.dev = 7;
-    } else if (p.id === 'pavia') {
-      p.settlements = [{ site:'pavia', name:'Ticinum', kind:'town' }];
-      p.dev = 5;
-    } else if (p.id === 'split') {
-      p.settlements = [
-        { site:'salona_476', name:'Salona', kind:'city' },
-        { site:'split', name:'Spalatum', kind:'village' }
-      ];
-      p.dev = 6;
-    } else if (p.id === 'tunis') {
-      p.settlements = [{ site:'carthage_476', name:'Carthage', kind:'city' }];
-      p.dev = 7;
-    } else if (p.id === 'kairouan') {
-      p.settlements = [{ site:'sufetula_476', name:'Sufetula', kind:'town' }];
-      p.dev = 3;
-    } else if (p.id === 'constantinople') {
-      p.settlements = [{ site:'constantinople', name:'Constantinople', kind:'city' }];
-      p.dev = 9;
-    } else if (p.id === 'toulouse' || p.id === 'arles' ||
-               p.id === 'vienne' || p.id === 'arras' || p.id === 'paris' ||
-               p.id === 'szekesfehervar') {
-      p.settlements = [{ site:p.id + '_476', name:p.name, kind:'town' }];
-    } else if (p.id === 'roma') {
-      p.settlements = [{ site:'roma', name:'Rome', kind:'city' },
-        { site:'ostia', name:'Ostia', kind:'town' }];
-      p.dev = 8;
-    }
-    return p;
-  });
-  FBDATA.settlementSites.ravenna_476 = { x:12.201, y:44.418 };
-  FBDATA.settlementSites.classis_476 = { x:12.24, y:44.38 };
-  FBDATA.settlementSites.salona_476 = { x:16.483426, y:43.539561 };
-  FBDATA.settlementSites.carthage_476 = { x:10.325, y:36.8528 };
-  FBDATA.settlementSites.sufetula_476 = { x:9.12, y:35.24 };
-  FBDATA.settlementSites.toulouse_476 = { x:1.44, y:43.6 };
-  FBDATA.settlementSites.arles_476 = { x:4.63, y:43.68 };
-  FBDATA.settlementSites.vienne_476 = { x:4.87, y:45.53 };
-  FBDATA.settlementSites.arras_476 = { x:2.78, y:50.29 };
-  FBDATA.settlementSites.paris_476 = { x:2.35, y:48.85 };
-  FBDATA.settlementSites.szekesfehervar_476 = { x:18.41, y:47.19 };
-  var settled = {}, keptStraits = [], crossingClasses = {};
-  provinces.forEach(function (province) {
-    if (!province.wasteland) settled[province.id] = true;
-  });
-  base.straits.forEach(function (pair) {
-    if (!settled[pair[0]] || !settled[pair[1]]) return;
-    keptStraits.push(pair.slice());
-    var key = pair[0] < pair[1] ? pair[0] + '|' + pair[1] :
-      pair[1] + '|' + pair[0];
-    if (base.crossingClasses[key]) crossingClasses[key] = base.crossingClasses[key];
-  });
-  if (settled.siracusa && settled.tunis) {
-    keptStraits.push(['siracusa','tunis']);
-    crossingClasses['siracusa|tunis'] = 'open';
-  }
-  FBDATA.bookmarks['476'] = {
-    id:'476', name:'The Last Western Court',
-    desc:'An emperor sits at Ravenna while federate soldiers demand a settlement.',
-    date:{ year:476, season:0, day:1 }, era:'late_antique',
-    geography:'europe_regional',
-    religiousHeads:{},
-    systems:{ disable:['papacy','scutage','manorial_tenure','excommunication',
-      'feudal_service','crown_bloc','tournaments','great_holy_wars'] },
-    stories:['western_court_476'],
-    provinces:provinces, realms:realms,
-    duchies:Object.assign({}, base.duchies),
-    kingdoms:Object.assign({}, base.kingdoms),
-    empires:Object.assign({}, base.empires),
-    straits:keptStraits, crossingClasses:crossingClasses, scripted:[]
-  };
-})();
+FBDATA.bookmarks['476'] = {
+  id:'476', name:'The Last Western Court',
+  desc:'An emperor sits at Ravenna while federate soldiers demand a settlement.',
+  date:{ year:476, season:0, day:1 }, era:'late_antique',
+  geography:'europe_regional', settlementLayout:'476',
+  religiousHeads:{},
+  systems:{ disable:['papacy','scutage','manorial_tenure','excommunication',
+    'feudal_service','crown_bloc','tournaments','great_holy_wars'] },
+  stories:['western_court_476'],
+  provinces:FBDATA.bookmarkRegions476.italy.provinces.concat(
+    FBDATA.bookmarkRegions476.dalmatia_east.provinces,
+    FBDATA.bookmarkRegions476.gaul_iberia.provinces,
+    FBDATA.bookmarkRegions476.africa.provinces, [
+      { id:'utrecht', name:'Utrecht', wasteland:true },
+      { id:'amsterdam', name:'Amsterdam', wasteland:true },
+      { id:'groningen', name:'Groningen', wasteland:true },
+      { id:'bremen', name:'Bremen', wasteland:true },
+      { id:'wurzburg', name:'Würzburg', wasteland:true },
+      { id:'nurnberg', name:'Nürnberg', wasteland:true },
+      { id:'bamberg', name:'Bamberg', wasteland:true },
+      { id:'frankfurt', name:'Frankfurt', wasteland:true },
+      { id:'mainz', name:'Mainz', wasteland:true },
+      { id:'worms', name:'Worms', wasteland:true },
+      { id:'koblenz', name:'Koblenz', wasteland:true },
+      { id:'ulm', name:'Ulm', wasteland:true },
+      { id:'freiburg', name:'Freiburg', wasteland:true },
+      { id:'munich', name:'München', wasteland:true },
+      { id:'regensburg', name:'Regensburg', wasteland:true },
+      { id:'passau', name:'Passau', wasteland:true },
+      { id:'hamburg', name:'Hamburg', wasteland:true },
+      { id:'hannover', name:'Hannover', wasteland:true },
+      { id:'braunschweig', name:'Braunschweig', wasteland:true },
+      { id:'magdeburg', name:'Magdeburg', wasteland:true },
+      { id:'erfurt', name:'Erfurt', wasteland:true },
+      { id:'leipzig', name:'Leipzig', wasteland:true },
+      { id:'meissen', name:'Meißen', wasteland:true },
+      { id:'winchester', name:'Winchester', wasteland:true },
+      { id:'salisbury', name:'Salisbury', wasteland:true },
+      { id:'dorset', name:'Dorset', wasteland:true },
+      { id:'bath', name:'Bath', wasteland:true },
+      { id:'exeter', name:'Exeter', wasteland:true },
+      { id:'cornwall', name:'Cornwall', wasteland:true },
+      { id:'canterbury', name:'Canterbury', wasteland:true },
+      { id:'rochester', name:'Rochester', wasteland:true },
+      { id:'chichester', name:'Chichester', wasteland:true },
+      { id:'lewes', name:'Lewes', wasteland:true },
+      { id:'london', name:'London', wasteland:true },
+      { id:'colchester', name:'Colchester', wasteland:true },
+      { id:'tamworth', name:'Tamworth', wasteland:true },
+      { id:'derby', name:'Derby', wasteland:true },
+      { id:'nottingham', name:'Nottingham', wasteland:true },
+      { id:'leicester', name:'Leicester', wasteland:true },
+      { id:'gloucester', name:'Gloucester', wasteland:true },
+      { id:'worcester', name:'Worcester', wasteland:true },
+      { id:'warwick', name:'Warwick', wasteland:true },
+      { id:'chester', name:'Chester', wasteland:true },
+      { id:'shrewsbury', name:'Shrewsbury', wasteland:true },
+      { id:'northampton', name:'Northampton', wasteland:true },
+      { id:'bedford', name:'Bedford', wasteland:true },
+      { id:'norwich', name:'Norwich', wasteland:true },
+      { id:'ipswich', name:'Ipswich', wasteland:true },
+      { id:'cambridge', name:'Cambridge', wasteland:true },
+      { id:'lincoln', name:'Lincoln', wasteland:true },
+      { id:'stamford', name:'Stamford', wasteland:true },
+      { id:'york', name:'York', wasteland:true },
+      { id:'scarborough', name:'Scarborough', wasteland:true },
+      { id:'bamburgh', name:'Bamburgh', wasteland:true },
+      { id:'durham', name:'Durham', wasteland:true },
+      { id:'carlisle', name:'Carlisle', wasteland:true },
+      { id:'lancaster', name:'Lancaster', wasteland:true },
+      { id:'gwynedd', name:'Gwynedd', wasteland:true },
+      { id:'powys', name:'Powys', wasteland:true },
+      { id:'cardigan', name:'Cardigan', wasteland:true },
+      { id:'carmarthen', name:'Carmarthen', wasteland:true },
+      { id:'cardiff', name:'Cardiff', wasteland:true },
+      { id:'scone', name:'Scone', wasteland:true },
+      { id:'dundee', name:'Dundee', wasteland:true },
+      { id:'aberdeen', name:'Aberdeen', wasteland:true },
+      { id:'elgin', name:'Elgin', wasteland:true },
+      { id:'inverness', name:'Inverness', wasteland:true },
+      { id:'edinburgh', name:'Edinburgh', wasteland:true },
+      { id:'stirling', name:'Stirling', wasteland:true },
+      { id:'glasgow', name:'Glasgow', wasteland:true },
+      { id:'dumbarton', name:'Dumbarton', wasteland:true },
+      { id:'whithorn', name:'Whithorn', wasteland:true },
+      { id:'iona', name:'Iona', wasteland:true },
+      { id:'man', name:'Man', wasteland:true },
+      { id:'lewis', name:'Lewis', wasteland:true },
+      { id:'ulaid', name:'Ulaid', wasteland:true },
+      { id:'tir_eoghain', name:'Tír Eoghain', wasteland:true },
+      { id:'tara', name:'Tara', wasteland:true },
+      { id:'dublin', name:'Dublin', wasteland:true },
+      { id:'kilkenny', name:'Kilkenny', wasteland:true },
+      { id:'wexford', name:'Wexford', wasteland:true },
+      { id:'galway', name:'Galway', wasteland:true },
+      { id:'tuam', name:'Tuam', wasteland:true },
+      { id:'roscommon', name:'Roscommon', wasteland:true },
+      { id:'cashel', name:'Cashel', wasteland:true },
+      { id:'cork', name:'Cork', wasteland:true },
+      { id:'limerick', name:'Limerick', wasteland:true },
+      { id:'agder', name:'Agder', wasteland:true },
+      { id:'stavanger', name:'Stavanger', wasteland:true },
+      { id:'bergen', name:'Bergen', wasteland:true },
+      { id:'oslo', name:'Oslo', wasteland:true },
+      { id:'tonsberg', name:'Tønsberg', wasteland:true },
+      { id:'trondheim', name:'Trondheim', wasteland:true },
+      { id:'halogaland', name:'Hålogaland', wasteland:true },
+      { id:'uppsala', name:'Uppsala', wasteland:true },
+      { id:'birka', name:'Birka', wasteland:true },
+      { id:'skara', name:'Skara', wasteland:true },
+      { id:'vaxjo', name:'Växjö', wasteland:true },
+      { id:'kalmar', name:'Kalmar', wasteland:true },
+      { id:'visby', name:'Visby', wasteland:true },
+      { id:'norrland', name:'Norrland', wasteland:true },
+      { id:'arhus', name:'Århus', wasteland:true },
+      { id:'viborg', name:'Viborg', wasteland:true },
+      { id:'hedeby', name:'Hedeby', wasteland:true },
+      { id:'ribe', name:'Ribe', wasteland:true },
+      { id:'roskilde', name:'Roskilde', wasteland:true },
+      { id:'lund', name:'Lund', wasteland:true },
+      { id:'veligrad', name:'Veligrad', wasteland:true },
+      { id:'olomouc', name:'Olomouc', wasteland:true },
+      { id:'brno', name:'Brno', wasteland:true },
+      { id:'nitra', name:'Nitra', wasteland:true },
+      { id:'bratislava', name:'Bratislava', wasteland:true },
+      { id:'praha', name:'Praha', wasteland:true },
+      { id:'plzen', name:'Plzeň', wasteland:true },
+      { id:'budejovice', name:'České Budějovice', wasteland:true },
+      { id:'poznan', name:'Poznań', wasteland:true },
+      { id:'gniezno', name:'Gniezno', wasteland:true },
+      { id:'plock', name:'Płock', wasteland:true },
+      { id:'krakow', name:'Kraków', wasteland:true },
+      { id:'wroclaw', name:'Wrocław', wasteland:true },
+      { id:'gdansk', name:'Gdańsk', wasteland:true },
+      { id:'szczecin', name:'Szczecin', wasteland:true },
+      { id:'mecklenburg', name:'Mecklenburg', wasteland:true },
+      { id:'lubeck', name:'Liubice', wasteland:true },
+      { id:'gyula', name:'Gyulafehérvár', wasteland:true },
+      { id:'cluj', name:'Cluj', wasteland:true },
+      { id:'novgorod', name:'Novgorod', wasteland:true },
+      { id:'ladoga', name:'Ladoga', wasteland:true },
+      { id:'pskov', name:'Pskov', wasteland:true },
+      { id:'rostov', name:'Rostov', wasteland:true },
+      { id:'suzdal', name:'Suzdal', wasteland:true },
+      { id:'beloozero', name:'Beloozero', wasteland:true },
+      { id:'smolensk', name:'Smolensk', wasteland:true },
+      { id:'kiev', name:'Kiev', wasteland:true },
+      { id:'pereyaslavl', name:'Pereyaslavl', wasteland:true },
+      { id:'chernigov', name:'Chernigov', wasteland:true },
+      { id:'kursk', name:'Kursk', wasteland:true },
+      { id:'polotsk', name:'Polotsk', wasteland:true },
+      { id:'vitebsk', name:'Vitebsk', wasteland:true },
+      { id:'turov', name:'Turov', wasteland:true },
+      { id:'minsk', name:'Minsk', wasteland:true },
+      { id:'volodymyr', name:'Volodymyr', wasteland:true },
+      { id:'lutsk', name:'Lutsk', wasteland:true },
+      { id:'etelkoz', name:'Etelköz', wasteland:true },
+      { id:'sambia', name:'Sambia', wasteland:true },
+      { id:'natangia', name:'Natangia', wasteland:true },
+      { id:'samogitia', name:'Samogitia', wasteland:true },
+      { id:'vilnius', name:'Vilnius', wasteland:true },
+      { id:'riga', name:'Riga', wasteland:true },
+      { id:'jersika', name:'Jersika', wasteland:true },
+      { id:'tallinn', name:'Tallinn', wasteland:true },
+      { id:'tartu', name:'Tartu', wasteland:true },
+      { id:'turku', name:'Turku', wasteland:true },
+      { id:'hame', name:'Häme', wasteland:true },
+      { id:'savo', name:'Savo', wasteland:true },
+      { id:'kexholm', name:'Kexholm', wasteland:true },
+      { id:'atil', name:'Atil', wasteland:true },
+      { id:'sarkel', name:'Sarkel', wasteland:true },
+      { id:'tmutarakan', name:'Tmutarakan', wasteland:true },
+      { id:'samandar', name:'Samandar', wasteland:true },
+      { id:'derbent', name:'Derbent', wasteland:true },
+      { id:'cherson', name:'Cherson', wasteland:true },
+      { id:'bolghar', name:'Bolghar', wasteland:true },
+      { id:'bilyar', name:'Bilyar', wasteland:true },
+      { id:'candia', name:'Candia', wasteland:true },
+      { id:'trebizond', name:'Trebizond', wasteland:true },
+      { id:'tarsos', name:'Tarsos', wasteland:true },
+      { id:'adana', name:'Adana', wasteland:true },
+      { id:'nicosia', name:'Nicosia', wasteland:true },
+      { id:'ras', name:'Raška', wasteland:true },
+      { id:'bosna', name:'Bosna', wasteland:true },
+      { id:'van', name:'Van', wasteland:true },
+      { id:'ani', name:'Ani', wasteland:true },
+      { id:'kars', name:'Kars', wasteland:true },
+      { id:'dvin', name:'Dvin', wasteland:true },
+      { id:'tbilisi', name:'Tbilisi', wasteland:true },
+      { id:'kutaisi', name:'Kutaisi', wasteland:true },
+      { id:'sukhumi', name:'Tskhumi', wasteland:true },
+      { id:'magas', name:'Magas', wasteland:true },
+      { id:'barqa', name:'Barqa', wasteland:true },
+      { id:'aghmat', name:'Aghmat', wasteland:true },
+      { id:'sale', name:'Salé', wasteland:true },
+      { id:'sijilmasa', name:'Sijilmasa', wasteland:true },
+      { id:'alexandria', name:'Alexandria', wasteland:true },
+      { id:'rosetta', name:'Rosetta', wasteland:true },
+      { id:'fustat', name:'Fustat', wasteland:true },
+      { id:'fayyum', name:'Fayyum', wasteland:true },
+      { id:'asyut', name:'Asyut', wasteland:true },
+      { id:'luxor', name:'Luxor', wasteland:true },
+      { id:'aswan', name:'Aswan', wasteland:true },
+      { id:'damascus', name:'Damascus', wasteland:true },
+      { id:'homs', name:'Homs', wasteland:true },
+      { id:'aleppo', name:'Aleppo', wasteland:true },
+      { id:'hama', name:'Hama', wasteland:true },
+      { id:'manbij', name:'Manbij', wasteland:true },
+      { id:'antioch', name:'Antioch', wasteland:true },
+      { id:'jerusalem', name:'Jerusalem', wasteland:true },
+      { id:'acre', name:'Acre', wasteland:true },
+      { id:'amman', name:'Amman', wasteland:true },
+      { id:'mosul', name:'Mosul', wasteland:true },
+      { id:'amida', name:'Amida', wasteland:true },
+      { id:'edessa', name:'Edessa', wasteland:true },
+      { id:'harran', name:'Harran', wasteland:true },
+      { id:'raqqa', name:'Raqqa', wasteland:true },
+      { id:'baghdad', name:'Baghdad', wasteland:true },
+      { id:'samarra', name:'Samarra', wasteland:true },
+      { id:'kufa', name:'Kufa', wasteland:true },
+      { id:'basra', name:'Basra', wasteland:true },
+      { id:'wasit', name:'Wasit', wasteland:true },
+      { id:'mecca', name:'Mecca', wasteland:true },
+      { id:'medina', name:'Medina', wasteland:true },
+      { id:'yamama', name:'Yamama', wasteland:true },
+      { id:'qatif', name:'Qatif', wasteland:true },
+      { id:'sanaa', name:'Sanaa', wasteland:true },
+      { id:'aden', name:'Aden', wasteland:true },
+      { id:'shibam', name:'Shibam', wasteland:true },
+      { id:'zeila', name:'Zeila', wasteland:true },
+      { id:'muscat', name:'Muscat', wasteland:true },
+      { id:'nizwa', name:'Nizwa', wasteland:true },
+      { id:'sohar', name:'Sohar', wasteland:true },
+      { id:'rayy', name:'Rayy', wasteland:true },
+      { id:'qazvin', name:'Qazvin', wasteland:true },
+      { id:'hamadan', name:'Hamadan', wasteland:true },
+      { id:'isfahan', name:'Isfahan', wasteland:true },
+      { id:'qom', name:'Qom', wasteland:true },
+      { id:'tabriz', name:'Tabriz', wasteland:true },
+      { id:'ardabil', name:'Ardabil', wasteland:true },
+      { id:'shiraz', name:'Shiraz', wasteland:true },
+      { id:'istakhr', name:'Istakhr', wasteland:true },
+      { id:'kerman', name:'Kerman', wasteland:true },
+      { id:'bam', name:'Bam', wasteland:true },
+      { id:'hormuz', name:'Hormuz', wasteland:true },
+      { id:'merv', name:'Merv', wasteland:true },
+      { id:'nishapur', name:'Nishapur', wasteland:true },
+      { id:'herat', name:'Herat', wasteland:true },
+      { id:'ghor', name:'Ghor', wasteland:true },
+      { id:'balkh', name:'Balkh', wasteland:true },
+      { id:'termez', name:'Termez', wasteland:true },
+      { id:'zaranj', name:'Zaranj', wasteland:true },
+      { id:'bust', name:'Bust', wasteland:true },
+      { id:'kandahar', name:'Kandahar', wasteland:true },
+      { id:'ghazni', name:'Ghazni', wasteland:true },
+      { id:'kabul', name:'Kabul', wasteland:true },
+      { id:'bamiyan', name:'Bamiyan', wasteland:true },
+      { id:'bukhara', name:'Bukhara', wasteland:true },
+      { id:'samarkand', name:'Samarkand', wasteland:true },
+      { id:'usrushana', name:'Usrushana', wasteland:true },
+      { id:'chach', name:'Chach', wasteland:true },
+      { id:'amol', name:'Amol', wasteland:true },
+      { id:'gorgan', name:'Gorgan', wasteland:true },
+      { id:'rasht', name:'Rasht', wasteland:true },
+      { id:'tiz', name:'Tiz', wasteland:true },
+      { id:'panjgur', name:'Panjgur', wasteland:true },
+      { id:'qusdar', name:'Qusdar', wasteland:true },
+      { id:'mansura', name:'Mansura', wasteland:true },
+      { id:'debal', name:'Debal', wasteland:true },
+      { id:'dongola', name:'Dongola', wasteland:true },
+      { id:'soba', name:'Soba', wasteland:true },
+      { id:'axum', name:'Axum', wasteland:true },
+      { id:'lalibela', name:'Lalibela', wasteland:true },
+      { id:'w_sahara_w', name:'Western Sahara', wasteland:true },
+      { id:'w_sahara_c', name:'Great Sahara', wasteland:true },
+      { id:'w_sahara_e', name:'Libyan Desert', wasteland:true },
+      { id:'w_sahel', name:'Sahel', wasteland:true },
+      { id:'w_nubia', name:'Nubian Desert', wasteland:true },
+      { id:'w_arabia', name:'Empty Quarter', wasteland:true },
+      { id:'w_nefud', name:'Nefud', wasteland:true },
+      { id:'w_syrian', name:'Syrian Desert', wasteland:true },
+      { id:'w_kavir', name:'Dasht-e Kavir', wasteland:true },
+      { id:'w_lut', name:'Dasht-e Lut', wasteland:true },
+      { id:'w_registan', name:'Registan', wasteland:true },
+      { id:'w_hindukush', name:'Hindu Kush', wasteland:true },
+      { id:'w_sulaiman', name:'Sulaiman Mountains', wasteland:true },
+      { id:'w_thar', name:'Thar Desert', wasteland:true },
+      { id:'w_karakum', name:'Karakum', wasteland:true },
+      { id:'w_kyzylkum', name:'Kyzylkum', wasteland:true },
+      { id:'w_steppe_e', name:'Kazakh Steppe', wasteland:true },
+      { id:'w_ural', name:'Ural Wastes', wasteland:true },
+      { id:'w_taiga', name:'Taiga', wasteland:true },
+      { id:'w_north', name:'Northern Wastes', wasteland:true },
+      { id:'w_lapland', name:'Lapland', wasteland:true }
+    ]),
+  realms:FBDATA.bookmarkRegions476.italy.realms.concat(
+    FBDATA.bookmarkRegions476.dalmatia_east.realms,
+    FBDATA.bookmarkRegions476.gaul_iberia.realms,
+    FBDATA.bookmarkRegions476.africa.realms),
+  duchies:Object.assign({},
+    FBDATA.bookmarkRegions476.italy.duchies,
+    FBDATA.bookmarkRegions476.dalmatia_east.duchies,
+    FBDATA.bookmarkRegions476.gaul_iberia.duchies,
+    FBDATA.bookmarkRegions476.africa.duchies),
+  kingdoms:Object.assign({},
+    FBDATA.bookmarkRegions476.italy.kingdoms,
+    FBDATA.bookmarkRegions476.dalmatia_east.kingdoms,
+    FBDATA.bookmarkRegions476.gaul_iberia.kingdoms,
+    FBDATA.bookmarkRegions476.africa.kingdoms),
+  empires:Object.assign({},
+    FBDATA.bookmarkRegions476.italy.empires,
+    FBDATA.bookmarkRegions476.dalmatia_east.empires,
+    FBDATA.bookmarkRegions476.gaul_iberia.empires,
+    FBDATA.bookmarkRegions476.africa.empires),
+  climate:{ zone:'northern_temperate', provinces:Object.assign({},
+    FBDATA.bookmarkRegions476.italy.climate,
+    FBDATA.bookmarkRegions476.dalmatia_east.climate,
+    FBDATA.bookmarkRegions476.gaul_iberia.climate,
+    FBDATA.bookmarkRegions476.africa.climate) },
+  straits:[['messina', 'reggio'], ['palermo', 'tunis'], ['malaga', 'tangier'], ['silves', 'tangier'], ['constantinople', 'nicaea'], ['cagliari', 'pisa'], ['ajaccio', 'lucca'], ['ajaccio', 'nice'], ['mallorca', 'valencia'], ['siracusa', 'tunis']],
+  crossingClasses:{ 'messina|reggio':'narrow', 'palermo|tunis':'open', 'malaga|tangier':'narrow', 'silves|tangier':'coastal', 'constantinople|nicaea':'narrow', 'cagliari|pisa':'open', 'ajaccio|lucca':'coastal', 'ajaccio|nice':'coastal', 'mallorca|valencia':'open', 'siracusa|tunis':'open' },
+  scripted:[]
+};

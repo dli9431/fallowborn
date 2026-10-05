@@ -2,7 +2,9 @@
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
   'data/map_data.js', 'data/counties.js', 'data/bookmarks.js',
-  'data/bookmark_476.js', 'data/settlements.js', 'data/settlements_real.js',
+  'data/bookmark_476.js',
+  'data/bookmark_476_italy.js', 'data/bookmark_476_dalmatia_east.js',
+  'data/bookmark_476_gaul_iberia.js', 'data/bookmark_476_africa.js', 'data/settlements.js', 'data/settlements_real.js',
   'data/geographies.js', 'data/eras.js', 'data/cultures.js',
   'js/util.js', 'js/world.js', 'js/title_ids.js', 'js/mods.js', 'js/mapview.js',
   'js/actions.js', 'js/main.js', 'js/save.js', 'js/save_v4.js'
@@ -118,7 +120,7 @@ test('476 resolves its period county names and heads from the date without mutat
       ['salona_476', 'Salona', 'city', true]
     ]);
     expect(late.explicit).toBe('paris_476');
-    expect(late.raw).toEqual([['barcelona', 'Barcelona', true], ['split', 'Split', false]]);
+    expect(late.raw).toEqual([['barcelona', 'Barcelona', true], ['split', 'Split', true]]);
     expect(late.geography).toBe('europe_regional');
 
     for (const id of ['867', '1066']) {

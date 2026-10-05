@@ -4,7 +4,9 @@ dependsOnRuntime(__filename, [
   'index.html',
   'js',
   'data/lexicons.js', 'data/eras.js', 'data/cultures.js', 'data/bookmarks.js',
-  'data/bookmark_476.js', 'data/political_institutions.js', 'data/economy.js',
+  'data/bookmark_476.js',
+  'data/bookmark_476_italy.js', 'data/bookmark_476_dalmatia_east.js',
+  'data/bookmark_476_gaul_iberia.js', 'data/bookmark_476_africa.js', 'data/political_institutions.js', 'data/economy.js',
   'data/units.js', 'data/map_data.js', 'data/starts.js'
 ]);
 const { test, expect } = require('../support/fixture');

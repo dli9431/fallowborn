@@ -583,3 +583,7 @@ modified by the 476 remapping.
 Scheduled Events markers use compiled settlement coordinates. At distant zoom they cluster within 48-pixel screen cells; detailed zoom retains one marker per funded edition at its exact settlement. Hit targets open an event or matching calendar subset. The overlay has independent session state and does not modify political or market views. Capacity uses settled counties in the active de jure kingdom, independently of current owners. See tournaments.md.
 
 FB.activateBookmark accepts an optional fourth argument, { geography: savedGeographyId }, for campaign loading. The override is applied to a detached bookmark before validation, geography resolution and raster caching. It leaves the bookmark registry unchanged. Pending activations coalesce only when both bookmark and geography match; other requests retain their override in the queue. A missing saved base fails activation before changing the active world.
+
+476 authored geography
+
+The 476 bookmark declares inhabited ownership and communities in four regional files on europe_regional. Its settlementLayout names the ordinary 476 layout; no later bookmark supplies its politics or settlement lists. Dated names remain on the physical base, while its optional climate layer overrides base assignments for that campaign only. Wasteland entries preserve ids and physical seeds without authored owners or communities.

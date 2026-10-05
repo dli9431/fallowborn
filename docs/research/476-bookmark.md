@@ -237,3 +237,16 @@ DELIBERATE SIMPLIFICATIONS
 - Generated characters fill offices and courts where sources name no one; they are labeled as generated.
 - Birth years of well-attested figures use the historical year; uncertain dates are rounded. Martial and other skills are gameplay characterizations, not source claims.
 - Population shares are relative community weights, not demographic estimates.
+
+
+MAP AUTHORING RECORD (2026-10-05)
+
+The 476 snapshot is now composed from independent regional declarations on europe_regional. Ownership corrections applied: mainland southern Italy is western, Sicily and the western islands are Vandal, Arles and Marseille are Visigothic, and the Amal body is a nonterritorial host in Macedonia rather than a Pannonian landowner. Strabo has a separate nonterritorial Thracian body. Pannonian cells use a generated Gepid court at Sirmium, while the Norican cells remain nominally western and Feletheus represents Rugian pressure in the wien cell. These cells are territorial approximations, not a reconstruction of exact fifth-century borders.
+
+Syagrius's seat and the later Frankish objective are Soissons in the laon cell. Childeric's seat is the Tournai site in ghent. Chilperic I sits at Lyon; Gundobad is the living co-ruler and designated heir at Vienne, and Godegisel is at Geneva. Suevic, Armorican, Moorish, Rhenish and Gepid ruler profiles are explicitly generated and use the seeded period culture name pools rather than fixed delegate names. Zeno's home and displaced-court record point to an approximate Isaurian site in ikonion; no claim is made that it identifies his siege fortress.
+
+Roman province, diocese and prefecture groups replace the copied medieval tables in the Italian, Dalmatian and eastern cells. Other realms retain no hierarchy, with customary right as the existing legal fallback. Dalmatia's intermediate group is a gameplay container, not a historical diocesan claim. Mediterranean, temperate, continental and arid assignments are scoped to the bookmark; medieval starts retain their climate behavior. Names marked verify above remain unresolved identifications: the authored map uses regional labels for the Apulian interior, Pannonian interior, Corsica and Tripolitanian coast instead of asserting those uncertain site matches.
+
+Soissons location and period name reference: https://pleiades.stoa.org/places/108772 (representative point 49.380839, 3.3258515). Tournai name reference: the Tabula Peutingeriana research record at https://www1.ku.de/ggf/ag/tabula_peutingeriana/trefferanzeige_es.php?id=3020, linked to Pleiades 109398. The new Tournai and Isaurian coordinates are approximate map anchors. The shared layout now owns all period settlement presentations, including the distinct sites named in the settlement discussion.
+
+Administrative seat checks distinguish Hadrianopolis in Haemimontus, Philippopolis in Thracia and Scupi in Dardania. References: https://www.corpus-nummorum.eu/en/typology/13 (Hadrianopolis research catalogue); https://publications.naim.bg/index.php/BNAI/issue/download/36/30 (Roman and Late Antique Thrace, original archaeological research); https://cts.perseids.org/read/latinLit/stoa0149b/stoa002/opp-lat1/2.2.2.5.2-2.2.5.1.1 (council subscription naming Scupi in Dardania).

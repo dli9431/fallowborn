@@ -68,19 +68,19 @@
       westRulerId:west.id, eastRulerId:east.id,
       neposId:nepos.id, odoacerId:odoacer.id,
       easternReturn:'pending',
-      zenoCourt:{ region:'isauria', status:'displaced' },
+      zenoCourt:{ region:'isauria', provinceId:'ikonion', site:'isauria_476', status:'displaced' },
       pressureNoted:false,
       governanceResolved:false, westernOfficeResolved:false,
       historical:{ clovis:'pending', theoderic:'pending',
         africa:'pending', italy:'pending' },
       courtAnchors:{ italy:'ravenna', croatia:'split',
-        byzantium:'constantinople', west_francia:'paris',
-        aghlabids:'tunis', pannonia:'szekesfehervar' }
+        byzantium:'constantinople', west_francia:'laon',
+        aghlabids:'tunis' }
     };
     var orestes = made(s, 'Orestes', 'roman', 'nicene', 50, 4,
       'commander', 'ravenna');
     var zeno = made(s, 'Zeno', 'greek', 'chalcedonian', 51, 4,
-      'claimant', null);
+      'claimant', 'ikonion');
     var delegate = made(s, FB.randomName('roman', 'm', null, s), 'roman',
       'nicene', 42, 2, 'notable', 'ravenna');
     var bishop = made(s, FB.randomName('roman', 'm', null, s), 'roman',
@@ -92,7 +92,23 @@
     var homoianBishop = made(s, FB.randomName('gothic', 'm', null, s), 'gothic',
       'homoian', 46, 3, 'priest', 'ravenna');
     var clovis = made(s, 'Clovis', 'frankish', 'germanic_pagan',
-      10, 2, 'heir', 'arras');
+      10, 2, 'heir', 'ghent');
+    var gundobad = made(s, 'Gundobad', 'gothic', 'homoian', 31, 4,
+      'co_ruler', 'vienne');
+    var godegisel = made(s, 'Godegisel', 'gothic', 'homoian', 26, 3,
+      'co_ruler', 'geneva');
+    var burgundianSuccession = FB.ensureRealmSuccession(s, 'burgundy');
+    if (burgundianSuccession) {
+      var gundobadMemberId = 'royal_burgundy_' + gundobad.id;
+      burgundianSuccession.members[gundobadMemberId] = {
+        id:gundobadMemberId, name:gundobad.name, sex:'m', born:gundobad.born,
+        alive:true, parentId:null, childIds:[], charId:gundobad.id, role:'co_ruler'
+      };
+      burgundianSuccession.order.unshift(gundobadMemberId);
+      burgundianSuccession.heirId = gundobadMemberId;
+      gundobad.royalLine = { realmId:'burgundy', memberId:gundobadMemberId };
+      FB.refreshRealmSuccession(s, 'burgundy');
+    }
     var childeric = ruler(s, 'franks_476');
     if (childeric) {
       clovis.fatherId = childeric.id;
@@ -124,6 +140,8 @@
     w.senatorId = senator.id;
     w.homoianBishopId = homoianBishop.id;
     w.clovisId = clovis.id;
+    w.gundobadId = gundobad.id;
+    w.godegiselId = godegisel.id;
     w.syagriusId = ruler(s, 'west_francia').id;
     w.theodericId = ruler(s, 'pannonia').id;
     w.childericId = childeric && childeric.id;
@@ -137,7 +155,17 @@
       units:{ levy:70, ret:50 }, supply:100, warId:null,
       path:[], goal:null, moveLeft:0,
       scenarioStanding:true, scenarioEndTurn:361 };
-    s.armies.push(italianHost, federateHost);
+    var amalHost = { id:'host_476_amal', realm:'pannonia',
+      at:'thessaloniki', from:'thessaloniki', men:160, size:160,
+      units:{ levy:100, ret:60 }, supply:100, warId:null,
+      path:[], goal:null, moveLeft:0,
+      scenarioStanding:true, scenarioEndTurn:18 * 360 };
+    var thracianHost = { id:'host_476_thracian', realm:'thracian_goths_476',
+      at:'adrianople', from:'adrianople', men:140, size:140,
+      units:{ levy:90, ret:50 }, supply:100, warId:null,
+      path:[], goal:null, moveLeft:0,
+      scenarioStanding:true, scenarioEndTurn:6 * 360 };
+    s.armies.push(italianHost, federateHost, amalHost, thracianHost);
     s.religiousHeads.rome_bishop = bishop.id;
     s.religiousHeads.ravenna_homoian_bishop = homoianBishop.id;
     var westClaim = recognize(s, 'dynastic_succession', actor('italy'), person(west.id));
@@ -346,14 +374,14 @@
   function historical476(s, w) {
     var h = w.historical || (w.historical = {});
     if (s.date.year < 481) return;
-    campaign476(s, w, 'clovis', 486, 500, 'franks_476', 'paris',
+    campaign476(s, w, 'clovis', 486, 500, 'franks_476', 'laon',
       function () {
         var frank = ruler(s, 'franks_476');
         return frank && frank.id === w.clovisId &&
           alive(s, w.clovisId) && alive(s, w.syagriusId) &&
-          s.owner.paris === 'west_francia';
+          s.owner.laon === 'west_francia';
       }, 'news.476.clovis_campaign',
-      '⚔ Clovis contests the Roman domain around Paris. Its actual war will decide the county.');
+      '⚔ Clovis contests the Roman domain around Soissons. Its actual war will decide the county.');
     campaign476(s, w, 'theoderic', 489, 493, 'pannonia', 'ravenna',
       function () {
         var gothic = ruler(s, 'pannonia');
@@ -424,6 +452,7 @@
         w.courtAt = 'displaced'; w.courtMove = null;
       }
       if (!realm || !realm.alive || !realm.capital ||
+          realm.nonTerritorial && !FB.realmTerritory(s, rid).length ||
           s.owner[realm.capital] === rid) continue;
       var lands = FB.realmTerritory(s, rid).filter(function (pid) {
         return s.owner[pid] === rid;
