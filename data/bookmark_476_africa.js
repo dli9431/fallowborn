@@ -6,12 +6,6 @@ FBDATA.bookmarkRegions476 = FBDATA.bookmarkRegions476 || {};
 FBDATA.bookmarkRegions476['africa'] = {
   provinces:[
     { id:'mallorca', name:'Mallorca', realm:'aghlabids', culture:'roman', religion:'nicene', dev:3, communities:[{ culture:'roman', religion:'nicene', populationShare0:8000 }, { culture:'vandal', religion:'homoian', paired:true, populationShare0:2000 }] },
-    { id:'palermo', name:'Palermo', realm:'aghlabids', culture:'roman', religion:'nicene', dev:5, communities:[{ culture:'roman', religion:'nicene', populationShare0:8000 }, { culture:'vandal', religion:'homoian', paired:true, populationShare0:2000 }] },
-    { id:'messina', name:'Messina', realm:'aghlabids', culture:'roman', religion:'nicene', dev:3, communities:[{ culture:'roman', religion:'nicene', populationShare0:8000 }, { culture:'vandal', religion:'homoian', paired:true, populationShare0:2000 }] },
-    { id:'siracusa', name:'Siracusa', realm:'aghlabids', culture:'roman', religion:'nicene', dev:4, communities:[{ culture:'roman', religion:'nicene', populationShare0:8000 }, { culture:'vandal', religion:'homoian', paired:true, populationShare0:2000 }] },
-    { id:'cagliari', name:'Cagliari', realm:'aghlabids', culture:'roman', religion:'nicene', dev:3, communities:[{ culture:'roman', religion:'nicene', populationShare0:8000 }, { culture:'vandal', religion:'homoian', paired:true, populationShare0:2000 }] },
-    { id:'sassari', name:'Sassari', realm:'aghlabids', culture:'roman', religion:'nicene', dev:2, communities:[{ culture:'roman', religion:'nicene', populationShare0:8000 }, { culture:'vandal', religion:'homoian', paired:true, populationShare0:2000 }] },
-    { id:'ajaccio', name:'Ajaccio', realm:'aghlabids', culture:'roman', religion:'nicene', dev:2, communities:[{ culture:'roman', religion:'nicene', populationShare0:8000 }, { culture:'vandal', religion:'homoian', paired:true, populationShare0:2000 }] },
     { id:'tunis', name:'Tunis', realm:'aghlabids', culture:'roman', religion:'nicene', dev:7, customaryRights:[
       { power:'peace', basis:'tenure', basisRef:'provincial_court_476:tunis' },
       { power:'revenue', basis:'tenure', basisRef:'provincial_court_476:tunis' }
@@ -44,12 +38,6 @@ FBDATA.bookmarkRegions476['africa'] = {
   empires:{},
   climate:{
     'mallorca':'mediterranean',
-    'palermo':'mediterranean',
-    'messina':'mediterranean',
-    'siracusa':'mediterranean',
-    'cagliari':'mediterranean',
-    'sassari':'mediterranean',
-    'ajaccio':'mediterranean',
     'tunis':'mediterranean',
     'kairouan':'mediterranean',
     'tripoli':'mediterranean',

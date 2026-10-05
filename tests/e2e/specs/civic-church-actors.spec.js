@@ -55,8 +55,11 @@ test('researched civic seats and head offices are distinct, pure and period scop
       techErrors:FB.validateTechnologyData()
     };
   });
-  expect(result.cities).toEqual(['arles_council','carthage_council','constantinople_senate','milan_council','ravenna_council','rome_senate','salona_council']);
-  expect(result.sees).toBe(11);
+  expect(result.cities).toEqual(['aleria_council','aquileia_council','arles_council','capua_council',
+    'carales_council','carthage_council','constantinople_senate','favianis_council',
+    'iuvavum_council','lauriacum_council','milan_council','neapolis_council','panormus_council',
+    'ravenna_council','rome_senate','salona_council','syracusae_council','ticinum_council','verona_council']);
+  expect(result.sees).toBe(20);
   expect(result.periodRoute).toBe('standing');
   expect(result.pure).toBe(true);
   expect(result.quote).toBe(true);

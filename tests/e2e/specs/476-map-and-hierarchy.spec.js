@@ -216,7 +216,7 @@ test('476 layouts and local climates survive save restore without changing medie
   });
   expect(result.layouts).toEqual([
     ['ravenna_476','classis_476'], ['salona_476','split'], ['carthage_476'],
-    ['sufetula_476'], ['roma','ostia'], ['soissons_476'], ['tournai_476']
+    ['sufetula_476'], ['roma','ostia','portus_476'], ['soissons_476'], ['tournai_476']
   ]);
   expect(result.initial).toEqual([
     ['mediterranean','dry_summer','mild_winter',false],

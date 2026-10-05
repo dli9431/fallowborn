@@ -26,7 +26,9 @@ JS = ROOT / "js"
 I18N = ROOT / "i18n"
 HASH_SCHEMA = 1
 CATALOG_SCHEMA = 1
-EVENT_FILES = sorted(DATA.glob("events_*.js"))
+PERIOD_REGION_FILES = [DATA / f"bookmark_476_{region}.js"
+                       for region in ("italy", "dalmatia_east", "gaul_iberia", "africa")]
+EVENT_FILES = sorted(DATA.glob("events_*.js")) + PERIOD_REGION_FILES
 BOOKMARK_FILE = DATA / "bookmarks.js"
 STARTS_FILE = DATA / "starts.js"
 TECHNOLOGY_FILE = DATA / "technology.js"
@@ -778,7 +780,17 @@ def extract_structured(inv: Inventory) -> None:
                            "map_data.js")
         root = node_object(find_assignment(path, "FBDATA", data_name)) or {}
         rel = path.relative_to(ROOT).as_posix()
-        for item_id, item_node in root.items():
+        items = [(item_id, item_node, rel) for item_id, item_node in root.items()]
+        if data_name == "storyCampaigns":
+            for region_path in PERIOD_REGION_FILES:
+                region = region_path.stem.removeprefix("bookmark_476_")
+                declaration = node_object(find_keyed_assignment(
+                    region_path, "FBDATA", "bookmarkRegions476", region
+                )) or {}
+                region_campaigns = node_object(declaration.get("storyCampaigns")) or {}
+                items.extend((item_id, item_node, region_path.relative_to(ROOT).as_posix())
+                             for item_id, item_node in region_campaigns.items())
+        for item_id, item_node, rel in items:
             item = node_object(item_node) or {}
             fields = DATA_FIELDS + (("earned",) if data_name == "traits" else ())
             if data_name == "religions":
@@ -1069,6 +1081,16 @@ def extract_structured(inv: Inventory) -> None:
         declaration = node_object(find_keyed_assignment(
             region_path, "FBDATA", "bookmarkRegions476", region
         )) or {}
+        for province_node in node_array(declaration.get("provinces")) or []:
+            province = node_object(province_node) or {}
+            province_id = node_string(province.get("id"))
+            if not province_id:
+                continue
+            for index, name_node in enumerate(node_array(province.get("names")) or []):
+                name = node_object(name_node) or {}
+                for branch, record, line in branch_records(name.get("name")):
+                    inv.add(f"province.476.{province_id}.name.dated.{index}.{branch}", record,
+                            f"{region_rel}:{line}", f"476 province {province_id}, period name.", ())
         for realm_node in node_array(declaration.get("realms")) or []:
             realm = node_object(realm_node) or {}
             realm_id = node_string(realm.get("id"))
