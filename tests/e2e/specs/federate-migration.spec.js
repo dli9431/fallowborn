@@ -9,7 +9,7 @@ dependsOnRuntime(__filename, [
   'js/governments.js', 'js/politics.js', 'js/settlement.js', 'js/world.js', 'js/model.js',
   'js/main.js', 'js/armies.js', 'js/wars.js', 'js/fortifications.js', 'js/logistics.js',
   'js/treasury.js', 'js/lordships.js', 'js/population.js', 'js/save.js', 'js/save_v4.js',
-  'js/stories.js', 'js/story_western_court_476.js', 'js/story_federate_track_476.js'
+  'js/stories.js', 'js/story_campaign.js', 'js/story_476_rails.js', 'data/story_campaigns.js', 'js/story_western_court_476.js', 'js/story_federate_track_476.js'
 ]);
 const { test, expect } = require('../support/fixture');
 const { openGame } = require('../support/game/navigation');
@@ -224,7 +224,7 @@ test('Theoderic uses data-defined recognition, a paid commission, a real host an
       s.realms.pannonia.treasury.gold = 0;
       s.turn = 180; s.date.year = 488;
       FB.stories.day(s);
-      const moving = FB.political.movingPolity(s, w.historical.theodericMigrationId);
+      const moving = FB.political.movingPolity(s, s.stories.theoderic_italy_476.migrationId);
       const retainedBanner = moving.hostId === existingHost.id &&
         s.armies.filter(function (a) { return a.realm === 'pannonia'; }).length === 1 &&
         s.armies.find(function (a) { return a.id === moving.hostId; }) === existingHost &&
@@ -248,7 +248,7 @@ test('Theoderic uses data-defined recognition, a paid commission, a real host an
         recognition:!!deal.recognitionId, onceGift:onceGift, noAward:noAward,
         target:war.objectives[0].target, status:settled.status,
         session:settled.session && settled.session.status,
-        historical:restored.stories.western_court_476.historical.theoderic,
+        historical:restored.stories.theoderic_italy_476.result,
         territorial:!restored.realms.pannonia.nonTerritorial,
         valid:FB.save.v4.validateAuthority(JSON.parse(FB.save.serialize()).state.authority, restored) };
     });
@@ -292,13 +292,13 @@ test('Theoderic cannot recreate a lost opening host at the migration opportunity
       s.armies = s.armies.filter(function (a) { return a.id !== 'host_476_amal'; });
       s.turn = 180; s.date.year = 488;
       for (let i = 0; i < 3; i++) { FB.stories.day(s); s.turn++; }
-      const noMigration = !w.historical.theodericMigrationId &&
+      const noMigration = !s.stories.theoderic_italy_476.migrationId &&
         !(s.authority.migrations || []).some(function (row) { return row.realmId === 'pannonia'; });
-      const noCommission = !w.historical.theodericCommissionId;
+      const noCommission = !s.stories.theoderic_italy_476.commissionId;
       const noHost = !s.armies.some(function (a) { return a.realm === 'pannonia'; });
       s.date.year = 494; FB.stories.day(s);
       return { noMigration:noMigration, noCommission:noCommission, noHost:noHost,
-        closed:w.historical.theoderic === 'diverged' };
+        closed:s.stories.theoderic_italy_476.phase === 'resolved' };
     });
     expect(result).toEqual({ noMigration:true, noCommission:true, noHost:true, closed:true });
   });
@@ -307,7 +307,7 @@ test('an already-declared Gothic campaign keeps its outcome without synthesizing
   async function ({ page }, testInfo) {
     await start(page, testInfo, '476');
     const result = await page.evaluate(function () {
-      const s = FB.state, w = s.stories.western_court_476;
+      let s = FB.state;
       FB.transferProvince(s, 'szekesfehervar', 'pannonia');
       FB.authoritySetGovernment(s, 'pannonia', 'regnum');
       s.realms.pannonia.nonTerritorial = false;
@@ -315,15 +315,21 @@ test('an already-declared Gothic campaign keeps its outcome without synthesizing
       const war = FB.registerOrdinaryWar(s, 'pannonia', { enemy:'italy', target:'ravenna',
         legacy:false, casus:{ type:'border', target:'ravenna' },
         objectives:[{ target:'ravenna', type:'border' }] });
-      w.historical.theoderic = 'started'; w.historical.theodericWarId = war.id;
+      const saved = JSON.parse(FB.save.serialize());
+      const old = saved.state.stories.western_court_476;
+      delete old.railsSchema;
+      old.historical = { theoderic:'started', theodericWarId:war.id };
+      for (const id of FBDATA.bookmarks['476'].stories)
+        if (id !== 'western_court_476') delete saved.state.stories[id];
+      FB.save.restore(saved); s = FB.state;
       s.date.year = 489; s.turn = 180;
       FB.stories.day(s);
-      const stillRunning = w.historical.theoderic === 'started';
+      const stillRunning = s.stories.theoderic_italy_476.phase === 'started';
       FB.transferProvince(s, 'ravenna', 'pannonia');
       FB.settleOrdinaryWar(s, war.id, 'victory');
       FB.stories.day(s);
-      return { stillRunning:stillRunning, result:w.historical.theoderic,
-        noMigration:!s.authority.migrations && !w.historical.theodericMigrationId,
+      return { stillRunning:stillRunning, result:s.stories.theoderic_italy_476.result,
+        noMigration:!s.authority.migrations && !s.stories.theoderic_italy_476.migrationId,
         noNewHost:s.armies.filter(function (a) { return a.realm === 'pannonia'; }).length === 1 &&
           s.armies.some(function (a) { return a.id === 'host_476_amal'; }) };
     });

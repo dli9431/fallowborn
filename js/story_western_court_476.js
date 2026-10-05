@@ -1,7 +1,7 @@
 /* The western court in 476, a registered world story. It authors the court's
-   actors and standing hosts, keeps the displaced courts and the eastern
-   claimant moving, lets the courts settle the federate dispute without the
-   player, and runs the conditional historical campaigns. Its record lives at
+   actors and standing hosts, keeps displaced courts moving, and lets the
+   courts settle the federate dispute without the player. Independent world
+   stories own the eastern return, western office and historical campaigns. Its record lives at
    state.stories.western_court_476. The federate player track shares the
    helpers on FB.story476; its choices call the shared authority, treasury,
    army and lordship transactions directly. */
@@ -73,12 +73,10 @@
       courtAt:'ravenna', courtMove:null,
       westRulerId:west.id, eastRulerId:east.id,
       neposId:nepos.id, odoacerId:odoacer.id,
-      easternReturn:'pending',
+      railsSchema:1,
       zenoCourt:{ region:'isauria', provinceId:'ikonion', site:'isauria_476', status:'displaced' },
       pressureNoted:false,
       governanceResolved:false, westernOfficeResolved:false,
-      historical:{ clovis:'pending', theoderic:'pending',
-        africa:'pending', italy:'pending' },
       courtAnchors:{ italy:'ravenna', croatia:'split',
         byzantium:'constantinople', west_francia:'laon',
         aghlabids:'tunis', pannonia:'thessaloniki' }
@@ -278,7 +276,8 @@
     FB.news(s, FB.msg(key, fallback, params || {}));
   }
   function aiSettlement476(s, w, t) {
-    if (!t || t.result !== 'declined' || s.turn < 90 ||
+    if (!t && FB.stories.record(s, 'curialis_track_476')) return;
+    if (t && t.result !== 'declined' || s.turn < 90 ||
         w.aiResolution === 'negotiated' ||
         w.aiResolution === 'won' ||
         w.aiResolution === 'failed' ||
@@ -356,123 +355,6 @@
         '⚔ With no service agreement, Odoacer’s host contests Ravenna through an ordinary campaign.', {});
     }
   }
-  function campaign476(s, w, key, firstYear, lastYear, attacker, target,
-      eligible, messageKey, fallback) {
-    var h = w.historical || (w.historical = {});
-    var status = h[key] || 'pending';
-    if (status === 'won' || status === 'failed' || status === 'diverged') return;
-    if (s.owner[target] === attacker) { h[key] = 'won'; return; }
-    if (status === 'started') {
-      if (!FB.ordinaryWarById(s, h[key + 'WarId'])) h[key] = 'failed';
-      return;
-    }
-    if (s.date.year < firstYear) return;
-    if (s.date.year > lastYear) { h[key] = 'diverged'; return; }
-    if (!eligible() || !s.realms[attacker] ||
-        !s.realms[attacker].alive ||
-        !s.realms[s.owner[target]] ||
-        !s.realms[s.owner[target]].alive ||
-        FB.isRealmAtWar(s, attacker) ||
-        FB.isRealmAtWar(s, s.owner[target])) return;
-    var war = FB.registerOrdinaryWar(s, attacker, {
-      enemy:s.owner[target], target:target, legacy:false,
-      casus:{ type:'border', target:target },
-      objectives:[{ target:target, type:'border' }]
-    });
-    if (!war) return;
-    h[key] = 'started'; h[key + 'WarId'] = war.id;
-    news(s, messageKey, fallback, {});
-  }
-  function historical476(s, w) {
-    var h = w.historical || (w.historical = {});
-    if (s.date.year < 481) return;
-    campaign476(s, w, 'clovis', 486, 500, 'franks_476', 'laon',
-      function () {
-        var frank = ruler(s, 'franks_476');
-        return frank && frank.id === w.clovisId &&
-          alive(s, w.clovisId) && alive(s, w.syagriusId) &&
-          s.owner.laon === 'west_francia';
-      }, 'news.476.clovis_campaign',
-      '⚔ Clovis contests the Roman domain around Soissons. Its actual war will decide the county.');
-    theodericMigration(s, w);
-    if (h.theoderic === 'won' && !h.theodericSettlement &&
-        s.owner.ravenna === 'pannonia') {
-      s.realms.pannonia.capital = 'ravenna';
-      FB.invalidateRealmCache();
-      if (alive(s, w.bishopId) && alive(s, w.civicDelegateId) &&
-          FB.countyReligionShare(s, 'ravenna', 'nicene') >= 0.5) {
-        var support = recognize(s, 'church_support',
-          { kind:'religious-office', id:'rome_bishop' },
-          actor('pannonia'), { kind:'county', id:'ravenna' });
-        if (support && cityRights(s, w, 'pannonia'))
-          FB.authoritySetGovernment(s, 'pannonia', 'roman_civic');
-      }
-      h.theodericSettlement = true;
-      news(s, 'news.476.theoderic_outcome',
-        '🏛 The Gothic court now holds Ravenna; local church and civic rights depend on the surviving delegates.', {});
-    }
-    campaign476(s, w, 'africa', 533, 550, 'byzantium', 'tunis',
-      function () { return s.owner.tunis === 'aghlabids' &&
-        s.owner.constantinople === 'byzantium'; },
-      'news.476.africa_campaign',
-      '⚔ The eastern court opens an African reconquest campaign against the Vandal ruler of Carthage.');
-    campaign476(s, w, 'italy', 535, 560, 'byzantium', 'ravenna',
-      function () { return s.owner.ravenna !== 'byzantium' &&
-        s.owner.constantinople === 'byzantium'; },
-      'news.476.italy_campaign',
-      '⚔ The eastern court opens an Italian reconquest campaign against the current ruler of Ravenna.');
-  }
-  function theodericMigration(s, w) {
-    var h = w.historical, def = FBDATA.federateMigrations.theoderic_italy;
-    /* Already-declared wars in older 476 saves retain their normal outcome.
-       Restore never creates a moving court or a second commission for them. */
-    if (!h.theodericMigrationId && h.theoderic === 'started') {
-      if (s.owner[def.target] === def.realmId) h.theoderic = 'won';
-      else if (!FB.ordinaryWarById(s, h.theodericWarId)) h.theoderic = 'failed';
-      return;
-    }
-    var moving = h.theodericMigrationId && FB.political.movingPolity(s, h.theodericMigrationId);
-    if (moving) {
-      if (moving.status === 'encamped' && !moving.choice && moving.contractId &&
-          FB.federateNegotiateContract(s, moving.contractId))
-        FB.federateRequest(s, moving.id, 'force');
-      moving = FB.political.movingPolity(s, moving.id);
-      h.theoderic = moving.status === 'settled' ? 'won' :
-        moving.status === 'failed' ? 'failed' : moving.choice ? 'started' : 'negotiating';
-      h.theodericWarId = moving.warId;
-      return;
-    }
-    if (['won','failed','diverged','started'].indexOf(h.theoderic) >= 0 ||
-        s.date.year < def.firstYear) return;
-    if (s.date.year > def.lastYear) { h.theoderic = 'diverged'; return; }
-    var gothic = ruler(s, def.realmId), eastern = ruler(s, def.patronRealmId);
-    var gothicHost = host(s, def.hostId);
-    if (!gothic || gothic.id !== w.theodericId || !alive(s, w.theodericId) ||
-        !eastern || eastern.id !== w.zenoId ||
-        s.owner.constantinople !== def.patronRealmId ||
-        ['italy','federates_476'].indexOf(s.owner[def.target]) < 0 ||
-        FB.isRealmAtWar(s, def.realmId) || FB.isRealmAtWar(s, s.owner[def.target]) ||
-        FB.realmTerritory(s, def.realmId).length ||
-        !gothicHost || gothicHost.realm !== def.realmId || gothicHost.men <= 0) return;
-    var commission = recognizeOrExisting(s, 'imperial_commission',
-      actor(def.patronRealmId), actor(def.realmId), actor(def.realmId));
-    if (!commission) return;
-    var created = FB.federateBeginMigration(s, Object.assign({}, def, {
-      endTurn:s.turn + def.durationDays }));
-    if (!created) return;
-    h.theodericMigrationId = created.id;
-    h.theodericCommissionId = commission.id;
-    var offered = FB.authorityOfferContractTemplate(s, def.templateId, {
-      patronRealmId:def.patronRealmId, federateRealmId:def.realmId,
-      hostId:def.hostId, recognitionId:commission.id });
-    if (offered) {
-      var record = s.authority.migrations.find(function (row) { return row.id === created.id; });
-      record.contractId = offered.id;
-      if (FB.federateNegotiateContract(s, offered.id) && FB.federateRequest(s, created.id, 'force')) {
-        h.theoderic = 'started'; h.theodericWarId = record.warId;
-      }
-    }
-  }
   function reaffirmDelegates(s, w) {
     if (w.civicProofId && alive(s, w.civicDelegateId) &&
         s.owner.ravenna === 'italy')
@@ -540,44 +422,12 @@
        arrival, interruption and displacement all release it to the AI. */
     var released = w.courtMove !== 'travelling' && host(s, 'host_476_italy');
     if (released && released.scenarioCourtEscort) released.scenarioCourtEscort = false;
-    var backedZeno = !!(t && t.backedClaimant === 'zeno');
-    if ((w.easternReturn === 'pending' || w.easternReturn === 'delayed') &&
-        s.turn >= (backedZeno ? 150 : 180)) {
-      var sitting = ruler(s, 'byzantium');
-      if (alive(s, w.zenoId) && alive(s, w.eastRulerId) &&
-          sitting && sitting.id === w.eastRulerId &&
-          s.owner.constantinople === 'byzantium' &&
-          !s.realms.byzantium.war) {
-        if (FB.assignRealmRulerCharacter(s, 'byzantium', w.zenoId,
-            { replaceAuthored:true })) {
-          FB.authorityAppointmentTransition(s, w.eastOfficeId, 'remove');
-          var claim = recognize(s, 'dynastic_succession',
-            actor('byzantium'), person(w.zenoId));
-          var office = appointment(s, 'imperial_office', 'byzantium',
-            person(w.zenoId), actor('byzantium'), claim && claim.id);
-          w.eastOfficeId = office && office.id;
-          if (backedZeno) {
-            var commission = recognize(s, 'imperial_commission',
-              actor('byzantium'), actor('federates_476'),
-              actor('federates_476'));
-            t.imperialRecognitionId = commission && commission.id;
-          }
-          w.easternReturn = 'restored';
-          w.zenoCourt.status = 'returned';
-          s.chars[w.zenoId].homeProvinceId = 'constantinople';
-          news(s, 'news.476.zeno_returns',
-            '🏛 Zeno returns to Constantinople. Basiliscus can no longer issue a fresh imperial commission.', {});
-        }
-      } else w.easternReturn = !alive(s, w.zenoId) || s.turn >= 360
-        ? 'interrupted' : 'delayed';
-    }
     if (!w.pressureNoted && s.turn >= 120 && (!t || t.phase !== 'complete')) {
       w.pressureNoted = true;
       news(s, 'news.476.pressure',
         '⚠ Arrears and rival claims sharpen the dispute around Ravenna.', {});
     }
     aiSettlement476(s, w, t);
-    historical476(s, w);
   }
   /* Branch saves from before the registry kept one state.situation476
      record. It splits once, in the detached copy, into this story and the
@@ -608,19 +458,25 @@
     state.stories[TRACK] = t;
     delete state.situation476;
   }
-  function validate(record) {
+  function validate(record, s) {
     function bad(field) {
       throw new Error(FB.T('Invalid v4 save field at {path}.',
         { path:'state.stories.' + WORLD + '.' + field }));
     }
     if (typeof record.courtAt !== 'string') bad('courtAt');
     if (typeof record.odoacerId !== 'string') bad('odoacerId');
-    if (record.historical !== undefined && !plain(record.historical)) bad('historical');
+    if (!plain(record.zenoCourt) || typeof record.zenoCourt.provinceId !== 'string' ||
+        ['displaced','returned','interrupted','diverted'].indexOf(record.zenoCourt.status) < 0) bad('zenoCourt');
+    if (record.railsSchema !== 1 || record.historical !== undefined || record.easternReturn !== undefined) bad('railsSchema');
+    var wanted = (FB.bookmark(s.start && s.start.id) || {}).stories || [];
+    for (var id of ['zeno_return_476','western_office_476','clovis_syagrius_476',
+        'theoderic_italy_476','eastern_africa_476','eastern_italy_476'])
+      if (wanted.indexOf(id) >= 0 && !s.stories[id]) bad('railsSchema');
     if (record.displacedCourts !== undefined && !plain(record.displacedCourts))
       bad('displacedCourts');
   }
   FB.story476 = {
-    world:world, track:track, actor:actor, person:person, host:host,
+    world:world, track:track, actor:actor, person:person, host:host, made:made,
     alive:alive, recognize:recognize, recognizeOrExisting:recognizeOrExisting,
     appointment:appointment, serviceTerms:serviceTerms,
     currentContract:currentContract, hasChurchSupport:hasChurchSupport,

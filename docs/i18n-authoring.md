@@ -188,3 +188,7 @@ Section label, subhead and statusLine fields in data/actions.js use stable deedS
 Late antique presentation text
 
 The late antique purse uses literal label and singular/plural unit names in data/eras.js. Its compact symbol and coin icon are locale-neutral. Era lexicon terms and item/unit relabels remain in data/lexicons.js and render through FB.term or FB.dataText. Never interpolate a rendered political term into a saved record. Period proper-name pools and procedural appearance/art ids are not translated. The expanded title subtitle uses data-i18n; start descriptions and introductions retain scenario structured-data owners. New culture display names retain culture owners. Feature branches keep English fallback and leave catalog regeneration to an explicitly requested integration.
+
+Campaign story authoring
+
+FBDATA.storyCampaigns name and desc fields use storyCampaign.<id>.<field>.default through FB.dataText. Their news outcome rows carry key and text; the static extractor registers each text under that opaque message key. Runtime registration supplies English for saved Chronicle descriptors without requiring catalog generation on the feature branch. Political stage labels use literal FB.T calls. The named commanders in FBDATA.storyActors476 are historical proper names and are not translated.

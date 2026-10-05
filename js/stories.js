@@ -6,7 +6,7 @@
    a story by name, and stories register at load time only. */
 (function () {
   'use strict';
-  var registry = [], byId = {}, sealed = false;
+  var registry = [], byId = {}, types = {}, sealed = false;
   var KINDS = { world:true, track:true };
   var HOOKS = ['appliesTo', 'init', 'day', 'season', 'year', 'title', 'intro',
     'status', 'choices', 'quote', 'blocker', 'review', 'apply',
@@ -29,6 +29,19 @@
   }
 
   FB.stories = {
+    /* Trusted classic scripts register reusable factories before boot seals
+       the registry. Definitions contain data, not executable save fields. */
+    registerType:function (id, factory) {
+      if (sealed) throw new Error('Story types register at load time only.');
+      if (!/^[a-z][a-z0-9_]*$/.test(id) || own(types, id) || typeof factory !== 'function')
+        throw new Error('Invalid or duplicate story type ' + id + '.');
+      types[id] = factory;
+    },
+    registerData:function (def) {
+      if (sealed) throw new Error('Stories register at load time only.');
+      if (!def || !own(types, def.type)) throw new Error('Unknown story type.');
+      return FB.stories.register(types[def.type](def));
+    },
     /* def: { id, kind:'world'|'track', requires:[story ids], and any of the
        HOOKS above }. A required story must already be registered, so the
        registration order is also the attachment and dispatch order. */

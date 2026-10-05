@@ -9,7 +9,7 @@ dependsOnRuntime(__filename, [
   'data/settlements_real.js', 'data/cultures.js', 'data/starts.js',
   'data/technology.js', 'data/political_institutions.js', 'data/units.js', 'data/modifiers.js',
   'data/economy.js', 'data/systems.js', 'js/systems.js',
-  'js/main.js', 'js/stories.js', 'js/story_western_court_476.js',
+  'js/main.js', 'js/stories.js', 'js/story_campaign.js', 'js/story_476_rails.js', 'data/story_campaigns.js', 'js/story_western_court_476.js',
   'js/story_federate_track_476.js', 'js/authority.js', 'js/federates.js', 'js/world.js',
   'js/holywar.js', 'js/actions.js',
   'js/armies.js', 'js/treasury.js', 'js/lordships.js', 'js/model.js',
@@ -121,7 +121,9 @@ test('476 bookmark and free federate start preserve 867 and 1066 data',
     expect(result.older).toEqual([[], []]);
     expect(result.noIslam).toBe(true);
     expect(result.sites).toEqual(['ravenna_476', 'classis_476']);
-    expect(result.stories).toEqual(['western_court_476', 'federate_track_476']);
+    expect(result.stories).toEqual(['western_court_476','zeno_return_476',
+      'clovis_syagrius_476','theoderic_italy_476','eastern_africa_476','eastern_italy_476',
+      'western_office_476','federate_track_476']);
     expect(result.legacy).toBeUndefined();
     expect(result.age).toBe(24);
     expect(result.station).toBe(1);
@@ -329,7 +331,7 @@ test('Zeno return depends on living rulers and invalidates Basiliscus recognitio
       const old = t.imperialRecognitionId;
       s.turn = 180;
       FB.stories.day(s);
-      return { return:w.easternReturn,
+      return { return:s.stories.zeno_return_476.result,
         ruler:FB.realmRulerCharacterSnapshot(s, 'byzantium').name,
         oldEffective:FB.political.legitimacy(s,
           { kind:'realm', id:'federates_476' },
@@ -358,7 +360,7 @@ test('backed Zeno issues a commission only after returning to office',
         FB.political.legitimacy(s, { kind:'realm', id:'federates_476' },
           { kind:'realm', id:'federates_476' }, 'imperial_commission')
           .some(function (row) { return row.id === t.imperialRecognitionId; });
-      return { return:w.easternReturn, ruler:
+      return { return:s.stories.zeno_return_476.result, ruler:
         FB.realmRulerCharacterSnapshot(s, 'byzantium').name,
         recognized:recognized };
     });
@@ -534,13 +536,13 @@ test('later campaigns register ordinary wars only with their living political pr
         'pannonia', s.owner.ravenna);
       const saved = JSON.parse(FB.save.serialize());
       FB.save.restore(saved);
-      const restored = FB.state.stories.western_court_476;
+      const restored = FB.state.stories;
       return { noForcedClovis:noForcedClovis,
         clovisInherited:clovisInherited,
         frankTarget:frankWar && frankWar.objectives[0].target,
         gothicTarget:gothicWar && gothicWar.objectives[0].target,
-        frankStatus:restored.historical.clovis,
-        gothicStatus:restored.historical.theoderic };
+        frankStatus:restored.clovis_syagrius_476.phase,
+        gothicStatus:restored.theoderic_italy_476.phase };
     });
     expect(result).toEqual({ noForcedClovis:true, clovisInherited:true,
       frankTarget:'laon',
@@ -558,7 +560,7 @@ test('reconquest targets current owners and never awards a county at declaration
       const war = FB.ordinaryWarBetween(s, 'byzantium', before);
       return { before:before, after:s.owner.tunis,
         target:war && war.objectives[0].target,
-        status:s.stories.western_court_476.historical.africa };
+        status:s.stories.eastern_africa_476.phase };
     });
     expect(result).toEqual({ before:'aghlabids', after:'aghlabids',
       target:'tunis', status:'started' });
@@ -676,6 +678,7 @@ test('a federate victory can preserve civic Peace and acknowledge Nepos',
           { kind:'realm', id:'federates_476' }).formId,
         rights:(w.cityRightIds || []).length,
         office:w.westernOfficeResolved,
+        story:s.stories.western_office_476.result,
         holder:s.authority.appointments.filter(function (a) {
           return a.id === w.westOfficeId;
         })[0].holder.id, nepos:w.neposId };
@@ -685,6 +688,7 @@ test('a federate victory can preserve civic Peace and acknowledge Nepos',
     expect(result.government).toBe('roman_civic');
     expect(result.rights).toBe(2);
     expect(result.office).toBe('nepos');
+    expect(result.story).toBe('nepos');
     expect(result.holder).toBe(result.nepos);
   });
 

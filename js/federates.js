@@ -361,6 +361,23 @@
       '🏳 {realm}’s moving court cannot complete its settlement at {province}. Its migration has ended.',
       noticeParams(s, row)));
   }
+  /* A story can end its own political opportunity without erasing an
+     ordinary war or extinguishing the surviving polity and household. */
+  FB.federateInterruptMigration = function (s, id, reason) {
+    var row = migration(s, id);
+    if (!row || !ongoing(row)) return false;
+    row.status = 'failed'; row.failureReason = reason || 'authority_lost';
+    row.changedTurn = s.turn;
+    if (row.contractId) FB.authorityContractTransition(s, row.contractId, 'breach', row.realmId);
+    var army = host(s, row.hostId);
+    if (army) {
+      delete army.migrationId;
+      if (!row.warId || !FB.ordinaryWarById(s, row.warId)) {
+        army.path = []; army.goal = null; army.moveLeft = 0;
+      }
+    }
+    return true;
+  };
   FB.federateDay = function (s) {
     for (var row of rows(s)) {
       if (!ongoing(row)) continue;

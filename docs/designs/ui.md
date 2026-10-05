@@ -3677,3 +3677,7 @@ Mixed-court sentence reviews also display the selected advisory legal tradition 
 Late antique first impression
 
 The title subtitle covers late antiquity and the Middle Ages while preserving the game's own title crest. The 476 date card describes Roman cities and rival courts. Federate Soldier and Curialis descriptions and opening text introduce household work, the shared Deeds story cards, and the distinction between standing, command and an appointment's powers. Existing start-code, family selection, Back, Begin and focus behavior remains shared with other starts. Period purse labels, crests, portrait dress and settlement art resolve from the same stamped era across the setup preview and campaign. Owner visual review should inspect fresh campaigns at phone size, including diadems, clerical dress, ridge helmets, settlement markers, money and long names.
+
+Independent world-story status cards
+
+Political world stories and date-window campaigns use the existing Deeds story card and shared sheet as read-only status. Pending future campaigns wait until their opening year to show a card; active and resolved outcomes remain readable. They add no confirmation buttons or alternate navigation flow. Household track choices keep their reviewed confirmation, quote revalidation, keyboard activation and retained Deeds scroll/focus return. Closing a world-story sheet returns to its originating status card through the same modal history.
