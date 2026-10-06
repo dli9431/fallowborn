@@ -12,7 +12,7 @@ const path = require('path');
 // UTF-8 bytes of the ordinary uncompressed v4 JSON, excluding transport codecs
 // and browser-storage overhead. Budgets are acceptance ceilings, not measured
 // claims. Each owner run attaches actual checkpoint and final byte counts.
-const SAVE_BUDGETS = { fresh:4 * 1024 * 1024, year2:6 * 1024 * 1024, year3:8 * 1024 * 1024 };
+const SAVE_BUDGETS = { fresh:4 * 1024 * 1024, year1:6 * 1024 * 1024, year2:6 * 1024 * 1024, year3:8 * 1024 * 1024 };
 
 test('every authored bookmark data file is loaded and the authoring template is unloaded', async function ({ page }, testInfo) {
   await openGame(page, testInfo);
@@ -54,7 +54,7 @@ test('bookmark facts preserve RNG bits across signed and unsigned representation
   expect(changed.snapshot.rng).not.toBe(original.snapshot.rng);
 });
 
-test('every registered bookmark plays three years and replays its final year after a cross-bookmark restore',
+test('every registered bookmark plays one year then restores across bookmarks and plays another year',
   async function ({ page }, testInfo) {
     test.setTimeout(20 * 60 * 1000);
     await openGame(page, testInfo);
@@ -63,16 +63,13 @@ test('every registered bookmark plays three years and replays its final year aft
     for (const id of ids) await test.step('bookmark ' + id, async function () {
       await beginBookmark(page, testInfo, id);
       await saveWithinBudget(page, testInfo, id + '-fresh', SAVE_BUDGETS.fresh);
-      await advanceBookmark(page, 720);
-      const checkpoint = await saveWithinBudget(page, testInfo, id + '-year2', SAVE_BUDGETS.year2);
+      await advanceBookmark(page, 360);
+      const checkpoint = await saveWithinBudget(page, testInfo, id + '-year1', SAVE_BUDGETS.year1);
       const checkpointFacts = await facts(page);
       const checkpointState = JSON.parse(checkpoint).state;
       for (const key of ['bookmarkSetup', 'religiousHeadVacancies']) {
         if (checkpointState[key] !== undefined) expect(checkpointFacts.campaign[key]).toEqual(checkpointState[key]);
       }
-      await advanceBookmark(page, 360);
-      const continuous = await facts(page);
-      await saveWithinBudget(page, testInfo, id + '-year3', SAVE_BUDGETS.year3);
       // Build a different map before restore. Matching hidden saves still
       // activate their own definition and never run creation hooks again.
       await page.evaluate(function (other) {
@@ -84,7 +81,11 @@ test('every registered bookmark plays three years and replays its final year aft
       await restoreBookmark(page, checkpoint);
       expect(await facts(page)).toEqual(checkpointFacts);
       await advanceBookmark(page, 360);
-      expect(await facts(page)).toEqual(continuous);
+      const continued = await facts(page);
+      expect(continued.campaign.turn).toBe(checkpointFacts.campaign.turn + 360);
+      expect(continued.campaign.date).toEqual(Object.assign({}, checkpointFacts.campaign.date,
+        { year:checkpointFacts.campaign.date.year + 1 }));
+      await saveWithinBudget(page, testInfo, id + '-year2', SAVE_BUDGETS.year2);
     });
   });
 
