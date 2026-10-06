@@ -296,11 +296,32 @@ test('normal v4 restore preserves durable records and rejects incompatible input
     expect(result.records).toBe(true);
     expect(result.schema).toBe(4);
     expect(result.duplicateId).toContain('Duplicate v4 authority id');
-    expect(result.duplicate).toContain('Invalid v4 authority record');
+    expect(result.duplicate).toContain('Duplicate v4 authority receipt for obligation render:');
     expect(result.unknownTitle).toContain('Missing duchy title d_missing_title');
     expect(result.unknownCanonicalTitle).toContain('Missing kingdom title missing_title');
     expect(result.wrongMod).toContain('different mod set');
     expect(result.missingHolder).toContain('v3 or v4 game state');
     expect(result.wrongIdentity).toContain('authority.governments');
     expect(result.directV4).toBe('');
+  });
+
+test('the frozen envelope rejects ambiguous title registries before state or identity adoption',
+  async function ({ page }, testInfo) {
+    await start(page, testInfo, '867');
+    const result = await page.evaluate(function () {
+      const source = JSON.parse(FB.save.serialize()), bytes = JSON.stringify(source);
+      const bookmark = FB.bookmark('867'), original = bookmark.duchies;
+      const live = FB.state, rng = FB.getRngState(), uid = FB.getUidCounter();
+      let message = '';
+      try {
+        bookmark.duchies = Object.assign({}, original, { d_essex:original.essex });
+        try { FB.save.restore(source); } catch (error) { message = error.message; }
+      } finally { bookmark.duchies = original; }
+      return { header:[source.v,source.titleIds,source.authoritySchema,source.platformSchema],
+        message:message, unchanged:FB.state === live && FB.getRngState() === rng &&
+          FB.getUidCounter() === uid && JSON.stringify(source) === bytes };
+    });
+    expect(result.header).toEqual([4,1,4,1]);
+    expect(result.message).toContain('Ambiguous duchy title aliases for essex');
+    expect(result.unchanged).toBe(true);
   });

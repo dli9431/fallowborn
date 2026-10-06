@@ -25,7 +25,58 @@ async function save(page) {
 }
 
 for (const mode of ['sdk', 'localstorage']) {
-  test('CrazyGames ' + mode + ' resumes v3 and writes readable v4 campaigns',
+  for (const version of [3, 'prototype-v4', 4]) {
+    test('CrazyGames ' + mode + ' resumes ' + version + ' and writes the frozen v4 envelope',
+      async function ({ page }, testInfo) {
+        if (mode === 'localstorage') await page.addInitScript(function () {
+          window.FB_CRAZYGAMES_STORAGE = 'localstorage';
+        });
+        await boot(page, testInfo);
+        await startDeterministicGame(page);
+        expect(await save(page)).toBe(true);
+        expect(await page.evaluate(async function (version) {
+          const old = JSON.parse(FB.save.serialize());
+          if (version === 3) {
+            old.v = 3;
+            delete old.titleIds;
+            delete old.authoritySchema;
+          }
+          if (version !== 4) delete old.platformSchema;
+          old.state.player.gold = 4321;
+          const written = await new Promise(function (resolve) {
+            FB.crazySave.write(JSON.stringify(old), resolve);
+          });
+          // Model a title boot with an existing legacy save; hiding the current
+          // game must not replace that fixture with its newer live state.
+          FB.state = null;
+          return written;
+        }, version)).toBe(true);
+        await page.reload();
+        await page.waitForFunction(function () { return window.FB && FB.game && FB.game.bootReady; });
+        expect(await page.evaluate(function () { return FB.save.read('auto').v; }))
+          .toBe(version === 3 ? 3 : 4);
+        await page.locator('#btn-continue').click();
+        await expect.poll(function () {
+          return page.evaluate(function () { return FB.state && FB.state.player.gold; });
+        }).toBe(4321);
+        expect(await save(page)).toBe(true);
+        await page.reload();
+        await page.waitForFunction(function () { return window.FB && FB.game && FB.game.bootReady; });
+        await page.locator('#btn-continue').click();
+        await expect.poll(function () {
+          return page.evaluate(function () { return FB.state && FB.state.player.gold; });
+        }).toBe(4321);
+        expect(await page.evaluate(function () {
+          const data = FB.save.read('auto');
+          const exported = FB.save.parseExport(FB.save.exportState());
+          return { header:[data.v,data.titleIds,data.authoritySchema,data.platformSchema],
+            exportHeader:[exported.v,exported.titleIds,exported.authoritySchema,exported.platformSchema],
+            gold:data.state.player.gold, edition:data.mods };
+        })).toEqual({ header:[4,1,4,1], exportHeader:[4,1,4,1],
+          gold:4321, edition:'crazygames-content-1' });
+      });
+  }
+  test('CrazyGames ' + mode + ' rejects future platform schemas and foreign editions without replacement',
     async function ({ page }, testInfo) {
       if (mode === 'localstorage') await page.addInitScript(function () {
         window.FB_CRAZYGAMES_STORAGE = 'localstorage';
@@ -33,35 +84,21 @@ for (const mode of ['sdk', 'localstorage']) {
       await boot(page, testInfo);
       await startDeterministicGame(page);
       expect(await save(page)).toBe(true);
-      expect(await page.evaluate(async function () {
-        const old = JSON.parse(FB.save.serialize());
-        old.v = 3;
-        delete old.titleIds;
-        delete old.authoritySchema;
-        old.state.player.gold = 4321;
-        const written = await new Promise(function (resolve) {
-          FB.crazySave.write(JSON.stringify(old), resolve);
+      const result = await page.evaluate(async function () {
+        const previous = FB.crazySave.read(), source = JSON.parse(previous);
+        source.platformSchema = 2;
+        const accepted = await new Promise(function (resolve) {
+          FB.crazySave.write(JSON.stringify(source), resolve);
         });
-        // Model a title boot with an existing legacy save; hiding the current
-        // game must not replace that fixture with its newer live state.
-        FB.state = null;
-        return written;
-      })).toBe(true);
-      await page.reload();
-      await page.waitForFunction(function () { return window.FB && FB.game && FB.game.bootReady; });
-      expect(await page.evaluate(function () { return FB.save.read('auto').v; })).toBe(3);
-      await page.locator('#btn-continue').click();
-      await expect.poll(function () {
-        return page.evaluate(function () { return FB.state && FB.state.player.gold; });
-      }).toBe(4321);
-      expect(await save(page)).toBe(true);
-      await page.reload();
-      await page.waitForFunction(function () { return window.FB && FB.game && FB.game.bootReady; });
-      expect(await page.evaluate(function () {
-        const data = FB.save.read('auto');
-        return { version:data.v, schema:data.authoritySchema,
-          gold:data.state.player.gold, edition:data.mods };
-      })).toEqual({ version:4, schema:4, gold:4321, edition:'crazygames-content-1' });
+        const live = FB.state, rng = FB.getRngState(), uid = FB.getUidCounter();
+        source.platformSchema = 1; source.mods = '';
+        let message = '';
+        try { FB.save.restore(source); } catch (error) { message = error.message; }
+        return { accepted:accepted, preserved:previous === FB.crazySave.read(), message:message,
+          pure:live === FB.state && rng === FB.getRngState() && uid === FB.getUidCounter() };
+      });
+      expect(result).toEqual({ accepted:false, preserved:true,
+        message:'This save belongs to a different edition of the game.', pure:true });
     });
 }
 
