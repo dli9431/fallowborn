@@ -1,5 +1,7 @@
 Optional systems
 
+colonate defaults to disabled and is enabled by late_antique. It registers the events, actions and economy module boundaries for Roman land-bound households. FB.tenureEnabled permits either registered tenure system to dispatch the shared scheduler; saved archetypes still check their own membership, so a disabled manorial record cannot become active merely because colonate is enabled. Roman events and the estate review Deed require colonate, while medieval events and their review continue to require manorial_tenure. Scenario availability checks its declarative system requirements before picker, code and direct creation. No system availability is stamped into saves.
+
 Local institutions
 
 church_councils and ruler_conversion also default to disabled and are enabled by late_antique. js/religion.js guards their direct mutations and annual AI hook and requires episcopal_sees in the acting court's context. Disabled saved decisions remain dormant; reads and restore allocate no new decision ledger. The 476 bookmark explicitly disables abbeys alongside its other medieval institutions. Medieval bookmarks keep their prior availability sets.

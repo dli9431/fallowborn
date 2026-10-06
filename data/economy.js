@@ -966,6 +966,46 @@ FBDATA.householdStandards = {
    Core game data: deterministic selectors match bookmark, household identity,
    permanent-home environment, settlement, and starting development. */
 FBDATA.tenureArchetypes = {
+  roman_estate: {
+    id:'roman_estate', systems:['colonate'], priority:100,
+    name:'Roman estate tenancy', desc:'Registered cultivation of an estate in Italy or the imperial provinces. The household owes a crop share and accounts; it cannot freely leave the land.',
+    nameKey:'tenure_archetype_roman_estate_name', summaryKey:'tenure_archetype_roman_estate_summary',
+    workLabel:'Cultivate the estate fields',
+    workDescription:'Cultivate the household’s leased fields and meet estate dues.',
+    workLabelKey:'tenure_work_roman_estate_label', workDescriptionKey:'tenure_work_roman_estate_desc',
+    selector:{ bookmarksAny:['476','493'] },
+    duties:[
+      { id:'estate_crop_share', eventId:'colonus_crop_due', firstDue:{ season:'autumn', day:30, cycle:0 }, intervalTurns:360 },
+      { id:'estate_accounts', eventId:'colonus_accounts_due', firstDue:{ season:'spring', day:30, cycle:0 }, intervalTurns:360 }
+    ], rights:['estate_dwelling','estate_cultivation'], contextSlots:[], conditionalDuties:[]
+  },
+  roman_gaul: {
+    id:'roman_gaul', systems:['colonate'], priority:400,
+    name:'Gallic Roman estate tenancy', desc:'A Gallic estate keeps its tenant register across changing courts. The possessor receives crop and account dues without granting the household ownership.',
+    nameKey:'tenure_archetype_roman_gaul_name', summaryKey:'tenure_archetype_roman_gaul_summary',
+    workLabel:'Cultivate the estate fields',
+    workDescription:'Cultivate the household’s leased fields and meet estate dues.',
+    workLabelKey:'tenure_work_roman_gaul_label', workDescriptionKey:'tenure_work_roman_gaul_desc',
+    selector:{ bookmarksAny:['476','493'], provinceIdsAny:['laon', 'paris', 'reims', 'orleans', 'lyon', 'arles', 'toulouse', 'bordeaux'] },
+    duties:[
+      { id:'estate_crop_share', eventId:'colonus_crop_due', firstDue:{ season:'autumn', day:30, cycle:0 }, intervalTurns:360 },
+      { id:'estate_accounts', eventId:'colonus_accounts_due', firstDue:{ season:'spring', day:30, cycle:0 }, intervalTurns:360 }
+    ], rights:['estate_dwelling','estate_cultivation'], contextSlots:[], conditionalDuties:[]
+  },
+  roman_africa: {
+    id:'roman_africa', systems:['colonate'], priority:400,
+    name:'African Roman estate tenancy', desc:'A Roman farming household cultivates an African estate under its possessor. Crop shares and rent accounts continue under the current court.',
+    nameKey:'tenure_archetype_roman_africa_name', summaryKey:'tenure_archetype_roman_africa_summary',
+    workLabel:'Cultivate the estate fields',
+    workDescription:'Cultivate the household’s leased fields and meet estate dues.',
+    workLabelKey:'tenure_work_roman_africa_label', workDescriptionKey:'tenure_work_roman_africa_desc',
+    selector:{ bookmarksAny:['476','493'], provinceIdsAny:['tunis', 'kairouan', 'tripoli', 'sirte'] },
+    duties:[
+      { id:'estate_crop_share', eventId:'colonus_crop_due', firstDue:{ season:'autumn', day:30, cycle:0 }, intervalTurns:360 },
+      { id:'estate_accounts', eventId:'colonus_accounts_due', firstDue:{ season:'spring', day:30, cycle:0 }, intervalTurns:360 }
+    ], rights:['estate_dwelling','estate_cultivation'], contextSlots:[], conditionalDuties:[]
+  },
+
   latin_manorial: {
     id: 'latin_manorial', systems:['manorial_tenure'],
     priority: 300,
@@ -1221,6 +1261,8 @@ FBDATA.tenureArchetypes = {
 };
 
 FBDATA.tenureDuties = {
+  estate_crop_share:{ name:'Estate crop share', desc:'Deliver the agreed share of the estate harvest to the possessor.' },
+  estate_accounts:{ name:'Estate rent accounts', desc:'Meet the registered rent due and keep the household’s cultivation account.' },
   week_work: { name: 'Week-work tally', desc: 'Customary unfree labor owed on demesne land each week.' },
   demesne_harvest: { name: 'Boon harvest', desc: 'Additional seasonal harvest service on the lord’s demesne.' },
   tithe_sheaf: { name: 'Tithe sheaf', desc: 'A tenth part of grain and livestock owed to the parish church.' },
@@ -1256,6 +1298,8 @@ FBDATA.tenureDuties = {
 };
 
 FBDATA.tenureRights = {
+  estate_dwelling:{ name:'Estate dwelling use', desc:'Use the household’s estate dwelling while meeting the tenancy. This is not owned property.' },
+  estate_cultivation:{ name:'Registered cultivation', desc:'Cultivate the household’s assigned fields under the estate register. Release conveys no land.' },
   deadwood_after_frost: { name: 'Deadwood gathering', desc: 'Customary right to collect fallen branches and deadwood for household fuel after frost.' },
   gleaning_after_harvest: { name: 'Post-harvest gleaning', desc: 'Customary right to glean remaining grain heads from harvested fields.' },
   irrigation_turn: { name: 'Irrigation turn', desc: 'Recognized customary rotational turn to draw water from shared irrigation channels.' },

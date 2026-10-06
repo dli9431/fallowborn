@@ -3,6 +3,7 @@ const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
   'data/map_data.js',
   'data/bookmarks.js',
+  'data/systems.js', 'data/eras.js', 'js/systems.js',
   'data/cultures.js',
   'data/economy.js', 'data/actions.js',
   'data/events_peasant.js',
@@ -441,7 +442,9 @@ test('Phase 4 tenure catalogue ships seven complete definitions and validates ev
           return String(error && error.message || error);
         }
       }
-      const definitions = Object.keys(FBDATA.tenureArchetypes).map(function (id) {
+      const definitions = Object.keys(FBDATA.tenureArchetypes).filter(function (id) {
+        return FBDATA.tenureArchetypes[id].systems.indexOf('manorial_tenure') >= 0;
+      }).map(function (id) {
         const definition = FBDATA.tenureArchetypes[id];
         return {
           id:id,
@@ -742,7 +745,9 @@ test('identical seeded Toil ticks produce identical economy, health, skill, and 
     await startGame(page, testInfo);
     const result = await page.evaluate(function () {
       const baseline = FB.save.serialize();
-      const archetypeIds = Object.keys(FBDATA.tenureArchetypes);
+      const archetypeIds = Object.keys(FBDATA.tenureArchetypes).filter(function (id) {
+        return FBDATA.tenureArchetypes[id].systems.indexOf('manorial_tenure') >= 0;
+      });
       return archetypeIds.map(function (archetypeId) {
         FB.save.restore(JSON.parse(baseline));
         const state = FB.state;

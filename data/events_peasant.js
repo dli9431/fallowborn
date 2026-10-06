@@ -3,6 +3,36 @@
    ========================================================================= */
 window.FBDATA = window.FBDATA || {};
 FBDATA.events = FBDATA.events || [];
+FBDATA.events.push(
+{ id:'colonus_crop_due', systems:['colonate'], title:'The Estate’s Crop Share',
+  trigger:{ never:true }, contextValidator:'colonus_duty_valid',
+  participants:[{ slot:'possessor', source:'context', required:true, sameHome:true }],
+  text:'The estate account names the share due from your household. {possessor} expects grain or its value. Cultivating these fields has given your family use of the land, not ownership.',
+  options:[
+    { label:'Deliver the crop share.', desc:'Meet the due through the household’s harvest.', effects:{ health:-1, prestige:1, standingCharacter:{ participant:'possessor', amt:3 } } },
+    { label:'Pay its value.', desc:'Pay {money:3} instead of delivering the crop share.', require:{ goldMin:3 }, effects:{ gold:-3, standingCharacter:{ participant:'possessor', amt:3 } } },
+    { label:'Withhold the share.', desc:'Keep today’s harvest and lose the possessor’s goodwill. The tenancy continues.', effects:{ prestige:-3, standingCharacter:{ participant:'possessor', amt:-12 } } }
+  ] },
+{ id:'colonus_accounts_due', systems:['colonate'], title:'The Registered Estate Account',
+  trigger:{ never:true }, contextValidator:'colonus_duty_valid',
+  participants:[{ slot:'possessor', source:'context', required:true, sameHome:true }],
+  text:'{possessor} checks the household’s cultivation account and rent. A new court has not erased your registered attachment to these fields.',
+  options:[
+    { label:'Settle the account.', desc:'Pay {money:2} to meet this rent due.', require:{ goldMin:2 }, effects:{ gold:-2, standingCharacter:{ participant:'possessor', amt:4 } } },
+    { label:'Work off the due.', desc:'Extra estate work settles today’s account.', effects:{ health:-1, standingCharacter:{ participant:'possessor', amt:2 } } },
+    { label:'Dispute the account.', desc:'Refuse today’s demand; the possessor’s consent becomes harder to obtain.', effects:{ prestige:-2, standingCharacter:{ participant:'possessor', amt:-8 } } }
+  ] },
+{ id:'colonus_flight', systems:['colonate'], title:'Beyond the Estate Register',
+  trigger:{ never:true }, contextValidator:'colonus_flight_valid',
+  participants:[{ slot:'possessor', source:'context', required:true, sameHome:true }],
+  text:'Leaving without consent risks pursuit and return to {possessor}’s estate. Reaching a town grants no automatic lawful freedom. Tonight your household can still try the road.',
+  options:[
+    { label:'Attempt flight.', desc:'55% chance of escape. Success costs {money:3} and moves the household; capture costs 2 health, 10 prestige and 20 Standing. No lawful charter is granted. Another attempt must wait 360 days.', chance:0.55,
+      success:{ text:'Your household escapes the estate’s reach. You live elsewhere as fugitives, with no lawful release recorded.', effects:{ serfFreedom:{ route:'flight' }, moveRandom:true, gold:-3, prestige:5 } },
+      failure:{ text:'The pursuers bring your household back. The estate register and its dues still bind you.', effects:{ health:-2, prestige:-10, standingCharacter:{ participant:'possessor', amt:-20 } } } },
+    { label:'Remain on the estate.', desc:'Keep the tenancy and seek a lawful release. The flight opportunity expires for 360 days.', effects:{} }
+  ] }
+);
 
 (function () {
   var firstEvent = FBDATA.events.length;

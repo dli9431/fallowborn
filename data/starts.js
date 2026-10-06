@@ -60,6 +60,15 @@ window.FBDATA = window.FBDATA || {};
       },
       tracks:['federate_track_476'],
       intro:'You are {name}, a free federate soldier near Ravenna. Orestes owes the host its pay; the court, the city and Odoacer each want a different settlement. Your household can work and trade while you decide whom to serve. Open the western court story in Deeds to review the dispute; personal standing and a command are separate rewards.' },
+    { id:'colonus_476', bookmarkIds:['476'], systems:['colonate'], alwaysUnlocked:true,
+      name:'Colonus', desc:'A Roman tenant household bound to an estate. Meet crop and account dues, earn the possessor’s consent, buy release or risk flight.',
+      tier:0, profession:'colonus', gold:5, prestige:0, piety:0,
+      startAge:24, startCulture:'roman', startReligion:'nicene',
+      familyPresets:{
+        standard:{ name:'Young tenant household', diff:'age 24 - parents and siblings' },
+        established:{ name:'Established tenant household', diff:'spouse and young children' }
+      },
+      intro:'You are {name}, a colonus of {province}. Your household cultivates an estate’s land; use of its fields and dwelling gives you no ownership. Crop and account dues continue whichever daily focus you choose. Open Review estate & freedom in Deeds to meet the possessor, inspect your obligations and review purchase, consented military service, consented ordination or risky flight. Release includes your spouse and descendants; parents and siblings need separate paid release. Flight grants no lawful charter.' },
     { id:'curialis_476', bookmarkIds:['476'], fixedProvinceId:'ravenna', alwaysUnlocked:true,
       name:'Curialis', desc:'A Roman civic household at Ravenna. Serve the council, seek a local mandate, or keep your livelihood outside the court dispute.',
       tier:2, profession:'curialis', gold:80, prestige:30, piety:10,

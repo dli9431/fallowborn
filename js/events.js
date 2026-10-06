@@ -6544,11 +6544,161 @@ window.FB = window.FB || {};
     return cached;
   }
 
+  /* The events module owns both registered legal forms. Medieval APIs keep
+     their names for saved-event and mod compatibility; each record's data
+     definition supplies its system membership. Estate ownership is separate
+     from county jurisdiction and never transfers public land. */
+  FB.colonateTenure = function (state) {
+    const tenure = FB.activeSerfTenure(state);
+    const arch = tenure && FBDATA.tenureArchetypes[tenure.archetypeId];
+    return arch && (arch.systems || []).indexOf('colonate') >= 0 ? tenure : null;
+  };
+  FB.colonatePossessor = function (state) {
+    const tenure = FB.colonateTenure(state);
+    const c = tenure && state.chars[tenure.landownerId];
+    return c && !c.dead ? c : null;
+  };
+  FB.ensureColonatePossessor = function (state) {
+    const tenure = FB.colonateTenure(state);
+    if (!tenure || FB.colonatePossessor(state)) return;
+    const me = state.chars[state.player.charId];
+    const possessor = FB.makeCharacter(state, {
+      culture:me.culture, religion:me.religion, station:2,
+      born:state.date.year - FB.ri(35, 55), role:'contact'
+    });
+    possessor.homeProvinceId = tenure.provinceId;
+    possessor.homeSettlement = tenure.settlement;
+    tenure.landownerId = possessor.id;
+    tenure.revision++;
+    FB.serfParticipantTenureChanged(state);
+  };
+  FB.validateColonateTenure = function (state) {
+    const tenure = state.player && state.player.tenure;
+    const arch = tenure && FBDATA.tenureArchetypes[tenure.archetypeId];
+    if (!arch || (arch.systems || []).indexOf('colonate') < 0) return true;
+    if (tenure.version !== 1 || ['active','closed'].indexOf(tenure.status) < 0 ||
+        typeof tenure.landownerId !== 'string' || !state.chars[tenure.landownerId] ||
+        tenure.landownerId === state.player.charId ||
+        !Number.isInteger(tenure.formedTurn) || tenure.formedTurn < 0 ||
+        !Number.isInteger(tenure.revision) || tenure.revision < 0 ||
+        !Number.isInteger(tenure.settlement) || tenure.settlement < 0 ||
+        !state.owner || !Object.prototype.hasOwnProperty.call(state.owner, tenure.provinceId) ||
+        !Array.isArray(tenure.duties) || tenure.duties.length !== arch.duties.length ||
+        !Array.isArray(tenure.rights) || tenure.rights.join('|') !== arch.rights.join('|') ||
+        !Array.isArray(tenure.conditional) || tenure.conditional.length) {
+      throw new Error(FB.T('The saved estate tenancy is damaged.'));
+    }
+    tenure.duties.forEach(function (duty, index) {
+      const def = arch.duties[index];
+      if (!duty || duty.id !== def.id || duty.eventId !== def.eventId ||
+          !Number.isInteger(duty.nextDueTurn) || duty.nextDueTurn < 0) {
+        throw new Error(FB.T('The saved estate duty is damaged.'));
+      }
+    });
+    const flags = state.player.flags || {};
+    for (const key of ['colonus_flight_until','colonus_flight_resolved_turn']) {
+      if (flags[key] !== undefined && (!Number.isInteger(flags[key]) || flags[key] < 0)) {
+        throw new Error(FB.T('The saved estate flight record is damaged.'));
+      }
+    }
+    return true;
+  };
+  function colonateChurch(state) {
+    const me = state.chars[state.player.charId];
+    const defs = FB.localInstitutionDefinitions(state);
+    for (const id of Object.keys(defs)) {
+      const def = defs[id];
+      if (def.provinceId !== state.player.provinceId || !def.officeId ||
+          !FB.systemEnabled(state, 'episcopal_sees')) continue;
+      const bishop = FB.religiousOfficeSnapshot(state, def.officeId);
+      if (bishop && !bishop.dead && bishop.religion === me.religion) return bishop;
+    }
+    return null;
+  }
+  FB.colonateReleaseStatus = function (state, route) {
+    const out = { ready:false, reason:'', route:route, quote:null, owner:null };
+    const tenure = FB.colonateTenure(state);
+    const p = state && state.player, me = p && state.chars[p.charId];
+    const owner = tenure && FB.colonatePossessor(state);
+    out.owner = owner;
+    if (!tenure || !me || me.dead || p.dead) out.reason = FB.T('No living bound estate household can take this route.');
+    else if (['military_service','ordination','flight'].indexOf(route) < 0) out.reason = FB.T('Unknown release route.');
+    else if (p.travel || p.provinceId !== tenure.provinceId ||
+        (p.homeSettlement || 0) !== tenure.settlement) out.reason = FB.T('Return to the registered estate home.');
+    else if (FB.ageOf(me, state.date.year) < 16) out.reason = FB.T('This route requires an adult.');
+    else if (p.flags.in_prison || (FB.intrigueCaptivityOf && FB.intrigueCaptivityOf(state, me.id))) out.reason = FB.T('You are imprisoned.');
+    else if (p.freedomOffer && p.freedomOffer.status === 'service') out.reason = FB.T('Complete the agreed final service first.');
+    else if (!owner) out.reason = FB.T('No living possessor can receive this decision.');
+    else if (route === 'flight' && ((p.flags.colonus_flight_until || 0) > state.turn ||
+        (state.eventQueue || []).some(function (e) { return e.id === 'colonus_flight'; }))) out.reason = FB.T('Another flight cannot be attempted yet.');
+    else if (route !== 'flight' && FB.standingOf(state, { kind:'character', id:owner.id }) < 20) out.reason = FB.T('Requires +20 Standing with the possessor for consent.');
+    else if (route === 'military_service' && (me.sex !== 'm' || FB.stat(me, 'mar') < 4)) out.reason = FB.T('Military service requires a man with Martial 4.');
+    else if (route === 'ordination' && (me.sex !== 'm' || p.piety < 25 || FB.stat(me, 'lea') < 3)) out.reason = FB.T('Ordination requires a man with Learning 3 and 25 piety.');
+    const church = tenure && route === 'ordination' ? colonateChurch(state) : null;
+    if (!out.reason && route === 'ordination' && !church) out.reason = FB.T('Requires a living local bishop of your faith.');
+    const profession = route === 'military_service' ? 'soldier' : route === 'ordination' ? 'priest' : null;
+    const career = profession && FBDATA.careers[profession];
+    if (!out.reason && career && (!FB.contentPeriodEnabled(state, career) || !FB.systemContentEnabled(state, career))) out.reason = FB.T('That service career is unavailable.');
+    if (!out.reason && career && career.requiresTech && !FB.techRequirementMet(state, career.requiresTech)) out.reason = FB.T('Service training requires {technology}.', { technology:FB.dataParam('tech', career.requiresTech) });
+    if (out.reason) return out;
+    out.ready = true;
+    out.profession = profession;
+    out.quote = JSON.stringify([route, p.charId, tenure.archetypeId, tenure.formedTurn,
+      tenure.revision, tenure.provinceId, tenure.settlement, owner.id,
+      church && church.id, FB.freedomCoveredCharacterIds(state, []).slice().sort()]);
+    return out;
+  };
+  FB.resolveColonateRelease = function (state, route, quote) {
+    const status = FB.colonateReleaseStatus(state, route);
+    if (!status.ready || status.quote !== quote) return false;
+    if (route === 'flight') {
+      const tenure = FB.colonateTenure(state);
+      const queued = FB.queueEvent(state, 'colonus_flight', {
+        participants:{ possessor:status.owner.id }, protagonistId:state.player.charId,
+        locationId:tenure.provinceId, tenureFormedTurn:tenure.formedTurn,
+        tenureRevision:tenure.revision, archetypeId:tenure.archetypeId,
+        flightAttemptTurn:state.turn
+      });
+      if (!queued) return false;
+      state.player.flags.colonus_flight_until = state.turn + 360;
+      return true;
+    }
+    const result = FB.resolveSerfFreedom(state, { route:route, quote:quote });
+    if (!result) return false;
+    FB.setCareer(state, state.chars[state.player.charId], status.profession, 'journeyman');
+    return result;
+  };
+  FB.fns = FB.fns || {};
+  FB.fns.colonus_duty_valid = function (state, ctx, ev) {
+    const tenure = FB.colonateTenure(state), owner = FB.colonatePossessor(state);
+    return !!(tenure && owner && ctx && ctx.participants &&
+      ctx.participants.possessor === owner.id &&
+      FB.fns.serf_tenure_context_valid(state, ctx, ev));
+  };
+  FB.fns.colonus_flight_valid = function (state, ctx) {
+    const tenure = FB.colonateTenure(state), owner = FB.colonatePossessor(state);
+    const p = state.player, me = state.chars[p.charId];
+    return !!(tenure && owner && ctx && !state.player.travel &&
+      me && !me.dead && !p.dead && FB.ageOf(me, state.date.year) >= 16 &&
+      !p.flags.in_prison && !(FB.intrigueCaptivityOf && FB.intrigueCaptivityOf(state, me.id)) &&
+      !(p.freedomOffer && p.freedomOffer.status === 'service') &&
+      (p.homeSettlement || 0) === tenure.settlement &&
+      ctx.protagonistId === state.player.charId && ctx.locationId === tenure.provinceId &&
+      state.player.provinceId === tenure.provinceId &&
+      ctx.tenureFormedTurn === tenure.formedTurn && ctx.tenureRevision === tenure.revision &&
+      ctx.archetypeId === tenure.archetypeId && ctx.participants &&
+      ctx.participants.possessor === owner.id && Number.isInteger(ctx.flightAttemptTurn) &&
+      ctx.flightAttemptTurn >= 0 && ctx.flightAttemptTurn <= state.turn &&
+      state.player.flags.colonus_flight_resolved_turn !== ctx.flightAttemptTurn &&
+      state.player.flags.colonus_flight_until === ctx.flightAttemptTurn + 360);
+  };
+
   FB.ensureSerfTenure = function (state, formedBy) {
-    if (!FB.systemEnabled(state, 'manorial_tenure')) return null;
+    if (!FB.tenureEnabled(state)) return null;
     if (!state || !state.player || !FB.station.isSerf(state.player, state)) return null;
     const p = state.player;
     if (p.tenure && p.tenure.status === 'active') {
+      if (!FB.activeSerfTenure(state)) return null;
       normalizeSerfTenure(state, p.tenure);
       return p.tenure;
     }
@@ -6665,13 +6815,17 @@ window.FB = window.FB || {};
     };
 
     p.tenure = tenure;
+    if ((archDef.systems || []).indexOf('colonate') >= 0) FB.ensureColonatePossessor(state);
     FB.refreshSerfTenureDueCache(state, tenure);
     normalizeSerfTenure(state, tenure);
     return tenure;
   };
 
   FB.activeSerfTenure = function (state) {
-    if (!FB.systemEnabled(state, 'manorial_tenure')) return null;
+    if (!FB.tenureEnabled(state)) return null;
+    const arch = state && state.player && state.player.tenure &&
+      FBDATA.tenureArchetypes[state.player.tenure.archetypeId];
+    if (!arch || !FB.systemContentEnabled(state, arch)) return null;
     return (state && state.player && FB.station.isSerf(state.player, state) &&
       state.player.tenure && state.player.tenure.status === 'active')
       ? state.player.tenure : null;
@@ -7063,6 +7217,7 @@ window.FB = window.FB || {};
   }
 
   FB.noteSerfHomeTransition = function (state, cause, before, after, details) {
+    if (FB.colonateTenure(state)) return false;
     const tenure = FB.activeSerfTenure(state);
     if (!tenure || SERF_TRANSITION_CAUSES.indexOf(cause) < 0) return false;
     normalizeSerfTenure(state, tenure);
@@ -7376,6 +7531,7 @@ window.FB = window.FB || {};
   }
 
   FB.resolveSerfTenureTransition = function (state, transitionRevision, outcome) {
+    if (FB.colonateTenure(state)) return false;
     if (['preserve','accept','restore','decline_restore'].indexOf(outcome) < 0) {
       return false;
     }
@@ -7469,7 +7625,7 @@ window.FB = window.FB || {};
     if (mechanicsChanged && state.eventQueue) {
       state.eventQueue = state.eventQueue.filter(function (item) {
         const ev = FB.eventById(item.id);
-        return !(ev && ev.contextValidator === 'serf_tenure_context_valid' &&
+        return !(ev && ['serf_tenure_context_valid','colonus_duty_valid'].indexOf(ev.contextValidator) >= 0 &&
           item.ctx && item.ctx.tenureFormedTurn === tenure.formedTurn &&
           (item.ctx.tenureRevision === undefined ? 0 :
             item.ctx.tenureRevision) !== tenure.revision);
@@ -7591,10 +7747,12 @@ window.FB = window.FB || {};
     const authority = FB.political.role(state, 'lord', {
       provinceId:tenure.provinceId
     });
-    const lord = authority && authority.characterId && state.chars
-      ? state.chars[authority.characterId] : null;
+    const lord = FB.colonateTenure(state) ? FB.colonatePossessor(state)
+      : authority && authority.characterId && state.chars
+        ? state.chars[authority.characterId] : null;
     const lordName = lord && !lord.dead
       ? FB.fullName(lord)
+      : FB.colonateTenure(state) ? FB.T('No living estate possessor')
       : (authority && holderRealm && holderRealm.ruler && holderRealm.ruler.name
           ? FB.fullName(holderRealm.ruler)
           : (holderRealm ? holderRealm.name : FB.T('Local authority')));
@@ -7862,7 +8020,7 @@ window.FB = window.FB || {};
   }
 
   FB.tenureDay = function (state) {
-    if (!FB.systemEnabled(state, 'manorial_tenure')) return;
+    if (!FB.tenureEnabled(state)) return;
     if (!state || !state.player || !FB.station.isSerf(state.player, state)) return;
     if (state.player.travel) return;
 
@@ -7881,13 +8039,17 @@ window.FB = window.FB || {};
     const curLocation = state.player.travel ? state.player.travel.currentId : (state.player.provinceId || state.player.home);
     if (curLocation !== tenure.provinceId) return;
 
+    const colonate = FB.colonateTenure(state);
+    if (colonate) FB.ensureColonatePossessor(state);
     const pending = state.player.tenureTransition;
     const indexedLordId = state.roles && state.roles.lord;
     if (pending && !FB.localLordAt(state, indexedLordId, false)) {
       FB.getRole(state, 'lord', true);
     }
-    FB.reconcileSerfHomeAuthority(state);
-    if (queueSerfTenureReview(state, tenure)) return;
+    if (!colonate) {
+      FB.reconcileSerfHomeAuthority(state);
+      if (queueSerfTenureReview(state, tenure)) return;
+    }
 
     let conditionalChanged = false;
     if ((state.turn || 0) >= tenure.nextWarCheckTurn) {
@@ -7925,7 +8087,7 @@ window.FB = window.FB || {};
 
     const hasValidQueued = (state.eventQueue || []).some(function (item) {
       const ev = FB.eventById(item.id);
-      return ev && ev.contextValidator === 'serf_tenure_context_valid' &&
+      return ev && ['serf_tenure_context_valid','colonus_duty_valid'].indexOf(ev.contextValidator) >= 0 &&
         FB.eventContextStillValid(state, ev, item.ctx);
     });
     if (hasValidQueued) return;
@@ -7954,7 +8116,7 @@ window.FB = window.FB || {};
       return;
     }
 
-    FB.queueEvent(state, candidate.duty.eventId, {
+    const dutyContext = {
       tenureFormedTurn: tenure.formedTurn,
       tenureRevision: tenure.revision,
       archetypeId: tenure.archetypeId,
@@ -7969,7 +8131,9 @@ window.FB = window.FB || {};
       commutationGold:candidate.duty.commutationGold,
       protagonistId: state.player.charId,
       locationId: curLocation
-    });
+    };
+    if (colonate) dutyContext.participants = { possessor:tenure.landownerId };
+    FB.queueEvent(state, candidate.duty.eventId, dutyContext);
 
     tenure.lastPresentedSeasonKey = currentSeasonKey;
   };
@@ -7984,7 +8148,9 @@ window.FB = window.FB || {};
     purchase:{ lawful:true, tenureEndReason:'purchase' },
     manumission:{ lawful:true, tenureEndReason:'manumission' },
     old_custom:{ lawful:true, tenureEndReason:'old_custom' },
-    flight:{ lawful:false, tenureEndReason:'flight' }
+    flight:{ lawful:false, tenureEndReason:'flight' },
+    military_service:{ lawful:true, tenureEndReason:'military_service' },
+    ordination:{ lawful:true, tenureEndReason:'ordination' }
   };
   const EVENT_SERF_FREEDOM_ROUTES = { old_custom:true, flight:true };
   FB.serfFreedomRoutes = SERF_FREEDOM_ROUTES;
@@ -8134,7 +8300,17 @@ window.FB = window.FB || {};
     const home = familyFreedomPlace(state, entry);
     const lord = familyFreedomName(state, entry.lordId,
       FB.T('the local lord'));
+    if (entry.route === 'military_service') {
+      return FB.T('{protagonist} received the possessor’s release for military service at {home} in {year}.', { protagonist:protagonist, home:home, year:entry.year });
+    }
+    if (entry.route === 'ordination') {
+      return FB.T('{protagonist} received the possessor’s consent for ordination at {home} in {year}.', { protagonist:protagonist, home:home, year:entry.year });
+    }
     if (entry.route === 'flight') {
+      if (FB.systemEnabled(state, 'colonate')) return FB.T(
+        '{protagonist} fled estate dependency from {home} in {year}; no lawful charter was granted.', {
+          protagonist:protagonist, home:home, year:entry.year
+        });
       return FB.T(
         '{protagonist} fled serfdom from {home} in {year}; no lawful charter was granted.', {
           protagonist:protagonist, home:home, year:entry.year
@@ -8179,6 +8355,7 @@ window.FB = window.FB || {};
   };
 
   function serfFreedomLord(state) {
+    if (FB.colonateTenure(state)) return FB.colonatePossessor(state);
     const id = state && state.roles && state.roles.lord;
     const lord = id && state.chars && state.chars[id];
     return lord && !lord.dead ? lord : null;
@@ -8305,6 +8482,11 @@ window.FB = window.FB || {};
       }
       memberIds = frozenFreedomMembers(state, recordProtagonistId,
         offer.memberIds);
+    } else if (route === 'military_service' || route === 'ordination') {
+      const release = FB.colonateReleaseStatus(state, route);
+      if (!release.ready || spec.quote !== release.quote) {
+        out.reason = 'colonus_release_changed'; return out;
+      }
     } else if (route === 'old_custom') {
       if (!ctx.event || ctx.event.id !== 'old_custom_end' ||
           !p.flags.old_custom_resolve || !p.flags.old_custom_won) {
@@ -8312,7 +8494,8 @@ window.FB = window.FB || {};
       }
       if (!lord) { out.reason = 'missing_lord'; return out; }
     } else if (route === 'flight') {
-      if (!ctx.event || ctx.event.id !== 'flee_serfdom') {
+      if (!ctx.event || (ctx.event.id !== 'flee_serfdom' &&
+          (ctx.event.id !== 'colonus_flight' || !FB.fns.colonus_flight_valid(state, ctx)))) {
         out.reason = 'flight_context'; return out;
       }
       lord = null;
@@ -8396,6 +8579,21 @@ window.FB = window.FB || {};
       message = FB.msg('news.freedom.old_custom',
         '📜 {protagonist} won lawful freedom from {lord} at {home} under the Old Custom.', {
           protagonist:protagonist, lord:lord, home:home
+        });
+    } else if (frozen.route === 'military_service') {
+      message = FB.msg('news.freedom.military_service',
+        '📜 {protagonist} received {lord}’s release for military service at {home}.', {
+          protagonist:protagonist, lord:lord, home:home
+        });
+    } else if (frozen.route === 'ordination') {
+      message = FB.msg('news.freedom.ordination',
+        '📜 {protagonist} received {lord}’s consent for ordination at {home}.', {
+          protagonist:protagonist, lord:lord, home:home
+        });
+    } else if (FB.systemEnabled(state, 'colonate')) {
+      message = FB.msg('news.freedom.colonate_flight',
+        '🏃 {protagonist} fled estate dependency from {home}; no lawful charter was granted.', {
+          protagonist:protagonist, home:home
         });
     } else {
       message = FB.msg('news.freedom.flight',
@@ -8948,7 +9146,7 @@ window.FB = window.FB || {};
   FB.fns.serf_tenure_context_valid = function (state, ctx, ev) {
     if (!state || !state.player || !FB.station.isSerf(state.player, state)) return false;
     if (state.player.travel) return false;
-    const tenure = state.player.tenure;
+    const tenure = FB.activeSerfTenure(state);
     if (!tenure || typeof tenure !== 'object' || tenure.status !== 'active') return false;
     if (!ctx || typeof ctx !== 'object') return false;
     if (ctx.tenureFormedTurn !== tenure.formedTurn) return false;
@@ -11956,6 +12154,7 @@ window.FB = window.FB || {};
     'news.career.comes_of_age news.career.mastered ' +
     'news.freedom.purchase news.freedom.manumission news.freedom.manumission_service ' +
     'news.freedom.old_custom news.freedom.flight news.freedom.family_manumission news.freedom.service_accepted ' +
+    'news.freedom.colonate_flight ' +
     'news.war.conquest news.war.crown_restored news.war.tribute_without_prize news.war.province_lost news.war.landless ' +
     'news.war.reparations news.war.captured news.war.tribute news.war.peace_bought ' +
     'news.war.submission news.war.submission_tribute news.war.negotiated_withdrawal ' +
@@ -12096,6 +12295,7 @@ window.FB = window.FB || {};
     if (FB.eventOptionStatus) {
       const optionStatus = FB.eventOptionStatus(state, ev, option, ctx);
       if (optionStatus.systemLocked || optionStatus.techLocked || optionStatus.fiscalLocked ||
+          (ev && ev.contextValidator === 'colonus_duty_valid' && !optionStatus.ready) ||
           (ev && ['commons_uprising_valid', 'commons_uprising_local_valid'].indexOf(ev.contextValidator) >= 0 && !optionStatus.ready) ||
           (option.effects &&
             (option.effects.custom === 'freedom_accept_offer' ||
@@ -12154,6 +12354,9 @@ window.FB = window.FB || {};
     }
 
     /* Advance tenure duties after accepted effects, with tenure-closing effects winning over advancement. */
+    if (ev && ev.id === 'colonus_flight') {
+      state.player.flags.colonus_flight_resolved_turn = ctx.flightAttemptTurn;
+    }
     if (ctx && ctx.dutyId) {
       ctx._tenureResolved = true;
       const tenure = state.player && state.player.tenure;

@@ -1,3 +1,9 @@
+Colonate authoring
+
+colonate is a registered optional system, enabled by late_antique and independent of manorial_tenure. The tenure catalogue can declare systems:['colonate'] alongside its normal selectors, display owners, rights and duties. Core Roman records add landownerId to the existing saved tenancy; their two annual duty rows and exact rights are validated on save and restore. colonus_duty_valid and colonus_flight_valid are registered event context validators. The former uses the ordinary tenure identity, duty and date stamp plus a required possessor context participant. The latter requires the live owner, current protagonist/home/revision and saved attempt/cooldown stamps. A completed flight stamp prevents replay after restore.
+
+military_service and ordination are engine-reviewed lawful familyFreedom routes, available through FB.colonateReleaseStatus and FB.resolveColonateRelease with an unchanged quote. They are not new declarative serfFreedom effect routes; that effect still accepts only old_custom and flight. Roman flight is a colonate-gated authored event using the existing flight effect. No new trigger or effect key is added. Each scenario's existing system/system-list requirement now also guards picker, codes and direct creation.
+
 Bookmark visibility and local institutions
 
 Bookmark definitions accept hidden, a boolean defaulting to false, and localInstitutions, an optional complete table keyed by stable institution id. hidden:true blocks every new-campaign entry point, including codes and Observe, while keeping matching existing saves loadable. FB.bookmarks(true) and FB.activateBookmark allow definition inspection and review-world activation. Setting hidden:false exposes the ordinary start flows. Existing legacy-mod restrictions still apply.

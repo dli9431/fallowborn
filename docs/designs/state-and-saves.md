@@ -1,3 +1,7 @@
+Colonate records
+
+Roman tenancy adds landownerId to the existing version-1 player.tenure record and retains its scheduler, rights, duties, revision and closed outcome. The shared familyFreedom version-1 record accepts military_service and ordination as lawful semantic routes; flight remains unlawful. The flags colonus_flight_until and colonus_flight_resolved_turn record cooldown and once-only resolution for a queued attempt, and follow the household through bound succession. No rendered prose is saved. V4 platform validation checks the possessor reference, home, exact estate rights and bounded authored duty list on detached migration and serialization. Restore never creates a tenure or a possessor, replays a due or invents a family release for existing free 476 households. Disabled saved tenancies remain recorded and dormant. The envelope and subsystem versions remain unchanged.
+
 # Game state & saves
 
 Carolingian settlement records

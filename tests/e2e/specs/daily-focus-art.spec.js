@@ -3,6 +3,7 @@ const { dependsOnRuntime } = require('../support/runtime-dependencies');
 
 dependsOnRuntime(__filename, [
   'data/actions.js', 'data/economy.js', 'js/actions.js', 'js/economy.js',
+  'data/systems.js', 'data/eras.js', 'js/systems.js',
   'js/events.js', 'js/main.js', 'js/model.js', 'js/keys.js', 'js/ui_misc.js',
   'js/ui_panels.js', 'js/ui_topbar.js', 'css/style.css', 'static/sprites/daily-focus.png'
 ]);
@@ -214,7 +215,9 @@ test.describe('desktop time bar', function () {
         woodland_dependence:'woodland', pagan_household_service:'service',
         dependent_farming:'fieldwork'
       };
-      expect(await page.evaluate(function () { return Object.keys(FBDATA.tenureArchetypes).sort(); }))
+      expect(await page.evaluate(function () { return Object.keys(FBDATA.tenureArchetypes).filter(function (id) {
+          return FBDATA.tenureArchetypes[id].systems.indexOf('manorial_tenure') >= 0;
+        }).sort(); }))
         .toEqual(Object.keys(tenures).sort());
       for (const id of Object.keys(tenures)) {
         await page.evaluate(function (archetype) {

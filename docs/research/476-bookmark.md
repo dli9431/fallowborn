@@ -1,5 +1,15 @@
 Spring 476 bookmark: sources and editorial decisions
 
+Colonate implementation record, 2026-10-06
+
+The previously deferred colonus opening now uses a separate colonate system with Roman estate, Gallic Roman estate and African Roman estate duty packages. These are regional gameplay abstractions of land-bound cultivation, crop shares and rent accounts. A generated possessor represents the private estate independently of the county's public ruler. County conquest does not itself release a registered household or convey its fields. Cultivation and dwelling rights confer use, not ownership. Neither fictional household identities nor two annual dues claim a reconstructed estate register.
+
+Codex Theodosianus 5.17.1 orders fugitive coloni returned to their original estate and addresses their capitation; 5.18 treats long prescription and descendants, and 5.19 restricts property disposal without the owner's knowledge. These support dependence, pursuit and the separation between lawful release and successful escape. The game's 55 percent flight chance, 360-day retry interval, health and Standing consequences, and household-wide coverage are editorial mechanics. A town provides no medieval year-and-a-day charter. Reference: https://droitromain.univ-grenoble-alpes.fr/Constitutiones/CTh05.html
+
+Codex Theodosianus 16.2.32 restricts clerical admission for people under public or private obligations; 16.2.33 permits clerics associated with estates while retaining fiscal liabilities. The ordination route therefore requires the living possessor's consent and a local same-faith bishop. Its release of the playable household is an explicit negotiated game outcome, not a claim that ordination universally cancelled land attachment or tax obligations. Reference: https://droitromain.univ-grenoble-alpes.fr/Constitutiones/CTh16.html
+
+Military release likewise represents a consented household agreement followed by ordinary soldier work, not a universal automatic exemption granted by enlistment. Martial, Learning, piety and Standing thresholds are game eligibility values. Paid charters and negotiated final service reuse the household freedom model with estate consent; their prices and family-share calculations are not attested Roman tariffs. The start grants no estate property, army command or episcopal office. All four colonate technology impact decisions are none because these are legal and social decisions; the soldier career retains its existing training gate. The earlier commoner-opening decision below records the original deferral, now superseded by this implementation request.
+
 This note records the historical frame behind the 476 bookmark (data/bookmark_476.js) and the decisions later data authoring should follow. Like the 1066 note, the bookmark is an authored grand-strategy snapshot, not a claim that every border, office or population value can be reconstructed exactly. It closes the open questions listed in docs/plans/v2-476-phase-0/scenario.md and docs/plans/v2-476-phase-6.md (historical review gate).
 
 Date: 2026-10-01. Status: research complete; owner decisions made 2026-10-01 (see OWNER DECISIONS).

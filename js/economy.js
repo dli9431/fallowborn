@@ -264,6 +264,8 @@ window.FB = window.FB || {};
   FB.setCareer = function (state, c, profession, rank) {
     const def = FBDATA.careers[profession];
     if (!c || !def) return false;
+    if (c.id === state.player.charId && FB.colonateTenure && FB.colonateTenure(state) &&
+        FB.professionHasRole(profession, ['arms','clergy','cloister'])) return false;
     if (!FB.contentPeriodEnabled(state, def)) return false;
     if (def.bookmarkIds && def.bookmarkIds.indexOf(
         state.start && state.start.id) < 0) return false;
@@ -766,6 +768,8 @@ window.FB = window.FB || {};
     const out = [];
     for (const id in FBDATA.careers) {
       const def = FBDATA.careers[id];
+      if (c.id === state.player.charId && FB.colonateTenure && FB.colonateTenure(state) &&
+          FB.professionHasRole(id, ['arms','clergy','cloister'])) continue;
       if (def.hiddenChoice || !FB.contentPeriodEnabled(state, def)) continue;
       if (def.bookmarkIds && def.bookmarkIds.indexOf(
           state.start && state.start.id) < 0) continue;
@@ -951,7 +955,9 @@ window.FB = window.FB || {};
     const career = FB.careerOf(state, c);
     const age = FB.ageOf(c, state.date.year);
     const goldCost = step.gold || 0;
-    const blocked = (step.maleOnly && c.sex !== 'm') ||
+    const blocked = (c.id === state.player.charId && FB.colonateTenure && FB.colonateTenure(state) &&
+      (step.tier !== undefined || step.station !== undefined)) ||
+      (step.maleOnly && c.sex !== 'm') ||
       age < (step.age || 0) ||
       career.experience < (step.years || 0) ||
       FB.skillOf(c, 'lea') < (step.learning || 0) ||

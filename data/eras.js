@@ -114,6 +114,7 @@ FBDATA.stationLadders.late_antique = JSON.parse(JSON.stringify(FBDATA.stationLad
     bands[i].promotion = rules[i] ? Object.assign({ route:'standing' }, rules[i]) : null;
     bands[i].sitsInEstates = false;
   }
+  bands[0].promotion = { route:'freedom', next:1 };
   bands[3].isBaron = false;
   bands[3].isLanded = false;
   bands[3].mayCommand = false;
@@ -153,7 +154,7 @@ FBDATA.eras = {
     from:375, to:649,
     defaultGovernment:'regnum', defaultCulture:'roman',
     costume:'late_antique', vocabulary:null, ladder:FBDATA.stationLadders.late_antique,
-    systems:{ enable:['civic_institutions','episcopal_sees','roman_offices','church_councils','ruler_conversion'], disable:['papacy','scutage','manorial_tenure','excommunication','abbeys',
+    systems:{ enable:['colonate','civic_institutions','episcopal_sees','roman_offices','church_councils','ruler_conversion'], disable:['papacy','scutage','manorial_tenure','excommunication','abbeys',
       'feudal_service','crown_bloc','tournaments','great_holy_wars'] },
     technology:{ from:476, to:649, startingKnowledge:'historical' },
     military:{ equipment:{ from:375, to:649 } },

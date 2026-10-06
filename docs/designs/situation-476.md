@@ -1,3 +1,9 @@
+Colonus opening
+
+colonus_476 is an always-unlocked bound Roman household start, alongside the federate and curialis openings. It uses the existing county and settlement picker, Roman/Nicene defaults, standard kin or an established spouse-and-children preset, 5 in the purse and the colonus career. It receives no owned plots, military command, church office or opening court award. Its introduction explains cultivation use, estate dues, family coverage and the four release routes. Review estate & freedom in Deeds opens Station & home with the current possessor, saved duties and separate consent/risk reviews. Ordinary tenure play supplies the opening, so no special player track is added.
+
+The late_antique era enables colonate while continuing to disable manorial_tenure. Italy and the provincial fallback, selected Gallic estates and African estates use separate data archetypes. The possessor is a generated estate contact, distinct from a public ruler. Military and clerical acceptance require that living person's consent; flight remains unlawful. Personal release conveys no land. Late antique band zero uses the ordinary freedom boundary instead of paying for station recognition. Existing free 476 saves acquire no invented tenancy, proprietor, duty or release history during restore. The four none technology reviews and exact legal abstractions are documented in holdings.md and the research note.
+
 Offices beyond the western opening
 
 The late antique campaign exposes an Offices & Legitimacy section in both Deeds layouts. Households can review their appointments, petition courts across the region and declare claimant recognition through an actual command, civic, church or court mandate. Local civil service, host command and personal honors remain independent of county ownership. Existing government forms choose their office catalogues and dispatch the same reviewed transactions for seasonal AI, including courts outside Italy.

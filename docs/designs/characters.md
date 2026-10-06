@@ -1,3 +1,7 @@
+Colonate status and careers
+
+The colonus opening's estate possessor is a generated independent contact with a saved residence and no county jurisdiction. While the head remains bound under colonate, direct clerical, monastic and military career entry and station-raising religious advancement cannot bypass the estate release review. Consented military release enters the existing soldier career, retaining its ordinary training prerequisite; consented ordination enters the existing priest career through a living same-faith local bishop. Neither grants a public command or church office. Paid release leaves the tenant career available as ordinary work. Late antique band zero uses the freedom route; higher bands retain their existing standing routes. These are legal-status conditions covered by the none colonate technology reviews in holdings.md.
+
 # Characters: skills & growing up
 
 Self skill labels wrap within the available space beside the portrait on narrow desktop sidebars, keeping every skill value visible inside the panel.

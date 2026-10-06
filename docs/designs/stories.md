@@ -1,5 +1,7 @@
 Stories and start scenarios
 
+colonus_476 adds a bound estate opening with standard and established family presets, Roman/Nicene defaults and an authored introduction. It reuses ordinary tenure events and the estate review without a bespoke story record or player track. The introductory pointer and post-first-steps coachmark target review_colonate instead of the medieval tenure Deed. System requirements are checked by scenarioOffered for every new-campaign entry point. Existing saves without this start remain unchanged.
+
 Institution restore hook
 
 Optional restore(state, record) runs after the saved world and political ledgers are adopted and repaired, before generic institution repair. It binds missing institutions to existing story actors without restarting init, repeating choices or paying commitments. Detached migrate and validate remain separate from this world-dependent boundary.
