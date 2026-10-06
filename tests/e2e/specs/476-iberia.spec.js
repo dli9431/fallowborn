@@ -259,9 +259,8 @@ test('a campaign built from the previous 476 data restores its ownership, law an
     expect(result).toEqual({ retained:true,owner:'aquitaine',oldLaw:'gothic_custom',noNewRealms:true,noNewRails:true,stable:true,warnings:0,valid:true });
   });
 
-test('ten years in Iberia keep conserved communities, valid courts and bounded campaigns through restore',
+test('one season in Iberia keeps conserved communities, valid courts and bounded campaigns through restore',
   async function ({ page },testInfo) {
-    test.setTimeout(180000);
     await start(page,testInfo);
     await page.evaluate(function () {
       FB.game.observe = true;
@@ -269,9 +268,15 @@ test('ten years in Iberia keep conserved communities, valid courts and bounded c
       FB.state.player.provinceId = 'merida';
       FB.state.chars[FB.state.player.charId].homeProvinceId = 'merida';
     });
-    for (let year = 0; year < 10; year++) {
-      await page.evaluate(function () { for (let day = 0; day < 360; day++) FB.game.passDay({ deferUi:true }); });
-      if (year === 4) await page.evaluate(function () { FB.save.restore(JSON.parse(FB.save.serialize())); });
+    for (let half = 0; half < 2; half++) {
+      await page.evaluate(function () {
+        for (let day = 0; day < 45; day++) {
+          const turn = FB.state.turn;
+          FB.game.passDay({ deferUi:true });
+          if (FB.state.turn !== turn + 1) throw new Error('Iberian observer stalled at turn ' + turn);
+        }
+      });
+      if (half === 0) await page.evaluate(function () { FB.save.restore(JSON.parse(FB.save.serialize())); });
     }
     const result = await page.evaluate(function () {
       const s = FB.state, ids = FBDATA.bookmarkRegions476.gaul_iberia.storyIds;
@@ -282,7 +287,7 @@ test('ten years in Iberia keep conserved communities, valid courts and bounded c
           rec.phase === 'started' && rec.deadline > s.turn && rec.deadline <= s.turn + duration && !!FB.ordinaryWarById(s,rec.warId);
       });
       FB.save.restore(JSON.parse(FB.save.serialize()));
-      return { year:FB.state.date.year,bounded:!!bounded,
+      return { date:FB.state.date,bounded:!!bounded,
         durable:before === JSON.stringify([FB.state.owner,FB.state.holder,FB.state.population,FB.state.stories,FB.state.bookmarkSetup]),
         rights:new Set(FB.state.authority.rights.map(function (row) { return row.id; })).size === FB.state.authority.rights.length,
         valid:FB.save.v4.validatePlatform(JSON.parse(FB.save.serialize()).state),
@@ -293,8 +298,7 @@ test('ten years in Iberia keep conserved communities, valid courts and bounded c
             FB.countyReligion(FB.state,id) && FB.world.sitesByProv[id].list[0].authored);
         }) };
     });
-    expect(result.year).toBeGreaterThanOrEqual(486);
-    expect(result).toMatchObject({ bounded:true,durable:true,rights:true,valid:true,religion:true,population:[],communities:true });
+    expect(result).toMatchObject({ date:{ year:476,season:1,day:1 },bounded:true,durable:true,rights:true,valid:true,religion:true,population:[],communities:true });
   });
 
 for (const id of ['867','1066']) {

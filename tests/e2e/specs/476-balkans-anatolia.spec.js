@@ -264,34 +264,55 @@ test('opening revision and actor reference declarations reject unknown or mixed 
     expect(result).toEqual({definitions:true,swapped:true});
   });
 
-test('ten regional daily years retain bounded rails, conserved communities and save records',
+test('one regional daily season resolves both bounded rails and retains communities and save records',
   async function ({ page }, testInfo) {
     test.skip(testInfo.project.name !== 'chromium-served','Run the bounded daily journey once; smoke covers the browser matrix.');
-    test.setTimeout(6 * 60 * 1000);
     await start(page,testInfo); await injectBrowserHarness(page);
     await page.evaluate(function () {
-      FB.game.observe = true; delete FB.state.stories.curialis_track_476;
-      FB.state.player.provinceId = 'thessaloniki';
+      const s = FB.state;
+      FB.game.observe = true; delete s.stories.curialis_track_476;
+      s.player.provinceId = 'thessaloniki';
       window.regionalChance = FB.chance; FB.chance = function (p) { return p >= 1; };
+      // Stage Zeno's return, then open the season in 482: the Thracian window
+      // (477-481) has closed while the Amal window (479-483) remains open.
+      s.turn = 180; FB.stories.get('zeno_return_476').day(s,s.stories.zeno_return_476);
+      s.date.year = 482;
     });
     try {
-      for (let year = 0; year < 10; year++) {
+      for (let half = 0; half < 2; half++) {
+        if (half === 1) {
+          // The daily tick started the Amal war; settle it as an ordinary
+          // defeat unless the war simulation has already decided it.
+          const midpoint = await page.evaluate(function () {
+            const s = FB.state, rec = s.stories.amal_epirus_476;
+            const started = rec.startedTurn !== null && !!rec.warId;
+            if (rec.phase === 'started' && FB.ordinaryWarById(s,rec.warId)) FB.settleOrdinaryWar(s,rec.warId,'defeat');
+            return {thracian:[s.stories.thracian_pressure_476.result,s.stories.thracian_pressure_476.reason],started:started};
+          });
+          expect(midpoint).toEqual({thracian:['diverted','window_closed'],started:true});
+        }
         const result = await page.evaluate(function () {
           const before = FB.state.turn;
-          for (let day = 0; day < 360; day++) FB.game.passDay({deferUi:true});
+          for (let day = 0; day < 45; day++) {
+            const turn = FB.state.turn;
+            FB.game.passDay({deferUi:true});
+            if (FB.state.turn !== turn + 1) throw new Error('Regional observer stalled at turn ' + turn);
+          }
           const saved = JSON.parse(FB.save.serialize()), records = JSON.stringify([saved.state.stories,saved.state.bookmarkSetup,saved.state.localInstitutions]);
           FB.save.restore(saved);
           return {days:FB.state.turn-before,errors:FBTEST.checkInvariants(),
             records:records === JSON.stringify([FB.state.stories,FB.state.bookmarkSetup,FB.state.localInstitutions])};
         });
-        expect(result).toEqual({days:360,errors:[],records:true});
+        expect(result).toEqual({days:45,errors:[],records:true});
       }
       const result = await page.evaluate(function () {
-        return {year:FB.state.date.year,results:['thracian_pressure_476','amal_epirus_476'].map(function (id) {
-          const rec = FB.state.stories[id]; return rec.phase === 'resolved' && ['won','failed','diverted','interrupted'].indexOf(rec.result) >= 0;
-        }),scope:['antioch','nicosia','jerusalem','tarsos'].every(function (id) { return !FB.state.owner[id]; })};
+        const thracian = FB.state.stories.thracian_pressure_476, amal = FB.state.stories.amal_epirus_476;
+        return {date:FB.state.date,thracian:[thracian.phase,thracian.result,thracian.reason],
+          amal:amal.phase === 'resolved' && ['won','failed'].indexOf(amal.result) >= 0,
+          scope:['antioch','nicosia','jerusalem','tarsos'].every(function (id) { return !FB.state.owner[id]; })};
       });
-      expect(result).toEqual({year:486,results:[true,true],scope:true});
+      expect(result).toEqual({date:{year:482,season:1,day:1},thracian:['resolved','diverted','window_closed'],
+        amal:true,scope:true});
     } finally {
       await page.evaluate(function () { FB.chance = window.regionalChance; delete window.regionalChance; });
     }

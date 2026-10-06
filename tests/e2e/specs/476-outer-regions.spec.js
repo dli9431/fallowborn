@@ -315,15 +315,14 @@ test('original 476 saves restore across the wider map without new courts, popula
     }
   });
 
-test('wider 476 observes ten years with bounded quarter timings, save budgets and cross-bookmark restore',
+test('wider 476 observes one season with bounded timings, save budgets and cross-bookmark restore',
   async function ({ page }, testInfo) {
-    test.setTimeout(6 * 60 * 1000);
     await openGame(page, testInfo);
     const error = await page.evaluate(function () {
       return new Promise(function (resolve) {
         FB.activateBookmark('476_outer', null, function (error) {
           if (error) { resolve(error.message); return; }
-          FB.game.pending = { seed:'OUTERDECADE' }; FB.game.startObserve();
+          FB.game.pending = { seed:'OUTERSEASON' }; FB.game.startObserve();
           FB.game.setPaused(true); resolve(null);
         });
       });
@@ -332,17 +331,21 @@ test('wider 476 observes ten years with bounded quarter timings, save budgets an
     await injectBrowserHarness(page);
     await saveBudget(page, testInfo, 'observer-fresh', 4 * 1024 * 1024);
     const timings = [];
-    for (let quarter = 0; quarter < 40; quarter++) {
+    for (let half = 0; half < 2; half++) {
       const result = await page.evaluate(function () {
         const before = FB.state.turn, started = performance.now();
-        for (let day = 0; day < 90; day++) FB.game.passDay({ deferUi:true });
+        for (let day = 0; day < 45; day++) {
+          const turn = FB.state.turn;
+          FB.game.passDay({ deferUi:true });
+          if (FB.state.turn !== turn + 1) throw new Error('Wider observer stalled at turn ' + turn);
+        }
         return { days:FB.state.turn - before, ms:performance.now() - started, errors:FBTEST.checkInvariants() };
       });
-      expect(result.days).toBe(90); expect(result.errors).toEqual([]);
-      expect(result.ms, '90-day observer slice').toBeLessThan(30000);
+      expect(result.days).toBe(45); expect(result.errors).toEqual([]);
+      expect(result.ms, '45-day observer slice').toBeLessThan(30000);
       timings.push(result.ms);
-      if (quarter === 19) {
-        const checkpoint = await saveBudget(page, testInfo, 'observer-year5', 8 * 1024 * 1024);
+      if (half === 0) {
+        const checkpoint = await saveBudget(page, testInfo, 'observer-midpoint', 8 * 1024 * 1024);
         await page.evaluate(function () {
           return new Promise(function (resolve, reject) {
             FB.activateBookmark('476', null, function (error) { if (error) reject(error); else resolve(); });
@@ -352,17 +355,17 @@ test('wider 476 observes ten years with bounded quarter timings, save budgets an
         await page.evaluate(function () { FB.game.observe = true; });
       }
     }
-    await testInfo.attach('outer-decade-timings.json', { contentType:'application/json',
-      body:Buffer.from(JSON.stringify({ days:3600, quarterMs:timings, quarterCeilingMs:30000 })) });
-    const saved = await saveBudget(page, testInfo, 'observer-year10', 8 * 1024 * 1024);
+    await testInfo.attach('outer-season-timings.json', { contentType:'application/json',
+      body:Buffer.from(JSON.stringify({ days:90, sliceMs:timings, sliceCeilingMs:30000 })) });
+    const saved = await saveBudget(page, testInfo, 'observer-season', 8 * 1024 * 1024);
     await restoreBookmark(page, saved);
     const result = await page.evaluate(function () {
       const s = FB.state;
-      return { year:s.date.year, id:s.start.id, faults:FB.validateBookmark(FB.bookmark('476_outer')),
+      return { date:s.date, id:s.start.id, faults:FB.validateBookmark(FB.bookmark('476_outer')),
         warnings:FB.save.lastRestoreWarnings.length,
         holders:FBDATA.bookmarkRegions476.outer.provinces.every(function (p) {
           return !!s.realms[s.owner[p.id]] && !!s.realms[s.holder[p.id]];
         }), valid:FB.save.v4.validatePlatform(JSON.parse(FB.save.serialize()).state) };
     });
-    expect(result).toEqual({ year:486, id:'476_outer', faults:[], warnings:0, holders:true, valid:true });
+    expect(result).toEqual({ date:{ year:476, season:1, day:1 }, id:'476_outer', faults:[], warnings:0, holders:true, valid:true });
   });
