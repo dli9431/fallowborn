@@ -31,6 +31,26 @@ class JavascriptLexerTests(unittest.TestCase):
 
 
 class StructuredDataExtractionTests(unittest.TestCase):
+    def test_711_candidate_has_display_owners_without_catalog_regeneration(self):
+        inventory = i18n_catalog.Inventory()
+        i18n_catalog.extract_structured(inventory)
+        for key, text in (
+            ('bookmark.711.name.default', 'Across the Strait'),
+            ('realm.711.umayyad_711.name.default', 'Umayyad Caliphate'),
+            ('province.711.oviedo.name.default', 'Asturian uplands'),
+            ('settlement.711.baghdad_711.name.default', "Al-Mada'in"),
+            ('duchy.d_711_galicia.name.default', 'Galicia'),
+            ('religion.umayyad_sunni_711.head.title.default', 'Caliph'),
+            ('culture.sindhi_711.name.default', 'Sindhi'),
+            ('storyCampaign.strait_crossing_711.name.default', 'Across the Strait'),
+        ):
+            self.assertEqual(inventory.entries[key]['text'], text)
+            self.assertIn('711.js', inventory.meta[key]['location'])
+        for campaign in ('crossing', 'toledo', 'septimania', 'gaul'):
+            for outcome in ('started', 'won', 'failed', 'diverted', 'interrupted'):
+                self.assertIn(f'news.711.{campaign}.{outcome}', inventory.entries)
+        self.assertFalse(any('al-Walid' in key for key in inventory.entries))
+
     def test_regional_africa_content_keeps_stable_display_and_news_owners(self):
         inventory = i18n_catalog.Inventory()
         i18n_catalog.extract_structured(inventory)

@@ -1611,3 +1611,7 @@ The non_territorial territory strategy now supplies a moving court and migration
 Adopting an authored court
 
 js/starts.js performs existing-ruler adoption only during new-campaign creation. The source realm retains its government, rank, governing identity, court, territorial boundaries and active host while becoming the ordinary player realm. The scenario's tier must map to the source realm's rank. The source key is removed and typed political references resolve to player. A nonterritorial host starts with no county holdings; becoming a player court does not territorialize it. The full seeded household replaces compact NPC succession so ordinary player family rules have one owner.
+
+Spring 711 review politics
+
+The hidden 711 candidate declares independent territorial courts and d_711_, k_711_ and e_711_ promotion regions. Provincial lieges distinguish sovereign ownership from local holdings; the Roman pontificate remains nonterritorial while Rome belongs to the eastern realm. These are existing-schema approximations rather than new government strategies. Visigothic kingship uses dynastic succession pending a generic elective strategy, and the candidate does not pre-create Asturias to stand in for a later conditional foundation. See bookmark-711.md and ../research/711-bookmark.md for acceptance gaps.

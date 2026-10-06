@@ -29,6 +29,7 @@ CATALOG_SCHEMA = 1
 EVENT_FILES = sorted(DATA.glob("events_*.js"))
 REGION_FILES = [(DATA / f"bookmark_476_{region}.js", region)
                 for region in ("italy", "dalmatia_east", "gaul_iberia", "africa")]
+CANDIDATE_FILES = [(DATA / "bookmark_711.js", "711")]
 BOOKMARK_FILE = DATA / "bookmarks.js"
 STARTS_FILE = DATA / "starts.js"
 TECHNOLOGY_FILE = DATA / "technology.js"
@@ -791,6 +792,18 @@ def extract_structured(inv: Inventory) -> None:
         root = node_object(find_assignment(path, "FBDATA", data_name)) or {}
         rel = path.relative_to(ROOT).as_posix()
         entries = [(item_id, item_node, rel) for item_id, item_node in root.items()]
+        # Review-only declarations still need stable localization owners.
+        # Read literal data without activating the candidate or running JS.
+        candidate_catalogues = {
+            "cultures": [(DATA / "bookmark_711.js", "bookmarkCultures711")],
+            "religions": [(DATA / "bookmark_711.js", "bookmarkReligions711")],
+            "storyCampaigns": [(DATA / "story_campaigns_711.js", "storyCampaigns711")],
+        }
+        for candidate_path, catalogue in candidate_catalogues.get(data_name, ()):
+            candidate_root = node_object(find_assignment(candidate_path, "FBDATA", catalogue)) or {}
+            candidate_rel = candidate_path.relative_to(ROOT).as_posix()
+            entries.extend((item_id, item_node, candidate_rel)
+                           for item_id, item_node in candidate_root.items())
         # Regional declarations spell some catalogue fields differently.
         regional_fields = {"cultures": ("cultures",),
                            "legalTraditions": ("legalTraditions",),
@@ -1144,6 +1157,40 @@ def extract_structured(inv: Inventory) -> None:
                         f"{region_rel}:{line}",
                         f"476 administrative {kind} {title_id}, display name.", ()
                     )
+    for candidate_path, bookmark_id in CANDIDATE_FILES:
+        candidate_rel = candidate_path.relative_to(ROOT).as_posix()
+        candidate = node_object(find_keyed_assignment(
+            candidate_path, "FBDATA", "bookmarkCandidates", bookmark_id
+        )) or {}
+        for field in ("name", "desc"):
+            for branch, record, line in branch_records(candidate.get(field)):
+                inv.add(f"bookmark.{bookmark_id}.{field}.{branch}", record,
+                        f"{candidate_rel}:{line}", f"Start bookmark {bookmark_id}, {field}.", ())
+        for province_node in node_array(candidate.get("provinces")) or []:
+            province = node_object(province_node) or {}
+            province_id = node_string(province.get("id"))
+            for branch, record, line in branch_records(province.get("name")):
+                inv.add(f"province.{bookmark_id}.{province_id}.name.{branch}", record,
+                        f"{candidate_rel}:{line}", f"{bookmark_id} county {province_id}, display name.", ())
+            for entry_node in node_array(province.get("settlements")) or []:
+                entry = node_object(entry_node) or {}
+                site_id = node_string(entry.get("site"))
+                for branch, record, line in branch_records(entry.get("name")):
+                    inv.add(f"settlement.{bookmark_id}.{site_id}.name.{branch}", record,
+                            f"{candidate_rel}:{line}", f"{bookmark_id} site {site_id}, display name.", ())
+        for realm_node in node_array(candidate.get("realms")) or []:
+            realm = node_object(realm_node) or {}
+            realm_id = node_string(realm.get("id"))
+            for branch, record, line in branch_records(realm.get("name")):
+                inv.add(f"realm.{bookmark_id}.{realm_id}.name.{branch}", record,
+                        f"{candidate_rel}:{line}", f"{bookmark_id} realm {realm_id}, display name.", ())
+        for table, kind in (("duchies", "duchy"), ("kingdoms", "kingdom"), ("empires", "empire")):
+            for title_id, title_node in (node_object(candidate.get(table)) or {}).items():
+                title = node_object(title_node) or {}
+                for branch, record, line in branch_records(title.get("name")):
+                    inv.add(f"{kind}.{title_id}.name.{branch}", record,
+                            f"{candidate_rel}:{line}", f"{bookmark_id} {kind} {title_id}, display name.", ())
+
     # Dated county names of the geography bases replace a county's display
     # name for the years they cover, so each is a display label of its own.
     geography_path = DATA / "geographies.js"
