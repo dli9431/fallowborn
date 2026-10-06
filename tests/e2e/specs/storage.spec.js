@@ -854,6 +854,12 @@ test('a quota-shaped storage failure advises a save-file download, not a generic
     await startDeterministicGame(page);
 
     const result = await page.evaluate(function () {
+      FB.game.setPaused(true);
+      FB.save.flushPending();
+      FB.save.toSlot(1);
+      const previousAuto = localStorage.getItem('fb_auto');
+      const previousSlot = localStorage.getItem('fb_slot1');
+      FB.state.player.gold += 777;
       const original = Storage.prototype.setItem;
       Storage.prototype.setItem = function () {
         throw new DOMException('storage is full', 'QuotaExceededError');
@@ -863,16 +869,89 @@ test('a quota-shaped storage failure advises a save-file download, not a generic
         const texts = [];
         const nodes = document.querySelectorAll('#toasts .toast');
         for (const el of nodes) texts.push(el.textContent);
-        return { stored:stored, texts:texts };
+        return { stored:stored, texts:texts,
+          preserved:previousAuto === localStorage.getItem('fb_auto') &&
+            previousSlot === localStorage.getItem('fb_slot1') };
       } finally {
         Storage.prototype.setItem = original;
       }
     });
 
     expect(result.stored).toBe(false);
+    expect(result.preserved).toBe(true);
     expect(result.texts.some(function (t) {
       return t.indexOf('outgrown') >= 0 && t.indexOf('Download save file') >= 0;
     })).toBe(true);
+  });
+
+test('a manual slot reclaims plain autosave space without replacing its campaign or pending snapshot',
+  async function ({ page }, testInfo) {
+    test.skip(testInfo.project.name !== 'chromium-served',
+      'The shared storage quota belongs to the served-origin contract.');
+    await openGame(page, testInfo);
+    await startDeterministicGame(page);
+
+    const result = await page.evaluate(function () {
+      FB.game.setPaused(true);
+      FB.save.autosave(); FB.save.flushPending();
+      const rawAuto = localStorage.getItem('fb_auto');
+      const previousAuto = JSON.stringify(FB.save.read('auto'));
+      FB.save.toSlot(1);
+      const previousSlot = localStorage.getItem('fb_slot1');
+      localStorage.setItem('fb_quota_preference', 'keep');
+      function usage() {
+        let bytes = 0;
+        for (let i = 0; i < localStorage.length; i++) {
+          const key = localStorage.key(i);
+          bytes += 2 * (key.length + localStorage.getItem(key).length);
+        }
+        return bytes;
+      }
+      // The existing records fill this budget. A new compressed slot can fit
+      // only after the older plain autosave releases its unused space.
+      const limit = usage(), original = Storage.prototype.setItem;
+      let rejected = 0, callbacks = 0, callbackResult = null;
+      Storage.prototype.setItem = function (key, value) {
+        if (this === localStorage) {
+          const previous = this.getItem(key);
+          const bytes = usage() - (previous === null ? 0 : 2 * (key.length + previous.length)) +
+            2 * (key.length + String(value).length);
+          if (bytes > limit) {
+            rejected++;
+            throw new DOMException('Shared storage quota probe', 'QuotaExceededError');
+          }
+        }
+        return original.apply(this, arguments);
+      };
+      try {
+        FB.state.player.gold += 123;
+        const queued = JSON.stringify(JSON.parse(FB.save.serialize()));
+        FB.save.autosave();
+        FB.state.player.gold += 1000;
+        const manual = JSON.stringify(JSON.parse(FB.save.serialize()));
+        const rng = FB.getRngState(), uid = FB.getUidCounter();
+        const accepted = FB.save.toSlot(2, function (ok) { callbacks++; callbackResult = ok; });
+        const compacted = localStorage.getItem('fb_auto');
+        const previousAutoPreserved = previousAuto === JSON.stringify(FB.save.read('auto'));
+        FB.save.flushPending();
+        return {
+          startedPlain:!!rawAuto && rawAuto.charAt(0) === '{',
+          accepted:accepted, callbacks:callbacks, callbackResult:callbackResult, rejected:rejected,
+          smaller:!!compacted && compacted.indexOf('FBC1.') === 0 && compacted.length < rawAuto.length,
+          previousAutoPreserved:previousAutoPreserved,
+          previousSlotPreserved:previousSlot === localStorage.getItem('fb_slot1'),
+          manualPreserved:manual === JSON.stringify(FB.save.read(2)),
+          pendingPreserved:queued === JSON.stringify(FB.save.read('auto')),
+          preferencePreserved:localStorage.getItem('fb_quota_preference') === 'keep',
+          withinBudget:usage() <= limit,
+          identityPreserved:rng === FB.getRngState() && uid === FB.getUidCounter()
+        };
+      } finally { Storage.prototype.setItem = original; }
+    });
+    expect(result).toEqual({ startedPlain:true, accepted:true, callbacks:1, callbackResult:true,
+      rejected:1, smaller:true, previousAutoPreserved:true, previousSlotPreserved:true,
+      manualPreserved:true, pendingPreserved:true, preferencePreserved:true,
+      withinBudget:true, identityPreserved:true });
   });
 
 test('autosave snapshots synchronously, writes on a later task, and flushes safely',

@@ -85,8 +85,12 @@ async function restoreBookmark(page, text) {
 }
 
 async function facts(page) {
-  return { snapshot:await captureWorldSnapshot(page, null), campaign:await page.evaluate(function () {
-    const s = FB.state, out = { rng:FB.getRngState(), uid:FB.getUidCounter(), start:s.start, date:s.date, turn:s.turn };
+  const snapshot = await captureWorldSnapshot(page, null);
+  // rng() uses signed bitwise arithmetic; restore accepts the same bits as
+  // uint32. Preserve every bit while comparing those equivalent representations.
+  snapshot.rng = snapshot.rng >>> 0;
+  return { snapshot:snapshot, campaign:await page.evaluate(function () {
+    const s = FB.state, out = { rng:FB.getRngState() >>> 0, uid:FB.getUidCounter(), start:s.start, date:s.date, turn:s.turn };
     ['stories','bookmarkSetup','authority','religiousHeads','religiousHeadVacancies','localInstitutions'].forEach(function (key) {
       if (s[key] !== undefined) out[key] = s[key];
     });

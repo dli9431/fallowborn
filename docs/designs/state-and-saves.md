@@ -22,6 +22,8 @@ Restore preserves unexpired scenario standing hosts using the daily army phase's
 
 Save v4 format freeze
 
+In the standard localStorage fallback, a manual slot rejected for quota can compact an existing plain autosave and retry once. Compaction verifies the exact stored JSON, checks that the original value is still current, and replaces only its encoding. It does not use live state or consume a pending snapshot. Later autosaves reuse compression. Failed compaction or a rejected retry preserves the previously accepted campaigns and reports the storage error. CrazyGames keeps its separate storage path, and no save schema changes.
+
 The version-4 resumable format is frozen for the current platform and bookmark state. FB.save.FORMAT is the shared frozen definition: v:4, titleIds:1, authoritySchema:4 and platformSchema:1. The serializer and migration use that definition together; a storage encoding is not another save schema. Later release work must reopen this contract and its migration coverage before adding saved fields or changing their meaning, defaults, id families or subsystem schemas. Changing an existing field's meaning requires a schema change and migration; optional extensions require an explicit contract review too.
 
 The envelope contains those four schema fields, rng, uid, mods, state and optional meta. rng preserves a 32-bit RNG state in its existing signed or unsigned representation; uid is a nonnegative safe integer. mods is the exact edition/mod fingerprint, not a request to switch content profiles. A missing legacy fingerprint is accepted only in an unmodded standard edition. meta is informational slot/Chronicle preview data and does not authorize gameplay changes. Unknown schema numbers and missing required v4 schema fields fail with the offending envelope field. Early v4 branch saves may omit platformSchema and the detached authority schema stamp; migration supplies them without changing their records.
@@ -905,10 +907,10 @@ over-cap save stops growing instead of failing. On top of that bounding, manual 
 are stored LZ-compressed (`FBC1.` prefix packing the bit stream into storage-safe
 UTF-16; an lz-string port private to `js/save.js`), which shrinks each established
 serialized life several-fold. The frequently replaced autosave is normally stored as
-ready plain JSON, keeping its worst-case footprint plus three compressed manual slots
-within the WebKit budget. This deliberately removes the full compression-and-
+ready plain JSON. This deliberately removes the full compression-and-
 verification pass from every season boundary; if the plain autosave write encounters
 quota pressure, that exceptional write retries with the verified compressed encoding.
+Manual slot quota pressure can also compact that stored autosave before retrying, preserving its exact campaign and any pending newer snapshot.
 `S.serialize` still returns plain JSON, compressed writes verify their own round trip
 and fall back to plain JSON rather than store an unproven encoding, and `S.read`
 accepts both forms forever. The season-boundary autosave splits the remaining work so

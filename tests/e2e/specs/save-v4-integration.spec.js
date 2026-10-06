@@ -551,11 +551,13 @@ async function checkStorageRoundTrip() {
   };
   try {
     const saved = [], slotChanges = [];
+    const previousAuto = JSON.stringify(FB.save.read('auto'));
     for (const slot of [1,2,3]) {
       saved.push(await new Promise(function (resolve) { FB.save.toSlot(slot, resolve); }));
       const reread = FB.save.read(slot);
       slotChanges.push(reread ? changed(expected, facts(reread)) : ['missing']);
     }
+    const previousAutoPreserved = previousAuto === JSON.stringify(FB.save.read('auto'));
     FB.save.autosave(); FB.save.flushPending();
     const auto = FB.save.read('auto');
     const exported = FB.save.exportState(), imported = FB.save.parseExport(exported);
@@ -565,7 +567,7 @@ async function checkStorageRoundTrip() {
       identity:(canonical.rng >>> 0) === (source.rng >>> 0) && canonical.uid === source.uid,
       idempotent:JSON.stringify(once) === JSON.stringify(twice),
       migrationChanges:migrationChanges, restoreChanges:restoreChanges, repeatedChanges:repeatedChanges,
-      saved:saved, slotChanges:slotChanges,
+      saved:saved, slotChanges:slotChanges, previousAutoPreserved:previousAutoPreserved,
       autoChanges:auto ? changed(expected, facts(auto)) : ['missing'],
       exportChanges:imported ? changed(expected, facts(imported)) : ['missing'],
       prefixes:[localStorage.getItem('fb_slot1').slice(0,5),exported.slice(0,5)],
@@ -591,6 +593,7 @@ function expectStorageRoundTrip(result) {
   expect(result.repeatedChanges).toEqual([]);
   expect(result.saved).toEqual([true,true,true]);
   expect(result.slotChanges).toEqual([[],[],[]]);
+  expect(result.previousAutoPreserved).toBe(true);
   expect(result.autoChanges).toEqual([]);
   expect(result.exportChanges).toEqual([]);
   expect(result.prefixes).toEqual(['FBC1.','FBS2.']);

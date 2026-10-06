@@ -947,6 +947,17 @@ window.FB = window.FB || {};
     } catch (error) { finish(false); }
   };
   S.storageBackend = function () { return crazy ? crazy.backend() : saveDatabase ? 'indexeddb' : 'localstorage'; };
+  function compactStoredAutosave() {
+    const name = key('auto'), raw = localStorage.getItem(name);
+    if (!raw || raw.charAt(0) !== '{') return false;
+    // Reclaim space without replacing the saved campaign with live or pending
+    // state. encodeStored verifies the exact JSON before any storage mutation.
+    const packed = encodeStored(raw);
+    if (packed.length >= raw.length || localStorage.getItem(name) !== raw) return false;
+    localStorage.setItem(name, packed);
+    autoNeedsCompression = true;
+    return true;
+  }
   S.toSlot = function (slot, done) {
     if (crazy) {
       if (slot !== 'auto') { if (done) done(false); return false; }
@@ -962,7 +973,12 @@ window.FB = window.FB || {};
     if (deletionBusy) { if (done) done(false); return false; }
     function fallback(json) {
       try {
-        localStorage.setItem(key(slot), encodeStored(json));
+        const packed = encodeStored(json);
+        try { localStorage.setItem(key(slot), packed); }
+        catch (error) {
+          if (slot === 'auto' || !isQuotaError(error) || !compactStoredAutosave()) throw error;
+          localStorage.setItem(key(slot), packed);
+        }
         if (done) done(true);
         return true;
       } catch (error) { reportSaveError(error); if (done) done(false); return false; }

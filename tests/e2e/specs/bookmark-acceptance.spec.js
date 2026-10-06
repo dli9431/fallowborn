@@ -36,6 +36,24 @@ async function saveWithinBudget(page, testInfo, label, budget) {
   return text;
 }
 
+test('bookmark facts preserve RNG bits across signed and unsigned representations', async function ({ page }, testInfo) {
+  await beginBookmark(page, testInfo, '867');
+  const signed = await page.evaluate(function () {
+    FB.seedRng(0); FB.rng(); FB.rng();
+    return FB.getRngState();
+  });
+  expect(signed).toBeLessThan(0);
+  const original = await facts(page);
+  expect(original.campaign.rng).toBe(signed >>> 0);
+  expect(original.snapshot.rng).toBe(signed >>> 0);
+  await page.evaluate(function (value) { FB.setRngState(value); }, signed >>> 0);
+  expect(await facts(page)).toEqual(original);
+  await page.evaluate(function (value) { FB.setRngState(value ^ 1); }, signed);
+  const changed = await facts(page);
+  expect(changed.campaign.rng).not.toBe(original.campaign.rng);
+  expect(changed.snapshot.rng).not.toBe(original.snapshot.rng);
+});
+
 test('every registered bookmark plays three years and replays its final year after a cross-bookmark restore',
   async function ({ page }, testInfo) {
     test.setTimeout(20 * 60 * 1000);
@@ -92,7 +110,8 @@ test('a persisted data-only mod supplies a different campaign and independent in
   await advanceBookmark(page, 720);
   const checkpoint = await saveWithinBudget(page, testInfo, 'proof-year2', SAVE_BUDGETS.year2);
   const original = await facts(page);
-  await page.reload();
+  // openGame navigates and waits for boot. A separate reload would start a
+  // deferred ui_modals.js request and immediately abort it with that navigation.
   await openGame(page, testInfo);
   await restoreBookmark(page, checkpoint);
   expect(await facts(page)).toEqual(original);
