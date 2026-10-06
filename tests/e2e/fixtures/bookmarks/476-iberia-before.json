@@ -1,0 +1,1129 @@
+{
+  "sourceRevision": "926e9aa3",
+  "provinceOverrides": [
+    {
+      "id": "coruna",
+      "name": "Brigantium",
+      "names": [
+        {
+          "to": 600,
+          "name": "Brigantium"
+        }
+      ],
+      "realm": "suebi_476",
+      "culture": "hispano_roman",
+      "religion": "nicene",
+      "dev": 2,
+      "customaryRights": [
+        {
+          "power": "peace",
+          "basis": "tenure",
+          "basisRef": "settled_tenure_476:coruna"
+        },
+        {
+          "power": "revenue",
+          "basis": "tenure",
+          "basisRef": "settled_tenure_476:coruna"
+        }
+      ],
+      "communities": [
+        {
+          "culture": "hispano_roman",
+          "religion": "nicene",
+          "populationShare0": 7500
+        },
+        {
+          "culture": "suevic",
+          "religion": "homoian",
+          "paired": true,
+          "populationShare0": 2500
+        }
+      ]
+    },
+    {
+      "id": "santiago",
+      "name": "Iria Flavia",
+      "names": [
+        {
+          "to": 600,
+          "name": "Iria Flavia"
+        }
+      ],
+      "realm": "suebi_476",
+      "culture": "hispano_roman",
+      "religion": "nicene",
+      "dev": 3,
+      "customaryRights": [
+        {
+          "power": "peace",
+          "basis": "tenure",
+          "basisRef": "settled_tenure_476:santiago"
+        },
+        {
+          "power": "revenue",
+          "basis": "tenure",
+          "basisRef": "settled_tenure_476:santiago"
+        }
+      ],
+      "communities": [
+        {
+          "culture": "hispano_roman",
+          "religion": "nicene",
+          "populationShare0": 7500
+        },
+        {
+          "culture": "suevic",
+          "religion": "homoian",
+          "paired": true,
+          "populationShare0": 2500
+        }
+      ]
+    },
+    {
+      "id": "ourense",
+      "name": "Middle Minius",
+      "names": [
+        {
+          "to": 600,
+          "name": "Middle Minius"
+        }
+      ],
+      "realm": "suebi_476",
+      "culture": "hispano_roman",
+      "religion": "nicene",
+      "dev": 2,
+      "customaryRights": [
+        {
+          "power": "peace",
+          "basis": "tenure",
+          "basisRef": "settled_tenure_476:ourense"
+        },
+        {
+          "power": "revenue",
+          "basis": "tenure",
+          "basisRef": "settled_tenure_476:ourense"
+        }
+      ],
+      "communities": [
+        {
+          "culture": "hispano_roman",
+          "religion": "nicene",
+          "populationShare0": 7500
+        },
+        {
+          "culture": "suevic",
+          "religion": "homoian",
+          "paired": true,
+          "populationShare0": 2500
+        }
+      ]
+    },
+    {
+      "id": "lugo",
+      "name": "Lucus Augusti",
+      "names": [
+        {
+          "to": 600,
+          "name": "Lucus Augusti"
+        }
+      ],
+      "realm": "suebi_476",
+      "culture": "hispano_roman",
+      "religion": "nicene",
+      "dev": 2,
+      "customaryRights": [
+        {
+          "power": "peace",
+          "basis": "tenure",
+          "basisRef": "settled_tenure_476:lugo"
+        },
+        {
+          "power": "revenue",
+          "basis": "tenure",
+          "basisRef": "settled_tenure_476:lugo"
+        }
+      ],
+      "communities": [
+        {
+          "culture": "hispano_roman",
+          "religion": "nicene",
+          "populationShare0": 7500
+        },
+        {
+          "culture": "suevic",
+          "religion": "homoian",
+          "paired": true,
+          "populationShare0": 2500
+        }
+      ]
+    },
+    {
+      "id": "oviedo",
+      "name": "Asturian uplands",
+      "names": [
+        {
+          "to": 600,
+          "name": "Asturian uplands"
+        }
+      ],
+      "realm": "aquitaine",
+      "culture": "hispano_roman",
+      "religion": "nicene",
+      "dev": 3,
+      "customaryRights": [
+        {
+          "power": "peace",
+          "basis": "tenure",
+          "basisRef": "settled_tenure_476:oviedo"
+        },
+        {
+          "power": "revenue",
+          "basis": "tenure",
+          "basisRef": "settled_tenure_476:oviedo"
+        }
+      ],
+      "communities": [
+        {
+          "culture": "hispano_roman",
+          "religion": "nicene",
+          "populationShare0": 8000
+        },
+        {
+          "culture": "gothic",
+          "religion": "homoian",
+          "paired": true,
+          "populationShare0": 2000
+        }
+      ]
+    },
+    {
+      "id": "astorga",
+      "name": "Asturica Augusta",
+      "names": [
+        {
+          "to": 600,
+          "name": "Asturica Augusta"
+        }
+      ],
+      "realm": "aquitaine",
+      "culture": "hispano_roman",
+      "religion": "nicene",
+      "dev": 2,
+      "customaryRights": [
+        {
+          "power": "peace",
+          "basis": "tenure",
+          "basisRef": "settled_tenure_476:astorga"
+        },
+        {
+          "power": "revenue",
+          "basis": "tenure",
+          "basisRef": "settled_tenure_476:astorga"
+        }
+      ],
+      "communities": [
+        {
+          "culture": "hispano_roman",
+          "religion": "nicene",
+          "populationShare0": 8000
+        },
+        {
+          "culture": "gothic",
+          "religion": "homoian",
+          "paired": true,
+          "populationShare0": 2000
+        }
+      ]
+    },
+    {
+      "id": "santander",
+      "name": "Cantabrian coast",
+      "names": [
+        {
+          "to": 600,
+          "name": "Cantabrian coast"
+        }
+      ],
+      "realm": "aquitaine",
+      "culture": "hispano_roman",
+      "religion": "nicene",
+      "dev": 2,
+      "customaryRights": [
+        {
+          "power": "peace",
+          "basis": "tenure",
+          "basisRef": "settled_tenure_476:santander"
+        },
+        {
+          "power": "revenue",
+          "basis": "tenure",
+          "basisRef": "settled_tenure_476:santander"
+        }
+      ],
+      "communities": [
+        {
+          "culture": "hispano_roman",
+          "religion": "nicene",
+          "populationShare0": 8000
+        },
+        {
+          "culture": "gothic",
+          "religion": "homoian",
+          "paired": true,
+          "populationShare0": 2000
+        }
+      ]
+    },
+    {
+      "id": "alava",
+      "name": "Alavese uplands",
+      "names": [
+        {
+          "to": 600,
+          "name": "Alavese uplands"
+        }
+      ],
+      "realm": "aquitaine",
+      "culture": "hispano_roman",
+      "religion": "nicene",
+      "dev": 2,
+      "customaryRights": [
+        {
+          "power": "peace",
+          "basis": "tenure",
+          "basisRef": "settled_tenure_476:alava"
+        },
+        {
+          "power": "revenue",
+          "basis": "tenure",
+          "basisRef": "settled_tenure_476:alava"
+        }
+      ],
+      "communities": [
+        {
+          "culture": "hispano_roman",
+          "religion": "nicene",
+          "populationShare0": 8000
+        },
+        {
+          "culture": "gothic",
+          "religion": "homoian",
+          "paired": true,
+          "populationShare0": 2000
+        }
+      ]
+    },
+    {
+      "id": "pamplona",
+      "name": "Pompaelo",
+      "names": [
+        {
+          "to": 600,
+          "name": "Pompaelo"
+        }
+      ],
+      "realm": "aquitaine",
+      "culture": "hispano_roman",
+      "religion": "nicene",
+      "dev": 3,
+      "customaryRights": [
+        {
+          "power": "peace",
+          "basis": "tenure",
+          "basisRef": "settled_tenure_476:pamplona"
+        },
+        {
+          "power": "revenue",
+          "basis": "tenure",
+          "basisRef": "settled_tenure_476:pamplona"
+        }
+      ],
+      "communities": [
+        {
+          "culture": "hispano_roman",
+          "religion": "nicene",
+          "populationShare0": 8000
+        },
+        {
+          "culture": "gothic",
+          "religion": "homoian",
+          "paired": true,
+          "populationShare0": 2000
+        }
+      ]
+    },
+    {
+      "id": "sevilla",
+      "name": "Hispalis",
+      "names": [
+        {
+          "to": 600,
+          "name": "Hispalis"
+        }
+      ],
+      "realm": "aquitaine",
+      "culture": "hispano_roman",
+      "religion": "nicene",
+      "dev": 4,
+      "customaryRights": [
+        {
+          "power": "peace",
+          "basis": "tenure",
+          "basisRef": "settled_tenure_476:sevilla"
+        },
+        {
+          "power": "revenue",
+          "basis": "tenure",
+          "basisRef": "settled_tenure_476:sevilla"
+        }
+      ],
+      "communities": [
+        {
+          "culture": "hispano_roman",
+          "religion": "nicene",
+          "populationShare0": 8000
+        },
+        {
+          "culture": "gothic",
+          "religion": "homoian",
+          "paired": true,
+          "populationShare0": 2000
+        }
+      ]
+    },
+    {
+      "id": "cordoba",
+      "name": "Corduba",
+      "names": [
+        {
+          "to": 600,
+          "name": "Corduba"
+        }
+      ],
+      "realm": "aquitaine",
+      "culture": "hispano_roman",
+      "religion": "nicene",
+      "dev": 4,
+      "customaryRights": [
+        {
+          "power": "peace",
+          "basis": "tenure",
+          "basisRef": "settled_tenure_476:cordoba"
+        },
+        {
+          "power": "revenue",
+          "basis": "tenure",
+          "basisRef": "settled_tenure_476:cordoba"
+        }
+      ],
+      "communities": [
+        {
+          "culture": "hispano_roman",
+          "religion": "nicene",
+          "populationShare0": 8000
+        },
+        {
+          "culture": "gothic",
+          "religion": "homoian",
+          "paired": true,
+          "populationShare0": 2000
+        }
+      ]
+    },
+    {
+      "id": "ecija",
+      "name": "Astigi",
+      "names": [
+        {
+          "to": 600,
+          "name": "Astigi"
+        }
+      ],
+      "realm": "aquitaine",
+      "culture": "hispano_roman",
+      "religion": "nicene",
+      "dev": 3,
+      "customaryRights": [
+        {
+          "power": "peace",
+          "basis": "tenure",
+          "basisRef": "settled_tenure_476:ecija"
+        },
+        {
+          "power": "revenue",
+          "basis": "tenure",
+          "basisRef": "settled_tenure_476:ecija"
+        }
+      ],
+      "communities": [
+        {
+          "culture": "hispano_roman",
+          "religion": "nicene",
+          "populationShare0": 8000
+        },
+        {
+          "culture": "gothic",
+          "religion": "homoian",
+          "paired": true,
+          "populationShare0": 2000
+        }
+      ]
+    },
+    {
+      "id": "niebla",
+      "name": "Ilibipla",
+      "names": [
+        {
+          "to": 600,
+          "name": "Ilibipla"
+        }
+      ],
+      "realm": "aquitaine",
+      "culture": "hispano_roman",
+      "religion": "nicene",
+      "dev": 2,
+      "customaryRights": [
+        {
+          "power": "peace",
+          "basis": "tenure",
+          "basisRef": "settled_tenure_476:niebla"
+        },
+        {
+          "power": "revenue",
+          "basis": "tenure",
+          "basisRef": "settled_tenure_476:niebla"
+        }
+      ],
+      "communities": [
+        {
+          "culture": "hispano_roman",
+          "religion": "nicene",
+          "populationShare0": 8000
+        },
+        {
+          "culture": "gothic",
+          "religion": "homoian",
+          "paired": true,
+          "populationShare0": 2000
+        }
+      ]
+    },
+    {
+      "id": "granada",
+      "name": "Iliberris",
+      "names": [
+        {
+          "to": 600,
+          "name": "Iliberris"
+        }
+      ],
+      "realm": "aquitaine",
+      "culture": "hispano_roman",
+      "religion": "nicene",
+      "dev": 2,
+      "customaryRights": [
+        {
+          "power": "peace",
+          "basis": "tenure",
+          "basisRef": "settled_tenure_476:granada"
+        },
+        {
+          "power": "revenue",
+          "basis": "tenure",
+          "basisRef": "settled_tenure_476:granada"
+        }
+      ],
+      "communities": [
+        {
+          "culture": "hispano_roman",
+          "religion": "nicene",
+          "populationShare0": 8000
+        },
+        {
+          "culture": "gothic",
+          "religion": "homoian",
+          "paired": true,
+          "populationShare0": 2000
+        }
+      ]
+    },
+    {
+      "id": "malaga",
+      "name": "Malaca",
+      "names": [
+        {
+          "to": 600,
+          "name": "Malaca"
+        }
+      ],
+      "realm": "aquitaine",
+      "culture": "hispano_roman",
+      "religion": "nicene",
+      "dev": 3,
+      "customaryRights": [
+        {
+          "power": "peace",
+          "basis": "tenure",
+          "basisRef": "settled_tenure_476:malaga"
+        },
+        {
+          "power": "revenue",
+          "basis": "tenure",
+          "basisRef": "settled_tenure_476:malaga"
+        }
+      ],
+      "communities": [
+        {
+          "culture": "hispano_roman",
+          "religion": "nicene",
+          "populationShare0": 8000
+        },
+        {
+          "culture": "gothic",
+          "religion": "homoian",
+          "paired": true,
+          "populationShare0": 2000
+        }
+      ]
+    },
+    {
+      "id": "almeria",
+      "name": "Southeastern coast",
+      "names": [
+        {
+          "to": 600,
+          "name": "Southeastern coast"
+        }
+      ],
+      "realm": "aquitaine",
+      "culture": "hispano_roman",
+      "religion": "nicene",
+      "dev": 1,
+      "customaryRights": [
+        {
+          "power": "peace",
+          "basis": "tenure",
+          "basisRef": "settled_tenure_476:almeria"
+        },
+        {
+          "power": "revenue",
+          "basis": "tenure",
+          "basisRef": "settled_tenure_476:almeria"
+        }
+      ],
+      "communities": [
+        {
+          "culture": "hispano_roman",
+          "religion": "nicene",
+          "populationShare0": 8000
+        },
+        {
+          "culture": "gothic",
+          "religion": "homoian",
+          "paired": true,
+          "populationShare0": 2000
+        }
+      ]
+    },
+    {
+      "id": "guadix",
+      "name": "Acci",
+      "names": [
+        {
+          "to": 600,
+          "name": "Acci"
+        }
+      ],
+      "realm": "aquitaine",
+      "culture": "hispano_roman",
+      "religion": "nicene",
+      "dev": 2,
+      "customaryRights": [
+        {
+          "power": "peace",
+          "basis": "tenure",
+          "basisRef": "settled_tenure_476:guadix"
+        },
+        {
+          "power": "revenue",
+          "basis": "tenure",
+          "basisRef": "settled_tenure_476:guadix"
+        }
+      ],
+      "communities": [
+        {
+          "culture": "hispano_roman",
+          "religion": "nicene",
+          "populationShare0": 8000
+        },
+        {
+          "culture": "gothic",
+          "religion": "homoian",
+          "paired": true,
+          "populationShare0": 2000
+        }
+      ]
+    },
+    {
+      "id": "toledo",
+      "name": "Toletum",
+      "names": [
+        {
+          "to": 600,
+          "name": "Toletum"
+        }
+      ],
+      "realm": "aquitaine",
+      "culture": "hispano_roman",
+      "religion": "nicene",
+      "dev": 5,
+      "customaryRights": [
+        {
+          "power": "peace",
+          "basis": "tenure",
+          "basisRef": "settled_tenure_476:toledo"
+        },
+        {
+          "power": "revenue",
+          "basis": "tenure",
+          "basisRef": "settled_tenure_476:toledo"
+        }
+      ],
+      "communities": [
+        {
+          "culture": "hispano_roman",
+          "religion": "nicene",
+          "populationShare0": 8000
+        },
+        {
+          "culture": "gothic",
+          "religion": "homoian",
+          "paired": true,
+          "populationShare0": 2000
+        }
+      ]
+    },
+    {
+      "id": "merida",
+      "name": "Emerita Augusta",
+      "names": [
+        {
+          "to": 600,
+          "name": "Emerita Augusta"
+        }
+      ],
+      "realm": "aquitaine",
+      "culture": "hispano_roman",
+      "religion": "nicene",
+      "dev": 3,
+      "customaryRights": [
+        {
+          "power": "peace",
+          "basis": "tenure",
+          "basisRef": "settled_tenure_476:merida"
+        },
+        {
+          "power": "revenue",
+          "basis": "tenure",
+          "basisRef": "settled_tenure_476:merida"
+        }
+      ],
+      "communities": [
+        {
+          "culture": "hispano_roman",
+          "religion": "nicene",
+          "populationShare0": 8000
+        },
+        {
+          "culture": "gothic",
+          "religion": "homoian",
+          "paired": true,
+          "populationShare0": 2000
+        }
+      ]
+    },
+    {
+      "id": "evora",
+      "name": "Ebora",
+      "names": [
+        {
+          "to": 600,
+          "name": "Ebora"
+        }
+      ],
+      "realm": "aquitaine",
+      "culture": "hispano_roman",
+      "religion": "nicene",
+      "dev": 2,
+      "customaryRights": [
+        {
+          "power": "peace",
+          "basis": "tenure",
+          "basisRef": "settled_tenure_476:evora"
+        },
+        {
+          "power": "revenue",
+          "basis": "tenure",
+          "basisRef": "settled_tenure_476:evora"
+        }
+      ],
+      "communities": [
+        {
+          "culture": "hispano_roman",
+          "religion": "nicene",
+          "populationShare0": 8000
+        },
+        {
+          "culture": "gothic",
+          "religion": "homoian",
+          "paired": true,
+          "populationShare0": 2000
+        }
+      ]
+    },
+    {
+      "id": "lisboa",
+      "name": "Olisipo",
+      "names": [
+        {
+          "to": 600,
+          "name": "Olisipo"
+        }
+      ],
+      "realm": "aquitaine",
+      "culture": "hispano_roman",
+      "religion": "nicene",
+      "dev": 4,
+      "customaryRights": [
+        {
+          "power": "peace",
+          "basis": "tenure",
+          "basisRef": "settled_tenure_476:lisboa"
+        },
+        {
+          "power": "revenue",
+          "basis": "tenure",
+          "basisRef": "settled_tenure_476:lisboa"
+        }
+      ],
+      "communities": [
+        {
+          "culture": "hispano_roman",
+          "religion": "nicene",
+          "populationShare0": 8000
+        },
+        {
+          "culture": "gothic",
+          "religion": "homoian",
+          "paired": true,
+          "populationShare0": 2000
+        }
+      ]
+    },
+    {
+      "id": "santarem",
+      "name": "Scallabis",
+      "names": [
+        {
+          "to": 600,
+          "name": "Scallabis"
+        }
+      ],
+      "realm": "aquitaine",
+      "culture": "hispano_roman",
+      "religion": "nicene",
+      "dev": 2,
+      "customaryRights": [
+        {
+          "power": "peace",
+          "basis": "tenure",
+          "basisRef": "settled_tenure_476:santarem"
+        },
+        {
+          "power": "revenue",
+          "basis": "tenure",
+          "basisRef": "settled_tenure_476:santarem"
+        }
+      ],
+      "communities": [
+        {
+          "culture": "hispano_roman",
+          "religion": "nicene",
+          "populationShare0": 8000
+        },
+        {
+          "culture": "gothic",
+          "religion": "homoian",
+          "paired": true,
+          "populationShare0": 2000
+        }
+      ]
+    },
+    {
+      "id": "coimbra",
+      "name": "Conimbriga",
+      "names": [
+        {
+          "to": 600,
+          "name": "Conimbriga"
+        }
+      ],
+      "realm": "aquitaine",
+      "culture": "hispano_roman",
+      "religion": "nicene",
+      "dev": 2,
+      "customaryRights": [
+        {
+          "power": "peace",
+          "basis": "tenure",
+          "basisRef": "settled_tenure_476:coimbra"
+        },
+        {
+          "power": "revenue",
+          "basis": "tenure",
+          "basisRef": "settled_tenure_476:coimbra"
+        }
+      ],
+      "communities": [
+        {
+          "culture": "hispano_roman",
+          "religion": "nicene",
+          "populationShare0": 8000
+        },
+        {
+          "culture": "gothic",
+          "religion": "homoian",
+          "paired": true,
+          "populationShare0": 2000
+        }
+      ]
+    },
+    {
+      "id": "silves",
+      "name": "Southern Lusitanian coast",
+      "names": [
+        {
+          "to": 600,
+          "name": "Southern Lusitanian coast"
+        }
+      ],
+      "realm": "aquitaine",
+      "culture": "hispano_roman",
+      "religion": "nicene",
+      "dev": 1,
+      "customaryRights": [
+        {
+          "power": "peace",
+          "basis": "tenure",
+          "basisRef": "settled_tenure_476:silves"
+        },
+        {
+          "power": "revenue",
+          "basis": "tenure",
+          "basisRef": "settled_tenure_476:silves"
+        }
+      ],
+      "communities": [
+        {
+          "culture": "hispano_roman",
+          "religion": "nicene",
+          "populationShare0": 8000
+        },
+        {
+          "culture": "gothic",
+          "religion": "homoian",
+          "paired": true,
+          "populationShare0": 2000
+        }
+      ]
+    },
+    {
+      "id": "beja",
+      "name": "Pax Julia",
+      "names": [
+        {
+          "to": 600,
+          "name": "Pax Julia"
+        }
+      ],
+      "realm": "aquitaine",
+      "culture": "hispano_roman",
+      "religion": "nicene",
+      "dev": 2,
+      "customaryRights": [
+        {
+          "power": "peace",
+          "basis": "tenure",
+          "basisRef": "settled_tenure_476:beja"
+        },
+        {
+          "power": "revenue",
+          "basis": "tenure",
+          "basisRef": "settled_tenure_476:beja"
+        }
+      ],
+      "communities": [
+        {
+          "culture": "hispano_roman",
+          "religion": "nicene",
+          "populationShare0": 8000
+        },
+        {
+          "culture": "gothic",
+          "religion": "homoian",
+          "paired": true,
+          "populationShare0": 2000
+        }
+      ]
+    },
+    {
+      "id": "tarragona",
+      "name": "Tarraco",
+      "names": [
+        {
+          "to": 600,
+          "name": "Tarraco"
+        }
+      ],
+      "realm": "aquitaine",
+      "culture": "hispano_roman",
+      "religion": "nicene",
+      "dev": 3,
+      "customaryRights": [
+        {
+          "power": "peace",
+          "basis": "tenure",
+          "basisRef": "settled_tenure_476:tarragona"
+        },
+        {
+          "power": "revenue",
+          "basis": "tenure",
+          "basisRef": "settled_tenure_476:tarragona"
+        }
+      ],
+      "communities": [
+        {
+          "culture": "hispano_roman",
+          "religion": "nicene",
+          "populationShare0": 8000
+        },
+        {
+          "culture": "gothic",
+          "religion": "homoian",
+          "paired": true,
+          "populationShare0": 2000
+        }
+      ]
+    },
+    {
+      "id": "zaragoza",
+      "name": "Caesaraugusta",
+      "names": [
+        {
+          "to": 600,
+          "name": "Caesaraugusta"
+        }
+      ],
+      "realm": "aquitaine",
+      "culture": "hispano_roman",
+      "religion": "nicene",
+      "dev": 4,
+      "customaryRights": [
+        {
+          "power": "peace",
+          "basis": "tenure",
+          "basisRef": "settled_tenure_476:zaragoza"
+        },
+        {
+          "power": "revenue",
+          "basis": "tenure",
+          "basisRef": "settled_tenure_476:zaragoza"
+        }
+      ],
+      "communities": [
+        {
+          "culture": "hispano_roman",
+          "religion": "nicene",
+          "populationShare0": 8000
+        },
+        {
+          "culture": "gothic",
+          "religion": "homoian",
+          "paired": true,
+          "populationShare0": 2000
+        }
+      ]
+    },
+    {
+      "id": "barcelona",
+      "name": "Barcino",
+      "names": [
+        {
+          "to": 600,
+          "name": "Barcino"
+        }
+      ],
+      "realm": "aquitaine",
+      "culture": "hispano_roman",
+      "religion": "nicene",
+      "dev": 4,
+      "customaryRights": [
+        {
+          "power": "peace",
+          "basis": "tenure",
+          "basisRef": "settled_tenure_476:barcelona"
+        },
+        {
+          "power": "revenue",
+          "basis": "tenure",
+          "basisRef": "settled_tenure_476:barcelona"
+        }
+      ],
+      "communities": [
+        {
+          "culture": "hispano_roman",
+          "religion": "nicene",
+          "populationShare0": 8000
+        },
+        {
+          "culture": "gothic",
+          "religion": "homoian",
+          "paired": true,
+          "populationShare0": 2000
+        }
+      ]
+    }
+  ],
+  "realmIdsToOmit": [
+    "basques_476",
+    "cantabri_476"
+  ],
+  "storyIdsToOmit": [
+    "suevic_frontier_476",
+    "cantabrian_campaign_476",
+    "vasconian_campaign_476",
+    "gallaecian_campaign_476"
+  ],
+  "institutionIdsToOmit": [
+    "sevilla_council",
+    "sevilla_see",
+    "toledo_council",
+    "toledo_see",
+    "cordoba_council",
+    "cordoba_see",
+    "barcelona_council",
+    "barcelona_see",
+    "zaragoza_council",
+    "zaragoza_see",
+    "lisboa_council",
+    "lisboa_see",
+    "astorga_council",
+    "astorga_see",
+    "lugo_council",
+    "santiago_council",
+    "lugo_homoian_congregation",
+    "toledo_homoian_congregation",
+    "tarragona_homoian_congregation"
+  ],
+  "visigothicLegalIdentityId": "gothic_custom"
+}

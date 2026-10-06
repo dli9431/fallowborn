@@ -25,3 +25,4 @@ FBDATA.storyCampaigns = {
 Object.assign(FBDATA.storyCampaigns, FBDATA.bookmarkRegions476.italy.storyCampaigns);
 
 Object.assign(FBDATA.storyCampaigns, FBDATA.bookmarkRegions476.dalmatia_east.campaigns);
+Object.assign(FBDATA.storyCampaigns, FBDATA.bookmarkRegions476.gaul_iberia.storyCampaigns);

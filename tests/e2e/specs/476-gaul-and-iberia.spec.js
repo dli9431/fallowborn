@@ -17,18 +17,11 @@ dependsOnRuntime(__filename, [
 ]);
 const { test, expect } = require('../support/fixture');
 const { openGame } = require('../support/game/navigation');
+const { startHistoricalGame } = require('../support/game/historical-start');
 
 async function start476(page, testInfo) {
-  await openGame(page, testInfo);
-  await page.getByRole('button', { name:'New Game', exact:true }).click();
-  await page.locator('#btn-bm-seed').click();
-  await page.locator('#ng-seed').fill('GAULIBERIA-476-curialis_476-ravenna-m-Marcus-standard-0-roman.nicene');
-  await page.locator('#ng-seed').press('Enter');
-  await expect(page.locator('#chargen:not(.hidden)')).toBeVisible();
-  await page.getByRole('button', { name:'Begin Your Story', exact:true }).click();
-  await page.getByRole('button', { name:'Begin', exact:true }).click();
-  await expect(page.locator('#genmodal')).toHaveClass(/hidden/);
-  await page.evaluate(function () { FB.game.setPaused(true); });
+  await startHistoricalGame(page, testInfo, { bookmark:'476',
+    code:'GAULIBERIA-476-curialis_476-ravenna-m-Marcus-standard-0-roman.nicene' }, false);
 }
 
 test('476 smoke creates period settlements, competing courts and provincial majorities',
@@ -93,7 +86,7 @@ test('provincials retain Roman personal law while successor and mixed cases use 
           born:446, station:1, traitsN:0 }).id;
       }
       const roman = party('gallo_roman'), hispano = party('hispano_roman');
-      const rows = [['aquitaine','gothic','gothic_custom'],
+      const rows = [['aquitaine','gothic','euric_code_476'],
         ['burgundy','burgundian','burgundian_custom'], ['suebi_476','suevic','suevic_custom'],
         ['franks_476','frankish','frankish_custom'], ['rhein_franks_476','frankish','frankish_custom'],
         ['armorica_476','brezhon','armorican_custom'], ['alamanni_476','alamannic','alamannic_custom']];
