@@ -11,7 +11,7 @@ async function start(page, testInfo) {
   test.skip(await page.evaluate(function () { return FB.save.storageBackend() !== 'indexeddb'; }),
     'This origin does not support IndexedDB; localStorage fallback is covered separately.');
 }
-async function storedGold(page, name) {
+async function storedText(page, name) {
   return page.evaluate(function (name) {
     return new Promise(function (resolve, reject) {
       const request = indexedDB.open('fallowborn-saves', 1);
@@ -19,12 +19,16 @@ async function storedGold(page, name) {
       request.onsuccess = function () {
         const db = request.result, transaction = db.transaction('slots', 'readonly');
         const read = transaction.objectStore('slots').get(name);
-        read.onsuccess = function () { resolve(read.result ? JSON.parse(read.result).state.player.gold : null); };
+        read.onsuccess = function () { resolve(read.result || null); };
         read.onerror = function () { reject(read.error); };
         transaction.oncomplete = function () { db.close(); };
       };
     });
   }, name);
+}
+async function storedGold(page, name) {
+  const raw = await storedText(page, name);
+  return raw ? JSON.parse(raw).state.player.gold : null;
 }
 
 test('manual saves confirm committed data and survive reload without a localStorage slot', async function ({ page }, testInfo) {
@@ -41,14 +45,14 @@ test('manual saves confirm committed data and survive reload without a localStor
   expect(await page.evaluate(function () { return FB.save.read(1).state.player.gold; })).toBe(4321);
 });
 
-for (const version of [3, 4]) {
-  test('v' + version + ' slots migrate only after commit and a local recovery copy wins on reload', async function ({ page }, testInfo) {
+for (const version of [3, 'prototype-v4', 4]) {
+  test(version + ' slots copy exact bytes only after commit and a local recovery copy wins', async function ({ page }, testInfo) {
     await start(page, testInfo);
     await page.evaluate(function () {
       FB.state.player.gold = 100;
       return new Promise(function (resolve) { FB.save.toSlot(1, resolve); });
     });
-    await page.evaluate(function (version) {
+    const source = await page.evaluate(function (version) {
       FB.state.player.gold = 200;
       const data = JSON.parse(FB.save.serialize());
       if (version === 3) {
@@ -56,18 +60,49 @@ for (const version of [3, 4]) {
         delete data.titleIds;
         delete data.authoritySchema;
       }
-      localStorage.setItem('fb_slot1', JSON.stringify(data));
+      if (version !== 4) delete data.platformSchema;
+      const raw = JSON.stringify(data);
+      localStorage.setItem('fb_slot1', raw);
+      return raw;
     }, version);
     await page.reload();
     await page.waitForFunction(function () { return FB.game.bootReady; });
     await expect.poll(function () { return storedGold(page, 'fb_slot1'); }).toBe(200);
+    expect(await storedText(page, 'fb_slot1')).toBe(source);
     await expect.poll(function () { return page.evaluate(function () { return localStorage.getItem('fb_slot1'); }); }).toBe(null);
     expect(await page.evaluate(function () {
       const data = FB.save.read(1);
-      return { version:data.v, gold:data.state.player.gold };
-    })).toEqual({ version:version, gold:200 });
+      return { version:data.v, gold:data.state.player.gold, supported:FB.save.isSupported(data) };
+    })).toEqual({ version:version === 3 ? 3 : 4, gold:200, supported:true });
+    await page.evaluate(function () { FB.game.loadSlot(1); });
+    await expect.poll(function () { return page.evaluate(function () { return FB.state && FB.state.player.gold; }); }).toBe(200);
+    expect(await page.evaluate(function () {
+      return new Promise(function (resolve) { FB.save.toSlot(1, resolve); });
+    })).toBe(true);
+    const final = JSON.parse(await storedText(page, 'fb_slot1'));
+    expect([final.v,final.titleIds,final.authoritySchema,final.platformSchema]).toEqual([4,1,4,1]);
   });
 }
+
+test('a future-schema local slot is retained and cannot replace the accepted database record',
+  async function ({ page }, testInfo) {
+    await start(page, testInfo);
+    expect(await page.evaluate(function () {
+      return new Promise(function (resolve) { FB.save.toSlot(1, resolve); });
+    })).toBe(true);
+    const accepted = await storedText(page, 'fb_slot1');
+    const unsupported = await page.evaluate(function () {
+      const data = JSON.parse(FB.save.serialize());
+      data.platformSchema = 2;
+      const raw = JSON.stringify(data);
+      localStorage.setItem('fb_slot1', raw);
+      return raw;
+    });
+    await page.reload();
+    await page.waitForFunction(function () { return FB.game.bootReady; });
+    expect(await page.evaluate(function () { return localStorage.getItem('fb_slot1'); })).toBe(unsupported);
+    expect(await storedText(page, 'fb_slot1')).toBe(accepted);
+  });
 
 test('newer autosave snapshots win and do not require localStorage capacity', async function ({ page }, testInfo) {
   await start(page, testInfo);

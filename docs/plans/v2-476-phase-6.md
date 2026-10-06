@@ -7,7 +7,7 @@ this document. The owner-controlled acceptance work below remains open.
 
 ## Save compatibility
 
-Normal serialization writes `{v:4,titleIds:1,authoritySchema:4,rng,uid,mods,state,meta}`.
+Normal serialization writes the frozen v4 envelope: v:4, titleIds:1, authoritySchema:4, platformSchema:1, rng, uid, mods, state and optional meta. The contract and reopening rule are recorded in docs/designs/state-and-saves.md.
 V3 campaigns remain readable through manual slots, Continue, autosave storage,
 FBS1 text and FBS2 compressed exports. Slot metadata and Chronicle extraction
 accept both versions without starting a world or converting stored bytes. The
@@ -24,11 +24,7 @@ Historical or expired references are retained; the validator does not require
 their former actors or hosts to be alive. Restoration does not execute authority
 transactions, seasonal settlement, situation initialization or scripted history.
 
-The serializer validates only the optional authority records before its existing
-state traversal. It adds the authority schema on a detached projection rather
-than copying or migrating the entire world on every autosave. The migration path
-does not run on slot reads or metadata displays. No timing or memory improvement
-is claimed without owner measurements.
+The serializer validates identity counters, authority records and platform/story state before its existing state traversal. It adds the authority schema on a detached projection rather than copying or migrating the entire world on every autosave. The migration path does not run on slot reads or metadata displays. No timing or memory improvement is claimed without owner measurements.
 
 Storage keys, compression formats, IndexedDB schema and Chronicle artifact
 version are unchanged. LocalStorage-to-IndexedDB copying admits both envelopes
@@ -38,12 +34,9 @@ in both SDK Data Module and localStorage modes. A v4 migration never converts
 between distribution profiles or bypasses a mod mismatch. The private packager
 must include the existing `js/save_v4.js` script as loaded by `index.html`.
 
-The previous `FB.save.prototypeV4` entry point remains an alias of `FB.save.v4`
-for development callers. There is no alternate serializer or restore bypass.
-Existing 867/1066 campaigns without authority keep it absent; no 476 office,
-contract, right, government identity or situation is synthesized during migration.
-This is a persistence integration with no new gameplay eligibility or technology
-dependency.
+The unused former FB.save.prototypeV4 API alias is removed at the format freeze. Its valid v4 branch saves, including an absent platformSchema stamp and legacy situation476 records, remain supported through FB.save.v4 and the normal Save/Load controls. There is no alternate serializer or restore bypass. Existing 867/1066 campaigns without authority keep it absent; no 476 office, contract, right, government identity or situation is synthesized during migration. This is a persistence integration with no new gameplay eligibility or technology dependency.
+
+Final-format coverage extends save-v4-integration.spec.js, title-id-migration.spec.js, crazygames-saves.spec.js and indexeddb-storage.spec.js. It includes every registered bookmark, legacy/prototype/final envelopes, story dependency and payment-stamp errors, source immutability, both CrazyGames modes, exact-byte IndexedDB copying, the hashed Phase 0 corpus and a bounded annual 476 stress case under a simulated 5 MiB localStorage budget. Save integration, title migration and IndexedDB cases also belong to the Firefox/WebKit compatibility slice; save integration also runs from file origins. Missing corpus exports are explicit skips and can be supplied through FB_PARITY_CORPUS. Recorded payload sizes and authored tests do not replace the owner-controlled acceptance evidence below.
 
 ## Authored acceptance coverage
 

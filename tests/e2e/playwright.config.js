@@ -16,6 +16,7 @@ const fileProjectTests = [
   '**/player-feedback-milestone-4.spec.js',
   '**/religions.spec.js',
   '**/ruler-titles.spec.js',
+  '**/save-v4-integration.spec.js',
   '**/settlement-engine.spec.js',
   '**/settlement-real-data.spec.js',
   '**/simulation.spec.js',
@@ -24,7 +25,10 @@ const fileProjectTests = [
 const compatibilityProjectTests = [
   '**/boot.spec.js',
   '**/holywar-accessibility.spec.js',
-  '**/journeys.spec.js'
+  '**/journeys.spec.js',
+  '**/save-v4-integration.spec.js',
+  '**/title-id-migration.spec.js',
+  '**/indexeddb-storage.spec.js'
 ];
 const firefoxUse = {
   browserName: 'firefox',

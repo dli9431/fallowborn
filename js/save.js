@@ -6,10 +6,20 @@ window.FB = window.FB || {};
 
   const S = {};
   FB.save = S;
+  // Frozen resumable envelope. Storage codecs and subsystem schemas are separate.
+  S.FORMAT = Object.freeze({ v:4, titleIds:1, authoritySchema:4, platformSchema:1 });
+  S.envelopeIssue = function (data) {
+    if (!data || typeof data !== 'object' || Array.isArray(data) ||
+        data.v !== 3 && data.v !== S.FORMAT.v) return 'v';
+    for (const key of ['titleIds', 'authoritySchema', 'platformSchema']) {
+      // V3 has no required schema stamps; early v4 predates the platform stamp.
+      if (data[key] === undefined && (data.v === 3 || key === 'platformSchema')) continue;
+      if (data[key] !== S.FORMAT[key]) return key;
+    }
+    return null;
+  };
   S.isSupported = function (data) {
-    return !!data && (data.v === 3 || data.v === 4 &&
-      data.titleIds === 1 && data.authoritySchema === 4 &&
-      (data.platformSchema === undefined || data.platformSchema === 1));
+    return S.envelopeIssue(data) === null;
   };
   const PREFIX = 'fb_';
   const crazy = FB.crazySave || null;
@@ -664,6 +674,7 @@ window.FB = window.FB || {};
 
   S.serialize = function () {
     const s = FB.state;
+    S.v4.validateIdentity({ rng:FB.getRngState(), uid:FB.getUidCounter() });
     S.v4.validateAuthority(s.authority, s);
     S.v4.validatePlatform(s);
     if (FB.pruneChronicle) FB.pruneChronicle(s);
@@ -680,8 +691,8 @@ window.FB = window.FB || {};
       }
     }
     try {
-      const header = JSON.stringify({ v:4, titleIds:1, authoritySchema:4, platformSchema:1,
-        rng:FB.getRngState(), uid:FB.getUidCounter(), mods:FB.mods.sig() });
+      const header = JSON.stringify(Object.assign({}, S.FORMAT, {
+        rng:FB.getRngState(), uid:FB.getUidCounter(), mods:FB.mods.sig() }));
       const metaData = {
         name:FB.fullName(s.chars[s.player.charId]), titleData:FB.titleSnapshot(s),
         year:s.date.year, season:s.date.season
@@ -693,7 +704,7 @@ window.FB = window.FB || {};
       const meta = JSON.stringify(metaData, saveReplacer);
       let stateJson = JSON.stringify(s, function (key, value) {
         if (this === s && key === 'authority' && value) {
-          return Object.assign({}, value, { schema:4 });
+          return Object.assign({}, value, { schema:S.FORMAT.authoritySchema });
         }
         return this === s && key === 'chronicle' ? undefined : saveReplacer.call(this, key, value);
       });

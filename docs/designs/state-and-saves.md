@@ -20,18 +20,19 @@ The v4 platform validator rejects unknown ids, wrong sites, invalid actors, malf
 
 Restore preserves unexpired scenario standing hosts using the daily army phase's living-realm and end-turn rules. An absent legacy wars table repairs to an empty table without declaring a campaign. Preservation tests compare structured facts rather than JSON property order, retaining exact checks on ownership, holders, population, family, treasury and hosts.
 
-## Save v4 and 476 integration (Phase 6)
+Save v4 format freeze
 
-The [authority contract](authority.md) separates appointments, contracts,
-recognition and customary rights from county ownership and settlement communities.
-The 476 branch now writes version-4 saves with `titleIds:1`,
-`authoritySchema:4` and `platformSchema:1` through the normal serializer, slots,
-autosave and export.
-Version-3 slots and FBS1/FBS2 exports remain readable and migrate on restore;
-reading a slot or showing its metadata never rewrites the campaign. The next
-successful save writes v4. `FB.save.v4.migrate` is the detached compatibility
-boundary; `FB.save.prototypeV4` remains an alias for existing development tools.
-Publication remains subject to the [Phase 6 acceptance gate](../plans/v2-476-phase-6.md).
+The version-4 resumable format is frozen for the current platform and bookmark state. FB.save.FORMAT is the shared frozen definition: v:4, titleIds:1, authoritySchema:4 and platformSchema:1. The serializer and migration use that definition together; a storage encoding is not another save schema. Later release work must reopen this contract and its migration coverage before adding saved fields or changing their meaning, defaults, id families or subsystem schemas. Changing an existing field's meaning requires a schema change and migration; optional extensions require an explicit contract review too.
+
+The envelope contains those four schema fields, rng, uid, mods, state and optional meta. rng preserves a 32-bit RNG state in its existing signed or unsigned representation; uid is a nonnegative safe integer. mods is the exact edition/mod fingerprint, not a request to switch content profiles. A missing legacy fingerprint is accepted only in an unmodded standard edition. meta is informational slot/Chronicle preview data and does not authorize gameplay changes. Unknown schema numbers and missing required v4 schema fields fail with the offending envelope field. Early v4 branch saves may omit platformSchema and the detached authority schema stamp; migration supplies them without changing their records.
+
+The authority contract in docs/designs/authority.md separates appointments, contracts, recognition and customary rights from county ownership and settlement communities. Normal serialization, slots, autosave and portable exports all write the same final v4 envelope. Version-3 slots and FBS1/FBS2 exports remain readable and migrate on restore; reading a slot or showing its metadata never rewrites the campaign. The next successful save writes v4. FB.save.v4.migrate is the detached compatibility boundary. The unused FB.save.prototypeV4 API alias has been removed; support for its saved envelopes remains. Publication remains subject to the owner-controlled acceptance gate in docs/plans/v2-476-phase-6.md.
+
+The frozen platform scope includes the stamped start, existing-ruler identity, authored royal families and branch links, authority identities and payment/award stamps, federate migrations and claims sessions, bookmarkSetup declarations, local and religious institutions and decisions, historical holy-war records, and every registered world story and player track. Population schema 2, bookmarkSetup schema 1, authority schema 4, western-court rails schema 1 and the other documented subsystem versions retain their existing meanings. The 476 story split and political/campaign rails are part of this one migration, alongside the saved facts of 493, 711, 800, 867, 1066 and 1204. Registries resolve stable ids; the envelope does not embed a second content registry.
+
+Detached preflight rejects malformed legacy situations and malformed or unknown story records before migration hooks read them. Final validation checks the complete story dependency graph before invoking validators that read other stories. A missing dependency names both story ids; duplicate render obligations name the exact obligation. The federate track accepts only its authored phases, roles, results, proposal and claimant choices, valid semantic references, boolean award/payment facts, bounded payment/outcome stamps and a valid veteran site reference. Historical references may outlive their actors or commitments; validation does not revive them. Invalid input leaves the source, live state, RNG, uid and accepted storage unchanged. Serialization repeats identity, authority and platform validation before replacing a slot.
+
+Storage acceptance coverage uses the unchanged Phase 0 corpus from its hash manifest and a bounded 60-year annual 476 court/community stress case. Each journey checks detached migration, repeatability, campaign and custody records, family links, communities, site holdings, finances, authority stamps, RNG and uid, then writes three manual slots and autosave under a simulated shared 5 MiB UTF-16 localStorage budget with 512 KiB of unrelated data. FBC1 slot and FBS2 export round trips remain exact. Size reports distinguish JSON payload bytes from total localStorage key/value bytes; they are not physical disk measurements. The stress case is not a full daily natural-play campaign. Authored coverage is not a passing quota or device result; owner runs and genuine long-campaign exports remain the release acceptance evidence.
 
 The field-level format-3 notes below record when additive systems were introduced.
 Those records retain their schemas inside v4; they do not require separate migrations.
@@ -88,17 +89,9 @@ The version-3 save envelope may carry optional meta.household with version 1, nu
 
 ## Save v4 platform schema
 
-This contract fixes which bookmark-platform facts a campaign saves and which it
-derives, so every system that adds saved state writes against one schema and v4
-keeps a single migration. `FB.save.v4.validatePlatform` accepts the optional
-fields described here; the registries that resolve their ids arrive with the
-systems that use them.
+This frozen contract fixes which bookmark-platform facts a campaign saves and which it derives, so every system that adds saved state writes against one schema and v4 keeps a single migration. FB.save.v4.validatePlatform accepts the optional fields described here; the registries that resolve their ids arrive with the systems that use them.
 
-Envelope. `platformSchema:1` sits beside `authoritySchema:4`. The serializer
-writes it and migration adds it. A v4 envelope without it, written before this
-schema, remains supported and gains it on its next save; any other value is an
-unsupported format. Adding an optional field does not bump the number; changing
-the meaning of an existing saved field does, together with a migration.
+Envelope. platformSchema:1 sits beside authoritySchema:4. The serializer writes it and migration adds it. A v4 envelope without it, written before this schema, remains supported and gains it on its next save; any other value is an unsupported format. V3 may omit every schema stamp, but a present unknown stamp is rejected rather than ignored. An optional field may retain the number only after reopening the frozen contract and extending migration coverage. Changing the meaning of an existing saved field changes the schema number together with a migration.
 
 Saved facts:
 
@@ -177,6 +170,8 @@ detached copy, to the two 476 story keys and drop the old field, only when
 neither key exists; other campaigns receive no story. The registry runs each story's migrate hook before validation, and the western court story performs this split: the household's own choices, bargain records and outcome go to state.stories.federate_track_476, and everything else to state.stories.western_court_476. A household that declined involvement made no bargain, so its contract and recognitions belong to the courts' record and an AI result reads as declined. Live 476 campaigns save only state.stories. Repeated
 migration returns the same envelope, and repeated restore of one input yields
 the same state.
+
+The polity-foundation compatibility exception is unchanged: an older campaign whose own bookmark already declares a foundation can acquire its missing semantic pending record. This allocates no people, grants, wars, payments, RNG draws or uid values. Existing terminal outcomes and commitments are retained. Other newly authored stories are not initialized by restore or migration.
 
 ## Personal household service
 

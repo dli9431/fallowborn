@@ -26,7 +26,9 @@ Declarative opening actors initialize before world-story attachment. Remaining d
 
 Saved state
 
-Each attached story keeps one record at state.stories[id]. Records hold semantic ids, statuses and turn stamps, never rendered text. Save validation rejects an unknown story id, a malformed record (through the story's validate hook) and a save that holds both state.stories and the legacy state.situation476. See state-and-saves.md.
+Each attached story keeps one record at state.stories[id]. Records hold semantic ids, statuses and turn stamps, never rendered text. Save validation first checks every id, record shape and required story dependency before invoking a story's validate hook. Missing dependencies name both ids, and malformed legacy situation476 records fail even if state.stories is absent. Valid legacy records migrate through the owning hook; conflicts remain rejected. See state-and-saves.md.
+
+The final v4 contract is frozen. New saved story fields or changed meanings require reopening that contract and its migration coverage. The federate track validates its enumerated phases, roles, outcomes, proposals and claimant choices, optional semantic references, boolean payment/award facts, payment periods, outcome turns and veteran settlement references. Optional fields absent from supported prototypes stay absent; validation never invents a bargain, choice or payment.
 
 Shared presentation
 

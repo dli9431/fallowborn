@@ -9,18 +9,34 @@ dependsOnRuntime(__filename, [
   'data/bookmarks.js', 'data/bookmark_476.js',
   'data/bookmark_476_italy.js', 'data/bookmark_476_dalmatia_east.js',
   'data/bookmark_476_gaul_iberia.js', 'data/bookmark_476_africa.js', 'data/political_institutions.js',
-  'data/eras.js', 'js/governments.js'
+  'data/eras.js', 'js/governments.js',
+  'js/story_476_rails.js', 'js/story_campaign.js', 'js/story_history.js',
+  'js/story_polity_foundation.js', 'js/story_agreements.js', 'js/story_carolingian_800.js',
+  'js/story_curialis_track_476.js', 'js/story_nepos_track_476.js', 'js/settlement.js',
+  'js/population.js', 'js/intrigue.js', 'js/justice.js', 'js/economy.js',
+  'js/bookmark_setup.js', 'js/institutions.js', 'js/federates.js',
+  'data/story_campaigns.js', 'data/story_campaigns_711.js', 'data/starts.js',
+  'data/geographies.js',
+  'data/bookmark_493.js', 'data/bookmark_493_history.js', 'data/bookmark_711.js',
+  'data/bookmark_800.js', 'data/bookmark_800_history.js',
+  'data/bookmark_1204.js', 'data/bookmark_1204_campaigns.js'
 ]);
 const { test, expect } = require('../support/fixture');
 const { openGame } = require('../support/game/navigation');
+const { loadParitySave } = require('../support/game/parity');
+const { corpusEntries, readCorpusExport } = require('../support/parity-fixtures');
 
 async function start(page, testInfo, bookmark) {
   await openGame(page, testInfo);
+  if (bookmark === '493') await page.evaluate(function () { FBDATA.bookmarks['493'].hidden = false; });
   await page.getByRole('button', { name:'New Game', exact:true }).click();
   await page.locator('#btn-bm-seed').click();
-  await page.locator('#ng-seed').fill(bookmark === '476'
-    ? 'SAVEV4-476-federate_476-ravenna-m-Marcus-standard-0-gothic.homoian'
-    : 'SAVEV4-' + bookmark + '-serf-london-f-Ada');
+  const codes = {
+    '476':'SAVEV4-476-federate_476-ravenna-m-Marcus-standard-0-gothic.homoian',
+    '493':'SAVEV4-493-farmer_493-ravenna-m-Marcus-standard-0-roman.nicene',
+    '711':'SAVEV4-711-serf-toledo-m-Paulus-standard-0-hispano_roman.catholic'
+  };
+  await page.locator('#ng-seed').fill(codes[bookmark] || 'SAVEV4-' + bookmark + '-serf-london-f-Ada');
   await page.locator('#ng-seed').press('Enter');
   await expect(page.locator('#chargen:not(.hidden)')).toBeVisible();
   await page.getByRole('button', { name:'Begin Your Story', exact:true }).click();
@@ -147,7 +163,21 @@ test('invalid v4 input preserves live state, RNG, identity counters and stored s
         },
         function (d) { d.state.stories = { missing_story:{} }; },
         function (d) { d.state.situation476 = {}; },
-        function (d) { d.state.start.defaultGovernment = 'missing_default'; }
+        function (d) { d.state.start.defaultGovernment = 'missing_default'; },
+        function (d) { d.state.stories.federate_track_476.phase = 'invalid'; },
+        function (d) { delete d.state.stories.western_court_476; },
+        function (d) { d.state.stories.western_court_476 = null; },
+        function (d) { d.rng = 4294967296; },
+        function (d) { d.uid = -1; },
+        function (d) { d.state.start = []; },
+        function (d) {
+          delete d.state.stories;
+          d.state.situation476 = null;
+        },
+        function (d) {
+          d.v = 3;
+          d.platformSchema = 2;
+        }
       ];
       return changes.map(function (change) {
         const input = JSON.parse(stored);
@@ -161,12 +191,16 @@ test('invalid v4 input preserves live state, RNG, identity counters and stored s
           JSON.stringify(input) === bytes && JSON.stringify(FB.save.read(1)) === stored };
       });
     });
-    expect(errors).toHaveLength(17);
+    expect(errors).toHaveLength(25);
     for (const error of errors) {
       expect(error.message).not.toBe('');
       expect(error.unchanged).toBe(true);
     }
     expect(errors[3].message).toContain('Missing bookmark');
+    expect(errors[0].message).toContain('Unsupported save schema at v: 5');
+    expect(errors[1].message).toContain('authoritySchema');
+    expect(errors[2].message).toContain('titleIds');
+    expect(errors[10].message).toContain('platformSchema');
     expect(errors[4].message).toContain('different mod set');
     expect(errors[6].message).toContain('authority.nextId');
     expect(errors[9].message).toContain('Duplicate v4 authority id');
@@ -176,6 +210,14 @@ test('invalid v4 input preserves live state, RNG, identity counters and stored s
     expect(errors[14].message).toContain('Unknown story missing_story');
     expect(errors[15].message).toContain('state.situation476');
     expect(errors[16].message).toContain('Unknown government form missing_default');
+    expect(errors[17].message).toContain('state.stories.federate_track_476.phase');
+    expect(errors[18].message).toContain('requires story western_court_476');
+    expect(errors[19].message).toContain('state.stories.western_court_476');
+    expect(errors[20].message).toContain('rng');
+    expect(errors[21].message).toContain('uid');
+    expect(errors[22].message).toContain('state.start');
+    expect(errors[23].message).toContain('state.situation476');
+    expect(errors[24].message).toContain('Unsupported save schema at platformSchema: 2');
   });
 
 test('optional platform fields round trip absent, stamped and present',
@@ -332,4 +374,267 @@ test('localStorage v3 Continue upgrades only on a successful v4 save',
       FB.save.flushPending();
       return { version:FB.save.read('auto').v, authority:!!FB.state.authority };
     })).toEqual({ version:4, authority:false });
+  });
+
+test('prototype v4 without a platform stamp migrates the old situation exactly once',
+  async function ({ page }, testInfo) {
+    await start(page, testInfo, '476');
+    const result = await page.evaluate(function () {
+      const source = JSON.parse(FB.save.serialize());
+      const input = JSON.parse(JSON.stringify(source));
+      delete input.platformSchema;
+      delete input.state.authority.schema;
+      input.state.situation476 = Object.assign({}, input.state.stories.western_court_476,
+        input.state.stories.federate_track_476);
+      delete input.state.situation476.railsSchema;
+      delete input.state.stories;
+      const bytes = JSON.stringify(input), live = FB.state;
+      const rng = FB.getRngState(), uid = FB.getUidCounter();
+      const once = FB.save.v4.migrate(input), twice = FB.save.v4.migrate(once);
+      const pure = FB.state === live && FB.getRngState() === rng && FB.getUidCounter() === uid;
+      FB.save.restore(once);
+      const first = FB.save.serialize();
+      FB.save.restore(twice);
+      return { supported:FB.save.isSupported(input),
+        header:[once.v, once.titleIds, once.authoritySchema, once.platformSchema],
+        immutable:bytes === JSON.stringify(input), pure:pure,
+        idempotent:JSON.stringify(once) === JSON.stringify(twice),
+        records:{ world:once.state.stories.western_court_476,
+          originalWorld:source.state.stories.western_court_476,
+          track:once.state.stories.federate_track_476,
+          originalTrack:source.state.stories.federate_track_476 },
+        removed:!Object.prototype.hasOwnProperty.call(once.state, 'situation476'),
+        repeatedRestore:first === FB.save.serialize(),
+        alias:Object.prototype.hasOwnProperty.call(FB.save, 'prototypeV4') };
+    });
+    expect(result.records.world).toEqual(result.records.originalWorld);
+    expect(result.records.track).toEqual(result.records.originalTrack);
+    delete result.records;
+    expect(result).toEqual({ supported:true, header:[4,1,4,1], immutable:true, pure:true,
+      idempotent:true, removed:true, repeatedRestore:true, alias:false });
+  });
+
+test('invalid live story records cannot replace a stored campaign',
+  async function ({ page }, testInfo) {
+    await start(page, testInfo, '476');
+    const result = await page.evaluate(async function () {
+      await new Promise(function (resolve) { FB.save.toSlot(1, resolve); });
+      const stored = JSON.stringify(FB.save.read(1)), track = FB.state.stories.federate_track_476;
+      const original = track.phase;
+      try {
+        track.phase = 'missing_phase';
+        const written = await new Promise(function (resolve) { FB.save.toSlot(1, resolve); });
+        return { written:written, preserved:stored === JSON.stringify(FB.save.read(1)) };
+      } finally { track.phase = original; }
+    });
+    expect(result).toEqual({ written:false, preserved:true });
+  });
+
+test('federate facts reject invalid choices, references and future payment stamps before adoption',
+  async function ({ page }, testInfo) {
+    await start(page, testInfo, '476');
+    const result = await page.evaluate(function () {
+      const source = FB.save.serialize(), live = FB.state;
+      const rng = FB.getRngState(), uid = FB.getUidCounter();
+      const invalid = { role:'missing_role', result:'missing_result', proposal:'missing_proposal',
+        backedClaimant:'missing_claimant', contractId:1, awardGranted:1,
+        lastAllocatedPeriod:Math.floor(FB.state.turn / 90) + 1, outcomeTurn:FB.state.turn + 1,
+        veteranMigration:{ provinceId:'missing_county', settlement:1, turn:FB.state.turn } };
+      return Object.keys(invalid).map(function (field) {
+        const input = JSON.parse(source);
+        input.state.stories.federate_track_476[field] = invalid[field];
+        const bytes = JSON.stringify(input);
+        let message = '';
+        try { FB.save.restore(input); } catch (error) { message = error.message; }
+        return { field:field, message:message, preserved:FB.state === live &&
+          FB.getRngState() === rng && FB.getUidCounter() === uid && JSON.stringify(input) === bytes };
+      });
+    });
+    for (const row of result) {
+      expect(row.message).toContain('state.stories.federate_track_476.' + row.field);
+      expect(row.preserved).toBe(true);
+    }
+  });
+
+test('an invalid live identity counter cannot replace a stored campaign',
+  async function ({ page }, testInfo) {
+    await start(page, testInfo, '867');
+    const result = await page.evaluate(async function () {
+      await new Promise(function (resolve) { FB.save.toSlot(1, resolve); });
+      const previous = JSON.stringify(FB.save.read(1)), uid = FB.getUidCounter();
+      try {
+        FB.setUidCounter(-1);
+        const accepted = await new Promise(function (resolve) { FB.save.toSlot(1, resolve); });
+        return { accepted:accepted, preserved:previous === JSON.stringify(FB.save.read(1)) };
+      } finally { FB.setUidCounter(uid); }
+    });
+    expect(result).toEqual({ accepted:false, preserved:true });
+  });
+
+/* Browser-only corpus/storage journey. No game scripts execute in Node. */
+async function checkStorageRoundTrip() {
+  FB.game.setPaused(true);
+  FB.save.flushPending();
+  function facts(data) {
+    const s = data.state, p = s.player;
+    return {
+      date:s.date, turn:s.turn, owner:s.owner, holder:s.holder,
+      population:s.population, buildings:s.buildings, settlementLordships:s.settlementLordships,
+      authority:s.authority && Object.assign({}, s.authority, { schema:undefined }),
+      courts:Object.keys(s.realms).sort().map(function (id) { return [id,s.realms[id].succession]; }),
+      intrigue:s.intrigue, justice:s.justice, wars:s.wars, armies:s.armies,
+      treasury:s.treasuryAccounting, fiscal:s.fiscalCrisis, market:s.market,
+      abbeys:s.abbeys, campaigns:s.stories,
+      player:[p.charId,p.provinceId,p.provs,p.gold,p.tier,p.holdings,p.enterprises,
+        p.landPlots,p.loans,p.captiveWarId,p.captiveTurn],
+      family:Object.keys(s.chars).sort().map(function (id) {
+        const c = s.chars[id];
+        return [id,c.born,c.culture,c.religion,c.fatherId,c.motherId,c.spouseId,c.spouseIds,c.childrenIds];
+      }), rng:data.rng >>> 0, uid:data.uid
+    };
+  }
+  function changed(a, b) {
+    return Object.keys(a).filter(function (key) { return JSON.stringify(a[key]) !== JSON.stringify(b[key]); });
+  }
+  const source = window.__saveFreezeSource || JSON.parse(FB.save.serialize());
+  const bytes = JSON.stringify(source), live = FB.state;
+  const rng = FB.getRngState(), uid = FB.getUidCounter();
+  const once = FB.save.v4.migrate(source), twice = FB.save.v4.migrate(once);
+  const pure = FB.state === live && FB.getRngState() === rng && FB.getUidCounter() === uid;
+  const normalized = Object.assign({}, source, { state:FB.titleIds.migrateState(source.state,
+    FB.bookmark(source.state.start && source.state.start.id || '867')) });
+  const migrationChanges = changed(facts(normalized), facts(once));
+  const canonical = JSON.parse(FB.save.serialize()), expected = facts(canonical);
+  FB.save.restore(canonical);
+  const restoreChanges = changed(expected, facts(JSON.parse(FB.save.serialize())));
+  FB.save.restore(canonical);
+  const repeatedChanges = changed(expected, facts(JSON.parse(FB.save.serialize())));
+  // 5 MiB aggregate UTF-16 budget, including keys and unrelated preferences.
+  const limit = 5 * 1024 * 1024;
+  const original = Storage.prototype.setItem;
+  let rejectedPlain = false;
+  function usage() {
+    let total = 0;
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      total += 2 * (key.length + localStorage.getItem(key).length);
+    }
+    return total;
+  }
+  localStorage.setItem('__save_freeze_reserve', 'r'.repeat(256 * 1024));
+  Storage.prototype.setItem = function (key, value) {
+    if (this === localStorage) {
+      const previous = this.getItem(key);
+      const size = usage() - (previous === null ? 0 : 2 * (key.length + previous.length)) +
+        2 * (key.length + String(value).length);
+      if (size > limit) {
+        if (key === 'fb_auto' && String(value).charAt(0) === '{') rejectedPlain = true;
+        throw new DOMException('Save format quota probe', 'QuotaExceededError');
+      }
+    }
+    return original.apply(this, arguments);
+  };
+  try {
+    const saved = [], slotChanges = [];
+    for (const slot of [1,2,3]) {
+      saved.push(await new Promise(function (resolve) { FB.save.toSlot(slot, resolve); }));
+      const reread = FB.save.read(slot);
+      slotChanges.push(reread ? changed(expected, facts(reread)) : ['missing']);
+    }
+    FB.save.autosave(); FB.save.flushPending();
+    const auto = FB.save.read('auto');
+    const exported = FB.save.exportState(), imported = FB.save.parseExport(exported);
+    const result = {
+      header:[canonical.v,canonical.titleIds,canonical.authoritySchema,canonical.platformSchema],
+      pure:pure, immutable:bytes === JSON.stringify(source),
+      identity:(canonical.rng >>> 0) === (source.rng >>> 0) && canonical.uid === source.uid,
+      idempotent:JSON.stringify(once) === JSON.stringify(twice),
+      migrationChanges:migrationChanges, restoreChanges:restoreChanges, repeatedChanges:repeatedChanges,
+      saved:saved, slotChanges:slotChanges,
+      autoChanges:auto ? changed(expected, facts(auto)) : ['missing'],
+      exportChanges:imported ? changed(expected, facts(imported)) : ['missing'],
+      prefixes:[localStorage.getItem('fb_slot1').slice(0,5),exported.slice(0,5)],
+      bytes:usage(), limit:limit, jsonBytes:JSON.stringify(canonical).length * 2,
+      rejectedPlain:rejectedPlain,
+      authority:JSON.stringify(canonical.state.authority) === JSON.stringify(FB.state.authority)
+    };
+    return result;
+  } finally {
+    Storage.prototype.setItem = original;
+    localStorage.removeItem('__save_freeze_reserve');
+  }
+}
+
+function expectStorageRoundTrip(result) {
+  expect(result.header).toEqual([4,1,4,1]);
+  expect(result.pure).toBe(true);
+  expect(result.immutable).toBe(true);
+  expect(result.identity).toBe(true);
+  expect(result.idempotent).toBe(true);
+  expect(result.migrationChanges).toEqual([]);
+  expect(result.restoreChanges).toEqual([]);
+  expect(result.repeatedChanges).toEqual([]);
+  expect(result.saved).toEqual([true,true,true]);
+  expect(result.slotChanges).toEqual([[],[],[]]);
+  expect(result.autoChanges).toEqual([]);
+  expect(result.exportChanges).toEqual([]);
+  expect(result.prefixes).toEqual(['FBC1.','FBS2.']);
+  expect(result.bytes).toBeLessThanOrEqual(result.limit);
+  expect(result.authority).toBe(true);
+}
+
+for (const bookmark of ['493','711','800','1204']) {
+  test(bookmark + ' retains every registered story and platform fact in the frozen format',
+    async function ({ page }, testInfo) {
+      test.setTimeout(180 * 1000);
+      await page.addInitScript(function () {
+        Object.defineProperty(window, 'indexedDB', { configurable:true, value:undefined });
+      });
+      await start(page, testInfo, bookmark);
+      expectStorageRoundTrip(await page.evaluate(checkStorageRoundTrip));
+    });
+}
+
+for (const entry of corpusEntries()) {
+  test('frozen v4 corpus round trip and WebKit-sized budget: ' + entry.id,
+    async function ({ page }, testInfo) {
+      const source = readCorpusExport(entry);
+      test.skip(!!source.missing, 'Set FB_PARITY_CORPUS to the checkout containing the Phase 0 saves.');
+      expect(source.sha256).toBe(entry.sha256);
+      test.setTimeout(180 * 1000);
+      await page.addInitScript(function () {
+        Object.defineProperty(window, 'indexedDB', { configurable:true, value:undefined });
+      });
+      await loadParitySave(page, testInfo, source.text);
+      await page.evaluate(function (text) { window.__saveFreezeSource = FB.save.parseExport(text); }, source.text);
+      const result = await page.evaluate(checkStorageRoundTrip);
+      await testInfo.attach('save-size.json', { body:JSON.stringify({ source:entry.id,
+        utf16Bytes:result.bytes, jsonUtf16Bytes:result.jsonBytes, quota:result.limit,
+        autosaveCompressedAfterQuota:result.rejectedPlain }), contentType:'application/json' });
+      expectStorageRoundTrip(result);
+    });
+}
+
+test('long 476 campaign round trips stories and payments within the WebKit-sized budget',
+  async function ({ page }, testInfo) {
+    test.setTimeout(180 * 1000);
+    await page.addInitScript(function () {
+      Object.defineProperty(window, 'indexedDB', { configurable:true, value:undefined });
+    });
+    await start(page, testInfo, '476');
+    // Use the annual-history stress method also used by storage.spec.js.
+    // It grows courts and communities without claiming a full daily replay.
+    await page.evaluate(function () {
+      FB.game.setPaused(true);
+      for (let year = 0; year < 60; year++) {
+        FB.state.date.year++; FB.state.turn += 360;
+        FB.worldTick(FB.state);
+        FB.stories.year(FB.state);
+      }
+    });
+    const result = await page.evaluate(checkStorageRoundTrip);
+    await testInfo.attach('save-size.json', { body:JSON.stringify({ years:60,
+      utf16Bytes:result.bytes, jsonUtf16Bytes:result.jsonBytes, quota:result.limit }),
+      contentType:'application/json' });
+    expectStorageRoundTrip(result);
   });

@@ -3,8 +3,6 @@
   'use strict';
   var P = {};
   FB.save.v4 = P;
-  // Keep development tools using the former prototype entry point compatible.
-  FB.save.prototypeV4 = P;
   function own(o, key) {
     return !!o && Object.prototype.hasOwnProperty.call(o, key);
   }
@@ -65,6 +63,12 @@
   function field(where) {
     throw new Error(FB.T('Invalid v4 save field at {path}.', { path:where }));
   }
+  P.validateIdentity = function (data) {
+    // The RNG exposes either signed or unsigned representations of 32 bits.
+    if (!Number.isInteger(data.rng) || data.rng < -2147483648 ||
+        data.rng > 4294967295) field('rng');
+    if (!Number.isSafeInteger(data.uid) || data.uid < 0) field('uid');
+  };
   function stamp(start, key, family) {
     if (!own(start, key)) return;
     if (typeof start[key] !== 'string' || !start[key]) field('state.start.' + key);
@@ -73,22 +77,36 @@
   /* Optional platform fields (state-and-saves.md, Save v4 platform schema).
      Absent fields stay valid; present ids must resolve. */
   P.validatePlatform = function (state) {
+    // A leftover legacy record must fail even when there are no stories.
+    if (state.situation476 !== undefined) field('state.situation476');
+    if (state.start !== undefined && !plain(state.start)) field('state.start');
     validateRoyalCourts(state);
     if (FB.validateStartingRealm) FB.validateStartingRealm(state);
     if (FB.validateLocalInstitutionState) FB.validateLocalInstitutionState(state);
     if (FB.validateReligionInstitutionState) FB.validateReligionInstitutionState(state);
     if (FB.validateHistoricalHolyWarState) FB.validateHistoricalHolyWarState(state);
     if (plain(state.start)) {
+      if (typeof state.start.id !== 'string' || !state.start.id) field('state.start.id');
+      if (!own(FBDATA.bookmarks, state.start.id)) throw new Error(FB.T(
+        'Missing bookmark {id} for title migration.', { id:state.start.id }));
       stamp(state.start, 'era', 'era');
       stamp(state.start, 'geography', 'geography');
       stamp(state.start, 'defaultGovernment', 'government');
     }
     if (state.stories === undefined) return true;
     if (!plain(state.stories)) field('state.stories');
-    if (state.situation476 !== undefined) field('state.situation476');
+    // Check the entire registry graph before calling validators that read peers.
     for (var id in state.stories) if (own(state.stories, id)) {
       if (!known('story', id)) unknown('story', id);
       if (!plain(state.stories[id])) field('state.stories.' + id);
+      var story = FB.stories.get(id);
+      (story.requires || []).forEach(function (required) {
+        if (!own(state.stories, required)) throw new Error(FB.T(
+          'Story {id} requires story {required} in this save.',
+          { id:id, required:required }));
+      });
+    }
+    for (var id in state.stories) if (own(state.stories, id)) {
       var story = FB.stories.get(id);
       if (typeof story.validate === 'function') story.validate(state.stories[id], state);
     }
@@ -198,7 +216,7 @@
   P.validateAuthority = function (authority, state) {
     if (authority === undefined) return true;
     if (!plain(authority) || authority.schema !== undefined &&
-        authority.schema !== 4 || !Number.isInteger(authority.nextId) ||
+        authority.schema !== FB.save.FORMAT.authoritySchema || !Number.isSafeInteger(authority.nextId) ||
         authority.nextId < 1 || !plain(authority.governments) ||
         authority.lastCustomYear !== undefined &&
         !Number.isInteger(authority.lastCustomYear)) invalid('authority');
@@ -207,9 +225,9 @@
       civicActors:1, migrations:1 };
     for (var key in authority) if (own(authority, key) && !own(allowed, key))
       invalid('authority.' + key);
-    var seen = {};
+    var seen = Object.create(null);
     rows(authority, 'appointments', seen, function (value, where) {
-      if (!FBDATA.authorityOffices[value.officeId] ||
+      if (!own(FBDATA.authorityOffices, value.officeId) ||
           typeof value.institutionId !== 'string' ||
           !own(state.realms, value.institutionId) ||
           !['active','contested','expired','removed'].includes(value.status) ||
@@ -224,7 +242,7 @@
       endTurn(value, where);
     });
     rows(authority, 'recognitions', seen, function (value, where) {
-      if (!FBDATA.legitimacySources[value.source] ||
+      if (!own(FBDATA.legitimacySources, value.source) ||
           !['active','revoked'].includes(value.status) ||
           !Number.isInteger(value.startTurn)) invalid(where);
       ref(value.issuer, ['realm','host','county','religious-office','character'],
@@ -333,7 +351,7 @@
       });
     }
     rows(authority, 'rights', seen, function (value, where) {
-      if (!FBDATA.customaryBases[value.basis] ||
+      if (!own(FBDATA.customaryBases, value.basis) ||
           ['peace','revenue','consent'].indexOf(value.power) < 0 ||
           !['active','lapsed','revoked'].includes(value.status) ||
           !Number.isFinite(value.strength) || value.strength < 0 ||
@@ -342,12 +360,13 @@
       ref(value.beneficiary, ['realm','character'], where + '.beneficiary');
       ref(value.scope, ['county'], where + '.scope');
     });
-    var obligations = {};
+    var obligations = Object.create(null);
     rows(authority, 'receipts', seen, function (value, where) {
       if (typeof value.obligationId !== 'string' || !value.obligationId ||
-          own(obligations, value.obligationId) ||
           !Number.isFinite(value.amount) || value.amount <= 0 ||
           !Number.isInteger(value.turn)) invalid(where);
+      if (own(obligations, value.obligationId)) throw new Error(FB.T(
+        'Duplicate v4 authority receipt for obligation {id}.', { id:value.obligationId }));
       obligations[value.obligationId] = true;
     });
     for (var rid in authority.governments) if (own(authority.governments, rid)) {
@@ -355,13 +374,13 @@
       if (plain(form) && typeof form.formId === 'string' &&
           !known('government', form.formId)) unknown('government', form.formId);
       if (!own(state.realms, rid) || !plain(form) ||
-          !FBDATA.governmentForms[form.formId] ||
+          !known('government', form.formId) ||
           !Number.isInteger(form.sinceTurn) ||
           form.eliteCultureId !== undefined &&
-            !FBDATA.cultures[form.eliteCultureId] ||
+            !own(FBDATA.cultures, form.eliteCultureId) ||
           form.eliteFaithId !== undefined &&
-            !((FBDATA.religions || {})[form.eliteFaithId] ||
-              (state.faiths || {})[form.eliteFaithId]) ||
+            !(own(FBDATA.religions, form.eliteFaithId) ||
+              own(state.faiths, form.eliteFaithId)) ||
           form.legalIdentityId !== undefined &&
             !own(FBDATA.legalTraditions, form.legalIdentityId) ||
           form.tolerance !== undefined &&
@@ -375,7 +394,7 @@
     if (authority.civicActors !== undefined) {
       rows(authority, 'civicActors', seen, function (value, where) {
         if (typeof value.siteId !== 'string' ||
-            !FBDATA.settlementSites[value.siteId] ||
+            !own(FBDATA.settlementSites, value.siteId) ||
             typeof value.countyId !== 'string') invalid(where);
       });
     }
@@ -386,26 +405,40 @@
     return true;
   };
   P.migrate = function (data) {
-    if (!plain(data) || !FB.save.isSupported(data) ||
-        !plain(data.state) || !plain(data.state.realms) ||
+    var issue = FB.save.envelopeIssue(data);
+    if (issue) throw new Error(FB.T('Unsupported save schema at {path}: {value}.',
+      { path:issue, value:plain(data) ? String(data[issue]) : '?' }));
+    if (!plain(data.state) || !plain(data.state.realms) ||
         !plain(data.state.owner) || !plain(data.state.holder) ||
         !plain(data.state.chars) || !plain(data.state.player) ||
         !plain(data.state.date) ||
         typeof data.state.player.charId !== 'string' ||
-        !plain(data.state.chars[data.state.player.charId]) ||
-        !Number.isInteger(data.rng) || !Number.isInteger(data.uid))
+        !plain(data.state.chars[data.state.player.charId]))
       throw new Error(FB.T('Save v4 migration needs a v3 or v4 game state.'));
+    P.validateIdentity(data);
+    if (data.state.start !== undefined && (!plain(data.state.start) ||
+        typeof data.state.start.id !== 'string' || !data.state.start.id)) field('state.start');
     var currentMods = FB.mods.sig();
     if ((FB.platform.isCrazyGames || /^crazygames-content-/.test(data.mods || '')) &&
         data.mods !== currentMods)
       throw new Error(FB.T('This save belongs to a different edition of the game.'));
     if (data.mods !== undefined ? data.mods !== currentMods : !!currentMods)
       throw new Error(FB.T('This save uses a different mod set and cannot be migrated.'));
-    var bookmarkId = data.state.start && data.state.start.id || '867';
-    var bookmark = FBDATA.bookmarks && FBDATA.bookmarks[bookmarkId];
+    var bookmarkId = data.state.start ? data.state.start.id : '867';
+    var bookmark = own(FBDATA.bookmarks, bookmarkId) && FBDATA.bookmarks[bookmarkId];
     if (!bookmark) throw new Error(FB.T(
       'Missing bookmark {id} for title migration.', { id:bookmarkId }));
     var state = FB.titleIds.migrateState(data.state, bookmark);
+    // Reject malformed branch records before hooks can read them. The owning
+    // story handles the valid split and leaves conflicts for validation.
+    if (state.situation476 !== undefined && !plain(state.situation476)) field('state.situation476');
+    if (state.stories !== undefined) {
+      if (!plain(state.stories)) field('state.stories');
+      for (var id in state.stories) if (own(state.stories, id)) {
+        if (!known('story', id)) unknown('story', id);
+        if (!plain(state.stories[id])) field('state.stories.' + id);
+      }
+    }
     /* A campaign keeps the era and geography it first ran under. Older saves
        take them once from their bookmark; a stamped value is never replaced.
        The default government form is stamped only at creation: deriving it
@@ -419,9 +452,8 @@
     if (FB.stories) FB.stories.migrate(state);
     P.validateAuthority(state.authority, state);
     P.validatePlatform(state);
-    if (state.authority) state.authority.schema = 4;
-    return Object.assign({}, data, { v:4, titleIds:1, authoritySchema:4,
-      platformSchema:1, state:state });
+    if (state.authority) state.authority.schema = FB.save.FORMAT.authoritySchema;
+    return Object.assign({}, data, FB.save.FORMAT, { state:state });
   };
   P.serialize = function () {
     return FB.save.serialize();

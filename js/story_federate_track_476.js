@@ -683,13 +683,43 @@
       { income:Math.round(award.net * 10) / 10,
         loss:Math.round(award.lostRevenue * 10) / 10 })];
   }
-  function validate(record) {
+  function validate(record, s) {
     function bad(field) {
       throw new Error(FB.T('Invalid v4 save field at {path}.',
         { path:'state.stories.' + TRACK + '.' + field }));
     }
-    if (typeof record.phase !== 'string' || !record.phase) bad('phase');
-    if (typeof record.role !== 'string') bad('role');
+    if (['delegate','commission','contract','civic','recognition','court','resolution',
+        'battle','aftermath','complete','civic_service','church_service'].indexOf(record.phase) < 0) bad('phase');
+    if (['ordinary','delegate','commander','outside','city_clerk','church_clerk',
+        'church_delegate'].indexOf(record.role) < 0) bad('role');
+    if (record.result !== undefined && [null,'declined','interrupted','negotiated',
+        'contested','contested_withdrawal','contested_defeat','contested_victory',
+        'civic_office','church_civic_office','civic_service','church_service'].indexOf(record.result) < 0) bad('result');
+    if (record.proposal !== undefined && ['court_guarantee','force'].indexOf(record.proposal) < 0) bad('proposal');
+    if (record.backedClaimant !== undefined &&
+        [null,'basiliscus','zeno','nepos','none'].indexOf(record.backedClaimant) < 0) bad('backedClaimant');
+    ['contractId','commissionId','civicRecognitionId','churchRecognitionId',
+      'imperialRecognitionId','cityOfficeId','homoianRecognitionId',
+      'interfaithRecognitionId','senateRecognitionId'].forEach(function (key) {
+      if (record[key] !== undefined && record[key] !== null &&
+          (typeof record[key] !== 'string' || !record[key])) bad(key);
+    });
+    ['awardRequested','awardGranted','maintenancePaid'].forEach(function (key) {
+      if (record[key] !== undefined && typeof record[key] !== 'boolean') bad(key);
+    });
+    if (record.lastAllocatedPeriod !== undefined &&
+        (!Number.isInteger(record.lastAllocatedPeriod) || record.lastAllocatedPeriod < 0 ||
+          record.lastAllocatedPeriod > Math.floor(s.turn / 90))) bad('lastAllocatedPeriod');
+    if (record.outcomeTurn !== undefined && record.outcomeTurn !== null &&
+        (!Number.isInteger(record.outcomeTurn) || record.outcomeTurn < 0 ||
+          record.outcomeTurn > s.turn)) bad('outcomeTurn');
+    if (record.veteranMigration !== undefined) {
+      var move = record.veteranMigration;
+      if (!move || typeof move !== 'object' || Array.isArray(move) ||
+          typeof move.provinceId !== 'string' || !Object.prototype.hasOwnProperty.call(s.owner, move.provinceId) ||
+          !Number.isInteger(move.settlement) || move.settlement < 0 ||
+          !Number.isInteger(move.turn) || move.turn < 0 || move.turn > s.turn) bad('veteranMigration');
+    }
   }
   FB.stories.register({ id:TRACK, kind:'track', requires:['western_court_476'],
     init:init, day:day, season:season,
