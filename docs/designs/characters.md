@@ -1232,6 +1232,8 @@ for the home and current destination counties. This bounded cast is a social for
 not a demographic simulation. The technology impact is **none**: everyday community life
 is baseline social play.
 
+Cleanup retains the family-reference closure of living residents in active counties, connected residents and non-local characters. A dead parent or spouse remains while a retained character references them, including reciprocal children links. An unconnected distant household has no retention root and can still be removed as a whole. This preserves genealogy and saved identity without creating new residents or extending autonomous household simulation.
+
 Communal nursing is a cultural household practice: one adult resident follower
 adds 0.001 annual mortality protection to the strongest professional provider.
 Additional followers do not stack, and a traveling player supplies no protection.

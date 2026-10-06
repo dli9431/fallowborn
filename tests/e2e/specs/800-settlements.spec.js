@@ -1,17 +1,21 @@
 'use strict';
 const { test, expect } = require('../support/fixture');
 const { openGame } = require('../support/game/navigation');
+const { openCrazyGame } = require('../support/game/crazygames-title');
+const { startParityGame } = require('../support/game/parity');
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
   'index.html', 'data/bookmark_800.js', 'data/bookmark_800_history.js',
   'data/bookmarks.js', 'data/technology.js', 'data/political_institutions.js',
+  'data/distribution_crazygames.js', 'js/crazygames.js',
   'js/world.js', 'js/royal_settlements.js', 'js/story_carolingian_800.js',
-  'js/stories.js', 'js/model.js', 'js/governments.js', 'js/station.js',
+  'js/stories.js', 'js/model.js', 'js/governments.js', 'js/station.js', 'js/localfolk.js',
   'js/wars.js', 'js/authority.js', 'js/treasury.js', 'js/events.js',
   'js/main.js', 'js/save.js', 'js/save_v4.js'
 ]);
-async function observe(page, testInfo, bookmark) {
-  await openGame(page, testInfo);
+async function observe(page, testInfo, bookmark, crazygames) {
+  if (crazygames) await openCrazyGame(page, testInfo);
+  else await openGame(page, testInfo);
   const error = await page.evaluate(function (bookmark) {
     return new Promise(function (resolve) {
       FB.activateBookmark(bookmark, null, function (fault) {
@@ -28,7 +32,7 @@ for (const crazy of [false, true]) {
   test('800 courts link real sons once and preserve their saved identity with flag ' + crazy,
     async function ({ page }, testInfo) {
       if (crazy) await page.addInitScript(function () { window.FB_DISTRIBUTION = 'crazygames'; });
-      await observe(page, testInfo);
+      await observe(page, testInfo, null, crazy);
       const result = await page.evaluate(function () {
         let s = FB.state;
         const rec = s.stories.carolingian_settlements_800;
@@ -267,7 +271,11 @@ test('867 stays detached and an older 800 save gains no historical people or sto
   async function ({ page }, testInfo) {
     await observe(page, testInfo, '867');
     expect(await page.evaluate(function () { return !!FB.stories.record(FB.state, 'carolingian_settlements_800'); })).toBe(false);
-    await observe(page, testInfo);
+    // A resumable household has its ordinary parents, unlike the observer's
+    // placeholder soul, so this isolates historical-story restore behavior.
+    await startParityGame(page, testInfo, {
+      bookmark:'800', code:'SETTLEMENTS-800-farmer-london-m-Review'
+    });
     const result = await page.evaluate(function () {
       delete FB.state.stories.carolingian_settlements_800;
       const before = Object.keys(FB.state.chars).sort().join('|');

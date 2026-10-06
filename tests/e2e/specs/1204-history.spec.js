@@ -6,17 +6,20 @@ dependsOnRuntime(__filename, [
   'data/technology.js', 'data/systems.js', 'data/eras.js', 'data/starts.js',
   'js/stories.js', 'js/story_history.js', 'js/story_campaign.js', 'js/story_476_rails.js',
   'js/starts.js', 'js/main.js', 'js/world.js', 'js/model.js', 'js/authority.js',
-  'js/holywar.js', 'js/papacy.js', 'js/treasury.js', 'js/save.js', 'js/save_v4.js'
+  'js/holywar.js', 'js/papacy.js', 'js/treasury.js', 'js/save.js', 'js/save_v4.js',
+  'data/distribution_crazygames.js', 'js/crazygames.js'
 ]);
 const { test, expect } = require('../support/fixture');
 const { openGame } = require('../support/game/navigation');
+const { openCrazyGame } = require('../support/game/crazygames-title');
 
 async function begin(page, testInfo, distribution) {
   if (distribution) await page.addInitScript(function () {
     window.FB_DISTRIBUTION = 'crazygames';
     window.FB_CRAZYGAMES_STORAGE = 'localstorage';
   });
-  await openGame(page, testInfo);
+  if (distribution) await openCrazyGame(page, testInfo);
+  else await openGame(page, testInfo);
   await page.evaluate(function () { FB.startProgression.noteTier(3); });
   const fullStart = page.locator('#btn-choose-beginning');
   if (await fullStart.isVisible()) await fullStart.click();
@@ -315,7 +318,9 @@ test('old campaigns receive no new history or people and malformed historical sa
       badDate.state.greatHolyWarHistory.campaigns[0].date.year = 1205;
       const badGrant = JSON.parse(JSON.stringify(source));
       badGrant.state.stories.thessalonica_partition_1204.grantedCounties = ['thessaloniki'];
-      [badDate,badGrant].forEach(function (data) {
+      const badDependency = JSON.parse(JSON.stringify(source));
+      delete badDependency.state.stories.thessalonica_partition_1204;
+      [badDate,badGrant,badDependency].forEach(function (data) {
         const before = FB.state, rng = FB.getRngState(), uid = FB.getUidCounter();
         let error = '';
         try { FB.save.restore(data); } catch (e) { error = e.message; }
@@ -325,7 +330,7 @@ test('old campaigns receive no new history or people and malformed historical sa
       const people = ['thessalonica_partition_1204','athens_partition_1204','achaia_partition_1204']
         .map(function (id) { return old.state.stories[id].beneficiaryId; });
       people.forEach(function (id) { delete old.state.chars[id]; });
-      ['thessalonica_partition_1204','athens_partition_1204','achaia_partition_1204','latin_athens_1204','latin_achaia_1204','fifth_crusade_call_1204']
+      ['thessalonica_partition_1204','athens_partition_1204','achaia_partition_1204','latin_bithynia_1204','latin_athens_1204','latin_achaia_1204','fifth_crusade_call_1204']
         .forEach(function (id) { delete old.state.stories[id]; });
       old.state.greatHolyWarHistory.campaigns = [];
       FB.save.restore(old);
@@ -334,8 +339,8 @@ test('old campaigns receive no new history or people and malformed historical sa
         attached:Object.keys(FB.state.stories).length, created:!!FB.state.realms.thessalonica_latin_1204,
         peopleAdded:people.some(function (id) { return !!FB.state.chars[id]; }) };
     });
-    expect(result.faults).toEqual([true,true]); expect(result.history).toEqual([]);
+    expect(result.faults).toEqual([true,true,true]); expect(result.history).toEqual([]);
     expect(result.crossBookmark).toBe(true);
-    expect(result.attached).toBe(9); expect(result.created).toBe(false);
+    expect(result.attached).toBe(8); expect(result.created).toBe(false);
     expect(result.peopleAdded).toBe(false);
   });

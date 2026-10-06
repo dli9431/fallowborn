@@ -20,6 +20,8 @@ const cases = [
   ['unknown ruler culture', 'culture', /ruler: unknown culture missing_culture/],
   ['unknown realm faith', 'faith', /missing_faith/],
   ['required faith institution', 'faith_system', /faith nicene: requires unavailable system papacy/],
+  ['null faith requirements', 'faith_requirements', /faith nicene: requirements must be an object/],
+  ['null faith-head requirements', 'head_requirements', /faith nicene head: requirements must be an object/],
   ['absent starting form', 'start_form', /government form territorial is absent/],
   ['missing province', 'province', /unknown provinces requirement missing_province/],
   ['missing site', 'site', /unknown sites requirement missing_site/],
@@ -77,6 +79,8 @@ for (const [label, change, expected] of cases) {
         case 'culture': realm.ruler.culture = 'missing_culture'; break;
         case 'faith': realm.religion = 'missing_faith'; break;
         case 'faith_system': faith.requirements = { systems:['papacy'] }; break;
+        case 'faith_requirements': faith.requirements = null; break;
+        case 'head_requirements': faith.head.requirements = null; break;
         case 'start_form': scenario.governmentForm = 'territorial'; break;
         case 'province': bm.requirements = { provinces:['missing_province'] }; break;
         case 'site': bm.requirements = { sites:['missing_site'] }; break;
@@ -114,6 +118,61 @@ for (const [label, change, expected] of cases) {
     expect(errors.join('\n')).toMatch(expected);
   });
 }
+
+test('headless 711 faiths pass bookmark and mod requirements without mutation', async function ({ page }, testInfo) {
+  await openGame(page, testInfo);
+  const result = await page.evaluate(function () {
+    const bm = FB.bookmark('711');
+    const before = JSON.stringify(FBDATA), state = FB.state;
+    const rng = FB.getRngState(), uid = FB.getUidCounter();
+    const faults = FB.validateBookmark(bm);
+    const errors = FB.mods.validate({ bookmarks:[JSON.parse(JSON.stringify(bm))] });
+    return { faults:faults, errors:errors,
+      heads:['buddhist_711','hindu_711'].map(function (id) { return FB.religionOf(id, null).head; }),
+      unchanged:before === JSON.stringify(FBDATA) && state === FB.state &&
+        rng === FB.getRngState() && uid === FB.getUidCounter() };
+  });
+  expect(result).toEqual({ faults:[], errors:[], heads:[null,null], unchanged:true });
+});
+
+test('missing bookmark validation reports a diagnostic without entering opening hooks', async function ({ page }, testInfo) {
+  await openGame(page, testInfo);
+  const result = await page.evaluate(function () {
+    const before = JSON.stringify(FBDATA), rng = FB.getRngState(), uid = FB.getUidCounter();
+    return { faults:[FB.validateBookmark(null), FB.validateBookmark(undefined)],
+      unchanged:before === JSON.stringify(FBDATA) && rng === FB.getRngState() && uid === FB.getUidCounter() };
+  });
+  expect(result).toEqual({ faults:[['Bookmark definition is missing.'], ['Bookmark definition is missing.']], unchanged:true });
+});
+
+test('bookmark validation leaves legacy technology defaults untouched until accepted activation', async function ({ page }, testInfo) {
+  await openGame(page, testInfo);
+  const result = await page.evaluate(async function () {
+    const id = Object.keys(FBDATA.tech).filter(function (id) {
+      return !(FBDATA.tech[id].reqAny || []).length;
+    })[0];
+    delete FBDATA.tech[id].reqAny;
+    const invalid = JSON.parse(JSON.stringify(FB.bookmark('867')));
+    invalid.id = 'invalid_technology_review'; invalid.requirements = { provinces:['missing_province'] };
+    FBDATA.bookmarks[invalid.id] = invalid;
+    const before = JSON.stringify(FBDATA), state = FB.state, world = FB.world;
+    const rng = FB.getRngState(), uid = FB.getUidCounter();
+    const faults = FB.validateBookmark(FB.bookmark('867'));
+    const rejected = await new Promise(function (resolve) {
+      FB.activateBookmark(invalid.id, null, function (error) { resolve(error && error.message); });
+    });
+    const unchanged = before === JSON.stringify(FBDATA) && state === FB.state && world === FB.world &&
+      rng === FB.getRngState() && uid === FB.getUidCounter();
+    await new Promise(function (resolve, reject) {
+      FB.activateBookmark('867', null, function (error) { if (error) reject(error); else resolve(); });
+    });
+    return { faults:faults, rejected:rejected, unchanged:unchanged, normalized:FBDATA.tech[id].reqAny };
+  });
+  expect(result.faults).toEqual([]);
+  expect(result.rejected).toContain('unknown provinces requirement missing_province');
+  expect(result.unchanged).toBe(true);
+  expect(result.normalized).toEqual([]);
+});
 
 test('late antique faith heads share their campaign sees without blocking activation or mods', async function ({ page }, testInfo) {
   await openGame(page, testInfo);

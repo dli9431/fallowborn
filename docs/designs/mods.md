@@ -30,6 +30,8 @@ history.
 
 Before applying each mod, FB.mods.validate and FB.mods.apply compose detached effective catalogues and validate every registered bookmark, including hidden definitions. Same-mod era, form, culture, wardrobe, geography, layout, lexicon and start additions can satisfy one another. Rejection installs no content and consumes no RNG. The store path rejects invalid requirements before writing storage or reloading. Activation repeats the gate before world generation. See docs/designs/bookmarks.md and the public schemas in docs/MODDING.md.
 
+A start's explicit tracks:[] declares no player story tracks and is valid for data-only campaigns. Non-array values, duplicate ids, unknown tracks and world-story ids remain invalid. Optional empty lists do not disable validation of the surrounding scenario or bookmark.
+
 The existing top-level
 `provinces`/`realms`/hierarchy/straits/crossingClasses/scripted fields remain the public
 867 merge API. `straits` keep their two-id pair format; `crossingClasses` merges by its

@@ -34,6 +34,8 @@ The final v4 contract is frozen. New saved story fields or changed meanings requ
 
 Shared presentation
 
+Story-sheet dismissal resolves the current Deeds card after modal navigation completes, because a live refresh may replace the original node. The scroll position belongs to sidebody, and Deeds refresh retains focus by data-story-card as well as its ordinary action keys. An intervening modal or event keeps its own focus.
+
 Every attached story whose status hook answers shows one card in Deeds with its title and current stage. The card opens the shared story sheet: the intro, the stage name, status lines and every current choice with its effect and conditions. Each choice opens a reviewed modal that shows its detail, the first blocker when it is unavailable, and any review lines the story adds, such as a grant's revenue. Confirmation rechecks the stamped quote; a changed decision shows Terms changed instead of applying. Back and Escape return to the choice list; Close and the outcome acknowledgment return to the Deeds card with its scroll position and focus. See ui.md.
 
 Start scenarios
@@ -49,6 +51,8 @@ The Curialis scenario attaches js/story_curialis_track_476.js after the western 
 Technology impact: none. The registry and scenario fields change no gameplay eligibility.
 
 Authored migration consumer
+
+An active commissioned campaign checks the issuer's living court, current ruler and saved ruler generation before continuing negotiation, even when no replacement service contract is affordable. Issuer death, extinction or succession interrupts the opportunity and its migration once, preserving the surviving host and independent ordinary wars. A completed settlement remains durable.
 
 The theoderic_italy_476 campaign definition names the existing theoderic_italy migration in FBDATA.federateMigrations. The shared campaign type obtains a living commission, starts one moving polity with the original host and offers its contract template through government AI. It retains the host's actual troops and position. General movement, payments, claims and territorial settlement belong to js/federates.js. An interruption closes the migration commitment without extinguishing a surviving polity or erasing an ordinary war. A legacy declared Gothic war continues without creating a new migration or commission.
 
@@ -68,6 +72,8 @@ Regional campaign ownership
 The Clovis-Syagrius campaign record is authored in data/bookmark_476_gaul_iberia.js and referenced from the first entry in FBDATA.storyCampaigns. Its id, registration order, attached story, named living actors, date window, objective and durable message keys remain stable. Existing opening ownership already includes Euric's gains in Auvergne, Provence and Iberia; this content pass adds no unsupported future Visigothic conquest date. The shared campaign engine still waits for inheritance, declares an ordinary war and observes its outcome. No regional lifecycle code or new engine selector is introduced, and conditional campaigns retain their existing technology decision of none.
 
 Existing-ruler openings
+
+Opening standing hosts materialize every registered unit-class count before they enter the army list. Fresh hosts and restored hosts therefore use the same composition shape without changing troop totals or consuming RNG. When a separately restored western claimant loses Ravenna or its mandate, the western-office record retains that claimant's displacement; the original court's automatic restoration does not replace this recorded claimant outcome.
 
 A scenario may declare rulerRealmId, governmentForm, characterName and onboarding: ruler together with a fixed bookmark, county, sex and community. Its standard family choice means the existing court household, not a newly generated commoner family. js/starts.js adopts that court once after the world stories initialize and before the selected player tracks initialize. The same living character becomes the player; typed realm references, ownership, direct holdings, authority, contracts and hosts move to the ordinary player key. FB.startRealmId resolves an authored source realm in subsequent story hooks. FB.startRealmDefinition copies and resolves campaign definitions without mutating FBDATA.
 

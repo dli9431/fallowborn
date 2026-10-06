@@ -16,20 +16,20 @@ dependsOnRuntime(__filename, [
   'js/save_v4.js', 'js/ui_modals.js', 'js/ui_misc.js', 'js/crazygames.js'
 ]);
 const { test, expect } = require('../support/fixture');
-const { startParityGame } = require('../support/game/parity');
+const { startHistoricalGame } = require('../support/game/historical-start');
 const { openGame } = require('../support/game/navigation');
 
-async function startItaly(page, testInfo) {
-  await startParityGame(page, testInfo, {
+async function startItaly(page, testInfo, crazygames) {
+  await startHistoricalGame(page, testInfo, {
     bookmark:'476', code:'ITALY476-476-federate_476-ravenna-m-Marcus-standard-0-gothic.homoian'
-  });
+  }, crazygames);
 }
 
 for (const crazygames of [false, true]) {
   test('Italian opening, islands and institutions work with distribution flag ' + crazygames,
     async function ({ page }, testInfo) {
       if (crazygames) await page.addInitScript(function () { window.FB_DISTRIBUTION = 'crazygames'; });
-      await startItaly(page, testInfo);
+      await startItaly(page, testInfo, crazygames);
       const result = await page.evaluate(function () {
         const s = FB.state, region = FBDATA.bookmarkRegions476.italy;
         const counties = region.provinces;

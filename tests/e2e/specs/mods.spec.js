@@ -8,6 +8,7 @@ dependsOnRuntime(__filename, [
   'js/events.js',
   'js/model.js',
   'js/mods.js',
+  'js/world.js',
   'js/population.js',
   'js/save.js',
   'js/ui_modals.js'
@@ -99,7 +100,8 @@ test('runtime mods add culture traditions and retain a replaced core culture aff
 
     const result = await page.evaluate(function () {
       const germanReplacement = {
-        name:'Mod German', dyn:'of_place', male:['Otto'], female:['Oda']
+        name:'Mod German', dyn:'of_place', male:['Otto'], female:['Oda'],
+        appearance:JSON.parse(JSON.stringify(FB.cultureOf('german').appearance))
       };
       const riverCulture = {
         name:'Riverlander', tradition:'riverlands', dyn:'of_place',

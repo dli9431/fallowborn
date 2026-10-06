@@ -253,7 +253,7 @@ window.FB = window.FB || {};
     const targetShare = total ? next / total : 0;
     const spouse = c && FB.spousesSnapshot(s, c).some(function (person) { return FB.faithInFold(s, person.religion, target); });
     const score = Math.round(40 * (targetShare - (total ? old / total : 0))) +
-      (q.bishops.length ? 8 : 0) + (spouse ? 12 : 0) - (c && FB.hasTrait(c, 'zealous') ? 20 : 0);
+      (q.bishops.length ? 8 : 0) + (spouse ? 12 : 0) - (c && (c.traits || []).indexOf('zealous') >= 0 ? 20 : 0);
     return { allowed:q.ok && q.relation !== 'in_fold' && (targetShare >= balance('rulerConversionAIMinShare', 0.35) || spouse) &&
       score >= balance('rulerConversionAIThreshold', 24), score:score, targetShare:targetShare, quote:q };
   };

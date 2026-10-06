@@ -133,7 +133,10 @@
       units:{ levy:90, ret:50 }, supply:100, warId:null,
       path:[], goal:null, moveLeft:0,
       scenarioStanding:true, scenarioEndTurn:6 * 360 };
-    s.armies.push(italianHost, federateHost, amalHost, thracianHost);
+    [italianHost, federateHost, amalHost, thracianHost].forEach(function (army) {
+      FB.hostUnits(army);
+      s.armies.push(army);
+    });
     for (var service of (FBDATA.federateServiceStarts || {})[WORLD] || []) {
       var openingContract = FB.authorityOfferContractTemplate(s, service.templateId, service);
       if (openingContract) FB.federateNegotiateContract(s, openingContract.id);

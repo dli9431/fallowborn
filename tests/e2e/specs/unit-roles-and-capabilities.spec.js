@@ -7,6 +7,7 @@ dependsOnRuntime(__filename, [
   'js/actions.js',
   'js/economy.js',
   'js/mods.js',
+  'js/world.js',
   'data/units.js',
   'data/technology.js'
 ]);

@@ -1041,7 +1041,7 @@ window.FB = window.FB || {};
     Object.keys(faiths).forEach(function (id) {
       var faith = FB.religionOf(id, null);
       requirements(faith.requirements, 'faith ' + id, id);
-      requirements(faith.head && faith.head.requirements, 'faith ' + id + ' head', id);
+      if (faith.head) requirements(faith.head.requirements, 'faith ' + id + ' head', id);
       if (!ownKey(FBDATA.legalTraditions, faith.legalTradition || FBDATA.faithDefaults.legalTradition)) fault('faith ' + id, 'no legal tradition resolves.');
     });
     FB.systems.ids().forEach(function (id) {
@@ -1094,7 +1094,7 @@ window.FB = window.FB || {};
       for (var le = 0; le < localErrors.length; le++) fault(localErrors[le]);
     }
     if (FB.validateTechnologyData) {
-      var technologyErrors = FB.validateTechnologyData();
+      var technologyErrors = FB.validateTechnologyData(true);
       for (var te = 0; te < technologyErrors.length; te++) errors.push(technologyErrors[te]);
     }
     if (FB.validateAuthorityData) {
@@ -2024,6 +2024,10 @@ window.FB = window.FB || {};
       }
       return;
     }
+    // Install legacy technology defaults only after the pure authoring gate.
+    if (FB.normalizeTechDefinition) Object.keys(FBDATA.tech || {}).forEach(function (id) {
+      FB.normalizeTechDefinition(id, FBDATA.tech[id]);
+    });
     var current = activation = {
       id:definition.id, cacheKey:worldCacheKey(definition),
       building:false, frac:0, msg:'Drawing the known world…',

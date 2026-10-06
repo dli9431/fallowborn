@@ -12,6 +12,8 @@ Old-fold realms outside the new communion lose 25 diplomatic regard in addition 
 
 FB.rulerFaithConversionEvaluation is pure. The AI score is round(40 * (new share - old share)) over population-weighted directly held counties, plus 8 for a living bishop in the target communion and 12 for a spouse in that communion, minus 20 for zeal. AI considers only departures outside the current communion. Eligibility needs score 24 and either 35% local following or a spouse in that communion, alongside the ordinary quote gates. Annual evaluation uses stable realm and target order, picks the highest scoring eligible target and gives it one seeded 6% chance. No eligible target consumes no conversion RNG. The saved lastAIYear prevents replay and each conversion stamps its ruler and generation. A successor may decide again; no historical ruler or baptism date is forced. World stories can call the same generic APIs. public_ruler_conversion has a none technology-impact review because profession, marriage and court allegiance are social decisions.
 
+The zeal penalty reads the living ruler's traits array. Evaluation with or without zealous changes no state or RNG, and the annual evaluation stamp remains effective after save restoration.
+
 Players may deliberately convert — themselves, their household, or their ruled realm —
 to another culture or religion through two deeds on the Deeds tab: **Convert faith…**
 and **Adopt a new culture…**. Both open a picker sheet that previews the exact cost and

@@ -8,7 +8,9 @@ async function beginBookmark(page, testInfo, id, scenarioId) {
   await openGame(page, testInfo);
   const setup = await page.evaluate(function (input) {
     const id = input.id;
-    const bm = FB.bookmark(id), errors = FB.validateBookmark(bm);
+    const bm = FB.bookmark(id);
+    if (!bm) throw new Error('Bookmark ' + id + ' was not registered at boot.');
+    const errors = FB.validateBookmark(bm);
     if (errors.length) throw new Error(errors.join('\n'));
     // Owner review inside this isolated test context. Production visibility
     // and the definition in the shipped source are never changed.

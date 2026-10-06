@@ -160,19 +160,33 @@ test('annual AI evaluation considers live local following and runs once per year
   await adultWesternCourt(page, 'homoian');
   const result = await page.evaluate(function () {
     const s = FB.state, old = FBDATA.balance.rulerConversionAIChance;
+    const ruler = FB.realmRulerCharacterSnapshot(s, 'italy');
+    ruler.traits = ruler.traits.filter(function (id) { return id !== 'zealous'; });
     const before = JSON.stringify(s), rng = FB.getRngState();
     const evaluation = FB.rulerFaithConversionEvaluation(s, 'italy', 'nicene');
     const pure = before === JSON.stringify(s) && rng === FB.getRngState();
+    ruler.traits.push('zealous');
+    const zealousBefore = JSON.stringify(s), zealousRng = FB.getRngState();
+    const zealous = FB.rulerFaithConversionEvaluation(s, 'italy', 'nicene');
+    const zealousPure = zealousBefore === JSON.stringify(s) && zealousRng === FB.getRngState();
+    ruler.traits.pop();
     try {
       FBDATA.balance.rulerConversionAIChance = 1;
       FB.religionYear(s);
       const after = JSON.stringify(s), nextRng = FB.getRngState();
       FB.religionYear(s);
+      const once = after === JSON.stringify(s) && nextRng === FB.getRngState();
+      FB.save.restore(JSON.parse(FB.save.serialize()));
+      const restored = FB.state, restoredBefore = JSON.stringify(restored), restoredRng = FB.getRngState();
+      FB.religionYear(restored);
       return { eligible:evaluation.allowed, pure:pure, converted:s.realms.italy.religion === 'nicene',
-        once:after === JSON.stringify(s) && nextRng === FB.getRngState(), year:s.rulerFaithDecisions.lastAIYear };
+        zealPenalty:evaluation.score - zealous.score, zealousPure:zealousPure,
+        once:once, year:restored.rulerFaithDecisions.lastAIYear,
+        restoredOnce:restoredBefore === JSON.stringify(restored) && restoredRng === FB.getRngState() };
     } finally { FBDATA.balance.rulerConversionAIChance = old; }
   });
-  expect(result).toEqual({ eligible:true, pure:true, converted:true, once:true, year:476 });
+  expect(result).toEqual({ eligible:true, pure:true, converted:true, zealPenalty:20, zealousPure:true,
+    once:true, year:476, restoredOnce:true });
 });
 
 test('church eligibility and public-faith authoring reject lay, child and malformed candidates', async function ({ page }, testInfo) {

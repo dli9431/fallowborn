@@ -15,7 +15,7 @@
   FB.bookmarkActor = actor;
   FB.openingDefinitionFaults = function (bm) {
     var d = bm && bm.opening, errors = [], year = bm && bm.date && bm.date.year;
-    if (d === undefined) return errors;
+    if (!bm || d === undefined) return errors;
     function fail(p) { errors.push('Invalid opening declaration: ' + p + '.'); }
     var counties = {}, realms = {};
     (Array.isArray(bm.provinces) ? bm.provinces : []).forEach(function (p) { if (p && !p.wasteland) counties[p.id] = p; });

@@ -6,6 +6,8 @@ Full-width shared action cards open a separate review before appointment, reaffi
 
 # UI: keyboard & mobile
 
+Story reviews return to the current Deeds card after Close, Escape or outcome Continue, including when a refresh replaced its DOM node while the sheet was open. Deeds preserves the card's semantic focus key through subsequent refreshes, and sidebody retains the originating scroll position.
+
 City and church dealings
 
 Convene a church council appears in Church dealings through the system and Deeds registries. Faith cards show exact price, participant count, support benefit and first blocker. Reviews and conclusions show bishop portraits and scoped support. Shared modal history retains scroll, Details and originating focus on Back and Continue. Late antique official-faith conversion uses the existing picker with county support, old-faith share, unrest effects and church-recognition consequences in its review. Confirmation revalidates the quote and retains a conclusion with Continue. Stale terms return to the mounted picker without payment. Papal and holy-war warnings require their enabled systems.

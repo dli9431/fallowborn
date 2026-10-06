@@ -84,8 +84,8 @@ for (const crazygames of [false, true]) {
           test.setTimeout(120 * 1000);
           await openTitle(page, testInfo, crazygames);
           await chooseStartingDate(page);
-          const code = 'BOOKMARKLOAD-' + start.id + '-serf-' + start.county +
-            '-m-Leo-standard-0-' + start.identity;
+          const canonicalCode = 'BOOKMARKLOAD-' + start.id + '-serf-' + start.county + '-m-Leo';
+          const code = canonicalCode + '-standard-0-' + start.identity;
           await page.locator('#btn-bm-seed').click();
           await page.locator('#ng-seed').fill(code);
           await page.locator('#ng-seed').press('Enter');
@@ -114,7 +114,7 @@ for (const crazygames of [false, true]) {
               stories:Object.keys(s.stories).sort(), error:FB.game.lastLoadError,
               faults:FB.validateBookmark(FB.bookmark(s.start.id)) };
           });
-          expect(restored).toEqual({ bookmark:start.id, seed:code, county:start.county,
+          expect(restored).toEqual({ bookmark:start.id, seed:canonicalCode, county:start.county,
             culture:start.identity.split('.')[0], religion:start.identity.split('.')[1],
             stories:Object.keys(JSON.parse(saved).state.stories).sort(), error:null, faults:[] });
         });

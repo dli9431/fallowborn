@@ -1,7 +1,8 @@
 'use strict';
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, ['index.html', 'js/crazygames.js', 'js/save.js', 'js/save_v4.js', 'js/main.js',
-  'js/ui_misc.js', 'js/ui_modals.js', 'js/util.js', 'js/mods.js']);
+  'js/ui_misc.js', 'js/ui_modals.js', 'js/util.js', 'js/mods.js',
+  'data/distribution_crazygames.js', 'data/events_intrigue.js']);
 const { test, expect } = require('../support/fixture');
 const { openGame, targetUrl } = require('../support/game/navigation');
 const { startDeterministicGame } = require('../support/game/start');

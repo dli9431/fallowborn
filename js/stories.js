@@ -173,6 +173,23 @@
       }
       return null;
     };
+    var returnToCard = function (id) {
+      var scroller = document.getElementById('sidebody');
+      var scroll = scroller && scroller.scrollTop;
+      return { returnFocus:cardNode(id), onDismiss:function () {
+        // Deeds can refresh while the sheet is open. Resolve the current card
+        // after modal navigation finishes rather than focusing a detached node.
+        window.setTimeout(function () {
+          var modal = document.getElementById('genmodal');
+          var event = document.getElementById('eventmodal');
+          var card = cardNode(id);
+          if (!card || !modal.classList.contains('hidden') ||
+              !event.classList.contains('hidden')) return;
+          if (scroller) scroller.scrollTop = scroll;
+          card.focus({ preventScroll:true });
+        }, 0);
+      } };
+    };
     var blockerText = function (story, s, quote) {
       var text = story.blocker && story.blocker(s, record(s, story.id), quote.reason);
       return text || FB.T('The current people, territory, route, or mandate no longer allows this choice.');
@@ -197,7 +214,7 @@
           esc(choice.detail) + '</span></button>';
       }
       UI.openModal(story.title ? story.title(s, rec) : id, html,
-        { returnFocus:document.activeElement });
+        returnToCard(id));
       document.querySelectorAll('[data-story-choice]').forEach(function (node) {
         node.addEventListener('click', function () {
           reviewChoice(id, node.getAttribute('data-story-choice'));
@@ -230,7 +247,7 @@
             '<p>' + esc(FB.T('This decision changed while it was open. Return to the situation and review it again.')) + '</p>');
           return;
         }
-        var deeds = document.getElementById('tab-actions');
+        var deeds = document.getElementById('sidebody');
         var scroll = deeds && deeds.scrollTop;
         UI.closeModal();
         UI.refresh();
@@ -241,7 +258,7 @@
           (updated ? '<p>' + esc(updated.name) + '</p>' : '') +
           '</div><button type="button" class="btn primary" id="gm-story-continue">' +
           esc(FB.T('Continue')) + '</button>',
-          { returnFocus:cardNode(id) });
+          returnToCard(id));
         document.getElementById('gm-story-continue').addEventListener('click',
           UI.closeModal);
       });

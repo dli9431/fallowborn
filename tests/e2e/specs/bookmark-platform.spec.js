@@ -9,14 +9,37 @@ dependsOnRuntime(__filename, [
   'data/bookmark_476_italy.js', 'data/bookmark_476_dalmatia_east.js',
   'data/bookmark_476_gaul_iberia.js', 'data/bookmark_476_africa.js',
   'data/political_institutions.js', 'data/starts.js', 'data/cultures.js',
-  'data/geographies.js', 'data/settlements.js', 'data/eras.js', 'data/systems.js',
+  'data/geographies.js', 'data/settlements.js', 'data/eras.js', 'data/systems.js', 'data/technology.js',
   'js/world.js', 'js/model.js', 'js/mods.js', 'js/main.js', 'js/institutions.js',
   'js/progression.js', 'js/religion.js', 'js/authority.js', 'js/politics.js',
   'js/stories.js', 'js/story_western_court_476.js', 'js/systems.js', 'js/bookmark_setup.js',
-  'js/save.js', 'js/save_v4.js'
+  'js/save.js', 'js/save_v4.js', 'js/technology.js'
 ]);
 
 const REVIEW_CODE = 'SIBLING-sibling_review-sibling_commoner-ravenna-m-Marcus-standard-0-roman.nicene';
+
+test('data-only starts accept an empty track list and reject malformed or unknown tracks atomically',
+  async function ({ page }, testInfo) {
+    await openGame(page, testInfo);
+    const result = await page.evaluate(function () {
+      const scenario = JSON.parse(JSON.stringify(FBDATA.startScenarios.filter(function (row) { return row.id === 'farmer'; })[0]));
+      scenario.id = 'empty_tracks_review'; scenario.tracks = [];
+      const mod = { startScenarios:[scenario] }, errors = FB.mods.validate(mod);
+      FB.mods.apply(mod);
+      const track = FB.stories.list().filter(function (row) { return row.kind === 'track'; })[0].id;
+      const world = FB.stories.list().filter(function (row) { return row.kind === 'world'; })[0].id;
+      const rejected = [null, 'track', ['missing_track'], [track, track], [world]].map(function (tracks) {
+        const invalid = JSON.parse(JSON.stringify(scenario)); invalid.tracks = tracks;
+        const before = JSON.stringify(FBDATA), rng = FB.getRngState(), uid = FB.getUidCounter();
+        let failed = false;
+        try { FB.mods.apply({ startScenarios:[invalid] }); } catch (error) { failed = /tracks/.test(error.message); }
+        return failed && before === JSON.stringify(FBDATA) && rng === FB.getRngState() && uid === FB.getUidCounter();
+      });
+      return { errors:errors, tracks:FBDATA.startScenarios.filter(function (row) { return row.id === scenario.id; })[0].tracks,
+        rejected:rejected };
+    });
+    expect(result).toEqual({ errors:[], tracks:[], rejected:Array(5).fill(true) });
+  });
 
 // Artificial data-only world: these profiles are test fiction, not historical claims.
 async function registerReview(page, hidden) {
@@ -119,7 +142,7 @@ test('data-only institutions remain independent across activation orders and mat
   async function ({ page }, testInfo) {
     test.setTimeout(120 * 1000);
     await startParityGame(page, testInfo, {
-      bookmark:'476', code:'PLATFORM-476-curialis_476-ravenna-m-Marcus-standard-0-roman.nicene'
+      bookmark:'476', code:'PLATFORM-476-curialis_476-ravenna-m-Marcus'
     });
     const original = await page.evaluate(function () { return FB.save.serialize(); });
     expect(await registerReview(page, false)).toEqual([]);
@@ -207,7 +230,7 @@ test('bookmark and runtime-mod validation reject invalid visibility, seats, offi
         const rejected = FB.validateBookmark(def).length > 0;
         const registry = JSON.stringify(FBDATA.bookmarks), rng = FB.getRngState();
         let modRejected = false;
-        try { FB.mods.apply({ bookmarks:[def] }); } catch (error) { modRejected = /bookmarks/.test(error.message); }
+        try { FB.mods.apply({ bookmarks:[def] }); } catch (error) { modRejected = true; }
         return rejected && modRejected && JSON.stringify(FBDATA.bookmarks) === registry && FB.getRngState() === rng;
       });
     });

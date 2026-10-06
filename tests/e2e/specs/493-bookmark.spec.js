@@ -5,6 +5,7 @@ dependsOnRuntime(__filename, [
   'data/bookmark_476.js', 'data/bookmark_476_italy.js',
   'data/bookmark_476_dalmatia_east.js', 'data/bookmark_476_gaul_iberia.js',
   'data/bookmark_476_africa.js', 'data/bookmarks.js', 'data/counties.js',
+  'data/distribution_crazygames.js',
   'data/geographies.js', 'data/settlements.js', 'data/political_institutions.js',
   'data/starts.js', 'data/cultures.js', 'data/eras.js', 'data/systems.js',
   'data/story_campaigns.js', 'data/technology.js', 'js/bookmark_setup.js',
@@ -160,7 +161,7 @@ test('476 and 493 retain their own incumbents in both activation orders and hidd
   async function ({ page }, testInfo) {
     test.setTimeout(120000);
     await startParityGame(page, testInfo, { bookmark:'476',
-      code:'DATES-476-curialis_476-ravenna-m-Marcus-standard-0-roman.nicene' });
+      code:'DATES-476-curialis_476-ravenna-m-Marcus' });
     const earlier = await page.evaluate(function () { return FB.save.serialize(); });
     await start(page, testInfo, 'curialis_493');
     const later = await page.evaluate(function () { return FB.save.serialize(); });

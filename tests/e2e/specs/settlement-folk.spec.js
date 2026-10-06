@@ -519,6 +519,33 @@ test('road travel hides the roster and pruning retains only connected distant ho
     expect(result.contactPresent).toBe(true);
   });
 
+test('pruning a deceased local parent preserves the surviving family and its save identity',
+  async function ({ page }) {
+    const result = await page.evaluate(function () {
+      const s = FB.state, county = s.localFolk[s.player.provinceId];
+      const household = county.households[0];
+      const child = household.memberIds.map(function (id) { return s.chars[id]; })
+        .filter(function (c) { return !!c.motherId; })[0];
+      const mother = s.chars[child.motherId];
+      mother.dead = true; mother.died = s.date.year;
+      FB.localFolkPrune(s);
+      const retained = !!s.chars[mother.id] && household.memberIds.indexOf(mother.id) >= 0;
+      const family = household.memberIds.map(function (id) {
+        const c = s.chars[id];
+        return { id:id, father:c.fatherId, mother:c.motherId, spouse:c.spouseId, children:c.childrenIds, dead:c.dead };
+      });
+      FB.save.restore(JSON.parse(FB.save.serialize()));
+      return { retained:retained, dead:FB.state.chars[mother.id] && FB.state.chars[mother.id].dead,
+        parent:FB.state.chars[child.id].motherId === mother.id,
+        family:family, restored:family.map(function (row) {
+          const c = FB.state.chars[row.id];
+          return c && { id:row.id, father:c.fatherId, mother:c.motherId, spouse:c.spouseId, children:c.childrenIds, dead:c.dead };
+        }) };
+    });
+    expect(result.retained && result.dead && result.parent).toBe(true);
+    expect(result.restored).toEqual(result.family);
+  });
+
 test('all four daily-life event sets and the technology review are registered',
   async function ({ page }) {
     const result = await page.evaluate(function () {

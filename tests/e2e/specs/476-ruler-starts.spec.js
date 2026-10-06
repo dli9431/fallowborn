@@ -11,7 +11,7 @@ dependsOnRuntime(__filename, [
   'js/authority.js', 'js/federates.js', 'js/institutions.js', 'js/treasury.js',
   'js/station.js', 'js/governments.js', 'js/technology.js', 'js/logistics.js',
   'js/mods.js', 'js/save.js', 'js/save_v4.js', 'js/ui_panels.js',
-  'js/modifiers.js', 'js/events.js', 'js/bookmark_setup.js'
+  'js/modifiers.js', 'js/events.js', 'js/bookmark_setup.js', 'js/religion.js', 'js/ui_misc.js'
 ]);
 const { test, expect } = require('../support/fixture');
 const { openGame } = require('../support/game/navigation');
@@ -103,6 +103,13 @@ for (const def of STARTS) {
           family.concat([me.id]).every(function (id) { return !s.chars[id].royalLine; }),
         form:FB.political.government(s, { kind:'realm', id:'player' }).formId,
         noSoldierTrack:!s.stories.federate_track_476,
+        normalizedHosts:s.armies.every(function (army) {
+          return FB.unitClassIds().every(function (id) {
+            return Number.isInteger(army.units[id]) && army.units[id] >= 0;
+          }) && Object.keys(army.units).reduce(function (total, id) {
+            return total + army.units[id];
+          }, 0) === army.men;
+        }),
         track:!!s.stories.nepos_track_476,
         host:def.id !== 'odoacer_476' || s.armies.some(function (a) {
           return a.id === 'host_476_federates' && a.realm === 'player' && a.men === 120 &&
@@ -121,7 +128,7 @@ for (const def of STARTS) {
     }, def);
     expect(result).toMatchObject({ sameActor:true, age:def.age, name:def.name.replace(/_/g, ' '),
       owner:true, held:true, noDuplicate:true, noAiFamily:true, form:def.form, tier:def.tier,
-      noSoldierTrack:true, track:!!def.track, host:true, identity:def.realm, definitions:true });
+      noSoldierTrack:true, normalizedHosts:true, track:!!def.track, host:true, identity:def.realm, definitions:true });
     expect(result.after).toEqual(result.before);
     expect(result.seed).toContain('-' + def.id + '-');
   });
@@ -381,9 +388,12 @@ for (const invalidation of ['expired','delegate_dead','incomplete_terms']) {
     const result = await page.evaluate(function (invalidation) {
       const s = FB.state, id = 'western_court_476', w = s.stories[id], subject = { kind:'realm', id:'player' };
       FB.localInstitutionMediate(s, 'rome_see', subject, 'ravenna');
+      // Fund the offered provisioning so omitted tolerance is the only issue.
+      if (invalidation === 'incomplete_terms') s.player.gold = Math.max(s.player.gold, 5);
       const terms = invalidation === 'incomplete_terms' ? { courts:true, protection:true, provision:true } :
         { courts:true, protection:true, tolerance:true };
       const agreement = FB.localInstitutionSettle(s, 'ravenna_council', subject, terms);
+      if (!agreement) throw new Error('Expected a funded, ratified council agreement');
       const reviewed = FB.stories.quote(s, id, 'accept_civic_rule');
       if (invalidation === 'expired') s.turn = agreement.expiresTurn;
       if (invalidation === 'delegate_dead') FB.killChar(s, s.chars[w.civicDelegateId]);
@@ -571,14 +581,32 @@ test('Nepos recognition and restoration observe actual ownership and survive sav
 test('ruler onboarding uses the existing story review and rank sheet at phone width', async function ({ page }, testInfo) {
   await page.setViewportSize({ width:390, height:844 });
   await start(page, testInfo, STARTS[0]);
-  await page.evaluate(function () { FB.state.player.flags.tutorial = 1; FB.ui.refresh(); });
+  await page.evaluate(function () {
+    FB.game.setPaused(true);
+    FB.state.player.flags.tutorial = 1;
+    FB.ui.refresh();
+  });
   await page.locator('[data-tab="actions"]').click();
   await expect(page.locator('#tutorial-guidance')).toHaveAttribute('data-tutorial-track', 'ruler_play');
   const card = page.locator('[data-story-card="nepos_track_476"]');
   await card.click();
+  const returnScroll = await page.evaluate(function () {
+    return document.getElementById('sidebody').scrollTop;
+  });
+  // Replace the originating card while the sheet is open, as a live refresh can.
+  await page.evaluate(function () { FB.ui.refresh(); });
+  await page.keyboard.press('Escape');
+  await expect(card).toBeFocused();
+  await expect.poll(function () {
+    return page.evaluate(function () { return document.getElementById('sidebody').scrollTop; });
+  }).toBe(returnScroll);
+  await card.click();
   await page.locator('[data-story-choice="keep_dalmatia"]').click();
   await page.locator('#gm-story-confirm').click();
+  await page.evaluate(function () { FB.ui.refresh(); });
   await page.locator('#gm-story-continue').click();
+  await expect(card).toBeFocused();
+  await page.evaluate(function () { FB.ui.refresh(); });
   await expect(card).toBeFocused();
   await page.evaluate(function () { FB.ui.showRankDetails(); });
   const flags = await page.evaluate(function () {
@@ -602,13 +630,18 @@ test('Nepos renews lapsed recognition and loses a restored mandate with Ravenna'
     FB.transferProvince(s, 'ravenna', 'player');
     const restored = FB.stories.apply(s, id, 'confirm_restoration', FB.stories.quote(s, id, 'confirm_restoration'));
     FB.transferProvince(s, 'ravenna', 'italy'); FB.story476.syncWestOffice(s);
+    const before = JSON.stringify(s.stories.western_office_476);
+    FB.story476.syncWestOffice(s);
+    FB.save.restore(JSON.parse(FB.save.serialize()));
+    FB.story476.syncWestOffice(FB.state);
     return { lapsed:lapsed, wrongAction:wrongAction, renewed:renewed,
       campaignAllowed:campaignAllowed, restored:restored,
       outcome:s.stories.western_office_476.result,
-      removed:s.authority.appointments.find(function (row) { return row.id === t.officeId; }).status === 'removed' };
+      removed:s.authority.appointments.find(function (row) { return row.id === t.officeId; }).status === 'removed',
+      durable:before === JSON.stringify(FB.state.stories.western_office_476) };
   });
   expect(result).toEqual({ lapsed:true, wrongAction:false, renewed:true, campaignAllowed:true,
-    restored:true, outcome:'deposed', removed:true });
+    restored:true, outcome:'deposed', removed:true, durable:true });
 });
 
 test('malformed ruler identity and track saves reject before adopting state', async function ({ page }, testInfo) {

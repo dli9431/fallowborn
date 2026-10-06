@@ -13,7 +13,7 @@ dependsOnRuntime(__filename, [
   'js/story_curialis_track_476.js', 'js/authority.js', 'js/federates.js',
   'js/wars.js', 'js/armies.js', 'js/politics.js', 'js/world.js', 'js/model.js',
   'js/treasury.js', 'js/institutions.js', 'js/main.js', 'js/save.js',
-  'js/save_v4.js', 'js/messages.js', 'js/i18n.js', 'js/ui_panels.js', 'js/ui_misc.js'
+  'js/save_v4.js', 'js/messages.js', 'js/i18n.js', 'js/ui_panels.js', 'js/ui_misc.js', 'js/religion.js'
 ]);
 const { test, expect } = require('../support/fixture');
 const { openGame } = require('../support/game/navigation');
@@ -267,7 +267,7 @@ for (const id of ['clovis_syagrius_476','theoderic_italy_476','eastern_africa_47
   }
 }
 
-for (const cause of ['succession','issuer death']) {
+for (const cause of ['succession','issuer death','issuer extinction']) {
   test('Theoderic negotiation survives saving and interrupts on ' + cause,
     async function ({ page }, testInfo) {
       await start(page, testInfo);
@@ -286,6 +286,7 @@ for (const cause of ['succession','issuer death']) {
         const rec = s.stories.theoderic_italy_476;
         if (cause === 'succession')
           FB.assignRealmRulerCharacter(s, 'byzantium', w.senatorId, { replaceAuthored:true });
+        else if (cause === 'issuer extinction') s.realms.byzantium.alive = false;
         else s.chars[w.zenoId].dead = true;
         story.day(s, rec);
         const outcome = JSON.stringify(rec), army = s.armies.find(function (row) { return row.id === 'host_476_amal'; });

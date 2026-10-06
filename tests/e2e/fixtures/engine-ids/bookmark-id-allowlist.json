@@ -64,7 +64,7 @@
     },
     {
       "file": "js/save_v4.js",
-      "source": "var bookmarkId = data.state.start && data.state.start.id || '867';",
+      "source": "var bookmarkId = data.state.start ? data.state.start.id : '867';",
       "kind": "legacy_default",
       "reason": "A save without start data belongs to the original 867 bookmark."
     },

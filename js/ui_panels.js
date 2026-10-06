@@ -1322,7 +1322,7 @@ window.FB = window.FB || {};
     const oldFocus = document.activeElement;
     let retainedFocus = null;
     if (retaining && oldFocus && box.contains(oldFocus)) {
-      for (const attr of ['id', 'data-action-id', 'data-focus-id', 'data-action-section', 'aria-controls']) {
+      for (const attr of ['id', 'data-action-id', 'data-focus-id', 'data-story-card', 'data-action-section', 'aria-controls']) {
         if (oldFocus.hasAttribute(attr)) {
           retainedFocus = [attr, oldFocus.getAttribute(attr)];
           break;

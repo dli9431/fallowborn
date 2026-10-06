@@ -8,15 +8,16 @@ dependsOnRuntime(__filename, [
   'js/bookmark_setup.js','js/story_agreements.js','js/story_476_rails.js','js/story_campaign.js',
   'js/story_western_court_476.js','js/stories.js','js/starts.js','js/authority.js','js/treasury.js',
   'js/population.js','js/world.js','js/model.js','js/institutions.js','js/religion.js','js/events.js',
-  'js/save.js','js/save_v4.js','js/ui_modals.js','js/main.js','js/technology.js','js/systems.js','js/settlement.js','js/federates.js'
+  'js/save.js','js/save_v4.js','js/ui_modals.js','js/main.js','js/technology.js','js/systems.js','js/settlement.js','js/federates.js',
+  'data/distribution_crazygames.js','js/crazygames.js'
 ]);
 const { test, expect } = require('../support/fixture');
-const { startParityGame } = require('../support/game/parity');
+const { startHistoricalGame } = require('../support/game/historical-start');
 const { openGame } = require('../support/game/navigation');
 
-async function start(page, testInfo) {
-  await startParityGame(page, testInfo, { bookmark:'476',
-    code:'ITALYFOLLOWUP-476-federate_476-ravenna-m-Marcus-standard-0-gothic.homoian' });
+async function start(page, testInfo, crazygames) {
+  await startHistoricalGame(page, testInfo, { bookmark:'476',
+    code:'ITALYFOLLOWUP-476-federate_476-ravenna-m-Marcus-standard-0-gothic.homoian' }, crazygames);
 }
 async function startOdoacer(page, testInfo) {
   await openGame(page, testInfo);
@@ -39,7 +40,7 @@ for (const crazygames of [false,true]) {
   test('declarative Italian families, property and civilian seeds restore once, distribution ' + crazygames,
     async function ({ page }, testInfo) {
       if (crazygames) await page.addInitScript(function () { window.FB_DISTRIBUTION = 'crazygames'; });
-      await start(page,testInfo);
+      await start(page,testInfo,crazygames);
       const result = await page.evaluate(function () {
         const s=FB.state, w=s.stories.western_court_476, setup=s.bookmarkSetup;
         const father=FB.bookmarkActor(s,'basilius'), son=FB.bookmarkActor(s,'senator');
@@ -53,8 +54,14 @@ for (const crazygames of [false,true]) {
         const rng=FB.getRngState(),count=Object.keys(s.chars).length;
         FB.stories.start(s,{});
         const repeat=stored===JSON.stringify([setup,s.population,s.authority]) && rng===FB.getRngState() && count===Object.keys(s.chars).length;
+        const saved=JSON.parse(FB.save.serialize());
+        // The v4 serializer stamps authority.schema on its detached copy.
+        const before=[saved.state.bookmarkSetup,saved.state.population,saved.state.authority];
+        FB.save.restore(saved);
+        const after=JSON.parse(JSON.stringify([FB.state.bookmarkSetup,FB.state.population,FB.state.authority]));
+        const rngAfter=FB.getRngState(), countAfter=Object.keys(FB.state.chars).length;
         FB.save.restore(JSON.parse(FB.save.serialize()));
-        const restored=stored===JSON.stringify([FB.state.bookmarkSetup,FB.state.population,FB.state.authority]);
+        const again=JSON.parse(JSON.stringify([FB.state.bookmarkSetup,FB.state.population,FB.state.authority]));
         return { name:son.name,linked:son.fatherId===father.id && father.childrenIds.includes(son.id),
           scoped:scoped.scope.kind==='host' && scoped.scope.id==='host_476_italy' && scoped.holder.id===w.orestesId,
           privateProperty:estate.basis==='tenure' && estate.evidence==='decian_family_property_476' && estate.share0===1000,
@@ -62,11 +69,16 @@ for (const crazygames of [false,true]) {
           demanded:setup.claims[0].status==='demanded' && setup.claims[0].contractId===null,
           civilians:migration.count>0 && migration.cohorts.every(function (c) {return c.culture==='roman' && c.religion==='nicene';}),
           exact:total===FB.countyPopulation(s,'linz')+FB.countyPopulation(s,'wien'),
-          noTerritorialMove:ownership===JSON.stringify([FB.state.owner,FB.state.holder]),repeat:repeat,restored:restored,
+          noTerritorialMove:ownership===JSON.stringify([FB.state.owner,FB.state.holder]),repeat:repeat,
+          before:before,after:after,again:again,
+          restored:rngAfter===FB.getRngState() && countAfter===Object.keys(FB.state.chars).length,
           modes:['historical_opening_households','private_family_estates','non_episcopal_congregations','tribute_cession_agreements','civilian_evacuation']
             .map(function (id) {return FBDATA.techImpactReviews.features[id].mode;}),
           technology:FB.validateTechnologyData(),bookmark:FB.validateBookmark(FB.bookmark('476')) };
       });
+      expect(result.after).toEqual(result.before);
+      expect(result.again).toEqual(result.after);
+      delete result.before; delete result.after; delete result.again;
       expect(result).toEqual({name:'Caecina Decius Maximus Basilius',linked:true,scoped:true,privateProperty:true,
         noPublicGrant:true,demanded:true,civilians:true,exact:true,noTerritorialMove:true,repeat:true,restored:true,
         modes:['none','none','none','none','none'],technology:[],bookmark:[]});

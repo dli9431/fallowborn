@@ -6,17 +6,21 @@ dependsOnRuntime(__filename, [
   'data/settlements.js', 'data/settlements_real.js', 'data/geographies.js',
   'data/eras.js', 'data/starts.js', 'data/cultures.js', 'data/technology.js',
   'data/systems.js', 'data/story_campaigns.js', 'js/world.js', 'js/main.js',
+  'data/distribution_crazygames.js', 'js/crazygames.js',
   'js/governments.js', 'js/authority.js', 'js/politics.js', 'js/population.js',
   'js/technology.js', 'js/holywar.js', 'js/papacy.js', 'js/stories.js',
   'js/story_campaign.js', 'js/story_history.js', 'js/story_476_rails.js', 'js/wars.js', 'js/armies.js',
-  'js/save.js', 'js/save_v4.js', 'js/events.js', 'js/ui_modals.js'
+  'js/save.js', 'js/save_v4.js', 'js/events.js', 'js/ui_modals.js', 'js/localfolk.js'
 ]);
 const { test, expect } = require('../support/fixture');
 const { openGame } = require('../support/game/navigation');
+const { openCrazyGame } = require('../support/game/crazygames-title');
 const { injectBrowserHarness } = require('../support/game/browser-harness');
+const { advanceBookmark } = require('../support/game/bookmark-acceptance');
 
-async function startBookmark(page, testInfo, scenario, county, identity) {
-  await openGame(page, testInfo);
+async function startBookmark(page, testInfo, scenario, county, identity, crazygames) {
+  if (crazygames) await openCrazyGame(page, testInfo);
+  else await openGame(page, testInfo);
   const faults = await page.evaluate(function () {
     FB.startProgression.noteTier(3);
     return FB.validateBookmark(FB.bookmark('1204'));
@@ -41,7 +45,12 @@ async function startBookmark(page, testInfo, scenario, county, identity) {
     if (FB.ui.coachmarkReset) FB.ui.coachmarkReset();
     delete FB.state.player.flags.tutorial;
   });
-  expect(await page.evaluate(function () { return FB.state.seed; })).toBe(code);
+  const expectedCode = await page.evaluate(function (input) {
+    const p = FB.world.byId[input.county];
+    return input.identity === p.culture + '.' + p.religion
+      ? input.code.split('-').slice(0, 6).join('-') : input.code;
+  }, { county:county || 'london', identity:identity, code:code });
+  expect(await page.evaluate(function () { return FB.state.seed; })).toBe(expectedCode);
 }
 
 test('1204 is offered in the picker and ordinary start codes reach character creation', async function ({ page }, testInfo) {
@@ -121,6 +130,7 @@ test('spring possession, court faiths, technology, holder chains and settlement 
         traditions:s.realms.latin_1204.techTraditions,
         known:FB.techList(s, 'latin_1204'),
         principal:[FB.world.byId.constantinople.culture,FB.world.byId.constantinople.religion],
+        identity:[s.chars[s.player.charId].culture,s.chars[s.player.charId].religion],
         homeSite:FB.world.sitesByProv.aghmat.list[0].site,
         layoutDetached:FBDATA.settlementLayouts['1204'] !== FBDATA.settlementLayouts['1066'],
         structuresDetached:b.duchies !== FBDATA.bookmarks['1066'].duchies,
@@ -142,9 +152,10 @@ test('spring possession, court faiths, technology, holder chains and settlement 
     expect(result.known).toContain('mail_hauberks');
     expect(result.known).not.toContain('plate_armor');
     expect(result.principal).toEqual(['greek','orthodox']);
+    expect(result.identity).toEqual(['greek','orthodox']);
     expect(result.homeSite).toBe('geo_marrakesh_2542997');
     expect(result.layoutDetached && result.structuresDetached).toBe(true);
-    expect(result.code).toContain('greek.orthodox');
+    expect(result.code).toBe('REVIEW1204-1204-serf-constantinople-m-Leo');
   });
 
 test('the silent English distribution retains the same world and save identity',
@@ -153,7 +164,7 @@ test('the silent English distribution retains the same world and save identity',
       window.FB_DISTRIBUTION = 'crazygames';
       window.FB_CRAZYGAMES_STORAGE = 'localstorage';
     });
-    await startBookmark(page, testInfo);
+    await startBookmark(page, testInfo, null, null, null, true);
     const result = await page.evaluate(function () {
       const source = JSON.parse(FB.save.serialize());
       FB.save.restore(source);
@@ -181,7 +192,7 @@ test('holy-war calls resolve only current hostile objectives and remain durable 
         return !!FBDATA.kingdoms[target.kingdomId] && target.objectiveCounties.length > 0 &&
           target.objectiveCounties.every(function (id) { return !!FB.world.byId[id] && !!s.owner[id]; });
       });
-      const called = !!first && FB.callGreatHolyWar(s, 'catholic', first.kingdomId, 'papacy_1204');
+      const called = !!(first && FB.callGreatHolyWar(s, 'catholic', first.kingdomId, 'papacy_1204'));
       const snapshot = JSON.parse(JSON.stringify(s.greatHolyWar));
       FB.save.restore(JSON.parse(FB.save.serialize()));
       return { valid:valid, called:called, objectives:first.objectiveCounties,
@@ -234,13 +245,11 @@ test('ten years of ordinary household play retain a valid world and save at the 
     test.setTimeout(10 * 60 * 1000);
     await startBookmark(page, testInfo);
     await injectBrowserHarness(page);
+    await page.evaluate(function () { FB.game.auto.all = true; FB.game.auto.style = 'first'; });
     // Keep seeded mortality, diplomacy, personal events, holy wars and ordinary
     // campaigns. Only the standard player automation makes daily choices.
     for (let quarter = 0; quarter < 40; quarter++) {
-      const result = await page.evaluate(function () {
-        return FBTEST.advanceDays({ days:90, maxDays:90, maxEvents:300, checkEvery:30 });
-      });
-      expect(result.advanced).toBe(90);
+      await advanceBookmark(page, 90);
       if (quarter === 19) await page.evaluate(function () {
         FB.save.restore(JSON.parse(FB.save.serialize()));
       });

@@ -370,11 +370,33 @@ window.FB = window.FB || {};
     return false;
   }
 
-  function removeHousehold(state, household) {
+  function retainedFamily(state, homeId, currentId) {
+    const retained = {}, pending = [];
+    function keep(id) {
+      if (!id || retained[id] || !state.chars[id]) return;
+      retained[id] = true;
+      pending.push(id);
+    }
+    for (const id in state.chars) if (own(state.chars, id)) {
+      const c = state.chars[id], local = c && c.localFolk;
+      if (c && (!local || connected(state, c) || !c.dead &&
+          (local.provinceId === homeId || local.provinceId === currentId))) keep(id);
+    }
+    // Retained residents and outside relatives keep the full linked family.
+    // Unconnected distant households provide no roots, so they still expire.
+    while (pending.length) {
+      const c = state.chars[pending.pop()];
+      ['fatherId','motherId','spouseId','betrothedId'].forEach(function (key) { keep(c[key]); });
+      (c.childrenIds || []).forEach(keep);
+    }
+    return retained;
+  }
+
+  function removeHousehold(state, household, retained) {
     const ids = household && household.memberIds || [];
     for (let i = 0; i < ids.length; i++) {
       const c = state.chars[ids[i]];
-      if (c && c.localFolk && !connected(state, c)) delete state.chars[ids[i]];
+      if (c && c.localFolk && !retained[c.id]) delete state.chars[ids[i]];
     }
   }
 
@@ -385,6 +407,7 @@ window.FB = window.FB || {};
     }
     const homeId = state.player.provinceId;
     const currentId = currentLocationId(state);
+    const retained = retainedFamily(state, homeId, currentId);
     let changed = false;
     const activityTurns = state.player.localActivityTurns;
     if (activityTurns && typeof activityTurns === 'object' &&
@@ -410,7 +433,7 @@ window.FB = window.FB || {};
         const memberIds = [];
         for (let memberIndex = 0; memberIndex < members.length; memberIndex++) {
           const member = members[memberIndex];
-          if (member.dead && !connected(state, member)) {
+          if (member.dead && !retained[member.id]) {
             delete state.chars[member.id];
             changed = true;
           } else {
@@ -425,7 +448,7 @@ window.FB = window.FB || {};
         }));
         if (keep) kept.push(household);
         else {
-          removeHousehold(state, household);
+          removeHousehold(state, household, retained);
           changed = true;
         }
       }

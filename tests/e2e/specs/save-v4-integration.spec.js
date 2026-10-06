@@ -16,7 +16,7 @@ dependsOnRuntime(__filename, [
   'js/population.js', 'js/intrigue.js', 'js/justice.js', 'js/economy.js',
   'js/bookmark_setup.js', 'js/institutions.js', 'js/federates.js',
   'data/story_campaigns.js', 'data/story_campaigns_711.js', 'data/starts.js',
-  'data/geographies.js',
+  'data/geographies.js', 'js/religion.js', 'js/royal_settlements.js',
   'data/bookmark_493.js', 'data/bookmark_493_history.js', 'data/bookmark_711.js',
   'data/bookmark_800.js', 'data/bookmark_800_history.js',
   'data/bookmark_1204.js', 'data/bookmark_1204_campaigns.js'
@@ -28,7 +28,10 @@ const { corpusEntries, readCorpusExport } = require('../support/parity-fixtures'
 
 async function start(page, testInfo, bookmark) {
   await openGame(page, testInfo);
-  if (bookmark === '493') await page.evaluate(function () { FBDATA.bookmarks['493'].hidden = false; });
+  if (bookmark === '493' || bookmark === '711') await page.evaluate(function (id) {
+    // Review hidden candidates only inside this test's isolated page.
+    FBDATA.bookmarks[id].hidden = false;
+  }, bookmark);
   await page.getByRole('button', { name:'New Game', exact:true }).click();
   await page.locator('#btn-bm-seed').click();
   const codes = {
@@ -482,7 +485,7 @@ async function checkStorageRoundTrip() {
       population:s.population, buildings:s.buildings, settlementLordships:s.settlementLordships,
       authority:s.authority && Object.assign({}, s.authority, { schema:undefined }),
       courts:Object.keys(s.realms).sort().map(function (id) { return [id,s.realms[id].succession]; }),
-      intrigue:s.intrigue, justice:s.justice, wars:s.wars, armies:s.armies,
+      intrigue:s.intrigue, justice:s.justice, wars:s.wars || {}, armies:s.armies,
       treasury:s.treasuryAccounting, fiscal:s.fiscalCrisis, market:s.market,
       abbeys:s.abbeys, campaigns:s.stories,
       player:[p.charId,p.provinceId,p.provs,p.gold,p.tier,p.holdings,p.enterprises,
@@ -493,8 +496,20 @@ async function checkStorageRoundTrip() {
       }), rng:data.rng >>> 0, uid:data.uid
     };
   }
+  function orderedFacts(value) {
+    if (Array.isArray(value)) return value.map(orderedFacts);
+    if (!value || typeof value !== 'object') return value;
+    const out = {};
+    Object.keys(value).sort().forEach(function (key) {
+      if (value[key] !== undefined) out[key] = orderedFacts(value[key]);
+    });
+    return out;
+  }
   function changed(a, b) {
-    return Object.keys(a).filter(function (key) { return JSON.stringify(a[key]) !== JSON.stringify(b[key]); });
+    // Object insertion order is not a saved fact; array ordering still is.
+    return Object.keys(a).filter(function (key) {
+      return JSON.stringify(orderedFacts(a[key])) !== JSON.stringify(orderedFacts(b[key]));
+    });
   }
   const source = window.__saveFreezeSource || JSON.parse(FB.save.serialize());
   const bytes = JSON.stringify(source), live = FB.state;

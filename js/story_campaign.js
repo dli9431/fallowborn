@@ -157,6 +157,9 @@
       }
       if (!live(s, rid) || rec.actorId && !alive(s, rec.actorId) ||
           rec.actorGeneration !== null && rec.actorGeneration !== FB.realmRulerGeneration(s, rid) ||
+          def.commission && rec.patronGeneration !== null && (!live(s, def.commission.issuerRealmId) ||
+            !alive(s, ruler(s, def.commission.issuerRealmId)) ||
+            rec.patronGeneration !== FB.realmRulerGeneration(s, def.commission.issuerRealmId)) ||
           rec.commissionId && def.commission && !commission(s, rec, def)) {
         finish(s, rec, def, 'interrupted', 'authority_lost'); return;
       }

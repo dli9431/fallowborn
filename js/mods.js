@@ -683,7 +683,7 @@ window.FBMODS = window.FBMODS || [];
       for (const story of (FB.stories ? FB.stories.list() : [])) {
         if (story.kind === 'track') tracks[story.id] = story;
       }
-      validateIdList(scenario.tracks, path + '.tracks', tracks);
+      validateIdList(scenario.tracks, path + '.tracks', tracks, true);
     }
   }
 

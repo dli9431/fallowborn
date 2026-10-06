@@ -68,6 +68,47 @@ for (const distribution of ['standard', 'crazygames']) {
       expect(result.savedProfile).toBe('');
     }
   });
+
+  test(distribution + ' hearing text keeps sentence kinds and live custody terms', async function ({ page }, testInfo) {
+    if (distribution === 'crazygames') await openRestrictedGame(page, testInfo);
+    else await openGame(page, testInfo);
+    await startDeterministicGame(page);
+    const result = await page.evaluate(function () {
+      const s = FB.state, event = FB.eventById('justice_hearing');
+      const before = JSON.stringify(s), rng = FB.getRngState(), uid = FB.getUidCounter();
+      function text(kind, mode) {
+        return FB.eventText(s, s.player.charId, event, 'text', {
+          studentId:s.player.charId, sentenceKind:kind, sentenceName:'Imprisonment',
+          sentenceCustodyMode:mode || 'initial', sentenceTermDays:540, sentenceRemainingDays:120
+        });
+      }
+      const death = text('death'), corporal = text('corporal');
+      const initial = text('custody'), extension = text('custody', 'extension');
+      const intrigue = FB.eventById('intrigue_hearing');
+      return { selector:event.text.param, death:death, corporal:corporal,
+        initial:initial, extension:extension, options:event.options.length,
+        intrigue:['execution','blinding_deposition','qisas'].map(function (sentence) {
+          return FB.eventText(s, s.player.charId, intrigue, 'text', { sentence:sentence });
+        }),
+        pure:before === JSON.stringify(s) && rng === FB.getRngState() && uid === FB.getUidCounter() };
+    });
+    expect(result).toMatchObject({ selector:'sentenceKind', options:5, pure:true });
+    expect(result.initial).toContain('a 540-day prison term');
+    expect(result.extension).toContain('add 540 days to your prison term');
+    expect(result.initial).toContain('Release is due in 120 days.');
+    expect(result.extension).toContain('Release is due in 120 days.');
+    if (distribution === 'crazygames') {
+      expect(result.death).toContain('a year of imprisonment');
+      expect(result.corporal).toContain('a year of imprisonment');
+      for (const text of result.intrigue) expect(text).toContain('a year of imprisonment');
+    } else {
+      expect(result.death).toContain(': death.');
+      expect(result.corporal).toContain('permanent injury and deposition');
+      expect(result.intrigue[0]).toContain('execution');
+      expect(result.intrigue[1]).toContain('blinding and deposition');
+      expect(result.intrigue[2]).toContain('qisas');
+    }
+  });
 }
 
 test('CrazyGames save round-trip preserves profile and rejects ordinary imports before mutation', async function ({ page }, testInfo) {

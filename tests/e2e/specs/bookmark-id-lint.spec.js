@@ -6,7 +6,7 @@ const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, ['index.html', 'js', 'data']);
 const { test, expect } = require('../support/fixture');
 const { openGame } = require('../support/game/navigation');
-const { STRING_MARK, engineSources } = require('../support/source-literals');
+const { STRING_MARK, engineSources, scanSource } = require('../support/source-literals');
 
 const allowlistPath = path.resolve(__dirname, '..', 'fixtures', 'engine-ids',
   'bookmark-id-allowlist.json');
@@ -17,6 +17,12 @@ const comparisons = [
   new RegExp(target + '\\s*\\)*\\s*[!=]==?\\s*' + literal),
   new RegExp(literal + '\\s*[!=]==?\\s*\\(*\\s*[\\w$.]*?' + target + '\\b')
 ];
+
+function comparesBookmark(masked) {
+  // A typeof check compares a type name, rather than a bookmark identity.
+  const values = masked.replace(/\btypeof\s*(?:\(\s*)?[\w$]+(?:\s*\.\s*[\w$]+)*(?:\s*\))?/g, 'TYPE');
+  return comparisons.some(function (pattern) { return pattern.test(values); });
+}
 
 /* Engine behavior should key on bookmark data, not on which bookmark is
    active. Every engine line that compares start.id or activeBookmarkId with
@@ -31,7 +37,7 @@ function findings(bookmarkIds) {
     });
     source.scan.maskedLines.forEach(function (masked, index) {
       const values = byLine.get(index + 1) || [];
-      const compared = comparisons.some(function (pattern) { return pattern.test(masked); });
+      const compared = comparesBookmark(masked);
       const quoted = values.some(function (value) { return bookmarkIds.has(value); });
       if (!compared && !quoted) return;
       const text = source.lines[index].trim();
@@ -43,6 +49,21 @@ function findings(bookmarkIds) {
   }
   return out;
 }
+
+test('bookmark comparison lint distinguishes type checks from id comparisons',
+  async function ({}, testInfo) {
+    test.skip(testInfo.project.name !== 'chromium-served', 'Run this source check once.');
+    const lines = [
+      "typeof state.start.id !== 'string'",
+      "typeof (FB.activeBookmarkId) === 'string'",
+      "state.start.id !== 'review_bookmark'",
+      "'review_bookmark' === FB.activeBookmarkId",
+      "FB.activeBookmarkId === 'string'"
+    ];
+    expect(lines.map(function (line) {
+      return comparesBookmark(scanSource(line).maskedLines[0]);
+    })).toEqual([false, false, true, true, true]);
+  });
 
 test('engine code names bookmark ids only on the reviewed allowlist',
   async function ({ page }, testInfo) {

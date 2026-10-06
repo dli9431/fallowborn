@@ -160,7 +160,9 @@
       }
     }
     if (!result && w.romulusDeposed) { result = 'deposed'; reason = 'capital_lost'; }
-    var independent = !t || t.role === 'outside';
+    // A restored claimant's loss remains its own outcome. The original court
+    // must not overwrite that displacement with a separate restoration.
+    var independent = (!t || t.role === 'outside') && !w.restoredClaimantId;
     if (independent && w.romulusDeposed && s.owner.ravenna === FB.startRealmId(s, WEST_REALM) &&
         X.alive(s, w.westRulerId) && s.realms[FB.startRealmId(s, WEST_REALM)].alive &&
         w.westernOfficeResolved !== 'restored' && ruler(s, FB.startRealmId(s, WEST_REALM)) &&

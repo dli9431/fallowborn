@@ -1742,9 +1742,10 @@ window.FB = window.FB || {};
     });
   };
 
-  FB.validateTechnologyData = function () {
+  FB.validateTechnologyData = function (readOnly) {
     var errors = [], domains = FBDATA.techDomains || {};
     var traditions = FBDATA.techTraditions || {};
+    var normalized = {};
     for (var domain in domains) {
       if (!own(domains, domain)) continue;
       var domainDef = domains[domain];
@@ -2026,7 +2027,9 @@ window.FB = window.FB || {};
     }
     for (var id in (FBDATA.tech || {})) {
       if (!own(FBDATA.tech, id)) continue;
-      var def = FB.normalizeTechDefinition(id, FBDATA.tech[id]);
+      var raw = FBDATA.tech[id];
+      var def = normalized[id] = FB.normalizeTechDefinition(id,
+        readOnly && raw && typeof raw === 'object' ? JSON.parse(JSON.stringify(raw)) : raw);
       if (!def || !FBDATA.techDomains[def.domain]) {
         errors.push('Technology ' + id + ': invalid domain.');
         continue;
@@ -2144,9 +2147,11 @@ window.FB = window.FB || {};
         errors.push('Technology prerequisite cycle reaches ' + id + '.');
         return;
       }
-      if (visited[id] || !FBDATA.tech[id]) return;
+      if (visited[id] || !normalized[id]) return;
+      var def = normalized[id];
+      if (!Array.isArray(def.req) || !Array.isArray(def.reqAny)) return;
       visiting[id] = 1;
-      var def = FBDATA.tech[id], refs = def.req.concat(def.reqAny);
+      var refs = def.req.concat(def.reqAny);
       for (var i = 0; i < refs.length; i++) walk(refs[i]);
       delete visiting[id];
       visited[id] = 1;

@@ -406,7 +406,7 @@
         "path": [
           "text",
           "cases",
-          "execution"
+          "death"
         ],
         "value": "You are held in {student}’s custody. The proposed sentence is a year of imprisonment."
       },
@@ -414,15 +414,7 @@
         "path": [
           "text",
           "cases",
-          "blinding_deposition"
-        ],
-        "value": "You are held in {student}’s custody. The proposed sentence is a year of imprisonment."
-      },
-      {
-        "path": [
-          "text",
-          "cases",
-          "qisas"
+          "corporal"
         ],
         "value": "You are held in {student}’s custody. The proposed sentence is a year of imprisonment."
       }

@@ -14,7 +14,7 @@ dependsOnRuntime(__filename, [
   'js/world.js', 'js/governments.js', 'js/station.js', 'js/starts.js',
   'js/stories.js', 'js/story_campaign.js', 'js/story_476_rails.js',
   'js/royal_settlements.js', 'js/story_carolingian_800.js', 'js/treasury.js', 'js/authority.js', 'js/model.js',
-  'js/papacy.js', 'js/technology.js', 'js/ambitions.js', 'js/wars.js',
+  'js/papacy.js', 'js/technology.js', 'js/ambitions.js', 'js/wars.js', 'js/localfolk.js',
   'js/armies.js', 'js/main.js', 'js/save.js', 'js/save_v4.js'
 ]);
 
@@ -120,6 +120,9 @@ test('800 activates the full world, period communities and subordinate courts', 
         }, 0) === 10000 && p.communities[0].culture === p.culture &&
           p.communities[0].religion === p.religion; }),
       coptic:cell('fustat').culture, bulgar:s.realms.bulgaria.religion,
+      sicily:['palermo','messina','siracusa'].map(function (id) {
+        return [s.owner[id], cell(id).culture, cell(id).religion];
+      }),
       noLaterCourts:['york','dublin','tahirids','saffarids','habbarids']
         .every(function (id) { return !realm(id); }),
       seats:['venezia','santiago','fes','raqqa'].map(function (id) {
@@ -135,6 +138,7 @@ test('800 activates the full world, period communities and subordinate courts', 
       'northumbria','leinster','byzantium','byzantium'],
     rulers:['Charlemagne','Irene','Harun al-Rashid','Leo III'], irene:'f',
     communities:true, coptic:'coptic', bulgar:'tengri', noLaterCourts:true,
+    sicily:[['byzantium','greek','orthodox'],['byzantium','greek','orthodox'],['byzantium','greek','orthodox']],
     seats:['Malamocco','Iria Flavia','Walila','Raqqa'],
     traditions:[['latin'],['islamic','persianate']], stories:STORIES });
 });
@@ -152,7 +156,7 @@ for (const scenario of ['serf','farmer','apprentice','monk','soldier','knight','
         return d.foundedYear > 800 && !s.historicalAmbitions[d.id];
       });
       FB.save.restore(JSON.parse(FB.save.serialize())); s = FB.state;
-      return { scenario:s.start.scenarioId, date:s.date, future:future,
+      return { scenario:s.telemetry.scenario, date:s.date, future:future,
         heads:s.religiousHeads, stories:FB.stories.attached(s),
         restored:before === JSON.stringify({ start:s.start, owner:s.owner, holder:s.holder,
           heads:s.religiousHeads, stories:s.stories, counts:s.papacy.regnalNameCounts }),

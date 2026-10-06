@@ -27,6 +27,8 @@ sentence projections similarly return prison. Sibling approaches and proposals
 remain unavailable even with a previously accepted record; exposure cannot queue
 or validate in this profile. Ordinary AI close-kin prohibitions remain intact.
 
+The justice hearing overlay targets the death and corporal sentence-kind branches; execution and qisas share death. It preserves the nested custody branches and their live term and remaining-day parameters. Intrigue hearings retain their separate outcome-id branches. Both event overlays still validate every target before publishing any replacements.
+
 The drunkard trait keeps its stable mechanical ID and modifiers but is presented
 as Overindulgent. Event display fields and trait replacements use normal
 source-hashed localization. A changed English source cannot reuse an old
