@@ -120,7 +120,7 @@ Grant settlement recipient cards use a compact identity column beside a visible
 Recipient identity uses the portrait's actual 40px width, with name and standing
 aligned beside it. Details occupies its own grid cell without overlapping the
 selection button or using a raised z-index. No empty bottom row is reserved.
-Enterprise purchase cards likewise reserve a bottom row for compact Details.
+Enterprise purchase cards likewise reserve a bottom row for compact Details, inset from the purchase action's lower edge. The purchase action overrides generic list-button margins so that inset remains intact. The disclosure participates in positioned painting after the purchase action with an automatic z-index. The enterprise catalogue scrolls in its own content region above the separate navigation footer, with eight pixels of scroll padding and disclosure scroll margin to keep touch targets clear of fractional clipping at the scroll edges. Bottom content padding also lets the final disclosure clear the footer. Modal history retains the position of content regions marked data-modal-scroll along with the originating control and expanded Details.
 Household Plan's Enterprise Plan entry uses a separate Details column whose touch
 target contributes to row height. These controls stay in the scrolling content,
 without a raised stacking layer that could cover the modal footer.

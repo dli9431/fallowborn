@@ -10,8 +10,11 @@ window.FB = window.FB || {};
   G.bootReady = false;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-FB.VERSION = '1.189.4';
+FB.VERSION = '1.189.5';
 FB.CHANGELOG = [
+  { v: '1.189.5', date: '2026-10-06', changes: [
+    'Enterprise purchase Details buttons stay clear of scroll edges and the modal footer.'
+  ] },
   { v: '1.189.4', date: '2026-10-05', changes: [
     'Rulers can buy freehold plots, and Buy a plot of land opens even when funds are short.',
     'Service and career reviews show experience and literacy progress. Household referrals explain their neutral outcome.',

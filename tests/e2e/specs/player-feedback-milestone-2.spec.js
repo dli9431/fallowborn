@@ -153,26 +153,63 @@ for (const width of [320, 390]) {
     for (let i = 0; i < await cards.count(); i++) {
       const card = cards.nth(i);
       const help = card.locator('.settcard-info');
+      await expect(help).toBeVisible();
+      // Start with the lower edge clipped when the catalogue has room to scroll.
+      await help.evaluate(function (button) {
+        const content = button.closest('.enterprise-market-content');
+        const viewportBottom = content.getBoundingClientRect().top +
+          content.clientTop + content.clientHeight;
+        content.scrollTop += Math.round(button.getBoundingClientRect().bottom - viewportBottom - 16);
+      });
       await help.scrollIntoViewIfNeeded();
       const bounds = await card.evaluate(function (card) {
-        const info = card.querySelector('.settcard-info').getBoundingClientRect();
+        const button = card.querySelector('.settcard-info');
+        const info = button.getBoundingClientRect();
         const cost = card.querySelector('.enterprise-purchase-critical').getBoundingClientRect();
         const action = card.querySelector('.enterprise-purchase-option').getBoundingClientRect();
+        const content = card.closest('.enterprise-market-content');
+        const viewportTop = content.getBoundingClientRect().top + content.clientTop;
         const footer = document.querySelector('#gm-body > .gm-footer').getBoundingClientRect();
         const hit = document.elementFromPoint(info.left + info.width / 2, info.top + info.height / 2);
+        const topHit = document.elementFromPoint(info.left + info.width / 2, info.top + 1);
+        const bottomHit = document.elementFromPoint(info.left + info.width / 2, info.bottom - 1);
         return { top:info.top, bottom:info.bottom, right:info.right, costBottom:cost.bottom,
           actionBottom:action.bottom, actionRight:action.right, footerTop:footer.top,
-          reachable:!!hit && card.querySelector('.settcard-info').contains(hit) };
+          viewportTop:viewportTop, viewportBottom:viewportTop + content.clientHeight,
+          reachable:!!hit && button.contains(hit),
+          topReachable:!!topHit && button.contains(topHit),
+          bottomReachable:!!bottomHit && button.contains(bottomHit),
+          bottomHit:bottomHit ? bottomHit.id || bottomHit.className || bottomHit.tagName : null };
       });
       expect(bounds.top).toBeGreaterThanOrEqual(bounds.costBottom);
-      expect(bounds.bottom).toBeLessThanOrEqual(bounds.actionBottom);
+      expect(bounds.bottom).toBeLessThanOrEqual(bounds.actionBottom - 1);
       expect(bounds.right).toBeLessThanOrEqual(bounds.actionRight);
-      expect(bounds.bottom).toBeLessThanOrEqual(bounds.footerTop);
+      // Fractional text layout and rounded scroll offsets can differ by less
+      // than one CSS pixel. Hit tests still require access at the center and bottom edge.
+      expect(bounds.top).toBeGreaterThanOrEqual(bounds.viewportTop - 1);
+      expect(bounds.bottom).toBeLessThanOrEqual(bounds.viewportBottom + 1);
+      expect(bounds.bottom).toBeLessThanOrEqual(bounds.footerTop + 1);
       expect(bounds.reachable).toBe(true);
+      expect(bounds.topReachable).toBe(true);
+      expect(bounds.bottomReachable, JSON.stringify(bounds)).toBe(true);
       await help.click();
       await expect(card.locator('.enterprise-purchase-details')).toBeVisible();
+      await expect(help).toHaveAttribute('aria-expanded', 'true');
       await help.click();
+      await expect(card.locator('.enterprise-purchase-details')).toBeHidden();
     }
+    // A review returns to the same independently scrolling catalogue.
+    const blocked = page.locator('[data-enterprise-explain]').last();
+    await blocked.scrollIntoViewIfNeeded();
+    const scroller = page.locator('.enterprise-market-content');
+    const beforeReview = await scroller.evaluate(function (content) { return content.scrollTop; });
+    expect(beforeReview).toBeGreaterThan(0);
+    await blocked.click();
+    await page.locator('#enterprise-requirements-back').click();
+    await expect(blocked).toBeFocused();
+    await expect.poll(function () {
+      return scroller.evaluate(function (content) { return content.scrollTop; });
+    }).toBe(beforeReview);
   });
 }
 

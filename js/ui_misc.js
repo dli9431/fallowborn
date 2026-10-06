@@ -3871,6 +3871,10 @@ window.FB = window.FB || {};
     view.title = $('gm-title').textContent;
     view.body = document.createDocumentFragment();
     view.scrollTop = body.scrollTop;
+    view.contentScroll = [];
+    body.querySelectorAll('[data-modal-scroll]').forEach(function (scroller) {
+      view.contentScroll.push({ node:scroller, top:scroller.scrollTop, left:scroller.scrollLeft });
+    });
     view.dismiss = UI._gmDismiss;
     view.onDismiss = UI._gmOnDismiss;
     view.modalKey = UI._gmModalKey;
@@ -3947,6 +3951,10 @@ window.FB = window.FB || {};
       }
       // Layout and focus restoration must not move the originating list.
       body.scrollTop = view.scrollTop || 0;
+      (view.contentScroll || []).forEach(function (scroll) {
+        scroll.node.scrollTop = scroll.top;
+        scroll.node.scrollLeft = scroll.left;
+      });
     }, 0);
   }
 

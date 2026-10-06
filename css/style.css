@@ -1680,7 +1680,18 @@ button.ongoing-commitment-row:focus-visible { background: #302619; }
 .enterprise-catalogue-summary .kv { margin: 0; }
 .enterprise-catalogue-group { margin-top: 5px; }
 .enterprise-purchase-shell { position: relative; }
-.enterprise-purchase-option { position: relative; width: 100%; margin: 0; }
+#genmodal.enterprise-market-modal #gm-body { overflow: hidden; padding-right: 0; }
+.enterprise-market-content {
+  flex: 1 1 auto; min-height: 0; overflow-y: auto; padding: 0 10px 8px 0;
+  scroll-padding: 8px 0;
+  -webkit-overflow-scrolling: touch; overscroll-behavior: contain;
+}
+#genmodal.enterprise-market-modal .gm-footer {
+  position: relative; bottom: auto; flex: 0 0 auto;
+}
+.enterprise-purchase-shell > .enterprise-purchase-option {
+  position: relative; width: 100%; margin: 0;
+}
 .enterprise-purchase-option.blocked {
   border-style: dashed; border-color: #704737; opacity: 1;
 }
@@ -1707,6 +1718,7 @@ button.ongoing-commitment-row:focus-visible { background: #302619; }
 .enterprise-purchase-option.blocked .enterprise-purchase-critical { color: var(--ui-danger-color); }
 .enterprise-purchase-option.warning .enterprise-purchase-critical { color: var(--ui-warning-color); }
 .enterprise-purchase-actions { position: absolute; z-index: 2; top: 8px; right: 8px; }
+.enterprise-purchase-actions .settcard-info { scroll-margin: 8px 0; }
 .enterprise-purchase-details { padding: 8px 10px; }
 .enterprise-purchase-details .asset-effect-summary { margin-top: 7px; }
 .enterprise-purchase-reason { margin-top: 4px; font-weight: bold; }
@@ -3583,7 +3595,8 @@ button.linklike { background: none; border: 0; padding: 0; font: inherit; color:
     grid-column: 1; grid-row: 1; padding: 10px 12px 64px;
   }
   .enterprise-purchase-shell > .enterprise-purchase-actions {
-    position: static; z-index: auto; grid-column: 1; grid-row: 1;
+    position: relative; top: auto; right: auto; z-index: auto;
+    grid-column: 1; grid-row: 1;
     justify-self: end; align-self: end; margin: 8px;
   }
   [data-settlement-grant-candidates] .person-assignment-card {
