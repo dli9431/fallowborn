@@ -2,7 +2,8 @@
    A government form (FBDATA.governmentForms) names one registered strategy
    per behavior slot, and engine consumers dispatch through the form instead
    of choosing rules by bookmark. Registration happens at script load only;
-   strategy ids are referenced by government-form data and are never saved. */
+   default strategy ids are referenced by government-form data; an optional
+   royal succession policy override is saved with the compact genealogy. */
 window.FB = window.FB || {};
 
 (function () {
@@ -95,6 +96,31 @@ window.FB = window.FB || {};
     return current && !G.problems(current.formId).length ? G.resolve(current.formId) : null;
   };
 
+  /* A court policy is campaign state, not a historical-date instruction. */
+  G.successionForRealm = function (state, rid) {
+    var realm = state && state.realms && state.realms[rid];
+    var policy = realm && realm.succession && realm.succession.policyId;
+    var form = G.forRealm(state, rid);
+    return G.strategy('succession', policy || (form && form.strategies.succession) || 'dynastic');
+  };
+
+  function maleLine(member, succession) {
+    var seen = {}, current = member;
+    while (current && !seen[current.id]) {
+      if (current.id === succession.founderId) return true;
+      if (current.sex !== 'm') return false;
+      seen[current.id] = true;
+      current = succession.members[current.fatherId || current.parentId];
+    }
+    return false;
+  }
+
+  function seniorEligible(member, succession, year) {
+    return !!member && member.id !== succession.rulerMemberId &&
+      member.alive !== false && member.role !== 'consort' &&
+      member.sex === 'm' && year - member.born >= 16 && maleLine(member, succession);
+  }
+
   G.validate = function () {
     var errors = [], forms = FBDATA.governmentForms;
     if (!forms || typeof forms !== 'object') return errors;
@@ -140,7 +166,26 @@ window.FB = window.FB || {};
           paths:[{ roles:['arms'], years:2, prestige:20 }, { office:true, prestige:10 }, { wealth:120, prestige:40 }] } }
       } }
     },
-    succession:{ dynastic:{}, office:{}, acclamation:{} },
+    succession:{
+      dynastic:{ eligible:function (member, succession, year, frontier) {
+        return !!member && frontier.indexOf(member.id) >= 0;
+      } },
+      agnatic_seniority:{
+        requiresFounder:true,
+        annualRefresh:true,
+        eligible:seniorEligible,
+        order:function (succession, year, frontier) {
+          var candidates = Object.keys(succession.members).map(function (id) {
+            return succession.members[id];
+          }).filter(function (member) { return seniorEligible(member, succession, year); });
+          candidates.sort(function (a, b) {
+            return a.born - b.born || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0);
+          });
+          return candidates.length ? candidates.map(function (member) { return member.id; }) : frontier;
+        }
+      },
+      office:{}, acclamation:{}
+    },
     territory:{ fixed:{}, non_territorial:{} },
     consent:{ territorial:{ territorialConsent:true },
       delegated:{ territorialConsent:false } }

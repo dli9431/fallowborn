@@ -73,6 +73,7 @@
   /* Optional platform fields (state-and-saves.md, Save v4 platform schema).
      Absent fields stay valid; present ids must resolve. */
   P.validatePlatform = function (state) {
+    validateRoyalCourts(state);
     if (FB.validateStartingRealm) FB.validateStartingRealm(state);
     if (FB.validateLocalInstitutionState) FB.validateLocalInstitutionState(state);
     if (FB.validateReligionInstitutionState) FB.validateReligionInstitutionState(state);
@@ -92,6 +93,95 @@
     }
     return true;
   };
+
+  /* Inspect the compact save representation, before inflateState or adoption.
+     Missing derived ids/links are legitimate serializer omissions. */
+  function validateRoyalCourts(state) {
+    Object.keys(state.realms || {}).forEach(function (rid) {
+      var realm = state.realms[rid], s = realm && realm.succession;
+      if (!s || s.authoredCourt === undefined && s.policyId === undefined) return;
+      var path = 'state.realms.' + rid + '.succession';
+      if (s.authoredCourt !== undefined && s.authoredCourt !== true ||
+          !plain(s.members) || !Array.isArray(s.order) || !own(s.members, s.rulerMemberId) ||
+          !Number.isInteger(s.rulerGeneration) || s.rulerGeneration < 1 ||
+          realm.ruler && realm.ruler.generation !== undefined && realm.ruler.generation !== s.rulerGeneration) field(path);
+      var policy = s.policyId === undefined ? null : FB.governments.strategy('succession', s.policyId);
+      if (s.policyId !== undefined && (!policy || typeof policy.eligible !== 'function')) field(path + '.policyId');
+      if (s.founderId !== undefined && !own(s.members, s.founderId) ||
+          policy && policy.requiresFounder && !own(s.members, s.founderId)) field(path + '.founderId');
+      function list(ids, where, excludeRuler) {
+        if (!Array.isArray(ids) || ids.some(function (id, i) {
+          return typeof id !== 'string' || !own(s.members, id) || ids.indexOf(id) !== i ||
+            excludeRuler && id === s.rulerMemberId;
+        })) field(where);
+      }
+      list(s.order, path + '.order', true);
+      if (s.authoredCourt) list(s.dynasticOrder, path + '.dynasticOrder', true);
+      if (own(s, 'heirId') && (s.heirId !== null && s.heirId !== s.order[0] ||
+          s.heirId === null && s.order.length)) field(path + '.heirId');
+      if (s.openingPreferredId !== undefined && (!own(s.members, s.openingPreferredId) ||
+          s.openingPreferredId === s.rulerMemberId)) field(path + '.openingPreferredId');
+      var localIds = {}, visiting = {}, done = {};
+      Object.keys(s.members).forEach(function (id) {
+        var m = s.members[id], where = path + '.members.' + id;
+        if (!plain(m) || m.id !== undefined && m.id !== id ||
+            typeof m.name !== 'string' || !m.name || ['m','f'].indexOf(m.sex) < 0 ||
+            !Number.isInteger(m.born) || m.born > state.date.year ||
+            m.alive !== undefined && typeof m.alive !== 'boolean' ||
+            m.died !== undefined && (!Number.isInteger(m.died) || m.died < m.born || m.died > state.date.year) ||
+            m.generated !== undefined && typeof m.generated !== 'boolean' ||
+            m.mar !== undefined && (typeof m.mar !== 'number' || !isFinite(m.mar) || m.mar < 0) ||
+            m.trait !== undefined && !own(FBDATA.traits, m.trait) ||
+            m.spouseDeclared !== undefined && typeof m.spouseDeclared !== 'boolean' ||
+            m.culture !== undefined && !own(FBDATA.cultures, m.culture) ||
+            m.religion !== undefined && !FB.faithExists(m.religion, state) ||
+            m.homeProvinceId !== undefined && !(FBDATA.provinces || []).some(function (p) { return p.id === m.homeProvinceId; })) field(where);
+        if (m.localId !== undefined) {
+          if (typeof m.localId !== 'string' || !/^[a-z][a-z0-9_]*$/.test(m.localId) ||
+              own(localIds, m.localId) || id !== 'royal_' + rid + '_authored_' + m.localId) field(where + '.localId');
+          localIds[m.localId] = true;
+        }
+        ['parentId','fatherId','motherId','spouseMemberId'].forEach(function (key) {
+          if (m[key] === undefined || m[key] === null) return;
+          var target = s.members[m[key]];
+          if (!own(s.members, m[key]) || !target || m[key] === id) field(where + '.' + key);
+          if (key === 'fatherId' || key === 'motherId') {
+            if (target.sex !== (key === 'fatherId' ? 'm' : 'f') || m.born - target.born < 12)
+              field(where + '.' + key);
+          }
+          if (key === 'spouseMemberId' && target.spouseMemberId !== id) field(where + '.' + key);
+        });
+        if (m.siblingIds !== undefined) {
+          list(m.siblingIds, where + '.siblingIds', false);
+          if (m.siblingIds.some(function (siblingId) {
+            var sibling = s.members[siblingId];
+            return siblingId === id || !Array.isArray(sibling.siblingIds) || sibling.siblingIds.indexOf(id) < 0;
+          })) field(where + '.siblingIds');
+        }
+        if (m.childIds !== undefined) {
+          list(m.childIds, where + '.childIds', false);
+          if (m.childIds.some(function (childId) {
+            var child = s.members[childId];
+            return child.parentId !== id && child.fatherId !== id && child.motherId !== id;
+          })) field(where + '.childIds');
+        }
+        if (m.charId) {
+          var c = state.chars && state.chars[m.charId];
+          if (!c || !c.royalLine || c.royalLine.realmId !== rid ||
+              c.royalLine.memberId !== undefined && c.royalLine.memberId !== id) field(where + '.charId');
+        }
+      });
+      function visit(id) {
+        if (visiting[id]) field(path + '.members.' + id + '.parents');
+        if (done[id]) return;
+        visiting[id] = true;
+        var m = s.members[id];
+        [m.parentId, m.fatherId, m.motherId].forEach(function (parentId) { if (parentId) visit(parentId); });
+        delete visiting[id]; done[id] = true;
+      }
+      Object.keys(s.members).forEach(visit);
+    });
+  }
   P.validateAuthority = function (authority, state) {
     if (authority === undefined) return true;
     if (!plain(authority) || authority.schema !== undefined &&

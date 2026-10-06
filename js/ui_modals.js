@@ -11981,7 +11981,38 @@ window.FB = window.FB || {};
           parent.id === ruler.id) {
         return FB.T(parent.sex === 'f' ? 'Wife' : 'Husband');
       }
+      if (succession && succession.authoredCourt) return royalRelation(parent);
       return FB.T(parent.sex === 'f' ? 'Mother' : 'Father');
+    }
+    function royalRelation(relative) {
+      const subject = s.chars[subjectId];
+      if (!subject || !subject.royalLine || !relative.royalLine) return FB.T('Relative');
+      const degree = FB.royalKinshipDegree(s, subject, relative);
+      const member = succession.members[relative.royalLine.memberId];
+      const origin = succession.members[subject.royalLine.memberId];
+      if (!member || !origin) return FB.T('Relative');
+      const parents = [origin.fatherId || origin.parentId, origin.motherId];
+      if (degree === 'parent_child') return parents.indexOf(member.id) >= 0
+        ? FB.T(relative.sex === 'f' ? 'Mother' : 'Father')
+        : FB.T(relative.sex === 'f' ? 'Daughter' : 'Son');
+      if (degree === 'full_sibling') return FB.T(relative.sex === 'f' ? 'Sister' : 'Brother');
+      if (degree === 'avuncular') {
+        const older = parents.some(function (id) {
+          const parent = succession.members[id];
+          return parent && FB.royalKinshipDegree(s, { royalLine:{ realmId:rid, memberId:id } }, relative) === 'full_sibling';
+        });
+        return older ? FB.T(relative.sex === 'f' ? 'Aunt' : 'Uncle') : FB.T(relative.sex === 'f' ? 'Niece' : 'Nephew');
+      }
+      if (degree === 'grandparent') {
+        const ancestor = parents.some(function (id) {
+          const parent = succession.members[id];
+          return parent && [parent.fatherId || parent.parentId, parent.motherId].indexOf(member.id) >= 0;
+        });
+        return ancestor ? FB.T(relative.sex === 'f' ? 'Grandmother' : 'Grandfather')
+          : FB.T(relative.sex === 'f' ? 'Granddaughter' : 'Grandson');
+      }
+      if (degree === 'cousin') return FB.T('Cousin');
+      return FB.T('Relative');
     }
     if (ruler && ruler.id !== subjectId) {
       rows.push({
@@ -12007,7 +12038,7 @@ window.FB = window.FB || {};
         role:'child',
         rel:succession && succession.heirId === member.id
           ? FB.T('Heir')
-          : (subjectId && childIds[subjectId]
+          : (succession && succession.authoredCourt ? royalRelation(c) : subjectId && childIds[subjectId]
             ? FB.T(c.sex === 'f' ? 'Sister' : 'Brother')
             : FB.T(c.sex === 'f' ? 'Daughter' : 'Son'))
       });

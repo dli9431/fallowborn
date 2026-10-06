@@ -1,3 +1,7 @@
+Authored royal courts and succession
+
+Named starting relatives are content, not a research capability. The independently selectable declared_royal_succession policy has technology mode none: ancestry, survival and eligibility supply its constraints. No research prerequisite belongs to family inheritance. A realm may declare royalCourt; absent declarations retain the existing generation path and RNG/uid progression. Initialization consumes declarations only at new-world creation. Government succession strategies dispatch an optional saved policyId, defaulting to the realm form's policy. Agnatic seniority selects adult male descendants through male parents from an explicit founder, oldest first with stable identity ties. If no eligible male survives, the ordinary living dynastic frontier is used; if that frontier is empty, the existing vacant-line repair applies. Opening preference is consumed once at creation and never reapplied on restore or accession.
+
 # Realms, the liege hierarchy & tiers
 
 ## Shared political queries (476 Phase 1)
@@ -35,7 +39,7 @@ code dispatches through the realm's form instead of choosing rules by bookmark.
 revenue, council, diplomacy, ai, vocabulary and ladder. Every form names its
 holders, succession, territory and consent strategies; a slot it omits resolves to
 `engine_default`, today's shared code path, until a later change converts that
-consumer. Strategy ids are referenced by data and are never saved.
+consumer. Default strategy ids are referenced by data; an optional court policy override is saved with its genealogy.
 
 | Form | Holders | Succession | Territory | Consent |
 | --- | --- | --- | --- | --- |
@@ -49,8 +53,7 @@ realm's holders strategy places its counties: `feudal_vassals` keeps the capital
 duchy as the ruler's demesne and generates dukes and counts for the rest;
 `direct` leaves every county of the realm in its own hand. The consent strategy
 decides whether a realm's territorial rule answers local civic consent
-(`territorial`) or leaves it to a delegated office (`delegated`). The other
-registered strategies still run the shared code.
+(`territorial`) or leaves it to a delegated office (`delegated`). Succession dispatches a declared court policy through the registry; forms without a policy override retain the shared frontier behavior.
 
 Creation stamps `state.start.era`, `state.start.geography` once a bookmark
 declares one, and `state.start.defaultGovernment` from the era. `FB.initPolitics`

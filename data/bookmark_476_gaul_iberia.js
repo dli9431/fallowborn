@@ -139,7 +139,11 @@ FBDATA.bookmarkRegions476['gaul_iberia'] = {
       aggression:1, rank:3, religion:'germanic_pagan',
       governingIdentity:{ eliteCultureId:'frankish', eliteFaithId:'germanic_pagan', legalIdentityId:'frankish_custom',
         tolerance:'preference', taxation:'equal', justicePolicy:'personal' },
-      ruler:{ name:'Childeric', sex:'m', culture:'frankish', born:440, mar:10, trait:'ambitious' } },
+      ruler:{ name:'Childeric', sex:'m', culture:'frankish', born:440, mar:10, trait:'ambitious' },
+      royalCourt:{ dynasty:'Merovingian', succession:{ policyId:'dynastic', preferredMemberId:'clovis' },
+        members:[
+          { id:'clovis', name:'Clovis', sex:'m', born:466, culture:'frankish', religion:'germanic_pagan', fatherId:'ruler', homeProvinceId:'ghent' }
+        ] } },
     { id:'aquitaine', name:'Visigothic Kingdom', color:'#ba8655', capital:'toulouse',
       aggression:1, rank:3, religion:'homoian', techTraditions:['latin'],
       governingIdentity:{ eliteCultureId:'gothic', eliteFaithId:'homoian', legalIdentityId:'gothic_custom',
@@ -149,7 +153,14 @@ FBDATA.bookmarkRegions476['gaul_iberia'] = {
       aggression:0, rank:3, religion:'homoian',
       governingIdentity:{ eliteCultureId:'burgundian', eliteFaithId:'homoian', legalIdentityId:'burgundian_custom',
         tolerance:'preference', taxation:'equal', justicePolicy:'personal' },
-      ruler:{ name:'Chilperic I', sex:'m', culture:'burgundian', born:415, mar:9, trait:'patient' } },
+      ruler:{ name:'Chilperic I', sex:'m', culture:'burgundian', born:415, mar:9, trait:'patient' },
+      royalCourt:{ dynasty:'Gibichung', founderId:'gundioc', rulerSiblingIds:['gundioc'],
+        succession:{ policyId:'dynastic', preferredMemberId:'gundobad' },
+        members:[
+          { id:'gundioc', name:'Gundioc', sex:'m', born:410, culture:'burgundian', religion:'homoian', alive:false, died:473, siblingIds:['ruler'] },
+          { id:'gundobad', name:'Gundobad', sex:'m', born:445, culture:'burgundian', religion:'homoian', fatherId:'gundioc', homeProvinceId:'vienne' },
+          { id:'godegisel', name:'Godegisel', sex:'m', born:450, culture:'burgundian', religion:'homoian', fatherId:'gundioc', homeProvinceId:'geneva' }
+        ] } },
     { id:'suebi_476', name:'Suevic Kingdom', color:'#667b59', capital:'lugo',
       aggression:0, rank:3, religion:'homoian',
       governingIdentity:{ eliteCultureId:'suevic', eliteFaithId:'homoian', legalIdentityId:'suevic_custom',
