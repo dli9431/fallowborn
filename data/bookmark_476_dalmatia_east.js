@@ -4,8 +4,128 @@
 window.FBDATA = window.FBDATA || {};
 FBDATA.bookmarkRegions476 = FBDATA.bookmarkRegions476 || {};
 FBDATA.bookmarkRegions476['dalmatia_east'] = {
-  /* Full institutional depth at the two courts; provincial sees elsewhere
-     use generated incumbents rather than inventing attested fifth-century names. */
+  /* Regional identities inherit shared naming and appearance rules. Uncertain
+     provincial incumbents are generated, never passed off as attested people. */
+  cultures:{
+    isaurian:{ name:'Isaurian', parent:'greek',
+      nameEras:{ late_antique:{ male:['Tarasis','Illus','Trocundes','Longinus','Conon','Indacus'] } } },
+    gepid:{ name:'Gepid', parent:'gothic',
+      nameEras:{ late_antique:{ male:['Ardaric','Gunderit','Thraustila','Thrasaric','Mundo'] } } }
+  },
+  /* Civil appointments have county scope. The two Gothic captains command
+     their polity's existing banner; neither is a second historical Theoderic.
+     Births, skills, estate share and the unnamed offices are gameplay values. */
+  opening:{
+    actors:{
+      amal_ruler:{ ref:{kind:'realm_ruler',realmId:'pannonia'} },
+      thracian_ruler:{ ref:{kind:'realm_ruler',realmId:'thracian_goths_476'} },
+      illus:{ ref:{kind:'story',storyId:'zeno_return_476',field:'illusId'} },
+      trocundes:{ ref:{kind:'story',storyId:'zeno_return_476',field:'trocundesId'} },
+      thessalonica_governor:{ sex:'m', culture:'greek', religion:'chalcedonian', born:431, station:3, role:'notable', home:'thessaloniki', skills:{ste:10,dip:8} },
+      serdica_governor:{ sex:'m', culture:'roman', religion:'chalcedonian', born:432, station:3, role:'notable', home:'serdica', skills:{ste:9,lea:8} },
+      thracia_governor:{ sex:'m', culture:'greek', religion:'chalcedonian', born:434, station:3, role:'notable', home:'philippopolis', skills:{ste:9,dip:8} },
+      haemimontus_governor:{ sex:'m', culture:'greek', religion:'chalcedonian', born:433, station:3, role:'notable', home:'adrianople', skills:{ste:8,dip:8} },
+      moesia_governor:{ sex:'m', culture:'roman', religion:'chalcedonian', born:430, station:3, role:'notable', home:'silistra', skills:{ste:9,lea:7} },
+      dacia_governor:{ sex:'m', culture:'roman', religion:'chalcedonian', born:435, station:3, role:'notable', home:'vidin', skills:{ste:8,dip:7} },
+      dardania_governor:{ sex:'m', culture:'roman', religion:'chalcedonian', born:431, station:3, role:'notable', home:'skopje', skills:{ste:8,lea:8} },
+      epirus_governor:{ sex:'m', culture:'roman', religion:'chalcedonian', born:434, station:3, role:'notable', home:'dyrrachion', skills:{ste:9,dip:9} },
+      bithynia_governor:{ sex:'m', culture:'greek', religion:'chalcedonian', born:430, station:3, role:'notable', home:'nicaea', skills:{ste:10,lea:9} },
+      galatia_governor:{ sex:'m', culture:'greek', religion:'chalcedonian', born:432, station:3, role:'notable', home:'ancyra', skills:{ste:10,dip:8} },
+      lydia_governor:{ sex:'m', culture:'greek', religion:'chalcedonian', born:434, station:3, role:'notable', home:'sardis', skills:{ste:9,lea:8} },
+      pamphylia_governor:{ sex:'m', culture:'greek', religion:'chalcedonian', born:433, station:3, role:'notable', home:'attaleia', skills:{ste:9,dip:8} },
+      cappadocia_governor:{ sex:'m', culture:'greek', religion:'chalcedonian', born:430, station:3, role:'notable', home:'caesarea', skills:{ste:9,lea:9} },
+      isaurian_magnate:{ name:'Longinus', sex:'m', culture:'isaurian', religion:'chalcedonian', born:450, station:3, role:'notable', home:'ikonion', dyn:'Isaurian household', skills:{ste:8,dip:8} },
+      amal_captain:{ sex:'m', culture:'gothic', religion:'homoian', born:441, station:3, role:'commander', home:'thessaloniki', skills:{mar:10,dip:7} },
+      thracian_captain:{ sex:'m', culture:'gothic', religion:'homoian', born:436, station:3, role:'commander', home:'adrianople', skills:{mar:10,dip:8} }
+    },
+    appointments:{
+      thracian_imperial_command:{ officeId:'magister_praesentalis', actorId:'thracian_ruler', realmId:'byzantium', scope:{kind:'host',id:'host_476_thracian'} },
+      thessalonica_governor:{ officeId:'consularis', actorId:'thessalonica_governor', realmId:'byzantium', scope:{kind:'county',id:'thessaloniki'} },
+      serdica_governor:{ officeId:'consularis', actorId:'serdica_governor', realmId:'byzantium', scope:{kind:'county',id:'serdica'} },
+      thracia_governor:{ officeId:'consularis', actorId:'thracia_governor', realmId:'byzantium', scope:{kind:'county',id:'philippopolis'} },
+      haemimontus_governor:{ officeId:'praeses', actorId:'haemimontus_governor', realmId:'byzantium', scope:{kind:'county',id:'adrianople'} },
+      moesia_governor:{ officeId:'praeses', actorId:'moesia_governor', realmId:'byzantium', scope:{kind:'county',id:'silistra'} },
+      dacia_governor:{ officeId:'praeses', actorId:'dacia_governor', realmId:'byzantium', scope:{kind:'county',id:'vidin'} },
+      dardania_governor:{ officeId:'praeses', actorId:'dardania_governor', realmId:'byzantium', scope:{kind:'county',id:'skopje'} },
+      epirus_governor:{ officeId:'praeses', actorId:'epirus_governor', realmId:'byzantium', scope:{kind:'county',id:'dyrrachion'} },
+      bithynia_governor:{ officeId:'consularis', actorId:'bithynia_governor', realmId:'byzantium', scope:{kind:'county',id:'nicaea'} },
+      galatia_governor:{ officeId:'consularis', actorId:'galatia_governor', realmId:'byzantium', scope:{kind:'county',id:'ancyra'} },
+      lydia_governor:{ officeId:'consularis', actorId:'lydia_governor', realmId:'byzantium', scope:{kind:'county',id:'sardis'} },
+      pamphylia_governor:{ officeId:'consularis', actorId:'pamphylia_governor', realmId:'byzantium', scope:{kind:'county',id:'attaleia'} },
+      cappadocia_governor:{ officeId:'praeses', actorId:'cappadocia_governor', realmId:'byzantium', scope:{kind:'county',id:'caesarea'} },
+      amal_unit_command:{ officeId:'tribunus', actorId:'amal_captain', realmId:'pannonia', scope:{kind:'host',id:'host_476_amal'} },
+      thracian_unit_command:{ officeId:'tribunus', actorId:'thracian_captain', realmId:'thracian_goths_476', scope:{kind:'host',id:'host_476_thracian'} }
+    },
+    estates:[{ id:'isaurian_family_estate_476', actorId:'isaurian_magnate', provinceId:'ikonion', share0:500, basis:'tenure', evidence:'isaurian_magnate_property_476' }],
+    claims:[
+      { id:'amal_balkan_settlement_476', realmId:'pannonia', countyIds:['thessaloniki','serres','vidin'], share0:1500, evidence:'unaccepted_amal_settlement_terms_476' },
+      { id:'thracian_settlement_476', realmId:'thracian_goths_476', countyIds:['adrianople','philippopolis'], share0:1500, evidence:'unaccepted_thracian_settlement_terms_476' }
+    ], migrations:[]
+  },
+  storyActors:{
+    illus:{ name:'Illus', culture:'isaurian', religion:'chalcedonian', age:40, station:4, role:'commander', home:'ikonion' },
+    trocundes:{ name:'Trocundes', culture:'isaurian', religion:'chalcedonian', age:40, station:4, role:'commander', home:'ikonion' }
+  },
+  serviceStarts:[
+    { templateId:'paid_service', patronRealmId:'byzantium', federateRealmId:'pannonia', hostId:'host_476_amal', payPerSeason:10, endTurn:360 },
+    { templateId:'paid_service', patronRealmId:'byzantium', federateRealmId:'thracian_goths_476', hostId:'host_476_thracian', payPerSeason:12, endTurn:360 }
+  ],
+  migrations:{
+    theoderic_italy:{ realmId:'pannonia', patronRealmId:'byzantium', hostId:'host_476_amal', origin:'thessaloniki', target:'ravenna', firstYear:488, lastYear:493, durationDays:2160, templateId:'commissioned_migration', settlementForm:'regnum', men:160, units:{levy:100,ret:60} }
+  },
+  storyIds:['thracian_pressure_476','amal_epirus_476'],
+  campaigns:{
+  theoderic_italy_476:{ id:'theoderic_italy_476', type:'campaign',
+    requires:['western_court_476'], name:'The Amal Commission for Italy',
+    desc:'Theoderic the Amal can receive Zeno’s commission and lead his existing host and court toward Ravenna. Theoderic Strabo’s Thracian host remains a separate body.',
+    firstYear:488, lastYear:493, durationDays:2160,
+    actor:{ realmId:'pannonia', character:{ storyId:'western_court_476', field:'theodericId' } },
+    target:{ provinceId:'ravenna', ownerIds:['italy','federates_476'] },
+    conditions:[
+      { kind:'ruler', realmId:'byzantium', character:{ storyId:'western_court_476', field:'zenoId' } },
+      { kind:'owner', provinceId:'constantinople', realmId:'byzantium' },
+      { kind:'landless', realmId:'pannonia' },
+      { kind:'host', hostId:'host_476_amal', realmId:'pannonia' }
+    ],
+    commission:{ source:'imperial_commission', issuerRealmId:'byzantium' },
+    migrationId:'theoderic_italy',
+    settlement:{ churchId:'rome_see', civicId:'ravenna_council',
+      faithId:'nicene', minimumShare:0.5, governmentForm:'roman_civic' },
+    news:{
+      started:{ key:'news.476.theoderic_campaign', text:'⚔ The Amal court marches toward Ravenna under an eastern commission. War and settlement must secure its objective.' },
+      won:{ key:'news.476.theoderic_outcome', text:'🏛 The Gothic court now holds Ravenna; local church and civic rights depend on the surviving delegates.' },
+      failed:{ key:'news.476.theoderic_failed', text:'🏳 The Amal campaign ends without completing its Italian settlement.' },
+      diverted:{ key:'news.476.theoderic_diverted', text:'📜 The Italian opportunity no longer fits the Amal and eastern courts.' },
+      interrupted:{ key:'news.476.theoderic_interrupted', text:'📜 The host or living imperial mandate needed for the Amal campaign is lost.' }
+    } },
+    thracian_pressure_476:{ id:'thracian_pressure_476', type:'campaign', requires:['western_court_476','zeno_return_476'],
+      name:'The Thracian Gothic Challenge', desc:'The Thracian host can contest Constantinople after Zeno’s return. Office and service disputes create an opportunity for ordinary war; the capital is never awarded by a date.',
+      firstYear:477, lastYear:481, durationDays:720, settlementForm:'regnum',
+      actor:{realmId:'thracian_goths_476'}, target:{provinceId:'constantinople',ownerIds:['byzantium'],character:{storyId:'western_court_476',field:'zenoId'}},
+      conditions:[{kind:'ruler',realmId:'byzantium',character:{storyId:'western_court_476',field:'zenoId'}},
+        {kind:'landless',realmId:'thracian_goths_476'},{kind:'host',realmId:'thracian_goths_476',hostId:'host_476_thracian'}],
+      news:{
+        started:{key:'news.476.thracian_pressure_started',text:'⚔ The Thracian Gothic host contests the eastern capital. An ordinary campaign must decide possession.'},
+        won:{key:'news.476.thracian_pressure_won',text:'🏛 The Thracian Gothic court secures Constantinople through its campaign.'},
+        failed:{key:'news.476.thracian_pressure_failed',text:'🏳 The Thracian challenge ends without securing the eastern capital.'},
+        diverted:{key:'news.476.thracian_pressure_diverted',text:'📜 The eastern and Thracian courts have taken another course; the capital challenge closes.'},
+        interrupted:{key:'news.476.thracian_pressure_interrupted',text:'📜 The living court or host needed for the Thracian challenge is lost.'}
+      } },
+    amal_epirus_476:{ id:'amal_epirus_476', type:'campaign', requires:['western_court_476','zeno_return_476'],
+      name:'The Amal Host in Epirus', desc:'The Amal host may contest Dyrrachium during the Balkan disputes. A successful territorial settlement changes its later eligibility for the Italian commission.',
+      firstYear:479, lastYear:483, durationDays:720, settlementForm:'regnum',
+      actor:{realmId:'pannonia',character:{storyId:'western_court_476',field:'theodericId'}}, target:{provinceId:'dyrrachion',ownerIds:['byzantium']},
+      conditions:[{kind:'ruler',realmId:'byzantium',character:{storyId:'western_court_476',field:'zenoId'}},
+        {kind:'owner',realmId:'byzantium',provinceId:'constantinople'},
+        {kind:'landless',realmId:'pannonia'},{kind:'host',realmId:'pannonia',hostId:'host_476_amal'}],
+      news:{
+        started:{key:'news.476.amal_epirus_started',text:'⚔ The Amal host contests Dyrrachium. The eastern court and an ordinary campaign must answer the challenge.'},
+        won:{key:'news.476.amal_epirus_won',text:'🏛 The Amal court secures Dyrrachium through its campaign; the local communities remain.'},
+        failed:{key:'news.476.amal_epirus_failed',text:'🏳 The Amal campaign in Epirus ends without securing Dyrrachium.'},
+        diverted:{key:'news.476.amal_epirus_diverted',text:'📜 The Balkan courts have taken another course; the Epirus opportunity closes.'},
+        interrupted:{key:'news.476.amal_epirus_interrupted',text:'📜 The living Amal host or eastern court needed for the Epirus campaign is lost.'}
+      } }
+  },
   institutions:{
     salona_council:{ city:'Salona', kind:'council', provinceId:'split', site:'salona_476', religion:'nicene', culture:'roman' },
     salona_see:{ city:'Salona', kind:'see', provinceId:'split', site:'salona_476', religion:'nicene', culture:'roman', officeId:'salona_bishop', historicalName:'Glycerius' },
@@ -16,7 +136,48 @@ FBDATA.bookmarkRegions476['dalmatia_east'] = {
     serdica_see:{ city:'Serdica', kind:'see', provinceId:'serdica', site:'serdica_476', religion:'chalcedonian', culture:'roman', officeId:'serdica_bishop' },
     nicaea_see:{ city:'Nicaea', kind:'see', provinceId:'nicaea', site:'nicaea_476', religion:'chalcedonian', culture:'greek', officeId:'nicaea_bishop' },
     ephesus_see:{ city:'Ephesus', kind:'see', provinceId:'ephesos', site:'ephesus_476', religion:'chalcedonian', culture:'greek', officeId:'ephesus_bishop' },
-    caesarea_see:{ city:'Caesarea', kind:'see', provinceId:'caesarea', site:'caesarea_476', religion:'chalcedonian', culture:'greek', officeId:'caesarea_bishop' }
+    caesarea_see:{ city:'Caesarea', kind:'see', provinceId:'caesarea', site:'caesarea_476', religion:'chalcedonian', culture:'greek', officeId:'caesarea_bishop' },
+    thessalonica_council:{ city:'Thessalonica', kind:'council', provinceId:'thessaloniki', site:'thessalonica_476', religion:'chalcedonian', culture:'greek' },
+    serdica_council:{ city:'Serdica', kind:'council', provinceId:'serdica', site:'serdica_476', religion:'chalcedonian', culture:'roman' },
+    sirmium_council:{ city:'Sirmium', kind:'council', provinceId:'sirmium', site:'sirmium_476', religion:'nicene', culture:'roman' },
+    sirmium_see:{ city:'Sirmium', kind:'see', provinceId:'sirmium', site:'sirmium_476', religion:'nicene', culture:'roman', officeId:'sirmium_bishop' },
+    mursa_council:{ city:'Mursa', kind:'council', provinceId:'osijek', site:'mursa_476', religion:'nicene', culture:'roman' },
+    mursa_see:{ city:'Mursa', kind:'see', provinceId:'osijek', site:'mursa_476', religion:'nicene', culture:'roman', officeId:'mursa_bishop' },
+    hadrianopolis_council:{ city:'Hadrianopolis', kind:'council', provinceId:'adrianople', site:'hadrianopolis_476', religion:'chalcedonian', culture:'greek' },
+    hadrianopolis_see:{ city:'Hadrianopolis', kind:'see', provinceId:'adrianople', site:'hadrianopolis_476', religion:'chalcedonian', culture:'greek', officeId:'hadrianopolis_bishop' },
+    philippopolis_council:{ city:'Philippopolis', kind:'council', provinceId:'philippopolis', site:'philippopolis_476', religion:'chalcedonian', culture:'greek' },
+    philippopolis_see:{ city:'Philippopolis', kind:'see', provinceId:'philippopolis', site:'philippopolis_476', religion:'chalcedonian', culture:'greek', officeId:'philippopolis_bishop' },
+    durostorum_council:{ city:'Durostorum', kind:'council', provinceId:'silistra', site:'durostorum_476', religion:'chalcedonian', culture:'roman' },
+    durostorum_see:{ city:'Durostorum', kind:'see', provinceId:'silistra', site:'durostorum_476', religion:'chalcedonian', culture:'roman', officeId:'durostorum_bishop' },
+    bononia_danube_council:{ city:'Bononia', kind:'council', provinceId:'vidin', site:'bononia_danube_476', religion:'chalcedonian', culture:'roman' },
+    bononia_danube_see:{ city:'Bononia', kind:'see', provinceId:'vidin', site:'bononia_danube_476', religion:'chalcedonian', culture:'roman', officeId:'bononia_danube_bishop' },
+    scupi_council:{ city:'Scupi', kind:'council', provinceId:'skopje', site:'scupi_476', religion:'chalcedonian', culture:'roman' },
+    scupi_see:{ city:'Scupi', kind:'see', provinceId:'skopje', site:'scupi_476', religion:'chalcedonian', culture:'roman', officeId:'scupi_bishop' },
+    lychnidus_council:{ city:'Lychnidus', kind:'council', provinceId:'ohrid', site:'lychnidus_476', religion:'chalcedonian', culture:'greek' },
+    lychnidus_see:{ city:'Lychnidus', kind:'see', provinceId:'ohrid', site:'lychnidus_476', religion:'chalcedonian', culture:'greek', officeId:'lychnidus_bishop' },
+    dyrrachium_council:{ city:'Dyrrachium', kind:'council', provinceId:'dyrrachion', site:'dyrrachium_476', religion:'chalcedonian', culture:'roman' },
+    corinth_council:{ city:'Corinth', kind:'council', provinceId:'korinth', site:'corinth_476', religion:'chalcedonian', culture:'greek' },
+    corinth_see:{ city:'Corinth', kind:'see', provinceId:'korinth', site:'corinth_476', religion:'chalcedonian', culture:'greek', officeId:'corinth_bishop' },
+    athens_council:{ city:'Athens', kind:'council', provinceId:'athens', site:'athens_476', religion:'chalcedonian', culture:'greek' },
+    athens_see:{ city:'Athens', kind:'see', provinceId:'athens', site:'athens_476', religion:'chalcedonian', culture:'greek', officeId:'athens_bishop' },
+    nicaea_council:{ city:'Nicaea', kind:'council', provinceId:'nicaea', site:'nicaea_476', religion:'chalcedonian', culture:'greek' },
+    ancyra_council:{ city:'Ancyra', kind:'council', provinceId:'ancyra', site:'ancyra_476', religion:'chalcedonian', culture:'greek' },
+    ancyra_see:{ city:'Ancyra', kind:'see', provinceId:'ancyra', site:'ancyra_476', religion:'chalcedonian', culture:'greek', officeId:'ancyra_bishop' },
+    sardis_council:{ city:'Sardis', kind:'council', provinceId:'sardis', site:'sardis_476', religion:'chalcedonian', culture:'greek' },
+    sardis_see:{ city:'Sardis', kind:'see', provinceId:'sardis', site:'sardis_476', religion:'chalcedonian', culture:'greek', officeId:'sardis_bishop' },
+    ephesus_council:{ city:'Ephesus', kind:'council', provinceId:'ephesos', site:'ephesus_476', religion:'chalcedonian', culture:'greek' },
+    attalea_council:{ city:'Attalea', kind:'council', provinceId:'attaleia', site:'attalea_476', religion:'chalcedonian', culture:'greek' },
+    attalea_see:{ city:'Attalea', kind:'see', provinceId:'attaleia', site:'attalea_476', religion:'chalcedonian', culture:'greek', officeId:'attalea_bishop' },
+    caesarea_council:{ city:'Caesarea', kind:'council', provinceId:'caesarea', site:'caesarea_476', religion:'chalcedonian', culture:'greek' },
+    sebastea_council:{ city:'Sebastea', kind:'council', provinceId:'sebasteia', site:'sebastea_476', religion:'chalcedonian', culture:'greek' },
+    sebastea_see:{ city:'Sebastea', kind:'see', provinceId:'sebasteia', site:'sebastea_476', religion:'chalcedonian', culture:'greek', officeId:'sebastea_bishop' },
+    iconium_council:{ city:'Iconium', kind:'council', provinceId:'ikonion', site:'ikonion_476', religion:'chalcedonian', culture:'greek' },
+    iconium_see:{ city:'Iconium', kind:'see', provinceId:'ikonion', site:'ikonion_476', religion:'chalcedonian', culture:'greek', officeId:'iconium_bishop' },
+    sirmium_homoian_congregation:{ city:'Sirmium', kind:'congregation', provinceId:'sirmium', site:'sirmium_476', religion:'homoian', culture:'gepid' },
+    thessalonica_homoian_congregation:{ city:'Thessalonica', kind:'congregation', provinceId:'thessaloniki', site:'thessalonica_476', religion:'homoian', culture:'gothic' },
+    hadrianopolis_homoian_congregation:{ city:'Hadrianopolis', kind:'congregation', provinceId:'adrianople', site:'hadrianopolis_476', religion:'homoian', culture:'gothic' },
+    isaurian_congregation:{ city:'Isauria', kind:'congregation', provinceId:'ikonion', site:'isauria_476', religion:'chalcedonian', culture:'isaurian' },
+    ephesus_miaphysite_congregation:{ city:'Ephesus', kind:'congregation', provinceId:'ephesos', site:'ephesus_476', religion:'miaphysite', culture:'greek', representative:{name:'Paul',born:430,role:'priest',station:3} }
   },
   /* Physical anchors and dated proper names, not exact county boundaries.
      Existing Salona/Spalatum and Iconium/Isaurian-court slots stay in order. */
@@ -46,6 +207,7 @@ FBDATA.bookmarkRegions476['dalmatia_east'] = {
     caesarea_476:{ x:35.48, y:38.72, names:[{ from:400, to:649, name:'Caesarea' }] },
     sebastea_476:{ x:37.02, y:39.75, names:[{ from:400, to:649, name:'Sebastea' }] },
     sinope_476:{ x:35.15, y:42.03, names:[{ from:400, to:649, name:'Sinope' }] },
+    novae_476:{ x:25.35, y:43.61, names:[{ from:400, to:649, name:'Novae' }] },
     durostorum_476:{ x:27.26, y:44.12, names:[{ from:400, to:649, name:'Durostorum' }] },
     bononia_danube_476:{ x:22.87, y:43.99, names:[{ from:400, to:649, name:'Bononia' }] },
     serdica_476:{ x:23.32, y:42.70, names:[{ from:400, to:649, name:'Serdica' }] },
@@ -82,11 +244,11 @@ FBDATA.bookmarkRegions476['dalmatia_east'] = {
     sardis:[{ site:'sardis_476', name:'Sardis', kind:'town' }],
     ephesos:[{ site:'ephesus_476', name:'Ephesus', kind:'town' }],
     attaleia:[{ site:'attalea_476', name:'Attalea', kind:'town' }],
-    ikonion:[{ site:'ikonion_476', name:'Iconium', kind:'town' }, { site:'isauria_476', name:'Isaurian court', kind:'village' }],
+    ikonion:[{ site:'ikonion_476', name:'Iconium', kind:'town', communities:[{culture:'greek',religion:'chalcedonian',populationShare0:8000},{culture:'isaurian',religion:'chalcedonian',populationShare0:1000},{culture:'greek',religion:'miaphysite',populationShare0:1000}] }, { site:'isauria_476', name:'Isaurian court', kind:'village', communities:[{culture:'greek',religion:'chalcedonian',populationShare0:3000},{culture:'isaurian',religion:'chalcedonian',populationShare0:6000},{culture:'greek',religion:'miaphysite',populationShare0:1000}] }],
     caesarea:[{ site:'caesarea_476', name:'Caesarea', kind:'town' }],
     sebasteia:[{ site:'sebastea_476', name:'Sebastea', kind:'town' }],
     sinope:[{ site:'sinope_476', name:'Sinope', kind:'town' }],
-    pliska:[{ site:'pliska_476', name:'Abritus', kind:'town' }],
+    pliska:[{ site:'pliska_476', name:'Abritus', kind:'town', communities:[{culture:'roman',religion:'chalcedonian',populationShare0:8000},{culture:'greek',religion:'chalcedonian',populationShare0:1800},{culture:'gothic',religion:'homoian',populationShare0:200}] }, { site:'novae_476', name:'Novae', kind:'town', communities:[{culture:'roman',religion:'chalcedonian',populationShare0:6000},{culture:'greek',religion:'chalcedonian',populationShare0:2000},{culture:'gothic',religion:'homoian',populationShare0:2000}] }],
     silistra:[{ site:'durostorum_476', name:'Durostorum', kind:'town' }],
     vidin:[{ site:'bononia_danube_476', name:'Bononia', kind:'town' }],
     serdica:[{ site:'serdica_476', name:'Serdica', kind:'town' }],
@@ -101,10 +263,10 @@ FBDATA.bookmarkRegions476['dalmatia_east'] = {
     sisak:[{ site:'siscia_476', name:'Siscia', kind:'town' }]
   },
   provinces:[
-    { id:'szekesfehervar', name:'Pannonian interior', names:[{ from:400, to:649, name:'Pannonian interior' }], realm:'gepids_476', culture:'roman', religion:'nicene', dev:2, communities:[{ culture:'roman', religion:'nicene', populationShare0:7000 }, { culture:'gothic', religion:'homoian', paired:true, populationShare0:3000 }] },
-    { id:'moson', name:'Upper Pannonia', names:[{ from:400, to:649, name:'Upper Pannonia' }], realm:'gepids_476', culture:'roman', religion:'nicene', dev:1, communities:[{ culture:'roman', religion:'nicene', populationShare0:7000 }, { culture:'gothic', religion:'homoian', paired:true, populationShare0:3000 }] },
-    { id:'sirmium', name:'Sirmium', names:[{ from:400, to:649, name:'Sirmium' }], realm:'gepids_476', culture:'roman', religion:'nicene', dev:2, communities:[{ culture:'roman', religion:'nicene', populationShare0:7000 }, { culture:'gothic', religion:'homoian', paired:true, populationShare0:3000 }] },
-    { id:'osijek', name:'Mursa', names:[{ from:400, to:649, name:'Mursa' }], realm:'gepids_476', culture:'roman', religion:'nicene', dev:1, communities:[{ culture:'roman', religion:'nicene', populationShare0:7000 }, { culture:'gothic', religion:'homoian', paired:true, populationShare0:3000 }] },
+    { id:'szekesfehervar', name:'Pannonian interior', names:[{ from:400, to:649, name:'Pannonian interior' }], realm:'gepids_476', culture:'roman', religion:'nicene', dev:2, customaryRights:[{power:'peace',basis:'possession'},{power:'revenue',basis:'possession'}], communities:[{ culture:'roman', religion:'nicene', populationShare0:6000 }, { culture:'gepid', religion:'homoian', paired:true, populationShare0:2500 }, { culture:'rugian', religion:'homoian', paired:true, populationShare0:1000 }, { culture:'gothic', religion:'homoian', paired:true, populationShare0:500 }] },
+    { id:'moson', name:'Upper Pannonia', names:[{ from:400, to:649, name:'Upper Pannonia' }], realm:'gepids_476', culture:'roman', religion:'nicene', dev:1, customaryRights:[{power:'peace',basis:'possession'},{power:'revenue',basis:'possession'}], communities:[{ culture:'roman', religion:'nicene', populationShare0:6000 }, { culture:'gepid', religion:'homoian', paired:true, populationShare0:2000 }, { culture:'rugian', religion:'homoian', paired:true, populationShare0:2000 }] },
+    { id:'sirmium', name:'Sirmium', names:[{ from:400, to:649, name:'Sirmium' }], realm:'gepids_476', culture:'roman', religion:'nicene', dev:2, customaryRights:[{power:'peace',basis:'possession'},{power:'revenue',basis:'possession'}], communities:[{ culture:'roman', religion:'nicene', populationShare0:7000 }, { culture:'gepid', religion:'homoian', paired:true, populationShare0:2500 }, { culture:'gothic', religion:'homoian', paired:true, populationShare0:500 }] },
+    { id:'osijek', name:'Mursa', names:[{ from:400, to:649, name:'Mursa' }], realm:'gepids_476', culture:'roman', religion:'nicene', dev:1, customaryRights:[{power:'peace',basis:'possession'},{power:'revenue',basis:'possession'}], communities:[{ culture:'roman', religion:'nicene', populationShare0:7500 }, { culture:'gepid', religion:'homoian', paired:true, populationShare0:2000 }, { culture:'gothic', religion:'homoian', paired:true, populationShare0:500 }] },
     { id:'constantinople', name:'Constantinople', names:[{ from:400, to:649, name:'Constantinople' }], realm:'byzantium', culture:'greek', religion:'chalcedonian', dev:9, duchy:'d_476_europa', customaryRights:[
       { power:'peace', basis:'tenure', basisRef:'provincial_court_476:constantinople' },
       { power:'revenue', basis:'tenure', basisRef:'provincial_court_476:constantinople' }
@@ -117,13 +279,13 @@ FBDATA.bookmarkRegions476['dalmatia_east'] = {
       { power:'peace', basis:'tenure', basisRef:'provincial_court_476:thessaloniki' },
       { power:'revenue', basis:'tenure', basisRef:'provincial_court_476:thessaloniki' }
     ], communities:[{ culture:'greek', religion:'chalcedonian', populationShare0:8500 }, { culture:'gothic', religion:'homoian', paired:true, populationShare0:1500 }] },
-    { id:'serres', name:'Serrhae', names:[{ from:400, to:649, name:'Serrhae' }], realm:'byzantium', culture:'greek', religion:'chalcedonian', dev:2, duchy:'d_476_macedonia_prima', communities:[{ culture:'greek', religion:'chalcedonian', populationShare0:8500 }, { culture:'gothic', religion:'homoian', paired:true, populationShare0:1500 }] },
-    { id:'larissa', name:'Larissa', names:[{ from:400, to:649, name:'Larissa' }], realm:'byzantium', culture:'greek', religion:'chalcedonian', dev:3, duchy:'d_476_thessalia', communities:[{ culture:'greek', religion:'chalcedonian', populationShare0:10000 }] },
-    { id:'athens', name:'Athens', names:[{ from:400, to:649, name:'Athens' }], realm:'byzantium', culture:'greek', religion:'chalcedonian', dev:3, duchy:'d_476_achaia', communities:[{ culture:'greek', religion:'chalcedonian', populationShare0:10000 }] },
-    { id:'thebes', name:'Thebes', names:[{ from:400, to:649, name:'Thebes' }], realm:'byzantium', culture:'greek', religion:'chalcedonian', dev:3, duchy:'d_476_achaia', communities:[{ culture:'greek', religion:'chalcedonian', populationShare0:10000 }] },
-    { id:'korinth', name:'Corinth', names:[{ from:400, to:649, name:'Corinth' }], realm:'byzantium', culture:'greek', religion:'chalcedonian', dev:3, duchy:'d_476_achaia', communities:[{ culture:'greek', religion:'chalcedonian', populationShare0:10000 }] },
-    { id:'sparta', name:'Sparta', names:[{ from:400, to:649, name:'Sparta' }], realm:'byzantium', culture:'greek', religion:'chalcedonian', dev:2, duchy:'d_476_achaia', communities:[{ culture:'greek', religion:'chalcedonian', populationShare0:10000 }] },
-    { id:'ioannina', name:'Epirus interior', names:[{ from:400, to:649, name:'Epirus interior' }], realm:'byzantium', culture:'greek', religion:'chalcedonian', dev:2, duchy:'d_476_epirus_vetus', communities:[{ culture:'greek', religion:'chalcedonian', populationShare0:7000 }, { culture:'roman', religion:'chalcedonian', populationShare0:3000 }] },
+    { id:'serres', name:'Serrhae', names:[{ from:400, to:649, name:'Serrhae' }], realm:'byzantium', culture:'greek', religion:'chalcedonian', dev:2, duchy:'d_476_macedonia_prima', customaryRights:[{power:'peace',basis:'possession'},{power:'revenue',basis:'possession'}], communities:[{ culture:'greek', religion:'chalcedonian', populationShare0:8500 }, { culture:'gothic', religion:'homoian', paired:true, populationShare0:1500 }] },
+    { id:'larissa', name:'Larissa', names:[{ from:400, to:649, name:'Larissa' }], realm:'byzantium', culture:'greek', religion:'chalcedonian', dev:3, duchy:'d_476_thessalia', customaryRights:[{power:'peace',basis:'possession'},{power:'revenue',basis:'possession'}], communities:[{ culture:'greek', religion:'chalcedonian', populationShare0:10000 }] },
+    { id:'athens', name:'Athens', names:[{ from:400, to:649, name:'Athens' }], realm:'byzantium', culture:'greek', religion:'chalcedonian', dev:3, duchy:'d_476_achaia', customaryRights:[{power:'peace',basis:'possession'},{power:'revenue',basis:'possession'}], communities:[{ culture:'greek', religion:'chalcedonian', populationShare0:10000 }] },
+    { id:'thebes', name:'Thebes', names:[{ from:400, to:649, name:'Thebes' }], realm:'byzantium', culture:'greek', religion:'chalcedonian', dev:3, duchy:'d_476_achaia', customaryRights:[{power:'peace',basis:'possession'},{power:'revenue',basis:'possession'}], communities:[{ culture:'greek', religion:'chalcedonian', populationShare0:10000 }] },
+    { id:'korinth', name:'Corinth', names:[{ from:400, to:649, name:'Corinth' }], realm:'byzantium', culture:'greek', religion:'chalcedonian', dev:3, duchy:'d_476_achaia', customaryRights:[{power:'peace',basis:'possession'},{power:'revenue',basis:'possession'}], communities:[{ culture:'greek', religion:'chalcedonian', populationShare0:10000 }] },
+    { id:'sparta', name:'Sparta', names:[{ from:400, to:649, name:'Sparta' }], realm:'byzantium', culture:'greek', religion:'chalcedonian', dev:2, duchy:'d_476_achaia', customaryRights:[{power:'peace',basis:'possession'},{power:'revenue',basis:'possession'}], communities:[{ culture:'greek', religion:'chalcedonian', populationShare0:10000 }] },
+    { id:'ioannina', name:'Epirus interior', names:[{ from:400, to:649, name:'Epirus interior' }], realm:'byzantium', culture:'greek', religion:'chalcedonian', dev:2, duchy:'d_476_epirus_vetus', customaryRights:[{power:'peace',basis:'possession'},{power:'revenue',basis:'possession'}], communities:[{ culture:'greek', religion:'chalcedonian', populationShare0:7000 }, { culture:'roman', religion:'chalcedonian', populationShare0:3000 }] },
     { id:'dyrrachion', name:'Dyrrachium', names:[{ from:400, to:649, name:'Dyrrachium' }], realm:'byzantium', culture:'greek', religion:'chalcedonian', dev:3, duchy:'d_476_epirus_nova', customaryRights:[
       { power:'peace', basis:'tenure', basisRef:'provincial_court_476:dyrrachion' },
       { power:'revenue', basis:'tenure', basisRef:'provincial_court_476:dyrrachion' }
@@ -132,35 +294,35 @@ FBDATA.bookmarkRegions476['dalmatia_east'] = {
       { power:'peace', basis:'tenure', basisRef:'provincial_court_476:nicaea' },
       { power:'revenue', basis:'tenure', basisRef:'provincial_court_476:nicaea' }
     ], communities:[{ culture:'greek', religion:'chalcedonian', populationShare0:8500 }, { culture:'greek', religion:'miaphysite', populationShare0:1500 }] },
-    { id:'dorylaion', name:'Dorylaeum', names:[{ from:400, to:649, name:'Dorylaeum' }], realm:'byzantium', culture:'greek', religion:'chalcedonian', dev:3, duchy:'d_476_bithynia', communities:[{ culture:'greek', religion:'chalcedonian', populationShare0:10000 }] },
+    { id:'dorylaion', name:'Dorylaeum', names:[{ from:400, to:649, name:'Dorylaeum' }], realm:'byzantium', culture:'greek', religion:'chalcedonian', dev:3, duchy:'d_476_bithynia', customaryRights:[{power:'peace',basis:'possession'},{power:'revenue',basis:'possession'}], communities:[{ culture:'greek', religion:'chalcedonian', populationShare0:10000 }] },
     { id:'ancyra', name:'Ancyra', names:[{ from:400, to:649, name:'Ancyra' }], realm:'byzantium', culture:'greek', religion:'chalcedonian', dev:4, duchy:'d_476_galatia', customaryRights:[
       { power:'peace', basis:'tenure', basisRef:'provincial_court_476:ancyra' },
       { power:'revenue', basis:'tenure', basisRef:'provincial_court_476:ancyra' }
     ], communities:[{ culture:'greek', religion:'chalcedonian', populationShare0:8500 }, { culture:'greek', religion:'miaphysite', populationShare0:1500 }] },
-    { id:'amorion', name:'Amorium', names:[{ from:400, to:649, name:'Amorium' }], realm:'byzantium', culture:'greek', religion:'chalcedonian', dev:3, duchy:'d_476_phrygia', communities:[{ culture:'greek', religion:'chalcedonian', populationShare0:10000 }] },
-    { id:'smyrna', name:'Smyrna', names:[{ from:400, to:649, name:'Smyrna' }], realm:'byzantium', culture:'greek', religion:'chalcedonian', dev:4, duchy:'d_476_asia', communities:[{ culture:'greek', religion:'chalcedonian', populationShare0:10000 }] },
-    { id:'sardis', name:'Sardis', names:[{ from:400, to:649, name:'Sardis' }], realm:'byzantium', culture:'greek', religion:'chalcedonian', dev:3, duchy:'d_476_lydia', communities:[{ culture:'greek', religion:'chalcedonian', populationShare0:10000 }] },
-    { id:'ephesos', name:'Ephesus', names:[{ from:400, to:649, name:'Ephesus' }], realm:'byzantium', culture:'greek', religion:'chalcedonian', dev:3, duchy:'d_476_asia', communities:[{ culture:'greek', religion:'chalcedonian', populationShare0:8500 }, { culture:'greek', religion:'miaphysite', populationShare0:1500 }] },
-    { id:'attaleia', name:'Attalea', names:[{ from:400, to:649, name:'Attalea' }], realm:'byzantium', culture:'greek', religion:'chalcedonian', dev:3, duchy:'d_476_pamphylia', communities:[{ culture:'greek', religion:'chalcedonian', populationShare0:10000 }] },
-    { id:'ikonion', name:'Iconium', names:[{ from:400, to:649, name:'Iconium' }], realm:'byzantium', culture:'greek', religion:'chalcedonian', dev:3, duchy:'d_476_lycaonia', communities:[{ culture:'greek', religion:'chalcedonian', populationShare0:8500 }, { culture:'greek', religion:'miaphysite', populationShare0:1500 }] },
+    { id:'amorion', name:'Amorium', names:[{ from:400, to:649, name:'Amorium' }], realm:'byzantium', culture:'greek', religion:'chalcedonian', dev:3, duchy:'d_476_phrygia', customaryRights:[{power:'peace',basis:'possession'},{power:'revenue',basis:'possession'}], communities:[{ culture:'greek', religion:'chalcedonian', populationShare0:10000 }] },
+    { id:'smyrna', name:'Smyrna', names:[{ from:400, to:649, name:'Smyrna' }], realm:'byzantium', culture:'greek', religion:'chalcedonian', dev:4, duchy:'d_476_asia', customaryRights:[{power:'peace',basis:'possession'},{power:'revenue',basis:'possession'}], communities:[{ culture:'greek', religion:'chalcedonian', populationShare0:10000 }] },
+    { id:'sardis', name:'Sardis', names:[{ from:400, to:649, name:'Sardis' }], realm:'byzantium', culture:'greek', religion:'chalcedonian', dev:3, duchy:'d_476_lydia', customaryRights:[{power:'peace',basis:'possession'},{power:'revenue',basis:'possession'}], communities:[{ culture:'greek', religion:'chalcedonian', populationShare0:10000 }] },
+    { id:'ephesos', name:'Ephesus', names:[{ from:400, to:649, name:'Ephesus' }], realm:'byzantium', culture:'greek', religion:'chalcedonian', dev:3, duchy:'d_476_asia', customaryRights:[{power:'peace',basis:'possession'},{power:'revenue',basis:'possession'}], communities:[{ culture:'greek', religion:'chalcedonian', populationShare0:8500 }, { culture:'greek', religion:'miaphysite', populationShare0:1500 }] },
+    { id:'attaleia', name:'Attalea', names:[{ from:400, to:649, name:'Attalea' }], realm:'byzantium', culture:'greek', religion:'chalcedonian', dev:3, duchy:'d_476_pamphylia', customaryRights:[{power:'peace',basis:'possession'},{power:'revenue',basis:'possession'}], communities:[{ culture:'greek', religion:'chalcedonian', populationShare0:10000 }] },
+    { id:'ikonion', name:'Iconium', names:[{ from:400, to:649, name:'Iconium' }], realm:'byzantium', culture:'greek', religion:'chalcedonian', dev:3, duchy:'d_476_lycaonia', customaryRights:[{power:'peace',basis:'possession'},{power:'revenue',basis:'possession'}], communities:[{ culture:'greek', religion:'chalcedonian', populationShare0:7000 }, { culture:'isaurian', religion:'chalcedonian', populationShare0:2000 }, { culture:'greek', religion:'miaphysite', populationShare0:1000 }] },
     { id:'caesarea', name:'Caesarea', names:[{ from:400, to:649, name:'Caesarea' }], realm:'byzantium', culture:'greek', religion:'chalcedonian', dev:4, duchy:'d_476_cappadocia', customaryRights:[
       { power:'peace', basis:'tenure', basisRef:'provincial_court_476:caesarea' },
       { power:'revenue', basis:'tenure', basisRef:'provincial_court_476:caesarea' }
     ], communities:[{ culture:'greek', religion:'chalcedonian', populationShare0:8500 }, { culture:'greek', religion:'miaphysite', populationShare0:1500 }] },
-    { id:'sebasteia', name:'Sebastea', names:[{ from:400, to:649, name:'Sebastea' }], realm:'byzantium', culture:'greek', religion:'chalcedonian', dev:3, duchy:'d_476_armenia_prima', communities:[{ culture:'greek', religion:'chalcedonian', populationShare0:8500 }, { culture:'greek', religion:'miaphysite', populationShare0:1500 }] },
-    { id:'sinope', name:'Sinope', names:[{ from:400, to:649, name:'Sinope' }], realm:'byzantium', culture:'greek', religion:'chalcedonian', dev:3, duchy:'d_476_paphlagonia', communities:[{ culture:'greek', religion:'chalcedonian', populationShare0:10000 }] },
-    { id:'pliska', name:'Abritus', names:[{ from:400, to:649, name:'Abritus' }], realm:'byzantium', culture:'roman', religion:'chalcedonian', dev:3, duchy:'d_476_moesia_secunda', communities:[{ culture:'roman', religion:'chalcedonian', populationShare0:8000 }, { culture:'greek', religion:'chalcedonian', populationShare0:2000 }] },
-    { id:'silistra', name:'Durostorum', names:[{ from:400, to:649, name:'Durostorum' }], realm:'byzantium', culture:'roman', religion:'chalcedonian', dev:2, duchy:'d_476_moesia_secunda', communities:[{ culture:'roman', religion:'chalcedonian', populationShare0:8000 }, { culture:'greek', religion:'chalcedonian', populationShare0:2000 }] },
-    { id:'vidin', name:'Bononia', names:[{ from:400, to:649, name:'Bononia' }], realm:'byzantium', culture:'roman', religion:'chalcedonian', dev:2, duchy:'d_476_dacia_ripensis', communities:[{ culture:'roman', religion:'chalcedonian', populationShare0:8000 }, { culture:'greek', religion:'chalcedonian', populationShare0:2000 }] },
+    { id:'sebasteia', name:'Sebastea', names:[{ from:400, to:649, name:'Sebastea' }], realm:'byzantium', culture:'greek', religion:'chalcedonian', dev:3, duchy:'d_476_armenia_prima', customaryRights:[{power:'peace',basis:'possession'},{power:'revenue',basis:'possession'}], communities:[{ culture:'greek', religion:'chalcedonian', populationShare0:8500 }, { culture:'greek', religion:'miaphysite', populationShare0:1500 }] },
+    { id:'sinope', name:'Sinope', names:[{ from:400, to:649, name:'Sinope' }], realm:'byzantium', culture:'greek', religion:'chalcedonian', dev:3, duchy:'d_476_paphlagonia', customaryRights:[{power:'peace',basis:'possession'},{power:'revenue',basis:'possession'}], communities:[{ culture:'greek', religion:'chalcedonian', populationShare0:10000 }] },
+    { id:'pliska', name:'Abritus', names:[{ from:400, to:649, name:'Abritus' }], realm:'byzantium', culture:'roman', religion:'chalcedonian', dev:3, duchy:'d_476_moesia_secunda', customaryRights:[{power:'peace',basis:'possession'},{power:'revenue',basis:'possession'}], communities:[{ culture:'roman', religion:'chalcedonian', populationShare0:7000 }, { culture:'greek', religion:'chalcedonian', populationShare0:2000 }, { culture:'gothic', religion:'homoian', paired:true, populationShare0:1000 }] },
+    { id:'silistra', name:'Durostorum', names:[{ from:400, to:649, name:'Durostorum' }], realm:'byzantium', culture:'roman', religion:'chalcedonian', dev:2, duchy:'d_476_moesia_secunda', customaryRights:[{power:'peace',basis:'possession'},{power:'revenue',basis:'possession'}], communities:[{ culture:'roman', religion:'chalcedonian', populationShare0:7000 }, { culture:'greek', religion:'chalcedonian', populationShare0:2000 }, { culture:'gothic', religion:'homoian', paired:true, populationShare0:1000 }] },
+    { id:'vidin', name:'Bononia', names:[{ from:400, to:649, name:'Bononia' }], realm:'byzantium', culture:'roman', religion:'chalcedonian', dev:2, duchy:'d_476_dacia_ripensis', customaryRights:[{power:'peace',basis:'possession'},{power:'revenue',basis:'possession'}], communities:[{ culture:'roman', religion:'chalcedonian', populationShare0:7500 }, { culture:'greek', religion:'chalcedonian', populationShare0:1500 }, { culture:'gepid', religion:'homoian', paired:true, populationShare0:1000 }] },
     { id:'serdica', name:'Serdica', names:[{ from:400, to:649, name:'Serdica' }], realm:'byzantium', culture:'roman', religion:'chalcedonian', dev:3, duchy:'d_476_dacia_mediterranea', customaryRights:[
       { power:'peace', basis:'tenure', basisRef:'provincial_court_476:serdica' },
       { power:'revenue', basis:'tenure', basisRef:'provincial_court_476:serdica' }
     ], communities:[{ culture:'roman', religion:'chalcedonian', populationShare0:8000 }, { culture:'greek', religion:'chalcedonian', populationShare0:2000 }] },
-    { id:'philippopolis', name:'Philippopolis', names:[{ from:400, to:649, name:'Philippopolis' }], realm:'byzantium', culture:'greek', religion:'chalcedonian', dev:3, duchy:'d_476_thracia', communities:[{ culture:'greek', religion:'chalcedonian', populationShare0:8500 }, { culture:'gothic', religion:'homoian', paired:true, populationShare0:1500 }] },
-    { id:'skopje', name:'Scupi', names:[{ from:400, to:649, name:'Scupi' }], realm:'byzantium', culture:'roman', religion:'chalcedonian', dev:2, duchy:'d_476_dardania', communities:[{ culture:'roman', religion:'chalcedonian', populationShare0:8000 }, { culture:'greek', religion:'chalcedonian', populationShare0:2000 }] },
-    { id:'ohrid', name:'Lychnidus', names:[{ from:400, to:649, name:'Lychnidus' }], realm:'byzantium', culture:'greek', religion:'chalcedonian', dev:2, duchy:'d_476_epirus_nova', communities:[{ culture:'greek', religion:'chalcedonian', populationShare0:7000 }, { culture:'roman', religion:'chalcedonian', populationShare0:3000 }] },
-    { id:'kotor', name:'Acruvium', names:[{ from:400, to:649, name:'Acruvium' }], realm:'croatia', culture:'roman', religion:'nicene', dev:2, duchy:'d_476_dalmatia', communities:[{ culture:'roman', religion:'nicene', populationShare0:10000 }] },
-    { id:'knin', name:'Burnum', names:[{ from:400, to:649, name:'Burnum' }], realm:'croatia', culture:'roman', religion:'nicene', dev:2, duchy:'d_476_dalmatia', communities:[{ culture:'roman', religion:'nicene', populationShare0:10000 }] },
+    { id:'philippopolis', name:'Philippopolis', names:[{ from:400, to:649, name:'Philippopolis' }], realm:'byzantium', culture:'greek', religion:'chalcedonian', dev:3, duchy:'d_476_thracia', customaryRights:[{power:'peace',basis:'possession'},{power:'revenue',basis:'possession'}], communities:[{ culture:'greek', religion:'chalcedonian', populationShare0:8500 }, { culture:'gothic', religion:'homoian', paired:true, populationShare0:1500 }] },
+    { id:'skopje', name:'Scupi', names:[{ from:400, to:649, name:'Scupi' }], realm:'byzantium', culture:'roman', religion:'chalcedonian', dev:2, duchy:'d_476_dardania', customaryRights:[{power:'peace',basis:'possession'},{power:'revenue',basis:'possession'}], communities:[{ culture:'roman', religion:'chalcedonian', populationShare0:8000 }, { culture:'greek', religion:'chalcedonian', populationShare0:2000 }] },
+    { id:'ohrid', name:'Lychnidus', names:[{ from:400, to:649, name:'Lychnidus' }], realm:'byzantium', culture:'greek', religion:'chalcedonian', dev:2, duchy:'d_476_epirus_nova', customaryRights:[{power:'peace',basis:'possession'},{power:'revenue',basis:'possession'}], communities:[{ culture:'greek', religion:'chalcedonian', populationShare0:7000 }, { culture:'roman', religion:'chalcedonian', populationShare0:3000 }] },
+    { id:'kotor', name:'Acruvium', names:[{ from:400, to:649, name:'Acruvium' }], realm:'croatia', culture:'roman', religion:'nicene', dev:2, duchy:'d_476_dalmatia', customaryRights:[{power:'peace',basis:'possession'},{power:'revenue',basis:'possession'}], communities:[{ culture:'roman', religion:'nicene', populationShare0:10000 }] },
+    { id:'knin', name:'Burnum', names:[{ from:400, to:649, name:'Burnum' }], realm:'croatia', culture:'roman', religion:'nicene', dev:2, duchy:'d_476_dalmatia', customaryRights:[{power:'peace',basis:'possession'},{power:'revenue',basis:'possession'}], communities:[{ culture:'roman', religion:'nicene', populationShare0:10000 }] },
     { id:'split', name:'Salona', names:[{ from:400, to:649, name:'Salona' }], realm:'croatia', culture:'roman', religion:'nicene', dev:6, duchy:'d_476_dalmatia', customaryRights:[
       { power:'peace', basis:'tenure', basisRef:'provincial_court_476:split' },
       { power:'revenue', basis:'tenure', basisRef:'provincial_court_476:split' }
@@ -169,7 +331,7 @@ FBDATA.bookmarkRegions476['dalmatia_east'] = {
       { power:'peace', basis:'tenure', basisRef:'provincial_court_476:zadar' },
       { power:'revenue', basis:'tenure', basisRef:'provincial_court_476:zadar' }
     ], communities:[{ culture:'roman', religion:'nicene', populationShare0:10000 }] },
-    { id:'zagreb', name:'Andautonia', names:[{ from:400, to:649, name:'Andautonia' }], realm:'croatia', culture:'roman', religion:'nicene', dev:1, duchy:'d_476_dalmatia', communities:[{ culture:'roman', religion:'nicene', populationShare0:10000 }] },
+    { id:'zagreb', name:'Andautonia', names:[{ from:400, to:649, name:'Andautonia' }], realm:'croatia', culture:'roman', religion:'nicene', dev:1, duchy:'d_476_dalmatia', customaryRights:[{power:'peace',basis:'possession'},{power:'revenue',basis:'possession'}], communities:[{ culture:'roman', religion:'nicene', populationShare0:10000 }] },
     { id:'sisak', name:'Siscia', names:[{ from:400, to:649, name:'Siscia' }], realm:'croatia', culture:'roman', religion:'nicene', dev:2, duchy:'d_476_dalmatia', customaryRights:[
       { power:'peace', basis:'tenure', basisRef:'provincial_court_476:sisak' },
       { power:'revenue', basis:'tenure', basisRef:'provincial_court_476:sisak' }
@@ -194,9 +356,9 @@ FBDATA.bookmarkRegions476['dalmatia_east'] = {
         tolerance:'preference', taxation:'equal', justicePolicy:'personal' },
       ruler:{ name:'Theoderic the Amal', sex:'m', culture:'gothic', born:454, mar:12, trait:'ambitious' } },
     { id:'gepids_476', name:'Gepid Kingdom', color:'#6c846c', capital:'sirmium', aggression:0, rank:2, religion:'homoian', techTraditions:['latin'],
-      governingIdentity:{ eliteCultureId:'gothic', eliteFaithId:'homoian', legalIdentityId:'gothic_custom',
+      governingIdentity:{ eliteCultureId:'gepid', eliteFaithId:'homoian', legalIdentityId:'gothic_custom',
         tolerance:'preference', taxation:'equal', justicePolicy:'personal' },
-      ruler:{ generated:true, sex:'m', culture:'gothic', born:440, mar:8, trait:'patient' } },
+      ruler:{ generated:true, sex:'m', culture:'gepid', born:440, mar:8, trait:'patient' } },
     { id:'thracian_goths_476', name:'Thracian Gothic Host', color:'#7b846f', capital:'adrianople', aggression:0, rank:3, religion:'homoian', techTraditions:['latin'], nonTerritorial:true, government:'federate_polity',
       governingIdentity:{ eliteCultureId:'gothic', eliteFaithId:'homoian', legalIdentityId:'gothic_custom',
         tolerance:'preference', taxation:'equal', justicePolicy:'personal' },
@@ -286,6 +448,9 @@ FBDATA.bookmarkRegions476['dalmatia_east'] = {
 
 /* The geography uses the shared physical-site table. Regional declarations
    extend it before any bookmark is activated, without borrowing a later layout. */
+FBDATA.techImpactReviews.features.federate_host_commissions = { mode:'none', rationale:'A patron can commission the exact host named by effective bilateral service. Living consent and continued service supply the jurisdiction; army technology remains unchanged.' };
+FBDATA.techImpactReviews.features.campaign_territorial_settlement = { mode:'none', rationale:'A landless court can adopt a declared territorial government only after ordinary war secures its objective. Actual possession, rather than research, constrains this political settlement.' };
+Object.assign(FBDATA.cultures, FBDATA.bookmarkRegions476.dalmatia_east.cultures);
 Object.assign(FBDATA.settlementSites, FBDATA.bookmarkRegions476.dalmatia_east.sites);
 Object.assign(FBDATA.settlementLayouts['476'], FBDATA.bookmarkRegions476.dalmatia_east.layouts);
 
@@ -383,6 +548,83 @@ FBDATA.events.push(
       { label:'Copy the names and inquiries.', desc:'Give scattered families another way to find one another.',
         effects:{ skills:{dip:1}, piety:1 } },
       { label:'Leave the letters with another household.', desc:'You have no spare provisions this season.', effects:{} }
+    ] },
+  { id:'provincial_registers_476', pack:'dalmatia_east_476', tags:['late_antique'],
+    title:'The Provincial Register',
+    trigger:{ minAge:16, countyIds:['thessaloniki','serdica','philippopolis','silistra','skopje','nicaea','ancyra','sardis','attaleia','caesarea'], careerRoles:['civic','learned'], chance:0.12 },
+    weight:4, cooldown:12,
+    text:'The provincial office and the city council keep separate copies of the public receipts. A clerk asks your household to compare a disputed entry. The governor’s civil warrant covers courts and receipts; it does not command the soldiers or settle a family’s private estate.',
+    options:[
+      { label:'Compare the entry with both registers.', desc:'Separate public dues from a private demand.', effects:{ skills:{ste:1}, prestige:3, log:'Compared a provincial register with the city’s copy.' } },
+      { label:'Pay a copyist to preserve the witnesses’ account.', desc:'Keep the evidence available for a later hearing.', require:{goldMin:4}, effects:{gold:-4,skills:{lea:1},popularOpinion:2} },
+      { label:'Leave the account with the issuing office.', desc:'The household will not guarantee a disputed entry.', effects:{} }
+    ] },
+  { id:'sirmium_mixed_court_476', pack:'dalmatia_east_476', tags:['late_antique'],
+    title:'Two Customs at Sirmium',
+    trigger:{ minAge:16, countyIds:['sirmium','osijek','szekesfehervar','moson'], countyCommunityShare:{kind:'culture',target:'gepid',min:0.10}, chance:0.10 },
+    weight:3, cooldown:12,
+    text:'A carrier and a Gepid household dispute a payment on the Danube road. Roman witnesses bring written receipts; the other party brings witnesses to an oral agreement. The local assessor needs both accounts before deciding whose customary obligation applies.',
+    options:[
+      { label:'Record both sets of witnesses.', desc:'Let each household’s evidence be heard.', effects:{skills:{dip:1},prestige:3,log:'Recorded Roman and Gepid witnesses to a freight agreement.'} },
+      { label:'Help replace the disputed cargo.', desc:'Ease the families’ loss while their case is heard.', require:{goldMin:6}, effects:{gold:-6,popularOpinion:4} },
+      { label:'Keep the household outside the case.', desc:'The assessor must settle the disagreement.', effects:{} }
+    ] },
+  { id:'novae_provision_accounts_476', pack:'dalmatia_east_476', tags:['late_antique'],
+    title:'Supplies for the Lower Danube',
+    trigger:{ minAge:16, countyIds:['pliska','silistra','vidin'], countyCommunityShare:{kind:'faith',target:'homoian',min:0.05}, chance:0.10 },
+    weight:3, cooldown:12,
+    text:'A supplier brings accounts from the communities around Novae. Grain issued for a host’s service is being confused with a grant of land to its families. The carrier asks you to keep deliveries, wages and proposed settlement terms on separate sheets.',
+    options:[
+      { label:'Separate service receipts from settlement proposals.', desc:'A paid delivery is evidence of service, not ownership.', effects:{skills:{ste:1},prestige:3,log:'Separated Danube service receipts from proposed settlement terms.'} },
+      { label:'Buy grain for waiting households.', desc:'Relieve the delay without promising public land.', require:{goldMin:5}, effects:{gold:-5,popularOpinion:3} },
+      { label:'Take on no part of the account.', desc:'The counterparties must agree on their obligations.', effects:{} }
+    ] },
+  { id:'gothic_office_petitions_476', pack:'dalmatia_east_476', tags:['late_antique'],
+    yearMin:477, yearMax:483, title:'The Office and the Host',
+    trigger:{ minAge:16, countyIds:['thessaloniki','serres','adrianople','philippopolis','constantinople'], chance:0.12 },
+    weight:4, cooldown:8,
+    text:'Copies of rival Gothic petitions arrive from the eastern court. One asks for an imperial field command, another for pay, and another for homes for the host’s families. The clerks warn that an honor, an army commission and a settlement agreement are different commitments.',
+    options:[
+      { label:'Copy each request under its own heading.', desc:'Make the obligations clear to both hosts and the court.', effects:{skills:{lea:1},prestige:3,log:'Distinguished Gothic office, pay and settlement petitions.'} },
+      { label:'Help families waiting for an agreement.', desc:'Meet an immediate need without choosing a commander.', require:{goldMin:5}, effects:{gold:-5,popularOpinion:4} },
+      { label:'Leave the petitions with the court.', desc:'The household cannot answer an imperial negotiation.', effects:{} }
+    ] },
+  { id:'gothic_meeting_accounts_476', pack:'dalmatia_east_476', tags:['late_antique'],
+    yearMin:478, yearMax:479, once:true, title:'Accounts of the Two Hosts',
+    trigger:{ minAge:16, countyIds:['thessaloniki','serres','adrianople','philippopolis','serdica'], chance:0.12 }, weight:4,
+    text:'Travelers compare accounts of meetings between the Amal and Thracian Gothic hosts. Each tells a different story about promised reinforcements and supplies. A neighbor asks you to preserve what the witnesses actually saw, without treating a rumor as a treaty.',
+    options:[
+      { label:'Write down each witness’s account separately.', desc:'Keep a claim of alliance distinct from an agreed obligation.', effects:{skills:{lea:1},prestige:3,log:'Preserved separate accounts of the rival Gothic hosts.'} },
+      { label:'Find provisions for travelers delayed by the dispute.', desc:'Help people caught between rival promises.', require:{goldMin:4}, effects:{gold:-4,piety:3} },
+      { label:'Repeat no unverified account.', desc:'Let the court obtain its own witnesses.', effects:{} }
+    ] },
+  { id:'isaurian_retainer_accounts_476', pack:'dalmatia_east_476', tags:['late_antique'],
+    title:'The Isaurian Household’s Account',
+    trigger:{ minAge:16, countyIds:['ikonion','attaleia','caesarea'], countyCommunityShare:{kind:'culture',target:'isaurian',min:0.10}, chance:0.12 },
+    weight:4, cooldown:12,
+    text:'An Isaurian household asks for help comparing the cost of retainers, supplies and repairs to its estate. Court favor may bring an office, but a private family holding does not by itself grant public receipts or command over a provincial host.',
+    options:[
+      { label:'Put the private and public accounts on separate sheets.', desc:'Show what the household can meet from its own resources.', effects:{skills:{ste:1},prestige:3,log:'Reconciled an Isaurian household’s private accounts.'} },
+      { label:'Contribute to repairs and provisions.', desc:'Help its dependents through the season.', require:{goldMin:5}, effects:{gold:-5,popularOpinion:3} },
+      { label:'Decline to guarantee the household’s debts.', desc:'A court connection is no substitute for an agreed payment.', effects:{} }
+    ] },
+  { id:'isaurian_command_letters_476', pack:'dalmatia_east_476', tags:['late_antique'],
+    yearMin:483, yearMax:488, title:'A Command from the East',
+    trigger:{ minAge:16, countyIds:['ikonion','caesarea','ancyra','attaleia'], chance:0.10 }, weight:3, cooldown:12,
+    text:'Letters recalling the careers of Illus and Trocundes circulate among Isaurian households. Their service in the imperial dispute has become an argument about distant field commands, court trust and family obligations. A carrier asks which parts of the letters can be checked against a surviving warrant.',
+    options:[
+      { label:'Check the warrants before carrying the letters.', desc:'Distinguish a living commission from a remembered service.', effects:{skills:{lea:1,dip:1},log:'Compared Isaurian command letters with their warrants.'} },
+      { label:'Help families waiting for news from the east.', desc:'Keep correspondence moving without promising military aid.', require:{goldMin:4}, effects:{gold:-4,piety:3} },
+      { label:'Take no message beyond its stated destination.', desc:'The household will make no political promise.', effects:{} }
+    ] },
+  { id:'provincial_reconciliation_formula_476', pack:'dalmatia_east_476', tags:['late_antique'],
+    yearMin:482, yearMax:488, title:'A Formula for Reconciliation',
+    trigger:{ minAge:16, countyIds:['nicaea','ancyra','ephesos','caesarea','sebasteia','ikonion'], countyCommunityShare:{kind:'faith',target:'miaphysite',min:0.05}, chance:0.12 }, weight:4, cooldown:12,
+    text:'A proposed formula invokes the older councils while leaving the disputed language of Chalcedon aside. Chalcedonian and miaphysite neighbors disagree over whether this brings reconciliation or merely conceals their differences. The congregation needs help keeping its common relief work peaceful.',
+    options:[
+      { label:'Hear both congregations before copying the formula.', desc:'Learn the disagreement without professing for either household.', effects:{skills:{lea:1},piety:2,log:'Compared a provincial reconciliation formula with both congregations’ objections.'} },
+      { label:'Supply the relief work shared by both congregations.', desc:'Give help without requiring agreement on the formula.', require:{goldMin:5}, effects:{gold:-5,popularOpinion:4,piety:2} },
+      { label:'Keep the family’s own worship.', desc:'The formula changes no one’s profession on your behalf.', effects:{} }
     ] },
   { id:'persian_frontier_dispatch_476', pack:'dalmatia_east_476', tags:['late_antique'],
     title:'A Dispatch from Beyond the Eastern Frontier',

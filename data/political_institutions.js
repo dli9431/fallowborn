@@ -137,20 +137,11 @@ FBDATA.federateContractTerms = {
 /* Opening service supplies landless hosts through ordinary paid commitments.
    The later campaign replaces service only after its new terms are affordable. */
 FBDATA.federateServiceStarts = {
-  western_court_476:[
-    { templateId:'paid_service', patronRealmId:'byzantium', federateRealmId:'pannonia', hostId:'host_476_amal' },
-    { templateId:'paid_service', patronRealmId:'byzantium', federateRealmId:'thracian_goths_476', hostId:'host_476_thracian' }
-  ]
+  western_court_476:FBDATA.bookmarkRegions476.dalmatia_east.serviceStarts
 };
 /* County anchors abstract the historical march. Courts travel with the
    ordinary host; no dated outcome replaces occupation or settlement. */
-FBDATA.federateMigrations = {
-  theoderic_italy:{ realmId:'pannonia', patronRealmId:'byzantium',
-    hostId:'host_476_amal', origin:'thessaloniki', target:'ravenna',
-    firstYear:488, lastYear:493, durationDays:2160,
-    templateId:'commissioned_migration', settlementForm:'regnum',
-    men:160, units:{ levy:100, ret:60 } }
-};
+FBDATA.federateMigrations = FBDATA.bookmarkRegions476.dalmatia_east.migrations;
 /* A government form names the registered strategy (js/governments.js) that
    answers each behavior slot for a realm of that form. A slot the form leaves
    out uses its engine default, today's shared code path. consent says whether

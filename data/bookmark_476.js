@@ -7,12 +7,19 @@ FBDATA.bookmarks['476'] = {
   date:{ year:476, season:0, day:1 }, era:'late_antique',
   geography:'europe_regional', settlementLayout:'476',
   religiousHeads:{},
-  opening:FBDATA.bookmarkRegions476.italy.opening,
+  openingRevision:'balkans_v1', openingLegacyRevision:'core_v1',
+  opening:{
+    actors:Object.assign({}, FBDATA.bookmarkRegions476.italy.opening.actors, FBDATA.bookmarkRegions476.dalmatia_east.opening.actors),
+    appointments:Object.assign({}, FBDATA.bookmarkRegions476.italy.opening.appointments, FBDATA.bookmarkRegions476.dalmatia_east.opening.appointments),
+    estates:FBDATA.bookmarkRegions476.italy.opening.estates.concat(FBDATA.bookmarkRegions476.dalmatia_east.opening.estates),
+    claims:FBDATA.bookmarkRegions476.italy.opening.claims.concat(FBDATA.bookmarkRegions476.dalmatia_east.opening.claims),
+    migrations:FBDATA.bookmarkRegions476.italy.opening.migrations.concat(FBDATA.bookmarkRegions476.dalmatia_east.opening.migrations)
+  },
   systems:{ disable:['papacy','scutage','manorial_tenure','excommunication','abbeys',
     'feudal_service','crown_bloc','tournaments','great_holy_wars'] },
   stories:['western_court_476','zeno_return_476','clovis_syagrius_476',
     'theoderic_italy_476','eastern_africa_476','eastern_italy_476','western_office_476']
-    .concat(FBDATA.bookmarkRegions476.italy.storyIds),
+    .concat(FBDATA.bookmarkRegions476.italy.storyIds, FBDATA.bookmarkRegions476.dalmatia_east.storyIds),
   provinces:FBDATA.bookmarkRegions476.italy.provinces.concat(
     FBDATA.bookmarkRegions476.dalmatia_east.provinces,
     FBDATA.bookmarkRegions476.gaul_iberia.provinces,
@@ -326,4 +333,44 @@ FBDATA.bookmarks['476'] = {
   straits:[['messina', 'reggio'], ['palermo', 'tunis'], ['malaga', 'tangier'], ['silves', 'tangier'], ['constantinople', 'nicaea'], ['cagliari', 'pisa'], ['ajaccio', 'lucca'], ['ajaccio', 'nice'], ['mallorca', 'valencia']].concat(FBDATA.bookmarkRegions476.africa.straits),
   crossingClasses:Object.assign({ 'messina|reggio':'narrow', 'palermo|tunis':'open', 'malaga|tangier':'narrow', 'silves|tangier':'coastal', 'constantinople|nicaea':'narrow', 'cagliari|pisa':'open', 'ajaccio|lucca':'coastal', 'ajaccio|nice':'coastal', 'mallorca|valencia':'open' }, FBDATA.bookmarkRegions476.africa.crossingClasses),
   scripted:[]
+};
+
+/* Frozen opening declarations are compatibility data. Never amend a shipped
+   revision in place: add a new id and retain every previously saved id. */
+FBDATA.bookmarks['476'].openingRevisions = {
+  core_v1:{
+    actors:{
+      orestes:{ name:'Orestes', sex:'m', culture:'roman', religion:'nicene', born:426,
+        station:4, role:'commander', home:'ravenna', rulerChildRealmId:'italy', skills:{mar:11,dip:7} },
+      civic_delegate:{ sex:'m', culture:'roman', religion:'nicene', born:434,
+        station:2, role:'notable', home:'ravenna' },
+      simplicius:{ name:'Simplicius', sex:'m', culture:'roman', religion:'nicene', born:422,
+        station:3, role:'priest', home:'roma', skills:{lea:10,dip:9} },
+      veteran:{ sex:'m', culture:'gothic', religion:'homoian', born:438,
+        station:2, role:'soldier', home:'pavia' },
+      basilius:{ name:'Caecina Decius Basilius', sex:'m', culture:'roman', religion:'nicene', born:415,
+        station:3, role:'notable', dyn:'Caecina Decia', home:'roma', skills:{ste:10,dip:10} },
+      senator:{ name:'Caecina Decius Maximus Basilius', sex:'m', culture:'roman', religion:'nicene', born:440,
+        station:3, role:'notable', dyn:'Caecina Decia', father:'basilius', home:'roma', skills:{ste:9,dip:10} },
+      venantius:{ name:'Decius Marius Venantius Basilius', sex:'m', culture:'roman', religion:'nicene', born:445,
+        station:2, role:'notable', dyn:'Caecina Decia', father:'basilius', home:'roma', skills:{ste:8,dip:8} },
+      homoian_bishop:{ sex:'m', culture:'gothic', religion:'homoian', born:430,
+        station:3, role:'priest', home:'ravenna' }
+    },
+    appointments:{
+      orestes_honor:{ officeId:'patricius', actorId:'orestes', realmId:'italy', scope:{kind:'realm',id:'italy'} },
+      orestes_magister:{ officeId:'magister_militum', actorId:'orestes', realmId:'italy', scope:{kind:'host',id:'host_476_italy'} },
+      orestes_command:{ officeId:'field_command', actorId:'orestes', realmId:'italy', scope:{kind:'host',id:'host_476_italy'}, endTurn:361 },
+      ravenna_delegate:{ officeId:'civic_delegate', actorId:'civic_delegate', realmId:'italy', scope:{kind:'county',id:'ravenna'}, recognitionSource:'civic_acceptance' },
+      senate_delegate:{ officeId:'civic_delegate', actorId:'senator', realmId:'italy', scope:{kind:'county',id:'roma'}, recognitionSource:'civic_acceptance' }
+    },
+    estates:[{ id:'decian_estate_476', actorId:'basilius', provinceId:'roma', share0:1000,
+      basis:'tenure', evidence:'decian_family_property_476' }],
+    claims:[{ id:'italian_federate_third', realmId:'federates_476', countyIds:['ravenna','pavia','milano','roma'],
+      share0:3333, evidence:'unaccepted_federate_land_demand_476' }],
+    /* Relative households displaced within Noricum before the opening.
+       This small cohort is not the later general evacuation into Italy. */
+    migrations:[{ from:'linz', to:'wien', rate:0.01, community:{culture:'roman',religion:'nicene'} }]
+  },
+  balkans_v1:FBDATA.bookmarks['476'].opening
 };

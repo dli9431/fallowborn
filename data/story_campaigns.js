@@ -2,37 +2,10 @@
    the campaign story type contains no bookmark or historical-person selectors. */
 window.FBDATA = window.FBDATA || {};
 /* Named actors have authored identities and game-scaled ages and standing. */
-FBDATA.storyActors476 = {
-  illus:{ name:'Illus', culture:'greek', religion:'chalcedonian', age:40,
-    station:4, role:'commander', home:'ikonion' },
-  trocundes:{ name:'Trocundes', culture:'greek', religion:'chalcedonian', age:40,
-    station:4, role:'commander', home:'ikonion' }
-};
+FBDATA.storyActors476 = FBDATA.bookmarkRegions476.dalmatia_east.storyActors;
 FBDATA.storyCampaigns = {
   clovis_syagrius_476:FBDATA.bookmarkRegions476.gaul_iberia.storyCampaigns.clovis_syagrius_476,
-  theoderic_italy_476:{ id:'theoderic_italy_476', type:'campaign',
-    requires:['western_court_476'], name:'The Amal Commission for Italy',
-    desc:'Theoderic the Amal can receive Zeno’s commission and lead his existing host and court toward Ravenna. Theoderic Strabo’s Thracian host remains a separate body.',
-    firstYear:488, lastYear:493, durationDays:2160,
-    actor:{ realmId:'pannonia', character:{ storyId:'western_court_476', field:'theodericId' } },
-    target:{ provinceId:'ravenna', ownerIds:['italy','federates_476'] },
-    conditions:[
-      { kind:'ruler', realmId:'byzantium', character:{ storyId:'western_court_476', field:'zenoId' } },
-      { kind:'owner', provinceId:'constantinople', realmId:'byzantium' },
-      { kind:'landless', realmId:'pannonia' },
-      { kind:'host', hostId:'host_476_amal', realmId:'pannonia' }
-    ],
-    commission:{ source:'imperial_commission', issuerRealmId:'byzantium' },
-    migrationId:'theoderic_italy',
-    settlement:{ churchId:'rome_see', civicId:'ravenna_council',
-      faithId:'nicene', minimumShare:0.5, governmentForm:'roman_civic' },
-    news:{
-      started:{ key:'news.476.theoderic_campaign', text:'⚔ The Amal court marches toward Ravenna under an eastern commission. War and settlement must secure its objective.' },
-      won:{ key:'news.476.theoderic_outcome', text:'🏛 The Gothic court now holds Ravenna; local church and civic rights depend on the surviving delegates.' },
-      failed:{ key:'news.476.theoderic_failed', text:'🏳 The Amal campaign ends without completing its Italian settlement.' },
-      diverted:{ key:'news.476.theoderic_diverted', text:'📜 The Italian opportunity no longer fits the Amal and eastern courts.' },
-      interrupted:{ key:'news.476.theoderic_interrupted', text:'📜 The host or living imperial mandate needed for the Amal campaign is lost.' }
-    } },
+  theoderic_italy_476:FBDATA.bookmarkRegions476.dalmatia_east.campaigns.theoderic_italy_476,
   eastern_africa_476:FBDATA.bookmarkRegions476.africa.campaigns.eastern_africa_476,
   eastern_italy_476:{ id:'eastern_italy_476', type:'campaign',
     requires:['western_court_476'], name:'The Eastern Italian Campaign',
@@ -50,3 +23,5 @@ FBDATA.storyCampaigns = {
 };
 
 Object.assign(FBDATA.storyCampaigns, FBDATA.bookmarkRegions476.italy.storyCampaigns);
+
+Object.assign(FBDATA.storyCampaigns, FBDATA.bookmarkRegions476.dalmatia_east.campaigns);
