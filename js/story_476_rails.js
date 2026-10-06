@@ -112,7 +112,17 @@
         if (rec[key] !== null && (typeof rec[key] !== 'string' || !rec[key])) bad(ZENO, key);
       if (!rec.legacy && (!rec.illusId || !rec.trocundesId)) bad(ZENO, 'illusId');
     } });
-  for (var id in FBDATA.storyCampaigns) FB.stories.registerData(FBDATA.storyCampaigns[id]);
+  var pending = Object.keys(FBDATA.storyCampaigns);
+  while (pending.length) {
+    var ready = [];
+    pending.forEach(function (id) {
+      if ((FBDATA.storyCampaigns[id].requires || []).every(function (required) { return !!FB.stories.get(required); })) {
+        FB.stories.registerData(FBDATA.storyCampaigns[id]); ready.push(id);
+      }
+    });
+    if (!ready.length) throw new Error('World story declarations have unresolved dependencies.');
+    pending = pending.filter(function (id) { return ready.indexOf(id) < 0; });
+  }
 
   function restoreOffice(s, w) {
     if (w.westOfficeId) FB.authorityAppointmentTransition(s, w.westOfficeId, 'remove');

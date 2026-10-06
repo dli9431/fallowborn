@@ -450,6 +450,9 @@ test('browser projects keep the full affected suite on primary served Chromium',
   const configuredFileSpecs = projects['chromium-file'].testMatch.map(function (pattern) {
     return path.basename(pattern);
   });
+  assert.equal(new Set(configuredFileSpecs).size, configuredFileSpecs.length,
+    'The file project must not repeat a specification.');
   assert.deepEqual(configuredFileSpecs.slice().sort(),
-    explicitFileSpecs.concat(['journeys.spec.js']).sort());
+    explicitFileSpecs.concat(['journeys.spec.js']).sort(),
+    'The file project covers explicit file-origin cases and shared journeys; other specs use served Chromium.');
 });

@@ -61,3 +61,23 @@ FBDATA.storyCampaigns711 = {
     } }
 };
 Object.assign(FBDATA.storyCampaigns, FBDATA.storyCampaigns711);
+
+/* Asturias is absent at creation. A surviving northern remnant or an earned
+   local revolt settlement can establish this court after Toledo falls. */
+FBDATA.storyFoundations = {
+  asturias_foundation_711:{ id:'asturias_foundation_711', type:'polity_foundation',
+    name:'The Asturian Resistance',
+    desc:'After the Umayyads take Toledo, the Asturian uplands may form a court under Pelayo. A surviving Gothic remnant can break away at peace. Conquered uplands must earn independence through an ordinary local revolt; the date guarantees no victory.',
+    firstYear:718, lastYear:730, durationDays:1080,
+    collapse:{ provinceId:'toledo', formerRealmId:'visigoths_711', ownerIds:['umayyad_711'] },
+    remnantRealmIds:['visigoths_711'], revoltRealmIds:['umayyad_711'],
+    community:{ faithId:'catholic', minimumShare:0.5 },
+    realm:{ id:'asturias_711', name:'Asturias', color:'#b58a42', capital:'oviedo',
+      rank:3, aggression:0.7, government:'territorial', religion:'catholic',
+      ruler:{ name:'Pelayo', sex:'m', culture:'gothic', born:685, mar:10, trait:'patient' } },
+    news:{
+      founded:{ key:'news.711.asturias.founded', text:'🏔 Pelayo establishes an Asturian court after the loss of Toledo. Its surviving territory and future wars follow ordinary political rules.' },
+      failed:{ key:'news.711.asturias.failed', text:'🏳 The northern uprising ends without founding Pelayo’s court. Its ordinary military and local settlement outcomes remain in force.' },
+      diverted:{ key:'news.711.asturias.diverted', text:'📜 Northern control or the course of the Gothic conquest closes the Asturian foundation opportunity.' }
+    } }
+};

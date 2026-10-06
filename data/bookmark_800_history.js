@@ -65,3 +65,39 @@ FBDATA.storyCampaigns800 = {
     } }
 };
 Object.assign(FBDATA.storyCampaigns, FBDATA.storyCampaigns800);
+
+/* Only relatives already born at the opening are seeded. Later births and
+   deaths belong to the dynasty simulation, never a historical calendar. */
+var courts800 = {
+  carolingian_800:{ dynasty:'Carolingian', spouseId:null, members:[
+    { id:'charles', name:'Charles', sex:'m', born:772, culture:'frankish',
+      religion:'catholic', fatherId:'ruler', spouseId:null }
+  ] },
+  aquitaine:{ dynasty:'Carolingian', members:[
+    { id:'lothair', name:'Lothair', sex:'m', born:795, culture:'frankish', religion:'catholic', fatherId:'ruler' },
+    { id:'pippin', name:'Pippin', sex:'m', born:797, culture:'frankish', religion:'catholic', fatherId:'ruler' }
+  ] },
+  italy:{ dynasty:'Carolingian', members:[
+    { id:'bernard', name:'Bernard', sex:'m', born:797, culture:'frankish', religion:'catholic', fatherId:'ruler' }
+  ] }
+};
+FBDATA.bookmarks['800'].realms.forEach(function (realm) {
+  if (courts800[realm.id]) realm.royalCourt = courts800[realm.id];
+});
+FBDATA.carolingianSettlements800 = {
+  divisio:{ firstYear:806, lastYear:813 },
+  ordinatio:{ firstYear:817, lastYear:823 },
+  gifts:{ firstYear:801, lastYear:809, westernGift:15, easternGift:25 },
+  recognition:{ firstYear:812, lastYear:814, coastalCounties:['venezia','split'] },
+  verdun:{ firstYear:843, lastYear:846 },
+  regions:{
+    west:{ realmId:'carolingian_west_800', capital:'paris', titleId:'west_francia',
+      duchies:['ile','normandy','anjou','blois','champagne','vermandois','flanders','aquitaine','poitou','toulouse','auvergne','gascogne','narbonne'] },
+    east:{ realmId:'carolingian_east_800', capital:'regensburg', titleId:'east_francia',
+      duchies:['bavaria','carantania','ostmark','saxony','thuringia','franconia','swabia','rhineland'] },
+    aquitaine:{ realmId:'carolingian_aquitaine_800', capital:'bordeaux', titleId:'aquitaine',
+      duchies:['aquitaine','poitou','toulouse','auvergne','gascogne','narbonne'] },
+    bavaria:{ realmId:'carolingian_bavaria_800', capital:'regensburg', titleId:'east_francia',
+      duchies:['bavaria','carantania','ostmark'] }
+  }
+};

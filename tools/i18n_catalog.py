@@ -90,6 +90,7 @@ STRUCTURED_DATA = {
     "seasonKinds": "seasonKind",
     "climateZones": "climateZone",
     "storyCampaigns": "storyCampaign",
+    "storyFoundations": "storyFoundation",
 }
 DATA_FIELDS = ("name", "desc")
 EVENT_FIELDS = ("title", "text", "desc")
@@ -786,6 +787,8 @@ def extract_structured(inv: Inventory) -> None:
             path = DATA / "climate.js"
         elif data_name == "storyCampaigns":
             path = DATA / "story_campaigns.js"
+        elif data_name == "storyFoundations":
+            path = DATA / "story_campaigns_711.js"
         else:
             path = DATA / ("traits.js" if data_name in ("traits", "ailments") else
                            "modifiers.js" if data_name == "modifiers" else
@@ -869,14 +872,21 @@ def extract_structured(inv: Inventory) -> None:
                         f"{namespace} {item_id}, {field}, faith branch {branch}.",
                         TOKEN_RE.findall(record["text"]),
                     )
-            if data_name == "storyCampaigns":
+            if data_name == "storyFoundations":
+                realm = node_object(item.get("realm")) or {}
+                for branch, record, line in branch_records(realm.get("name")):
+                    inv.add(f"{namespace}.{item_id}.realm.name.{branch}",
+                            record, f"{rel}:{line}",
+                            f"Foundation {item_id}, realm display name.",
+                            TOKEN_RE.findall(record["text"]))
+            if data_name in ("storyCampaigns", "storyFoundations"):
                 for outcome, message_node in (node_object(item.get("news")) or {}).items():
                     message = node_object(message_node) or {}
                     key = node_string(message.get("key"))
                     for _, record, line in branch_records(message.get("text")):
                         if key:
                             inv.add(key, record, f"{rel}:{line}",
-                                    f"Campaign {item_id}, {outcome} durable news.",
+                                    f"{namespace} {item_id}, {outcome} durable news.",
                                     TOKEN_RE.findall(record["text"]))
             if data_name == "tenureArchetypes":
                 explicit_fields = (
@@ -1230,13 +1240,16 @@ def extract_structured(inv: Inventory) -> None:
                     inv.add(f"{kind}.{title_id}.name.{branch}", record,
                             f"{candidate_rel}:{line}", f"{bookmark_id} {kind} {title_id}, display name.", ())
 
-    # Review candidates have literal complete maps but stay outside the live
-    # bookmark registry. Extract display fields without evaluating game code,
+    # Literal dated candidates include registered hidden review worlds.
+    # Extract display fields without evaluating game code,
     # descending into ruler profiles or colliding with existing title labels.
     for candidate_path, candidate_id in CANDIDATE_BOOKMARK_FILES:
         candidate_rel = candidate_path.relative_to(ROOT).as_posix()
         candidate = node_object(find_keyed_assignment(
             candidate_path, "FBDATA", "bookmarkCandidates", candidate_id
+        )) or {}
+        layout = node_object(find_keyed_assignment(
+            candidate_path, "FBDATA", "settlementLayouts", candidate_id
         )) or {}
         for field in ("name", "desc"):
             for branch, record, line in branch_records(candidate.get(field)):
@@ -1253,6 +1266,19 @@ def extract_structured(inv: Inventory) -> None:
                     inv.add(f"{kind}.{candidate_id}.{item_id}.name.{branch}", record,
                             f"{candidate_rel}:{line}",
                             f"Review {candidate_id} {kind} {item_id}, display name.", ())
+                if table == "provinces":
+                    sites = node_array(item.get("settlements"))
+                    if sites is None:
+                        sites = node_array(layout.get(item_id))
+                    for site_node in sites or []:
+                        site = node_object(site_node) or {}
+                        site_id = node_string(site.get("site"))
+                        if not site_id:
+                            continue
+                        for branch, record, line in branch_records(site.get("name")):
+                            inv.add(f"settlement.{candidate_id}.{site_id}.name.{branch}",
+                                    record, f"{candidate_rel}:{line}",
+                                    f"Review {candidate_id} site {site_id}, display name.", ())
         for table, kind in (("duchies", "duchy"), ("kingdoms", "kingdom"),
                             ("empires", "empire")):
             for item_id, item_node in (node_object(candidate.get(table)) or {}).items():

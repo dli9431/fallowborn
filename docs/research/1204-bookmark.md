@@ -1,6 +1,6 @@
 Late spring 1204: historical frame and authoring decisions
 
-Review candidate: data/bookmark_1204.js and data/bookmark_1204_campaigns.js. This is a full-map high medieval snapshot on europe_regional. It remains outside the selectable bookmark catalogue until content and device acceptance.
+Bookmark sources: data/bookmark_1204.js and data/bookmark_1204_campaigns.js. This is a full-map high medieval snapshot on europe_regional, selectable during ordinary boot on the 476 branch. Historical, content and device review remain separate from starting-date registration.
 
 Chosen instant
 
@@ -22,7 +22,13 @@ https://www.treccani.it/enciclopedia/teodoro-i-lascari_%28Federiciana%29/
 
 Latin vassals and Venice
 
-Boniface's Latin kingdom at Thessalonica, Othon's Athenian duchy, the Frankish principality of Achaea and the later island lordships are not already established spring possessions. Generated territorial holders are gameplay vassals, not identifications of these future historical rulers. The conditional Latin Macedonia campaign may win a county through ordinary war but does not manufacture Boniface or his later fief. A faithful reviewed partition and historical vassal-creation rail is an acceptance gap requiring a shared platform capability beyond the current campaign factory.
+Boniface's Latin kingdom at Thessalonica, Othon's Athenian lordship and William of Champlitte's Achaean principality are prospective spring claims. Three shared partition stories create these named living claimants without land. The ordinary Macedonia, Athens and Morea campaigns can supply possession; a separate accepted partition requires the imperial court's exact direct holdings, peace, current civic consent and the living recipient and liege. Boniface receives Thessalonica beneath the emperor; Othon and William receive Athens and the mapped Morean county beneath the resulting Thessalonican crown. Succession, death, captivity, another holder or a lost capital can interrupt or delay the opportunity. Neither promised territory nor a date creates a realm.
+
+The Foundation of the Hellenic World places Boniface's settlement and homage in later 1204, Othon's lordship in 1205 and the founding of Achaea under William in 1205. The map has no Patras county. Achaea therefore uses the existing sparta county as a coarse regional Morean abstraction, requiring its actual conquest before a grant rather than pretending it is a historically precise 1205 possession. Corinth is excluded and the later island lordships remain outside these three stories. Athens and Achaea use the shared ducal rank for gameplay scale; Othon's opening lordship does not claim that the historically later ducal title already existed. Birth years, seasonal boundaries and skills remain approximate simulation inputs. Later deaths and successions follow ordinary mortality rather than fixed historical outcomes.
+
+https://www.ime.gr/chronos/projects/fragokratia/en/webpages/thessal_gen.html
+https://www.ime.gr/chronos/projects/fragokratia/en/webpages/ath_frag_gen.html
+https://www.ime.gr/chronos/projects/fragokratia/en/webpages/ach_gen.html
 
 Venice is independent and territorial, retaining its lagoon seat and the simplified Zadar conquest. It receives neither Greek Crete nor every projected allotment. Its doge is Enrico Dandolo. Territorial government and dynastic succession remain approximations until a reusable city-republic form supports dogal election and dispersed possessions. No republic behavior is added to the engine for this bookmark.
 
@@ -75,23 +81,27 @@ https://www.iranicaonline.org/articles/inanc-katun/
 
 Innocent III and campaign history
 
-Innocent III is the Catholic head at Rome. Papacy, excommunication, great holy wars, tournaments, guilds, council and estates use the existing high medieval systems. Eligible crusade calls use current heads, authority, dates and hostile sacred targets. They are conditional simulation calls; the fresh holy-war history cannot claim to reproduce every preceding crusade or issue an exact Fifth Crusade summons on an authored date. A dated holy-war story type and historical campaign-history seeding are deferred platform gaps, not ordinary bilateral wars renamed Crusades.
+Innocent III is the Catholic head at Rome. Papacy, excommunication, great holy wars, tournaments, guilds, council and estates use the existing high medieval systems. The shared holy_war story opens a Fifth Crusade call from 1213 through 1215, reflecting the appeals begun in 1213 and renewed at the Fourth Lateran Council. It calls through the current religious head, authority, eligible hostile Syrian objectives, cooldown and existing coalition rules. A player controlling that head receives reviewed Call and Decline choices; an eligible AI head may call. A vacant head or busy campaign can delay it, a restored target can divert it, and expiry closes it. Ordinary religious decisions remain available.
+
+New campaigns seed four bounded earlier crusade records: the First's 1099 success, the Second's 1149 failure, the Third's partial 1192 recovery and the Fourth's 1204 diversion to Byzantium. Abstract seasonal dates give these records negative turns relative to the opening, so historical failures have their actual elapsed age. They mark prior calls and launches without creating an active campaign, cooldown, host, holding or reward. Restore retains existing history and never seeds missing records or attaches new stories to older campaigns. The dated call tracks the campaign actually created and records its real settlement once. It is not a bilateral war renamed a crusade.
+
+The Lateran decree prescribed a June 1217 departure. This story deliberately retains the ordinary preparation interval after an eligible 1213-1215 call instead of forcing a multi-year historical expedition or an Egyptian detour. The date offers an opportunity in an alternate-history world; the four archive records are selected summaries, not a complete crusade chronology.
 
 https://academic.oup.com/book/32805/chapter-abstract/274636469
 https://www.jstor.org/stable/j.ctt3fh9x5
 
-Nine registered ordinary campaign instances cover the Latin Macedonia and Bithynia claims, Nicaean restoration, Bulgaria's Thracian challenge, later Epirote expansion, Iberian frontier opportunities and Capetian Normandy. Their windows are opportunities, not outcomes. Living courts, possession of an opening seat, target ownership, existing war eligibility and actual campaign results decide their records. A lost capital or incompatible target can close them. Restoring a save never reissues an award. The Mongol arrival is omitted until a shared steppe-government and arrival rail can express it.
+https://sourcebooks.fordham.edu/basis/lateran4.asp
+
+Fifteen registered stories comprise eleven ordinary campaign instances, three negotiated partitions and the dated religious call. The campaigns cover the Latin Macedonia, Bithynia, Athens and Morea claims, Greek restoration, Bulgaria, Iberian frontier opportunities and Capetian Normandy. Their windows are opportunities, not outcomes. Living courts, possession of an opening seat, target ownership, existing war eligibility and actual campaign results decide their records. A lost capital or incompatible target can close them. Restoring a save never reissues an award. The Mongol arrival is omitted until a shared steppe-government and arrival rail can express it.
 
 Interpretation and acceptance
 
 Stable county seeds and de jure promotion groupings are reused from the shared medieval geography, not traced as exact 1204 borders. Every realm explicitly uses territorial government. Holders are generated through that form beneath the authored liege hierarchy. County identity remains independent of court religion. Communities are gameplay opening partitions; their positive integer shares total 10000 but are not sourced census estimates. Development, uncertain birth years, skill and trait values are editorial simulation inputs. Historical proper names remain outside translation.
 
-Technology uses the existing high_medieval historical knowledge policy for 1204, with explicit court traditions and ordinary item/unit gates. No technology is awarded by a historical campaign date, and no new research prerequisite is introduced. This is content on existing capabilities, not an additional independently gateable mechanic.
+Technology uses the existing high_medieval historical knowledge policy for 1204, with explicit court traditions and ordinary item/unit gates. negotiated_historical_partition and dated_holy_war_calls both use none: possession and living political or religious consent govern these optional opportunities, while ordinary conquest and religious decisions remain available. No technology is awarded by a historical campaign date, and no new research prerequisite is introduced.
 
-The candidate remains hidden pending the owner-run bookmark validation, seven scenario smoke journeys, ten-year natural household journey, save round trips, holy-war target and call checks, partition review, regional historical review and device acceptance. The tests promote only their own browser context's candidate. Ordinary title-screen picks and start codes cannot select 1204. Review saves require the same candidate promotion after a reload. Publication must be a separate content acceptance decision, with normal integration versioning and distribution review.
+The 476 branch registers 1204 for ordinary title-screen picks, start codes and save loading after a reload. Tests use the ordinary registration without injecting the date into their browser contexts. Owner-run bookmark validation, seven scenario smoke journeys, ten-year natural household journeys, save round trips, holy-war target and call checks, partition review, regional historical review and device acceptance remain review tasks. Normal integration versioning and distribution review apply when the branch reaches main or dev.
 
-For an owner review from this worktree's index.html, enter the following line in the browser console after the title finishes booting, then choose a new game or restore a review save. This changes only that page session.
-
-FBDATA.bookmarks['1204'] = FBDATA.bookmarkCandidates['1204'];
+Open this worktree's index.html and choose a new game or load a saved 1204 campaign. No browser-console registration is required. tests/e2e/specs/bookmark-picker.spec.js covers the picker and save loading after a fresh boot in both Chromium origins and distribution flags.
 
 Example ordinary start code: REVIEW1204-1204-serf-constantinople-m-Leo-standard-0-greek.orthodox

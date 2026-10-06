@@ -11,10 +11,11 @@ dependsOnRuntime(__filename, [
   'js/authority.js', 'js/federates.js', 'js/institutions.js', 'js/treasury.js',
   'js/station.js', 'js/governments.js', 'js/technology.js', 'js/logistics.js',
   'js/mods.js', 'js/save.js', 'js/save_v4.js', 'js/ui_panels.js',
-  'js/modifiers.js', 'js/events.js'
+  'js/modifiers.js', 'js/events.js', 'js/bookmark_setup.js'
 ]);
 const { test, expect } = require('../support/fixture');
 const { openGame } = require('../support/game/navigation');
+const { injectBrowserHarness } = require('../support/game/browser-harness');
 
 const STARTS = [
   { id:'nepos_476', realm:'croatia', province:'split', name:'Julius_Nepos', age:46,
@@ -125,7 +126,7 @@ for (const def of STARTS) {
     expect(result.seed).toContain('-' + def.id + '-');
   });
 
-  test(def.id + ' completes its opening and advances ten real calendar years', async function ({ page }, testInfo) {
+  test(def.id + ' advances ten calendar years in the isolated world-ordering journey', async function ({ page }, testInfo) {
     test.setTimeout(180000);
     await start(page, testInfo, def);
     await page.evaluate(function (def) {
@@ -142,7 +143,7 @@ for (const def of STARTS) {
       FB.pickDailyEvents = function () { return []; };
       FB.game.die = function () {};
       FB.ui.runEvents = function (events, done) { if (typeof done === 'function') done(); };
-      FB.ui.eventsBusy = false;
+      FB.ui.eventsBusy = function () { return false; };
       FB.game.paused = true;
       FB.game.uiPrefs.hideBeginnerHints = true;
       s.player.flags.tutorial_done = 1;
@@ -164,6 +165,51 @@ for (const def of STARTS) {
         finite:Number.isFinite(s.player.gold), noDuplicate:!s.realms[s.start.rulerRealmId] };
     });
     expect(result).toMatchObject({ year:486, identity:def.realm, valid:true, finite:true, noDuplicate:true });
+  });
+
+  test(def.id + ' retains ordinary household play and succession over ten years', async function ({ page }, testInfo) {
+    test.skip(testInfo.project.name !== 'chromium-served', 'Run each bounded household journey once; smoke covers every browser project.');
+    test.setTimeout(10 * 60 * 1000);
+    await start(page, testInfo, def);
+    await injectBrowserHarness(page);
+    await page.evaluate(function (def) {
+      const s = FB.state;
+      if (def.track) {
+        if (!FB.stories.apply(s, def.track, 'keep_dalmatia', FB.stories.quote(s, def.track, 'keep_dalmatia')))
+          throw new Error('Opening failed');
+      } else if (def.id === 'odoacer_476') {
+        if (!FB.stories.apply(s, 'western_court_476', 'keep_host', FB.stories.quote(s, 'western_court_476', 'keep_host')))
+          throw new Error('Opening failed');
+      }
+      FB.game.setPaused(true); FB.game.uiPrefs.hideTips = true;
+      FB.game.uiPrefs.hideBeginnerHints = true; FB.ui.coachmarkReset();
+      delete s.player.flags.tutorial;
+      FB.game.auto.all = true; FB.game.auto.style = 'first';
+    }, def);
+    for (let quarter = 0; quarter < 40; quarter++) {
+      const result = await page.evaluate(function () {
+        const target = FB.state.turn + 90;
+        for (let attempts = 0; attempts < 120 && FB.state.turn < target; attempts++) {
+          if (FB.state.player.dead) {
+            const heirs = FB.heirsOf(FB.state);
+            if (!heirs.length) throw new Error('The natural ruler-start dynasty ended before its review boundary.');
+            FB.ui.closeModal(); FB.game.succeedTo(heirs[0].id); FB.ui.closeModal();
+            FB.game.auto.all = true;
+          }
+          FB.game.passDay({ deferUi:true });
+        }
+        return { remaining:target - FB.state.turn, errors:FBTEST.checkInvariants() };
+      });
+      expect(result).toEqual({ remaining:0, errors:[] });
+      if (quarter === 19) await page.evaluate(function () { FB.save.restore(JSON.parse(FB.save.serialize())); });
+    }
+    const end = await page.evaluate(function () {
+      FB.save.restore(JSON.parse(FB.save.serialize()));
+      return { year:FB.state.date.year, turn:FB.state.turn, ordinary:!FB.game.observe,
+        identity:FB.state.start.rulerRealmId, errors:FBTEST.checkInvariants(),
+        valid:FB.save.v4.validatePlatform(FB.state) };
+    });
+    expect(end).toEqual({ year:486, turn:3600, ordinary:true, identity:def.realm, errors:[], valid:true });
   });
 }
 

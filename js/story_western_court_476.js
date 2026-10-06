@@ -82,20 +82,14 @@
         byzantium:'constantinople', west_francia:'laon',
         aghlabids:'tunis', pannonia:'thessaloniki' }
     };
-    var orestes = made(s, 'Orestes', 'roman', 'nicene', 50, 4,
-      'commander', 'ravenna');
+    var orestes = FB.bookmarkActor(s, 'orestes');
     var zeno = made(s, 'Zeno', 'greek', 'chalcedonian', 51, 4,
       'claimant', 'ikonion');
-    var delegate = made(s, FB.randomName('roman', 'm', null, s), 'roman',
-      'nicene', 42, 2, 'notable', 'ravenna');
-    var bishop = made(s, 'Simplicius', 'roman',
-      'nicene', 54, 3, 'priest', 'roma');
-    var veteran = made(s, FB.randomName('gothic', 'm', null, s), 'gothic',
-      'homoian', 38, 2, 'soldier', 'pavia');
-    var senator = made(s, FB.randomName('roman', 'm', null, s), 'roman',
-      'nicene', 58, 3, 'notable', 'roma');
-    var homoianBishop = made(s, FB.randomName('gothic', 'm', null, s), 'gothic',
-      'homoian', 46, 3, 'priest', 'ravenna');
+    var delegate = FB.bookmarkActor(s, 'civic_delegate');
+    var bishop = FB.bookmarkActor(s, 'simplicius');
+    var veteran = FB.bookmarkActor(s, 'veteran');
+    var senator = FB.bookmarkActor(s, 'senator');
+    var homoianBishop = FB.bookmarkActor(s, 'homoian_bishop');
     function courtPerson(rid, localId) {
       var member = FB.authoredRoyalMemberSnapshot(s, rid, localId);
       return member && FB.materializeRoyalMember(s, rid, member.id);
@@ -105,7 +99,7 @@
     var godegisel = courtPerson('burgundy', 'godegisel');
     var childeric = ruler(s, 'franks_476');
     west.fatherId = orestes.id;
-    orestes.childrenIds.push(west.id);
+    if (orestes.childrenIds.indexOf(west.id) < 0) orestes.childrenIds.push(west.id);
     w.orestesId = orestes.id;
     w.zenoId = zeno.id;
     w.civicDelegateId = delegate.id;
@@ -165,30 +159,15 @@
     FB.authorityAppoint(s, { officeId:'imperial_office', institutionId:R(s, 'byzantium'),
       appointer:actor(R(s, 'byzantium')), holder:person(zeno.id), scope:actor(R(s, 'byzantium')),
       recognitionId:zenoClaim && zenoClaim.id, contested:true });
-    appointment(s, 'patricius', R(s, 'italy'), person(orestes.id), actor(R(s, 'italy')));
-    appointment(s, 'magister_militum', R(s, 'italy'), person(orestes.id),
-      { kind:'host', id:italianHost.id });
-    var military = appointment(s, 'field_command', R(s, 'italy'),
-      person(orestes.id), { kind:'host', id:italianHost.id }, null, 361);
-    var civicProof = recognize(s, 'civic_acceptance',
-      { kind:'county', id:'ravenna' }, person(delegate.id),
-      { kind:'county', id:'ravenna' });
-    var civicOffice = appointment(s, 'civic_delegate', R(s, 'italy'),
-      person(delegate.id), { kind:'county', id:'ravenna' },
-      civicProof && civicProof.id);
-    var senateProof = recognize(s, 'civic_acceptance',
-      { kind:'county', id:'roma' }, person(senator.id),
-      { kind:'county', id:'roma' });
-    var senateOffice = appointment(s, 'civic_delegate', R(s, 'italy'),
-      person(senator.id), { kind:'county', id:'roma' },
-      senateProof && senateProof.id);
+    FB.bookmarkSetupAppointments(s);
+    var seededOffices = s.bookmarkSetup.appointments;
     w.westOfficeId = westOffice && westOffice.id;
     w.eastOfficeId = eastOffice && eastOffice.id;
-    w.orestesOfficeId = military && military.id;
-    w.civicOfficeId = civicOffice && civicOffice.id;
-    w.civicProofId = civicProof && civicProof.id;
-    w.senateProofId = senateProof && senateProof.id;
-    w.senateOfficeId = senateOffice && senateOffice.id;
+    w.orestesOfficeId = seededOffices.orestes_command.id;
+    w.civicOfficeId = seededOffices.ravenna_delegate.id;
+    w.civicProofId = seededOffices.ravenna_delegate.recognitionId;
+    w.senateProofId = seededOffices.senate_delegate.recognitionId;
+    w.senateOfficeId = seededOffices.senate_delegate.id;
     if (s.realms[R(s, 'italy')].treasury) s.realms[R(s, 'italy')].treasury.gold = 120;
     if (s.realms[R(s, 'federates_476')].treasury) s.realms[R(s, 'federates_476')].treasury.gold = 0;
     restoreInstitutions(s, w);

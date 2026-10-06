@@ -209,3 +209,5 @@ needs a broader pause/menu/lifecycle review.
 
 
 Scheduled games adds data/tournaments.js, js/tournaments.js and js/ui_tournaments.js as classic local script references in index.html. The existing data/js directory allowlists cover these files in standard and CrazyGames packaging; the offline asset list is derived from the same index references. No new asset directory or external resource is required. New files must be tracked before a tracked-file package is assembled. No private workspace or site source is included.
+
+Historical story support adds js/story_history.js as a classic local script reference before story instance registration. Existing js directory allowlists and index-derived offline assets cover it in standard and CrazyGames distributions. Track this new file before assembling a tracked-file package. English story displays and durable news use the existing storyCampaign and news extraction; no new asset directory or external dependency is added.

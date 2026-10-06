@@ -31,6 +31,24 @@ class JavascriptLexerTests(unittest.TestCase):
 
 
 class StructuredDataExtractionTests(unittest.TestCase):
+    def test_493_review_content_has_display_and_durable_message_owners(self):
+        inventory = i18n_catalog.Inventory()
+        i18n_catalog.extract_structured(inventory)
+        for key, text in (
+            ('bookmark.493.name.default', 'The Ravenna Settlement'),
+            ('realm.493.ostrogoths_493.name.default', 'Ostrogothic Kingdom'),
+            ('province.493.laon.name.default', 'Augusta Suessionum'),
+            ('settlement.493.soissons_476.name.default', 'Augusta Suessionum'),
+            ('storyCampaign.visigothic_campaign_493.name.default', 'The Toulouse Campaign'),
+        ):
+            self.assertEqual(inventory.entries[key]['text'], text)
+            self.assertIn('bookmark_493', inventory.meta[key]['location'])
+        for campaign in ('alamanni', 'burgundy', 'toulouse', 'sirmium', 'africa', 'italy'):
+            for outcome in ('started', 'won', 'failed', 'diverted', 'interrupted'):
+                self.assertIn(f'news.493.{campaign}.{outcome}', inventory.entries)
+        for proper_name in ('Theoderic', 'Anastasius I', 'Gunthamund', 'Gelasius I'):
+            self.assertNotIn(i18n_catalog.source_key(proper_name), inventory.entries)
+
     def test_711_candidate_has_display_owners_without_catalog_regeneration(self):
         inventory = i18n_catalog.Inventory()
         i18n_catalog.extract_structured(inventory)
@@ -43,6 +61,8 @@ class StructuredDataExtractionTests(unittest.TestCase):
             ('religion.umayyad_sunni_711.head.title.default', 'Caliph'),
             ('culture.sindhi_711.name.default', 'Sindhi'),
             ('storyCampaign.strait_crossing_711.name.default', 'Across the Strait'),
+            ('storyFoundation.asturias_foundation_711.name.default', 'The Asturian Resistance'),
+            ('storyFoundation.asturias_foundation_711.realm.name.default', 'Asturias'),
         ):
             self.assertEqual(inventory.entries[key]['text'], text)
             self.assertIn('711.js', inventory.meta[key]['location'])
@@ -50,6 +70,9 @@ class StructuredDataExtractionTests(unittest.TestCase):
             for outcome in ('started', 'won', 'failed', 'diverted', 'interrupted'):
                 self.assertIn(f'news.711.{campaign}.{outcome}', inventory.entries)
         self.assertFalse(any('al-Walid' in key for key in inventory.entries))
+        for outcome in ('founded', 'failed', 'diverted'):
+            self.assertIn(f'news.711.asturias.{outcome}', inventory.entries)
+        self.assertFalse(any('Pelayo' in key for key in inventory.entries))
         # The generic candidate pass must not re-extract 711 under year-scoped title keys.
         self.assertNotIn('duchy.711.d_711_galicia.name.default', inventory.entries)
 
@@ -80,6 +103,10 @@ class StructuredDataExtractionTests(unittest.TestCase):
             ('realm.1204.latin_1204.name.default', 'Latin Empire'),
             ('province.1204.aghmat.name.default', 'Marrakesh'),
             ('storyCampaign.latin_thessalonica_1204.name.default', 'The Latin March into Macedonia'),
+            ('storyCampaign.thessalonica_partition_1204.name.default', "Boniface's Thessalonican Settlement"),
+            ('storyCampaign.athens_partition_1204.name.default', "Othon's Athenian Lordship"),
+            ('storyCampaign.achaia_partition_1204.name.default', "William's Achaean Principality"),
+            ('storyCampaign.fifth_crusade_call_1204.name.default', 'The Fifth Crusade Call'),
         ):
             self.assertEqual(inventory.entries[key]['text'], text)
             self.assertIn('bookmark_1204', inventory.meta[key]['location'])
@@ -87,6 +114,13 @@ class StructuredDataExtractionTests(unittest.TestCase):
             self.assertIn(f'news.1204.latin_thessalonica_1204.{outcome}', inventory.entries)
         self.assertNotIn(i18n_catalog.source_key('Baldwin of Flanders'), inventory.entries)
         self.assertNotIn(i18n_catalog.source_key('Theodore Laskaris'), inventory.entries)
+        for owner in ('thessalonica_partition_1204', 'athens_partition_1204', 'achaia_partition_1204'):
+            for outcome in ('granted', 'declined', 'diverted', 'interrupted'):
+                self.assertIn(f'news.1204.{owner}.{outcome}', inventory.entries)
+        for outcome in ('called', 'won', 'failed', 'declined', 'diverted'):
+            self.assertIn(f'news.1204.fifth_crusade_call_1204.{outcome}', inventory.entries)
+        self.assertNotIn(i18n_catalog.source_key('Boniface of Montferrat'), inventory.entries)
+        self.assertNotIn(i18n_catalog.source_key('Othon de la Roche'), inventory.entries)
 
     def test_regional_africa_content_keeps_stable_display_and_news_owners(self):
         inventory = i18n_catalog.Inventory()
@@ -118,6 +152,10 @@ class StructuredDataExtractionTests(unittest.TestCase):
             self.assertIn(f"{prefix}.options.0.label.default", inventory.entries)
         self.assertEqual(inventory.entries[
             "storyCampaign.rugian_frontier_476.name.default"]["text"], "The Rugian Frontier")
+        for story_id, title in (("sicilian_tribute_476", "The Sicilian Agreement"),
+                                ("norican_evacuation_476", "The Norican Evacuation")):
+            self.assertEqual(inventory.entries[
+                f"storyCampaign.{story_id}.name.default"]["text"], title)
         for suffix in ("campaign", "won", "failed", "diverted", "interrupted"):
             self.assertIn(f"news.476.rugian_{suffix}", inventory.entries)
         for county, name in (("foggia", "Luceria"), ("viterbo", "Volsinii")):

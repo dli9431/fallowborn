@@ -35,13 +35,36 @@ window.FB = window.FB || {};
       ? defaultBookmarkId() : String(id));
   };
 
+  /* Visibility limits new campaigns, not inspection or matching save loads. */
+  FB.bookmarkAvailable = function (id) {
+    var definition = FB.bookmark(id);
+    return !!definition && definition.hidden !== true &&
+      !(FB.mods && FB.mods.bookmarkAvailable && !FB.mods.bookmarkAvailable(definition.id));
+  };
+
+  FB.bookmarkUnavailableReason = function (id) {
+    var definition = FB.bookmark(id);
+    if (!definition) return FB.T('That starting date is unavailable.');
+    if (definition.hidden === true) return FB.T('This starting date is hidden for new campaigns. Existing matching saves can still load.');
+    return FB.mods && FB.mods.bookmarkWarning ? FB.T(FB.mods.bookmarkWarning()) : '';
+  };
+
+  /* Definitions follow the campaign even while another bookmark is active.
+     An explicit table replaces the legacy catalogue, including an empty table. */
+  FB.localInstitutionDefinitions = function (state) {
+    state = state || FB.state;
+    var definition = state && state.start && state.start.id
+      ? FB.bookmark(state.start.id) : FB.activeBookmark;
+    return definition && definition.localInstitutions !== undefined
+      ? definition.localInstitutions : FBDATA.localInstitutions || {};
+  };
+
   FB.bookmarks = function (includeHidden) {
     var out = [], bookmarks = FBDATA.bookmarks || {};
     for (var id in bookmarks) {
       if (!Object.prototype.hasOwnProperty.call(bookmarks, id)) continue;
       if (!bookmarks[id] || !bookmarks[id].id || !bookmarks[id].date) continue;
-      if (!includeHidden && FB.mods && FB.mods.bookmarkAvailable &&
-          !FB.mods.bookmarkAvailable(id)) continue;
+      if (!includeHidden && !FB.bookmarkAvailable(id)) continue;
       out.push(bookmarks[id]);
     }
     out.sort(function (a, b) {
@@ -729,11 +752,82 @@ window.FB = window.FB || {};
     return errors;
   };
 
+  /* Shared by activation and the mod gate, before installing any definitions. */
+  FB.localInstitutionDefinitionFaults = function (definition, catalogs) {
+    var errors = [], defs = definition.localInstitutions;
+    if (defs === undefined) return errors;
+    if (!plainRecord(defs)) return ['localInstitutions must be an object keyed by institution id.'];
+    catalogs = catalogs || FBDATA;
+    var provinces = {}, offices = {};
+    (Array.isArray(definition.provinces) ? definition.provinces : []).forEach(function (p) { if (p) provinces[p.id] = p; });
+    var geography = (catalogs.geographies || {})[FB.bookmarkGeography(definition)];
+    var sites = geography && geography.sites || catalogs.settlementSites || {};
+    var layoutId = definition.settlementLayout !== undefined ? definition.settlementLayout
+      : ownKey(catalogs.settlementLayouts, definition.id) ? definition.id : geography && geography.defaultLayout;
+    var layout = (catalogs.settlementLayouts || {})[layoutId] || {};
+    Object.keys(defs).forEach(function (id) {
+      var def = defs[id], path = 'localInstitutions.' + id;
+      function fault(detail) { errors.push(path + ': ' + detail); }
+      if (!/^[a-z][a-z0-9_]*$/.test(id) || !plainRecord(def)) { fault('invalid institution record.'); return; }
+      if (typeof def.city !== 'string' || !def.city.trim() ||
+          ['senate','council','see','patriarchate','congregation'].indexOf(def.kind) < 0) fault('invalid city or kind.');
+      var isChurch = def.kind === 'see' || def.kind === 'patriarchate';
+      if (isChurch ? typeof def.officeId !== 'string' || !/^[a-z][a-z0-9_]*$/.test(def.officeId) : def.officeId !== undefined)
+        fault('invalid officeId for institution kind.');
+      if (def.officeId) {
+        if (offices[def.officeId]) fault('duplicate officeId ' + def.officeId + '.');
+        offices[def.officeId] = true;
+        Object.keys(catalogs.religions || {}).forEach(function (faithId) {
+          var faith = catalogs.religions[faithId], head = faith && (faith.head || faith.properties && faith.properties.head);
+          if (head && head.officeId === def.officeId) fault('officeId collides with a central faith office.');
+        });
+      }
+      if (!ownKey(catalogs.cultures, def.culture) || !catalogs.cultures[def.culture] || catalogs.cultures[def.culture].active === false) fault('unknown or inactive culture.');
+      if (!ownKey(catalogs.religions, def.religion) || !catalogs.religions[def.religion] || catalogs.religions[def.religion].active === false ||
+          catalogs.religions[def.religion].assignable === false ||
+          catalogs === FBDATA && !FB.faithAssignable(def.religion, null)) fault('unknown or unassignable faith.');
+      if (def.provinceId === null) {
+        if (!isChurch || def.site !== null) fault('only an off-map church office may have a null seat.');
+      } else {
+        var province = provinces[def.provinceId], entries = province && (province.settlements || layout[def.provinceId]);
+        if (!province || province.wasteland || !ownKey(sites, def.site) || !Array.isArray(entries) ||
+            !entries.some(function (entry) { return entry && entry.site === def.site; })) fault('seat must resolve in an inhabited province settlement layout.');
+      }
+      if (def.vacant !== undefined && typeof def.vacant !== 'boolean') fault('vacant must be true or false.');
+      if (def.historicalName !== undefined && (typeof def.historicalName !== 'string' || !def.historicalName.trim())) fault('invalid historicalName.');
+      if (def.vacant === true && def.historicalName) fault('vacant institution cannot seed a historicalName.');
+      var profile = def.representative;
+      if (profile === undefined) return;
+      if (!plainRecord(profile)) { fault('representative must be a profile object.'); return; }
+      Object.keys(profile).forEach(function (key) {
+        if (['name','born','sex','role','station','skills','traits'].indexOf(key) < 0) fault('unknown representative field ' + key + '.');
+      });
+      if (profile.name !== undefined && (typeof profile.name !== 'string' || !profile.name.trim())) fault('invalid representative name.');
+      if (profile.name && def.historicalName && profile.name !== def.historicalName) fault('conflicting representative names.');
+      if (profile.born !== undefined && (!Number.isInteger(profile.born) || !definition.date ||
+          profile.born > definition.date.year - (isChurch ? 18 : 0))) fault('invalid representative birth year.');
+      if (profile.sex !== undefined && (['m','f'].indexOf(profile.sex) < 0 || isChurch && profile.sex !== 'm')) fault('invalid representative sex.');
+      if (profile.role !== undefined && (['priest','notable','monk'].indexOf(profile.role) < 0 ||
+          isChurch && profile.role !== 'priest' || def.kind === 'congregation' &&
+          ['priest','monk'].indexOf(profile.role) < 0)) fault('invalid representative role.');
+      if (profile.station !== undefined && (!Number.isInteger(profile.station) || profile.station < 0 || profile.station > 7)) fault('invalid representative station.');
+      if (profile.skills !== undefined && (!plainRecord(profile.skills) || Object.keys(profile.skills).some(function (skill) {
+        return FB.SKILLS.indexOf(skill) < 0 || !Number.isFinite(profile.skills[skill]) || profile.skills[skill] < 0;
+      }))) fault('invalid representative skills.');
+      if (profile.traits !== undefined && (!Array.isArray(profile.traits) || profile.traits.some(function (trait, i) {
+        return !ownKey(catalogs.traits, trait) || profile.traits.indexOf(trait) !== i;
+      }))) fault('invalid representative traits.');
+      if (def.vacant === true && (def.historicalName || Object.keys(profile).length)) fault('vacant institution cannot seed a representative.');
+    });
+    return errors;
+  };
+
   FB.validateBookmark = function (definition) {
     var errors = [];
     var label = definition && definition.id ? definition.id : '?';
     function fault(text) { errors.push('Bookmark ' + label + ': ' + text); }
     if (!definition || typeof definition !== 'object') return ['Bookmark definition is missing.'];
+    if (definition.hidden !== undefined && typeof definition.hidden !== 'boolean') fault('hidden must be true or false.');
     var geographyId = FB.bookmarkGeography(definition);
     if (!FB.geography(geographyId)) {
       fault('unknown geography ' + geographyId + '.');
@@ -747,6 +841,10 @@ window.FB = window.FB || {};
     }
     try { definition = preparedDefinition(definition); }
     catch (error) { return [error.message]; }
+    if (FB.localInstitutionDefinitionFaults) {
+      var localErrors = FB.localInstitutionDefinitionFaults(definition);
+      for (var le = 0; le < localErrors.length; le++) fault(localErrors[le]);
+    }
     if (FB.validateTechnologyData) {
       var technologyErrors = FB.validateTechnologyData();
       for (var te = 0; te < technologyErrors.length; te++) errors.push(technologyErrors[te]);
@@ -2479,6 +2577,40 @@ window.FB = window.FB || {};
     return r;
   };
 
+  /* A local remnant or a victorious uprising can found an authored court.
+     The caller supplies only counties already eligible for that outcome;
+     this transaction grants no host, conquest, conversion or player land. */
+  FB.foundPolity = function (state, definition, counties, formerRealmId) {
+    const source = state.realms[formerRealmId];
+    if (!definition || !source || !source.alive || formerRealmId === 'player' ||
+        !definition.id || state.realms[definition.id] || !Array.isArray(counties) ||
+        !counties.length || counties.indexOf(definition.capital) < 0 ||
+        !definition.ruler || !FBDATA.cultures[definition.ruler.culture] ||
+        !FBDATA.religions[definition.religion] ||
+        !FBDATA.governmentForms[definition.government] ||
+        counties.some(function (pid, i) {
+          const pr = FB.world.byId[pid], holder = state.holder[pid];
+          return !pr || pr.wasteland || counties.indexOf(pid) !== i ||
+            state.owner[pid] !== formerRealmId || holder === 'player' ||
+            FB.liegeChain(state, holder).indexOf('player') >= 0;
+        })) return null;
+    const r = {
+      id:definition.id, name:definition.name, color:definition.color,
+      capital:definition.capital, aggression:definition.aggression,
+      rank:definition.rank, liege:null, religion:definition.religion,
+      alive:true, ruler:makeRuler(definition.ruler.culture, definition.ruler,
+        state.date.year, state), war:null, op:0
+    };
+    state.realms[r.id] = r;
+    FB.invalidateRealmCache();
+    FB.authoritySetGovernment(state, r.id, definition.government);
+    if (FB.treasuryCreateFromCounties) FB.treasuryCreateFromCounties(state, r.id, counties);
+    if (FB.mergeRealmTech) FB.mergeRealmTech(state, r.id, formerRealmId);
+    counties.forEach(function (pid) { FB.transferProvince(state, pid, r.id); });
+    FB.ensureRealmCourt(state, r.id);
+    return r;
+  };
+
   /* small deterministic color variation for generated vassals */
   function shade(hex, key) {
     const n = parseInt(hex.slice(1), 16);
@@ -3482,6 +3614,7 @@ window.FB = window.FB || {};
     const s = r.succession;
     if (!s || !s.members) return FB.ensureRealmSuccession(state, rid);
     if (s.papalElective) return s;
+    if (FB.syncRoyalBranches) FB.syncRoyalBranches(state, rid);
     const memberIndex = successionMemberIndex(s);
     const children = memberIndex.children;
     const frontier = s.authoredCourt ? s.dynasticOrder : s.order;
@@ -3515,6 +3648,11 @@ window.FB = window.FB || {};
     if (s.authoredCourt) s.dynasticOrder = out.slice();
     const policy = FB.governments.successionForRealm(state, rid);
     s.order = policy && policy.order ? policy.order(s, state.date.year, out) : out;
+    if (FB.royalBranchEligible) s.order = s.order.filter(function (id) {
+      return FB.royalBranchEligible(state, rid, s.members[id]);
+    });
+    if (s.designatedHeirId && s.order.indexOf(s.designatedHeirId) >= 0)
+      s.order = [s.designatedHeirId].concat(s.order.filter(function (id) { return id !== s.designatedHeirId; }));
     if (s.openingPreferredId) {
       const preferred = s.members[s.openingPreferredId];
       if (state.turn !== 0 || s.rulerGeneration !== 1 || !preferred || preferred.alive === false ||
@@ -3892,6 +4030,8 @@ window.FB = window.FB || {};
       const id = memberIds[memberIndex];
       const m = s.members[id];
       if (!m || m.alive === false || id === s.rulerMemberId) continue;
+      if (m.branchRef && state.realms[m.branchRef.realmId] &&
+          state.realms[m.branchRef.realmId].alive) continue;
       const c = m.charId && state.chars[m.charId];
       /* A direct or legacy writer may have killed or removed a materialized
          court record without going through royalCharDied. The old blanket
@@ -3989,6 +4129,8 @@ window.FB = window.FB || {};
     const s = FB.ensureRealmSuccession(state, rid);
     const m = s && s.members[memberId];
     if (!r || !m || m.alive === false) return null;
+    if (m.branchRef && FB.materializeRoyalBranch)
+      return FB.materializeRoyalBranch(state, rid, memberId, opts);
     if (m.charId && state.chars[m.charId] && !state.chars[m.charId].dead) {
       return linkMaterializedRoyalFamily(state, s, m, state.chars[m.charId], opts);
     }
@@ -4482,6 +4624,8 @@ window.FB = window.FB || {};
     dropRulerIndex(c.id);
     detachCourtRecord(state, c);
     delete state.chars[c.id];
+    if (FB.syncLinkedRoyalCourts && c.royalLine)
+      FB.syncLinkedRoyalCourts(state, c.royalLine.realmId);
     if (FB.touchFamily) FB.touchFamily();
     return true;
   };
@@ -4782,6 +4926,8 @@ window.FB = window.FB || {};
   }
 
   FB.royalKinshipDegreeSnapshot = function (state, a, b) {
+    const linked = FB.linkedRoyalKinSnapshot && FB.linkedRoyalKinSnapshot(state, a, b);
+    if (linked) return royalKinshipDegreeFromSuccession(linked.a, linked.b, linked.family);
     if (!a || !b || !a.royalLine || !b.royalLine ||
         a.royalLine.realmId !== b.royalLine.realmId) return 'unrelated';
     const r = state.realms[a.royalLine.realmId];
@@ -4789,6 +4935,8 @@ window.FB = window.FB || {};
   };
 
   FB.royalCloseKinSnapshot = function (state, a, b) {
+    const linked = FB.linkedRoyalKinSnapshot && FB.linkedRoyalKinSnapshot(state, a, b);
+    if (linked) return royalCloseKinFromSuccession(linked.a, linked.b, linked.family);
     if (!a || !b || !a.royalLine || !b.royalLine ||
         a.royalLine.realmId !== b.royalLine.realmId) return false;
     const r = state.realms[a.royalLine.realmId];
@@ -4796,6 +4944,8 @@ window.FB = window.FB || {};
   };
 
   FB.royalCloseKin = function (state, a, b) {
+    const linked = FB.linkedRoyalKinSnapshot && FB.linkedRoyalKinSnapshot(state, a, b);
+    if (linked) return royalCloseKinFromSuccession(linked.a, linked.b, linked.family);
     if (!a || !b || !a.royalLine || !b.royalLine ||
         a.royalLine.realmId !== b.royalLine.realmId) return false;
     const r = state.realms[a.royalLine.realmId];
@@ -4881,6 +5031,7 @@ window.FB = window.FB || {};
       }
     }
     FB.refreshRealmSuccession(state, r.id);
+    if (FB.syncLinkedRoyalCourts) FB.syncLinkedRoyalCourts(state, r.id);
   };
 
   function advanceRealmAfterRulerDeath(state, rid) {
@@ -4919,6 +5070,7 @@ window.FB = window.FB || {};
        character dead. An ordinary court death therefore stops here instead
        of scanning every realm; a real ruler still scans the roots so every
        corrupted legacy duplicate advances along with the legitimate crown. */
+    if (FB.syncLinkedRoyalCourts && line) FB.syncLinkedRoyalCourts(state, line.realmId);
     if (!reigningRealmId) return;
     for (const rid in state.realms) {
       if (advanced[rid] || rid === 'player') continue;
@@ -5036,6 +5188,9 @@ window.FB = window.FB || {};
       recoveryAttempts++;
     }
     if (!heir || !c || c.dead) return null;
+    if (heir.branchRef && FB.absorbRoyalBranch)
+      FB.absorbRoyalBranch(state, rid, heir.branchRef.realmId);
+    delete s.designatedHeirId;
     s.order.shift();
     /* Read the heir as a person before installing them as ruler. Once the
        crown pointer changes, the typed facade correctly resolves that same

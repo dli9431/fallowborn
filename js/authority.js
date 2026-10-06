@@ -194,6 +194,10 @@
   };
   function validIssuer(s, issuer, source) {
     if (!issuer || typeof issuer.id !== 'string') return false;
+    if (source === 'church_support' && issuer.kind === 'character') {
+      var cleric = s.chars && s.chars[issuer.id];
+      return !!(cleric && !cleric.dead && ['priest','monk'].indexOf(cleric.role) >= 0);
+    }
     if ((source === 'imperial_commission' ||
          source === 'dynastic_succession') && issuer.kind === 'realm')
       return !!Q.actor(s, issuer);
@@ -211,6 +215,7 @@
     return false;
   }
   function generation(s, issuer) {
+    if (issuer.kind === 'character') return issuer.id;
     if (issuer.kind === 'realm') return FB.realmRulerGeneration(s, issuer.id);
     if (issuer.kind === 'county') {
       var rid = FB.settlementCountyHolder(s, issuer.id);

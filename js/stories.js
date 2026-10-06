@@ -10,7 +10,7 @@
   var KINDS = { world:true, track:true };
   var HOOKS = ['appliesTo', 'init', 'day', 'season', 'year', 'title', 'intro',
     'status', 'choices', 'quote', 'blocker', 'review', 'apply',
-    'validate', 'migrate', 'restore'];
+    'validate', 'migrate', 'restore', 'foundRevolt'];
   function own(o, key) {
     return !!o && Object.prototype.hasOwnProperty.call(o, key);
   }
@@ -103,6 +103,18 @@
     season:function (s) { run(s, 'season'); },
     year:function (s) { run(s, 'year'); },
     restore:function (s) { run(s, 'restore'); },
+    /* Called only by the revolt settlement after actual rebel occupation.
+       The first attached story accepting this component owns its foundation;
+       otherwise the ordinary unnamed independent realm is created. */
+    foundRevolt:function (s, group, counties) {
+      var list = attachedList(s);
+      for (var i = 0; i < list.length; i++) {
+        if (!list[i].foundRevolt) continue;
+        var realm = list[i].foundRevolt(s, record(s, list[i].id), group, counties);
+        if (realm) return realm;
+      }
+      return null;
+    },
     /* Save migration on the detached copy, before validation. */
     migrate:function (state) {
       for (var i = 0; i < registry.length; i++) {

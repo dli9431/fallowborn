@@ -1397,6 +1397,8 @@ recognition is recorded as `earned_starting_stations` with `mode:'none'` in
 `FBDATA.techImpactReviews`: it exists outside the simulated world, so no historical
 technology credibly gates or improves it.
 
+The 476 branch offers 476, 711, 800, 867, 1066 and 1204 in chronological order through the ordinary starting-date picker. The merged 711, 800 and 1204 data registers before title boot, so selecting a date, using its start code and loading its save after a reload need no console setup. Quick Start keeps its existing authored lives. The independent 493 definition is registered as a hidden review candidate; new-campaign entry points reject it while matching saved review campaigns remain loadable. Historical review gaps remain in the individual bookmark documents.
+
 Bookmark
 cards use the same responsive grid and native-button keyboard behavior as scenario
 cards. Their date and bookmark name use a colon rather than a dash, and their heading
@@ -3687,3 +3689,9 @@ Ruler opening onboarding
 Existing-ruler openings pin the authored name, sex and culture/faith pair in character creation, disable name reroll, and offer only the existing court household. Their intro explains the actual court, territory and host before play. The Ruling a court checklist in Deeds replaces commoner First steps: review a court story, review Rank & Realm, and let days advance. It then joins ordinary family guidance. Reviewing a sheet records only onboarding progress and never accepts an agreement.
 
 Ruler choices use the existing story card, quote, confirmation and outcome acknowledgment. Costs, term lengths, territorial prerequisites and the separation of office, service and land appear in the choice detail. A stale review cannot apply. Back, Escape, Close and acknowledgment use the shared scroll and focus return. A future campaign stays out of Deeds until its date window; a live player opportunity identifies that it awaits the player's decision.
+
+Italy agreement and private-property presentation
+
+The existing Deeds story cards present a bilateral Sicilian cession and conditional civilian evacuation. Tribute status and review identify the recurring amount, ceded counties and retained foothold; consent and decline use fresh quoted facts. Evacuation reports actual relocated residents and offers authorization or declining relocation. Future opportunities stay hidden until relevant. Character interaction context identifies declared private family estate shares separately from the ordinary authority sheet. The context read returns detached property data and changes no navigation or state. A congregation is labeled Congregation of its city and uses a religious representative rather than a bishop title.
+
+Partition and dated religious decisions use the existing Deeds card, shared story list, reviewed confirmation and retained focus/scroll return. A partition card shows a prospective claim before possession; a controlled party sees its pending decision only in the date window. Recipient, exact county list, liege and retained population/property are disclosed in review. Accept remains blocked by current holdings and consent, while Decline can close an open opportunity. Religious choices belong to the current head and disclose the authority, target, cooldown and preparation constraints. Future religious calls stay quiet until their window. Read-only holy-war previews inspect saved heads and papacy without materializing, repairing or enrolling courts during review.

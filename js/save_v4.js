@@ -77,6 +77,7 @@
     if (FB.validateStartingRealm) FB.validateStartingRealm(state);
     if (FB.validateLocalInstitutionState) FB.validateLocalInstitutionState(state);
     if (FB.validateReligionInstitutionState) FB.validateReligionInstitutionState(state);
+    if (FB.validateHistoricalHolyWarState) FB.validateHistoricalHolyWarState(state);
     if (plain(state.start)) {
       stamp(state.start, 'era', 'era');
       stamp(state.start, 'geography', 'geography');
@@ -121,6 +122,8 @@
           s.heirId === null && s.order.length)) field(path + '.heirId');
       if (s.openingPreferredId !== undefined && (!own(s.members, s.openingPreferredId) ||
           s.openingPreferredId === s.rulerMemberId)) field(path + '.openingPreferredId');
+      if (s.designatedHeirId !== undefined && (typeof s.designatedHeirId !== 'string' || !own(s.members, s.designatedHeirId) ||
+          s.designatedHeirId === s.rulerMemberId)) field(path + '.designatedHeirId');
       var localIds = {}, visiting = {}, done = {};
       Object.keys(s.members).forEach(function (id) {
         var m = s.members[id], where = path + '.members.' + id;
@@ -167,8 +170,18 @@
         }
         if (m.charId) {
           var c = state.chars && state.chars[m.charId];
-          if (!c || !c.royalLine || c.royalLine.realmId !== rid ||
-              c.royalLine.memberId !== undefined && c.royalLine.memberId !== id) field(where + '.charId');
+          var birthRealm = m.branchRef ? m.branchRef.realmId : rid;
+          var birthMember = m.branchRef ? m.branchRef.memberId : id;
+          if (!c || !c.royalLine || c.royalLine.realmId !== birthRealm ||
+              c.royalLine.memberId !== undefined && c.royalLine.memberId !== birthMember) field(where + '.charId');
+        }
+        if (m.branchRef !== undefined) {
+          var ref = m.branchRef, source = plain(ref) && state.realms[ref.realmId];
+          var original = source && source.succession && source.succession.members[ref.memberId];
+          if (!plain(ref) || ref.realmId === rid || !original || original.branchRef ||
+              !own(s.members, ref.parentId) ||
+              id !== 'royal_' + rid + '_branch_' + ref.realmId + '_' + ref.memberId ||
+              m.charId && m.charId !== (original.charId || FB.courtCharacterId(ref.memberId))) field(where + '.branchRef');
         }
       });
       function visit(id) {
@@ -214,7 +227,7 @@
       if (!FBDATA.legitimacySources[value.source] ||
           !['active','revoked'].includes(value.status) ||
           !Number.isInteger(value.startTurn)) invalid(where);
-      ref(value.issuer, ['realm','host','county','religious-office'],
+      ref(value.issuer, ['realm','host','county','religious-office','character'],
         where + '.issuer');
       ref(value.subject, ['realm','character'], where + '.subject');
       if (value.scope !== null) ref(value.scope, ['realm','host','county'],

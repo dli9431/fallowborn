@@ -8,7 +8,7 @@ dependsOnRuntime(__filename, [
   'data/bookmark_476_italy.js', 'data/bookmark_476_dalmatia_east.js',
   'data/bookmark_476_gaul_iberia.js', 'data/bookmark_476_africa.js',
   'data/political_institutions.js', 'data/technology.js', 'data/starts.js',
-  'js/stories.js', 'js/story_campaign.js', 'js/story_476_rails.js',
+  'js/stories.js', 'js/story_campaign.js', 'js/story_476_rails.js', 'js/bookmark_setup.js', 'js/story_agreements.js',
   'js/story_western_court_476.js', 'js/story_federate_track_476.js',
   'js/story_curialis_track_476.js', 'js/authority.js', 'js/federates.js',
   'js/wars.js', 'js/armies.js', 'js/politics.js', 'js/world.js', 'js/model.js',
@@ -19,7 +19,8 @@ const { test, expect } = require('../support/fixture');
 const { openGame } = require('../support/game/navigation');
 const { openCrazyGame } = require('../support/game/crazygames-title');
 const RAILS = ['zeno_return_476','clovis_syagrius_476','theoderic_italy_476',
-  'eastern_africa_476','eastern_italy_476','western_office_476','rugian_frontier_476'];
+  'eastern_africa_476','eastern_italy_476','rugian_frontier_476','sicilian_tribute_476',
+  'norican_evacuation_476','western_office_476'];
 
 async function start(page, testInfo, bookmark, crazygames, scenario) {
   if (crazygames) {

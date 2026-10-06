@@ -37,6 +37,9 @@ Object.assign(FBDATA.localInstitutions, FBDATA.bookmarkRegions476.dalmatia_east.
 Object.assign(FBDATA.localInstitutions, FBDATA.bookmarkRegions476.italy.localInstitutions);
 Object.assign(FBDATA.localInstitutions, FBDATA.bookmarkRegions476.gaul_iberia.localInstitutions);
 
+/* Each campaign can own a complete table without replacing the legacy fallback. */
+FBDATA.bookmarks['476'].localInstitutions = FBDATA.localInstitutions;
+
 /* Phase 2 authority records name legal capacities rather than landed titles.
    The institution and scope on each appointment remain separate from owner
    and holder; these definitions never manufacture a territorial realm. */

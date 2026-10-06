@@ -1,6 +1,6 @@
-/* Late spring 1204 review content. Physical counties and settlement slots
+/* Late spring 1204 content. Physical counties and settlement slots
    retain their stable identities. No future partition grants are opening
-   possessions. This candidate is deliberately absent from FBDATA.bookmarks.
+   possessions. The definition is registered for ordinary campaign setup.
    See docs/research/1204-bookmark.md for chronology and review limitations. */
 window.FBDATA = window.FBDATA || {};
 FBDATA.bookmarkContent = FBDATA.bookmarkContent || {};
@@ -513,4 +513,5 @@ FBDATA.bookmarkContent['1204'] = {
     straits:clone(source.straits), crossingClasses:clone(source.crossingClasses),
     scripted:[], stories:[]
   };
+  FBDATA.bookmarks['1204'] = FBDATA.bookmarkCandidates['1204'];
 })();

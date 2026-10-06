@@ -1,6 +1,6 @@
 Spring 711 historical research and authoring decisions
 
-Research date: 2026-10-05. This is a review candidate, not an accepted historical reconstruction. The opening is Spring day 1 in the game's seasonal calendar, before the main Iberian crossing and summer battle. It is not an asserted conversion to a precise Gregorian date. Evidence supports the principal courts; many county boundaries, ages and peripheral groupings remain game-scale approximations.
+Research date: 2026-10-05. The 476 branch makes this bookmark selectable for ordinary play and review. Its historical reconstruction remains incomplete. The opening is Spring day 1 in the game's seasonal calendar, before the main Iberian crossing and summer battle. It is not an asserted conversion to a precise Gregorian date. Evidence supports the principal courts; many county boundaries, ages and peripheral groupings remain game-scale approximations.
 
 Hispania and the crossing
 
@@ -16,9 +16,13 @@ The Metropolitan Museum, Iberian Peninsula, 500-1000 A.D., contextual chronology
 
 Later northern resistance and Gaul
 
-Pelayo and Asturias belong to the post-conquest history. Their later narratives need critical handling rather than an already-crowned northern king in 711. The candidate leaves the northern uplands under the Gothic domain and does not substitute a scripted land gift for Asturias. Generic conditional polity creation is missing from the data-only platform. This is an acceptance blocker.
+Pelayo and Asturias belong to the post-conquest history. Their later narratives need critical handling rather than an already-crowned northern king in 711. The opening leaves the northern uplands under the Gothic domain. A reusable conditional foundation now requires actual Umayyad possession of Toledo and Catholic community continuity. A surviving Gothic-held remnant can form Pelayo's court at peace; conquered uplands must win independence through an ordinary armed revolt. Neither the calendar nor a foundation record wins the revolt. Using the loss of Toledo as a collapse predicate and allowing a peaceful northern remnant are explicit game-scale approximations.
 
 Cambridge University Press, Treacherous Foundations, introduction and its discussion of later Pelayo traditions: https://www.cambridge.org/core/books/abs/treacherous-foundations/introduction/15DF4B0750E42B82E1D7EC0EA5C2E00C
+
+The Principality of Asturias tourism account gives the conventional sequence of a resistance leadership in 718 and Covadonga in 722, with the centre at Cangas de Onis. This supports keeping the northern polity out of the pre-conquest opening; it does not settle the later narrative's disputed details. The foundation's 718-730 window, three-year revolt commitment, one shared upland county, royal rank, birth year 685, skills and generated family are gameplay authoring decisions rather than reconstructed personal or administrative records. The county keeps its neutral upland presentation instead of presenting the later foundation of Oviedo as Pelayo's city.
+
+Principality of Asturias, Historic Covadonga, Pelayo and the Kingdom of Asturias: https://www.turismoasturias.es/en/covadonga/historica
 
 The conventional post-conquest sequence includes Narbonne and Septimania from 719, Toulouse in 721 and the later campaign associated with Tours in 732. The candidate's rail windows permit alternate outcomes and are not recreations of those battles. Its 725 Aquitanian opportunity is deliberately later than Toulouse's original attack, allowing ordinary campaigns to determine a foothold first. It therefore requires owner acceptance as a gameplay approximation.
 
@@ -88,4 +92,4 @@ The d_711_, k_711_ and e_711_ tables are gameplay promotion regions. They do not
 
 Review disposition
 
-The candidate is kept out of the selectable registry pending the requirement check, regional historical acceptance, ordinary household natural-play review and device/distribution review. Conditional Asturian foundation is an unmet platform dependency. Elective Visigothic succession, provincial and papal arrangements, frontier faith progression and outer-map aggregates are recorded approximations. The implementation must not be described as an accepted full historical start while those gaps remain.
+The bookmark is registered during ordinary boot on the 476 branch. Conditional Asturian foundation is implemented through the shared polity_foundation type; its loss-of-Toledo predicate, remnant route and ordinary revolt route still need historical and natural-play acceptance. Requirement checks, regional historical acceptance, ordinary household natural-play review and device/distribution review remain owner review tasks. Elective Visigothic succession, provincial and papal arrangements, frontier faith progression and outer-map aggregates are recorded approximations. The implementation must not be described as an accepted full historical start while those gaps remain.

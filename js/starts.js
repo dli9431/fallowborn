@@ -74,6 +74,7 @@
     references(s.alliances, id); references(s.localInstitutions, id);
     references(s.settlementLordships, id);
     references(s.stories, id);
+    references(s.bookmarkSetup, id);
     rekey(s.authority && s.authority.governments, id);
     rekey(s.armyLogistics && s.armyLogistics.purses, id);
     ['realmTech','armyDown','armyDownSurvival','armyDetachmentDown','armyCohorts'].forEach(function (key) {

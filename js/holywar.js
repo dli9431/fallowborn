@@ -253,12 +253,13 @@ window.FB = window.FB || {};
   /* Eligible targets are frozen only when a call is made. Lost sacred places
      rank before later heartland reconquests; ties prefer more lost development
      and then the stable kingdom id. */
-  FB.greatHolyWarTargets = function (state, religionId) {
+  FB.greatHolyWarTargets = function (state, religionId, preview) {
     if (!FB.greatHolyWarsEnabled(state)) return [];
     if (!state || !config(state, religionId) ||
         !callingGroup(state, religionId)) return [];
-    var history = ensureHistory(state), conf = config(state, religionId), out = [];
-    if (FB.titleLevels.has('kingdom', conf.firstTarget) && !history.firstLaunched[religionId]) {
+    var history = preview ? state.greatHolyWarHistory || {} : ensureHistory(state);
+    var conf = config(state, religionId), out = [];
+    if (FB.titleLevels.has('kingdom', conf.firstTarget) && !(history.firstLaunched || {})[religionId]) {
       var first = objectiveRecord(state, religionId, conf.firstTarget, true);
       if (first && first.holyCounties.length) out.push(first);
       return out;
@@ -284,8 +285,8 @@ window.FB = window.FB || {};
     return out;
   };
 
-  function targetById(state, religionId, kingdomId) {
-    var targets = FB.greatHolyWarTargets(state, religionId);
+  function targetById(state, religionId, kingdomId, preview) {
+    var targets = FB.greatHolyWarTargets(state, religionId, preview);
     for (var i = 0; i < targets.length; i++) {
       if (targets[i].kingdomId === kingdomId) return targets[i];
     }
@@ -302,38 +303,45 @@ window.FB = window.FB || {};
     };
   }
 
-  FB.canCallGreatHolyWar = function (state, religionId, kingdomId, callerRealm) {
+  /* Story reviews use preview to inspect saved institutions without repairing,
+     materializing or enrolling a newly created court while a modal is open. */
+  FB.canCallGreatHolyWar = function (state, religionId, kingdomId, callerRealm, preview) {
     if (!FB.systemEnabled(state, 'great_holy_wars', { faith:religionId, realm:callerRealm })) return false;
     if (callerRealm === 'player' && FB.fiscalRestriction && FB.fiscalRestriction(state)) return false;
     if (!state || state.greatHolyWar || !config(state, religionId)) return false;
     if (callerRealm === 'player' && FB.intrigueCaptivityOf &&
         FB.intrigueCaptivityOf(state, state.player.charId)) return false;
-    var conf = config(state, religionId), history = ensureHistory(state);
+    var conf = config(state, religionId);
+    var history = preview ? state.greatHolyWarHistory || {} : ensureHistory(state);
     if (!dateReached(state, conf.minDate)) return false;
-    if ((history.cooldownUntil[religionId] || 0) > state.turn) return false;
-    var head = FB.religiousHeadOf(state, religionId);
+    if (((history.cooldownUntil || {})[religionId] || 0) > state.turn) return false;
+    var head = preview ? FB.religiousHeadSnapshot(state, religionId) : FB.religiousHeadOf(state, religionId);
     if (!head) return false;
     if (FB.intrigueRealmRulerCaptive &&
         FB.intrigueRealmRulerCaptive(state, head.id)) return false;
     if (papalFaith(state, religionId) && FB.ensurePapacy) {
-      var papacy = FB.ensurePapacy(state, religionId);
-      var obedience = papacy && papacy.obediences[papacy.romanObedience];
+      var papacy = preview ? FB.papacyState(state, religionId) : FB.ensurePapacy(state, religionId);
+      var obedience = papacy && papacy.obediences && papacy.obediences[papacy.romanObedience];
       var authorityGate = FBDATA.papacy &&
         FBDATA.papacy.authority && FBDATA.papacy.authority.gates
         ? FBDATA.papacy.authority.gates.greatHolyWar : 50;
+      var schism = preview ? Object.keys(papacy && papacy.obediences || {}).filter(function (oid) {
+        return papacy.obediences[oid].status === 'active';
+      }).length > 1 : FB.papacyInSchism(state, religionId);
       if (!obedience || !obedience.claimantId ||
-          FB.papacyInSchism(state, religionId) ||
+          schism ||
           obedience.authority < authorityGate) return false;
+      if (preview && (!state.chars[obedience.claimantId] || state.chars[obedience.claimantId].dead)) return false;
       var playerCaller = callerRealm === 'player' &&
         obedience.claimantId === state.player.charId;
       if (callerRealm && callerRealm !== head.id && !playerCaller) return false;
     } else if (callerRealm && callerRealm !== head.id) {
       return false;
     }
-    var targets = FB.greatHolyWarTargets(state, religionId);
+    var targets = FB.greatHolyWarTargets(state, religionId, preview);
     if (!targets.length) return false;
     if (!kingdomId) return true;
-    return !!targetById(state, religionId, kingdomId);
+    return !!targetById(state, religionId, kingdomId, preview);
   };
 
   function ordinaryWarInvolves(state, rid) {

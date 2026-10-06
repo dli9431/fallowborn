@@ -148,17 +148,53 @@ FBDATA.bookmarkRegions476['italy'] = {
     'reggio':'mediterranean',
     'cosenza':'mediterranean'
   },
+  /* Dates and skill values without secure attestation are gameplay profiles.
+     Private estate shares express a bounded holding, not public jurisdiction. */
+  opening:{
+    actors:{
+      orestes:{ name:'Orestes', sex:'m', culture:'roman', religion:'nicene', born:426,
+        station:4, role:'commander', home:'ravenna', rulerChildRealmId:'italy', skills:{mar:11,dip:7} },
+      civic_delegate:{ sex:'m', culture:'roman', religion:'nicene', born:434,
+        station:2, role:'notable', home:'ravenna' },
+      simplicius:{ name:'Simplicius', sex:'m', culture:'roman', religion:'nicene', born:422,
+        station:3, role:'priest', home:'roma', skills:{lea:10,dip:9} },
+      veteran:{ sex:'m', culture:'gothic', religion:'homoian', born:438,
+        station:2, role:'soldier', home:'pavia' },
+      basilius:{ name:'Caecina Decius Basilius', sex:'m', culture:'roman', religion:'nicene', born:415,
+        station:3, role:'notable', dyn:'Caecina Decia', home:'roma', skills:{ste:10,dip:10} },
+      senator:{ name:'Caecina Decius Maximus Basilius', sex:'m', culture:'roman', religion:'nicene', born:440,
+        station:3, role:'notable', dyn:'Caecina Decia', father:'basilius', home:'roma', skills:{ste:9,dip:10} },
+      venantius:{ name:'Decius Marius Venantius Basilius', sex:'m', culture:'roman', religion:'nicene', born:445,
+        station:2, role:'notable', dyn:'Caecina Decia', father:'basilius', home:'roma', skills:{ste:8,dip:8} },
+      homoian_bishop:{ sex:'m', culture:'gothic', religion:'homoian', born:430,
+        station:3, role:'priest', home:'ravenna' }
+    },
+    appointments:{
+      orestes_honor:{ officeId:'patricius', actorId:'orestes', realmId:'italy', scope:{kind:'realm',id:'italy'} },
+      orestes_magister:{ officeId:'magister_militum', actorId:'orestes', realmId:'italy', scope:{kind:'host',id:'host_476_italy'} },
+      orestes_command:{ officeId:'field_command', actorId:'orestes', realmId:'italy', scope:{kind:'host',id:'host_476_italy'}, endTurn:361 },
+      ravenna_delegate:{ officeId:'civic_delegate', actorId:'civic_delegate', realmId:'italy', scope:{kind:'county',id:'ravenna'}, recognitionSource:'civic_acceptance' },
+      senate_delegate:{ officeId:'civic_delegate', actorId:'senator', realmId:'italy', scope:{kind:'county',id:'roma'}, recognitionSource:'civic_acceptance' }
+    },
+    estates:[{ id:'decian_estate_476', actorId:'basilius', provinceId:'roma', share0:1000,
+      basis:'tenure', evidence:'decian_family_property_476' }],
+    claims:[{ id:'italian_federate_third', realmId:'federates_476', countyIds:['ravenna','pavia','milano','roma'],
+      share0:3333, evidence:'unaccepted_federate_land_demand_476' }],
+    /* Relative households displaced within Noricum before the opening.
+       This small cohort is not the later general evacuation into Italy. */
+    migrations:[{ from:'linz', to:'wien', rate:0.01, community:{culture:'roman',religion:'nicene'} }]
+  },
   /* Rounded site anchors; demographics and development are editorial weights. */
   localInstitutions:{
     rome_senate:{ city:'Rome', kind:'senate', provinceId:'roma', site:'roma', religion:'nicene', culture:'roman' },
     ravenna_council:{ city:'Ravenna', kind:'council', provinceId:'ravenna', site:'ravenna_476', religion:'nicene', culture:'roman' },
     milan_council:{ city:'Mediolanum', kind:'council', provinceId:'milano', site:'milano_476', religion:'nicene', culture:'roman' },
     rome_see:{ city:'Rome', kind:'see', provinceId:'roma', site:'roma', religion:'nicene', culture:'roman', officeId:'rome_bishop', historicalName:'Simplicius' },
-    ravenna_see:{ city:'Ravenna', kind:'see', provinceId:'ravenna', site:'ravenna_476', religion:'nicene', culture:'roman', officeId:'ravenna_nicene_bishop', historicalName:'Exuperantius' },
+    ravenna_see:{ city:'Ravenna', kind:'see', provinceId:'ravenna', site:'ravenna_476', religion:'nicene', culture:'roman', officeId:'ravenna_nicene_bishop', historicalName:'Exuperantius', representative:{born:425,role:'priest',skills:{lea:9,dip:8}} },
     ravenna_homoian_see:{ city:'Ravenna', kind:'see', provinceId:'ravenna', site:'ravenna_476', religion:'homoian', culture:'gothic', officeId:'ravenna_homoian_bishop' },
     milan_see:{ city:'Mediolanum', kind:'see', provinceId:'milano', site:'milano_476', religion:'nicene', culture:'roman', officeId:'milan_bishop' },
     ticinum_council:{ kind:'council', city:'Ticinum', provinceId:'pavia', site:'pavia', religion:'nicene', culture:'roman' },
-    ticinum_see:{ kind:'see', city:'Ticinum', provinceId:'pavia', site:'pavia', religion:'nicene', culture:'roman', officeId:'ticinum_bishop', historicalName:'Epiphanius' },
+    ticinum_see:{ kind:'see', city:'Ticinum', provinceId:'pavia', site:'pavia', religion:'nicene', culture:'roman', officeId:'ticinum_bishop', historicalName:'Epiphanius', representative:{born:438,role:'priest',skills:{lea:10,dip:12}} },
     aquileia_council:{ kind:'council', city:'Aquileia', provinceId:'aquileia', site:'aquileia_476', religion:'nicene', culture:'roman' },
     aquileia_see:{ kind:'see', city:'Aquileia', provinceId:'aquileia', site:'aquileia_476', religion:'nicene', culture:'roman', officeId:'aquileia_bishop' },
     verona_council:{ kind:'council', city:'Verona', provinceId:'verona', site:'verona_476', religion:'nicene', culture:'roman' },
@@ -175,11 +211,13 @@ FBDATA.bookmarkRegions476['italy'] = {
     carales_see:{ kind:'see', city:'Carales', provinceId:'cagliari', site:'cagliari_476', religion:'nicene', culture:'roman', officeId:'carales_bishop' },
     aleria_council:{ kind:'council', city:'Aleria', provinceId:'ajaccio', site:'aleria_476', religion:'nicene', culture:'roman' },
     lauriacum_council:{ kind:'council', city:'Lauriacum', provinceId:'linz', site:'lauriacum_476', religion:'nicene', culture:'roman' },
-    lauriacum_see:{ kind:'see', city:'Lauriacum', provinceId:'linz', site:'lauriacum_476', religion:'nicene', culture:'roman', officeId:'lauriacum_bishop', historicalName:'Constantius' },
+    lauriacum_see:{ kind:'see', city:'Lauriacum', provinceId:'linz', site:'lauriacum_476', religion:'nicene', culture:'roman', officeId:'lauriacum_bishop', historicalName:'Constantius', representative:{born:420,role:'priest',skills:{lea:9,dip:10}} },
     iuvavum_council:{ kind:'council', city:'Iuvavum', provinceId:'salzburg', site:'salzburg_476', religion:'nicene', culture:'roman' },
-    favianis_council:{ city:'Favianis', kind:'council', provinceId:'wien', site:'favianis_476', religion:'nicene', culture:'roman' }
+    favianis_council:{ city:'Favianis', kind:'council', provinceId:'wien', site:'favianis_476', religion:'nicene', culture:'roman' },
+    favianis_congregation:{ city:'Favianis', kind:'congregation', provinceId:'wien', site:'favianis_476', religion:'nicene', culture:'roman',
+      representative:{name:'Severinus',born:410,role:'monk',station:2,skills:{lea:11,dip:12}} }
   },
-  storyIds:['rugian_frontier_476'],
+  storyIds:['rugian_frontier_476','sicilian_tribute_476','norican_evacuation_476'],
   storyCampaigns:{
     rugian_frontier_476:{ id:'rugian_frontier_476', type:'campaign',
       requires:['western_court_476'], name:'The Rugian Frontier',
@@ -194,7 +232,19 @@ FBDATA.bookmarkRegions476['italy'] = {
         failed:{ key:'news.476.rugian_failed', text:'🏳 The Danube campaign ends without securing its objective.' },
         diverted:{ key:'news.476.rugian_diverted', text:'📜 The Italian and Rugian courts have taken another course; the frontier opportunity closes.' },
         interrupted:{ key:'news.476.rugian_interrupted', text:'📜 The living court needed for the Rugian frontier campaign is lost.' }
-      } }
+      } },
+    sicilian_tribute_476:{ id:'sicilian_tribute_476', type:'tribute_cession', requires:['western_court_476'],
+      name:'The Sicilian Agreement', desc:'The Ravenna court and the Vandal king may agree to a Sicilian cession for annual tribute. Western Sicily, including Lilybaeum, remains a Vandal foothold.',
+      firstYear:476,lastYear:477,firstTurn:270,tribute:20,intervalDays:360,
+      actor:{realmId:'federates_476',character:{storyId:'western_court_476',field:'odoacerId'}}, source:{realmId:'aghlabids'},
+      countyIds:['messina','siracusa'],retainedCountyIds:['palermo'],
+      conditions:[{kind:'owner',provinceId:'ravenna',realmId:'federates_476'}] },
+    norican_evacuation_476:{ id:'norican_evacuation_476',type:'civilian_migration',requires:['rugian_frontier_476'],
+      name:'The Norican Evacuation',desc:'After a successful frontier campaign, the Ravenna court may relocate Roman civilian households from the Danube to safer Italian homes. Community identity and population are conserved.',
+      firstYear:487,lastYear:493,actor:{realmId:'federates_476'},community:{culture:'roman',religion:'nicene'},share:0.6,batchSize:1000,
+      routes:[{from:'wien',to:'ravenna'}],
+      conditions:[{kind:'story_result',storyId:'rugian_frontier_476',result:'won'},
+        {kind:'owner',provinceId:'ravenna',realmId:'federates_476'}] }
   },
   settlementSites:{
     augsburg_476:{ x:10.9, y:48.37, names:[{ from:375, to:600, name:'Augusta Vindelicum' }] },
@@ -250,7 +300,8 @@ FBDATA.bookmarkRegions476['italy'] = {
     zurich:[{ site:'zurich_476', name:'Turicum', kind:'town' }],
     salzburg:[{ site:'salzburg_476', name:'Iuvavum', kind:'town' }],
     wien:[{ site:'wien_476', name:'Vindobona', kind:'town' }, { site:'favianis_476', name:'Favianis', kind:'town' }],
-    linz:[{ site:'linz_476', name:'Lentia', kind:'town' }, { site:'lauriacum_476', name:'Lauriacum', kind:'town' }],
+    linz:[{ site:'linz_476', name:'Lentia', kind:'town', communities:[{culture:'roman',religion:'nicene',populationShare0:9000},{culture:'gothic',religion:'homoian',populationShare0:1000}] },
+      { site:'lauriacum_476', name:'Lauriacum', kind:'town', communities:[{culture:'roman',religion:'nicene',populationShare0:10000}] }],
     klagenfurt:[{ site:'klagenfurt_476', name:'Virunum', kind:'town' }],
     graz:[{ site:'graz_476', name:'Flavia Solva', kind:'town' }],
     torino:[{ site:'torino_476', name:'Augusta Taurinorum', kind:'town' }],
@@ -300,15 +351,14 @@ FBDATA.bookmarkRegions476['italy'] = {
 Object.assign(FBDATA.settlementSites, FBDATA.bookmarkRegions476.italy.settlementSites);
 Object.assign(FBDATA.settlementLayouts['476'], FBDATA.bookmarkRegions476.italy.settlementLayouts);
 
-/* Italian civic and provisioning stories also fit other Roman communities.
-   Use live community gates rather than unsupported county-id trigger keys. */
+/* Stable county selectors retain the themes in their authored Italian region. */
 FBDATA.eventPacks = FBDATA.eventPacks || {};
 FBDATA.eventPacks.italy_476 = { eras:['late_antique'], yearMin:476, yearMax:600 };
 FBDATA.events = FBDATA.events || [];
 FBDATA.events.push(
 { id:'italy_476_grain_roll', pack:'italy_476', eras:['late_antique'], tags:['late_antique'],
   title:'The Grain Roll', weight:4, cooldown:12,
-  trigger:{ minAge:18, tierMax:2, goldMin:3, countyCulture:'roman', countyFaith:'nicene' },
+  trigger:{ countyIds:FBDATA.bookmarkRegions476.italy.provinces.map(function (p) {return p.id;}), minAge:18, tierMax:2, goldMin:3, countyCulture:'roman', countyFaith:'nicene' },
   text:'The grain clerks in {province} find fewer sacks than names on the distribution roll. They ask households for a small contribution while the missing shipment is traced.',
   options:[
     { label:'Contribute to the distribution.', effects:{ gold:-3, prestige:2, piety:2, log:'Contributed to the local grain distribution.' } },
@@ -317,7 +367,7 @@ FBDATA.events.push(
   ] },
 { id:'italy_476_civic_records', pack:'italy_476', eras:['late_antique'], tags:['late_antique'],
   title:'Registers After the Fighting', weight:3, cooldown:16,
-  trigger:{ minAge:18, tierMax:2, countyCulture:'roman', realmAtWar:false },
+  trigger:{ countyIds:FBDATA.bookmarkRegions476.italy.provinces.map(function (p) {return p.id;}), minAge:18, tierMax:2, countyCulture:'roman', realmAtWar:false },
   text:'Old fighting has scattered a bundle of tax and property registers in {province}. The city clerks need witnesses and careful copies before they can distinguish a lawful holding from an armed demand.',
   options:[
     { label:'Copy the surviving records.', effects:{ skills:{lea:1}, prestige:2, log:'Helped preserve the surviving city registers.' } },
@@ -326,7 +376,7 @@ FBDATA.events.push(
   ] },
 { id:'italy_476_two_congregations', pack:'italy_476', eras:['late_antique'], tags:['late_antique'],
   title:'Two Congregations', weight:3, cooldown:12,
-  trigger:{ minAge:18, tierMax:2, goldMin:2, countyCulture:'roman',
+  trigger:{ countyIds:FBDATA.bookmarkRegions476.italy.provinces.map(function (p) {return p.id;}), minAge:18, tierMax:2, goldMin:2, countyCulture:'roman',
     countyCommunityShare:{ kind:'faith', target:'homoian', min:0.03, max:0.4 } },
   text:'Nicene and Homoian households in {province} share a market but worship apart. After harsh words over a burial, neighbors ask someone to carry food between the grieving families.',
   options:[

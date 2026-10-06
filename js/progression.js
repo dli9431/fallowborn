@@ -15,7 +15,7 @@
        relationships start neutral, never at the player's reputation. */
     var rows = s.localInstitutions || {}, key = 'character:' + c.id, best = null;
     for (var id in rows) {
-      var def = FBDATA.localInstitutions && FBDATA.localInstitutions[id];
+      var def = FB.localInstitutionDefinitions(s)[id];
       if (def && def.provinceId && rows[id] && rows[id].standing &&
           FB.settlementCountyHolder(s, def.provinceId) === patron &&
           Object.prototype.hasOwnProperty.call(rows[id].standing, key)) {

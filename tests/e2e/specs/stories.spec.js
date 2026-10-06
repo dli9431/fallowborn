@@ -2,7 +2,11 @@
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
   'index.html', 'js/starts.js', 'js/story_nepos_track_476.js', 'js/stories.js', 'js/story_campaign.js', 'js/story_476_rails.js',
+  'js/bookmark_setup.js', 'js/story_agreements.js',
   'data/story_campaigns.js', 'data/story_campaigns_711.js', 'js/story_western_court_476.js',
+  'data/bookmark_493.js', 'data/bookmark_493_history.js',
+  'data/bookmark_1204_campaigns.js', 'js/story_history.js',
+  'js/story_polity_foundation.js', 'js/rebellions.js',
   'js/story_federate_track_476.js', 'js/main.js', 'js/save.js', 'js/save_v4.js',
   'js/i18n.js', 'js/ui_panels.js', 'js/world.js',
   'data/starts.js', 'data/bookmarks.js', 'data/bookmark_476.js',
@@ -33,7 +37,8 @@ async function begin(page, testInfo, code) {
 }
 
 const WORLD_STORIES = ['western_court_476','zeno_return_476','clovis_syagrius_476',
-  'theoderic_italy_476','eastern_africa_476','eastern_italy_476','western_office_476','rugian_frontier_476'];
+  'theoderic_italy_476','eastern_africa_476','eastern_italy_476','western_office_476','rugian_frontier_476',
+  'sicilian_tribute_476','norican_evacuation_476'];
 
 const CODE_476 = 'STORIES-476-federate_476-ravenna-m-Marcus-standard-0-gothic.homoian';
 
@@ -76,11 +81,21 @@ test('stories register in order at load time only and resolve by id',
         }).map(function (sc) { return sc.id + ':' + sc.tracks.join(','); })
       };
     });
-    // Campaign instances register as one data batch before the western office.
-    expect(result.order).toEqual(WORLD_STORIES.filter(function (id) { return id !== 'western_office_476'; })
-      .concat(['strait_crossing_711','toledo_campaign_711','septimania_campaign_711',
-        'gaul_campaign_711','western_office_476']).map(function (id) { return id + ':world'; })
-      .concat(['federate_track_476:track','curialis_track_476:track','nepos_track_476:track']));
+    // Other bookmarks may register independent data between these hooks.
+    // Keep the 476 dependency order and the 711 foundation boundary explicit.
+    const expectedOrder = WORLD_STORIES.filter(function (id) { return id !== 'western_office_476'; })
+      .concat(['alamannic_campaign_493','burgundian_campaign_493','visigothic_campaign_493',
+        'sirmium_campaign_493','african_campaign_493','italian_campaign_493',
+        'strait_crossing_711','toledo_campaign_711','septimania_campaign_711',
+        'gaul_campaign_711','latin_thessalonica_1204','nicaean_return_1204',
+        'bulgarian_thrace_1204','epirote_macedonia_1204','castilian_frontier_1204',
+        'portuguese_algarve_1204','aragonese_valencia_1204','capetian_normandy_1204',
+        'thessalonica_partition_1204','athens_partition_1204','achaia_partition_1204',
+        'latin_athens_1204','latin_achaia_1204','fifth_crusade_call_1204','latin_bithynia_1204',
+        'western_office_476','asturias_foundation_711']).map(function (id) { return id + ':world'; })
+      .concat(['federate_track_476:track','curialis_track_476:track','nepos_track_476:track']);
+    expect(result.order.filter(function (entry) { return expectedOrder.includes(entry); })).toEqual(expectedOrder);
+    expect(new Set(result.order).size).toBe(result.order.length);
     expect(result.world).toBe(true);
     expect(result.unknown).toBeNull();
     expect(result.late).toContain('load time only');
@@ -143,7 +158,8 @@ test('a branch save holding state.situation476 migrates once into both story rec
     });
     expect(result).toEqual({
       immutable:true, world:true, track:true, dropped:true, idempotent:true,
-      restored:WORLD_STORIES.concat(['federate_track_476']).join(','), phase:'delegate',
+      restored:WORLD_STORIES.filter(function (id) { return !['rugian_frontier_476','sicilian_tribute_476','norican_evacuation_476'].includes(id); })
+        .concat(['federate_track_476']).join(','), phase:'delegate',
       outsideTrack:['declined', 'outside', false],
       outsideWorld:['federate-9', 'recognition-8', 'recognition-7', 'negotiated'],
       conflict:result.conflict

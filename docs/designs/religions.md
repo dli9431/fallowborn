@@ -262,6 +262,8 @@ Music checks the exact faith, its authored music.lineage, then remaining ancestr
 
 Optional faith institutions
 
+Local religious offices read the owning campaign's localInstitutions table through FB.localInstitutionDefinitions(state). A bookmark can therefore keep a surviving office id with a different opening incumbent or vacancy, omit an office, or supply an empty table without borrowing another date's cast. Both the office resolver and saved church-council validation use the same campaign lookup, even while another world is active. Saved head assignments and institutional ledgers are preserved; representative profiles apply only to new actors. See docs/designs/council.md for the profile and seat contract. This is a data and persistence refactor with no new technology dependency.
+
 Faith properties.systems accepts enable and disable lists as well as the existing boolean map. Compilation normalizes the local layer before merging inherited properties, preserving a parent's requirements unless the child overrides them. FB.faithHasSystem delegates to FB.systemEnabled for the named faith, so a final bookmark disable also applies to inherited and generated faiths. Papacy remains faith-enabled; medieval excommunication preserves the existing nonpapal religious-head sanctions. Catholic vocation paths retain their papacy requirement. See docs/designs/systems.md.
 
 

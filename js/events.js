@@ -1305,6 +1305,11 @@ window.FB = window.FB || {};
 
   function communityEventTriggerError(trigger, refs, field) {
     if (!trigger) return '';
+    if (trigger.countyIds !== undefined && (!Array.isArray(trigger.countyIds) || !trigger.countyIds.length ||
+        trigger.countyIds.some(function (id, i) {
+          return typeof id !== 'string' || !Object.prototype.hasOwnProperty.call(refs.provinces, id) ||
+            trigger.countyIds.indexOf(id) !== i;
+        }))) return field + '.countyIds must be a nonempty list of distinct known province ids.';
     for (const dominant of ['countyCulture','countyFaith']) {
       if (trigger[dominant] === undefined) continue;
       const kind = dominant === 'countyFaith' ? 'faith' : 'culture';
@@ -5119,6 +5124,7 @@ window.FB = window.FB || {};
     });
     const provinceId = ctx && ctx.locationId || p.provinceId;
     const pr = FB.world.byId[provinceId];
+    if (tg.countyIds && (!Array.isArray(tg.countyIds) || tg.countyIds.indexOf(provinceId) < 0)) return false;
 
     if (!FB.station.reaches(p, tg.tierMin, state)) return false;
     if (FB.station.exceeds(p, tg.tierMax, state)) return false;

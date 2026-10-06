@@ -1,12 +1,11 @@
-/* Spring 711 review candidate on europe_regional. This declaration is not
-   installed in the selectable bookmark registry before historical acceptance.
+/* Spring 711 world on europe_regional, registered for ordinary campaign setup.
    Politics and community shares are literal, independent of other bookmarks.
    Empty county names lists pin the literal labels instead of base-date aliases.
-   See docs/designs/bookmark-711.md for review promotion and remaining gaps. */
+   See docs/designs/bookmark-711.md for remaining historical limitations. */
 window.FBDATA = window.FBDATA || {};
 FBDATA.bookmarkCandidates = FBDATA.bookmarkCandidates || {};
 
-/* Supplemental faiths and physical sites are inert until candidate review.
+/* Supplemental faiths and physical sites install before engine indexing.
    The Umayyad branch reuses Sunni doctrine with its own Damascus head office.
    Community shares and unrecorded rulers are gameplay estimates. */
 FBDATA.bookmarkCultures711 = {
@@ -509,7 +508,7 @@ FBDATA.bookmarkCandidates['711'] = {
   settlementLayout:null,
   religiousHeads:{"catholic":"papacy_711","umayyad_sunni_711":"umayyad_711"},
   systems:{"disable":["great_holy_wars","tournaments"]},
-  stories:["strait_crossing_711","toledo_campaign_711","septimania_campaign_711","gaul_campaign_711"],
+  stories:["strait_crossing_711","toledo_campaign_711","septimania_campaign_711","gaul_campaign_711","asturias_foundation_711"],
   provinces:[
     {"id":"coruna","names":[],"name":"Brigantium","realm":"visigoths_711","duchy":"d_711_galicia","culture":"hispano_roman","religion":"catholic","dev":1,"communities":[{"culture":"hispano_roman","religion":"catholic","populationShare0":8500},{"culture":"gothic","religion":"catholic","paired":true,"populationShare0":1000},{"culture":"hispano_roman","religion":"jewish","paired":true,"populationShare0":500}],"settlements":[{"site":"coruna_711","name":"Brigantium","kind":"village"}]},
     {"id":"santiago","names":[],"name":"Iria Flavia","realm":"visigoths_711","duchy":"d_711_galicia","culture":"hispano_roman","religion":"catholic","dev":2,"communities":[{"culture":"hispano_roman","religion":"catholic","populationShare0":8500},{"culture":"gothic","religion":"catholic","paired":true,"populationShare0":1000},{"culture":"hispano_roman","religion":"jewish","paired":true,"populationShare0":500}],"settlements":[{"site":"santiago_711","name":"Iria Flavia","kind":"village"}]},
@@ -870,8 +869,8 @@ FBDATA.bookmarkCandidates['711'] = {
     {"id":"sebasteia","names":[],"name":"Sebasteia","realm":"byzantium_711","duchy":"d_711_armeniac","culture":"greek","religion":"orthodox","dev":2,"communities":[{"culture":"greek","religion":"orthodox","populationShare0":10000}],"settlements":[{"site":"sebasteia_711","name":"Sebasteia","kind":"village"}]},
     {"id":"trebizond","names":[],"name":"Trebizond","realm":"byzantium_711","duchy":"d_711_chaldia","culture":"greek","religion":"orthodox","dev":3,"communities":[{"culture":"greek","religion":"orthodox","populationShare0":10000}],"settlements":[{"site":"trebizond_711","name":"Trebizond","kind":"town"}]},
     {"id":"sinope","names":[],"name":"Sinope","realm":"byzantium_711","duchy":"d_711_paphlagonia","culture":"greek","religion":"orthodox","dev":2,"communities":[{"culture":"greek","religion":"orthodox","populationShare0":10000}],"settlements":[{"site":"sinope_711","name":"Sinope","kind":"village"}]},
-    {"id":"tarsos","names":[],"name":"Tarsos","realm":"umayyad_711","duchy":"d_711_cilicia","culture":"armenian","religion":"eastern","dev":2,"communities":[{"culture":"arabic","religion":"eastern","populationShare0":7000},{"culture":"arabic","religion":"umayyad_sunni_711","paired":true,"populationShare0":2500},{"culture":"arabic","religion":"jewish","paired":true,"populationShare0":500}],"settlements":[{"site":"tarsos_711","name":"Tarsos","kind":"village"}]},
-    {"id":"adana","names":[],"name":"Adana","realm":"umayyad_711","duchy":"d_711_cilicia","culture":"armenian","religion":"eastern","dev":2,"communities":[{"culture":"arabic","religion":"eastern","populationShare0":7000},{"culture":"arabic","religion":"umayyad_sunni_711","paired":true,"populationShare0":2500},{"culture":"arabic","religion":"jewish","paired":true,"populationShare0":500}],"settlements":[{"site":"adana_711","name":"Adana","kind":"village"}]},
+    {"id":"tarsos","names":[],"name":"Tarsos","realm":"umayyad_711","duchy":"d_711_cilicia","culture":"armenian","religion":"eastern","dev":2,"communities":[{"culture":"armenian","religion":"eastern","populationShare0":7000},{"culture":"arabic","religion":"umayyad_sunni_711","paired":true,"populationShare0":2500},{"culture":"arabic","religion":"jewish","paired":true,"populationShare0":500}],"settlements":[{"site":"tarsos_711","name":"Tarsos","kind":"village"}]},
+    {"id":"adana","names":[],"name":"Adana","realm":"umayyad_711","duchy":"d_711_cilicia","culture":"armenian","religion":"eastern","dev":2,"communities":[{"culture":"armenian","religion":"eastern","populationShare0":7000},{"culture":"arabic","religion":"umayyad_sunni_711","paired":true,"populationShare0":2500},{"culture":"arabic","religion":"jewish","paired":true,"populationShare0":500}],"settlements":[{"site":"adana_711","name":"Adana","kind":"village"}]},
     {"id":"nicosia","names":[],"name":"Nicosia","realm":"cyprus_711","duchy":"d_711_cyprus","culture":"greek","religion":"orthodox","dev":2,"communities":[{"culture":"greek","religion":"orthodox","populationShare0":10000}],"settlements":[{"site":"nicosia_711","name":"Nicosia","kind":"village"}]},
     {"id":"pliska","names":[],"name":"Pliska district","realm":"bulgars_711","duchy":"d_711_moesia","culture":"slavic","religion":"slavic_pagan","dev":2,"communities":[{"culture":"slavic","religion":"slavic_pagan","populationShare0":10000}],"settlements":[{"site":"pliska_711","name":"Pliska district","kind":"village"}]},
     {"id":"silistra","names":[],"name":"Silistra","realm":"bulgars_711","duchy":"d_711_moesia","culture":"slavic","religion":"slavic_pagan","dev":1,"communities":[{"culture":"slavic","religion":"slavic_pagan","populationShare0":10000}],"settlements":[{"site":"silistra_711","name":"Silistra","kind":"village"}]},
@@ -1674,3 +1673,7 @@ FBDATA.bookmarkCandidates['711'] = {
   crossingClasses:{"malaga|tangier":"narrow","silves|tangier":"coastal","messina|reggio":"narrow","constantinople|nicaea":"narrow","cagliari|pisa":"open","ajaccio|lucca":"coastal","ajaccio|nice":"coastal","mallorca|valencia":"open"},
   scripted:[]
 };
+Object.assign(FBDATA.cultures, FBDATA.bookmarkCultures711);
+Object.assign(FBDATA.religions, FBDATA.bookmarkReligions711);
+Object.assign(FBDATA.settlementSites, FBDATA.bookmarkSites711);
+FBDATA.bookmarks['711'] = FBDATA.bookmarkCandidates['711'];

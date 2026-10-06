@@ -266,7 +266,7 @@ owned businesses, and qualified local hires. Local hiring is a baseline labor co
 individual enterprise acquisition and upgrade requirements retain their authored technology
 gates.
 
-The enterprise purchase catalogue has a scrolling content region above its separate Back and Close footer. Compact Details remains reachable on every card without overlapping the footer. Requirements review returns to the retained catalogue position, focus and disclosure state; successful purchases restore the same content region's position after the one deed day.
+The enterprise purchase catalogue has a scrolling content region above its separate Back and Close footer. Compact Details stays inset from each purchase action's bottom edge, and scrolling reserves space around its full touch target. Bottom content padding lets the final disclosure clear the footer. Requirements review returns to the retained catalogue position, focus and disclosure state; successful purchases restore the same content region's position after the one deed day.
 The `enterprise_child_labor` technology-impact decision is `none`: a child who
 has reached the matching calling's apprenticeship age may perform ordinary
 family labor without national research, while the enterprise and its upgrades
@@ -509,3 +509,7 @@ the permanent endowment rather than the spendable treasury. See [abbeys.md](abbe
 Customary tenure availability
 
 The manorial_tenure system guards dependent household tenure templates, duty scheduling, tenure review events and the associated Deed. When disabled, existing tenure records are inactive and no duties are created or collected. Ordinary household property and station rules continue to apply. Abbey donations and office effects use the abbeys system and the existing faith eligibility. See docs/designs/systems.md.
+
+Private opening estate evidence
+
+bookmarkSetup.estates records a declared county share, named character beneficiary, dynasty, tenure/possession/judgment basis and stable evidence id. FB.privateEstates returns detached records for character context. These records represent private property evidence, with no sovereign ownership, public jurisdiction, settlement lordship, automatic revenue or independent economic subsystem. On a holder's death, ordinary daily dispatch prefers living direct children in the same dynasty, then the oldest living member, with stable id ordering for ties. With no eligible kin the estate becomes unclaimed. Inheritance preserves county ownership, public rights and population. Opening claims separately retain demanded status and no contract; a one-third demand never initializes a grant. Technology impact private_family_estates is none because property evidence and family inheritance are baseline social relationships.

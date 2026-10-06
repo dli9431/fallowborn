@@ -420,6 +420,11 @@ window.FB = window.FB || {};
           if (at >= 0) { remaining.splice(at, 1); component.push(pid); }
         });
       }
+      var founded = FB.stories && FB.stories.foundRevolt(state, group, component);
+      if (founded) {
+        notice(state, 'independence', { counties:component.map(countyName).join(', ') });
+        continue;
+      }
       var capital = component[0], id = 'free_' + FB.uid();
       state.realms[id] = { id:id, alive:true, name:countyName(capital), capital:capital,
         rank:component.length > 1 ? 2 : 1, color:'#a96f42', aggression:0.5,

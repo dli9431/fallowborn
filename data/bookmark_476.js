@@ -7,6 +7,7 @@ FBDATA.bookmarks['476'] = {
   date:{ year:476, season:0, day:1 }, era:'late_antique',
   geography:'europe_regional', settlementLayout:'476',
   religiousHeads:{},
+  opening:FBDATA.bookmarkRegions476.italy.opening,
   systems:{ disable:['papacy','scutage','manorial_tenure','excommunication','abbeys',
     'feudal_service','crown_bloc','tournaments','great_holy_wars'] },
   stories:['western_court_476','zeno_return_476','clovis_syagrius_476',

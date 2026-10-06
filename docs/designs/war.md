@@ -2162,3 +2162,11 @@ Technology impact: content_period_membership is none for these class restriction
 Player-controlled opening hosts
 
 The peaceful-player disband pass honors scenarioHostStanding and federateHostStanding just as the NPC pass does. Adopting an authored host does not erase its remaining standing term or effective service contract. Existing recruitment, provisions, upkeep, orders and expiry remain authoritative; a declined political opening does not grant an indefinite free army.
+
+Dated religious campaigns and historical records
+
+The holy_war story factory in js/story_history.js calls the existing great-holy-war transaction only inside its declared date window. Current heads, authority, hostile objectives, cooldown, coalition eligibility, preparation and actual fighting remain authoritative. It observes the created campaign id and its real bounded history result once. The 1204 Fifth Crusade instance offers a 1213-1215 call for Syria; ordinary preparation replaces the historical multi-year departure schedule and no Egyptian route is forced.
+
+Optional historySeed rows attach only to a new campaign and record selected completed campaigns before its opening. They have literal ids, faith and kingdom ids, structured abstract dates, semantic outcomes and negative opening-relative turns. Earlier failure penalties therefore use elapsed historical time. Prior-call and launch flags prevent an inaugural crusade from replaying; no active campaign, cooldown or army is seeded. Restore never adds archive rows. Technology impact dated_holy_war_calls is none: religious authority and current objectives govern the opportunity without a research prerequisite.
+
+The optional preview argument of greatHolyWarTargets and canCallGreatHolyWar reads existing history, religiousHeadSnapshot and papacyState. It performs no institution repair or new court enrollment. Applying a story choice repeats the ordinary authoritative call checks, so stale head, authority, objective or cooldown reviews cannot issue a call.

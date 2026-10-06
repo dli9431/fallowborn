@@ -2066,6 +2066,7 @@ FB.CHANGELOG = [
      list and an optional eras list, matched against the bookmark's era. */
   function scenarioOffered(scenario, bookmarkId) {
     if (!scenario || scenario.hidden) return false;
+    if (!FB.bookmarkAvailable(bookmarkId)) return false;
     if (scenario.bookmarkIds && scenario.bookmarkIds.indexOf(bookmarkId) < 0) return false;
     if (scenario.rulerRealmId) {
       const bookmark = FB.bookmark(bookmarkId);
@@ -2205,9 +2206,8 @@ FB.CHANGELOG = [
       const legacy = parts.length === 5;
       const bookmarkId = legacy ? '867' : parts[1].toLowerCase();
       const bookmark = FB.bookmark(bookmarkId);
-      if (bookmark && FB.mods && FB.mods.bookmarkAvailable &&
-          !FB.mods.bookmarkAvailable(bookmarkId)) {
-        return { error: FB.mods.bookmarkWarning() };
+      if (bookmark && !FB.bookmarkAvailable(bookmarkId)) {
+        return { error: FB.bookmarkUnavailableReason(bookmarkId) };
       }
       const scenarioPart = legacy ? 1 : 2;
       const provincePart = legacy ? 2 : 3;
@@ -2596,6 +2596,10 @@ FB.CHANGELOG = [
   }
 
   function activatePendingBookmark(id, next) {
+    if (!FB.bookmarkAvailable(id)) {
+      FB.ui.toast(FB.bookmarkUnavailableReason(id));
+      return false;
+    }
     FB.ui.showScreen('loading');
     $('loadbar').style.width = '0%';
     $('loadmsg').textContent = FB.T('Drawing the known world…');
@@ -2647,8 +2651,7 @@ FB.CHANGELOG = [
         !definition.provinceId || !definition.settlementSite ||
         !definition.characterName ||
         (definition.sex !== 'm' && definition.sex !== 'f')) return null;
-    if (FB.mods && FB.mods.bookmarkAvailable &&
-        !FB.mods.bookmarkAvailable(definition.bookmarkId)) return null;
+    if (!FB.bookmarkAvailable(definition.bookmarkId)) return null;
     const bookmark = FB.bookmark(definition.bookmarkId);
     if (!bookmark) return null;
     const province = bookmark.provinces.filter(function (candidate) {
@@ -3210,6 +3213,11 @@ FB.CHANGELOG = [
   }
 
   G.start = function () {
+    if (!FB.activeBookmark || !FB.bookmarkAvailable(FB.activeBookmark.id) ||
+        G.pending && G.pending.bookmarkId && G.pending.bookmarkId !== FB.activeBookmark.id) {
+      FB.ui.toast(FB.bookmarkUnavailableReason(G.pending && G.pending.bookmarkId || FB.activeBookmarkId));
+      return false;
+    }
     const previousState = FB.state, previousRng = FB.getRngState(), previousUid = FB.getUidCounter();
     G.observe = false;
     document.body.classList.remove('observing');
@@ -3580,6 +3588,11 @@ FB.CHANGELOG = [
      ever ticks — passDay only turns the calendar and runs the world. Nothing
      is autosaved: an afternoon of watching must not bury a real life. */
   G.startObserve = function () {
+    if (!FB.activeBookmark || !FB.bookmarkAvailable(FB.activeBookmark.id) ||
+        G.pending && G.pending.bookmarkId && G.pending.bookmarkId !== FB.activeBookmark.id) {
+      FB.ui.toast(FB.bookmarkUnavailableReason(G.pending && G.pending.bookmarkId || FB.activeBookmarkId));
+      return false;
+    }
     G.observe = false; // startObserve sets it below; clear any stale state first
     document.body.classList.remove('observing');
     // watchers share worlds too: a bare seed re-seeds the home pick and politics

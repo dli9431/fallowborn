@@ -1642,6 +1642,20 @@ window.FBMODS = window.FBMODS || [];
     if (own(mod, 'name') && (typeof mod.name !== 'string' || !mod.name)) {
       fail('name', 'must be a non-empty string.');
     }
+    if (own(mod, 'bookmarks')) {
+      if (!Array.isArray(mod.bookmarks) && !plainObject(mod.bookmarks)) fail('bookmarks', 'must be an object or array.');
+      const catalogs = Object.assign({}, FBDATA);
+      ['cultures','religions','traits','geographies','settlementSites','settlementLayouts'].forEach(function (key) {
+        catalogs[key] = combinedTable(FBDATA[key], mod[key], key);
+      });
+      Object.keys(mod.bookmarks).forEach(function (key) {
+        const def = mod.bookmarks[key], path = 'bookmarks.' + key;
+        if (!plainObject(def)) fail(path, 'must be an object.');
+        if (own(def, 'hidden') && typeof def.hidden !== 'boolean') fail(path + '.hidden', 'must be true or false.');
+        const errors = FB.localInstitutionDefinitionFaults(def, catalogs);
+        if (errors.length) fail(path, errors.join(' '));
+      });
+    }
     if (own(mod, 'legalTraditions') || own(mod, 'justiceSentences') || own(mod, 'governmentForms') || own(mod, 'religions')) validateJustice(mod);
     if (own(mod, 'intrigue') || own(mod, 'plots')) validateIntrigue(mod);
     if (own(mod, 'itemPools')) validateItemPools(mod);

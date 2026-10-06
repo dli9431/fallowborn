@@ -335,6 +335,10 @@ without ordination, a secular county grant or an independent realm. Private-war,
 independence and generic baron-government shortcuts use the shared church-only
 office guard. Territorial secular titles may still coexist with an abbacy.
 
+800 court agreements
+
+The carolingian_settlements_800 world story negotiates Frankish-Abbasid funded gifts and eastern recognition of an existing western imperial title. Original ruler identity, independent courts, capital control, current coastal ownership, peace and resources govern eligibility. Saved quotes recheck the negotiating generations and money before applying. Gift transfers and two-year realm-pair truces use shared treasury and war state; they create no defensive alliance. Imperial recognition uses the existing authority recognition ledger and its issuer-succession rules. A concluded story never repeats a payment or creates replacement recognition on restore. Technology impact period_800_diplomatic_agreements is none because ordinary court gifts, peace and title recognition need no research. The date windows and money values are gameplay abstractions; see carolingian-800.md and ../research/800-bookmark.md.
+
 Faith office and tradition selection
 
 Absolution and religious head claims use the current faith's effective head office, registered succession strategy and balance references. Papal sanctions and remedies remain scoped to the recognized office's obedience; other offices may author flat-price absolution. Intrigue sentence forms read legalTradition while preserving existing cultural precedence. Character-held heads participate in clergy-policy Standing changes as characters, without requiring a temporal realm.

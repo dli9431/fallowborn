@@ -1445,7 +1445,7 @@ window.FB = window.FB || {};
   }
 
   function withLocalReligiousOffices(state, definitions) {
-    const out = Object.assign({}, definitions), local = FBDATA.localInstitutions || {};
+    const out = Object.assign({}, definitions), local = FB.localInstitutionDefinitions(state);
     for (const officeId in out) {
       if (out[officeId].head.system && (!FB.systemEnabled || !FB.systemEnabled(state, out[officeId].head.system))) delete out[officeId];
     }
@@ -1787,7 +1787,7 @@ window.FB = window.FB || {};
   /* The single realm-death boundary used by conquest, escheat, revocation,
      downfall, and inheritance. Territorial callers remain responsible for
      reparenting vassals and moving capitals. */
-  FB.markRealmDead = function (state, realmId) {
+  FB.markRealmDead = function (state, realmId, options) {
     const realm = state && state.realms && state.realms[realmId];
     if (!realm || !realm.alive) return false;
     const ruler = realmId !== 'player' && FB.realmRulerCharacterSnapshot
@@ -1799,7 +1799,7 @@ window.FB = window.FB || {};
     }
     FB.vacateReligiousHeads(state, realmId);
     if (FB.historicalAmbitionRealmEnded) FB.historicalAmbitionRealmEnded(state, realmId);
-    if (FB.treasuryRetireRealm) FB.treasuryRetireRealm(state, realmId);
+    if (FB.treasuryRetireRealm) FB.treasuryRetireRealm(state, realmId, options && options.recipientId);
     realm.alive = false;
     realm.war = null;
     if (FB.papacyRealmDied) FB.papacyRealmDied(state, realmId);

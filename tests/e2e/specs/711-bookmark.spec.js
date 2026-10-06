@@ -9,6 +9,7 @@ dependsOnRuntime(__filename, [
   'data/story_campaigns.js', 'data/bookmark_476_gaul_iberia.js',
   'js/world.js', 'js/model.js', 'js/governments.js', 'js/station.js', 'js/starts.js',
   'js/stories.js', 'js/story_campaign.js', 'js/story_476_rails.js',
+  'js/story_polity_foundation.js', 'js/rebellions.js', 'js/authority.js',
   'js/main.js', 'js/save.js', 'js/save_v4.js', 'js/papacy.js', 'js/systems.js',
   'js/technology.js', 'js/armies.js', 'js/wars.js', 'js/messages.js',
   'js/i18n.js', 'js/ui_misc.js', 'js/ui_panels.js', 'js/ui_modals.js',
@@ -20,26 +21,17 @@ const { openCrazyGame } = require('../support/game/crazygames-title');
 const { injectBrowserHarness } = require('../support/game/browser-harness');
 
 const CAMPAIGNS = ['strait_crossing_711', 'toledo_campaign_711',
-  'septimania_campaign_711', 'gaul_campaign_711'];
+  'septimania_campaign_711', 'gaul_campaign_711', 'asturias_foundation_711'];
 
-// A scenario-local review install. Ordinary boot never promotes this candidate.
-async function review(page, testInfo, crazygames) {
+async function openBookmarkGame(page, testInfo, crazygames) {
   if (crazygames) {
     await page.addInitScript(function () { window.FB_DISTRIBUTION = 'crazygames'; });
     await openCrazyGame(page, testInfo);
   } else await openGame(page, testInfo);
-  await page.evaluate(function () {
-    Object.assign(FBDATA.cultures, FBDATA.bookmarkCultures711);
-    Object.assign(FBDATA.religions, FBDATA.bookmarkReligions711);
-    Object.assign(FBDATA.settlementSites, FBDATA.bookmarkSites711);
-    FBDATA.bookmarks['711'] = FBDATA.bookmarkCandidates['711'];
-    FB.invalidateCultureData();
-    FB.invalidateReligionData();
-  });
 }
 
 async function observe(page, testInfo) {
-  await review(page, testInfo);
+  await openBookmarkGame(page, testInfo);
   const fault = await page.evaluate(function () {
     return new Promise(function (resolve) {
       FB.activateBookmark('711', null, function (error) {
@@ -54,15 +46,16 @@ async function observe(page, testInfo) {
   expect(fault).toBe(null);
 }
 
-async function household(page, testInfo, scenario, crazygames) {
-  await review(page, testInfo, crazygames);
+async function household(page, testInfo, scenario, crazygames, birthplace, family) {
+  birthplace = birthplace || { county:'toledo', identity:'hispano_roman.catholic' };
+  await openBookmarkGame(page, testInfo, crazygames);
   await page.evaluate(function () { FB.startProgression.noteTier(1); });
   const full = page.locator('#btn-choose-beginning');
   if (await full.isVisible()) await full.click();
   else await page.getByRole('button', { name:'New Game', exact:true }).click();
   await page.locator('#btn-bm-seed').click();
   await page.locator('#ng-seed').fill('STRAIT711-711-' + scenario +
-    '-toledo-m-Paulus-standard-0-hispano_roman.catholic');
+    '-' + birthplace.county + '-m-Paulus-' + (family || 'standard') + '-0-' + birthplace.identity);
   await page.locator('#ng-seed').press('Enter');
   await expect(page.locator('#chargen:not(.hidden)')).toBeVisible();
   await page.getByRole('button', { name:'Begin Your Story', exact:true }).click();
@@ -78,7 +71,7 @@ async function household(page, testInfo, scenario, crazygames) {
   });
 }
 
-test('711 remains hidden and its supplemental data does not change accepted starts',
+test('711 is selectable with its supplemental data and independent earlier starts',
   async function ({ page }, testInfo) {
     await openGame(page, testInfo);
     const result = await page.evaluate(function () {
@@ -91,21 +84,52 @@ test('711 remains hidden and its supplemental data does not change accepted star
         earlier.realm = 'review_replacement';
         independent = JSON.stringify(candidate) === before;
       } finally { earlier.realm = owner; }
-      return { hidden:!FB.bookmark('711') && FB.bookmarks(true).every(function (b) { return b.id !== '711'; }),
-        faiths:Object.keys(FBDATA.bookmarkReligions711).every(function (id) { return !FBDATA.religions[id]; }),
-        sites:Object.keys(FBDATA.bookmarkSites711).every(function (id) { return !FBDATA.settlementSites[id]; }),
+      return { selectable:FB.bookmark('711') === candidate && FB.bookmarks().some(function (b) { return b.id === '711'; }),
+        cultures:Object.keys(FBDATA.bookmarkCultures711).every(function (id) { return !!FBDATA.cultures[id]; }),
+        faiths:Object.keys(FBDATA.bookmarkReligions711).every(function (id) { return !!FBDATA.religions[id]; }),
+        sites:Object.keys(FBDATA.bookmarkSites711).every(function (id) { return !!FBDATA.settlementSites[id]; }),
         independent:independent,
+        principalMatches:candidate.provinces.filter(function (p) { return !p.wasteland; })
+          .every(function (p) { return p.communities[0].culture === p.culture &&
+            p.communities[0].religion === p.religion; }),
         cells:candidate.provinces.length,
         stable:candidate.provinces.map(function (p) { return p.id; }).sort().join('|') ===
           FBDATA.bookmarks['867'].provinces.map(function (p) { return p.id; }).sort().join('|'),
         stories:candidate.stories.every(function (id) { return FB.stories.get(id).kind === 'world'; }),
         scripted:candidate.scripted };
     });
-    expect(result).toEqual({ hidden:true, faiths:true, sites:true, independent:true,
+    expect(result).toEqual({ selectable:true, cultures:true, faiths:true, sites:true, independent:true,
+      principalMatches:true,
       cells:498, stable:true, stories:true, scripted:[] });
   });
 
-test('review activation owns a full map, mixed communities and a separate 711 hierarchy',
+for (const county of ['tarsos', 'adana']) {
+  test('711 ' + county + ' accepts its principal household and preserves it through restore',
+    async function ({ page }, testInfo) {
+      await household(page, testInfo, 'serf', false, { county:county, identity:'armenian.eastern' });
+      const result = await page.evaluate(function (county) {
+        const b = FB.bookmark('711');
+        const province = b.provinces.find(function (p) { return p.id === county; });
+        const s = FB.state, me = s.chars[s.player.charId];
+        const before = { county:s.player.provinceId, culture:me.culture, religion:me.religion };
+        FB.save.restore(JSON.parse(FB.save.serialize()));
+        const restored = FB.state, character = restored.chars[restored.player.charId];
+        return { before:before,
+          after:{ county:restored.player.provinceId, culture:character.culture, religion:character.religion },
+          principal:province.communities[0],
+          shares:province.communities.map(function (c) { return c.populationShare0; }),
+          faults:FB.validateBookmark(b) };
+      }, county);
+      expect(result).toEqual({
+        before:{ county:county, culture:'armenian', religion:'eastern' },
+        after:{ county:county, culture:'armenian', religion:'eastern' },
+        principal:{ culture:'armenian', religion:'eastern', populationShare0:7000 },
+        shares:[7000,2500,500], faults:[]
+      });
+    });
+}
+
+test('711 activation owns a full map, mixed communities and a separate hierarchy',
   async function ({ page }, testInfo) {
     await observe(page, testInfo);
     const result = await page.evaluate(function () {
@@ -257,4 +281,49 @@ test('711 natural world simulation advances ten years and restores its campaign 
         valid:FB.save.v4.validatePlatform(JSON.parse(FB.save.serialize()).state) };
     }, authored);
     expect(result).toEqual({ year:721, unchanged:true, records:true, faults:[], valid:true });
+  });
+
+test('711 ordinary household play advances ten years with a midpoint save and natural events',
+  async function ({ page }, testInfo) {
+    test.skip(testInfo.project.name !== 'chromium-served', 'Run the bounded household journey once; smoke covers every browser project.');
+    test.setTimeout(10 * 60 * 1000);
+    await household(page, testInfo, 'farmer', false, null, 'established');
+    await injectBrowserHarness(page);
+    // Retain ordinary mortality, family life, diplomacy, events and campaigns.
+    // The standard harness chooses through the game's player automation.
+    await page.evaluate(function () {
+      FB.game.uiPrefs.hideBeginnerHints = true;
+      FB.game.auto.all = true; FB.game.auto.style = 'first';
+    });
+    for (let quarter = 0; quarter < 40; quarter++) {
+      const result = await page.evaluate(function () {
+        const before = FB.state.turn, target = before + 90;
+        for (let attempts = 0; attempts < 120 && FB.state.turn < target; attempts++) {
+          if (FB.state.player.dead) {
+            const heirs = FB.heirsOf(FB.state);
+            if (!heirs.length) throw new Error('The natural 711 dynasty ended before its review boundary.');
+            FB.ui.closeModal(); FB.game.succeedTo(heirs[0].id); FB.ui.closeModal();
+            FB.game.auto.all = true;
+          }
+          FB.game.passDay({ deferUi:true });
+        }
+        return { advanced:FB.state.turn - before, errors:FBTEST.checkInvariants() };
+      });
+      expect(result.advanced).toBe(90);
+      expect(result.errors).toEqual([]);
+      if (quarter === 19) await page.evaluate(function () {
+        FB.save.restore(JSON.parse(FB.save.serialize()));
+      });
+    }
+    const end = await page.evaluate(function () {
+      const records = JSON.stringify(FB.state.stories);
+      FB.save.restore(JSON.parse(FB.save.serialize()));
+      return { year:FB.state.date.year, turn:FB.state.turn,
+        errors:FBTEST.checkInvariants(), ordinary:!FB.game.observe,
+        bookmark:FB.state.start.id,
+        records:records === JSON.stringify(FB.state.stories),
+        valid:FB.save.v4.validatePlatform(FB.state) };
+    });
+    expect(end).toMatchObject({ year:721, turn:3600, errors:[], ordinary:true,
+      bookmark:'711', records:true, valid:true });
   });

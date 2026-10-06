@@ -301,6 +301,8 @@ globals. **Load order matters** — do not reorder the `<script>` tags casually:
   script after the title shell has had a chance to paint and before setting `FB.game.bootReady`.
   Preserve that dependency order when changing boot.
 
+js/story_history.js loads after js/stories.js and js/story_campaign.js, before js/story_476_rails.js registers data instances. It registers the reusable partition and holy_war factories. Historical declarations stay in the owning bookmark data; restore validates saved records without initializing new people, grants or historical campaign rows.
+
 ## Required UI/UX review before implementation
 
 Before creating or changing any UI/UX, read and follow

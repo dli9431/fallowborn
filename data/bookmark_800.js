@@ -1,5 +1,5 @@
-/* Review-only late 800 world. Content acceptance registers this candidate in
-   FBDATA.bookmarks. Independent literals own politics and settlement names;
+/* Late 800 world registered for ordinary campaign setup.
+   Independent literals own politics and settlement names;
    europe_regional supplies physical geometry and climate. */
 window.FBDATA = window.FBDATA || {};
 FBDATA.bookmarkCandidates = FBDATA.bookmarkCandidates || {};
@@ -14,6 +14,7 @@ FBDATA.bookmarkCandidates['800'] = {
   systems:{"enable":["manorial_tenure","feudal_service","scutage","crown_bloc","excommunication","abbeys","tournaments","great_holy_wars","guild_elections","royal_council","estates"]},
   religiousHeads:{"catholic":"papacy","sunni":"abbasid"},
   stories:[
+    "carolingian_settlements_800",
     "barcelona_800",
     "danish_friesland_800",
     "abbasid_anatolia_800",
@@ -980,3 +981,4 @@ FBDATA.settlementLayouts['800'] = {
   dongola:[{ site:'dongola', name:'Dongola', kind:'town' }],
   axum:[{ site:'axum', name:'Axum', kind:'town' }]
 };
+FBDATA.bookmarks['800'] = FBDATA.bookmarkCandidates['800'];

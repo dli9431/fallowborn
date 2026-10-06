@@ -301,7 +301,7 @@ window.FB = window.FB || {};
             !Number.isFinite(r.goldCost) || r.goldCost < 0 || !Array.isArray(r.counties) || !r.counties.length ||
             r.counties.some(function (id, i) { return typeof id !== 'string' || !FB.world.byId[id] || r.counties.indexOf(id) !== i; }) ||
             !Array.isArray(r.bishops) || r.bishops.length < 2 || r.bishops.some(function (b) {
-              const def = plain(b) && FBDATA.localInstitutions[b.institutionId];
+              const def = plain(b) && FB.localInstitutionDefinitions(s)[b.institutionId];
               return !plain(b) || !def || def.officeId !== b.officeId || def.provinceId !== b.provinceId ||
                 r.counties.indexOf(b.provinceId) < 0 || typeof b.charId !== 'string' || !b.charId;
             }) || !Array.isArray(r.recognitionIds) || r.recognitionIds.length !== r.bishops.length ||

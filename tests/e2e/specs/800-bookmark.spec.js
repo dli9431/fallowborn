@@ -13,14 +13,16 @@ dependsOnRuntime(__filename, [
   'data/distribution_crazygames.js', 'js/crazygames.js', 'js/systems.js', 'data/systems.js',
   'js/world.js', 'js/governments.js', 'js/station.js', 'js/starts.js',
   'js/stories.js', 'js/story_campaign.js', 'js/story_476_rails.js',
+  'js/royal_settlements.js', 'js/story_carolingian_800.js', 'js/treasury.js', 'js/authority.js', 'js/model.js',
   'js/papacy.js', 'js/technology.js', 'js/ambitions.js', 'js/wars.js',
   'js/armies.js', 'js/main.js', 'js/save.js', 'js/save_v4.js'
 ]);
 
 const RAILS = ['barcelona_800', 'danish_friesland_800',
   'abbasid_anatolia_800', 'italian_lagoon_800'];
+const STORIES = ['carolingian_settlements_800'].concat(RAILS);
 
-test('CrazyGames keeps the review candidate outside its live start registry', async function ({ page }, testInfo) {
+test('CrazyGames offers 800 in its live start registry', async function ({ page }, testInfo) {
   await page.addInitScript(function () {
     window.FB_DISTRIBUTION = 'crazygames';
     window.FB_CRAZYGAMES_STORAGE = 'localstorage';
@@ -35,18 +37,11 @@ test('CrazyGames keeps the review candidate outside its live start registry', as
         return FB.stories.get(id).kind === 'world';
       }) };
   });
-  expect(result).toEqual({ registered:false, selectable:false, candidate:true, faults:[], stories:true });
+  expect(result).toEqual({ registered:true, selectable:true, candidate:true, faults:[], stories:true });
 });
 
-async function registerReview(page, testInfo) {
-  await openGame(page, testInfo);
-  await page.evaluate(function () {
-    FBDATA.bookmarks['800'] = FBDATA.bookmarkCandidates['800'];
-  });
-}
-
 async function observe(page, testInfo) {
-  await registerReview(page, testInfo);
+  await openGame(page, testInfo);
   const error = await page.evaluate(function () {
     return new Promise(function (resolve) {
       FB.activateBookmark('800', null, function (fault) {
@@ -62,7 +57,7 @@ async function observe(page, testInfo) {
 }
 
 async function start(page, testInfo, scenario) {
-  await registerReview(page, testInfo);
+  await openGame(page, testInfo);
   await page.evaluate(function () { FB.startProgression.noteTier(3); });
   await page.getByRole('button', { name:'New Game', exact:true }).click();
   await page.locator('#btn-bm-seed').click();
@@ -80,7 +75,7 @@ async function start(page, testInfo, scenario) {
   });
 }
 
-test('800 stays outside the picker and owns independent review data', async function ({ page }, testInfo) {
+test('800 is selectable and owns independent world data', async function ({ page }, testInfo) {
   await openGame(page, testInfo);
   const result = await page.evaluate(function () {
     const b = FBDATA.bookmarkCandidates['800'];
@@ -101,7 +96,7 @@ test('800 stays outside the picker and owns independent review data', async func
       distinct:['provinces','realms','duchies','kingdoms','empires','straits','crossingClasses']
         .every(function (key) { return b[key] !== previous[key]; }) };
   });
-  expect(result).toEqual({ registered:false, selectable:false, default:'867',
+  expect(result).toEqual({ registered:true, selectable:true, default:'867',
     independent:true, faults:[], stable:true, scripts:[], distinct:true });
 });
 
@@ -141,7 +136,7 @@ test('800 activates the full world, period communities and subordinate courts', 
     rulers:['Charlemagne','Irene','Harun al-Rashid','Leo III'], irene:'f',
     communities:true, coptic:'coptic', bulgar:'tengri', noLaterCourts:true,
     seats:['Malamocco','Iria Flavia','Walila','Raqqa'],
-    traditions:[['latin'],['islamic','persianate']], stories:RAILS });
+    traditions:[['latin'],['islamic','persianate']], stories:STORIES });
 });
 
 for (const scenario of ['serf','farmer','apprentice','monk','soldier','knight','baron']) {
@@ -165,7 +160,7 @@ for (const scenario of ['serf','farmer','apprentice','monk','soldier','knight','
         platform:FB.save.v4.validatePlatform(JSON.parse(FB.save.serialize()).state) };
     });
     expect(result).toMatchObject({ scenario:scenario, date:{ year:800, season:3, day:25 },
-      future:true, heads:{ catholic:'papacy', sunni:'abbasid' }, stories:RAILS,
+      future:true, heads:{ catholic:'papacy', sunni:'abbasid' }, stories:STORIES,
       restored:true, sourceUnchanged:true, platform:true });
   });
 }

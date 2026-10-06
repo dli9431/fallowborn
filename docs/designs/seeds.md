@@ -139,6 +139,12 @@ Codes reproduce only on the same game version and mod set: any change to `FBDATA
 rides along in saves automatically; saves from before 1.19.0 have no seed and the menu
 simply hides the row.
 
+Bookmark visibility
+
+FB.bookmarkAvailable(id) is the shared new-campaign gate. hidden:true excludes a registered bookmark from the date picker, its scenarios and Quick Start; its start codes, direct campaign creation and observer creation are rejected before state or RNG changes. Availability also honors legacy-mod world restrictions. Setting hidden:false restores the ordinary entry points. FB.bookmarks(true), FB.bookmark and FB.activateBookmark retain definition inspection and world activation for review and matching existing saves. Visibility is an author acceptance flag, not a historical technology requirement or save migration.
+
+The hidden 493 review candidate has independent farmer_493, craftsman_493, cleric_493 and curialis_493 scenarios. The church household fixes Rome and Roman/Nicene identity; the curialis fixes Ravenna and that identity. Other households use ordinary local community selection. Review codes use the existing format, for example RAVENNA493-493-farmer_493-ravenna-m-Marcus-established-0-roman.nicene. They remain rejected while the bookmark is hidden; matching saved review campaigns remain loadable.
+
 Fixed ruler identities
 
 Existing-ruler scenario codes use the normal bookmark, scenario, county, sex, name and optional standard-family/settlement/community fields. They require the authored name and sex, fixed county and settlement slot zero. An omitted community defaults to the scenario's authored ruler community, which may differ from the county's principal community. An explicit community must match that identity. Hidden definitions reject codes before any new campaign is created. Ordinary codes retain their existing defaults and generation order.

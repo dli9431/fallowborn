@@ -238,6 +238,8 @@ interrupt spread without erasing unrest elsewhere.
 
 ## Armed county revolts and scaled settlements
 
+A victorious connected revolt component may be accepted by an attached world's generic foundRevolt story hook, which establishes a data-declared historical court on the actually won component. The hook runs after the existing complete-occupation and surviving-host checks; it does not start a revolt or change siege, muster, support or response rules. Components with no eligible foundation retain their ordinary generated independent realm. Expired, failed or divergent foundation stories leave ordinary revolt outcomes intact. The independent political foundation capability is reviewed as conditional_polity_foundation with technology mode none.
+
 At -50 support or worse after the 90-day warning, a county musters half its
 potential population levy; the fraction rises linearly to the whole potential
 levy at -100. Potential levy excludes support and occupation penalties so

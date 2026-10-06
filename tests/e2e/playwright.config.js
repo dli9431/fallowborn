@@ -2,10 +2,11 @@ const { defineConfig } = require('@playwright/test');
 
 const servedOrigin = 'http://127.0.0.1:4173';
 const fileProjectTests = [
+  '**/1204-history.spec.js',
   '**/boot.spec.js',
+  '**/bookmark-picker.spec.js',
   '**/determinism.spec.js',
   '**/eager-courts.spec.js',
-  '**/royal-relatives-succession.spec.js',
   '**/family-growth.spec.js',
   '**/holywar-adapter.spec.js',
   '**/holywar-lifecycle.spec.js',

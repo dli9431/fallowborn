@@ -1224,6 +1224,28 @@ window.FB = window.FB || {};
     });
   };
 
+  /* Fresh declarations supply relative local mixes, while the county and
+     real settlement populations remain authoritative integer margins. */
+  FB.seedSettlementCommunities = function (state) {
+    provinceList().forEach(function (pr) {
+      var entries = pr.settlements;
+      if (!Array.isArray(entries) || !entries.some(function (site) { return !!site.communities; })) return;
+      var rec = ensureCountyPopulationRecord(state, pr.id);
+      if (!rec || hasSettlementPartition(rec.communities)) return;
+      var rows = settlementPopulationAllocation(state, pr.id, rec.count);
+      var previous = rec.communities.map(function (c) {
+        return rows.map(function (count, slot) {
+          var local = entries[slot] && entries[slot].communities;
+          if (!local) return count * c.count / rec.count;
+          var share = local.filter(function (r) { return r.culture === c.culture && r.religion === c.religion; })[0];
+          return count * (share ? share.populationShare0 : 0) / 10000;
+        });
+      });
+      reconcileSettlementRecord(state, pr.id, rec, previous);
+      assertPopulationCommunities(state, [pr.id], 'authored settlement partition');
+    });
+  };
+
   /* Prepare a conserved partition before ownership/visibility is committed.
      Only residents move between sites; county and culture-faith totals stay fixed. */
   FB.settlementFoundingPopulationPlan = function (state, pid, slot) {

@@ -1098,3 +1098,7 @@ data/bookmark_476_dalmatia_east.js appends eight literal events to the ordinary 
 Gaul and Iberia regional events
 
 data/bookmark_476_gaul_iberia.js appends the gaul_iberia_476 pack with late_antique membership and a 476-600 date window. Its eight ordinary-life events concern mixed-law records, civic accounts, bishop vacancies, Rhone grain relief, Iberian assessments, Frankish provisioning, Armorican arrivals and Rhine captive relief. Existing countyCulture, countyCommunityShare, coastal, religionGroup and careerRoles triggers read live communities and circumstances. Events spend or grant ordinary household resources; they do not force a conquest, migration, religious conversion or office appointment. The same period gate excludes stale options after the date window and all medieval starts. Period eligibility retains the existing content_period_membership technology decision of none.
+
+Regional county selectors
+
+trigger.countyIds and option require.countyIds accept a nonempty array of distinct known stable province ids. Malformed declarations fail the ordinary community event validator. FB.checkTrigger reads the live event context locationId, falling back to the player's current provinceId, so restore and changed location do not preserve stale regional eligibility. County membership combines with the existing period, community and household gates; it conveys no territorial power. The three Italian events explicitly select their owning region's counties. This is a selector schema extension, not a research-gated capability.

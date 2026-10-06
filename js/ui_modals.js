@@ -294,16 +294,19 @@ window.FB = window.FB || {};
         h += '<button type="button" class="actionbtn" data-local-review="' + FB.esc(id) +
           '" data-local-action="refuse">' + FB.esc(FB.T('Review refusal')) + '</button>';
       }
-      if (def.officeId) {
+      if (def.officeId || def.kind === 'congregation') {
         const m = FB.localInstitutionMediationQuote(s, id, subject, s.player.provinceId);
         h += reviewActionCardHtml({ data:{ localReview:id, localAction:'mediate' }, detailsId:'local-' + id + '-mediation',
-          disabled:!m.allowed, label:FB.T('Review episcopal mediation'), note:m.reason || FB.T('No fee; support in your home county.'),
-          details:'<p>' + FB.esc(FB.T('A living bishop recognizes mediation while congregations retain their faith. This grants no land, command, tax revenue or judicial office. Support lapses when the bishop is replaced.')) + '</p>' });
+          disabled:!m.allowed, label:def.officeId ? FB.T('Review episcopal mediation') : FB.T('Review religious mediation'),
+          note:m.reason || FB.T('No fee; support in your home county.'),
+          details:'<p>' + FB.esc(def.officeId
+            ? FB.T('A living bishop recognizes mediation while congregations retain their faith. This grants no land, command, tax revenue or judicial office. Support lapses when the bishop is replaced.')
+            : FB.T('A living religious representative offers mediation while the congregation retains its faith. This grants no land, command, tax revenue or judicial office. Support lapses when that representative is lost.')) + '</p>' });
       }
       h += '</section>';
     });
     h += '</div>';
-    UI.openModal(kind === 'church' ? FB.T('Bishoprics and patriarchates') : FB.T('Councils and senates'), h,
+    UI.openModal(kind === 'church' ? FB.T('Bishoprics, patriarchates and congregations') : FB.T('Councils and senates'), h,
       { modalClass:'fullsheet-modal',
         titleDetailsHtml:'<p>' + FB.esc(FB.T('Cities and congregations have independent standing and consent. A local household may petition its seat; a ruler bargains with the seats it controls. Off-map patriarchs offer mediation without territory.')) + '</p>' });
     const list = $('gm-body').querySelector('[data-local-institution-list]');
@@ -24174,6 +24177,13 @@ window.FB = window.FB || {};
     if (access) {
       model.context.push({ label:FB.T('Access'), value:access.description });
     }
+    if (FB.privateEstates) FB.privateEstates(s, c.id).forEach(function (estate) {
+      if (estate.status !== 'held') return;
+      const county = FB.world.byId[estate.provinceId];
+      model.context.push({ label:FB.T('Private family estate'),
+        value:FB.T('{county}: {percent}% private holding', {
+          county:county ? county.name : estate.provinceId, percent:estate.share0 / 100 }) });
+    });
     if (c.dead || c.id === me.id) return model;
     if (localFolk) {
       const settlements = FB.settlementsOf(s, localFolk.provinceId);
