@@ -28,7 +28,7 @@ HASH_SCHEMA = 1
 CATALOG_SCHEMA = 1
 EVENT_FILES = sorted(DATA.glob("events_*.js"))
 REGION_FILES = [(DATA / f"bookmark_476_{region}.js", region)
-                for region in ("italy", "dalmatia_east", "gaul_iberia", "africa")]
+                for region in ("italy", "dalmatia_east", "gaul_iberia", "africa", "outer")]
 CANDIDATE_FILES = [(DATA / "bookmark_711.js", "711")]
 BOOKMARK_FILE = DATA / "bookmarks.js"
 # Generic review candidates. Files with bespoke owners in CANDIDATE_FILES
@@ -39,6 +39,7 @@ CANDIDATE_BOOKMARK_FILES = [
     if re.fullmatch(r"bookmark_[0-9]+", path.stem)
     and path not in {candidate for candidate, _ in CANDIDATE_FILES}
 ]
+CANDIDATE_BOOKMARK_FILES.append((DATA / "bookmark_476_outer.js", "476_outer"))
 STARTS_FILE = DATA / "starts.js"
 TECHNOLOGY_FILE = DATA / "technology.js"
 ACTIONS_FILE = DATA / "actions.js"
@@ -1150,8 +1151,14 @@ def extract_structured(inv: Inventory) -> None:
                 f"bookmark.476.{field}.{branch}", record,
                 f"{period_rel}:{line}", f"Start bookmark 476, {field}.", ()
             )
-    for region in ("italy", "dalmatia_east", "gaul_iberia", "africa"):
-        region_path = DATA / f"bookmark_476_{region}.js"
+    # The wider world reuses the four original declarations, but its display
+    # lookup keys carry its own bookmark id. Register both ownership paths.
+    regional_bookmarks = [
+        (path, region, bookmark_id)
+        for path, region in REGION_FILES
+        for bookmark_id in (("476_outer",) if region == "outer" else ("476", "476_outer"))
+    ]
+    for region_path, region, bookmark_id in regional_bookmarks:
         region_rel = region_path.relative_to(ROOT).as_posix()
         declaration = node_object(find_keyed_assignment(
             region_path, "FBDATA", "bookmarkRegions476", region
@@ -1165,14 +1172,14 @@ def extract_structured(inv: Inventory) -> None:
                 continue
             for branch, record, line in branch_records(province.get("name")):
                 inv.add(
-                    f"province.476.{province_id}.name.{branch}", record,
-                    f"{region_rel}:{line}", f"476 county {province_id}, display name.", ()
+                    f"province.{bookmark_id}.{province_id}.name.{branch}", record,
+                    f"{region_rel}:{line}", f"{bookmark_id} county {province_id}, display name.", ()
                 )
             for index, entry_node in enumerate(node_array(province.get("names")) or []):
                 entry = node_object(entry_node) or {}
                 for branch, record, line in branch_records(entry.get("name")):
-                    inv.add(f"province.476.{province_id}.name.dated.{index}.{branch}", record,
-                            f"{region_rel}:{line}", f"476 province {province_id}, dated name.", ())
+                    inv.add(f"province.{bookmark_id}.{province_id}.name.dated.{index}.{branch}", record,
+                            f"{region_rel}:{line}", f"{bookmark_id} province {province_id}, dated name.", ())
         layouts = {**(node_object(declaration.get("layouts")) or {}),
                    **(node_object(declaration.get("settlementLayouts")) or {})}
         for province_id, layout_node in layouts.items():
@@ -1181,9 +1188,9 @@ def extract_structured(inv: Inventory) -> None:
                 site_id = node_string(entry.get("site")) or str(index)
                 for branch, record, line in branch_records(entry.get("name")):
                     inv.add(
-                        f"settlement.476.{site_id}.name.{branch}", record,
+                        f"settlement.{bookmark_id}.{site_id}.name.{branch}", record,
                         f"{region_rel}:{line}",
-                        f"476 county {province_id}, site {site_id}, display name.", ()
+                        f"{bookmark_id} county {province_id}, site {site_id}, display name.", ()
                     )
         for realm_node in node_array(declaration.get("realms")) or []:
             realm = node_object(realm_node) or {}
@@ -1192,10 +1199,12 @@ def extract_structured(inv: Inventory) -> None:
                 continue
             for branch, record, line in branch_records(realm.get("name")):
                 inv.add(
-                    f"realm.476.{realm_id}.name.{branch}", record,
+                    f"realm.{bookmark_id}.{realm_id}.name.{branch}", record,
                     f"{region_rel}:{line}",
-                    f"476 realm {realm_id}, display name.", ()
+                    f"{bookmark_id} realm {realm_id}, display name.", ()
                 )
+        if bookmark_id == "476_outer" and region != "outer":
+            continue  # Administrative title keys are shared across bookmarks.
         for table, kind in (("duchies", "duchy"), ("kingdoms", "kingdom"),
                             ("empires", "empire")):
             for title_id, title_node in (node_object(declaration.get(table)) or {}).items():
@@ -1204,7 +1213,7 @@ def extract_structured(inv: Inventory) -> None:
                     inv.add(
                         f"{kind}.{title_id}.name.{branch}", record,
                         f"{region_rel}:{line}",
-                        f"476 administrative {kind} {title_id}, display name.", ()
+                        f"{bookmark_id} administrative {kind} {title_id}, display name.", ()
                     )
     for candidate_path, bookmark_id in CANDIDATE_FILES:
         candidate_rel = candidate_path.relative_to(ROOT).as_posix()

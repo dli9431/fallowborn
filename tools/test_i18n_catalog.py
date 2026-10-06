@@ -31,6 +31,28 @@ class JavascriptLexerTests(unittest.TestCase):
 
 
 class StructuredDataExtractionTests(unittest.TestCase):
+    def test_wider_476_content_has_region_and_bookmark_display_owners(self):
+        inventory = i18n_catalog.Inventory()
+        i18n_catalog.extract_structured(inventory)
+        for key, text in (
+            ('bookmark.476_outer.name.default', 'The Last Western Court: Wider World'),
+            ('province.476_outer.baghdad.name.default', 'Ctesiphon'),
+            ('province.476_outer.lund.name.dated.0.default', 'Uppåkra'),
+            ('settlement.476_outer.shrewsbury_outer_476.name.default', 'Viroconium'),
+            ('realm.476_outer.sasanian_476.name.default', 'Sasanian Empire'),
+            ('province.476_outer.ravenna.name.default', 'Ravenna'),
+            ('settlement.476_outer.ravenna_476.name.default', 'Ravenna'),
+            ('realm.476_outer.italy.name.default', 'Western Roman Court'),
+            ('culture.brittonic.name.default', 'Brittonic'),
+            ('religion.east_syriac.name.default', 'East Syriac Christianity'),
+            ('event.antioch_congregation_relief_476.title.default', 'Relief Among the Congregations'),
+            ('event.british_farm_boundary_476.options.0.effects.log.default',
+             'Helped British neighbors reconcile a field boundary.'),
+        ):
+            self.assertEqual(inventory.entries[key]['text'], text)
+        self.assertIn('bookmark_476_outer.js',
+                      inventory.meta['province.476_outer.baghdad.name.default']['location'])
+
     def test_493_review_content_has_display_and_durable_message_owners(self):
         inventory = i18n_catalog.Inventory()
         i18n_catalog.extract_structured(inventory)

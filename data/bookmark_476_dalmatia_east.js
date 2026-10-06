@@ -387,10 +387,10 @@ FBDATA.events.push(
   { id:'persian_frontier_dispatch_476', pack:'dalmatia_east_476', tags:['late_antique'],
     title:'A Dispatch from Beyond the Eastern Frontier',
     trigger:{ minAge:16, provinceCultures:['greek'], chance:0.08 }, weight:2, cooldown:16,
-    text:'An eastern dispatch reports Persian requests for money toward the defense of the Caucasian passes. Merchants fear new levies and delays on the long road. The contested frontier lies beyond the lands your household can reach, but its demands arrive in prices and letters.',
+    text:'An eastern dispatch reports Persian requests for money toward the defense of the Caucasian passes. Merchants fear new levies and delays on the long road. The distant passes send their demands through prices and letters.',
     options:[
       { label:'Pay a courier for reliable accounts of the road.', desc:'Good information may spare a household a costly mistake.',
-        require:{ goldMin:4 }, effects:{ gold:-4, skills:{ste:1}, log:'Obtained news of the off-map Persian frontier.' } },
+        require:{ goldMin:4 }, effects:{ gold:-4, skills:{ste:1}, log:'Obtained news of the distant Persian frontier.' } },
       { label:'Compare the report with the merchants’ letters.', desc:'Learn how distant demands reach local markets.',
         effects:{ skills:{lea:1} } },
       { label:'Keep the purse closed.', desc:'The imperial court must answer the frontier demand.', effects:{} }

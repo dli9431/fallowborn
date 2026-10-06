@@ -1102,3 +1102,7 @@ data/bookmark_476_gaul_iberia.js appends the gaul_iberia_476 pack with late_anti
 Regional county selectors
 
 trigger.countyIds and option require.countyIds accept a nonempty array of distinct known stable province ids. Malformed declarations fail the ordinary community event validator. FB.checkTrigger reads the live event context locationId, falling back to the player's current provinceId, so restore and changed location do not preserve stale regional eligibility. County membership combines with the existing period, community and household gates; it conveys no territorial power. The three Italian events explicitly select their owning region's counties. This is a selector schema extension, not a research-gated capability.
+
+Wider spring-476 households
+
+The outer_476 pack declares late_antique membership and years 476-649. Eight events in data/bookmark_476_outer.js cover British boundary and landing disputes, northern iron exchange and compensation, eastern congregational relief, frontier receipts, shared water-channel work and multilingual accounts. Explicit countyIds and live community/career requirements constrain local eligibility. Costs use goldMin and existing money tokens; outcomes reuse ordinary household skills, piety, prestige and county Popular support. No event creates a realm, converts a community or transfers land. Source grouping introduces no new trigger or effect key.

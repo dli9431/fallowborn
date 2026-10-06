@@ -62,6 +62,7 @@ Object.assign(FBDATA.legalTraditions.gothic_custom.jurisdiction.cultures,
 Object.assign(FBDATA.legalTraditions, FBDATA.bookmarkRegions476.gaul_iberia.legalTraditions);
 
 Object.assign(FBDATA.legalTraditions, FBDATA.bookmarkRegions476.africa.legalTraditions);
+Object.assign(FBDATA.legalTraditions, FBDATA.bookmarkRegions476.outer.legalTraditions);
 
 FBDATA.intrigue = {
   maxAiSchemes:6,
