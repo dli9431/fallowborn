@@ -780,8 +780,16 @@ window.FB = window.FB || {};
         if (offices[def.officeId]) fault('duplicate officeId ' + def.officeId + '.');
         offices[def.officeId] = true;
         Object.keys(catalogs.religions || {}).forEach(function (faithId) {
-          var faith = catalogs.religions[faithId], head = faith && (faith.head || faith.properties && faith.properties.head);
-          if (head && head.officeId === def.officeId) fault('officeId collides with a central faith office.');
+          var faith = catalogs === FBDATA ? FB.religionOf(faithId, null) : catalogs.religions[faithId];
+          var head = faith && (faith.head || faith.properties && faith.properties.head);
+          if (!head || head.officeId !== def.officeId) return;
+          var localFaith = catalogs === FBDATA ? FB.religionOf(def.religion, null) : catalogs.religions[def.religion];
+          var localHead = localFaith && (localFaith.head || localFaith.properties && localFaith.properties.head);
+          // A faith's episcopal head can also be its campaign's local see.
+          // Both declarations then seed the same character-held office ledger.
+          if (!isChurch || head.holderKind !== 'character' || head.system !== 'episcopal_sees' ||
+              !localHead || localHead.officeId !== def.officeId)
+            fault('officeId collides with an incompatible central faith office.');
         });
       }
       if (!ownKey(catalogs.cultures, def.culture) || !catalogs.cultures[def.culture] || catalogs.cultures[def.culture].active === false) fault('unknown or inactive culture.');
@@ -997,6 +1005,19 @@ window.FB = window.FB || {};
       identity({ culture:start.startCulture, religion:start.startReligion }, owner);
       if (start.governmentForm && forms.indexOf(start.governmentForm) < 0) fault(owner, 'government form ' + start.governmentForm + ' is absent.');
       if (start.fixedProvinceId && (!provinces[start.fixedProvinceId] || provinces[start.fixedProvinceId].wasteland)) fault(owner, 'unknown inhabited province ' + start.fixedProvinceId + '.');
+      var startingProvince = start.fixedProvinceId && provinces[start.fixedProvinceId];
+      if (startingProvince && !start.rulerRealmId && !(Array.isArray(startingProvince.communities) ? startingProvince.communities : [startingProvince]).some(function (community) {
+            return community && community.culture === start.startCulture && community.religion === start.startReligion;
+          })) fault(owner, 'fixed culture and faith are absent from province ' + start.fixedProvinceId + '.');
+      if (start.rulerRealmId) {
+        var startingRealm = realms[start.rulerRealmId], ruler = startingRealm && startingRealm.ruler;
+        if (!startingRealm) fault(owner, 'unknown ruler realm ' + start.rulerRealmId + '.');
+        else if (!ruler || ruler.name !== start.characterName || ruler.sex !== start.sex ||
+            ruler.culture !== start.startCulture || startingRealm.religion !== start.startReligion ||
+            platform.governments[start.rulerRealmId] !== start.governmentForm ||
+            FB.station.realmRank({ tier:start.tier, formId:start.governmentForm, era:platform.era }, {}) !== startingRealm.rank)
+          fault(owner, 'existing ruler identity, government and rank must match realm ' + start.rulerRealmId + '.');
+      }
       if (!ownKey(FBDATA.careers, start.profession)) fault(owner, 'unknown career ' + start.profession + '.');
       if (start.tracks !== undefined) list(start.tracks, owner + '.tracks', function (track) {
         story(track, 'track', worldStories.concat(start.tracks), owner);

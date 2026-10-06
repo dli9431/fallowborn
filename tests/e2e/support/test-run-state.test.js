@@ -434,7 +434,10 @@ test('browser projects keep the full affected suite on primary served Chromium',
   assert.deepEqual(projects['firefox-served'].testMatch, [
     '**/boot.spec.js',
     '**/holywar-accessibility.spec.js',
-    '**/journeys.spec.js'
+    '**/journeys.spec.js',
+    '**/save-v4-integration.spec.js',
+    '**/title-id-migration.spec.js',
+    '**/indexeddb-storage.spec.js'
   ]);
   assert.deepEqual(
     projects['webkit-served'].testMatch,
@@ -452,7 +455,8 @@ test('browser projects keep the full affected suite on primary served Chromium',
   });
   assert.equal(new Set(configuredFileSpecs).size, configuredFileSpecs.length,
     'The file project must not repeat a specification.');
+  const sharedFileSpecs = ['1204-history.spec.js', 'journeys.spec.js', 'save-v4-integration.spec.js'];
   assert.deepEqual(configuredFileSpecs.slice().sort(),
-    explicitFileSpecs.concat(['journeys.spec.js']).sort(),
-    'The file project covers explicit file-origin cases and shared journeys; other specs use served Chromium.');
+    Array.from(new Set(explicitFileSpecs.concat(sharedFileSpecs))).sort(),
+    'The file project covers explicit file-origin cases, historical and save integration, and shared journeys; other specs use served Chromium.');
 });

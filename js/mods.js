@@ -563,10 +563,14 @@ window.FBMODS = window.FBMODS || [];
   function combinedBookmarks(mod) {
     const out = combinedTable(FBDATA.bookmarks, undefined, 'bookmarks');
     if (Array.isArray(mod.bookmarks)) {
-      for (const definition of mod.bookmarks) {
-        if (plainObject(definition) && typeof definition.id === 'string') {
-          out[definition.id] = definition;
-        }
+      const supplied = {};
+      for (let i = 0; i < mod.bookmarks.length; i++) {
+        const definition = mod.bookmarks[i], path = 'bookmarks[' + i + ']';
+        if (!plainObject(definition) || typeof definition.id !== 'string' || !/^[a-z0-9_]+$/i.test(definition.id))
+          fail(path + '.id', 'must be a bookmark id.');
+        if (own(supplied, definition.id)) fail(path + '.id', 'must not repeat ' + definition.id + '.');
+        supplied[definition.id] = true;
+        out[definition.id] = definition;
       }
     } else if (plainObject(mod.bookmarks)) {
       for (const id in mod.bookmarks) {
@@ -633,7 +637,8 @@ window.FBMODS = window.FBMODS || [];
         fail(path + '.fixedProvinceId',
           'needs bookmarkIds, startCulture and startReligion.');
       }
-      /* the fixed county and its culture/faith pair exist in each bookmark */
+      /* Ordinary starts choose a resident community. Existing rulers keep
+         the court identity already checked above, even among other residents. */
       for (const bookmarkId of scenario.bookmarkIds) {
         const provinces = rules.bookmarks[bookmarkId].provinces || [];
         const county = provinces.filter(function (province) {
@@ -644,7 +649,7 @@ window.FBMODS = window.FBMODS || [];
           fail(path + '.fixedProvinceId', 'is not a settled county of bookmark ' +
             bookmarkId + '.');
         }
-        const paired = FB.provinceCommunities(county).some(function (community) {
+        const paired = !!scenario.rulerRealmId || FB.provinceCommunities(county).some(function (community) {
           return community.culture === scenario.startCulture &&
             community.religion === scenario.startReligion;
         });
@@ -1653,16 +1658,10 @@ window.FBMODS = window.FBMODS || [];
     }
     if (own(mod, 'bookmarks')) {
       if (!Array.isArray(mod.bookmarks) && !plainObject(mod.bookmarks)) fail('bookmarks', 'must be an object or array.');
-      const catalogs = Object.assign({}, FBDATA);
-      ['cultures','religions','traits','geographies','settlementSites','settlementLayouts'].forEach(function (key) {
-        catalogs[key] = combinedTable(FBDATA[key], mod[key], key);
-      });
       Object.keys(mod.bookmarks).forEach(function (key) {
         const def = mod.bookmarks[key], path = 'bookmarks.' + key;
         if (!plainObject(def)) fail(path, 'must be an object.');
         if (own(def, 'hidden') && typeof def.hidden !== 'boolean') fail(path + '.hidden', 'must be true or false.');
-        const errors = FB.localInstitutionDefinitionFaults(def, catalogs);
-        if (errors.length) fail(path, errors.join(' '));
       });
     }
     if (own(mod, 'legalTraditions') || own(mod, 'justiceSentences') || own(mod, 'governmentForms') || own(mod, 'religions')) validateJustice(mod);

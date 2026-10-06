@@ -1018,6 +1018,8 @@ window.FB = window.FB || {};
     const compiled = compiledFaiths(state), errors = compiled.errors.slice();
     const ladder = state ? FB.station.definition(state.player, state) : undefined;
     for (const id in compiled.resolved) if (own(compiled.resolved, id)) {
+      if (FB.systems) errors.push.apply(errors,
+        FB.systems.validateContent(compiled.resolved[id].head, 'Faith ' + id + ' head'));
       const tradition = compiled.resolved[id].legalTradition || FBDATA.faithDefaults.legalTradition;
       if (!FBDATA.legalTraditions || !Object.prototype.hasOwnProperty.call(FBDATA.legalTraditions, tradition)) {
         errors.push('Faith ' + id + ': legalTradition names an unknown tradition.');

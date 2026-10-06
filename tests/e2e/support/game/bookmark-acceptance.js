@@ -85,7 +85,7 @@ async function restoreBookmark(page, text) {
 async function facts(page) {
   return { snapshot:await captureWorldSnapshot(page, null), campaign:await page.evaluate(function () {
     const s = FB.state, out = { rng:FB.getRngState(), uid:FB.getUidCounter(), start:s.start, date:s.date, turn:s.turn };
-    ['stories','bookmarkOpening','authority','religiousHeads','localInstitutions'].forEach(function (key) {
+    ['stories','bookmarkSetup','authority','religiousHeads','religiousHeadVacancies','localInstitutions'].forEach(function (key) {
       if (s[key] !== undefined) out[key] = s[key];
     });
     return JSON.parse(JSON.stringify(out));

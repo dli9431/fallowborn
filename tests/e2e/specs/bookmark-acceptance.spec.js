@@ -48,6 +48,10 @@ test('every registered bookmark plays three years and replays its final year aft
       await advanceBookmark(page, 720);
       const checkpoint = await saveWithinBudget(page, testInfo, id + '-year2', SAVE_BUDGETS.year2);
       const checkpointFacts = await facts(page);
+      const checkpointState = JSON.parse(checkpoint).state;
+      for (const key of ['bookmarkSetup', 'religiousHeadVacancies']) {
+        if (checkpointState[key] !== undefined) expect(checkpointFacts.campaign[key]).toEqual(checkpointState[key]);
+      }
       await advanceBookmark(page, 360);
       const continuous = await facts(page);
       await saveWithinBudget(page, testInfo, id + '-year3', SAVE_BUDGETS.year3);

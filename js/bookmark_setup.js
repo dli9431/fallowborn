@@ -14,7 +14,7 @@
   }
   FB.bookmarkActor = actor;
   FB.openingDefinitionFaults = function (bm) {
-    var d = bm && bm.opening, errors = [];
+    var d = bm && bm.opening, errors = [], year = bm && bm.date && bm.date.year;
     if (d === undefined) return errors;
     function fail(p) { errors.push('Invalid opening declaration: ' + p + '.'); }
     var counties = {}, realms = {};
@@ -36,7 +36,7 @@
       });
       if (p.name !== undefined && (typeof p.name !== 'string' || !p.name) ||
           ['m','f'].indexOf(p.sex) < 0 || !FBDATA.cultures[p.culture] ||
-          !FB.faithAssignable(p.religion, null) || !Number.isInteger(p.born) || p.born > bm.date.year ||
+          !FB.faithAssignable(p.religion, null) || !Number.isInteger(p.born) || p.born > year ||
           !Number.isInteger(p.station) || p.station < 0 || p.station > 7 || !counties[p.home] ||
           ['commander','claimant','notable','priest','monk','soldier'].indexOf(p.role) < 0 ||
           p.dyn !== undefined && (typeof p.dyn !== 'string' || !p.dyn) ||
@@ -119,8 +119,8 @@
         var mix = site.communities;
         if (!Array.isArray(mix) || !mix.length || mix.some(function (c, i) {
           return !plain(c) || !Number.isInteger(c.populationShare0) || c.populationShare0 < 1 ||
-            c.populationShare0 > 10000 || !(p.communities || []).some(function (pc) {
-              return pc.culture === c.culture && pc.religion === c.religion;
+            c.populationShare0 > 10000 || !(Array.isArray(p.communities) ? p.communities : []).some(function (pc) {
+              return pc && pc.culture === c.culture && pc.religion === c.religion;
             }) || mix.some(function (other, j) { return j < i && other.culture === c.culture && other.religion === c.religion; });
         }) || mix.reduce(function (n, c) { return n + c.populationShare0; }, 0) !== 10000)
           errors.push('Invalid settlement community partition: ' + p.id + '/' + site.site + '.');

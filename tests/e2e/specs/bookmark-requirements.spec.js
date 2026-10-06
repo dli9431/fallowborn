@@ -29,6 +29,7 @@ const cases = [
   ['missing appearance', 'appearance', /no appearance profile resolves/],
   ['missing name pool', 'names', /no male name pool resolves/],
   ['undefined faith office', 'office', /officeId/],
+  ['unknown faith-head system', 'head_system', /[Uu]nknown system missing_system/],
   ['unknown garment', 'garment', /unknown garment missing_garment/],
   ['capability without a grant', 'capability', /granted by no technology/],
   ['missing climate', 'climate', /no climate zone resolves/],
@@ -85,6 +86,7 @@ for (const [label, change, expected] of cases) {
         case 'appearance': delete culture.appearance; delete culture.appearanceEras; delete culture.parent; break;
         case 'names': culture.male = []; delete culture.nameEras; delete culture.parent; break;
         case 'office': faith.head = { officeId:null, holderKind:'character', succession:'hereditary' }; break;
+        case 'head_system': faith.head.system = 'missing_system'; break;
         case 'garment': FBDATA.wardrobes.late_antique.garments[0].garment = 'missing_garment'; break;
         case 'capability': FBDATA.capabilities.proof_ungranted = {}; bm.requirements = { capabilities:['proof_ungranted'] }; break;
         case 'climate': delete bm.climate; delete geography.climate; delete FBDATA.defaultClimateZone; break;
@@ -112,6 +114,138 @@ for (const [label, change, expected] of cases) {
     expect(errors.join('\n')).toMatch(expected);
   });
 }
+
+test('late antique faith heads share their campaign sees without blocking activation or mods', async function ({ page }, testInfo) {
+  await openGame(page, testInfo);
+  const result = await page.evaluate(async function () {
+    const faults = ['476', '493'].map(function (id) { return FB.validateBookmark(FB.bookmark(id)); });
+    await new Promise(function (resolve, reject) {
+      FB.activateBookmark('476', null, function (error) { if (error) reject(error); else resolve(); });
+    });
+    const bm = JSON.parse(JSON.stringify(FB.bookmark('476')));
+    bm.localInstitutions.rome_see.religion = 'proof_nicene';
+    const mod = { bookmarks:[bm], religions:{ proof_nicene:{ name:'Proof communion',
+      group:'nicene', relationToParent:'in_fold', properties:{} } } };
+    const before = JSON.stringify(FBDATA), errors = FB.mods.validate(mod);
+    const pure = before === JSON.stringify(FBDATA);
+    if (!errors.length) FB.mods.apply(mod);
+    return { faults:faults, active:FB.activeBookmark.id, errors:errors, pure:pure,
+      office:FB.faithOfficeId('proof_nicene', null),
+      installed:FB.bookmark('476').localInstitutions.rome_see.religion };
+  });
+  expect(result).toEqual({ faults:[[], []], active:'476', errors:[], pure:true,
+    office:'rome_bishop', installed:'proof_nicene' });
+});
+
+test('local sees reject incompatible central offices and duplicate office seeds', async function ({ page }, testInfo) {
+  await openGame(page, testInfo);
+  const results = await page.evaluate(function () {
+    return ['realm_office', 'other_communion', 'duplicate'].map(function (change) {
+      const bm = JSON.parse(JSON.stringify(FB.bookmark('476')));
+      if (change === 'realm_office') bm.localInstitutions.rome_see.officeId = 'catholic';
+      if (change === 'other_communion') bm.localInstitutions.rome_see.religion = 'homoian';
+      if (change === 'duplicate') bm.localInstitutions.milan_see.officeId = 'rome_bishop';
+      const before = JSON.stringify(FBDATA), rng = FB.getRngState(), uid = FB.getUidCounter();
+      const faults = FB.validateBookmark(bm), mod = { bookmarks:[bm] };
+      const modErrors = FB.mods.validate(mod);
+      let rejected = false;
+      try { FB.mods.apply(mod); } catch (error) { rejected = true; }
+      return { faults:faults, modErrors:modErrors, rejected:rejected,
+        unchanged:before === JSON.stringify(FBDATA) && rng === FB.getRngState() && uid === FB.getUidCounter() };
+    });
+  });
+  for (let i = 0; i < results.length; i++) {
+    const diagnostic = i === 2 ? /duplicate officeId rome_bishop/ : /incompatible central faith office/;
+    expect(results[i].faults.join('\n')).toMatch(diagnostic);
+    expect(results[i].modErrors.join('\n')).toMatch(diagnostic);
+    expect(results[i].rejected && results[i].unchanged).toBe(true);
+  }
+});
+
+test('bookmark replacements recheck existing ruler and fixed-community starts', async function ({ page }, testInfo) {
+  await openGame(page, testInfo);
+  const results = await page.evaluate(function () {
+    return ['ruler', 'community'].map(function (change) {
+      const bm = JSON.parse(JSON.stringify(FB.bookmark('476')));
+      if (change === 'ruler') bm.realms.filter(function (r) { return r.id === 'croatia'; })[0].ruler.name = 'Another ruler';
+      else {
+        const county = bm.provinces.filter(function (p) { return p.id === 'ravenna'; })[0];
+        county.communities = [{ culture:county.culture, religion:county.religion, populationShare0:10000 }];
+      }
+      const before = JSON.stringify(FBDATA);
+      const faults = FB.validateBookmark(bm), errors = FB.mods.validate({ bookmarks:[bm] });
+      return { faults:faults.join('\n'), errors:errors.join('\n'), unchanged:before === JSON.stringify(FBDATA) };
+    });
+  });
+  const diagnostics = [/start nepos_476: existing ruler identity/, /start federate_476: fixed culture and faith are absent/];
+  results.forEach(function (result, i) {
+    expect(result.faults).toMatch(diagnostics[i]);
+    expect(result.errors).toMatch(diagnostics[i]);
+    expect(result.unchanged).toBe(true);
+  });
+});
+
+test('mod start validation keeps an existing ruler identity distinct from county residents', async function ({ page }, testInfo) {
+  await openGame(page, testInfo);
+  const result = await page.evaluate(function () {
+    const scenario = FBDATA.startScenarios.filter(function (s) { return s.id === 'syagrius_476'; })[0];
+    const county = FB.bookmark('476').provinces.filter(function (p) { return p.id === scenario.fixedProvinceId; })[0];
+    const resident = FB.provinceCommunities(county).some(function (c) { return c.culture === scenario.startCulture; });
+    return { resident:resident, errors:FB.mods.validate({ startScenarios:[JSON.parse(JSON.stringify(scenario))] }) };
+  });
+  expect(result).toEqual({ resident:false, errors:[] });
+});
+
+test('unused mod faiths cannot introduce an unregistered head system', async function ({ page }, testInfo) {
+  await openGame(page, testInfo);
+  const result = await page.evaluate(function () {
+    const before = JSON.stringify(FBDATA);
+    const mod = { religions:{ proof_unused_head:{ name:'Proof head system', group:'catholic',
+      relationToParent:'in_fold', properties:{ head:{ system:'missing_system' } } } } };
+    const errors = FB.mods.validate(mod);
+    let rejected = false;
+    try { FB.mods.apply(mod); } catch (error) { rejected = true; }
+    return { errors:errors.join('\n'), rejected:rejected, unchanged:before === JSON.stringify(FBDATA) };
+  });
+  expect(result.errors).toMatch(/[Uu]nknown system missing_system/);
+  expect(result.rejected && result.unchanged).toBe(true);
+});
+
+test('malformed bookmark arrays cannot be silently ignored or overwrite an earlier entry', async function ({ page }, testInfo) {
+  await openGame(page, testInfo);
+  const results = await page.evaluate(function () {
+    const bm = JSON.parse(JSON.stringify(FB.bookmark('867')));
+    return [[{}], [null], [bm, bm]].map(function (bookmarks) {
+      const before = JSON.stringify(FBDATA);
+      const errors = FB.mods.validate({ bookmarks:bookmarks });
+      let rejected = false;
+      try { FB.mods.apply({ bookmarks:bookmarks }); } catch (error) { rejected = true; }
+      return { errors:errors.join('\n'), rejected:rejected, unchanged:before === JSON.stringify(FBDATA) };
+    });
+  });
+  results.forEach(function (result, i) {
+    expect(result.errors).toMatch(i === 2 ? /must not repeat 867/ : /must be a bookmark id/);
+    expect(result.rejected && result.unchanged).toBe(true);
+  });
+});
+
+test('malformed dates and community lists return diagnostics through the opening validator', async function ({ page }, testInfo) {
+  await openGame(page, testInfo);
+  const results = await page.evaluate(function () {
+    const missingDate = JSON.parse(JSON.stringify(FB.bookmark('493')));
+    delete missingDate.date;
+    const invalidCommunities = JSON.parse(JSON.stringify(FB.bookmark('493')));
+    const layout = FBDATA.settlementLayouts[invalidCommunities.settlementLayout];
+    const county = invalidCommunities.provinces.filter(function (p) { return !p.wasteland && layout[p.id]; })[0];
+    const entry = layout[county.id][0];
+    county.communities = {};
+    county.settlements = [Object.assign({}, entry, { communities:[{ culture:county.culture,
+      religion:county.religion, populationShare0:10000 }] })];
+    return [FB.validateBookmark(missingDate).join('\n'), FB.validateBookmark(invalidCommunities).join('\n')];
+  });
+  expect(results[0]).toContain('invalid start date');
+  expect(results[1]).toContain('Invalid settlement community partition');
+});
 
 test('invalid activation preserves the active world, RNG and state', async function ({ page }, testInfo) {
   await openGame(page, testInfo);
