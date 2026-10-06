@@ -123,7 +123,8 @@ test('476 bookmark and free federate start preserve 867 and 1066 data',
     expect(result.sites).toEqual(['ravenna_476', 'classis_476']);
     expect(result.stories).toEqual(['western_court_476','zeno_return_476',
       'clovis_syagrius_476','theoderic_italy_476','eastern_africa_476','eastern_italy_476',
-      'western_office_476','federate_track_476']);
+      'rugian_frontier_476','sicilian_tribute_476','norican_evacuation_476',
+      'clovis_alamanni_476','western_office_476','federate_track_476']);
     expect(result.legacy).toBeUndefined();
     expect(result.age).toBe(24);
     expect(result.station).toBe(1);

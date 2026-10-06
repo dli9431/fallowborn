@@ -76,15 +76,15 @@ FBDATA.bookmarkRegions476['gaul_iberia'] = {
       { power:'peace', basis:'tenure', basisRef:'provincial_court_476:laon' },
       { power:'revenue', basis:'tenure', basisRef:'provincial_court_476:laon' }
     ], communities:[{ culture:'gallo_roman', religion:'nicene', populationShare0:10000 }] },
-    { id:'bruges', name:'Menapian coast', names:[{ to:600, name:'Menapian coast' }], realm:'franks_476', culture:'gallo_roman', religion:'nicene', dev:1, customaryRights:[{ power:'peace', basis:'tenure', basisRef:'settled_tenure_476:bruges' }, { power:'revenue', basis:'tenure', basisRef:'settled_tenure_476:bruges' }], communities:[{ culture:'gallo_roman', religion:'nicene', populationShare0:7000 }, { culture:'frankish', religion:'germanic_pagan', paired:true, populationShare0:3000 }] },
-    { id:'ghent', name:'Tornacum area', names:[{ to:600, name:'Tornacum area' }], realm:'franks_476', culture:'gallo_roman', religion:'nicene', dev:3, customaryRights:[{ power:'peace', basis:'tenure', basisRef:'settled_tenure_476:ghent' }, { power:'revenue', basis:'tenure', basisRef:'settled_tenure_476:ghent' }], communities:[{ culture:'gallo_roman', religion:'nicene', populationShare0:7000 }, { culture:'frankish', religion:'germanic_pagan', paired:true, populationShare0:3000 }] },
-    { id:'boulogne', name:'Gesoriacum', names:[{ to:600, name:'Gesoriacum' }], realm:'franks_476', culture:'gallo_roman', religion:'nicene', dev:2, customaryRights:[{ power:'peace', basis:'tenure', basisRef:'settled_tenure_476:boulogne' }, { power:'revenue', basis:'tenure', basisRef:'settled_tenure_476:boulogne' }], communities:[{ culture:'gallo_roman', religion:'nicene', populationShare0:7000 }, { culture:'frankish', religion:'germanic_pagan', paired:true, populationShare0:3000 }] },
-    { id:'arras', name:'Atrebates', names:[{ to:600, name:'Atrebates' }], realm:'franks_476', culture:'gallo_roman', religion:'nicene', dev:2, customaryRights:[{ power:'peace', basis:'tenure', basisRef:'settled_tenure_476:arras' }, { power:'revenue', basis:'tenure', basisRef:'settled_tenure_476:arras' }], communities:[{ culture:'gallo_roman', religion:'nicene', populationShare0:7000 }, { culture:'frankish', religion:'germanic_pagan', paired:true, populationShare0:3000 }] },
-    { id:'rennes', name:'Condate', names:[{ to:600, name:'Condate' }], realm:'armorica_476', culture:'brezhon', religion:'nicene', dev:3, customaryRights:[{ power:'peace', basis:'tenure', basisRef:'settled_tenure_476:rennes' }, { power:'revenue', basis:'tenure', basisRef:'settled_tenure_476:rennes' }], communities:[{ culture:'brezhon', religion:'nicene', populationShare0:7000 }, { culture:'gallo_roman', religion:'nicene', paired:true, populationShare0:3000 }] },
-    { id:'nantes', name:'Condevincum', names:[{ to:600, name:'Condevincum' }], realm:'armorica_476', culture:'brezhon', religion:'nicene', dev:3, customaryRights:[{ power:'peace', basis:'tenure', basisRef:'settled_tenure_476:nantes' }, { power:'revenue', basis:'tenure', basisRef:'settled_tenure_476:nantes' }], communities:[{ culture:'brezhon', religion:'nicene', populationShare0:7000 }, { culture:'gallo_roman', religion:'nicene', paired:true, populationShare0:3000 }] },
-    { id:'vannes', name:'Darioritum', names:[{ to:600, name:'Darioritum' }], realm:'armorica_476', culture:'brezhon', religion:'nicene', dev:2, customaryRights:[{ power:'peace', basis:'tenure', basisRef:'settled_tenure_476:vannes' }, { power:'revenue', basis:'tenure', basisRef:'settled_tenure_476:vannes' }], communities:[{ culture:'brezhon', religion:'nicene', populationShare0:7000 }, { culture:'gallo_roman', religion:'nicene', paired:true, populationShare0:3000 }] },
-    { id:'quimper', name:'Western Armorica', names:[{ to:600, name:'Western Armorica' }], realm:'armorica_476', culture:'brezhon', religion:'nicene', dev:2, customaryRights:[{ power:'peace', basis:'tenure', basisRef:'settled_tenure_476:quimper' }, { power:'revenue', basis:'tenure', basisRef:'settled_tenure_476:quimper' }], communities:[{ culture:'brezhon', religion:'nicene', populationShare0:7000 }, { culture:'gallo_roman', religion:'nicene', paired:true, populationShare0:3000 }] },
-    { id:'st_brieuc', name:'Northern Armorican coast', names:[{ to:600, name:'Northern Armorican coast' }], realm:'armorica_476', culture:'brezhon', religion:'nicene', dev:2, customaryRights:[{ power:'peace', basis:'tenure', basisRef:'settled_tenure_476:st_brieuc' }, { power:'revenue', basis:'tenure', basisRef:'settled_tenure_476:st_brieuc' }], communities:[{ culture:'brezhon', religion:'nicene', populationShare0:7000 }, { culture:'gallo_roman', religion:'nicene', paired:true, populationShare0:3000 }] },
+    { id:'bruges', name:'Menapian coast', names:[{ to:600, name:'Menapian coast' }], realm:'franks_476', culture:'gallo_roman', religion:'nicene', dev:1, customaryRights:[{ power:'peace', basis:'tenure', basisRef:'frankish_settled_custom_476:bruges' }, { power:'revenue', basis:'tenure', basisRef:'frankish_settled_custom_476:bruges' }], communities:[{ culture:'gallo_roman', religion:'nicene', populationShare0:7000 }, { culture:'frankish', religion:'germanic_pagan', paired:true, populationShare0:3000 }] },
+    { id:'ghent', name:'Tornacum area', names:[{ to:600, name:'Tornacum area' }], realm:'franks_476', culture:'gallo_roman', religion:'nicene', dev:3, customaryRights:[{ power:'peace', basis:'tenure', basisRef:'frankish_settled_custom_476:ghent' }, { power:'revenue', basis:'tenure', basisRef:'frankish_settled_custom_476:ghent' }], communities:[{ culture:'gallo_roman', religion:'nicene', populationShare0:6500 }, { culture:'frankish', religion:'germanic_pagan', paired:true, populationShare0:3000 }, { culture:'frankish', religion:'nicene', paired:true, populationShare0:500 }] },
+    { id:'boulogne', name:'Gesoriacum', names:[{ to:600, name:'Gesoriacum' }], realm:'franks_476', culture:'gallo_roman', religion:'nicene', dev:2, customaryRights:[{ power:'peace', basis:'tenure', basisRef:'frankish_settled_custom_476:boulogne' }, { power:'revenue', basis:'tenure', basisRef:'frankish_settled_custom_476:boulogne' }], communities:[{ culture:'gallo_roman', religion:'nicene', populationShare0:7000 }, { culture:'frankish', religion:'germanic_pagan', paired:true, populationShare0:3000 }] },
+    { id:'arras', name:'Atrebates', names:[{ to:600, name:'Atrebates' }], realm:'franks_476', culture:'gallo_roman', religion:'nicene', dev:2, customaryRights:[{ power:'peace', basis:'tenure', basisRef:'frankish_settled_custom_476:arras' }, { power:'revenue', basis:'tenure', basisRef:'frankish_settled_custom_476:arras' }], communities:[{ culture:'gallo_roman', religion:'nicene', populationShare0:8000 }, { culture:'frankish', religion:'germanic_pagan', paired:true, populationShare0:1500 }, { culture:'frankish', religion:'nicene', paired:true, populationShare0:500 }] },
+    { id:'rennes', name:'Condate', names:[{ to:600, name:'Condate' }], realm:'armorica_476', culture:'brezhon', religion:'nicene', dev:3, customaryRights:[{ power:'peace', basis:'tenure', basisRef:'armorican_settled_custom_476:rennes' }, { power:'revenue', basis:'tenure', basisRef:'armorican_settled_custom_476:rennes' }], communities:[{ culture:'brezhon', religion:'nicene', populationShare0:6000 }, { culture:'gallo_roman', religion:'nicene', paired:true, populationShare0:4000 }] },
+    { id:'nantes', name:'Condevincum', names:[{ to:600, name:'Condevincum' }], realm:'armorica_476', culture:'brezhon', religion:'nicene', dev:3, customaryRights:[{ power:'peace', basis:'tenure', basisRef:'armorican_settled_custom_476:nantes' }, { power:'revenue', basis:'tenure', basisRef:'armorican_settled_custom_476:nantes' }], communities:[{ culture:'brezhon', religion:'nicene', populationShare0:5500 }, { culture:'gallo_roman', religion:'nicene', paired:true, populationShare0:4500 }] },
+    { id:'vannes', name:'Darioritum', names:[{ to:600, name:'Darioritum' }], realm:'armorica_476', culture:'brezhon', religion:'nicene', dev:2, customaryRights:[{ power:'peace', basis:'tenure', basisRef:'armorican_settled_custom_476:vannes' }, { power:'revenue', basis:'tenure', basisRef:'armorican_settled_custom_476:vannes' }], communities:[{ culture:'brezhon', religion:'nicene', populationShare0:6000 }, { culture:'gallo_roman', religion:'nicene', paired:true, populationShare0:4000 }] },
+    { id:'quimper', name:'Western Armorica', names:[{ to:600, name:'Western Armorica' }], realm:'armorica_476', culture:'brezhon', religion:'nicene', dev:2, customaryRights:[{ power:'peace', basis:'tenure', basisRef:'armorican_settled_custom_476:quimper' }, { power:'revenue', basis:'tenure', basisRef:'armorican_settled_custom_476:quimper' }], communities:[{ culture:'brezhon', religion:'nicene', populationShare0:8500 }, { culture:'gallo_roman', religion:'nicene', paired:true, populationShare0:1500 }] },
+    { id:'st_brieuc', name:'Northern Armorican coast', names:[{ to:600, name:'Northern Armorican coast' }], realm:'armorica_476', culture:'brezhon', religion:'nicene', dev:2, customaryRights:[{ power:'peace', basis:'tenure', basisRef:'armorican_settled_custom_476:st_brieuc' }, { power:'revenue', basis:'tenure', basisRef:'armorican_settled_custom_476:st_brieuc' }], communities:[{ culture:'brezhon', religion:'nicene', populationShare0:8000 }, { culture:'gallo_roman', religion:'nicene', paired:true, populationShare0:2000 }] },
     { id:'bordeaux', name:'Burdigala', names:[{ to:600, name:'Burdigala' }], realm:'aquitaine', culture:'gallo_roman', religion:'nicene', dev:4, customaryRights:[{ power:'peace', basis:'tenure', basisRef:'settled_tenure_476:bordeaux' }, { power:'revenue', basis:'tenure', basisRef:'settled_tenure_476:bordeaux' }], communities:[{ culture:'gallo_roman', religion:'nicene', populationShare0:8000 }, { culture:'gothic', religion:'homoian', paired:true, populationShare0:2000 }] },
     { id:'agen', name:'Aginnum', names:[{ to:600, name:'Aginnum' }], realm:'aquitaine', culture:'gallo_roman', religion:'nicene', dev:2, customaryRights:[{ power:'peace', basis:'tenure', basisRef:'settled_tenure_476:agen' }, { power:'revenue', basis:'tenure', basisRef:'settled_tenure_476:agen' }], communities:[{ culture:'gallo_roman', religion:'nicene', populationShare0:8000 }, { culture:'gothic', religion:'homoian', paired:true, populationShare0:2000 }] },
     { id:'perigueux', name:'Vesunna', names:[{ to:600, name:'Vesunna' }], realm:'aquitaine', culture:'gallo_roman', religion:'nicene', dev:2, customaryRights:[{ power:'peace', basis:'tenure', basisRef:'settled_tenure_476:perigueux' }, { power:'revenue', basis:'tenure', basisRef:'settled_tenure_476:perigueux' }], communities:[{ culture:'gallo_roman', religion:'nicene', populationShare0:8000 }, { culture:'gothic', religion:'homoian', paired:true, populationShare0:2000 }] },
@@ -121,13 +121,13 @@ FBDATA.bookmarkRegions476['gaul_iberia'] = {
     { id:'metz', name:'Divodurum', names:[{ to:600, name:'Divodurum' }], realm:'west_francia', culture:'gallo_roman', religion:'nicene', dev:4, customaryRights:[{ power:'peace', basis:'tenure', basisRef:'provincial_court_476:metz' }, { power:'revenue', basis:'tenure', basisRef:'provincial_court_476:metz' }], communities:[{ culture:'gallo_roman', religion:'nicene', populationShare0:10000 }] },
     { id:'verdun', name:'Virodunum', names:[{ to:600, name:'Virodunum' }], realm:'west_francia', culture:'gallo_roman', religion:'nicene', dev:2, customaryRights:[{ power:'peace', basis:'tenure', basisRef:'provincial_court_476:verdun' }, { power:'revenue', basis:'tenure', basisRef:'provincial_court_476:verdun' }], communities:[{ culture:'gallo_roman', religion:'nicene', populationShare0:10000 }] },
     { id:'nancy', name:'Mosella uplands', names:[{ to:600, name:'Mosella uplands' }], realm:'west_francia', culture:'gallo_roman', religion:'nicene', dev:2, customaryRights:[{ power:'peace', basis:'tenure', basisRef:'provincial_court_476:nancy' }, { power:'revenue', basis:'tenure', basisRef:'provincial_court_476:nancy' }], communities:[{ culture:'gallo_roman', religion:'nicene', populationShare0:10000 }] },
-    { id:'strasbourg', name:'Argentoratum', names:[{ to:600, name:'Argentoratum' }], realm:'alamanni_476', culture:'gallo_roman', religion:'nicene', dev:3, customaryRights:[{ power:'peace', basis:'tenure', basisRef:'settled_tenure_476:strasbourg' }, { power:'revenue', basis:'tenure', basisRef:'settled_tenure_476:strasbourg' }], communities:[{ culture:'gallo_roman', religion:'nicene', populationShare0:8000 }, { culture:'alamannic', religion:'germanic_pagan', paired:true, populationShare0:2000 }] },
+    { id:'strasbourg', name:'Argentoratum', names:[{ to:600, name:'Argentoratum' }], realm:'alamanni_476', culture:'gallo_roman', religion:'nicene', dev:3, customaryRights:[{ power:'peace', basis:'tenure', basisRef:'alamannic_settled_custom_476:strasbourg' }, { power:'revenue', basis:'tenure', basisRef:'alamannic_settled_custom_476:strasbourg' }], communities:[{ culture:'gallo_roman', religion:'nicene', populationShare0:7000 }, { culture:'alamannic', religion:'germanic_pagan', paired:true, populationShare0:2500 }, { culture:'alamannic', religion:'nicene', paired:true, populationShare0:500 }] },
     { id:'basel', name:'Basilia', names:[{ to:600, name:'Basilia' }], realm:'burgundy', culture:'gallo_roman', religion:'nicene', dev:2, customaryRights:[{ power:'peace', basis:'tenure', basisRef:'settled_tenure_476:basel' }, { power:'revenue', basis:'tenure', basisRef:'settled_tenure_476:basel' }], communities:[{ culture:'gallo_roman', religion:'nicene', populationShare0:8000 }, { culture:'burgundian', religion:'homoian', paired:true, populationShare0:2000 }] },
-    { id:'aachen', name:'Aquae Granni', names:[{ to:600, name:'Aquae Granni' }], realm:'rhein_franks_476', culture:'gallo_roman', religion:'nicene', dev:2, customaryRights:[{ power:'peace', basis:'tenure', basisRef:'settled_tenure_476:aachen' }, { power:'revenue', basis:'tenure', basisRef:'settled_tenure_476:aachen' }], communities:[{ culture:'gallo_roman', religion:'nicene', populationShare0:7000 }, { culture:'frankish', religion:'germanic_pagan', paired:true, populationShare0:3000 }] },
-    { id:'trier', name:'Augusta Treverorum', names:[{ to:600, name:'Augusta Treverorum' }], realm:'rhein_franks_476', culture:'gallo_roman', religion:'nicene', dev:3, customaryRights:[{ power:'peace', basis:'tenure', basisRef:'settled_tenure_476:trier' }, { power:'revenue', basis:'tenure', basisRef:'settled_tenure_476:trier' }], communities:[{ culture:'gallo_roman', religion:'nicene', populationShare0:7000 }, { culture:'frankish', religion:'germanic_pagan', paired:true, populationShare0:3000 }] },
-    { id:'luxembourg', name:'Treveran uplands', names:[{ to:600, name:'Treveran uplands' }], realm:'rhein_franks_476', culture:'gallo_roman', religion:'nicene', dev:2, customaryRights:[{ power:'peace', basis:'tenure', basisRef:'settled_tenure_476:luxembourg' }, { power:'revenue', basis:'tenure', basisRef:'settled_tenure_476:luxembourg' }], communities:[{ culture:'gallo_roman', religion:'nicene', populationShare0:7000 }, { culture:'frankish', religion:'germanic_pagan', paired:true, populationShare0:3000 }] },
-    { id:'liege', name:'Middle Mosa', names:[{ to:600, name:'Middle Mosa' }], realm:'rhein_franks_476', culture:'gallo_roman', religion:'nicene', dev:2, customaryRights:[{ power:'peace', basis:'tenure', basisRef:'settled_tenure_476:liege' }, { power:'revenue', basis:'tenure', basisRef:'settled_tenure_476:liege' }], communities:[{ culture:'gallo_roman', religion:'nicene', populationShare0:7000 }, { culture:'frankish', religion:'germanic_pagan', paired:true, populationShare0:3000 }] },
-    { id:'cologne', name:'Colonia Agrippina', names:[{ to:600, name:'Colonia Agrippina' }], realm:'rhein_franks_476', culture:'gallo_roman', religion:'nicene', dev:4, customaryRights:[{ power:'peace', basis:'tenure', basisRef:'settled_tenure_476:cologne' }, { power:'revenue', basis:'tenure', basisRef:'settled_tenure_476:cologne' }], communities:[{ culture:'gallo_roman', religion:'nicene', populationShare0:7000 }, { culture:'frankish', religion:'germanic_pagan', paired:true, populationShare0:3000 }] }
+    { id:'aachen', name:'Aquae Granni', names:[{ to:600, name:'Aquae Granni' }], realm:'rhein_franks_476', culture:'gallo_roman', religion:'nicene', dev:2, customaryRights:[{ power:'peace', basis:'tenure', basisRef:'frankish_settled_custom_476:aachen' }, { power:'revenue', basis:'tenure', basisRef:'frankish_settled_custom_476:aachen' }], communities:[{ culture:'gallo_roman', religion:'nicene', populationShare0:7000 }, { culture:'frankish', religion:'germanic_pagan', paired:true, populationShare0:3000 }] },
+    { id:'trier', name:'Augusta Treverorum', names:[{ to:600, name:'Augusta Treverorum' }], realm:'rhein_franks_476', culture:'gallo_roman', religion:'nicene', dev:3, customaryRights:[{ power:'peace', basis:'tenure', basisRef:'frankish_settled_custom_476:trier' }, { power:'revenue', basis:'tenure', basisRef:'frankish_settled_custom_476:trier' }], communities:[{ culture:'gallo_roman', religion:'nicene', populationShare0:8000 }, { culture:'frankish', religion:'germanic_pagan', paired:true, populationShare0:1500 }, { culture:'gothic', religion:'homoian', paired:true, populationShare0:500 }] },
+    { id:'luxembourg', name:'Treveran uplands', names:[{ to:600, name:'Treveran uplands' }], realm:'rhein_franks_476', culture:'gallo_roman', religion:'nicene', dev:2, customaryRights:[{ power:'peace', basis:'tenure', basisRef:'frankish_settled_custom_476:luxembourg' }, { power:'revenue', basis:'tenure', basisRef:'frankish_settled_custom_476:luxembourg' }], communities:[{ culture:'gallo_roman', religion:'nicene', populationShare0:7000 }, { culture:'frankish', religion:'germanic_pagan', paired:true, populationShare0:3000 }] },
+    { id:'liege', name:'Middle Mosa', names:[{ to:600, name:'Middle Mosa' }], realm:'rhein_franks_476', culture:'gallo_roman', religion:'nicene', dev:2, customaryRights:[{ power:'peace', basis:'tenure', basisRef:'frankish_settled_custom_476:liege' }, { power:'revenue', basis:'tenure', basisRef:'frankish_settled_custom_476:liege' }], communities:[{ culture:'gallo_roman', religion:'nicene', populationShare0:7000 }, { culture:'frankish', religion:'germanic_pagan', paired:true, populationShare0:3000 }] },
+    { id:'cologne', name:'Colonia Agrippina', names:[{ to:600, name:'Colonia Agrippina' }], realm:'rhein_franks_476', culture:'gallo_roman', religion:'nicene', dev:4, customaryRights:[{ power:'peace', basis:'tenure', basisRef:'frankish_settled_custom_476:cologne' }, { power:'revenue', basis:'tenure', basisRef:'frankish_settled_custom_476:cologne' }], communities:[{ culture:'gallo_roman', religion:'nicene', populationShare0:7000 }, { culture:'frankish', religion:'germanic_pagan', paired:true, populationShare0:2500 }, { culture:'frankish', religion:'nicene', paired:true, populationShare0:500 }] }
   ],
   realms:[
     { id:'west_francia', name:'Roman Domain in Gaul', color:'#758aa0', capital:'laon',
@@ -140,9 +140,10 @@ FBDATA.bookmarkRegions476['gaul_iberia'] = {
       governingIdentity:{ eliteCultureId:'frankish', eliteFaithId:'germanic_pagan', legalIdentityId:'frankish_custom',
         tolerance:'preference', taxation:'equal', justicePolicy:'personal' },
       ruler:{ name:'Childeric', sex:'m', culture:'frankish', born:440, mar:10, trait:'ambitious' },
-      royalCourt:{ dynasty:'Merovingian', succession:{ policyId:'dynastic', preferredMemberId:'clovis' },
+      royalCourt:{ dynasty:'Merovingian', spouseId:'basina', succession:{ policyId:'dynastic', preferredMemberId:'clovis' },
         members:[
-          { id:'clovis', name:'Clovis', sex:'m', born:466, culture:'frankish', religion:'germanic_pagan', fatherId:'ruler', homeProvinceId:'ghent' }
+          { id:'basina', name:'Basina', sex:'f', born:438, culture:'frankish', religion:'germanic_pagan', spouseId:'ruler', homeProvinceId:'ghent' },
+          { id:'clovis', name:'Clovis', sex:'m', born:466, culture:'frankish', religion:'germanic_pagan', fatherId:'ruler', motherId:'basina', homeProvinceId:'ghent' }
         ] } },
     { id:'aquitaine', name:'Visigothic Kingdom', color:'#ba8655', capital:'toulouse',
       aggression:1, rank:3, religion:'homoian', techTraditions:['latin'],
@@ -455,6 +456,21 @@ FBDATA.bookmarkRegions476['gaul_iberia'] = {
     vienne_council:{ city:'Vienna', kind:'council', provinceId:'vienne', site:'vienne_476', religion:'nicene', culture:'gallo_roman' },
     geneva_council:{ city:'Genava', kind:'council', provinceId:'geneva', site:'geneva_476', religion:'nicene', culture:'gallo_roman' },
     soissons_council:{ city:'Augusta Suessionum', kind:'council', provinceId:'laon', site:'soissons_476', religion:'nicene', culture:'gallo_roman' },
+    paris_council:{ city:'Parisii', kind:'council', provinceId:'paris', site:'paris_476', religion:'nicene', culture:'gallo_roman' },
+    orleans_council:{ city:'Aurelianum', kind:'council', provinceId:'orleans', site:'orleans_476', religion:'nicene', culture:'gallo_roman' },
+    reims_council:{ city:'Durocortorum', kind:'council', provinceId:'reims', site:'reims_476', religion:'nicene', culture:'gallo_roman' },
+    troyes_council:{ city:'Tricasses', kind:'council', provinceId:'troyes', site:'troyes_476', religion:'nicene', culture:'gallo_roman' },
+    tours_council:{ city:'Turones', kind:'council', provinceId:'tours', site:'tours_476', religion:'nicene', culture:'gallo_roman' },
+    rouen_council:{ city:'Rotomagus', kind:'council', provinceId:'rouen', site:'rouen_476', religion:'nicene', culture:'gallo_roman' },
+    angers_council:{ city:'Andecavi', kind:'council', provinceId:'angers', site:'angers_476', religion:'nicene', culture:'gallo_roman' },
+    metz_council:{ city:'Divodurum', kind:'council', provinceId:'metz', site:'metz_476', religion:'nicene', culture:'gallo_roman' },
+    trier_council:{ city:'Augusta Treverorum', kind:'council', provinceId:'trier', site:'trier_476', religion:'nicene', culture:'gallo_roman' },
+    cologne_council:{ city:'Colonia Agrippina', kind:'council', provinceId:'cologne', site:'cologne_476', religion:'nicene', culture:'gallo_roman' },
+    tournai_council:{ city:'Tornacum', kind:'council', provinceId:'ghent', site:'tournai_476', religion:'nicene', culture:'gallo_roman' },
+    rennes_council:{ city:'Condate', kind:'council', provinceId:'rennes', site:'rennes_476', religion:'nicene', culture:'gallo_roman' },
+    nantes_council:{ city:'Condevincum', kind:'council', provinceId:'nantes', site:'nantes_476', religion:'nicene', culture:'gallo_roman' },
+    vannes_council:{ city:'Darioritum', kind:'council', provinceId:'vannes', site:'vannes_476', religion:'nicene', culture:'gallo_roman' },
+    strasbourg_council:{ city:'Argentoratum', kind:'council', provinceId:'strasbourg', site:'strasbourg_476', religion:'nicene', culture:'gallo_roman' },
     arles_see:{ city:'Arelate', kind:'see', provinceId:'arles', site:'arles_476', religion:'nicene', culture:'gallo_roman', officeId:'arles_bishop', historicalName:'Leontius' },
     lyon_see:{ city:'Lugdunum', kind:'see', provinceId:'lyon', site:'lyon_476', religion:'nicene', culture:'gallo_roman', officeId:'lyon_bishop', historicalName:'Patiens' },
     toulouse_see:{ city:'Tolosa', kind:'see', provinceId:'toulouse', site:'toulouse_476', religion:'nicene', culture:'gallo_roman', officeId:'toulouse_bishop' },
@@ -464,14 +480,45 @@ FBDATA.bookmarkRegions476['gaul_iberia'] = {
     marseille_see:{ city:'Massilia', kind:'see', provinceId:'marseille', site:'marseille_476', religion:'nicene', culture:'gallo_roman', officeId:'marseille_bishop', historicalName:'Graecus' },
     vienne_see:{ city:'Vienna', kind:'see', provinceId:'vienne', site:'vienne_476', religion:'nicene', culture:'gallo_roman', officeId:'vienne_bishop' },
     geneva_see:{ city:'Genava', kind:'see', provinceId:'geneva', site:'geneva_476', religion:'nicene', culture:'gallo_roman', officeId:'geneva_bishop' },
-    reims_see:{ city:'Durocortorum', kind:'see', provinceId:'reims', site:'reims_476', religion:'nicene', culture:'gallo_roman', officeId:'reims_bishop', historicalName:'Remigius' },
+    reims_see:{ city:'Durocortorum', kind:'see', provinceId:'reims', site:'reims_476', religion:'nicene', culture:'gallo_roman', officeId:'reims_bishop', historicalName:'Remigius', representative:{ born:440, role:'priest', skills:{ lea:12, dip:11 } } },
+    soissons_see:{ city:'Augusta Suessionum', kind:'see', provinceId:'laon', site:'soissons_476', religion:'nicene', culture:'gallo_roman', officeId:'soissons_bishop', historicalName:'Principius', representative:{ born:430, role:'priest', skills:{ lea:10, dip:9 } } },
+    paris_see:{ city:'Parisii', kind:'see', provinceId:'paris', site:'paris_476', religion:'nicene', culture:'gallo_roman', officeId:'paris_bishop' },
+    orleans_see:{ city:'Aurelianum', kind:'see', provinceId:'orleans', site:'orleans_476', religion:'nicene', culture:'gallo_roman', officeId:'orleans_bishop' },
+    troyes_see:{ city:'Tricasses', kind:'see', provinceId:'troyes', site:'troyes_476', religion:'nicene', culture:'gallo_roman', officeId:'troyes_bishop', historicalName:'Lupus', representative:{ born:400, role:'priest', skills:{ lea:10, dip:12 } } },
+    tours_see:{ city:'Turones', kind:'see', provinceId:'tours', site:'tours_476', religion:'nicene', culture:'gallo_roman', officeId:'tours_bishop', historicalName:'Perpetuus', representative:{ born:425, role:'priest', skills:{ lea:10, dip:10 } } },
+    rouen_see:{ city:'Rotomagus', kind:'see', provinceId:'rouen', site:'rouen_476', religion:'nicene', culture:'gallo_roman', officeId:'rouen_bishop' },
+    metz_see:{ city:'Divodurum', kind:'see', provinceId:'metz', site:'metz_476', religion:'nicene', culture:'gallo_roman', officeId:'metz_bishop' },
+    trier_see:{ city:'Augusta Treverorum', kind:'see', provinceId:'trier', site:'trier_476', religion:'nicene', culture:'gallo_roman', officeId:'trier_bishop' },
+    trier_homoian_congregation:{ city:'Augusta Treverorum', kind:'congregation', provinceId:'trier', site:'trier_476', religion:'homoian', culture:'gothic', representative:{ role:'priest' } },
+    rennes_see:{ city:'Condate', kind:'see', provinceId:'rennes', site:'rennes_476', religion:'nicene', culture:'gallo_roman', officeId:'rennes_bishop' },
+    nantes_see:{ city:'Condevincum', kind:'see', provinceId:'nantes', site:'nantes_476', religion:'nicene', culture:'gallo_roman', officeId:'nantes_bishop' },
+    vannes_see:{ city:'Darioritum', kind:'see', provinceId:'vannes', site:'vannes_476', religion:'nicene', culture:'gallo_roman', officeId:'vannes_bishop' },
+    /* Clerical presence does not assert a securely continuous episcopate. */
+    cologne_congregation:{ city:'Colonia Agrippina', kind:'congregation', provinceId:'cologne', site:'cologne_476', religion:'nicene', culture:'gallo_roman', representative:{ role:'priest' } },
+    tournai_congregation:{ city:'Tornacum', kind:'congregation', provinceId:'ghent', site:'tournai_476', religion:'nicene', culture:'gallo_roman', representative:{ role:'priest' } },
+    strasbourg_congregation:{ city:'Argentoratum', kind:'congregation', provinceId:'strasbourg', site:'strasbourg_476', religion:'nicene', culture:'gallo_roman', representative:{ role:'priest' } },
     tarragona_council:{ city:'Tarraco', kind:'council', provinceId:'tarragona', site:'tarragona_476', religion:'nicene', culture:'hispano_roman' },
     tarragona_see:{ city:'Tarraco', kind:'see', provinceId:'tarragona', site:'tarragona_476', religion:'nicene', culture:'hispano_roman', officeId:'tarragona_bishop' },
     merida_council:{ city:'Emerita Augusta', kind:'council', provinceId:'merida', site:'merida_476', religion:'nicene', culture:'hispano_roman' },
     merida_see:{ city:'Emerita Augusta', kind:'see', provinceId:'merida', site:'merida_476', religion:'nicene', culture:'hispano_roman', officeId:'merida_bishop' },
     lugo_see:{ city:'Lucus Augusti', kind:'see', provinceId:'lugo', site:'lugo_476', religion:'nicene', culture:'hispano_roman', officeId:'lugo_bishop' }
   },
+  storyIds:['clovis_alamanni_476'],
   storyCampaigns:{
+    clovis_alamanni_476:{ id:'clovis_alamanni_476', type:'campaign',
+      requires:['western_court_476'], name:'The Frankish Upper Rhine Challenge',
+      desc:'A living Clovis ruling the Franks and holding Soissons may contest the Alamannic seat. An ordinary war decides possession; victory does not baptize the court or its communities.',
+      firstYear:496, lastYear:506, durationDays:1440,
+      actor:{ realmId:'franks_476', character:{ storyId:'western_court_476', field:'clovisId' } },
+      target:{ provinceId:'strasbourg', ownerIds:['alamanni_476'] },
+      conditions:[{ kind:'owner', provinceId:'laon', realmId:'franks_476' }],
+      news:{
+        started:{ key:'news.476.alamanni.started', text:'⚔ The Frankish court contests the Alamannic seat on the upper Rhine.' },
+        won:{ key:'news.476.alamanni.won', text:'⚔ Frankish armies secure the Alamannic seat. Its communities retain their beliefs.' },
+        failed:{ key:'news.476.alamanni.failed', text:'🏳 The Frankish Upper Rhine campaign ends without its objective.' },
+        diverted:{ key:'news.476.alamanni.diverted', text:'📜 Changed possession closes the Frankish Upper Rhine opportunity.' },
+        interrupted:{ key:'news.476.alamanni.interrupted', text:'📜 A changed or lost court interrupts the Frankish Upper Rhine campaign.' }
+      } },
     clovis_syagrius_476:{ id:'clovis_syagrius_476', type:'campaign',
       requires:['western_court_476'], name:'The Roman Domain at Soissons',
       desc:'Clovis may contest Syagrius after inheriting the Frankish court. Their living courts and an ordinary campaign decide the outcome.',
@@ -612,6 +659,9 @@ FBDATA.bookmarkRegions476['gaul_iberia'] = {
 Object.assign(FBDATA.cultures, FBDATA.bookmarkRegions476.gaul_iberia.cultures);
 Object.assign(FBDATA.settlementSites, FBDATA.bookmarkRegions476.gaul_iberia.settlementSites);
 Object.assign(FBDATA.settlementLayouts['476'], FBDATA.bookmarkRegions476.gaul_iberia.settlementLayouts);
+FBDATA.techImpactReviews.features.period_476_alamannic_campaign = {
+  mode:'none', rationale:'The Upper Rhine opportunity reuses a living Clovis court, actual Soissons possession and ordinary war. Political timing supplies no credible discovery prerequisite; military technology still applies.'
+};
 
 FBDATA.eventPacks = FBDATA.eventPacks || {};
 FBDATA.eventPacks.gaul_iberia_476 = { eras:['late_antique'], yearMin:476, yearMax:600 };
@@ -676,7 +726,7 @@ FBDATA.events.push(
     ] },
   { id:'gaul_476_frankish_supplies', pack:'gaul_iberia_476', title:'A Frankish Escort',
     cooldown:12, weight:3,
-    trigger:{ minAge:16, countyCulture:'gallo_roman',
+    trigger:{ minAge:16, countyIds:['ghent','bruges','boulogne','arras','aachen','trier','luxembourg','liege','cologne'], countyCulture:'gallo_roman',
       countyCommunityShare:{ kind:'culture', target:'frankish', min:0.10 } },
     text:'Frankish warriors are escorting a wagon through the district. Their leader asks local households for provisions, while the town’s clerk wants every contribution entered on a receipt.',
     options:[
@@ -686,7 +736,7 @@ FBDATA.events.push(
     ] },
   { id:'armorica_476_coastal_guests', pack:'gaul_iberia_476', title:'Guests From Across the Water',
     cooldown:16, weight:2,
-    trigger:{ minAge:16, countyCulture:'brezhon', coastal:true },
+    trigger:{ minAge:16, countyIds:['rennes','nantes','vannes','quimper','st_brieuc'], countyCulture:'brezhon', coastal:true },
     text:'A boat brings British-speaking travelers to the Armorican coast. They carry letters for local kin and news of households seeking a place among the communities here. A host asks you to help receive them.',
     options:[
       { label:'Share the household’s provisions.', desc:'Spend {money:3} and gain 4 piety.', require:{ goldMin:3 }, effects:{ gold:-3, piety:4 } },
@@ -695,12 +745,92 @@ FBDATA.events.push(
     ] },
   { id:'rhine_476_captive_relief', pack:'gaul_iberia_476', title:'Word of a Captive',
     cooldown:16, weight:2,
-    trigger:{ minAge:16, countyCulture:'gallo_roman',
+    trigger:{ minAge:16, countyIds:['strasbourg'], countyCulture:'gallo_roman',
       countyCommunityShare:{ kind:'culture', target:'alamannic', min:0.10 } },
     text:'A messenger asks for help bringing a captive home from a frontier raid. The family is gathering a ransom through neighbors rather than waiting for another expedition. Your household can add a little to the chest.',
     options:[
       { label:'Add to the ransom chest.', desc:'Spend {money:5} and gain 6 piety and 2 prestige.', require:{ goldMin:5 }, effects:{ gold:-5, piety:6, prestige:2 } },
       { label:'Carry the appeal to other households.', desc:'Lose 1 health and gain 3 piety.', effects:{ health:-1, piety:3 } },
       { label:'Keep your resources for your own family.', desc:'The household loses no resources.', effects:{} }
+    ] },
+  { id:'north_gaul_476_public_registers', pack:'gaul_iberia_476', title:'The Provincial Register',
+    cooldown:12, weight:3,
+    trigger:{ minAge:16, careerRoles:['civic'], countyIds:['laon','paris','orleans','reims','troyes','rouen','tours','metz'], countyCulture:'gallo_roman' },
+    text:'A local officer brings the council an old Roman assessment. The names of households and their obligations no longer agree with the register. The councillors need a careful copy before they answer the controlling court.',
+    options:[
+      { label:'Copy the assessment for the council.', desc:'Lose 1 health and gain 4 prestige.', effects:{ health:-1, prestige:4 } },
+      { label:'Pay a trained copyist.', desc:'Spend {money:4} and gain 5 prestige.', require:{ goldMin:4 }, effects:{ gold:-4, prestige:5 } },
+      { label:'Leave the account to its officers.', desc:'The household loses no resources.', effects:{} }
+    ] },
+  { id:'north_gaul_476_church_petition', pack:'gaul_iberia_476', title:'A Petition From the Church',
+    cooldown:16, weight:2,
+    trigger:{ minAge:16, countyIds:['laon','reims','paris','orleans','troyes','tours'], religionGroup:'nicene' },
+    text:'The local church is disputing the sale of a vessel used in its services. Its clerks ask neighboring households to help trace the witnesses and present the claim to the court. Recovering it depends on an agreement, not on the name of the ruler.',
+    options:[
+      { label:'Help prepare the petition.', desc:'Lose 1 health and gain 5 piety.', effects:{ health:-1, piety:5 } },
+      { label:'Pay the messenger’s expenses.', desc:'Spend {money:3} and gain 4 piety and 2 prestige.', require:{ goldMin:3 }, effects:{ gold:-3, piety:4, prestige:2 } },
+      { label:'Let the church pursue its own claim.', desc:'The household loses no resources.', effects:{} }
+    ] },
+  { id:'franks_476_settled_boundaries', pack:'gaul_iberia_476', title:'A Settled Boundary',
+    cooldown:12, weight:3,
+    trigger:{ minAge:16, countyIds:['ghent','arras','boulogne','cologne','trier','aachen','liege','luxembourg'],
+      countyCommunityShare:{ kind:'culture', target:'frankish', min:0.10 } },
+    text:'A Frankish household and a Roman neighbor disagree over a field boundary. Service to the court, possession and the older land record all enter the argument. Neither household accepts that a warrior’s obligation settles every question of local custom.',
+    options:[
+      { label:'Bring the witnesses together.', desc:'Spend {money:3} and gain 4 prestige.', require:{ goldMin:3 }, effects:{ gold:-3, prestige:4 } },
+      { label:'Compare the record with the boundary marks.', desc:'Stewardship may earn 5 prestige; a mistake loses 2 prestige.', chance:'skill_ste',
+        success:{ text:'The record and the surviving marks give the assessor a common starting point.', effects:{ prestige:5 } },
+        failure:{ text:'A missing mark leaves both households asking for another hearing.', effects:{ prestige:-2 } } },
+      { label:'Keep out of the dispute.', desc:'The household loses no resources.', effects:{} }
+    ] },
+  { id:'franks_476_neighbor_worship', pack:'gaul_iberia_476', title:'Neighbors at the Church Door',
+    cooldown:16, weight:2,
+    trigger:{ minAge:16, countyIds:['ghent','arras','cologne','trier','aachen','liege','luxembourg'],
+      countyCommunityShare:{ kind:'faith', target:'germanic_pagan', min:0.10 } },
+    text:'A Christian neighbor invites a household that keeps the old gods to a shared meal. The priest hopes the invitation will open a conversation; the guests ask whether their own observances will still be respected. Your household can help them meet without deciding anyone’s belief.',
+    options:[
+      { label:'Provide food for both households.', desc:'Spend {money:3} and gain 4 prestige.', require:{ goldMin:3 }, effects:{ gold:-3, prestige:4 } },
+      { label:'Spend a day making introductions.', desc:'Lose 1 health and gain 3 prestige.', effects:{ health:-1, prestige:3 } },
+      { label:'Leave the invitation to the neighbors.', desc:'The household loses no resources.', effects:{} }
+    ] },
+  { id:'rhine_476_two_congregations', pack:'gaul_iberia_476', title:'Two Congregations by the Mosella',
+    cooldown:16, weight:2,
+    trigger:{ minAge:16, countyIds:['trier'], religionGroup:'nicene',
+      countyCommunityShare:{ kind:'faith', target:'homoian', min:0.02 } },
+    text:'Nicene townspeople and Homoian travelers seek space to distribute bread by the river. Their clergy disagree over worship, but both groups have hungry households waiting. A merchant asks you to help arrange separate tables and a fair division of the provisions.',
+    options:[
+      { label:'Buy bread for the distribution.', desc:'Spend {money:4} and gain 6 piety.', require:{ goldMin:4 }, effects:{ gold:-4, piety:6 } },
+      { label:'Help distribute the provisions.', desc:'Lose 1 health and gain 4 piety.', effects:{ health:-1, piety:4 } },
+      { label:'Attend to your own household.', desc:'The household loses no resources.', effects:{} }
+    ] },
+  { id:'rhine_476_ford_receipts', pack:'gaul_iberia_476', title:'Receipts at the Rhine Crossing',
+    cooldown:12, weight:3,
+    trigger:{ minAge:16, countyIds:['strasbourg','cologne','trier'], countyCulture:'gallo_roman' },
+    text:'At the crossing, an escort asks for supplies and a town clerk checks the receipts. The travelers want to know which payments have already been made before they enter another court’s reach. Your household can help reconcile the lists.',
+    options:[
+      { label:'Pay for a clear copy of the receipts.', desc:'Spend {money:3} and gain 3 prestige.', require:{ goldMin:3 }, effects:{ gold:-3, prestige:3 } },
+      { label:'Check the lists yourself.', desc:'Learning may earn {money:4}; failure loses 2 prestige.', chance:'skill_lea',
+        success:{ text:'The matching entries save the merchants another payment, and they pay for your work.', effects:{ gold:4 } },
+        failure:{ text:'The lists disagree and another clerk must check the entries.', effects:{ prestige:-2 } } },
+      { label:'Leave the receipts with the clerk.', desc:'The household loses no resources.', effects:{} }
+    ] },
+  { id:'armorica_476_two_tongues', pack:'gaul_iberia_476', title:'Two Tongues at the Council',
+    cooldown:12, weight:3,
+    trigger:{ minAge:16, countyIds:['rennes','nantes','vannes','quimper','st_brieuc'], countyCulture:'brezhon',
+      countyCommunityShare:{ kind:'culture', target:'gallo_roman', min:0.10 } },
+    text:'A local agreement is read aloud for British-speaking households and Roman neighbors. Their witnesses use different names for the same fields. Before the council accepts the record, someone must make sure both groups understand the obligations.',
+    options:[
+      { label:'Pay a bilingual reader.', desc:'Spend {money:3} and gain 4 prestige.', require:{ goldMin:3 }, effects:{ gold:-3, prestige:4 } },
+      { label:'Give a day to the witnesses.', desc:'Lose 1 health and gain 3 prestige.', effects:{ health:-1, prestige:3 } },
+      { label:'Let the council find its own reader.', desc:'The household loses no resources.', effects:{} }
+    ] },
+  { id:'armorica_476_church_letters', pack:'gaul_iberia_476', title:'Letters for the Coastal Churches',
+    cooldown:16, weight:2,
+    trigger:{ minAge:16, countyIds:['rennes','nantes','vannes','quimper','st_brieuc'], religionGroup:'nicene' },
+    text:'A cleric traveling between coastal communities carries books and letters for their churches. War and rough water have made the journey slow. A local host asks your household to help copy a damaged letter and prepare provisions for the next stage.',
+    options:[
+      { label:'Pay for provisions and writing materials.', desc:'Spend {money:4} and gain 6 piety.', require:{ goldMin:4 }, effects:{ gold:-4, piety:6 } },
+      { label:'Help copy the letter.', desc:'Lose 1 health and gain 4 piety.', effects:{ health:-1, piety:4 } },
+      { label:'Wish the traveler a safe journey.', desc:'Gain 1 piety.', effects:{ piety:1 } }
     ] }
 );
