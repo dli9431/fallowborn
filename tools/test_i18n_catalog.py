@@ -72,6 +72,22 @@ class StructuredDataExtractionTests(unittest.TestCase):
         self.assertNotIn(i18n_catalog.source_key('Charlemagne'), inventory.entries)
         self.assertNotIn(i18n_catalog.source_key('Harun al-Rashid'), inventory.entries)
 
+    def test_review_bookmark_content_has_display_and_durable_news_owners(self):
+        inventory = i18n_catalog.Inventory()
+        i18n_catalog.extract_structured(inventory)
+        for key, text in (
+            ('bookmark.1204.name.default', 'The Fall of Constantinople'),
+            ('realm.1204.latin_1204.name.default', 'Latin Empire'),
+            ('province.1204.aghmat.name.default', 'Marrakesh'),
+            ('storyCampaign.latin_thessalonica_1204.name.default', 'The Latin March into Macedonia'),
+        ):
+            self.assertEqual(inventory.entries[key]['text'], text)
+            self.assertIn('bookmark_1204', inventory.meta[key]['location'])
+        for outcome in ('started', 'won', 'failed', 'diverted', 'interrupted'):
+            self.assertIn(f'news.1204.latin_thessalonica_1204.{outcome}', inventory.entries)
+        self.assertNotIn(i18n_catalog.source_key('Baldwin of Flanders'), inventory.entries)
+        self.assertNotIn(i18n_catalog.source_key('Theodore Laskaris'), inventory.entries)
+
     def test_regional_africa_content_keeps_stable_display_and_news_owners(self):
         inventory = i18n_catalog.Inventory()
         i18n_catalog.extract_structured(inventory)

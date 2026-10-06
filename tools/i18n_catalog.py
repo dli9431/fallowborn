@@ -398,7 +398,8 @@ def find_local_assignment(path: Path, variable: str) -> Node | None:
     return None
 
 
-def find_keyed_assignment(path: Path, owner: str, prop: str, key: str) -> Node | None:
+def find_keyed_assignment(path: Path, owner: str, prop: str, key: str,
+                          field: str | None = None) -> Node | None:
     tokens = lex_js(path.read_text(encoding="utf-8"))
     for i in range(len(tokens) - 6):
         if (
@@ -406,10 +407,16 @@ def find_keyed_assignment(path: Path, owner: str, prop: str, key: str) -> Node |
             and tokens[i + 2].value == prop and tokens[i + 3].value == "["
             and tokens[i + 4].kind == "string"
             and tokens[i + 4].value == key and tokens[i + 5].value == "]"
-            and tokens[i + 6].value == "="
         ):
+            position = i + 6
+            if field is not None:
+                if position + 2 >= len(tokens) or tokens[position].value != "." or tokens[position + 1].value != field:
+                    continue
+                position += 2
+            if tokens[position].value != "=":
+                continue
             parser = Parser(tokens)
-            parser.i = i + 7
+            parser.i = position + 1
             return parser.parse_value()
     return None
 
@@ -835,6 +842,19 @@ def extract_structured(inv: Inventory) -> None:
             for regional_field in regional_fields:
                 entries.extend((item_id, item_node, region_rel) for item_id, item_node in
                                (node_object(declaration.get(regional_field)) or {}).items())
+        if data_name == "storyCampaigns":
+            # Review bookmarks compose literal campaign tables before boot.
+            # Read authoring data statically, including hidden candidates.
+            for candidate_path in sorted(DATA.glob("bookmark_*_campaigns.js")):
+                candidate_id = candidate_path.stem[len("bookmark_"):-len("_campaigns")]
+                if not candidate_id.isdigit():
+                    continue
+                candidate = node_object(find_keyed_assignment(
+                    candidate_path, "FBDATA", "bookmarkContent", candidate_id, "campaigns"
+                )) or {}
+                candidate_rel = candidate_path.relative_to(ROOT).as_posix()
+                entries.extend((item_id, item_node, candidate_rel)
+                               for item_id, item_node in candidate.items())
         for item_id, item_node, rel in entries:
             item = node_object(item_node) or {}
             fields = DATA_FIELDS + (("earned",) if data_name == "traits" else ())
@@ -1241,6 +1261,26 @@ def extract_structured(inv: Inventory) -> None:
                     inv.add(f"{kind}.{candidate_id}.{item_id}.name.{branch}", record,
                             f"{candidate_rel}:{line}",
                             f"Review {candidate_id} {kind} {item_id}, display name.", ())
+        # Candidates that compose from a literal bookmarkContent table keep
+        # their realm and county override labels there.
+        content = node_object(find_keyed_assignment(
+            candidate_path, "FBDATA", "bookmarkContent", candidate_id
+        )) or {}
+        for realm_node in node_array(content.get("realms")) or []:
+            realm = node_object(realm_node) or {}
+            realm_id = node_string(realm.get("id"))
+            if not realm_id:
+                continue
+            for branch, record, line in branch_records(realm.get("name")):
+                inv.add(f"realm.{candidate_id}.{realm_id}.name.{branch}", record,
+                        f"{candidate_rel}:{line}",
+                        f"Review {candidate_id} realm {realm_id}, display name.", ())
+        for province_id, province_node in (node_object(content.get("countyOverrides")) or {}).items():
+            province = node_object(province_node) or {}
+            for branch, record, line in branch_records(province.get("name")):
+                inv.add(f"province.{candidate_id}.{province_id}.name.{branch}", record,
+                        f"{candidate_rel}:{line}",
+                        f"Review {candidate_id} county {province_id}, display name.", ())
     # Dated county names of the geography bases replace a county's display
     # name for the years they cover, so each is a display label of its own.
     geography_path = DATA / "geographies.js"
