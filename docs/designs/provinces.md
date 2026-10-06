@@ -622,3 +622,7 @@ Opening migration declarations and civilian_migration stories use FB.moveCommuni
 Balkan and Anatolian community authoring
 
 The 476 eastern region declares distinct Gepid and Isaurian cultures through the shared culture catalogue, mixed Roman/Gepid/Rugian Pannonian communities, lower-Danube Gothic and Gepid minorities and an Isaurian minority at the coarse Iconium anchor. Abritus keeps its first slot and Novae adds a second physical site. The local Novae and Isaurian-court weights use the existing conserved partition projection; no population is created by adding a site or changing relative weights. Existing saved community counts remain authoritative. These inputs are editorial simulation weights, not a census or exact ancient frontier.
+
+Optional wider 476 content
+
+476_outer reuses the retained europe_regional seed grid and terrain but independently inhabits 105 formerly unauthored cells. Its county labels, community weights, development, dated physical-site heads, title memberships and climate assignments are literal region data. District labels replace later foundations, and former Roman city names do not imply surviving urban scale. New crossing pairs use the existing explicit class table. The original 476 map and layout remain separately addressable for older saves. No geometry, settlement compiler or runtime map change is needed. The regional design and research record are in situation-476.md and ../research/476-bookmark.md.
