@@ -19,7 +19,6 @@
     "test:served": "playwright test --project=chromium-served",
     "parity:capture": "node support/parity-run.js capture",
     "parity:compare": "node support/parity-run.js compare",
-    "ids:update": "node support/parity-run.js ids",
     "verify:runtime": "node support/verify-runtime-manifest.js"
   },
   "devDependencies": {

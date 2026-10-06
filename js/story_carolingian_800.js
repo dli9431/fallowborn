@@ -323,7 +323,8 @@
       }
     }
   }
-  FB.stories.register({ id:ID, kind:'world', init:init, day:day, season:season, validate:validate,
+  FB.stories.register({ id:ID, kind:'world', requirements:{ eras:['early_medieval'],
+    realms:[CROWN,'italy','aquitaine','abbasid'] }, init:init, day:day, season:season, validate:validate,
     title:function () { return FB.T('Carolingian Inheritance and Embassies'); },
     intro:function () { return FB.T('Living heirs, regional government and surviving courts govern these opportunities. Succession plans preserve current borders until accession; agreements require peaceful parties and current terms.'); },
     status:function (s, rec) {

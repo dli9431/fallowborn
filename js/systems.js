@@ -46,6 +46,18 @@ window.FB = window.FB || {};
     if (Array.isArray(layer.disable) && layer.disable.indexOf(id) >= 0) return false;
     return previous;
   }
+  /* Authoring uses declared scopes before characters or politics exist. */
+  S.enabledForBookmark = function (bm, id, faith, government) {
+    if (!known(id) || !plain(FBDATA.systems[id])) return false;
+    var eraId = FB.bookmarkEra(bm), era = FBDATA.eras[eraId];
+    var form = FBDATA.governmentForms[government || era && era.defaultGovernment];
+    var rel = faith && FB.faithExists(faith, null) ? FB.religionOf(faith, null) : null;
+    var value = override(era && era.systems, id, FBDATA.systems[id].defaultEnabled);
+    value = override(form && form.systems, id, value);
+    value = override(rel && rel.systems, id, value);
+    if (id === 'great_holy_wars' && typeof bm.greatHolyWars === 'boolean') value = bm.greatHolyWars;
+    return override(bm.systems, id, value) === true;
+  };
   S.layerMap = function (layer) {
     var out = {};
     S.ids().forEach(function (id) {
@@ -163,7 +175,11 @@ window.FB = window.FB || {};
     var errors = S.validate();
     var tables = ['focuses','deeds','events','traits','policies','privileges',
       'elections','politicalBlocs','religiousPaths','feudalServiceCharters',
-      'tenureArchetypes','councilSeats'];
+      'tenureArchetypes','councilSeats','careers','buildings','unitClasses','items','enterprises',
+      'startScenarios','eventPacks','ambitions','ailments','modifiers','holdings','positions',
+      'localCouncilMotions','schooling','auctionLotTypes','householdStandards','marketGoods',
+      'marketEndowmentTypes','travelPurposes','travelSites','finance','plots','collectiveDemands',
+      'countyCommunityPolicies'];
     tables.forEach(function (name) {
       var table = FBDATA[name] || {};
       for (var key in table) if (own(table, key)) {

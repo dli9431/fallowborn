@@ -354,7 +354,7 @@ test('save fingerprints stamp and refuse a life from another mod set',
     await page.evaluate(function () {
       const mod = JSON.stringify({
         name:'E2E signature world',
-        balance:{ e2eSignatureMarker:true }
+        balance:{ startAge:29 }
       });
       localStorage.setItem('fb_mods', JSON.stringify([mod]));
     });
@@ -364,14 +364,14 @@ test('save fingerprints stamp and refuse a life from another mod set',
     expect(await page.evaluate(function (data) {
       return {
         activeSig:FB.mods.sig(),
-        marker:FBDATA.balance.e2eSignatureMarker,
+        marker:FBDATA.balance.startAge,
         mismatch:FB.save.otherWorld(data),
         loaded:FB.game.loadData(data),
         stateStayedEmpty:FB.state === null
       };
     }, saved)).toEqual({
       activeSig:expect.stringMatching(/^1-/),
-      marker:true,
+      marker:29,
       mismatch:true,
       loaded:false,
       stateStayedEmpty:true
@@ -388,16 +388,16 @@ test('bundled mod toggles persist and apply across reloads',
         id:'e2e-bundled',
         name:'E2E bundled mod',
         desc:'Synthetic bundled-mod contract.',
-        data:{ balance:{ e2eBundledMarker:73 } }
+        data:{ balance:{ startAge:27 } }
       }];
     });
     await openGame(page, testInfo);
     expect(await page.evaluate(function () {
       return {
         enabled:FB.mods.isEnabled('e2e-bundled'),
-        marker:FBDATA.balance.e2eBundledMarker || null
+        marker:FBDATA.balance.startAge
       };
-    })).toEqual({ enabled:false, marker:null });
+    })).toEqual({ enabled:false, marker:16 });
 
     await page.locator('#btn-mods').click();
     await expect(page.getByRole('heading', { name:'Mods', exact:true })).toBeVisible();
@@ -409,10 +409,10 @@ test('bundled mod toggles persist and apply across reloads',
     expect(await page.evaluate(function () {
       return {
         enabled:FB.mods.isEnabled('e2e-bundled'),
-        marker:FBDATA.balance.e2eBundledMarker,
+        marker:FBDATA.balance.startAge,
         count:FB.mods.count()
       };
-    })).toEqual({ enabled:true, marker:73, count:1 });
+    })).toEqual({ enabled:true, marker:27, count:1 });
 
     await page.locator('#btn-mods').click();
     await expect(page.getByRole('heading', { name:'Mods', exact:true })).toBeVisible();
@@ -424,10 +424,10 @@ test('bundled mod toggles persist and apply across reloads',
     expect(await page.evaluate(function () {
       return {
         enabled:FB.mods.isEnabled('e2e-bundled'),
-        marker:FBDATA.balance.e2eBundledMarker || null,
+        marker:FBDATA.balance.startAge,
         count:FB.mods.count()
       };
-    })).toEqual({ enabled:false, marker:null, count:0 });
+    })).toEqual({ enabled:false, marker:16, count:0 });
   });
 
 test('invalid mod currency falls back without discarding the rest of the mod',
@@ -446,7 +446,7 @@ test('invalid mod currency falls back without discarding the rest of the mod',
           smallestPerGold:0,
           units:[]
         },
-        balance:{ e2eCurrencyMarker:91 }
+        balance:{ startAge:31 }
       });
       localStorage.setItem('fb_mods', JSON.stringify([mod]));
     });
@@ -457,12 +457,12 @@ test('invalid mod currency falls back without discarding the rest of the mod',
       return {
         invalid:FB.mods.currencyInvalid(),
         currency:FBDATA.currency.id,
-        marker:FBDATA.balance.e2eCurrencyMarker
+        marker:FBDATA.balance.startAge
       };
     })).toEqual({
       invalid:true,
       currency:'gold',
-      marker:91
+      marker:31
     });
   });
 

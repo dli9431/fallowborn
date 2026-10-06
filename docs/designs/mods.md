@@ -26,8 +26,11 @@ mod using title aliases remains supported when its stored fingerprint matches.
 **Bookmarks are atomic world definitions.** A mod may provide `bookmarks` keyed by
 bookmark id; each value replaces that entire bookmark and must include its date,
 provinces, realms, de jure hierarchy, straits, optional crossing classes, and scripted
-history. It is validated
-only when activated, after all enabled mods have applied. The existing top-level
+history.
+
+Before applying each mod, FB.mods.validate and FB.mods.apply compose detached effective catalogues and validate every registered bookmark, including hidden definitions. Same-mod era, form, culture, wardrobe, geography, layout, lexicon and start additions can satisfy one another. Rejection installs no content and consumes no RNG. The store path rejects invalid requirements before writing storage or reloading. Activation repeats the gate before world generation. See docs/designs/bookmarks.md and the public schemas in docs/MODDING.md.
+
+The existing top-level
 `provinces`/`realms`/hierarchy/straits/crossingClasses/scripted fields remain the public
 867 merge API. `straits` keep their two-id pair format; `crossingClasses` merges by its
 canonical pair key and may classify an existing edge as `narrow`, `coastal`, or `open`.

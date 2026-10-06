@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "about": "Engine lines allowed to compare start.id or activeBookmarkId with a literal, or to quote a registered bookmark id. Matched by file and trimmed source line. Kinds: legacy_default and legacy_contract keep old saves, start codes and mods working; identity_key uses the id as a stable seed or message key; pending is bookmark-specific behavior that should move into bookmark data. Pending entries may only be removed. New behavior belongs in bookmark data, not in a new entry.",
+  "about": "Reviewed engine bookmark-id references, matched by file and trimmed source. Only legacy_default, legacy_contract and identity_key are allowed; bookmark-specific pending behavior is forbidden.",
   "entries": [
     {
       "file": "js/ambitions.js",
@@ -97,6 +97,12 @@
       "source": "return 'scripted_' + (FB.activeBookmarkId || '867') + '_' +",
       "kind": "identity_key",
       "reason": "Scripted-history identities include the bookmark id."
+    },
+    {
+      "file": "js/story_history.js",
+      "source": "var bookmark = FB.bookmark(s.start && s.start.id || '867');",
+      "kind": "legacy_default",
+      "reason": "Legacy saved-story lookup uses the original bookmark when an old save has no start stamp."
     }
   ]
 }

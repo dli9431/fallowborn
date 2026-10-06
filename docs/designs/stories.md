@@ -16,6 +16,8 @@ js/stories.js owns FB.stories. Each story module calls FB.stories.register once 
 
 Hooks
 
+Bookmark authoring may declare requirements on a registered module or reusable story declaration and a pure appliesToBookmark(definition) hook on a native module. FB.validateBookmark checks attachment dependencies, typed content references and applicability before world generation. registerData retains the original declaration on the registry module for this check; it is never saved. Authoring does not invoke init, appliesTo(state), choices or other mutation hooks. See docs/designs/bookmarks.md for requirement keys.
+
 init(state) creates the story's record at campaign creation and returns it, or returns nothing to stay detached. appliesTo(state) can veto attachment. day, season and year receive the state and the story's own record. title, intro, status, choices, quote, blocker, review and apply drive the shared story sheet. Period vocabulary is not a story hook: it lives in the lexicon (data/lexicons.js, see i18n.md). validate checks a saved record before a save is adopted. migrate moves a legacy save field into state.stories on the detached copy before validation.
 
 Lifecycle

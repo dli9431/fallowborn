@@ -13,12 +13,13 @@ window.FBMODS = window.FBMODS || [];
   FB.mods = M;
   const KEY = 'fb_mods';
   const BKEY = 'fb_mods_bundled';
+  const legacyWorldBookmarkId = FBDATA.defaultBookmark;
   let currencySupplied = false;
   let currencyInvalid = false;
   let legacyBookmarkLimited = false;
 
   function own(obj, key) {
-    return Object.prototype.hasOwnProperty.call(obj, key);
+    return !!obj && Object.prototype.hasOwnProperty.call(obj, key);
   }
 
   function readAll() {
@@ -108,6 +109,11 @@ window.FBMODS = window.FBMODS || [];
       return;
     }
     if (typeof mod !== 'object' || mod === null) { if (FB.ui) FB.ui.toast('Mod must be a JSON object.'); return; }
+    const requirementErrors = M.validate(mod);
+    if (requirementErrors.length) {
+      if (FB.ui) FB.ui.toast('Mod requirements failed: {message}', { message:requirementErrors.join(' ') });
+      return false;
+    }
     const all = readAll();
     // re-applying a mod (same text, or same "name") replaces the stored
     // copy rather than stacking another on the pile
@@ -163,7 +169,7 @@ window.FBMODS = window.FBMODS || [];
   /* This is the complete public top-level runtime-mod surface. Tables that
      are generated artifacts or engine aliases are intentionally absent. */
   const PUBLIC_KEYS = {
-    name:true, bookmarks:true, defaultBookmark:true,
+    name:true, bookmarks:true, defaultBookmark:true, eras:true, wardrobes:true,
     startScenarios:true, familyPresets:true,
     focuses:true, deeds:true, deedSections:true, countyCommunityPolicies:true,
     provinces:true, realms:true, empires:true, kingdoms:true, duchies:true,
@@ -183,7 +189,7 @@ window.FBMODS = window.FBMODS || [];
     rulerTraits:true, raidingTraditions:true, councilSeats:true,
     councilRules:true, politicalBlocs:true,
     policies:true, elections:true, privileges:true, collectiveDemands:true,
-    settlementNames:true, settlementSites:true, titles:true, papacy:true,
+    settlementNames:true, settlementSites:true, settlementLayouts:true, titles:true, papacy:true,
     currency:true, balance:true, land:true, seas:true, rivers:true,
     bounds:true, geographies:true, seasonKinds:true, climateZones:true,
     lexicons:true, architectureStyles:true
@@ -724,7 +730,8 @@ window.FBMODS = window.FBMODS || [];
         startEffects:true, bookmarkIds:true, eras:true, alwaysUnlocked:true,
         fixedProvinceId:true, startAge:true, startCulture:true,
         startReligion:true, familyPresets:true, tracks:true, hidden:true,
-        rulerRealmId:true, governmentForm:true, characterName:true, onboarding:true
+        rulerRealmId:true, governmentForm:true, characterName:true, onboarding:true, requirements:true,
+        system:true, systems:true
       }, path);
       if (!/^[a-z][a-z0-9_]*$/.test(scenario.id || '')) {
         fail(path + '.id', 'must be a lowercase start-code id.');
@@ -1401,7 +1408,8 @@ window.FBMODS = window.FBMODS || [];
 
   /* Mod buildings merge by id, so check the composed table: known roles,
      fort set exactly for the fortification role, and still exactly one
-     fortification. A legacy building without a role is accepted. */
+     fortification. The complete bookmark gate additionally requires an
+     explicit role on every effective building. */
   function validateBuildings(mod) {
     if (!plainObject(mod.buildings)) fail('buildings', 'must be an object.');
     const composed = {};
@@ -1508,7 +1516,8 @@ window.FBMODS = window.FBMODS || [];
 
   /* Mod unit classes merge by id, so check the composed table: known roles,
      hired exactly for the mercenary role, and a class for every core role.
-     A legacy class without a role is accepted. */
+     The complete bookmark gate additionally requires a role on every
+     effective class; legacy replacements retain their prior role below. */
   /* A legacy replacement of an existing class that omits `role` keeps the
      replaced class's role, as a replaced culture keeps its tradition. */
   function unitClassWithRole(previous, next) {
@@ -1759,9 +1768,112 @@ window.FBMODS = window.FBMODS || [];
     }
   }
 
+  /* Validate the same composed catalogues activation will read. Temporary
+     tables are detached, including technologies normalized by their schema
+     validator. Never run story init, install actions, or consume RNG here. */
+  function prepareRequirements(mod) {
+    if (!plainObject(mod)) throw new Error('Mod data must be an object.');
+    var live = FBDATA, staged = Object.assign({}, live), prepared;
+    ['eras','wardrobes','settlementLayouts'].forEach(function (key) {
+      if (own(mod, key) && !plainObject(mod[key])) fail(key, 'must be an object keyed by id.');
+    });
+    var lists = ['startScenarios','familyPresets','events','travelSites','provinces','realms'];
+    Object.keys(mod).forEach(function (key) {
+      if (['name','bookmarks','lexicons','balance','techCaps','forts','tournaments','intrigue','papacy','currency',
+          'bounds','land','seas','rivers','straits','scripted','defaultBookmark'].indexOf(key) >= 0) return;
+      if (lists.indexOf(key) >= 0) staged[key] = combinedList(live[key], mod[key], key);
+      else if (own(PUBLIC_KEYS, key) && plainObject(mod[key])) staged[key] = combinedTable(live[key], mod[key], key);
+    });
+    staged.bookmarks = combinedBookmarks(mod);
+    // Bookmark table keys are authoritative; keep the caller's records intact.
+    Object.keys(staged.bookmarks).forEach(function (id) {
+      staged.bookmarks[id] = Object.assign({}, staged.bookmarks[id], { id:id });
+    });
+    if (mod.lexicons) staged.lexicons = composeLexicons(live.lexicons, mod.lexicons);
+    if (mod.techCaps) {
+      staged.techCaps = Object.assign({}, live.techCaps, mod.techCaps);
+      ['costFloor','units','aiUnits'].forEach(function (key) {
+        if (plainObject(mod.techCaps[key])) staged.techCaps[key] = Object.assign({}, live.techCaps[key], mod.techCaps[key]);
+      });
+    }
+    if (mod.techImpactReviews) staged.techImpactReviews = Object.assign({}, live.techImpactReviews,
+      { features:Object.assign({}, live.techImpactReviews.features, mod.techImpactReviews.features) });
+    if (mod.forts) staged.forts = Object.assign({}, live.forts, mod.forts,
+      { levels:Object.assign({}, live.forts.levels, mod.forts.levels) });
+    if (mod.papacy) staged.papacy = mod.papacy;
+    if (own(mod, 'currency')) staged.currency = mod.currency;
+    if (mod.doctrineCatalogs) {
+      staged.doctrineCatalogs = Object.assign({}, live.doctrineCatalogs);
+      Object.keys(mod.doctrineCatalogs).forEach(function (kind) {
+        staged.doctrineCatalogs[kind] = combinedTable(live.doctrineCatalogs[kind], mod.doctrineCatalogs[kind], 'doctrineCatalogs.' + kind);
+      });
+    }
+    if (['bounds','land','seas','rivers'].some(function (key) { return own(mod, key); })) {
+      staged.geographies = Object.assign({}, staged.geographies);
+      var base = staged.geographies[live.defaultGeography] = Object.assign({}, staged.geographies[live.defaultGeography]);
+      ['bounds','land','seas','rivers'].forEach(function (key) { if (own(mod, key)) base[key] = mod[key]; });
+    }
+    staged.tech = JSON.parse(JSON.stringify(staged.tech));
+    if (mod.unitClasses) Object.keys(mod.unitClasses).forEach(function (id) {
+      staged.unitClasses[id] = unitClassWithRole(live.unitClasses[id], mod.unitClasses[id]);
+    });
+    if (mod.cultures) Object.keys(mod.cultures).forEach(function (id) {
+      var next = staged.cultures[id], prior = live.cultures[id];
+      if (plainObject(next) && prior && prior.tradition && !own(next, 'tradition'))
+        staged.cultures[id] = Object.assign({}, next, { tradition:prior.tradition });
+    });
+    if (own(mod, 'defaultBookmark')) staged.defaultBookmark = mod.defaultBookmark;
+    function reset() {
+      FB.invalidateCultureData(); FB.invalidateReligionData(); FB.lexicon.reset();
+    }
+    try {
+      window.FBDATA = staged; reset();
+      prepared = validateBeforeApply(mod);
+      var problems = FB.balanceLayers.problems(mod.balance);
+      if (problems.length) fail('balance', problems.map(FB.balanceLayers.describe).join(' '));
+      // Project legacy patches into the original default world, as boot does.
+      // Whole-bookmark additions retain their atomic replacement semantics.
+      if (['provinces','realms','duchies','kingdoms','empires','straits','scripted','crossingClasses'].some(function (key) { return own(mod, key); })) {
+        var legacy = staged.bookmarks[legacyWorldBookmarkId];
+        var replacesDefault = Array.isArray(mod.bookmarks) ? mod.bookmarks.some(function (bm) {
+          return bm && bm.id === legacyWorldBookmarkId;
+        }) : own(mod.bookmarks, legacyWorldBookmarkId);
+        if (legacy && !replacesDefault) {
+          legacy = staged.bookmarks[legacyWorldBookmarkId] = Object.assign({}, legacy);
+          ['provinces','realms'].forEach(function (key) {
+            if (mod[key]) legacy[key] = combinedList(legacy[key], mod[key], key);
+          });
+          ['duchies','kingdoms','empires','crossingClasses'].forEach(function (key) {
+            if (mod[key]) legacy[key] = combinedTable(legacy[key], mod[key], key);
+          });
+          if (mod.straits) legacy.straits = legacy.straits.concat(mod.straits);
+          if (mod.scripted) {
+            legacy.scripted = legacy.scripted.filter(function (old) {
+              return !mod.scripted.some(function (next) { return next.year === old.year && next.realm === old.realm; });
+            }).concat(mod.scripted);
+          }
+        }
+      }
+      var ids = Object.keys(staged.bookmarks);
+      for (var i = 0; i < ids.length; i++) {
+        var errors = FB.validateBookmark(staged.bookmarks[ids[i]]);
+        if (errors.length) fail('requirements', errors.join(' '));
+      }
+      if (!own(staged.bookmarks, staged.defaultBookmark)) fail('defaultBookmark', 'must name a registered bookmark.');
+    } finally {
+      window.FBDATA = live; reset();
+    }
+    return prepared;
+  }
+
+  M.validate = function (mod) {
+    try { prepareRequirements(mod); return []; }
+    catch (error) { return [error.message]; }
+  };
+
   M.apply = function (mod) {
     if (FB.platform.isCrazyGames) throw new Error('Custom mods are unavailable in this edition.');
-    const prepared = validateBeforeApply(mod);
+    const prepared = prepareRequirements(mod);
     mod = FB.titleIds.normalizeMod(mod);
     if (own(mod, 'marketGoods') || own(mod, 'marketEndowmentTypes') ||
         own(mod, 'marketEndowments')) {
@@ -2081,6 +2193,9 @@ window.FBMODS = window.FBMODS || [];
     }
     if (mod.seasonKinds) mergeTable(FBDATA.seasonKinds, mod.seasonKinds);
     if (mod.climateZones) mergeTable(FBDATA.climateZones, mod.climateZones);
+    if (mod.eras) mergeTable(FBDATA.eras, mod.eras);
+    if (mod.wardrobes) mergeTable(FBDATA.wardrobes, mod.wardrobes);
+    if (mod.settlementLayouts) mergeTable(FBDATA.settlementLayouts, mod.settlementLayouts);
     if (mod.geographies) mergeTable(FBDATA.geographies, mod.geographies);
     if (mod.architectureStyles) mergeTable(FBDATA.architectureStyles, mod.architectureStyles);
     /* The legacy top-level geometry keys replace the geometry of the default

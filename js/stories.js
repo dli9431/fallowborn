@@ -10,7 +10,7 @@
   var KINDS = { world:true, track:true };
   var HOOKS = ['appliesTo', 'init', 'day', 'season', 'year', 'title', 'intro',
     'status', 'choices', 'quote', 'blocker', 'review', 'apply',
-    'validate', 'migrate', 'restore', 'foundRevolt'];
+    'validate', 'migrate', 'restore', 'foundRevolt', 'appliesToBookmark'];
   function own(o, key) {
     return !!o && Object.prototype.hasOwnProperty.call(o, key);
   }
@@ -40,7 +40,11 @@
     registerData:function (def) {
       if (sealed) throw new Error('Stories register at load time only.');
       if (!def || !own(types, def.type)) throw new Error('Unknown story type.');
-      return FB.stories.register(types[def.type](def));
+      var story = types[def.type](def);
+      // Keep authored requirements available to the pre-generation gate.
+      // This declaration is never copied into a saved story record.
+      story.declaration = def;
+      return FB.stories.register(story);
     },
     /* def: { id, kind:'world'|'track', requires:[story ids], and any of the
        HOOKS above }. A required story must already be registered, so the

@@ -235,11 +235,13 @@ window.FB = window.FB || {};
         var provinceNames = names.provinces || {}, siteNames = names.sites || {};
         for (var namedProvince in provinceNames) {
           if (ownKey(provinceNames, namedProvince)) {
+            if (!ownKey(seedIds, namedProvince)) fault('names reference unknown province ' + namedProvince + '.');
             nameListFaults(provinceNames[namedProvince], 'province ' + namedProvince, fault);
           }
         }
         for (var namedSite in siteNames) {
           if (ownKey(siteNames, namedSite)) {
+            if (!ownKey(geographySites(geography), namedSite)) fault('names reference unknown site ' + namedSite + '.');
             nameListFaults(siteNames[namedSite], 'site ' + namedSite, fault);
           }
         }
@@ -546,7 +548,7 @@ window.FB = window.FB || {};
       faults.push('unknown era ' + definition.era + '.');
     } else if (!eraId) {
       faults.push('no era resolves for start year ' + year + '.');
-    } else if (definition.era !== undefined && !(year >= era.from && year <= era.to)) {
+    } else if (!(year >= era.from && year <= era.to)) {
       faults.push('start year ' + year + ' is outside era ' + eraId + ' (' +
         era.from + '–' + era.to + ').');
     }
@@ -822,6 +824,231 @@ window.FB = window.FB || {};
     return errors;
   };
 
+  /* Cross-catalogue requirements are checked on the prepared definition,
+     before activation changes the live world. No init hooks, RNG or saved
+     representatives participate in authoring validation. */
+  FB.bookmarkRequirementFaults = function (definition, platform) {
+    var errors = [], era = FBDATA.eras[platform.era];
+    var geography = FB.geography(FB.bookmarkGeography(definition));
+    var provinces = {}, realms = {}, cultures = {}, faiths = {}, starts = {};
+    function fault(owner, detail) { errors.push(owner + ': ' + detail); }
+    function list(value, owner, check) {
+      if (!Array.isArray(value)) { fault(owner, 'must be a list.'); return; }
+      var seen = {};
+      value.forEach(function (id) {
+        if (typeof id !== 'string' || !id || seen[id]) fault(owner, 'invalid or duplicate id ' + id + '.');
+        else { seen[id] = true; check(id); }
+      });
+    }
+    (definition.provinces || []).forEach(function (p) { if (p) provinces[p.id] = p; });
+    (definition.realms || []).forEach(function (r) { if (r) realms[r.id] = r; });
+    (FBDATA.startScenarios || []).forEach(function (s) { if (s) starts[s.id] = s; });
+    var sites = geographySites(geography), forms = Object.keys(platform.governments).map(function (id) {
+      return platform.governments[id];
+    });
+    function system(id, faith, form) {
+      return FB.systems.enabledForBookmark(definition, id, faith, form);
+    }
+    function availableSystem(id, faith, form) {
+      if (form) return system(id, faith, form);
+      if (system(id, faith)) return true;
+      if (forms.some(function (candidate) { return system(id, faith, candidate); })) return true;
+      return !faith && Object.keys(faiths).some(function (candidate) {
+        return system(id, candidate) || forms.some(function (form) { return system(id, candidate, form); });
+      });
+    }
+    function identity(row, owner) {
+      if (!row) return;
+      if (row.culture !== undefined) {
+        if (!FB.cultureExists(row.culture, null)) fault(owner, 'unknown culture ' + row.culture + '.');
+        else cultures[row.culture] = true;
+      }
+      if (row.religion !== undefined) {
+        if (!FB.faithAssignable(row.religion, null)) fault(owner, 'unknown or unassignable faith ' + row.religion + '.');
+        else faiths[row.religion] = true;
+      }
+    }
+    function requirements(req, owner, faith, form, attached) {
+      if (req === undefined) return;
+      if (!plainRecord(req)) { fault(owner, 'requirements must be an object.'); return; }
+      var known = { eras:FBDATA.eras, geographies:FBDATA.geographies, governments:FBDATA.governmentForms,
+        provinces:provinces, sites:sites, realms:realms, starts:starts, systems:FBDATA.systems,
+        capabilities:FBDATA.capabilities };
+      Object.keys(req).forEach(function (key) {
+        if (key === 'titles') {
+          if (!Array.isArray(req.titles)) { fault(owner, 'requirements.titles must be a list.'); return; }
+          req.titles.forEach(function (ref) {
+            var table = ref && { duchy:definition.duchies, kingdom:definition.kingdoms, empire:definition.empires }[ref.kind];
+            if (!table || !FB.titleIds.resolve(ref.kind, ref.id, table)) fault(owner, 'unknown title ' + (ref && ref.kind) + '/' + (ref && ref.id) + '.');
+          });
+          return;
+        }
+        if (key === 'stories') {
+          list(req[key], owner + '.requirements.' + key, function (id) {
+            var attachedStories = Array.isArray(attached) ? attached : Array.isArray(definition.stories) ? definition.stories : [];
+            if (attachedStories.indexOf(id) < 0) fault(owner, 'requires unattached story ' + id + '.');
+          });
+          return;
+        }
+        if (!ownKey(known, key)) { fault(owner, 'unknown requirement kind ' + key + '.'); return; }
+        list(req[key], owner + '.requirements.' + key, function (id) {
+          if (!ownKey(known[key], id)) { fault(owner, 'unknown ' + key + ' requirement ' + id + '.'); return; }
+          if (key === 'systems' && !availableSystem(id, faith, form)) fault(owner, 'requires unavailable system ' + id + '.');
+          if (key === 'capabilities' && !FB.capabilityInEraWindow(id, platform.era)) fault(owner, 'capability ' + id + ' is granted by no technology in era ' + platform.era + '.');
+        });
+      });
+      if (Array.isArray(req.eras) && req.eras.indexOf(platform.era) < 0) fault(owner, 'cannot apply to era ' + platform.era + '.');
+      if (Array.isArray(req.geographies) && req.geographies.indexOf(FB.bookmarkGeography(definition)) < 0) fault(owner, 'cannot apply to geography ' + FB.bookmarkGeography(definition) + '.');
+      if (Array.isArray(req.governments) && !req.governments.some(function (id) { return forms.indexOf(id) >= 0; })) fault(owner, 'requires an absent government form.');
+    }
+    function story(id, kind, attached, owner) {
+      var def = FB.stories.get(id);
+      if (!def || def.kind !== kind) { fault(owner, 'unregistered ' + kind + ' story ' + id + '.'); return; }
+      (def.requires || []).forEach(function (required) {
+        if (attached.indexOf(required) < 0) fault(owner, 'story ' + id + ' requires unattached story ' + required + '.');
+      });
+      if (def.appliesToBookmark) {
+        try { if (!def.appliesToBookmark(definition)) fault(owner, 'story ' + id + ' cannot apply to this bookmark.'); }
+        catch (error) { fault(owner, 'story ' + id + ' applicability failed: ' + error.message); }
+      }
+      requirements(def.requirements, 'story ' + id, null, null, attached);
+      if (def.declaration) {
+        requirements(def.declaration.requirements, 'story ' + id, null, null, attached);
+        var storyRealms = Object.assign({}, realms), visited = {};
+        // A dependent story may refer to a polity its prerequisite creates.
+        // Merely listing an unrelated future grant does not satisfy a cast.
+        function futureRealms(required) {
+          if (visited[required] || attached.indexOf(required) < 0) return;
+          visited[required] = true;
+          var prerequisite = FB.stories.get(required), declaration = prerequisite && prerequisite.declaration;
+          if (declaration && declaration.grant) storyRealms[declaration.grant.realmId] = true;
+          if (declaration && declaration.realm) storyRealms[declaration.realm.id] = true;
+          (prerequisite && prerequisite.requires || []).forEach(futureRealms);
+        }
+        (def.requires || []).forEach(futureRealms);
+        // Typed fields of reusable story declarations, excluding the realm
+        // a partition/foundation creates in the future.
+        function walk(row, path) {
+          if (!row || typeof row !== 'object') return;
+          if (Array.isArray(row)) { row.forEach(function (v, i) { walk(v, path + '.' + i); }); return; }
+          Object.keys(row).forEach(function (key) {
+            var value = row[key], where = path ? path + '.' + key : key, table = null;
+            if (key === 'requirements') return;
+            if (['provinceId','capital','originProvinceId'].indexOf(key) >= 0 ||
+                def.declaration.type === 'civilian_migration' && (key === 'from' || key === 'to')) table = provinces;
+            if (['realmId','issuerRealmId','formerRealmId','liege'].indexOf(key) >= 0 && where !== 'grant.realmId') table = storyRealms;
+            if (key === 'culture' || key === 'cultureId') table = FBDATA.cultures;
+            if (key === 'religion' || key === 'faithId') table = FBDATA.religions;
+            if (key === 'governmentForm' || key === 'government') table = FBDATA.governmentForms;
+            if (key === 'churchId' || key === 'civicId') table = definition.localInstitutions !== undefined ? definition.localInstitutions : FBDATA.localInstitutions;
+            if (table && typeof value === 'string' && !ownKey(table, value)) fault('story ' + id, where + ' references unknown id ' + value + '.');
+            if ((key === 'culture' || key === 'cultureId') && typeof value === 'string') identity({ culture:value }, 'story ' + id);
+            if ((key === 'religion' || key === 'faithId') && typeof value === 'string') identity({ religion:value }, 'story ' + id);
+            var many = ['counties','countyIds','retainedCountyIds'].indexOf(key) >= 0 ? provinces
+              : ['ownerIds','remnantRealmIds','revoltRealmIds'].indexOf(key) >= 0 ? storyRealms : null;
+            if (many && Array.isArray(value)) value.forEach(function (ref) {
+              if (!ownKey(many, ref)) fault('story ' + id, where + ' references unknown id ' + ref + '.');
+            });
+            if ((key === 'kingdomId' || key === 'target' && path.indexOf('historySeed.') === 0) &&
+                !FB.titleIds.resolve('kingdom', value, definition.kingdoms)) fault('story ' + id, 'unknown kingdom ' + value + '.');
+            if ((key === 'storyId' || key === 'parentStoryId') && attached.indexOf(value) < 0) fault('story ' + id, where + ' references unattached story ' + value + '.');
+            walk(value, where);
+          });
+        }
+        walk(def.declaration, '');
+      }
+    }
+    (definition.provinces || []).forEach(function (p) {
+      if (!p) return;
+      if (!p.wasteland) { identity(p, 'province ' + p.id); (Array.isArray(p.communities) ? p.communities : []).forEach(function (c) { identity(c, 'province ' + p.id + ' community'); }); }
+      var local = definition.climate || {}, base = geography && geography.climate || {};
+      var zone = local.provinces && local.provinces[p.id] || local.zone || base.provinces && base.provinces[p.id] || base.zone || FBDATA.defaultClimateZone;
+      if (!FB.climateZone(zone)) fault('province ' + p.id, 'no climate zone resolves.');
+    });
+    (definition.realms || []).concat((definition.scripted || []).map(function (row) { return row && row.newRealm; })).forEach(function (r) {
+      if (!r) return;
+      identity(r, 'realm ' + r.id); identity(r.ruler, 'realm ' + r.id + ' ruler');
+      if (r.governingIdentity) identity({ culture:r.governingIdentity.eliteCultureId,
+        religion:r.governingIdentity.eliteFaithId }, 'realm ' + r.id + ' governing identity');
+      var members = r.royalCourt && r.royalCourt.members;
+      (Array.isArray(members) ? members : []).forEach(function (m) { identity(m, 'realm ' + r.id + ' court'); });
+    });
+    Object.keys(definition.opening && definition.opening.actors || {}).forEach(function (id) { identity(definition.opening.actors[id], 'opening actor ' + id); });
+    Object.keys(definition.localInstitutions || {}).forEach(function (id) { identity(definition.localInstitutions[id], 'institution ' + id); });
+    var worldStories = Array.isArray(definition.stories) ? definition.stories : [];
+    if (Array.isArray(worldStories)) list(worldStories, 'stories', function (id) { story(id, 'world', worldStories, 'stories'); });
+    if (definition.starts !== undefined) list(definition.starts, 'starts', function (id) {
+      if (!starts[id]) fault('starts', 'unregistered start ' + id + '.');
+    });
+    Object.keys(starts).forEach(function (id) {
+      var start = starts[id], owner = 'start ' + id;
+      if (start.bookmarkIds !== undefined) list(start.bookmarkIds, owner + '.bookmarkIds', function (bm) {
+        if (!ownKey(FBDATA.bookmarks, bm)) fault(owner, 'unknown bookmark ' + bm + '.');
+      });
+      if (start.eras !== undefined) list(start.eras, owner + '.eras', function (id) {
+        if (!ownKey(FBDATA.eras, id)) fault(owner, 'unknown era ' + id + '.');
+      });
+      if (start.bookmarkIds !== undefined && (!Array.isArray(start.bookmarkIds) || start.bookmarkIds.indexOf(definition.id) < 0) ||
+          start.eras !== undefined && (!Array.isArray(start.eras) || start.eras.indexOf(platform.era) < 0) ||
+          Array.isArray(definition.starts) && definition.starts.indexOf(id) < 0) {
+        if (Array.isArray(definition.starts) && definition.starts.indexOf(id) >= 0) fault(owner, 'cannot apply to this bookmark.');
+        return;
+      }
+      identity({ culture:start.startCulture, religion:start.startReligion }, owner);
+      if (start.governmentForm && forms.indexOf(start.governmentForm) < 0) fault(owner, 'government form ' + start.governmentForm + ' is absent.');
+      if (start.fixedProvinceId && (!provinces[start.fixedProvinceId] || provinces[start.fixedProvinceId].wasteland)) fault(owner, 'unknown inhabited province ' + start.fixedProvinceId + '.');
+      if (!ownKey(FBDATA.careers, start.profession)) fault(owner, 'unknown career ' + start.profession + '.');
+      if (start.tracks !== undefined) list(start.tracks, owner + '.tracks', function (track) {
+        story(track, 'track', worldStories.concat(start.tracks), owner);
+      });
+      requirements(start.requirements, owner, start.startReligion, start.governmentForm, worldStories.concat(start.tracks || []));
+    });
+    if (era) cultures[era.defaultCulture] = true;
+    Object.keys(cultures).forEach(function (id) {
+      var culture = FB.cultureOf(id, null), look = culture.appearanceEras && culture.appearanceEras[platform.era] || culture.appearance;
+      if (!plainRecord(look)) fault('culture ' + id, 'no appearance profile resolves.');
+      (culture.dyn === 'plain' ? ['male','female','family'] : ['male','female']).forEach(function (key) {
+        var variant = culture.nameEras && culture.nameEras[platform.era] && culture.nameEras[platform.era][key];
+        var pool = variant && variant.length ? variant : culture[key];
+        if (!Array.isArray(pool) || !pool.length || pool.some(function (name) { return typeof name !== 'string' || !name; })) fault('culture ' + id, 'no ' + key + ' name pool resolves.');
+      });
+      var style = culture.architecture || era && era.architecture || 'manuscript';
+      if (!style || !ownKey(FBDATA.architectureStyles, style)) fault('culture ' + id, 'no architecture style resolves.');
+    });
+    var currency = geography && geography.currency || era && era.currency || FBDATA.currency;
+    if (era && !currency) fault('era ' + platform.era, 'no currency resolves.');
+    Object.keys(faiths).forEach(function (id) {
+      var faith = FB.religionOf(id, null);
+      requirements(faith.requirements, 'faith ' + id, id);
+      requirements(faith.head && faith.head.requirements, 'faith ' + id + ' head', id);
+      if (!ownKey(FBDATA.legalTraditions, faith.legalTradition || FBDATA.faithDefaults.legalTradition)) fault('faith ' + id, 'no legal tradition resolves.');
+    });
+    FB.systems.ids().forEach(function (id) {
+      if (availableSystem(id) && FBDATA.systems[id]) requirements(FBDATA.systems[id].requirements, 'system ' + id);
+    });
+    requirements(definition.requirements, 'bookmark');
+    var knowledge = geography && geography.knowledge;
+    if (knowledge && knowledge.starts !== undefined) {
+      if (!plainRecord(knowledge.starts)) fault('knowledge.starts', 'must be an object keyed by start id.');
+      else Object.keys(knowledge.starts).forEach(function (id) {
+        if (!starts[id]) fault('knowledge.starts', 'unknown start ' + id + '.');
+        var hook = knowledge.starts[id];
+        if (!plainRecord(hook)) { fault('knowledge start ' + id, 'must be an object.'); return; }
+        ['provinces','basins'].forEach(function (key) {
+          if (hook[key] === undefined) return;
+          list(hook[key], 'knowledge start ' + id + '.' + key, function (ref) {
+            if (!ownKey(key === 'provinces' ? provinces : knowledge.basins, ref)) fault('knowledge start ' + id, 'unknown ' + key + ' ' + ref + '.');
+          });
+        });
+      });
+    }
+    Object.keys(FBDATA.careers || {}).forEach(function (id) {
+      var career = FBDATA.careers[id];
+      if (!career || !ownKey(FB.CAREER_ROLES, career.role)) fault('career ' + id, 'needs a registered role.');
+    });
+    return errors;
+  };
+
   FB.validateBookmark = function (definition) {
     var errors = [];
     var label = definition && definition.id ? definition.id : '?';
@@ -876,10 +1103,19 @@ window.FB = window.FB || {};
     for (var ge = 0; ge < governmentErrors.length; ge++) errors.push(governmentErrors[ge]);
     if (!definition.id || !/^[a-z0-9_]+$/i.test(definition.id)) fault('invalid id.');
     var date = definition.date || {};
-    if (!isFinite(date.year) || date.season < 0 || date.season > 3 ||
-        date.day < 1 || date.day > 90) fault('invalid start date.');
+    if (!Number.isInteger(date.year) || !Number.isInteger(date.season) || !Number.isInteger(date.day) ||
+        date.season < 0 || date.season > 3 || date.day < 1 || date.day > 90) fault('invalid start date.');
+    ['provinces','realms','straits','scripted'].forEach(function (key) {
+      if (!Array.isArray(definition[key])) fault(key + ' must be a list.');
+    });
+    if (errors.length && (!Array.isArray(definition.provinces) || !Array.isArray(definition.realms) ||
+        !Array.isArray(definition.scripted))) return errors;
     var platform = FB.resolveBookmarkPlatform(definition);
     for (var pf = 0; pf < platform.faults.length; pf++) fault(platform.faults[pf]);
+    FB.bookmarkRequirementFaults(definition, platform).forEach(fault);
+    FB.validateClimateData().forEach(fault);
+    FB.validateBuildingData(FBDATA.buildings, true).forEach(fault);
+    FB.validateUnitClassRoles(FBDATA.unitClasses, true).forEach(fault);
     /* coverage, the era's technology window and realm traditions; a realm
        fault the catalogue-wide check already reported is not repeated */
     var technologyFaults = FB.bookmarkTechnologyFaults

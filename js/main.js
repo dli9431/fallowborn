@@ -2068,6 +2068,8 @@ FB.CHANGELOG = [
     if (!scenario || scenario.hidden) return false;
     if (!FB.bookmarkAvailable(bookmarkId)) return false;
     if (scenario.bookmarkIds && scenario.bookmarkIds.indexOf(bookmarkId) < 0) return false;
+    const offeredBookmark = FB.bookmark(bookmarkId);
+    if (offeredBookmark && offeredBookmark.starts && offeredBookmark.starts.indexOf(scenario.id) < 0) return false;
     if (scenario.rulerRealmId) {
       const bookmark = FB.bookmark(bookmarkId);
       const realm = bookmark && (bookmark.realms || []).filter(function (row) {
