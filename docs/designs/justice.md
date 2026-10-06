@@ -1,5 +1,11 @@
 # Ruler justice
 
+Iberian late antique personal law
+
+New 476 Visigothic courts use euric_code_476, displayed as Code of Euric, from the gaul_iberia regional declaration. Roman, Hispano-Roman and Gallo-Roman parties retain late_roman personal law; Gothic parties use the written Gothic identity, and mixed Roman-Gothic cases use that identity with a Roman assessor. Basque parties use basque_custom_476, an unwritten local-law abstraction, in the Visigothic and autonomous Basque courts. Suevic courts retain their existing personal-law mapping and mixed-party assessor.
+
+The Code of Euric declaration reuses the existing sentence, evidence and procedure schema. Its spring-476 availability and personal-law division are editorial gameplay choices, with the disputed dating and Roman influence recorded in ../research/476-bookmark.md. Existing gothic_custom saved identities remain supported, and no later Breviary, Salic code or corporal sentence is backdated. Technology impact remains none under dual_jurisdiction; these are additional regional identities within the existing baseline capability.
+
 Committed exile and shared intrigue-custody capture append turning points for
 tracked life histories. Arrest/sentence previews do not. Biography preservation
 does not keep an unrelated dead prisoner's full character in the simulation.

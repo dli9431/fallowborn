@@ -126,3 +126,11 @@ civilian_migration waits for its date window, declared story result, current con
 Technology impact tribute_cession_agreements and civilian_evacuation is none. Current consent, treasury, territorial control and conserved civilian eligibility provide the constraints. Ordinary warfare and community movement remain independent capabilities.
 
 The Bithynian campaign declares the Thessalonican partition as a registration dependency so its daily dispatch follows the partition review. This gives a peaceful court the chance to settle newly won Thessalonica before opening another foreign campaign. It is ordering, not a requirement for a granted outcome; ordinary conquest remains available if the partition is declined. Named partition beneficiaries may declare a proper dyn string for their ordinary family identity.
+
+Iberian 476 campaign instances
+
+The gaul_iberia regional declaration supplies suevic_frontier_476, cantabrian_campaign_476, vasconian_campaign_476 and gallaecian_campaign_476 to the existing campaign catalogue. The 476 bookmark attaches their storyIds at fresh creation. Suevic pressure on Gothic Asturica runs during 476-490 as an explicit counterfactual frontier opportunity. Visigothic consolidation at the Cantabrian coast, Alavese uplands and Suevic Lucus seat opens during 574-590, 581-600 and 585-600. Target-owner restrictions and required current possession of Lugo, Toletum or Pompaelo close incompatible opportunities.
+
+These instances use current ordinary rulers rather than synthesizing a future historical dynasty. They wait for peaceful living courts and use the existing ordinary objective war, duration, succession interruption and once-only terminal outcomes. A victory affects only its actual objective; the Gallaecian instance does not annex every Suevic county or convert its population. Player-controlled parties retain the existing explicit campaign review. Saved records resume commitments and terminal results; older campaigns lacking these records do not acquire them during restore.
+
+Technology impact uses the existing period_476_conditional_campaigns none decision. These are additional historical content instances, with current control, resources and ordinary military capability as their constraints.
