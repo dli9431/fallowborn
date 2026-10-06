@@ -125,6 +125,8 @@ test('476 bookmark and free federate start preserve 867 and 1066 data',
       'clovis_syagrius_476','theoderic_italy_476','eastern_africa_476','eastern_italy_476',
       'rugian_frontier_476','sicilian_tribute_476','norican_evacuation_476',
       'thracian_pressure_476','amal_epirus_476',
+      'clovis_alamanni_476','suevic_frontier_476','cantabrian_campaign_476',
+      'vasconian_campaign_476','gallaecian_campaign_476',
       'western_office_476','federate_track_476']);
     expect(result.legacy).toBeUndefined();
     expect(result.age).toBe(24);

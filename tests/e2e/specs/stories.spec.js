@@ -38,7 +38,7 @@ async function begin(page, testInfo, code) {
 
 const WORLD_STORIES = ['western_court_476','zeno_return_476','clovis_syagrius_476',
   'theoderic_italy_476','eastern_africa_476','eastern_italy_476','western_office_476','rugian_frontier_476',
-  'sicilian_tribute_476','norican_evacuation_476'];
+  'sicilian_tribute_476','norican_evacuation_476','clovis_alamanni_476'];
 
 const CODE_476 = 'STORIES-476-federate_476-ravenna-m-Marcus-standard-0-gothic.homoian';
 
@@ -158,7 +158,7 @@ test('a branch save holding state.situation476 migrates once into both story rec
     });
     expect(result).toEqual({
       immutable:true, world:true, track:true, dropped:true, idempotent:true,
-      restored:WORLD_STORIES.filter(function (id) { return !['rugian_frontier_476','sicilian_tribute_476','norican_evacuation_476'].includes(id); })
+      restored:WORLD_STORIES.filter(function (id) { return !['rugian_frontier_476','sicilian_tribute_476','norican_evacuation_476','clovis_alamanni_476'].includes(id); })
         .concat(['federate_track_476']).join(','), phase:'delegate',
       outsideTrack:['declined', 'outside', false],
       outsideWorld:['federate-9', 'recognition-8', 'recognition-7', 'negotiated'],
