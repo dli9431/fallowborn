@@ -9,7 +9,7 @@ dependsOnRuntime(__filename, [
   'data/settlements_real.js', 'data/cultures.js', 'data/starts.js',
   'data/technology.js', 'data/political_institutions.js', 'data/units.js', 'data/modifiers.js',
   'data/economy.js', 'data/systems.js', 'js/systems.js',
-  'js/main.js', 'js/stories.js', 'js/story_campaign.js', 'js/story_476_rails.js', 'data/story_campaigns.js', 'js/story_western_court_476.js',
+  'js/main.js', 'js/stories.js', 'js/story_campaign.js', 'js/story_476_rails.js', 'js/bookmark_setup.js', 'data/story_campaigns.js', 'js/story_western_court_476.js',
   'js/story_federate_track_476.js', 'js/authority.js', 'js/federates.js', 'js/world.js',
   'js/holywar.js', 'js/actions.js',
   'js/armies.js', 'js/treasury.js', 'js/lordships.js', 'js/model.js',
@@ -123,6 +123,8 @@ test('476 bookmark and free federate start preserve 867 and 1066 data',
     expect(result.sites).toEqual(['ravenna_476', 'classis_476']);
     expect(result.stories).toEqual(['western_court_476','zeno_return_476',
       'clovis_syagrius_476','theoderic_italy_476','eastern_africa_476','eastern_italy_476',
+      'rugian_frontier_476','sicilian_tribute_476','norican_evacuation_476',
+      'thracian_pressure_476','amal_epirus_476',
       'western_office_476','federate_track_476']);
     expect(result.legacy).toBeUndefined();
     expect(result.age).toBe(24);

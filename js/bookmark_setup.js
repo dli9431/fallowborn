@@ -7,7 +7,17 @@
   function clone(v) { return JSON.parse(JSON.stringify(v)); }
   function slug(v) { return typeof v === 'string' && /^[a-z][a-z0-9_]*$/.test(v); }
   function fault(path) { throw new Error(FB.T('Invalid v4 save field at {path}.', { path:path })); }
-  function definition(s) { return (FB.bookmark(s.start && s.start.id) || {}).opening; }
+  function definition(s) {
+    var bm = FB.bookmark(s.start && s.start.id) || {};
+    var revision = s.bookmarkSetup && s.bookmarkSetup.revision;
+    if (revision !== undefined) {
+      if (!slug(revision) || !plain(bm.openingRevisions) || !own(bm.openingRevisions, revision))
+        fault('state.bookmarkSetup.revision');
+      return bm.openingRevisions[revision];
+    }
+    return s.bookmarkSetup && bm.openingLegacyRevision
+      ? bm.openingRevisions[bm.openingLegacyRevision] : bm.opening;
+  }
   function actor(s, id) {
     var cid = s.bookmarkSetup && s.bookmarkSetup.actors[id];
     return cid && s.chars[cid] || null;
@@ -30,6 +40,16 @@
     Object.keys(d.actors).forEach(function (id) {
       var p = d.actors[id];
       if (!slug(id) || !plain(p)) { fail('actors.' + id); return; }
+      if (p.ref !== undefined) {
+        var ref = p.ref;
+        var validRef = plain(ref) && (ref.kind === 'realm_ruler'
+          ? slug(ref.realmId) && !!realms[ref.realmId] && Object.keys(ref).every(function (k) { return ['kind','realmId'].indexOf(k) >= 0; })
+          : ref.kind === 'story' && slug(ref.storyId) && typeof ref.field === 'string' && /^[a-z][a-zA-Z0-9_]*$/.test(ref.field) &&
+            (bm.stories || []).indexOf(ref.storyId) >= 0 && Object.keys(ref).every(function (k) { return ['kind','storyId','field'].indexOf(k) >= 0; }));
+        if (Object.keys(p).length !== 1 || !validRef)
+          fail('actors.' + id + '.ref');
+        return;
+      }
       Object.keys(p).forEach(function (k) {
         if (['name','sex','culture','religion','born','station','role','dyn','father','mother',
           'skills','traits','home','rulerChildRealmId'].indexOf(k) < 0) fail('actors.' + id + '.' + k);
@@ -100,7 +120,8 @@
           !FB.faithAssignable(m.community.religion, null) ||
           Object.keys(m).some(function (k) { return ['from','to','rate','community','actorIds'].indexOf(k) < 0; }) ||
           m.actorIds !== undefined && (!Array.isArray(m.actorIds) || m.actorIds.some(function (id, i) {
-            return !d.actors[id] || m.actorIds.indexOf(id) !== i;
+            var p = d.actors[id];
+            return !p || p.ref && p.ref.kind === 'story' || m.actorIds.indexOf(id) !== i;
           })))
         fail('migrations');
     });
@@ -109,6 +130,18 @@
   var validateBookmark = FB.validateBookmark;
   FB.validateBookmark = function (bm) {
     var errors = validateBookmark(bm).concat(FB.openingDefinitionFaults(bm));
+    if (bm && (bm.openingRevision !== undefined || bm.openingRevisions !== undefined || bm.openingLegacyRevision !== undefined)) {
+      var versions = bm.openingRevisions;
+      if (!plain(bm.opening) || !plain(versions) || !slug(bm.openingRevision) || !own(versions, bm.openingRevision) ||
+          JSON.stringify(bm.opening) !== JSON.stringify(versions[bm.openingRevision]) ||
+          bm.openingLegacyRevision !== undefined && (!slug(bm.openingLegacyRevision) || !own(versions, bm.openingLegacyRevision)))
+        errors.push('Invalid opening revision catalogue.');
+      if (plain(versions)) Object.keys(versions).forEach(function (revision) {
+        if (!slug(revision)) errors.push('Invalid opening revision id.');
+        if (!plain(versions[revision])) errors.push('Missing opening revision declaration.');
+        errors = errors.concat(FB.openingDefinitionFaults(Object.assign({}, bm, { opening:versions[revision] })));
+      });
+    }
     var layout = bm && FBDATA.settlementLayouts[bm.settlementLayout] || {};
     (bm && Array.isArray(bm.provinces) ? bm.provinces : []).forEach(function (p) {
       if (!p) return;
@@ -128,14 +161,33 @@
     });
     return errors;
   };
+  function resolveActorReferences(s, d) {
+    Object.keys(d.actors).forEach(function (id) {
+      var ref = d.actors[id].ref;
+      if (!ref || own(s.bookmarkSetup.actors, id)) return;
+      var realmId = ref.kind === 'realm_ruler' && FB.startRealmId(s, ref.realmId);
+      var rec = ref.kind === 'story' && s.stories && s.stories[ref.storyId];
+      var c = realmId ? realmId === 'player' ? s.chars[s.player.charId] : FB.materializeRealmRuler(s, realmId) :
+        rec && own(rec, ref.field) && typeof rec[ref.field] === 'string' && s.chars[rec[ref.field]];
+      if (c) {
+        if (Object.keys(s.bookmarkSetup.actors).some(function (key) { return s.bookmarkSetup.actors[key] === c.id; }))
+          throw new Error('Opening actor references must identify distinct people.');
+        s.bookmarkSetup.actors[id] = c.id;
+      }
+    });
+  }
   function initialize(s) {
     var d = definition(s);
     if (!d || s.bookmarkSetup) return;
     var errors = FB.openingDefinitionFaults(FB.bookmark(s.start.id));
     if (errors.length) throw new Error(errors.join(' '));
     var store = s.bookmarkSetup = { schema:1, actors:{}, appointments:{}, estates:[], claims:[], migrations:[] };
+    var bm = FB.bookmark(s.start.id);
+    if (bm.openingRevision) store.revision = bm.openingRevision;
     Object.keys(d.actors).forEach(function (id) {
-      var p = d.actors[id], c = FB.makeCharacter(s, {
+      var p = d.actors[id];
+      if (p.ref) return;
+      var c = FB.makeCharacter(s, {
         name:p.name, sex:p.sex, culture:p.culture, religion:p.religion, born:p.born,
         station:p.station, role:p.role, dyn:p.dyn, quality:2, traitsN:1,
         traits:p.traits && p.traits.slice()
@@ -144,8 +196,10 @@
       c.homeProvinceId = p.home; c.generatedOfficeholder = !p.name;
       store.actors[id] = c.id;
     });
+    resolveActorReferences(s, d);
     Object.keys(d.actors).forEach(function (id) {
       var p = d.actors[id], c = actor(s, id);
+      if (p.ref) return;
       ['father','mother'].forEach(function (key) {
         var parent = p[key] && actor(s, p[key]);
         if (parent) { c[key + 'Id'] = parent.id; parent.childrenIds.push(c.id); }
@@ -174,9 +228,11 @@
   FB.bookmarkSetupAppointments = function (s) {
     var d = definition(s), store = s.bookmarkSetup;
     if (!d || !store) return;
+    resolveActorReferences(s, d);
     Object.keys(d.appointments).forEach(function (id) {
       if (own(store.appointments, id)) return;
       var a = d.appointments[id], c = actor(s, a.actorId), proof = null;
+      if (!c) return;
       if (a.recognitionSource) proof = FB.authorityRecognize(s, { source:a.recognitionSource,
         issuer:{ kind:'county', id:a.scope.id }, subject:{ kind:'character', id:c.id }, scope:a.scope });
       var row = FB.authorityAppoint(s, { officeId:a.officeId, institutionId:a.realmId,
@@ -215,6 +271,10 @@
     // Every bookmark can declare offices. World-story initialization has now
     // created any deferred hosts; an earlier story-owned appointment is kept.
     FB.bookmarkSetupAppointments(s);
+    var d = definition(s);
+    if (d && (Object.keys(s.bookmarkSetup.actors).length !== Object.keys(d.actors).length ||
+        Object.keys(s.bookmarkSetup.appointments).length !== Object.keys(d.appointments).length))
+      throw new Error('Opening references did not resolve after story initialization.');
     return result;
   };
   FB.stories.day = function (s) { inheritEstates(s); return day(s); };
@@ -234,11 +294,14 @@
       var r = s.bookmarkSetup, d = definition(s), path = 'state.bookmarkSetup';
       if (!d || !plain(r) || r.schema !== 1 || !plain(r.actors) || !plain(r.appointments) ||
           !Array.isArray(r.estates) || !Array.isArray(r.claims) || !Array.isArray(r.migrations)) fault(path);
-      if (Object.keys(r).some(function (k) { return ['schema','actors','appointments','estates','claims','migrations'].indexOf(k) < 0; }) ||
+      if (Object.keys(r).some(function (k) { return ['schema','revision','actors','appointments','estates','claims','migrations'].indexOf(k) < 0; }) ||
           Object.keys(r.actors).length !== Object.keys(d.actors).length) fault(path + '.actors');
       var actorIds = {};
       Object.keys(r.actors).forEach(function (id) {
         if (!own(d.actors, id) || typeof r.actors[id] !== 'string' || !own(s.chars, r.actors[id]) || actorIds[r.actors[id]]) fault(path + '.actors');
+        var ref = d.actors[id].ref, rec = ref && ref.kind === 'story' && s.stories && s.stories[ref.storyId];
+        if (ref && ref.kind === 'story' && (!rec || !own(rec, ref.field) || rec[ref.field] !== r.actors[id]))
+          fault(path + '.actors.' + id);
         actorIds[r.actors[id]] = true;
       });
       if (Object.keys(r.appointments).length !== Object.keys(d.appointments).length) fault(path + '.appointments');

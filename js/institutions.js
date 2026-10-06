@@ -3085,12 +3085,16 @@ window.FB = window.FB || {};
   }
   FB.ensureLocalInstitutions = function (s, seeds) {
     if (!FB.systemAvailable(s, 'civic_institutions') && !FB.systemAvailable(s, 'episcopal_sees')) return null;
+    // An existing ledger is the campaign's opening roster. Content additions
+    // do not allocate new representatives while restoring or ticking that save.
+    var creating = s.localInstitutions === undefined;
     var defs = FB.localInstitutionDefinitions(s);
     for (var id in defs) {
       var def = defs[id];
       if (!enabled(s, def) || !present(s, def)) continue;
       if (!s.localInstitutions) s.localInstitutions = {};
       if (row(s, id)) continue;
+      if (!creating) continue;
       var seeded = seeds && seeds[id];
       var head = church(def) && s.religiousHeads && s.religiousHeads[def.officeId];
       var vacancy = church(def) && s.religiousHeadVacancies && s.religiousHeadVacancies[def.officeId];

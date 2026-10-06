@@ -1102,3 +1102,7 @@ data/bookmark_476_gaul_iberia.js appends the gaul_iberia_476 pack with late_anti
 Regional county selectors
 
 trigger.countyIds and option require.countyIds accept a nonempty array of distinct known stable province ids. Malformed declarations fail the ordinary community event validator. FB.checkTrigger reads the live event context locationId, falling back to the player's current provinceId, so restore and changed location do not preserve stale regional eligibility. County membership combines with the existing period, community and household gates; it conveys no territorial power. The three Italian events explicitly select their owning region's counties. This is a selector schema extension, not a research-gated capability.
+
+Additional eastern provincial events
+
+The dalmatia_east_476 pack now has sixteen late_antique events. Its eight additional choices use existing countyIds, careerRoles, live community shares and household requirements for provincial registers, Sirmium's mixed court, lower-Danube supplies, Gothic office petitions, rival-host reports, Isaurian retainers, recalled command disputes and the reconciliation formula. Gothic petitions close after 483, meeting accounts after 479, Isaurian command letters after 488 and reconciliation copies use 482-488. Recalled letters do not require a deceased writer to be alive or enact a historical rebellion. Effects use ordinary resources, skills and opinion with the existing preview and durable receipt; they do not change public offices, territorial owners or community religion.

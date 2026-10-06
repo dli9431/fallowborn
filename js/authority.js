@@ -326,7 +326,10 @@
   function within(s, rid, at) {
     if (at.kind === 'host') {
       var army = host(s, at.id);
-      return !!army && army.realm === rid;
+      return !!army && (army.realm === rid || !FB.armiesHostile(s, army, {realm:rid}) && list(s, 'contracts').some(function (row) {
+        return row.hostId === army.id && row.patronRealmId === rid &&
+          row.federateRealmId === army.realm && activeContract(s, row);
+      }));
     }
     if (at.kind === 'county') return FB.realmTerritory(s, rid).indexOf(at.id) >= 0;
     return at.kind === 'realm' && at.id === rid;
@@ -922,7 +925,7 @@
     var out = [];
     if (def.scopes.indexOf('realm') >= 0) out.push({ kind:'realm', id:rid });
     if (def.scopes.indexOf('host') >= 0) for (var army of s.armies || []) {
-      if (army.realm === rid && army.men > 0) out.push({ kind:'host', id:army.id });
+      if (army.men > 0 && within(s, rid, {kind:'host',id:army.id})) out.push({ kind:'host', id:army.id });
     }
     if (def.scopes.indexOf('county') >= 0) for (var pid of FB.realmTerritory(s, rid))
       out.push({ kind:'county', id:pid });

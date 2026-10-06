@@ -40,6 +40,15 @@
       FB.federateInterruptMigration(s, rec.migrationId, reason);
     rec.phase = 'resolved'; rec.result = result; rec.reason = reason;
     rec.outcomeTurn = s.turn;
+    // A landless court becomes territorial only after ordinary war has
+    // secured the declared objective. This never transfers or teleports land.
+    if (result === 'won' && def.settlementForm && !rec.settlementApplied &&
+        s.owner[def.target.provinceId] === def.actor.realmId) {
+      var realm = s.realms[def.actor.realmId];
+      realm.nonTerritorial = false; realm.capital = def.target.provinceId;
+      FB.authoritySetGovernment(s, def.actor.realmId, def.settlementForm);
+      if (!def.settlement) rec.settlementApplied = true;
+    }
     if (result === 'won' && def.settlement && !rec.settlementApplied) {
       var rule = def.settlement, county = def.target.provinceId;
       if (s.owner[county] === def.actor.realmId &&
@@ -264,6 +273,9 @@
         !Number.isInteger(def.firstYear) || !Number.isInteger(def.lastYear) || def.lastYear < def.firstYear ||
         !Number.isInteger(def.durationDays) || def.durationDays <= 0 ||
         def.migrationId && !FBDATA.federateMigrations[def.migrationId] ||
+        def.settlementForm !== undefined && (!id(def.settlementForm) || !FBDATA.governmentForms[def.settlementForm] || def.migrationId ||
+          FBDATA.governmentForms[def.settlementForm].territory !== 'fixed' ||
+          !Array.isArray(def.conditions) || !def.conditions.some(function (row) { return plain(row) && row.kind === 'landless' && row.realmId === def.actor.realmId; })) ||
         def.conditions !== undefined && !Array.isArray(def.conditions) ||
         def.target.ownerIds !== undefined && (!Array.isArray(def.target.ownerIds) ||
           !def.target.ownerIds.length || def.target.ownerIds.some(function (id) { return typeof id !== 'string'; })) ||

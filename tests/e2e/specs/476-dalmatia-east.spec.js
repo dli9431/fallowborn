@@ -14,7 +14,7 @@ dependsOnRuntime(__filename, [
   'js/stories.js', 'js/story_campaign.js', 'js/story_476_rails.js',
   'js/story_western_court_476.js', 'js/story_federate_track_476.js',
   'js/federates.js', 'js/armies.js', 'js/wars.js', 'js/main.js',
-  'js/save.js', 'js/save_v4.js'
+  'js/save.js', 'js/save_v4.js', 'js/bookmark_setup.js'
 ]);
 const { test, expect } = require('../support/fixture');
 const { startParityGame } = require('../support/game/parity');
@@ -136,7 +136,7 @@ test('Salona and Constantinople ratify local guarantees and regional sees mediat
     });
     expect(result).toEqual({ bargains:[0,1].map(function () {
       return { stage:'ratified', support:10, cost:5, once:true, rights:['consent','peace'] };
-    }), mediation:true, council:true, bishops:7, councilCost:30, faith:'chalcedonian',
+    }), mediation:true, council:true, bishops:20, councilCost:30, faith:'chalcedonian',
       land:true, records:true, recognitions:true, valid:true });
   });
 
@@ -191,7 +191,7 @@ test('regional events use live community gates, period windows and ordinary prev
         noPersia:!s.realms.persia && !s.realms.persia_476, stale:stale, rejectionPure:rejectionPure,
         window:window, log:persistedLog === JSON.stringify(s.log) };
     });
-    expect(result).toEqual({ count:8, gates:true, period:true, preview:true, cost:4,
+    expect(result).toEqual({ count:16, gates:true, period:true, preview:true, cost:4,
       receipt:'persian_frontier_dispatch_476', impacts:true, land:true, politics:true,
       offMap:true, noPersia:true, stale:false, rejectionPure:true, window:true, log:true });
   });
@@ -205,6 +205,10 @@ test('ten daily world years retain regional institutions and Zeno, then Theoderi
     await page.evaluate(function () {
       FB.game.observe = true;
       delete FB.state.stories.federate_track_476;
+      // This journey isolates the original eastern return and Italian rail.
+      // The full regional campaign journey lives in 476-balkans-anatolia.spec.js.
+      delete FB.state.stories.thracian_pressure_476;
+      delete FB.state.stories.amal_epirus_476;
       // Isolate random mortality and diplomacy while real daily, seasonal,
       // annual, treasury, institution and campaign transactions continue.
       window.east476OriginalChance = FB.chance;

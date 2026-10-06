@@ -20,7 +20,7 @@ const { openGame } = require('../support/game/navigation');
 const { openCrazyGame } = require('../support/game/crazygames-title');
 const RAILS = ['zeno_return_476','clovis_syagrius_476','theoderic_italy_476',
   'eastern_africa_476','eastern_italy_476','rugian_frontier_476','sicilian_tribute_476',
-  'norican_evacuation_476','western_office_476'];
+  'norican_evacuation_476','thracian_pressure_476','amal_epirus_476','western_office_476'];
 
 async function start(page, testInfo, bookmark, crazygames, scenario) {
   if (crazygames) {
