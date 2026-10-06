@@ -5,6 +5,7 @@ const fileProjectTests = [
   '**/boot.spec.js',
   '**/determinism.spec.js',
   '**/eager-courts.spec.js',
+  '**/royal-relatives-succession.spec.js',
   '**/family-growth.spec.js',
   '**/holywar-adapter.spec.js',
   '**/holywar-lifecycle.spec.js',

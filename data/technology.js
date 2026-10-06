@@ -762,6 +762,10 @@ window.FBDATA = window.FBDATA || {};
         mode:'none',
         rationale:'The bounded mod-authoring facility, including explicit deterministic fallback selection, is not an in-world capability and has no credible technology dependency; individual declarative focuses may retain their own explicit technology requirements.'
       },
+      declared_royal_succession:{
+        mode:'none',
+        rationale:'Authored starting kin is content. Selecting a declared succession policy is constrained by ancestry, survival and eligibility, with no credible technology prerequisite.'
+      },
       professional_replacement_cohorts:{
         mode:'none',
         rationale:'Re-drilling slain professionals at a reinforcement premium is core war play owned by the realm; the unit classes themselves already carry their technology gates, so a second gate on replacing them would double-lock the same content.'

@@ -1379,3 +1379,9 @@ Vandal and African personal names: https://sourcebooks.web.fordham.edu/ancient/p
 Regional provincial identities in 476
 
 Gallo-Roman and Hispano-Roman culture definitions are authored in data/bookmark_476_gaul_iberia.js and inherit Roman period name pools, appearance and cultural rules. They describe provincial communities independently of a Gothic, Burgundian, Frankish or Suevic court. Alamannic inherits the Frankish prototype with its own late antique name pool. Historical rulers and the existing Clovis and Burgundian co-ruler cast keep their identities and succession references. Unknown incumbents remain generated; a historical bishop name does not establish a researched birth year, skill or family.
+
+Authored compact royal relatives
+
+Optional royalCourt data initializes the existing compact family before religious heads and stories attach. Actual ruler, local relatives and deceased ancestors have durable realm-derived identities, with both parent links, reciprocal spouses and explicit siblings when parents are unknown. Unknown ancestry stays absent. The visible court remains bounded to six relatives; accession and declared spouse links materialize additional people only when needed. Generated declarations remain marked generated after materialization and restore. Births add both known royal parents once, and death compaction preserves compact ancestry while removing ordinary dangling character links.
+
+Authored court kinship reads never treat two unknown parents as evidence of siblings. The existing court strip labels nephews, uncles, cousins and siblings through the compact graph, and keeps the effective heir marker. Regional declarations supply Clovis, Gundobad and Godegisel; the western story binds its cast references to those same people instead of installing another family. No new navigation, family subsystem or save version is introduced.

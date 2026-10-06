@@ -364,9 +364,12 @@ window.FB = window.FB || {};
       }
       for (const id in members) {
         const member = members[id];
-        const parent = member && member.parentId && members[member.parentId];
-        if (parent && parent.childIds.indexOf(id) < 0) {
-          parent.childIds.push(id);
+        if (!member) continue;
+        const parentIds = succession.authoredCourt
+          ? [member.fatherId, member.motherId] : [member.parentId];
+        for (const parentId of parentIds) {
+          const parent = parentId && members[parentId];
+          if (parent && parent.childIds.indexOf(id) < 0) parent.childIds.push(id);
         }
         if (!member || member.charId || id.indexOf('royal_') !== 0) continue;
         const charId = 'ro_' + id.slice('royal_'.length);

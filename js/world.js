@@ -622,6 +622,113 @@ window.FB = window.FB || {};
   /* Activation is also the runtime schema gate for base and mod-provided
      bookmarks. Returning all faults together makes a broken atomic world much
      easier for a mod author to repair than failing at its first bad county. */
+  /* Validate declarations before activation changes any world globals. */
+  FB.royalCourtFaults = function (court, ruler, year, provinces, defaultPolicyId) {
+    const errors = [], members = Object.create(null);
+    function fault(detail) { errors.push('royalCourt: ' + detail); }
+    if (!court || typeof court !== 'object' || Array.isArray(court) ||
+        !Array.isArray(court.members) || court.members.length > 24) {
+      return ['royalCourt: members must be a list of at most 24 people.'];
+    }
+    if (court.dynasty !== undefined && (typeof court.dynasty !== 'string' || !court.dynasty.trim()))
+      fault('invalid dynasty name.');
+    if (!ruler || !Number.isInteger(ruler.born) || ruler.born > year) fault('invalid ruler birth.');
+    members.ruler = { id:'ruler', sex:ruler && ruler.sex || 'm',
+      born:ruler && ruler.born, alive:true,
+      fatherId:court.rulerFatherId, motherId:court.rulerMotherId,
+      siblingIds:court.rulerSiblingIds || [], spouseId:court.spouseId };
+    court.members.forEach(function (m) {
+      if (!m || typeof m !== 'object' || !/^[a-z][a-z0-9_]*$/.test(m.id || '') ||
+          m.id === 'ruler' || ownKey(members, m.id)) {
+        fault('invalid or duplicate member id.'); return;
+      }
+      members[m.id] = m;
+      if (!(typeof m.name === 'string' && m.name.trim()) && m.generated !== true ||
+          m.name !== undefined && m.generated === true ||
+          m.generated !== undefined && typeof m.generated !== 'boolean' ||
+          ['m','f'].indexOf(m.sex) < 0 || !Number.isInteger(m.born) || m.born > year ||
+          !ownKey(FBDATA.cultures, m.culture) || !FB.faithAssignable(m.religion, null) ||
+          m.alive !== undefined && typeof m.alive !== 'boolean' ||
+          m.died !== undefined && (!Number.isInteger(m.died) || m.died < m.born ||
+            m.died > year || m.alive !== false) ||
+          m.mar !== undefined && (typeof m.mar !== 'number' || !isFinite(m.mar) || m.mar < 0) ||
+          m.trait !== undefined && !ownKey(FBDATA.traits, m.trait) ||
+          m.homeProvinceId !== undefined && (!provinces[m.homeProvinceId] || provinces[m.homeProvinceId].wasteland)) {
+        fault('invalid person ' + m.id + '.');
+      }
+    });
+    Object.keys(members).forEach(function (id) {
+      const m = members[id];
+      ['fatherId','motherId'].forEach(function (key) {
+        if (m[key] === undefined) return;
+        const parent = members[m[key]];
+        if (!parent || parent.id === id || parent.sex !== (key === 'fatherId' ? 'm' : 'f') ||
+            !Number.isInteger(parent.born) || m.born - parent.born < 12 ||
+            parent.died !== undefined && m.born > parent.died + 1) fault('invalid ' + key + ' for ' + id + '.');
+      });
+      if (m.spouseId !== undefined && m.spouseId !== null) {
+        const spouse = members[m.spouseId];
+        if (!spouse || spouse.id === id || spouse.alive === false || m.alive === false ||
+            spouse.spouseId !== id || year - m.born < 16 || year - spouse.born < 16)
+          fault('inconsistent spouse for ' + id + '.');
+      }
+      if (m.siblingIds !== undefined) {
+        if (!Array.isArray(m.siblingIds) || m.siblingIds.some(function (siblingId, i) {
+          const sibling = members[siblingId];
+          return !sibling || siblingId === id || m.siblingIds.indexOf(siblingId) !== i ||
+            !Array.isArray(sibling.siblingIds) || sibling.siblingIds.indexOf(id) < 0;
+        })) fault('inconsistent siblings for ' + id + '.');
+      }
+    });
+    const visiting = {}, done = {};
+    function visit(id) {
+      if (visiting[id]) { fault('genealogy cycle.'); return; }
+      if (done[id] || !members[id]) return;
+      visiting[id] = true;
+      const m = members[id];
+      if (m.fatherId) visit(m.fatherId);
+      if (m.motherId) visit(m.motherId);
+      delete visiting[id]; done[id] = true;
+    }
+    Object.keys(members).forEach(visit);
+    const spec = court.succession;
+    const policy = FB.governments.strategy('succession', spec ? spec.policyId : defaultPolicyId || 'dynastic');
+    if (spec !== undefined && (!spec || typeof spec !== 'object' ||
+        !policy || typeof policy.eligible !== 'function')) fault('unsupported succession policy.');
+    const founder = court.founderId || 'ruler';
+    if (court.founderId !== undefined && (typeof court.founderId !== 'string' ||
+        !ownKey(members, court.founderId))) fault('invalid dynasty founder reference.');
+    if (!members[founder] || policy && policy.requiresFounder &&
+        (court.founderId === undefined || members[founder].sex !== 'm'))
+      fault('unresolved dynasty founder.');
+    if (policy && policy.requiresFounder && members[founder]) {
+      let current = members.ruler, seen = {};
+      while (current && !seen[current.id] && current.id !== founder && current.sex === 'm') {
+        seen[current.id] = true; current = members[current.fatherId];
+      }
+      if (!current || current.id !== founder) fault('ruler is outside the founder’s male line.');
+    }
+    if (spec && spec.preferredMemberId !== undefined) {
+      const preferred = members[spec.preferredMemberId];
+      const graph = { members:members, founderId:founder, rulerMemberId:'ruler' };
+      const descendants = [];
+      function descend(id, seen) {
+        if (seen[id]) return;
+        seen[id] = true;
+        Object.keys(members).forEach(function (key) {
+          const m = members[key];
+          if ((m.fatherId || m.motherId) !== id || key === 'ruler') return;
+          if (m.alive !== false) descendants.push(key);
+          else descend(key, seen);
+        });
+      }
+      descend(founder, {});
+      if (!preferred || preferred.alive === false || preferred.id === court.spouseId || !policy ||
+          !policy.eligible(preferred, graph, year, descendants)) fault('ineligible preferred successor.');
+    }
+    return errors;
+  };
+
   FB.validateBookmark = function (definition) {
     var errors = [];
     var label = definition && definition.id ? definition.id : '?';
@@ -762,6 +869,12 @@ window.FB = window.FB || {};
         if (!validRulerProfile(realmDef.ruler)) {
           fault('realm ' + rid + ' has an invalid ruler profile.');
         }
+      }
+      if (realmDef.royalCourt !== undefined) {
+        const formIds = FB.governments.strategyIds(platform.governments[rid]);
+        FB.royalCourtFaults(realmDef.royalCourt, realmDef.ruler, date.year, provinceIds,
+          formIds && formIds.succession)
+          .forEach(function (detail) { fault('realm ' + rid + ': ' + detail); });
       }
       if (realmDef.governingIdentity !== undefined &&
           !FB.authorityIdentityValid(null, realmDef.governingIdentity))
@@ -2265,6 +2378,7 @@ window.FB = window.FB || {};
       FB.governments.resolve(forms[r.id]).use.holders.assign(state, r.id);
     }
     FB.invalidateRealmCache();
+    FB.initializeRoyalCourts(state, FBDATA.realms);
     FB.ensureReligiousHeads(state);
     FB.ensureDynasticState(state);
     if (FB.authoritySeedCommunities)
@@ -2976,6 +3090,71 @@ window.FB = window.FB || {};
       .replace(/[^A-Za-z0-9_-]/g, '_');
   }
 
+  /* Creation only. Restore consumes saved compact records, never this data. */
+  FB.initializeRoyalCourts = function (state, definitions) {
+    for (const definition of definitions) {
+      const court = definition.royalCourt, r = state.realms[definition.id];
+      if (!court || !r || r.succession) continue;
+      const s = r.succession = { authoredCourt:true, rulerGeneration:1,
+        rulerMemberId:courtMemberId(r, 'authored_ruler'), members:{}, order:[], heirId:null };
+      function resolve(id) {
+        return id === 'ruler' ? s.rulerMemberId : id ? courtMemberId(r, 'authored_' + id) : null;
+      }
+      const root = { id:s.rulerMemberId, localId:'ruler', name:r.ruler.name,
+        sex:r.ruler.sex || 'm', born:r.ruler.born, alive:true, parentId:null,
+        childIds:[], charId:null, role:null, dyn:court.dynasty || r.dynasty || r.ruler.name,
+        fatherId:resolve(court.rulerFatherId), motherId:resolve(court.rulerMotherId),
+        siblingIds:(court.rulerSiblingIds || []).map(resolve),
+        spouseDeclared:ownKey(court, 'spouseId'), spouseMemberId:resolve(court.spouseId) };
+      root.parentId = root.fatherId || root.motherId;
+      r.dynasty = root.dyn;
+      s.members[root.id] = root;
+      for (const person of court.members) {
+        const id = resolve(person.id);
+        const name = person.generated === true ? FB.withSeed(courtScope(state, r.id, id + ':name'),
+          function () { return FB.randomName(person.culture, person.sex, null, state); }) : person.name;
+        const m = { id:id, localId:person.id, name:name, generated:person.generated === true,
+          sex:person.sex, born:person.born, alive:person.alive !== false,
+          culture:person.culture, religion:person.religion, dyn:root.dyn,
+          fatherId:resolve(person.fatherId), motherId:resolve(person.motherId),
+          siblingIds:(person.siblingIds || []).map(resolve),
+          spouseDeclared:ownKey(person, 'spouseId'), spouseMemberId:resolve(person.spouseId),
+          childIds:[], charId:null, role:person.id === court.spouseId ? 'consort' : null };
+        m.parentId = m.fatherId || m.motherId;
+        if (m.role === 'consort') m.consortGen = 1;
+        if (person.died !== undefined) m.died = person.died;
+        if (person.mar !== undefined) m.mar = person.mar;
+        if (person.trait !== undefined) m.trait = person.trait;
+        if (person.homeProvinceId) m.homeProvinceId = person.homeProvinceId;
+        s.members[id] = m;
+      }
+      for (const id in s.members) {
+        const m = s.members[id];
+        for (const parentId of [m.fatherId, m.motherId]) {
+          if (parentId && s.members[parentId]) s.members[parentId].childIds.push(id);
+        }
+      }
+      s.founderId = resolve(court.founderId || 'ruler');
+      if (court.succession) s.policyId = court.succession.policyId;
+      if (court.succession && court.succession.preferredMemberId)
+        s.openingPreferredId = resolve(court.succession.preferredMemberId);
+      s.order = orderedMemberIds(s, s.rulerMemberId);
+      if (s.founderId !== s.rulerMemberId) {
+        s.order = s.order.concat(orderedMemberIds(s, s.founderId));
+      }
+      s.dynasticOrder = s.order.slice();
+      FB.refreshRealmSuccession(state, r.id);
+      seedConsortMember(state, r.id);
+      ensureCourtMaterialized(state, r.id, { bulk:true });
+    }
+  };
+
+  FB.authoredRoyalMemberSnapshot = function (state, rid, localId) {
+    const r = state && state.realms && state.realms[rid];
+    const s = r && r.succession;
+    return s && s.members && s.members[courtMemberId(r, 'authored_' + localId)] || null;
+  };
+
   /* Never overwrite a record that already holds the derived id, and never
      escape to FB.uid: the member-to-character identity is a save contract.
      A matching orphan can be reclaimed by the materializer; an unrelated
@@ -3112,12 +3291,19 @@ window.FB = window.FB || {};
       if (c.betrothedId === ruler.id) c.betrothedId = null;
       if (ruler.betrothedId === c.id) ruler.betrothedId = null;
     }
-    if (c && c.royalLine &&
+    if (!member.localId && c && c.royalLine &&
         c.royalLine.realmId && c.royalLine.memberId === member.id) {
       delete c.royalLine;
     }
-    delete succession.members[member.id];
-    removeLivingMember(succession, member.id);
+    if (member.localId) {
+      member.role = null;
+      const root = succession.members[succession.rulerMemberId];
+      if (root && root.spouseMemberId === member.id) root.spouseMemberId = null;
+      member.spouseMemberId = null;
+    } else {
+      delete succession.members[member.id];
+      removeLivingMember(succession, member.id);
+    }
     const generation = succession.rulerGeneration === undefined
       ? 1 : succession.rulerGeneration;
     rememberConsortMember(succession, generation, null);
@@ -3131,6 +3317,8 @@ window.FB = window.FB || {};
     const r = state.realms[rid];
     const s = r && r.succession;
     if (!r || !s || !s.members || !r.ruler) return null;
+    const root = s.rulerMemberId && s.members[s.rulerMemberId];
+    if (root && root.spouseDeclared) return null;
     const generation = s.rulerGeneration === undefined ? 1 : s.rulerGeneration;
     if (FB.realmConsortMember(state, rid)) return null;
     /* A ruler who already has a spouse of record is never handed a second
@@ -3198,6 +3386,11 @@ window.FB = window.FB || {};
     const r = state && state.realms && state.realms[rid];
     const s = r && r.succession;
     if (!s || !s.members) return null;
+    const root = s.rulerMemberId && s.members[s.rulerMemberId];
+    if (root && root.spouseMemberId) {
+      const spouse = s.members[root.spouseMemberId];
+      return spouse && spouse.alive !== false ? spouse : null;
+    }
     const generation = s.rulerGeneration === undefined ? 1 : s.rulerGeneration;
     const cached = consortMemberCache.get(s);
     if (cached && cached.members === s.members &&
@@ -3291,7 +3484,8 @@ window.FB = window.FB || {};
     if (s.papalElective) return s;
     const memberIndex = successionMemberIndex(s);
     const children = memberIndex.children;
-    const source = s.order && s.order.length ? s.order.slice() :
+    const frontier = s.authoredCourt ? s.dynasticOrder : s.order;
+    const source = frontier && frontier.length ? frontier.slice() :
       indexedMemberIds(children, s.rulerMemberId || null);
     /* Keep the reigning-ruler index honest from the one place that already
        notices a linked character has gone. */
@@ -3302,6 +3496,12 @@ window.FB = window.FB || {};
       else indexRuler(rulerMember.charId, rid);
     }
     const out = [], seen = {};
+    if (s.authoredCourt) {
+      for (const id of memberIndex.living) {
+        const m = s.members[id], c = m.charId && state.chars[m.charId];
+        if (m.charId && (!c || c.dead)) m.alive = false;
+      }
+    }
     for (const id of source) {
       const m = s.members[id];
       if (m && m.charId) {
@@ -3310,10 +3510,18 @@ window.FB = window.FB || {};
            removed, so a missing character here is genuinely a death. */
         if (!c || c.dead) m.alive = false;
       }
-      expandDeadBranch(s, id, out, seen, children);
+      if (id !== s.rulerMemberId) expandDeadBranch(s, id, out, seen, children);
     }
-    s.order = out;
-    s.heirId = out.length ? out[0] : null;
+    if (s.authoredCourt) s.dynasticOrder = out.slice();
+    const policy = FB.governments.successionForRealm(state, rid);
+    s.order = policy && policy.order ? policy.order(s, state.date.year, out) : out;
+    if (s.openingPreferredId) {
+      const preferred = s.members[s.openingPreferredId];
+      if (state.turn !== 0 || s.rulerGeneration !== 1 || !preferred || preferred.alive === false ||
+          !policy || !policy.eligible(preferred, s, state.date.year, out)) delete s.openingPreferredId;
+      else s.order = [preferred.id].concat(s.order.filter(function (id) { return id !== preferred.id; }));
+    }
+    s.heirId = s.order.length ? s.order[0] : null;
     // Every compact royal house exposes one designated successor. If an
     // entire lightweight line dies out, repair it with a young collateral
     // branch instead of leaving the UI and ruler transition heirless.
@@ -3433,6 +3641,8 @@ window.FB = window.FB || {};
      so skipping unchanged houses does not weaken old-save recovery. */
   function successionReadyForYear(state, r) {
     const s = r && r.succession;
+    const policy = s && FB.governments.successionForRealm(state, r.id);
+    if (policy && policy.annualRefresh) return false; // Majority can change eligibility.
     if (!s || !s.members || !Array.isArray(s.order) || !s.order.length ||
         !s.heirId || s.heirId !== s.order[0]) return false;
     /* A missing frontier means this succession object was installed without
@@ -3567,8 +3777,11 @@ window.FB = window.FB || {};
     for (const member of FB.realmFamily(state, rid)) {
       if (!member || member.alive === false || member.role === 'consort') continue;
       if (member.id === s.rulerMemberId) continue;
-      if (member.charId && state.chars[member.charId]) continue;
-      if (FB.materializeRoyalChild(state, rid, member.id, opts)) made = true;
+      if ((!member.charId || !state.chars[member.charId]) &&
+          FB.materializeRoyalChild(state, rid, member.id, opts)) made = true;
+      const spouse = member.spouseMemberId && s.members[member.spouseMemberId];
+      if (spouse && spouse.alive !== false && !spouse.charId &&
+          FB.materializeRoyalChild(state, rid, spouse.id, opts)) made = true;
     }
     return made;
   }
@@ -3628,6 +3841,13 @@ window.FB = window.FB || {};
     for (const id of (s.order || [])) {
       const member = s.members[id];
       if (member && member.alive !== false && ids.indexOf(id) < 0) ids.push(id);
+    }
+    if (s.authoredCourt) {
+      for (const id in s.members) {
+        const member = s.members[id];
+        if (member.alive !== false && id !== s.rulerMemberId &&
+            member.role !== 'consort' && ids.indexOf(id) < 0) ids.push(id);
+      }
     }
     return ids.slice(0, 6).map(function (id) { return s.members[id]; });
   }
@@ -3714,16 +3934,20 @@ window.FB = window.FB || {};
     }
     /* The annual preparation leaves healthy houses untouched. Rebuild only
        when this mortality roll or its local legacy repair changed the tree. */
-    if (changed) FB.refreshRealmSuccession(state, rid);
+    if (changed) {
+      delete s.openingPreferredId;
+      FB.refreshRealmSuccession(state, rid);
+    }
   }
 
   function linkMaterializedRoyalFamily(state, succession, member, c, opts) {
     if (!succession || !member || !c) return c;
-    const parentMember = member.parentId &&
-      succession.members[member.parentId];
-    const parent = parentMember && parentMember.charId &&
-      state.chars[parentMember.charId];
-    if (parent) {
+    const parentIds = member.fatherId || member.motherId
+      ? [member.fatherId, member.motherId].filter(Boolean) : [member.parentId];
+    for (const parentId of parentIds) {
+      const parentMember = succession.members[parentId];
+      const parent = parentMember && parentMember.charId && state.chars[parentMember.charId];
+      if (!parent) continue;
       if (parent.sex === 'f') {
         if (!c.motherId) c.motherId = parent.id;
       } else if (!c.fatherId) c.fatherId = parent.id;
@@ -3742,6 +3966,14 @@ window.FB = window.FB || {};
       } else if (!child.fatherId) child.fatherId = c.id;
       c.childrenIds = c.childrenIds || [];
       if (c.childrenIds.indexOf(child.id) < 0) c.childrenIds.push(child.id);
+    }
+    const spouseMember = member.spouseMemberId && succession.members[member.spouseMemberId];
+    const spouse = spouseMember && spouseMember.charId && state.chars[spouseMember.charId];
+    if (member.spouseDeclared && spouseMember && spouseMember.alive !== false &&
+        spouse && !spouse.dead && !c.dead &&
+        !committedToOther(state, c, spouse, opts) && !committedToOther(state, spouse, c, opts)) {
+      c.spouseId = spouse.id;
+      spouse.spouseId = c.id;
     }
     /* A bulk sweep defers the patronym pass to one call at the end; it walks
        the whole character map and cannot run once per record. */
@@ -3770,20 +4002,33 @@ window.FB = window.FB || {};
         id:charId,
         name: m.name,
         sex: m.sex,
-        culture: r.ruler.culture,
-        religion: courtReligion(state, r, cap),
+        culture: m.culture || r.ruler.culture,
+        religion: m.religion || courtReligion(state, r, cap),
         born: m.born,
         dyn: m.dyn || 'of ' + (r.nameStyle ? r.nameStyle.place : r.name),
         station: FB.realmRank.isRoyal(r, state) ? 4 : 3,
         quality: Math.max(2, r.rank + 1),
+        traits:m.trait ? [m.trait] : undefined,
         opinion: FB.ri(-5, 20)
       });
     });
     c.health = 8;
+    applyRoyalMemberProfile(state, m, c);
     c.royalLine = { realmId: rid, memberId: memberId };
     m.charId = c.id;
     return linkMaterializedRoyalFamily(state, s, m, c, opts);
   };
+
+  function applyRoyalMemberProfile(state, member, c) {
+    if (member.generated) c.generated = true;
+    if (member.homeProvinceId) c.homeProvinceId = member.homeProvinceId;
+    if (member.mar !== undefined) {
+      const bonus = realmMartial(state, c) - (Number(c.skills.mar) || 0);
+      c.skills.mar = Math.max(0, member.mar - bonus);
+    }
+  }
+
+  FB.materializeRoyalMember = FB.materializeRoyalChild;
 
   /* The consort as an ordinary character. A child ruler's compact reservation
      stays unmaterialized and unlinked; once both are adults this path creates
@@ -3837,16 +4082,18 @@ window.FB = window.FB || {};
           id:charId,
           name:m.name,
           sex:m.sex,
-          culture:r.ruler.culture,
-          religion:courtReligion(state, r, cap),
+          culture:m.culture || r.ruler.culture,
+          religion:m.religion || courtReligion(state, r, cap),
           born:m.born,
           dyn:m.dyn || 'of ' + (r.nameStyle ? r.nameStyle.place : r.name),
           station:FB.realmRank.isRoyal(r, state) ? 4 : 3,
           quality:Math.max(2, r.rank + 1),
+          traits:m.trait ? [m.trait] : undefined,
           opinion:FB.ri(-5, 20)
         });
       });
       c.health = 8;
+      applyRoyalMemberProfile(state, m, c);
       c.royalLine = { realmId:rid, memberId:m.id };
       m.charId = c.id;
     }
@@ -4493,6 +4740,26 @@ window.FB = window.FB || {};
     const mb = members && members[b.royalLine.memberId];
     if (!ma || !mb) return 'unrelated';
     if (ma.id === mb.id) return 'self';
+    if (succession.authoredCourt) {
+      function parents(m) { return [m.fatherId || m.parentId, m.motherId].filter(Boolean); }
+      function authoredSiblings(x, y) {
+        return !!x && !!y && x.id !== y.id &&
+          ((x.siblingIds || []).indexOf(y.id) >= 0 || parents(x).some(function (id) {
+            return parents(y).indexOf(id) >= 0;
+          }));
+      }
+      const aParents = parents(ma), bParents = parents(mb);
+      if (aParents.indexOf(mb.id) >= 0 || bParents.indexOf(ma.id) >= 0) return 'parent_child';
+      if (authoredSiblings(ma, mb)) return 'full_sibling';
+      if (aParents.some(function (id) { return authoredSiblings(members[id], mb); }) ||
+          bParents.some(function (id) { return authoredSiblings(members[id], ma); })) return 'avuncular';
+      if (aParents.some(function (id) { return members[id] && parents(members[id]).indexOf(mb.id) >= 0; }) ||
+          bParents.some(function (id) { return members[id] && parents(members[id]).indexOf(ma.id) >= 0; })) return 'grandparent';
+      if (aParents.some(function (id) { return bParents.some(function (other) {
+        return authoredSiblings(members[id], members[other]);
+      }); })) return 'cousin';
+      return 'unrelated';
+    }
     if (ma.parentId === mb.id || mb.parentId === ma.id) return 'parent_child';
     function siblings(x, y) {
       return !!x && !!y && x.id !== y.id &&
@@ -4538,6 +4805,12 @@ window.FB = window.FB || {};
   };
 
   FB.registerRoyalBirth = function (state, child, father, mother) {
+    const existingLine = child && child.royalLine;
+    const existingRealm = existingLine && state.realms[existingLine.realmId];
+    const existingFamily = existingRealm && existingRealm.succession;
+    if (existingFamily && existingFamily.authoredCourt &&
+        existingFamily.members[existingLine.memberId] &&
+        existingFamily.members[existingLine.memberId].charId === child.id) return;
     const candidates = [];
     if (father && father.royalLine) candidates.push(father);
     if (mother && mother.royalLine) candidates.push(mother);
@@ -4581,6 +4854,18 @@ window.FB = window.FB || {};
       charId: child.id,
       role: null
     };
+    if (s.authoredCourt) {
+      for (const key of ['fatherId','motherId']) {
+        const person = key === 'fatherId' ? father : mother;
+        const birthLine = person && person.royalLine;
+        if (birthLine && birthLine.realmId === r.id && s.members[birthLine.memberId]) {
+          m[key] = birthLine.memberId;
+          const other = s.members[birthLine.memberId];
+          if (other.id !== parent.id && other.childIds.indexOf(m.id) < 0) other.childIds.push(m.id);
+        }
+      }
+      m.parentId = m.fatherId || m.motherId || parent.id;
+    }
     s.members[m.id] = m;
     parent.childIds = parent.childIds || [];
     parent.childIds.push(m.id);
@@ -4589,6 +4874,11 @@ window.FB = window.FB || {};
       const children = orderedMemberIds(s, parent.id);
       const rest = s.order.filter(function (id) { return children.indexOf(id) < 0; });
       s.order = children.concat(rest);
+      if (s.authoredCourt) {
+        s.dynasticOrder = children.concat((s.dynasticOrder || []).filter(function (id) {
+          return children.indexOf(id) < 0;
+        }));
+      }
     }
     FB.refreshRealmSuccession(state, r.id);
   };
@@ -4616,6 +4906,7 @@ window.FB = window.FB || {};
     const advanced = {};
     if (m) {
       m.alive = false;
+      delete s.openingPreferredId;
       if (s.rulerMemberId === m.id && r.alive) {
         advanceRealmAfterRulerDeath(state, r.id);
         advanced[r.id] = 1;
@@ -4644,7 +4935,7 @@ window.FB = window.FB || {};
 
   function makeHeirIfEmpty(state, r, s) {
     if (s.order.length) return null;
-    const parentId = s.rulerMemberId || null;
+    const parentId = s.authoredCourt && r.ruler.age < 12 ? null : s.rulerMemberId || null;
     const generation = s.rulerGeneration === undefined ? 1 : s.rulerGeneration;
     let ordinal = 0;
     let key = 'g' + generation + '_heir' + ordinal;
@@ -4666,6 +4957,12 @@ window.FB = window.FB || {};
     }
     s.order = [m.id];
     s.heirId = m.id;
+    if (s.authoredCourt) {
+      if (s.members[parentId] && s.members[parentId].sex === 'm') m.fatherId = parentId;
+      else m.motherId = parentId;
+      m.generated = true;
+      s.dynasticOrder = [m.id];
+    }
     addLivingMember(s, m);
     return m;
   }
@@ -4688,6 +4985,7 @@ window.FB = window.FB || {};
       FB.serfHomeAuthority ? FB.serfHomeAuthority(state) : null;
     const s = FB.ensureRealmSuccession(state, rid);
     if (!s) return null;
+    delete s.openingPreferredId;
     const formerPlayerAlliance = rid !== 'player' &&
       FB.areAllied(state, 'player', rid);
     FB.refreshRealmSuccession(state, rid);
@@ -4749,6 +5047,11 @@ window.FB = window.FB || {};
     if (outgoing && outgoing.charId) dropRulerIndex(outgoing.charId);
     const children = orderedMemberIds(s, heirId);
     s.order = children.concat(s.order.filter(function (id) { return children.indexOf(id) < 0; }));
+    if (s.authoredCourt) {
+      s.dynasticOrder = children.concat((s.dynasticOrder || []).filter(function (id) {
+        return id !== heirId && children.indexOf(id) < 0;
+      }));
+    }
     r.ruler = {
       name:c.name,
       sex:c.sex,

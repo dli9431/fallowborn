@@ -96,45 +96,14 @@
       'nicene', 58, 3, 'notable', 'roma');
     var homoianBishop = made(s, FB.randomName('gothic', 'm', null, s), 'gothic',
       'homoian', 46, 3, 'priest', 'ravenna');
-    var clovis = made(s, 'Clovis', 'frankish', 'germanic_pagan',
-      10, 2, 'heir', 'ghent');
-    var gundobad = made(s, 'Gundobad', 'burgundian', 'homoian', 31, 4,
-      'co_ruler', 'vienne');
-    var godegisel = made(s, 'Godegisel', 'burgundian', 'homoian', 26, 3,
-      'co_ruler', 'geneva');
-    var burgundianSuccession = FB.ensureRealmSuccession(s, 'burgundy');
-    if (burgundianSuccession) {
-      var gundobadMemberId = 'royal_burgundy_' + gundobad.id;
-      burgundianSuccession.members[gundobadMemberId] = {
-        id:gundobadMemberId, name:gundobad.name, sex:'m', born:gundobad.born,
-        alive:true, parentId:null, childIds:[], charId:gundobad.id, role:'co_ruler'
-      };
-      burgundianSuccession.order.unshift(gundobadMemberId);
-      burgundianSuccession.heirId = gundobadMemberId;
-      gundobad.royalLine = { realmId:'burgundy', memberId:gundobadMemberId };
-      FB.refreshRealmSuccession(s, 'burgundy');
+    function courtPerson(rid, localId) {
+      var member = FB.authoredRoyalMemberSnapshot(s, rid, localId);
+      return member && FB.materializeRoyalMember(s, rid, member.id);
     }
+    var clovis = courtPerson('franks_476', 'clovis');
+    var gundobad = courtPerson('burgundy', 'gundobad');
+    var godegisel = courtPerson('burgundy', 'godegisel');
     var childeric = ruler(s, 'franks_476');
-    if (childeric) {
-      clovis.fatherId = childeric.id;
-      childeric.childrenIds.push(clovis.id);
-      var frankSuccession = FB.ensureRealmSuccession(s, 'franks_476');
-      var frankRoot = frankSuccession &&
-        frankSuccession.members[frankSuccession.rulerMemberId];
-      if (frankRoot) {
-        var clovisMemberId = 'royal_franks_476_' + clovis.id;
-        frankSuccession.members[clovisMemberId] = {
-          id:clovisMemberId, name:clovis.name, sex:'m',
-          born:clovis.born, alive:true, parentId:frankRoot.id,
-          childIds:[], charId:clovis.id, role:null
-        };
-        frankRoot.childIds.unshift(clovisMemberId);
-        frankSuccession.order.unshift(clovisMemberId);
-        frankSuccession.heirId = clovisMemberId;
-        clovis.royalLine = { realmId:'franks_476', memberId:clovisMemberId };
-        FB.refreshRealmSuccession(s, 'franks_476');
-      }
-    }
     west.fatherId = orestes.id;
     orestes.childrenIds.push(west.id);
     w.orestesId = orestes.id;
