@@ -537,7 +537,8 @@
     hasCivicConsent:hasCivicConsent, cityRights:cityRights,
     civicPermission:civicPermission, civicSettlement:civicSettlement, news:news
   };
-  FB.stories.register({ id:WORLD, kind:'world', init:init, day:day,
+  FB.stories.register({ id:WORLD, kind:'world', requirements:{ eras:['late_antique'],
+    realms:['italy','byzantium','federates_476'], provinces:['ravenna'] }, init:init, day:day,
     title:function () { return FB.T('The federate ruler and Ravenna'); },
     intro:function () { return FB.T('You decide for the host. Paid service, a campaign and a civic settlement are separate commitments, each using the ordinary authority rules.'); },
     status:function (s, w) {

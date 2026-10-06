@@ -148,6 +148,8 @@ test('mod buildings must keep roles valid and a single fortification',
         unknownTableUnchanged:!Object.prototype.hasOwnProperty.call(FBDATA.buildings, 'e2e_unknown'),
         legacy:attempt({ e2e_legacy:building({}) }),
         legacyRole:FB.buildingRole('e2e_legacy'),
+        explicitUnassigned:attempt({ e2e_unassigned:building({ role:'unassigned' }) }),
+        unassignedRole:FB.buildingRole('e2e_unassigned'),
         fortification:FB.fortificationBuildingId()
       };
     });
@@ -158,7 +160,9 @@ test('mod buildings must keep roles valid and a single fortification',
     expect(result.fortRoleWithoutFlag).toMatch(/fort exactly when/);
     expect(result.badOrder).toMatch(/aiBuildOrder/);
     expect(result.unknownTableUnchanged).toBe(true);
-    expect(result.legacy).toBe('');
-    expect(result.legacyRole).toBe('unassigned');
+    expect(result.legacy).toMatch(/Building e2e_legacy needs a role/);
+    expect(result.legacyRole).toBe(null);
+    expect(result.explicitUnassigned).toBe('');
+    expect(result.unassignedRole).toBe('unassigned');
     expect(result.fortification).toBe('walls');
   });

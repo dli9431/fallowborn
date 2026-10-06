@@ -297,7 +297,7 @@ test('mods must keep unit roles and capability grants valid',
     expect(result.hiredFoot).toMatch(/hired exactly/);
     expect(result.roleAsId).toMatch(/share its id with a unit role/);
     expect(result.roleKeyCounter).toBe('');
-    expect(result.legacy).toBe('');
+    expect(result.legacy).toMatch(/Unit class e2e_legacy needs a role/);
     expect(result.legacyRole).toBe(null);
     expect(result.replacement).toBe('');
     expect(result.replacedRole).toBe('levy_infantry');

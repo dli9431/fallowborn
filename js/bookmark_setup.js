@@ -18,8 +18,8 @@
     if (d === undefined) return errors;
     function fail(p) { errors.push('Invalid opening declaration: ' + p + '.'); }
     var counties = {}, realms = {};
-    (bm.provinces || []).forEach(function (p) { if (!p.wasteland) counties[p.id] = p; });
-    (bm.realms || []).forEach(function (r) { realms[r.id] = r; });
+    (Array.isArray(bm.provinces) ? bm.provinces : []).forEach(function (p) { if (p && !p.wasteland) counties[p.id] = p; });
+    (Array.isArray(bm.realms) ? bm.realms : []).forEach(function (r) { if (r) realms[r.id] = r; });
     if (!plain(d) || !plain(d.actors) || !plain(d.appointments) ||
         !Array.isArray(d.estates) || !Array.isArray(d.claims) || !Array.isArray(d.migrations)) {
       fail('schema'); return errors;
@@ -110,8 +110,11 @@
   FB.validateBookmark = function (bm) {
     var errors = validateBookmark(bm).concat(FB.openingDefinitionFaults(bm));
     var layout = bm && FBDATA.settlementLayouts[bm.settlementLayout] || {};
-    (bm && bm.provinces || []).forEach(function (p) {
-      (p.settlements || layout[p.id] || []).forEach(function (site) {
+    (bm && Array.isArray(bm.provinces) ? bm.provinces : []).forEach(function (p) {
+      if (!p) return;
+      var entries = p.settlements || layout[p.id] || [];
+      (Array.isArray(entries) ? entries : []).forEach(function (site) {
+        if (!site) return;
         if (site.communities === undefined) return;
         var mix = site.communities;
         if (!Array.isArray(mix) || !mix.length || mix.some(function (c, i) {

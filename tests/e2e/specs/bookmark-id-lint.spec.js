@@ -2,19 +2,15 @@
 const fs = require('fs');
 const path = require('path');
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
-dependsOnRuntime(__filename, [
-  'js',
-  'data/bookmarks.js', 'data/bookmark_476.js',
-  'data/bookmark_476_italy.js', 'data/bookmark_476_dalmatia_east.js',
-  'data/bookmark_476_gaul_iberia.js', 'data/bookmark_476_africa.js'
-]);
+// This catalogue-wide source canary discovers every registered bookmark id.
+dependsOnRuntime(__filename, ['index.html', 'js', 'data']);
 const { test, expect } = require('../support/fixture');
 const { openGame } = require('../support/game/navigation');
 const { STRING_MARK, engineSources } = require('../support/source-literals');
 
 const allowlistPath = path.resolve(__dirname, '..', 'fixtures', 'engine-ids',
   'bookmark-id-allowlist.json');
-const kinds = ['legacy_default', 'legacy_contract', 'identity_key', 'pending'];
+const kinds = ['legacy_default', 'legacy_contract', 'identity_key'];
 const target = '(?:\\bstart\\s*\\.\\s*id|\\bactiveBookmarkId)';
 const literal = STRING_MARK;
 const comparisons = [
@@ -91,9 +87,5 @@ test('engine code names bookmark ids only on the reviewed allowlist',
       }
     });
 
-    const pending = allowlist.entries.filter(function (entry) {
-      return entry.kind === 'pending';
-    }).length;
-    testInfo.annotations.push({ type:'pending bookmark branches', description:String(pending) });
     expect(problems, problems.join('\n')).toEqual([]);
   });

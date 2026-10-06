@@ -1715,6 +1715,33 @@ window.FB = window.FB || {};
     return faults;
   };
 
+  /* A module's required capability must have at least one grant reachable
+     by the end of the era's supported window. Inherited earlier inventions
+     remain valid; a prerequisite dated later than the window does not. */
+  FB.capabilityInEraWindow = function (capabilityId, eraId) {
+    var era = FBDATA.eras[eraId], window = era && era.technology || FBDATA.techCoverage;
+    if (!window || !own(FBDATA.capabilities, capabilityId)) return false;
+    var visiting = {}, reachable = {};
+    function available(id) {
+      if (own(reachable, id)) return reachable[id];
+      if (visiting[id]) return false;
+      var raw = FBDATA.tech[id];
+      if (!raw) return false;
+      visiting[id] = true;
+      var def = FB.normalizeTechDefinition(id, JSON.parse(JSON.stringify(raw)));
+      var year = def.history && def.history.attested && def.history.attested[0];
+      var result = isFinite(year) && year <= window.to &&
+        (!Array.isArray(def.eras) || def.eras.indexOf(eraId) >= 0) &&
+        (def.req || []).every(available) && (!(def.reqAny || []).length || def.reqAny.some(available));
+      delete visiting[id]; reachable[id] = result;
+      return result;
+    }
+    return Object.keys(FBDATA.tech || {}).some(function (id) {
+      var def = FBDATA.tech[id], grants = def && def.capabilities;
+      return Array.isArray(grants) && grants.indexOf(capabilityId) >= 0 && available(id);
+    });
+  };
+
   FB.validateTechnologyData = function () {
     var errors = [], domains = FBDATA.techDomains || {};
     var traditions = FBDATA.techTraditions || {};
