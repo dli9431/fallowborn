@@ -596,3 +596,7 @@ The Dalmatia/east regional declaration supplies explicit county-local dated name
 Gaul and Iberia in 476
 
 The gaul_iberia declaration owns period names, community weights, development and all 117 county settlement heads. Its settlementSites and settlementLayouts are composed into the ordinary physical-site and 476-layout tables before bookmark registration; activation still clones the layout and resolves year-keyed names. Existing Soissons, Tournai and other site ids remain stable. Uncertain city identifications use geographic labels and village presentations. A generated Upper Rhine Alamannic court occupies the strasbourg cell; this is a coarse political approximation, not a surveyed frontier. Medieval layouts and province records retain their own presentations.
+
+Spring 711 review geography
+
+data/bookmark_711.js owns literal politics, community weights, period names and one head presentation per inhabited county across the shared europe_regional grid. Its separate bookmarkSites711 table is inert until review installation. A null settlementLayout keeps the inline presentations independent of medieval layouts, and empty county names lists preserve the literal 711 labels instead of shared dated aliases. Geography supplies physical county seeds and terrain only. Later urban foundations use predecessors or district names, and generated extra slots remain procedural. No other bookmark supplies opening owners, holders, courts or community shares. Historical and coordinate uncertainties remain recorded in ../research/711-bookmark.md.

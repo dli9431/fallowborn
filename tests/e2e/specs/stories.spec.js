@@ -2,7 +2,7 @@
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
   'index.html', 'js/starts.js', 'js/story_nepos_track_476.js', 'js/stories.js', 'js/story_campaign.js', 'js/story_476_rails.js',
-  'data/story_campaigns.js', 'js/story_western_court_476.js',
+  'data/story_campaigns.js', 'data/story_campaigns_711.js', 'js/story_western_court_476.js',
   'js/story_federate_track_476.js', 'js/main.js', 'js/save.js', 'js/save_v4.js',
   'js/i18n.js', 'js/ui_panels.js', 'js/world.js',
   'data/starts.js', 'data/bookmarks.js', 'data/bookmark_476.js',
@@ -76,7 +76,10 @@ test('stories register in order at load time only and resolve by id',
         }).map(function (sc) { return sc.id + ':' + sc.tracks.join(','); })
       };
     });
-    expect(result.order).toEqual(WORLD_STORIES.map(function (id) { return id + ':world'; })
+    // Campaign instances register as one data batch before the western office.
+    expect(result.order).toEqual(WORLD_STORIES.filter(function (id) { return id !== 'western_office_476'; })
+      .concat(['strait_crossing_711','toledo_campaign_711','septimania_campaign_711',
+        'gaul_campaign_711','western_office_476']).map(function (id) { return id + ':world'; })
       .concat(['federate_track_476:track','curialis_track_476:track','nepos_track_476:track']));
     expect(result.world).toBe(true);
     expect(result.unknown).toBeNull();
