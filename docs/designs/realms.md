@@ -1611,3 +1611,8 @@ The non_territorial territory strategy now supplies a moving court and migration
 Adopting an authored court
 
 js/starts.js performs existing-ruler adoption only during new-campaign creation. The source realm retains its government, rank, governing identity, court, territorial boundaries and active host while becoming the ordinary player realm. The scenario's tier must map to the source realm's rank. The source key is removed and typed political references resolve to player. A nonterritorial host starts with no county holdings; becoming a player court does not territorialize it. The full seeded household replaces compact NPC succession so ordinary player family rules have one owner.
+
+
+800 review world
+
+The late 800 candidate in data/bookmark_800.js declares an independent full europe_regional political map. Charlemagne's imperial core has subordinate Aquitaine and Italy, while Venice and Ifriqiya use eastern and Abbasid lieges. Existing territorial government generates ordinary holders. The promotion tables retain enduring ambition regions but use period names such as Austrasia and Lower Seine. Owner is the sovereign; holder remains the local court or generated vassal. The research note docs/research/800-bookmark.md records disputed boundaries and representative polities. The candidate is outside FBDATA.bookmarks until accepted; ordinary dynastic succession does not reproduce historical partitions or wire the three Carolingian courts into a shared historical family.

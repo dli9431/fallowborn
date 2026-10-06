@@ -596,3 +596,8 @@ The Dalmatia/east regional declaration supplies explicit county-local dated name
 Gaul and Iberia in 476
 
 The gaul_iberia declaration owns period names, community weights, development and all 117 county settlement heads. Its settlementSites and settlementLayouts are composed into the ordinary physical-site and 476-layout tables before bookmark registration; activation still clones the layout and resolves year-keyed names. Existing Soissons, Tournai and other site ids remain stable. Uncertain city identifications use geographic labels and village presentations. A generated Upper Rhine Alamannic court occupies the strasbourg cell; this is a coarse political approximation, not a surveyed frontier. Medieval layouts and province records retain their own presentations.
+
+
+800 review geography and settlements
+
+The late 800 candidate owns every political province row, community weight and title table independently of 867. Shared europe_regional seeds, terrain, climate and crossings retain their physical meaning. Its explicit 800 settlement layout uses period sites at fifty major seats; unlisted counties use generated slots rather than the later 867 imported fill list. Iria Flavia, Walila, Malamocco, Tudmir and Pechina presentations avoid carrying later urban names backward. Raqqa adds one enduring physical-site slug, raqqa_800. Community weights are gameplay abstractions, including substantial Coptic and Syriac communities under Abbasid rule, not census estimates. No population or settlement schema changes. See docs/research/800-bookmark.md.

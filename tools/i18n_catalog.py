@@ -30,6 +30,11 @@ EVENT_FILES = sorted(DATA.glob("events_*.js"))
 REGION_FILES = [(DATA / f"bookmark_476_{region}.js", region)
                 for region in ("italy", "dalmatia_east", "gaul_iberia", "africa")]
 BOOKMARK_FILE = DATA / "bookmarks.js"
+CANDIDATE_BOOKMARK_FILES = [
+    (path, path.stem.split("_")[-1])
+    for path in sorted(DATA.glob("bookmark_*.js"))
+    if re.fullmatch(r"bookmark_[0-9]+", path.stem)
+]
 STARTS_FILE = DATA / "starts.js"
 TECHNOLOGY_FILE = DATA / "technology.js"
 ACTIONS_FILE = DATA / "actions.js"
@@ -791,6 +796,17 @@ def extract_structured(inv: Inventory) -> None:
         root = node_object(find_assignment(path, "FBDATA", data_name)) or {}
         rel = path.relative_to(ROOT).as_posix()
         entries = [(item_id, item_node, rel) for item_id, item_node in root.items()]
+        if data_name == "storyCampaigns":
+            for _, candidate_id in CANDIDATE_BOOKMARK_FILES:
+                candidate_path = DATA / f"bookmark_{candidate_id}_history.js"
+                if not candidate_path.exists():
+                    continue
+                candidates = node_object(find_assignment(
+                    candidate_path, "FBDATA", "storyCampaigns" + candidate_id
+                )) or {}
+                candidate_rel = candidate_path.relative_to(ROOT).as_posix()
+                entries.extend((item_id, item_node, candidate_rel)
+                               for item_id, item_node in candidates.items())
         # Regional declarations spell some catalogue fields differently.
         regional_fields = {"cultures": ("cultures",),
                            "legalTraditions": ("legalTraditions",),
@@ -1144,6 +1160,37 @@ def extract_structured(inv: Inventory) -> None:
                         f"{region_rel}:{line}",
                         f"476 administrative {kind} {title_id}, display name.", ()
                     )
+    # Review candidates have literal complete maps but stay outside the live
+    # bookmark registry. Extract display fields without evaluating game code,
+    # descending into ruler profiles or colliding with existing title labels.
+    for candidate_path, candidate_id in CANDIDATE_BOOKMARK_FILES:
+        candidate_rel = candidate_path.relative_to(ROOT).as_posix()
+        candidate = node_object(find_keyed_assignment(
+            candidate_path, "FBDATA", "bookmarkCandidates", candidate_id
+        )) or {}
+        for field in ("name", "desc"):
+            for branch, record, line in branch_records(candidate.get(field)):
+                inv.add(f"bookmark.{candidate_id}.{field}.{branch}", record,
+                        f"{candidate_rel}:{line}",
+                        f"Review bookmark {candidate_id}, {field}.", ())
+        for table, kind in (("provinces", "province"), ("realms", "realm")):
+            for item_node in node_array(candidate.get(table)) or []:
+                item = node_object(item_node) or {}
+                item_id = node_string(item.get("id"))
+                if not item_id:
+                    continue
+                for branch, record, line in branch_records(item.get("name")):
+                    inv.add(f"{kind}.{candidate_id}.{item_id}.name.{branch}", record,
+                            f"{candidate_rel}:{line}",
+                            f"Review {candidate_id} {kind} {item_id}, display name.", ())
+        for table, kind in (("duchies", "duchy"), ("kingdoms", "kingdom"),
+                            ("empires", "empire")):
+            for item_id, item_node in (node_object(candidate.get(table)) or {}).items():
+                item = node_object(item_node) or {}
+                for branch, record, line in branch_records(item.get("name")):
+                    inv.add(f"{kind}.{candidate_id}.{item_id}.name.{branch}", record,
+                            f"{candidate_rel}:{line}",
+                            f"Review {candidate_id} {kind} {item_id}, display name.", ())
     # Dated county names of the geography bases replace a county's display
     # name for the years they cover, so each is a display label of its own.
     geography_path = DATA / "geographies.js"

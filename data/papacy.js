@@ -185,6 +185,11 @@ window.FBDATA = window.FBDATA || {};
       investiture_concordat:{ from:1122 }
     },
     regnalSeeds:[
+      { from:800, counts:{
+        John:7, Benedict:2, Gregory:3, Leo:3, Stephen:3, Nicholas:0,
+        Adrian:1, Alexander:1, Clement:1, Innocent:1, Urban:1,
+        Paschal:0, Eugene:1, Victor:1, Lucius:1
+      } },
       { from:867, counts:{
         John:8, Benedict:3, Gregory:4, Leo:4, Stephen:5, Nicholas:1,
         Adrian:1, Alexander:0, Clement:2, Innocent:1, Urban:1,
