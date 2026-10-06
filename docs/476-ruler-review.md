@@ -34,7 +34,7 @@ Odoacer: inspect the original host and lack of counties. Review paid service, de
 
 Syagrius: play the ordinary domain opening and review the later Frankish opportunity only if its ruler and ownership conditions survive. Launch or decline that opportunity in separate campaigns. Neither date nor review transfers Soissons.
 
-Run each opening for ten years, save and reload, and check that neighbors, household, armies, accounts and court succession continue without a duplicate source realm. Review ordinary 476 household starts and 867/1066 starts as baseline comparisons. tests/e2e/specs/476-ruler-starts.spec.js covers the new boundaries; tests/e2e/specs/stories.spec.js covers registry changes. Follow docs/TESTS.md for owner-controlled harness commands. The bounded automated ten-year journeys suppress personal event and player-death interruptions; ordinary mortality, choices and device behavior still need a manual playthrough.
+Run each opening for ten years, save and reload, and check that neighbors, household, armies, accounts and court succession continue without a duplicate source realm. Review ordinary 476 household starts and 867/1066 starts as baseline comparisons. tests/e2e/specs/476-ruler-starts.spec.js covers the new boundaries; tests/e2e/specs/stories.spec.js covers registry changes. Follow docs/TESTS.md for owner-controlled harness commands. Automated journeys now cover one season, with separate isolated world-ordering and ordinary household slices; long-term mortality, succession, choices and device behavior still need a manual playthrough.
 
 Acceptance
 

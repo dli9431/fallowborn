@@ -5,11 +5,13 @@ dependsOnRuntime(__filename, [
   'data/cultures.js',
   'data/events_peasant.js',
   'data/map_data.js',
+  'data/technology.js',
   'js/events.js',
   'js/model.js',
   'js/mods.js',
   'js/world.js',
   'js/population.js',
+  'js/technology.js',
   'js/save.js',
   'js/ui_modals.js'
 ]);
@@ -260,16 +262,17 @@ test('runtime mods merge definitions and the complete technology configuration',
       });
 
       const errors = FB.validateTechnologyData();
-      /* Judge the merge before the invalid-cap apply below overwrites
-         movement: mods.apply merges verbatim and validation only reports,
-         so the bad value must land for validate to flag it. */
+      // Invalid requirements must fail before replacing the valid catalogue.
       const capsMerged = FBDATA.techCaps.movement === 0.5 &&
         FBDATA.techCaps.costFloor.build === 0.45 &&
         FBDATA.techCaps.costFloor.enterprise === oldEnterpriseFloor &&
         FBDATA.techCaps.units.arch === 333 &&
         FBDATA.techCaps.units.levy === oldLevyCap;
-      FB.mods.apply({ techCaps:{ movement:'fast' } });
-      const invalidCapErrors = FB.validateTechnologyData();
+      const beforeInvalid = JSON.stringify(FBDATA), rng = FB.getRngState(), uid = FB.getUidCounter();
+      const invalidCapErrors = FB.mods.validate({ techCaps:{ movement:'fast' } });
+      let invalidCapError = '';
+      try { FB.mods.apply({ techCaps:{ movement:'fast' } }); }
+      catch (error) { invalidCapError = error.message; }
       return {
         /* apply installs title-id-normalized copies of events */
         eventReplaced:FBDATA.events[0].id === eventId &&
@@ -292,8 +295,11 @@ test('runtime mods merge definitions and the complete technology configuration',
           FBDATA.auctionLotTypes.claim.requiresTech === 'experimental_gearing',
         defaultBookmark:FBDATA.defaultBookmark,
         validationErrors:errors,
-        invalidCapRejected:invalidCapErrors.indexOf(
-          'Technology cap movement must be a non-negative number.') >= 0
+        invalidCapRejected:invalidCapErrors.some(function (message) {
+          return message.indexOf('Technology cap movement must be a non-negative number.') >= 0;
+        }) && invalidCapError.indexOf('Technology cap movement must be a non-negative number.') >= 0,
+        invalidCapPreserved:beforeInvalid === JSON.stringify(FBDATA) &&
+          FB.getRngState() === rng && FB.getUidCounter() === uid && FB.validateTechnologyData().length === 0
       };
     })).toEqual({
       eventReplaced:true,
@@ -308,7 +314,8 @@ test('runtime mods merge definitions and the complete technology configuration',
       auctionLotMerged:true,
       defaultBookmark:'1066',
       validationErrors:[],
-      invalidCapRejected:true
+      invalidCapRejected:true,
+      invalidCapPreserved:true
     });
   });
 
@@ -476,7 +483,7 @@ test('legacy 1066 hiding ignores decorative rivers but catches appended straits'
       const originalRivers = FBDATA.rivers;
       const oldStraitCount = FBDATA.straits.length;
       const replacementRivers = [[0,0,1,1]];
-      const addedStrait = ['e2e_island','e2e_mainland'];
+      const addedStrait = ['norwich','bruges'];
 
       FB.mods.apply({ rivers:replacementRivers });
       const afterRivers = {

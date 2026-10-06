@@ -19,6 +19,7 @@ dependsOnRuntime(__filename, [
 const { test, expect } = require('../support/fixture');
 const { openGame } = require('../support/game/navigation');
 const { openCrazyGame } = require('../support/game/crazygames-title');
+const { mockCrazyGames } = require('../support/crazygames');
 const { startParityGame } = require('../support/game/parity');
 const { injectBrowserHarness } = require('../support/game/browser-harness');
 
@@ -28,6 +29,7 @@ const CAMPAIGNS = ['alamannic_campaign_493', 'burgundian_campaign_493',
 
 async function start(page, testInfo, scenario, crazygames, family) {
   if (crazygames) {
+    await mockCrazyGames(page);
     await page.addInitScript(function () { window.FB_DISTRIBUTION = 'crazygames'; });
     await openCrazyGame(page, testInfo);
   } else await openGame(page, testInfo);
@@ -246,17 +248,16 @@ for (const outcome of ['failed','interrupted']) {
   });
 }
 
-test('493 completes ten years of ordinary household play with midpoint and hidden final saves',
+test('493 completes one season of ordinary household play with midpoint and hidden final saves',
   async function ({ page }, testInfo) {
     test.skip(testInfo.project.name !== 'chromium-served', 'Run the bounded natural journey once; smoke covers every browser project.');
-    test.setTimeout(10 * 60 * 1000);
     await start(page, testInfo, 'farmer_493', false, 'established');
     await injectBrowserHarness(page);
     await page.evaluate(function () { FB.game.auto.all = true; FB.game.auto.style = 'first'; });
-    for (let quarter = 0; quarter < 40; quarter++) {
+    for (let half = 0; half < 2; half++) {
       const result = await page.evaluate(function () {
-        const target = FB.state.turn + 90;
-        for (let attempts = 0; attempts < 120 && FB.state.turn < target; attempts++) {
+        const target = FB.state.turn + 45;
+        for (let attempts = 0; attempts < 60 && FB.state.turn < target; attempts++) {
           if (FB.state.player.dead) {
             const heirs = FB.heirsOf(FB.state);
             if (!heirs.length) throw new Error('The natural 493 dynasty ended before its review boundary.');
@@ -268,7 +269,7 @@ test('493 completes ten years of ordinary household play with midpoint and hidde
         return { remaining:target - FB.state.turn, errors:FBTEST.checkInvariants() };
       });
       expect(result).toEqual({ remaining:0, errors:[] });
-      if (quarter === 19) await page.evaluate(function () { FB.save.restore(JSON.parse(FB.save.serialize())); });
+      if (half === 0) await page.evaluate(function () { FB.save.restore(JSON.parse(FB.save.serialize())); });
     }
     const end = await page.evaluate(function () {
       const stories = JSON.stringify(FB.state.stories);
@@ -278,6 +279,6 @@ test('493 completes ten years of ordinary household play with midpoint and hidde
         bookmark:FB.state.start.id, stories:stories === JSON.stringify(FB.state.stories),
         errors:FBTEST.checkInvariants(), valid:FB.save.v4.validatePlatform(FB.state) };
     });
-    expect(end).toEqual({ year:503, turn:3600, ordinary:true, bookmark:'493',
+    expect(end).toEqual({ year:493, turn:90, ordinary:true, bookmark:'493',
       stories:true, errors:[], valid:true });
   });

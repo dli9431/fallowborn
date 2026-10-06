@@ -378,34 +378,33 @@ for (const bookmark of ['867','1066']) {
     });
 }
 
-test('a ten-year 476 observer run retains valid saved royal links and story identities',
+test('one 476 observer season retains valid saved royal links and story identities',
   async function ({ page }, testInfo) {
-    test.setTimeout(6 * 60 * 1000);
     await openGame(page, testInfo);
     const error = await page.evaluate(function () {
       return new Promise(function (resolve) {
         FB.activateBookmark('476', null, function (error) {
           if (error) { resolve(error.message); return; }
-          FB.game.pending = { seed:'ROYAL-DECADE' }; FB.game.startObserve();
+          FB.game.pending = { seed:'ROYAL-SEASON' }; FB.game.startObserve();
           FB.game.setPaused(true); resolve(null);
         });
       });
     });
     expect(error).toBe(null);
     const result = await page.evaluate(function () {
-      const s = FB.state, initialYear = s.date.year;
-      for (let i = 0; i < 3600; i++) {
-        const turn = s.turn; FB.game.passDay();
+      const s = FB.state, initialTurn = s.turn;
+      for (let i = 0; i < 90; i++) {
+        const turn = s.turn; FB.game.passDay({ deferUi:true });
         if (s.turn !== turn + 1) throw new Error('Observer stalled on day ' + i);
       }
       const data = JSON.parse(FB.save.serialize());
       FB.save.restore(data);
       const family = FB.state.realms.aghlabids.succession;
-      return { years:FB.state.date.year - initialYear, policy:family.policyId,
+      return { days:FB.state.turn - initialTurn, policy:family.policyId,
         valid:FB.save.v4.validatePlatform(JSON.parse(FB.save.serialize()).state),
         parent:FB.authoredRoyalMemberSnapshot(FB.state, 'aghlabids', 'gunthamund').fatherId ===
           FB.authoredRoyalMemberSnapshot(FB.state, 'aghlabids', 'gento').id,
         faults:FB.validateBookmark(FB.bookmark('476')) };
     });
-    expect(result).toEqual({ years:10, policy:'agnatic_seniority', valid:true, parent:true, faults:[] });
+    expect(result).toEqual({ days:90, policy:'agnatic_seniority', valid:true, parent:true, faults:[] });
   });

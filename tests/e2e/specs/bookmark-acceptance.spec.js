@@ -101,6 +101,9 @@ test('a persisted data-only mod supplies a different campaign and independent in
       bishop:bishop.name, vacant:s.religiousHeads.constantinople_patriarch === null,
       stories:FB.stories.attached(s), signature:FB.mods.sig(),
       original:FBDATA.localInstitutions.rome_see.historicalName,
+      communities:FB.bookmark('proof_bookmark').provinces.filter(function (p) {
+        return p.realm === 'proof_coast';
+      }).map(function (p) { return { id:p.id, communities:p.communities }; }),
       starts:FB.bookmark('proof_bookmark').starts, errors:FB.validateBookmark(FB.bookmark('proof_bookmark')) };
   });
   expect(opening).toMatchObject({ date:500, owner:'proof_coast', culture:'proof_culture',
@@ -108,6 +111,10 @@ test('a persisted data-only mod supplies a different campaign and independent in
     starts:['proof_farmer','proof_coastal'], errors:[] });
   expect(opening.signature).not.toBe('');
   expect(opening.original).not.toBe('Proof Roman bishop');
+  expect(opening.communities).toHaveLength(5);
+  for (const province of opening.communities) expect(province.communities).toEqual([
+    { culture:'proof_culture', religion:'nicene', populationShare0:10000 }
+  ]);
   await advanceBookmark(page, 720);
   const checkpoint = await saveWithinBudget(page, testInfo, 'proof-year2', SAVE_BUDGETS.year2);
   const original = await facts(page);

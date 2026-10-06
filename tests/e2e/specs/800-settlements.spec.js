@@ -2,6 +2,7 @@
 const { test, expect } = require('../support/fixture');
 const { openGame } = require('../support/game/navigation');
 const { openCrazyGame } = require('../support/game/crazygames-title');
+const { mockCrazyGames } = require('../support/crazygames');
 const { startParityGame } = require('../support/game/parity');
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
@@ -14,7 +15,10 @@ dependsOnRuntime(__filename, [
   'js/main.js', 'js/save.js', 'js/save_v4.js'
 ]);
 async function observe(page, testInfo, bookmark, crazygames) {
-  if (crazygames) await openCrazyGame(page, testInfo);
+  if (crazygames) {
+    await mockCrazyGames(page);
+    await openCrazyGame(page, testInfo);
+  }
   else await openGame(page, testInfo);
   const error = await page.evaluate(function (bookmark) {
     return new Promise(function (resolve) {

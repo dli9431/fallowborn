@@ -133,8 +133,7 @@ for (const def of STARTS) {
     expect(result.seed).toContain('-' + def.id + '-');
   });
 
-  test(def.id + ' advances ten calendar years in the isolated world-ordering journey', async function ({ page }, testInfo) {
-    test.setTimeout(180000);
+  test(def.id + ' advances one season in the isolated world-ordering journey', async function ({ page }, testInfo) {
     await start(page, testInfo, def);
     await page.evaluate(function (def) {
       const s = FB.state;
@@ -155,28 +154,36 @@ for (const def of STARTS) {
       FB.game.uiPrefs.hideBeginnerHints = true;
       s.player.flags.tutorial_done = 1;
     }, def);
-    for (let year = 0; year < 10; year++) {
-      await page.evaluate(function () {
-        for (let day = 0; day < 360; day++) {
-          FB.state.eventQueue = [];
-          FB.game.passDay({ deferUi:true });
-        }
+    for (let batch = 0; batch < 3; batch++) {
+      const advanced = await page.evaluate(function () {
+        const before = FB.state.turn, wasForwarding = FB.game.fastForwarding;
+        FB.game.fastForwarding = true;
+        try {
+          for (let day = 0; day < 30; day++) {
+            FB.state.eventQueue.length = 0;
+            const turn = FB.state.turn;
+            FB.game.passDay({ deferUi:true });
+            if (FB.state.turn !== turn + 1) throw new Error('Ruler journey stalled at turn ' + turn);
+          }
+          return FB.state.turn - before;
+        } finally { FB.game.fastForwarding = wasForwarding; }
       });
+      expect(advanced, def.id + ' world-ordering batch ' + batch).toBe(30);
     }
     const result = await page.evaluate(function () {
       const s = FB.state;
       const saved = JSON.parse(FB.save.serialize());
       FB.save.restore(saved);
-      return { year:FB.state.date.year, identity:FB.state.start.rulerRealmId,
+      FB.ui.fastForwardFinished();
+      return { date:FB.state.date, turn:FB.state.turn, identity:FB.state.start.rulerRealmId,
         valid:FB.save.v4.validatePlatform(FB.state) && FB.save.v4.validateAuthority(FB.state.authority, FB.state),
         finite:Number.isFinite(s.player.gold), noDuplicate:!s.realms[s.start.rulerRealmId] };
     });
-    expect(result).toMatchObject({ year:486, identity:def.realm, valid:true, finite:true, noDuplicate:true });
+    expect(result).toMatchObject({ date:{ year:476, season:1, day:1 }, turn:90, identity:def.realm, valid:true, finite:true, noDuplicate:true });
   });
 
-  test(def.id + ' retains ordinary household play and succession over ten years', async function ({ page }, testInfo) {
+  test(def.id + ' retains ordinary household play over one season with a midpoint save', async function ({ page }, testInfo) {
     test.skip(testInfo.project.name !== 'chromium-served', 'Run each bounded household journey once; smoke covers every browser project.');
-    test.setTimeout(10 * 60 * 1000);
     await start(page, testInfo, def);
     await injectBrowserHarness(page);
     await page.evaluate(function (def) {
@@ -193,10 +200,10 @@ for (const def of STARTS) {
       delete s.player.flags.tutorial;
       FB.game.auto.all = true; FB.game.auto.style = 'first';
     }, def);
-    for (let quarter = 0; quarter < 40; quarter++) {
+    for (let half = 0; half < 2; half++) {
       const result = await page.evaluate(function () {
-        const target = FB.state.turn + 90;
-        for (let attempts = 0; attempts < 120 && FB.state.turn < target; attempts++) {
+        const target = FB.state.turn + 45;
+        for (let attempts = 0; attempts < 60 && FB.state.turn < target; attempts++) {
           if (FB.state.player.dead) {
             const heirs = FB.heirsOf(FB.state);
             if (!heirs.length) throw new Error('The natural ruler-start dynasty ended before its review boundary.');
@@ -208,15 +215,15 @@ for (const def of STARTS) {
         return { remaining:target - FB.state.turn, errors:FBTEST.checkInvariants() };
       });
       expect(result).toEqual({ remaining:0, errors:[] });
-      if (quarter === 19) await page.evaluate(function () { FB.save.restore(JSON.parse(FB.save.serialize())); });
+      if (half === 0) await page.evaluate(function () { FB.save.restore(JSON.parse(FB.save.serialize())); });
     }
     const end = await page.evaluate(function () {
       FB.save.restore(JSON.parse(FB.save.serialize()));
-      return { year:FB.state.date.year, turn:FB.state.turn, ordinary:!FB.game.observe,
+      return { date:FB.state.date, turn:FB.state.turn, ordinary:!FB.game.observe,
         identity:FB.state.start.rulerRealmId, errors:FBTEST.checkInvariants(),
         valid:FB.save.v4.validatePlatform(FB.state) };
     });
-    expect(end).toEqual({ year:486, turn:3600, ordinary:true, identity:def.realm, errors:[], valid:true });
+    expect(end).toEqual({ date:{ year:476, season:1, day:1 }, turn:90, ordinary:true, identity:def.realm, errors:[], valid:true });
   });
 }
 

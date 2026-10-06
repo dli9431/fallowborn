@@ -1276,7 +1276,8 @@ window.FB = window.FB || {};
       alive:true,
       parentId:null,
       childIds:[],
-      charId:c.id
+      charId:c.id,
+      role:null
     };
     realm.ruler = {
       name:c.papalName || c.name,

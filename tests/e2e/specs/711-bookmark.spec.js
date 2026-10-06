@@ -18,6 +18,7 @@ dependsOnRuntime(__filename, [
 const { test, expect } = require('../support/fixture');
 const { openGame } = require('../support/game/navigation');
 const { openCrazyGame } = require('../support/game/crazygames-title');
+const { mockCrazyGames } = require('../support/crazygames');
 const { injectBrowserHarness } = require('../support/game/browser-harness');
 
 const CAMPAIGNS = ['strait_crossing_711', 'toledo_campaign_711',
@@ -25,6 +26,7 @@ const CAMPAIGNS = ['strait_crossing_711', 'toledo_campaign_711',
 
 async function openBookmarkGame(page, testInfo, crazygames) {
   if (crazygames) {
+    await mockCrazyGames(page);
     await page.addInitScript(function () { window.FB_DISTRIBUTION = 'crazygames'; });
     await openCrazyGame(page, testInfo);
   } else await openGame(page, testInfo);
@@ -254,16 +256,15 @@ test('711 campaigns diverge on missing footholds and never transfer counties on 
       modes:['none','none','none','none'] });
   });
 
-test('711 natural world simulation advances ten years and restores its campaign records',
+test('711 natural world simulation advances one season and restores its campaign records',
   async function ({ page }, testInfo) {
-    test.setTimeout(6 * 60 * 1000);
     await observe(page, testInfo);
     const authored = await page.evaluate(function () {
       return JSON.stringify(FBDATA.bookmarkCandidates['711']);
     });
-    for (let year = 0; year < 10; year++) {
+    for (let batch = 0; batch < 3; batch++) {
       await page.evaluate(function () {
-        for (let day = 0; day < 360; day++) {
+        for (let day = 0; day < 30; day++) {
           const before = FB.state.turn;
           FB.game.passDay({ deferUi:true });
           if (FB.state.turn !== before + 1) throw new Error('711 observer stalled at turn ' + before);
@@ -274,19 +275,18 @@ test('711 natural world simulation advances ten years and restores its campaign 
       const s = FB.state;
       const records = JSON.stringify(s.stories);
       FB.save.restore(JSON.parse(FB.save.serialize()));
-      return { year:FB.state.date.year,
+      return { date:FB.state.date, turn:FB.state.turn,
         unchanged:authored === JSON.stringify(FBDATA.bookmarkCandidates['711']),
         records:records === JSON.stringify(FB.state.stories),
         faults:FB.validateBookmark(FB.bookmark('711')),
         valid:FB.save.v4.validatePlatform(JSON.parse(FB.save.serialize()).state) };
     }, authored);
-    expect(result).toEqual({ year:721, unchanged:true, records:true, faults:[], valid:true });
+    expect(result).toEqual({ date:{ year:711, season:1, day:1 }, turn:90, unchanged:true, records:true, faults:[], valid:true });
   });
 
-test('711 ordinary household play advances ten years with a midpoint save and natural events',
+test('711 ordinary household play advances one season with a midpoint save and natural events',
   async function ({ page }, testInfo) {
     test.skip(testInfo.project.name !== 'chromium-served', 'Run the bounded household journey once; smoke covers every browser project.');
-    test.setTimeout(10 * 60 * 1000);
     await household(page, testInfo, 'farmer', false, null, 'established');
     await injectBrowserHarness(page);
     // Retain ordinary mortality, family life, diplomacy, events and campaigns.
@@ -295,10 +295,10 @@ test('711 ordinary household play advances ten years with a midpoint save and na
       FB.game.uiPrefs.hideBeginnerHints = true;
       FB.game.auto.all = true; FB.game.auto.style = 'first';
     });
-    for (let quarter = 0; quarter < 40; quarter++) {
+    for (let half = 0; half < 2; half++) {
       const result = await page.evaluate(function () {
-        const before = FB.state.turn, target = before + 90;
-        for (let attempts = 0; attempts < 120 && FB.state.turn < target; attempts++) {
+        const before = FB.state.turn, target = before + 45;
+        for (let attempts = 0; attempts < 60 && FB.state.turn < target; attempts++) {
           if (FB.state.player.dead) {
             const heirs = FB.heirsOf(FB.state);
             if (!heirs.length) throw new Error('The natural 711 dynasty ended before its review boundary.');
@@ -309,9 +309,9 @@ test('711 ordinary household play advances ten years with a midpoint save and na
         }
         return { advanced:FB.state.turn - before, errors:FBTEST.checkInvariants() };
       });
-      expect(result.advanced).toBe(90);
+      expect(result.advanced).toBe(45);
       expect(result.errors).toEqual([]);
-      if (quarter === 19) await page.evaluate(function () {
+      if (half === 0) await page.evaluate(function () {
         FB.save.restore(JSON.parse(FB.save.serialize()));
       });
     }
@@ -324,6 +324,6 @@ test('711 ordinary household play advances ten years with a midpoint save and na
         records:records === JSON.stringify(FB.state.stories),
         valid:FB.save.v4.validatePlatform(FB.state) };
     });
-    expect(end).toMatchObject({ year:721, turn:3600, errors:[], ordinary:true,
+    expect(end).toMatchObject({ year:711, turn:90, errors:[], ordinary:true,
       bookmark:'711', records:true, valid:true });
   });

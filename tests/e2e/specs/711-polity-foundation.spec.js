@@ -2,6 +2,7 @@
 const { test, expect } = require('../support/fixture');
 const { openGame } = require('../support/game/navigation');
 const { openCrazyGame } = require('../support/game/crazygames-title');
+const { mockCrazyGames } = require('../support/crazygames');
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
   'index.html', 'data/bookmark_711.js', 'data/story_campaigns_711.js',
@@ -17,6 +18,7 @@ const STORY = 'asturias_foundation_711';
 
 async function observe(page, testInfo, crazygames, bookmark) {
   if (crazygames) {
+    await mockCrazyGames(page);
     await page.addInitScript(function () { window.FB_DISTRIBUTION = 'crazygames'; });
     await openCrazyGame(page, testInfo);
   } else await openGame(page, testInfo);

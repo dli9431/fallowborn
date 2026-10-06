@@ -2,7 +2,8 @@
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
   'index.html', 'js/save.js', 'js/save_v4.js', 'js/title_ids.js',
-  'js/main.js', 'js/world.js', 'js/model.js', 'js/mods.js', 'js/messages.js',
+  'js/main.js', 'js/world.js', 'js/model.js', 'js/mods.js', 'js/messages.js', 'js/papacy.js',
+  'data/papacy.js', 'data/cultures.js',
   'js/armies.js', 'js/wars.js', 'data/units.js',
   'js/authority.js', 'js/politics.js', 'js/stories.js',
   'js/story_western_court_476.js', 'js/story_federate_track_476.js', 'js/ui_modals.js',
@@ -613,6 +614,31 @@ for (const bookmark of ['493','711','800','1204']) {
     });
 }
 
+for (const bookmark of ['711','800','1204']) {
+  test(bookmark + ' opening pope keeps the same elective root through repeated restores',
+    async function ({ page }, testInfo) {
+      await start(page, testInfo, bookmark);
+      const result = await page.evaluate(function () {
+        const source = JSON.parse(FB.save.serialize());
+        const rid = Object.keys(FB.state.realms).find(function (id) {
+          return FB.state.realms[id].succession && FB.state.realms[id].succession.papalElective;
+        });
+        const court = source.state.realms[rid].succession;
+        const root = court.members[court.rulerMemberId];
+        const expected = JSON.stringify(court), generation = court.rulerGeneration;
+        FB.save.restore(source);
+        const first = JSON.parse(FB.save.serialize()).state.realms[rid].succession;
+        FB.save.restore(JSON.parse(FB.save.serialize()));
+        const second = JSON.parse(FB.save.serialize()).state.realms[rid].succession;
+        return { role:root.role, first:expected === JSON.stringify(first),
+          second:expected === JSON.stringify(second), generation:second.rulerGeneration === generation,
+          claimant:first.members[first.rulerMemberId].charId === root.charId,
+          warnings:FB.save.lastRestoreWarnings.length };
+      });
+      expect(result).toEqual({ role:null, first:true, second:true, generation:true, claimant:true, warnings:0 });
+    });
+}
+
 for (const entry of corpusEntries()) {
   test('frozen v4 corpus round trip and WebKit-sized budget: ' + entry.id,
     async function ({ page }, testInfo) {
@@ -649,6 +675,11 @@ test('long 476 campaign round trips stories and payments within the WebKit-sized
         FB.worldTick(FB.state);
         FB.stories.year(FB.state);
       }
+      // Direct annual staging skips daily host cleanup and can end just after
+      // a replacement heir is declared. Finish that fixture's court and war
+      // preparation before measuring exact storage preservation.
+      FB.ensureDynasticState(FB.state);
+      FB.repairWars(FB.state);
     });
     const result = await page.evaluate(checkStorageRoundTrip);
     await testInfo.attach('save-size.json', { body:JSON.stringify({ years:60,

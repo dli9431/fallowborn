@@ -111,6 +111,8 @@ needed by the player's genealogy remains as a minimal deceased character.
 
 ## Vacancy and election
 
+An installed elective ruler root includes role:null at creation, matching the restored succession-member shape. Repeated restoration preserves that root and generation; filling a missing legacy default is not a new election or accession.
+
 The Papal States never use dynastic succession. World court initialization recognizes
 the bookmark's Catholic territorial head before materializing a dynastic household, and
 `FB.ensurePapacy` installs the incumbent's `papalElective` ruler root from the first

@@ -39,7 +39,6 @@ async function startOdoacer(page, testInfo) {
 for (const crazygames of [false,true]) {
   test('declarative Italian families, property and civilian seeds restore once, distribution ' + crazygames,
     async function ({ page }, testInfo) {
-      if (crazygames) await page.addInitScript(function () { window.FB_DISTRIBUTION = 'crazygames'; });
       await start(page,testInfo,crazygames);
       const result = await page.evaluate(function () {
         const s=FB.state, w=s.stories.western_court_476, setup=s.bookmarkSetup;

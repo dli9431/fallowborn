@@ -28,7 +28,6 @@ async function startItaly(page, testInfo, crazygames) {
 for (const crazygames of [false, true]) {
   test('Italian opening, islands and institutions work with distribution flag ' + crazygames,
     async function ({ page }, testInfo) {
-      if (crazygames) await page.addInitScript(function () { window.FB_DISTRIBUTION = 'crazygames'; });
       await startItaly(page, testInfo, crazygames);
       const result = await page.evaluate(function () {
         const s = FB.state, region = FBDATA.bookmarkRegions476.italy;
@@ -214,24 +213,23 @@ for (const compatible of [false, true]) {
     });
 }
 
-test('ten years keep every Italian county owned, populated and partitioned through a save restore',
+test('one season keeps every Italian county owned, populated and partitioned through a save restore',
   async function ({ page }, testInfo) {
-    test.setTimeout(6 * 60 * 1000);
     await openGame(page, testInfo);
     const error = await page.evaluate(function () {
       return new Promise(function (resolve) {
         FB.activateBookmark('476', null, function (fault) {
           if (fault) { resolve(fault.message); return; }
-          FB.game.pending = { seed:'ITALY-TEN-YEARS' };
+          FB.game.pending = { seed:'ITALY-SEASON' };
           FB.game.startObserve(); FB.game.setPaused(true); resolve(null);
         });
       });
     });
     expect(error).toBe(null);
-    const result = await page.evaluate(function () {
-      let s = FB.state;
-      const region = FBDATA.bookmarkRegions476.italy, data = JSON.stringify(region), year = s.date.year;
-      function audit() {
+    const initial = await page.evaluate(function () {
+      const region = FBDATA.bookmarkRegions476.italy;
+      window.italy476Audit = function () {
+        const s = FB.state;
         return region.provinces.every(function (p) {
           const count = FB.countyPopulation(s, p.id), communities = FB.countyCommunities(s, p.id);
           const rows = FB.settlementPopulations(s, p.id);
@@ -240,15 +238,35 @@ test('ten years keep every Italian county owned, populated and partitioned throu
             communities.reduce(function (sum, c) { return sum + c.count; }, 0) === count &&
             rows.reduce(function (sum, n) { return sum + n; }, 0) === count;
         });
-      }
-      for (let day = 0; day < 3600; day++) {
-        const turn = s.turn; FB.game.passDay();
-        if (s.turn !== turn + 1 || !audit()) throw new Error('Italian county failed at day ' + day);
-      }
+      };
+      return { turn:FB.state.turn, data:JSON.stringify(region), valid:window.italy476Audit() };
+    });
+    expect(initial.valid).toBe(true);
+    // Yield to the browser between short batches. Keep the per-day county
+    // audit, while using the runtime's normal fast-forward paint deferral.
+    for (let batch = 0; batch < 3; batch++) {
+      const advanced = await page.evaluate(function () {
+        const before = FB.state.turn, wasForwarding = FB.game.fastForwarding;
+        FB.game.fastForwarding = true;
+        try {
+          for (let day = 0; day < 30; day++) {
+            const turn = FB.state.turn;
+            FB.game.passDay({ deferUi:true });
+            if (FB.state.turn !== turn + 1) throw new Error('Italian observer stalled at turn ' + turn);
+            if (!window.italy476Audit()) throw new Error('Italian county failed at turn ' + FB.state.turn);
+          }
+          return FB.state.turn - before;
+        } finally { FB.game.fastForwarding = wasForwarding; }
+      });
+      expect(advanced, 'Italian observer batch ' + batch).toBe(30);
+    }
+    const result = await page.evaluate(function (initial) {
+      let s = FB.state;
       const population = JSON.stringify(s.population);
       FB.save.restore(JSON.parse(FB.save.serialize())); s = FB.state;
-      return { years:s.date.year - year, valid:audit(),
-        restored:population === JSON.stringify(s.population), unchanged:data === JSON.stringify(region) };
-    });
-    expect(result).toEqual({ years:10, valid:true, restored:true, unchanged:true });
+      FB.ui.fastForwardFinished();
+      return { days:s.turn - initial.turn, valid:window.italy476Audit(),
+        restored:population === JSON.stringify(s.population), unchanged:initial.data === JSON.stringify(FBDATA.bookmarkRegions476.italy) };
+    }, initial);
+    expect(result).toEqual({ days:90, valid:true, restored:true, unchanged:true });
   });

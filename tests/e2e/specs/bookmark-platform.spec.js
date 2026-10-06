@@ -248,11 +248,12 @@ test('visibility composes with legacy mod restrictions and explicit empty instit
       FB.ensureLocalInstitutions(state);
       const local = FB.localInstitutionDefinitions(state);
       FB.mods.apply({ provinces:[] });
-      return { empty:Object.keys(local).length === 0 && !FB.religiousOffices(state).rome_bishop && !state.localInstitutions,
+      return { empty:Object.keys(local).length === 0 && !FB.religiousOffices(state).milan_bishop && !state.localInstitutions,
+        faithHead:!!FB.religiousOffices(state).rome_bishop,
         faults:FB.validateBookmark(FB.bookmark(def.id)),
         blocked:!FB.bookmarkAvailable('1066') && !FB.bookmarks(false).some(function (b) { return b.id === '1066'; }),
         warning:FB.bookmarkUnavailableReason('1066') === FB.mods.bookmarkWarning(),
         older:FB.bookmarkAvailable('867') };
     });
-    expect(result).toEqual({ empty:true, faults:[], blocked:true, warning:true, older:true });
+    expect(result).toEqual({ empty:true, faithHead:true, faults:[], blocked:true, warning:true, older:true });
   });

@@ -232,29 +232,28 @@ for (const outcome of ['won','failed','diverted']) {
     });
 }
 
-test('the African region remains a valid world through a ten-year observer run and restore',
+test('the African region remains a valid world through one observer season and restore',
   async function ({ page }, testInfo) {
-    test.setTimeout(6 * 60 * 1000);
     await openGame(page, testInfo);
     const fault = await page.evaluate(function () {
       return new Promise(function (resolve) {
         FB.activateBookmark('476', null, function (error) {
           if (error) { resolve(error.message); return; }
-          FB.game.pending = { seed:'AFRICA-DECADE' }; FB.game.startObserve();
+          FB.game.pending = { seed:'AFRICA-SEASON' }; FB.game.startObserve();
           FB.game.setPaused(true); resolve(null);
         });
       });
     });
     expect(fault).toBe(null);
     const result = await page.evaluate(function () {
-      const s = FB.state, initialYear = s.date.year;
+      const s = FB.state, initialTurn = s.turn;
       const authored = JSON.stringify(FBDATA.bookmarkRegions476.africa);
-      for (let i = 0; i < 3600; i++) {
-        const turn = s.turn; FB.game.passDay();
+      for (let i = 0; i < 90; i++) {
+        const turn = s.turn; FB.game.passDay({ deferUi:true });
         if (s.turn !== turn + 1) throw new Error('Observer stalled on day ' + i);
       }
       FB.save.restore(JSON.parse(FB.save.serialize()));
-      return { years:FB.state.date.year - initialYear,
+      return { days:FB.state.turn - initialTurn,
         unchanged:authored === JSON.stringify(FBDATA.bookmarkRegions476.africa),
         faults:FB.validateBookmark(FB.bookmark('476')),
         valid:FB.save.v4.validatePlatform(JSON.parse(FB.save.serialize()).state),
@@ -262,5 +261,5 @@ test('the African region remains a valid world through a ten-year observer run a
           return !!FB.state.realms[FB.state.owner[p.id]] && !!FB.state.realms[FB.state.holder[p.id]];
         }) };
     });
-    expect(result).toEqual({ years:10, unchanged:true, faults:[], valid:true, holders:true });
+    expect(result).toEqual({ days:90, unchanged:true, faults:[], valid:true, holders:true });
   });

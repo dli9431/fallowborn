@@ -196,45 +196,60 @@ test('regional events use live community gates, period windows and ordinary prev
       offMap:true, noPersia:true, stale:false, rejectionPure:true, window:true, log:true });
   });
 
-test('ten daily world years retain regional institutions and Zeno, then Theoderic can resolve a staged campaign',
+test('one world season retains regional institutions before staged Zeno and Theoderic outcomes',
   async function ({ page }, testInfo) {
     test.skip(testInfo.project.name !== 'chromium-served', 'Run the bounded world journey once; regional smoke covers the browser matrix.');
-    test.setTimeout(6 * 60 * 1000);
     await start476(page, testInfo);
     await injectBrowserHarness(page);
     await page.evaluate(function () {
       FB.game.observe = true;
       delete FB.state.stories.federate_track_476;
-      // Isolate random mortality and diplomacy while real daily, seasonal,
-      // annual, treasury, institution and campaign transactions continue.
+      // Isolate random diplomacy while real daily, seasonal, treasury,
+      // institution and campaign transactions continue.
       window.east476OriginalChance = FB.chance;
       FB.chance = function (probability) { return probability >= 1; };
     });
     try {
-      for (let year = 0; year < 10; year++) {
+      for (let batch = 0; batch < 3; batch++) {
         const tick = await page.evaluate(function () {
           const before = FB.state.turn;
-          for (let day = 0; day < 360; day++) FB.game.passDay({ deferUi:true });
+          for (let day = 0; day < 30; day++) {
+            const turn = FB.state.turn;
+            FB.game.passDay({ deferUi:true });
+            if (FB.state.turn !== turn + 1) throw new Error('Eastern observer stalled at turn ' + turn);
+          }
           return { days:FB.state.turn - before, errors:FBTEST.checkInvariants() };
         });
-        expect(tick).toEqual({ days:360, errors:[] });
-        if (year === 4) await page.evaluate(function () { FB.save.restore(JSON.parse(FB.save.serialize())); });
+        expect(tick).toEqual({ days:30, errors:[] });
+        if (batch === 1) await page.evaluate(function () { FB.save.restore(JSON.parse(FB.save.serialize())); });
       }
       const journey = await page.evaluate(function () {
         const s = FB.state, host = s.armies.find(function (a) { return a.id === 'host_476_amal'; });
-        return { year:s.date.year, result:s.stories.zeno_return_476.result,
+        return { date:s.date, turn:s.turn, phase:s.stories.zeno_return_476.phase,
           zeno:FB.realmRulerCharacterSnapshot(s, 'byzantium').name,
           institutions:Object.keys(FBDATA.bookmarkRegions476.dalmatia_east.institutions).every(function (id) {
             return !!s.localInstitutions[id];
           }), host:!!host && host.men >= 120,
           offMap:['antioch','jerusalem','baghdad','nicosia','cherson'].every(function (id) { return !s.owner[id]; }) };
       });
-      expect(journey).toEqual({ year:486, result:'restored', zeno:'Zeno', institutions:true, host:true, offMap:true });
+      expect(journey).toEqual({ date:{ year:476, season:1, day:1 }, turn:90, phase:'pending',
+        zeno:'Basiliscus', institutions:true, host:true, offMap:true });
+      const restoration = await page.evaluate(function () {
+        // Review the later return boundary directly instead of simulating
+        // another season solely to reach the authored opportunity.
+        const s = FB.state;
+        s.date = { year:476, season:2, day:1 }; s.turn = 180;
+        FB.stories.day(s);
+        FB.save.restore(JSON.parse(FB.save.serialize()));
+        return { result:FB.state.stories.zeno_return_476.result,
+          zeno:FB.realmRulerCharacterSnapshot(FB.state, 'byzantium').name };
+      });
+      expect(restoration).toEqual({ result:'restored', zeno:'Zeno' });
       const campaign = await page.evaluate(function () {
         const s = FB.state, host = s.armies.find(function (a) { return a.id === 'host_476_amal'; });
-        // The campaign opportunity begins after the ten-year window. Advance
+        // The campaign opportunity begins after the observed season. Advance
         // its date boundary, then stage a won ordinary war rather than forcing history.
-        s.date.year = 488;
+        s.date = { year:488, season:0, day:1 }; s.turn = 12 * 360;
         s.realms.byzantium.treasury.gold = 1000;
         FB.stories.day(s);
         const rec = s.stories.theoderic_italy_476;

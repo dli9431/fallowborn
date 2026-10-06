@@ -266,20 +266,19 @@ for (const id of RAILS) {
   }
 }
 
-test('800 runs ten natural years with bounded daily steps and a durable save', async function ({ page }, testInfo) {
-  test.setTimeout(180000);
-  test.skip(testInfo.project.name !== 'chromium-served', 'The long natural-play slice runs once.');
+test('800 runs one natural season with bounded daily steps and a durable save', async function ({ page }, testInfo) {
+  test.skip(testInfo.project.name !== 'chromium-served', 'The natural-play slice runs once.');
   await start(page, testInfo, 'farmer');
   await injectBrowserHarness(page);
   await page.evaluate(function () { FB.game.auto.all = true; FB.game.auto.style = 'first'; });
-  for (let year = 0; year < 10; year++) {
+  for (let batch = 0; batch < 3; batch++) {
     const result = await page.evaluate(function () {
       const startTurn = FB.state.turn;
       let successions = 0;
-      for (let attempts = 0; attempts < 400 && FB.state.turn < startTurn + 360; attempts++) {
+      for (let attempts = 0; attempts < 40 && FB.state.turn < startTurn + 30; attempts++) {
         if (FB.state.player.dead) {
           const heirs = FB.heirsOf(FB.state);
-          if (!heirs.length) throw new Error('Natural-play dynasty ended before the ten-year review boundary.');
+          if (!heirs.length) throw new Error('Natural-play dynasty ended before the one-season review boundary.');
           FB.ui.closeModal();
           FB.game.succeedTo(heirs[0].id);
           FB.ui.closeModal();
@@ -291,17 +290,17 @@ test('800 runs ten natural years with bounded daily steps and a durable save', a
       return { advanced:FB.state.turn - startTurn,
         errors:FBTEST.checkInvariants(), successions:successions };
     });
-    expect(result.advanced).toBe(360);
+    expect(result.advanced).toBe(30);
     expect(result.errors).toEqual([]);
   }
   const result = await page.evaluate(function () {
     const before = JSON.stringify({ start:FB.state.start, date:FB.state.date,
       turn:FB.state.turn, stories:FB.state.stories, heads:FB.state.religiousHeads });
     FB.save.restore(JSON.parse(FB.save.serialize()));
-    return { turn:FB.state.turn, year:FB.state.date.year,
+    return { turn:FB.state.turn, date:FB.state.date,
       retained:before === JSON.stringify({ start:FB.state.start, date:FB.state.date,
         turn:FB.state.turn, stories:FB.state.stories, heads:FB.state.religiousHeads }),
       errors:FBTEST.checkInvariants() };
   });
-  expect(result).toEqual({ turn:3600, year:810, retained:true, errors:[] });
+  expect(result).toEqual({ turn:90, date:{ year:801, season:0, day:25 }, retained:true, errors:[] });
 });

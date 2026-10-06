@@ -91,8 +91,11 @@ async function facts(page) {
   snapshot.rng = snapshot.rng >>> 0;
   return { snapshot:snapshot, campaign:await page.evaluate(function () {
     const s = FB.state, out = { rng:FB.getRngState() >>> 0, uid:FB.getUidCounter(), start:s.start, date:s.date, turn:s.turn };
+    // The serializer adds this schema stamp to its detached authority copy.
+    // Compare the ledger facts; the envelope contract is validated separately.
     ['stories','bookmarkSetup','authority','religiousHeads','religiousHeadVacancies','localInstitutions'].forEach(function (key) {
-      if (s[key] !== undefined) out[key] = s[key];
+      if (s[key] !== undefined) out[key] = key === 'authority'
+        ? Object.assign({}, s[key], { schema:undefined }) : s[key];
     });
     return JSON.parse(JSON.stringify(out));
   }) };

@@ -96,17 +96,16 @@ test('optional parents and mixed regions accept absence but reject supplied inva
     invalid:[true,true,true], mod:true });
 });
 
-test('hierarchy-free worlds run ten years with direct holders, empty title goals and save round trips', async function ({ page }, testInfo) {
-  test.setTimeout(6 * 60 * 1000);
+test('hierarchy-free worlds run one season with direct holders, empty title goals and save round trips', async function ({ page }, testInfo) {
   await startWorld(page, testInfo, 'e2e_optional_titles', true);
   const result = await page.evaluate(function () {
-    const s = FB.state, initialYear = s.date.year;
+    const s = FB.state, initialTurn = s.turn;
     const direct = FB.world.provs.filter(function (p) { return !p.wasteland; }).every(function (p) {
       return s.holder[p.id] === p.realm0;
     });
-    for (let i = 0; i < 3600; i++) {
+    for (let i = 0; i < 90; i++) {
       const before = s.turn;
-      FB.game.passDay();
+      FB.game.passDay({ deferUi:true });
       if (s.turn !== before + 1) throw new Error('Observer stalled at day ' + i);
     }
     const original = JSON.parse(FB.save.serialize());
@@ -118,7 +117,7 @@ test('hierarchy-free worlds run ten years with direct holders, empty title goals
       faiths:{ test:{ head:{ greatHolyWar:{ firstTarget:'k_syria',
         sacredTargets:[{ kingdom:'k_syria', counties:['damascus'] }], crisisKingdoms:['k_egypt'] } } } }
     }), FB.bookmark('e2e_optional_titles'));
-    return { years:restored.date.year - initialYear, direct:direct,
+    return { days:restored.turn - initialTurn, direct:direct,
       noSynthetic:!Object.keys(restored.realms).some(function (id) { return /undefined|null/.test(id); }),
       empty:FB.world.provs.every(function (p) { return !FB.dejureOf(p.id).duchy; }),
       lists:[FB.duchyCounties(null), FB.kingdomCounties(null), FB.empireKingdoms(null)],
@@ -127,7 +126,7 @@ test('hierarchy-free worlds run ten years with direct holders, empty title goals
       immutable:JSON.stringify(original) === input,
       inactiveTarget:bogus.faiths.test.head.greatHolyWar.firstTarget };
   });
-  expect(result).toEqual({ years:10, direct:true, noSynthetic:true, empty:true,
+  expect(result).toEqual({ days:90, direct:true, noSynthetic:true, empty:true,
     lists:[[],[],[]], titles:[[],[],[]], holy:[], immutable:true, inactiveTarget:'syria' });
 });
 

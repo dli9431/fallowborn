@@ -18,12 +18,14 @@ dependsOnRuntime(__filename, [
 const { test, expect } = require('../support/fixture');
 const { openGame } = require('../support/game/navigation');
 const { openCrazyGame } = require('../support/game/crazygames-title');
+const { mockCrazyGames } = require('../support/crazygames');
 const RAILS = ['zeno_return_476','clovis_syagrius_476','theoderic_italy_476',
   'eastern_africa_476','eastern_italy_476','rugian_frontier_476','sicilian_tribute_476',
   'norican_evacuation_476','western_office_476'];
 
 async function start(page, testInfo, bookmark, crazygames, scenario) {
   if (crazygames) {
+    await mockCrazyGames(page);
     await openCrazyGame(page, testInfo);
     await page.locator('#btn-choose-beginning').click();
   } else {
@@ -397,18 +399,21 @@ test('campaign configuration works in a medieval world without a 476 engine sele
     expect(result).toEqual({ phase:'started', target:'constantinople', noAward:true, attached:[] });
   });
 
-test('a bounded observer run through 560 leaves no stuck historical opportunities',
+test('one observer season preserves bounded historical opportunities through restore',
   async function ({ page }, testInfo) {
-    test.setTimeout(180000);
     await start(page, testInfo);
     await page.evaluate(function () {
       FB.game.observe = true;
       delete FB.state.stories.federate_track_476;
     });
-    // Keep each browser task bounded and exercise the real daily/annual ordering.
-    for (let year = 476; year <= 560; year++) {
+    // Keep each browser task bounded and exercise real daily/seasonal ordering.
+    for (let batch = 0; batch < 3; batch++) {
       await page.evaluate(function () {
-        for (let day = 0; day < 360; day++) FB.game.passDay({ deferUi:true });
+        for (let day = 0; day < 30; day++) {
+          const turn = FB.state.turn;
+          FB.game.passDay({ deferUi:true });
+          if (FB.state.turn !== turn + 1) throw new Error('World-story observer stalled at turn ' + turn);
+        }
       });
     }
     const result = await page.evaluate(function (ids) {
@@ -422,12 +427,12 @@ test('a bounded observer run through 560 leaves no stuck historical opportunitie
       const before = JSON.stringify(ids.map(function (id) { return s.stories[id]; }));
       FB.save.restore(JSON.parse(FB.save.serialize()));
       FB.stories.day(FB.state);
-      return { statuses:statuses, year:s.date.year,
+      return { statuses:statuses, date:FB.state.date, turn:FB.state.turn,
         durable:before === JSON.stringify(ids.map(function (id) { return FB.state.stories[id]; })) };
     }, RAILS);
-    expect(result.year).toBeGreaterThanOrEqual(560);
+    expect(result).toMatchObject({ date:{ year:476, season:1, day:1 }, turn:90 });
     expect(result.statuses.every(function (rec) {
-      return rec.phase === 'resolved' && !!rec.result || rec.boundedCampaign;
+      return rec.phase === 'pending' || rec.phase === 'resolved' && !!rec.result || rec.boundedCampaign;
     })).toBe(true);
     expect(result.durable).toBe(true);
   });

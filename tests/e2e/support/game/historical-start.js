@@ -1,6 +1,7 @@
 'use strict';
 
 const { expect } = require('../fixture');
+const { mockCrazyGames } = require('../crazygames');
 const { startParityGame } = require('./parity');
 const { openCrazyGame } = require('./crazygames-title');
 
@@ -8,7 +9,16 @@ const { openCrazyGame } = require('./crazygames-title');
 // standard parity helper and the universal navigation fixture unchanged.
 async function startHistoricalGame(page, testInfo, journey, crazygames) {
   if (!crazygames) return startParityGame(page, testInfo, journey);
+  await mockCrazyGames(page);
+  await page.addInitScript(function () {
+    window.FB_DISTRIBUTION = 'crazygames';
+    window.FB_CRAZYGAMES_STORAGE = 'localstorage';
+  });
   await openCrazyGame(page, testInfo);
+  expect(await page.evaluate(function () {
+    return { distribution:FB.platform.isCrazyGames, storage:FB.save.storageBackend(),
+      available:FB.crazySave.available(), initialized:window.__cgTest.calls.includes('init') };
+  })).toEqual({ distribution:true, storage:'localstorage', available:true, initialized:true });
   await page.evaluate(function () { FB.startProgression.noteTier(3); });
   await page.locator('#btn-choose-beginning').click();
   await page.locator('#btn-bm-seed').click();
