@@ -1615,3 +1615,7 @@ js/starts.js performs existing-ruler adoption only during new-campaign creation.
 Spring 711 review politics
 
 The hidden 711 candidate declares independent territorial courts and d_711_, k_711_ and e_711_ promotion regions. Provincial lieges distinguish sovereign ownership from local holdings; the Roman pontificate remains nonterritorial while Rome belongs to the eastern realm. These are existing-schema approximations rather than new government strategies. Visigothic kingship uses dynastic succession pending a generic elective strategy, and the candidate does not pre-create Asturias to stand in for a later conditional foundation. See bookmark-711.md and ../research/711-bookmark.md for acceptance gaps.
+
+800 review world
+
+The late 800 candidate in data/bookmark_800.js declares an independent full europe_regional political map. Charlemagne's imperial core has subordinate Aquitaine and Italy, while Venice and Ifriqiya use eastern and Abbasid lieges. Existing territorial government generates ordinary holders. The promotion tables retain enduring ambition regions but use period names such as Austrasia and Lower Seine. Owner is the sovereign; holder remains the local court or generated vassal. The research note docs/research/800-bookmark.md records disputed boundaries and representative polities. The candidate is outside FBDATA.bookmarks until accepted; ordinary dynastic succession does not reproduce historical partitions or wire the three Carolingian courts into a shared historical family.

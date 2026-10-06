@@ -111,6 +111,7 @@ window.FBDATA = window.FBDATA || {};
   FBDATA.techImpactReviews = {
     baselineVersion:'1.127.1',
     features:{
+      period_800_conditional_campaigns:{ mode:'none', rationale:'The Barcelona, Danish coast, Anatolian frontier and Adriatic opportunities reuse living courts and ordinary wars. Historical timing and territorial conditions require no invention; existing army technology still applies.' },
       existing_ruler_starts:{ mode:'none', rationale:'Adopting a living authored ruler and the existing court changes initial identity, not discovery or political eligibility.' },
       western_claim_restoration:{ mode:'none', rationale:'Claimant recognition and restoration reuse living institutional support and ordinary military possession. A baseline political claim has no credible research dependency.' },
       provincial_church_councils:{ mode:'none', rationale:'Gathering living bishops with protected worship and treasury funding is baseline institutional negotiation, independent of discovery. Additional Balkan and Anatolian sees extend the existing living-participant pool without a research gate.' },

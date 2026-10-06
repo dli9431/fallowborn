@@ -50,6 +50,27 @@ class StructuredDataExtractionTests(unittest.TestCase):
             for outcome in ('started', 'won', 'failed', 'diverted', 'interrupted'):
                 self.assertIn(f'news.711.{campaign}.{outcome}', inventory.entries)
         self.assertFalse(any('al-Walid' in key for key in inventory.entries))
+        # The generic candidate pass must not re-extract 711 under year-scoped title keys.
+        self.assertNotIn('duchy.711.d_711_galicia.name.default', inventory.entries)
+
+    def test_800_review_content_has_display_and_durable_message_keys(self):
+        inventory = i18n_catalog.Inventory()
+        i18n_catalog.extract_structured(inventory)
+        for key, text in (
+            ('bookmark.800.name.default', 'The Imperial Coronation'),
+            ('realm.800.carolingian_800.name.default', 'Carolingian Empire'),
+            ('province.800.santiago.name.default', 'Iria Flavia'),
+            ('duchy.800.normandy.name.default', 'Lower Seine'),
+            ('kingdom.800.lotharingia.name.default', 'Austrasia'),
+            ('storyCampaign.barcelona_800.name.default', 'The Barcelona Frontier'),
+        ):
+            self.assertEqual(inventory.entries[key]['text'], text)
+            self.assertIn('bookmark_800', inventory.meta[key]['location'])
+        for campaign in ('barcelona', 'danish', 'anatolia', 'lagoon'):
+            for outcome in ('started', 'won', 'failed', 'diverted', 'interrupted'):
+                self.assertIn(f'news.800.{campaign}_{outcome}', inventory.entries)
+        self.assertNotIn(i18n_catalog.source_key('Charlemagne'), inventory.entries)
+        self.assertNotIn(i18n_catalog.source_key('Harun al-Rashid'), inventory.entries)
 
     def test_regional_africa_content_keeps_stable_display_and_news_owners(self):
         inventory = i18n_catalog.Inventory()

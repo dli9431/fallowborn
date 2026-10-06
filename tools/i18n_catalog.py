@@ -31,6 +31,14 @@ REGION_FILES = [(DATA / f"bookmark_476_{region}.js", region)
                 for region in ("italy", "dalmatia_east", "gaul_iberia", "africa")]
 CANDIDATE_FILES = [(DATA / "bookmark_711.js", "711")]
 BOOKMARK_FILE = DATA / "bookmarks.js"
+# Generic review candidates. Files with bespoke owners in CANDIDATE_FILES
+# keep their own key layout and are not extracted a second time here.
+CANDIDATE_BOOKMARK_FILES = [
+    (path, path.stem.split("_")[-1])
+    for path in sorted(DATA.glob("bookmark_*.js"))
+    if re.fullmatch(r"bookmark_[0-9]+", path.stem)
+    and path not in {candidate for candidate, _ in CANDIDATE_FILES}
+]
 STARTS_FILE = DATA / "starts.js"
 TECHNOLOGY_FILE = DATA / "technology.js"
 ACTIONS_FILE = DATA / "actions.js"
@@ -804,6 +812,17 @@ def extract_structured(inv: Inventory) -> None:
             candidate_rel = candidate_path.relative_to(ROOT).as_posix()
             entries.extend((item_id, item_node, candidate_rel)
                            for item_id, item_node in candidate_root.items())
+        if data_name == "storyCampaigns":
+            for _, candidate_id in CANDIDATE_BOOKMARK_FILES:
+                candidate_path = DATA / f"bookmark_{candidate_id}_history.js"
+                if not candidate_path.exists():
+                    continue
+                candidates = node_object(find_assignment(
+                    candidate_path, "FBDATA", "storyCampaigns" + candidate_id
+                )) or {}
+                candidate_rel = candidate_path.relative_to(ROOT).as_posix()
+                entries.extend((item_id, item_node, candidate_rel)
+                               for item_id, item_node in candidates.items())
         # Regional declarations spell some catalogue fields differently.
         regional_fields = {"cultures": ("cultures",),
                            "legalTraditions": ("legalTraditions",),
@@ -1191,6 +1210,37 @@ def extract_structured(inv: Inventory) -> None:
                     inv.add(f"{kind}.{title_id}.name.{branch}", record,
                             f"{candidate_rel}:{line}", f"{bookmark_id} {kind} {title_id}, display name.", ())
 
+    # Review candidates have literal complete maps but stay outside the live
+    # bookmark registry. Extract display fields without evaluating game code,
+    # descending into ruler profiles or colliding with existing title labels.
+    for candidate_path, candidate_id in CANDIDATE_BOOKMARK_FILES:
+        candidate_rel = candidate_path.relative_to(ROOT).as_posix()
+        candidate = node_object(find_keyed_assignment(
+            candidate_path, "FBDATA", "bookmarkCandidates", candidate_id
+        )) or {}
+        for field in ("name", "desc"):
+            for branch, record, line in branch_records(candidate.get(field)):
+                inv.add(f"bookmark.{candidate_id}.{field}.{branch}", record,
+                        f"{candidate_rel}:{line}",
+                        f"Review bookmark {candidate_id}, {field}.", ())
+        for table, kind in (("provinces", "province"), ("realms", "realm")):
+            for item_node in node_array(candidate.get(table)) or []:
+                item = node_object(item_node) or {}
+                item_id = node_string(item.get("id"))
+                if not item_id:
+                    continue
+                for branch, record, line in branch_records(item.get("name")):
+                    inv.add(f"{kind}.{candidate_id}.{item_id}.name.{branch}", record,
+                            f"{candidate_rel}:{line}",
+                            f"Review {candidate_id} {kind} {item_id}, display name.", ())
+        for table, kind in (("duchies", "duchy"), ("kingdoms", "kingdom"),
+                            ("empires", "empire")):
+            for item_id, item_node in (node_object(candidate.get(table)) or {}).items():
+                item = node_object(item_node) or {}
+                for branch, record, line in branch_records(item.get("name")):
+                    inv.add(f"{kind}.{candidate_id}.{item_id}.name.{branch}", record,
+                            f"{candidate_rel}:{line}",
+                            f"Review {candidate_id} {kind} {item_id}, display name.", ())
     # Dated county names of the geography bases replace a county's display
     # name for the years they cover, so each is a display label of its own.
     geography_path = DATA / "geographies.js"
