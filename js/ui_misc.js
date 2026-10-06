@@ -2886,16 +2886,18 @@ window.FB = window.FB || {};
         coachQueue.some(function (item) {
           return item.saveHintId === 'serf_tenure';
         })) return false;
+    const tenureDeed = FB.colonateTenure(s) ? 'review_colonate' : 'review_serf_tenure';
     const exposed = UI.revealDeedAction &&
-      UI.revealDeedAction('review_serf_tenure');
-    UI.coachmark(FB.T(
+      UI.revealDeedAction(tenureDeed);
+    UI.coachmark(FB.colonateTenure(s) ? FB.T(
+      'Review estate & freedom shows your possessor, dues and routes to release.') : FB.T(
       'Rank & Realm contains your station, home, lord, and routes to freedom.'),
       exposed
-        ? '#tab-actions [data-action-id="review_serf_tenure"]'
+        ? '#tab-actions [data-action-id="' + tenureDeed + '"]'
         : '#sidetabs .tab[data-tab="actions"]', {
         hintId:'serf-tenure', hintKind:'guide', noNext:true,
         saveHintId:'serf_tenure', followUp:'serf-tenure',
-        revealDeed:exposed ? 'review_serf_tenure' : null
+        revealDeed:exposed ? tenureDeed : null
       });
     return true;
   };
@@ -3330,6 +3332,8 @@ window.FB = window.FB || {};
   function crazyGamesFreedomAndLandTips(s) {
     const p = s.player;
     if (FB.station.isSerf(p, s)) {
+      if (FB.colonateTenure(s)) return crazyGamesProgressTip('cg-freedom-plan', FB.T(
+        'Your next goal is estate release. In Rank & Realm, open Review estate & freedom to inspect your possessor, dues, paid release, consented service and risky flight. Keep earning while you prepare.'), 'review_colonate');
       const offer = FB.freedomOfferView(s);
       if (offer && offer.status === 'service') {
         return crazyGamesProgressTip('cg-freedom-service', FB.T(
@@ -3457,9 +3461,12 @@ window.FB = window.FB || {};
   UI.maybeMakingLandTip = function () {
     const s = FB.state;
     const needsFreedom = s && s.player && FB.station.isSerf(s.player, s);
-    const deed = needsFreedom ? 'review_serf_tenure' : 'buy_land';
+    const colony = s && FB.colonateTenure(s);
+    const deed = needsFreedom ? (colony ? 'review_colonate' : 'review_serf_tenure') : 'buy_land';
     const exposed = UI.revealDeedAction && UI.revealDeedAction(deed);
-    const text = needsFreedom
+    const text = colony
+      ? FB.T('Land comes after estate release. In Rank & Realm, open Review estate & freedom to arrange release; once free, Buy a plot of land appears in the same section.')
+      : needsFreedom
       ? '💡 Land comes after freedom. In Rank & Realm, open Review station & freedom to arrange your release; once free, Buy a plot of land appears in the same section.'
       : '💡 In Rank & Realm, use Buy a plot of land to purchase your first plot. Plots held together in one settlement are more productive.';
     return UI.maybeTip('making-land', text,

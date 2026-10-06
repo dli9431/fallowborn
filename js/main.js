@@ -2069,6 +2069,7 @@ FB.CHANGELOG = [
     if (!FB.bookmarkAvailable(bookmarkId)) return false;
     if (scenario.bookmarkIds && scenario.bookmarkIds.indexOf(bookmarkId) < 0) return false;
     const offeredBookmark = FB.bookmark(bookmarkId);
+    if (!FB.systemContentEnabled({ start:{ id:bookmarkId } }, scenario)) return false;
     if (offeredBookmark && offeredBookmark.starts && offeredBookmark.starts.indexOf(scenario.id) < 0) return false;
     if (scenario.rulerRealmId) {
       const bookmark = FB.bookmark(bookmarkId);
@@ -3495,7 +3496,7 @@ FB.CHANGELOG = [
          home authority from the first playable frame. Establish the bounded
          local lord/steward cast before tenure snapshots that authority. */
       if (FB.getRole) FB.getRole(state, 'lord', true);
-      if (FB.ensureSerfTenure && FB.systemEnabled(state, 'manorial_tenure')) FB.ensureSerfTenure(state, 'new_game');
+      if (FB.ensureSerfTenure && FB.tenureEnabled(state)) FB.ensureSerfTenure(state, 'new_game');
     }
 
     if (!sc.rulerRealmId && FB.station.isLanded(sc, state)) {
@@ -3550,8 +3551,9 @@ FB.CHANGELOG = [
         : FB.T('Watch the Deeds tab: your First steps are listed there.');
     const serfIntroPointer = FB.activeSerfTenure &&
       FB.activeSerfTenure(state)
-      ? '<p class="hint" data-serf-start-pointer>' + FB.esc(FB.T(
-        "Your station and routes to freedom are in Rank & Realm. First steps remain in Deeds.")) + '</p>'
+      ? '<p class="hint" data-serf-start-pointer>' + FB.esc(FB.colonateTenure(state) ? FB.T(
+        'Review estate & freedom in Deeds shows your tenancy and release routes. First steps remain in Deeds.') : FB.T(
+        'Your station and routes to freedom are in Rank & Realm. First steps remain in Deeds.')) + '</p>'
       : '';
     if (!directCrazyGamesStart) {
       FB.ui.openModal('Your Story Begins', '<div class="gm-body-text"><p>' +
@@ -4129,7 +4131,7 @@ FB.CHANGELOG = [
 
     if (FB.freedomDay) FB.freedomDay(s);
     if (FB.householdServiceDay) FB.householdServiceDay(s);
-    if (FB.tenureDay && FB.systemEnabled(s, 'manorial_tenure')) FB.tenureDay(s);
+    if (FB.tenureDay && FB.tenureEnabled(s)) FB.tenureDay(s);
     if (FB.reconcileSerfStory) FB.reconcileSerfStory(s);
     if (FB.reconcileSerfNeighborConsequence) {
       FB.reconcileSerfNeighborConsequence(s);
@@ -6069,6 +6071,12 @@ FB.CHANGELOG = [
        same tenure so succession cannot repeat already-seen teaching. */
     for (const key in p.flags) {
       if (key.indexOf('hint_serf_') === 0 && p.flags[key]) keep[key] = 1;
+    }
+    // Estate flight belongs to the household, including its next head.
+    if (FB.colonateTenure(s)) {
+      for (const key of ['colonus_flight_until','colonus_flight_resolved_turn']) {
+        if (Number.isInteger(p.flags[key])) keep[key] = p.flags[key];
+      }
     }
     if (tutorialCarry) {
       for (const key in tutorialCarry) keep[key] = tutorialCarry[key];

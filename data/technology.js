@@ -111,6 +111,10 @@ window.FBDATA = window.FBDATA || {};
   FBDATA.techImpactReviews = {
     baselineVersion:'1.127.1',
     features:{
+      colonate_tenure:{ mode:'none', rationale:'Land-bound tenancy, estate obligations and paid release are legal and household conditions, independent of research.' },
+      colonate_military_release:{ mode:'none', rationale:'Consented military release depends on a living possessor and personal fitness. The ordinary soldier career retains its existing training requirement.' },
+      colonate_ordination_release:{ mode:'none', rationale:'Consented church release depends on a living possessor, personal piety and a local bishop. Legal status and worship require no discovery.' },
+      colonate_flight:{ mode:'none', rationale:'Escape and pursuit are baseline personal risks. Flight creates no lawful charter and requires no discovery.' },
       historical_opening_households:{ mode:'none', rationale:'Authored living households and scoped starting offices reuse ordinary character and authority rules. Historical identity requires no invention.' },
       private_family_estates:{ mode:'none', rationale:'Inherited private property and evidence of a disputed land demand are baseline household rights. They grant no public command or county jurisdiction.' },
       non_episcopal_congregations:{ mode:'none', rationale:'A local monk or priest can represent a religious congregation and mediate through living church support without a bishopric or discovery prerequisite.' },

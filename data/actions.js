@@ -196,6 +196,8 @@ FBDATA.deeds = [
     section:'work', group:'work', flow:'no_day', cooldownDays:360, requiresTech:'guild_charters', handler:'petition_monopoly' },
   { id:'review_serf_tenure', availableWhileTraveling:true, systems:['manorial_tenure'], label:'📜 Review station & freedom', order:38,
     section:'realm', group:'realm', flow:'choices', handler:'review_serf_tenure' },
+  { id:'review_colonate', availableWhileTraveling:true, systems:['colonate'], label:'📜 Review estate & freedom', order:92,
+    section:'realm', group:'realm', flow:'choices', handler:'review_colonate' },
   { id:'buy_land', label:'🌾 Buy a plot of land…', order:39,
     section:'realm', group:'realm', flow:'choices', handler:'buy_land' },
   { id:'declare_manor', availableWhileTraveling:true, label:'🏡 Declare a manor', order:40,

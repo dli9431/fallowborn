@@ -3251,7 +3251,7 @@ window.FB = window.FB || {};
       h += kv('Station', esc(FB.styledTitle(s))) +
         kv('Home', homeLink);
       if (view) {
-        h += kv('Current lord', view.lordId
+        h += kv(FB.colonateTenure(s) ? 'Estate possessor' : 'Current lord', view.lordId
           ? '<button type="button" class="panel-inline-link tenure-character-link" ' +
             'data-tenure-character="' + esc(view.lordId) + '">' +
             (s.chars[view.lordId] ? FB.faceTag(s.chars[view.lordId], 44, 50) : '') +
@@ -3260,10 +3260,12 @@ window.FB = window.FB || {};
       } else {
         h += kv('Local ruler', esc(rulerDesc));
       }
+      if (view && FB.colonateTenure(s)) h += kv('County controller', esc(view.controllerName));
 
       let homeInfo = '';
       if (FB.station.isSerf(s.player, s)) {
-        homeInfo = FB.T(
+        homeInfo = FB.colonateTenure(s) ? FB.T(
+          'Your household is registered on this estate. Crop shares and rent accounts continue until release, independently of the county controller.') : FB.T(
           'Your household is bound to this home; customary service appears as events when it needs your decision.');
       } else if (FB.station.isFreeholder(s.player, s)) {
         homeInfo = FB.T('Your household lives here as free commoners.');
@@ -3337,6 +3339,26 @@ window.FB = window.FB || {};
           (petition && !petition.ready
             ? '<p class="adesc" data-freedom-petition-reason>' +
               esc(petitionReason) + '</p>' : '') + '</div>';
+        if (view && FB.colonateTenure(s)) {
+          h += reviewFactsCard(FB.T('Registered tenancy'),
+            kv('Terms', esc(view.archetypeSummary)) +
+            kv('Rights', esc(view.rights.map(function (r) { return r.name; }).join(' · '))) +
+            view.duties.map(function (d) { return kv(d.name, esc(d.dateFull)); }).join('') +
+            kv('Ownership', esc(FB.T('Estate use only; release grants no plots.'))));
+          const routes = [
+            { id:'military_service', label:FB.T('Review military release…') },
+            { id:'ordination', label:FB.T('Review ordination consent…') },
+            { id:'flight', label:FB.T('Review flight risks…') }
+          ];
+          h += '<div class="gm-list">';
+          routes.forEach(function (route) {
+            const status = FB.colonateReleaseStatus(s, route.id);
+            h += reviewActionCardHtml({ data:{ colonateRoute:route.id }, label:route.label,
+              note:status.ready ? FB.T('Review before deciding') : status.reason,
+              warn:!status.ready });
+          });
+          h += '</div>';
+        }
         if (view && view.pendingTransition) {
           h += '<div class="progressnote" data-serf-authority-review>' +
             esc(FB.T(
@@ -3356,6 +3378,11 @@ window.FB = window.FB || {};
       ? FB.serfTenurePresentationSignature(s) : null;
     FB.paintFaces($('gm-body'), s);
     const freedomPurchase = $('rank-buy-freedom');
+    document.querySelectorAll('[data-colonate-route]').forEach(function (button) {
+      button.addEventListener('click', function () {
+        UI.showColonateRelease(button.dataset.colonateRoute);
+      });
+    });
     if (freedomPurchase) freedomPurchase.addEventListener('click', function () {
       UI.showFreedomPurchase();
     });

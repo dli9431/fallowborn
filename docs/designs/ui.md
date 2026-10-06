@@ -1,3 +1,7 @@
+Estate and freedom review
+
+The colonus opening exposes Review estate & freedom in both Deeds layouts. Station & home names the living estate possessor separately from the county controller, lists saved rights and dues and explains that cultivation grants no owned land. Shared action cards open separate military consent, ordination consent and flight reviews. Requirements, family coverage, costs, risks and blockers remain visible, with expanded Details for consequences. Reviews use the ordinary portrait rows, modal history and full-width controls. Back and Escape restore the originating route control; stale confirmation changes no state and replaces the review with current blockers. Lawful outcome Continue returns to Station & home. Flight closes the review and queues an ordinary event. Medieval tenure sheets and their action remain unchanged. Beginner, land and CrazyGames tips point to the estate deed while that legal form is active.
+
 Offices and legitimacy reviews
 
 Both Deeds layouts expose the system-gated Offices & Legitimacy section. Its root sheet uses Governance fact cards for held appointments and every living imperial claimant, named people in shared portrait rows, and the existing field skin for court, office, scope and recognition-mandate selectors. Office powers, actual petition fee, retained prestige qualification, skill and succession or annual term stay visible. Each claimant lists the five independent legitimacy sources and current issuers, without a universal score.

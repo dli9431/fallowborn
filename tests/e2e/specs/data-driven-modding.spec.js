@@ -1093,7 +1093,7 @@ test('milestone-four phase A projects protected baseline action catalogues and r
       };
     });
 
-    expect(result.counts).toEqual([28, 92]);
+    expect(result.counts).toEqual([28, 93]);
     expect(result.gamesOrder).toEqual([
       'take_road', 'games_calendar', 'host_games', 'travel_turn_back'
     ]);

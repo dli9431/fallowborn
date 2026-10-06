@@ -67,7 +67,7 @@ test('period ladder validates, separates civic standing from land and preserves 
     expect(result.faults.join('\n')).toContain('Invalid standing requirements.');
     expect(result.route).toBe('standing');
     expect(result.blocked).toBe(true);
-    expect(result.routes).toEqual(Array(7).fill('standing'));
+    expect(result.routes).toEqual(['freedom'].concat(Array(6).fill('standing')));
     expect(result.medieval).toEqual(Array(2).fill(['freedom','manor','barony','county','higher','higher','higher']));
     expect(result.decurion).toEqual({ landed:false, county:false, seeksCounty:true, estates:false });
     expect(result.tech).toEqual(['none','none','none']);

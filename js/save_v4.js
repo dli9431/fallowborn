@@ -82,6 +82,7 @@
     if (state.start !== undefined && !plain(state.start)) field('state.start');
     validateRoyalCourts(state);
     if (FB.validateStartingRealm) FB.validateStartingRealm(state);
+    if (FB.validateColonateTenure) FB.validateColonateTenure(state);
     if (FB.validateLocalInstitutionState) FB.validateLocalInstitutionState(state);
     if (FB.validateReligionInstitutionState) FB.validateReligionInstitutionState(state);
     if (FB.validateHistoricalHolyWarState) FB.validateHistoricalHolyWarState(state);

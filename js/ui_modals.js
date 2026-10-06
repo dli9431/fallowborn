@@ -1775,7 +1775,7 @@ window.FB = window.FB || {};
     if (UI.eventReceiptToast) UI.eventReceiptToast(receipt);
     const milestones = receipt.milestones || [];
     const freedom = milestones.some(function (msg) {
-      return /^news\.freedom\.(purchase|manumission|manumission_service|old_custom|flight)$/.test(msg.key);
+      return /^news\.freedom\.(purchase|manumission|manumission_service|old_custom|flight|colonate_flight)$/.test(msg.key);
     });
     const report = receipt.reportId && FB.hostileReport(s, receipt.reportId);
     const rankLoss = (receipt.impacts || []).some(function (r) {
@@ -1792,7 +1792,7 @@ window.FB = window.FB || {};
     if (receipt.eventId === 'proposal_made' || receipt.eventId === 'sibling_proposal_made') {
       title = receipt.result === 'success' ? FB.T('Wedding vows') : FB.T('Proposal refused');
     }
-    if (receipt.eventId === 'flee_serfdom' && receipt.result === 'failure') title = FB.T('Escape failed');
+    if ((receipt.eventId === 'flee_serfdom' || receipt.eventId === 'colonus_flight') && receipt.result === 'failure') title = FB.T('Escape failed');
     if (report) title = hostileWarResultName(report.result, false);
     if (rankLoss) title = FB.T('Station lost');
     $('ev-title').textContent = title;
@@ -3068,6 +3068,50 @@ window.FB = window.FB || {};
     return kv('Benefits', esc(FB.T(
       'Personal freedom, freehold land, travel, and durable property.')));
   }
+
+  UI.showColonateRelease = function (route, replaceView) {
+    const s = FB.state, status = FB.colonateReleaseStatus(s, route);
+    if (!FB.colonateTenure(s)) return;
+    const flight = route === 'flight';
+    const title = flight ? FB.T('Review estate flight') : route === 'ordination'
+      ? FB.T('Review ordination consent') : FB.T('Review military release');
+    const details = flight
+      ? FB.T('55% chance of escape. Success moves the household and costs {money:3}; capture costs 2 health, 10 prestige and 20 Standing. Flight grants no lawful charter. Another attempt must wait 360 days.')
+      : FB.T('The possessor consents at +20 Standing. Release frees the head, spouses and descendants, without granting land. Parents and siblings remain bound unless separately released. This changes the head’s career and grants no military command or church office.');
+    const requirements = route === 'ordination'
+      ? FB.T('A man with Learning 3, 25 piety and a living local bishop of the same faith.')
+      : route === 'military_service'
+        ? FB.T('A man with Martial 4 and the ordinary soldier career’s training requirements.')
+        : FB.T('An adult at home, outside captivity and final-service commitments.');
+    const facts = (status.owner ? reviewPeopleHtml(reviewPersonHtml(status.owner, FB.T('Estate possessor'), null)) : '') +
+      kv('Requirements', esc(requirements)) + kv('Cost', esc(flight ? FB.T('Charged only after successful escape') : FB.T('No payment'))) +
+      kv('Status', esc(status.ready ? FB.T('Ready for your decision') : status.reason));
+    openModal(title, reviewFactsCard('', facts) + reviewActionsHtml(reviewActionCardHtml({
+      id:'colonus-release-confirm', label:flight ? FB.T('Consider flight tonight') : FB.T('Accept consented release'),
+      disabled:!status.ready, note:status.reason, details:'<p>' + esc(details) + '</p>'
+    })) + '<div class="gm-footer"><button type="button" class="btn" id="colonus-release-back">' +
+      esc(FB.T('Back')) + '</button></div>', { historyView:true, replaceView:!!replaceView, historyBack:true,
+        historyBackRender:UI.showRankDetails, titleDetailsHtml:'<p>' + esc(details) + '</p>' });
+    FB.paintFaces($('gm-body'), s);
+    $('colonus-release-back').onclick = function () { modalHistoryBack(UI.showRankDetails); };
+    $('colonus-release-confirm').onclick = function () {
+      if (!FB.resolveColonateRelease(s, route, status.quote)) {
+        UI.toast(FB.T('Circumstances changed. Review the route again.'));
+        UI.showColonateRelease(route, true);
+        return;
+      }
+      if (flight) { UI.closeModal(); return; }
+      if (FB.noteDeedCompleted) FB.noteDeedCompleted(s, 'review_colonate');
+      UI.refresh();
+      openModal(FB.T('Estate release recorded'), reviewFactsCard('',
+        kv('Station', esc(FB.styledTitle(s))) + kv('Family', esc(FB.T('The head, spouses and descendants are free.'))) +
+        kv('Property', esc(FB.T('No estate land was transferred.')))) +
+        '<div class="gm-footer"><button type="button" class="btn" id="colonus-release-continue">' +
+        esc(FB.T('Continue')) + '</button></div>', { replaceView:true, historyBack:true,
+          historyBackRender:UI.showRankDetails });
+      $('colonus-release-continue').onclick = function () { modalHistoryBack(UI.showRankDetails); };
+    };
+  };
 
   UI.showFreedomPurchase = function () {
     const s = FB.state;

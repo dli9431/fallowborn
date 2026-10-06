@@ -11,6 +11,9 @@ window.FB = window.FB || {};
     if (!known(id)) throw new Error('Unknown system ' + String(id) + '.');
   }
   S.ids = function () { return Object.keys(FBDATA.systems || {}); };
+  FB.tenureEnabled = function (state) {
+    return FB.systemEnabled(state, 'manorial_tenure') || FB.systemEnabled(state, 'colonate');
+  };
   S.known = known;
 
   /* Boolean maps remain supported for inherited faith definitions. Other

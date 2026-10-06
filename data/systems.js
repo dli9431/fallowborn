@@ -8,6 +8,7 @@ FBDATA.systems = {
   civic_institutions:{ id:'civic_institutions', desc:'Site councils and senates with local bargains and consent.', defaultEnabled:false, modules:['institutions'] },
   episcopal_sees:{ id:'episcopal_sees', desc:'Local bishoprics and patriarchates with mediation and institutional standing.', defaultEnabled:false, modules:['institutions','model'] },
   manorial_tenure:{ id:'manorial_tenure', desc:'Customary dependent tenure and scheduled household duties.', defaultEnabled:true, modules:['events','actions','economy'] },
+  colonate:{ id:'colonate', desc:'Roman land-bound tenancy, estate dues and release from registered dependency.', defaultEnabled:false, modules:['events','actions','economy'] },
   feudal_service:{ id:'feudal_service', desc:'Service charters and hereditary, life or fixed-term grants.', defaultEnabled:true, modules:['actions','lordships'] },
   scutage:{ id:'scutage', desc:'Silver in place of military service.', defaultEnabled:true, modules:['parliament','actions'] },
   crown_bloc:{ id:'crown_bloc', desc:'Political allegiance to the ruling house.', defaultEnabled:true, modules:['politics'] },

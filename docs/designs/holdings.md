@@ -1,3 +1,17 @@
+Colonate tenancy
+
+The colonate system is disabled by default and enabled by late_antique. The events module shares its dependent-household scheduler, tenure presentation, paid freedom, final service and family history with manorial_tenure. Each saved archetype retains its own system membership; disabled records remain dormant. The medieval catalogue, timing, obligations and freedom routes are unchanged.
+
+Roman estate, Gallic Roman estate and African Roman estate definitions live in data/economy.js. The regional packages name current county cells; the Roman estate package also supplies the late antique provincial fallback. They record dwelling and cultivation use, annual crop shares and rent accounts, without assigning owned plots or county powers. Data/events_peasant.js owns separate Roman duty and flight events. No medieval tithe, marriage leave, manorial facility dues, Old Custom chain or town freedom rule is enabled by colonate.
+
+The tenure's landownerId identifies a generated living possessor separate from the public county ruler. New formation creates that person once. Ordinary tenure days replace a dead possessor with a generated estate representative and increment the tenure revision; reads and restore create nobody. This is a household estate abstraction, not a historical proprietor or a transfer of private holdings. Public conquest and ruler succession do not amend its dues or confer the possessor's consent. Stale owner, protagonist, home, family and revision reviews are rejected.
+
+Purchase and negotiated manumission use the existing family-share quote and frozen final-service agreement, with the possessor as counterparty. Additional parents and siblings can be included through paid release. Military release requires adult male eligibility, Martial 4, +20 Standing with the living possessor and the existing soldier training requirement; acceptance frees the covered household and enters the ordinary soldier career without command or land. Ordination requires adult male eligibility, Learning 3, 25 piety, +20 Standing and a living local bishop of the head's faith; acceptance enters ordinary clerical service without creating a church office. Service release covers spouses and descendants, while collateral kin remain bound. These negotiated household releases are gameplay abstractions, not universal exemptions from late Roman law.
+
+Flight queues a separate reviewed event with a saved once-only attempt stamp. Escape has a 55% seeded chance, costs 3 on success, moves the household and records unlawful freedom. Capture costs 2 health, 10 prestige and 20 possessor Standing; the tenure and its dues remain active. Another attempt waits 360 days, including after choosing to stay. No year-and-a-day charter is granted. All release routes close personal obligations without conveying estate land. Late antique band zero now uses the freedom route instead of ordinary station recognition; starting clerical or military work and religious promotion cannot bypass active dependency.
+
+Technology impact is none in colonate_tenure, colonate_military_release, colonate_ordination_release and colonate_flight. Legal status, consent, personal fitness, worship and escape require no discovery. Ordinary soldier training retains its existing spear_shield_drill gate; paid release and flight remain available independently of that career requirement.
+
 # Holdings (commoner property)
 
 CrazyGames first-business review

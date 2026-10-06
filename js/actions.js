@@ -2287,6 +2287,7 @@ window.FB = window.FB || {};
   };
 
   function freedomCurrentLord(state) {
+    if (FB.colonateTenure(state)) return FB.colonatePossessor(state);
     if (FB.homeCountyAuthority) {
       const authority = FB.homeCountyAuthority(state);
       return authority.characterId && authority.characterId !== state.player.charId
@@ -3723,6 +3724,15 @@ window.FB = window.FB || {};
       return FB.station.isSerf(s.player, s) && !!(FB.activeSerfTenure &&
         FB.activeSerfTenure(s));
     },
+    run:function () {
+      if (FB.ui && FB.ui.showRankDetails) FB.ui.showRankDetails();
+    } },
+
+  { id:'review_colonate', opensChoices:true, noConsume:true,
+    desc:function () {
+      return FB.T('Review your registered estate, possessor, obligations and routes to release.');
+    },
+    show:function (s) { return !!FB.colonateTenure(s); },
     run:function () {
       if (FB.ui && FB.ui.showRankDetails) FB.ui.showRankDetails();
     } },
