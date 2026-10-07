@@ -1,6 +1,7 @@
 'use strict';
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
+  'data/story_courts_476.js',
   'index.html', 'css/style.css', 'data/eras.js', 'data/wardrobes.js',
   'data/cultures.js', 'data/lexicons.js', 'data/map_data.js', 'data/units.js',
   'data/technology.js', 'data/starts.js', 'data/bookmark_476.js', 'data/story_campaigns.js',
@@ -8,8 +9,8 @@ dependsOnRuntime(__filename, [
   'js/portrait.js', 'js/siteart.js', 'js/util.js', 'js/model.js', 'js/items.js',
   'js/localfolk.js', 'js/armies.js', 'js/world.js', 'js/mods.js', 'js/i18n.js',
   'js/lexicon.js', 'js/station.js', 'js/main.js', 'js/ui_topbar.js',
-  'js/ui_misc.js', 'js/stories.js', 'js/story_campaign.js', 'js/story_476_rails.js',
-  'js/story_western_court_476.js'
+  'js/ui_misc.js', 'js/stories.js', 'js/story_campaign.js', 'data/story_instances.js',
+  'js/story_courts.js'
 ]);
 const { test, expect } = require('../support/fixture');
 const { openGame } = require('../support/game/navigation');

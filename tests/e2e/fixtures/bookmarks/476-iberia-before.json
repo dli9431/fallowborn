@@ -1,5 +1,6 @@
 {
   "sourceRevision": "926e9aa3",
+  "openingRevision": "core_v1",
   "provinceOverrides": [
     {
       "id": "coruna",
@@ -1099,6 +1100,8 @@
     "cantabri_476"
   ],
   "storyIdsToOmit": [
+    "thracian_pressure_476",
+    "amal_epirus_476",
     "suevic_frontier_476",
     "cantabrian_campaign_476",
     "vasconian_campaign_476",

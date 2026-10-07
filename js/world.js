@@ -921,6 +921,9 @@ window.FB = window.FB || {};
       }
       requirements(def.requirements, 'story ' + id, null, null, attached);
       if (def.declaration) {
+        FB.stories.definitionFaults(def.declaration, definition, attached).forEach(function (error) {
+          errors.push(error);
+        });
         requirements(def.declaration.requirements, 'story ' + id, null, null, attached);
         var storyRealms = Object.assign({}, realms), visited = {};
         // A dependent story may refer to a polity its prerequisite creates.
@@ -931,6 +934,9 @@ window.FB = window.FB || {};
           var prerequisite = FB.stories.get(required), declaration = prerequisite && prerequisite.declaration;
           if (declaration && declaration.grant) storyRealms[declaration.grant.realmId] = true;
           if (declaration && declaration.realm) storyRealms[declaration.realm.id] = true;
+          (declaration && Array.isArray(declaration.regions) ? declaration.regions : []).forEach(function (region) {
+            if (region && region.grant) storyRealms[region.grant.id] = true;
+          });
           (prerequisite && prerequisite.requires || []).forEach(futureRealms);
         }
         (def.requires || []).forEach(futureRealms);
@@ -941,16 +947,21 @@ window.FB = window.FB || {};
           if (Array.isArray(row)) { row.forEach(function (v, i) { walk(v, path + '.' + i); }); return; }
           Object.keys(row).forEach(function (key) {
             var value = row[key], where = path ? path + '.' + key : key, table = null;
-            if (key === 'requirements') return;
-            if (['provinceId','capital','originProvinceId'].indexOf(key) >= 0 ||
+            if (key === 'requirements' || key === 'news' || key === 'registrationBefore' || key === 'registrationAfter') return;
+            if (/ProvinceId$/.test(key) || ['provinceId','capital','originProvinceId'].indexOf(key) >= 0 ||
                 def.declaration.type === 'civilian_migration' && (key === 'from' || key === 'to')) table = provinces;
-            if (['realmId','issuerRealmId','formerRealmId','liege'].indexOf(key) >= 0 && where !== 'grant.realmId') table = storyRealms;
-            if (key === 'culture' || key === 'cultureId') table = FBDATA.cultures;
-            if (key === 'religion' || key === 'faithId') table = FBDATA.religions;
-            if (key === 'governmentForm' || key === 'government') table = FBDATA.governmentForms;
+            if ((/RealmId$/.test(key) || ['realmId','issuerRealmId','formerRealmId','liege'].indexOf(key) >= 0) && where !== 'grant.realmId') table = storyRealms;
+            if (key === 'culture' || /CultureId$/.test(key) || key === 'cultureId') table = FBDATA.cultures;
+            if (key === 'religion' || /FaithId$/.test(key) || key === 'faithId') table = FBDATA.religions;
+            if (key === 'governmentForm' || /GovernmentForm$/.test(key) || key === 'government') table = FBDATA.governmentForms;
+            if (key === 'officeId' && path.indexOf('opening.authority.') === 0 ||
+                ['sovereignOfficeId','judicialOfficeId','commandOfficeId'].indexOf(key) >= 0) table = FBDATA.authorityOffices;
+            if (key === 'institutionId' && path.indexOf('opening.authority.') === 0) table = storyRealms;
+            if (['court_settlement','ruler_restoration','contested_office','political_track'].indexOf(def.declaration.type) >= 0 &&
+                (key === FB.stories.tokens.source || /Source$/.test(key))) table = FBDATA.legitimacySources;
             if (key === 'churchId' || key === 'civicId') table = definition.localInstitutions !== undefined ? definition.localInstitutions : FBDATA.localInstitutions;
             if (table && typeof value === 'string' && !ownKey(table, value)) fault('story ' + id, where + ' references unknown id ' + value + '.');
-            if ((key === 'culture' || key === 'cultureId') && typeof value === 'string') identity({ culture:value }, 'story ' + id);
+            if ((key === 'culture' || /CultureId$/.test(key) || key === 'cultureId') && typeof value === 'string') identity({ culture:value }, 'story ' + id);
             if ((key === 'religion' || key === 'faithId') && typeof value === 'string') identity({ religion:value }, 'story ' + id);
             var many = ['counties','countyIds','retainedCountyIds'].indexOf(key) >= 0 ? provinces
               : ['ownerIds','remnantRealmIds','revoltRealmIds'].indexOf(key) >= 0 ? storyRealms : null;
@@ -984,6 +995,19 @@ window.FB = window.FB || {};
     Object.keys(definition.opening && definition.opening.actors || {}).forEach(function (id) { identity(definition.opening.actors[id], 'opening actor ' + id); });
     Object.keys(definition.localInstitutions || {}).forEach(function (id) { identity(definition.localInstitutions[id], 'institution ' + id); });
     var worldStories = Array.isArray(definition.stories) ? definition.stories : [];
+    if (definition.storyRegions !== undefined) {
+      if (!plainRecord(definition.storyRegions)) fault('storyRegions', 'must be a table.');
+      else Object.keys(definition.storyRegions).forEach(function (id) {
+        var region = definition.storyRegions[id];
+        if (!plainRecord(region) || (region.provinceIds === undefined) === (region.duchies === undefined)) {
+          fault('story region ' + id, 'declare one provinceIds or duchies list.'); return;
+        }
+        var table = region.provinceIds ? provinces : definition.duchies || {};
+        list(region.provinceIds || region.duchies, 'story region ' + id, function (ref) {
+          if (!ownKey(table, ref)) fault('story region ' + id, 'unknown selector ' + ref + '.');
+        });
+      });
+    }
     if (Array.isArray(worldStories)) list(worldStories, 'stories', function (id) { story(id, 'world', worldStories, 'stories'); });
     if (definition.starts !== undefined) list(definition.starts, 'starts', function (id) {
       if (!starts[id]) fault('starts', 'unregistered start ' + id + '.');

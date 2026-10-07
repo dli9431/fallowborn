@@ -84,20 +84,61 @@ var courts800 = {
 FBDATA.bookmarks['800'].realms.forEach(function (realm) {
   if (courts800[realm.id]) realm.royalCourt = courts800[realm.id];
 });
-FBDATA.carolingianSettlements800 = {
-  divisio:{ firstYear:806, lastYear:813 },
-  ordinatio:{ firstYear:817, lastYear:823 },
-  gifts:{ firstYear:801, lastYear:809, westernGift:15, easternGift:25 },
-  recognition:{ firstYear:812, lastYear:814, coastalCounties:['venezia','split'] },
-  verdun:{ firstYear:843, lastYear:846 },
-  regions:{
-    west:{ realmId:'carolingian_west_800', capital:'paris', titleId:'west_francia',
-      duchies:['ile','normandy','anjou','blois','champagne','vermandois','flanders','aquitaine','poitou','toulouse','auvergne','gascogne','narbonne'] },
-    east:{ realmId:'carolingian_east_800', capital:'regensburg', titleId:'east_francia',
-      duchies:['bavaria','carantania','ostmark','saxony','thuringia','franconia','swabia','rhineland'] },
-    aquitaine:{ realmId:'carolingian_aquitaine_800', capital:'bordeaux', titleId:'aquitaine',
-      duchies:['aquitaine','poitou','toulouse','auvergne','gascogne','narbonne'] },
-    bavaria:{ realmId:'carolingian_bavaria_800', capital:'regensburg', titleId:'east_francia',
-      duchies:['bavaria','carantania','ostmark'] }
-  }
+/* Region selectors belong to the bookmark, independently of story mechanics. */
+FBDATA.bookmarkCandidates['800'].storyRegions = {
+  west:{ duchies:['ile','normandy','anjou','blois','champagne','vermandois','flanders','aquitaine','poitou','toulouse','auvergne','gascogne','narbonne'] },
+  east:{ duchies:['bavaria','carantania','ostmark','saxony','thuringia','franconia','swabia','rhineland'] },
+  aquitaine:{ duchies:['aquitaine','poitou','toulouse','auvergne','gascogne','narbonne'] },
+  bavaria:{ duchies:['bavaria','carantania','ostmark'] }
 };
+FBDATA.storySettlements800 = {
+  divisio_800:{ id:'divisio_800', type:'succession_partition', name:'806 inheritance settlement',
+    desc:'Living sons and existing regional crowns determine the inheritance plan. Borders remain unchanged until succession replaces the present ruler.',
+    firstYear:806, lastYear:813, chance:0.65, truceDays:0,
+    actor:{ realmId:'carolingian_800', capital:'aachen', castField:'charlemagne' },
+    branchRealmIds:['italy','aquitaine'],
+    cast:{ charlemagne:{ kind:'realm_ruler', realmId:'carolingian_800' },
+      louis:{ kind:'realm_ruler', realmId:'aquitaine' }, pippin:{ kind:'realm_ruler', realmId:'italy' },
+      harun:{ kind:'realm_ruler', realmId:'abbasid' } },
+    shares:[{ realmId:'aquitaine', castField:'louis' },{ realmId:'italy', castField:'pippin' }],
+    news:{ agreed:{ key:'news.800.divisio', text:'📜 The Carolingian court settles its inheritance shares. Regional crowns remain subordinate until the present ruler’s succession.' },
+      executed:{ key:'news.800.partition_accession', text:'📜 The surviving regional shares of the Carolingian inheritance become independent after succession.' } } },
+  ordinatio_800:{ id:'ordinatio_800', type:'designated_succession', requires:['divisio_800'], name:'817 imperial arrangement',
+    desc:'The senior living son receives the succession designation. Younger living sons receive regional government while the imperial realm stays united.',
+    firstYear:817, lastYear:823, chance:0.65, truceDays:0,
+    actor:{ realmId:'carolingian_800', capital:'aachen', character:{ kind:'story', storyId:'divisio_800', field:'cast.louis' } },
+    regions:[{ id:'aquitaine', selector:{ kind:'region', regionId:'aquitaine' },
+      grant:{ id:'carolingian_aquitaine_800', capital:'bordeaux', titleId:'aquitaine', rank:3, titleKind:'kingdom' } },
+      { id:'bavaria', selector:{ kind:'region', regionId:'bavaria' },
+        grant:{ id:'carolingian_bavaria_800', capital:'regensburg', titleId:'east_francia', rank:3, titleKind:'kingdom' } }],
+    news:{ agreed:{ key:'news.800.ordinatio', text:'📜 The Carolingian court designates a senior successor and grants regional government to younger sons. The imperial realm remains united.' } } },
+  gifts_800:{ id:'gifts_800', type:'diplomatic_exchange', requires:['ordinatio_800','divisio_800'], name:'Frankish-Abbasid gifts',
+    desc:'Both original courts must be sovereign and peaceful, hold their capitals and fund their own gifts. The exchange establishes a limited peace.',
+    firstYear:801, lastYear:809, chance:0.65, truceDays:720, actorGift:15, sourceGift:25, opinion:0,
+    actor:{ realmId:'carolingian_800', capital:'aachen', character:{ kind:'story', storyId:'divisio_800', field:'cast.charlemagne' } },
+    source:{ realmId:'abbasid', capital:'baghdad', character:{ kind:'story', storyId:'divisio_800', field:'cast.harun' } },
+    news:{ agreed:{ key:'news.800.gifts', text:'🎁 The Frankish and Abbasid courts exchange funded gifts and agree to a limited peace.' } } },
+  recognition_800:{ id:'recognition_800', type:'recognition', requires:['gifts_800','divisio_800'], name:'Eastern imperial recognition',
+    desc:'The eastern imperial court recognizes the living western emperor. Participating western-held Adriatic counties return to eastern government and the courts agree to peace.',
+    firstYear:812, lastYear:814, chance:0.65, truceDays:720, authoritySource:'imperial_commission', requireImperial:true,
+    actor:{ realmId:'carolingian_800', capital:'aachen', character:{ kind:'story', storyId:'divisio_800', field:'cast.charlemagne' } },
+    source:{ realmId:'byzantium', capital:'constantinople' }, region:{ kind:'provinces', provinceIds:['venezia','split'] },
+    news:{ agreed:{ key:'news.800.recognition', text:'📜 The eastern court recognizes the western imperial title in an Adriatic peace agreement.' } } },
+  verdun_800:{ id:'verdun_800', type:'treaty_settlement', requires:['recognition_800','ordinatio_800'], name:'843 partition negotiations',
+    desc:'The surviving senior successor and two original regional beneficiaries may divide the realm. Only their mutual ordinary wars can end through this agreement; foreign wars block it.',
+    firstYear:843, lastYear:846, chance:0.65, truceDays:720,
+    actor:{ realmId:'carolingian_800', capital:'aachen' }, planRef:{ kind:'story', storyId:'ordinatio_800', field:'plan' },
+    regions:[{ id:'west', selector:{ kind:'region', regionId:'west' }, titleId:'west_francia' },
+      { id:'east', selector:{ kind:'region', regionId:'east' }, titleId:'east_francia' }],
+    pressure:{ threshold:4, chance:0.35 },
+    news:{ agreed:{ key:'news.800.verdun', text:'📜 The surviving Carolingian brothers agree to a western, middle and eastern division. Their existing subjects retain their local government.' },
+      pressure:{ key:'news.800.sibling_pressure', text:'⚔ A regional Carolingian court contests the senior ruler’s authority. Ordinary armies and peace decide the dispute.' } } }
+};
+/* An exact typed split on the detached save copy, never new-game init. */
+FBDATA.storyRecordMigrations = [{ sourceId:'carolingian_settlements_800',
+  opportunityFields:['divisio','ordinatio','gifts','recognition','verdun'],
+  targets:[{ id:'divisio_800', recordField:'opportunities.divisio', fields:{ cast:'cast' } },
+    { id:'ordinatio_800', recordField:'opportunities.ordinatio', fields:{} },
+    { id:'gifts_800', recordField:'opportunities.gifts', fields:{} },
+    { id:'recognition_800', recordField:'opportunities.recognition', fields:{} },
+    { id:'verdun_800', recordField:'opportunities.verdun', fields:{ pressure:'pressure' } }] }];

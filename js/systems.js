@@ -6,13 +6,44 @@ window.FB = window.FB || {};
   var S = FB.systems = {};
   function own(o, k) { return !!o && Object.prototype.hasOwnProperty.call(o, k); }
   function plain(o) { return !!o && typeof o === 'object' && !Array.isArray(o); }
+  function text(value) { return typeof value === 'string' && !!value; }
   function known(id) { return typeof id === 'string' && own(FBDATA.systems, id); }
   function requireId(id) {
     if (!known(id)) throw new Error('Unknown system ' + String(id) + '.');
   }
   S.ids = function () { return Object.keys(FBDATA.systems || {}); };
   FB.tenureEnabled = function (state) {
-    return FB.systemEnabled(state, 'manorial_tenure') || FB.systemEnabled(state, 'colonate');
+    return S.ids().some(function (id) {
+      return !!FBDATA.systems[id].tenure && FB.systemEnabled(state, id);
+    });
+  };
+  S.estateTenureDefinition = function (ids) {
+    var id = (ids || S.ids()).find(function (id) {
+      var def = FBDATA.systems[id];
+      return def && def.tenure && def.tenure.estatePossessor;
+    });
+    return id ? FBDATA.systems[id] : null;
+  };
+  FB.colonateRules = function () {
+    var def = S.estateTenureDefinition();
+    return def && def.tenure;
+  };
+  FB.colonateEnabled = function (state) {
+    var def = S.estateTenureDefinition();
+    return !!def && FB.systemEnabled(state, def.id);
+  };
+  FB.colonateReleaseRoute = function (route) {
+    var rules = FB.colonateRules();
+    return rules && rules.releaseRoutes.find(function (row) { return row.id === route; });
+  };
+  FB.colonateReviewDeed = function () {
+    var rules = FB.colonateRules();
+    return rules && FBDATA.deeds.find(function (row) { return row.id === rules.reviewDeedId; });
+  };
+  S.ordinationEnabled = function (state) {
+    return S.ids().some(function (id) {
+      return FBDATA.systems[id].providesOrdination && FB.systemEnabled(state, id);
+    });
   };
   S.known = known;
 
@@ -170,6 +201,26 @@ window.FB = window.FB || {};
           typeof def.defaultEnabled !== 'boolean' || typeof def.desc !== 'string' ||
           !Array.isArray(def.modules) || !def.modules.length) {
         errors.push(FB.T('Invalid system definition {id}.', { id:id }));
+        continue;
+      }
+      var tenure = def.tenure;
+      if (def.providesOrdination !== undefined && typeof def.providesOrdination !== 'boolean' ||
+          tenure !== undefined && (!plain(tenure) ||
+            tenure.estatePossessor !== undefined && typeof tenure.estatePossessor !== 'boolean')) {
+        errors.push(FB.T('Invalid tenure system definition {id}.', { id:id }));
+        continue;
+      }
+      if (tenure && tenure.estatePossessor) {
+        var routes = tenure.releaseRoutes;
+        if (tenure.estatePossessor !== true ||
+            !FBDATA.deeds.some(function (row) { return row.id === tenure.reviewDeedId; }) ||
+            !Array.isArray(tenure.blockedCareerRoles) || tenure.blockedCareerRoles.some(function (role) { return !own(FB.CAREER_ROLES, role); }) ||
+            !Array.isArray(routes) || !routes.length || routes.some(function (row, index) {
+              return !plain(row) || !text(row.id) || routes.some(function (other, j) { return j < index && other.id === row.id; }) ||
+                (row.eventId !== undefined ? !text(row.eventId) || !!row.careerId || !!row.careerRank ||
+                  !FBDATA.events.some(function (event) { return event.id === row.eventId; })
+                : !FBDATA.careers[row.careerId] || !text(row.careerRank));
+            })) errors.push(FB.T('Invalid estate release definition {id}.', { id:id }));
       }
     }
     return errors;

@@ -2,8 +2,9 @@
    conquered county must win its ordinary revolt before a court is founded. */
 (function () {
   'use strict';
-  function plain(row) { return !!row && typeof row === 'object' && !Array.isArray(row); }
-  function id(value) { return typeof value === 'string' && /^[a-z][a-z0-9_]*$/.test(value); }
+  var V = FB.stories.tokens;
+  function plain(row) { return !!row && typeof row === V.object && !Array.isArray(row); }
+  function id(value) { return typeof value === V.string && /^[a-z][a-z0-9_]*$/.test(value); }
   function fresh() {
     return { phase:'pending', result:null, reason:null, outcomeTurn:null,
       startedTurn:null, deadline:null, rebellionId:null, formerOwnerId:null,
@@ -19,8 +20,8 @@
   }
   function protectedCounty(s, pid) {
     var holder = s.holder[pid];
-    return s.owner[pid] === 'player' || holder === 'player' ||
-      FB.liegeChain(s, holder).indexOf('player') >= 0;
+    return s.owner[pid] === V.player || holder === V.player ||
+      FB.liegeChain(s, holder).indexOf(V.player) >= 0;
   }
   function collapse(s, def) {
     return includes(s, def.collapse.ownerIds, s.owner[def.collapse.provinceId]) &&
@@ -39,30 +40,30 @@
     var realm = FB.foundPolity(s, def.realm, counties, formerOwnerId);
     if (!realm) return null;
     rec.realmId = realm.id;
-    var ruler = FB.realmRulerCharacterSnapshot(s, realm.id);
+    var ruler = FB.stories.ruler(s, realm.id);
     rec.founderId = ruler && ruler.id || null;
     rec.founderMemberId = realm.succession.rulerMemberId;
     rec.formerOwnerId = formerOwnerId; rec.counties = counties.slice();
-    finish(s, rec, def, 'founded', reason);
+    finish(s, rec, def, V.founded, reason);
     return realm;
   }
   function day(s, rec, def) {
     if (rec.phase === 'resolved' || s.date.year < def.firstYear) return;
     var pid = def.realm.capital, owner = s.owner[pid];
-    if (s.realms[def.realm.id]) { finish(s, rec, def, 'diverted', 'realm_exists'); return; }
-    if (protectedCounty(s, pid)) { finish(s, rec, def, 'diverted', 'player_control'); return; }
+    if (s.realms[def.realm.id]) { finish(s, rec, def, V.diverted, 'realm_exists'); return; }
+    if (protectedCounty(s, pid)) { finish(s, rec, def, V.diverted, 'player_control'); return; }
     if (rec.phase === 'rebelling') {
       var group = FB.rebellionById(s, rec.rebellionId);
-      if (!group || !group.counties[pid]) { finish(s, rec, def, 'failed', 'revolt_ended'); return; }
+      if (!group || !group.counties[pid]) { finish(s, rec, def, V.failed, 'revolt_ended'); return; }
       if (owner !== rec.formerOwnerId || group.target !== rec.formerOwnerId || !collapse(s, def) || !community(s, def)) {
-        finish(s, rec, def, 'diverted', 'conditions_changed'); return;
+        finish(s, rec, def, V.diverted, 'conditions_changed'); return;
       }
-      if (s.turn >= rec.deadline) finish(s, rec, def, 'failed', 'revolt_timeout');
+      if (s.turn >= rec.deadline) finish(s, rec, def, V.failed, 'revolt_timeout');
       return;
     }
-    if (closed(s, def)) { finish(s, rec, def, 'diverted', 'window_closed'); return; }
+    if (closed(s, def)) { finish(s, rec, def, V.diverted, 'window_closed'); return; }
     if (!includes(s, def.remnantRealmIds, owner) && !includes(s, def.revoltRealmIds, owner)) {
-      finish(s, rec, def, 'diverted', 'local_control_changed'); return;
+      finish(s, rec, def, V.diverted, 'local_control_changed'); return;
     }
     /* A delayed conquest may still open the foundation inside its window.
        Neither a surviving former seat nor a healthy conquered county is forced. */
@@ -97,7 +98,7 @@
   function validateDefinition(def) {
     function ids(rows) { return Array.isArray(rows) && rows.length && rows.every(id); }
     var realm = def.realm, loss = def.collapse, faith = def.community;
-    if (typeof def.name !== 'string' || typeof def.desc !== 'string' ||
+    if (typeof def.name !== V.string || typeof def.desc !== V.string ||
         !Number.isInteger(def.firstYear) || !Number.isInteger(def.lastYear) || def.lastYear < def.firstYear ||
         !Number.isInteger(def.durationDays) || def.durationDays <= 0 ||
         !plain(loss) || !id(loss.provinceId) || !id(loss.formerRealmId) || !ids(loss.ownerIds) ||
@@ -106,31 +107,31 @@
         def.remnantRealmIds.some(function (rid) { return def.revoltRealmIds.indexOf(rid) >= 0; }) ||
         !plain(faith) || !FBDATA.religions[faith.faithId] ||
         !Number.isFinite(faith.minimumShare) || faith.minimumShare <= 0 || faith.minimumShare > 1 ||
-        !plain(realm) || !id(realm.id) || realm.id === 'player' || !id(realm.capital) ||
-        realm.capital === loss.provinceId || typeof realm.name !== 'string' || !realm.name ||
+        !plain(realm) || !id(realm.id) || realm.id === V.player || !id(realm.capital) ||
+        realm.capital === loss.provinceId || typeof realm.name !== V.string || !realm.name ||
         !/^#[a-f0-9]{6}$/i.test(realm.color) || [1,2,3,4].indexOf(realm.rank) < 0 ||
         !Number.isFinite(realm.aggression) || realm.aggression < 0 ||
         !FBDATA.governmentForms[realm.government] || !FBDATA.religions[realm.religion] ||
-        !plain(realm.ruler) || typeof realm.ruler.name !== 'string' || !realm.ruler.name ||
+        !plain(realm.ruler) || typeof realm.ruler.name !== V.string || !realm.ruler.name ||
         ['m','f'].indexOf(realm.ruler.sex) < 0 || !FBDATA.cultures[realm.ruler.culture] ||
         !Number.isInteger(realm.ruler.born) || realm.ruler.born > def.firstYear - 16 ||
         !Number.isFinite(realm.ruler.mar) || FBDATA.rulerTraits.indexOf(realm.ruler.trait) < 0)
       throw new Error('Invalid polity foundation definition.');
     for (var event in def.news || {})
-      if (['founded','failed','diverted'].indexOf(event) < 0 || !plain(def.news[event]) ||
-          !/^news\.[a-z0-9_.-]+$/.test(def.news[event].key) || typeof def.news[event].text !== 'string')
+      if ([V.founded,V.failed,V.diverted].indexOf(event) < 0 || !plain(def.news[event]) ||
+          !/^news\.[a-z0-9_.-]+$/.test(def.news[event].key) || typeof def.news[event].text !== V.string)
         throw new Error('Invalid polity foundation message.');
   }
   function validate(rec, s, def) {
     function bad(field) { throw new Error(FB.T('Invalid v4 save field at {path}.',
       { path:'state.stories.' + def.id + '.' + field })); }
-    if (!plain(rec) || ['pending','rebelling','resolved'].indexOf(rec.phase) < 0) bad('phase');
-    if (rec.phase === 'resolved' ? ['founded','failed','diverted'].indexOf(rec.result) < 0 : rec.result !== null) bad('result');
+    if (!plain(rec) || ['pending','rebelling','resolved'].indexOf(rec.phase) < 0) bad(V.phase);
+    if (rec.phase === 'resolved' ? [V.founded,V.failed,V.diverted].indexOf(rec.result) < 0 : rec.result !== null) bad(V.result);
     for (var key of ['startedTurn','deadline','outcomeTurn'])
       if (rec[key] !== null && (!Number.isInteger(rec[key]) || rec[key] < 0 ||
           key !== 'deadline' && rec[key] > s.turn)) bad(key);
-    for (var field of ['reason','rebellionId','formerOwnerId','realmId','founderId','founderMemberId'])
-      if (rec[field] !== null && (typeof rec[field] !== 'string' || !rec[field])) bad(field);
+    for (var field of [V.reason,'rebellionId','formerOwnerId','realmId','founderId','founderMemberId'])
+      if (rec[field] !== null && (typeof rec[field] !== V.string || !rec[field])) bad(field);
     if (rec.phase === 'resolved' ? rec.outcomeTurn === null || rec.reason === null :
         rec.outcomeTurn !== null || rec.reason !== null) bad('outcomeTurn');
     if (rec.phase === 'rebelling' && (!rec.rebellionId || !rec.formerOwnerId || rec.startedTurn === null || rec.deadline === null)) bad('rebellionId');
@@ -141,8 +142,8 @@
     var provinceIds = bookmark && bookmark.provinces.map(function (p) { return p.id; }) || [];
     if (!Array.isArray(rec.counties) || rec.counties.length > provinceIds.length || rec.counties.some(function (pid, i) {
       return provinceIds.indexOf(pid) < 0 || rec.counties.indexOf(pid) !== i;
-    })) bad('counties');
-    if (rec.result === 'founded') {
+    })) bad(V.counties);
+    if (rec.result === V.founded) {
       if (rec.realmId !== def.realm.id || !s.realms[rec.realmId]) bad('realmId');
       var realm = s.realms[rec.realmId], members = realm.succession && realm.succession.members;
       /* Ordinary royal mortality may compact the full founder character.
@@ -150,17 +151,17 @@
       if (!rec.founderId || !rec.founderMemberId || !members || !members[rec.founderMemberId]) bad('founderId');
       var founder = members[rec.founderMemberId];
       if (founder.charId && founder.charId !== rec.founderId) bad('founderId');
-      if (!rec.formerOwnerId || rec.counties.indexOf(def.realm.capital) < 0) bad('counties');
+      if (!rec.formerOwnerId || rec.counties.indexOf(def.realm.capital) < 0) bad(V.counties);
     } else if (rec.realmId !== null || rec.founderId !== null || rec.founderMemberId !== null || rec.counties.length) bad('realmId');
   }
-  FB.stories.registerType('polity_foundation', function (def) {
+  FB.stories.registerType(V.polity_foundation, function (def) {
     validateDefinition(def);
     for (var event in def.news || {}) {
       var msg = def.news[event]; FB.registerMessage(msg.key, { text:msg.text });
     }
-    return { id:def.id, kind:'world', requires:def.requires || [], init:fresh,
-      day:function (s, rec) { day(s, rec, def); },
-      foundRevolt:function (s, rec, group, counties) { return foundRevolt(s, rec, def, group, counties); },
+    return { id:def.id, kind:V.world, requires:def.requires || [], init:fresh,
+      day:function (s, rec) { day(s, rec, FB.stories.definition(s, def)); },
+      foundRevolt:function (s, rec, group, counties) { return foundRevolt(s, rec, FB.stories.definition(s, def), group, counties); },
       migrate:function (s) {
         var bookmark = FB.bookmark(s.start && s.start.id);
         if (!bookmark || (bookmark.stories || []).indexOf(def.id) < 0 || s.stories && s.stories[def.id]) return;
@@ -168,9 +169,9 @@
         /* Add only semantic pending state, never people or territorial effects. */
         s.stories[def.id] = fresh();
       },
-      validate:function (rec, s) { validate(rec, s, def); },
-      title:function (s) { return FB.dataText(s, null, 'storyFoundation', def.id, def, 'name', {}); },
-      intro:function (s) { return FB.dataText(s, null, 'storyFoundation', def.id, def, 'desc', {}); },
+      validate:function (rec, s) { validate(rec, s, FB.stories.definition(s, def)); },
+      title:function (s) { return FB.dataText(s, null, 'storyFoundation', def.id, def, V.name, {}); },
+      intro:function (s) { return FB.dataText(s, null, 'storyFoundation', def.id, def, V.desc, {}); },
       status:function (s, rec) {
         if (rec.phase === 'pending' && s.date.year < def.firstYear) return null;
         var names = { pending:FB.T('Awaiting a local opening'), rebelling:FB.T('Local revolt underway'),
@@ -179,6 +180,5 @@
         return { phase:rec.phase, name:names[rec.result || rec.phase],
           lines:[FB.T('A conquered county must earn independence through its local uprising.')] };
       } };
-  });
-  for (var foundationId in FBDATA.storyFoundations || {}) FB.stories.registerData(FBDATA.storyFoundations[foundationId]);
+  }, 'js/story_polity_foundation.js', validateDefinition);
 })();

@@ -3,6 +3,8 @@ const fs = require('fs');
 const path = require('path');
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
+  'data/story_instances.js',
+  'data/story_courts_476.js',
   'index.html', 'data/bookmark_476.js',
   'data/bookmark_476_italy.js', 'data/bookmark_476_dalmatia_east.js',
   'data/bookmark_476_gaul_iberia.js', 'data/bookmark_476_africa.js',
@@ -10,7 +12,7 @@ dependsOnRuntime(__filename, [
   'data/climate.js', 'data/settlements.js', 'data/settlements_real.js',
   'data/eras.js', 'data/lexicons.js', 'js/world.js', 'js/title_ids.js',
   'js/climate.js', 'js/governments.js', 'js/lexicon.js', 'js/main.js',
-  'js/stories.js', 'js/story_western_court_476.js', 'js/authority.js',
+  'js/stories.js', 'js/story_courts.js', 'js/authority.js',
   'js/armies.js', 'js/wars.js', 'js/save.js', 'js/save_v4.js'
 ]);
 const { test, expect } = require('../support/fixture');

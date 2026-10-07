@@ -1,17 +1,18 @@
 'use strict';
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
-  'index.html', 'js/starts.js', 'js/story_nepos_track_476.js', 'js/stories.js', 'js/story_campaign.js', 'js/story_476_rails.js',
+  'data/story_courts_476.js',
+  'index.html', 'js/starts.js', 'js/story_track.js', 'js/stories.js', 'js/story_campaign.js', 'data/story_instances.js',
   'js/bookmark_setup.js', 'js/story_agreements.js',
-  'data/story_campaigns.js', 'data/story_campaigns_711.js', 'js/story_western_court_476.js',
+  'data/story_campaigns.js', 'data/story_campaigns_711.js', 'js/story_courts.js',
   'data/bookmark_493.js', 'data/bookmark_493_history.js',
   'data/bookmark_1204_campaigns.js', 'js/story_history.js',
   'js/story_polity_foundation.js', 'js/rebellions.js',
-  'js/story_federate_track_476.js', 'js/main.js', 'js/save.js', 'js/save_v4.js',
+   'js/main.js', 'js/save.js', 'js/save_v4.js',
   'js/i18n.js', 'js/ui_panels.js', 'js/world.js',
   'data/starts.js', 'data/bookmarks.js', 'data/bookmark_476.js',
   'data/bookmark_476_italy.js', 'data/bookmark_476_dalmatia_east.js',
-  'data/bookmark_476_gaul_iberia.js', 'data/bookmark_476_africa.js', 'data/eras.js',
+  'data/bookmark_476_gaul_iberia.js', 'data/bookmark_476_africa.js', 'data/eras.js', 'data/political_institutions.js',
   'data/actions.js', 'js/actions.js', 'js/systems.js'
 ]);
 const { test, expect } = require('../support/fixture');
@@ -38,7 +39,9 @@ async function begin(page, testInfo, code) {
 
 const WORLD_STORIES = ['western_court_476','zeno_return_476','clovis_syagrius_476',
   'theoderic_italy_476','eastern_africa_476','eastern_italy_476','western_office_476','rugian_frontier_476',
-  'sicilian_tribute_476','norican_evacuation_476','clovis_alamanni_476'];
+  'sicilian_tribute_476','norican_evacuation_476','thracian_pressure_476','amal_epirus_476',
+  'clovis_alamanni_476','suevic_frontier_476','cantabrian_campaign_476',
+  'vasconian_campaign_476','gallaecian_campaign_476'];
 
 const CODE_476 = 'STORIES-476-federate_476-ravenna-m-Marcus-standard-0-gothic.homoian';
 
@@ -119,6 +122,8 @@ test('a branch save holding state.situation476 migrates once into both story rec
           copy.state.stories.federate_track_476, overrides || {});
         delete copy.state.situation476.railsSchema;
         delete copy.state.stories;
+        // This legacy format predates opening records and their story references.
+        delete copy.state.bookmarkSetup;
         return copy;
       }
       const legacy = legacyOf(source);
@@ -144,6 +149,7 @@ test('a branch save holding state.situation476 migrates once into both story rec
         }) && Object.keys(once.state.stories.western_court_476).length === Object.keys(world).length,
         track:JSON.stringify(once.state.stories.federate_track_476) === JSON.stringify(track),
         dropped:!own(once.state, 'situation476'),
+        noOpening:!own(live, 'bookmarkSetup'),
         idempotent:JSON.stringify(once) === JSON.stringify(twice),
         restored:!own(live, 'situation476') && FB.stories.attached(live).join(','),
         phase:live.stories.federate_track_476.phase,
@@ -157,8 +163,10 @@ test('a branch save holding state.situation476 migrates once into both story rec
       };
     });
     expect(result).toEqual({
-      immutable:true, world:true, track:true, dropped:true, idempotent:true,
-      restored:WORLD_STORIES.filter(function (id) { return !['rugian_frontier_476','sicilian_tribute_476','norican_evacuation_476','clovis_alamanni_476'].includes(id); })
+      immutable:true, world:true, track:true, dropped:true, noOpening:true, idempotent:true,
+      restored:WORLD_STORIES.filter(function (id) { return !['rugian_frontier_476','sicilian_tribute_476','norican_evacuation_476',
+        'thracian_pressure_476','amal_epirus_476','clovis_alamanni_476','suevic_frontier_476',
+        'cantabrian_campaign_476','vasconian_campaign_476','gallaecian_campaign_476'].includes(id); })
         .concat(['federate_track_476']).join(','), phase:'delegate',
       outsideTrack:['declined', 'outside', false],
       outsideWorld:['federate-9', 'recognition-8', 'recognition-7', 'negotiated'],

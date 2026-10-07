@@ -265,7 +265,7 @@ window.FB = window.FB || {};
     const def = FBDATA.careers[profession];
     if (!c || !def) return false;
     if (c.id === state.player.charId && FB.colonateTenure && FB.colonateTenure(state) &&
-        FB.professionHasRole(profession, ['arms','clergy','cloister'])) return false;
+        FB.professionHasRole(profession, FB.colonateRules().blockedCareerRoles)) return false;
     if (!FB.contentPeriodEnabled(state, def)) return false;
     if (def.bookmarkIds && def.bookmarkIds.indexOf(
         state.start && state.start.id) < 0) return false;
@@ -769,7 +769,7 @@ window.FB = window.FB || {};
     for (const id in FBDATA.careers) {
       const def = FBDATA.careers[id];
       if (c.id === state.player.charId && FB.colonateTenure && FB.colonateTenure(state) &&
-          FB.professionHasRole(id, ['arms','clergy','cloister'])) continue;
+          FB.professionHasRole(id, FB.colonateRules().blockedCareerRoles)) continue;
       if (def.hiddenChoice || !FB.contentPeriodEnabled(state, def)) continue;
       if (def.bookmarkIds && def.bookmarkIds.indexOf(
           state.start && state.start.id) < 0) continue;

@@ -1110,3 +1110,7 @@ The dalmatia_east_476 pack now has sixteen late_antique events. Its eight additi
 Wider spring-476 households
 
 The outer_476 pack declares late_antique membership and years 476-649. Eight events in data/bookmark_476_outer.js cover British boundary and landing disputes, northern iron exchange and compensation, eastern congregational relief, frontier receipts, shared water-channel work and multilingual accounts. Explicit countyIds and live community/career requirements constrain local eligibility. Costs use goldMin and existing money tokens; outcomes reuse ordinary household skills, piety, prestige and county Popular support. No event creates a realm, converts a community or transfers land. Source grouping introduces no new trigger or effect key.
+
+Estate release selectors
+
+Registered estate-tenure system data owns the blocked career roles, release career and rank, and flight event id. The event registry resolves that id for queueing, context validation and once-only flight completion. Release quotes include the declared career, rank and event so a changed declaration cannot reuse an earlier review. The existing freedom-route enums, skills, family coverage and saved tenure records retain their meanings; this internal refactor adds no technology gate.

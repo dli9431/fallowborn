@@ -6551,7 +6551,12 @@ window.FB = window.FB || {};
   FB.colonateTenure = function (state) {
     const tenure = FB.activeSerfTenure(state);
     const arch = tenure && FBDATA.tenureArchetypes[tenure.archetypeId];
-    return arch && (arch.systems || []).indexOf('colonate') >= 0 ? tenure : null;
+    return arch && FB.systems.estateTenureDefinition(arch.systems || []) ? tenure : null;
+  };
+  FB.colonateFlightEvent = function () {
+    const rules = FB.colonateRules();
+    const route = rules && rules.releaseRoutes.find(function (row) { return row.eventId; });
+    return route && FB.eventById(route.eventId);
   };
   FB.colonatePossessor = function (state) {
     const tenure = FB.colonateTenure(state);
@@ -6575,7 +6580,7 @@ window.FB = window.FB || {};
   FB.validateColonateTenure = function (state) {
     const tenure = state.player && state.player.tenure;
     const arch = tenure && FBDATA.tenureArchetypes[tenure.archetypeId];
-    if (!arch || (arch.systems || []).indexOf('colonate') < 0) return true;
+    if (!arch || !FB.systems.estateTenureDefinition(arch.systems || [])) return true;
     if (tenure.version !== 1 || ['active','closed'].indexOf(tenure.status) < 0 ||
         typeof tenure.landownerId !== 'string' || !state.chars[tenure.landownerId] ||
         tenure.landownerId === state.player.charId ||
@@ -6609,7 +6614,7 @@ window.FB = window.FB || {};
     for (const id of Object.keys(defs)) {
       const def = defs[id];
       if (def.provinceId !== state.player.provinceId || !def.officeId ||
-          !FB.systemEnabled(state, 'episcopal_sees')) continue;
+          !FB.systems.ordinationEnabled(state)) continue;
       const bishop = FB.religiousOfficeSnapshot(state, def.officeId);
       if (bishop && !bishop.dead && bishop.religion === me.religion) return bishop;
     }
@@ -6617,12 +6622,13 @@ window.FB = window.FB || {};
   }
   FB.colonateReleaseStatus = function (state, route) {
     const out = { ready:false, reason:'', route:route, quote:null, owner:null };
+    const routeDef = FB.colonateReleaseRoute(route);
     const tenure = FB.colonateTenure(state);
     const p = state && state.player, me = p && state.chars[p.charId];
     const owner = tenure && FB.colonatePossessor(state);
     out.owner = owner;
     if (!tenure || !me || me.dead || p.dead) out.reason = FB.T('No living bound estate household can take this route.');
-    else if (['military_service','ordination','flight'].indexOf(route) < 0) out.reason = FB.T('Unknown release route.');
+    else if (!routeDef) out.reason = FB.T('Unknown release route.');
     else if (p.travel || p.provinceId !== tenure.provinceId ||
         (p.homeSettlement || 0) !== tenure.settlement) out.reason = FB.T('Return to the registered estate home.');
     else if (FB.ageOf(me, state.date.year) < 16) out.reason = FB.T('This route requires an adult.');
@@ -6630,22 +6636,23 @@ window.FB = window.FB || {};
     else if (p.freedomOffer && p.freedomOffer.status === 'service') out.reason = FB.T('Complete the agreed final service first.');
     else if (!owner) out.reason = FB.T('No living possessor can receive this decision.');
     else if (route === 'flight' && ((p.flags.colonus_flight_until || 0) > state.turn ||
-        (state.eventQueue || []).some(function (e) { return e.id === 'colonus_flight'; }))) out.reason = FB.T('Another flight cannot be attempted yet.');
+        (state.eventQueue || []).some(function (e) { return e.id === FB.colonateFlightEvent().id; }))) out.reason = FB.T('Another flight cannot be attempted yet.');
     else if (route !== 'flight' && FB.standingOf(state, { kind:'character', id:owner.id }) < 20) out.reason = FB.T('Requires +20 Standing with the possessor for consent.');
     else if (route === 'military_service' && (me.sex !== 'm' || FB.stat(me, 'mar') < 4)) out.reason = FB.T('Military service requires a man with Martial 4.');
     else if (route === 'ordination' && (me.sex !== 'm' || p.piety < 25 || FB.stat(me, 'lea') < 3)) out.reason = FB.T('Ordination requires a man with Learning 3 and 25 piety.');
     const church = tenure && route === 'ordination' ? colonateChurch(state) : null;
     if (!out.reason && route === 'ordination' && !church) out.reason = FB.T('Requires a living local bishop of your faith.');
-    const profession = route === 'military_service' ? 'soldier' : route === 'ordination' ? 'priest' : null;
+    const profession = routeDef && routeDef.careerId || null;
     const career = profession && FBDATA.careers[profession];
-    if (!out.reason && career && (!FB.contentPeriodEnabled(state, career) || !FB.systemContentEnabled(state, career))) out.reason = FB.T('That service career is unavailable.');
+    if (!out.reason && profession && (!career || !FB.contentPeriodEnabled(state, career) || !FB.systemContentEnabled(state, career))) out.reason = FB.T('That service career is unavailable.');
     if (!out.reason && career && career.requiresTech && !FB.techRequirementMet(state, career.requiresTech)) out.reason = FB.T('Service training requires {technology}.', { technology:FB.dataParam('tech', career.requiresTech) });
     if (out.reason) return out;
     out.ready = true;
     out.profession = profession;
     out.quote = JSON.stringify([route, p.charId, tenure.archetypeId, tenure.formedTurn,
       tenure.revision, tenure.provinceId, tenure.settlement, owner.id,
-      church && church.id, FB.freedomCoveredCharacterIds(state, []).slice().sort()]);
+      church && church.id, profession, routeDef.careerRank || null, routeDef.eventId || null,
+      FB.freedomCoveredCharacterIds(state, []).slice().sort()]);
     return out;
   };
   FB.resolveColonateRelease = function (state, route, quote) {
@@ -6653,7 +6660,7 @@ window.FB = window.FB || {};
     if (!status.ready || status.quote !== quote) return false;
     if (route === 'flight') {
       const tenure = FB.colonateTenure(state);
-      const queued = FB.queueEvent(state, 'colonus_flight', {
+      const queued = FB.queueEvent(state, FB.colonateFlightEvent().id, {
         participants:{ possessor:status.owner.id }, protagonistId:state.player.charId,
         locationId:tenure.provinceId, tenureFormedTurn:tenure.formedTurn,
         tenureRevision:tenure.revision, archetypeId:tenure.archetypeId,
@@ -6665,7 +6672,7 @@ window.FB = window.FB || {};
     }
     const result = FB.resolveSerfFreedom(state, { route:route, quote:quote });
     if (!result) return false;
-    FB.setCareer(state, state.chars[state.player.charId], status.profession, 'journeyman');
+    FB.setCareer(state, state.chars[state.player.charId], status.profession, FB.colonateReleaseRoute(route).careerRank);
     return result;
   };
   FB.fns = FB.fns || {};
@@ -6815,7 +6822,7 @@ window.FB = window.FB || {};
     };
 
     p.tenure = tenure;
-    if ((archDef.systems || []).indexOf('colonate') >= 0) FB.ensureColonatePossessor(state);
+    if (FB.systems.estateTenureDefinition(archDef.systems || [])) FB.ensureColonatePossessor(state);
     FB.refreshSerfTenureDueCache(state, tenure);
     normalizeSerfTenure(state, tenure);
     return tenure;
@@ -8307,7 +8314,7 @@ window.FB = window.FB || {};
       return FB.T('{protagonist} received the possessor’s consent for ordination at {home} in {year}.', { protagonist:protagonist, home:home, year:entry.year });
     }
     if (entry.route === 'flight') {
-      if (FB.systemEnabled(state, 'colonate')) return FB.T(
+      if (FB.colonateEnabled(state)) return FB.T(
         '{protagonist} fled estate dependency from {home} in {year}; no lawful charter was granted.', {
           protagonist:protagonist, home:home, year:entry.year
         });
@@ -8495,7 +8502,7 @@ window.FB = window.FB || {};
       if (!lord) { out.reason = 'missing_lord'; return out; }
     } else if (route === 'flight') {
       if (!ctx.event || (ctx.event.id !== 'flee_serfdom' &&
-          (ctx.event.id !== 'colonus_flight' || !FB.fns.colonus_flight_valid(state, ctx)))) {
+          (ctx.event.id !== FB.colonateFlightEvent().id || !FB.fns.colonus_flight_valid(state, ctx)))) {
         out.reason = 'flight_context'; return out;
       }
       lord = null;
@@ -8590,7 +8597,7 @@ window.FB = window.FB || {};
         '📜 {protagonist} received {lord}’s consent for ordination at {home}.', {
           protagonist:protagonist, lord:lord, home:home
         });
-    } else if (FB.systemEnabled(state, 'colonate')) {
+    } else if (FB.colonateEnabled(state)) {
       message = FB.msg('news.freedom.colonate_flight',
         '🏃 {protagonist} fled estate dependency from {home}; no lawful charter was granted.', {
           protagonist:protagonist, home:home
@@ -12354,7 +12361,7 @@ window.FB = window.FB || {};
     }
 
     /* Advance tenure duties after accepted effects, with tenure-closing effects winning over advancement. */
-    if (ev && ev.id === 'colonus_flight') {
+    if (ev && ev.id === FB.colonateFlightEvent().id) {
       state.player.flags.colonus_flight_resolved_turn = ctx.flightAttemptTurn;
     }
     if (ctx && ctx.dutyId) {

@@ -66,6 +66,75 @@ for (const site of [
     });
 }
 
+test('tenure behavior, career targets, flight events and review deeds resolve from data',
+  async function ({ page }, testInfo) {
+    await start(page, testInfo);
+    const result = await page.evaluate(function () {
+      const s = FB.state, me = s.chars[s.player.charId], owner = FB.colonatePossessor(s);
+      const rules = FB.colonateRules(), military = FB.colonateReleaseRoute('military_service');
+      const flight = FB.colonateReleaseRoute('flight'), system = FBDATA.systems.colonate;
+      const sees = FBDATA.systems.episcopal_sees;
+      sees.providesOrdination = false;
+      const ordinationBlocked = !FB.systems.ordinationEnabled(s);
+      sees.providesOrdination = true;
+      const ordinationEnabled = !!FB.systems.ordinationEnabled(s);
+      // A differently named system retains the declared tenure behavior.
+      FBDATA.systems.fixture_estate = Object.assign({}, system, { id:'fixture_estate', defaultEnabled:true });
+      delete FBDATA.systems.colonate;
+      FBDATA.tenureArchetypes[s.player.tenure.archetypeId].systems = ['fixture_estate'];
+      const enabled = FB.tenureEnabled(s) && FB.colonateTenure(s) === s.player.tenure;
+      rules.reviewDeedId = 'review_serf_tenure';
+      const deed = FB.colonateReviewDeed().id;
+      flight.eventId = 'flee_serfdom';
+      const event = FB.colonateFlightEvent().id;
+      const stillBlocked = !FB.setCareer(s, me, 'priest');
+      rules.blockedCareerRoles = [];
+      const permitted = FB.setCareer(s, me, 'priest');
+      // Restore the bound household's career before reviewing release.
+      FB.setCareer(s, me, 'colonus');
+      FB.adjustStanding(s, { kind:'character', id:owner.id }, 50, 'fixture:consent');
+      me.skills.mar = 8;
+      military.careerId = 'craftsman'; military.careerRank = 'apprentice';
+      const oldQuote = FB.colonateReleaseStatus(s, military.id).quote;
+      military.careerRank = 'master';
+      const before = JSON.stringify(s), rng = FB.getRngState();
+      const stale = !FB.resolveColonateRelease(s, military.id, oldQuote) &&
+        before === JSON.stringify(s) && rng === FB.getRngState();
+      const quote = FB.colonateReleaseStatus(s, military.id);
+      const released = !!FB.resolveColonateRelease(s, military.id, quote.quote);
+      return { enabled:!!enabled, deed:deed, event:event, stillBlocked:stillBlocked, permitted:permitted,
+        ordinationBlocked:ordinationBlocked, ordinationEnabled:ordinationEnabled,
+        stale:stale, released:released, career:me.career.profession, rank:me.career.rank };
+    });
+    expect(result).toEqual({ enabled:true, deed:'review_serf_tenure', event:'flee_serfdom',
+      stillBlocked:true, permitted:true, ordinationBlocked:true, ordinationEnabled:true,
+      stale:true, released:true, career:'craftsman', rank:'master' });
+  });
+
+test('tenure declarations reject unknown careers, roles, deeds and flight events',
+  async function ({ page }, testInfo) {
+    await start(page, testInfo);
+    const result = await page.evaluate(function () {
+      const def = FBDATA.systems.colonate, original = JSON.parse(JSON.stringify(def.tenure));
+      const edits = [
+        function (t) { t.reviewDeedId = 'unknown'; },
+        function (t) { t.blockedCareerRoles = ['unknown']; },
+        function (t) { t.releaseRoutes[0].careerId = 'unknown'; },
+        function (t) { t.releaseRoutes[0].careerRank = ''; },
+        function (t) { t.releaseRoutes[2].eventId = 'unknown'; },
+        function (t) { t.releaseRoutes.push(t.releaseRoutes[0]); },
+        function (t) { t.estatePossessor = 'invalid'; }
+      ];
+      const rejected = edits.map(function (edit) {
+        def.tenure = JSON.parse(JSON.stringify(original)); edit(def.tenure);
+        return FB.systems.validate().length > 0;
+      });
+      def.tenure = original;
+      return { rejected:rejected, valid:FB.systems.validate() };
+    });
+    expect(result).toEqual({ rejected:[true,true,true,true,true,true,true], valid:[] });
+  });
+
 test('estate duties use saved dates, charge once, and retain the possessor across county transfers',
   async function ({ page }, testInfo) {
     await start(page, testInfo);

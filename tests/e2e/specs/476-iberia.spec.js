@@ -1,14 +1,15 @@
 'use strict';
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
+  'data/story_courts_476.js',
   'index.html','data/bookmarks.js','data/bookmark_476.js','data/bookmark_476_gaul_iberia.js',
-  'data/bookmark_476_italy.js','data/cultures.js','data/intrigue.js','data/settlements.js',
+  'data/bookmark_476_italy.js','data/bookmark_476_dalmatia_east.js','data/cultures.js','data/intrigue.js','data/settlements.js',
   'data/geographies.js','data/eras.js','data/starts.js','data/technology.js','data/systems.js',
   'data/political_institutions.js','data/story_campaigns.js','data/distribution_crazygames.js',
   'js/world.js','js/model.js','js/authority.js','js/governments.js','js/politics.js',
   'js/justice.js','js/institutions.js','js/religion.js','js/population.js','js/settlement.js',
-  'js/stories.js','js/story_campaign.js','js/story_476_rails.js','js/story_western_court_476.js',
-  'js/story_curialis_track_476.js','js/bookmark_setup.js','js/events.js','js/wars.js',
+  'js/stories.js','js/story_campaign.js','data/story_instances.js','js/story_courts.js',
+  'js/story_track.js','js/bookmark_setup.js','js/events.js','js/wars.js',
   'js/armies.js','js/treasury.js','js/save.js','js/save_v4.js','js/main.js','js/technology.js',
   'js/starts.js','js/ui_modals.js','js/messages.js','js/i18n.js'
 ]);
@@ -209,55 +210,69 @@ for (const mode of ['early','third_party','capital_lost','defeat','succession','
   });
 }
 
-test('a campaign built from the previous 476 data restores its ownership, law and opening records',
-  async function ({ page },testInfo) {
-    await openGame(page,testInfo);
-    // Construct an old campaign with the exact public base-branch data deltas.
-    // This is a schema regression, not an owner-supplied historical save corpus.
-    await page.evaluate(function (before) {
-      const bm = FBDATA.bookmarks['476'];
-      window.iberiaCurrentDefinition = JSON.parse(JSON.stringify(bm));
-      bm.provinces = bm.provinces.map(function (p) {
-        return before.provinceOverrides.find(function (row) { return row.id === p.id; }) || p;
-      });
-      bm.realms = bm.realms.filter(function (r) { return before.realmIdsToOmit.indexOf(r.id) < 0; });
-      bm.realms.find(function (r) { return r.id === 'aquitaine'; }).governingIdentity.legalIdentityId = before.visigothicLegalIdentityId;
-      bm.stories = bm.stories.filter(function (id) { return before.storyIdsToOmit.indexOf(id) < 0; });
-      before.institutionIdsToOmit.forEach(function (id) { delete bm.localInstitutions[id]; });
-      FB.startProgression.noteTier(3);
-    },previous);
-    const full = page.locator('#btn-choose-beginning');
-    if (await full.isVisible()) await full.click();
-    else await page.getByRole('button',{ name:'New Game',exact:true }).click();
-    await page.locator('#btn-bm-seed').click();
-    await page.locator('#ng-seed').fill('IBERIALegacy-476-curialis_476-ravenna-m-Marcus-standard-0-roman.nicene');
-    await page.locator('#ng-seed').press('Enter');
-    await expect(page.locator('#chargen:not(.hidden)')).toBeVisible();
-    await page.getByRole('button',{ name:'Begin Your Story',exact:true }).click();
-    await page.getByRole('button',{ name:'Begin',exact:true }).click();
-    await expect(page.locator('#genmodal')).toHaveClass(/hidden/);
-    const result = await page.evaluate(function (before) {
-      FB.game.setPaused(true);
-      const saved = JSON.parse(FB.save.serialize());
-      const old = JSON.stringify([saved.state.owner,saved.state.holder,saved.state.population,saved.state.bookmarkSetup,
-        saved.state.authority.governments,saved.state.stories]);
-      FBDATA.bookmarks['476'] = window.iberiaCurrentDefinition;
-      FBDATA.localInstitutions = FBDATA.bookmarks['476'].localInstitutions;
-      FB.save.restore(saved);
-      const s = FB.state, modern = JSON.parse(FB.save.serialize());
-      const retained = old === JSON.stringify([modern.state.owner,modern.state.holder,modern.state.population,modern.state.bookmarkSetup,
-        modern.state.authority.governments,modern.state.stories]);
-      const institutions = JSON.stringify(s.localInstitutions), rng = FB.getRngState();
-      FB.save.restore(modern);
-      return { retained:retained,owner:FB.state.owner.alava,
-        oldLaw:FB.political.governingIdentity(FB.state,'aquitaine').legalIdentityId,
-        noNewRealms:before.realmIdsToOmit.every(function (id) { return !FB.state.realms[id]; }),
-        noNewRails:before.storyIdsToOmit.every(function (id) { return !FB.state.stories[id]; }),
-        stable:institutions === JSON.stringify(FB.state.localInstitutions) && rng === FB.getRngState(),
-        warnings:FB.save.lastRestoreWarnings.length,valid:FB.save.v4.validatePlatform(modern.state) };
-    },previous);
-    expect(result).toEqual({ retained:true,owner:'aquitaine',oldLaw:'gothic_custom',noNewRealms:true,noNewRails:true,stable:true,warnings:0,valid:true });
-  });
+for (const opening of [
+  { revision:previous.openingRevision, unversioned:true },
+  { revision:'balkans_v1', unversioned:false }
+]) {
+  test('previous Iberian data restores its ownership and law with the ' + (opening.unversioned ? 'unversioned ' : '') + opening.revision + ' opening',
+    async function ({ page },testInfo) {
+      await openGame(page,testInfo);
+      // Reconstruct public Iberian deltas with the retained core opening or the
+      // later Balkan opening. This covers both opening contracts independently.
+      // This is a schema regression, not an owner-supplied historical save corpus.
+      await page.evaluate(function (input) {
+        const before = input.before;
+        const bm = FBDATA.bookmarks['476'];
+        window.iberiaCurrentDefinition = JSON.parse(JSON.stringify(bm));
+        bm.openingRevision = input.opening.revision;
+        bm.opening = bm.openingRevisions[bm.openingRevision];
+        bm.provinces = bm.provinces.map(function (p) {
+          return before.provinceOverrides.find(function (row) { return row.id === p.id; }) || p;
+        });
+        bm.realms = bm.realms.filter(function (r) { return before.realmIdsToOmit.indexOf(r.id) < 0; });
+        bm.realms.find(function (r) { return r.id === 'aquitaine'; }).governingIdentity.legalIdentityId = before.visigothicLegalIdentityId;
+        bm.stories = bm.stories.filter(function (id) { return before.storyIdsToOmit.indexOf(id) < 0; });
+        before.institutionIdsToOmit.forEach(function (id) { delete bm.localInstitutions[id]; });
+        FB.startProgression.noteTier(3);
+      },{ before:previous, opening:opening });
+      const full = page.locator('#btn-choose-beginning');
+      if (await full.isVisible()) await full.click();
+      else await page.getByRole('button',{ name:'New Game',exact:true }).click();
+      await page.locator('#btn-bm-seed').click();
+      await page.locator('#ng-seed').fill('IBERIALegacy-476-curialis_476-ravenna-m-Marcus-standard-0-roman.nicene');
+      await page.locator('#ng-seed').press('Enter');
+      await expect(page.locator('#chargen:not(.hidden)')).toBeVisible();
+      await page.getByRole('button',{ name:'Begin Your Story',exact:true }).click();
+      await page.getByRole('button',{ name:'Begin',exact:true }).click();
+      await expect(page.locator('#genmodal')).toHaveClass(/hidden/);
+      const result = await page.evaluate(function (input) {
+        const before = input.before;
+        FB.game.setPaused(true);
+        const saved = JSON.parse(FB.save.serialize());
+        if (input.opening.unversioned) delete saved.state.bookmarkSetup.revision;
+        const old = JSON.stringify([saved.state.owner,saved.state.holder,saved.state.population,saved.state.bookmarkSetup,
+          saved.state.authority.governments,saved.state.stories]);
+        FBDATA.bookmarks['476'] = window.iberiaCurrentDefinition;
+        FBDATA.localInstitutions = FBDATA.bookmarks['476'].localInstitutions;
+        FB.save.restore(saved);
+        const s = FB.state, modern = JSON.parse(FB.save.serialize());
+        const retained = old === JSON.stringify([modern.state.owner,modern.state.holder,modern.state.population,modern.state.bookmarkSetup,
+          modern.state.authority.governments,modern.state.stories]);
+        const institutions = JSON.stringify(s.localInstitutions), rng = FB.getRngState();
+        FB.save.restore(modern);
+        return { retained:retained,owner:FB.state.owner.alava,
+          oldLaw:FB.political.governingIdentity(FB.state,'aquitaine').legalIdentityId,
+          noNewRealms:before.realmIdsToOmit.every(function (id) { return !FB.state.realms[id]; }),
+          noNewRails:before.storyIdsToOmit.every(function (id) { return !FB.state.stories[id]; }),
+          opening:FB.state.bookmarkSetup.revision || null,
+          castRetained:JSON.stringify(saved.state.bookmarkSetup.actors) === JSON.stringify(FB.state.bookmarkSetup.actors),
+          stable:institutions === JSON.stringify(FB.state.localInstitutions) && rng === FB.getRngState(),
+          warnings:FB.save.lastRestoreWarnings.length,valid:FB.save.v4.validatePlatform(modern.state) };
+      },{ before:previous, opening:opening });
+      expect(result).toEqual({ retained:true,owner:'aquitaine',oldLaw:'gothic_custom',noNewRealms:true,noNewRails:true,
+        opening:opening.unversioned ? null : opening.revision,castRetained:true,stable:true,warnings:0,valid:true });
+    });
+}
 
 test('one season in Iberia keeps conserved communities, valid courts and bounded campaigns through restore',
   async function ({ page },testInfo) {

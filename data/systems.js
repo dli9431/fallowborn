@@ -6,9 +6,15 @@ FBDATA.systems = {
   church_councils:{ id:'church_councils', desc:'Provincial gatherings of living bishops and protected congregations.', defaultEnabled:false, modules:['religion'] },
   ruler_conversion:{ id:'ruler_conversion', desc:'Public ruler conversion with court, church and community consequences.', defaultEnabled:false, modules:['religion','actions'] },
   civic_institutions:{ id:'civic_institutions', desc:'Site councils and senates with local bargains and consent.', defaultEnabled:false, modules:['institutions'] },
-  episcopal_sees:{ id:'episcopal_sees', desc:'Local bishoprics and patriarchates with mediation and institutional standing.', defaultEnabled:false, modules:['institutions','model'] },
-  manorial_tenure:{ id:'manorial_tenure', desc:'Customary dependent tenure and scheduled household duties.', defaultEnabled:true, modules:['events','actions','economy'] },
-  colonate:{ id:'colonate', desc:'Roman land-bound tenancy, estate dues and release from registered dependency.', defaultEnabled:false, modules:['events','actions','economy'] },
+  episcopal_sees:{ id:'episcopal_sees', desc:'Local bishoprics and patriarchates with mediation and institutional standing.', defaultEnabled:false, modules:['institutions','model'], providesOrdination:true },
+  manorial_tenure:{ id:'manorial_tenure', desc:'Customary dependent tenure and scheduled household duties.', defaultEnabled:true, modules:['events','actions','economy'], tenure:{} },
+  colonate:{ id:'colonate', desc:'Roman land-bound tenancy, estate dues and release from registered dependency.', defaultEnabled:false, modules:['events','actions','economy'],
+    tenure:{ estatePossessor:true, reviewDeedId:'review_colonate', blockedCareerRoles:['arms','clergy','cloister'],
+      releaseRoutes:[
+        { id:'military_service', careerId:'soldier', careerRank:'journeyman' },
+        { id:'ordination', careerId:'priest', careerRank:'journeyman' },
+        { id:'flight', eventId:'colonus_flight' }
+      ] } },
   feudal_service:{ id:'feudal_service', desc:'Service charters and hereditary, life or fixed-term grants.', defaultEnabled:true, modules:['actions','lordships'] },
   scutage:{ id:'scutage', desc:'Silver in place of military service.', defaultEnabled:true, modules:['parliament','actions'] },
   crown_bloc:{ id:'crown_bloc', desc:'Political allegiance to the ruling house.', defaultEnabled:true, modules:['politics'] },

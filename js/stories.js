@@ -6,7 +6,7 @@
    a story by name, and stories register at load time only. */
 (function () {
   'use strict';
-  var registry = [], byId = {}, types = {}, sealed = false;
+  var registry = [], byId = {}, types = {}, typeFiles = {}, validators = {}, sealed = false;
   var KINDS = { world:true, track:true };
   var HOOKS = ['appliesTo', 'init', 'day', 'season', 'year', 'title', 'intro',
     'status', 'choices', 'quote', 'blocker', 'review', 'apply',
@@ -28,18 +28,159 @@
     }
   }
 
+  function plain(v) { return !!v && typeof v === 'object' && !Array.isArray(v); }
+  function pathValue(row, path) {
+    return path.split('.').reduce(function (value, key) {
+      return value && own(value, key) ? value[key] : null;
+    }, row);
+  }
+  function referenceValid(ref, def) {
+    if (typeof ref === 'string') return !!ref;
+    if (!plain(ref)) return false;
+    var kind = ref.kind || (ref.storyId ? 'story' : null), keys;
+    if (kind === 'realm_ruler') keys = ['kind','realmId'];
+    else if (kind === 'story') keys = ['kind','storyId','field'];
+    else if (kind === 'opening_actor') keys = ['kind','actorId'];
+    else if (kind === 'region') keys = ['kind','regionId'];
+    else if (kind === 'provinces') keys = ['kind','provinceIds'];
+    else return false;
+    if (Object.keys(ref).some(function (key) { return keys.indexOf(key) < 0; })) return false;
+    if (kind === 'story') return typeof ref.storyId === 'string' &&
+      Array.isArray(def.requires) && def.requires.indexOf(ref.storyId) >= 0 && typeof ref.field === 'string' &&
+      /^[a-zA-Z][a-zA-Z0-9_]*(\.[a-zA-Z][a-zA-Z0-9_]*)*$/.test(ref.field);
+    if (kind === 'provinces') return Array.isArray(ref.provinceIds) && !!ref.provinceIds.length &&
+      ref.provinceIds.every(function (id, i) { return typeof id === 'string' && !!id && ref.provinceIds.indexOf(id) === i; });
+    return typeof ref[keys[1]] === 'string' && !!ref[keys[1]];
+  }
+  function resolve(s, ref) {
+    if (typeof ref === 'string') return ref;
+    if (!ref) return null;
+    var kind = ref.kind || (ref.storyId ? 'story' : null);
+    if (kind === 'story') return pathValue(record(s, ref.storyId), ref.field);
+    if (kind === 'realm_ruler') {
+      var person = FB.stories.ruler(s, ref.realmId);
+      return person && person.id || null;
+    }
+    if (kind === 'opening_actor') {
+      var person = FB.bookmarkActor(s, ref.actorId);
+      return person && person.id || null;
+    }
+    if (kind === 'provinces') return ref.provinceIds.slice();
+    if (kind === 'region') {
+      var bm = FB.bookmark(s.start.id), region = bm.storyRegions && bm.storyRegions[ref.regionId];
+      if (!region) return [];
+      return (bm.provinces || []).filter(function (p) {
+        return !p.wasteland && (region.provinceIds ? region.provinceIds.indexOf(p.id) >= 0 :
+          (region.duchies || []).indexOf(p.duchy) >= 0);
+      }).map(function (p) { return p.id; }).sort();
+    }
+    return null;
+  }
+  function declarationFaults(def, bm, attached) {
+    var errors = [];
+    function bad(detail) { errors.push('story ' + String(def && def.id) + ': ' + detail); }
+    if (!plain(def) || !own(types, def.type)) { bad('unknown story type'); return errors; }
+    if ((def.firstYear !== undefined || def.lastYear !== undefined) && (!Number.isInteger(def.firstYear) || !Number.isInteger(def.lastYear) ||
+        def.firstYear <= 0 || def.lastYear < def.firstYear)) bad('invalid date window');
+    function date(d) { return plain(d) && Number.isInteger(d.year) && d.year > 0 &&
+      Number.isInteger(d.season) && d.season >= 0 && d.season < 4 &&
+      Number.isInteger(d.day) && d.day >= 1 && d.day <= 90; }
+    function day(d) { return d.year * 360 + d.season * 90 + d.day; }
+    if ((def.firstDate !== undefined || def.lastDate !== undefined) && (!date(def.firstDate) || !date(def.lastDate) ||
+        day(def.lastDate) < day(def.firstDate))) bad('invalid date window');
+    if (def.requires !== undefined && (!Array.isArray(def.requires) || def.requires.some(function (id, i) {
+      return typeof id !== 'string' || id === def.id || def.requires.indexOf(id) !== i ||
+        !own(byId, id) || attached && attached.indexOf(id) < 0 ||
+        byId[def.id] && registry.indexOf(byId[id]) >= registry.indexOf(byId[def.id]);
+    }))) bad('unreachable requires');
+    function walk(row) {
+      if (!row || typeof row !== 'object') return;
+      if (Array.isArray(row)) { row.forEach(walk); return; }
+      if (row.kind === 'realm_ruler' || row.kind === 'story' || row.kind === 'opening_actor' ||
+          row.kind === 'region' || row.kind === 'provinces' || row.storyId && row.field) {
+        if (!referenceValid(row, def)) { bad('invalid reference'); return; }
+        if (bm) {
+          if (row.kind === 'realm_ruler' && !(bm.realms || []).some(function (r) { return r.id === row.realmId; })) bad('unresolved ruler reference');
+          if (row.kind === 'opening_actor' && !own(bm.opening && bm.opening.actors, row.actorId)) bad('unresolved opening actor reference');
+          if (row.kind === 'region' && !own(bm.storyRegions, row.regionId)) bad('unresolved region reference');
+          if (row.kind === 'provinces' && row.provinceIds.some(function (id) {
+            return !(bm.provinces || []).some(function (p) { return p.id === id && !p.wasteland; });
+          })) bad('unresolved province reference');
+        }
+        if (row.storyId) {
+          var parent = byId[row.storyId];
+          if (!parent || parent.fields && parent.fields.indexOf(row.field) < 0) bad('unresolved story field reference');
+        }
+        return;
+      }
+      Object.keys(row).forEach(function (key) { if (key !== 'news') walk(row[key]); });
+    }
+    walk(def);
+    if (bm) {
+      (Array.isArray(def.regions) ? def.regions : []).forEach(function (region) {
+        if (!plain(region)) return;
+        var grant = region.grant;
+        var titles = grant && { duchy:bm.duchies, kingdom:bm.kingdoms, empire:bm.empires }[grant.titleKind];
+        var knownTitle = grant && (grant.titleKind === 'county' ? (bm.provinces || []).some(function (p) {
+          return p.id === grant.titleId && !p.wasteland;
+        }) : !!FB.titleIds.resolve(grant.titleKind, grant.titleId, titles));
+        if (grant && (!(bm.provinces || []).some(function (p) { return p.id === grant.capital && !p.wasteland; }) ||
+            !knownTitle)) bad('unresolved regional grant');
+        if (region.titleId && !FB.titleIds.resolve('kingdom', region.titleId, bm.kingdoms)) bad('unresolved regional title');
+      });
+    }
+    if (validators[def.type]) {
+      try { validators[def.type](def); } catch (error) { bad(error.message); }
+    }
+    return errors;
+  }
+  function registerInstances(anchor, placement, final) {
+    var table = FBDATA.storyInstances || {}, pending = Object.keys(table).filter(function (id) {
+      var d = table[id];
+      return !own(byId, id) && (final || d[placement] === anchor);
+    });
+    while (pending.length) {
+      var ready = [];
+      pending.forEach(function (id) {
+        if (own(byId, id)) { ready.push(id); return; }
+        var d = table[id];
+        if (!plain(d) || d.id !== id) throw new Error('Invalid story instance ' + id + '.');
+        if ((d.requires || []).every(function (required) { return own(byId, required); })) {
+          FB.stories.registerData(d); ready.push(id);
+        }
+      });
+      if (!ready.length) throw new Error('Unreachable story instance dependencies: ' + pending.join(', ') + '.');
+      pending = pending.filter(function (id) { return ready.indexOf(id) < 0; });
+    }
+  }
+
   FB.stories = {
+    /* Shared protocol vocabulary, never historical content selectors. */
+    tokens:{ rival:'rival', senator:'senator', recipient:'recipient', bishop:'bishop', withdraw:'withdraw', treasury:'treasury', text:'text', role:'role', reaffirm:'reaffirm', proposal:'proposal', ordinary:'ordinary', opening:'opening', null:'null', none:'none', legacy:'legacy', label:'label', institutions:'institutions', household:'household', history:'history', family:'family', court:'court', contract:'contract', contested:'contested', complete:'complete', commission:'commission', commander:'commander', claim:'claim', civic:'civic', character:'character', battle:'battle', authority:'authority', appointment:'appointment', chance:'chance', news:'news', opinion:'opinion', source:'source', type:'type', active:'active', attackers:'attackers', beneficiary:'beneficiary', called:'called', campaign:'campaign', civilian_migration:'civilian_migration',
+      consent:'consent', counties:'counties', county:'county', date:'date', declined:'declined', defenders:'defenders',
+      desc:'desc', diverted:'diverted', duchy:'duchy', early:'early', empire:'empire', expired:'expired',
+      failed:'failed', fixed:'fixed', founded:'founded', granted:'granted', historical:'historical', holy_war:'holy_war',
+      host:'host', independence:'independence', interrupted:'interrupted', kingdom:'kingdom', landless:'landless', liege:'liege',
+      name:'name', notable:'notable', object:'object', open:'open', owner:'owner', partial:'partial',
+      partition:'partition', phase:'phase', player:'player', polity_foundation:'polity_foundation', pressure:'pressure', provinces:'provinces',
+      realm:'realm', reason:'reason', recognition:'recognition', record:'record', result:'result', routes:'routes',
+      ruler:'ruler', settled:'settled', started:'started', story:'story', story_result:'story_result', string:'string',
+      tribute_cession:'tribute_cession', war:'war', won:'won', world:'world' },
     /* Trusted classic scripts register reusable factories before boot seals
        the registry. Definitions contain data, not executable save fields. */
-    registerType:function (id, factory) {
+    registerType:function (id, factory, file, validator) {
       if (sealed) throw new Error('Story types register at load time only.');
       if (!/^[a-z][a-z0-9_]*$/.test(id) || own(types, id) || typeof factory !== 'function')
         throw new Error('Invalid or duplicate story type ' + id + '.');
       types[id] = factory;
+      typeFiles[id] = file;
+      validators[id] = validator;
     },
     registerData:function (def) {
       if (sealed) throw new Error('Stories register at load time only.');
       if (!def || !own(types, def.type)) throw new Error('Unknown story type.');
+      var faults = declarationFaults(def);
+      if (faults.length) throw new Error(faults.join('\n'));
       var story = types[def.type](def);
       // Keep authored requirements available to the pre-generation gate.
       // This declaration is never copied into a saved story record.
@@ -55,6 +196,7 @@
       if (!def || typeof def.id !== 'string' || !/^[a-z][a-z0-9_]*$/.test(def.id))
         throw new Error('A story needs a lowercase slug id.');
       if (own(byId, def.id)) throw new Error('Duplicate story ' + def.id + '.');
+      registerInstances(def.id, 'registrationBefore', false);
       if (!own(KINDS, def.kind))
         throw new Error('Story ' + def.id + ' needs kind world or track.');
       if (typeof def.init !== 'function')
@@ -68,10 +210,28 @@
         throw new Error('Story ' + def.id + ' requires a story registered before it.');
       registry.push(def);
       byId[def.id] = def;
+      registerInstances(def.id, 'registrationAfter', false);
       return def;
     },
     /* Boot calls this once every script has loaded. */
-    seal:function () { sealed = true; },
+    load:function () {
+      registerInstances(null, null, true);
+      Object.keys(FBDATA.storyInstances || {}).forEach(function (id) {
+        var d = FBDATA.storyInstances[id];
+        if (d.registrationBefore && !own(byId, d.registrationBefore) ||
+            d.registrationAfter && !own(byId, d.registrationAfter)) throw new Error('Unknown story registration anchor ' + id + '.');
+      });
+    },
+    seal:function () { FB.stories.load(); sealed = true; },
+    typeFiles:function () { return Object.assign({}, typeFiles); },
+    definitionFaults:declarationFaults,
+    referenceValid:referenceValid,
+    resolve:resolve,
+    ruler:function (s, rid) {
+      rid = FB.startRealmId(s, rid);
+      return rid === FB.stories.tokens.player ? s.chars[s.player.charId] : FB.realmRulerCharacterSnapshot(s, rid);
+    },
+    definition:function (s, def) { return FB.startRealmDefinition(s, def); },
     get:function (id) {
       return typeof id === 'string' && own(byId, id) ? byId[id] : null;
     },

@@ -2368,6 +2368,7 @@ FB.CHANGELOG = [
     FB.loadSelectedLocale(function (loaded) {
       /* Mods establish the effective English source before hashes are checked.
          A changed mod string therefore falls back to that exact current English. */
+      FB.stories.load(); // all type scripts have loaded; validate mod bookmarks against their instances
       FB.mods.applyStored();
       if (FB.configureReligions) FB.configureReligions();
       if (FB.configureCultures) FB.configureCultures();

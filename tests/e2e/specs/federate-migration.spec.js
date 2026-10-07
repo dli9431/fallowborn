@@ -1,6 +1,7 @@
 'use strict';
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
+  'data/story_courts_476.js',
   'index.html', 'data/bookmarks.js', 'data/bookmark_476.js', 'data/political_institutions.js',
   'data/bookmark_476_italy.js', 'data/bookmark_476_dalmatia_east.js',
   'data/bookmark_476_gaul_iberia.js', 'data/bookmark_476_africa.js',
@@ -9,7 +10,7 @@ dependsOnRuntime(__filename, [
   'js/governments.js', 'js/politics.js', 'js/settlement.js', 'js/world.js', 'js/model.js',
   'js/main.js', 'js/armies.js', 'js/wars.js', 'js/fortifications.js', 'js/logistics.js',
   'js/treasury.js', 'js/lordships.js', 'js/population.js', 'js/save.js', 'js/save_v4.js',
-  'js/stories.js', 'js/story_campaign.js', 'js/story_476_rails.js', 'data/story_campaigns.js', 'js/story_western_court_476.js', 'js/story_federate_track_476.js'
+  'js/stories.js', 'js/story_campaign.js', 'data/story_instances.js', 'data/story_campaigns.js', 'js/story_courts.js', 'js/story_track.js'
 ]);
 const { test, expect } = require('../support/fixture');
 const { openGame } = require('../support/game/navigation');

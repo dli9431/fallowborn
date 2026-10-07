@@ -1,6 +1,7 @@
 'use strict';
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
+  'data/story_courts_476.js',
   'index.html', 'data/bookmark_476.js', 'data/bookmark_476_italy.js',
   'data/bookmark_476_africa.js', 'data/bookmark_476_dalmatia_east.js',
   'data/bookmark_476_gaul_iberia.js', 'data/bookmarks.js', 'data/counties.js',
@@ -10,8 +11,8 @@ dependsOnRuntime(__filename, [
   'data/distribution_crazygames.js', 'js/world.js', 'js/model.js',
   'js/population.js', 'js/settlement.js', 'js/authority.js', 'js/institutions.js',
   'js/technology.js', 'js/systems.js', 'js/treasury.js', 'js/politics.js', 'js/federates.js',
-  'js/religion.js', 'js/stories.js', 'js/story_campaign.js', 'js/story_476_rails.js', 'js/bookmark_setup.js', 'js/story_agreements.js',
-  'js/story_western_court_476.js', 'js/story_federate_track_476.js',
+  'js/religion.js', 'js/stories.js', 'js/story_campaign.js', 'data/story_instances.js', 'js/bookmark_setup.js', 'js/story_agreements.js',
+  'js/story_courts.js', 'js/story_track.js',
   'js/armies.js', 'js/wars.js', 'js/events.js', 'js/main.js', 'js/save.js',
   'js/save_v4.js', 'js/ui_modals.js', 'js/ui_misc.js', 'js/crazygames.js'
 ]);

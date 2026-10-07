@@ -1,6 +1,7 @@
 'use strict';
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
+  'data/story_courts_476.js',
   'data/map_data.js', 'data/counties.js', 'data/bookmarks.js',
   'data/climate.js', 'data/geographies.js', 'js/climate.js',
   'data/bookmark_476.js',
@@ -9,8 +10,8 @@ dependsOnRuntime(__filename, [
   'data/settlements_real.js', 'data/cultures.js', 'data/starts.js',
   'data/technology.js', 'data/political_institutions.js', 'data/units.js', 'data/modifiers.js',
   'data/economy.js', 'data/systems.js', 'js/systems.js',
-  'js/main.js', 'js/stories.js', 'js/story_campaign.js', 'js/story_476_rails.js', 'js/bookmark_setup.js', 'data/story_campaigns.js', 'js/story_western_court_476.js',
-  'js/story_federate_track_476.js', 'js/authority.js', 'js/federates.js', 'js/world.js',
+  'js/main.js', 'js/stories.js', 'js/story_campaign.js', 'data/story_instances.js', 'js/bookmark_setup.js', 'data/story_campaigns.js', 'js/story_courts.js',
+  'js/story_track.js', 'js/authority.js', 'js/federates.js', 'js/world.js',
   'js/holywar.js', 'js/actions.js',
   'js/armies.js', 'js/treasury.js', 'js/lordships.js', 'js/model.js',
   'js/politics.js', 'js/institutions.js', 'js/technology.js', 'js/settlement.js',

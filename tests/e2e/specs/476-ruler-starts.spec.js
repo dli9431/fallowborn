@@ -1,12 +1,13 @@
 'use strict';
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
+  'data/story_courts_476.js',
   'index.html', 'data/starts.js', 'data/bookmark_476.js',
   'data/bookmark_476_italy.js', 'data/bookmark_476_dalmatia_east.js',
   'data/bookmark_476_gaul_iberia.js', 'data/bookmark_476_africa.js', 'data/eras.js', 'data/technology.js',
   'data/political_institutions.js', 'data/story_campaigns.js',
-  'js/starts.js', 'js/stories.js', 'js/story_western_court_476.js',
-  'js/story_476_rails.js', 'js/story_campaign.js', 'js/story_nepos_track_476.js',
+  'js/starts.js', 'js/stories.js', 'js/story_courts.js',
+  'data/story_instances.js', 'js/story_campaign.js', 'js/story_track.js',
   'js/main.js', 'js/world.js', 'js/model.js', 'js/armies.js', 'js/wars.js',
   'js/authority.js', 'js/federates.js', 'js/institutions.js', 'js/treasury.js',
   'js/station.js', 'js/governments.js', 'js/technology.js', 'js/logistics.js',
@@ -636,11 +637,11 @@ test('Nepos renews lapsed recognition and loses a restored mandate with Ravenna'
     const campaignAllowed = FB.stories.quote(s, id, 'restore_by_campaign').allowed;
     FB.transferProvince(s, 'ravenna', 'player');
     const restored = FB.stories.apply(s, id, 'confirm_restoration', FB.stories.quote(s, id, 'confirm_restoration'));
-    FB.transferProvince(s, 'ravenna', 'italy'); FB.story476.syncWestOffice(s);
+    FB.transferProvince(s, 'ravenna', 'italy'); FB.storyCourts.context('western_court_476').syncOffice(s);
     const before = JSON.stringify(s.stories.western_office_476);
-    FB.story476.syncWestOffice(s);
+    FB.storyCourts.context('western_court_476').syncOffice(s);
     FB.save.restore(JSON.parse(FB.save.serialize()));
-    FB.story476.syncWestOffice(FB.state);
+    FB.storyCourts.context('western_court_476').syncOffice(FB.state);
     return { lapsed:lapsed, wrongAction:wrongAction, renewed:renewed,
       campaignAllowed:campaignAllowed, restored:restored,
       outcome:s.stories.western_office_476.result,

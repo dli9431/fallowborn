@@ -5,6 +5,7 @@ const { beginBookmark, advanceBookmark, restoreBookmark, facts } = require('../s
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 // This whole-runtime smoke canary intentionally covers every registered date.
 dependsOnRuntime(__filename, ['index.html', 'data', 'js', 'css']);
+const { installStoryProof } = require('../support/game/story-proof');
 const proofMod = require('../fixtures/bookmarks/proof-mod.json');
 const fs = require('fs');
 const path = require('path');
@@ -91,6 +92,7 @@ test('every registered bookmark plays one year then restores across bookmarks an
 
 test('a persisted data-only mod supplies a different campaign and independent institution seeds', async function ({ page }, testInfo) {
   test.setTimeout(10 * 60 * 1000);
+  await installStoryProof(page);
   // Load the literal JSON through the ordinary stored-mod boot boundary.
   await page.addInitScript(function (source) { localStorage.setItem('fb_mods', JSON.stringify([source])); }, JSON.stringify(proofMod));
   await beginBookmark(page, testInfo, 'proof_bookmark', 'proof_coastal');
@@ -107,7 +109,7 @@ test('a persisted data-only mod supplies a different campaign and independent in
       starts:FB.bookmark('proof_bookmark').starts, errors:FB.validateBookmark(FB.bookmark('proof_bookmark')) };
   });
   expect(opening).toMatchObject({ date:500, owner:'proof_coast', culture:'proof_culture',
-    playerCulture:'proof_culture', bishop:'Proof Roman bishop', vacant:true, stories:['sirmium_campaign_493'],
+    playerCulture:'proof_culture', bishop:'Proof Roman bishop', vacant:true, stories:['sirmium_campaign_493','proof_embassy_500'],
     starts:['proof_farmer','proof_coastal'], errors:[] });
   expect(opening.signature).not.toBe('');
   expect(opening.original).not.toBe('Proof Roman bishop');

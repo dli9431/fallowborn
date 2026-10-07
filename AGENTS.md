@@ -301,7 +301,7 @@ globals. **Load order matters** — do not reorder the `<script>` tags casually:
   script after the title shell has had a chance to paint and before setting `FB.game.bootReady`.
   Preserve that dependency order when changing boot.
 
-js/story_history.js loads after js/stories.js and js/story_campaign.js, before js/story_476_rails.js registers data instances. It registers the reusable partition and holy_war factories. Historical declarations stay in the owning bookmark data; restore validates saved records without initializing new people, grants or historical campaign rows.
+js/story_history.js loads after js/stories.js and js/story_campaign.js, before js/stories.js registers data instances from FBDATA.storyInstances. It registers the reusable partition and holy_war factories. Historical declarations stay in the owning bookmark data; restore validates saved records without initializing new people, grants or historical campaign rows.
 
 ## Required UI/UX review before implementation
 
@@ -465,8 +465,8 @@ Architecture and locale lifecycle: `docs/designs/i18n.md`. Schema: `docs/MODDING
 - `js/keys.js`, `js/save.js`, `js/save_v4.js`, `js/mods.js` — keyboard,
   version-3 persistence, opt-in version-4 migration prototype, runtime mods.
 - js/stories.js: the story registry (world stories and player tracks) and the shared
-  Deeds story card and story sheet. Story modules such as js/story_western_court_476.js
-  register through it; engine code never names a story.
+  Deeds story card and story sheet. Reusable types register factories; data/story_instances.js composes historical
+  instances, and engine code never names a story.
 - `js/title_ids.js` — rank-scoped de jure title aliases and typed migration.
 - `js/messages.js`, `js/i18n.js` — durable saved-message descriptors; localization catalog lookup and locale lifecycle.
 - `i18n/` — tracked translation caches, extraction coverage reports, and historical translation logs.
@@ -498,3 +498,7 @@ Architecture and locale lifecycle: `docs/designs/i18n.md`. Schema: `docs/MODDING
   live at the top of `js/main.js`; every change landing on `main` bumps them, **assigned at
   integration** (see *Git workflow*) — `FB.VERSION` is the cache-bust key, so skipping it serves
   stale assets.
+
+Historical story type loading
+
+index.html loads data/story_instances.js after bookmark instance sources, including data/story_courts_476.js. js/story_campaign.js, js/story_history.js, js/story_agreements.js, js/royal_settlements.js, js/story_polity_foundation.js, js/story_settlements.js, js/story_courts.js and js/story_track.js load after js/stories.js and before js/main.js. story_track.js depends on story_courts.js. Reusable type files register factories only. The story registry composes declaration-owned instance batches at their data anchors, preserving attachment and RNG dispatch order. New type files must declare their source and have no content-id allowlist entries.

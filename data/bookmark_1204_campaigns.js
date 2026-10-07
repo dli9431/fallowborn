@@ -502,7 +502,7 @@ FBDATA.bookmarkContent['1204'].campaigns = {
     }
   },
   "fifth_crusade_call_1204": {
-    "id":"fifth_crusade_call_1204", "type":"holy_war",
+    "id":"fifth_crusade_call_1204", "type":"holy_war", "systemId":"great_holy_wars",
     "name":"The Fifth Crusade Call",
     "desc":"The appeals begun in 1213 and renewed at the Fourth Lateran Council open a conditional call for the Holy Land. The current Catholic head must have authority and an eligible hostile target. The existing campaign rules govern preparation, fighting and settlement; this opportunity promises no victory or Egyptian expedition.",
     "firstDate":{"year":1213,"season":0,"day":1},

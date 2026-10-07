@@ -1,6 +1,7 @@
 'use strict';
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
+  'data/story_courts_476.js',
   'index.html', 'data/bookmark_1204.js', 'data/bookmark_1204_campaigns.js',
   'data/bookmarks.js', 'data/counties.js', 'data/map_data.js',
   'data/settlements.js', 'data/settlements_real.js', 'data/geographies.js',
@@ -9,7 +10,7 @@ dependsOnRuntime(__filename, [
   'data/distribution_crazygames.js', 'js/crazygames.js',
   'js/governments.js', 'js/authority.js', 'js/politics.js', 'js/population.js',
   'js/technology.js', 'js/holywar.js', 'js/papacy.js', 'js/stories.js',
-  'js/story_campaign.js', 'js/story_history.js', 'js/story_476_rails.js', 'js/wars.js', 'js/armies.js',
+  'js/story_campaign.js', 'js/story_history.js', 'data/story_instances.js', 'js/wars.js', 'js/armies.js',
   'js/save.js', 'js/save_v4.js', 'js/events.js', 'js/ui_modals.js', 'js/localfolk.js'
 ]);
 const { test, expect } = require('../support/fixture');

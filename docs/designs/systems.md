@@ -39,3 +39,7 @@ Technology and verification
 optional_system_availability has a none technology-impact review. Membership is an authored political and religious condition; enabled content keeps its existing technology gates. tests/e2e/specs/systems-availability.spec.js exercises precedence, pure reads, validation, campaign membership, hidden content, dormant records, scheduler boundaries and restore. The declarative 476 baseline is tests/e2e/fixtures/systems-476.json. The full seeded world parity snapshots use the unchanged owner-controlled capture workflow in docs/TESTS.md.
 
 Papal world-hook availability permits dispatch but does not enable every office. Each papal_election office checks its own faith and holder-realm context before work. Existing saved office models remain untouched while disabled, and explicit disabled office callbacks are rejected.
+
+Data-owned dependent tenure
+
+A system may declare tenure metadata; enabled declarations permit the shared dependent-household scheduler. estatePossessor marks registered estate tenancy and declares blockedCareerRoles, reviewDeedId and releaseRoutes. Each release route names a target careerId and careerRank or an eventId resolved through the existing registry. providesOrdination marks a system that enables local bishop consent. Engine readers select these properties rather than named system, career, event or deed ids. Trusted system validation rejects unknown references and duplicate routes. These internal selectors preserve existing eligibility and saved record shapes.

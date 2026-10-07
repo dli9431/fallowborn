@@ -94,6 +94,25 @@ test('every content-id reference is on the reviewed, file-bounded allowlist',
       });
     });
 
+    // Reviewed DOM and presentation tokens have no content declaration.
+    // A future table using one of these spellings needs a fresh review.
+    ['provision','option','gift','list'].forEach(function (id) {
+      expect(owners.has(id), 'Reviewed UI token became a content id: ' + id).toBe(false);
+    });
+
+    const typeFiles = await page.evaluate(function () { return FB.stories.typeFiles(); });
+    const reusableFiles = new Set(Object.values(typeFiles));
+    for (const [type, file] of Object.entries(typeFiles)) {
+      expect(file, 'A registered type must declare its source: ' + type).toMatch(/^js\/story_[^/]+\.js$/);
+    }
+    for (const source of engineSources()) {
+      if (!reusableFiles.has(source.file)) continue;
+      const literals = source.scan.literals.filter(function (row) { return owners.has(row.value); });
+      expect(literals, source.file + ' quotes content ids: ' + literals.map(function (row) { return row.value; }).join(', ')).toEqual([]);
+      expect(allowlist.hooks.filter(function (hook) { return hook.uses[source.file] !== undefined; }),
+        'Reusable types may not have content-id allowlist entries: ' + source.file).toEqual([]);
+    }
+
     const hooks = new Map();
     allowlist.hooks.forEach(function (entry) {
       if (typeof entry.id !== 'string' || !entry.id) problems.push('hook needs an id');

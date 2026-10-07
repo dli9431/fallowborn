@@ -14,7 +14,7 @@ FBDATA.bookmarkCandidates['800'] = {
   systems:{"enable":["manorial_tenure","feudal_service","scutage","crown_bloc","excommunication","abbeys","tournaments","great_holy_wars","guild_elections","royal_council","estates"]},
   religiousHeads:{"catholic":"papacy","sunni":"abbasid"},
   stories:[
-    "carolingian_settlements_800",
+    "divisio_800", "ordinatio_800", "gifts_800", "recognition_800", "verdun_800",
     "barcelona_800",
     "danish_friesland_800",
     "abbasid_anatolia_800",

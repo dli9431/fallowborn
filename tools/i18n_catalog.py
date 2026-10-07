@@ -816,7 +816,8 @@ def extract_structured(inv: Inventory) -> None:
         candidate_catalogues = {
             "cultures": [(DATA / "bookmark_711.js", "bookmarkCultures711")],
             "religions": [(DATA / "bookmark_711.js", "bookmarkReligions711")],
-            "storyCampaigns": [(DATA / "story_campaigns_711.js", "storyCampaigns711")],
+            "storyCampaigns": [(DATA / "story_campaigns_711.js", "storyCampaigns711"),
+                               (DATA / "bookmark_800_history.js", "storySettlements800")],
         }
         for candidate_path, catalogue in candidate_catalogues.get(data_name, ()):
             candidate_root = node_object(find_assignment(candidate_path, "FBDATA", catalogue)) or {}
@@ -1811,9 +1812,41 @@ def term_placeholder_errors(entries: dict[str, dict[str, Any]]) -> list[str]:
     return errors
 
 
+def extract_story_courts(inv: Inventory) -> None:
+    source = DATA / "story_courts_476.js"
+    declarations = node_object(find_assignment(source, "FBDATA", "storyCourts476")) or {}
+    rel = source.relative_to(ROOT).as_posix()
+    for story_id, story_node in declarations.items():
+        story = node_object(story_node) or {}
+        for field, text_node in (node_object(story.get("text")) or {}).items():
+            for _, record, line in branch_records(text_node):
+                inv.add(f"story.{story_id}.text.{field}", record, f"{rel}:{line}",
+                        f"Story {story_id} presentation.", TOKEN_RE.findall(record["text"]))
+        for choice_id, choice_node in (node_object(story.get("choices")) or {}).items():
+            choice = node_object(choice_node) or {}
+            for field in ("label", "detail"):
+                for _, record, line in branch_records(choice.get(field)):
+                    inv.add(f"story.{story_id}.choice.{choice_id}.{field}", record,
+                            f"{rel}:{line}", f"Story {story_id} choice {choice_id}.",
+                            TOKEN_RE.findall(record["text"]))
+        for stage_id, stage_node in (node_object(story.get("stages")) or {}).items():
+            stage = node_object(stage_node) or {}
+            for _, record, line in branch_records(stage.get("name")):
+                inv.add(f"story.{story_id}.stage.{stage_id}.name", record, f"{rel}:{line}",
+                        f"Story {story_id} stage.", TOKEN_RE.findall(record["text"]))
+        for outcome, news_node in (node_object(story.get("news")) or {}).items():
+            news = node_object(news_node) or {}
+            key = node_string(news.get("key"))
+            for _, record, line in branch_records(news.get("text")):
+                if key:
+                    inv.add(key, record, f"{rel}:{line}", f"Story {story_id} {outcome} news.",
+                            TOKEN_RE.findall(record["text"]))
+
+
 def build_inventory() -> Inventory:
     inv = Inventory()
     extract_structured(inv)
+    extract_story_courts(inv)
     extract_lexicons(inv)
     extract_literal_aliases(inv)
     add_core_records(inv)

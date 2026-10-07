@@ -6,6 +6,7 @@ const { startParityGame } = require('../support/game/parity');
 const { restoreBookmark, advanceBookmark } = require('../support/game/bookmark-acceptance');
 const { injectBrowserHarness } = require('../support/game/browser-harness');
 dependsOnRuntime(__filename, [
+  'data/story_courts_476.js',
   'index.html', 'data/bookmark_476_outer.js', 'data/bookmark_476.js',
   'data/bookmark_476_italy.js', 'data/bookmark_476_dalmatia_east.js',
   'data/bookmark_476_gaul_iberia.js', 'data/bookmark_476_africa.js',
@@ -16,7 +17,7 @@ dependsOnRuntime(__filename, [
   'js/world.js', 'js/model.js', 'js/institutions.js', 'js/religion.js',
   'js/authority.js', 'js/population.js', 'js/justice.js', 'js/technology.js',
   'js/climate.js', 'js/governments.js', 'js/settlement.js', 'js/events.js',
-  'js/stories.js', 'js/story_western_court_476.js', 'js/story_476_rails.js',
+  'js/stories.js', 'js/story_courts.js', 'data/story_instances.js',
   'js/save.js', 'js/save_v4.js', 'js/main.js'
 ]);
 

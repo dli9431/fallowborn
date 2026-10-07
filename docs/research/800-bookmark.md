@@ -1,6 +1,6 @@
 Late 800 bookmark: sources and editorial decisions
 
-The 476 branch makes this bookmark selectable for ordinary play and review. Historical reconstruction remains incomplete. data/bookmark_800.js owns the full political map independently of the other bookmarks. data/bookmark_800_history.js declares campaign opportunities, opening royal relatives and settlement windows. js/story_carolingian_800.js owns conditional inheritance and diplomatic negotiations; shared dynasty helpers contain no historical date or person selectors.
+The 476 branch makes this bookmark selectable for ordinary play and review. Historical reconstruction remains incomplete. data/bookmark_800.js owns the full political map independently of the other bookmarks. data/bookmark_800_history.js declares campaign opportunities, opening royal relatives and settlement windows. Five data instances use the content-free types in js/story_settlements.js for conditional inheritance and diplomatic negotiations; shared dynasty helpers contain no historical date or person selectors.
 
 Chosen instant
 

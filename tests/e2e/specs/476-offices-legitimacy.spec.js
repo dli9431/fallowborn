@@ -1,11 +1,13 @@
 'use strict';
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
+  'data/story_instances.js',
+  'data/story_courts_476.js',
   'data/political_institutions.js', 'data/actions.js', 'data/technology.js',
   'data/systems.js', 'data/eras.js', 'data/bookmarks.js', 'data/bookmark_476.js',
   'data/bookmark_476_italy.js', 'data/bookmark_476_dalmatia_east.js', 'data/starts.js',
   'js/authority.js', 'js/governments.js', 'js/federates.js', 'js/actions.js',
-  'js/story_western_court_476.js', 'js/story_federate_track_476.js', 'js/stories.js', 'js/systems.js', 'js/progression.js',
+  'js/story_courts.js', 'js/story_track.js', 'js/stories.js', 'js/systems.js', 'js/progression.js',
   'js/politics.js', 'js/world.js', 'js/model.js', 'js/treasury.js', 'js/justice.js',
   'js/main.js', 'js/lordships.js', 'js/armies.js',
   'js/ui_panels.js', 'js/ui_modals.js', 'js/ui_misc.js', 'js/save.js', 'js/save_v4.js',

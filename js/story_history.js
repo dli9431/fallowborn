@@ -2,9 +2,10 @@
    Data names the parties. A date grants no land, ruler replacement or victory. */
 (function () {
   'use strict';
-  function plain(v) { return !!v && typeof v === 'object' && !Array.isArray(v); }
+  var V = FB.stories.tokens;
+  function plain(v) { return !!v && typeof v === V.object && !Array.isArray(v); }
   function own(o, k) { return !!o && Object.prototype.hasOwnProperty.call(o, k); }
-  function id(v) { return typeof v === 'string' && /^[a-z][a-z0-9_]*$/.test(v); }
+  function id(v) { return typeof v === V.string && /^[a-z][a-z0-9_]*$/.test(v); }
   function number(d) { return d.year * 360 + d.season * 90 + d.day - 1; }
   function date(d) {
     return plain(d) && Number.isInteger(d.year) && d.year > 0 &&
@@ -13,26 +14,25 @@
   }
   function live(s, rid) { return !!(s.realms[rid] && s.realms[rid].alive); }
   function ruler(s, rid) {
-    return rid === 'player' ? s.chars[s.player.charId] : FB.realmRulerCharacterSnapshot(s, rid);
+    return FB.stories.ruler(s, rid);
   }
   function controlled(s, rid) {
     var c = ruler(s, rid);
-    return rid === 'player' || !!(c && c.id === s.player.charId);
+    return rid === V.player || !!(c && c.id === s.player.charId);
   }
   function held(s, pid) { return s.holder[pid] || s.owner[pid]; }
-  function effective(s, def) { return FB.startRealmDefinition(s, def); }
+  function effective(s, def) { return FB.stories.definition(s, def); }
   function invalid(path) {
     throw new Error(FB.T('Invalid v4 save field at {path}.', { path:'state.' + path }));
   }
   function baseDefinition(def) {
-    if (!plain(def) || !id(def.id) || typeof def.name !== 'string' || typeof def.desc !== 'string' ||
+    if (!plain(def) || !id(def.id) || typeof def.name !== V.string || typeof def.desc !== V.string ||
         !date(def.firstDate) || !date(def.lastDate) || number(def.lastDate) < number(def.firstDate))
       throw new Error('Invalid historical story definition.');
     Object.keys(def.news || {}).forEach(function (key) {
       var msg = def.news[key];
-      if (!plain(msg) || !/^news\.[a-z0-9_.-]+$/.test(msg.key || '') || typeof msg.text !== 'string')
+      if (!plain(msg) || !/^news\.[a-z0-9_.-]+$/.test(msg.key || '') || typeof msg.text !== V.string)
         throw new Error('Invalid historical story message.');
-      FB.registerMessage(msg.key, { text:msg.text });
     });
   }
   function text(s, def, field) { return FB.dataText(s, null, 'storyCampaign', def.id, def, field, {}); }
@@ -46,11 +46,11 @@
     notice(s, def, result);
   }
   function time(s, def) {
-    return number(s.date) < number(def.firstDate) ? 'early' :
-      number(s.date) > number(def.lastDate) ? 'late' : 'open';
+    return number(s.date) < number(def.firstDate) ? V.early :
+      number(s.date) > number(def.lastDate) ? 'late' : V.open;
   }
   function basicRecord(rec, s, def, results) {
-    if (!plain(rec) || ['pending','started','resolved'].indexOf(rec.phase) < 0 ||
+    if (!plain(rec) || ['pending',V.started,'resolved'].indexOf(rec.phase) < 0 ||
         rec.result !== null && results.indexOf(rec.result) < 0 ||
         rec.reason !== null && !id(rec.reason) ||
         rec.outcomeTurn !== null && (!Number.isInteger(rec.outcomeTurn) || rec.outcomeTurn < 0 || rec.outcomeTurn > s.turn) ||
@@ -64,14 +64,14 @@
     baseDefinition(def);
     var b = def.beneficiary, g = def.grant;
     if (!plain(def.actor) || !id(def.actor.realmId) || !id(def.actor.capital) ||
-        !plain(b) || typeof b.name !== 'string' || !b.name || ['m','f'].indexOf(b.sex) < 0 ||
+        !plain(b) || typeof b.name !== V.string || !b.name || ['m','f'].indexOf(b.sex) < 0 ||
         !Number.isInteger(b.born) || def.firstDate.year - b.born < 16 ||
         !own(FBDATA.cultures, b.culture) || !FB.faithAssignable(b.religion, null) ||
-        b.dyn !== undefined && (typeof b.dyn !== 'string' || !b.dyn) ||
+        b.dyn !== undefined && (typeof b.dyn !== V.string || !b.dyn) ||
         b.trait !== undefined && !own(FBDATA.traits, b.trait) ||
         !plain(g) || !id(g.realmId) || !id(g.liege) || !id(g.capital) ||
         !Number.isInteger(g.rank) || g.rank < 1 || g.rank > 4 ||
-        ['county','duchy','kingdom','empire'].indexOf(g.kind) < 0 || typeof g.place !== 'string' || !g.place ||
+        [V.county,V.duchy,V.kingdom,V.empire].indexOf(g.kind) < 0 || typeof g.place !== V.string || !g.place ||
         !Array.isArray(g.counties) || !g.counties.length || g.counties.length > 24 ||
         g.counties.indexOf(g.capital) < 0 || g.counties.indexOf(def.actor.capital) >= 0 ||
         g.counties.some(function (pid, i) { return !id(pid) || g.counties.indexOf(pid) !== i; }) ||
@@ -79,8 +79,8 @@
       throw new Error('Invalid negotiated partition declaration.');
   }
   function partitionParties(rec, def) {
-    var parties = ['grantor','beneficiary'];
-    if (def.grant.liege !== def.actor.realmId) parties.push('liege');
+    var parties = ['grantor',V.beneficiary];
+    if (def.grant.liege !== def.actor.realmId) parties.push(V.liege);
     return parties;
   }
   function partitionTerms(facts) {
@@ -105,12 +105,12 @@
   }
   function partitionBlock(s, rec, def, facts) {
     if (rec.phase !== 'pending') return 'closed';
-    if (facts.time !== 'open') return 'date';
+    if (facts.time !== V.open) return V.date;
     if (!live(s, def.actor.realmId) || facts.actorId !== rec.actorId || facts.generation !== rec.actorGeneration)
       return 'actor_changed';
     if (facts.dead) return 'beneficiary_dead';
     if (facts.capital !== FB.topRealm(s, def.actor.realmId)) return 'capital_lost';
-    if (def.parentStoryId && facts.parent !== 'granted') return 'parent_unsettled';
+    if (def.parentStoryId && facts.parent !== V.granted) return 'parent_unsettled';
     if (!live(s, def.grant.liege) || !facts.liegeId) return 'liege_missing';
     if (!FB.realmRank.above(s.realms[def.grant.liege], def.grant.rank, s)) return 'liege_rank';
     if (facts.destination || facts.beneficiaryRealm) return 'already_landed';
@@ -118,20 +118,20 @@
     if (facts.captive || FB.intrigueRealmRulerCaptive &&
         (FB.intrigueRealmRulerCaptive(s, def.actor.realmId) || FB.intrigueRealmRulerCaptive(s, def.grant.liege)))
       return 'captivity';
-    if (facts.wars[0] || facts.wars[1]) return 'war';
+    if (facts.wars[0] || facts.wars[1]) return V.war;
     var top = FB.topRealm(s, def.actor.realmId);
     if (FB.topRealm(s, def.grant.liege) !== top) return 'liege_changed';
     for (var county of facts.counties) {
       if (!FB.world.byId[county[0]] || FB.world.byId[county[0]].wasteland ||
           county[1] !== top || county[2] !== def.actor.realmId) return 'not_held';
       if (FB.isProtected && FB.isProtected(s, 'grantCounty', county[0])) return 'protected';
-      if (!FB.political.power(s, { kind:'realm', id:def.actor.realmId }, 'consent', { provinceId:county[0] }).allowed)
+      if (!FB.political.power(s, { kind:V.realm, id:def.actor.realmId }, V.consent, { provinceId:county[0] }).allowed)
         return 'consent_power';
     }
     return null;
   }
   function partyIsPlayer(s, rec, def, party) {
-    return party === 'beneficiary' ? rec.beneficiaryId === s.player.charId :
+    return party === V.beneficiary ? rec.beneficiaryId === s.player.charId :
       controlled(s, party === 'grantor' ? def.actor.realmId : def.grant.liege);
   }
   function partitionQuote(s, rec, def, choice) {
@@ -140,7 +140,7 @@
     var action = choice.split('_')[0];
     var allowed = ['accept','decline'].indexOf(action) >= 0 &&
       partitionParties(rec, def).indexOf(party) >= 0 && partyIsPlayer(s, rec, def, party) &&
-      (action === 'decline' ? rec.phase === 'pending' && facts.time === 'open' : !reason);
+      (action === 'decline' ? rec.phase === 'pending' && facts.time === V.open : !reason);
     return { id:choice, allowed:allowed, reason:allowed ? null : reason || 'not_party', facts:facts,
       stamp:JSON.stringify(facts) };
   }
@@ -153,11 +153,11 @@
     var realm = FB.makeVassalRealm(s, { id:g.realmId, capital:g.capital, rank:g.rank,
       liege:g.liege, culture:b.culture, religion:b.religion, nameStyle:{ kind:g.kind, place:g.place } });
     FB.assignRealmRulerCharacter(s, realm.id, b.id);
-    var form = FB.political.government(s, { kind:'realm', id:def.actor.realmId });
+    var form = FB.political.government(s, { kind:V.realm, id:def.actor.realmId });
     if (form) FB.authoritySetGovernment(s, realm.id, form.formId);
     g.counties.forEach(function (pid) {
       s.holder[pid] = realm.id;
-      if (def.actor.realmId === 'player' && s.player.provs.indexOf(pid) >= 0)
+      if (def.actor.realmId === V.player && s.player.provs.indexOf(pid) >= 0)
         s.player.provs.splice(s.player.provs.indexOf(pid), 1);
     });
     b.homeProvinceId = g.capital;
@@ -168,19 +168,19 @@
     if (FB.invalidatePoliticsState) FB.invalidatePoliticsState();
     if (FB.syncHomeCountyLord) FB.syncHomeCountyLord(s);
     if (FB.ui && FB.ui.mapDirty) FB.ui.mapDirty();
-    finish(s, rec, def, 'granted', 'consenting_partition');
+    finish(s, rec, def, V.granted, 'consenting_partition');
     return true;
   }
   function partitionDay(s, rec, def) {
     if (rec.phase !== 'pending') return;
     var facts = partitionFacts(s, rec, def), reason = partitionBlock(s, rec, def, facts);
-    if (facts.time === 'early') return;
-    if (facts.time === 'late') { finish(s, rec, def, 'diverted', 'window_closed'); return; }
+    if (facts.time === V.early) return;
+    if (facts.time === 'late') { finish(s, rec, def, V.diverted, 'window_closed'); return; }
     if (['actor_changed','beneficiary_dead','capital_lost','already_landed','liege_changed'].indexOf(reason) >= 0) {
-      finish(s, rec, def, 'interrupted', reason); return;
+      finish(s, rec, def, V.interrupted, reason); return;
     }
-    if (def.parentStoryId && facts.parent && facts.parent !== 'granted') {
-      finish(s, rec, def, 'diverted', 'parent_diverted'); return;
+    if (def.parentStoryId && facts.parent && facts.parent !== V.granted) {
+      finish(s, rec, def, V.diverted, 'parent_diverted'); return;
     }
     if (reason) { rec.approvals = {}; rec.approvalStamp = null; return; }
     /* Every approval belongs to these exact living parties and holdings.
@@ -193,16 +193,17 @@
     grantPartition(s, rec, def);
   }
   FB.storyPartition = { quote:partitionQuote, grant:grantPartition };
-  FB.stories.registerType('partition', function (def) {
+  FB.stories.registerType(V.partition, function (def) {
     partitionDefinition(def);
-    return { id:def.id, kind:'world', requires:def.requires || [],
+    Object.keys(def.news || {}).forEach(function (key) { FB.registerMessage(def.news[key].key, { text:def.news[key].text }); });
+    return { id:def.id, kind:V.world, requires:def.requires || [],
       init:function (s) {
         var d = effective(s, def), actor = ruler(s, d.actor.realmId);
         if (!actor) return null;
         if (!FB.world.byId[d.actor.capital] || d.grant.counties.some(function (pid) { return !FB.world.byId[pid]; }))
           throw new Error('A partition must name existing counties.');
         var b = FB.makeCharacter(s, Object.assign({}, d.beneficiary,
-          { station:3, role:'notable', quality:2, traits:d.beneficiary.trait ? [d.beneficiary.trait] : [] }));
+          { station:3, role:V.notable, quality:2, traits:d.beneficiary.trait ? [d.beneficiary.trait] : [] }));
         b.homeProvinceId = d.actor.capital;
         return { phase:'pending', result:null, reason:null, outcomeTurn:null,
           actorId:actor.id, actorGeneration:FB.realmRulerGeneration(s, d.actor.realmId),
@@ -210,11 +211,11 @@
           liegeGeneration:null, grantedCounties:[] };
       },
       day:function (s, rec) { partitionDay(s, rec, effective(s, def)); },
-      title:function (s) { return text(s, def, 'name'); },
-      intro:function (s) { return text(s, def, 'desc'); },
+      title:function (s) { return text(s, def, V.name); },
+      intro:function (s) { return text(s, def, V.desc); },
       choices:function (s, rec) {
         var d = effective(s, def);
-        if (rec.phase !== 'pending' || time(s, d) !== 'open') return [];
+        if (rec.phase !== 'pending' || time(s, d) !== V.open) return [];
         var out = [];
         partitionParties(rec, d).forEach(function (party) {
           if (!partyIsPlayer(s, rec, d, party)) return;
@@ -237,7 +238,7 @@
       apply:function (s, rec, choice, reviewed) {
         var d = effective(s, def), q = partitionQuote(s, rec, d, choice);
         if (!q.allowed || !reviewed || reviewed.id !== choice || reviewed.stamp !== q.stamp) return false;
-        if (choice.indexOf('decline_') === 0) finish(s, rec, d, 'declined', 'player_declined');
+        if (choice.indexOf('decline_') === 0) finish(s, rec, d, V.declined, 'player_declined');
         else {
           var facts = q.facts;
           var terms = partitionTerms(facts);
@@ -253,39 +254,39 @@
           declined:FB.T('Partition declined'), diverted:FB.T('History took another course'),
           interrupted:FB.T('Partition interrupted') };
         var d = effective(s, def);
-        if (rec.phase === 'pending' && time(s, d) === 'open' && partitionParties(rec, d).some(function (party) {
+        if (rec.phase === 'pending' && time(s, d) === V.open && partitionParties(rec, d).some(function (party) {
           return partyIsPlayer(s, rec, d, party) && !rec.approvals[party];
         })) names.pending = FB.T('Awaiting your partition decision');
         return { phase:rec.phase, name:names[rec.result || rec.phase],
           lines:[FB.T('Promised territory becomes a holding only after actual possession and consent.')] };
       },
       validate:function (rec, s) {
-        basicRecord(rec, s, def, ['granted','declined','diverted','interrupted']);
-        if (rec.phase === 'started' || !id(rec.actorId) || !id(rec.beneficiaryId) ||
+        basicRecord(rec, s, def, [V.granted,V.declined,V.diverted,V.interrupted]);
+        if (rec.phase === V.started || !id(rec.actorId) || !id(rec.beneficiaryId) ||
             !Number.isInteger(rec.actorGeneration) || rec.actorGeneration < 1 || !plain(rec.approvals) ||
             rec.actorId === rec.beneficiaryId ||
             Object.keys(rec.approvals).some(function (p) { return partitionParties(rec, def).indexOf(p) < 0 || rec.approvals[p] !== true; }) ||
-            rec.approvalStamp !== null && typeof rec.approvalStamp !== 'string' ||
+            rec.approvalStamp !== null && typeof rec.approvalStamp !== V.string ||
             rec.realmId !== null && rec.realmId !== def.grant.realmId ||
             !Array.isArray(rec.grantedCounties) ||
-            (rec.result === 'granted' ? rec.realmId !== def.grant.realmId ||
+            (rec.result === V.granted ? rec.realmId !== def.grant.realmId ||
               JSON.stringify(rec.grantedCounties) !== JSON.stringify(def.grant.counties) ||
               !Number.isInteger(rec.liegeGeneration) || rec.liegeGeneration < 1 ||
               rec.approvalStamp === null || partitionParties(rec, def).some(function (p) { return rec.approvals[p] !== true; }) :
               rec.realmId !== null || rec.grantedCounties.length || rec.liegeGeneration !== null)) invalid(def.id);
         if (rec.phase === 'pending' && (!s.chars[rec.beneficiaryId] || !s.chars[rec.actorId])) invalid(def.id + '.parties');
       } };
-  });
+  }, 'js/story_history.js', partitionDefinition);
 
   function holyDefinition(def) {
     baseDefinition(def);
-    if (!id(def.religion) || !own(FBDATA.religions, def.religion) || !plain(def.target) || !id(def.target.kingdomId) ||
+    if (!id(def.systemId) || !FBDATA.systems[def.systemId] || !id(def.religion) || !own(FBDATA.religions, def.religion) || !plain(def.target) || !id(def.target.kingdomId) ||
         def.historySeed !== undefined && (!Array.isArray(def.historySeed) || def.historySeed.length > 24))
       throw new Error('Invalid dated holy-war definition.');
     var ids = {};
     (def.historySeed || []).forEach(function (row) {
       if (!plain(row) || !id(row.id) || ids[row.id] || !date(row.date) ||
-          !id(row.target) || ['attackers','defenders','partial','diverted'].indexOf(row.outcome) < 0 ||
+          !id(row.target) || [V.attackers,V.defenders,V.partial,V.diverted].indexOf(row.outcome) < 0 ||
           number(row.date) >= number(def.firstDate)) throw new Error('Invalid holy-war history seed.');
       ids[row.id] = true;
     });
@@ -298,7 +299,7 @@
       history:JSON.stringify(s.greatHolyWarHistory || null),
       targets:FB.greatHolyWarTargets(s, def.religion, true),
       eligible:!!head && FB.canCallGreatHolyWar(s, def.religion, def.target.kingdomId, head.id, true) };
-    var allowed = rec.phase === 'pending' && facts.time === 'open' && (choice === 'decline' || facts.eligible) &&
+    var allowed = rec.phase === 'pending' && facts.time === V.open && (choice === 'decline' || facts.eligible) &&
       (choice === 'call' || choice === 'decline') && !!head &&
       (controlled(s, head.id) || !!(pope && pope.id === s.player.charId));
     return { id:choice, allowed:allowed, reason:allowed ? null : 'head_or_target',
@@ -315,28 +316,28 @@
     if (!head || !FB.canCallGreatHolyWar(s, def.religion, def.target.kingdomId, head.id)) return false;
     var campaign = FB.callGreatHolyWar(s, def.religion, def.target.kingdomId, head.id);
     if (!campaign) return false;
-    rec.phase = 'started'; rec.campaignId = campaign.id; rec.calledTurn = s.turn;
+    rec.phase = V.started; rec.campaignId = campaign.id; rec.calledTurn = s.turn;
     rec.callerRealmId = head.id;
     rec.callerCharacterId = campaign.callerClaimantId || (ruler(s, head.id) || {}).id || null;
-    notice(s, def, 'called');
+    notice(s, def, V.called);
     return true;
   }
   function holyDay(s, rec, def) {
     if (rec.phase === 'resolved') return;
-    if (rec.phase === 'started') {
+    if (rec.phase === V.started) {
       if (s.greatHolyWar && s.greatHolyWar.id === rec.campaignId) return;
       var completed = (s.greatHolyWarHistory && s.greatHolyWarHistory.campaigns || [])
         .filter(function (row) { return row.id === rec.campaignId; })[0];
-      finish(s, rec, def, completed && completed.outcome === 'attackers' ? 'won' : 'failed',
+      finish(s, rec, def, completed && completed.outcome === V.attackers ? V.won : V.failed,
         completed ? 'campaign_ended' : 'campaign_missing');
       return;
     }
-    if (!FB.systemEnabled(s, 'great_holy_wars', { faith:def.religion })) return;
-    if (time(s, def) === 'early') return;
-    if (time(s, def) === 'late') { finish(s, rec, def, 'diverted', 'window_closed'); return; }
+    if (!FB.systemEnabled(s, def.systemId, { faith:def.religion })) return;
+    if (time(s, def) === V.early) return;
+    if (time(s, def) === 'late') { finish(s, rec, def, V.diverted, 'window_closed'); return; }
     var targets = FB.greatHolyWarTargets(s, def.religion);
     if (!targets.some(function (t) { return t.kingdomId === def.target.kingdomId; })) {
-      finish(s, rec, def, 'diverted', 'target_restored'); return;
+      finish(s, rec, def, V.diverted, 'target_restored'); return;
     }
     var head = FB.religiousHeadOf(s, def.religion), pope = FB.romanPope && FB.romanPope(s, def.religion);
     if (!head || controlled(s, head.id) || pope && pope.id === s.player.charId) return;
@@ -347,28 +348,29 @@
     if (!history || !Array.isArray(history.campaigns)) return true;
     /* Detached save validation precedes world activation. Resolve against the
        saved bookmark, including its legacy aliases, not the currently played map. */
-    var bookmark = FB.bookmark(s.start && s.start.id || '867');
+    var bookmark = FB.bookmark(s.start && s.start.id);
     var kingdoms = bookmark && bookmark.kingdoms || {};
     var seen = {}, start = s.start && { year:s.start.year, season:s.start.season, day:s.start.day };
     history.campaigns.forEach(function (row) {
-      if (!row || !own(row, 'historical')) return;
+      if (!row || !own(row, V.historical)) return;
       if (row.historical !== true || !id(row.id) || seen[row.id] || !date(row.date) || !date(start) ||
           number(row.date) >= number(start) || row.turn !== number(row.date) - number(start) ||
           !own(FBDATA.religions, row.religion) || !id(row.target) ||
           !(own(kingdoms, row.target) || own(kingdoms, 'k_' + row.target)) ||
-          ['attackers','defenders','partial','diverted'].indexOf(row.outcome) < 0) invalid('greatHolyWarHistory');
+          [V.attackers,V.defenders,V.partial,V.diverted].indexOf(row.outcome) < 0) invalid('greatHolyWarHistory');
       seen[row.id] = true;
     });
     return true;
   };
-  FB.stories.registerType('holy_war', function (def) {
+  FB.stories.registerType(V.holy_war, function (def) {
     holyDefinition(def);
-    return { id:def.id, kind:'world', requires:def.requires || [],
+    Object.keys(def.news || {}).forEach(function (key) { FB.registerMessage(def.news[key].key, { text:def.news[key].text }); });
+    return { id:def.id, kind:V.world, requires:def.requires || [],
       init:function (s) {
         var seeded = [];
-        if (FB.systemEnabled(s, 'great_holy_wars', { faith:def.religion })) {
-          if (!FB.titleLevels.has('kingdom', def.target.kingdomId) ||
-              (def.historySeed || []).some(function (row) { return !FB.titleLevels.has('kingdom', row.target); }))
+        if (FB.systemEnabled(s, def.systemId, { faith:def.religion })) {
+          if (!FB.titleLevels.has(V.kingdom, def.target.kingdomId) ||
+              (def.historySeed || []).some(function (row) { return !FB.titleLevels.has(V.kingdom, row.target); }))
             throw new Error('A holy-war story must name existing kingdoms.');
           FB.ensureGreatHolyWar(s);
           var history = s.greatHolyWarHistory, start = { year:s.start.year, season:s.start.season, day:s.start.day };
@@ -390,11 +392,11 @@
           campaignId:null, calledTurn:null, callerRealmId:null, callerCharacterId:null, seededIds:seeded };
       },
       day:function (s, rec) { holyDay(s, rec, effective(s, def)); },
-      title:function (s) { return text(s, def, 'name'); },
-      intro:function (s) { return text(s, def, 'desc'); },
+      title:function (s) { return text(s, def, V.name); },
+      intro:function (s) { return text(s, def, V.desc); },
       choices:function (s, rec) {
         var d = effective(s, def), head = FB.religiousHeadSnapshot(s, d.religion), pope = popeSnapshot(s, d.religion);
-        if (rec.phase !== 'pending' || time(s, d) !== 'open' ||
+        if (rec.phase !== 'pending' || time(s, d) !== V.open ||
             !(head && controlled(s, head.id) || pope && pope.id === s.player.charId)) return [];
         return [{ id:'call', label:FB.T('Call the holy war'),
           detail:FB.T('Call the faithful through the existing campaign rules. Authority, hostile objectives, preparation and actual fighting determine the outcome.') },
@@ -405,11 +407,11 @@
       apply:function (s, rec, choice, reviewed) {
         var d = effective(s, def), q = holyQuote(s, rec, d, choice);
         if (!q.allowed || !reviewed || reviewed.id !== choice || reviewed.stamp !== q.stamp) return false;
-        if (choice === 'decline') { finish(s, rec, d, 'declined', 'player_declined'); return true; }
+        if (choice === 'decline') { finish(s, rec, d, V.declined, 'player_declined'); return true; }
         return holyCall(s, rec, d);
       },
       status:function (s, rec) {
-        if (rec.phase === 'pending' && time(s, def) === 'early') return null;
+        if (rec.phase === 'pending' && time(s, def) === V.early) return null;
         var names = { pending:FB.T('Awaiting a religious call'), started:FB.T('Holy war underway'),
           won:FB.T('Campaign settled'), failed:FB.T('Campaign ended'), declined:FB.T('Call declined'),
           diverted:FB.T('History took another course') };
@@ -417,16 +419,16 @@
           lines:[FB.T('The historical date offers a call; it guarantees neither a campaign nor a conquest.')] };
       },
       validate:function (rec, s) {
-        basicRecord(rec, s, def, ['won','failed','declined','diverted']);
+        basicRecord(rec, s, def, [V.won,V.failed,V.declined,V.diverted]);
         var seeds = (def.historySeed || []).map(function (r) { return r.id; });
         if (!Array.isArray(rec.seededIds) || rec.seededIds.some(function (v, i) { return seeds.indexOf(v) < 0 || rec.seededIds.indexOf(v) !== i; }) ||
             rec.campaignId !== null && !/^ghw_[0-9]+$/.test(rec.campaignId) ||
             rec.calledTurn !== null && (!Number.isInteger(rec.calledTurn) || rec.calledTurn < 0 || rec.calledTurn > s.turn) ||
             rec.callerRealmId !== null && !id(rec.callerRealmId) || rec.callerCharacterId !== null && !id(rec.callerCharacterId) ||
-            (rec.phase === 'started' || rec.result === 'won' || rec.result === 'failed') &&
+            (rec.phase === V.started || rec.result === V.won || rec.result === V.failed) &&
               (!rec.campaignId || rec.calledTurn === null || !rec.callerRealmId) ||
             rec.phase === 'pending' && (rec.campaignId !== null || rec.calledTurn !== null || rec.callerRealmId !== null || rec.callerCharacterId !== null))
           invalid(def.id);
       } };
-  });
+  }, 'js/story_history.js', holyDefinition);
 })();

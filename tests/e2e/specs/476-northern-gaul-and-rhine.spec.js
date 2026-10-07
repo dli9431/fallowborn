@@ -2,6 +2,7 @@
 const fs = require('fs');
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
+  'data/story_courts_476.js',
   'index.html', 'data/bookmarks.js', 'data/bookmark_476.js',
   'data/bookmark_476_gaul_iberia.js', 'data/political_institutions.js',
   'data/story_campaigns.js', 'data/cultures.js', 'data/technology.js',
@@ -11,8 +12,8 @@ dependsOnRuntime(__filename, [
   'js/world.js', 'js/model.js', 'js/population.js', 'js/settlement.js', 'js/station.js',
   'js/authority.js', 'js/politics.js', 'js/institutions.js', 'js/religion.js',
   'js/governments.js', 'js/systems.js', 'js/justice.js', 'js/events.js', 'js/technology.js', 'js/bookmark_setup.js',
-  'js/stories.js', 'js/story_campaign.js', 'js/story_476_rails.js',
-  'js/story_western_court_476.js', 'js/story_curialis_track_476.js', 'js/treasury.js', 'js/wars.js', 'js/armies.js',
+  'js/stories.js', 'js/story_campaign.js', 'data/story_instances.js',
+  'js/story_courts.js', 'js/story_track.js', 'js/treasury.js', 'js/wars.js', 'js/armies.js',
   'js/main.js', 'js/save.js', 'js/save_v4.js', 'js/messages.js', 'js/i18n.js', 'js/crazygames.js'
 ]);
 const { test, expect } = require('../support/fixture');

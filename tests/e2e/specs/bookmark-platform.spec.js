@@ -5,6 +5,8 @@ const { startParityGame } = require('../support/game/parity');
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 
 dependsOnRuntime(__filename, [
+  'data/story_instances.js',
+  'data/story_courts_476.js',
   'index.html', 'data/bookmarks.js', 'data/bookmark_476.js',
   'data/bookmark_476_italy.js', 'data/bookmark_476_dalmatia_east.js',
   'data/bookmark_476_gaul_iberia.js', 'data/bookmark_476_africa.js',
@@ -12,7 +14,7 @@ dependsOnRuntime(__filename, [
   'data/geographies.js', 'data/settlements.js', 'data/eras.js', 'data/systems.js', 'data/technology.js',
   'js/world.js', 'js/model.js', 'js/mods.js', 'js/main.js', 'js/institutions.js',
   'js/progression.js', 'js/religion.js', 'js/authority.js', 'js/politics.js',
-  'js/stories.js', 'js/story_western_court_476.js', 'js/systems.js', 'js/bookmark_setup.js',
+  'js/stories.js', 'js/story_courts.js', 'js/systems.js', 'js/bookmark_setup.js',
   'js/save.js', 'js/save_v4.js', 'js/technology.js'
 ]);
 

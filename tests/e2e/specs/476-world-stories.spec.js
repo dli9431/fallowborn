@@ -1,6 +1,7 @@
 'use strict';
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
+  'data/story_courts_476.js',
   'index.html', 'data/story_campaigns.js', 'data/bookmarks.js', 'data/bookmark_476.js',
   'data/eras.js', 'data/systems.js', 'js/systems.js', 'data/cultures.js',
   'data/settlements.js', 'data/map_data.js', 'data/counties.js',
@@ -8,9 +9,9 @@ dependsOnRuntime(__filename, [
   'data/bookmark_476_italy.js', 'data/bookmark_476_dalmatia_east.js',
   'data/bookmark_476_gaul_iberia.js', 'data/bookmark_476_africa.js',
   'data/political_institutions.js', 'data/technology.js', 'data/starts.js',
-  'js/stories.js', 'js/story_campaign.js', 'js/story_476_rails.js', 'js/bookmark_setup.js', 'js/story_agreements.js',
-  'js/story_western_court_476.js', 'js/story_federate_track_476.js',
-  'js/story_curialis_track_476.js', 'js/authority.js', 'js/federates.js',
+  'js/stories.js', 'js/story_campaign.js', 'data/story_instances.js', 'js/bookmark_setup.js', 'js/story_agreements.js',
+  'js/story_courts.js', 'js/story_track.js',
+   'js/authority.js', 'js/federates.js',
   'js/wars.js', 'js/armies.js', 'js/politics.js', 'js/world.js', 'js/model.js',
   'js/treasury.js', 'js/institutions.js', 'js/main.js', 'js/save.js',
   'js/save_v4.js', 'js/messages.js', 'js/i18n.js', 'js/ui_panels.js', 'js/ui_misc.js', 'js/religion.js'
@@ -120,7 +121,7 @@ test('Zeno’s commanders restore the office and replace a stale commission exac
       let s = FB.state;
       const w = s.stories.western_court_476, rec = s.stories.zeno_return_476;
       const t = s.stories.federate_track_476;
-      const old = FB.story476.recognize(s, 'imperial_commission',
+      const old = FB.storyCourts.context('western_court_476').recognize(s, 'imperial_commission',
         { kind:'realm', id:'byzantium' }, { kind:'realm', id:'federates_476' },
         { kind:'realm', id:'federates_476' });
       t.backedClaimant = 'zeno';
@@ -319,18 +320,18 @@ test('the western office survives, is deposed and restores with mandates indepen
       let s = FB.state;
       const w = s.stories.western_court_476, rec = s.stories.western_office_476;
       s.stories.federate_track_476.role = 'outside';
-      s.turn = 361; FB.story476.syncWestOffice(s);
+      s.turn = 361; FB.storyCourts.context('western_court_476').syncOffice(s);
       const survived = rec.result;
       const old = w.westOfficeId;
-      FB.transferProvince(s, 'ravenna', 'federates_476'); FB.story476.syncWestOffice(s);
+      FB.transferProvince(s, 'ravenna', 'federates_476'); FB.storyCourts.context('western_court_476').syncOffice(s);
       const deposed = rec.result;
       const removed = s.authority.appointments.find(function (row) { return row.id === old; }).status;
-      FB.transferProvince(s, 'ravenna', 'italy'); FB.story476.syncWestOffice(s);
+      FB.transferProvince(s, 'ravenna', 'italy'); FB.storyCourts.context('western_court_476').syncOffice(s);
       const live = FB.political.offices(s, { kind:'character', id:w.westRulerId })
         .filter(function (row) { return row.ref.appointmentId === w.westOfficeId && row.status === 'active'; }).length;
       const newId = w.westOfficeId, before = JSON.stringify(rec), count = s.authority.appointments.length;
       FB.save.restore(JSON.parse(FB.save.serialize())); s = FB.state;
-      FB.story476.syncWestOffice(s);
+      FB.storyCourts.context('western_court_476').syncOffice(s);
       return { survived:survived, deposed:deposed, removed:removed, result:rec.result, live:live,
         newOffice:newId !== old, owner:s.owner.ravenna,
         durable:before === JSON.stringify(s.stories.western_office_476), once:count === s.authority.appointments.length };

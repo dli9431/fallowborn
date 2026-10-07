@@ -1792,7 +1792,7 @@ window.FB = window.FB || {};
     if (receipt.eventId === 'proposal_made' || receipt.eventId === 'sibling_proposal_made') {
       title = receipt.result === 'success' ? FB.T('Wedding vows') : FB.T('Proposal refused');
     }
-    if ((receipt.eventId === 'flee_serfdom' || receipt.eventId === 'colonus_flight') && receipt.result === 'failure') title = FB.T('Escape failed');
+    if ((receipt.eventId === 'flee_serfdom' || receipt.eventId === FB.colonateFlightEvent().id) && receipt.result === 'failure') title = FB.T('Escape failed');
     if (report) title = hostileWarResultName(report.result, false);
     if (rankLoss) title = FB.T('Station lost');
     $('ev-title').textContent = title;
@@ -3101,7 +3101,7 @@ window.FB = window.FB || {};
         return;
       }
       if (flight) { UI.closeModal(); return; }
-      if (FB.noteDeedCompleted) FB.noteDeedCompleted(s, 'review_colonate');
+      if (FB.noteDeedCompleted) FB.noteDeedCompleted(s, FB.colonateReviewDeed().id);
       UI.refresh();
       openModal(FB.T('Estate release recorded'), reviewFactsCard('',
         kv('Station', esc(FB.styledTitle(s))) + kv('Family', esc(FB.T('The head, spouses and descendants are free.'))) +

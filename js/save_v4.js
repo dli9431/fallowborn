@@ -435,6 +435,33 @@
     if (state.situation476 !== undefined && !plain(state.situation476)) field('state.situation476');
     if (state.stories !== undefined) {
       if (!plain(state.stories)) field('state.stories');
+      /* Typed instance splits are declaration-owned and run only when their
+         source exists. Reject conflicts rather than initializing or merging
+         historical commitments. The owning types validate every copied row. */
+      (FBDATA.storyRecordMigrations || []).forEach(function (migration) {
+        if (!own(state.stories, migration.sourceId)) return;
+        var source = state.stories[migration.sourceId];
+        if (!plain(source) || !plain(source.opportunities) ||
+            Object.keys(source.opportunities).length !== migration.opportunityFields.length ||
+            migration.opportunityFields.some(function (key) { return !plain(source.opportunities[key]); }))
+          field('state.stories.' + migration.sourceId);
+        function read(path) {
+          var value = path.split('.').reduce(function (row, key) { return row && own(row, key) ? row[key] : undefined; }, source);
+          if (value === undefined) field('state.stories.' + migration.sourceId + '.' + path);
+          return JSON.parse(JSON.stringify(value));
+        }
+        var copies = {};
+        migration.targets.forEach(function (target) {
+          if (own(state.stories, target.id)) field('state.stories.' + target.id);
+          var row = read(target.recordField);
+          if (!plain(row)) field('state.stories.' + migration.sourceId + '.' + target.recordField);
+          row.approvals = {};
+          Object.keys(target.fields).forEach(function (key) { row[key] = read(target.fields[key]); });
+          copies[target.id] = row;
+        });
+        Object.keys(copies).forEach(function (id) { state.stories[id] = copies[id]; });
+        delete state.stories[migration.sourceId];
+      });
       for (var id in state.stories) if (own(state.stories, id)) {
         if (!known('story', id)) unknown('story', id);
         if (!plain(state.stories[id])) field('state.stories.' + id);

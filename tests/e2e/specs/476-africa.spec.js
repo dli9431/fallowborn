@@ -1,14 +1,15 @@
 'use strict';
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
+  'data/story_courts_476.js',
   'index.html', 'data/bookmark_476_africa.js', 'data/bookmark_476.js',
   'data/bookmarks.js', 'data/settlements.js', 'data/geographies.js',
   'data/intrigue.js', 'data/political_institutions.js', 'data/story_campaigns.js',
   'data/eras.js', 'data/systems.js', 'data/economy.js', 'data/cultures.js',
   'data/distribution_crazygames.js', 'js/world.js', 'js/institutions.js',
   'js/authority.js', 'js/justice.js', 'js/population.js', 'js/events.js',
-  'js/stories.js', 'js/story_campaign.js', 'js/story_476_rails.js',
-  'js/story_western_court_476.js', 'js/wars.js', 'js/armies.js',
+  'js/stories.js', 'js/story_campaign.js', 'data/story_instances.js',
+  'js/story_courts.js', 'js/wars.js', 'js/armies.js',
   'js/save.js', 'js/save_v4.js', 'js/main.js', 'js/modifiers.js', 'js/model.js'
 ]);
 const { test, expect } = require('../support/fixture');

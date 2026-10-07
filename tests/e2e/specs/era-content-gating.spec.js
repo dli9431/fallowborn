@@ -1,6 +1,8 @@
 'use strict';
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
+  'data/story_instances.js',
+  'data/story_courts_476.js',
   'data/systems.js', 'data/eras.js', 'data/ambitions.js', 'data/economy.js', 'data/cultures.js',
   'data/papacy.js', 'data/tournaments.js', 'data/technology.js',
   'data/events_agency.js', 'data/events_artifacts.js', 'data/events_common.js',
@@ -11,7 +13,7 @@ dependsOnRuntime(__filename, [
   'data/events_tutorial.js', 'data/events_war.js', 'data/events_world.js',
   'js/events.js', 'js/world.js', 'js/ambitions.js', 'js/economy.js', 'js/model.js',
   'js/papacy.js', 'js/tournaments.js', 'js/save.js', 'js/mods.js', 'js/main.js',
-  'js/ui_modals.js', 'js/ui_tournaments.js', 'js/story_western_court_476.js',
+  'js/ui_modals.js', 'js/ui_tournaments.js', 'js/story_courts.js',
   'js/fiscal.js', 'js/lordships.js', 'js/settlement.js'
 ]);
 const { test, expect } = require('../support/fixture');

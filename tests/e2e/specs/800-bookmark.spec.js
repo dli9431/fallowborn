@@ -5,6 +5,7 @@ const { openCrazyGame } = require('../support/game/crazygames-title');
 const { injectBrowserHarness } = require('../support/game/browser-harness');
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
+  'data/story_courts_476.js',
   'index.html', 'data/bookmark_800.js', 'data/bookmark_800_history.js',
   'data/bookmarks.js', 'data/map_data.js', 'data/counties.js',
   'data/geographies.js', 'data/settlements.js', 'data/settlements_real.js',
@@ -12,15 +13,15 @@ dependsOnRuntime(__filename, [
   'data/cultures.js', 'data/papacy.js', 'data/story_campaigns.js',
   'data/distribution_crazygames.js', 'js/crazygames.js', 'js/systems.js', 'data/systems.js',
   'js/world.js', 'js/governments.js', 'js/station.js', 'js/starts.js',
-  'js/stories.js', 'js/story_campaign.js', 'js/story_476_rails.js',
-  'js/royal_settlements.js', 'js/story_carolingian_800.js', 'js/treasury.js', 'js/authority.js', 'js/model.js',
+  'js/stories.js', 'js/story_campaign.js', 'data/story_instances.js',
+  'js/royal_settlements.js', 'js/story_settlements.js',  'js/treasury.js', 'js/authority.js', 'js/model.js',
   'js/papacy.js', 'js/technology.js', 'js/ambitions.js', 'js/wars.js', 'js/localfolk.js',
   'js/armies.js', 'js/main.js', 'js/save.js', 'js/save_v4.js'
 ]);
 
 const RAILS = ['barcelona_800', 'danish_friesland_800',
   'abbasid_anatolia_800', 'italian_lagoon_800'];
-const STORIES = ['carolingian_settlements_800'].concat(RAILS);
+const STORIES = ['divisio_800','ordinatio_800','gifts_800','recognition_800','verdun_800'].concat(RAILS);
 
 test('CrazyGames offers 800 in its live start registry', async function ({ page }, testInfo) {
   await page.addInitScript(function () {

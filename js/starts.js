@@ -7,7 +7,7 @@
   };
   var realmFields = ['realmId','patronRealmId','federateRealmId','institutionId',
     'ownerId','holderId','controllerId','applicantRealmId','targetOwnerId','owner',
-    'issuerRealmId','payerRealmId','beneficiaryRealmId','nomineeRealmId',
+    'issuerRealmId','payerRealmId','beneficiaryRealmId','nomineeRealmId','scopeRealmId',
     'liege','realm','fromRid','toRid','a','b'];
   function references(value, from) {
     if (!value || typeof value !== 'object') return;
@@ -16,6 +16,9 @@
       if (value[key] === from) value[key] = 'player';
     });
     Object.keys(value).forEach(function (key) { references(value[key], from); });
+    ['ownerIds','remnantRealmIds','revoltRealmIds','branchRealmIds'].forEach(function (key) {
+      if (Array.isArray(value[key])) value[key] = value[key].map(function (id) { return id === from ? 'player' : id; });
+    });
     if (value.courtAnchors) rekey(value.courtAnchors, from);
     if (value.displacedCourts) rekey(value.displacedCourts, from);
     if (value.approvals) rekey(value.approvals, from);

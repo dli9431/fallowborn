@@ -2886,7 +2886,7 @@ window.FB = window.FB || {};
         coachQueue.some(function (item) {
           return item.saveHintId === 'serf_tenure';
         })) return false;
-    const tenureDeed = FB.colonateTenure(s) ? 'review_colonate' : 'review_serf_tenure';
+    const tenureDeed = FB.colonateTenure(s) ? FB.colonateReviewDeed().id : 'review_serf_tenure';
     const exposed = UI.revealDeedAction &&
       UI.revealDeedAction(tenureDeed);
     UI.coachmark(FB.colonateTenure(s) ? FB.T(
@@ -3333,7 +3333,7 @@ window.FB = window.FB || {};
     const p = s.player;
     if (FB.station.isSerf(p, s)) {
       if (FB.colonateTenure(s)) return crazyGamesProgressTip('cg-freedom-plan', FB.T(
-        'Your next goal is estate release. In Rank & Realm, open Review estate & freedom to inspect your possessor, dues, paid release, consented service and risky flight. Keep earning while you prepare.'), 'review_colonate');
+        'Your next goal is estate release. In Rank & Realm, open Review estate & freedom to inspect your possessor, dues, paid release, consented service and risky flight. Keep earning while you prepare.'), FB.colonateReviewDeed().id);
       const offer = FB.freedomOfferView(s);
       if (offer && offer.status === 'service') {
         return crazyGamesProgressTip('cg-freedom-service', FB.T(
@@ -3462,7 +3462,7 @@ window.FB = window.FB || {};
     const s = FB.state;
     const needsFreedom = s && s.player && FB.station.isSerf(s.player, s);
     const colony = s && FB.colonateTenure(s);
-    const deed = needsFreedom ? (colony ? 'review_colonate' : 'review_serf_tenure') : 'buy_land';
+    const deed = needsFreedom ? (colony ? FB.colonateReviewDeed().id : 'review_serf_tenure') : 'buy_land';
     const exposed = UI.revealDeedAction && UI.revealDeedAction(deed);
     const text = colony
       ? FB.T('Land comes after estate release. In Rank & Realm, open Review estate & freedom to arrange release; once free, Buy a plot of land appears in the same section.')

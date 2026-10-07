@@ -1,6 +1,8 @@
 'use strict';
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
+  'data/story_instances.js',
+  'data/story_courts_476.js',
   'index.html', 'data/eras.js', 'data/lexicons.js', 'data/starts.js',
   'data/economy.js', 'data/technology.js', 'data/actions.js',
   'data/bookmark_476.js', 'data/bookmark_476_italy.js',
@@ -10,8 +12,8 @@ dependsOnRuntime(__filename, [
   'js/economy.js', 'js/events.js', 'js/world.js', 'js/lordships.js',
   'js/authority.js', 'js/treasury.js', 'js/armies.js', 'js/lexicon.js', 'js/institutions.js',
   'js/main.js', 'js/ui_panels.js', 'js/ui_modals.js', 'js/ui_misc.js',
-  'js/stories.js', 'js/story_western_court_476.js',
-  'js/story_curialis_track_476.js', 'js/story_federate_track_476.js',
+  'js/stories.js', 'js/story_courts.js',
+  'js/story_track.js',
   'js/save.js', 'js/save_v4.js'
 ]);
 const { test, expect } = require('../support/fixture');
@@ -130,9 +132,9 @@ test('service and live offices qualify independently of wealth, and changed revi
       const refused = FB.attemptRankElevation(s, 'standing', ctx);
       const noMutation = before === JSON.stringify(s) && rng === FB.getRngState();
       const w = s.stories.western_court_476;
-      const rec = FB.story476.recognizeOrExisting(s, 'civic_acceptance', { kind:'county', id:'ravenna' },
+      const rec = FB.storyCourts.context('western_court_476').recognizeOrExisting(s, 'civic_acceptance', { kind:'county', id:'ravenna' },
         { kind:'character', id:c.id }, { kind:'county', id:'ravenna' });
-      const office = FB.story476.appointment(s, 'judicial_vicar', 'italy',
+      const office = FB.storyCourts.context('western_court_476').appointment(s, 'judicial_vicar', 'italy',
         { kind:'character', id:c.id }, { kind:'county', id:'ravenna' }, rec.id);
       const live = FB.rankElevationStatus(s);
       FB.authorityAppointmentTransition(s, office.id, 'remove');
@@ -212,7 +214,7 @@ for (const choice of ['serve_council','keep_household']) {
     });
 }
 
-test('curial reviews reject changed age, insufficient total funds and an occupied mandate without partial writes',
+test('curial reviews reject changed terms, mismatched choices, age, funds and occupied mandates without partial writes',
   async function ({ page }, testInfo) {
     await start(page, testInfo, 'curialis_476');
     const result = await page.evaluate(function () {
@@ -221,6 +223,18 @@ test('curial reviews reject changed age, insufficient total funds and an occupie
       const beforeQuote = JSON.stringify(s), rng = FB.getRngState();
       FB.stories.quote(s, 'curialis_track_476', 'serve_council');
       const pure = beforeQuote === JSON.stringify(s) && rng === FB.getRngState();
+      const wrongChoice = !FB.stories.apply(s, 'curialis_track_476', 'keep_household', ready);
+      const noWrongChoiceWrites = beforeQuote === JSON.stringify(s);
+      const declaration = FB.stories.get('curialis_track_476').declaration;
+      const fee = declaration.parameters.registrationFee;
+      declaration.parameters.registrationFee = fee + 1;
+      const changedTerms = !FB.stories.apply(s, 'curialis_track_476', 'serve_council', ready);
+      const noChangedTermsWrites = beforeQuote === JSON.stringify(s);
+      declaration.parameters.registrationFee = fee;
+      declaration.choices.serve_council.operation = 'keep_household';
+      const changedOperation = !FB.stories.apply(s, 'curialis_track_476', 'serve_council', ready);
+      const noChangedOperationWrites = beforeQuote === JSON.stringify(s);
+      declaration.choices.serve_council.operation = 'serve_council';
       s.player.gold = 59;
       const funds = !FB.stories.quote(s, 'curialis_track_476', 'serve_council').allowed;
       s.player.gold = 80; c.born = s.date.year - 15;
@@ -229,15 +243,20 @@ test('curial reviews reject changed age, insufficient total funds and an occupie
       const noWrites = before === JSON.stringify(s);
       c.born = s.date.year - 30;
       const person = { kind:'character', id:w.civicDelegateId }, at = { kind:'county', id:'ravenna' };
-      const rec = FB.story476.recognizeOrExisting(s, 'civic_acceptance', at, person, at);
-      FB.story476.appointment(s, 'judicial_vicar', 'italy', person, at, rec.id);
+      const rec = FB.storyCourts.context('western_court_476').recognizeOrExisting(s, 'civic_acceptance', at, person, at);
+      FB.storyCourts.context('western_court_476').appointment(s, 'judicial_vicar', 'italy', person, at, rec.id);
       const occupied = FB.stories.quote(s, 'curialis_track_476', 'serve_council');
       const beforeOccupied = JSON.stringify(s);
       const rejected = !FB.stories.apply(s, 'curialis_track_476', 'serve_council', occupied);
-      return { ready:ready.allowed, pure:pure, funds:funds, underage:underage, noWrites:noWrites,
+      return { ready:ready.allowed, pure:pure, wrongChoice:wrongChoice, noWrongChoiceWrites:noWrongChoiceWrites,
+        changedTerms:changedTerms, noChangedTermsWrites:noChangedTermsWrites,
+        changedOperation:changedOperation, noChangedOperationWrites:noChangedOperationWrites,
+        funds:funds, underage:underage, noWrites:noWrites,
         occupied:!occupied.allowed, rejected:rejected, unchanged:beforeOccupied === JSON.stringify(s) };
     });
-    expect(result).toEqual({ ready:true, pure:true, funds:true, underage:true, noWrites:true,
+    expect(result).toEqual({ ready:true, pure:true, wrongChoice:true, noWrongChoiceWrites:true,
+      changedTerms:true, noChangedTermsWrites:true, changedOperation:true, noChangedOperationWrites:true,
+      funds:true, underage:true, noWrites:true,
       occupied:true, rejected:true, unchanged:true });
   });
 

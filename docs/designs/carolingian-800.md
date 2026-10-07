@@ -1,6 +1,6 @@
 Carolingian inheritance and diplomacy
 
-The selectable 800 bookmark attaches carolingian_settlements_800 before its four ordinary campaigns. data/bookmark_800_history.js owns the opening royal courts, opportunity windows and compressed region definitions. js/story_carolingian_800.js owns negotiation and the saved record. js/royal_settlements.js supplies bookmark-neutral branch linking, heir designation, complete regional grants and release. Shared world code calls these helpers at ordinary succession, birth and death boundaries without naming the bookmark or story.
+The selectable 800 bookmark attaches divisio_800, ordinatio_800, gifts_800, recognition_800 and verdun_800 before its four ordinary campaigns. data/bookmark_800_history.js owns the opening royal courts, opportunity windows and compressed region definitions. js/story_settlements.js supplies five content-free types; data/story_instances.js composes their declarations into the shared registry. js/royal_settlements.js supplies bookmark-neutral branch linking, heir designation, complete regional grants and release. Shared world code calls these helpers at ordinary succession, birth and death boundaries without naming the bookmark or story.
 
 Opening family
 
@@ -22,11 +22,11 @@ Frankish-Abbasid gifts require the original living rulers, sovereign courts, the
 
 Negotiation and presentation
 
-Each eligible opportunity receives one seeded 65 percent autonomous negotiation attempt per season. Date windows open eligibility and close expired opportunities; they guarantee no settlement. Quotes read ids, generations, current ownership, holders, money and any participating war ids. apply rechecks the complete stamp before a payment or award. The shared Deeds card and story sheet expose localized opportunity labels and outcomes. Durable news uses literal message descriptors; saves contain no rendered prose. No new screen or control pattern is introduced.
+Each eligible opportunity receives one seeded 65 percent autonomous negotiation attempt per season, in the original settlement order. Player-controlled parties must first authorize the reviewed terms; changed parties or shares invalidate their authorization. Date windows open eligibility and close expired opportunities; they guarantee no settlement. Quotes read ids, generations, current ownership, holders, money and any participating war ids. apply rechecks the complete stamp before a payment or award. The shared Deeds card and story sheet expose localized opportunity labels and outcomes. Durable news uses literal message descriptors; saves contain no rendered prose. No new screen or control pattern is introduced.
 
 Persistence and limits
 
-The story stores the opening cast, five bounded opportunity records, optional settlement plans, attempt seasons, pressure and its war id. Resolved agreements never reopen. Restore consumes saved state without calling init, reauthoring courts, paying gifts or reinstating recognition. Older 800 saves without this story remain unchanged. The settlement helpers and records are not JSON runtime-mod roots. Exact historical clauses, object gifts, Gregorian dates and every 843 boundary remain editorial abstractions. See ../research/800-bookmark.md for sources.
+Five independently typed records store phase, result, turn, attemptSeason, plan and approvals. divisio_800 retains the opening cast; verdun_800 retains pressure and its war id. Resolved agreements never reopen. Restore consumes saved state without calling init, reauthoring courts, paying gifts or reinstating recognition. Older 800 saves without this story remain unchanged. Existing bundled branch saves migrate on the detached copy by splitting opportunities into these five records and retaining cast, plans and pressure. Mixed old/new records or malformed source records fail before adoption. The settlement helpers and instance catalogue are not JSON runtime-mod roots. Exact historical clauses, object gifts, Gregorian dates and every 843 boundary remain editorial abstractions. See ../research/800-bookmark.md for sources.
 
 Technology impact
 

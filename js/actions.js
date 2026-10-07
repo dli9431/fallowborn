@@ -3728,7 +3728,7 @@ window.FB = window.FB || {};
       if (FB.ui && FB.ui.showRankDetails) FB.ui.showRankDetails();
     } },
 
-  { id:'review_colonate', opensChoices:true, noConsume:true,
+  { id:FB.colonateReviewDeed().handler, opensChoices:true, noConsume:true,
     desc:function () {
       return FB.T('Review your registered estate, possessor, obligations and routes to release.');
     },

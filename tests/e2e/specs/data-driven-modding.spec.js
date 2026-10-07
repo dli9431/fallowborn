@@ -1,6 +1,8 @@
 'use strict';
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
+  'data/story_instances.js',
+  'data/story_courts_476.js',
   'data/map_data.js',
   'data/starts.js',
   'data/eras.js',
@@ -27,8 +29,8 @@ dependsOnRuntime(__filename, [
   'js/save.js', 'js/save_v4.js',
   'js/mods.js',
   'js/stories.js',
-  'js/story_western_court_476.js',
-  'js/story_federate_track_476.js',
+  'js/story_courts.js',
+  'js/story_track.js',
   'js/ui_misc.js',
   'js/ui_panels.js',
   'js/ui_modals.js',
