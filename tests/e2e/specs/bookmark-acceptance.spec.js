@@ -37,6 +37,26 @@ async function saveWithinBudget(page, testInfo, label, budget) {
   return text;
 }
 
+for (const sample of [
+  { bookmark:'867', scenario:'serf', parts:7 },
+  { bookmark:'476', scenario:'federate_476', parts:9 }
+]) {
+  test('bookmark smoke codes preserve the ' + sample.parts + '-part identity at ' + sample.bookmark,
+    async function ({ page }, testInfo) {
+      await beginBookmark(page, testInfo, sample.bookmark, sample.scenario);
+      const result = await page.evaluate(function () {
+        const s = FB.state, me = s.chars[s.player.charId];
+        const county = FB.bookmark(s.start.id).provinces.filter(function (p) { return p.id === s.player.provinceId; })[0];
+        return { parts:s.seed.split('-').length,
+          principal:me.culture === county.culture && me.religion === county.religion,
+          authored:Array.isArray(county.communities) && county.communities.some(function (c) {
+            return c.culture === me.culture && c.religion === me.religion;
+          }) };
+      });
+      expect(result).toEqual({ parts:sample.parts, principal:sample.parts === 7, authored:sample.parts === 9 });
+    });
+}
+
 test('bookmark facts preserve RNG bits across signed and unsigned representations', async function ({ page }, testInfo) {
   await beginBookmark(page, testInfo, '867');
   const signed = await page.evaluate(function () {
@@ -109,8 +129,11 @@ test('a persisted data-only mod supplies a different campaign and independent in
       starts:FB.bookmark('proof_bookmark').starts, errors:FB.validateBookmark(FB.bookmark('proof_bookmark')) };
   });
   expect(opening).toMatchObject({ date:500, owner:'proof_coast', culture:'proof_culture',
-    playerCulture:'proof_culture', bishop:'Proof Roman bishop', vacant:true, stories:['sirmium_campaign_493','proof_embassy_500'],
+    playerCulture:'proof_culture', bishop:'Proof Roman bishop', vacant:true,
     starts:['proof_farmer','proof_coastal'], errors:[] });
+  // Independent attachments follow declaration registration anchors, not
+  // the bookmark list's order. Require the exact declared story set.
+  expect(opening.stories.slice().sort()).toEqual(proofMod.bookmarks.proof_bookmark.stories.slice().sort());
   expect(opening.signature).not.toBe('');
   expect(opening.original).not.toBe('Proof Roman bishop');
   expect(opening.communities).toHaveLength(5);

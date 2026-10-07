@@ -391,8 +391,10 @@ test('prototype v4 without a platform stamp migrates the old situation exactly o
       delete input.state.authority.schema;
       input.state.situation476 = Object.assign({}, input.state.stories.western_court_476,
         input.state.stories.federate_track_476);
-      delete input.state.situation476.railsSchema;
-      delete input.state.stories;
+      // Move only the merged records. Linked rails retain their saved cast
+      // and remain required by bookmarkSetup's opening actor references.
+      delete input.state.stories.western_court_476;
+      delete input.state.stories.federate_track_476;
       const bytes = JSON.stringify(input), live = FB.state;
       const rng = FB.getRngState(), uid = FB.getUidCounter();
       const once = FB.save.v4.migrate(input), twice = FB.save.v4.migrate(once);
@@ -404,7 +406,8 @@ test('prototype v4 without a platform stamp migrates the old situation exactly o
         header:[once.v, once.titleIds, once.authoritySchema, once.platformSchema],
         immutable:bytes === JSON.stringify(input), pure:pure,
         idempotent:JSON.stringify(once) === JSON.stringify(twice),
-        records:{ world:once.state.stories.western_court_476,
+        records:{ all:once.state.stories, originalAll:source.state.stories,
+          world:once.state.stories.western_court_476,
           originalWorld:source.state.stories.western_court_476,
           track:once.state.stories.federate_track_476,
           originalTrack:source.state.stories.federate_track_476 },
@@ -412,6 +415,7 @@ test('prototype v4 without a platform stamp migrates the old situation exactly o
         repeatedRestore:first === FB.save.serialize(),
         alias:Object.prototype.hasOwnProperty.call(FB.save, 'prototypeV4') };
     });
+    expect(result.records.all).toEqual(result.records.originalAll);
     expect(result.records.world).toEqual(result.records.originalWorld);
     expect(result.records.track).toEqual(result.records.originalTrack);
     delete result.records;

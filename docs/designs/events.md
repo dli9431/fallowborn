@@ -1,3 +1,5 @@
+Community-share triggers use kind culture or faith. The wider 476 Antioch relief event uses faith for its Miaphysite share. Event lookup validates the complete bundled catalogue before indexing any id, so period-inactive declarations must also satisfy this schema at an ordinary medieval boot.
+
 # Events are data
 
 Liege peace-demand choices have campaign-bound preview and receipt adapters. Comply previews white peace for the demanded war and reports its completion; Refuse previews continued war and possible peace enforcement, then reports the refusal. Stale contexts have no preview, and reading the consequences does not change state or RNG. The goldCounterparty effect key is transfer metadata for the existing gold consequence.

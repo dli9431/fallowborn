@@ -29,7 +29,11 @@ async function beginBookmark(page, testInfo, id, scenarioId) {
     })[0];
     const culture = scenario.startCulture || county.culture, faith = scenario.startReligion || county.religion;
     const family = scenario.familyPresets ? Object.keys(scenario.familyPresets)[0] : 'established';
-    return { code:'BOOKMARKSMOKE-' + id + '-' + scenario.id + '-' + county.id + '-m-Review-' + family + '-0-' + culture + '.' + faith };
+    const code = 'BOOKMARKSMOKE-' + id + '-' + scenario.id + '-' + county.id + '-m-Review-' + family;
+    // Principal identities need no suffix. The ninth part requires an
+    // explicitly authored community, which fallback-only counties lack.
+    const nonPrincipal = culture !== county.culture || faith !== county.religion;
+    return { code:code + (nonPrincipal ? '-0-' + culture + '.' + faith : '') };
   }, { id:id, scenarioId:scenarioId });
   const fullStart = page.locator('#btn-choose-beginning');
   if (await fullStart.isVisible()) await fullStart.click();

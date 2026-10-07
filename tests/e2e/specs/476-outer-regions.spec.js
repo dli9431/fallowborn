@@ -2,6 +2,8 @@
 const { test, expect } = require('../support/fixture');
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 const { openGame } = require('../support/game/navigation');
+const { openCrazyGame } = require('../support/game/crazygames-title');
+const { mockCrazyGames } = require('../support/crazygames');
 const { startParityGame } = require('../support/game/parity');
 const { restoreBookmark, advanceBookmark } = require('../support/game/bookmark-acceptance');
 const { injectBrowserHarness } = require('../support/game/browser-harness');
@@ -13,7 +15,7 @@ dependsOnRuntime(__filename, [
   'data/starts.js', 'data/cultures.js', 'data/intrigue.js',
   'data/political_institutions.js', 'data/technology.js', 'data/settlements.js',
   'data/geographies.js', 'data/climate.js', 'data/eras.js', 'data/systems.js',
-  'data/story_campaigns.js', 'data/distribution_crazygames.js',
+  'data/story_campaigns.js', 'data/distribution_crazygames.js', 'js/crazygames.js',
   'js/world.js', 'js/model.js', 'js/institutions.js', 'js/religion.js',
   'js/authority.js', 'js/population.js', 'js/justice.js', 'js/technology.js',
   'js/climate.js', 'js/governments.js', 'js/settlement.js', 'js/events.js',
@@ -219,6 +221,39 @@ test('local practice and provincial jurisdiction use baseline rights without res
     expect(result).toEqual({ laws:['british_custom_476','saxon_custom_476','sasanian_custom_476'],
       rights:true, mixed:true, pure:true });
   });
+
+for (const crazygames of [false, true]) {
+  test('regional community events leave the complete catalogue valid at medieval boot with flag ' + crazygames,
+    async function ({ page }, testInfo) {
+      if (crazygames) {
+        await page.addInitScript(function () { window.FB_DISTRIBUTION = 'crazygames'; });
+        await mockCrazyGames(page);
+        await openCrazyGame(page, testInfo);
+      } else await openGame(page, testInfo);
+      const result = await page.evaluate(async function () {
+        await new Promise(function (resolve, reject) {
+          FB.activateBookmark('867', null, function (error) { if (error) reject(error); else resolve(); });
+        });
+        const rng = FB.getRngState(), uid = FB.getUidCounter(), faults = [];
+        FBDATA.events.forEach(function (event) {
+          try { FB.validateCommunityEvent(event); }
+          catch (error) { faults.push({ id:event.id, message:error.message }); }
+        });
+        const relief = FB.eventById('antioch_congregation_relief_476');
+        const invalid = JSON.parse(JSON.stringify(relief));
+        invalid.trigger.countyCommunityShare.kind = 'religion';
+        let rejected = '';
+        try { FB.validateCommunityEvent(invalid); } catch (error) { rejected = error.message; }
+        return { bookmark:FB.activeBookmarkId, faults:faults,
+          share:relief.trigger.countyCommunityShare,
+          unrelated:!!FB.eventById('ghw_called'), rejected:rejected,
+          pure:rng === FB.getRngState() && uid === FB.getUidCounter() };
+      });
+      expect(result).toEqual({ bookmark:'867', faults:[],
+        share:{ kind:'faith', target:'miaphysite', min:0.1 }, unrelated:true,
+        rejected:'trigger.countyCommunityShare.kind must be culture or faith.', pure:true });
+    });
+}
 
 test('regional events follow live communities, county and period gates with reviewed local receipts',
   async function ({ page }, testInfo) {

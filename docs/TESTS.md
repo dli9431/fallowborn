@@ -1,3 +1,7 @@
+Part A regression repairs
+
+476-outer-regions.spec.js checks the complete community-event catalogue at an ordinary 867 boot in both distributions, the Antioch relief faith trigger, unrelated holy-war lookup and rejection of the invalid religion kind. bookmark-acceptance.spec.js covers both principal seven-part and authored non-principal nine-part smoke codes and checks the proof mod's exact story set independently of registration order. The 800 bundle migration and reusable settlement journeys compare RNG bits as unsigned values. The bundle migration compares detached saved campaign facts structurally, including characters, ownership, holders, realms, authority and log, and retains the uid check. The prototype v4 fixture moves only the merged court and track records and preserves linked stories referenced by opening actors.
+
 # Testing Fallowborn
 
 The remaining bookmark/save regression repairs cover scenario-local CrazyGames SDK initialization in 476-world-stories.spec.js, 493-bookmark.spec.js, 711-bookmark.spec.js, 711-polity-foundation.spec.js and 800-settlements.spec.js. The title helper continues to require its callers to provide the SDK double. mods.spec.js checks transactional rejection of malformed technology caps and uses registered counties for appended crossings. bookmark-platform.spec.js distinguishes an empty local institution catalogue from inherited faith-head offices.

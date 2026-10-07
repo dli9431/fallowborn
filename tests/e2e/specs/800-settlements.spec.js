@@ -319,23 +319,28 @@ test('bundled 800 saves migrate their pending, planned and concluded opportuniti
     const old = JSON.parse(FB.save.serialize()), rows = {}, cast = old.state.stories.divisio_800.cast;
     const pressure = old.state.stories.verdun_800.pressure;
     function snapshot(rows) { return JSON.stringify(Object.keys(rows).sort().map(function (id) { return [id,rows[id]]; })); }
-    const expected = snapshot(old.state.stories), before = JSON.stringify([s.chars,s.owner,s.holder,s.realms,s.authority,s.log]);
+    function effects(state) { return [state.chars,state.owner,state.holder,state.realms,state.authority,state.log]; }
+    // Compare detached saved facts. Runtime defaults and the authority schema
+    // stamp are compacted/reinflated at the save boundary.
+    const expected = snapshot(old.state.stories), before = effects(JSON.parse(JSON.stringify(old.state)));
     ['divisio','ordinatio','gifts','recognition','verdun'].forEach(function (key) {
       const id = key + '_800', row = old.state.stories[id];
       delete row.approvals; delete row.cast; delete row.pressure; rows[key] = row; delete old.state.stories[id];
     });
     old.state.stories.carolingian_settlements_800 = { cast:cast, pressure:pressure, opportunities:rows };
-    const source = JSON.stringify(old), rng = FB.getRngState();
+    const source = JSON.stringify(old), rng = FB.getRngState() >>> 0, uid = FB.getUidCounter();
     const migrated = FB.save.v4.migrate(old);
-    const detached = source === JSON.stringify(old);
+    const detached = source === JSON.stringify(old) && rng === (FB.getRngState() >>> 0) && uid === FB.getUidCounter();
     FB.save.restore(old); s = FB.state;
     return { detached:detached, records:snapshot(migrated.state.stories) === expected,
       restored:snapshot(s.stories) === expected,
-      effects:before === JSON.stringify([s.chars,s.owner,s.holder,s.realms,s.authority,s.log]),
-      rng:rng === FB.getRngState(), absent:!s.stories.carolingian_settlements_800,
+      before:before, after:effects(JSON.parse(FB.save.serialize()).state),
+      rng:rng === (FB.getRngState() >>> 0), uid:uid === FB.getUidCounter(), absent:!s.stories.carolingian_settlements_800,
       phases:[s.stories.divisio_800.phase,s.stories.gifts_800.result,s.stories.ordinatio_800.phase] };
   });
-  expect(result).toEqual({ detached:true, records:true, restored:true, effects:true, rng:true, absent:true,
+  expect(result.after).toEqual(result.before);
+  delete result.before; delete result.after;
+  expect(result).toEqual({ detached:true, records:true, restored:true, rng:true, uid:true, absent:true,
     phases:['planned','agreed','pending'] });
 });
 

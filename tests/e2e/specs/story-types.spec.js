@@ -44,12 +44,12 @@ test('each settlement type plays a second data-only instance with a different fa
     FB.killChar(s, father);
     s.date.year = 943;
     const treaty = approve('proof_treaty');
-    const saved = JSON.parse(FB.save.serialize()), rng = FB.getRngState();
+    const saved = JSON.parse(FB.save.serialize()), rng = FB.getRngState() >>> 0;
     FB.save.restore(saved); s = FB.state;
     return { order:order, exchange:exchange, funds:funds, partition:partition, pendingBorders:pendingBorders,
       recognition:recognition, designation:designation, capitals:capitals, treaty:treaty,
       free:shares.every(function (share) { return !s.realms[share.realmId].liege; }),
-      retained:JSON.stringify(s.stories) === JSON.stringify(saved.state.stories), rng:rng === FB.getRngState(),
+      retained:JSON.stringify(s.stories) === JSON.stringify(saved.state.stories), rng:rng === (FB.getRngState() >>> 0),
       data:source === JSON.stringify(FB.bookmark(s.start.id)), faults:FB.validateBookmark(FB.bookmark(s.start.id)) };
   });
   expect(result).toEqual({ order:['proof_partition','proof_designation','proof_exchange','proof_recognition','proof_treaty'],
