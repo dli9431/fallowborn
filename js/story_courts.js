@@ -1,14 +1,13 @@
 /* Reusable political story mechanics. Historical selectors and presentation belong to declarations. */
 (function () {
   'use strict';
-  var V = FB.stories.tokens;
 
-  function plain(v) { return !!v && typeof v === V.object && !Array.isArray(v); }
+  function plain(v) { return !!v && typeof v === 'object' && !Array.isArray(v); }
   function need(ok, detail) { if (!ok) throw new Error('Invalid political story declaration: ' + detail + '.'); }
   function characterValid(c) {
-    return plain(c) && typeof c.name === V.string && !!c.name &&
-      typeof c.culture === V.string && !!c.culture && typeof c.religion === V.string && !!c.religion &&
-      typeof c.role === V.string && !!c.role && typeof c.home === V.string && !!c.home &&
+    return plain(c) && typeof c.name === 'string' && !!c.name &&
+      typeof c.culture === 'string' && !!c.culture && typeof c.religion === 'string' && !!c.religion &&
+      typeof c.role === 'string' && !!c.role && typeof c.home === 'string' && !!c.home &&
       Number.isInteger(c.age) && c.age >= 0 && Number.isInteger(c.station) && c.station >= 0;
   }
   function choiceOperation(def, id) {
@@ -41,38 +40,39 @@
       'judicialOfficeId','commandOfficeId','civicGovernmentForm','civicCareerId','churchCareerId','civicPermission',
       'returnStoryId','officeStoryId','serviceTrackId','civicTrackId','returningClaimant','sittingClaimant',
       'rivalClaimant','retainedResult','contestWarId'].forEach(function (key) {
-      need(typeof p[key] === V.string && !!p[key], 'selector ' + key);
+      need(typeof p[key] === 'string' && !!p[key], 'selector ' + key);
     });
-    ['patronRuler','sittingRuler',V.rival,'serviceRuler','returningRuler',V.commander,'delegate',V.bishop,
-      V.recipient,V.senator,'minorityBishop','displacedCourt','patronOffice','issuerOffice','serviceAcclamation'].forEach(function (key) {
-      need(typeof p.fields[key] === V.string && !!p.fields[key], 'record role ' + key);
+    ['patronRuler','sittingRuler','rival','serviceRuler','returningRuler','commander','delegate','bishop',
+      'recipient','senator','minorityBishop','displacedCourt','patronOffice','issuerOffice','serviceAcclamation'].forEach(function (key) {
+      need(typeof p.fields[key] === 'string' && !!p.fields[key], 'record role ' + key);
     });
     Object.keys(p).forEach(function (key) {
       if (key === 'fields') { Object.keys(p.fields).forEach(function (role) {
-        need(typeof p.fields[role] === V.string && /^[a-zA-Z][a-zA-Z0-9_]*$/.test(p.fields[role]), 'record field'); }); return; }
-      need(typeof p[key] === V.string && !!p[key] || typeof p[key] === 'number' && Number.isFinite(p[key]) && p[key] >= 0, 'parameter ' + key);
+        need(typeof p.fields[role] === 'string' && /^[a-zA-Z][a-zA-Z0-9_]*$/.test(p.fields[role]), 'record field'); }); return; }
+      need(typeof p[key] === 'string' && !!p[key] || typeof p[key] === 'number' && Number.isFinite(p[key]) && p[key] >= 0, 'parameter ' + key);
     });
     ['serviceDays','paymentPeriods','returnTurn','backedReturnTurn','returnDeadline','officeReviewTurn','settlementTurn','pressureTurn','settlementIndex'].forEach(function (key) {
       need(Number.isInteger(p[key]) && p[key] >= 0, 'timing or index ' + key);
     });
     need(p.serviceDays > 0 && p.majorityShare <= 1 && p.backedReturnTurn <= p.returnTurn && p.returnTurn < p.returnDeadline, 'window or majority');
-    need(typeof p.fields.deposed === V.string && !!p.fields.deposed, 'displacement record field');
+    need(typeof p.fields.deposed === 'string' && !!p.fields.deposed, 'displacement record field');
     ['immediatePay','seasonalPay','householdShare','escortPay','registrationFee','prestigeMinimum'].forEach(function (key) {
       need(Number.isFinite(p[key]) && p[key] >= 0, 'cost ' + key);
     });
     need(plain(def.text) && plain(def.news), 'presentation');
-    Object.keys(def.text).forEach(function (key) { need(typeof def.text[key] === V.string, V.text); });
-    Object.keys(def.news).forEach(function (key) { var n = def.news[key]; need(plain(n) && typeof n.key === V.string && typeof n.text === V.string, V.news); });
+    Object.keys(def.text).forEach(function (key) { need(typeof def.text[key] === 'string', 'text'); });
+    Object.keys(def.news).forEach(function (key) { var n = def.news[key]; need(plain(n) && typeof n.key === 'string' && typeof n.text === 'string', 'news'); });
   }
   function validateChoices(def, operations) {
     need(plain(def.choices) && plain(def.stages), 'stages and choices');
     var ids = {};
     Object.keys(def.choices).forEach(function (key) {
       var row = def.choices[key];
-      need(plain(row) && typeof row.id === V.string && !!row.id && operations.indexOf(row.operation) >= 0 &&
-        typeof row.label === V.string && typeof row.detail === V.string, 'choice');
+      need(plain(row) && typeof row.id === 'string' && !!row.id && operations.indexOf(row.operation) >= 0 &&
+        typeof row.label === 'string' && typeof row.detail === 'string', 'choice');
       need(!ids[row.id] || ids[row.id] === row.operation, 'ambiguous choice'); ids[row.id] = row.operation;
-      need(Object.keys(row).every(function (field) { return ['id','operation',V.label,'detail','detailParams'].indexOf(field) >= 0; }), 'choice field');
+      need(Object.keys(row).every(function (field) { return ['id','operation','label','detail','detailParams','nextStage'].indexOf(field) >= 0; }), 'choice field');
+      need(row.nextStage === undefined || def.type === 'political_track' && typeof row.nextStage === 'string' && !!row.nextStage, 'choice next stage');
     });
     Object.keys(def.stages).forEach(function (phase) {
       var row = def.stages[phase]; need(plain(row) && Array.isArray(row.choices), 'stage');
@@ -93,26 +93,30 @@
     function world(s) { return FB.stories.record(s, WORLD); }
     function track(s) {
       var federate = FB.stories.record(s, TRACK);
-      if (federate) return federate;
+      if (federate) {
+        var view = Object.assign({}, federate);
+        view.phase = FB.storyCourts.trackPhase(TRACK, federate);
+        return view;
+      }
       var civic = FB.stories.record(s, p.civicTrackId);
-      return civic && civic.phase === V.complete
-        ? { phase:V.complete, role:'outside', result:V.declined } : null;
+      return civic && FB.storyCourts.trackPhase(p.civicTrackId, civic) === 'complete'
+        ? { phase:'complete', role:'outside', result:'declined' } : null;
     }
     function own(o, key) {
       return !!o && Object.prototype.hasOwnProperty.call(o, key);
     }
     function plain(o) {
-      return !!o && typeof o === V.object && !Array.isArray(o);
+      return !!o && typeof o === 'object' && !Array.isArray(o);
     }
-    function actor(id) { return { kind:V.realm, id:id }; }
-    function person(id) { return { kind:V.character, id:id }; }
+    function actor(id) { return { kind:'realm', id:id }; }
+    function person(id) { return { kind:'character', id:id }; }
     function host(s, id) {
       for (var row of s.armies || []) if (row.id === id) return row;
       return null;
     }
     function alive(s, id) { return !!(id && s.chars[id] && !s.chars[id].dead); }
     function ruler(s, rid) {
-      return rid === V.player ? s.chars[s.player.charId] :
+      return rid === 'player' ? s.chars[s.player.charId] :
         FB.realmRulerCharacterSnapshot(s, rid) || FB.materializeRealmRuler(s, rid);
     }
     function recognize(s, source, issuer, subject, at) {
@@ -123,12 +127,12 @@
       var created = recognize(s, source, issuer, subject, at);
       if (created) return created;
       for (var row of s.authority && s.authority.recognitions || []) {
-        if (row.source !== source || row.status !== V.active ||
+        if (row.source !== source || row.status !== 'active' ||
             row.issuer.kind !== issuer.kind || row.issuer.id !== issuer.id ||
             row.subject.kind !== subject.kind || row.subject.id !== subject.id ||
             !!row.scope !== !!at || row.scope &&
               (row.scope.kind !== at.kind || row.scope.id !== at.id)) continue;
-        FB.authorityRecognitionTransition(s, row.id, V.reaffirm);
+        FB.authorityRecognitionTransition(s, row.id, 'reaffirm');
         if (FB.political.legitimacy(s, subject, at, source).some(function (live) {
           return live.id === row.id;
         })) return row;
@@ -174,7 +178,7 @@
       d.heads.forEach(function (row) { s.religiousHeads[row.officeId] = w[row.field]; });
       var claims = {};
       d.authority.forEach(function (row) {
-        if (row.kind === V.recognition) {
+        if (row.kind === 'recognition') {
           claims[row.key] = recognize(s, row.source, actor(row.issuerRealmId), person(w[row.field]),
             row.scopeRealmId ? actor(row.scopeRealmId) : null);
         } else {
@@ -211,7 +215,7 @@
       var policy = terms || p;
       return !!(deal && deal.churchRecognitionId &&
         FB.political.legitimacy(s, actor(R(s, policy.serviceRealmId)),
-          { kind:V.county, id:policy.targetProvinceId }, policy.churchSource).some(function (row) {
+          { kind:'county', id:policy.targetProvinceId }, policy.churchSource).some(function (row) {
             return row.id === deal.churchRecognitionId;
           }));
     }
@@ -221,7 +225,7 @@
         return FB.localInstitutionConsent(s, policy.civicId, actor(R(s, policy.serviceRealmId)));
       return !!(deal && deal.civicRecognitionId &&
         FB.political.legitimacy(s, actor(R(s, policy.serviceRealmId)),
-          { kind:V.county, id:policy.targetProvinceId }, policy.civicSource).some(function (row) {
+          { kind:'county', id:policy.targetProvinceId }, policy.civicSource).some(function (row) {
             return row.id === deal.civicRecognitionId;
           }));
     }
@@ -254,14 +258,14 @@
       FB.news(s, FB.msg(key, fallback, params || {}));
     }
     function aiSettlement(s, w, t) {
-      if (R(s, p.patronRealmId) === V.player || R(s, p.serviceRealmId) === V.player) return;
+      if (R(s, p.patronRealmId) === 'player' || R(s, p.serviceRealmId) === 'player') return;
       if (!t && FB.stories.record(s, p.civicTrackId)) return;
-      if (t && t.result !== V.declined || s.turn < p.settlementTurn ||
+      if (t && t.result !== 'declined' || s.turn < p.settlementTurn ||
           w.aiResolution === 'negotiated' ||
-          w.aiResolution === V.won ||
-          w.aiResolution === V.failed ||
+          w.aiResolution === 'won' ||
+          w.aiResolution === 'failed' ||
           w.aiResolution === 'diverged') return;
-      if (w.aiResolution === V.war) {
+      if (w.aiResolution === 'war') {
         if (s.owner[p.targetProvinceId] === R(s, p.serviceRealmId)) {
           s.realms[R(s, p.serviceRealmId)].nonTerritorial = false;
           s.realms[R(s, p.serviceRealmId)].capital = p.targetProvinceId;
@@ -269,22 +273,22 @@
             s, w[p.fields.patronOffice], 'remove');
           w[p.fields.deposed] = true;
           var acclaim = recognize(s, p.acclamationSource,
-            { kind:V.host, id:p.serviceHostId }, person(w[p.fields.serviceRuler]));
+            { kind:'host', id:p.serviceHostId }, person(w[p.fields.serviceRuler]));
           w[p.fields.serviceAcclamation] = acclaim && acclaim.id;
           if (alive(s, w[p.fields.bishop]) && alive(s, w[p.fields.delegate]) &&
               FB.countyReligionShare(s, p.targetProvinceId, p.majorityFaithId) >= p.majorityShare) {
             var support = recognize(s, p.churchSource,
               { kind:'religious-office', id:p.religiousOfficeId },
-              actor(R(s, p.serviceRealmId)), { kind:V.county, id:p.targetProvinceId });
+              actor(R(s, p.serviceRealmId)), { kind:'county', id:p.targetProvinceId });
             if (support && cityRights(s, w, R(s, p.serviceRealmId))) {
               FB.authoritySetGovernment(s, R(s, p.serviceRealmId), p.civicGovernmentForm);
-              w.governanceResolved = V.civic;
+              w.governanceResolved = 'civic';
             }
           }
-          w.aiResolution = V.won;
+          w.aiResolution = 'won';
           news(s, def.news.message1.key, def.news.message1.text, {});
         } else if (!FB.ordinaryWarById(s, w.aiWarId)) {
-          w.aiResolution = V.failed;
+          w.aiResolution = 'failed';
         }
         return;
       }
@@ -327,17 +331,17 @@
         objectives:[{ target:p.targetProvinceId, type:'border' }]
       });
       if (war) {
-        w.aiResolution = V.war; w.aiWarId = war.id;
+        w.aiResolution = 'war'; w.aiWarId = war.id;
         news(s, def.news.message3.key, def.news.message3.text, {});
       }
     }
     function reaffirmDelegates(s, w) {
       if (w.civicProofId && alive(s, w[p.fields.delegate]) &&
           s.owner[p.targetProvinceId] === R(s, p.patronRealmId))
-        FB.authorityRecognitionTransition(s, w.civicProofId, V.reaffirm);
+        FB.authorityRecognitionTransition(s, w.civicProofId, 'reaffirm');
       if (w.senateProofId && alive(s, w[p.fields.senator]) &&
           s.owner[p.senateProvinceId] === R(s, p.patronRealmId))
-        FB.authorityRecognitionTransition(s, w.senateProofId, V.reaffirm);
+        FB.authorityRecognitionTransition(s, w.senateProofId, 'reaffirm');
     }
     function displacedCourts(s, w) {
       w.displacedCourts = w.displacedCourts || {};
@@ -374,9 +378,9 @@
       }
     }
     function rulerChoices(s, w) {
-      if (R(s, p.serviceRealmId) !== V.player || s.player.charId !== w[p.fields.serviceRuler] ||
+      if (R(s, p.serviceRealmId) !== 'player' || s.player.charId !== w[p.fields.serviceRuler] ||
           !alive(s, w[p.fields.serviceRuler]) || s.player.dead || w.rulerInterruptionTurn !== undefined) return [];
-      if (s.owner[p.targetProvinceId] === V.player && !w.governanceResolved)
+      if (s.owner[p.targetProvinceId] === 'player' && !w.governanceResolved)
         return renderChoices(def, def.stages.government.choices);
       if (w.aiResolution || s.owner[p.targetProvinceId] !== R(s, p.patronRealmId)) return [];
       return renderChoices(def, def.stages.opening.choices);
@@ -392,18 +396,18 @@
         governance:w.governanceResolved, owner:s.owner[p.targetProvinceId], host:host(s, p.serviceHostId),
         dead:s.player.dead, living:alive(s, w[p.fields.serviceRuler]),
         west:FB.political.actor(s, actor(R(s, p.patronRealmId))),
-        westGeneration:FB.realmRulerGeneration(s, R(s, p.patronRealmId)),
+        patronGeneration:FB.realmRulerGeneration(s, R(s, p.patronRealmId)),
         funds:FB.treasuryAvailable(s, R(s, p.patronRealmId)), agreement:agreement,
         civic:civicPermission(s, w), bishop:bishop && bishop.id,
         representative:council && council.representativeId,
         consent:FB.political.civicConsent(s, p.targetProvinceId),
-        councilAgreement:FB.localInstitutionConsent(s, p.civicId, actor(V.player)),
+        councilAgreement:FB.localInstitutionConsent(s, p.civicId, actor('player')),
         councilTerms:petition && petition.terms,
-        mediation:FB.localInstitutionMediationQuote(s, p.churchId, actor(V.player), p.targetProvinceId),
+        mediation:FB.localInstitutionMediationQuote(s, p.churchId, actor('player'), p.targetProvinceId),
         institutions:JSON.parse(JSON.stringify(s.localInstitutions)),
         churchHolder:s.religiousHeads[p.religiousOfficeId],
         majority:FB.countyReligionShare(s, p.targetProvinceId, p.majorityFaithId),
-        wars:[FB.isRealmAtWar(s, V.player), FB.isRealmAtWar(s, R(s, p.patronRealmId))] };
+        wars:[FB.isRealmAtWar(s, 'player'), FB.isRealmAtWar(s, R(s, p.patronRealmId))] };
       var available = rulerChoices(s, w).some(function (choice) { return choice.id === id; });
       var allowed = available && (op === 'keep_host' || op === 'retain_host_rule' ||
         op === 'contest_capital' && facts.host && facts.host.men > 0 && !facts.wars[0] && !facts.wars[1] ||
@@ -426,41 +430,41 @@
       if (op === 'accept_service') {
         var contract = FB.authorityOfferContract(s, serviceTerms(s, w));
         if (!contract || !FB.authorityConsentContract(s, contract.id, R(s, p.patronRealmId)) ||
-            !FB.authorityConsentContract(s, contract.id, V.player) ||
-            !FB.treasuryTransfer(s, R(s, p.patronRealmId), V.player, p.immediatePay)) return false;
+            !FB.authorityConsentContract(s, contract.id, 'player') ||
+            !FB.treasuryTransfer(s, R(s, p.patronRealmId), 'player', p.immediatePay)) return false;
         w.contractId = contract.id; w.aiResolution = 'negotiated';
-        var church = FB.localInstitutionMediate(s, p.churchId, actor(V.player), p.targetProvinceId);
+        var church = FB.localInstitutionMediate(s, p.churchId, actor('player'), p.targetProvinceId);
         w.churchRecognitionId = church && church.id;
         var civic = civicSettlement(s, w); w.civicRecognitionId = civic && civic.recognitionId;
         cityRights(s, w, R(s, p.patronRealmId));
       } else if (op === 'contest_capital') {
-        var war = FB.registerOrdinaryWar(s, V.player, { enemy:R(s, p.patronRealmId), target:p.targetProvinceId,
+        var war = FB.registerOrdinaryWar(s, 'player', { enemy:R(s, p.patronRealmId), target:p.targetProvinceId,
           legacy:false, casus:{ type:'border', target:p.targetProvinceId }, objectives:[{ type:'border', target:p.targetProvinceId }] });
         if (!war) return false;
-        w.aiResolution = V.war; w.aiWarId = war.id;
+        w.aiResolution = 'war'; w.aiWarId = war.id;
       } else if (op === 'accept_civic_rule') {
-        var support = FB.localInstitutionMediate(s, p.churchId, actor(V.player), p.targetProvinceId);
-        if (!support || !cityRights(s, w, V.player) || !FB.authoritySetGovernment(s, V.player, p.civicGovernmentForm)) return false;
-        w.governanceResolved = V.civic;
+        var support = FB.localInstitutionMediate(s, p.churchId, actor('player'), p.targetProvinceId);
+        if (!support || !cityRights(s, w, 'player') || !FB.authoritySetGovernment(s, 'player', p.civicGovernmentForm)) return false;
+        w.governanceResolved = 'civic';
       } else if (op === 'retain_host_rule') w.governanceResolved = 'federate';
-      else w.aiResolution = V.declined;
+      else w.aiResolution = 'declined';
       news(s, def.news.message4.key, def.news.message4.text, {});
       return true;
     }
     function day(s, w) {
       var t = track(s);
 
-      if (R(s, p.serviceRealmId) === V.player && !w.governanceResolved &&
-          (!w.aiResolution || [V.war,V.won].indexOf(w.aiResolution) >= 0 || s.owner[p.targetProvinceId] === V.player) &&
+      if (R(s, p.serviceRealmId) === 'player' && !w.governanceResolved &&
+          (!w.aiResolution || ['war','won'].indexOf(w.aiResolution) >= 0 || s.owner[p.targetProvinceId] === 'player') &&
           w.rulerInterruptionTurn === undefined &&
           (!alive(s, w[p.fields.serviceRuler]) || s.player.dead || s.player.charId !== w[p.fields.serviceRuler]))
         w.rulerInterruptionTurn = s.turn;
-      if (R(s, p.serviceRealmId) === V.player && w.aiResolution === V.war) {
-        if (s.owner[p.targetProvinceId] === V.player) {
-          w.aiResolution = V.won;
+      if (R(s, p.serviceRealmId) === 'player' && w.aiResolution === 'war') {
+        if (s.owner[p.targetProvinceId] === 'player') {
+          w.aiResolution = 'won';
           s.realms.player.nonTerritorial = false; s.realms.player.capital = p.targetProvinceId;
           FB.invalidateRealmCache();
-        } else if (!FB.ordinaryWarById(s, w.aiWarId)) w.aiResolution = V.failed;
+        } else if (!FB.ordinaryWarById(s, w.aiWarId)) w.aiResolution = 'failed';
       }
       displacedCourts(s, w);
       reaffirmDelegates(s, w);
@@ -474,21 +478,21 @@
           escort.scenarioCourtEscort = false;
           news(s, def.news.message5.key, def.news.message5.text, {});
         } else if (!escort || s.owner[p.retreatProvinceId] !== R(s, p.patronRealmId)) {
-          w.courtMove = V.interrupted;
+          w.courtMove = 'interrupted';
           news(s, def.news.message6.key, def.news.message6.text, {});
         }
       }
 
       var released = w.courtMove !== 'travelling' && host(s, p.patronHostId);
       if (released && released.scenarioCourtEscort) released.scenarioCourtEscort = false;
-      if (!w.pressureNoted && s.turn >= p.pressureTurn && (!t || t.phase !== V.complete)) {
+      if (!w.pressureNoted && s.turn >= p.pressureTurn && (!t || t.phase !== 'complete')) {
         w.pressureNoted = true;
         news(s, def.news.message7.key, def.news.message7.text, {});
       }
       aiSettlement(s, w, t);
     }
 
-    var TRACK_FIELDS = [V.phase, V.role, V.result, V.proposal, 'backedClaimant',
+    var TRACK_FIELDS = ['phase', 'role', 'result', 'proposal', 'backedClaimant',
       'contractId', 'lastAllocatedPeriod', 'civicRecognitionId',
       'churchRecognitionId', 'imperialRecognitionId', 'commissionId',
       'awardRequested', 'awardGranted', 'maintenancePaid', 'outcomeTurn',
@@ -506,7 +510,7 @@
         var mine = TRACK_FIELDS.indexOf(key) >= 0 && !(outside && COURT_DEAL[key]);
         (mine ? t : w)[key] = legacy[key];
       }
-      if (typeof t.result === V.string && t.result.indexOf('ai_') === 0) t.result = V.declined;
+      if (typeof t.result === 'string' && t.result.indexOf('ai_') === 0) t.result = 'declined';
       state.stories = state.stories || {};
       state.stories[WORLD] = w;
       state.stories[TRACK] = t;
@@ -517,10 +521,10 @@
         throw new Error(FB.T('Invalid v4 save field at {path}.',
           { path:'state.stories.' + WORLD + '.' + field }));
       }
-      if (typeof record.courtAt !== V.string) bad('courtAt');
-      if (typeof record[p.fields.serviceRuler] !== V.string) bad(p.fields.serviceRuler);
-      if (!plain(record[p.fields.displacedCourt]) || typeof record[p.fields.displacedCourt].provinceId !== V.string ||
-          ['displaced','returned',V.interrupted,V.diverted].indexOf(record[p.fields.displacedCourt].status) < 0) bad(p.fields.displacedCourt);
+      if (typeof record.courtAt !== 'string') bad('courtAt');
+      if (typeof record[p.fields.serviceRuler] !== 'string') bad(p.fields.serviceRuler);
+      if (!plain(record[p.fields.displacedCourt]) || typeof record[p.fields.displacedCourt].provinceId !== 'string' ||
+          ['displaced','returned','interrupted','diverted'].indexOf(record[p.fields.displacedCourt].status) < 0) bad(p.fields.displacedCourt);
       if (record.railsSchema !== 1 || record.historical !== undefined || record.easternReturn !== undefined) bad('railsSchema');
       var wanted = (FB.bookmark(s.start && s.start.id) || {}).stories || [];
       for (var id of def.legacyRails)
@@ -528,15 +532,15 @@
       if (record.displacedCourts !== undefined && !plain(record.displacedCourts))
         bad('displacedCourts');
       if (record.aiResolution !== undefined &&
-          ['negotiated',V.war,V.won,V.failed,'diverged',V.declined].indexOf(record.aiResolution) < 0) bad('aiResolution');
+          ['negotiated','war','won','failed','diverged','declined'].indexOf(record.aiResolution) < 0) bad('aiResolution');
       if (record.governanceResolved !== undefined && record.governanceResolved !== false &&
-          [V.civic,'federate'].indexOf(record.governanceResolved) < 0) bad('governanceResolved');
+          ['civic','federate'].indexOf(record.governanceResolved) < 0) bad('governanceResolved');
       if (record.rulerInterruptionTurn !== undefined &&
           (!Number.isInteger(record.rulerInterruptionTurn) || record.rulerInterruptionTurn < 0 ||
             record.rulerInterruptionTurn > s.turn || record.governanceResolved ||
-            R(s, p.serviceRealmId) !== V.player)) bad('rulerInterruptionTurn');
+            R(s, p.serviceRealmId) !== 'player')) bad('rulerInterruptionTurn');
       for (var field of ['aiWarId','restoredClaimantId','restoredCourtId','restoredOfficeId'])
-        if (record[field] !== undefined && (typeof record[field] !== V.string || !record[field])) bad(field);
+        if (record[field] !== undefined && (typeof record[field] !== 'string' || !record[field])) bad(field);
     }
     var context = {
       world:world, track:track, actor:actor, person:person, host:host, made:made,
@@ -546,18 +550,18 @@
       hasCivicConsent:hasCivicConsent, cityRights:cityRights,
       civicPermission:civicPermission, civicSettlement:civicSettlement, news:news
     };
-    return { id:WORLD, kind:V.world, requires:def.requires, fields:def.opening.cast.map(function (row) { return row.field; }), context:context, requirements:def.requirements, init:init, day:day,
+    return { id:WORLD, kind:'world', requires:def.requires, fields:def.opening.cast.map(function (row) { return row.field; }), context:context, requirements:def.requirements, init:init, day:day,
       title:function () { return FB.T(def.text.text12); },
       intro:function () { return FB.T(def.text.text13); },
       status:function (s, w) {
-        if (R(s, p.serviceRealmId) !== V.player) return null;
-        if (w.rulerInterruptionTurn !== undefined) return { phase:V.interrupted,
+        if (R(s, p.serviceRealmId) !== 'player') return null;
+        if (w.rulerInterruptionTurn !== undefined) return { phase:'interrupted',
           name:FB.T(def.text.text14),
           lines:[FB.T(def.text.text15)] };
-        return { phase:w.aiResolution || V.opening, name:w.governanceResolved ? FB.T(def.text.text16) :
-          w.aiResolution === V.war ? FB.T(def.text.text17) :
+        return { phase:w.aiResolution || 'opening', name:w.governanceResolved ? FB.T(def.text.text16) :
+          w.aiResolution === 'war' ? FB.T(def.text.text17) :
           w.aiResolution === 'negotiated' ? FB.T(def.text.text18) :
-          w.aiResolution === V.won ? FB.T(def.text.text19) :
+          w.aiResolution === 'won' ? FB.T(def.text.text19) :
           w.aiResolution ? FB.T(def.text.text20) : FB.T(def.text.text21), lines:[] };
       },
       choices:rulerChoices, quote:rulerQuote, apply:rulerApply,
@@ -568,10 +572,10 @@
   function restorationFactory(def) {
     function cast(s, role) { return FB.stories.resolve(s, def.cast[role]); }
     var p = def.parameters, RETURN = def.id, R = FB.startRealmId, X = FB.storyCourts.context(def.courtStoryId);
-    function plain(row) { return !!row && typeof row === V.object && !Array.isArray(row); }
+    function plain(row) { return !!row && typeof row === 'object' && !Array.isArray(row); }
     function ruler(s, id) {
       id = FB.startRealmId(s, id);
-      return id === V.player ? s.chars[s.player.charId] : FB.realmRulerCharacterSnapshot(s, id);
+      return id === 'player' ? s.chars[s.player.charId] : FB.realmRulerCharacterSnapshot(s, id);
     }
     function politicalRecord() { return { phase:'pending', result:null, reason:null, outcomeTurn:null }; }
     function end(s, rec, result, reason) {
@@ -580,11 +584,11 @@
     function bad(id, field) { throw new Error(FB.T('Invalid v4 save field at {path}.',
       { path:'state.stories.' + id + '.' + field })); }
     function validatePolitical(rec, id, results) {
-      if (!plain(rec) || ['pending','resolved'].indexOf(rec.phase) < 0) bad(id, V.phase);
-      if (rec.phase === 'resolved' ? results.indexOf(rec.result) < 0 : rec.result !== null) bad(id, V.result);
+      if (!plain(rec) || ['pending','resolved'].indexOf(rec.phase) < 0) bad(id, 'phase');
+      if (rec.phase === 'resolved' ? results.indexOf(rec.result) < 0 : rec.result !== null) bad(id, 'result');
       if (rec.phase === 'resolved' ? !Number.isInteger(rec.outcomeTurn) || rec.outcomeTurn < 0 : rec.outcomeTurn !== null)
         bad(id, 'outcomeTurn');
-      if (rec.reason !== null && (typeof rec.reason !== V.string || !rec.reason)) bad(id, V.reason);
+      if (rec.reason !== null && (typeof rec.reason !== 'string' || !rec.reason)) bad(id, 'reason');
     }
     function restorationInit(s) {
       var rec = politicalRecord();
@@ -605,12 +609,12 @@
         !X.alive(s, cast(s, 'sittingRuler')) && (!sitting || sitting.id !== cast(s, 'returningRuler')) ? 'issuer_dead' :
         !rec.legacy && (def.commanders.some(function (row) { return !X.alive(s, rec[row.field]); })) ? 'commanders_lost' : null;
       if (cause) {
-        end(s, rec, V.interrupted, cause); w[p.fields.displacedCourt].status = V.interrupted;
+        end(s, rec, 'interrupted', cause); w[p.fields.displacedCourt].status = 'interrupted';
         FB.news(s, FB.msg(def.news.message1.key, def.news.message1.text, {}));
         return;
       }
       if (s.owner[p.issuerProvinceId] !== R(s, p.issuerRealmId)) {
-        end(s, rec, V.diverted, 'capital_lost'); w[p.fields.displacedCourt].status = V.diverted;
+        end(s, rec, 'diverted', 'capital_lost'); w[p.fields.displacedCourt].status = 'diverted';
         FB.news(s, FB.msg(def.news.message2.key, def.news.message2.text, {}));
         return;
       }
@@ -620,8 +624,8 @@
       var backed = track && track.backedClaimant === p.returningClaimant;
       if (s.turn < (backed ? p.backedReturnTurn : p.returnTurn)) return;
       if (s.turn >= p.returnDeadline) {
-        end(s, rec, V.diverted, 'return_window_closed');
-        w[p.fields.displacedCourt].status = V.diverted;
+        end(s, rec, 'diverted', 'return_window_closed');
+        w[p.fields.displacedCourt].status = 'diverted';
         FB.news(s, FB.msg(def.news.message3.key, def.news.message3.text, {}));
         return;
       }
@@ -630,8 +634,8 @@
       var commissionSource = p.commissionSource;
 
       for (var old of s.authority.recognitions)
-        if (old.source === commissionSource && old.status === V.active &&
-            old.issuer.kind === V.realm && old.issuer.id === R(s, p.issuerRealmId) &&
+        if (old.source === commissionSource && old.status === 'active' &&
+            old.issuer.kind === 'realm' && old.issuer.id === R(s, p.issuerRealmId) &&
             old.issuerGeneration !== FB.realmRulerGeneration(s, R(s, p.issuerRealmId)))
           FB.authorityRecognitionTransition(s, old.id, 'revoke');
       FB.authorityAppointmentTransition(s, w[p.fields.issuerOffice], 'remove');
@@ -650,7 +654,7 @@
         if (X.alive(s, id)) s.chars[id].homeProvinceId = s.chars[cast(s, 'returningRuler')].homeProvinceId;
       FB.news(s, FB.msg(def.news.message4.key, def.news.message4.text, {}));
     }
-    return { id:def.id, kind:V.world, requires:def.requires, fields:def.commanders.map(function (row) { return row.field; }),
+    return { id:def.id, kind:'world', requires:def.requires, fields:def.commanders.map(function (row) { return row.field; }),
       init:restorationInit, day:restorationDay,
       title:function () { return FB.T(def.text.text2); },
       intro:function () { return FB.T(def.text.text3); },
@@ -660,10 +664,10 @@
         return { phase:rec.phase, name:names[rec.result] || FB.T(def.text.text7), lines:[] };
       },
       validate:function (rec) {
-        validatePolitical(rec, RETURN, ['restored',V.interrupted,V.diverted]);
-        if (typeof rec.legacy !== 'boolean') bad(RETURN, V.legacy);
+        validatePolitical(rec, RETURN, ['restored','interrupted','diverted']);
+        if (typeof rec.legacy !== 'boolean') bad(RETURN, 'legacy');
         for (var key of def.commanders.map(function (row) { return row.field; }))
-          if (rec[key] !== null && (typeof rec[key] !== V.string || !rec[key])) bad(RETURN, key);
+          if (rec[key] !== null && (typeof rec[key] !== 'string' || !rec[key])) bad(RETURN, key);
         if (!rec.legacy && def.commanders.some(function (row) { return !rec[row.field]; })) bad(RETURN, def.commanders[0].field);
       } };
   }
@@ -671,10 +675,10 @@
     function cast(s, role) { return FB.stories.resolve(s, def.cast[role]); }
     var p = def.parameters, R = FB.startRealmId, OFFICE = def.id, RETURN = p.returnStoryId, PATRON_REALM = p.patronRealmId,
       CAMPAIGNS = def.legacyCampaigns, X = FB.storyCourts.context(def.courtStoryId);
-    function plain(row) { return !!row && typeof row === V.object && !Array.isArray(row); }
+    function plain(row) { return !!row && typeof row === 'object' && !Array.isArray(row); }
     function ruler(s, id) {
       id = FB.startRealmId(s, id);
-      return id === V.player ? s.chars[s.player.charId] : FB.realmRulerCharacterSnapshot(s, id);
+      return id === 'player' ? s.chars[s.player.charId] : FB.realmRulerCharacterSnapshot(s, id);
     }
     function politicalRecord() { return { phase:'pending', result:null, reason:null, outcomeTurn:null }; }
     function end(s, rec, result, reason) {
@@ -683,11 +687,11 @@
     function bad(id, field) { throw new Error(FB.T('Invalid v4 save field at {path}.',
       { path:'state.stories.' + id + '.' + field })); }
     function validatePolitical(rec, id, results) {
-      if (!plain(rec) || ['pending','resolved'].indexOf(rec.phase) < 0) bad(id, V.phase);
-      if (rec.phase === 'resolved' ? results.indexOf(rec.result) < 0 : rec.result !== null) bad(id, V.result);
+      if (!plain(rec) || ['pending','resolved'].indexOf(rec.phase) < 0) bad(id, 'phase');
+      if (rec.phase === 'resolved' ? results.indexOf(rec.result) < 0 : rec.result !== null) bad(id, 'result');
       if (rec.phase === 'resolved' ? !Number.isInteger(rec.outcomeTurn) || rec.outcomeTurn < 0 : rec.outcomeTurn !== null)
         bad(id, 'outcomeTurn');
-      if (rec.reason !== null && (typeof rec.reason !== V.string || !rec.reason)) bad(id, V.reason);
+      if (rec.reason !== null && (typeof rec.reason !== 'string' || !rec.reason)) bad(id, 'reason');
     }
     function restoreOffice(s, w) {
       if (w[p.fields.patronOffice]) FB.authorityAppointmentTransition(s, w[p.fields.patronOffice], 'remove');
@@ -713,12 +717,12 @@
       if (w.restoredClaimantId && w.restoredOfficeId && w.westernOfficeResolved === 'restored') {
         var liveClaim = X.alive(s, w.restoredClaimantId) &&
           FB.political.offices(s, X.person(w.restoredClaimantId)).some(function (row) {
-            return row.ref.appointmentId === w.restoredOfficeId && row.status === V.active;
+            return row.ref.appointmentId === w.restoredOfficeId && row.status === 'active';
           });
         if (s.owner[p.targetProvinceId] !== w.restoredCourtId || !liveClaim) {
           if (s.owner[p.targetProvinceId] !== w.restoredCourtId)
             FB.authorityAppointmentTransition(s, w.restoredOfficeId, 'remove');
-          result = s.owner[p.targetProvinceId] !== w.restoredCourtId ? 'deposed' : V.interrupted;
+          result = s.owner[p.targetProvinceId] !== w.restoredCourtId ? 'deposed' : 'interrupted';
           w.westernOfficeResolved = result;
         }
       }
@@ -732,14 +736,14 @@
           ruler(s, FB.startRealmId(s, PATRON_REALM)).id === cast(s, 'patronRuler') && restoreOffice(s, w)) result = 'restored';
       if (!result && rec.phase === 'pending') {
         if (!X.alive(s, cast(s, 'patronRuler')) || !s.realms[FB.startRealmId(s, PATRON_REALM)].alive) {
-          result = V.interrupted; reason = 'holder_or_court_lost';
+          result = 'interrupted'; reason = 'holder_or_court_lost';
         } else if (ruler(s, FB.startRealmId(s, PATRON_REALM)) && ruler(s, FB.startRealmId(s, PATRON_REALM)).id !== cast(s, 'patronRuler')) {
-          result = V.diverted; reason = 'court_succeeded';
+          result = 'diverted'; reason = 'court_succeeded';
         } else if (s.turn >= p.officeReviewTurn) {
           var active = FB.political.offices(s, X.person(cast(s, 'patronRuler'))).some(function (row) {
-            return row.ref.appointmentId === w[p.fields.patronOffice] && row.status === V.active;
+            return row.ref.appointmentId === w[p.fields.patronOffice] && row.status === 'active';
           });
-          result = active ? 'survived' : V.interrupted; reason = active ? 'office_retained' : 'mandate_lapsed';
+          result = active ? 'survived' : 'interrupted'; reason = active ? 'office_retained' : 'mandate_lapsed';
         }
       }
       if (!result || rec.result === result) return;
@@ -750,7 +754,7 @@
       rec.officeId = w.restoredOfficeId || w[p.fields.patronOffice] || null;
       if (result === 'deposed') FB.news(s, FB.msg(def.news.message2.key, def.news.message2.text, {}));
       if (result === 'survived') FB.news(s, FB.msg(def.news.message3.key, def.news.message3.text, {}));
-      if (result === V.interrupted || result === V.diverted) FB.news(s, FB.msg(def.news.message4.key, def.news.message4.text, {}));
+      if (result === 'interrupted' || result === 'diverted') FB.news(s, FB.msg(def.news.message4.key, def.news.message4.text, {}));
     }
     X.syncOffice = function (s) {
       var rec = FB.stories.record(s, OFFICE);
@@ -761,12 +765,12 @@
       var w = s.stories && s.stories[def.courtStoryId];
       if (!w || s[def.legacyStateField] || w.railsSchema !== undefined) return;
       var h = w.historical || {};
-      if (!plain(h)) bad(def.courtStoryId, V.historical);
+      if (!plain(h)) bad(def.courtStoryId, 'historical');
       if (!s.stories[RETURN]) {
         var z = politicalRecord(), old = w.easternReturn || 'pending';
-        if (['pending','delayed','restored',V.interrupted].indexOf(old) < 0) bad(RETURN, V.phase);
+        if (['pending','delayed','restored','interrupted'].indexOf(old) < 0) bad(RETURN, 'phase');
         FB.stories.get(RETURN).declaration.commanders.forEach(function (row) { z[row.field] = null; }); z.legacy = true;
-        if (old === 'restored' || old === V.interrupted) end(s, z, old, 'legacy_outcome');
+        if (old === 'restored' || old === 'interrupted') end(s, z, old, 'legacy_outcome');
         s.stories[RETURN] = z;
       }
       if (w[p.fields.displacedCourt] === undefined) { w[p.fields.displacedCourt] = JSON.parse(JSON.stringify(def.legacyDisplacedCourt));
@@ -775,17 +779,17 @@
         var id = CAMPAIGNS[key], campaign = FB.stories.definition(s, FBDATA.storyCampaigns[id]);
         if (s.stories[id]) continue;
         var rec = FB.storyCampaign.fresh(), phase = h[key] || 'pending';
-        if (['pending','negotiating',V.started,V.won,V.failed,'diverged'].indexOf(phase) < 0) bad(id, V.phase);
+        if (['pending','negotiating','started','won','failed','diverged'].indexOf(phase) < 0) bad(id, 'phase');
         rec.warId = h[key + 'WarId'] || null;
         rec.migrationId = h[key + 'MigrationId'] || null;
         rec.commissionId = h[key + 'CommissionId'] || null;
         var moving = (s.authority && s.authority.migrations || []).filter(function (row) { return row.id === rec.migrationId; })[0];
         rec.contractId = moving && moving.contractId || null;
         rec.settlementApplied = !!h[key + 'Settlement'];
-        if ([V.won,V.failed,'diverged'].indexOf(phase) >= 0) end(s, rec, phase === 'diverged' ? V.diverted : phase, 'legacy_outcome');
+        if (['won','failed','diverged'].indexOf(phase) >= 0) end(s, rec, phase === 'diverged' ? 'diverted' : phase, 'legacy_outcome');
         else if (phase !== 'pending') {
           var war = s.wars && s.wars[rec.warId];
-          rec.phase = rec.warId ? V.started : 'negotiating';
+          rec.phase = rec.warId ? 'started' : 'negotiating';
           rec.startedTurn = moving ? moving.startTurn : war ? war.startedTurn : s.turn;
           rec.deadline = moving ? moving.endTurn : rec.startedTurn + campaign.durationDays;
           rec.actorId = campaign.actor.character ? w[campaign.actor.character.field] || null : ruler(s, campaign.actor.realmId) && ruler(s, campaign.actor.realmId).id;
@@ -803,7 +807,7 @@
       }
       delete w.historical; delete w.easternReturn; w.railsSchema = 1;
     }
-    return { id:OFFICE, kind:V.world, requires:def.requires,
+    return { id:OFFICE, kind:'world', requires:def.requires,
       init:function (s) { var rec = politicalRecord(); rec.officeId = X.world(s)[p.fields.patronOffice] || null; rec.history = []; return rec; },
       day:officeDay, migrate:migrate,
       title:function () { return FB.T(def.text.text2); },
@@ -816,13 +820,13 @@
         return { phase:rec.phase, name:names[rec.result] || FB.T(def.text.text11), lines:[] };
       },
       validate:function (rec, s) {
-        validatePolitical(rec, OFFICE, ['deposed','survived','restored',p.rivalClaimant,'retired',V.interrupted,V.diverted]);
-        if (rec.officeId !== null && typeof rec.officeId !== V.string) bad(OFFICE, 'officeId');
-        if (!Array.isArray(rec.history) || rec.history.length > 12) bad(OFFICE, V.history);
+        validatePolitical(rec, OFFICE, ['deposed','survived','restored',p.rivalClaimant,'retired','interrupted','diverted']);
+        if (rec.officeId !== null && typeof rec.officeId !== 'string') bad(OFFICE, 'officeId');
+        if (!Array.isArray(rec.history) || rec.history.length > 12) bad(OFFICE, 'history');
         rec.history.forEach(function (row) {
           if (!plain(row) || !Number.isInteger(row.turn) || row.turn < 0 ||
-              ['deposed','survived','restored',p.rivalClaimant,'retired',V.interrupted,V.diverted].indexOf(row.result) < 0 ||
-              row.officeId !== null && typeof row.officeId !== V.string) bad(OFFICE, V.history);
+              ['deposed','survived','restored',p.rivalClaimant,'retired','interrupted','diverted'].indexOf(row.result) < 0 ||
+              row.officeId !== null && typeof row.officeId !== 'string') bad(OFFICE, 'history');
         });
         if (X.world(s).railsSchema !== 1) bad(def.courtStoryId, 'railsSchema');
         var wanted = (FB.bookmark(s.start && s.start.id) || {}).stories || [];
@@ -835,38 +839,38 @@
     validateParameters(def); validateChoices(def, ['accept_civic_rule','retain_host_rule','accept_service','contest_capital','keep_host']);
     need(def.stages.opening && def.stages.government && Object.keys(def.stages).length === 2, 'court stages');
     var d = def.opening, fields = {};
-    need(plain(d) && plain(d.record) && Array.isArray(d.cast) && d.cast.length > 0, V.opening);
+    need(plain(d) && plain(d.record) && Array.isArray(d.cast) && d.cast.length > 0, 'opening');
     d.cast.forEach(function (row) {
-      need(plain(row) && typeof row.field === V.string && !fields[row.field], 'cast field'); fields[row.field] = true;
-      need(row.ref && FB.stories.referenceValid(row.ref, def) || row.kind === 'royal_member' && typeof row.realmId === V.string && typeof row.memberId === V.string ||
+      need(plain(row) && typeof row.field === 'string' && !fields[row.field], 'cast field'); fields[row.field] = true;
+      need(row.ref && FB.stories.referenceValid(row.ref, def) || row.kind === 'royal_member' && typeof row.realmId === 'string' && typeof row.memberId === 'string' ||
         row.kind === 'created' && characterValid(row.character), 'cast');
     });
-    ['patronRuler','sittingRuler',V.rival,'serviceRuler','returningRuler',V.commander,'delegate',
-      V.bishop,V.recipient,V.senator,'minorityBishop'].forEach(function (role) {
+    ['patronRuler','sittingRuler','rival','serviceRuler','returningRuler','commander','delegate',
+      'bishop','recipient','senator','minorityBishop'].forEach(function (role) {
       need(fields[def.parameters.fields[role]], 'court cast role ' + role);
     });
-    need(d.family === undefined || plain(d.family) && fields[d.family.parentField] && fields[d.family.childField], V.family);
+    need(d.family === undefined || plain(d.family) && fields[d.family.parentField] && fields[d.family.childField], 'family');
     var claims = {};
-    need(Array.isArray(d.authority), V.authority);
+    need(Array.isArray(d.authority), 'authority');
     d.authority.forEach(function (row) {
       need(plain(row) && fields[row.field], 'authority actor');
-      if (row.kind === V.recognition) { need(typeof row.key === V.string && !claims[row.key] && typeof row.source === V.string && typeof row.issuerRealmId === V.string, V.recognition); claims[row.key] = true; }
-      else need(row.kind === V.appointment && claims[row.claim] && typeof row.officeId === V.string && typeof row.institutionId === V.string && typeof row.contested === 'boolean', V.appointment);
+      if (row.kind === 'recognition') { need(typeof row.key === 'string' && !claims[row.key] && typeof row.source === 'string' && typeof row.issuerRealmId === 'string', 'recognition'); claims[row.key] = true; }
+      else need(row.kind === 'appointment' && claims[row.claim] && typeof row.officeId === 'string' && typeof row.institutionId === 'string' && typeof row.contested === 'boolean', 'appointment');
     });
-    ['hosts','heads','seededOffices','treasuries',V.institutions].forEach(function (key) { need(Array.isArray(d[key]), 'opening list'); });
-    d.hosts.forEach(function (row) { need(plain(row) && typeof row.id === V.string && typeof row.realm === V.string &&
-      typeof row.at === V.string && Number.isInteger(row.men) && row.men > 0 && plain(row.units) &&
-      Number.isInteger(row.units.levy) && Number.isInteger(row.units.ret) && row.units.levy + row.units.ret === row.men, V.host); });
-    d.heads.forEach(function (row) { need(plain(row) && typeof row.officeId === V.string && fields[row.field], 'religious head'); });
-    d.institutions.forEach(function (row) { need(plain(row) && typeof row.institutionId === V.string && fields[row.field], 'institution representative'); });
-    d.seededOffices.forEach(function (row) { need(plain(row) && typeof row.actorId === V.string && typeof row.field === V.string &&
-      (row.proofField === undefined || typeof row.proofField === V.string), 'seeded appointment'); });
-    d.treasuries.forEach(function (row) { need(Number.isFinite(row.gold) && row.gold >= 0, V.treasury); });
+    ['hosts','heads','seededOffices','treasuries','institutions'].forEach(function (key) { need(Array.isArray(d[key]), 'opening list'); });
+    d.hosts.forEach(function (row) { need(plain(row) && typeof row.id === 'string' && typeof row.realm === 'string' &&
+      typeof row.at === 'string' && Number.isInteger(row.men) && row.men > 0 && plain(row.units) &&
+      Number.isInteger(row.units.levy) && Number.isInteger(row.units.ret) && row.units.levy + row.units.ret === row.men, 'host'); });
+    d.heads.forEach(function (row) { need(plain(row) && typeof row.officeId === 'string' && fields[row.field], 'religious head'); });
+    d.institutions.forEach(function (row) { need(plain(row) && typeof row.institutionId === 'string' && fields[row.field], 'institution representative'); });
+    d.seededOffices.forEach(function (row) { need(plain(row) && typeof row.actorId === 'string' && typeof row.field === 'string' &&
+      (row.proofField === undefined || typeof row.proofField === 'string'), 'seeded appointment'); });
+    d.treasuries.forEach(function (row) { need(Number.isFinite(row.gold) && row.gold >= 0, 'treasury'); });
     need(Array.isArray(def.legacyRails) && plain(def.legacy), 'legacy compatibility');
   }
   function validateLinked(def, roles) {
     validateParameters(def);
-    need(typeof def.courtStoryId === V.string && (def.requires || []).indexOf(def.courtStoryId) >= 0, 'court dependency');
+    need(typeof def.courtStoryId === 'string' && (def.requires || []).indexOf(def.courtStoryId) >= 0, 'court dependency');
     var court = FB.stories.get(def.courtStoryId);
     need(court && court.declaration && court.declaration.type === 'court_settlement', 'court type');
     need(plain(def.cast) && Object.keys(def.cast).every(function (role) {
@@ -878,8 +882,8 @@
   FB.stories.registerType('ruler_restoration', restorationFactory, 'js/story_courts.js', function (def) {
     validateLinked(def, ['sittingRuler','returningRuler']); need(Array.isArray(def.commanders) && def.commanders.length > 0, 'commanders');
     var fields = {};
-    def.commanders.forEach(function (row) { need(plain(row) && typeof row.field === V.string && !fields[row.field] &&
-      characterValid(row.character), V.commander); fields[row.field] = true; });
+    def.commanders.forEach(function (row) { need(plain(row) && typeof row.field === 'string' && !fields[row.field] &&
+      characterValid(row.character), 'commander'); fields[row.field] = true; });
   });
   FB.stories.registerType('contested_office', officeFactory, 'js/story_courts.js', function (def) {
     validateLinked(def, ['patronRuler']); need(plain(def.legacyCampaigns) && Array.isArray(def.legacyRails) && plain(def.legacyDisplacedCourt), 'legacy rails');

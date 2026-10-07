@@ -958,7 +958,7 @@ window.FB = window.FB || {};
                 ['sovereignOfficeId','judicialOfficeId','commandOfficeId'].indexOf(key) >= 0) table = FBDATA.authorityOffices;
             if (key === 'institutionId' && path.indexOf('opening.authority.') === 0) table = storyRealms;
             if (['court_settlement','ruler_restoration','contested_office','political_track'].indexOf(def.declaration.type) >= 0 &&
-                (key === FB.stories.tokens.source || /Source$/.test(key))) table = FBDATA.legitimacySources;
+                (key === 'source' || /Source$/.test(key))) table = FBDATA.legitimacySources;
             if (key === 'churchId' || key === 'civicId') table = definition.localInstitutions !== undefined ? definition.localInstitutions : FBDATA.localInstitutions;
             if (table && typeof value === 'string' && !ownKey(table, value)) fault('story ' + id, where + ' references unknown id ' + value + '.');
             if ((key === 'culture' || /CultureId$/.test(key) || key === 'cultureId') && typeof value === 'string') identity({ culture:value }, 'story ' + id);

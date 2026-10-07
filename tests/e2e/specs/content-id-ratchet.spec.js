@@ -9,7 +9,8 @@ dependsOnRuntime(__filename, [
 ]);
 const { test, expect } = require('../support/fixture');
 const { openGame } = require('../support/game/navigation');
-const { engineSources } = require('../support/source-literals');
+const { engineSources, scanSource } = require('../support/source-literals');
+const { quotedCounts, reviewProblems } = require('../support/content-id-reviews');
 
 const fixtureDirectory = path.resolve(__dirname, '..', 'fixtures', 'engine-ids');
 const allowlistPath = path.join(fixtureDirectory, 'content-id-allowlist.json');
@@ -46,17 +47,6 @@ function collectDataIds() {
   const keys = Object.keys(FBDATA).sort();
   keys.forEach(function (key) { walk(key, FBDATA[key], 0); });
   return { keys:keys, tables:out };
-}
-
-function quotedCounts() {
-  const counts = new Map();
-  for (const source of engineSources()) {
-    for (const row of source.scan.literals) {
-      const key = source.file + '\n' + row.value;
-      counts.set(key, (counts.get(key) || 0) + 1);
-    }
-  }
-  return counts;
 }
 
 test('every content-id reference is on the reviewed, file-bounded allowlist',
@@ -105,13 +95,10 @@ test('every content-id reference is on the reviewed, file-bounded allowlist',
     for (const [type, file] of Object.entries(typeFiles)) {
       expect(file, 'A registered type must declare its source: ' + type).toMatch(/^js\/story_[^/]+\.js$/);
     }
-    for (const source of engineSources()) {
-      if (!reusableFiles.has(source.file)) continue;
-      const literals = source.scan.literals.filter(function (row) { return owners.has(row.value); });
-      expect(literals, source.file + ' quotes content ids: ' + literals.map(function (row) { return row.value; }).join(', ')).toEqual([]);
-      expect(allowlist.hooks.filter(function (hook) { return hook.uses[source.file] !== undefined; }),
-        'Reusable types may not have content-id allowlist entries: ' + source.file).toEqual([]);
-    }
+    expect(await page.evaluate(function () { return Object.prototype.hasOwnProperty.call(FB.stories, 'tokens'); }),
+      'Protocol words must remain directly reviewable in their owning files.').toBe(false);
+    const sources = engineSources();
+    problems.push.apply(problems, reviewProblems(sources, reusableFiles, owners, allowlist.hooks));
 
     const hooks = new Map();
     allowlist.hooks.forEach(function (entry) {
@@ -126,7 +113,7 @@ test('every content-id reference is on the reviewed, file-bounded allowlist',
       hooks.set(entry.id, entry);
     });
 
-    const counts = quotedCounts();
+    const counts = quotedCounts(sources);
     const totals = new Map();
     counts.forEach(function (count, key) {
       const id = key.split('\n')[1]; totals.set(id, (totals.get(id) || 0) + count);
@@ -141,15 +128,8 @@ test('every content-id reference is on the reviewed, file-bounded allowlist',
     });
     testInfo.annotations.push({ type:'quoted content ids', description:String(total) });
 
-    // Closing the ratchet removes the update escape hatch. New deliberate
-    // references require a reviewed reason and an explicit per-file ceiling.
-    counts.forEach(function (count, key) {
-      const [file, id] = key.split('\n');
-      const entry = hooks.get(id);
-      if (!entry) return;
-      const maximum = entry.uses && entry.uses[file];
-      if (!Number.isInteger(maximum) || maximum < count) problems.push('unreviewed use of ' + id + ' in ' + file + ': ' + count + ' (allowed ' + (maximum || 0) + ')');
-    });
+    // There is no update escape hatch. Adding or removing a reference requires
+    // reviewing its exact per-file count, including structural collisions.
 
     expect(fs.existsSync(countsPath),
       'The closed, zero-residual baseline is missing: ' + path.relative(process.cwd(), countsPath))
@@ -172,3 +152,32 @@ test('every content-id reference is on the reviewed, file-bounded allowlist',
     expect(problems, problems.join('\n')).toEqual([]);
     expect(total).toBe(0);
   });
+
+function audited(text, hook) {
+  const file = 'js/story_example.js';
+  return reviewProblems([{ file:file, scan:scanSource(text) }], new Set([file]),
+    new Map([['host',['example']]]), hook ? [hook] : []);
+}
+
+test('structural spellings need explicit per-file reviews with exact counts', function () {
+  const hook = { id:'host', reason:'Authority actor kind protocol.', uses:{ 'js/story_example.js':1 } };
+  expect(audited("var kind = 'host';", hook)).not.toEqual([]);
+  hook.protocolFiles = ['js/story_example.js'];
+  expect(audited("var kind = 'host';", hook)).toEqual([]);
+  expect(audited("var kind = 'host', extra = 'host';", hook)).not.toEqual([]);
+  expect(audited('var kind = null;', hook)).not.toEqual([]);
+});
+
+test('moving a spelling behind the old token table cannot bypass the type audit', function () {
+  expect(audited('var V = FB.stories.tokens; var kind = V.host;')).not.toEqual([]);
+  expect(audited('var kind = V.arbitrary_content_id;')).not.toEqual([]);
+});
+
+test('zero-use ceilings and authored-module reasons are rejected', function () {
+  const sources = [{ file:'js/events.js', scan:scanSource('var tenure = null;') }];
+  const hook = { id:'manorial_tenure', reason:'Tenure behavior protocol.', uses:{ 'js/events.js':3 } };
+  expect(reviewProblems(sources, new Set(), new Map(), [hook])).not.toEqual([]);
+  hook.reason = 'Authored story-module reference.';
+  hook.uses = {};
+  expect(reviewProblems(sources, new Set(), new Map(), [hook])).not.toEqual([]);
+});

@@ -64,7 +64,11 @@
    data/story_courts_476.js shows court_settlement, ruler_restoration,
    contested_office and political_track declarations. Linked cast references
    use {kind:"story", storyId:requiredInstance, field:exportedField}.
-   Political tracks choose a closed profile, declare its stages and map
-   choice ids to reviewed operations; costs and targets are typed parameters.
+   Political tracks choose a progress-record profile and declare initialStage,
+   phaseStages and their own stage graph. Stages name mechanics and ordered
+   choice keys; transitions and choice nextStage can branch to another stage
+   with the operation's outcome mechanic. Unused paths can be omitted. Only
+   participants required by the declared operations need cast references.
+   Costs and targets remain typed parameters; transactions stay closed.
    Keep released ids stable. Version new record schemas and migrate facts
    on detached copies when their released format changes. */

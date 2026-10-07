@@ -2,9 +2,8 @@
    Cast, regions, dates, funding, authority sources and news belong to data. */
 (function () {
   'use strict';
-  var V = FB.stories.tokens;
-  function plain(v) { return !!v && typeof v === V.object && !Array.isArray(v); }
-  function id(v) { return typeof v === V.string && !!v; }
+  function plain(v) { return !!v && typeof v === 'object' && !Array.isArray(v); }
+  function id(v) { return typeof v === 'string' && !!v; }
   function integer(v) { return Number.isInteger(v) && v >= 0; }
   function ruler(s, rid) {
     return FB.stories.ruler(s, rid);
@@ -37,22 +36,22 @@
     return def.actor.castField ? rec.cast[def.actor.castField] : FB.stories.resolve(s, def.actor.character);
   }
   function definition(def) {
-    var common = ['id',V.type,'requires','requirements',V.name,V.desc,'actor','firstYear','lastYear',V.chance,'truceDays',V.news,'registrationBefore','registrationAfter'];
+    var common = ['id','type','requires','requirements','name','desc','actor','firstYear','lastYear','chance','truceDays','news','registrationBefore','registrationAfter'];
     var extra = { succession_partition:['cast','branchRealmIds','shares'], designated_succession:['regions'],
-      diplomatic_exchange:[V.source,'actorGift','sourceGift',V.opinion], recognition:[V.source,'authoritySource','requireImperial','region'],
-      treaty_settlement:['planRef','regions',V.pressure] };
+      diplomatic_exchange:['source','actorGift','sourceGift','opinion'], recognition:['source','authoritySource','requireImperial','region'],
+      treaty_settlement:['planRef','regions','pressure'] };
     if (!plain(def) || !extra[def.type] || Object.keys(def).some(function (key) { return common.concat(extra[def.type]).indexOf(key) < 0; }))
       throw new Error('Unknown settlement declaration field.');
     function ref(v) { return FB.stories.referenceValid(v, def); }
     function party(v) { return plain(v) && id(v.realmId) && id(v.capital) &&
       (v.character === undefined || ref(v.character)); }
-    if (!plain(def) || !id(def.id) || typeof def.name !== V.string || typeof def.desc !== V.string ||
+    if (!plain(def) || !id(def.id) || typeof def.name !== 'string' || typeof def.desc !== 'string' ||
         !party(def.actor) || !integer(def.firstYear) || !integer(def.lastYear) || def.lastYear < def.firstYear ||
         !Number.isFinite(def.chance) || def.chance < 0 || def.chance > 1 || !integer(def.truceDays) || !plain(def.news))
       throw new Error('Invalid settlement story declaration.');
     Object.keys(def.news).forEach(function (key) {
       var m = def.news[key];
-      if (!plain(m) || !/^news\.[a-z0-9_.-]+$/.test(m.key || '') || typeof m.text !== V.string)
+      if (!plain(m) || !/^news\.[a-z0-9_.-]+$/.test(m.key || '') || typeof m.text !== 'string')
         throw new Error('Invalid settlement news descriptor.');
     });
     if (def.type === 'succession_partition') {
@@ -64,12 +63,12 @@
     } else if (def.type === 'designated_succession' || def.type === 'treaty_settlement') {
       if (!Array.isArray(def.regions) || !def.regions.length || def.regions.length > 8 || def.regions.some(function (row, i) {
         return !plain(row) || !id(row.id) || def.regions.some(function (other, j) { return j !== i && other.id === row.id; }) ||
-          !ref(row.selector) || ['region',V.provinces].indexOf(row.selector.kind) < 0 ||
+          !ref(row.selector) || ['region','provinces'].indexOf(row.selector.kind) < 0 ||
           def.type === 'designated_succession' && (!plain(row.grant) || !id(row.grant.id) || !id(row.grant.capital) ||
             !id(row.grant.titleId) || !integer(row.grant.rank) || row.grant.rank < 1 || row.grant.rank > 4 ||
-            [V.county,V.duchy,V.kingdom].indexOf(row.grant.titleKind) < 0) ||
+            ['county','duchy','kingdom'].indexOf(row.grant.titleKind) < 0) ||
           def.type === 'treaty_settlement' && !id(row.titleId);
-      }) || def.type === 'treaty_settlement' && (!ref(def.planRef) || def.planRef.kind !== V.story))
+      }) || def.type === 'treaty_settlement' && (!ref(def.planRef) || def.planRef.kind !== 'story'))
         throw new Error('Invalid settlement regions or prerequisite plan.');
       if (def.pressure !== undefined && (!plain(def.pressure) || !integer(def.pressure.threshold) || def.pressure.threshold < 1 ||
           !Number.isFinite(def.pressure.chance) || def.pressure.chance < 0 || def.pressure.chance > 1))
@@ -78,18 +77,18 @@
       if (!party(def.source) || def.actor.realmId === def.source.realmId || !Number.isFinite(def.actorGift) || def.actorGift < 0 ||
           !Number.isFinite(def.sourceGift) || def.sourceGift < 0 || !Number.isFinite(def.opinion) || def.opinion < -100 || def.opinion > 100)
         throw new Error('Invalid diplomatic exchange terms.');
-    } else if (def.type === V.recognition) {
+    } else if (def.type === 'recognition') {
       if (!party(def.source) || def.actor.realmId === def.source.realmId || !id(def.authoritySource) ||
-          !FBDATA.legitimacySources[def.authoritySource] || !ref(def.region) || ['region',V.provinces].indexOf(def.region.kind) < 0 ||
+          !FBDATA.legitimacySources[def.authoritySource] || !ref(def.region) || ['region','provinces'].indexOf(def.region.kind) < 0 ||
           typeof def.requireImperial !== 'boolean') throw new Error('Invalid recognition terms.');
     }
   }
   function terms(s, rec, def) {
     var rid = def.actor.realmId, crown = s.realms[rid], king = ruler(s, rid);
-    if (!crown || !crown.alive || crown.liege || !king || s.owner[def.actor.capital] !== rid) return { terminal:V.diverted };
+    if (!crown || !crown.alive || crown.liege || !king || s.owner[def.actor.capital] !== rid) return { terminal:'diverted' };
     if (rec.phase !== 'pending' || s.date.year < def.firstYear || s.date.year > def.lastYear) return { allowed:false };
     var wanted = expected(s, rec, def);
-    if ((def.actor.character || def.actor.castField) && king.id !== wanted) return { terminal:V.interrupted };
+    if ((def.actor.character || def.actor.castField) && king.id !== wanted) return { terminal:'interrupted' };
     if (def.type === 'succession_partition') {
       var children = heirs(s, rid);
       var shares = def.shares.filter(function (share) {
@@ -120,8 +119,8 @@
     }
     if (def.source) {
       var other = s.realms[def.source.realmId], otherKing = ruler(s, def.source.realmId);
-      if (!otherKing || def.source.character && otherKing.id !== FB.stories.resolve(s, def.source.character)) return { terminal:V.interrupted };
-      if (!other || !other.alive || other.liege || s.owner[def.source.capital] !== def.source.realmId) return { terminal:V.diverted };
+      if (!otherKing || def.source.character && otherKing.id !== FB.stories.resolve(s, def.source.character)) return { terminal:'interrupted' };
+      if (!other || !other.alive || other.liege || s.owner[def.source.capital] !== def.source.realmId) return { terminal:'diverted' };
       var peaceful = !FB.isRealmAtWar(s, rid) && !FB.isRealmAtWar(s, def.source.realmId);
       var check = { allowed:peaceful, parties:[king.id,otherKing.id],
         generations:[FB.realmRulerGeneration(s, rid),FB.realmRulerGeneration(s, def.source.realmId)] };
@@ -132,7 +131,7 @@
         var coast = FB.stories.resolve(s, def.region);
         if (def.requireImperial && !FB.realmRank.isImperial(other, s) || coast.some(function (pid) {
           return [rid,def.source.realmId].indexOf(s.owner[pid]) < 0;
-        })) return { terminal:V.diverted };
+        })) return { terminal:'diverted' };
         check.allowed = peaceful && (!def.requireImperial || FB.realmRank.isImperial(crown, s));
         check.coast = coast.map(function (pid) { return s.owner[pid]; });
       }
@@ -141,7 +140,7 @@
     var settlement = FB.stories.resolve(s, def.planRef);
     if (!settlement || king.id === settlement.rulerId) return { allowed:false };
     var primary = crown.succession && crown.succession.members[settlement.primaryId];
-    if (!primary || primary.charId !== king.id) return { terminal:V.interrupted };
+    if (!primary || primary.charId !== king.id) return { terminal:'interrupted' };
     var juniors = settlement.shares.filter(function (share) {
       var c = ruler(s, share.realmId), realm = s.realms[share.realmId];
       return c && c.id === share.charId && realm && (!realm.liege || realm.liege === rid);
@@ -174,7 +173,7 @@
   }
   function controlled(s, rid) {
     var c = ruler(s, rid);
-    return rid === V.player || !!(c && c.id === s.player.charId);
+    return rid === 'player' || !!(c && c.id === s.player.charId);
   }
   function quote(s, rec, def, choice) {
     var check = terms(s, rec, def), actors = parties(s, rec, def, check);
@@ -220,12 +219,12 @@
           s.chars[person.id].opinion = Math.max(-100, Math.min(100, s.chars[person.id].opinion + def.opinion));
       }
       truce(s, rid, def.source.realmId, def.truceDays); finish(s, rec, 'agreed');
-    } else if (def.type === V.recognition) {
-      var actor = { kind:V.realm, id:rid };
+    } else if (def.type === 'recognition') {
+      var actor = { kind:'realm', id:rid };
       var proof = FB.political.legitimacy(s, actor, actor, def.authoritySource).filter(function (row) {
-        return row.issuer.kind === V.realm && row.issuer.id === def.source.realmId;
+        return row.issuer.kind === 'realm' && row.issuer.id === def.source.realmId;
       })[0] || FB.authorityRecognize(s, { source:def.authoritySource,
-        issuer:{ kind:V.realm, id:def.source.realmId }, subject:actor, scope:actor });
+        issuer:{ kind:'realm', id:def.source.realmId }, subject:actor, scope:actor });
       if (!proof) return false;
       for (var pid of FB.stories.resolve(s, def.region)) if (s.owner[pid] === rid) FB.transferProvince(s, pid, def.source.realmId);
       rec.plan = { recognitionId:proof.id }; truce(s, rid, def.source.realmId, def.truceDays); finish(s, rec, 'agreed');
@@ -234,7 +233,7 @@
       for (var part of plan.shares) {
         if (!FB.grantRoyalRegion(s, rid, part.realmId, part.counties)) return false;
         var title = def.regions.filter(function (row) { return row.id === part.region; })[0].titleId;
-        FB.setRealmTitle(s, s.realms[part.realmId], V.kingdom, title);
+        FB.setRealmTitle(s, s.realms[part.realmId], 'kingdom', title);
       }
       for (var part of plan.shares) FB.releaseRoyalRegion(s, rid, part.realmId);
       for (var i = 0; i < plan.shares.length; i++) {
@@ -255,7 +254,7 @@
           if (surviving.length && FB.designateRoyalHeir(s, rid, surviving[0].id)) rec.plan.primaryId = surviving[0].id;
         }
       } else {
-        if (!king || !s.realms[rid].alive || s.owner[def.actor.capital] !== rid) { finish(s, rec, V.diverted); return; }
+        if (!king || !s.realms[rid].alive || s.owner[def.actor.capital] !== rid) { finish(s, rec, 'diverted'); return; }
         if (FB.isRealmAtWar(s, rid)) return;
         for (var share of rec.plan.shares) {
           var current = ruler(s, share.realmId);
@@ -265,7 +264,7 @@
       }
     }
     if (rec.phase !== 'pending') return;
-    if (s.date.year > def.lastYear) { finish(s, rec, V.expired); return; }
+    if (s.date.year > def.lastYear) { finish(s, rec, 'expired'); return; }
     if (s.date.year >= def.firstYear) {
       var check = terms(s, rec, def);
       if (check.terminal) finish(s, rec, check.terminal);
@@ -286,27 +285,27 @@
     var rebel = juniors[0].realmId;
     if (FB.truceExpiry(s, rid, rebel) || !FB.releaseRoyalRegion(s, rid, rebel)) return;
     var war = FB.registerOrdinaryWar(s, rid, { enemy:rebel, legacy:false,
-      casus:{ type:V.independence, rebel:rebel, formerLiege:rid, rebelCharId:ruler(s, rebel).id } });
+      casus:{ type:'independence', rebel:rebel, formerLiege:rid, rebelCharId:ruler(s, rebel).id } });
     if (!war) {
       s.realms[rebel].liege = rid;
       for (var pid of FB.realmTerritory(s, rebel)) s.owner[pid] = rid;
       FB.invalidateRealmCache(); return;
     }
-    p.warId = war.id; p.rebelId = rebel; notice(s, def, V.pressure);
+    p.warId = war.id; p.rebelId = rebel; notice(s, def, 'pressure');
   }
   function validate(rec, s, def) {
     function bad(field) { throw new Error(FB.T('Invalid v4 save field at {path}.', { path:'state.stories.' + def.id + '.' + field })); }
     function turn(v) { return integer(v) && v <= s.turn; }
     if (!plain(rec) || ['pending','planned','resolved'].indexOf(rec.phase) < 0 ||
         rec.phase === 'planned' && def.type !== 'succession_partition' ||
-        rec.phase === 'resolved' && ['agreed','executed',V.declined,V.expired,V.interrupted,V.diverted].indexOf(rec.result) < 0 ||
+        rec.phase === 'resolved' && ['agreed','executed','declined','expired','interrupted','diverted'].indexOf(rec.result) < 0 ||
         rec.result === 'executed' && def.type !== 'succession_partition' ||
         rec.phase !== 'resolved' && rec.result !== null || rec.phase === 'pending' && rec.turn !== null ||
         rec.phase !== 'pending' && !turn(rec.turn) || rec.attemptSeason !== null && !integer(rec.attemptSeason) ||
         !plain(rec.approvals) || Object.keys(rec.approvals).some(function (rid) {
           var approval = rec.approvals[rid];
-          return !s.realms[rid] || !plain(approval) || !integer(approval.generation) || typeof approval.stamp !== V.string;
-        })) bad(V.record);
+          return !s.realms[rid] || !plain(approval) || !integer(approval.generation) || typeof approval.stamp !== 'string';
+        })) bad('record');
     if (rec.phase === 'pending' && rec.plan !== null) bad('plan');
     if (def.cast && (!plain(rec.cast) || Object.keys(rec.cast).length !== Object.keys(def.cast).length ||
         Object.keys(def.cast).some(function (key) { return !id(rec.cast[key]); }))) bad('cast');
@@ -314,14 +313,14 @@
       var p = rec.pressure;
       if (!plain(p) || !integer(p.amount) || p.amount > def.pressure.threshold || p.season !== null && !integer(p.season) ||
           p.warId !== null && !id(p.warId) || p.rebelId !== null && (!id(p.rebelId) || !s.realms[p.rebelId]) ||
-          (p.warId === null) !== (p.rebelId === null)) bad(V.pressure);
+          (p.warId === null) !== (p.rebelId === null)) bad('pressure');
     }
     if (rec.plan === null) {
       if (rec.phase === 'planned' || rec.result === 'executed' || rec.result === 'agreed' && def.type !== 'diplomatic_exchange') bad('plan');
       return;
     }
     if (!plain(rec.plan)) bad('plan');
-    if (def.type === V.recognition) { if (!id(rec.plan.recognitionId)) bad('recognitionId'); return; }
+    if (def.type === 'recognition') { if (!id(rec.plan.recognitionId)) bad('recognitionId'); return; }
     if (def.type === 'diplomatic_exchange') bad('plan');
     var plan = rec.plan;
     if (!id(plan.rulerId) || !integer(plan.generation) || !id(plan.primaryId) || !Array.isArray(plan.shares) ||
@@ -336,7 +335,7 @@
       if (def.type === 'designated_succession' && !id(share.memberId)) bad('memberId');
       if (def.type === 'treaty_settlement' && (!Array.isArray(share.counties) || !share.counties.length || share.counties.some(function (pid, i) {
         return share.counties.indexOf(pid) !== i || !(FB.bookmark(s.start.id).provinces || []).some(function (p) { return p.id === pid && !p.wasteland; });
-      }))) bad(V.counties);
+      }))) bad('counties');
     }
   }
   function factory(def) {
@@ -349,7 +348,7 @@
         expired:FB.T('Opportunity expired'), interrupted:FB.T('Court changed'), diverted:FB.T('Territory changed') };
       return states[rec.result || rec.phase];
     }
-    return { id:def.id, kind:V.world, requires:def.requires || [], fields:['plan'].concat(def.cast ? ['cast'].concat(Object.keys(def.cast).map(function (key) { return 'cast.' + key; })) : []),
+    return { id:def.id, kind:'world', requires:def.requires || [], fields:['plan'].concat(def.cast ? ['cast'].concat(Object.keys(def.cast).map(function (key) { return 'cast.' + key; })) : []),
       init:function (s) {
         var d = effective(s), rec = fresh();
         if (d.cast) {
@@ -378,8 +377,8 @@
         }
         pressure(s, rec, d, tick);
       },
-      title:function (s) { return FB.dataText(s, null, 'storyCampaign', def.id, def, V.name, {}); },
-      intro:function (s) { return FB.dataText(s, null, 'storyCampaign', def.id, def, V.desc, {}); },
+      title:function (s) { return FB.dataText(s, null, 'storyCampaign', def.id, def, 'name', {}); },
+      intro:function (s) { return FB.dataText(s, null, 'storyCampaign', def.id, def, 'desc', {}); },
       status:function (s, rec) { return { phase:rec.phase, name:labels(rec),
         lines:rec.phase === 'pending' && Object.keys(rec.approvals).length ?
           [FB.T('Your authorization is recorded. The other courts may accept at a seasonal review; changed parties or shares require another review.')] : [] }; },
@@ -393,7 +392,7 @@
       blocker:function () { return FB.T('The agreement requires its living rulers, declared territory, date window, peaceful courts and sufficient funds.'); },
       review:function (s, rec, choice, reviewed) {
         var d = effective(s), lines = choice === 'decline' ? [FB.T('This opportunity closes without payment, recognition or a territorial grant.')] :
-          [FB.dataText(s, null, 'storyCampaign', d.id, d, V.desc, {})];
+          [FB.dataText(s, null, 'storyCampaign', d.id, d, 'desc', {})];
         if (choice === 'approve' && d.type === 'diplomatic_exchange') lines.push(FB.T('Your court sends {money:sent} and receives {money:received}.',
           { sent:controlled(s, d.actor.realmId) ? d.actorGift : d.sourceGift, received:controlled(s, d.actor.realmId) ? d.sourceGift : d.actorGift }));
         if (choice === 'approve' && d.truceDays) lines.push(FB.T('Peace term: {days} days.', { days:d.truceDays }));
@@ -408,7 +407,7 @@
               counties:share.counties.map(function (pid) { return FB.world.byId[pid].name; }).join(', ') }));
           });
         }
-        if (choice === 'approve' && d.type === V.recognition) lines.push(FB.T('Recognition: {source}. Returned counties: {counties}.',
+        if (choice === 'approve' && d.type === 'recognition') lines.push(FB.T('Recognition: {source}. Returned counties: {counties}.',
           { source:FB.legitimacySourceName(s, d.authoritySource), counties:FB.stories.resolve(s, d.region).filter(function (pid) {
             return s.owner[pid] === d.actor.realmId;
           }).map(function (pid) { return FB.world.byId[pid].name; }).join(', ') }));
@@ -417,7 +416,7 @@
       apply:function (s, rec, choice, reviewed) {
         var d = effective(s), q = quote(s, rec, d, choice);
         if (!q.allowed || !reviewed || reviewed.id !== choice || reviewed.stamp !== q.stamp) return false;
-        if (choice === 'decline') { finish(s, rec, V.declined); return true; }
+        if (choice === 'decline') { finish(s, rec, 'declined'); return true; }
         var players = parties(s, rec, d, q.facts.check).filter(function (rid) { return controlled(s, rid); });
         if (players.length) {
           players.forEach(function (rid) { rec.approvals[rid] = { generation:FB.realmRulerGeneration(s, rid), stamp:q.consentStamp }; });
@@ -428,7 +427,7 @@
       validate:function (rec, s) { validate(rec, s, effective(s)); }
     };
   }
-  ['succession_partition','designated_succession','diplomatic_exchange',V.recognition,'treaty_settlement'].forEach(function (type) {
+  ['succession_partition','designated_succession','diplomatic_exchange','recognition','treaty_settlement'].forEach(function (type) {
     FB.stories.registerType(type, factory, 'js/story_settlements.js', definition);
   });
 })();

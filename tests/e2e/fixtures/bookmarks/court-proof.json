@@ -11469,7 +11469,7 @@
       "profile": "service_negotiation",
       "courtStoryId": "proof_court",
       "stages": {
-        "delegate": {
+        "briefing": {
           "choices": [
             "accept_delegate",
             "remain_service",
@@ -11477,43 +11477,48 @@
             "seek_city_service",
             "seek_church_service"
           ],
-          "name": "Fictional stage"
+          "name": "Fictional stage",
+          "mechanic": "delegate"
         },
-        "civic_service": {
+        "city_desk": {
           "choices": [
             "petition_city_office",
             "leave_city_service",
             "leave_dispute"
           ],
-          "name": "Fictional stage"
+          "name": "Fictional stage",
+          "mechanic": "civic_service"
         },
-        "church_service": {
+        "chapel_desk": {
           "choices": [
             "seek_minority_commission",
             "mediate_communities",
             "leave_church_service",
             "leave_dispute"
           ],
-          "name": "Fictional stage"
+          "name": "Fictional stage",
+          "mechanic": "church_service"
         },
-        "commission": {
+        "orders": {
           "choices": [
             "seek_commission",
             "back_commander",
             "keep_serving",
             "leave_dispute"
           ],
-          "name": "Fictional stage"
+          "name": "Fictional stage",
+          "mechanic": "commission"
         },
-        "contract": {
+        "bargain": {
           "choices": [
             "offer_pay",
             "refuse_pay",
             "leave_dispute"
           ],
-          "name": "Fictional stage"
+          "name": "Fictional stage",
+          "mechanic": "contract"
         },
-        "civic": {
+        "town_terms": {
           "choices": [
             "seek_mediation",
             "renegotiate_pay",
@@ -11522,9 +11527,13 @@
             "demand_force",
             "leave_dispute"
           ],
-          "name": "Fictional stage"
+          "name": "Fictional stage",
+          "mechanic": "civic",
+          "transitions": {
+            "contract": "renewal"
+          }
         },
-        "recognition": {
+        "endorsement": {
           "choices": [
             "petition_sitting_ruler",
             "back_returning_claimant",
@@ -11532,9 +11541,10 @@
             "forgo_recognition",
             "leave_dispute"
           ],
-          "name": "Fictional stage"
+          "name": "Fictional stage",
+          "mechanic": "recognition"
         },
-        "court": {
+        "escort": {
           "choices": [
             "escort_court",
             "court_maintenance",
@@ -11543,29 +11553,33 @@
             "demand_force_29",
             "leave_dispute"
           ],
-          "name": "Fictional stage"
+          "name": "Fictional stage",
+          "mechanic": "court"
         },
-        "resolution": {
+        "ratification": {
           "choices": [
             "ratify",
             "reject_ratification",
             "leave_dispute"
           ],
-          "name": "Fictional stage"
+          "name": "Fictional stage",
+          "mechanic": "resolution"
         },
-        "battle": {
+        "contest": {
           "choices": [
             "withdraw"
           ],
-          "name": "Fictional stage"
+          "name": "Fictional stage",
+          "mechanic": "battle"
         },
-        "aftermath": {
+        "report": {
           "choices": [
             "accept_aftermath"
           ],
-          "name": "Fictional stage"
+          "name": "Fictional stage",
+          "mechanic": "aftermath"
         },
-        "complete": {
+        "settled": {
           "choices": [],
           "groups": [
             {
@@ -11584,7 +11598,26 @@
               ]
             }
           ],
-          "name": "Fictional stage"
+          "name": "Fictional stage",
+          "mechanic": "complete"
+        },
+        "commission_audience": {
+          "name": "A delegate receives orders",
+          "mechanic": "commission",
+          "choices": [
+            "seek_commission",
+            "keep_serving",
+            "leave_dispute"
+          ]
+        },
+        "renewal": {
+          "name": "Review the broken service bargain",
+          "mechanic": "contract",
+          "choices": [
+            "offer_pay",
+            "refuse_pay",
+            "leave_dispute"
+          ]
         }
       },
       "choices": {
@@ -11598,13 +11631,15 @@
           "id": "proof_accept_delegate",
           "operation": "accept_delegate",
           "label": "Fictional accept_delegate",
-          "detail": "Review accept_delegate through ordinary transactions."
+          "detail": "Review accept_delegate through ordinary transactions.",
+          "nextStage": "commission_audience"
         },
         "remain_service": {
           "id": "proof_remain_service",
           "operation": "remain_service",
           "label": "Fictional remain_service",
-          "detail": "Review remain_service through ordinary transactions."
+          "detail": "Review remain_service through ordinary transactions.",
+          "nextStage": "orders"
         },
         "refuse_involvement": {
           "id": "proof_refuse_involvement",
@@ -11779,13 +11814,13 @@
         },
         "retire_western_office": {
           "id": "proof_retire_western_office",
-          "operation": "retire_western_office",
+          "operation": "retire_contested_office",
           "label": "Fictional retire_western_office",
           "detail": "Review retire_western_office through ordinary transactions."
         },
         "restore_western_office": {
           "id": "proof_restore_western_office",
-          "operation": "restore_western_office",
+          "operation": "restore_contested_office",
           "label": "Fictional restore_western_office",
           "detail": "Review restore_western_office through ordinary transactions."
         },
@@ -11797,7 +11832,7 @@
         },
         "petition_sitting_ruler": {
           "id": "proof_petition_basiliscus",
-          "operation": "petition_sitting_ruler",
+          "operation": "seek_issuer_commission",
           "label": "Fictional petition_sitting_ruler",
           "detail": "Review petition_sitting_ruler through ordinary transactions."
         },
@@ -12040,6 +12075,21 @@
           "storyId": "proof_court",
           "field": "proof_homoianBishopId"
         }
+      },
+      "initialStage": "briefing",
+      "phaseStages": {
+        "delegate": "briefing",
+        "civic_service": "city_desk",
+        "church_service": "chapel_desk",
+        "commission": "orders",
+        "contract": "bargain",
+        "civic": "town_terms",
+        "recognition": "endorsement",
+        "court": "escort",
+        "resolution": "ratification",
+        "battle": "contest",
+        "aftermath": "report",
+        "complete": "settled"
       }
     },
     "proof_civic": {
@@ -12144,15 +12194,22 @@
       "profile": "civic_mandate",
       "courtStoryId": "proof_court",
       "stages": {
-        "opening": {
+        "register": {
           "name": "Fictional stage",
           "choices": [
             "serve_council",
             "keep_household"
-          ]
+          ],
+          "mechanic": "opening"
         },
-        "complete": {
-          "name": "Fictional stage",
+        "civic_house": {
+          "name": "The civic household serves the town",
+          "mechanic": "complete",
+          "choices": []
+        },
+        "private_house": {
+          "name": "The private household continues",
+          "mechanic": "complete",
           "choices": []
         }
       },
@@ -12161,13 +12218,15 @@
           "id": "proof_serve_council",
           "operation": "serve_council",
           "label": "Fictional serve_council",
-          "detail": "Review serve_council through ordinary transactions."
+          "detail": "Review serve_council through ordinary transactions.",
+          "nextStage": "civic_house"
         },
         "keep_household": {
           "id": "proof_keep_household",
           "operation": "keep_household",
           "label": "Fictional keep_household",
-          "detail": "Review keep_household through ordinary transactions."
+          "detail": "Review keep_household through ordinary transactions.",
+          "nextStage": "private_house"
         }
       },
       "text": {
@@ -12243,6 +12302,11 @@
           "storyId": "proof_court",
           "field": "proof_homoianBishopId"
         }
+      },
+      "initialStage": "register",
+      "phaseStages": {
+        "opening": "register",
+        "complete": "civic_house"
       }
     },
     "proof_claim": {
@@ -12348,64 +12412,25 @@
       "profile": "claim_restoration",
       "courtStoryId": "proof_court",
       "stages": {
-        "opening": {
-          "name": "Fictional stage",
+        "claim_review": {
+          "name": "Review the household domain",
+          "mechanic": "opening",
           "choices": [
-            "seek_recognition",
             "retain_domain"
           ]
         },
-        "claim": {
-          "name": "Fictional stage",
-          "choices": [
-            "restore_by_campaign",
-            "confirm_restoration",
-            "seek_recognition_2",
-            "retain_domain"
-          ]
-        },
-        "campaign": {
-          "name": "Fictional stage",
-          "choices": [
-            "confirm_restoration",
-            "seek_recognition_2",
-            "retain_domain"
-          ]
-        },
-        "complete": {
-          "name": "Fictional stage",
+        "domain_house": {
+          "name": "The household retains its domain",
+          "mechanic": "complete",
           "choices": []
         },
-        "interrupted": {
-          "name": "Fictional stage",
+        "succession": {
+          "name": "A successor continues the household",
+          "mechanic": "interrupted",
           "choices": []
         }
       },
       "choices": {
-        "seek_recognition": {
-          "id": "proof_seek_recognition",
-          "operation": "seek_recognition",
-          "label": "Fictional seek_recognition",
-          "detail": "Review seek_recognition through ordinary transactions."
-        },
-        "seek_recognition_2": {
-          "id": "proof_seek_recognition",
-          "operation": "seek_recognition",
-          "label": "Fictional seek_recognition_2",
-          "detail": "Review seek_recognition through ordinary transactions."
-        },
-        "confirm_restoration": {
-          "id": "proof_confirm_restoration",
-          "operation": "confirm_restoration",
-          "label": "Fictional confirm_restoration",
-          "detail": "Review confirm_restoration through ordinary transactions."
-        },
-        "restore_by_campaign": {
-          "id": "proof_restore_by_campaign",
-          "operation": "restore_by_campaign",
-          "label": "Fictional restore_by_campaign",
-          "detail": "Review restore_by_campaign through ordinary transactions."
-        },
         "retain_domain": {
           "id": "proof_keep_dalmatia",
           "operation": "retain_domain",
@@ -12436,62 +12461,12 @@
         }
       },
       "legacyRails": [],
-      "cast": {
-        "patronRuler": {
-          "kind": "story",
-          "storyId": "proof_court",
-          "field": "proof_westRulerId"
-        },
-        "sittingRuler": {
-          "kind": "story",
-          "storyId": "proof_court",
-          "field": "proof_eastRulerId"
-        },
-        "rival": {
-          "kind": "story",
-          "storyId": "proof_court",
-          "field": "proof_neposId"
-        },
-        "serviceRuler": {
-          "kind": "story",
-          "storyId": "proof_court",
-          "field": "proof_odoacerId"
-        },
-        "returningRuler": {
-          "kind": "story",
-          "storyId": "proof_court",
-          "field": "proof_zenoId"
-        },
-        "commander": {
-          "kind": "story",
-          "storyId": "proof_court",
-          "field": "proof_orestesId"
-        },
-        "delegate": {
-          "kind": "story",
-          "storyId": "proof_court",
-          "field": "proof_civicDelegateId"
-        },
-        "bishop": {
-          "kind": "story",
-          "storyId": "proof_court",
-          "field": "proof_bishopId"
-        },
-        "recipient": {
-          "kind": "story",
-          "storyId": "proof_court",
-          "field": "proof_veteranId"
-        },
-        "senator": {
-          "kind": "story",
-          "storyId": "proof_court",
-          "field": "proof_senatorId"
-        },
-        "minorityBishop": {
-          "kind": "story",
-          "storyId": "proof_court",
-          "field": "proof_homoianBishopId"
-        }
+      "cast": {},
+      "initialStage": "claim_review",
+      "phaseStages": {
+        "opening": "claim_review",
+        "complete": "domain_house",
+        "interrupted": "succession"
       }
     }
   },

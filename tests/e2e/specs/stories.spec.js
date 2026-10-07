@@ -4,6 +4,7 @@ dependsOnRuntime(__filename, [
   'data/story_courts_476.js',
   'index.html', 'js/starts.js', 'js/story_track.js', 'js/stories.js', 'js/story_campaign.js', 'data/story_instances.js',
   'js/bookmark_setup.js', 'js/story_agreements.js',
+  'data/bookmark_800_history.js', 'js/story_settlements.js', 'js/royal_settlements.js',
   'data/story_campaigns.js', 'data/story_campaigns_711.js', 'js/story_courts.js',
   'data/bookmark_493.js', 'data/bookmark_493_history.js',
   'data/bookmark_1204_campaigns.js', 'js/story_history.js',
@@ -84,13 +85,15 @@ test('stories register in order at load time only and resolve by id',
         }).map(function (sc) { return sc.id + ':' + sc.tracks.join(','); })
       };
     });
-    // Other bookmarks may register independent data between these hooks.
-    // Keep the 476 dependency order and the 711 foundation boundary explicit.
-    const expectedOrder = WORLD_STORIES.filter(function (id) { return id !== 'western_office_476'; })
+    // The catalogue lists before/after batches before their data anchors.
+    // Assert their dispatch boundaries even when a batch has no requires.
+    const expectedOrder = ['divisio_800','ordinatio_800','gifts_800','recognition_800','verdun_800']
+      .concat(WORLD_STORIES.filter(function (id) { return id !== 'western_office_476'; }))
       .concat(['alamannic_campaign_493','burgundian_campaign_493','visigothic_campaign_493',
         'sirmium_campaign_493','african_campaign_493','italian_campaign_493',
         'strait_crossing_711','toledo_campaign_711','septimania_campaign_711',
-        'gaul_campaign_711','latin_thessalonica_1204','nicaean_return_1204',
+        'gaul_campaign_711','barcelona_800','danish_friesland_800',
+        'abbasid_anatolia_800','italian_lagoon_800','latin_thessalonica_1204','nicaean_return_1204',
         'bulgarian_thrace_1204','epirote_macedonia_1204','castilian_frontier_1204',
         'portuguese_algarve_1204','aragonese_valencia_1204','capetian_normandy_1204',
         'thessalonica_partition_1204','athens_partition_1204','achaia_partition_1204',

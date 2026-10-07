@@ -145,6 +145,10 @@
         if (own(byId, id)) { ready.push(id); return; }
         var d = table[id];
         if (!plain(d) || d.id !== id) throw new Error('Invalid story instance ' + id + '.');
+        // Data anchors pull their own batches into the dispatch boundary.
+        if (final && [d.registrationBefore,d.registrationAfter].some(function (anchor) {
+          return anchor && own(table, anchor) && !own(byId, anchor);
+        })) return;
         if ((d.requires || []).every(function (required) { return own(byId, required); })) {
           FB.stories.registerData(d); ready.push(id);
         }
@@ -155,17 +159,6 @@
   }
 
   FB.stories = {
-    /* Shared protocol vocabulary, never historical content selectors. */
-    tokens:{ rival:'rival', senator:'senator', recipient:'recipient', bishop:'bishop', withdraw:'withdraw', treasury:'treasury', text:'text', role:'role', reaffirm:'reaffirm', proposal:'proposal', ordinary:'ordinary', opening:'opening', null:'null', none:'none', legacy:'legacy', label:'label', institutions:'institutions', household:'household', history:'history', family:'family', court:'court', contract:'contract', contested:'contested', complete:'complete', commission:'commission', commander:'commander', claim:'claim', civic:'civic', character:'character', battle:'battle', authority:'authority', appointment:'appointment', chance:'chance', news:'news', opinion:'opinion', source:'source', type:'type', active:'active', attackers:'attackers', beneficiary:'beneficiary', called:'called', campaign:'campaign', civilian_migration:'civilian_migration',
-      consent:'consent', counties:'counties', county:'county', date:'date', declined:'declined', defenders:'defenders',
-      desc:'desc', diverted:'diverted', duchy:'duchy', early:'early', empire:'empire', expired:'expired',
-      failed:'failed', fixed:'fixed', founded:'founded', granted:'granted', historical:'historical', holy_war:'holy_war',
-      host:'host', independence:'independence', interrupted:'interrupted', kingdom:'kingdom', landless:'landless', liege:'liege',
-      name:'name', notable:'notable', object:'object', open:'open', owner:'owner', partial:'partial',
-      partition:'partition', phase:'phase', player:'player', polity_foundation:'polity_foundation', pressure:'pressure', provinces:'provinces',
-      realm:'realm', reason:'reason', recognition:'recognition', record:'record', result:'result', routes:'routes',
-      ruler:'ruler', settled:'settled', started:'started', story:'story', story_result:'story_result', string:'string',
-      tribute_cession:'tribute_cession', war:'war', won:'won', world:'world' },
     /* Trusted classic scripts register reusable factories before boot seals
        the registry. Definitions contain data, not executable save fields. */
     registerType:function (id, factory, file, validator) {
@@ -229,7 +222,7 @@
     resolve:resolve,
     ruler:function (s, rid) {
       rid = FB.startRealmId(s, rid);
-      return rid === FB.stories.tokens.player ? s.chars[s.player.charId] : FB.realmRulerCharacterSnapshot(s, rid);
+      return rid === 'player' ? s.chars[s.player.charId] : FB.realmRulerCharacterSnapshot(s, rid);
     },
     definition:function (s, def) { return FB.startRealmDefinition(s, def); },
     get:function (id) {

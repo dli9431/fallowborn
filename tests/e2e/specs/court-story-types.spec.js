@@ -66,19 +66,27 @@ test('a fictional track negotiates its own declared payments and duration withou
     const contract = FB.political.contract(s, t.contractId);
     const declaration = FB.stories.get(track).declaration;
     const display = declaration.choices.offer_pay.detailParams;
-    return { steps:steps, phase:t.phase, patronPayment:patronGold - FB.treasuryAvailable(s, 'proof_senior'),
+    const result = { steps:steps, phase:t.phase, patronPayment:patronGold - FB.treasuryAvailable(s, 'proof_senior'),
       servicePayment:FB.treasuryAvailable(s, 'proof_north'),
       contract:contract && { pay:contract.payPerSeason, duration:contract.endTurn - contract.startTurn,
         patron:contract.patronRealmId, service:contract.federateRealmId },
       courtPay:FB.stories.get('proof_court').declaration.parameters.seasonalPay,
       display:display, noAward:before === JSON.stringify([s.owner,s.holder,s.settlementLordships]) };
+    FB.authorityContractTransition(s, t.contractId, 'breach', 'proof_senior');
+    FB.stories.get(track).day(s, t);
+    result.recovery = t.phase;
+    const saved = JSON.parse(FB.save.serialize()), record = JSON.stringify(t);
+    FB.save.restore(saved);
+    result.recoveryRetained = record === JSON.stringify(FB.state.stories[track]);
+    return result;
   });
-  expect(result).toEqual({ steps:[true,true,true], phase:'civic', patronPayment:12, servicePayment:12,
+  expect(result).toEqual({ steps:[true,true,true], phase:'town_terms', patronPayment:12, servicePayment:12,
     contract:{ pay:6,duration:181,patron:'proof_senior',service:'proof_north' }, courtPay:4,
-    display:{ immediate:12,seasonal:6,share:1,days:181 }, noAward:true });
+    display:{ immediate:12,seasonal:6,share:1,days:181 }, noAward:true, recovery:'renewal', recoveryRetained:true });
 });
 
-for (const variant of ['cost','window','culture','choice','stage','cast','actor','office','character','court_stage']) {
+for (const variant of ['cost','window','culture','choice','stage','cast','actor','office','character','court_stage',
+  'initial_stage','mechanic','next_stage','route','autonomous','unreachable','duplicate_choice','phase_stage','stage_transition']) {
   test('political declarations reject malformed ' + variant + ' without changing the campaign or RNG', async function ({ page }, testInfo) {
     await openGame(page, testInfo);
     const result = await page.evaluate(function (variant) {
@@ -95,6 +103,15 @@ for (const variant of ['cost','window','culture','choice','stage','cast','actor'
       if (variant === 'office') d.opening.authority[3].officeId = 'missing_office';
       if (variant === 'character') d.opening.cast[5].character.station = 'courtier';
       if (variant === 'court_stage') delete d.stages.government;
+      if (variant === 'initial_stage') d.initialStage = 'missing_stage';
+      if (variant === 'mechanic') d.stages.delegate.mechanic = 'arbitrary_effect';
+      if (variant === 'next_stage') d.choices.accept_delegate.nextStage = 'missing_stage';
+      if (variant === 'route') d.choices.accept_delegate.nextStage = 'complete';
+      if (variant === 'autonomous') delete d.phaseStages.aftermath;
+      if (variant === 'unreachable') d.stages.isolated = { name:'Isolated', mechanic:'complete', choices:[] };
+      if (variant === 'duplicate_choice') d.stages.delegate.choices.push('accept_delegate');
+      if (variant === 'phase_stage') d.phaseStages.contract = ['contract'];
+      if (variant === 'stage_transition') d.stages.civic.transitions = { contract:'' };
       const faults = FB.validateBookmark(FB.bookmark('476'));
       Object.keys(d).forEach(function (key) { delete d[key]; }); Object.assign(d, old);
       return { faults:faults, pure:rng === (FB.getRngState() >>> 0) && uid === FB.getUidCounter() && state === FB.state };
@@ -114,9 +131,12 @@ test('476 records retain their ids and old schema, and invalid track records fai
     FB.save.restore(saved);
     const retained = before === facts(JSON.parse(FB.save.serialize()).state);
     const live = FB.state;
-    const corrupt = JSON.parse(JSON.stringify(saved)); corrupt.state.stories.federate_track_476.phase = 'arbitrary_stage';
-    let rejected = false;
-    try { FB.save.restore(corrupt); } catch (error) { rejected = error.message.indexOf('state.stories.federate_track_476') >= 0; }
+    const invalidPhases = ['arbitrary_stage',['delegate'],null];
+    const rejected = invalidPhases.every(function (phase) {
+      const corrupt = JSON.parse(JSON.stringify(saved)); corrupt.state.stories.federate_track_476.phase = phase;
+      try { FB.save.restore(corrupt); } catch (error) { return error.message.indexOf('state.stories.federate_track_476') >= 0; }
+      return false;
+    });
     return { retained:retained, rejected:rejected, detached:FB.state === live,
       rng:rng === (FB.getRngState() >>> 0), uid:uid === FB.getUidCounter(),
       ids:Object.keys(FB.state.stories), noReplay:FB.state.armies.length === saved.state.armies.length };
@@ -124,4 +144,53 @@ test('476 records retain their ids and old schema, and invalid track records fai
   expect(result).toMatchObject({ retained:true,rejected:true,detached:true,rng:true,uid:true,noReplay:true });
   expect(result.ids).toContain('western_court_476');
   expect(result.ids).toContain('federate_track_476');
+});
+
+test('authored track branches, shortened stages and changed routes survive the shared lifecycle', async function ({ page }, testInfo) {
+  await installCourtProof(page);
+  await beginBookmark(page, testInfo, 'proof_courts_900', 'proof_court_household');
+  const result = await page.evaluate(function () {
+    let s = FB.state;
+    const service = FB.stories.get('proof_service'), civic = FB.stories.get('proof_civic');
+    const sizes = [Object.keys(service.declaration.stages).length, Object.keys(civic.declaration.stages).length,
+      Object.keys(FB.stories.get('proof_claim').declaration.stages).length];
+    const before = JSON.stringify(s), rng = FB.getRngState(), uid = FB.getUidCounter();
+    const reviewed = FB.stories.quote(s, 'proof_service', 'proof_accept_delegate');
+    const choice = service.declaration.choices.accept_delegate;
+    choice.nextStage = 'orders';
+    const stale = FB.stories.apply(s, 'proof_service', 'proof_accept_delegate', reviewed);
+    const unchanged = before === JSON.stringify(s) && rng === FB.getRngState() && uid === FB.getUidCounter();
+    choice.nextStage = 'commission_audience';
+    function apply(story, id) { return FB.stories.apply(s, story, id, FB.stories.quote(s, story, id)); }
+    const branch = apply('proof_service', 'proof_accept_delegate'), branchPhase = s.stories.proof_service.phase;
+    const civicDone = apply('proof_civic', 'proof_keep_household'), claimDone = apply('proof_claim', 'proof_keep_dalmatia');
+    const labels = [FB.stories.status(s, 'proof_service').name, FB.stories.status(s, 'proof_civic').name];
+    const saved = JSON.parse(FB.save.serialize()), phases = JSON.stringify(s.stories), savedRng = FB.getRngState(), savedUid = FB.getUidCounter();
+    FB.save.restore(saved); s = FB.state;
+    const restored = phases === JSON.stringify(s.stories) && savedRng === FB.getRngState() && savedUid === FB.getUidCounter();
+    const phasesBefore = [s.stories.proof_service.phase,s.stories.proof_civic.phase,s.stories.proof_claim.phase];
+    const finished = apply('proof_service', 'proof_leave_dispute');
+    s.turn = FB.stories.get('proof_court').declaration.parameters.pressureTurn;
+    FB.stories.get('proof_court').day(s, s.stories.proof_court);
+    const noPressure = !s.stories.proof_court.pressureNoted;
+    // A civic-only household must release independent court bargaining even
+    // when its completed stage id differs from the mechanic's spelling.
+    delete s.stories.proof_service;
+    s.turn = Math.max(s.turn, FB.stories.get('proof_court').declaration.parameters.settlementTurn);
+    FB.stories.get('proof_court').day(s, s.stories.proof_court);
+    const independent = !!s.stories.proof_court.aiResolution;
+    const completedPhase = FB.storyCourts.trackPhase('proof_civic', s.stories.proof_civic);
+    const corrupt = JSON.parse(JSON.stringify(saved)); corrupt.state.stories.proof_service.phase = 'commission';
+    const live = FB.state;
+    let rejected = false;
+    try { FB.save.restore(corrupt); } catch (error) { rejected = error.message.includes('state.stories.proof_service'); }
+    return { sizes:sizes, stale:stale, unchanged:unchanged, branch:branch, branchPhase:branchPhase,
+      done:[civicDone,claimDone], phases:phasesBefore, labels:labels, restored:restored,
+      completedPhase:completedPhase, finished:finished, noPressure:noPressure, independent:independent,
+      rejected:rejected, detached:FB.state === live };
+  });
+  expect(result).toEqual({ sizes:[14,3,3], stale:false, unchanged:true, branch:true,
+    branchPhase:'commission_audience', done:[true,true], phases:['commission_audience','private_house','domain_house'],
+    labels:['A delegate receives orders','The private household continues'], restored:true,
+    completedPhase:'complete', finished:true, noPressure:true, independent:true, rejected:true, detached:true });
 });

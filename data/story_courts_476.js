@@ -1122,7 +1122,8 @@ FBDATA.storyCourts476 = {
           "seek_city_service",
           "seek_church_service"
         ],
-        "name": "Soldiers seek a spokesman"
+        "name": "Soldiers seek a spokesman",
+        "mechanic": "delegate"
       },
       "civic_service": {
         "choices": [
@@ -1130,7 +1131,8 @@ FBDATA.storyCourts476 = {
           "leave_city_service",
           "leave_dispute"
         ],
-        "name": "Service to the Ravenna council"
+        "name": "Service to the Ravenna council",
+        "mechanic": "civic_service"
       },
       "church_service": {
         "choices": [
@@ -1139,7 +1141,8 @@ FBDATA.storyCourts476 = {
           "leave_church_service",
           "leave_dispute"
         ],
-        "name": "Service to the Ravenna congregation"
+        "name": "Service to the Ravenna congregation",
+        "mechanic": "church_service"
       },
       "commission": {
         "choices": [
@@ -1148,7 +1151,8 @@ FBDATA.storyCourts476 = {
           "keep_serving",
           "leave_dispute"
         ],
-        "name": "A disputed command"
+        "name": "A disputed command",
+        "mechanic": "commission"
       },
       "contract": {
         "choices": [
@@ -1156,7 +1160,8 @@ FBDATA.storyCourts476 = {
           "refuse_pay",
           "leave_dispute"
         ],
-        "name": "Arrears and service"
+        "name": "Arrears and service",
+        "mechanic": "contract"
       },
       "civic": {
         "choices": [
@@ -1167,7 +1172,8 @@ FBDATA.storyCourts476 = {
           "demand_force",
           "leave_dispute"
         ],
-        "name": "Ravenna civic bargain"
+        "name": "Ravenna civic bargain",
+        "mechanic": "civic"
       },
       "recognition": {
         "choices": [
@@ -1177,7 +1183,8 @@ FBDATA.storyCourts476 = {
           "forgo_recognition",
           "leave_dispute"
         ],
-        "name": "Imperial recognition"
+        "name": "Imperial recognition",
+        "mechanic": "recognition"
       },
       "court": {
         "choices": [
@@ -1188,7 +1195,8 @@ FBDATA.storyCourts476 = {
           "demand_force_29",
           "leave_dispute"
         ],
-        "name": "The moving court"
+        "name": "The moving court",
+        "mechanic": "court"
       },
       "resolution": {
         "choices": [
@@ -1196,19 +1204,22 @@ FBDATA.storyCourts476 = {
           "reject_ratification",
           "leave_dispute"
         ],
-        "name": "Ratify the settlement"
+        "name": "Ratify the settlement",
+        "mechanic": "resolution"
       },
       "battle": {
         "choices": [
           "withdraw"
         ],
-        "name": "Contest for Ravenna"
+        "name": "Contest for Ravenna",
+        "mechanic": "battle"
       },
       "aftermath": {
         "choices": [
           "accept_aftermath"
         ],
-        "name": "Review the peace"
+        "name": "Review the peace",
+        "mechanic": "aftermath"
       },
       "complete": {
         "choices": [],
@@ -1229,7 +1240,8 @@ FBDATA.storyCourts476 = {
             ]
           }
         ],
-        "name": "Situation concluded"
+        "name": "Situation concluded",
+        "mechanic": "complete"
       }
     },
     "choices": {
@@ -1423,13 +1435,13 @@ FBDATA.storyCourts476 = {
       },
       "retire_western_office": {
         "id": "retire_western_office",
-        "operation": "retire_western_office",
+        "operation": "retire_contested_office",
         "label": "Leave the western office vacant",
         "detail": "Seek an eastern commission for the federate polity. The western title remains vacant; no eastern territory transfers."
       },
       "restore_western_office": {
         "id": "restore_western_office",
-        "operation": "restore_western_office",
+        "operation": "restore_contested_office",
         "label": "Restore Romulus’s western office",
         "detail": "Requires Romulus alive and Ravenna back under the western court. Restore the office without granting new counties."
       },
@@ -1441,7 +1453,7 @@ FBDATA.storyCourts476 = {
       },
       "petition_sitting_ruler": {
         "id": "petition_basiliscus",
-        "operation": "petition_sitting_ruler",
+        "operation": "seek_issuer_commission",
         "label": "Petition Basiliscus",
         "detail": "The sitting eastern {term:emperor} may recognize federate service. His commission needs reaffirmation if his rule ends."
       },
@@ -1683,6 +1695,21 @@ FBDATA.storyCourts476 = {
         "storyId": "western_court_476",
         "field": "homoianBishopId"
       }
+    },
+    "initialStage": "delegate",
+    "phaseStages": {
+      "delegate": "delegate",
+      "civic_service": "civic_service",
+      "church_service": "church_service",
+      "commission": "commission",
+      "contract": "contract",
+      "civic": "civic",
+      "recognition": "recognition",
+      "court": "court",
+      "resolution": "resolution",
+      "battle": "battle",
+      "aftermath": "aftermath",
+      "complete": "complete"
     }
   },
   "curialis_track_476": {
@@ -1792,11 +1819,13 @@ FBDATA.storyCourts476 = {
         "choices": [
           "serve_council",
           "keep_household"
-        ]
+        ],
+        "mechanic": "opening"
       },
       "complete": {
         "name": "The civic household continues",
-        "choices": []
+        "choices": [],
+        "mechanic": "complete"
       }
     },
     "choices": {
@@ -1885,6 +1914,11 @@ FBDATA.storyCourts476 = {
         "storyId": "western_court_476",
         "field": "homoianBishopId"
       }
+    },
+    "initialStage": "opening",
+    "phaseStages": {
+      "opening": "opening",
+      "complete": "complete"
     }
   },
   "nepos_track_476": {
@@ -1995,7 +2029,8 @@ FBDATA.storyCourts476 = {
         "choices": [
           "seek_recognition",
           "retain_domain"
-        ]
+        ],
+        "mechanic": "opening"
       },
       "claim": {
         "name": "Recognition without Italy",
@@ -2004,7 +2039,8 @@ FBDATA.storyCourts476 = {
           "confirm_restoration",
           "seek_recognition_2",
           "retain_domain"
-        ]
+        ],
+        "mechanic": "claim"
       },
       "campaign": {
         "name": "Restoration depends on the armies",
@@ -2012,15 +2048,18 @@ FBDATA.storyCourts476 = {
           "confirm_restoration",
           "seek_recognition_2",
           "retain_domain"
-        ]
+        ],
+        "mechanic": "campaign"
       },
       "complete": {
         "name": "The Dalmatian household continues",
-        "choices": []
+        "choices": [],
+        "mechanic": "complete"
       },
       "interrupted": {
         "name": "The claimant’s opportunity ended",
-        "choices": []
+        "choices": [],
+        "mechanic": "interrupted"
       }
     },
     "choices": {
@@ -2133,6 +2172,14 @@ FBDATA.storyCourts476 = {
         "storyId": "western_court_476",
         "field": "homoianBishopId"
       }
+    },
+    "initialStage": "opening",
+    "phaseStages": {
+      "opening": "opening",
+      "claim": "claim",
+      "campaign": "campaign",
+      "complete": "complete",
+      "interrupted": "interrupted"
     }
   }
 };
