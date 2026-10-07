@@ -16,7 +16,12 @@ test('fictional court instances and all three track profiles play and restore fr
   const result = await page.evaluate(function () {
     let s = FB.state;
     const w = s.stories.proof_court, restored = s.stories.proof_return;
-    const order = FB.stories.attached(s), owners = JSON.stringify([s.owner,s.holder]);
+    function borders() {
+      return JSON.stringify([s.owner,s.holder].map(function (rows) {
+        return Object.keys(rows).sort().map(function (id) { return [id,rows[id]]; });
+      }));
+    }
+    const order = FB.stories.attached(s), owners = borders();
     const rng = (FB.getRngState() >>> 0), before = JSON.stringify(s);
     const cards = FB.stories.cards(s), choices = FB.stories.choices(s, 'proof_service');
     const claimReview = FB.stories.quote(s, 'proof_claim', 'proof_keep_dalmatia');
@@ -25,17 +30,22 @@ test('fictional court instances and all three track profiles play and restore fr
     function apply(story, id) { return FB.stories.apply(s, story, id, FB.stories.quote(s, story, id)); }
     const paths = [apply('proof_service','proof_refuse_involvement'),
       apply('proof_civic','proof_keep_household'), apply('proof_claim','proof_keep_dalmatia')];
+    const noAward = owners === borders();
     s.turn = 24;
     FB.stories.get('proof_return').day(s, restored);
     const returned = FB.realmRulerCharacterSnapshot(s, 'proof_issuer').id === w.proof_zenoId;
     const commanders = ['proof_commander_0','proof_commander_1'].every(function (field) {
       return s.chars[restored[field]].homeProvinceId === 'constantinople';
     });
+    const restorationNoAward = owners === borders();
+    // Conquest replaces the holder even when the sovereign later recovers Paris.
+    // Compare restored borders with this deliberately staged saved boundary.
     FB.transferProvince(s, 'paris', 'proof_north');
     FB.stories.get('proof_office').day(s, s.stories.proof_office);
     const displaced = s.stories.proof_office.result;
     FB.transferProvince(s, 'paris', 'proof_senior');
     FB.stories.get('proof_office').day(s, s.stories.proof_office);
+    const stagedBorders = borders();
     const records = JSON.stringify(s.stories), counts = [s.authority.appointments.length,s.authority.recognitions.length,s.armies.length];
     const saved = JSON.parse(FB.save.serialize()), savedRng = (FB.getRngState() >>> 0);
     FB.save.restore(saved); s = FB.state;
@@ -43,7 +53,7 @@ test('fictional court instances and all three track profiles play and restore fr
     FB.stories.get('proof_office').day(s, s.stories.proof_office);
     return { order:order, paths:paths, pure:pure, returned:returned, commanders:commanders,
       displaced:displaced, restored:s.stories.proof_office.result,
-      noAward:owners === JSON.stringify([s.owner,s.holder]),
+      noAward:noAward, restorationNoAward:restorationNoAward, bordersRetained:stagedBorders === borders(),
       retained:records === JSON.stringify(s.stories), rng:savedRng === (FB.getRngState() >>> 0),
       replay:JSON.stringify(counts) === JSON.stringify([s.authority.appointments.length,s.authority.recognitions.length,s.armies.length]),
       cards:cards.map(function (row) { return row.id; }), choices:choices.map(function (row) { return row.id; }),
@@ -54,7 +64,7 @@ test('fictional court instances and all three track profiles play and restore fr
   });
   expect(result).toMatchObject({ order:['proof_court','proof_return','proof_office','proof_service','proof_civic','proof_claim'],
     paths:[true,true,true], pure:true, returned:true, commanders:true, displaced:'deposed', restored:'restored',
-    noAward:true, retained:true, rng:true, replay:true,
+    noAward:true, restorationNoAward:true, bordersRetained:true, retained:true, rng:true, replay:true,
     claimReview:{ reason:'claim_restoration',issuerMatches:true,genericRole:true },
     results:['declined','household','retained'] });
   expect(result.choices).toContain('proof_accept_delegate');

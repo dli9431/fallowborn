@@ -82,6 +82,12 @@ test('staged resources verify every period band and reviewed county-grant bounda
       const s = FB.state, p = s.player, me = s.chars[p.charId];
       p.gold = 10000; p.prestige = 2000;
       FB.adjustStanding(s, { kind:'realm', id:'italy' }, 100, 'e2e:patron');
+      // Roman civic advancement needs civic service or a live appointment.
+      // Stage the office route while retaining the household's soldier career.
+      const court = FB.storyCourts.context('western_court_476');
+      const person = { kind:'character', id:me.id }, scope = { kind:'county', id:'ravenna' };
+      const recognition = court.recognizeOrExisting(s, 'civic_acceptance', scope, person, scope);
+      court.appointment(s, 'judicial_vicar', 'italy', person, scope, recognition.id);
       const rows = [], errors = [];
       function claim() {
         const q = FB.rankElevationStatus(s), before = { gold:p.gold, prestige:p.prestige };
@@ -288,16 +294,20 @@ test('NPC and vassal recognition is independent of player Standing', async funct
   await start(page, testInfo, 'federate_476');
   const result = await page.evaluate(function () {
     const s = FB.state, player = s.chars[s.player.charId];
-    const npc = Object.assign({}, player, { id:'e2e_dependent', station:0, gold:80, prestige:0,
+    // Band zero uses lawful freedom rather than a standing-recognition quote.
+    const npc = Object.assign({}, player, { id:'e2e_resident', station:1, gold:150, prestige:50,
       homeProvinceId:'ravenna', career:null });
     s.chars[npc.id] = npc;
-    function ready() { return FB.standingElevationStatus(s, npc).ready; }
+    function status() {
+      const q = FB.standingElevationStatus(s, npc);
+      return { ready:q.ready, standing:JSON.parse(q.stamp).candidate.standing };
+    }
     FB.adjustStanding(s, { kind:'realm', id:'italy' }, 100, 'e2e:unrelated');
-    const neutral = ready();
+    const neutral = status();
     s.localInstitutions.ravenna_council.standing['character:' + npc.id] = 30;
-    const respected = ready();
+    const respected = status();
     FB.adjustStanding(s, { kind:'realm', id:'italy' }, -200, 'e2e:unrelated');
-    const unchanged = ready();
+    const unchanged = status();
     const r = s.realms.croatia;
     r.liege = 'byzantium'; r.rank = 1; r.stationPrestige = 300; r.treasury.gold = 1000; r.favor = 60;
     FB.invalidateRealmCache();
@@ -307,7 +317,8 @@ test('NPC and vassal recognition is independent of player Standing', async funct
     const disfavored = FB.standingElevationStatus(s, ruler).ready;
     return { neutral:neutral, respected:respected, unchanged:unchanged, favored:favored, disfavored:disfavored };
   });
-  expect(result).toEqual({ neutral:false, respected:true, unchanged:true, favored:true, disfavored:false });
+  expect(result).toEqual({ neutral:{ ready:true, standing:0 }, respected:{ ready:true, standing:30 },
+    unchanged:{ ready:true, standing:30 }, favored:true, disfavored:false });
 });
 
 test('AI spends its own treasury using the same ladder and accrues prestige once per year',
@@ -316,8 +327,12 @@ test('AI spends its own treasury using the same ladder and accrues prestige once
     const result = await page.evaluate(function () {
       const s = FB.state, r = s.realms.italy;
       r.rank = 1; r.stationPrestige = 300;
-      const player = JSON.stringify(s.player), money = FB.treasuryAvailable(s, 'italy');
       const c = FB.realmRulerCharacterSnapshot(s, 'italy');
+      const underage = !FB.standingElevationStatus(s, c).eligible;
+      s.date.year = c.born + 16;
+      const poor = FB.standingElevationStatus(s, c);
+      r.treasury.gold = 1000;
+      const player = JSON.stringify(s.player), money = FB.treasuryAvailable(s, 'italy');
       const q = FB.standingElevationStatus(s, c);
       FB.realmStandingYearly(s);
       const first = { rank:r.rank, money:FB.treasuryAvailable(s, 'italy'), prestige:r.stationPrestige };
@@ -325,12 +340,13 @@ test('AI spends its own treasury using the same ladder and accrues prestige once
       const repeat = { rank:r.rank, money:FB.treasuryAvailable(s, 'italy'), prestige:r.stationPrestige };
       const noPlayerCharge = JSON.stringify(s.player) === player;
       FB.save.restore(JSON.parse(FB.save.serialize()));
-      return { q:q.ready, first:first, repeat:repeat, paid:money - first.money,
+      return { underage:underage, poor:poor.eligible && !poor.ready,
+        q:q.ready, first:first, repeat:repeat, paid:money - first.money,
         cost:q.cost.gold, noPlayerCharge:noPlayerCharge,
         year:FB.state.realms.italy.stationStandingYear, currentYear:FB.state.date.year,
         savedPrestige:FB.state.realms.italy.stationPrestige };
     });
-    expect(result).toMatchObject({ q:true, noPlayerCharge:true });
+    expect(result).toMatchObject({ underage:true, poor:true, q:true, noPlayerCharge:true });
     expect(result.first.rank).toBe(2);
     expect(result.repeat).toEqual(result.first);
     expect(result.paid).toBe(result.cost);

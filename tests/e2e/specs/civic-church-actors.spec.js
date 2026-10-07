@@ -57,14 +57,23 @@ test('researched civic seats and head offices are distinct, pure and period scop
       techErrors:FB.validateTechnologyData()
     };
   });
-  expect(result.cities).toEqual(['aleria_council','altava_council','aquileia_council',
-    'arles_council','bordeaux_council','capua_council','carales_council','carthage_council',
-    'constantinople_senate','favianis_council','geneva_council','hippo_council','iuvavum_council',
-    'lauriacum_council','lyon_council','marseille_council','merida_council','milan_council',
-    'narbonne_council','neapolis_council','panormus_council','ravenna_council','rome_senate',
-    'salona_council','soissons_council','sufetula_council','syracusae_council','tarragona_council',
-    'ticinum_council','toulouse_council','verona_council','vienne_council']);
-  expect(result.sees).toBe(40);
+  expect(result.cities).toEqual(['aleria_council','altava_council','ancyra_council','angers_council',
+    'aquileia_council','arles_council','astorga_council','athens_council','attalea_council',
+    'barcelona_council','bononia_danube_council','bordeaux_council','caesarea_council',
+    'capua_council','carales_council','carthage_council','cologne_council','constantinople_senate',
+    'cordoba_council','corinth_council','durostorum_council','dyrrachium_council','ephesus_council',
+    'favianis_council','geneva_council','hadrianopolis_council','hippo_council','iconium_council',
+    'iuvavum_council','lauriacum_council','lisboa_council','lugo_council','lychnidus_council',
+    'lyon_council','marseille_council','merida_council','metz_council','milan_council','mursa_council',
+    'nantes_council','narbonne_council','neapolis_council','nicaea_council','orleans_council',
+    'panormus_council','paris_council','philippopolis_council','ravenna_council','reims_council',
+    'rennes_council','rome_senate','rouen_council','salona_council','santiago_council','sardis_council',
+    'scupi_council','sebastea_council','serdica_council','sevilla_council','sirmium_council',
+    'soissons_council','strasbourg_council','sufetula_council','syracusae_council','tarragona_council',
+    'thessalonica_council','ticinum_council','toledo_council','toulouse_council','tournai_council',
+    'tours_council','trier_council','troyes_council','vannes_council','verona_council','vienne_council',
+    'zaragoza_council']);
+  expect(result.sees).toBe(86);
   expect(result.periodRoute).toBe('standing');
   expect(result.pure).toBe(true);
   expect(result.quote).toBe(true);
