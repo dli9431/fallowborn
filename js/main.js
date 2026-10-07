@@ -10,8 +10,11 @@ window.FB = window.FB || {};
   G.bootReady = false;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-FB.VERSION = '1.189.5';
+FB.VERSION = '1.189.6';
 FB.CHANGELOG = [
+  { v: '1.189.6', date: '2026-10-07', changes: [
+    'Resident family dependents keep their education and work controls after succession. Older saves recover the inherited household on load.'
+  ] },
   { v: '1.189.5', date: '2026-10-06', changes: [
     'Enterprise purchase Details buttons stay clear of scroll edges and the modal footer.'
   ] },
@@ -4870,11 +4873,11 @@ FB.CHANGELOG = [
     const schoolingAnnual = FB.schoolingYear ? FB.schoolingYear(s) : null;
     if (schoolingAnnual === false) return;
 
-    // managed descendants: schooling, then coming of age
+    // resident family dependents: schooling, then coming of age
     educationTick(s);
     FB.livelihoodYearly(s);
     for (const c of FB.householdMembers(s)) {
-      if (FB.playerDescendantKind(s, c.id) && FB.ageOf(c, year) === 16) {
+      if (FB.isHouseholdDependent(s, c.id) && FB.ageOf(c, year) === 16) {
         if (c.edu && c.edu.focus) {
           FB.gainSkill(c, c.edu.focus, 2);
           if (c.edu.focus === 'lea') FB.addTrait(c, 'literate');
@@ -4988,14 +4991,14 @@ FB.CHANGELOG = [
       }
       const a = FB.ageOf(c, year);
       let cq = (a < 5 ? 0.03 : a < 16 ? 0.006 : a < 50 ? 0.008 : a < 65 ? 0.03 : a < 80 ? 0.1 : 0.25) * mortScale;
-      const descendantKind = a < 16
-        ? FB.playerDescendantKind(s, c.id) : null;
-      const householdCharacter = descendantKind || medicalProtection || marketMortality
+      const dependent = a < 16 && (FB.playerDescendantKind(s, c.id) ||
+        FB.isInheritedHouseholdMember(s, c.id, familyLinks));
+      const householdCharacter = dependent || medicalProtection || marketMortality
         ? FB.isHouseholdCharacter(s, c.id, familyLinks) : false;
-      /* the house's resident descendants share its table: each station above serf means
+      /* the house's resident dependents share its table: each station above serf means
          better food and water — slightly fewer child deaths and slightly
          hardier children (rulers and rich merchants alike) */
-      if (descendantKind && householdCharacter) {
+      if (dependent && householdCharacter) {
         cq *= 1 - station * (FBDATA.balance.richChildMortalityBonus || 0);
         if (c.health < 8 && FB.chance(station * (FBDATA.balance.richChildHealthChance || 0))) c.health++;
       }
@@ -5243,6 +5246,7 @@ FB.CHANGELOG = [
            wedding does through FB.doKinWedding. */
         if (FB.unassignEnterpriseWorker) FB.unassignEnterpriseWorker(s, k.id);
         if (FB.clearLoadout) FB.clearLoadout(s, k.id);
+        if (FB.releaseInheritedHouseholdMember) FB.releaseInheritedHouseholdMember(s, k.id);
         k.spouseId = sp.id; sp.spouseId = k.id;
         FB.sealMarriageLineage(s, k, sp, FB.preferredMarriageLineage(s, k, sp));
         FB.touchFamily();
@@ -5369,6 +5373,10 @@ FB.CHANGELOG = [
           }
         }
         FB.touchFamily();
+        if (FB.isInheritedHouseholdMember(s, mother.id) ||
+            (father && FB.isInheritedHouseholdMember(s, father.id))) {
+          s.player.inheritedHouseholdIds.push(baby.id);
+        }
         if (FB.registerRoyalBirth) FB.registerRoyalBirth(s, baby, father, mother);
         FB.queueEvent(s, 'child_born_flavor', { childId:baby.id });
         if (FB.ui && FB.ui.maybeTip) {
@@ -5833,6 +5841,8 @@ FB.CHANGELOG = [
       }
       return false;
     }
+    /* Capture residents before worker, loadout, and match cleanup sees the heir. */
+    if (FB.inheritHousehold) FB.inheritHousehold(s, old, heir.id);
     /* Complete the old-save property migration before taking the inheritance
        snapshot, so former business holdings remain enterprises rather than
        being restored in both catalogues after the transition. */

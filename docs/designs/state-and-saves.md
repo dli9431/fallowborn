@@ -24,6 +24,24 @@ CrazyGames Continue preview
 
 The version-3 save envelope may carry optional meta.household with version 1, numeric tier, enterprise and land counts, a marriage boolean, and a detached objective record. Objectives store stable phase and enterprise IDs, settlement index and proper name, money amounts, readiness booleans and remaining in-game days. They never store localized prose, UI nodes or callbacks. The preview is generated from the live campaign at serialization and rendered in the active locale on the title. It is informational; loading reconstructs progress from authoritative state. Missing preview metadata is compatible with older saves, and a preview calculation failure cannot prevent the campaign from saving. Standard distributions do not add this metadata. The save version and campaign simulation are unchanged.
 
+## Inherited resident family
+
+Optional `player.inheritedHouseholdIds` is an additive array of dependent character
+ids at save format 3. Succession captures the outgoing resident family before the
+protagonist pointer changes, then retains eligible people through worker, office,
+and loadout cleanup. It does not save rendered relationships or alter parentage.
+Repeated handovers carry the same living dependents; independent marriages, ruling
+households, vows, and explicit remote homes prevent management. Temporary bans or
+abbey stays suspend management without discarding an otherwise resident saved dependency.
+Resident inherited parents' posthumous children join the same roster.
+
+Restore normalizes ids and derives a missing roster once from recorded predecessor
+legends and their surviving resident spouse/child/grandchild links. A present empty
+array is authoritative. Repair runs before equipment and education normalization,
+consumes no RNG, allocates no characters, and preserves personal station and family
+identity. Stale predecessor `self` tutoring clears on death; a living handover uses
+the predecessor's actual id. Existing named tutors and accumulated learning remain.
+
 ## Personal household service
 
 Optional `player.householdService` is a version-1 appointment for the current

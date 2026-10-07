@@ -105,6 +105,8 @@ window.FB = window.FB || {};
     for (let i = 0; i < retainers.length; i++) {
       if (retainers[i] && retainers[i].charId === c.id) return true;
     }
+    if (FB.isInheritedHouseholdMember &&
+        FB.isInheritedHouseholdMember(state, cid, familyLinks)) return true;
     if (!FB.playerDescendantKind ||
         !FB.playerDescendantKind(state, c.id)) return false;
     /* Unmarried children and grandchildren live in the managed household.

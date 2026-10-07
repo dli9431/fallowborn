@@ -17802,10 +17802,10 @@ window.FB = window.FB || {};
         action:null
       };
     }
-    if (c.id !== s.player.charId && !FB.playerDescendantKind(s, c.id)) {
+    if (c.id !== s.player.charId && !FB.isHouseholdDependent(s, c.id)) {
       return {
         content:householdPlanLines(FB.T('Not applicable'),
-          FB.T('Education is managed for the household head and descendants')),
+          FB.T('Education is managed for resident family dependents')),
         action:null
       };
     }
@@ -17827,10 +17827,10 @@ window.FB = window.FB || {};
         action:null
       };
     }
-    if (c.id !== s.player.charId && !FB.playerDescendantKind(s, c.id)) {
+    if (c.id !== s.player.charId && !FB.isHouseholdDependent(s, c.id)) {
       return {
         content:householdPlanLines(FB.T('Not applicable'),
-          FB.T('Instruction is managed for the household head and descendants')),
+          FB.T('Instruction is managed for resident family dependents')),
         action:null
       };
     }
@@ -18055,10 +18055,8 @@ window.FB = window.FB || {};
     for (const c of FB.householdMembers(s)) {
       if (c.id !== head.id) add(c, 'family');
     }
-    /* Manageable kin (resident unwed siblings) get work, assignment, and
-       equipment cells like household members; education, instruction, and
-       match cells stay disabled with their existing explanations — those
-       are managed for the descent line only. */
+    /* Labor-only siblings get work and equipment cells. Inherited dependents
+       already joined the family rows above, including their education controls. */
     if (FB.manageableKinKind) {
       for (const id in s.chars) {
         const c = s.chars[id];
@@ -18127,7 +18125,7 @@ window.FB = window.FB || {};
       matchDowrySummary, matchGoldSummary, matchPrestigeSummary
     ].join(' · ');
     const planIntro = FB.T(
-      'Every living person managed by the household is shown here — including unwed siblings living under your roof, who take work and equipment but keep their own education and matches. Select an available cell to open its existing detailed controls.');
+      'Resident family dependents stay with the household through succession, including siblings and widowed parents. Their education, work, and equipment remain manageable. Other eligible unwed siblings can help with work and equipment. Select an available cell to open its detailed controls.');
     let h = '<div class="household-plan-content">' + householdPolicySummaryHtml(
         'education-policy-summary', FB.T('Education Policy'),
         [educationFocusSummary, educationInstructionSummary],
@@ -24549,7 +24547,7 @@ window.FB = window.FB || {};
         route:'retainer-hire'
       });
     }
-    const managedMinor = (descendantKind || c.id === me.id) &&
+    const managedMinor = FB.isHouseholdDependent(s, c.id) &&
       household && FB.ageOf(c, s.date.year) < 16;
     if (managedMinor) {
       addInteractionAction(model, {
@@ -28096,7 +28094,7 @@ window.FB = window.FB || {};
     const s = FB.state;
     const c = s.chars[cid];
     if (!c || c.dead || !FB.isHouseholdCharacter(s, cid) ||
-        (c.id !== s.player.charId && !FB.playerDescendantKind(s, cid)) ||
+        (c.id !== s.player.charId && !FB.isHouseholdDependent(s, cid)) ||
         FB.ageOf(c, s.date.year) >= 16) return;
     const self = c.id === s.player.charId;
     const policy = FB.ensureEducationPolicy(s);
@@ -28195,7 +28193,7 @@ window.FB = window.FB || {};
     const s = FB.state;
     const c = s.chars[cid];
     if (!c || c.dead || !FB.isHouseholdCharacter(s, cid) ||
-        (c.id !== s.player.charId && !FB.playerDescendantKind(s, cid)) ||
+        (c.id !== s.player.charId && !FB.isHouseholdDependent(s, cid)) ||
         FB.ageOf(c, s.date.year) >= 16) return;
     const me = s.chars[s.player.charId];
     const self = c.id === me.id;
@@ -31562,7 +31560,7 @@ window.FB = window.FB || {};
       guideBody([], [
         FB.T('Playable line: the current protagonist and the eligible successor you can continue as. The chronicle, family property, enterprises, contracts, role-orientation history, and most money survive; prestige, piety, and Popular support are reduced. Personal Standing, courtship, plots, attention, cooldowns, and the named-heir choice reset for the new life.'),
         FB.T('House or dynasty: characters sharing the house identity. A chosen relative joins the playable house at succession; house membership by itself does not make someone controllable or resident.'),
-        FB.T('Managed household: the playable head, resident spouses and descendants, and hired retainers that Work & Enterprises can assign when age, station, faith, and career rules allow. Unwed, unlanded, unvowed siblings living at the household home can also be put to work, though they never join the household itself; marriage, land, vows, or moving away ends that.'),
+        FB.T('Managed household: the playable head, resident spouses and descendants, family dependents retained through succession, and hired retainers. Inherited siblings and widowed parents keep their education, work, and equipment controls while dependent; noble birth alone does not make them independent. Marriage, a separate ruling household, vows, or moving away ends inherited dependency. Other eligible unwed siblings at home may help with work and equipment.'),
         FB.T('Visible family: the broader family tree, including dead kin and relatives living elsewhere. Visibility is not control.'),
         FB.T('Royal branch: the designated crown successor’s branch. A marriage tie alone does not redirect a crown into the playable line.')
       ]), 'dynasty house kin relatives resident controllable assignable work royal branch');

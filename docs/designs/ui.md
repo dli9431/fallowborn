@@ -2686,6 +2686,13 @@ scrollable plan beneath the ledger and uses the same tooltip/disclosure treatmen
 helper copy. A successful no-day apply returns to this authoritative table rather than the
 intermediate Work & Enterprises sheet.
 
+After succession, Household Plan and character sheets retain education, instruction,
+work, assignment, and equipment controls for inherited resident dependents. Kin marks
+inherited siblings as family dependents rather than treating noble birth as an
+independent station. Adult cells retain the existing age/career requirements; children
+under six may choose a focus but lessons begin at six. Match authority keeps its own
+existing eligibility. All routes reuse the existing pickers and modal return state.
+
 An **Education Policy** summary and native management button sit above the Household Plan
 ledger. Its keyboard/mobile-safe flow uses a native focus select, instruction checkbox,
 and non-negative number input. The same sheet provides a direct Save action and a live

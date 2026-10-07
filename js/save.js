@@ -1660,6 +1660,9 @@ window.FB = window.FB || {};
     if (FB.ensureSettlementLordships) restoreRepair('settlement lordships', function () {
       FB.ensureSettlementLordships(FB.state);
     });
+    if (FB.ensureInheritedHousehold) restoreRepair('inherited household', function () {
+      FB.ensureInheritedHousehold(FB.state);
+    });
     /* Save format 3 is deliberately stable. The equipment subsystem repairs
        old inventories and grows exact instances/loadouts additively here. */
     if (FB.ensureItems) restoreRepair('items and equipment', function () {

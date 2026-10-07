@@ -4101,8 +4101,11 @@ window.FB = window.FB || {};
         let meta = FB.T(e.rel) + (e.c.dead ? ' · †' : ' · ' +
           FB.T('age {age}', { age: FB.ageOf(e.c, s.date.year) }));
         if (!e.c.dead && FB.manageableKinBlocker) {
+          const residentFamily = FB.isInheritedHouseholdMember(s, e.c.id);
           const blocker = FB.manageableKinBlocker(s, e.c.id);
-          meta += ' · ' + (blocker === 'married'
+          meta += ' · ' + (residentFamily
+            ? FB.T('Lives with the household — family dependent')
+            : blocker === 'married'
             ? FB.T('Married — runs their own household')
             : blocker === 'reigning'
               ? FB.T('Rules a realm of their own')

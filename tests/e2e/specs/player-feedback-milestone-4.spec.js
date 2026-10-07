@@ -543,7 +543,7 @@ test.describe('sibling and collateral-household agency', function () {
       await expect(row.locator(
         '[data-household-plan-action="equipment"]')).toBeVisible();
       await expect(row).toContainText(
-        'Education is managed for the household head and descendants');
+        'Education is managed for resident family dependents');
       await expect(row).toContainText(
         'Matches are arranged for the descent line only');
       await expect(row.locator(
@@ -704,7 +704,7 @@ test.describe('sibling and collateral-household agency', function () {
       await titleInfo.click();
       await expect(page.locator('#gm-title-details')).toBeVisible();
       await expect(page.locator('#gm-title-details')).toContainText(
-        'Every living person managed by the household');
+        'Resident family dependents stay with the household through succession');
 
       const row = page.locator(
         'tr[data-household-plan-cid="' + childId + '"]');

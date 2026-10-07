@@ -18,7 +18,10 @@ back into the ruler's power. See [justice](justice.md).
 list of exact item references. `player.loadouts[characterId]` maps Head, Neck, Body,
 Waist, Feet, Left hand, Right hand, and Ring to those references. The managed wearers
 are the current head, living spouses, paid retainers, and resident unmarried children
-and grandchildren, except that a reigning ruler or local lord who marries the player keeps
+and grandchildren, plus resident family dependents retained through succession.
+They remain eligible during succession's loadout reconciliation; ordinary automatic
+successor outfitting still respects item reservations. A reigning ruler or local
+lord who marries the player keeps
 a separate political household and never becomes a managed wearer. An object can
 appear in only one loadout, and a two-handed object writes the same reference into both
 hand slots. Marriage out, divorce, departure, and non-player death clear the assignment

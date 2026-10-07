@@ -2699,15 +2699,17 @@ window.FB = window.FB || {};
      but manage their own affairs. kinManageability returns 'manageable' when
      every test passes, otherwise a blocker key; FB.manageableKinKind maps
      that to the 'sibling'/null shape playerDescendantKind callers expect.
-     Manageable kin join the labor pool and career/equipment agency WITHOUT
-     becoming household members, so upkeep and succession semantics are
-     untouched. */
+     Labor-only kin join career/equipment agency without household membership.
+     A sibling retained from a predecessor's resident family instead keeps
+     ordinary household dependency, regardless of inherited courtesy station. */
   function kinManageability(state, cid) {
     if (!state || !state.player || !state.chars) return 'not-sibling';
     const me = state.chars[state.player.charId];
     const c = state.chars[cid];
     if (!me || !c || !siblingOfPlayer(state, me, c)) return 'not-sibling';
     if (c.dead) return 'dead';
+    if (FB.isInheritedHouseholdMember &&
+        FB.isInheritedHouseholdMember(state, cid)) return 'manageable';
     const spouse = c.spouseId && state.chars[c.spouseId];
     if (spouse && !spouse.dead) return 'married';
     const reverseSpouses = FB.spouseLinksTo(state, c.id);

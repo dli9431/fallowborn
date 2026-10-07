@@ -3806,6 +3806,10 @@ window.FB = window.FB || {};
       FB.removeFamilyOffice(state, k.id);
     }
     if (k.id !== p.charId && FB.clearLoadout) FB.clearLoadout(state, k.id);
+    if (k.id !== p.charId && FB.releaseInheritedHouseholdMember) {
+      FB.releaseInheritedHouseholdMember(state, k.id);
+      FB.releaseInheritedHouseholdMember(state, sp.id);
+    }
     k.betrothedId = null; sp.betrothedId = null;
     k.spouseId = sp.id; sp.spouseId = k.id;
     sp.role = 'kinspouse';

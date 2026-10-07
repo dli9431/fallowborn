@@ -971,15 +971,45 @@ queued.
 ## Family, house, and household scope
 
 **Family visibility is not household control.** Work & Enterprises names its scope:
-the playable head, resident spouses and descendants, unwed siblings living with the
-household, and hired retainers appear when old enough for work or training. A spouse who
+the playable head, resident spouses and descendants, inherited resident family
+dependents, other eligible unwed siblings, and hired retainers appear when old enough
+for work or training. A spouse who
 remains an external political household authority is excluded from that managed scope.
 A visible relative outside the managed household is not assignable. Each present but
 unavailable row states the applicable age, station, faith, career, or landed-head rule. The Guide
 separately defines playable line, house, managed household, visible kin, and royal
 branch.
 
-**Manageable kin are resident unwed siblings, never household members.**
+**Resident family dependents survive succession.** The household passes with its
+home, property, and obligations; changing protagonists does not turn its former
+children into independent people. `player.inheritedHouseholdIds` retains surviving
+resident dependents before worker, office, and equipment cleanup. Unmarried adult
+and minor siblings, adopted siblings, nieces/nephews, and widowed parents or
+stepparents already in that household remain manageable, with ordinary family
+upkeep and wages. Neither inherited noble station nor royal ancestry by itself
+means the person rules a separate household. Actual rulers/local lords, married-away
+family, vowed clergy, and people with an independent residence remain outside it.
+A wedding removes inherited membership; a later widowhood does not undo that departure.
+The roster carries only known living dependents, not all members of the dynasty.
+
+`FB.isHouseholdDependent` joins resident descendants and inherited family without
+rewriting biological or adoptive relationships. Education focus, instruction,
+seasonal terms, formative stories, coming-of-age rewards, and the household's child
+health protections use this scope. Work, enterprise staffing, family offices, and
+loadouts continue through their ordinary household gates. School and career age,
+station, cost, faith, and technology requirements remain in force. A posthumous child
+of a resident inherited parent joins that household as a sibling of the new head.
+
+A predecessor's `tutorId:'self'` names the predecessor: living handover replaces it
+with that person's id; death clears the unavailable teacher and lets education
+policy refill its own choices. Named living teachers remain assigned. Inherited adult
+family are known tutoring candidates; a minor head is never offered as a teacher.
+Older saves reconstruct dependency from recorded former heads' family links once,
+without RNG draws, uid allocation, or invented parents. A saved empty roster stays
+empty. This is a continuity fix to existing household management, with no new
+technology dependency or technology-impact ledger entry.
+
+**Other manageable kin are resident unwed siblings, without household membership.**
 `FB.manageableKinKind(state, cid)` (model.js) is the single explicit rule for which
 resident relatives the player may put to work: a living sibling of the protagonist by
 recorded parentage (with the same role-plus-dynasty fallback `siblingsOf` uses for
@@ -997,10 +1027,11 @@ itself a license to redirect a married-away, landed, vowed, or ruling relative.
 Manageable siblings join `FB.householdWorkers` and pass the `managedCareerCharacter`
 gate, so Work & Enterprises, the career picker, enterprise staffing, the Household
 Plan work/assignment/equipment cells, and the shared armory treat them like household
-members — but they are never added to `FB.householdMembers`, so upkeep, family wages,
-education, instruction, and match management keep their existing descent-line
-semantics; the Household Plan shows those cells disabled with their existing
-explanations. Manageability ends cleanly: both wedding paths (`FB.doKinWedding` and
+members — but labor-only siblings are never added to `FB.householdMembers`, so upkeep,
+family wages, education, and instruction require actual household dependency;
+match management keeps its existing descent-line semantics. The Household Plan keeps
+education, instruction, and match cells disabled for labor-only siblings, with the
+existing explanations. Manageability ends cleanly: both wedding paths (`FB.doKinWedding` and
 the yearly `kinLifeTick` match) strip enterprise assignments and loadouts for any
 non-head kin, and lazy enterprise normalization clears the assignment of a worker who
 has left the labor pool. A resident sibling has no saved residence of their own, so
