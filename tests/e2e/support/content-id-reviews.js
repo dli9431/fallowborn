@@ -17,10 +17,11 @@ function reviewProblems(sources, reusableFiles, owners, entries) {
   const problems = [], hooks = new Map(entries.map(function (entry) { return [entry.id, entry]; }));
   const counts = quotedCounts(sources);
   for (const source of sources) {
-    if (/\bFB\s*\.\s*stories\s*\.\s*tokens\b/.test(source.scan.masked))
+    const masked = source.scan.maskedLines.join('\n');
+    if (/\bFB\s*\.\s*stories\s*\.\s*tokens\b/.test(masked))
       problems.push('Story token indirection is forbidden: ' + source.file);
     if (!reusableFiles.has(source.file)) continue;
-    if (/\bV\s*\.\s*[A-Za-z_$][\w$]*/.test(source.scan.masked))
+    if (/\bV\s*\.\s*[A-Za-z_$][\w$]*/.test(masked))
       problems.push('Unreviewed story token alias: ' + source.file);
     for (const row of source.scan.literals) {
       if (!owners.has(row.value)) continue;

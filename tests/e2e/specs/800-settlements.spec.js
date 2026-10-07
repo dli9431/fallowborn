@@ -7,10 +7,10 @@ const { startParityGame } = require('../support/game/parity');
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
   'index.html', 'data/bookmark_800.js', 'data/bookmark_800_history.js',
-  'data/bookmarks.js', 'data/technology.js', 'data/political_institutions.js',
+  'data/bookmarks.js', 'data/starts.js', 'data/technology.js', 'data/political_institutions.js',
   'data/distribution_crazygames.js', 'js/crazygames.js',
   'js/world.js', 'js/royal_settlements.js', 'js/story_settlements.js', 'data/story_instances.js',
-  'js/stories.js', 'js/model.js', 'js/governments.js', 'js/station.js', 'js/localfolk.js',
+  'js/stories.js', 'js/starts.js', 'js/model.js', 'js/governments.js', 'js/station.js', 'js/localfolk.js',
   'js/wars.js', 'js/authority.js', 'js/treasury.js', 'js/events.js',
   'js/main.js', 'js/save.js', 'js/save_v4.js'
 ]);
@@ -308,18 +308,30 @@ test('867 stays detached and an older 800 save gains no historical people or sto
   });
 
 test('bundled 800 saves migrate their pending, planned and concluded opportunities without replay', async function ({ page }, testInfo) {
-  await observe(page, testInfo);
+  // Restore a resumable household, whose parents and station already exist.
+  await startParityGame(page, testInfo, {
+    bookmark:'800', code:'SETTLEMENTS-800-farmer-london-m-Migration'
+  });
   const result = await page.evaluate(function () {
     let s = FB.state;
     s.date.year = 806;
     s.realms.carolingian_800.treasury.gold = 100; s.realms.abbasid.treasury.gold = 100;
+    s.realms.abbasid.treasury.distributionNextTurn = s.turn + 90;
     ['divisio','gifts'].forEach(function (key) {
       const id = key + '_800'; FB.stories.apply(s, id, 'approve', FB.stories.quote(s, id, 'approve'));
     });
     const old = JSON.parse(FB.save.serialize()), rows = {}, cast = old.state.stories.divisio_800.cast;
     const pressure = old.state.stories.verdun_800.pressure;
     function snapshot(rows) { return JSON.stringify(Object.keys(rows).sort().map(function (id) { return [id,rows[id]]; })); }
-    function effects(state) { return [state.chars,state.owner,state.holder,state.realms,state.authority,state.log]; }
+    function effects(state) {
+      // Missing cooldowns and explicit zero have the same saved meaning.
+      // Keep nonzero cooldowns so the comparison still catches their loss.
+      Object.keys(state.realms).forEach(function (id) {
+        const treasury = state.realms[id].treasury;
+        if (treasury && treasury.distributionNextTurn === undefined) treasury.distributionNextTurn = 0;
+      });
+      return [state.chars,state.owner,state.holder,state.realms,state.authority,state.log];
+    }
     // Compare detached saved facts. Runtime defaults and the authority schema
     // stamp are compacted/reinflated at the save boundary.
     const expected = snapshot(old.state.stories), before = effects(JSON.parse(JSON.stringify(old.state)));

@@ -1,20 +1,20 @@
 'use strict';
 const { test, expect } = require('../support/fixture');
 const { openGame } = require('../support/game/navigation');
+const { startParityGame } = require('../support/game/parity');
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 const { installStoryProof } = require('../support/game/story-proof');
-dependsOnRuntime(__filename, ['index.html','data/bookmark_800.js','data/bookmark_800_history.js',
+dependsOnRuntime(__filename, ['index.html','data/bookmark_800.js','data/bookmark_800_history.js','data/starts.js',
   'data/story_instances.js','data/political_institutions.js','js/stories.js','js/story_settlements.js',
   'js/royal_settlements.js','js/starts.js','js/world.js','js/model.js','js/main.js','js/save.js','js/save_v4.js']);
 
 test('each settlement type plays a second data-only instance with a different family and regions', async function ({ page }, testInfo) {
   await installStoryProof(page);
-  await openGame(page, testInfo);
-  const result = await page.evaluate(async function () {
-    await new Promise(function (resolve, reject) {
-      FB.activateBookmark('proof_settlements_900', null, function (error) { if (error) reject(error); else resolve(); });
-    });
-    FB.game.pending = { seed:'GENERIC-SETTLEMENT-PROOF' }; FB.game.startObserve(); FB.game.setPaused(true);
+  // Observer placeholders have no genealogy and are not resumable households.
+  await startParityGame(page, testInfo, {
+    bookmark:'proof_settlements_900', code:'GENERIC-proof_settlements_900-farmer-london-m-Proof'
+  });
+  const result = await page.evaluate(function () {
     let s = FB.state, cast = s.stories.proof_partition.cast;
     const order = FB.stories.attached(s), source = JSON.stringify(FB.bookmark(s.start.id));
     function approve(id) { return FB.stories.apply(s, id, 'approve', FB.stories.quote(s, id, 'approve')); }
@@ -44,17 +44,18 @@ test('each settlement type plays a second data-only instance with a different fa
     FB.killChar(s, father);
     s.date.year = 943;
     const treaty = approve('proof_treaty');
-    const saved = JSON.parse(FB.save.serialize()), rng = FB.getRngState() >>> 0;
+    const saved = JSON.parse(FB.save.serialize()), rng = FB.getRngState() >>> 0, uid = FB.getUidCounter();
     FB.save.restore(saved); s = FB.state;
     return { order:order, exchange:exchange, funds:funds, partition:partition, pendingBorders:pendingBorders,
       recognition:recognition, designation:designation, capitals:capitals, treaty:treaty,
       free:shares.every(function (share) { return !s.realms[share.realmId].liege; }),
       retained:JSON.stringify(s.stories) === JSON.stringify(saved.state.stories), rng:rng === (FB.getRngState() >>> 0),
+      uid:uid === FB.getUidCounter(),
       data:source === JSON.stringify(FB.bookmark(s.start.id)), faults:FB.validateBookmark(FB.bookmark(s.start.id)) };
   });
   expect(result).toEqual({ order:['proof_partition','proof_designation','proof_exchange','proof_recognition','proof_treaty'],
     exchange:true, funds:[106,94], partition:true, pendingBorders:true, recognition:true,
-    designation:true, capitals:['paris','regensburg'], treaty:true, free:true, retained:true, rng:true, data:true, faults:[] });
+    designation:true, capitals:['paris','regensburg'], treaty:true, free:true, retained:true, rng:true, uid:true, data:true, faults:[] });
 });
 
 test('shared references resolve opening actors, required fields, rulers and both region forms without mutation', async function ({ page }, testInfo) {

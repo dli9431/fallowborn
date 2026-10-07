@@ -169,8 +169,16 @@ test('structural spellings need explicit per-file reviews with exact counts', fu
 });
 
 test('moving a spelling behind the old token table cannot bypass the type audit', function () {
+  expect(audited('var vocabulary = FB.stories.tokens;')).not.toEqual([]);
+  expect(audited('var vocabulary = FB.\n stories.\n tokens;')).not.toEqual([]);
   expect(audited('var V = FB.stories.tokens; var kind = V.host;')).not.toEqual([]);
   expect(audited('var kind = V.arbitrary_content_id;')).not.toEqual([]);
+});
+
+test('token audit ignores spelling examples in comments and strings', function () {
+  expect(audited('// FB.stories.tokens; V.host;\n' +
+    '/* FB.\n stories.tokens; V.host; */\n' +
+    "var example = 'FB.stories.tokens; V.host;';")).toEqual([]);
 });
 
 test('zero-use ceilings and authored-module reasons are rejected', function () {

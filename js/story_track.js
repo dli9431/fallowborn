@@ -189,17 +189,17 @@
         facts:facts, stamp:JSON.stringify(facts) };
     }
     function startContest(s, w, t, selected) {
-      var federates = s.realms[R(s, p.serviceRealmId)];
+      var serviceRealm = s.realms[R(s, p.serviceRealmId)];
       var army = host(s, p.serviceHostId);
-      if (!federates || !federates.alive || !army ||
-          !alive(s, cast(s, 'serviceRuler')) || federates.war) return false;
+      if (!serviceRealm || !serviceRealm.alive || !army ||
+          !alive(s, cast(s, 'serviceRuler')) || serviceRealm.war) return false;
       var plan = FB.armyOrderPlan(s, army, p.targetProvinceId);
       if (!plan.ok) return false;
-      federates.war = { enemy:R(s, p.patronRealmId), years:0, captures:0,
+      serviceRealm.war = { enemy:R(s, p.patronRealmId), years:0, captures:0,
         casus:{ type:'border' } };
       army.warId = p.contestWarId;
       if (!FB.orderArmy(s, army, p.targetProvinceId, plan)) {
-        federates.war = null; return false;
+        serviceRealm.war = null; return false;
       }
       if (t.contractId) FB.authorityContractTransition(s, t.contractId,
         'breach', R(s, p.serviceRealmId));
@@ -442,15 +442,15 @@
         }
       }
       if (phase(def, t) !== 'battle') return;
-      var federates = host(s, p.serviceHostId);
-      var italian = host(s, p.patronHostId);
-      if (!federates || federates.men <= 0 ||
+      var serviceHost = host(s, p.serviceHostId);
+      var patronHost = host(s, p.patronHostId);
+      if (!serviceHost || serviceHost.men <= 0 ||
           !alive(s, cast(s, 'serviceRuler'))) {
         s.realms[R(s, p.serviceRealmId)].war = null;
         advance(def, t, 'aftermath'); t.result = 'contested_defeat';
         news(s, def.news.message23.key, def.news.message23.text, {});
-      } else if (federates.at === p.targetProvinceId &&
-                 (!italian || italian.men <= 0 || italian.at !== p.targetProvinceId) &&
+      } else if (serviceHost.at === p.targetProvinceId &&
+                 (!patronHost || patronHost.men <= 0 || patronHost.at !== p.targetProvinceId) &&
                  s.owner[p.targetProvinceId] === R(s, p.patronRealmId)) {
         FB.transferProvince(s, p.targetProvinceId, R(s, p.serviceRealmId));
         s.realms[R(s, p.serviceRealmId)].nonTerritorial = false;
@@ -458,7 +458,7 @@
         s.realms[R(s, p.serviceRealmId)].war = null;
         advance(def, t, 'aftermath'); t.result = 'contested_victory';
         var acclaim = recognize(s, p.acclamationSource,
-          { kind:'host', id:federates.id }, person(cast(s, 'serviceRuler')));
+          { kind:'host', id:serviceHost.id }, person(cast(s, 'serviceRuler')));
         w[p.fields.serviceAcclamation] = acclaim && acclaim.id;
         if (alive(s, cast(s, 'patronRuler')) && w[p.fields.patronOffice]) {
           FB.authorityAppointmentTransition(s, w[p.fields.patronOffice], 'remove');
@@ -690,7 +690,7 @@
       var w = X.world(s), ref = X.person(t.claimantId), owner = s.owner[p.targetProvinceId];
       var senate = X.alive(s, cast(s, 'senator')) && FB.political.permission(s,
         X.person(cast(s, 'senator')), p.civicPermission, { provinceId:p.senateProvinceId }).allowed;
-      var east = FB.political.actor(s, X.actor(R(s, p.issuerRealmId)));
+      var issuer = FB.political.actor(s, X.actor(R(s, p.issuerRealmId)));
       var claim = FB.political.legitimacy(s, ref, null, p.commissionSource).filter(function (row) {
         return row.scope && row.scope.kind === 'realm' &&
           [R(s, p.patronRealmId),'player'].indexOf(row.scope.id) >= 0;
@@ -698,7 +698,7 @@
       var facts = { phase:t.phase, claimant:t.claimantId, player:s.player.charId,
         dead:!X.alive(s, t.claimantId) || !!s.player.dead, turn:s.turn,
         owner:owner, holder:s.holder[p.targetProvinceId], senate:!!senate,
-        senateId:cast(s, 'senator'), east:east && east.characterId,
+        senateId:cast(s, 'senator'), issuer:issuer && issuer.characterId,
         issuerGeneration:FB.realmRulerGeneration(s, R(s, p.issuerRealmId)),
         playerGeneration:FB.realmRulerGeneration(s, 'player'),
         at:s.player.provinceId, travel:!!s.player.travel,
@@ -707,7 +707,7 @@
       var live = !facts.dead && facts.player === t.claimantId &&
         ['complete','interrupted'].indexOf(phase(def, t)) < 0;
       var allowed = live && (op === 'retain_domain' ||
-        op === 'seek_recognition' && (phase(def, t) === 'opening' || claim.length === 0) && !!east && senate ||
+        op === 'seek_recognition' && (phase(def, t) === 'opening' || claim.length === 0) && !!issuer && senate ||
         op === 'restore_by_campaign' && phase(def, t) === 'claim' && claim.length > 0 &&
           owner && owner !== 'player' && !facts.wars[0] && !facts.wars[1] ||
         op === 'confirm_restoration' && ['claim','campaign'].indexOf(phase(def, t)) >= 0 &&
@@ -717,7 +717,7 @@
       allowed = allowed && routeValid(def, t.phase, stageChoice(def, t, id));
       facts.operation = op;
       facts.terms = JSON.parse(JSON.stringify(p));
-      return { id:id, allowed:!!allowed, reason:'western_claim', facts:facts, stamp:JSON.stringify(facts) };
+      return { id:id, allowed:!!allowed, reason:'claim_restoration', facts:facts, stamp:JSON.stringify(facts) };
     }
     function apply(s, t, id, reviewed) {
       var from = t.phase, selected = stageChoice(def, t, id);
@@ -726,12 +726,12 @@
       if (!q.allowed || !reviewed || reviewed.id !== id || q.stamp !== reviewed.stamp) return false;
       if (op === 'retain_domain') { advance(def, t, 'complete', selected); t.result = p.retainedResult; t.outcomeTurn = s.turn; }
       else if (op === 'seek_recognition') {
-        var east = X.recognizeOrExisting(s, p.commissionSource, X.actor(R(s, p.issuerRealmId)),
+        var issuer = X.recognizeOrExisting(s, p.commissionSource, X.actor(R(s, p.issuerRealmId)),
           ref, X.actor(s.realms[R(s, p.patronRealmId)] && s.realms[R(s, p.patronRealmId)].alive ? R(s, p.patronRealmId) : 'player'));
         var senate = X.recognizeOrExisting(s, p.civicSource, { kind:'county', id:p.senateProvinceId },
           ref, { kind:'county', id:p.senateProvinceId });
-        if (!east || !senate) return false;
-        t.recognitionId = east.id; t.senateRecognitionId = senate.id;
+        if (!issuer || !senate) return false;
+        t.recognitionId = issuer.id; t.senateRecognitionId = senate.id;
         if (phase(def, t) !== 'campaign') advance(def, t, 'claim', selected);
         w.westernOfficeResolved = p.rivalClaimant;
         X.syncOffice(s);

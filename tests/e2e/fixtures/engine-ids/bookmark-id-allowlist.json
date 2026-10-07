@@ -97,12 +97,6 @@
       "source": "return 'scripted_' + (FB.activeBookmarkId || '867') + '_' +",
       "kind": "identity_key",
       "reason": "Scripted-history identities include the bookmark id."
-    },
-    {
-      "file": "js/story_history.js",
-      "source": "var bookmark = FB.bookmark(s.start && s.start.id || '867');",
-      "kind": "legacy_default",
-      "reason": "Legacy saved-story lookup uses the original bookmark when an old save has no start stamp."
     }
   ]
 }

@@ -19,6 +19,8 @@ test('fictional court instances and all three track profiles play and restore fr
     const order = FB.stories.attached(s), owners = JSON.stringify([s.owner,s.holder]);
     const rng = (FB.getRngState() >>> 0), before = JSON.stringify(s);
     const cards = FB.stories.cards(s), choices = FB.stories.choices(s, 'proof_service');
+    const claimReview = FB.stories.quote(s, 'proof_claim', 'proof_keep_dalmatia');
+    const issuer = FB.political.actor(s, { kind:'realm', id:'proof_issuer' });
     const pure = before === JSON.stringify(s) && rng === (FB.getRngState() >>> 0);
     function apply(story, id) { return FB.stories.apply(s, story, id, FB.stories.quote(s, story, id)); }
     const paths = [apply('proof_service','proof_refuse_involvement'),
@@ -45,11 +47,16 @@ test('fictional court instances and all three track profiles play and restore fr
       retained:records === JSON.stringify(s.stories), rng:savedRng === (FB.getRngState() >>> 0),
       replay:JSON.stringify(counts) === JSON.stringify([s.authority.appointments.length,s.authority.recognitions.length,s.armies.length]),
       cards:cards.map(function (row) { return row.id; }), choices:choices.map(function (row) { return row.id; }),
+      claimReview:{ reason:claimReview.reason, issuerMatches:!!issuer && claimReview.facts.issuer === issuer.characterId,
+        genericRole:Object.prototype.hasOwnProperty.call(claimReview.facts, 'issuer') &&
+          !Object.prototype.hasOwnProperty.call(claimReview.facts, 'east') },
       results:[s.stories.proof_service.result,s.stories.proof_civic.result,s.stories.proof_claim.result] };
   });
   expect(result).toMatchObject({ order:['proof_court','proof_return','proof_office','proof_service','proof_civic','proof_claim'],
     paths:[true,true,true], pure:true, returned:true, commanders:true, displaced:'deposed', restored:'restored',
-    noAward:true, retained:true, rng:true, replay:true, results:['declined','household','retained'] });
+    noAward:true, retained:true, rng:true, replay:true,
+    claimReview:{ reason:'claim_restoration',issuerMatches:true,genericRole:true },
+    results:['declined','household','retained'] });
   expect(result.choices).toContain('proof_accept_delegate');
   expect(result.cards).toEqual(['proof_return','proof_office','proof_service','proof_civic','proof_claim']);
 });
