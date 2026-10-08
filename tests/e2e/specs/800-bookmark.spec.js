@@ -16,7 +16,8 @@ dependsOnRuntime(__filename, [
   'js/stories.js', 'js/story_campaign.js', 'data/story_instances.js',
   'js/royal_settlements.js', 'js/story_settlements.js',  'js/treasury.js', 'js/authority.js', 'js/model.js',
   'js/papacy.js', 'js/technology.js', 'js/ambitions.js', 'js/wars.js', 'js/localfolk.js',
-  'js/armies.js', 'js/main.js', 'js/save.js', 'js/save_v4.js'
+  'js/armies.js', 'js/main.js', 'js/save.js', 'js/save_v4.js',
+  'js/government_administration.js', 'js/government_recognition.js', 'data/political_institutions.js'
 ]);
 
 const RAILS = ['barcelona_800', 'danish_friesland_800',

@@ -119,6 +119,15 @@ FBDATA.stationLadders.late_antique = JSON.parse(JSON.stringify(FBDATA.stationLad
   bands[3].role = 'gentry';
 })();
 
+FBDATA.stationLadders.administrative_monarchy = JSON.parse(JSON.stringify(FBDATA.stationLadders.late_antique));
+(function () {
+  var bands = FBDATA.stationLadders.administrative_monarchy.bands;
+  // Personal standing supports a public career without purchasing jurisdiction.
+  bands[2].succession = 'personal';
+  [3,4,5,6].forEach(function (id) { bands[id].promotion = null; });
+  bands[3].maySeekCounty = false;
+})();
+
 /* The shared manuscript look is deliberately unchanged. Period-specific
    content can add styles using the registered shapes in js/siteart.js. */
 FBDATA.architectureStyles = {

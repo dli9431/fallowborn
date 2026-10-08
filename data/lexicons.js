@@ -135,6 +135,14 @@ FBDATA.lexicons = {
   },
 
   governments:{
+    administrative_monarchy:{ rank:{
+      m:['Dependent','Free Household','Clerk','Court Notable','Provincial Officer','Senior Officer','Sovereign','Imperial Sovereign'],
+      f:['Dependent','Free Household','Clerk','Court Notable','Provincial Officer','Senior Officer','Sovereign','Imperial Sovereign']
+    }, terms:{
+      vassal:{ one:'subordinate', other:'subordinates' },
+      fief:{ one:'jurisdiction', other:'jurisdictions' },
+      duchy:{ one:'province', other:'provinces' }
+    } },
     roman_civic:{ rank:{
       m:['Dependent','Free Citizen','Curialis','Decurion','Comes','Magister militum','Patrician','Augustus'],
       f:['Dependent','Free Citizen','Curialis','Decurion','Comitissa','Magistra militum','Patrician','Augusta']

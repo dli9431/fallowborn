@@ -356,3 +356,7 @@ Optional system requirements validate before a runtime mod is applied. Bookmarks
 Existing-ruler scenario validation
 
 The start-scenario schema admits hidden, rulerRealmId, governmentForm, characterName and onboarding. A ruler scenario must name a fixed bookmark/county, match the bookmark's named ruler, sex, culture, faith and government, and use only the standard existing-court family label. Its tier may span the registered station bands; ordinary scenario tiers remain bounded to 0-3. Unknown governments, mismatched identities and partial ruler declarations reject before catalogue mutation. See ../MODDING.md.
+
+Public administration profiles
+
+administrationProfiles is an allowed JSON mod root with atomic record replacement. Profiles choose existing public offices, qualification-independent appointment cost, personal term/confirmation, source-capped salary or revenue/service terms, and dynastic/designation/recognition eligibility and interests. A form declares administrationProfileId; an explicit fresh realm declaration can choose a dated override. Validation checks the merged effective forms/profiles before mutation. No profile imports engine source or branches on historical realm identity. See docs/MODDING.md and docs/designs/administrative-monarchy.md.

@@ -113,7 +113,7 @@
       fiscal.counties, fiscal.vassals, { tier:FB.realmRank.tier(state.realms[rid], state), realmId:rid }, state);
   }
   function necessary(fiscal) {
-    return positive(fiscal.upkeep) + positive(fiscal.duesOut) + positive(fiscal.government);
+    return positive(fiscal.upkeep) + positive(fiscal.duesOut) + positive(fiscal.government) + positive(fiscal.publicOffices);
   }
   function civilianReserve(fiscal) {
     return FBDATA.balance.realmReserveSeasons * Math.max(necessary(fiscal),
@@ -243,6 +243,7 @@
         rows[rid].administration = costs.administration;
         rows[rid].court = costs.court;
         rows[rid].government = costs.total;
+        if (FB.publicOfficeBudget) rows[rid].publicOffices = FB.publicOfficeBudget(state, rid, settlementContext);
       }
       return { rows:rows, holders:counties };
     });
@@ -486,6 +487,7 @@
         count('accounts settled');
       }
       state.treasuryAccounting.lastSettledSeason = period;
+      if (FB.publicOfficeSettle) FB.publicOfficeSettle(state, snapshot, period, false);
       FB.settlementLordshipSeason(state, period);
       return true;
     });

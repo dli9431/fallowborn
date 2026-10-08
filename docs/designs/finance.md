@@ -574,3 +574,7 @@ When an authored court becomes player-controlled, its actual NPC treasury balanc
 Government strategy integration
 
 Government revenue dispatch preserves the canonical player tax lines and realm treasury receipt calculation. County/site bases, subordinate remittances and lender/fiscal assignments use the same strategies at projection and collection. Private income and transfer bookkeeping keep their existing sources. See docs/designs/governments.md.
+
+Source-backed public remuneration
+
+Public office remuneration is paid from the same treasury that receives the referenced county receipts through the ordinary fiscal path. Actual salaries/revenue shares debit that payer and credit the officer once per period; projected household income never performs a second credit. Local pay precedes remittance, withholding creates real recoverable arrears, and audit/repayment/confirmation have separate reviewed consequences. Missing/inactive treasuries cannot issue pay. Ended assignments retain real arrears, while private estates and enterprises retain their existing income. See docs/designs/administrative-monarchy.md for source caps, conservation and accounting order.

@@ -26,6 +26,8 @@ FBDATA.deedSections = [
     label:'✝ Church dealings', subhead:'Bishoprics and patriarchates' },
   { id:'offices', type:'deeds', order:106, layout:'both', system:'roman_offices',
     label:'🏛 Offices & Legitimacy', subhead:'Appointments and imperial claims' },
+  { id:'administration', type:'deeds', order:108, layout:'both', system:'public_offices',
+    label:'🏛 Public administration', subhead:'Appointments, receipts and accession' },
   { id:'realm', type:'deeds', order:110, layout:'theme',
     label:'👑 Rank & Realm', subhead:'One-time deeds' },
   { id:'war', type:'deeds', order:120, layout:'theme',
@@ -306,6 +308,9 @@ FBDATA.deeds = [
   { id:'offices_legitimacy', label:'🏛 Offices and legitimacy…', order:90,
     desc:'Review held offices, seek a scoped appointment, or recognize and contest an imperial claimant.',
     section:'offices', group:'offices', flow:'choices', handler:'offices_legitimacy', systems:['roman_offices'] },
+  { id:'public_administration', label:'🏛 Public administration…', order:90,
+    desc:'Review public appointments, productive revenue sources, service, audits and sovereign accession.',
+    section:'administration', group:'administration', flow:'choices', handler:'public_administration', systems:['public_offices'] },
   { id:'seek_station', availableWhileTraveling:true, label:'🏛 Seek station recognition', order:91,
     section:'realm', group:'realm', flow:'choices', handler:'seek_station' }
 ];

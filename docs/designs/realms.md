@@ -1645,3 +1645,9 @@ The reusable campaign settlementForm option allows a nonterritorial actor to ado
 Wider spring-476 courts
 
 476_outer adds sixteen authored direct-holder regnum courts for broad British and northern communities and Sasanian Persia. Fifteen representatives are explicitly generated; Peroz is named with an editorial working birth year. These are budget-conscious regional aggregates where the sources cannot establish a precise spring-476 hierarchy. The existing Roman eastern realm directly holds the newly authored Cilician, Syrian, Palestinian and western Mesopotamian counties under roman_civic, with new province groups in its existing Oriens chain. Other new courts have no fabricated de jure hierarchy or generated feudal vassals. Possession and public jurisdiction rights do not imply private land deeds. This extends baseline political geography with none technology reviews for each authored region and leaves future wars and succession to the existing ordinary systems.
+
+Public administrative jurisdiction
+
+administrative_monarchy keeps sovereign county ownership and direct holders separate from revocable public governors. Fresh 800 Abbasid and Byzantine declarations select distinct profiles; independent subordinate courts retain their declared autonomy. Vacant jurisdiction does not generate a hereditary holder. Conquest and dismissal update existing authority scope without confiscating private settlement/household property. See docs/designs/administrative-monarchy.md.
+
+Public crown absorption rekeys the government profile and public commissions to the player before retiring the old realm. Household succession grants that crown only to the recognized candidate. A different recognized sovereign receives the existing realm through abdication, while household property stays with the playable dynasty; an unrecognized death leaves a dated public vacancy.

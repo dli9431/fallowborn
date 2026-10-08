@@ -384,3 +384,7 @@ The 476 Strabo declaration uses this rule for magister_praesentalis on host_476_
 Government strategy integration
 
 Government dispatch now owns territorial Consent and typed levy, war, treaty and grant decision hooks. FB.political.consent projects the selected strategy and its constituency reference; existing contracts, council thresholds and authority transactions remain canonical. No constituency state is added. See docs/designs/governments.md for context fields and default delegations.
+
+Public administration
+
+The optional public_offices system uses profile-owned public catalogues through the existing authority.appointments ledger. publicTerms schema 1 references a productive source and declared remuneration, service, remittance and succession confirmation. Pure publicAppointmentQuote/publicOfficeQuote reviews and their revalidating applies cover appointment, audit, repayment, confirmation and dismissal. Effective scope stops on death, custody, lost source/host, expiry or required sovereign confirmation. Public and private rights remain separate. Shared governmentRecognition projects living interests and stores bounded current support inside existing government rows; it creates no duplicate holder ledger. See docs/designs/administrative-monarchy.md.

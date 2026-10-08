@@ -92,6 +92,9 @@ window.FB = window.FB || {};
       }
     }
     var params = FBDATA.governmentForms[formId].strategyParameters;
+    var profileId = FBDATA.governmentForms[formId].administrationProfileId;
+    if (profileId !== undefined && (!FBDATA.administrationProfiles || !own(FBDATA.administrationProfiles, profileId)))
+      out.push({ kind:'parameters' });
     if (params !== undefined) {
       var valid = params && typeof params === 'object' && !Array.isArray(params);
       if (valid) Object.keys(params).forEach(function (slot) {
@@ -188,6 +191,7 @@ window.FB = window.FB || {};
 
   G.validate = function () {
     var errors = [], forms = FBDATA.governmentForms;
+    if (FB.validateAdministrationProfiles) errors.push.apply(errors, FB.validateAdministrationProfiles());
     if (!forms || typeof forms !== 'object') return errors;
     for (var formId in forms) if (own(forms, formId)) {
       if (!ID.test(formId) || !forms[formId] || typeof forms[formId] !== 'object') {

@@ -2175,3 +2175,7 @@ The optional preview argument of greatHolyWarTargets and canCallGreatHolyWar rea
 Government strategy integration
 
 Government dispatch routes player/AI recruitment, delegated levy service, rebel capacity, muster permission, host upkeep, war-goal eligibility, declaration reviews and peace quotes through named strategies. Existing army, occupation, supply, treaty and territory transactions apply the results. See docs/designs/governments.md for the consumer inventory, typed contexts and compatibility boundaries.
+
+Public military obligations
+
+public_service removes automatic hereditary-vassal levy contributions and applies a profile-declared funded commissioned share to existing county levy capacity. The Abbasid 800 salary profile preserves the ordinary paid-army baseline; the Byzantine 800 salary profile reserves half for effective funded service, and the generic revenue/service profile reserves 35 percent. Unpaid remuneration, arrears and ineffective commissions remove that share. Actual hosts, population, equipment technology, recruitment, supply and upkeep retain their canonical transactions. A host commission grants command over an existing exact host, without creating men or private land. Technology impact public_military_obligations is none; equipment gates remain. See docs/designs/administrative-monarchy.md.

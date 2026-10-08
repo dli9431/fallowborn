@@ -6,7 +6,7 @@ dependsOnRuntime(__filename, [
   'index.html', 'data/eras.js', 'data/political_institutions.js',
   'js/governments.js', 'js/government_levy.js', 'js/government_revenue.js',
   'js/government_council.js', 'js/government_diplomacy.js', 'js/government_ai.js',
-  'js/government_continuity.js', 'js/world.js', 'js/actions.js', 'js/council.js',
+  'js/government_continuity.js', 'js/government_recognition.js', 'js/government_administration.js', 'js/world.js', 'js/actions.js', 'js/council.js',
   'js/authority.js', 'js/armies.js', 'js/lordships.js', 'js/treasury.js', 'js/fiscal.js',
   'js/economy.js', 'js/wars.js', 'js/federates.js', 'js/politics.js', 'js/mods.js',
   'js/station.js', 'js/save.js', 'js/save_v4.js'
@@ -27,7 +27,7 @@ test('forms have complete named interfaces; legacy mods delegate and invalid for
   await openGame(page, testInfo);
   const result = await page.evaluate(function () {
     const G = FB.governments;
-    const explicit = ['territorial','regnum','roman_civic','federate_polity'].every(function (id) {
+    const explicit = ['territorial','regnum','roman_civic','federate_polity','administrative_monarchy'].every(function (id) {
       return G.slots().every(function (slot) { return typeof FBDATA.governmentForms[id][slot] === 'string'; });
     });
     let empty = '', unknown = '', retired = '', parameters = '', incomplete = '';

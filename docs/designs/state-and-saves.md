@@ -2064,3 +2064,9 @@ A political track saves its authored stage id in the existing phase field. The d
 Government strategy integration
 
 Government dispatch adds no saved fields or schema revision. Saved form ids and optional court policy ids select validated implementations. Derived per-day resolution lives in a WeakMap and is recreated for restored states. Office and acclamation remain explicit dynastic delegations; restore never manufactures an election or constituency.
+
+Reviewed public administration records
+
+Optional publicTerms schema 1 extends existing appointment rows. administrationProfileId, bounded recognition, publicVacancy and lastAccession extend existing government rows; publicCandidateIds extends the compact succession tree with at most eight actual person/member references. Detached validation rejects malformed sources, amounts, overlaps and political records before adoption. These optional records preserve save-v4 and existing subsystem versions. Old campaigns keep their stored forms, and restore never reseeds a revised historical profile, officer, payment or accession. Transient reviews and projections are not saved. See docs/designs/administrative-monarchy.md.
+
+Public courts are restored without materializing or repairing their succession. Their office, recognition and latest accession references retain referenced characters through compaction. The player public court references existing household characters directly rather than saving another compact royal tree.
