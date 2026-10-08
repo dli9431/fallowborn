@@ -773,6 +773,7 @@ window.FB = window.FB || {};
       if (!/^[a-z][a-z0-9_]*$/.test(id) || !plainRecord(def)) { fault('invalid institution record.'); return; }
       if (typeof def.city !== 'string' || !def.city.trim() ||
           ['senate','council','see','patriarchate','congregation'].indexOf(def.kind) < 0) fault('invalid city or kind.');
+      if (def.freshOnly !== undefined && typeof def.freshOnly !== 'boolean') fault('freshOnly must be boolean.');
       var isChurch = def.kind === 'see' || def.kind === 'patriarchate';
       if (isChurch ? typeof def.officeId !== 'string' || !/^[a-z][a-z0-9_]*$/.test(def.officeId) : def.officeId !== undefined)
         fault('invalid officeId for institution kind.');
@@ -1243,6 +1244,15 @@ window.FB = window.FB || {};
       if (topDefinitionRealm(realms, rid) === null) fault('realm ' + rid + ' has a liege cycle.');
       var capital = provinceIds[realmDef.capital];
       if (!capital || capital.wasteland) fault('realm ' + rid + ' has invalid capital ' + realmDef.capital + '.');
+      var form = FBDATA.governmentForms[platform.governments[rid]], electoral = form && form.selectionProfile;
+      if (electoral && electoral.procedure && !FB.governments.problems(platform.governments[rid]).length) electoral.members.forEach(function (member) {
+        if (['capital_elite','capital_clergy'].indexOf(member.principal) < 0) return;
+        var institutions = definition.localInstitutions || {};
+        if (!Object.keys(institutions).some(function (id) {
+          var d = institutions[id];
+          return d.provinceId === realmDef.capital && d.kind === (member.principal === 'capital_elite' ? 'council' : 'congregation');
+        })) fault('realm ' + rid + ' has no declared electoral capital institution.');
+      });
       if (capital && !capital.wasteland && capital.realm !== rid &&
           !realmDef.nonTerritorial) {
         fault('realm ' + rid + ' does not own its capital.');
@@ -5536,6 +5546,7 @@ window.FB = window.FB || {};
       generation: (s.rulerGeneration || 1) + 1
     };
     s.rulerGeneration = r.ruler.generation;
+    if (policy.publicCrown) r.dynasty = c.dyn || c.name;
     c.realmStanding = writeStoredRealmStanding(state, rid, heirStanding);
     c.opinion = c.realmStanding;
     if (FB.markRealmStandingFaithBaseline) {
@@ -5557,8 +5568,10 @@ window.FB = window.FB || {};
       /* Each generation is seeded its own consort; past ones stay in the tree
          as dated tombstones. A protagonist who inherits a throne brings their
          own household and is never handed a generated spouse. */
-      seedConsortMember(state, rid);
-      if (COURT_EAGERNESS === 'court') FB.materializeRealmConsort(state, rid);
+      if (!policy.publicCrown) {
+        seedConsortMember(state, rid);
+        if (COURT_EAGERNESS === 'court') FB.materializeRealmConsort(state, rid);
+      }
     }
     if (!policy.selectionManaged) makeHeirIfEmpty(state, r, s);
     FB.refreshRealmSuccession(state, rid);
@@ -10489,7 +10502,9 @@ window.FB = window.FB || {};
     if (FB.mergeRealmTech) FB.mergeRealmTech(state, 'player', rid);
     if (FB.remapWarRealm) FB.remapWarRealm(state, rid, 'player');
     if (FB.historicalAmbitionRealmInherited) FB.historicalAmbitionRealmInherited(state, rid, 'player');
-    if (FB.treasuryRetireRealm) FB.treasuryRetireRealm(state, rid, 'player');
+    if (FB.treasuryRetireRealm) FB.treasuryRetireRealm(state, rid, 'player', {
+      publicAccession:!!(FB.electiveCrown && FB.electiveCrown(state, rid))
+    });
     FB.markRealmDead(state, rid);
     /* The realm's temporal inheritance is separate from any religious office:
        markRealmDead leaves the latter explicitly vacant for recovery. */

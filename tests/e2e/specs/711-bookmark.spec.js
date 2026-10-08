@@ -10,6 +10,8 @@ dependsOnRuntime(__filename, [
   'data/story_campaigns.js', 'data/bookmark_476_gaul_iberia.js',
   'js/world.js', 'js/model.js', 'js/governments.js', 'js/station.js', 'js/starts.js',
   'js/stories.js', 'js/story_campaign.js', 'data/story_instances.js',
+  'data/political_institutions.js', 'js/government_elective.js', 'js/government_selection.js',
+  'js/government_lineage.js', 'js/institutions.js', 'js/lordships.js', 'js/treasury.js', 'js/story_government_selection.js',
   'js/story_polity_foundation.js', 'js/rebellions.js', 'js/authority.js',
   'js/main.js', 'js/save.js', 'js/save_v4.js', 'js/papacy.js', 'js/systems.js',
   'js/technology.js', 'js/armies.js', 'js/wars.js', 'js/messages.js',
@@ -23,7 +25,8 @@ const { mockCrazyGames } = require('../support/crazygames');
 const { injectBrowserHarness } = require('../support/game/browser-harness');
 
 const CAMPAIGNS = ['strait_crossing_711', 'toledo_campaign_711',
-  'septimania_campaign_711', 'gaul_campaign_711', 'asturias_foundation_711'];
+  'septimania_campaign_711', 'gaul_campaign_711', 'asturias_foundation_711',
+  'toledo_crown_711', 'northeastern_crown_711'];
 
 async function openBookmarkGame(page, testInfo, crazygames) {
   if (crazygames) {
@@ -160,7 +163,8 @@ test('711 activation owns a full map, mixed communities and a separate hierarchy
         sites:inhabited.every(function (p) { return p.settlements.length === 1 && FB.world.sitesByProv[p.id].list[0].authored; }),
         names:['oviedo','santiago','baghdad','mansura','fes'].map(function (id) { return FB.world.byId[id].name; }),
         gothic:b.provinces.find(function (p) { return p.id === 'toledo'; }).communities,
-        forms:b.realms.every(function (r) { return r.government === 'territorial'; }) };
+        forms:b.realms.every(function (r) { return r.government ===
+          (['visigoths_711','achila_711'].includes(r.id) ? 'elective_monarchy' : 'territorial'); }) };
     });
     expect(result).toMatchObject({ faults:[], diagnostics:[], attached:CAMPAIGNS,
       era:'early_medieval', geography:'europe_regional', owners:true, hierarchy:true,

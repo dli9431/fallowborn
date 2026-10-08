@@ -65,3 +65,8 @@ The government-dispatch specification covers registration and form validation, c
 Administrative monarchy extension
 
 The administrative_monarchy form installs public appointment, source-backed fiscal/military service, public accession and personal career strategies in government_administration.js after the baseline adapters. government_recognition.js supplies the shared pure constituency/candidate/review interface before that module. Public accession can return an unresolved vacancy and sets repairEmpty false to suppress generated collateral repair. Optional saved assignments and bounded recognition are owned by the existing authority/succession ledgers, with technology-impact decisions and dated consumer scope documented in docs/designs/administrative-monarchy.md. The dispatch platform itself retains its existing compatibility interfaces.
+
+
+Elective crown extension
+
+elective_monarchy composes crown_election and the common governmentSelection owner. candidatePool admits qualified local nominations outside the reigning genealogy; procedure owns designation, realm-wide recognition and interim powers. The existing canonical public treasury survives accession and protagonist adoption separately from household gold. See docs/designs/elective-monarchy.md for policy, conversion, technology decisions and dated rollout.

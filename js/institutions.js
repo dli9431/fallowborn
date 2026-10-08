@@ -3083,7 +3083,7 @@ window.FB = window.FB || {};
     c.generatedOfficeholder = !name;
     return c.id;
   }
-  FB.ensureLocalInstitutions = function (s, seeds) {
+  FB.ensureLocalInstitutions = function (s, seeds, options) {
     if (!FB.systemAvailable(s, 'civic_institutions') && !FB.systemAvailable(s, 'episcopal_sees')) return null;
     // An existing ledger is the campaign's opening roster. Content additions
     // do not allocate new representatives while restoring or ticking that save.
@@ -3092,6 +3092,7 @@ window.FB = window.FB || {};
     for (var id in defs) {
       var def = defs[id];
       if (!enabled(s, def) || !present(s, def)) continue;
+      if (def.freshOnly && !(options && options.fresh) && !row(s, id)) continue;
       if (!s.localInstitutions) s.localInstitutions = {};
       if (row(s, id)) continue;
       if (!creating) continue;

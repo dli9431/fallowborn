@@ -22,7 +22,8 @@
   }
   function account(state, rid) {
     const realm = state.realms && state.realms[rid];
-    return eligible(realm, rid, state) && realm.treasury && realm.treasury.version === 1
+    return (eligible(realm, rid, state) || rid === 'player' && realm && realm.alive &&
+      FB.electiveCrown && FB.electiveCrown(state, rid)) && realm.treasury && realm.treasury.version === 1
       && !realm.treasury.retired ? realm.treasury : null;
   }
   function empty(state, gold) {
@@ -48,7 +49,7 @@
     return out;
   }
   FB.treasuryAvailable = function (state, rid) {
-    if (rid === 'player') return Math.max(0, numeric(state.player.gold));
+    if (rid === 'player' && !(FB.electiveCrown && FB.electiveCrown(state, rid))) return Math.max(0, numeric(state.player.gold));
     const row = account(state, rid);
     return row ? Math.max(0, numeric(row.gold) - positive(row.militaryAccrued)) : 0;
   };
@@ -57,11 +58,11 @@
   FB.treasuryTransfer = function (state, payer, recipient, amount, compulsory) {
     if (typeof amount !== 'number' || !isFinite(amount) || amount < 0 || (payer && payer === recipient)) return false;
     const enabled = state.treasuryAccounting && state.treasuryAccounting.mode === 'active';
-    const from = payer === 'player' ? state.player : enabled && account(state, payer);
-    const to = recipient === 'player' ? state.player : enabled && account(state, recipient);
+    const from = payer === 'player' ? account(state, payer) || state.player : enabled && account(state, payer);
+    const to = recipient === 'player' ? account(state, recipient) || state.player : enabled && account(state, recipient);
     if (enabled && ((payer && payer !== 'player' && !from) ||
         (recipient && recipient !== 'player' && !to))) return false;
-    const available = payer === 'player' ? Math.max(0, numeric(state.player.gold)) :
+    const available = payer === 'player' ? FB.treasuryAvailable(state, payer) :
       from ? FB.treasuryAvailable(state, payer) : Infinity;
     if (!compulsory && amount > available) return false;
     if (from) from.gold -= amount;
@@ -120,7 +121,7 @@
       positive(fiscal.income + (fiscal.duesIn || 0)) * FBDATA.balance.realmReserveRevenueFloor);
   }
   function distributionAccount(state, rid) {
-    return rid === 'player' ? state.player : active(state, rid);
+    return rid === 'player' ? account(state, rid) || state.player : active(state, rid);
   }
   FB.publicDistributionQuote = function (state, rid, fiscal) {
     const payer = distributionAccount(state, rid);
@@ -134,7 +135,7 @@
     return { eligible:eligible, counties:counties,
       minimum:Math.max(FBDATA.balance.distributionMinimum, government.total),
       nextTurn:next || 0, ready:eligible && !(next > state.turn),
-      available:rid === 'player' ? positive(state.player.gold) : FB.treasuryAvailable(state, rid) };
+      available:FB.treasuryAvailable(state, rid) };
   };
   FB.publicDistribution = function (state, rid, amount, fiscal) {
     const q = FB.publicDistributionQuote(state, rid, fiscal);
@@ -583,7 +584,9 @@
           const rate = FBDATA.balance.hostLogisticsMercenaryCompany;
           const adjustment = ((contracted || Math.ceil(men / size)) - men / size) * rate / 90;
           const cost = batch.costs[rid] + adjustment;
-          state.player.gold -= cost;
+          const publicAccount = account(state, rid);
+          if (publicAccount) publicAccount.gold -= cost;
+          else state.player.gold -= cost;
           state.treasuryAccounting.playerMilitary = positive(state.treasuryAccounting.playerMilitary) + cost;
         } else {
           const row = account(state, rid);
@@ -642,10 +645,16 @@
     }
     state.realms[rid].treasury = empty(state, gold);
   };
-  FB.treasuryRetireRealm = function (state, rid, recipient) {
+  FB.treasuryRetireRealm = function (state, rid, recipient, options) {
     if (recipient === rid) return;
     const from = account(state, rid);
     if (!from) return;
+    if (recipient === 'player' && options && options.publicAccession &&
+        FB.electiveCrown && FB.electiveCrown(state, rid)) {
+      state.realms.player.treasury = from;
+      delete state.realms[rid].treasury;
+      return;
+    }
     const to = account(state, recipient);
     if (to) { to.gold += from.gold; to.militaryAccrued += from.militaryAccrued; }
     else if (recipient === 'player') {

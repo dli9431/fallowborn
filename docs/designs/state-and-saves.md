@@ -2084,3 +2084,10 @@ Reviewed public administration records
 Optional publicTerms schema 1 extends existing appointment rows. administrationProfileId, bounded recognition, publicVacancy and lastAccession extend existing government rows; publicCandidateIds extends the compact succession tree with at most eight actual person/member references. Detached validation rejects malformed sources, amounts, overlaps and political records before adoption. These optional records preserve save-v4 and existing subsystem versions. Old campaigns keep their stored forms, and restore never reseeds a revised historical profile, officer, payment or accession. Transient reviews and projections are not saved. See docs/designs/administrative-monarchy.md.
 
 Public courts are restored without materializing or repairing their succession. Their office, recognition and latest accession references retain referenced characters through compaction. The player public court references existing household characters directly rather than saving another compact royal tree.
+
+
+Elective crown persistence
+
+Elective progress uses the existing optional schema-1 government selection record and canonical court tree. electoral_candidate members reference ordinary characters through royalLine; their nomination identities, bounds and resolved incumbent consistency are validated before detached state adoption. No envelope version changes. Stored older government forms remain unchanged, and restore creates no constituency or public resources. The existing realm treasury can belong to the player-controlled public institution without becoming player.gold. See elective-monarchy.md.
+
+A live electoral selection requires its existing version-1 treasury with finite gold and nonnegative finite military accrual. A missing or damaged account fails detached validation instead of inventing funds or routing public income into the household purse.

@@ -4048,8 +4048,9 @@ FB.CHANGELOG = [
       /* Income is credited before necessities are settled. This lets family
          wages meet the table and leaves any unfunded share as hardship rather
          than silently discarding which obligation went unpaid. */
-      p.gold += income - buildingUpkeep - modifierUpkeep - FB.playerGovernmentCosts(s, taxParts).total +
-        FB.holdingBonus(s, 'gold') + FB.landYield(s) + FB.itemBonus(s, 'gold') +
+      const publicNet = income - buildingUpkeep - modifierUpkeep - FB.playerGovernmentCosts(s, taxParts).total;
+      if (!(FB.electivePublicSeason && FB.electivePublicSeason(s, publicNet, taxParts))) p.gold += publicNet;
+      p.gold += FB.holdingBonus(s, 'gold') + FB.landYield(s) + FB.itemBonus(s, 'gold') +
         (FB.positionBonus ? FB.positionBonus(s, 'gold') : 0);
       FB.livelihoodSeason(s);
       if (FB.publicOfficeSettle) FB.publicOfficeSettle(s, null, Math.floor(s.turn / 90), true);

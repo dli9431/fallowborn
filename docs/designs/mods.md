@@ -364,3 +364,8 @@ constituencyProfiles is a public keyed table merged and validated with the detac
 Public administration profiles
 
 administrationProfiles is an allowed JSON mod root with atomic record replacement. Profiles choose existing public offices, qualification-independent appointment cost, personal term/confirmation, source-capped salary or revenue/service terms, and dynastic/designation/recognition eligibility and interests. A form declares administrationProfileId; an explicit fresh realm declaration can choose a dated override. Validation checks the merged effective forms/profiles before mutation. No profile imports engine source or branches on historical realm identity. See docs/MODDING.md and docs/designs/administrative-monarchy.md.
+
+
+Elective profiles
+
+selectionProfile may declare candidatePool and procedure through the common selection contract. Registered elective strategies interpret that typed data; JSON supplies no election function. Fresh capital_elite and capital_clergy selectors require declared capital council and congregation institutions. Existing saved forms and constituencies are preserved. See docs/MODDING.md and elective-monarchy.md.

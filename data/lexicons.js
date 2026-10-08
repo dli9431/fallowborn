@@ -162,6 +162,8 @@ FBDATA.lexicons = {
       f:['Dependent','Free Citizen','Host Notable','Veteran','Comitissa','Ducissa','Regina','Augusta']
     } },
     regnum:{ terms:{ kingdom:{ one:'kingdom', other:'kingdoms' } } },
+    elective_monarchy:{ terms:{ kingdom:{ one:'elective crown', other:'elective crowns' },
+      vassal:{ one:'dependent ruler', other:'dependent rulers' } } },
     lineage_kingship:{ rank:{
       m:['Dependent','Free Householder','Notable','Local Elder','Local King','Regional King','King','Overking'],
       f:['Dependent','Free Householder','Notable','Local Elder','Local Queen','Regional Queen','Queen','Overqueen']

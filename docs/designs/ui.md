@@ -3717,3 +3717,10 @@ js/ui_assembly.js uses the shared review fact, person and action cards. It retai
 Public administration reviews
 
 The Public administration deed opens a shared full-sheet review for profile, court, office, productive source, incumbent and sovereign candidate. Current treasury, qualifications, powers, fee, salary/share, term, private property distinction, service, remittance and arrears remain visible before a decision. Mutations require a concrete second review and reject changed terms. Existing review cards, person cards, accessible native selects and details buttons retain selection, open disclosure, scroll and focus on Back/Escape and outcome return. All chrome uses the shared localization paths; profile and office display fields are structured data. See docs/designs/administrative-monarchy.md.
+
+
+Elective crown review
+
+Both Deeds layouts expose Elective crown using the shared kingship sheet. Qualifications, living political principals, quorum, weights, current claims, designation policy, obligations and public funds remain visible. Nomination and accession require separate atomic reviews. Candidate and term selection, scroll, expanded Details and semantic focus survive Back, Escape and outcome Continue. Conversion reviews disclose missing existing delegates and a public account, preserve the current household and require fresh facts at confirmation.
+
+The gold breakdown and household income forecast show personal receipts and costs for an elective incumbent. Crown tax, administration and field logistics belong to the separate public account shown in the elective review; they are excluded from household net income and credit capacity. Vacancy administration and defense labels follow the selected procedure.

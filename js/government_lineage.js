@@ -158,7 +158,7 @@
     if (s.realmTech && s.realmTech.player) { s.realmTech[rid] = s.realmTech.player; delete s.realmTech.player; }
     if (FB.treasuryCreateRealm) FB.treasuryCreateRealm(s, rid, null, 0);
     if (r.treasury && s.treasuryAccounting) {
-      r.treasury.militaryAccrued += s.treasuryAccounting.playerMilitary || 0;
+      if (!(FB.electiveCrown && FB.electiveCrown(s, rid))) r.treasury.militaryAccrued += s.treasuryAccounting.playerMilitary || 0;
       s.treasuryAccounting.playerMilitary = 0;
     }
     ['armyDown','armyDownSurvival','armyDetachmentDown','armyCohorts'].forEach(function (key) {

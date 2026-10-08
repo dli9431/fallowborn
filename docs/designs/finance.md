@@ -582,3 +582,10 @@ Community profiles bound local public income, levy contributions and protected r
 Source-backed public remuneration
 
 Public office remuneration is paid from the same treasury that receives the referenced county receipts through the ordinary fiscal path. Actual salaries/revenue shares debit that payer and credit the officer once per period; projected household income never performs a second credit. Local pay precedes remittance, withholding creates real recoverable arrears, and audit/repayment/confirmation have separate reviewed consequences. Missing/inactive treasuries cannot issue pay. Ended assignments retain real arrears, while private estates and enterprises retain their existing income. See docs/designs/administrative-monarchy.md for source caps, conservation and accounting order.
+
+
+Elective crown accounts
+
+For a player-controlled elective crown, realm.treasury remains the public account and player.gold remains household money. Public receipts, government costs, distribution and field expense route to the existing crown account; private wages, holdings and household inheritance keep their normal owners. Receiving or relinquishing the crown moves the account with the institution without gifting the previous household or charging daily military expense twice. See elective-monarchy.md.
+
+An elective incumbent's private settlement actor remains distinct from the public realm. Personal estate receipts and ordinary personal religious-office income enter household cash; public taxes do not. Household credit capacity, reliable income and the gold breakdown use the same private income boundary and exclude crown government and field logistics expense. The elective review shows the separate available public treasury. Military costs accrued before accession settle once from that treasury.

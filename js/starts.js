@@ -50,12 +50,13 @@
     s.start.onboarding = scenario.onboarding;
     p.provs = FB.realmHeldCounties(s, id).slice();
     p.liege = realm.liege || null;
-    p.gold = realm.treasury ? realm.treasury.gold : scenario.gold;
+    var publicCrown = FB.electiveCrown && FB.electiveCrown(s, id);
+    p.gold = publicCrown ? scenario.gold : realm.treasury ? realm.treasury.gold : scenario.gold;
     if (s.treasuryAccounting && realm.treasury) {
       s.treasuryAccounting.playerMilitary = realm.treasury.militaryAccrued || 0;
       s.treasuryAccounting.playerMilitaryLast = realm.treasury.militaryLast || 0;
     }
-    delete realm.treasury;
+    if (!publicCrown) delete realm.treasury;
     realm.id = 'player'; s.realms.player = realm; delete s.realms[id];
     /* Compact AI succession becomes the ordinary, fully materialized player
        family. Never leave a second succession engine aging that household. */

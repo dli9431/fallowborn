@@ -31,6 +31,18 @@ class JavascriptLexerTests(unittest.TestCase):
 
 
 class StructuredDataExtractionTests(unittest.TestCase):
+    def test_elective_profiles_and_contests_have_stable_display_owners(self):
+        inventory = i18n_catalog.Inventory()
+        i18n_catalog.extract_government_selections(inventory)
+        for key, text in (
+            ('governmentSelection.elective_monarchy.member.palace_interest.name.default', 'Palace nobility'),
+            ('governmentSelection.elective_monarchy.member.clerical_interest.name.default', 'Clerical delegates'),
+            ('governmentContest.toledo_crown_711.name.default', 'The Toledo crown'),
+            ('governmentContest.northeastern_crown_711.name.default', 'The northeastern crown'),
+        ):
+            self.assertEqual(inventory.entries[key]['text'], text)
+        self.assertNotIn(i18n_catalog.source_key('Roderic'), inventory.entries)
+
     def test_assembly_policies_have_display_owners_without_translating_people(self):
         inventory = i18n_catalog.Inventory()
         i18n_catalog.extract_structured(inventory)

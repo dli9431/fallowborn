@@ -172,3 +172,8 @@ Keep each released instance id stable and store only typed progress, cast refere
 Government contests
 
 government_contest is registered by js/story_government_selection.js. A data instance declares realmId, name and desc; its only saved fact is the institutional realm reference. The card appears for contested, minority, vacant or resolved canonical selections. It reads governmentSelection without opening a second vacancy, creating people, scheduling a second succession or allocating property. Realm adoption and release remap this reference with the public court. Restore validates the reference and never initializes a missing story.
+
+
+Elective contested selections
+
+The 711 crown observers reference the same governmentSelection vacancies as the shared government_contest type. Supported candidate names and actual possession remain distinct. Restoring a story creates no delegate, rival ruler, claim territory or historical outcome. Selection can remain contested through ordinary war and negotiation. See elective-monarchy.md.

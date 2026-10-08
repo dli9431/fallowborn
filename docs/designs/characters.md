@@ -1399,3 +1399,8 @@ An opening actor may be a generated or named profile, or a sole ref declaration 
 Public careers and sovereign candidates
 
 The administrative_monarchy ladder retains all eight station identities and personal standing routes through freedom, wealth, service and effective office. Higher public jurisdiction comes from a revocable appointment rather than buying a hereditary county. Officers can enter an explicitly permitted eight-person recognition slate; a compact public_candidate links the actual person without invented parents or dynasty. Removal ends public power/pay and candidature but preserves private property. Sovereign succession applies the selected existing person through the canonical realm transition. See docs/designs/administrative-monarchy.md.
+
+
+Elective qualification and household continuity
+
+The elective profile can permit a qualified free local person from another house to stand. Nomination adds a canonical court member reference without altering parents, spouse, children, dynasty, personal gold or property. Accession retains that person and suppresses generated consort replacement. Household succession retains its existing inheritance owner and does not automatically inherit the public crown. See elective-monarchy.md.

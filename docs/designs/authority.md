@@ -398,3 +398,8 @@ The shared constituency contract in FB.governments.support supplies typed member
 Public administration
 
 The optional public_offices system uses profile-owned public catalogues through the existing authority.appointments ledger. publicTerms schema 1 references a productive source and declared remuneration, service, remittance and succession confirmation. Pure publicAppointmentQuote/publicOfficeQuote reviews and their revalidating applies cover appointment, audit, repayment, confirmation and dismissal. Effective scope stops on death, custody, lost source/host, expiry or required sovereign confirmation. Public and private rights remain separate. Shared governmentRecognition projects living interests and stores bounded current support inside existing government rows; it creates no duplicate holder ledger. See docs/designs/administrative-monarchy.md.
+
+
+Elective assent
+
+Elective crowns use the shared living constituency and reserved consent transaction. Nomination grants no public jurisdiction. Vacancy retains only the profile-declared local courts, receipts and defensive service; offensive decisions await recognition. Explicit conversion requires existing principals, a qualified incumbent and the active canonical public account. See elective-monarchy.md.
