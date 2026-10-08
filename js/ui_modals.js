@@ -9,6 +9,137 @@ window.FB = window.FB || {};
   const UI = FB.ui;
   const SH = UI._shared;
   const $ = SH.$;
+  UI.showLocalKingship = function (view) {
+    const s = FB.state, S = FB.governmentSelection;
+    const rid = view && view.realmId || S.localRealm(s), data = rid && S.state(s, rid), p = rid && S.profile(s, rid);
+    if (!data || !p) {
+      UI.openModal(FB.T('Local kingship'), '<p>' + esc(S.reason('missing_state')) + '</p>');
+      return;
+    }
+    FB.game.setPaused(true);
+    view = view || {};
+    const t = s.realms[rid].succession, me = s.chars[s.player.charId];
+    const actor = rid === 'player' ? { kind:'realm', id:rid } : { kind:'character', id:me.id };
+    const candidates = S.candidates(s, rid), id = candidates.indexOf(view.candidateId) >= 0 ? view.candidateId : candidates[0];
+    const offer = view.terms || p.terms, decisions = {};
+    const statusNames = { selecting:FB.T('Selecting a successor'), contested:FB.T('Contested succession'),
+      minority:FB.T('Eligible kin are still minors'), vacant:FB.T('No eligible successor'), resolved:FB.T('Accession recorded') };
+    function candidateName(key) { return t.members[key] && t.members[key].name || FB.T('No eligible candidate'); }
+    function interestName(key) {
+      const member = data.members.find(function (m) { return m.id === key; });
+      const def = p.members.find(function (m) { return m.id === (member && member.templateId || key); });
+      return member && key !== member.templateId && member.scope.kind === 'county' ? FB.world.byId[member.scope.id].name : def ? FB.T(def.name) : key;
+    }
+    function action(key, label, request) {
+      const decisionActor = request.action === 'support' || request.action === 'withdraw' ? { kind:'character', id:me.id } : actor;
+      const q = S.quote(s, rid, Object.assign({ actor:decisionActor }, request));
+      decisions[key] = q;
+      return reviewActionCardHtml({ data:{ lineageReview:key }, label:label, disabled:!q.allowed,
+        detailsId:'lineage-action-' + key, warn:!q.allowed,
+        note:q.reason || FB.T('Payment on acceptance: {money:cost}', { cost:q.cost }),
+        details:'<p>' + esc(FB.T('Review current candidates, living principals, support and obligations. Confirmation rechecks every fact before payment or accession.')) + '</p>' });
+    }
+    let h = '<div data-lineage-list data-modal-scroll>';
+    h += reviewFactsCard(FB.T('Recognized leadership'),
+      kv('Court', esc(s.realms[rid].name)) + kv('Ruler', esc(candidateName(t.rulerMemberId))) +
+      kv('Recognition', esc(S.recognized(s, rid) ? FB.T('Locally recognized') : FB.T('Local assent is missing'))) +
+      kv('Succession', esc(data.vacancy ? statusNames[data.vacancy.status] : FB.T('No open vacancy'))) +
+      '<p>' + esc(FB.T('Kin eligibility, leadership and private property are separate. Household work, farming, crafts, religion and military service remain available. Wealth can improve Standing without buying eligibility or a county.')) + '</p>');
+    h += reviewFactsCard(FB.T('Local interests'), S.constituency(s, rid).map(function (m) {
+      const vote = data.vacancy && data.vacancy.support[m.id];
+      const principal = m.currentPrincipal, person = principal && (principal.kind === 'character' ? s.chars[principal.id] :
+        principal.kind === 'royal_member' && t.members[principal.id].charId ? s.chars[t.members[principal.id].charId] : null);
+      let body = person ? reviewPeopleHtml(reviewPersonHtml(person, interestName(m.id), null)) : kv('Interest', esc(interestName(m.id)));
+      body += kv('Scope', esc(m.scope.kind === 'county' ? FB.world.byId[m.scope.id].name : s.realms[rid].name)) +
+        kv('Political weight', String(m.weight)) + kv('Status', esc(m.active ? FB.T('Principal available') : FB.T('Principal unavailable'))) +
+        kv('Support', esc(vote && vote.candidateId ? candidateName(vote.candidateId) : vote && vote.reason ? S.reason(vote.reason) : FB.T('No successor recognized')));
+      if (data.vacancy && data.vacancy.status !== 'resolved' && id) {
+        body += action('recognize-' + m.id, FB.T('Review this interest’s recognition'), { action:'support', memberId:m.id, candidateId:id, terms:offer });
+        body += action('withhold-' + m.id, FB.T('Review withholding support'), { action:'support', memberId:m.id, candidateId:id, terms:offer, withhold:true });
+      } else if (data.recognition && data.recognition.consents.indexOf(m.id) >= 0) {
+        body += action('withdraw-' + m.id, FB.T('Review withdrawing recognition'), { action:'withdraw', memberId:m.id });
+      }
+      return body;
+    }).join(''));
+    let fields = '<div class="governing-identity-fields"><label for="lineage-candidate">' + esc(FB.T('Eligible successor')) + '</label><select class="select" id="lineage-candidate">';
+    if (!candidates.length) fields += '<option>' + esc(FB.T('No eligible adult kin')) + '</option>';
+    candidates.forEach(function (key) { fields += '<option value="' + esc(key) + '"' + (key === id ? ' selected' : '') + '>' + esc(candidateName(key)) + '</option>'; });
+    fields += '</select><label for="lineage-terms">' + esc(FB.T('Local obligations')) + '</label><select class="select" id="lineage-terms">';
+    const offers = [p.terms, { levy:Math.min(0.4, p.terms.levy), revenue:Math.min(0.4, p.terms.revenue) }];
+    offers.forEach(function (terms, index) {
+      fields += '<option value="' + index + '"' + (JSON.stringify(terms) === JSON.stringify(offer) ? ' selected' : '') + '>' +
+        esc(FB.T('Levy {levy}%; revenue {revenue}%', { levy:Math.round(terms.levy * 100), revenue:Math.round(terms.revenue * 100) })) + '</option>';
+    });
+    fields += '</select></div>' + kv('Recognition cost', esc(FB.T('{money:cost}', { cost:p.negotiationCost }))) +
+      kv('Current levy obligation', esc(FB.T('{amount}%', { amount:Math.round((data.recognition ? data.recognition.terms.levy : 0) * 100) }))) +
+      kv('Current revenue obligation', esc(FB.T('{amount}%', { amount:Math.round((data.recognition ? data.recognition.terms.revenue : 0) * 100) })));
+    if (data.vacancy && data.vacancy.status !== 'resolved') {
+      fields += action('negotiate', FB.T('Review successor’s recognition'), { action:'negotiate', candidateId:id || null, terms:offer });
+      fields += action('resolve', FB.T('Review accession'), { action:'resolve' });
+    } else {
+      fields += action('assent', FB.T('Review local assent and obligations'), { action:'obligations', candidateId:t.rulerMemberId, terms:offer });
+      fields += action('abdicate', FB.T('Review relinquishing kingship'), { action:'open', cause:'abdication' });
+      fields += action('displace', FB.T('Review lawful displacement'), { action:'open', cause:'lawful_removal', candidateId:id || null });
+      const form = FBDATA.governmentForms[s.authority.governments[rid].formId];
+      (form.transformationOptions || []).forEach(function (option) {
+        fields += action('transform-' + option.formId, FB.T(option.name), { action:'transform', formId:option.formId });
+      });
+    }
+    FB.realmHeldCounties(s, rid).filter(function (pid) {
+      return !data.members.some(function (m) { return m.scope.kind === 'county' && m.scope.id === pid; });
+    }).forEach(function (pid) {
+      fields += action('enroll-' + pid, FB.T('Review local representation at {county}', { county:FB.world.byId[pid].name }), { action:'enroll', provinceId:pid });
+    });
+    h += reviewFactsCard(FB.T('Recognition and obligations'), fields) + '</div>';
+    UI.openModal(FB.T('Local kingship'), h, { modalClass:'fullsheet-modal', historyView:true,
+      historyBack:false, titleDetailsHtml:'<p>' + esc(FB.T('Weights model political influence, not universal suffrage. A vacancy preserves households and local administration; it does not create a dynasty or divide counties. Conquest requires a separate local assent.')) + '</p>' });
+    const list = $('gm-body').querySelector('[data-lineage-list]');
+    function position() { return { realmId:rid, candidateId:$('lineage-candidate').value,
+      terms:offers[Number($('lineage-terms').value)], bodyScroll:$('gm-body').scrollTop,
+      focus:document.activeElement && document.activeElement.dataset.lineageReview,
+      fieldFocus:document.activeElement && ['lineage-candidate','lineage-terms'].indexOf(document.activeElement.id) >= 0 ? document.activeElement.id : null,
+      details:Array.from(list.querySelectorAll('details[open]')).map(function (node) { return node.id; }) }; }
+    (view.details || []).forEach(function (key) { const node = $(key); if (node) node.open = true; });
+    $('gm-body').scrollTop = view.bodyScroll || 0;
+    if (view.fieldFocus && $(view.fieldFocus)) $(view.fieldFocus).focus({ preventScroll:true });
+    if (view.focus) { const node = list.querySelector('[data-lineage-review="' + view.focus + '"]'); if (node) node.focus({ preventScroll:true }); }
+    ['lineage-candidate','lineage-terms'].forEach(function (key) { $(key).onchange = function () { UI.showLocalKingship(position()); }; });
+    list.querySelectorAll('[data-lineage-review]').forEach(function (button) {
+      button.onclick = function () {
+        if (button.disabled) return;
+        const pos = position(), q = decisions[button.dataset.lineageReview];
+        pos.focus = button.dataset.lineageReview;
+        function back() { UI.showLocalKingship(pos); }
+        let facts = kv('Payment on acceptance', esc(FB.T('{money:cost}', { cost:q.cost }))) +
+          kv('Candidate', esc(candidateName(q.request.candidateId || q.winnerId || t.rulerMemberId)));
+        if (q.request.terms) facts += kv('Levy obligation', esc(FB.T('{amount}%', { amount:Math.round(q.request.terms.levy * 100) }))) +
+          kv('Revenue obligation', esc(FB.T('{amount}%', { amount:Math.round(q.request.terms.revenue * 100) })));
+        q.responses.forEach(function (row) { facts += kv(interestName(row.memberId), esc(row.reason ? S.reason(row.reason) : FB.T('Recognizes this candidate on the offered terms'))); });
+        const consequence = q.request.action === 'open' ? FB.T('Opening a vacancy begins selection immediately. Private property stays with its owners; royal demands stop until accession.') :
+          q.request.action === 'withdraw' ? FB.T('This interest withdraws recognition without payment. Public demands stop wherever the remaining assent is insufficient.') :
+          q.request.action === 'support' ? FB.T('This interest records its support or refusal without payment. Recognition creates no private land rights.') :
+          q.request.action === 'transform' ? FB.T('The court adopts the reviewed government. Existing households, rights, institutions and commitments retain their records. The target form’s declared systems become available.') :
+          q.request.action === 'enroll' ? FB.T('This county gains a local interest in the constituency. Enrollment grants no tax right or leadership; obtain assent separately.') :
+          q.request.action === 'resolve' ? FB.T('The recognized eligible candidate accedes once. No private land or household property is awarded.') :
+          FB.T('The quoted payment funds negotiation even if interests withhold support. Only accepted local obligations can authorize public demands.');
+        UI.openModal(FB.T('Review local kingship decision'), reviewFactsCard(FB.T('Decision terms'), facts) +
+          reviewActionCardHtml({ id:'lineage-confirm', label:FB.T('Confirm decision'), detailsId:'lineage-confirm-details', note:consequence,
+            details:'<p>' + esc(consequence) + '</p>' }), { modalClass:'fullsheet-modal', historyView:true, historyBack:true, historyBackRender:back });
+        $('lineage-confirm').onclick = function () {
+          const result = s === FB.state && S.apply(s, q);
+          markActionsDirty();
+          UI.openModal(result ? FB.T('Decision recorded') : FB.T('Terms changed'), '<p>' +
+            esc(result ? FB.T('The decision is recorded. Local recognition and property retain their separate rules.') :
+              FB.T('Review the current terms again. Nothing was spent.')) + '</p><button type="button" class="actionbtn" id="lineage-continue">' +
+            esc(FB.T('Continue')) + '</button>', { replaceView:true });
+          $('lineage-continue').onclick = function () {
+            if (result && (q.request.action === 'transform' || !S.state(s, rid))) { UI.closeModal(); UI.refresh(); }
+            else modalHistoryBack(back);
+          };
+        };
+      };
+    });
+  };
   function officeActor(s) {
     return FB.station.rulesRealm(s.player, s) ? { kind:'realm', id:'player' } :
       { kind:'character', id:s.player.charId };

@@ -2064,3 +2064,13 @@ A political track saves its authored stage id in the existing phase field. The d
 Government strategy integration
 
 Government dispatch adds no saved fields or schema revision. Saved form ids and optional court policy ids select validated implementations. Derived per-day resolution lives in a WeakMap and is recreated for restored states. Office and acclamation remain explicit dynastic delegations; restore never manufactures an election or constituency.
+
+Optional government selection records
+
+authority.governments[realmId].selection is an optional typed record with schema 1, profileId, originRealmId, roots, members, revision, vacancy, recognition and optional lastPeriod. It is an additive subsystem record, with no envelope, platform or authority version change. Selection initialization happens only during fresh world creation. Missing records remain missing on detached migration and restore; no kin, supporter, vote or initial recognition is backfilled into old campaigns.
+
+Members have stable id/templateId, typed principal, typed realm/county scope, authority basis, weight and continuity. A vacancy holds its opening generation, cause, turn, bounded candidate ids, one vote per interest, status and accessionId. Recognition holds generation, memberId, accepted county scopes, levy/revenue terms and the consenting principals. Canonical royal member ids retain genealogy; quotes and derived eligibility are never saved. Previous selection state can remain dormant after a reviewed change of form. Validation rejects unknown fields, broken references, duplicate or excessive members, invalid weights/terms, inconsistent resolutions and malformed votes before adopting the detached state.
+
+Historical character principals may outlive ordinary character compaction. Their typed ids retain the recorded decision but grant nothing without the same current living principal. Fixed template principals must match their declaration; royal members, county scopes and institution definitions remain validated references.
+
+originRealmId preserves authored kin identities while a protagonist holds the court under the player realm key. Validation accepts that original authored prefix and the institutional/player aliases for borrowed branches, while retaining canonical source-member checks. Existing royal birth registration and the single annual court mortality pass also serve the adopted kin graph; household mortality retains its existing complementary scope. Household succession releases the public court before political selection can install another ruler.

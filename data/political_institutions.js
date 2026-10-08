@@ -158,6 +158,19 @@ FBDATA.federateMigrations = FBDATA.bookmarkRegions476.dalmatia_east.migrations;
    realms of the form, read through FB.balanceFor at realm-scoped sites; it
    sits over the era layer and beneath the bookmark and mod layers. */
 FBDATA.governmentForms = {
+  lineage_kingship:{ holders:'direct', succession:'kin_acclamation', territory:'fixed',
+    consent:'local_reserved', levy:'local_obligations', revenue:'local_obligations',
+    council:'local_interests', diplomacy:'territorial_diplomacy', ai:'local_kingship', ladder:'local_standing',
+    transformationOptions:[{ formId:'regnum', name:'Review settled dynastic government' }],
+    officeCatalogue:[], systems:{ disable:['roman_offices','feudal_service','estates','royal_council','scutage','manorial_tenure','colonate'] },
+    selectionProfile:{ eligibility:{ minAge:16 }, tieBreak:'seniority', consensus:0.6, quorum:0.6, negotiationCost:8,
+      terms:{ levy:0.6, revenue:0.65 }, reserved:['levy','war','treaty','grant','extraordinary_tax'],
+      members:[
+        { id:'royal_kin_interest', name:'Recognized royal kin', principal:'senior_kin', scope:'realm', basis:'kin_recognition',
+          weight:3, continuity:'senior_kin', minimumSupport:-15, minimumMartial:0, maximumLevy:0.8, maximumRevenue:0.8 },
+        { id:'county_household_interest', name:'Local households', principal:'capital_community', scope:'capital', basis:'community_assent',
+          weight:3, continuity:'institution', minimumSupport:-5, minimumMartial:0, maximumLevy:0.7, maximumRevenue:0.7 }
+      ] } },
   territorial:{ legalTradition:{ default:'faith', cultures:{ greek:'byzantine' },
     realms:{ byzantium:'byzantine', byzantium_1066:'byzantine' } }, levy:'feudal_levy', revenue:'demesne_revenue', council:'royal_council', diplomacy:'territorial_diplomacy', holders:'feudal_vassals', succession:'dynastic',
     territory:'fixed', consent:'territorial', ladder:'inherited_ladder', ai:'federate_contracts', systems:{ enable:['feudal_service'] } },

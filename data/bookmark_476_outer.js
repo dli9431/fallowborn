@@ -5,6 +5,7 @@ window.FBDATA = window.FBDATA || {};
 FBDATA.bookmarkRegions476 = FBDATA.bookmarkRegions476 || {};
 FBDATA.bookmarkRegions476['outer'] = {
   provinces:[
+    {"id":"cashel","name":"Cashel district","realm":"cashel_local_476","culture":"gaelic","religion":"nicene","dev":1,"communities":[{"culture":"gaelic","religion":"nicene","populationShare0":10000}]},
     {"id":"exeter","name":"Isca Dumnoniorum","names":[{"to":649,"name":"Isca Dumnoniorum","from":400}],"realm":"dumnonia_476","culture":"brittonic","religion":"nicene","dev":2,"customaryRights":[{"power":"peace","basis":"possession"},{"power":"revenue","basis":"possession"}],"communities":[{"culture":"brittonic","religion":"nicene","populationShare0":10000}]},
     {"id":"cornwall","name":"Dumnonian west","names":[{"to":649,"name":"Dumnonian west","from":400}],"realm":"dumnonia_476","culture":"brittonic","religion":"nicene","dev":1,"customaryRights":[{"power":"peace","basis":"possession"},{"power":"revenue","basis":"possession"}],"communities":[{"culture":"brittonic","religion":"nicene","populationShare0":10000}]},
     {"id":"dorset","name":"Durnovaria","names":[{"to":649,"name":"Durnovaria","from":400}],"realm":"dumnonia_476","culture":"brittonic","religion":"nicene","dev":1,"customaryRights":[{"power":"peace","basis":"possession"},{"power":"revenue","basis":"possession"}],"communities":[{"culture":"brittonic","religion":"nicene","populationShare0":10000}]},
@@ -112,6 +113,14 @@ FBDATA.bookmarkRegions476['outer'] = {
     {"id":"rasht","name":"Caspian forest communities","names":[{"to":649,"name":"Caspian forest communities","from":400}],"realm":"sasanian_476","culture":"persian","religion":"zoroastrian","dev":1,"customaryRights":[{"power":"peace","basis":"possession"},{"power":"revenue","basis":"possession"}],"communities":[{"culture":"persian","religion":"zoroastrian","populationShare0":9000},{"culture":"syriac","religion":"east_syriac","paired":true,"populationShare0":1000}]}
   ],
   realms:[
+    { id:'cashel_local_476', name:'Cashel Local Kingship', capital:'cashel', color:'#74894f', rank:1,
+      aggression:0, government:'lineage_kingship', religion:'nicene', techTraditions:['latin'],
+      ruler:{ generated:true, sex:'m', culture:'gaelic', born:440, mar:7, trait:'patient' },
+      royalCourt:{ founderId:'local_ancestor', rulerFatherId:'local_ancestor', members:[
+        { id:'local_ancestor', generated:true, sex:'m', born:410, culture:'gaelic', religion:'nicene', alive:false, died:470 },
+        { id:'local_collateral', generated:true, sex:'m', born:443, culture:'gaelic', religion:'nicene', fatherId:'local_ancestor', homeProvinceId:'cashel', mar:6 },
+        { id:'local_offspring', generated:true, sex:'m', born:459, culture:'gaelic', religion:'nicene', fatherId:'ruler', homeProvinceId:'cashel', mar:4 }
+      ] } },
     {"id":"dumnonia_476","name":"Dumnonian Communities","capital":"exeter","color":"#648773","rank":2,"aggression":0,"government":"regnum","religion":"nicene","techTraditions":["latin"],"governingIdentity":{"eliteCultureId":"brittonic","eliteFaithId":"nicene","legalIdentityId":"british_custom_476","tolerance":"tolerant","taxation":"equal","justicePolicy":"personal"},"ruler":{"generated":true,"sex":"m","culture":"brittonic","born":440,"mar":7,"trait":"patient"}},
     {"id":"british_interior_476","name":"Interior British Communities","capital":"shrewsbury","color":"#8d875c","rank":2,"aggression":0,"government":"regnum","religion":"nicene","techTraditions":["latin"],"governingIdentity":{"eliteCultureId":"brittonic","eliteFaithId":"nicene","legalIdentityId":"british_custom_476","tolerance":"tolerant","taxation":"equal","justicePolicy":"personal"},"ruler":{"generated":true,"sex":"m","culture":"brittonic","born":440,"mar":7,"trait":"patient"}},
     {"id":"welsh_britons_476","name":"Western British Communities","capital":"gwynedd","color":"#5e7996","rank":2,"aggression":0,"government":"regnum","religion":"nicene","techTraditions":["latin"],"governingIdentity":{"eliteCultureId":"brittonic","eliteFaithId":"nicene","legalIdentityId":"british_custom_476","tolerance":"tolerant","taxation":"equal","justicePolicy":"personal"},"ruler":{"generated":true,"sex":"m","culture":"brittonic","born":440,"mar":7,"trait":"patient"}},
@@ -130,6 +139,7 @@ FBDATA.bookmarkRegions476['outer'] = {
     {"id":"sasanian_476","name":"Sasanian Empire","capital":"baghdad","color":"#a46579","rank":4,"aggression":0,"government":"regnum","religion":"zoroastrian","techTraditions":["persianate"],"governingIdentity":{"eliteCultureId":"persian","eliteFaithId":"zoroastrian","legalIdentityId":"sasanian_custom_476","tolerance":"tolerant","taxation":"equal","justicePolicy":"personal"},"ruler":{"name":"Peroz","sex":"m","culture":"persian","born":430,"mar":9,"trait":"ambitious"},"royalCourt":{"dynasty":"Sasan","founderId":"yazdegerd","rulerFatherId":"yazdegerd","members":[{"id":"yazdegerd","name":"Yazdegerd II","sex":"m","born":399,"culture":"persian","religion":"zoroastrian","alive":false,"died":457},{"id":"balash","name":"Balash","sex":"m","born":435,"culture":"persian","religion":"zoroastrian","fatherId":"yazdegerd","homeProvinceId":"baghdad"}]}}
   ],
   sites:{
+    cashel_outer_476:{ x:-7.89, y:52.52, names:[{ from:400, to:649, name:'Cashel district' }] },
     "exeter_outer_476":{"x":-3.53,"y":50.72,"names":[{"from":400,"to":649,"name":"Isca Dumnoniorum"}]},
     "cornwall_outer_476":{"x":-4.75,"y":50.6,"names":[{"from":400,"to":649,"name":"Dumnonian west"}]},
     "dorset_outer_476":{"x":-2.44,"y":50.71,"names":[{"from":400,"to":649,"name":"Durnovaria"}]},
@@ -237,6 +247,7 @@ FBDATA.bookmarkRegions476['outer'] = {
     "rasht_outer_476":{"x":49.58,"y":37.05,"names":[{"from":400,"to":649,"name":"Caspian forest communities"}]}
   },
   layouts:{
+    cashel:[{ site:'cashel_outer_476', name:'Cashel district', kind:'village' }],
     "exeter":[{"site":"exeter_outer_476","name":"Isca Dumnoniorum","kind":"village"}],
     "cornwall":[{"site":"cornwall_outer_476","name":"Dumnonian west","kind":"village"}],
     "dorset":[{"site":"dorset_outer_476","name":"Durnovaria","kind":"village"}],
@@ -379,6 +390,7 @@ FBDATA.bookmarkRegions476['outer'] = {
 
   },
   climate:{
+    cashel:'northern_temperate',
     "exeter":"northern_temperate",
     "cornwall":"northern_temperate",
     "dorset":"northern_temperate",
@@ -539,7 +551,7 @@ FBDATA.bookmarkCandidates['476_outer'] = {
   geography:'europe_regional', settlementLayout:'476_outer', religiousHeads:{},
   opening:FBDATA.bookmarkRegions476.italy.opening,
   systems:FBDATA.bookmarks['476'].systems,
-  stories:FBDATA.bookmarks['476'].stories.slice(),
+  stories:FBDATA.bookmarks['476'].stories.concat(['cashel_recognition_476']),
   provinces:FBDATA.bookmarkRegions476.italy.provinces.concat(
     FBDATA.bookmarkRegions476.dalmatia_east.provinces,
     FBDATA.bookmarkRegions476.gaul_iberia.provinces,
@@ -578,7 +590,6 @@ FBDATA.bookmarkCandidates['476_outer'] = {
       {"id":"galway","name":"Galway","wasteland":true},
       {"id":"tuam","name":"Tuam","wasteland":true},
       {"id":"roscommon","name":"Roscommon","wasteland":true},
-      {"id":"cashel","name":"Cashel","wasteland":true},
       {"id":"cork","name":"Cork","wasteland":true},
       {"id":"limerick","name":"Limerick","wasteland":true},
       {"id":"halogaland","name":"Hålogaland","wasteland":true},
@@ -735,3 +746,7 @@ FBDATA.bookmarkCandidates['476_outer'] = {
   scripted:[]
 };
 FBDATA.bookmarks['476_outer'] = FBDATA.bookmarkCandidates['476_outer'];
+FBDATA.storyGovernmentSelections = {
+  cashel_recognition_476:{ id:'cashel_recognition_476', type:'government_contest', realmId:'cashel_local_476',
+    name:'Local succession at Cashel', desc:'Recognized kin seek local assent. A divided kingship preserves households and administration while public demands await recognition.' }
+};

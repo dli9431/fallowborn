@@ -1843,10 +1843,38 @@ def extract_story_courts(inv: Inventory) -> None:
                             TOKEN_RE.findall(record["text"]))
 
 
+def extract_government_selections(inv: Inventory) -> None:
+    source = DATA / "political_institutions.js"
+    forms = node_object(find_assignment(source, "FBDATA", "governmentForms")) or {}
+    rel = source.relative_to(ROOT).as_posix()
+    for form_id, form_node in forms.items():
+        form = node_object(form_node) or {}
+        profile = node_object(form.get("selectionProfile")) or {}
+        for group, rows in (("member", node_array(profile.get("members")) or []),
+                            ("transformation", node_array(form.get("transformationOptions")) or [])):
+            for row_node in rows:
+                row = node_object(row_node) or {}
+                row_id = node_string(row.get("id") or row.get("formId"))
+                for _, record, line in branch_records(row.get("name")):
+                    inv.add(f"governmentSelection.{form_id}.{group}.{row_id}.name.default",
+                            record, f"{rel}:{line}", "Government selection presentation.",
+                            TOKEN_RE.findall(record["text"]))
+    source = DATA / "bookmark_476_outer.js"
+    stories = node_object(find_assignment(source, "FBDATA", "storyGovernmentSelections")) or {}
+    rel = source.relative_to(ROOT).as_posix()
+    for story_id, story_node in stories.items():
+        story = node_object(story_node) or {}
+        for field in ("name", "desc"):
+            for _, record, line in branch_records(story.get(field)):
+                inv.add(f"governmentContest.{story_id}.{field}.default", record,
+                        f"{rel}:{line}", "Government contest presentation.", TOKEN_RE.findall(record["text"]))
+
+
 def build_inventory() -> Inventory:
     inv = Inventory()
     extract_structured(inv)
     extract_story_courts(inv)
+    extract_government_selections(inv)
     extract_lexicons(inv)
     extract_literal_aliases(inv)
     add_core_records(inv)

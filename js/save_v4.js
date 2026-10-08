@@ -121,6 +121,8 @@
       var realm = state.realms[rid], s = realm && realm.succession;
       if (!s || s.authoredCourt === undefined && s.policyId === undefined) return;
       var path = 'state.realms.' + rid + '.succession';
+      var government = state.authority && state.authority.governments && state.authority.governments[rid];
+      var authoredRealmId = government && government.selection ? government.selection.originRealmId : rid;
       if (s.authoredCourt !== undefined && s.authoredCourt !== true ||
           !plain(s.members) || !Array.isArray(s.order) || !own(s.members, s.rulerMemberId) ||
           !Number.isInteger(s.rulerGeneration) || s.rulerGeneration < 1 ||
@@ -160,7 +162,7 @@
             m.homeProvinceId !== undefined && !(FBDATA.provinces || []).some(function (p) { return p.id === m.homeProvinceId; })) field(where);
         if (m.localId !== undefined) {
           if (typeof m.localId !== 'string' || !/^[a-z][a-z0-9_]*$/.test(m.localId) ||
-              own(localIds, m.localId) || id !== 'royal_' + rid + '_authored_' + m.localId) field(where + '.localId');
+              own(localIds, m.localId) || id !== 'royal_' + authoredRealmId + '_authored_' + m.localId) field(where + '.localId');
           localIds[m.localId] = true;
         }
         ['parentId','fatherId','motherId','spouseMemberId'].forEach(function (key) {
@@ -199,7 +201,9 @@
           var original = source && source.succession && source.succession.members[ref.memberId];
           if (!plain(ref) || ref.realmId === rid || !original || original.branchRef ||
               !own(s.members, ref.parentId) ||
-              id !== 'royal_' + rid + '_branch_' + ref.realmId + '_' + ref.memberId ||
+              ![rid, authoredRealmId].concat(government && government.selection ? ['player'] : []).some(function (identity) {
+                return id === 'royal_' + identity + '_branch_' + ref.realmId + '_' + ref.memberId;
+              }) ||
               m.charId && m.charId !== (original.charId || FB.courtCharacterId(ref.memberId))) field(where + '.branchRef');
         }
       });
@@ -372,6 +376,7 @@
     });
     for (var rid in authority.governments) if (own(authority.governments, rid)) {
       var form = authority.governments[rid];
+      if (FB.governmentSelection && plain(form)) FB.governmentSelection.validate(state, rid, form.selection);
       if (plain(form) && typeof form.formId === 'string' &&
           !known('government', form.formId)) unknown('government', form.formId);
       if (!own(state.realms, rid) || !plain(form) ||

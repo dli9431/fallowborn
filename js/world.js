@@ -2767,6 +2767,7 @@ window.FB = window.FB || {};
     if (FB.authoritySeedCommunities)
       FB.authoritySeedCommunities(state, FBDATA.realms, FBDATA.provinces);
     if (FB.seedRealmTechnologies) FB.seedRealmTechnologies(state);
+    if (FB.governmentSelection) FB.governmentSelection.seed(state);
   };
 
   /* Group a realm's counties by duchy and hand out titles:
@@ -3569,7 +3570,10 @@ window.FB = window.FB || {};
   FB.authoredRoyalMemberSnapshot = function (state, rid, localId) {
     const r = state && state.realms && state.realms[rid];
     const s = r && r.succession;
-    return s && s.members && s.members[courtMemberId(r, 'authored_' + localId)] || null;
+    const government = state && state.authority && state.authority.governments && state.authority.governments[rid];
+    const origin = government && government.selection && government.selection.originRealmId;
+    return s && s.members && (s.members[courtMemberId(r, 'authored_' + localId)] ||
+      origin && s.members['royal_' + origin + '_authored_' + localId]) || null;
   };
 
   /* Never overwrite a record that already holds the derived id, and never
@@ -3948,7 +3952,7 @@ window.FB = window.FB || {};
     // Every compact royal house exposes one designated successor. If an
     // entire lightweight line dies out, repair it with a young collateral
     // branch instead of leaving the UI and ruler transition heirless.
-    const repairedHeir = !s.heirId ? makeHeirIfEmpty(state, r, s) : null;
+    const repairedHeir = !s.heirId && !(policy && policy.selectionManaged) ? makeHeirIfEmpty(state, r, s) : null;
     const living = memberIndex.living.filter(function (id) {
       const member = s.members[id];
       return !!member && member.alive !== false;
@@ -3965,7 +3969,11 @@ window.FB = window.FB || {};
 
   FB.ensureRealmSuccession = function (state, rid) {
     const r = state.realms[rid];
-    if (!r || !r.alive || rid === 'player') return null;
+    if (!r || !r.alive) return null;
+    if (rid === 'player') {
+      const form = FB.governments.forRealm(state, rid);
+      return form && form.use.succession.selectionManaged && r.succession && r.succession.members ? r.succession : null;
+    }
     if (r.succession && r.succession.papalElective) return r.succession;
     if (!r.ruler) {
       const cap = FB.world.byId[r.capital];
@@ -5429,7 +5437,7 @@ window.FB = window.FB || {};
     const formerPlayerAlliance = rid !== 'player' &&
       FB.areAllied(state, 'player', rid);
     FB.refreshRealmSuccession(state, rid);
-    makeHeirIfEmpty(state, r, s);
+    if (!policy.selectionManaged) makeHeirIfEmpty(state, r, s);
     const outgoing = s.rulerMemberId && s.members[s.rulerMemberId];
     if (outgoing && outgoing.reignGeneration === undefined) {
       outgoing.reignGeneration = FB.realmRulerGeneration
@@ -5459,7 +5467,7 @@ window.FB = window.FB || {};
     const recoveryLimit = Object.keys(state.chars || {}).length + 1;
     let recoveryAttempts = 0;
     while (recoveryAttempts < recoveryLimit) {
-      makeHeirIfEmpty(state, r, s);
+      if (!policy.selectionManaged) makeHeirIfEmpty(state, r, s);
       const accession = policy.accession(state, rid, { succession:s, cause:vacancy.cause });
       if (!accession || accession.realmId !== rid || accession.rulerGeneration !== s.rulerGeneration ||
           s.order.indexOf(accession.memberId) < 0) return null;
@@ -5533,7 +5541,7 @@ window.FB = window.FB || {};
       seedConsortMember(state, rid);
       if (COURT_EAGERNESS === 'court') FB.materializeRealmConsort(state, rid);
     }
-    makeHeirIfEmpty(state, r, s);
+    if (!policy.selectionManaged) makeHeirIfEmpty(state, r, s);
     FB.refreshRealmSuccession(state, rid);
     /* A temporal crown can pass to a woman even when the realm also held a
        sex-gated central religious office. Revalidate immediately so the
@@ -8026,7 +8034,13 @@ window.FB = window.FB || {};
       // realm AI
       for (const id in state.realms) {
         const r = state.realms[id];
-        if (!r.alive || id === 'player') continue;
+        if (!r.alive) continue;
+        if (id === 'player') {
+          const form = FB.governments.forRealm(state, id);
+          if (form && form.use.succession.selectionManaged && r.succession && r.succession.members)
+            tickRoyalFamily(state, id, familyLinks, r.succession, annualContext);
+          continue;
+        }
         if (timing) timing.count('World annual: realms processed');
         const papalTerritorialRealm = !!papalTerritorialIds[id];
         const papalClaimantId = papalTerritorialRealm &&

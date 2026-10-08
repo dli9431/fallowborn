@@ -59,10 +59,11 @@
     realm.id = 'player'; s.realms.player = realm; delete s.realms[id];
     /* Compact AI succession becomes the ordinary, fully materialized player
        family. Never leave a second succession engine aging that household. */
-    delete realm.succession;
+    var retainedSelection = government.rules.selectionProfile && realm.succession;
+    if (!retainedSelection) delete realm.succession;
     Object.keys(s.chars).forEach(function (cid) {
       var c = s.chars[cid];
-      if (c.royalLine && c.royalLine.realmId === id) delete c.royalLine;
+      if (!retainedSelection && c.royalLine && c.royalLine.realmId === id) delete c.royalLine;
       if (c.realmStanding) rekey(c.realmStanding, id);
     });
     Object.keys(s.owner).forEach(function (pid) {

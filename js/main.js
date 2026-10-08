@@ -5922,6 +5922,8 @@ FB.CHANGELOG = [
       (old.childrenIds || []).map(function (id) { return s.chars[id]; }))
       .some(function (child) { return child && child.id === heir.id; });
     const outgoingTier = p.tier;
+    if (FB.governmentSelection && FB.governmentSelection.releasePlayerCourt)
+      FB.governmentSelection.releasePlayerCourt(s, old, livingAbdication);
     /* Permanent holdings belong to the dynasty, not the outgoing
        protagonist. Most succession work mutates the existing player record,
        but personal and office cleanup hooks may replace collections while
@@ -6167,14 +6169,16 @@ FB.CHANGELOG = [
       const oldGeneration = s.realms.player.ruler &&
         s.realms.player.ruler.generation !== undefined
         ? s.realms.player.ruler.generation : 1;
+      const localAccession = FB.governments.forRealm(s, 'player').use.succession.selectionManaged && s.realms.player.succession &&
+        s.realms.player.succession.members[s.realms.player.succession.rulerMemberId].charId === heir.id;
       s.realms.player.ruler = {
         name: heir.name, sex: heir.sex, culture: heir.culture,
         age: FB.ageOf(heir, s.date.year),
         mar: FB.skillSnapshot(s, heir, 'mar'),
-        generation: oldGeneration + 1
+        generation: localAccession ? oldGeneration : oldGeneration + 1
       };
       s.realms.player.succession = s.realms.player.succession || { playerDynasty: true };
-      s.realms.player.succession.rulerGeneration = oldGeneration + 1;
+      s.realms.player.succession.rulerGeneration = localAccession ? oldGeneration : oldGeneration + 1;
       s.realms.player.succession.heirCharId = null;
       s.realms.player.liege = p.liege || null;
       s.realms.player.religion = heir.religion;

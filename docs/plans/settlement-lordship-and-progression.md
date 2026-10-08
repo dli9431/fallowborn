@@ -477,3 +477,6 @@ References used during design:
 - [Historical account of the office of count](https://en.wikisource.org/wiki/1911_Encyclop%C3%A6dia_Britannica/Count)
 - [Historical account of Anjou and conquest of Touraine](https://en.wikisource.org/wiki/1911_Encyclop%C3%A6dia_Britannica/Anjou)
 - [Historical account of regional baronial titles](https://en.wikisource.org/wiki/1911_Encyclop%C3%A6dia_Britannica/Baron)
+Local kingship progression
+
+local_standing preserves all eight station bands and uses the station registry for every permission. Early advancement rewards work in farming/labor, crafts, arms, learned or religious careers, or established wealth and prestige. The next standing bands grant no county purchase, automatic landed promotion, estates seat or royal council office. Kin eligibility is a canonical relationship and cannot be purchased. Existing household enterprises, religious careers, guild roles and independent local mandates retain their own progression. Its baseline capability has technology impact none.

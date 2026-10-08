@@ -147,7 +147,11 @@ FBDATA.lexicons = {
       m:['Dependent','Free Citizen','Host Notable','Veteran','Comes','Dux','Rex','Augustus'],
       f:['Dependent','Free Citizen','Host Notable','Veteran','Comitissa','Ducissa','Regina','Augusta']
     } },
-    regnum:{ terms:{ kingdom:{ one:'kingdom', other:'kingdoms' } } }
+    regnum:{ terms:{ kingdom:{ one:'kingdom', other:'kingdoms' } } },
+    lineage_kingship:{ rank:{
+      m:['Dependent','Free Householder','Notable','Local Elder','Local King','Regional King','King','Overking'],
+      f:['Dependent','Free Householder','Notable','Local Elder','Local Queen','Regional Queen','Queen','Overqueen']
+    }, terms:{ vassal:{ one:'dependent ruler', other:'dependent rulers' }, kingdom:{ one:'kingship', other:'kingships' } } }
   },
 
   faiths:{

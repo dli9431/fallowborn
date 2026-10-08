@@ -6,6 +6,7 @@
     realmIncome:function (state, rid, c) {
       return (c.tax + c.buildings) * Math.max(0, 1 + c.technology);
     },
+    buildingIncome:function (state, rid, c) { return c.amount; },
     remittance:function (state, rid, c) { return c.amount * c.share; },
     loanAssignment:function (state, rid, c) { return c.amount * c.share; }
   });

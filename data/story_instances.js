@@ -15,6 +15,7 @@
   add(FBDATA.storySettlements800, 'registrationBefore', 'western_court_476');
   add(FBDATA.storyCampaigns, 'registrationAfter', 'zeno_return_476');
   add(FBDATA.storyFoundations, 'registrationAfter', 'western_office_476');
+  add(FBDATA.storyGovernmentSelections, 'registrationAfter', 'western_office_476');
   Object.keys(FBDATA.storyCourts476 || {}).forEach(function (id) {
     if (FBDATA.storyInstances[id]) throw new Error('Duplicate story instance ' + id + '.');
     FBDATA.storyInstances[id] = FBDATA.storyCourts476[id];

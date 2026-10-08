@@ -166,6 +166,7 @@ window.FB = window.FB || {};
     var realm = state && state.realms && state.realms[rid];
     var policy = realm && realm.succession && realm.succession.policyId;
     var form = G.forRealm(state, rid);
+    if (form && form.use.succession.selectionManaged) return form.use.succession;
     return policy ? G.strategy('succession', policy) : form ? form.use.succession : G.strategy('succession', 'dynastic');
   };
 
@@ -202,6 +203,10 @@ window.FB = window.FB || {};
         return !office || !office.appointment || catalogue.indexOf(id) !== index;
       }))) errors.push(FB.T('Invalid office catalogue for government {id}.', { id:formId }));
       var ladder = forms[formId].ladder && G.strategy('ladder', forms[formId].ladder);
+      if (forms[formId].selectionProfile !== undefined && FB.governmentSelection)
+        errors.push.apply(errors, FB.governmentSelection.profileFaults(forms[formId].selectionProfile).map(function (detail) {
+          return FB.T('Invalid selection profile for government {id}: {detail}', { id:formId, detail:FB.T(detail) });
+        }));
       errors.push.apply(errors, FB.station.validateLadder(ladder, formId, true));
       errors.push.apply(errors, FB.systems.validateLayer(forms[formId].systems,
         FB.T('Government form {form}', { form:formId })));

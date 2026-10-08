@@ -98,7 +98,7 @@ for (const crazygames of [false, true]) {
             })
           };
         });
-        expect(result).toEqual({ faults:[], legal:[], technology:[], stable:true, unique:true, added:105, courts:16,
+        expect(result).toEqual({ faults:[], legal:[], technology:[], stable:true, unique:true, added:106, courts:17,
           direct:true, weighted:true, heads:true, sites:true, restoredRights:true, untouched:true,
           identity:sample[1].split('.'), offMap:true, generated:true, royalFamily:true, chapters:true, valid:true,
           reviews:['none','none','none'] });

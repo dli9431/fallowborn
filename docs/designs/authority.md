@@ -384,3 +384,8 @@ The 476 Strabo declaration uses this rule for magister_praesentalis on host_476_
 Government strategy integration
 
 Government dispatch now owns territorial Consent and typed levy, war, treaty and grant decision hooks. FB.political.consent projects the selected strategy and its constituency reference; existing contracts, council thresholds and authority transactions remain canonical. No constituency state is added. See docs/designs/governments.md for context fields and default delegations.
+Local acclamation
+
+A lineage kingship's county umbrella is distinct from kin membership, private ownership and public jurisdiction. Current generation, living ruler, valid principals and accepted obligations determine local_acclamation power. Existing independent appointments, commands and customary rights with a substantive legal basis retain their own rules. Mere territorial possession cannot replace local recognition. Levy, war, treaty, grant and extraordinary tax consent read the form's declared reserved operations. Public revenue and recruitment use negotiated fractions, while household estate production survives a vacancy.
+
+Enrollment adds a bounded county community interest only after the ruler controls and directly holds the county. It requires another assent transaction before public duties apply there. A reviewed transformation may select only a declared target form and preserves rights, agreements, local institutions and private property. Direct form replacement cannot bypass this review for a selection-managed court.

@@ -26,6 +26,8 @@ FBDATA.deedSections = [
     label:'✝ Church dealings', subhead:'Bishoprics and patriarchates' },
   { id:'offices', type:'deeds', order:106, layout:'both', system:'roman_offices',
     label:'🏛 Offices & Legitimacy', subhead:'Appointments and imperial claims' },
+  { id:'local_kingship', type:'deeds', order:108, layout:'both',
+    label:'👑 Local kingship', subhead:'Kin, recognition and obligations' },
   { id:'realm', type:'deeds', order:110, layout:'theme',
     label:'👑 Rank & Realm', subhead:'One-time deeds' },
   { id:'war', type:'deeds', order:120, layout:'theme',
@@ -306,6 +308,9 @@ FBDATA.deeds = [
   { id:'offices_legitimacy', label:'🏛 Offices and legitimacy…', order:90,
     desc:'Review held offices, seek a scoped appointment, or recognize and contest an imperial claimant.',
     section:'offices', group:'offices', flow:'choices', handler:'offices_legitimacy', systems:['roman_offices'] },
+  { id:'local_kingship', label:'👑 Local kingship…', order:90.5,
+    desc:'Review eligible kin, local interests, succession and the levy and revenue obligations they recognize.',
+    section:'local_kingship', group:'realm', flow:'choices', handler:'local_kingship' },
   { id:'seek_station', availableWhileTraveling:true, label:'🏛 Seek station recognition', order:91,
     section:'realm', group:'realm', flow:'choices', handler:'seek_station' }
 ];

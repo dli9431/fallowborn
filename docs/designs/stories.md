@@ -169,3 +169,6 @@ js/story_track.js provides political_track with service_negotiation, civic_manda
 Future save evolution
 
 Keep each released instance id stable and store only typed progress, cast references, turn stamps, reviewed plans and transaction ids. New story formats should carry a small explicit record schema version. Use the type migration hook on the detached save copy only when a released format changes; migrate facts, validate the target and never replay initialization, grants or payments. Changing prose or refactoring a factory does not need a migration. Adding a version field to an existing frozen record requires the ordinary scoped contract review.
+Government contests
+
+government_contest is registered by js/story_government_selection.js. A data instance declares realmId, name and desc; its only saved fact is the institutional realm reference. The card appears for contested, minority, vacant or resolved canonical selections. It reads governmentSelection without opening a second vacancy, creating people, scheduling a second succession or allocating property. Realm adoption and release remap this reference with the public court. Restore validates the reference and never initializes a missing story.

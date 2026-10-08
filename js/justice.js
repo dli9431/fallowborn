@@ -738,8 +738,12 @@
       if (def.kind === 'corporal') {
         FB.addTrait(person(s, target), 'one_eyed');
         FB.addTrait(person(s, target), 'maimed');
-        if (target === s.player.charId && FB.station.isLanded(s.player, s)) FB.loseAllLand(s, {});
-        else if (realmOf(s, target)) FB.advanceRealmSuccession(s, realmOf(s, target));
+        var deposedRealm = realmOf(s, target);
+        if (deposedRealm === 'player' && FB.governmentSelection && FB.governmentSelection.profile(s, deposedRealm)) {
+          var removal = FB.governmentSelection.quote(s, deposedRealm, { action:'open', cause:'lawful_removal', actor:{ kind:'realm', id:deposedRealm } });
+          if (removal.allowed) FB.governmentSelection.apply(s, removal);
+        } else if (target === s.player.charId && FB.station.isLanded(s.player, s)) FB.loseAllLand(s, {});
+        else if (deposedRealm) FB.advanceRealmSuccession(s, deposedRealm, { cause:'lawful_removal' });
       }
       if (def.kind === 'exile') exile(s, p);
       if (def.kind === 'penance') {

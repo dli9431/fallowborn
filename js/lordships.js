@@ -286,7 +286,9 @@ window.FB = window.FB || {};
     } else profileCount('fiscal county input cache hits');
     const support = input.support;
     const bonus = function (name) { return FB.buildingBonusAt ? FB.buildingBonusAt(state, pid, slot, name) : 0; };
-    const building = militaryOnly ? 0 : bonus('tax') * support;
+    const building = militaryOnly ? 0 : FB.governments.call(state, governmentRealm, 'revenue', 'buildingIncome', {
+      provinceId:pid, settlement:slot, holder:holder, amount:bonus('tax') * support
+    }, government);
     const factor = capacity.multiplier * countyPenalty;
     const tax = base * factor, tolls = building * factor;
     const gross = tax + tolls;

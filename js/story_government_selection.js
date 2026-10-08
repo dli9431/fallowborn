@@ -1,0 +1,31 @@
+/* A contest card references the canonical government vacancy. It creates no
+   rival candidates, elections, incumbents, property or succession scheduler. */
+(function () {
+  'use strict';
+  function validateDefinition(def) {
+    if (!def || typeof def.realmId !== 'string' || typeof def.name !== 'string' || typeof def.desc !== 'string')
+      throw new Error(FB.T('A government contest needs a court, name and description.'));
+  }
+  FB.stories.registerType('government_contest', function (def) {
+    validateDefinition(def);
+    return { id:def.id, kind:'world', requires:def.requires || [],
+      appliesTo:function (s) { return !!FB.governmentSelection.state(s, def.realmId); },
+      init:function () { return { realmId:def.realmId }; },
+      validate:function (rec, s) {
+        if (!rec || Object.keys(rec).length !== 1 || typeof rec.realmId !== 'string' || !s.realms[rec.realmId])
+          throw new Error(FB.T('Invalid government contest reference.'));
+      },
+      title:function (s) { return FB.dataText(s, null, 'governmentContest', def.id, def, 'name', {}); },
+      intro:function (s) { return FB.dataText(s, null, 'governmentContest', def.id, def, 'desc', {}); },
+      status:function (s, rec) {
+        var data = FB.governmentSelection.state(s, rec.realmId), v = data && data.vacancy;
+        if (!v || ['contested','vacant','minority','resolved'].indexOf(v.status) < 0) return null;
+        var names = { contested:FB.T('Local recognition is divided'), vacant:FB.T('No eligible successor'),
+          minority:FB.T('Recognized kin are still minors'), resolved:FB.T('Local accession recorded') };
+        return { phase:v.status === 'resolved' ? 'resolved' : 'active', name:names[v.status],
+          lines:[FB.T('{count} eligible adult candidates; households and local administration continue.',
+            { count:FB.governmentSelection.candidates(s, rec.realmId).length })] };
+      }
+    };
+  }, 'js/story_government_selection.js', validateDefinition);
+})();
