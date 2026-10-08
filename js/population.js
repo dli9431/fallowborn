@@ -2333,6 +2333,38 @@ window.FB = window.FB || {};
     return { count:moved, cohorts:copyCommunities(requested) };
   };
 
+  /* Conserved exchange with an external civilian/fighter pool. Preview never
+     repairs a county or allocates an identity. The caller owns the pool. */
+  FB.populationPoolQuote = function (state, pid, pool, count, direction) {
+    var rec = state && state.population && state.population.counties[pid];
+    if (!rec || !Array.isArray(pool) || !Number.isSafeInteger(count) || count <= 0 ||
+        [1,-1].indexOf(direction) < 0 || pool.some(function (c) {
+          return !c || !Number.isSafeInteger(c.count) || c.count <= 0 ||
+            !FBDATA.cultures[c.culture] || !(FBDATA.religions[c.religion] || state.faiths && state.faiths[c.religion]);
+        })) return null;
+    var available = direction === 1 ? communityTotal(pool) : Math.max(0, rec.count - populationFloor());
+    if (count > available) return null;
+    return { provinceId:pid, direction:direction, count:count,
+      cohorts:allocatedCommunityCohorts(direction === 1 ? pool : rec.communities, count),
+      signature:JSON.stringify([rec, pool]) };
+  };
+  FB.populationPoolApply = function (state, pool, reviewed) {
+    if (!reviewed) return false;
+    var q = FB.populationPoolQuote(state, reviewed.provinceId, pool, reviewed.count, reviewed.direction);
+    if (!q || JSON.stringify(q) !== JSON.stringify(reviewed)) return false;
+    var rec = state.population.counties[q.provinceId], before = rec.communities;
+    rec.communities = mergeCohorts(before, q.cohorts, q.direction);
+    carrySettlementPartition(before, rec.communities);
+    if (q.direction === 1) placeSettlementArrivals(state, q.provinceId, rec, q.cohorts, rec.count + q.count, null);
+    rec.count += q.direction * q.count;
+    rec.migration = (rec.migration || 0) + q.direction * q.count;
+    var next = mergeCohorts(pool, q.cohorts, -q.direction);
+    pool.splice.apply(pool, [0, pool.length].concat(next));
+    repairCountyRecord(state, provinceDef(q.provinceId), rec, stateYear(state));
+    assertPopulationCommunities(state, [q.provinceId], 'external population pool');
+    return true;
+  };
+
   /* Declarative events name an amount or share plus an optional culture-faith
      filter; they never assemble mutable cohort rows themselves. Keep that
      selection at the population boundary so migration, resettlement, and

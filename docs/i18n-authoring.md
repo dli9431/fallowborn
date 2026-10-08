@@ -220,3 +220,7 @@ Selection interest and transformation names are extracted from governmentForms i
 Assembly display owners
 
 The extractor reads assemblyOpenings names as assemblyOpening.<id>.name, assemblyCounties names and settlement names as assemblyCounty.<id> display fields, and constituencyProfiles member names as constituencyMember.<profile>.<member>.name. Runtime member labels use dataText with the same owner. Opening representative names are proper names and are not extracted. Engine cards use FB.T and durable delegation news uses FB.msg; saved mandate and decision records contain no rendered prose.
+
+Mobile opening presentation
+
+The typed mobileBookmarkPresentation and mobileScenarioPresentation tables in data/mobile_confederations.js supply the new bookmark and scenario display fields. extract_mobile_presentations routes them to the ordinary bookmark and scenario keys without executing data scripts. Coalition UI uses literal FB.T patterns, lexicons use the existing government extraction route, and news.mobile.decision stores an opaque message descriptor with proper-name references and numeric following size. No generated catalog is changed on this feature branch.

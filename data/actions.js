@@ -122,6 +122,8 @@ FBDATA.focuses = [
 ];
 
 FBDATA.deeds = [
+  { id:'mobile_coalition', label:'Mobile coalition', icon:'🐎', desc:'Review a mobile following, its members, access agreements and conserved people.',
+    section:'realm', group:'realm', flow:'choices', handler:'mobile_coalition' },
   { id:'community_assembly', label:'Local assembly', icon:'🏛',
     desc:'Review the local mandate, represented interests and reserved decisions.',
     section:'realm', group:'realm', flow:'choices', handler:'community_assembly' },

@@ -3481,6 +3481,7 @@ FB.CHANGELOG = [
     if (FB.ensurePopulationState) FB.ensurePopulationState(state);
     if (FB.ensureMarket) FB.ensureMarket(state);
     if (FB.treasuryInitialize) FB.treasuryInitialize(state);
+    if (FB.mobileInitialize) FB.mobileInitialize(state, FBDATA.realms);
     if (FB.localFolkArrive) FB.localFolkArrive(state, provId);
     if (FB.ensureSettlementLordships) FB.ensureSettlementLordships(state, { fresh:true });
     if (FB.station.isBaron(sc, state) && !FB.initializeBaronyStart(state)) {
@@ -3681,6 +3682,7 @@ FB.CHANGELOG = [
     if (FB.ensurePopulationState) FB.ensurePopulationState(state);
     if (FB.ensureMarket) FB.ensureMarket(state);
     if (FB.treasuryInitialize) FB.treasuryInitialize(state);
+    if (FB.mobileInitialize) FB.mobileInitialize(state, FBDATA.realms);
     if (FB.ensureSettlementLordships) FB.ensureSettlementLordships(state, { fresh:true });
     if (FB.ensureFaithStandingBaselines) {
       FB.ensureFaithStandingBaselines(state);
@@ -4010,6 +4012,7 @@ FB.CHANGELOG = [
         if (FB.stories) FB.stories.year(s);
       }
       if (FB.federatePrepareDay) FB.federatePrepareDay(s);
+      if (FB.mobileDay) FB.mobileDay(s);
       FB.armyTick(s);
       if (FB.federateDay) FB.federateDay(s);
       if (FB.stories) FB.stories.day(s);
@@ -4120,6 +4123,7 @@ FB.CHANGELOG = [
     FB.fiscalDay(s);
     birthTick(s);
     if (FB.federatePrepareDay) FB.federatePrepareDay(s);
+    if (FB.mobileDay) FB.mobileDay(s);
     FB.armyTick(s); // hosts march and fight on the map every day
     if (FB.federateDay) FB.federateDay(s);
     if (FB.stories) FB.stories.day(s);

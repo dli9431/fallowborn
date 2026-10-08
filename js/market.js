@@ -1043,6 +1043,12 @@
     return { stock:row[0][at], price:quotedMarketPrice(state, market, pid, at), demand:demand,
       reserve:demand * balance('marketReserveSeasons', 2) };
   };
+  /* Political review must not initialize or repair the market. */
+  FB.marketProvisionSnapshot = function (state, pid) {
+    const market = state && state.market, at = market && market.goods.indexOf('provisions');
+    const row = market && market.counties[pid];
+    return row && at >= 0 ? {stock:row[0][at],price:quotedMarketPrice(state,market,pid,at)} : null;
+  };
   FB.marketWithdrawProvisions = function (state, pid, amount) {
     const market = FB.ensureMarket(state), at = market.goods.indexOf('provisions');
     const row = market.counties[pid];

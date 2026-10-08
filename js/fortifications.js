@@ -705,7 +705,7 @@ window.FB = window.FB || {};
     }
     for (i = 0; i < allocations.length; i++) {
       var hostLosses = FB.applyHostLosses
-        ? FB.applyHostLosses(allocations[i].host, allocations[i].amount)
+        ? FB.applyHostLosses(allocations[i].host, allocations[i].amount, state)
         : { total:0 };
       mergeLosses(losses, hostLosses);
       if (FB.noteCohortLosses) {

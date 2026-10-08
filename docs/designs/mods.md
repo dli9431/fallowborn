@@ -364,3 +364,7 @@ constituencyProfiles is a public keyed table merged and validated with the detac
 Public administration profiles
 
 administrationProfiles is an allowed JSON mod root with atomic record replacement. Profiles choose existing public offices, qualification-independent appointment cost, personal term/confirmation, source-capped salary or revenue/service terms, and dynastic/designation/recognition eligibility and interests. A form declares administrationProfileId; an explicit fresh realm declaration can choose a dated override. Validation checks the merged effective forms/profiles before mutation. No profile imports engine source or branches on historical realm identity. See docs/MODDING.md and docs/designs/administrative-monarchy.md.
+
+Mobile declarations
+
+mobileProfiles is a validated replace/merge table. A mobile realm must explicitly choose mobile_confederation and declare its profile, origin, target, distinct patron, initial food, fighters, treasury, culture and faith. Profiles specify adult age, majority threshold, bounds, member weights/population/pledges, recruitment and supply rates, seasonal terms, livelihood counties and a registered fixed territorial settlement form. Zero or negative people, excessive bounds, duplicate members and moving settlement forms fail validation. Existing identities, dates and terrain never infer a mobile polity.

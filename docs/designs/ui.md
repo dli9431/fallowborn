@@ -3717,3 +3717,7 @@ js/ui_assembly.js uses the shared review fact, person and action cards. It retai
 Public administration reviews
 
 The Public administration deed opens a shared full-sheet review for profile, court, office, productive source, incumbent and sovereign candidate. Current treasury, qualifications, powers, fee, salary/share, term, private property distinction, service, remittance and arrears remain visible before a decision. Mutations require a concrete second review and reject changed terms. Existing review cards, person cards, accessible native selects and details buttons retain selection, open disclosure, scroll and focus on Back/Escape and outcome return. All chrome uses the shared localization paths; profile and office display fields are structured data. See docs/designs/administrative-monarchy.md.
+
+Mobile coalition review
+
+The Mobile coalition Deed uses shared governance fact cards, person cards, action cards and modal history. It labels the court/civilian camp, separate field host, civilian following, resting fighters, local inhabitants, ownership, treasury and both camp and carried food. Proposal, member assent, outside acceptance and execution are distinct actions. Immediate costs and the first concrete blocker remain visible. Review and result sheets preserve inputs, body/list scroll, expanded shared disclosures and the originating focus through Back, Escape and Continue. A stale confirmation spends nothing and transfers no people.

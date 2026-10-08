@@ -87,6 +87,7 @@
     if (FB.validateReligionInstitutionState) FB.validateReligionInstitutionState(state);
     if (FB.validateHistoricalHolyWarState) FB.validateHistoricalHolyWarState(state);
     if (FB.governments.support) FB.governments.support.validate(state);
+    if (FB.mobile) FB.mobile.validate(state);
     if (plain(state.start)) {
       if (typeof state.start.id !== 'string' || !state.start.id) field('state.start.id');
       if (!own(FBDATA.bookmarks, state.start.id)) throw new Error(FB.T(

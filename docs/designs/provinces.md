@@ -626,3 +626,7 @@ The 476 eastern region declares distinct Gepid and Isaurian cultures through the
 Optional wider 476 content
 
 476_outer reuses the retained europe_regional seed grid and terrain but independently inhabits 105 formerly unauthored cells. Its county labels, community weights, development, dated physical-site heads, title memberships and climate assignments are literal region data. District labels replace later foundations, and former Roman city names do not imply surviving urban scale. New crossing pairs use the existing explicit class table. The original 476 map and layout remain separately addressable for older saves. No geometry, settlement compiler or runtime map change is needed. The regional design and research record are in situation-476.md and ../research/476-bookmark.md.
+
+Mobile population boundary
+
+populationPoolQuote and populationPoolApply exchange exact culture-faith cohorts between an initialized county and a caller-owned external pool. Reviews preserve the local floor and remain pure. Apply rechecks the county and pool, updates county migration and settlement partitions, and preserves the combined headcount. Mobile following pools are separate from settled local inhabitants. Seasonal access never changes sovereignty or county holders. See docs/designs/mobile-confederation.md.

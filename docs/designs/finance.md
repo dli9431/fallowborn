@@ -582,3 +582,7 @@ Community profiles bound local public income, levy contributions and protected r
 Source-backed public remuneration
 
 Public office remuneration is paid from the same treasury that receives the referenced county receipts through the ordinary fiscal path. Actual salaries/revenue shares debit that payer and credit the officer once per period; projected household income never performs a second credit. Local pay precedes remittance, withholding creates real recoverable arrears, and audit/repayment/confirmation have separate reviewed consequences. Missing/inactive treasuries cannot issue pay. Ended assignments retain real arrears, while private estates and enterprises retain their existing income. See docs/designs/administrative-monarchy.md for source caps, conservation and accounting order.
+
+Mobile coalition accounts
+
+Coalition and private household money remain separate. Recruitment costs debit the real coalition treasury. Bilateral access, tribute and protection debit the actual agreed payer and credit the other court once on acceptance. Food trading exchanges real local market stock with real treasury payment; stock movement inside an owned county makes no payment to the same treasury. Local personal service pays the actual household once per day from the coalition treasury and consumes food. A countyless coalition receives no demesne income or phantom county levy.
