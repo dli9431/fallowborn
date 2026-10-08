@@ -790,6 +790,21 @@ def extract_structured(inv: Inventory) -> None:
                         f"data/assembly_polities.js:{line}", "Local represented interest.",
                         TOKEN_RE.findall(record["text"]))
 
+    aristocratic_path = DATA / "aristocratic_courts.js"
+    for profile_id, profile_node in (node_object(find_assignment(aristocratic_path, "FBDATA", "aristocraticProfiles")) or {}).items():
+        profile = node_object(profile_node) or {}
+        for branch, record, line in branch_records(profile.get("name")):
+            inv.add(f"aristocraticProfile.{profile_id}.name.{branch}", record,
+                    f"data/aristocratic_courts.js:{line}", "Royal court display name.", ())
+        for member_node in node_array(profile.get("interests")) or []:
+            member = node_object(member_node) or {}
+            member_id = node_string(member.get("id"))
+            if not member_id:
+                continue
+            for branch, record, line in branch_records(member.get("name")):
+                inv.add(f"aristocraticInterest.{profile_id}.{member_id}.name.{branch}", record,
+                        f"data/aristocratic_courts.js:{line}", "Hereditary interest display name.", ())
+
     for data_name, namespace in STRUCTURED_DATA.items():
         if data_name == "tech":
             rel = TECHNOLOGY_FILE.relative_to(ROOT).as_posix()
@@ -837,6 +852,12 @@ def extract_structured(inv: Inventory) -> None:
         root = node_object(find_assignment(path, "FBDATA", data_name)) or {}
         rel = path.relative_to(ROOT).as_posix()
         entries = [(item_id, item_node, rel) for item_id, item_node in root.items()]
+        supplemental = {"authorityOffices": "aristocraticOffices",
+                        "administrationProfiles": "aristocraticAdministrationProfiles"}.get(data_name)
+        if supplemental:
+            supplemental_root = node_object(find_assignment(aristocratic_path, "FBDATA", supplemental)) or {}
+            entries.extend((item_id, item_node, "data/aristocratic_courts.js")
+                           for item_id, item_node in supplemental_root.items())
         # Review-only declarations still need stable localization owners.
         # Read literal data without activating the candidate or running JS.
         candidate_catalogues = {

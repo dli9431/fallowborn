@@ -185,7 +185,7 @@ window.FBMODS = window.FBMODS || [];
     schooling:true, enterprises:true, auctionLotTypes:true,
     householdStandards:true, marketGoods:true, marketEndowmentTypes:true,
     marketEndowments:true, travelPurposes:true, travelSites:true, tournaments:true,
-    finance:true, plots:true, intrigue:true, legalTraditions:true, justiceSentences:true, governmentForms:true, administrationProfiles:true, items:true, itemPools:true,
+    finance:true, plots:true, intrigue:true, legalTraditions:true, justiceSentences:true, governmentForms:true, administrationProfiles:true, aristocraticProfiles:true, items:true, itemPools:true,
     rulerTraits:true, raidingTraditions:true, councilSeats:true, constituencyProfiles:true,
     councilRules:true, politicalBlocs:true,
     policies:true, elections:true, privileges:true, collectiveDemands:true,
@@ -1632,6 +1632,7 @@ window.FBMODS = window.FBMODS || [];
     const sentences = combinedTable(FBDATA.justiceSentences, mod.justiceSentences, 'justiceSentences');
     const forms = combinedTable(FBDATA.governmentForms, mod.governmentForms, 'governmentForms');
     const profiles = combinedTable(FBDATA.administrationProfiles, mod.administrationProfiles, 'administrationProfiles');
+    const aristocraticProfiles = combinedTable(FBDATA.aristocraticProfiles, mod.aristocraticProfiles, 'aristocraticProfiles');
     const profileErrors = FB.validateAdministrationProfiles(profiles);
     if (profileErrors.length) fail('administrationProfiles', profileErrors[0]);
     const errors = FB.validateLegalTraditions(traditions, sentences, forms);
@@ -1640,12 +1641,14 @@ window.FBMODS = window.FBMODS || [];
       if (legal !== undefined && !own(traditions, legal)) fail('religions.' + id + '.properties.legalTradition', 'names an unknown tradition.');
     }
     if (errors.length) fail('legalTraditions', errors[0]);
-    if (mod.governmentForms || mod.administrationProfiles) {
+    if (mod.governmentForms || mod.administrationProfiles || mod.aristocraticProfiles) {
       const saved = FBDATA.governmentForms;
       const savedProfiles = FBDATA.administrationProfiles;
+      const savedAristocraticProfiles = FBDATA.aristocraticProfiles;
       let problems;
-      try { FBDATA.governmentForms = forms; FBDATA.administrationProfiles = profiles; problems = FB.governments.validate(); }
-      finally { FBDATA.governmentForms = saved; FBDATA.administrationProfiles = savedProfiles; }
+      try { FBDATA.governmentForms = forms; FBDATA.administrationProfiles = profiles;
+        FBDATA.aristocraticProfiles = aristocraticProfiles; problems = FB.governments.validate(); }
+      finally { FBDATA.governmentForms = saved; FBDATA.administrationProfiles = savedProfiles; FBDATA.aristocraticProfiles = savedAristocraticProfiles; }
       if (problems.length) fail('governmentForms', problems[0]);
     }
   }
@@ -1668,7 +1671,7 @@ window.FBMODS = window.FBMODS || [];
         if (own(def, 'hidden') && typeof def.hidden !== 'boolean') fail(path + '.hidden', 'must be true or false.');
       });
     }
-    if (own(mod, 'legalTraditions') || own(mod, 'justiceSentences') || own(mod, 'governmentForms') || own(mod, 'administrationProfiles') || own(mod, 'religions')) validateJustice(mod);
+    if (own(mod, 'legalTraditions') || own(mod, 'justiceSentences') || own(mod, 'governmentForms') || own(mod, 'administrationProfiles') || own(mod, 'aristocraticProfiles') || own(mod, 'religions')) validateJustice(mod);
     if (mod.constituencyProfiles) {
       const profiles = combinedTable(FBDATA.constituencyProfiles, mod.constituencyProfiles, 'constituencyProfiles');
       const problems = FB.governments.support.validateProfiles(profiles);
@@ -2037,6 +2040,7 @@ window.FBMODS = window.FBMODS || [];
     if (mod.governmentForms) { mergeTable(FBDATA.governmentForms, mod.governmentForms); FB.governments.invalidate(); }
     if (mod.constituencyProfiles) mergeTable(FBDATA.constituencyProfiles, mod.constituencyProfiles);
     if (mod.administrationProfiles) { mergeTable(FBDATA.administrationProfiles, mod.administrationProfiles); FB.governments.invalidate(); }
+    if (mod.aristocraticProfiles) { mergeTable(FBDATA.aristocraticProfiles, mod.aristocraticProfiles); FB.governments.invalidate(); }
     if (mod.religions) for (const k in mod.religions) FBDATA.religions[k] = mod.religions[k];
     if (mod.traits) for (const k in mod.traits) FBDATA.traits[k] = mod.traits[k];
     if (mod.ailments) for (const k in mod.ailments) FBDATA.ailments[k] = mod.ailments[k];

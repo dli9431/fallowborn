@@ -59,7 +59,7 @@
     realm.id = 'player'; s.realms.player = realm; delete s.realms[id];
     /* Compact AI succession becomes the ordinary, fully materialized player
        family. Never leave a second succession engine aging that household. */
-    var retainedSelection = government.rules.selectionProfile && realm.succession;
+    var retainedSelection = (government.rules.selectionProfile || government.rules.aristocraticProfileId) && realm.succession;
     if (!retainedSelection) delete realm.succession;
     Object.keys(s.chars).forEach(function (cid) {
       var c = s.chars[cid];
@@ -80,6 +80,7 @@
     references(s.stories, id);
     references(s.bookmarkSetup, id);
     rekey(s.authority && s.authority.governments, id);
+    if (retainedSelection && government.rules.aristocraticProfileId) FB.aristocracy.adopt(s,id);
     rekey(s.armyLogistics && s.armyLogistics.purses, id);
     ['realmTech','armyDown','armyDownSurvival','armyDetachmentDown','armyCohorts'].forEach(function (key) {
       rekey(s[key], id);

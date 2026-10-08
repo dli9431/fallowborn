@@ -319,6 +319,9 @@ FBDATA.deeds = [
   { id:'public_administration', label:'🏛 Public administration…', order:90,
     desc:'Review public appointments, productive revenue sources, service, audits and sovereign accession.',
     section:'administration', group:'administration', flow:'choices', handler:'public_administration', systems:['public_offices'] },
+  { id:'provincial_continuity', label:'🏛 Provincial continuity…', order:90.6,
+    desc:'Review surviving hereditary rights and an explicit return to royal recognition.',
+    section:'realm', group:'realm', flow:'choices', handler:'provincial_continuity' },
   { id:'seek_station', availableWhileTraveling:true, label:'🏛 Seek station recognition', order:91,
     section:'realm', group:'realm', flow:'choices', handler:'seek_station' }
 ];

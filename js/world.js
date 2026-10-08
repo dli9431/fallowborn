@@ -3580,7 +3580,8 @@ window.FB = window.FB || {};
     const r = state && state.realms && state.realms[rid];
     const s = r && r.succession;
     const government = state && state.authority && state.authority.governments && state.authority.governments[rid];
-    const origin = government && government.selection && government.selection.originRealmId;
+    const origin = government && (government.selection && government.selection.originRealmId ||
+      government.aristocracy && government.aristocracy.originRealmId);
     return s && s.members && (s.members[courtMemberId(r, 'authored_' + localId)] ||
       origin && s.members['royal_' + origin + '_authored_' + localId]) || null;
   };
@@ -3982,7 +3983,8 @@ window.FB = window.FB || {};
     if (FB.governments.successionForRealm(state, rid).delegatedLeadership) return null;
     if (rid === 'player') {
       const form = FB.governments.forRealm(state, rid);
-      return form && form.use.succession.selectionManaged && r.succession && r.succession.members ? r.succession : null;
+      var retainedRoyalCourt = FB.aristocracy && FB.aristocracy.state(state,rid);
+      return form && (form.use.succession.selectionManaged || retainedRoyalCourt) && r.succession && r.succession.members ? r.succession : null;
     }
     if (r.succession && r.succession.papalElective) return r.succession;
     if (!r.ruler) {

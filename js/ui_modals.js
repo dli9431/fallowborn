@@ -325,6 +325,64 @@ window.FB = window.FB || {};
     return FB.station.rulesRealm(s.player, s) ? { kind:'realm', id:'player' } :
       { kind:'character', id:s.player.charId };
   }
+  UI.showProvincialContinuity = function (view) {
+    const s = FB.state, A = FB.aristocracy, rid = s && A && A.continuityRealm(s);
+    if (!rid) return;
+    view = view || {};
+    FB.game.setPaused(true);
+    const data = A.state(s,rid), actor = officeActor(s);
+    const target = Object.keys(FBDATA.governmentForms).find(function (id) {
+      return !!FBDATA.governmentForms[id].aristocraticProfileId && !FB.governments.problems(id).length;
+    });
+    const q = target && A.conversionQuote(s,actor,rid,target);
+    let facts = kv('Court',esc(s.realms[rid].name)) + '<p>' + esc(FB.T('Surviving hereditary rights and private estates continue under the current government. Returning to royal recognition requires royal descent and every living provincial principal’s assent.')) + '</p>';
+    const probate = {};
+    data.interests.forEach(function (m) {
+      const grant = s.authority.appointments.find(function (row) { return row.id === m.appointmentId; });
+      const review = A.inheritanceQuote(s,actor,rid,m.id);
+      probate[m.id] = review;
+      facts += kv('Jurisdiction',esc(officeScopeName(s,m.scope))) +
+        reviewPeopleHtml(reviewPersonHtml(grant && s.chars[grant.holder.id],FB.T('Current principal'),null)) +
+        reviewActionCardHtml({id:'provincial-probate-' + m.id,label:FB.T('Review inherited local rights'),disabled:!review.allowed,
+          note:review.reason || FB.T('Payment: {money:amount}. The existing adult house member continues these rights.',{amount:0}),
+          detailsId:'provincial-probate-details-' + m.id,details:'<p>' + esc(FB.T('Private estate inheritance and personal governor commissions remain separate.')) + '</p>'});
+    });
+    let returnView = view;
+    function back() { UI.showProvincialContinuity(returnView); }
+    UI.openModal(FB.T('Provincial continuity'),reviewFactsCard(FB.T('Surviving rights'),facts) +
+      reviewActionCardHtml({id:'provincial-return',label:FB.T('Review return to royal recognition'),disabled:!q || !q.allowed,
+        note:q && q.reason || FB.T('Payment: {money:amount}. Existing royal and provincial records are retained.',{amount:0}),
+        detailsId:'provincial-return-details',details:'<p>' + esc(FB.T('The current court must have royal descent. A vacancy or minority stewardship prevents conversion.')) + '</p>'}),
+      {modalClass:'fullsheet-modal',historyView:true});
+    (view.details || []).forEach(function (id) { const node = $('gm-body').querySelector('[aria-controls="' + id + '"]'); if (node) node.click(); });
+    $('gm-body').scrollTop = view.scroll || 0;
+    if (view.focus && $(view.focus)) $(view.focus).focus({preventScroll:true});
+    function reviewDecision(quote) {
+      if (!quote || !quote.allowed) return;
+      returnView = {scroll:$('gm-body').scrollTop,focus:document.activeElement && document.activeElement.id,
+        details:Array.from($('gm-body').querySelectorAll('.settcard-info[aria-expanded="true"]')).map(function (node) { return node.getAttribute('aria-controls'); })};
+      const inherited = quote.heirId && data.interests.find(function (m) { return m.id === quote.interestId; });
+      const terms = quote.heirId ? reviewPeopleHtml(reviewPersonHtml(s.chars[quote.heirId],FB.T('Inheriting principal'),null)) +
+        kv('Jurisdiction',esc(officeScopeName(s,inherited.scope))) :
+        '<p>' + esc(FB.T('Restore royal recognition using the existing court and provincial rights.')) + '</p>';
+      UI.openModal(FB.T('Review public decision'),reviewFactsCard(FB.T('Decision terms'),terms +
+        kv('Court',esc(s.realms[rid].name)) + kv('Payment',esc(FB.T('{money:amount}',{amount:quote.cost})))) +
+        reviewActionCardHtml({id:'provincial-return-confirm',label:quote.heirId ? FB.T('Confirm inherited rights') : FB.T('Confirm return'),
+          note:quote.heirId ? FB.T('Continue this family’s existing local rights. Private estates and governor commissions retain their separate owners.') :
+            FB.T('Restore royal recognition using the existing court and provincial rights.'),
+          detailsId:'provincial-return-confirm-details',details:'<p>' + esc(FB.T('Changed ancestry, principal, jurisdiction or obligations require another review.')) + '</p>'}),
+        {modalClass:'fullsheet-modal',historyView:true,historyBack:true,historyBackRender:back});
+      $('provincial-return-confirm').onclick = function () {
+        if (FB.state !== s) return;
+        const result = quote.heirId ? A.inherit(s,quote) : A.convert(s,quote);
+        markActionsDirty();
+        if (result && !quote.heirId) UI.showAdministration({court:rid});
+        else back();
+      };
+    }
+    $('provincial-return').onclick = function () { reviewDecision(q); };
+    data.interests.forEach(function (m) { $('provincial-probate-' + m.id).onclick = function () { reviewDecision(probate[m.id]); }; });
+  };
   UI.showAdministration = function (view) {
     const s = FB.state;
     if (!s || !FB.systemEnabled(s,'public_offices')) return;
@@ -339,6 +397,10 @@ window.FB = window.FB || {};
     const profile = FB.administrationProfile(s,rid), government = s.authority.governments[rid];
     const definition = FBDATA.governmentForms[government.formId];
     const profileId = government.administrationProfileId || definition.administrationProfileId;
+    const aristocracy = FB.aristocracy, royalProfile = aristocracy && aristocracy.profile(s,rid);
+    const royalState = royalProfile && aristocracy.state(s,rid);
+    const terms = royalProfile && {revenue:Number(view.revenue || royalProfile.defaultTerms.revenue),
+      levy:Number(view.levy || royalProfile.defaultTerms.levy)};
     const provinces = FB.realmHeldCounties(s,rid), offices = FB.publicOfficeRows(s,rid);
     const officeId = profile.offices.includes(view.office) ? view.office : profile.offices[0];
     const def = FBDATA.authorityOffices[officeId], pid = provinces.includes(view.province) ? view.province : provinces[0];
@@ -351,6 +413,7 @@ window.FB = window.FB || {};
     const decisions = {};
     function card(key,q,label,note,details) {
       decisions[key] = q;
+      if (royalProfile && q && q.allowed) note = FB.T('Payment: {money:amount}. {note}',{amount:q.cost || 0,note:note});
       return reviewActionCardHtml({data:{publicReview:key},label:label,disabled:!q || !q.allowed,
         warn:!q || !q.allowed,note:q && q.reason || note,detailsId:'public-details-' + key,
         details:'<p>' + esc(details || note) + '</p>'});
@@ -385,6 +448,7 @@ window.FB = window.FB || {};
       card('appoint',appointment,FB.T('Review public appointment'),FB.T('The court pays once; no land transfers.'),FB.officeText(s,officeId,'desc'));
     h += reviewFactsCard(FB.T('Appointment'),fields);
     offices.forEach(function (row) {
+      if (royalProfile && aristocracy.assignment(s,row)) return;
       const t = row.publicTerms, person = s.chars[row.holder.id];
       let body = person ? reviewPeopleHtml(reviewPersonHtml(person,FB.officeText(s,row.officeId,'name'),null)) : '';
       body += kv('Scope',esc(officeScopeName(s,row.scope))) + kv('Status',esc(officeStateName(row.status))) +
@@ -406,10 +470,46 @@ window.FB = window.FB || {};
         body += card(row.id + '-remit-' + share,FB.publicOfficeQuote(s,me,row.id,'remit',share),
           FB.T('Review {share}% remittance',{share:share * 100}),FB.T('Expenses are paid first. Withheld receipts become recoverable arrears and may cost the office.'));
       });
-      body += card(row.id + '-nominate',R.nominationQuote(s,actor,rid,row.holder.id),FB.T('Review admission to the succession slate'),
+      if (profile.accession.officeCandidates) body += card(row.id + '-nominate',R.nominationQuote(s,actor,rid,row.holder.id),FB.T('Review admission to the succession slate'),
         FB.T('Admission creates eligibility for recognition, with no invented ancestry, property transfer or automatic accession.'));
       h += reviewFactsCard(FB.officeText(s,row.officeId,'name'),body,' data-public-office="' + esc(row.id) + '"');
     });
+    if (royalProfile) {
+      let royal = kv('Royal eligibility',esc(aristocracy.royalEligibility(s,rid,s.player.charId).allowed ?
+        FB.T('Living royal kin; recognition is still required.') : FB.T('Royal descent is required. Savings and service qualify a household for office, not the crown.'))) +
+        '<div class="governing-identity-fields">' +
+        select('public-revenue',FB.T('Court receipts after the family assignment'),[0.55,0.65,0.75,0.8].map(function (n) {
+          return {id:String(n),name:FB.T('{share}% of source receipts',{share:n * 100})};
+        }),String(terms.revenue)) + select('public-levy',FB.T('Provincial military obligation'),[0.4,0.6,0.7,0.8].map(function (n) {
+          return {id:String(n),name:FB.T('{share}% of existing capacity',{share:n * 100})};
+        }),String(terms.levy)) + '</div>';
+      if (royalState.regency) royal += reviewPeopleHtml(reviewPersonHtml(s.chars[royalState.regency.stewardId],FB.T('Minority steward'),null)) +
+        card('steward',aristocracy.stewardQuote(s,actor,rid),FB.T('Review minority stewardship'),FB.T('A living hereditary principal replaces an incapable steward; royal ancestry and private property remain unchanged.'));
+      if (government.publicVacancy) royal += '<p>' + esc(FB.T('The crown is vacant. Provincial administration and private households continue while recognition is divided.')) + '</p>';
+      h += reviewFactsCard(FB.T('Royal house and provincial burdens'),royal);
+      aristocracy.constituency(s,rid).forEach(function (m) {
+        const declared = royalProfile.interests.find(function (i) { return i.id === m.id; });
+        const title = FB.dataText(s,s.player.charId,'aristocraticInterest',royalState.profileId + '.' + m.id,declared,'name',{});
+        const person = m.principal && s.chars[m.principal.id];
+        let body = person ? reviewPeopleHtml(reviewPersonHtml(person,FB.T('Hereditary principal'),null)) : '';
+        body += kv('Jurisdiction',esc(officeScopeName(s,m.scope))) + kv('Rights',esc(FB.T('Local courts and provincial assent; private estates are independent.'))) +
+          kv('Recognition weight',String(m.weight)) + kv('Principal',esc(m.active ? FB.T('Effective living principal') : FB.T('Inactive; inherited rights still require review'))) +
+          kv('Public assignment',esc(FB.T('{share}% of actual receipts',{share:Math.round((1 - m.terms.revenue) * 100)}))) +
+          kv('Military obligation',esc(FB.T('{share}% of existing capacity',{share:m.terms.levy * 100}))) +
+          kv('Provincial response',esc(m.terms.status === 'assent' ? FB.T('Assented') : FB.T('Withheld: reduced receipts and military contribution')));
+        body += card('inherit-' + m.id,aristocracy.inheritanceQuote(s,actor,rid,m.id),FB.T('Review inherited local rights'),FB.T('A living adult of this house continues its rights; the personal governor commission stays separate.'));
+        [['negotiate',FB.T('Review provincial bargain')],['withhold',FB.T('Review withholding obligations')],
+          ['assent',FB.T('Review restoring obligations')],['enforce',FB.T('Review lawful enforcement')]].forEach(function (option) {
+          const q = aristocracy.provincialQuote(s,option[0] === 'withhold' || option[0] === 'assent' ? me : actor,rid,m.id,option[0],option[0] === 'negotiate' ? terms : undefined);
+          body += card('province-' + m.id + '-' + option[0],q,option[1],option[0] === 'enforce' ?
+            FB.T('Costs {amount} Popular support in this province; existing lawful courts are required.',{amount:royalProfile.enforcementSupportCost}) :
+            FB.T('Court retains {revenue}% of receipts; levy commitment {levy}%. Changes clear this interest’s previous recognition.',{revenue:terms.revenue * 100,levy:terms.levy * 100}));
+        });
+        h += reviewFactsCard(title,body,' data-hereditary-interest="' + esc(m.id) + '"');
+      });
+      h += reviewFactsCard(FB.T('Government continuity'),card('conversion',aristocracy.conversionQuote(s,actor,rid,'regnum'),
+        FB.T('Review dynastic government'),FB.T('Every hereditary interest must assent. Existing families, estates, communities and surviving local rights retain their holders.')));
+    }
     const candidates = R.candidates(s,rid), members = R.members(s,rid), tree = s.realms[rid].succession;
     const candidate = candidates.find(function (row) { return row.id === view.candidate; }) || candidates[0];
     let succession = '<div class="governing-identity-fields">' + select('public-candidate',FB.T('Candidate'),candidates.map(function (row) {
@@ -417,12 +517,18 @@ window.FB = window.FB || {};
     }),candidate && candidate.id) + '</div>';
     if (candidate) {
       if (candidate.charId) succession += reviewPeopleHtml(reviewPersonHtml(s.chars[candidate.charId],FB.T('Sovereign candidate'),null));
-      succession += kv('Minority',esc(candidate.minor ? FB.T('Permitted; public officers retain their declared continuity and powers.') : FB.T('Adult candidate')));
+      succession += kv('Minority',esc(candidate.minor ? royalProfile ? FB.T('A living adult hereditary principal must steward the public court. Provincial and household rights continue separately.') :
+        FB.T('Permitted; public officers retain their declared continuity and powers.') : FB.T('Adult candidate')));
       members.forEach(function (member) {
-        succession += card('support-' + member.id,R.supportQuote(s,actor,rid,member.id,candidate.id),
+        const support = R.supportQuote(s,actor,rid,member.id,candidate.id,terms || undefined);
+        succession += card('support-' + member.id,support,
           FB.T('Review recognition: {interest}',{interest:member.id === 'court' ? FB.T('Court designation') :
             member.principal.kind === 'character' ? s.chars[member.principal.id].name : s.realms[member.principal.id].name}),
-          FB.T('Weight {weight}. Only this interest’s living principal can change its recognition.',{weight:member.weight}));
+          royalProfile ? FB.T('Weight {weight}. Court retains {revenue}% of receipts; provincial levy {levy}%. A living principal must accept these burdens.',
+            {weight:member.weight,revenue:terms.revenue * 100,levy:terms.levy * 100}) :
+            FB.T('Weight {weight}. Only this interest’s living principal can change its recognition.',{weight:member.weight}));
+        if (royalProfile && member.id !== 'court') succession += card('withdraw-' + member.id,
+          R.supportQuote(s,me,rid,member.id,null),FB.T('Review withholding recognition'),FB.T('This principal withdraws its vote without erasing its family or local rights.'));
       });
     }
     const accession = FB.publicAccessionQuote(s,actor,rid,government.publicVacancy ? government.publicVacancy.cause : 'abdication');
@@ -436,6 +542,7 @@ window.FB = window.FB || {};
       function value(id) { return $(id) && $(id).value; }
       return {court:value('public-court'),office:value('public-office'),province:value('public-province'),holder:value('public-holder'),
         host:value('public-host'),candidate:value('public-candidate'),scroll:list.scrollTop,bodyScroll:$('gm-body').scrollTop,
+        revenue:value('public-revenue'),levy:value('public-levy'),
         details:Array.from(list.querySelectorAll('.settcard-info[aria-expanded="true"]')).map(function (node) { return node.getAttribute('aria-controls'); }),
         focus:document.activeElement && document.activeElement.id,review:document.activeElement && document.activeElement.dataset.publicReview};
     }
@@ -443,7 +550,7 @@ window.FB = window.FB || {};
     list.scrollTop = view.scroll || 0; $('gm-body').scrollTop = view.bodyScroll || 0;
     const focus = view.focus && $(view.focus) || view.review && list.querySelector('[data-public-review="' + view.review + '"]');
     if (focus) focus.focus({preventScroll:true});
-    ['public-court','public-office','public-province','public-holder','public-host','public-candidate'].forEach(function (id) {
+    ['public-court','public-office','public-province','public-holder','public-host','public-candidate','public-revenue','public-levy'].forEach(function (id) {
       if ($(id)) $(id).onchange = function () { const pos = position(); if (id === 'public-court') { pos.office = null; pos.province = null; } UI.showAdministration(pos); };
     });
     list.querySelectorAll('[data-public-review]').forEach(function (button) {
@@ -464,8 +571,17 @@ window.FB = window.FB || {};
             kv('Holder',esc(s.chars[row.holder.id].name));
         }
         const memberId = q.memberId || q.candidateId;
+        if (q.terms && royalProfile) facts += kv('Court receipts',esc(FB.T('{share}% of the existing source',{share:q.terms.revenue * 100}))) +
+          kv('Provincial levy',esc(FB.T('{share}% of existing capacity',{share:q.terms.levy * 100})));
+        if (q.interestId && royalProfile) {
+          const m = aristocracy.constituency(s,rid).find(function (row) { return row.id === q.interestId; });
+          if (m) facts += kv('Jurisdiction',esc(officeScopeName(s,m.scope))) +
+            reviewPeopleHtml(reviewPersonHtml(s.chars[q.heirId || m.principal.id],q.heirId ? FB.T('Inheriting principal') : FB.T('Current principal'),null));
+          if (q.supportCost) facts += kv('Popular support cost',String(q.supportCost));
+        }
         if (memberId && R.candidateMember(s,rid,memberId)) facts += kv('Candidate',esc(R.candidateMember(s,rid,memberId).name));
         else if (q.characterId) facts += kv('Candidate',esc(s.chars[q.characterId].name));
+        if (q.stewardId && royalProfile) facts += reviewPeopleHtml(reviewPersonHtml(s.chars[q.stewardId],FB.T('Minority steward'),null));
         function back() { UI.showAdministration(pos); }
         UI.openModal(FB.T('Review public decision'),reviewFactsCard(FB.T('Decision terms'),facts) +
           reviewActionCardHtml({id:'public-confirm',label:FB.T('Confirm decision'),note:button.textContent,
@@ -474,7 +590,9 @@ window.FB = window.FB || {};
         $('public-confirm').onclick = function () {
           if (FB.state !== s) return;
           const result = q.operation === 'appoint' ? FB.publicAppoint(s,q) : q.operation === 'office' ? FB.publicOfficeApply(s,q) :
-            q.operation === 'support' ? R.applySupport(s,q) : q.operation === 'nominate' ? R.nominate(s,q) : FB.publicAccede(s,q);
+            q.operation === 'support' ? R.applySupport(s,q) : q.operation === 'nominate' ? R.nominate(s,q) :
+              q.operation === 'provincial' ? aristocracy.apply(s,q) : q.operation === 'provincial_inheritance' ? aristocracy.inherit(s,q) :
+                q.operation === 'aristocratic_conversion' ? aristocracy.convert(s,q) : q.operation === 'aristocratic_steward' ? aristocracy.steward(s,q) : FB.publicAccede(s,q);
           markActionsDirty();
           UI.openModal(result ? FB.T('Decision recorded') : FB.T('Terms changed'),'<p>' +
             esc(result ? FB.T('The public authority record has been updated.') : FB.T('Review the current terms again. Nothing was spent.')) +
