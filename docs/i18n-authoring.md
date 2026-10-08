@@ -220,3 +220,7 @@ Selection interest and transformation names are extracted from governmentForms i
 Assembly display owners
 
 The extractor reads assemblyOpenings names as assemblyOpening.<id>.name, assemblyCounties names and settlement names as assemblyCounty.<id> display fields, and constituencyProfiles member names as constituencyMember.<profile>.<member>.name. Runtime member labels use dataText with the same owner. Opening representative names are proper names and are not extracted. Engine cards use FB.T and durable delegation news uses FB.msg; saved mandate and decision records contain no rendered prose.
+
+Civic display ownership
+
+Civic profile names extract under civicProfile.<profile>.name, ordered magistracy names under civicOffice.<profile>.<office>.name, and represented interests under constituencyMember.<constituency>.<member>.name. Civic contest declarations extract under governmentContest.<instance>.name and desc. Runtime screens use dataText for those fields and T for chrome; names of actual people and saved ids remain identity data. Civic announcements persist message descriptors. New English falls back normally until separately authorized integration catalog regeneration.

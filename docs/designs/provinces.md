@@ -626,3 +626,7 @@ The 476 eastern region declares distinct Gepid and Isaurian cultures through the
 Optional wider 476 content
 
 476_outer reuses the retained europe_regional seed grid and terrain but independently inhabits 105 formerly unauthored cells. Its county labels, community weights, development, dated physical-site heads, title memberships and climate assignments are literal region data. District labels replace later foundations, and former Roman city names do not imply surviving urban scale. New crossing pairs use the existing explicit class table. The original 476 map and layout remain separately addressable for older saves. No geometry, settlement compiler or runtime map change is needed. The regional design and research record are in situation-476.md and ../research/476-bookmark.md.
+
+Civic foreign site rights
+
+Institution-owned foreign quarters, warehouses, jurisdiction and assigned receipts reference an existing county and its stable physical settlement slot. They add no county, geometry or duplicate settlement. Host sovereignty, inhabitants and private enterprises remain separate from the beneficiary institution; loss of host control suspends the right. Saved references retain their slot through changes in current site visibility. Historical 1204 Venetian presence uses the existing Constantinople site without asserting a surveyed district or numeric receipts. See docs/designs/city-republic.md.

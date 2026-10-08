@@ -1661,3 +1661,7 @@ Public administrative jurisdiction
 administrative_monarchy keeps sovereign county ownership and direct holders separate from revocable public governors. Fresh 800 Abbasid and Byzantine declarations select distinct profiles; independent subordinate courts retain their declared autonomy. Vacant jurisdiction does not generate a hereditary holder. Conquest and dismissal update existing authority scope without confiscating private settlement/household property. See docs/designs/administrative-monarchy.md.
 
 Public crown absorption rekeys the government profile and public commissions to the player before retiring the old realm. Household succession grants that crown only to the recognized candidate. A different recognized sovereign receives the existing realm through abdication, while household property stays with the playable dynasty; an unrecognized death leaves a dated public vacancy.
+
+Civic institutional holders
+
+Fresh 1204 Venice is a city_republic with a continuing realm identity, public county holder and treasury. Individual magistracies never absorb that institution into a protagonist's dynasty. Military occupation changes owner while preserving the civic holder; a lawful reviewed county grant transfers both public holder and sovereignty and removes that scope from civic interests. The capital and final county cannot be granted away. Foreign quarters and receipt rights retain the host county's sovereign and inhabitants. See docs/designs/city-republic.md.

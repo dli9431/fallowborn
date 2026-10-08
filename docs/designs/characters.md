@@ -1399,3 +1399,7 @@ An opening actor may be a generated or named profile, or a sole ref declaration 
 Public careers and sovereign candidates
 
 The administrative_monarchy ladder retains all eight station identities and personal standing routes through freedom, wealth, service and effective office. Higher public jurisdiction comes from a revocable appointment rather than buying a hereditary county. Officers can enter an explicitly permitted eight-person recognition slate; a compact public_candidate links the actual person without invented parents or dynasty. Removal ends public power/pay and candidature but preserves private property. Sovereign succession applies the selected existing person through the canonical realm transition. See docs/designs/administrative-monarchy.md.
+
+Civic personal standing
+
+The city_republic ladder preserves all eight personal station bands with professional, economic and public-service advancement. Civic office selection checks actual local residence, free status, effective skills, service and declared eligibility; a sworn profile also requires separately reviewed admission. Wealth can support standing but cannot buy membership or ownership of the republic. Civic incumbents use ordinary character and household records without a new dynasty. Institutional rank continues to describe the public realm's size. See docs/designs/city-republic.md.

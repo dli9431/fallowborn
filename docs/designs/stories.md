@@ -172,3 +172,7 @@ Keep each released instance id stable and store only typed progress, cast refere
 Government contests
 
 government_contest is registered by js/story_government_selection.js. A data instance declares realmId, name and desc; its only saved fact is the institutional realm reference. The card appears for contested, minority, vacant or resolved canonical selections. It reads governmentSelection without opening a second vacancy, creating people, scheduling a second succession or allocating property. Realm adoption and release remap this reference with the public court. Restore validates the reference and never initializes a missing story.
+
+Civic office contest projection
+
+government_contest also reads the canonical civic offices and vacancies. It retains only the existing institutional realm reference, projects open selection or occupied offices, and owns no incumbent or nomination ledger. The 1204 Venetian declaration supplies its name and introduction through storyCivicSelections and the ordinary instance catalogue. Earlier territorial saves do not gain a missing civic story on restore.

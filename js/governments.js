@@ -169,7 +169,7 @@ window.FB = window.FB || {};
     var realm = state && state.realms && state.realms[rid];
     var policy = realm && realm.succession && realm.succession.policyId;
     var form = G.forRealm(state, rid);
-    if (form && form.use.succession.selectionManaged) return form.use.succession;
+    if (form && (form.use.succession.selectionManaged || form.use.succession.civicLeadership)) return form.use.succession;
     return policy ? G.strategy('succession', policy) : form ? form.use.succession : G.strategy('succession', 'dynastic');
   };
 

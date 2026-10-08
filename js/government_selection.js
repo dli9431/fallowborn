@@ -512,7 +512,7 @@
   S.commitSource = function (s, review) {
     if (!review || !sources[review.source]) return false;
     var fresh = S.reviewSource(s, review.source, review.request);
-    if (!fresh.review.allowed || JSON.stringify(fresh) !== JSON.stringify(review)) return false;
+    if (!fresh.review || !fresh.review.allowed || JSON.stringify(fresh) !== JSON.stringify(review)) return false;
     return sources[review.source].apply(s, fresh.request, fresh.review);
   };
   S.registerSource('elective_crown', {

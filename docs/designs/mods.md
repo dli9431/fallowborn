@@ -364,3 +364,7 @@ constituencyProfiles is a public keyed table merged and validated with the detac
 Public administration profiles
 
 administrationProfiles is an allowed JSON mod root with atomic record replacement. Profiles choose existing public offices, qualification-independent appointment cost, personal term/confirmation, source-capped salary or revenue/service terms, and dynastic/designation/recognition eligibility and interests. A form declares administrationProfileId; an explicit fresh realm declaration can choose a dated override. Validation checks the merged effective forms/profiles before mutation. No profile imports engine source or branches on historical realm identity. See docs/MODDING.md and docs/designs/administrative-monarchy.md.
+
+Civic constitutional profiles
+
+civicProfiles is an allowed JSON root with atomic policy replacement. Its effective constituency and government form are validated together before mutation. A civic strategy requires a valid form-level default profile, while a fresh bookmark realm can select a compatible dated civicProfileId and constituency. Opening civicRights require typed scope, zero numeric receipts and evidence; they belong only to fresh initialization. Mod text cannot install executable civic strategy functions. See docs/MODDING.md and docs/designs/city-republic.md.

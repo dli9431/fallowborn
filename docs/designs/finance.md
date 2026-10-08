@@ -582,3 +582,7 @@ Community profiles bound local public income, levy contributions and protected r
 Source-backed public remuneration
 
 Public office remuneration is paid from the same treasury that receives the referenced county receipts through the ordinary fiscal path. Actual salaries/revenue shares debit that payer and credit the officer once per period; projected household income never performs a second credit. Local pay precedes remittance, withholding creates real recoverable arrears, and audit/repayment/confirmation have separate reviewed consequences. Missing/inactive treasuries cannot issue pay. Ended assignments retain real arrears, while private estates and enterprises retain their existing income. See docs/designs/administrative-monarchy.md for source caps, conservation and accounting order.
+
+Civic treasury and foreign receipts
+
+A civic polity uses its existing realm treasury. Public borrowing transfers real lender funds into that account and repayment debits the quoted outstanding public obligation once. Temporary dues enter its ordinary receipts. Salaries transfer actual funds above the declared protected reserve to living incumbents once per season; income projections perform no second credit. An NPC magistrate's personal wallet is separate from the city account. Limited foreign revenue shares debit and credit matching amounts from one publicly held settlement, with aggregate commitments bounded by that source. Private enterprises and household credit retain their owners. See docs/designs/city-republic.md.

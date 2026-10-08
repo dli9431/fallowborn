@@ -122,6 +122,12 @@ FBDATA.focuses = [
 ];
 
 FBDATA.deeds = [
+  { id:'civic_government', label:'Civic government', icon:'🏛',
+    desc:'Review public offices, civic qualification, selection, city funds and limited foreign rights.',
+    section:'realm', group:'realm', flow:'choices', handler:'civic_government' },
+  { id:'civic_constitution', label:'Review civic constitution', icon:'🏛',
+    desc:'Review founding magistrates, current authority, public money and private property before adopting a civic constitution.',
+    section:'realm', group:'realm', flow:'choices', handler:'civic_constitution' },
   { id:'community_assembly', label:'Local assembly', icon:'🏛',
     desc:'Review the local mandate, represented interests and reserved decisions.',
     section:'realm', group:'realm', flow:'choices', handler:'community_assembly' },
