@@ -28,6 +28,8 @@ FBDATA.deedSections = [
     label:'🏛 Offices & Legitimacy', subhead:'Appointments and imperial claims' },
   { id:'local_kingship', type:'deeds', order:108, layout:'both',
     label:'👑 Local kingship', subhead:'Kin, recognition and obligations' },
+  { id:'administration', type:'deeds', order:108, layout:'both', system:'public_offices',
+    label:'🏛 Public administration', subhead:'Appointments, receipts and accession' },
   { id:'realm', type:'deeds', order:110, layout:'theme',
     label:'👑 Rank & Realm', subhead:'One-time deeds' },
   { id:'war', type:'deeds', order:120, layout:'theme',
@@ -314,6 +316,9 @@ FBDATA.deeds = [
   { id:'local_kingship', label:'👑 Local kingship…', order:90.5,
     desc:'Review eligible kin, local interests, succession and the levy and revenue obligations they recognize.',
     section:'local_kingship', group:'realm', flow:'choices', handler:'local_kingship' },
+  { id:'public_administration', label:'🏛 Public administration…', order:90,
+    desc:'Review public appointments, productive revenue sources, service, audits and sovereign accession.',
+    section:'administration', group:'administration', flow:'choices', handler:'public_administration', systems:['public_offices'] },
   { id:'seek_station', availableWhileTraveling:true, label:'🏛 Seek station recognition', order:91,
     section:'realm', group:'realm', flow:'choices', handler:'seek_station' }
 ];

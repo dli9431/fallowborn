@@ -325,6 +325,165 @@ window.FB = window.FB || {};
     return FB.station.rulesRealm(s.player, s) ? { kind:'realm', id:'player' } :
       { kind:'character', id:s.player.charId };
   }
+  UI.showAdministration = function (view) {
+    const s = FB.state;
+    if (!s || !FB.systemEnabled(s,'public_offices')) return;
+    FB.game.setPaused(true);
+    view = view || {};
+    const me = {kind:'character',id:s.player.charId}, actor = officeActor(s), R = FB.governmentRecognition;
+    const courts = Object.keys(s.realms).filter(function (rid) { return !!FB.administrationProfile(s,rid); });
+    const rid = courts.includes(view.court) ? view.court : courts.find(function (id) {
+      return FB.realmTerritory(s,id).includes(s.player.provinceId);
+    }) || courts[0];
+    if (!rid) return;
+    const profile = FB.administrationProfile(s,rid), government = s.authority.governments[rid];
+    const definition = FBDATA.governmentForms[government.formId];
+    const profileId = government.administrationProfileId || definition.administrationProfileId;
+    const provinces = FB.realmHeldCounties(s,rid), offices = FB.publicOfficeRows(s,rid);
+    const officeId = profile.offices.includes(view.office) ? view.office : profile.offices[0];
+    const def = FBDATA.authorityOffices[officeId], pid = provinces.includes(view.province) ? view.province : provinces[0];
+    const people = Object.keys(s.chars).filter(function (id) { return !s.chars[id].dead &&
+      (id === s.player.charId || provinces.includes(FB.characterResidence(s,s.chars[id]))); }).sort();
+    const cid = people.includes(view.holder) ? view.holder : s.player.charId;
+    const hosts = (s.armies || []).filter(function (host) { return host.realm === rid && host.men > 0; });
+    const host = hosts.find(function (row) { return row.id === view.host; }) || hosts[0];
+    const scope = def.scopes.includes('host') ? host && {kind:'host',id:host.id} : {kind:'county',id:pid};
+    const decisions = {};
+    function card(key,q,label,note,details) {
+      decisions[key] = q;
+      return reviewActionCardHtml({data:{publicReview:key},label:label,disabled:!q || !q.allowed,
+        warn:!q || !q.allowed,note:q && q.reason || note,detailsId:'public-details-' + key,
+        details:'<p>' + esc(details || note) + '</p>'});
+    }
+    function select(id,label,values,current) {
+      return '<label for="' + id + '">' + esc(label) + '</label><select class="select" id="' + id + '">' +
+        values.map(function (item) { return '<option value="' + esc(item.id) + '"' + (item.id === current ? ' selected' : '') + '>' + esc(item.name) + '</option>'; }).join('') + '</select>';
+    }
+    let h = '<div data-public-list data-modal-scroll>';
+    h += reviewFactsCard(FB.T('Public court'),kv('Profile',esc(FB.dataText(s,s.player.charId,'administrationProfile',profileId,profile,'name',{}))) +
+      kv('Available treasury',esc(FB.T('{money:amount}',{amount:FB.treasuryAvailable(s,rid)}))) +
+      kv('Office commitments per season',esc(FB.T('{money:amount}',{amount:FB.publicOfficeBudget(s,rid)}))) +
+      '<p>' + esc(FB.T('Appointments grant public powers within an exact scope. Household estates, businesses and sovereign ownership stay with their existing holders. Vacant jurisdictions retain local administration.')) + '</p>');
+    let fields = '<div class="governing-identity-fields">' +
+      select('public-court',FB.T('Court'),courts.map(function (id) { return {id:id,name:s.realms[id].name}; }),rid) +
+      select('public-office',FB.T('Office'),profile.offices.map(function (id) { return {id:id,name:FB.officeText(s,id,'name')}; }),officeId) +
+      select('public-province',FB.T('Productive county source'),provinces.map(function (id) { return {id:id,name:FB.world.byId[id].name}; }),pid) +
+      select('public-holder',FB.T('Applicant'),people.map(function (id) { return {id:id,name:s.chars[id].name}; }),cid);
+    if (def.scopes.includes('host')) fields += select('public-host',FB.T('Host'),hosts.map(function (row) { return {id:row.id,name:officeScopeName(s,{kind:'host',id:row.id})}; }),host && host.id);
+    fields += '</div>';
+    const appointment = FB.publicAppointmentQuote(s,actor,{institutionId:rid,officeId:officeId,holderId:cid,scope:scope || null,provinceId:pid});
+    fields += reviewPeopleHtml(reviewPersonHtml(s.chars[cid],FB.T('Applicant'),null)) +
+      kv('Scope',scope ? esc(officeScopeName(s,scope)) : esc(FB.T('No host available'))) +
+      kv('Powers',esc(officePowerNames(def.powers))) +
+      kv('Court cost',esc(FB.T('{money:amount}',{amount:appointment.cost}))) +
+      kv('Retained prestige qualification',String(def.appointment.prestige)) +
+      kv('Required skill',esc(FB.T('{skill} {minimum}',{skill:FB.T(FB.SKILL_NAMES[def.appointment.skill]),minimum:def.appointment.minimum}))) +
+      kv('Source receipts',esc(FB.T('{money:amount} per season',{amount:FB.publicCountyIncome(s,rid,pid)}))) +
+      kv('Remuneration',esc(profile.finance.kind === 'salary' ? FB.T('Up to {money:salary}, capped at {share}% of source receipts.',{salary:profile.finance.salary,share:profile.finance.share * 100}) :
+        FB.T('{share}% of actual source receipts.',{share:profile.finance.share * 100}))) +
+      kv('Term',esc(FB.T('{days} days; {policy}',{days:profile.termDays,policy:profile.confirmation === 'continues' ? FB.T('continues across sovereign succession') : FB.T('requires sovereign confirmation')}))) +
+      card('appoint',appointment,FB.T('Review public appointment'),FB.T('The court pays once; no land transfers.'),FB.officeText(s,officeId,'desc'));
+    h += reviewFactsCard(FB.T('Appointment'),fields);
+    offices.forEach(function (row) {
+      const t = row.publicTerms, person = s.chars[row.holder.id];
+      let body = person ? reviewPeopleHtml(reviewPersonHtml(person,FB.officeText(s,row.officeId,'name'),null)) : '';
+      body += kv('Scope',esc(officeScopeName(s,row.scope))) + kv('Status',esc(officeStateName(row.status))) +
+        kv('Private estates',esc(FB.T('Retained independently'))) +
+        kv('Arrears',esc(FB.T('{money:amount}',{amount:t.arrears}))) +
+        kv('Unfunded remuneration',esc(FB.T('{money:amount}',{amount:t.unpaid}))) +
+        kv('Service share',esc(FB.T('{share}% requires an effective, funded commission.',{share:t.serviceShare * 100})));
+      if (t.last) body += kv('Last payment',esc(FB.T('{money:amount}',{amount:t.last.paid}))) +
+        kv('Last remittance',esc(FB.T('{money:amount}',{amount:t.last.remitted})));
+      const actions = [
+        {id:'confirm',label:FB.T('Review confirmation'),note:FB.T('Restore this scope under the current sovereign, after arrears are settled.')},
+        {id:'remove',label:FB.T('Review dismissal'),note:FB.T('End jurisdiction and future pay. Private property remains; this county stays under its sovereign.')},
+        {id:'audit',label:FB.T('Review audit'),note:FB.T('Require full remittance. Outstanding arrears suspend the commission until repaid and confirmed.')},
+        {id:'repay',label:FB.T('Review repayment'),note:FB.T('Return {money:amount} from the officer’s actual purse.',{amount:t.arrears})}
+      ];
+      actions.forEach(function (action) { body += card(row.id + '-' + action.id,
+        FB.publicOfficeQuote(s,action.id === 'repay' ? me : actor,row.id,action.id),action.label,action.note); });
+      if (row.holder.id === s.player.charId && row.role === 'governor') [1,0.75].forEach(function (share) {
+        body += card(row.id + '-remit-' + share,FB.publicOfficeQuote(s,me,row.id,'remit',share),
+          FB.T('Review {share}% remittance',{share:share * 100}),FB.T('Expenses are paid first. Withheld receipts become recoverable arrears and may cost the office.'));
+      });
+      body += card(row.id + '-nominate',R.nominationQuote(s,actor,rid,row.holder.id),FB.T('Review admission to the succession slate'),
+        FB.T('Admission creates eligibility for recognition, with no invented ancestry, property transfer or automatic accession.'));
+      h += reviewFactsCard(FB.officeText(s,row.officeId,'name'),body,' data-public-office="' + esc(row.id) + '"');
+    });
+    const candidates = R.candidates(s,rid), members = R.members(s,rid), tree = s.realms[rid].succession;
+    const candidate = candidates.find(function (row) { return row.id === view.candidate; }) || candidates[0];
+    let succession = '<div class="governing-identity-fields">' + select('public-candidate',FB.T('Candidate'),candidates.map(function (row) {
+      return {id:row.id,name:R.candidateMember(s,rid,row.id).name};
+    }),candidate && candidate.id) + '</div>';
+    if (candidate) {
+      if (candidate.charId) succession += reviewPeopleHtml(reviewPersonHtml(s.chars[candidate.charId],FB.T('Sovereign candidate'),null));
+      succession += kv('Minority',esc(candidate.minor ? FB.T('Permitted; public officers retain their declared continuity and powers.') : FB.T('Adult candidate')));
+      members.forEach(function (member) {
+        succession += card('support-' + member.id,R.supportQuote(s,actor,rid,member.id,candidate.id),
+          FB.T('Review recognition: {interest}',{interest:member.id === 'court' ? FB.T('Court designation') :
+            member.principal.kind === 'character' ? s.chars[member.principal.id].name : s.realms[member.principal.id].name}),
+          FB.T('Weight {weight}. Only this interest’s living principal can change its recognition.',{weight:member.weight}));
+      });
+    }
+    const accession = FB.publicAccessionQuote(s,actor,rid,government.publicVacancy ? government.publicVacancy.cause : 'abdication');
+    succession += kv('Accession policy',esc(profile.accession.mode === 'designation' ? FB.T('Designation claim with declared eligibility') :
+      profile.accession.mode === 'dynastic' ? FB.T('Dynastic eligibility') : FB.T('More than {share}% of current recognition weight',{share:profile.accession.threshold * 100}))) +
+      card('accession',accession,FB.T('Review sovereign accession'),FB.T('One political transition. Religious office eligibility is rechecked separately. Public and private property keep their existing owners.'));
+    h += reviewFactsCard(FB.T('Sovereign accession'),succession) + '</div>';
+    UI.openModal(FB.T('Public administration'),h,{modalClass:'fullsheet-modal'});
+    const list = $('gm-body').querySelector('[data-public-list]');
+    function position() {
+      function value(id) { return $(id) && $(id).value; }
+      return {court:value('public-court'),office:value('public-office'),province:value('public-province'),holder:value('public-holder'),
+        host:value('public-host'),candidate:value('public-candidate'),scroll:list.scrollTop,bodyScroll:$('gm-body').scrollTop,
+        details:Array.from(list.querySelectorAll('.settcard-info[aria-expanded="true"]')).map(function (node) { return node.getAttribute('aria-controls'); }),
+        focus:document.activeElement && document.activeElement.id,review:document.activeElement && document.activeElement.dataset.publicReview};
+    }
+    if (view.details) view.details.forEach(function (id) { const node = list.querySelector('[aria-controls="' + id + '"]'); if (node) node.click(); });
+    list.scrollTop = view.scroll || 0; $('gm-body').scrollTop = view.bodyScroll || 0;
+    const focus = view.focus && $(view.focus) || view.review && list.querySelector('[data-public-review="' + view.review + '"]');
+    if (focus) focus.focus({preventScroll:true});
+    ['public-court','public-office','public-province','public-holder','public-host','public-candidate'].forEach(function (id) {
+      if ($(id)) $(id).onchange = function () { const pos = position(); if (id === 'public-court') { pos.office = null; pos.province = null; } UI.showAdministration(pos); };
+    });
+    list.querySelectorAll('[data-public-review]').forEach(function (button) {
+      button.onclick = function () {
+        if (button.disabled) return;
+        const q = decisions[button.dataset.publicReview], pos = position();
+        let facts = kv('Payment',esc(FB.T('{money:amount}',{amount:q.cost || 0}))) +
+          kv('Court',esc(s.realms[rid].name)) +
+          '<p>' + esc(FB.T('Confirm only the displayed decision. Public scope, assigned receipts, household estates and sovereign accession remain separate rights. Changed terms require another review.')) + '</p>';
+        if (q.operation === 'appoint') facts += reviewPeopleHtml(reviewPersonHtml(s.chars[q.input.holderId],FB.T('Applicant'),null)) +
+          kv('Office',esc(FB.officeText(s,q.input.officeId,'name'))) + kv('Scope',esc(officeScopeName(s,q.input.scope))) +
+          kv('Source',esc(FB.world.byId[q.input.provinceId].name)) + kv('Term',esc(FB.T('{days} days',{days:q.endTurn - s.turn}))) +
+          kv('Remuneration',esc(q.publicTerms.kind === 'salary' ? FB.T('Up to {money:amount}, capped at {share}% of actual receipts.',{amount:q.publicTerms.salary,share:q.publicTerms.share * 100}) :
+            FB.T('{share}% of actual receipts.',{share:q.publicTerms.share * 100})));
+        if (q.operation === 'office') {
+          const row = offices.find(function (office) { return office.id === q.id; });
+          if (row) facts += kv('Office',esc(FB.officeText(s,row.officeId,'name'))) + kv('Scope',esc(officeScopeName(s,row.scope))) +
+            kv('Holder',esc(s.chars[row.holder.id].name));
+        }
+        const memberId = q.memberId || q.candidateId;
+        if (memberId && R.candidateMember(s,rid,memberId)) facts += kv('Candidate',esc(R.candidateMember(s,rid,memberId).name));
+        else if (q.characterId) facts += kv('Candidate',esc(s.chars[q.characterId].name));
+        function back() { UI.showAdministration(pos); }
+        UI.openModal(FB.T('Review public decision'),reviewFactsCard(FB.T('Decision terms'),facts) +
+          reviewActionCardHtml({id:'public-confirm',label:FB.T('Confirm decision'),note:button.textContent,
+            detailsId:'public-confirm-details',details:'<p>' + esc(button.textContent) + '</p>'}),
+          {modalClass:'fullsheet-modal',historyView:true,historyBack:true,historyBackRender:back});
+        $('public-confirm').onclick = function () {
+          if (FB.state !== s) return;
+          const result = q.operation === 'appoint' ? FB.publicAppoint(s,q) : q.operation === 'office' ? FB.publicOfficeApply(s,q) :
+            q.operation === 'support' ? R.applySupport(s,q) : q.operation === 'nominate' ? R.nominate(s,q) : FB.publicAccede(s,q);
+          markActionsDirty();
+          UI.openModal(result ? FB.T('Decision recorded') : FB.T('Terms changed'),'<p>' +
+            esc(result ? FB.T('The public authority record has been updated.') : FB.T('Review the current terms again. Nothing was spent.')) +
+            '</p><button type="button" class="actionbtn" id="public-continue">' + esc(FB.T('Continue')) + '</button>',{replaceView:true});
+          $('public-continue').onclick = function () { modalHistoryBack(back); };
+        };
+      };
+    });
+  };
   function localInstitutionStage(stage) {
     if (stage === 'petition') return FB.T('Awaiting terms');
     if (stage === 'bargain') return FB.T('Ready for a vote');

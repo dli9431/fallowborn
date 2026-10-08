@@ -4052,6 +4052,7 @@ FB.CHANGELOG = [
         FB.holdingBonus(s, 'gold') + FB.landYield(s) + FB.itemBonus(s, 'gold') +
         (FB.positionBonus ? FB.positionBonus(s, 'gold') : 0);
       FB.livelihoodSeason(s);
+      if (FB.publicOfficeSettle) FB.publicOfficeSettle(s, null, Math.floor(s.turn / 90), true);
       if (FB.enterpriseUpgradeSeason) FB.enterpriseUpgradeSeason(s);
       if (FB.marketSettleHouseholdNecessities) {
         FB.marketSettleHouseholdNecessities(s);
@@ -5919,6 +5920,8 @@ FB.CHANGELOG = [
        being restored in both catalogues after the transition. */
     if (FB.enterpriseList) FB.enterpriseList(s);
     if (FB.notePlayerStatus) FB.notePlayerStatus(s);
+    if (FB.publicPlayerHouseholdSuccession &&
+        FB.publicPlayerHouseholdSuccession(s,heir,livingAbdication ? 'abdication' : 'death') === false) return false;
     const successorIsChild = (FB.childrenOf ? FB.childrenOf(s, old) :
       (old.childrenIds || []).map(function (id) { return s.chars[id]; }))
       .some(function (child) { return child && child.id === heir.id; });
@@ -6172,17 +6175,19 @@ FB.CHANGELOG = [
         ? s.realms.player.ruler.generation : 1;
       const localAccession = FB.governments.forRealm(s, 'player').use.succession.selectionManaged && s.realms.player.succession &&
         s.realms.player.succession.members[s.realms.player.succession.rulerMemberId].charId === heir.id;
+      const nextGeneration = oldGeneration + (localAccession || reigningHeirRealm && FB.administrationProfile(s,'player') ? 0 : 1);
       s.realms.player.ruler = {
         name: heir.name, sex: heir.sex, culture: heir.culture,
         age: FB.ageOf(heir, s.date.year),
         mar: FB.skillSnapshot(s, heir, 'mar'),
-        generation: localAccession ? oldGeneration : oldGeneration + 1
+        generation: nextGeneration
       };
       s.realms.player.succession = s.realms.player.succession || { playerDynasty: true };
-      s.realms.player.succession.rulerGeneration = localAccession ? oldGeneration : oldGeneration + 1;
+      s.realms.player.succession.rulerGeneration = nextGeneration;
       s.realms.player.succession.heirCharId = null;
       s.realms.player.liege = p.liege || null;
       s.realms.player.religion = heir.religion;
+      if (FB.administrationProfile(s,'player') && FB.ensureReligiousHeads) FB.ensureReligiousHeads(s);
     }
     if (FB.notePlayerStatus) FB.notePlayerStatus(s);
     if (FB.papacyPlayerSuccession) FB.papacyPlayerSuccession(s, old.id);

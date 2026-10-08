@@ -360,3 +360,7 @@ The start-scenario schema admits hidden, rulerRealmId, governmentForm, character
 Typed constituency profiles
 
 constituencyProfiles is a public keyed table merged and validated with the detached effective catalogues. Atomic bookmark realms selecting delegated leadership must declare a valid constituency and inhabited territory, without a liege. Optional representative fields supply an ordinary opening character. JSON selects registered strategies and typed policy; it cannot provide engine functions. See docs/MODDING.md and docs/designs/assembly-polity.md.
+
+Public administration profiles
+
+administrationProfiles is an allowed JSON mod root with atomic record replacement. Profiles choose existing public offices, qualification-independent appointment cost, personal term/confirmation, source-capped salary or revenue/service terms, and dynastic/designation/recognition eligibility and interests. A form declares administrationProfileId; an explicit fresh realm declaration can choose a dated override. Validation checks the merged effective forms/profiles before mutation. No profile imports engine source or branches on historical realm identity. See docs/MODDING.md and docs/designs/administrative-monarchy.md.

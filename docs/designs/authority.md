@@ -393,3 +393,8 @@ Enrollment adds a bounded county community interest only after the ruler control
 Collective local authority
 
 The shared constituency contract in FB.governments.support supplies typed members and public mandates. Political consent dispatches character actors to their actual delegated realm, while preserving household residence for nondelegates. Reserved offensive war, outside agreements, extraordinary dues and conversion need an exact current collective decision. Ordinary household activity, defensive recruitment and existing customary jurisdiction survive vacancies. Public mandate powers are scoped separately from household property. See docs/designs/assembly-polity.md.
+
+
+Public administration
+
+The optional public_offices system uses profile-owned public catalogues through the existing authority.appointments ledger. publicTerms schema 1 references a productive source and declared remuneration, service, remittance and succession confirmation. Pure publicAppointmentQuote/publicOfficeQuote reviews and their revalidating applies cover appointment, audit, repayment, confirmation and dismissal. Effective scope stops on death, custody, lost source/host, expiry or required sovereign confirmation. Public and private rights remain separate. Shared governmentRecognition projects living interests and stores bounded current support inside existing government rows; it creates no duplicate holder ledger. See docs/designs/administrative-monarchy.md.

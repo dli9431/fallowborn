@@ -2,6 +2,7 @@
    papal institutions additionally require an enabling faith. */
 window.FBDATA = window.FBDATA || {};
 FBDATA.systems = {
+  public_offices:{ id:'public_offices', desc:'Appointed public jurisdiction, audited receipts, service and sovereign recognition.', defaultEnabled:false, modules:['authority','treasury'] },
   roman_offices:{ id:'roman_offices', desc:'Scoped Roman offices, personal honors and contested imperial recognition.', defaultEnabled:false, modules:['authority'] },
   church_councils:{ id:'church_councils', desc:'Provincial gatherings of living bishops and protected congregations.', defaultEnabled:false, modules:['religion'] },
   ruler_conversion:{ id:'ruler_conversion', desc:'Public ruler conversion with court, church and community consequences.', defaultEnabled:false, modules:['religion','actions'] },

@@ -1622,7 +1622,7 @@ window.FB = window.FB || {};
       FB.ensureCharacterBynames(FB.state);
     });
     if (FB.ensureDynasticState) restoreRepair('dynastic state', function () {
-      FB.ensureDynasticState(FB.state);
+      FB.ensureDynasticState(FB.state,{restore:true});
     });
     if (FB.ensureCharacterStatusHistory) {
       restoreRepair('character status history', function () {

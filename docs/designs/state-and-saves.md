@@ -2078,3 +2078,9 @@ originRealmId preserves authored kin identities while a protagonist holds the co
 Constituencies and public mandates
 
 The optional governmentSupport schema-1 root stores bounded typed polity records, membership, selection, mandate, decision history, agreements and temporary dues. save_v4 validates the detached root before state adoption, including member principals, unique scopes, ruler generations, exact term policy, quorum and record limits. Missing roots remain missing on legacy restore; restore does not seed representatives. Queries return detached projections without RNG, uid or state writes. Full record ownership and limits are in docs/designs/assembly-polity.md.
+
+Reviewed public administration records
+
+Optional publicTerms schema 1 extends existing appointment rows. administrationProfileId, bounded recognition, publicVacancy and lastAccession extend existing government rows; publicCandidateIds extends the compact succession tree with at most eight actual person/member references. Detached validation rejects malformed sources, amounts, overlaps and political records before adoption. These optional records preserve save-v4 and existing subsystem versions. Old campaigns keep their stored forms, and restore never reseeds a revised historical profile, officer, payment or accession. Transient reviews and projections are not saved. See docs/designs/administrative-monarchy.md.
+
+Public courts are restored without materializing or repairing their succession. Their office, recognition and latest accession references retain referenced characters through compaction. The player public court references existing household characters directly rather than saving another compact royal tree.

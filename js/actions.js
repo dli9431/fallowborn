@@ -4437,6 +4437,9 @@ window.FB = window.FB || {};
       s.player.liege || s.holder && s.holder[s.player.provinceId])); },
     run:function (s) { if (FB.ui && FB.ui.showCommunityAssembly) FB.ui.showCommunityAssembly(
       s.player.liege || s.holder && s.holder[s.player.provinceId]); } },
+  { id:'public_administration', opensChoices:true, noConsume:true,
+    show:function (s) { return FB.systemEnabled(s, 'public_offices'); },
+    run:function (s) { if (FB.ui && FB.ui.showAdministration) FB.ui.showAdministration(); } },
   { id:'church_dealings', opensChoices:true, noConsume:true,
     show:function (s) { return !!FB.localInstitutionList && FB.localInstitutionList(s, 'church').length > 0; },
     run:function () { if (FB.ui && FB.ui.showLocalInstitutions) FB.ui.showLocalInstitutions('church'); } },
@@ -6895,6 +6898,11 @@ window.FB = window.FB || {};
     const p = state.player;
     let receipts = 0;
     let total = -FB.householdUpkeep(state) - FB.playerGovernmentCosts(state).total;
+    if (FB.publicOfficeBudget) total -= FB.publicOfficeBudget(state, 'player');
+    if (FB.publicOfficerIncome) {
+      const salary = FB.publicOfficerIncome(state, p.charId);
+      total += salary; receipts += salary;
+    }
     if (FB.householdStandardsUpkeep) total -= FB.householdStandardsUpkeep(state);
     if (FB.modifierUpkeep) total -= FB.modifierUpkeep(state, 'gold');
     if (FB.station.isLanded(p, state)) {
@@ -7031,6 +7039,7 @@ window.FB = window.FB || {};
 
     goldGroup = 'income';
     /* household property and carried treasures, line by line */
+    if (FB.publicOfficerIncome) add('gold', FB.T('Public office remuneration'), FB.publicOfficerIncome(state,p.charId));
     for (const hid of FB.holdingList(state)) {
       const def = FBDATA.holdings[hid];
       if (!def || !def.fx) continue;
@@ -7088,6 +7097,7 @@ window.FB = window.FB || {};
     const government = FB.playerGovernmentCosts(state);
     add('gold', FB.T('Government administration'), -government.administration);
     add('gold', FB.T('Official court expenses'), -government.court);
+    if (FB.publicOfficeBudget) add('gold', FB.T('Public office commitments'), -FB.publicOfficeBudget(state,'player'));
     goldGroup = 'household';
     const upkeep = FB.householdUpkeepParts(state);
     add('gold', FB.T('Household upkeep'), -upkeep.base);

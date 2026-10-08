@@ -304,3 +304,7 @@ The regional declaration contributes councils and episcopal sees through the exi
 Government strategy integration
 
 Government council strategies supply seats, holder eligibility and vacancy choice. The royal_council default retains catalogue order and existing system/station gates; strategyParameters.council.seats can select a validated subset. Summary, recommendations and appointments consume the same active catalogue and selection rules. See docs/designs/governments.md.
+
+Appointed public courts
+
+appointed_council replaces generated feudal Council seats with the existing scoped authority appointments shown in Public administration. Its empty feudal seat catalogue is deliberate and does not create another AI council ledger. Living public civil/military interests participate through the shared governmentRecognition projection, with independent principals and reviewed votes. See docs/designs/administrative-monarchy.md.

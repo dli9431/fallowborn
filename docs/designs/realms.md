@@ -1654,3 +1654,10 @@ A protagonist's public court keeps the compact kin graph through accession. When
 Assembly communities
 
 An assembly polity is the public holder of its declared counties. Its selected representative has a revocable mandate, not private county ownership or dynastic succession. Military transfer changes owner while retaining that community holder; a reviewed political settlement resolves autonomy or government conversion separately. Territory growth does not manufacture higher titles. See docs/designs/assembly-polity.md.
+
+
+Public administrative jurisdiction
+
+administrative_monarchy keeps sovereign county ownership and direct holders separate from revocable public governors. Fresh 800 Abbasid and Byzantine declarations select distinct profiles; independent subordinate courts retain their declared autonomy. Vacant jurisdiction does not generate a hereditary holder. Conquest and dismissal update existing authority scope without confiscating private settlement/household property. See docs/designs/administrative-monarchy.md.
+
+Public crown absorption rekeys the government profile and public commissions to the player before retiring the old realm. Household succession grants that crown only to the recognized candidate. A different recognized sovereign receives the existing realm through abdication, while household property stays with the playable dynasty; an unrecognized death leaves a dated public vacancy.

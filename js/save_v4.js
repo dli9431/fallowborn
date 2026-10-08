@@ -247,6 +247,10 @@
         invalid(where + '.scope');
       endTurn(value, where);
     });
+    if (FB.validatePublicAdministrationState) {
+      var publicFault = FB.validatePublicAdministrationState(state);
+      if (publicFault) invalid(publicFault);
+    }
     rows(authority, 'recognitions', seen, function (value, where) {
       if (!own(FBDATA.legitimacySources, value.source) ||
           !['active','revoked'].includes(value.status) ||

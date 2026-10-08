@@ -3712,3 +3712,8 @@ Both Deeds layouts expose Local kingship in an affected community. Its full shee
 Local assembly reviews
 
 js/ui_assembly.js uses the shared review fact, person and action cards. It retains partner selection, scroll, focus and disclosure state across review, Back, Escape and completion. Cost, duration, troop commitment and scope appear before confirmation; current mandate and membership are rechecked at commit. A stale review applies no charge or authority. The assembly sheet is separate from the family tree and uses the same flow in standard and CrazyGames distributions.
+
+
+Public administration reviews
+
+The Public administration deed opens a shared full-sheet review for profile, court, office, productive source, incumbent and sovereign candidate. Current treasury, qualifications, powers, fee, salary/share, term, private property distinction, service, remittance and arrears remain visible before a decision. Mutations require a concrete second review and reject changed terms. Existing review cards, person cards, accessible native selects and details buttons retain selection, open disclosure, scroll and focus on Back/Escape and outcome return. All chrome uses the shared localization paths; profile and office display fields are structured data. See docs/designs/administrative-monarchy.md.

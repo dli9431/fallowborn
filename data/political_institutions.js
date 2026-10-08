@@ -117,7 +117,34 @@ FBDATA.authorityOffices = {
   fiscal_agent:{ name:'Fiscal agent', desc:'Administers public receipts only in the appointed jurisdiction.', powers:['revenue'], scopes:['county'], succession:'reaffirm',
     recognitionSources:['imperial_commission','civic_acceptance'] },
   civic_delegate:{ name:'Civic delegate', desc:'Supplies civic consent in the named city, subject to community agreement.', powers:['consent'], scopes:['county'], succession:'continues',
-    recognitionSources:['civic_acceptance'] }
+    recognitionSources:['civic_acceptance'] },
+  public_governor:{ name:'Public governor', desc:'Appointed county courts and administration. Private estates and sovereign ownership remain separate.',
+    powers:['peace','revenue'], scopes:['county'], succession:'continues', publicRole:'governor',
+    appointment:{ gold:0, prestige:30, skill:'ste', minimum:6 } },
+  public_fiscal_officer:{ name:'Public fiscal officer', desc:'Audits and remits the named county receipts. No private estate or army command is granted.',
+    powers:['revenue'], scopes:['county'], succession:'continues', publicRole:'fiscal',
+    appointment:{ gold:0, prestige:20, skill:'ste', minimum:6 } },
+  public_commander:{ name:'Public commander', desc:'Commands an existing host, paid from an explicitly referenced productive county.',
+    powers:['ban'], scopes:['host'], succession:'continues', publicRole:'commander',
+    appointment:{ gold:0, prestige:30, skill:'mar', minimum:6 } },
+  abbasid_wali:{ name:'Wali', desc:'A revocable provincial commission, represented by one county jurisdiction. It creates no hereditary county.',
+    powers:['peace','revenue'], scopes:['county'], succession:'continues', publicRole:'governor',
+    appointment:{ gold:0, prestige:40, skill:'ste', minimum:7 } },
+  abbasid_amil:{ name:'Amil', desc:'Assesses and remits county public receipts. Provincial expenses precede remittance; private property remains separate.',
+    powers:['revenue'], scopes:['county'], succession:'continues', publicRole:'fiscal',
+    appointment:{ gold:0, prestige:30, skill:'ste', minimum:7 } },
+  abbasid_commander:{ name:'Appointed army commander', desc:'A salaried command over one existing host, without an iqta or private land grant.',
+    powers:['ban'], scopes:['host'], succession:'continues', publicRole:'commander',
+    appointment:{ gold:0, prestige:40, skill:'mar', minimum:7 } },
+  byzantine_strategos:{ name:'Strategos', desc:'An appointed provincial jurisdiction, abstracted at county scale. Commissioned military service uses existing hosts and equipment.',
+    powers:['peace','revenue'], scopes:['county'], succession:'continues', publicRole:'governor',
+    appointment:{ gold:0, prestige:40, skill:'mar', minimum:7 } },
+  byzantine_logothete:{ name:'Logothetes of the genikon', desc:'An appointed fiscal commission over the referenced county receipts. No pronoia or private estate is created.',
+    powers:['revenue'], scopes:['county'], succession:'continues', publicRole:'fiscal',
+    appointment:{ gold:0, prestige:40, skill:'ste', minimum:7 } },
+  byzantine_commander:{ name:'Commissioned host commander', desc:'Commands one existing host with public remuneration; military command and private property remain separate.',
+    powers:['ban'], scopes:['host'], succession:'continues', publicRole:'commander',
+    appointment:{ gold:0, prestige:40, skill:'mar', minimum:7 } }
 };
 FBDATA.legitimacySources = {
   army_acclamation:{ name:'Army acclamation', succession:'reaffirm' },
@@ -171,6 +198,14 @@ FBDATA.governmentForms = {
         { id:'county_household_interest', name:'Local households', principal:'capital_community', scope:'capital', basis:'community_assent',
           weight:3, continuity:'institution', minimumSupport:-5, minimumMartial:0, maximumLevy:0.7, maximumRevenue:0.7 }
       ] } },
+  administrative_monarchy:{ legalTradition:{ default:'faith', cultures:{ greek:'byzantine' } },
+    holders:'public_offices', succession:'public_accession',
+    territory:'fixed', consent:'delegated', levy:'public_service', revenue:'public_receipts',
+    council:'appointed_council', diplomacy:'territorial_diplomacy', ai:'public_administration',
+    ladder:'public_careers', administrationProfileId:'public_court',
+    officeCatalogue:['public_governor','public_fiscal_officer','public_commander',
+      'abbasid_wali','abbasid_amil','abbasid_commander','byzantine_strategos','byzantine_logothete','byzantine_commander'],
+    systems:{ enable:['public_offices'], disable:['feudal_service','scutage','estates','crown_bloc','royal_council'] } },
   territorial:{ legalTradition:{ default:'faith', cultures:{ greek:'byzantine' },
     realms:{ byzantium:'byzantine', byzantium_1066:'byzantine' } }, levy:'feudal_levy', revenue:'demesne_revenue', council:'royal_council', diplomacy:'territorial_diplomacy', holders:'feudal_vassals', succession:'dynastic',
     territory:'fixed', consent:'territorial', ladder:'inherited_ladder', ai:'federate_contracts', systems:{ enable:['feudal_service'] } },
@@ -187,6 +222,32 @@ FBDATA.governmentForms = {
     territory:'non_territorial', consent:'delegated', ladder:'federate_polity', ai:'roman_offices',
     officeCatalogue:['tribunus','comes_rei_militaris','dux','patricius'], systems:{ disable:['feudal_service'] } }
 };
+
+/* Dated public-service profiles. Shares, fees and thresholds are gameplay
+   abstractions; no religion, language or title selects one. */
+FBDATA.administrationProfiles = {
+  public_court:{ name:'Public court', offices:['public_governor','public_fiscal_officer','public_commander'],
+    governor:'public_governor', fiscal:'public_fiscal_officer', commander:'public_commander',
+    appointmentCost:5, termDays:720, confirmation:'continues',
+    finance:{ kind:'revenue_service', share:0.20, salary:0, serviceShare:0.35, remittance:1 },
+    accession:{ mode:'recognition', minimumAge:16, allowMinor:false, officeCandidates:true, threshold:0.5,
+      interests:[{ id:'civil', role:'governor', weight:1 },{ id:'military', role:'commander', weight:1 }] } },
+  abbasid_800:{ name:'Abbasid public administration (800)',
+    offices:['abbasid_wali','abbasid_amil','abbasid_commander'],
+    governor:'abbasid_wali', fiscal:'abbasid_amil', commander:'abbasid_commander',
+    appointmentCost:5, termDays:1080, confirmation:'continues',
+    finance:{ kind:'salary', share:0.15, salary:6, serviceShare:0, remittance:1 },
+    accession:{ mode:'designation', minimumAge:16, allowMinor:true, officeCandidates:false, threshold:0.5,
+      interests:[{ id:'civil', role:'governor', weight:1 },{ id:'military', role:'commander', weight:1 }] } },
+  byzantine_800:{ name:'Byzantine public administration (800)',
+    offices:['byzantine_strategos','byzantine_logothete','byzantine_commander'],
+    governor:'byzantine_strategos', fiscal:'byzantine_logothete', commander:'byzantine_commander',
+    appointmentCost:5, termDays:720, confirmation:'reaffirm',
+    finance:{ kind:'salary', share:0.10, salary:4, serviceShare:0.5, remittance:1 },
+    accession:{ mode:'recognition', minimumAge:16, allowMinor:false, officeCandidates:true, threshold:0.5,
+      interests:[{ id:'civil', role:'fiscal', weight:1 },{ id:'military', role:'governor', weight:1 }] } }
+};
+
 
 /* Great offices are stable save ids. Added seats receive the Council's
    ordinary vacancy, appointment, Standing, and effectiveness behavior;

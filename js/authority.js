@@ -308,6 +308,7 @@
         !Q.actor(s, { kind:'realm', id:row.institutionId })) return false;
     if (!within(s, row.institutionId, row.scope)) return false;
     var def = FBDATA.authorityOffices[row.officeId];
+    if (row.publicTerms && (!FB.publicAppointmentEffective || !FB.publicAppointmentEffective(s, row))) return false;
     if (!def || def.succession === 'reaffirm' &&
         row.appointerGeneration !== FB.realmRulerGeneration(s, row.institutionId)) return false;
     if (row.recognitionId) {
@@ -398,7 +399,7 @@
         appointmentId:row.id }, holder:copy(row.holder), scope:copy(row.scope),
         status:activeAppointment(s, row) ? 'active' :
           row.status === 'active' && FBDATA.authorityOffices[row.officeId] &&
-          FBDATA.authorityOffices[row.officeId].succession === 'reaffirm' &&
+          (row.publicTerms ? row.publicTerms.confirmation : FBDATA.authorityOffices[row.officeId].succession) === 'reaffirm' &&
           row.appointerGeneration !== FB.realmRulerGeneration(s, row.institutionId)
             ? 'contested' : row.status === 'active' ? 'expired' : row.status,
         terms:copy(row) });
@@ -1251,11 +1252,14 @@
     }
   };
   FB.officeCourtSeason = function (s) {
-    if (!FB.systemAvailable(s, 'roman_offices')) return;
+    if (!FB.systemAvailable(s, 'roman_offices') && !FB.systemAvailable(s, 'public_offices')) return;
     var period = Math.floor(s.turn / 90);
     if (period < 1 || s.officeCourtPeriod === period) return;
     s.officeCourtPeriod = period;
-    for (var court of FB.officeCourts(s)) {
+    var courts = FB.officeCourts(s).concat(Object.keys(s.realms).filter(function (rid) {
+      return FB.administrationProfile && FB.administrationProfile(s, rid);
+    }).map(function (rid) { return { id:rid }; }));
+    for (var court of courts) {
       var government = FB.governments.forRealm(s, court.id);
       if (government && typeof government.use.ai.offices === 'function')
         government.use.ai.offices(s, court.id);
@@ -1284,14 +1288,15 @@
             return power !== 'ban' && def.scopes.indexOf('county') < 0 && def.scopes.indexOf('realm') < 0;
           }) ||
           ['reaffirm','continues'].indexOf(def.succession) < 0 ||
-          !Array.isArray(def.recognitionSources) ||
-          def.recognitionSources.some(function (sourceId) {
+          def.publicRole !== undefined && ['governor','fiscal','commander'].indexOf(def.publicRole) < 0 ||
+          !def.publicRole && !Array.isArray(def.recognitionSources) ||
+          Array.isArray(def.recognitionSources) && def.recognitionSources.some(function (sourceId) {
             return !own(sources, sourceId);
           }) || def.appointment && (!Number.isFinite(def.appointment.gold) || def.appointment.gold < 0 ||
             !Number.isFinite(def.appointment.prestige) || def.appointment.prestige < 0 ||
             FB.SKILLS.indexOf(def.appointment.skill) < 0 ||
             !Number.isFinite(def.appointment.minimum) || def.appointment.minimum < 0 ||
-            def.recognitionSources.indexOf('imperial_commission') < 0 ||
+            !def.publicRole && def.recognitionSources.indexOf('imperial_commission') < 0 ||
             def.appointment.imperialOnly !== undefined && typeof def.appointment.imperialOnly !== 'boolean' ||
             def.appointment.annual !== undefined && typeof def.appointment.annual !== 'boolean'))
         errors.push(FB.T('Invalid authority office {id}.', { id:id }));
@@ -1368,6 +1373,11 @@
           federate:FB.realmNameParam(s, row.federateRealmId), amount:row.payPerSeason }));
     }
     for (var office of list(s, 'appointments')) {
+      if (office.publicTerms && office.status === 'active' &&
+          office.publicTerms.confirmation === 'reaffirm' &&
+          office.appointerGeneration !== FB.realmRulerGeneration(s, office.institutionId)) {
+        office.status = 'contested'; office.changedTurn = s.turn;
+      }
       if (office.status === 'active' && FBDATA.authorityOffices[office.officeId] &&
           FBDATA.authorityOffices[office.officeId].succession === 'reaffirm' &&
           office.appointerGeneration !== FB.realmRulerGeneration(s, office.institutionId)) {

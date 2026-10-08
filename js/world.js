@@ -1261,6 +1261,10 @@ window.FB = window.FB || {};
       if (realmDef.governingIdentity !== undefined &&
           !FB.authorityIdentityValid(null, realmDef.governingIdentity))
         fault('realm ' + rid + ' has invalid governing identity.');
+      if (realmDef.administrationProfileId !== undefined &&
+          (!ownKey(FBDATA.administrationProfiles,realmDef.administrationProfileId) ||
+           !FBDATA.governmentForms[platform.governments[rid]].administrationProfileId))
+        fault('realm ' + rid + ' has invalid public administration profile.');
       if (realmDef.religion !== undefined &&
           (!FB.faithExists(realmDef.religion, null) ||
            !FB.faithAssignable(realmDef.religion, null))) {
@@ -2752,6 +2756,7 @@ window.FB = window.FB || {};
     }
     // a realm whose form differs from the campaign default keeps a saved row
     if (FB.authoritySeedGovernments) FB.authoritySeedGovernments(state, forms);
+    if (FB.publicAdministrationSeed) FB.publicAdministrationSeed(state, FBDATA.realms);
     FB.repairRealmNames(state);
     // sovereignty (map color) = the top of each county's realm chain
     for (const pr of FB.world.provs) {
@@ -4105,6 +4110,7 @@ window.FB = window.FB || {};
       const r = state.realms[rid];
       if (!r || !r.alive) continue;
       if (FB.governments.successionForRealm(state, rid).delegatedLeadership) continue;
+      if (opts.restore && FB.administrationProfile && FB.administrationProfile(state,rid)) continue;
       if (rid === 'player') {
         if (r.ruler && r.ruler.generation === undefined) r.ruler.generation = 1;
         r.succession = r.succession || {
@@ -4828,6 +4834,7 @@ window.FB = window.FB || {};
   FB.courtRecordRetained = function (state, c, kinById, familyLinks) {
     if (FB.governments.support && FB.governments.support.referencesCharacter(state, c && c.id)) return true;
     if (!state || !c || !state.player) return false;
+    if (FB.publicAdministrationReferencesCharacter && FB.publicAdministrationReferencesCharacter(state,c.id)) return true;
     if (FB.federateReferencesCharacter && FB.federateReferencesCharacter(state, c.id)) return true;
     if (FB.settlementLordshipReferencesCharacter &&
         FB.settlementLordshipReferencesCharacter(state, c.id)) return true;
@@ -5391,6 +5398,7 @@ window.FB = window.FB || {};
 
   function makeHeirIfEmpty(state, r, s) {
     if (s.order.length) return null;
+    if (FB.governments.successionForRealm(state,r.id).repairEmpty === false) return null;
     const parentId = s.authoredCourt && r.ruler.age < 12 ? null : s.rulerMemberId || null;
     const generation = s.rulerGeneration === undefined ? 1 : s.rulerGeneration;
     let ordinal = 0;
@@ -8157,7 +8165,7 @@ window.FB = window.FB || {};
             yearWars.rebuild();
             continue;
           }
-          if (!papalClaimantId &&
+          if (!papalClaimantId && r.ruler.generation !== oldGeneration &&
               (FB.game.observe || id === FB.playerRealmId(state) ||
                 id === state.player.liege)) {
             FB.news(state, FB.msg('news.world.ruler_succeeds',
@@ -10291,12 +10299,17 @@ window.FB = window.FB || {};
      the current lawful heir. Re-key the special player node into an ordinary
      AI realm in place: no realm dies, so offices, technology, vassals, and
      ownership survive without vacancy, usurpation, or restoration effects. */
-  FB.abdicatePlayerRealmToHeir = function (state, heir) {
+  FB.abdicatePlayerRealmToHeir = function (state, heir, opts) {
+    opts = opts || {};
     const p = state && state.player;
     const realm = state && state.realms && state.realms.player;
-    if (!p || !realm || !realm.alive || !heir || heir.dead ||
+    const publicProfile = realm && FB.administrationProfile && FB.administrationProfile(state,'player');
+    const publicVacancy = !!(publicProfile && opts.publicVacancy);
+    const publicQuote = publicProfile && FB.governmentRecognition.accessionQuote(state,'player',opts.cause || 'abdication');
+    if (publicProfile && !publicVacancy && (!publicQuote.allowed || publicQuote.memberId !== (heir && heir.id))) return null;
+    if (!p || !realm || !realm.alive || !heir || heir.dead && !publicVacancy ||
         !p.provs || !p.provs.length ||
-        FB.isReigningRealmRuler(state, heir)) return null;
+        !publicVacancy && FB.isReigningRealmRuler(state, heir)) return null;
 
     let rid = 'abdicated_player_' + state.turn;
     let suffix = 2;
@@ -10305,7 +10318,7 @@ window.FB = window.FB || {};
     if (FB.ensureReligiousHeads) FB.ensureReligiousHeads(state);
 
     const generation = realm.ruler && realm.ruler.generation !== undefined
-      ? realm.ruler.generation + 1 : 2;
+      ? realm.ruler.generation + (publicVacancy ? 0 : 1) : 2;
     realm.id = rid;
     realm.ruler = {
       name:heir.name,
@@ -10325,7 +10338,7 @@ window.FB = window.FB || {};
       name:heir.name,
       sex:heir.sex,
       born:heir.born,
-      alive:true,
+      alive:!heir.dead,
       parentId:null,
       childIds:[],
       charId:heir.id,
@@ -10371,8 +10384,18 @@ window.FB = window.FB || {};
     if (!heir.royalLine) heir.royalLine = { realmId:rid, memberId:rootId };
 
     state.realms[rid] = realm;
+    if (publicProfile) {
+      FB.publicAdministrationRekey(state,'player',rid);
+      const government = state.authority.governments[rid];
+      if (publicVacancy) government.publicVacancy = {generation:generation,cause:opts.cause || 'death',openedTurn:state.turn};
+      else {
+        delete government.publicVacancy;
+        government.lastAccession = {generation:publicQuote.rulerGeneration,memberId:rootId,
+          cause:publicQuote.cause,turn:state.turn,minor:publicQuote.minor};
+      }
+    }
     if (FB.treasuryCreateRealm) FB.treasuryCreateRealm(state, rid, null, 0);
-    if (FB.noteCharacterStatus && FB.realmRulerTitleSnapshot) {
+    if (!publicVacancy && FB.noteCharacterStatus && FB.realmRulerTitleSnapshot) {
       const title = FB.realmRulerTitleSnapshot(state, realm, heir);
       FB.noteCharacterStatus(state, heir, title.tier, title);
       if (FB.noteLifeAccession) FB.noteLifeAccession(state, heir, title);
@@ -10420,6 +10443,7 @@ window.FB = window.FB || {};
        ruler it exists to record. */
     FB.rebuildRulerIndex(state);
     FB.ensureRealmSuccession(state, rid);
+    if (publicProfile && FB.ensureReligiousHeads) FB.ensureReligiousHeads(state);
     FB.invalidateRealmCache();
     if (FB.ui && FB.ui.mapDirty) FB.ui.mapDirty();
     return realm;
@@ -10438,6 +10462,15 @@ window.FB = window.FB || {};
     const inheritedLiege = inherited.liege || null;
     if (!state.realms.player || !state.realms.player.alive) FB.foundPlayerRealm(state);
     const mine = state.realms.player;
+    const publicProfile = FB.administrationProfile && FB.administrationProfile(state,rid);
+    if (publicProfile) {
+      FB.publicAdministrationRekey(state,rid,'player');
+      mine.ruler.generation = FB.realmRulerGeneration(state,rid);
+      mine.succession = {playerDynasty:true,rulerGeneration:mine.ruler.generation,heirCharId:null};
+      for (const officeId in (state.religiousHeads || {})) {
+        if (state.religiousHeads[officeId] === rid) state.religiousHeads[officeId] = 'player';
+      }
+    }
     if (sovereignTitle) {
       FB.changePlayerLiege(state, null, 'realm:inherit_sovereign');
     } else if (inheritedLiege !== 'player' &&

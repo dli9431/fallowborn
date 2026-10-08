@@ -2179,3 +2179,7 @@ Government dispatch routes player/AI recruitment, delegated levy service, rebel 
 Assembly military authority
 
 Assembly offensive declarations require current collective assent on the exact cause package, including at raw ordinary-war registration. Defensive recruitment remains available during a leadership vacancy. White peace obtains local assent and the other party’s agreement. Conquest of an assembly county changes military owner while retaining the community holder; autonomy and government conversion are separately reviewed political outcomes. Service and protection commitments redistribute bounded existing host capacity. See docs/designs/assembly-polity.md.
+
+Public military obligations
+
+public_service removes automatic hereditary-vassal levy contributions and applies a profile-declared funded commissioned share to existing county levy capacity. The Abbasid 800 salary profile preserves the ordinary paid-army baseline; the Byzantine 800 salary profile reserves half for effective funded service, and the generic revenue/service profile reserves 35 percent. Unpaid remuneration, arrears and ineffective commissions remove that share. Actual hosts, population, equipment technology, recruitment, supply and upkeep retain their canonical transactions. A host commission grants command over an existing exact host, without creating men or private land. Technology impact public_military_obligations is none; equipment gates remain. See docs/designs/administrative-monarchy.md.

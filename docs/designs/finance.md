@@ -578,3 +578,7 @@ Government revenue dispatch preserves the canonical player tax lines and realm t
 Assembly public accounts
 
 Community profiles bound local public income, levy contributions and protected reserves. Nomination charges use the candidate’s personal wallet for the protagonist and the polity treasury for NPCs. Outside agreements transfer one reviewed public payment between actual treasury counterparties. Temporary dues require collective assent, have an expiry, cannot overlap active dues and remain within the total public-income ceiling. No mandate permits pledging all households or selling communal land. Direct render quotes cannot invent new community household charges. See docs/designs/assembly-polity.md.
+
+Source-backed public remuneration
+
+Public office remuneration is paid from the same treasury that receives the referenced county receipts through the ordinary fiscal path. Actual salaries/revenue shares debit that payer and credit the officer once per period; projected household income never performs a second credit. Local pay precedes remittance, withholding creates real recoverable arrears, and audit/repayment/confirmation have separate reviewed consequences. Missing/inactive treasuries cannot issue pay. Ended assignments retain real arrears, while private estates and enterprises retain their existing income. See docs/designs/administrative-monarchy.md for source caps, conservation and accounting order.
