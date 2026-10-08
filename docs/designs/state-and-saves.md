@@ -2074,3 +2074,7 @@ Members have stable id/templateId, typed principal, typed realm/county scope, au
 Historical character principals may outlive ordinary character compaction. Their typed ids retain the recorded decision but grant nothing without the same current living principal. Fixed template principals must match their declaration; royal members, county scopes and institution definitions remain validated references.
 
 originRealmId preserves authored kin identities while a protagonist holds the court under the player realm key. Validation accepts that original authored prefix and the institutional/player aliases for borrowed branches, while retaining canonical source-member checks. Existing royal birth registration and the single annual court mortality pass also serve the adopted kin graph; household mortality retains its existing complementary scope. Household succession releases the public court before political selection can install another ruler.
+
+Constituencies and public mandates
+
+The optional governmentSupport schema-1 root stores bounded typed polity records, membership, selection, mandate, decision history, agreements and temporary dues. save_v4 validates the detached root before state adoption, including member principals, unique scopes, ruler generations, exact term policy, quorum and record limits. Missing roots remain missing on legacy restore; restore does not seed representatives. Queries return detached projections without RNG, uid or state writes. Full record ownership and limits are in docs/designs/assembly-polity.md.

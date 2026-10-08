@@ -2175,3 +2175,7 @@ The optional preview argument of greatHolyWarTargets and canCallGreatHolyWar rea
 Government strategy integration
 
 Government dispatch routes player/AI recruitment, delegated levy service, rebel capacity, muster permission, host upkeep, war-goal eligibility, declaration reviews and peace quotes through named strategies. Existing army, occupation, supply, treaty and territory transactions apply the results. See docs/designs/governments.md for the consumer inventory, typed contexts and compatibility boundaries.
+
+Assembly military authority
+
+Assembly offensive declarations require current collective assent on the exact cause package, including at raw ordinary-war registration. Defensive recruitment remains available during a leadership vacancy. White peace obtains local assent and the other party’s agreement. Conquest of an assembly county changes military owner while retaining the community holder; autonomy and government conversion are separately reviewed political outcomes. Service and protection commitments redistribute bounded existing host capacity. See docs/designs/assembly-polity.md.

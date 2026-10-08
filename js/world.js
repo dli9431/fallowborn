@@ -1234,6 +1234,9 @@ window.FB = window.FB || {};
     for (var rid in realms) {
       if (!Object.prototype.hasOwnProperty.call(realms, rid)) continue;
       var realmDef = realms[rid];
+      if (FB.governments.support && platform.governments[rid] && !FB.governments.problems(platform.governments[rid]).length)
+        FB.governments.support.definitionFaults(realmDef, platform.governments[rid], date.year, provinces)
+          .forEach(function (detail) { fault('realm ' + rid + ': ' + detail); });
       if (realmDef.liege && !realms[realmDef.liege]) {
         fault('realm ' + rid + ' has missing liege ' + realmDef.liege + '.');
       }
@@ -2762,6 +2765,7 @@ window.FB = window.FB || {};
     }
     FB.invalidateRealmCache();
     FB.initializeRoyalCourts(state, FBDATA.realms);
+    if (FB.governments.support) FB.governments.support.initialize(state, FBDATA.realms);
     FB.ensureReligiousHeads(state);
     FB.ensureDynasticState(state);
     if (FB.authoritySeedCommunities)
@@ -3970,6 +3974,7 @@ window.FB = window.FB || {};
   FB.ensureRealmSuccession = function (state, rid) {
     const r = state.realms[rid];
     if (!r || !r.alive) return null;
+    if (FB.governments.successionForRealm(state, rid).delegatedLeadership) return null;
     if (rid === 'player') {
       const form = FB.governments.forRealm(state, rid);
       return form && form.use.succession.selectionManaged && r.succession && r.succession.members ? r.succession : null;
@@ -4099,6 +4104,7 @@ window.FB = window.FB || {};
     for (const rid in state.realms) {
       const r = state.realms[rid];
       if (!r || !r.alive) continue;
+      if (FB.governments.successionForRealm(state, rid).delegatedLeadership) continue;
       if (rid === 'player') {
         if (r.ruler && r.ruler.generation === undefined) r.ruler.generation = 1;
         r.succession = r.succession || {
@@ -4221,6 +4227,8 @@ window.FB = window.FB || {};
      It establishes the succession first, advances a dead root immediately,
      and returns only once the living ruler is a full character. */
   FB.ensureRealmCourt = function (state, rid, opts) {
+    if (FB.governments.support && FB.governments.support.isDelegated(state, rid))
+      return FB.governments.support.delegate(state, rid);
     const r = state && state.realms && state.realms[rid];
     if (!r || !r.alive || rid === 'player' ||
         isPapalTerritorialRealm(state, rid)) return null;
@@ -4239,6 +4247,8 @@ window.FB = window.FB || {};
      world-tick passes, so under the default policy opening a sheet writes
      nothing at all. */
   FB.ensureRealmCourtForDisplay = function (state, rid) {
+    if (FB.governments.support && FB.governments.support.isDelegated(state, rid))
+      return FB.governments.support.delegate(state, rid);
     const r = state && state.realms && state.realms[rid];
     if (!r || !r.alive || rid === 'player' ||
         isPapalTerritorialRealm(state, rid)) return null;
@@ -4816,6 +4826,7 @@ window.FB = window.FB || {};
      again does count, and a missed reference class is the likeliest bug here,
      so the check errs toward keeping the record. */
   FB.courtRecordRetained = function (state, c, kinById, familyLinks) {
+    if (FB.governments.support && FB.governments.support.referencesCharacter(state, c && c.id)) return true;
     if (!state || !c || !state.player) return false;
     if (FB.federateReferencesCharacter && FB.federateReferencesCharacter(state, c.id)) return true;
     if (FB.settlementLordshipReferencesCharacter &&
@@ -6699,6 +6710,7 @@ window.FB = window.FB || {};
 
   FB.recognizeCompleteDuchy = function (state, rid, options) {
     options = options || {};
+    if (FB.governments.call(state, rid, 'territory', 'profile', {}).allowsTitleGrowth === false) return null;
     const did = FB.completeDuchyForRealm(state, rid, options.duchyId);
     if (!did) return null;
     const realm = state.realms[rid];
@@ -8039,6 +8051,15 @@ window.FB = window.FB || {};
           const form = FB.governments.forRealm(state, id);
           if (form && form.use.succession.selectionManaged && r.succession && r.succession.members)
             tickRoyalFamily(state, id, familyLinks, r.succession, annualContext);
+          continue;
+        }
+        const delegatedLeadership = FB.governments.successionForRealm(state, id).delegatedLeadership;
+        if (delegatedLeadership && FB.governments.support) {
+          FB.governments.support.tick(state, id);
+          const representative = FB.governments.support.delegate(state, id);
+          if (representative) r.ruler.age = state.date.year - representative.born;
+          if (representative && state.date.year - representative.born > 55 && FB.chance(0.07))
+            FB.killChar(state, representative);
           continue;
         }
         if (timing) timing.count('World annual: realms processed');

@@ -4431,6 +4431,12 @@ window.FB = window.FB || {};
   { id:'local_kingship', opensChoices:true, noConsume:true,
     show:function (s) { var rid = FB.governmentSelection && FB.governmentSelection.localRealm(s); return !!rid; },
     run:function () { if (FB.ui && FB.ui.showLocalKingship) FB.ui.showLocalKingship(); } },
+
+  { id:'community_assembly', opensChoices:true, noConsume:true,
+    show:function (s) { return !!(FB.governments.support && FB.governments.support.row(s,
+      s.player.liege || s.holder && s.holder[s.player.provinceId])); },
+    run:function (s) { if (FB.ui && FB.ui.showCommunityAssembly) FB.ui.showCommunityAssembly(
+      s.player.liege || s.holder && s.holder[s.player.provinceId]); } },
   { id:'church_dealings', opensChoices:true, noConsume:true,
     show:function (s) { return !!FB.localInstitutionList && FB.localInstitutionList(s, 'church').length > 0; },
     run:function () { if (FB.ui && FB.ui.showLocalInstitutions) FB.ui.showLocalInstitutions('church'); } },

@@ -216,3 +216,7 @@ The static regional source list includes data/bookmark_476_outer.js. Its outer d
 Government selection presentation
 
 Selection interest and transformation names are extracted from governmentForms into governmentSelection.<form>.<member-or-transformation>.<id>.name.default. UI labels and blockers use literal FB.T, with data names resolved through exact-source aliases. The conditional card uses governmentContest.<story>.<name-or-desc>.default. Durable accession news uses news.government.local_accession. Saved phases, interests, votes, obligations and reasons remain ids and numbers. Feature work adds extractor support without regenerating catalogs.
+
+Assembly display owners
+
+The extractor reads assemblyOpenings names as assemblyOpening.<id>.name, assemblyCounties names and settlement names as assemblyCounty.<id> display fields, and constituencyProfiles member names as constituencyMember.<profile>.<member>.name. Runtime member labels use dataText with the same owner. Opening representative names are proper names and are not extracted. Engine cards use FB.T and durable delegation news uses FB.msg; saved mandate and decision records contain no rendered prose.

@@ -120,6 +120,9 @@ FBDATA.focuses = [
 ];
 
 FBDATA.deeds = [
+  { id:'community_assembly', label:'Local assembly', icon:'🏛',
+    desc:'Review the local mandate, represented interests and reserved decisions.',
+    section:'realm', group:'realm', flow:'choices', handler:'community_assembly' },
   { id:'poach', systems:['manorial_tenure'], label:'🗡 Desperate measures…', order:0,
     desc:'Choose an illegal way to take food, goods, or coin from the lord.', section:'work', group:'work', flow:'choices', cooldownDays:30, handler:'poach' },
   { id:'scheme_rival', label:'🗡 Scheme against {rival}', order:1,

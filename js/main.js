@@ -3975,6 +3975,7 @@ FB.CHANGELOG = [
       seasonBoundary = true;
       if (s.date.season > 3) { s.date.season = 0; s.date.year++; newYear = true; }
     }
+    if (FB.governments.support) FB.governments.support.day(s);
     if (!G.observe) {
       noteCampaignActivation('firstDayAdvanced', 'first-day-advanced');
     }

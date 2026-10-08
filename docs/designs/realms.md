@@ -1650,3 +1650,7 @@ Local kingship continuity
 The wider 476 Cashel district uses lineage_kingship. Its territory remains fixed and directly held, but the recognized kin pool and living local interests select its ruler. A failed selection retains owner and holder assignments and local administration. It creates neither an unrelated heir nor a territorial partition. Household holdings and settlement property remain in their ordinary stores. The conditional government_contest story reads the canonical vacancy and creates no candidates or competing ruler.
 
 A protagonist's public court keeps the compact kin graph through accession. When the protagonist leaves that leadership, the court returns to its original institutional realm id with its military commitments, rights and local records. Household money stays in the personal purse; the independent public account begins without invented funds. The household heir receives political leadership only if separately selected. Transformation and conquest use the government selection review boundary described in governments.md.
+
+Assembly communities
+
+An assembly polity is the public holder of its declared counties. Its selected representative has a revocable mandate, not private county ownership or dynastic succession. Military transfer changes owner while retaining that community holder; a reviewed political settlement resolves autonomy or government conversion separately. Territory growth does not manufacture higher titles. See docs/designs/assembly-polity.md.

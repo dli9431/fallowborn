@@ -31,6 +31,22 @@ class JavascriptLexerTests(unittest.TestCase):
 
 
 class StructuredDataExtractionTests(unittest.TestCase):
+    def test_assembly_policies_have_display_owners_without_translating_people(self):
+        inventory = i18n_catalog.Inventory()
+        i18n_catalog.extract_structured(inventory)
+        for key, text in (
+            ('assemblyOpening.north_coast_476.name.default', 'Northern coastal households'),
+            ('assemblyOpening.federation_example.name.default', 'Settlement federation example'),
+            ('assemblyCounty.north_coast_476.name.default', 'Northern Estonian coast'),
+            ('assemblyCounty.north_coast_476.settlement.0.name.default', 'Coastal households'),
+            ('constituencyMember.coastal_households.cultivators.name.default', 'Cultivating households'),
+            ('constituencyMember.settlement_federation.routes.name.default', 'Route keepers'),
+        ):
+            self.assertEqual(inventory.entries[key]['text'], text)
+            self.assertIn('assembly_polities.js', inventory.meta[key]['location'])
+        self.assertNotIn(i18n_catalog.source_key('Vaino'), inventory.entries)
+        self.assertNotIn(i18n_catalog.source_key('Edan'), inventory.entries)
+
     def test_wider_476_content_has_region_and_bookmark_display_owners(self):
         inventory = i18n_catalog.Inventory()
         i18n_catalog.extract_structured(inventory)

@@ -208,6 +208,9 @@ window.FB = window.FB || {};
       ? FB.faithValue(state, lineage[0], 'rankTitles') : null;
     var legacySource = legacy && plain(legacy.value) ? legacy.sourceId || lineage[0] : null;
     var only = definers().rank, found = null;
+    var institutionId = r('governments'), institution = entry('governments', institutionId);
+    if (institution && institution.institutionalRanks && hasBand(institution.rank))
+      found = { source:'governments.' + institutionId, titles:institution.rank, faithId:null };
     for (var li = 0; li < LAYERS.length && !found; li++) {
       var layer = LAYERS[li];
       if (!only[layer] && !(layer === 'faiths' && legacySource)) continue;
@@ -314,6 +317,8 @@ window.FB = window.FB || {};
       for (var id in table) if (own(table, id)) {
         var where = layer + '.' + id, e = table[id];
         if (!plain(e)) { fault(where, 'must be an object.'); continue; }
+        if (e.institutionalRanks !== undefined && (layer !== 'governments' || typeof e.institutionalRanks !== 'boolean'))
+          fault(where, 'institutionalRanks must be a government boolean.');
         if (!own(tables[layer], id) && !(extra && own(extra[layer], id))) {
           fault(where, 'names an unknown ' + layer + ' id.');
         }

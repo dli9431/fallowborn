@@ -3708,3 +3708,7 @@ The ordinary appointment scope picker includes the exact foreign host under effe
 Local kingship review
 
 Both Deeds layouts expose Local kingship in an affected community. Its full sheet uses shared Governance fact cards, ordinary people rows, native candidate/terms selectors and shared action-card Details. It shows current recognition, vacancy, each interest's scope, weight and living principal, support or refusal, obligations, payment and the first blocker. Candidate eligibility is distinct from household work and property. Recognition, withholding, withdrawal, negotiation, accession, community enrollment, abdication and permitted form changes open a separate cost/consequence review. Stale confirmation spends nothing. Back, Escape and outcome Continue retain candidate, terms, scroll, expanded Details and semantic action focus. Abdication or a form change closes the former court view when its context no longer exists.
+
+Local assembly reviews
+
+js/ui_assembly.js uses the shared review fact, person and action cards. It retains partner selection, scroll, focus and disclosure state across review, Back, Escape and completion. Cost, duration, troop commitment and scope appear before confirmation; current mandate and membership are rechecked at commit. A stale review applies no charge or authority. The assembly sheet is separate from the family tree and uses the same flow in standard and CrazyGames distributions.
