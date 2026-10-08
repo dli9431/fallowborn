@@ -2064,3 +2064,7 @@ A political track saves its authored stage id in the existing phase field. The d
 Government strategy integration
 
 Government dispatch adds no saved fields or schema revision. Saved form ids and optional court policy ids select validated implementations. Derived per-day resolution lives in a WeakMap and is recreated for restored states. Office and acclamation remain explicit dynastic delegations; restore never manufactures an election or constituency.
+
+Constituencies and public mandates
+
+The optional governmentSupport schema-1 root stores bounded typed polity records, membership, selection, mandate, decision history, agreements and temporary dues. save_v4 validates the detached root before state adoption, including member principals, unique scopes, ruler generations, exact term policy, quorum and record limits. Missing roots remain missing on legacy restore; restore does not seed representatives. Queries return detached projections without RNG, uid or state writes. Full record ownership and limits are in docs/designs/assembly-polity.md.

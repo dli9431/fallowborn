@@ -764,6 +764,31 @@ def extract_structured(inv: Inventory) -> None:
                         f"data/ambitions.js:{line}", f"Historical ambition {item_id}, {field}.",
                         TOKEN_RE.findall(record["text"]))
 
+    # Local represented interests are nested in typed policy declarations.
+    assembly_path = DATA / "assembly_polities.js"
+    for table, namespace in (("assemblyOpenings", "assemblyOpening"), ("assemblyCounties", "assemblyCounty")):
+        for item_id, item_node in (node_object(find_assignment(assembly_path, "FBDATA", table)) or {}).items():
+            item = node_object(item_node) or {}
+            for branch, record, line in branch_records(item.get("name")):
+                inv.add(f"{namespace}.{item_id}.name.{branch}", record,
+                        f"data/assembly_polities.js:{line}", "Local polity display name.", ())
+            for index, site_node in enumerate(node_array(item.get("settlements")) or []):
+                site = node_object(site_node) or {}
+                for branch, record, line in branch_records(site.get("name")):
+                    inv.add(f"{namespace}.{item_id}.settlement.{index}.name.{branch}", record,
+                            f"data/assembly_polities.js:{line}", "Local settlement display name.", ())
+    for profile_id, profile_node in (node_object(find_assignment(assembly_path, "FBDATA", "constituencyProfiles")) or {}).items():
+        profile = node_object(profile_node) or {}
+        for member_node in node_array(profile.get("members")) or []:
+            member = node_object(member_node) or {}
+            member_id = node_string(member.get("id"))
+            if not member_id:
+                continue
+            for branch, record, line in branch_records(member.get("name")):
+                inv.add(f"constituencyMember.{profile_id}.{member_id}.name.{branch}", record,
+                        f"data/assembly_polities.js:{line}", "Local represented interest.",
+                        TOKEN_RE.findall(record["text"]))
+
     for data_name, namespace in STRUCTURED_DATA.items():
         if data_name == "tech":
             rel = TECHNOLOGY_FILE.relative_to(ROOT).as_posix()

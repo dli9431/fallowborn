@@ -186,7 +186,7 @@ window.FBMODS = window.FBMODS || [];
     householdStandards:true, marketGoods:true, marketEndowmentTypes:true,
     marketEndowments:true, travelPurposes:true, travelSites:true, tournaments:true,
     finance:true, plots:true, intrigue:true, legalTraditions:true, justiceSentences:true, governmentForms:true, items:true, itemPools:true,
-    rulerTraits:true, raidingTraditions:true, councilSeats:true,
+    rulerTraits:true, raidingTraditions:true, councilSeats:true, constituencyProfiles:true,
     councilRules:true, politicalBlocs:true,
     policies:true, elections:true, privileges:true, collectiveDemands:true,
     settlementNames:true, settlementSites:true, settlementLayouts:true, titles:true, papacy:true,
@@ -1665,6 +1665,11 @@ window.FBMODS = window.FBMODS || [];
       });
     }
     if (own(mod, 'legalTraditions') || own(mod, 'justiceSentences') || own(mod, 'governmentForms') || own(mod, 'religions')) validateJustice(mod);
+    if (mod.constituencyProfiles) {
+      const profiles = combinedTable(FBDATA.constituencyProfiles, mod.constituencyProfiles, 'constituencyProfiles');
+      const problems = FB.governments.support.validateProfiles(profiles);
+      if (problems.length) fail('constituencyProfiles', problems[0]);
+    }
     if (own(mod, 'intrigue') || own(mod, 'plots')) validateIntrigue(mod);
     if (own(mod, 'itemPools')) validateItemPools(mod);
     if (own(mod, 'careers')) validateCareers(mod);
@@ -2026,6 +2031,7 @@ window.FBMODS = window.FBMODS || [];
     if (mod.legalTraditions) mergeTable(FBDATA.legalTraditions, mod.legalTraditions);
     if (mod.justiceSentences) mergeTable(FBDATA.justiceSentences, mod.justiceSentences);
     if (mod.governmentForms) { mergeTable(FBDATA.governmentForms, mod.governmentForms); FB.governments.invalidate(); }
+    if (mod.constituencyProfiles) mergeTable(FBDATA.constituencyProfiles, mod.constituencyProfiles);
     if (mod.religions) for (const k in mod.religions) FBDATA.religions[k] = mod.religions[k];
     if (mod.traits) for (const k in mod.traits) FBDATA.traits[k] = mod.traits[k];
     if (mod.ailments) for (const k in mod.ailments) FBDATA.ailments[k] = mod.ailments[k];

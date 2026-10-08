@@ -1645,3 +1645,7 @@ The reusable campaign settlementForm option allows a nonterritorial actor to ado
 Wider spring-476 courts
 
 476_outer adds sixteen authored direct-holder regnum courts for broad British and northern communities and Sasanian Persia. Fifteen representatives are explicitly generated; Peroz is named with an editorial working birth year. These are budget-conscious regional aggregates where the sources cannot establish a precise spring-476 hierarchy. The existing Roman eastern realm directly holds the newly authored Cilician, Syrian, Palestinian and western Mesopotamian counties under roman_civic, with new province groups in its existing Oriens chain. Other new courts have no fabricated de jure hierarchy or generated feudal vassals. Possession and public jurisdiction rights do not imply private land deeds. This extends baseline political geography with none technology reviews for each authored region and leaves future wars and succession to the existing ordinary systems.
+
+Assembly communities
+
+An assembly polity is the public holder of its declared counties. Its selected representative has a revocable mandate, not private county ownership or dynastic succession. Military transfer changes owner while retaining that community holder; a reviewed political settlement resolves autonomy or government conversion separately. Territory growth does not manufacture higher titles. See docs/designs/assembly-polity.md.

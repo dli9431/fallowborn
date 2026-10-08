@@ -3705,3 +3705,7 @@ Partition and dated religious decisions use the existing Deeds card, shared stor
 Contracted host scope presentation
 
 The ordinary appointment scope picker includes the exact foreign host under effective nonhostile bilateral service with the appointing patron. The same authority predicate determines the office's current power, so a released, expired or succeeded contract removes that choice and its active mandate. The 476 Strabo commission uses this shared presentation without a special historical screen or hidden authority exemption.
+
+Local assembly reviews
+
+js/ui_assembly.js uses the shared review fact, person and action cards. It retains partner selection, scroll, focus and disclosure state across review, Back, Escape and completion. Cost, duration, troop commitment and scope appear before confirmation; current mandate and membership are rechecked at commit. A stale review applies no charge or authority. The assembly sheet is separate from the family tree and uses the same flow in standard and CrazyGames distributions.

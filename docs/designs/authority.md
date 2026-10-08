@@ -384,3 +384,7 @@ The 476 Strabo declaration uses this rule for magister_praesentalis on host_476_
 Government strategy integration
 
 Government dispatch now owns territorial Consent and typed levy, war, treaty and grant decision hooks. FB.political.consent projects the selected strategy and its constituency reference; existing contracts, council thresholds and authority transactions remain canonical. No constituency state is added. See docs/designs/governments.md for context fields and default delegations.
+
+Collective local authority
+
+The shared constituency contract in FB.governments.support supplies typed members and public mandates. Political consent dispatches character actors to their actual delegated realm, while preserving household residence for nondelegates. Reserved offensive war, outside agreements, extraordinary dues and conversion need an exact current collective decision. Ordinary household activity, defensive recruitment and existing customary jurisdiction survive vacancies. Public mandate powers are scoped separately from household property. See docs/designs/assembly-polity.md.

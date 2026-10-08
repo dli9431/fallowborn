@@ -64,7 +64,14 @@
   });
   Q.consent = function (state, actor, operation, scope) {
     var rid = actor && actor.kind === 'realm' ? actor.id : actor && actor.kind === 'character'
-      ? state && state.player && actor.id === state.player.charId ? 'player' : FB.realmIdForRulerCharacter(state, actor.id) : null;
+      ? FB.realmIdForRulerCharacter(state, actor.id) ||
+        (state && state.player && actor.id === state.player.charId ? 'player' : null) : null;
+    if (actor && actor.kind === 'character' && (!rid || rid === 'player' && !(state.realms.player && state.realms.player.alive))) {
+      var character = state.chars && state.chars[actor.id], player = actor.id === state.player.charId;
+      var provinceId = player ? state.player.provinceId : character && character.homeProvinceId;
+      var localRealm = player && state.player.liege || provinceId && state.holder && state.holder[provinceId];
+      if (localRealm) rid = localRealm;
+    }
     var context = { actor:actor, operation:operation, scope:scope };
     var result = G.call(state, rid, 'consent', 'decision', context);
     if (result.required) {

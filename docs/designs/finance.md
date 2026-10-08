@@ -574,3 +574,7 @@ When an authored court becomes player-controlled, its actual NPC treasury balanc
 Government strategy integration
 
 Government revenue dispatch preserves the canonical player tax lines and realm treasury receipt calculation. County/site bases, subordinate remittances and lender/fiscal assignments use the same strategies at projection and collection. Private income and transfer bookkeeping keep their existing sources. See docs/designs/governments.md.
+
+Assembly public accounts
+
+Community profiles bound local public income, levy contributions and protected reserves. Nomination charges use the candidate’s personal wallet for the protagonist and the polity treasury for NPCs. Outside agreements transfer one reviewed public payment between actual treasury counterparties. Temporary dues require collective assent, have an expiry, cannot overlap active dues and remain within the total public-income ceiling. No mandate permits pledging all households or selling communal land. Direct render quotes cannot invent new community household charges. See docs/designs/assembly-polity.md.

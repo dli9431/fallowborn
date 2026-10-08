@@ -135,6 +135,12 @@ FBDATA.lexicons = {
   },
 
   governments:{
+    assembly_polity:{ institutionalRanks:true, rank:{
+      m:['Dependent','Householder','Trusted neighbor','Local servant','Senior householder','Senior householder','Senior householder','Senior householder'],
+      f:['Dependent','Householder','Trusted neighbor','Local servant','Senior householder','Senior householder','Senior householder','Senior householder']
+    }, terms:{ council:{ one:'local council', other:'local councils' },
+      estates:{ one:'represented interest', other:'represented interests' },
+      kingdom:{ one:'community', other:'communities' }, empire:{ one:'federation', other:'federations' } } },
     roman_civic:{ rank:{
       m:['Dependent','Free Citizen','Curialis','Decurion','Comes','Magister militum','Patrician','Augustus'],
       f:['Dependent','Free Citizen','Curialis','Decurion','Comitissa','Magistra militum','Patrician','Augusta']

@@ -213,3 +213,7 @@ Literal FBDATA.bookmarkCandidates and bookmarkContent declarations in data/bookm
 Wider spring-476 display owners
 
 The static regional source list includes data/bookmark_476_outer.js. Its outer declaration uses province.476_outer, realm.476_outer and settlement.476_outer owners, while administrative title ids retain their existing typed keys. The wider bookmark name and description have bookmark.476_outer owners. Regional cultures, law labels, event options, effects.log and costs use the existing structured routes. Original same-date regional labels register both their 476 and 476_outer owners and retain exact-source aliases when reused by the wider snapshot. No generated catalog needs to change on this feature branch. tools/test_i18n_catalog.py covers the additional source and owner paths.
+
+Assembly display owners
+
+The extractor reads assemblyOpenings names as assemblyOpening.<id>.name, assemblyCounties names and settlement names as assemblyCounty.<id> display fields, and constituencyProfiles member names as constituencyMember.<profile>.<member>.name. Runtime member labels use dataText with the same owner. Opening representative names are proper names and are not extracted. Engine cards use FB.T and durable delegation news uses FB.msg; saved mandate and decision records contain no rendered prose.

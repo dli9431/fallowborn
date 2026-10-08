@@ -356,3 +356,7 @@ Optional system requirements validate before a runtime mod is applied. Bookmarks
 Existing-ruler scenario validation
 
 The start-scenario schema admits hidden, rulerRealmId, governmentForm, characterName and onboarding. A ruler scenario must name a fixed bookmark/county, match the bookmark's named ruler, sex, culture, faith and government, and use only the standard existing-court family label. Its tier may span the registered station bands; ordinary scenario tiers remain bounded to 0-3. Unknown governments, mismatched identities and partial ruler declarations reject before catalogue mutation. See ../MODDING.md.
+
+Typed constituency profiles
+
+constituencyProfiles is a public keyed table merged and validated with the detached effective catalogues. Atomic bookmark realms selecting delegated leadership must declare a valid constituency and inhabited territory, without a liege. Optional representative fields supply an ordinary opening character. JSON selects registered strategies and typed policy; it cannot provide engine functions. See docs/MODDING.md and docs/designs/assembly-polity.md.
