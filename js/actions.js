@@ -6159,9 +6159,9 @@ window.FB = window.FB || {};
     } else if (state.player.provs.indexOf(id) >= 0) countyIds = [id];
     let tax = 0, levy = 0;
     for (const pid of countyIds) {
-      tax += countyTaxBase(state, pid,
+      tax += FB.countyTaxBase(state, pid,
         FBDATA.balance.taxPerDev * def.taxShare);
-      levy += domainCountyLevyBase(state, pid) * def.levyShare;
+      levy += FB.domainCountyLevyBase(state, pid) * def.levyShare;
     }
     const tenureStanding = tenure === 'life' ? -5 : (tenure === 'term' ? -10 : 0);
     return {
@@ -6386,7 +6386,7 @@ window.FB = window.FB || {};
     const contract = FB.feudalContractOf(state, rid);
     const charter = FB.feudalCharterDef(contract.charterId);
     const fiscal = FB.settlementActorFiscal(state, rid);
-    const total = fiscal.tax * charter.taxShare;
+    const total = FB.governments.call(state, rid, 'revenue', 'remittance', { amount:fiscal.tax, share:charter.taxShare, recipientId:realm.liege, kind:'realm' });
     return total;
   };
 
@@ -6429,8 +6429,10 @@ window.FB = window.FB || {};
     const beforeLiege = taxable + national + council + positions + monopoly +
       papacy + bishopric + abbey + dues;
     const countyLiege = p.liege && (p.provs || []).length
-      ? -(taxable + national + council + positions + monopoly + papacy + bishopric) *
-        (FB.parliamentAid ? FB.parliamentAid(state) : 0.25) : 0;
+      ? -FB.governments.call(state, 'player', 'revenue', 'remittance', {
+        amount:taxable + national + council + positions + monopoly + papacy + bishopric,
+        share:FB.parliamentAid ? FB.parliamentAid(state) : 0.25, recipientId:p.liege, kind:'realm'
+      }) : 0;
     const liege = countyLiege - fiscal.duesOut;
     return {
       rents:rents, rentBase:rentBase, rentTraits:rentTraits,
@@ -6476,12 +6478,12 @@ window.FB = window.FB || {};
       state.player.provs && state.player.provs.length || 0);
   };
 
-  function domainCountyLevyBase(state, pid) {
+  FB.domainCountyLevyBase = function (state, pid) {
     const modifier = FB.modBonus
       ? Math.max(0, 1 + FB.modBonus(state, 'levy', pid)) : 1;
     const popFactor = FB.countyPopulationFactor ? FB.countyPopulationFactor(state, pid) : 1.0;
     return (state.dev[pid] || 1) * popFactor * FBDATA.balance.levyPerDev * modifier;
-  }
+  };
 
   /* The cleanup preview compares base county tax and levy plus direct-vassal
      land contributions. Character, household, item, building, office,
@@ -8041,12 +8043,13 @@ window.FB = window.FB || {};
     if (!realm || !realm.alive || realm.liege !== 'player') return 0;
     const B = FBDATA.balance;
     const rate = FB.vassalLevyRate(state, rid);
+    const government = FB.governments.forRealm(state, rid);
     let amount = 0;
     const context = { capacities:{} };
     for (const site of FB.directSettlements(state, rid)) {
       if (recruitmentRealm && FB.recruitmentCountyBlocked(state, recruitmentRealm, site.provinceId)) continue;
       const a = FB.settlementFiscalProjection(state, site.provinceId, site.settlement, context).amounts;
-      amount += (a.availableLevy + a.specialists - a.specialistDues) * rate;
+      amount += FB.governments.call(state, rid, 'levy', 'service', { amount:a.availableLevy + a.specialists - a.specialistDues, share:rate }, government);
     }
     return amount;
   };

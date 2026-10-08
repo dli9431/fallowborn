@@ -2025,7 +2025,7 @@ window.FBMODS = window.FBMODS || [];
       mod.religiousPaths);
     if (mod.legalTraditions) mergeTable(FBDATA.legalTraditions, mod.legalTraditions);
     if (mod.justiceSentences) mergeTable(FBDATA.justiceSentences, mod.justiceSentences);
-    if (mod.governmentForms) mergeTable(FBDATA.governmentForms, mod.governmentForms);
+    if (mod.governmentForms) { mergeTable(FBDATA.governmentForms, mod.governmentForms); FB.governments.invalidate(); }
     if (mod.religions) for (const k in mod.religions) FBDATA.religions[k] = mod.religions[k];
     if (mod.traits) for (const k in mod.traits) FBDATA.traits[k] = mod.traits[k];
     if (mod.ailments) for (const k in mod.ailments) FBDATA.ailments[k] = mod.ailments[k];

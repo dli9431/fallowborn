@@ -7,6 +7,8 @@ dependsOnRuntime(__filename, [
   'data/bookmark_476_italy.js', 'data/bookmark_476_dalmatia_east.js',
   'data/bookmark_476_gaul_iberia.js', 'data/bookmark_476_africa.js',
   'data/political_institutions.js', 'data/cultures.js',
+  'js/government_levy.js', 'js/government_revenue.js', 'js/government_council.js',
+  'js/government_diplomacy.js', 'js/government_ai.js', 'js/government_continuity.js',
   'js/governments.js', 'js/world.js', 'js/authority.js', 'js/federates.js', 'js/politics.js',
   'js/armies.js', 'js/wars.js', 'js/stories.js', 'js/story_courts.js', 'js/main.js',
   'js/save.js', 'js/save_v4.js'
@@ -73,13 +75,13 @@ test('every bookmark declares an era and resolves each realm form',
     expect(result.data).toEqual([]);
     expect(result.territorial).toEqual({ holders:'feudal_vassals',
       succession:'dynastic', territory:'fixed', consent:'territorial',
-      levy:'engine_default', revenue:'engine_default', council:'engine_default',
-      diplomacy:'engine_default', ai:'federate_contracts',
-      vocabulary:'engine_default', ladder:'engine_default' });
+      levy:'feudal_levy', revenue:'demesne_revenue', council:'royal_council',
+      diplomacy:'territorial_diplomacy', ai:'federate_contracts',
+      ladder:'inherited_ladder' });
     expect(result.regnum).toBe('direct');
     expect(result.lateAntique).toEqual([
-      ['roman_civic','roman_civic','federate_contracts'],
-      ['federate_polity','federate_polity','federate_contracts']
+      ['roman_civic','roman_civic','roman_offices'],
+      ['federate_polity','federate_polity','roman_offices']
     ]);
   });
 

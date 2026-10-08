@@ -84,7 +84,7 @@
   FB.authoritySetGovernment = function (s, rid, formId) {
     var current = Q.government(s, { kind:'realm', id:rid });
     if (!current || !FBDATA.governmentForms[formId] ||
-        current.formId === formId) return false;
+        FB.governments.problems(formId).length || current.formId === formId) return false;
     ensure(s).governments[rid] = Object.assign({},
       s.authority && s.authority.governments && s.authority.governments[rid],
       { formId:formId, sinceTurn:s.turn });
@@ -803,10 +803,9 @@
       if (rid && FB.settlementCountyHolder(s, pid) === rid)
         return basis('direct_receipt', rid);
     } else if (power === 'consent') {
-      var government = rid && Q.government(s, { kind:'realm', id:rid });
-      var consent = government &&
-        FB.governments.strategy('consent', government.rules.consent);
-      if (consent && consent.territorialConsent &&
+      var government = rid && FB.governments.forRealm(s, rid);
+      var consent = government && government.use.consent;
+      if (consent && consent.local(s, rid, { provinceId:pid }) &&
           FB.realmTerritory(s, rid).indexOf(pid) >= 0)
         return basis('territorial_consent', rid);
     }
@@ -881,8 +880,10 @@
     return denied('unsupported_operation');
   };
   Q.permission = function (s, actor, operation, context) {
-    if (operation === 'grant_settlement')
-      return priorPermission(s, actor, operation, context);
+    if (operation === 'grant_settlement') {
+      var agreement = Q.consent(s, actor, 'grant', context);
+      return agreement.allowed ? priorPermission(s, actor, operation, context) : agreement;
+    }
     if (operation === 'collect_service_pay' &&
         (!context || !context.contractId) || operation === 'collect_render' &&
         (!context || !context.provinceId || context.contractId))

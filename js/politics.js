@@ -1051,7 +1051,7 @@ window.FB = window.FB || {};
     return weight ? total / weight : 0;
   }
 
-  function motionScore(state, bloc, motionId, courtEconomicPowerAverage) {
+  FB.governmentMotionScore = function (state, bloc, motionId, courtEconomicPowerAverage) {
     var def = blocDef(bloc.archetypeId) || {};
     var motions = def.motions || {};
     var base = isFinite(Number(motions[motionId]))
@@ -1142,7 +1142,7 @@ window.FB = window.FB || {};
         relationships + ambitions,
       reasons:reasons
     };
-  }
+  };
 
   function pendingPledge(pending, blocId) {
     var value = pending && pending.pledges && pending.pledges[blocId];
@@ -1176,7 +1176,7 @@ window.FB = window.FB || {};
     var uncertain = 0;
     for (var i = 0; i < summary.blocs.length; i++) {
       var bloc = summary.blocs[i];
-      var scored = motionScore(state, bloc, motionId,
+      var scored = FB.governmentMotionScore(state, bloc, motionId,
         summary.courtEconomicPowerAverage);
       var probability = FB.clamp((50 + scored.score) / 100, 0.15, 0.85);
       var pledge = resultPledge(pending, bloc.id) ||

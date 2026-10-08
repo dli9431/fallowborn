@@ -36,7 +36,7 @@ Every bookmark declares an `era` from `FBDATA.eras` (`data/eras.js`):
 `late_antique` (375–649), `early_medieval` (650–999) and `high_medieval`
 (1000–1300). 867 is early medieval, 1066 high medieval and 476 late antique. An era
 holds an inclusive year window, a default government form and a default culture,
-plus slots that later period systems fill (costume, vocabulary, ladder, systems,
+plus period definitions (costume, ladder, systems,
 technology, event eras, currency and architecture). A bookmark without an `era`,
 such as an older mod, runs in the era whose window holds its start year, or the
 nearest era when none does; a declared era must hold the start year.
@@ -44,12 +44,7 @@ nearest era when none does; a declared era must hold the start year.
 Each authored realm may declare a `government` form; a realm without one takes its
 era's `defaultGovernment`. A form names one strategy per behavior slot, and engine
 code dispatches through the realm's form instead of choosing rules by bookmark.
-`js/governments.js` holds the registry (`FB.governments.register`, `strategy`,
-`resolve`, `forRealm`). The slots are holders, succession, territory, consent, levy,
-revenue, council, diplomacy, ai, vocabulary and ladder. Every form names its
-holders, succession, territory and consent strategies; a slot it omits resolves to
-`engine_default`, today's shared code path, until a later change converts that
-consumer. Default strategy ids are referenced by data; an optional court policy override is saved with its genealogy.
+The government registry in js/governments.js resolves holders, succession, territory, consent, levy, revenue, council, diplomacy, ai and ladder. Every bundled form names all ten slots. Existing JSON mods may omit historically optional slots and use deprecated engine_default aliases of named implementations. Empty or incomplete implementations and the retired vocabulary slot fail validation. The complete consumer inventory, typed interfaces, cache and mutation boundaries are documented in docs/designs/governments.md. Optional saved court policy ids still override the form's succession strategy.
 
 | Form | Holders | Succession | Territory | Consent |
 | --- | --- | --- | --- | --- |

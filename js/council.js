@@ -39,12 +39,9 @@ window.FB = window.FB || {};
     return out;
   };
   FB.councilSeat = function (id, state) {
-    if (state && !FB.systemEnabled(state, 'royal_council')) return null;
-    const def = FBDATA.councilSeats && FBDATA.councilSeats[id];
-    if (!def || (state && (!FB.station.has(state.player, def.station || 'mayHoldCouncil', state) ||
-          def.station === undefined && !FB.station.reaches(state.player, def.tierMin, state) ||
-          !FB.systemContentEnabled(state, def)))) return null;
-    return seatRecord(id, def);
+    const seats = FB.councilSeats(state);
+    for (const seat of seats) if (seat.id === id) return seat;
+    return null;
   };
   FB.councilSeatName = function (state, id) {
     const def = FBDATA.councilSeats && FBDATA.councilSeats[id];
@@ -71,13 +68,13 @@ window.FB = window.FB || {};
     return Array.isArray(rules.schemerTraits) ? rules.schemerTraits : [];
   }
 
-  function holderEligible(state, seat, rid, appointment) {
+  FB.councilHolderEligible = function (state, seat, rid, appointment) {
     const realm = rid && state.realms[rid];
     if (!seat || seat.holderEligibility !== 'direct_vassal' ||
         !realm || !realm.alive || realm.liege !== 'player') return false;
     return !(appointment && FB.intrigueRealmRulerCaptive &&
       FB.intrigueRealmRulerCaptive(state, rid));
-  }
+  };
 
   FB.councilActive = function (state) {
     return !!(state && state.player && FB.councilSeats(state).length);
@@ -106,7 +103,7 @@ window.FB = window.FB || {};
     const seated = {};
     for (const s of seats) {
       const rid = c.seats[s.id];
-      if (rid && (!holderEligible(state, s, rid, false) || seated[rid])) {
+      if (rid && (!FB.councilHolderEligible(state, s, rid, false) || seated[rid])) {
         c.seats[s.id] = null;
       } else if (rid) {
         seated[rid] = 1;
@@ -126,7 +123,13 @@ window.FB = window.FB || {};
       if (!c.seats[s.id] && cand.length &&
           !(FB.councilSeatRequiresConfirmation &&
             FB.councilSeatRequiresConfirmation(state, s.id))) {
-        c.seats[s.id] = cand.shift();
+        const chosen = FB.governments.call(state, 'player', 'council', 'vacancy', {
+          seat:s, candidates:cand.slice()
+        });
+        if (cand.indexOf(chosen) >= 0) {
+          c.seats[s.id] = chosen;
+          cand.splice(cand.indexOf(chosen), 1);
+        }
       }
     }
     if (fresh) {
@@ -166,7 +169,7 @@ window.FB = window.FB || {};
       const holderId = council && council.seats &&
         council.seats[seat.id] || null;
       const realm = holderId && state.realms[holderId];
-      const valid = holderEligible(state, seat, holderId, false);
+      const valid = FB.councilHolderEligible(state, seat, holderId, false);
       const value = valid ? standing(state, holderId) : 0;
       const effective = valid && value > -50;
       if (valid) {
@@ -223,7 +226,7 @@ window.FB = window.FB || {};
     if (!summary || !seat) return null;
     const candidates = FB.playerVassals(state).filter(function (rid) {
       return !summary.seated[rid] &&
-        holderEligible(state, seat, rid, true) &&
+        FB.councilHolderEligible(state, seat, rid, true) &&
         !FB.isProtected(state, 'councilRealm', rid);
     });
     candidates.sort(function (a, b) {
@@ -234,7 +237,7 @@ window.FB = window.FB || {};
       if (value) return value;
       return a < b ? -1 : a > b ? 1 : 0;
     });
-    return candidates.length ? candidates[0] : null;
+    return FB.governments.call(state, 'player', 'council', 'vacancy', { seat:seat, candidates:candidates });
   };
 
   /* sum of office bonuses of one key (tax/levy/build/piety/plot) */
@@ -291,7 +294,7 @@ window.FB = window.FB || {};
     const c = FB.councilEnsure(state);
     const seat = FB.councilSeat(seatId, state);
     const r = rid && state.realms[rid];
-    if (!c || !seat || !r || !holderEligible(state, seat, rid, true)) return;
+    if (!c || !seat || !r || !FB.councilHolderEligible(state, seat, rid, true)) return;
     if (!options.confirmed && FB.councilAppointmentStatus) {
       const status = FB.councilAppointmentStatus(state, seatId, rid);
       if (!status.ready) return false;

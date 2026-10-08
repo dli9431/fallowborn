@@ -3932,7 +3932,7 @@ window.FB = window.FB || {};
     }
     if (s.authoredCourt) s.dynasticOrder = out.slice();
     const policy = FB.governments.successionForRealm(state, rid);
-    s.order = policy && policy.order ? policy.order(s, state.date.year, out) : out;
+    s.order = policy ? policy.candidates(state, rid, { succession:s, frontier:out }) : out;
     if (FB.royalBranchEligible) s.order = s.order.filter(function (id) {
       return FB.royalBranchEligible(state, rid, s.members[id]);
     });
@@ -4065,7 +4065,7 @@ window.FB = window.FB || {};
   function successionReadyForYear(state, r) {
     const s = r && r.succession;
     const policy = s && FB.governments.successionForRealm(state, r.id);
-    if (policy && policy.annualRefresh) return false; // Majority can change eligibility.
+    if (policy && policy.refresh(state, r.id, { succession:s })) return false; // Majority can change eligibility.
     if (!s || !s.members || !Array.isArray(s.order) || !s.order.length ||
         !s.heirId || s.heirId !== s.order[0]) return false;
     /* A missing frontier means this succession object was installed without
@@ -5409,6 +5409,9 @@ window.FB = window.FB || {};
     const r = state.realms[rid];
     if (!r || isPapalTerritorialRealm(state, rid) ||
         (r.succession && r.succession.papalElective)) return null;
+    const policy = FB.governments.successionForRealm(state, rid);
+    const vacancy = policy.vacancy(state, rid, { cause:opts.cause || 'death' });
+    if (!vacancy.allowed) return null;
     const serfTenure = FB.activeSerfTenure && FB.activeSerfTenure(state);
     const serfHomeHolder = serfTenure &&
       (state.holder && state.holder[serfTenure.provinceId] ||
@@ -5457,10 +5460,13 @@ window.FB = window.FB || {};
     let recoveryAttempts = 0;
     while (recoveryAttempts < recoveryLimit) {
       makeHeirIfEmpty(state, r, s);
-      heirId = s.order[0];
+      const accession = policy.accession(state, rid, { succession:s, cause:vacancy.cause });
+      if (!accession || accession.realmId !== rid || accession.rulerGeneration !== s.rulerGeneration ||
+          s.order.indexOf(accession.memberId) < 0) return null;
+      heirId = accession.memberId;
       heir = heirId && s.members[heirId];
-      if (!heir) {
-        if (s.order.length) s.order.shift();
+      if (!heir || heir.alive === false) {
+        if (s.order.indexOf(heirId) >= 0) s.order.splice(s.order.indexOf(heirId), 1);
         recoveryAttempts++;
         continue;
       }
@@ -5476,7 +5482,7 @@ window.FB = window.FB || {};
     if (heir.branchRef && FB.absorbRoyalBranch)
       FB.absorbRoyalBranch(state, rid, heir.branchRef.realmId);
     delete s.designatedHeirId;
-    s.order.shift();
+    s.order.splice(s.order.indexOf(heirId), 1);
     /* Read the heir as a person before installing them as ruler. Once the
        crown pointer changes, the typed facade correctly resolves that same
        character through the realm store instead. */
@@ -6934,8 +6940,13 @@ window.FB = window.FB || {};
     const from = state.owner[pid];
     const oldHolder = (state.holder && state.holder[pid]) || from;
     let forcedPlayerCapital = null;
+    const government = FB.governments.forRealm(state, toRealm);
+    if (!FB.governments.call(state, toRealm, 'territory', 'profile', {}, government).holdsCounties) return;
+    const holderId = FB.governments.call(state, toRealm, 'holders', 'conquest', { provinceId:pid, previousHolderId:oldHolder }, government);
+    if (holderId !== toRealm && (!state.realms[holderId] || !state.realms[holderId].alive ||
+        FB.topRealm(state, holderId) !== FB.topRealm(state, toRealm))) return;
     state.owner[pid] = toRealm;
-    if (state.holder) state.holder[pid] = toRealm; // conquerors hold their prizes directly
+    if (state.holder) state.holder[pid] = holderId;
     FB.invalidateRealmCache();
     // relocate capitals; realms whose whole subtree is gone die — their
     // orphaned vassals (and a vassal player) reattach to the dead liege's liege
@@ -6943,7 +6954,7 @@ window.FB = window.FB || {};
       const fr = state.realms[rid];
       if (!fr || !fr.alive) continue;
       const terr = FB.realmTerritory(state, rid);
-      if (!terr.length) {
+      if (FB.governments.call(state, rid, 'territory', 'defeat', { counties:terr, provinceId:pid, conquerorId:toRealm }).dissolve) {
         if (FB.mergeRealmTech) {
           FB.mergeRealmTech(state, FB.topRealm(state, toRealm), rid);
         }
@@ -7067,12 +7078,19 @@ window.FB = window.FB || {};
           }
         }
       }
+      let successorHolder = FB.governments.call(state, liege, 'holders', 'vacancy', {
+        provinceId:pid, previousHolderId:rid, proposedHolderId:toPlayer ? 'player' : liege
+      });
+      if (!state.realms[successorHolder] || !state.realms[successorHolder].alive ||
+          FB.topRealm(state, successorHolder) !== FB.topRealm(state, liege))
+        successorHolder = toPlayer ? 'player' : liege;
+      toPlayer = successorHolder === 'player';
       if (toPlayer) {
         p.provs = p.provs || [];
         if (p.provs.indexOf(pid) < 0) p.provs.push(pid);
         state.holder[pid] = 'player';
       } else {
-        state.holder[pid] = liege;
+        state.holder[pid] = successorHolder;
         if (!opts.silent && (FB.game.observe ||
             (FB.world.adj[p.provinceId] && FB.world.adj[p.provinceId][pid]))) {
           FB.news(state, FB.msg('news.world.escheat_observed', {
@@ -8192,7 +8210,7 @@ window.FB = window.FB || {};
       for (const id in state.realms) {
         const r = state.realms[id];
         if (id === 'player' || !r.alive || r.liege || !FB.realmRank.isRoyal(r, state) || yearWars.has(id) ||
-            courted[id] || yearAlliances.has(id) || !FB.chance(0.08)) continue;
+            courted[id] || yearAlliances.has(id) || !FB.chance(FB.governments.call(state, id, 'ai', 'goals', {}).allianceChance)) continue;
         const choices = [];
         for (const id2 in state.realms) {
           const r2 = state.realms[id2];
@@ -8387,13 +8405,14 @@ window.FB = window.FB || {};
       }
 
       if (p.liege && (p.provs || []).length) {
+        const government = FB.governments.forRealm(state, 'player');
         const rate = FB.feudalCharterDef(FB.feudalContractOf(state, 'player').charterId).levyShare;
         let service = 0;
         for (const site of territorial) {
           if (FB.settlementCountyHolder(state, site.provinceId) !== 'player' ||
               FB.recruitmentCountyBlocked(state, 'player', site.provinceId)) continue;
           const a = FB.settlementFiscalProjection(state, site.provinceId, site.settlement, fiscalContext).amounts;
-          service += (a.availableLevy + a.specialists - a.specialistDues) * rate;
+          service += FB.governments.call(state, 'player', 'levy', 'service', { amount:a.availableLevy + a.specialists - a.specialistDues, share:rate }, government);
         }
         if (service) add(levyClass, 'settlement_service', -Math.min(comp[levyClass], service));
       }
@@ -9922,7 +9941,9 @@ window.FB = window.FB || {};
   FB.fns.war_negotiated_withdrawal = function (state) {
     const w = state.player.war;
     if (!w) return;
-    state.player.prestige = Math.max(0, state.player.prestige - 4);
+    const terms = FB.warPeaceTerms(state, 'war_negotiated_withdrawal');
+    if (!terms) return;
+    state.player.prestige = Math.max(0, state.player.prestige + terms.prestige);
     FB.news(state, FB.msg('news.war.negotiated_withdrawal',
       '🕊 Safe conduct is agreed; the surviving host withdraws and the war ends.', {}));
     FB.endPlayerWar(state);
@@ -9932,9 +9953,11 @@ window.FB = window.FB || {};
   FB.fns.war_accept_tribute = function (state) {
     const p = state.player;
     const w = p.war; if (!w) return;
-    const amount = FB.treasuryOffer(state, w.enemy, 25);
+    const terms = FB.warPeaceTerms(state, 'war_accept_tribute');
+    if (!terms) return false;
+    const amount = terms.gold;
     if (!FB.treasuryTransfer(state, FB.treasuryCounterparty(state, w.enemy), 'player', amount)) return false;
-    p.prestige += FB.warPrestigeReward(w, 'tribute');
+    p.prestige += terms.prestige;
     if (!amount) {
       FB.news(state, FB.msg('news.war.empty_treasury_peace',
         'Peace is agreed without a cash payment; the enemy treasury cannot fund tribute.', {}));
@@ -10015,14 +10038,17 @@ window.FB = window.FB || {};
       support:b.warWithdrawCountySupport || -5, counties:(p.provs || []).slice(), returnLiege:null };
   };
   FB.fns.war_terms_affordable = function (state) {
-    const w = state.player.war, cost = FB.warTermsCost(state, w);
-    return !!cost && state.player.gold >= cost.gold;
+    const terms = FB.warPeaceTerms(state, 'war_terms');
+    return !!terms && state.player.gold >= -terms.gold;
   };
   FB.fns.war_terms = function (state) {
     const p = state.player;
     const w = p.war; if (!w) return;
     const enemy = state.realms[w.enemy];
     const terms = FB.warTermsCost(state, w);
+    const quote = FB.warPeaceTerms(state, 'war_terms');
+    if (!quote) return false;
+    terms.gold = -quote.gold; terms.prestige = -quote.prestige;
     if (w.defending) {
       const cost = terms.gold;
       if (p.gold < cost) return false;
@@ -10061,8 +10087,9 @@ window.FB = window.FB || {};
     return (FBDATA.balance.submissionTributePerRank || 25) * ((enemy && enemy.rank) || 1);
   }
   FB.fns.war_submission_tribute_affordable = function (state) {
-    return FB.fns.war_submission_valid(state) &&
-      state.player.gold >= submissionTributePrice(state);
+    const terms = FB.warPeaceTerms(state, 'war_submission_tribute');
+    return FB.fns.war_submission_valid(state) && !!terms &&
+      state.player.gold >= -terms.gold;
   };
   /* kneel: the war dies here, the land stays in hand, the banner changes.
      A crowned head that kneels fails the independence its style rests on —
@@ -10072,7 +10099,9 @@ window.FB = window.FB || {};
     if (!w || !FB.fns.war_submission_valid(state)) return;
     const enemy = state.realms[w.enemy]; if (!enemy || !enemy.alive) return;
     // A rebel who kneels returns to the lord renounced, not over their head.
-    const rid = FB.independenceReturnLiege(state, w) || w.enemy;
+    const terms = FB.warPeaceTerms(state, 'war_submit');
+    const rid = terms && terms.liege;
+    if (!rid || !state.realms[rid] || !state.realms[rid].alive) return;
     w.rebellionSettled = 1; // the oath below replaces the generic return
     FB.endPlayerWar(state);
     FB.changePlayerLiege(state, rid, 'war:submission');
@@ -10083,7 +10112,7 @@ window.FB = window.FB || {};
     for (const pid of FB.realmTerritory(state, 'player')) state.owner[pid] = newTop;
     FB.invalidateRealmCache();
     if (FB.adjustStanding) FB.adjustStanding(state, { kind:'realm', id:rid }, 10, 'war:submission');
-    p.prestige = Math.max(0, p.prestige - 15);
+    p.prestige = Math.max(0, p.prestige + terms.prestige);
     FB.news(state, FB.msg('news.war.submission',
       '🛡 You kneel to {enemy} and swear the oaths. The war is over; your lands remain — under a new banner.',
       { enemy: FB.realmNameParam(state, enemy) }));
@@ -10093,8 +10122,9 @@ window.FB = window.FB || {};
   FB.fns.war_submission_tribute = function (state) {
     const p = state.player, w = p.war; if (!w) return;
     const enemy = state.realms[w.enemy];
-    const price = submissionTributePrice(state);
-    if (!FB.fns.war_submission_tribute_affordable(state)) return false;
+    const terms = FB.warPeaceTerms(state, 'war_submission_tribute');
+    if (!terms || !FB.fns.war_submission_tribute_affordable(state)) return false;
+    const price = -terms.gold;
     if (!FB.treasuryTransfer(state, 'player', FB.treasuryCounterparty(state, w.enemy), price)) return false;
     FB.news(state, FB.msg('news.war.submission_tribute',
       '🕊 A conqueror’s tribute buys the peace — {money:price} to {enemy}.',

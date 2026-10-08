@@ -569,3 +569,8 @@ The late antique era declares a complete solidus currency definition: Solidi as 
 Existing court purse adoption
 
 When an authored court becomes player-controlled, its actual NPC treasury balance moves to player.gold and its accrued military charges move to treasuryAccounting.playerMilitary. The old NPC account is removed. FB.treasuryAvailable(player) quotes the available player purse for authority and contract consumers, consistent with treasuryTransfer's existing player debit and credit path. Starting scenario gold is only the fallback when the source court has no treasury; it never creates a second purse.
+
+
+Government strategy integration
+
+Government revenue dispatch preserves the canonical player tax lines and realm treasury receipt calculation. County/site bases, subordinate remittances and lender/fiscal assignments use the same strategies at projection and collection. Private income and transfer bookkeeping keep their existing sources. See docs/designs/governments.md.

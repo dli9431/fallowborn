@@ -20,7 +20,7 @@
   }
   function mobile(s, rid) {
     var form = FB.governments.forRealm(s, rid);
-    return !!(form && form.use.territory.movingCourt);
+    return !!(form && form.use.territory.profile(s, rid, {}).movingCourt);
   }
   function noticeParams(s, row) {
     return { realm:FB.realmNameParam(s, row.realmId),
@@ -88,7 +88,7 @@
        ruler's consent. An unrelated patron's service cannot be displaced. */
     if ([terms.patronRealmId, terms.federateRealmId].some(function (rid) {
           var form = FB.governments.forRealm(s, rid);
-          return playerRules(s, rid) || !form || typeof form.use.ai.consentContract !== 'function';
+          return playerRules(s, rid) || !form || !form.use.ai.canNegotiate(s, rid, {});
         }) ||
         FB.treasuryAvailable(s, terms.patronRealmId) < terms.payPerSeason + (terms.initialPay || 0) ||
         (s.authority.contracts || []).some(function (row) {
@@ -111,9 +111,11 @@
       FB.settlementCountyHolder(s, row.target) === row.patronRealmId ? 'land' : 'service';
     return FB.federateRequest(s, row.id, choice);
   }
-  FB.governments.register('ai', 'federate_contracts', { consentContract:ai, proposeMigration:propose });
+  FB.governments.register('ai', 'federate_contracts', { consentContract:function (s, rid, c) { return ai(s, rid, c.contract); },
+    proposeMigration:function (s, rid, c) { return propose(s, c.migration); } });
   FB.governments.register('ai', 'roman_offices', {
-    consentContract:ai, proposeMigration:propose, offices:FB.officeCourtAI
+    consentContract:function (s, rid, c) { return ai(s, rid, c.contract); },
+    proposeMigration:function (s, rid, c) { return propose(s, c.migration); }, offices:FB.officeCourtAI
   });
   FB.governments.strategy('territory', 'non_territorial').movingCourt = true;
   FB.federateSupplyContracts = function (s) {
@@ -147,7 +149,7 @@
     for (var rid of [row.patronRealmId, row.federateRealmId]) {
       var form = FB.governments.forRealm(s, rid);
       if (form && typeof form.use.ai.consentContract === 'function')
-        form.use.ai.consentContract(s, rid, row);
+        form.use.ai.consentContract(s, rid, { contract:row });
     }
     var current = Q.contract(s, id);
     return !!(current && current.effective);
@@ -156,7 +158,7 @@
     for (var moving of rows(s)) {
       var government = FB.governments.forRealm(s, moving.realmId);
       if (government && typeof government.use.ai.proposeMigration === 'function')
-        government.use.ai.proposeMigration(s, moving);
+        government.use.ai.proposeMigration(s, moving.realmId, { migration:moving });
     }
     for (var row of s.authority && s.authority.contracts || []) {
       var def = (FBDATA.federateContractTerms || {})[row.templateId];
@@ -223,7 +225,7 @@
         typeof spec.hostId !== 'string' || !spec.hostId ||
         !Number.isInteger(spec.endTurn) || spec.endTurn <= s.turn ||
         !FBDATA.governmentForms[spec.settlementForm] ||
-        FB.governments.resolve(spec.settlementForm).use.territory.movingCourt ||
+        FB.governments.resolve(spec.settlementForm).use.territory.profile(s, spec.realmId, {}).movingCourt ||
         rows(s).some(function (row) { return ongoing(row) &&
           (row.realmId === spec.realmId || row.hostId === spec.hostId); })) return null;
     var army = host(s, spec.hostId);
@@ -306,7 +308,7 @@
     var row = migration(s, id), army = row && host(s, row.hostId);
     if (!row || !ongoing(row) || row.endTurn <= s.turn || !army || army.men <= 0 ||
         !mobile(s, row.realmId) || FB.governments.problems(row.settlementForm).length ||
-        FB.governments.resolve(row.settlementForm).use.territory.movingCourt ||
+        FB.governments.resolve(row.settlementForm).use.territory.profile(s, row.realmId, {}).movingCourt ||
         !live(s, row.realmId) || army.realm !== row.realmId || army.at !== row.target ||
         army.moveLeft > 0 || FB.isRealmAtWar(s, row.realmId)) return null;
     var deal = row.contractId && Q.contract(s, row.contractId);

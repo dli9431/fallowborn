@@ -221,13 +221,16 @@
           count('realm tax bonus quotes');
           tech[sovereign] = FB.techBonus(state, 'tax', sovereign);
         }
-        row.income = (row.tax + row.buildings) * Math.max(0, 1 + tech[sovereign]);
+        const government = FB.governments.forRealm(state, rid);
+        row.income = FB.governments.call(state, rid, 'revenue', 'realmIncome', {
+          tax:row.tax, buildings:row.buildings, technology:tech[sovereign]
+        }, government);
         const liege = realms[rid].liege;
         if (!liege || liege === rid || (!rows[liege] && liege !== 'player')) continue;
         count('liege edges');
         const contract = FB.feudalContractOf(state, rid);
         const charter = FB.feudalCharterDef(contract.charterId);
-        const dues = row.tax * Math.max(0, numeric(charter.taxShare));
+        const dues = FB.governments.call(state, rid, 'revenue', 'remittance', { amount:row.tax, share:Math.max(0, numeric(charter.taxShare)), recipientId:liege, kind:'realm' }, government);
         row.duesOut += dues;
         if (rows[liege]) rows[liege].duesIn += dues;
       }

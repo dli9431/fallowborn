@@ -266,8 +266,14 @@ window.FB = window.FB || {};
     const populations = context.populations || (context.populations = {});
     profileCount(populations[pid] ? 'fiscal population cache hits' : 'fiscal population builds');
     const shares = populations[pid] || (populations[pid] = FB.settlementPopulationShares(state, pid));
+    const governmentRealm = FB.settlementCountyHolder(state, pid);
+    const governments = context.governments || (context.governments = {});
+    const government = governments[governmentRealm] ||
+      (governments[governmentRealm] = FB.governments.forRealm(state, governmentRealm));
     const militaryOnly = !!context.militaryOnly;
-    const base = militaryOnly ? 0 : FB.settlementTaxBase(state, pid, slot, undefined, shares);
+    const base = militaryOnly ? 0 : FB.governments.call(state, governmentRealm, 'revenue', 'settlementBase', {
+      provinceId:pid, settlement:slot, shares:shares
+    }, government);
     const countyInputs = context.countyInputs || (context.countyInputs = {});
     let input = countyInputs[pid];
     if (!input) {
@@ -289,13 +295,15 @@ window.FB = window.FB || {};
     const delegated = holder.kind === 'character' &&
       !actorHolds(state, { kind:'realm', id:FB.settlementCountyHolder(state, pid) }, holder);
     const charter = FB.feudalCharterDef(r && r.obligations && r.obligations.charterId || 'customary_service');
-    const dues = delegated ? gross * charter.taxShare : 0;
-    const rawLevy = (state.dev[pid] || 1) * shares[slot] * FBDATA.balance.levyPerDev *
-      input.population * input.levy + bonus('levy') * support;
+    const dues = delegated ? FB.governments.call(state, governmentRealm, 'revenue', 'remittance', { amount:gross, share:charter.taxShare, kind:'settlement', provinceId:pid, settlement:slot }, government) : 0;
+    const rawLevy = FB.governments.call(state, governmentRealm, 'levy', 'settlementBase', {
+      provinceId:pid, settlement:slot, share:shares[slot], population:input.population,
+      modifier:input.levy, buildings:bonus('levy'), support:support
+    }, government);
     const levy = rawLevy * factor;
-    const levyDues = delegated ? levy * charter.levyShare : 0;
+    const levyDues = delegated ? FB.governments.call(state, governmentRealm, 'levy', 'service', { amount:levy, share:charter.levyShare }, government) : 0;
     const specialists = (bonus('retinue') + bonus('archers')) * factor;
-    const specialistDues = delegated ? specialists * charter.levyShare : 0;
+    const specialistDues = delegated ? FB.governments.call(state, governmentRealm, 'levy', 'service', { amount:specialists, share:charter.levyShare }, government) : 0;
     const upkeep = militaryOnly ? 0 : bonus('upkeep');
     return { provinceId:pid, settlement:slot, holder:holder,
       countyHolderId:FB.settlementCountyHolder(state, pid),

@@ -1978,7 +1978,7 @@ window.FB = window.FB || {};
     const valid = hosts.length > 0 && hosts.every(function (host) { return host.men >= plan.floor; });
     return { rows:plan.rows, men:plan.men, units:plan.units, rally:plan.territory.rally,
       minimum:plan.floor, days:FB.musterDelay(state, 'player'), valid:valid,
-      canRaise:!!fullPlayerMusterPlan(state) && valid && !FB.musterDelay(state, 'player'),
+      canRaise:!!fullPlayerMusterPlan(state) && valid && !FB.musterDelay(state, 'player') && FB.governments.call(state, 'player', 'levy', 'mayCall', {}),
       standing:standing, food:food, total:standing + (force || auto.buySupplies === false ? 0 : food),
       forced:force, purchases:auto.buySupplies !== false, fixed:(plan.units.mercs || 0) + plan.allied.men,
       hosts:hosts.length, estimates:estimates, formation:(formation === undefined ? state.player.musterFormation : formation) === 'county' ? 'county' : 'gather' };
@@ -2005,13 +2005,14 @@ window.FB = window.FB || {};
     if (!plan) return null;
     return {
       men:plan.men, minimum:plan.floor,
-      canRaise:plan.men >= plan.floor && musterHosts(state, plan).every(function (host) { return host.men >= plan.floor; }) && !FB.musterDelay(state, 'player'), limited:plan.limited,
+      canRaise:plan.men >= plan.floor && musterHosts(state, plan).every(function (host) { return host.men >= plan.floor; }) && !FB.musterDelay(state, 'player') && FB.governments.call(state, 'player', 'levy', 'mayCall', {}), limited:plan.limited,
       days:FB.musterDelay(state, 'player'), territory:plan.territory,
       units:copyUnitCounts(plan.units)
     };
   };
 
   FB.raisePlayerHost = function (state) {
+    if (!FB.governments.call(state, 'player', 'levy', 'mayCall', {})) return null;
     if (!FB.station.mayCommand(state.player, state) &&
         !(FB.activeMilitaryCommand && FB.activeMilitaryCommand(state))) return null;
     FB.armiesEnsure(state);
@@ -2054,6 +2055,7 @@ window.FB = window.FB || {};
     finally { timing.leave(entry); }
   }
   function raiseAIHostUntimed(state, rid, projection) {
+    if (!FB.governments.call(state, rid, 'levy', 'mayCall', {})) return null;
     const r = state.realms[rid];
     if (!r || !r.alive) return null;
     const territory = projection ? projection.territory : FB.recruitmentTerritory(state, rid);

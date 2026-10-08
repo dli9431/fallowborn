@@ -159,18 +159,18 @@ FBDATA.federateMigrations = FBDATA.bookmarkRegions476.dalmatia_east.migrations;
    sits over the era layer and beneath the bookmark and mod layers. */
 FBDATA.governmentForms = {
   territorial:{ legalTradition:{ default:'faith', cultures:{ greek:'byzantine' },
-    realms:{ byzantium:'byzantine', byzantium_1066:'byzantine' } }, holders:'feudal_vassals', succession:'dynastic',
-    territory:'fixed', consent:'territorial', ai:'federate_contracts', systems:{ enable:['feudal_service'] } },
+    realms:{ byzantium:'byzantine', byzantium_1066:'byzantine' } }, levy:'feudal_levy', revenue:'demesne_revenue', council:'royal_council', diplomacy:'territorial_diplomacy', holders:'feudal_vassals', succession:'dynastic',
+    territory:'fixed', consent:'territorial', ladder:'inherited_ladder', ai:'federate_contracts', systems:{ enable:['feudal_service'] } },
   regnum:{ legalTradition:{ default:'faith', cultures:{ greek:'byzantine' },
-    realms:{ byzantium:'byzantine', byzantium_1066:'byzantine' } }, holders:'direct', succession:'dynastic',
-    territory:'fixed', consent:'territorial', ai:'roman_offices',
+    realms:{ byzantium:'byzantine', byzantium_1066:'byzantine' } }, levy:'feudal_levy', revenue:'demesne_revenue', council:'royal_council', diplomacy:'territorial_diplomacy', holders:'direct', succession:'dynastic',
+    territory:'fixed', consent:'territorial', ladder:'inherited_ladder', ai:'roman_offices',
     officeCatalogue:['defensor_civitatis','praeses','tribunus','consularis','corrector','comes_rei_privatae','dux','patricius','consul'], systems:{ disable:['feudal_service'] } },
   roman_civic:{ legalTradition:{ default:'faith', cultures:{ greek:'byzantine' },
-    realms:{ byzantium:'byzantine', byzantium_1066:'byzantine' } }, holders:'direct', succession:'office',
+    realms:{ byzantium:'byzantine', byzantium_1066:'byzantine' } }, levy:'feudal_levy', revenue:'demesne_revenue', council:'royal_council', diplomacy:'territorial_diplomacy', holders:'direct', succession:'office',
     territory:'fixed', consent:'delegated', ladder:'roman_civic', ai:'roman_offices',
     officeCatalogue:['defensor_civitatis','praeses','tribunus','vicarius','urban_prefect','praetorian_prefect','comes_largitionum','comes_rei_privatae','comes_rei_militaris','dux','magister_militum','magister_praesentalis','magister_gallias','magister_illyricum','magister_thracias','magister_orientem','patricius','consul'], systems:{ disable:['feudal_service'] } },
   federate_polity:{ legalTradition:{ default:'faith', cultures:{ greek:'byzantine' },
-    realms:{ byzantium:'byzantine', byzantium_1066:'byzantine' } }, holders:'direct', succession:'acclamation',
+    realms:{ byzantium:'byzantine', byzantium_1066:'byzantine' } }, levy:'feudal_levy', revenue:'demesne_revenue', council:'royal_council', diplomacy:'territorial_diplomacy', holders:'direct', succession:'acclamation',
     territory:'non_territorial', consent:'delegated', ladder:'federate_polity', ai:'roman_offices',
     officeCatalogue:['tribunus','comes_rei_militaris','dux','patricius'], systems:{ disable:['feudal_service'] } }
 };

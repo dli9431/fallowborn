@@ -2170,3 +2170,8 @@ The holy_war story factory in js/story_history.js calls the existing great-holy-
 Optional historySeed rows attach only to a new campaign and record selected completed campaigns before its opening. They have literal ids, faith and kingdom ids, structured abstract dates, semantic outcomes and negative opening-relative turns. Earlier failure penalties therefore use elapsed historical time. Prior-call and launch flags prevent an inaugural crusade from replaying; no active campaign, cooldown or army is seeded. Restore never adds archive rows. Technology impact dated_holy_war_calls is none: religious authority and current objectives govern the opportunity without a research prerequisite.
 
 The optional preview argument of greatHolyWarTargets and canCallGreatHolyWar reads existing history, religiousHeadSnapshot and papacyState. It performs no institution repair or new court enrollment. Applying a story choice repeats the ordinary authoritative call checks, so stale head, authority, objective or cooldown reviews cannot issue a call.
+
+
+Government strategy integration
+
+Government dispatch routes player/AI recruitment, delegated levy service, rebel capacity, muster permission, host upkeep, war-goal eligibility, declaration reviews and peace quotes through named strategies. Existing army, occupation, supply, treaty and territory transactions apply the results. See docs/designs/governments.md for the consumer inventory, typed contexts and compatibility boundaries.

@@ -2059,3 +2059,8 @@ For future story formats, stable instance ids and an explicit per-record schema 
 Declarative track stages
 
 A political track saves its authored stage id in the existing phase field. The declaration maps that id to a transaction mechanic; restore rejects undeclared stages even if their spelling names a valid mechanic. Native 476 stage ids and all frozen record fields retain their previous meanings. New data instances can use different stage ids, branches and shorter paths without a record-schema change. Court dispatch reads the mapped mechanic when checking completed tracks. Restore does not resolve routes, choose a branch, replay an operation or allocate actors. Changing a released declaration's saved stage ids still requires retaining those ids or an explicit detached migration.
+
+
+Government strategy integration
+
+Government dispatch adds no saved fields or schema revision. Saved form ids and optional court policy ids select validated implementations. Derived per-day resolution lives in a WeakMap and is recreated for restored states. Office and acclamation remain explicit dynastic delegations; restore never manufactures an election or constituency.

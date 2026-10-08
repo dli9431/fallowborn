@@ -379,3 +379,8 @@ Contracted foreign-host appointments
 A realm can appoint to an exact foreign host scope when an effective bilateral service contract names that host, the realm is its patron, the host belongs to the contracted federate polity and the parties are not hostile. The shared within check is used for appointment creation, effective powers, reaffirmation and the office scope picker. Own-host scopes retain their ordinary rules. Expiry, release, succession, lost host or hostility removes the patron's scope without changing the host's polity or transferring civilian jurisdiction. Holder and appointer eligibility remain necessary independently of the service contract.
 
 The 476 Strabo declaration uses this rule for magister_praesentalis on host_476_thracian. County consularis and praeses warrants supply Peace and Revenue; the two Gothic tribunus warrants supply host command; Longinus's private estate supplies none of those powers. Technology impact federate_host_commissions is none: current bilateral service supplies jurisdiction, while ordinary armies retain their existing resource and research constraints. No historical person or host id is named by the generic authority reader.
+
+
+Government strategy integration
+
+Government dispatch now owns territorial Consent and typed levy, war, treaty and grant decision hooks. FB.political.consent projects the selected strategy and its constituency reference; existing contracts, council thresholds and authority transactions remain canonical. No constituency state is added. See docs/designs/governments.md for context fields and default delegations.

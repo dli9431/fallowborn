@@ -299,3 +299,8 @@ Fresh ledgers use the campaign's profile unless a story or saved head already su
 Gallic and Iberian city institutions in 476
 
 The regional declaration contributes councils and episcopal sees through the existing local-institution catalogue. Southern Gaul has the denser set, including Arles, Lyon, Toulouse, Bordeaux, Narbonne, Marseille, Vienne and Geneva. Soissons, Reims, Tarragona, Merida and Lugo provide selected northern and Iberian actors. Leontius, Patiens, Graecus and Remigius have named profiles; uncertain officeholders are generated. Bordeaux begins vacant, and Toulouse has separate Nicene and Homoian sees. Existing appointment, mediation, voting and saved-ledger rules apply; councils and sees neither own counties nor change their communities. Technology impact remains none for local_institution_bargains and episcopal_institution_mediation: living representatives, protected worship, consent and resources govern these existing capabilities.
+
+
+Government strategy integration
+
+Government council strategies supply seats, holder eligibility and vacancy choice. The royal_council default retains catalogue order and existing system/station gates; strategyParameters.council.seats can select a validated subset. Summary, recommendations and appointments consume the same active catalogue and selection rules. See docs/designs/governments.md.

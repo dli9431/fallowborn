@@ -49,12 +49,7 @@
        definition; a geography's currency takes priority, then a runtime mod
      emblem: heraldry, standard, chi_rho or tamga from the crest shape library
 
-   The remaining slot is declared here and filled by a later system:
-   vocabulary. null
-   means the era adds nothing and today's shared behavior applies.
-   vocabulary stays null: an era's words and rank labels are its entry in
-   FBDATA.lexicons.eras (data/lexicons.js). ladder is the permission definition
-   below, separate from those display labels.
+   Political words are supplied by FBDATA.lexicons.eras.
    ========================================================================= */
 window.FBDATA = window.FBDATA || {};
 
@@ -153,7 +148,7 @@ FBDATA.eras = {
   late_antique:{
     from:375, to:649,
     defaultGovernment:'regnum', defaultCulture:'roman',
-    costume:'late_antique', vocabulary:null, ladder:FBDATA.stationLadders.late_antique,
+    costume:'late_antique', ladder:FBDATA.stationLadders.late_antique,
     systems:{ enable:['colonate','civic_institutions','episcopal_sees','roman_offices','church_councils','ruler_conversion'], disable:['papacy','scutage','manorial_tenure','excommunication','abbeys',
       'feudal_service','crown_bloc','tournaments','great_holy_wars'] },
     technology:{ from:476, to:649, startingKnowledge:'historical' },
@@ -167,7 +162,7 @@ FBDATA.eras = {
   early_medieval:{
     from:650, to:999,
     defaultGovernment:'territorial', defaultCulture:'frankish',
-    costume:'medieval', vocabulary:null, ladder:FBDATA.stationLadders.feudal, systems:{ enable:['manorial_tenure','feudal_service','scutage','crown_bloc',
+    costume:'medieval', ladder:FBDATA.stationLadders.feudal, systems:{ enable:['manorial_tenure','feudal_service','scutage','crown_bloc',
       'excommunication','abbeys','tournaments','great_holy_wars','guild_elections','royal_council','estates'] },
     technology:{ from:650, to:999, startingKnowledge:'historical' },
     military:null, currency:null, architecture:null, emblem:'heraldry',
@@ -176,7 +171,7 @@ FBDATA.eras = {
   high_medieval:{
     from:1000, to:1300,
     defaultGovernment:'territorial', defaultCulture:'frankish',
-    costume:'medieval', vocabulary:null, ladder:FBDATA.stationLadders.feudal, systems:{ enable:['manorial_tenure','feudal_service','scutage','crown_bloc',
+    costume:'medieval', ladder:FBDATA.stationLadders.feudal, systems:{ enable:['manorial_tenure','feudal_service','scutage','crown_bloc',
       'excommunication','abbeys','tournaments','great_holy_wars','guild_elections','royal_council','estates'] },
     technology:{ from:1000, to:1300, startingKnowledge:'historical' },
     military:null, currency:null, architecture:null, emblem:'heraldry',

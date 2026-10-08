@@ -315,7 +315,7 @@
             !Number.isInteger(value.startTurn) || !Number.isInteger(value.endTurn) ||
             value.endTurn <= value.startTurn ||
             !known('government', value.settlementForm) ||
-            FB.governments.resolve(value.settlementForm).use.territory.movingCourt ||
+            FB.governments.resolve(value.settlementForm).use.territory.profile(null, null, {}).movingCourt ||
             !Array.isArray(value.courtIds) || !value.courtIds.length ||
             value.courtIds.some(function (id, index) {
               return typeof id !== 'string' || !id || value.courtIds.indexOf(id) !== index;

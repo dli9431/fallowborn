@@ -6476,7 +6476,7 @@ window.FB = window.FB || {};
     for (const loan of activeLoans(e)) {
       if (loan.status === 'default' && loan.defaultKind === 'revenue') {
         assigned += Math.min(FB.financeDueNow(state, loan, e),
-          assignedRevenueBase(state, loan, e) * share);
+          FB.governments.call(state, 'player', 'revenue', 'loanAssignment', { amount:assignedRevenueBase(state, loan, e), share:share, loan:loan }));
       }
     }
     return assigned;
@@ -6795,7 +6795,7 @@ window.FB = window.FB || {};
       if (loan.status !== 'default' || loan.defaultKind !== 'revenue') continue;
       const due = FB.financeDueNow(state, loan, economy);
       const levy = Math.min(due, state.player.gold,
-        assignedRevenueBase(state, loan) * share);
+        FB.governments.call(state, 'player', 'revenue', 'loanAssignment', { amount:assignedRevenueBase(state, loan), share:share, loan:loan }));
       if (!(levy > 0)) continue;
       state.player.gold -= levy;
       if (loan.denomination === 'real') loan.face = Math.max(0, loan.face - levy);
