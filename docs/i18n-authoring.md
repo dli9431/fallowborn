@@ -220,3 +220,7 @@ Selection interest and transformation names are extracted from governmentForms i
 Assembly display owners
 
 The extractor reads assemblyOpenings names as assemblyOpening.<id>.name, assemblyCounties names and settlement names as assemblyCounty.<id> display fields, and constituencyProfiles member names as constituencyMember.<profile>.<member>.name. Runtime member labels use dataText with the same owner. Opening representative names are proper names and are not extracted. Engine cards use FB.T and durable delegation news uses FB.msg; saved mandate and decision records contain no rendered prose.
+
+Aristocratic display owners
+
+aristocraticProfiles names extract as aristocraticProfile.<id>.name.default, and permanent interest labels as aristocraticInterest.<profile>.<interest>.name.default. Literal aristocraticOffices and aristocraticAdministrationProfiles contribute to the existing authorityOffice and administrationProfile namespaces before they merge into the runtime tables. Public review chrome uses FB.T and durable political news uses FB.msg. Royal, principal and dynasty names remain proper-name identities. Do not regenerate catalogs on a feature branch.

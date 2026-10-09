@@ -20,6 +20,14 @@ window.FBDATA = window.FBDATA || {};
 
   FBDATA.startScenarios = [
     /* Candidates remain hidden until the owner accepts each opening. */
+    { id:'peroz_476', bookmarkIds:['476_outer'], hidden:true, alwaysUnlocked:true,
+      rulerRealmId:'sasanian_476', governmentForm:'aristocratic_monarchy', fixedProvinceId:'baghdad',
+      characterName:'Peroz', sex:'m', startCulture:'persian', startReligion:'zoroastrian',
+      name:'Peroz and the magnate court', desc:'Govern through royal kin, inherited family interests and appointed provincial officers.',
+      tier:7, profession:'noble', gold:120, prestige:180, piety:20,
+      familyPresets:{ standard:{ name:'Existing royal household', diff:'age 46 - existing court family',
+        desc:'Keep the declared royal kin and generated supporting households.' } }, tracks:[], onboarding:'ruler',
+      intro:'You are Peroz at Ctesiphon. Public administration in Deeds shows your royal candidates, provincial family rights and appointed officers. Review actual receipts and military burdens with the magnates. Balash has royal ancestry, but recognition decides accession. Your subjects retain their own worship and private estates.' },
     { id:'nepos_476', bookmarkIds:['476'], hidden:true, alwaysUnlocked:true,
       rulerRealmId:'croatia', governmentForm:'roman_civic', fixedProvinceId:'split',
       characterName:'Julius Nepos', sex:'m', startCulture:'roman', startReligion:'nicene',

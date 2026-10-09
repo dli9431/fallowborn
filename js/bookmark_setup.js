@@ -271,6 +271,7 @@
     // Every bookmark can declare offices. World-story initialization has now
     // created any deferred hosts; an earlier story-owned appointment is kept.
     FB.bookmarkSetupAppointments(s);
+    if (FB.aristocracy) FB.aristocracy.seed(s);
     var d = definition(s);
     if (d && (Object.keys(s.bookmarkSetup.actors).length !== Object.keys(d.actors).length ||
         Object.keys(s.bookmarkSetup.appointments).length !== Object.keys(d.appointments).length))
@@ -320,7 +321,8 @@
         var def = d.estates[i];
         if (!plain(e) || e.id !== def.id || e.provinceId !== def.provinceId || e.share0 !== def.share0 ||
             e.evidence !== def.evidence || e.basis !== def.basis || typeof e.holderId !== 'string' || !own(s.chars, e.holderId) ||
-            e.dynasty !== d.actors[def.actorId].dyn || e.status === 'held' && s.chars[e.holderId].dyn !== e.dynasty ||
+            e.dynasty !== d.actors[def.actorId].dyn && !(FB.aristocracy && FB.aristocracy.estateDynastyValid(s,def,e)) ||
+            e.status === 'held' && s.chars[e.holderId].dyn !== e.dynasty ||
             ['held','unclaimed'].indexOf(e.status) < 0 ||
             !Number.isInteger(e.changedTurn) || e.changedTurn < 0 || e.changedTurn > s.turn) fault(path + '.estates');
       });

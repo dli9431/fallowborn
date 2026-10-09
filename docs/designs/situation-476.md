@@ -242,3 +242,7 @@ Acceptance coverage is authored in tests/e2e/specs/476-outer-regions.spec.js. Re
 Data-driven court and household implementation
 
 data/story_courts_476.js owns the historical cast, opening hosts and authority sequence, court anchors, timing, treasury terms, news and choice presentation. western_court_476 uses court_settlement, zeno_return_476 uses ruler_restoration and western_office_476 uses contested_office. The federate, curialis and Nepos tracks use the three political_track profiles in js/story_track.js. js/story_courts.js binds reusable court transactions and displacement. The old 476 module files are removed, while instance ids, saved fields, lifecycle order and legacy situation476 migration remain stable.
+
+Fresh wider-world Sasanian government
+
+data/aristocratic_courts.js revises only the fresh 476_outer Sasanian declaration to aristocratic_monarchy with its own dated profile. It retains Peroz's existing court, adds generated Mihran/Karen households and a generated capital governor, and distinguishes their private estates from public receipt assignments and local jurisdiction. The hidden Peroz start reuses the current ruler through normal start adoption. Existing outer_v1 saves keep regnum and their opening actors, with no retroactive governor or family generation. No named later accession, Armenian rebellion, Hephthalite defeat, four-quarter command or fiscal reform is scheduled. Research limits: docs/research/aristocratic-monarchy.md.

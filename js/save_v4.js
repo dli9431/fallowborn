@@ -123,7 +123,8 @@
       if (!s || s.authoredCourt === undefined && s.policyId === undefined) return;
       var path = 'state.realms.' + rid + '.succession';
       var government = state.authority && state.authority.governments && state.authority.governments[rid];
-      var authoredRealmId = government && government.selection ? government.selection.originRealmId : rid;
+      var authoredRealmId = government && government.selection ? government.selection.originRealmId :
+        government && government.aristocracy ? government.aristocracy.originRealmId : rid;
       if (s.authoredCourt !== undefined && s.authoredCourt !== true ||
           !plain(s.members) || !Array.isArray(s.order) || !own(s.members, s.rulerMemberId) ||
           !Number.isInteger(s.rulerGeneration) || s.rulerGeneration < 1 ||
@@ -192,17 +193,25 @@
         }
         if (m.charId) {
           var c = state.chars && state.chars[m.charId];
-          var birthRealm = m.branchRef ? m.branchRef.realmId : rid;
-          var birthMember = m.branchRef ? m.branchRef.memberId : id;
+          var birthRealm = m.branchRef ? m.branchRef.realmId : m.incumbentRef ? m.incumbentRef.realmId : rid;
+          var birthMember = m.branchRef ? m.branchRef.memberId : m.incumbentRef ? m.incumbentRef.memberId : id;
           if (!c || !c.royalLine || c.royalLine.realmId !== birthRealm ||
               c.royalLine.memberId !== undefined && c.royalLine.memberId !== birthMember) field(where + '.charId');
+        }
+        if (m.incumbentRef !== undefined) {
+          var incumbent = m.incumbentRef, birthCourt = plain(incumbent) && state.realms[incumbent.realmId];
+          var birth = birthCourt && birthCourt.succession && birthCourt.succession.members[incumbent.memberId];
+          if (!government || !government.aristocracy || !plain(incumbent) || Object.keys(incumbent).length !== 2 ||
+              incumbent.realmId === rid || !birth || !m.charId || birth.charId !== m.charId || m.role !== 'incumbent' ||
+              m.branchRef || m.parentId || m.fatherId || m.motherId ||
+              !Array.isArray(government.aristocracy.royalRoots) || government.aristocracy.royalRoots.indexOf(id) >= 0) field(where + '.incumbentRef');
         }
         if (m.branchRef !== undefined) {
           var ref = m.branchRef, source = plain(ref) && state.realms[ref.realmId];
           var original = source && source.succession && source.succession.members[ref.memberId];
           if (!plain(ref) || ref.realmId === rid || !original || original.branchRef ||
               !own(s.members, ref.parentId) ||
-              ![rid, authoredRealmId].concat(government && government.selection ? ['player'] : []).some(function (identity) {
+              ![rid, authoredRealmId].concat(government && (government.selection || government.aristocracy) ? ['player'] : []).some(function (identity) {
                 return id === 'royal_' + identity + '_branch_' + ref.realmId + '_' + ref.memberId;
               }) ||
               m.charId && m.charId !== (original.charId || FB.courtCharacterId(ref.memberId))) field(where + '.branchRef');
@@ -250,6 +259,10 @@
     if (FB.validatePublicAdministrationState) {
       var publicFault = FB.validatePublicAdministrationState(state);
       if (publicFault) invalid(publicFault);
+    }
+    if (FB.aristocracy) {
+      var aristocraticFault = FB.aristocracy.validateState(state);
+      if (aristocraticFault) invalid(aristocraticFault);
     }
     rows(authority, 'recognitions', seen, function (value, where) {
       if (!own(FBDATA.legitimacySources, value.source) ||

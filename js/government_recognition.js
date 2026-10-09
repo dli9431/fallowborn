@@ -8,6 +8,11 @@
   function votes(s, rid) { var row = record(s, rid); return row && row.recognition || {}; }
   function validActor(s, actor) { return !!actor && !!FB.political.actor(s, actor); }
   function same(a, b) { return !!a && !!b && a.kind === b.kind && a.id === b.id; }
+  // Later forms extend this same transaction with declared ancestry and terms.
+  R.policy = function (s, rid) {
+    var form = FB.governments.forRealm(s, rid);
+    return form && form.use.succession.recognitionPolicy || null;
+  };
   R.candidateMember = function (s,rid,id) {
     var tree = s.realms[rid] && s.realms[rid].succession;
     return rid === 'player' ? s.chars[id] : tree && tree.members && tree.members[id];
@@ -22,6 +27,8 @@
     });
   }
   R.members = function (s, rid) {
+    var policy = R.policy(s, rid);
+    if (policy) return policy.members(s, rid);
     var profile = FB.administrationProfile(s, rid), realm = s.realms[rid];
     if (!profile || !realm || !realm.alive) return [];
     var out = [{ id:'court', principal:{ kind:'realm', id:rid },
@@ -38,6 +45,8 @@
     return out;
   };
   R.candidates = function (s, rid) {
+    var policy = R.policy(s, rid);
+    if (policy) return policy.candidates(s, rid);
     var profile = FB.administrationProfile(s, rid), tree = s.realms[rid] && s.realms[rid].succession;
     if (!profile || !tree) return [];
     if (rid === 'player') {
@@ -103,26 +112,31 @@
     if (q.realmId !== 'player') FB.refreshRealmSuccession(s,q.realmId);
     return true;
   };
-  R.supportQuote = function (s, actor, rid, seatId, candidateId) {
+  R.supportQuote = function (s, actor, rid, seatId, candidateId, terms) {
+    var policy = R.policy(s, rid);
     var members = R.members(s, rid), candidates = R.candidates(s, rid);
     var seat = members.filter(function (row) { return row.id === seatId; })[0];
     var candidate = candidates.filter(function (row) { return row.id === candidateId; })[0];
     var principal = seat && seat.principal, ruler = FB.realmRulerCharacterSnapshot(s, rid);
-    var allowed = validActor(s, actor) && candidate && seat &&
-      (same(actor, principal) || principal.kind === 'realm' && ruler && actor.kind === 'character' && actor.id === ruler.id);
+    var allowed = validActor(s, actor) && (candidate || policy && candidateId === null) && seat &&
+      (same(actor, principal) || principal && principal.kind === 'realm' && ruler && actor.kind === 'character' && actor.id === ruler.id);
     var q = { operation:'support', actor:copy(actor || null), realmId:rid, seatId:seatId,
       candidateId:candidateId, cost:0, allowed:!!allowed,
       reason:allowed ? null : FB.T('Only this living interest can recognize an eligible candidate.') };
     q.stamp = JSON.stringify([FB.realmRulerGeneration(s, rid), members, candidates,
       votes(s, rid), FB.administrationProfile(s, rid), actor, ruler && [ruler.id,ruler.dead]]);
+    if (policy) policy.support(s, rid, q, seat, candidate, terms);
     return q;
   };
   R.applySupport = function (s, reviewed) {
     if (!reviewed) return false;
-    var q = R.supportQuote(s, reviewed.actor, reviewed.realmId, reviewed.seatId, reviewed.candidateId);
+    var policy = R.policy(s, reviewed.realmId);
+    var q = R.supportQuote(s, reviewed.actor, reviewed.realmId, reviewed.seatId, reviewed.candidateId,
+      policy ? reviewed.terms : undefined);
     if (!q.allowed || JSON.stringify(q) !== JSON.stringify(reviewed)) return false;
     var row = record(s, q.realmId);
     if (!row) return false;
+    if (policy && !policy.pay(s, q)) return false;
     var old = votes(s, q.realmId), next = {}, members = R.members(s, q.realmId);
     members.forEach(function (member) {
       var prior = old[member.id];
@@ -130,28 +144,33 @@
     });
     next[q.seatId] = { principal:copy(members.filter(function (member) { return member.id === q.seatId; })[0].principal),
       candidateId:q.candidateId, generation:FB.realmRulerGeneration(s, q.realmId) };
+    if (policy) next[q.seatId].terms = copy(q.terms);
     row.recognition = next;
     // A designation is a claim in the canonical tree, never a property grant.
-    if (q.seatId === 'court') s.realms[q.realmId].succession.designatedHeirId = q.candidateId;
+    if (q.seatId === 'court') s.realms[q.realmId].succession.designatedHeirId = policy
+      ? policy.designate(s,q.realmId,q.candidateId) : q.candidateId;
     return true;
   };
   R.accessionQuote = function (s, rid, cause) {
+    var policy = R.policy(s, rid);
     var profile = FB.administrationProfile(s, rid), tree = s.realms[rid] && s.realms[rid].succession;
     var members = R.members(s, rid), candidates = R.candidates(s, rid), support = votes(s, rid), totals = {};
     var weight = 0, generation = FB.realmRulerGeneration(s, rid);
+    var designated = policy && tree ? policy.designated(s,rid,tree) : tree && tree.designatedHeirId;
     members.forEach(function (member) {
       weight += member.weight;
       var vote = support[member.id];
-      var choice = member.id === 'court' && tree && tree.designatedHeirId ||
+      var choice = member.id === 'court' && designated ||
         vote && vote.generation === generation && same(vote.principal, member.principal) && vote.candidateId;
-      if (candidates.some(function (candidate) { return candidate.id === choice; }))
+      if ((!policy || policy.voteValid(s, rid, member, vote, choice)) &&
+          candidates.some(function (candidate) { return candidate.id === choice; }))
         totals[choice] = (totals[choice] || 0) + member.weight;
     });
     var selected = candidates.slice().sort(function (a, b) {
       return (totals[b.id] || 0) - (totals[a.id] || 0) || candidates.indexOf(a) - candidates.indexOf(b);
     })[0];
     if (profile && profile.accession.mode === 'designation') selected = candidates.filter(function (c) {
-      return c.id === tree.designatedHeirId;
+      return c.id === designated;
     })[0] || selected;
     if (profile && profile.accession.mode === 'dynastic') selected = candidates[0];
     var recognized = selected && profile && (profile.accession.mode === 'designation' || profile.accession.mode === 'dynastic' ||
@@ -163,21 +182,26 @@
         !recognized ? FB.T('Recognition is divided. Public administration continues while the court is vacant.') : null };
     q.stamp = JSON.stringify([generation, members, candidates, support, tree && tree.designatedHeirId, profile,
       tree && tree.rulerMemberId, tree && tree.rulerMemberId && tree.members && tree.members[tree.rulerMemberId]]);
+    if (policy) policy.accession(s, rid, q);
     return q;
   };
   R.resolve = function (s, reviewed, apply) {
     if (!reviewed) return false;
     var q = R.accessionQuote(s, reviewed.realmId, reviewed.cause);
     if (!q.allowed || JSON.stringify(q) !== JSON.stringify(reviewed)) return false;
+    var policy = R.policy(s, reviewed.realmId);
+    var member = R.candidateMember(s,reviewed.realmId,q.memberId);
     var result = apply(q);
     if (!result) return false;
     var row = record(s, reviewed.realmId) || record(s, 'player');
     if (row) {
       row.recognition = {};
       delete row.publicVacancy;
-      var member = R.candidateMember(s,reviewed.realmId,q.memberId);
-      row.lastAccession = { generation:q.rulerGeneration, memberId:!record(s,reviewed.realmId) && member && member.charId || q.memberId, cause:q.cause,
+      var settledRealmId = record(s,reviewed.realmId) ? reviewed.realmId : 'player';
+      var settledMemberId = settledRealmId !== reviewed.realmId && member && member.charId || q.memberId;
+      row.lastAccession = { generation:q.rulerGeneration, memberId:settledMemberId, cause:q.cause,
         turn:s.turn, minor:q.minor };
+      if (policy) policy.resolved(s, settledRealmId, Object.assign({},q,{memberId:settledMemberId}));
     }
     return result;
   };

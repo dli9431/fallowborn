@@ -398,3 +398,7 @@ The shared constituency contract in FB.governments.support supplies typed member
 Public administration
 
 The optional public_offices system uses profile-owned public catalogues through the existing authority.appointments ledger. publicTerms schema 1 references a productive source and declared remuneration, service, remittance and succession confirmation. Pure publicAppointmentQuote/publicOfficeQuote reviews and their revalidating applies cover appointment, audit, repayment, confirmation and dismissal. Effective scope stops on death, custody, lost source/host, expiry or required sovereign confirmation. Public and private rights remain separate. Shared governmentRecognition projects living interests and stores bounded current support inside existing government rows; it creates no duplicate holder ledger. See docs/designs/administrative-monarchy.md.
+
+Aristocratic provincial authority
+
+aristocratic_monarchy reuses personal public commissions and the common recognition transaction while retaining permanent hereditary interests. Each interest references one perpetual fiscal appointment and separate Peace/Consent customary rights. Probate transfers those same public records to an existing adult of the house; private estate succession stays separate. Royal ancestry is required for sovereign candidature. Provincial negotiation, refusal, legitimate enforcement, minority stewardship and conversion use pure, fully revalidated reviews. A generic appointment dismissal cannot revoke hereditary jurisdiction. See docs/designs/aristocratic-monarchy.md.

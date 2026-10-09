@@ -6,6 +6,7 @@ const { startParityGame, FRESH_JOURNEYS } = require('../support/game/parity');
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
   'index.html', 'js/government_selection.js', 'js/government_lineage.js', 'js/governments.js',
+  'data/aristocratic_courts.js', 'js/government_aristocracy.js', 'js/government_recognition.js', 'js/government_administration.js', 'js/bookmark_setup.js',
   'js/government_levy.js', 'js/government_revenue.js', 'js/government_continuity.js',
   'js/world.js', 'js/model.js', 'js/main.js', 'js/starts.js', 'js/station.js', 'js/actions.js',
   'js/authority.js', 'js/politics.js', 'js/institutions.js', 'js/modifiers.js', 'js/treasury.js', 'js/justice.js',

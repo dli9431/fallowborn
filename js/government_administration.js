@@ -85,9 +85,10 @@
   };
   FB.publicAppointmentEffective = function (s, row) {
     var terms = row && row.publicTerms, profile = row && FB.administrationProfile(s, row.institutionId);
+    var hereditary = FB.aristocracy && FB.aristocracy.assignment(s, row);
     if (!terms || !profile || row.status !== 'active' || row.endTurn !== null && row.endTurn <= s.turn ||
         !s.chars[row.holder.id] || s.chars[row.holder.id].dead || s.chars[row.holder.id].unfree ||
-        FB.justiceCustodyOf(s, row.holder.id) || profile.offices.indexOf(row.officeId) < 0 ||
+        FB.justiceCustodyOf(s, row.holder.id) || !hereditary && profile.offices.indexOf(row.officeId) < 0 ||
         terms.confirmation === 'reaffirm' && row.appointerGeneration !== FB.realmRulerGeneration(s, row.institutionId)) return false;
     var realm = s.realms[row.institutionId], pid = terms.source.provinceId;
     if (!realm || !realm.alive || (s.holder[pid] || s.owner[pid]) !== row.institutionId) return false;
@@ -237,6 +238,9 @@
       action === 'audit' ? patron && current === 'active' :
       action === 'repay' ? holder && live && FB.treasuryCounterparty(s,row.institutionId) && row.publicTerms.arrears > 0 &&
         (FB.treasuryCharacterRealm(s,c.id) ? FB.treasuryAvailable(s,FB.treasuryCharacterRealm(s,c.id)) : Number(c.gold) || 0) >= row.publicTerms.arrears : false;
+    // A perpetual family assignment continues through its own probate review.
+    // Dismissing a personal governor cannot revoke surviving customary rights.
+    if (FB.aristocracy && FB.aristocracy.assignment(s,row) && ['remove','confirm'].indexOf(action) >= 0) allowed = false;
     var q = { operation:'office', actor:copy(actor || null), id:id, action:action, value:value === undefined ? null : value,
       allowed:!!allowed, cost:action === 'repay' ? row.publicTerms.arrears : 0,
       reason:allowed ? null : FB.T('The holder, appointing authority, funding or office terms no longer permit this decision.') };
@@ -531,7 +535,7 @@
             t.last.due > t.last.gross + 0.000001 || t.last.withheld + t.last.remitted > t.last.gross + 0.000001)) {
         fault = 'authority.appointments.' + row.id + '.publicTerms'; return;
       }
-      if (['active','contested'].indexOf(row.status) >= 0 && row.endTurn > s.turn) {
+      if (['active','contested'].indexOf(row.status) >= 0 && (row.endTurn === null || row.endTurn > s.turn)) {
         var key = row.institutionId + ':' + t.source.provinceId;
         totals[key] = (totals[key] || 0) + t.share;
         var seat = row.institutionId + ':' + row.officeId + ':' + row.scope.id;
@@ -549,11 +553,13 @@
         if (!support || typeof support !== 'object' || Array.isArray(support) ||
             Object.keys(support).length > 1 + rows(s).length * 8 || Object.keys(support).some(function (id) {
               var vote = support[id], tree = s.realms[rid].succession;
-              return !vote || Object.keys(vote).length !== 3 || !vote.principal ||
+              var extended = FB.aristocracy && FB.aristocracy.state(s,rid);
+              return !vote || Object.keys(vote).length !== (extended ? 4 : 3) || !vote.principal ||
                 ['character','realm'].indexOf(vote.principal.kind) < 0 ||
                 !own(vote.principal.kind === 'character' ? s.chars : s.realms,vote.principal.id) ||
                 !Number.isInteger(vote.generation) || vote.generation < 1 ||
-                Object.keys(vote.principal).length !== 2 || !tree || !R.candidateMember(s,rid,vote.candidateId);
+                Object.keys(vote.principal).length !== 2 || !tree ||
+                !(extended && vote.candidateId === null) && !R.candidateMember(s,rid,vote.candidateId);
             })) fault = 'authority.governments.' + rid + '.recognition';
       }
       if (row.lastAccession !== undefined) {

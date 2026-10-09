@@ -582,3 +582,7 @@ Community profiles bound local public income, levy contributions and protected r
 Source-backed public remuneration
 
 Public office remuneration is paid from the same treasury that receives the referenced county receipts through the ordinary fiscal path. Actual salaries/revenue shares debit that payer and credit the officer once per period; projected household income never performs a second credit. Local pay precedes remittance, withholding creates real recoverable arrears, and audit/repayment/confirmation have separate reviewed consequences. Missing/inactive treasuries cannot issue pay. Ended assignments retain real arrears, while private estates and enterprises retain their existing income. See docs/designs/administrative-monarchy.md for source caps, conservation and accounting order.
+
+Aristocratic provincial commitments
+
+Hereditary family assignments use the same county source, publicTerms ledger and payroll. Provincial terms declare retained public receipts and levy commitment separately from private estates and personal governor pay. Aggregate source assignments remain capped at one. Withheld or ineffective local assent reduces the existing public tax base, while private production retains its normal owner. Negotiation debits the actual court treasury after full revalidation; enforcing a legitimate claim costs local popular support. Paid peace tribute and alliance/protection retain their existing, distinct contracts and conserved counterparties. See docs/designs/aristocratic-monarchy.md.

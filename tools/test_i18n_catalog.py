@@ -31,6 +31,20 @@ class JavascriptLexerTests(unittest.TestCase):
 
 
 class StructuredDataExtractionTests(unittest.TestCase):
+    def test_aristocratic_courts_and_offices_have_display_owners(self):
+        inventory = i18n_catalog.Inventory()
+        i18n_catalog.extract_structured(inventory)
+        for key, text in (
+            ('aristocraticProfile.chartered_court.name.default', 'Chartered royal court'),
+            ('aristocraticInterest.chartered_court.alder.name.default', 'Alder household'),
+            ('aristocraticInterest.sasanian_476.mihran.name.default', 'Mihran family interest'),
+            ('authorityOffice.provincial_governor.name.default', 'Provincial governor'),
+            ('authorityOffice.sasanian_shahrab.name.default', 'Shahrab'),
+            ('administrationProfile.sasanian_provinces_476.name.default', 'Sasanian provincial service (476)'),
+        ):
+            self.assertEqual(inventory.entries[key]['text'], text)
+            self.assertIn('aristocratic_courts.js', inventory.meta[key]['location'])
+
     def test_assembly_policies_have_display_owners_without_translating_people(self):
         inventory = i18n_catalog.Inventory()
         i18n_catalog.extract_structured(inventory)

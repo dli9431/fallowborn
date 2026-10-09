@@ -9,6 +9,7 @@ const { restoreBookmark, advanceBookmark } = require('../support/game/bookmark-a
 const { injectBrowserHarness } = require('../support/game/browser-harness');
 dependsOnRuntime(__filename, [
   'data/story_courts_476.js',
+  'data/aristocratic_courts.js', 'js/government_aristocracy.js', 'js/government_recognition.js', 'js/government_administration.js', 'js/bookmark_setup.js', 'js/starts.js',
   'index.html', 'data/bookmark_476_outer.js', 'data/bookmark_476.js',
   'data/assembly_polities.js', 'js/government_support.js', 'js/government_collective.js', 'js/government_assembly.js',
   'data/bookmark_476_italy.js', 'data/bookmark_476_dalmatia_east.js',

@@ -4,6 +4,7 @@ const fs = require('fs');
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
   'index.html', 'data/eras.js', 'data/political_institutions.js',
+  'data/aristocratic_courts.js', 'js/government_aristocracy.js',
   'js/governments.js', 'js/government_levy.js', 'js/government_revenue.js',
   'js/government_council.js', 'js/government_diplomacy.js', 'js/government_ai.js',
   'js/government_selection.js', 'js/government_lineage.js', 'js/government_support.js',
@@ -29,7 +30,7 @@ test('forms have complete named interfaces; legacy mods delegate and invalid for
   await openGame(page, testInfo);
   const result = await page.evaluate(function () {
     const G = FB.governments;
-    const explicit = ['territorial','regnum','roman_civic','federate_polity','lineage_kingship','assembly_polity','administrative_monarchy'].every(function (id) {
+    const explicit = ['territorial','regnum','roman_civic','federate_polity','lineage_kingship','assembly_polity','administrative_monarchy','aristocratic_monarchy'].every(function (id) {
       return G.slots().every(function (slot) { return typeof FBDATA.governmentForms[id][slot] === 'string'; });
     });
     let empty = '', unknown = '', retired = '', parameters = '', incomplete = '';

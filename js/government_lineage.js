@@ -3,7 +3,7 @@
 (function () {
   'use strict';
   var G = FB.governments, S = FB.governmentSelection, Q = FB.political;
-  function managed(s, rid) { var form = G.forRealm(s, rid); return !!form && form.use.succession.selectionManaged === true; }
+  function managed(s, rid) { var form = G.forRealm(s, rid); return !!form && form.use.succession.selectionManaged === true && !form.use.succession.recognitionPolicy; }
   function accepted(s, rid, kind, pid) {
     var data = S.state(s, rid);
     return S.recognized(s, rid, pid) && data.recognition ? data.recognition.terms[kind] : 0;

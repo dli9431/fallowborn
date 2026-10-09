@@ -7,6 +7,7 @@ const { mockCrazyGames } = require('../support/crazygames');
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
   'index.html', 'data/bookmark_800.js', 'data/bookmark_800_history.js',
+  'data/aristocratic_courts.js', 'js/government_aristocracy.js',
   'data/political_institutions.js', 'data/eras.js', 'data/systems.js',
   'data/actions.js', 'data/lexicons.js', 'data/technology.js', 'data/cultures.js',
   'js/governments.js', 'js/government_recognition.js', 'js/government_administration.js',
