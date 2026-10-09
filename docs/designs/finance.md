@@ -601,3 +601,7 @@ An elective incumbent's private settlement actor remains distinct from the publi
 Civic treasury and foreign receipts
 
 A civic polity uses its existing realm treasury. Public borrowing transfers real lender funds into that account and repayment debits the quoted outstanding public obligation once. Temporary dues enter its ordinary receipts. Salaries transfer actual funds above the declared protected reserve to living incumbents once per season; income projections perform no second credit. An NPC magistrate's personal wallet is separate from the city account. Limited foreign revenue shares debit and credit matching amounts from one publicly held settlement, with aggregate commitments bounded by that source. Private enterprises and household credit retain their owners. See docs/designs/city-republic.md.
+
+Ecclesiastical public accounts
+
+Ecclesiastical receipts, remittances, military service and expense retain canonical fiscal owners. Vacancy powers and control gate public sources while private settlement production stays private. Reviewed appointment and temporal recognition fees debit only available institutional funds above the declared reserve. No new salary, loan store or treasury is created. See ecclesiastical-principality.md.

@@ -186,7 +186,7 @@ window.FBMODS = window.FBMODS || [];
     householdStandards:true, marketGoods:true, marketEndowmentTypes:true,
     marketEndowments:true, travelPurposes:true, travelSites:true, tournaments:true,
     finance:true, plots:true, intrigue:true, legalTraditions:true, justiceSentences:true, governmentForms:true, administrationProfiles:true, aristocraticProfiles:true, items:true, itemPools:true,
-    rulerTraits:true, raidingTraditions:true, councilSeats:true, constituencyProfiles:true, mobileProfiles:true, civicProfiles:true,
+    rulerTraits:true, raidingTraditions:true, councilSeats:true, constituencyProfiles:true, mobileProfiles:true, civicProfiles:true, ecclesiasticalProfiles:true,
     councilRules:true, politicalBlocs:true,
     policies:true, elections:true, privileges:true, collectiveDemands:true,
     settlementNames:true, settlementSites:true, settlementLayouts:true, titles:true, papacy:true,
@@ -1637,6 +1637,8 @@ window.FBMODS = window.FBMODS || [];
     const constituencies = combinedTable(FBDATA.constituencyProfiles, mod.constituencyProfiles, 'constituencyProfiles');
     const civicErrors = FB.civicGovernment.profileFaults(civicProfiles,forms,constituencies);
     if (civicErrors.length) fail('civicProfiles',civicErrors[0]);
+    const ecclesiasticalErrors = FB.ecclesiasticalGovernment.profileFaults(combinedTable(FBDATA.ecclesiasticalProfiles,mod.ecclesiasticalProfiles,'ecclesiasticalProfiles'));
+    if (ecclesiasticalErrors.length) fail('ecclesiasticalProfiles',ecclesiasticalErrors[0]);
     const profileErrors = FB.validateAdministrationProfiles(profiles);
     if (profileErrors.length) fail('administrationProfiles', profileErrors[0]);
     const errors = FB.validateLegalTraditions(traditions, sentences, forms);
@@ -1678,7 +1680,7 @@ window.FBMODS = window.FBMODS || [];
         if (own(def, 'hidden') && typeof def.hidden !== 'boolean') fail(path + '.hidden', 'must be true or false.');
       });
     }
-    if (own(mod, 'legalTraditions') || own(mod, 'justiceSentences') || own(mod, 'governmentForms') || own(mod, 'administrationProfiles') || own(mod, 'aristocraticProfiles') || own(mod, 'religions') || own(mod, 'civicProfiles') || own(mod, 'constituencyProfiles')) validateJustice(mod);
+    if (own(mod, 'legalTraditions') || own(mod, 'justiceSentences') || own(mod, 'governmentForms') || own(mod, 'administrationProfiles') || own(mod, 'aristocraticProfiles') || own(mod, 'religions') || own(mod, 'civicProfiles') || own(mod, 'ecclesiasticalProfiles') || own(mod, 'constituencyProfiles')) validateJustice(mod);
     if (mod.constituencyProfiles) {
       const profiles = combinedTable(FBDATA.constituencyProfiles, mod.constituencyProfiles, 'constituencyProfiles');
       const problems = FB.governments.support.validateProfiles(profiles);
@@ -2058,6 +2060,7 @@ window.FBMODS = window.FBMODS || [];
     if (mod.constituencyProfiles) mergeTable(FBDATA.constituencyProfiles, mod.constituencyProfiles);
     if (mod.mobileProfiles) mergeTable(FBDATA.mobileProfiles, mod.mobileProfiles);
     if (mod.civicProfiles) { mergeTable(FBDATA.civicProfiles,mod.civicProfiles); FB.governments.invalidate(); }
+    if (mod.ecclesiasticalProfiles) { mergeTable(FBDATA.ecclesiasticalProfiles,mod.ecclesiasticalProfiles); FB.governments.invalidate(); }
     if (mod.administrationProfiles) { mergeTable(FBDATA.administrationProfiles, mod.administrationProfiles); FB.governments.invalidate(); }
     if (mod.aristocraticProfiles) { mergeTable(FBDATA.aristocraticProfiles, mod.aristocraticProfiles); FB.governments.invalidate(); }
     if (mod.religions) for (const k in mod.religions) FBDATA.religions[k] = mod.religions[k];

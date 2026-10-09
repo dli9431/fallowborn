@@ -278,3 +278,7 @@ Wider spring-476 congregations
 Public sovereign accession and religious offices
 
 Public sovereign recognition resolves one canonical political candidate and calls the existing advanceRealmSuccession transition once. The existing religious-head record is revalidated after that transition; selecting administrative_monarchy neither creates another caliph nor grants an ineligible ruler religious authority. Political minority and female sovereignty follow the public profile, while a religious office retains its own eligibility and can remain vacant. See docs/designs/administrative-monarchy.md.
+
+Office-bound temporal jurisdiction
+
+A declared ecclesiastical government reads the canonical religious office without creating another incumbent or election. Local officeProfile eligibility remains in the religious registry; chapterId identifies an independent local congregation. Local appointment, resignation and qualification-based removal update the existing religiousHeads record. Spiritual validity does not confer automatic temporal recognition or property. See ecclesiastical-principality.md.

@@ -109,7 +109,7 @@ window.FB = window.FB || {};
     if (!actor) actor = { kind:'realm', id:'player' };
     if (actor.kind === holder.kind && actor.id === holder.id) return true;
     var publicId = actor.kind === 'realm' ? actor.id : holder.kind === 'realm' ? holder.id : null;
-    if (publicId && FB.electiveCrown && FB.electiveCrown(state, publicId)) return false;
+    if (publicId && FB.governments.institutionalProperty(state, publicId)) return false;
     if (actor.kind === 'realm' && holder.kind === 'character') {
       if (actor.id === 'player') return holder.id === state.player.charId;
       const c = FB.realmRulerCharacterSnapshot(state, actor.id);
@@ -130,7 +130,7 @@ window.FB = window.FB || {};
     if (actor.kind === 'character' && state.chars[actor.id] && FB.realmIdForRulerCharacter) {
       const rid = FB.realmIdForRulerCharacter(state, state.chars[actor.id]);
       if (rid && state.realms[rid] && state.realms[rid].alive &&
-          !(FB.electiveCrown && FB.electiveCrown(state, rid))) return { kind:'realm', id:rid };
+          !FB.governments.institutionalProperty(state, rid)) return { kind:'realm', id:rid };
     }
     return actor;
   }

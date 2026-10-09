@@ -4447,6 +4447,10 @@ window.FB = window.FB || {};
   { id:'mobile_coalition', opensChoices:true, noConsume:true,
     show:function (s) { return !!(FB.mobile && FB.mobile.localRealm(s)); },
     run:function (s) { if (FB.ui && FB.ui.showMobileConfederation) FB.ui.showMobileConfederation(FB.mobile.localRealm(s)); } },
+  { id:'ecclesiastical_government', opensChoices:true, noConsume:true,
+    show:function (s) { var E = FB.ecclesiasticalGovernment,rid = s.player.liege || s.holder[s.player.provinceId];
+      return !!(E && (E.localRealm(s) || E.conversionBindings && E.conversionBindings(s,rid).length)); },
+    run:function (s) { FB.ui.showEcclesiasticalGovernment(FB.ecclesiasticalGovernment.localRealm(s) || s.player.liege || s.holder[s.player.provinceId]); } },
   { id:'civic_government', opensChoices:true, noConsume:true,
     show:function (s) { return !!(FB.civicGovernment && FB.civicGovernment.localRealm(s)); },
     run:function (s) { if (FB.ui && FB.ui.showCivicGovernment) FB.ui.showCivicGovernment(FB.civicGovernment.localRealm(s)); } },

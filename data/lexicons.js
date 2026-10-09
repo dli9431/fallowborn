@@ -145,6 +145,12 @@ FBDATA.lexicons = {
       f:['Dependent','Householder','Trusted follower','Member principal','Coalition leader','Coalition leader','Coalition leader','Coalition leader']
     }, terms:{council:{one:'member council',other:'member councils'},vassal:{one:'member following',other:'member followings'},
       kingdom:{one:'coalition',other:'coalitions'},empire:{one:'confederation',other:'confederations'}} },
+    ecclesiastical_principality:{ institutionalRanks:true, rank:{
+      m:['Dependent','Free Householder','Skilled Servant','Local Notable','Senior Servant','Senior Servant','Senior Servant','Senior Servant'],
+      f:['Dependent','Free Householder','Skilled Servant','Local Notable','Senior Servant','Senior Servant','Senior Servant','Senior Servant']
+    }, terms:{ council:{ one:'chapter',other:'chapters' },vassal:{ one:'temporal officer',other:'temporal officers' },
+      fief:{ one:'temporal jurisdiction',other:'temporal jurisdictions' },duchy:{ one:'ecclesiastical lordship',other:'ecclesiastical lordships' },
+      kingdom:{ one:'ecclesiastical principality',other:'ecclesiastical principalities' },empire:{ one:'ecclesiastical dominion',other:'ecclesiastical dominions' } } },
     city_republic:{ institutionalRanks:true, rank:{
       m:['Dependent','Citizen','Professional','Civic Notable','Senior Citizen','Senior Citizen','Senior Citizen','Senior Citizen'],
       f:['Dependent','Citizen','Professional','Civic Notable','Senior Citizen','Senior Citizen','Senior Citizen','Senior Citizen']

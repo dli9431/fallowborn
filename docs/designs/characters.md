@@ -1410,3 +1410,7 @@ The elective profile can permit a qualified free local person from another house
 Civic personal standing
 
 The city_republic ladder preserves all eight personal station bands with professional, economic and public-service advancement. Civic office selection checks actual local residence, free status, effective skills, service and declared eligibility; a sworn profile also requires separately reviewed admission. Wealth can support standing but cannot buy membership or ownership of the republic. Civic incumbents use ordinary character and household records without a new dynasty. Institutional rank continues to describe the public realm's size. See docs/designs/city-republic.md.
+
+Clerical Standing and institutional office
+
+Ecclesiastical household progression retains the existing station bands and service roles. Spiritual eligibility and chapter or temporal recognition are separate requirements; wealth and Standing cannot buy an unconditional office. Institutional public property remains outside private succession. See ecclesiastical-principality.md.

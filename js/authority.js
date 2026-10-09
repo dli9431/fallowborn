@@ -95,7 +95,8 @@
      still being made, so no actor query runs here. */
   FB.authoritySeedGovernments = function (s, forms) {
     for (var rid in forms) if (own(forms, rid)) {
-      if (forms[rid] === defaultForm(s) || !own(s.realms, rid) ||
+      if (forms[rid] === defaultForm(s) && !(FB.governments.strategy('succession',
+          FBDATA.governmentForms[forms[rid]] && FBDATA.governmentForms[forms[rid]].succession) || {}).officeBound || !own(s.realms, rid) ||
           !own(FBDATA.governmentForms, forms[rid])) continue;
       ensure(s).governments[rid] = { formId:forms[rid], sinceTurn:s.turn };
     }

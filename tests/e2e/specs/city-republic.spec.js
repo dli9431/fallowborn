@@ -60,6 +60,20 @@ async function qualify(page,rid,officeIndex) {
   }, { rid:rid,officeIndex:officeIndex });
 }
 
+test('shared institutional property keeps a magistrate private estate outside the city estate', async function ({ page },testInfo) {
+  const rid = await start(page,testInfo);
+  const result = await page.evaluate(function (rid) {
+    const s = FB.state,c = FB.civicGovernment.chief(s,rid);
+    const pid = FB.governments.support.row(s,rid).scopes.find(function (id) { return FB.settlementVisibleCount(s,id) > 1; });
+    if (!pid || !FB.assignSettlementLordship(s,pid,1,c.id)) throw new Error('Private civic estate fixture unavailable');
+    const actor = FB.settlementActor(s,{ kind:'character',id:c.id });
+    return { personal:actor.kind === 'character' && actor.id === c.id,
+      excluded:!FB.directSettlements(s,{ kind:'realm',id:rid }).some(function (site) { return site.provinceId === pid && site.settlement === 1; }),
+      retained:FB.settlementHolder(s,pid,1).id === c.id,institution:FB.governments.institutionalProperty(s,rid) };
+  },rid);
+  expect(result).toEqual({ personal:true,excluded:true,retained:true,institution:true });
+});
+
 async function electPlayer(page,rid,officeIndex) {
   await qualify(page,rid,officeIndex);
   await page.evaluate(function (input) {

@@ -535,3 +535,7 @@ For elective crowns, a ruler's character actor and public realm actor retain sep
 Civic office and private property
 
 Civic membership, magistracy, public treasury and foreign rights are separate from household land, enterprises and inheritance. Selection, office expiry, resignation, recall and death confer or end a public mandate without confiscating private property. A reviewed sovereign county grant retains private settlement holders and enterprises. Deliberate adoption of a civic constitution preserves existing household loans and property, rather than awarding the fresh bookmark's concessions. See docs/designs/city-republic.md.
+
+Institutional property boundary
+
+A civic or ecclesiastical officeholder remains a private settlement actor distinct from the public realm. Personal settlement inheritance follows the existing heir; public counties and spiritual offices remain institutional. Current control and vacancy rules may limit public receipts without redirecting private property.

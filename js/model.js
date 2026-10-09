@@ -1449,14 +1449,16 @@ window.FB = window.FB || {};
   function withLocalReligiousOffices(state, definitions) {
     const out = Object.assign({}, definitions), local = FB.localInstitutionDefinitions(state);
     for (const officeId in out) {
-      if (out[officeId].head.system && (!FB.systemEnabled || !FB.systemEnabled(state, out[officeId].head.system))) delete out[officeId];
+      if (out[officeId].head.system && (!FB.systemEnabled || !FB.systemEnabled(state, out[officeId].head.system,
+          { faith:out[officeId].religionId,realm:null }))) delete out[officeId];
     }
-    if (!FB.systemEnabled || !FB.systemEnabled(state, 'episcopal_sees')) return out;
+    if (!FB.systemEnabled) return out;
     for (const id in local) {
       const def = local[id];
+      if (!FB.systemEnabled(state,'episcopal_sees',{ faith:def.religion,realm:null })) continue;
       if (!def.officeId || out[def.officeId]) continue;
       out[def.officeId] = { id:def.officeId, religionId:def.religion,
-        head:{ holderKind:'character', holderSex:'m', holderRole:'priest', minAge:18, succession:'appointment', local:true } };
+        head:Object.assign({ holderKind:'character', holderSex:'m', holderRole:'priest', minAge:18, succession:'appointment', local:true }, def.officeProfile || {}) };
     }
     return out;
   }
@@ -1468,6 +1470,10 @@ window.FB = window.FB || {};
     const holder = office && state.religiousHeads && state.religiousHeads[officeId];
     return holder && religiousHeadHolderEligible(state, office, holder)
       ? state.chars[holder] || state.realms[holder] : null;
+  };
+
+  FB.religiousOfficeHolderEligible = function (state, officeId, holderId) {
+    return religiousHeadHolderEligible(state,religiousOfficeDefinitions(state)[officeId],holderId);
   };
 
   FB.religiousOffices = function (state) {

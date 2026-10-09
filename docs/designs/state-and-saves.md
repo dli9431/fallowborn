@@ -2101,3 +2101,7 @@ A live electoral selection requires its existing version-1 treasury with finite 
 Civic institutions
 
 authority.governments[realmId].civic is an optional strict schema-1 record for the institution, profile, former constitution, ordered offices and vacancies, citizens, bounded mandate history, scoped rights, public debts, temporary dues and overreach. governmentSupport remains the sole constituency record. Detached validation rejects malformed references, office generations, resolutions, terms, source overassignment and duplicate identities before adoption. An active civic form requires its civic record; old territorial saves remain territorial without initialization. Conversion preserves the former genealogy for family reference while civic succession owns current political generations. Restore never elects, creates people, pays salaries or awards historical rights. See docs/designs/city-republic.md for fields and bounds.
+
+Ecclesiastical binding records
+
+Optional authority.governments[realmId].ecclesiastical schema 1 contains profileId, officeId, institutionId, scope, originFormId and temporalRecognitionId. Exact detached validation checks references, unique office binding, bounded jurisdiction and the canonical recognition record. No election, incumbent or treasury is serialized here. Restoration does not initialize the form or adopt revised opening content. See ecclesiastical-principality.md.

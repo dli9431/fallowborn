@@ -1,6 +1,8 @@
 'use strict';
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
+  'data/ecclesiastical_profiles.js', 'js/government_ecclesiastical.js', 'js/ecclesiastical_strategies.js',
+  'js/ecclesiastical_validation.js', 'js/local_office_appointments.js', 'js/ui_ecclesiastical.js',
   'css/style.css',
   'js/model.js',
   'data/cultures.js',

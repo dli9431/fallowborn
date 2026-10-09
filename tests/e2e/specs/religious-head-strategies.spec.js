@@ -4,6 +4,8 @@ const { openGame } = require('../support/game/navigation');
 const { startDeterministicGame } = require('../support/game/start');
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
+  'data/ecclesiastical_profiles.js', 'js/government_ecclesiastical.js', 'js/ecclesiastical_strategies.js',
+  'js/ecclesiastical_validation.js', 'js/local_office_appointments.js', 'js/ui_ecclesiastical.js',
   'data/cultures.js', 'data/technology.js', 'data/papacy.js', 'data/settlements.js', 'data/map_data.js',
   'js/model.js', 'js/world.js', 'js/papacy.js', 'js/actions.js', 'js/events.js',
   'js/mods.js', 'js/save.js', 'js/save_v4.js', 'js/holywar.js', 'js/music.js',

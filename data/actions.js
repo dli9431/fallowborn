@@ -126,6 +126,9 @@ FBDATA.focuses = [
 FBDATA.deeds = [
   { id:'mobile_coalition', label:'Mobile coalition', icon:'🐎', desc:'Review a mobile following, its members, access agreements and conserved people.',
     section:'realm', group:'realm', flow:'choices', handler:'mobile_coalition' },
+  { id:'ecclesiastical_government', label:'Ecclesiastical government', icon:'⛪',
+    desc:'Review the spiritual office, institutional jurisdiction and temporal recognition.',
+    section:'realm', group:'realm', flow:'choices', handler:'ecclesiastical_government' },
   { id:'civic_government', label:'Civic government', icon:'🏛',
     desc:'Review public offices, civic qualification, selection, city funds and limited foreign rights.',
     section:'realm', group:'realm', flow:'choices', handler:'civic_government' },

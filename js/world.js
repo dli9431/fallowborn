@@ -774,6 +774,16 @@ window.FB = window.FB || {};
       if (typeof def.city !== 'string' || !def.city.trim() ||
           ['senate','council','see','patriarchate','congregation'].indexOf(def.kind) < 0) fault('invalid city or kind.');
       if (def.freshOnly !== undefined && typeof def.freshOnly !== 'boolean') fault('freshOnly must be boolean.');
+      if (def.officeProfile !== undefined) {
+        var op = def.officeProfile;
+        if (!plainRecord(op) || Object.keys(op).some(function (key) { return ['holderSex','holderRole','minAge'].indexOf(key) < 0; }) ||
+            op.holderSex !== undefined && op.holderSex !== null && ['m','f'].indexOf(op.holderSex) < 0 ||
+            op.holderRole !== undefined && op.holderRole !== null && ['priest','monk'].indexOf(op.holderRole) < 0 ||
+            op.minAge !== undefined && (!Number.isInteger(op.minAge) || op.minAge < 18 || op.minAge > 80) || !def.officeId)
+          fault('invalid local office eligibility profile.');
+      }
+      if (def.chapterId !== undefined && (!def.officeId || !defs[def.chapterId] || defs[def.chapterId].kind !== 'congregation' ||
+          defs[def.chapterId].officeId || defs[def.chapterId].provinceId !== def.provinceId)) fault('invalid local chapter reference.');
       var isChurch = def.kind === 'see' || def.kind === 'patriarchate';
       if (isChurch ? typeof def.officeId !== 'string' || !/^[a-z][a-z0-9_]*$/.test(def.officeId) : def.officeId !== undefined)
         fault('invalid officeId for institution kind.');
@@ -1280,6 +1290,8 @@ window.FB = window.FB || {};
         fault('realm ' + rid + ' has invalid public administration profile.');
       if (FB.civicGovernment) FB.civicGovernment.definitionFaults(realmDef,
         platform.governments[rid],date.year,definition.provinces)
+        .forEach(function (detail) { fault('realm ' + rid + ': ' + detail); });
+      if (FB.ecclesiasticalGovernment) FB.ecclesiasticalGovernment.definitionFaults(realmDef,platform.governments[rid],definition)
         .forEach(function (detail) { fault('realm ' + rid + ': ' + detail); });
       if (realmDef.religion !== undefined &&
           (!FB.faithExists(realmDef.religion, null) ||
