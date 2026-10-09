@@ -24,7 +24,7 @@ async function start(page, testInfo, scenario) {
   await page.getByRole('button', { name:'New Game', exact:true }).click();
   await page.locator('#btn-bm-seed').click();
   await page.locator('#ng-seed').fill(scenario === 'curialis_476'
-    ? 'CURIAL476-476-curialis_476-ravenna-m-Marcus-established-0-roman.nicene'
+    ? 'CURIAL476-476-curialis_476-ravenna-m-Marcus-established'
     : 'LADDER476-476-federate_476-ravenna-m-Marcus-standard-0-gothic.homoian');
   await page.locator('#ng-seed').press('Enter');
   await expect(page.locator('#chargen:not(.hidden)')).toBeVisible();

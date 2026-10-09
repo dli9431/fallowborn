@@ -32,7 +32,7 @@ const addedInstitutions = [
 async function start476(page, testInfo, crazygames) {
   await startHistoricalGame(page, testInfo, {
     bookmark:'476',
-    code:'NORTHGAUL-476-curialis_476-ravenna-m-Marcus-established-0-roman.nicene'
+    code:'NORTHGAUL-476-curialis_476-ravenna-m-Marcus-established'
   }, crazygames);
 }
 

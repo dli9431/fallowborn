@@ -1464,9 +1464,11 @@ window.FB = window.FB || {};
   }
 
   /* Local sees share the head-office ledger without pretending that every
-     bishop is the central head of an entire faith. */
-  FB.religiousOfficeSnapshot = function (state, officeId) {
-    const office = religiousOfficeDefinitions(state)[officeId];
+     bishop is the central head of an entire faith. A caller reading many
+     offices may pass one FB.religiousOffices(state) table instead of having
+     each lookup rebuild it. */
+  FB.religiousOfficeSnapshot = function (state, officeId, offices) {
+    const office = (offices || religiousOfficeDefinitions(state))[officeId];
     const holder = office && state.religiousHeads && state.religiousHeads[officeId];
     return holder && religiousHeadHolderEligible(state, office, holder)
       ? state.chars[holder] || state.realms[holder] : null;
@@ -1836,6 +1838,10 @@ window.FB = window.FB || {};
   };
 
   FB.religiousHeadSnapshot = function (state, religionId) {
+    return religiousHeadSnapshot(state, religionId, null);
+  };
+  function religiousHeadSnapshot(state, religionId, offices) {
+    const definitions = function () { return offices || (offices = religiousOfficeDefinitions(state)); };
     const rel = FB.religionOf(religionId, state);
     const officeId = rel && rel.head && rel.head.officeId;
     const heads = state && state.religiousHeads;
@@ -1847,7 +1853,7 @@ window.FB = window.FB || {};
       bookmarkReligiousHead(state, religionId);
     if (rid === null) return null;
     if (rel.head.holderKind === 'character') {
-      return religiousHeadHolderEligible(state, religiousOfficeDefinitions(state)[officeId], rid)
+      return religiousHeadHolderEligible(state, definitions()[officeId], rid)
         ? state.chars[rid] : null;
     }
     let realm = state.realms && state.realms[rid];
@@ -1863,19 +1869,21 @@ window.FB = window.FB || {};
         realm = state.realms[rid];
       }
     }
-    const office = officeId && religiousOfficeDefinitions(state)[officeId];
+    const office = officeId && definitions()[officeId];
     return realm && realm.alive &&
       religiousHeadHolderEligible(state, office, rid) ? realm : null;
-  };
+  }
 
   FB.religionsHeadedBy = function (state, realmId) {
     const out = [];
     if (!state || !realmId) return out;
-    const offices = religiousOfficeDefinitions(state);
+    /* Local sees repeat their faith's id; read each faith's head once. */
+    const offices = religiousOfficeDefinitions(state), heads = Object.create(null);
     for (const officeId in offices) {
       if (!own(offices, officeId)) continue;
       const religionId = offices[officeId].religionId;
-      const head = FB.religiousHeadSnapshot(state, religionId);
+      if (!own(heads, religionId)) heads[religionId] = religiousHeadSnapshot(state, religionId, offices);
+      const head = heads[religionId];
       if (head && head.id === realmId) out.push(religionId);
     }
     return out;

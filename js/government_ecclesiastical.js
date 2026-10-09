@@ -11,13 +11,13 @@
   E.incumbent = function (s,rid) {
     var r = E.row(s,rid);
     if (!r || !E.active(s,rid)) return null;
-    var office = FB.religiousOffices(s)[r.officeId], p = E.profile(s,rid);
+    var offices = FB.religiousOffices(s), office = offices[r.officeId], p = E.profile(s,rid);
     if (!office || !p) return null;
     if (p.source === 'papal_election') {
-      var holder = FB.religiousOfficeSnapshot(s,r.officeId);
+      var holder = FB.religiousOfficeSnapshot(s,r.officeId,offices);
       return holder && holder.id === rid ? FB.papalOfficeIncumbentSnapshot(s,r.officeId) : null;
     }
-    return FB.religiousOfficeSnapshot(s,r.officeId);
+    return FB.religiousOfficeSnapshot(s,r.officeId,offices);
   };
   E.controlled = function (s,rid,pid) {
     var r = E.row(s,rid), realm = s.realms[rid];

@@ -15,7 +15,7 @@ dependsOnRuntime(__filename, [
 ]);
 async function start(page,testInfo,fictional,crazygames) {
   await startHistoricalGame(page,testInfo,{bookmark:'476',
-    code:'MOBILE-476-mobile_household_476-cherson-m-Review-established-0-greek.chalcedonian'},!!crazygames);
+    code:'MOBILE-476-mobile_household_476-cherson-m-Review-established'},!!crazygames);
   if (fictional) await page.addScriptTag({path:path.resolve(__dirname,'../fixtures/mobile-confederation.js')});
   return page.evaluate(function (fictional) {
     const s=FB.state;
@@ -293,7 +293,10 @@ test('saved coalition restores exactly and malformed records fail without mutati
   const rid=await start(page,testInfo,true);
   const result=await page.evaluate(function (rid) {
     const M=FB.mobile,source=JSON.parse(FB.save.serialize()),record=JSON.stringify(M.row(FB.state,rid));
+    const host=JSON.stringify(M.host(FB.state,rid)),total=M.total(FB.state,rid);
     FB.save.restore(source);
+    // The peacetime following host survives restore repair with its people.
+    const kept=!!M.host(FB.state,rid) && host===JSON.stringify(M.host(FB.state,rid)) && total===M.total(FB.state,rid);
     const restored=record===JSON.stringify(M.row(FB.state,rid)),identity=(FB.getRngState()>>>0)===(source.rng>>>0) && FB.getUidCounter()===source.uid;
     const mutations=[
       function (s,r) {r.profileId='missing_profile';},function (s,r) {r.members.push(r.members[0]);},
@@ -309,9 +312,9 @@ test('saved coalition restores exactly and malformed records fail without mutati
       try {FB.save.restore(input);} catch(error) {failed=true;}
       return failed && FB.state===live && rng===FB.getRngState() && uid===FB.getUidCounter() && bytes===JSON.stringify(input);
     });
-    return {restored:restored,identity:identity,rejected:rejected,valid:M.validate(FB.state)};
+    return {restored:restored,kept:kept,identity:identity,rejected:rejected,valid:M.validate(FB.state)};
   },rid);
-  expect(result).toEqual({restored:true,identity:true,rejected:Array(12).fill(true),valid:true});
+  expect(result).toEqual({restored:true,kept:true,identity:true,rejected:Array(12).fill(true),valid:true});
 });
 test('mobile review preserves scroll, disclosure and focus through cancel and stale confirmation',async function ({page},testInfo) {
   const rid=await start(page,testInfo);

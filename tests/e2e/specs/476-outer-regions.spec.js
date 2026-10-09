@@ -4,7 +4,7 @@ const { dependsOnRuntime } = require('../support/runtime-dependencies');
 const { openGame } = require('../support/game/navigation');
 const { openCrazyGame } = require('../support/game/crazygames-title');
 const { mockCrazyGames } = require('../support/crazygames');
-const { startParityGame } = require('../support/game/parity');
+const { startHistoricalGame } = require('../support/game/historical-start');
 const { restoreBookmark, advanceBookmark } = require('../support/game/bookmark-acceptance');
 const { injectBrowserHarness } = require('../support/game/browser-harness');
 dependsOnRuntime(__filename, [
@@ -25,11 +25,17 @@ dependsOnRuntime(__filename, [
   'js/save.js', 'js/save_v4.js', 'js/main.js'
 ]);
 
-async function start(page, testInfo, county, identity, scenario) {
+/* Canonical start codes omit a county's principal community (js/main.js seedCode). */
+const PRINCIPAL = { shrewsbury:'brittonic.nicene', lund:'north_germanic_476.germanic_pagan',
+  baghdad:'syriac.east_syriac', istakhr:'persian.zoroastrian', antioch:'greek.miaphysite', ravenna:'roman.nicene' };
+
+async function start(page, testInfo, county, identity, scenario, crazygames) {
   const family = scenario === 'federate_476' ? 'standard' : 'established';
-  await startParityGame(page, testInfo, { bookmark:'476',
-    code:'OUTER476-476-' + (scenario || 'farmer_476') + '-' +
-      (county || 'shrewsbury') + '-m-Review-' + family + '-0-' + (identity || 'brittonic.nicene') });
+  county = county || 'shrewsbury'; identity = identity || 'brittonic.nicene';
+  const suffix = identity !== PRINCIPAL[county] ? '-' + family + '-0-' + identity
+    : family !== 'standard' ? '-' + family : '';
+  await startHistoricalGame(page, testInfo, { bookmark:'476',
+    code:'OUTER476-476-' + (scenario || 'farmer_476') + '-' + county + '-m-Review' + suffix }, !!crazygames);
 }
 
 async function saveBudget(page, testInfo, label, budget) {
@@ -48,8 +54,7 @@ for (const crazygames of [false, true]) {
   ]) {
     test('wider 476 household at ' + sample[0] + ' preserves independent regional content with flag ' + crazygames,
       async function ({ page }, testInfo) {
-        if (crazygames) await page.addInitScript(function () { window.FB_DISTRIBUTION = 'crazygames'; });
-        await start(page, testInfo, sample[0], sample[1]);
+        await start(page, testInfo, sample[0], sample[1], null, crazygames);
         const result = await page.evaluate(function () {
           const s = FB.state, b = FB.bookmark('476'), earlier = FB.bookmark('867');
           const region = FBDATA.bookmarkRegions476.outer;

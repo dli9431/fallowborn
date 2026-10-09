@@ -24,7 +24,7 @@ const { injectBrowserHarness } = require('../support/game/browser-harness');
 async function start476(page, testInfo, civic) {
   await startParityGame(page, testInfo, {
     bookmark:'476', code:civic
-      ? 'EAST476-476-curialis_476-ravenna-m-Marcus-standard-0-roman.nicene'
+      ? 'EAST476-476-curialis_476-ravenna-m-Marcus'
       : 'EAST476-476-federate_476-ravenna-m-Marcus-standard-0-gothic.homoian'
   });
 }
@@ -137,7 +137,8 @@ test('Salona and Constantinople ratify local guarantees and regional sees mediat
     });
     expect(result).toEqual({ bargains:[0,1].map(function () {
       return { stage:'ratified', support:10, cost:5, once:true, rights:['consent','peace'] };
-    }), mediation:true, council:true, bishops:20, councilCost:30, faith:'chalcedonian',
+    // The merged bookmark adds the Chalcedonian see of Byzantine Jerusalem.
+    }), mediation:true, council:true, bishops:21, councilCost:30, faith:'chalcedonian',
       land:true, records:true, recognitions:true, valid:true });
   });
 
@@ -164,15 +165,19 @@ test('regional events use live community gates, period windows and ordinary prev
       ];
       const medieval = { start:{ id:'867', era:'early_medieval' }, date:{ year:867 } };
       const period = ids.every(function (id) {
+        // Later Gothic and Isaurian events open in their own year windows.
         const ev = FB.eventById(id);
-        return ev.tags.indexOf('late_antique') >= 0 && FB.eventPeriodEnabled(s, ev) &&
+        const opened = Object.assign({}, s, { date:Object.assign({}, s.date, { year:ev.yearMin || s.date.year }) });
+        return ev.tags.indexOf('late_antique') >= 0 && FB.eventPeriodEnabled(opened, ev) &&
           !FB.eventPeriodEnabled(medieval, ev);
       });
       const event = FB.eventById('persian_frontier_dispatch_476');
       const ctx = FB.eventContextFor(s, event, {}), before = JSON.stringify(s), rng = FB.getRngState();
       const preview = FB.previewEventOption(s, event, event.options[0], ctx);
       const pure = before === JSON.stringify(s) && rng === FB.getRngState();
-      const land = JSON.stringify([s.owner, s.holder]), politics = JSON.stringify(s.authority), gold = s.player.gold;
+      // Restore stamps the frozen authority schema on live state; compare the records.
+      const records = function (a) { return Object.assign({}, a, { schema:undefined }); };
+      const land = JSON.stringify([s.owner, s.holder]), politics = JSON.stringify(records(s.authority)), gold = s.player.gold;
       const receipt = FB.resolveEventOption(s, event, event.options[0], ctx);
       const expired = FB.eventById('isaurian_household_letters_476');
       const staleCtx = FB.eventContextFor(s, expired, {});
@@ -187,7 +192,7 @@ test('regional events use live community gates, period windows and ordinary prev
       FB.save.restore(JSON.parse(FB.save.serialize())); s = FB.state;
       return { count:ids.length, gates:gates.every(Boolean), period:period, preview:!!preview && pure,
         cost:gold - s.player.gold, receipt:receipt && receipt.eventId, impacts:receipt && receipt.impacts.length > 0,
-        land:land === JSON.stringify([s.owner, s.holder]), politics:politics === JSON.stringify(s.authority),
+        land:land === JSON.stringify([s.owner, s.holder]), politics:politics === JSON.stringify(records(s.authority)),
         offMap:['nicosia','kiev','mecca'].every(function (id) { return !s.owner[id] && !s.holder[id]; }),
         noPersia:!s.realms.persia && !s.realms.persia_476, stale:stale, rejectionPure:rejectionPure,
         window:window, log:persistedLog === JSON.stringify(s.log) };

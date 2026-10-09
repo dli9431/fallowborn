@@ -51,9 +51,10 @@
     id:'tallinn', name:'Northern Estonian coast', realm:'north_coast_476', culture:'finnic',
     religion:'baltic_pagan', dev:1,
     communities:[{ culture:'finnic', religion:'baltic_pagan', populationShare0:10000 }],
-    settlements:[{ name:'Coastal households', kind:'village', share:1 }],
     customaryRights:[{ power:'peace', basis:'possession' }, { power:'revenue', basis:'possession' }]
   } };
+  FBDATA.settlementSites.tallinn_assembly_476 = { x:24.8, y:59.4 };
+  FBDATA.settlementLayouts['476'].tallinn = [{ site:'tallinn_assembly_476', name:'Coastal households', kind:'village', share:1 }];
   var coastal = FBDATA.assemblyOpenings.north_coast_476;
   var opening = FBDATA.bookmarks['476'];
   opening.realms = opening.realms.concat([coastal]);

@@ -21,7 +21,7 @@ const previous = require('../fixtures/bookmarks/476-iberia-before.json');
 async function start(page, testInfo, crazygames) {
   if (crazygames) await page.addInitScript(function () { window.FB_DISTRIBUTION = 'crazygames'; });
   await startHistoricalGame(page, testInfo, { bookmark:'476',
-    code:'IBERIA476-476-curialis_476-ravenna-m-Marcus-standard-0-roman.nicene' }, !!crazygames);
+    code:'IBERIA476-476-curialis_476-ravenna-m-Marcus' }, !!crazygames);
 }
 
 for (const crazygames of [false, true]) {
@@ -41,8 +41,9 @@ for (const crazygames of [false, true]) {
         const governors = FB.officeCourts(s).filter(function (row) {
           return ['aquitaine','suebi_476'].indexOf(row.id) >= 0;
         });
+        // Restore stamps the frozen authority schema on live state; compare the records.
         const state = function () { return JSON.stringify([FB.state.owner,FB.state.holder,FB.state.population,
-          FB.state.localInstitutions,FB.state.authority,FB.state.stories,FB.state.bookmarkSetup]); };
+          FB.state.localInstitutions,Object.assign({},FB.state.authority,{ schema:undefined }),FB.state.stories,FB.state.bookmarkSetup]); };
         const before = state();
         FB.save.restore(JSON.parse(FB.save.serialize()));
         return { faults:FB.validateBookmark(FB.bookmark('476')).concat(FB.validateLegalTraditions(),
@@ -108,11 +109,13 @@ test('personal law, royal appointments and civic guarantees keep their exact jur
       const tenure = protectedFields.length === 2 && protectedFields.every(function (r) {
         return r.basisRef === 'municipal_tenure_476:merida';
       });
-      const before = JSON.stringify([s.authority,s.localInstitutions,s.bookmarkSetup]);
+      // Restore stamps the frozen authority schema on live state; compare the records.
+      const records = function (a) { return Object.assign({}, a, { schema:undefined }); };
+      const before = JSON.stringify([records(s.authority),s.localInstitutions,s.bookmarkSetup]);
       FB.save.restore(JSON.parse(FB.save.serialize())); s = FB.state;
       return { laws:laws,official:!!official,local:local,external:external,petition:q.allowed,
         church:!!grant,protectedFields:tenure,
-        durable:before === JSON.stringify([s.authority,s.localInstitutions,s.bookmarkSetup]),
+        durable:before === JSON.stringify([records(s.authority),s.localInstitutions,s.bookmarkSetup]),
         sameLand:beforeLand === JSON.stringify([s.owner,s.holder,s.population,s.bookmarkSetup.estates]) };
     });
     expect(result).toEqual({ laws:['late_roman','euric_code_476','basque_custom_476','euric_code_476','late_roman'],
@@ -224,8 +227,15 @@ for (const opening of [
         const before = input.before;
         const bm = FBDATA.bookmarks['476'];
         window.iberiaCurrentDefinition = JSON.parse(JSON.stringify(bm));
+        window.iberiaCurrentStarts = FBDATA.startScenarios;
         bm.openingRevision = input.opening.revision;
         bm.opening = bm.openingRevisions[bm.openingRevision];
+        // Earlier revisions predate the Sasanian households, so use the original court declaration
+        // and set aside the Peroz start that needs the aristocratic form.
+        FBDATA.startScenarios = FBDATA.startScenarios.filter(function (sc) { return sc.id !== 'peroz_476'; });
+        bm.realms = bm.realms.map(function (r) {
+          return r.id === 'sasanian_476' ? FBDATA.bookmarkRegions476.outer.realms.find(function (o) { return o.id === r.id; }) : r;
+        });
         bm.provinces = bm.provinces.map(function (p) {
           return before.provinceOverrides.find(function (row) { return row.id === p.id; }) || p;
         });
@@ -253,6 +263,7 @@ for (const opening of [
         const old = JSON.stringify([saved.state.owner,saved.state.holder,saved.state.population,saved.state.bookmarkSetup,
           saved.state.authority.governments,saved.state.stories]);
         FBDATA.bookmarks['476'] = window.iberiaCurrentDefinition;
+        FBDATA.startScenarios = window.iberiaCurrentStarts;
         FB.save.restore(saved);
         const s = FB.state, modern = JSON.parse(FB.save.serialize());
         const retained = old === JSON.stringify([modern.state.owner,modern.state.holder,modern.state.population,modern.state.bookmarkSetup,
@@ -326,7 +337,7 @@ for (const id of ['867','1066']) {
           FB.game.pending = { seed:'IBERIA-ISOLATION' }; FB.game.startObserve(); FB.game.setPaused(true);
           resolve({ same:before === JSON.stringify(FB.bookmark(id)),
             events:FBDATA.events.filter(function (ev) { return ev.pack === 'iberia_full_476' && FB.eventPeriodEnabled(FB.state,ev); }).length,
-            rails:FBDATA.bookmarkRegions476.gaul_iberia.storyIds.some(function (story) { return !!FB.state.stories[story]; }),
+            rails:FBDATA.bookmarkRegions476.gaul_iberia.storyIds.some(function (story) { return !!(FB.state.stories && FB.state.stories[story]); }),
             institutions:FB.localInstitutionList(FB.state).length });
         });
       });

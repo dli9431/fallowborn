@@ -780,7 +780,9 @@
   FB.realmRulerCharacterSnapshot = function (s,rid) { return M.active(s,rid) ? M.leader(s,rid) : snapshot(s,rid); };
   FB.realmIdForRulerCharacter = function (s,value) {
     var cid = typeof value === 'string' ? value : value && value.id;
-    var rid = Object.keys(s.authority && s.authority.governments || {}).filter(function (id) { return M.active(s,id) && M.leader(s,id) && M.leader(s,id).id === cid; })[0];
+    // Only a realm with a coalition record can have a leader; skip the form lookup for the rest.
+    var root = s.authority && s.authority.governments || {};
+    var rid = Object.keys(root).filter(function (id) { return !!(root[id] && root[id].mobile) && M.active(s,id) && M.leader(s,id) && M.leader(s,id).id === cid; })[0];
     return rid || rulerRealm(s,value);
   };
   FB.advanceRealmSuccession = function (s,rid,opts) {
@@ -919,9 +921,9 @@
           !Array.isArray(r.members) || r.members.length > p.maxMembers || !Array.isArray(r.agreements) || r.agreements.length > p.maxAgreements ||
           !plain(r.worked) || Object.keys(r.worked).length > 64 || Object.keys(r.worked).some(function (cid) {return !s.chars[cid] || r.worked[cid] !== s.turn;}) ||
           r.defeatKey !== undefined && (typeof r.defeatKey !== 'string' || r.defeatKey.length > 512)) fault(rid);
-      if (r.status === 'active' && (!strategy || !strategy.mobileLeadership || !s.realms[rid].alive || moving.status === 'settled' || moving.status === 'failed') ||
+      if (r.status === 'active' && (!strategy || !strategy.mobileLeadership || s.realms[rid].alive === false || moving.status === 'settled' || moving.status === 'failed') ||
           r.status === 'settled' && (strategy.mobileLeadership || moving.status !== 'settled' || M.total(s,rid) !== 0) ||
-          r.status === 'dispersed' && (s.realms[rid].alive || M.total(s,rid) !== 0)) fault(rid,'status');
+          r.status === 'dispersed' && (s.realms[rid].alive !== false || M.total(s,rid) !== 0)) fault(rid,'status');
       r.members.forEach(function (m) {
         if (!keys(m,['id','principal','scope','basis','continuity','weight','pledge','allegiance','civilians','reserve']) ||
             typeof m.id !== 'string' || !m.id || m.id.length>160 || ids[m.id] || !keys(m.principal,['kind','id']) || m.principal.kind !== 'character' ||

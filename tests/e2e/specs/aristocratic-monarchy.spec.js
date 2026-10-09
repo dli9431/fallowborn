@@ -43,7 +43,7 @@ async function start(page,testInfo,options) {
   await page.locator('#btn-bm-seed').click();
   const code = options.ruler ? 'ROYALREVIEW-476-peroz_476-baghdad-m-Peroz-standard-0-persian.zoroastrian' :
     options.fictional ? 'ROYALREVIEW-476-farmer_476-london-m-Review-established-0-brittonic.nicene' :
-      'ROYALREVIEW-476-farmer_476-rayy-m-Review-established-0-persian.zoroastrian';
+      'ROYALREVIEW-476-farmer_476-rayy-m-Review-established';
   await page.locator('#ng-seed').fill(code); await page.locator('#ng-seed').press('Enter');
   await expect(page.locator('#chargen:not(.hidden)')).toBeVisible();
   await page.getByRole('button',{name:'Begin Your Story',exact:true}).click();

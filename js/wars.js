@@ -268,7 +268,10 @@
     });
     state.armies = (state.armies || []).filter(function (a) {
       if (!a) return false;
-      if (FB.scenarioHostStanding(state, a)) return true;
+      /* Moving-court hosts keep their banners at peace, as at muster; dropping
+         one here would also lose a mobile coalition's deployed people. */
+      if (FB.scenarioHostStanding(state, a) ||
+          FB.federateHostStanding && FB.federateHostStanding(state, a)) return true;
       const uprising = a.rebellionId && FB.rebellionById && FB.rebellionById(state, a.rebellionId);
       return !!(uprising && uprising.faction === a.realm) || FB.isRealmAtWar(state, a.realm);
     });

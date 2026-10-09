@@ -22,7 +22,7 @@ const { startHistoricalGame } = require('../support/game/historical-start');
 
 async function start476(page, testInfo) {
   await startHistoricalGame(page, testInfo, { bookmark:'476',
-    code:'GAULIBERIA-476-curialis_476-ravenna-m-Marcus-standard-0-roman.nicene' }, false);
+    code:'GAULIBERIA-476-curialis_476-ravenna-m-Marcus' }, false);
 }
 
 test('476 smoke creates period settlements, competing courts and provincial majorities',

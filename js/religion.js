@@ -29,12 +29,27 @@ window.FB = window.FB || {};
     });
     return ids.filter(function (id, i) { return ids.indexOf(id) === i; }).map(function (id) { return s.chars[id]; });
   }
+  /* The yearly AI pass quotes every realm against every target faith. The
+     office table and each faith's bishops depend on neither, so one pass
+     shares them until a conversion changes the world. */
+  let passMemo = null;
+  function pass(s) { return passMemo && passMemo.state === s ? passMemo : null; }
+  function officeTable(s) {
+    const memo = pass(s);
+    if (!memo) return FB.religiousOffices(s);
+    return memo.offices || (memo.offices = FB.religiousOffices(s));
+  }
   function bishops(s, faith) {
-    return FB.localInstitutionList(s, 'church').map(function (item) {
-      const holder = FB.religiousOfficeSnapshot(s, item.def.officeId);
+    const memo = pass(s);
+    if (memo && own(memo.bishops, faith)) return memo.bishops[faith].map(function (b) { return Object.assign({}, b); });
+    const table = officeTable(s);
+    const out = FB.localInstitutionList(s, 'church').map(function (item) {
+      const holder = FB.religiousOfficeSnapshot(s, item.def.officeId, table);
       return holder && FB.faithInFold(s, item.def.religion, faith) ?
         { institutionId:item.id, officeId:item.def.officeId, charId:holder.id, provinceId:item.def.provinceId } : null;
     }).filter(Boolean).sort(function (a, b) { return a.officeId < b.officeId ? -1 : 1; });
+    if (memo) memo.bishops[faith] = out.map(function (b) { return Object.assign({}, b); });
+    return out;
   }
   function share(s, pid, faith, excluded) {
     let total = 0, matching = 0;
@@ -178,7 +193,7 @@ window.FB = window.FB || {};
             !FB.faithInFold(s, FB.realmReligionId(s, id), target)) out.oldFoldRealmIds.push(id);
         if (s.realms[id].liege === rid) out.vassalIds.push(id);
       }
-      const offices = FB.religiousOffices(s);
+      const offices = officeTable(s);
       (s.authority && s.authority.recognitions || []).forEach(function (rec) {
         const office = offices[rec.issuer.id];
         if (rec.status === 'active' && rec.source === 'church_support' && rec.subject.kind === 'realm' &&
@@ -262,7 +277,9 @@ window.FB = window.FB || {};
     if (s.rulerFaithDecisions && s.rulerFaithDecisions.lastAIYear === s.date.year) return;
     if (!s.rulerFaithDecisions) s.rulerFaithDecisions = { conversions:{} };
     s.rulerFaithDecisions.lastAIYear = s.date.year;
-    Object.keys(s.realms).sort().forEach(function (rid) {
+    const fresh = function () { return { state:s, bishops:Object.create(null), offices:null }; };
+    passMemo = fresh();
+    try { Object.keys(s.realms).sort().forEach(function (rid) {
       if (rid === 'player' || rulerReason(s, rid, 'ruler_conversion')) return;
       const options = (FBDATA.rulerFaithTargets || []).map(function (target) {
         return FB.rulerFaithConversionEvaluation(s, rid, target);
@@ -272,8 +289,9 @@ window.FB = window.FB || {};
       if (options.length && FB.rng() < balance('rulerConversionAIChance', 0.06)) {
         const best = options[0].quote;
         FB.applyRulerFaithConversion(s, rid, best.targetId, best);
+        passMemo = fresh();
       }
-    });
+    }); } finally { passMemo = null; }
   };
 
   FB.validateReligionInstitutionState = function (s) {

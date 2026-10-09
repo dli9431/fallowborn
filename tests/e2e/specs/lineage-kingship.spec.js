@@ -33,7 +33,7 @@ async function start(page, testInfo, fictional) {
   if (await beginning.isVisible()) await beginning.click();
   else await page.getByRole('button', { name:'New Game', exact:true }).click();
   await page.locator('#btn-bm-seed').click();
-  await page.locator('#ng-seed').fill('LINEAGE-476-farmer_476-cashel-m-Review-established-0-gaelic.nicene');
+  await page.locator('#ng-seed').fill('LINEAGE-476-farmer_476-cashel-m-Review-established');
   await page.locator('#ng-seed').press('Enter');
   await expect(page.locator('#chargen:not(.hidden)')).toBeVisible();
   await page.getByRole('button', { name:'Begin Your Story', exact:true }).click();

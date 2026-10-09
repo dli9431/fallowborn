@@ -39,7 +39,7 @@ async function start(page, testInfo, bookmark, crazygames, scenario) {
   await page.locator('#btn-bm-seed').click();
   await page.locator('#ng-seed').fill(bookmark === '867'
     ? 'WORLDSTORIES-867-serf-london-f-Ada'
-    : scenario === 'curialis_476' ? 'WORLDSTORIES-476-curialis_476-ravenna-m-Marcus-standard-0-roman.nicene'
+    : scenario === 'curialis_476' ? 'WORLDSTORIES-476-curialis_476-ravenna-m-Marcus'
     : 'WORLDSTORIES-476-federate_476-ravenna-m-Marcus-standard-0-gothic.homoian');
   await page.locator('#ng-seed').press('Enter');
   await expect(page.locator('#chargen:not(.hidden)')).toBeVisible();
@@ -70,7 +70,8 @@ for (const crazygames of [false,true]) {
       });
       expect(result.attached).toEqual(['western_court_476'].concat(RAILS, ['cashel_recognition_476','federate_track_476']));
       expect(result).toMatchObject({ pure:true, world:true, noLegacy:true, valid:true, modes:['none','none','none'] });
-      expect(result.cards).toEqual(['zeno_return_476','western_office_476','federate_track_476']);
+      // The Suevic frontier window opens in 476, so its campaign card shows from the start.
+      expect(result.cards).toEqual(['zeno_return_476','suevic_frontier_476','western_office_476','federate_track_476']);
     });
 }
 
@@ -345,6 +346,8 @@ test('legacy campaign records migrate without inventing actors, awards or paymen
     await start(page, testInfo);
     const result = await page.evaluate(function () {
       const old = JSON.parse(FB.save.serialize());
+      // Pre-rails saves predate declarative openings, so they carry no bookmarkSetup.
+      delete old.state.bookmarkSetup;
       const w = old.state.stories.western_court_476;
       delete w.railsSchema; w.easternReturn = 'interrupted';
       w.historical = { clovis:'won', theoderic:'failed', africa:'diverged', italy:'pending' };
@@ -391,7 +394,8 @@ test('campaign configuration works in a medieval world without a 476 engine sele
   async function ({ page }, testInfo) {
     await start(page, testInfo, '867');
     const result = await page.evaluate(function () {
-      const s = FB.state, def = FBDATA.storyCampaigns.clovis_syagrius_476;
+      // The registry runs its own copy of each declaration; edit that copy.
+      const s = FB.state, def = FB.stories.get('clovis_syagrius_476').declaration;
       def.actor = { realmId:s.owner.roma }; def.target = { provinceId:'constantinople' };
       def.firstYear = 867; def.lastYear = 870;
       const story = FB.stories.get(def.id), rec = story.init(s), owner = s.owner.constantinople;

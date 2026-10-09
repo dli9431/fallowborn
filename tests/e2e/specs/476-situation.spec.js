@@ -452,7 +452,7 @@ test('476 regional assignments and dress stay local to the bookmark',
     expect(result.rennes).toBe('armorica_476');
     expect(result.constantine).toBe('mauri_476');
     expect(result.pliska).toBe('byzantium');
-    expect(result.faith).toEqual(['nicene','homoian']);
+    expect(result.faith).toEqual(['nicene','homoian','nicene']);
     expect(result.dress).toEqual(['late_antique','lateMilitary','lateMantle']);
     expect(result.strait).toBe(true);
     expect(result.frankHeir).toBe(true);

@@ -47,8 +47,7 @@
   b.provinces = b.provinces.map(function (p) {
     return p.id === 'cherson' ? { id:p.id, name:'Cherson', realm:'byzantium', duchy:'d_476_cherson',
       culture:'greek', religion:'chalcedonian', dev:3,
-      communities:[{ culture:'greek', religion:'chalcedonian', populationShare0:10000 }],
-      settlements:[{ site:'cherson_mobile_476', name:'Cherson', kind:'city' }] } : p;
+      communities:[{ culture:'greek', religion:'chalcedonian', populationShare0:10000 }] } : p;
   });
   b.realms = b.realms.concat([{ id:'pontic_following_476', name:'Pontic Followings', color:'#ac8959',
     capital:'cherson', nonTerritorial:true, government:'mobile_confederation',
@@ -56,8 +55,9 @@
     mobile:{ profileId:'pontic_following', patronRealmId:'byzantium', origin:'cherson',
       target:'cherson', food:7200, fighters:120, treasury:60 } }]);
   FBDATA.settlementSites.cherson_mobile_476 = { x:33.49, y:44.61 };
+  FBDATA.settlementLayouts['476'].cherson = [{ site:'cherson_mobile_476', name:'Cherson', kind:'city' }];
   FBDATA.startScenarios.push(Object.assign({
-    id:'mobile_household_476', fixedProvinceId:'cherson',
+    id:'mobile_household_476', fixedProvinceId:'cherson', startCulture:'greek', startReligion:'chalcedonian',
     bookmarkIds:['476'], alwaysUnlocked:true, tier:1, profession:'farmer', gold:20, prestige:5, piety:0,
     startEffects:{landPlots:1}
   },FBDATA.mobileScenarioPresentation.mobile_household_476));

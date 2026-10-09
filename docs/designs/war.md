@@ -1,6 +1,6 @@
 # Wars
 
-War repair retains a scenario standing host while its saved end turn remains ahead and its realm is alive. FB.scenarioHostStanding supplies the same predicate to restore and the daily army phase. Expired hosts and hosts of extinct realms follow ordinary peace-time dismissal rules.
+War repair retains a scenario standing host while its saved end turn remains ahead and its realm is alive. FB.scenarioHostStanding supplies the same predicate to restore and the daily army phase. Restore also keeps a moving court's host while FB.federateHostStanding holds, as the daily muster does, so a mobile coalition's deployed following is never dropped at peace. Expired hosts and hosts of extinct realms follow ordinary peace-time dismissal rules.
 
 Daily muster projections identify defending realms from the active ordinary-campaign registry. Peaceful counts and dukes are not polled for legacy war state in this pass; ended campaign history is excluded by the same cached registry query used for host discovery.
 

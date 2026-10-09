@@ -17,7 +17,7 @@ const { test, expect } = require('../support/fixture');
 const { startParityGame } = require('../support/game/parity');
 const { openGame } = require('../support/game/navigation');
 const { injectBrowserHarness } = require('../support/game/browser-harness');
-const CODE = 'BALKANS476-476-curialis_476-ravenna-m-Marcus-standard-0-roman.nicene';
+const CODE = 'BALKANS476-476-curialis_476-ravenna-m-Marcus';
 async function start(page, testInfo) {
   await startParityGame(page, testInfo, { bookmark:'476', code:CODE });
 }
@@ -57,7 +57,9 @@ test('regional smoke separates governors, host commissions, magnate property and
         const c = s.authority.contracts.find(function (row) { return row.federateRealmId === rid; });
         return [c.payPerSeason, FB.political.contract(s, c.id).effective, c.settlementCountyIds.length];
       });
-      const saved = JSON.stringify([s.bookmarkSetup,s.authority,s.localInstitutions]);
+      // Restore stamps the frozen authority schema on live state; compare the records.
+      const records = function (a) { return Object.assign({}, a, { schema:undefined }); };
+      const saved = JSON.stringify([s.bookmarkSetup,records(s.authority),s.localInstitutions]);
       FB.save.restore(JSON.parse(FB.save.serialize()));
       return { errors:FB.validateBookmark(FB.bookmark('476')), governors:governors.length,
         scopes:scopes, aliases:aliases, rights:rights,
@@ -68,7 +70,7 @@ test('regional smoke separates governors, host commissions, magnate property and
         demands:s.bookmarkSetup.claims.map(function (c) { return c.status; }),
         institutions:Object.keys(region.institutions).every(function (id) { return !!FB.state.localInstitutions[id]; }),
         revision:FB.state.bookmarkSetup.revision,
-        saved:saved === JSON.stringify([FB.state.bookmarkSetup,FB.state.authority,FB.state.localInstitutions]),
+        saved:saved === JSON.stringify([FB.state.bookmarkSetup,records(FB.state.authority),FB.state.localInstitutions]),
         tech:['federate_host_commissions','campaign_territorial_settlement'].map(function (id) {
           return FBDATA.techImpactReviews.features[id].mode;
         }), technologyFaults:FB.validateTechnologyData() };
@@ -178,8 +180,14 @@ test('an unversioned core opening restores under its retained revision without s
     await openGame(page,testInfo);
     await page.evaluate(function () {
       const bm = FB.bookmark('476');
-      window.regionalOpening = {opening:bm.opening,revision:bm.openingRevision,stories:bm.stories,institutions:bm.localInstitutions};
+      window.regionalOpening = {opening:bm.opening,revision:bm.openingRevision,stories:bm.stories,institutions:bm.localInstitutions,realms:bm.realms,starts:FBDATA.startScenarios};
       bm.opening = bm.openingRevisions.core_v1; bm.openingRevision = 'core_v1';
+      // core_v1 predates the Sasanian households, so use the original court declaration
+      // and set aside the Peroz start that needs the aristocratic form.
+      FBDATA.startScenarios = FBDATA.startScenarios.filter(function (sc) { return sc.id !== 'peroz_476'; });
+      bm.realms = bm.realms.map(function (r) {
+        return r.id === 'sasanian_476' ? FBDATA.bookmarkRegions476.outer.realms.find(function (o) { return o.id === r.id; }) : r;
+      });
       bm.stories = bm.stories.filter(function (id) { return ['thracian_pressure_476','amal_epirus_476'].indexOf(id) < 0; });
       const old = ['salona_council','salona_see','constantinople_senate','constantinople_see','thessalonica_see',
         'dyrrachium_see','serdica_see','nicaea_see','ephesus_see','caesarea_see'];
@@ -200,7 +208,7 @@ test('an unversioned core opening restores under its retained revision without s
     const result = await page.evaluate(function () {
       const saved = JSON.parse(FB.save.serialize()); delete saved.state.bookmarkSetup.revision;
       const bm = FB.bookmark('476'), kept = window.regionalOpening;
-      bm.opening = kept.opening; bm.openingRevision = kept.revision; bm.stories = kept.stories; bm.localInstitutions = kept.institutions;
+      bm.opening = kept.opening; bm.openingRevision = kept.revision; bm.stories = kept.stories; bm.localInstitutions = kept.institutions; bm.realms = kept.realms; FBDATA.startScenarios = kept.starts;
       const ids = Object.keys(saved.state.chars).sort().join(','), opening = JSON.stringify(saved.state.bookmarkSetup);
       const institutions = JSON.stringify(saved.state.localInstitutions), authority = JSON.stringify(saved.state.authority);
       FB.save.restore(saved);

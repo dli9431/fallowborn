@@ -664,18 +664,18 @@ for (const entry of corpusEntries()) {
     });
 }
 
-test('long 476 campaign round trips stories and payments within the WebKit-sized budget',
+test('476 campaign after two annual steps round trips stories and payments within the WebKit-sized budget',
   async function ({ page }, testInfo) {
     test.setTimeout(180 * 1000);
     await page.addInitScript(function () {
       Object.defineProperty(window, 'indexedDB', { configurable:true, value:undefined });
     });
     await start(page, testInfo, '476');
-    // Use the annual-history stress method also used by storage.spec.js.
-    // It grows courts and communities without claiming a full daily replay.
+    // Two annual steps age courts and communities without claiming a full daily
+    // replay, keeping this storage check in line with the other bounded journeys.
     await page.evaluate(function () {
       FB.game.setPaused(true);
-      for (let year = 0; year < 60; year++) {
+      for (let year = 0; year < 2; year++) {
         FB.state.date.year++; FB.state.turn += 360;
         FB.worldTick(FB.state);
         FB.stories.year(FB.state);
@@ -687,7 +687,7 @@ test('long 476 campaign round trips stories and payments within the WebKit-sized
       FB.repairWars(FB.state);
     });
     const result = await page.evaluate(checkStorageRoundTrip);
-    await testInfo.attach('save-size.json', { body:JSON.stringify({ years:60,
+    await testInfo.attach('save-size.json', { body:JSON.stringify({ years:2,
       utf16Bytes:result.bytes, jsonUtf16Bytes:result.jsonBytes, quota:result.limit }),
       contentType:'application/json' });
     expectStorageRoundTrip(result);

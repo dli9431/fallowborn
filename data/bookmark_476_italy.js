@@ -354,11 +354,19 @@ Object.assign(FBDATA.settlementLayouts['476'], FBDATA.bookmarkRegions476.italy.s
 /* Stable county selectors retain the themes in their authored Italian region. */
 FBDATA.eventPacks = FBDATA.eventPacks || {};
 FBDATA.eventPacks.italy_476 = { eras:['late_antique'], yearMin:476, yearMax:600 };
+/* Every county of this region, listed literally for the regional events. */
+FBDATA.bookmarkRegions476.italy.eventCountyIds = [
+  'palermo','messina','siracusa','cagliari','sassari','ajaccio','augsburg','konstanz','zurich',
+  'salzburg','wien','linz','klagenfurt','graz','torino','aosta','genoa','milano','pavia',
+  'brescia','verona','trento','padova','venezia','aquileia','friuli','parma','modena','bologna',
+  'ravenna','firenze','pisa','siena','lucca','spoleto','perugia','ancona','roma','viterbo',
+  'benevento','capua','salerno','bari','taranto','foggia','brindisi','reggio','cosenza'
+];
 FBDATA.events = FBDATA.events || [];
 FBDATA.events.push(
 { id:'italy_476_grain_roll', pack:'italy_476', eras:['late_antique'], tags:['late_antique'],
   title:'The Grain Roll', weight:4, cooldown:12,
-  trigger:{ countyIds:FBDATA.bookmarkRegions476.italy.provinces.map(function (p) {return p.id;}), minAge:18, tierMax:2, goldMin:3, countyCulture:'roman', countyFaith:'nicene' },
+  trigger:{ countyIds:FBDATA.bookmarkRegions476.italy.eventCountyIds, minAge:18, tierMax:2, goldMin:3, countyCulture:'roman', countyFaith:'nicene' },
   text:'The grain clerks in {province} find fewer sacks than names on the distribution roll. They ask households for a small contribution while the missing shipment is traced.',
   options:[
     { label:'Contribute to the distribution.', effects:{ gold:-3, prestige:2, piety:2, log:'Contributed to the local grain distribution.' } },
@@ -367,7 +375,7 @@ FBDATA.events.push(
   ] },
 { id:'italy_476_civic_records', pack:'italy_476', eras:['late_antique'], tags:['late_antique'],
   title:'Registers After the Fighting', weight:3, cooldown:16,
-  trigger:{ countyIds:FBDATA.bookmarkRegions476.italy.provinces.map(function (p) {return p.id;}), minAge:18, tierMax:2, countyCulture:'roman', realmAtWar:false },
+  trigger:{ countyIds:FBDATA.bookmarkRegions476.italy.eventCountyIds, minAge:18, tierMax:2, countyCulture:'roman', realmAtWar:false },
   text:'Old fighting has scattered a bundle of tax and property registers in {province}. The city clerks need witnesses and careful copies before they can distinguish a lawful holding from an armed demand.',
   options:[
     { label:'Copy the surviving records.', effects:{ skills:{lea:1}, prestige:2, log:'Helped preserve the surviving city registers.' } },
@@ -376,7 +384,7 @@ FBDATA.events.push(
   ] },
 { id:'italy_476_two_congregations', pack:'italy_476', eras:['late_antique'], tags:['late_antique'],
   title:'Two Congregations', weight:3, cooldown:12,
-  trigger:{ countyIds:FBDATA.bookmarkRegions476.italy.provinces.map(function (p) {return p.id;}), minAge:18, tierMax:2, goldMin:2, countyCulture:'roman',
+  trigger:{ countyIds:FBDATA.bookmarkRegions476.italy.eventCountyIds, minAge:18, tierMax:2, goldMin:2, countyCulture:'roman',
     countyCommunityShare:{ kind:'faith', target:'homoian', min:0.03, max:0.4 } },
   text:'Nicene and Homoian households in {province} share a market but worship apart. After harsh words over a burial, neighbors ask someone to carry food between the grieving families.',
   options:[

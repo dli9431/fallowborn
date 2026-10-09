@@ -107,7 +107,7 @@ test('stories register in order at load time only and resolve by id',
     expect(result.late).toContain('load time only');
     expect(result.registered).toBe(false);
     expect(result.bookmark).toEqual(WORLD_STORIES.concat(['cashel_recognition_476']));
-    expect(result.tracks).toEqual(['nepos_476:nepos_track_476','federate_476:federate_track_476','curialis_476:curialis_track_476']);
+    expect(result.tracks).toEqual(['peroz_476:','nepos_476:nepos_track_476','federate_476:federate_track_476','curialis_476:curialis_track_476']);
   });
 
 test('a branch save holding state.situation476 migrates once into both story records',
@@ -210,7 +210,9 @@ test('the start picker and family presets follow scenario data',
     await expect(page.locator('input[name=cg-family][value="standard"]')).toBeChecked();
     await page.locator('#btn-cg-back').click();
     const cards = page.locator('#scenariolist .scencard');
-    await expect(cards).toHaveCount(3);
+    // Seven 476 starts (federate, colonus, curialis, three free households and
+    // the Pontic household) plus the Observe card; hidden ruler starts stay out.
+    await expect(cards).toHaveCount(8);
     const federate = cards.filter({ hasText:'Federate Soldier' });
     await expect(federate).toHaveCount(1);
     await expect(federate).not.toHaveClass(/locked/);

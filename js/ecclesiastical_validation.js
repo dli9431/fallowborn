@@ -52,7 +52,7 @@
     Object.keys(s.realms || {}).forEach(function (rid) {
       var formId = roots[rid] && roots[rid].formId || s.start && s.start.defaultGovernment || 'territorial';
       var form = FBDATA.governmentForms[formId], rule = form && G.strategy('succession',form.succession);
-      if (s.realms[rid].alive && rule && rule.officeBound && !E.row(s,rid)) fault();
+      if (s.realms[rid].alive !== false && rule && rule.officeBound && !E.row(s,rid)) fault();
     });
     Object.keys(roots).forEach(function (rid) {
       if (!plain(roots[rid])) fault();
