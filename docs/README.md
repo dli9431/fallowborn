@@ -606,3 +606,7 @@ leave stored Popular support and prestige unchanged (the privilege retains its c
 in other holders' counties. AI vassals attempt local talks after 30 days of involvement,
 using their own ruler's Diplomacy and granting their own concessions. They do not spend
 your treasury. The existing wider settlement and suppression options still work.
+
+Mobile coalitions
+
+The Pontic Followings opening starts in Spring 476 and offers a free local household near a mobile coalition. Open Mobile coalition in Deeds to review its people, member voices, court, host, supplies and outside agreements. Local service can pay your household. Joining moves actual local people into a following only when its access terms permit recruitment. A leader needs member assent for outside commitments, campaigns and settlement. Seasonal use grants no county. The field host can march while the civilian court remains at camp; reunite them before moving the following. A defeated host can recover from survivors without creating new people or supplies.

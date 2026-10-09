@@ -1234,6 +1234,9 @@ window.FB = window.FB || {};
     for (var rid in realms) {
       if (!Object.prototype.hasOwnProperty.call(realms, rid)) continue;
       var realmDef = realms[rid];
+      if (FB.mobile && platform.governments[rid] && !FB.governments.problems(platform.governments[rid]).length)
+        FB.mobile.definitionFaults(realmDef, platform.governments[rid], provinces, realms)
+          .forEach(function (detail) { fault('realm ' + rid + ': ' + detail); });
       if (FB.governments.support && platform.governments[rid] && !FB.governments.problems(platform.governments[rid]).length)
         FB.governments.support.definitionFaults(realmDef, platform.governments[rid], date.year, provinces)
           .forEach(function (detail) { fault('realm ' + rid + ': ' + detail); });
@@ -3980,7 +3983,8 @@ window.FB = window.FB || {};
   FB.ensureRealmSuccession = function (state, rid) {
     const r = state.realms[rid];
     if (!r || !r.alive) return null;
-    if (FB.governments.successionForRealm(state, rid).delegatedLeadership) return null;
+    if (FB.governments.successionForRealm(state, rid).delegatedLeadership ||
+        FB.governments.successionForRealm(state, rid).mobileLeadership) return null;
     if (rid === 'player') {
       const form = FB.governments.forRealm(state, rid);
       var retainedRoyalCourt = FB.aristocracy && FB.aristocracy.state(state,rid);
@@ -4111,7 +4115,8 @@ window.FB = window.FB || {};
     for (const rid in state.realms) {
       const r = state.realms[rid];
       if (!r || !r.alive) continue;
-      if (FB.governments.successionForRealm(state, rid).delegatedLeadership) continue;
+      if (FB.governments.successionForRealm(state, rid).delegatedLeadership ||
+          FB.governments.successionForRealm(state, rid).mobileLeadership) continue;
       if (opts.restore && FB.administrationProfile && FB.administrationProfile(state,rid)) continue;
       if (rid === 'player') {
         if (r.ruler && r.ruler.generation === undefined) r.ruler.generation = 1;
@@ -4235,6 +4240,7 @@ window.FB = window.FB || {};
      It establishes the succession first, advances a dead root immediately,
      and returns only once the living ruler is a full character. */
   FB.ensureRealmCourt = function (state, rid, opts) {
+    if (FB.mobile && FB.mobile.active(state, rid)) return FB.mobile.leader(state, rid);
     if (FB.governments.support && FB.governments.support.isDelegated(state, rid))
       return FB.governments.support.delegate(state, rid);
     const r = state && state.realms && state.realms[rid];
@@ -4835,6 +4841,7 @@ window.FB = window.FB || {};
      so the check errs toward keeping the record. */
   FB.courtRecordRetained = function (state, c, kinById, familyLinks) {
     if (FB.governments.support && FB.governments.support.referencesCharacter(state, c && c.id)) return true;
+    if (FB.mobile && FB.mobile.referencesCharacter(state, c && c.id)) return true;
     if (!state || !c || !state.player) return false;
     if (FB.publicAdministrationReferencesCharacter && FB.publicAdministrationReferencesCharacter(state,c.id)) return true;
     if (FB.federateReferencesCharacter && FB.federateReferencesCharacter(state, c.id)) return true;
@@ -7003,9 +7010,13 @@ window.FB = window.FB || {};
           FB.changePlayerLiege(state, nl, 'realm:liege_destroyed');
         }
       } else if (fr.capital === pid) {
-        const held = rid === 'player' ? FB.realmHeldCounties(state, 'player') : [];
-        fr.capital = held.length ? held[0] : terr[0];
-        if (rid === 'player' && held.length) forcedPlayerCapital = fr.capital;
+        const moving = FB.mobile && FB.mobile.active(state, rid) && FB.mobile.migration(state, rid);
+        if (moving) fr.capital = moving.at;
+        else {
+          const held = rid === 'player' ? FB.realmHeldCounties(state, 'player') : [];
+          fr.capital = held.length ? held[0] : terr[0];
+          if (rid === 'player' && held.length) forcedPlayerCapital = fr.capital;
+        }
       }
     }
     // a crown with no land left in its kingdom loses the world's recognition
@@ -8061,6 +8072,10 @@ window.FB = window.FB || {};
           const form = FB.governments.forRealm(state, id);
           if (form && form.use.succession.selectionManaged && r.succession && r.succession.members)
             tickRoyalFamily(state, id, familyLinks, r.succession, annualContext);
+          continue;
+        }
+        if (FB.governments.successionForRealm(state, id).mobileLeadership && FB.mobile) {
+          FB.mobile.annual(state, id);
           continue;
         }
         const delegatedLeadership = FB.governments.successionForRealm(state, id).delegatedLeadership;
@@ -9915,7 +9930,7 @@ window.FB = window.FB || {};
     if (!w || !host || !host.allied || !host.allied.men) return;
     const contribution = host.allied.men;
     const leaving = Math.min(contribution, host.men);
-    const losses = FB.applyHostLosses ? FB.applyHostLosses(host, leaving) : null;
+    const losses = FB.applyHostLosses ? FB.applyHostLosses(host, leaving, state) : null;
     if (losses && FB.notePlayerWarTroopLosses) {
       FB.notePlayerWarTroopLosses(state, losses);
     }

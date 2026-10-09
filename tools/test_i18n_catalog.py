@@ -4,6 +4,14 @@ import i18n_catalog
 
 
 class StaticHtmlExtractionTests(unittest.TestCase):
+    def test_mobile_opening_display_owners(self):
+        inventory = i18n_catalog.Inventory()
+        i18n_catalog.extract_mobile_presentations(inventory)
+        self.assertEqual(inventory.entries['bookmark.476_mobile.name.default']['text'], 'The Pontic Followings')
+        self.assertEqual(inventory.entries['scenario.mobile_household_476.name.default']['text'], 'Pontic household')
+        self.assertIn('{province}', inventory.entries['scenario.mobile_household_476.intro.default']['text'])
+        self.assertNotIn(i18n_catalog.source_key('Cherson'), inventory.entries)
+
     def test_non_display_blocks_are_blank_without_shifting_source_lines(self):
         source = (
             '<script>\nwindow.telemetry = "title=\\"Private code\\"";\n</script>\n'

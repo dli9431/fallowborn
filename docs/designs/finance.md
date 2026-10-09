@@ -586,3 +586,7 @@ Public office remuneration is paid from the same treasury that receives the refe
 Aristocratic provincial commitments
 
 Hereditary family assignments use the same county source, publicTerms ledger and payroll. Provincial terms declare retained public receipts and levy commitment separately from private estates and personal governor pay. Aggregate source assignments remain capped at one. Withheld or ineffective local assent reduces the existing public tax base, while private production retains its normal owner. Negotiation debits the actual court treasury after full revalidation; enforcing a legitimate claim costs local popular support. Paid peace tribute and alliance/protection retain their existing, distinct contracts and conserved counterparties. See docs/designs/aristocratic-monarchy.md.
+
+Mobile coalition accounts
+
+Coalition and private household money remain separate. Recruitment costs debit the real coalition treasury. Bilateral access, tribute and protection debit the actual agreed payer and credit the other court once on acceptance. Food trading exchanges real local market stock with real treasury payment; stock movement inside an owned county makes no payment to the same treasury. Local personal service pays the actual household once per day from the coalition treasury and consumes food. A countyless coalition receives no demesne income or phantom county levy.

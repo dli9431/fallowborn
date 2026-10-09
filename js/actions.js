@@ -4437,6 +4437,9 @@ window.FB = window.FB || {};
       s.player.liege || s.holder && s.holder[s.player.provinceId])); },
     run:function (s) { if (FB.ui && FB.ui.showCommunityAssembly) FB.ui.showCommunityAssembly(
       s.player.liege || s.holder && s.holder[s.player.provinceId]); } },
+  { id:'mobile_coalition', opensChoices:true, noConsume:true,
+    show:function (s) { return !!(FB.mobile && FB.mobile.localRealm(s)); },
+    run:function (s) { if (FB.ui && FB.ui.showMobileConfederation) FB.ui.showMobileConfederation(FB.mobile.localRealm(s)); } },
   { id:'public_administration', opensChoices:true, noConsume:true,
     show:function (s) { return FB.systemEnabled(s, 'public_offices'); },
     run:function (s) { if (FB.ui && FB.ui.showAdministration) FB.ui.showAdministration(); } },

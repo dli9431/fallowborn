@@ -186,7 +186,7 @@ window.FBMODS = window.FBMODS || [];
     householdStandards:true, marketGoods:true, marketEndowmentTypes:true,
     marketEndowments:true, travelPurposes:true, travelSites:true, tournaments:true,
     finance:true, plots:true, intrigue:true, legalTraditions:true, justiceSentences:true, governmentForms:true, administrationProfiles:true, aristocraticProfiles:true, items:true, itemPools:true,
-    rulerTraits:true, raidingTraditions:true, councilSeats:true, constituencyProfiles:true,
+    rulerTraits:true, raidingTraditions:true, councilSeats:true, constituencyProfiles:true, mobileProfiles:true,
     councilRules:true, politicalBlocs:true,
     policies:true, elections:true, privileges:true, collectiveDemands:true,
     settlementNames:true, settlementSites:true, settlementLayouts:true, titles:true, papacy:true,
@@ -1677,6 +1677,16 @@ window.FBMODS = window.FBMODS || [];
       const problems = FB.governments.support.validateProfiles(profiles);
       if (problems.length) fail('constituencyProfiles', problems[0]);
     }
+    if (mod.mobileProfiles) {
+      const profiles = combinedTable(FBDATA.mobileProfiles, mod.mobileProfiles, 'mobileProfiles');
+      const forms=FBDATA.governmentForms;
+      let problems;
+      try {
+        FBDATA.governmentForms=combinedTable(forms,mod.governmentForms,'governmentForms');
+        problems=FB.mobile.validateProfiles(profiles);
+      } finally {FBDATA.governmentForms=forms;}
+      if (problems.length) fail('mobileProfiles', problems[0]);
+    }
     if (own(mod, 'intrigue') || own(mod, 'plots')) validateIntrigue(mod);
     if (own(mod, 'itemPools')) validateItemPools(mod);
     if (own(mod, 'careers')) validateCareers(mod);
@@ -2039,6 +2049,7 @@ window.FBMODS = window.FBMODS || [];
     if (mod.justiceSentences) mergeTable(FBDATA.justiceSentences, mod.justiceSentences);
     if (mod.governmentForms) { mergeTable(FBDATA.governmentForms, mod.governmentForms); FB.governments.invalidate(); }
     if (mod.constituencyProfiles) mergeTable(FBDATA.constituencyProfiles, mod.constituencyProfiles);
+    if (mod.mobileProfiles) mergeTable(FBDATA.mobileProfiles, mod.mobileProfiles);
     if (mod.administrationProfiles) { mergeTable(FBDATA.administrationProfiles, mod.administrationProfiles); FB.governments.invalidate(); }
     if (mod.aristocraticProfiles) { mergeTable(FBDATA.aristocraticProfiles, mod.aristocraticProfiles); FB.governments.invalidate(); }
     if (mod.religions) for (const k in mod.religions) FBDATA.religions[k] = mod.religions[k];

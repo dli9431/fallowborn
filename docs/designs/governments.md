@@ -69,3 +69,7 @@ The administrative_monarchy form installs public appointment, source-backed fisc
 Aristocratic monarchy extension
 
 government_aristocracy.js composes mixed_provincial holders, royal_recognition succession, fixed territory, provincial_assent consent, provincial_obligations levy, provincial_receipts revenue, magnate_council, territorial_diplomacy, aristocratic_court AI and aristocratic_careers. The common recognition module accepts a declared policy provider for permanent seats, ancestry, commitments, costs and stewardship while retaining its transaction and vacancy owner. The lineage adapter excludes these policy-managed courts from kin-selection interception. Numerical policy, provincial roles and historical names belong to profiles in data/aristocratic_courts.js. See docs/designs/aristocratic-monarchy.md.
+
+Mobile coalition dispatch
+
+mobile_confederation composes coalition_holders, coalition_leadership, coalition_court, coalition_consent, following_levy, coalition_receipts, member_council, coalition_diplomacy, coalition_decisions and local_service. FB.mobile is the bounded canonical membership and stock owner; its coalition_leadership adapter uses the shared selection review boundary. Countyless continuity, actual following recruitment, finite provisions, outside consent and partial/final settlement are documented in docs/designs/mobile-confederation.md. Historical identities remain in data declarations.

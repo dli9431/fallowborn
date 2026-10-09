@@ -480,7 +480,7 @@ window.FB = window.FB || {};
     });
   }
 
-  FB.applyHostLosses = function (army, lost) {
+  FB.applyHostLosses = function (army, lost, state) {
     const result = emptyUnitCounts();
     result.total = 0;
     if (!army || army.men <= 0) return result;
@@ -515,6 +515,7 @@ window.FB = window.FB || {};
     }
     army.men = Math.max(0, army.men - actual);
     result.total = actual;
+    if (FB.mobileHostLosses) FB.mobileHostLosses(state || FB.state, army, actual);
     return result;
   };
 
@@ -1239,7 +1240,7 @@ window.FB = window.FB || {};
   FB.playerWarHostLoss = function (state, lost, spec) {
     const host = FB.warPlayerHost(state);
     if (!host) return null;
-    const losses = FB.applyHostLosses(host, lost);
+    const losses = FB.applyHostLosses(host, lost, state);
     FB.noteCohortLosses(state, host.realm, losses);
     FB.notePlayerWarTroopLosses(state, losses);
     spec = spec || {};
@@ -1364,6 +1365,7 @@ window.FB = window.FB || {};
      (battle, siege, starvation, desertion, campaign events) funnels here */
   FB.noteCohortLosses = function (state, realmId, losses) {
     if (!state || !realmId || !losses) return;
+    if (FB.mobile && FB.mobile.active(state, realmId)) return;
     const cap = Number(B().cohortMaxPerClass);
     const capPerClass = isFinite(cap) && cap > 0 ? Math.round(cap) : 600;
     const ledger = cohortLedger(state, realmId);
@@ -2146,6 +2148,7 @@ window.FB = window.FB || {};
     finally { timing.leave(entry); }
   }
   function disbandUntimed(state, army) {
+    if (state.armies.indexOf(army) >= 0 && FB.mobileHostDisband) FB.mobileHostDisband(state, army);
     const i = state.armies.indexOf(army);
     if (i >= 0) state.armies.splice(i, 1);
     if (selId === army.id) selId = null;
@@ -3715,7 +3718,7 @@ window.FB = window.FB || {};
         ? total - assigned
         : Math.round(total * host.men / men);
       assigned += Math.max(0, share);
-      const losses = FB.applyHostLosses(host, Math.max(0, share));
+      const losses = FB.applyHostLosses(host, Math.max(0, share), state);
       FB.noteCohortLosses(state, host.realm, losses);
       for (const key of FB.unitClassIds()) aggregate[key] += losses[key] || 0;
       aggregate.total += losses.total;
@@ -4352,7 +4355,7 @@ window.FB = window.FB || {};
       const rate = bal.supplyAttritionPerDay === undefined
         ? 0.0025 : bal.supplyAttritionPerDay;
       const losses = FB.applyHostLosses(army,
-        Math.max(1, Math.round(army.men * Math.max(0, rate))));
+        Math.max(1, Math.round(army.men * Math.max(0, rate))), state);
       FB.noteCohortLosses(state, army.realm, losses);
       if (army.realm === 'player' && FB.notePlayerWarTroopLosses) {
         FB.notePlayerWarTroopLosses(state, losses);
@@ -4719,7 +4722,7 @@ window.FB = window.FB || {};
         if (fraction > 0 && FB.rng() < fraction) lost++;
         if (lost > 0) {
           const deserters = FB.applyHostLosses(playerHost,
-            Math.min(playerHost.men, lost));
+            Math.min(playerHost.men, lost), state);
           FB.noteCohortLosses(state, 'player', deserters);
           requestMap();
         }
@@ -4734,7 +4737,7 @@ window.FB = window.FB || {};
       const recruitRoom = {};
       let reinforcementPolicy;
       for (const a of state.armies) {
-        if (a.rebellionId) continue;
+        if (a.rebellionId || a.mobileFollowing) continue;
         if (a.size === undefined) a.size = a.men; // hosts from before ranks refilled
         FB.hostUnits(a); // hosts from before levy tiers
         if (a.men >= a.size || a.moveLeft > 0) continue;

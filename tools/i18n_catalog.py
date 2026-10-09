@@ -1917,11 +1917,28 @@ def extract_government_selections(inv: Inventory) -> None:
                         f"{rel}:{line}", "Government contest presentation.", TOKEN_RE.findall(record["text"]))
 
 
+def extract_mobile_presentations(inv: Inventory) -> None:
+    source = DATA / "mobile_confederations.js"
+    for table, namespace, fields in (
+        ("mobileBookmarkPresentation", "bookmark", ("name", "desc")),
+        ("mobileScenarioPresentation", "scenario", ("name", "desc", "intro")),
+    ):
+        records = node_object(find_assignment(source, "FBDATA", table)) or {}
+        for item_id, node in records.items():
+            item = node_object(node) or {}
+            for field in fields:
+                for branch, record, line in branch_records(item.get(field)):
+                    inv.add(f"{namespace}.{item_id}.{field}.{branch}", record,
+                            f"data/mobile_confederations.js:{line}", "Mobile opening presentation.",
+                            TOKEN_RE.findall(record["text"]))
+
+
 def build_inventory() -> Inventory:
     inv = Inventory()
     extract_structured(inv)
     extract_story_courts(inv)
     extract_government_selections(inv)
+    extract_mobile_presentations(inv)
     extract_lexicons(inv)
     extract_literal_aliases(inv)
     add_core_records(inv)

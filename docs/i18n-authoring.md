@@ -224,3 +224,7 @@ The extractor reads assemblyOpenings names as assemblyOpening.<id>.name, assembl
 Aristocratic display owners
 
 aristocraticProfiles names extract as aristocraticProfile.<id>.name.default, and permanent interest labels as aristocraticInterest.<profile>.<interest>.name.default. Literal aristocraticOffices and aristocraticAdministrationProfiles contribute to the existing authorityOffice and administrationProfile namespaces before they merge into the runtime tables. Public review chrome uses FB.T and durable political news uses FB.msg. Royal, principal and dynasty names remain proper-name identities. Do not regenerate catalogs on a feature branch.
+
+Mobile opening presentation
+
+The typed mobileBookmarkPresentation and mobileScenarioPresentation tables in data/mobile_confederations.js supply the new bookmark and scenario display fields. extract_mobile_presentations routes them to the ordinary bookmark and scenario keys without executing data scripts. Coalition UI uses literal FB.T patterns, lexicons use the existing government extraction route, and news.mobile.decision stores an opaque message descriptor with proper-name references and numeric following size. No generated catalog is changed on this feature branch.

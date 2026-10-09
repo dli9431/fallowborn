@@ -186,6 +186,7 @@
     return rows(s).filter(function (row) { return row.realmId === rid; }).map(copy);
   };
   function court(s, row, army) {
+    if (army.mobileFollowing && !army.mobileCourt) return;
     var ruler = FB.realmRulerCharacterSnapshot(s, row.realmId);
     if (ruler && row.courtIds.indexOf(ruler.id) < 0) row.courtIds.push(ruler.id);
     for (var cid of row.courtIds) {
@@ -197,6 +198,9 @@
       FB.invalidateRealmCache();
       if (FB.ui && FB.ui.mapDirty) FB.ui.mapDirty();
     }
+    if (army.mobileFollowing && army.mobileCourt && s.player && !s.player.travel &&
+        s.player.provinceId === row.at && row.courtIds.indexOf(s.player.charId) >= 0)
+      s.player.provinceId = army.at;
     row.at = army.at;
   }
   FB.federateReferencesCharacter = function (s, cid) {
@@ -219,7 +223,7 @@
   FB.federateBeginMigration = function (s, spec) {
     if (!spec || !live(s, spec.realmId) || !live(s, spec.patronRealmId) ||
         spec.realmId === spec.patronRealmId || !mobile(s, spec.realmId) ||
-        FB.realmTerritory(s, spec.realmId).length ||
+        FB.realmTerritory(s, spec.realmId).length && !FB.governments.forRealm(s, spec.realmId).use.territory.profile(s, spec.realmId, {}).allowsMixed ||
         !FB.world.byId[spec.origin] || !s.owner[spec.origin] ||
         !FB.world.byId[spec.target] || !s.owner[spec.target] ||
         typeof spec.hostId !== 'string' || !spec.hostId ||
@@ -374,6 +378,7 @@
   };
 
   function fail(s, row, reason) {
+    if (FB.mobileMigrationInterrupted && FB.mobileMigrationInterrupted(s, row, reason)) return;
     row.status = 'failed'; row.failureReason = reason; row.changedTurn = s.turn;
     var army = host(s, row.hostId);
     if (army) delete army.migrationId;
@@ -408,6 +413,7 @@
     for (var row of rows(s)) {
       if (!ongoing(row)) continue;
       var army = host(s, row.hostId);
+      if (!army && FB.mobile && FB.mobile.active(s, row.realmId) && FB.mobile.row(s, row.realmId)) continue;
       if (!live(s, row.realmId) || !army || army.men <= 0 || army.realm !== row.realmId ||
           !mobile(s, row.realmId) || row.endTurn <= s.turn) {
         fail(s, row, row.endTurn <= s.turn ? 'term_ended' : 'host_or_polity_lost'); continue;
@@ -441,6 +447,7 @@
     for (var row of rows(s)) {
       if (!ongoing(row)) continue;
       var army = host(s, row.hostId);
+      if (!army && FB.mobile && FB.mobile.active(s, row.realmId) && FB.mobile.row(s, row.realmId)) continue;
       if (!live(s, row.realmId) || !army || army.realm !== row.realmId ||
           army.men <= 0 || row.endTurn <= s.turn || !mobile(s, row.realmId)) {
         fail(s, row, row.endTurn <= s.turn ? 'term_ended' : 'host_or_polity_lost'); continue;

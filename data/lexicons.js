@@ -140,6 +140,11 @@ FBDATA.lexicons = {
       f:['Dependent','Free Household','Officer','Court Notable','Provincial Governor','Senior Officer','Queen','Queen of Queens']
     }, terms:{ vassal:{one:'client',other:'clients'}, fief:{one:'jurisdiction',other:'jurisdictions'},
       duchy:{one:'province',other:'provinces'}, council:{one:'magnate court',other:'magnate courts'} } },
+    mobile_confederation:{ institutionalRanks:true, rank:{
+      m:['Dependent','Householder','Trusted follower','Member principal','Coalition leader','Coalition leader','Coalition leader','Coalition leader'],
+      f:['Dependent','Householder','Trusted follower','Member principal','Coalition leader','Coalition leader','Coalition leader','Coalition leader']
+    }, terms:{council:{one:'member council',other:'member councils'},vassal:{one:'member following',other:'member followings'},
+      kingdom:{one:'coalition',other:'coalitions'},empire:{one:'confederation',other:'confederations'}} },
     assembly_polity:{ institutionalRanks:true, rank:{
       m:['Dependent','Householder','Trusted neighbor','Local servant','Senior householder','Senior householder','Senior householder','Senior householder'],
       f:['Dependent','Householder','Trusted neighbor','Local servant','Senior householder','Senior householder','Senior householder','Senior householder']
