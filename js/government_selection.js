@@ -633,6 +633,8 @@
   S.registerSource('religious_office_result', {
     quote:function (s, request) {
       var holder = FB.religiousOfficeSnapshot(s, request.officeId);
+      if (request.person && holder && s.realms[holder.id] === holder)
+        holder = FB.papalOfficeIncumbentSnapshot(s,request.officeId);
       return { allowed:!!holder, officeId:request.officeId || null,
         holder:holder ? { kind:s.chars[holder.id] === holder ? 'character' : 'realm', id:holder.id } : null,
         generation:holder && s.realms[holder.id] === holder ? generation(s, holder.id) : null };

@@ -232,3 +232,7 @@ The typed mobileBookmarkPresentation and mobileScenarioPresentation tables in da
 Civic display ownership
 
 Civic profile names extract under civicProfile.<profile>.name, ordered magistracy names under civicOffice.<profile>.<office>.name, and represented interests under constituencyMember.<constituency>.<member>.name. Civic contest declarations extract under governmentContest.<instance>.name and desc. Runtime screens use dataText for those fields and T for chrome; names of actual people and saved ids remain identity data. Civic announcements persist message descriptors. New English falls back normally until separately authorized integration catalog regeneration.
+
+Ecclesiastical display owners
+
+data/ecclesiastical_profiles.js names extract as ecclesiasticalProfile.<profile-id>.name.default and render through FB.dataText. Government review chrome and outcome text use FB.T. Local institution names retain their existing structured owners. No generated catalogs are edited on the feature branch.

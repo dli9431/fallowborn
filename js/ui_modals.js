@@ -22383,8 +22383,10 @@ window.FB = window.FB || {};
         const before = promotionResources(s);
         const pope = FB.choosePapalName(s, obedience.id, b.dataset.papalName);
         if (pope) religiousOfficeSuccess(pope, FB.T('Elected Pope'), FB.T(
-          '{name} takes the Papal office.', { name:FB.papalDisplayName(s, pope) }), FB.T(
-          'Your personal bishopric returns to the Church; secular titles pass to your lawful heir and family property enters custody.'), function () {
+          '{name} takes the Papal office.', { name:FB.papalDisplayName(s, pope) }),
+          FB.ecclesiasticalGovernment && FB.ecclesiasticalGovernment.localRealm(s)
+            ? FB.T('Your personal bishopric returns to the Church. The institution retains its temporal property and your household retains its own possessions.')
+            : FB.T('Your personal bishopric returns to the Church; secular titles pass to your lawful heir and family property enters custody.'), function () {
             UI.showPapacy(obedience.id);
           }, before);
       });

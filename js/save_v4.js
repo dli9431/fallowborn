@@ -88,6 +88,7 @@
     if (FB.validateHistoricalHolyWarState) FB.validateHistoricalHolyWarState(state);
     if (FB.governments.support) FB.governments.support.validate(state);
     if (FB.mobile) FB.mobile.validate(state);
+    if (FB.ecclesiasticalGovernment) FB.ecclesiasticalGovernment.validate(state);
     if (plain(state.start)) {
       if (typeof state.start.id !== 'string' || !state.start.id) field('state.start.id');
       if (!own(FBDATA.bookmarks, state.start.id)) throw new Error(FB.T(
@@ -126,12 +127,14 @@
       var government = state.authority && state.authority.governments && state.authority.governments[rid];
       var civic = government && government.civic && government.civic.originFormId !== null &&
         FB.civicGovernment && FB.civicGovernment.active(state,rid);
+      var ecclesiastical = government && government.ecclesiastical && government.ecclesiastical.originFormId !== null &&
+        FB.ecclesiasticalGovernment && FB.ecclesiasticalGovernment.active(state,rid);
       var authoredRealmId = government && government.selection ? government.selection.originRealmId :
         government && government.aristocracy ? government.aristocracy.originRealmId : rid;
       if (s.authoredCourt !== undefined && s.authoredCourt !== true ||
           !plain(s.members) || !Array.isArray(s.order) || !own(s.members, s.rulerMemberId) ||
           !Number.isInteger(s.rulerGeneration) || s.rulerGeneration < 1 ||
-          !civic && realm.ruler && realm.ruler.generation !== undefined && realm.ruler.generation !== s.rulerGeneration) field(path);
+          !civic && !ecclesiastical && realm.ruler && realm.ruler.generation !== undefined && realm.ruler.generation !== s.rulerGeneration) field(path);
       var policy = s.policyId === undefined ? null : FB.governments.strategy('succession', s.policyId);
       if (s.policyId !== undefined && (!policy || typeof policy.eligible !== 'function')) field(path + '.policyId');
       if (s.founderId !== undefined && !own(s.members, s.founderId) ||

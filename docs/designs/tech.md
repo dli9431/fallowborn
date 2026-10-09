@@ -592,3 +592,7 @@ Public service capability reviews
 public_service_appointments, public_fiscal_assignments, public_military_obligations and public_sovereign_recognition each have impact none. Baseline appointment, assessment, assignment, remittance, audit, service and sovereign recognition are constrained by living participants, public authority, jurisdiction and actual resources, with no credible technology prerequisite. Existing equipment and advanced army gates remain effective. See docs/designs/administrative-monarchy.md.
 
 aristocratic_royal_recognition, aristocratic_hereditary_jurisdiction, aristocratic_provincial_bargains and aristocratic_government_conversion each have impact none. Their eligibility comes from real descent, surviving rights, consent, resources and lawful political transition. Provincial dues grant no automatic later taxation or military reform. Existing technology effects continue through the ordinary fiscal and army projections. See docs/designs/aristocratic-monarchy.md.
+
+Ecclesiastical capability review
+
+Office binding, vacancy administration, local canonical appointment, explicit institutional conversion and household service progression each have technology impact none. They depend on existing institutions, qualification, current consent and actual funds. Ordinary military and economic technology gates remain unchanged.

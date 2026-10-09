@@ -296,3 +296,7 @@ The papacy system's institutions table owns cardinal_shortlist (1059), nonreside
 Late 800 review seed
 
 The Papacy's year table now has an 800 entry before the unchanged 867 and 1066 entries. Leo III, John VII, Benedict II and Gregory III are counted; Nicholas and Paschal begin at zero. A successor choosing Leo receives Leo IV. The 800 world assigns the Catholic office to papacy and the Sunni head to abbasid. The pre-1059 Roman-assent law and existing authority seed apply naturally by year. Cardinal and election institutions retain the shared game's historical abstraction. No election logic or save schema changes; older campaigns retain their saved counts. The 476 branch registers the independent 800 definition for ordinary campaign setup. Historical limitations remain in docs/research/800-bookmark.md.
+
+Institutional temporal consumer
+
+Fresh 1204 papal government uses ecclesiastical_principality and the existing 1179 two-thirds election profile without enclosed-conclave rules. papalOfficeIncumbentSnapshot projects the canonical territorial claimant without repair or election. Player accession in this form retains household possessions and personal station; legacy territorial campaigns retain custody behavior. See ecclesiastical-principality.md.

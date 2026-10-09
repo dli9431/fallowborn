@@ -826,6 +826,13 @@ def extract_structured(inv: Inventory) -> None:
                 inv.add(f"civicOffice.{profile_id}.{office_id}.name.{branch}", record,
                         f"data/civic_profiles.js:{line}", "Civic magistracy name.", ())
 
+    ecclesiastical_path = DATA / "ecclesiastical_profiles.js"
+    for profile_id, profile_node in (node_object(find_assignment(ecclesiastical_path, "FBDATA", "ecclesiasticalProfiles")) or {}).items():
+        profile = node_object(profile_node) or {}
+        for branch, record, line in branch_records(profile.get("name")):
+            inv.add(f"ecclesiasticalProfile.{profile_id}.name.{branch}", record,
+                    f"data/ecclesiastical_profiles.js:{line}", "Ecclesiastical temporal constitution.", ())
+
     for data_name, namespace in STRUCTURED_DATA.items():
         if data_name == "tech":
             rel = TECHNOLOGY_FILE.relative_to(ROOT).as_posix()

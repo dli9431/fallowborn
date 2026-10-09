@@ -1672,3 +1672,7 @@ Fresh 711 Gothic courts retain their distinct counties and opening rulers under 
 Civic institutional holders
 
 Fresh 1204 Venice is a city_republic with a continuing realm identity, public county holder and treasury. Individual magistracies never absorb that institution into a protagonist's dynasty. Military occupation changes owner while preserving the civic holder; a lawful reviewed county grant transfers both public holder and sovereignty and removes that scope from civic interests. The capital and final county cannot be granted away. Foreign quarters and receipt rights retain the host county's sovereign and inhabitants. See docs/designs/city-republic.md.
+
+Institutional ecclesiastical holders
+
+The ecclesiastical realm remains the public holder through vacancy and clerical turnover. Its ruler resolves from the canonical office. Actual control, scoped jurisdiction and temporal recognition remain separate; conquest receives no religious immunity. A private heir inherits household property rather than institutional counties or spiritual office. See ecclesiastical-principality.md.

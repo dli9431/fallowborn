@@ -82,3 +82,7 @@ elective_monarchy composes crown_election and the common governmentSelection own
 Civic government extension
 
 city_republic composes explicit civic holders, magistracy succession, fixed institutional territory, consent, public levy/receipts, shared civic interests, diplomacy, AI and personal-career strategies. Its civic_magistracy selection adapter commits the canonical office owner. A preserved former royal genealogy cannot override civic succession. Script order is government_civic, civic_transactions, civic_strategies, civic_conversion and civic_validation after public administration, with ui_civic after shared review UI. See docs/designs/city-republic.md.
+
+Ecclesiastical institutions
+
+ecclesiastical_principality binds a canonical religious office to continuing temporal jurisdiction. All ten dispatch slots are explicit. institutionalProperty is a shared succession capability used by civic and ecclesiastical forms alongside publicCrown to keep private settlement actors separate from public institutions. See docs/designs/ecclesiastical-principality.md.

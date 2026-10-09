@@ -411,3 +411,7 @@ Elective crowns use the shared living constituency and reserved consent transact
 Civic mandates and reserved acts
 
 Civic offices reference the shared governmentSupport constituency and keep individual incumbents and terms inside the existing government row. Current profile, executive quorum and represented interests decide reserved proposals. Pure reviewed public transactions own debt, dues, treaties, permanent county grants, war, peace and founding conversion; raw form, offensive-war and white-peace shortcuts are blocked. Ordinary local administration and defence remain with the institution during a vacancy. Independent substantive warrants and customary rights retain their own authority. Foreign jurisdiction is a Peace right in one explicitly named settlement. See docs/designs/city-republic.md.
+
+Office-bound temporal recognition
+
+Ecclesiastical chapter assent uses the existing local congregation bargain. A distinct lay temporal confirmation reuses one imperial_commission record scoped to the institution and naming the current spiritual incumbent. The government retains only its recognition reference. Revocation blocks automatic renewal without changing the spiritual holder or property. See ecclesiastical-principality.md.

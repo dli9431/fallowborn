@@ -11,7 +11,7 @@
     conquest:function (s,rid) { return rid; }, vacancy:function (s,rid) { return rid; }
   }));
   G.register('succession','civic_magistracies',{
-    civicLeadership:true, delegatedLeadership:true, repairEmpty:false,
+    civicLeadership:true, institutionalProperty:true, delegatedLeadership:true, repairEmpty:false,
     eligible:function () { return false; }, order:function () { return []; },
     candidates:function (s,rid) { var p = V.profile(s,rid); return p ? V.candidates(s,rid,p.offices[0].id) : []; },
     vacancy:function (s,rid,c) { return { allowed:false,cause:c.cause,rulerGeneration:FB.realmRulerGeneration(s,rid) }; },

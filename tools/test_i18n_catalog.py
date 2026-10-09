@@ -445,6 +445,16 @@ class LexiconPlaceholderTests(unittest.TestCase):
             ['text'],
             'Household soldiers')
 
+    def test_ecclesiastical_profiles_have_structured_display_owners(self):
+        inventory = i18n_catalog.Inventory()
+        i18n_catalog.extract_structured(inventory)
+        self.assertEqual(inventory.entries['ecclesiasticalProfile.papal_temporal_1204.name.default']['text'],
+                         'Papal temporal government (1204)')
+        self.assertEqual(inventory.entries['ecclesiasticalProfile.durham_temporal.name.default']['text'],
+                         'Durham episcopal lordship')
+        self.assertEqual(inventory.entries['ecclesiasticalProfile.sanctuary_temporal.name.default']['text'],
+                         'Sanctuary community government')
+
     def test_religions_no_longer_carry_rank_title_keys(self):
         inventory = i18n_catalog.Inventory()
 

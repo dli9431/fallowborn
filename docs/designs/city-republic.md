@@ -51,3 +51,7 @@ civic_magistracies, civic_public_dues, civic_public_debt, civic_public_campaigns
 Acceptance coverage
 
 tests/e2e/specs/city-republic.spec.js covers all three profiles, shared-electorate reuse, pure projections, stale and duplicate commits, life and term tenure, separate executive vacancies, minority/interim rules, gender and sworn membership, recall, private property, conserved debt and salary, site-specific jurisdiction and receipts, lost host control, reserved war/peace/grants, explicit conversion, detached malformed saves, legacy territorial restore, natural seasonal replay, bounded turnover and mobile retained review in both distributions. Related dispatch, 1204 and structured extraction specifications register these inputs. Historical fit, appearance, touch, iframe behavior, long campaigns and test execution remain owner-controlled.
+
+Shared institutional settlement ownership
+
+The institutionalProperty succession capability is shared with ecclesiastical governments. Settlement holder matching and private actor normalization use that capability, so an incumbent cannot acquire public settlements merely by being the ruler, and private magistrate settlements do not become civic property. Existing public accounts and election records are unchanged.

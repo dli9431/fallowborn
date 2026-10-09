@@ -3478,6 +3478,7 @@ FB.CHANGELOG = [
 
     } // ordinary generated household
     if (FB.ensurePapacyState && FB.systemAvailable(state, 'papacy')) FB.ensurePapacyState(state);
+    if (FB.ecclesiasticalGovernment) FB.ecclesiasticalGovernment.initialize(state, FBDATA.realms);
     if (FB.ensurePopulationState) FB.ensurePopulationState(state);
     if (FB.ensureMarket) FB.ensureMarket(state);
     if (FB.treasuryInitialize) FB.treasuryInitialize(state);
@@ -3679,6 +3680,7 @@ FB.CHANGELOG = [
     });
     state.player.charId = me.id;
     if (FB.ensurePapacyState && FB.systemAvailable(state, 'papacy')) FB.ensurePapacyState(state);
+    if (FB.ecclesiasticalGovernment) FB.ecclesiasticalGovernment.initialize(state, FBDATA.realms);
     if (FB.ensurePopulationState) FB.ensurePopulationState(state);
     if (FB.ensureMarket) FB.ensureMarket(state);
     if (FB.treasuryInitialize) FB.treasuryInitialize(state);

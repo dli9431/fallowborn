@@ -9,6 +9,10 @@ window.FB = window.FB || {};
 (function () {
   'use strict';
   var G = FB.governments = {};
+  G.institutionalProperty = function (state,realmId) {
+    var form = G.forRealm(state,realmId);
+    return !!(form && (form.use.succession.institutionalProperty || form.use.succession.publicCrown));
+  };
   function own(o, k) { return !!o && Object.prototype.hasOwnProperty.call(o, k); }
 
   /* Required slots remain explicit. Optional omissions in existing JSON mods
@@ -176,7 +180,7 @@ window.FB = window.FB || {};
     var realm = state && state.realms && state.realms[rid];
     var policy = realm && realm.succession && realm.succession.policyId;
     var form = G.forRealm(state, rid);
-    if (form && (form.use.succession.selectionManaged || form.use.succession.civicLeadership)) return form.use.succession;
+    if (form && (form.use.succession.selectionManaged || form.use.succession.civicLeadership || form.use.succession.officeBound)) return form.use.succession;
     return policy ? G.strategy('succession', policy) : form ? form.use.succession : G.strategy('succession', 'dynastic');
   };
 

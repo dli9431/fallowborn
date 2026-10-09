@@ -260,8 +260,25 @@ window.FB = window.FB || {};
     if (rid === 'player') return playerChar(state);
     var c = FB.realmRulerCharacter && FB.realmRulerCharacter(state, rid);
     if (!c && FB.materializeRealmRuler) c = FB.materializeRealmRuler(state, rid);
+    if (!c && FB.governments.successionForRealm(state,rid).officeBound && !papacyState(state).obediences[papacyState(state).romanObedience]) {
+      var ruler = state.realms[rid].ruler;
+      c = FB.makeCharacter(state,{ name:ruler.name,sex:ruler.sex,born:ruler.born,culture:ruler.culture,
+        religion:officeFaith(state),role:'priest',station:3,quality:2,traitsN:0 });
+      c.homeProvinceId = officeSeat(state);
+    }
     return c || null;
   }
+
+  /* Pure canonical personal result, including alternate configured offices.
+     It never normalizes an office or follows a viewer's rival obedience. */
+  FB.papalOfficeIncumbentSnapshot = function (state,id) {
+    var def = FB.religiousOffices(state)[id];
+    if (!def || def.head.succession !== 'papal_election') return null;
+    var store = id === FBDATA.faithDefaults.offices.papal_election ? state : state.religiousOfficeStates && state.religiousOfficeStates[id];
+    var p = store && store.papacy, o = p && p.obediences && p.obediences[p.romanObedience];
+    var c = o && o.claimantId && state.chars[o.claimantId];
+    return c && !c.dead && o.status === 'active' ? c : null;
+  };
 
   function papalRecord(state, charId) {
     var papacy = state && papacyState(state);
@@ -574,7 +591,8 @@ window.FB = window.FB || {};
     record.electedTurn = record.electedTurn === undefined ? state.turn : record.electedTurn;
     papacy.cardinals[claimant.id] = record;
     claimant.papalOffice = 'pope';
-    claimant.station = Math.max(4, FB.stationOf(claimant));
+    if (!FB.governments.successionForRealm(state,romanRealmId(state)).officeBound)
+      claimant.station = Math.max(4, FB.stationOf(claimant));
     claimant.papalName = claimant.papalName || claimant.name;
   }
 
@@ -1371,6 +1389,12 @@ window.FB = window.FB || {};
     var p = state.player;
     var me = playerChar(state);
     if (!me || p.papalOffice) return;
+    var temporalRealm = romanRealmId(state);
+    if (obedience.roman && temporalRealm && FB.governments.successionForRealm(state,temporalRealm).officeBound) {
+      p.papalOffice = { obedienceId:obedience.id,enteredTurn:state.turn,successorId:null };
+      p.flags.cardinal = 1; p.flags.pope = 1;
+      return;
+    }
     var heirs = FB.heirsOf ? FB.heirsOf(state) : [];
     var lawful = heirs.length ? heirs[0] : null;
     var custody = {
@@ -1438,7 +1462,8 @@ window.FB = window.FB || {};
     papacy.regnalNameCounts[chosen] = count;
     c.papalName = chosen + (count > 1 ? ' ' + numeral(count) : '');
     c.papalOffice = 'pope';
-    c.station = Math.max(4, FB.stationOf(c));
+    if (!FB.governments.successionForRealm(state,romanRealmId(state)).officeBound)
+      c.station = Math.max(4, FB.stationOf(c));
 
     var record = papacy.cardinals[c.id] || {
       charId:c.id,
@@ -2718,6 +2743,12 @@ window.FB = window.FB || {};
     var papacy = savedPapacy(state);
     if (!papacy) return false;
     var custody = papacy && papacy.custody[formerId];
+    var former = state.chars[formerId], rid = former && former.papalRealmId;
+    if (!custody && rid && FB.governments.successionForRealm(state,rid).officeBound) {
+      state.player.papalOffice = null;
+      delete state.player.flags.pope; delete state.player.flags.cardinal;
+      return true;
+    }
     if (!custody) return false;
     var p = state.player;
     p.enterprises = custody.enterprises || [];
@@ -3285,7 +3316,7 @@ window.FB = window.FB || {};
     if (priorExports.indexOf(key) >= 0 || typeof FB[key] !== 'function' ||
         key === 'withPapalOffice' || key === 'papacyState' ||
         key === 'papalElectionLaw' || key === 'papalAuthorityBand' ||
-        key === 'papalInstitutionActive') return;
+        key === 'papalInstitutionActive' || key === 'papalOfficeIncumbentSnapshot') return;
     FB[key] = bindOffice(FB[key], allOfficeCalls.indexOf(key) >= 0, false,
       key === 'ensurePapacy');
   });

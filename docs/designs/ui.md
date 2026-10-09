@@ -3734,3 +3734,7 @@ The gold breakdown and household income forecast show personal receipts and cost
 Civic public reviews
 
 The Civic government deed uses shared full-sheet fact, person and action cards with native counterpart/county selectors and action disclosures. Tenure, eligibility, influence, public treasury/reserve, household funds and concrete proposal consequences remain visible. Confirmation names the exact office, participant, partner, site, duration, receipt share, payment, repayment or campaign. Back, Escape and outcome return retain selection, scroll, focus and expanded disclosures. Review civic constitution uses native profile/founder selectors and a second review of the existing ruler, retained counties, scoped public rights, household plots and enterprises, and each retained household obligation with its current amount and due term. These views and transactions are shared by standard and CrazyGames distributions. See docs/designs/city-republic.md.
+
+Ecclesiastical government review
+
+The Ecclesiastical government deed shows canonical office, spiritual vacancy, temporal recognition, chapter assent, superior, actual jurisdiction and separate public and household money in shared fact cards. Appointment, resignation, lawful removal, recognition and explicit conversion use cost/blocker action cards and separate confirmation. Return navigation retains scroll, focus and expanded disclosures. Standard and CrazyGames share the presentation. See ecclesiastical-principality.md.
