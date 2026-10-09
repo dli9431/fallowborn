@@ -2090,3 +2090,10 @@ Aristocratic courts retain their original compact royal tree alongside linked ac
 Mobile coalition records
 
 The existing v4 envelope and authority schema are unchanged. Optional authority.governments[realmId].mobile schema 1 stores bounded member principals and civilian/resting-fighter cohorts, one leader/vacancy, one pending member decision, agreements, food and conservation counters. authority.migrations remains the sole court position. Ordinary hosts carry mobileFollowing, mobileCourt, mobileRoster, mobileFood and optional mobileProvisionTurn. Optional mobilePastures schema 1 retains only the current period and harvested capacity per county, preventing repeated concession harvests. Strict detached validation rejects invalid references, duplicate partitions, negative values, incompatible forms and broken people conservation. Restore creates no followings, pays no agreements, harvests no pasture and never rebuilds a lost host. Earlier openings remain absent rather than receiving fresh records.
+
+
+Elective crown persistence
+
+Elective progress uses the existing optional schema-1 government selection record and canonical court tree. electoral_candidate members reference ordinary characters through royalLine; their nomination identities, bounds and resolved incumbent consistency are validated before detached state adoption. No envelope version changes. Stored older government forms remain unchanged, and restore creates no constituency or public resources. The existing realm treasury can belong to the player-controlled public institution without becoming player.gold. See elective-monarchy.md.
+
+A live electoral selection requires its existing version-1 treasury with finite gold and nonnegative finite military accrual. A missing or damaged account fails detached validation instead of inventing funds or routing public income into the household purse.

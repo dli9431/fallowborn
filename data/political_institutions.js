@@ -185,6 +185,22 @@ FBDATA.federateMigrations = FBDATA.bookmarkRegions476.dalmatia_east.migrations;
    realms of the form, read through FB.balanceFor at realm-scoped sites; it
    sits over the era layer and beneath the bookmark and mod layers. */
 FBDATA.governmentForms = {
+  elective_monarchy:{ holders:'direct', succession:'crown_election', territory:'fixed',
+    consent:'local_reserved', levy:'elective_service', revenue:'elective_receipts',
+    council:'local_interests', diplomacy:'territorial_diplomacy', ai:'elective_selection', ladder:'local_standing',
+    officeCatalogue:[], systems:{ enable:['civic_institutions','episcopal_sees'],
+      disable:['roman_offices','feudal_service','estates','royal_council','scutage','manorial_tenure','colonate'] },
+    selectionProfile:{ eligibility:{ minAge:18, sex:'m', ancestry:false },
+      candidatePool:{ gentle:true, cultures:['gothic'], religions:['catholic'], excludedRoles:['priest','monk'] },
+      procedure:{ realmRecognition:true, designation:false, interimRevenue:true, defensiveLevy:true },
+      tieBreak:'identity', consensus:1, quorum:1, negotiationCost:12,
+      terms:{ levy:0.7, revenue:0.7 }, reserved:['levy','war','treaty','grant','extraordinary_tax'],
+      members:[
+        { id:'palace_interest', name:'Palace nobility', principal:'capital_elite', scope:'realm', basis:'public_office',
+          weight:1, continuity:'institution', minimumSupport:-25, minimumMartial:6, maximumLevy:0.85, maximumRevenue:0.8 },
+        { id:'clerical_interest', name:'Clerical delegates', principal:'capital_clergy', scope:'realm', basis:'public_office',
+          weight:1, continuity:'institution', minimumSupport:-15, minimumMartial:0, maximumLevy:0.75, maximumRevenue:0.75 }
+      ] } },
   lineage_kingship:{ holders:'direct', succession:'kin_acclamation', territory:'fixed',
     consent:'local_reserved', levy:'local_obligations', revenue:'local_obligations',
     council:'local_interests', diplomacy:'territorial_diplomacy', ai:'local_kingship', ladder:'local_standing',

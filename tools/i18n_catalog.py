@@ -1906,15 +1906,17 @@ def extract_government_selections(inv: Inventory) -> None:
                     inv.add(f"governmentSelection.{form_id}.{group}.{row_id}.name.default",
                             record, f"{rel}:{line}", "Government selection presentation.",
                             TOKEN_RE.findall(record["text"]))
-    source = DATA / "bookmark_476_outer.js"
-    stories = node_object(find_assignment(source, "FBDATA", "storyGovernmentSelections")) or {}
-    rel = source.relative_to(ROOT).as_posix()
-    for story_id, story_node in stories.items():
-        story = node_object(story_node) or {}
-        for field in ("name", "desc"):
-            for _, record, line in branch_records(story.get(field)):
-                inv.add(f"governmentContest.{story_id}.{field}.default", record,
-                        f"{rel}:{line}", "Government contest presentation.", TOKEN_RE.findall(record["text"]))
+    for filename, table in (("bookmark_476_outer.js", "storyGovernmentSelections"),
+                            ("bookmark_711.js", "storyGovernmentSelections711")):
+        source = DATA / filename
+        stories = node_object(find_assignment(source, "FBDATA", table)) or {}
+        rel = source.relative_to(ROOT).as_posix()
+        for story_id, story_node in stories.items():
+            story = node_object(story_node) or {}
+            for field in ("name", "desc"):
+                for _, record, line in branch_records(story.get(field)):
+                    inv.add(f"governmentContest.{story_id}.{field}.default", record,
+                            f"{rel}:{line}", "Government contest presentation.", TOKEN_RE.findall(record["text"]))
 
 
 def extract_mobile_presentations(inv: Inventory) -> None:

@@ -37,11 +37,12 @@
   }
   function eligible(s, rid, m, includeRuler, ignoreAge) {
     var data = S.state(s, rid), p = S.profile(s, rid), t = tree(s, rid);
+    var c = memberCharacter(s, m), person = c || m;
     if (!data || !p || !t || !alive(s, m) || !includeRuler && m.id === t.rulerMemberId ||
-        m.role === 'consort' || p.eligibility.sex && m.sex !== p.eligibility.sex ||
-        !ignoreAge && s.date.year - m.born < p.eligibility.minAge ||
+        m.role === 'consort' || p.eligibility.sex && person.sex !== p.eligibility.sex ||
+        !ignoreAge && s.date.year - person.born < p.eligibility.minAge ||
         p.eligibility.ancestry !== false && !descent(m, t.members, data.roots, {})) return false;
-    var c = memberCharacter(s, m);
+    if (p.candidatePool && !poolEligible(s, rid, m, c, ignoreAge)) return false;
     if (c && (c.captive || c.imprisoned || c.exiled || FB.justiceCustodyOf && FB.justiceCustodyOf(s, c.id))) return false;
     if (m.branchRef && FB.royalBranchEligible && !FB.royalBranchEligible(s, rid, m)) return false;
     var occupied = !c && s.chars[FB.courtCharacterId(m.id)];
@@ -52,6 +53,32 @@
     })) return false;
     return true;
   }
+  function poolEligible(s, rid, m, c, ignoreAge) {
+    var p = S.profile(s, rid), pool = p && p.candidatePool;
+    if (!pool) return true;
+    var culture = c ? c.culture : m.culture || realm(s, rid).ruler.culture;
+    var religion = c ? c.religion : m.religion || realm(s, rid).religion;
+    if (pool.cultures.length && pool.cultures.indexOf(culture) < 0 ||
+        pool.religions.length && pool.religions.indexOf(religion) < 0 ||
+        c && (c.unfree || pool.excludedRoles.indexOf(c.role) >= 0 ||
+          FB.isReigningRealmRuler(s, c) && FB.realmIdForRulerCharacter(s, c.id) !== rid)) return false;
+    if (m.role === 'electoral_candidate' && (!c ||
+        !c.royalLine || c.royalLine.realmId !== rid || c.royalLine.memberId !== m.id ||
+        pool.gentle && !FB.station.isGentle(FB.station.subject(c, s), s))) return false;
+    return true;
+  }
+  S.nominees = function (s, rid) {
+    var p = S.profile(s, rid), t = tree(s, rid);
+    if (!p || !p.candidatePool || !t || !S.state(s, rid)) return [];
+    return Object.keys(s.chars).sort().filter(function (id) {
+      var c = s.chars[id], home = id === s.player.charId ? s.player.provinceId : c.homeProvinceId;
+      return !c.dead && !c.captive && !c.imprisoned && !c.exiled && !FB.justiceCustodyOf(s, id) &&
+        !c.royalLine && !FB.isReigningRealmRuler(s, c) && home && s.owner[home] === rid &&
+        s.date.year - c.born >= p.eligibility.minAge && (!p.eligibility.sex || c.sex === p.eligibility.sex) &&
+        (!p.candidatePool.gentle || FB.station.isGentle(FB.station.subject(c, s), s)) &&
+        poolEligible(s, rid, c, c, false);
+    }).slice(0, MAX_CANDIDATES);
+  };
   S.candidates = function (s, rid, includeRuler) {
     var t = tree(s, rid);
     if (!t || !S.state(s, rid) || !S.profile(s, rid)) return [];
@@ -69,7 +96,8 @@
       var def = definitions && definitions[at.id];
       var inst = s.localInstitutions && s.localInstitutions[at.id];
       var c = inst && s.chars[inst.representativeId];
-      return def && availablePerson(c) ? { kind:'character', id:c.id } : null;
+      return def && (!def.provinceId || s.owner[def.provinceId] === rid) && availablePerson(c)
+        ? { kind:'character', id:c.id } : null;
     }
     if (at.kind === 'royal_member') {
       if (t && alive(s, t.members[at.id]) && (!memberCharacter(s, t.members[at.id]) || availablePerson(memberCharacter(s, t.members[at.id])))) return at;
@@ -91,6 +119,8 @@
   function candidateFacts(s, rid, id) {
     var t = tree(s, rid), m = t && t.members[id], c = memberCharacter(s, m);
     return m ? { id:id, alive:alive(s, m), born:m.born, sex:m.sex,
+      person:c ? { name:c.name, dyn:c.dyn, born:c.born, sex:c.sex, culture:c.culture, religion:c.religion,
+        role:c.role || null, unfree:!!c.unfree, station:FB.stationOf(c) } : null,
       fatherId:m.fatherId || m.parentId || null, motherId:m.motherId || null,
       charId:m.charId || null, role:m.role || null, martial:c ? FB.skillSnapshot(s, c, 'mar') : Number(m.mar) || 0,
       captive:!!(c && (c.captive || c.imprisoned || c.exiled)),
@@ -164,6 +194,8 @@
     var t = tree(s, rid), data = S.state(s, rid), p = S.profile(s, rid);
     return JSON.stringify({ request:request, form:record(s, rid).formId, profile:p, data:data,
       generation:generation(s, rid), ruler:incumbent(s, rid), liege:realm(s, rid).liege || null,
+      designation:t && t.designatedHeirId || null,
+      nominee:request.characterId && s.chars[request.characterId] || null, nominees:S.nominees(s, rid),
       judgment:s.justice && s.justice.last || null,
       candidates:t ? Object.keys(t.members).sort().map(function (id) { return candidateFacts(s, rid, id); }) : [],
       eligible:S.candidates(s, rid, true),
@@ -176,9 +208,11 @@
       }), funds:available(s, request.actor), turn:s.turn });
   }
   S.reason = function (id) {
-    var text = { missing_state:FB.T('This campaign has no declared kin constituency.'), invalid_actor:FB.T('A current ruler or eligible candidate must propose this decision.'),
+    var text = { missing_state:FB.T('This campaign has no declared political constituency.'), invalid_actor:FB.T('A current ruler or eligible candidate must propose this decision.'),
       no_vacancy:FB.T('Open a lawful vacancy before seeking a successor.'), ruler_alive:FB.T('Death cannot open a vacancy while the ruler lives.'),
-      ineligible:FB.T('The candidate must be a living adult in the recognized kin pool, free of captivity and exile.'),
+      ineligible:FB.T('The candidate must meet the declared age, ancestry, legal status and office requirements, free of captivity and exile.'),
+      nomination_refused:FB.T('A living selection interest must nominate a qualified local person. Existing rulers and other courts’ royal members retain their current roles.'),
+      designation_refused:FB.T('This profile does not permit this designation. Designation never replaces political assent.'),
       terms_refused:FB.T('The offered obligations exceed a local interest’s declared limit.'), funds:FB.T('The paying treasury cannot afford the displayed cost.'),
       no_consensus:FB.T('No eligible candidate has the required local recognition.'), stale:FB.T('Current facts changed. Review this decision again.'),
       already_resolved:FB.T('This ruler generation already has a resolved accession.'), principal_unavailable:FB.T('A required local principal or scope is unavailable.'),
@@ -195,7 +229,7 @@
     if (!r || !r.alive || !data || !p) q.reasonId = 'missing_state';
     else {
       var v = data.vacancy, actor = request.actor, id = request.candidateId, t = tree(s, rid);
-      var personalVote = request.action === 'support' || request.action === 'withdraw';
+      var personalVote = request.action === 'support' || request.action === 'withdraw' || request.action === 'nominate';
       var mandate = personalVote && S.constituency(s, rid).filter(function (m) { return m.id === request.memberId && m.active; })[0];
       var isPrincipal = mandate && actor && (actor.kind === 'character' &&
         (mandate.currentPrincipal.kind === 'character' && mandate.currentPrincipal.id === actor.id ||
@@ -203,7 +237,17 @@
         actor.kind === 'constituency' && actor.realmId === rid && actor.id === mandate.id);
       var candidateProposal = request.action === 'negotiate' || request.action === 'resolve' || request.action === 'open' && request.cause === 'lawful_removal';
       if (personalVote ? !isPrincipal : !actorAllowed(s, rid, actor, id, candidateProposal)) q.reasonId = personalVote ? 'no_mandate' : 'invalid_actor';
-      else if (request.action === 'open') {
+      else if (request.action === 'nominate') {
+        if (!v || v.status === 'resolved') q.reasonId = 'no_vacancy';
+        else if (S.nominees(s, rid).indexOf(request.characterId) < 0 ||
+            ('royal_' + data.originRealmId + '_electoral_' + request.characterId).length > 160 ||
+            Object.keys(t.members).filter(function (key) { return t.members[key].role === 'electoral_candidate' && alive(s, t.members[key]); }).length >= MAX_CANDIDATES ||
+            S.candidates(s, rid).length >= MAX_CANDIDATES ||
+            own(t.members, 'royal_' + data.originRealmId + '_electoral_' + request.characterId)) q.reasonId = 'nomination_refused';
+      } else if (request.action === 'designate') {
+        if (!p.procedure || !p.procedure.designation || !id || S.candidates(s, rid).indexOf(id) < 0 ||
+            v && v.status !== 'resolved') q.reasonId = 'designation_refused';
+      } else if (request.action === 'open') {
         if (['death','abdication','lawful_removal'].indexOf(request.cause) < 0) q.reasonId = 'invalid_actor';
         else if (v && v.generation === generation(s, rid)) q.reasonId = v.status === 'resolved' ? 'already_resolved' : 'no_vacancy';
         else if (request.cause === 'death' && alive(s, incumbent(s, rid))) q.reasonId = 'ruler_alive';
@@ -276,7 +320,17 @@
     var q = S.quote(s, review.realmId, review.request);
     if (!q.allowed || q.stamp !== review.stamp) return false;
     var rid = q.realmId, request = q.request, data = S.state(s, rid), v = data.vacancy, p = S.profile(s, rid);
-    if (request.action === 'open') {
+    if (request.action === 'nominate') {
+      var c = s.chars[request.characterId], t = tree(s, rid);
+      var key = 'royal_' + data.originRealmId + '_electoral_' + c.id;
+      t.members[key] = { id:key, name:c.name, dyn:c.dyn, sex:c.sex, born:c.born, alive:true,
+        culture:c.culture, religion:c.religion, charId:c.id, parentId:null, childIds:[], role:'electoral_candidate' };
+      c.royalLine = { realmId:rid, memberId:key };
+      v.candidates = S.candidates(s, rid);
+      FB.refreshRealmSuccession(s, rid);
+    } else if (request.action === 'designate') {
+      tree(s, rid).designatedHeirId = request.candidateId;
+    } else if (request.action === 'open') {
       data.vacancy = { generation:generation(s, rid), cause:request.cause, openedTurn:s.turn,
         status:'selecting', candidates:S.candidates(s, rid), support:{}, accessionId:null };
       delete data.lastPeriod;
@@ -339,25 +393,36 @@
       if (saved && JSON.stringify(saved.principal) === JSON.stringify(m.currentPrincipal) &&
           !response(s, rid, m, row.memberId, row.terms).reason) weight += m.weight;
     });
-    return !!total && total >= full * p.quorum && weight >= total * p.consensus && (!pid || row.scopes.indexOf(pid) >= 0 && s.owner[pid] === rid);
+    return !!total && total >= full * p.quorum && weight >= total * p.consensus &&
+      (!pid || (p.procedure && p.procedure.realmRecognition || row.scopes.indexOf(pid) >= 0) && s.owner[pid] === rid);
   };
   S.initialize = function (s, rid) {
     var p = S.profile(s, rid), t = tree(s, rid), row = record(s, rid);
     if (!p || !t || !row || row.selection) return false;
+    if (p.procedure) FB.ensureLocalInstitutions(s, null, { fresh:true });
     var root = t.founderId || t.rulerMemberId;
     var data = row.selection = { schema:1, profileId:row.formId, originRealmId:rid, roots:[root], members:[], revision:0, vacancy:null, recognition:null };
     p.members.forEach(function (def) {
       var at = def.scope === 'capital' ? { kind:'county', id:realm(s, rid).capital } : { kind:'realm', id:rid };
       var who = def.principal === 'senior_kin' ? { kind:'royal_member', id:root } :
         def.principal === 'capital_community' ? { kind:'county', id:realm(s, rid).capital } : copy(def.principal);
+      if (def.principal === 'capital_elite' || def.principal === 'capital_clergy') {
+        var defs = FB.localInstitutionDefinitions(s);
+        var id = Object.keys(defs).sort().filter(function (id) {
+          return defs[id].provinceId === realm(s, rid).capital &&
+            (def.principal === 'capital_elite' ? defs[id].kind === 'council' : defs[id].kind === 'congregation');
+        })[0];
+        if (!id) throw new Error(FB.T('The electoral profile requires a declared capital institution.'));
+        who = { kind:'institution', id:id };
+      }
       data.members.push({ id:def.id, templateId:def.id, principal:who, scope:at, basis:def.basis, weight:def.weight, continuity:def.continuity });
     });
     var votes = {}, offer = p.terms;
     S.constituency(s, rid).forEach(function (m) { votes[m.id] = response(s, rid, m, t.rulerMemberId, offer); });
     data.recognition = recognition(s, rid, t.rulerMemberId, votes, offer);
     FB.refreshRealmSuccession(s, rid);
-    /* Every initial county has its own community mandate. The first consumer
-       deliberately has one county; wider profiles must declare local scopes. */
+    /* Community mandates retain county scopes; electoral realm-wide
+       mandates come from the declared profile and never allocate land. */
     return true;
   };
   S.seed = function (s) {
@@ -371,10 +436,16 @@
     data.lastPeriod = period;
     var actor = { kind:'realm', id:rid }, v = data.vacancy;
     if (v && v.status !== 'resolved') {
+      if (p.candidatePool) {
+        var interest = S.constituency(s, rid).filter(function (m) { return m.active; })[0];
+        var nominee = S.nominees(s, rid)[0];
+        if (interest && nominee) S.apply(s, S.quote(s, rid, { action:'nominate',
+          actor:{ kind:'constituency', realmId:rid, id:interest.id }, memberId:interest.id, characterId:nominee }));
+      }
       var candidates = S.candidates(s, rid), chosen = null, best = -1;
       candidates.forEach(function (id) {
         var score = S.constituency(s, rid).reduce(function (n, m) { return n + (!response(s, rid, m, id, p.terms).reason ? m.weight : 0); }, 0);
-        if (score > best) { chosen = id; best = score; }
+        if (score > best || score === best && p.procedure && p.procedure.designation && tree(s, rid).designatedHeirId === id) { chosen = id; best = score; }
       });
       if (!chosen) {
         var t = tree(s, rid);
@@ -395,6 +466,7 @@
       var assent = S.quote(s, rid, { action:'assent', actor:actor, candidateId:tree(s, rid).rulerMemberId, terms:p.terms });
       return assent.allowed && S.apply(s, assent);
     }
+    if (p.procedure && p.procedure.realmRecognition) return false;
     var missing = FB.realmHeldCounties(s, rid).filter(function (pid) {
       return !data.members.some(function (m) { return m.scope.kind === 'county' && m.scope.id === pid; });
     })[0];
@@ -410,7 +482,7 @@
   };
   S.profileFaults = function (p) {
     var faults = [];
-    if (!keys(p, ['eligibility','tieBreak','consensus','quorum','negotiationCost','terms','reserved','members']) ||
+    if (!keys(p, ['eligibility','candidatePool','procedure','tieBreak','consensus','quorum','negotiationCost','terms','reserved','members']) ||
         !keys(p.eligibility, ['minAge','sex','ancestry','officeId']) || !integer(p.eligibility.minAge, 16, 80) ||
         p.eligibility.ancestry !== undefined && typeof p.eligibility.ancestry !== 'boolean' ||
         p.eligibility.officeId !== undefined && !own(FBDATA.authorityOffices, p.eligibility.officeId) ||
@@ -419,13 +491,22 @@
         !integer(p.negotiationCost, 0, 1000000) || !terms(p.terms) || !unique(p.reserved) ||
         p.reserved.some(function (id) { return ['levy','war','treaty','grant','extraordinary_tax'].indexOf(id) < 0; }) ||
         !Array.isArray(p.members) || !p.members.length || p.members.length > MAX_MEMBERS) return [FB.T('Invalid selection profile.')];
+    if (p.candidatePool !== undefined && (!keys(p.candidatePool, ['gentle','cultures','religions','excludedRoles']) ||
+        p.eligibility.ancestry !== false || typeof p.candidatePool.gentle !== 'boolean' ||
+        !unique(p.candidatePool.cultures) || p.candidatePool.cultures.some(function (id) { return !own(FBDATA.cultures, id); }) ||
+        !unique(p.candidatePool.religions) || p.candidatePool.religions.some(function (id) { return !own(FBDATA.religions, id); }) ||
+        !unique(p.candidatePool.excludedRoles) || !p.procedure)) faults.push(FB.T('Invalid elective candidate pool.'));
+    if (p.procedure !== undefined && (!p.candidatePool || !keys(p.procedure, ['realmRecognition','designation','interimRevenue','defensiveLevy']) ||
+        ['realmRecognition','designation','interimRevenue','defensiveLevy'].some(function (key) { return typeof p.procedure[key] !== 'boolean'; })))
+      faults.push(FB.T('Invalid electoral procedure.'));
     var seen = {};
     p.members.forEach(function (m) {
       if (!keys(m, ['id','name','principal','scope','basis','weight','continuity','minimumSupport','minimumMartial','maximumLevy','maximumRevenue']) ||
           !/^[a-z][a-z0-9_]*$/.test(m.id || '') || seen[m.id] || typeof m.name !== 'string' ||
-          ['senior_kin','capital_community'].indexOf(m.principal) < 0 &&
+          ['senior_kin','capital_community','capital_elite','capital_clergy'].indexOf(m.principal) < 0 &&
             (!keys(m.principal, ['kind','id']) || ['character','institution'].indexOf(m.principal.kind) < 0 || typeof m.principal.id !== 'string') ||
           ['realm','capital'].indexOf(m.scope) < 0 || ['kin_recognition','community_assent','public_office'].indexOf(m.basis) < 0 ||
+          ['capital_elite','capital_clergy'].indexOf(m.principal) >= 0 && (m.scope !== 'realm' || m.continuity !== 'institution') ||
           !integer(m.weight, 1, 10) || ['institution','vacant','senior_kin'].indexOf(m.continuity) < 0 ||
           typeof m.minimumSupport !== 'number' || !isFinite(m.minimumSupport) || m.minimumSupport < -100 || m.minimumSupport > 100 ||
           !integer(m.minimumMartial, 0, 100) || !rate(m.maximumLevy) || !rate(m.maximumRevenue)) faults.push(FB.T('Invalid constituency member.'));
@@ -444,6 +525,19 @@
         data.roots.some(function (id) { return !own(t.members, id); }) ||
         !Array.isArray(data.members) || data.members.length < p.members.length || data.members.length > MAX_MEMBERS ||
         data.lastPeriod !== undefined && !integer(data.lastPeriod, -10000000, 10000000)) fail();
+    var publicAccount = realm(s, rid).treasury;
+    if (p.procedure && realm(s, rid).alive && (!publicAccount || publicAccount.version !== 1 || publicAccount.retired ||
+        typeof publicAccount.gold !== 'number' || !isFinite(publicAccount.gold) ||
+        typeof publicAccount.militaryAccrued !== 'number' || !isFinite(publicAccount.militaryAccrued) ||
+        publicAccount.militaryAccrued < 0)) fail();
+    var nominations = Object.keys(t.members).filter(function (id) { return t.members[id].role === 'electoral_candidate'; });
+    if (nominations.filter(function (id) { return alive(s, t.members[id]); }).length > MAX_CANDIDATES || nominations.length && !p.candidatePool || nominations.some(function (id) {
+      var m = t.members[id], c = s.chars[m.charId];
+      if (!c) return m.alive !== false;
+      return !c.royalLine || c.royalLine.realmId !== rid || c.royalLine.memberId !== id ||
+        id !== 'royal_' + data.originRealmId + '_electoral_' + c.id || m.parentId !== null ||
+        m.fatherId || m.motherId || m.born !== c.born || m.sex !== c.sex;
+    })) fail();
     var ids = [], types = ['royal_member','character','county','institution'];
     function validPrincipal(at) {
       if (!keys(at, ['kind','id']) || typeof at.id !== 'string' || !at.id || at.id.length > 160 || types.indexOf(at.kind) < 0) return false;
@@ -463,6 +557,10 @@
           d.principal === 'capital_community' && (m.scope.kind !== 'county' || m.principal.kind !== 'county' || m.principal.id !== m.scope.id) ||
           d.principal === 'senior_kin' && (m.principal.kind !== 'royal_member' || data.roots.indexOf(m.principal.id) < 0) ||
           plain(d.principal) && JSON.stringify(m.principal) !== JSON.stringify(d.principal) ||
+          ['capital_elite','capital_clergy'].indexOf(d.principal) >= 0 &&
+            (m.principal.kind !== 'institution' || m.scope.kind !== 'realm' ||
+              !FB.localInstitutionDefinitions(s)[m.principal.id] ||
+              FB.localInstitutionDefinitions(s)[m.principal.id].kind !== (d.principal === 'capital_elite' ? 'council' : 'congregation')) ||
           m.basis !== d.basis || m.weight !== d.weight || m.continuity !== d.continuity) fail();
       ids.push(m.id);
     });
@@ -477,6 +575,7 @@
           Object.keys(v.support).some(function (id) { return ids.indexOf(id) < 0; }) ||
           (v.status === 'resolved' ? !knownCandidate(v.accessionId) || v.candidates.indexOf(v.accessionId) < 0 ||
             v.generation + 1 > generation(s, rid) : v.accessionId !== null || v.generation !== generation(s, rid))) fail();
+      if (v.status === 'resolved' && v.generation + 1 === generation(s, rid) && v.accessionId !== t.rulerMemberId) fail();
       Object.keys(v.support).forEach(function (id) {
         var vote = v.support[id];
         if (!keys(vote, ['memberId','principal','candidateId','reason','terms']) || vote.memberId !== id ||

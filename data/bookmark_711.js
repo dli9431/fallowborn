@@ -507,7 +507,7 @@ FBDATA.bookmarkCandidates['711'] = {
   geography:"europe_regional",
   settlementLayout:null,
   religiousHeads:{"catholic":"papacy_711","umayyad_sunni_711":"umayyad_711"},
-  systems:{"disable":["great_holy_wars","tournaments"]},
+  systems:{"enable":["civic_institutions","episcopal_sees"],"disable":["great_holy_wars","tournaments"]},
   stories:["strait_crossing_711","toledo_campaign_711","septimania_campaign_711","gaul_campaign_711","asturias_foundation_711"],
   provinces:[
     {"id":"coruna","names":[],"name":"Brigantium","realm":"visigoths_711","duchy":"d_711_galicia","culture":"hispano_roman","religion":"catholic","dev":1,"communities":[{"culture":"hispano_roman","religion":"catholic","populationShare0":8500},{"culture":"gothic","religion":"catholic","paired":true,"populationShare0":1000},{"culture":"hispano_roman","religion":"jewish","paired":true,"populationShare0":500}],"settlements":[{"site":"coruna_711","name":"Brigantium","kind":"village"}]},
@@ -1010,8 +1010,8 @@ FBDATA.bookmarkCandidates['711'] = {
     {"id":"w_lapland","names":[],"name":"Lapland","wasteland":true}
   ],
   realms:[
-    {"id":"visigoths_711","name":"Visigothic Kingdom at Toledo","color":"#8671ad","capital":"toledo","aggression":1,"rank":3,"government":"territorial","religion":"catholic","ruler":{"name":"Roderic","sex":"m","culture":"gothic","born":675,"mar":10,"trait":"patient"},"techTraditions":["latin"]},
-    {"id":"achila_711","name":"Northeastern Gothic Kingdom","color":"#af705b","capital":"narbonne","aggression":1,"rank":3,"government":"territorial","religion":"catholic","ruler":{"name":"Achila II","sex":"m","culture":"gothic","born":680,"mar":8,"trait":"patient"},"techTraditions":["latin"]},
+    {"id":"visigoths_711","name":"Visigothic Kingdom at Toledo","color":"#8671ad","capital":"toledo","aggression":1,"rank":3,"government":"elective_monarchy","religion":"catholic","ruler":{"name":"Roderic","sex":"m","culture":"gothic","born":675,"mar":10,"trait":"patient"},"techTraditions":["latin"]},
+    {"id":"achila_711","name":"Northeastern Gothic Kingdom","color":"#af705b","capital":"narbonne","aggression":1,"rank":3,"government":"elective_monarchy","religion":"catholic","ruler":{"name":"Achila II","sex":"m","culture":"gothic","born":680,"mar":8,"trait":"patient"},"techTraditions":["latin"]},
     {"id":"vascones_711","name":"Vasconian uplands","color":"#4a8792","capital":"pamplona","aggression":1,"rank":2,"government":"territorial","religion":"catholic"},
     {"id":"francia_711","name":"Kingdom of the Franks","color":"#a69350","capital":"paris","aggression":1,"rank":3,"government":"territorial","religion":"catholic","ruler":{"name":"Childebert III","sex":"m","culture":"frankish","born":679,"mar":6,"trait":"patient"},"techTraditions":["latin"]},
     {"id":"aquitaine_711","name":"Aquitanian duchy","color":"#5b9270","capital":"toulouse","aggression":1,"rank":2,"government":"territorial","religion":"catholic","ruler":{"name":"Odo","sex":"m","culture":"frankish","born":670,"mar":10,"trait":"patient"},"techTraditions":["latin"]},
@@ -1677,3 +1677,22 @@ Object.assign(FBDATA.cultures, FBDATA.bookmarkCultures711);
 Object.assign(FBDATA.religions, FBDATA.bookmarkReligions711);
 Object.assign(FBDATA.settlementSites, FBDATA.bookmarkSites711);
 FBDATA.bookmarks['711'] = FBDATA.bookmarkCandidates['711'];
+/* Generated delegates represent political interests, not an attested 711
+   electoral roster. No local congregation claims the crown or anoints it. */
+FBDATA.bookmarks['711'].localInstitutions = {
+  toledo_palace_711:{ city:'Toledo', kind:'council', provinceId:'toledo', site:'toledo_711', freshOnly:true,
+    culture:'gothic', religion:'catholic', representative:{ station:3, role:'notable', skills:{ mar:8 } } },
+  toledo_clergy_711:{ city:'Toledo', kind:'congregation', provinceId:'toledo', site:'toledo_711', freshOnly:true,
+    culture:'hispano_roman', religion:'catholic', representative:{ station:3, role:'priest' } },
+  narbonne_palace_711:{ city:'Narbonne', kind:'council', provinceId:'narbonne', site:'narbonne_711', freshOnly:true,
+    culture:'gothic', religion:'catholic', representative:{ station:3, role:'notable', skills:{ mar:8 } } },
+  narbonne_clergy_711:{ city:'Narbonne', kind:'congregation', provinceId:'narbonne', site:'narbonne_711', freshOnly:true,
+    culture:'gothic', religion:'catholic', representative:{ station:3, role:'priest' } }
+};
+FBDATA.storyGovernmentSelections711 = {
+  toledo_crown_711:{ type:'government_contest', id:'toledo_crown_711', realmId:'visigoths_711',
+    name:'The Toledo crown', desc:'Noble and clerical assent recognizes this crown. Divided selection leaves rival claims without dividing possession or private inheritance.' },
+  northeastern_crown_711:{ type:'government_contest', id:'northeastern_crown_711', realmId:'achila_711',
+    name:'The northeastern crown', desc:'This court retains its own territory and political recognition. No election proves which opening Gothic claimant was legitimate.' }
+};
+FBDATA.bookmarks['711'].stories.push('toledo_crown_711', 'northeastern_crown_711');

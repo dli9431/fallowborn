@@ -92,6 +92,10 @@ window.FB = window.FB || {};
       }
     }
     var params = FBDATA.governmentForms[formId].strategyParameters;
+    var succession = G.strategy('succession', ids.succession);
+    var selection = FBDATA.governmentForms[formId].selectionProfile;
+    if (succession && succession.publicCrown && (!selection || !selection.candidatePool || !selection.procedure ||
+        FB.governmentSelection && FB.governmentSelection.profileFaults(selection).length)) out.push({ kind:'parameters' });
     var profileId = FBDATA.governmentForms[formId].administrationProfileId;
     if (profileId !== undefined && (!FBDATA.administrationProfiles || !own(FBDATA.administrationProfiles, profileId)))
       out.push({ kind:'parameters' });

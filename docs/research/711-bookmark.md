@@ -88,7 +88,7 @@ Settlement and constitutional cautions
 
 Many modern county identifiers refer to later city foundations. The bookmark keeps saved identifiers stable while presenting earlier settlements or neutral regional names. The baghdad cell presents al-Mada'in, mansura presents Brahmanabad, fes presents Volubilis, murcia presents Orihuela, santiago presents Iria Flavia and oviedo presents the Asturian uplands. Urbanity and district coordinates are authoring estimates, with one head site per inhabited cell. A seed point is not archaeological proof of a town.
 
-The d_711_, k_711_ and e_711_ tables are gameplay promotion regions. They do not imply that later medieval duchies, kingdoms, sovereign borders or imperial titles existed across the full map in 711. Realms remain separate from those title groups. All courts use the existing territorial form; Visigothic election remains an explicit dynastic-succession gap. New behavior belongs in registered platform strategies rather than bookmark selectors.
+The d_711_, k_711_ and e_711_ tables are gameplay promotion regions. They do not imply that later medieval duchies, kingdoms, sovereign borders or imperial titles existed across the full map in 711. Realms remain separate from those title groups. Fresh Gothic courts now use the shared elective crown profile; other courts retain the territorial form. The electoral representatives and numerical procedure remain explicit gameplay abstractions, described in 711-elective-monarchy.md. New behavior belongs in registered platform strategies rather than bookmark selectors.
 
 Review disposition
 

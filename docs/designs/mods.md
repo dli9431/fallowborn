@@ -370,3 +370,8 @@ aristocraticProfiles is an allowed JSON mod root merged into detached effective 
 Mobile declarations
 
 mobileProfiles is a validated replace/merge table. A mobile realm must explicitly choose mobile_confederation and declare its profile, origin, target, distinct patron, initial food, fighters, treasury, culture and faith. Profiles specify adult age, majority threshold, bounds, member weights/population/pledges, recruitment and supply rates, seasonal terms, livelihood counties and a registered fixed territorial settlement form. Zero or negative people, excessive bounds, duplicate members and moving settlement forms fail validation. Existing identities, dates and terrain never infer a mobile polity.
+
+
+Elective profiles
+
+selectionProfile may declare candidatePool and procedure through the common selection contract. Registered elective strategies interpret that typed data; JSON supplies no election function. Fresh capital_elite and capital_clergy selectors require declared capital council and congregation institutions. Existing saved forms and constituencies are preserved. See docs/MODDING.md and elective-monarchy.md.

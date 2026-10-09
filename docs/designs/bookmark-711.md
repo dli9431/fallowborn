@@ -44,7 +44,7 @@ conditional_polity_foundation declares none. Local political independence after 
 
 Acceptance gaps
 
-Visigothic kingship still uses territorial/dynastic succession. The elective and contested monarchy requires a separately registered succession strategy if the owner wants that distinction modeled. Bookmark data must not implement elections with date-based transfers.
+Fresh Gothic courts use the separately registered crown_election strategy and shared selection state. Existing saved governments remain unchanged. Bookmark data must not implement elections with date-based transfers.
 
 Asturias now has a conditional foundation rather than an opening kingdom or unconditional historical conquest. The loss-of-Toledo predicate, peaceful remnant route, revolt route and game-scale Pelayo court remain explicit gameplay approximations requiring historical and natural-play review.
 
@@ -65,3 +65,8 @@ Foundation display fields use storyFoundation.asturias_foundation_711, including
 tests/e2e/specs/711-bookmark.spec.js covers ordinary registration, supplemental catalogues, data isolation, activation, the full political grid, communities, head claims, dated papal institutions, commoner starts in both distribution flag modes, save round trips, campaign divergence and separate one-season world and household journeys. tests/e2e/specs/bookmark-picker.spec.js covers date cards, scenario activation and save loading after a fresh boot on served and file Chromium with both distribution flags. tests/e2e/specs/stories.spec.js includes the expanded registration order. tools/test_i18n_catalog.py covers the new extraction owners. Follow the repository's owner-controlled testing workflow.
 
 tests/e2e/specs/711-polity-foundation.spec.js covers absence at creation, real collapse eligibility, peaceful remnant foundation in both distribution flag modes, delayed and busy courts, conquered-county revolt occupation, defeat, timeout, restored Toledo, divergent control, expiry, protected player holders, additive save migration, malformed records and once-only restore. Staged revolt occupations exercise the real independence settlement boundary; they do not establish a naturally won historical battle. Earlier bookmarks remain detached and consume no foundation RNG.
+
+
+Elective rollout
+
+Fresh 711 uses elective_monarchy at Toledo and the northeastern Gothic court. The opening political grid, ruler uncertainty and conditional campaigns remain intact. Palace and clerical representatives are generated political abstractions. Full elite assent and the simulation thresholds are authoring choices, not an attested ballot procedure. Existing saved forms remain unchanged. Independent policy coverage and research limits are documented in elective-monarchy.md and ../research/711-elective-monarchy.md.

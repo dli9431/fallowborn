@@ -402,3 +402,8 @@ The optional public_offices system uses profile-owned public catalogues through 
 Aristocratic provincial authority
 
 aristocratic_monarchy reuses personal public commissions and the common recognition transaction while retaining permanent hereditary interests. Each interest references one perpetual fiscal appointment and separate Peace/Consent customary rights. Probate transfers those same public records to an existing adult of the house; private estate succession stays separate. Royal ancestry is required for sovereign candidature. Provincial negotiation, refusal, legitimate enforcement, minority stewardship and conversion use pure, fully revalidated reviews. A generic appointment dismissal cannot revoke hereditary jurisdiction. See docs/designs/aristocratic-monarchy.md.
+
+
+Elective assent
+
+Elective crowns use the shared living constituency and reserved consent transaction. Nomination grants no public jurisdiction. Vacancy retains only the profile-declared local courts, receipts and defensive service; offensive decisions await recognition. Explicit conversion requires existing principals, a qualified incumbent and the active canonical public account. See elective-monarchy.md.

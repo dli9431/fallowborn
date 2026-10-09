@@ -4429,8 +4429,15 @@ window.FB = window.FB || {};
     show:function (s) { return FB.systemEnabled(s, 'roman_offices'); },
     run:function (s) { if (FB.systemEnabled(s, 'roman_offices') && FB.ui && FB.ui.showOffices) FB.ui.showOffices(); } },
   { id:'local_kingship', opensChoices:true, noConsume:true,
-    show:function (s) { var rid = FB.governmentSelection && FB.governmentSelection.localRealm(s); return !!rid; },
+    show:function (s) { var rid = FB.governmentSelection && FB.governmentSelection.localRealm(s); return !!rid && !FB.governmentSelection.profile(s, rid).procedure; },
     run:function () { if (FB.ui && FB.ui.showLocalKingship) FB.ui.showLocalKingship(); } },
+  { id:'elective_crown', opensChoices:true, noConsume:true,
+    show:function (s) { var rid = FB.governmentSelection && FB.governmentSelection.localRealm(s);
+      return !!rid && !!FB.governmentSelection.profile(s, rid).procedure || FB.electiveCrown &&
+        FB.station.rulesRealm(s.player,s) && !FB.electiveCrown(s,'player') && FB.electiveConversionTargets(s,'player').length > 0; },
+    run:function (s) { if (!FB.ui) return;
+      if (FB.governmentSelection.localRealm(s)) FB.ui.showLocalKingship();
+      else if (FB.ui.showElectiveConversion) FB.ui.showElectiveConversion(); } },
 
   { id:'community_assembly', opensChoices:true, noConsume:true,
     show:function (s) { return !!(FB.governments.support && FB.governments.support.row(s,
@@ -6902,19 +6909,27 @@ window.FB = window.FB || {};
      labels from incomeBreakdown. */
   FB.playerCivilianBudget = function (state, economy, ignoreAssignments, options) {
     const p = state.player;
+    const publicCrown = FB.electiveCrown && FB.electiveCrown(state, 'player');
     let receipts = 0;
-    let total = -FB.householdUpkeep(state) - FB.playerGovernmentCosts(state).total;
+    let total = -FB.householdUpkeep(state) - (publicCrown ? 0 : FB.playerGovernmentCosts(state).total);
     if (FB.publicOfficeBudget) total -= FB.publicOfficeBudget(state, 'player');
     if (FB.publicOfficerIncome) {
       const salary = FB.publicOfficerIncome(state, p.charId);
       total += salary; receipts += salary;
     }
     if (FB.householdStandardsUpkeep) total -= FB.householdStandardsUpkeep(state);
-    if (FB.modifierUpkeep) total -= FB.modifierUpkeep(state, 'gold');
+    if (FB.modifierUpkeep && !publicCrown) total -= FB.modifierUpkeep(state, 'gold');
     if (FB.station.isLanded(p, state)) {
-      const tax = FB.playerTax(state); total += tax; receipts += Math.max(0, tax);
-      total -= FB.buildingBonus(state, 'upkeep');
-      if (FB.fortUpkeep) total -= FB.fortUpkeep(state);
+      if (publicCrown) {
+        const fiscal = FB.settlementActorFiscal(state, { kind:'character', id:p.charId });
+        const tax = fiscal.tax + fiscal.tolls + fiscal.national +
+          (FB.bishopricIncome ? FB.bishopricIncome(state) : 0) + (FB.abbeyIncome ? FB.abbeyIncome(state) : 0);
+        total += tax - fiscal.upkeep - fiscal.duesOut; receipts += Math.max(0, tax);
+      } else {
+        const tax = FB.playerTax(state); total += tax; receipts += Math.max(0, tax);
+        total -= FB.buildingBonus(state, 'upkeep');
+        if (FB.fortUpkeep) total -= FB.fortUpkeep(state);
+      }
     }
     { const value = FB.holdingBonus(state, 'gold'); total += value; receipts += Math.max(0, value); }
     { const value = FB.landYield(state); total += value; receipts += Math.max(0, value); }
@@ -6937,7 +6952,8 @@ window.FB = window.FB || {};
   FB.reliableGoldIncome = function (state, ignoreAssignments, economy) {
     const budget = FB.playerCivilianBudget(state, economy, ignoreAssignments);
     let total = budget.surplus;
-    if (FB.playerHostUpkeepParts) total -= FB.playerHostUpkeepParts(state).total;
+    if (FB.playerHostUpkeepParts && !(FB.electiveCrown && FB.electiveCrown(state, 'player')))
+      total -= FB.playerHostUpkeepParts(state).total;
     if (FB.playerProvisionEstimate) total -= FB.playerProvisionEstimate(state);
     if (!ignoreAssignments && FB.fiscalAssignedIncome) total -= FB.fiscalAssignedIncome(state, budget.surplus);
     return total;
@@ -6950,6 +6966,7 @@ window.FB = window.FB || {};
      above; a change there wants a change here. */
   FB.incomeBreakdown = function (state) {
     const p = state.player;
+    const publicCrown = FB.electiveCrown && FB.electiveCrown(state, 'player');
     if (FB.enterpriseList) FB.enterpriseList(state); // normalize legacy business holdings first
     const lines = { gold: [], prestige: [], piety: [] };
     let goldGroup = 'income';
@@ -6993,7 +7010,7 @@ window.FB = window.FB || {};
     /* noble revenue (playerTax, unrounded so the lines tell the truth):
        demesne rents, vassal dues, tolls — grown by national technology,
        cut by a liege */
-    if (FB.station.isLanded(p, state)) {
+    if (FB.station.isLanded(p, state) && !publicCrown) {
       const tax = FB.playerTaxParts(state);
       add('gold', FB.castellanyOf && FB.castellanyOf(state)
         ? FB.T('Castellan’s stipend and revenues')
@@ -7041,6 +7058,16 @@ window.FB = window.FB || {};
         add('gold', FB.T('Fortification upkeep'), -FB.fortUpkeep(state));
       }
       addBuildings('piety', 'piety'); // chapels and temples pay in piety, not coin
+    }
+    if (FB.station.isLanded(p, state) && publicCrown) {
+      const fiscal = FB.settlementActorFiscal(state, { kind:'character', id:p.charId });
+      add('gold', FB.T('Private settlement receipts'), fiscal.tax + fiscal.tolls + fiscal.national);
+      add('gold', FB.T('Episcopal temporalities'), FB.bishopricIncome ? FB.bishopricIncome(state) : 0);
+      add('gold', FB.T('Abbey office allowance'), FB.abbeyIncome ? FB.abbeyIncome(state) : 0);
+      add('gold', FB.T('Private settlement dues'), -fiscal.duesOut);
+      goldGroup = 'buildings';
+      add('gold', FB.T('Private settlement upkeep'), -fiscal.upkeep);
+      addBuildings('piety', 'piety');
     }
 
     goldGroup = 'income';
@@ -7100,7 +7127,7 @@ window.FB = window.FB || {};
     /* station, resident family, and recurring schooling are separate lines so
        a larger household never hides inside an unexplained flat charge */
     goldGroup = 'government';
-    const government = FB.playerGovernmentCosts(state);
+    const government = publicCrown ? { administration:0, court:0 } : FB.playerGovernmentCosts(state);
     add('gold', FB.T('Government administration'), -government.administration);
     add('gold', FB.T('Official court expenses'), -government.court);
     if (FB.publicOfficeBudget) add('gold', FB.T('Public office commitments'), -FB.publicOfficeBudget(state,'player'));
@@ -7133,7 +7160,7 @@ window.FB = window.FB || {};
       });
     }
     goldGroup = 'other';
-    if (FB.modifierUpkeepEntries) {
+    if (FB.modifierUpkeepEntries && !publicCrown) {
       for (const entry of FB.modifierUpkeepEntries(state, 'gold')) {
         const def = FBDATA.modifiers[entry.id];
         const province = FB.world.byId[entry.pid];
@@ -7146,7 +7173,7 @@ window.FB = window.FB || {};
       }
     }
     goldGroup = 'army';
-    if (FB.playerHostUpkeepParts) {
+    if (FB.playerHostUpkeepParts && !publicCrown) {
       const hostUpkeep = FB.playerHostUpkeepParts(state);
       add('gold', FB.T('Raised-host base logistics'), -hostUpkeep.base);
       add('gold', FB.T('Levy equipment and transport'), -hostUpkeep.levy);
@@ -7177,6 +7204,8 @@ window.FB = window.FB || {};
         add('gold', FB.T('Campaign supply modifiers'), -hostUpkeep.campaignModifier);
       }
     }
+    if (publicCrown && FB.playerProvisionEstimate)
+      add('gold', FB.T('Army provisions (estimated consumption)'), -FB.playerProvisionEstimate(state));
     goldGroup = 'household';
     if (FB.retainerRecords) {
       for (const record of FB.retainerRecords(state)) {

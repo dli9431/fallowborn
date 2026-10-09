@@ -1622,7 +1622,7 @@ js/starts.js performs existing-ruler adoption only during new-campaign creation.
 
 Spring 711 review politics
 
-The hidden 711 candidate declares independent territorial courts and d_711_, k_711_ and e_711_ promotion regions. Provincial lieges distinguish sovereign ownership from local holdings; the Roman pontificate remains nonterritorial while Rome belongs to the eastern realm. These are existing-schema approximations rather than new government strategies. Visigothic kingship uses dynastic succession pending a generic elective strategy, and the candidate does not pre-create Asturias to stand in for a later conditional foundation. See bookmark-711.md and ../research/711-bookmark.md for acceptance gaps.
+The hidden 711 candidate declares independent territorial courts and d_711_, k_711_ and e_711_ promotion regions. Provincial lieges distinguish sovereign ownership from local holdings; the Roman pontificate remains nonterritorial while Rome belongs to the eastern realm. These are existing-schema approximations rather than new government strategies. Fresh Visigothic crowns use the generic elective strategy while older saved forms remain unchanged, and the candidate does not pre-create Asturias to stand in for a later conditional foundation. See bookmark-711.md and ../research/711-bookmark.md for acceptance gaps.
 
 800 review world
 
@@ -1663,3 +1663,8 @@ administrative_monarchy keeps sovereign county ownership and direct holders sepa
 Public crown absorption rekeys the government profile and public commissions to the player before retiring the old realm. Household succession grants that crown only to the recognized candidate. A different recognized sovereign receives the existing realm through abdication, while household property stays with the playable dynasty; an unrecognized death leaves a dated public vacancy.
 
 Aristocratic royal courts retain the original compact royal tree when adopted by a player ruler or separated from a private household. Current institutional references are rekeyed without replacing the ancestry founder, private estate owners or county communities. Direct holders coexist with hereditary local rights and personal public governors, without a generated count/duke hierarchy. Active recognition selects only actual royal descendants and can leave a minority stewardship or public vacancy. Explicit government conversion preserves surviving provincial facts and requires a fresh review to return. See docs/designs/aristocratic-monarchy.md.
+
+
+Elective public crowns
+
+Fresh 711 Gothic courts retain their distinct counties and opening rulers under elective_monarchy. Political selection can install another eligible house without changing private property or handing its household the outgoing family. Crown adoption and release rekey the existing realm treasury; they do not award it to the playable family. See elective-monarchy.md.

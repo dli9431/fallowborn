@@ -21,10 +21,16 @@
         var data = FB.governmentSelection.state(s, rec.realmId), v = data && data.vacancy;
         if (!v || ['contested','vacant','minority','resolved'].indexOf(v.status) < 0) return null;
         var names = { contested:FB.T('Local recognition is divided'), vacant:FB.T('No eligible successor'),
-          minority:FB.T('Recognized kin are still minors'), resolved:FB.T('Local accession recorded') };
+          minority:FB.T('Eligible candidates are still minors'), resolved:FB.T('Local accession recorded') };
+        var t = s.realms[rec.realmId].succession;
+        var claims = Object.keys(v.support).map(function (id) { return v.support[id].candidateId; }).filter(function (id, i, ids) {
+          return id && ids.indexOf(id) === i && t.members[id];
+        }).map(function (id) { return t.members[id].name; });
         return { phase:v.status === 'resolved' ? 'resolved' : 'active', name:names[v.status],
-          lines:[FB.T('{count} eligible adult candidates; households and local administration continue.',
-            { count:FB.governmentSelection.candidates(s, rec.realmId).length })] };
+          lines:[FB.T('{count} eligible adult candidates; private households continue.',
+            { count:FB.governmentSelection.candidates(s, rec.realmId).length }),
+            FB.T('Current supported claims: {names}. County possession follows ordinary control and war.',
+              { names:claims.length ? claims.join(', ') : FB.T('None') })] };
       }
     };
   }, 'js/story_government_selection.js', validateDefinition);

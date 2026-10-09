@@ -9,6 +9,46 @@ window.FB = window.FB || {};
   const UI = FB.ui;
   const SH = UI._shared;
   const $ = SH.$;
+  UI.showElectiveConversion = function () {
+    const s = FB.state, rid = 'player', actor = {kind:'realm',id:rid};
+    const targets = FB.electiveConversionTargets(s,rid);
+    let h = reviewFactsCard(FB.T('Adopt an elective crown'),
+      '<p>' + esc(FB.T('Existing campaigns keep their government until a reviewed conversion. The current ruler, private households, county holders, rights, contracts and public treasury retain their records. No delegates or funds are created.')) + '</p>');
+    const decisions = {};
+    targets.forEach(function (id, index) {
+      const q = decisions[index] = FB.electiveConversionQuote(s,actor,rid,id);
+      const p = FBDATA.governmentForms[id].selectionProfile;
+      h += reviewFactsCard(FB.T('Elective accession'), kv('Public treasury', esc(FB.T('{money:amount}', {amount:FB.treasuryAvailable(s,rid)}))) +
+        kv('Minimum candidate age', String(p.eligibility.minAge)) +
+        kv('Political assent required', esc(FB.T('{amount}%', {amount:Math.round(p.consensus * 100)}))) +
+        kv('Levy obligation', esc(FB.T('{amount}%', {amount:Math.round(p.terms.levy * 100)}))) +
+        kv('Revenue obligation', esc(FB.T('{amount}%', {amount:Math.round(p.terms.revenue * 100)}))) +
+        reviewActionCardHtml({data:{electiveConversion:String(index)},label:FB.T('Review government conversion'),disabled:!q.allowed,
+          detailsId:'elective-conversion-' + index,note:q.reason || FB.T('No payment. Future accession needs living political assent.'),
+          details:'<p>' + esc(FB.T('Changed principals, property, obligations or funds invalidate this review. Existing local administration remains in place.')) + '</p>'}));
+    });
+    UI.openModal(FB.T('Elective crown'),h,{modalClass:'fullsheet-modal',historyView:true,historyBack:false});
+    $('gm-body').querySelectorAll('[data-elective-conversion]').forEach(function (button) {
+      button.onclick = function () {
+        if (button.disabled) return;
+        const q = decisions[button.dataset.electiveConversion];
+        UI.openModal(FB.T('Review government conversion'), reviewFactsCard(FB.T('Consequences'),
+          '<p>' + esc(FB.T('The existing crown adopts this electoral profile. Political accession can pass to another house; private property and the public treasury retain their owners.')) + '</p>') +
+          reviewActionCardHtml({id:'elective-convert-confirm',label:FB.T('Confirm conversion'),note:FB.T('No payment.'),
+            detailsId:'elective-convert-details',details:'<p>' + esc(FB.T('Only current reviewed facts can create the constituency.')) + '</p>'}),
+          {modalClass:'fullsheet-modal',historyView:true,historyBack:true});
+        $('elective-convert-confirm').onclick = function () {
+          const result = s === FB.state && FB.electiveConvert(s,q);
+          markActionsDirty();
+          UI.openModal(result ? FB.T('Government adopted') : FB.T('Terms changed'), '<p>' + esc(result ?
+            FB.T('The reviewed government is adopted. Private property and public resources retain their separate owners.') :
+            FB.T('Review current facts again. Nothing was spent.')) + '</p><button class="actionbtn" type="button" id="elective-convert-continue">' +
+            esc(FB.T('Continue')) + '</button>',{replaceView:true});
+          $('elective-convert-continue').onclick = function () { if (result) UI.showLocalKingship({realmId:rid}); else modalHistoryBack(); };
+        };
+      };
+    });
+  };
   UI.showLocalKingship = function (view) {
     const s = FB.state, S = FB.governmentSelection;
     const rid = view && view.realmId || S.localRealm(s), data = rid && S.state(s, rid), p = rid && S.profile(s, rid);
@@ -18,20 +58,23 @@ window.FB = window.FB || {};
     }
     FB.game.setPaused(true);
     view = view || {};
+    const elective = !!p.procedure;
     const t = s.realms[rid].succession, me = s.chars[s.player.charId];
     const actor = rid === 'player' ? { kind:'realm', id:rid } : { kind:'character', id:me.id };
     const candidates = S.candidates(s, rid), id = candidates.indexOf(view.candidateId) >= 0 ? view.candidateId : candidates[0];
     const offer = view.terms || p.terms, decisions = {};
     const statusNames = { selecting:FB.T('Selecting a successor'), contested:FB.T('Contested succession'),
-      minority:FB.T('Eligible kin are still minors'), vacant:FB.T('No eligible successor'), resolved:FB.T('Accession recorded') };
+      minority:FB.T('Eligible candidates are still minors'), vacant:FB.T('No eligible successor'), resolved:FB.T('Accession recorded') };
     function candidateName(key) { return t.members[key] && t.members[key].name || FB.T('No eligible candidate'); }
     function interestName(key) {
       const member = data.members.find(function (m) { return m.id === key; });
       const def = p.members.find(function (m) { return m.id === (member && member.templateId || key); });
-      return member && key !== member.templateId && member.scope.kind === 'county' ? FB.world.byId[member.scope.id].name : def ? FB.T(def.name) : key;
+      return member && key !== member.templateId && member.scope.kind === 'county' ? FB.world.byId[member.scope.id].name :
+        def ? FB.dataText(s, null, 'governmentSelection', s.authority.governments[rid].formId + '.member.' + def.id,
+          def, 'name', {}) : key;
     }
     function action(key, label, request) {
-      const decisionActor = request.action === 'support' || request.action === 'withdraw' ? { kind:'character', id:me.id } : actor;
+      const decisionActor = ['support','withdraw','nominate'].indexOf(request.action) >= 0 ? { kind:'character', id:me.id } : actor;
       const q = S.quote(s, rid, Object.assign({ actor:decisionActor }, request));
       decisions[key] = q;
       return reviewActionCardHtml({ data:{ lineageReview:key }, label:label, disabled:!q.allowed,
@@ -44,7 +87,39 @@ window.FB = window.FB || {};
       kv('Court', esc(s.realms[rid].name)) + kv('Ruler', esc(candidateName(t.rulerMemberId))) +
       kv('Recognition', esc(S.recognized(s, rid) ? FB.T('Locally recognized') : FB.T('Local assent is missing'))) +
       kv('Succession', esc(data.vacancy ? statusNames[data.vacancy.status] : FB.T('No open vacancy'))) +
-      '<p>' + esc(FB.T('Kin eligibility, leadership and private property are separate. Household work, farming, crafts, religion and military service remain available. Wealth can improve Standing without buying eligibility or a county.')) + '</p>');
+      '<p>' + esc(elective ? FB.T('Candidate qualification, political assent, the crown and private property are separate. Another house can win the crown. Household work and private inheritance continue; money cannot buy eligibility or force assent.') :
+        FB.T('Kin eligibility, leadership and private property are separate. Household work, farming, crafts, religion and military service remain available. Wealth can improve Standing without buying eligibility or a county.')) + '</p>');
+    if (elective) {
+      h += reviewFactsCard(FB.T('Electoral procedure'),
+        kv('Minimum age', String(p.eligibility.minAge)) +
+        kv('Candidate ancestry', esc(p.eligibility.ancestry === false ? FB.T('Other houses may stand') : FB.T('Recognized ancestry required'))) +
+        kv('Political assent required', esc(FB.T('{amount}% of active political weight', { amount:Math.round(p.consensus * 100) }))) +
+        kv('Quorum', esc(FB.T('{amount}% of declared political weight', { amount:Math.round(p.quorum * 100) }))) +
+        kv('Tie outcome', esc(FB.T('Divided assent leaves a contested vacancy'))) +
+        kv('Designation', esc(p.procedure.designation ? FB.T('A preference requiring the same assent') : FB.T('Unavailable in this profile'))) +
+        kv('Vacancy administration', esc(p.procedure.interimRevenue ? FB.T('Local receipts and courts continue') : FB.T('Public receipts await accession'))) +
+        kv('Vacancy defense', esc(p.procedure.defensiveLevy ? FB.T('May defend against an actual attack') : FB.T('Public levy awaits accession'))) +
+        kv('Public treasury', esc(FB.T('{money:amount}', { amount:FB.treasuryAvailable(s, rid) }))) +
+        '<p>' + esc(FB.T('Nominations require a living political principal. Candidate death, captivity, exile or changed qualifications interrupts accession. Vacancy powers follow the declared procedure. Secular selection does not perform anointing or imperial coronation.')) + '</p>');
+      const pool = p.candidatePool;
+      h += reviewFactsCard(FB.T('Who can stand'),
+        kv('Legal status', esc(pool.gentle ? FB.T('Free adult of gentle standing') : FB.T('Free adult'))) +
+        kv('Sex requirement', esc(p.eligibility.sex === 'm' ? FB.T('Male') : p.eligibility.sex === 'f' ? FB.T('Female') : FB.T('Any'))) +
+        kv('Cultures', esc(pool.cultures.length ? pool.cultures.map(function (key) { return FB.L(FBDATA.cultures[key].name); }).join(', ') : FB.T('Any'))) +
+        kv('Faiths', esc(pool.religions.length ? pool.religions.map(function (key) { return FB.L(FBDATA.religions[key].name); }).join(', ') : FB.T('Any'))) +
+        kv('Religious service', esc(pool.excludedRoles.length ? FB.T('Declared religious roles are excluded') : FB.T('Religious roles may stand'))) +
+        '<p>' + esc(FB.T('Existing rulers and royal members of other courts keep their current roles. Local qualified people can be nominated without transferring any private property.')) + '</p>');
+      if (data.vacancy && data.vacancy.status !== 'resolved') {
+        const nominees = S.nominees(s, rid);
+        h += reviewFactsCard(FB.T('Nominate another house'), nominees.length ? nominees.map(function (cid) {
+          const c = s.chars[cid];
+          return reviewPeopleHtml(reviewPersonHtml(c, FB.T('Qualified local candidate'), null)) + S.constituency(s, rid).map(function (m) {
+            return action('nominate-' + m.id + '-' + cid, FB.T('Review nomination by {interest}', { interest:interestName(m.id) }),
+              { action:'nominate', memberId:m.id, characterId:cid });
+          }).join('');
+        }).join('') : '<p>' + esc(FB.T('No additional qualified local people are available.')) + '</p>');
+      }
+    }
     h += reviewFactsCard(FB.T('Local interests'), S.constituency(s, rid).map(function (m) {
       const vote = data.vacancy && data.vacancy.support[m.id];
       const principal = m.currentPrincipal, person = principal && (principal.kind === 'character' ? s.chars[principal.id] :
@@ -62,7 +137,7 @@ window.FB = window.FB || {};
       return body;
     }).join(''));
     let fields = '<div class="governing-identity-fields"><label for="lineage-candidate">' + esc(FB.T('Eligible successor')) + '</label><select class="select" id="lineage-candidate">';
-    if (!candidates.length) fields += '<option>' + esc(FB.T('No eligible adult kin')) + '</option>';
+    if (!candidates.length) fields += '<option>' + esc(elective ? FB.T('No eligible adult candidate') : FB.T('No eligible adult kin')) + '</option>';
     candidates.forEach(function (key) { fields += '<option value="' + esc(key) + '"' + (key === id ? ' selected' : '') + '>' + esc(candidateName(key)) + '</option>'; });
     fields += '</select><label for="lineage-terms">' + esc(FB.T('Local obligations')) + '</label><select class="select" id="lineage-terms">';
     const offers = [p.terms, { levy:Math.min(0.4, p.terms.levy), revenue:Math.min(0.4, p.terms.revenue) }];
@@ -77,6 +152,7 @@ window.FB = window.FB || {};
       fields += action('negotiate', FB.T('Review successor’s recognition'), { action:'negotiate', candidateId:id || null, terms:offer });
       fields += action('resolve', FB.T('Review accession'), { action:'resolve' });
     } else {
+      if (elective && p.procedure.designation && id) fields += action('designate', FB.T('Review designating a candidate'), { action:'designate', candidateId:id });
       fields += action('assent', FB.T('Review local assent and obligations'), { action:'obligations', candidateId:t.rulerMemberId, terms:offer });
       fields += action('abdicate', FB.T('Review relinquishing kingship'), { action:'open', cause:'abdication' });
       fields += action('displace', FB.T('Review lawful displacement'), { action:'open', cause:'lawful_removal', candidateId:id || null });
@@ -85,14 +161,16 @@ window.FB = window.FB || {};
         fields += action('transform-' + option.formId, FB.T(option.name), { action:'transform', formId:option.formId });
       });
     }
-    FB.realmHeldCounties(s, rid).filter(function (pid) {
+    (elective && p.procedure.realmRecognition ? [] : FB.realmHeldCounties(s, rid)).filter(function (pid) {
       return !data.members.some(function (m) { return m.scope.kind === 'county' && m.scope.id === pid; });
     }).forEach(function (pid) {
       fields += action('enroll-' + pid, FB.T('Review local representation at {county}', { county:FB.world.byId[pid].name }), { action:'enroll', provinceId:pid });
     });
     h += reviewFactsCard(FB.T('Recognition and obligations'), fields) + '</div>';
-    UI.openModal(FB.T('Local kingship'), h, { modalClass:'fullsheet-modal', historyView:true,
-      historyBack:false, titleDetailsHtml:'<p>' + esc(FB.T('Weights model political influence, not universal suffrage. A vacancy preserves households and local administration; it does not create a dynasty or divide counties. Conquest requires a separate local assent.')) + '</p>' });
+    UI.openModal(elective ? FB.T('Elective crown') : FB.T('Local kingship'), h, { modalClass:'fullsheet-modal', historyView:true,
+      historyBack:false, titleDetailsHtml:'<p>' + esc(elective ?
+        FB.T('Weights and quorum model elite political assent. Selection preserves households, public resources and actual county possession. Anointing and imperial coronation remain separate acts.') :
+        FB.T('Weights model political influence, not universal suffrage. A vacancy preserves households and local administration; it does not create a dynasty or divide counties. Conquest requires a separate local assent.')) + '</p>' });
     const list = $('gm-body').querySelector('[data-lineage-list]');
     function position() { return { realmId:rid, candidateId:$('lineage-candidate').value,
       terms:offers[Number($('lineage-terms').value)], bodyScroll:$('gm-body').scrollTop,
@@ -111,18 +189,21 @@ window.FB = window.FB || {};
         pos.focus = button.dataset.lineageReview;
         function back() { UI.showLocalKingship(pos); }
         let facts = kv('Payment on acceptance', esc(FB.T('{money:cost}', { cost:q.cost }))) +
-          kv('Candidate', esc(candidateName(q.request.candidateId || q.winnerId || t.rulerMemberId)));
+          kv('Candidate', esc(q.request.characterId ? s.chars[q.request.characterId].name : candidateName(q.request.candidateId || q.winnerId || t.rulerMemberId)));
         if (q.request.terms) facts += kv('Levy obligation', esc(FB.T('{amount}%', { amount:Math.round(q.request.terms.levy * 100) }))) +
           kv('Revenue obligation', esc(FB.T('{amount}%', { amount:Math.round(q.request.terms.revenue * 100) })));
         q.responses.forEach(function (row) { facts += kv(interestName(row.memberId), esc(row.reason ? S.reason(row.reason) : FB.T('Recognizes this candidate on the offered terms'))); });
-        const consequence = q.request.action === 'open' ? FB.T('Opening a vacancy begins selection immediately. Private property stays with its owners; royal demands stop until accession.') :
+        const consequence = q.request.action === 'nominate' ? FB.T('This qualified person joins the candidate pool. Nomination grants no crown, vote, land or household wealth.') :
+          q.request.action === 'designate' ? FB.T('This candidate becomes the court’s preference. Accession still requires a lawful vacancy and current political assent.') :
+          q.request.action === 'open' ? (elective ? FB.T('The crown becomes vacant. Private inheritance continues; public administration follows the declared interim powers and reserved royal decisions await accession.') :
+            FB.T('Opening a vacancy begins selection immediately. Private property stays with its owners; royal demands stop until accession.')) :
           q.request.action === 'withdraw' ? FB.T('This interest withdraws recognition without payment. Public demands stop wherever the remaining assent is insufficient.') :
           q.request.action === 'support' ? FB.T('This interest records its support or refusal without payment. Recognition creates no private land rights.') :
           q.request.action === 'transform' ? FB.T('The court adopts the reviewed government. Existing households, rights, institutions and commitments retain their records. The target form’s declared systems become available.') :
           q.request.action === 'enroll' ? FB.T('This county gains a local interest in the constituency. Enrollment grants no tax right or leadership; obtain assent separately.') :
           q.request.action === 'resolve' ? FB.T('The recognized eligible candidate accedes once. No private land or household property is awarded.') :
           FB.T('The quoted payment funds negotiation even if interests withhold support. Only accepted local obligations can authorize public demands.');
-        UI.openModal(FB.T('Review local kingship decision'), reviewFactsCard(FB.T('Decision terms'), facts) +
+        UI.openModal(elective ? FB.T('Review elective crown decision') : FB.T('Review local kingship decision'), reviewFactsCard(FB.T('Decision terms'), facts) +
           reviewActionCardHtml({ id:'lineage-confirm', label:FB.T('Confirm decision'), detailsId:'lineage-confirm-details', note:consequence,
             details:'<p>' + esc(consequence) + '</p>' }), { modalClass:'fullsheet-modal', historyView:true, historyBack:true, historyBackRender:back });
         $('lineage-confirm').onclick = function () {

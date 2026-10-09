@@ -590,3 +590,10 @@ Hereditary family assignments use the same county source, publicTerms ledger and
 Mobile coalition accounts
 
 Coalition and private household money remain separate. Recruitment costs debit the real coalition treasury. Bilateral access, tribute and protection debit the actual agreed payer and credit the other court once on acceptance. Food trading exchanges real local market stock with real treasury payment; stock movement inside an owned county makes no payment to the same treasury. Local personal service pays the actual household once per day from the coalition treasury and consumes food. A countyless coalition receives no demesne income or phantom county levy.
+
+
+Elective crown accounts
+
+For a player-controlled elective crown, realm.treasury remains the public account and player.gold remains household money. Public receipts, government costs, distribution and field expense route to the existing crown account; private wages, holdings and household inheritance keep their normal owners. Receiving or relinquishing the crown moves the account with the institution without gifting the previous household or charging daily military expense twice. See elective-monarchy.md.
+
+An elective incumbent's private settlement actor remains distinct from the public realm. Personal estate receipts and ordinary personal religious-office income enter household cash; public taxes do not. Household credit capacity, reliable income and the gold breakdown use the same private income boundary and exclude crown government and field logistics expense. The elective review shows the separate available public treasury. Military costs accrued before accession settle once from that treasury.

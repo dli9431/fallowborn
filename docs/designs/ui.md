@@ -3723,3 +3723,10 @@ For an aristocratic court the same sheet additionally shows actual royal eligibi
 Mobile coalition review
 
 The Mobile coalition Deed uses shared governance fact cards, person cards, action cards and modal history. It labels the court/civilian camp, separate field host, civilian following, resting fighters, local inhabitants, ownership, treasury and both camp and carried food. Proposal, member assent, outside acceptance and execution are distinct actions. Immediate costs and the first concrete blocker remain visible. Review and result sheets preserve inputs, body/list scroll, expanded shared disclosures and the originating focus through Back, Escape and Continue. A stale confirmation spends nothing and transfers no people.
+
+
+Elective crown review
+
+Both Deeds layouts expose Elective crown using the shared kingship sheet. Qualifications, living political principals, quorum, weights, current claims, designation policy, obligations and public funds remain visible. Nomination and accession require separate atomic reviews. Candidate and term selection, scroll, expanded Details and semantic focus survive Back, Escape and outcome Continue. Conversion reviews disclose missing existing delegates and a public account, preserve the current household and require fresh facts at confirmation.
+
+The gold breakdown and household income forecast show personal receipts and costs for an elective incumbent. Crown tax, administration and field logistics belong to the separate public account shown in the elective review; they are excluded from household net income and credit capacity. Vacancy administration and defense labels follow the selected procedure.

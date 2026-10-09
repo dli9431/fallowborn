@@ -73,3 +73,8 @@ government_aristocracy.js composes mixed_provincial holders, royal_recognition s
 Mobile coalition dispatch
 
 mobile_confederation composes coalition_holders, coalition_leadership, coalition_court, coalition_consent, following_levy, coalition_receipts, member_council, coalition_diplomacy, coalition_decisions and local_service. FB.mobile is the bounded canonical membership and stock owner; its coalition_leadership adapter uses the shared selection review boundary. Countyless continuity, actual following recruitment, finite provisions, outside consent and partial/final settlement are documented in docs/designs/mobile-confederation.md. Historical identities remain in data declarations.
+
+
+Elective crown extension
+
+elective_monarchy composes crown_election and the common governmentSelection owner. candidatePool admits qualified local nominations outside the reigning genealogy; procedure owns designation, realm-wide recognition and interim powers. The existing canonical public treasury survives accession and protagonist adoption separately from household gold. See docs/designs/elective-monarchy.md for policy, conversion, technology decisions and dated rollout.

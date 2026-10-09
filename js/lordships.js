@@ -108,6 +108,8 @@ window.FB = window.FB || {};
     if (typeof actor === 'string') actor = { kind:'realm', id:actor };
     if (!actor) actor = { kind:'realm', id:'player' };
     if (actor.kind === holder.kind && actor.id === holder.id) return true;
+    var publicId = actor.kind === 'realm' ? actor.id : holder.kind === 'realm' ? holder.id : null;
+    if (publicId && FB.electiveCrown && FB.electiveCrown(state, publicId)) return false;
     if (actor.kind === 'realm' && holder.kind === 'character') {
       if (actor.id === 'player') return holder.id === state.player.charId;
       const c = FB.realmRulerCharacterSnapshot(state, actor.id);
@@ -123,10 +125,12 @@ window.FB = window.FB || {};
   function actorRef(state, actor) {
     if (!actor) return { kind:'realm', id:'player' };
     if (typeof actor === 'string') return { kind:'realm', id:actor };
-    if (actor.kind === 'character' && actor.id === state.player.charId) return { kind:'realm', id:'player' };
+    if (actor.kind === 'character' && actor.id === state.player.charId)
+      return FB.electiveCrown && FB.electiveCrown(state, 'player') ? actor : { kind:'realm', id:'player' };
     if (actor.kind === 'character' && state.chars[actor.id] && FB.realmIdForRulerCharacter) {
       const rid = FB.realmIdForRulerCharacter(state, state.chars[actor.id]);
-      if (rid && state.realms[rid] && state.realms[rid].alive) return { kind:'realm', id:rid };
+      if (rid && state.realms[rid] && state.realms[rid].alive &&
+          !(FB.electiveCrown && FB.electiveCrown(state, rid))) return { kind:'realm', id:rid };
     }
     return actor;
   }
@@ -136,10 +140,11 @@ window.FB = window.FB || {};
     const out = [], candidates = Object.create(null);
     let cid = actor.kind === 'character' ? actor.id : null;
     let rid = actor.kind === 'realm' ? actor.id : null;
-    if (rid === 'player') cid = state.player.charId;
+    var publicCrown = rid && FB.electiveCrown && FB.electiveCrown(state, rid);
+    if (rid === 'player' && !publicCrown) cid = state.player.charId;
     else if (rid) {
       const c = FB.realmRulerCharacterSnapshot(state, rid);
-      cid = c && c.id;
+      cid = !publicCrown && c && c.id;
     } else if (cid && FB.realmIdForRulerCharacter) {
       rid = FB.realmIdForRulerCharacter(state, state.chars[cid]);
     }
