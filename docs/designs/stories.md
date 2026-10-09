@@ -177,3 +177,7 @@ government_contest is registered by js/story_government_selection.js. A data ins
 Elective contested selections
 
 The 711 crown observers reference the same governmentSelection vacancies as the shared government_contest type. Supported candidate names and actual possession remain distinct. Restoring a story creates no delegate, rival ruler, claim territory or historical outcome. Selection can remain contested through ordinary war and negotiation. See elective-monarchy.md.
+
+Civic office contest projection
+
+government_contest also reads the canonical civic offices and vacancies. It retains only the existing institutional realm reference, projects open selection or occupied offices, and owns no incumbent or nomination ledger. The 1204 Venetian declaration supplies its name and introduction through storyCivicSelections and the ordinary instance catalogue. Earlier territorial saves do not gain a missing civic story on restore.

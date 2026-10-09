@@ -16,7 +16,7 @@ FBDATA.bookmarkContent['1204'] = {
     {"id":"bavaria_1204","name":"Duchy of Bavaria","color":"#af5f2f","capital":"munich","aggression":1,"rank":2,"government":"territorial","religion":"catholic","techTraditions":["latin"],"ruler":{"sex":"m","culture":"german","born":1173,"mar":10,"trait":"patient","name":"Louis I"},"liege":"hre_1204"},
     {"id":"bohemia_1204","name":"Kingdom of Bohemia","color":"#c98f4a","capital":"praha","aggression":1,"rank":3,"government":"territorial","religion":"catholic","techTraditions":["latin","slavic"],"ruler":{"sex":"m","culture":"slavic","born":1155,"mar":11,"trait":"ambitious","name":"Ottokar I"},"liege":"hre_1204"},
     {"id":"papacy_1204","name":"The Papacy","color":"#2f8f8f","capital":"roma","aggression":1,"rank":3,"government":"territorial","religion":"catholic","techTraditions":["latin"],"ruler":{"sex":"m","culture":"italian","born":1161,"mar":4,"trait":"zealous","name":"Innocent III"}},
-    {"id":"venice_1204","name":"Republic of Venice","color":"#b87945","capital":"venezia","aggression":1,"rank":2,"government":"territorial","religion":"catholic","techTraditions":["latin","byzantine"],"ruler":{"sex":"m","culture":"italian","born":1107,"mar":10,"trait":"ambitious","name":"Enrico Dandolo"}},
+    {"id":"venice_1204","name":"Republic of Venice","color":"#b87945","capital":"venezia","aggression":1,"rank":2,"government":"city_republic","civicProfileId":"venice_1204","constituency":"venetian_councils","religion":"catholic","techTraditions":["latin","byzantine"],"ruler":{"sex":"m","culture":"italian","born":1107,"mar":10,"trait":"ambitious","name":"Enrico Dandolo"},"civicRights":[{"kind":"quarter","grantorRealmId":"latin_1204","provinceId":"constantinople","settlement":0,"share":0,"duration":null,"evidenceId":"venetian_quarter_1204"}]},
     {"id":"sicily_1204","name":"Kingdom of Sicily","color":"#6f9348","capital":"palermo","aggression":1,"rank":3,"government":"territorial","religion":"catholic","techTraditions":["latin","islamic"],"ruler":{"sex":"m","culture":"german","born":1194,"mar":6,"trait":"ambitious","name":"Frederick II"}},
     {"id":"sardinia_1204","name":"Judicate of Cagliari","color":"#4f7fd0","capital":"cagliari","aggression":1,"rank":2,"government":"territorial","religion":"catholic","techTraditions":["latin"],"ruler":{"sex":"m","culture":"italian","born":1160,"mar":9,"trait":"ambitious","name":"William of Massa"}},
     {"id":"leon_1204","name":"Kingdom of Leon","color":"#6f91c8","capital":"leon","aggression":1,"rank":3,"government":"territorial","religion":"catholic","techTraditions":["latin","islamic"],"ruler":{"sex":"m","culture":"iberian","born":1171,"mar":11,"trait":"proud","name":"Alfonso IX"}},
@@ -514,4 +514,9 @@ FBDATA.bookmarkContent['1204'] = {
     scripted:[], stories:[]
   };
   FBDATA.bookmarks['1204'] = FBDATA.bookmarkCandidates['1204'];
+  FBDATA.storyCivicSelections = {
+    venetian_offices_1204:{ id:'venetian_offices_1204',type:'government_contest',realmId:'venice_1204',
+      name:'The ducal commune',desc:'The civic institution endures beyond a doge. Offices follow civic recognition; households keep their property and foreign quarters remain limited rights.' }
+  };
+  FBDATA.bookmarks['1204'].stories.push('venetian_offices_1204');
 })();

@@ -78,3 +78,7 @@ mobile_confederation composes coalition_holders, coalition_leadership, coalition
 Elective crown extension
 
 elective_monarchy composes crown_election and the common governmentSelection owner. candidatePool admits qualified local nominations outside the reigning genealogy; procedure owns designation, realm-wide recognition and interim powers. The existing canonical public treasury survives accession and protagonist adoption separately from household gold. See docs/designs/elective-monarchy.md for policy, conversion, technology decisions and dated rollout.
+
+Civic government extension
+
+city_republic composes explicit civic holders, magistracy succession, fixed institutional territory, consent, public levy/receipts, shared civic interests, diplomacy, AI and personal-career strategies. Its civic_magistracy selection adapter commits the canonical office owner. A preserved former royal genealogy cannot override civic succession. Script order is government_civic, civic_transactions, civic_strategies, civic_conversion and civic_validation after public administration, with ui_civic after shared review UI. See docs/designs/city-republic.md.

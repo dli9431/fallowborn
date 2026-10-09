@@ -65,6 +65,21 @@ class StructuredDataExtractionTests(unittest.TestCase):
             self.assertEqual(inventory.entries[key]['text'], text)
         self.assertNotIn(i18n_catalog.source_key('Roderic'), inventory.entries)
 
+    def test_civic_profiles_offices_interests_and_contests_keep_display_owners(self):
+        inventory = i18n_catalog.Inventory()
+        i18n_catalog.extract_structured(inventory)
+        i18n_catalog.extract_government_selections(inventory)
+        for key, text in (
+            ('civicProfile.venice_1204.name.default', 'Venetian ducal commune (1204)'),
+            ('civicOffice.venice_1204.ducal_office.name.default', 'Doge'),
+            ('civicOffice.genoese_consular.second_consul.name.default', 'Second consul'),
+            ('constituencyMember.open_civic_service.residents.name.default', 'Resident households'),
+            ('governmentContest.venetian_offices_1204.name.default', 'The ducal commune'),
+        ):
+            self.assertEqual(inventory.entries[key]['text'], text)
+        self.assertFalse(any('Enrico Dandolo' in value['text'] for key, value
+                             in inventory.entries.items() if key.startswith('civic')))
+
     def test_assembly_policies_have_display_owners_without_translating_people(self):
         inventory = i18n_catalog.Inventory()
         i18n_catalog.extract_structured(inventory)

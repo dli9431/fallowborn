@@ -124,12 +124,14 @@
       if (!s || s.authoredCourt === undefined && s.policyId === undefined) return;
       var path = 'state.realms.' + rid + '.succession';
       var government = state.authority && state.authority.governments && state.authority.governments[rid];
+      var civic = government && government.civic && government.civic.originFormId !== null &&
+        FB.civicGovernment && FB.civicGovernment.active(state,rid);
       var authoredRealmId = government && government.selection ? government.selection.originRealmId :
         government && government.aristocracy ? government.aristocracy.originRealmId : rid;
       if (s.authoredCourt !== undefined && s.authoredCourt !== true ||
           !plain(s.members) || !Array.isArray(s.order) || !own(s.members, s.rulerMemberId) ||
           !Number.isInteger(s.rulerGeneration) || s.rulerGeneration < 1 ||
-          realm.ruler && realm.ruler.generation !== undefined && realm.ruler.generation !== s.rulerGeneration) field(path);
+          !civic && realm.ruler && realm.ruler.generation !== undefined && realm.ruler.generation !== s.rulerGeneration) field(path);
       var policy = s.policyId === undefined ? null : FB.governments.strategy('succession', s.policyId);
       if (s.policyId !== undefined && (!policy || typeof policy.eligible !== 'function')) field(path + '.policyId');
       if (s.founderId !== undefined && !own(s.members, s.founderId) ||

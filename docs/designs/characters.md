@@ -1406,3 +1406,7 @@ Aristocratic careers retain the same station identities but distinguish heredita
 Elective qualification and household continuity
 
 The elective profile can permit a qualified free local person from another house to stand. Nomination adds a canonical court member reference without altering parents, spouse, children, dynasty, personal gold or property. Accession retains that person and suppresses generated consort replacement. Household succession retains its existing inheritance owner and does not automatically inherit the public crown. See elective-monarchy.md.
+
+Civic personal standing
+
+The city_republic ladder preserves all eight personal station bands with professional, economic and public-service advancement. Civic office selection checks actual local residence, free status, effective skills, service and declared eligibility; a sworn profile also requires separately reviewed admission. Wealth can support standing but cannot buy membership or ownership of the republic. Civic incumbents use ordinary character and household records without a new dynasty. Institutional rank continues to describe the public realm's size. See docs/designs/city-republic.md.

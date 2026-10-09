@@ -407,3 +407,7 @@ aristocratic_monarchy reuses personal public commissions and the common recognit
 Elective assent
 
 Elective crowns use the shared living constituency and reserved consent transaction. Nomination grants no public jurisdiction. Vacancy retains only the profile-declared local courts, receipts and defensive service; offensive decisions await recognition. Explicit conversion requires existing principals, a qualified incumbent and the active canonical public account. See elective-monarchy.md.
+
+Civic mandates and reserved acts
+
+Civic offices reference the shared governmentSupport constituency and keep individual incumbents and terms inside the existing government row. Current profile, executive quorum and represented interests decide reserved proposals. Pure reviewed public transactions own debt, dues, treaties, permanent county grants, war, peace and founding conversion; raw form, offensive-war and white-peace shortcuts are blocked. Ordinary local administration and defence remain with the institution during a vacancy. Independent substantive warrants and customary rights retain their own authority. Foreign jurisdiction is a Peace right in one explicitly named settlement. See docs/designs/city-republic.md.

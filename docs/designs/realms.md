@@ -1668,3 +1668,7 @@ Aristocratic royal courts retain the original compact royal tree when adopted by
 Elective public crowns
 
 Fresh 711 Gothic courts retain their distinct counties and opening rulers under elective_monarchy. Political selection can install another eligible house without changing private property or handing its household the outgoing family. Crown adoption and release rekey the existing realm treasury; they do not award it to the playable family. See elective-monarchy.md.
+
+Civic institutional holders
+
+Fresh 1204 Venice is a city_republic with a continuing realm identity, public county holder and treasury. Individual magistracies never absorb that institution into a protagonist's dynasty. Military occupation changes owner while preserving the civic holder; a lawful reviewed county grant transfers both public holder and sovereignty and removes that scope from civic interests. The capital and final county cannot be granted away. Foreign quarters and receipt rights retain the host county's sovereign and inhabitants. See docs/designs/city-republic.md.

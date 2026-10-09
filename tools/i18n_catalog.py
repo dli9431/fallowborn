@@ -805,6 +805,27 @@ def extract_structured(inv: Inventory) -> None:
                 inv.add(f"aristocraticInterest.{profile_id}.{member_id}.name.{branch}", record,
                         f"data/aristocratic_courts.js:{line}", "Hereditary interest display name.", ())
 
+    civic_path = DATA / "civic_profiles.js"
+    for profile_id, profile_node in (node_object(find_assignment(civic_path, "FBDATA", "civicConstituencies")) or {}).items():
+        profile = node_object(profile_node) or {}
+        for member_node in node_array(profile.get("members")) or []:
+            member = node_object(member_node) or {}
+            member_id = node_string(member.get("id"))
+            for branch, record, line in branch_records(member.get("name")):
+                inv.add(f"constituencyMember.{profile_id}.{member_id}.name.{branch}", record,
+                        f"data/civic_profiles.js:{line}", "Represented civic interest.", ())
+    for profile_id, profile_node in (node_object(find_assignment(civic_path, "FBDATA", "civicProfiles")) or {}).items():
+        profile = node_object(profile_node) or {}
+        for branch, record, line in branch_records(profile.get("name")):
+            inv.add(f"civicProfile.{profile_id}.name.{branch}", record,
+                    f"data/civic_profiles.js:{line}", "Civic constitution profile.", ())
+        for office_node in node_array(profile.get("offices")) or []:
+            office = node_object(office_node) or {}
+            office_id = node_string(office.get("id"))
+            for branch, record, line in branch_records(office.get("name")):
+                inv.add(f"civicOffice.{profile_id}.{office_id}.name.{branch}", record,
+                        f"data/civic_profiles.js:{line}", "Civic magistracy name.", ())
+
     for data_name, namespace in STRUCTURED_DATA.items():
         if data_name == "tech":
             rel = TECHNOLOGY_FILE.relative_to(ROOT).as_posix()
@@ -1907,7 +1928,8 @@ def extract_government_selections(inv: Inventory) -> None:
                             record, f"{rel}:{line}", "Government selection presentation.",
                             TOKEN_RE.findall(record["text"]))
     for filename, table in (("bookmark_476_outer.js", "storyGovernmentSelections"),
-                            ("bookmark_711.js", "storyGovernmentSelections711")):
+                            ("bookmark_711.js", "storyGovernmentSelections711"),
+                            ("bookmark_1204.js", "storyCivicSelections")):
         source = DATA / filename
         stories = node_object(find_assignment(source, "FBDATA", table)) or {}
         rel = source.relative_to(ROOT).as_posix()

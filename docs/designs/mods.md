@@ -375,3 +375,7 @@ mobileProfiles is a validated replace/merge table. A mobile realm must explicitl
 Elective profiles
 
 selectionProfile may declare candidatePool and procedure through the common selection contract. Registered elective strategies interpret that typed data; JSON supplies no election function. Fresh capital_elite and capital_clergy selectors require declared capital council and congregation institutions. Existing saved forms and constituencies are preserved. See docs/MODDING.md and elective-monarchy.md.
+
+Civic constitutional profiles
+
+civicProfiles is an allowed JSON root with atomic policy replacement. Its effective constituency and government form are validated together before mutation. A civic strategy requires a valid form-level default profile, while a fresh bookmark realm can select a compatible dated civicProfileId and constituency. Opening civicRights require typed scope, zero numeric receipts and evidence; they belong only to fresh initialization. Mod text cannot install executable civic strategy functions. See docs/MODDING.md and docs/designs/city-republic.md.

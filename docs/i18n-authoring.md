@@ -228,3 +228,7 @@ aristocraticProfiles names extract as aristocraticProfile.<id>.name.default, and
 Mobile opening presentation
 
 The typed mobileBookmarkPresentation and mobileScenarioPresentation tables in data/mobile_confederations.js supply the new bookmark and scenario display fields. extract_mobile_presentations routes them to the ordinary bookmark and scenario keys without executing data scripts. Coalition UI uses literal FB.T patterns, lexicons use the existing government extraction route, and news.mobile.decision stores an opaque message descriptor with proper-name references and numeric following size. No generated catalog is changed on this feature branch.
+
+Civic display ownership
+
+Civic profile names extract under civicProfile.<profile>.name, ordered magistracy names under civicOffice.<profile>.<office>.name, and represented interests under constituencyMember.<constituency>.<member>.name. Civic contest declarations extract under governmentContest.<instance>.name and desc. Runtime screens use dataText for those fields and T for chrome; names of actual people and saved ids remain identity data. Civic announcements persist message descriptors. New English falls back normally until separately authorized integration catalog regeneration.

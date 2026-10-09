@@ -9,6 +9,7 @@ dependsOnRuntime(__filename, [
   'data/systems.js', 'data/story_campaigns.js', 'js/world.js', 'js/main.js',
   'data/distribution_crazygames.js', 'js/crazygames.js',
   'js/governments.js', 'js/authority.js', 'js/politics.js', 'js/population.js',
+  'data/civic_profiles.js', 'js/government_civic.js', 'js/civic_transactions.js', 'js/civic_strategies.js', 'js/civic_conversion.js', 'js/civic_validation.js', 'js/story_government_selection.js',
   'js/technology.js', 'js/holywar.js', 'js/papacy.js', 'js/stories.js',
   'js/story_campaign.js', 'js/story_history.js', 'data/story_instances.js', 'js/wars.js', 'js/armies.js',
   'js/save.js', 'js/save_v4.js', 'js/events.js', 'js/ui_modals.js', 'js/localfolk.js'
@@ -65,7 +66,7 @@ test('1204 is offered in the picker and ordinary start codes reach character cre
   });
   expect(state).toMatchObject({ registered:true, faults:[], diagnostics:[],
     date:{ year:1204, season:0, day:76 }, era:'high_medieval', geography:'europe_regional',
-    scripted:[], stories:15, storiesRegistered:true });
+    scripted:[], stories:16, storiesRegistered:true });
   expect(state.offered).toContain('1204');
   const fullStart = page.locator('#btn-choose-beginning');
   if (await fullStart.isVisible()) await fullStart.click();
@@ -103,7 +104,7 @@ for (const scenario of ['serf','farmer','apprentice','monk','soldier','knight','
       expect(result.before.start).toMatchObject({ id:'1204', era:'high_medieval', geography:'europe_regional' });
       expect(result.faults).toEqual([]);
       expect(result.sourceUnchanged).toBe(true);
-      expect(result.storyIds).toHaveLength(15);
+      expect(result.storyIds).toHaveLength(16);
       expect(result.storyIds.every(function (id) { return id.endsWith('_1204'); })).toBe(true);
     });
 }
@@ -178,7 +179,7 @@ test('the silent English distribution retains the same world and save identity',
           { realm:'Latin Empire', province:'Thessalonica' }), { state:FB.state }) };
     });
     expect(result).toEqual({ flag:true, bookmark:'1204', owner:'latin_1204', head:'papacy_1204',
-      registered:true, stories:15,
+      registered:true, stories:16,
       message:'The court of Latin Empire secures Thessalonica through its campaign.' });
   });
 
@@ -260,5 +261,5 @@ test('one season of ordinary household play retains a valid world and saves at t
       return { year:FB.state.date.year, turn:FB.state.turn, errors:FBTEST.checkInvariants(),
         ordinary:!FB.game.observe, start:FB.state.start.id, stories:Object.keys(s.stories).length };
     });
-    expect(end).toEqual({ year:1204, turn:90, errors:[], ordinary:true, start:'1204', stories:15 });
+    expect(end).toEqual({ year:1204, turn:90, errors:[], ordinary:true, start:'1204', stories:16 });
   });

@@ -4440,13 +4440,20 @@ window.FB = window.FB || {};
       else if (FB.ui.showElectiveConversion) FB.ui.showElectiveConversion(); } },
 
   { id:'community_assembly', opensChoices:true, noConsume:true,
-    show:function (s) { return !!(FB.governments.support && FB.governments.support.row(s,
-      s.player.liege || s.holder && s.holder[s.player.provinceId])); },
+    show:function (s) { var rid = s.player.liege || s.holder && s.holder[s.player.provinceId];
+      return !!(FB.governments.support && FB.governments.support.isDelegated(s,rid) && FB.governments.support.row(s,rid)); },
     run:function (s) { if (FB.ui && FB.ui.showCommunityAssembly) FB.ui.showCommunityAssembly(
       s.player.liege || s.holder && s.holder[s.player.provinceId]); } },
   { id:'mobile_coalition', opensChoices:true, noConsume:true,
     show:function (s) { return !!(FB.mobile && FB.mobile.localRealm(s)); },
     run:function (s) { if (FB.ui && FB.ui.showMobileConfederation) FB.ui.showMobileConfederation(FB.mobile.localRealm(s)); } },
+  { id:'civic_government', opensChoices:true, noConsume:true,
+    show:function (s) { return !!(FB.civicGovernment && FB.civicGovernment.localRealm(s)); },
+    run:function (s) { if (FB.ui && FB.ui.showCivicGovernment) FB.ui.showCivicGovernment(FB.civicGovernment.localRealm(s)); } },
+  { id:'civic_constitution', opensChoices:true, noConsume:true,
+    show:function (s) { var rid = s.player.liege || s.holder[s.player.provinceId], r = s.realms[rid];
+      return !!(r && r.alive && rid !== 'player' && !r.liege && !FB.governments.forRealm(s,rid).use.succession.delegatedLeadership); },
+    run:function (s) { FB.ui.showCivicConstitution(s.player.liege || s.holder[s.player.provinceId]); } },
   { id:'public_administration', opensChoices:true, noConsume:true,
     show:function (s) { return FB.systemEnabled(s, 'public_offices'); },
     run:function (s) { if (FB.ui && FB.ui.showAdministration) FB.ui.showAdministration(); } },

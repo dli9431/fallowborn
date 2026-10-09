@@ -630,3 +630,7 @@ Optional wider 476 content
 Mobile population boundary
 
 populationPoolQuote and populationPoolApply exchange exact culture-faith cohorts between an initialized county and a caller-owned external pool. Reviews preserve the local floor and remain pure. Apply rechecks the county and pool, updates county migration and settlement partitions, and preserves the combined headcount. Mobile following pools are separate from settled local inhabitants. Seasonal access never changes sovereignty or county holders. See docs/designs/mobile-confederation.md.
+
+Civic foreign site rights
+
+Institution-owned foreign quarters, warehouses, jurisdiction and assigned receipts reference an existing county and its stable physical settlement slot. They add no county, geometry or duplicate settlement. Host sovereignty, inhabitants and private enterprises remain separate from the beneficiary institution; loss of host control suspends the right. Saved references retain their slot through changes in current site visibility. Historical 1204 Venetian presence uses the existing Constantinople site without asserting a surveyed district or numeric receipts. See docs/designs/city-republic.md.

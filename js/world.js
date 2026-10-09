@@ -1278,6 +1278,9 @@ window.FB = window.FB || {};
           (!ownKey(FBDATA.administrationProfiles,realmDef.administrationProfileId) ||
            !FBDATA.governmentForms[platform.governments[rid]].administrationProfileId))
         fault('realm ' + rid + ' has invalid public administration profile.');
+      if (FB.civicGovernment) FB.civicGovernment.definitionFaults(realmDef,
+        platform.governments[rid],date.year,definition.provinces)
+        .forEach(function (detail) { fault('realm ' + rid + ': ' + detail); });
       if (realmDef.religion !== undefined &&
           (!FB.faithExists(realmDef.religion, null) ||
            !FB.faithAssignable(realmDef.religion, null))) {

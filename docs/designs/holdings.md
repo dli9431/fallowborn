@@ -531,3 +531,7 @@ bookmarkSetup.estates records a declared county share, named character beneficia
 Elective crown private property
 
 For elective crowns, a ruler's character actor and public realm actor retain separate settlement ownership and fiscal projections. Accession does not transfer the previous household's lordships or fold the elected person's estate receipts into public taxes. NPC private settlement accounts and the protagonist's personal purse continue through their existing owners; public service dues still use the declared ordinary obligations. Household inheritance remains separate from selection of the sovereign. See elective-monarchy.md.
+
+Civic office and private property
+
+Civic membership, magistracy, public treasury and foreign rights are separate from household land, enterprises and inheritance. Selection, office expiry, resignation, recall and death confer or end a public mandate without confiscating private property. A reviewed sovereign county grant retains private settlement holders and enterprises. Deliberate adoption of a civic constitution preserves existing household loans and property, rather than awarding the fresh bookmark's concessions. See docs/designs/city-republic.md.
