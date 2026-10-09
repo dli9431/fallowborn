@@ -17,8 +17,8 @@ dependsOnRuntime(__filename, [
 ]);
 
 async function start(page, testInfo, fictional, crazygames) {
-  const journey = { bookmark:'476_outer',
-    code:'ASSEMBLY-476_outer-farmer_476_outer-tallinn-m-Review-established-0-finnic.baltic_pagan' };
+  const journey = { bookmark:'476',
+    code:'ASSEMBLY-476-farmer_476-tallinn-m-Review-established-0-finnic.baltic_pagan' };
   if (crazygames) await startHistoricalGame(page, testInfo, journey, true);
   else await startParityGame(page, testInfo, journey);
   return page.evaluate(function (fictional) {

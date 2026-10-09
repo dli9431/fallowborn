@@ -23,7 +23,7 @@ async function start(page, testInfo, fictional) {
     await page.evaluate(function () {
       const f = FB_LINEAGE_FIXTURE;
       FBDATA.governmentForms[f.formId] = Object.assign({}, FBDATA.governmentForms.lineage_kingship, { selectionProfile:f.profile });
-      const row = FBDATA.bookmarks['476_outer'].realms.find(function (r) { return r.id === f.realmId; });
+      const row = FBDATA.bookmarks['476'].realms.find(function (r) { return r.id === f.realmId; });
       Object.assign(row, { name:'River Kin Fixture', government:f.formId, ruler:f.ruler, royalCourt:f.royalCourt });
       FB.governments.invalidate();
     });
@@ -33,7 +33,7 @@ async function start(page, testInfo, fictional) {
   if (await beginning.isVisible()) await beginning.click();
   else await page.getByRole('button', { name:'New Game', exact:true }).click();
   await page.locator('#btn-bm-seed').click();
-  await page.locator('#ng-seed').fill('LINEAGE-476_outer-farmer_476_outer-cashel-m-Review-established-0-gaelic.nicene');
+  await page.locator('#ng-seed').fill('LINEAGE-476-farmer_476-cashel-m-Review-established-0-gaelic.nicene');
   await page.locator('#ng-seed').press('Enter');
   await expect(page.locator('#chargen:not(.hidden)')).toBeVisible();
   await page.getByRole('button', { name:'Begin Your Story', exact:true }).click();
@@ -69,7 +69,7 @@ for (const fictional of [false, true]) {
         preserved:owner === JSON.stringify(s.owner) && holder === JSON.stringify(s.holder) && property === JSON.stringify(s.player.holdings),
         restored:S.state(FB.state, rid).vacancy.accessionId === winner && S.recognized(FB.state, rid),
         rng:(FB.getRngState() >>> 0) === (source.rng >>> 0), uid:FB.getUidCounter() === source.uid,
-        forms:FB.governments.validate(), bookmark:FB.validateBookmark(FB.bookmark('476_outer')) };
+        forms:FB.governments.validate(), bookmark:FB.validateBookmark(FB.bookmark('476')) };
     }, fictional);
     expect(result.pure).toBe(true); expect(result.minimum).toBe(true);
     if (fictional) expect(result.sexes).toEqual(['f', 'f']);

@@ -39,7 +39,6 @@ CANDIDATE_BOOKMARK_FILES = [
     if re.fullmatch(r"bookmark_[0-9]+", path.stem)
     and path not in {candidate for candidate, _ in CANDIDATE_FILES}
 ]
-CANDIDATE_BOOKMARK_FILES.append((DATA / "bookmark_476_outer.js", "476_outer"))
 STARTS_FILE = DATA / "starts.js"
 TECHNOLOGY_FILE = DATA / "technology.js"
 ACTIONS_FILE = DATA / "actions.js"
@@ -1227,13 +1226,9 @@ def extract_structured(inv: Inventory) -> None:
                 f"bookmark.476.{field}.{branch}", record,
                 f"{period_rel}:{line}", f"Start bookmark 476, {field}.", ()
             )
-    # The wider world reuses the four original declarations, but its display
-    # lookup keys carry its own bookmark id. Register both ownership paths.
-    regional_bookmarks = [
-        (path, region, bookmark_id)
-        for path, region in REGION_FILES
-        for bookmark_id in (("476_outer",) if region == "outer" else ("476", "476_outer"))
-    ]
+    # The 476 bookmark composes all five regional declarations, so every
+    # regional display label is owned by bookmark 476.
+    regional_bookmarks = [(path, region, "476") for path, region in REGION_FILES]
     for region_path, region, bookmark_id in regional_bookmarks:
         region_rel = region_path.relative_to(ROOT).as_posix()
         declaration = node_object(find_keyed_assignment(
@@ -1279,8 +1274,6 @@ def extract_structured(inv: Inventory) -> None:
                     f"{region_rel}:{line}",
                     f"{bookmark_id} realm {realm_id}, display name.", ()
                 )
-        if bookmark_id == "476_outer" and region != "outer":
-            continue  # Administrative title keys are shared across bookmarks.
         for table, kind in (("duchies", "duchy"), ("kingdoms", "kingdom"),
                             ("empires", "empire")):
             for title_id, title_node in (node_object(declaration.get(table)) or {}).items():
@@ -1951,7 +1944,6 @@ def extract_government_selections(inv: Inventory) -> None:
 def extract_mobile_presentations(inv: Inventory) -> None:
     source = DATA / "mobile_confederations.js"
     for table, namespace, fields in (
-        ("mobileBookmarkPresentation", "bookmark", ("name", "desc")),
         ("mobileScenarioPresentation", "scenario", ("name", "desc", "intro")),
     ):
         records = node_object(find_assignment(source, "FBDATA", table)) or {}

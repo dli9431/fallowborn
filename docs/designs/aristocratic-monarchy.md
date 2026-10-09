@@ -4,7 +4,7 @@ Scope and data ownership
 
 aristocratic_monarchy is a settled court with royal descent, permanent hereditary interests and personal public commissions. data/aristocratic_courts.js declares its generic chartered profile and its dated Sasanian profile. js/government_aristocracy.js supplies reusable strategies after the common recognition and administration modules. Engine behavior names no Persian dynasty, province, office or historical outcome. The fictional acceptance fixture declares a different royal pool and provincial households through the same interfaces.
 
-The Sasanian profile applies only to fresh 476_outer openings. Peroz and his already declared relatives retain their existing identities. Generated Mihran and Karen principals, their adult children and a generated capital governor fill simulation roles without asserting named spring-476 incumbencies. The hidden Peroz ruler start supports owner review through the normal existing-ruler journey. Earlier openings and saved regnum courts retain their own declarations. The dated research and abstraction limits are recorded in docs/research/aristocratic-monarchy.md.
+The Sasanian profile applies to fresh 476 openings, which save opening revision wider_v1. Peroz and his already declared relatives retain their existing identities. Generated Mihran and Karen principals, their adult children and a generated capital governor fill simulation roles without asserting named spring-476 incumbencies. The hidden Peroz ruler start supports owner review through the normal existing-ruler journey. Earlier openings and saved regnum courts retain their own declarations. The dated research and abstraction limits are recorded in docs/research/aristocratic-monarchy.md.
 
 Canonical facts
 

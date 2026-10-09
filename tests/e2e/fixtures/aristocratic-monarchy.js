@@ -3,7 +3,7 @@
 window.FB_ARISTOCRATIC_FIXTURE = {
   realmId:'dumnonia_476',
   install:function () {
-    var b = FBDATA.bookmarks['476_outer'];
+    var b = FBDATA.bookmarks['476'];
     var realm = b.realms.find(function (r) { return r.id === 'dumnonia_476'; });
     Object.assign(realm,{name:'Ash royal court',government:'aristocratic_monarchy',
       aristocraticProfileId:'chartered_court',administrationProfileId:'chartered_provinces',

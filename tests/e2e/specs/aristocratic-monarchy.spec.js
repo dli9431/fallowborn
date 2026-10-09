@@ -41,9 +41,9 @@ async function start(page,testInfo,options) {
   if (await beginning.isVisible()) await beginning.click();
   else await page.getByRole('button',{name:'New Game',exact:true}).click();
   await page.locator('#btn-bm-seed').click();
-  const code = options.ruler ? 'ROYALREVIEW-476_outer-peroz_476-baghdad-m-Peroz-standard-0-persian.zoroastrian' :
-    options.fictional ? 'ROYALREVIEW-476_outer-farmer_476_outer-london-m-Review-established-0-brittonic.nicene' :
-      'ROYALREVIEW-476_outer-farmer_476_outer-rayy-m-Review-established-0-persian.zoroastrian';
+  const code = options.ruler ? 'ROYALREVIEW-476-peroz_476-baghdad-m-Peroz-standard-0-persian.zoroastrian' :
+    options.fictional ? 'ROYALREVIEW-476-farmer_476-london-m-Review-established-0-brittonic.nicene' :
+      'ROYALREVIEW-476-farmer_476-rayy-m-Review-established-0-persian.zoroastrian';
   await page.locator('#ng-seed').fill(code); await page.locator('#ng-seed').press('Enter');
   await expect(page.locator('#chargen:not(.hidden)')).toBeVisible();
   await page.getByRole('button',{name:'Begin Your Story',exact:true}).click();
@@ -432,7 +432,7 @@ test('profile mods validate detached policy and fresh openings without historica
     const saved=JSON.stringify(FBDATA.aristocraticProfiles),rng=FB.getRngState(),uid=FB.getUidCounter();
     copy.interests[1].provinceId=copy.interests[0].provinceId;
     const bad=FB.mods.validate({aristocraticProfiles:{another_court:copy}});
-    const opening=JSON.parse(JSON.stringify(FB.bookmark('476_outer')));
+    const opening=JSON.parse(JSON.stringify(FB.bookmark('476')));
     delete opening.opening.actors.mihran_elder;
     return {good:good,bad:bad.length > 0,opening:FB.validateBookmark(opening).length > 0,
       detached:saved === JSON.stringify(FBDATA.aristocraticProfiles) && rng === FB.getRngState() && uid === FB.getUidCounter()};

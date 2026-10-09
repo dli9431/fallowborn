@@ -2048,7 +2048,7 @@ The Iberian 476 expansion leaves bookmarkSetup opening actors, appointments, est
 
 Same-date regional expansion identity
 
-The optional wider spring-476 snapshot stamps start.id as 476_outer. Original 476 saves keep their existing id, empty outer counties and null Antioch/Jerusalem institution sites. Each bookmark owns its own settlement layout and full institution table, so an old save is never validated against the wider definition's moved seats. Cross-bookmark load rebuilds the matching map through the existing activation transaction before restoring saved state. No format migration, generated regional population, new court creation or historical grant is performed during legacy restore. The outer-region regression suite checks both map identities and exact legacy owner, holder, community, institution, head, authority and story records.
+The 476 bookmark contains all five regional declarations and stamps start.id 476. Its own settlement layout and full institution table place Antioch and Jerusalem on authored sites, so a development save of the earlier bounded map, whose institution rows have null sites, is not supported. The separate 476_outer and 476_mobile ids are retired; a save naming either fails before activation with the ordinary unknown-bookmark message and leaves the live campaign and RNG unchanged. Other bookmarks keep the null-site fallback table. Cross-bookmark load still rebuilds the matching map through the existing activation transaction before restoring saved state. No format migration, generated regional population, new court creation or historical grant is performed. tests/e2e/specs/476-outer-regions.spec.js covers merged save and restore and both retired ids.
 
 Data-driven 476 story records
 

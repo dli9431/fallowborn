@@ -7,7 +7,7 @@ class StaticHtmlExtractionTests(unittest.TestCase):
     def test_mobile_opening_display_owners(self):
         inventory = i18n_catalog.Inventory()
         i18n_catalog.extract_mobile_presentations(inventory)
-        self.assertEqual(inventory.entries['bookmark.476_mobile.name.default']['text'], 'The Pontic Followings')
+        self.assertNotIn('bookmark.476_mobile.name.default', inventory.entries)
         self.assertEqual(inventory.entries['scenario.mobile_household_476.name.default']['text'], 'Pontic household')
         self.assertIn('{province}', inventory.entries['scenario.mobile_household_476.intro.default']['text'])
         self.assertNotIn(i18n_catalog.source_key('Cherson'), inventory.entries)
@@ -100,14 +100,14 @@ class StructuredDataExtractionTests(unittest.TestCase):
         inventory = i18n_catalog.Inventory()
         i18n_catalog.extract_structured(inventory)
         for key, text in (
-            ('bookmark.476_outer.name.default', 'The Last Western Court: Wider World'),
-            ('province.476_outer.baghdad.name.default', 'Ctesiphon'),
-            ('province.476_outer.lund.name.dated.0.default', 'Uppåkra'),
-            ('settlement.476_outer.shrewsbury_outer_476.name.default', 'Viroconium'),
-            ('realm.476_outer.sasanian_476.name.default', 'Sasanian Empire'),
-            ('province.476_outer.ravenna.name.default', 'Ravenna'),
-            ('settlement.476_outer.ravenna_476.name.default', 'Ravenna'),
-            ('realm.476_outer.italy.name.default', 'Western Roman Court'),
+            ('bookmark.476.name.default', 'The Last Western Court'),
+            ('province.476.baghdad.name.default', 'Ctesiphon'),
+            ('province.476.lund.name.dated.0.default', 'Uppåkra'),
+            ('settlement.476.shrewsbury_outer_476.name.default', 'Viroconium'),
+            ('realm.476.sasanian_476.name.default', 'Sasanian Empire'),
+            ('province.476.ravenna.name.default', 'Ravenna'),
+            ('settlement.476.ravenna_476.name.default', 'Ravenna'),
+            ('realm.476.italy.name.default', 'Western Roman Court'),
             ('culture.brittonic.name.default', 'Brittonic'),
             ('religion.east_syriac.name.default', 'East Syriac Christianity'),
             ('event.antioch_congregation_relief_476.title.default', 'Relief Among the Congregations'),
@@ -116,7 +116,9 @@ class StructuredDataExtractionTests(unittest.TestCase):
         ):
             self.assertEqual(inventory.entries[key]['text'], text)
         self.assertIn('bookmark_476_outer.js',
-                      inventory.meta['province.476_outer.baghdad.name.default']['location'])
+                      inventory.meta['province.476.baghdad.name.default']['location'])
+        for retired in ('bookmark.476_outer.name.default', 'province.476_outer.baghdad.name.default'):
+            self.assertNotIn(retired, inventory.entries)
 
     def test_493_review_content_has_display_and_durable_message_owners(self):
         inventory = i18n_catalog.Inventory()

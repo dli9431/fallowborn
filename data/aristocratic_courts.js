@@ -89,10 +89,10 @@ Object.assign(FBDATA.techImpactReviews.features, {
   aristocratic_provincial_bargains:{ mode:'none', rationale:'Baseline revenue and military obligations, concessions, refusal and enforcement depend on legitimate scope, consent and actual funds.' },
   aristocratic_government_conversion:{ mode:'none', rationale:'An explicit change of political rules requires a current adult court and assent from surviving hereditary interests, not a discovery.' }
 });
-/* Change only the wider fresh opening. The old outer realms and its original
-   opening remain immutable compatibility declarations for older campaigns. */
+/* Change only the fresh 476 opening. Earlier revisions stay in the catalogue
+   as immutable compatibility declarations; never amend them in place. */
 (function () {
-  var bm = FBDATA.bookmarks['476_outer'], old = bm.opening;
+  var bm = FBDATA.bookmarks['476'], old = bm.opening;
   var opening = JSON.parse(JSON.stringify(old));
   Object.assign(opening.actors, {
     mihran_elder:{ sex:'m', culture:'persian', religion:'zoroastrian', born:437, station:3,
@@ -112,11 +112,9 @@ Object.assign(FBDATA.techImpactReviews.features, {
     { id:'karen_estate_476', actorId:'karen_elder', provinceId:'hamadan', share0:1000,
       basis:'tenure', evidence:'generated_karen_estate_476' }
   ]);
-  bm.openingRevision = 'aristocratic_v1';
-  bm.openingLegacyRevision = 'outer_v1';
-  bm.openingRevisions = { outer_v1:old, aristocratic_v1:opening };
+  bm.openingRevision = 'wider_v1';
+  bm.openingRevisions.wider_v1 = opening;
   bm.opening = opening;
-  bm.starts = bm.starts.concat(['peroz_476']);
   bm.realms = bm.realms.map(function (realm) {
     return realm.id === 'sasanian_476' ? Object.assign({}, realm, {
       government:'aristocratic_monarchy', aristocraticProfileId:'sasanian_476',

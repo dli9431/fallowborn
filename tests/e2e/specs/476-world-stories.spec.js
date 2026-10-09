@@ -68,7 +68,7 @@ for (const crazygames of [false,true]) {
             .map(function (id) { return FBDATA.techImpactReviews.features[id].mode; }),
           valid:FB.save.v4.validatePlatform(JSON.parse(FB.save.serialize()).state) };
       });
-      expect(result.attached).toEqual(['western_court_476'].concat(RAILS, ['federate_track_476']));
+      expect(result.attached).toEqual(['western_court_476'].concat(RAILS, ['cashel_recognition_476','federate_track_476']));
       expect(result).toMatchObject({ pure:true, world:true, noLegacy:true, valid:true, modes:['none','none','none'] });
       expect(result.cards).toEqual(['zeno_return_476','western_office_476','federate_track_476']);
     });

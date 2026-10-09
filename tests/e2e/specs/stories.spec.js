@@ -106,7 +106,7 @@ test('stories register in order at load time only and resolve by id',
     expect(result.unknown).toBeNull();
     expect(result.late).toContain('load time only');
     expect(result.registered).toBe(false);
-    expect(result.bookmark).toEqual(WORLD_STORIES);
+    expect(result.bookmark).toEqual(WORLD_STORIES.concat(['cashel_recognition_476']));
     expect(result.tracks).toEqual(['nepos_476:nepos_track_476','federate_476:federate_track_476','curialis_476:curialis_track_476']);
   });
 

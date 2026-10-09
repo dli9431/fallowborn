@@ -210,9 +210,9 @@ Review bookmark content extraction
 
 Literal FBDATA.bookmarkCandidates and bookmarkContent declarations in data/bookmark_<numeric-id>.js are read statically for bookmark names/descriptions, realm display names and county override names. Companion data/bookmark_<numeric-id>_campaigns.js files declare the literal bookmarkContent[id].campaigns table. Those records retain storyCampaign.<id>.name/desc owners and opaque news keys, then compose into the existing runtime catalogue before registration. Historical ruler profiles remain proper names and are excluded. Review-only status does not exempt display strings from extraction. Feature work leaves all generated language files, caches and manifests unchanged; regeneration still requires a separate owner request at integration.
 
-Wider spring-476 display owners
+476 regional display owners
 
-The static regional source list includes data/bookmark_476_outer.js. Its outer declaration uses province.476_outer, realm.476_outer and settlement.476_outer owners, while administrative title ids retain their existing typed keys. The wider bookmark name and description have bookmark.476_outer owners. Regional cultures, law labels, event options, effects.log and costs use the existing structured routes. Original same-date regional labels register both their 476 and 476_outer owners and retain exact-source aliases when reused by the wider snapshot. No generated catalog needs to change on this feature branch. tools/test_i18n_catalog.py covers the additional source and owner paths.
+The static regional source list includes data/bookmark_476_outer.js. All five regional declarations use province.476, realm.476 and settlement.476 owners, while administrative title ids retain their existing typed keys. The bookmark name and description have bookmark.476 owners. Regional cultures, law labels, event options, effects.log and costs use the existing structured routes. The retired 476_outer and 476_mobile owners are no longer extracted. Catalogs are regenerated only at an owner-requested integration step. tools/test_i18n_catalog.py covers the source and owner paths.
 Government selection presentation
 
 Selection interest and transformation names are extracted from governmentForms into governmentSelection.<form>.<member-or-transformation>.<id>.name.default. UI labels and blockers use literal FB.T, with data names resolved through exact-source aliases. The conditional card uses governmentContest.<story>.<name-or-desc>.default. Durable accession news uses news.government.local_accession. Saved phases, interests, votes, obligations and reasons remain ids and numbers. Feature work adds extractor support without regenerating catalogs.
@@ -227,7 +227,7 @@ aristocraticProfiles names extract as aristocraticProfile.<id>.name.default, and
 
 Mobile opening presentation
 
-The typed mobileBookmarkPresentation and mobileScenarioPresentation tables in data/mobile_confederations.js supply the new bookmark and scenario display fields. extract_mobile_presentations routes them to the ordinary bookmark and scenario keys without executing data scripts. Coalition UI uses literal FB.T patterns, lexicons use the existing government extraction route, and news.mobile.decision stores an opaque message descriptor with proper-name references and numeric following size. No generated catalog is changed on this feature branch.
+The typed mobileScenarioPresentation table in data/mobile_confederations.js supplies the Pontic household scenario display fields. extract_mobile_presentations routes them to the ordinary scenario keys without executing data scripts. Coalition UI uses literal FB.T patterns, lexicons use the existing government extraction route, and news.mobile.decision stores an opaque message descriptor with proper-name references and numeric following size. No generated catalog is changed on this feature branch.
 
 Civic display ownership
 

@@ -55,7 +55,7 @@
     customaryRights:[{ power:'peace', basis:'possession' }, { power:'revenue', basis:'possession' }]
   } };
   var coastal = FBDATA.assemblyOpenings.north_coast_476;
-  var opening = FBDATA.bookmarks['476_outer'];
+  var opening = FBDATA.bookmarks['476'];
   opening.realms = opening.realms.concat([coastal]);
   opening.provinces = opening.provinces.map(function (p) {
     if (p.id !== 'tallinn') return p;

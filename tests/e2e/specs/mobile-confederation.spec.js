@@ -14,8 +14,8 @@ dependsOnRuntime(__filename, [
   'js/save.js','js/save_v4.js','js/mods.js'
 ]);
 async function start(page,testInfo,fictional,crazygames) {
-  await startHistoricalGame(page,testInfo,{bookmark:'476_mobile',
-    code:'MOBILE-476_mobile-mobile_household_476-cherson-m-Review-established-0-greek.chalcedonian'},!!crazygames);
+  await startHistoricalGame(page,testInfo,{bookmark:'476',
+    code:'MOBILE-476-mobile_household_476-cherson-m-Review-established-0-greek.chalcedonian'},!!crazygames);
   if (fictional) await page.addScriptTag({path:path.resolve(__dirname,'../fixtures/mobile-confederation.js')});
   return page.evaluate(function (fictional) {
     const s=FB.state;

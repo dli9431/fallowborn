@@ -37,11 +37,10 @@ Object.assign(FBDATA.localInstitutions, FBDATA.bookmarkRegions476.dalmatia_east.
 Object.assign(FBDATA.localInstitutions, FBDATA.bookmarkRegions476.italy.localInstitutions);
 Object.assign(FBDATA.localInstitutions, FBDATA.bookmarkRegions476.gaul_iberia.localInstitutions);
 
-/* Each campaign can own a complete table without replacing the legacy fallback. */
-FBDATA.bookmarks['476'].localInstitutions = FBDATA.localInstitutions;
-/* The wider snapshot may relocate seats without changing the original save
-   contract. Its Antioch and Jerusalem offices keep their ordinary office ids. */
-FBDATA.bookmarks['476_outer'].localInstitutions = Object.assign({},
+/* Each campaign can own a complete table without replacing the legacy fallback.
+   The 476 outer region places Antioch and Jerusalem on authored sites; their
+   offices keep their ordinary ids, and other bookmarks keep the off-map seats. */
+FBDATA.bookmarks['476'].localInstitutions = Object.assign({},
   FBDATA.localInstitutions, FBDATA.bookmarkRegions476.outer.institutions);
 
 /* Phase 2 authority records name legal capacities rather than landed titles.

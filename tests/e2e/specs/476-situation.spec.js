@@ -128,7 +128,7 @@ test('476 bookmark and free federate start preserve 867 and 1066 data',
       'thracian_pressure_476','amal_epirus_476',
       'clovis_alamanni_476','suevic_frontier_476','cantabrian_campaign_476',
       'vasconian_campaign_476','gallaecian_campaign_476',
-      'western_office_476','federate_track_476']);
+      'western_office_476','cashel_recognition_476','federate_track_476']);
     expect(result.legacy).toBeUndefined();
     expect(result.age).toBe(24);
     expect(result.station).toBe(1);

@@ -188,7 +188,7 @@ test('regional events use live community gates, period windows and ordinary prev
       return { count:ids.length, gates:gates.every(Boolean), period:period, preview:!!preview && pure,
         cost:gold - s.player.gold, receipt:receipt && receipt.eventId, impacts:receipt && receipt.impacts.length > 0,
         land:land === JSON.stringify([s.owner, s.holder]), politics:politics === JSON.stringify(s.authority),
-        offMap:['antioch','jerusalem','baghdad','nicosia','cherson'].every(function (id) { return !s.owner[id] && !s.holder[id]; }),
+        offMap:['nicosia','kiev','mecca'].every(function (id) { return !s.owner[id] && !s.holder[id]; }),
         noPersia:!s.realms.persia && !s.realms.persia_476, stale:stale, rejectionPure:rejectionPure,
         window:window, log:persistedLog === JSON.stringify(s.log) };
     });
@@ -235,7 +235,7 @@ test('one world season retains regional institutions before staged Zeno and Theo
           institutions:Object.keys(FBDATA.bookmarkRegions476.dalmatia_east.institutions).every(function (id) {
             return !!s.localInstitutions[id];
           }), host:!!host && host.men >= 120,
-          offMap:['antioch','jerusalem','baghdad','nicosia','cherson'].every(function (id) { return !s.owner[id]; }) };
+          offMap:['nicosia','kiev','mecca'].every(function (id) { return !s.owner[id]; }) };
       });
       expect(journey).toEqual({ date:{ year:476, season:1, day:1 }, turn:90, phase:'pending',
         zeno:'Basiliscus', institutions:true, host:true, offMap:true });

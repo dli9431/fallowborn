@@ -10,7 +10,7 @@ const { injectBrowserHarness } = require('../support/game/browser-harness');
 dependsOnRuntime(__filename, [
   'data/story_courts_476.js',
   'data/aristocratic_courts.js', 'js/government_aristocracy.js', 'js/government_recognition.js', 'js/government_administration.js', 'js/bookmark_setup.js', 'js/starts.js',
-  'index.html', 'data/bookmark_476_outer.js', 'data/bookmark_476.js',
+  'index.html', 'data/bookmark_476_outer.js', 'data/bookmark_476.js', 'data/mobile_confederations.js',
   'data/assembly_polities.js', 'js/government_support.js', 'js/government_collective.js', 'js/government_assembly.js',
   'data/bookmark_476_italy.js', 'data/bookmark_476_dalmatia_east.js',
   'data/bookmark_476_gaul_iberia.js', 'data/bookmark_476_africa.js',
@@ -27,8 +27,8 @@ dependsOnRuntime(__filename, [
 
 async function start(page, testInfo, county, identity, scenario) {
   const family = scenario === 'federate_476' ? 'standard' : 'established';
-  await startParityGame(page, testInfo, { bookmark:'476_outer',
-    code:'OUTER476-476_outer-' + (scenario || 'farmer_476_outer') + '-' +
+  await startParityGame(page, testInfo, { bookmark:'476',
+    code:'OUTER476-476-' + (scenario || 'farmer_476') + '-' +
       (county || 'shrewsbury') + '-m-Review-' + family + '-0-' + (identity || 'brittonic.nicene') });
 }
 
@@ -36,7 +36,7 @@ async function saveBudget(page, testInfo, label, budget) {
   const source = await page.evaluate(function () { return FB.save.serialize(); });
   const bytes = Buffer.byteLength(source, 'utf8');
   await testInfo.attach(label + '-budget.json', { contentType:'application/json',
-    body:Buffer.from(JSON.stringify({ bookmark:'476_outer', bytes:bytes, ceiling:budget })) });
+    body:Buffer.from(JSON.stringify({ bookmark:'476', bytes:bytes, ceiling:budget })) });
   expect(bytes, label + ' uncompressed v4 JSON').toBeLessThanOrEqual(budget);
   return source;
 }
@@ -51,10 +51,9 @@ for (const crazygames of [false, true]) {
         if (crazygames) await page.addInitScript(function () { window.FB_DISTRIBUTION = 'crazygames'; });
         await start(page, testInfo, sample[0], sample[1]);
         const result = await page.evaluate(function () {
-          const s = FB.state, b = FB.bookmark('476_outer'), old = FB.bookmark('476');
+          const s = FB.state, b = FB.bookmark('476'), earlier = FB.bookmark('867');
           const region = FBDATA.bookmarkRegions476.outer;
           const medieval = JSON.stringify(FB.bookmark('867'));
-          const original = JSON.stringify(old);
           const sites = region.provinces.map(function (p) {
             return FB.world.sitesByProv[p.id].list.filter(function (site) { return site.authored; })
               .map(function (site) { return site.site; });
@@ -68,7 +67,7 @@ for (const crazygames of [false, true]) {
           return {
             faults:FB.validateBookmark(b), legal:FB.validateLegalTraditions(), technology:FB.validateTechnologyData(true),
             stable:b.provinces.map(function (p) { return p.id; }).sort().join('|') ===
-              old.provinces.map(function (p) { return p.id; }).sort().join('|'),
+              earlier.provinces.map(function (p) { return p.id; }).sort().join('|'),
             unique:new Set(b.provinces.map(function (p) { return p.id; })).size === b.provinces.length,
             added:region.provinces.length, courts:region.realms.length,
             direct:region.provinces.every(function (p) {
@@ -82,7 +81,7 @@ for (const crazygames of [false, true]) {
               return list[0] === region.provinces[i].id + '_outer_476';
             }),
             restoredRights:initial === JSON.stringify(FB.state.authority.rights),
-            untouched:original === JSON.stringify(old) && medieval === JSON.stringify(FB.bookmark('867')),
+            untouched:medieval === JSON.stringify(FB.bookmark('867')),
             identity:identity,
             offMap:['nicosia','novgorod','merv','balkh','etelkoz','norrland','scone','tara'].every(function (id) {
               return FB.world.byId[id].wasteland && !FB.state.owner[id] && !FB.state.holder[id];
@@ -110,15 +109,15 @@ for (const crazygames of [false, true]) {
           await advanceBookmark(page, 360);
           const checkpoint = await saveBudget(page, testInfo, 'household-year1-' + sample[0], 6 * 1024 * 1024);
           await restoreBookmark(page, checkpoint);
-          expect(await page.evaluate(function () { return FB.state.start.id; })).toBe('476_outer');
+          expect(await page.evaluate(function () { return FB.state.start.id; })).toBe('476');
         }
       });
   }
 }
 
 for (const sample of [
-  ['craftsman_476_outer','lund','north_germanic_476.germanic_pagan','craftsman'],
-  ['cleric_476_outer','baghdad','syriac.east_syriac','monk']
+  ['craftsman_476','lund','north_germanic_476.germanic_pagan','craftsman'],
+  ['cleric_476','baghdad','syriac.east_syriac','monk']
 ]) {
   test('wider local ' + sample[0] + ' retains its household profession without a Ravenna track',
     async function ({ page }, testInfo) {
@@ -131,16 +130,16 @@ for (const sample of [
           tracks:['federate_track_476','curialis_track_476'].filter(function (id) { return !!s.stories[id]; }),
           valid:FB.save.v4.validatePlatform(JSON.parse(FB.save.serialize()).state) };
       });
-      expect(result).toEqual({ bookmark:'476_outer', province:sample[1], profession:sample[3], tracks:[], valid:true });
+      expect(result).toEqual({ bookmark:'476', province:sample[1], profession:sample[3], tracks:[], valid:true });
     });
 }
 
-test('on-map Antioch and Jerusalem retain offices while provincial and northern institutions survive restore',
+test('on-map Antioch and Jerusalem retain offices while other bookmarks keep off-map seats and institutions survive restore',
   async function ({ page }, testInfo) {
     await start(page, testInfo, 'antioch', 'greek.miaphysite');
     const result = await page.evaluate(function () {
       const s = FB.state, defs = FB.localInstitutionDefinitions(s);
-      const original = FB.bookmark('476').localInstitutions;
+      const original = FBDATA.localInstitutions;
       const antioch = FB.religiousOfficeSnapshot(s, 'antioch_patriarch');
       const jerusalem = FB.religiousOfficeSnapshot(s, 'jerusalem_bishop');
       const records = JSON.stringify(s.localInstitutions);
@@ -160,9 +159,9 @@ test('on-map Antioch and Jerusalem retain offices while provincial and northern 
         }),
         restored:records === JSON.stringify(FB.state.localInstitutions), crossings:crossings,
         season:season, dual:dual,
-        roman:FB.bookmark('476_outer').provinces.filter(function (p) {
+        roman:FB.bookmark('476').provinces.filter(function (p) {
           return p.realm === 'byzantium';
-        }).every(function (p) { return !!FB.bookmark('476_outer').duchies[p.duchy]; }) };
+        }).every(function (p) { return !!FB.bookmark('476').duchies[p.duchy]; }) };
     });
     expect(result).toEqual({ antioch:['antioch','antioch_outer_476','Peter the Fuller'],
       jerusalem:['jerusalem','Anastasius'], oldSeats:[null,null,null], present:true, restored:true,
@@ -321,44 +320,70 @@ test('regional events follow live communities, county and period gates with revi
     expect(absent).toBe(true);
   });
 
-test('original 476 saves restore across the wider map without new courts, populations or on-map offices',
+test('one 476 bookmark carries every Wave 12 consumer and retires the separate wider and mobile ids',
   async function ({ page }, testInfo) {
-    await startParityGame(page, testInfo, { bookmark:'476',
-      code:'LEGACY476-476-federate_476-ravenna-m-Marcus-standard-0-gothic.homoian' });
-    // The retained original definition is the pre-expansion 2.0-era contract.
-    // A real old life has the same id, null seats and no added regional realm.
-    const saved = await page.evaluate(function () { return FB.save.serialize(); });
-    const snapshot = JSON.parse(saved).state;
-    await page.evaluate(function () {
-      return new Promise(function (resolve, reject) {
-        FB.activateBookmark('476_outer', null, function (error) { if (error) reject(error); else resolve(); });
-      });
+    await openGame(page, testInfo);
+    const result = await page.evaluate(function () {
+      const b = FB.bookmark('476');
+      const realm = function (id) { const r = b.realms.find(function (row) { return row.id === id; }); return r && r.government; };
+      const offered = FBDATA.startScenarios.filter(function (sc) {
+        return Array.isArray(sc.bookmarkIds) && sc.bookmarkIds.indexOf('476') >= 0;
+      }).map(function (sc) { return sc.id; });
+      const disabled = b.provinces.filter(function (p) { return p.wasteland; });
+      return {
+        retired:['476_outer','476_mobile'].filter(function (id) { return !!FBDATA.bookmarks[id]; }),
+        stale:FBDATA.startScenarios.filter(function (sc) {
+          return (sc.bookmarkIds || []).some(function (id) { return id === '476_outer' || id === '476_mobile'; });
+        }).map(function (sc) { return sc.id; }),
+        revisions:[b.openingRevision, b.openingLegacyRevision, Object.keys(b.openingRevisions).sort()],
+        governments:['sasanian_476','cashel_local_476','north_coast_476','pontic_following_476'].map(realm),
+        cashel:b.stories.indexOf('cashel_recognition_476') >= 0,
+        starts:['farmer_476','craftsman_476','cleric_476','peroz_476','mobile_household_476',
+          'federate_476','curialis_476','colonus_476'].every(function (id) { return offered.indexOf(id) >= 0; }),
+        anchors:[disabled.filter(function (p) { return !/^w_/.test(p.id); }).length,
+          disabled.filter(function (p) { return /^w_/.test(p.id); }).length],
+        faults:FB.validateBookmark(b)
+      };
     });
+    expect(result).toEqual({ retired:[], stale:[],
+      revisions:['wider_v1','core_v1',['balkans_v1','core_v1','wider_v1']],
+      governments:['aristocratic_monarchy','lineage_kingship','assembly_polity','mobile_confederation'],
+      cashel:true, starts:true, anchors:[152,21], faults:[] });
+  });
+
+test('a merged 476 save restores, while retired wider and mobile ids fail without changing the live campaign',
+  async function ({ page }, testInfo) {
+    await start(page, testInfo, 'ravenna', 'roman.nicene');
+    const saved = await page.evaluate(function () { return FB.save.serialize(); });
+    for (const retired of ['476_outer','476_mobile']) {
+      const outcome = await page.evaluate(function (id) {
+        const data = JSON.parse(FB.save.serialize());
+        data.state.start.id = id;
+        const before = FB.save.serialize(), rng = FB.getRngState();
+        const accepted = FB.game.loadData(data, function () { window.__retiredLoaded = true; });
+        return { accepted:accepted, loaded:!!window.__retiredLoaded, active:FB.activeBookmark.id,
+          unchanged:before === FB.save.serialize() && rng === FB.getRngState() };
+      }, retired);
+      expect(outcome, retired).toEqual({ accepted:false, loaded:false, active:'476', unchanged:true });
+    }
     await restoreBookmark(page, saved);
     const result = await page.evaluate(function () {
       const s = FB.state;
-      return { id:s.start.id, geography:FB.activeBookmark.id,
-        noCourts:FBDATA.bookmarkRegions476.outer.realms.every(function (r) { return !s.realms[r.id]; }),
-        empty:FBDATA.bookmarkRegions476.outer.provinces.every(function (p) {
-          return FB.world.byId[p.id].wasteland && !s.owner[p.id] && !s.holder[p.id];
-        }),
+      return { id:s.start.id, warnings:FB.save.lastRestoreWarnings.length,
         seats:[s.localInstitutions.antioch_see.site, s.localInstitutions.jerusalem_see.site],
-        warnings:FB.save.lastRestoreWarnings.length, platform:FB.save.v4.validatePlatform(JSON.parse(FB.save.serialize()).state) };
+        courts:FBDATA.bookmarkRegions476.outer.realms.every(function (r) { return !!s.realms[r.id]; }),
+        platform:FB.save.v4.validatePlatform(JSON.parse(FB.save.serialize()).state) };
     });
-    expect(result).toEqual({ id:'476', geography:'476', noCourts:true, empty:true,
-      seats:[null,null], warnings:0, platform:true });
-    const restored = JSON.parse(await page.evaluate(function () { return FB.save.serialize(); })).state;
-    for (const key of ['owner','holder','communities','localInstitutions','religiousHeads','authority','stories']) {
-      expect(restored[key], 'legacy field ' + key).toEqual(snapshot[key]);
-    }
+    expect(result).toEqual({ id:'476', warnings:0, seats:['antioch_outer_476','jerusalem_outer_476'],
+      courts:true, platform:true });
   });
 
-test('wider 476 observes one season with bounded timings, save budgets and cross-bookmark restore',
+test('merged 476 observes one season with bounded timings, save budgets and cross-bookmark restore',
   async function ({ page }, testInfo) {
     await openGame(page, testInfo);
     const error = await page.evaluate(function () {
       return new Promise(function (resolve) {
-        FB.activateBookmark('476_outer', null, function (error) {
+        FB.activateBookmark('476', null, function (error) {
           if (error) { resolve(error.message); return; }
           FB.game.pending = { seed:'OUTERSEASON' }; FB.game.startObserve();
           FB.game.setPaused(true); resolve(null);
@@ -386,7 +411,7 @@ test('wider 476 observes one season with bounded timings, save budgets and cross
         const checkpoint = await saveBudget(page, testInfo, 'observer-midpoint', 8 * 1024 * 1024);
         await page.evaluate(function () {
           return new Promise(function (resolve, reject) {
-            FB.activateBookmark('476', null, function (error) { if (error) reject(error); else resolve(); });
+            FB.activateBookmark('867', null, function (error) { if (error) reject(error); else resolve(); });
           });
         });
         await restoreBookmark(page, checkpoint);
@@ -399,11 +424,11 @@ test('wider 476 observes one season with bounded timings, save budgets and cross
     await restoreBookmark(page, saved);
     const result = await page.evaluate(function () {
       const s = FB.state;
-      return { date:s.date, id:s.start.id, faults:FB.validateBookmark(FB.bookmark('476_outer')),
+      return { date:s.date, id:s.start.id, faults:FB.validateBookmark(FB.bookmark('476')),
         warnings:FB.save.lastRestoreWarnings.length,
         holders:FBDATA.bookmarkRegions476.outer.provinces.every(function (p) {
           return !!s.realms[s.owner[p.id]] && !!s.realms[s.holder[p.id]];
         }), valid:FB.save.v4.validatePlatform(JSON.parse(FB.save.serialize()).state) };
     });
-    expect(result).toEqual({ date:{ year:476, season:1, day:1 }, id:'476_outer', faults:[], warnings:0, holders:true, valid:true });
+    expect(result).toEqual({ date:{ year:476, season:1, day:1 }, id:'476', faults:[], warnings:0, holders:true, valid:true });
   });

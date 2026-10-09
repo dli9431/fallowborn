@@ -253,7 +253,6 @@ for (const opening of [
         const old = JSON.stringify([saved.state.owner,saved.state.holder,saved.state.population,saved.state.bookmarkSetup,
           saved.state.authority.governments,saved.state.stories]);
         FBDATA.bookmarks['476'] = window.iberiaCurrentDefinition;
-        FBDATA.localInstitutions = FBDATA.bookmarks['476'].localInstitutions;
         FB.save.restore(saved);
         const s = FB.state, modern = JSON.parse(FB.save.serialize());
         const retained = old === JSON.stringify([modern.state.owner,modern.state.holder,modern.state.population,modern.state.bookmarkSetup,

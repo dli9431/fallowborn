@@ -8,6 +8,7 @@ dependsOnRuntime(__filename, [
   'index.html', 'data/bookmark_476.js',
   'data/bookmark_476_italy.js', 'data/bookmark_476_dalmatia_east.js',
   'data/bookmark_476_gaul_iberia.js', 'data/bookmark_476_africa.js',
+  'data/bookmark_476_outer.js', 'data/mobile_confederations.js', 'data/assembly_polities.js',
   'data/counties.js', 'data/bookmarks.js', 'data/geographies.js',
   'data/climate.js', 'data/settlements.js', 'data/settlements_real.js',
   'data/eras.js', 'data/lexicons.js', 'js/world.js', 'js/title_ids.js',
@@ -38,7 +39,7 @@ test('476 declarations do not read or remap another bookmark', async function ({
   test.skip(testInfo.project.name !== 'chromium-served', 'One source inspection is sufficient.');
   const root = path.resolve(__dirname, '../../..');
   for (const name of ['bookmark_476', 'bookmark_476_italy', 'bookmark_476_dalmatia_east',
-    'bookmark_476_gaul_iberia', 'bookmark_476_africa']) {
+    'bookmark_476_gaul_iberia', 'bookmark_476_africa', 'bookmark_476_outer']) {
     const source = fs.readFileSync(path.join(root, 'data', name + '.js'), 'utf8');
     expect(source).not.toMatch(/bookmarks\s*\[\s*['"](?:867|1066)['"]\s*\]/);
     expect(source).not.toMatch(/\bfunction\s*\(|\.map\s*\(|\.forEach\s*\(|\bcuratedSites\b/);
@@ -88,9 +89,13 @@ test('476 owns a complete stable grid and independent Roman hierarchy', async fu
         });
       }),
       unchanged:independent && snapshot === JSON.stringify(b) && before === JSON.stringify(earlier),
-      empty:['london','birka','novgorod','cherson','nicosia','antioch','jerusalem','baghdad'].every(function (id) {
+      empty:['novgorod','nicosia','kiev','mecca','praha'].every(function (id) {
         const p = b.provinces.find(function (row) { return row.id === id; });
         return p.wasteland && !s.owner[id] && !s.holder[id];
+      }),
+      wider:['london','birka','antioch','jerusalem','baghdad','cashel','tallinn','cherson'].every(function (id) {
+        const p = b.provinces.find(function (row) { return row.id === id; });
+        return !p.wasteland && s.owner[id] === p.realm && s.holder[id] === p.realm;
       }),
       words:['duchy','kingdom','empire'].map(function (kind) {
         return FB.titleLevels.name(s, kind, { realm:'italy', viewer:null });
@@ -98,7 +103,7 @@ test('476 owns a complete stable grid and independent Roman hierarchy', async fu
     };
   });
   expect(result).toEqual({ faults:[], stable:true, unique:true, direct:true, names:true,
-    roman:true, custom:true, fresh:true, unchanged:true, empty:true,
+    roman:true, custom:true, fresh:true, unchanged:true, empty:true, wider:true,
     words:['province','diocese','prefecture'] });
 });
 

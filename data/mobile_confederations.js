@@ -34,36 +34,31 @@
     FBDATA.techImpactReviews.features[id] = { mode:'none',
       rationale:'Living consent, conserved people and available food or money govern this baseline capability. Existing unit and travel technology still applies.' };
   });
-  /* A separate fresh opening preserves the earlier atomic 476 definitions.
+  /* The fresh 476 opening inhabits Cherson and adds the Pontic following.
      Priscus attests displaced followings and Roman diplomacy, not a precise
      476 boundary or an identifiable incumbent at this simulated camp. */
-  FBDATA.mobileBookmarkPresentation = {'476_mobile':{
-    name:'The Pontic Followings',
-    desc:'The western court faces its settlement crisis while a mobile Pontic coalition negotiates seasonal access near Roman Cherson. Its following and leaders can move, divide or settle.'
-  }};
   FBDATA.mobileScenarioPresentation = {mobile_household_476:{
     name:'Pontic household',desc:'Begin as a free household near the mobile following at Cherson.',
     intro:'You are {name}, a free farmer of {province}. Nearby mobile households bargain for access and supplies. Open Mobile coalition in Deeds to review their following or seek local paid service.'
   }};
-  var b = JSON.parse(JSON.stringify(FBDATA.bookmarks['476']));
-  b.id = '476_mobile'; b.name = FBDATA.mobileBookmarkPresentation[b.id].name;
-  b.desc = FBDATA.mobileBookmarkPresentation[b.id].desc;
+  var b = FBDATA.bookmarks['476'];
+  /* A map grouping for the Roman-facing port, not a reconstructed province. */
+  b.duchies.d_476_cherson = { name:'Cherson', kingdom:'k_476_thrace' };
   b.provinces = b.provinces.map(function (p) {
-    return p.id === 'cherson' ? { id:p.id, name:'Cherson', realm:'byzantium',
+    return p.id === 'cherson' ? { id:p.id, name:'Cherson', realm:'byzantium', duchy:'d_476_cherson',
       culture:'greek', religion:'chalcedonian', dev:3,
       communities:[{ culture:'greek', religion:'chalcedonian', populationShare0:10000 }],
       settlements:[{ site:'cherson_mobile_476', name:'Cherson', kind:'city' }] } : p;
   });
-  b.realms.push({ id:'pontic_following_476', name:'Pontic Followings', color:'#ac8959',
+  b.realms = b.realms.concat([{ id:'pontic_following_476', name:'Pontic Followings', color:'#ac8959',
     capital:'cherson', nonTerritorial:true, government:'mobile_confederation',
     culture:'turkic', religion:'tengri', rank:3,
     mobile:{ profileId:'pontic_following', patronRealmId:'byzantium', origin:'cherson',
-      target:'cherson', food:7200, fighters:120, treasury:60 } });
-  FBDATA.bookmarks[b.id] = b;
+      target:'cherson', food:7200, fighters:120, treasury:60 } }]);
   FBDATA.settlementSites.cherson_mobile_476 = { x:33.49, y:44.61 };
   FBDATA.startScenarios.push(Object.assign({
-    id:'mobile_household_476',
-    bookmarkIds:['476_mobile'], alwaysUnlocked:true, tier:1, profession:'farmer', gold:20, prestige:5, piety:0,
+    id:'mobile_household_476', fixedProvinceId:'cherson',
+    bookmarkIds:['476'], alwaysUnlocked:true, tier:1, profession:'farmer', gold:20, prestige:5, piety:0,
     startEffects:{landPlots:1}
   },FBDATA.mobileScenarioPresentation.mobile_household_476));
 })();

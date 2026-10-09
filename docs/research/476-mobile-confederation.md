@@ -1,6 +1,6 @@
 Fresh 476 mobile consumer
 
-476_mobile is a separate Spring 476 opening based on the existing atomic 476 definition. It adds inhabited Cherson under the eastern Roman court and a countyless Pontic following with explicit mobile_confederation government. The existing 476 and 476_outer definitions are unchanged. New games can choose a free local household and encounter the following through the Mobile coalition Deed. The wider-world rollout remains independent of this consumer.
+The fresh Spring 476 bookmark inhabits Cherson under the eastern Roman court and adds a countyless Pontic following with explicit mobile_confederation government. Both were first authored as a separate 476_mobile opening, which is now retired. New games can choose the Pontic household start at Cherson and encounter the following through the Mobile coalition Deed.
 
 Evidence
 
@@ -22,4 +22,4 @@ Simulation choices and uncertainty
 
 The Pontic Followings name is a deliberately broad gameplay label. The three member groups, generated principals, exact camp at Cherson, demographics, recruitment fractions, treasury, food and seasonal terms are simulation choices, not documented historical counts or a reconstructed treaty. Generic turkic and tengri identities provide existing gameplay vocabulary for the mobile pool; they do not claim a precise ethnic, linguistic or religious identification. Local Greek Christian inhabitants stay in the separate county population. Named rulers and later confederations are not imported into this opening.
 
-The separate opening protects earlier campaign definitions and provides an explicitly researched first consumer without making an undocumented 476 territorial map of the Pontic hinterland. Pasture and movement contracts supply playable access. Actual ownership changes require ordinary warfare or consented settlement. The fictional river policy has a different adult age, threshold, members, recruiting costs, origin and unrestricted local service geography to demonstrate that none of the historical identity selects the engine behavior.
+The consumer provides an explicitly researched first case without making an undocumented 476 territorial map of the Pontic hinterland. Pasture and movement contracts supply playable access. Actual ownership changes require ordinary warfare or consented settlement. The fictional river policy has a different adult age, threshold, members, recruiting costs, origin and unrestricted local service geography to demonstrate that none of the historical identity selects the engine behavior.

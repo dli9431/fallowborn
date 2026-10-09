@@ -4,7 +4,7 @@ Public authority
 
 assembly_polity composes all ten government slots. Its county holder is the community polity; its representative is an ordinary character with an explicit public mandate. Selecting that person neither changes household station nor grants private county ownership, a dynasty, royal council seats or hereditary succession. Local service permits personal standing, while mandate eligibility and represented support determine public leadership independently.
 
-data/assembly_polities.js supplies two policies. Northern coastal households inhabit one county in 476_outer; the narrower 476 bookmark remains unchanged. The settlement federation example is fictional and is not attached to a historical bookmark. Its different influence weights, service requirement, nomination fee, finite term and obligation ceilings exercise the same engine. Historical limits and the source are recorded in docs/research/assembly-polities.md.
+data/assembly_polities.js supplies two policies. Northern coastal households inhabit one county, Tallinn, in the 476 bookmark. The settlement federation example is fictional and is not attached to a historical bookmark. Its different influence weights, service requirement, nomination fee, finite term and obligation ceilings exercise the same engine. Historical limits and the source are recorded in docs/research/assembly-polities.md.
 
 Shared constituency contract
 
