@@ -97,6 +97,7 @@ test('historical bishops and a non-episcopal congregation use separate living id
     const pure=JSON.stringify([s.localInstitutions,s.chars]),rng=FB.getRngState();
     FB.localInstitutionList(s,'church'); FB.stories.cards(s);
     const readsPure=pure===JSON.stringify([s.localInstitutions,s.chars]) && rng===FB.getRngState();
+    s.chars[s.player.charId].religion=rep.religion;
     FB.ui.showLocalInstitutions('church');
     const mediationUi=!!document.querySelector('[data-local-review="favianis_congregation"][data-local-action="mediate"]');
     rep.dead=true;

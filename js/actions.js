@@ -4465,7 +4465,7 @@ window.FB = window.FB || {};
     show:function (s) { return !!(FB.aristocracy && FB.aristocracy.continuityRealm(s)); },
     run:function () { if (FB.ui && FB.ui.showProvincialContinuity) FB.ui.showProvincialContinuity(); } },
   { id:'church_dealings', opensChoices:true, noConsume:true,
-    show:function (s) { return !!FB.localInstitutionList && FB.localInstitutionList(s, 'church').length > 0; },
+    show:function (s) { return !!FB.playerChurchInstitutions && FB.playerChurchInstitutions(s).length > 0; },
     run:function () { if (FB.ui && FB.ui.showLocalInstitutions) FB.ui.showLocalInstitutions('church'); } },
   { id:'church_council', opensChoices:true, noConsume:true, requiresAdult:true,
     show:function (s) { return FB.station.rulesRealm(s.player, s); },

@@ -3126,6 +3126,16 @@ window.FB = window.FB || {};
         (!kind || (kind === 'church') === church(def));
     }).map(function (id) { return { id:id, def:copy(defs[id]), record:copy(row(s, id)) }; });
   };
+  FB.playerChurchInstitutions = function (s) {
+    var c = s && s.player && s.chars && s.chars[s.player.charId];
+    if (!c || !c.religion) return [];
+    var institutions = FB.localInstitutionList(s, 'church').filter(function (item) {
+      return item.def.religion === c.religion;
+    });
+    // The Bishoprics deed requires an episcopal office of the player's faith.
+    // A vacant see still qualifies; a congregation alone does not.
+    return institutions.some(function (item) { return !!item.def.officeId; }) ? institutions : [];
+  };
   FB.localInstitutionName = function (id, s) {
     var def = FB.localInstitutionDefinitions(s)[id];
     if (!def) return '';

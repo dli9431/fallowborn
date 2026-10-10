@@ -750,10 +750,12 @@ window.FB = window.FB || {};
   UI.showLocalInstitutions = function (kind, view) {
     const s = FB.state;
     if (!s) return;
+    const institutions = kind === 'church' ? FB.playerChurchInstitutions(s) : FB.localInstitutionList(s, kind);
+    if (kind === 'church' && !institutions.length) { UI.closeModal(); return; }
     FB.game.setPaused(true);
     const subject = localInstitutionSubject(s), key = subject.kind + ':' + subject.id;
     let h = '<div data-local-institution-list data-modal-scroll>';
-    FB.localInstitutionList(s, kind).forEach(function (item) {
+    institutions.forEach(function (item) {
       const def = item.def, record = item.record, pending = record.petitions[key];
       const rep = def.officeId ? FB.religiousOfficeSnapshot(s, def.officeId) : s.chars[record.representativeId];
       const petition = FB.localInstitutionQuote(s, item.id, subject, 'petition');
