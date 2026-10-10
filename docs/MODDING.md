@@ -5200,7 +5200,7 @@ checks these tables when a bookmark activates. Definitions are semantic; phase
 4 supplies localized period labels.
 
 `state.authority` uses the optional v4 authority schema. Normal save/export
-writes envelope `v:4`, `titleIds:1`, `authoritySchema:4`, `platformSchema:1`;
+writes envelope v:4, titleIds:1, authoritySchema:4, platformSchema:2;
 supported v3 data migrates without inventing authority records. Mods must preserve the saved fingerprint,
 rank-scoped title references and durable authority IDs. Unknown formats, ambiguous
 titles and malformed authority records fail before state adoption. See the
@@ -5629,3 +5629,19 @@ The civic_magistracy adapter registers with governmentSelection.reviewSource/com
 Ecclesiastical temporal declarations
 
 ecclesiasticalProfiles is a keyed JSON mod root. Each profile requires name, source (papal_election or local_office), chapter and layRecognition booleans, appointmentCost, recognitionCost and reserve (finite 0 to 1000), revenueRate and levyRate (0 to 1), distinct interim operations (revenue, peace, defence, levy), distinct reserved operations (war, treaty, grant, extraordinary_tax, pledge), and powers (ban, peace, revenue). Local office profiles require a separate chapter; papal profiles delegate to the existing election owner. A realm using ecclesiastical_principality requires ecclesiastical with profileId, officeId and institutionId (null for papal office bindings). Local sees may declare chapterId referencing a congregation in their county and officeProfile containing holderSex (m, f or null), holderRole (priest, monk or null) and minAge (18 to 80). These eligibility fields are consumed by the religious office registry. A lay-recognition profile needs a superior at opening. The canonical public treasury, properties and religious ledger are reused. See docs/designs/ecclesiastical-principality.md for save fields and reviewed APIs.
+
+World revisions and additive geography
+
+A bookmark may declare revision and revisions. The revisions object must contain baseline. Root world fields describe the retained baseline; baseline overrides apply first, followed by the selected revision's overrides. Overrides replace whole fields, including arrays and catalogues. Supported fields are geography, provinces, realms, duchies, kingdoms, empires, straits, crossingClasses, localInstitutions, settlementLayout, climate, religiousHeads, starts, stories, storyRegions, scripted, opening, openingRevision, openingRevisions and openingLegacyRevision. Date, id and era remain bookmark identity rather than revision fields. Use another bookmark for another opening date.
+
+FB.bookmark(id) resolves the default fresh revision. FB.bookmark(id, revision) resolves an explicit revision. FB.campaignBookmark(state) reads the saved revision, taking baseline when the old stamp is absent. Effective definitions omit the revisions catalogue to avoid accidentally resolving an already-expanded definition as the baseline. Inspect FBDATA.bookmarks[id] for the authored catalogue. Save v4 platformSchema 2 requires state.start.revision, including baseline for unversioned bookmarks. An unknown revision or mismatched revision/geography fails closed. Mod fingerprints remain exact; changing a mod does not silently upgrade existing lives.
+
+A geography may extend another registered geography and declare provinceAdditions plus provinceOverrides. The resolver copies the inherited province list. Additions need unique, non-retired ids. Existing inhabited seeds cannot be overridden; existing scenery seeds may override name, x, y and terrain. An extension cannot also replace provinces wholesale. Inheritance cycles, unknown parents and unknown override ids are rejected. Independent full geography bases remain supported.
+
+A physical seed may declare maxRadiusKm between 10 and 500. Its nearest-seed raster territory is capped using the local Mercator scale at its authored latitude, around the snapped seed. Unbounded surrounding seeds retain the remaining land. This is a map extent control, not a surveyed boundary or a population estimate. Keep an unbounded seed available for every landmass; do not use bounded seeds as the only coverage of an entire map.
+
+A geography's landRoutes is a list of [fromCountyId, toCountyId, travelUnits] entries. The third value defaults to 1 and accepts integers from 1 through 60. Routes are bidirectional, require known distinct seed ids and enter land adjacency without water capacity. The complete list replaces an inherited list. Each bookmark must include the relevant counties. Households use least-time routing with travel units reflected in time and provision charges; courier and scheduled-games clocks use the same edge weights. Army quotes multiply the existing destination-terrain march time. Costs are authoring values; they do not establish a historical itinerary.
+
+Example independent extension: {"geographies":{"small_oases":{"extends":"europe_regional","provinceAdditions":[{"id":"small_oasis","name":"Small oasis","x":9,"y":28,"terrain":"desert","maxRadiusKm":35}],"landRoutes":[["tripoli","small_oasis",4]]}}}. A bookmark using it must separately declare the new county's habitation and politics, or explicitly keep it scenery. The physical seed does not invent a ruler, community or town.
+
+The built-in expanded base is europe_regional_2. Its 476 politics live in wider_v2; using that geography for another date requires that date's own political and settlement declarations. The baseline europe_regional and released medieval bookmarks are not rewritten. These contracts are public JSON mod inputs, not a special loader for the historical bookmark.

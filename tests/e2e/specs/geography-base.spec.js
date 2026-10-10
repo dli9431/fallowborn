@@ -1,6 +1,7 @@
 'use strict';
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
+  'data/bookmark_476_wider.js', 'data/bookmark_476_wider_identities.js', 'data/geography_expansion.js',
   'data/map_data.js', 'data/counties.js', 'data/bookmarks.js',
   'data/bookmark_476.js',
   'data/bookmark_476_italy.js', 'data/bookmark_476_dalmatia_east.js',
@@ -13,8 +14,8 @@ const { test, expect } = require('../support/fixture');
 const { openGame } = require('../support/game/navigation');
 const { startDeterministicGame } = require('../support/game/start');
 
-/* Geography bases (docs/designs/provinces.md, Geography bases): every core
-   bookmark draws on europe_regional, names follow the start year, layouts
+/* Geography bases (docs/designs/provinces.md, Geography bases): retained
+   bookmarks draw on europe_regional and expanded 476 uses its additive child; names follow the start year, layouts
    fall back to the base's default, and legacy geometry mods still apply. */
 
 async function activate(page, id) {
@@ -61,7 +62,7 @@ test('europe_regional owns the legacy geometry and every core bookmark names it'
     expect(result.active).toBe('europe_regional');
     expect(result.projected).toEqual([1100, 1100, true]);
     expect(result.scale).toEqual([45, 85, 28000]);
-    expect(result.layouts).toEqual(['1066', '476', '867']);
+    expect(result.layouts).toEqual(['1066', '476', '476_wider_v2', '867']);
   });
 
 test('dated names prefer a matching culture and respect inclusive year windows',
@@ -121,7 +122,7 @@ test('476 resolves its period county names and heads from the date without mutat
     ]);
     expect(late.explicit).toBe('paris_476');
     expect(late.raw).toEqual([['barcelona', 'Barcelona', true], ['split', 'Split', true]]);
-    expect(late.geography).toBe('europe_regional');
+    expect(late.geography).toBe('europe_regional_2');
 
     for (const id of ['867', '1066']) {
       expect(await activate(page, id)).toBe(null);

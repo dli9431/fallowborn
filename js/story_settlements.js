@@ -334,7 +334,7 @@
       if (def.regions && !def.regions.some(function (region) { return region.id === share.region; })) bad('region');
       if (def.type === 'designated_succession' && !id(share.memberId)) bad('memberId');
       if (def.type === 'treaty_settlement' && (!Array.isArray(share.counties) || !share.counties.length || share.counties.some(function (pid, i) {
-        return share.counties.indexOf(pid) !== i || !(FB.bookmark(s.start.id).provinces || []).some(function (p) { return p.id === pid && !p.wasteland; });
+        return share.counties.indexOf(pid) !== i || !(FB.campaignBookmark(s).provinces || []).some(function (p) { return p.id === pid && !p.wasteland; });
       }))) bad('counties');
     }
   }

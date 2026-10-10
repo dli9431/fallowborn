@@ -628,3 +628,9 @@ tests/e2e/specs/city-republic.spec.js exercises fresh 1204 Venice, an independen
 Ecclesiastical principality coverage
 
 tests/e2e/specs/ecclesiastical-principality.spec.js and fixtures/ecclesiastical-principality.js cover papal canonical reuse, independent episcopal and fictional profiles, public/private property, vacancy, consent, recognition, treasury limits, conversion and restore. Relevant shared coverage includes papacy.spec.js, religious-head-strategies.spec.js, city-republic.spec.js and government-dispatch.spec.js. The structured extraction test covers the new profile display owners.
+
+Expanded 476 and world revisions
+
+tests/e2e/specs/476-wider-completion.spec.js covers the remaining ordinary inventory, bounded scenery districts, explicit dry-route costs, regional one-season save/replay journeys, baseline migration, mixed-revision rejection, retained older-reader rejection and a stored JSON geography mod. Scenario-local helpers live in support/game/476-wider.js; the archived schema 1 header reader is injected into the browser from support/fixtures/platform-schema-1-reader.js.
+
+The current-save header is platformSchema 2. Tests that model earlier saves start from the retained baseline before removing its revision stamp; they must not disguise an expanded campaign as a legacy world. Existing outer-region daily smoke is bounded to one season. Expanded observer checks keep 30 seconds per 45-day slice and the 8 MiB ceiling. Fresh saves keep 4 MiB; the household-year ceiling remains 6 MiB, with genuine year and longer exports supplied through owner playtesting. No one-season result substitutes for that evidence.

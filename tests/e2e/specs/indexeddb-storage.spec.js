@@ -60,7 +60,7 @@ for (const version of [3, 'prototype-v4', 4]) {
         delete data.titleIds;
         delete data.authoritySchema;
       }
-      if (version !== 4) delete data.platformSchema;
+      if (version !== 4) { delete data.platformSchema; delete data.state.start.revision; }
       const raw = JSON.stringify(data);
       localStorage.setItem('fb_slot1', raw);
       return raw;
@@ -80,7 +80,7 @@ for (const version of [3, 'prototype-v4', 4]) {
       return new Promise(function (resolve) { FB.save.toSlot(1, resolve); });
     })).toBe(true);
     const final = JSON.parse(await storedText(page, 'fb_slot1'));
-    expect([final.v,final.titleIds,final.authoritySchema,final.platformSchema]).toEqual([4,1,4,1]);
+    expect([final.v,final.titleIds,final.authoritySchema,final.platformSchema]).toEqual([4,1,4,2]);
   });
 }
 
@@ -93,7 +93,7 @@ test('a future-schema local slot is retained and cannot replace the accepted dat
     const accepted = await storedText(page, 'fb_slot1');
     const unsupported = await page.evaluate(function () {
       const data = JSON.parse(FB.save.serialize());
-      data.platformSchema = 2;
+      data.platformSchema = 3;
       const raw = JSON.stringify(data);
       localStorage.setItem('fb_slot1', raw);
       return raw;

@@ -8,7 +8,7 @@
   function slug(v) { return typeof v === 'string' && /^[a-z][a-z0-9_]*$/.test(v); }
   function fault(path) { throw new Error(FB.T('Invalid v4 save field at {path}.', { path:path })); }
   function definition(s) {
-    var bm = FB.bookmark(s.start && s.start.id) || {};
+    var bm = FB.campaignBookmark(s) || {};
     var revision = s.bookmarkSetup && s.bookmarkSetup.revision;
     if (revision !== undefined) {
       if (!slug(revision) || !plain(bm.openingRevisions) || !own(bm.openingRevisions, revision))
@@ -179,10 +179,10 @@
   function initialize(s) {
     var d = definition(s);
     if (!d || s.bookmarkSetup) return;
-    var errors = FB.openingDefinitionFaults(FB.bookmark(s.start.id));
+    var errors = FB.openingDefinitionFaults(FB.campaignBookmark(s));
     if (errors.length) throw new Error(errors.join(' '));
     var store = s.bookmarkSetup = { schema:1, actors:{}, appointments:{}, estates:[], claims:[], migrations:[] };
-    var bm = FB.bookmark(s.start.id);
+    var bm = FB.campaignBookmark(s);
     if (bm.openingRevision) store.revision = bm.openingRevision;
     Object.keys(d.actors).forEach(function (id) {
       var p = d.actors[id];

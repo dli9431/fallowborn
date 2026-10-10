@@ -347,7 +347,7 @@
     if (!history || !Array.isArray(history.campaigns)) return true;
     /* Detached save validation precedes world activation. Resolve against the
        saved bookmark, including its legacy aliases, not the currently played map. */
-    var bookmark = FB.bookmark(s.start && s.start.id);
+    var bookmark = FB.campaignBookmark(s);
     var kingdoms = bookmark && bookmark.kingdoms || {};
     var seen = {}, start = s.start && { year:s.start.year, season:s.start.season, day:s.start.day };
     history.campaigns.forEach(function (row) {

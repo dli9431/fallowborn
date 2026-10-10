@@ -6,6 +6,7 @@ dependsOnRuntime(__filename, [
   'data/story_instances.js',
   'data/story_courts_476.js',
   'index.html', 'data/bookmark_476.js',
+  'data/bookmark_476_wider.js', 'data/bookmark_476_wider_identities.js', 'data/geography_expansion.js',
   'data/bookmark_476_italy.js', 'data/bookmark_476_dalmatia_east.js',
   'data/bookmark_476_gaul_iberia.js', 'data/bookmark_476_africa.js',
   'data/bookmark_476_outer.js', 'data/mobile_confederations.js', 'data/assembly_polities.js',
@@ -71,7 +72,7 @@ test('476 owns a complete stable grid and independent Roman hierarchy', async fu
     finally { medieval.realm = owner; medieval.duchy = level; }
     return {
       faults:FB.validateBookmark(b),
-      stable:b.provinces.map(function (p) { return p.id; }).sort().join('|') ===
+      stable:FB.bookmark('476','baseline').provinces.map(function (p) { return p.id; }).sort().join('|') ===
         earlier.provinces.map(function (p) { return p.id; }).sort().join('|'),
       unique:new Set(b.provinces.map(function (p) { return p.id; })).size === b.provinces.length,
       direct:inhabited.every(function (p) { return s.owner[p.id] === p.realm && s.holder[p.id] === p.realm; }),
@@ -89,9 +90,9 @@ test('476 owns a complete stable grid and independent Roman hierarchy', async fu
         });
       }),
       unchanged:independent && snapshot === JSON.stringify(b) && before === JSON.stringify(earlier),
-      empty:['novgorod','nicosia','kiev','mecca','praha'].every(function (id) {
+      completed:['novgorod','nicosia','kiev','mecca','praha'].every(function (id) {
         const p = b.provinces.find(function (row) { return row.id === id; });
-        return p.wasteland && !s.owner[id] && !s.holder[id];
+        return !p.wasteland && s.owner[id] === p.realm && s.holder[id] === p.realm;
       }),
       wider:['london','birka','antioch','jerusalem','baghdad','cashel','tallinn','cherson'].every(function (id) {
         const p = b.provinces.find(function (row) { return row.id === id; });
@@ -103,7 +104,7 @@ test('476 owns a complete stable grid and independent Roman hierarchy', async fu
     };
   });
   expect(result).toEqual({ faults:[], stable:true, unique:true, direct:true, names:true,
-    roman:true, custom:true, fresh:true, unchanged:true, empty:true, wider:true,
+    roman:true, custom:true, fresh:true, unchanged:true, completed:true, wider:true,
     words:['province','diocese','prefecture'] });
 });
 
@@ -233,7 +234,7 @@ test('476 layouts and local climates survive save restore without changing medie
   expect(result.restored).toEqual(result.initial);
   expect(result.names).toEqual(['Ticinum','Altinum','Lucus Augusti','Augusta Suessionum','Syracusae']);
   expect(result.base).toBe(true);
-  expect(result.geography).toBe('europe_regional');
+  expect(result.geography).toBe('europe_regional_2');
   expect(result.noZoneState).toBe(true);
   expect(result.raw).toBe(true);
   for (const id of ['867','1066']) {

@@ -526,7 +526,7 @@
       if (!plain(record[p.fields.displacedCourt]) || typeof record[p.fields.displacedCourt].provinceId !== 'string' ||
           ['displaced','returned','interrupted','diverted'].indexOf(record[p.fields.displacedCourt].status) < 0) bad(p.fields.displacedCourt);
       if (record.railsSchema !== 1 || record.historical !== undefined || record.easternReturn !== undefined) bad('railsSchema');
-      var wanted = (FB.bookmark(s.start && s.start.id) || {}).stories || [];
+      var wanted = (FB.campaignBookmark(s) || {}).stories || [];
       for (var id of def.legacyRails)
         if (wanted.indexOf(id) >= 0 && !s.stories[id]) bad('railsSchema');
       if (record.displacedCourts !== undefined && !plain(record.displacedCourts))
@@ -829,7 +829,7 @@
               row.officeId !== null && typeof row.officeId !== 'string') bad(OFFICE, 'history');
         });
         if (X.world(s).railsSchema !== 1) bad(def.courtStoryId, 'railsSchema');
-        var wanted = (FB.bookmark(s.start && s.start.id) || {}).stories || [];
+        var wanted = (FB.campaignBookmark(s) || {}).stories || [];
         for (var id of def.legacyRails)
           if (wanted.indexOf(id) >= 0 && !s.stories[id]) bad(def.courtStoryId, 'railsSchema');
       } };

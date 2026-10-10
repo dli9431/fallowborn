@@ -135,9 +135,7 @@ window.FB = window.FB || {};
      restored save gets the same active table it was played with. */
   L.applyCampaign = function (state) {
     var start = state && state.start;
-    var definition = start && start.id !== undefined && FB.activeBookmark &&
-      String(FB.activeBookmark.id) === String(start.id)
-      ? FB.activeBookmark : start && FB.bookmark ? FB.bookmark(start.id) : null;
+    var definition = start && start.id !== undefined ? FB.campaignBookmark(state) : null;
     L.activate(FB.campaignEra ? FB.campaignEra(state) : null, definition || FB.activeBookmark);
   };
 

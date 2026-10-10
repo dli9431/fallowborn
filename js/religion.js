@@ -295,6 +295,8 @@ window.FB = window.FB || {};
   };
 
   FB.validateReligionInstitutionState = function (s) {
+    const counties = {};
+    ((FB.campaignBookmark(s) || {}).provinces || []).forEach(function (p) { counties[p.id] = true; });
     function plain(v) { return !!v && typeof v === 'object' && !Array.isArray(v); }
     function fail(path) { throw new Error(FB.T('Invalid v4 save field at {path}.', { path:path })); }
     function record(r, rid) {
@@ -317,7 +319,7 @@ window.FB = window.FB || {};
         const r = s.churchCouncils[rid];
         if (!record(r, rid) || r.realmId !== rid || !FB.faithAssignable(r.faithId, s) ||
             !Number.isFinite(r.goldCost) || r.goldCost < 0 || !Array.isArray(r.counties) || !r.counties.length ||
-            r.counties.some(function (id, i) { return typeof id !== 'string' || !FB.world.byId[id] || r.counties.indexOf(id) !== i; }) ||
+            r.counties.some(function (id, i) { return typeof id !== 'string' || !counties[id] || r.counties.indexOf(id) !== i; }) ||
             !Array.isArray(r.bishops) || r.bishops.length < 2 || r.bishops.some(function (b) {
               const def = plain(b) && FB.localInstitutionDefinitions(s)[b.institutionId];
               return !plain(b) || !def || def.officeId !== b.officeId || def.provinceId !== b.provinceId ||

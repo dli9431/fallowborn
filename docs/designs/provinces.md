@@ -634,3 +634,11 @@ populationPoolQuote and populationPoolApply exchange exact culture-faith cohorts
 Civic foreign site rights
 
 Institution-owned foreign quarters, warehouses, jurisdiction and assigned receipts reference an existing county and its stable physical settlement slot. They add no county, geometry or duplicate settlement. Host sovereignty, inhabitants and private enterprises remain separate from the beneficiary institution; loss of host control suspends the right. Saved references retain their slot through changes in current site visibility. Historical 1204 Venetian presence uses the existing Constantinople site without asserting a surveyed district or numeric receipts. See docs/designs/city-republic.md.
+
+Bounded districts and dry corridors
+
+data/geography_expansion.js declares europe_regional_2 as an additive child of europe_regional. FB.geography resolves inheritance without mutating parent seeds. The expanded 476 revision supplies its own dated communities, institutions and settlement layout. Existing province ids survive, and saves choose the world revision that supplied their geometry.
+
+maxRadiusKm limits a physical seed's raster extent in Mercator-local kilometres. Both nearest-seed assignment and orphan reassignment respect the cap. landRoutes adds bidirectional non-water adjacency with explicit travel units. Weighted household routing retains the original adjacency-order tie behavior where all edges have unit cost. Couriers, provision quotes, scheduled games and army leg quotes consume these weights; displays use the same route-unit projection. An ordinary unextended geography has unit costs everywhere and unchanged seed extents.
+
+The expanded district and scenery interpretations are documented in docs/research/476-wider-districts.md. Their 65 km extents and route costs require physical-map acceptance; they are authored simulation bounds rather than archaeological measurements.

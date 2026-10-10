@@ -47,7 +47,7 @@
   };
   E.validate = function (s) {
     var roots = s.authority && s.authority.governments || {}, offices = FB.religiousOffices(s), seen = {};
-    var bookmark = s.start && FBDATA.bookmarks[s.start.id], provinces = bookmark && bookmark.provinces || [];
+    var bookmark = FB.campaignBookmark(s), provinces = bookmark && bookmark.provinces || [];
     function fault() { throw new Error(FB.T('Invalid ecclesiastical government or canonical office binding in this save.')); }
     Object.keys(s.realms || {}).forEach(function (rid) {
       var formId = roots[rid] && roots[rid].formId || s.start && s.start.defaultGovernment || 'territorial';

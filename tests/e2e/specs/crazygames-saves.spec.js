@@ -42,7 +42,7 @@ for (const mode of ['sdk', 'localstorage']) {
             delete old.titleIds;
             delete old.authoritySchema;
           }
-          if (version !== 4) delete old.platformSchema;
+          if (version !== 4) { delete old.platformSchema; delete old.state.start.revision; }
           old.state.player.gold = 4321;
           const written = await new Promise(function (resolve) {
             FB.crazySave.write(JSON.stringify(old), resolve);
@@ -73,7 +73,7 @@ for (const mode of ['sdk', 'localstorage']) {
           return { header:[data.v,data.titleIds,data.authoritySchema,data.platformSchema],
             exportHeader:[exported.v,exported.titleIds,exported.authoritySchema,exported.platformSchema],
             gold:data.state.player.gold, edition:data.mods };
-        })).toEqual({ header:[4,1,4,1], exportHeader:[4,1,4,1],
+        })).toEqual({ header:[4,1,4,2], exportHeader:[4,1,4,2],
           gold:4321, edition:'crazygames-content-1' });
       });
   }
@@ -87,12 +87,12 @@ for (const mode of ['sdk', 'localstorage']) {
       expect(await save(page)).toBe(true);
       const result = await page.evaluate(async function () {
         const previous = FB.crazySave.read(), source = JSON.parse(previous);
-        source.platformSchema = 2;
+        source.platformSchema = 3;
         const accepted = await new Promise(function (resolve) {
           FB.crazySave.write(JSON.stringify(source), resolve);
         });
         const live = FB.state, rng = FB.getRngState(), uid = FB.getUidCounter();
-        source.platformSchema = 1; source.mods = '';
+        source.platformSchema = 2; source.mods = '';
         let message = '';
         try { FB.save.restore(source); } catch (error) { message = error.message; }
         return { accepted:accepted, preserved:previous === FB.crazySave.read(), message:message,

@@ -215,3 +215,9 @@ Historical story support adds js/story_history.js as a classic local script refe
 Mobile coalition assets
 
 index.html loads data/mobile_confederations.js after the assembled story declarations, js/mobile_confederations.js after all government owners and adapters, and js/ui_mobile.js after ui_misc.js. These are ordinary authored data/JS assets included by both distribution allowlists and index-derived offline asset stamping. Historical and fictional regression journeys share the runtime contracts in both standard and CrazyGames distributions. No private capture or packaging file belongs in the public game.
+
+Expanded 476 scripts
+
+index.html loads data/geography_expansion.js immediately after data/geographies.js, then data/bookmark_476_wider_identities.js and data/bookmark_476_wider.js after the merged mobile and story declarations. The ordinary data-directory allowlist includes these assets; the CrazyGames tracked-file allowlist includes the same gameplay data while retaining its language and music exclusions. All new files must be tracked before producing a release package. Index-derived offline assets include the new script tags.
+
+The private debug script inventory mirrors this order with its existing eager English catalogue and modal extras. Private review ledgers and packaging tools remain outside this repository. Historical, raster, save/performance and distribution acceptance must refer to the same integrated revision.

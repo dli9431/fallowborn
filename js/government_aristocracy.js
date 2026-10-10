@@ -350,7 +350,7 @@
     return settle(s,snapshot,period,playerOnly);
   };
   A.seed = function (s) {
-    var bm = FB.bookmark(s.start.id);
+    var bm = FB.campaignBookmark(s);
     (bm.realms || []).forEach(function (def) {
       var rid = FB.startRealmId(s,def.id), row = government(s,rid), form = row && FBDATA.governmentForms[row.formId];
       if (!form || !form.aristocraticProfileId || row.aristocracy) return;
@@ -676,7 +676,7 @@
       var path = 'authority.governments.' + rid + '.aristocracy', p = data && FBDATA.aristocraticProfiles[data.profileId];
       var source = data && tree(s,data.royalRealmId);
       if (!keys(data,['schema','profileId','originRealmId','royalRealmId','royalRoots','interests','regency','lastPeriod']) || data.schema !== 1 ||
-          typeof data.originRealmId !== 'string' || !own(s.realms,data.originRealmId) && !(FB.bookmark(s.start.id).realms || []).some(function (r) { return r.id === data.originRealmId; }) ||
+          typeof data.originRealmId !== 'string' || !own(s.realms,data.originRealmId) && !(FB.campaignBookmark(s).realms || []).some(function (r) { return r.id === data.originRealmId; }) ||
           !p || form && form.aristocraticProfileId && row.administrationProfileId !== p.administrationProfileId ||
           data.royalRealmId !== rid || !source || !source.members || !Array.isArray(data.royalRoots) || data.royalRoots.length !== 1 ||
           data.royalRoots[0] !== source.founderId ||

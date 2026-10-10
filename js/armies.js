@@ -2434,17 +2434,18 @@ window.FB = window.FB || {};
       ? FB.waterCrossing(fromPid, toPid) : null;
     if (!crossingClass) {
       const land = memo.landQuotes || (memo.landQuotes = Object.create(null));
-      if (land[toPid]) {
+      const routeKey = fromPid + '|' + toPid;
+      if (land[routeKey]) {
         if (timing) timing.count('Paths: land quote cache hits');
-        return land[toPid];
+        return land[routeKey];
       }
       if (timing) timing.count('Paths: land quotes built');
       /* land legs pay the destination's terrain: the day-weighted route
          search then detours around mountains and mires on its own. Sea legs
          keep their crossing-class clock. */
       const landDays = Math.max(1, Math.round(memo.landDays *
-        terrainMarchFactor(terrainOf(toPid))));
-      return land[toPid] = {
+        terrainMarchFactor(terrainOf(toPid)) * FB.landRouteUnits(fromPid,toPid)));
+      return land[routeKey] = {
         water:false,
         crossingClass:null,
         hostMen:memo.hostMen,

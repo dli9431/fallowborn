@@ -6361,6 +6361,12 @@ FB.CHANGELOG = [
   /* shared wake-up for a save read from a slot, file, or pasted export text;
      false when the life belongs to another mod world */
   G.loadData = function (data, afterLoad) {
+    if (!FB.save.isSupported(data)) {
+      G.lastLoadError = new Error(FB.T('This save uses an unsupported format.'));
+      G.lastLoadStage = 'save preflight';
+      FB.ui.toast('This save uses an unsupported format.');
+      return false;
+    }
     // a life cannot wake up in the wrong world: the map ids would not fit
     if (FB.save.otherWorld(data)) {
       FB.ui.toast(data.mods ?
@@ -6376,6 +6382,14 @@ FB.CHANGELOG = [
     G.lastLoadError = null;
     G.lastLoadStage = null;
     G.lastLoadWarnings = [];
+    // Validate a detached campaign before changing the active map or RNG.
+    try { data = FB.save.v4.migrate(data); }
+    catch (preflightError) {
+      G.lastLoadError = preflightError;
+      G.lastLoadStage = 'core save restoration';
+      FB.ui.toast('This save could not be restored. Its stored copy is unchanged.');
+      return false;
+    }
     FB.ui.showScreen('loading');
     $('loadbar').style.width = '0%';
     FB.activateBookmark(bookmarkId, function (frac, msg) {
@@ -6496,7 +6510,9 @@ FB.CHANGELOG = [
           FB.esc(FB.T('Close')) + '</button>');
         $('gm-go').addEventListener('click', function () { FB.ui.closeModal(); });
       }
-    }, { geography:data.state && data.state.start && data.state.start.geography });
+    }, { geography:data.state && data.state.start && data.state.start.geography,
+      revision:data.state && data.state.start && data.state.start.revision !== undefined
+        ? data.state.start.revision : 'baseline' });
     return true;
   };
 

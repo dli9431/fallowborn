@@ -888,8 +888,10 @@ def extract_structured(inv: Inventory) -> None:
         # Review-only declarations still need stable localization owners.
         # Read literal data without activating the candidate or running JS.
         candidate_catalogues = {
-            "cultures": [(DATA / "bookmark_711.js", "bookmarkCultures711")],
-            "religions": [(DATA / "bookmark_711.js", "bookmarkReligions711")],
+            "cultures": [(DATA / "bookmark_711.js", "bookmarkCultures711"),
+                         (DATA / "bookmark_476_wider_identities.js", "bookmarkCultures476Wider")],
+            "religions": [(DATA / "bookmark_711.js", "bookmarkReligions711"),
+                          (DATA / "bookmark_476_wider_identities.js", "bookmarkReligions476Wider")],
             "storyCampaigns": [(DATA / "story_campaigns_711.js", "storyCampaigns711"),
                                (DATA / "bookmark_800_history.js", "storySettlements800")],
         }

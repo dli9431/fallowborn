@@ -321,7 +321,7 @@ test('the frozen envelope rejects ambiguous title registries before state or ide
         message:message, unchanged:FB.state === live && FB.getRngState() === rng &&
           FB.getUidCounter() === uid && JSON.stringify(source) === bytes };
     });
-    expect(result.header).toEqual([4,1,4,1]);
+    expect(result.header).toEqual([4,1,4,2]);
     expect(result.message).toContain('Ambiguous duchy title aliases for essex');
     expect(result.unchanged).toBe(true);
   });

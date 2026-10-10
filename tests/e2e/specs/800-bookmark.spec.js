@@ -134,7 +134,7 @@ test('800 activates the full world, period communities and subordinate courts', 
       stories:FB.stories.attached(s) };
   });
   expect(result).toMatchObject({ faults:[],
-    start:{ id:'800', year:800, season:3, day:25, era:'early_medieval', geography:'europe_regional' },
+    start:{ id:'800', year:800, season:3, day:25, era:'early_medieval', geography:'europe_regional', revision:'baseline' },
     hierarchy:['carolingian_800','carolingian_800','byzantium','abbasid'],
     owners:['carolingian_800','carolingian_800','carolingian_800','cordoba',
       'northumbria','leinster','byzantium','byzantium'],

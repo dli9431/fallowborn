@@ -11859,7 +11859,7 @@ window.FB = window.FB || {};
     }
     out.eligible = true;
     out.route = route;
-    out.days = route.length * FB.travelLegDaysSnapshot(s);
+    out.days = FB.travelRouteUnits(s.player.provinceId,route) * FB.travelLegDaysSnapshot(s);
     out.cost = FB.travelCostSnapshot('relationship', route, s);
     if (out.cost > s.player.gold) {
       out.eligible = false;

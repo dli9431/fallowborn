@@ -1,6 +1,7 @@
 'use strict';
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
+  'data/bookmark_476_wider.js', 'data/bookmark_476_wider_identities.js', 'data/geography_expansion.js',
   'data/story_courts_476.js',
   'index.html', 'data/bookmarks.js', 'data/bookmark_476.js',
   'data/bookmark_476_dalmatia_east.js', 'data/bookmark_476_italy.js',
@@ -79,7 +80,7 @@ test('regional smoke separates governors, host commissions, magnate property and
       command:['active','host','host_476_thracian'], magnate:['Longinus','isaurian',500,'byzantium'],
       gepid:'gepid', isaurian:'isaurian', services:[[10,true,0],[12,true,0]],
       demands:['demanded','demanded','demanded'], institutions:true,
-      revision:'wider_v1', saved:true, tech:['none','none'], technologyFaults:[] });
+      revision:'wider_v2', saved:true, tech:['none','none'], technologyFaults:[] });
   });
 
 test('a patron commission loses its foreign host scope when bilateral service lapses',
@@ -318,7 +319,7 @@ test('one regional daily season resolves both bounded rails and retains communit
         const thracian = FB.state.stories.thracian_pressure_476, amal = FB.state.stories.amal_epirus_476;
         return {date:FB.state.date,thracian:[thracian.phase,thracian.result,thracian.reason],
           amal:amal.phase === 'resolved' && ['won','failed'].indexOf(amal.result) >= 0,
-          scope:!FB.state.owner.nicosia && ['antioch','jerusalem','tarsos'].every(function (id) {
+          scope:FB.state.owner.nicosia === 'byzantium' && ['antioch','jerusalem','tarsos'].every(function (id) {
             return FB.state.owner[id] === 'byzantium';
           })};
       });

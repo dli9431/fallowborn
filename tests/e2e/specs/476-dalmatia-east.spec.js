@@ -1,6 +1,7 @@
 'use strict';
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
+  'data/bookmark_476_wider.js', 'data/bookmark_476_wider_identities.js', 'data/geography_expansion.js',
   'data/story_courts_476.js',
   'index.html', 'data/bookmarks.js', 'data/bookmark_476.js',
   'data/bookmark_476_dalmatia_east.js', 'data/bookmark_476_italy.js',
@@ -193,13 +194,13 @@ test('regional events use live community gates, period windows and ordinary prev
       return { count:ids.length, gates:gates.every(Boolean), period:period, preview:!!preview && pure,
         cost:gold - s.player.gold, receipt:receipt && receipt.eventId, impacts:receipt && receipt.impacts.length > 0,
         land:land === JSON.stringify([s.owner, s.holder]), politics:politics === JSON.stringify(records(s.authority)),
-        offMap:['nicosia','kiev','mecca'].every(function (id) { return !s.owner[id] && !s.holder[id]; }),
+        inhabited:['nicosia','kiev','mecca'].every(function (id) { return !!s.owner[id] && !!s.holder[id]; }),
         noPersia:!s.realms.persia && !s.realms.persia_476, stale:stale, rejectionPure:rejectionPure,
         window:window, log:persistedLog === JSON.stringify(s.log) };
     });
     expect(result).toEqual({ count:16, gates:true, period:true, preview:true, cost:4,
       receipt:'persian_frontier_dispatch_476', impacts:true, land:true, politics:true,
-      offMap:true, noPersia:true, stale:false, rejectionPure:true, window:true, log:true });
+      inhabited:true, noPersia:true, stale:false, rejectionPure:true, window:true, log:true });
   });
 
 test('one world season retains regional institutions before staged Zeno and Theoderic outcomes',
@@ -240,10 +241,10 @@ test('one world season retains regional institutions before staged Zeno and Theo
           institutions:Object.keys(FBDATA.bookmarkRegions476.dalmatia_east.institutions).every(function (id) {
             return !!s.localInstitutions[id];
           }), host:!!host && host.men >= 120,
-          offMap:['nicosia','kiev','mecca'].every(function (id) { return !s.owner[id]; }) };
+          inhabited:['nicosia','kiev','mecca'].every(function (id) { return !!s.owner[id]; }) };
       });
       expect(journey).toEqual({ date:{ year:476, season:1, day:1 }, turn:90, phase:'pending',
-        zeno:'Basiliscus', institutions:true, host:true, offMap:true });
+        zeno:'Basiliscus', institutions:true, host:true, inhabited:true });
       const restoration = await page.evaluate(function () {
         // Review the later return boundary directly instead of simulating
         // another season solely to reach the authored opportunity.

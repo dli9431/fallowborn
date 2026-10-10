@@ -12,6 +12,7 @@ dependsOnRuntime(__filename, [
   'js/technology.js', 'js/fiscal.js', 'js/ui_misc.js', 'js/ui_panels.js', 'js/ui_modals.js', 'css/style.css'
 ]);
 const { test, expect } = require('../support/fixture');
+const { startBaseline476 } = require('../support/game/476-wider');
 const { startHistoricalGame } = require('../support/game/historical-start');
 
 async function start(page, testInfo, options) {
@@ -386,10 +387,10 @@ test('malformed saved estate references, rights and duty dates fail before repla
 
 test('existing free 476 saves restore without creating a tenancy, possessor or freedom history',
   async function ({ page }, testInfo) {
-    await start(page, testInfo, { scenario:'federate_476' });
+    await startBaseline476(page,testInfo,'COLONATEOLD-476-federate_476-ravenna-m-Marcus-standard-0-gothic.homoian');
     const result = await page.evaluate(function () {
       const source = JSON.parse(FB.save.serialize()), legacy = JSON.parse(JSON.stringify(source));
-      legacy.v = 3; delete legacy.titleIds; delete legacy.authoritySchema; delete legacy.platformSchema;
+      legacy.v = 3; delete legacy.titleIds; delete legacy.authoritySchema; delete legacy.platformSchema; delete legacy.state.start.revision;
       if (legacy.state.authority) delete legacy.state.authority.schema;
       FB.save.restore(legacy);
       const s = FB.state;

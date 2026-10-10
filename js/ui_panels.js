@@ -637,7 +637,7 @@ window.FB = window.FB || {};
         : FB.T('at the destination'));
     const days = travel.remainingRoute && travel.remainingRoute.length
       ? travel.legDaysLeft +
-        Math.max(0, travel.remainingRoute.length - 1) * travel.legDays
+        FB.travelRouteUnits(travel.remainingRoute[0],travel.remainingRoute.slice(1)) * travel.legDays
       : 0;
     let status = FB.T('{purpose} · {phase} · {location} → {destination}', {
       purpose:purposeName,

@@ -96,6 +96,19 @@
       stamp(state.start, 'era', 'era');
       stamp(state.start, 'geography', 'geography');
       stamp(state.start, 'defaultGovernment', 'government');
+      var worldDefinition = FB.campaignBookmark(state);
+      if (state.start.revision !== undefined && typeof state.start.revision !== 'string') field('state.start.revision');
+      if (worldDefinition && FB.bookmarkHasRevisions(state.start.id) && state.start.geography !== worldDefinition.geography)
+        field('state.start.geography');
+      if (worldDefinition && FB.bookmarkHasRevisions(state.start.id)) {
+        var inhabited = {};
+        worldDefinition.provinces.forEach(function (p) { inhabited[p.id] = true; });
+        ['owner','holder'].forEach(function (key) {
+          Object.keys(state[key] || {}).forEach(function (id) {
+            if (state[key][id] && !own(inhabited, id)) field('state.' + key + '.' + id);
+          });
+        });
+      }
     }
     if (state.stories === undefined) return true;
     if (!plain(state.stories)) field('state.stories');
@@ -167,7 +180,7 @@
             m.spouseDeclared !== undefined && typeof m.spouseDeclared !== 'boolean' ||
             m.culture !== undefined && !own(FBDATA.cultures, m.culture) ||
             m.religion !== undefined && !FB.faithExists(m.religion, state) ||
-            m.homeProvinceId !== undefined && !(FBDATA.provinces || []).some(function (p) { return p.id === m.homeProvinceId; })) field(where);
+            m.homeProvinceId !== undefined && !((FB.campaignBookmark(state) || {}).provinces || []).some(function (p) { return p.id === m.homeProvinceId; })) field(where);
         if (m.localId !== undefined) {
           if (typeof m.localId !== 'string' || !/^[a-z][a-z0-9_]*$/.test(m.localId) ||
               own(localIds, m.localId) || id !== 'royal_' + authoredRealmId + '_authored_' + m.localId) field(where + '.localId');
@@ -455,7 +468,8 @@
     if (data.mods !== undefined ? data.mods !== currentMods : !!currentMods)
       throw new Error(FB.T('This save uses a different mod set and cannot be migrated.'));
     var bookmarkId = data.state.start ? data.state.start.id : '867';
-    var bookmark = own(FBDATA.bookmarks, bookmarkId) && FBDATA.bookmarks[bookmarkId];
+    var bookmark = own(FBDATA.bookmarks, bookmarkId) && FB.bookmark(bookmarkId,
+      data.state.start && data.state.start.revision !== undefined ? data.state.start.revision : 'baseline');
     if (!bookmark) throw new Error(FB.T(
       'Missing bookmark {id} for title migration.', { id:bookmarkId }));
     var state = FB.titleIds.migrateState(data.state, bookmark);
@@ -500,6 +514,8 @@
        take them once from their bookmark; a stamped value is never replaced.
        The default government form is stamped only at creation: deriving it
        here would change realms that older saves resolve as territorial. */
+    if (state.start === undefined) state.start = {id:bookmarkId,year:867,season:0,day:1};
+    if (plain(state.start) && state.start.revision === undefined) state.start.revision = 'baseline';
     if (plain(state.start)) ['era','geography'].forEach(function (key) {
       if (!own(state.start, key) && typeof bookmark[key] === 'string')
         state.start[key] = bookmark[key];

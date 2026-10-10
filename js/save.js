@@ -7,11 +7,19 @@ window.FB = window.FB || {};
   const S = {};
   FB.save = S;
   // Frozen resumable envelope. Storage codecs and subsystem schemas are separate.
-  S.FORMAT = Object.freeze({ v:4, titleIds:1, authoritySchema:4, platformSchema:1 });
+  S.FORMAT = Object.freeze({ v:4, titleIds:1, authoritySchema:4, platformSchema:2 });
   S.envelopeIssue = function (data) {
     if (!data || typeof data !== 'object' || Array.isArray(data) ||
         data.v !== 3 && data.v !== S.FORMAT.v) return 'v';
+    if (data.platformSchema === 2 && (!data.state || !data.state.start ||
+        typeof data.state.start.revision !== 'string')) return 'platformSchema';
+    if (data.platformSchema !== 2 && data.state && data.state.start &&
+        data.state.start.revision !== undefined) return 'platformSchema';
     for (const key of ['titleIds', 'authoritySchema', 'platformSchema']) {
+      if (key === 'platformSchema' && data[key] === 1) {
+        if (data.state && data.state.start && data.state.start.revision !== undefined) return key;
+        continue;
+      }
       // V3 has no required schema stamps; early v4 predates the platform stamp.
       if (data[key] === undefined && (data.v === 3 || key === 'platformSchema')) continue;
       if (data[key] !== S.FORMAT[key]) return key;
@@ -674,6 +682,8 @@ window.FB = window.FB || {};
 
   S.serialize = function () {
     const s = FB.state;
+    if (!s.start || typeof s.start.revision !== 'string')
+      throw new Error(FB.T('This campaign has no saved world revision.'));
     S.v4.validateIdentity({ rng:FB.getRngState(), uid:FB.getUidCounter() });
     S.v4.validateAuthority(s.authority, s);
     S.v4.validatePlatform(s);
@@ -1543,6 +1553,9 @@ window.FB = window.FB || {};
   S.restore = function (data) {
     // Prepare a detached, validated state before adopting its RNG or identity.
     data = S.v4.migrate(data);
+    if (!FB.activeBookmark || FB.activeBookmark.id !== data.state.start.id ||
+        (FB.activeBookmark.revision || 'baseline') !== data.state.start.revision)
+      throw new Error(FB.T('Activate this saved world revision before restoring its campaign.'));
     var restoredState = inflateState(data.state);
     S.lastRestoreWarnings = [];
     FB.setRngState(data.rng);

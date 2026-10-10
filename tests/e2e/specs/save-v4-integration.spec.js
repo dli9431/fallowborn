@@ -24,11 +24,13 @@ dependsOnRuntime(__filename, [
   'data/bookmark_1204.js', 'data/bookmark_1204_campaigns.js'
 ]);
 const { test, expect } = require('../support/fixture');
+const { startBaseline476 } = require('../support/game/476-wider');
 const { openGame } = require('../support/game/navigation');
 const { loadParitySave } = require('../support/game/parity');
 const { corpusEntries, readCorpusExport } = require('../support/parity-fixtures');
 
 async function start(page, testInfo, bookmark) {
+  if (bookmark === '476') return startBaseline476(page,testInfo,'SAVEV4-476-federate_476-ravenna-m-Marcus-standard-0-gothic.homoian');
   await openGame(page, testInfo);
   if (bookmark === '493' || bookmark === '711') await page.evaluate(function (id) {
     // Review hidden candidates only inside this test's isolated page.
@@ -62,6 +64,7 @@ for (const bookmark of ['476', '867', '1066']) {
         delete legacy.titleIds;
         delete legacy.authoritySchema;
         delete legacy.platformSchema;
+        delete legacy.state.start.revision;
         if (legacy.state.authority) delete legacy.state.authority.schema;
         function facts(state) {
           // Missing legacy classes and explicit zero counts describe the same
@@ -121,7 +124,7 @@ for (const bookmark of ['476', '867', '1066']) {
       expect(result.facts.second).toEqual(result.facts.first);
       delete result.facts;
       expect(result).toEqual({
-        header:[4, 1, 4, 1], migratedHeader:1, serializerPure:true, immutable:true,
+        header:[4, 1, 4, 2], migratedHeader:2, serializerPure:true, immutable:true,
         idempotent:true,
         rng:true, uid:true, saved:true, slotVersion:4, exportVersion:4,
         bookmark:bookmark, authority:bookmark === '476', chronicle:true
@@ -159,7 +162,7 @@ test('invalid v4 input preserves live state, RNG, identity counters and stored s
         function (d) {
           d.state.authority.appointments.push(d.state.authority.appointments[0]);
         },
-        function (d) { d.platformSchema = 2; },
+        function (d) { d.platformSchema = 3; },
         function (d) { d.state.start.era = 'missing_era'; },
         function (d) { d.state.start.geography = 'missing_geography'; },
         function (d) {
@@ -181,7 +184,7 @@ test('invalid v4 input preserves live state, RNG, identity counters and stored s
         },
         function (d) {
           d.v = 3;
-          d.platformSchema = 2;
+          d.platformSchema = 3;
         }
       ];
       return changes.map(function (change) {
@@ -222,7 +225,7 @@ test('invalid v4 input preserves live state, RNG, identity counters and stored s
     expect(errors[21].message).toContain('uid');
     expect(errors[22].message).toContain('state.start');
     expect(errors[23].message).toContain('state.situation476');
-    expect(errors[24].message).toContain('Unsupported save schema at platformSchema: 2');
+    expect(errors[24].message).toContain('Unsupported save schema at platformSchema: 3');
   });
 
 test('optional platform fields round trip absent, stamped and present',
@@ -319,9 +322,9 @@ test('optional platform fields round trip absent, stamped and present',
         FB.save.restore(JSON.parse(original));
       }
     });
-    const none = { platformSchema:1, era:undefined, geography:undefined,
+    const none = { platformSchema:2, era:undefined, geography:undefined,
       defaultGovernment:undefined, stories:undefined };
-    const stampedFields = { platformSchema:1, era:'save_test_era',
+    const stampedFields = { platformSchema:2, era:'save_test_era',
       geography:'save_test_geography', defaultGovernment:undefined, stories:undefined };
     expect(result).toEqual({
       absent:none, migrated:stampedFields, stamped:stampedFields, kept:stampedFields,
@@ -388,6 +391,7 @@ test('prototype v4 without a platform stamp migrates the old situation exactly o
       const source = JSON.parse(FB.save.serialize());
       const input = JSON.parse(JSON.stringify(source));
       delete input.platformSchema;
+      delete input.state.start.revision;
       delete input.state.authority.schema;
       input.state.situation476 = Object.assign({}, input.state.stories.western_court_476,
         input.state.stories.federate_track_476);
@@ -419,7 +423,7 @@ test('prototype v4 without a platform stamp migrates the old situation exactly o
     expect(result.records.world).toEqual(result.records.originalWorld);
     expect(result.records.track).toEqual(result.records.originalTrack);
     delete result.records;
-    expect(result).toEqual({ supported:true, header:[4,1,4,1], immutable:true, pure:true,
+    expect(result).toEqual({ supported:true, header:[4,1,4,2], immutable:true, pure:true,
       idempotent:true, removed:true, repeatedRestore:true, alias:false });
   });
 
@@ -589,7 +593,7 @@ async function checkStorageRoundTrip() {
 }
 
 function expectStorageRoundTrip(result) {
-  expect(result.header).toEqual([4,1,4,1]);
+  expect(result.header).toEqual([4,1,4,2]);
   expect(result.pure).toBe(true);
   expect(result.immutable).toBe(true);
   expect(result.identity).toBe(true);

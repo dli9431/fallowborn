@@ -1651,7 +1651,7 @@ window.FB = window.FB || {};
 
   function bookmarkReligiousHead(state, religionId) {
     var bookmark = null;
-    if (state && state.start && FB.bookmark) bookmark = FB.bookmark(state.start.id);
+    if (state && state.start && FB.bookmark) bookmark = FB.campaignBookmark(state);
     if (!bookmark) bookmark = FB.activeBookmark;
     var mapping = bookmark && bookmark.religiousHeads;
     if (mapping && Object.prototype.hasOwnProperty.call(mapping, religionId)) {

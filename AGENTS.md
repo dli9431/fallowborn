@@ -502,3 +502,7 @@ Architecture and locale lifecycle: `docs/designs/i18n.md`. Schema: `docs/MODDING
 Historical story type loading
 
 index.html loads data/story_instances.js after bookmark instance sources, including data/story_courts_476.js. js/story_campaign.js, js/story_history.js, js/story_agreements.js, js/royal_settlements.js, js/story_polity_foundation.js, js/story_settlements.js, js/story_courts.js and js/story_track.js load after js/stories.js and before js/main.js. story_track.js depends on story_courts.js. Reusable type files register factories only. The story registry composes declaration-owned instance batches at their data anchors, preserving attachment and RNG dispatch order. New type files must declare their source and never select historical content through literal ids. Structural spellings that collide with content ids require explicit protocolFiles reviews and exact per-file counts in the content-id allowlist. Keep protocol literals in their owning files; do not hide them behind shared token tables.
+
+Expanded 476 load order
+
+data/geography_expansion.js follows data/geographies.js. data/bookmark_476_wider_identities.js and data/bookmark_476_wider.js follow data/mobile_confederations.js, after all merged opening and government consumers are declared. These scripts author the wider_v2 world revision while retaining the merged baseline. Saved-campaign readers use FB.campaignBookmark(state); FB.bookmark(id) selects the current fresh revision. Public authoring contracts are in docs/MODDING.md.

@@ -126,7 +126,7 @@ window.FB = window.FB || {};
       t.legDays = Math.max(1, balance('travelLegDays', 3));
     }
     if (t && (!isFinite(Number(t.legDaysLeft)) || Number(t.legDaysLeft) < 0)) {
-      t.legDaysLeft = t.remainingRoute && t.remainingRoute.length ? t.legDays : 0;
+      t.legDaysLeft = FB.travelNextLegDays(t);
     }
     if (t && t.targetCharId !== undefined &&
         typeof t.targetCharId !== 'string') delete t.targetCharId;
@@ -185,22 +185,30 @@ window.FB = window.FB || {};
     return FB.world.byId[t ? t.currentId : state.player.provinceId] || null;
   };
 
-  /* Settled-only BFS. Authored straits are already part of FB.world.adj, so
-     they remain legal without admitting decorative wasteland counties. */
+  /* Settled-only least-time route. Equal-cost ties retain adjacency order,
+     including the original breadth-first ordering on ordinary maps. */
   function routeSearch(fromPid, toPid) {
     const targeted = toPid !== undefined && toPid !== null;
     if (!settled(fromPid) || (targeted && !settled(toPid))) return null;
     const prev = {};
     const q = [fromPid];
+    const costs = {}, done = {};
+    costs[fromPid] = 0;
     prev[fromPid] = fromPid;
-    for (let qi = 0; qi < q.length; qi++) {
-      const cur = q[qi];
+    while (q.length) {
+      let best = 0;
+      for (let i = 1; i < q.length; i++) if (costs[q[i]] < costs[q[best]]) best = i;
+      const cur = q.splice(best,1)[0];
+      done[cur] = true;
+      if (targeted && cur === toPid) return {from:fromPid,prev:prev};
       const adj = FB.world.adj[cur] || {};
       for (const nb in adj) {
-        if (prev[nb] !== undefined || !settled(nb)) continue;
+        if (done[nb] || !settled(nb)) continue;
+        const cost = costs[cur] + FB.landRouteUnits(cur,nb);
+        if (costs[nb] !== undefined && costs[nb] <= cost) continue;
+        if (costs[nb] === undefined) q.push(nb);
+        costs[nb] = cost;
         prev[nb] = cur;
-        if (targeted && nb === toPid) return { from:fromPid, prev:prev };
-        q.push(nb);
       }
     }
     return targeted ? null : { from:fromPid, prev:prev };
@@ -299,7 +307,7 @@ window.FB = window.FB || {};
 
   FB.travelRouteOverhead = function (routeOrLegs, state) {
     const legs = typeof routeOrLegs === 'number'
-      ? routeOrLegs : ((routeOrLegs && routeOrLegs.length) || 0);
+      ? routeOrLegs : FB.travelRouteUnits(state && state.player && state.player.provinceId,routeOrLegs);
     const base = Math.ceil(2 + legs * 2 * 0.25);
     const mult = state && FB.householdStandardEffects
       ? FB.householdStandardEffects(state).travelCost : 1;
@@ -311,7 +319,7 @@ window.FB = window.FB || {};
   FB.travelCostSnapshot = function (purposeId, routeOrLegs, state) {
     const def = purpose(purposeId);
     const legs = typeof routeOrLegs === 'number'
-      ? routeOrLegs : ((routeOrLegs && routeOrLegs.length) || 0);
+      ? routeOrLegs : FB.travelRouteUnits(state && state.player && state.player.provinceId,routeOrLegs);
     const supplies = Math.ceil(2 + legs * 2 * 0.25);
     const fee = (def && def.cost) || 0;
     const mult = state ? travelStandardEffectsSnapshot(state).travelCost : 1;
@@ -324,7 +332,7 @@ window.FB = window.FB || {};
   FB.travelCost = function (purposeId, routeOrLegs, state) {
     const def = purpose(purposeId);
     const legs = typeof routeOrLegs === 'number'
-      ? routeOrLegs : ((routeOrLegs && routeOrLegs.length) || 0);
+      ? routeOrLegs : FB.travelRouteUnits(state && state.player && state.player.provinceId,routeOrLegs);
     const supplies = Math.ceil(2 + legs * 2 * 0.25);
     const fee = (def && def.cost) || 0;
     const mult = state && FB.householdStandardEffects
@@ -394,7 +402,7 @@ window.FB = window.FB || {};
     if (!route.length) return 0;
     const legDays = Math.max(1, Number(delivery.legDays) || 1);
     const left = Math.max(0, Number(delivery.legDaysLeft) || 0);
-    return left + Math.max(0, route.length - 1) * legDays;
+    return left + FB.travelRouteUnits(route[0],route.slice(1)) * legDays;
   }
 
   FB.giftDeliveryEnsure = function (state) {
@@ -514,7 +522,7 @@ window.FB = window.FB || {};
     out.route = route || [];
     out.legs = out.route.length;
     out.legDays = legDays;
-    out.days = out.legs * legDays;
+    out.days = FB.travelRouteUnits(homeId,out.route) * legDays;
     out.eta = out.days;
     return out;
   };
@@ -577,7 +585,7 @@ window.FB = window.FB || {};
       remainingRoute:preview.route.slice(),
       outboundRoute:preview.route.slice(),
       legDays:preview.legDays,
-      legDaysLeft:preview.legDays,
+      legDaysLeft:preview.legDays * FB.landRouteUnits(preview.homeId,preview.route[0]),
       startedTurn:state.turn,
       outboundArrivalTurn:state.turn + preview.days,
       failedReason:null
@@ -676,8 +684,7 @@ window.FB = window.FB || {};
     delivery.returnHomeId = state.player.provinceId;
     delivery.remainingRoute =
       deliveryReturnRoute(delivery, delivery.returnHomeId) || [];
-    delivery.legDaysLeft = delivery.remainingRoute.length
-      ? delivery.legDays : 0;
+    delivery.legDaysLeft = FB.travelNextLegDays(delivery);
     delivery.returnStartedTurn = state.turn;
     delivery.returnArrivalTurn = state.turn + deliveryEta(delivery);
     const destination = FB.world.byId[delivery.destinationId];
@@ -798,7 +805,7 @@ window.FB = window.FB || {};
     if (!route || !route.length) return;
     delivery.returnHomeId = homeId;
     delivery.remainingRoute = route;
-    delivery.legDaysLeft = delivery.legDays;
+    delivery.legDaysLeft = FB.travelNextLegDays(delivery);
     delivery.returnArrivalTurn = state.turn + deliveryEta(delivery);
   }
 
@@ -832,7 +839,7 @@ window.FB = window.FB || {};
         d.legDaysLeft--;
         if (d.legDaysLeft > 0) continue;
         d.currentId = d.remainingRoute.shift();
-        d.legDaysLeft = d.remainingRoute.length ? d.legDays : 0;
+        d.legDaysLeft = FB.travelNextLegDays(d);
         if (!d.remainingRoute.length) {
           if (d.phase === 'outbound') giftDeliveryArrive(state, d);
           else if (d.currentId === state.player.provinceId) {
@@ -954,7 +961,7 @@ window.FB = window.FB || {};
       destinationRealm:realmId || null,
       route:route,
       legs:route.length,
-      days:route.length * legDays,
+      days:FB.travelRouteUnits(state.player.provinceId,route) * legDays,
       legDays:legDays,
       development:(state.dev && state.dev[pid]) || (pr && pr.dev0) || 1,
       cost:opts.overheadOnly
@@ -1080,7 +1087,7 @@ window.FB = window.FB || {};
           gatewayId:best.gatewayId,
           route:best.route,
           legs:best.route.length,
-          days:best.route.length * legDays,
+          days:FB.travelRouteUnits(state.player.provinceId,best.route) * legDays,
           legDays:legDays,
           development:1,
           cost:FB.travelCost(purposeId, best.route, state)
@@ -1142,7 +1149,7 @@ window.FB = window.FB || {};
       remainingRoute:choice.route.slice(),
       outboundRoute:choice.route.slice(),
       visited:[p.provinceId],
-      legDaysLeft:legDays,
+      legDaysLeft:legDays * FB.landRouteUnits(p.provinceId,choice.route[0]),
       legDays:legDays,
       startTurn:state.turn,
       cost:upfront,
@@ -1279,7 +1286,7 @@ window.FB = window.FB || {};
     out.route = route;
     out.legs = route.length;
     out.legDays = legDays;
-    out.days = route.length * legDays;
+    out.days = FB.travelRouteUnits(state.player.provinceId,route) * legDays;
     out.cost = readOnly
       ? FB.travelCostSnapshot('relationship', route, state)
       : FB.travelCost('relationship', route, state);
@@ -1635,7 +1642,7 @@ window.FB = window.FB || {};
     const route = FB.travelRoute(t.currentId, t.homeId);
     t.phase = 'return';
     t.remainingRoute = route || [];
-    t.legDaysLeft = t.remainingRoute.length ? t.legDays : 0;
+    t.legDaysLeft = FB.travelNextLegDays(t);
     if (!t.remainingRoute.length) finishAtHome(state);
     if (FB.map) FB.map.request();
   }
@@ -1679,7 +1686,7 @@ window.FB = window.FB || {};
     if (t.legDaysLeft > 0) return;
     t.currentId = t.remainingRoute.shift();
     if (t.phase === 'outbound') t.visited.push(t.currentId);
-    if (t.remainingRoute.length) t.legDaysLeft = t.legDays;
+    t.legDaysLeft = FB.travelNextLegDays(t);
     arriveCounty(state);
     if (!t.remainingRoute.length && t.phase === 'return') finishAtHome(state);
     if (FB.map) FB.map.request();
@@ -1968,7 +1975,7 @@ window.FB = window.FB || {};
     }
     t.phase = 'return';
     t.remainingRoute = route;
-    t.legDaysLeft = route.length ? t.legDays : 0;
+    t.legDaysLeft = FB.travelNextLegDays(t);
     if (!route.length) finishAtHome(state);
     else FB.news(state, FB.msg('news.travel.turned_back',
       '🧭 Turned back toward {home}.', {home:FB.world.byId[t.homeId].name}));
@@ -1983,7 +1990,7 @@ window.FB = window.FB || {};
     clearQueued(state);
     t.phase = 'return';
     t.remainingRoute = [t.homeId].concat(t.outboundRoute.slice(0, -1)).reverse();
-    t.legDaysLeft = t.remainingRoute.length ? t.legDays : 0;
+    t.legDaysLeft = FB.travelNextLegDays(t);
     if (!t.remainingRoute.length) finishAtHome(state);
     if (FB.map) FB.map.request();
     return true;

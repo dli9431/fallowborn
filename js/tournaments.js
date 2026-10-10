@@ -859,12 +859,12 @@ window.FB = window.FB || {};
       }
       var shadow = copy(s); shadow.player.provinceId = origin;
       out.legDays = FB.travelLegDaysSnapshot(shadow);
-      out.outbound = origin === e.provinceId ? 0 : FB.travelCostSnapshot('tournament', route.length / 2, shadow);
+      out.outbound = origin === e.provinceId ? 0 : FB.travelCostSnapshot('tournament', FB.travelRouteUnits(origin,route) / 2, shadow);
       shadow.player.provinceId = e.provinceId;
-      out.returnReserve = e.provinceId === s.player.provinceId ? 0 : FB.travelCostSnapshot('tournament', back.length / 2, shadow);
+      out.returnReserve = e.provinceId === s.player.provinceId ? 0 : FB.travelCostSnapshot('tournament', FB.travelRouteUnits(e.provinceId,back) / 2, shadow);
       out.oldReserve = t ? num(t.returnReserve) : 0;
       out.cost = out.outbound + out.returnReserve - out.oldReserve;
-      out.arrivalTurn = s.turn + route.length * out.legDays;
+      out.arrivalTurn = s.turn + FB.travelRouteUnits(origin,route) * out.legDays;
       if (out.arrivalTurn >= e.closeTurn) out.reasons.push(FB.T('The games would close before your arrival.'));
       if (s.player.gold < out.cost) out.reasons.push(FB.T('You cannot fund the journey and return allowance.'));
     }
@@ -886,7 +886,7 @@ window.FB = window.FB || {};
       phase:'outbound', remainingRoute:q.route.slice(), outboundRoute:q.route.slice(),
       visited:old ? (old.visited || [q.homeId]).slice() : [q.homeId],
       returnRoute:q.returnRoute.slice(), returnReserve:q.returnReserve, cost:q.outbound,
-      legDays:q.legDays, legDaysLeft:q.legDays, startTurn:s.turn,
+      legDays:q.legDays, legDaysLeft:q.legDays * FB.landRouteUnits(q.originId,q.route[0]), startTurn:s.turn,
       encounters:{ culture:0, road:0 }, seenCultures:{}, seenEvents:{}, completed:false };
     t.seenCultures[character(s, s.player.charId).culture] = 1;
     if (FB.map) FB.map.request();
@@ -904,7 +904,7 @@ window.FB = window.FB || {};
     if (!route) route = (t.visited || []).slice(0, -1).reverse();
     if (t.currentId !== t.homeId && (!route.length || route[route.length - 1] !== t.homeId)) return false;
     t.phase = 'return'; t.forcedReturn = !!forced; t.returnReserve = 0;
-    t.remainingRoute = route; t.legDaysLeft = route.length ? t.legDays : 0;
+    t.remainingRoute = route; t.legDaysLeft = FB.travelNextLegDays(t);
     s.eventQueue = (s.eventQueue || []).filter(function (q) { return !q.travel && !(q.ctx && q.ctx.tournamentId === t.tournamentId); });
     notify(s, 'returning', 'The traveller begins the funded return home from the games.', {});
     return true;

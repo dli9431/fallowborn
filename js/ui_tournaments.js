@@ -116,7 +116,7 @@
     var t = s.player.travel, origin = t ? t.currentId : s.player.provinceId;
     if (origin === e.provinceId) return FB.T('At your location');
     var route = FB.travelRoute(origin, e.provinceId);
-    return route ? FB.T('About {days} days’ journey', {days:route.length * legDays}) : FB.T('No route from your location');
+    return route ? FB.T('About {days} days’ journey', {days:FB.travelRouteUnits(origin,route) * legDays}) : FB.T('No route from your location');
   }
   function gameCard(s, e, legDays) {
     var eligibility = T.eligibility(s, s.player.charId, e), p = T.participant(e, s.player.charId), host = s.chars[e.hostId];

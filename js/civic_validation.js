@@ -52,7 +52,7 @@
     return errors;
   };
   V.validate = function (s) {
-    var bookmark = s.start && FBDATA.bookmarks[s.start.id], roots = s.authority && s.authority.governments || {}, assigned = {};
+    var bookmark = FB.campaignBookmark(s), roots = s.authority && s.authority.governments || {}, assigned = {};
     function fault() { throw new Error(FB.T('Invalid civic institution, office or foreign right in this save.')); }
     Object.keys(roots).forEach(function (rid) {
       var r = roots[rid].civic;

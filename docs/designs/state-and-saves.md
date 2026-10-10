@@ -32,7 +32,7 @@ In the standard localStorage fallback, a manual slot rejected for quota can comp
 
 New elective papal roots carry the same explicit role:null default that restoration supplies to succession members. Saving and restoring an opening therefore retains its root identity, ruler generation and court record without adding a field during load. This uses the existing member role field and changes no schema.
 
-The version-4 resumable format is frozen for the current platform and bookmark state. FB.save.FORMAT is the shared frozen definition: v:4, titleIds:1, authoritySchema:4 and platformSchema:1. The serializer and migration use that definition together; a storage encoding is not another save schema. Later release work must reopen this contract and its migration coverage before adding saved fields or changing their meaning, defaults, id families or subsystem schemas. Changing an existing field's meaning requires a schema change and migration; optional extensions require an explicit contract review too.
+FB.save.FORMAT freezes the current resumable envelope at v:4, titleIds:1, authoritySchema:4 and platformSchema:2. The serializer and migration use that definition together; a storage encoding is not another save schema. Later release work must reopen this contract and its migration coverage before adding saved fields or changing their meaning, defaults, id families or subsystem schemas. Changing an existing field's meaning requires a schema change and migration; optional extensions require an explicit contract review too.
 
 The envelope contains those four schema fields, rng, uid, mods, state and optional meta. rng preserves a 32-bit RNG state in its existing signed or unsigned representation; uid is a nonnegative safe integer. mods is the exact edition/mod fingerprint, not a request to switch content profiles. A missing legacy fingerprint is accepted only in an unmodded standard edition. meta is informational slot/Chronicle preview data and does not authorize gameplay changes. Unknown schema numbers and missing required v4 schema fields fail with the offending envelope field. Early v4 branch saves may omit platformSchema and the detached authority schema stamp; migration supplies them without changing their records.
 
@@ -101,7 +101,7 @@ The version-3 save envelope may carry optional meta.household with version 1, nu
 
 This frozen contract fixes which bookmark-platform facts a campaign saves and which it derives, so every system that adds saved state writes against one schema and v4 keeps a single migration. FB.save.v4.validatePlatform accepts the optional fields described here; the registries that resolve their ids arrive with the systems that use them.
 
-Envelope. platformSchema:1 sits beside authoritySchema:4. The serializer writes it and migration adds it. A v4 envelope without it, written before this schema, remains supported and gains it on its next save; any other value is an unsupported format. V3 may omit every schema stamp, but a present unknown stamp is rejected rather than ignored. An optional field may retain the number only after reopening the frozen contract and extending migration coverage. Changing the meaning of an existing saved field changes the schema number together with a migration.
+Envelope. platformSchema:2 sits beside authoritySchema:4 and requires state.start.revision. Supported schema 1, unstamped early v4 and v3 records without a world revision migrate to baseline and gain schema 2 on serialization. Present unknown schema numbers are rejected. A revision-bearing record cannot masquerade as schema 1 or as an unstamped legacy record. The World-revision compatibility section defines resolution and older-reader rejection. Changing saved-field meaning requires another explicit contract review and migration.
 
 Saved facts:
 
@@ -2105,3 +2105,11 @@ authority.governments[realmId].civic is an optional strict schema-1 record for t
 Ecclesiastical binding records
 
 Optional authority.governments[realmId].ecclesiastical schema 1 contains profileId, officeId, institutionId, scope, originFormId and temporalRecognitionId. Exact detached validation checks references, unique office binding, bounded jurisdiction and the canonical recognition record. No election, incumbent or treasury is serialized here. Restoration does not initialize the form or adopt revised opening content. See ecclesiastical-principality.md.
+
+World-revision compatibility
+
+The world-revision extension reopens the platform contract as platformSchema 2 while retaining v:4, titleIds:1 and authoritySchema:4. Every newly serialized campaign carries state.start.revision. Unversioned bookmarks use baseline. Supported schema 1, early v4 and v3 campaigns without this field migrate on a detached copy to baseline; they never take the current fresh revision. A revision field in a schema 1 or unstamped envelope is rejected.
+
+The saved revision resolves geography, opening actors, settlement layout, local institutions, political declarations and title maps before activation. Saved geography must agree with a versioned definition. Unknown revision ids, foreign county ownership and an opening catalogue from another revision fail before state, RNG, uid or world adoption. Direct FB.save.restore requires the matching bookmark and revision already active; FB.game.loadData performs detached preflight and selects the saved world. Existing converted scenery remains legal when its county belongs to that world.
+
+For 476, baseline retains the merged wider_v1 opening and its older supported opening catalogues on europe_regional. wider_v2 owns the expanded layout and its own opening catalogue on europe_regional_2. Loading baseline does not add new courts, move Alexandria or seed fresh communities. The existing edition/mod fingerprint checks remain mandatory. The retained schema 1 reader fixture rejects platformSchema 2, preventing an older runtime from discarding a revision it cannot interpret.

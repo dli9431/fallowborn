@@ -281,7 +281,7 @@
       if (operation === 'war') return keys(t, ['causes']) && Array.isArray(t.causes) && t.causes.length > 0 && t.causes.length <= 8 &&
         t.causes.every(function (c) { return keys(c, ['type','enemy','target','titleKind','titleId','rightId','basis']) &&
           ['aggression','customary','fabricated','dejure'].indexOf(c.type) >= 0 && !!s.realms[c.enemy] && c.enemy !== rid &&
-          (FBDATA.bookmarks[s.start.id].provinces || []).some(function (q) { return q.id === c.target; }) &&
+          (FB.campaignBookmark(s).provinces || []).some(function (q) { return q.id === c.target; }) &&
           ['titleKind','titleId','rightId','basis'].every(function (key) { return c[key] === null || typeof c[key] === 'string'; }); });
       if (operation === 'extraordinary_tax') return keys(t, ['amount','duration']) && amount(t) && t.amount > 0 && duration(t, 360);
       if (operation === 'conversion') return keys(t, ['formId','externalRealmId']) && !!FBDATA.governmentForms[t.formId] && outside(t);

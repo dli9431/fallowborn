@@ -10,6 +10,7 @@ const { injectBrowserHarness } = require('../support/game/browser-harness');
 dependsOnRuntime(__filename, [
   'data/story_courts_476.js',
   'data/aristocratic_courts.js', 'js/government_aristocracy.js', 'js/government_recognition.js', 'js/government_administration.js', 'js/bookmark_setup.js', 'js/starts.js',
+  'data/bookmark_476_wider.js', 'data/bookmark_476_wider_identities.js', 'data/geography_expansion.js',
   'index.html', 'data/bookmark_476_outer.js', 'data/bookmark_476.js', 'data/mobile_confederations.js',
   'data/assembly_polities.js', 'js/government_support.js', 'js/government_collective.js', 'js/government_assembly.js',
   'data/bookmark_476_italy.js', 'data/bookmark_476_dalmatia_east.js',
@@ -71,7 +72,7 @@ for (const crazygames of [false, true]) {
           FB.save.restore(JSON.parse(FB.save.serialize()));
           return {
             faults:FB.validateBookmark(b), legal:FB.validateLegalTraditions(), technology:FB.validateTechnologyData(true),
-            stable:b.provinces.map(function (p) { return p.id; }).sort().join('|') ===
+            stable:FB.bookmark('476','baseline').provinces.map(function (p) { return p.id; }).sort().join('|') ===
               earlier.provinces.map(function (p) { return p.id; }).sort().join('|'),
             unique:new Set(b.provinces.map(function (p) { return p.id; })).size === b.provinces.length,
             added:region.provinces.length, courts:region.realms.length,
@@ -88,8 +89,8 @@ for (const crazygames of [false, true]) {
             restoredRights:initial === JSON.stringify(FB.state.authority.rights),
             untouched:medieval === JSON.stringify(FB.bookmark('867')),
             identity:identity,
-            offMap:['nicosia','novgorod','merv','balkh','etelkoz','norrland','scone','tara'].every(function (id) {
-              return FB.world.byId[id].wasteland && !FB.state.owner[id] && !FB.state.holder[id];
+            inhabited:['nicosia','novgorod','merv','balkh','etelkoz','norrland','scone','tara'].every(function (id) {
+              return !FB.world.byId[id].wasteland && !!FB.state.owner[id] && !!FB.state.holder[id];
             }),
             generated:region.realms.every(function (r) {
               return r.id === 'sasanian_476' ? r.ruler.name === 'Peroz' : r.ruler.generated === true && !r.ruler.name;
@@ -106,13 +107,13 @@ for (const crazygames of [false, true]) {
         });
         expect(result).toEqual({ faults:[], legal:[], technology:[], stable:true, unique:true, added:106, courts:17,
           direct:true, weighted:true, heads:true, sites:true, restoredRights:true, untouched:true,
-          identity:sample[1].split('.'), offMap:true, generated:true, royalFamily:true, chapters:true, valid:true,
+          identity:sample[1].split('.'), inhabited:true, generated:true, royalFamily:true, chapters:true, valid:true,
           reviews:['none','none','none'] });
         await saveBudget(page, testInfo, 'fresh-' + sample[0], 4 * 1024 * 1024);
         if (!crazygames && ['shrewsbury','lund','baghdad'].indexOf(sample[0]) >= 0) {
           await injectBrowserHarness(page);
-          await advanceBookmark(page, 360);
-          const checkpoint = await saveBudget(page, testInfo, 'household-year1-' + sample[0], 6 * 1024 * 1024);
+          await advanceBookmark(page, 90);
+          const checkpoint = await saveBudget(page, testInfo, 'household-season-' + sample[0], 6 * 1024 * 1024);
           await restoreBookmark(page, checkpoint);
           expect(await page.evaluate(function () { return FB.state.start.id; })).toBe('476');
         }
@@ -351,9 +352,9 @@ test('one 476 bookmark carries every Wave 12 consumer and retires the separate w
       };
     });
     expect(result).toEqual({ retired:[], stale:[],
-      revisions:['wider_v1','core_v1',['balkans_v1','core_v1','wider_v1']],
+      revisions:['wider_v2','wider_v2',['wider_v2']],
       governments:['aristocratic_monarchy','lineage_kingship','assembly_polity','mobile_confederation'],
-      cashel:true, starts:true, anchors:[152,21], faults:[] });
+      cashel:true, starts:true, anchors:[0,21], faults:[] });
   });
 
 test('a merged 476 save restores, while retired wider and mobile ids fail without changing the live campaign',

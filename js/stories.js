@@ -67,7 +67,7 @@
     }
     if (kind === 'provinces') return ref.provinceIds.slice();
     if (kind === 'region') {
-      var bm = FB.bookmark(s.start.id), region = bm.storyRegions && bm.storyRegions[ref.regionId];
+      var bm = FB.campaignBookmark(s), region = bm.storyRegions && bm.storyRegions[ref.regionId];
       if (!region) return [];
       return (bm.provinces || []).filter(function (p) {
         return !p.wasteland && (region.provinceIds ? region.provinceIds.indexOf(p.id) >= 0 :
@@ -238,7 +238,7 @@
        when every required story is attached, appliesTo agrees and init
        returns its record. A campaign with no story gets no state.stories. */
     start:function (s, options) {
-      var bookmark = FB.bookmark(s.start && s.start.id);
+      var bookmark = FB.campaignBookmark(s);
       var world = bookmark && Array.isArray(bookmark.stories) ? bookmark.stories : [];
       var tracks = options && Array.isArray(options.tracks) ? options.tracks : [];
       var added = [];

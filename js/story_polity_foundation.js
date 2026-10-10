@@ -137,7 +137,7 @@
     if (rec.phase === 'pending' && (rec.startedTurn !== null || rec.rebellionId !== null || rec.formerOwnerId !== null)) bad('startedTurn');
     if ((rec.startedTurn === null) !== (rec.deadline === null) ||
         rec.deadline !== null && rec.deadline !== rec.startedTurn + def.durationDays) bad('deadline');
-    var bookmark = FB.bookmark(s.start && s.start.id);
+    var bookmark = FB.campaignBookmark(s);
     var provinceIds = bookmark && bookmark.provinces.map(function (p) { return p.id; }) || [];
     if (!Array.isArray(rec.counties) || rec.counties.length > provinceIds.length || rec.counties.some(function (pid, i) {
       return provinceIds.indexOf(pid) < 0 || rec.counties.indexOf(pid) !== i;
@@ -162,7 +162,7 @@
       day:function (s, rec) { day(s, rec, FB.stories.definition(s, def)); },
       foundRevolt:function (s, rec, group, counties) { return foundRevolt(s, rec, FB.stories.definition(s, def), group, counties); },
       migrate:function (s) {
-        var bookmark = FB.bookmark(s.start && s.start.id);
+        var bookmark = FB.campaignBookmark(s);
         if (!bookmark || (bookmark.stories || []).indexOf(def.id) < 0 || s.stories && s.stories[def.id]) return;
         if (!s.stories) s.stories = {};
         /* Add only semantic pending state, never people or territorial effects. */

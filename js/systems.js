@@ -103,7 +103,7 @@ window.FB = window.FB || {};
   function bookmark(state, context) {
     if (context && context.bookmark) return context.bookmark;
     var start = state && state.start;
-    return start && start.id !== undefined && FB.bookmark ? FB.bookmark(start.id) : FB.activeBookmark;
+    return start && start.id !== undefined && FB.bookmark ? FB.campaignBookmark(state) : FB.activeBookmark;
   }
   function scope(state, context) {
     context = context || {};

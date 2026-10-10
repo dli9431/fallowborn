@@ -217,7 +217,7 @@
     function fault() { throw new Error(FB.T('Invalid constituency or mandate in this save.')); }
     function int(n) { return Number.isSafeInteger(n) && n >= 0; }
     if (!keys(root, ['schema','polities']) || root.schema !== 1 || !plain(root.polities)) fault();
-    var bookmark = s.start && FBDATA.bookmarks[s.start.id];
+    var bookmark = FB.campaignBookmark(s);
     if (!bookmark || !s.realms || !s.chars || !s.owner || !s.holder) fault();
     Object.keys(root.polities).forEach(function (rid) {
       var r = root.polities[rid], p = r && FBDATA.constituencyProfiles[r.profileId];

@@ -127,7 +127,7 @@
     definitions.forEach(function (d) {
       if (!E.active(s,d.id) || E.row(s,d.id)) return;
       var t = d.ecclesiastical;
-      if (!t || E.definitionFaults(d,G.forRealm(s,d.id).id,s.start && FBDATA.bookmarks[s.start.id]).length) throw new Error('Invalid ecclesiastical opening');
+      if (!t || E.definitionFaults(d,G.forRealm(s,d.id).id,FB.campaignBookmark(s)).length) throw new Error('Invalid ecclesiastical opening');
       if (t.institutionId) FB.ensureLocalInstitutions(s,null,{ fresh:true });
       s.authority.governments[d.id].ecclesiastical = { schema:1,profileId:t.profileId,officeId:t.officeId,
         institutionId:t.institutionId,scope:FB.realmHeldCounties(s,d.id).slice().sort(),originFormId:null,temporalRecognitionId:null };
