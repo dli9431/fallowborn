@@ -1202,12 +1202,12 @@ window.FB = window.FB || {};
             return community && community.culture === start.startCulture && community.religion === start.startReligion;
           })) fault(owner, 'fixed culture and faith are absent from province ' + start.fixedProvinceId + '.');
       if (start.rulerRealmId) {
-        var startingRealm = realms[start.rulerRealmId], ruler = startingRealm && startingRealm.ruler;
+        var startingRealm = realms[start.rulerRealmId], ruler = FB.startRulerProfile(definition, startingRealm, start.governmentForm);
         if (!startingRealm) fault(owner, 'unknown ruler realm ' + start.rulerRealmId + '.');
         else if (!ruler || ruler.name !== start.characterName || ruler.sex !== start.sex ||
             ruler.culture !== start.startCulture || startingRealm.religion !== start.startReligion ||
             platform.governments[start.rulerRealmId] !== start.governmentForm ||
-            FB.station.realmRank({ tier:start.tier, formId:start.governmentForm, era:platform.era }, {}) !== startingRealm.rank)
+            FB.realmRank.tier({ rank:startingRealm.rank, formId:start.governmentForm, era:platform.era }, {}) !== start.tier)
           fault(owner, 'existing ruler identity, government and rank must match realm ' + start.rulerRealmId + '.');
       }
       if (!ownKey(FBDATA.careers, start.profession)) fault(owner, 'unknown career ' + start.profession + '.');

@@ -240,3 +240,7 @@ data/ecclesiastical_profiles.js names extract as ecclesiasticalProfile.<profile-
 Dated district display owners
 
 bookmark_<date>_expansion.js may declare literal bookmarkCultures<date>Expansion, bookmarkConstituencies<date>Expansion, bookmarkRealms<date>Expansion and bookmarkDistricts<date> catalogues. The static extractor reads these without executing the composer. Cultures use culture.<id>.name, represented interests use constituencyMember.<profile>.<member>.name, courts use realm.<date>.<id>.name, and district/site names use province.<date>.<id>.name and settlement.<date>.<id>_inhabited_<date>.name. Generated personal names remain identity data. The 867 composer registers these catalogues before its fresh revision and keeps normal English fallback until separately authorized integration regeneration.
+
+Spring 1204 district extraction
+
+The literal bookmarkTerrain1204 table in data/bookmark_1204_terrain.js exposes independently dated province and realm names, settlement layout labels, constituency member names and scenario/family-preset display fields to extract_terrain_1204. The composer need not execute during extraction. bookmarkCultures1204Terrain supplies the culture name through the existing culture owner. Generated person names and district/revision/mandate ids remain identity data. Runtime labels retain their ordinary province.1204, realm.1204, settlement.1204, constituencyMember and scenario owners. Integration regeneration remains separately authorized; new English falls back normally.

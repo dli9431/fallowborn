@@ -181,3 +181,7 @@ The 711 crown observers reference the same governmentSelection vacancies as the 
 Civic office contest projection
 
 government_contest also reads the canonical civic offices and vacancies. It retains only the existing institutional realm reference, projects open selection or occupied offices, and owns no incumbent or nomination ledger. The 1204 Venetian declaration supplies its name and introduction through storyCivicSelections and the ordinary instance catalogue. Earlier territorial saves do not gain a missing civic story on restore.
+
+Existing representative beginnings
+
+An existing-authority start may select the constituency's already chosen delegate through the ordinary starting-realm entry point. Pure offering and authoring validation read FB.startRulerProfile. Rank validation uses the government's rank-to-tier projection, allowing a public delegate to retain freeholder personal standing. The public constituency, treasury, holder and mandate keep their original ids; the protagonist starts an ordinary private household as its existing representative. Historical reference resolution retains that public identity. No second election or royal dynasty is initialized. Named court rulers continue to use ordinary player-realm adoption. Historical campaigns and partition instances retain their existing declared ids and outcome gates when the 1204 inhabited revision is selected.

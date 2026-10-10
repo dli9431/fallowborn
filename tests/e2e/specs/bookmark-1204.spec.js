@@ -4,13 +4,14 @@ dependsOnRuntime(__filename, [
   'data/ecclesiastical_profiles.js', 'js/government_ecclesiastical.js', 'js/ecclesiastical_strategies.js',
   'js/ecclesiastical_validation.js', 'js/local_office_appointments.js', 'js/ui_ecclesiastical.js',
   'data/story_courts_476.js',
-  'index.html', 'data/bookmark_1204.js', 'data/bookmark_1204_campaigns.js',
+  'index.html', 'data/bookmark_1204.js', 'data/bookmark_1204_campaigns.js', 'data/bookmark_1204_terrain.js',
   'data/bookmarks.js', 'data/counties.js', 'data/map_data.js',
   'data/settlements.js', 'data/settlements_real.js', 'data/geographies.js',
   'data/eras.js', 'data/starts.js', 'data/cultures.js', 'data/technology.js',
   'data/systems.js', 'data/story_campaigns.js', 'js/world.js', 'js/main.js',
   'data/distribution_crazygames.js', 'js/crazygames.js',
   'js/governments.js', 'js/authority.js', 'js/politics.js', 'js/population.js',
+  'js/starts.js',
   'data/civic_profiles.js', 'js/government_civic.js', 'js/civic_transactions.js', 'js/civic_strategies.js', 'js/civic_conversion.js', 'js/civic_validation.js', 'js/story_government_selection.js',
   'js/technology.js', 'js/holywar.js', 'js/papacy.js', 'js/stories.js',
   'js/story_campaign.js', 'js/story_history.js', 'data/story_instances.js', 'js/wars.js', 'js/armies.js',
@@ -60,14 +61,14 @@ async function startBookmark(page, testInfo, scenario, county, identity, crazyga
 test('1204 is offered in the picker and ordinary start codes reach character creation', async function ({ page }, testInfo) {
   await openGame(page, testInfo);
   const state = await page.evaluate(function () {
-    const b = FBDATA.bookmarkCandidates['1204'];
-    return { registered:FB.bookmark('1204') === b, offered:FB.bookmarks().map(function (b) { return b.id; }),
+    const b = FB.bookmark('1204');
+    return { registered:FBDATA.bookmarks['1204'] === FBDATA.bookmarkCandidates['1204'], offered:FB.bookmarks().map(function (b) { return b.id; }),
       faults:FB.validateBookmark(b), diagnostics:FB.communityShareDiagnostics(b),
       date:b.date, era:b.era, geography:b.geography, scripted:b.scripted,
       stories:b.stories.length, storiesRegistered:b.stories.every(function (id) { return !!FB.stories.get(id); }) };
   });
   expect(state).toMatchObject({ registered:true, faults:[], diagnostics:[],
-    date:{ year:1204, season:0, day:76 }, era:'high_medieval', geography:'europe_regional',
+    date:{ year:1204, season:0, day:76 }, era:'high_medieval', geography:'europe_regional_2',
     scripted:[], stories:16, storiesRegistered:true });
   expect(state.offered).toContain('1204');
   const fullStart = page.locator('#btn-choose-beginning');
@@ -103,7 +104,7 @@ for (const scenario of ['serf','farmer','apprentice','monk','soldier','knight','
           storyIds:Object.keys(restored.stories).sort() };
       });
       expect(result.after).toEqual(result.before);
-      expect(result.before.start).toMatchObject({ id:'1204', era:'high_medieval', geography:'europe_regional' });
+      expect(result.before.start).toMatchObject({ id:'1204', era:'high_medieval', geography:'europe_regional_2', revision:'inhabited_v2' });
       expect(result.faults).toEqual([]);
       expect(result.sourceUnchanged).toBe(true);
       expect(result.storyIds).toHaveLength(16);

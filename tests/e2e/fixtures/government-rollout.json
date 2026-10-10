@@ -17,5 +17,5 @@
     {"realm":"byzantium_1066","form":"administrative_monarchy","profile":"byzantine_1066","mode":"recognition","minor":false,"officers":true,"service":0.25},
     {"realm":"papacy_1066","form":"ecclesiastical_principality","profile":"papal_temporal_1066","law":"cardinal_shortlist","vacancyLevy":true}
   ]},
-  {"bookmark":"1204","scenario":"farmer","province":"venezia","revision":"baseline","forms":["city_republic","ecclesiastical_principality"],"changed":[]}
+  {"bookmark":"1204","scenario":"farmer","province":"venezia","revision":"inhabited_v2","forms":["city_republic","ecclesiastical_principality"],"changed":[]}
 ]

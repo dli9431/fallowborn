@@ -676,3 +676,11 @@ The 867 inhabited_v2 world uses the same 527-anchor europe_regional_2 physical c
 Spring 1066 district habitation
 
 1066 inhabited_v2 uses the existing 527-anchor europe_regional_2 geography. Its eleven inhabited additions have separate dated sites ending in _inhabited_1066, literal community compositions and a date-owned layout. Physical _site prototypes and earlier 476 declarations supply no population or ownership. Original layout entries are retained. Settlements, communities, commissions and the lower Syr demand remain separate facts. Eighteen deferred additions remain scenery without residents, owner or layout. No geometry, radius or route rule changes. Climate overrides select arid or continental seasons. Evidence and physical acceptance are in docs/research/1066-inhabited-terrain.md.
+
+Spring 1204 inhabited revision
+
+inhabited_v2 selects europe_regional_2 with fourteen independently dated new inhabited districts and fifteen explicitly gated scenery additions. All original 21 scenery remnants remain. The resulting physical world has 527 districts, 491 inhabited and 36 scenery. The original independently authored 498-district baseline is retained, including its ordered settlement layouts. No 1066 declaration supplies new owners or communities. See docs/research/1204-terrain.md for the exhaustive disposition and evidence ledger.
+
+Sarakhs and Nur promote existing physical fill-site locations into their own bounded districts only in the expanded revision. Sarakhs retains its site id; Nur shares the former coordinates through a new presentation id so its period label has a separate localization owner. Expanded Merv and Bukhara remove those presentations, including the duplicate Sarahs presentation, to avoid placing the same town in two counties. Other original layout slots remain unchanged; baseline slots are untouched. New synthetic site heads denote regional habitation rather than exact excavated buildings. Qara Khitai has a nonterritorial diplomatic anchor and no additional resident county.
+
+period_1204_inhabited_terrain has technology impact none. Baseline habitation, local authority, subordinate courts and ordinary travel require no new discovery. Existing production, equipment, supply and movement requirements remain active.
