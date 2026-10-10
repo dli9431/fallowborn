@@ -165,6 +165,23 @@ class StructuredDataExtractionTests(unittest.TestCase):
         # The generic candidate pass must not re-extract 711 under year-scoped title keys.
         self.assertNotIn('duchy.711.d_711_galicia.name.default', inventory.entries)
 
+    def test_711_terrain_display_owners(self):
+        inventory = i18n_catalog.Inventory()
+        i18n_catalog.extract_structured(inventory)
+        for key, text in (
+            ('province.711.terrain_v2.jenne_district.name.default', 'Middle Niger settlements'),
+            ('settlement.711.terrain_v2.jenne_jeno_711.name.default', 'Jenne-jeno'),
+            ('province.711.terrain_v2.kath_district.name.default', 'Kath'),
+            ('province.711.terrain_v2.w_steppe_e.name.default', 'Eastern steppe'),
+            ('realm.711.terrain_v2.khwarazm_711.name.default', 'Khwarazm'),
+            ('realm.711.terrain_v2.middle_niger_711.name.default', 'Middle Niger communities'),
+            ('duchy.d_711_khwarazm.name.default', 'Khwarazm'),
+            ('kingdom.k_711_middle_niger.name.default', 'Middle Niger'),
+        ):
+            self.assertEqual(inventory.entries[key]['text'], text)
+            self.assertIn('bookmark_711_terrain.js', inventory.meta[key]['location'])
+        self.assertEqual(inventory.entries['province.711.w_steppe_e.name.default']['text'], 'Kazakh Steppe')
+
     def test_800_review_content_has_display_and_durable_message_keys(self):
         inventory = i18n_catalog.Inventory()
         i18n_catalog.extract_structured(inventory)

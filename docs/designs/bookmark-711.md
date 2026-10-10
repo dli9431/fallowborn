@@ -1,5 +1,19 @@
 Across the Strait: spring 711 bookmark
 
+Expanded inhabited terrain
+
+Fresh campaigns now select terrain_v2_governments_v2 on europe_regional_2. data/bookmark_711_terrain.js adds eight independently dated districts: Ghadames, Jenne-jeno, Gao Saney, Ibrim, Tadmor, Tabas, Sarakhs and Kath. Four local courts are generated; Kath is an independent pre-conquest Khwarazm court. The other 21 additions and all 21 original scenery anchors remain scenery. The resulting declarations contain 485 inhabited counties in a 527-anchor world. The detailed evidence, all seven scenery dispositions and remaining regional limits are in docs/research/711-inhabited-terrain.md.
+
+The older full-map description below remains the baseline contract. baseline and governments_v2 still use europe_regional, their original 498 counties and stable settlement slots. terrain_v2 is the date-owned expanded definition; the government layer adds the existing Byzantine and Umayyad assignments in terrain_v2_governments_v2 without losing the independently resolvable government-only revision. Gothic selection, institutional definitions, start scenarios, opening actors, dates and Iberian story declarations remain inherited. Saved worlds select their own revision before geography activation; restore creates no extra inhabitants, courts or rewards.
+
+Each new district has an ordinary local household start, a known climate and a researched head site. The Niger chain uses the existing dry routes through Gao and Ghadames to Kairouan. Generated territorial local courts are minimal gameplay representations, not reconstructed electoral or hereditary constitutions. Khwarazm uses regnum for directly held dynastic authority. Existing Iranian, Nubian, Berber and Sahelian profiles remain coarse documented proxies; no new religious institutions are inferred from archaeological occupation. Community shares, ruler ages, skills and development are simulation values.
+
+Technology decision: period_711_terrain_habitation is none. Baseline habitation and local authority require no discovery. Existing travel, provisions, production and military requirements remain effective. No new government strategy, seasonal-access mechanic or save schema is introduced.
+
+The terrain script loads after the shared identity catalogue and before government_rollout.js. Literal display fields have static extraction owners under province.711.terrain_v2, settlement.711.terrain_v2 and realm.711.terrain_v2, with separate source aliases for retained labels. Title ids keep their ordinary namespaces. Version/changelog assignment and catalogue regeneration remain integration work.
+
+711-terrain.spec.js and its independent fixture cover declarations, withheld scenery, opening owners, routes and site snapping, current and retained saves, technology review, regional household seasons, public delegation, succession and observer state. The original 711 bookmark and government-rollout specifications now expect the combined fresh revision while retaining their baseline assertions. Owner execution, historical review, raster/travel inspection, performance measurements and package/device acceptance are outstanding. No acceptance result follows from the authored counts.
+
 Status
 
 The 476 branch registers this data-only definition in FBDATA.bookmarks during ordinary boot. New Game, start codes and save loading can select 711 without a console setup. The authored definition remains in bookmarkCandidates for the existing static localization extractor, and the live registry references that same definition. Its supplemental culture, faith and site tables install before engine indexing. Selectability does not resolve the historical and capability gaps listed below.

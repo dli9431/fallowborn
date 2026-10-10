@@ -599,6 +599,8 @@ The gaul_iberia declaration owns period names, community weights, development an
 
 Spring 711 geography
 
+The baseline described here remains retained. Fresh 711 uses terrain_v2_governments_v2 on europe_regional_2, adding eight inhabited bounded districts and keeping 21 unused additions as scenery. data/bookmark_711_terrain.js supplies literal date-specific head sites, communities, title groups and local courts. No shared seed or released geography changes. The original 21 scenery anchors survive, with Eastern steppe replacing the later national label in this revision only. The research ledger is docs/research/711-inhabited-terrain.md; government composition and saved-world behavior are described in bookmark-711.md.
+
 data/bookmark_711.js owns literal politics, community weights, period names and one head presentation per inhabited county across the shared europe_regional grid. Its separate bookmarkSites711 table installs before engine indexing alongside the live bookmark registration. A null settlementLayout keeps the inline presentations independent of medieval layouts, and empty county names lists preserve the literal 711 labels instead of shared dated aliases. Geography supplies physical county seeds and terrain only. Later urban foundations use predecessors or district names, and generated extra slots remain procedural. No other bookmark supplies opening owners, holders, courts or community shares. Historical and coordinate uncertainties remain recorded in ../research/711-bookmark.md.
 
 800 geography and settlements

@@ -1293,32 +1293,38 @@ def extract_structured(inv: Inventory) -> None:
                         f"{region_rel}:{line}",
                         f"{bookmark_id} administrative {kind} {title_id}, display name.", ()
                     )
-    for candidate_path, bookmark_id in CANDIDATE_FILES:
+    for candidate_path, bookmark_id, owner in (
+        [(path, bid, "bookmarkCandidates") for path, bid in CANDIDATE_FILES]
+        + [(DATA / "bookmark_711_terrain.js", "711", "bookmarkTerrain")]
+    ):
         candidate_rel = candidate_path.relative_to(ROOT).as_posix()
+        # A retained county can have different prose in the expanded world.
+        # Separate owners preserve both exact-source aliases without collisions.
+        display_scope = bookmark_id if owner == "bookmarkCandidates" else bookmark_id + ".terrain_v2"
         candidate = node_object(find_keyed_assignment(
-            candidate_path, "FBDATA", "bookmarkCandidates", bookmark_id
+            candidate_path, "FBDATA", owner, bookmark_id
         )) or {}
         for field in ("name", "desc"):
             for branch, record, line in branch_records(candidate.get(field)):
-                inv.add(f"bookmark.{bookmark_id}.{field}.{branch}", record,
+                inv.add(f"bookmark.{display_scope}.{field}.{branch}", record,
                         f"{candidate_rel}:{line}", f"Start bookmark {bookmark_id}, {field}.", ())
         for province_node in node_array(candidate.get("provinces")) or []:
             province = node_object(province_node) or {}
             province_id = node_string(province.get("id"))
             for branch, record, line in branch_records(province.get("name")):
-                inv.add(f"province.{bookmark_id}.{province_id}.name.{branch}", record,
+                inv.add(f"province.{display_scope}.{province_id}.name.{branch}", record,
                         f"{candidate_rel}:{line}", f"{bookmark_id} county {province_id}, display name.", ())
             for entry_node in node_array(province.get("settlements")) or []:
                 entry = node_object(entry_node) or {}
                 site_id = node_string(entry.get("site"))
                 for branch, record, line in branch_records(entry.get("name")):
-                    inv.add(f"settlement.{bookmark_id}.{site_id}.name.{branch}", record,
+                    inv.add(f"settlement.{display_scope}.{site_id}.name.{branch}", record,
                             f"{candidate_rel}:{line}", f"{bookmark_id} site {site_id}, display name.", ())
         for realm_node in node_array(candidate.get("realms")) or []:
             realm = node_object(realm_node) or {}
             realm_id = node_string(realm.get("id"))
             for branch, record, line in branch_records(realm.get("name")):
-                inv.add(f"realm.{bookmark_id}.{realm_id}.name.{branch}", record,
+                inv.add(f"realm.{display_scope}.{realm_id}.name.{branch}", record,
                         f"{candidate_rel}:{line}", f"{bookmark_id} realm {realm_id}, display name.", ())
         for table, kind in (("duchies", "duchy"), ("kingdoms", "kingdom"), ("empires", "empire")):
             for title_id, title_node in (node_object(candidate.get(table)) or {}).items():
