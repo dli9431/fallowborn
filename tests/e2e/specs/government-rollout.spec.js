@@ -15,6 +15,7 @@ dependsOnRuntime(__filename,[
   'data/bookmark_800.js','data/bookmark_800_history.js','data/bookmark_800_expansion.js','data/bookmark_1204.js',
   'data/bookmark_867_expansion.js',
   'data/bookmark_476.js','data/bookmark_476_outer.js','data/bookmark_476_wider.js',
+  'data/bookmark_1066_inhabited.js',
   'data/political_institutions.js','data/aristocratic_courts.js','data/assembly_polities.js',
   'data/mobile_confederations.js','data/civic_profiles.js','data/ecclesiastical_profiles.js',
   'data/papacy.js','data/eras.js','data/systems.js','data/starts.js','data/lexicons.js',
@@ -33,6 +34,17 @@ dependsOnRuntime(__filename,[
 function journey(row) {
   return {bookmark:row.bookmark,code:'GOVROLLOUT-' + row.bookmark + '-' + row.scenario +
     '-' + row.province + '-m-Review-established'};
+}
+
+// Each fixture selects its declared government revision, including retained
+// worlds. Dedicated date specifications cover expanded regional journeys.
+async function startGovernmentRevision(page,info,row,flag) {
+  await page.addInitScript(function (row) {
+    document.addEventListener('DOMContentLoaded',function () {
+      FBDATA.bookmarks[row.bookmark].revision = row.revision;
+    },{once:true});
+  },row);
+  await startHistoricalGame(page,info,journey(row),flag);
 }
 
 // The legacy start is isolated here; ordinary journeys keep their current revision.
@@ -61,7 +73,7 @@ test('dated assignments retain complete baseline worlds and validate every strat
   await openGame(page,info);
   const result = await page.evaluate(function (rows) {
     return rows.map(function (row) {
-      const raw = FBDATA.bookmarks[row.bookmark], current = FB.bookmark(row.bookmark),
+      const raw = FBDATA.bookmarks[row.bookmark], current = FB.bookmark(row.bookmark,row.revision),
         baseline = FB.bookmark(row.bookmark,'baseline'), era = FBDATA.eras[current.era];
       const changed = row.changed.map(function (c) { return c.realm; });
       return {id:row.bookmark,revision:current.revision || 'baseline',
@@ -96,7 +108,7 @@ for (const row of consumers) {
   test(row.bookmark + ' dated government journey saves and replays one natural season',async function ({page},info) {
     test.skip(info.project.name !== 'chromium-served','One bounded natural journey per date.');
     test.setTimeout(240000);
-    await startHistoricalGame(page,info,journey(row));
+    await startGovernmentRevision(page,info,row);
     await injectBrowserHarness(page);
     await advanceBookmark(page,45);
     const source = await page.evaluate(function () { return FB.save.serialize(); });
@@ -125,7 +137,7 @@ for (const row of consumers) {
 for (const row of consumers.filter(function (row) { return row.changed.length; })) {
   for (const flag of [false,true]) test(row.bookmark + ' direct holders and dated profiles, CrazyGames ' + flag,
     async function ({page},info) {
-      await startHistoricalGame(page,info,journey(row),flag);
+      await startGovernmentRevision(page,info,row,flag);
       const result = await page.evaluate(function (row) {
         const s = FB.state, before = JSON.stringify(s), rng = FB.getRngState(), uid = FB.getUidCounter();
         const profiles = row.changed.map(function (c) {
@@ -194,7 +206,7 @@ for (const row of consumers.filter(function (row) { return row.changed.length; }
 
 for (const row of consumers) for (const consumer of row.changed.filter(function (c) { return c.mode; })) {
   test(consumer.profile + ' public commissions conserve receipts and reject stale, duplicate and malformed records',async function ({page},info) {
-    await startHistoricalGame(page,info,journey(row));
+    await startGovernmentRevision(page,info,row);
     const result = await page.evaluate(function (rid) {
       const s = FB.state, c = s.chars[s.player.charId], profile = FB.administrationProfile(s,rid);
       const pid = FB.realmHeldCounties(s,rid).find(function (id) { return FB.publicCountyIncome(s,rid,id) > 0; });
@@ -235,7 +247,7 @@ for (const row of consumers) for (const consumer of row.changed.filter(function 
 
 for (const row of consumers) for (const consumer of row.changed.filter(function (c) { return c.law; })) {
   test(consumer.profile + ' vacancy retains the canonical election, property and public money',async function ({page},info) {
-    await startHistoricalGame(page,info,journey(row));
+    await startGovernmentRevision(page,info,row);
     const result = await page.evaluate(function (rid) {
       const s = FB.state,E = FB.ecclesiasticalGovernment,incumbent = E.incumbent(s,rid);
       const property = JSON.stringify([s.owner,s.holder,s.player]),cash = s.realms[rid].treasury.gold;

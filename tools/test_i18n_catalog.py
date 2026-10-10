@@ -59,6 +59,22 @@ class StructuredDataExtractionTests(unittest.TestCase):
             self.assertIn('bookmark_867_expansion.js', inventory.meta[key]['location'])
         self.assertNotIn(i18n_catalog.source_key('Farnak'), inventory.entries)
 
+    def test_1066_terrain_has_literal_display_owners(self):
+        inventory = i18n_catalog.Inventory()
+        i18n_catalog.extract_structured(inventory)
+        for key, text in (
+            ('culture.soninke_1066.name.default', 'Soninke'),
+            ('culture.khwarazmian_1066.name.default', 'Khwarazmian'),
+            ('religion.wagadu_traditional_1066.name.default', 'Wagadu traditional worship'),
+            ('authorityOffice.district_delegate_1066.name.default', 'District delegate'),
+            ('constituencyMember.jenne_households_1066.fields.name.default', 'Cultivating households'),
+            ('province.1066.central_iran_oases.name.default', 'Kashan oasis'),
+            ('settlement.1066.kumbi_district_inhabited_1066.name.default', 'Kumbi district'),
+            ('realm.1066.jenne_1066.name.default', 'Jenne-jeno households'),
+        ):
+            self.assertEqual(inventory.entries[key]['text'], text)
+            self.assertIn('bookmark_1066_inhabited.js', inventory.meta[key]['location'])
+
     def test_aristocratic_courts_and_offices_have_display_owners(self):
         inventory = i18n_catalog.Inventory()
         i18n_catalog.extract_structured(inventory)

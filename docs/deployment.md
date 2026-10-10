@@ -227,3 +227,7 @@ The private debug script inventory mirrors this order with its existing eager En
 Expanded 493 asset
 
 The authored data/bookmark_493_world.js script loads from index.html through the normal data-directory distribution rules and index-derived offline precache. It must be tracked before either generated package is assembled. The standard and CrazyGames flag paths use the same hidden 493 declaration; language, music and storage policies are unchanged. No private research plan or packaging file is copied into the game. The generated CrazyGames package and the private debug loader still require integration review against the assembled branch; runtime flag tests do not establish package acceptance.
+
+Expanded 1066 script
+
+index.html loads data/bookmark_1066_inhabited.js after the shared wider declarations and immediately before data/government_rollout.js. Existing data-directory allowlists cover both standard and CrazyGames packages; index-derived offline assets include the local reference. Track the new file before assembling a tracked-file package. There is no network asset, build dependency or asset directory. Distribution remains flag-gated, preserving standard music/language assets and CrazyGames exclusions. The dedicated acceptance specification covers both flag values. Version assignment, generated translations, private debug inventory synchronisation and packaged-device review remain integration work.
