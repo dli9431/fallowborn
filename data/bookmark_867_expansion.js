@@ -1,0 +1,126 @@
+/* Spring 867 district declarations. Retained worlds are independent of this
+   fresh revision. Sources and reconstruction limits: docs/research/867-districts.md.
+   Physical seeds, unnamed people and simulation shares do not prove borders,
+   a historical incumbent, a language census or an excavated constitution. */
+/* Literal catalogues also give the static localization extractor an owner. */
+FBDATA.bookmarkCultures867Expansion = {
+  middle_niger_867:{ name:'Middle Niger communities', parent:'sahelian_476' },
+  western_sahel_867:{ name:'Western Sahel communities', parent:'sahelian_476' },
+  chorasmian_867:{
+    name:'Chorasmian', parent:'persian', dyn:'of_place',
+    male:['Farnak','Rastak','Artavan','Arsavan'],
+    female:['Artana','Farnisa','Razana']
+  }
+};
+
+/* A reconstructed corporate settlement model, not a recorded ballot law.
+   Reserved decisions and renewable delegation use the existing platform. */
+FBDATA.bookmarkConstituencies867Expansion = {
+  middle_niger_867:{
+    eligibility:{ minAge:18, minServiceYears:0, skills:{ dip:3 }, free:true },
+    selection:{ threshold:0.6, tie:'id', termDays:720, nominationCost:0 },
+    recall:{ threshold:0.6, reasons:['neglect','overreach','ineligible'] },
+    obligations:{ revenueRate:0.08, levyRate:0.3, maxDues:12, maxLevy:80, reserve:10 },
+    reserved:['war','treaty','grant','extraordinary_tax','pledge','conversion'],
+    powers:['ban','peace','revenue'],
+    members:[
+      { id:'fields', name:'Cultivating households', weight:2, basis:'custom', continuity:'institution', support:60 },
+      { id:'waters', name:'River households', weight:2, basis:'custom', continuity:'institution', support:60 },
+      { id:'crafts', name:'Craft households', weight:2, basis:'custom', continuity:'institution', support:60 }
+    ]
+  }
+};
+
+FBDATA.bookmarkRealms867Expansion = [
+    { id:'jenne_867', name:'Jenne-jeno Communities', color:'#9d865a',
+      capital:'jenne_district', rank:1, aggression:0, government:'assembly_polity',
+      religion:'sahel_traditional_476', constituency:'middle_niger_867',
+      representative:{ sex:'m', born:832, skills:{ dip:5, ste:5, mar:3 } } },
+    { id:'gao_867', name:'Gao Court', color:'#b38c5f', capital:'gao_district',
+      rank:1, aggression:0, government:'regnum', religion:'sahel_traditional_476',
+      ruler:{ generated:true, sex:'m', culture:'middle_niger_867', born:830, mar:6, trait:'patient' } },
+    { id:'wagadu_867', name:'Ghana / Wagadu', color:'#a47b53', capital:'kumbi_district',
+      rank:1, aggression:0, government:'regnum', religion:'sahel_traditional_476',
+      ruler:{ generated:true, sex:'m', culture:'western_sahel_867', born:830, mar:6, trait:'patient' } },
+    { id:'afrighids_867', name:'Afrighid Khwarazm', color:'#7c9d9b', capital:'kath_district',
+      rank:1, aggression:0, government:'regnum', religion:'sunni',
+      ruler:{ generated:true, sex:'m', culture:'chorasmian_867', born:830, mar:6, trait:'patient' } }
+];
+
+FBDATA.bookmarkDistricts867 = [
+  { id:'jenne_district', name:'Jenne-jeno', realm:'jenne_867', dev:3, zone:'arid', kind:'town',
+    communities:[['middle_niger_867','sahel_traditional_476',10000]] },
+  { id:'gao_district', name:'Gao-Saney', realm:'gao_867', dev:2, zone:'arid', kind:'town',
+    communities:[['middle_niger_867','sahel_traditional_476',10000]] },
+  { id:'kumbi_district', name:'Kumbi district', realm:'wagadu_867', dev:2, zone:'arid', kind:'town',
+    communities:[['western_sahel_867','sahel_traditional_476',10000]] },
+  { id:'qasr_ibrim', name:'Ibrim', realm:'makuria', dev:2, zone:'arid', kind:'town',
+    communities:[['nubian','eastern',10000]] },
+  { id:'kath_district', name:'Kath', realm:'afrighids_867', dev:3, zone:'continental', kind:'town',
+    communities:[['chorasmian_867','zoroastrian',6000],['chorasmian_867','sunni',3000],
+      ['chorasmian_867','eastern',1000]] },
+  { id:'palmyra_district', name:'Tadmor', realm:'abbasid', dev:2, zone:'arid', kind:'town',
+    communities:[['arabic','sunni',8000],['syriac','eastern',2000]] },
+  { id:'tayma_oasis', name:'Tayma', realm:'abbasid', dev:1, zone:'arid', kind:'village',
+    communities:[['arabic','sunni',10000]] },
+  { id:'central_iran_oases', name:'Kashan oases', realm:'abbasid', dev:1, zone:'arid', kind:'village',
+    communities:[['persian','shia',6000],['persian','zoroastrian',3000],['persian','sunni',1000]] }
+];
+
+(function () {
+  'use strict';
+  var base = FBDATA.bookmarks['867'];
+  var geography = FBDATA.geographies.europe_regional_2;
+  function copy(value) { return JSON.parse(JSON.stringify(value)); }
+  /* Existing neutral presentation and faith rules, without new doctrine. */
+  Object.assign(FBDATA.cultures, FBDATA.bookmarkCultures867Expansion);
+  Object.assign(FBDATA.constituencyProfiles, FBDATA.bookmarkConstituencies867Expansion);
+  var realms = copy(FBDATA.bookmarkRealms867Expansion);
+  /* No invented historical genealogy or future king. Ordinary generated kin
+     are private households and provide the existing dynastic succession path. */
+  realms.filter(function (r) { return r.government === 'regnum'; }).forEach(function (realm) {
+    realm.royalCourt = { members:[
+      { id:'offspring', generated:true, sex:'m', born:849, fatherId:'ruler',
+        culture:realm.ruler.culture, religion:realm.religion, homeProvinceId:realm.capital }
+    ] };
+  });
+
+  var layout = copy(FBDATA.settlementLayouts['867']);
+  var climates = Object.assign({}, geography.climate.provinces);
+  var counties = {};
+  function county(id, name, owner, dev, zone, identities, kind) {
+    var seed = geography.provinceAdditions.filter(function (p) { return p.id === id; })[0];
+    if (!seed || counties[id]) throw new Error('Invalid 867 district: ' + id);
+    var site = id + '_inhabited_867';
+    FBDATA.settlementSites[site] = { x:seed.x, y:seed.y };
+    layout[id] = [{ site:site, name:name, kind:kind }];
+    climates[id] = zone;
+    counties[id] = {
+      id:id, name:name, realm:owner, dev:dev, culture:identities[0][0], religion:identities[0][1],
+      customaryRights:[{ power:'peace', basis:'possession' },{ power:'revenue', basis:'possession' }],
+      communities:identities.map(function (row) {
+        return { culture:row[0], religion:row[1], populationShare0:row[2], paired:true };
+      })
+    };
+  }
+  FBDATA.bookmarkDistricts867.forEach(function (p) {
+    county(p.id, p.name, p.realm, p.dev, p.zone, p.communities, p.kind);
+  });
+
+  /* Existing counties, including their complete curated and fill slots, keep
+     their authored data. Unaccepted additions remain physically bounded scenery. */
+  FBDATA.settlementLayouts['867_inhabited_v2'] = layout;
+  base.revisions = Object.assign({ baseline:{} }, base.revisions || {});
+  base.revisions.inhabited_v2 = {
+    geography:'europe_regional_2',
+    provinces:base.provinces.slice().concat(geography.provinceAdditions.map(function (seed) {
+      return counties[seed.id] || Object.assign({}, seed);
+    })),
+    realms:base.realms.slice().concat(realms),
+    settlementLayout:'867_inhabited_v2',
+    climate:{ zone:geography.climate.zone, provinces:climates }
+  };
+  base.revision = 'inhabited_v2';
+  FBDATA.techImpactReviews.features.period_867_district_habitation = { mode:'none',
+    rationale:'Established households, irrigated settlements and ordinary local government require no technological discovery. Existing travel, production and equipment requirements continue to apply.' };
+})();

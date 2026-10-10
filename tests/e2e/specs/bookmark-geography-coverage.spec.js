@@ -5,12 +5,14 @@ const {test,expect} = require('../support/fixture');
 const {dependsOnRuntime} = require('../support/runtime-dependencies');
 const {openGame} = require('../support/game/navigation');
 const {startRegion,saveBudget} = require('../support/game/476-wider');
-const {beginBookmark,restoreBookmark,facts} = require('../support/game/bookmark-acceptance');
+const {restoreBookmark,facts} = require('../support/game/bookmark-acceptance');
+const {injectBrowserHarness} = require('../support/game/browser-harness');
 const audit = require('../fixtures/bookmark-geography-coverage.json');
 dependsOnRuntime(__filename,[
   'data/bookmark_493_world.js',
   'index.html','data/counties.js','data/map_data.js','data/geographies.js','data/geography_expansion.js',
   'data/bookmarks.js','data/bookmark_493.js','data/bookmark_711.js','data/bookmark_800.js',
+  'data/bookmark_867_expansion.js','data/government_rollout.js',
   'data/bookmark_1204.js','data/bookmark_476_wider.js','data/settlements.js','data/settlements_real.js',
   'data/climate.js','data/starts.js','js/world.js','js/climate.js','js/travel.js','js/armies.js',
   'js/main.js','js/save.js','js/save_v4.js','js/population.js','js/title_ids.js'
@@ -174,7 +176,21 @@ for (const flag of [false,true]) test('shared district raster, dry routes and re
 
 for (const bookmark of ['867','1066']) test('a converted ' + bookmark + ' frontier keeps its original raster across expansion switches',
   async function ({page},testInfo) {
-    await beginBookmark(page,testInfo,bookmark,'farmer');
+    await openGame(page,testInfo);
+    await page.evaluate(function (id) {
+      FBDATA.bookmarks[id].revision = 'baseline'; FB.startProgression.noteTier(1);
+    },bookmark);
+    const fullStart = page.locator('#btn-choose-beginning');
+    if (await fullStart.isVisible()) await fullStart.click();
+    else await page.getByRole('button',{name:'New Game',exact:true}).click();
+    await page.locator('#btn-bm-seed').click();
+    await page.locator('#ng-seed').fill('COVERAGEBASE-' + bookmark + '-farmer-london-m-Review-established');
+    await page.locator('#ng-seed').press('Enter');
+    await expect(page.locator('#chargen:not(.hidden)')).toBeVisible();
+    await page.getByRole('button',{name:'Begin Your Story',exact:true}).click();
+    await page.getByRole('button',{name:'Begin',exact:true}).click();
+    await injectBrowserHarness(page);
+    await page.evaluate(function () { FB.game.setPaused(true); });
     const prepared = await page.evaluate(function () {
       const s = FB.state;
       s.player.gold = 5000; s.player.prestige = 500;

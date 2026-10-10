@@ -39,6 +39,11 @@ CANDIDATE_BOOKMARK_FILES = [
     if re.fullmatch(r"bookmark_[0-9]+", path.stem)
     and path not in {candidate for candidate, _ in CANDIDATE_FILES}
 ]
+EXPANSION_BOOKMARK_FILES = [
+    (path, path.stem.split("_")[1])
+    for path in sorted(DATA.glob("bookmark_*_expansion.js"))
+    if re.fullmatch(r"bookmark_[0-9]+_expansion", path.stem)
+]
 STARTS_FILE = DATA / "starts.js"
 TECHNOLOGY_FILE = DATA / "technology.js"
 ACTIONS_FILE = DATA / "actions.js"
@@ -777,17 +782,23 @@ def extract_structured(inv: Inventory) -> None:
                 for branch, record, line in branch_records(site.get("name")):
                     inv.add(f"{namespace}.{item_id}.settlement.{index}.name.{branch}", record,
                             f"data/assembly_polities.js:{line}", "Local settlement display name.", ())
-    for profile_id, profile_node in (node_object(find_assignment(assembly_path, "FBDATA", "constituencyProfiles")) or {}).items():
-        profile = node_object(profile_node) or {}
-        for member_node in node_array(profile.get("members")) or []:
-            member = node_object(member_node) or {}
-            member_id = node_string(member.get("id"))
-            if not member_id:
-                continue
-            for branch, record, line in branch_records(member.get("name")):
-                inv.add(f"constituencyMember.{profile_id}.{member_id}.name.{branch}", record,
-                        f"data/assembly_polities.js:{line}", "Local represented interest.",
-                        TOKEN_RE.findall(record["text"]))
+    constituency_sources = [(assembly_path, "constituencyProfiles")] + [
+        (path, "bookmarkConstituencies" + bookmark_id + "Expansion")
+        for path, bookmark_id in EXPANSION_BOOKMARK_FILES
+    ]
+    for profile_path, table in constituency_sources:
+        rel = profile_path.relative_to(ROOT).as_posix()
+        for profile_id, profile_node in (node_object(find_assignment(profile_path, "FBDATA", table)) or {}).items():
+            profile = node_object(profile_node) or {}
+            for member_node in node_array(profile.get("members")) or []:
+                member = node_object(member_node) or {}
+                member_id = node_string(member.get("id"))
+                if not member_id:
+                    continue
+                for branch, record, line in branch_records(member.get("name")):
+                    inv.add(f"constituencyMember.{profile_id}.{member_id}.name.{branch}", record,
+                            f"{rel}:{line}", "Local represented interest.",
+                            TOKEN_RE.findall(record["text"]))
 
     aristocratic_path = DATA / "aristocratic_courts.js"
     for profile_id, profile_node in (node_object(find_assignment(aristocratic_path, "FBDATA", "aristocraticProfiles")) or {}).items():
@@ -907,6 +918,13 @@ def extract_structured(inv: Inventory) -> None:
             candidate_rel = candidate_path.relative_to(ROOT).as_posix()
             entries.extend((item_id, item_node, candidate_rel)
                            for item_id, item_node in candidate_root.items())
+        if data_name == "cultures":
+            for expansion_path, bookmark_id in EXPANSION_BOOKMARK_FILES:
+                cultures = node_object(find_assignment(
+                    expansion_path, "FBDATA", "bookmarkCultures" + bookmark_id + "Expansion"
+                )) or {}
+                rel = expansion_path.relative_to(ROOT).as_posix()
+                entries.extend((item_id, item_node, rel) for item_id, item_node in cultures.items())
         if data_name == "storyCampaigns":
             for _, candidate_id in CANDIDATE_BOOKMARK_FILES:
                 candidate_path = DATA / f"bookmark_{candidate_id}_history.js"
@@ -1453,6 +1471,33 @@ def extract_structured(inv: Inventory) -> None:
                 inv.add(f"aristocraticInterest.{profile_id}.{interest_id}.name.{branch}", record,
                         f"{expansion_rel}:{line}", "Dated provincial interest.", ())
 
+    # Dated habitation declarations own their labels, independently of the
+    # physical geography and the retained bookmark catalogue.
+    for expansion_path, bookmark_id in EXPANSION_BOOKMARK_FILES:
+        rel = expansion_path.relative_to(ROOT).as_posix()
+        districts = node_array(find_assignment(
+            expansion_path, "FBDATA", "bookmarkDistricts" + bookmark_id
+        )) or []
+        for district_node in districts:
+            district = node_object(district_node) or {}
+            province_id = node_string(district.get("id"))
+            if not province_id:
+                continue
+            for branch, record, line in branch_records(district.get("name")):
+                inv.add(f"province.{bookmark_id}.{province_id}.name.{branch}", record,
+                        f"{rel}:{line}", f"{bookmark_id} district display name.", ())
+                inv.add(f"settlement.{bookmark_id}.{province_id}_inhabited_{bookmark_id}.name.{branch}", record,
+                        f"{rel}:{line}", f"{bookmark_id} district settlement display name.", ())
+        realms = node_array(find_assignment(
+            expansion_path, "FBDATA", "bookmarkRealms" + bookmark_id + "Expansion"
+        )) or []
+        for realm_node in realms:
+            realm = node_object(realm_node) or {}
+            realm_id = node_string(realm.get("id"))
+            if realm_id:
+                for branch, record, line in branch_records(realm.get("name")):
+                    inv.add(f"realm.{bookmark_id}.{realm_id}.name.{branch}", record,
+                            f"{rel}:{line}", f"{bookmark_id} local realm display name.", ())
     # Dated county names of the geography bases replace a county's display
     # name for the years they cover, so each is a display label of its own.
     geography_path = DATA / "geographies.js"

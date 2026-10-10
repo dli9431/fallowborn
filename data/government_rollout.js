@@ -93,9 +93,8 @@
   Object.keys(assignments).forEach(function (id) {
     var base = FBDATA.bookmarks[id], revisions = base.revisions || {baseline:{}},
       previous = base.revision || 'baseline', changes = assignments[id];
-    var inherited = Object.assign({}, revisions.baseline, revisions[previous]);
-    function assignedRealms(realms) {
-      var found = {};
+    function compose(source) {
+      var realms = source.realms || base.realms, found = {};
       var revised = realms.map(function (realm) {
         if (!Object.prototype.hasOwnProperty.call(changes, realm.id)) return realm;
         found[realm.id] = true;
@@ -104,20 +103,18 @@
       Object.keys(changes).forEach(function (rid) {
         if (!found[rid]) throw new Error('Missing government rollout realm: ' + id + '/' + rid);
       });
-      return revised;
+      return Object.assign({}, source, {realms:revised});
     }
+    var inherited = Object.assign({}, revisions.baseline, revisions[previous]);
     var revisionId = previous === 'baseline' ? 'governments_v2' : previous + '_governments_v2';
     if (Object.prototype.hasOwnProperty.call(revisions, revisionId))
       throw new Error('Duplicate government rollout revision: ' + id + '/' + revisionId);
     base.revisions = Object.assign({}, revisions);
-    /* A new date layer must not remove the previously saved government-only
-       world. Compose it from the retained baseline, never expanded content. */
-    if (previous !== 'baseline' && !base.revisions.governments_v2) {
-      base.revisions.governments_v2 = Object.assign({}, revisions.baseline,
-        {realms:assignedRealms(revisions.baseline.realms || base.realms)});
-    }
-    base.revisions[revisionId] = Object.assign({}, inherited,
-      {realms:assignedRealms(inherited.realms || base.realms)});
+    /* Archive the original government-only world even when a date composer
+       has selected wider geography. Never derive this retained id from it. */
+    if (previous !== 'baseline' && !Object.prototype.hasOwnProperty.call(revisions, 'governments_v2'))
+      base.revisions.governments_v2 = compose(Object.assign({}, revisions.baseline));
+    base.revisions[revisionId] = compose(inherited);
     base.revision = revisionId;
   });
 })();

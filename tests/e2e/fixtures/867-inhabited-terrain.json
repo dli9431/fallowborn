@@ -1,0 +1,41 @@
+{
+  "bookmark": "867",
+  "revision": "inhabited_v2_governments_v2",
+  "retainedRevisions": ["baseline", "governments_v2"],
+  "geography": "europe_regional_2",
+  "anchors": 527,
+  "inhabited": 485,
+  "districts": [
+    {"id":"jenne_district","name":"Jenne-jeno","realm":"jenne_867","form":"assembly_polity","culture":"middle_niger_867","religion":"sahel_traditional_476","zone":"arid","route":"gao_district","units":5},
+    {"id":"gao_district","name":"Gao-Saney","realm":"gao_867","form":"regnum","culture":"middle_niger_867","religion":"sahel_traditional_476","zone":"arid","route":"jenne_district","units":5},
+    {"id":"kumbi_district","name":"Kumbi district","realm":"wagadu_867","form":"regnum","culture":"western_sahel_867","religion":"sahel_traditional_476","zone":"arid","route":"jenne_district","units":6},
+    {"id":"qasr_ibrim","name":"Ibrim","realm":"makuria","form":"territorial","culture":"nubian","religion":"eastern","zone":"arid","route":"dongola","units":4},
+    {"id":"kath_district","name":"Kath","realm":"afrighids_867","form":"regnum","culture":"chorasmian_867","religion":"zoroastrian","zone":"continental","route":"bukhara","units":8},
+    {"id":"palmyra_district","name":"Tadmor","realm":"abbasid","form":"administrative_monarchy","culture":"arabic","religion":"sunni","zone":"arid","route":"homs","units":2},
+    {"id":"tayma_oasis","name":"Tayma","realm":"abbasid","form":"administrative_monarchy","culture":"arabic","religion":"sunni","zone":"arid","route":"medina","units":4},
+    {"id":"central_iran_oases","name":"Kashan oases","realm":"abbasid","form":"administrative_monarchy","culture":"persian","religion":"shia","zone":"arid","route":"isfahan","units":2}
+  ],
+  "scenery": {
+    "w_sahara_w": ["draa_oases"],
+    "w_sahara_c": ["garama", "ghadames_oasis"],
+    "w_sahara_e": ["awjila_oasis", "siwa_oasis"],
+    "w_sahel": ["chad_lakeshore", "timbuktu_district"],
+    "w_nubia": [],
+    "w_arabia": ["najran_oasis"],
+    "w_nefud": [],
+    "w_syrian": [],
+    "w_kavir": [],
+    "w_lut": ["eastern_iran_oases"],
+    "w_registan": [],
+    "w_sulaiman": ["gomal_valley"],
+    "w_thar": ["thar_margin"],
+    "w_hindukush": ["shebar_valley"],
+    "w_karakum": ["sarakhs_oasis", "gurganj_district"],
+    "w_kyzylkum": ["nurata_foothills", "lower_syr_darya"],
+    "w_steppe_e": ["sarysu_corridor"],
+    "w_ural": ["upper_kama"],
+    "w_taiga": ["vychegda_district"],
+    "w_north": ["onega_district"],
+    "w_lapland": ["torne_district"]
+  }
+}

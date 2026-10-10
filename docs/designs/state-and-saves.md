@@ -2134,3 +2134,9 @@ The released-catalogue fixture records resolved baseline worlds and their settle
 Independent expanded 493 saves
 
 The hidden 493 world_v2 revision resolves europe_regional_2, layout 493_world_v2 and opening revision world_v2. The original root world remains baseline, including its unversioned opening and three off-map sees. An unstamped supported schema-1 save resolves this baseline before map activation. The new revision keeps original story ids and court actor declarations while adding fresh-only provincial and court actors. Restoring either world never initializes the other world's actors, institutions, populations, grants or campaign commitments. Converted scenery in a baseline save retains its original raster and saved settlements. No save format or migration changes are introduced by this date data.
+
+Expanded 867 compatibility
+
+Fresh 867 campaigns select inhabited_v2_governments_v2 on europe_regional_2. Both baseline and the earlier governments_v2 retain europe_regional and their original opening actors and settlement slots. government_rollout.js preserves the earlier government-only revision independently before composing over a date-owned geography revision. Legacy unversioned saves still select baseline. Restore uses saved population, tenure, private/public property, stories, royal households and converted wastelandSettlements without inserting the new neighbours or making new local actors.
+
+The expansion adds no envelope or state schema. Unknown revisions, mismatched geography and changed effective mod fingerprints use the existing detached rejection boundary. tests/e2e/specs/867-inhabited-terrain.spec.js authors true retained household and frontier saves, actual serf tenure, expanded/retained switching and original owner-export imports. The public corpus manifest and retained hashes are unchanged; new seasonal checkpoints do not replace owner-supplied longer campaign evidence.

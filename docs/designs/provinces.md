@@ -666,3 +666,9 @@ Geography extensions inherit retiredProvinceIds monotonically. A child can appen
 493 regional declarations
 
 The hidden 493 world_v2 consumer uses the existing europe_regional_2 physical base without modifying shared seeds, coordinates, raster scale or dry-route units. The 260 previously disabled ordinary anchors now have independent dated declarations. Twelve of the 29 bounded additions are inhabited candidates; seventeen retain scenery with explicit evidence blockers. Earlier date-specific display names and literal settlement layouts prevent later cities from appearing through shared physical ids. New island links use the existing crossing classes and normal movement rules. Historical, raster and travel review remains required; declarations alone are not measurements of connectivity.
+
+Spring 867 district habitation
+
+The 867 inhabited_v2 world uses the same 527-anchor europe_regional_2 physical catalogue with eight new inhabited counties, for 485 inhabited counties total. Jenne-jeno, Gao-Saney, the Kumbi district, Ibrim, Kath, Tadmor, Tayma and the Kashan oases have date-owned community and political declarations. All original scenery and the 21 unaccepted additions remain scenery. No seed, radius, shared dry route or ordinary county geometry is changed by this consumer.
+
+867_inhabited_v2 clones every curated and generated-fill slot from the retained 867 layout before appending a new physical-site head for each accepted district. Existing home and building slots therefore retain their order within their owning revision. Date-local climate overrides use the existing arid and continental vocabulary; original counties retain their prior defaults. The full research and scenery decisions are in docs/research/867-districts.md. Baseline habitation has technology impact none under period_867_district_habitation. Raster extent, route presentation and measured performance remain acceptance work.

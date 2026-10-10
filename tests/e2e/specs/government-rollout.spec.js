@@ -13,6 +13,7 @@ dependsOnRuntime(__filename,[
   'data/bookmark_493_world.js','data/bookmark_711.js','data/bookmark_711_terrain.js',
   'data/geography_expansion.js','data/bookmark_476_wider_identities.js',
   'data/bookmark_800.js','data/bookmark_800_history.js','data/bookmark_800_expansion.js','data/bookmark_1204.js',
+  'data/bookmark_867_expansion.js',
   'data/bookmark_476.js','data/bookmark_476_outer.js','data/bookmark_476_wider.js',
   'data/political_institutions.js','data/aristocratic_courts.js','data/assembly_polities.js',
   'data/mobile_confederations.js','data/civic_profiles.js','data/ecclesiastical_profiles.js',
@@ -254,7 +255,7 @@ test('JSON import supplies a different public-service constitution with exact-pr
   await openGame(page,info);
   expect(await page.evaluate(function (fixture) {
     const mod = JSON.parse(JSON.stringify(fixture)), b = JSON.parse(JSON.stringify(FBDATA.bookmarks['867']));
-    b.revisions.governments_v2.realms = b.revisions.governments_v2.realms.map(function (r) {
+    b.revisions[b.revision].realms = b.revisions[b.revision].realms.map(function (r) {
       return r.id === 'byzantium' ? Object.assign({},r,{government:'river_service_rollout',administrationProfileId:'river_service_rollout'}) : r;
     });
     mod.bookmarks = {'867':b};
@@ -315,7 +316,7 @@ test('fresh revision rejects missing forms and unregistered strategies before mu
   const result = await page.evaluate(function () {
     const before = JSON.stringify(FBDATA.bookmarks), rng = FB.getRngState(), uid = FB.getUidCounter();
     const missing = JSON.parse(JSON.stringify(FBDATA.bookmarks['867']));
-    missing.revisions.governments_v2.realms[0].government = 'missing_rollout_form';
+    missing.revisions[missing.revision].realms[0].government = 'missing_rollout_form';
     const unknown = FB.validateBookmark(missing);
     const broken = JSON.parse(JSON.stringify(FBDATA.governmentForms.administrative_monarchy));
     broken.succession = 'unregistered_rollout_succession';
