@@ -17,6 +17,71 @@ window.FBMODS = window.FBMODS || [];
   let currencySupplied = false;
   let currencyInvalid = false;
   let legacyBookmarkLimited = false;
+  let effectiveFingerprint = '';
+  let modFailure = '';
+
+  M.assertReady = function () {
+    if (modFailure) throw new Error(modFailure);
+  };
+
+  /* Canonical JSON and synchronous SHA-256 keep file:// saves independent of
+     WebCrypto availability. This runs at mod installation, never per tick. */
+  M.fingerprint = function (value) {
+    function canonical(row) {
+      if (Array.isArray(row)) return '[' + row.map(canonical).join(',') + ']';
+      if (row && typeof row === 'object') return '{' + Object.keys(row).sort().map(function (key) {
+        return JSON.stringify(key) + ':' + canonical(row[key]);
+      }).join(',') + '}';
+      return JSON.stringify(row);
+    }
+    var text = canonical(JSON.parse(JSON.stringify(value))), bytes = [];
+    for (var i = 0; i < text.length; i++) {
+      var c = text.charCodeAt(i);
+      if (c >= 0xd800 && c <= 0xdbff && i + 1 < text.length &&
+          text.charCodeAt(i + 1) >= 0xdc00 && text.charCodeAt(i + 1) <= 0xdfff)
+        c = 0x10000 + ((c - 0xd800) << 10) + text.charCodeAt(++i) - 0xdc00;
+      else if (c >= 0xd800 && c <= 0xdfff) c = 0xfffd;
+      if (c < 128) bytes.push(c);
+      else if (c < 2048) bytes.push(192 | c >> 6, 128 | c & 63);
+      else if (c < 65536) bytes.push(224 | c >> 12, 128 | c >> 6 & 63, 128 | c & 63);
+      else bytes.push(240 | c >> 18, 128 | c >> 12 & 63, 128 | c >> 6 & 63, 128 | c & 63);
+    }
+    var bits = bytes.length * 8;
+    bytes.push(128);
+    while (bytes.length % 64 !== 56) bytes.push(0);
+    var high = Math.floor(bits / 4294967296), low = bits >>> 0;
+    for (i = 3; i >= 0; i--) bytes.push(high >>> (i * 8) & 255);
+    for (i = 3; i >= 0; i--) bytes.push(low >>> (i * 8) & 255);
+    var h = [0x6a09e667,0xbb67ae85,0x3c6ef372,0xa54ff53a,0x510e527f,0x9b05688c,0x1f83d9ab,0x5be0cd19];
+    var k = [0x428a2f98,0x71374491,0xb5c0fbcf,0xe9b5dba5,0x3956c25b,0x59f111f1,0x923f82a4,0xab1c5ed5,
+      0xd807aa98,0x12835b01,0x243185be,0x550c7dc3,0x72be5d74,0x80deb1fe,0x9bdc06a7,0xc19bf174,
+      0xe49b69c1,0xefbe4786,0x0fc19dc6,0x240ca1cc,0x2de92c6f,0x4a7484aa,0x5cb0a9dc,0x76f988da,
+      0x983e5152,0xa831c66d,0xb00327c8,0xbf597fc7,0xc6e00bf3,0xd5a79147,0x06ca6351,0x14292967,
+      0x27b70a85,0x2e1b2138,0x4d2c6dfc,0x53380d13,0x650a7354,0x766a0abb,0x81c2c92e,0x92722c85,
+      0xa2bfe8a1,0xa81a664b,0xc24b8b70,0xc76c51a3,0xd192e819,0xd6990624,0xf40e3585,0x106aa070,
+      0x19a4c116,0x1e376c08,0x2748774c,0x34b0bcb5,0x391c0cb3,0x4ed8aa4a,0x5b9cca4f,0x682e6ff3,
+      0x748f82ee,0x78a5636f,0x84c87814,0x8cc70208,0x90befffa,0xa4506ceb,0xbef9a3f7,0xc67178f2];
+    function rotate(n, by) { return n >>> by | n << (32 - by); }
+    for (var offset = 0; offset < bytes.length; offset += 64) {
+      var w = [], a = h[0], b = h[1], c0 = h[2], d = h[3], e = h[4], f = h[5], g = h[6], h0 = h[7];
+      for (i = 0; i < 64; i++) {
+        if (i < 16) {
+          var j = offset + i * 4;
+          w[i] = bytes[j] << 24 | bytes[j + 1] << 16 | bytes[j + 2] << 8 | bytes[j + 3];
+        } else {
+          var x = w[i - 15], y = w[i - 2];
+          w[i] = (w[i - 16] + (rotate(x,7) ^ rotate(x,18) ^ x >>> 3) +
+            w[i - 7] + (rotate(y,17) ^ rotate(y,19) ^ y >>> 10)) | 0;
+        }
+        var t1 = (h0 + (rotate(e,6) ^ rotate(e,11) ^ rotate(e,25)) +
+          ((e & f) ^ (~e & g)) + k[i] + w[i]) | 0;
+        var t2 = ((rotate(a,2) ^ rotate(a,13) ^ rotate(a,22)) + ((a & b) ^ (a & c0) ^ (b & c0))) | 0;
+        h0 = g; g = f; f = e; e = (d + t1) | 0; d = c0; c0 = b; b = a; a = (t1 + t2) | 0;
+      }
+      [a,b,c0,d,e,f,g,h0].forEach(function (n, index) { h[index] = (h[index] + n) | 0; });
+    }
+    return h.map(function (n) { return ('00000000' + (n >>> 0).toString(16)).slice(-8); }).join('');
+  };
 
   function own(obj, key) {
     return !!obj && Object.prototype.hasOwnProperty.call(obj, key);
@@ -24,14 +89,22 @@ window.FBMODS = window.FBMODS || [];
 
   function readAll() {
     if (FB.platform.isCrazyGames) return [];
-    try { return JSON.parse(localStorage.getItem(KEY) || '[]'); }
-    catch (e) { return []; }
+    try {
+      var rows = JSON.parse(localStorage.getItem(KEY) || '[]');
+      if (!Array.isArray(rows) || rows.some(function (row) { return typeof row !== 'string'; }))
+        throw new Error('Expected a list of JSON mods.');
+      return rows;
+    } catch (e) { modFailure = 'Unreadable stored mod configuration: ' + e.message; return []; }
   }
 
   function readEnabled() {
     if (FB.platform.isCrazyGames) return [];
-    try { return JSON.parse(localStorage.getItem(BKEY) || '[]'); }
-    catch (e) { return []; }
+    try {
+      var rows = JSON.parse(localStorage.getItem(BKEY) || '[]');
+      if (!Array.isArray(rows) || rows.some(function (row, i) { return typeof row !== 'string' || rows.indexOf(row) !== i; }))
+        throw new Error('Expected unique bundled mod ids.');
+      return rows;
+    } catch (e) { modFailure = 'Unreadable enabled mod configuration: ' + e.message; return []; }
   }
 
   M.bundled = function () { return window.FBMODS; };
@@ -54,7 +127,7 @@ window.FBMODS = window.FBMODS || [];
   M.count = function () { return readAll().length + readEnabled().length; };
   M.currencyInvalid = function () { return currencyInvalid; };
   M.bookmarkAvailable = function (id) {
-    return id !== '1066' || !legacyBookmarkLimited;
+    return !modFailure && (id !== '1066' || !legacyBookmarkLimited);
   };
   M.bookmarkWarning = function () {
     return legacyBookmarkLimited
@@ -77,13 +150,12 @@ window.FBMODS = window.FBMODS || [];
     return out;
   };
 
-  /* a fingerprint of the active mod set — stored JSON mods plus the enabled
-     bundled ids — stamped into saves so a life can refuse to wake up in the
-     wrong world ('' = the unmodded base game). Every mutation of the mod
-     store reloads the page, so the signature is constant per page load and
-     computed once (serialize calls this on every autosave). */
+  /* The signature binds stored configuration to the validated effective data,
+     including bundled payloads and inherited definitions. The unmodded base
+     remains ''. Every successful apply invalidates this session cache. */
   let _sig = null;
   M.sig = function () {
+    M.assertReady();
     if (_sig === null) _sig = computeSig();
     return _sig;
   };
@@ -91,13 +163,10 @@ window.FBMODS = window.FBMODS || [];
     if (FB.platform.isCrazyGames) return 'crazygames-content-1';
     const all = readAll();
     const on = readEnabled().slice().sort();
-    if (!all.length && !on.length) return '';
-    const joined = 'b:' + on.join(',') + '|' + all.join('|');
-    let hsh = 5381;
-    for (let i = 0; i < joined.length; i++) {
-      hsh = ((hsh * 33) ^ joined.charCodeAt(i)) >>> 0;
-    }
-    return (all.length + on.length) + '-' + hsh.toString(36);
+    M.assertReady();
+    if (!all.length && !on.length && !effectiveFingerprint) return '';
+    if (!effectiveFingerprint) throw new Error('The active mod catalogue has not been validated.');
+    return 'effective-1-' + M.fingerprint({stored:all, bundled:on, catalogue:effectiveFingerprint});
   }
 
   M.store = function (jsonText) {
@@ -1847,10 +1916,11 @@ window.FBMODS = window.FBMODS || [];
         staged.doctrineCatalogs[kind] = combinedTable(live.doctrineCatalogs[kind], mod.doctrineCatalogs[kind], 'doctrineCatalogs.' + kind);
       });
     }
-    if (['bounds','land','seas','rivers'].some(function (key) { return own(mod, key); })) {
+    if (['bounds','land','seas','rivers','provinces'].some(function (key) { return own(mod, key); })) {
       staged.geographies = Object.assign({}, staged.geographies);
       var base = staged.geographies[live.defaultGeography] = Object.assign({}, staged.geographies[live.defaultGeography]);
       ['bounds','land','seas','rivers'].forEach(function (key) { if (own(mod, key)) base[key] = mod[key]; });
+      if (mod.provinces) base.provinces = combinedList(base.provinces, mod.provinces, 'provinces');
     }
     staged.tech = JSON.parse(JSON.stringify(staged.tech));
     if (mod.unitClasses) Object.keys(mod.unitClasses).forEach(function (id) {
@@ -2276,22 +2346,37 @@ window.FBMODS = window.FBMODS || [];
         mod.doctrineCatalogs || mod.techTraditions) && FB.invalidateCultureData) {
       FB.invalidateCultureData();
     }
+    // Bind to the definitions actually installed, including inherited defaults
+    // and bundled payloads. Snapshot before activation swaps the legacy tables.
+    var effective = {};
+    Object.keys(PUBLIC_KEYS).concat(['faithDefaults','defaultGeography']).forEach(function (key) {
+      if (own(FBDATA, key)) effective[key] = FBDATA[key];
+    });
+    effectiveFingerprint = M.fingerprint(effective);
+    _sig = null;
   };
 
   M.applyStored = function () {
     currencySupplied = false;
     currencyInvalid = false;
     legacyBookmarkLimited = false;
+    modFailure = '';
     const on = readEnabled();
+    on.forEach(function (id) {
+      if (!M.bundled().some(function (mod) { return mod.id === id; }))
+        modFailure = 'Missing enabled mod: ' + id;
+    });
     for (const mod of M.bundled()) {
+      if (modFailure) break;
       if (on.indexOf(mod.id) === -1) continue;
       try { M.apply(mod.data); }
-      catch (e) { /* skip broken mod */ }
+      catch (e) { modFailure = 'Invalid enabled mod ' + mod.id + ': ' + e.message; }
     }
     const all = readAll();
     for (const text of all) {
+      if (modFailure) break;
       try { M.apply(JSON.parse(text)); }
-      catch (e) { /* skip broken mod */ }
+      catch (e) { modFailure = 'Invalid stored mod: ' + e.message; }
     }
     if (FB.configureCurrency) {
       currencyInvalid = !FB.configureCurrency(

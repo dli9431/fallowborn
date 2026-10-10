@@ -556,7 +556,7 @@ window.FB = window.FB || {};
     parent:true, group:true, assignable:true, active:true,
     relationToParent:true, relations:true, properties:true,
     createdTurn:true, founderId:true, originProvinceId:true,
-    doctrineBranch:true
+    doctrineBranch:true, legacy:true, supersededBy:true
   };
   const FAITH_RELATIONS = {
     same:0, in_fold:1, schismatic:2, hostile:3, foreign:4
@@ -806,6 +806,8 @@ window.FB = window.FB || {};
         parent:parentId,
         assignable:local.assignable !== false,
         active:local.active !== false,
+        legacy:local.legacy === true,
+        supersededBy:local.supersededBy,
         relationToParent:local.relationToParent,
         relations:plainObject(local.relations) ? cloneFaithValue(local.relations) : {},
         properties:properties,
@@ -846,6 +848,13 @@ window.FB = window.FB || {};
       if (!own(resolved, id)) continue;
       const rel = resolved[id];
       const rawDef = raw[id];
+      if (rawDef.legacy !== undefined && typeof rawDef.legacy !== 'boolean')
+        fault(id, 'legacy must be boolean.');
+      if (rawDef.legacy === true && (typeof rawDef.supersededBy !== 'string' ||
+          rawDef.supersededBy === id || !raw[rawDef.supersededBy] || raw[rawDef.supersededBy].legacy === true))
+        fault(id, 'legacy needs a different, non-legacy supersededBy faith.');
+      if (rawDef.supersededBy !== undefined && rawDef.legacy !== true)
+        fault(id, 'supersededBy requires legacy:true.');
       if (rawDef.assignable !== false &&
           (typeof rawDef.name !== 'string' || !rawDef.name)) {
         fault(id, 'assignable definitions need a name.');
@@ -1051,8 +1060,7 @@ window.FB = window.FB || {};
     const out = [];
     for (const id in compiled.resolved) {
       if (!own(compiled.resolved, id)) continue;
-      const rel = compiled.resolved[id];
-      if (assignableOnly && (!rel.assignable || !rel.active)) continue;
+      if (assignableOnly && !FB.faithAvailable(id, requestedFaithState(state))) continue;
       out.push(id);
     }
     return out;
@@ -1071,6 +1079,30 @@ window.FB = window.FB || {};
   FB.faithAssignable = function (id, state) {
     const rel = compiledFaiths(requestedFaithState(state)).resolved[id];
     return !!(rel && rel.assignable && rel.active);
+  };
+
+  /* Catalogue existence and saved-record validation remain independent of
+     fresh conversion eligibility. Legacy metadata never inherits to a child. */
+  FB.faithAvailable = function (id, state) {
+    state = requestedFaithState(state);
+    const compiled = compiledFaiths(state), rel = compiled.resolved[id];
+    if (!rel || !rel.assignable || !rel.active) return false;
+    if (!rel.legacy) return true;
+    if (!state) return false;
+    function contains(value) {
+      if (!value || typeof value !== 'object') return false;
+      return Object.keys(value).some(function (key) {
+        const child = value[key];
+        if (['religion','faithId','eliteFaithId','startReligion'].indexOf(key) >= 0 && child === id) return true;
+        return child && typeof child === 'object' && contains(child);
+      });
+    }
+    // An existing descendant retains access to its original parent too.
+    if (Object.keys(state.faiths || {}).some(function (key) {
+      const faith = compiled.resolved[key];
+      return faith && faith._faithLineage.indexOf(id) >= 0;
+    })) return true;
+    return contains(state) || contains(FB.campaignBookmark(state));
   };
 
   FB.faithLineage = function (id, state) {
