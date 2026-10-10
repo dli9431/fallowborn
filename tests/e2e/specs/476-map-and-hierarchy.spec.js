@@ -75,7 +75,7 @@ test('476 owns a complete stable grid and independent Roman hierarchy', async fu
       stable:FB.bookmark('476','baseline').provinces.map(function (p) { return p.id; }).sort().join('|') ===
         earlier.provinces.map(function (p) { return p.id; }).sort().join('|'),
       unique:new Set(b.provinces.map(function (p) { return p.id; })).size === b.provinces.length,
-      direct:inhabited.every(function (p) { return s.owner[p.id] === p.realm && s.holder[p.id] === p.realm; }),
+      direct:inhabited.every(function (p) { return s.owner[p.id] === FB.topRealm(s,p.realm) && s.holder[p.id] === p.realm; }),
       names:FB.world.provs.every(function (p) { return typeof p.name === 'string' && p.name.length > 0; }),
       roman:roman.every(function (p) {
         const d = b.duchies[p.duchy], k = d && b.kingdoms[d.kingdom];

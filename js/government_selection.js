@@ -89,7 +89,10 @@
   function principal(s, rid, row) {
     var t = tree(s, rid), at = row.principal;
     function availablePerson(c) { return !!c && !c.dead && !c.exiled && !c.captive && !c.imprisoned && !FB.justiceCustodyOf(s, c.id); }
-    if (at.kind === 'county') return FB.world.byId[at.id] && !FB.world.byId[at.id].wasteland ? at : null;
+    if (at.kind === 'county') {
+      var county = FB.campaignProvince(s, at.id);
+      return county && (!county.wasteland || s.owner && s.owner[at.id]) ? at : null;
+    }
     if (at.kind === 'character') return availablePerson(s.chars[at.id]) ? at : null;
     if (at.kind === 'institution') {
       var definitions = FB.localInstitutionDefinitions(s);
@@ -544,7 +547,7 @@
       /* Recorded people can outlive character compaction. Only the current
          living principal can exercise the mandate, never a historic vote. */
       return at.kind === 'royal_member' ? own(t.members, at.id) : at.kind === 'character' ? true :
-        at.kind === 'county' ? own(FB.world.byId, at.id) : own(FB.localInstitutionDefinitions(s), at.id);
+        at.kind === 'county' ? !!FB.campaignProvince(s, at.id) : own(FB.localInstitutionDefinitions(s), at.id);
     }
     data.members.forEach(function (m, i) {
       if (!plain(m) || !keys(m.scope, ['kind','id'])) fail();
@@ -553,7 +556,7 @@
           (i < p.members.length ? m.id !== p.members[i].id || m.templateId !== m.id :
             m.id !== 'local_' + m.scope.id || d.principal !== 'capital_community') || ids.indexOf(m.id) >= 0 ||
           !validPrincipal(m.principal) || !keys(m.scope, ['kind','id']) ||
-          !(m.scope.kind === 'realm' && m.scope.id === rid || m.scope.kind === 'county' && own(FB.world.byId, m.scope.id)) ||
+          !(m.scope.kind === 'realm' && m.scope.id === rid || m.scope.kind === 'county' && FB.campaignProvince(s, m.scope.id)) ||
           d.principal === 'capital_community' && (m.scope.kind !== 'county' || m.principal.kind !== 'county' || m.principal.id !== m.scope.id) ||
           d.principal === 'senior_kin' && (m.principal.kind !== 'royal_member' || data.roots.indexOf(m.principal.id) < 0) ||
           plain(d.principal) && JSON.stringify(m.principal) !== JSON.stringify(d.principal) ||
@@ -589,7 +592,7 @@
     if (a !== null) {
       if (!keys(a, ['generation','memberId','scopes','terms','consents','principals']) ||
           !integer(a.generation, 1, generation(s, rid)) || !knownCandidate(a.memberId) || !unique(a.scopes) ||
-          a.scopes.length > MAX_MEMBERS || a.scopes.some(function (id) { return !own(FB.world.byId, id); }) || !terms(a.terms) ||
+          a.scopes.length > MAX_MEMBERS || a.scopes.some(function (id) { return !FB.campaignProvince(s, id); }) || !terms(a.terms) ||
           !unique(a.consents) || a.consents.some(function (id) { return ids.indexOf(id) < 0; }) ||
           !Array.isArray(a.principals) || a.principals.length !== a.consents.length ||
           a.principals.some(function (who, i) { return !keys(who, ['id','principal']) || who.id !== a.consents[i] || !validPrincipal(who.principal); })) fail();

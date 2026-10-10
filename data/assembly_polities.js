@@ -23,6 +23,19 @@
         { id:'guard', name:'Local defenders', weight:1, basis:'service', continuity:'institution', support:50 }
       ]
     },
+    river_households_476:{
+      eligibility:{ minAge:18, minServiceYears:0, skills:{ dip:3 }, free:true },
+      selection:{ threshold:0.6, tie:'id', termDays:null, nominationCost:0 },
+      recall:{ threshold:0.6, reasons:['neglect','overreach','ineligible'] },
+      obligations:{ revenueRate:0.1, levyRate:0.4, maxDues:16, maxLevy:100, reserve:10 },
+      reserved:['war','treaty','grant','extraordinary_tax','pledge','conversion'],
+      powers:['ban','peace','revenue'],
+      members:[
+        { id:'fields', name:'Cultivating households', weight:3, basis:'custom', continuity:'institution', support:60 },
+        { id:'waters', name:'River and lake households', weight:2, basis:'custom', continuity:'institution', support:55 },
+        { id:'guard', name:'Local defenders', weight:1, basis:'service', continuity:'institution', support:50 }
+      ]
+    },
     settlement_federation:{
       eligibility:{ minAge:20, minServiceYears:2, skills:{ ste:4 }, free:true },
       selection:{ threshold:0.75, tie:'id', termDays:720, nominationCost:3 },

@@ -1,4 +1,8 @@
-/* Regional presentation catalogues. Generated names are not attested incumbents. */
+/* Regional presentation catalogues. Pools use ordinary name forms or openly
+   reconstructed forms where local anthroponymy is unavailable. The named
+   historical incumbents discussed in the evidence notes are excluded;
+   generated people never assert an attested office or genealogy.
+   See docs/research/476-wider-evidence.md for naming evidence and limits. */
 FBDATA.bookmarkCultures476Wider = {
   "pictish_476": {
     "name": "Northern British",
@@ -6,18 +10,29 @@ FBDATA.bookmarkCultures476Wider = {
     "nameEras": {
       "late_antique": {
         "male": [
-          "Talorc",
-          "Drest",
-          "Galan",
-          "Brude"
+          "Uven",
+          "Brenoc",
+          "Talon",
+          "Cenoc"
         ],
         "female": [
-          "Eithne",
           "Elen",
-          "Essylt"
+          "Essylt",
+          "Nessa"
         ]
       }
-    }
+    },
+    "male": [
+      "Uven",
+      "Brenoc",
+      "Talon",
+      "Cenoc"
+    ],
+    "female": [
+      "Elen",
+      "Essylt",
+      "Nessa"
+    ]
   },
   "elbegermanic_476": {
     "name": "Elbe Germanic",
@@ -25,41 +40,63 @@ FBDATA.bookmarkCultures476Wider = {
     "nameEras": {
       "late_antique": {
         "male": [
-          "Bisin",
-          "Felethus",
-          "Gibuld",
-          "Gundeoch"
+          "Wulfhard",
+          "Adalmar",
+          "Raginwald",
+          "Bernward"
         ],
         "female": [
-          "Basina",
-          "Giso",
-          "Gundrada"
+          "Adalhild",
+          "Bertruna",
+          "Wulfrun"
         ]
       }
-    }
+    },
+    "male": [
+      "Wulfhard",
+      "Adalmar",
+      "Raginwald",
+      "Bernward"
+    ],
+    "female": [
+      "Adalhild",
+      "Bertruna",
+      "Wulfrun"
+    ]
   },
   "vistula_476": {
     "name": "Vistula communities",
-    "parent": "gothic",
     "nameEras": {
       "late_antique": {
         "male": [
-          "Wulfila",
-          "Gunderic",
-          "Radagais",
-          "Ostrogotha"
+          "Aren",
+          "Bera",
+          "Daro",
+          "Wida"
         ],
         "female": [
-          "Giso",
-          "Amalafrida",
-          "Gundrada"
+          "Alna",
+          "Mera",
+          "Wena"
         ]
       }
-    }
+    },
+    "male": [
+      "Aren",
+      "Bera",
+      "Daro",
+      "Wida"
+    ],
+    "female": [
+      "Alna",
+      "Mera",
+      "Wena"
+    ],
+    "tradition": "other",
+    "dyn": "of_place"
   },
   "dnieper_476": {
     "name": "Dnieper communities",
-    "parent": "baltic",
     "nameEras": {
       "late_antique": {
         "male": [
@@ -74,7 +111,20 @@ FBDATA.bookmarkCultures476Wider = {
           "Daina"
         ]
       }
-    }
+    },
+    "tradition": "other",
+    "dyn": "of_place",
+    "male": [
+      "Dargis",
+      "Vaidis",
+      "Rimas",
+      "Aistis"
+    ],
+    "female": [
+      "Laima",
+      "Rasa",
+      "Daina"
+    ]
   },
   "alan_476": {
     "name": "Alan communities",
@@ -82,18 +132,29 @@ FBDATA.bookmarkCultures476Wider = {
     "nameEras": {
       "late_antique": {
         "male": [
-          "Aspar",
-          "Ardabur",
-          "Sangiban",
-          "Goar"
+          "Arsavan",
+          "Farnak",
+          "Rastak",
+          "Artavan"
         ],
         "female": [
-          "Sati",
-          "Roxana",
-          "Artaz"
+          "Artana",
+          "Farnisa",
+          "Razana"
         ]
       }
-    }
+    },
+    "male": [
+      "Arsavan",
+      "Farnak",
+      "Rastak",
+      "Artavan"
+    ],
+    "female": [
+      "Artana",
+      "Farnisa",
+      "Razana"
+    ]
   },
   "bactrian_476": {
     "name": "Bactrian",
@@ -101,18 +162,27 @@ FBDATA.bookmarkCultures476Wider = {
     "nameEras": {
       "late_antique": {
         "male": [
-          "Mihira",
-          "Khingila",
-          "Goboziko",
-          "Sart"
+          "Bab",
+          "Piduk",
+          "Bagbandag",
+          "Abdabuk"
         ],
         "female": [
-          "Roxana",
-          "Dukht",
-          "Nana"
+          "Ralik",
+          "Nogsanind"
         ]
       }
-    }
+    },
+    "male": [
+      "Bab",
+      "Piduk",
+      "Bagbandag",
+      "Abdabuk"
+    ],
+    "female": [
+      "Ralik",
+      "Nogsanind"
+    ]
   },
   "sogdian_476": {
     "name": "Sogdian",
@@ -139,37 +209,60 @@ FBDATA.bookmarkCultures476Wider = {
     "nameEras": {
       "late_antique": {
         "male": [
-          "Mithra",
-          "Vahram",
-          "Narseh",
-          "Peroz"
+          "Rastak",
+          "Mihrbandag",
+          "Artavan",
+          "Farnak"
         ],
         "female": [
+          "Artana",
           "Dukht",
-          "Nana",
-          "Roxana"
+          "Razana"
         ]
       }
-    }
+    },
+    "male": [
+      "Rastak",
+      "Mihrbandag",
+      "Artavan",
+      "Farnak"
+    ],
+    "female": [
+      "Artana",
+      "Dukht",
+      "Razana"
+    ]
   },
   "indus_476": {
     "name": "Indus communities",
-    "parent": "persian",
     "nameEras": {
       "late_antique": {
         "male": [
-          "Deva",
-          "Mitra",
-          "Rudra",
-          "Vishnu"
+          "Mitradatta",
+          "Dharmadasa",
+          "Devadatta",
+          "Rudradatta"
         ],
         "female": [
-          "Devi",
-          "Mitra",
-          "Padma"
+          "Mitradevi",
+          "Dharmavati",
+          "Padmavati"
         ]
       }
-    }
+    },
+    "male": [
+      "Mitradatta",
+      "Dharmadasa",
+      "Devadatta",
+      "Rudradatta"
+    ],
+    "female": [
+      "Mitradevi",
+      "Dharmavati",
+      "Padmavati"
+    ],
+    "tradition": "other",
+    "dyn": "of_place"
   },
   "arabian_476": {
     "name": "Arabian",
@@ -177,18 +270,29 @@ FBDATA.bookmarkCultures476Wider = {
     "nameEras": {
       "late_antique": {
         "male": [
-          "Mundhir",
-          "Harith",
-          "Amr",
-          "Aswad"
+          "Wahb",
+          "Saad",
+          "Malik",
+          "Hani"
         ],
         "female": [
+          "Salma",
           "Hind",
-          "Mawiya",
-          "Salma"
+          "Layla"
         ]
       }
-    }
+    },
+    "male": [
+      "Wahb",
+      "Saad",
+      "Malik",
+      "Hani"
+    ],
+    "female": [
+      "Salma",
+      "Hind",
+      "Layla"
+    ]
   },
   "south_arabian_476": {
     "name": "South Arabian",
@@ -196,18 +300,29 @@ FBDATA.bookmarkCultures476Wider = {
     "nameEras": {
       "late_antique": {
         "male": [
-          "Sharhabil",
-          "Marathad",
-          "Abikarib",
-          "Lahayathat"
+          "Wahbil",
+          "Ilawatar",
+          "Hani",
+          "Nashakarib"
         ],
         "female": [
           "Nawfa",
-          "Hind",
-          "Malkat"
+          "Malkat",
+          "Wahba"
         ]
       }
-    }
+    },
+    "male": [
+      "Wahbil",
+      "Ilawatar",
+      "Hani",
+      "Nashakarib"
+    ],
+    "female": [
+      "Nawfa",
+      "Malkat",
+      "Wahba"
+    ]
   },
   "aksumite_476": {
     "name": "Aksumite",
@@ -215,41 +330,63 @@ FBDATA.bookmarkCultures476Wider = {
     "nameEras": {
       "late_antique": {
         "male": [
-          "Ezana",
-          "Ousanas",
-          "Eon",
-          "Aphilas"
+          "Gabra",
+          "Walda",
+          "Mabra",
+          "Samra"
         ],
         "female": [
           "Admas",
-          "Mariam",
-          "Saba"
+          "Saba",
+          "Mariam"
         ]
       }
-    }
+    },
+    "male": [
+      "Gabra",
+      "Walda",
+      "Mabra",
+      "Samra"
+    ],
+    "female": [
+      "Admas",
+      "Saba",
+      "Mariam"
+    ]
   },
   "horn_coastal_476": {
     "name": "Horn coastal communities",
-    "parent": "nubian",
     "nameEras": {
       "late_antique": {
         "male": [
-          "Adal",
-          "Ayan",
-          "Samir",
-          "Dima"
+          "Dima",
+          "Gala",
+          "Bara",
+          "Wara"
         ],
         "female": [
-          "Ayan",
-          "Saba",
-          "Admas"
+          "Awa",
+          "Dima",
+          "Gala"
         ]
       }
-    }
+    },
+    "male": [
+      "Dima",
+      "Gala",
+      "Bara",
+      "Wara"
+    ],
+    "female": [
+      "Awa",
+      "Dima",
+      "Gala"
+    ],
+    "tradition": "other",
+    "dyn": "of_place"
   },
   "sahelian_476": {
     "name": "Sahelian communities",
-    "parent": "nubian",
     "nameEras": {
       "late_antique": {
         "male": [
@@ -264,7 +401,82 @@ FBDATA.bookmarkCultures476Wider = {
           "Dama"
         ]
       }
-    }
+    },
+    "tradition": "other",
+    "dyn": "of_place",
+    "male": [
+      "Dama",
+      "Koro",
+      "Sira",
+      "Tama"
+    ],
+    "female": [
+      "Sira",
+      "Awa",
+      "Dama"
+    ]
+  },
+  "oghuric_476": {
+    "name": "Oghuric followings",
+    "tradition": "steppe",
+    "dyn": "of_place",
+    "nameEras": {
+      "late_antique": {
+        "male": [
+          "Aruk",
+          "Saran",
+          "Tulan",
+          "Kurun"
+        ],
+        "female": [
+          "Aruna",
+          "Sula",
+          "Alana"
+        ]
+      }
+    },
+    "male": [
+      "Aruk",
+      "Saran",
+      "Tulan",
+      "Kurun"
+    ],
+    "female": [
+      "Aruna",
+      "Sula",
+      "Alana"
+    ]
+  },
+  "central_steppe_476": {
+    "name": "Central steppe households",
+    "tradition": "steppe",
+    "dyn": "of_place",
+    "nameEras": {
+      "late_antique": {
+        "male": [
+          "Aruk",
+          "Saran",
+          "Tulan",
+          "Bora"
+        ],
+        "female": [
+          "Aruna",
+          "Sula",
+          "Alana"
+        ]
+      }
+    },
+    "male": [
+      "Aruk",
+      "Saran",
+      "Tulan",
+      "Bora"
+    ],
+    "female": [
+      "Aruna",
+      "Sula",
+      "Alana"
+    ]
   }
 };
 FBDATA.bookmarkReligions476Wider = {

@@ -16,16 +16,17 @@
         !Number.isInteger(def.firstYear) || !Number.isInteger(def.lastYear) || def.lastYear < def.firstYear)
       throw new Error('Invalid agreement story declaration.');
     Object.keys(FBDATA.bookmarks).forEach(function (id) {
-      var bm = FBDATA.bookmarks[id];
-      if ((bm.stories || []).indexOf(def.id) < 0) return;
-      var counties = {}, realms = {};
-      (bm.provinces || []).forEach(function (p) { if (!p.wasteland) counties[p.id] = true; });
-      (bm.realms || []).forEach(function (r) { realms[r.id] = true; });
-      if (!def.actor || !realms[def.actor.realmId] || def.source && !realms[def.source.realmId] ||
-          (def.countyIds || []).concat(def.retainedCountyIds || []).some(function (pid) { return !counties[pid]; }) ||
-          (def.routes || []).some(function (r) { return !r || !counties[r.from] || !counties[r.to]; }) ||
-          (def.conditions || []).some(function (c) { return !c || c.kind === 'owner' && (!counties[c.provinceId] || !realms[c.realmId]); }))
-        throw new Error('Agreement parties and counties must resolve in the owning bookmark.');
+      FB.bookmarkRevisions(id).forEach(function (bm) {
+        if ((bm.stories || []).indexOf(def.id) < 0) return;
+        var counties = {}, realms = {};
+        (bm.provinces || []).forEach(function (p) { if (!p.wasteland) counties[p.id] = true; });
+        (bm.realms || []).forEach(function (r) { realms[r.id] = true; });
+        if (!def.actor || !realms[def.actor.realmId] || def.source && !realms[def.source.realmId] ||
+            (def.countyIds || []).concat(def.retainedCountyIds || []).some(function (pid) { return !counties[pid]; }) ||
+            (def.routes || []).some(function (r) { return !r || !counties[r.from] || !counties[r.to]; }) ||
+            (def.conditions || []).some(function (c) { return !c || c.kind === 'owner' && (!counties[c.provinceId] || !realms[c.realmId]); }))
+          throw new Error('Agreement parties and counties must resolve in the owning bookmark.');
+      });
     });
   }
   function text(s, d, field) { return FB.dataText(s, null, 'storyCampaign', d.id, d, field, {}); }

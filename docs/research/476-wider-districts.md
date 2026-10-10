@@ -12,6 +12,8 @@ Independent local faith roots explicitly declare their shared mechanical default
 
 Sources and limits
 
+The more specific source locators, disputed models and naming limits for the corrected opening are in docs/research/476-wider-evidence.md. The short regional list below is background, not a per-county proof. Darband applies to its Caspian position; Dyakovo applies to Upper Volga/Valday, not to Poland, Ukraine or Belarus.
+
 roman: Evagrius, Ecclesiastical History, Book III. III.3-8; Timothy and the imperial church dispute. Church incumbency and imperial dispute; not county borders or population shares. https://www.tertullian.org/fathers/evagrius_3_book3.htm
 
 caucasus: Nina Garsoian, Armeno-Iranian relations in the pre-Islamic period. Sasanian period, abolition of Armenian monarchy in 428 and hereditary nobility. Imperial supervision and local aristocratic continuity; not the generated households or all Caucasian borders. https://www.iranicaonline.org/articles/armeno-iranian-relations-in-the-pre-islamic-period/
@@ -38,7 +40,7 @@ Northern Britain: University of Aberdeen, Hillfort revealed to be the largest Pi
 
 Sogdian centres: Etienne de la Vaissiere, Sogdiana iii. History and Archaeology. The regional synthesis supports treating oasis centres separately. The exact 476 boundaries and incumbent profiles remain reconstructions. https://www.iranicaonline.org/articles/sogdiana-iii-history-and-archaeology/
 
-Arabian coast: Encyclopaedia Iranica, Arabia ii. The Sasanians and Arabia. Evidence for Persian interests at different dates does not by itself establish direct rule at every Gulf anchor in 476. The local opening courts are conservative gameplay choices, not a denial of external claims. https://www.iranicaonline.org/articles/arabia-ii-sasanians-and-arabia/
+Arabian coast: Encyclopaedia Iranica, Arabia ii. The Sasanians and Arabia. Qatif and the Oman coast now retain local courts under a Sasanian liege. The source supports coastal interests and client relationships but leaves a fourth-to-sixth-century gap. The opening link is a reasoned reconstruction, not an attested 476 tribute amount or direct Persian bureaucracy. https://www.iranicaonline.org/articles/arabia-ii-sasanians-and-arabia/
 
 Aksum: UNESCO World Heritage Centre, Aksum, description of fourth-century Christian adoption. This supports an established Christian royal context without selecting an unattested spring-476 king or making all neighbouring districts Aksumite. https://whc.unesco.org/en/list/15
 
@@ -51,5 +53,9 @@ Each new physical seed has a 65 km Mercator-local radius limit. This is an edito
 Overland links are explicit physical routes with travel-unit costs. Households, couriers, games journeys and armies pay their appropriate ordinary time and provision costs multiplied by those units. They do not receive water transport capacity. Long Saharan links are coarse travel abstractions and require historical and map review before release; their existence and exact weights are not claimed as measured 476 itineraries.
 
 Acceptance
+
+The corrected opening separates Saragur and Oghur mobile followings from river residents and gives Taman a Bosporan coastal court. Ras follows the existing eastern Roman Scupi side; Rosetta has a generated civil delegate. Inland constituencies describe river and lake households. The reusable startLocations field restricts the Colonus beginning to declared estate regions; later travel and restored tenure are unaffected.
+
+Bounded regression specifications cover regional starts and borders, succession, death, mobile defeat, occupation, mixed-government consent and levies, cross-map restores, and revision-only authoring references. Multi-year evidence has a separate role: it evaluates continuing political and demographic behaviour beyond those interruption cases.
 
 The data and generic engine contracts are implemented for review. Site chronology, exact local political groupings, faith shares, the northern court aggregates already present in the baseline and long overland links remain historical acceptance points. Shared geography and route constraints require visual raster inspection. Save budgets remain 4 MiB fresh, 6 MiB household-year and 8 MiB observer, with 30 seconds per 45-day observer slice. One-season journeys do not establish multi-year political stability.

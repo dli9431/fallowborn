@@ -2,6 +2,20 @@
    Authored historical references resolve through the saved start identity. */
 (function () {
   'use strict';
+  /* Birthplace eligibility is pure and declaration-scoped, before a world or
+     household exists. All new-campaign entry points share this gate. */
+  FB.startProvinceAllowed = function (scenario, bookmark, provinceId) {
+    if (!scenario || !bookmark || scenario.fixedProvinceId && scenario.fixedProvinceId !== provinceId) return false;
+    var province = (bookmark.provinces || []).find(function (p) { return p.id === provinceId; });
+    if (!province || province.wasteland) return false;
+    var locations = bookmark.startLocations && bookmark.startLocations[scenario.id];
+    if (locations !== undefined && (!Array.isArray(locations) || locations.indexOf(provinceId) < 0)) return false;
+    var realm = (bookmark.realms || []).find(function (r) { return r.id === province.realm; });
+    var required = (scenario.systems || []).concat(scenario.system ? [scenario.system] : []);
+    return required.every(function (id) {
+      return FB.systems.enabledForBookmark(bookmark, id, province.religion, realm && realm.government);
+    });
+  };
   FB.startRealmId = function (s, id) {
     return s && s.start && s.start.rulerRealmId === id ? 'player' : id;
   };

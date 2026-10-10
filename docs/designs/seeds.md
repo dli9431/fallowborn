@@ -148,3 +148,7 @@ The hidden 493 review candidate has independent farmer_493, craftsman_493, cleri
 Fixed ruler identities
 
 Existing-ruler scenario codes use the normal bookmark, scenario, county, sex, name and optional standard-family/settlement/community fields. They require the authored name and sex, fixed county and settlement slot zero. An omitted community defaults to the scenario's authored ruler community, which may differ from the county's principal community. An explicit community must match that identity. Hidden definitions reject codes before any new campaign is created. Ordinary codes retain their existing defaults and generation order.
+
+Regional birthplace rules
+
+An effective bookmark revision may declare startLocations, mapping scenario ids to eligible inhabited county ids. Missing entries add no location constraint; an empty list disables that beginning. FB.startProvinceAllowed intersects the declared locations with fixed birthplaces and required systems under the county's opening faith and government. Offering, seed parsing, random selection, map picks and final creation use this shared gate before creating a household. A rejected code or final birthplace consumes no campaign RNG or uid. This policy does not change restored households or restrict later movement. The wider 476 Colonus scenario uses a positive estate-region list rather than admitting every inhabited county.

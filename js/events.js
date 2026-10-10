@@ -6008,16 +6008,17 @@ window.FB = window.FB || {};
     const knownCultures = FBDATA.cultures ? Object.keys(FBDATA.cultures) : [];
     const knownProvinceIds = [];
     for (let b = 0; b < knownBookmarks.length; b++) {
-      const bookmark = FBDATA.bookmarks[knownBookmarks[b]];
-      const provinces = (bookmark && bookmark.provinces) || {};
-      for (const provinceKey in provinces) {
-        if (!Object.prototype.hasOwnProperty.call(provinces, provinceKey)) continue;
-        const province = provinces[provinceKey];
-        const provinceId = province && province.id || provinceKey;
-        if (provinceId && knownProvinceIds.indexOf(provinceId) < 0) {
-          knownProvinceIds.push(provinceId);
+      FB.bookmarkRevisions(knownBookmarks[b]).forEach(function (bookmark) {
+        const provinces = (bookmark && bookmark.provinces) || {};
+        for (const provinceKey in provinces) {
+          if (!Object.prototype.hasOwnProperty.call(provinces, provinceKey)) continue;
+          const province = provinces[provinceKey];
+          const provinceId = province && province.id || provinceKey;
+          if (provinceId && knownProvinceIds.indexOf(provinceId) < 0) {
+            knownProvinceIds.push(provinceId);
+          }
         }
-      }
+      });
     }
     const selectorFields = {
       bookmarksAny:1, culturesAny:1, faithAncestor:1,

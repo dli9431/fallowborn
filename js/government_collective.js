@@ -42,7 +42,7 @@
     if (operation === 'war') return Array.isArray(t.causes) && t.causes.length > 0 && t.causes.length <= 8 && t.causes.every(function (c) {
       return c && typeof c.type === 'string' && s.realms[c.enemy] && s.realms[c.enemy].alive && c.enemy !== rid &&
         ['aggression','customary','fabricated','dejure'].indexOf(c.type) >= 0 &&
-        typeof c.target === 'string' && !!FB.world.byId[c.target] && FB.warTargetDefender(s, rid, c.target) === c.enemy;
+        typeof c.target === 'string' && !!FB.campaignProvince(s, c.target) && FB.warTargetDefender(s, rid, c.target) === c.enemy;
     });
     if (operation === 'extraordinary_tax') return Number.isFinite(t.amount) && t.amount > 0 && t.amount <= p.obligations.maxDues &&
       Number.isInteger(t.duration) && t.duration > 0 && t.duration <= 360;

@@ -2069,7 +2069,9 @@ FB.CHANGELOG = [
     if (!FB.bookmarkAvailable(bookmarkId)) return false;
     if (scenario.bookmarkIds && scenario.bookmarkIds.indexOf(bookmarkId) < 0) return false;
     const offeredBookmark = FB.bookmark(bookmarkId);
-    if (!FB.systemContentEnabled({ start:{ id:bookmarkId } }, scenario)) return false;
+    if (!offeredBookmark || !offeredBookmark.provinces.some(function (p) {
+      return FB.startProvinceAllowed(scenario, offeredBookmark, p.id);
+    })) return false;
     if (offeredBookmark && offeredBookmark.starts && offeredBookmark.starts.indexOf(scenario.id) < 0) return false;
     if (scenario.rulerRealmId) {
       const bookmark = FB.bookmark(bookmarkId);
@@ -2226,7 +2228,7 @@ FB.CHANGELOG = [
       })[0];
       const sex = parts[sexPart].toLowerCase();
       const name = parts[namePart].replace(/_/g, ' ').trim();
-      if (!seed || !scen || !prov || prov.wasteland || (sex !== 'm' && sex !== 'f') ||
+      if (!seed || !scen || !prov || !FB.startProvinceAllowed(scen, bookmark, prov.id) || (sex !== 'm' && sex !== 'f') ||
         !name || name.length > 20 ||
           scen.characterName && name !== scen.characterName) return { error: bad };
       if (scen.sex && sex !== scen.sex) {
@@ -2515,7 +2517,10 @@ FB.CHANGELOG = [
         });
         return;
       }
-      const cands = FB.world.provs.filter(function (p) { return !p.wasteland; });
+      const cands = FB.world.provs.filter(function (p) {
+        return FB.startProvinceAllowed(G.pending && G.pending.scenario, FB.activeBookmark, p.id);
+      });
+      if (!cands.length) return;
       G.pickProvince(FB.pick(cands));
     });
     $('cg-reroll').addEventListener('click', function () {
@@ -2920,6 +2925,10 @@ FB.CHANGELOG = [
       FB.ui.toast('No one is born in {province}. Pick a settled land.', { province: pr.name });
       return false;
     }
+    if (!FB.startProvinceAllowed(G.pending && G.pending.scenario, FB.activeBookmark, pr.id)) {
+      FB.ui.toast('This beginning is unavailable in {province}. Choose another county.', {province:pr.name});
+      return false;
+    }
     const sameCommunityCounty = G.pending.communityProvinceId === pr.id;
     G.pending.provinceId = pr.id;
     const preserved = sameCommunityCounty
@@ -3226,7 +3235,7 @@ FB.CHANGELOG = [
     G.observe = false;
     document.body.classList.remove('observing');
     const sc = G.pending && G.pending.scenario;
-    if (!scenarioUnlocked(sc) || sc.rulerRealmId && G.pending.provinceId !== sc.fixedProvinceId) {
+    if (!scenarioUnlocked(sc) || !FB.startProvinceAllowed(sc, FB.activeBookmark, G.pending.provinceId)) {
       showScenarios();
       return false;
     }

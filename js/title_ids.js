@@ -56,8 +56,11 @@ window.FB = window.FB || {};
     if (!canonical) return false;
     if (own(FBDATA[plural], canonical)) return true;
     for (var bookmarkId in FBDATA.bookmarks || {}) {
-      var table = FBDATA.bookmarks[bookmarkId][plural];
-      if (own(table, canonical) || own(table, prefixes[rank] + canonical)) return true;
+      var definitions = FB.bookmarkRevisions(bookmarkId);
+      for (var i = 0; i < definitions.length; i++) {
+        var table = definitions[i][plural];
+        if (own(table, canonical) || own(table, prefixes[rank] + canonical)) return true;
+      }
     }
     return false;
   };

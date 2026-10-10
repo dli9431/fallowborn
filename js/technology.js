@@ -2269,11 +2269,14 @@ window.FB = window.FB || {};
     var bookmarks = FBDATA.bookmarks || {};
     for (var bookmarkId in bookmarks) {
       if (!own(bookmarks, bookmarkId)) continue;
-      var realms = bookmarks[bookmarkId] && bookmarks[bookmarkId].realms || [];
-      for (var ri = 0; ri < realms.length; ri++) {
-        var realmErrors = realmTechnologyErrors(bookmarkId, realms[ri]);
-        for (var re = 0; re < realmErrors.length; re++) errors.push(realmErrors[re]);
-      }
+      FB.bookmarkRevisions(bookmarkId).forEach(function (definition) {
+        (definition.realms || []).forEach(function (realm) {
+          var realmErrors = realmTechnologyErrors(bookmarkId, realm);
+          for (var re = 0; re < realmErrors.length; re++) {
+            if (errors.indexOf(realmErrors[re]) < 0) errors.push(realmErrors[re]);
+          }
+        });
+      });
     }
     return errors;
   };

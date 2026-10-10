@@ -35,7 +35,7 @@ window.FB = window.FB || {};
   var REVISION_FIELDS = ['geography','opening','openingRevision','provinces','realms',
     'duchies','kingdoms','empires','straits','crossingClasses','localInstitutions',
     'settlementLayout','climate','religiousHeads','starts','stories','storyRegions','scripted',
-    'openingRevisions','openingLegacyRevision'];
+    'openingRevisions','openingLegacyRevision','startLocations'];
   function resolveBookmarkRevision(base, revision) {
     if (!base) return null;
     var selected = revision === undefined ? base.revision || 'baseline' : revision;
@@ -68,10 +68,23 @@ window.FB = window.FB || {};
     return resolveBookmarkRevision(bookmarkDefinition(id === undefined || id === null
       ? defaultBookmarkId() : String(id)), revision);
   };
+  /* Catalogue validation must inspect retained and fresh definitions. The
+     optional raw definition supports a staged JSON mod before installation. */
+  FB.bookmarkRevisions = function (id, definition) {
+    var base = definition || bookmarkDefinition(id);
+    if (!base) return [];
+    return (base.revisions ? Object.keys(base.revisions) : ['baseline']).map(function (revision) {
+      return resolveBookmarkRevision(base, revision);
+    });
+  };
   FB.campaignBookmark = function (state) {
     var start = state && state.start;
     return start && start.id ? FB.bookmark(start.id, start.revision === undefined ? 'baseline' : start.revision)
       : FB.activeBookmark;
+  };
+  FB.campaignProvince = function (state, id) {
+    var definition = FB.campaignBookmark(state);
+    return definition && (definition.provinces || []).find(function (p) { return p.id === id; }) || null;
   };
 
   /* Visibility limits new campaigns, not inspection or matching save loads. */
@@ -1133,6 +1146,15 @@ window.FB = window.FB || {};
     if (definition.starts !== undefined) list(definition.starts, 'starts', function (id) {
       if (!starts[id]) fault('starts', 'unregistered start ' + id + '.');
     });
+    if (definition.startLocations !== undefined) {
+      if (!plainRecord(definition.startLocations)) fault('startLocations', 'must be a scenario-to-county map.');
+      else Object.keys(definition.startLocations).forEach(function (id) {
+        if (!starts[id]) fault('startLocations', 'unknown start ' + id + '.');
+        list(definition.startLocations[id], 'startLocations.' + id, function (pid) {
+          if (!provinces[pid] || provinces[pid].wasteland) fault('startLocations.' + id, 'unknown inhabited province ' + pid + '.');
+        });
+      });
+    }
     Object.keys(starts).forEach(function (id) {
       var start = starts[id], owner = 'start ' + id;
       if (start.bookmarkIds !== undefined) list(start.bookmarkIds, owner + '.bookmarkIds', function (bm) {
@@ -1151,6 +1173,10 @@ window.FB = window.FB || {};
       if (start.governmentForm && forms.indexOf(start.governmentForm) < 0) fault(owner, 'government form ' + start.governmentForm + ' is absent.');
       if (start.fixedProvinceId && (!provinces[start.fixedProvinceId] || provinces[start.fixedProvinceId].wasteland)) fault(owner, 'unknown inhabited province ' + start.fixedProvinceId + '.');
       var startingProvince = start.fixedProvinceId && provinces[start.fixedProvinceId];
+      var locations = definition.startLocations && definition.startLocations[id];
+      if (startingProvince && !(Array.isArray(locations) && !locations.length) &&
+          !FB.startProvinceAllowed(start, definition, startingProvince.id))
+        fault(owner, 'fixed birthplace is unavailable under this bookmark\u2019s start rules.');
       if (startingProvince && !start.rulerRealmId && !(Array.isArray(startingProvince.communities) ? startingProvince.communities : [startingProvince]).some(function (community) {
             return community && community.culture === start.startCulture && community.religion === start.startReligion;
           })) fault(owner, 'fixed culture and faith are absent from province ' + start.fixedProvinceId + '.');

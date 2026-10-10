@@ -586,6 +586,12 @@ window.FBMODS = window.FBMODS || [];
      offered, its fixed birthplace and identity, its family shapes and its
      player-track stories. */
   function validateStartRules(scenario, rules, path) {
+    function freshBookmark(id) {
+      var raw = rules.bookmarks[id];
+      return FB.bookmarkRevisions(id, raw).find(function (bm) {
+        return (bm.revision || 'baseline') === (raw.revision || 'baseline');
+      });
+    }
     if (own(scenario, 'bookmarkIds')) {
       validateIdList(scenario.bookmarkIds, path + '.bookmarkIds', rules.bookmarks);
     }
@@ -608,7 +614,7 @@ window.FBMODS = window.FBMODS || [];
       if (scenario.characterName.length > 20 || !FBDATA.governmentForms[scenario.governmentForm])
         fail(path + '.characterName', 'needs a start-code name and a known government.');
       for (const bookmarkId of scenario.bookmarkIds) {
-        const bookmark = rules.bookmarks[bookmarkId];
+        const bookmark = freshBookmark(bookmarkId);
         const realm = (bookmark.realms || []).filter(function (row) { return row.id === scenario.rulerRealmId; })[0];
         const ruler = realm && realm.ruler;
         const eraId = FB.bookmarkEra(bookmark), era = FBDATA.eras[eraId];
@@ -640,12 +646,15 @@ window.FBMODS = window.FBMODS || [];
       /* Ordinary starts choose a resident community. Existing rulers keep
          the court identity already checked above, even among other residents. */
       for (const bookmarkId of scenario.bookmarkIds) {
-        const provinces = rules.bookmarks[bookmarkId].provinces || [];
+        const bookmark = freshBookmark(bookmarkId);
+        const provinces = bookmark.provinces || [];
         const county = provinces.filter(function (province) {
           return province && province.id === scenario.fixedProvinceId &&
             !province.wasteland;
         })[0];
-        if (!county) {
+        const locations = bookmark.startLocations && bookmark.startLocations[scenario.id];
+        if (!county || !(Array.isArray(locations) && !locations.length) &&
+            !FB.startProvinceAllowed(scenario, bookmark, county.id)) {
           fail(path + '.fixedProvinceId', 'is not a settled county of bookmark ' +
             bookmarkId + '.');
         }
