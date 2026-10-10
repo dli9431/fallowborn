@@ -7,7 +7,8 @@ const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
   'data/government_rollout.js','js/government_ecclesiastical.js','js/ecclesiastical_strategies.js',
   'data/story_courts_476.js',
-  'index.html', 'data/bookmark_800.js', 'data/bookmark_800_history.js',
+  'index.html', 'data/bookmark_800.js', 'data/bookmark_800_history.js', 'data/bookmark_800_expansion.js',
+  'data/geography_expansion.js', 'data/bookmark_476_wider_identities.js',
   'data/bookmarks.js', 'data/map_data.js', 'data/counties.js',
   'data/geographies.js', 'data/settlements.js', 'data/settlements_real.js',
   'data/eras.js', 'data/starts.js', 'data/technology.js', 'data/ambitions.js',
@@ -135,7 +136,7 @@ test('800 activates the full world, period communities and subordinate courts', 
       stories:FB.stories.attached(s) };
   });
   expect(result).toMatchObject({ faults:[],
-    start:{ id:'800', year:800, season:3, day:25, era:'early_medieval', geography:'europe_regional', revision:'governments_v2' },
+    start:{ id:'800', year:800, season:3, day:25, era:'early_medieval', geography:'europe_regional_2', revision:'inhabited_v2_governments_v2' },
     hierarchy:['carolingian_800','carolingian_800','byzantium','abbasid'],
     owners:['carolingian_800','carolingian_800','carolingian_800','cordoba',
       'northumbria','leinster','byzantium','byzantium'],

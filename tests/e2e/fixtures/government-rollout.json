@@ -5,7 +5,7 @@
     {"realm":"byzantium_711","form":"administrative_monarchy","profile":"byzantine_711","mode":"recognition","minor":false,"officers":true,"service":0.5},
     {"realm":"umayyad_711","form":"administrative_monarchy","profile":"umayyad_711","mode":"designation","minor":true,"officers":false,"service":0}
   ]},
-  {"bookmark":"800","scenario":"farmer","province":"roma","revision":"governments_v2","forms":["administrative_monarchy","ecclesiastical_principality"],"changed":[
+  {"bookmark":"800","scenario":"farmer","province":"roma","revision":"inhabited_v2_governments_v2","geography":"europe_regional_2","forms":["administrative_monarchy","ecclesiastical_principality"],"changed":[
     {"realm":"papacy","form":"ecclesiastical_principality","profile":"papal_temporal_800","law":"roman_assent","vacancyLevy":false}
   ]},
   {"bookmark":"867","scenario":"farmer","province":"constantinople","revision":"governments_v2","forms":["administrative_monarchy","ecclesiastical_principality"],"changed":[

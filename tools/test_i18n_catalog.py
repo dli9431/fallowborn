@@ -184,6 +184,18 @@ class StructuredDataExtractionTests(unittest.TestCase):
         self.assertNotIn(i18n_catalog.source_key('Charlemagne'), inventory.entries)
         self.assertNotIn(i18n_catalog.source_key('Harun al-Rashid'), inventory.entries)
 
+    def test_800_expansion_names_have_stable_display_owners(self):
+        inventory = i18n_catalog.Inventory()
+        i18n_catalog.extract_structured(inventory)
+        for key, text in (
+            ('province.800.jenne_district.name.default', 'Jenne-jeno'),
+            ('province.800.central_iran_oases.name.default', 'Kashan district'),
+            ('realm.800.khwarazm_800.name.default', 'Khwarazm'),
+            ('settlement.800.gao_district_800.name.default', 'Gao-Saney'),
+        ):
+            self.assertEqual(inventory.entries[key]['text'], text)
+            self.assertIn('bookmark_800_expansion.js', inventory.meta[key]['location'])
+
     def test_review_bookmark_content_has_display_and_durable_news_owners(self):
         inventory = i18n_catalog.Inventory()
         i18n_catalog.extract_structured(inventory)

@@ -93,21 +93,25 @@
   Object.keys(assignments).forEach(function (id) {
     var base = FBDATA.bookmarks[id], revisions = base.revisions || {baseline:{}},
       previous = base.revision || 'baseline', changes = assignments[id];
-    var inherited = Object.assign({}, revisions.baseline, revisions[previous]);
-    var realms = inherited.realms || base.realms, found = {};
-    var revised = realms.map(function (realm) {
-      if (!Object.prototype.hasOwnProperty.call(changes, realm.id)) return realm;
-      found[realm.id] = true;
-      return Object.assign({}, realm, JSON.parse(JSON.stringify(changes[realm.id])));
-    });
-    Object.keys(changes).forEach(function (rid) {
-      if (!found[rid]) throw new Error('Missing government rollout realm: ' + id + '/' + rid);
-    });
-    var revisionId = previous === 'baseline' ? 'governments_v2' : previous + '_governments_v2';
-    if (Object.prototype.hasOwnProperty.call(revisions, revisionId))
-      throw new Error('Duplicate government rollout revision: ' + id + '/' + revisionId);
     base.revisions = Object.assign({}, revisions);
-    base.revisions[revisionId] = Object.assign({}, inherited, {realms:revised});
-    base.revision = revisionId;
+    /* Always keep the original dated-government world resolvable. A date
+       expansion must not make existing governments_v2 saves select new land. */
+    (previous === 'baseline' ? ['baseline'] : ['baseline',previous]).forEach(function (source) {
+      var inherited = Object.assign({}, revisions.baseline, revisions[source]);
+      var realms = inherited.realms || base.realms, found = {};
+      var revised = realms.map(function (realm) {
+        if (!Object.prototype.hasOwnProperty.call(changes, realm.id)) return realm;
+        found[realm.id] = true;
+        return Object.assign({}, realm, JSON.parse(JSON.stringify(changes[realm.id])));
+      });
+      Object.keys(changes).forEach(function (rid) {
+        if (!found[rid]) throw new Error('Missing government rollout realm: ' + id + '/' + rid);
+      });
+      var revisionId = source === 'baseline' ? 'governments_v2' : source + '_governments_v2';
+      if (Object.prototype.hasOwnProperty.call(revisions, revisionId))
+        throw new Error('Duplicate government rollout revision: ' + id + '/' + revisionId);
+      base.revisions[revisionId] = Object.assign({}, inherited, {realms:revised});
+      base.revision = revisionId;
+    });
   });
 })();

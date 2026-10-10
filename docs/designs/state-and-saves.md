@@ -2117,6 +2117,14 @@ Government selection principals, constituency scopes, recognized counties and co
 For 476, baseline retains the merged wider_v1 opening and its older supported opening catalogues on europe_regional. wider_v2 owns the expanded layout and its own opening catalogue on europe_regional_2. Loading baseline does not add new courts, move Alexandria or seed fresh communities. The existing edition/mod fingerprint checks remain mandatory. The retained schema 1 reader fixture rejects platformSchema 2, preventing an older runtime from discarding a revision it cannot interpret.
 Released catalogue retention
 
+800 expanded-world retention
+
+The 800 date retains independently resolvable baseline, governments_v2, inhabited_v2 and inhabited_v2_governments_v2 definitions. The first two keep the 498-anchor geography and original settlement layout; the latter two use the 527-anchor geography and the dated layout. The final combined revision is the fresh default. Government source composition always materializes the baseline government revision as well as the current date expansion, so adding a date composer cannot retire governments_v2 saves. It does not run during restore or change saved government profiles.
+
+The expansion changes no 800 opening actors or story definitions. Existing bundled Carolingian record migration still splits saved opportunities into the reusable types without replaying grants, diplomacy or completed outcomes. A saved frontier settlement remains attached to its original world rather than being replaced by newly authored districts. Regression coverage switches retained, expanded and other-date worlds in both directions and checks population, holders, sites, RNG, story records and personal state.
+
+Retained catalogue rules
+
 Every restored world revision must agree with its saved geography, including a bookmark with only the implicit baseline. A known but different geography is rejected before activation or state adoption. Retained form ids, default government stamps, generated-faith parents and optional institution records remain authoritative; this contract adds no automatic government transformation or restore-time initialization.
 
 The released-catalogue fixture records resolved baseline worlds and their settlement layouts, geography bases, effective faith profiles and defaults, government definitions and era government defaults. The initial protected bookmarks are 867 and 1066. New content uses additive ids and revisions; each new baseline is frozen when first shipped. Compatibility review must accompany any change to a retained hash. The fixture is a catalogue boundary, not an engine-code freeze.

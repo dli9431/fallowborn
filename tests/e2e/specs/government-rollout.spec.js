@@ -9,7 +9,8 @@ const consumers = require('../fixtures/government-rollout.json');
 const proofMod = require('../fixtures/government-rollout-mod.json');
 
 dependsOnRuntime(__filename,[
-  'index.html','data/government_rollout.js','data/bookmarks.js','data/bookmark_493.js',
+  'index.html','data/government_rollout.js','data/bookmark_800_expansion.js',
+  'data/geography_expansion.js','data/bookmark_476_wider_identities.js','data/bookmarks.js','data/bookmark_493.js',
   'data/bookmark_711.js','data/bookmark_800.js','data/bookmark_800_history.js','data/bookmark_1204.js',
   'data/bookmark_476.js','data/bookmark_476_outer.js','data/bookmark_476_wider.js',
   'data/political_institutions.js','data/aristocratic_courts.js','data/assembly_polities.js',
@@ -70,7 +71,7 @@ test('dated assignments retain complete baseline worlds and validate every strat
         untouched:!changed.length || baseline.realms.every(function (r) {
           return changed.indexOf(r.id) >= 0 || JSON.stringify(r) === JSON.stringify(current.realms.find(function (n) { return n.id === r.id; }));
         }),
-        geography:!changed.length || current.geography === baseline.geography,
+        geography:!changed.length || current.geography === (row.geography || baseline.geography),
         stories:!changed.length || JSON.stringify(current.stories) === JSON.stringify(baseline.stories),
         opening:!changed.length || JSON.stringify(current.opening) === JSON.stringify(baseline.opening),
         oldForms:row.changed.every(function (c) {

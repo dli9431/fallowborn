@@ -645,6 +645,14 @@ The expanded district and scenery interpretations are documented in docs/researc
 
 Shared district extension
 
+Winter 800 dated habitation
+
+data/bookmark_800_expansion.js selects six independently researched inhabited districts on europe_regional_2. Its complete province list retains the original 498 declarations and appends all 29 shared seeds, leaving 23 additions and all 21 original scenery anchors uninhabited. Each accepted district has one dated site; all original settlement slot identities are retained. Territorial local possession at Jenne and Gao is a declared simulation abstraction, Kath uses regnum, Ibrim belongs to the existing Makurian court, and Kashan/Tadmor use existing Abbasid public authority. No new constitution or religious institution follows automatically from a physical seed. The complete evidence and deferred-candidate ledger is docs/research/800-inhabited-terrain.md.
+
+Technology impact period_800_inhabited_terrain is none. Existing households and ordinary authority do not depend on a discovery. Population, livelihoods, climate and weighted dry travel use their existing contracts, with no new seasonal-access or market capability. The original 800 baseline and governments_v2 worlds keep europe_regional; only new expanded campaigns select the larger geography.
+
+Shared physical catalogue
+
 The unreleased europe_regional_2 base contains 29 bounded additions and 527 total anchors. Four appended districts cover the lower Amu Darya at Kath and Gurganj, the Kumbi area and the Timbuktu margin. All original scenery remains. The 476 expanded definition includes every shared seed but retains additions without a 476 political declaration as scenery, with no residents, owner or settlement layout. Date-specific habitation must be authored explicitly. docs/research/shared-geography-districts.md records the physical inventory, source confidence, route costs and acceptance workload.
 
 The expanded base supplies per-district climate defaults and a period-scoped Eastern steppe label; each bookmark's climate and names retain precedence. Inherited grid width, map scale, ordinary seed positions and the released europe_regional definition remain unchanged. This is an in-place extension of an unreleased base, so existing development wider_v2 rasters require renewed review. It is not a mechanism for changing a released base. Supported original-world saves still resolve their original geography and preserve converted frontier sites. Technology impact remains none under bounded_overland_corridors.

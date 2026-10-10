@@ -6,7 +6,8 @@ const { mockCrazyGames } = require('../support/crazygames');
 const { startParityGame } = require('../support/game/parity');
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
-  'index.html', 'data/bookmark_800.js', 'data/bookmark_800_history.js',
+  'index.html', 'data/bookmark_800.js', 'data/bookmark_800_history.js', 'data/bookmark_800_expansion.js',
+  'data/geography_expansion.js', 'data/government_rollout.js', 'data/bookmark_476_wider_identities.js',
   'data/bookmarks.js', 'data/starts.js', 'data/technology.js', 'data/political_institutions.js',
   'data/distribution_crazygames.js', 'js/crazygames.js',
   'js/world.js', 'js/royal_settlements.js', 'js/story_settlements.js', 'data/story_instances.js',
