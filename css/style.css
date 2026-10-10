@@ -499,6 +499,7 @@ body.picking #mapwrap { flex: 1 1 auto; }
    reserve space instead of relying on tabular figures */
 .stat { font-size: 14px; white-space: nowrap; min-width: 58px; flex: 0 0 auto; }
 .stat .net { font-size: var(--ui-label-size); } /* last season's net gain, beside the stat */
+.currency-coin { width: 1em; height: 1em; margin-right: .3em; vertical-align: -.12em; }
 /* gold/prestige/piety are buttons (hover or tap opens the per-season source
    breakdown); the reset keeps them looking like the plain figures they were,
    and the padding/negative-margin pair gives hit room without moving them */

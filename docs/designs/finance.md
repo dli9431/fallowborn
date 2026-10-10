@@ -566,6 +566,8 @@ Late antique purse
 
 The late antique era declares a complete solidus currency definition: Solidi as the purse label, a coin icon, s as the compact unit, and solidus/solidi as the long singular/plural. One internal gold remains one displayed solidus. This is a period presentation unit, not a new exchange system or reconstruction of fifth-century prices. Runtime currency and geography overrides retain their existing precedence; medieval money remains unchanged.
 
+The topbar renders the coin icon as inline SVG shapes so its visibility does not depend on emoji font coverage. Selection follows the resolved currency icon, including overrides, rather than the bookmark id. FB.money still returns plain text, and the purse button retains its localized currency label and long amount for accessibility.
+
 Existing court purse adoption
 
 When an authored court becomes player-controlled, its actual NPC treasury balance moves to player.gold and its accrued military charges move to treasuryAccounting.playerMilitary. The old NPC account is removed. FB.treasuryAvailable(player) quotes the available player purse for authority and contract consumers, consistent with treasuryTransfer's existing player debit and credit path. Starting scenario gold is only the fallback when the source court has no treasury; it never creates a second purse.

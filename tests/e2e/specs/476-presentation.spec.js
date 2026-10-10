@@ -10,10 +10,12 @@ dependsOnRuntime(__filename, [
   'js/localfolk.js', 'js/armies.js', 'js/world.js', 'js/mods.js', 'js/i18n.js',
   'js/lexicon.js', 'js/station.js', 'js/main.js', 'js/ui_topbar.js',
   'js/ui_misc.js', 'js/stories.js', 'js/story_campaign.js', 'data/story_instances.js',
-  'js/story_courts.js'
+  'js/story_courts.js', 'data/distribution_crazygames.js', 'js/crazygames.js'
 ]);
 const { test, expect } = require('../support/fixture');
 const { openGame } = require('../support/game/navigation');
+const { startHistoricalGame } = require('../support/game/historical-start');
+const { waitForUiRefresh } = require('../support/game/ui');
 
 test('shipped late antique presentation validates and preserves medieval defaults',
   async function ({ page }, testInfo) {
@@ -49,6 +51,51 @@ test('shipped late antique presentation validates and preserves medieval default
     expect(result.pure).toBe(true);
     expect(result.medieval).toEqual(Array(2).fill(['manuscript','heraldry','Gold','2 gold']));
   });
+
+for (const crazygames of [false, true]) {
+  test('476 purse draws a visible coin without an emoji font, distribution ' + crazygames,
+    async function ({ page }, testInfo) {
+      await page.setViewportSize({ width:390, height:844 });
+      await startHistoricalGame(page, testInfo, { bookmark:'476',
+        code:'COIN476-476-federate_476-ravenna-m-Marcus-standard-0-gothic.homoian' }, crazygames);
+      await page.evaluate(function () {
+        FB.state.player.gold = 32;
+        document.getElementById('tb-gold').style.fontFamily = 'Arial, sans-serif';
+        FB.ui.refresh();
+      });
+      await waitForUiRefresh(page);
+      const purse = page.locator('#tb-gold'), coin = purse.locator('svg.currency-coin');
+      await expect(coin).toBeVisible();
+      await expect(coin).toHaveAttribute('aria-hidden', 'true');
+      await expect(purse).toHaveAttribute('aria-label', 'Solidi: 32 solidi');
+      await expect(purse.locator('.mono')).toHaveText('32');
+      expect(await coin.evaluate(function (svg) {
+        const art = svg.getBBox(), rect = svg.getBoundingClientRect();
+        const button = svg.parentNode.getBoundingClientRect();
+        return { drawn:art.width > 0 && art.height > 0,
+          selfContained:svg.querySelectorAll('text,image,use').length === 0,
+          fits:rect.left >= button.left && rect.right <= button.right &&
+            rect.top >= button.top && rect.bottom <= button.bottom };
+      })).toEqual({ drawn:true, selfContained:true, fits:true });
+      await expect(purse).not.toContainText('🪙');
+      await page.evaluate(function () {
+        const currency = FB.currencyDef(FB.state);
+        currency.icon = 'C';
+        FB.configureCurrency(currency, true);
+        FB.ui.refresh();
+      });
+      await waitForUiRefresh(page);
+      await expect(coin).toHaveCount(0);
+      await expect(purse).toContainText('C32');
+      await page.evaluate(function () {
+        FB.configureCurrency(null, false);
+        FB.ui.refresh();
+      });
+      await waitForUiRefresh(page);
+      await expect(coin).toBeVisible();
+      await expect(purse).toHaveAttribute('aria-label', 'Solidi: 32 solidi');
+    });
+}
 
 test('period portraits cover every culture, sex and rank without changing state or RNG',
   async function ({ page }, testInfo) {

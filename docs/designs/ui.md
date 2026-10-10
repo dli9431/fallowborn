@@ -22,6 +22,8 @@ The Bishoprics and mediation deed appears only when the protagonist's current re
 
 Period presentation uses the existing map markers, crest canvases and purse displays. The map's fixed-size art cache includes style data; retained topbar and player-host crests include the era's emblem style. House identity, names, shape-coded settlement kinds, hit targets and keyboard/mobile flows stay the same. Purse accessible labels use the resolved localized currency label and the normal long money formatter. The title shell always retains the game's own heraldic crest.
 
+The topbar's coin icon is a small inline SVG with explicit gold fills and strokes, scaled to the surrounding text and separated from the amount. It needs no font glyph or external asset. The decorative SVG is hidden from accessibility APIs; the purse button supplies the currency name and amount. Other resolved currency icons retain their escaped text rendering.
+
 Settings resolves the current campaign state when opened, including a null state on the title screen. Its root sheet keeps Back disabled and Close enabled; nested settings sheets retain their return route.
 
 Read-only event disclosures, including the first-duty teaching anchor, remain available by pointer and native Enter/Space activation during the event input guard. Choices, confirmations and outcome acknowledgements retain their guarded activation boundary.

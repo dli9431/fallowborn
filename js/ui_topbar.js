@@ -312,7 +312,14 @@ window.FB = window.FB || {};
     });
     const net = s.seasonNet || {};
     const coinIcon = FB.money(0, { style:'icon' });
-    $('tb-gold').innerHTML = esc(coinIcon) + (coinIcon === '💰' ? ' ' : '') + '<span class="mono' +
+    // Draw the coin locally so a missing emoji glyph cannot leave the purse blank.
+    const coinHtml = coinIcon === '🪙'
+      ? '<svg class="currency-coin" width="16" height="16" viewBox="0 0 20 20" aria-hidden="true" focusable="false">' +
+        '<circle cx="10" cy="10" r="9" fill="#d8b24a" stroke="#8a5e22"/>' +
+        '<circle cx="10" cy="10" r="6.5" fill="none" stroke="#ffe6a0"/>' +
+        '<path d="M10 5.5v9M8 6.5h4M8 13.5h4" fill="none" stroke="#8a5e22" stroke-width="1.5"/></svg>'
+      : esc(coinIcon) + (coinIcon === '💰' ? ' ' : '');
+    $('tb-gold').innerHTML = coinHtml + '<span class="mono' +
       (s.player.gold < -0.0001 ? ' op-bad' : '') + '">' +
       esc(FB.money(s.player.gold, { omitPrimarySymbol:true })) + '</span>' +
       netBadge(net.gold, true);
