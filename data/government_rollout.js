@@ -94,19 +94,29 @@
     var base = FBDATA.bookmarks[id], revisions = base.revisions || {baseline:{}},
       previous = base.revision || 'baseline', changes = assignments[id];
     var inherited = Object.assign({}, revisions.baseline, revisions[previous]);
-    var realms = inherited.realms || base.realms, found = {};
-    var revised = realms.map(function (realm) {
-      if (!Object.prototype.hasOwnProperty.call(changes, realm.id)) return realm;
-      found[realm.id] = true;
-      return Object.assign({}, realm, JSON.parse(JSON.stringify(changes[realm.id])));
-    });
-    Object.keys(changes).forEach(function (rid) {
-      if (!found[rid]) throw new Error('Missing government rollout realm: ' + id + '/' + rid);
-    });
+    function assigned(realms) {
+      var found = {};
+      var revised = realms.map(function (realm) {
+        if (!Object.prototype.hasOwnProperty.call(changes, realm.id)) return realm;
+        found[realm.id] = true;
+        return Object.assign({}, realm, JSON.parse(JSON.stringify(changes[realm.id])));
+      });
+      Object.keys(changes).forEach(function (rid) {
+        if (!found[rid]) throw new Error('Missing government rollout realm: ' + id + '/' + rid);
+      });
+      return revised;
+    }
+    /* Keep the already established original-geography government revision
+       when a date now composes an expanded fresh world before this file. */
+    base.revisions = Object.assign({}, revisions);
+    if (previous !== 'baseline' && !Object.prototype.hasOwnProperty.call(revisions, 'governments_v2')) {
+      base.revisions.governments_v2 = Object.assign({}, revisions.baseline,
+        {realms:assigned(revisions.baseline.realms || base.realms)});
+    }
+    var revised = assigned(inherited.realms || base.realms);
     var revisionId = previous === 'baseline' ? 'governments_v2' : previous + '_governments_v2';
     if (Object.prototype.hasOwnProperty.call(revisions, revisionId))
       throw new Error('Duplicate government rollout revision: ' + id + '/' + revisionId);
-    base.revisions = Object.assign({}, revisions);
     base.revisions[revisionId] = Object.assign({}, inherited, {realms:revised});
     base.revision = revisionId;
   });

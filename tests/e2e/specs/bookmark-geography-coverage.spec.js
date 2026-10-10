@@ -10,7 +10,7 @@ const audit = require('../fixtures/bookmark-geography-coverage.json');
 dependsOnRuntime(__filename,[
   'index.html','data/counties.js','data/map_data.js','data/geographies.js','data/geography_expansion.js',
   'data/bookmarks.js','data/bookmark_493.js','data/bookmark_711.js','data/bookmark_800.js',
-  'data/bookmark_1204.js','data/bookmark_476_wider.js','data/settlements.js','data/settlements_real.js',
+  'data/bookmark_1204.js','data/bookmark_476_wider.js','data/bookmark_1066_inhabited.js','data/government_rollout.js','data/settlements.js','data/settlements_real.js',
   'data/climate.js','data/starts.js','js/world.js','js/climate.js','js/travel.js','js/armies.js',
   'js/main.js','js/save.js','js/save_v4.js','js/population.js','js/title_ids.js'
 ]);
@@ -173,6 +173,11 @@ for (const flag of [false,true]) test('shared district raster, dry routes and re
 
 for (const bookmark of ['867','1066']) test('a converted ' + bookmark + ' frontier keeps its original raster across expansion switches',
   async function ({page},testInfo) {
+    await page.addInitScript(function (id) {
+      document.addEventListener('DOMContentLoaded',function () {
+        FBDATA.bookmarks[id].revision = 'baseline';
+      },{once:true});
+    },bookmark);
     await beginBookmark(page,testInfo,bookmark,'farmer');
     const prepared = await page.evaluate(function () {
       const s = FB.state;

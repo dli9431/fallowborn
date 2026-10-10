@@ -652,3 +652,7 @@ The expanded base supplies per-district climate defaults and a period-scoped Eas
 Retained geography ids
 
 Geography extensions inherit retiredProvinceIds monotonically. A child can append retired ids but cannot clear an ancestor's list. Validation rejects duplicate retirement entries, malformed ids and any active seed reusing a retired id, including an independent full base. Released geography hashes cover the resolved base; the shared settlement-site catalogue remains available for independently authored dates. Saved geography must agree with the resolved bookmark revision even for an implicit baseline.
+
+Spring 1066 district habitation
+
+1066 inhabited_v2 uses the existing 527-anchor europe_regional_2 geography. Its eleven inhabited additions have separate dated sites ending in _inhabited_1066, literal community compositions and a date-owned layout. Physical _site prototypes and earlier 476 declarations supply no population or ownership. Original layout entries are retained. Settlements, communities, commissions and the lower Syr demand remain separate facts. Eighteen deferred additions remain scenery without residents, owner or layout. No geometry, radius or route rule changes. Climate overrides select arid or continental seasons. Evidence and physical acceptance are in docs/research/1066-inhabited-terrain.md.

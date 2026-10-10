@@ -76,3 +76,9 @@ Revision catalogue compatibility
 A revision may use opening as a string naming an entry in its effective openingRevisions catalogue. Resolution installs that retained declaration and sets openingRevision to the same id. Existing object-valued openings remain supported. This gives data authors whole-field replacement without an engine patch language. Unknown opening aliases fail before activation.
 
 Released baseline hashes are checked independently of the current fresh revision. Era government defaults stay frozen, and revised courts declare their forms per realm. Retained saves continue selecting their own revision and form records. Fresh faith assignment rejects legacy profiles; retained revisions still validate against them. No government retrofit or world regeneration is performed on restore.
+
+Expanded spring 1066
+
+data/bookmark_1066_inhabited.js loads after the shared geography and 476 declarations and before government_rollout.js. It adds inhabited_v2 on europe_regional_2, with complete date-owned province, realm, layout, climate and opening fields. The composer retains original-geography governments_v2 and selects inhabited_v2_governments_v2 for fresh campaigns. baseline, governments_v2 and inhabited_v2 remain independently resolvable. Older unstamped campaigns still select baseline.
+
+Eleven additions have explicitly dated occupation, communities and authority. Eighteen additions and all original scenery remain scenery. The original ordinary counties and layout entries are unchanged. Five generated delegates and one demanded outside claim use the existing opening schema; there is no new saved-state owner. Public evidence, approximations and every scenery decision are in docs/research/1066-inhabited-terrain.md. 1204 retains its independent declaration and layout.

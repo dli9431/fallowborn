@@ -789,6 +789,18 @@ def extract_structured(inv: Inventory) -> None:
                         f"data/assembly_polities.js:{line}", "Local represented interest.",
                         TOKEN_RE.findall(record["text"]))
 
+    terrain_path = DATA / "bookmark_1066_inhabited.js"
+    terrain_rel = terrain_path.relative_to(ROOT).as_posix()
+    for profile_id, profile_node in (node_object(find_assignment(
+            terrain_path, "FBDATA", "bookmarkConstituencies1066Terrain")) or {}).items():
+        profile = node_object(profile_node) or {}
+        for member_node in node_array(profile.get("members")) or []:
+            member = node_object(member_node) or {}
+            member_id = node_string(member.get("id"))
+            for branch, record, line in branch_records(member.get("name")):
+                inv.add(f"constituencyMember.{profile_id}.{member_id}.name.{branch}", record,
+                        f"{terrain_rel}:{line}", "Local represented interest.", ())
+
     aristocratic_path = DATA / "aristocratic_courts.js"
     for profile_id, profile_node in (node_object(find_assignment(aristocratic_path, "FBDATA", "aristocraticProfiles")) or {}).items():
         profile = node_object(profile_node) or {}
@@ -895,9 +907,12 @@ def extract_structured(inv: Inventory) -> None:
         # Review-only declarations still need stable localization owners.
         # Read literal data without activating the candidate or running JS.
         candidate_catalogues = {
-            "cultures": [(DATA / "bookmark_711.js", "bookmarkCultures711"),
+            "authorityOffices": [(DATA / "bookmark_1066_inhabited.js", "bookmarkOffices1066Terrain")],
+            "cultures": [(DATA / "bookmark_1066_inhabited.js", "bookmarkCultures1066Terrain"),
+                         (DATA / "bookmark_711.js", "bookmarkCultures711"),
                          (DATA / "bookmark_476_wider_identities.js", "bookmarkCultures476Wider")],
-            "religions": [(DATA / "bookmark_711.js", "bookmarkReligions711"),
+            "religions": [(DATA / "bookmark_1066_inhabited.js", "bookmarkReligions1066Terrain"),
+                          (DATA / "bookmark_711.js", "bookmarkReligions711"),
                           (DATA / "bookmark_476_wider_identities.js", "bookmarkReligions476Wider")],
             "storyCampaigns": [(DATA / "story_campaigns_711.js", "storyCampaigns711"),
                                (DATA / "bookmark_800_history.js", "storySettlements800")],
@@ -1221,6 +1236,23 @@ def extract_structured(inv: Inventory) -> None:
                 f"Start bookmark {bookmark_id}, {field}.",
                 (),
             )
+
+    # Expanded 1066 labels have independent literal owners. Compilation copies
+    # the district name into its one authored site; no game code is evaluated.
+    terrain_path = DATA / "bookmark_1066_inhabited.js"
+    terrain_rel = terrain_path.relative_to(ROOT).as_posix()
+    for table, kind in (("bookmarkDistricts1066Terrain", "province"),
+                        ("bookmarkRealms1066Terrain", "realm")):
+        for item_node in node_array(find_assignment(terrain_path, "FBDATA", table)) or []:
+            item = node_object(item_node) or {}
+            item_id = node_string(item.get("id"))
+            for branch, record, line in branch_records(item.get("name")):
+                inv.add(f"{kind}.1066.{item_id}.name.{branch}", record,
+                        f"{terrain_rel}:{line}", "1066 district display name.", ())
+                if kind == "province":
+                    site_id = item_id + "_inhabited_1066"
+                    inv.add(f"settlement.1066.{site_id}.name.{branch}", record,
+                            f"{terrain_rel}:{line}", "1066 authored district site.", ())
 
     # The 476 bookmark composes regional literal declarations. Extract their
     # labels without evaluating game code; ruler profiles are proper names.

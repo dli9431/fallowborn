@@ -221,3 +221,7 @@ Expanded 476 scripts
 index.html loads data/geography_expansion.js immediately after data/geographies.js, then data/bookmark_476_wider_identities.js and data/bookmark_476_wider.js after the merged mobile and story declarations. The ordinary data-directory allowlist includes these assets; the CrazyGames tracked-file allowlist includes the same gameplay data while retaining its language and music exclusions. All new files must be tracked before producing a release package. Index-derived offline assets include the new script tags.
 
 The private debug script inventory mirrors this order with its existing eager English catalogue and modal extras. Private review ledgers and packaging tools remain outside this repository. Historical, raster, save/performance and distribution acceptance must refer to the same integrated revision.
+
+Expanded 1066 script
+
+index.html loads data/bookmark_1066_inhabited.js after the shared wider declarations and immediately before data/government_rollout.js. Existing data-directory allowlists cover both standard and CrazyGames packages; index-derived offline assets include the local reference. Track the new file before assembling a tracked-file package. There is no network asset, build dependency or asset directory. Distribution remains flag-gated, preserving standard music/language assets and CrazyGames exclusions. The dedicated acceptance specification covers both flag values. Version assignment, generated translations, private debug inventory synchronisation and packaged-device review remain integration work.

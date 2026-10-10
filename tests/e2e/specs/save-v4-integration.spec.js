@@ -8,7 +8,7 @@ dependsOnRuntime(__filename, [
   'js/armies.js', 'js/wars.js', 'data/units.js',
   'js/authority.js', 'js/politics.js', 'js/stories.js',
   'js/story_courts.js', 'js/story_track.js', 'js/ui_modals.js',
-  'data/bookmarks.js', 'data/bookmark_476.js',
+  'data/bookmarks.js', 'data/bookmark_476.js', 'data/bookmark_1066_inhabited.js',
   'data/bookmark_476_italy.js', 'data/bookmark_476_dalmatia_east.js',
   'data/bookmark_476_gaul_iberia.js', 'data/bookmark_476_africa.js', 'data/political_institutions.js',
   'data/eras.js', 'js/governments.js',
@@ -29,9 +29,12 @@ const { openGame } = require('../support/game/navigation');
 const { loadParitySave } = require('../support/game/parity');
 const { corpusEntries, readCorpusExport } = require('../support/parity-fixtures');
 
-async function start(page, testInfo, bookmark) {
+async function start(page, testInfo, bookmark, revision) {
   if (bookmark === '476') return startBaseline476(page,testInfo,'SAVEV4-476-federate_476-ravenna-m-Marcus-standard-0-gothic.homoian');
   await openGame(page, testInfo);
+  if (revision) await page.evaluate(function (input) {
+    FBDATA.bookmarks[input.bookmark].revision = input.revision;
+  },{bookmark:bookmark,revision:revision});
   if (bookmark === '493' || bookmark === '711') await page.evaluate(function (id) {
     // Review hidden candidates only inside this test's isolated page.
     FBDATA.bookmarks[id].hidden = false;
@@ -54,7 +57,9 @@ async function start(page, testInfo, bookmark) {
 for (const bookmark of ['476', '867', '1066']) {
   test(bookmark + ' v3 imports and v4 slots preserve political and personal facts',
     async function ({ page }, testInfo) {
-      await start(page, testInfo, bookmark);
+      // Import an actual retained world. Removing a revision marker from an
+      // expanded geography would manufacture an unsupported legacy fixture.
+      await start(page, testInfo, bookmark, 'baseline');
       const result = await page.evaluate(async function () {
         const authorityBefore = JSON.stringify(FB.state.authority);
         const source = JSON.parse(FB.save.serialize());
