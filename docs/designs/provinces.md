@@ -652,3 +652,9 @@ The expanded base supplies per-district climate defaults and a period-scoped Eas
 Retained geography ids
 
 Geography extensions inherit retiredProvinceIds monotonically. A child can append retired ids but cannot clear an ancestor's list. Validation rejects duplicate retirement entries, malformed ids and any active seed reusing a retired id, including an independent full base. Released geography hashes cover the resolved base; the shared settlement-site catalogue remains available for independently authored dates. Saved geography must agree with the resolved bookmark revision even for an implicit baseline.
+
+Spring 867 district habitation
+
+The 867 inhabited_v2 world uses the same 527-anchor europe_regional_2 physical catalogue with eight new inhabited counties, for 485 inhabited counties total. Jenne-jeno, Gao-Saney, the Kumbi district, Ibrim, Kath, Tadmor, Tayma and the Kashan oases have date-owned community and political declarations. All original scenery and the 21 unaccepted additions remain scenery. No seed, radius, shared dry route or ordinary county geometry is changed by this consumer.
+
+867_inhabited_v2 clones every curated and generated-fill slot from the retained 867 layout before appending a new physical-site head for each accepted district. Existing home and building slots therefore retain their order within their owning revision. Date-local climate overrides use the existing arid and continental vocabulary; original counties retain their prior defaults. The full research and scenery decisions are in docs/research/867-districts.md. Baseline habitation has technology impact none under period_867_district_habitation. Raster extent, route presentation and measured performance remain acceptance work.

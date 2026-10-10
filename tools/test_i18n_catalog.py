@@ -39,6 +39,26 @@ class JavascriptLexerTests(unittest.TestCase):
 
 
 class StructuredDataExtractionTests(unittest.TestCase):
+    def test_867_district_labels_have_independent_display_owners(self):
+        inventory = i18n_catalog.Inventory()
+        i18n_catalog.extract_structured(inventory)
+        for key, text in (
+            ('culture.middle_niger_867.name.default', 'Middle Niger communities'),
+            ('culture.western_sahel_867.name.default', 'Western Sahel communities'),
+            ('culture.chorasmian_867.name.default', 'Chorasmian'),
+            ('constituencyMember.middle_niger_867.fields.name.default', 'Cultivating households'),
+            ('constituencyMember.middle_niger_867.waters.name.default', 'River households'),
+            ('constituencyMember.middle_niger_867.crafts.name.default', 'Craft households'),
+            ('realm.867.jenne_867.name.default', 'Jenne-jeno Communities'),
+            ('realm.867.afrighids_867.name.default', 'Afrighid Khwarazm'),
+            ('province.867.kath_district.name.default', 'Kath'),
+            ('province.867.central_iran_oases.name.default', 'Kashan oases'),
+            ('settlement.867.kath_district_inhabited_867.name.default', 'Kath'),
+        ):
+            self.assertEqual(inventory.entries[key]['text'], text)
+            self.assertIn('bookmark_867_expansion.js', inventory.meta[key]['location'])
+        self.assertNotIn(i18n_catalog.source_key('Farnak'), inventory.entries)
+
     def test_aristocratic_courts_and_offices_have_display_owners(self):
         inventory = i18n_catalog.Inventory()
         i18n_catalog.extract_structured(inventory)

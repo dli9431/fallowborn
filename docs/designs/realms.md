@@ -1676,3 +1676,9 @@ Fresh 1204 Venice is a city_republic with a continuing realm identity, public co
 Institutional ecclesiastical holders
 
 The ecclesiastical realm remains the public holder through vacancy and clerical turnover. Its ruler resolves from the canonical office. Actual control, scoped jurisdiction and temporal recognition remain separate; conquest receives no religious immunity. A private heir inherits household property rather than institutional counties or spiritual office. See ecclesiastical-principality.md.
+
+867 local district authorities
+
+The expanded 867 world adds separate generated Gao, Ghana / Wagadu and Afrighid courts under the existing direct-holder regnum model. Each holds only its declared inhabited district, with ordinary generated kin for dynastic succession. This is a bounded settled-court approximation, with no invented count/duke hierarchy or attested local office labels. Kath has no fabricated opening liege or tribute terms where the exact 867 superior claim remains uncertain. Its court religion is separate from its resident cohorts.
+
+Jenne-jeno uses assembly_polity as an explicit reconstruction of corporate settlement authority. Delegation grants public powers while private household inheritance stays with its own people. Ibrim reuses Makurian territorial jurisdiction; Tadmor, Tayma and the Kashan oases reuse the Abbasid administrative profile without invented named governors. Peace and revenue possession rights do not assert private land deeds or sovereignty over surrounding scenery. This date-only habitation has technology impact none. Evidence, limits and unresolved regional consumers are recorded in docs/research/867-districts.md.

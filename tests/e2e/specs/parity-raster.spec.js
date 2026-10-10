@@ -28,6 +28,8 @@ for (const bookmark of RASTER_BOOKMARKS) {
 
     await openGame(page, testInfo);
     const snapshot = await page.evaluate(function (id) {
+      const b = FBDATA.bookmarks[id];
+      if (id !== '476' && b && b.revisions && b.revisions.baseline) b.revision = 'baseline';
       return new Promise(function (resolve, reject) {
         FB.activateBookmark(id, null, function (error) {
           if (error) { reject(error); return; }

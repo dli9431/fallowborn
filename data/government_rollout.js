@@ -93,21 +93,28 @@
   Object.keys(assignments).forEach(function (id) {
     var base = FBDATA.bookmarks[id], revisions = base.revisions || {baseline:{}},
       previous = base.revision || 'baseline', changes = assignments[id];
+    function compose(source) {
+      var realms = source.realms || base.realms, found = {};
+      var revised = realms.map(function (realm) {
+        if (!Object.prototype.hasOwnProperty.call(changes, realm.id)) return realm;
+        found[realm.id] = true;
+        return Object.assign({}, realm, JSON.parse(JSON.stringify(changes[realm.id])));
+      });
+      Object.keys(changes).forEach(function (rid) {
+        if (!found[rid]) throw new Error('Missing government rollout realm: ' + id + '/' + rid);
+      });
+      return Object.assign({}, source, {realms:revised});
+    }
     var inherited = Object.assign({}, revisions.baseline, revisions[previous]);
-    var realms = inherited.realms || base.realms, found = {};
-    var revised = realms.map(function (realm) {
-      if (!Object.prototype.hasOwnProperty.call(changes, realm.id)) return realm;
-      found[realm.id] = true;
-      return Object.assign({}, realm, JSON.parse(JSON.stringify(changes[realm.id])));
-    });
-    Object.keys(changes).forEach(function (rid) {
-      if (!found[rid]) throw new Error('Missing government rollout realm: ' + id + '/' + rid);
-    });
     var revisionId = previous === 'baseline' ? 'governments_v2' : previous + '_governments_v2';
     if (Object.prototype.hasOwnProperty.call(revisions, revisionId))
       throw new Error('Duplicate government rollout revision: ' + id + '/' + revisionId);
     base.revisions = Object.assign({}, revisions);
-    base.revisions[revisionId] = Object.assign({}, inherited, {realms:revised});
+    /* Archive the original government-only world even when a date composer
+       has selected wider geography. Never derive this retained id from it. */
+    if (previous !== 'baseline' && !Object.prototype.hasOwnProperty.call(revisions, 'governments_v2'))
+      base.revisions.governments_v2 = compose(Object.assign({}, revisions.baseline));
+    base.revisions[revisionId] = compose(inherited);
     base.revision = revisionId;
   });
 })();

@@ -236,3 +236,7 @@ Civic profile names extract under civicProfile.<profile>.name, ordered magistrac
 Ecclesiastical display owners
 
 data/ecclesiastical_profiles.js names extract as ecclesiasticalProfile.<profile-id>.name.default and render through FB.dataText. Government review chrome and outcome text use FB.T. Local institution names retain their existing structured owners. No generated catalogs are edited on the feature branch.
+
+Dated district display owners
+
+bookmark_<date>_expansion.js may declare literal bookmarkCultures<date>Expansion, bookmarkConstituencies<date>Expansion, bookmarkRealms<date>Expansion and bookmarkDistricts<date> catalogues. The static extractor reads these without executing the composer. Cultures use culture.<id>.name, represented interests use constituencyMember.<profile>.<member>.name, courts use realm.<date>.<id>.name, and district/site names use province.<date>.<id>.name and settlement.<date>.<id>_inhabited_<date>.name. Generated personal names remain identity data. The 867 composer registers these catalogues before its fresh revision and keeps normal English fallback until separately authorized integration regeneration.

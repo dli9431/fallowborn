@@ -35,6 +35,16 @@ for (const journey of FRESH_JOURNEYS) {
       'Parity journeys use the served Chromium target.');
     test.setTimeout(10 * 60 * 1000);
 
+    if (journey.bookmark === '867' || journey.bookmark === '1066') {
+      // Existing medieval fixtures describe the retained world. Expanded
+      // district checkpoints have their own names in the date specification.
+      await page.addInitScript(function (id) {
+        window.addEventListener('DOMContentLoaded',function () {
+          const b = window.FBDATA && FBDATA.bookmarks[id];
+          if (b && b.revisions && b.revisions.baseline) b.revision = 'baseline';
+        });
+      },journey.bookmark);
+    }
     await startParityGame(page, testInfo, journey);
     const checkpoints = await captureJourney(page);
     await settleParityFixture(testInfo, journey.id, {
