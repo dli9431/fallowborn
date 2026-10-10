@@ -1,0 +1,24 @@
+{
+  "revision":"terrain_v2_governments_v2",
+  "geography":"europe_regional_2",
+  "districts":[
+    {"id":"ghadames_oasis","site":"ghadames_711","owner":"ghadames_711","court":"ghadames_711","form":"territorial","climate":"arid","route":["kairouan",7]},
+    {"id":"jenne_district","site":"jenne_jeno_711","owner":"middle_niger_711","court":"middle_niger_711","form":"territorial","climate":"arid","route":["gao_district",5]},
+    {"id":"gao_district","site":"gao_saney_711","owner":"niger_bend_711","court":"niger_bend_711","form":"territorial","climate":"arid","route":["ghadames_oasis",22]},
+    {"id":"qasr_ibrim","site":"ibrim_711","owner":"makuria_711","court":"makuria_711","form":"territorial","climate":"arid","route":["dongola",4]},
+    {"id":"palmyra_district","site":"tadmor_711","owner":"umayyad_711","court":"umayyad_711","form":"administrative_monarchy","climate":"arid","route":["homs",2]},
+    {"id":"eastern_iran_oases","site":"tabas_711","owner":"umayyad_711","court":"khurasan_711","form":"territorial","climate":"arid","route":["nishapur",4]},
+    {"id":"sarakhs_oasis","site":"sarakhs_711","owner":"umayyad_711","court":"khurasan_711","form":"territorial","climate":"continental","route":["merv",3]},
+    {"id":"kath_district","site":"kath_711","owner":"khwarazm_711","court":"khwarazm_711","form":"regnum","climate":"continental","route":["bukhara",8]}
+  ],
+  "retained":["draa_oases","garama","awjila_oasis","siwa_oasis","chad_lakeshore","najran_oasis","tayma_oasis","central_iran_oases","shebar_valley","gomal_valley","thar_margin","nurata_foothills","lower_syr_darya","sarysu_corridor","upper_kama","vychegda_district","onega_district","torne_district","gurganj_district","kumbi_district","timbuktu_district"],
+  "scenery":{
+    "A":["w_sahara_w","w_sahara_c","w_sahara_e","w_sahel"],
+    "B":["w_nubia"],
+    "C":["w_arabia","w_nefud","w_syrian"],
+    "D":["w_kavir","w_lut","w_registan","w_sulaiman","w_thar"],
+    "E":["w_hindukush"],
+    "F":["w_karakum","w_kyzylkum","w_steppe_e"],
+    "G":["w_ural","w_taiga","w_north","w_lapland"]
+  }
+}

@@ -3,7 +3,8 @@ const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
   'data/government_rollout.js','js/government_administration.js','js/government_recognition.js',
   'data/story_courts_476.js',
-  'index.html', 'data/bookmark_711.js', 'data/story_campaigns_711.js',
+  'index.html', 'data/bookmark_711.js', 'data/bookmark_711_terrain.js', 'data/geography_expansion.js',
+  'data/bookmark_476_wider_identities.js', 'data/story_campaigns_711.js',
   'data/bookmarks.js', 'data/counties.js', 'data/geographies.js',
   'data/settlements.js', 'data/cultures.js', 'data/starts.js', 'data/eras.js',
   'data/climate.js', 'js/climate.js',
@@ -91,7 +92,7 @@ test('711 is selectable with its supplemental data and independent earlier start
         earlier.realm = 'review_replacement';
         independent = JSON.stringify(candidate) === before;
       } finally { earlier.realm = owner; }
-      return { selectable:FB.bookmark('711') === candidate && FB.bookmarks().some(function (b) { return b.id === '711'; }),
+      return { selectable:FB.bookmark('711').id === candidate.id && FB.bookmarks().some(function (b) { return b.id === '711'; }),
         cultures:Object.keys(FBDATA.bookmarkCultures711).every(function (id) { return !!FBDATA.cultures[id]; }),
         faiths:Object.keys(FBDATA.bookmarkReligions711).every(function (id) { return !!FBDATA.religions[id]; }),
         sites:Object.keys(FBDATA.bookmarkSites711).every(function (id) { return !!FBDATA.settlementSites[id]; }),
@@ -166,10 +167,11 @@ test('711 activation owns a full map, mixed communities and a separate hierarchy
         gothic:b.provinces.find(function (p) { return p.id === 'toledo'; }).communities,
         forms:b.realms.every(function (r) { return r.government ===
           (['visigoths_711','achila_711'].includes(r.id) ? 'elective_monarchy' :
-            ['byzantium_711','umayyad_711'].includes(r.id) ? 'administrative_monarchy' : 'territorial'); }) };
+            ['byzantium_711','umayyad_711'].includes(r.id) ? 'administrative_monarchy' :
+              r.id === 'khwarazm_711' ? 'regnum' : 'territorial'); }) };
     });
     expect(result).toMatchObject({ faults:[], diagnostics:[], attached:CAMPAIGNS,
-      era:'early_medieval', geography:'europe_regional', owners:true, hierarchy:true,
+      era:'early_medieval', geography:'europe_regional_2', owners:true, hierarchy:true,
       periodNames:true, shares:true, sites:true, forms:true,
       names:['Asturian uplands','Iria Flavia',"Al-Mada'in",'Brahmanabad','Volubilis'] });
     expect(result.gothic).toEqual([
