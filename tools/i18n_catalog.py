@@ -684,7 +684,59 @@ class Inventory:
             }
 
 
+def extract_terrain_1204(inv: Inventory) -> None:
+    """Read date-owned district presentation without executing its composer."""
+    source = DATA / "bookmark_1204_terrain.js"
+    rel = source.relative_to(ROOT).as_posix()
+    terrain = node_object(find_assignment(source, "FBDATA", "bookmarkTerrain1204")) or {}
+    for table, namespace in (("provinces", "province"), ("realms", "realm")):
+        for row_node in node_array(terrain.get(table)) or []:
+            row = node_object(row_node) or {}
+            row_id = node_string(row.get("id"))
+            if not row_id:
+                continue
+            for branch, record, line in branch_records(row.get("name")):
+                inv.add(f"{namespace}.1204.{row_id}.name.{branch}", record,
+                        f"{rel}:{line}", "Spring 1204 district display name.", ())
+    for province_id, layout_node in (node_object(terrain.get("layouts")) or {}).items():
+        for site_node in node_array(layout_node) or []:
+            site = node_object(site_node) or {}
+            site_id = node_string(site.get("site"))
+            if not site_id:
+                continue
+            for branch, record, line in branch_records(site.get("name")):
+                inv.add(f"settlement.1204.{site_id}.name.{branch}", record,
+                        f"{rel}:{line}", f"Spring 1204 district {province_id}, site display name.", ())
+    for profile_id, profile_node in (node_object(terrain.get("constituencies")) or {}).items():
+        profile = node_object(profile_node) or {}
+        for member_node in node_array(profile.get("members")) or []:
+            member = node_object(member_node) or {}
+            member_id = node_string(member.get("id"))
+            if not member_id:
+                continue
+            for branch, record, line in branch_records(member.get("name")):
+                inv.add(f"constituencyMember.{profile_id}.{member_id}.name.{branch}", record,
+                        f"{rel}:{line}", "Local represented interest.", TOKEN_RE.findall(record["text"]))
+    for row_node in node_array(terrain.get("starts")) or []:
+        row = node_object(row_node) or {}
+        row_id = node_string(row.get("id"))
+        if not row_id:
+            continue
+        for field in ("name", "diff", "desc", "intro", "intro_f", "intro_muslim", "intro_other"):
+            for branch, record, line in branch_records(row.get(field)):
+                inv.add(f"scenario.{row_id}.{field}.{branch}", record, f"{rel}:{line}",
+                        f"New-game scenario {row_id}, {field}.", TOKEN_RE.findall(record["text"]))
+        for preset_id, preset_node in (node_object(row.get("familyPresets")) or {}).items():
+            preset = node_object(preset_node) or {}
+            for field in ("name", "diff", "desc"):
+                for branch, record, line in branch_records(preset.get(field)):
+                    inv.add(f"scenario.{row_id}.familyPresets.{preset_id}.{field}.{branch}", record,
+                            f"{rel}:{line}", f"New-game scenario {row_id}, family preset {preset_id}, {field}.",
+                            TOKEN_RE.findall(record["text"]))
+
+
 def extract_structured(inv: Inventory) -> None:
+    extract_terrain_1204(inv)
     for path in EVENT_FILES + [path for path, _ in REGION_FILES]:
         rel = path.relative_to(ROOT).as_posix()
         for event_node in parse_events(path):
@@ -896,7 +948,8 @@ def extract_structured(inv: Inventory) -> None:
         # Read literal data without activating the candidate or running JS.
         candidate_catalogues = {
             "cultures": [(DATA / "bookmark_711.js", "bookmarkCultures711"),
-                         (DATA / "bookmark_476_wider_identities.js", "bookmarkCultures476Wider")],
+                         (DATA / "bookmark_476_wider_identities.js", "bookmarkCultures476Wider"),
+                         (DATA / "bookmark_1204_terrain.js", "bookmarkCultures1204Terrain")],
             "religions": [(DATA / "bookmark_711.js", "bookmarkReligions711"),
                           (DATA / "bookmark_476_wider_identities.js", "bookmarkReligions476Wider")],
             "storyCampaigns": [(DATA / "story_campaigns_711.js", "storyCampaigns711"),

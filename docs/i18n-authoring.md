@@ -236,3 +236,7 @@ Civic profile names extract under civicProfile.<profile>.name, ordered magistrac
 Ecclesiastical display owners
 
 data/ecclesiastical_profiles.js names extract as ecclesiasticalProfile.<profile-id>.name.default and render through FB.dataText. Government review chrome and outcome text use FB.T. Local institution names retain their existing structured owners. No generated catalogs are edited on the feature branch.
+
+Spring 1204 district extraction
+
+The literal bookmarkTerrain1204 table in data/bookmark_1204_terrain.js exposes independently dated province and realm names, settlement layout labels, constituency member names and scenario/family-preset display fields to extract_terrain_1204. The composer need not execute during extraction. bookmarkCultures1204Terrain supplies the culture name through the existing culture owner. Generated person names and district/revision/mandate ids remain identity data. Runtime labels retain their ordinary province.1204, realm.1204, settlement.1204, constituencyMember and scenario owners. Integration regeneration remains separately authorized; new English falls back normally.

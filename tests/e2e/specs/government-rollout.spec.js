@@ -9,6 +9,7 @@ const consumers = require('../fixtures/government-rollout.json');
 const proofMod = require('../fixtures/government-rollout-mod.json');
 
 dependsOnRuntime(__filename,[
+  'data/bookmark_1204_terrain.js',
   'index.html','data/government_rollout.js','data/bookmarks.js','data/bookmark_493.js',
   'data/bookmark_711.js','data/bookmark_800.js','data/bookmark_800_history.js','data/bookmark_1204.js',
   'data/bookmark_476.js','data/bookmark_476_outer.js','data/bookmark_476_wider.js',

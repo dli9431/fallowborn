@@ -652,3 +652,11 @@ The expanded base supplies per-district climate defaults and a period-scoped Eas
 Retained geography ids
 
 Geography extensions inherit retiredProvinceIds monotonically. A child can append retired ids but cannot clear an ancestor's list. Validation rejects duplicate retirement entries, malformed ids and any active seed reusing a retired id, including an independent full base. Released geography hashes cover the resolved base; the shared settlement-site catalogue remains available for independently authored dates. Saved geography must agree with the resolved bookmark revision even for an implicit baseline.
+
+Spring 1204 inhabited revision
+
+inhabited_v2 selects europe_regional_2 with fourteen independently dated new inhabited districts and fifteen explicitly gated scenery additions. All original 21 scenery remnants remain. The resulting physical world has 527 districts, 491 inhabited and 36 scenery. The original independently authored 498-district baseline is retained, including its ordered settlement layouts. No 1066 declaration supplies new owners or communities. See docs/research/1204-terrain.md for the exhaustive disposition and evidence ledger.
+
+Sarakhs and Nur promote existing physical fill-site locations into their own bounded districts only in the expanded revision. Sarakhs retains its site id; Nur shares the former coordinates through a new presentation id so its period label has a separate localization owner. Expanded Merv and Bukhara remove those presentations, including the duplicate Sarahs presentation, to avoid placing the same town in two counties. Other original layout slots remain unchanged; baseline slots are untouched. New synthetic site heads denote regional habitation rather than exact excavated buildings. Qara Khitai has a nonterritorial diplomatic anchor and no additional resident county.
+
+period_1204_inhabited_terrain has technology impact none. Baseline habitation, local authority, subordinate courts and ordinary travel require no new discovery. Existing production, equipment, supply and movement requirements remain active.

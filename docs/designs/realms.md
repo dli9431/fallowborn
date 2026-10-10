@@ -1676,3 +1676,7 @@ Fresh 1204 Venice is a city_republic with a continuing realm identity, public co
 Institutional ecclesiastical holders
 
 The ecclesiastical realm remains the public holder through vacancy and clerical turnover. Its ruler resolves from the canonical office. Actual control, scoped jurisdiction and temporal recognition remain separate; conquest receives no religious immunity. A private heir inherits household property rather than institutional counties or spiritual office. See ecclesiastical-principality.md.
+
+Spring 1204 subordinate and local courts
+
+The inhabited_v2 opening preserves the Khwarazmian court and Muhammad II while anchoring it at Gurganj. Qara Khitai is a nonterritorial superior court with an off-map capital represented by a diplomatic anchor; ordinary owner/holder hierarchy preserves direct Khwarazmian and Western Karakhanid county holders. This is a working approximation of tributary supremacy rather than a complete parallel-administration model. The Bamiyan branch holds the existing Bamiyan site and its adjoining valley. Mobile Qipchaq followers, resident communities, local congregations and court affiliations retain separate canonical records. Research limits are in docs/research/1204-terrain.md.

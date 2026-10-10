@@ -2,6 +2,18 @@
    Authored historical references resolve through the saved start identity. */
 (function () {
   'use strict';
+  // Existing delegates are resolved from their constituency declaration.
+  // This is a pure identity read; generated names remain campaign facts.
+  FB.startRulerProfile = function (bookmark, realm, formId) {
+    if (!bookmark || !realm || FB.governments.problems(formId).length) return null;
+    var form = FB.governments.resolve(formId);
+    if (!form.use.succession.delegatedLeadership) return realm.ruler || null;
+    var province = (bookmark.provinces || []).find(function (p) { return p.id === realm.capital; });
+    var seed = realm.representative;
+    return realm.constituency && seed && province ? {
+      name:seed.name,sex:seed.sex || 'm',culture:province.culture
+    } : null;
+  };
   /* Birthplace eligibility is pure and declaration-scoped, before a world or
      household exists. All new-campaign entry points share this gate. */
   FB.startProvinceAllowed = function (scenario, bookmark, provinceId) {
@@ -16,8 +28,13 @@
       return FB.systems.enabledForBookmark(bookmark, id, province.religion, realm && realm.government);
     });
   };
+  function delegatedStart(s) {
+    var scenario = s && s.start && FBDATA.startScenarios.find(function (row) { return row.id === s.start.scenarioId; });
+    return !!(scenario && scenario.rulerRealmId && !FB.governments.problems(scenario.governmentForm).length &&
+      FB.governments.resolve(scenario.governmentForm).use.succession.delegatedLeadership);
+  }
   FB.startRealmId = function (s, id) {
-    return s && s.start && s.start.rulerRealmId === id ? 'player' : id;
+    return s && s.start && s.start.rulerRealmId === id && !delegatedStart(s) ? 'player' : id;
   };
   var realmFields = ['realmId','patronRealmId','federateRealmId','institutionId',
     'ownerId','holderId','controllerId','applicantRealmId','targetOwnerId','owner',
@@ -42,7 +59,7 @@
     table.player = table[from]; delete table[from];
   }
   FB.startRealmDefinition = function (s, definition) {
-    if (!s.start || !s.start.rulerRealmId) return definition;
+    if (!s.start || !s.start.rulerRealmId || delegatedStart(s)) return definition;
     var out = JSON.parse(JSON.stringify(definition)), from = s.start.rulerRealmId;
     references(out, from);
     if (out.target && out.target.ownerIds) out.target.ownerIds = out.target.ownerIds.map(function (id) {
@@ -58,10 +75,21 @@
     var me = s.chars[p.charId];
     var government = FB.political.government(s, { kind:'realm', id:id });
     if (!government || government.formId !== scenario.governmentForm ||
-        FB.station.realmRank({ tier:scenario.tier, formId:government.formId }, s) !== realm.rank) return false;
+        FB.realmRank.tier({ rank:realm.rank, formId:government.formId }, s) !== scenario.tier) return false;
     s.start.rulerRealmId = id;
     s.start.scenarioId = scenario.id;
     s.start.onboarding = scenario.onboarding;
+    if (FB.governments.support && FB.governments.support.isDelegated(s, id)) {
+      // Public jurisdiction, serial ids and treasury stay with the institution.
+      // The already selected delegate begins an ordinary private household.
+      p.provs = []; p.liege = id; p.gold = scenario.gold; me.role = null;
+      s.politics = null;
+      if (FB.invalidatePoliticsState) FB.invalidatePoliticsState();
+      FB.rebuildRulerIndex(s); FB.invalidateRealmCache();
+      if (FB.ensureAgency) FB.ensureAgency(s);
+      if (FB.ensurePolitics) FB.ensurePolitics(s);
+      return true;
+    }
     p.provs = FB.realmHeldCounties(s, id).slice();
     p.liege = realm.liege || null;
     var publicCrown = FB.electiveCrown && FB.electiveCrown(s, id);
@@ -94,6 +122,7 @@
     references(s.settlementLordships, id);
     references(s.stories, id);
     references(s.bookmarkSetup, id);
+    references(s.governmentSupport, id);
     rekey(s.authority && s.authority.governments, id);
     if (retainedSelection && government.rules.aristocraticProfileId) FB.aristocracy.adopt(s,id);
     rekey(s.armyLogistics && s.armyLogistics.purses, id);

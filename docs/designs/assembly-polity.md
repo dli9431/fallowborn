@@ -45,3 +45,7 @@ assembly_delegation is none: local representation, nomination, replacement and j
 Coverage
 
 tests/e2e/specs/assembly-polity.spec.js covers both declarations, pure projections, exact reviews, fees, eligibility, public succession, recall, repair, refusal, reserved authority, financial and troop conservation, war and occupation, conversion, detached save rejection, bounded continuity, ordinary household replay and retained mobile navigation. The outer-region specification includes the new scripts in its runtime dependencies. tools/test_i18n_catalog.py covers the new structured display owners.
+
+Spring 1204 starting representatives
+
+The Middle Niger and Siwa profiles are independently dated simulation policies with the limits stated in docs/research/1204-terrain.md. Their beginnings select the existing representative at freeholder service tier 1. Delegate, members, mandate, public holder, protocol ids and public treasury are retained under the institutional realm id; the player starts a separate private household and wallet. Selection, public authority and household station remain separate. existing_delegate_start has technology impact none: beginning in an already selected public role uses ordinary eligibility and mandate rules. The government rank-to-tier projection determines the starting tier, rather than inferring a hereditary rank from personal standing.

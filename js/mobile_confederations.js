@@ -95,12 +95,19 @@
     return !!(p && availablePerson(s,c) && s.date.year - c.born >= p.minAge &&
       M.members(s, rid).some(function (m) { return m.principal.id === cid && m.allegiance; }));
   }
+  // A lawful subordinate holder can grant local access. Foreign occupation
+  // cannot: its owner is outside the holder's current superior chain.
+  function accessControl(s, partner, pid) {
+    var owner = s.owner[pid], realm = s.realms[partner];
+    return !!(owner && s.realms[owner] && s.realms[owner].alive && realm && realm.alive &&
+      s.holder[pid] === partner && FB.topRealm(s, partner) === owner);
+  }
   function activeAccess(s, rid, pid) {
     var r = M.row(s, rid);
     return r && r.agreements.filter(function (a) {
       return a.kind === 'access' && a.status === 'active' && a.endTurn > s.turn &&
         a.countyIds.indexOf(pid) >= 0 && s.realms[a.partnerId] && s.realms[a.partnerId].alive &&
-        s.owner[pid] === a.partnerId && s.holder[pid] === a.partnerId &&
+        accessControl(s, a.partnerId, pid) &&
         !FB.armiesHostile(s, { realm:rid }, { realm:a.partnerId });
     })[0];
   }
@@ -229,7 +236,7 @@
           !decision(s, rid, 'agreement', t) || FB.isRealmAtWar(s, rid)) return no('withheld');
       if (t.kind === 'access' && (!Array.isArray(t.countyIds) || !t.countyIds.length || t.countyIds.length > 16 ||
           !whole(t.capacity) || !t.capacity || typeof t.allowRecruit !== 'boolean' || t.countyIds.some(function (pid, i) {
-            return t.countyIds.indexOf(pid) !== i || s.owner[pid] !== t.partnerId || s.holder[pid] !== t.partnerId ||
+            return t.countyIds.indexOf(pid) !== i || !accessControl(s, t.partnerId, pid) ||
               t.capacity + allocated(s, pid) > capacity(s, pid);
           }))) return no('capacity');
       if (t.kind !== 'access' && (!whole(t.levy) || t.levy > (army && army.men || 0))) return no('following');
@@ -242,7 +249,7 @@
           FB.armiesHostile(s, { realm:rid }, { realm:a.partnerId })) return no('partner');
       if (!Q.consent(s,request.actor,'treaty',{externalRealmId:rid,kind:a.kind}).allowed) return no('partner');
       if (a.kind === 'access' && a.countyIds.some(function (pid) {
-        return s.owner[pid] !== a.partnerId || s.holder[pid] !== a.partnerId || a.capacity + allocated(s, pid, a.id) > capacity(s, pid);
+        return !accessControl(s, a.partnerId, pid) || a.capacity + allocated(s, pid, a.id) > capacity(s, pid);
       })) return no('capacity');
       if(a.kind==='protection' && a.levy+r.agreements.filter(function (b) {return b.kind==='protection' && b.status==='active' && b.endTurn>s.turn;})
           .reduce(function (n,b) {return n+b.levy;},0)>(army && army.men || 0)) return no('following');
@@ -600,9 +607,9 @@
     });
     var at = moving.at;
     r.agreements = r.agreements.filter(function (a) { return a.endTurn > s.turn; });
-    if (!safe(s, rid, at) && s.owner[at] && s.owner[at] === s.holder[at] &&
+    if (!safe(s, rid, at) && accessControl(s, s.holder[at], at) &&
         !r.agreements.some(function (a) { return a.kind === 'access' && a.countyIds.indexOf(at) >= 0; })) {
-      var terms = {kind:'access',partnerId:s.owner[at],countyIds:[at],capacity:Math.min(M.total(s,rid),capacity(s,at)),
+      var terms = {kind:'access',partnerId:s.holder[at],countyIds:[at],capacity:Math.min(M.total(s,rid),capacity(s,at)),
         allowRecruit:true,price:p.accessPrice,duration:p.accessDays};
       if (approvalAI(s, rid, 'agreement', terms)) enact(s, rid, 'offer', terms);
       var offered=r.agreements.filter(function (a) {return a.status==='offered' && a.partnerId===terms.partnerId;})[0];

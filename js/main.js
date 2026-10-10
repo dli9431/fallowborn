@@ -2078,7 +2078,7 @@ FB.CHANGELOG = [
       const realm = bookmark && (bookmark.realms || []).filter(function (row) {
         return row.id === scenario.rulerRealmId;
       })[0];
-      const ruler = realm && realm.ruler;
+      const ruler = FB.startRulerProfile(bookmark, realm, scenario.governmentForm);
       if (!ruler || ruler.name !== scenario.characterName || ruler.sex !== scenario.sex ||
           ruler.culture !== scenario.startCulture || realm.religion !== scenario.startReligion ||
           (realm.government || FBDATA.eras[FB.bookmarkEra(bookmark)].defaultGovernment) !== scenario.governmentForm)

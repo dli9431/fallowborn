@@ -457,6 +457,22 @@ class LexiconPlaceholderTests(unittest.TestCase):
         self.assertEqual(inventory.entries['ecclesiasticalProfile.sanctuary_temporal.name.default']['text'],
                          'Sanctuary community government')
 
+    def test_1204_terrain_labels_and_beginnings_have_structured_owners(self):
+        inventory = i18n_catalog.Inventory()
+        i18n_catalog.extract_structured(inventory)
+        entries = inventory.entries
+        self.assertEqual(entries['province.1204.gurganj_district.name.default']['text'], 'Gurganj')
+        self.assertEqual(entries['realm.1204.qara_khitai_1204.name.default']['text'], 'Qara Khitai suzerainty')
+        self.assertEqual(entries['culture.khitan_court_1204.name.default']['text'], 'Khitan court')
+        self.assertEqual(entries['constituencyMember.middle_niger_1204.waters.name.default']['text'], 'River households')
+        self.assertEqual(entries['scenario.muhammad_1204.name.default']['text'], 'Muhammad II at Gurganj')
+        self.assertEqual(entries['settlement.1204.siwa_oasis_inhabited_1204.name.default']['text'], 'Shali')
+        self.assertEqual(entries['settlement.1204.nurata_foothills_inhabited_1204.name.default']['text'], 'Nur')
+        for scenario in ('niger_delegate_1204', 'muhammad_1204', 'siwa_delegate_1204'):
+            for field in ('name', 'desc', 'intro'):
+                self.assertIn(f'scenario.{scenario}.{field}.default', entries)
+            self.assertIn(f'scenario.{scenario}.familyPresets.standard.desc.default', entries)
+
     def test_religions_no_longer_carry_rank_title_keys(self):
         inventory = i18n_catalog.Inventory()
 

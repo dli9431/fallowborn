@@ -109,3 +109,7 @@ The 476 branch registers 1204 for ordinary title-screen picks, start codes and s
 Open this worktree's index.html and choose a new game or load a saved 1204 campaign. No browser-console registration is required. tests/e2e/specs/bookmark-picker.spec.js covers the picker and save loading after a fresh boot in both Chromium origins and distribution flags.
 
 Example ordinary start code: REVIEW1204-1204-serf-constantinople-m-Leo-standard-0-greek.orthodox
+
+Inhabited terrain revision
+
+The fresh opening now selects inhabited_v2 on europe_regional_2. The original declaration and its ordered layouts remain available as baseline. docs/research/1204-terrain.md owns the independently sourced fourteen inhabited additions, fifteen research/behavior gates, all original scenery dispositions, local authority approximations and supported-save review. Existing historical campaign, partition and Venetian civic records remain declaration-owned; new geography awards none of their objectives automatically.
