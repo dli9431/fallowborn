@@ -1333,6 +1333,25 @@ def extract_structured(inv: Inventory) -> None:
                     inv.add(f"{kind}.{title_id}.name.{branch}", record,
                             f"{candidate_rel}:{line}", f"{bookmark_id} {kind} {title_id}, display name.", ())
 
+    # Dated expansion literals are composed into whole-field world revisions.
+    # Read their authored tables without executing the composer.
+    expansion_path = DATA / "bookmark_800_expansion.js"
+    expansion_rel = expansion_path.relative_to(ROOT).as_posix()
+    for variable, kind in (("additions", "province"), ("realms", "realm")):
+        for item_node in node_array(find_local_assignment(expansion_path, variable)) or []:
+            item = node_object(item_node) or {}
+            item_id = node_string(item.get("id"))
+            if not item_id:
+                continue
+            for branch, record, line in branch_records(item.get("name")):
+                inv.add(f"{kind}.800.{item_id}.name.{branch}", record,
+                        f"{expansion_rel}:{line}", f"800 {kind} {item_id}, display name.", ())
+    for province_id, site_node in (node_object(find_local_assignment(expansion_path, "sites")) or {}).items():
+        site = node_object(site_node) or {}
+        for branch, record, line in branch_records(site.get("name")):
+            inv.add(f"settlement.800.{province_id}_800.name.{branch}", record,
+                    f"{expansion_rel}:{line}", f"800 site {province_id}, display name.", ())
+
     # Literal dated candidates include registered hidden review worlds.
     # Extract display fields without evaluating game code,
     # descending into ruler profiles or colliding with existing title labels.

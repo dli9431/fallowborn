@@ -10,8 +10,9 @@ const proofMod = require('../fixtures/government-rollout-mod.json');
 
 dependsOnRuntime(__filename,[
   'index.html','data/government_rollout.js','data/bookmarks.js','data/bookmark_493.js',
-  'data/bookmark_711.js','data/bookmark_711_terrain.js','data/geography_expansion.js',
-  'data/bookmark_800.js','data/bookmark_800_history.js','data/bookmark_1204.js',
+  'data/bookmark_493_world.js','data/bookmark_711.js','data/bookmark_711_terrain.js',
+  'data/geography_expansion.js','data/bookmark_476_wider_identities.js',
+  'data/bookmark_800.js','data/bookmark_800_history.js','data/bookmark_800_expansion.js','data/bookmark_1204.js',
   'data/bookmark_476.js','data/bookmark_476_outer.js','data/bookmark_476_wider.js',
   'data/political_institutions.js','data/aristocratic_courts.js','data/assembly_polities.js',
   'data/mobile_confederations.js','data/civic_profiles.js','data/ecclesiastical_profiles.js',

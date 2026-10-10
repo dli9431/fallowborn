@@ -220,6 +220,8 @@ Expanded 476 scripts
 
 index.html loads data/geography_expansion.js immediately after data/geographies.js, then data/bookmark_476_wider_identities.js and data/bookmark_476_wider.js after the merged mobile and story declarations. The ordinary data-directory allowlist includes these assets; the CrazyGames tracked-file allowlist includes the same gameplay data while retaining its language and music exclusions. All new files must be tracked before producing a release package. Index-derived offline assets include the new script tags.
 
+The 800 terrain composer, data/bookmark_800_expansion.js, loads after those identity declarations and before data/government_rollout.js. Both the ordinary and CrazyGames distributions require this data script, through the existing data-directory allowlists. It does not change distribution flags, music, locale controls or storage. The index-derived offline asset scan includes its script tag. Feature-branch versions and generated language catalogues remain integration-owned; tools/i18n_catalog.py reads the expansion's literal name tables without executing its composer.
+
 The private debug script inventory mirrors this order with its existing eager English catalogue and modal extras. Private review ledgers and packaging tools remain outside this repository. Historical, raster, save/performance and distribution acceptance must refer to the same integrated revision.
 
 Expanded 493 asset
