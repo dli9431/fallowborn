@@ -11827,7 +11827,8 @@ window.FB = window.FB || {};
     }
     for (const member of family) {
       const c = member.charId && s.chars[member.charId];
-      if (!c || c.dead || c.id === subjectId) continue;
+      if (!c || c.dead || c.id === subjectId ||
+          (ruler && c.id === ruler.id) || (consort && c.id === consort.id)) continue;
       let courtRelation = FB.T('Court member');
       if (rulerName && subject !== ruler) {
         const rulerRelation = realmCourtRelation(s, ruler, c, null);

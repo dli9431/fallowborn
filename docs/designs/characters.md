@@ -69,6 +69,10 @@ Court-strip relationship labels are relative to the displayed person. An unrelat
 consort is explicitly the named ruler's consort; a court relative without a direct
 kinship label is identified by their relationship to the named ruler or by court
 membership. These are display fallbacks, not new spouse or kinship links.
+An existing spouse who accompanies a royal heir's accession appears in the court
+strip even without a generated consort record. The same person appears as Father
+or Mother on their recorded child's sheet. A spouse who is also listed in the
+compact court appears only once; displaying either relationship never edits parentage.
 
 Succession eligibility text identifies each close relative individually: son or
 daughter, grandson or granddaughter, father or mother, brother or sister,

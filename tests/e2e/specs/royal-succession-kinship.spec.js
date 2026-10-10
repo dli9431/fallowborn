@@ -449,3 +449,238 @@ test('a stale compact child backlink cannot turn a sibling into a child',
         children:FB.childrenOf(s, s.chars[ids.successor]).length };
     }, ids)).toEqual({ parent:ids.fatherMember, father:ids.father, children:0 });
   });
+
+// The spouse is already a real person before the sibling takes the county.
+async function installPlayerMarriageAccession(page, options) {
+  const ids = await installCourt(page, { mode:'accession', sex:options.sex });
+  return page.evaluate(function (setup) {
+    const ids = setup.ids, opts = setup.options, s = FB.state;
+    const realm = s.realms[ids.rid], su = realm.succession;
+    const me = s.chars[s.player.charId], spouse = s.chars[ids.sibling];
+    me.sex = opts.sex === 'f' ? 'm' : 'f';
+    me.born = s.date.year - 28;
+    me.dyn = 'Player House';
+    for (const record of [[ids.father, ids.fatherMember, 65],
+        [ids.successor, ids.successorMember, 32],
+        [ids.sibling, ids.siblingMember, 26]]) {
+      s.chars[record[0]].born = s.date.year - record[2];
+      su.members[record[1]].born = s.chars[record[0]].born;
+    }
+    realm.ruler.born = s.chars[ids.father].born;
+    realm.ruler.age = 65;
+    s.chars[ids.extra].dead = true;
+    su.members[s.chars[ids.extra].royalLine.memberId].alive = false;
+    su.order = [ids.successorMember, ids.siblingMember];
+    FB.touchFamily();
+    FB.killChar(s, s.chars[ids.father]);
+    me.spouseId = spouse.id;
+    spouse.spouseId = me.id;
+    s.roles.spouse = spouse.id;
+    FB.touchFamily();
+    let child = null;
+    if (opts.childBefore) {
+      child = FB.makeCharacter(s, { name:'Richar', sex:'m', born:s.date.year - 1,
+        fatherId:me.sex === 'm' ? me.id : spouse.id,
+        motherId:me.sex === 'f' ? me.id : spouse.id,
+        dyn:me.dyn, culture:me.culture, religion:me.religion, traitsN:0 });
+      me.childrenIds.push(child.id);
+      spouse.childrenIds.push(child.id);
+      FB.registerRoyalBirth(s, child, s.chars[child.fatherId], s.chars[child.motherId]);
+      FB.touchFamily();
+    }
+    FB.killChar(s, s.chars[ids.successor]);
+    FB.ensureRealmCourt(s, ids.rid);
+    return Object.assign(ids, { player:me.id, spouse:spouse.id,
+      child:child && child.id, heir:su.members[su.heirId].charId });
+  }, { ids:ids, options:options });
+}
+
+for (const sex of ['f', 'm']) {
+  test('a married ' + sex + ' successor gets no invented child and real births take priority',
+    async function ({ page }) {
+      const ids = await installPlayerMarriageAccession(page, { sex:sex });
+      const result = await page.evaluate(function (ids) {
+        const s = FB.state, me = s.chars[ids.player], spouse = s.chars[ids.spouse];
+        const su = s.realms[ids.rid].succession, fallback = su.members[su.heirId];
+        const initial = {
+          ruler:FB.realmRulerCharacterSnapshot(s, ids.rid).id,
+          consort:FB.realmConsortCharacter(s, ids.rid).id,
+          compactConsort:FB.realmConsortMember(s, ids.rid),
+          parent:fallback.parentId,
+          father:s.chars[ids.heir].fatherId, mother:s.chars[ids.heir].motherId,
+          spouseChildren:FB.childrenOf(s, spouse).length,
+          playerChildren:FB.childrenOf(s, me).length
+        };
+        const before = FB.save.serialize(), rng = FB.getRngState(), uid = FB.getUidCounter();
+        FB.refreshRealmSuccession(s, ids.rid);
+        const unchanged = before === FB.save.serialize() &&
+          rng === FB.getRngState() && uid === FB.getUidCounter();
+        const child = FB.makeCharacter(s, { name:'Recorded daughter', sex:'f',
+          born:s.date.year, fatherId:me.sex === 'm' ? me.id : spouse.id,
+          motherId:me.sex === 'f' ? me.id : spouse.id, dyn:me.dyn,
+          culture:me.culture, religion:me.religion, traitsN:0 });
+        me.childrenIds.push(child.id); spouse.childrenIds.push(child.id);
+        FB.registerRoyalBirth(s, child, s.chars[child.fatherId], s.chars[child.motherId]);
+        FB.touchFamily();
+        const actualHeir = su.members[su.heirId].charId;
+        const data = JSON.parse(FB.save.serialize());
+        FB.save.restore(data);
+        const after = FB.state, restored = after.realms[ids.rid].succession;
+        return { initial:initial, unchanged:unchanged, child:child.id,
+          actualHeir:actualHeir, restoredHeir:restored.members[restored.heirId].charId,
+          parents:[after.chars[child.id].fatherId, after.chars[child.id].motherId],
+          expectedParents:[child.fatherId, child.motherId],
+          restoredConsort:FB.realmConsortCharacter(after, ids.rid).id,
+          fallbackParent:restored.members[fallback.id].parentId };
+      }, ids);
+      expect(result.initial).toEqual({ ruler:ids.spouse, consort:ids.player,
+        compactConsort:null, parent:null, father:null, mother:null,
+        spouseChildren:0, playerChildren:0 });
+      expect(result.unchanged).toBe(true);
+      expect(result.actualHeir).toBe(result.child);
+      expect(result.restoredHeir).toBe(result.child);
+      expect(result.parents).toEqual(result.expectedParents);
+      expect(result.restoredConsort).toBe(ids.player);
+      expect(result.fallbackParent).toBeNull();
+    });
+}
+
+for (const width of [390, 1280]) {
+  test('an existing player consort appears as spouse and parent with retained Back at ' + width,
+    async function ({ page }) {
+      await page.setViewportSize({ width:width, height:600 });
+      const ids = await installPlayerMarriageAccession(page, { sex:'f', childBefore:true });
+      expect(ids.heir).toBe(ids.child);
+      const before = await page.evaluate(function () {
+        return { save:FB.save.serialize(), rng:FB.getRngState(), uid:FB.getUidCounter() };
+      });
+      const link = function (cid) {
+        return page.locator('.court-strip [data-realm-family-cid="' + cid + '"]');
+      };
+      await page.evaluate(function (rid) { FB.ui.showLiegeModal(rid); }, ids.rid);
+      await expect(link(ids.player)).toHaveCount(1);
+      await expect(link(ids.player).locator('.frel')).toHaveText('Husband · age 28');
+      await expect(link(ids.child).locator('.frel')).toHaveText('Son · Heir · age 1');
+      await link(ids.child).click();
+      await expect(link(ids.player).locator('.frel')).toHaveText('Father · age 28');
+      await expect(link(ids.spouse).locator('.frel')).toHaveText('Mother · age 26');
+      // Direct profiles retain their own Back chain; the realm navigator
+      // intentionally replaces its currently selected court member.
+      await page.evaluate(function (cid) {
+        FB.ui.closeModal(); FB.ui.showCharModal(cid);
+      }, ids.child);
+      await link(ids.player).focus();
+      const scroll = await page.locator('#gm-body').evaluate(function (body) {
+        return body.scrollTop;
+      });
+      await page.keyboard.press('Enter');
+      await expect(page.locator('#gm-title')).toContainText('Player House');
+      await page.locator('#cm-close').click();
+      await expect(link(ids.player)).toBeFocused();
+      expect(await page.locator('#gm-body').evaluate(function (body) {
+        return body.scrollTop;
+      })).toBeCloseTo(scroll, 0);
+      expect(await page.evaluate(function () {
+        return { save:FB.save.serialize(), rng:FB.getRngState(), uid:FB.getUidCounter() };
+      })).toEqual(before);
+    });
+}
+
+test('consort snapshots follow an existing marriage, not a stale generated reservation',
+  async function ({ page }) {
+    const ids = await installCourt(page, { mode:'accession', sex:'f' });
+    const result = await page.evaluate(function (ids) {
+      const s = FB.state;
+      s.chars[ids.successor].born = s.date.year - 25;
+      s.realms[ids.rid].succession.members[ids.successorMember].born =
+        s.chars[ids.successor].born;
+      FB.killChar(s, s.chars[ids.father]);
+      const ruler = s.chars[ids.successor], old = FB.realmConsortCharacter(s, ids.rid);
+      const me = s.chars[s.player.charId];
+      ruler.spouseId = me.id; me.spouseId = ruler.id;
+      FB.touchFamily();
+      const before = FB.save.serialize();
+      const current = FB.realmConsortCharacter(s, ids.rid);
+      const pure = before === FB.save.serialize();
+      me.dead = true;
+      const afterDeath = FB.realmConsortCharacter(s, ids.rid);
+      me.dead = false; ruler.spouseId = null; me.spouseId = null;
+      const afterDivorce = FB.realmConsortCharacter(s, ids.rid);
+      return { hasOld:!!old, current:current.id, expected:me.id,
+        pure:pure, afterDeath:afterDeath, afterDivorce:afterDivorce };
+    }, ids);
+    expect(result).toEqual({ hasOld:true, current:result.expected, expected:result.expected,
+      pure:true, afterDeath:null, afterDivorce:null });
+  });
+
+for (const connection of ['child', 'child-spouse', 'pledge', 'unrelated']) {
+  test('empty-line repair respects a ruler’s ' + connection + ' connection to the player',
+    async function ({ page }) {
+      const ids = await installCourt(page, { mode:'empty', parentless:true });
+      const result = await page.evaluate(function (setup) {
+        const s = FB.state, ids = setup.ids, su = s.realms[ids.rid].succession;
+        const ruler = s.chars[ids.successor], me = s.chars[s.player.charId];
+        me.sex = 'm'; me.born = s.date.year - 60;
+        ruler.born = s.date.year - 26;
+        su.members[ids.successorMember].born = ruler.born;
+        s.realms[ids.rid].ruler.born = ruler.born;
+        s.realms[ids.rid].ruler.age = 26;
+        if (setup.connection === 'child') {
+          ruler.fatherId = me.id; me.childrenIds.push(ruler.id);
+        } else if (setup.connection === 'child-spouse') {
+          const child = FB.makeCharacter(s, { name:'Married daughter', sex:'f',
+            born:s.date.year - 26, fatherId:me.id, culture:me.culture,
+            religion:me.religion, traitsN:0 });
+          me.childrenIds.push(child.id);
+          ruler.spouseId = child.id; child.spouseId = ruler.id;
+        } else if (setup.connection === 'pledge') {
+          ruler.betrothedId = me.id; me.betrothedId = ruler.id;
+        }
+        FB.touchFamily();
+        FB.ensureRealmCourt(s, ids.rid);
+        const heir = su.members[su.heirId];
+        return { parent:heir.parentId, children:FB.childrenOf(s, ruler).length };
+      }, { ids:ids, connection:connection });
+      expect(result).toEqual(connection === 'unrelated'
+        ? { parent:ids.successorMember, children:1 }
+        : { parent:null, children:0 });
+    });
+}
+
+test('a childless player spouse’s court fallback can still inherit', async function ({ page }) {
+  const ids = await installPlayerMarriageAccession(page, { sex:'f' });
+  const result = await page.evaluate(function (ids) {
+    const s = FB.state;
+    FB.killChar(s, s.chars[ids.spouse]);
+    const ruler = FB.realmRulerCharacterSnapshot(s, ids.rid);
+    return { ruler:ruler && ruler.id, alive:ruler && !ruler.dead,
+      father:s.chars[ids.heir].fatherId, mother:s.chars[ids.heir].motherId };
+  }, ids);
+  expect(result).toEqual({ ruler:ids.heir, alive:true, father:null, mother:null });
+});
+
+test('restore preserves an old generated child without inventing a second biological parent',
+  async function ({ page }) {
+    const ids = await installPlayerMarriageAccession(page, { sex:'f' });
+    const result = await page.evaluate(function (ids) {
+      const s = FB.state, su = s.realms[ids.rid].succession;
+      const m = su.members[su.heirId], c = s.chars[ids.heir];
+      const mother = s.chars[ids.spouse];
+      // Reproduce the reported pre-fix save, preserving its existing person.
+      m.parentId = su.rulerMemberId;
+      su.members[su.rulerMemberId].childIds.push(m.id);
+      c.motherId = mother.id; mother.childrenIds.push(c.id);
+      FB.touchFamily();
+      const identity = { name:c.name, born:c.born, dyn:c.dyn };
+      FB.save.restore(JSON.parse(FB.save.serialize()));
+      const after = FB.state, restored = after.chars[ids.heir];
+      const line = after.realms[ids.rid].succession;
+      return { identity:{ name:restored.name, born:restored.born, dyn:restored.dyn },
+        expectedIdentity:identity, father:restored.fatherId, mother:restored.motherId,
+        heir:line.members[line.heirId].charId,
+        consort:FB.realmConsortCharacter(after, ids.rid).id };
+    }, ids);
+    expect(result.identity).toEqual(result.expectedIdentity);
+    expect(result).toMatchObject({ father:null, mother:ids.spouse,
+      heir:ids.heir, consort:ids.player });
+  });

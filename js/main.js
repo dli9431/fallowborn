@@ -10,8 +10,11 @@ window.FB = window.FB || {};
   G.bootReady = false;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-FB.VERSION = '1.189.6';
+FB.VERSION = '1.189.7';
 FB.CHANGELOG = [
+  { v: '1.189.7', date: '2026-10-09', changes: [
+    'Player-family rulers no longer gain invented children on accession. Court family portraits show existing spouses and their recorded parent relationships.'
+  ] },
   { v: '1.189.6', date: '2026-10-07', changes: [
     'Resident family dependents keep their education and work controls after succession. Older saves recover the inherited household on load.'
   ] },

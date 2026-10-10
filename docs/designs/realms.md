@@ -276,7 +276,13 @@ Heir added separately: a sibling successor remains Brother or Sister, including
 on their own sheet. Compact ancestry supplies labels when a dead parent has
 been removed; merely sharing a court or lacking parents proves no blood relation.
 
-An empty line still receives a generated fallback. An adult ruler may receive
+An empty line still receives a generated fallback. A ruler in the player's known
+family, or married or pledged into it, receives a parentless court successor rather
+than an invented child or sibling. The same protection applies to the proposed
+parent of a fallback sibling. Recorded children retain priority, including children
+born after accession; if there are none, the fallback still prevents a dead throne.
+Existing generated people in older saves are preserved, without guessing a missing
+biological parent or deleting their place in the line. Other adult rulers may receive
 a child, with at least sixteen years between their births. A minor instead
 receives a sibling through a plausible recorded parent, or a parentless
 collateral when no such parent exists. Generated siblings cannot be born after
@@ -337,7 +343,10 @@ a consort's `parentId` is legitimately `null`, which is exactly what
 is also as much of the intent as a build without the `role` concept can read. Consorts
 of past generations stay in the tree as dated tombstones and are never read as the
 sitting spouse; `FB.realmConsortMember` resolves the current generation's reservation,
-while `FB.realmConsortCharacter` resolves it only once it is an actual marriage. There
+while `FB.realmConsortCharacter` reads the ruler's actual living primary spouse,
+including an existing player spouse without a compact consort member. Stale reservations
+and former consorts do not replace that marriage. This is a read-only display lookup;
+it creates no court membership or biological links. There
 is no AI remarriage, so a generation whose consort has died simply has none. If an
 invalid generated consort is retired because a real commitment superseded it, its
 ordinary character record remains navigable; any future same-generation replacement

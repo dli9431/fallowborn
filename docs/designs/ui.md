@@ -176,6 +176,10 @@ sister viewed from the consort's sheet reads **Sister of Count Ingelram**, retai
 the Heir marker when applicable. An unclassified relationship names the ruler's
 court instead of implying a family tie to the displayed person. Courtesy titles
 remain Countess/Duchess and their equivalents; these labels change no relationships.
+The consort chip follows the ruler's actual marriage, including the player, rather
+than requiring a generated court slot. Their recorded children therefore show both
+parents. A spouse already listed in the compact court is shown only once. These
+links retain the existing character-sheet Back, focus and scroll behavior.
 
 ## County progression reviews
 

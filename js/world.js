@@ -3092,14 +3092,13 @@ window.FB = window.FB || {};
     return c;
   };
 
-  /* The sitting consort as a character, if one exists and is materialized. */
+  /* Consort is a marriage, not a generated court slot. An heir can bring an
+     existing spouse (including the protagonist) to the throne without adding
+     that spouse to this realm's compact succession members. Read only: old
+     reservations and former consorts never override the current marriage. */
   FB.realmConsortCharacter = function (state, rid) {
-    const m = FB.realmConsortMember(state, rid);
-    const c = m && m.alive !== false && m.charId && state.chars &&
-      state.chars[m.charId];
-    const ruler = c && FB.realmRulerCharacterSnapshot(state, rid);
-    return c && !c.dead && ruler &&
-      ruler.spouseId === c.id && c.spouseId === ruler.id ? c : null;
+    const ruler = FB.realmRulerCharacterSnapshot(state, rid);
+    return ruler && FB.spouseSnapshot ? FB.spouseSnapshot(state, ruler) : null;
   };
 
   FB.materializeRoyalStepchildren = function (state, spouse) {
@@ -3903,6 +3902,19 @@ window.FB = window.FB || {};
       ? Math.min(state.date.year, died) : state.date.year;
   }
 
+  function royalHasPlayerFamily(state, member) {
+    const me = state.player && state.chars[state.player.charId];
+    const c = member && member.charId && state.chars[member.charId];
+    if (!me || !c) return false;
+    if (c.id === me.id || c.spouseId === me.id || me.spouseId === c.id ||
+        c.betrothedId === me.id || me.betrothedId === c.id) return true;
+    const kin = FB.kinOf(state).byId;
+    if (kin[c.id] || kin[c.betrothedId]) return true;
+    return FB.spousesSnapshot(state, c).some(function (spouse) {
+      return spouse.id === me.id || !!kin[spouse.id];
+    });
+  }
+
   function makeHeirIfEmpty(state, r, s) {
     if (s.order.length) return null;
     const ruler = s.rulerMemberId && s.members[s.rulerMemberId];
@@ -3910,6 +3922,13 @@ window.FB = window.FB || {};
     const ancestor = ruler && ruler.parentId && s.members[ruler.parentId];
     let parent = rulerAge >= 16 ? ruler :
       (ancestor && state.date.year - ancestor.born >= 16 ? ancestor : null);
+    /* The compact-house fallback is not a birth. Never manufacture children
+       or siblings inside the player's known family to keep a throne occupied.
+       A parentless court successor preserves the existing recovery mechanism;
+       recorded births still take priority through registerRoyalBirth. */
+    if (royalHasPlayerFamily(state, ruler) || royalHasPlayerFamily(state, parent)) {
+      parent = null;
+    }
     let ageMin = parent ? state.date.year - royalLastBirthYear(state, parent) : 0;
     if (parent && state.date.year - parent.born - 16 < ageMin) {
       parent = null;
