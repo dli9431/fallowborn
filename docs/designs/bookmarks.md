@@ -24,6 +24,8 @@ World references resolve against the prepared bookmark, not whichever map is cur
 
 Realm, ruler, court, opening-actor, community, institution and offered-start identities contribute to the culture/faith requirement set. An inherited or period culture profile must exist; male and female name pools must resolve, as must a family pool for a plain dynasty naming pattern. Architecture follows culture, era, then the registered manuscript default. Currency follows geography, era, then the global definition. Faith law may inherit the existing default tradition. Government law may delegate to faith or name its own validated tradition and jurisdiction mappings. Careers, buildings and unit classes require registered behavior roles. Wardrobe rules may name only registered garment and headwear shapes.
 
+Parentless regional cultures in the wider 476 opening declare their own tone, fair and red appearance values alongside their independent name pools and mechanical defaults. These palettes are portrait presentation defaults, not ancestry claims. The portrait renderer's era fallback does not satisfy the bookmark requirement gate.
+
 Reusable data-defined stories expose their original declaration to validation without adding it to saved records. Their typed province, realm, culture, faith, government and kingdom references must resolve. The future realm created by a partition or foundation is not required to exist at creation; dependent stories can refer to that declared polity only through their attached prerequisite chain. Native story modules may provide declarative requirements and a pure appliesToBookmark hook. Validation never invokes init, day, appliesTo(state), choices or any story mutation hook.
 
 Requirements declarations

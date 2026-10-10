@@ -9,7 +9,7 @@ dependsOnRuntime(__filename,[
   'index.html','data/bookmark_476_wider.js','data/bookmark_476_wider_identities.js',
   'data/geography_expansion.js','data/geographies.js','data/bookmark_476.js',
   'data/bookmark_476_outer.js','data/aristocratic_courts.js','data/mobile_confederations.js',
-  'data/assembly_polities.js','data/starts.js',
+  'data/assembly_polities.js','data/starts.js','data/cultures.js','js/portrait.js',
   'js/world.js','js/model.js','js/save.js','js/save_v4.js','js/main.js','js/mods.js',
   'js/bookmark_setup.js','js/government_aristocracy.js','js/government_support.js',
   'js/government_collective.js','js/institutions.js','js/population.js','js/stories.js','js/religion.js',
@@ -472,6 +472,28 @@ test('revision-only counties, titles, starts and story parties participate in ca
   });
   expect(result).toEqual({titles:true,counties:true,badCounty:true,agreement:true,badAgreement:true,
     technology:true,invalidStarts:[true,true,true,true,true],disabledStart:true,pure:true});
+});
+
+test('parentless wider cultures satisfy the 476 appearance requirements',async function ({page},testInfo) {
+  await openGame(page,testInfo);
+  const result = await page.evaluate(function () {
+    const ids = ['vistula_476','dnieper_476','oghuric_476','horn_coastal_476',
+      'indus_476','sahelian_476','central_steppe_476'];
+    const faults = FB.validateBookmark(FBDATA.bookmarks['476']);
+    return {faults:faults,profiles:ids.map(function (id) {
+      const resolved = FB.cultureValue(null,id,'appearance'), look = resolved.value;
+      return {id:id,source:resolved.sourceId,independent:!FBDATA.cultures[id].parent,
+        complete:!!look && ['tone','fair','red'].every(function (key) {
+          return typeof look[key] === 'number' && isFinite(look[key]) &&
+            look[key] >= 0 && look[key] <= (key === 'tone' ? 4 : 1);
+        })};
+    })};
+  });
+  expect(result.faults).toEqual([]);
+  expect(result.profiles).toHaveLength(7);
+  for (const profile of result.profiles) {
+    expect(profile,profile.id).toEqual({id:profile.id,source:profile.id,independent:true,complete:true});
+  }
 });
 
 test('generated wider identities exclude named historical incumbents and unrelated culture parents',async function ({page},testInfo) {

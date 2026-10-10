@@ -2,6 +2,8 @@
    reconstructed forms where local anthroponymy is unavailable. The named
    historical incumbents discussed in the evidence notes are excluded;
    generated people never assert an attested office or genealogy.
+   Parentless identities declare portrait palettes as presentation defaults,
+   independently of cultural ancestry, naming and mechanical traditions.
    See docs/research/476-wider-evidence.md for naming evidence and limits. */
 FBDATA.bookmarkCultures476Wider = {
   "pictish_476": {
@@ -66,6 +68,7 @@ FBDATA.bookmarkCultures476Wider = {
   },
   "vistula_476": {
     "name": "Vistula communities",
+    "appearance": { "tone": 0.6, "fair": 0.42, "red": 0.07 },
     "nameEras": {
       "late_antique": {
         "male": [
@@ -97,6 +100,7 @@ FBDATA.bookmarkCultures476Wider = {
   },
   "dnieper_476": {
     "name": "Dnieper communities",
+    "appearance": { "tone": 0.65, "fair": 0.5, "red": 0.06 },
     "nameEras": {
       "late_antique": {
         "male": [
@@ -235,6 +239,7 @@ FBDATA.bookmarkCultures476Wider = {
   },
   "indus_476": {
     "name": "Indus communities",
+    "appearance": { "tone": 2, "fair": 0.03, "red": 0.02 },
     "nameEras": {
       "late_antique": {
         "male": [
@@ -356,6 +361,7 @@ FBDATA.bookmarkCultures476Wider = {
   },
   "horn_coastal_476": {
     "name": "Horn coastal communities",
+    "appearance": { "tone": 3.7, "fair": 0.01, "red": 0.02 },
     "nameEras": {
       "late_antique": {
         "male": [
@@ -387,6 +393,7 @@ FBDATA.bookmarkCultures476Wider = {
   },
   "sahelian_476": {
     "name": "Sahelian communities",
+    "appearance": { "tone": 3.7, "fair": 0.01, "red": 0.02 },
     "nameEras": {
       "late_antique": {
         "male": [
@@ -418,6 +425,7 @@ FBDATA.bookmarkCultures476Wider = {
   },
   "oghuric_476": {
     "name": "Oghuric followings",
+    "appearance": { "tone": 1.5, "fair": 0.05, "red": 0.02 },
     "tradition": "steppe",
     "dyn": "of_place",
     "nameEras": {
@@ -449,6 +457,7 @@ FBDATA.bookmarkCultures476Wider = {
   },
   "central_steppe_476": {
     "name": "Central steppe households",
+    "appearance": { "tone": 1.5, "fair": 0.05, "red": 0.02 },
     "tradition": "steppe",
     "dyn": "of_place",
     "nameEras": {
