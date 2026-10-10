@@ -2,6 +2,8 @@
 
 The wider_v2 declaration adds households to the 152 ordinary anchors still disabled in the merged 476 baseline. It adds 25 bounded physical districts beside retained scenery. The original merged world remains addressable as the baseline world revision; 867 and 1066 keep europe_regional. The data is in data/bookmark_476_wider.js, data/bookmark_476_wider_identities.js and data/geography_expansion.js.
 
+The shared base now also carries four additional physical districts, retained as scenery in 476. Thus wider_v2 has 527 total anchors while its inhabited regional declaration count remains 177. These four seeds do not supply later residents or rulers to this opening. Their physical evidence and routes are recorded in docs/research/shared-geography-districts.md; the unreleased expanded raster requires renewed owner review.
+
 Historical interpretation
 
 County ids are durable map anchors. A district name at a medieval city id does not assert that the later city existed in 476. New local rulers and representatives are generated. Their birth years, households, institutions, political boundaries, development and population shares are editorial simulation choices. Broad archaeological evidence supports habitation more readily than a precise political constitution. Local assembly and lineage models are abstractions requiring historical review, especially in eastern forest districts.

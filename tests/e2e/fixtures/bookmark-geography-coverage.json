@@ -1,0 +1,37 @@
+{
+  "baselineAnchors": 498,
+  "baselineOrdinary": 477,
+  "expandedAnchors": 527,
+  "baselines": {
+    "493": {"inhabited": 217, "disabled": 260},
+    "711": {"inhabited": 477, "disabled": 0},
+    "800": {"inhabited": 477, "disabled": 0},
+    "867": {"inhabited": 477, "disabled": 0},
+    "1066": {"inhabited": 477, "disabled": 0},
+    "1204": {"inhabited": 477, "disabled": 0}
+  },
+  "scenery": {
+    "w_sahara_w": ["draa_oases"],
+    "w_sahara_c": ["garama", "ghadames_oasis"],
+    "w_sahara_e": ["awjila_oasis", "siwa_oasis"],
+    "w_sahel": ["jenne_district", "gao_district", "chad_lakeshore", "kumbi_district", "timbuktu_district"],
+    "w_nubia": ["qasr_ibrim"],
+    "w_arabia": ["najran_oasis"],
+    "w_nefud": ["tayma_oasis"],
+    "w_syrian": ["palmyra_district"],
+    "w_kavir": ["central_iran_oases"],
+    "w_lut": ["eastern_iran_oases"],
+    "w_registan": [],
+    "w_sulaiman": ["gomal_valley"],
+    "w_thar": ["thar_margin"],
+    "w_hindukush": ["shebar_valley"],
+    "w_karakum": ["sarakhs_oasis", "kath_district", "gurganj_district"],
+    "w_kyzylkum": ["nurata_foothills", "lower_syr_darya"],
+    "w_steppe_e": ["sarysu_corridor"],
+    "w_ural": ["upper_kama"],
+    "w_taiga": ["vychegda_district"],
+    "w_north": ["onega_district"],
+    "w_lapland": ["torne_district"]
+  },
+  "newDistricts": ["kath_district", "gurganj_district", "kumbi_district", "timbuktu_district"]
+}

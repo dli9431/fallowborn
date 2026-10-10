@@ -55,7 +55,7 @@ for (const flag of [false,true]) test('all wider 476 districts have accountable 
     });
     expect(result).toEqual({faults:[],stamp:'wider_v2',geography:'europe_regional_2',disabled:152,
       added:177,complete:true,communities:true,sites:true,scenery:21,
-      old:['europe_regional','wider_v1',498],newCount:523,kept:true,deterministic:true,
+      old:['europe_regional','wider_v1',498],newCount:527,kept:true,deterministic:true,
       alexandria:'alexandria',armenian:2});
     await saveBudget(page,testInfo,'fresh-expanded',4 * 1024 * 1024);
   });

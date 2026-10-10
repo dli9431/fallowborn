@@ -316,7 +316,11 @@
   var expanded = {
     geography:'europe_regional_2',
     provinces:b.provinces.map(function (p) { return additions[p.id] || p; }).concat(
-      corridors.map(function (c) { return additions[c[0]]; })),
+      FBDATA.geographies.europe_regional_2.provinceAdditions.map(function (seed) {
+        /* Shared physical additions are scenery until this date authors
+           inhabitants. No later opening supplies residents or rulers. */
+        return additions[seed.id] || Object.assign({}, seed);
+      })),
     realms:expandedRealms, duchies:duchies, kingdoms:kingdoms,
     localInstitutions:Object.assign({}, b.localInstitutions, region.institutions),
     settlementLayout:'476_wider_v2', climate:{zone:b.climate.zone,provinces:climates},

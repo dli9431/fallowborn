@@ -96,6 +96,10 @@ Fifteen registered stories comprise eleven ordinary campaign instances, three ne
 
 Interpretation and acceptance
 
+Independent geography construction
+
+data/bookmark_1204.js now owns its county defaults and all ordered settlement layouts. Physical seeds and crossings come from europe_regional; 1066 supplies no province, community, title or settlement record. This preserves the existing 1204 opening, including fill flags, paired communities and the Marrakesh/Aghmat slot order, while allowing another date to expand independently. It is a source-isolation change and does not settle the historical uncertainties listed here. tests/e2e/specs/bookmark-geography-coverage.spec.js compares the former construction against the independent declaration and rebuilds it with the 1066 inputs removed.
+
 Stable county seeds and de jure promotion groupings are reused from the shared medieval geography, not traced as exact 1204 borders. Every realm explicitly uses territorial government. Holders are generated through that form beneath the authored liege hierarchy. County identity remains independent of court religion. Communities are gameplay opening partitions; their positive integer shares total 10000 but are not sourced census estimates. Development, uncertain birth years, skill and trait values are editorial simulation inputs. Historical proper names remain outside translation.
 
 Technology uses the existing high_medieval historical knowledge policy for 1204, with explicit court traditions and ordinary item/unit gates. negotiated_historical_partition and dated_holy_war_calls both use none: possession and living political or religious consent govern these optional opportunities, while ordinary conquest and religious decisions remain available. No technology is awarded by a historical campaign date, and no new research prerequisite is introduced.
