@@ -282,3 +282,11 @@ Public sovereign recognition resolves one canonical political candidate and call
 Office-bound temporal jurisdiction
 
 A declared ecclesiastical government reads the canonical religious office without creating another incumbent or election. Local officeProfile eligibility remains in the religious registry; chapterId identifies an independent local congregation. Local appointment, resignation and qualification-based removal update the existing religiousHeads record. Spiritual validity does not confer automatic temporal recognition or property. See ecclesiastical-principality.md.
+
+Released faith compatibility
+
+Released faith ids retain their resolved properties, parent relationships and inherited defaults. A refinement receives a new id and may inherit from its retained predecessor. The predecessor can declare legacy:true and supersededBy with a different existing non-legacy faith id. These are non-inheriting metadata fields, not doctrine or assignability changes. Invalid replacement references are rejected during detached catalogue validation.
+
+FB.faithAssignable remains the existence and saved-record eligibility query. FB.faithAvailable additionally checks fresh conversion eligibility: a legacy faith remains available when the campaign contains it, its retained bookmark declares it, or a saved generated faith descends from it. Fresh pickers omit other legacy ids. Personal and public ruler conversion use the same gate, while offices, relations and saved-record validation keep resolving the original profile. A current fresh bookmark revision cannot assign a legacy faith to its provinces, communities, courts, starts, institutions or story identities; retained revisions may still use it.
+
+tests/e2e/fixtures/released-catalogue.json freezes released effective faiths separately from legacy metadata and faithDefaults. New traditions are additive. Updating a retained hash requires compatibility review, and semantic changes require a new definition or a reviewed migration. This compatibility boundary adds no researchable capability and needs no technology gate.

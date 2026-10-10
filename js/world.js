@@ -58,6 +58,13 @@ window.FB = window.FB || {};
     });
     result.revision = selected;
     delete result.revisions;
+    if (typeof result.opening === 'string') {
+      var openingId = result.opening;
+      if (!ownKey(result.openingRevisions, openingId))
+        throw new Error('Unknown opening revision: ' + openingId);
+      result.openingRevision = openingId;
+      result.opening = result.openingRevisions[openingId];
+    }
     return result;
   }
   FB.bookmarkHasRevisions = function (id) {
@@ -155,8 +162,10 @@ window.FB = window.FB || {};
     var additions = base.provinceAdditions === undefined ? [] : base.provinceAdditions;
     var overrides = base.provinceOverrides === undefined ? {} : base.provinceOverrides;
     if (!Array.isArray(additions) || !plainRecord(overrides)) throw new Error('Invalid geography seed changes.');
-    var seen = {}, retired = parent.retiredProvinceIds || [];
-    if (!Array.isArray(retired)) throw new Error('Invalid retired geography ids.');
+    var seen = {}, retired = parent.retiredProvinceIds === undefined ? [] : parent.retiredProvinceIds;
+    var localRetired = base.retiredProvinceIds === undefined ? [] : base.retiredProvinceIds;
+    if (!Array.isArray(retired) || !Array.isArray(localRetired)) throw new Error('Invalid retired geography ids.');
+    retired = retired.concat(localRetired.filter(function (key) { return retired.indexOf(key) < 0; }));
     var provinces = parent.provinces.map(function (p) {
       seen[p.id] = true;
       if (!ownKey(overrides, p.id)) return p;
@@ -176,7 +185,7 @@ window.FB = window.FB || {};
       seen[p.id] = true;
       provinces.push(Object.assign({}, p));
     });
-    return Object.assign({}, parent, base, {provinces:provinces});
+    return Object.assign({}, parent, base, {provinces:provinces, retiredProvinceIds:retired});
   };
 
   /* A map-scale tuning value of the active base. A base that leaves a value
@@ -307,6 +316,10 @@ window.FB = window.FB || {};
       }
     }
     var seedIds = {};
+    if (geography.retiredProvinceIds !== undefined && (!Array.isArray(geography.retiredProvinceIds) ||
+        geography.retiredProvinceIds.some(function (key, index, ids) {
+          return typeof key !== 'string' || !/^[a-z][a-z0-9_]*$/.test(key) || ids.indexOf(key) !== index;
+        }))) fault('retiredProvinceIds must contain unique county ids.');
     if (geography.provinces !== undefined) {
       if (!Array.isArray(geography.provinces)) fault('provinces must be an array of seeds.');
       else for (var pi = 0; pi < geography.provinces.length; pi++) {
@@ -316,6 +329,8 @@ window.FB = window.FB || {};
           continue;
         }
         if (ownKey(seedIds, seed.id)) fault('duplicate seed ' + seed.id + '.');
+        if (Array.isArray(geography.retiredProvinceIds) && geography.retiredProvinceIds.indexOf(seed.id) >= 0)
+          fault('retired seed ' + seed.id + ' cannot be reused.');
         seedIds[seed.id] = true;
         if (seed.maxRadiusKm !== undefined && (typeof seed.maxRadiusKm !== 'number' ||
             !isFinite(seed.maxRadiusKm) || seed.maxRadiusKm < 10 || seed.maxRadiusKm > 500))
@@ -1007,7 +1022,13 @@ window.FB = window.FB || {};
       }
       if (row.religion !== undefined) {
         if (!FB.faithAssignable(row.religion, null)) fault(owner, 'unknown or unassignable faith ' + row.religion + '.');
-        else faiths[row.religion] = true;
+        else {
+          faiths[row.religion] = true;
+          var rawBookmark = FBDATA.bookmarks[definition.id] || definition;
+          if ((definition.revision || 'baseline') === (rawBookmark.revision || 'baseline') &&
+              FB.religionOf(row.religion, null).legacy)
+            fault(owner, 'fresh revision names legacy faith ' + row.religion + '.');
+        }
       }
     }
     function requirements(req, owner, faith, form, attached) {
@@ -2213,7 +2234,10 @@ window.FB = window.FB || {};
     var definition;
     progress = progress || function () {};
     done = done || function () {};
-    try { definition = FB.bookmark(requestedId, options && options.revision); }
+    try {
+      if (FB.mods) FB.mods.assertReady();
+      definition = FB.bookmark(requestedId, options && options.revision);
+    }
     catch (revisionError) {
       setTimeout(function () { done(revisionError); }, 0);
       return;
@@ -2226,7 +2250,7 @@ window.FB = window.FB || {};
        current declaration changes. Resolve the detached override before
        validation, preparation and cache lookup; never rewrite the registry. */
     if (options && options.geography !== undefined) {
-      if (FB.bookmarkHasRevisions(definition.id) && options.geography !== FB.bookmarkGeography(definition)) {
+      if (options.geography !== FB.bookmarkGeography(definition)) {
         setTimeout(function () { done(new Error('Saved geography does not match its world revision.')); }, 0);
         return;
       }

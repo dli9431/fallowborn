@@ -379,3 +379,11 @@ selectionProfile may declare candidatePool and procedure through the common sele
 Civic constitutional profiles
 
 civicProfiles is an allowed JSON root with atomic policy replacement. Its effective constituency and government form are validated together before mutation. A civic strategy requires a valid form-level default profile, while a fresh bookmark realm can select a compatible dated civicProfileId and constituency. Opening civicRights require typed scope, zero numeric receipts and evidence; they belong only to fresh initialization. Mod text cannot install executable civic strategy functions. See docs/MODDING.md and docs/designs/city-republic.md.
+
+Effective catalogue compatibility
+
+Standard modded saves use an effective-1 SHA-256 fingerprint of canonical JSON: the installed effective public data, inherited faith defaults, and stored/bundled configuration. It is captured after successful mod application and before bookmark activation changes the legacy world aliases. Bundled payload changes are therefore detected even when their enabled ids remain identical. A repeated application invalidates the cached signature. Unmodded saves retain the empty signature and CrazyGames retains its edition signature.
+
+Missing enabled bundles, malformed stored configuration and invalid mod definitions block activation and save adoption. They cannot silently fall back to the shipped catalogue. Candidate validation remains detached and runs before installation. A changed effective catalogue requires its own matching campaign; the loader does not guess an upgrade. Older mod signatures that recorded only input text and bundle ids do not certify an effective catalogue and are rejected instead of being silently upgraded. Supported unmodded schema-1 and legacy migrations retain their existing path.
+
+The released-catalogue browser ratchet inspects unmodded definitions before any override. Explicit valid mods can replace those definitions; their changed profiles belong to their exact fingerprint. The immutable shipped fixture is never rewritten to accept an override. The stronger identity check is a compatibility rule, not a gameplay capability, and needs no technology-impact entry.

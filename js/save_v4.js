@@ -98,7 +98,7 @@
       stamp(state.start, 'defaultGovernment', 'government');
       var worldDefinition = FB.campaignBookmark(state);
       if (state.start.revision !== undefined && typeof state.start.revision !== 'string') field('state.start.revision');
-      if (worldDefinition && FB.bookmarkHasRevisions(state.start.id) && state.start.geography !== worldDefinition.geography)
+      if (worldDefinition && state.start.geography !== FB.bookmarkGeography(worldDefinition))
         field('state.start.geography');
       if (worldDefinition && FB.bookmarkHasRevisions(state.start.id)) {
         var inhabited = {};

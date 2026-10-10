@@ -1,0 +1,65 @@
+{
+  "schema": 1,
+  "algorithm": "sha256-canonical-json",
+  "baselineCommit": "17aa60d5",
+  "selection": {
+    "bookmarks": [
+      "867",
+      "1066"
+    ],
+    "geographies": [
+      "europe_regional"
+    ],
+    "eras": [
+      "early_medieval",
+      "high_medieval"
+    ],
+    "governments": [
+      "territorial"
+    ],
+    "faiths": [
+      "christian",
+      "catholic",
+      "orthodox",
+      "eastern",
+      "muslim",
+      "sunni",
+      "ashari",
+      "maturidi",
+      "shia",
+      "pagan",
+      "norse_pagan",
+      "slavic_pagan",
+      "baltic_pagan",
+      "tengri",
+      "zoroastrian",
+      "jewish"
+    ]
+  },
+  "hashes": {
+    "bookmark/1066/baseline": "a651c799a00b5c28f4e40ec26125ffaae34cd7e68852056588fbccc6a7e9e5a7",
+    "bookmark/867/baseline": "f54ebecdf4c2dc2eb9a3c2cf6fb331f6ec880b97db65c9e879a351fc1ea2e304",
+    "eraDefault/early_medieval": "dc0c08a97b9bb14d25aa99caa009740eb73d818f536aa026c075e2ab65f6a8b8",
+    "eraDefault/high_medieval": "dc0c08a97b9bb14d25aa99caa009740eb73d818f536aa026c075e2ab65f6a8b8",
+    "faith/ashari": "b938c44c02cb452d0ef2c97cc41100556683443481af34a3aaf57a1346e44215",
+    "faith/baltic_pagan": "c283e8bc2f6a73f4b5a53491c3c3b1f94f64dfb6a7452812ec3c51cac9130dde",
+    "faith/catholic": "f34afb7ecbd775b167e68348016be62863fe923b804d54ae270092b1b8ff26f2",
+    "faith/christian": "c48749bb7b1ca22d09f18da48553f454a09d2fca72bb164eb45f6f2df64cc480",
+    "faith/eastern": "9cfe6b6421176f119ea6c3d68d52b4f50eca321c2467d28a8d0bd789cb6c849a",
+    "faith/jewish": "74ebf9b4b9cd4278299e4a18bb7e9de9d5f1492dbe48fc9a04e56e7960a250f0",
+    "faith/maturidi": "f53cfd8ba6944e2eb6f3f0514d723b14b581795686b966cbd4d80d534fc84835",
+    "faith/muslim": "8b3246de12aa0fa9c8b8feb27ae68b1f2fbd5e2ddfd3cde7bd07f27c28596876",
+    "faith/norse_pagan": "e13bec7c1789b8ac8ebe31e79172c740d2fc0b3b3c442483ee45d1a2a6266e57",
+    "faith/orthodox": "5d85032e20ddeed64aa1b213d637e9f94f2c95d6873c62fdbf33ae15e57cdca1",
+    "faith/pagan": "99e38c5494c15bc79f709a1406f5f207abe942c295726c92c1179386b2bec0c1",
+    "faith/shia": "86f57825bc8aec387d1175e3dd041ed870130c2d4f69fff848d4748408a0e412",
+    "faith/slavic_pagan": "9c2c3e6e5192dba5bd4aaa5d49d18421e3330c0852053f228b3ee01a33cb97fc",
+    "faith/sunni": "13ac50382f68419199495fdaceb6286a4549ea5a39431c92115de9b771b684aa",
+    "faith/tengri": "8fee1c130a75eadf3cba094f832bee2d1a0bd59ff64ffb1b9f3f788c2b9284d2",
+    "faith/zoroastrian": "40fa85b3961d9ff95f739e8520058752549f7046651178e1c1794686da3bc2d1",
+    "faithDefaults": "0d3cd07e441558e7a0ce9c4a9672f8e93128586c21a8aa1777e1ff16e8086eab",
+    "geography/europe_regional": "69b911ca27fb0eaacd93ffd0ba982212de20199a329a46deae21a25975568f73",
+    "government/territorial": "e7bc6e23923bed0a074a95d323d947cb3f819f0826753ec1cde425f9c3ce8231"
+  },
+  "legacyFaiths": {}
+}
