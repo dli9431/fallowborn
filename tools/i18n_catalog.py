@@ -1394,6 +1394,40 @@ def extract_structured(inv: Inventory) -> None:
                 inv.add(f"province.{candidate_id}.{province_id}.name.{branch}", record,
                         f"{candidate_rel}:{line}",
                         f"Review {candidate_id} county {province_id}, display name.", ())
+    # A retained world and its expansion can name the same county differently.
+    # Keep revision owners separate; exact-source aliases serve live map labels.
+    expansion_path = DATA / "bookmark_493_world.js"
+    expansion_rel = expansion_path.relative_to(ROOT).as_posix()
+    expansion = node_object(find_assignment(expansion_path, "FBDATA", "bookmarkExpansion493")) or {}
+    for table, kind in (("provinces", "province"), ("realms", "realm")):
+        for item_node in node_array(expansion.get(table)) or []:
+            item = node_object(item_node) or {}
+            item_id = node_string(item.get("id"))
+            for branch, record, line in branch_records(item.get("name")):
+                inv.add(f"{kind}.493.world_v2.{item_id}.name.{branch}", record,
+                        f"{expansion_rel}:{line}", "Expanded 493 display name.", ())
+    for entries in (node_object(expansion.get("settlementLayouts")) or {}).values():
+        for item_node in node_array(entries) or []:
+            item = node_object(item_node) or {}
+            site_id = node_string(item.get("site"))
+            for branch, record, line in branch_records(item.get("name")):
+                inv.add(f"settlement.493.world_v2.{site_id}.name.{branch}", record,
+                        f"{expansion_rel}:{line}", "Expanded 493 settlement label.", ())
+    for table, profile_id, namespace in (
+        ("administrationProfiles", "sasanian_provinces_493", "administrationProfile"),
+        ("aristocraticProfiles", "sasanian_493", "aristocraticProfile"),
+    ):
+        profile = node_object(find_keyed_assignment(expansion_path, "FBDATA", table, profile_id)) or {}
+        for branch, record, line in branch_records(profile.get("name")):
+            inv.add(f"{namespace}.{profile_id}.name.{branch}", record,
+                    f"{expansion_rel}:{line}", "Dated court policy name.", ())
+        for interest_node in node_array(profile.get("interests")) or []:
+            interest = node_object(interest_node) or {}
+            interest_id = node_string(interest.get("id"))
+            for branch, record, line in branch_records(interest.get("name")):
+                inv.add(f"aristocraticInterest.{profile_id}.{interest_id}.name.{branch}", record,
+                        f"{expansion_rel}:{line}", "Dated provincial interest.", ())
+
     # Dated county names of the geography bases replace a county's display
     # name for the years they cover, so each is a display label of its own.
     geography_path = DATA / "geographies.js"

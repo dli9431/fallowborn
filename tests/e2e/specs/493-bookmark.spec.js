@@ -1,6 +1,9 @@
 'use strict';
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
+  'data/bookmark_493_world.js', 'data/geography_expansion.js',
+  'data/bookmark_476_outer.js', 'data/bookmark_476_wider_identities.js',
+  'data/aristocratic_courts.js', 'data/assembly_polities.js',
   'data/story_courts_476.js',
   'index.html', 'data/bookmark_493.js', 'data/bookmark_493_history.js',
   'data/bookmark_476.js', 'data/bookmark_476_italy.js',

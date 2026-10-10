@@ -120,6 +120,22 @@ class StructuredDataExtractionTests(unittest.TestCase):
         for retired in ('bookmark.476_outer.name.default', 'province.476_outer.baghdad.name.default'):
             self.assertNotIn(retired, inventory.entries)
 
+    def test_493_expansion_retains_baseline_labels_and_excludes_generated_people(self):
+        inventory = i18n_catalog.Inventory()
+        i18n_catalog.extract_structured(inventory)
+        for key, text in (
+            ('province.493.fustat.name.default', 'Fustat'),
+            ('province.493.world_v2.fustat.name.default', 'Babylon of Egypt'),
+            ('settlement.493.world_v2.baghdad_outer_476.name.default', 'Ctesiphon'),
+            ('realm.493.world_v2.sasanian_493.name.default', 'Sasanian Court'),
+            ('aristocraticProfile.sasanian_493.name.default', 'Sasanian royal and magnate court (493)'),
+            ('administrationProfile.sasanian_provinces_493.name.default', 'Sasanian provincial service (493)'),
+            ('aristocraticInterest.sasanian_493.armenian.name.default', 'Armenian provincial interest'),
+        ):
+            self.assertEqual(inventory.entries[key]['text'], text)
+        for name in ('Kawad I', 'Jamasp', 'Yazdegerd II'):
+            self.assertNotIn(i18n_catalog.source_key(name), inventory.entries)
+
     def test_493_review_content_has_display_and_durable_message_owners(self):
         inventory = i18n_catalog.Inventory()
         i18n_catalog.extract_structured(inventory)

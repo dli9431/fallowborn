@@ -652,3 +652,7 @@ The expanded base supplies per-district climate defaults and a period-scoped Eas
 Retained geography ids
 
 Geography extensions inherit retiredProvinceIds monotonically. A child can append retired ids but cannot clear an ancestor's list. Validation rejects duplicate retirement entries, malformed ids and any active seed reusing a retired id, including an independent full base. Released geography hashes cover the resolved base; the shared settlement-site catalogue remains available for independently authored dates. Saved geography must agree with the resolved bookmark revision even for an implicit baseline.
+
+493 regional declarations
+
+The hidden 493 world_v2 consumer uses the existing europe_regional_2 physical base without modifying shared seeds, coordinates, raster scale or dry-route units. The 260 previously disabled ordinary anchors now have independent dated declarations. Twelve of the 29 bounded additions are inhabited candidates; seventeen retain scenery with explicit evidence blockers. Earlier date-specific display names and literal settlement layouts prevent later cities from appearing through shared physical ids. New island links use the existing crossing classes and normal movement rules. Historical, raster and travel review remains required; declarations alone are not measurements of connectivity.

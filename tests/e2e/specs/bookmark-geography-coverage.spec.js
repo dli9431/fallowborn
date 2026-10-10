@@ -8,6 +8,7 @@ const {startRegion,saveBudget} = require('../support/game/476-wider');
 const {beginBookmark,restoreBookmark,facts} = require('../support/game/bookmark-acceptance');
 const audit = require('../fixtures/bookmark-geography-coverage.json');
 dependsOnRuntime(__filename,[
+  'data/bookmark_493_world.js',
   'index.html','data/counties.js','data/map_data.js','data/geographies.js','data/geography_expansion.js',
   'data/bookmarks.js','data/bookmark_493.js','data/bookmark_711.js','data/bookmark_800.js',
   'data/bookmark_1204.js','data/bookmark_476_wider.js','data/settlements.js','data/settlements_real.js',
