@@ -18,4 +18,4 @@ The PBE career index distinguishes fiscal logothetes of the genikon from militar
 
 Fictional reuse and rollout
 
-public_court supplies generic governor, fiscal officer and commander offices, revenue/service remuneration and adult recognition. A data-only fictional form/profile exercises the same APIs without historical names in engine dispatch. Only the explicitly selected 800 courts change in fresh campaigns. Existing 476, 867 and 1066 declarations and old saved government selections remain unchanged. Broader dated rollout requires its own profile and evidence.
+public_court supplies generic governor, fiscal officer and commander offices, revenue/service remuneration and adult recognition. A data-only fictional form/profile exercises the same APIs without historical names in engine dispatch. The original implementation selected only the two 800 courts. Additional dated profiles and fresh revisions are now documented in government-rollout.md; old saved selections and retained baseline declarations remain unchanged.

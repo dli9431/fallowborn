@@ -1,6 +1,7 @@
 'use strict';
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
+  'data/government_rollout.js',
   'js/world.js', 'js/lordships.js', 'js/armies.js', 'js/fortifications.js',
   'js/population.js', 'js/modifiers.js', 'js/technology.js', 'js/main.js',
   'data/map_data.js', 'data/counties.js', 'data/bookmarks.js',
@@ -13,6 +14,8 @@ const { startDeterministicGame } = require('../support/game/start');
 
 test.beforeEach(async function ({ page }, testInfo) {
   await openGame(page, testInfo);
+  // These formulas and nested vassals describe retained territorial worlds.
+  await page.evaluate(function () { FBDATA.bookmarks['867'].revision = 'baseline'; });
   await startDeterministicGame(page);
   await page.evaluate(function () { FB.game.setPaused(true); });
 });

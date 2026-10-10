@@ -1,0 +1,24 @@
+{
+  "name":"Public river service constitution",
+  "administrationProfiles":{
+    "river_service_rollout":{
+      "name":"River public service",
+      "offices":["public_governor","public_fiscal_officer","public_commander"],
+      "governor":"public_governor","fiscal":"public_fiscal_officer","commander":"public_commander",
+      "appointmentCost":3,"termDays":360,"confirmation":"continues",
+      "finance":{"kind":"revenue_service","share":0.2,"salary":0,"serviceShare":0.35,"remittance":1},
+      "accession":{"mode":"recognition","minimumAge":18,"allowMinor":false,"officeCandidates":true,"threshold":0.6,
+        "interests":[{"id":"residents","role":"governor","weight":2},{"id":"receivers","role":"fiscal","weight":1}]}
+    }
+  },
+  "governmentForms":{
+    "river_service_rollout":{
+      "holders":"public_offices","succession":"public_accession","territory":"fixed","consent":"delegated",
+      "levy":"public_service","revenue":"public_receipts","council":"appointed_council",
+      "diplomacy":"territorial_diplomacy","ai":"public_administration","ladder":"public_careers",
+      "administrationProfileId":"river_service_rollout",
+      "officeCatalogue":["public_governor","public_fiscal_officer","public_commander"],
+      "systems":{"enable":["public_offices"],"disable":["feudal_service","scutage","estates","crown_bloc","royal_council"]}
+    }
+  }
+}
