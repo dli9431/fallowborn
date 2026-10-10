@@ -2,9 +2,11 @@ Administrative monarchy
 
 Scope and consumers
 
+Additional dated consumers use umayyad_711, byzantine_711, byzantine_867, abbasid_867 and byzantine_1066 through fresh world revisions. The original 800 profiles below remain independent. See docs/research/government-rollout.md for evidence, policy differences and pending courts; these assignments use the existing contracts without changing old saved forms or public-service records.
+
 administrative_monarchy governs populated counties through the sovereign's direct holder and revocable public commissions. It does not generate hereditary counts to fill an empty jurisdiction. A commission grants its declared county courts/receipts or exact existing host command; it grants no settlement property, household estate, enterprise, hereditary county or sovereign accession. Independently declared subordinate courts retain their own realm records and local holders.
 
-Fresh 800 starts select abbasid_800 for the Abbasid court and byzantine_800 for the Byzantine court. Other realms retain their existing forms. Other bookmarks and restored campaigns retain their saved forms. public_court is the reusable fictional profile and the form's default. Profiles are selected only by explicit data or saved administrationProfileId, never by religion, language, imperial title or an engine historical-id branch. Historical scope and evidence are in docs/research/administrative-monarchy.md.
+Fresh 800 starts select abbasid_800 for the Abbasid court and byzantine_800 for the Byzantine court. Other administrative consumers are explicitly assigned by the dated rollout above. Restored campaigns retain their saved forms. public_court is the reusable fictional profile and the form's default. Profiles are selected only by explicit data or saved administrationProfileId, never by religion, language, imperial title or an engine historical-id branch. Original 800 scope and evidence are in docs/research/administrative-monarchy.md.
 
 Interfaces and canonical records
 

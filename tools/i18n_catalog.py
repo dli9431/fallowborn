@@ -825,12 +825,14 @@ def extract_structured(inv: Inventory) -> None:
                 inv.add(f"civicOffice.{profile_id}.{office_id}.name.{branch}", record,
                         f"data/civic_profiles.js:{line}", "Civic magistracy name.", ())
 
-    ecclesiastical_path = DATA / "ecclesiastical_profiles.js"
-    for profile_id, profile_node in (node_object(find_assignment(ecclesiastical_path, "FBDATA", "ecclesiasticalProfiles")) or {}).items():
-        profile = node_object(profile_node) or {}
-        for branch, record, line in branch_records(profile.get("name")):
-            inv.add(f"ecclesiasticalProfile.{profile_id}.name.{branch}", record,
-                    f"data/ecclesiastical_profiles.js:{line}", "Ecclesiastical temporal constitution.", ())
+    for filename, table in [("ecclesiastical_profiles.js", "ecclesiasticalProfiles"),
+                            ("government_rollout.js", "governmentEcclesiasticalProfiles")]:
+        ecclesiastical_path = DATA / filename
+        for profile_id, profile_node in (node_object(find_assignment(ecclesiastical_path, "FBDATA", table)) or {}).items():
+            profile = node_object(profile_node) or {}
+            for branch, record, line in branch_records(profile.get("name")):
+                inv.add(f"ecclesiasticalProfile.{profile_id}.name.{branch}", record,
+                        f"data/{filename}:{line}", "Ecclesiastical temporal constitution.", ())
 
     for data_name, namespace in STRUCTURED_DATA.items():
         if data_name == "tech":
@@ -885,6 +887,11 @@ def extract_structured(inv: Inventory) -> None:
             supplemental_root = node_object(find_assignment(aristocratic_path, "FBDATA", supplemental)) or {}
             entries.extend((item_id, item_node, "data/aristocratic_courts.js")
                            for item_id, item_node in supplemental_root.items())
+        if data_name == "administrationProfiles":
+            rollout_root = node_object(find_assignment(DATA / "government_rollout.js", "FBDATA",
+                                                      "governmentAdministrationProfiles")) or {}
+            entries.extend((item_id, item_node, "data/government_rollout.js")
+                           for item_id, item_node in rollout_root.items())
         # Review-only declarations still need stable localization owners.
         # Read literal data without activating the candidate or running JS.
         candidate_catalogues = {

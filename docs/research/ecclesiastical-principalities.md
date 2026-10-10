@@ -1,5 +1,7 @@
 Ecclesiastical temporal profiles
 
+Additional dated papal temporal bindings for 800, 867 and 1066 are documented in government-rollout.md. They reuse their canonical pre-1059 and cardinal-shortlist elections, keeping the 1204 profile below independent and retaining old worlds. No new dated episcopal principality is assigned by that rollout.
+
 Papal territory in 1204
 
 The existing 1204 map supplies the temporal territory; this change neither enlarges it to every Catholic see nor treats spiritual primacy as possession. County boundaries remain the bookmark's coarse territorial abstraction. The new form binds that polity to the canonical Roman claimant and reuses existing schism and occupation behavior.

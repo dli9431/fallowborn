@@ -1,5 +1,13 @@
 Government dispatch
 
+Dated fresh-world rollout
+
+data/government_rollout.js composes administrative and papal profiles after bookmark declarations. Fresh 711, 800, 867 and 1066 campaigns select governments_v2; baseline realms, existing form definitions, era defaults and strategy assignments are retained. If a date already has a revision, the composer copies its whole-field replacements and appends _governments_v2 to its id. Geography, institutions, stories, openings and unmodified courts remain date-owned. A missing named court or duplicate result id fails instead of silently omitting a consumer. Evidence, confidence, holder/career/obligation changes and unresolved assignments are in docs/research/government-rollout.md.
+
+This is source composition, with no new runtime registry, strategy, scheduler, saved record or upgrade transaction. Restore resolves the saved world and stored form/profile ids; it never applies the fresh assignment list to an older life. Existing reforms retain their canonical review/apply owners. No transformation is added to a released form. Existing capability technology reviews remain none because dated assignment adds no independently gateable capability.
+
+governmentAdministrationProfiles and governmentEcclesiasticalProfiles are literal supplemental source tables. Names use administrationProfile and ecclesiasticalProfile localization owners, read by the extractor without executing scripts. Existing lexicons and UI explain the actual constitution and terms. Generated catalogues and version assignment remain integration-owned.
+
 The revenue interface also includes buildingIncome(state, realmId, context), where context supplies provinceId, settlement, holder and amount. The default returns the existing building receipt unchanged. Local obligations scale public building receipts through the same accepted county terms as taxation, while privately held settlement production keeps its own owner. The settlement fiscal projection remains the single accounting source.
 
 Local kingship and the shared selection boundary

@@ -1,6 +1,7 @@
 'use strict';
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
+  'data/government_rollout.js','js/government_administration.js','js/government_recognition.js',
   'data/story_courts_476.js',
   'index.html', 'data/bookmark_711.js', 'data/story_campaigns_711.js',
   'data/bookmarks.js', 'data/counties.js', 'data/geographies.js',
@@ -164,7 +165,8 @@ test('711 activation owns a full map, mixed communities and a separate hierarchy
         names:['oviedo','santiago','baghdad','mansura','fes'].map(function (id) { return FB.world.byId[id].name; }),
         gothic:b.provinces.find(function (p) { return p.id === 'toledo'; }).communities,
         forms:b.realms.every(function (r) { return r.government ===
-          (['visigoths_711','achila_711'].includes(r.id) ? 'elective_monarchy' : 'territorial'); }) };
+          (['visigoths_711','achila_711'].includes(r.id) ? 'elective_monarchy' :
+            ['byzantium_711','umayyad_711'].includes(r.id) ? 'administrative_monarchy' : 'territorial'); }) };
     });
     expect(result).toMatchObject({ faults:[], diagnostics:[], attached:CAMPAIGNS,
       era:'early_medieval', geography:'europe_regional', owners:true, hierarchy:true,

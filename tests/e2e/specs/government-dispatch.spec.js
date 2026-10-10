@@ -3,6 +3,7 @@ const path = require('path');
 const fs = require('fs');
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
+  'data/government_rollout.js','data/mobile_confederations.js','js/mobile_confederations.js',
   'data/ecclesiastical_profiles.js', 'js/government_ecclesiastical.js', 'js/ecclesiastical_strategies.js',
   'js/ecclesiastical_validation.js', 'js/local_office_appointments.js', 'js/ui_ecclesiastical.js',
   'index.html', 'data/eras.js', 'data/political_institutions.js',
@@ -34,7 +35,7 @@ test('forms have complete named interfaces; legacy mods delegate and invalid for
   await openGame(page, testInfo);
   const result = await page.evaluate(function () {
     const G = FB.governments;
-    const explicit = ['territorial','regnum','roman_civic','federate_polity','lineage_kingship','elective_monarchy','assembly_polity','administrative_monarchy','aristocratic_monarchy','city_republic','ecclesiastical_principality'].every(function (id) {
+    const explicit = ['territorial','regnum','roman_civic','federate_polity','lineage_kingship','elective_monarchy','assembly_polity','administrative_monarchy','aristocratic_monarchy','mobile_confederation','city_republic','ecclesiastical_principality'].every(function (id) {
       return G.slots().every(function (slot) { return typeof FBDATA.governmentForms[id][slot] === 'string'; });
     });
     let empty = '', unknown = '', retired = '', parameters = '', incomplete = '';

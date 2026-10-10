@@ -1,6 +1,7 @@
 'use strict';
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
+  'data/government_rollout.js',
   'js/main.js',
   'js/model.js',
   'js/save.js', 'js/save_v4.js',
@@ -27,6 +28,8 @@ const { START_CODE, startDeterministicGame } = require('../support/game/start');
 
 test.beforeEach(async function ({ page }, testInfo) {
   await openGame(page, testInfo);
+  // Keep the retained court corpus and territorial breakaway fixtures intact.
+  await page.evaluate(function () { FBDATA.bookmarks['867'].revision = 'baseline'; });
   await startDeterministicGame(page);
 });
 
@@ -1030,6 +1033,7 @@ test('two worlds on one seed produce identical courts',
       secondPage = await secondContext.newPage();
       const guard = installPageGuards(secondPage);
       await openGame(secondPage, testInfo);
+      await secondPage.evaluate(function () { FBDATA.bookmarks['867'].revision = 'baseline'; });
       await startDeterministicGame(secondPage);
       expect(await courtFingerprint(secondPage)).toEqual(first);
       expect(first[0].ruler).not.toBeNull();
