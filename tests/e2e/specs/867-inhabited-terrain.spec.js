@@ -28,7 +28,12 @@ dependsOnRuntime(__filename,[
   'js/crazygames.js','data/distribution_crazygames.js'
 ]);
 
-function startDistrict(page,info,id,crazygames) {
+async function startDistrict(page,info,id,crazygames) {
+  await page.addInitScript(function (revision) {
+    document.addEventListener('DOMContentLoaded',function () {
+      FBDATA.bookmarks['867'].revision = revision;
+    },{once:true});
+  },CURRENT);
   return startHistoricalGame(page,info,{bookmark:'867',
     code:'DISTRICT867-867-farmer-' + id + '-m-Review-established'},!!crazygames);
 }
@@ -86,7 +91,7 @@ test('867 revisions account for all scenery and retain the released catalogue',a
   await openGame(page,info);
   expect((await page.evaluate(releasedCatalogue,released.selection)).hashes).toEqual(released.hashes);
   const result = await page.evaluate(function (input) {
-    const b = FB.bookmark('867'), old = FB.bookmark('867','baseline'), raw = FBDATA.bookmarks['867'];
+    const b = FB.bookmark('867',input.coverage.revision), old = FB.bookmark('867','baseline'), raw = FBDATA.bookmarks['867'];
     const ids = input.coverage.districts.map(function (p) { return p.id; });
     const pending = [].concat.apply([],Object.values(input.coverage.scenery));
     const original = JSON.stringify(raw), rng = FB.getRngState(), uid = FB.getUidCounter();
@@ -155,7 +160,7 @@ for (const flag of [false,true]) test('fresh expanded households and bounded dis
               !!w.adj[row.route][row.id],!!FB.waterCrossing(row.id,row.route)],
             seasons:[0,1,2,3].map(function (i) { return FB.seasonKindAt(row.id,i); })};
         }),
-        local:!!FB.governments.support.delegate(s,'jenne_867'),
+        local:FB.governments.forRealm(s,'jenne_867').id === 'territorial',
         direct:['gao_district','kumbi_district','kath_district'].every(function (id) { return s.holder[id] === s.owner[id]; }),
         separate:s.owner.jenne_district !== s.owner.gao_district && s.owner.gao_district !== s.owner.kumbi_district,
         kath:[s.realms.afrighids_867.liege || null,s.realms.afrighids_867.religion],
@@ -214,6 +219,7 @@ for (const revision of coverage.retainedRevisions) test(revision + ' retains con
     });
     const before = await establishedFacts(page);
     await openGame(page,info);
+    await page.evaluate(function (revision) { FBDATA.bookmarks['867'].revision = revision; },CURRENT);
     await startDeterministicGame(page);
     const expanded = await budget(page,info,'867-switch-expanded',4 * 1024 * 1024);
     expect(JSON.parse(expanded).state.start.revision).toBe(CURRENT);
@@ -280,30 +286,15 @@ test('new local courts inherit through existing people without remaking land or 
   }),land:true,household:true,random:true});
 });
 
-test('Jenne-jeno delegates local power without transferring household inheritance',async function ({page},info) {
+test('Jenne-jeno retains a conservative local ruler without an invented constituency',async function ({page},info) {
   await startDistrict(page,info,'jenne_district');
   expect(await page.evaluate(function () {
-    const s = FB.state, C = FB.governments.support, id = 'jenne_867', c = s.chars[s.player.charId];
-    c.born = s.date.year - 30; c.skills.dip = 8; delete c.unfree;
-    const property = JSON.stringify([s.player.landPlots,c.dyn,c.childrenIds,c.spouseId]);
-    const before = JSON.stringify(s), rng = FB.getRngState(), uid = FB.getUidCounter();
-    C.candidates(s,id); C.members(s,id); C.quote(s,id,'nominate',{candidateId:c.id});
-    const pure = before === JSON.stringify(s) && rng === FB.getRngState() && uid === FB.getUidCounter();
-    C.openVacancy(s,id,'resign');
-    if (!C.apply(s,C.quote(s,id,'nominate',{candidateId:c.id}))) throw new Error('Local nomination failed.');
-    C.members(s,id).forEach(function (m) {
-      if (!C.apply(s,C.quote(s,id,'recognize',{memberId:m.id,candidateId:c.id}))) throw new Error('Local assent failed.');
-    });
-    const quote = C.quote(s,id,'select',{}), selected = C.apply(s,quote), repeated = C.apply(s,quote);
-    const delegate = C.delegate(s,id), selectedId = delegate.id;
-    const source = JSON.parse(FB.save.serialize());
-    FB.save.restore(source);
-    return {pure:pure,selected:!!selected,repeated:!!repeated,delegate:selectedId === c.id,
-      retained:C.delegate(FB.state,id).id === selectedId,
-      property:property === JSON.stringify([FB.state.player.landPlots,FB.state.chars[c.id].dyn,
-        FB.state.chars[c.id].childrenIds,FB.state.chars[c.id].spouseId]),
-      notRoyal:!FB.state.realms[id].succession && !FB.state.chars[c.id].royalLine};
-  })).toEqual({pure:true,selected:true,repeated:false,delegate:true,retained:true,property:true,notRoyal:true});
+    const s = FB.state, r = FB.campaignBookmark(s).realms.find(function (r) { return r.id === 'jenne_867'; });
+    return {form:FB.governments.forRealm(s,r.id).id,ruler:!!s.realms[r.id].ruler,
+      constituency:!!r.constituency,representative:!!r.representative,holder:s.holder.jenne_district};
+  })).toEqual({form:'territorial',ruler:true,constituency:false,representative:false,holder:'jenne_867'});
+  const source = await page.evaluate(function () { return FB.save.serialize(); }), before = await facts(page);
+  await restoreBookmark(page,source); expect(await facts(page)).toEqual(before);
 });
 
 test('unknown or mismatched expanded revisions fail before adopting saved facts',async function ({page},info) {
@@ -359,6 +350,7 @@ test('expanded observer AI saves and replays a bounded season',async function ({
   await openGame(page,info);
   await injectBrowserHarness(page);
   await page.evaluate(function () {
+    FBDATA.bookmarks['867'].revision = 'inhabited_v2_governments_v2';
     return new Promise(function (resolve,reject) {
       FB.activateBookmark('867',null,function (error) {
         if (error) { reject(error); return; }

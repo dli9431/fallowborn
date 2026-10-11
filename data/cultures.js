@@ -37,6 +37,10 @@ FBDATA.cultureTraditions = {
 };
 
 FBDATA.cultures = {
+  /* Shared regional identity for the dated Khwarazm districts. Inherited
+     Persian naming and portrait rules are presentation proxies, not a claim
+     that Chorasmian was Persian or that conquest replaced local residents. */
+  chorasmian:{ name:'Chorasmian', parent:'persian', dyn:'of_place' },
 /* Period identities inherit the prototype's affinity and doctrine rules.
    Grooming is a visual tendency, not an assertion about ancestry. */
 vandal:{ name:'Vandal', parent:'gothic',

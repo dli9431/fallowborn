@@ -7,8 +7,10 @@ FBDATA.bookmarkTerrain['711'] = {
     {id:'ghadames_oasis',name:'Ghadames',names:[],realm:'ghadames_711',
       duchy:'d_711_ghadames',culture:'berber',religion:'umayyad_sunni_711',dev:2,
       customaryRights:[{power:'peace',basis:'possession'},{power:'revenue',basis:'possession'}],
-      communities:[{culture:'berber',religion:'umayyad_sunni_711',populationShare0:7500},
-        {culture:'berber',religion:'catholic',paired:true,populationShare0:2500}],
+      // Conquest chronology does not quantify conversion. Equal weights keep
+      // both communities without declaring a researched Muslim majority.
+      communities:[{culture:'berber',religion:'umayyad_sunni_711',populationShare0:5000},
+        {culture:'berber',religion:'catholic',paired:true,populationShare0:5000}],
       settlements:[{site:'ghadames_711',name:'Ghadames',kind:'town'}]},
     {id:'jenne_district',name:'Middle Niger settlements',names:[],realm:'middle_niger_711',
       duchy:'d_711_middle_niger',culture:'sahelian_476',religion:'sahel_traditional_476',dev:2,
@@ -40,9 +42,9 @@ FBDATA.bookmarkTerrain['711'] = {
         {culture:'arabic',religion:'umayyad_sunni_711',paired:true,populationShare0:2000}],
       settlements:[{site:'sarakhs_711',name:'Sarakhs',kind:'town'}]},
     {id:'kath_district',name:'Kath',names:[],realm:'khwarazm_711',duchy:'d_711_khwarazm',
-      culture:'persian',religion:'zoroastrian',dev:3,
+      culture:'chorasmian',religion:'zoroastrian',dev:3,
       customaryRights:[{power:'peace',basis:'possession'},{power:'revenue',basis:'possession'}],
-      communities:[{culture:'persian',religion:'zoroastrian',populationShare0:10000}],
+      communities:[{culture:'chorasmian',religion:'zoroastrian',populationShare0:10000}],
       settlements:[{site:'kath_711',name:'Kath',kind:'town'}]},
     {id:'w_steppe_e',name:'Eastern steppe',names:[],wasteland:true}
   ],
@@ -58,7 +60,7 @@ FBDATA.bookmarkTerrain['711'] = {
       ruler:{generated:true,sex:'m',culture:'sahelian_476',born:673,mar:5,trait:'patient'}},
     {id:'khwarazm_711',name:'Khwarazm',color:'#9b9867',capital:'kath_district',
       government:'regnum',rank:2,aggression:0,religion:'zoroastrian',techTraditions:['persianate'],
-      ruler:{generated:true,sex:'m',culture:'persian',born:674,mar:7,trait:'patient'}}
+      ruler:{generated:true,sex:'m',culture:'chorasmian',born:674,mar:7,trait:'patient'}}
   ],
   duchies:{
     d_711_ghadames:{name:'Ghadames oasis',kingdom:'k_711_ghadames'},

@@ -23,8 +23,14 @@ dependsOnRuntime(__filename,[
 const CURRENT = 'inhabited_v2_governments_v2';
 const inhabited = ['kumbi_district','jenne_district','gao_district','ghadames_oasis','awjila_oasis',
   'qasr_ibrim','central_iran_oases','sarakhs_oasis','kath_district','gurganj_district','lower_syr_darya'];
-const delegated = ['qasr_ibrim','central_iran_oases','sarakhs_oasis','kath_district','gurganj_district',
-  'gao_district','ghadames_oasis','awjila_oasis','lower_syr_darya'];
+async function startExpanded(page,info,start,flag) {
+  await page.addInitScript(function (revision) {
+    document.addEventListener('DOMContentLoaded',function () {
+      FBDATA.bookmarks['1066'].revision = revision;
+    },{once:true});
+  },CURRENT);
+  return startHistoricalGame(page,info,start,flag);
+}
 function journey(county) {
   return {bookmark:'1066',code:'TERRAIN1066-1066-farmer-' + county + '-m-Review-established'};
 }
@@ -40,7 +46,7 @@ test('expanded 1066 accounts for every district while retaining both released wo
   await openGame(page,info);
   const result = await page.evaluate(function (ids) {
     const base = FB.bookmark('1066','baseline'), old = FB.bookmark('1066','governments_v2'),
-      current = FB.bookmark('1066'), later = FB.bookmark('1204'), raw = FBDATA.bookmarks['1066'];
+      current = FB.bookmark('1066','inhabited_v2_governments_v2'), later = FB.bookmark('1204','baseline'), raw = FBDATA.bookmarks['1066'];
     const ledger = FBDATA.bookmarkTerrain1066;
     return {revision:current.revision,geography:current.geography,
       faults:FB.validateBookmark(raw),forms:FB.governments.validate(),technology:FB.validateTechnologyData(true),
@@ -78,7 +84,7 @@ test('expanded 1066 accounts for every district while retaining both released wo
 
 for (const flag of [false,true]) test('inhabited raster, sites, climate and dry routes, CrazyGames ' + flag,
   async function ({page},info) {
-    await startHistoricalGame(page,info,journey('kumbi_district'),flag);
+    await startExpanded(page,info,journey('kumbi_district'),flag);
     const result = await page.evaluate(function (ids) {
       const w = FB.world, counts = {}, outside = [];
       ids.forEach(function (id) { counts[id] = 0; });
@@ -138,7 +144,7 @@ for (const flag of [false,true]) test('inhabited raster, sites, climate and dry 
 for (const county of inhabited) test(county + ' supports a commoner season with deterministic midpoint restore',async function ({page},info) {
   test.skip(info.project.name !== 'chromium-served','One bounded natural journey per accepted district.');
   test.setTimeout(240000);
-  await startHistoricalGame(page,info,journey(county)); await injectBrowserHarness(page);
+  await startExpanded(page,info,journey(county)); await injectBrowserHarness(page);
   expect(await page.evaluate(function () { return [FB.state.player.provinceId,FB.state.start.revision]; })).toEqual([county,CURRENT]);
   await saveBudget(page,info,county + '-opening',4 * 1024 * 1024);
   await advanceBookmark(page,45);
@@ -150,49 +156,8 @@ for (const county of inhabited) test(county + ' supports a commoner season with 
   expect(await facts(page)).toEqual(finish);
 });
 
-for (const county of delegated) test(county + ' commission grants scoped authority and conserves public receipts without private land',async function ({page},info) {
-  await startHistoricalGame(page,info,journey(county));
-  const result = await page.evaluate(function (pid) {
-    const s = FB.state, actor = {kind:'character',id:s.player.charId}, rid = s.owner[pid];
-    const incumbent = s.authority.appointments.find(function (row) {
-      return row.officeId === 'district_delegate_1066' && row.scope.id === pid && row.status === 'active';
-    });
-    const seeded = ['qasr_ibrim','central_iran_oases','sarakhs_oasis','kath_district','gurganj_district'].includes(pid);
-    const original = !seeded || incumbent && FB.political.power(s,incumbent.holder,'peace',{provinceId:pid}).allowed;
-    if (seeded && !incumbent) throw new Error('Missing seeded delegate');
-    if (incumbent && !FB.authorityAppointmentTransition(s,incumbent.id,'remove')) throw new Error('Delegate removal failed');
-    const c = s.chars[s.player.charId]; c.skills.ste = 20; c.unfree = false; c.born = 1030;
-    s.player.tier = 1; s.player.gold = 200; s.player.prestige = 200; s.player.travel = null;
-    const terms = {institutionId:rid,officeId:'district_delegate_1066',holder:actor,scope:{kind:'county',id:pid}};
-    const before = JSON.stringify(s), rng = FB.getRngState(), uid = FB.getUidCounter();
-    const q = FB.officeAppointmentQuote(s,actor,terms); FB.officeCourts(s); FB.officeScopes(s,rid,terms.officeId);
-    const pure = before === JSON.stringify(s) && rng === FB.getRngState() && uid === FB.getUidCounter();
-    const property = JSON.stringify([s.owner,s.holder,s.player.provs,s.player.holdings,s.player.tier]);
-    const appointment = FB.officeSeekAppointment(s,q), purse = s.player.gold, treasury = FB.treasuryAvailable(s,rid);
-    const render = FB.political.renderQuote(s,actor,{provinceId:pid,payerRealmId:'player',amount:3,obligationId:'district-proof-' + pid});
-    const paid = FB.authorityCollectRender(s,render), duplicate = FB.authorityCollectRender(s,render);
-    const after = FB.treasuryAvailable(s,rid);
-    const generation = FB.realmRulerGeneration(s,rid);
-    FB.advanceRealmSuccession(s,rid,{cause:'death'});
-    return {original:!!original,allowed:q.allowed,pure:pure,appointed:!!appointment,cost:q.cost,
-      paid:paid,duplicate:duplicate,conserved:Math.abs(purse + treasury - s.player.gold - after) < 0.000001,
-      publicReceipt:Math.abs(after - treasury - 3) < 0.000001,petition:purse === 195,
-      privateLand:property === JSON.stringify([s.owner,s.holder,s.player.provs,s.player.holdings,s.player.tier]),
-      succession:FB.realmRulerGeneration(s,rid) === generation + 1 &&
-        appointment && FB.political.power(s,actor,'revenue',{provinceId:pid}).allowed,
-      peace:FB.political.power(s,actor,'peace',{provinceId:pid}).allowed,
-      outside:FB.political.power(s,actor,'peace',{provinceId:'london'}).allowed,
-      ban:FB.political.power(s,actor,'ban',{provinceId:pid}).allowed,
-      feudal:FB.systemEnabled(s,'feudal_service',{realm:rid})};
-  },county);
-  expect(result).toEqual({original:true,allowed:true,pure:true,appointed:true,cost:5,paid:true,duplicate:false,
-    conserved:true,publicReceipt:true,petition:true,privateLand:true,succession:true,peace:true,outside:false,ban:false,feudal:false});
-  const source = await page.evaluate(function () { return FB.save.serialize(); }), before = await facts(page);
-  await activate(page,'867'); await restoreBookmark(page,source); expect(await facts(page)).toEqual(before);
-});
-
 test('Wagadu recognises a maternal nephew through canonical kin selection with conserved accession costs',async function ({page},info) {
-  await startHistoricalGame(page,info,journey('kumbi_district'));
+  await startExpanded(page,info,journey('kumbi_district'));
   const result = await page.evaluate(function () {
     const s = FB.state, rid = 'wagadu_1066', S = FB.governmentSelection, actor = {kind:'realm',id:rid};
     const t = s.realms[rid].succession, p = S.profile(s,rid);
@@ -217,30 +182,6 @@ test('Wagadu recognises a maternal nephew through canonical kin selection with c
   expect(result.cost).toBe(result.expectedCost);
   const source = await page.evaluate(function () { return FB.save.serialize(); }), before = await facts(page);
   await restoreBookmark(page,source); expect(await facts(page)).toEqual(before);
-});
-
-test('Jenne-jeno delegates a qualified household without turning its common property into a crown',async function ({page},info) {
-  await startHistoricalGame(page,info,journey('jenne_district'));
-  const result = await page.evaluate(function () {
-    const s = FB.state, rid = 'jenne_1066', C = FB.governments.support, c = s.chars[s.player.charId];
-    s.player.liege = rid; s.player.tier = 1; s.player.gold = 100; c.born = 1030; delete c.unfree;
-    FB.SKILLS.forEach(function (k) { c.skills[k] = 10; }); FB.careerOf(s,c).experience = 3;
-    const property = JSON.stringify([s.owner,s.holder,s.player.holdings,c.childrenIds,c.spouseId]);
-    C.openVacancy(s,rid,'resign'); const q = C.quote(s,rid,'nominate',{candidateId:c.id}), nominated = C.apply(s,q);
-    const paid = 100 - s.player.gold;
-    C.members(s,rid).forEach(function (m) {
-      if (!C.apply(s,C.quote(s,rid,'recognize',{memberId:m.id,candidateId:c.id}))) throw new Error('Recognition failed');
-    });
-    const review = C.quote(s,rid,'select',{}), selected = C.apply(s,review), after = JSON.stringify(s), duplicate = C.apply(s,review);
-    const profile = C.profile(s,rid), income = FB.treasurySnapshot(s).rows[rid].income;
-    return {nominated:nominated,selected:selected,paid:paid,cost:profile.selection.nominationCost,duplicate:duplicate,
-      once:after === JSON.stringify(s),property:property === JSON.stringify([s.owner,s.holder,s.player.holdings,c.childrenIds,c.spouseId]),
-      crown:FB.station.rulesRealm(s.player,s),cap:income <= profile.obligations.maxDues,ordinary:!s.realms[rid].succession};
-  });
-  expect(result).toMatchObject({nominated:true,selected:true,duplicate:false,once:true,property:true,crown:false,cap:true,ordinary:true});
-  expect(result.paid).toBe(result.cost);
-  const source = await page.evaluate(function () { return FB.save.serialize(); }), before = await facts(page);
-  await activate(page,'1204'); await restoreBookmark(page,source); expect(await facts(page)).toEqual(before);
 });
 
 for (const revision of ['baseline','governments_v2']) test(revision + ' 1066 households and converted frontier survive new-date switching',async function ({page},info) {
@@ -271,10 +212,11 @@ for (const revision of ['baseline','governments_v2']) test(revision + ' 1066 hou
   await restoreBookmark(page,saved); expect(await facts(page)).toEqual(before);
 });
 
-test('1066 observer advances bounded seasons without scripted conquests or duplicated delegates',async function ({page},info) {
+test('1066 observer advances bounded seasons without scripted conquests or speculative commissions',async function ({page},info) {
   test.skip(info.project.name !== 'chromium-served','One measured observer slice.'); test.setTimeout(240000);
   await openGame(page,info); await injectBrowserHarness(page);
   await page.evaluate(function () {
+    FBDATA.bookmarks['1066'].revision = 'inhabited_v2_governments_v2';
     return new Promise(function (resolve,reject) {
       FB.activateBookmark('1066',null,function (error) {
         if (error) { reject(error); return; }
@@ -288,13 +230,9 @@ test('1066 observer advances bounded seasons without scripted conquests or dupli
     expect(elapsed).toBeLessThan(30000);
   }
   expect(await page.evaluate(function () {
-    const s = FB.state, unique = {};
-    return s.authority.appointments.filter(function (row) {
-      return row.officeId === 'district_delegate_1066' && row.status === 'active';
-    }).every(function (row) {
-      const key = row.institutionId + ':' + row.scope.id;
-      if (unique[key]) return false; unique[key] = true;
-      return FB.political.power(s,row.holder,'peace',{provinceId:row.scope.id}).allowed;
+    const s = FB.state;
+    return !s.authority.appointments.some(function (row) {
+      return row.officeId === 'district_delegate_1066';
     }) && s.owner.kumbi_district === 'wagadu_1066';
   })).toBe(true);
   const source = await saveBudget(page,info,'1066-observer-midpoint',6 * 1024 * 1024), before = await facts(page);

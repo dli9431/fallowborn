@@ -15,9 +15,9 @@
       communities:[{culture:'sahelian_476',religion:'sahel_traditional_476',populationShare0:10000}]},
     {id:'qasr_ibrim',name:'Ibrim',realm:'makuria',culture:'nubian',religion:'miaphysite',dev:2,
       communities:[{culture:'nubian',religion:'miaphysite',populationShare0:10000}]},
-    {id:'kath_district',name:'Kath',realm:'khwarazm_800',culture:'persian',religion:'zoroastrian',dev:3,
-      communities:[{culture:'persian',religion:'zoroastrian',populationShare0:8000},
-        {culture:'persian',religion:'east_syriac',populationShare0:2000}]},
+    {id:'kath_district',name:'Kath',realm:'khwarazm_800',culture:'chorasmian',religion:'zoroastrian',dev:3,
+      communities:[{culture:'chorasmian',religion:'zoroastrian',populationShare0:8000},
+        {culture:'chorasmian',religion:'east_syriac',populationShare0:2000}]},
     {id:'central_iran_oases',name:'Kashan district',realm:'abbasid',culture:'persian',religion:'zoroastrian',dev:1,
       communities:[{culture:'persian',religion:'zoroastrian',populationShare0:7000},
         {culture:'persian',religion:'sunni',populationShare0:3000}]},
@@ -38,7 +38,7 @@
        the later Gurganj dynasty is projected back into this opening. */
     {id:'khwarazm_800',name:'Khwarazm',capital:'kath_district',government:'regnum',
       rank:2,aggression:0,color:'#819b85',religion:'zoroastrian',
-      ruler:{generated:true,culture:'persian',sex:'m',born:760,mar:7,trait:'patient'}}
+      ruler:{generated:true,culture:'chorasmian',sex:'m',born:760,mar:7,trait:'patient'}}
   ];
   var sites = {
     jenne_district:{name:'Jenne-jeno',x:-4.55,y:13.89,kind:'town'},

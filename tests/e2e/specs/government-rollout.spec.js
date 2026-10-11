@@ -88,7 +88,9 @@ test('dated assignments retain complete baseline worlds and validate every strat
         }),
         geography:!changed.length || current.geography === (row.geography || baseline.geography),
         stories:!changed.length || JSON.stringify(current.stories) === JSON.stringify(baseline.stories),
-        opening:!changed.length || JSON.stringify(current.opening) === JSON.stringify(baseline.opening),
+        opening:!changed.length || (row.openingRevision
+          ? current.openingRevision === row.openingRevision
+          : JSON.stringify(current.opening) === JSON.stringify(baseline.opening)),
         oldForms:row.changed.every(function (c) {
           const r = baseline.realms.find(function (r) { return r.id === c.realm; });
           return (r.government || era.defaultGovernment) === 'territorial';

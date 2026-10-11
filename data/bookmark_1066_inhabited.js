@@ -13,13 +13,15 @@
 
   /* Independent later-period presentation pools. Ordinary generated names,
      palettes and numerical shares are simulation inputs, not census evidence
-     or reconstructed historical people. No 476 faith or culture is reused. */
+     or reconstructed historical people. These date-owned pools reuse
+     the shared Sahelian presentation parent used by other dates; neither proves a
+     change in ethnicity or a dated census. */
   FBDATA.bookmarkCultures1066Terrain = {soninke_1066:{
-    name:'Soninke', tradition:'african', dyn:'of_place',
+    name:'Soninke', parent:'sahelian_476', tradition:'african', dyn:'of_place',
     appearance:{tone:3.7,fair:0.01,red:0.02},
     male:['Demba','Kante','Dama','Samba'], female:['Sira','Awa','Dado','Kumba']
   },middle_niger_1066:{
-    name:'Middle Niger communities', tradition:'african', dyn:'of_place',
+    name:'Middle Niger communities', parent:'sahelian_476', tradition:'african', dyn:'of_place',
     appearance:{tone:3.7,fair:0.01,red:0.02},
     male:['Koro','Dama','Samba','Tama'], female:['Sira','Awa','Dama','Kumba']
   },khwarazmian_1066:{
@@ -42,38 +44,9 @@
       roles:{priestM:'Ritual keeper',priestF:'Ritual keeper'}}
   }};
   Object.assign(FBDATA.religions,FBDATA.bookmarkReligions1066Terrain);
-  /* Existing settled succession and scoped appointments are sufficient for
-     these districts. This is not a speculative Seljuk fiscal constitution. */
-  FBDATA.bookmarkOffices1066Terrain = {district_delegate_1066:{
-    name:'District delegate',desc:'Appointed local courts and receipts. The commission grants no private estate or hereditary county.',
-    powers:['peace','revenue'],scopes:['county'],succession:'continues',
-    recognitionSources:['imperial_commission'],
-    appointment:{gold:5,prestige:20,skill:'ste',minimum:6}
-  }};
-  Object.assign(FBDATA.authorityOffices,FBDATA.bookmarkOffices1066Terrain);
-  FBDATA.governmentForms.district_court_1066 = Object.assign({},FBDATA.governmentForms.regnum,{
-    officeCatalogue:['district_delegate_1066'],
-    systems:{enable:['roman_offices'],disable:['feudal_service','scutage','estates','manorial_tenure']}
-  });
-  realms = realms.map(function (r) {
-    return r.id === 'seljuk_1066' || r.id === 'makuria_1066'
-      ? Object.assign({},r,{government:'district_court_1066'}) : r;
-  });
-  /* Archaeological urban clustering supports an independent local community
-     model, not a named historical assembly or Ghanaian province. */
-  FBDATA.bookmarkConstituencies1066Terrain = {jenne_households_1066:{
-    eligibility:{minAge:20,minServiceYears:2,skills:{ste:4},free:true},
-    selection:{threshold:0.75,tie:'id',termDays:720,nominationCost:3},
-    recall:{threshold:0.75,reasons:['neglect','overreach','ineligible']},
-    obligations:{revenueRate:0.08,levyRate:0.3,maxDues:12,maxLevy:80,reserve:15},
-    reserved:['war','treaty','grant','extraordinary_tax','pledge','conversion'],
-    powers:['ban','peace','revenue'], members:[
-      {id:'fields',name:'Cultivating households',weight:2,basis:'custom',continuity:'institution',support:65},
-      {id:'crafts',name:'Craft households',weight:2,basis:'custom',continuity:'institution',support:60},
-      {id:'river',name:'River households',weight:1,basis:'service',continuity:'institution',support:50}
-    ]
-  }};
-  Object.assign(FBDATA.constituencyProfiles,FBDATA.bookmarkConstituencies1066Terrain);
+  /* Seljuk and Makurian constitutions remain unchanged. Provincial fiscal
+     delegation belongs to the separately researched government rollout.
+     Settlement clustering alone does not establish a local assembly. */
   FBDATA.bookmarkRealms1066Terrain = [{id:'wagadu_1066',name:'Wagadu',color:'#ae8851',capital:'kumbi_district',
     government:'lineage_kingship',rank:2,aggression:0,religion:'wagadu_traditional_1066',
     ruler:{name:'Tunka Manin',sex:'m',culture:'soninke_1066',born:1030,mar:8,trait:'patient'},
@@ -86,19 +59,20 @@
         culture:'soninke_1066',religion:'wagadu_traditional_1066',homeProvinceId:'kumbi_district'}
     ]}},
   {id:'jenne_1066',name:'Jenne-jeno households',color:'#81916b',capital:'jenne_district',
-    government:'assembly_polity',constituency:'jenne_households_1066',rank:1,aggression:0,
-    religion:'niger_traditional_1066',representative:{sex:'m',born:1030,skills:{dip:5,ste:5,mar:4}}},
+    government:'territorial',rank:1,aggression:0,
+    religion:'niger_traditional_1066',
+    ruler:{generated:true,sex:'m',culture:'middle_niger_1066',born:1030,mar:4,trait:'patient'}},
   {id:'gao_1066',name:'Gao',capital:'gao_district',religion:'sunni',color:'#b09b59',
-    government:'district_court_1066',rank:1,aggression:0,
+    government:'territorial',rank:1,aggression:0,
     ruler:{generated:true,sex:'m',culture:'middle_niger_1066',born:1030,mar:6,trait:'patient'}},
   {id:'ghadames_local_1066',name:'Ghadames oasis',capital:'ghadames_oasis',religion:'sunni',color:'#859267',
-    government:'district_court_1066',rank:1,aggression:0,
+    government:'territorial',rank:1,aggression:0,
     ruler:{generated:true,sex:'m',culture:'berber',born:1030,mar:6,trait:'patient'}},
   {id:'awjila_local_1066',name:'Awjila oasis',capital:'awjila_oasis',religion:'sunni',color:'#8a976b',
-    government:'district_court_1066',rank:1,aggression:0,
+    government:'territorial',rank:1,aggression:0,
     ruler:{generated:true,sex:'m',culture:'berber',born:1030,mar:6,trait:'patient'}},
   {id:'lower_syr_local_1066',name:'Lower Syr Darya court',capital:'lower_syr_darya',religion:'sunni',color:'#b59a69',
-    government:'district_court_1066',rank:1,aggression:0,
+    government:'territorial',rank:1,aggression:0,
     ruler:{generated:true,sex:'m',culture:'turkic',born:1030,mar:6,trait:'patient'}}];
   realms = realms.concat(FBDATA.bookmarkRealms1066Terrain);
 
@@ -153,9 +127,9 @@
     {id:'sarakhs_oasis',name:'Sarakhs',realm:'seljuk_1066',dev:3,zone:'continental',
       communities:[['persian','sunni',10000]],kind:'town'},
     {id:'kath_district',name:'Kath district',realm:'seljuk_1066',dev:2,zone:'continental',
-      communities:[['khwarazmian_1066','sunni',7000],['turkic','sunni',2000],['khwarazmian_1066','zoroastrian',1000]],kind:'town'},
+      communities:[['chorasmian','sunni',7000],['turkic','sunni',2000],['chorasmian','zoroastrian',1000]],kind:'town'},
     {id:'gurganj_district',name:'Gurganj',realm:'seljuk_1066',dev:4,zone:'continental',
-      communities:[['khwarazmian_1066','sunni',8000],['turkic','sunni',2000]],kind:'city'},
+      communities:[['chorasmian','sunni',8000],['turkic','sunni',2000]],kind:'city'},
     {id:'lower_syr_darya',name:'Lower Syr Darya settlements',realm:'lower_syr_local_1066',dev:2,zone:'continental',
       communities:[['turkic','sunni',8000],['turkic','tengri',2000]],kind:'town'}
   ];
@@ -174,13 +148,6 @@
     climate.provinces[d.id] = d.zone;
     decisions[d.id].site = site;
     decisions[d.id].realm = d.realm;
-  });
-  ['kath_district','gurganj_district','sarakhs_oasis','central_iran_oases','qasr_ibrim'].forEach(function (id) {
-    var p = inhabited[id], actor = id + '_delegate_1066';
-    opening.actors[actor] = {sex:'m',culture:p.culture,religion:p.religion,born:1030,
-      station:3,role:'notable',home:id,skills:{ste:8,dip:7}};
-    opening.appointments[actor] = {officeId:'district_delegate_1066',actorId:actor,realmId:p.realm,
-      scope:{kind:'county',id:id}};
   });
   /* Jand's location and 1065/1066 submission chronology remain disputed.
      A recorded outside demand is distinct from possession or an active tax. */
@@ -205,7 +172,7 @@
     opening:opening,openingRevision:'inhabited_v2',openingRevisions:{inhabited_v2:opening},
     openingLegacyRevision:'inhabited_v2'
   };
-  b.revision = 'inhabited_v2';
+  /* Retain the existing fresh default pending explicit expansion acceptance. */
   FBDATA.techImpactReviews.features.period_1066_district_habitation = {mode:'none',
     rationale:'Dated habitation, commoner livelihoods and existing local authority require no technological discovery. Ordinary production, equipment and travel requirements remain in force.'};
 })();

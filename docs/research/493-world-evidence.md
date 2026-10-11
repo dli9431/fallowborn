@@ -83,3 +83,7 @@ Regional government and identity choices remain candidate abstractions, especial
 Technology impact: period_493_world_habitation is none. Existing habitation, local government and ordinary service do not depend on an invention. No new military, fiscal, navigation or religious capability is introduced. Existing requirements and government strategies remain authoritative.
 
 Acceptance workload uses the existing ceilings: fresh and restored saves 4 MiB, household midpoint saves 6 MiB, observer saves 8 MiB and 30 seconds per 45-day observer slice. No measured result or increased ceiling is asserted. Historical source review, raster/adjacency and island travel, long-run behavior, memory/storage cost, mobile devices, iframe presentation and generated distribution packages remain acceptance gates. The date stays hidden.
+
+Title coverage review, 2026-10-10
+
+All 272 added counties now have explicit 493 duchy references with complete parent catalogues. Roman districts reuse suitable same-date provincial parents and declare the missing Egyptian, Syrian and island groups. Other groups organize the independently declared local courts and Iranian regions for title progression. These are geographic game abstractions rather than attested duchies or a claim of uniform feudal administration. Existing government strategies still decide whether the ruler, public officers, magnates or vassals hold counties. Baseline titles and counties remain unchanged.

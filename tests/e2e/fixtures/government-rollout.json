@@ -13,7 +13,7 @@
     {"realm":"abbasid","form":"administrative_monarchy","profile":"abbasid_867","mode":"recognition","minor":true,"officers":false,"service":0},
     {"realm":"papacy","form":"ecclesiastical_principality","profile":"papal_temporal_867","law":"roman_assent","vacancyLevy":false}
   ]},
-  {"bookmark":"1066","scenario":"farmer","province":"constantinople","revision":"governments_v2","forms":["administrative_monarchy","ecclesiastical_principality"],"changed":[
+  {"bookmark":"1066","scenario":"farmer","province":"constantinople","revision":"inhabited_v2_governments_v2","geography":"europe_regional_2","openingRevision":"inhabited_v2","forms":["administrative_monarchy","ecclesiastical_principality"],"changed":[
     {"realm":"byzantium_1066","form":"administrative_monarchy","profile":"byzantine_1066","mode":"recognition","minor":false,"officers":true,"service":0.25},
     {"realm":"papacy_1066","form":"ecclesiastical_principality","profile":"papal_temporal_1066","law":"cardinal_shortlist","vacancyLevy":true}
   ]},

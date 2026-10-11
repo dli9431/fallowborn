@@ -23,9 +23,9 @@
       {id:'sarakhs_oasis',name:'Sarakhs',realm:'khwarazm_1204',culture:'persian',religion:'sunni',dev:3},
       {id:'nurata_foothills',name:'Nur district',realm:'karakhanid_1204',culture:'persian',religion:'sunni',dev:2},
       {id:'lower_syr_darya',name:'Lower Syr Darya settlements',realm:'khwarazm_1204',culture:'turkic',religion:'sunni',dev:3},
-      {id:'kath_district',name:'Kath',realm:'khwarazm_1204',culture:'persian',religion:'sunni',dev:4},
-      {id:'gurganj_district',name:'Gurganj',realm:'khwarazm_1204',culture:'persian',religion:'sunni',dev:5,
-        communities:[{culture:'persian',religion:'sunni',populationShare0:8500},
+      {id:'kath_district',name:'Kath',realm:'khwarazm_1204',culture:'chorasmian',religion:'sunni',dev:4},
+      {id:'gurganj_district',name:'Gurganj',realm:'khwarazm_1204',culture:'chorasmian',religion:'sunni',dev:5,
+        communities:[{culture:'chorasmian',religion:'sunni',populationShare0:8500},
           {culture:'turkic',religion:'sunni',populationShare0:1500}]},
       {id:'shebar_valley',name:'Shibar valley',realm:'bamiyan_court_1204',culture:'persian',religion:'sunni',dev:1},
       {id:'palmyra_district',name:'Tadmur',realm:'ayyubid_1204',culture:'arabic',religion:'sunni',dev:2}
@@ -48,8 +48,8 @@
     },
     realms:[
       {id:'jenne_households_1204',name:'Middle Niger households',capital:'jenne_district',color:'#997253',rank:1,
-        government:'assembly_polity',constituency:'middle_niger_1204',religion:'sahel_traditional_476',aggression:0,
-        representative:{sex:'m',born:1168,skills:{dip:5,ste:5,mar:3}}},
+        government:'territorial',religion:'sahel_traditional_476',aggression:0,
+        ruler:{generated:true,sex:'m',culture:'sahelian_476',born:1168,mar:3,trait:'patient'}},
       {id:'gao_court_1204',name:'Gao court',capital:'gao_district',color:'#ad8b56',rank:3,
         government:'regnum',religion:'sunni',techTraditions:['islamic'],aggression:0,
         ruler:{generated:true,sex:'m',culture:'sahelian_476',born:1165,mar:8,trait:'patient'}},
@@ -71,19 +71,9 @@
         mobile:{profileId:'eastern_qipchaq_1204',patronRealmId:'khwarazm_1204',origin:'lower_syr_darya',
           target:'lower_syr_darya',food:3200,fighters:80,treasury:40}}
     ],
-    // These are independently dated policy choices, not reconstructed ballots.
+    // Jenne-jeno's clustered settlements do not establish an assembly law.
+    // Siwa's separate local evidence owns this constituency approximation.
     constituencies:{
-      middle_niger_1204:{
-        eligibility:{minAge:18,minServiceYears:0,skills:{dip:3},free:true},
-        selection:{threshold:0.6,tie:'id',termDays:720,nominationCost:0},
-        recall:{threshold:0.6,reasons:['neglect','overreach','ineligible']},
-        obligations:{revenueRate:0.08,levyRate:0.3,maxDues:12,maxLevy:80,reserve:15},
-        reserved:['war','treaty','grant','extraordinary_tax','pledge','conversion'],powers:['ban','peace','revenue'],
-        members:[
-          {id:'fields',name:'Cultivating households',weight:3,basis:'custom',continuity:'institution',support:60},
-          {id:'waters',name:'River households',weight:2,basis:'custom',continuity:'institution',support:55},
-          {id:'crafts',name:'Craft households',weight:2,basis:'custom',continuity:'institution',support:55}
-        ]},
       siwa_oasis_1204:{
         eligibility:{minAge:18,minServiceYears:0,skills:{dip:3},free:true},
         selection:{threshold:0.6,tie:'id',termDays:null,nominationCost:0},
@@ -96,12 +86,6 @@
         ]}
     },
     starts:[
-      {id:'niger_delegate_1204',bookmarkIds:['1204'],alwaysUnlocked:true,rulerRealmId:'jenne_households_1204',
-        governmentForm:'assembly_polity',fixedProvinceId:'jenne_district',startCulture:'sahelian_476',startReligion:'sahel_traditional_476',
-        name:'Middle Niger delegate',desc:'Represent cultivating, river and craft households. Reserved decisions need their consent.',
-        sex:'m',tier:1,profession:'farmer',gold:30,prestige:40,piety:0,onboarding:'ruler',
-        familyPresets:{standard:{name:'Existing representative',diff:'local public mandate',desc:'Keep the selected representative and public mandate. Begin a separate private household.'}},
-        intro:'You represent the households of Jenne-jeno. Review Local government in Deeds: public dues and defensive service are bounded, and reserved decisions need household consent. Your family keeps its own property.'},
       {id:'muhammad_1204',bookmarkIds:['1204'],alwaysUnlocked:true,rulerRealmId:'khwarazm_1204',
         governmentForm:'regnum',fixedProvinceId:'gurganj_district',startCulture:'persian',startReligion:'sunni',
         characterName:'Muhammad II',
@@ -225,15 +209,11 @@
         representative:{role:'priest'}};
     });
   });
-  // Capture baseline choices before registering expanded-only fixed starts.
-  // Baseline restores cannot acquire a birthplace absent from their world.
-  var starts = b.starts ? b.starts.slice() : FBDATA.startScenarios.filter(function (s) {
-    return (!s.bookmarkIds || s.bookmarkIds.indexOf(b.id) >= 0) && (!s.eras || s.eras.indexOf(b.era) >= 0);
-  }).map(function (s) { return s.id; });
-  b.revisions = {baseline:{starts:starts},inhabited_v2:{
+  // Eligible mod starts remain discoverable. Fixed birthplaces and ruler
+  // references already exclude expanded-only starts from retained worlds.
+  b.revisions = {baseline:{},inhabited_v2:{
     geography:'europe_regional_2',provinces:provinces,realms:realms,
-    settlementLayout:layoutId,localInstitutions:institutions,
-    starts:starts.concat(d.starts.map(function (s) { return s.id; }))
+    settlementLayout:layoutId,localInstitutions:institutions
   }};
   b.revision = revision;
   Array.prototype.push.apply(FBDATA.startScenarios,d.starts);

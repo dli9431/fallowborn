@@ -25,7 +25,6 @@ const districts = ['draa_oases','jenne_district','gao_district','kumbi_district'
   'qasr_ibrim','central_iran_oases','sarakhs_oasis','nurata_foothills','lower_syr_darya',
   'kath_district','gurganj_district','shebar_valley','palmyra_district'];
 const authorityStarts = [
-  {scenario:'niger_delegate_1204',province:'jenne_district',realm:'jenne_households_1204',form:'assembly_polity',tier:1},
   {scenario:'muhammad_1204',province:'gurganj_district',realm:'khwarazm_1204',form:'regnum',tier:6},
   {scenario:'siwa_delegate_1204',province:'siwa_oasis',realm:'siwa_households_1204',form:'assembly_polity',tier:1}
 ];
@@ -99,7 +98,10 @@ for (const flag of [false,true]) test('dated districts, communities, rights and 
           JSON.stringify(FBDATA.settlementSites.nurata_foothills_inhabited_1204) === JSON.stringify(FBDATA.settlementSites.geo_nurota_1513087) &&
           !layout.merv.some(function (p) { return /sarakhs|sarahs/.test(p.site); }) &&
           !layout.bukhara.some(function (p) { return p.site === 'geo_nurota_1513087'; }),
-        starts:d.starts.every(function (p) { return b.starts.includes(p.id) && !old.starts.includes(p.id); })};
+        starts:!b.starts && !old.starts && d.starts.every(function (p) {
+          return FB.startProvinceAllowed(p,b,p.fixedProvinceId) &&
+            !FB.startProvinceAllowed(p,old,p.fixedProvinceId);
+        })};
     });
     expect(result).toEqual({faults:[],technology:[],stamp:'inhabited_v2',geography:'europe_regional_2',
       date:{year:1204,season:0,day:76},counts:[527,491,36],baseline:[498,477,21],added:14,
@@ -138,11 +140,11 @@ test('court, community and mobile claims do not replace each other',async functi
 test('delegate offering rejects mismatched identity and hereditary starting tiers without side effects',async function ({page},info) {
   await openGame(page,info);
   expect(await page.evaluate(function () {
-    const row = FBDATA.startScenarios.find(function (s) { return s.id === 'niger_delegate_1204'; });
+    const row = FBDATA.startScenarios.find(function (s) { return s.id === 'siwa_delegate_1204'; });
     const saved = JSON.stringify(row), rng = FB.getRngState(), uid = FB.getUidCounter();
     const result = ['tier','startCulture','startReligion','governmentForm'].map(function (field) {
       const before = row[field];
-      row[field] = {tier:4,startCulture:'persian',startReligion:'sunni',governmentForm:'missing'}[field];
+      row[field] = {tier:4,startCulture:'persian',startReligion:'catholic',governmentForm:'missing'}[field];
       const rejected = FB.validateBookmark(FB.bookmark('1204')).length > 0;
       row[field] = before; return rejected;
     });

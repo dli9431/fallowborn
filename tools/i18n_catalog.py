@@ -1527,6 +1527,12 @@ def extract_structured(inv: Inventory) -> None:
     expansion_path = DATA / "bookmark_493_world.js"
     expansion_rel = expansion_path.relative_to(ROOT).as_posix()
     expansion = node_object(find_assignment(expansion_path, "FBDATA", "bookmarkExpansion493")) or {}
+    for table, kind in (("duchies", "duchy"), ("kingdoms", "kingdom"), ("empires", "empire")):
+        for item_id, item_node in (node_object(expansion.get(table)) or {}).items():
+            item = node_object(item_node) or {}
+            for branch, record, line in branch_records(item.get("name")):
+                inv.add(f"{kind}.493.world_v2.{item_id}.name.{branch}", record,
+                        f"{expansion_rel}:{line}", "Expanded 493 geographic title label.", ())
     for table, kind in (("provinces", "province"), ("realms", "realm")):
         for item_node in node_array(expansion.get(table)) or []:
             item = node_object(item_node) or {}
@@ -1560,6 +1566,15 @@ def extract_structured(inv: Inventory) -> None:
     # physical geography and the retained bookmark catalogue.
     for expansion_path, bookmark_id in EXPANSION_BOOKMARK_FILES:
         rel = expansion_path.relative_to(ROOT).as_posix()
+        titles = node_object(find_assignment(
+            expansion_path, "FBDATA", "bookmarkTitles" + bookmark_id + "Expansion"
+        )) or {}
+        for table, kind in (("duchies", "duchy"), ("kingdoms", "kingdom"), ("empires", "empire")):
+            for item_id, item_node in (node_object(titles.get(table)) or {}).items():
+                item = node_object(item_node) or {}
+                for branch, record, line in branch_records(item.get("name")):
+                    inv.add(f"{kind}.{bookmark_id}.inhabited_v2.{item_id}.name.{branch}", record,
+                            f"{rel}:{line}", "Dated geographic title label.", ())
         districts = node_array(find_assignment(
             expansion_path, "FBDATA", "bookmarkDistricts" + bookmark_id
         )) or []

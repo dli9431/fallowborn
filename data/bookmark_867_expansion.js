@@ -13,29 +13,26 @@ FBDATA.bookmarkCultures867Expansion = {
   }
 };
 
-/* A reconstructed corporate settlement model, not a recorded ballot law.
-   Reserved decisions and renewable delegation use the existing platform. */
-FBDATA.bookmarkConstituencies867Expansion = {
-  middle_niger_867:{
-    eligibility:{ minAge:18, minServiceYears:0, skills:{ dip:3 }, free:true },
-    selection:{ threshold:0.6, tie:'id', termDays:720, nominationCost:0 },
-    recall:{ threshold:0.6, reasons:['neglect','overreach','ineligible'] },
-    obligations:{ revenueRate:0.08, levyRate:0.3, maxDues:12, maxLevy:80, reserve:10 },
-    reserved:['war','treaty','grant','extraordinary_tax','pledge','conversion'],
-    powers:['ban','peace','revenue'],
-    members:[
-      { id:'fields', name:'Cultivating households', weight:2, basis:'custom', continuity:'institution', support:60 },
-      { id:'waters', name:'River households', weight:2, basis:'custom', continuity:'institution', support:60 },
-      { id:'crafts', name:'Craft households', weight:2, basis:'custom', continuity:'institution', support:60 }
-    ]
-  }
+FBDATA.bookmarkTitles867Expansion = {
+  duchies:{
+    d_867_middle_niger:{name:'Middle Niger districts',kingdom:'k_867_niger'},
+    d_867_gao:{name:'Gao districts',kingdom:'k_867_niger'},
+    d_867_wagadu:{name:'Wagadu districts',kingdom:'k_867_sahel'},
+    d_867_khwarazm:{name:'Khwarazm districts',kingdom:'k_867_khwarazm'}
+  },
+  kingdoms:{
+    k_867_niger:{name:'Middle Niger',empire:'e_867_sahel'},
+    k_867_sahel:{name:'Western Sahel',empire:'e_867_sahel'},
+    k_867_khwarazm:{name:'Khwarazm',empire:'persia'}
+  },
+  empires:{e_867_sahel:{name:'Sahel'}}
 };
 
 FBDATA.bookmarkRealms867Expansion = [
     { id:'jenne_867', name:'Jenne-jeno Communities', color:'#9d865a',
-      capital:'jenne_district', rank:1, aggression:0, government:'assembly_polity',
-      religion:'sahel_traditional_476', constituency:'middle_niger_867',
-      representative:{ sex:'m', born:832, skills:{ dip:5, ste:5, mar:3 } } },
+      capital:'jenne_district', rank:1, aggression:0, government:'territorial',
+      religion:'sahel_traditional_476',
+      ruler:{ generated:true, sex:'m', culture:'middle_niger_867', born:832, mar:3, trait:'patient' } },
     { id:'gao_867', name:'Gao Court', color:'#b38c5f', capital:'gao_district',
       rank:1, aggression:0, government:'regnum', religion:'sahel_traditional_476',
       ruler:{ generated:true, sex:'m', culture:'middle_niger_867', born:830, mar:6, trait:'patient' } },
@@ -44,26 +41,26 @@ FBDATA.bookmarkRealms867Expansion = [
       ruler:{ generated:true, sex:'m', culture:'western_sahel_867', born:830, mar:6, trait:'patient' } },
     { id:'afrighids_867', name:'Afrighid Khwarazm', color:'#7c9d9b', capital:'kath_district',
       rank:1, aggression:0, government:'regnum', religion:'sunni',
-      ruler:{ generated:true, sex:'m', culture:'chorasmian_867', born:830, mar:6, trait:'patient' } }
+      ruler:{ generated:true, sex:'m', culture:'chorasmian', born:830, mar:6, trait:'patient' } }
 ];
 
 FBDATA.bookmarkDistricts867 = [
-  { id:'jenne_district', name:'Jenne-jeno', realm:'jenne_867', dev:3, zone:'arid', kind:'town',
+  { id:'jenne_district', duchy:'d_867_middle_niger', name:'Jenne-jeno', realm:'jenne_867', dev:3, zone:'arid', kind:'town',
     communities:[['middle_niger_867','sahel_traditional_476',10000]] },
-  { id:'gao_district', name:'Gao-Saney', realm:'gao_867', dev:2, zone:'arid', kind:'town',
+  { id:'gao_district', duchy:'d_867_gao', name:'Gao-Saney', realm:'gao_867', dev:2, zone:'arid', kind:'town',
     communities:[['middle_niger_867','sahel_traditional_476',10000]] },
-  { id:'kumbi_district', name:'Kumbi district', realm:'wagadu_867', dev:2, zone:'arid', kind:'town',
+  { id:'kumbi_district', duchy:'d_867_wagadu', name:'Kumbi district', realm:'wagadu_867', dev:2, zone:'arid', kind:'town',
     communities:[['western_sahel_867','sahel_traditional_476',10000]] },
-  { id:'qasr_ibrim', name:'Ibrim', realm:'makuria', dev:2, zone:'arid', kind:'town',
+  { id:'qasr_ibrim', duchy:'makuria', name:'Ibrim', realm:'makuria', dev:2, zone:'arid', kind:'town',
     communities:[['nubian','eastern',10000]] },
-  { id:'kath_district', name:'Kath', realm:'afrighids_867', dev:3, zone:'continental', kind:'town',
-    communities:[['chorasmian_867','zoroastrian',6000],['chorasmian_867','sunni',3000],
-      ['chorasmian_867','eastern',1000]] },
-  { id:'palmyra_district', name:'Tadmor', realm:'abbasid', dev:2, zone:'arid', kind:'town',
+  { id:'kath_district', duchy:'d_867_khwarazm', name:'Kath', realm:'afrighids_867', dev:3, zone:'continental', kind:'town',
+    communities:[['chorasmian','zoroastrian',6000],['chorasmian','sunni',3000],
+      ['chorasmian','eastern',1000]] },
+  { id:'palmyra_district', duchy:'damascus', name:'Tadmor', realm:'abbasid', dev:2, zone:'arid', kind:'town',
     communities:[['arabic','sunni',8000],['syriac','eastern',2000]] },
-  { id:'tayma_oasis', name:'Tayma', realm:'abbasid', dev:1, zone:'arid', kind:'village',
+  { id:'tayma_oasis', duchy:'hejaz', name:'Tayma', realm:'abbasid', dev:1, zone:'arid', kind:'village',
     communities:[['arabic','sunni',10000]] },
-  { id:'central_iran_oases', name:'Kashan oases', realm:'abbasid', dev:1, zone:'arid', kind:'village',
+  { id:'central_iran_oases', duchy:'isfahan', name:'Kashan oases', realm:'abbasid', dev:1, zone:'arid', kind:'village',
     communities:[['persian','shia',6000],['persian','zoroastrian',3000],['persian','sunni',1000]] }
 ];
 
@@ -74,7 +71,6 @@ FBDATA.bookmarkDistricts867 = [
   function copy(value) { return JSON.parse(JSON.stringify(value)); }
   /* Existing neutral presentation and faith rules, without new doctrine. */
   Object.assign(FBDATA.cultures, FBDATA.bookmarkCultures867Expansion);
-  Object.assign(FBDATA.constituencyProfiles, FBDATA.bookmarkConstituencies867Expansion);
   var realms = copy(FBDATA.bookmarkRealms867Expansion);
   /* No invented historical genealogy or future king. Ordinary generated kin
      are private households and provide the existing dynastic succession path. */
@@ -105,6 +101,7 @@ FBDATA.bookmarkDistricts867 = [
   }
   FBDATA.bookmarkDistricts867.forEach(function (p) {
     county(p.id, p.name, p.realm, p.dev, p.zone, p.communities, p.kind);
+    counties[p.id].duchy = p.duchy;
   });
 
   /* Existing counties, including their complete curated and fill slots, keep
@@ -113,6 +110,10 @@ FBDATA.bookmarkDistricts867 = [
   base.revisions = Object.assign({ baseline:{} }, base.revisions || {});
   base.revisions.inhabited_v2 = {
     geography:'europe_regional_2',
+    /* Geographic title groups do not assert excavated duchies or suzerainty. */
+    duchies:Object.assign({},base.duchies,FBDATA.bookmarkTitles867Expansion.duchies),
+    kingdoms:Object.assign({},base.kingdoms,FBDATA.bookmarkTitles867Expansion.kingdoms),
+    empires:Object.assign({},base.empires,FBDATA.bookmarkTitles867Expansion.empires),
     provinces:base.provinces.slice().concat(geography.provinceAdditions.map(function (seed) {
       return counties[seed.id] || Object.assign({}, seed);
     })),
@@ -120,7 +121,8 @@ FBDATA.bookmarkDistricts867 = [
     settlementLayout:'867_inhabited_v2',
     climate:{ zone:geography.climate.zone, provinces:climates }
   };
-  base.revision = 'inhabited_v2';
+  /* Expansion remains opt-in until its opening is explicitly accepted.
+     The government composer also authors the combined review revision. */
   FBDATA.techImpactReviews.features.period_867_district_habitation = { mode:'none',
     rationale:'Established households, irrigated settlements and ordinary local government require no technological discovery. Existing travel, production and equipment requirements continue to apply.' };
 })();

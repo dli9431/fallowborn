@@ -65,10 +65,10 @@
   };
   Object.assign(FBDATA.ecclesiasticalProfiles, FBDATA.governmentEcclesiasticalProfiles);
 
-  /* This is source composition, not a new engine or mod patch language.
-     Load after date-owned geography revisions. Copy all fields of the current
-     revision, then replace its complete realm list through the normal contract.
-     Baseline and previous revisions retain their independent declarations. */
+  /* Source composition loads after date-owned geography revisions. Compose
+     every uncombined revision, replacing only its complete realm list through
+     the normal contract. Selection is independent of review availability.
+     Explicit retained results keep their independent declarations. */
   var assignments = {
     '711':{
       byzantium_711:{ government:'administrative_monarchy', administrationProfileId:'byzantine_711' },
@@ -105,16 +105,18 @@
       });
       return Object.assign({}, source, {realms:revised});
     }
-    var inherited = Object.assign({}, revisions.baseline, revisions[previous]);
-    var revisionId = previous === 'baseline' ? 'governments_v2' : previous + '_governments_v2';
-    if (Object.prototype.hasOwnProperty.call(revisions, revisionId))
-      throw new Error('Duplicate government rollout revision: ' + id + '/' + revisionId);
+    var revisionId = previous === 'baseline' ? 'governments_v2' :
+      previous === 'governments_v2' || /_governments_v2$/.test(previous)
+        ? previous : previous + '_governments_v2';
     base.revisions = Object.assign({}, revisions);
-    /* Archive the original government-only world even when a date composer
-       has selected wider geography. Never derive this retained id from it. */
-    if (previous !== 'baseline' && !Object.prototype.hasOwnProperty.call(revisions, 'governments_v2'))
-      base.revisions.governments_v2 = compose(Object.assign({}, revisions.baseline));
-    base.revisions[revisionId] = compose(inherited);
+    /* Compose opt-in worlds too, without selecting them for new campaigns.
+       Explicit retained combined definitions are never recalculated. */
+    Object.keys(revisions).forEach(function (sourceId) {
+      if (sourceId === 'governments_v2' || /_governments_v2$/.test(sourceId)) return;
+      var combinedId = sourceId === 'baseline' ? 'governments_v2' : sourceId + '_governments_v2';
+      if (Object.prototype.hasOwnProperty.call(revisions, combinedId)) return;
+      base.revisions[combinedId] = compose(Object.assign({}, revisions.baseline, revisions[sourceId]));
+    });
     base.revision = revisionId;
   });
 })();
