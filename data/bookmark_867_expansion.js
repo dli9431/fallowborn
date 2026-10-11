@@ -5,12 +5,7 @@
 /* Literal catalogues also give the static localization extractor an owner. */
 FBDATA.bookmarkCultures867Expansion = {
   middle_niger_867:{ name:'Middle Niger communities', parent:'sahelian_476' },
-  western_sahel_867:{ name:'Western Sahel communities', parent:'sahelian_476' },
-  chorasmian_867:{
-    name:'Chorasmian', parent:'persian', dyn:'of_place',
-    male:['Farnak','Rastak','Artavan','Arsavan'],
-    female:['Artana','Farnisa','Razana']
-  }
+  western_sahel_867:{ name:'Western Sahel communities', parent:'sahelian_476' }
 };
 
 FBDATA.bookmarkTitles867Expansion = {
@@ -29,7 +24,7 @@ FBDATA.bookmarkTitles867Expansion = {
 };
 
 FBDATA.bookmarkRealms867Expansion = [
-    { id:'jenne_867', name:'Jenne-jeno Communities', color:'#9d865a',
+    { id:'jenne_867', name:'Jenne-jeno', color:'#9d865a',
       capital:'jenne_district', rank:1, aggression:0, government:'territorial',
       religion:'sahel_traditional_476',
       ruler:{ generated:true, sex:'m', culture:'middle_niger_867', born:832, mar:3, trait:'patient' } },

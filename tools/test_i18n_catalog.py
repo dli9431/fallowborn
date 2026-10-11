@@ -45,11 +45,7 @@ class StructuredDataExtractionTests(unittest.TestCase):
         for key, text in (
             ('culture.middle_niger_867.name.default', 'Middle Niger communities'),
             ('culture.western_sahel_867.name.default', 'Western Sahel communities'),
-            ('culture.chorasmian_867.name.default', 'Chorasmian'),
-            ('constituencyMember.middle_niger_867.fields.name.default', 'Cultivating households'),
-            ('constituencyMember.middle_niger_867.waters.name.default', 'River households'),
-            ('constituencyMember.middle_niger_867.crafts.name.default', 'Craft households'),
-            ('realm.867.jenne_867.name.default', 'Jenne-jeno Communities'),
+            ('realm.867.jenne_867.name.default', 'Jenne-jeno'),
             ('realm.867.afrighids_867.name.default', 'Afrighid Khwarazm'),
             ('province.867.kath_district.name.default', 'Kath'),
             ('province.867.central_iran_oases.name.default', 'Kashan oases'),
@@ -58,22 +54,28 @@ class StructuredDataExtractionTests(unittest.TestCase):
             self.assertEqual(inventory.entries[key]['text'], text)
             self.assertIn('bookmark_867_expansion.js', inventory.meta[key]['location'])
         self.assertNotIn(i18n_catalog.source_key('Farnak'), inventory.entries)
+        self.assertNotIn('culture.chorasmian_867.name.default', inventory.entries)
+        self.assertFalse(any(key.startswith('constituencyMember.middle_niger_867.')
+                             for key in inventory.entries))
+        self.assertEqual(inventory.entries['culture.chorasmian.name.default']['text'], 'Chorasmian')
+        self.assertIn('cultures.js', inventory.meta['culture.chorasmian.name.default']['location'])
 
     def test_1066_terrain_has_literal_display_owners(self):
         inventory = i18n_catalog.Inventory()
         i18n_catalog.extract_structured(inventory)
         for key, text in (
             ('culture.soninke_1066.name.default', 'Soninke'),
-            ('culture.khwarazmian_1066.name.default', 'Khwarazmian'),
             ('religion.wagadu_traditional_1066.name.default', 'Wagadu traditional worship'),
-            ('authorityOffice.district_delegate_1066.name.default', 'District delegate'),
-            ('constituencyMember.jenne_households_1066.fields.name.default', 'Cultivating households'),
             ('province.1066.central_iran_oases.name.default', 'Kashan oasis'),
             ('settlement.1066.kumbi_district_inhabited_1066.name.default', 'Kumbi district'),
-            ('realm.1066.jenne_1066.name.default', 'Jenne-jeno households'),
+            ('realm.1066.jenne_1066.name.default', 'Jenne-jeno'),
         ):
             self.assertEqual(inventory.entries[key]['text'], text)
             self.assertIn('bookmark_1066_inhabited.js', inventory.meta[key]['location'])
+        self.assertNotIn('culture.khwarazmian_1066.name.default', inventory.entries)
+        self.assertNotIn('authorityOffice.district_delegate_1066.name.default', inventory.entries)
+        self.assertFalse(any(key.startswith('constituencyMember.jenne_households_1066.')
+                             for key in inventory.entries))
 
     def test_aristocratic_courts_and_offices_have_display_owners(self):
         inventory = i18n_catalog.Inventory()
@@ -545,14 +547,16 @@ class LexiconPlaceholderTests(unittest.TestCase):
         self.assertEqual(entries['province.1204.gurganj_district.name.default']['text'], 'Gurganj')
         self.assertEqual(entries['realm.1204.qara_khitai_1204.name.default']['text'], 'Qara Khitai suzerainty')
         self.assertEqual(entries['culture.khitan_court_1204.name.default']['text'], 'Khitan court')
-        self.assertEqual(entries['constituencyMember.middle_niger_1204.waters.name.default']['text'], 'River households')
+        self.assertEqual(entries['realm.1204.jenne_households_1204.name.default']['text'], 'Jenne-jeno')
         self.assertEqual(entries['scenario.muhammad_1204.name.default']['text'], 'Muhammad II at Gurganj')
         self.assertEqual(entries['settlement.1204.siwa_oasis_inhabited_1204.name.default']['text'], 'Shali')
         self.assertEqual(entries['settlement.1204.nurata_foothills_inhabited_1204.name.default']['text'], 'Nur')
-        for scenario in ('niger_delegate_1204', 'muhammad_1204', 'siwa_delegate_1204'):
+        for scenario in ('muhammad_1204', 'siwa_delegate_1204'):
             for field in ('name', 'desc', 'intro'):
                 self.assertIn(f'scenario.{scenario}.{field}.default', entries)
             self.assertIn(f'scenario.{scenario}.familyPresets.standard.desc.default', entries)
+        self.assertFalse(any(key.startswith('constituencyMember.middle_niger_1204.')
+                             or key.startswith('scenario.niger_delegate_1204.') for key in entries))
 
     def test_religions_no_longer_carry_rank_title_keys(self):
         inventory = i18n_catalog.Inventory()

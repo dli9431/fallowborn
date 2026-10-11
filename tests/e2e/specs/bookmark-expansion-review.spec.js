@@ -86,9 +86,15 @@ test('dated Khwarazm identity and provisional Niger authority remain consistent'
       const r = b.realms.find(function (r) { return r.id === rows[i][2]; });
       return [r.government,!!r.constituency,!!r.representative];
     }),oasis:oasis.communities.map(function (c) { return [c.religion,c.populationShare0]; }),
-      shared:FBDATA.cultures.middle_niger_1066.parent};
+      shared:FBDATA.cultures.middle_niger_1066.parent,
+      labels:worlds.slice(2).map(function (b,i) {
+        return b.realms.find(function (r) { return r.id === rows[i + 2][2]; }).name;
+      }),unused:['chorasmian_867','khwarazmian_1066'].map(function (id) {
+        return !!FBDATA.cultures[id];
+      })};
   })).toEqual({cultures:Array(5).fill('chorasmian'),local:Array(5).fill(['territorial',false,false]),
-    oasis:[['umayyad_sunni_711',5000],['catholic',5000]],shared:'sahelian_476'});
+    oasis:[['umayyad_sunni_711',5000],['catholic',5000]],shared:'sahelian_476',
+    labels:Array(3).fill('Jenne-jeno'),unused:[false,false]});
 });
 
 for (const revision of ['baseline','inhabited_v2']) {

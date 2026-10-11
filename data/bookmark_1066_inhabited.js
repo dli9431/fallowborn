@@ -24,9 +24,6 @@
     name:'Middle Niger communities', parent:'sahelian_476', tradition:'african', dyn:'of_place',
     appearance:{tone:3.7,fair:0.01,red:0.02},
     male:['Koro','Dama','Samba','Tama'], female:['Sira','Awa','Dama','Kumba']
-  },khwarazmian_1066:{
-    name:'Khwarazmian',parent:'persian',dyn:'of_place',
-    male:['Ahmad','Hasan','Afshin','Bahram'],female:['Maryam','Fatima','Shirin','Roxana']
   }};
   Object.assign(FBDATA.cultures,FBDATA.bookmarkCultures1066Terrain);
   /* A narrow headless local profile. It does not assert one West African
@@ -58,7 +55,7 @@
       {id:'nephew',generated:true,sex:'m',born:1049,motherId:'sister',
         culture:'soninke_1066',religion:'wagadu_traditional_1066',homeProvinceId:'kumbi_district'}
     ]}},
-  {id:'jenne_1066',name:'Jenne-jeno households',color:'#81916b',capital:'jenne_district',
+  {id:'jenne_1066',name:'Jenne-jeno',color:'#81916b',capital:'jenne_district',
     government:'territorial',rank:1,aggression:0,
     religion:'niger_traditional_1066',
     ruler:{generated:true,sex:'m',culture:'middle_niger_1066',born:1030,mar:4,trait:'patient'}},

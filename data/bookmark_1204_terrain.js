@@ -47,7 +47,7 @@
       palmyra_district:[{site:'palmyra_district_inhabited_1204',name:'Tadmur',kind:'town'}]
     },
     realms:[
-      {id:'jenne_households_1204',name:'Middle Niger households',capital:'jenne_district',color:'#997253',rank:1,
+      {id:'jenne_households_1204',name:'Jenne-jeno',capital:'jenne_district',color:'#997253',rank:1,
         government:'territorial',religion:'sahel_traditional_476',aggression:0,
         ruler:{generated:true,sex:'m',culture:'sahelian_476',born:1168,mar:3,trait:'patient'}},
       {id:'gao_court_1204',name:'Gao court',capital:'gao_district',color:'#ad8b56',rank:3,
