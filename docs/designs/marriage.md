@@ -634,3 +634,7 @@ profile rejects ordinary imported lives. See [content profiles](distribution-con
 Government ladder and social class
 
 Dynastic match navigation asks mayArrangeDynasticMarriage independently of isLanded. The feudal ladder grants both from band 3. NPC station remains a saved class from 0 to 4 with the legacy lord/notable inference; FB.socialStation resolves gentle/noble eligibility, class gaps and minimum-station policies through the NPC's form and era. Player class comes from its current band mapping, preserving the cardinal/Pope override. Courtship, kinship, doctrine, Standing, dowry and prestige checks remain independent. Ladder changes do not rewrite a pledged marriage or existing NPC station. This is an internal refactor, with no technology change.
+
+Locally recognized dissolution
+
+An effective faith may declare marriage.divorce.enabled false to withhold the ordinary marriage-ending action until a locally recognized procedure exists. FB.marriageEndStatus returns a visible blocker before costs or cooldowns can authorize the action. Both the direct and petition interaction routes re-read this status before payment, and the ordinary marriage-end event trigger uses the same gate. Omission retains the existing route; it changes neither legacy marriages nor first-marriage eligibility. A disabled ending is a held procedure, not proof that a tradition forbids divorce.

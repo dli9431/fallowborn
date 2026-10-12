@@ -913,6 +913,10 @@ window.FB = window.FB || {};
               ['annulment','talaq','get','sunder'].indexOf(ending.kind) < 0) {
             fault(id, 'marriage.divorce has an invalid kind.');
           }
+          if (plainObject(ending) && ending.enabled !== undefined &&
+              typeof ending.enabled !== 'boolean') {
+            fault(id, 'marriage.divorce.enabled must be boolean.');
+          }
         }
       }
       const titles = rel.rankTitles;

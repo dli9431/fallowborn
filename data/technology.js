@@ -111,6 +111,7 @@ window.FBDATA = window.FBDATA || {};
   FBDATA.techImpactReviews = {
     baselineVersion:'1.127.1',
     features:{
+      jewish_samaritan_lay_profiles:{ mode:'none', rationale:'Ordinary communal participation and household study do not require a discovery, wealth, land or religious office. Specialist qualification and local recognition remain separate institutional requirements.' },
       faith_catalogue_availability:{ mode:'none', rationale:'Religious identity has dated historical availability and consumer eligibility. Worship, profession and existing communities are baseline social conditions, independent of discovery.' },
       colonate_tenure:{ mode:'none', rationale:'Land-bound tenancy, estate obligations and paid release are legal and household conditions, independent of research.' },
       colonate_military_release:{ mode:'none', rationale:'Consented military release depends on a living possessor and personal fitness. The ordinary soldier career retains its existing training requirement.' },
