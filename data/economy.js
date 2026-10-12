@@ -50,7 +50,7 @@ FBDATA.abbeys = {
    boundary even though every rank also has its own stable id. */
 FBDATA.religiousPaths = {
   late_antique_lay: {
-    kind:'lay', faiths:['nicene','homoian','chalcedonian','miaphysite'],
+    kind:'lay', faiths:['nicene','homoian','chalcedonian','miaphysite','east_syriac'],
     ranks:[
       { id:'faithful', name:'Faithful', pietyYield:0 },
       { id:'almsgiver', name:'Almsgiver', age:16, piety:10, gold:5,
@@ -60,7 +60,7 @@ FBDATA.religiousPaths = {
     ]
   },
   late_antique_monastic: {
-    kind:'vocation', faiths:['nicene','homoian','chalcedonian','miaphysite'],
+    kind:'vocation', faiths:['nicene','homoian','chalcedonian','miaphysite','east_syriac'],
     professions:['monk'],
     ranks:[
       { id:'novice', name:'Novice', pietyYield:0.25 },
@@ -73,7 +73,7 @@ FBDATA.religiousPaths = {
     ]
   },
   late_antique_clerical: {
-    kind:'vocation', faiths:['nicene','homoian','chalcedonian','miaphysite'],
+    kind:'vocation', faiths:['nicene','homoian','chalcedonian','miaphysite','east_syriac'],
     professions:['priest'],
     ranks:[
       { id:'clerk', name:'Lector', pietyYield:0.25 },
@@ -83,7 +83,7 @@ FBDATA.religiousPaths = {
         piety:50, prestigeGain:7, pietyYield:1, station:1 },
       { id:'bishop', name:'Bishop', age:30, years:14, learning:12,
         piety:160, prestige:80, prestigeGain:25, pietyYield:2.5,
-        station:3, tier:3, flag:'bishop' }
+        station:3, tier:3, flag:'bishop', maleOnly:true }
     ]
   },
   catholic_lay: {
