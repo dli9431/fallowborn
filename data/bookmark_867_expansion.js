@@ -121,3 +121,12 @@ FBDATA.bookmarkDistricts867 = [
   FBDATA.techImpactReviews.features.period_867_district_habitation = { mode:'none',
     rationale:'Established households, irrigated settlements and ordinary local government require no technological discovery. Existing travel, production and equipment requirements continue to apply.' };
 })();
+
+/* Household activity uses retained Jewish identities only. Sura's site,
+   Karaite/Samaritan localities and Khazar reclassification remain held.
+   This opt-in activity scope adds no county, community, institution or site. */
+(function () {
+  'use strict';
+  var b = FBDATA.bookmarks['867'];
+  b.revisions.jewish_samaritan_v3 = Object.assign({},b.revisions.inhabited_v2);
+})();

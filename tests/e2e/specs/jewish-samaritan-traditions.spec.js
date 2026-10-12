@@ -13,6 +13,11 @@ dependsOnRuntime(__filename, [
   'data/cultures.js', 'data/economy.js', 'data/technology.js',
   'data/bookmarks.js', 'data/bookmark_476.js', 'data/bookmark_476_wider.js',
   'data/bookmark_493_world.js', 'data/bookmark_711.js', 'data/bookmark_800.js',
+  'data/bookmark_711_terrain.js', 'data/bookmark_800_expansion.js',
+  'data/bookmark_867_expansion.js', 'data/government_rollout.js', 'data/settlements.js',
+  'data/starts.js', 'data/geographies.js', 'data/geography_expansion.js',
+  'data/bookmark_476_outer.js', 'data/bookmark_476_dalmatia_east.js',
+  'data/bookmark_493.js', 'data/bookmark_1204.js',
   'data/bookmark_1066_inhabited.js', 'data/bookmark_1204_terrain.js',
   'js/model.js', 'js/economy.js', 'js/events.js', 'js/actions.js',
   'js/population.js', 'js/world.js', 'js/mods.js', 'js/systems.js',
@@ -279,8 +284,8 @@ test('legacy Jewish households, generated ancestry and an ongoing project surviv
     }, {ids:saved.ids,pid:saved.pid})).toEqual(saved.expected);
   });
 
-/* These placements are fixtures at the test household's home. F09 owns
-   historical site bindings and independently accepted opening revisions. */
+/* These fixture placements isolate the shared contracts from the shipped
+   dated communities tested separately below. */
 async function communalHousehold(page, testInfo, crazygames) {
   await startHistoricalGame(page, testInfo, {
     bookmark:'476', code:'COMMUNAL-476-curialis_476-ravenna-m-Marcus-established-0-roman.nicene'
@@ -703,3 +708,313 @@ for (const distribution of ['standard','CrazyGames']) {
       expect(await page.evaluate(communalSavedFacts)).toEqual(after);
     });
 }
+
+/* Shipped dated revisions: selecting the opt-in world is a test setup choice,
+   while all community, institution and site declarations remain real data. */
+const DATED_COMMUNAL_OPENINGS = [
+  {id:'476',source:'wider_v2',revision:'jewish_samaritan_v3',pid:'baghdad',culture:'syriac',groups:3},
+  {id:'493',source:'world_v2',revision:'jewish_samaritan_v3',pid:'baghdad',culture:'syriac',groups:3},
+  {id:'711',source:'terrain_v2_governments_v2',revision:'jewish_samaritan_v3_governments_v2',pid:'jerusalem',culture:'syriac',groups:1},
+  {id:'800',source:'inhabited_v2_governments_v2',revision:'jewish_samaritan_v3_governments_v2',pid:'jerusalem',culture:'syriac',groups:2},
+  {id:'867',source:'inhabited_v2_governments_v2',revision:'jewish_samaritan_v3_governments_v2',pid:'atil',culture:'khazar',groups:0},
+  {id:'1066',source:'inhabited_v2_governments_v2',revision:'jewish_samaritan_v3_governments_v2',pid:'metz',culture:'frankish',groups:2},
+  {id:'1204',source:'inhabited_v2',revision:'jewish_samaritan_v3',pid:'alexandria',culture:'arabic',groups:3}
+];
+
+async function startCommunalOpening(page,testInfo,input,crazygames) {
+  await page.addInitScript(function (opening) {
+    window.addEventListener('DOMContentLoaded',function () {
+      FBDATA.bookmarks[opening.id].revision = opening.revision;
+    },{once:true});
+  },input);
+  const scenario = input.id === '476' ? 'farmer_476' : input.id === '493' ? 'farmer_493' : 'farmer';
+  const faith = input.faith || 'jewish';
+  await startHistoricalGame(page,testInfo,{bookmark:input.id,
+    code:'DATED-' + input.id + '-' + scenario + '-' + input.pid + '-f-Sara-established-0-' + input.culture + '.' + faith},!!crazygames);
+  expect(await page.evaluate(function () {
+    const s = FB.state;
+    return {revision:s.start.revision,faith:s.chars[s.player.charId].religion,pid:s.player.provinceId};
+  })).toEqual({revision:input.revision,faith:faith,pid:input.pid});
+  await household(page);
+  await page.evaluate(function (choice) {
+    const s = FB.state, me = s.chars[s.player.charId], spouse = FB.spouseOf(s,me);
+    me.religion = choice.faith || 'jewish'; spouse.religion = me.religion;
+    me.homeProvinceId = choice.pid; spouse.homeProvinceId = choice.pid;
+    me.health = 8; spouse.health = 8; me.skills.int = 3;
+    me.role = 'farmer'; FB.careerOf(s,me).profession = 'farmer'; s.player.profession = 'farmer';
+    s.player.gold = 0; s.player.piety = 0; s.player.prestige = 0;
+    s.player.travel = null; s.player.flags.on_campaign = false; s.player.flags.with_liege_host = false;
+    window.datedCommunal = {cid:me.id,spouse:spouse.id,pid:choice.pid};
+  },input);
+}
+
+function datedCommunalFacts() {
+  const s = FB.state, f = datedCommunal;
+  return JSON.parse(JSON.stringify({start:s.start,
+    household:[s.player.gold,s.player.piety,s.player.profession,s.player.landPlots],
+    people:[f.cid,f.spouse].map(function (cid) { const c = s.chars[cid];
+      return [c.id,c.religion,c.spouseId,c.religiousAffiliations,c.religiousActivity,c.religiousActivityHistory,c.skills]; }),
+    groups:s.localInstitutions,heads:s.religiousHeads,houses:s.abbeys && s.abbeys.houses,
+    communities:FB.countyCommunities(s,f.pid),population:FB.countyPopulation(s,f.pid)}));
+}
+
+test('seven communal revisions retain their source worlds and validate real dated consumers without side effects',
+  async function ({page},testInfo) {
+    await openGame(page,testInfo);
+    const result = await page.evaluate(function (openings) {
+      const before = JSON.stringify(FBDATA), rng = FB.getRngState(), uid = FB.getUidCounter();
+      const rows = openings.map(function (o) {
+        const b = FB.bookmark(o.id,o.revision), old = FB.bookmark(o.id,o.source);
+        const groups = Object.keys(b.localInstitutions || {}).filter(function (iid) {
+          return b.localInstitutions[iid].profileId && !(old.localInstitutions || {})[iid];
+        });
+        const sites = b.settlementLayout ? FBDATA.settlementLayouts[b.settlementLayout] : null;
+        return {id:o.id,groups:groups.length,errors:FB.validateBookmark(b),
+          retained:JSON.stringify(b.realms) === JSON.stringify(old.realms) &&
+            JSON.stringify(b.opening) === JSON.stringify(old.opening) && b.geography === old.geography,
+          identities:b.provinces.every(function (p,i) {
+            const prior = old.provinces[i];
+            return prior.id === p.id && prior.religion === p.religion && prior.culture === p.culture && prior.realm === p.realm &&
+              prior.population0 === p.population0;
+          }),
+          totals:b.provinces.every(function (p) {
+            return !p.communities || p.communities.every(function (c) { return c.populationShare0 === undefined; }) ||
+              p.communities.reduce(function (total,c) { return total + c.populationShare0; },0) === 10000;
+          }),
+          bindings:groups.every(function (iid) {
+            const d = b.localInstitutions[iid], p = b.provinces.find(function (row) { return row.id === d.provinceId; });
+            const list = sites ? sites[d.provinceId] : p.settlements, pos = FBDATA.settlementSites[d.site];
+            return list.some(function (row) { return row.site === d.site; }) &&
+              pos.x >= -11 && pos.x <= 70 && pos.y >= 13 && pos.y <= 66 &&
+              d.vacant && d.freshOnly && !d.officeId && !d.representative && d.jurisdictionIds.length === 1 &&
+              p.communities.some(function (row) { return row.religion === d.religion; });
+          })};
+      });
+      const later = FB.bookmark('1204','jewish_samaritan_v3');
+      return {rows:rows,cairo:later.localInstitutions.cairo_karaite_congregation_1204.site,
+        neapolis:later.localInstitutions.nablus_samaritan_congregation_1204.site,
+        technology:FBDATA.techImpactReviews.features.jewish_samaritan_dated_communities.mode,
+        pure:before === JSON.stringify(FBDATA) && rng === FB.getRngState() && uid === FB.getUidCounter()};
+    },DATED_COMMUNAL_OPENINGS);
+    expect(result).toEqual({rows:DATED_COMMUNAL_OPENINGS.map(function (o) {
+      return {id:o.id,groups:o.groups,errors:[],retained:true,identities:true,totals:true,bindings:true};
+    }),cairo:'cairo',neapolis:'samaria_neapolis_w15',technology:'none',pure:true});
+  });
+
+for (const opening of DATED_COMMUNAL_OPENINGS) {
+  test(opening.id + ' real revision lets a poor married Jewish household study once while preserving minorities and property',
+    async function ({page},testInfo) {
+      await startCommunalOpening(page,testInfo,opening);
+      expect(await page.evaluate(function () {
+        const s = FB.state, me = s.chars[s.player.charId];
+        const kept = JSON.stringify([me.religion,me.spouseId,s.player.profession,s.player.landPlots,
+          FB.countyCommunities(s,s.player.provinceId),s.religiousHeads]);
+        const before = JSON.stringify(s), rng = FB.getRngState(), uid = FB.getUidCounter();
+        const q = FB.religiousActivityQuote(s,'jewish_household_study',me.id);
+        const pure = before === JSON.stringify(s) && rng === FB.getRngState() && uid === FB.getUidCounter();
+        const applied = FB.religiousActivityApply(s,q);
+        s.turn += 2; FB.religiousActivityTick(s);
+        const once = me.skills.int === 4 && me.religiousActivityHistory.jewish_household_study_done.performed;
+        const after = JSON.stringify(s);
+        const repeat = FB.religiousActivityQuote(s,'jewish_household_study',me.id);
+        return {allowed:q.allowed,cost:q.cost,duration:q.duration,pure:pure,applied:applied,once:!!once,
+          repeat:!repeat.allowed && !FB.religiousActivityApply(s,repeat) && after === JSON.stringify(s),
+          kept:kept === JSON.stringify([me.religion,me.spouseId,s.player.profession,s.player.landPlots,
+            FB.countyCommunities(s,s.player.provinceId),s.religiousHeads]),gold:s.player.gold};
+      })).toEqual({allowed:true,cost:0,duration:2,pure:true,applied:true,once:true,repeat:true,kept:true,gold:0});
+    });
+}
+
+for (const year of ['476','493']) {
+  test(year + ' real Babylonian study circle grants optional learning without an academy office or vocation',
+    async function ({page},testInfo) {
+      const opening = DATED_COMMUNAL_OPENINGS.find(function (o) { return o.id === year; });
+      await startCommunalOpening(page,testInfo,opening);
+      expect(await page.evaluate(function (id) {
+        const s = FB.state, me = s.chars[s.player.charId], iid = 'jewish_meso_study_circle_' + id;
+        const snap = FB.religiousInstitutionSnapshot(s,iid);
+        const original = JSON.stringify([me.religion,me.spouseId,s.player.profession,s.player.landPlots,s.religiousHeads]);
+        const q = FB.religiousInstitutionQuote(s,iid,{kind:'character',id:me.id},'admit',{roleId:'learner'});
+        const joined = FB.religiousInstitutionApply(s,q);
+        const affiliation = FB.religiousInstitutionApply(s,FB.religiousInstitutionQuote(s,iid,
+          {kind:'character',id:me.id},'affiliate',{affiliationId:'jewish_rabbinic_learning_early'}));
+        const helper = FB.religiousInstitutionQuote(s,iid,{kind:'character',id:me.id},'admit',{roleId:'study_helper'});
+        const study = FB.religiousActivityApply(s,FB.religiousActivityQuote(s,iid + '_lesson',me.id));
+        s.turn += 2; FB.religiousActivityTick(s);
+        return {site:snap.definition.site,noStaff:snap.members && !Object.keys(snap.members).length && !snap.definition.officeId,
+          joined:joined,affiliation:affiliation,helperHeld:!helper.allowed,study:study,intelligence:me.skills.int,
+          noStack:!FB.religiousActivityQuote(s,'jewish_household_study',me.id).allowed,
+          preserved:original === JSON.stringify([me.religion,me.spouseId,s.player.profession,s.player.landPlots,s.religiousHeads])};
+      },year)).toEqual({site:'baghdad_outer_476',noStaff:true,joined:true,affiliation:true,helperHeld:true,
+        study:true,intelligence:4,noStack:true,preserved:true});
+    });
+}
+
+test('independently dated Nablus and Karaite groups grant lay membership while all specialist and journey holds remain closed',
+  async function ({page},testInfo) {
+    await openGame(page,testInfo);
+    expect(await page.evaluate(function () {
+      const accepted = ['476','493','711','800','1204'].map(function (id) {
+        const b = FB.bookmark(id,id === '711' || id === '800' ? 'jewish_samaritan_v3_governments_v2' : 'jewish_samaritan_v3');
+        const d = b.localInstitutions['nablus_samaritan_congregation_' + id];
+        return d && d.religion === 'samaritan' && d.site === 'samaria_neapolis_w15' && !d.officeId;
+      });
+      const held = ['867','1066'].every(function (id) {
+        const b = FB.bookmark(id,'jewish_samaritan_v3_governments_v2');
+        return !b.provinces.some(function (p) { return (p.communities || []).some(function (c) { return c.religion === 'samaritan'; }); });
+      });
+      const earlyKaraite = ['476','493','711','800','867'].every(function (id) {
+        return !FB.faithHistoricalAvailable('karaite',FB.bookmark(id),'community');
+      });
+      return {accepted:accepted,held:held,earlyKaraite:earlyKaraite,
+        noPriests:['samaritan_lay_congregation','karaite_lay_congregation'].every(function (id) {
+          const p = FBDATA.religiousInstitutionProfiles[id];
+          return p.selection === null && !p.roles.priest && !p.roles.samaritan_priest && p.actions.indexOf('mediate') < 0;
+        }),noJourneys:Object.keys(FBDATA.religiousActivities).every(function (id) { return FBDATA.religiousActivities[id].mode !== 'journey'; })};
+    })).toEqual({accepted:[true,true,true,true,true],held:true,earlyKaraite:true,noPriests:true,noJourneys:true});
+  });
+
+test('a real 1204 Nablus household keeps Samaritan identity and worship when local public access is restricted',
+  async function ({page},testInfo) {
+    await startCommunalOpening(page,testInfo,Object.assign({},DATED_COMMUNAL_OPENINGS[6],
+      {pid:'jerusalem',culture:'syriac',faith:'samaritan'}));
+    expect(await page.evaluate(function () {
+      const s = FB.state, me = s.chars[s.player.charId], iid = 'nablus_samaritan_congregation_1204';
+      const membership = FB.religiousInstitutionApply(s,FB.religiousInstitutionQuote(s,iid,
+        {kind:'character',id:me.id},'admit',{roleId:'worshipper'}));
+      const before = JSON.stringify([me.religion,me.spouseId,s.player.landPlots,FB.countyCommunities(s,'jerusalem'),s.religiousHeads]);
+      const held = FB.religiousInstitutionQuote(s,iid,{kind:'character',id:me.id},'admit',{roleId:'samaritan_priest'});
+      s.localInstitutions[iid].status = 'closed';
+      FB.addModifier(s,'persecuted_minorities','jerusalem',1,10);
+      const q = FB.religiousActivityQuote(s,'samaritan_household_worship',me.id);
+      const home = FB.religiousActivityApply(s,q);
+      s.turn++; FB.religiousActivityTick(s);
+      return {membership:membership,priestHeld:!held.allowed,home:home,piety:s.player.piety,
+        preserved:before === JSON.stringify([me.religion,me.spouseId,s.player.landPlots,FB.countyCommunities(s,'jerusalem'),s.religiousHeads]),
+        noOffice:!s.localInstitutions[iid].representativeId};
+    })).toEqual({membership:true,priestHeld:true,home:true,piety:1,preserved:true,noOffice:true});
+  });
+
+test('Cairo Karaite worship keeps the city binding and cannot acquire a Jewish study affiliation or court authority',
+  async function ({page},testInfo) {
+    await startCommunalOpening(page,testInfo,Object.assign({},DATED_COMMUNAL_OPENINGS[6],
+      {pid:'fustat',culture:'arabic',faith:'karaite'}));
+    expect(await page.evaluate(function () {
+      const s = FB.state, me = s.chars[s.player.charId], iid = 'cairo_karaite_congregation_1204';
+      const joined = FB.religiousInstitutionApply(s,FB.religiousInstitutionQuote(s,iid,
+        {kind:'character',id:me.id},'admit',{roleId:'worshipper'}));
+      const before = JSON.stringify(s), rng = FB.getRngState(), uid = FB.getUidCounter();
+      const study = FB.religiousInstitutionQuote(s,iid,{kind:'character',id:me.id},'affiliate',
+        {affiliationId:'jewish_rabbinic_learning_1204'});
+      const mediate = FB.religiousInstitutionQuote(s,iid,{kind:'character',id:me.id},'mediate',
+        {subject:{kind:'character',id:me.id},provinceId:'fustat',source:'institution_support'});
+      const pure = !study.allowed && !mediate.allowed && before === JSON.stringify(s) && rng === FB.getRngState() && uid === FB.getUidCounter();
+      const q = FB.religiousActivityQuote(s,'karaite_household_worship',me.id);
+      const worship = FB.religiousActivityApply(s,q); s.turn++; FB.religiousActivityTick(s);
+      return {joined:joined,site:FB.religiousInstitutionSnapshot(s,iid).definition.site,pure:pure,
+        worship:worship,faith:me.religion,affiliations:me.religiousAffiliations || [],piety:s.player.piety};
+    })).toEqual({joined:true,site:'cairo',pure:true,worship:true,faith:'karaite',affiliations:[],piety:1});
+  });
+
+async function fundDatedSardis(page,testInfo,crazygames) {
+  await startCommunalOpening(page,testInfo,Object.assign({},DATED_COMMUNAL_OPENINGS[0],
+    {pid:'sardis',culture:'greek'}),crazygames);
+  await page.evaluate(function () {
+    const s = FB.state, me = s.chars[s.player.charId], iid = 'jewish_sardis_congregation_476';
+    s.player.gold = 2; s.player.landPlots = [{provinceId:'sardis',settlement:0},{provinceId:'sardis',settlement:0}];
+    s.player.manor = null; s.player.landPlotMigration = 1;
+    const foundation = FB.religiousPatronageQuote(s,'jewish_sardis_giving_476',me.id,'foundation',
+      {land:{provinceId:'sardis',settlement:0,count:2}});
+    if (!foundation.allowed || !FB.religiousPatronageApply(s,foundation)) throw new Error('Dated Sardis foundation');
+    if (!FB.religiousInstitutionApply(s,FB.religiousInstitutionQuote(s,iid,{kind:'character',id:me.id},'admit',{roleId:'worshipper'})))
+      throw new Error('Dated Sardis admission');
+  });
+}
+
+test('the dated synagogue public AI spends only its actual treasury on the canonical voluntary property',
+  async function ({page},testInfo) {
+    await fundDatedSardis(page,testInfo);
+    expect(await page.evaluate(function () {
+      const s = FB.state, household = s.player.gold;
+      FB.treasuryInitialize(s); s.treasuryAccounting.mode = 'active';
+      const rid = Object.keys(s.realms).sort().find(function (id) {
+        const c = FB.realmRulerCharacterSnapshot(s,id);
+        return c && FB.treasuryCharacterRealm(s,c.id) === id && !FB.isRealmAtWar(s,id);
+      });
+      if (!rid) throw new Error('Expected existing peaceful public treasury');
+      /* Isolated payer fixture: no historical ruler conversion is asserted. */
+      const c = FB.realmRulerCharacterSnapshot(s,rid);
+      s.realms[rid].capital = 'sardis'; c.homeProvinceId = 'sardis';
+      c.religion = 'jewish'; c.health = 8; c.born = s.date.year - 30;
+      s.realms[rid].treasury.gold = 2; s.realms[rid].treasury.militaryAccrued = 0;
+      const balance = FB.treasuryAvailable(s,rid), house = s.abbeys.houses.find(function (h) { return h.id === 'jewish_sardis_property_476'; });
+      const plots = JSON.stringify(house.plots), keys = Object.keys(s.realms).sort();
+      let period = 1;
+      while (period < keys.length + 1) {
+        const offset = period * 16 % keys.length;
+        if (Array.from({length:Math.min(16,keys.length)},function (_,i) { return keys[(offset + i) % keys.length]; }).indexOf(rid) >= 0) break;
+        period++;
+      }
+      s.turn = period * 90;
+      const applied = FB.religiousActivityAI(s), repeat = FB.religiousActivityAI(s);
+      const spent = balance - FB.treasuryAvailable(s,rid);
+      s.realms[rid].treasury.gold = 0;
+      const dry = FB.religiousPatronageQuote(s,'jewish_sardis_public_giving_476',c.id,'donation',{fund:'building_care',amount:1});
+      return {bounded:applied > 0 && applied <= 4,repeat:repeat,spent:spent,fund:house.restrictedFunds.building_care,
+        dry:!dry.allowed,household:household === s.player.gold,plots:plots === JSON.stringify(house.plots),
+        land:s.player.landPlots.length,owner:house.activityInstitutionId};
+    })).toEqual({bounded:true,repeat:0,spent:1,fund:1,dry:true,household:true,plots:true,land:0,owner:'jewish_sardis_congregation_476'});
+  });
+
+for (const distribution of ['standard','CrazyGames']) {
+  test(distribution + ' dated Sardis restore after another world preserves its voluntary gift and completes service once',
+    async function ({page},testInfo) {
+      await fundDatedSardis(page,testInfo,distribution === 'CrazyGames');
+      const source = await page.evaluate(function () {
+        const s = FB.state, cid = s.player.charId;
+        if (!FB.religiousPatronageApply(s,FB.religiousPatronageQuote(s,'jewish_sardis_giving_476',cid,
+          'donation',{fund:'building_care',amount:1})) ||
+            !FB.religiousActivityApply(s,FB.religiousActivityQuote(s,'jewish_sardis_congregation_476_care',cid)))
+          throw new Error('Dated gift and service');
+        return FB.save.serialize();
+      });
+      const before = await page.evaluate(datedCommunalFacts);
+      await page.evaluate(function () { FB.state.turn += 2; FB.religiousActivityTick(FB.state); });
+      const after = await page.evaluate(datedCommunalFacts);
+      await page.evaluate(function () {
+        return new Promise(function (resolve,reject) {
+          FB.activateBookmark('1204',null,function (error) { if (error) reject(error); else resolve(); });
+        });
+      });
+      await restoreBookmark(page,source);
+      expect(await page.evaluate(datedCommunalFacts)).toEqual(before);
+      await page.evaluate(function () { FB.state.turn += 2; FB.religiousActivityTick(FB.state); });
+      expect(await page.evaluate(datedCommunalFacts)).toEqual(after);
+      expect(await page.evaluate(function () {
+        const s = FB.state, before = JSON.stringify(s), cid = s.player.charId;
+        const q = FB.religiousActivityQuote(s,'jewish_sardis_congregation_476_care',cid);
+        return !q.allowed && !FB.religiousActivityApply(s,q) && before === JSON.stringify(s);
+      })).toBe(true);
+    });
+}
+
+test('a saved opening roster never receives missing fresh-only communal rows or a new spiritual office',
+  async function ({page},testInfo) {
+    await startCommunalOpening(page,testInfo,DATED_COMMUNAL_OPENINGS[0]);
+    const saved = await page.evaluate(function () {
+      const s = FB.state;
+      Object.keys(FB.localInstitutionDefinitions(s)).forEach(function (iid) {
+        if (FB.localInstitutionDefinitions(s)[iid].freshOnly && FB.localInstitutionDefinitions(s)[iid].profileId)
+          delete s.localInstitutions[iid];
+      });
+      return {text:FB.save.serialize(),groups:Object.keys(s.localInstitutions).sort(),heads:s.religiousHeads,
+        faith:s.chars[s.player.charId].religion,community:FB.countyCommunities(s,'baghdad')};
+    });
+    await restoreBookmark(page,saved.text);
+    expect(await page.evaluate(function () {
+      const s = FB.state;
+      FB.ensureLocalInstitutions(s);
+      return {groups:Object.keys(s.localInstitutions).sort(),heads:s.religiousHeads,
+        faith:s.chars[s.player.charId].religion,community:FB.countyCommunities(s,'baghdad')};
+    })).toEqual({groups:saved.groups,heads:saved.heads,faith:saved.faith,community:saved.community});
+  });

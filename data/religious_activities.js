@@ -4,7 +4,11 @@
 FBDATA.religiousActivities = {
   jewish_household_worship:{
     name:'Jewish household worship', period:{ yearMin:476, yearMax:null },
-    openings:[{ id:'476', revision:'wider_v2' },{ id:'493', revision:'world_v2' },{ id:'1204', revision:'inhabited_v2' }],
+    openings:[{ id:'476', revision:'wider_v2' },{ id:'493', revision:'world_v2' },{ id:'1204', revision:'inhabited_v2' },
+      { id:'476', revision:'jewish_samaritan_v3' },{ id:'493', revision:'jewish_samaritan_v3' },
+      { id:'711', revision:'jewish_samaritan_v3_governments_v2' },{ id:'800', revision:'jewish_samaritan_v3_governments_v2' },
+      { id:'867', revision:'jewish_samaritan_v3_governments_v2' },{ id:'1066', revision:'jewish_samaritan_v3_governments_v2' },
+      { id:'1204', revision:'jewish_samaritan_v3' }],
     faithIds:['jewish'], affiliationIds:[], roleIds:[], institutionId:null,
     mode:'local', purpose:null, siteId:null, payer:'household', cost:0, reserve:0,
     duration:1, calendar:'any_day', interruption:'retain_cost', recipient:'participant',
@@ -12,7 +16,11 @@ FBDATA.religiousActivities = {
   },
   jewish_household_study:{
     name:'Jewish household study', period:{ yearMin:476, yearMax:null },
-    openings:[{ id:'476', revision:'wider_v2' },{ id:'493', revision:'world_v2' },{ id:'1204', revision:'inhabited_v2' }],
+    openings:[{ id:'476', revision:'wider_v2' },{ id:'493', revision:'world_v2' },{ id:'1204', revision:'inhabited_v2' },
+      { id:'476', revision:'jewish_samaritan_v3' },{ id:'493', revision:'jewish_samaritan_v3' },
+      { id:'711', revision:'jewish_samaritan_v3_governments_v2' },{ id:'800', revision:'jewish_samaritan_v3_governments_v2' },
+      { id:'867', revision:'jewish_samaritan_v3_governments_v2' },{ id:'1066', revision:'jewish_samaritan_v3_governments_v2' },
+      { id:'1204', revision:'jewish_samaritan_v3' }],
     faithIds:['jewish'], affiliationIds:[], roleIds:[], institutionId:null,
     mode:'local', purpose:null, siteId:null, payer:'household', cost:0, reserve:0,
     duration:2, calendar:'any_day', interruption:'retain_cost', recipient:'participant',
@@ -21,7 +29,10 @@ FBDATA.religiousActivities = {
   samaritan_household_worship:{
     name:'Samaritan household worship', period:{ yearMin:476, yearMax:null },
     openings:[{ id:'476', revision:'wider_v2' },{ id:'493', revision:'world_v2' },
-      { id:'711', revision:'baseline' },{ id:'800', revision:'baseline' },{ id:'1204', revision:'inhabited_v2' }],
+      { id:'711', revision:'baseline' },{ id:'800', revision:'baseline' },{ id:'1204', revision:'inhabited_v2' },
+      { id:'476', revision:'jewish_samaritan_v3' },{ id:'493', revision:'jewish_samaritan_v3' },
+      { id:'711', revision:'jewish_samaritan_v3_governments_v2' },{ id:'800', revision:'jewish_samaritan_v3_governments_v2' },
+      { id:'1204', revision:'jewish_samaritan_v3' }],
     faithIds:['samaritan'], affiliationIds:[], roleIds:[], institutionId:null,
     mode:'local', purpose:null, siteId:null, payer:'household', cost:0, reserve:0,
     duration:1, calendar:'any_day', interruption:'retain_cost', recipient:'participant',
@@ -29,7 +40,8 @@ FBDATA.religiousActivities = {
   },
   karaite_household_worship:{
     name:'Karaite household worship', period:{ yearMin:1066, yearMax:null },
-    openings:[{ id:'1066', revision:'inhabited_v2' },{ id:'1204', revision:'inhabited_v2' }],
+    openings:[{ id:'1066', revision:'inhabited_v2' },{ id:'1204', revision:'inhabited_v2' },
+      { id:'1066', revision:'jewish_samaritan_v3_governments_v2' },{ id:'1204', revision:'jewish_samaritan_v3' }],
     faithIds:['karaite'], affiliationIds:[], roleIds:[], institutionId:null,
     mode:'local', purpose:null, siteId:null, payer:'household', cost:0, reserve:0,
     duration:1, calendar:'any_day', interruption:'retain_cost', recipient:'participant',
@@ -38,7 +50,7 @@ FBDATA.religiousActivities = {
   /* The shared milestone prevents stacking household and local learning. */
   jewish_meso_study_circle_476_lesson:{
     name:'Study with the local group', period:{ yearMin:476, yearMax:493 },
-    openings:[{ id:'476', revision:'wider_v2' }], faithIds:['jewish'], affiliationIds:[],
+    openings:[{ id:'476', revision:'wider_v2' },{ id:'476', revision:'jewish_samaritan_v3' }], faithIds:['jewish'], affiliationIds:[],
     roleIds:['learner','study_helper'], institutionId:'jewish_meso_study_circle_476',
     mode:'local', purpose:null, siteId:null, payer:'household', cost:0, reserve:0,
     duration:2, calendar:'any_day', interruption:'retain_cost', recipient:'institution',
@@ -46,7 +58,7 @@ FBDATA.religiousActivities = {
   },
   jewish_meso_study_circle_493_lesson:{
     name:'Study with the local group', period:{ yearMin:493, yearMax:493 },
-    openings:[{ id:'493', revision:'world_v2' }], faithIds:['jewish'], affiliationIds:[],
+    openings:[{ id:'493', revision:'world_v2' },{ id:'493', revision:'jewish_samaritan_v3' }], faithIds:['jewish'], affiliationIds:[],
     roleIds:['learner','study_helper'], institutionId:'jewish_meso_study_circle_493',
     mode:'local', purpose:null, siteId:null, payer:'household', cost:0, reserve:0,
     duration:2, calendar:'any_day', interruption:'retain_cost', recipient:'institution',
@@ -54,7 +66,7 @@ FBDATA.religiousActivities = {
   },
   alexandria_communal_school_1204_lesson:{
     name:'Study with the local group', period:{ yearMin:1204, yearMax:null },
-    openings:[{ id:'1204', revision:'inhabited_v2' }], faithIds:['jewish'], affiliationIds:[],
+    openings:[{ id:'1204', revision:'inhabited_v2' },{ id:'1204', revision:'jewish_samaritan_v3' }], faithIds:['jewish'], affiliationIds:[],
     roleIds:['learner','study_helper'], institutionId:'alexandria_communal_school_1204',
     mode:'local', purpose:null, siteId:null, payer:'household', cost:0, reserve:0,
     duration:2, calendar:'any_day', interruption:'retain_cost', recipient:'institution',
@@ -62,7 +74,7 @@ FBDATA.religiousActivities = {
   },
   jewish_sardis_congregation_476_care:{
     name:'Help care for the synagogue', period:{ yearMin:476, yearMax:493 },
-    openings:[{ id:'476', revision:'wider_v2' }], faithIds:['jewish'], affiliationIds:[],
+    openings:[{ id:'476', revision:'wider_v2' },{ id:'476', revision:'jewish_samaritan_v3' }], faithIds:['jewish'], affiliationIds:[],
     roleIds:['worshipper'], institutionId:'jewish_sardis_congregation_476',
     mode:'local', purpose:null, siteId:null, payer:'household', cost:0, reserve:0,
     duration:2, calendar:'any_day', interruption:'retain_cost', recipient:'institution',
@@ -71,7 +83,7 @@ FBDATA.religiousActivities = {
   },
   jewish_sardis_congregation_493_care:{
     name:'Help care for the synagogue', period:{ yearMin:493, yearMax:493 },
-    openings:[{ id:'493', revision:'world_v2' }], faithIds:['jewish'], affiliationIds:[],
+    openings:[{ id:'493', revision:'world_v2' },{ id:'493', revision:'jewish_samaritan_v3' }], faithIds:['jewish'], affiliationIds:[],
     roleIds:['worshipper'], institutionId:'jewish_sardis_congregation_493',
     mode:'local', purpose:null, siteId:null, payer:'household', cost:0, reserve:0,
     duration:2, calendar:'any_day', interruption:'retain_cost', recipient:'institution',
@@ -82,28 +94,28 @@ FBDATA.religiousActivities = {
 FBDATA.religiousPatronage = {
   jewish_sardis_giving_476:{
     name:'Support the Sardis synagogue', period:{ yearMin:476, yearMax:493 },
-    openings:[{ id:'476', revision:'wider_v2' }], faithIds:['jewish'], affiliationIds:[],
+    openings:[{ id:'476', revision:'wider_v2' },{ id:'476', revision:'jewish_samaritan_v3' }], faithIds:['jewish'], affiliationIds:[],
     roleIds:[], institutionId:'jewish_sardis_congregation_476', payer:'household', reserve:0,
     foundation:{ startup:0, capital:0, treasury:0, landRequired:true },
     funds:{ building_care:{ name:'Synagogue care', capacity:8, unitCost:1 } }, outreach:[]
   },
   jewish_sardis_giving_493:{
     name:'Support the Sardis synagogue', period:{ yearMin:493, yearMax:493 },
-    openings:[{ id:'493', revision:'world_v2' }], faithIds:['jewish'], affiliationIds:[],
+    openings:[{ id:'493', revision:'world_v2' },{ id:'493', revision:'jewish_samaritan_v3' }], faithIds:['jewish'], affiliationIds:[],
     roleIds:[], institutionId:'jewish_sardis_congregation_493', payer:'household', reserve:0,
     foundation:{ startup:0, capital:0, treasury:0, landRequired:true },
     funds:{ building_care:{ name:'Synagogue care', capacity:8, unitCost:1 } }, outreach:[]
   },
   jewish_sardis_public_giving_476:{
     name:'Support the Sardis synagogue', period:{ yearMin:476, yearMax:493 },
-    openings:[{ id:'476', revision:'wider_v2' }], faithIds:['jewish'], affiliationIds:[],
+    openings:[{ id:'476', revision:'wider_v2' },{ id:'476', revision:'jewish_samaritan_v3' }], faithIds:['jewish'], affiliationIds:[],
     roleIds:[], institutionId:'jewish_sardis_congregation_476', payer:'public', reserve:0, ai:true,
     foundation:{ startup:0, capital:0, treasury:0, landRequired:true },
     funds:{ building_care:{ name:'Synagogue care', capacity:8, unitCost:1 } }, outreach:[]
   },
   jewish_sardis_public_giving_493:{
     name:'Support the Sardis synagogue', period:{ yearMin:493, yearMax:493 },
-    openings:[{ id:'493', revision:'world_v2' }], faithIds:['jewish'], affiliationIds:[],
+    openings:[{ id:'493', revision:'world_v2' },{ id:'493', revision:'jewish_samaritan_v3' }], faithIds:['jewish'], affiliationIds:[],
     roleIds:[], institutionId:'jewish_sardis_congregation_493', payer:'public', reserve:0, ai:true,
     foundation:{ startup:0, capital:0, treasury:0, landRequired:true },
     funds:{ building_care:{ name:'Synagogue care', capacity:8, unitCost:1 } }, outreach:[]

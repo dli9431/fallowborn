@@ -58,6 +58,31 @@ FBDATA.religiousInstitutionProfiles = {
     fees:{}, affiliationIds:['jewish_rabbinic_learning_1204'],
     ai:{ roles:['learner'], affiliations:[], reserve:0, maxActions:2, recognize:false }
   },
+  /* Later lay groups imply neither a synagogue building nor a court. */
+  jewish_local_congregation_later:{
+    name:'Local Jewish congregation', faithIds:['jewish'],
+    period:{ yearMin:800, yearMax:1204 }, system:null,
+    roles:{
+      worshipper:{ name:'Congregant', minAge:16, sexes:[], unmarried:false,
+        professions:[], skills:{}, affiliationId:null }
+    },
+    selection:null,
+    recognition:{ sources:[], roles:[], quorum:1, requiresLeader:false, protectedWorship:true },
+    actions:['admit','withdraw'], fees:{}, affiliationIds:[],
+    ai:{ roles:['worshipper'], affiliations:[], reserve:0, maxActions:2, recognize:false }
+  },
+  karaite_lay_congregation:{
+    name:'Local Karaite congregation', faithIds:['karaite'],
+    period:{ yearMin:1066, yearMax:1204 }, system:null,
+    roles:{
+      worshipper:{ name:'Congregant', minAge:16, sexes:[], unmarried:false,
+        professions:[], skills:{}, affiliationId:null }
+    },
+    selection:null,
+    recognition:{ sources:[], roles:[], quorum:1, requiresLeader:false, protectedWorship:true },
+    actions:['admit','withdraw'], fees:{}, affiliationIds:[],
+    ai:{ roles:['worshipper'], affiliations:[], reserve:0, maxActions:2, recognize:false }
+  },
   /* Lay membership grants no Samaritan priesthood or sanctuary access. */
   samaritan_lay_congregation:{
     name:'Local Samaritan congregation', faithIds:['samaritan'],
@@ -92,4 +117,7 @@ FBDATA.techImpactReviews.features.religious_institution_ai = {
 };
 FBDATA.techImpactReviews.features.religious_institution_constitutional_binding = {
   mode:'none', rationale:'Explicit temporal binding reads a canonical qualified incumbent and existing public rights, independently of spiritual membership or research.'
+};
+FBDATA.techImpactReviews.features.jewish_samaritan_dated_communities = {
+  mode:'none', rationale:'Dated lay communities and household observance require presence and voluntary participation, without a discovery requirement.'
 };
