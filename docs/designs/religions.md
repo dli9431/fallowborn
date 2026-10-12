@@ -309,6 +309,12 @@ The unreleased germanic_pagan definition overrides the pagan root with one spous
 
 Released pagan, norse_pagan, slavic_pagan, baltic_pagan and tengri definitions retain their effective doctrine. The five provisional regional definitions remain unchanged while their individual opening assignments await evidence; no alias, population migration or new primary faith is introduced. A later local institution must declare its own admission, commitments, property and recognition rather than infer them from a display role or county controller. Shared career selection and vocation rules remain their existing contracts; this data correction supplies no new institution or destination.
 
+Arabian catalogue compatibility
+
+arabian_traditional_476 is a standalone early-opening definition with bookmarkIds limited to 476 and 493. Its roles, clergy marriage, spouse limits and customary legal context are explicit simulation defaults; they come from this definition rather than a pagan ancestor. It declares neither a central head nor a holy-war tradition and has no religious advancement paths. Catalogue scope alone supplies no local institution, sanctuary access or political right.
+
+The two expanded early openings keep county communities, realm faith, generated court kin and congregation representatives as separate consumers. Jewish and East Syriac records continue using their shared family definitions. Local representatives do not create a central head, and a realm's profession does not rewrite its residents. Later historical openings do not assign the early Arabian definition. Existing campaign records keep their faith ids and population partitions on restore. tests/e2e/specs/arabian-traditions.spec.js covers the independent definition, both early consumer inventories, date rejection, released-catalogue compatibility and save retention. These compatibility checks add no player capability or technology requirement.
+
 Dated faith authoring
 
 A faith's top-level availability record declares optional inclusive yearMin/yearMax integers, eras, bookmarkIds and consumers. It is local metadata, separate from inherited properties. An omitted field is unrestricted; an empty selector list permits no consumer. A child needs its own declaration. Existing JSON mods that omit availability keep their prior eligibility. Invalid dates, unknown or duplicate selectors and unsupported fields fail detached catalogue validation. Availability describes potential eligibility, not evidence of local adherence or a county majority.
