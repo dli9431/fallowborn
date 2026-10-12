@@ -43,6 +43,7 @@ window.FB = window.FB || {};
       locationId:loc ? loc.id : travel.currentId,
       destinationId:dest ? dest.id : travel.destinationId
     };
+    if (travel.religiousActivity) ctx.activityJourneyTurn = travel.startTurn;
     const target = travel.targetCharId && state.chars[travel.targetCharId];
     if (target) ctx.visitname = FB.fullName(target);
     /* Contract stories quote the same frozen terms as the offer. */
@@ -73,7 +74,7 @@ window.FB = window.FB || {};
     return p.travelHistory;
   }
   function historyHas(state, purposeId, destinationId) {
-    const list = history(state);
+    const list = Array.isArray(state.player.travelHistory) ? state.player.travelHistory : [];
     for (let i = 0; i < list.length; i++) {
       if (list[i].purpose === purposeId &&
         (!destinationId || list[i].destinationId === destinationId)) return true;
@@ -952,7 +953,7 @@ window.FB = window.FB || {};
       ? FB.travelRoute(p.provinceId, pid)
       : routeFromSearch(search, pid);
     if (!route || !route.length) return;
-    const legDays = FB.travelLegDays(state);
+    const legDays = opts.readOnly ? FB.travelLegDaysSnapshot(state) : FB.travelLegDays(state);
     const pr = FB.world.byId[pid];
     seen[pid] = 1;
     out.push({
@@ -966,7 +967,7 @@ window.FB = window.FB || {};
       development:(state.dev && state.dev[pid]) || (pr && pr.dev0) || 1,
       cost:opts.overheadOnly
         ? FB.travelRouteOverhead(route, state)
-        : FB.travelCost(purposeId, route, state)
+        : opts.readOnly ? FB.travelCostSnapshot(purposeId, route, state) : FB.travelCost(purposeId, route, state)
     });
   }
 
@@ -1222,6 +1223,24 @@ window.FB = window.FB || {};
     return beginJourney(state, purposeId, choice, {
       venturePayload:venturePayload
     });
+  };
+
+  /* One authored site, with no repair of travel, standards or completion history. */
+  FB.travelSiteSnapshot = function (state, siteId) {
+    const site = (FBDATA.travelSites || []).filter(function (v) { return v.id === siteId; })[0];
+    if (!site || !siteAllowed(state, site) || FB.travelEligible(state, site.purpose, { readOnly:true }) !== true) return null;
+    const out = [], seen = {};
+    addDestination(state, out, seen, site.purpose, site.provinceId, null, { readOnly:true });
+    return out[0] || null;
+  };
+
+  FB.travelActivityCapstoneValid = function (state, ev, ctx) {
+    const t = state.player.travel;
+    if (ctx.activityJourneyTurn === undefined && !(t && t.religiousActivity)) return true;
+    if (!ev || !ev.travel || ev.travel.kind !== 'capstone') return true;
+    return !!(t && t.religiousActivity && t.phase === 'arrived' && !t.completed &&
+      ctx.activityJourneyTurn === t.startTurn && ctx.destinationId === t.destinationId && ev.travel.purpose === t.purpose &&
+      FB.religiousActivityJourneyReady(state, t));
   };
 
   FB.socialVisitPreview = function (state, c, options) {
@@ -2191,6 +2210,7 @@ window.FB = window.FB || {};
     const t = FB.travelEnsure(state);
     if (!t || t.phase !== 'arrived') return;
     recordCompletion(state);
+    if (t.religiousActivity && FB.religiousActivityJourneyDone) FB.religiousActivityJourneyDone(state, t);
     if (t.stayStarted) return;
     t.stayStarted = true;
     t.stayStartTurn = state.turn;

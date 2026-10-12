@@ -2680,6 +2680,9 @@ window.FB = window.FB || {};
           ? FB.T('{count} destinations in reach.', {count:destinations.length})
           : FB.T('No qualifying destination can be reached.')) + '</span></button>';
     }
+    if (FB.religiousActivityVisible(s, s.player.charId)) h += SH.reviewActionCardHtml({
+      id:'travel-religious-activities', label:FB.T('Religious activities'),
+      note:FB.T('Review declared journeys, local participation and patronage.') });
     h += '</div><div class="gm-footer"><button class="btn" id="travel-purpose-cancel">' +
       esc(FB.T('Cancel')) + '</button></div>';
     openModal('🧭 Take to the road…', h, {
@@ -2696,6 +2699,8 @@ window.FB = window.FB || {};
         UI.showTravelDestinations(purposeId);
       });
     });
+    const activityLink = $('travel-religious-activities');
+    if (activityLink) activityLink.onclick = function () { UI.showReligiousActivities({ returnTo:UI.showTravelPurposes }); };
     $('travel-purpose-cancel').addEventListener('click', UI.closeModal);
   };
 
@@ -20857,6 +20862,9 @@ window.FB = window.FB || {};
         });
       }
     }
+    if (FB.religiousActivityVisible(s, c.id)) advancement += SH.reviewActionCardHtml({
+      id:'career-religious-activities', label:FB.T('Religious activities'),
+      note:FB.T('Review participation without changing work, rank or public office.') });
     const cardinalPetition = FB.cardinalPetitionStatus &&
       FB.cardinalPetitionStatus(s, c);
     if (cardinalPetition && cardinalPetition.visible) {
@@ -20969,6 +20977,10 @@ window.FB = window.FB || {};
         view:'career', cid:cid, returnContext:returnContext
       });
     });
+    const activities = $('career-religious-activities');
+    if (activities) activities.onclick = function () {
+      UI.showReligiousActivities({ personId:c.id, returnTo:function () { UI.showCareerPicker(cid, returnContext); } });
+    };
     const religious = $('career-religious');
     const abbeyOffice = $('career-abbey-office');
     if (abbeyOffice) abbeyOffice.addEventListener('click', function () {

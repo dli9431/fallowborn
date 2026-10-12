@@ -3367,6 +3367,7 @@ window.FB = window.FB || {};
   };
   FB.localInstitutionsSeason = function (s) {
     if (FB.religiousInstitutionAI) FB.religiousInstitutionAI(s);
+    if (FB.religiousActivityAI) FB.religiousActivityAI(s);
     if (!s.localInstitutions || !FB.systemAvailable(s, 'civic_institutions') && !FB.systemAvailable(s, 'episcopal_sees')) return;
     var period = Math.floor(s.turn / 90);
     if (period < 1) return;

@@ -6415,8 +6415,9 @@ window.FB = window.FB || {};
     return false;
   }
 
-  FB.financeCollateralPledged = function (state, kind, id) {
-    return collateralPledged(state, { kind:kind, id:id });
+  FB.financeCollateralPledged = function (state, kind, id, options) {
+    return collateralPledged(state, { kind:kind, id:id }, options && options.readOnly
+      ? { loans:state.economy && Array.isArray(state.economy.loans) ? state.economy.loans : [] } : undefined);
   };
 
   FB.financeCollateral = function (state, economy) {

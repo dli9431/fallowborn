@@ -348,3 +348,8 @@ A daily courier batch normalizes the delivery list once, records completed deliv
 
 
 The targeted repeatable tournament purpose permits free adults through tier 7. It preserves household home, reuses routes, transport and road incidents, and exempts only its own journeys from the yearly departure cooldown and 90-day stay. Its quote reserves a physical return and requotes onward legs from the current venue. War starts that return before generic cancellation; return movement remains permitted during war, while death, captivity and succession keep priority. Exile still blocks entry into a prohibited county. Local attendance never replaces another journey. See tournaments.md.
+
+
+Religious activity adapters
+
+travelSiteSnapshot reads one authored site through the ordinary route, eligibility and history constraints without repairing travel or household standards. Explicit religious activity journeys attach a declaration to the same player.travel record. Their start-turn context makes a stale capstone reject before reward effects, and completion records a journey without asserting a separately performed rite. Activity profiles add no second route, charge or pilgrimage reward. Existing unwrapped saved journeys remain unchanged. See docs/designs/religious-activities.md.
