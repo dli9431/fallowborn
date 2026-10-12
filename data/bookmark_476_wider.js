@@ -308,7 +308,10 @@
     });
   });
   var expandedRealms = b.realms.map(function (r) {
-    if (r.id === 'sasanian_476') return Object.assign({},r,{aristocraticProfileId:'sasanian_wider_476'});
+    if (r.id === 'sasanian_476') return Object.assign({},r,{
+      aristocraticProfileId:'sasanian_wider_476',religion:'zoroastrian_sasanian_476',
+      governingIdentity:Object.assign({},r.governingIdentity,{eliteFaithId:'zoroastrian_sasanian_476'})
+    });
     return r.id === 'pontic_following_476' ? Object.assign({},r,{
       mobile:Object.assign({},r.mobile,{profileId:'pontic_wider_following'})
     }) : r;
@@ -328,6 +331,24 @@
     openingRevisions:{wider_v2:opening},openingLegacyRevision:'wider_v2',
     straits:b.straits.concat(crossings),crossingClasses:crossingClasses
   };
+  /* The existing king is one consumer whether played or simulated. Keep
+     his retained beginning intact and bind a fresh copy to this revision. */
+  var retainedCourtStart = FBDATA.startScenarios.filter(function (s) { return s.id === 'peroz_476'; })[0];
+  FBDATA.startScenarios.push(Object.assign(JSON.parse(JSON.stringify(retainedCourtStart)),{
+    id:'peroz_sasanian_476',startReligion:'zoroastrian_sasanian_476'
+  }));
+  function startsFor(world, excluded) {
+    return FBDATA.startScenarios.filter(function (s) {
+      return s.id !== excluded && (!s.bookmarkIds || s.bookmarkIds.indexOf('476') >= 0) &&
+        (!s.eras || s.eras.indexOf(b.era) >= 0) && (!b.starts || b.starts.indexOf(s.id) >= 0 ||
+          s.id === 'peroz_sasanian_476') &&
+        (!s.fixedProvinceId || world.provinces.some(function (p) {
+          return p.id === s.fixedProvinceId && !p.wasteland;
+        })) && (!s.rulerRealmId || world.realms.some(function (r) { return r.id === s.rulerRealmId; }));
+    }).map(function (s) { return s.id; });
+  }
+  var retainedStarts = startsFor(b,'peroz_sasanian_476');
+  expanded.starts = startsFor(expanded,'peroz_476');
   /* Estate tenure is positively scoped, not inferred from a bookmark-wide
      colonate switch. Regional imperial estates and the authored Gallic and
      African estate archetypes supply these opening locations. */
@@ -339,7 +360,7 @@
   /* Root fields are the retained merged opening. Revisions replace whole
      fields; an unstamped supported save selects this baseline. */
   b.revision = 'wider_v2';
-  b.revisions = {baseline:{},wider_v2:expanded};
+  b.revisions = {baseline:{starts:retainedStarts},wider_v2:expanded};
   FBDATA.techImpactReviews.features.period_476_wider_habitation = {mode:'none',
     rationale:'Established regional households, existing civil offices and local political relationships require no technological discovery. Existing travel, equipment and production requirements remain in force.'};
   FBDATA.techImpactReviews.features.bounded_overland_corridors = {mode:'none',

@@ -913,6 +913,8 @@ FBDATA.bookmarkReligions476Wider = {
       }
     }
   },
+  /* Provisional local assignments remain unchanged until each community
+     and court has a dated replacement; this is not additive acceptance. */
   "iranian_traditional_476": {
     "availability": {"bookmarkIds": ["476","493"]},
     "name": "Eastern Iranian local practices",
@@ -966,6 +968,8 @@ FBDATA.bookmarkReligions476Wider = {
       }
     }
   },
+  /* Provisional local assignments remain unchanged until each community
+     and court has a dated replacement; this is not additive acceptance. */
   "sogdian_traditional_476": {
     "availability": {"bookmarkIds": ["476","493"]},
     "name": "Sogdian local traditions",

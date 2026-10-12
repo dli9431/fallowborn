@@ -20,7 +20,7 @@ test('the existing catalogue declares local availability without changing releas
     await openGame(page,testInfo);
     const fixture = JSON.parse(fs.readFileSync(path.join(__dirname,'../fixtures/released-catalogue.json'),'utf8'));
     expect((await page.evaluate(releasedCatalogue,fixture.selection)).hashes).toEqual(fixture.hashes);
-    expect(await page.evaluate(function () {
+    expect(await page.evaluate(function (released) {
       const before = JSON.stringify(FBDATA), rng = FB.getRngState(), uid = FB.getUidCounter();
       const ids = FB.religionIds(null,false);
       const results = ids.every(function (id) {
@@ -30,9 +30,10 @@ test('the existing catalogue declares local availability without changing releas
           FB.faithAvailability(id,null).yearMin !== 9999 &&
           FB.religionOf(id,null).properties.availability === undefined;
       });
-      return {count:ids.length,declared:results,errors:FB.validateReligionData(null),
+      return {released:released.every(function (id) { return ids.indexOf(id) >= 0; }),
+        declared:results,errors:FB.validateReligionData(null),
         pure:before === JSON.stringify(FBDATA) && rng === FB.getRngState() && uid === FB.getUidCounter()};
-    })).toEqual({count:44,declared:true,errors:[],pure:true});
+    },fixture.selection.faiths)).toEqual({released:true,declared:true,errors:[],pure:true});
   });
 
 test('all fresh worlds validate, with distinct original and wider 476 and dated Islamic targets',

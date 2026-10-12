@@ -112,6 +112,7 @@ window.FBDATA = window.FBDATA || {};
     baselineVersion:'1.127.1',
     features:{
       faith_catalogue_availability:{ mode:'none', rationale:'Religious identity has dated historical availability and consumer eligibility. Worship, profession and existing communities are baseline social conditions, independent of discovery.' },
+      iranian_local_faith_contexts:{ mode:'none', rationale:'Dated court affiliation, local worship and existing legal context are social conditions. Distinguishing learners from fire custodians introduces no discovery requirement or automatic institutional office.' },
       colonate_tenure:{ mode:'none', rationale:'Land-bound tenancy, estate obligations and paid release are legal and household conditions, independent of research.' },
       colonate_military_release:{ mode:'none', rationale:'Consented military release depends on a living possessor and personal fitness. The ordinary soldier career retains its existing training requirement.' },
       colonate_ordination_release:{ mode:'none', rationale:'Consented church release depends on a living possessor, personal piety and a local bishop. Legal status and worship require no discovery.' },
