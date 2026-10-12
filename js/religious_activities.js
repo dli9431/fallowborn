@@ -7,6 +7,32 @@
   function ident(v) { return typeof v === 'string' && /^[a-z][a-z0-9_]{0,79}$/.test(v); }
   function keys(v, allowed) { return plain(v) && Object.keys(v).every(function (k) { return allowed.indexOf(k) >= 0; }); }
   function list(v) { return Array.isArray(v) && v.length <= 32 && v.every(ident); }
+  var activeIndexes = new WeakMap();
+  function activeIds(s) {
+    var ids = activeIndexes.get(s);
+    if (!ids) {
+      ids = Object.keys(s.chars).filter(function (cid) { return !!s.chars[cid].religiousActivity; }).sort();
+      activeIndexes.set(s, ids);
+    }
+    return ids;
+  }
+  FB.religiousActivityManaged = function (s, cid) {
+    var c = s.chars[cid];
+    return !!(c && !c.dead && (cid === s.player.charId ||
+      !(FB.isExternalHouseholdAuthority && FB.isExternalHouseholdAuthority(s, c)) &&
+      (FB.isHouseholdCharacter(s, cid) || FB.manageableKinKind(s, cid))));
+  };
+  FB.religiousActivityPeople = function (s) {
+    return [s.player.charId].concat(Object.keys(s.chars).sort().filter(function (cid) {
+      return cid !== s.player.charId && FB.religiousActivityManaged(s, cid);
+    })).slice(0, 64);
+  };
+  FB.religiousActivityVisible = function (s, cid) {
+    var c = s.chars[cid || s.player.charId];
+    return !!c && (!!c.religiousActivity || [FBDATA.religiousActivities, FBDATA.religiousPatronage].some(function (table) {
+      return Object.keys(table).some(function (id) { var d = table[id]; return !d.faithIds.length || d.faithIds.indexOf(c.religion) >= 0; });
+    }));
+  };
   function live(s, d) {
     return d.period.yearMin <= s.date.year && (d.period.yearMax === null || s.date.year <= d.period.yearMax) &&
       (!d.openings.length || d.openings.some(function (o) { return o.id === s.start.id && o.revision === (s.start.revision || 'baseline'); }));
@@ -15,11 +41,12 @@
     return cid === s.player.charId ? (s.player.travel ? s.player.travel.currentId : s.player.provinceId) : FB.characterResidence(s, s.chars[cid]);
   }
   function available(s, c) {
-    return c && !c.dead && (c.health === undefined || c.health > 0) && FB.ageOf(c, s.date.year) >= 16 &&
+    return c && !c.dead && !c.captive && !c.exiled && (c.health === undefined || c.health > 0) && FB.ageOf(c, s.date.year) >= 16 &&
       !(FB.intrigueCaptivityOf && FB.intrigueCaptivityOf(s, c.id)) &&
       !(FB.justiceCustodyOf && FB.justiceCustodyOf(s, c.id)) &&
       !(s.justice && s.justice.exiles && s.justice.exiles[c.id] && s.justice.exiles[c.id].endTurn > s.turn) &&
-      (c.id !== s.player.charId || !(s.player.flags && s.player.flags.in_prison) && !FB.atWarPersonally(s));
+      (!(FB.isHouseholdCharacter(s, c.id) || FB.manageableKinKind(s, c.id)) || !FB.atWarPersonally(s)) &&
+      (c.id !== s.player.charId || !(s.player.flags && s.player.flags.in_prison));
   }
   function house(s, iid) {
     var d = FB.localInstitutionDefinitions(s)[iid];
@@ -40,7 +67,7 @@
       ins.definition.offMap && ins.definition.jurisdictionIds.indexOf(at(s, cid)) >= 0;
   }
   function payer(s, cid, kind) {
-    if (kind === 'household') return cid === s.player.charId ? { kind:kind, id:cid, funds:s.player.gold } : null;
+    if (kind === 'household') return FB.religiousActivityManaged(s, cid) ? { kind:kind, id:s.player.charId, funds:s.player.gold } : null;
     var rid = FB.treasuryCharacterRealm(s, cid);
     return rid && rid !== 'player' && FB.treasuryCounterparty(s, rid) ?
       { kind:kind, id:rid, funds:FB.treasuryAvailable(s, rid) } : null;
@@ -62,7 +89,7 @@
     c.religiousActivityHistory[d.milestone] = { turn:s.turn, activityId:d.id, performed:true, rewarded:!already };
     if (already) return;
     Object.keys(d.reward.skills).forEach(function (k) { c.skills[k] = Math.max(c.skills[k] || 0, Math.min(20, (c.skills[k] || 0) + d.reward.skills[k])); });
-    if (cid === s.player.charId) { s.player.piety += d.reward.piety; s.player.prestige += d.reward.prestige; }
+    if (FB.religiousActivityManaged(s, cid) && d.payer === 'household') { s.player.piety += d.reward.piety; s.player.prestige += d.reward.prestige; }
   }
   function commonValid(d) {
     return plain(d) && typeof d.name === 'string' && keys(d.period, ['yearMin','yearMax']) &&
@@ -76,8 +103,10 @@
     var faults = [], activities = data.religiousActivities || {}, patrons = data.religiousPatronage || {};
     Object.keys(activities).forEach(function (id) {
       var d = activities[id];
-      if (!ident(id) || !keys(d, ['name','period','openings','faithIds','affiliationIds','roleIds','institutionId','mode','purpose','siteId','payer','cost','reserve','duration','calendar','interruption','recipient','milestone','reward','legacy','service']) ||
+      if (!ident(id) || !keys(d, ['name','period','openings','faithIds','affiliationIds','roleIds','institutionId','mode','purpose','siteId','payer','cost','reserve','duration','calendar','interruption','recipient','milestone','reward','legacy','service','ai']) ||
           !commonValid(d) || ['journey','local'].indexOf(d.mode) < 0 || ['household','public'].indexOf(d.payer) < 0 ||
+          d.ai !== undefined && (d.ai !== true || d.payer !== 'public' || d.mode !== 'local') ||
+          d.payer === 'public' && d.reward && (d.reward.piety !== 0 || d.reward.prestige !== 0) ||
           !number(d.cost) || !number(d.reserve) || !Number.isInteger(d.duration) || d.duration < 0 || d.duration > 360 ||
           d.calendar !== 'any_day' || d.interruption !== 'retain_cost' || !ident(d.milestone) ||
           !keys(d.reward, ['piety','prestige','skills']) || !number(d.reward.piety) || d.reward.piety > 30 ||
@@ -100,15 +129,17 @@
     });
     Object.keys(patrons).forEach(function (id) {
       var d = patrons[id];
-      if (!ident(id) || !keys(d, ['name','period','openings','faithIds','affiliationIds','roleIds','institutionId','payer','reserve','foundation','funds','outreach']) ||
+      if (!ident(id) || !keys(d, ['name','period','openings','faithIds','affiliationIds','roleIds','institutionId','payer','reserve','foundation','funds','outreach','ai']) ||
           !commonValid(d) || !d.institutionId || ['household','public'].indexOf(d.payer) < 0 || !number(d.reserve) ||
+          d.ai !== undefined && (d.ai !== true || d.payer !== 'public') ||
           !plain(d.funds) || !Object.keys(d.funds).length || Object.keys(d.funds).length > 8 || Object.keys(d.funds).some(function (f) {
-            var v = d.funds[f]; return !ident(f) || !keys(v, ['capacity','unitCost']) || !Number.isInteger(v.capacity) ||
+            var v = d.funds[f]; return !ident(f) || !keys(v, ['name','capacity','unitCost']) || v.name !== undefined && typeof v.name !== 'string' || !Number.isInteger(v.capacity) ||
               v.capacity < 1 || v.capacity > 64 || !number(v.unitCost) || v.unitCost <= 0;
           }) || !keys(d.foundation, ['startup','capital','treasury','landRequired']) ||
           !number(d.foundation.startup) || !number(d.foundation.capital) || !number(d.foundation.treasury) || d.foundation.landRequired !== true ||
           !list(d.outreach)) faults.push('religiousPatronage.' + id);
     });
+    if (Object.keys(activities).length > 128 || Object.keys(patrons).length > 128) faults.push('religiousActivities.capacity');
     return faults;
   };
   FB.religiousActivityQuote = function (s, activityId, cid) {
@@ -117,7 +148,7 @@
     var p = payer(s, cid, d.payer), travel = null, h = d.institutionId && house(s, d.institutionId), reason = null;
     if (!participant(s, d, cid)) reason = 'eligibility';
     if (c.religiousActivity || Object.keys(c.religiousActivityHistory || {}).length >= 64 || earned(c, d, s)) reason = reason || 'commitment';
-    if (cid !== s.player.charId) reason = reason || 'participant';
+    if (activeIds(s).length >= 64) reason = reason || 'capacity';
     if (cid === s.player.charId && s.player.travel) reason = reason || 'travel';
     if (d.mode === 'journey') {
       var site = (FBDATA.travelSites || []).filter(function (v) { return v.id === d.siteId; })[0];
@@ -147,18 +178,20 @@
     if (!pay(s, q.payer, q.cost)) return false;
     c.religiousActivity = { activityId:q.activityId, startTurn:s.turn, dueTurn:s.turn + d.duration,
       location:at(s, q.cid), institutionId:d.institutionId, paid:q.cost, definition:copy(d) };
+    activeIds(s).push(q.cid);
     return true;
   };
   FB.religiousActivityFinish = function (s, cid, cancel) {
     var c = s.chars[cid], a = c && c.religiousActivity;
     if (!a) return false;
     var d = a.definition, h = d.institutionId && house(s, d.institutionId);
-    var valid = !cancel && participant(s, d, cid) && at(s, cid) === a.location &&
+    var valid = !cancel && participant(s, d, cid) && (d.payer !== 'household' || FB.religiousActivityManaged(s, cid)) && at(s, cid) === a.location &&
       (cid !== s.player.charId || !s.player.travel) && (!d.service || h && h.activityInstitutionId &&
         h.activityServices[d.service.fund] && h.activityServices[d.service.fund].unitCost === d.service.cost &&
         (h.restrictedFunds[d.service.fund] || 0) >= d.service.cost);
     if (valid && s.turn < a.dueTurn) return false;
     delete c.religiousActivity;
+    activeIndexes.set(s, activeIds(s).filter(function (id) { return id !== cid; }));
     if (!valid) return false;
     if (d.service) {
       h.restrictedFunds[d.service.fund] -= d.service.cost;
@@ -168,8 +201,8 @@
     return true;
   };
   FB.religiousActivityTick = function (s) {
-    /* S04 owns household/AI selection. This adapter only maintains explicit starts. */
-    FB.religiousActivityFinish(s, s.player.charId, false);
+    activeIndexes.set(s, activeIds(s).filter(function (cid) { return !!(s.chars[cid] && s.chars[cid].religiousActivity); }));
+    activeIds(s).slice(0, 64).forEach(function (cid) { FB.religiousActivityFinish(s, cid, false); });
     var t = s.player.travel, a = t && t.religiousActivity;
     if (a && !t.completed && !FB.religiousActivityJourneyReady(s, t)) FB.travelCancel(s);
   };
@@ -207,11 +240,18 @@
       if (!ins || !ins.definition.abbeyId || !ins.definition.provinceId || h || (s.abbeys && s.abbeys.houses || []).length >= 12 ||
           (s.abbeys && s.abbeys.houses || []).some(function (v) { return v.provinceId === ins.definition.provinceId; }) ||
           !g || g.provinceId !== ins.definition.provinceId || cid !== s.player.charId || d.payer !== 'household') reason = reason || 'property';
-    } else if (!h || h.activityInstitutionId !== d.institutionId || h.activityProfileId !== profileId) reason = reason || 'recipient';
+    } else if (!h || h.activityInstitutionId !== d.institutionId ||
+        h.activityProfileId !== profileId && (d.payer !== 'public' || Object.keys(d.funds).some(function (id) {
+          return !h.activityServices[id] || h.activityServices[id].capacity !== d.funds[id].capacity ||
+            h.activityServices[id].unitCost !== d.funds[id].unitCost;
+        }))) reason = reason || 'recipient';
     if (t.land && (!g || !Number.isInteger(g.count) || g.count <= 0 || cid !== s.player.charId || d.payer !== 'household' ||
         !ins || g.provinceId !== ins.definition.provinceId ||
         FB.financeCollateralPledged(s, 'land', t.land.provinceId + ':' + t.land.settlement, { readOnly:true }) ||
         s.player.manor && s.player.manor.provinceId === t.land.provinceId && s.player.manor.settlement === t.land.settlement)) reason = reason || 'property';
+    if (g && h && h.plots.length >= 64 && !h.plots.some(function (v) {
+      return v.provinceId === g.provinceId && v.settlement === g.settlement;
+    })) reason = reason || 'capacity';
     if (action === 'donation' || action === 'outreach') {
       cost = t.land ? 0 : t.amount;
       if (!t.land && (!number(cost) || cost <= 0 || !d.funds[t.fund] ||
@@ -260,5 +300,144 @@
       });
     }
     return true;
+  };
+  FB.religiousActivityCancel = function (s, cid, reviewed) {
+    var c = s.chars[cid];
+    if (!FB.religiousActivityManaged(s, cid) || !c.religiousActivity || JSON.stringify(c.religiousActivity) !== JSON.stringify(reviewed)) return false;
+    FB.religiousActivityFinish(s, cid, true);
+    return true;
+  };
+  FB.religiousPatronageOptions = function (s, profileId, cid) {
+    var d = FBDATA.religiousPatronage[profileId], out = [], groups = {};
+    if (!d) return out;
+    var def = FB.localInstitutionDefinitions(s)[d.institutionId];
+    if (!def) return out;
+    var existing = house(s, d.institutionId);
+    if (cid === s.player.charId && d.payer === 'household') {
+      (s.player.landPlots || []).forEach(function (p) {
+        if (p.provinceId !== def.provinceId) return;
+        var key = p.provinceId + ':' + p.settlement;
+        if (!groups[key]) groups[key] = { provinceId:p.provinceId, settlement:p.settlement, count:0 };
+        groups[key].count++;
+      });
+      Object.keys(groups).sort().slice(0, 32).forEach(function (key) { out.push({ action:existing ? 'donation' : 'foundation', terms:{ land:groups[key] } }); });
+    }
+    if (!existing) {
+      if (!out.length) out.push({ action:'foundation', terms:{} });
+      return out;
+    }
+    Object.keys(d.funds).sort().forEach(function (fund) { out.push({ action:'donation', terms:{ fund:fund, amount:d.funds[fund].unitCost } }); });
+    def.jurisdictionIds.forEach(function (pid) {
+      var rec = s.population && s.population.counties[pid];
+      var scopes = [null].concat(Object.keys(rec && rec.settlementCommunityProjects || {}).slice(0, 32).map(Number));
+      scopes.forEach(function (index) {
+        var q = FB.communityProjectFundingSnapshot(s, pid, index);
+        if (!q || d.outreach.indexOf(q.project.policy) < 0) return;
+        Object.keys(d.funds).sort().forEach(function (fund) {
+          out.push({ action:'outreach', terms:{ fund:fund, amount:d.funds[fund].unitCost,
+            provinceId:pid, settlement:index, target:q.project.target, policy:q.project.policy } });
+        });
+      });
+    });
+    return out.slice(0, 64);
+  };
+  FB.religiousActivityAI = function (s) {
+    var activities = Object.keys(FBDATA.religiousActivities).sort().filter(function (id) { return FBDATA.religiousActivities[id].ai; });
+    var patrons = Object.keys(FBDATA.religiousPatronage).sort().filter(function (id) { return FBDATA.religiousPatronage[id].ai; });
+    var period = Math.floor(s.turn / 90), applied = 0, attempts = 0;
+    if (!activities.length && !patrons.length || period < 1 || s.religiousActivityAI && s.religiousActivityAI.period >= period) return 0;
+    s.religiousActivityAI = { period:period };
+    var realms = Object.keys(s.realms).sort(), offset = period * 16 % Math.max(1, realms.length);
+    for (var i = 0; i < Math.min(16, realms.length) && applied < 4 && attempts < 64; i++) {
+      var rid = realms[(offset + i) % realms.length], realm = s.realms[rid];
+      if (rid === 'player' || !realm.alive || !FB.treasuryCounterparty(s, rid) || FB.isRealmAtWar(s, rid)) continue;
+      var c = FB.realmRulerCharacterSnapshot(s, rid), success = false;
+      if (!c || FB.religiousActivityManaged(s, c.id)) continue;
+      activities.some(function (id) {
+        if (attempts++ >= 64) return true;
+        var q = FB.religiousActivityQuote(s, id, c.id);
+        if (q && q.allowed && q.payer.id === rid && FB.religiousActivityApply(s, q)) { applied++; success = true; return true; }
+        return false;
+      });
+      if (success) continue;
+      patrons.some(function (id) {
+        return FB.religiousPatronageOptions(s, id, c.id).some(function (option) {
+          if (attempts++ >= 64) return true;
+          if (option.action === 'foundation') return false;
+          var q = FB.religiousPatronageQuote(s, id, c.id, option.action, option.terms);
+          if (q && q.allowed && q.payer.id === rid && FB.religiousPatronageApply(s, q)) { applied++; success = true; return true; }
+          return false;
+        }) || success;
+      });
+    }
+    return applied;
+  };
+  FB.validateReligiousActivityState = function (s) {
+    var count = 0, defs = FB.localInstitutionDefinitions(s), provinces = {};
+    (FB.campaignBookmark(s).provinces || []).forEach(function (p) { provinces[p.id] = true; });
+    function fail(path) { throw new Error(FB.T('Invalid v4 save field at {path}.', { path:path })); }
+    function turn(v) { return Number.isInteger(v) && v >= 0 && v <= s.turn; }
+    function definition(d, id) {
+      var data = Object.assign({}, FBDATA, { religiousActivities:{}, religiousPatronage:{} });
+      data.religiousActivities[id] = d;
+      return !FB.religiousActivityCatalogFaults(data).length;
+    }
+    Object.keys(s.chars).forEach(function (cid) {
+      var c = s.chars[cid], a = c.religiousActivity, history = c.religiousActivityHistory;
+      if (a !== undefined) {
+        count++;
+        if (!plain(a) || !ident(a.activityId) || !definition(a.definition, a.activityId) || a.definition.mode !== 'local' ||
+            !turn(a.startTurn) || !Number.isInteger(a.dueTurn) || a.dueTurn !== a.startTurn + a.definition.duration ||
+            !provinces[a.location] || a.institutionId !== a.definition.institutionId ||
+            a.institutionId && !defs[a.institutionId] || !number(a.paid)) fail('chars.' + cid + '.religiousActivity');
+      }
+      if (history !== undefined) {
+        if (!plain(history) || Object.keys(history).length > 64) fail('chars.' + cid + '.religiousActivityHistory');
+        Object.keys(history).forEach(function (id) {
+          var r = history[id];
+          if (!ident(id) || !plain(r) || !ident(r.activityId) || !turn(r.turn) || typeof r.performed !== 'boolean' ||
+              typeof r.rewarded !== 'boolean' || r.journeyCompleted !== undefined && r.journeyCompleted !== true)
+            fail('chars.' + cid + '.religiousActivityHistory.' + id);
+        });
+      }
+    });
+    if (count > 64) fail('religiousActivities.capacity');
+    var t = s.player.travel, a = t && t.religiousActivity;
+    if (a !== undefined && a !== null && (!plain(a) || a.cid !== s.player.charId || !ident(a.activityId) ||
+        !definition(a.definition, a.activityId) || a.definition.mode !== 'journey' || a.milestone !== a.definition.milestone ||
+        a.definition.purpose !== t.purpose)) fail('player.travel.religiousActivity');
+    (s.abbeys && s.abbeys.houses || []).forEach(function (h) {
+      if (!h.activityInstitutionId) return;
+      var def = defs[h.activityInstitutionId];
+      if (!def || def.abbeyId !== h.id || def.provinceId !== h.provinceId || !ident(h.activityProfileId) ||
+          !number(h.capital) || !number(h.treasury) || !number(h.activitySpent) ||
+          !plain(h.restrictedFunds) || !plain(h.activityServices) || Object.keys(h.activityServices).length > 8 ||
+          !Array.isArray(h.plots) || h.plots.length > 64) fail('abbeys.activityProperty');
+      Object.keys(h.activityServices).forEach(function (id) {
+        var r = h.activityServices[id];
+        if (!ident(id) || !plain(r) || !Number.isInteger(r.capacity) || r.capacity < 1 || r.capacity > 64 ||
+            !number(r.unitCost) || r.unitCost === 0) fail('abbeys.activityServices');
+      });
+      Object.keys(h.restrictedFunds).forEach(function (id) {
+        if (!h.activityServices[id] || !number(h.restrictedFunds[id]) ||
+            h.restrictedFunds[id] > h.activityServices[id].capacity * h.activityServices[id].unitCost) fail('abbeys.restrictedFunds');
+      });
+      h.plots.forEach(function (p) {
+        if (!provinces[p.provinceId] || !Number.isInteger(p.settlement) || p.settlement < 0 || !Number.isInteger(p.count) || p.count < 1) fail('abbeys.plots');
+      });
+    });
+    Object.keys(s.population && s.population.counties || {}).forEach(function (pid) {
+      var county = s.population.counties[pid];
+      var scopes = [county.communityProjects].concat(Object.keys(county.settlementCommunityProjects || {}).map(function (id) {
+        return county.settlementCommunityProjects[id];
+      }));
+      scopes.forEach(function (projects) {
+        var support = projects && projects.faith && projects.faith.activitySupport;
+        if (support !== undefined && (!plain(support) || !defs[support.institutionId] || !number(support.amount) ||
+            support.amount === 0 || !Number.isInteger(support.untilTurn) || support.untilTurn < 0 || support.untilTurn > s.turn + 360)) fail('population.activitySupport');
+      });
+    });
+    if (s.religiousActivityAI !== undefined && (!plain(s.religiousActivityAI) || !Number.isInteger(s.religiousActivityAI.period) ||
+        s.religiousActivityAI.period < 0 || s.religiousActivityAI.period > Math.floor(s.turn / 90))) fail('religiousActivityAI');
   };
 })();

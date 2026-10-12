@@ -85,6 +85,7 @@
     if (FB.validateColonateTenure) FB.validateColonateTenure(state);
     if (FB.validateLocalInstitutionState) FB.validateLocalInstitutionState(state);
     if (FB.validateReligiousInstitutionState) FB.validateReligiousInstitutionState(state);
+    if (FB.validateReligiousActivityState) FB.validateReligiousActivityState(state);
     if (FB.validateReligionInstitutionState) FB.validateReligionInstitutionState(state);
     if (FB.validateHistoricalHolyWarState) FB.validateHistoricalHolyWarState(state);
     if (FB.governments.support) FB.governments.support.validate(state);

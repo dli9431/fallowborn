@@ -909,6 +909,19 @@ def extract_structured(inv: Inventory) -> None:
                 inv.add(f"ecclesiasticalProfile.{profile_id}.name.{branch}", record,
                         f"data/{filename}:{line}", "Ecclesiastical temporal constitution.", ())
 
+    religious_activities_path = DATA / 'religious_activities.js'
+    for table, namespace in [('religiousActivities', 'religiousActivity'),
+                             ('religiousPatronage', 'religiousPatronage')]:
+        for item_id, item_node in (node_object(find_assignment(religious_activities_path, 'FBDATA', table)) or {}).items():
+            item = node_object(item_node) or {}
+            for branch, record, line in branch_records(item.get('name')):
+                inv.add(f'{namespace}.{item_id}.name.{branch}', record,
+                        f'data/religious_activities.js:{line}', 'Religious activity or patronage.', ())
+            for fund_id, fund_node in (node_object(item.get('funds')) or {}).items():
+                for branch, record, line in branch_records((node_object(fund_node) or {}).get('name')):
+                    inv.add(f'{namespace}.{item_id}.funds.{fund_id}.name.{branch}', record,
+                            f'data/religious_activities.js:{line}', 'Restricted religious service.', ())
+
     religious_institutions_path = DATA / 'religious_institutions.js'
     for table, namespace in [('religiousAffiliations', 'religiousAffiliation'),
                              ('religiousInstitutionProfiles', 'religiousInstitutionProfile')]:

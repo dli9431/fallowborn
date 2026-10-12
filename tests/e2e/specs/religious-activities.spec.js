@@ -2,6 +2,8 @@
 const { test, expect } = require('../support/fixture');
 const { openGame } = require('../support/game/navigation');
 const { startDeterministicGame } = require('../support/game/start');
+const { startHistoricalGame } = require('../support/game/historical-start');
+const { restoreBookmark } = require('../support/game/bookmark-acceptance');
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
   'index.html', 'data/religious_activities.js', 'data/religious_institutions.js',
@@ -11,7 +13,9 @@ dependsOnRuntime(__filename, [
   'js/events.js', 'js/abbeys.js', 'js/population.js', 'js/treasury.js', 'js/mods.js',
   'js/main.js', 'js/actions.js', 'js/model.js', 'js/authority.js', 'js/institutions.js',
   'js/religion.js', 'js/settlement.js', 'js/justice.js', 'js/intrigue.js',
-  'js/save.js', 'js/save_v4.js', 'js/economy.js', 'js/market.js', 'js/systems.js'
+  'js/save.js', 'js/save_v4.js', 'js/economy.js', 'js/market.js', 'js/systems.js',
+  'data/actions.js', 'js/ui_religious_activities.js', 'js/ui_misc.js', 'js/ui_modals.js',
+  'js/items.js', 'js/world.js', 'js/wars.js', 'css/style.css'
 ]);
 
 function installActivities() {
@@ -64,8 +68,234 @@ function installActivities() {
   };
 }
 test.beforeEach(async function ({ page }, testInfo) {
-  await openGame(page, testInfo); await startDeterministicGame(page); await page.evaluate(installActivities);
+  if (testInfo.title.includes('CrazyGames restore')) {
+    await startHistoricalGame(page, testInfo, { bookmark:'867', code:'CADENCE-867-farmer-london-f-Ada' }, true);
+  } else { await openGame(page, testInfo); await startDeterministicGame(page); }
+  await page.evaluate(installActivities);
 });
+
+function installActivityHousehold() {
+  var s = FB.state, me = s.chars[s.player.charId];
+  var c = JSON.parse(JSON.stringify(me));
+  c.id = 'test_activity_spouse'; c.name = 'Fictional participant'; c.spouseId = me.id;
+  delete c.religiousActivity; delete c.religiousActivityHistory; delete c.royalLine;
+  s.chars[c.id] = c; activityFixture.member = c.id;
+}
+
+test('household participation charges one purse and observes location, health and military obligations', async function ({ page }) {
+  await page.evaluate(installActivityHousehold);
+  const result = await page.evaluate(function () {
+    var s = FB.state, f = activityFixture, c = s.chars[f.member], gold = s.player.gold;
+    var q = FB.religiousActivityQuote(s, 'test_learning', c.id);
+    var start = FB.religiousActivityApply(s, q);
+    s.turn += 2; FB.religiousActivityTick(s);
+    var completed = c.skills.int === 5 && c.religiousActivityHistory.test_learning_done.rewarded;
+    var d = FBDATA.religiousActivities.test_learning; d.milestone = 'test_other';
+    c.health = 0; var ill = !FB.religiousActivityQuote(s, 'test_learning', c.id).allowed; c.health = 8;
+    s.player.flags.on_campaign = true;
+    var duty = !FB.religiousActivityQuote(s, 'test_learning', c.id).allowed; s.player.flags.on_campaign = false;
+    d.institutionId = 'test_activity_school';
+    var home = s.player.provinceId;
+    s.player.provinceId = Object.keys(s.owner).filter(function (pid) { return pid !== home && s.owner[pid]; })[0];
+    var away = !FB.religiousActivityQuote(s, 'test_learning', c.id).allowed;
+    s.player.provinceId = home;
+    return { managed:FB.religiousActivityPeople(s).indexOf(c.id) >= 0, start:start, completed:completed,
+      spent:gold - s.player.gold, ill:ill, duty:duty, away:away };
+  });
+  expect(result).toEqual({ managed:true, start:true, completed:true, spent:2, ill:true, duty:true, away:true });
+});
+
+test('cancellation, death and access loss preserve funded institution property', async function ({ page }) {
+  await page.evaluate(installActivityHousehold);
+  const result = await page.evaluate(function () {
+    var s = FB.state, f = activityFixture, c = s.chars[f.member], h = foundActivityHouse();
+    FB.religiousPatronageApply(s, FB.religiousPatronageQuote(s, 'test_patronage', f.cid, 'donation', { fund:'learning', amount:6 }));
+    var property = JSON.stringify(h), outcomes = [];
+    ['cancel','death','access'].forEach(function (kind) {
+      c.dead = false; s.localInstitutions.test_activity_school.status = 'active';
+      var start = FB.religiousActivityApply(s, FB.religiousActivityQuote(s, 'test_schooling', c.id));
+      if (kind === 'cancel') {
+        var stale = JSON.parse(JSON.stringify(c.religiousActivity)); stale.paid++;
+        outcomes.push(!FB.religiousActivityCancel(s, c.id, stale));
+        outcomes.push(FB.religiousActivityCancel(s, c.id, c.religiousActivity));
+      } else {
+        if (kind === 'death') c.dead = true;
+        else s.localInstitutions.test_activity_school.status = 'closed';
+        s.turn++; FB.religiousActivityTick(s);
+      }
+      outcomes.push(start && !c.religiousActivity && !c.religiousActivityHistory && property === JSON.stringify(h));
+    });
+    return outcomes;
+  });
+  expect(result).toEqual([true,true,true,true,true]);
+});
+
+test('quarterly AI spends only its own treasury and starts at most four declared local activities', async function ({ page }) {
+  const result = await page.evaluate(function () {
+    var s = FB.state, d = FBDATA.religiousActivities.test_learning;
+    d.payer = 'public'; d.ai = true; d.faithIds = []; d.reward.piety = 0;
+    FB.treasuryInitialize(s); s.treasuryAccounting.mode = 'active'; s.turn = 90;
+    var before = {}, eligible = 0, household = s.player.gold, piety = s.player.piety;
+    Object.keys(s.realms).forEach(function (rid) {
+      var c = FB.realmRulerCharacterSnapshot(s, rid);
+      if (!c || !FB.treasuryCounterparty(s, rid)) return;
+      c.health = 8; c.born = s.date.year - 30;
+      s.realms[rid].treasury.gold = 100; s.realms[rid].treasury.militaryAccrued = 0;
+      before[rid] = FB.treasuryAvailable(s, rid);
+      if (!FB.isRealmAtWar(s, rid) && FB.treasuryCharacterRealm(s, c.id) === rid) eligible++;
+    });
+    var count = FB.religiousActivityAI(s), repeat = FB.religiousActivityAI(s), spent = 0, own = true;
+    Object.keys(before).forEach(function (rid) {
+      var c = FB.realmRulerCharacterSnapshot(s, rid), delta = before[rid] - FB.treasuryAvailable(s, rid);
+      spent += delta;
+      if (delta !== (c.religiousActivity ? 2 : 0)) own = false;
+    });
+    s.turn += 2; FB.religiousActivityTick(s);
+    d.milestone = 'test_insolvent';
+    Object.keys(before).forEach(function (rid) { s.realms[rid].treasury.gold = 0; });
+    s.turn = 180;
+    return { eligible:eligible > 0, started:count > 0 && count <= 4, repeat:repeat,
+      conserved:spent === count * 2, own:own, insolvent:FB.religiousActivityAI(s),
+      household:household === s.player.gold && piety === s.player.piety };
+  });
+  expect(result).toEqual({ eligible:true, started:true, repeat:0, conserved:true, own:true, insolvent:0, household:true });
+});
+
+test('public patronage uses the actual ruler account and the institution existing service contract', async function ({ page }) {
+  const result = await page.evaluate(function () {
+    var s = FB.state, f = activityFixture, h = foundActivityHouse();
+    FB.treasuryInitialize(s); s.treasuryAccounting.mode = 'active';
+    var rid = Object.keys(s.realms).sort().filter(function (id) {
+      var c = FB.realmRulerCharacterSnapshot(s, id);
+      return c && FB.treasuryCharacterRealm(s, c.id) === id && FB.characterResidence(s, c) === f.pid;
+    })[0];
+    if (!rid) {
+      rid = Object.keys(s.realms).sort().filter(function (id) {
+        var c = FB.realmRulerCharacterSnapshot(s, id); return c && FB.treasuryCharacterRealm(s, c.id) === id;
+      })[0];
+      s.realms[rid].capital = f.pid;
+    }
+    var c = FB.realmRulerCharacterSnapshot(s, rid); c.religion = 'catholic'; c.health = 8; c.born = s.date.year - 30;
+    s.realms[rid].treasury.gold = 100; s.realms[rid].treasury.militaryAccrued = 0;
+    var d = JSON.parse(JSON.stringify(FBDATA.religiousPatronage.test_patronage)); d.payer = 'public'; d.ai = true;
+    FBDATA.religiousPatronage.test_public_patronage = d;
+    var gold = s.player.gold, before = FB.treasuryAvailable(s, rid);
+    var q = FB.religiousPatronageQuote(s, 'test_public_patronage', c.id, 'donation', { fund:'learning', amount:3 });
+    var applied = FB.religiousPatronageApply(s, q);
+    d.funds.learning.unitCost++;
+    var mismatch = FB.religiousPatronageQuote(s, 'test_public_patronage', c.id, 'donation', { fund:'learning', amount:4 });
+    return { applied:applied, payer:q.payer.id === rid, spent:before - FB.treasuryAvailable(s, rid),
+      fund:h.restrictedFunds.learning, household:s.player.gold === gold, mismatch:!mismatch.allowed };
+  });
+  expect(result).toEqual({ applied:true, payer:true, spent:3, fund:3, household:true, mismatch:true });
+});
+
+test('headless household learning leaves profession, rank, abbey and papacy gates unchanged', async function ({ page }) {
+  const result = await page.evaluate(function () {
+    var s = FB.state, c = s.chars[activityFixture.cid], d = FBDATA.religiousActivities.test_learning;
+    c.religion = 'jewish'; d.faithIds = ['jewish'];
+    FBDATA.religions.jewish.properties = Object.assign({}, FBDATA.religions.jewish.properties, { religiousPaths:null });
+    FB.invalidateReligionData();
+    var before = JSON.stringify([s.abbeys, s.papacy, c.religiousRanks, s.player.profession,
+      FB.systemAvailable(s, 'abbeys'), FB.systemAvailable(s, 'papacy')]);
+    var denied = !FB.religiousCareerReview(s, c, 'priest', true).allowed;
+    var start = FB.religiousActivityApply(s, FB.religiousActivityQuote(s, 'test_learning', c.id));
+    s.turn += 2; FB.religiousActivityTick(s);
+    return { visible:FB.religiousActivityVisible(s, c.id), start:start, denied:denied,
+      unchanged:before === JSON.stringify([s.abbeys, s.papacy, c.religiousRanks, s.player.profession,
+        FB.systemAvailable(s, 'abbeys'), FB.systemAvailable(s, 'papacy')]), skill:c.skills.int };
+  });
+  expect(result).toEqual({ visible:true, start:true, denied:true, unchanged:true, skill:5 });
+});
+
+test('activity reviews are pure, retain Details and focus, and reject a changed purse on mobile', async function ({ page }) {
+  await page.setViewportSize({ width:390, height:844 });
+  await page.evaluate(function () {
+    window.activityBeforeReview = [JSON.stringify(FB.state), FB.getRngState(), FB.getUidCounter()];
+    FB.ui.showReligiousActivities();
+  });
+  const review = page.locator('#activity-review-test_learning');
+  const card = review.locator('xpath=../..');
+  await card.getByRole('button', { name:'Details', exact:true }).click();
+  await review.click();
+  await expect(page.locator('#gm-body')).toContainText('Household purse');
+  await expect(page.locator('#gm-body')).toContainText('2 days at this location');
+  expect(await page.evaluate(function () {
+    return JSON.stringify(activityBeforeReview) === JSON.stringify([JSON.stringify(FB.state), FB.getRngState(), FB.getUidCounter()]);
+  })).toBe(true);
+  await page.keyboard.press('Escape');
+  await expect(review).toBeFocused();
+  await expect(card.getByRole('button', { name:'Details', exact:true })).toHaveAttribute('aria-expanded', 'true');
+  await review.click();
+  await page.evaluate(function () { FB.state.player.gold = 0; window.activityStale = JSON.stringify(FB.state); });
+  await page.locator('#activity-confirm').click();
+  await expect(page.getByRole('heading', { name:'Terms changed', exact:true })).toBeVisible();
+  expect(await page.evaluate(function () { return activityStale === JSON.stringify(FB.state); })).toBe(true);
+  await page.locator('#activity-continue').click();
+  expect(await page.evaluate(function () {
+    var box = document.getElementById('gm-body'); return box.scrollWidth <= box.clientWidth + 1;
+  })).toBe(true);
+});
+
+test('detached save validation rejects malformed activity records without normalizing state', async function ({ page }) {
+  const result = await page.evaluate(function () {
+    var s = FB.state, cid = activityFixture.cid;
+    FB.religiousActivityApply(s, FB.religiousActivityQuote(s, 'test_learning', cid));
+    var before = JSON.stringify(s), rejected = [];
+    [function (v) { v.chars[cid].religiousActivity.dueTurn++; },
+      function (v) { v.chars[cid].religiousActivity.paid = -1; },
+      function (v) { v.chars[cid].religiousActivity.location = 'missing_place'; },
+      function (v) { v.religiousActivityAI = { period:999999 }; }].forEach(function (change) {
+      var v = JSON.parse(before); change(v);
+      try { FB.validateReligiousActivityState(v); rejected.push(false); } catch (e) { rejected.push(true); }
+    });
+    FB.validateReligiousActivityState(s);
+    return { rejected:rejected, pure:before === JSON.stringify(s) };
+  });
+  expect(result).toEqual({ rejected:[true,true,true,true], pure:true });
+});
+
+function retainedActivityFacts() {
+  var s = FB.state;
+  return JSON.parse(JSON.stringify({ start:s.start, rng:FB.getRngState() >>> 0, uid:FB.getUidCounter(),
+    player:[s.player.gold, s.player.piety, s.player.prestige, s.player.travel, s.player.travelHistory, s.player.landPlots],
+    person:s.chars[s.player.charId], member:s.chars[activityFixture.member], abbeys:s.abbeys,
+    population:s.population, ai:s.religiousActivityAI, institutions:s.localInstitutions }));
+}
+
+for (const distribution of ['standard','CrazyGames']) {
+  test(distribution + ' restore after another bookmark retains activities, legacy ranks, routes and funded property', async function ({ page }) {
+    await page.evaluate(installActivityHousehold);
+    const original = await page.evaluate(function () {
+      var s = FB.state, f = activityFixture;
+      var house = foundActivityHouse();
+      s.turn = 90; s.religiousActivityAI = { period:1 };
+      s.population.counties[f.pid].communityProjects = { faith:{ target:'catholic', sponsor:s.owner[f.pid],
+        policy:'voluntary', startTurn:0, progress:0.375, converted:12, resistance:0.2, lastTransfer:2, lastYear:s.date.year,
+        activitySupport:{ institutionId:'test_activity_school', amount:3, untilTurn:s.turn + 360 } } };
+      house.activitySpent += 3; s.player.gold -= 3;
+      FB.religiousPatronageApply(s, FB.religiousPatronageQuote(s, 'test_patronage', f.cid, 'donation', { fund:'learning', amount:6 }));
+      FB.religiousActivityApply(s, FB.religiousActivityQuote(s, 'test_schooling', f.member));
+      s.chars[f.cid].religiousRanks = { catholic_lay:2 };
+      s.player.travelHistory = [{ purpose:'pilgrimage', destinationId:f.pid, turn:s.turn }];
+      var choice = FB.travelDestinations(s, 'study')[0];
+      if (!choice || !FB.travelStart(s, 'study', choice.destinationId, null)) throw new Error('Expected an existing route');
+      return FB.save.serialize();
+    });
+    const before = await page.evaluate(retainedActivityFacts);
+    await page.evaluate(function () { FB.state.turn++; FB.religiousActivityTick(FB.state); });
+    const after = await page.evaluate(retainedActivityFacts);
+    await page.evaluate(function () {
+      return new Promise(function (resolve, reject) {
+        FB.activateBookmark('1204', null, function (error) { if (error) reject(error); else resolve(); });
+      });
+    });
+    await restoreBookmark(page, original);
+    expect(await page.evaluate(retainedActivityFacts)).toEqual(before);
+    await page.evaluate(function () { FB.state.turn++; FB.religiousActivityTick(FB.state); });
+    expect(await page.evaluate(retainedActivityFacts)).toEqual(after);
+  });
+}
 
 test('independent local and existing pilgrimage declarations validate without opening placements', async function ({ page }) {
   const result = await page.evaluate(function () {
@@ -223,6 +453,25 @@ test('pledged land and unauthorized public payers preserve every purse and prope
     return { pledged:pledged, ownPurse:ownPurse, absentRecords:before === JSON.stringify(s) };
   });
   expect(result).toEqual({ pledged:true, ownPurse:true, absentRecords:true });
+});
+
+test('interrupted activity journeys use ordinary travel cleanup and retain institutional property', async function ({ page }) {
+  const result = await page.evaluate(function () {
+    var s = FB.state, cid = activityFixture.cid; foundActivityHouse();
+    var property = JSON.stringify(s.abbeys), choice = FB.travelDestinations(s, 'pilgrimage')[0];
+    var site = FBDATA.travelSites.filter(function (v) { return v.purpose === 'pilgrimage' && v.provinceId === choice.destinationId; })[0];
+    var d = JSON.parse(JSON.stringify(FBDATA.religiousActivities.test_learning));
+    Object.assign(d, { mode:'journey', purpose:'pilgrimage', siteId:site.id, cost:0, duration:0,
+      milestone:'test_interrupted_journey', reward:{ piety:0, prestige:0, skills:{} } });
+    FBDATA.religiousActivities.test_journey = d;
+    var started = FB.religiousActivityApply(s, FB.religiousActivityQuote(s, 'test_journey', cid));
+    var gold = s.player.gold;
+    s.chars[cid].health = 0; FB.religiousActivityTick(s);
+    return { started:started, cleared:s.player.travel === null, costRetained:s.player.gold === gold,
+      history:s.player.travelHistory.length, receipt:!!s.chars[cid].religiousActivityHistory,
+      property:property === JSON.stringify(s.abbeys) };
+  });
+  expect(result).toEqual({ started:true, cleared:true, costRetained:true, history:0, receipt:false, property:true });
 });
 
 test('an activity journey pays its existing capstone once and keeps rite performance separate', async function ({ page }) {
