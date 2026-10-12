@@ -4,7 +4,7 @@
   function copy(v) { return JSON.parse(JSON.stringify(v)); }
   function scope(s,id) {
     var d = FB.localInstitutionDefinitions(s)[id], r = s.localInstitutions && s.localInstitutions[id];
-    return d && r && d.officeId && FB.religiousOffices(s)[d.officeId] ? { def:d,row:r } : null;
+    return d && !d.profileId && r && d.officeId && FB.religiousOffices(s)[d.officeId] ? { def:d,row:r } : null;
   }
   FB.localOfficeCandidates = function (s,id) {
     var at = scope(s,id); if (!at) return [];

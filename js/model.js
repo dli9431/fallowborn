@@ -1571,6 +1571,11 @@ window.FB = window.FB || {};
     if (!FB.systemEnabled) return out;
     for (const id in local) {
       const def = local[id];
+      if (def.profileId) {
+        const office = def.officeId && FB.religiousInstitutionOffice && FB.religiousInstitutionOffice(state, id, def);
+        if (office && !out[def.officeId]) out[def.officeId] = office;
+        continue;
+      }
       if (!FB.systemEnabled(state,'episcopal_sees',{ faith:def.religion,realm:null })) continue;
       if (!def.officeId || out[def.officeId]) continue;
       out[def.officeId] = { id:def.officeId, religionId:def.religion,
@@ -1739,6 +1744,8 @@ window.FB = window.FB || {};
      becoming Pope or Caliph. */
   function religiousHeadHolderEligible(state, office, realmId) {
     if (!office) return false;
+    if (office.institutionId) return !!(FB.religiousInstitutionOfficeEligible &&
+      FB.religiousInstitutionOfficeEligible(state, office.institutionId, realmId));
     const requiredSex = office && office.head && office.head.holderSex;
     if (office && office.head.holderKind === 'character') {
       const c = state && state.chars && state.chars[realmId];

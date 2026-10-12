@@ -898,6 +898,10 @@ window.FB = window.FB || {};
     if (defs === undefined) return errors;
     if (!plainRecord(defs)) return ['localInstitutions must be an object keyed by institution id.'];
     catalogs = catalogs || FBDATA;
+    if (FB.religiousInstitutionCatalogFaults) {
+      var catalogErrors = FB.religiousInstitutionCatalogFaults(catalogs);
+      if (catalogErrors.length) return catalogErrors;
+    }
     var provinces = {}, offices = {};
     (Array.isArray(definition.provinces) ? definition.provinces : []).forEach(function (p) { if (p) provinces[p.id] = p; });
     var geography = (catalogs.geographies || {})[FB.bookmarkGeography(definition)];
@@ -910,7 +914,11 @@ window.FB = window.FB || {};
       function fault(detail) { errors.push(path + ': ' + detail); }
       if (!/^[a-z][a-z0-9_]*$/.test(id) || !plainRecord(def)) { fault('invalid institution record.'); return; }
       if (typeof def.city !== 'string' || !def.city.trim() ||
-          ['senate','council','see','patriarchate','congregation'].indexOf(def.kind) < 0) fault('invalid city or kind.');
+          ['senate','council','see','patriarchate','congregation','school','temple','monastery','ritual_community'].indexOf(def.kind) < 0) fault('invalid city or kind.');
+      if (def.profileId !== undefined) {
+        if (!FB.religiousInstitutionDefinitionFaults) fault('institution profile validator is unavailable.');
+        else errors = errors.concat(FB.religiousInstitutionDefinitionFaults(id, def, definition, catalogs));
+      } else if (['school','temple','monastery','ritual_community'].indexOf(def.kind) >= 0) fault('institution kind requires a profile.');
       if (def.freshOnly !== undefined && typeof def.freshOnly !== 'boolean') fault('freshOnly must be boolean.');
       if (def.officeProfile !== undefined) {
         var op = def.officeProfile;
@@ -923,7 +931,7 @@ window.FB = window.FB || {};
       if (def.chapterId !== undefined && (!def.officeId || !defs[def.chapterId] || defs[def.chapterId].kind !== 'congregation' ||
           defs[def.chapterId].officeId || defs[def.chapterId].provinceId !== def.provinceId)) fault('invalid local chapter reference.');
       var isChurch = def.kind === 'see' || def.kind === 'patriarchate';
-      if (isChurch ? typeof def.officeId !== 'string' || !/^[a-z][a-z0-9_]*$/.test(def.officeId) : def.officeId !== undefined)
+      if (!def.profileId && (isChurch ? typeof def.officeId !== 'string' || !/^[a-z][a-z0-9_]*$/.test(def.officeId) : def.officeId !== undefined))
         fault('invalid officeId for institution kind.');
       if (def.officeId) {
         if (offices[def.officeId]) fault('duplicate officeId ' + def.officeId + '.');
@@ -936,7 +944,7 @@ window.FB = window.FB || {};
           var localHead = localFaith && (localFaith.head || localFaith.properties && localFaith.properties.head);
           // A faith's episcopal head can also be its campaign's local see.
           // Both declarations then seed the same character-held office ledger.
-          if (!isChurch || head.holderKind !== 'character' || head.system !== 'episcopal_sees' ||
+          if (def.profileId || !isChurch || head.holderKind !== 'character' || head.system !== 'episcopal_sees' ||
               !localHead || localHead.officeId !== def.officeId)
             fault('officeId collides with an incompatible central faith office.');
         });
@@ -946,7 +954,7 @@ window.FB = window.FB || {};
           catalogs.religions[def.religion].assignable === false ||
           catalogs === FBDATA && !FB.faithAssignable(def.religion, null)) fault('unknown or unassignable faith.');
       if (def.provinceId === null) {
-        if (!isChurch || def.site !== null) fault('only an off-map church office may have a null seat.');
+        if ((!isChurch && !def.profileId) || def.site !== null) fault('only an explicit off-map institution may have a null seat.');
       } else {
         var province = provinces[def.provinceId], entries = province && (province.settlements || layout[def.provinceId]);
         if (!province || province.wasteland || !ownKey(sites, def.site) || !Array.isArray(entries) ||

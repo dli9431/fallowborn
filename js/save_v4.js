@@ -84,6 +84,7 @@
     if (FB.validateStartingRealm) FB.validateStartingRealm(state);
     if (FB.validateColonateTenure) FB.validateColonateTenure(state);
     if (FB.validateLocalInstitutionState) FB.validateLocalInstitutionState(state);
+    if (FB.validateReligiousInstitutionState) FB.validateReligiousInstitutionState(state);
     if (FB.validateReligionInstitutionState) FB.validateReligionInstitutionState(state);
     if (FB.validateHistoricalHolyWarState) FB.validateHistoricalHolyWarState(state);
     if (FB.governments.support) FB.governments.support.validate(state);
@@ -287,7 +288,7 @@
       if (!own(FBDATA.legitimacySources, value.source) ||
           !['active','revoked'].includes(value.status) ||
           !Number.isInteger(value.startTurn)) invalid(where);
-      ref(value.issuer, ['realm','host','county','religious-office','character'],
+      ref(value.issuer, ['realm','host','county','religious-office','religious-institution','character'],
         where + '.issuer');
       ref(value.subject, ['realm','character'], where + '.subject');
       if (value.scope !== null) ref(value.scope, ['realm','host','county'],
