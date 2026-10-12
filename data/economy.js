@@ -83,7 +83,7 @@ FBDATA.religiousPaths = {
         piety:50, prestigeGain:7, pietyYield:1, station:1 },
       { id:'bishop', name:'Bishop', age:30, years:14, learning:12,
         piety:160, prestige:80, prestigeGain:25, pietyYield:2.5,
-        station:3, tier:3, flag:'bishop' }
+        station:3, tier:3, flag:'bishop', maleOnly:true }
     ]
   },
   catholic_lay: {
