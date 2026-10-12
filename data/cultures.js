@@ -498,7 +498,18 @@ FBDATA.religions = {
       attire:{ tonsure:true, pendant:'cross', clergyPendant:true }
     } },
   berber_traditional: { availability:{}, name:'Amazigh traditional belief', group:'pagan',
-    relationToParent:'in_fold', icon:'☀' },
+    relationToParent:'in_fold', icon:'☀',
+    /* Neutral simulation rules, not a shared regional priesthood or law.
+       Local specialist admission and household discipline remain unassigned. */
+    properties:{ legalTradition:'customary', head:null, holyWarTradition:null,
+      raidingTradition:false, clergyMarriage:true, religiousPaths:null,
+      marriage:{ spouseLimit:{m:1,f:1},
+        divorce:{kind:'sunder',direct:true,gold:0,piety:0,prestige:5,cooldownDays:0},
+        acceptedRelations:['same','in_fold'],kinship:{siblingRite:null} },
+      words:{deity:'the sacred powers',cleric:'Ritual keeper',temple:'shrine',
+        landed:'Ruler',partnership:'Trade partnership'},
+      roles:{monasticM:'Devotee',monasticF:'Devotee',
+        priestM:'Ritual keeper',priestF:'Ritual keeper'} } },
   germanic_pagan: { availability:{}, name:'Germanic traditional belief', group:'pagan', relationToParent:'in_fold', icon:'☀' },
   nicene: { availability:{}, name:'Nicene Christianity', group:'christian', relationToParent:'in_fold', icon:'✝',
     properties:{ head:{ system:'episcopal_sees', officeId:'rome_bishop', title:'Bishop of Rome', holderKind:'character', holderSex:'m', holderRole:'priest', minAge:18, succession:'appointment' }, religiousPaths:{ lay:'late_antique_lay',

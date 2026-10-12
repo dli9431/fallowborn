@@ -26,15 +26,24 @@
     male:['Koro','Dama','Samba','Tama'], female:['Sira','Awa','Dama','Kumba']
   }};
   Object.assign(FBDATA.cultures,FBDATA.bookmarkCultures1066Terrain);
-  /* A narrow headless local profile. It does not assert one West African
-     church, priesthood or conversion timetable. Further ritual and institution
-     detail needs independent research. */
-  FBDATA.bookmarkReligions1066Terrain = {wagadu_traditional_1066:{
+  /* Ghana's local royal practice is distinct from its Muslim residents.
+     Household capacities and dissolution costs are conservative simulation
+     settings, not an attested local legal code. Specialist admission remains
+     unassigned; no monastic or clerical advancement path is declared. */
+  FBDATA.bookmarkReligions1066Terrain = {ghana_local_practice_1066:{
     availability:{bookmarkIds:['1066']},
-    name:'Wagadu traditional worship', group:'pagan', relationToParent:'schismatic', icon:'☀',
-    properties:{head:null,words:{deity:'the spirits',cleric:'Ritual keeper',temple:'shrine',
-      landed:'Ruler',partnership:'Trade partnership'},
-      roles:{priestM:'Ritual keeper',priestF:'Ritual keeper'}}
+    name:'Ghana local practice', icon:'☀',
+    properties:{legalTradition:'customary',head:null,holyWarTradition:null,
+      raidingTradition:false,clergyMarriage:true,religiousPaths:null,
+      music:{lineage:['pagan'],fallback:'pagan'},intro:{path:'intro_other'},
+      conversionCategory:{name:'Local Traditions',icon:'☀',order:6},
+      marriage:{spouseLimit:{m:1,f:1},
+        divorce:{kind:'sunder',direct:true,gold:0,piety:0,prestige:5,cooldownDays:0},
+        acceptedRelations:['same','in_fold'],kinship:{siblingRite:null}},
+      words:{deity:'the sacred powers',cleric:'Ritual keeper',temple:'shrine',
+        landed:'Ruler',partnership:'Trade partnership'},
+      roles:{monasticM:'Devotee',monasticF:'Devotee',
+        priestM:'Ritual keeper',priestF:'Ritual keeper'}}
   },niger_traditional_1066:{
     availability:{bookmarkIds:['1066']},
     name:'Middle Niger traditional worship', group:'pagan', relationToParent:'schismatic', icon:'☀',
@@ -47,15 +56,15 @@
      delegation belongs to the separately researched government rollout.
      Settlement clustering alone does not establish a local assembly. */
   FBDATA.bookmarkRealms1066Terrain = [{id:'wagadu_1066',name:'Wagadu',color:'#ae8851',capital:'kumbi_district',
-    government:'lineage_kingship',rank:2,aggression:0,religion:'wagadu_traditional_1066',
+    government:'lineage_kingship',rank:2,aggression:0,religion:'ghana_local_practice_1066',
     ruler:{name:'Tunka Manin',sex:'m',culture:'soninke_1066',born:1030,mar:8,trait:'patient'},
     royalCourt:{founderId:'ancestor',rulerFatherId:'ancestor',members:[
       {id:'ancestor',generated:true,sex:'m',born:1000,culture:'soninke_1066',
-        religion:'wagadu_traditional_1066',alive:false,died:1063},
+        religion:'ghana_local_practice_1066',alive:false,died:1063},
       {id:'sister',generated:true,sex:'f',born:1032,fatherId:'ancestor',
-        culture:'soninke_1066',religion:'wagadu_traditional_1066',homeProvinceId:'kumbi_district'},
+        culture:'soninke_1066',religion:'ghana_local_practice_1066',homeProvinceId:'kumbi_district'},
       {id:'nephew',generated:true,sex:'m',born:1049,motherId:'sister',
-        culture:'soninke_1066',religion:'wagadu_traditional_1066',homeProvinceId:'kumbi_district'}
+        culture:'soninke_1066',religion:'ghana_local_practice_1066',homeProvinceId:'kumbi_district'}
     ]}},
   {id:'jenne_1066',name:'Jenne-jeno',color:'#81916b',capital:'jenne_district',
     government:'territorial',rank:1,aggression:0,
@@ -110,7 +119,7 @@
      seed supplies only physical coordinates and terrain. */
   FBDATA.bookmarkDistricts1066Terrain = [
     {id:'kumbi_district',name:'Kumbi district',realm:'wagadu_1066',dev:3,zone:'arid',
-      communities:[['soninke_1066','wagadu_traditional_1066',7000],['soninke_1066','sunni',3000]],kind:'town'},
+      communities:[['soninke_1066','ghana_local_practice_1066',7000],['soninke_1066','sunni',3000]],kind:'town'},
     {id:'jenne_district',name:'Jenne-jeno',realm:'jenne_1066',dev:3,zone:'arid',
       communities:[['middle_niger_1066','niger_traditional_1066',10000]],kind:'town'},
     {id:'gao_district',name:'Gao',realm:'gao_1066',dev:3,zone:'arid',
