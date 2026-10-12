@@ -2,7 +2,7 @@ Religious institutions and affiliation
 
 Optional declarations
 
-data/religious_institutions.js declares initially empty religiousAffiliations and religiousInstitutionProfiles catalogues. Complete bookmark localInstitutions tables place each institution. Profiles declare their own faith ids, date bounds, qualifications, household restrictions, allowed actions, fees, selection and recognition. None of these declarations changes a person's primary faith, community composition, doctrinal relations or government form.
+data/religious_institutions.js declares the optional religiousAffiliations and religiousInstitutionProfiles catalogues, including dated lay authoring profiles whose historical seats remain unplaced. Complete bookmark localInstitutions tables place each institution. Profiles declare their own faith ids, date bounds, qualifications, household restrictions, allowed actions, fees, selection and recognition. None of these declarations changes a person's primary faith, community composition, doctrinal relations or government form.
 
 Roles carry a minimum age, explicit permitted sexes (an empty list permits either), an unmarried requirement, permitted career professions (an empty list imposes none), skill floors and an optional affiliation prerequisite. A deceased spouse does not block an unmarried role. Eligible specialists need not be priests or monastics. On-map membership requires residence in the seat county. Off-map institutions declare offMap:true and explicit county jurisdiction. Opening records are vacant and create no fictional representative; actual admissions and selection are explicit transactions.
 

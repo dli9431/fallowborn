@@ -1,6 +1,26 @@
 /* Optional declarations. Campaigns and mods place their own institutions. */
 FBDATA.religiousAffiliations = {};
-FBDATA.religiousInstitutionProfiles = {};
+/* Lay authoring profiles. Historical seats and specialist offices remain separate. */
+FBDATA.religiousInstitutionProfiles = {
+  garama_offering_community:{
+    name:'Garama offering community', faithIds:['berber_traditional'],
+    period:{yearMin:476,yearMax:493}, system:null,
+    roles:{participant:{name:'Participant',minAge:16,sexes:[],unmarried:false,
+      professions:[],skills:{},affiliationId:null}},
+    selection:null,
+    recognition:{sources:[],roles:[],quorum:1,requiresLeader:false,protectedWorship:true},
+    actions:['admit','withdraw'], fees:{}, affiliationIds:[]
+  },
+  ghana_muslim_learning_1066:{
+    name:'Ghana Muslim learning community', faithIds:['sunni'],
+    period:{yearMin:1066,yearMax:1066}, system:null,
+    roles:{learner:{name:'Learner',minAge:16,sexes:[],unmarried:false,
+      professions:[],skills:{},affiliationId:null}},
+    selection:null,
+    recognition:{sources:[],roles:[],quorum:1,requiresLeader:false,protectedWorship:true},
+    actions:['admit','withdraw'], fees:{}, affiliationIds:[]
+  }
+};
 FBDATA.legitimacySources.institution_support = {
   name:'Institutional recognition', succession:'reaffirm', institutional:true
 };
@@ -21,4 +41,7 @@ FBDATA.techImpactReviews.features.religious_institution_ai = {
 };
 FBDATA.techImpactReviews.features.religious_institution_constitutional_binding = {
   mode:'none', rationale:'Explicit temporal binding reads a canonical qualified incumbent and existing public rights, independently of spiritual membership or research.'
+};
+FBDATA.techImpactReviews.features.african_lay_community_participation = {
+  mode:'none', rationale:'Ordinary local offerings and communal learning require presence and protected access, without specialist office or discovery.'
 };
