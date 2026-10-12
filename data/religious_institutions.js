@@ -1,6 +1,37 @@
 /* Optional declarations. Campaigns and mods place their own institutions. */
-FBDATA.religiousAffiliations = {};
-FBDATA.religiousInstitutionProfiles = {};
+FBDATA.religiousAffiliations = {
+  shafii_learning_1066:{
+    name:"Shafi'i legal learning",faithIds:['sunni'],
+    period:{yearMin:1066,yearMax:1066},exclusiveWith:[]
+  },
+  ashari_learning_1066:{
+    name:"Ash'ari theological learning",faithIds:['sunni'],
+    period:{yearMin:1066,yearMax:1066},exclusiveWith:[]
+  }
+};
+/* City-level learning reconstructions, without a named building or incumbent.
+   Adult lay admission is a simulation rule, not specialist certification. */
+FBDATA.religiousInstitutionProfiles = {
+  baghdad_shafii_study_1066:{
+    name:"Baghdad Shafi'i study circle",faithIds:['sunni'],
+    period:{yearMin:1066,yearMax:1066},system:null,
+    roles:{learner:{name:'Learner',minAge:16,sexes:[],unmarried:false,
+      professions:[],skills:{},affiliationId:null}},
+    selection:null,
+    recognition:{sources:[],roles:[],quorum:1,requiresLeader:false,protectedWorship:true},
+    actions:['admit','affiliate','withdraw'],fees:{},affiliationIds:['shafii_learning_1066']
+  },
+  nishapur_shafii_ashari_study_1066:{
+    name:"Nishapur Shafi'i and Ash'ari study circle",faithIds:['sunni'],
+    period:{yearMin:1066,yearMax:1066},system:null,
+    roles:{learner:{name:'Learner',minAge:16,sexes:[],unmarried:false,
+      professions:[],skills:{},affiliationId:null}},
+    selection:null,
+    recognition:{sources:[],roles:[],quorum:1,requiresLeader:false,protectedWorship:true},
+    actions:['admit','affiliate','withdraw'],fees:{},
+    affiliationIds:['shafii_learning_1066','ashari_learning_1066']
+  }
+};
 FBDATA.legitimacySources.institution_support = {
   name:'Institutional recognition', succession:'reaffirm', institutional:true
 };

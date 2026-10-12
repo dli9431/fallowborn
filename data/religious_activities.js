@@ -1,5 +1,24 @@
 /* Activity consumers are declared by accepted campaigns and mods. */
-FBDATA.religiousActivities = {};
+/* Seven-day lessons and one skill point are bounded simulation choices.
+   They award no vocation, judicial jurisdiction, prayer office or pilgrimage. */
+FBDATA.religiousActivities = {
+  baghdad_shafii_learning_1066:{
+    name:"Study Shafi'i jurisprudence",period:{yearMin:1066,yearMax:1066},openings:[],
+    faithIds:['sunni'],affiliationIds:['shafii_learning_1066'],roleIds:['learner'],
+    institutionId:'baghdad_shafii_circle_1066',mode:'local',purpose:null,siteId:null,
+    payer:'household',cost:0,reserve:0,duration:7,calendar:'any_day',
+    interruption:'retain_cost',recipient:'participant',milestone:'baghdad_shafii_learning_1066',
+    reward:{piety:0,prestige:0,skills:{int:1}},legacy:null,service:null
+  },
+  nishapur_shafii_ashari_learning_1066:{
+    name:"Study Shafi'i law and Ash'ari theology",period:{yearMin:1066,yearMax:1066},openings:[],
+    faithIds:['sunni'],affiliationIds:['shafii_learning_1066','ashari_learning_1066'],roleIds:['learner'],
+    institutionId:'nishapur_shafii_ashari_circle_1066',mode:'local',purpose:null,siteId:null,
+    payer:'household',cost:0,reserve:0,duration:7,calendar:'any_day',
+    interruption:'retain_cost',recipient:'participant',milestone:'nishapur_shafii_ashari_learning_1066',
+    reward:{piety:0,prestige:0,skills:{int:1}},legacy:null,service:null
+  }
+};
 FBDATA.religiousPatronage = {};
 FBDATA.balance.religiousOutreachPressure = 0.10;
 FBDATA.techImpactReviews.features.religious_activity_household = {
@@ -16,4 +35,7 @@ FBDATA.techImpactReviews.features.religious_activity_patronage = {
 };
 FBDATA.techImpactReviews.features.religious_activity_outreach = {
   mode:'none', rationale:'Funding an existing permitted community project uses its existing policy and population limits, not a new conversion capability.'
+};
+FBDATA.techImpactReviews.features.islamic_scholarly_learning = {
+  mode:'none',rationale:'Local study depends on presence, voluntary membership and scholarly affiliation, without a discovery requirement or grant of public office.'
 };

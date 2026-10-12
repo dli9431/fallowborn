@@ -2,7 +2,7 @@ Religious activities and patronage
 
 Ownership and declarations
 
-The optional religiousActivities and religiousPatronage catalogues start empty. Campaign and mod authors supply accepted consumers. Shared strategies make no new historical destination, institution, legal rule or calendar claim. Travel remains player.travel, property remains abbeys.houses through the local institution's abbeyId, and outreach remains the existing population communityProject. Primary faith, offices, community membership, standing ranks and rite performance remain separate.
+The optional religiousActivities and religiousPatronage catalogues declare accepted consumers. Campaign and mod authors can add their own. Shared strategies make no new historical destination, institution, legal rule or calendar claim. Travel remains player.travel, property remains abbeys.houses through the local institution's abbeyId, and outreach remains the existing population communityProject. Primary faith, offices, community membership, standing ranks and rite performance remain separate.
 
 Activity profiles declare name, period, accepted openings, faithIds, affiliationIds, roleIds, institutionId, mode, purpose, siteId, payer, cost, reserve, duration, calendar, interruption, recipient, milestone, reward, legacy and service. Empty openings explicitly permits the declared year interval in any retained campaign; a nonempty list matches both start id and exact revision. Empty eligibility lists impose no additional requirement. Role requirements use qualified active membership and actual location. No missing field inherits a Catholic vocation or monastic rule. Calendar any_day is the only supported calendar; a seasonal Hajj shortcut is rejected. Calendar-dependent rites need a separately reviewed strategy before authoring.
 
@@ -33,6 +33,8 @@ Technology and integration
 religious_activity_participation, religious_activity_patronage and religious_activity_outreach have technology impact none. Presence, admission, lawful property and actual funding govern these baseline activities; no discovery gate is credible. Optional route improvements keep their existing technology rules. Household participation and autonomous decisions separately declare technology impact none. The new optional state is created only by explicit starts; no restore path initializes an activity or endowment.
 
 Coverage
+
+baghdad_shafii_learning_1066 and nishapur_shafii_ashari_learning_1066 use qualified learner membership and explicit scholarly affiliations in the opt-in 1066 circles. Seven days, no fee and one intelligence point per actor milestone are simulation terms. The date window is 1066 only. No prayer/judicial office, career rank, Hajj completion or endowment follows from learning. islamic_scholarly_learning has technology impact none. The Islamic specification uses fictional property terms to cover funding conservation, unused restricted gifts on interruption, and public/AI payer separation; no historical waqf or recurring revenue is declared. Sources and geographical limits are in docs/designs/religions.md.
 
 tests/e2e/specs/religious-activities.spec.js covers an existing pilgrimage adapter and independently declared fictional local learning/service, pure and stale proposals, date/revision gates, unsupported calendars, single rewards, interruption, exact land and gold conservation, restricted funding, service delivery, property holds, capacity, county/settlement project progress and legacy reward suppression. Fixture institutions are fictional and are not shipped placements.
 
