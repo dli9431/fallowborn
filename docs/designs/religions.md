@@ -291,6 +291,12 @@ FB.faithAssignable remains the existence and saved-record eligibility query. FB.
 
 tests/e2e/fixtures/released-catalogue.json freezes released effective faiths separately from legacy metadata and faithDefaults. New traditions are additive. Updating a retained hash requires compatibility review, and semantic changes require a new definition or a reviewed migration. This compatibility boundary adds no researchable capability and needs no technology gate.
 
+Germanic household defaults
+
+The unreleased germanic_pagan definition overrides the pagan root with one spouse per sex, ordinary marriage eligibility, customary legal routing and neutral religious-student/participant vocabulary. These are conservative simulation settings. They establish no common historical household code, priest qualification, monastic vow or ritual office. The faith keeps its existing ancestry and relations, declares no central head or religious advancement path, and removes inherited sacred-war vocabulary and faith-derived raiding eligibility. Culture-based raid eligibility remains governed by the existing raid rules. Technology impact is none for germanic_household_rules because these household relationships require no discovery.
+
+Released pagan, norse_pagan, slavic_pagan, baltic_pagan and tengri definitions retain their effective doctrine. The five provisional regional definitions remain unchanged while their individual opening assignments await evidence; no alias, population migration or new primary faith is introduced. A later local institution must declare its own admission, commitments, property and recognition rather than infer them from a display role or county controller. Shared career selection and vocation rules remain their existing contracts; this data correction supplies no new institution or destination.
+
 Dated faith authoring
 
 A faith's top-level availability record declares optional inclusive yearMin/yearMax integers, eras, bookmarkIds and consumers. It is local metadata, separate from inherited properties. An omitted field is unrestricted; an empty selector list permits no consumer. A child needs its own declaration. Existing JSON mods that omit availability keep their prior eligibility. Invalid dates, unknown or duplicate selectors and unsupported fields fail detached catalogue validation. Availability describes potential eligibility, not evidence of local adherence or a county majority.

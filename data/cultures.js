@@ -499,7 +499,16 @@ FBDATA.religions = {
     } },
   berber_traditional: { availability:{}, name:'Amazigh traditional belief', group:'pagan',
     relationToParent:'in_fold', icon:'☀' },
-  germanic_pagan: { availability:{}, name:'Germanic traditional belief', group:'pagan', relationToParent:'in_fold', icon:'☀' },
+  germanic_pagan: { availability:{}, name:'Germanic traditional belief', group:'pagan', relationToParent:'in_fold', icon:'☀',
+    /* Household defaults are simulation choices, not a common regional law
+       or qualification for an office. Local specialist rules remain undeclared. */
+    properties:{ head:null, legalTradition:'customary', holyWarTradition:null,
+      raidingTradition:false, clergyMarriage:true, religiousPaths:null,
+      marriage:{ spouseLimit:{ m:1, f:1 } },
+      words:{ deity:'the sacred powers', cleric:'ritual participant',
+        temple:'ritual place', landed:'Lord', partnership:'Trade partnership' },
+      roles:{ monasticM:'Religious student', monasticF:'Religious student',
+        priestM:'Ritual participant', priestF:'Ritual participant' } } },
   nicene: { availability:{}, name:'Nicene Christianity', group:'christian', relationToParent:'in_fold', icon:'✝',
     properties:{ head:{ system:'episcopal_sees', officeId:'rome_bishop', title:'Bishop of Rome', holderKind:'character', holderSex:'m', holderRole:'priest', minAge:18, succession:'appointment' }, religiousPaths:{ lay:'late_antique_lay',
       professions:{ monk:'late_antique_monastic', priest:'late_antique_clerical' } } } },
