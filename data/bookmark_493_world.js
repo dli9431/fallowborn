@@ -1228,6 +1228,17 @@ FBDATA.aristocraticProfiles['sasanian_493'] = {
         religion:community.religion,representative:{role:'priest'}};
     });
   });
+  /* The incumbent belongs to a spiritual office, independently of the shah.
+     Local service groups are playable reconstructions, not named buildings. */
+  institutions.ctesiphon_catholicos_493 = {city:'Ctesiphon',kind:'patriarchate',
+    provinceId:'baghdad',site:'baghdad_outer_476',culture:'syriac',religion:'east_syriac',
+    officeId:'east_syriac_catholicos',historicalName:'Acacius',freshOnly:true,jurisdictionIds:['baghdad']};
+  institutions.ctesiphon_church_service_493 = {city:'Ctesiphon',kind:'congregation',
+    provinceId:'baghdad',site:'baghdad_outer_476',culture:'syriac',religion:'east_syriac',
+    profileId:'east_syriac_church_service',vacant:true,freshOnly:true,jurisdictionIds:['baghdad']};
+  institutions.dvin_church_service_493 = {city:'Dvin',kind:'congregation',
+    provinceId:'dvin',site:'dvin_493',culture:'armenian',religion:'caucasian_christian_476',
+    profileId:'dvin_church_service',vacant:true,freshOnly:true,jurisdictionIds:['dvin']};
   var crossings = [
     ['candia','athens','open'],['nicosia','tarsos','open'],
     ['iona','glasgow','coastal'],['lewis','inverness','coastal'],

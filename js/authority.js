@@ -165,7 +165,7 @@
   Q.worshipProtected = function (s, pid) {
     var local = Q.communityGovernance(s, pid);
     return !!local && local.tolerance !== 'persecution' &&
-      !FB.hasModifier(s, 'persecuted_minorities', pid);
+      !FB.countyModifierSnapshot(s, pid).some(function (record) { return record.id === 'persecuted_minorities'; });
   };
   /* A civic grant remains recorded even when communities refuse the bargain. */
   Q.civicConsent = function (s, pid) {

@@ -920,6 +920,10 @@ window.FB = window.FB || {};
         else errors = errors.concat(FB.religiousInstitutionDefinitionFaults(id, def, definition, catalogs));
       } else if (['school','temple','monastery','ritual_community'].indexOf(def.kind) >= 0) fault('institution kind requires a profile.');
       if (def.freshOnly !== undefined && typeof def.freshOnly !== 'boolean') fault('freshOnly must be boolean.');
+      if (!def.profileId && def.jurisdictionIds !== undefined && (!Array.isArray(def.jurisdictionIds) ||
+          !def.jurisdictionIds.length || def.jurisdictionIds.length > 16 || def.jurisdictionIds.some(function (pid, index) {
+            return !ownKey(provinces, pid) || def.jurisdictionIds.indexOf(pid) !== index;
+          }) || def.provinceId !== null && def.jurisdictionIds.indexOf(def.provinceId) < 0)) fault('invalid local jurisdiction.');
       if (def.officeProfile !== undefined) {
         var op = def.officeProfile;
         if (!plainRecord(op) || Object.keys(op).some(function (key) { return ['holderSex','holderRole','minAge'].indexOf(key) < 0; }) ||

@@ -1,6 +1,44 @@
-/* Optional declarations. Campaigns and mods place their own institutions. */
-FBDATA.religiousAffiliations = {};
-FBDATA.religiousInstitutionProfiles = {};
+/* Campaigns and mods place institutions independently of primary faith. */
+FBDATA.religiousAffiliations = {
+  east_syriac_nicene_reception:{
+    name:'East Syriac Nicene tradition', faithIds:['east_syriac'],
+    period:{yearMin:410,yearMax:null}, exclusiveWith:[]
+  }
+};
+FBDATA.religiousInstitutionProfiles = {
+  east_syriac_church_service:{
+    name:'East Syriac church service', faithIds:['east_syriac'],
+    period:{yearMin:493,yearMax:null}, system:null,
+    roles:{
+      household:{name:'Household participant',minAge:16,sexes:[],unmarried:false,
+        professions:[],skills:{},affiliationId:null,pathId:'late_antique_lay'},
+      cleric:{name:'Local priest',minAge:18,sexes:['m'],unmarried:false,
+        professions:['priest'],skills:{lea:3,int:3},affiliationId:null,
+        pathId:'late_antique_clerical'}
+    },
+    selection:null,
+    recognition:{sources:['institution_support'],roles:['cleric'],quorum:1,
+      requiresLeader:false,protectedWorship:true},
+    actions:['admit','affiliate','withdraw','assent','recognize','mediate','dispute'],
+    fees:{}, affiliationIds:['east_syriac_nicene_reception'],
+    ai:{roles:['cleric'],affiliations:[],reserve:0,maxActions:2,recognize:false}
+  },
+  dvin_church_service:{
+    name:'Dvin church service', faithIds:['caucasian_christian_476'],
+    period:{yearMin:493,yearMax:null}, system:null,
+    roles:{
+      household:{name:'Household participant',minAge:16,sexes:[],unmarried:false,
+        professions:[],skills:{},affiliationId:null},
+      helper:{name:'Relief helper',minAge:16,sexes:[],unmarried:false,
+        professions:[],skills:{int:3},affiliationId:null}
+    },
+    selection:null,
+    recognition:{sources:['institution_support'],roles:['helper'],quorum:2,
+      requiresLeader:false,protectedWorship:true},
+    actions:['admit','withdraw','assent','recognize','mediate','dispute'],
+    fees:{}, affiliationIds:[]
+  }
+};
 FBDATA.legitimacySources.institution_support = {
   name:'Institutional recognition', succession:'reaffirm', institutional:true
 };
@@ -21,4 +59,7 @@ FBDATA.techImpactReviews.features.religious_institution_ai = {
 };
 FBDATA.techImpactReviews.features.religious_institution_constitutional_binding = {
   mode:'none', rationale:'Explicit temporal binding reads a canonical qualified incumbent and existing public rights, independently of spiritual membership or research.'
+};
+FBDATA.techImpactReviews.features.christian_local_church_service = {
+  mode:'none', rationale:'Household church service and local clerical or community mediation depend on presence, qualification and consent. Ordinary supplies and relief require no discovery.'
 };

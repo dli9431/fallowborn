@@ -1575,6 +1575,8 @@ window.FB = window.FB || {};
     if (!FB.systemEnabled) return out;
     for (const id in local) {
       const def = local[id];
+      // Fresh-only offices exist only after their institution was explicitly seeded.
+      if (def.freshOnly && !(state && state.localInstitutions && state.localInstitutions[id])) continue;
       if (def.profileId) {
         const office = def.officeId && FB.religiousInstitutionOffice && FB.religiousInstitutionOffice(state, id, def);
         if (office && !out[def.officeId]) out[def.officeId] = office;

@@ -3349,6 +3349,7 @@ window.FB = window.FB || {};
     var rep = def && r && representative(s, def, r);
     var allowed = !!(enabled(s, def) && !def.profileId && church(def) && r && rep && present(s, def) &&
       FB.political.actor(s, subject) && provinceId && FB.world.byId[provinceId] && s.owner[provinceId] &&
+      (!def.jurisdictionIds || def.jurisdictionIds.indexOf(provinceId) >= 0) &&
       FB.political.worshipProtected(s, provinceId));
     return { allowed:allowed, action:'mediate', institutionId:id, subject:subject && copy(subject),
       provinceId:provinceId, cost:0, reason:allowed ? null : FB.T('Mediation needs a living religious representative and a county where worship is protected.'),
