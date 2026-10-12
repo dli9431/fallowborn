@@ -2229,6 +2229,9 @@ window.FB = window.FB || {};
       for (let i = 0; i < n && pool.length; i++) FB.addTrait(c, FB.pick(pool), state);
     }
     if (state) {
+      /* A new actor does not acquire specialist membership from a role label. */
+      if (state.player && c.role && FB.religiousCareerReview &&
+          !FB.religiousCareerReview(state, c, c.role, true).allowed) c.role = null;
       state.chars[c.id] = c;
       FB.touchFamily();
     }
@@ -3372,7 +3375,9 @@ window.FB = window.FB || {};
       };
       const workRole = FB.professionRole(p.profession);
       const role = faithRoleRecord(state, me.religion, p.profession, me.sex);
-      if (role) t = FB.faithDataText(state, p.charId, me.religion, role.path, {});
+      const localTitle = FB.religiousInstitutionCareerTitle && FB.religiousInstitutionCareerTitle(state, me, p.profession);
+      if (localTitle) t = localTitle;
+      else if (role) t = FB.faithDataText(state, p.charId, me.religion, role.path, {});
       else if (workRole && roleNames[workRole]) t = FB.T(roleNames[workRole]);
     }
     if (state.player.flags.bishop &&
@@ -3439,7 +3444,12 @@ window.FB = window.FB || {};
     if (!FB.station.isGentle(p, state) && p.profession && !FB.professionHasRole(p.profession, 'labor')) {
       const role = faithRoleRecord(state, me.religion, p.profession, me.sex);
       const workRole = FB.professionRole(p.profession);
-      if (role) {
+      const localRole = FB.religiousInstitutionCareerSource && FB.religiousInstitutionCareerSource(state, me, p.profession);
+      if (localRole) {
+        snap.institutionRoleProfile = localRole.profileId;
+        snap.institutionRoleId = localRole.roleId;
+        snap.institutionRoleWord = localRole.word;
+      } else if (role) {
         snap.faithRolePath = role.path;
         snap.faithRoleReligion = role.sourceId;
         snap.faithRoleWord = role.word;
@@ -3641,7 +3651,10 @@ window.FB = window.FB || {};
       grand_qadi: 'Grand Qadi', abbot: 'Abbot', abbess: 'Abbess', qadi: 'Qadi',
       castellan:'Castellan'
     };
-    const title = snapshot.faithRolePath && snapshot.faithRoleWord
+    const title = !snapshot.special && snapshot.institutionRoleProfile && snapshot.institutionRoleWord
+      ? FB.renderKey('religiousInstitutionProfile.' + snapshot.institutionRoleProfile + '.roles.' +
+        snapshot.institutionRoleId + '.name.default', { text:snapshot.institutionRoleWord }, {})
+      : snapshot.faithRolePath && snapshot.faithRoleWord
       ? FB.renderKey('religion.' + snapshot.faithRoleReligion + '.' +
         snapshot.faithRolePath + '.default', { text:snapshot.faithRoleWord }, {})
       : snapshot.special && specialWords[snapshot.special]

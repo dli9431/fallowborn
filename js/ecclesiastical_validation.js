@@ -12,13 +12,14 @@
     Object.keys(table).forEach(function (id) {
       var p = table[id];
       if (!/^[a-z][a-z0-9_]*$/.test(id) || !keys(p,['name','source','chapter','layRecognition','appointmentCost','recognitionCost','reserve','revenueRate','levyRate','interim','reserved','powers']) ||
-          typeof p.name !== 'string' || !p.name || ['papal_election','local_office'].indexOf(p.source) < 0 ||
+          typeof p.name !== 'string' || !p.name || ['papal_election','local_office','institution_profile'].indexOf(p.source) < 0 ||
           typeof p.chapter !== 'boolean' || typeof p.layRecognition !== 'boolean' ||
           ['appointmentCost','recognitionCost','reserve'].some(function (k) { return !Number.isFinite(p[k]) || p[k] < 0 || p[k] > 1000; }) ||
           ['revenueRate','levyRate'].some(function (k) { return !Number.isFinite(p[k]) || p[k] < 0 || p[k] > 1; }) ||
           !list(p.interim,['revenue','peace','defence','levy']) || !list(p.reserved,['war','treaty','grant','extraordinary_tax','pledge']) ||
           !list(p.powers,['ban','peace','revenue']) ||
-          p.source === 'local_office' && !p.chapter || p.source === 'papal_election' && p.chapter)
+          p.source === 'local_office' && !p.chapter || p.source === 'papal_election' && p.chapter ||
+          p.source === 'institution_profile' && (p.chapter || p.appointmentCost !== 0))
         errors.push(FB.T('Invalid ecclesiastical profile {id}.',{ id:id }));
     });
     return errors;
@@ -27,6 +28,8 @@
     var p = t && FBDATA.ecclesiasticalProfiles[t.profileId], d = t && definitions[t.institutionId], office = t && offices[t.officeId];
     if (!keys(t,['profileId','officeId','institutionId']) || !p || typeof t.officeId !== 'string' || !office) return ['invalid religious office reference'];
     if (p.source === 'papal_election') return t.institutionId !== null || office.head.succession !== 'papal_election' || office.head.holderKind !== 'realm' ? ['invalid canonical election binding'] : [];
+    if (p.source === 'institution_profile') return !d || !d.profileId || d.officeId !== t.officeId ||
+      office.institutionId !== t.institutionId || !office.head.local || office.head.holderKind !== 'character' ? ['invalid institution profile office binding'] : [];
     var chapter = d && definitions[d.chapterId];
     return !d || d.officeId !== t.officeId || !office.head.local || !chapter || chapter.officeId ||
       chapter.kind !== 'congregation' || chapter.provinceId !== d.provinceId ? ['invalid local office or chapter binding'] : [];

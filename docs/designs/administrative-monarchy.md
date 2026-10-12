@@ -42,6 +42,10 @@ Absorbing a public crown rekeys its government profile, commissions and eligible
 
 Public references keep officeholders and supported candidates reachable during character compaction. Save restoration skips public court succession repair and materialization, leaving dated vacancies and recognition untouched until normal play resumes.
 
+Religious institutions and public service
+
+PublicAppointmentQuote/publicAppoint and authorityAppoint retain public and judicial authority in authority.appointments. A qualified religious-community member can receive a commission through the ordinary public contract, but it neither admits or promotes them spiritually nor rewrites their primary faith, career, affiliation, local membership or canonical spiritual head. Conversely, a religious role supplies no public commission, productive source, salary, county title or jurisdiction. Existing finance, occupation and public qualification checks remain in force. tests/e2e/specs/religious-institutions.spec.js covers both a paid public commission and a separate judicial mandate for a headless communal-school member.
+
 Careers, AI and presentation
 
 All eight saved station bands remain. Personal freedom, wealth, service and effective office support the first standing promotions. Public commissions then supply scoped civil or military powers and remuneration independently of station. Personal standing does not buy a hereditary county or supreme office; sovereign bands belong to actual accession and authored starting authority. Household/property succession keeps its existing owner. Dismissal immediately removes public powers from ongoing justice/command permission queries and stops later salary; it does not seize an enterprise or stop an unrelated private project.

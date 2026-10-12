@@ -25,7 +25,7 @@
     return d && p && r ? { def:d, profile:p, row:r } : null;
   }
   function character(s, cid) { var c = s.chars && s.chars[cid]; return c && !c.dead ? c : null; }
-  function home(s, c) { return c.id === s.player.charId ? s.player.provinceId : c.homeProvinceId; }
+  function home(s, c) { return FB.characterResidence(s, c); }
   function free(s, c) {
     return !!(c && !c.captive && !c.exiled &&
       !(c.id === s.player.charId && s.player.flags && s.player.flags.in_prison) &&
@@ -60,7 +60,7 @@
     return !!(role && free(s, c) && c.religion === a.def.religion &&
       (!a.def.provinceId || home(s, c) === a.def.provinceId) &&
       FB.ageOf(c, s.date.year) >= role.minAge && (!role.sexes.length || role.sexes.indexOf(c.sex) >= 0) &&
-      (!role.unmarried || !c.spouseId || !character(s, c.spouseId)) && (!role.professions.length ||
+      (!role.unmarried || (FB.spousesSnapshot ? !FB.spousesSnapshot(s, c).length : !c.spouseId || !character(s, c.spouseId))) && (!role.professions.length ||
         role.professions.indexOf(c.role) >= 0 || c.career && role.professions.indexOf(c.career.profession) >= 0) &&
       Object.keys(role.skills).every(function (skill) { return (c.skills && c.skills[skill] || 0) >= role.skills[skill]; }) &&
       (!role.affiliationId || affiliation(s, cid, role.affiliationId)));
@@ -150,12 +150,176 @@
     var a = at(s, institutionId); return !!(a && available(s, a) && qualified(s, a, cid, roleId));
   };
 
+  /* Membership is optional. These projections never admit or repair a person. */
+  function characterRoles(s, c, effective) {
+    if (!c) return [];
+    return Object.keys(s.localInstitutions || {}).sort().reduce(function (out, iid) {
+      var a = at(s, iid), m = a && member(a, c.id), r = m && a.profile.roles[m.roleId];
+      if (r && (!effective || available(s, a) && qualified(s, a, c.id, m.roleId)))
+        out.push({ institutionId:iid, profileId:a.def.profileId, roleId:m.roleId, role:r });
+      return out;
+    }, []);
+  }
+  FB.religiousInstitutionCharacterPaths = function (s, c) {
+    var out = [];
+    characterRoles(s, c, true).forEach(function (r) {
+      if (r.role.pathId && out.indexOf(r.role.pathId) < 0) out.push(r.role.pathId);
+    });
+    return out;
+  };
+  FB.religiousCareerReview = function (s, c, profession, fresh) {
+    var grants = characterRoles(s, c, true).filter(function (r) {
+      return (r.role.careerIds || []).indexOf(profession) >= 0;
+    });
+    var religious = FB.professionHasRole(profession, ['cloister','clergy']);
+    var faith = c && FB.religionOf(c.religion, s);
+    var retained = !fresh && c && (s.player && c.id === s.player.charId ? s.player.profession :
+      c.career ? c.career.profession : c.role) === profession;
+    return { allowed:!!c && (!!grants.length || !religious || !faith || faith.religiousPaths !== null || retained),
+      explicit:!!grants.length, roles:grants.map(function (r) {
+        return { institutionId:r.institutionId, roleId:r.roleId };
+      }) };
+  };
+  FB.religiousHouseholdRule = function (s, c, profession) {
+    var roles = characterRoles(s, c, false);
+    return { unmarried:roles.some(function (r) { return r.role.unmarried; }),
+      explicit:roles.some(function (r) { return (r.role.careerIds || []).concat(r.role.professions).indexOf(profession) >= 0; }) };
+  };
+  FB.religiousCelibate = function (s, c) {
+    if (!c) return false;
+    var profession = c.id === s.player.charId ? s.player.profession : c.career && c.career.profession || c.role;
+    var rule = FB.religiousHouseholdRule(s, c, profession);
+    if (rule.unmarried) return true;
+    if (rule.explicit) return false;
+    return FB.professionHasRole(profession, ['cloister','clergy']) && !FB.religionOf(c.religion, s).clergyMarriage;
+  };
+  FB.religiousInstitutionCareerSource = function (s, c, profession) {
+    var roles = characterRoles(s, c, true), result = null;
+    roles.some(function (r) {
+      if ((r.role.careerIds || []).concat(r.role.professions).indexOf(profession) < 0) return false;
+      result = { profileId:r.profileId, roleId:r.roleId, word:r.role.name };
+      return true;
+    });
+    return result;
+  };
+  FB.religiousInstitutionCareerTitle = function (s, c, profession) {
+    var r = FB.religiousInstitutionCareerSource(s, c, profession);
+    return r ? FB.dataText(s, c.id, 'religiousInstitutionProfile', r.profileId,
+      catalogs().profiles[r.profileId], 'roles.' + r.roleId + '.name', {}) : '';
+  };
+  FB.playerReligiousInstitutions = function (s, cid) {
+    if (!Object.keys(catalogs().profiles).length) return [];
+    if (!cid) {
+      var union = [];
+      Object.keys(s.chars).forEach(function (id) {
+        var c = s.chars[id];
+        if (c.dead || FB.isExternalHouseholdAuthority && FB.isExternalHouseholdAuthority(s, c) ||
+            id !== s.player.charId && !(FB.isHouseholdCharacter && FB.isHouseholdCharacter(s, id)) &&
+            !(FB.manageableKinKind && FB.manageableKinKind(s, id))) return;
+        FB.playerReligiousInstitutions(s, id).forEach(function (iid) { if (union.indexOf(iid) < 0) union.push(iid); });
+      });
+      return union.sort();
+    }
+    var c = s.chars[cid || s.player.charId];
+    if (!c) return [];
+    return Object.keys(s.localInstitutions || {}).sort().filter(function (iid) {
+      var a = at(s, iid);
+      return !!(a && (member(a, c.id) || a.def.religion === c.religion &&
+        (!a.def.provinceId || a.def.provinceId === home(s, c)) || patron(s, a) === 'player'));
+    });
+  };
+
+  /* Explicit AI policy, bounded proposals, and the same atomic transaction. */
+  FB.religiousInstitutionAI = function (s) {
+    var periodId = Math.floor(s.turn / 90), applied = 0;
+    var iids = Object.keys(s.localInstitutions || {}).sort().filter(function (iid) {
+      var a = at(s, iid); return !!(a && a.profile.ai && available(s, a));
+    });
+    if (!iids.length || periodId < 1) return 0;
+    var offset = periodId * 16 % iids.length;
+    for (var n = 0; n < Math.min(16, iids.length); n++) {
+      var iid = iids[(offset + n) % iids.length], a = at(s, iid), policy = a.profile.ai;
+      if (a.row.aiPeriod === periodId) continue;
+      a.row.aiPeriod = periodId;
+      var used = 0, attempts = 0, rid = patron(s, a);
+      function act(actor, action, terms) {
+        if (used >= policy.maxActions || attempts++ >= 64) return false;
+        var q = FB.religiousInstitutionQuote(s, iid, actor, action, terms);
+        if (!q || !q.allowed || q.cost && (q.payer === 'player' || !q.payer ||
+            FB.treasuryAvailable(s, q.payer) - q.cost < policy.reserve)) return false;
+        if (!FB.religiousInstitutionApply(s, q)) return false;
+        used++; applied++; a = at(s, iid); return true;
+      }
+      var people = Object.keys(s.chars).sort().filter(function (cid) {
+        var c = character(s, cid);
+        return c && c.id !== s.player.charId &&
+          !(FB.isHouseholdCharacter && FB.isHouseholdCharacter(s, cid)) &&
+          !(FB.manageableKinKind && FB.manageableKinKind(s, cid)) &&
+          c.religion === a.def.religion && (!a.def.provinceId || home(s, c) === a.def.provinceId) &&
+          (member(a, cid) || policy.roles.some(function (roleId) { return qualified(s, a, cid, roleId); }));
+      }).slice(0, 64);
+      people.forEach(function (cid) {
+        if (used >= policy.maxActions) return;
+        var actor = { kind:'character', id:cid }, m = member(a, cid);
+        if (!m) policy.roles.some(function (roleId) {
+          return qualified(s, a, cid, roleId) && act(actor, 'admit', { roleId:roleId });
+        });
+        if (member(a, cid)) policy.affiliations.forEach(function (aid) {
+          act(actor, 'affiliate', { affiliationId:aid });
+        });
+      });
+      var sel = a.profile.selection, current = a.def.officeId && s.religiousHeads[a.def.officeId];
+      if (sel && !current) {
+        var candidate = Object.keys(a.row.members).sort().filter(function (cid) {
+          return people.indexOf(cid) >= 0 && FB.religiousInstitutionOfficeEligible(s, iid, cid);
+        })[0];
+        if (candidate) {
+          var target = { kind:'character', id:candidate };
+          if (sel.quorum) people.forEach(function (cid) {
+            if (constituency(s, a, cid, sel.consentRoles))
+              act({ kind:'character', id:cid }, 'assent', { decision:'appoint', subject:target });
+          });
+          var chooser = sel.policy === 'patron' ? rid && rid !== 'player' && { kind:'realm', id:rid } :
+            people.filter(function (cid) { return constituency(s, a, cid, sel.consentRoles); })[0];
+          if (typeof chooser === 'string') chooser = { kind:'character', id:chooser };
+          if (chooser) act(chooser, 'appoint', { candidateId:candidate });
+        }
+      } else if (sel && current && rid && rid !== 'player' && !FB.religiousInstitutionOfficeEligible(s, iid, current)) {
+        act({ kind:'realm', id:rid }, 'vacate', {});
+      }
+      if (policy.recognize && rid && rid !== 'player') {
+        var rec = a.profile.recognition, subject = { kind:'realm', id:rid };
+        var issuer = rec.requiresLeader ? leader(s, a) : people.filter(function (cid) {
+          return constituency(s, a, cid, rec.roles);
+        })[0];
+        if (issuer && people.indexOf(issuer) >= 0 && rec.sources.length && a.def.jurisdictionIds.length) {
+          if (rec.quorum > 1) people.forEach(function (cid) {
+            if (cid !== issuer && constituency(s, a, cid, rec.roles))
+              act({ kind:'character', id:cid }, 'assent', { decision:'recognize', subject:subject });
+          });
+          act({ kind:'character', id:issuer }, 'recognize', {
+            subject:subject, provinceId:a.def.jurisdictionIds[0], source:rec.sources[0] });
+        }
+      }
+    }
+    return applied;
+  };
+
   /* Validation is detached and rejects unknown fields, references and bounds. */
   FB.religiousInstitutionCatalogFaults = function (data) {
     data = data || FBDATA;
     var errors = [], affs = data.religiousAffiliations, profiles = data.religiousInstitutionProfiles;
     function fault(path) { errors.push(path + ': invalid religious institution declaration.'); }
     function faith(fid) { return own(data.religions, fid); }
+    function descends(fid, ancestor) {
+      var seen = {};
+      while (fid && !seen[fid]) {
+        if (fid === ancestor) return true;
+        seen[fid] = true;
+        var r = data.religions[fid]; fid = r && (r.parent || r.group);
+      }
+      return false;
+    }
     if (!plain(affs) || !plain(profiles)) return ['Religious institution catalogues must be objects keyed by id.'];
     Object.keys(affs).forEach(function (aid) {
       var d = affs[aid], path = 'religiousAffiliations.' + aid;
@@ -165,7 +329,7 @@
     });
     Object.keys(profiles).forEach(function (pid) {
       var p = profiles[pid], path = 'religiousInstitutionProfiles.' + pid;
-      if (!id(pid) || !keys(p, ['name','faithIds','period','system','roles','selection','recognition','actions','fees','affiliationIds']) ||
+      if (!id(pid) || !keys(p, ['name','faithIds','period','system','roles','selection','recognition','actions','fees','affiliationIds','ai']) ||
           typeof p.name !== 'string' || !p.name.trim() || p.name.length > 160 || !ids(p.faithIds, 32, faith) || !p.faithIds.length ||
           !periodValid(p.period) || p.system !== null && !own(data.systems, p.system) ||
           !plain(p.roles) || !Object.keys(p.roles).length || Object.keys(p.roles).length > 16 ||
@@ -176,13 +340,29 @@
       }
       Object.keys(p.roles).forEach(function (rid) {
         var r = p.roles[rid];
-        if (!id(rid) || !keys(r, ['name','minAge','sexes','unmarried','professions','skills','affiliationId']) ||
+        if (!id(rid) || !keys(r, ['name','minAge','sexes','unmarried','professions','skills','affiliationId','careerIds','pathId']) ||
             typeof r.name !== 'string' || !r.name.trim() || r.name.length > 80 || !Number.isInteger(r.minAge) || r.minAge < 0 || r.minAge > 80 ||
             !ids(r.sexes, 2, function (v) { return ['m','f'].indexOf(v) >= 0; }) || typeof r.unmarried !== 'boolean' ||
             !ids(r.professions, 16, function (v) { return own(data.careers, v); }) || !plain(r.skills) ||
             Object.keys(r.skills).some(function (k) { return FB.SKILLS.indexOf(k) < 0 || !Number.isFinite(r.skills[k]) || r.skills[k] < 0; }) ||
-            r.affiliationId !== null && (!own(affs, r.affiliationId) || p.affiliationIds.indexOf(r.affiliationId) < 0)) fault(path + '.roles.' + rid);
+            r.affiliationId !== null && (!own(affs, r.affiliationId) || p.affiliationIds.indexOf(r.affiliationId) < 0) ||
+            r.careerIds !== undefined && !ids(r.careerIds, 16, function (v) { return own(data.careers, v); }) ||
+            r.pathId !== undefined && (typeof r.pathId !== 'string' || !own(data.religiousPaths, r.pathId))) {
+          fault(path + '.roles.' + rid); return;
+        }
+        var route = r.pathId && data.religiousPaths && data.religiousPaths[r.pathId];
+        if (route && (Array.isArray(route.faiths) && !p.faithIds.every(function (fid) {
+          return route.faiths.some(function (ancestor) { return descends(fid, ancestor); });
+        }) || Array.isArray(route.professions) && !(r.careerIds || []).concat(r.professions || []).some(function (career) {
+          return route.professions.indexOf(career) >= 0;
+        }))) fault(path + '.roles.' + rid + '.pathId');
       });
+      var ai = p.ai;
+      if (ai !== undefined && (!keys(ai, ['roles','affiliations','reserve','maxActions','recognize']) ||
+          !ids(ai.roles, 16, function (v) { return own(p.roles, v); }) ||
+          !ids(ai.affiliations, MAX_AFFILIATIONS, function (v) { return p.affiliationIds.indexOf(v) >= 0; }) ||
+          !Number.isFinite(ai.reserve) || ai.reserve < 0 || !Number.isInteger(ai.maxActions) || ai.maxActions < 1 || ai.maxActions > 8 ||
+          typeof ai.recognize !== 'boolean')) fault(path + '.ai');
       var sel = p.selection;
       if (sel !== null && (!keys(sel, ['strategy','policy','roleId','consentRoles','quorum']) || sel.strategy !== 'appointment' ||
           !FB.religiousHeads.strategy(sel.strategy) || ['patron','members'].indexOf(sel.policy) < 0 || !own(p.roles, sel.roleId) ||
@@ -407,6 +587,7 @@
       if (!a) { if (r.members !== undefined || r.assents !== undefined) fail(path); return; }
       if (['active','suspended','closed'].indexOf(r.status) < 0 || !plain(r.members) || Object.keys(r.members).length > MAX_MEMBERS ||
           !plain(r.assents) || Object.keys(r.assents).length > MAX_DECISIONS) fail(path);
+      if (r.aiPeriod !== undefined && (!Number.isInteger(r.aiPeriod) || r.aiPeriod < 0 || r.aiPeriod > Math.floor(s.turn / 90))) fail(path + '.aiPeriod');
       Object.keys(r.members).forEach(function (cid) {
         var m = r.members[cid];
         if (!own(s.chars, cid) || !keys(m, ['roleId','status','joinedTurn','changedTurn']) || !own(a.profile.roles, m.roleId) ||

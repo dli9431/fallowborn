@@ -67,13 +67,26 @@
     var r = E.row(s,rid), p = E.profile(s,rid), t = copy(terms || {}), c = E.incumbent(s,rid);
     if (!r || !p || !E.active(s,rid)) return null;
     var reason = !E.controlled(s,rid) ? 'occupied' : null, cost = 0, appointment = null, source = null;
+    function institutionAppointment(operation) {
+      var def = FB.localInstitutionDefinitions(s)[r.institutionId], profile = def && FBDATA.religiousInstitutionProfiles[def.profileId];
+      if (!profile) return null;
+      var actor = { kind:'character', id:s.player.charId };
+      if (operation !== 'resign' && (operation === 'remove' || profile.selection.policy === 'patron') &&
+          FB.realmIdForRulerCharacter(s, s.player.charId) === rid)
+        actor = { kind:'realm', id:rid };
+      if (Object.keys(t).length && operation !== 'appoint') return null;
+      return FB.religiousInstitutionQuote(s, r.institutionId, actor,
+        operation === 'appoint' ? 'appoint' : 'vacate', operation === 'appoint' ? t : {});
+    }
     if (action === 'appoint') {
-      if (p.source !== 'local_office') reason = reason || 'canonical_election';
+      if (p.source === 'institution_profile') appointment = institutionAppointment(action);
+      else if (p.source !== 'local_office') reason = reason || 'canonical_election';
       else appointment = FB.localOfficeQuote(s,r.institutionId,'appoint',t);
       if (!appointment || !appointment.allowed) reason = reason || appointment && appointment.reason || 'qualification';
-      cost = p.appointmentCost;
+      cost = p.source === 'institution_profile' ? appointment && appointment.cost || 0 : p.appointmentCost;
     } else if (action === 'resign' || action === 'remove') {
-      if (p.source !== 'local_office') reason = reason || 'canonical_election';
+      if (p.source === 'institution_profile') appointment = institutionAppointment(action);
+      else if (p.source !== 'local_office') reason = reason || 'canonical_election';
       else appointment = FB.localOfficeQuote(s,r.institutionId,action,t);
       if (!appointment || !appointment.allowed) reason = reason || appointment && appointment.reason || 'qualification';
     } else if (action === 'recognize') {
@@ -86,7 +99,10 @@
           !Q.consent(s,{ kind:'realm',id:liege },'treaty',{ kind:'realm',id:rid }).allowed) reason = reason || 'lay_refusal';
       cost = p.recognitionCost;
     } else reason = reason || 'unsupported';
-    if (cost > 0 && (FB.treasuryAvailable(s,rid) - p.reserve < cost || !s.treasuryAccounting || s.treasuryAccounting.mode !== 'active')) reason = reason || 'funds';
+    if (appointment && p.source === 'institution_profile') cost = appointment.cost;
+    var payer = appointment && p.source === 'institution_profile' ? appointment.payer : rid;
+    if (cost > 0 && (FB.treasuryAvailable(s,payer) - p.reserve < cost || payer !== 'player' &&
+        (!s.treasuryAccounting || s.treasuryAccounting.mode !== 'active'))) reason = reason || 'funds';
     return { realmId:rid,action:action,terms:t,stamp:E.stamp(s,rid),appointment:appointment,source:source,
       cost:cost,allowed:!reason,reason:reason };
   };
@@ -106,7 +122,8 @@
           subject:{ kind:'character',id:c.id },scope:{ kind:'realm',id:rid } });
         if (success) row.temporalRecognitionId = success.id;
       }
-    } else success = FB.localOfficeApply(s,q.appointment);
+    } else success = E.profile(s,rid).source === 'institution_profile' ?
+      FB.religiousInstitutionApply(s,q.appointment) : FB.localOfficeApply(s,q.appointment);
     if (!success) return false;
     if (q.cost && q.action === 'recognize') FB.treasurySpend(s,rid,q.cost);
     E.sync(s,rid); return true;

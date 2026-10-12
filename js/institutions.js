@@ -3153,6 +3153,9 @@ window.FB = window.FB || {};
   FB.localInstitutionName = function (id, s) {
     var def = FB.localInstitutionDefinitions(s)[id];
     if (!def) return '';
+    if (def.profileId) return FB.T('{institution} at {place}', {
+      institution:FB.dataText(s, s && s.player && s.player.charId, 'religiousInstitutionProfile', def.profileId,
+        FBDATA.religiousInstitutionProfiles[def.profileId], 'name', {}), place:def.city });
     if (def.kind === 'senate') return FB.T('Senate of {city}', { city:def.city });
     if (def.kind === 'patriarchate') return FB.T('Patriarchate of {city}', { city:def.city });
     if (def.kind === 'congregation') return FB.T('Congregation of {city}', { city:def.city });
@@ -3363,6 +3366,7 @@ window.FB = window.FB || {};
       : person(row(s, id).representativeId), subject, scope);
   };
   FB.localInstitutionsSeason = function (s) {
+    if (FB.religiousInstitutionAI) FB.religiousInstitutionAI(s);
     if (!s.localInstitutions || !FB.systemAvailable(s, 'civic_institutions') && !FB.systemAvailable(s, 'episcopal_sees')) return;
     var period = Math.floor(s.turn / 90);
     if (period < 1) return;

@@ -3018,8 +3018,7 @@ window.FB = window.FB || {};
     },
     show: function (s) {
       const m = me(s);
-      const clergyCelibate = FB.professionHasRole(s.player.profession, 'cloister') &&
-        !FB.religionOf(m.religion, s).clergyMarriage;
+      const clergyCelibate = FB.religiousCelibate && FB.religiousCelibate(s, m);
       return FB.canWed(s) && !s.player.courtingId && !clergyCelibate;
     },
     run: function (s) {
@@ -4468,6 +4467,9 @@ window.FB = window.FB || {};
   { id:'church_dealings', opensChoices:true, noConsume:true,
     show:function (s) { return !!FB.playerChurchInstitutions && FB.playerChurchInstitutions(s).length > 0; },
     run:function () { if (FB.ui && FB.ui.showLocalInstitutions) FB.ui.showLocalInstitutions('church'); } },
+  { id:'religious_membership', opensChoices:true, noConsume:true,
+    show:function (s) { return FB.playerReligiousInstitutions(s).length > 0; },
+    run:function () { FB.ui.showReligiousInstitutions(); } },
   { id:'church_council', opensChoices:true, noConsume:true, requiresAdult:true,
     show:function (s) { return FB.station.rulesRealm(s.player, s); },
     run:function () { if (FB.ui && FB.ui.showChurchCouncils) FB.ui.showChurchCouncils(); } },
