@@ -2,7 +2,7 @@ Religious institutions and affiliation
 
 Optional declarations
 
-data/religious_institutions.js declares initially empty religiousAffiliations and religiousInstitutionProfiles catalogues. Complete bookmark localInstitutions tables place each institution. Profiles declare their own faith ids, date bounds, qualifications, household restrictions, allowed actions, fees, selection and recognition. None of these declarations changes a person's primary faith, community composition, doctrinal relations or government form.
+data/religious_institutions.js declares religiousAffiliations and religiousInstitutionProfiles catalogues. Complete bookmark localInstitutions tables place each institution. Profiles declare their own faith ids, date bounds, qualifications, household restrictions, allowed actions, fees, selection and recognition. None of these declarations changes a person's primary faith, community composition, doctrinal relations or government form.
 
 Roles carry a minimum age, explicit permitted sexes (an empty list permits either), an unmarried requirement, permitted career professions (an empty list imposes none), skill floors and an optional affiliation prerequisite. A deceased spouse does not block an unmarried role. Eligible specialists need not be priests or monastics. On-map membership requires residence in the seat county. Off-map institutions declare offMap:true and explicit county jurisdiction. Opening records are vacant and create no fictional representative; actual admissions and selection are explicit transactions.
 
@@ -23,6 +23,8 @@ Review and atomic application
 FB.religiousInstitutionQuote(state, institutionId, actor, action, terms) reads eligibility, consent, vacancy, payer, cost, consequences and all dependent facts without repair, RNG, uid allocation or payment. Actors are typed character or realm references. Unsupported actions and fields fail closed. FB.religiousInstitutionApply(state, reviewed) recomputes the entire proposal before proceeding. Fallible canonical authority operations are staged on a detached state; only affected local records, affiliations, office references and authority records are adopted after payment succeeds. Costs use existing treasury counterparties and cannot spend a ruler's private household assets as an institutional purse. NPC characters without an authorized treasury counterparty cannot pay a fee.
 
 The profile's existing abbeyId, when present on its local declaration, references abbeys.houses as the property authority. Membership, selection, recognition, withdrawal and vacancy neither copy nor alter that property's capital, treasury or plots. Withdrawal can remove one bound affiliation or the whole membership, preserving the character, followers, household and institution. No new purse or loyalty score is stored.
+
+An optional abbeyId may name a receiving property that has not yet been explicitly founded. Its absence does not block otherwise qualified lay membership, withdrawal or consent, and these actions cannot create or spend property. Foundation and funded service still require their own exact property and restricted-account reviews. Spiritual eligibility never imposes landed patronage through an unrelated optional property reference.
 
 Public entry points
 
