@@ -5,6 +5,8 @@ const {test,expect} = require('../support/fixture');
 const {openGame} = require('../support/game/navigation');
 const {startDeterministicGame} = require('../support/game/start');
 const {beginBookmark,restoreBookmark} = require('../support/game/bookmark-acceptance');
+const {startHistoricalGame} = require('../support/game/historical-start');
+const {injectHolyWarHarness} = require('../support/game/holywar-harness');
 const {releasedCatalogue} = require('../support/released-catalogue');
 const {dependsOnRuntime} = require('../support/runtime-dependencies');
 
@@ -18,7 +20,13 @@ dependsOnRuntime(__filename, ['data/cultures.js','data/technology.js','data/econ
   'js/religious_activities.js','js/religious_institutions.js','js/authority.js',
   'js/institutions.js','js/population.js','js/modifiers.js','js/treasury.js',
   'js/settlement.js','js/justice.js','js/intrigue.js','js/ui_religious_activities.js',
-  'js/ui_misc.js','js/ui_modals.js','css/style.css']);
+  'js/ui_misc.js','js/ui_modals.js','css/style.css',
+  'data/counties.js','data/geographies.js','data/bookmark_800.js','data/bookmark_800_expansion.js',
+  'data/bookmark_867_expansion.js','data/bookmark_1066_inhabited.js','data/bookmark_1204.js',
+  'data/bookmark_1204_terrain.js','data/mobile_confederations.js','data/units.js','data/travel.js',
+  'js/mobile_confederations.js','js/governments.js','js/government_continuity.js','js/government_selection.js',
+  'js/armies.js','js/federates.js','js/logistics.js','js/market.js','js/holywar.js',
+  'js/wars.js','js/travel.js','js/crazygames.js','js/util.js']);
 
 test('released faiths and their inherited defaults keep their catalogue fingerprints',
   async function ({page},testInfo) {
@@ -389,4 +397,306 @@ test('narrow local activity review discloses district, worship access, price and
     expect(await page.evaluate(function () {
       const box = document.getElementById('gm-body'); return box.scrollWidth <= box.clientWidth + 1;
     })).toBe(true);
+  });
+
+test('seven opening decisions gate district participation by independent dates and retained revisions',
+  async function ({page},testInfo) {
+    await beginBookmark(page,testInfo,'1066');
+    const result = await page.evaluate(function () {
+      const source = JSON.stringify(FB.state), data = JSON.stringify(FBDATA);
+      const rng = FB.getRngState(), uid = FB.getUidCounter();
+      const dates = ['476','493','711','800','867','1066','1204'];
+      const profiles = ['uppakra_local_observance','samogitian_mortuary_observance',
+        'samogitian_mortuary_support','uppsala_local_gathering'];
+      const accepted = [[],[],[],[]]; let pure = true, bounds = true;
+      dates.forEach(function (date) {
+        FB.bookmarkRevisions(date).forEach(function (b) {
+          profiles.forEach(function (id,index) {
+            const s = JSON.parse(source), d = FBDATA.religiousActivities[id], cid = s.player.charId;
+            s.start.id = date; s.start.revision = b.revision || 'baseline'; s.date.year = Number(date);
+            s.player.provinceId = d.provinceIds[0]; s.player.travel = null; s.player.gold = 10;
+            s.chars[cid].religion = s.player.religion = d.faithIds[0];
+            s.chars[cid].born = s.date.year - 30; s.chars[cid].health = 8;
+            const before = JSON.stringify(s), q = FB.religiousActivityQuote(s,id,cid);
+            pure = pure && before === JSON.stringify(s);
+            if (!q || !q.allowed) return;
+            accepted[index].push(date + ':' + s.start.revision);
+            const p = FBDATA.provinces.find(function (p) { return p.id === d.provinceIds[0]; });
+            bounds = bounds && !!p && p.x >= -11 && p.x <= 70 && p.y >= 13 && p.y <= 66 &&
+              b.provinces.some(function (v) { return v.id === p.id && !v.wasteland; });
+          });
+        });
+      });
+      return {accepted:accepted,bounds:bounds,pure:pure && source === JSON.stringify(FB.state) &&
+        data === JSON.stringify(FBDATA) && rng === FB.getRngState() && uid === FB.getUidCounter()};
+    });
+    expect(result).toEqual({accepted:[
+      ['476:wider_v2','493:world_v2'],['476:wider_v2','493:world_v2'],
+      ['476:wider_v2','493:world_v2'],['1066:baseline','1066:inhabited_v2']
+    ],bounds:true,pure:true});
+  });
+
+for (const revision of ['baseline','inhabited_v2']) {
+  test(revision + ' 1066 gathering consumes household supplies once without granting ranks or property',
+    async function ({page},testInfo) {
+      await page.addInitScript(function (revision) {
+        document.addEventListener('DOMContentLoaded',function () {
+          FBDATA.bookmarks['1066'].revision = revision;
+        },{once:true});
+      },revision);
+      await beginBookmark(page,testInfo,'1066');
+      await page.evaluate(stageNorthernObservance,{province:'uppsala',faith:'norse_pagan',gold:1,
+        sex:revision === 'baseline' ? 'f' : 'm'});
+      expect(await page.evaluate(function () {
+        const s = FB.state, c = s.chars[s.player.charId], id = 'uppsala_local_gathering';
+        const retained = JSON.stringify([s.population,s.localInstitutions,s.abbeys,s.religiousHeads,
+          c.religiousRanks,c.religiousAffiliations,c.traits,c.career,s.player.landPlots]);
+        const piety = s.player.piety, prestige = s.player.prestige, q = FB.religiousActivityQuote(s,id,c.id);
+        const before = JSON.stringify(s), rng = FB.getRngState(), uid = FB.getUidCounter();
+        FB.religiousActivityQuote(s,id,c.id);
+        const pure = before === JSON.stringify(s) && rng === FB.getRngState() && uid === FB.getUidCounter();
+        const started = FB.religiousActivityApply(s,q), repeat = FB.religiousActivityApply(s,q);
+        s.turn++; FB.religiousActivityTick(s); const waiting = !!c.religiousActivity;
+        s.turn++; FB.religiousActivityTick(s); FB.religiousActivityTick(s);
+        return {revision:s.start.revision,pure:pure,started:started,repeat:repeat,waiting:waiting,
+          gold:s.player.gold,piety:s.player.piety - piety,prestige:s.player.prestige - prestige,
+          performed:c.religiousActivityHistory[id].performed,
+          duplicate:FB.religiousActivityQuote(s,id,c.id).reason,
+          retained:retained === JSON.stringify([s.population,s.localInstitutions,s.abbeys,s.religiousHeads,
+            c.religiousRanks,c.religiousAffiliations,c.traits,c.career,s.player.landPlots])};
+      })).toEqual({revision:revision,pure:true,started:true,repeat:false,waiting:true,gold:0,
+        piety:1,prestige:1,performed:true,duplicate:'commitment',retained:true});
+    });
+}
+
+test('ordinary 1066 participation implies no festival season and a changed year invalidates a pending review',
+  async function ({page},testInfo) {
+    await page.addInitScript(function () {
+      document.addEventListener('DOMContentLoaded',function () {
+        FBDATA.bookmarks['1066'].revision = 'inhabited_v2';
+      },{once:true});
+    });
+    await beginBookmark(page,testInfo,'1066');
+    await page.evaluate(stageNorthernObservance,{province:'uppsala',faith:'norse_pagan',gold:1});
+    expect(await page.evaluate(function () {
+      const s = FB.state, id = 'uppsala_local_gathering', cid = s.player.charId;
+      const seasons = [0,1,2,3].map(function (season) {
+        const v = JSON.parse(JSON.stringify(s)); v.date.season = season;
+        return FB.religiousActivityQuote(v,id,cid).allowed;
+      });
+      const d = FBDATA.religiousActivities[id], v = JSON.parse(JSON.stringify(FBDATA));
+      v.religiousActivities[id].calendar = 'nine_year_equinox';
+      const calendarRejected = FB.religiousActivityCatalogFaults(v).length > 0;
+      const q = FB.religiousActivityQuote(s,id,cid); s.date.year = 1067;
+      const before = JSON.stringify(s), rejected = !FB.religiousActivityApply(s,q) && before === JSON.stringify(s);
+      return {seasons:seasons,calendar:d.calendar,calendarRejected:calendarRejected,rejected:rejected,
+        later:FB.religiousActivityQuote(s,id,cid).reason,faith:s.chars[cid].religion,gold:s.player.gold};
+    })).toEqual({seasons:[true,true,true,true],calendar:'any_day',calendarRejected:true,rejected:true,
+      later:'eligibility',faith:'norse_pagan',gold:1});
+  });
+
+test('a Christian local authority preserves northern households and one existing voluntary mission project',
+  async function ({page},testInfo) {
+    await page.addInitScript(function () {
+      document.addEventListener('DOMContentLoaded',function () {
+        FBDATA.bookmarks['1066'].revision = 'inhabited_v2';
+      },{once:true});
+    });
+    await beginBookmark(page,testInfo,'1066');
+    await page.evaluate(stageNorthernObservance,{province:'uppsala',faith:'norse_pagan',gold:1});
+    expect(await page.evaluate(function () {
+      const s = FB.state, c = s.chars[s.player.charId], rid = s.holder.uppsala || s.owner.uppsala;
+      const converted = FB.convertCountyCommunity(s,'uppsala',{kind:'faith',target:'catholic',amount:100});
+      if (!converted || converted.count !== 100) throw new Error('Mixed community setup failed');
+      if (!FB.startCountyCommunityProject(s,'uppsala',{kind:'faith',target:'catholic',sponsor:rid,policy:'voluntary'}))
+        throw new Error('Existing mission project setup failed');
+      const rec = s.population.counties.uppsala, project = rec.communityProjects.faith;
+      project.progress = 0.375;
+      const communities = JSON.stringify(rec.communities), projectBefore = JSON.stringify(project);
+      const identity = {eliteCultureId:'norse',eliteFaithId:'catholic',legalIdentityId:'latin',
+        tolerance:'tolerant',taxation:'equal',justicePolicy:'personal'};
+      if (!FB.authoritySetIdentity(s,rid,identity)) throw new Error('Local authority setup failed');
+      const started = FB.religiousActivityApply(s,FB.religiousActivityQuote(s,'uppsala_local_gathering',c.id));
+      s.turn += 2; FB.religiousActivityTick(s);
+      FB.authoritySetIdentity(s,rid,Object.assign({},identity,{tolerance:'persecution'}));
+      return {started:started,faith:c.religion,communities:communities === JSON.stringify(rec.communities),
+        sameProject:project === rec.communityProjects.faith && projectBefore === JSON.stringify(project),
+        progress:project.progress,projects:Object.keys(rec.communityProjects),
+        blocked:FB.religiousActivityQuote(s,'uppsala_local_gathering',c.id).reason};
+    })).toEqual({started:true,faith:'norse_pagan',communities:true,sameProject:true,progress:0.375,
+      projects:['faith'],blocked:'eligibility'});
+  });
+
+test('unaccepted Sami and later steppe candidates create no institutions or new pilgrimage destinations',
+  async function ({page},testInfo) {
+    await openGame(page,testInfo);
+    expect(await page.evaluate(function () {
+      const before = JSON.stringify(FBDATA), rng = FB.getRngState(), uid = FB.getUidCounter();
+      const held = ['tisso_feast_later','sambian_grove_access_later','birka_local_recognition_later',
+        'qipchaq_following_1204','unna_saiva','vindelgransele','sieiddakeadgi'];
+      const destinations = ['pilgrim_uppsala','pilgrim_sambia','pilgrim_vilnius','pilgrim_kiev',
+        'pilgrim_novgorod','pilgrim_bolghar','pilgrim_etelkoz','pilgrim_sarkel'];
+      return {held:held.every(function (id) {
+        return !FBDATA.religiousActivities[id] && ['476','493','711','800','867','1066','1204'].every(function (date) {
+          return FB.bookmarkRevisions(date).every(function (b) { return !b.localInstitutions || !b.localInstitutions[id]; });
+        }) &&
+          !FBDATA.travelSites.some(function (v) { return v.id === id; });
+      }),legacy:destinations.every(function (id) { return FBDATA.travelSites.some(function (v) { return v.id === id; }); }),
+      local:FBDATA.religiousActivities.uppsala_local_gathering.siteId === null,
+      pure:before === JSON.stringify(FBDATA) && rng === FB.getRngState() && uid === FB.getUidCounter()};
+    })).toEqual({held:true,legacy:true,local:true,pure:true});
+  });
+
+test('autonomous local participation conserves the public reserve and never charges the household',
+  async function ({page},testInfo) {
+    await page.addInitScript(function () {
+      document.addEventListener('DOMContentLoaded',function () {
+        FBDATA.bookmarks['1066'].revision = 'inhabited_v2';
+      },{once:true});
+    });
+    await beginBookmark(page,testInfo,'1066');
+    expect(await page.evaluate(function () {
+      const s = FB.state, rid = s.owner.uppsala, c = FB.realmRulerCharacterSnapshot(s,rid);
+      const faith = 'e2e_northern_ai_faith';
+      // An isolated declared-profile fixture gives only this ruler admission.
+      FBDATA.religions[faith] = {name:'Public participation fixture',group:'norse_pagan',
+        relationToParent:'in_fold',availability:{}};
+      c.religion = faith; c.born = s.date.year - 30; c.health = 8;
+      const d = JSON.parse(JSON.stringify(FBDATA.religiousActivities.uppsala_local_gathering));
+      Object.assign(d,{payer:'public',ai:true,faithIds:[faith],cost:2,reserve:5,
+        milestone:'e2e_northern_ai_done',reward:{piety:0,prestige:0,skills:{}}});
+      FBDATA.religiousActivities.e2e_northern_ai = d;
+      FB.treasuryInitialize(s); s.treasuryAccounting.mode = 'active';
+      s.realms[rid].treasury.gold = 6; s.realms[rid].treasury.militaryAccrued = 0;
+      const realms = Object.keys(s.realms).sort(); let period = 1;
+      while (period <= realms.length && !Array.from({length:Math.min(16,realms.length)},function (_,i) {
+        return realms[(period * 16 + i) % realms.length];
+      }).includes(rid)) period++;
+      if (period > realms.length) throw new Error('Public actor was outside the bounded rotation');
+      s.turn = period * 90; delete s.religiousActivityAI;
+      const purse = s.player.gold, piety = s.player.piety, prestige = s.player.prestige;
+      const blocked = FB.religiousActivityAI(s), untouched = !c.religiousActivity && FB.treasuryAvailable(s,rid) === 6;
+      s.realms[rid].treasury.gold = 7; delete s.religiousActivityAI;
+      const started = FB.religiousActivityAI(s), repeat = FB.religiousActivityAI(s);
+      s.turn += 2; FB.religiousActivityTick(s);
+      return {blocked:blocked,untouched:untouched,started:started,repeat:repeat,
+        reserve:FB.treasuryAvailable(s,rid),performed:c.religiousActivityHistory.e2e_northern_ai_done.performed,
+        private:s.player.gold === purse && s.player.piety === piety && s.player.prestige === prestige};
+    })).toEqual({blocked:0,untouched:true,started:1,repeat:0,reserve:5,performed:true,private:true});
+  });
+
+test('a mobile court keeps mixed religious members and conserved people when its location changes',
+  async function ({page},testInfo) {
+    await startHistoricalGame(page,testInfo,{bookmark:'476',
+      code:'NORTHERNMOBILE-476-mobile_household_476-cherson-m-Review-established'},false);
+    expect(await page.evaluate(function () {
+      const s = FB.state, M = FB.mobile, rid = 'pontic_following_476', r = M.row(s,rid);
+      const army = M.host(s,rid), origin = M.migration(s,rid).at;
+      const member = r.members[1], principal = s.chars[member.principal.id];
+      // A mixed following is an acceptance fixture, not an opening assignment.
+      principal.religion = 'chalcedonian'; member.civilians[0].religion = principal.religion;
+      function identities() {
+        const cohorts = []; r.members.forEach(function (m) { cohorts.push.apply(cohorts,m.civilians.concat(m.reserve)); });
+        cohorts.push.apply(cohorts,M.host(s,rid).mobileRoster);
+        const totals = {}; cohorts.forEach(function (c) { totals[c.religion] = (totals[c.religion] || 0) + c.count; });
+        return JSON.stringify({principals:r.members.map(function (m) { return [m.id,s.chars[m.principal.id].religion]; }),
+          totals:totals,ids:r.members.map(function (m) { return m.id; })});
+      }
+      const destination = Object.keys(FB.world.adj[origin]).sort().find(function (pid) {
+        const plan = FB.armyOrderPlan(s,army,pid);
+        return s.owner[pid] === 'byzantium' && plan.ok && plan.path.length &&
+          plan.path.every(function (p) { return s.owner[p] === 'byzantium'; });
+      });
+      if (!destination) throw new Error('Expected the existing Roman-facing route');
+      const path = FB.armyOrderPlan(s,army,destination).path;
+      path.forEach(function (pid) { FB.transferProvince(s,pid,rid); });
+      const population = JSON.stringify([s.population.counties[origin],s.population.counties[destination]]);
+      const identitiesBefore = identities(), total = M.total(s,rid);
+      const review = M.review(s,{realmId:rid,action:'move',terms:{countyId:destination},actor:{kind:'realm',id:rid}});
+      const before = JSON.stringify(s), rng = FB.getRngState(), uid = FB.getUidCounter();
+      M.review(s,review.request);
+      const pure = before === JSON.stringify(s) && rng === FB.getRngState() && uid === FB.getUidCounter();
+      const moved = M.commit(s,review);
+      for (let day = 0; day < 90 && M.migration(s,rid).at !== destination; day++) {
+        s.turn++; FB.armyTick(s); FB.federateDay(s);
+      }
+      return {pure:pure,moved:moved,arrived:M.migration(s,rid).at === destination,
+        people:M.total(s,rid) === total,identities:identitiesBefore === identities(),
+        countyPopulation:population === JSON.stringify([s.population.counties[origin],s.population.counties[destination]]),
+        members:r.members.every(function (m) { return s.chars[m.principal.id].homeProvinceId === destination; }),
+        valid:M.validate(s)};
+    })).toEqual({pure:true,moved:true,arrived:true,people:true,identities:true,countyPopulation:true,members:true,valid:true});
+  });
+
+for (const crazygames of [false,true]) {
+  test((crazygames ? 'CrazyGames' : 'standard') + ' restore keeps frozen 1066 district terms after a different opening',
+    async function ({page},testInfo) {
+      await page.addInitScript(function () {
+        document.addEventListener('DOMContentLoaded',function () {
+          FBDATA.bookmarks['1066'].revision = 'inhabited_v2';
+        },{once:true});
+      });
+      await startHistoricalGame(page,testInfo,{bookmark:'1066',
+        code:'NORTHERNSAVE-1066-farmer-uppsala-f-Review-established'},crazygames);
+      await page.evaluate(stageNorthernObservance,{province:'uppsala',faith:'norse_pagan',gold:1});
+      const original = await page.evaluate(function () {
+        const s = FB.state;
+        if (!FB.religiousActivityApply(s,FB.religiousActivityQuote(s,'uppsala_local_gathering',s.player.charId)))
+          throw new Error('Gathering setup failed');
+        return FB.save.serialize();
+      });
+      function facts() {
+        const s = FB.state, c = s.chars[s.player.charId];
+        return JSON.parse(JSON.stringify({start:s.start,activity:c.religiousActivity,history:c.religiousActivityHistory,
+          household:[c.religion,c.religiousRanks,c.religiousAffiliations,s.player.gold,s.player.piety,s.player.prestige],
+          property:[s.abbeys,s.localInstitutions,s.religiousHeads],population:s.population,
+          rng:FB.getRngState() >>> 0,uid:FB.getUidCounter()}));
+      }
+      const before = await page.evaluate(facts);
+      await page.evaluate(function () { FB.state.turn += 2; FB.religiousActivityTick(FB.state); });
+      const completed = await page.evaluate(facts);
+      await page.evaluate(function () {
+        FBDATA.religiousActivities.uppsala_local_gathering.cost = 99;
+        FBDATA.religiousActivities.uppsala_local_gathering.provinceIds = ['lund'];
+        return new Promise(function (resolve,reject) {
+          FB.activateBookmark('1204',null,function (error) { if (error) reject(error); else resolve(); });
+        });
+      });
+      await restoreBookmark(page,original);
+      expect(await page.evaluate(facts)).toEqual(before);
+      await page.evaluate(function () { FB.state.turn += 2; FB.religiousActivityTick(FB.state); });
+      expect(await page.evaluate(facts)).toEqual(completed);
+      expect(completed.history.uppsala_local_gathering).toMatchObject({performed:true,rewarded:true});
+    });
+}
+
+test('legacy pagan and Tengri doctrine, generated households and unrelated holy-war state survive restore',
+  async function ({page},testInfo) {
+    await beginBookmark(page,testInfo,'867');
+    await injectHolyWarHarness(page);
+    const original = await page.evaluate(function () {
+      const s = FB.state; s.turn = 180;
+      const id = FB.createFaith(s,{id:'e2e_northern_tengri',name:'Saved steppe household',parent:'tengri',
+        relationToParent:'in_fold',founderId:s.player.charId});
+      if (!id) throw new Error('Generated faith setup failed');
+      s.chars[s.player.charId].religion = s.player.religion = id;
+      const transfer = FB.convertCountyCommunity(s,s.player.provinceId,{kind:'faith',target:id,amount:100});
+      if (!transfer || transfer.count !== 100) throw new Error('Generated minority setup failed');
+      FBTEST.makeGreatHolyWar({phase:'preparation',capturedCounties:[],includePlayer:false});
+      return FB.save.serialize();
+    });
+    function retained() {
+      const s = FB.state, faith = 'e2e_northern_tengri';
+      return JSON.parse(JSON.stringify({start:s.start,person:s.chars[s.player.charId].religion,
+        generated:FB.religionOf(faith,s),lineage:FB.faithLineage(faith,s),
+        doctrine:['norse_pagan','slavic_pagan','baltic_pagan','tengri',faith].map(function (id) {
+          return [FB.marriageDoctrine(id,s),FB.faithValue(s,id,'clergyMarriage'),FB.faithValue(s,id,'head')];
+        }),communities:FB.countyCommunities(s,s.player.provinceId),institutions:s.localInstitutions,
+        holyWar:s.greatHolyWar,history:s.greatHolyWarHistory,heads:s.religiousHeads,
+        rng:FB.getRngState() >>> 0,uid:FB.getUidCounter()}));
+    }
+    const before = await page.evaluate(retained);
+    await openGame(page,testInfo);
+    await restoreBookmark(page,original);
+    expect(await page.evaluate(retained)).toEqual(before);
   });

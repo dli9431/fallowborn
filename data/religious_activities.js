@@ -1,4 +1,4 @@
-/* Local early-opening reconstructions. Costs, duration and social rewards are
+/* Dated local reconstructions. Costs, duration and social rewards are
    simulation choices; district scope does not place an exact sanctuary. */
 FBDATA.religiousActivities = {
   uppakra_local_observance:{
@@ -30,6 +30,16 @@ FBDATA.religiousActivities = {
     mode:'local', purpose:null, siteId:null, payer:'household', cost:1, reserve:0, duration:2,
     calendar:'any_day', interruption:'retain_cost', recipient:'participant',
     milestone:'samogitian_mortuary_observance', reward:{ piety:1, prestige:0, skills:{} }, legacy:null, service:null
+  },
+  uppsala_local_gathering:{
+    name:'Support a local gathering in the Uppsala district',
+    period:{ yearMin:1066, yearMax:1066 },
+    openings:[{ id:'1066', revision:'baseline' }, { id:'1066', revision:'inhabited_v2' }],
+    faithIds:['norse_pagan'], affiliationIds:[], roleIds:[], institutionId:null,
+    provinceIds:['uppsala'], protectedWorship:true,
+    mode:'local', purpose:null, siteId:null, payer:'household', cost:1, reserve:0, duration:2,
+    calendar:'any_day', interruption:'retain_cost', recipient:'participant',
+    milestone:'uppsala_local_gathering', reward:{ piety:1, prestige:1, skills:{} }, legacy:null, service:null
   }
 };
 FBDATA.religiousPatronage = {};
