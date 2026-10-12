@@ -434,7 +434,6 @@
     if (!subjectValid(s, actor) || a.profile.actions.indexOf(action) < 0) block('rights');
     if (terms !== undefined && !plain(terms)) block('terms');
     if (!available(s, a) && ['withdraw','vacate','dispute'].indexOf(action) < 0) block('unavailable');
-    if (a.def.abbeyId && !property(s, a)) block('property');
     if (action === 'admit') {
       if (!keys(t, ['roleId']) || !c || !qualified(s, a, c.id, t.roleId)) block('qualification');
       if (m && m.roleId === t.roleId || Object.keys(a.row.members || {}).length >= MAX_MEMBERS && !own(a.row.members, actor.id)) block('membership');

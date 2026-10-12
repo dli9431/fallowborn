@@ -2,6 +2,34 @@
 FBDATA.religiousAffiliations = {};
 /* Lay authoring profiles. Historical seats and specialist offices remain separate. */
 FBDATA.religiousInstitutionProfiles = {
+  kairouan_lay_711:{
+    name:'Kairouan Muslim congregation', faithIds:['umayyad_sunni_711'], period:{yearMin:711,yearMax:711}, system:null,
+    roles:{participant:{name:'Participant',minAge:16,sexes:[],unmarried:false,
+      professions:[],skills:{},affiliationId:null}}, selection:null,
+    recognition:{sources:[],roles:[],quorum:1,requiresLeader:false,protectedWorship:true},
+    actions:['admit','withdraw'], fees:{}, affiliationIds:[]
+  },
+  kairouan_lay_800:{
+    name:'Kairouan Muslim congregation', faithIds:['sunni'], period:{yearMin:800,yearMax:800}, system:null,
+    roles:{participant:{name:'Participant',minAge:16,sexes:[],unmarried:false,
+      professions:[],skills:{},affiliationId:null}}, selection:null,
+    recognition:{sources:[],roles:[],quorum:1,requiresLeader:false,protectedWorship:true},
+    actions:['admit','withdraw'], fees:{}, affiliationIds:[]
+  },
+  kairouan_lay_867:{
+    name:'Kairouan Muslim congregation', faithIds:['sunni'], period:{yearMin:867,yearMax:867}, system:null,
+    roles:{participant:{name:'Participant',minAge:16,sexes:[],unmarried:false,
+      professions:[],skills:{},affiliationId:null}}, selection:null,
+    recognition:{sources:[],roles:[],quorum:1,requiresLeader:false,protectedWorship:true},
+    actions:['admit','withdraw'], fees:{}, affiliationIds:[]
+  },
+  gao_lay_1204:{
+    name:'Gao Muslim congregation', faithIds:['sunni'], period:{yearMin:1204,yearMax:1204}, system:null,
+    roles:{participant:{name:'Participant',minAge:16,sexes:[],unmarried:false,
+      professions:[],skills:{},affiliationId:null}}, selection:null,
+    recognition:{sources:[],roles:[],quorum:1,requiresLeader:false,protectedWorship:true},
+    actions:['admit','withdraw'], fees:{}, affiliationIds:[]
+  },
   garama_offering_community:{
     name:'Garama offering community', faithIds:['berber_traditional'],
     period:{yearMin:476,yearMax:493}, system:null,
@@ -43,5 +71,5 @@ FBDATA.techImpactReviews.features.religious_institution_constitutional_binding =
   mode:'none', rationale:'Explicit temporal binding reads a canonical qualified incumbent and existing public rights, independently of spiritual membership or research.'
 };
 FBDATA.techImpactReviews.features.african_lay_community_participation = {
-  mode:'none', rationale:'Ordinary local offerings and communal learning require presence and protected access, without specialist office or discovery.'
+  mode:'none', rationale:'Ordinary local offerings, worship and communal learning require presence and protected access, without specialist office or discovery.'
 };

@@ -15,6 +15,10 @@ dependsOnRuntime(__filename,[
   'data/bookmark_800_expansion.js','data/bookmark_867_expansion.js',
   'data/bookmark_1066_inhabited.js','data/bookmark_1204_terrain.js',
   'data/government_rollout.js','data/starts.js','data/distribution_crazygames.js',
+  'data/african_religious_rollout.js','data/islamic_profiles.js',
+  'data/geographies.js','data/geography_expansion.js','data/settlements.js',
+  'data/bookmark_476.js','data/bookmark_493.js','data/bookmark_711.js','data/bookmark_800.js',
+  'data/bookmark_1204.js',
   'js/model.js','js/world.js','js/economy.js','js/population.js',
   'js/bookmark_setup.js','js/government_lineage.js','js/religion.js',
   'js/mods.js','js/save.js','js/save_v4.js','js/main.js','js/crazygames.js',
@@ -101,14 +105,16 @@ function installAfricanPlaySeat(property) {
   };
 }
 
-test('African communal catalogues validate purely without planting held seats or offices',
+test('African communal catalogues validate purely and retain earlier worlds without new seats',
   async function ({page},info) {
     await openGame(page,info);
     expect(await page.evaluate(function () {
       var before = JSON.stringify(FBDATA), rng = FB.getRngState(), uid = FB.getUidCounter();
       var ids = ['garama_offering_community_476','garama_offering_community_493','ghana_muslim_congregation_1066'];
       var absent = ['476','493','711','800','867','1066','1204'].every(function (date) {
-        var b = FBDATA.bookmarks[date], revisions = b.revisions ? Object.keys(b.revisions) : [null];
+        var b = FBDATA.bookmarks[date], revisions = b.revisions ? Object.keys(b.revisions).filter(function (id) {
+          return !/_african_v1$/.test(id);
+        }) : [null];
         return revisions.every(function (revision) {
           var defs = FB.bookmark(date,revision).localInstitutions || {};
           return ids.every(function (id) { return !defs[id]; });
@@ -531,4 +537,182 @@ for (const crazygames of [false,true]) test('Ghana households and generated fait
         lineage:FB.faithLineage(id,s),definition:s.faiths[id],
         paths:FB.religiousPathOf(s,c),heads:JSON.parse(JSON.stringify(s.religiousHeads))};
     })).toEqual(source.before);
+  });
+
+const AFRICAN_DATED = [
+  {id:'476',prior:'wider_v2',pid:'garama',iid:'garama_offering_community_476',
+    activity:'garama_funeral_offerings_476',faith:'berber_traditional',role:'participant'},
+  {id:'493',prior:'world_v2',pid:'garama',iid:'garama_offering_community_493',
+    activity:'garama_funeral_offerings_493',faith:'berber_traditional',role:'participant'},
+  {id:'711',prior:'terrain_v2_governments_v2',pid:'kairouan',iid:'kairouan_muslim_congregation_711',
+    activity:'kairouan_household_worship_711',faith:'umayyad_sunni_711',role:'participant'},
+  {id:'800',prior:'inhabited_v2_governments_v2',pid:'kairouan',iid:'kairouan_muslim_congregation_800',
+    activity:'kairouan_household_worship_800',faith:'sunni',role:'participant'},
+  {id:'867',prior:'inhabited_v2_governments_v2',pid:'kairouan',iid:'kairouan_muslim_congregation_867',
+    activity:'kairouan_household_worship_867',faith:'sunni',role:'participant'},
+  {id:'1066',prior:'inhabited_v2_governments_v2',pid:'kumbi_district',iid:'ghana_muslim_congregation_1066',
+    activity:'ghana_muslim_household_learning_1066',faith:'sunni',role:'learner',identity:'soninke_1066.sunni'},
+  {id:'1204',prior:'inhabited_v2',pid:'gao_district',iid:'gao_muslim_congregation_1204',
+    activity:'gao_household_worship_1204',faith:'sunni',role:'participant',identity:'sahelian_476.sunni'}
+];
+
+async function startAfricanDated(page,info,row,crazygames,retained) {
+  await page.addInitScript(function (input) {
+    document.addEventListener('DOMContentLoaded',function () {
+      FBDATA.bookmarks[input.id].revision = input.revision;
+      FBDATA.bookmarks[input.id].hidden = false; // Isolated owner-review journey.
+    },{once:true});
+  },{id:row.id,revision:row.prior + (retained ? '' : '_african_v1')});
+  await startHistoricalGame(page,info,{bookmark:row.id,
+    code:'AFRICANDATED' + row.id + '-' + row.id + '-farmer-' + row.pid + '-f-Review-established' +
+      (row.identity ? '-0-' + row.identity : '')},crazygames);
+}
+
+function africanDatedFacts(row) {
+  const s = FB.state, c = s.chars[s.player.charId], county = s.population.counties[row.pid];
+  return JSON.parse(JSON.stringify({start:s.start,turn:s.turn,date:s.date,
+    religion:c.religion,career:c.career,profession:s.player.profession,
+    gold:s.player.gold,piety:s.player.piety,commitment:c.religiousActivity,
+    history:c.religiousActivityHistory,affiliations:c.religiousAffiliations,
+    institution:s.localInstitutions[row.iid],heads:s.religiousHeads,
+    communities:FB.countyCommunities(s,row.pid),count:county.count,
+    owner:s.owner[row.pid],holder:s.holder[row.pid],property:s.abbeys,
+    rng:FB.getRngState() >>> 0,uid:FB.getUidCounter()}));
+}
+
+test('seven African review openings preserve complete earlier worlds and validate fresh bounds purely',
+  async function ({page},info) {
+    await openGame(page,info);
+    expect(await page.evaluate(function (rows) {
+      const before = JSON.stringify(FBDATA), rng = FB.getRngState(), uid = FB.getUidCounter();
+      const results = rows.map(function (row) {
+        const revision = row.prior + '_african_v1', raw = FBDATA.bookmarks[row.id];
+        const revised = FB.bookmark(row.id,revision), d = revised.localInstitutions[row.iid];
+        const preserved = Object.keys(raw.revisions).filter(function (id) {
+          return /_african_v1$/.test(id);
+        }).every(function (id) {
+          const prior = FB.bookmark(row.id,id.replace(/_african_v1$/,'')), next = FB.bookmark(row.id,id);
+          const a = Object.assign({},prior), b = Object.assign({},next);
+          delete a.revision; delete b.revision; delete a.localInstitutions; delete b.localInstitutions;
+          const existing = prior.localInstitutions === undefined ? FBDATA.localInstitutions || {} : prior.localInstitutions;
+          const unchanged = Object.assign({},next.localInstitutions); delete unchanged[row.iid];
+          return JSON.stringify(a) === JSON.stringify(b) && JSON.stringify(existing) === JSON.stringify(unchanged);
+        });
+        const site = (FB.geography(FB.bookmarkGeography(revised)).sites || FBDATA.settlementSites)[d.site];
+        const selected = raw.revision;
+        let faults;
+        try { raw.revision = revision; faults = FB.validateBookmark(revised); }
+        finally { raw.revision = selected; }
+        return !faults.length && preserved && d.provinceId === row.pid &&
+          d.religion === row.faith && d.vacant && d.freshOnly && !d.officeId && !d.representative &&
+          site.x >= -11 && site.x <= 70 && site.y >= 13 && site.y <= 66 &&
+          !/_african_v1$/.test(raw.revision);
+      });
+      return {results:results,institutions:FB.religiousInstitutionCatalogFaults(FBDATA),
+        activities:FB.religiousActivityCatalogFaults(FBDATA),
+        pure:before === JSON.stringify(FBDATA) && rng === FB.getRngState() && uid === FB.getUidCounter()};
+    },AFRICAN_DATED)).toEqual({results:[true,true,true,true,true,true,true],institutions:[],activities:[],pure:true});
+  });
+
+for (const row of AFRICAN_DATED) {
+  for (const crazygames of [false,true]) {
+    test(row.id + ' placed lay activity and membership retain minorities and restore, CrazyGames ' + crazygames,
+      async function ({page},info) {
+        await startAfricanDated(page,info,row,crazygames,false);
+        expect(await page.evaluate(function (row) {
+          const s = FB.state, c = s.chars[s.player.charId];
+          c.born = s.date.year - 30; c.health = 8;
+          s.player.gold = row.id === '476' || row.id === '493' ? 1 : 0;
+          s.player.piety = 0; s.player.landPlots = [];
+          const ins = FB.religiousInstitutionSnapshot(s,row.iid), faith = c.religion;
+          const population = JSON.stringify([s.population.counties[row.pid],s.realms,s.owner,s.holder,s.religiousHeads]);
+          const preview = FB.religiousActivityQuote(s,row.activity,c.id), year = s.date.year;
+          s.date.year = year + 1;
+          let unchanged = JSON.stringify(s);
+          const dated = !FB.religiousActivityQuote(s,row.activity,c.id).allowed &&
+            !FB.religiousActivityApply(s,preview) && unchanged === JSON.stringify(s);
+          s.date.year = year;
+          s.player.provinceId = 'constantinople';
+          unchanged = JSON.stringify(s);
+          const local = !FB.religiousActivityQuote(s,row.activity,c.id).allowed &&
+            !FB.religiousActivityApply(s,preview) && unchanged === JSON.stringify(s);
+          s.player.provinceId = row.pid;
+          const q = FB.religiousInstitutionQuote(s,row.iid,{kind:'character',id:c.id},'admit',{roleId:row.role});
+          const admitted = q.allowed && FB.religiousInstitutionApply(s,q);
+          const before = JSON.stringify(s), rng = FB.getRngState(), uid = FB.getUidCounter();
+          const activity = FB.religiousActivityQuote(s,row.activity,c.id);
+          const pure = before === JSON.stringify(s) && rng === FB.getRngState() && uid === FB.getUidCounter();
+          const started = activity.allowed && FB.religiousActivityApply(s,activity);
+          return {placed:!!ins && ins.definition.provinceId === row.pid,empty:Object.keys(ins.members).length === 0,
+            admitted:admitted,started:started,pure:pure,dated:dated,local:local,faith:faith,
+            conserved:population === JSON.stringify([s.population.counties[row.pid],s.realms,s.owner,s.holder,s.religiousHeads]),
+            careerGrant:!!FBDATA.religiousInstitutionProfiles[ins.definition.profileId].roles[row.role].careerIds,
+            historicalProperty:!!ins.property};
+        },row)).toEqual({placed:true,empty:true,admitted:true,started:true,pure:true,dated:true,local:true,faith:row.faith,
+          conserved:true,careerGrant:false,historicalProperty:false});
+        const before = await page.evaluate(africanDatedFacts,row);
+        const saved = await page.evaluate(function () { return FB.save.serialize(); });
+        await page.evaluate(function (row) {
+          FBDATA.bookmarks[row.id].revision = row.prior;
+          return new Promise(function (resolve,reject) {
+            FB.activateBookmark(row.id === '1204' ? '867' : '1204',null,function (error) {
+              if (error) reject(error); else resolve();
+            });
+          });
+        },row);
+        await restoreBookmark(page,saved);
+        expect(await page.evaluate(africanDatedFacts,row)).toEqual(before);
+        expect(await page.evaluate(function (row) {
+          const s = FB.state, c = s.chars[s.player.charId], d = FBDATA.religiousActivities[row.activity];
+          const population = JSON.stringify(s.population.counties[row.pid]);
+          s.turn += d.duration; FB.religiousActivityTick(s);
+          const mix = FB.countyCommunities(s,row.pid);
+          return {completed:c.religiousActivityHistory[d.milestone].performed,
+            repeated:FB.religiousActivityQuote(s,row.activity,c.id).reason,
+            piety:s.player.piety,unchanged:population === JSON.stringify(s.population.counties[row.pid]),
+            conserved:mix.reduce(function (n,v) { return n + v.count; },0) === s.population.counties[row.pid].count};
+        },row)).toEqual({completed:true,repeated:'commitment',piety:1,unchanged:true,conserved:true});
+      });
+  }
+}
+
+test('placed Ghana membership needs no endowment and giving requires real property',
+  async function ({page},info) {
+    const row = AFRICAN_DATED.find(function (r) { return r.id === '1066'; });
+    await startAfricanDated(page,info,row,false,false);
+    expect(await page.evaluate(function (row) {
+      const s = FB.state, c = s.chars[s.player.charId];
+      c.born = s.date.year - 30; s.player.gold = 0; s.player.landPlots = [];
+      const d = FB.localInstitutionDefinitions(s)[row.iid], before = JSON.stringify(s);
+      const gift = FB.religiousPatronageQuote(s,'ghana_muslim_learning_support_1066',c.id,'donation',{fund:'learning',amount:3});
+      const foundation = FB.religiousPatronageQuote(s,'ghana_muslim_learning_support_1066',c.id,
+        'foundation',{land:{provinceId:row.pid,settlement:0,count:1}});
+      const pure = before === JSON.stringify(s);
+      const q = FB.religiousInstitutionQuote(s,row.iid,{kind:'character',id:c.id},'admit',{roleId:'learner'});
+      const joined = q.allowed && FB.religiousInstitutionApply(s,q);
+      const withdrawn = FB.religiousInstitutionApply(s,FB.religiousInstitutionQuote(s,row.iid,{kind:'character',id:c.id},'withdraw'));
+      return {namedProperty:!!d.abbeyId,missingProperty:!FB.religiousInstitutionSnapshot(s,row.iid).property,
+        gift:gift.reason,foundation:foundation.reason,pure:pure,joined:joined,withdrawn:withdrawn,gold:s.player.gold};
+    },row)).toEqual({namedProperty:true,missingProperty:true,gift:'recipient',foundation:'property',pure:true,joined:true,withdrawn:true,gold:0});
+  });
+
+test('new opening selection does not inject groups into retained campaigns or restore missing fresh-only records',
+  async function ({page},info) {
+    const row = AFRICAN_DATED[0];
+    await startAfricanDated(page,info,row,false,true);
+    const old = await page.evaluate(function () { return FB.save.serialize(); });
+    await page.evaluate(function (row) { FBDATA.bookmarks[row.id].revision = row.prior + '_african_v1'; },row);
+    await restoreBookmark(page,old);
+    expect(await page.evaluate(function (row) {
+      return FB.state.start.revision === row.prior && !FB.state.localInstitutions[row.iid] &&
+        !FB.localInstitutionDefinitions(FB.state)[row.iid];
+    },row)).toBe(true);
+    await startAfricanDated(page,info,row,false,false);
+    const stripped = await page.evaluate(function (row) {
+      const data = JSON.parse(FB.save.serialize());
+      delete data.state.localInstitutions[row.iid];
+      return JSON.stringify(data);
+    },row);
+    await restoreBookmark(page,stripped);
+    expect(await page.evaluate(function (row) { return !FB.state.localInstitutions[row.iid]; },row)).toBe(true);
   });

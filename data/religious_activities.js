@@ -1,6 +1,42 @@
 /* Activity consumers are declared by accepted campaigns and mods. */
 /* These declarations require an explicitly placed, accessible local institution. */
 FBDATA.religiousActivities = {
+  kairouan_household_worship_711:{
+    name:'Join local Muslim worship', period:{yearMin:711,yearMax:711},
+    openings:[{id:'711',revision:'terrain_v2_african_v1'},{id:'711',revision:'terrain_v2_governments_v2_african_v1'}],
+    faithIds:['umayyad_sunni_711'], affiliationIds:[], roleIds:[],
+    institutionId:'kairouan_muslim_congregation_711', mode:'local', purpose:null, siteId:null,
+    payer:'household', cost:0, reserve:0, duration:1, calendar:'any_day',
+    interruption:'retain_cost', recipient:'participant', milestone:'african_muslim_household_worship',
+    reward:{piety:1,prestige:0,skills:{}}, legacy:null, service:null
+  },
+  kairouan_household_worship_800:{
+    name:'Join local Muslim worship', period:{yearMin:800,yearMax:800},
+    openings:[{id:'800',revision:'inhabited_v2_african_v1'},{id:'800',revision:'inhabited_v2_governments_v2_african_v1'}],
+    faithIds:['sunni'], affiliationIds:[], roleIds:[],
+    institutionId:'kairouan_muslim_congregation_800', mode:'local', purpose:null, siteId:null,
+    payer:'household', cost:0, reserve:0, duration:1, calendar:'any_day',
+    interruption:'retain_cost', recipient:'participant', milestone:'african_muslim_household_worship',
+    reward:{piety:1,prestige:0,skills:{}}, legacy:null, service:null
+  },
+  kairouan_household_worship_867:{
+    name:'Join local Muslim worship', period:{yearMin:867,yearMax:867},
+    openings:[{id:'867',revision:'inhabited_v2_african_v1'},{id:'867',revision:'inhabited_v2_governments_v2_african_v1'}],
+    faithIds:['sunni'], affiliationIds:[], roleIds:[],
+    institutionId:'kairouan_muslim_congregation_867', mode:'local', purpose:null, siteId:null,
+    payer:'household', cost:0, reserve:0, duration:1, calendar:'any_day',
+    interruption:'retain_cost', recipient:'participant', milestone:'african_muslim_household_worship',
+    reward:{piety:1,prestige:0,skills:{}}, legacy:null, service:null
+  },
+  gao_household_worship_1204:{
+    name:'Join local Muslim worship', period:{yearMin:1204,yearMax:1204},
+    openings:[{id:'1204',revision:'inhabited_v2_african_v1'}],
+    faithIds:['sunni'], affiliationIds:[], roleIds:[],
+    institutionId:'gao_muslim_congregation_1204', mode:'local', purpose:null, siteId:null,
+    payer:'household', cost:0, reserve:0, duration:1, calendar:'any_day',
+    interruption:'retain_cost', recipient:'participant', milestone:'african_muslim_household_worship',
+    reward:{piety:1,prestige:0,skills:{}}, legacy:null, service:null
+  },
   garama_funeral_offerings_476:{
     name:'Make a local funerary offering', period:{yearMin:476,yearMax:476},
     openings:[{id:'476',revision:'wider_v2'}], faithIds:['berber_traditional'],
