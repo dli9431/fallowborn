@@ -2,6 +2,14 @@
 /* Seven-day lessons and one skill point are bounded simulation choices.
    They award no vocation, judicial jurisdiction, prayer office or pilgrimage. */
 FBDATA.religiousActivities = {
+  kufa_hanafi_learning_800:{
+    name:'Study Hanafi jurisprudence',period:{yearMin:800,yearMax:800},openings:[],
+    faithIds:['sunni'],affiliationIds:['hanafi_learning_800'],roleIds:['learner'],
+    institutionId:'kufa_hanafi_circle_800',mode:'local',purpose:null,siteId:null,
+    payer:'household',cost:0,reserve:0,duration:7,calendar:'any_day',
+    interruption:'retain_cost',recipient:'participant',milestone:'kufa_hanafi_learning_800',
+    reward:{piety:0,prestige:0,skills:{int:1}},legacy:null,service:null
+  },
   baghdad_shafii_learning_1066:{
     name:"Study Shafi'i jurisprudence",period:{yearMin:1066,yearMax:1066},openings:[],
     faithIds:['sunni'],affiliationIds:['shafii_learning_1066'],roleIds:['learner'],

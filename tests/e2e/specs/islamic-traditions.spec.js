@@ -8,7 +8,7 @@ const {releasedCatalogue} = require('../support/released-catalogue');
 const released = require('../fixtures/released-catalogue.json');
 
 dependsOnRuntime(__filename,[
-  'index.html','data/islamic_profiles.js','data/cultures.js','data/economy.js',
+  'index.html','data/islamic_profiles.js','data/islamic_rollout.js','data/cultures.js','data/economy.js',
   'data/technology.js','data/bookmarks.js','data/map_data.js','data/counties.js',
   'data/bookmark_711.js','data/bookmark_711_terrain.js','data/bookmark_800.js',
   'data/bookmark_800_expansion.js','data/bookmark_867_expansion.js',
@@ -22,7 +22,11 @@ dependsOnRuntime(__filename,[
   'data/political_institutions.js','data/systems.js','data/settlements.js',
   'js/religious_institutions.js','js/religious_activities.js','js/authority.js',
   'js/treasury.js','js/abbeys.js','js/politics.js','js/settlement.js','js/systems.js',
-  'js/justice.js','js/intrigue.js','js/economy.js','js/station.js','js/travel.js'
+  'js/justice.js','js/intrigue.js','js/economy.js','js/station.js','js/travel.js',
+  'data/bookmark_476.js','data/bookmark_476_wider.js','data/bookmark_476_wider_identities.js',
+  'data/bookmark_476_italy.js','data/bookmark_476_gaul_iberia.js',
+  'data/bookmark_476_dalmatia_east.js','data/bookmark_476_africa.js','data/bookmark_476_outer.js',
+  'data/bookmark_493.js','data/bookmark_493_world.js','data/travel.js','data/geography_expansion.js'
 ]);
 
 const profiles = ['ibadi','zaydi','imami_pre_occultation','imami_twelver',
@@ -31,6 +35,11 @@ const assignments = {
   '800':{rustamids:'ibadi'},
   '867':{rustamids:'ibadi',tabaristan:'zaydi'},
   '1066':{fatimid_1066:'ismaili_fatimid'}
+};
+const selectedRevisions = {
+  '800':'inhabited_v2_governments_v2_islamic_v1_learning_v1',
+  '867':'governments_v2_islamic_v1',
+  '1066':'governments_v2_islamic_v1_institutions_v1'
 };
 
 test('released communities, school descendants and baseline worlds retain their effective rules',
@@ -116,7 +125,7 @@ test('review revisions assign only accepted court identities and preserve comple
       });
       return {covered:Object.keys(changes).every(function (id) { return rows.some(function (r) { return r.id === id; }); }),
         valid:rows.every(function (r) { return !r.valid.length && r.onlyCourts && r.residentsAndWorld; }),
-        defaults:['800','867','1066'].every(function (id) { return !/_islamic_v1$/.test(FBDATA.bookmarks[id].revision); }),
+        defaults:['800','867','1066'].every(function (id) { return /_islamic_v1/.test(FBDATA.bookmarks[id].revision); }),
         pure:before === JSON.stringify(FBDATA) && rng === FB.getRngState() && uid === FB.getUidCounter()};
     },assignments)).toEqual({covered:true,valid:true,defaults:true,pure:true});
   });
@@ -198,6 +207,170 @@ for (const crazygames of [false,true]) {
   }
 }
 
+test('dated fresh rollout selects only accepted worlds and preserves mixed populations and caliphal declarations',
+  async function ({page},info) {
+    await openGame(page,info);
+    expect(await page.evaluate(function (selected) {
+      const before = JSON.stringify(FBDATA), rng = FB.getRngState(), uid = FB.getUidCounter();
+      const dates = ['476','493','711','800','867','1066','1204'];
+      const current = dates.map(function (id) { return FB.bookmark(id).revision; });
+      const valid = dates.every(function (id) { return !FB.validateBookmark(FB.bookmark(id)).length; });
+      const unchanged = Object.keys(selected).every(function (id) {
+        const fresh = FB.bookmark(id), previous = FB.bookmark(id,
+          id === '800' ? 'inhabited_v2_governments_v2' : 'governments_v2');
+        const expectedCourts = previous.realms.map(function (r) {
+          return assignmentsFor(id,r);
+        });
+        function assignmentsFor(date,r) {
+          const changes = {'800':{rustamids:'ibadi'},'867':{rustamids:'ibadi',tabaristan:'zaydi'},
+            '1066':{fatimid_1066:'ismaili_fatimid'}}[date];
+          return changes[r.id] ? Object.assign({},r,{religion:changes[r.id]}) : r;
+        }
+        const expectedProvinces = previous.provinces.map(function (p) {
+          return id === '800' && p.id === 'kufa'
+            ? Object.assign({},p,{settlements:[{site:'kufa',name:'Kufa',kind:'town'}]}) : p;
+        });
+        const a = Object.assign({},previous), b = Object.assign({},fresh);
+        ['realms','provinces','localInstitutions','revision'].forEach(function (key) { delete a[key]; delete b[key]; });
+        return fresh.revision === selected[id] && JSON.stringify(fresh.realms) === JSON.stringify(expectedCourts) &&
+          JSON.stringify(fresh.provinces) === JSON.stringify(expectedProvinces) && JSON.stringify(a) === JSON.stringify(b) &&
+          Object.keys(previous.localInstitutions || {}).every(function (iid) {
+            return JSON.stringify(fresh.localInstitutions[iid]) === JSON.stringify(previous.localInstitutions[iid]);
+          });
+      });
+      const late = FB.bookmark('1204'), held = ['ismaili_nizari_1204','ismaili_tayyibi_1204','zaydi'];
+      const noHeldPlacement = !late.realms.some(function (r) { return held.includes(r.religion); }) &&
+        !late.provinces.some(function (p) { return held.includes(p.religion) ||
+          (p.communities || []).some(function (c) { return held.includes(c.religion); }); }) &&
+        !Object.values(late.localInstitutions || {}).some(function (d) { return held.includes(d.religion); });
+      const early = ['476','493'].every(function (id) {
+        const b = FB.bookmark(id);
+        return !FB.faithHistoricalAvailable('sunni',b,'character') &&
+          !FB.faithHistoricalAvailable('shia',b,'institution');
+      });
+      return {current:current,valid:valid,unchanged:unchanged,noHeldPlacement:noHeldPlacement,early:early,
+        pure:before === JSON.stringify(FBDATA) && rng === FB.getRngState() && uid === FB.getUidCounter()};
+    },selectedRevisions)).toEqual({current:['wider_v2','world_v2','terrain_v2_governments_v2',
+      selectedRevisions['800'],selectedRevisions['867'],selectedRevisions['1066'],'inhabited_v2'],
+      valid:true,unchanged:true,noHeldPlacement:true,early:true,pure:true});
+  });
+
+for (const crazygames of [false,true]) {
+  test('fresh 800 Kufa learning separates legal affiliation from theology and restores, CrazyGames ' + crazygames,
+    async function ({page},info) {
+      await startHistoricalGame(page,info,{bookmark:'800',
+        code:'ISLAMICROLLOUT-800-serf-kufa-f-Review-established'},crazygames);
+      expect(await page.evaluate(function (revision) {
+        const s = FB.state, c = s.chars[s.player.charId], iid = 'kufa_hanafi_circle_800';
+        c.born = s.date.year - 30; c.health = 8; c.skills.int = 4;
+        const prior = JSON.stringify([s.population,s.religiousHeads,s.authority,s.player.profession,c.religion]);
+        const actor = {kind:'character',id:c.id};
+        function apply(action,terms) {
+          const q = FB.religiousInstitutionQuote(s,iid,actor,action,terms);
+          return !!(q && q.allowed && FB.religiousInstitutionApply(s,q));
+        }
+        const admitted = apply('admit',{roleId:'learner'}), affiliated = apply('affiliate',{affiliationId:'hanafi_learning_800'});
+        const wrongSchool = !FB.religiousInstitutionQuote(s,iid,actor,'affiliate',{affiliationId:'ashari_learning_1066'}).allowed;
+        const q = FB.religiousActivityQuote(s,'kufa_hanafi_learning_800',c.id);
+        const before = JSON.stringify(s), rng = FB.getRngState(), uid = FB.getUidCounter();
+        const repeated = FB.religiousActivityQuote(s,'kufa_hanafi_learning_800',c.id);
+        const pure = JSON.stringify(q) === JSON.stringify(repeated) && before === JSON.stringify(s) &&
+          rng === FB.getRngState() && uid === FB.getUidCounter();
+        const started = FB.religiousActivityApply(s,q);
+        const dates = [799,801,867].map(function (year) {
+          const original = s.date.year; s.date.year = year;
+          try { return !FB.religiousInstitutionRoleEligibility(s,iid,c.id,'learner'); }
+          finally { s.date.year = original; }
+        });
+        return {revision:s.start.revision === revision,admitted:admitted,affiliated:affiliated,
+          wrongSchool:wrongSchool,pure:pure,started:started,dates:dates,
+          noVow:!FB.religiousMembershipUnmarried(s,c),noOffice:FB.religiousInstitutionSnapshot(s,iid).holderId === null,
+          unchanged:prior === JSON.stringify([s.population,s.religiousHeads,s.authority,s.player.profession,c.religion])};
+      },selectedRevisions['800'])).toEqual({revision:true,admitted:true,affiliated:true,wrongSchool:true,pure:true,
+        started:true,dates:[true,true,true],noVow:true,noOffice:true,unchanged:true});
+      const saved = await page.evaluate(function () { return FB.save.serialize(); });
+      await openGame(page,info);
+      await restoreBookmark(page,saved);
+      expect(await page.evaluate(function () {
+        const s = FB.state, c = s.chars[s.player.charId];
+        const retained = c.religiousAffiliations.map(function (a) { return a.id; });
+        s.turn += 7;
+        const completed = FB.religiousActivityFinish(s,c.id,false);
+        return {retained:retained,completed:completed,skill:c.skills.int,
+          repeat:!FB.religiousActivityQuote(s,'kufa_hanafi_learning_800',c.id).allowed,
+          faith:c.religion,revision:s.start.revision};
+      })).toEqual({retained:['hanafi_learning_800'],completed:true,skill:5,repeat:true,
+        faith:'sunni',revision:selectedRevisions['800']});
+    });
+
+  for (const row of [
+    {bookmark:'800',province:'tahert',realm:'rustamids',faith:'ibadi'},
+    {bookmark:'867',province:'tahert',realm:'rustamids',faith:'ibadi'},
+    {bookmark:'1066',province:'fustat',realm:'fatimid_1066',faith:'ismaili_fatimid'}
+  ]) {
+    test(row.bookmark + ' ordinary fresh selection keeps the court independent of residents, CrazyGames ' + crazygames,
+      async function ({page},info) {
+        await startHistoricalGame(page,info,{bookmark:row.bookmark,
+          code:'ISLAMICFRESH-' + row.bookmark + '-serf-' + row.province + '-m-Review-established'},crazygames);
+        expect(await page.evaluate(function (input) {
+          const s = FB.state, b = FB.campaignBookmark(s), c = s.chars[s.player.charId];
+          const previous = FB.bookmark(input.row.bookmark,
+            input.row.bookmark === '800' ? 'inhabited_v2_governments_v2' : 'governments_v2');
+          const county = b.provinces.find(function (p) { return p.id === input.row.province; });
+          const original = previous.provinces.find(function (p) { return p.id === input.row.province; });
+          const expected = input.row.bookmark === '800' ? ['kufa_hanafi_circle_800'] :
+            input.row.bookmark === '1066' ? ['baghdad_shafii_circle_1066','nishapur_shafii_ashari_circle_1066'] : [];
+          return {revision:s.start.revision,faith:FB.realmReligionId(s,input.row.realm),
+            ruler:FB.realmRulerCharacterSnapshot(s,input.row.realm).religion,
+            resident:c.religion !== input.row.faith,population:JSON.stringify(county.communities) === JSON.stringify(original.communities),
+            head:FB.faithOfficeId(input.row.faith,s),institutions:expected.every(function (iid) {
+              const a = FB.religiousInstitutionSnapshot(s,iid);
+              return a && a.available && !Object.keys(a.members).length && a.holderId === null && a.property === null;
+            })};
+        },{row:row})).toEqual({revision:selectedRevisions[row.bookmark],
+          faith:row.faith,ruler:row.faith,resident:true,population:true,head:null,institutions:true});
+      });
+  }
+
+  for (const row of [
+    {bookmark:'800',province:'kufa',revision:'inhabited_v2_governments_v2'},
+    {bookmark:'867',province:'tahert',revision:'governments_v2'},
+    {bookmark:'1066',province:'nishapur',revision:'governments_v2'}
+  ]) {
+    test(row.bookmark + ' retained campaign restores without adopting fresh courts or circles, CrazyGames ' + crazygames,
+      async function ({page},info) {
+        await page.addInitScript(function (row) {
+          document.addEventListener('DOMContentLoaded',function () { FBDATA.bookmarks[row.bookmark].revision = row.revision; },{once:true});
+        },row);
+        await startHistoricalGame(page,info,{bookmark:row.bookmark,
+          code:'ISLAMICRETAINED-' + row.bookmark + '-serf-' + row.province + '-m-Review-established'},crazygames);
+        function retainedFacts() {
+          const s = FB.state, c = s.chars[s.player.charId];
+          return JSON.parse(JSON.stringify({start:s.start,faith:c.religion,career:c.career,
+            ranks:c.religiousRanks,flags:s.player.flags,heads:s.religiousHeads,vacancies:s.religiousHeadVacancies,
+            institutions:s.localInstitutions,population:s.population,
+            courts:Object.keys(s.realms).sort().map(function (id) { return [id,FB.realmReligionId(s,id)]; }),
+            rng:FB.getRngState() >>> 0,uid:FB.getUidCounter()}));
+        }
+        const saved = await page.evaluate(function () { return FB.save.serialize(); });
+        const before = await page.evaluate(retainedFacts);
+        await page.addInitScript(function (selected) {
+          document.addEventListener('DOMContentLoaded',function () {
+            Object.keys(selected).forEach(function (id) { FBDATA.bookmarks[id].revision = selected[id]; });
+          },{once:true});
+        },selectedRevisions);
+        await openGame(page,info);
+        await restoreBookmark(page,saved);
+        expect(await page.evaluate(retainedFacts)).toEqual(before);
+        expect(await page.evaluate(function () {
+          return ['kufa_hanafi_circle_800','baghdad_shafii_circle_1066','nishapur_shafii_ashari_circle_1066'].every(function (id) {
+            return !Object.prototype.hasOwnProperty.call(FB.state.localInstitutions || {},id);
+          });
+        })).toBe(true);
+      });
+  }
+}
+
 test('the held 711 allegiance preserves Damascus recovery rather than adopting the Abbasid seat',
   async function ({page},info) {
     await startHistoricalGame(page,info,{bookmark:'711',
@@ -221,6 +394,56 @@ const circles = [
     activity:'nishapur_shafii_ashari_learning_1066',
     affiliations:['shafii_learning_1066','ashari_learning_1066'],sex:'f'}
 ];
+
+for (const crazygames of [false,true]) {
+  test('saved school descendants, projects, pilgrimage ranks and restricted property survive another world, CrazyGames ' + crazygames,
+    async function ({page},info) {
+      await beginCircle(page,info,circles[0],crazygames);
+      await page.evaluate(function () { joinCircle(); });
+      await page.evaluate(installCircleSupport);
+      const saved = await page.evaluate(function () {
+        const s = FB.state, cid = s.player.charId, pid = s.player.provinceId;
+        const q = FB.religiousPatronageQuote(s,'test_islamic_support',cid,'donation',{fund:'study',amount:6});
+        if (!q.allowed || !FB.religiousPatronageApply(s,q)) throw new Error('Restricted support setup failed.');
+        const id = FB.createFaith(s,{id:'e2e_retained_islamic_school',name:'Retained school descendant',
+          parent:'ashari',relationToParent:{childView:'in_fold',parentView:'schismatic'},founderId:cid});
+        if (!id || !FB.convertCountyCommunity(s,pid,{kind:'faith',target:id,amount:100}) ||
+            !FB.startCountyCommunityProject(s,pid,{kind:'faith',target:id,sponsor:'player',policy:'voluntary'}))
+          throw new Error('Retained school/project setup failed.');
+        s.population.counties[pid].communityProjects.faith.progress = 0.25;
+        s.chars[cid].religiousRanks = {muslim_lay:3};
+        s.player.travelHistory = [{purpose:'pilgrimage',destinationId:'mecca',turn:s.turn}];
+        return FB.save.serialize();
+      });
+      function retainedReligiousFacts() {
+        const s = FB.state, c = s.chars[s.player.charId], id = 'e2e_retained_islamic_school';
+        return JSON.parse(JSON.stringify({start:s.start,faith:c.religion,affiliations:c.religiousAffiliations,
+          ranks:c.religiousRanks,travel:s.player.travelHistory,heads:s.religiousHeads,vacancies:s.religiousHeadVacancies,
+          lineage:FB.faithLineage(id,s),relation:FB.faithRelation(s,id,'ashari'),
+          communities:FB.countyCommunities(s,s.player.provinceId),
+          project:FB.countyCommunityProject(s,s.player.provinceId,'faith'),
+          houses:s.abbeys.houses,plots:s.player.landPlots,gold:s.player.gold,
+          rng:FB.getRngState() >>> 0,uid:FB.getUidCounter()}));
+      }
+      const before = await page.evaluate(retainedReligiousFacts);
+      await page.evaluate(function () {
+        return new Promise(function (resolve,reject) {
+          FB.activateBookmark('1204',null,function (error) { if (error) reject(error); else resolve(); });
+        });
+      });
+      await restoreBookmark(page,saved);
+      expect(await page.evaluate(retainedReligiousFacts)).toEqual(before);
+      expect(await page.evaluate(function () {
+        const s = FB.state, house = s.abbeys.houses.find(function (h) {
+          return h.activityInstitutionId === 'baghdad_shafii_circle_1066';
+        });
+        return {restricted:house.restrictedFunds.study,capital:house.capital,treasury:house.treasury,
+          spent:house.activitySpent,plots:house.plots[0].count,
+          lineage:FB.faithLineage('e2e_retained_islamic_school',s).includes('ashari'),
+          unchangedShia:FB.religionOf('shia',s).id === 'shia'};
+      })).toEqual({restricted:6,capital:10,treasury:6,spent:4,plots:2,lineage:true,unchangedShia:true});
+    });
+}
 
 async function beginCircle(page,info,row,crazygames) {
   await page.addInitScript(function () {
@@ -247,7 +470,7 @@ async function beginCircle(page,info,row,crazygames) {
   },row);
 }
 
-test('two city-level circles validate only in opt-in revisions without changing any retained world',
+test('two city-level circles validate in composed revisions without changing any retained world',
   async function ({page},info) {
     await openGame(page,info);
     expect(await page.evaluate(function (rows) {
@@ -267,12 +490,12 @@ test('two city-level circles validate only in opt-in revisions without changing 
           });
       });
       return {valid:valid,revisions:revisions.length,
-        unselected:!/_institutions_v1$/.test(raw.revision),
+        selected:/_institutions_v1$/.test(raw.revision),
         institutions:FB.religiousInstitutionCatalogFaults(FBDATA),
         activities:FB.religiousActivityCatalogFaults(FBDATA),technology:FB.validateTechnologyData(true),
         review:FBDATA.techImpactReviews.features.islamic_scholarly_learning.mode,
         pure:before === JSON.stringify(FBDATA) && rng === FB.getRngState() && uid === FB.getUidCounter()};
-    },circles)).toEqual({valid:true,revisions:2,unselected:true,institutions:[],activities:[],
+    },circles)).toEqual({valid:true,revisions:2,selected:true,institutions:[],activities:[],
       technology:[],review:'none',pure:true});
   });
 

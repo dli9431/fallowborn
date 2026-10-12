@@ -1,4 +1,4 @@
-/* Opt-in 1066 urban study contexts. A city anchor is not an identified madrasa,
+/* Dated 1066 urban study contexts. A city anchor is not an identified madrasa,
    mosque building, historical staff list or endowment deed. */
 (function () {
   'use strict';
