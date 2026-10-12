@@ -51,7 +51,9 @@ function installInstitutions() {
   FBDATA.religiousInstitutionProfiles.test_house = profile('Fictional religious house', 'catholic', 'patron', true);
   FBDATA.religiousInstitutionProfiles.test_school = profile('Fictional communal school', 'jewish', 'members', false);
   FBDATA.religiousInstitutionProfiles.test_lantern = profile('Fictional ritual community', 'test_lantern', null, false);
-  var defs = Object.assign({}, FB.localInstitutionDefinitions(s));
+  /* Start from this world's own seats; the legacy global table belongs to 476. */
+  var own = FB.campaignBookmark(s).localInstitutions;
+  var defs = Object.assign({}, own !== undefined ? own : {});
   defs.test_house = { city:'Fictional riverside house', kind:'monastery', provinceId:pid, site:site,
     religion:'catholic', culture:'frankish', profileId:'test_house', officeId:'test_house_office',
     vacant:true, jurisdictionIds:[pid] };
@@ -108,7 +110,7 @@ test('independent patron, headless school and fictional leaderless profiles vali
       religiousInstitutionProfiles:FBDATA.religiousInstitutionProfiles };
     return { catalog:FB.religiousInstitutionCatalogFaults(FBDATA),
       seats:FB.localInstitutionDefinitionFaults(bookmark), mod:FB.mods.validate(mod),
-      headless:FB.religionOf('jewish', s).head === null, office:FB.religiousOffices(s).test_school_office.head.succession,
+      headless:!FB.religionOf('jewish', s).head, office:FB.religiousOffices(s).test_school_office.head.succession,
       leaderless:!FB.religiousInstitutionSnapshot(s, 'test_lantern').definition.officeId,
       pure:before === JSON.stringify(s) && rng === FB.getRngState() && uid === FB.getUidCounter() };
   });
@@ -491,7 +493,7 @@ test('headless lay and specialist routes grant declared work and titles without 
     }
     return { denied:denied, lay:lay, layAdvance:layAdvance, originalWork:originalWork,
       offered:offered, chosen:chosen, title:title, vocation:vocation, advanced:advanced,
-      ranks:c.religiousRanks, gold:s.player.gold, headless:FB.religionOf(c.religion, s).head === null,
+      ranks:c.religiousRanks, gold:s.player.gold, headless:!FB.religionOf(c.religion, s).head,
       noOffice:heads === JSON.stringify(s.religiousHeads) && abbeys === JSON.stringify(s.abbeys),
       snapshotRole:snapshot.institutionRoleId, rendered:rendered,
       pure:before === JSON.stringify(s) && rng === FB.getRngState() && uid === FB.getUidCounter() };
@@ -535,6 +537,26 @@ test('reverse spouse links exclude unmarried membership without repairing either
   expect(result).toEqual({ allowed:false, reason:'qualification', pure:true });
 });
 
+test('an unmarried membership closes marriage capacity and names the vow until withdrawal', async function ({ page }) {
+  const result = await page.evaluate(function () {
+    var s = FB.state, me = s.chars[s.player.charId], actor = { kind:'character', id:me.id };
+    FB.spousesSnapshot(s, me).forEach(function (c) { c.spouseId = null; c.spouseIds = []; });
+    me.spouseId = null; me.spouseIds = []; me.betrothedId = null; s.player.courtingId = null;
+    me.religion = 'jewish'; me.born = s.date.year - 30; me.skills.int = 8;
+    FB.touchFamily();
+    FBDATA.religiousInstitutionProfiles.test_school.roles.specialist.unmarried = true;
+    var partner = FB.makeCharacter(s, { name:'Fictional Neighbour', religion:'jewish', culture:me.culture,
+      sex:me.sex === 'm' ? 'f' : 'm', born:s.date.year - 25, traits:[], opinion:100 });
+    partner.homeProvinceId = s.player.provinceId;
+    var open = FB.canWedSnapshot(s);
+    institutionAct('test_school', actor, 'admit', { roleId:'specialist' });
+    var promised = { snapshot:FB.canWedSnapshot(s), live:FB.canWed(s), code:FB.courtshipStatus(s, partner, false).code };
+    institutionAct('test_school', actor, 'withdraw', {});
+    return { open:open, promised:promised, reopened:FB.canWedSnapshot(s) };
+  });
+  expect(result).toEqual({ open:true, promised:{ snapshot:false, live:false, code:'vocation_vow' }, reopened:true });
+});
+
 test('explicit no-vocation faiths block fresh generic roles while preserving existing saved work', async function ({ page }) {
   const result = await page.evaluate(function () {
     var s = FB.state, f = institutionFixture, c = s.chars[f.lantern];
@@ -553,7 +575,7 @@ test('explicit no-vocation faiths block fresh generic roles while preserving exi
     institutionAct('test_lantern', { kind:'character', id:c.id }, 'withdraw', {});
     return { denied:denied, fresh:fresh.role, existing:existing, blocked:blocked, granted:granted,
       retained:FB.religiousCareerReview(s, c, 'priest').allowed, noPath:FB.religiousPathOf(s, c) === null,
-      noHead:FB.religionOf(c.religion, s).head === null };
+      noHead:!FB.religionOf(c.religion, s).head };
   });
   expect(result).toEqual({ denied:true, fresh:null, existing:true, blocked:true, granted:true, retained:true, noPath:true, noHead:true });
 });
@@ -635,7 +657,7 @@ test('member-selected AI obeys its quorum and free decisions remain headless at 
     var count = FB.religiousInstitutionAI(s), leader = FB.religiousOfficeSnapshot(s, 'test_school_office');
     return { count:count, leader:!!leader && [f.teacher,f.pupil].indexOf(leader.id) >= 0,
       members:Object.keys(s.localInstitutions.test_school.members).length,
-      repeat:FB.religiousInstitutionAI(s), headless:FB.religionOf('jewish', s).head === null,
+      repeat:FB.religiousInstitutionAI(s), headless:!FB.religionOf('jewish', s).head,
       ownFunds:gold === s.player.gold, counters:rng === FB.getRngState() && uid === FB.getUidCounter() };
   });
   expect(result).toEqual({ count:5, leader:true, members:2, repeat:0, headless:true, ownFunds:true, counters:true });
@@ -712,7 +734,7 @@ test('administrative commissions and judicial mandates preserve spiritual member
       spiritual:spiritual === JSON.stringify([c.religion, c.role, c.career, c.religiousAffiliations, s.localInstitutions,
         s.religiousHeads, s.religiousHeadVacancies]), property:property === JSON.stringify([s.abbeys, s.player.holdings]),
       publicOnly:!!appointed && !!appointed.publicTerms && FB.publicAppointmentEffective(s, appointed),
-      noHead:FB.religionOf(c.religion, s).head === null };
+      noHead:!FB.religionOf(c.religion, s).head };
   });
   expect(result).toEqual({ allowed:true, appointed:true, judicial:true, spiritual:true, property:true, publicOnly:true, noHead:true });
 });
@@ -743,7 +765,7 @@ test('household review restores details and keyboard focus, rejects changed term
     FB.state.chars[FB.state.player.charId].skills.int = 0;
     window.institutionStaleState = JSON.stringify(FB.state);
   });
-  await page.getByRole('button', { name:'Confirm decision', exact:true }).click();
+  await page.getByRole('button', { name:/^Confirm decision/ }).click();
   await expect(page.getByRole('heading', { name:'Terms changed', exact:true })).toBeVisible();
   expect(await page.evaluate(function () { return institutionStaleState === JSON.stringify(FB.state); })).toBe(true);
   await page.getByRole('button', { name:'Continue', exact:true }).click();

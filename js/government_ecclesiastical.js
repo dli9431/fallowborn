@@ -8,16 +8,23 @@
   E.active = function (s,rid) { var f = G.forRealm(s,rid); return !!(f && f.use.succession.officeBound); };
   E.row = function (s,rid) { var a = s && s.authority; return a && a.governments && a.governments[rid] && a.governments[rid].ecclesiastical || null; };
   E.profile = function (s,rid) { var r = E.row(s,rid); return r && FBDATA.ecclesiasticalProfiles[r.profileId] || null; };
+  /* Profile office eligibility reads residence, and residence asks whether a
+     character reigns here. While one realm's incumbent resolves, a nested
+     read of that same realm sees no incumbent instead of recursing. */
+  var resolving = {};
   E.incumbent = function (s,rid) {
     var r = E.row(s,rid);
-    if (!r || !E.active(s,rid)) return null;
-    var offices = FB.religiousOffices(s), office = offices[r.officeId], p = E.profile(s,rid);
-    if (!office || !p) return null;
-    if (p.source === 'papal_election') {
-      var holder = FB.religiousOfficeSnapshot(s,r.officeId,offices);
-      return holder && holder.id === rid ? FB.papalOfficeIncumbentSnapshot(s,r.officeId) : null;
-    }
-    return FB.religiousOfficeSnapshot(s,r.officeId,offices);
+    if (!r || !E.active(s,rid) || resolving[rid]) return null;
+    resolving[rid] = true;
+    try {
+      var offices = FB.religiousOffices(s), office = offices[r.officeId], p = E.profile(s,rid);
+      if (!office || !p) return null;
+      if (p.source === 'papal_election') {
+        var holder = FB.religiousOfficeSnapshot(s,r.officeId,offices);
+        return holder && holder.id === rid ? FB.papalOfficeIncumbentSnapshot(s,r.officeId) : null;
+      }
+      return FB.religiousOfficeSnapshot(s,r.officeId,offices);
+    } finally { delete resolving[rid]; }
   };
   E.controlled = function (s,rid,pid) {
     var r = E.row(s,rid), realm = s.realms[rid];

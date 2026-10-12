@@ -2255,12 +2255,17 @@ FB.CHANGELOG = [
       let religionId = scen.rulerRealmId ? scen.startReligion : prov.religion;
       if (!legacy && parts.length === 9) {
         const identity = parts[8].toLowerCase().split('.');
-        if (identity.length !== 2 || !identity[0] || !identity[1] ||
-            !Array.isArray(prov.communities)) return { error: bad };
-        const authored = prov.communities.filter(function (community) {
-          return community.culture === identity[0] &&
-            community.religion === identity[1];
-        })[0];
+        if (identity.length !== 2 || !identity[0] || !identity[1]) return { error: bad };
+        /* A ruler start keeps its court identity, which need not be a resident
+           community; seedCode spells it whenever it differs from the county's. */
+        const courtIdentity = scen.rulerRealmId &&
+          identity[0] === scen.startCulture && identity[1] === scen.startReligion;
+        if (!courtIdentity && !Array.isArray(prov.communities)) return { error: bad };
+        const authored = courtIdentity ? { culture:identity[0], religion:identity[1] } :
+          prov.communities.filter(function (community) {
+            return community.culture === identity[0] &&
+              community.religion === identity[1];
+          })[0];
         if (!authored) return { error: bad };
         cultureId = authored.culture;
         religionId = authored.religion;

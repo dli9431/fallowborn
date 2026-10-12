@@ -185,6 +185,11 @@
     return { unmarried:roles.some(function (r) { return r.role.unmarried; }),
       explicit:roles.some(function (r) { return (r.role.careerIds || []).concat(r.role.professions).indexOf(profession) >= 0; }) };
   };
+  /* Active membership in an unmarried role is a promise that blocks every
+     marriage path. Released vows keep their own courtship-only gate. */
+  FB.religiousMembershipUnmarried = function (s, c) {
+    return !!c && FB.religiousHouseholdRule(s, c, null).unmarried;
+  };
   FB.religiousCelibate = function (s, c) {
     if (!c) return false;
     var profession = c.id === s.player.charId ? s.player.profession : c.career && c.career.profession || c.role;

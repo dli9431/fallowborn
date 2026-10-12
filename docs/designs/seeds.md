@@ -50,6 +50,9 @@ continue to use their generated portraits.
   community starts retain their existing five- through eight-part spelling. For
   example, a Norse Catholic family at Iona's county seat may spell
   `K7F29QZ-1066-serf-iona-m-olaf-standard-0-norse.catholic`.
+  A ruler start whose court identity differs from the county's principal
+  community spells that court identity in the same ninth part; it must equal the
+  scenario's `startCulture.startReligion` and needs no matching resident community.
   This
   is what `state.seed` stores (built in `G.start` from the picks actually taken, name
   edits included) and what the ☰ menu shows; pasting one through **Use a Seed or

@@ -14,7 +14,9 @@ async function beginBookmark(page, testInfo, id, scenarioId) {
     if (errors.length) throw new Error(errors.join('\n'));
     // Owner review inside this isolated test context. Production visibility
     // and the definition in the shipped source are never changed.
+    // A revisioned bookmark resolves to a copy, so also unhide the registry entry.
     bm.hidden = false;
+    FBDATA.bookmarks[id].hidden = false;
     FB.startProgression.noteTier(3);
     const offered = FBDATA.startScenarios.filter(function (s) {
       return !s.hidden && !s.rulerRealmId &&

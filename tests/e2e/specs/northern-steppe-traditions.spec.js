@@ -38,7 +38,7 @@ test('Germanic household queries override pagan doctrine without creating a reli
         words:[FB.faithDataText(null,null,faith,'roles.monasticF',{}),
           FB.faithDataText(null,null,faith,'roles.priestM',{}),
           FB.faithDataText(null,null,faith,'words.partnership',{})],
-        errors:FB.validateReligionData(null),technology:FB.validateTechnologyData(),
+        errors:FB.validateReligionData(null),technology:FB.validateTechnologyData(true),
         impact:FBDATA.techImpactReviews.features.germanic_household_rules.mode,
         pure:before === JSON.stringify(FBDATA) && rng === FB.getRngState() && uid === FB.getUidCounter()};
     })).toEqual({local:true,limits:{m:1,f:1},marriage:true,office:null,paths:null,

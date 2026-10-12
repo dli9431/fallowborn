@@ -2114,7 +2114,7 @@ window.FB = window.FB || {};
   FB.canWedSnapshot = function (state) {
     const player = state.chars[state.player.charId];
     if (!player) return false;
-    if (FB.religiousCelibate && FB.religiousCelibate(state, player)) return false;
+    if (FB.religiousMembershipUnmarried && FB.religiousMembershipUnmarried(state, player)) return false;
     if (FB.papacyCelibateSnapshot &&
         FB.papacyCelibateSnapshot(state, player)) return false;
     const spouses = FB.spousesSnapshot(state, player).length;
@@ -2127,7 +2127,7 @@ window.FB = window.FB || {};
      for the protagonist's sex; the first spouse remains the addressed role. */
   FB.canWed = function (state) {
     const me = state.chars[state.player.charId];
-    if (FB.religiousCelibate && FB.religiousCelibate(state, me)) return false;
+    if (FB.religiousMembershipUnmarried && FB.religiousMembershipUnmarried(state, me)) return false;
     if (FB.papacyCelibate && FB.papacyCelibate(state, me)) return false;
     const n = FB.spousesOf(state, me).length;
     if (n === 0) return true;
@@ -2968,6 +2968,10 @@ window.FB = window.FB || {};
       return blocked('same_sex',
         FB.T('The marriage doctrine of this era does not recognize this match.'),
         false);
+    }
+    // An unmarried membership also closes capacity; name the promise instead.
+    if (FB.religiousMembershipUnmarried && FB.religiousMembershipUnmarried(state, me)) {
+      return blocked('vocation_vow', FB.T('Your vows forbid marriage.'));
     }
     if (!FB.canWedSnapshot(state)) {
       return blocked('player_married',

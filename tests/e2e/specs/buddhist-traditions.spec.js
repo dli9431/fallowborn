@@ -45,7 +45,7 @@ test('household profiles resolve independent study rules without an ordained lad
               return FB.faithDataText(null,null,id,key,{});
             })};
       });
-      return {rows:rows,errors:FB.validateReligionData(null),technology:FB.validateTechnologyData(),
+      return {rows:rows,errors:FB.validateReligionData(null),technology:FB.validateTechnologyData(true),
         impact:FBDATA.techImpactReviews.features.buddhist_household_participation.mode,
         pure:before === JSON.stringify(FBDATA) && rng === FB.getRngState() && uid === FB.getUidCounter()};
     })).toEqual({rows:['buddhist_476','buddhist_711'].map(function (id) {

@@ -172,7 +172,21 @@ function indusSnapshot() {
   Object.keys(s.chars).forEach(function (id) { if (s.chars[id].religion === faith) out.followers[id] = s.chars[id]; });
   out.noJainFollowers = !Object.keys(s.chars).some(function (id) { return s.chars[id].religion === 'jain'; });
   out.pure = before === JSON.stringify(s) && rng === (FB.getRngState() >>> 0) && uid === FB.getUidCounter();
-  return JSON.parse(JSON.stringify(out));
+  /* Compare in saved form: saves omit null fields and restore fills the
+     character defaults, so a live record and its restored copy match. */
+  function savedForm(value) {
+    if (Array.isArray(value)) return value.map(savedForm);
+    if (!value || typeof value !== 'object') return value;
+    const o = {};
+    Object.keys(value).forEach(function (k) { if (value[k] !== null) o[k] = savedForm(value[k]); });
+    if (typeof o.id === 'string' && o.born !== undefined && o.sex !== undefined) {
+      [['dead',false],['opinion',0],['fertility',1],['health',8],['faithStandingBase',0]].forEach(function (d) {
+        if (o[d[0]] === undefined) o[d[0]] = d[1];
+      });
+    }
+    return o;
+  }
+  return savedForm(JSON.parse(JSON.stringify(out)));
 }
 
 for (const id of ['476','493','711']) test('Indus household and generated political consumers retain their faiths on restore in ' + id,
