@@ -25,7 +25,7 @@ window.FB = window.FB || {};
   function houses(s) {
     if (!FB.systemAvailable(s, 'abbeys')) return [];
     return (s.abbeys && s.abbeys.houses || []).filter(function (h) {
-      if (!h) return false;
+      if (!h || h.activityInstitutionId) return false;
       const rid = s.holder && s.holder[h.provinceId] || s.owner && s.owner[h.provinceId];
       return FB.systemEnabled(s, 'abbeys', { realm:rid, faith:h.religion });
     });
@@ -543,6 +543,7 @@ window.FB = window.FB || {};
     s.abbeys.houses = s.abbeys.houses.filter(function (h) {
       if (!h || !FB.world.byId[h.provinceId] || seen[h.provinceId]) return false;
       seen[h.provinceId] = true;
+      if (h.activityInstitutionId) return true;
       const rid = s.holder && s.holder[h.provinceId] || s.owner && s.owner[h.provinceId];
       if (!FB.systemEnabled(s, 'abbeys', { realm:rid, faith:h.religion })) return true;
       h.id = 'abbey:' + h.provinceId;

@@ -916,6 +916,11 @@ window.FB = window.FB || {};
       if (isFinite(Number(project.lastYear))) {
         next.lastYear = Math.round(Number(project.lastYear));
       }
+      if (project.activitySupport && typeof project.activitySupport.institutionId === 'string' &&
+          isFinite(project.activitySupport.amount) && project.activitySupport.amount > 0 &&
+          Number.isInteger(project.activitySupport.untilTurn) && project.activitySupport.untilTurn >= 0) {
+        next.activitySupport = Object.assign({}, project.activitySupport);
+      }
       repaired[kind] = next;
     }
     return repaired.faith || repaired.culture ? repaired : null;
@@ -1519,6 +1524,7 @@ window.FB = window.FB || {};
       lastTransfer:project.lastTransfer
     };
     if (project.lastYear !== undefined) out.lastYear = project.lastYear;
+    if (project.activitySupport) out.activitySupport = Object.assign({}, project.activitySupport);
     return out;
   }
 
@@ -1528,6 +1534,27 @@ window.FB = window.FB || {};
       state.population.counties[pid];
     return copyProject(rec && rec.communityProjects &&
       rec.communityProjects[kind]);
+  };
+
+  function fundingProject(state, pid, settlementIndex) {
+    var rec = state.population && state.population.counties && state.population.counties[pid];
+    var projects = rec && (typeof settlementIndex === 'number' ?
+      rec.settlementCommunityProjects && rec.settlementCommunityProjects[settlementIndex] : rec.communityProjects);
+    return projects && projects.faith || null;
+  }
+  FB.communityProjectFundingSnapshot = function (state, pid, settlementIndex) {
+    if (settlementIndex !== null && settlementIndex !== undefined && (!Number.isInteger(settlementIndex) || settlementIndex < 0)) return null;
+    var p = fundingProject(state, pid, settlementIndex);
+    if (!p) return null;
+    return { project:copyProject(p), control:typeof settlementIndex === 'number' ?
+      settlementProjectSponsorControls(state, pid, settlementIndex, p.sponsor) : projectSponsorControls(state, pid, p.sponsor) };
+  };
+  FB.communityProjectFund = function (state, pid, settlementIndex, expected, support) {
+    var q = FB.communityProjectFundingSnapshot(state, pid, settlementIndex);
+    if (!q || !q.control || JSON.stringify(q.project) !== JSON.stringify(expected) ||
+        q.project.activitySupport && q.project.activitySupport.untilTurn > state.turn) return false;
+    fundingProject(state, pid, settlementIndex).activitySupport = Object.assign({}, support);
+    return true;
   };
 
   function projectSponsorControls(state, pid, sponsor) {
@@ -1658,6 +1685,10 @@ window.FB = window.FB || {};
     var institution = projectInstitutionFactors(
       state, pid, kind, project.target, project.policy, rulerMatches);
     pressure = Math.max(0, pressure + institution.pressure);
+    /* Paid outreach is support for this project, never independent conversion. */
+    if (control && project.activitySupport && project.activitySupport.amount > 0 && project.activitySupport.untilTurn > state.turn) {
+      pressure += Math.max(0, balance('religiousOutreachPressure', 0.10));
+    }
 
     var resistance = relationResistance(
       state, communities, kind, project.target);

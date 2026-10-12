@@ -4147,6 +4147,7 @@ FB.CHANGELOG = [
     if (FB.greatHolyWarTick && FB.systemAvailable(s, 'great_holy_wars')) FB.greatHolyWarTick(s);
     if (FB.tournaments && FB.systemAvailable(s, 'tournaments')) FB.tournaments.reconcile(s);
     if (FB.travelTick) FB.travelTick(s);
+    if (FB.religiousActivityTick) FB.religiousActivityTick(s);
     if (FB.tournaments && FB.systemAvailable(s, 'tournaments')) FB.tournaments.tick(s);
     if (FB.giftDeliveryTick) FB.giftDeliveryTick(s);
     if (s.peakTier === undefined || FB.station.above(p, s.peakTier, s)) {

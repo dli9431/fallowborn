@@ -245,7 +245,7 @@ window.FBMODS = window.FBMODS || [];
     events:true, eventPacks:true, straits:true, crossingClasses:true, scripted:true,
     cultureTraditions:true, cultures:true, cultureDoctrineDefaults:true,
     doctrineCatalogs:true, religions:true, religiousPaths:true,
-    religiousAffiliations:true, religiousInstitutionProfiles:true,
+    religiousAffiliations:true, religiousInstitutionProfiles:true, religiousActivities:true, religiousPatronage:true,
     traits:true,
     ailments:true, modifiers:true, buildings:true, forts:true,
     techDomains:true, techTraditions:true, tech:true, techCaps:true,
@@ -1787,6 +1787,8 @@ window.FBMODS = window.FBMODS || [];
     }
     var institutionFaults = FB.religiousInstitutionCatalogFaults(FBDATA);
     if (institutionFaults.length) fail('religiousInstitutionProfiles', institutionFaults.join(' '));
+    var activityFaults = FB.religiousActivityCatalogFaults(FBDATA);
+    if (activityFaults.length) fail('religiousActivities', activityFaults.join(' '));
     if (own(mod, 'councilSeats') || own(mod, 'councilRules')) {
       validateCouncilDefinitions(mod);
     }
@@ -2138,6 +2140,8 @@ window.FBMODS = window.FBMODS || [];
       mod.religiousPaths);
     if (mod.religiousAffiliations) mergeTable(FBDATA.religiousAffiliations, mod.religiousAffiliations);
     if (mod.religiousInstitutionProfiles) mergeTable(FBDATA.religiousInstitutionProfiles, mod.religiousInstitutionProfiles);
+    if (mod.religiousActivities) mergeTable(FBDATA.religiousActivities, mod.religiousActivities);
+    if (mod.religiousPatronage) mergeTable(FBDATA.religiousPatronage, mod.religiousPatronage);
     if (mod.legalTraditions) mergeTable(FBDATA.legalTraditions, mod.legalTraditions);
     if (mod.justiceSentences) mergeTable(FBDATA.justiceSentences, mod.justiceSentences);
     if (mod.governmentForms) { mergeTable(FBDATA.governmentForms, mod.governmentForms); FB.governments.invalidate(); }

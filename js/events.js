@@ -12307,6 +12307,7 @@ window.FB = window.FB || {};
     option = option || { label:'So it goes.', effects:{} };
     ctx = ctx || {};
     meta = meta || {};
+    if (FB.travelActivityCapstoneValid && !FB.travelActivityCapstoneValid(state, ev, ctx)) return false;
     if (meta.automated && option.manualOnly) return false;
     if (FB.eventOptionStatus) {
       const optionStatus = FB.eventOptionStatus(state, ev, option, ctx);

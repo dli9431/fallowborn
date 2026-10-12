@@ -132,3 +132,7 @@ When an outcome acknowledgement reopens abbey management, it waits for dismissal
 Availability boundary
 
 The abbeys system guards houses, office eligibility, repair and seasonal work. House queries resolve the house's faith and county holder; personal candidacy also resolves the candidate's scope. Disabled houses are omitted from live queries and retained on restore. Existing papal-faith eligibility still applies to Catholic houses. See docs/designs/systems.md.
+
+Declared institution property
+
+Explicit activity foundations reuse abbeys.houses with activityInstitutionId and the local declaration's abbeyId. They conserve transferred plots, capital, treasury and earmarked service funds. Legacy abbey queries exclude these records, and repair preserves them without assigning a Catholic holder or paying a second rent. Their services consume funded units under docs/designs/religious-activities.md; they inherit no legacy allowance, automatic yield, admission or office rule.
