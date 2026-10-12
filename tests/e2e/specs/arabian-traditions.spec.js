@@ -657,9 +657,8 @@ test('funded support of a mixed congregation preserves one existing conversion p
       const rec = s.population.counties.medina;
       /* Fictional mixed population tests continuity, not historical proportions. */
       const total = rec.communities.reduce(function (sum,v) { return sum + v.count; },0);
-      const minority = JSON.parse(JSON.stringify(rec.communities[0]));
-      minority.religion = 'jewish'; minority.count = 1;
-      rec.communities[0].count--; rec.communities.push(minority);
+      if (FB.convertCountyCommunity(s,'medina',{kind:'faith',target:'jewish',amount:1}).count !== 1)
+        throw new Error('Expected one fictional minority resident and a conserved settlement partition.');
       rec.communityProjects = {faith:{target:c.religion,sponsor:'player',policy:'voluntary',startTurn:s.turn,
         progress:0.375,converted:12,resistance:0.2,lastTransfer:2,lastYear:s.date.year}};
       const population = JSON.stringify(rec.communities), project = JSON.stringify(rec.communityProjects.faith);
@@ -788,8 +787,8 @@ for (const distribution of ['standard','CrazyGames']) {
         c.religiousRanks = {muslim_lay:2};
         s.player.travelHistory = [{purpose:'pilgrimage',destinationId:'medina',turn:s.turn}];
         const rec = s.population.counties.medina;
-        const minority = JSON.parse(JSON.stringify(rec.communities[0])); minority.religion = 'jewish'; minority.count = 1;
-        rec.communities[0].count--; rec.communities.push(minority);
+        if (FB.convertCountyCommunity(s,'medina',{kind:'faith',target:'jewish',amount:1}).count !== 1)
+          throw new Error('Expected a conserved fictional minority fixture.');
         rec.communityProjects = {faith:{target:c.religion,sponsor:s.owner.medina,policy:'voluntary',startTurn:0,
           progress:0.375,converted:12,resistance:0.2,lastTransfer:2,lastYear:s.date.year}};
         if (!FB.travelStart(s,'pilgrimage','mecca',null)) throw new Error('Expected an existing Mecca itinerary.');
