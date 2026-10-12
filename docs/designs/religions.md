@@ -291,6 +291,14 @@ FB.faithAssignable remains the existence and saved-record eligibility query. FB.
 
 tests/e2e/fixtures/released-catalogue.json freezes released effective faiths separately from legacy metadata and faithDefaults. New traditions are additive. Updating a retained hash requires compatibility review, and semantic changes require a new definition or a reviewed migration. This compatibility boundary adds no researchable capability and needs no technology gate.
 
+Hindu and Jain catalogue scope
+
+brahmanical_476 retains its standalone definition and its 476/493 scope. hindu_711 retains its standalone definition and its 711 scope. Existing county, community, court and generated household consumers keep their ids and population partitions. The early definition's role vocabulary and both definitions' marriage rules are compatibility defaults, not local qualification or ascetic admission contracts. Neither profile supplies a religious advancement path. Later openings do not acquire Hindu communities from these earlier definitions.
+
+jain is an independent institution-only catalogue profile. Its availability permits institution authoring in the 1204 bookmark from year 1204 onward. This scope does not permit a county population, character, ruler, start, story, conversion or community project. No institution, visitor, travel node or incumbent is seeded. The profile has no parent, central head, holy-war tradition, household marriage doctrine, clergy-marriage rule, role eligibility, appearance or advancement path. customary is a neutral technical legal fallback and grants no local jurisdiction. Household and ascetic policy require separate declarations before those consumers can be enabled.
+
+The dated catalogue uses the existing faith_catalogue_availability review with technology impact none. This profile adds an institutional identity through that contract and enables no new activity or admission capability. An off-map learning institution still needs its own supported binding, service and access rules. tests/e2e/specs/hindu-jain-traditions.spec.js covers the scopes, retained Hindu consumers, independent Jain identity, rejected premature or unsupported assignments, action rejection and save compatibility.
+
 Dated faith authoring
 
 A faith's top-level availability record declares optional inclusive yearMin/yearMax integers, eras, bookmarkIds and consumers. It is local metadata, separate from inherited properties. An omitted field is unrestricted; an empty selector list permits no consumer. A child needs its own declaration. Existing JSON mods that omit availability keep their prior eligibility. Invalid dates, unknown or duplicate selectors and unsupported fields fail detached catalogue validation. Availability describes potential eligibility, not evidence of local adherence or a county majority.
