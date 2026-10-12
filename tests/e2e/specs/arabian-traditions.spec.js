@@ -17,7 +17,11 @@ dependsOnRuntime(__filename,[
   'js/model.js','js/world.js','js/institutions.js','js/religion.js','js/population.js',
   'js/bookmark_setup.js','js/starts.js','js/save.js','js/save_v4.js','js/main.js','js/ui_modals.js',
   'js/governments.js','js/government_support.js','js/government_collective.js',
-  'js/government_assembly.js','js/government_lineage.js'
+  'js/government_assembly.js','js/government_lineage.js',
+  'data/religious_institutions.js','data/religious_activities.js','data/systems.js',
+  'js/religious_institutions.js','js/religious_activities.js','js/abbeys.js','js/treasury.js',
+  'js/politics.js','js/authority.js','js/local_office_appointments.js','js/systems.js',
+  'js/settlement.js','js/economy.js','js/market.js','js/justice.js','js/intrigue.js','js/travel.js','js/technology.js'
 ]);
 
 test('the Arabian early profile has independent defaults and retains the released catalogue',
@@ -150,7 +154,8 @@ test('Arabian historical consumers cannot borrow an Islamic profile before its d
   });
 
 // Hidden revision review belongs to this specification's fresh browser context.
-async function startArabianHousehold(page,testInfo,id) {
+async function startArabianHousehold(page,testInfo,id,provinceId,sex) {
+  provinceId = provinceId || 'mecca'; sex = sex || 'm';
   await openGame(page,testInfo);
   await page.evaluate(function (id) {
     FBDATA.bookmarks[id].hidden = false;
@@ -160,7 +165,8 @@ async function startArabianHousehold(page,testInfo,id) {
   if (await beginning.isVisible()) await beginning.click();
   else await page.getByRole('button',{name:'New Game',exact:true}).click();
   await page.locator('#btn-bm-seed').click();
-  await page.locator('#ng-seed').fill('ARABIAN-' + id + '-farmer_' + id + '-mecca-m-Review-established');
+  const scenario = id === '711' ? 'farmer' : 'farmer_' + id;
+  await page.locator('#ng-seed').fill('ARABIAN-' + id + '-' + scenario + '-' + provinceId + '-' + sex + '-Review-established');
   await page.locator('#ng-seed').press('Enter');
   await expect(page.locator('#chargen:not(.hidden)')).toBeVisible();
   await page.getByRole('button',{name:'Begin Your Story',exact:true}).click();
@@ -170,7 +176,7 @@ async function startArabianHousehold(page,testInfo,id) {
   expect(await page.evaluate(function () {
     return {bookmark:FB.state.start.id,home:FB.state.player.provinceId,
       faith:FB.state.chars[FB.state.player.charId].religion};
-  })).toEqual({bookmark:id,home:'mecca',faith:'arabian_traditional_476'});
+  })).toEqual({bookmark:id,home:provinceId,faith:id === '711' ? 'umayyad_sunni_711' : 'arabian_traditional_476'});
 }
 
 // Snapshot existing records only; these reads must not allocate officeholders or kin.
@@ -250,4 +256,238 @@ for (const id of ['476','493']) test('Arabian households, generated kin and loca
     await openGame(page,testInfo);
     await restoreBookmark(page,saved);
     expect(await page.evaluate(arabianCampaignSnapshot)).toEqual(before);
+  });
+
+test('711 congregations bind two existing towns without clergy, land, allegiance changes or retained-world seeds',
+  async function ({page},testInfo) {
+    await openGame(page,testInfo);
+    expect(await page.evaluate(function () {
+      const before = JSON.stringify(FBDATA), rng = FB.getRngState(), uid = FB.getUidCounter();
+      const b = FB.bookmark('711'), retained = ['baseline','governments_v2'].map(function (revision) {
+        return FB.bookmark('711',revision);
+      });
+      const profile = FBDATA.religiousInstitutionProfiles.arabian_local_congregation_711;
+      const rows = ['medina','sanaa'].map(function (pid) {
+        const d = b.localInstitutions[pid + '_congregation_711'];
+        const p = b.provinces.find(function (p) { return p.id === pid; });
+        const point = FBDATA.settlementSites[d.site];
+        return {scope:d.jurisdictionIds,faith:d.religion,residents:p.religion,vacant:d.vacant,freshOnly:d.freshOnly,
+          site:p.settlements.some(function (v) { return v.site === d.site; }),
+          bounds:point.x >= -11 && point.x <= 70 && point.y >= 13 && point.y <= 66,
+          unstaffed:!d.officeId && !d.representative && !d.abbeyId};
+      });
+      return {faults:FB.validateBookmark(b),catalogue:FB.religiousInstitutionCatalogFaults(FBDATA),
+        activities:FB.religiousActivityCatalogFaults(FBDATA),technology:FB.validateTechnologyData(true),rows:rows,
+        retained:retained.every(function (world) {
+          return !world.localInstitutions.medina_congregation_711 && !world.localInstitutions.sanaa_congregation_711;
+        }),member:profile.roles.participant,selection:profile.selection,recognition:profile.recognition.sources,
+        reviews:['arabian_local_congregations_711','arabian_local_worship_711'].map(function (id) {
+          return FBDATA.techImpactReviews.features[id].mode;
+        }),pure:before === JSON.stringify(FBDATA) && rng === FB.getRngState() && uid === FB.getUidCounter()};
+    })).toEqual({faults:[],catalogue:[],activities:[],technology:[],
+      rows:['medina','sanaa'].map(function (pid) {
+        return {scope:[pid],faith:'sunni',residents:'umayyad_sunni_711',vacant:true,freshOnly:true,
+          site:true,bounds:true,unstaffed:true};
+      }),retained:true,member:{name:'Lay participant',minAge:16,sexes:[],unmarried:false,
+        professions:[],skills:{},affiliationId:null},selection:null,recognition:[],reviews:['none','none'],pure:true});
+  });
+
+for (const locality of [{pid:'medina',sex:'f'},{pid:'sanaa',sex:'m'}]) {
+  test('local worship in ' + locality.pid + ' consumes one commitment without granting pilgrimage or political rights',
+    async function ({page},testInfo) {
+      await startArabianHousehold(page,testInfo,'711',locality.pid,locality.sex);
+      expect(await page.evaluate(function (pid) {
+        const s = FB.state, c = s.chars[s.player.charId], id = pid + '_local_worship_711';
+        c.born = 681; c.health = 8;
+        const before = JSON.stringify(s), rng = FB.getRngState(), uid = FB.getUidCounter();
+        const q = FB.religiousActivityQuote(s,id,c.id);
+        const pure = before === JSON.stringify(s) && rng === FB.getRngState() && uid === FB.getUidCounter();
+        const preserved = function () { return JSON.stringify([s.owner,s.holder,s.religiousHeads,
+          s.religiousHeadVacancies,s.localInstitutions,s.abbeys,s.player.profession,c.religiousRanks,
+          s.player.travel,s.player.travelHistory,s.population,c.religion]); };
+        const canonical = preserved(), piety = s.player.piety, gold = s.player.gold;
+        const started = FB.religiousActivityApply(s,q), early = FB.religiousActivityFinish(s,c.id,false);
+        s.turn++; const completed = FB.religiousActivityFinish(s,c.id,false);
+        const repeat = FB.religiousActivityQuote(s,id,c.id);
+        return {pure:pure,started:started,early:early,completed:completed,
+          price:gold - s.player.gold,piety:s.player.piety - piety,repeat:!repeat.allowed,
+          receipt:c.religiousActivityHistory[id],canonical:canonical === preserved(),
+          noMembership:Object.keys(s.localInstitutions[pid + '_congregation_711'].members).length === 0};
+      },locality.pid)).toMatchObject({pure:true,started:true,early:false,completed:true,price:0,piety:1,
+        repeat:true,receipt:{activityId:locality.pid + '_local_worship_711',performed:true,rewarded:true},
+        canonical:true,noMembership:true});
+    });
+}
+
+test('local worship separates faith from allegiance and rejects changed place, date, access and proposals atomically',
+  async function ({page},testInfo) {
+    await startArabianHousehold(page,testInfo,'711','medina','f');
+    expect(await page.evaluate(function () {
+      const s = FB.state, c = s.chars[s.player.charId], id = 'medina_local_worship_711';
+      c.born = 681; c.health = 8;
+      const allegiance = FB.religiousActivityQuote(s,id,c.id).allowed;
+      c.religion = 'sunni'; const independent = FB.religiousActivityQuote(s,id,c.id).allowed;
+      const q = FB.religiousActivityQuote(s,id,c.id);
+      s.player.provinceId = 'sanaa';
+      const moved = !FB.religiousActivityQuote(s,id,c.id).allowed, before = JSON.stringify(s);
+      const stale = !FB.religiousActivityApply(s,q) && before === JSON.stringify(s);
+      s.player.provinceId = 'medina';
+      c.religion = 'jewish'; const other = !FB.religiousActivityQuote(s,id,c.id).allowed; c.religion = 'sunni';
+      s.date.year = 712; const later = !FB.religiousActivityQuote(s,id,c.id).allowed; s.date.year = 711;
+      const revision = s.start.revision; s.start.revision = 'baseline';
+      const retained = !FB.religiousActivityQuote(s,id,c.id).allowed; s.start.revision = revision;
+      const row = s.localInstitutions.medina_congregation_711; row.status = 'closed';
+      const closed = !FB.religiousActivityQuote(s,id,c.id).allowed; row.status = 'active';
+      const tampered = JSON.parse(JSON.stringify(FB.religiousActivityQuote(s,id,c.id))); tampered.cost = 1;
+      const exact = JSON.stringify(s);
+      return {allegiance:allegiance,independent:independent,moved:moved,stale:stale,other:other,later:later,
+        retained:retained,closed:closed,tampered:!FB.religiousActivityApply(s,tampered) && exact === JSON.stringify(s)};
+    })).toEqual({allegiance:true,independent:true,moved:true,stale:true,other:true,later:true,retained:true,
+      closed:true,tampered:true});
+  });
+
+test('lay admission preserves married households, work and canonical authority without declaring an imam',
+  async function ({page},testInfo) {
+    await startArabianHousehold(page,testInfo,'711','medina','f');
+    expect(await page.evaluate(function () {
+      const s = FB.state, c = s.chars[s.player.charId], iid = 'medina_congregation_711';
+      c.religion = 'sunni'; c.born = 681;
+      const actor = {kind:'character',id:c.id};
+      const preserved = JSON.stringify([c.spouseId,s.player.profession,s.owner,s.holder,s.religiousHeads,
+        s.religiousHeadVacancies,s.authority,c.religiousRanks,s.abbeys]);
+      const q = FB.religiousInstitutionQuote(s,iid,actor,'admit',{roleId:'participant'});
+      const joined = FB.religiousInstitutionApply(s,q);
+      const snapshot = FB.religiousInstitutionSnapshot(s,iid);
+      const priest = FB.religiousInstitutionQuote(s,iid,actor,'admit',{roleId:'imam'});
+      const office = FB.religiousInstitutionQuote(s,iid,actor,'appoint',{candidateId:c.id});
+      const before = JSON.stringify(s);
+      const rejected = !FB.religiousInstitutionApply(s,priest) && !FB.religiousInstitutionApply(s,office) &&
+        before === JSON.stringify(s);
+      const rules = FB.religiousHouseholdRule(s,c,s.player.profession);
+      const withdrawn = FB.religiousInstitutionApply(s,FB.religiousInstitutionQuote(s,iid,actor,'withdraw',{}));
+      return {joined:joined,role:snapshot.members[c.id].roleId,head:snapshot.holderId,rejected:rejected,
+        rules:rules,withdrawn:withdrawn,preserved:preserved === JSON.stringify([c.spouseId,s.player.profession,
+          s.owner,s.holder,s.religiousHeads,s.religiousHeadVacancies,s.authority,c.religiousRanks,s.abbeys])};
+    })).toEqual({joined:true,role:'participant',head:null,rejected:true,rules:{unmarried:false,explicit:false},
+      withdrawn:true,preserved:true});
+  });
+
+/* Property and fees below are fictional contracts, not an attested mosque endowment. */
+function installArabianServiceFixture() {
+  const s = FB.state, c = s.chars[s.player.charId], iid = 'medina_congregation_711';
+  c.born = 681; c.health = 8; c.skills.int = 4; s.player.gold = 100;
+  FB.setPlayerTier(s,1,{stationFarewell:false}); s.player.manor = null; s.player.landPlotMigration = 1;
+  s.player.landPlots = [{provinceId:'medina',settlement:0}];
+  const raw = FBDATA.bookmarks['711'].revisions[s.start.revision];
+  raw.localInstitutions = JSON.parse(JSON.stringify(FB.campaignBookmark(s).localInstitutions));
+  raw.localInstitutions[iid].abbeyId = 'test_arabian_property';
+  const base = {period:{yearMin:711,yearMax:711},openings:[{id:'711',revision:s.start.revision}],
+    faithIds:['sunni','umayyad_sunni_711'],affiliationIds:[],roleIds:[],institutionId:iid,payer:'household',reserve:0};
+  FBDATA.religiousPatronage.test_arabian_giving = Object.assign({},base,{
+    name:'Fictional congregation service fund',foundation:{startup:2,capital:8,treasury:0,landRequired:true},
+    funds:{maintenance:{name:'Fictional upkeep',unitCost:2,capacity:4},learning:{name:'Fictional lessons',unitCost:3,capacity:4}},
+    outreach:[]
+  });
+  ['learning','maintenance'].forEach(function (fund) {
+    FBDATA.religiousActivities['test_arabian_' + fund] = Object.assign({},base,{
+      name:'Fictional prepaid service',mode:'local',purpose:null,siteId:null,cost:0,duration:1,
+      calendar:'any_day',interruption:'retain_cost',recipient:'institution',milestone:'test_arabian_' + fund,
+      reward:{piety:0,prestige:0,skills:fund === 'learning' ? {int:1} : {}},legacy:null,
+      service:{fund:fund,cost:fund === 'learning' ? 3 : 2}
+    });
+  });
+}
+
+test('fictional congregation gifts conserve land and restricted service funds through learning and access loss',
+  async function ({page},testInfo) {
+    await startArabianHousehold(page,testInfo,'711','medina');
+    await page.evaluate(installArabianServiceFixture);
+    expect(await page.evaluate(function () {
+      const s = FB.state, c = s.chars[s.player.charId], terms = {land:{provinceId:'medina',settlement:0,count:1}};
+      const population = JSON.stringify(s.population), gold = s.player.gold, before = JSON.stringify(s);
+      const q = FB.religiousPatronageQuote(s,'test_arabian_giving',c.id,'foundation',terms);
+      const pure = before === JSON.stringify(s), founded = FB.religiousPatronageApply(s,q);
+      if (!founded) throw new Error('Fictional property setup failed: ' + q.reason);
+      const h = s.abbeys.houses.find(function (h) { return h.id === 'test_arabian_property'; });
+      const gifts = ['maintenance','learning'].map(function (fund) {
+        return FB.religiousPatronageApply(s,FB.religiousPatronageQuote(s,'test_arabian_giving',c.id,'donation',{
+          fund:fund,amount:fund === 'learning' ? 3 : 2}));
+      });
+      const started = FB.religiousActivityApply(s,FB.religiousActivityQuote(s,'test_arabian_learning',c.id));
+      s.turn++; const learned = FB.religiousActivityFinish(s,c.id,false);
+      const maintenance = FB.religiousActivityApply(s,FB.religiousActivityQuote(s,'test_arabian_maintenance',c.id));
+      const property = JSON.stringify(h); s.localInstitutions.medina_congregation_711.status = 'closed';
+      s.turn++; FB.religiousActivityTick(s);
+      return {pure:pure,founded:founded,gifts:gifts,disclosed:q.cost,spent:gold - s.player.gold,
+        land:s.player.landPlots.length,plots:h.plots[0].count,capital:h.capital,treasury:h.treasury,
+        restricted:h.restrictedFunds,consumed:h.activitySpent,started:started,learned:learned,skill:c.skills.int,
+        maintenance:maintenance,interrupted:!c.religiousActivity && !c.religiousActivityHistory.test_arabian_maintenance,
+        property:property === JSON.stringify(h),population:population === JSON.stringify(s.population)};
+    })).toEqual({pure:true,founded:true,gifts:[true,true],disclosed:10,spent:15,land:0,plots:1,capital:8,
+      treasury:0,restricted:{maintenance:2,learning:0},consumed:5,started:true,learned:true,skill:5,
+      maintenance:true,interrupted:true,property:true,population:true});
+  });
+
+test('fictional public giving debits its actual treasury and preserves household funds and reserve',
+  async function ({page},testInfo) {
+    await startArabianHousehold(page,testInfo,'711','medina');
+    await page.evaluate(installArabianServiceFixture);
+    expect(await page.evaluate(function () {
+      const s = FB.state, pc = s.chars[s.player.charId];
+      const q = FB.religiousPatronageQuote(s,'test_arabian_giving',pc.id,'foundation',{
+        land:{provinceId:'medina',settlement:0,count:1}});
+      if (!FB.religiousPatronageApply(s,q)) throw new Error('Fictional property setup failed.');
+      FB.treasuryInitialize(s); s.treasuryAccounting.mode = 'active';
+      const rid = 'umayyad_711', ruler = FB.realmRulerCharacter(s,rid);
+      s.realms[rid].capital = 'medina'; ruler.homeProvinceId = 'medina'; ruler.health = 8;
+      s.realms[rid].treasury.gold = 100; s.realms[rid].treasury.militaryAccrued = 0;
+      const publicProfile = JSON.parse(JSON.stringify(FBDATA.religiousPatronage.test_arabian_giving));
+      publicProfile.payer = 'public'; publicProfile.reserve = 5;
+      FBDATA.religiousPatronage.test_arabian_public_giving = publicProfile;
+      const household = s.player.gold, treasury = FB.treasuryAvailable(s,rid);
+      const gift = FB.religiousPatronageQuote(s,'test_arabian_public_giving',ruler.id,'donation',{
+        fund:'maintenance',amount:2});
+      const applied = FB.religiousPatronageApply(s,gift);
+      const spent = treasury - FB.treasuryAvailable(s,rid);
+      s.realms[rid].treasury.gold = 6;
+      const low = FB.religiousPatronageQuote(s,'test_arabian_public_giving',ruler.id,'donation',{
+        fund:'maintenance',amount:2});
+      const before = JSON.stringify(s), refused = !FB.religiousPatronageApply(s,low) && before === JSON.stringify(s);
+      const h = s.abbeys.houses.find(function (h) { return h.id === 'test_arabian_property'; });
+      return {applied:applied,payer:gift.payer.id,charged:spent,
+        private:household === s.player.gold,fund:h.restrictedFunds.maintenance,
+        reserve:!low.allowed && low.reason === 'funds',refused:refused};
+    })).toEqual({applied:true,payer:'umayyad_711',charged:2,private:true,fund:2,reserve:true,refused:true});
+  });
+
+test('new congregation activity and identity survive restore while an older opening roster remains absent',
+  async function ({page},testInfo) {
+    await startArabianHousehold(page,testInfo,'711','sanaa','f');
+    const source = await page.evaluate(function () {
+      const s = FB.state, c = s.chars[s.player.charId]; c.born = 681; c.health = 8;
+      if (!FB.religiousActivityApply(s,FB.religiousActivityQuote(s,'sanaa_local_worship_711',c.id)))
+        throw new Error('Local worship did not start.');
+      return {saved:FB.save.serialize(),commitment:c.religiousActivity,piety:s.player.piety,faith:c.religion,
+        population:FB.countyCommunities(s,'sanaa'),heads:s.religiousHeads};
+    });
+    await openGame(page,testInfo); await restoreBookmark(page,source.saved);
+    expect(await page.evaluate(function () {
+      const s = FB.state, c = s.chars[s.player.charId];
+      return {commitment:c.religiousActivity,piety:s.player.piety,faith:c.religion,
+        population:FB.countyCommunities(s,'sanaa'),heads:s.religiousHeads};
+    })).toEqual({commitment:source.commitment,piety:source.piety,faith:source.faith,
+      population:source.population,heads:source.heads});
+    expect(await page.evaluate(function () {
+      const s = FB.state, c = s.chars[s.player.charId], piety = s.player.piety;
+      s.turn++; FB.religiousActivityTick(s);
+      delete s.localInstitutions.medina_congregation_711; delete s.localInstitutions.sanaa_congregation_711;
+      return {reward:s.player.piety - piety,performed:c.religiousActivityHistory.sanaa_local_worship_711.performed,
+        saved:FB.save.serialize()};
+    })).toMatchObject({reward:1,performed:true});
+    const older = await page.evaluate(function () { return FB.save.serialize(); });
+    await openGame(page,testInfo); await restoreBookmark(page,older);
+    expect(await page.evaluate(function () {
+      FB.ensureLocalInstitutions(FB.state);
+      return !FB.state.localInstitutions.medina_congregation_711 && !FB.state.localInstitutions.sanaa_congregation_711;
+    })).toBe(true);
   });

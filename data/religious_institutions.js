@@ -1,6 +1,19 @@
 /* Optional declarations. Campaigns and mods place their own institutions. */
 FBDATA.religiousAffiliations = {};
-FBDATA.religiousInstitutionProfiles = {};
+/* Lay participation only. Local clergy, legal school, custodianship and
+   endowed property need independent declarations. Age 16 and free admission
+   are simulation terms; no named incumbent or office is created. */
+FBDATA.religiousInstitutionProfiles = { arabian_local_congregation_711: {
+  name:'Local Muslim congregation', faithIds:['sunni'], period:{yearMin:711,yearMax:711}, system:null,
+  roles:{participant:{name:'Lay participant',minAge:16,sexes:[],unmarried:false,
+    professions:[],skills:{},affiliationId:null}},
+  selection:null,
+  recognition:{sources:[],roles:[],quorum:1,requiresLeader:false,protectedWorship:true},
+  actions:['admit','withdraw'], fees:{}, affiliationIds:[]
+} };
+FBDATA.techImpactReviews.features.arabian_local_congregations_711 = {
+  mode:'none', rationale:'Voluntary local congregation membership depends on presence and consent, without a discovery requirement or a priestly office.'
+};
 FBDATA.legitimacySources.institution_support = {
   name:'Institutional recognition', succession:'reaffirm', institutional:true
 };
