@@ -31,9 +31,10 @@ test('the existing catalogue declares local availability without changing releas
           FB.religionOf(id,null).properties.availability === undefined;
       });
       return {released:released.every(function (id) { return ids.indexOf(id) >= 0; }),
+        catalogueComplete:ids.length === Object.keys(FBDATA.religions).length,
         declared:results,errors:FB.validateReligionData(null),
         pure:before === JSON.stringify(FBDATA) && rng === FB.getRngState() && uid === FB.getUidCounter()};
-    },fixture.selection.faiths)).toEqual({released:true,declared:true,errors:[],pure:true});
+    },fixture.selection.faiths)).toEqual({released:true,catalogueComplete:true,declared:true,errors:[],pure:true});
   });
 
 test('all fresh worlds validate, with distinct original and wider 476 and dated Islamic targets',

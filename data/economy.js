@@ -49,6 +49,20 @@ FBDATA.abbeys = {
    numeric rank index. Baseline rank order is therefore a compatibility
    boundary even though every rank also has its own stable id. */
 FBDATA.religiousPaths = {
+  /* Ordinary participation grants neither scholarly nor priestly office.
+     Specialist admission and recognition belong to institution contracts. */
+  rabbanite_lay: {
+    kind:'lay', faiths:['rabbanite'],
+    ranks:[{ id:'participant', name:'Community Participant', pietyYield:0 }]
+  },
+  karaite_lay: {
+    kind:'lay', faiths:['karaite'],
+    ranks:[{ id:'participant', name:'Community Participant', pietyYield:0 }]
+  },
+  samaritan_lay: {
+    kind:'lay', faiths:['samaritan'],
+    ranks:[{ id:'participant', name:'Community Participant', pietyYield:0 }]
+  },
   late_antique_lay: {
     kind:'lay', faiths:['nicene','homoian','chalcedonian','miaphysite','east_syriac'],
     ranks:[

@@ -698,5 +698,56 @@ FBDATA.religions = {
       roles:{ monasticM:'Monk', monasticF:'Nun', priestM:'Rabbi', priestF:'Rabbi' },
       clergyMarriage:false,
       attire:{ tends:['cap'] }
+    } },
+  /* Institution profiles do not reclassify legacy Jewish households. */
+  rabbanite: { name:'Rabbinic Judaism', parent:'jewish', icon:'✡',
+    relationToParent:'in_fold',
+    availability:{ yearMin:476, bookmarkIds:['476','493','711','800','867','1066','1204'],
+      consumers:['institution'] },
+    properties:{
+      head:null, holyWarTradition:null, legalTradition:'customary',
+      clergyMarriage:true,
+      marriage:{ divorce:{ enabled:false } },
+      roles:{ monasticM:'Student', monasticF:'Student',
+        priestM:'Community Representative', priestF:'Community Representative',
+        teacher:'Teacher', rabbi:'Rabbi', judge:'Communal Judge' },
+      religiousPaths:{ lay:'rabbanite_lay', professions:{} }
+    } },
+  karaite: { name:'Karaite Judaism', parent:'jewish', icon:'✡',
+    relationToParent:'in_fold',
+    availability:{ yearMin:1066, bookmarkIds:['1066','1204'],
+      consumers:['community','character','institution'] },
+    properties:{
+      head:null, holyWarTradition:null, legalTradition:'customary',
+      clergyMarriage:true,
+      marriage:{ divorce:{ enabled:false } },
+      words:{ cleric:'teacher' },
+      roles:{ monasticM:'Student', monasticF:'Student',
+        priestM:'Community Representative', priestF:'Community Representative',
+        teacher:'Teacher' },
+      religiousPaths:{ lay:'karaite_lay', professions:{} }
+    } },
+  samaritan: { name:'Samaritan tradition', icon:'📜',
+    availability:{ yearMin:476, bookmarkIds:['476','493','711','800','1204'],
+      consumers:['community','character','institution'] },
+    properties:{
+      head:null, holyWarTradition:null, legalTradition:'customary',
+      music:{ lineage:['jewish'], fallback:'muslim' },
+      intro:{ path:'intro_other' },
+      conversionCategory:{ name:'Samaritan Tradition', icon:'📜', order:6 },
+      /* Capacity is a balancing limit; dissolution awaits local review. */
+      marriage:{
+        spouseLimit:{ m:1, f:1 },
+        divorce:{ kind:'sunder', enabled:false, direct:true, gold:0, piety:0,
+          prestige:0, cooldownDays:0 },
+        acceptedRelations:['same'], kinship:{ siblingRite:null }
+      },
+      words:{ deity:'the Lord', cleric:'representative', temple:'synagogue',
+        landed:'Elder', partnership:'Trade partnership' },
+      roles:{ monasticM:'Student', monasticF:'Student',
+        priestM:'Community Representative', priestF:'Community Representative',
+        teacher:'Teacher', samaritan_priest:'Priest' },
+      clergyMarriage:true,
+      religiousPaths:{ lay:'samaritan_lay', professions:{} }
     } }
 };

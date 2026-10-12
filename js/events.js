@@ -2770,6 +2770,8 @@ window.FB = window.FB || {};
     };
     if (!spouse) {
       status.reason = FB.T('This person is not your spouse.');
+    } else if (ending.enabled === false) {
+      status.reason = FB.T('This community requires a locally recognized marriage review.');
     } else if (cooldownDays) {
       status.reason = FB.T('Ready in {days} days.', {
         days:cooldownDays
@@ -5212,7 +5214,7 @@ window.FB = window.FB || {};
           ? Number(ctx.marriagePiety) || 0 : Number(marriageEnding.piety) || 0;
         const marriagePrestige = ctx.marriagePrestige !== undefined
           ? Number(ctx.marriagePrestige) || 0 : Number(marriageEnding.prestige) || 0;
-        if (marriageEnding.direct || p.gold < marriageGold ||
+        if (marriageEnding.enabled === false || marriageEnding.direct || p.gold < marriageGold ||
             p.piety < marriagePiety || p.prestige < marriagePrestige) return false;
       }
     }
