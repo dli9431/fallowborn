@@ -476,7 +476,7 @@ FBDATA.faithDefaults = {
 };
 
 FBDATA.religions = {
-  christian: { name:'Christianity', assignable:false, icon:'✝',
+  christian: { availability:{}, name:'Christianity', assignable:false, icon:'✝',
     properties:{
       legalTradition:'latin', holyWarTradition:'crusade',
       music:{ lineage:['christian'], fallback:'christian' },
@@ -497,22 +497,22 @@ FBDATA.religions = {
       clergyMarriage:false,
       attire:{ tonsure:true, pendant:'cross', clergyPendant:true }
     } },
-  berber_traditional: { name:'Amazigh traditional belief', group:'pagan',
+  berber_traditional: { availability:{}, name:'Amazigh traditional belief', group:'pagan',
     relationToParent:'in_fold', icon:'☀' },
-  germanic_pagan: { name:'Germanic traditional belief', group:'pagan', relationToParent:'in_fold', icon:'☀' },
-  nicene: { name:'Nicene Christianity', group:'christian', relationToParent:'in_fold', icon:'✝',
+  germanic_pagan: { availability:{}, name:'Germanic traditional belief', group:'pagan', relationToParent:'in_fold', icon:'☀' },
+  nicene: { availability:{}, name:'Nicene Christianity', group:'christian', relationToParent:'in_fold', icon:'✝',
     properties:{ head:{ system:'episcopal_sees', officeId:'rome_bishop', title:'Bishop of Rome', holderKind:'character', holderSex:'m', holderRole:'priest', minAge:18, succession:'appointment' }, religiousPaths:{ lay:'late_antique_lay',
       professions:{ monk:'late_antique_monastic', priest:'late_antique_clerical' } } } },
-  homoian: { name:'Homoian Christianity', group:'christian', relationToParent:'schismatic', icon:'☧',
+  homoian: { availability:{}, name:'Homoian Christianity', group:'christian', relationToParent:'schismatic', icon:'☧',
     properties:{ head:{ system:'episcopal_sees', officeId:'ravenna_homoian_bishop', title:'Homoian Bishop', holderKind:'character', holderSex:'m', holderRole:'priest', minAge:18, succession:'appointment' }, religiousPaths:{ lay:'late_antique_lay',
       professions:{ monk:'late_antique_monastic', priest:'late_antique_clerical' } } } },
-  chalcedonian: { name:'Chalcedonian Christianity', group:'christian', relationToParent:'in_fold', icon:'☦',
+  chalcedonian: { availability:{}, name:'Chalcedonian Christianity', group:'christian', relationToParent:'in_fold', icon:'☦',
     properties:{ head:{ system:'episcopal_sees', officeId:'constantinople_patriarch', title:'Patriarch of Constantinople', holderKind:'character', holderSex:'m', holderRole:'priest', minAge:18, succession:'appointment' }, religiousPaths:{ lay:'late_antique_lay',
       professions:{ monk:'late_antique_monastic', priest:'late_antique_clerical' } } } },
-  miaphysite: { name:'Miaphysite Christianity', group:'christian', relationToParent:'schismatic', icon:'☧',
+  miaphysite: { availability:{}, name:'Miaphysite Christianity', group:'christian', relationToParent:'schismatic', icon:'☧',
     properties:{ head:{ system:'episcopal_sees', officeId:'alexandria_patriarch', title:'Patriarch of Alexandria', holderKind:'character', holderSex:'m', holderRole:'priest', minAge:18, succession:'appointment' }, religiousPaths:{ lay:'late_antique_lay',
       professions:{ monk:'late_antique_monastic', priest:'late_antique_clerical' } } } },
-  catholic: { name:'Latin Christianity', group:'christian',
+  catholic: { availability:{}, name:'Latin Christianity', group:'christian',
     relationToParent:'schismatic', icon:'✝',
     properties:{
       systems:{ papacy:true, excommunication:true },
@@ -541,21 +541,21 @@ FBDATA.religions = {
         }
       }
     } },
-  orthodox: { name:'Greek Christianity', group:'christian',
+  orthodox: { availability:{}, name:'Greek Christianity', group:'christian',
     relationToParent:'schismatic', icon:'☦' },
-  eastern: { name:'Eastern Christianity', group:'christian',
+  eastern: { availability:{}, name:'Eastern Christianity', group:'christian',
     relationToParent:'schismatic', icon:'☧' },
-  east_syriac: { name:'East Syriac Christianity', group:'christian',
+  east_syriac: { availability:{}, name:'East Syriac Christianity', group:'christian',
     relationToParent:'schismatic', icon:'✝',
     properties:{ head:null, legalTradition:'sasanian_custom_476', clergyMarriage:true,
       religiousPaths:{ lay:'late_antique_lay',
         professions:{ monk:'late_antique_monastic', priest:'late_antique_clerical' } } } },
-  mesopotamian_traditional: { name:'Mesopotamian traditional belief', group:'pagan',
+  mesopotamian_traditional: { availability:{}, name:'Mesopotamian traditional belief', group:'pagan',
     relationToParent:'in_fold', icon:'☾',
     properties:{ legalTradition:'customary',
       words:{ deity:'the gods', cleric:'priest', temple:'shrine', landed:'Lord',
         partnership:'Trade partnership' }, roles:{ priestM:'Priest', priestF:'Priest' } } },
-  muslim: { name:'Islam', assignable:false, icon:'☪',
+  muslim: { name:'Islam', assignable:false, icon:'☪', availability:{yearMin:622},
     properties:{
       legalTradition:'muslim', tournamentTradition:'furusiyya', holyWarTradition:'jihad',
       feastDescription:'Meat, sherbet, and politics.',
@@ -582,7 +582,7 @@ FBDATA.religions = {
       attire:{ covers:{ m:'turban', f:'veil' }, garments:{ tunic:'robe' },
         beard:{ min:.45, cuts:['full','square','spade','forked'] } }
     } },
-  sunni: { name:'Islam (Sunni)', group:'muslim',
+  sunni: { name:'Islam (Sunni)', group:'muslim', availability:{yearMin:622},
     relationToParent:'schismatic', icon:'☪',
     properties:{
       head:{
@@ -603,13 +603,13 @@ FBDATA.religions = {
         }
       }
     } },
-  ashari: { name:'Ash’ari School', adjective:'Ash’ari', group:'sunni',
+  ashari: { name:'Ash’ari School', adjective:'Ash’ari', group:'sunni', availability:{yearMin:900},
     relationToParent:'in_fold', icon:'☪' },
-  maturidi: { name:'Maturidi School', adjective:'Maturidi', group:'sunni',
+  maturidi: { name:'Maturidi School', adjective:'Maturidi', group:'sunni', availability:{yearMin:900},
     relationToParent:'in_fold', icon:'☪' },
-  shia: { name:'Islam (Shia)', group:'muslim',
+  shia: { name:'Islam (Shia)', group:'muslim', availability:{yearMin:622},
     relationToParent:'schismatic', icon:'☪' },
-  pagan: { name:'Paganism', assignable:false, icon:'☀',
+  pagan: { availability:{}, name:'Paganism', assignable:false, icon:'☀',
     properties:{
       legalTradition:'customary', holyWarTradition:'sacred',
       music:{ lineage:['pagan'], fallback:'pagan' }, intro:{ path:'intro_other' },
@@ -626,15 +626,15 @@ FBDATA.religions = {
       roles:{ monasticM:'Monk', monasticF:'Nun', priestM:'Godi', priestF:'Godi' },
       clergyMarriage:false
     } },
-  norse_pagan: { name:'Norse Paganism', group:'pagan',
+  norse_pagan: { availability:{}, name:'Norse Paganism', group:'pagan',
     relationToParent:'schismatic', icon:'ᚠ' },
-  slavic_pagan: { name:'Slavic Paganism', group:'pagan',
+  slavic_pagan: { availability:{}, name:'Slavic Paganism', group:'pagan',
     relationToParent:'schismatic', icon:'☀' },
-  baltic_pagan: { name:'Baltic Paganism', group:'pagan',
+  baltic_pagan: { availability:{}, name:'Baltic Paganism', group:'pagan',
     relationToParent:'schismatic', icon:'☽' },
-  tengri: { name:'Tengrism', group:'pagan',
+  tengri: { availability:{}, name:'Tengrism', group:'pagan',
     relationToParent:'schismatic', icon:'⧙' },
-  zoroastrian: { name:'Zoroastrianism', adjective:'Zoroastrian',
+  zoroastrian: { availability:{}, name:'Zoroastrianism', adjective:'Zoroastrian',
     collective:'Zoroastrians', icon:'🔥',
     properties:{
       legalTradition:'latin', music:{ lineage:['zoroastrian'], fallback:'muslim' },
@@ -653,7 +653,7 @@ FBDATA.religions = {
         priestF:'Mobed' },
       clergyMarriage:true
     } },
-  jewish: { name:'Judaism', icon:'✡',
+  jewish: { availability:{}, name:'Judaism', icon:'✡',
     properties:{
       legalTradition:'latin', music:{ lineage:['jewish'], fallback:'muslim' },
       intro:{ path:'intro_other' },

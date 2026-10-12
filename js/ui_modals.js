@@ -5260,7 +5260,7 @@ window.FB = window.FB || {};
 
   function countyProjectTargetIds(s, pid, kind, settlementIndex) {
     const ids = kind === 'faith'
-      ? FB.religionIds(s, true) : (FB.cultureIds
+      ? FB.religionIds(s, true, 'project') : (FB.cultureIds
         ? FB.cultureIds(s, true) : Object.keys(FBDATA.cultures || {}));
     const local = typeof settlementIndex === 'number';
     const communities = local && FB.settlementCommunities

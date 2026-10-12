@@ -1,5 +1,9 @@
 # Conversion: adopting a new faith or culture
 
+Dated target eligibility
+
+Personal, household and public ruler conversion use FB.faithAvailable for a target's local availability metadata. New county and settlement project previews and starts use the same query with consumer project, before materializing population records or charging anything. The canonical population transfer and existing-project status/annual progression retain existence-based validation, so an authoring date boundary does not remove minorities or interrupt a funded project. Existing campaign followers, generated ancestry and recorded project targets retain access to their original faiths. A changed date or explicit consumer restriction blocks a new commitment at apply. The catalogue gate grants no population, territory, affiliation or advancement; its technology-impact decision is none. See docs/designs/religions.md for the authoring contract.
+
 Late antique public ruler conversion
 
 With ruler_conversion and episcopal_sees enabled, realm scope dispatches to FB.rulerFaithConversionStatus and FB.applyRulerFaithConversion in js/religion.js. Personal, household and medieval realm conversion retain their behavior below. FBDATA.rulerFaithTargets authors public professions; the late antique table supplies Nicene, Homoian, Chalcedonian and Miaphysite identities. A ruler already personally following the target can still change the court's different official faith. Public profession requires adulthood, peace, a living territorial court and at least one directly held county. Player encounter rules, cooldowns and once-per-ruler limits remain. Reviewed facts include ruler, generation, funds, household, bishops, communities, support and old recognition ids; changes invalidate the review before spending.

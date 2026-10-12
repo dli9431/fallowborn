@@ -1,0 +1,38 @@
+{
+  "name": "Independent dated religious communities",
+  "religions": {
+    "e2e_river_observance": {
+      "name": "River observance",
+      "parent": "pagan",
+      "relationToParent": "in_fold",
+      "availability": {
+        "yearMin": 476,
+        "yearMax": 620,
+        "consumers": ["community", "character", "start", "conversion", "project", "story"]
+      },
+      "properties": {
+        "head": null,
+        "clergyMarriage": true,
+        "marriage": {"spouseLimit": {"m": 1, "f": 1}},
+        "words": {"cleric": "Keeper", "temple": "River gathering"},
+        "roles": {"priestM": "Keeper", "priestF": "Keeper"}
+      }
+    },
+    "e2e_city_teaching": {
+      "name": "City teaching",
+      "parent": "jewish",
+      "relationToParent": "schismatic",
+      "availability": {
+        "yearMin": 1000,
+        "yearMax": 1250,
+        "consumers": ["community", "character", "institution", "conversion", "project", "story"]
+      },
+      "properties": {
+        "head": null,
+        "clergyMarriage": true,
+        "words": {"cleric": "Teacher", "temple": "School"},
+        "roles": {"monasticM": "Student", "monasticF": "Student", "priestM": "Teacher", "priestF": "Teacher"}
+      }
+    }
+  }
+}

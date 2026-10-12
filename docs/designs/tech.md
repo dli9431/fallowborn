@@ -1,5 +1,9 @@
 # National technology
 
+Religious catalogue eligibility
+
+faith_catalogue_availability has technology impact none. Dated religious identity and eligibility for community, household, ruler and institutional consumers are social authoring conditions, independent of discovery. Existing communities and projects retain their identities when their authoring window ends. The declaration adds no research unlock, institutional capacity, population transfer or advancement reward; see docs/designs/religions.md.
+
 Household estate, commercial, military and learned service each have a **none**
 impact review. Useful personal work and promotion depend on experience, skills,
 Standing and (for senior literate offices) Lettered. These social appointments

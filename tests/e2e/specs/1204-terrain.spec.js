@@ -110,6 +110,28 @@ for (const flag of [false,true]) test('dated districts, communities, rights and 
     await saveWithin(page,4 * 1024 * 1024);
   });
 
+test('revision-only starts belong to their world while unknown or listed references still fault',async function ({page},info) {
+  await openGame(page,info);
+  const result = await page.evaluate(function () {
+    const root = FBDATA.bookmarks['1204'], before = JSON.stringify([root,FBDATA.startScenarios]);
+    const siwa = FBDATA.startScenarios.filter(function (s) { return s.id === 'siwa_delegate_1204'; })[0];
+    const misspelt = Object.assign({},siwa,{id:'e2e_misspelt_birthplace_1204',fixedProvinceId:'e2e_no_such_district'});
+    const listed = Object.assign({},root,{revisions:Object.assign({},root.revisions,
+      {baseline:Object.assign({},root.revisions.baseline,{starts:['siwa_delegate_1204']})})});
+    const full = FB.validateBookmark(root), explicit = FB.validateBookmark(listed);
+    let unknown;
+    FBDATA.startScenarios.push(misspelt);
+    try { unknown = FB.validateBookmark(root); } finally { FBDATA.startScenarios.pop(); }
+    const has = function (errors,text) { return errors.some(function (e) { return e.indexOf(text) >= 0; }); };
+    return {full:full,
+      unknown:has(unknown,'start e2e_misspelt_birthplace_1204: unknown inhabited province e2e_no_such_district.') &&
+        unknown.every(function (e) { return e.indexOf('e2e_misspelt_birthplace_1204') >= 0; }),
+      explicit:has(explicit,'start siwa_delegate_1204: unknown inhabited province siwa_oasis.'),
+      pure:before === JSON.stringify([root,FBDATA.startScenarios])};
+  });
+  expect(result).toEqual({full:[],unknown:true,explicit:true,pure:true});
+});
+
 test('court, community and mobile claims do not replace each other',async function ({page},info) {
   await startHistoricalGame(page,info,journey('gurganj_district'));
   expect(await page.evaluate(function () {

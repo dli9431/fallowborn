@@ -556,7 +556,7 @@ window.FB = window.FB || {};
     parent:true, group:true, assignable:true, active:true,
     relationToParent:true, relations:true, properties:true,
     createdTurn:true, founderId:true, originProvinceId:true,
-    doctrineBranch:true, legacy:true, supersededBy:true
+    doctrineBranch:true, legacy:true, supersededBy:true, availability:true
   };
   const FAITH_RELATIONS = {
     same:0, in_fold:1, schismatic:2, hostile:3, foreign:4
@@ -848,6 +848,10 @@ window.FB = window.FB || {};
       if (!own(resolved, id)) continue;
       const rel = resolved[id];
       const rawDef = raw[id];
+      const availabilityFault = faithAvailabilityFault(rawDef.availability);
+      if (availabilityFault) fault(id, availabilityFault);
+      if (plainObject(rawDef.properties) && own(rawDef.properties, 'availability'))
+        fault(id, 'availability must be top-level metadata, outside properties.');
       if (rawDef.legacy !== undefined && typeof rawDef.legacy !== 'boolean')
         fault(id, 'legacy must be boolean.');
       if (rawDef.legacy === true && (typeof rawDef.supersededBy !== 'string' ||
@@ -1055,12 +1059,18 @@ window.FB = window.FB || {};
     return state.faiths;
   };
 
-  FB.religionIds = function (state, assignableOnly) {
-    const compiled = compiledFaiths(requestedFaithState(state));
+  FB.religionIds = function (state, assignableOnly, consumer) {
+    state = requestedFaithState(state);
+    const compiled = compiledFaiths(state);
+    let retained = null;
+    function retainedFaiths() {
+      if (!retained) retained = campaignFaithReferences(state, compiled);
+      return retained;
+    }
     const out = [];
     for (const id in compiled.resolved) {
       if (!own(compiled.resolved, id)) continue;
-      if (assignableOnly && !FB.faithAvailable(id, requestedFaithState(state))) continue;
+      if (assignableOnly && !availableFaith(id, state, consumer, compiled, retainedFaiths)) continue;
       out.push(id);
     }
     return out;
@@ -1081,28 +1091,102 @@ window.FB = window.FB || {};
     return !!(rel && rel.assignable && rel.active);
   };
 
-  /* Catalogue existence and saved-record validation remain independent of
-     fresh conversion eligibility. Legacy metadata never inherits to a child. */
-  FB.faithAvailable = function (id, state) {
-    state = requestedFaithState(state);
-    const compiled = compiledFaiths(state), rel = compiled.resolved[id];
-    if (!rel || !rel.assignable || !rel.active) return false;
-    if (!rel.legacy) return true;
-    if (!state) return false;
-    function contains(value) {
-      if (!value || typeof value !== 'object') return false;
-      return Object.keys(value).some(function (key) {
+  /* Historical authoring is distinct from catalogue existence. These local
+     metadata fields never enter inherited doctrine or the released hashes.
+     A child's own period must be authored independently of its parent. */
+  const FAITH_CONSUMERS = ['community','character','ruler','institution','start','story','conversion','project'];
+  function faithAvailabilityFault(value) {
+    if (value === undefined) return null;
+    if (!plainObject(value)) return 'availability must be an object.';
+    for (const key in value) if (own(value, key) &&
+        ['yearMin','yearMax','eras','bookmarkIds','consumers'].indexOf(key) < 0)
+      return 'availability contains unsupported field ' + key + '.';
+    for (const key of ['yearMin','yearMax']) if (value[key] !== undefined &&
+        !Number.isInteger(value[key])) return 'availability.' + key + ' must be an integer.';
+    if (value.yearMin !== undefined && value.yearMax !== undefined && value.yearMin > value.yearMax)
+      return 'availability.yearMin must not exceed yearMax.';
+    for (const key of ['eras','bookmarkIds','consumers']) {
+      if (value[key] === undefined) continue;
+      if (!Array.isArray(value[key])) return 'availability.' + key + ' must be a list.';
+      const seen = {};
+      for (const id of value[key]) {
+        if (typeof id !== 'string' || !id || own(seen, id) ||
+            key === 'eras' && !own(FBDATA.eras || {}, id) ||
+            key === 'bookmarkIds' && !own(FBDATA.bookmarks || {}, id) ||
+            key === 'consumers' && FAITH_CONSUMERS.indexOf(id) < 0)
+          return 'availability.' + key + ' must name unique known ids.';
+        seen[id] = true;
+      }
+    }
+    return null;
+  }
+  function faithPeriodAllows(value, date, era, bookmarkId, consumer) {
+    if (FAITH_CONSUMERS.indexOf(consumer) < 0) return false;
+    if (value === undefined) return true; // Older authored/mod records remain unrestricted.
+    if (faithAvailabilityFault(value)) return false;
+    return (!value.consumers || value.consumers.indexOf(consumer) >= 0) &&
+      (!value.eras || value.eras.indexOf(era) >= 0) &&
+      (!value.bookmarkIds || value.bookmarkIds.indexOf(bookmarkId) >= 0) &&
+      (value.yearMin === undefined || date && date.year >= value.yearMin) &&
+      (value.yearMax === undefined || date && date.year <= value.yearMax);
+  }
+  FB.faithAvailability = function (id, state) {
+    const rel = compiledFaiths(requestedFaithState(state)).resolved[id];
+    return rel ? cloneFaithValue(rel._faithRaw.availability || {}) : null;
+  };
+  FB.faithHistoricalAvailable = function (id, bookmark, consumer) {
+    const rel = compiledFaiths(null).resolved[id];
+    return !!(rel && rel.assignable && rel.active && !rel.legacy && bookmark &&
+      faithPeriodAllows(rel._faithRaw.availability, bookmark.date,
+        FB.bookmarkEra(bookmark), bookmark.id, consumer || 'community'));
+  };
+
+  function campaignFaithReferences(state, compiled) {
+    const retained = {};
+    if (!state) return retained;
+    function remember(id) {
+      if (typeof id === 'string' && own(compiled.resolved, id)) retained[id] = true;
+    }
+    function collect(value, projectKind, openingOnly) {
+      if (!value || typeof value !== 'object') return;
+      if (value.kind === 'faith') remember(value.target);
+      Object.keys(value).forEach(function (key) {
+        if (openingOnly && ['scripted','revisions','openingRevisions'].indexOf(key) >= 0) return;
         const child = value[key];
-        if (['religion','faithId','eliteFaithId','startReligion'].indexOf(key) >= 0 && child === id) return true;
-        return child && typeof child === 'object' && contains(child);
+        if (['religion','faithId','eliteFaithId','startReligion','fromFaithId','toFaithId'].indexOf(key) >= 0 ||
+            key === 'target' && projectKind === 'faith') remember(child);
+        if (child && typeof child === 'object') collect(child, key === 'faith' ? 'faith' : null, openingOnly);
       });
     }
-    // An existing descendant retains access to its original parent too.
-    if (Object.keys(state.faiths || {}).some(function (key) {
+    Object.keys(state.faiths || {}).forEach(function (key) {
       const faith = compiled.resolved[key];
-      return faith && faith._faithLineage.indexOf(id) >= 0;
-    })) return true;
-    return contains(state) || contains(FB.campaignBookmark(state));
+      if (faith) faith._faithLineage.forEach(remember);
+    });
+    collect(state);
+    collect(FB.campaignBookmark(state), null, true);
+    return retained;
+  }
+
+  /* Catalogue existence and saved-record validation remain independent of
+     fresh conversion eligibility. Legacy metadata never inherits to a child. */
+  function availableFaith(id, state, consumer, compiled, retainedFaiths) {
+    const rel = compiled.resolved[id];
+    if (!rel || !rel.assignable || !rel.active) return false;
+    consumer = consumer || 'conversion';
+    if (FAITH_CONSUMERS.indexOf(consumer) < 0) return false;
+    const availability = rel._faithRaw.availability;
+    if (faithAvailabilityFault(availability) || availability &&
+        availability.consumers && availability.consumers.indexOf(consumer) < 0) return false;
+    const bookmark = state ? FB.campaignBookmark(state) : FB.activeBookmark;
+    if (!rel.legacy && faithPeriodAllows(availability,
+      state ? state.date : bookmark && bookmark.date,
+      state ? FB.campaignEra(state) : bookmark && FB.bookmarkEra(bookmark),
+      bookmark && bookmark.id, consumer)) return true;
+    return own(retainedFaiths ? retainedFaiths() : campaignFaithReferences(state, compiled), id);
+  }
+  FB.faithAvailable = function (id, state, consumer) {
+    state = requestedFaithState(state);
+    return availableFaith(id, state, consumer, compiledFaiths(state));
   };
 
   FB.faithLineage = function (id, state) {
@@ -1396,11 +1480,11 @@ window.FB = window.FB || {};
   FB.createFaith = function (state, definition) {
     if (!state || !plainObject(definition) ||
         !jsonSafeFaithValue(definition)) return null;
-    FB.ensureFaithState(state);
+    let nextId = isFinite(state.faithNextId) && state.faithNextId >= 1 ? Math.floor(state.faithNextId) : 1;
     const suppliedId = definition.id === undefined ? null : String(definition.id);
     let id = suppliedId;
     if (!id) {
-      do { id = 'generated_faith_' + state.faithNextId++; }
+      do { id = 'generated_faith_' + nextId++; }
       while (FB.faithExists(id, state));
     }
     if (!/^[a-z0-9_-]+$/i.test(id) || FB.faithExists(id, state)) return null;
@@ -1409,14 +1493,14 @@ window.FB = window.FB || {};
     if (stored.assignable === undefined) stored.assignable = true;
     if (stored.active === undefined) stored.active = true;
     if (stored.createdTurn === undefined) stored.createdTurn = Number(state.turn) || 0;
+    const proposed = Object.assign({}, state, { faiths:Object.assign({}, state.faiths || {}) });
+    proposed.faiths[id] = stored;
+    if (FB.validateReligionData(proposed).length || !faithPeriodAllows(stored.availability,
+        state.date, FB.campaignEra(state), (FB.campaignBookmark(state) || {}).id, 'story')) return null;
+    FB.ensureFaithState(state);
     state.faiths[id] = stored;
+    if (!suppliedId) state.faithNextId = nextId;
     touchFaithState(state);
-    const errors = FB.validateReligionData(state);
-    if (errors.length) {
-      delete state.faiths[id];
-      touchFaithState(state);
-      return null;
-    }
     return id;
   };
 

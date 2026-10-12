@@ -1312,7 +1312,8 @@ window.FB = window.FB || {};
     if (kind === 'faith' && scope === 'realm' && FB.systemEnabled(state, 'ruler_conversion', { realm:'player' }))
       return FB.rulerFaithConversionStatus(state, 'player', targetId);
     if (kind === 'faith') {
-      if (!targetId || !FB.faithAvailable(targetId, state)) {
+      if (!targetId || !FB.faithAvailable(targetId, state) ||
+          scope === 'realm' && !FB.faithAvailable(targetId, state, 'ruler')) {
         out.reason = FB.T('That faith cannot be adopted.');
         return out;
       }
@@ -1593,7 +1594,7 @@ window.FB = window.FB || {};
       return out;
     }
     const targetValid = kind === 'faith'
-      ? FB.faithExists(targetId, state) && FB.faithAvailable(targetId, state)
+      ? FB.faithExists(targetId, state) && FB.faithAvailable(targetId, state, 'project')
       : kind === 'culture' && !!(FB.cultureAssignable
         ? FB.cultureAssignable(targetId, state)
         : (FB.cultureExists
@@ -1672,7 +1673,7 @@ window.FB = window.FB || {};
       return out;
     }
     const targetValid = kind === 'faith'
-      ? FB.faithExists(targetId, state) && FB.faithAvailable(targetId, state)
+      ? FB.faithExists(targetId, state) && FB.faithAvailable(targetId, state, 'project')
       : kind === 'culture' && !!(FB.cultureAssignable
         ? FB.cultureAssignable(targetId, state)
         : (FB.cultureExists

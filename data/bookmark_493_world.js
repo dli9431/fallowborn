@@ -1127,6 +1127,7 @@ FBDATA.bookmarkExpansion493 = {
     "k_493_africa":{"name":"African districts","empire":"e_493_africa"},
     "k_493_arabia":{"name":"Arabian districts","empire":"e_493_arabia"},
     "k_493_eastern":{"name":"Eastern frontier districts","empire":"e_493_eastern"},
+    "k_493_scenery":{"name":"Hephthalite and Sogdian districts","empire":"e_493_eastern"},
     "k_493_steppe":{"name":"Pontic and steppe districts","empire":"e_493_steppe"}
   },
   "empires":{

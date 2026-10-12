@@ -490,6 +490,7 @@ FBDATA.bookmarkCultures476Wider = {
 };
 FBDATA.bookmarkReligions476Wider = {
   "insular_traditional_476": {
+    "availability": {"bookmarkIds": ["476","493"]},
     "name": "Insular traditional practices",
     "icon": "☀",
     "properties": {
@@ -542,6 +543,7 @@ FBDATA.bookmarkReligions476Wider = {
     }
   },
   "finnic_traditional_476": {
+    "availability": {"bookmarkIds": ["476","493"]},
     "name": "Finnic traditional practices",
     "icon": "☀",
     "properties": {
@@ -594,6 +596,7 @@ FBDATA.bookmarkReligions476Wider = {
     }
   },
   "woodland_traditional_476": {
+    "availability": {"bookmarkIds": ["476","493"]},
     "name": "Woodland community practices",
     "icon": "☀",
     "properties": {
@@ -646,6 +649,7 @@ FBDATA.bookmarkReligions476Wider = {
     }
   },
   "steppe_traditional_476": {
+    "availability": {"bookmarkIds": ["476","493"]},
     "name": "Steppe community practices",
     "icon": "☀",
     "properties": {
@@ -698,6 +702,7 @@ FBDATA.bookmarkReligions476Wider = {
     }
   },
   "caucasian_traditional_476": {
+    "availability": {"bookmarkIds": ["476","493"]},
     "name": "Caucasian traditional practices",
     "icon": "☀",
     "properties": {
@@ -750,6 +755,7 @@ FBDATA.bookmarkReligions476Wider = {
     }
   },
   "nile_traditional_476": {
+    "availability": {"bookmarkIds": ["476","493"]},
     "name": "Middle Nile traditional practices",
     "icon": "☀",
     "properties": {
@@ -802,6 +808,7 @@ FBDATA.bookmarkReligions476Wider = {
     }
   },
   "horn_traditional_476": {
+    "availability": {"bookmarkIds": ["476","493"]},
     "name": "Horn community practices",
     "icon": "☀",
     "properties": {
@@ -854,6 +861,7 @@ FBDATA.bookmarkReligions476Wider = {
     }
   },
   "arabian_traditional_476": {
+    "availability": {"bookmarkIds": ["476","493"]},
     "name": "Arabian traditional practices",
     "icon": "☀",
     "properties": {
@@ -906,6 +914,7 @@ FBDATA.bookmarkReligions476Wider = {
     }
   },
   "iranian_traditional_476": {
+    "availability": {"bookmarkIds": ["476","493"]},
     "name": "Eastern Iranian local practices",
     "icon": "☀",
     "properties": {
@@ -958,6 +967,7 @@ FBDATA.bookmarkReligions476Wider = {
     }
   },
   "sogdian_traditional_476": {
+    "availability": {"bookmarkIds": ["476","493"]},
     "name": "Sogdian local traditions",
     "icon": "☀",
     "properties": {
@@ -1010,6 +1020,7 @@ FBDATA.bookmarkReligions476Wider = {
     }
   },
   "caucasian_christian_476": {
+    "availability": {"bookmarkIds": ["476","493"]},
     "name": "Caucasian Christianity",
     "group": "nicene",
     "relationToParent": "in_fold",
@@ -1019,12 +1030,14 @@ FBDATA.bookmarkReligions476Wider = {
     }
   },
   "aksumite_christian_476": {
+    "availability": {"bookmarkIds": ["476","493"]},
     "name": "Aksumite Christianity",
     "group": "miaphysite",
     "relationToParent": "in_fold",
     "icon": "✝"
   },
   "buddhist_476": {
+    "availability": {"bookmarkIds": ["476","493","1204"]},
     "name": "Buddhist communities",
     "icon": "☀",
     "properties": {
@@ -1077,6 +1090,7 @@ FBDATA.bookmarkReligions476Wider = {
     }
   },
   "brahmanical_476": {
+    "availability": {"bookmarkIds": ["476","493"]},
     "name": "Brahmanical communities",
     "icon": "☀",
     "properties": {
@@ -1129,6 +1143,7 @@ FBDATA.bookmarkReligions476Wider = {
     }
   },
   "sahel_traditional_476": {
+    "availability": {"bookmarkIds": ["476","493","711","800","867","1204"]},
     "name": "Sahelian local practices",
     "properties": {
       "head": null,

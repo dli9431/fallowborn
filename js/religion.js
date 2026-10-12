@@ -146,7 +146,7 @@ window.FB = window.FB || {};
     const r = s && s.realms && s.realms[rid], c = r && ruler(s, rid);
     const out = { ok:false, reason:rulerReason(s, rid, 'ruler_conversion'), rulerDecision:true,
       realmId:rid, charId:c && c.id || null, generation:r && FB.realmRulerGeneration(s, rid) || 0,
-      kind:'faith', scope:'realm', targetId:target, targetValid:FB.faithAvailable(target, s),
+      kind:'faith', scope:'realm', targetId:target, targetValid:FB.faithAvailable(target, s) && FB.faithAvailable(target, s, 'ruler'),
       from:r && r.religion || c && c.religion || null, relation:null, relationMult:1,
       pietyCost:0, prestigeCost:0, goldCost:0, popularOpinion:0, foldStanding:balance('faithConversionRealmRealmStanding', -25),
       vassalStanding:balance('faithConversionVassalStanding', -35), oldFoldRealmIds:[], vassalIds:[],

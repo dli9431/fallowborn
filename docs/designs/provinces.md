@@ -182,6 +182,8 @@ data-defined hysteresis margin, while an absolute majority changes the saved ide
 immediately. Ownership and character or realm conversion do not rewrite communities or
 start projects. The full policy boundary is documented in [conversion.md](conversion.md).
 
+Dated faith availability gates new county and settlement project previews and starts before population materialization. It does not gate the identity of an existing cohort, an exact population transfer or the annual progression of an already funded project. Existing followers, generated descendants and recorded project targets retain their faith beyond its authoring window. Crossing a date boundary neither redistributes a mixed county nor creates followers, offices or advancement. Consumer project is shared by the project target picker and canonical apply; see docs/designs/religions.md for its local metadata contract.
+
 A county community may carry an optional `bySettlement` integer array. The array is
 absent while every visible site follows the county-wide proportional projection. The
 first settlement-specific conversion or project materializes every community column at

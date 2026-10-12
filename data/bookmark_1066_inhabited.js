@@ -30,11 +30,13 @@
      church, priesthood or conversion timetable. Further ritual and institution
      detail needs independent research. */
   FBDATA.bookmarkReligions1066Terrain = {wagadu_traditional_1066:{
+    availability:{bookmarkIds:['1066']},
     name:'Wagadu traditional worship', group:'pagan', relationToParent:'schismatic', icon:'☀',
     properties:{head:null,words:{deity:'the spirits',cleric:'Ritual keeper',temple:'shrine',
       landed:'Ruler',partnership:'Trade partnership'},
       roles:{priestM:'Ritual keeper',priestF:'Ritual keeper'}}
   },niger_traditional_1066:{
+    availability:{bookmarkIds:['1066']},
     name:'Middle Niger traditional worship', group:'pagan', relationToParent:'schismatic', icon:'☀',
     properties:{head:null,words:{deity:'the spirits',cleric:'Ritual keeper',temple:'shrine',
       landed:'Ruler',partnership:'Trade partnership'},

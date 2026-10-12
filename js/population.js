@@ -1744,6 +1744,7 @@ window.FB = window.FB || {};
   FB.countyCommunityProjectPreview = function (state, pid, request, context) {
     if (!state || !request || !validProjectKind(request.kind) ||
         !projectTargetValid(state, request.kind, request.target) ||
+        request.kind === 'faith' && !FB.faithAvailable(request.target, state, 'project') ||
         !projectPolicyDefinition(request.policy)) return null;
     return countyCommunityProjectStatus(state, pid, request.kind, {
       target:request.target,
@@ -1773,6 +1774,7 @@ window.FB = window.FB || {};
     settlementIndex, request) {
     if (!state || !request || !validProjectKind(request.kind) ||
         !projectTargetValid(state, request.kind, request.target) ||
+        request.kind === 'faith' && !FB.faithAvailable(request.target, state, 'project') ||
         !projectPolicyDefinition(request.policy)) return null;
     return countyCommunityProjectStatus(state, pid, request.kind, {
       target:request.target,
@@ -1961,6 +1963,7 @@ window.FB = window.FB || {};
   FB.startCountyCommunityProject = function (state, pid, request) {
     if (!state || !request || !validProjectKind(request.kind) ||
         !projectTargetValid(state, request.kind, request.target) ||
+        request.kind === 'faith' && !FB.faithAvailable(request.target, state, 'project') ||
         !projectPolicyDefinition(request.policy)) return null;
     var pr = provinceDef(pid);
     if (!pr || pr.wasteland) return null;
@@ -2008,6 +2011,7 @@ window.FB = window.FB || {};
     var idx = Number(settlementIndex);
     if (!state || !request || !validProjectKind(request.kind) ||
         !projectTargetValid(state, request.kind, request.target) ||
+        request.kind === 'faith' && !FB.faithAvailable(request.target, state, 'project') ||
         !projectPolicyDefinition(request.policy) || !isFinite(idx) ||
         Math.floor(idx) !== idx || idx < 0) return null;
     var pr = provinceDef(pid);
