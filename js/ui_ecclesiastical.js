@@ -16,6 +16,9 @@
       no_incumbent:FB.T('Only the current incumbent may resign.'),
       no_cause:FB.T('Removal requires loss of the canonical office qualification.'),
       funds:FB.T('The public treasury cannot pay this cost while retaining its reserve.'),
+      rights:FB.T('The declared institution rights do not permit this decision.'),
+      consent:FB.T('The required members have not assented.'),
+      unavailable:FB.T('The religious community is unavailable at this place or date.'),
       lay_refusal:FB.T('The lay superior cannot or will not recognize these temporal rights.'),
       already_recognized:FB.T('No new temporal recognition is required.'),
       different_incumbent:FB.T('The current territorial ruler must already be the canonical spiritual incumbent.'),
@@ -70,10 +73,11 @@
       facts += kv(FB.T('Existing institutional rights'),rights.length) + kv(FB.T('Succession'),FB.T('Office and public property are not inherited by the incumbent’s household'));
       if (p.layRecognition) add(FB.T('Review temporal recognition'),E.review(s,rid,'recognize',{}),E.apply,
         FB.T('The lay superior recognizes public jurisdiction only. This neither elects nor consecrates a spiritual incumbent.'));
-      if (p.source === 'local_office') {
+      if (p.source === 'local_office' || p.source === 'institution_profile') {
         add(FB.T('Review your appointment'),E.review(s,rid,'appoint',{ candidateId:s.player.charId }),E.apply,
           FB.T('The chapter, office qualification, residence and actual public funds are checked. Standing or wealth alone grants no spiritual office.'));
-        if (c && c.id === s.player.charId) add(FB.T('Review resignation'),E.review(s,rid,'resign',{ characterId:c.id }),E.apply,
+        if (c && c.id === s.player.charId) add(FB.T('Review resignation'),E.review(s,rid,'resign',
+          p.source === 'institution_profile' ? {} : { characterId:c.id }),E.apply,
           FB.T('Resignation vacates the spiritual office. The institution retains its public property and obligations; your household retains its own possessions.'));
         if (!c) add(FB.T('Review removal of an ineligible holder'),E.review(s,rid,'remove',{}),E.apply,
           FB.T('Only a recorded holder who no longer meets the spiritual office requirements may be removed through this review.'));

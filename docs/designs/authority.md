@@ -419,3 +419,7 @@ Civic offices reference the shared governmentSupport constituency and keep indiv
 Office-bound temporal recognition
 
 Ecclesiastical chapter assent uses the existing local congregation bargain. A distinct lay temporal confirmation reuses one imperial_commission record scoped to the institution and naming the current spiritual incumbent. The government retains only its recognition reference. Revocation blocks automatic renewal without changing the spiritual holder or property. See ecclesiastical-principality.md.
+
+Scoped institutional recognition
+
+The religious-institution issuer kind references a declared profile institution in localInstitutions. Its source must explicitly declare institutional:true and reaffirm succession. The default institution_support source grants no public rights. Effective support requires current qualified constituents, declared jurisdiction and any required canonical leader. Control, constituency or leader changes suspend recognition until explicit consenting renewal. A dispute revokes the existing authority record. Profile institutions use their own reviewed action contract; legacy civic bargains and episcopal appointments cannot supply substitute consent. See docs/designs/religious-institutions.md.

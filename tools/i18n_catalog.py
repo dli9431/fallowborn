@@ -909,6 +909,20 @@ def extract_structured(inv: Inventory) -> None:
                 inv.add(f"ecclesiasticalProfile.{profile_id}.name.{branch}", record,
                         f"data/{filename}:{line}", "Ecclesiastical temporal constitution.", ())
 
+    religious_institutions_path = DATA / 'religious_institutions.js'
+    for table, namespace in [('religiousAffiliations', 'religiousAffiliation'),
+                             ('religiousInstitutionProfiles', 'religiousInstitutionProfile')]:
+        for item_id, item_node in (node_object(find_assignment(religious_institutions_path, 'FBDATA', table)) or {}).items():
+            item = node_object(item_node) or {}
+            for branch, record, line in branch_records(item.get('name')):
+                inv.add(f'{namespace}.{item_id}.name.{branch}', record,
+                        f'data/religious_institutions.js:{line}', 'Religious affiliation or institution.', ())
+            for role_id, role_node in (node_object(item.get('roles')) or {}).items():
+                role = node_object(role_node) or {}
+                for branch, record, line in branch_records(role.get('name')):
+                    inv.add(f'{namespace}.{item_id}.roles.{role_id}.name.{branch}', record,
+                            f'data/religious_institutions.js:{line}', 'Local religious role.', ())
+
     for data_name, namespace in STRUCTURED_DATA.items():
         if data_name == "tech":
             rel = TECHNOLOGY_FILE.relative_to(ROOT).as_posix()

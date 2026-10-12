@@ -264,6 +264,8 @@ window.FB = window.FB || {};
   FB.setCareer = function (state, c, profession, rank) {
     const def = FBDATA.careers[profession];
     if (!c || !def) return false;
+    const admission = FB.religiousCareerReview && FB.religiousCareerReview(state, c, profession);
+    if (admission && !admission.allowed) return false;
     if (c.id === state.player.charId && FB.colonateTenure && FB.colonateTenure(state) &&
         FB.professionHasRole(profession, FB.colonateRules().blockedCareerRoles)) return false;
     if (!FB.contentPeriodEnabled(state, def)) return false;
@@ -271,7 +273,7 @@ window.FB = window.FB || {};
         state.start && state.start.id) < 0) return false;
     if (def.requiresTech && FB.techRequirementMet &&
         !FB.techRequirementMet(state, def.requiresTech)) return false;
-    if (def.maleOnly && c.sex !== 'm') return false;
+    if (!(admission && admission.explicit) && def.maleOnly && c.sex !== 'm') return false;
     const defaultRank = FB.ageOf(c, state.date.year) < 16 || def.learned
       ? 'apprentice' : 'journeyman';
     let career = FB.careerOf(state, c);
@@ -333,6 +335,8 @@ window.FB = window.FB || {};
     const def = career && FBDATA.careers[career.profession];
     if (!def) return FB.T('No occupation');
     if (career.rank === 'unassigned') return FB.T('No apprenticeship chosen');
+    const local = FB.religiousInstitutionCareerTitle && FB.religiousInstitutionCareerTitle(state, c, career.profession);
+    if (local) return local;
     const specialization = career.specialization && def.specializations &&
       def.specializations[career.specialization];
     if (specialization) {
@@ -775,8 +779,10 @@ window.FB = window.FB || {};
           state.start && state.start.id) < 0) continue;
       if (!FB.station.reaches(state.player, def.tierMin, state)) continue;
       if (def.requiresTech && !FB.techRequirementMet(state, def.requiresTech)) continue;
-      if (def.maleOnly && c.sex !== 'm') continue;
-      if (def.religionGroups && !def.religionGroups.some(function (id) {
+      const admission = FB.religiousCareerReview && FB.religiousCareerReview(state, c, id);
+      if (admission && !admission.allowed) continue;
+      if (!(admission && admission.explicit) && def.maleOnly && c.sex !== 'm') continue;
+      if (!(admission && admission.explicit) && def.religionGroups && !def.religionGroups.some(function (id) {
         return FB.faithIsA(c.religion, id, state);
       })) continue;
       if (age < 16 && age < (def.apprenticeAge || 10)) continue;
@@ -821,6 +827,9 @@ window.FB = window.FB || {};
   }
 
   function religiousLayPathId(state, c) {
+    const local = FB.religiousInstitutionCharacterPaths ? FB.religiousInstitutionCharacterPaths(state, c) : [];
+    const lay = local.filter(function (id) { return FBDATA.religiousPaths[id].kind === 'lay' && religiousPathAllowed(state, c, id); })[0];
+    if (lay) return lay;
     const routes = religiousRoutes(state, c);
     const pathId = routes && routes.lay;
     return pathId && religiousPathAllowed(state, c, pathId) ? pathId : null;
@@ -829,6 +838,10 @@ window.FB = window.FB || {};
   function religiousPathId(state, c) {
     if (FB.abbeyOf && FB.abbeyOf(state, c) &&
         FB.faithHasSystem(c.religion, 'papacy', state)) return 'catholic_monastic';
+    const local = FB.religiousInstitutionCharacterPaths ? FB.religiousInstitutionCharacterPaths(state, c) : [];
+    const paths = local.filter(function (id) { return religiousPathAllowed(state, c, id); });
+    const vocation = paths.filter(function (id) { return FBDATA.religiousPaths[id].kind !== 'lay'; })[0];
+    if (vocation || paths.length) return vocation || paths[0];
     const career = c && FB.careerOf(state, c);
     const routes = religiousRoutes(state, c);
     if (!career || !routes) return null;

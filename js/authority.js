@@ -195,6 +195,8 @@
   };
   function validIssuer(s, issuer, source) {
     if (!issuer || typeof issuer.id !== 'string') return false;
+    if (issuer.kind === 'religious-institution') return !!(FB.religiousInstitutionIssuerValid &&
+      FB.religiousInstitutionIssuerValid(s, issuer.id, source));
     if (source === 'church_support' && issuer.kind === 'character') {
       var cleric = s.chars && s.chars[issuer.id];
       return !!(cleric && !cleric.dead && ['priest','monk'].indexOf(cleric.role) >= 0);
@@ -216,6 +218,7 @@
     return false;
   }
   function generation(s, issuer) {
+    if (issuer.kind === 'religious-institution') return FB.religiousInstitutionIssuerGeneration(s, issuer.id);
     if (issuer.kind === 'character') return issuer.id;
     if (issuer.kind === 'realm') return FB.realmRulerGeneration(s, issuer.id);
     if (issuer.kind === 'county') {
@@ -235,6 +238,8 @@
         row.endTurn <= s.turn || !validIssuer(s, row.issuer, row.source) ||
         !ref(s, row.subject)) return false;
     var def = FBDATA.legitimacySources[row.source];
+    if (row.issuer.kind === 'religious-institution' && (!FB.religiousInstitutionRecognitionValid ||
+        !FB.religiousInstitutionRecognitionValid(s, row))) return false;
     return !!def && (def.succession !== 'reaffirm' ||
       row.issuerGeneration === generation(s, row.issuer));
   }

@@ -3742,3 +3742,7 @@ The Civic government deed uses shared full-sheet fact, person and action cards w
 Ecclesiastical government review
 
 The Ecclesiastical government deed shows canonical office, spiritual vacancy, temporal recognition, chapter assent, superior, actual jurisdiction and separate public and household money in shared fact cards. Appointment, resignation, lawful removal, recognition and explicit conversion use cost/blocker action cards and separate confirmation. Return navigation retains scroll, focus and expanded disclosures. Standard and CrazyGames share the presentation. See ecclesiastical-principality.md.
+
+Religious communities review
+
+The Religious communities deed selects a managed household participant, then shows declared local or off-map communities, primary faith, membership, canonical leadership, access, scope and recorded recognition. Shared action cards disclose current/minimum age, permitted sex, skills, required existing work, affiliation, residence and marriage promises, plus cost and actionable blockers. Separate confirmation names payer, exact decision, cost and assent. Back, Escape and Continue retain participant, expanded disclosures, list/body scroll and semantic action focus. Stale acceptance spends nothing. Headless and leaderless communities share the same i18n-routed review in standard and CrazyGames. See religious-institutions.md.

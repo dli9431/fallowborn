@@ -600,3 +600,7 @@ aristocratic_royal_recognition, aristocratic_hereditary_jurisdiction, aristocrat
 Ecclesiastical capability review
 
 Office binding, vacancy administration, local canonical appointment, explicit institutional conversion and household service progression each have technology impact none. They depend on existing institutions, qualification, current consent and actual funds. Ordinary military and economic technology gates remain unchanged.
+
+Religious institution adapters
+
+religious_institution_household_paths, religious_institution_ai and religious_institution_constitutional_binding record technology impact none. Role qualification, household promises, canonical incumbents, declared consent and actual payer budgets determine their availability. Membership grants no discovery, economic multiplier or military capability; existing career requirements still apply. See docs/designs/religious-institutions.md.

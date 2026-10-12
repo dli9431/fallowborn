@@ -3029,6 +3029,7 @@ window.FB = window.FB || {};
   function copy(value) { return JSON.parse(JSON.stringify(value)); }
   function church(def) { return !!def.officeId || def.kind === 'congregation'; }
   function enabled(s, def) {
+    if (def && def.profileId) return !!(FB.religiousInstitutionEnabled && FB.religiousInstitutionEnabled(s, def));
     return !!(def && FB.systemEnabled(s, church(def) ? 'episcopal_sees' : 'civic_institutions'));
   }
   function row(s, id) { return s.localInstitutions && s.localInstitutions[id]; }
@@ -3084,7 +3085,10 @@ window.FB = window.FB || {};
     return c.id;
   }
   FB.ensureLocalInstitutions = function (s, seeds, options) {
-    if (!FB.systemAvailable(s, 'civic_institutions') && !FB.systemAvailable(s, 'episcopal_sees')) return null;
+    if (!FB.systemAvailable(s, 'civic_institutions') && !FB.systemAvailable(s, 'episcopal_sees') &&
+        !Object.keys(FB.localInstitutionDefinitions(s)).some(function (id) {
+          return FB.localInstitutionDefinitions(s)[id].profileId && enabled(s, FB.localInstitutionDefinitions(s)[id]);
+        })) return null;
     // An existing ledger is the campaign's opening roster. Content additions
     // do not allocate new representatives while restoring or ticking that save.
     var creating = s.localInstitutions === undefined;
@@ -3096,6 +3100,16 @@ window.FB = window.FB || {};
       if (!s.localInstitutions) s.localInstitutions = {};
       if (row(s, id)) continue;
       if (!creating) continue;
+      if (def.profileId) {
+        s.localInstitutions[id] = FB.religiousInstitutionOpeningRow(id, def);
+        if (def.officeId) {
+          s.religiousHeads = s.religiousHeads || {};
+          s.religiousHeads[def.officeId] = null;
+          s.religiousHeadVacancies = s.religiousHeadVacancies || {};
+          s.religiousHeadVacancies[def.officeId] = { turn:s.turn, formerHolder:null };
+        }
+        continue;
+      }
       var seeded = seeds && seeds[id];
       var head = church(def) && s.religiousHeads && s.religiousHeads[def.officeId];
       var vacancy = church(def) && s.religiousHeadVacancies && s.religiousHeadVacancies[def.officeId];
@@ -3122,7 +3136,7 @@ window.FB = window.FB || {};
     var defs = FB.localInstitutionDefinitions(s);
     return Object.keys(defs).filter(function (id) {
       var def = defs[id];
-      return row(s, id) && enabled(s, def) && present(s, def) &&
+      return !def.profileId && row(s, id) && enabled(s, def) && present(s, def) &&
         (!kind || (kind === 'church') === church(def));
     }).map(function (id) { return { id:id, def:copy(defs[id]), record:copy(row(s, id)) }; });
   };
@@ -3139,6 +3153,9 @@ window.FB = window.FB || {};
   FB.localInstitutionName = function (id, s) {
     var def = FB.localInstitutionDefinitions(s)[id];
     if (!def) return '';
+    if (def.profileId) return FB.T('{institution} at {place}', {
+      institution:FB.dataText(s, s && s.player && s.player.charId, 'religiousInstitutionProfile', def.profileId,
+        FBDATA.religiousInstitutionProfiles[def.profileId], 'name', {}), place:def.city });
     if (def.kind === 'senate') return FB.T('Senate of {city}', { city:def.city });
     if (def.kind === 'patriarchate') return FB.T('Patriarchate of {city}', { city:def.city });
     if (def.kind === 'congregation') return FB.T('Congregation of {city}', { city:def.city });
@@ -3184,7 +3201,7 @@ window.FB = window.FB || {};
     var def = FB.localInstitutionDefinitions(s)[id], record = row(s, id);
     var out = { allowed:false, reason:FB.T('This institution is unavailable.'), action:action,
       institutionId:id, subject:subject && copy(subject), cost:0, stamp:null };
-    if (!enabled(s, def) || !record || !present(s, def) || !FB.political.actor(s, subject)) return out;
+    if (!enabled(s, def) || def.profileId || !record || !present(s, def) || !FB.political.actor(s, subject)) return out;
     var f = facts(s, id, subject), pending = f.pending;
     out.terms = termsCopy(terms || pending && pending.terms);
     out.facts = f;
@@ -3330,7 +3347,7 @@ window.FB = window.FB || {};
   FB.localInstitutionMediationQuote = function (s, id, subject, provinceId) {
     var def = FB.localInstitutionDefinitions(s)[id], r = row(s, id);
     var rep = def && r && representative(s, def, r);
-    var allowed = !!(enabled(s, def) && church(def) && r && rep && present(s, def) &&
+    var allowed = !!(enabled(s, def) && !def.profileId && church(def) && r && rep && present(s, def) &&
       FB.political.actor(s, subject) && provinceId && FB.world.byId[provinceId] && s.owner[provinceId] &&
       FB.political.worshipProtected(s, provinceId));
     return { allowed:allowed, action:'mediate', institutionId:id, subject:subject && copy(subject),
@@ -3349,6 +3366,7 @@ window.FB = window.FB || {};
       : person(row(s, id).representativeId), subject, scope);
   };
   FB.localInstitutionsSeason = function (s) {
+    if (FB.religiousInstitutionAI) FB.religiousInstitutionAI(s);
     if (!s.localInstitutions || !FB.systemAvailable(s, 'civic_institutions') && !FB.systemAvailable(s, 'episcopal_sees')) return;
     var period = Math.floor(s.turn / 90);
     if (period < 1) return;
