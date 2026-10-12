@@ -14,8 +14,9 @@ dependsOnRuntime(__filename, ['index.html','data/cultures.js','data/economy.js',
   'data/bookmark_493_world.js','data/bookmark_711.js','data/bookmark_800_expansion.js',
   'data/bookmark_867_expansion.js','data/bookmark_1066_inhabited.js',
   'data/bookmark_1204_terrain.js','data/government_rollout.js',
+  'data/christian_rollout.js',
   'js/model.js','js/economy.js','js/holywar.js','js/systems.js','js/technology.js',
-  'js/institutions.js','js/religious_institutions.js','js/religious_activities.js',
+  'js/population.js','js/institutions.js','js/religious_institutions.js','js/religious_activities.js',
   'js/local_office_appointments.js','js/authority.js','js/treasury.js','js/modifiers.js',
   'js/story_courts.js','js/main.js','js/religion.js','js/world.js','js/save.js','js/save_v4.js']);
 
@@ -48,6 +49,31 @@ async function startChurch493(page, testInfo, county) {
         throw new Error(action + ': ' + (q && q.reason));
       return q;
     };
+  });
+}
+
+async function startDatedChurch(page, testInfo, bookmark, revision, county) {
+  await openGame(page,testInfo);
+  await page.evaluate(function (o) {
+    FBDATA.bookmarks[o.bookmark].hidden = false;
+    FBDATA.bookmarks[o.bookmark].revision = o.revision;
+    FB.startProgression.noteTier(3);
+  },{bookmark:bookmark,revision:revision});
+  const beginning = page.locator('#btn-choose-beginning');
+  if (await beginning.isVisible()) await beginning.click();
+  else await page.getByRole('button',{name:'New Game',exact:true}).click();
+  await page.locator('#btn-bm-seed').click();
+  const scenario = bookmark === '476' ? 'farmer_476' : bookmark === '493' ? 'farmer_493' : 'farmer';
+  await page.locator('#ng-seed').fill('DATEDCHURCH-' + bookmark + '-' + scenario + '-' + county + '-m-Review-established');
+  await page.locator('#ng-seed').press('Enter');
+  await expect(page.locator('#chargen:not(.hidden)')).toBeVisible();
+  await page.getByRole('button',{name:'Begin Your Story',exact:true}).click();
+  await page.getByRole('button',{name:'Begin',exact:true}).click();
+  await expect(page.locator('#game:not(.hidden)')).toBeVisible();
+  await page.evaluate(function () {
+    FB.game.setPaused(true); FB.game.uiPrefs.hideTips = true;
+    FB.game.uiPrefs.hideBeginnerHints = true; FB.ui.coachmarkReset();
+    delete FB.state.player.flags.tutorial;
   });
 }
 
@@ -396,4 +422,225 @@ test('retained 493 ledgers do not acquire newly declared service groups or a cat
         absent:FB.religiousOfficeSnapshot(s,'east_syriac_catholicos') === null &&
           !FB.religiousInstitutionSnapshot(s,'ctesiphon_church_service_493')};
     })).toEqual({retained:true,absent:true});
+  });
+
+
+const datedChurchCases = [
+  {id:'476',revision:'wider_v2',county:'baghdad',east:'Babowai',coptic:null,west:null,armenian:null,service:null},
+  {id:'493',revision:'world_v2',county:'baghdad',east:'Acacius',coptic:null,west:null,armenian:null,service:'ctesiphon_church_service_493'},
+  {id:'711',revision:'terrain_v2_governments_v2',county:'alexandria',east:null,coptic:'Alexander II',west:null,armenian:null,service:'alexandrian_service_711'},
+  {id:'800',revision:'inhabited_v2_governments_v2',county:'baghdad',east:'Timothy I',coptic:'Mark II',west:'Cyriacus',armenian:null,service:'baghdad_service_800'},
+  {id:'867',revision:'governments_v2',county:'baghdad',east:'Sergius',coptic:'Shenute I',west:null,armenian:'Zacharias',service:'baghdad_service_867'},
+  {id:'1066',revision:'governments_v2',county:'constantinople',east:'Sabrisho III',coptic:'Christodoulos',west:'John bar Shushan',armenian:null,service:'constantinople_greek_service_1066'},
+  {id:'1204',revision:'inhabited_v2',county:'constantinople',east:'Yahballaha II',coptic:'John VI',west:null,armenian:null,service:'constantinople_greek_service_1204'}
+];
+
+datedChurchCases.forEach(function (o) {
+  test('dated Christian offices and service survive exact restore in ' + o.id,
+    async function ({page},testInfo) {
+      await startDatedChurch(page,testInfo,o.id,o.revision,o.county);
+      expect(await page.evaluate(function (o) {
+        var s = FB.state, offices = ['east_syriac_catholicos','alexandrian_coptic_patriarch',
+          'west_syriac_patriarch','armenian_catholicos'];
+        var before = JSON.stringify(s), rng = FB.getRngState(), uid = FB.getUidCounter();
+        var names = offices.map(function (id) { var c = FB.religiousOfficeSnapshot(s,id); return c && c.name || null; });
+        var group = o.service && FB.religiousInstitutionSnapshot(s,o.service);
+        var pure = before === JSON.stringify(s) && rng === FB.getRngState() && uid === FB.getUidCounter();
+        var facts = JSON.stringify([s.localInstitutions,s.religiousHeads,s.religiousHeadVacancies,
+          s.papacy || null,s.chars,s.population,s.authority]);
+        var text = FB.save.serialize(); FB.save.restore(JSON.parse(text)); s = FB.state;
+        FB.ensureLocalInstitutions(s); FB.ensureReligiousHeads(s);
+        return {names:names,pure:pure,service:!o.service || !!group && group.available && !group.holder,
+          preserved:facts === JSON.stringify([s.localInstitutions,s.religiousHeads,s.religiousHeadVacancies,
+            s.papacy || null,s.chars,s.population,s.authority]),
+          restored:s.start.id === o.id && s.start.revision === o.revision,
+          independent:FB.religiousHeadSnapshot(s,'east_syriac') === null,
+          offMap:FB.localInstitutionList(s).filter(function (i) { return i.def.officeSystem === null && i.def.provinceId === null; })
+            .every(function (i) {
+              return i.def.jurisdictionIds.length === 0 &&
+                !FB.localInstitutionMediationQuote(s,i.id,{kind:'realm',id:s.holder[o.county]},o.county).allowed;
+            })};
+      },o)).toEqual({names:[o.east,o.coptic,o.west,o.armenian],pure:true,service:true,
+        preserved:true,restored:true,independent:true,offMap:true});
+    });
+});
+
+test('all dated declarations validate while original revisions and unresolved consumers remain intact',
+  async function ({page},testInfo) {
+    await openGame(page,testInfo);
+    expect(await page.evaluate(function () {
+      var dates = ['476','493','711','800','867','1066','1204'];
+      var errors = dates.map(function (id) { return FB.validateBookmark(FB.bookmark(id)); });
+      ['867','1066'].forEach(function (id) {
+        errors.push(FB.validateBookmark(FB.bookmark(id,'inhabited_v2_governments_v2')));
+      });
+      var baseline = dates.map(function (id) {
+        var b = FB.bookmark(id,'baseline');
+        return !Object.keys(b.localInstitutions || {}).some(function (iid) {
+          return /^(alexandrian_|ibrim_service_|baghdad_catholicos_|east_syriac_catholicos_|constantinople_.*_service_|ctesiphon_catholicos_476)/.test(iid);
+        });
+      });
+      var b = FB.bookmark('1204'), defs = b.localInstitutions;
+      function rejects(change) {
+        var copy = JSON.parse(JSON.stringify(FB.bookmark('800'))); change(copy.localInstitutions);
+        return FB.localInstitutionDefinitionFaults(copy,FBDATA).length > 0;
+      }
+      var constantinople = b.provinces.filter(function (p) { return p.id === 'constantinople'; })[0];
+      var old = FB.bookmark('1204','baseline').provinces.filter(function (p) { return p.id === 'constantinople'; })[0];
+      return {errors:errors,baseline:baseline.every(Boolean),profiles:FB.religiousInstitutionCatalogFaults(FBDATA),
+        activities:FB.religiousActivityCatalogFaults(FBDATA),
+        disputed:defs.west_syriac_patriarch_1204.vacant && !defs.west_syriac_patriarch_1204.historicalName,
+        held:!defs.ibrim_service_1204 && !defs.latin_patriarch_1204 && !defs.armenian_catholicos_1204,
+        population:JSON.stringify(constantinople.communities) === JSON.stringify(old.communities),
+        latin1066:!FB.bookmark('1066').localInstitutions.constantinople_latin_service_1066,
+        invalidSystem:rejects(function (d) { d.baghdad_catholicos_800.officeSystem = 'missing_system'; }),
+        invalidCommunion:rejects(function (d) { d.alexandrian_patriarch_800.communionWith = ['absent_office']; }),
+        emptyOnMap:rejects(function (d) { d.baghdad_catholicos_800.jurisdictionIds = []; })};
+    })).toEqual({errors:[[],[],[],[],[],[],[],[],[]],baseline:true,profiles:[],activities:[],
+      disputed:true,held:true,population:true,latin1066:true,invalidSystem:true,invalidCommunion:true,emptyOnMap:true});
+  });
+
+test('800 synodical recognition is directional, personal, pure to read and cannot pass to a replacement',
+  async function ({page},testInfo) {
+    await startDatedChurch(page,testInfo,'800','inhabited_v2_governments_v2','baghdad');
+    expect(await page.evaluate(function () {
+      var s = FB.state, coptic = FB.religiousOfficeSnapshot(s,'alexandrian_coptic_patriarch');
+      var west = FB.religiousOfficeSnapshot(s,'west_syriac_patriarch');
+      var before = JSON.stringify(s), rng = FB.getRngState(), uid = FB.getUidCounter();
+      var a = FB.political.legitimacy(s,{kind:'character',id:coptic.id},null,'church_support');
+      var b = FB.political.legitimacy(s,{kind:'character',id:west.id},null,'church_support');
+      var pure = before === JSON.stringify(s) && rng === FB.getRngState() && uid === FB.getUidCounter();
+      var named = a.length === 1 && b.length === 1 && a[0].issuer.id === 'west_syriac_patriarch' &&
+        b[0].issuer.id === 'alexandrian_coptic_patriarch' && a[0].scope === null && b[0].scope === null;
+      var canonical = JSON.stringify([s.owner,s.holder,s.population,s.papacy || null,s.authority.rights]);
+      var review = FB.localOfficeQuote(s,'west_syriac_patriarch_800','resign',{characterId:west.id});
+      var resigned = FB.localOfficeApply(s,review);
+      var lapsed = FB.political.legitimacy(s,{kind:'character',id:coptic.id},null,'church_support').length === 0;
+      var replacement = FB.makeCharacter(s,{name:'Fictional replacement',sex:'m',culture:'syriac',religion:'eastern',
+        born:750,role:'priest',station:3});
+      s.religiousHeads.west_syriac_patriarch = replacement.id;
+      var inherited = FB.political.legitimacy(s,{kind:'character',id:coptic.id},null,'church_support').length;
+      return {pure:pure,named:named,resigned:resigned,lapsed:lapsed,inherited:inherited,
+        unchanged:canonical === JSON.stringify([s.owner,s.holder,s.population,s.papacy || null,s.authority.rights])};
+    })).toEqual({pure:true,named:true,resigned:true,lapsed:true,inherited:0,unchanged:true});
+  });
+
+test('1204 local role promises distinguish married Greek clergy, Latin clergy and ordinary households',
+  async function ({page},testInfo) {
+    await startDatedChurch(page,testInfo,'1204','inhabited_v2','constantinople');
+    expect(await page.evaluate(function () {
+      var s = FB.state, c = s.chars[s.player.charId], p = s.player;
+      c.born = 1170; c.sex = 'm'; c.skills.int = 8; c.role = 'priest';
+      c.career = {profession:'priest',experience:10};
+      c.religion = p.religion = 'orthodox';
+      var spouse = FB.makeCharacter(s,{name:'Fictional spouse',sex:'f',culture:'greek',religion:'orthodox',
+        born:1174,role:'farmer',station:1});
+      spouse.homeProvinceId = 'constantinople'; spouse.spouseId = c.id; c.spouseId = spouse.id;
+      var actor = {kind:'character',id:c.id}, greek = 'constantinople_greek_service_1204';
+      function admit(iid,role) {
+        return FB.religiousInstitutionQuote(s,iid,actor,'admit',{roleId:role});
+      }
+      var before = JSON.stringify(s), rng = FB.getRngState(), uid = FB.getUidCounter();
+      var q = admit(greek,'priest'), pure = before === JSON.stringify(s) && rng === FB.getRngState() && uid === FB.getUidCounter();
+      var allowed = q.allowed && FB.religiousInstitutionApply(s,q);
+      var greekVow = FB.religiousHouseholdRule(s,c,'priest').unmarried;
+      var withdraw = FB.religiousInstitutionQuote(s,greek,actor,'withdraw',{});
+      FB.religiousInstitutionApply(s,withdraw);
+      c.religion = p.religion = 'catholic';
+      var latin = 'constantinople_latin_service_1204', denied = !admit(latin,'priest').allowed;
+      var lay = admit(latin,'household');
+      var household = lay.allowed && FB.religiousInstitutionApply(s,lay) && !FB.religiousHouseholdRule(s,c,'priest').unmarried;
+      c.spouseId = null; spouse.spouseId = null;
+      var single = admit(latin,'priest'), admitted = single.allowed && FB.religiousInstitutionApply(s,single);
+      var latinVow = FB.religiousHouseholdRule(s,c,'priest').unmarried;
+      c.role = 'farmer'; c.career.profession = 'farmer';
+      var noOrdination = !FB.religiousInstitutionRoleEligibility(s,latin,c.id,'priest');
+      return {pure:pure,allowed:allowed,greekVow:greekVow,denied:denied,household:household,
+        admitted:admitted,latinVow:latinVow,noOrdination:noOrdination};
+    })).toEqual({pure:true,allowed:true,greekVow:false,denied:true,household:true,admitted:true,latinVow:true,noOrdination:true});
+  });
+
+test('local minority relief preserves communities, incumbents, papacy and active payment across another opening',
+  async function ({page},testInfo) {
+    await startDatedChurch(page,testInfo,'800','inhabited_v2_governments_v2','alexandria');
+    const saved = await page.evaluate(function () {
+      var s = FB.state, c = s.chars[s.player.charId], iid = 'alexandrian_service_800';
+      c.religion = s.player.religion = 'eastern'; c.born = 760; s.player.gold = 20;
+      var q = FB.religiousInstitutionQuote(s,iid,{kind:'character',id:c.id},'admit',{roleId:'household'});
+      if (!q.allowed || !FB.religiousInstitutionApply(s,q)) throw new Error('Admission failed');
+      var name = 'alexandrian_relief_800', actor = {kind:'character',id:c.id};
+      var before = JSON.stringify(s), rng = FB.getRngState(), uid = FB.getUidCounter();
+      var review = FB.religiousActivityQuote(s,actor,name,'begin',{});
+      if (before !== JSON.stringify(s) || rng !== FB.getRngState() || uid !== FB.getUidCounter()) throw new Error('Impure activity review');
+      if (!review.allowed || !FB.religiousActivityApply(s,review)) throw new Error('Participation failed');
+      if (!FB.createFaith(s,{id:'fictional_christian_reform',name:'Fictional household reform',parent:'eastern',
+        icon:'+',relationToParent:'in_fold',properties:{clergyMarriage:true}})) throw new Error('Reform failed');
+      if (!FB.startCountyCommunityProject(s,'alexandria',{kind:'faith',target:'eastern',
+        sponsor:s.owner.alexandria,policy:'integrative'})) throw new Error('Project failed');
+      return {text:FB.save.serialize(),gold:s.player.gold,activity:JSON.stringify(c.religiousActivity),
+        protected:JSON.stringify([s.religiousHeads,s.religiousHeadVacancies,s.papacy || null,s.authority,
+          s.population,s.faiths,s.churchCouncils || null,s.rulerFaithDecisions || null,c.career])};
+    });
+    await startDatedChurch(page,testInfo,'1204','inhabited_v2','constantinople');
+    expect(await page.evaluate(function (saved) {
+      FB.save.restore(JSON.parse(saved.text)); var s = FB.state, c = s.chars[s.player.charId];
+      var protectedFacts = JSON.stringify([s.religiousHeads,s.religiousHeadVacancies,s.papacy || null,s.authority,
+        s.population,s.faiths,s.churchCouncils || null,s.rulerFaithDecisions || null,c.career]);
+      var restored = saved.protected === protectedFacts && saved.activity === JSON.stringify(c.religiousActivity);
+      var gold = s.player.gold, piety = s.player.piety;
+      s.turn = c.religiousActivity.dueTurn; FB.religiousActivitiesTick(s);
+      var completed = !c.religiousActivity && s.player.piety === piety + 1;
+      return {restored:restored,gold:saved.gold === gold && gold === 18 && s.player.gold === gold,
+        completed:completed,repeat:!FB.religiousActivityQuote(s,{kind:'character',id:c.id},'alexandrian_relief_800','begin',{}).allowed,
+        opening:s.start.id,absent:!s.localInstitutions.constantinople_greek_service_1204};
+    },saved)).toEqual({restored:true,gold:true,completed:true,repeat:true,opening:'800',absent:true});
+  });
+
+
+test('Samarkand service is local and voluntary while later AI creates no unverified clergy or recognition',
+  async function ({page},testInfo) {
+    await startDatedChurch(page,testInfo,'800','inhabited_v2_governments_v2','samarkand');
+    expect(await page.evaluate(function () {
+      var s = FB.state, c = s.chars[s.player.charId], iid = 'samarkand_service_800';
+      var population = JSON.stringify(s.population), heads = JSON.stringify(s.religiousHeads);
+      c.religion = s.player.religion = 'east_syriac'; c.born = 760; s.player.gold = 20;
+      var q = FB.religiousInstitutionQuote(s,iid,{kind:'character',id:c.id},'admit',{roleId:'household'});
+      var entered = q.allowed && FB.religiousInstitutionApply(s,q);
+      var activity = FB.religiousActivityQuote(s,{kind:'character',id:c.id},iid,'begin',{});
+      s.player.provinceId = 'baghdad';
+      var stale = !FB.religiousActivityApply(s,activity), gold = s.player.gold;
+      s.player.provinceId = 'samarkand';
+      var people = Object.keys(s.chars).sort().join(','), supports = JSON.stringify(s.authority.recognitions);
+      s.turn = 90;
+      var actions = FB.religiousInstitutionAI(s), again = FB.religiousInstitutionAI(s);
+      return {entered:entered,offered:activity.allowed,stale:stale,unpaid:gold === 20 && s.player.gold === gold,
+        actions:actions,again:again,unseeded:people === Object.keys(s.chars).sort().join(',') &&
+          supports === JSON.stringify(s.authority.recognitions),
+        unchanged:population === JSON.stringify(s.population) && heads === JSON.stringify(s.religiousHeads)};
+    })).toEqual({entered:true,offered:true,stale:true,unpaid:true,actions:0,again:0,unseeded:true,unchanged:true});
+  });
+
+test('existing councils, official profession and their support restore without replay or primary-faith migration',
+  async function ({page},testInfo) {
+    await startEarly(page,testInfo);
+    expect(await page.evaluate(function () {
+      var s = FB.state; FB.treasuryTransfer(s,null,'italy',500);
+      var before = JSON.stringify(s), rng = FB.getRngState(), uid = FB.getUidCounter();
+      var q = FB.churchCouncilQuote(s,'italy','nicene');
+      var pure = before === JSON.stringify(s) && rng === FB.getRngState() && uid === FB.getUidCounter();
+      var held = JSON.stringify([s.owner,s.holder]);
+      var result = FB.conveneChurchCouncil(s,q);
+      var conversion = FB.rulerFaithConversionStatus(s,'italy','nicene');
+      var professed = FB.applyRulerFaithConversion(s,'italy','nicene',conversion);
+      var facts = JSON.stringify([s.churchCouncils,s.rulerFaithDecisions,s.authority,s.religiousHeads,
+        s.population,s.player.profession,s.chars[s.player.charId].career,s.treasuryAccounting]);
+      var save = FB.save.serialize(); FB.save.restore(JSON.parse(save)); s = FB.state;
+      var restored = facts === JSON.stringify([s.churchCouncils,s.rulerFaithDecisions,s.authority,s.religiousHeads,
+        s.population,s.player.profession,s.chars[s.player.charId].career,s.treasuryAccounting]);
+      var repeatBefore = JSON.stringify(s);
+      var repeated = FB.conveneChurchCouncil(s,q);
+      return {pure:pure,council:!!result,professed:professed,restored:restored,
+        once:repeated === null && repeatBefore === JSON.stringify(s),
+        held:held === JSON.stringify([s.owner,s.holder]),east:FB.religiousOfficeSnapshot(s,'east_syriac_catholicos').name};
+    })).toEqual({pure:true,council:true,professed:true,restored:true,once:true,held:true,east:'Babowai'});
   });

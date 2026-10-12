@@ -19,8 +19,8 @@
     var at = scope(s,id); if (!at) return null;
     var t = copy(terms || {}), d = at.def, current = s.religiousHeads[d.officeId] || null;
     var rid = s.holder[d.provinceId], reason = null, c = s.chars[t.candidateId || current];
-    if (!FB.systemEnabled(s,'episcopal_sees',{ faith:d.religion,realm:null }) || !s.realms[rid] || !s.realms[rid].alive ||
-        s.owner[d.provinceId] !== FB.topRealm(s,rid)) reason = 'occupied';
+    if (!FB.localInstitutionEnabled(s,d) || d.provinceId !== null && (!s.realms[rid] || !s.realms[rid].alive ||
+        s.owner[d.provinceId] !== FB.topRealm(s,rid))) reason = 'occupied';
     if (action === 'appoint') {
       if (Object.keys(t).length !== 1 || !Object.prototype.hasOwnProperty.call(t,'candidateId') ||
           FB.localOfficeCandidates(s,id).indexOf(t.candidateId) < 0) reason = reason || 'qualification';

@@ -1582,7 +1582,8 @@ window.FB = window.FB || {};
         if (office && !out[def.officeId]) out[def.officeId] = office;
         continue;
       }
-      if (!FB.systemEnabled(state,'episcopal_sees',{ faith:def.religion,realm:null })) continue;
+      const system = def.officeSystem === undefined ? 'episcopal_sees' : def.officeSystem;
+      if (system && !FB.systemEnabled(state,system,{ faith:def.religion,realm:null })) continue;
       if (!def.officeId || out[def.officeId]) continue;
       out[def.officeId] = { id:def.officeId, religionId:def.religion,
         head:Object.assign({ holderKind:'character', holderSex:'m', holderRole:'priest', minAge:18, succession:'appointment', local:true }, def.officeProfile || {}) };
