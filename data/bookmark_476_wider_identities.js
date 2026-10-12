@@ -1048,7 +1048,9 @@ FBDATA.bookmarkReligions476Wider = {
       "head": null,
       "legalTradition": "customary",
       "holyWarTradition": null,
-      "clergyMarriage": false,
+      "clergyMarriage": true,
+      "raidingTradition": false,
+      "religiousPaths": null,
       "conversionCategory": {
         "name": "Buddhist Traditions",
         "icon": "☀",
@@ -1077,16 +1079,16 @@ FBDATA.bookmarkReligions476Wider = {
       },
       "words": {
         "deity": "the Three Jewels",
-        "cleric": "monastic",
-        "temple": "monastery",
+        "cleric": "religious participant",
+        "temple": "place of worship",
         "landed": "Lord",
         "partnership": "Trade partnership"
       },
       "roles": {
-        "monasticM": "Monk",
-        "monasticF": "Nun",
-        "priestM": "Monk",
-        "priestF": "Nun"
+        "monasticM": "Religious student",
+        "monasticF": "Religious student",
+        "priestM": "Religious participant",
+        "priestF": "Religious participant"
       },
       "intro": {
         "path": "intro_other"
