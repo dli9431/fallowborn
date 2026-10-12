@@ -803,6 +803,9 @@ FBDATA.religions = {
       roles:{monasticM:'Learner',monasticF:'Learner',priestM:'Fire custodian',priestF:'Fire custodian',
         teacher:'Herbed',fireCustodian:'Fire custodian'} }
   },
+  jain: { availability:{ yearMin:1204, bookmarkIds:['1204'], consumers:['institution'] },
+    name:'Jain tradition', adjective:'Jain', collective:'Jains', icon:'◇',
+    properties:{ legalTradition:'customary', head:null, holyWarTradition:null } },
   jewish: { availability:{}, name:'Judaism', icon:'✡',
     properties:{
       legalTradition:'latin', music:{ lineage:['jewish'], fallback:'muslim' },
