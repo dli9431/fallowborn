@@ -39,6 +39,8 @@
     var h = SH.reviewPeopleHtml(SH.reviewPersonHtml(s.chars[q.cid], FB.T('Participant'))) + kv(FB.T('Destination'), destination) +
       kv(FB.T('Payer'), payer) + kv(FB.T('Cost on acceptance'), FB.money(q.cost, s)) +
       kv(FB.T('Required reserve'), FB.money(d.reserve, s));
+    if (d.provinceIds) h += kv(FB.T('Permitted locations'), d.provinceIds.map(place).join('; '));
+    if (d.protectedWorship) h += kv(FB.T('Access'), FB.T('Participation requires protected local worship.'));
     if (!patron) return h + kv(FB.T('Time'), q.travel ? FB.T('{days} days outward, plus the return journey and any delays.', { days:q.travel.days }) :
       FB.T('{days} days at this location', { days:q.duration })) + kv(FB.T('Benefit on completion'), benefits(d)) +
       kv(FB.T('Interruption'), FB.T('Cancellation, lost access, departure or incapacity ends participation. Paid costs remain spent; no completion reward is granted.')) +

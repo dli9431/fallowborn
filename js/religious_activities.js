@@ -55,11 +55,13 @@
   function participant(s, d, cid) {
     var c = s.chars[cid], ins = d.institutionId && FB.religiousInstitutionSnapshot(s, d.institutionId);
     if (!available(s, c) || !live(s, d) || d.faithIds.length && d.faithIds.indexOf(c.religion) < 0 ||
+        d.provinceIds && d.provinceIds.indexOf(at(s, cid)) < 0 ||
         !d.affiliationIds.every(function (aid) { return (c.religiousAffiliations || []).some(function (a) {
           return a.id === aid && (!d.institutionId || a.institutionId === d.institutionId);
         }); })) return false;
     /* The legacy protection projection repairs modifier rows; isolate that read. */
-    if (d.institutionId && (!ins || !ins.available || !FB.political.worshipProtected(copy(s), at(s, cid)))) return false;
+    if (d.institutionId && (!ins || !ins.available) ||
+        (d.institutionId || d.protectedWorship) && !FB.political.worshipProtected(copy(s), at(s, cid))) return false;
     if (d.roleIds.length && (!ins || !ins.members[cid] || ins.members[cid].status !== 'active' ||
         d.roleIds.indexOf(ins.members[cid].roleId) < 0 ||
         !FB.religiousInstitutionRoleEligibility(s, d.institutionId, cid, ins.members[cid].roleId))) return false;
@@ -103,8 +105,11 @@
     var faults = [], activities = data.religiousActivities || {}, patrons = data.religiousPatronage || {};
     Object.keys(activities).forEach(function (id) {
       var d = activities[id];
-      if (!ident(id) || !keys(d, ['name','period','openings','faithIds','affiliationIds','roleIds','institutionId','mode','purpose','siteId','payer','cost','reserve','duration','calendar','interruption','recipient','milestone','reward','legacy','service','ai']) ||
+      if (!ident(id) || !keys(d, ['name','period','openings','faithIds','affiliationIds','roleIds','institutionId','mode','purpose','siteId','payer','cost','reserve','duration','calendar','interruption','recipient','milestone','reward','legacy','service','ai','provinceIds','protectedWorship']) ||
           !commonValid(d) || ['journey','local'].indexOf(d.mode) < 0 || ['household','public'].indexOf(d.payer) < 0 ||
+          d.provinceIds !== undefined && (d.mode !== 'local' || !list(d.provinceIds) || !d.provinceIds.length ||
+            d.provinceIds.some(function (v, i) { return d.provinceIds.indexOf(v) !== i; })) ||
+          d.protectedWorship !== undefined && (d.mode !== 'local' || typeof d.protectedWorship !== 'boolean') ||
           d.ai !== undefined && (d.ai !== true || d.payer !== 'public' || d.mode !== 'local') ||
           d.payer === 'public' && d.reward && (d.reward.piety !== 0 || d.reward.prestige !== 0) ||
           !number(d.cost) || !number(d.reserve) || !Number.isInteger(d.duration) || d.duration < 0 || d.duration > 360 ||
@@ -389,6 +394,7 @@
         if (!plain(a) || !ident(a.activityId) || !definition(a.definition, a.activityId) || a.definition.mode !== 'local' ||
             !turn(a.startTurn) || !Number.isInteger(a.dueTurn) || a.dueTurn !== a.startTurn + a.definition.duration ||
             !provinces[a.location] || a.institutionId !== a.definition.institutionId ||
+            a.definition.provinceIds && a.definition.provinceIds.indexOf(a.location) < 0 ||
             a.institutionId && !defs[a.institutionId] || !number(a.paid)) fail('chars.' + cid + '.religiousActivity');
       }
       if (history !== undefined) {
