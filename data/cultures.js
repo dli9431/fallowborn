@@ -499,7 +499,16 @@ FBDATA.religions = {
     } },
   berber_traditional: { availability:{}, name:'Amazigh traditional belief', group:'pagan',
     relationToParent:'in_fold', icon:'☀' },
-  germanic_pagan: { availability:{}, name:'Germanic traditional belief', group:'pagan', relationToParent:'in_fold', icon:'☀' },
+  germanic_pagan: { availability:{}, name:'Germanic traditional belief', group:'pagan', relationToParent:'in_fold', icon:'☀',
+    /* Household defaults are simulation choices, not a common regional law
+       or qualification for an office. Local specialist rules remain undeclared. */
+    properties:{ head:null, legalTradition:'customary', holyWarTradition:null,
+      raidingTradition:false, clergyMarriage:true, religiousPaths:null,
+      marriage:{ spouseLimit:{ m:1, f:1 } },
+      words:{ deity:'the sacred powers', cleric:'ritual participant',
+        temple:'ritual place', landed:'Lord', partnership:'Trade partnership' },
+      roles:{ monasticM:'Religious student', monasticF:'Religious student',
+        priestM:'Ritual participant', priestF:'Ritual participant' } } },
   /* Early profiles retain their local office adapters and explicit legacy
      household defaults without inheriting medieval crusade vocabulary. */
   nicene: { availability:{}, name:'Nicene Christianity', group:'christian', relationToParent:'in_fold', icon:'✝',
