@@ -557,11 +557,19 @@ FBDATA.religions = {
       holyWarTradition:null,
       religiousPaths:{ lay:'late_antique_lay',
         professions:{ monk:'late_antique_monastic', priest:'late_antique_clerical' } } } },
-  mesopotamian_traditional: { availability:{}, name:'Mesopotamian traditional belief', group:'pagan',
+  mesopotamian_traditional: { name:'Harranian local worship', group:'pagan',
+    availability:{yearMin:476,yearMax:493,bookmarkIds:['476','493']},
     relationToParent:'in_fold', icon:'☾',
-    properties:{ legalTradition:'customary',
-      words:{ deity:'the gods', cleric:'priest', temple:'shrine', landed:'Lord',
-        partnership:'Trade partnership' }, roles:{ priestM:'Priest', priestF:'Priest' } } },
+    /* Carrhae's lunar worship is locally evidenced. These operational
+       household defaults do not reconstruct its unverified priestly law. */
+    properties:{ head:null, legalTradition:'customary', holyWarTradition:null,
+      raidingTradition:false, clergyMarriage:true, religiousPaths:null,
+      marriage:{ spouseLimit:{m:1,f:1}, kinship:{siblingRite:null},
+        acceptedRelations:['same','in_fold'],
+        divorce:{kind:'sunder',direct:true,gold:0,piety:0,prestige:5,cooldownDays:0} },
+      words:{ deity:'the moon deity', cleric:'ritual keeper', temple:'shrine', landed:'Lord',
+        partnership:'Trade partnership' },
+      roles:{monasticM:'Devotee',monasticF:'Devotee',priestM:'Ritual keeper',priestF:'Ritual keeper'} } },
   muslim: { name:'Islam', assignable:false, icon:'☪', availability:{yearMin:622},
     properties:{
       legalTradition:'muslim', tournamentTradition:'furusiyya', holyWarTradition:'jihad',
@@ -660,6 +668,19 @@ FBDATA.religions = {
         priestF:'Mobed' },
       clergyMarriage:true
     } },
+  zoroastrian_sasanian_476: {
+    name:'Sasanian Zoroastrian tradition', adjective:'Zoroastrian', collective:'Zoroastrians',
+    parent:'zoroastrian', relationToParent:'in_fold', icon:'🔥',
+    availability:{yearMin:476,yearMax:493,bookmarkIds:['476','493'],consumers:['ruler','character','start']},
+    /* A fresh court context, not a replacement for every Iranian household.
+       Inherited marriage prices/capacity are retained simulation settings.
+       Learning and fire custody do not confer ordained office or abbacy. */
+    properties:{head:null,legalTradition:'sasanian_custom_476',holyWarTradition:null,
+      raidingTradition:false,clergyMarriage:true,religiousPaths:null,
+      marriage:{kinship:{siblingRite:'xwedodah'}},
+      roles:{monasticM:'Learner',monasticF:'Learner',priestM:'Fire custodian',priestF:'Fire custodian',
+        teacher:'Herbed',fireCustodian:'Fire custodian'} }
+  },
   jewish: { availability:{}, name:'Judaism', icon:'✡',
     properties:{
       legalTradition:'latin', music:{ lineage:['jewish'], fallback:'muslim' },

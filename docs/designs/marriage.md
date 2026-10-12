@@ -634,3 +634,9 @@ profile rejects ordinary imported lives. See [content profiles](distribution-con
 Government ladder and social class
 
 Dynastic match navigation asks mayArrangeDynasticMarriage independently of isLanded. The feudal ladder grants both from band 3. NPC station remains a saved class from 0 to 4 with the legacy lord/notable inference; FB.socialStation resolves gentle/noble eligibility, class gaps and minimum-station policies through the NPC's form and era. Player class comes from its current band mapping, preserving the cardinal/Pope override. Courtship, kinship, doctrine, Standing, dowry and prestige checks remain independent. Ladder changes do not rewrite a pledged marriage or existing NPC station. This is an internal refactor, with no technology change.
+
+Early Iranian profiles
+
+The released zoroastrian doctrine and generated descendants retain their marriage settings. The fresh zoroastrian_sasanian_476 court profile inherits its one-spouse capacity, divorce prices and cooldown as simulation settings; xwedodah remains an explicit optional normative rite. Neither the profile's court assignment nor its legal reference generates close-kin households, migrates provincial communities or supplies a complete Sasanian family-law adapter. Detailed historical marriage, divorce and priest-office eligibility remain unresolved. The CrazyGames restriction still applies at the existing shared boundaries.
+
+mesopotamian_traditional explicitly uses one-spouse capacity and direct separation without an enforced clerical celibacy rule. These are operational simulation defaults while local Harranian household and priestly discipline remain unverified. They replace inherited generic pagan polygyny and monastic restrictions, and do not claim an attested local marriage code. No existing union is rewritten.

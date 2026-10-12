@@ -181,11 +181,14 @@ test('an unversioned core opening restores under its retained revision without s
     await openGame(page,testInfo);
     await page.evaluate(function () {
       const bm = FB.bookmark('476');
-      window.regionalOpening = {opening:bm.opening,revision:bm.openingRevision,stories:bm.stories,institutions:bm.localInstitutions,realms:bm.realms,starts:FBDATA.startScenarios};
+      window.regionalOpening = {opening:bm.opening,revision:bm.openingRevision,stories:bm.stories,institutions:bm.localInstitutions,realms:bm.realms,starts:FBDATA.startScenarios,startSelectors:bm.starts};
       bm.opening = bm.openingRevisions.core_v1; bm.openingRevision = 'core_v1';
       // core_v1 predates the Sasanian households, so use the original court declaration
       // and set aside the Peroz start that needs the aristocratic form.
-      FBDATA.startScenarios = FBDATA.startScenarios.filter(function (sc) { return sc.id !== 'peroz_476'; });
+      FBDATA.startScenarios = FBDATA.startScenarios.filter(function (sc) { return sc.rulerRealmId !== 'sasanian_476'; });
+      bm.starts = bm.starts.filter(function (id) {
+        return FBDATA.startScenarios.some(function (sc) { return sc.id === id; });
+      });
       bm.realms = bm.realms.map(function (r) {
         return r.id === 'sasanian_476' ? FBDATA.bookmarkRegions476.outer.realms.find(function (o) { return o.id === r.id; }) : r;
       });
@@ -209,7 +212,7 @@ test('an unversioned core opening restores under its retained revision without s
     const result = await page.evaluate(function () {
       const saved = JSON.parse(FB.save.serialize()); delete saved.state.bookmarkSetup.revision;
       const bm = FB.bookmark('476'), kept = window.regionalOpening;
-      bm.opening = kept.opening; bm.openingRevision = kept.revision; bm.stories = kept.stories; bm.localInstitutions = kept.institutions; bm.realms = kept.realms; FBDATA.startScenarios = kept.starts;
+      bm.opening = kept.opening; bm.openingRevision = kept.revision; bm.stories = kept.stories; bm.localInstitutions = kept.institutions; bm.realms = kept.realms; FBDATA.startScenarios = kept.starts; bm.starts = kept.startSelectors;
       const ids = Object.keys(saved.state.chars).sort().join(','), opening = JSON.stringify(saved.state.bookmarkSetup);
       const institutions = JSON.stringify(saved.state.localInstitutions), authority = JSON.stringify(saved.state.authority);
       FB.save.restore(saved);

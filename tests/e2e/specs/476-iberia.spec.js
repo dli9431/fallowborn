@@ -1,7 +1,7 @@
 'use strict';
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
-  'data/story_courts_476.js',
+  'data/story_courts_476.js','data/bookmark_476_wider.js',
   'index.html','data/bookmarks.js','data/bookmark_476.js','data/bookmark_476_gaul_iberia.js',
   'data/bookmark_476_italy.js','data/bookmark_476_dalmatia_east.js','data/cultures.js','data/intrigue.js','data/settlements.js',
   'data/geographies.js','data/eras.js','data/starts.js','data/technology.js','data/systems.js',
@@ -232,7 +232,12 @@ for (const opening of [
         bm.opening = bm.openingRevisions[bm.openingRevision];
         // Earlier revisions predate the Sasanian households, so use the original court declaration
         // and set aside the Peroz start that needs the aristocratic form.
-        FBDATA.startScenarios = FBDATA.startScenarios.filter(function (sc) { return sc.id !== 'peroz_476'; });
+        FBDATA.startScenarios = FBDATA.startScenarios.filter(function (sc) { return sc.rulerRealmId !== 'sasanian_476'; });
+        Object.values(bm.revisions).forEach(function (revision) {
+          revision.starts = revision.starts.filter(function (id) {
+            return FBDATA.startScenarios.some(function (sc) { return sc.id === id; });
+          });
+        });
         bm.realms = bm.realms.map(function (r) {
           return r.id === 'sasanian_476' ? FBDATA.bookmarkRegions476.outer.realms.find(function (o) { return o.id === r.id; }) : r;
         });

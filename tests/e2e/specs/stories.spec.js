@@ -11,7 +11,7 @@ dependsOnRuntime(__filename, [
   'js/story_polity_foundation.js', 'js/rebellions.js',
    'js/main.js', 'js/save.js', 'js/save_v4.js',
   'js/i18n.js', 'js/ui_panels.js', 'js/world.js',
-  'data/starts.js', 'data/bookmarks.js', 'data/bookmark_476.js',
+  'data/starts.js', 'data/bookmarks.js', 'data/bookmark_476.js', 'data/bookmark_476_wider.js',
   'data/bookmark_476_italy.js', 'data/bookmark_476_dalmatia_east.js',
   'data/bookmark_476_gaul_iberia.js', 'data/bookmark_476_africa.js', 'data/eras.js', 'data/political_institutions.js',
   'data/actions.js', 'js/actions.js', 'js/systems.js'
@@ -107,7 +107,7 @@ test('stories register in order at load time only and resolve by id',
     expect(result.late).toContain('load time only');
     expect(result.registered).toBe(false);
     expect(result.bookmark).toEqual(WORLD_STORIES.concat(['cashel_recognition_476']));
-    expect(result.tracks).toEqual(['peroz_476:','nepos_476:nepos_track_476','federate_476:federate_track_476','curialis_476:curialis_track_476']);
+    expect(result.tracks).toEqual(['peroz_476:','nepos_476:nepos_track_476','federate_476:federate_track_476','curialis_476:curialis_track_476','peroz_sasanian_476:']);
   });
 
 test('a branch save holding state.situation476 migrates once into both story records',

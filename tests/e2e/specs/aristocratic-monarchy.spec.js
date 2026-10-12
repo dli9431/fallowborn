@@ -10,7 +10,7 @@ const {injectBrowserHarness} = require('../support/game/browser-harness');
 const {dependsOnRuntime} = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename,[
   'index.html','data/aristocratic_courts.js','data/starts.js','data/bookmark_476.js','data/bookmark_476_outer.js',
-  'data/bookmark_476_italy.js','data/political_institutions.js','data/eras.js','data/lexicons.js','data/technology.js',
+  'data/bookmark_476_italy.js','data/bookmark_476_wider.js','data/political_institutions.js','data/eras.js','data/lexicons.js','data/technology.js',
   'data/actions.js','data/systems.js','data/cultures.js','data/story_courts_476.js',
   'js/government_aristocracy.js','js/government_recognition.js','js/government_administration.js','js/government_lineage.js',
   'js/government_selection.js','js/government_levy.js','js/government_revenue.js','js/government_continuity.js',
@@ -34,14 +34,14 @@ async function start(page,testInfo,options) {
   }
   if (options.ruler) await page.evaluate(function () {
     // Owner acceptance context, isolated from production visibility.
-    FBDATA.startScenarios.find(function (r) { return r.id === 'peroz_476'; }).hidden = false;
+    FBDATA.startScenarios.find(function (r) { return r.id === 'peroz_sasanian_476'; }).hidden = false;
   });
   await page.evaluate(function () { FB.startProgression.noteTier(3); });
   const beginning = page.locator('#btn-choose-beginning');
   if (await beginning.isVisible()) await beginning.click();
   else await page.getByRole('button',{name:'New Game',exact:true}).click();
   await page.locator('#btn-bm-seed').click();
-  const code = options.ruler ? 'ROYALREVIEW-476-peroz_476-baghdad-m-Peroz-standard-0-persian.zoroastrian' :
+  const code = options.ruler ? 'ROYALREVIEW-476-peroz_sasanian_476-baghdad-m-Peroz-standard-0-persian.zoroastrian_sasanian_476' :
     options.fictional ? 'ROYALREVIEW-476-farmer_476-london-m-Review-established-0-brittonic.nicene' :
       'ROYALREVIEW-476-farmer_476-rayy-m-Review-established';
   await page.locator('#ng-seed').fill(code); await page.locator('#ng-seed').press('Enter');
