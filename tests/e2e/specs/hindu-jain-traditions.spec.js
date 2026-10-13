@@ -552,3 +552,152 @@ test('a deceased lay donor creates no temple successor or return of dedicated pr
         pure:before === JSON.stringify(s) && rng === FB.getRngState() && uid === FB.getUidCounter()};
     })).toEqual({property:true,heads:true,people:true,holder:null,land:0,privateHolder:null,pure:true});
   });
+
+
+// Each retained world has its own placement decision; a later date is not consent.
+test('all seven openings keep Hindu service scoped and Jain delivery unplaced',
+  async function ({page},testInfo) {
+    await openGame(page,testInfo);
+    expect(await page.evaluate(function () {
+      const before = JSON.stringify(FBDATA), rng = FB.getRngState(), uid = FB.getUidCounter();
+      const faults = [], serviceIds = ['brahmanabad_ritual_support_711','debal_temple_service_711'];
+      const faiths = ['brahmanical_476','hindu_711','jain'];
+      ['476','493','711','800','867','1066','1204'].forEach(function (id) {
+        const revisions = FB.bookmarkRevisions(id);
+        if (!revisions.length) faults.push(id + ': missing revisions');
+        revisions.forEach(function (b) {
+          const label = id + '/' + b.revision;
+          const review = id === '711' && ['hindu_service_v2','hindu_service_v2_governments_v2'].includes(b.revision);
+          const local = Object.keys(b.localInstitutions || {}).filter(function (iid) {
+            return faiths.includes(b.localInstitutions[iid].religion);
+          }).sort();
+          if (JSON.stringify(local) !== JSON.stringify(review ? serviceIds : []))
+            faults.push(label + ': unexpected local institution');
+          if (['800','867','1066','1204'].includes(id)) {
+            b.provinces.forEach(function (p) {
+              if ([p.religion].concat((p.communities || []).map(function (c) { return c.religion; }))
+                .some(function (faith) { return faiths.includes(faith); }))
+                faults.push(label + ': unsupported resident assignment ' + p.id);
+            });
+            if (b.realms.some(function (r) { return faiths.includes(r.religion); }))
+              faults.push(label + ': unsupported court assignment');
+          }
+          if (FB.faithHistoricalAvailable('hindu_711',b,'community') !== (id === '711') ||
+              FB.faithHistoricalAvailable('brahmanical_476',b,'community') !== ['476','493'].includes(id) ||
+              FB.faithHistoricalAvailable('jain',b,'community') ||
+              FB.faithHistoricalAvailable('jain',b,'institution') !== (id === '1204'))
+            faults.push(label + ': widened identity scope');
+        });
+      });
+      return {faults:faults,selected:FBDATA.bookmarks['711'].revision,
+        pure:before === JSON.stringify(FBDATA) && rng === FB.getRngState() && uid === FB.getUidCounter()};
+    })).toEqual({faults:[],selected:'terrain_v2_governments_v2',pure:true});
+  });
+
+for (const key of ['debal','brahmanabad']) test(key + ' service expiry preserves the community, membership and unused gifts',
+  async function ({page},testInfo) {
+    await startHinduService(page,testInfo);
+    expect(await page.evaluate(function (key) {
+      const s = FB.state, me = s.chars[s.player.charId], h = hinduFoundation(key);
+      hinduAdmit(key);
+      const amount = key === 'debal' ? 1 : 2;
+      if (!FB.religiousPatronageApply(s,FB.religiousPatronageQuote(s,key + '_lay_support_711',me.id,
+        'donation',{fund:'ritual_supplies',amount:amount}))) throw new Error('Gift setup failed');
+      const quote = FB.religiousActivityQuote(s,key + '_funded_observance_711',me.id);
+      if (!FB.religiousActivityApply(s,quote)) throw new Error('Service setup failed');
+      const property = JSON.stringify(h), residents = JSON.stringify(FB.countyCommunities(s,s.player.provinceId));
+      const iid = key === 'debal' ? 'debal_temple_service_711' : 'brahmanabad_ritual_support_711';
+      s.date.year = 712; s.turn += 2;
+      FB.religiousActivityTick(s);
+      const before = JSON.stringify(s), rng = FB.getRngState(), uid = FB.getUidCounter();
+      const fresh = FB.religiousActivityQuote(s,key + '_local_observance_711',me.id);
+      const gift = FB.religiousPatronageQuote(s,key + '_lay_support_711',me.id,
+        'donation',{fund:'ritual_supplies',amount:amount});
+      return {ended:!me.religiousActivity,reward:!!(me.religiousActivityHistory || {}).hindu_local_observance_711,
+        piety:s.player.piety,property:property === JSON.stringify(h),
+        residents:residents === JSON.stringify(FB.countyCommunities(s,s.player.provinceId)),
+        member:s.localInstitutions[iid].members[me.id].status,faith:me.religion,
+        denied:!fresh.allowed && !gift.allowed,
+        applied:FB.religiousActivityApply(s,quote) || FB.religiousActivityApply(s,fresh) || FB.religiousPatronageApply(s,gift),
+        pure:before === JSON.stringify(s) && rng === FB.getRngState() && uid === FB.getUidCounter()};
+    },key)).toEqual({ended:true,reward:false,piety:0,property:true,residents:true,member:'active',
+      faith:'hindu_711',denied:true,applied:false,pure:true});
+  });
+
+for (const distribution of ['standard','CrazyGames']) {
+  test(distribution + ' retained 711 save never acquires opt-in service institutions',
+    async function ({page},testInfo) {
+      await startIndusHousehold(page,testInfo,'711',{crazygames:distribution === 'CrazyGames'});
+      expect(await page.evaluate(function () { return FB.platform.isCrazyGames; })).toBe(distribution === 'CrazyGames');
+      const saved = await page.evaluate(function () { return FB.save.serialize(); });
+      const before = await page.evaluate(hinduServiceFacts);
+      expect(before.start.revision).toBe('terrain_v2_governments_v2');
+      await page.evaluate(function (revision) {
+        FBDATA.bookmarks['711'].revision = revision;
+        return new Promise(function (resolve,reject) {
+          FB.activateBookmark('711',null,function (error) { if (error) reject(error); else resolve(); });
+        });
+      },HINDU_REVIEW);
+      expect(await page.evaluate(function () {
+        return !!FB.bookmark('711').localInstitutions.brahmanabad_ritual_support_711;
+      })).toBe(true);
+      await restoreBookmark(page,saved);
+      expect(await page.evaluate(hinduServiceFacts)).toEqual(before);
+      expect(await page.evaluate(function () {
+        const s = FB.state, me = s.chars[s.player.charId];
+        const before = JSON.stringify(s), rng = FB.getRngState(), uid = FB.getUidCounter();
+        const denied = ['debal','brahmanabad'].every(function (key) {
+          const activity = FB.religiousActivityQuote(s,key + '_local_observance_711',me.id);
+          const gift = FB.religiousPatronageQuote(s,key + '_lay_support_711',me.id,
+            'donation',{fund:'ritual_supplies',amount:1});
+          return activity && !activity.allowed && gift && !gift.allowed &&
+            !FB.religiousActivityApply(s,activity) && !FB.religiousPatronageApply(s,gift);
+        });
+        return {denied:denied,local:FB.religiousInstitutionSnapshot(s,'brahmanabad_ritual_support_711'),
+          revision:FB.campaignBookmark(s).revision,
+          pure:before === JSON.stringify(s) && rng === FB.getRngState() && uid === FB.getUidCounter()};
+      })).toEqual({denied:true,local:null,revision:'terrain_v2_governments_v2',pure:true});
+    });
+
+  for (const id of ['476','493']) test(distribution + ' ' + id + ' ancestry, household rules and one project survive a later world',
+    async function ({page},testInfo) {
+      await startIndusHousehold(page,testInfo,id,{crazygames:distribution === 'CrazyGames'});
+      expect(await page.evaluate(function () { return FB.platform.isCrazyGames; })).toBe(distribution === 'CrazyGames');
+      await page.evaluate(function () {
+        const s = FB.state, me = s.chars[s.player.charId], pid = s.player.provinceId;
+        const faith = FB.createFaith(s,{id:'e2e_indus_household',name:'Indus household practice',
+          parent:'brahmanical_476',relationToParent:'in_fold',founderId:me.id});
+        if (!faith) throw new Error('Expected a generated descendant');
+        const child = FB.makeCharacter(s,{name:'Household descendant',sex:'f',born:s.date.year - 8,
+          culture:me.culture,religion:faith,fatherId:me.id,traits:[]});
+        me.childrenIds.push(child.id);
+        if (!FB.startCountyCommunityProject(s,pid,{kind:'faith',target:faith,sponsor:'player',policy:'voluntary'}))
+          throw new Error('Expected one voluntary project');
+        s.population.counties[pid].communityProjects.faith.progress = 0.25;
+      });
+      function facts() {
+        const s = FB.state, me = s.chars[s.player.charId], faith = 'e2e_indus_household';
+        return JSON.parse(JSON.stringify({start:s.start,gold:s.player.gold,faith:me.religion,
+          children:me.childrenIds.map(function (cid) {
+            const c = s.chars[cid]; return [cid,c.religion,c.fatherId];
+          }),spouses:FB.spousesSnapshot(s,me).map(function (c) { return c.id; }),
+          lineage:FB.faithLineage(faith,s),doctrine:FB.marriageDoctrine(faith,s),
+          rows:FB.countyCommunities(s,s.player.provinceId),
+          project:FB.countyCommunityProject(s,s.player.provinceId,'faith'),
+          institutions:s.localInstitutions,heads:s.religiousHeads,houses:s.abbeys && s.abbeys.houses || [],
+          rng:FB.getRngState() >>> 0,uid:FB.getUidCounter()}));
+      }
+      const saved = await page.evaluate(function () { return FB.save.serialize(); });
+      const before = await page.evaluate(facts);
+      expect(before.lineage).toEqual(['e2e_indus_household','brahmanical_476']);
+      expect(before.project.progress).toBe(0.25);
+      expect(before.houses).toEqual([]);
+      await page.evaluate(function () {
+        return new Promise(function (resolve,reject) {
+          FB.activateBookmark('1204',null,function (error) { if (error) reject(error); else resolve(); });
+        });
+      });
+      await restoreBookmark(page,saved);
+      expect(await page.evaluate(facts)).toEqual(before);
+    });
+}
