@@ -104,7 +104,19 @@ FBDATA.bookmarkTerrain['711'] = {
     realms:b.realms.concat(region.realms),
     duchies:Object.assign({},b.duchies,region.duchies),
     kingdoms:Object.assign({},b.kingdoms,region.kingdoms),
-    climate:{zone:b.climate.zone,provinces:climate}
+    climate:{zone:b.climate.zone,provinces:climate},
+    /* Community presence at the existing towns, without identifying an imam,
+       building footprint, ownership or a compulsory political allegiance.
+       Munt (2022), Medina renovations in 706/707-709/710; UNESCO, Old City
+       of Sana'a, Brief synthesis, seventh-century Great Mosque remains. */
+    localInstitutions:Object.assign({},b.localInstitutions,{
+      medina_congregation_711:{city:'Medina',kind:'congregation',provinceId:'medina',site:'medina_711',
+        religion:'sunni',culture:'arabic',profileId:'arabian_local_congregation_711',
+        jurisdictionIds:['medina'],vacant:true,freshOnly:true},
+      sanaa_congregation_711:{city:'Sanaa',kind:'congregation',provinceId:'sanaa',site:'sanaa_711',
+        religion:'sunni',culture:'arabic',profileId:'arabian_local_congregation_711',
+        jurisdictionIds:['sanaa'],vacant:true,freshOnly:true}
+    })
   };
   b.revision = 'terrain_v2';
   FBDATA.techImpactReviews.features.period_711_terrain_habitation = {mode:'none',
