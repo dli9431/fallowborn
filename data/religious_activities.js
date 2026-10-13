@@ -592,6 +592,42 @@ FBDATA.religiousActivities = {
     payer:'household',cost:0,reserve:0,duration:3,calendar:'any_day',
     interruption:'retain_cost',recipient:'institution',milestone:'buddhist_household_study_done',
     reward:{piety:0,prestige:0,skills:{int:1}},legacy:null,service:{fund:'learning',cost:2}
+  },
+  debal_local_observance_711:{
+    name:'Observe with local households in Debal',period:{yearMin:711,yearMax:711},
+    openings:[{id:'711',revision:'hindu_service_v2'},{id:'711',revision:'hindu_service_v2_governments_v2'}],
+    faithIds:['hindu_711'],affiliationIds:[],roleIds:[],institutionId:'debal_temple_service_711',
+    mode:'local',purpose:null,siteId:null,payer:'household',cost:0,reserve:0,duration:1,
+    calendar:'any_day',interruption:'retain_cost',recipient:'participant',
+    milestone:'hindu_local_observance_711',reward:{piety:1,prestige:0,skills:{}},
+    legacy:null,service:null
+  },
+  debal_funded_observance_711:{
+    name:'Join supported observance in Debal',period:{yearMin:711,yearMax:711},
+    openings:[{id:'711',revision:'hindu_service_v2'},{id:'711',revision:'hindu_service_v2_governments_v2'}],
+    faithIds:['hindu_711'],affiliationIds:[],roleIds:['participant'],institutionId:'debal_temple_service_711',
+    mode:'local',purpose:null,siteId:null,payer:'household',cost:0,reserve:0,duration:2,
+    calendar:'any_day',interruption:'retain_cost',recipient:'institution',
+    milestone:'hindu_local_observance_711',reward:{piety:1,prestige:0,skills:{}},
+    legacy:null,service:{fund:'ritual_supplies',cost:1}
+  },
+  brahmanabad_local_observance_711:{
+    name:'Observe with local households in Brahmanabad',period:{yearMin:711,yearMax:711},
+    openings:[{id:'711',revision:'hindu_service_v2'},{id:'711',revision:'hindu_service_v2_governments_v2'}],
+    faithIds:['hindu_711'],affiliationIds:[],roleIds:[],institutionId:'brahmanabad_ritual_support_711',
+    mode:'local',purpose:null,siteId:null,payer:'household',cost:0,reserve:0,duration:1,
+    calendar:'any_day',interruption:'retain_cost',recipient:'participant',
+    milestone:'hindu_local_observance_711',reward:{piety:1,prestige:0,skills:{}},
+    legacy:null,service:null
+  },
+  brahmanabad_funded_observance_711:{
+    name:'Join supported observance in Brahmanabad',period:{yearMin:711,yearMax:711},
+    openings:[{id:'711',revision:'hindu_service_v2'},{id:'711',revision:'hindu_service_v2_governments_v2'}],
+    faithIds:['hindu_711'],affiliationIds:[],roleIds:['supporter'],institutionId:'brahmanabad_ritual_support_711',
+    mode:'local',purpose:null,siteId:null,payer:'household',cost:0,reserve:0,duration:2,
+    calendar:'any_day',interruption:'retain_cost',recipient:'institution',
+    milestone:'hindu_local_observance_711',reward:{piety:1,prestige:0,skills:{}},
+    legacy:null,service:{fund:'ritual_supplies',cost:2}
   }
 };
 FBDATA.religiousPatronage = {
@@ -702,6 +738,38 @@ FBDATA.religiousPatronage = {
     faithIds:[],affiliationIds:[],roleIds:[],institutionId:'tapa_sardar_house_711',
     payer:'public',ai:true,reserve:1,foundation:{startup:0,capital:0,treasury:0,landRequired:true},
     funds:{learning:{name:'Learning supplies',capacity:6,unitCost:1}},outreach:['voluntary']
+  },
+  debal_lay_support_711:{
+    name:'Support local observance in Debal',period:{yearMin:711,yearMax:711},
+    openings:[{id:'711',revision:'hindu_service_v2'},{id:'711',revision:'hindu_service_v2_governments_v2'}],
+    faithIds:[],affiliationIds:[],roleIds:[],institutionId:'debal_temple_service_711',
+    payer:'household',reserve:0,
+    foundation:{startup:0,capital:0,treasury:0,landRequired:true},
+    funds:{ritual_supplies:{name:'Ritual supplies',capacity:6,unitCost:1}},outreach:[]
+  },
+  debal_public_support_711:{
+    name:'Public support for Debal',period:{yearMin:711,yearMax:711},
+    openings:[{id:'711',revision:'hindu_service_v2'},{id:'711',revision:'hindu_service_v2_governments_v2'}],
+    faithIds:[],affiliationIds:[],roleIds:[],institutionId:'debal_temple_service_711',
+    payer:'public',reserve:5,ai:true,
+    foundation:{startup:0,capital:0,treasury:0,landRequired:true},
+    funds:{ritual_supplies:{name:'Ritual supplies',capacity:6,unitCost:1}},outreach:[]
+  },
+  brahmanabad_lay_support_711:{
+    name:'Support local observance in Brahmanabad',period:{yearMin:711,yearMax:711},
+    openings:[{id:'711',revision:'hindu_service_v2'},{id:'711',revision:'hindu_service_v2_governments_v2'}],
+    faithIds:[],affiliationIds:[],roleIds:[],institutionId:'brahmanabad_ritual_support_711',
+    payer:'household',reserve:0,
+    foundation:{startup:0,capital:0,treasury:0,landRequired:true},
+    funds:{ritual_supplies:{name:'Ritual supplies',capacity:4,unitCost:2}},outreach:[]
+  },
+  brahmanabad_public_support_711:{
+    name:'Public support for Brahmanabad',period:{yearMin:711,yearMax:711},
+    openings:[{id:'711',revision:'hindu_service_v2'},{id:'711',revision:'hindu_service_v2_governments_v2'}],
+    faithIds:[],affiliationIds:[],roleIds:[],institutionId:'brahmanabad_ritual_support_711',
+    payer:'public',reserve:5,ai:true,
+    foundation:{startup:0,capital:0,treasury:0,landRequired:true},
+    funds:{ritual_supplies:{name:'Ritual supplies',capacity:4,unitCost:2}},outreach:[]
   }
 };
 FBDATA.techImpactReviews.features.arabian_dated_local_worship = {
@@ -750,4 +818,11 @@ FBDATA.techImpactReviews.features.sasanian_lay_service = {
 };
 FBDATA.techImpactReviews.features.sasanian_service_support = {
   mode:'none',rationale:'Voluntary foundation and giving use lawful existing property and the actual household or public payer, without a research gate.'
+};
+
+FBDATA.techImpactReviews.features.hindu_local_observance_711 = {
+  mode:'none',rationale:'Ordinary local observance depends on protected presence, with no wealth, land or discovery requirement.'
+};
+FBDATA.techImpactReviews.features.hindu_service_patronage_711 = {
+  mode:'none',rationale:'Optional service funds require lawful donated property and conserved prepaid supplies, without a discovery gate or automatic conversion.'
 };

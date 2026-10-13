@@ -172,3 +172,22 @@ FBDATA.bookmarkTerrain['711'] = {
   }
   b.revisions.jewish_samaritan_v3 = Object.assign({},source,changes);
 })();
+
+/* City-level lay service reconstructions. No temple footprint, incumbent or
+   endowed asset is inferred. Retained worlds and the fresh default stay intact. */
+(function () {
+  'use strict';
+  var b = FBDATA.bookmarks['711'], source = b.revisions.terrain_v2;
+  b.revisions.hindu_service_v2 = Object.assign({},source,{
+    localInstitutions:Object.assign({},source.localInstitutions,{
+      debal_temple_service_711:{city:'Debal',kind:'ritual_community',
+        provinceId:'debal',site:'debal_711',religion:'hindu_711',culture:'sindhi_711',
+        profileId:'debal_lay_service_711',jurisdictionIds:['debal'],vacant:true,freshOnly:true,
+        abbeyId:'debal_lay_service_property_711'},
+      brahmanabad_ritual_support_711:{city:'Brahmanabad',kind:'ritual_community',
+        provinceId:'mansura',site:'mansura_711',religion:'hindu_711',culture:'sindhi_711',
+        profileId:'brahmanabad_lay_service_711',jurisdictionIds:['mansura'],vacant:true,freshOnly:true,
+        abbeyId:'brahmanabad_lay_service_property_711'}
+    })
+  });
+})();
