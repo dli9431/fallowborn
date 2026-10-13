@@ -528,3 +528,62 @@ test('expanded observer checkpoints retain the existing budgets',async function 
     await saveBudget(page,testInfo,'observer-' + slice,8 * 1024 * 1024);
   }
 });
+
+test('open federate and curialis roles begin where their institutions live and attach the Ravenna story only there',
+  async function ({page},testInfo) {
+    await openGame(page,testInfo);
+    const rules = await page.evaluate(function () {
+      const before = JSON.stringify(FBDATA), rng = FB.getRngState(), uid = FB.getUidCounter();
+      const rows = FBDATA.startScenarios;
+      const federate = rows.find(function (r) { return r.id === 'federate_476'; });
+      const curialis = rows.find(function (r) { return r.id === 'curialis_476'; });
+      function check(b) {
+        const settled = {};
+        b.provinces.forEach(function (p) { if (!p.wasteland) settled[p.id] = true; });
+        const camps = b.realms.filter(function (r) { return r.government === 'federate_polity'; })
+          .map(function (r) { return r.capital; }).concat(['ravenna']);
+        const councils = Object.keys(b.localInstitutions || {}).map(function (id) { return b.localInstitutions[id]; })
+          .filter(function (d) { return d.kind === 'council' && d.provinceId; }).map(function (d) { return d.provinceId; });
+        const allowed = function (start) {
+          return b.provinces.filter(function (p) { return FB.startProvinceAllowed(start,b,p.id); })
+            .map(function (p) { return p.id; }).sort();
+        };
+        const unique = function (ids) {
+          return ids.filter(function (id, i) { return settled[id] && ids.indexOf(id) === i; }).sort();
+        };
+        return {federate:JSON.stringify(allowed(federate)) === JSON.stringify(unique(camps)),
+          curialis:JSON.stringify(allowed(curialis)) === JSON.stringify(unique(councils)),
+          several:allowed(federate).length > 1 && allowed(curialis).length > 1,
+          ravenna:FB.startProvinceAllowed(federate,b,'ravenna') && FB.startProvinceAllowed(curialis,b,'ravenna')};
+      }
+      const wider = FB.bookmark('476'), baseline = FB.bookmark('476','baseline');
+      const away = wider.startLocations.federate_476.filter(function (id) { return id !== 'ravenna'; })[0];
+      const civic = wider.startLocations.curialis_476.filter(function (id) { return id !== 'ravenna'; })[0];
+      return {wider:check(wider),baseline:check(baseline),away:away,
+        tracks:[FB.startTracks(federate,'ravenna'),FB.startTracks(federate,away),
+          FB.startTracks(curialis,'ravenna'),FB.startTracks(curialis,civic)],
+        unfixed:!federate.fixedProvinceId && !curialis.fixedProvinceId,
+        pure:before === JSON.stringify(FBDATA) && rng === FB.getRngState() && uid === FB.getUidCounter()};
+    });
+    const expected = {federate:true,curialis:true,several:true,ravenna:true};
+    expect(rules).toMatchObject({wider:expected,baseline:expected,
+      tracks:[['federate_track_476'],[],['curialis_track_476'],[]],unfixed:true,pure:true});
+    await page.evaluate(function () { FB.game.uiPrefs.hideTips = true; FB.game.uiPrefs.hideBeginnerHints = true; });
+    await page.getByRole('button',{name:'New Game',exact:true}).click();
+    await page.locator('#bookmarklist .scencard',{hasText:/\b476:/}).click();
+    await expect(page.locator('#scenariolist .scen-group')).toHaveText(['Historical starts','Open starts']);
+    await page.locator('#scenariolist .scencard',{hasText:'Federate Soldier'}).click();
+    await expect(page.locator('#pickprov:not(.hidden)')).toBeVisible();
+    expect(await page.evaluate(function (id) {
+      return FB.game.pickProvince(FB.world.byId[id]) && FB.game.pickSettlement({pid:id,index:0});
+    },rules.away)).toBe(true);
+    await expect(page.locator('#chargen:not(.hidden)')).toBeVisible();
+    await page.getByRole('button',{name:'Begin Your Story',exact:true}).click();
+    await page.evaluate(function () { FB.game.setPaused(true); });
+    await page.getByRole('button',{name:'Begin',exact:true}).click();
+    expect(await page.evaluate(function () {
+      const s = FB.state;
+      return {province:s.player.provinceId,scenario:s.start.scenarioId,
+        western:!!s.stories.western_court_476,track:!!s.stories.federate_track_476};
+    })).toEqual({province:rules.away,scenario:'federate_476',western:true,track:false});
+  });

@@ -70,6 +70,7 @@ async function registerReview(page, hidden) {
     });
     const scenario = clone(FBDATA.startScenarios.filter(function (s) { return s.id === 'curialis_476'; })[0]);
     scenario.id = 'sibling_commoner'; scenario.bookmarkIds = [def.id]; scenario.tracks = [];
+    delete scenario.trackLocations;
     scenario.intro = 'A civic household begins its review campaign.';
     FB.mods.apply({ name:'Sibling platform fixture', bookmarks:[def], startScenarios:[scenario] });
     return FB.validateBookmark(FB.bookmark(def.id));

@@ -26,10 +26,20 @@ async function beginBookmark(page, testInfo, id, scenarioId) {
     const scenario = input.scenarioId ? offered.filter(function (s) { return s.id === input.scenarioId; })[0]
       : offered.filter(function (s) { return s.profession === 'farmer'; })[0] || offered[0];
     if (!scenario) throw new Error('No ordinary start for bookmark ' + id);
-    const county = bm.provinces.filter(function (p) {
-      return !p.wasteland && (scenario.fixedProvinceId ? p.id === scenario.fixedProvinceId : true);
+    // The shared start gate decides the birthplace. A start whose story is
+    // bound to named counties begins in one of them so its track attaches.
+    const allowed = bm.provinces.filter(function (p) { return FB.startProvinceAllowed(scenario, bm, p.id); });
+    const storyPlaces = Object.keys(scenario.trackLocations || {}).reduce(function (ids, track) {
+      return ids.concat(scenario.trackLocations[track]);
+    }, []);
+    const county = allowed.filter(function (p) { return storyPlaces.indexOf(p.id) >= 0; })[0] || allowed[0];
+    if (!county) throw new Error('No available birthplace for ' + scenario.id + ' in bookmark ' + id);
+    // A declared identity applies where that community lives; elsewhere the
+    // county's principal community is the household's.
+    const declared = FB.provinceCommunities(county).filter(function (c) {
+      return c.culture === scenario.startCulture && c.religion === scenario.startReligion;
     })[0];
-    const culture = scenario.startCulture || county.culture, faith = scenario.startReligion || county.religion;
+    const culture = declared ? declared.culture : county.culture, faith = declared ? declared.religion : county.religion;
     const family = scenario.familyPresets ? Object.keys(scenario.familyPresets)[0] : 'established';
     const code = 'BOOKMARKSMOKE-' + id + '-' + scenario.id + '-' + county.id + '-m-Review-' + family;
     // Principal identities need no suffix. The ninth part requires an

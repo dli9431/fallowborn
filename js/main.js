@@ -2827,8 +2827,37 @@ FB.CHANGELOG = [
     });
     const box = $('scenariolist');
     box.innerHTML = '';
-    for (const sc of FBDATA.startScenarios) {
-      if (!scenarioOffered(sc, bookmark.id)) continue;
+    /* A fixed place or an existing court makes a historical start; every
+       other role is an open start chosen on the map. Headings appear only
+       when a date offers both kinds. */
+    const offered = FBDATA.startScenarios.filter(function (sc) {
+      return scenarioOffered(sc, bookmark.id);
+    });
+    const historical = offered.filter(function (sc) { return !!(sc.fixedProvinceId || sc.rulerRealmId); });
+    const open = offered.filter(function (sc) { return historical.indexOf(sc) < 0; });
+    function groupHeading(text) {
+      if (!historical.length || !open.length) return;
+      const heading = document.createElement('h3');
+      heading.className = 'scen-group';
+      heading.textContent = text;
+      box.appendChild(heading);
+    }
+    function storyPlaces(sc) {
+      const ids = [];
+      Object.keys(sc.trackLocations || {}).forEach(function (track) {
+        (sc.trackLocations[track] || []).forEach(function (id) {
+          if (ids.indexOf(id) < 0) ids.push(id);
+        });
+      });
+      return ids.map(function (id) {
+        const province = FB.world && FB.world.byId && FB.world.byId[id] ||
+          (bookmark.provinces || []).filter(function (row) { return row.id === id; })[0];
+        return province && typeof province.name === 'string' ? FB.L(province.name) : id;
+      }).join(', ');
+    }
+    for (const sc of historical.concat(open)) {
+      if (sc === historical[0]) groupHeading(FB.T('Historical starts'));
+      if (sc === open[0]) groupHeading(FB.T('Open starts'));
       const el = document.createElement('button');
       const locked = !scenarioUnlocked(sc);
       el.type = 'button';
@@ -2838,7 +2867,9 @@ FB.CHANGELOG = [
         FB.esc(FB.dataText(null, null, 'scenario', sc.id, sc, 'name', {})) +
         '</h3><p>' +
         FB.esc(FB.dataText(null, null, 'scenario', sc.id, sc, 'desc', {})) +
-        '</p>' + (locked
+        '</p>' + (storyPlaces(sc)
+          ? '<p class="scenario-story">' + FB.esc(FB.T('Story start: begin in {places}.', { places:storyPlaces(sc) })) + '</p>'
+          : '') + (locked
           ? '<p class="scenario-lock">' + FB.esc(scenarioUnlockText(sc, false)) + '</p>'
           : '');
       if (!locked) {
@@ -2938,8 +2969,17 @@ FB.CHANGELOG = [
     G.pending.provinceId = pr.id;
     const preserved = sameCommunityCounty
       ? provinceCommunity(pr, G.pending.culture, G.pending.religion) : null;
-    G.pending.culture = preserved ? preserved.culture : pr.culture;
-    G.pending.religion = preserved ? preserved.religion : pr.religion;
+    /* A role's declared identity is preselected where that community lives;
+       elsewhere the county's principal community applies. */
+    const scenario = G.pending.scenario;
+    const declared = !preserved && scenario && scenario.startCulture ?
+      FB.provinceCommunities(pr).filter(function (community) {
+        return community.culture === scenario.startCulture &&
+          community.religion === scenario.startReligion;
+      })[0] : null;
+    const chosen = preserved || declared;
+    G.pending.culture = chosen ? chosen.culture : pr.culture;
+    G.pending.religion = chosen ? chosen.religion : pr.religion;
     G.pending.communityProvinceId = pr.id;
     G.pending.settlementIdx = 0; // a new county restarts the birthplace pick
     G.pickStage = 'settlement';
@@ -3531,7 +3571,7 @@ FB.CHANGELOG = [
       if (!FB.adoptStartingRealm(state, sc))
         throw new Error('Starting ruler could not adopt the authored realm.');
     }
-    if (FB.stories) FB.stories.start(state, { tracks:sc.tracks });
+    if (FB.stories) FB.stories.start(state, { tracks:FB.startTracks(sc, provId) });
     state.seasonMark.gold = state.player.gold;
     if (FB.ensureInstitutions) FB.ensureInstitutions(state, { silent:true });
     state.player.focus = startEffects.focus || FB.defaultFocus(state);

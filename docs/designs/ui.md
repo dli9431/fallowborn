@@ -1387,6 +1387,8 @@ mod removes only the invalid shortcut; the ordinary path remains available. This
 over existing Serf eligibility, not a new gameplay capability, so it needs no technology-impact
 ledger entry.
 
+The beginning screen lists fixed-place and existing-ruler starts under **Historical starts** and map-chosen roles under **Open starts**, as full-width gold section headings in the card grid. The headings appear only when a date offers both kinds, so dates with only open roles keep a plain list. An open card whose story is bound to named counties adds one gold line, for example "Story start: begin in Ravenna.", so the player knows where the story runs before choosing a county.
+
 The ordinary path proceeds directly through bookmark → social scenario → province → character,
 rolling a fresh seed before the starting-date screen so the ordinary path has no preliminary
 choice dialog. The starting-date screen keeps **Use a Seed or Start Code** as a secondary

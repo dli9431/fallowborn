@@ -28,6 +28,15 @@
       return FB.systems.enabledForBookmark(bookmark, id, province.religion, realm && realm.government);
     });
   };
+  /* A track may name the counties where its story takes place. The same
+     beginning elsewhere is an ordinary household without that track. */
+  FB.startTracks = function (scenario, provinceId) {
+    var places = scenario && scenario.trackLocations || {};
+    return (scenario && Array.isArray(scenario.tracks) ? scenario.tracks : []).filter(function (id) {
+      return !Object.prototype.hasOwnProperty.call(places, id) ||
+        Array.isArray(places[id]) && places[id].indexOf(provinceId) >= 0;
+    });
+  };
   function delegatedStart(s) {
     var scenario = s && s.start && FBDATA.startScenarios.find(function (row) { return row.id === s.start.scenarioId; });
     return !!(scenario && scenario.rulerRealmId && !FB.governments.problems(scenario.governmentForm).length &&

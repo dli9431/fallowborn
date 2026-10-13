@@ -764,6 +764,36 @@ window.FBMODS = window.FBMODS || [];
       }
       validateIdList(scenario.tracks, path + '.tracks', tracks, true);
     }
+    if (own(scenario, 'trackLocations')) {
+      const places = scenario.trackLocations;
+      if (!plainObject(places) || !Object.keys(places).length) {
+        fail(path + '.trackLocations', 'must be a non-empty object keyed by track id.');
+      } else {
+        for (const trackId in places) {
+          if (!own(places, trackId)) continue;
+          const placePath = path + '.trackLocations.' + trackId;
+          const list = places[trackId];
+          if (!Array.isArray(scenario.tracks) || scenario.tracks.indexOf(trackId) < 0) {
+            fail(placePath, 'must name one of the scenario’s tracks.');
+          }
+          if (!Array.isArray(list) || !list.length || list.some(function (id, index) {
+            return typeof id !== 'string' || !id || list.indexOf(id) !== index;
+          })) {
+            fail(placePath, 'must be a non-empty list of unique county ids.');
+            continue;
+          }
+          for (const bookmarkId of (Array.isArray(scenario.bookmarkIds) ? scenario.bookmarkIds : [])) {
+            if (!own(rules.bookmarks, bookmarkId)) continue;
+            const bookmark = freshBookmark(bookmarkId);
+            for (const provinceId of list) {
+              if (!bookmark || !FB.startProvinceAllowed(scenario, bookmark, provinceId)) {
+                fail(placePath, provinceId + ' is not an available beginning of bookmark ' + bookmarkId + '.');
+              }
+            }
+          }
+        }
+      }
+    }
   }
 
   function validateStartScenarios(mod) {
@@ -813,7 +843,7 @@ window.FBMODS = window.FBMODS || [];
         intro:true, intro_f:true, intro_muslim:true, intro_other:true,
         startEffects:true, bookmarkIds:true, eras:true, alwaysUnlocked:true,
         fixedProvinceId:true, startAge:true, startCulture:true,
-        startReligion:true, familyPresets:true, tracks:true, hidden:true,
+        startReligion:true, familyPresets:true, tracks:true, trackLocations:true, hidden:true,
         rulerRealmId:true, governmentForm:true, characterName:true, onboarding:true, requirements:true,
         system:true, systems:true
       }, path);

@@ -1270,8 +1270,26 @@ FBDATA.aristocraticProfiles['sasanian_493'] = {
   };
   /* No opening transaction, story initialization or catalogue binding runs on
      restore. Unstamped supported saves resolve the untouched baseline. */
+  /* Open roles begin where their institutions live: a church household in a
+     county with a declared see or patriarchate, a curialis in a county with a
+     declared city council. */
+  function roleLocations(world) {
+    var churches = {}, councils = {}, institutions = world.localInstitutions || {};
+    Object.keys(institutions).forEach(function (id) {
+      var d = institutions[id];
+      if (!d || !d.provinceId) return;
+      if (d.kind === 'see' || d.kind === 'patriarchate') churches[d.provinceId] = true;
+      if (d.kind === 'council') councils[d.provinceId] = true;
+    });
+    function settled(table) {
+      return world.provinces.filter(function (p) { return !p.wasteland && table[p.id]; })
+        .map(function (p) { return p.id; });
+    }
+    return {cleric_493:settled(churches),curialis_493:settled(councils)};
+  }
+  expanded.startLocations = roleLocations(expanded);
   b.revision = 'world_v2';
-  b.revisions = {baseline:{},world_v2:expanded};
+  b.revisions = {baseline:{startLocations:roleLocations(b)},world_v2:expanded};
   FBDATA.techImpactReviews.features.period_493_world_habitation = {mode:'none',
     rationale:'Established households, ordinary local authority and provincial service require no discovery. Existing travel, production, equipment and government requirements remain authoritative.'};
 })();

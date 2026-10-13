@@ -256,7 +256,13 @@ for (const scenario of ['federate_476','curialis_476']) {
     await bookmark.click();
     const start=page.locator('#scenariolist .scencard').filter({hasText:scenario==='federate_476'?'Federate Soldier':'Curialis'});
     await expect(page.locator('#scenariolist .scencard')).toHaveCount(3);
+    await expect(start).toContainText('Story start: begin in Ravenna.');
     await start.click();
+    // An open role chooses its county; the Ravenna story attaches only there.
+    await expect(page.locator('#pickprov:not(.hidden)')).toBeVisible();
+    expect(await page.evaluate(function(){
+      return FB.game.pickProvince(FB.world.byId.ravenna)&&FB.game.pickSettlement({pid:'ravenna',index:0})!==false;
+    })).toBe(true);
     await expect(page.locator('#chargen:not(.hidden)')).toBeVisible();
     await page.getByRole('button',{name:'Begin Your Story',exact:true}).click();
     await expect(page.getByRole('heading',{name:'Your Story Begins',exact:true})).toBeVisible();

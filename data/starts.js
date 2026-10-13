@@ -12,6 +12,9 @@
      familyPresets: the allowed family shapes in picker order, each with
        optional authored name and diff labels; the first is the default
      tracks: player-track stories attached at creation (js/stories.js)
+     trackLocations: optional { trackId:[countyIds] }; a listed track attaches
+       only to a beginning in one of its counties, elsewhere the start is an
+       ordinary household
      intro, intro_f, intro_muslim, intro_other: the opening text */
 window.FBDATA = window.FBDATA || {};
 
@@ -55,10 +58,10 @@ window.FBDATA = window.FBDATA || {};
       familyPresets:{ standard:{ name:'Gallic court household', diff:'age 46 - existing court family', desc:'Keep the court’s seeded family. Unattested relatives are generated campaign characters.' } },
       onboarding:'ruler',
       intro:'You are Syagrius at Soissons. Your Roman domain has its own treasury and resident communities. Review Governance and Offices & Legitimacy in Deeds, manage your actual territory and prepare for neighboring courts. If Clovis inherits and challenges your domain, the story offers a decision; no historical date hands over your land.' },
-    { id:'federate_476', bookmarkIds:['476'], fixedProvinceId:'ravenna',
+    { id:'federate_476', bookmarkIds:['476'],
       alwaysUnlocked:true,
       name:'Federate Soldier',
-      desc:'A free soldier in a federate host at Ravenna. Earn wages, maintain your household and seek command while the western court bargains for its future.',
+      desc:'A free soldier in a federate host. Earn wages, maintain your household and seek command while courts bargain over pay and land.',
       tier:1, sex:'m', profession:'soldier', gold:20, prestige:5, piety:0,
       startAge:24, startCulture:'gothic', startReligion:'homoian',
       startEffects:{ skills:{ mar:2 },
@@ -66,8 +69,8 @@ window.FBDATA = window.FBDATA || {};
       familyPresets:{
         standard:{ name:'Free household', diff:'age 24 · federate service' }
       },
-      tracks:['federate_track_476'],
-      intro:'You are {name}, a free federate soldier near Ravenna. Orestes owes the host its pay; the court, the city and Odoacer each want a different settlement. Your household can work and trade while you decide whom to serve. Open the western court story in Deeds to review the dispute; personal standing and a command are separate rewards.' },
+      tracks:['federate_track_476'], trackLocations:{ federate_track_476:['ravenna'] },
+      intro:'You are {name}, a free federate soldier of {province}. The host lives on promised pay, and the courts it serves each want a different settlement. Your household can work and trade while you decide whom to serve. At Ravenna, the western court story in Deeds follows the host’s pay dispute; personal standing and a command are separate rewards.' },
     { id:'colonus_476', bookmarkIds:['476'], systems:['colonate'], alwaysUnlocked:true,
       name:'Colonus', desc:'A Roman tenant household bound to an estate. Meet crop and account dues, earn the possessor’s consent, buy release or risk flight.',
       tier:0, profession:'colonus', gold:5, prestige:0, piety:0,
@@ -77,8 +80,8 @@ window.FBDATA = window.FBDATA || {};
         established:{ name:'Established tenant household', diff:'spouse and young children' }
       },
       intro:'You are {name}, a colonus of {province}. Your household cultivates an estate’s land; use of its fields and dwelling gives you no ownership. Crop and account dues continue whichever daily focus you choose. Open Review estate & freedom in Deeds to meet the possessor, inspect your obligations and review purchase, consented military service, consented ordination or risky flight. Release includes your spouse and descendants; parents and siblings need separate paid release. Flight grants no lawful charter.' },
-    { id:'curialis_476', bookmarkIds:['476'], fixedProvinceId:'ravenna', alwaysUnlocked:true,
-      name:'Curialis', desc:'A Roman civic household at Ravenna. Serve the council, seek a local mandate, or keep your livelihood outside the court dispute.',
+    { id:'curialis_476', bookmarkIds:['476'], alwaysUnlocked:true,
+      name:'Curialis', desc:'A Roman civic household in a council city. Serve the council, seek a local mandate, or keep your livelihood outside the courts’ disputes.',
       tier:2, profession:'curialis', gold:80, prestige:30, piety:10,
       startAge:30, startCulture:'roman', startReligion:'nicene',
       startEffects:{ skills:{ ste:2, lea:2 }, careerExperience:5 },
@@ -86,8 +89,8 @@ window.FBDATA = window.FBDATA || {};
         established:{ name:'Civic household', diff:'age 30 · spouse and young children' },
         standard:{ name:'Unmarried curialis', diff:'age 30 · parents and siblings' }
       },
-      tracks:['curialis_track_476'],
-      intro:'You are {name}, a curialis of Ravenna. Civic accounts and family obligations fill your days while the court and federate host negotiate. A council mandate can bring standing, but it does not give you the city’s land or treasury. Open your civic story in Deeds to review the mandate, or keep working for your household. Rank & Realm distinguishes your standing from the powers of an appointment.' },
+      tracks:['curialis_track_476'], trackLocations:{ curialis_track_476:['ravenna'] },
+      intro:'You are {name}, a curialis of {province}. Civic accounts and family obligations fill your days while distant courts and hosts negotiate. A council mandate can bring standing, but it does not give you the city’s land or treasury. At Ravenna, your civic story in Deeds follows the western court’s mandate; elsewhere, keep working for your household. Rank & Realm distinguishes your standing from the powers of an appointment.' },
     { id:'farmer_476', bookmarkIds:['476'], alwaysUnlocked:true,
       name:'Free Farming Household',
       desc:'A free household with a small plot in the wider late antique world.',
@@ -119,17 +122,17 @@ window.FBDATA = window.FBDATA || {};
       name:'Church Household',
       desc:'Begin in local religious service with letters and piety.',
       tier:1, profession:'monk', gold:2, prestige:0, piety:25,
-      fixedProvinceId:'roma', startCulture:'roman', startReligion:'nicene',
+      startCulture:'roman', startReligion:'nicene',
       intro:'You are {name}, serving the church in {province}. Letters, prayer and neighbors’ needs give your household a place in the city. Local religious authority remains separate from the ruling court.' },
     { id:'curialis_493', bookmarkIds:['493'], alwaysUnlocked:true,
-      fixedProvinceId:'ravenna', startCulture:'roman', startReligion:'nicene',
-      name:'Ravenna Curialis',
-      desc:'Keep civic accounts under Theoderic’s Italian settlement.',
+      startCulture:'roman', startReligion:'nicene',
+      name:'Curialis',
+      desc:'Keep civic accounts for a council city in the new kingdoms.',
       tier:2, profession:'curialis', gold:80, prestige:30, piety:10,
       startAge:30, startEffects:{ skills:{ste:2,lea:2}, careerExperience:5 },
       familyPresets:{ established:{ name:'Civic household', diff:'age 30 · spouse and young children' },
         standard:{ name:'Unmarried curialis', diff:'age 30 · parents and siblings' } },
-      intro:'You are {name}, a curialis of Ravenna. Theoderic holds the court, Liberius oversees civil administration, and the city still needs its records. Work for your household, deal with the council, and seek an ordinary appointment without inheriting an earlier court dispute.' },
+      intro:'You are {name}, a curialis of {province}. New kings hold the courts, yet the city still needs its records. Work for your household, deal with the council, and seek an ordinary appointment without inheriting an earlier court dispute.' },
     { id:'serf', eras:['early_medieval','high_medieval'], name:'Serf',
       desc:'Bound to the land, with no property or freedom.',
       tier:0, profession:'farmer', gold:5, prestige:0, piety:0,

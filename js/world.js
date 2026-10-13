@@ -1262,6 +1262,13 @@ window.FB = window.FB || {};
       if (start.tracks !== undefined) list(start.tracks, owner + '.tracks', function (track) {
         story(track, 'track', worldStories.concat(start.tracks), owner);
       });
+      if (plainRecord(start.trackLocations)) Object.keys(start.trackLocations).forEach(function (track) {
+        var places = start.trackLocations[track];
+        (Array.isArray(places) ? places : []).forEach(function (pid) {
+          if (!provinces[pid] || provinces[pid].wasteland || !FB.startProvinceAllowed(start, definition, pid))
+            fault(owner, 'track ' + track + ' location ' + pid + ' is not an available beginning.');
+        });
+      });
       requirements(start.requirements, owner, start.startReligion, start.governmentForm, worldStories.concat(start.tracks || []));
     });
     if (era) cultures[era.defaultCulture] = true;

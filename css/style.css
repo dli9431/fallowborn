@@ -422,6 +422,11 @@ html.music-choice-resolved #music-choice { display: none !important; }
   font-size: 19px; margin-bottom: 6px;
 }
 .scencard p { color: var(--main-text-color); }
+#scenariolist .scen-group {
+  grid-column: 1 / -1; margin: 4px 0 -4px;
+  color: var(--ui-accent-color); font-size: 16px; font-weight: 700;
+}
+.scencard .scenario-story { color: var(--ui-accent-color); margin-top: 6px; font-size: 13px; }
 .scencard.locked {
   background: #201f1d; border-color: #484641; color: var(--helper-text-color); cursor: default;
 }

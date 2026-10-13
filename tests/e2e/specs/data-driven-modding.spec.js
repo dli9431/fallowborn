@@ -538,6 +538,17 @@ test('milestone-one validation protects baseline starts and rejects bad referenc
       badFixed.startReligion = 'homoian';
       const loneFixed = scenario('e2e_lone_fixed');
       loneFixed.fixedProvinceId = 'london';
+      function placed(id, places) {
+        const out = scenario(id);
+        out.bookmarkIds = ['476'];
+        out.eras = ['late_antique'];
+        out.tracks = ['federate_track_476'];
+        out.trackLocations = places;
+        return out;
+      }
+      const shapedPlaces = placed('e2e_shaped_places', { federate_track_476:'ravenna' });
+      const strayPlaces = placed('e2e_stray_places', { curialis_track_476:['ravenna'] });
+      const barrenPlaces = placed('e2e_barren_places', { federate_track_476:['w_sahara_c'] });
       const badRange = copy(FBDATA.familyPresets.filter(function (entry) {
         return entry.id === 'established';
       })[0]);
@@ -564,6 +575,9 @@ test('milestone-one validation protects baseline starts and rejects bad referenc
         { data:{ startScenarios:[badFixed] }, includes:'must be a community of london' },
         { data:{ startScenarios:[loneFixed] },
           includes:'needs bookmarkIds, startCulture and startReligion' },
+        { data:{ startScenarios:[shapedPlaces] }, includes:'non-empty list of unique county ids' },
+        { data:{ startScenarios:[strayPlaces] }, includes:'must name one of the scenario' },
+        { data:{ startScenarios:[barrenPlaces] }, includes:'w_sahara_c is not an available beginning of bookmark 476' },
         { data:{ familyPresets:[badRange] }, includes:'minimum to maximum' },
         { data:{ familyPresets:[badStandard] }, includes:'historical age' }
       ];
@@ -590,6 +604,7 @@ test('milestone-one validation protects baseline starts and rejects bad referenc
       ruled.startReligion = 'homoian';
       ruled.familyPresets = { standard:{ name:'Ravenna household' } };
       ruled.tracks = ['federate_track_476'];
+      ruled.trackLocations = { federate_track_476:['ravenna'] };
       let accepted;
       try {
         FB.mods.apply({ startScenarios:[ruled] });
@@ -603,7 +618,7 @@ test('milestone-one validation protects baseline starts and rejects bad referenc
     });
 
     expect(result.errors).toEqual([
-      true, true, true, true, true, true, true, true, true, true, true, true, true
+      true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true
     ]);
     expect(result.unchanged).toBe(true);
     expect(result.accepted).toBe(true);

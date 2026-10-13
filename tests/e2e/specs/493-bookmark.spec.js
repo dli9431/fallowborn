@@ -286,3 +286,37 @@ test('493 completes one season of ordinary household play with midpoint and hidd
     expect(end).toEqual({ year:493, turn:90, ordinary:true, bookmark:'493',
       stories:true, errors:[], valid:true });
   });
+
+test('493 church and curial households begin wherever a see or a council is declared', async function ({ page }, testInfo) {
+  await openGame(page, testInfo);
+  const result = await page.evaluate(function () {
+    const before = JSON.stringify(FBDATA), rng = FB.getRngState(), uid = FB.getUidCounter();
+    const rows = FBDATA.startScenarios;
+    function check(b) {
+      const settled = {};
+      b.provinces.forEach(function (p) { if (!p.wasteland) settled[p.id] = true; });
+      const counties = function (kinds) {
+        const ids = Object.keys(b.localInstitutions || {}).map(function (id) { return b.localInstitutions[id]; })
+          .filter(function (d) { return kinds.indexOf(d.kind) >= 0 && d.provinceId; })
+          .map(function (d) { return d.provinceId; });
+        return ids.filter(function (id, i) { return settled[id] && ids.indexOf(id) === i; }).sort();
+      };
+      const allowed = function (id) {
+        const start = rows.find(function (r) { return r.id === id; });
+        return b.provinces.filter(function (p) { return FB.startProvinceAllowed(start, b, p.id); })
+          .map(function (p) { return p.id; }).sort();
+      };
+      return { cleric:JSON.stringify(allowed('cleric_493')) === JSON.stringify(counties(['see', 'patriarchate'])),
+        curialis:JSON.stringify(allowed('curialis_493')) === JSON.stringify(counties(['council'])),
+        several:allowed('cleric_493').length > 1 && allowed('curialis_493').length > 1,
+        retained:allowed('cleric_493').indexOf('roma') >= 0 && allowed('curialis_493').indexOf('ravenna') >= 0 };
+    }
+    return { world:check(FB.bookmark('493')), baseline:check(FB.bookmark('493', 'baseline')),
+      unfixed:['cleric_493', 'curialis_493'].every(function (id) {
+        return !rows.find(function (r) { return r.id === id; }).fixedProvinceId;
+      }),
+      pure:before === JSON.stringify(FBDATA) && rng === FB.getRngState() && uid === FB.getUidCounter() };
+  });
+  const expected = { cleric:true, curialis:true, several:true, retained:true };
+  expect(result).toEqual({ world:expected, baseline:expected, unfixed:true, pure:true });
+});

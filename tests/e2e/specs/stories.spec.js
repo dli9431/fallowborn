@@ -209,6 +209,14 @@ test('the start picker and family presets follow scenario data',
     await expect(family).toContainText('age 24 · federate service');
     await expect(page.locator('input[name=cg-family][value="standard"]')).toBeChecked();
     await page.locator('#btn-cg-back').click();
+    // An open role returns to its birthplace map. Leave it and reopen the
+    // 476 beginnings, which a pasted start code never rendered.
+    await expect(page.locator('#pickprov:not(.hidden)')).toBeVisible();
+    await page.locator('#btn-pick-back').click();
+    if (await page.locator('#pickprov:not(.hidden)').count()) await page.locator('#btn-pick-back').click();
+    await page.locator('#btn-ng-back').click();
+    await page.locator('#bookmarklist .scencard', { hasText:/\b476:/ }).click();
+    await expect(page.locator('#scenariolist .scen-group')).toHaveText(['Historical starts', 'Open starts']);
     const cards = page.locator('#scenariolist .scencard');
     // Seven 476 starts (federate, colonus, curialis, three free households and
     // the Pontic household) plus the Observe card; hidden ruler starts stay out.
