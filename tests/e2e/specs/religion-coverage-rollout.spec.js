@@ -428,3 +428,47 @@ test('every retained and opt-in revision validates against the combined family c
     })).toEqual({revisions:Array(7).fill(true),errors:[[],[],[],[],[],[],[]],
       institutions:[],activities:[],dangling:[],pure:true});
   });
+
+test('Islamic composed revisions keep the activity and patronage offers of their sources',
+  async function ({page},testInfo) {
+    await openGame(page,testInfo);
+    expect(await page.evaluate(function () {
+      const before = JSON.stringify(FBDATA), rng = FB.getRngState(), uid = FB.getUidCounter();
+      const steps = {'800':['_islamic_v1','_learning_v1'],'867':['_islamic_v1'],'1066':['_islamic_v1','_institutions_v1']};
+      const missing = [];
+      Object.keys(steps).forEach(function (id) {
+        const revisions = FBDATA.bookmarks[id].revisions;
+        [FBDATA.religiousActivities,FBDATA.religiousPatronage].forEach(function (table) {
+          Object.keys(table).forEach(function (key) {
+            const openings = table[key].openings;
+            function names(revision) {
+              return openings.some(function (o) { return o.id === id && o.revision === revision; });
+            }
+            openings.filter(function (o) { return o.id === id; }).forEach(function (o) {
+              steps[id].forEach(function (suffix) {
+                const composed = o.revision + suffix;
+                if (Object.prototype.hasOwnProperty.call(revisions,composed) && !names(composed))
+                  missing.push(key + ':' + id + '/' + composed);
+              });
+            });
+          });
+        });
+      });
+      const christian = {'800':['samarkand_service_800','baghdad_service_800','alexandrian_relief_800','ibrim_service_800'],
+        '867':['dongola_service_867','alexandrian_relief_867','baghdad_service_867'],
+        '1066':['alexandrian_relief_1066','constantinople_greek_service_1066']};
+      const fresh = Object.keys(christian).map(function (id) {
+        const revision = FB.bookmark(id).revision;
+        return {revision:revision,offered:christian[id].every(function (key) {
+          return FBDATA.religiousActivities[key].openings.some(function (o) {
+            return o.id === id && o.revision === revision;
+          });
+        })};
+      });
+      return {missing:missing,fresh:fresh,
+        pure:before === JSON.stringify(FBDATA) && rng === FB.getRngState() && uid === FB.getUidCounter()};
+    })).toEqual({missing:[],fresh:[
+      {revision:'inhabited_v2_governments_v2_islamic_v1_learning_v1',offered:true},
+      {revision:'governments_v2_islamic_v1',offered:true},
+      {revision:'governments_v2_islamic_v1_institutions_v1',offered:true}],pure:true});
+  });

@@ -5776,6 +5776,8 @@ religiousActivities and religiousPatronage are optional mergeable tables. Their 
 
 Local activities optionally declare provinceIds (one to 32 distinct county ids) and protectedWorship (boolean). Actual location must match the scope, and protectedWorship:true requires the existing local worship protection. These fields are rejected for journeys and patronage, impose no office/estate requirement and are preserved in frozen saved commitments. Omitted fields preserve existing profiles. Multiple activity options can share a milestone to prevent equivalent paid and free participation from awarding it twice. The early Uppakra and Samogitian profiles demonstrate district scope without placing a temple or changing a released faith.
 
+A nonempty openings list matches exact revision ids. A script that composes a descendant revision must add that revision to every activity and patronage declaration it should keep. data/islamic_profiles.js, data/islamic_institutions.js and data/islamic_rollout.js do this for every declaration that names their source revision. Mods that compose further descendants follow the same rule.
+
 Dated Arabian review worlds
 
 data/arabian_openings.js loads after data/government_rollout.js and data/islamic_profiles.js. For 800, 867 and 1066 it composes inhabited_v2_governments_v2_arabian_v1 and inhabited_v2_governments_v2_islamic_v1_arabian_v1; 1204 receives inhabited_v2_arabian_v1. No fresh default is selected. The complete source world remains intact except for its institution table and the 800 review's independent city presentations. The 800 layout adds Mecca and Medina at existing anchors without changing the retained generated slots or importing later fill entries.

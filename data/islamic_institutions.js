@@ -2,6 +2,19 @@
    mosque building, historical staff list or endowment deed. */
 (function () {
   'use strict';
+  /* A composed revision keeps the activity and patronage offers of its source,
+     because a nonempty openings list matches exact revision ids only. */
+  function carryOpenings(id, sourceId, revisionId) {
+    [FBDATA.religiousActivities, FBDATA.religiousPatronage].forEach(function (table) {
+      Object.keys(table || {}).forEach(function (key) {
+        var openings = table[key].openings;
+        function names(revision) {
+          return openings.some(function (o) { return o.id === id && o.revision === revision; });
+        }
+        if (names(sourceId) && !names(revisionId)) openings.push({id:id, revision:revisionId});
+      });
+    });
+  }
   var circles = {
     baghdad_shafii_circle_1066:{
       city:'Baghdad',kind:'school',provinceId:'baghdad',site:'baghdad',
@@ -22,5 +35,6 @@
     bookmark.revisions[sourceId + '_institutions_v1'] = Object.assign({}, source, {
       localInstitutions:Object.assign({}, source.localInstitutions || {}, circles)
     });
+    carryOpenings('1066', sourceId, sourceId + '_institutions_v1');
   });
 })();
