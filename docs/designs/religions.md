@@ -18,6 +18,18 @@ The Italian Archaeological Mission's The Buddhist site of Tapa Sardar, fire/reco
 
 Zafar Paiman's 2011 Tepe Narenj colloquium abstract, excavation chronology and lower/upper access paragraphs, supports a separate establishment candidate. A broad occupation range and lay donor imagery do not settle an opening-year building, local ordination or entitlement to the restricted upper area. The implemented lay contracts are simulations and promise no such access. https://seechac.org/2011-international-colloquium-abstract/
 
+Buddhist dated acceptance boundaries
+
+Dated Buddhist activity eligibility follows the saved campaign revision and the live year together. The early household declarations belong only to 476 wider_v2 and 493 world_v2; the 711 household and proposed house-service declarations belong only to terrain_v2_governments_v2. Other retained or opt-in revisions do not inherit activity eligibility merely because they contain the same faith id. Fresh revision selection remains unchanged.
+
+The existing early population and court assignments remain provisional. No new early monastery is placed. The 711 household rules are revised in place, while the two independent lay house profiles remain available for authored placements without seeding premises. Their test bindings exercise different districts, admission rules and restricted funds; they do not certify historical monastery coordinates.
+
+800 and 867 have separate unresolved community, primary-profile and access decisions. Neither opening receives a Buddhist population allocation or an active house from the earlier declarations. The 1066 and 1204 local-house decisions likewise remain unresolved. The 1204 Qara Khitai court keeps its current buddhist_476 identity pending a complete dated replacement; its off-map status and Samarkand diplomatic anchor grant no local monastery, resident conversion or change to subordinate courts. No reusable replacement profile is introduced by these acceptance boundaries.
+
+The final allowed service year is 799. A lesson still pending when the live year becomes 800 ends without a reward or consumption of its restricted service fund; the institution's property, lay membership and household identity remain. That participation cutoff is a simulation limit, not a historical extinction event. A previously reviewed proposal is rechecked against the current date before it can spend or begin a service.
+
+Acceptance covers every registered revision of all seven openings, actual unplaced-house rejection, both house-service cutoff paths, and early household and 1204 court restoration in the standard and CrazyGames distributions. Restoring after another bookmark was activated preserves the saved campaign, community allocations, court kin and existing activity. Completion of a restored household lesson uses its original once-per-person milestone. Loading never supplies missing Buddhist premises or converts the off-map court's subjects. Baseline technology impact remains none; these checks add no gameplay capability or technology gate.
+
 Jewish and Samaritan profile boundaries
 
 jewish retains its released definition, ancestry, household transactions and saved followers. rabbanite supplies an optional institution profile from 476 onward across the seven reviewed bookmarks; its availability permits institution consumers only. It cannot be chosen for a household, a population project, a ruler or a conversion. Local scholarly affiliation and recognition will use institution contracts while the household keeps its primary identity. No existing community is reclassified by adding this profile.
