@@ -2,6 +2,19 @@
    Kufa is a city-level learning reconstruction, without named staff/property. */
 (function () {
   'use strict';
+  /* A composed revision keeps the activity and patronage offers of its source,
+     because a nonempty openings list matches exact revision ids only. */
+  function carryOpenings(id, sourceId, revisionId) {
+    [FBDATA.religiousActivities, FBDATA.religiousPatronage].forEach(function (table) {
+      Object.keys(table || {}).forEach(function (key) {
+        var openings = table[key].openings;
+        function names(revision) {
+          return openings.some(function (o) { return o.id === id && o.revision === revision; });
+        }
+        if (names(sourceId) && !names(revisionId)) openings.push({id:id, revision:revisionId});
+      });
+    });
+  }
   var bookmark = FBDATA.bookmarks['800'], revisions = bookmark.revisions;
   bookmark.revisions = Object.assign({}, revisions);
   Object.keys(revisions).forEach(function (sourceId) {
@@ -25,6 +38,7 @@
         }
       })
     });
+    carryOpenings('800', sourceId, sourceId + '_learning_v1');
   });
   var selected = {
     '800':'inhabited_v2_governments_v2_islamic_v1_learning_v1',

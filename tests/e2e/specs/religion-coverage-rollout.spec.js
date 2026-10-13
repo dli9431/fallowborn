@@ -12,8 +12,23 @@ dependsOnRuntime(__filename, ['data/cultures.js','data/bookmarks.js','data/bookm
   'data/bookmark_476_wider_identities.js','data/bookmark_476_wider.js','data/bookmark_493_world.js',
   'data/bookmark_711.js','data/bookmark_711_terrain.js','data/bookmark_800_expansion.js',
   'data/bookmark_867_expansion.js','data/bookmark_1066_inhabited.js','data/bookmark_1204_terrain.js',
-  'data/government_rollout.js','data/technology.js','js/model.js','js/world.js','js/actions.js',
-  'js/religion.js','js/population.js','js/mods.js','js/save.js','js/save_v4.js','js/main.js','js/ui_modals.js']);
+  'data/government_rollout.js','data/christian_rollout.js','data/islamic_profiles.js',
+  'data/african_religious_rollout.js','data/arabian_openings.js','data/islamic_institutions.js',
+  'data/islamic_rollout.js','data/religious_institutions.js','data/religious_activities.js',
+  'data/technology.js','js/model.js','js/world.js','js/actions.js',
+  'js/religion.js','js/population.js','js/mods.js','js/save.js','js/save_v4.js','js/main.js','js/ui_modals.js',
+  'js/religious_institutions.js','js/religious_activities.js']);
+
+/* Wave 15 closeout record. A placeholder leaves this list only when its
+   owning family migrates every consumer and deletes the unreleased id. */
+const HELD_PLACEHOLDERS = ['aksumite_christian_476','arabian_traditional_476','brahmanical_476',
+  'buddhist_476','buddhist_711','caucasian_christian_476','caucasian_traditional_476',
+  'finnic_traditional_476','hindu_711','horn_traditional_476','insular_traditional_476',
+  'iranian_traditional_476','niger_traditional_1066','nile_traditional_476','sahel_traditional_476',
+  'sogdian_traditional_476','steppe_traditional_476','umayyad_sunni_711','woodland_traditional_476'];
+const FAMILY_PROFILES = ['ghana_local_practice_1066','ibadi','imami_pre_occultation','imami_twelver',
+  'ismaili_fatimid','ismaili_nizari_1204','ismaili_tayyibi_1204','jain','karaite','rabbanite',
+  'samaritan','zaydi','zoroastrian_sasanian_476'];
 
 test('the existing catalogue declares local availability without changing released effective rules',
   async function ({page},testInfo) {
@@ -340,4 +355,120 @@ test('expired profiles preserve an ongoing project without manufacturing followe
           JSON.stringify(FB.countyCommunityProject(s,pid,'faith')) === JSON.stringify(project),
         pure:before === JSON.stringify(s) && rng === FB.getRngState() && uid === FB.getUidCounter()};
     })).toEqual({exists:true,survives:true,preview:true,unchanged:true,pure:true});
+  });
+
+test('provisional faiths are only the recorded holds and family profiles keep their dated boundaries',
+  async function ({page},testInfo) {
+    await openGame(page,testInfo);
+    const fixture = JSON.parse(fs.readFileSync(path.join(__dirname,'../fixtures/released-catalogue.json'),'utf8'));
+    expect(await page.evaluate(function (input) {
+      const before = JSON.stringify(FBDATA), rng = FB.getRngState(), uid = FB.getUidCounter();
+      const supplementary = [FBDATA.bookmarkReligions711,FBDATA.bookmarkReligions476Wider,
+        FBDATA.bookmarkReligions1066Terrain].reduce(function (ids, table) {
+        return ids.concat(Object.keys(table || {}));
+      },[]).sort();
+      const consumers = ['community','character','ruler','institution','start','story','conversion','project'];
+      function anyAt(id, date) {
+        return consumers.some(function (consumer) {
+          return FB.faithHistoricalAvailable(id,FB.bookmark(date),consumer);
+        });
+      }
+      const muslim = FB.religionIds(null,false).filter(function (id) {
+        return FB.faithLineage(id,null).indexOf('muslim') >= 0;
+      });
+      return {supplementary:supplementary,
+        replacedRemoved:!FB.faithExists('wagadu_traditional_1066',null),
+        unreleased:input.held.concat(input.family).every(function (id) {
+          return input.released.indexOf(id) < 0;
+        }),
+        familyDeclared:input.family.every(function (id) {
+          const availability = FB.faithAvailability(id,null);
+          return FB.faithExists(id,null) && !!availability &&
+            (availability.yearMin !== undefined || !!availability.bookmarkIds);
+        }),
+        islamBeforeHijra:muslim.length > 0 && ['476','493'].every(function (date) {
+          return muslim.every(function (id) { return !anyAt(id,date); });
+        }),
+        fatimidBefore909:['711','800','867'].map(function (date) { return anyAt('ismaili_fatimid',date); }),
+        nizariTayyibi:[anyAt('ismaili_nizari_1204','1066'),anyAt('ismaili_tayyibi_1204','1066'),
+          FB.faithHistoricalAvailable('ismaili_nizari_1204',FB.bookmark('1204'),'character'),
+          FB.faithHistoricalAvailable('ismaili_tayyibi_1204',FB.bookmark('1204'),'character')],
+        pure:before === JSON.stringify(FBDATA) && rng === FB.getRngState() && uid === FB.getUidCounter()};
+    },{held:HELD_PLACEHOLDERS,family:FAMILY_PROFILES,released:fixture.selection.faiths})).toEqual({
+      supplementary:HELD_PLACEHOLDERS.concat(['ghana_local_practice_1066']).sort(),
+      replacedRemoved:true,unreleased:true,familyDeclared:true,islamBeforeHijra:true,
+      fatimidBefore909:[false,false,false],
+      nizariTayyibi:[false,false,true,true],pure:true});
+  });
+
+test('every retained and opt-in revision validates against the combined family catalogues',
+  async function ({page},testInfo) {
+    await openGame(page,testInfo);
+    expect(await page.evaluate(function () {
+      const before = JSON.stringify(FBDATA), rng = FB.getRngState(), uid = FB.getUidCounter();
+      const dates = ['476','493','711','800','867','1066','1204'];
+      function revisionExists(opening) {
+        const raw = FBDATA.bookmarks[opening.id];
+        return !!raw && (raw.revisions ? Object.prototype.hasOwnProperty.call(raw.revisions,opening.revision)
+          : opening.revision === 'baseline');
+      }
+      const dangling = [];
+      [FBDATA.religiousActivities,FBDATA.religiousPatronage].forEach(function (table) {
+        Object.keys(table).forEach(function (id) {
+          (table[id].openings || []).forEach(function (opening) {
+            if (!revisionExists(opening)) dangling.push(id + ':' + opening.id + '/' + opening.revision);
+          });
+        });
+      });
+      return {revisions:dates.map(function (id) { return FB.bookmarkRevisions(id).length > 1; }),
+        errors:dates.map(function (id) { return FB.validateBookmark(FBDATA.bookmarks[id]); }),
+        institutions:FB.religiousInstitutionCatalogFaults(FBDATA),
+        activities:FB.religiousActivityCatalogFaults(FBDATA),dangling:dangling,
+        pure:before === JSON.stringify(FBDATA) && rng === FB.getRngState() && uid === FB.getUidCounter()};
+    })).toEqual({revisions:Array(7).fill(true),errors:[[],[],[],[],[],[],[]],
+      institutions:[],activities:[],dangling:[],pure:true});
+  });
+
+test('Islamic composed revisions keep the activity and patronage offers of their sources',
+  async function ({page},testInfo) {
+    await openGame(page,testInfo);
+    expect(await page.evaluate(function () {
+      const before = JSON.stringify(FBDATA), rng = FB.getRngState(), uid = FB.getUidCounter();
+      const steps = {'800':['_islamic_v1','_learning_v1'],'867':['_islamic_v1'],'1066':['_islamic_v1','_institutions_v1']};
+      const missing = [];
+      Object.keys(steps).forEach(function (id) {
+        const revisions = FBDATA.bookmarks[id].revisions;
+        [FBDATA.religiousActivities,FBDATA.religiousPatronage].forEach(function (table) {
+          Object.keys(table).forEach(function (key) {
+            const openings = table[key].openings;
+            function names(revision) {
+              return openings.some(function (o) { return o.id === id && o.revision === revision; });
+            }
+            openings.filter(function (o) { return o.id === id; }).forEach(function (o) {
+              steps[id].forEach(function (suffix) {
+                const composed = o.revision + suffix;
+                if (Object.prototype.hasOwnProperty.call(revisions,composed) && !names(composed))
+                  missing.push(key + ':' + id + '/' + composed);
+              });
+            });
+          });
+        });
+      });
+      const christian = {'800':['samarkand_service_800','baghdad_service_800','alexandrian_relief_800','ibrim_service_800'],
+        '867':['dongola_service_867','alexandrian_relief_867','baghdad_service_867'],
+        '1066':['alexandrian_relief_1066','constantinople_greek_service_1066']};
+      const fresh = Object.keys(christian).map(function (id) {
+        const revision = FB.bookmark(id).revision;
+        return {revision:revision,offered:christian[id].every(function (key) {
+          return FBDATA.religiousActivities[key].openings.some(function (o) {
+            return o.id === id && o.revision === revision;
+          });
+        })};
+      });
+      return {missing:missing,fresh:fresh,
+        pure:before === JSON.stringify(FBDATA) && rng === FB.getRngState() && uid === FB.getUidCounter()};
+    })).toEqual({missing:[],fresh:[
+      {revision:'inhabited_v2_governments_v2_islamic_v1_learning_v1',offered:true},
+      {revision:'governments_v2_islamic_v1',offered:true},
+      {revision:'governments_v2_islamic_v1_institutions_v1',offered:true}],pure:true});
   });
