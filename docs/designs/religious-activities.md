@@ -40,6 +40,8 @@ religious_activity_participation, religious_activity_patronage and religious_act
 
 Coverage
 
+kufa_hanafi_learning_800, baghdad_shafii_learning_1066 and nishapur_shafii_ashari_learning_1066 use qualified learner membership and explicit scholarly affiliations in the dated circles. Seven days, no fee and one intelligence point per actor milestone are simulation terms. Kufa's window is 800 only and the other windows are 1066 only. data/islamic_rollout.js selects their accepted fresh revisions, preserving every predecessor and saved commitment. No prayer/judicial office, career rank, Hajj completion or endowment follows from learning. islamic_scholarly_learning has technology impact none. The Islamic specification uses fictional property terms to cover funding conservation, unused restricted gifts on interruption, public/AI payer separation and retained service property; no historical waqf or recurring revenue is declared. Sources and geographical limits are in docs/designs/religions.md.
+
 tests/e2e/specs/religious-activities.spec.js covers an existing pilgrimage adapter and independently declared fictional local learning/service, pure and stale proposals, date/revision gates, unsupported calendars, single rewards, interruption, exact land and gold conservation, restricted funding, service delivery, property holds, capacity, county/settlement project progress and legacy reward suppression. Fixture institutions are fictional and are not shipped placements.
 
 Household review and profession gates

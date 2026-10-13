@@ -438,6 +438,32 @@ FBDATA.religiousActivities = {
     mode:'local', purpose:null, siteId:null, payer:'household', cost:0, reserve:0, duration:1,
     calendar:'any_day', interruption:'retain_cost', recipient:'participant', milestone:'mecca_local_worship_1204',
     reward:{piety:1,prestige:0,skills:{}}, legacy:null, service:null
+  },
+  /* Seven-day lessons and one skill point are bounded simulation choices.
+     They award no vocation, judicial jurisdiction, prayer office or pilgrimage. */
+  kufa_hanafi_learning_800:{
+    name:'Study Hanafi jurisprudence',period:{yearMin:800,yearMax:800},openings:[],
+    faithIds:['sunni'],affiliationIds:['hanafi_learning_800'],roleIds:['learner'],
+    institutionId:'kufa_hanafi_circle_800',mode:'local',purpose:null,siteId:null,
+    payer:'household',cost:0,reserve:0,duration:7,calendar:'any_day',
+    interruption:'retain_cost',recipient:'participant',milestone:'kufa_hanafi_learning_800',
+    reward:{piety:0,prestige:0,skills:{int:1}},legacy:null,service:null
+  },
+  baghdad_shafii_learning_1066:{
+    name:"Study Shafi'i jurisprudence",period:{yearMin:1066,yearMax:1066},openings:[],
+    faithIds:['sunni'],affiliationIds:['shafii_learning_1066'],roleIds:['learner'],
+    institutionId:'baghdad_shafii_circle_1066',mode:'local',purpose:null,siteId:null,
+    payer:'household',cost:0,reserve:0,duration:7,calendar:'any_day',
+    interruption:'retain_cost',recipient:'participant',milestone:'baghdad_shafii_learning_1066',
+    reward:{piety:0,prestige:0,skills:{int:1}},legacy:null,service:null
+  },
+  nishapur_shafii_ashari_learning_1066:{
+    name:"Study Shafi'i law and Ash'ari theology",period:{yearMin:1066,yearMax:1066},openings:[],
+    faithIds:['sunni'],affiliationIds:['shafii_learning_1066','ashari_learning_1066'],roleIds:['learner'],
+    institutionId:'nishapur_shafii_ashari_circle_1066',mode:'local',purpose:null,siteId:null,
+    payer:'household',cost:0,reserve:0,duration:7,calendar:'any_day',
+    interruption:'retain_cost',recipient:'participant',milestone:'nishapur_shafii_ashari_learning_1066',
+    reward:{piety:0,prestige:0,skills:{int:1}},legacy:null,service:null
   }
 };
 FBDATA.religiousPatronage = {
@@ -519,4 +545,7 @@ FBDATA.techImpactReviews.features.ghana_local_learning_service = {
 };
 FBDATA.techImpactReviews.features.ghana_local_learning_support = {
   mode:'none', rationale:'Giving and bounded outreach depend on lawful property, the donor’s actual resources and existing community projects rather than discovery.'
+};
+FBDATA.techImpactReviews.features.islamic_scholarly_learning = {
+  mode:'none',rationale:'Local study depends on presence, voluntary membership and scholarly affiliation, without a discovery requirement or grant of public office.'
 };

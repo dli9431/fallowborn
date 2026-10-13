@@ -16,6 +16,18 @@ FBDATA.religiousAffiliations = {
   jewish_rabbinic_learning_1204:{
     name:'Local rabbinic learning', faithIds:['jewish'],
     period:{ yearMin:1204, yearMax:null }, exclusiveWith:[]
+  },
+  hanafi_learning_800:{
+    name:'Hanafi legal learning',faithIds:['sunni'],
+    period:{yearMin:800,yearMax:800},exclusiveWith:[]
+  },
+  shafii_learning_1066:{
+    name:"Shafi'i legal learning",faithIds:['sunni'],
+    period:{yearMin:1066,yearMax:1066},exclusiveWith:[]
+  },
+  ashari_learning_1066:{
+    name:"Ash'ari theological learning",faithIds:['sunni'],
+    period:{yearMin:1066,yearMax:1066},exclusiveWith:[]
   }
 };
 FBDATA.religiousInstitutionProfiles = {
@@ -289,6 +301,36 @@ FBDATA.religiousInstitutionProfiles = {
       professions:[],skills:{},affiliationId:null}},
     selection:null, recognition:{sources:[],roles:[],quorum:1,requiresLeader:false,protectedWorship:true},
     actions:['admit','withdraw'], fees:{}, affiliationIds:[]
+  },
+  /* City-level learning reconstructions, without a named building or incumbent.
+     Adult lay admission is a simulation rule, not specialist certification. */
+  kufa_hanafi_study_800:{
+    name:'Kufa Hanafi study circle',faithIds:['sunni'],
+    period:{yearMin:800,yearMax:800},system:null,
+    roles:{learner:{name:'Learner',minAge:16,sexes:[],unmarried:false,
+      professions:[],skills:{},affiliationId:null}},
+    selection:null,
+    recognition:{sources:[],roles:[],quorum:1,requiresLeader:false,protectedWorship:true},
+    actions:['admit','affiliate','withdraw'],fees:{},affiliationIds:['hanafi_learning_800']
+  },
+  baghdad_shafii_study_1066:{
+    name:"Baghdad Shafi'i study circle",faithIds:['sunni'],
+    period:{yearMin:1066,yearMax:1066},system:null,
+    roles:{learner:{name:'Learner',minAge:16,sexes:[],unmarried:false,
+      professions:[],skills:{},affiliationId:null}},
+    selection:null,
+    recognition:{sources:[],roles:[],quorum:1,requiresLeader:false,protectedWorship:true},
+    actions:['admit','affiliate','withdraw'],fees:{},affiliationIds:['shafii_learning_1066']
+  },
+  nishapur_shafii_ashari_study_1066:{
+    name:"Nishapur Shafi'i and Ash'ari study circle",faithIds:['sunni'],
+    period:{yearMin:1066,yearMax:1066},system:null,
+    roles:{learner:{name:'Learner',minAge:16,sexes:[],unmarried:false,
+      professions:[],skills:{},affiliationId:null}},
+    selection:null,
+    recognition:{sources:[],roles:[],quorum:1,requiresLeader:false,protectedWorship:true},
+    actions:['admit','affiliate','withdraw'],fees:{},
+    affiliationIds:['shafii_learning_1066','ashari_learning_1066']
   }
 };
 FBDATA.techImpactReviews.features.arabian_dated_congregations = {
