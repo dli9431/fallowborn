@@ -115,6 +115,10 @@
   }
   minority('jerusalem','jewish','syriac');
   minority('jerusalem','samaritan','syriac');
+  /* The inhabited layout leaves Jerusalem's presentation generated. Name the
+     existing city first, so the town is appended after it and the Jewish
+     congregation binds the city rather than Nablus. */
+  if (layout && !layout.jerusalem) layout.jerusalem = [{site:'jerusalem',name:'Jerusalem',kind:'city'}];
   nablus('Nablus');
   place('jerusalem_jewish_congregation_800','jerusalem',null,'Jerusalem','congregation','jewish','syriac','jewish_local_congregation_later');
   place('nablus_samaritan_congregation_800','jerusalem','samaria_neapolis_w15','Nablus','congregation','samaritan','syriac','samaritan_lay_congregation');
