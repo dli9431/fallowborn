@@ -2164,3 +2164,7 @@ Profile rows optionally retain aiPeriod as an integer from zero through floor(tu
 Religious activity retention
 
 Optional character religiousActivity and religiousActivityHistory, player.travel.religiousActivity, abbeys.houses activity property, population project activitySupport and religiousActivityAI.period remain with their canonical owners. validateReligiousActivityState checks saved campaign references and bounded frozen terms without live eligibility checks or initialization. Loading preserves legacy standing, routes and property; the normal daily tick owns completion and interruption. See docs/designs/religious-activities.md for limits and review behavior.
+
+Dated local office restoration
+
+Fresh dated offices retain the existing religiousHeads and religiousHeadVacancies ledgers. Service membership, optional affiliations, personal communion letters, paid activity commitments, reform definitions, papal state, council support, rulerFaithDecisions and population communityProjects retain their canonical owners. Added freshOnly definitions never create absent rows or people on load. Communion letters are existing authority recognition records with exact issuer generation and counterpart character, not a repair instruction. Opening revisions restore their own complete institutional table after another campaign has been active.

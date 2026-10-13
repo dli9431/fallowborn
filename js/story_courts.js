@@ -196,7 +196,7 @@
         if (row.proofField) w[row.proofField] = office.recognitionId;
       });
       d.treasuries.forEach(function (row) { if (s.realms[row.realmId].treasury) s.realms[row.realmId].treasury.gold = row.gold; });
-      restoreInstitutions(s, w);
+      restoreInstitutions(s, w, true);
       FB.news(s, FB.msg(def.news.opening.key, def.news.opening.text, {}));
       return w;
     }
@@ -238,10 +238,10 @@
       w.cityRightIds = rights;
       return true;
     }
-    function restoreInstitutions(s, w) {
+    function restoreInstitutions(s, w, fresh) {
       var representatives = {};
       def.opening.institutions.forEach(function (row) { representatives[row.institutionId] = w[row.field]; });
-      FB.ensureLocalInstitutions(s, representatives);
+      FB.ensureLocalInstitutions(s, representatives, { fresh:!!fresh });
     }
     function civicSettlement(s, deal, terms) {
       var policy = terms || p;

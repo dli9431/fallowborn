@@ -310,3 +310,9 @@ Government council strategies supply seats, holder eligibility and vacancy choic
 Appointed public courts
 
 appointed_council replaces generated feudal Council seats with the existing scoped authority appointments shown in Public administration. Its empty feudal seat catalogue is deliberate and does not create another AI council ledger. Living public civil/military interests participate through the shared governmentRecognition projection, with independent principals and reviewed votes. See docs/designs/administrative-monarchy.md.
+
+Explicit local mediation and fresh offices
+
+A legacy church institution may declare jurisdictionIds to limit mediation to at most sixteen unique counties including its on-map seat. Missing jurisdictionIds preserves existing legacy behavior; profile institutions retain their required explicit jurisdiction. Worship review reads the non-repairing county modifier snapshot so a proposal cannot repair saved modifiers. This adds no religious jurisdiction, title or discovery gate. The Ctesiphon catholicos in the 493 world_v2 opening declares only its seat county.
+
+Fresh-only offices are visible to the canonical office registry only after their local institution exists. Explicit fresh initialization can seed their opening incumbent; restore and seasonal repair cannot add their missing office, vacancy or representative. Existing incumbents, explicit null vacancies and canonical office ids remain authoritative. Council support remains scoped support without resident conversion or doctrinal change.

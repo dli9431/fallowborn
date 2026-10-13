@@ -1575,12 +1575,15 @@ window.FB = window.FB || {};
     if (!FB.systemEnabled) return out;
     for (const id in local) {
       const def = local[id];
+      // Fresh-only offices exist only after their institution was explicitly seeded.
+      if (def.freshOnly && !(state && state.localInstitutions && state.localInstitutions[id])) continue;
       if (def.profileId) {
         const office = def.officeId && FB.religiousInstitutionOffice && FB.religiousInstitutionOffice(state, id, def);
         if (office && !out[def.officeId]) out[def.officeId] = office;
         continue;
       }
-      if (!FB.systemEnabled(state,'episcopal_sees',{ faith:def.religion,realm:null })) continue;
+      const system = def.officeSystem === undefined ? 'episcopal_sees' : def.officeSystem;
+      if (system && !FB.systemEnabled(state,system,{ faith:def.religion,realm:null })) continue;
       if (!def.officeId || out[def.officeId]) continue;
       out[def.officeId] = { id:def.officeId, religionId:def.religion,
         head:Object.assign({ holderKind:'character', holderSex:'m', holderRole:'priest', minAge:18, succession:'appointment', local:true }, def.officeProfile || {}) };

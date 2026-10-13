@@ -3030,8 +3030,11 @@ window.FB = window.FB || {};
   function church(def) { return !!def.officeId || def.kind === 'congregation'; }
   function enabled(s, def) {
     if (def && def.profileId) return !!(FB.religiousInstitutionEnabled && FB.religiousInstitutionEnabled(s, def));
+    if (def && def.officeId && def.officeSystem !== undefined)
+      return def.officeSystem === null || FB.systemEnabled(s, def.officeSystem, {faith:def.religion,realm:null});
     return !!(def && FB.systemEnabled(s, church(def) ? 'episcopal_sees' : 'civic_institutions'));
   }
+  FB.localInstitutionEnabled = enabled;
   function row(s, id) { return s.localInstitutions && s.localInstitutions[id]; }
   function person(id) { return { kind:'character', id:id }; }
   function county(def) { return def.provinceId ? { kind:'county', id:def.provinceId } : null; }
@@ -3087,7 +3090,7 @@ window.FB = window.FB || {};
   FB.ensureLocalInstitutions = function (s, seeds, options) {
     if (!FB.systemAvailable(s, 'civic_institutions') && !FB.systemAvailable(s, 'episcopal_sees') &&
         !Object.keys(FB.localInstitutionDefinitions(s)).some(function (id) {
-          return FB.localInstitutionDefinitions(s)[id].profileId && enabled(s, FB.localInstitutionDefinitions(s)[id]);
+          return enabled(s, FB.localInstitutionDefinitions(s)[id]);
         })) return null;
     // An existing ledger is the campaign's opening roster. Content additions
     // do not allocate new representatives while restoring or ticking that save.
@@ -3130,6 +3133,18 @@ window.FB = window.FB || {};
         else s.religiousHeadVacancies[def.officeId] = vacancy || { turn:s.turn, formerHolder:null };
       }
     }
+    // Opening letters recognize these people, not every later successor or ruler.
+    if (creating && options && options.fresh) Object.keys(defs).forEach(function (id) {
+      var def = defs[id], issuer = def.officeId && FB.religiousOfficeSnapshot(s, def.officeId);
+      if (!row(s, id) || !issuer) return;
+      (def.communionWith || []).forEach(function (targetId) {
+        var target = defs[targetId], holder = target && FB.religiousOfficeSnapshot(s, target.officeId);
+        if (row(s, targetId) && holder) FB.authorityRecognize(s, {
+          source:'church_support', issuer:{kind:'religious-office',id:def.officeId},
+          subject:{kind:'character',id:holder.id}
+        });
+      });
+    });
     return s.localInstitutions || null;
   };
   FB.localInstitutionList = function (s, kind) {
@@ -3349,6 +3364,7 @@ window.FB = window.FB || {};
     var rep = def && r && representative(s, def, r);
     var allowed = !!(enabled(s, def) && !def.profileId && church(def) && r && rep && present(s, def) &&
       FB.political.actor(s, subject) && provinceId && FB.world.byId[provinceId] && s.owner[provinceId] &&
+      (!def.jurisdictionIds || def.jurisdictionIds.indexOf(provinceId) >= 0) &&
       FB.political.worshipProtected(s, provinceId));
     return { allowed:allowed, action:'mediate', institutionId:id, subject:subject && copy(subject),
       provinceId:provinceId, cost:0, reason:allowed ? null : FB.T('Mediation needs a living religious representative and a county where worship is protected.'),
@@ -3368,7 +3384,7 @@ window.FB = window.FB || {};
   FB.localInstitutionsSeason = function (s) {
     if (FB.religiousInstitutionAI) FB.religiousInstitutionAI(s);
     if (FB.religiousActivityAI) FB.religiousActivityAI(s);
-    if (!s.localInstitutions || !FB.systemAvailable(s, 'civic_institutions') && !FB.systemAvailable(s, 'episcopal_sees')) return;
+    if (!s.localInstitutions || !FB.localInstitutionList(s).length) return;
     var period = Math.floor(s.turn / 90);
     if (period < 1) return;
     if (s.localInstitutionPeriod === period) return;

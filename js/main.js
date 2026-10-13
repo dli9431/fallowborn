@@ -3706,7 +3706,7 @@ FB.CHANGELOG = [
 
     // A watcher has no scenario, so only the bookmark's world stories attach.
     if (FB.stories) FB.stories.start(state, {});
-    if (FB.ensureLocalInstitutions) FB.ensureLocalInstitutions(state);
+    if (FB.ensureLocalInstitutions) FB.ensureLocalInstitutions(state, null, { fresh:true });
     G.observe = true;
     G.paused = false;
     document.body.classList.add('observing');
