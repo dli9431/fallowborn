@@ -793,7 +793,7 @@ FBDATA.religions = {
   zoroastrian_sasanian_476: {
     name:'Sasanian Zoroastrian tradition', adjective:'Zoroastrian', collective:'Zoroastrians',
     parent:'zoroastrian', relationToParent:'in_fold', icon:'🔥',
-    availability:{yearMin:476,yearMax:493,bookmarkIds:['476','493'],consumers:['ruler','character','start']},
+    availability:{yearMin:476,yearMax:493,bookmarkIds:['476','493'],consumers:['ruler','character','institution','start']},
     /* A fresh court context, not a replacement for every Iranian household.
        Inherited marriage prices/capacity are retained simulation settings.
        Learning and fire custody do not confer ordained office or abbacy. */
