@@ -23,7 +23,10 @@ dependsOnRuntime(__filename, ['data/cultures.js','data/economy.js','data/technol
   'js/religious_institutions.js','js/religious_activities.js','js/institutions.js',
   'js/authority.js','js/treasury.js','js/abbeys.js','js/religion.js','js/settlement.js',
   'js/justice.js','js/intrigue.js','js/travel.js','js/technology.js','js/systems.js',
-  'js/crazygames.js','js/politics.js','js/progression.js','js/station.js']);
+  'js/crazygames.js','js/politics.js','js/progression.js','js/station.js',
+  'data/government_rollout.js','data/islamic_profiles.js','data/african_religious_rollout.js',
+  'data/arabian_openings.js','data/islamic_institutions.js','data/islamic_rollout.js',
+  'data/geographies.js','data/geography_expansion.js','js/bookmark_setup.js']);
 
 test('Buddhist household corrections preserve the released effective catalogue',
   async function ({page},testInfo) {
@@ -306,7 +309,7 @@ test('household activities keep early and 711 faith, date and revision qualifica
         ['476','wider_v2',476,'buddhist_711'],['711','terrain_v2_governments_v2',711,'buddhist_476'],
         ['711','baseline',711,'buddhist_711'],['493','world_v2',494,'buddhist_476'],
         ['800','inhabited_v2_governments_v2',800,'buddhist_711'],
-        ['1204','inhabited_v2_governments_v2',1204,'buddhist_476']
+        ['1204','inhabited_v2',1204,'buddhist_476']
       ];
       const allowed = scopes.map(function (scope) {
         s.start = Object.assign({},start,{id:scope[0],revision:scope[1]});
@@ -634,5 +637,207 @@ for (const distribution of ['standard','CrazyGames']) {
       expect(await page.evaluate(laySavedFacts)).toEqual(before);
       await page.evaluate(function () { FB.state.turn += 2; FB.religiousActivityTick(FB.state); });
       expect(await page.evaluate(laySavedFacts)).toEqual(after);
+    });
+}
+
+/* Acceptance uses retained revisions as well as the current fresh selection.
+   Unresolved physical sites and identities are deliberate content boundaries. */
+test('all dated revisions withhold unaccepted Buddhist houses and later population replacements',
+  async function ({page},testInfo) {
+    await openGame(page,testInfo);
+    expect(await page.evaluate(function () {
+      const before = JSON.stringify(FBDATA), rng = FB.getRngState(), uid = FB.getUidCounter();
+      const faults = [], dates = ['476','493','711','800','867','1066','1204'];
+      dates.forEach(function (id) {
+        const revisions = FB.bookmarkRevisions(id);
+        if (!revisions.length) faults.push(id + ': no revisions');
+        revisions.forEach(function (b) {
+          const label = id + '/' + b.revision;
+          Object.keys(b.localInstitutions || {}).forEach(function (iid) {
+            const d = b.localInstitutions[iid];
+            if (['buddhist_476','buddhist_711'].includes(d.religion) ||
+                ['tapa_sardar_lay_support','tepe_narenj_lay_support'].includes(d.profileId))
+              faults.push(label + ': unaccepted house ' + iid);
+          });
+          if (['800','867','1066','1204'].includes(id)) {
+            b.provinces.forEach(function (p) {
+              if ([p.religion].concat((p.communities || []).map(function (c) { return c.religion; }))
+                .some(function (faith) { return ['buddhist_476','buddhist_711'].includes(faith); }))
+                faults.push(label + ': unaccepted resident mapping ' + p.id);
+            });
+          }
+          const court = b.realms.find(function (r) { return r.id === 'qara_khitai_1204'; });
+          if (court && (court.religion !== 'buddhist_476' || !court.nonTerritorial || court.capital !== 'samarkand'))
+            faults.push(label + ': changed held court');
+          if (FB.faithHistoricalAvailable('buddhist_711',b,'community') !== (id === '711'))
+            faults.push(label + ': widened 711 identity');
+        });
+      });
+      return {faults:faults,replacement:!!FBDATA.religions.buddhist_community,
+        pure:before === JSON.stringify(FBDATA) && rng === FB.getRngState() && uid === FB.getUidCounter()};
+    })).toEqual({faults:[],replacement:false,pure:true});
+  });
+
+test('an actual 711 household cannot fund or attend either unplaced house',
+  async function ({page},testInfo) {
+    await startHistoricalGame(page,testInfo,{
+      bookmark:'711',code:'UNPLACED-711-farmer-ghazni-f-Pema-established'
+    });
+    expect(await page.evaluate(function () {
+      const s = FB.state, me = s.chars[s.player.charId];
+      me.born = s.date.year - 30; me.health = 8; me.religion = 'buddhist_711';
+      s.player.gold = 20;
+      s.player.landPlots = [{provinceId:'ghazni',settlement:0},{provinceId:'ghazni',settlement:0}];
+      const before = JSON.stringify(s), data = JSON.stringify(FBDATA);
+      const rng = FB.getRngState(), uid = FB.getUidCounter();
+      const denied = ['tapa_sardar','tepe_narenj'].map(function (key) {
+        const lesson = FB.religiousActivityQuote(s,key + '_learning_711',me.id);
+        const foundation = FB.religiousPatronageQuote(s,key + '_giving_711',me.id,'foundation',
+          {land:{provinceId:'ghazni',settlement:0,count:2}});
+        const gift = FB.religiousPatronageQuote(s,key + '_giving_711',me.id,'donation',{fund:'learning',amount:1});
+        return [lesson,foundation,gift].every(function (q) { return q && !q.allowed; }) &&
+          !FB.religiousActivityApply(s,lesson) && !FB.religiousPatronageApply(s,foundation) &&
+          !FB.religiousPatronageApply(s,gift);
+      });
+      return {denied:denied,household:FB.religiousActivityQuote(s,'buddhist_household_study_711',me.id).allowed,
+        pure:before === JSON.stringify(s) && data === JSON.stringify(FBDATA) &&
+          rng === FB.getRngState() && uid === FB.getUidCounter()};
+    })).toEqual({denied:[true,true],household:true,pure:true});
+  });
+
+for (const house of ['tapa_sardar','tepe_narenj']) {
+  test(house + ' funded service stops at the live year boundary without consuming gifts',
+    async function ({page},testInfo) {
+      await layHousehold(page,testInfo);
+      expect(await page.evaluate(function (key) {
+        const s = FB.state, me = s.chars[buddhistFixture.cid], h = foundLayHouse(key);
+        s.date.year = 799; me.born = 769;
+        layAdmit(key + '_house_711',me.id,'learner');
+        const amount = key === 'tapa_sardar' ? 1 : 2;
+        if (!FB.religiousPatronageApply(s,FB.religiousPatronageQuote(s,key + '_giving_711',me.id,
+          'donation',{fund:'learning',amount:amount}))) throw new Error('Expected prepaid gift');
+        const quote = FB.religiousActivityQuote(s,key + '_learning_711',me.id);
+        const started = FB.religiousActivityApply(s,quote), property = JSON.stringify(h);
+        const community = JSON.stringify(FB.countyCommunities(s,s.player.provinceId));
+        s.date.year = 800; s.turn += 3;
+        FB.religiousActivityTick(s);
+        const before = JSON.stringify(s), rng = FB.getRngState(), uid = FB.getUidCounter();
+        const fresh = FB.religiousActivityQuote(s,key + '_learning_711',me.id);
+        const stale = FB.religiousActivityApply(s,quote);
+        const gift = FB.religiousPatronageQuote(s,key + '_giving_711',me.id,'donation',{fund:'learning',amount:amount});
+        return {started:started,ended:!me.religiousActivity,rewarded:!!(me.religiousActivityHistory || {}).buddhist_household_study_done,
+          property:property === JSON.stringify(h),community:community === JSON.stringify(FB.countyCommunities(s,s.player.provinceId)),
+          member:s.localInstitutions[key + '_house_711'].members[me.id].status,faith:me.religion,
+          fresh:!fresh.allowed,gift:!gift.allowed,stale:stale,
+          pure:before === JSON.stringify(s) && rng === FB.getRngState() && uid === FB.getUidCounter()};
+      },house)).toEqual({started:true,ended:true,rewarded:false,property:true,community:true,
+        member:'active',faith:'buddhist_711',fresh:true,gift:true,stale:false,pure:true});
+    });
+}
+
+function earlyHouseholdFacts() {
+  const s = FB.state, me = s.chars[s.player.charId];
+  return JSON.parse(JSON.stringify({start:s.start,gold:s.player.gold,piety:s.player.piety,
+    faith:me.religion,kin:[me.spouseId,me.childrenIds],skills:me.skills,
+    activity:me.religiousActivity || null,history:me.religiousActivityHistory || {},
+    communities:FB.countyCommunities(s,'ghazni'),institutions:s.localInstitutions,
+    houses:s.abbeys && s.abbeys.houses || [],heads:s.religiousHeads}));
+}
+
+function laterCourtFacts() {
+  const s = FB.state, court = s.realms.qara_khitai_1204;
+  const ruler = FB.realmRulerCharacterSnapshot(s,'qara_khitai_1204');
+  const members = court.succession && court.succession.members || {};
+  const people = Object.keys(s.chars).filter(function (id) {
+    return s.chars[id].religion === 'buddhist_476' || Object.keys(members).some(function (mid) {
+      return members[mid].charId === id;
+    });
+  }).sort().map(function (id) {
+    const c = s.chars[id];
+    return {id:id,faith:c.religion,father:c.fatherId,mother:c.motherId,spouse:c.spouseId,
+      children:c.childrenIds,affiliations:c.religiousAffiliations || [],commitment:c.religiousActivity || null};
+  });
+  return JSON.parse(JSON.stringify({start:s.start,faith:court.religion,ruler:ruler && [ruler.id,ruler.religion],
+    members:Object.keys(members).sort().map(function (id) {
+      const m = members[id];
+      return [id,m.charId || null,m.religion || null,m.parentId || null,m.fatherId || null,
+        m.motherId || null,m.childIds || [],m.alive !== false,m.role || null];
+    }),people:people,subordinates:['khwarazm_1204','karakhanid_1204'].map(function (id) {
+      return [id,s.realms[id].religion,s.realms[id].liege];
+    }),residents:FB.countyCommunities(s,'samarkand'),owner:s.owner.samarkand,holder:s.holder.samarkand,
+    institutions:s.localInstitutions,houses:s.abbeys && s.abbeys.houses || [],heads:s.religiousHeads}));
+}
+
+for (const distribution of ['standard','CrazyGames']) {
+  test(distribution + ' early household study restores without inventing a monastery',
+    async function ({page},testInfo) {
+      await startHistoricalGame(page,testInfo,{
+        bookmark:'476',code:'EARLYLAY-476-farmer_476-ghazni-f-Pema-established'
+      },distribution === 'CrazyGames');
+      await page.evaluate(function () {
+        const s = FB.state, me = s.chars[s.player.charId];
+        me.born = 446; me.health = 8; me.skills.int = 3; s.player.gold = 0;
+        if (me.religion !== 'buddhist_476') throw new Error('Expected the retained early community');
+        if (!FB.religiousActivityApply(s,FB.religiousActivityQuote(s,'buddhist_household_study_early',me.id)))
+          throw new Error('Expected free early study');
+      });
+      const saved = await page.evaluate(function () { return FB.save.serialize(); });
+      const before = await page.evaluate(earlyHouseholdFacts);
+      expect(before.houses).toEqual([]);
+      await page.evaluate(function () { FB.state.turn += 2; FB.religiousActivityTick(FB.state); });
+      const after = await page.evaluate(earlyHouseholdFacts);
+      expect(after.skills.int).toBe(4);
+      expect(after.gold).toBe(0);
+      expect(after.houses).toEqual([]);
+      await page.evaluate(function () {
+        return new Promise(function (resolve,reject) {
+          FB.activateBookmark('1204',null,function (error) { if (error) reject(error); else resolve(); });
+        });
+      });
+      await restoreBookmark(page,saved);
+      expect(await page.evaluate(earlyHouseholdFacts)).toEqual(before);
+      await page.evaluate(function () { FB.state.turn += 2; FB.religiousActivityTick(FB.state); });
+      expect(await page.evaluate(earlyHouseholdFacts)).toEqual(after);
+      expect(await page.evaluate(function () {
+        const s = FB.state, me = s.chars[s.player.charId];
+        return FB.religiousActivityQuote(s,'buddhist_household_study_early',me.id).allowed;
+      })).toBe(false);
+    });
+
+  test(distribution + ' 1204 court and generated kin restore without earlier Buddhist services or resident conversion',
+    async function ({page},testInfo) {
+      await startHistoricalGame(page,testInfo,{
+        bookmark:'1204',code:'LATECOURT-1204-farmer-samarkand-f-Review-established'
+      },distribution === 'CrazyGames');
+      const before = await page.evaluate(laterCourtFacts);
+      expect(before.faith).toBe('buddhist_476');
+      expect(before.ruler).not.toBeNull();
+      expect(before.ruler[1]).toBe('buddhist_476');
+      expect(before.people.length).toBeGreaterThan(0);
+      expect(before.subordinates.map(function (r) { return r.slice(1); }))
+        .toEqual([['sunni','qara_khitai_1204'],['sunni','qara_khitai_1204']]);
+      const saved = await page.evaluate(function () { return FB.save.serialize(); });
+      await page.evaluate(function () {
+        return new Promise(function (resolve,reject) {
+          FB.activateBookmark('711',null,function (error) { if (error) reject(error); else resolve(); });
+        });
+      });
+      await restoreBookmark(page,saved);
+      expect(await page.evaluate(laterCourtFacts)).toEqual(before);
+      expect(await page.evaluate(function () {
+        const s = FB.state, me = s.chars[s.player.charId];
+        // Even an explicitly staged lay follower cannot unlock another opening's service.
+        me.religion = 'buddhist_476'; me.born = 1174; me.health = 8;
+        const before = JSON.stringify(s), data = JSON.stringify(FBDATA);
+        const rng = FB.getRngState(), uid = FB.getUidCounter();
+        const denied = ['buddhist_household_practice_early','buddhist_household_study_early',
+          'buddhist_household_practice_711','buddhist_household_study_711',
+          'tapa_sardar_learning_711','tepe_narenj_learning_711'].every(function (id) {
+          const q = FB.religiousActivityQuote(s,id,me.id);
+          return q && !q.allowed && !FB.religiousActivityApply(s,q);
+        });
+        return {denied:denied,pure:before === JSON.stringify(s) && data === JSON.stringify(FBDATA) &&
+          rng === FB.getRngState() && uid === FB.getUidCounter()};
+      })).toEqual({denied:true,pure:true});
     });
 }
