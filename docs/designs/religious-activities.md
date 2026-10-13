@@ -59,3 +59,9 @@ These declarations use the existing household and participation technology decis
 Dated Christian service
 
 Literal local activities bind Alexandria, Ibrim, Baghdad, Samarkand, Dongola, Soba and Constantinople to their accepted opening revisions and exact institution ids. Households spend two gold with a two-gold reserve for a one-day commitment and a one-time piety reward. These amounts and consent thresholds are simulation rules. No activity assumes an endowed fund or creates land, clergy, an office, population transfer or a church calendar. Frozen paid commitments restore with the saved campaign; ordinary ticking owns completion. Ordinary local service remains covered by the none technology reviews.
+
+Dated communal activity scopes
+
+Jewish household worship and study additionally accept the explicit Jewish/Samaritan review revisions for all seven dates. This makes ordinary household participation available to retained Jewish identities, without declaring a new congregation or a local majority in every county. Early Babylonian lessons and Sardis care/giving additionally accept their own dated review revisions; the Alexandria lesson additionally accepts the 1204 review revision. Existing compatibility selectors remain available.
+
+Samaritan review selectors cover only 476, 493, 711, 800 and 1204; Karaite selectors cover only 1066 and 1204. Distinct identities, community presence, lay membership and household observance stay separate. No new journey or calendar declaration is added: Gerizim/Jerusalem route permissions, priestly rites, legal arbitration and specialist authorization remain held. Legacy unwrapped travel remains unchanged. New frozen commitments and voluntary Sardis property use the existing standard and CrazyGames save contract without repair-time seeding. Dated participation retains technology impact none.

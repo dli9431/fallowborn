@@ -73,3 +73,55 @@
   FBDATA.techImpactReviews.features.period_800_inhabited_terrain = {mode:'none',
     rationale:'Established households, local possession and ordinary royal or public authority need no technological discovery. Existing production, travel, provision and equipment requirements still apply.'};
 })();
+
+/* Jerusalem prayer and Nablus community continuity are independently
+   reconstructed. No academy address, Khazar conversion or sanctuary right follows.
+   New minority weights are simulation quantities, never historical percentages.
+   Retained revisions and the fresh default remain unchanged. */
+(function () {
+  'use strict';
+  var b = FBDATA.bookmarks['800'], source = b.revisions.inhabited_v2;
+  var world = Object.assign({},b,b.revisions.baseline,source);
+  function copy(value) { return JSON.parse(JSON.stringify(value)); }
+  var provinces = copy(world.provinces), institutions = copy(world.localInstitutions || {});
+  var layout = world.settlementLayout ? copy(FBDATA.settlementLayouts[world.settlementLayout]) : null;
+  function county(pid) { return provinces.filter(function (p) { return p.id === pid; })[0]; }
+  function minority(pid,faith,culture) {
+    var p = county(pid);
+    if (!p || p.wasteland) throw new Error('Missing communal county: ' + pid);
+    var rows = p.communities || [{culture:p.culture,religion:p.religion,populationShare0:10000}];
+    if (rows.some(function (row) { return row.religion === faith; })) return;
+    var largest = rows.reduce(function (a,row) { return row.populationShare0 > a.populationShare0 ? row : a; },rows[0]);
+    if (!(largest.populationShare0 >= 100)) throw new Error('Missing communal population weight: ' + pid);
+    largest.populationShare0 -= 100;
+    rows.push({culture:culture,religion:faith,populationShare0:100,paired:true});
+    p.communities = rows;
+  }
+  function nablus(name) {
+    var p = county('jerusalem'), rows = layout ? layout.jerusalem : p.settlements;
+    FBDATA.settlementSites.samaria_neapolis_w15 = {x:35.26,y:32.22,
+      names:[{from:400,to:649,name:'Neapolis'},{from:650,name:'Nablus'}]};
+    rows.push({site:'samaria_neapolis_w15',name:name,kind:'town'});
+    if (p.settlements) p.settlements = copy(rows);
+  }
+  function place(iid,pid,site,city,kind,faith,culture,profile,property) {
+    var p = county(pid), rows = layout ? layout[pid] : p.settlements;
+    if (!rows || !rows.length || site && !rows.some(function (row) { return row.site === site; }))
+      throw new Error('Missing communal settlement: ' + iid);
+    institutions[iid] = {city:city,kind:kind,provinceId:pid,site:site || rows[0].site,
+      religion:faith,culture:culture,profileId:profile,jurisdictionIds:[pid],
+      vacant:true,freshOnly:true};
+    if (property) institutions[iid].abbeyId = property;
+  }
+  minority('jerusalem','jewish','syriac');
+  minority('jerusalem','samaritan','syriac');
+  nablus('Nablus');
+  place('jerusalem_jewish_congregation_800','jerusalem',null,'Jerusalem','congregation','jewish','syriac','jewish_local_congregation_later');
+  place('nablus_samaritan_congregation_800','jerusalem','samaria_neapolis_w15','Nablus','congregation','samaritan','syriac','samaritan_lay_congregation');
+  var changes = {provinces:provinces,localInstitutions:institutions};
+  if (layout) {
+    FBDATA.settlementLayouts['800_jewish_samaritan_v3'] = layout;
+    changes.settlementLayout = '800_jewish_samaritan_v3';
+  }
+  b.revisions.jewish_samaritan_v3 = Object.assign({},source,changes);
+})();

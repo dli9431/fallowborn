@@ -7,6 +7,15 @@ FBDATA.religiousAffiliations = {
   alexandrian_church_reception:{
     name:'Alexandrian church participation', faithIds:['eastern','miaphysite'],
     period:{yearMin:711,yearMax:null}, exclusiveWith:[]
+  },
+  /* Learning affiliations leave the household's primary identity unchanged. */
+  jewish_rabbinic_learning_early:{
+    name:'Local rabbinic learning', faithIds:['jewish'],
+    period:{ yearMin:476, yearMax:493 }, exclusiveWith:[]
+  },
+  jewish_rabbinic_learning_1204:{
+    name:'Local rabbinic learning', faithIds:['jewish'],
+    period:{ yearMin:1204, yearMax:null }, exclusiveWith:[]
   }
 };
 FBDATA.religiousInstitutionProfiles = {
@@ -109,6 +118,91 @@ FBDATA.religiousInstitutionProfiles = {
       requiresLeader:false,protectedWorship:true},
     actions:['admit','withdraw','assent','recognize','mediate','dispute'],
     fees:{}, affiliationIds:[]
+  },
+  /* Admission floors and support quorums are explicit simulation choices.
+     A study helper is neither an ordained rabbi nor an authorized judge. */
+  jewish_study_circle_early:{
+    name:'Local Jewish study circle', faithIds:['jewish'],
+    period:{ yearMin:476, yearMax:493 }, system:null,
+    roles:{
+      learner:{ name:'Learner', minAge:16, sexes:[], unmarried:false,
+        professions:[], skills:{}, affiliationId:null },
+      study_helper:{ name:'Study helper', minAge:16, sexes:[], unmarried:false,
+        professions:[], skills:{ int:4 }, affiliationId:'jewish_rabbinic_learning_early' }
+    },
+    selection:null,
+    recognition:{ sources:['institution_support'], roles:['learner','study_helper'],
+      quorum:2, requiresLeader:false, protectedWorship:true },
+    actions:['admit','affiliate','recognize','dispute','withdraw','assent'],
+    fees:{}, affiliationIds:['jewish_rabbinic_learning_early'],
+    ai:{ roles:['learner'], affiliations:[], reserve:0, maxActions:2, recognize:false }
+  },
+  jewish_sardis_congregation:{
+    name:'Sardis Jewish congregation', faithIds:['jewish'],
+    period:{ yearMin:476, yearMax:493 }, system:null,
+    roles:{
+      worshipper:{ name:'Congregant', minAge:16, sexes:[], unmarried:false,
+        professions:[], skills:{}, affiliationId:null }
+    },
+    selection:null,
+    recognition:{ sources:['institution_support'], roles:['worshipper'],
+      quorum:2, requiresLeader:false, protectedWorship:true },
+    actions:['admit','recognize','dispute','withdraw','assent'], fees:{}, affiliationIds:[],
+    ai:{ roles:['worshipper'], affiliations:[], reserve:0, maxActions:2, recognize:false }
+  },
+  jewish_study_group_1204:{
+    name:'Local Jewish study group', faithIds:['jewish'],
+    period:{ yearMin:1204, yearMax:null }, system:null,
+    roles:{
+      learner:{ name:'Learner', minAge:16, sexes:[], unmarried:false,
+        professions:[], skills:{}, affiliationId:null },
+      study_helper:{ name:'Study helper', minAge:16, sexes:[], unmarried:false,
+        professions:[], skills:{ int:4 }, affiliationId:'jewish_rabbinic_learning_1204' }
+    },
+    selection:null,
+    recognition:{ sources:['institution_support'], roles:['learner','study_helper'],
+      quorum:2, requiresLeader:false, protectedWorship:true },
+    actions:['admit','affiliate','recognize','dispute','withdraw','assent'],
+    fees:{}, affiliationIds:['jewish_rabbinic_learning_1204'],
+    ai:{ roles:['learner'], affiliations:[], reserve:0, maxActions:2, recognize:false }
+  },
+  /* Later lay groups imply neither a synagogue building nor a court. */
+  jewish_local_congregation_later:{
+    name:'Local Jewish congregation', faithIds:['jewish'],
+    period:{ yearMin:800, yearMax:1204 }, system:null,
+    roles:{
+      worshipper:{ name:'Congregant', minAge:16, sexes:[], unmarried:false,
+        professions:[], skills:{}, affiliationId:null }
+    },
+    selection:null,
+    recognition:{ sources:[], roles:[], quorum:1, requiresLeader:false, protectedWorship:true },
+    actions:['admit','withdraw'], fees:{}, affiliationIds:[],
+    ai:{ roles:['worshipper'], affiliations:[], reserve:0, maxActions:2, recognize:false }
+  },
+  karaite_lay_congregation:{
+    name:'Local Karaite congregation', faithIds:['karaite'],
+    period:{ yearMin:1066, yearMax:1204 }, system:null,
+    roles:{
+      worshipper:{ name:'Congregant', minAge:16, sexes:[], unmarried:false,
+        professions:[], skills:{}, affiliationId:null }
+    },
+    selection:null,
+    recognition:{ sources:[], roles:[], quorum:1, requiresLeader:false, protectedWorship:true },
+    actions:['admit','withdraw'], fees:{}, affiliationIds:[],
+    ai:{ roles:['worshipper'], affiliations:[], reserve:0, maxActions:2, recognize:false }
+  },
+  /* Lay membership grants no Samaritan priesthood or sanctuary access. */
+  samaritan_lay_congregation:{
+    name:'Local Samaritan congregation', faithIds:['samaritan'],
+    period:{ yearMin:476, yearMax:null }, system:null,
+    roles:{
+      worshipper:{ name:'Congregant', minAge:16, sexes:[], unmarried:false,
+        professions:[], skills:{}, affiliationId:null }
+    },
+    selection:null,
+    recognition:{ sources:[], roles:[], quorum:1, requiresLeader:false, protectedWorship:true },
+    actions:['admit','withdraw'], fees:{}, affiliationIds:[],
+    ai:{ roles:['worshipper'], affiliations:[], reserve:0, maxActions:2, recognize:false }
   }
 };
 FBDATA.legitimacySources.institution_support = {
@@ -137,4 +231,7 @@ FBDATA.techImpactReviews.features.christian_local_church_service = {
 };
 FBDATA.techImpactReviews.features.opening_office_communion = {
   mode:'none', rationale:'Explicit opening correspondence records personal recognition between living incumbents through existing authority records. It requires no technological discovery and grants no temporal power.'
+};
+FBDATA.techImpactReviews.features.jewish_samaritan_dated_communities = {
+  mode:'none', rationale:'Dated lay communities and household observance require presence and voluntary participation, without a discovery requirement.'
 };
