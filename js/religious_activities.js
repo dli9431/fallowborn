@@ -30,7 +30,12 @@
   FB.religiousActivityVisible = function (s, cid) {
     var c = s.chars[cid || s.player.charId];
     return !!c && (!!c.religiousActivity || [FBDATA.religiousActivities, FBDATA.religiousPatronage].some(function (table) {
-      return Object.keys(table).some(function (id) { var d = table[id]; return !d.faithIds.length || d.faithIds.indexOf(c.religion) >= 0; });
+      return Object.keys(table).some(function (id) {
+        var d = table[id], ins = d.institutionId && FB.religiousInstitutionSnapshot(s, d.institutionId);
+        return live(s, d) && (!d.faithIds.length || d.faithIds.indexOf(c.religion) >= 0) &&
+          (!d.institutionId || ins && ins.available && (ins.definition.provinceId === at(s, c.id) ||
+            ins.definition.offMap && ins.definition.jurisdictionIds.indexOf(at(s, c.id)) >= 0));
+      });
     }));
   };
   function live(s, d) {

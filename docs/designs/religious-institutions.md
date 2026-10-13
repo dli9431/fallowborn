@@ -28,6 +28,8 @@ FB.religiousInstitutionQuote(state, institutionId, actor, action, terms) reads e
 
 The profile's existing abbeyId, when present on its local declaration, references abbeys.houses as the property authority. An unused property reference does not require a foundation before free membership or consent. Membership, selection, recognition, withdrawal and vacancy neither create, copy nor alter that property's capital, treasury or plots. Patronage and funded service independently require their actual property owner and balances. Withdrawal can remove one bound affiliation or the whole membership, preserving the character, followers, household and institution. No new purse or loyalty score is stored.
 
+An optional abbeyId may name a receiving property that has not yet been explicitly founded. Its absence does not block otherwise qualified lay membership, withdrawal or consent, and these actions cannot create or spend property. Foundation and funded service still require their own exact property and restricted-account reviews. Spiritual eligibility never imposes landed patronage through an unrelated optional property reference.
+
 Public entry points
 
 FB.religiousInstitutionSnapshot exposes the definition, profile, effective availability, bounded membership, canonical holder, vacancy, existing recognition records and referenced property. FB.religiousInstitutionRoleEligibility resolves declared qualifications. Existing episcopal appointment and civic bargain APIs reject profile institutions, ensuring that their legacy defaults cannot bypass declared qualification or consent. Legacy sees, patriarchates, congregations, papal elections and caliphal claims keep their original paths and ids.

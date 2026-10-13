@@ -331,6 +331,37 @@ FBDATA.religiousInstitutionProfiles = {
     recognition:{sources:[],roles:[],quorum:1,requiresLeader:false,protectedWorship:true},
     actions:['admit','affiliate','withdraw'],fees:{},
     affiliationIds:['shafii_learning_1066','ashari_learning_1066']
+  },
+  /* Lay support contracts, not reconstructed ordination constitutions. */
+  tapa_sardar_lay_support:{
+    name:'Tapa Sardar lay support', faithIds:['buddhist_711'],
+    period:{yearMin:711,yearMax:799}, system:null,
+    roles:{
+      learner:{name:'Learner',minAge:16,sexes:[],unmarried:false,
+        professions:[],skills:{},affiliationId:null},
+      supporter:{name:'Lay supporter',minAge:16,sexes:[],unmarried:false,
+        professions:[],skills:{},affiliationId:null},
+      study_helper:{name:'Learning assistant',minAge:18,sexes:[],unmarried:false,
+        professions:[],skills:{int:4},affiliationId:null}
+    },
+    selection:null,
+    recognition:{sources:[],roles:[],quorum:1,requiresLeader:false,protectedWorship:true},
+    actions:['admit','withdraw'],fees:{},affiliationIds:[],
+    ai:{roles:['learner','supporter'],affiliations:[],reserve:0,maxActions:2,recognize:false}
+  },
+  tepe_narenj_lay_support:{
+    name:'Tepe Narenj lay support', faithIds:['buddhist_711'],
+    period:{yearMin:711,yearMax:799}, system:null,
+    roles:{
+      learner:{name:'Learner',minAge:18,sexes:[],unmarried:false,
+        professions:[],skills:{},affiliationId:null},
+      visitor:{name:'Lay visitor',minAge:16,sexes:[],unmarried:false,
+        professions:[],skills:{},affiliationId:null}
+    },
+    selection:null,
+    recognition:{sources:[],roles:[],quorum:1,requiresLeader:false,protectedWorship:true},
+    actions:['admit','withdraw'],fees:{},affiliationIds:[],
+    ai:{roles:['learner','visitor'],affiliations:[],reserve:0,maxActions:1,recognize:false}
   }
 };
 FBDATA.techImpactReviews.features.arabian_dated_congregations = {
