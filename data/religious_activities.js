@@ -253,6 +253,48 @@ FBDATA.religiousActivities = {
     duration:2, calendar:'any_day', interruption:'retain_cost', recipient:'institution',
     milestone:'jewish_synagogue_care_done', reward:{ piety:1, prestige:0, skills:{} }, legacy:null,
     service:{ fund:'building_care', cost:1 }
+  },
+  /* Dated local reconstructions. Costs, duration and social rewards are
+     simulation choices; district scope does not place an exact sanctuary. */
+  uppakra_local_observance:{
+    name:'Join local observance in the Uppakra district',
+    period:{ yearMin:400, yearMax:599 },
+    openings:[{ id:'476', revision:'wider_v2' }, { id:'493', revision:'world_v2' }],
+    faithIds:['germanic_pagan'], affiliationIds:[], roleIds:[], institutionId:null,
+    provinceIds:['lund'], protectedWorship:true,
+    mode:'local', purpose:null, siteId:null, payer:'household', cost:1, reserve:0, duration:1,
+    calendar:'any_day', interruption:'retain_cost', recipient:'participant',
+    milestone:'uppakra_local_observance', reward:{ piety:1, prestige:1, skills:{} }, legacy:null, service:null
+  },
+  samogitian_mortuary_observance:{
+    name:'Keep a household remembrance in Samogitia',
+    period:{ yearMin:400, yearMax:599 },
+    openings:[{ id:'476', revision:'wider_v2' }, { id:'493', revision:'world_v2' }],
+    faithIds:['baltic_pagan'], affiliationIds:[], roleIds:[], institutionId:null,
+    provinceIds:['samogitia'], protectedWorship:true,
+    mode:'local', purpose:null, siteId:null, payer:'household', cost:0, reserve:0, duration:2,
+    calendar:'any_day', interruption:'retain_cost', recipient:'participant',
+    milestone:'samogitian_mortuary_observance', reward:{ piety:1, prestige:0, skills:{} }, legacy:null, service:null
+  },
+  samogitian_mortuary_support:{
+    name:'Provide materials for a household remembrance in Samogitia',
+    period:{ yearMin:400, yearMax:599 },
+    openings:[{ id:'476', revision:'wider_v2' }, { id:'493', revision:'world_v2' }],
+    faithIds:['baltic_pagan'], affiliationIds:[], roleIds:[], institutionId:null,
+    provinceIds:['samogitia'], protectedWorship:true,
+    mode:'local', purpose:null, siteId:null, payer:'household', cost:1, reserve:0, duration:2,
+    calendar:'any_day', interruption:'retain_cost', recipient:'participant',
+    milestone:'samogitian_mortuary_observance', reward:{ piety:1, prestige:0, skills:{} }, legacy:null, service:null
+  },
+  uppsala_local_gathering:{
+    name:'Support a local gathering in the Uppsala district',
+    period:{ yearMin:1066, yearMax:1066 },
+    openings:[{ id:'1066', revision:'baseline' }, { id:'1066', revision:'inhabited_v2' }],
+    faithIds:['norse_pagan'], affiliationIds:[], roleIds:[], institutionId:null,
+    provinceIds:['uppsala'], protectedWorship:true,
+    mode:'local', purpose:null, siteId:null, payer:'household', cost:1, reserve:0, duration:2,
+    calendar:'any_day', interruption:'retain_cost', recipient:'participant',
+    milestone:'uppsala_local_gathering', reward:{ piety:1, prestige:1, skills:{} }, legacy:null, service:null
   }
 };
 FBDATA.religiousPatronage = {
@@ -286,6 +328,9 @@ FBDATA.religiousPatronage = {
   }
 };
 FBDATA.balance.religiousOutreachPressure = 0.10;
+FBDATA.techImpactReviews.features.northern_local_observance = {
+  mode:'none', rationale:'District household observance and remembrance use actual presence, local worship access and the household budget without a discovery requirement.'
+};
 FBDATA.techImpactReviews.features.religious_activity_household = {
   mode:'none', rationale:'Managed household participation uses actual presence, qualification and the household budget without a research gate.'
 };

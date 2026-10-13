@@ -3746,3 +3746,7 @@ The Ecclesiastical government deed shows canonical office, spiritual vacancy, te
 Religious communities review
 
 The Religious communities deed selects a managed household participant, then shows declared local or off-map communities, primary faith, membership, canonical leadership, access, scope and recorded recognition. Shared action cards disclose current/minimum age, permitted sex, skills, required existing work, affiliation, residence and marriage promises, plus cost and actionable blockers. Separate confirmation names payer, exact decision, cost and assent. Back, Escape and Continue retain participant, expanded disclosures, list/body scroll and semantic action focus. Stale acceptance spends nothing. Headless and leaderless communities share the same i18n-routed review in standard and CrazyGames. See religious-institutions.md.
+
+District religious activity review
+
+Local activity Details and confirmation use the existing fact rows to show actual destination, permitted districts and required worship protection alongside payer, cost, time, completion benefit and interruption. Disabled reviews retain the same scope disclosure. Back and Escape retain the household participant, disclosure state, list/body scroll and originating action focus. Activity names use structured data and all new row labels use localization. See religious-activities.md.
