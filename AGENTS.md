@@ -196,18 +196,13 @@ commit subject**, using `vMAJOR.MINOR.PATCH: description` (for example,
 to the final merge/integration commit. Feature-branch commits do not guess a version, and
 docs-only commits do not assign one, so those commits are exempt.
 
-**Never manage git worktrees.** Their lifecycle is owner-controlled. Do not create, add, remove,
-move, prune, repair, or otherwise modify a worktree or its registration.
-
-Exception: when the owner explicitly asks for a new worktree, an agent may create exactly that one with git worktree add, on a new branch from the base the owner names, at the location the owner names, and then work and commit in it. Removing, moving, pruning or repairing worktrees, and touching any other worktree or its registration, remain owner-controlled.
-
 **When the owner explicitly asks for a new branch and a merge into `main` or `dev`:**
 
 1. Create the requested temporary branch in the current checkout and commit the work there.
 2. Merge that temporary branch into the requested integration target.
 3. Once the branch is fully merged, switch the current checkout off it if Git requires that,
-   then delete **only the branch** with `git branch -d <branch>` (use `-d`, not `-D`, so Git
-   refuses if it is not fully merged). Leave every worktree and worktree registration intact.
+   then delete the branch with `git branch -d <branch>` (use `-d`, not `-D`, so Git
+   refuses if it is not fully merged).
 
 **The `dev` branch is long-lived — never delete it.** It survives its merges into `main`
 and serves as the owner's test branch for larger changes. Every merge of any branch into `dev`
