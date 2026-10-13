@@ -362,6 +362,23 @@ FBDATA.religiousInstitutionProfiles = {
     recognition:{sources:[],roles:[],quorum:1,requiresLeader:false,protectedWorship:true},
     actions:['admit','withdraw'],fees:{},affiliationIds:[],
     ai:{roles:['learner','visitor'],affiliations:[],reserve:0,maxActions:1,recognize:false}
+  },
+  /* Lay service groups do not certify priests or ascetic admission. */
+  debal_lay_service_711:{
+    name:'Debal lay service community',faithIds:['hindu_711'],
+    period:{yearMin:711,yearMax:711},system:null,
+    roles:{participant:{name:'Lay participant',minAge:16,sexes:[],unmarried:false,
+      professions:[],skills:{},affiliationId:null}},
+    selection:null,recognition:{sources:[],roles:[],quorum:1,requiresLeader:false,protectedWorship:true},
+    actions:['admit','withdraw'],fees:{},affiliationIds:[]
+  },
+  brahmanabad_lay_service_711:{
+    name:'Brahmanabad lay service community',faithIds:['hindu_711'],
+    period:{yearMin:711,yearMax:711},system:null,
+    roles:{supporter:{name:'Lay supporter',minAge:16,sexes:[],unmarried:false,
+      professions:[],skills:{},affiliationId:null}},
+    selection:null,recognition:{sources:[],roles:[],quorum:1,requiresLeader:false,protectedWorship:true},
+    actions:['admit','withdraw'],fees:{},affiliationIds:[]
   }
 };
 FBDATA.techImpactReviews.features.arabian_dated_congregations = {
@@ -402,4 +419,8 @@ FBDATA.techImpactReviews.features.jewish_samaritan_dated_communities = {
 };
 FBDATA.techImpactReviews.features.african_lay_community_participation = {
   mode:'none', rationale:'Ordinary local offerings, worship and communal learning require presence and protected access, without specialist office or discovery.'
+};
+
+FBDATA.techImpactReviews.features.hindu_lay_service_711 = {
+  mode:'none',rationale:'Voluntary lay participation depends on presence and consent, without granting priesthood, an ascetic vow or a researched capability.'
 };
