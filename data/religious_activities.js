@@ -1,5 +1,79 @@
 /* Local costs consume supplies; they create no endowed property or purse. */
 FBDATA.religiousActivities = {
+  /* Household practice grants no specialist qualification. Dates and rewards
+     are simulation terms; historical premises require separate acceptance. */
+  zoroastrian_household_fire_observance:{
+    name:'Household fire observance',period:{yearMin:476,yearMax:493},
+    openings:[{id:'476',revision:'wider_v2'},{id:'493',revision:'world_v2'}],
+    faithIds:['zoroastrian_sasanian_476'],affiliationIds:[],roleIds:[],institutionId:null,
+    mode:'local',purpose:null,siteId:null,payer:'household',cost:0,reserve:0,
+    duration:1,calendar:'any_day',interruption:'retain_cost',recipient:'participant',
+    milestone:'zoroastrian_household_fire_done',reward:{piety:1,prestige:0,skills:{}},
+    legacy:null,service:null
+  },
+  zoroastrian_religious_learning:{
+    name:'Household Zoroastrian study',period:{yearMin:476,yearMax:493},
+    openings:[{id:'476',revision:'wider_v2'},{id:'493',revision:'world_v2'}],
+    faithIds:['zoroastrian_sasanian_476'],affiliationIds:[],roleIds:[],institutionId:null,
+    mode:'local',purpose:null,siteId:null,payer:'household',cost:0,reserve:0,
+    duration:2,calendar:'any_day',interruption:'retain_cost',recipient:'participant',
+    milestone:'zoroastrian_learning_done',reward:{piety:0,prestige:0,skills:{int:1}},
+    legacy:null,service:null
+  },
+  sasanian_learning_476:{
+    name:'Study with the local Zoroastrian group',period:{yearMin:476,yearMax:493},
+    openings:[{id:'476',revision:'wider_v2'}],
+    faithIds:['zoroastrian_sasanian_476'],affiliationIds:[],roleIds:['learner'],
+    institutionId:'sasanian_service_476',mode:'local',purpose:null,siteId:null,
+    payer:'household',cost:0,reserve:0,duration:2,calendar:'any_day',
+    interruption:'retain_cost',recipient:'institution',milestone:'zoroastrian_learning_done',
+    reward:{piety:0,prestige:0,skills:{int:1}},legacy:null,service:{fund:'learning',cost:1}
+  },
+  sasanian_fire_care_476:{
+    name:'Help maintain local fire supplies',period:{yearMin:476,yearMax:493},
+    openings:[{id:'476',revision:'wider_v2'}],
+    faithIds:['zoroastrian_sasanian_476'],affiliationIds:[],roleIds:['supporter'],
+    institutionId:'sasanian_service_476',mode:'local',purpose:null,siteId:null,
+    payer:'household',cost:0,reserve:0,duration:1,calendar:'any_day',
+    interruption:'retain_cost',recipient:'institution',milestone:'zoroastrian_household_fire_done',
+    reward:{piety:1,prestige:0,skills:{}},legacy:null,service:{fund:'fire_care',cost:1}
+  },
+  sasanian_relief_476:{
+    name:'Help provide local household relief',period:{yearMin:476,yearMax:493},
+    openings:[{id:'476',revision:'wider_v2'}],
+    faithIds:['zoroastrian_sasanian_476'],affiliationIds:[],roleIds:['supporter'],
+    institutionId:'sasanian_service_476',mode:'local',purpose:null,siteId:null,
+    payer:'household',cost:0,reserve:0,duration:1,calendar:'any_day',
+    interruption:'retain_cost',recipient:'institution',milestone:'zoroastrian_relief_done',
+    reward:{piety:1,prestige:0,skills:{}},legacy:null,service:{fund:'relief',cost:1}
+  },
+  sasanian_learning_493:{
+    name:'Study with the local Zoroastrian group',period:{yearMin:493,yearMax:493},
+    openings:[{id:'493',revision:'world_v2'}],
+    faithIds:['zoroastrian_sasanian_476'],affiliationIds:[],roleIds:['learner'],
+    institutionId:'sasanian_service_493',mode:'local',purpose:null,siteId:null,
+    payer:'household',cost:0,reserve:0,duration:2,calendar:'any_day',
+    interruption:'retain_cost',recipient:'institution',milestone:'zoroastrian_learning_done',
+    reward:{piety:0,prestige:0,skills:{int:1}},legacy:null,service:{fund:'learning',cost:1}
+  },
+  sasanian_fire_care_493:{
+    name:'Help maintain local fire supplies',period:{yearMin:493,yearMax:493},
+    openings:[{id:'493',revision:'world_v2'}],
+    faithIds:['zoroastrian_sasanian_476'],affiliationIds:[],roleIds:['supporter'],
+    institutionId:'sasanian_service_493',mode:'local',purpose:null,siteId:null,
+    payer:'household',cost:0,reserve:0,duration:1,calendar:'any_day',
+    interruption:'retain_cost',recipient:'institution',milestone:'zoroastrian_household_fire_done',
+    reward:{piety:1,prestige:0,skills:{}},legacy:null,service:{fund:'fire_care',cost:1}
+  },
+  sasanian_relief_493:{
+    name:'Help provide local household relief',period:{yearMin:493,yearMax:493},
+    openings:[{id:'493',revision:'world_v2'}],
+    faithIds:['zoroastrian_sasanian_476'],affiliationIds:[],roleIds:['supporter'],
+    institutionId:'sasanian_service_493',mode:'local',purpose:null,siteId:null,
+    payer:'household',cost:0,reserve:0,duration:1,calendar:'any_day',
+    interruption:'retain_cost',recipient:'institution',milestone:'zoroastrian_relief_done',
+    reward:{piety:1,prestige:0,skills:{}},legacy:null,service:{fund:'relief',cost:1}
+  },
   ctesiphon_church_service_493:{
     name:'Serve the local church at Ctesiphon', period:{yearMin:493,yearMax:null},
     openings:[{id:'493',revision:'world_v2'}], faithIds:['east_syriac'],
@@ -521,6 +595,46 @@ FBDATA.religiousActivities = {
   }
 };
 FBDATA.religiousPatronage = {
+  sasanian_household_support_476:{
+    name:'Support local Zoroastrian service',period:{yearMin:476,yearMax:493},
+    openings:[{id:'476',revision:'wider_v2'}],
+    faithIds:[],affiliationIds:[],roleIds:[],institutionId:'sasanian_service_476',
+    payer:'household',reserve:0,
+    foundation:{startup:1,capital:2,treasury:1,landRequired:true},
+    funds:{fire_care:{name:'Fire supplies',capacity:6,unitCost:1},
+      learning:{name:'Learning supplies',capacity:6,unitCost:1},
+      relief:{name:'Household relief supplies',capacity:6,unitCost:1}},outreach:[]
+  },
+  sasanian_public_support_476:{
+    name:'Public support for local Zoroastrian service',period:{yearMin:476,yearMax:493},
+    openings:[{id:'476',revision:'wider_v2'}],
+    faithIds:[],affiliationIds:[],roleIds:[],institutionId:'sasanian_service_476',
+    payer:'public',ai:true,reserve:2,
+    foundation:{startup:1,capital:2,treasury:1,landRequired:true},
+    funds:{fire_care:{name:'Fire supplies',capacity:6,unitCost:1},
+      learning:{name:'Learning supplies',capacity:6,unitCost:1},
+      relief:{name:'Household relief supplies',capacity:6,unitCost:1}},outreach:[]
+  },
+  sasanian_household_support_493:{
+    name:'Support local Zoroastrian service',period:{yearMin:493,yearMax:493},
+    openings:[{id:'493',revision:'world_v2'}],
+    faithIds:[],affiliationIds:[],roleIds:[],institutionId:'sasanian_service_493',
+    payer:'household',reserve:0,
+    foundation:{startup:1,capital:2,treasury:1,landRequired:true},
+    funds:{fire_care:{name:'Fire supplies',capacity:6,unitCost:1},
+      learning:{name:'Learning supplies',capacity:6,unitCost:1},
+      relief:{name:'Household relief supplies',capacity:6,unitCost:1}},outreach:[]
+  },
+  sasanian_public_support_493:{
+    name:'Public support for local Zoroastrian service',period:{yearMin:493,yearMax:493},
+    openings:[{id:'493',revision:'world_v2'}],
+    faithIds:[],affiliationIds:[],roleIds:[],institutionId:'sasanian_service_493',
+    payer:'public',ai:true,reserve:2,
+    foundation:{startup:1,capital:2,treasury:1,landRequired:true},
+    funds:{fire_care:{name:'Fire supplies',capacity:6,unitCost:1},
+      learning:{name:'Learning supplies',capacity:6,unitCost:1},
+      relief:{name:'Household relief supplies',capacity:6,unitCost:1}},outreach:[]
+  },
   jewish_sardis_giving_476:{
     name:'Support the Sardis synagogue', period:{ yearMin:476, yearMax:493 },
     openings:[{ id:'476', revision:'wider_v2' },{ id:'476', revision:'jewish_samaritan_v3' }], faithIds:['jewish'], affiliationIds:[],
@@ -623,4 +737,17 @@ FBDATA.techImpactReviews.features.ghana_local_learning_support = {
 };
 FBDATA.techImpactReviews.features.islamic_scholarly_learning = {
   mode:'none',rationale:'Local study depends on presence, voluntary membership and scholarly affiliation, without a discovery requirement or grant of public office.'
+};
+
+FBDATA.techImpactReviews.features.sasanian_household_observance = {
+  mode:'none',rationale:'Household fire observance depends on voluntary participation, without a discovery requirement or priestly qualification.'
+};
+FBDATA.techImpactReviews.features.sasanian_lay_learning = {
+  mode:'none',rationale:'Household study and local lay learning require time and, for a funded lesson, actual membership and supplies rather than discovery.'
+};
+FBDATA.techImpactReviews.features.sasanian_lay_service = {
+  mode:'none',rationale:'Local fire supplies and relief depend on protected access and prepaid institutional resources, without conferring specialist office.'
+};
+FBDATA.techImpactReviews.features.sasanian_service_support = {
+  mode:'none',rationale:'Voluntary foundation and giving use lawful existing property and the actual household or public payer, without a research gate.'
 };

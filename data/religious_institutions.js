@@ -31,6 +31,21 @@ FBDATA.religiousAffiliations = {
   }
 };
 FBDATA.religiousInstitutionProfiles = {
+  /* Lay service terms do not appoint a priest or certify ritual purity. */
+  sasanian_lay_service:{
+    name:'Zoroastrian lay service', faithIds:['zoroastrian_sasanian_476'],
+    period:{yearMin:476,yearMax:493}, system:null,
+    roles:{
+      learner:{name:'Learner',minAge:16,sexes:[],unmarried:false,
+        professions:[],skills:{},affiliationId:null},
+      supporter:{name:'Lay service helper',minAge:16,sexes:[],unmarried:false,
+        professions:[],skills:{},affiliationId:null}
+    },
+    selection:null,
+    recognition:{sources:[],roles:[],quorum:1,requiresLeader:false,protectedWorship:true},
+    actions:['admit','withdraw'],fees:{},affiliationIds:[],
+    ai:{roles:['learner'],affiliations:[],reserve:0,maxActions:2,recognize:false}
+  },
   east_syriac_church_service:{
     name:'East Syriac church service', faithIds:['east_syriac'],
     period:{yearMin:493,yearMax:null}, system:null,
