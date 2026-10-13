@@ -5838,6 +5838,12 @@ The buddhist_household_practice_early and buddhist_household_study_early declara
 
 tapa_sardar_giving_711 has six one-unit learning services, while tepe_narenj_giving_711 has four two-unit services and consumes one startup unit on foundation. Capital and treasury begin at zero. Each foundation transfers the exact local unpledged plot group once. tapa_sardar_public_giving_711 matches the first house's service terms, uses the canonical ruler account with reserve:1 and may participate in bounded public patronage AI. Only Tapa Sardar declares voluntary outreach; it funds the existing matching sponsor-owned project and preserves the population owner's single support record. Neither admission nor restoration initializes a receiving house, advances a project, certifies a rite or changes household identity.
 
+Later Iranian household activities
+
+zoroastrian_household_learning_800 and zoroastrian_household_learning_867 demonstrate independent local declarations with provinceIds and exact opening revision gates. The 800 declaration accepts istakhr only on inhabited_v2_governments_v2_islamic_v1_learning_v1; the 867 declaration accepts istakhr or kerman only on governments_v2_islamic_v1. Each accepts the retained zoroastrian faith during its opening year. These are regional household-study simulations, not institutional placements or community replacements. A participant who moves even between two allowed counties must start a new local commitment.
+
+Both share zoroastrian_learning_done with early household and funded study. They require no institution or specialist role and transfer no property. Preserve saved activity definitions and milestones through the existing save contract; do not synthesize roles from culture or extend the periods to later openings without separate evidence. zoroastrian_later_household_learning records technology impact none.
+
 Iranian lay service declarations
 
 sasanian_lay_service permits learner and supporter membership for zoroastrian_sasanian_476 within years 476-493. It has no selection, priestly role, career grant, recognition power or obligatory celibacy. No production bookmark places the proposed sasanian_service_476 or sasanian_service_493 receiving institutions. Each needs a separately accepted local site, vacant:true, a local jurisdiction and its own abbeyId before service or patronage can be used. Do not attach the template to an existing court congregation or temple by inference.

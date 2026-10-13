@@ -11,6 +11,11 @@ const {dependsOnRuntime} = require('../support/runtime-dependencies');
 
 dependsOnRuntime(__filename, ['data/cultures.js','data/bookmarks.js','data/bookmark_476.js',
   'data/bookmark_476_outer.js','data/bookmark_476_wider_identities.js','data/bookmark_476_wider.js',
+  'index.html','data/counties.js','data/map_data.js','data/geographies.js','data/geography_expansion.js',
+  'data/bookmark_711.js','data/bookmark_711_terrain.js','data/bookmark_800.js','data/bookmark_800_expansion.js',
+  'data/bookmark_867_expansion.js','data/bookmark_1066_inhabited.js','data/bookmark_1204.js','data/bookmark_1204_terrain.js',
+  'data/government_rollout.js','data/islamic_profiles.js','data/islamic_institutions.js','data/islamic_rollout.js',
+  'data/african_religious_rollout.js','data/arabian_openings.js',
   'data/bookmark_493.js','data/bookmark_493_world.js','data/economy.js','data/technology.js','data/starts.js',
   'js/model.js','js/world.js','js/economy.js','js/religion.js','js/technology.js','js/population.js','js/authority.js',
   'js/politics.js','js/save.js','js/save_v4.js','js/mods.js','js/starts.js','js/main.js',
@@ -535,4 +540,201 @@ test('unplaced Iranian services and gifts fail closed without creating recipient
       recipient:FB.religiousInstitutionSnapshot(s,'sasanian_service_493'),
       pure:before === JSON.stringify(s) && rng === FB.getRngState() && uid === FB.getUidCounter()};
   })).toEqual({services:[true,true,true],gift:true,recipient:null,pure:true});
+});
+
+
+/* These starts use existing provincial identities; no temple is staged. */
+async function laterIranianHousehold(page,testInfo,date,crazygames) {
+  await startHistoricalGame(page,testInfo,{bookmark:date,
+    code:'IRANIANLEARNING-' + date + '-farmer-istakhr-f-Dena-established'},!!crazygames);
+  expect(await page.evaluate(function () {
+    const s = FB.state; return {faith:s.chars[s.player.charId].religion,place:s.player.provinceId};
+  })).toEqual({faith:'zoroastrian',place:'istakhr'});
+  await page.evaluate(function (date) {
+    const s = FB.state, me = s.chars[s.player.charId];
+    me.born = s.date.year - 30; me.health = 8; me.skills.int = 3;
+    s.player.gold = 0; s.player.travel = null; s.player.war = null;
+    s.player.flags.on_campaign = false; s.player.flags.with_liege_host = false;
+    s.player.manor = null; s.player.landPlots = []; s.player.landPlotMigration = 1;
+    let spouse = FB.spouseOf(s,me);
+    if (!spouse) {
+      spouse = FB.makeCharacter(s,{name:'Household Partner',sex:'m',born:s.date.year - 30,
+        religion:me.religion,culture:me.culture,role:'spouse',station:1,traits:[]});
+      me.spouseId = spouse.id; spouse.spouseId = me.id; FB.touchFamily();
+    }
+    spouse.born = s.date.year - 30; spouse.health = 8; spouse.religion = me.religion;
+    spouse.homeProvinceId = 'istakhr'; spouse.skills.int = 3;
+    window.iranianLater = {cid:me.id,spouse:spouse.id,activity:'zoroastrian_household_learning_' + date};
+  },date);
+}
+
+test('later study has two bounded regional consumers and seven openings retain held institutions',async function ({page},testInfo) {
+  await openGame(page,testInfo);
+  expect(await page.evaluate(function () {
+    const before = JSON.stringify(FBDATA), rng = FB.getRngState(), uid = FB.getUidCounter();
+    const dates = ['476','493','711','800','867','1066','1204'];
+    const rows = ['800','867'].map(function (date) {
+      const d = FBDATA.religiousActivities['zoroastrian_household_learning_' + date], b = FB.bookmark(date);
+      return {opening:d.openings[0].revision === b.revision,period:d.period,places:d.provinceIds,
+        mapped:d.provinceIds.every(function (id) {
+          return b.provinces.some(function (p) { return p.id === id && !p.wasteland; });
+        }),house:d.institutionId,roles:d.roleIds,faiths:d.faithIds};
+    });
+    return {rows:rows,activities:FB.religiousActivityCatalogFaults(FBDATA),technology:FB.validateTechnologyData(true),
+      review:FBDATA.techImpactReviews.features.zoroastrian_later_household_learning.mode,
+      unplaced:dates.every(function (date) {
+        const b = FB.bookmark(date);
+        return !Object.values(b.localInstitutions || {}).some(function (d) { return d.profileId === 'sasanian_lay_service'; });
+      }),held:!FB.faithExists('manichaean',null) && !FB.faithExists('mazdakite',null),
+      bounds:['istakhr','kerman'].every(function (id) {
+        const p = FBDATA.geographies.europe_regional.provinces.find(function (row) { return row.id === id; });
+        return p && p.x >= -11 && p.x <= 70 && p.y >= 13 && p.y <= 66;
+      }),pure:before === JSON.stringify(FBDATA) && rng === FB.getRngState() && uid === FB.getUidCounter()};
+  })).toEqual({rows:[
+    {opening:true,period:{yearMin:800,yearMax:800},places:['istakhr'],mapped:true,house:null,roles:[],faiths:['zoroastrian']},
+    {opening:true,period:{yearMin:867,yearMax:867},places:['istakhr','kerman'],mapped:true,house:null,roles:[],faiths:['zoroastrian']}
+  ],activities:[],technology:[],review:'none',unplaced:true,held:true,bounds:true,pure:true});
+});
+
+for (const date of ['800','867']) {
+  test(date + ' household study is free for married adults without changing religion or granting office',async function ({page},testInfo) {
+    await laterIranianHousehold(page,testInfo,date);
+    expect(await page.evaluate(function () {
+      const s = FB.state, f = iranianLater, people = [f.cid,f.spouse];
+      const before = JSON.stringify({heads:s.religiousHeads,institutions:s.localInstitutions,property:s.abbeys,
+        communities:FB.countyCommunities(s,'istakhr'),faith:FB.religionOf('zoroastrian',s).properties,
+        people:people.map(function (cid) { const c = s.chars[cid]; return [c.religion,c.spouseId,c.career,c.religiousRanks]; })});
+      const started = people.map(function (cid) { return FB.religiousActivityApply(s,FB.religiousActivityQuote(s,f.activity,cid)); });
+      s.turn++; FB.religiousActivityTick(s);
+      const waiting = people.every(function (cid) { return s.chars[cid].skills.int === 3 && !!s.chars[cid].religiousActivity; });
+      s.turn++; FB.religiousActivityTick(s);
+      const after = JSON.stringify({heads:s.religiousHeads,institutions:s.localInstitutions,property:s.abbeys,
+        communities:FB.countyCommunities(s,'istakhr'),faith:FB.religionOf('zoroastrian',s).properties,
+        people:people.map(function (cid) { const c = s.chars[cid]; return [c.religion,c.spouseId,c.career,c.religiousRanks]; })});
+      return {started:started,waiting:waiting,skills:people.map(function (cid) { return s.chars[cid].skills.int; }),
+        repeats:people.map(function (cid) { return FB.religiousActivityQuote(s,f.activity,cid).allowed; }),
+        gold:s.player.gold,unchanged:before === after};
+    })).toEqual({started:[true,true],waiting:true,skills:[4,4],repeats:[false,false],gold:0,unchanged:true});
+  });
+}
+
+test('later study rejects unreviewed revisions, dates, places and faiths with pure atomic proposals',async function ({page},testInfo) {
+  await laterIranianHousehold(page,testInfo,'867');
+  expect(await page.evaluate(function () {
+    const s = FB.state, f = iranianLater, me = s.chars[f.cid];
+    const original = {start:s.start,year:s.date.year,born:me.born,faith:me.religion,place:s.player.provinceId};
+    const before = JSON.stringify(s), rng = FB.getRngState(), uid = FB.getUidCounter();
+    const r800 = FB.bookmark('800').revision, r867 = FB.bookmark('867').revision;
+    const rows = [
+      ['800',r800,800,'istakhr','zoroastrian'],['800',r800,800,'kerman','zoroastrian'],
+      ['867',r867,867,'istakhr','zoroastrian'],['867',r867,867,'kerman','zoroastrian'],
+      ['867',r867,867,'baghdad','zoroastrian'],['800','inhabited_v2_governments_v2',800,'istakhr','zoroastrian'],
+      ['867','governments_v2',867,'istakhr','zoroastrian'],['867',r867,868,'istakhr','zoroastrian'],
+      ['800',r800,799,'istakhr','zoroastrian'],['800',r800,801,'istakhr','zoroastrian'],
+      ['867',r867,867,'istakhr','zoroastrian_sasanian_476'],['867',r867,867,'istakhr','iranian_traditional_476'],
+      ['867',r867,867,'istakhr','sogdian_traditional_476'],['867',r867,867,'istakhr','sunni']
+    ];
+    const allowed = rows.map(function (row) {
+      s.start = Object.assign({},original.start,{id:row[0],revision:row[1]});
+      s.date.year = row[2]; me.born = row[2] - 30; s.player.provinceId = row[3]; me.religion = row[4];
+      const q = FB.religiousActivityQuote(s,'zoroastrian_household_learning_' + row[0],f.cid);
+      if (!q.allowed) {
+        const rejected = JSON.stringify(s);
+        if (FB.religiousActivityApply(s,q) || rejected !== JSON.stringify(s)) throw new Error('Rejected proposal mutated state');
+      }
+      return q.allowed;
+    });
+    const otherDates = ['476','493','711','1066','1204'].map(function (date) {
+      s.start = Object.assign({},original.start,{id:date,revision:FB.bookmark(date).revision});
+      s.date.year = +date; me.born = +date - 30; me.religion = 'zoroastrian'; s.player.provinceId = 'istakhr';
+      return ['800','867'].every(function (id) { return !FB.religiousActivityQuote(s,'zoroastrian_household_learning_' + id,f.cid).allowed; });
+    });
+    s.start = original.start; s.date.year = original.year; me.born = original.born;
+    me.religion = original.faith; s.player.provinceId = original.place;
+    const pure = before === JSON.stringify(s) && rng === FB.getRngState() && uid === FB.getUidCounter();
+    const q = FB.religiousActivityQuote(s,f.activity,f.cid);
+    s.player.provinceId = 'kerman';
+    const changed = JSON.stringify(s);
+    return {allowed:allowed,otherDates:otherDates,pure:pure,
+      stale:!FB.religiousActivityApply(s,q),atomic:changed === JSON.stringify(s)};
+  })).toEqual({allowed:[true,false,true,true,false,false,false,false,false,false,false,false,false,false],
+    otherDates:[true,true,true,true,true],pure:true,stale:true,atomic:true});
+});
+
+for (const interruption of ['movement','year']) {
+  test('later study interrupted by ' + interruption + ' keeps household resources and gives no reward',async function ({page},testInfo) {
+    await laterIranianHousehold(page,testInfo,'867');
+    expect(await page.evaluate(function (interruption) {
+      const s = FB.state, f = iranianLater, me = s.chars[f.cid];
+      const started = FB.religiousActivityApply(s,FB.religiousActivityQuote(s,f.activity,f.cid));
+      if (interruption === 'movement') s.player.provinceId = 'kerman';
+      else s.date.year = 868;
+      const preserved = JSON.stringify({gold:s.player.gold,communities:FB.countyCommunities(s,'istakhr'),
+        institutions:s.localInstitutions,property:s.abbeys});
+      s.turn += 2; FB.religiousActivityTick(s);
+      return {started:started,active:!!me.religiousActivity,reward:!!(me.religiousActivityHistory || {}).zoroastrian_learning_done,
+        skill:me.skills.int,preserved:preserved === JSON.stringify({gold:s.player.gold,communities:FB.countyCommunities(s,'istakhr'),
+          institutions:s.localInstitutions,property:s.abbeys})};
+    },interruption)).toEqual({started:true,active:false,reward:false,skill:3,preserved:true});
+  });
+}
+
+function laterIranianSavedFacts() {
+  const s = FB.state, f = iranianLater;
+  return JSON.parse(JSON.stringify({start:s.start,gold:s.player.gold,
+    people:[f.cid,f.spouse].map(function (cid) {
+      const c = s.chars[cid]; return [c.religion,c.spouseId,c.skills.int,c.religiousActivity,c.religiousActivityHistory];
+    }),heads:s.religiousHeads,institutions:s.localInstitutions,property:s.abbeys,
+    root:FB.religionOf('zoroastrian',s).properties,child:FB.religionOf('e2e_iranian_saved_child',s).properties,
+    communities:FB.countyCommunities(s,'istakhr'),project:FB.countyCommunityProject(s,'istakhr','faith')}));
+}
+for (const distribution of ['standard','CrazyGames']) {
+  test(distribution + ' restores later learning with saved doctrine, a mixed community and conversion progress',async function ({page},testInfo) {
+    await laterIranianHousehold(page,testInfo,'800',distribution === 'CrazyGames');
+    const saved = await page.evaluate(function () {
+      const s = FB.state, f = iranianLater;
+      const id = FB.createFaith(s,{id:'e2e_iranian_saved_child',name:'Saved Iranian household faith',parent:'zoroastrian',
+        relationToParent:'in_fold',founderId:f.cid,properties:{marriage:{divorce:{piety:7,cooldownDays:120}}}});
+      if (!id || FB.convertCountyCommunity(s,'istakhr',{kind:'faith',target:id,amount:100}).count !== 100 ||
+          !FB.startCountyCommunityProject(s,'istakhr',{kind:'faith',target:id,sponsor:'player',policy:'voluntary'}))
+        throw new Error('Saved community setup failed');
+      s.population.counties.istakhr.communityProjects.faith.progress = 0.25;
+      s.chars[f.spouse].religion = id;
+      if (!FB.religiousActivityApply(s,FB.religiousActivityQuote(s,f.activity,f.cid))) throw new Error('Expected household lesson');
+      return FB.save.serialize();
+    });
+    const before = await page.evaluate(laterIranianSavedFacts);
+    expect(before.child.marriage.divorce).toMatchObject({piety:7,cooldownDays:120});
+    await page.evaluate(function () { FB.state.turn += 2; FB.religiousActivityTick(FB.state); });
+    const after = await page.evaluate(laterIranianSavedFacts);
+    expect(after.people[0][2]).toBe(4);
+    await page.evaluate(function () {
+      return new Promise(function (resolve,reject) {
+        FB.activateBookmark('1204',null,function (error) { if (error) reject(error); else resolve(); });
+      });
+    });
+    await restoreBookmark(page,saved);
+    expect(await page.evaluate(laterIranianSavedFacts)).toEqual(before);
+    await page.evaluate(function () { FB.state.turn += 2; FB.religiousActivityTick(FB.state); });
+    expect(await page.evaluate(laterIranianSavedFacts)).toEqual(after);
+    expect(await page.evaluate(function () {
+      return FB.religiousActivityQuote(FB.state,iranianLater.activity,iranianLater.cid).allowed;
+    })).toBe(false);
+  });
+}
+
+test('the Sasanian service cutoff retains donated funds, membership and communities',async function ({page},testInfo) {
+  await iranianServiceHousehold(page,testInfo,'493');
+  expect(await page.evaluate(function () {
+    const s = FB.state, f = iranianFixture, h = iranianFound();
+    iranianAdmit(f.cid,'learner'); iranianGive('learning',1);
+    const started = FB.religiousActivityApply(s,FB.religiousActivityQuote(s,'sasanian_learning_493',f.cid));
+    const before = JSON.stringify({property:h,institution:s.localInstitutions[f.iid],
+      communities:FB.countyCommunities(s,'baghdad'),gold:s.player.gold,faith:s.chars[f.cid].religion});
+    s.date.year = 494; s.turn += 2; FB.religiousActivityTick(s);
+    return {started:started,active:!!s.chars[f.cid].religiousActivity,skill:s.chars[f.cid].skills.int,
+      unchanged:before === JSON.stringify({property:h,institution:s.localInstitutions[f.iid],
+        communities:FB.countyCommunities(s,'baghdad'),gold:s.player.gold,faith:s.chars[f.cid].religion}),
+      reward:!!(s.chars[f.cid].religiousActivityHistory || {}).zoroastrian_learning_done};
+  })).toEqual({started:true,active:false,skill:3,unchanged:true,reward:false});
 });
