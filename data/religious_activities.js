@@ -20,6 +20,25 @@ FBDATA.religiousActivities = {
     milestone:'zoroastrian_learning_done',reward:{piety:0,prestige:0,skills:{int:1}},
     legacy:null,service:null
   },
+  /* Regional household study, not a placed school or specialist office. */
+  zoroastrian_household_learning_800:{
+    name:'Household Zoroastrian study',period:{yearMin:800,yearMax:800},
+    openings:[{id:'800',revision:'inhabited_v2_governments_v2_islamic_v1_learning_v1'}],
+    faithIds:['zoroastrian'],affiliationIds:[],roleIds:[],institutionId:null,
+    mode:'local',provinceIds:['istakhr'],purpose:null,siteId:null,payer:'household',cost:0,reserve:0,
+    duration:2,calendar:'any_day',interruption:'retain_cost',recipient:'participant',
+    milestone:'zoroastrian_learning_done',reward:{piety:0,prestige:0,skills:{int:1}},
+    legacy:null,service:null
+  },
+  zoroastrian_household_learning_867:{
+    name:'Household Zoroastrian study',period:{yearMin:867,yearMax:867},
+    openings:[{id:'867',revision:'governments_v2_islamic_v1'}],
+    faithIds:['zoroastrian'],affiliationIds:[],roleIds:[],institutionId:null,
+    mode:'local',provinceIds:['istakhr','kerman'],purpose:null,siteId:null,payer:'household',cost:0,reserve:0,
+    duration:2,calendar:'any_day',interruption:'retain_cost',recipient:'participant',
+    milestone:'zoroastrian_learning_done',reward:{piety:0,prestige:0,skills:{int:1}},
+    legacy:null,service:null
+  },
   sasanian_learning_476:{
     name:'Study with the local Zoroastrian group',period:{yearMin:476,yearMax:493},
     openings:[{id:'476',revision:'wider_v2'}],
@@ -825,4 +844,8 @@ FBDATA.techImpactReviews.features.hindu_local_observance_711 = {
 };
 FBDATA.techImpactReviews.features.hindu_service_patronage_711 = {
   mode:'none',rationale:'Optional service funds require lawful donated property and conserved prepaid supplies, without a discovery gate or automatic conversion.'
+};
+
+FBDATA.techImpactReviews.features.zoroastrian_later_household_learning = {
+  mode:'none',rationale:'Dated local household study requires time and participation, without a discovery gate, endowed school or specialist qualification.'
 };
