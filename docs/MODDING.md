@@ -5310,6 +5310,10 @@ FB.faithAvailability(id, state) returns detached metadata (null for an unknown f
 
 Generated definitions pass detached validation before state changes. Explicitly dated generated content must permit story creation at the current campaign date. Ordinary player-founded branches without availability remain possible without research. A calendar boundary never creates a branch, changes population, initializes an office, grants territorial rights or awards advancement. Keep existing spiritual offices, treasury, property, travel and population projects authoritative. tests/e2e/fixtures/religion-coverage-mod.json supplies two independent fictional JSON configurations for this contract.
 
+Provisional regional profiles
+
+FBDATA.bookmarkReligions711, FBDATA.bookmarkReligions476Wider and FBDATA.bookmarkReligions1066Terrain merge into FBDATA.religions when their bookmark scripts load. Apart from ghana_local_practice_1066, their ids are unreleased provisional profiles kept for existing opening consumers. Do not build a mod on them as stable identities. An owning replacement migrates every consumer and then removes the id without a legacy alias, so a mod reference would no longer validate. Reference a released id, a dated family profile or a faith declared by the mod instead. tests/e2e/specs/religion-coverage-rollout.spec.js records the current table contents.
+
 Early Iranian profile examples
 
 zoroastrian_sasanian_476 is a child of the retained zoroastrian definition. It permits ruler, character, institution and start consumers in bookmarks 476 and 493, within the inclusive years 476-493. Its fresh assignments are the Sasanian courts and the matching existing-ruler beginning, not every province or household under their authority. Community, story, conversion and project consumers are excluded. Institution eligibility permits explicit authoring without certifying a site or creating a placement. Assignments and generated descendants already in a save retain their identity under the ordinary survival contract; the profile's time window is not an extinction rule.
