@@ -203,6 +203,53 @@ FBDATA.religiousInstitutionProfiles = {
     recognition:{ sources:[], roles:[], quorum:1, requiresLeader:false, protectedWorship:true },
     actions:['admit','withdraw'], fees:{}, affiliationIds:[],
     ai:{ roles:['worshipper'], affiliations:[], reserve:0, maxActions:2, recognize:false }
+  },
+  /* Lay authoring profiles. Historical seats and specialist offices remain separate. */
+  kairouan_lay_711:{
+    name:'Kairouan Muslim congregation', faithIds:['umayyad_sunni_711'], period:{yearMin:711,yearMax:711}, system:null,
+    roles:{participant:{name:'Participant',minAge:16,sexes:[],unmarried:false,
+      professions:[],skills:{},affiliationId:null}}, selection:null,
+    recognition:{sources:[],roles:[],quorum:1,requiresLeader:false,protectedWorship:true},
+    actions:['admit','withdraw'], fees:{}, affiliationIds:[]
+  },
+  kairouan_lay_800:{
+    name:'Kairouan Muslim congregation', faithIds:['sunni'], period:{yearMin:800,yearMax:800}, system:null,
+    roles:{participant:{name:'Participant',minAge:16,sexes:[],unmarried:false,
+      professions:[],skills:{},affiliationId:null}}, selection:null,
+    recognition:{sources:[],roles:[],quorum:1,requiresLeader:false,protectedWorship:true},
+    actions:['admit','withdraw'], fees:{}, affiliationIds:[]
+  },
+  kairouan_lay_867:{
+    name:'Kairouan Muslim congregation', faithIds:['sunni'], period:{yearMin:867,yearMax:867}, system:null,
+    roles:{participant:{name:'Participant',minAge:16,sexes:[],unmarried:false,
+      professions:[],skills:{},affiliationId:null}}, selection:null,
+    recognition:{sources:[],roles:[],quorum:1,requiresLeader:false,protectedWorship:true},
+    actions:['admit','withdraw'], fees:{}, affiliationIds:[]
+  },
+  gao_lay_1204:{
+    name:'Gao Muslim congregation', faithIds:['sunni'], period:{yearMin:1204,yearMax:1204}, system:null,
+    roles:{participant:{name:'Participant',minAge:16,sexes:[],unmarried:false,
+      professions:[],skills:{},affiliationId:null}}, selection:null,
+    recognition:{sources:[],roles:[],quorum:1,requiresLeader:false,protectedWorship:true},
+    actions:['admit','withdraw'], fees:{}, affiliationIds:[]
+  },
+  garama_offering_community:{
+    name:'Garama offering community', faithIds:['berber_traditional'],
+    period:{yearMin:476,yearMax:493}, system:null,
+    roles:{participant:{name:'Participant',minAge:16,sexes:[],unmarried:false,
+      professions:[],skills:{},affiliationId:null}},
+    selection:null,
+    recognition:{sources:[],roles:[],quorum:1,requiresLeader:false,protectedWorship:true},
+    actions:['admit','withdraw'], fees:{}, affiliationIds:[]
+  },
+  ghana_muslim_learning_1066:{
+    name:'Ghana Muslim learning community', faithIds:['sunni'],
+    period:{yearMin:1066,yearMax:1066}, system:null,
+    roles:{learner:{name:'Learner',minAge:16,sexes:[],unmarried:false,
+      professions:[],skills:{},affiliationId:null}},
+    selection:null,
+    recognition:{sources:[],roles:[],quorum:1,requiresLeader:false,protectedWorship:true},
+    actions:['admit','withdraw'], fees:{}, affiliationIds:[]
   }
 };
 FBDATA.legitimacySources.institution_support = {
@@ -234,4 +281,7 @@ FBDATA.techImpactReviews.features.opening_office_communion = {
 };
 FBDATA.techImpactReviews.features.jewish_samaritan_dated_communities = {
   mode:'none', rationale:'Dated lay communities and household observance require presence and voluntary participation, without a discovery requirement.'
+};
+FBDATA.techImpactReviews.features.african_lay_community_participation = {
+  mode:'none', rationale:'Ordinary local offerings, worship and communal learning require presence and protected access, without specialist office or discovery.'
 };
