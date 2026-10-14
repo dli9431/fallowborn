@@ -182,7 +182,11 @@
   FB.realmRulerCharacterSnapshot = function (s, rid) { return C.isDelegated(s, rid) ? C.delegate(s, rid) : snapshot(s, rid); };
   FB.realmIdForRulerCharacter = function (s, value) {
     var id = typeof value === 'string' ? value : value && value.id;
+    // A delegated realm's ruler is always its active mandate holder, so
+    // compare that id before the full delegate check copies the members.
     var found = Object.keys(s && s.governmentSupport && s.governmentSupport.polities || {}).filter(function (rid) {
+      var r = C.row(s, rid);
+      if (!r || !r.mandate || r.mandate.delegateId !== id) return false;
       var c = C.delegate(s, rid); return C.isDelegated(s, rid) && c && c.id === id;
     })[0];
     return found || rulerRealm(s, value);

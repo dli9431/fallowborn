@@ -573,6 +573,36 @@ window.FB = window.FB || {};
     return out;
   }
 
+  // One character's current target context for a hostile character plot,
+  // or null when the actor cannot aim it at them. The option list and the
+  // single-target checks share this rule, so a lookup for one character
+  // never needs to project every character in the sovereign realm.
+  function characterTargetFor(state, def, c, actorId, sovereign,
+    actorHasCaptive, actorHasLeverage) {
+    if (!c || c.dead || c.id === actorId ||
+        characterSovereign(state, c) !== sovereign) return null;
+    if (def.outcome === 'captive' &&
+        (actorHasCaptive || unavailableThroughCaptivity(state, c))) return null;
+    if (def.outcome === 'leverage' &&
+        (actorHasLeverage || !blackmailEligible(state, c))) return null;
+    var foothold = def.outcome === 'foothold' ? politicalFoothold(state, c) : null;
+    if (def.outcome === 'foothold' && !foothold) return null;
+    var home = residence(state, c);
+    var ruling = FB.realmIdForRulerCharacter &&
+      FB.realmIdForRulerCharacter(state, c);
+    var context = {
+      characterId:c.id,
+      targetSovereign:sovereign,
+      residenceId:home || null
+    };
+    if (ruling) {
+      context.realmId = ruling;
+      context.rulerGeneration = rulerGeneration(state, ruling);
+    }
+    if (foothold) context.foothold = foothold;
+    return { context:context, home:home, ruling:ruling };
+  }
+
   function characterTargetOptions(state, def, actorId, actorRealmId) {
     var out = [];
     var actor = actorCharacter(state, actorId);
@@ -582,27 +612,11 @@ window.FB = window.FB || {};
     if (!actor || actor.dead || !sovereign) return out;
     for (var id in state.chars) {
       var c = state.chars[id];
-      if (!c || c.dead || c.id === actorId || characterSovereign(state, c) !== sovereign) continue;
-      if (def.outcome === 'captive' &&
-          (actorHasCaptive || unavailableThroughCaptivity(state, c))) continue;
-      if (def.outcome === 'leverage' &&
-          (actorHasLeverage || !blackmailEligible(state, c))) continue;
-      var foothold = def.outcome === 'foothold' ? politicalFoothold(state, c) : null;
-      if (def.outcome === 'foothold' && !foothold) continue;
-      var home = residence(state, c);
+      var target = characterTargetFor(state, def, c, actorId, sovereign,
+        actorHasCaptive, actorHasLeverage);
+      if (!target) continue;
+      var context = target.context, home = target.home, ruling = target.ruling;
       var pr = home && FB.world.byId[home];
-      var ruling = FB.realmIdForRulerCharacter &&
-        FB.realmIdForRulerCharacter(state, c);
-      var context = {
-        characterId:c.id,
-        targetSovereign:sovereign,
-        residenceId:home || null
-      };
-      if (ruling) {
-        context.realmId = ruling;
-        context.rulerGeneration = rulerGeneration(state, ruling);
-      }
-      if (foothold) context.foothold = foothold;
       out.push({
         context:context,
         label:FB.fullName(c),
@@ -655,27 +669,10 @@ window.FB = window.FB || {};
     var actor = actorCharacter(state, actorId);
     var c = targetCharacter(state, context);
     var sovereign = actorSovereign(state, actorId, actorRealmId);
-    if (!actor || actor.dead || !c || c.dead || c.id === actorId ||
-        characterSovereign(state, c) !== sovereign) return null;
-    if (def.outcome === 'captive' && (rawCaptiveOf(state, actorId) ||
-        unavailableThroughCaptivity(state, c))) return null;
-    if (def.outcome === 'leverage' && (rawLeverageOf(state, actorId) ||
-        !blackmailEligible(state, c))) return null;
-    var foothold = def.outcome === 'foothold' ? politicalFoothold(state, c) : null;
-    if (def.outcome === 'foothold' && !foothold) return null;
-    var home = residence(state, c);
-    var ruling = FB.realmIdForRulerCharacter &&
-      FB.realmIdForRulerCharacter(state, c);
-    var current = {
-      characterId:c.id, targetSovereign:sovereign,
-      residenceId:home || null
-    };
-    if (ruling) {
-      current.realmId = ruling;
-      current.rulerGeneration = rulerGeneration(state, ruling);
-    }
-    if (foothold) current.foothold = foothold;
-    return sameTarget(context, current) ? current : null;
+    if (!actor || actor.dead || !c) return null;
+    var target = characterTargetFor(state, def, c, actorId, sovereign,
+      rawCaptiveOf(state, actorId), rawLeverageOf(state, actorId));
+    return target && sameTarget(context, target.context) ? target.context : null;
   }
 
   function directCountyContext(state, context, actorId, actorRealmId) {
@@ -746,18 +743,18 @@ window.FB = window.FB || {};
     var out = [];
     var actor = character(state, state && state.player && state.player.charId);
     if (!actor || actor.dead || FB.ageOf(actor, state.date.year) < 16) return out;
+    var actorId = actor.id;
+    var sovereign = actorSovereign(state, actorId);
+    var c = character(state, characterId);
+    if (!sovereign || !c) return out;
+    var actorHasCaptive = rawCaptiveOf(state, actorId);
+    var actorHasLeverage = rawLeverageOf(state, actorId);
     for (var i = 0; i < HOSTILE_IDS.length; i++) {
       var def = defOf(HOSTILE_IDS[i]);
       if (!def || def.target !== 'intrigue_character') continue;
-      var options = FB.intrigueTargetOptions(state, def);
-      var exact = null;
-      for (var j = 0; j < options.length; j++) {
-        if (options[j].characterId === characterId) {
-          exact = copy(options[j].context);
-          break;
-        }
-      }
-      if (exact) out.push({ id:HOSTILE_IDS[i], def:def, context:exact });
+      var target = characterTargetFor(state, def, c, actorId, sovereign,
+        actorHasCaptive, actorHasLeverage);
+      if (target) out.push({ id:HOSTILE_IDS[i], def:def, context:target.context });
     }
     return out;
   };

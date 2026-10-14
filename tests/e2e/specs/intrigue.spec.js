@@ -113,6 +113,75 @@ test('hostile targets stay in scope and method previews use the named math',
     expect(result.plotSlots).toEqual(['plot']);
   });
 
+test('a character sheet checks its one target without projecting the whole realm',
+  async function ({ page }) {
+    const result = await page.evaluate(function () {
+      const s = FB.state;
+      const home = FB.world.byId[s.player.provinceId];
+      const target = FB.makeCharacter(s, {
+        name:'Sheet Target', sex:'m', culture:home.culture,
+        religion:home.religion, born:s.date.year - 30,
+        station:3, traitsN:0
+      });
+      const outsidePid = Object.keys(s.owner).filter(function (pid) {
+        return FB.topRealm(s, s.owner[pid]) !== FB.playerRealmId(s);
+      })[0];
+      const outside = FB.makeCharacter(s, {
+        name:'Distant Target', sex:'f', culture:home.culture,
+        religion:home.religion, born:s.date.year - 30,
+        station:2, traitsN:0, homeProvinceId:outsidePid
+      });
+      outside.homeProvinceId = outsidePid;
+      const ids = [target.id, outside.id, s.player.charId].concat(
+        Object.keys(s.chars).sort().slice(0, 24));
+      const ruler = FB.realmRulerCharacterSnapshot &&
+        FB.realmRulerCharacterSnapshot(s, FB.playerRealmId(s));
+      if (ruler && ruler.id) ids.push(ruler.id);
+      const hostile = Object.keys(FBDATA.plots).filter(function (id) {
+        return FBDATA.plots[id].hostile &&
+          FBDATA.plots[id].target === 'intrigue_character';
+      });
+      // The expected rows come from the full option list, as the sheet
+      // used to build them, before the one-target lookup is measured.
+      const expected = ids.map(function (id) {
+        return hostile.map(function (plotId) {
+          const option = FB.intrigueTargetOptions(s, FBDATA.plots[plotId])
+            .filter(function (row) { return row.characterId === id; })[0];
+          return option ? [plotId, option.context] : null;
+        }).filter(Boolean);
+      });
+      const before = JSON.stringify(s), rng = FB.getRngState(), uid = FB.getUidCounter();
+      const list = FB.intrigueTargetOptions;
+      let projections = 0;
+      FB.intrigueTargetOptions = function () {
+        projections++;
+        return list.apply(this, arguments);
+      };
+      let actual;
+      try {
+        actual = ids.map(function (id) {
+          return FB.intrigueSchemesForTarget(s, id).map(function (row) {
+            return [row.id, row.context];
+          });
+        });
+      } finally {
+        FB.intrigueTargetOptions = list;
+      }
+      return {
+        same:JSON.stringify(actual) === JSON.stringify(expected),
+        offered:actual[0].length,
+        outside:actual[1].length,
+        self:actual[2].length,
+        projections:projections,
+        pure:before === JSON.stringify(s) && rng === FB.getRngState() &&
+          uid === FB.getUidCounter()
+      };
+    });
+    expect(result.same).toBe(true);
+    expect(result.offered).toBeGreaterThan(0);
+    expect(result).toMatchObject({ outside:0, self:0, projections:0, pure:true });
+  });
+
 test('accomplice consent, secret refusal, and leaks are seeded and exact',
   async function ({ page }) {
     const result = await page.evaluate(function () {

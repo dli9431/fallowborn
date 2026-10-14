@@ -497,3 +497,35 @@ for (const crazygames of [false, true]) {
     await expect(tribute).toBeFocused();
   });
 }
+
+test('ruler lookups find the delegate without reviewing other polities', async function ({ page }, testInfo) {
+  const rid = await start(page, testInfo);
+  const result = await page.evaluate(function (rid) {
+    const s = FB.state, C = FB.governments.support;
+    const delegate = C.delegate(s, rid);
+    const polities = s.governmentSupport.polities;
+    const holders = Object.keys(polities).map(function (id) {
+      return polities[id].mandate && polities[id].mandate.delegateId;
+    });
+    const others = Object.keys(s.chars).filter(function (id) {
+      return holders.indexOf(id) < 0 && !s.chars[id].dead;
+    }).sort().slice(0, 40);
+    const before = JSON.stringify(s), rng = FB.getRngState(), uid = FB.getUidCounter();
+    const review = C.delegate;
+    let reviews = 0;
+    C.delegate = function () { reviews++; return review.apply(this, arguments); };
+    let found, foundById, strangers;
+    try {
+      found = FB.realmIdForRulerCharacter(s, delegate);
+      foundById = FB.realmIdForRulerCharacter(s, delegate.id);
+      reviews = 0;
+      strangers = others.map(function (id) { return FB.realmIdForRulerCharacter(s, id); });
+    } finally {
+      C.delegate = review;
+    }
+    return { found:found, foundById:foundById, strangers:strangers.indexOf(rid) < 0,
+      checked:others.length > 0, reviews:reviews,
+      pure:before === JSON.stringify(s) && rng === FB.getRngState() && uid === FB.getUidCounter() };
+  }, rid);
+  expect(result).toEqual({ found:rid, foundById:rid, strangers:true, checked:true, reviews:0, pure:true });
+});
