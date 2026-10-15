@@ -297,8 +297,13 @@ test('malformed bookmark arrays cannot be silently ignored or overwrite an earli
 test('malformed dates and community lists return diagnostics through the opening validator', async function ({ page }, testInfo) {
   await openGame(page, testInfo);
   const results = await page.evaluate(function () {
-    const missingDate = JSON.parse(JSON.stringify(FB.bookmark('493')));
-    delete missingDate.date;
+    const malformedDates = [undefined, null, {}, { year:'493', season:0, day:1 },
+      { year:493.5, season:0, day:1 }].map(function (date) {
+      const bm = JSON.parse(JSON.stringify(FB.bookmark('493')));
+      if (date === undefined) delete bm.date;
+      else bm.date = date;
+      return bm;
+    });
     const invalidCommunities = JSON.parse(JSON.stringify(FB.bookmark('493')));
     const layout = FBDATA.settlementLayouts[invalidCommunities.settlementLayout];
     const county = invalidCommunities.provinces.filter(function (p) { return !p.wasteland && layout[p.id]; })[0];
@@ -311,15 +316,16 @@ test('malformed dates and community lists return diagnostics through the opening
     if (!institution) throw new Error('Expected a profile institution');
     institution.jurisdictionIds = null;
     const before = JSON.stringify(FBDATA), rng = FB.getRngState(), uid = FB.getUidCounter();
-    const faults = [FB.validateBookmark(missingDate).join('\n'), FB.validateBookmark(invalidCommunities).join('\n'),
-      FB.validateBookmark(malformedScope).join('\n')];
+    const faults = { dates:malformedDates.map(function (bm) { return FB.validateBookmark(bm).join('\n'); }),
+      communities:FB.validateBookmark(invalidCommunities).join('\n'),
+      scope:FB.validateBookmark(malformedScope).join('\n') };
     if (before !== JSON.stringify(FBDATA) || rng !== FB.getRngState() || uid !== FB.getUidCounter())
       throw new Error('Malformed definition validation changed the catalogue or identity');
     return faults;
   });
-  expect(results[0]).toContain('invalid start date');
-  expect(results[1]).toContain('Invalid settlement community partition');
-  expect(results[2]).toContain('invalid local jurisdiction');
+  results.dates.forEach(function (faults) { expect(faults).toContain('invalid start date'); });
+  expect(results.communities).toContain('Invalid settlement community partition');
+  expect(results.scope).toContain('invalid local jurisdiction');
 });
 
 test('invalid activation preserves the active world, RNG and state', async function ({ page }, testInfo) {

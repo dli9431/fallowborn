@@ -653,6 +653,7 @@
   };
   A.openingFaults = function (bm) {
     var errors = [], opening = bm && bm.opening, actors = opening && opening.actors;
+    var year = bm && bm.date && bm.date.year;
     (bm && bm.realms || []).forEach(function (realm) {
       var era = FBDATA.eras[FB.bookmarkEra(bm)];
       var form = FBDATA.governmentForms[realm.government || era && era.defaultGovernment];
@@ -664,7 +665,7 @@
           required.some(function (m) {
             var c = actors && actors[m.actorId], county = (bm.provinces || []).filter(function (v) { return v.id === m.provinceId; })[0];
             return !c || c.ref || c.dyn !== m.dynasty || !county || county.realm !== realm.id ||
-              !Number.isInteger(c.born) || bm.date.year - c.born < p.minimumAge;
+              !Number.isInteger(c.born) || Number.isInteger(year) && year - c.born < p.minimumAge;
           }) || p.openingGovernor && (!actors[p.openingGovernor.actorId] || !(bm.provinces || []).some(function (v) {
             return v.id === p.openingGovernor.provinceId && v.realm === realm.id;
           }))) errors.push(FB.T('Court {id} requires a declared royal tree and existing adult provincial households within its opening jurisdiction.',{id:realm.id}));

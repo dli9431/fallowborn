@@ -4,7 +4,7 @@ dependsOnRuntime(__filename, [
   'js/armies.js',
   'js/wars.js', 'js/technology.js', 'js/holywar.js',
   'js/treasury.js', 'js/logistics.js', 'js/fortifications.js',
-  'data/technology.js', 'data/units.js',
+  'data/technology.js', 'data/units.js', 'data/bookmarks.js',
   'js/travel.js',
   'js/ui_panels.js',
   'js/world.js',
@@ -118,9 +118,11 @@ test('an unclassified atomic bookmark defaults its water edges to narrow',
 
     const result = await page.evaluate(function () {
       return new Promise(function (resolve) {
-        const source = FB.bookmark('867');
+        const source = FB.bookmark('867', 'baseline');
         const definition = {};
         for (const key in source) definition[key] = source[key];
+        // This atomic fixture has no revision catalogue to resolve.
+        delete definition.revision;
         definition.id = 'sea_default';
         definition.crossingClasses = {};
         FBDATA.bookmarks.sea_default = definition;
