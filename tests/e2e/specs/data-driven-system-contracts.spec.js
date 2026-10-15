@@ -180,7 +180,8 @@ for (const id of ['study','play','rest','pray','militia','work_land','market','k
       const expected = JSON.stringify(facts(s)); FB.save.restore(before); def.tick(FB.state);
       return { expected:expected, actual:JSON.stringify(facts(FB.state)) };
     }, id);
-    expect(result.actual).toBe(result.expected);
+    // Restore can reorder research object keys without changing any saved values.
+    expect(JSON.parse(result.actual)).toEqual(JSON.parse(result.expected));
   });
 }
 
