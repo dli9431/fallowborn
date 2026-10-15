@@ -46,6 +46,8 @@ Coverage
 
 tests/e2e/specs/assembly-polity.spec.js covers both declarations, pure projections, exact reviews, fees, eligibility, public succession, recall, repair, refusal, reserved authority, financial and troop conservation, war and occupation, conversion, detached save rejection, bounded continuity, ordinary household replay and retained mobile navigation. The outer-region specification includes the new scripts in its runtime dependencies. tools/test_i18n_catalog.py covers the new structured display owners.
 
+The declaration checks retain Tallinn as an inhabited community in the baseline world. Service and protection fixtures stage local development with realm-cache invalidation and select a peaceful independent regnum partner by its actual deployable force and treaty consent. A rally county alone is not evidence of spare troops after garrison deductions; conservation assertions continue to compare the actual source and recipient forces.
+
 867 corporate settlement consumer
 
 data/bookmark_867_expansion.js adds the middle_niger_867 policy for Jenne-jeno. Cultivating, river and craft households are reconstructed interests based on archaeological interpretations of distributed corporate authority, not recorded electors. Equal weights, 60 percent assent, a renewable 720-day term and bounded dues are authored mechanics. The existing pure review, mandate, recall, reserved-consent and private-property rules apply unchanged. The date spec covers commoner nomination, recognition, selection, stale review rejection and saved delegation without household inheritance transfer. Source confidence and the distinction from neighbouring courts are in docs/research/867-districts.md.
