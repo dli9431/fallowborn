@@ -2,10 +2,35 @@
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, ['js/world.js', 'js/save.js', 'js/main.js',
   'js/population.js', 'js/travel.js', 'js/settlement.js', 'data/events_travel.js',
-  'data/travel.js', 'data/map_data.js', 'data/counties.js']);
+  'data/travel.js', 'data/map_data.js', 'data/counties.js', 'js/market.js', 'js/actions.js']);
 const { test, expect } = require('../support/fixture');
 const { openGame } = require('../support/game/navigation');
 const { startDeterministicGame } = require('../support/game/start');
+
+test('wasteland conversion completes its market before any price read', async function ({ page }, testInfo) {
+  await openGame(page, testInfo);
+  await startDeterministicGame(page);
+  const result = await page.evaluate(function () {
+    const s = FB.state, home = s.player.provinceId;
+    const pid = FB.world.provs.filter(function (pr) { return pr.wasteland; })[0].id;
+    const previous = JSON.parse(JSON.stringify(s.market.counties));
+    const converted = FB.materializeWasteland(s, pid, {
+      holderId:s.holder[home], ownerId:s.owner[home]
+    });
+    // Inspect the ledger before any market helper can fill a missing row.
+    const ready = !!s.market.counties[pid];
+    const before = JSON.stringify(s), rng = FB.getRngState(), uid = FB.getUidCounter();
+    FB.marketPrice(s, home, 'provisions');
+    FB.marketPrice(s, pid, 'provisions');
+    FB.landPlotCost(s, 1);
+    const current = {};
+    Object.keys(previous).forEach(function (id) { current[id] = s.market.counties[id]; });
+    return { converted:!!converted, ready:ready, previous:previous, current:current,
+      pure:before === JSON.stringify(s) && rng === FB.getRngState() && uid === FB.getUidCounter() };
+  });
+  expect(result).toMatchObject({ converted:true, ready:true, pure:true });
+  expect(result.current).toEqual(result.previous);
+});
 
 for (const mode of ['noble', 'commoner', 'legacy']) {
   test(mode + ' wasteland settlement survives a fresh page and switching saves', async function ({ page }, testInfo) {

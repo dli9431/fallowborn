@@ -14,7 +14,7 @@ dependsOnRuntime(__filename,[
   'data/cultures.js','data/technology.js','data/travel.js','data/story_campaigns_711.js','data/story_instances.js',
   'js/world.js','js/main.js','js/model.js','js/population.js','js/settlement.js','js/climate.js',
   'js/travel.js','js/armies.js','js/governments.js','js/government_administration.js',
-  'js/authority.js','js/lordships.js','js/treasury.js',
+  'js/authority.js','js/lordships.js','js/treasury.js','js/market.js',
   'js/stories.js','js/story_campaign.js','js/story_polity_foundation.js','js/save.js','js/save_v4.js',
   'js/starts.js','js/technology.js','js/crazygames.js','data/distribution_crazygames.js'
 ]);
@@ -257,6 +257,7 @@ for (const revision of ['baseline','governments_v2']) test('retained ' + revisio
         records:JSON.stringify([s.population,s.wastelandSettlements,s.owner,s.holder,s.stories,s.localInstitutions,s.player.gold])};
     },revision);
     const before = await facts(page);
+    expect(before.snapshot.readsArePure).toBe(true);
     await observe(page,audit.revision,'711-EXPANDED-SWITCH');
     const expanded = await checkpoint(page,4 * 1024 * 1024),expandedFacts = await facts(page);
     await restoreBookmark(page,prepared.source);

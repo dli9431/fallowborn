@@ -18,7 +18,7 @@ dependsOnRuntime(__filename,[
   'js/travel.js','js/armies.js','js/stories.js','js/story_settlements.js','js/royal_settlements.js',
   'js/governments.js','js/government_administration.js','js/government_recognition.js',
   'js/government_ecclesiastical.js','js/authority.js','js/treasury.js','js/save.js','js/save_v4.js',
-  'js/starts.js','js/technology.js','js/crazygames.js'
+  'js/starts.js','js/technology.js','js/crazygames.js','js/market.js'
 ]);
 
 const CURRENT = 'inhabited_v2_governments_v2';
@@ -266,6 +266,7 @@ test('unstamped baseline frontier and bundled completed stories survive expansio
     return JSON.stringify(data);
   });
   const before = await facts(page);
+  expect(before.snapshot.readsArePure).toBe(true);
   await start800(page,info,'kath_district');
   await restoreBookmark(page,legacy);
   expect(await facts(page)).toEqual(before);

@@ -16,7 +16,7 @@ dependsOnRuntime(__filename,[
   'js/authority.js','js/politics.js','js/population.js','js/settlement.js','js/lordships.js',
   'js/governments.js','js/government_selection.js','js/government_lineage.js','js/government_assembly.js',
   'js/government_support.js','js/government_continuity.js','js/government_levy.js','js/government_revenue.js',
-  'js/treasury.js','js/climate.js','js/travel.js','js/armies.js','js/religion.js','js/station.js',
+  'js/treasury.js','js/climate.js','js/travel.js','js/armies.js','js/religion.js','js/station.js','js/market.js',
   'js/crazygames.js','data/distribution_crazygames.js'
 ]);
 
@@ -201,6 +201,7 @@ for (const revision of ['baseline','governments_v2']) test(revision + ' 1066 hou
     const s = FB.state;
     return JSON.stringify([s.chars,s.player,s.owner,s.holder,s.population,s.wastelandSettlements,s.settlements]);
   });
+  expect(before.snapshot.readsArePure).toBe(true);
   await activate(page,'1066'); await activate(page,'867'); await activate(page,'1204'); await restoreBookmark(page,source);
   expect(await facts(page)).toEqual(before);
   expect(await page.evaluate(function (ids) {
