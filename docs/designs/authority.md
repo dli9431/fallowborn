@@ -20,6 +20,8 @@ Seasonal government AI uses officeAppointmentQuote/officeSeekAppointment, office
 
 Imperial succession reads the durable appointment ledger even when every former claimant is dead and absent from the claimant display. An ended tenure from an earlier ruler generation can establish succession; a ledger containing only explicitly removed imperial appointments cannot. The successor receives one effective appointment through the existing authority transactions, without reviving a dead holder.
 
+Succession regression coverage calls the real government office AI for the Dalmatian, western and eastern courts directly at staged season boundaries. It checks one new regional appointment, same-season idempotence, a preserved western deposition, the eastern claimant transition and exact authority/RNG/uid preservation after restore. A separate saved-period case checks that an already completed global office season is not replayed. These targeted cases avoid repeated whole-world seasonal passes; they do not establish world-season performance.
+
 Technology impact: roman_office_petitions and imperial_claim_contestation each use none. Service qualifications, living issuers, exact scope, fees and political continuity govern baseline office access and recognition. Existing authority_appointments, authority_command_commissions and authority_recognition reviews remain applicable. The regression specification is tests/e2e/specs/476-offices-legitimacy.spec.js.
 
 # Shared political facts and authority

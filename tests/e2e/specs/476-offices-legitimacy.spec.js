@@ -228,39 +228,68 @@ test('government AI appoints and contests on succession without reversing a depo
   await start(page, testInfo);
   const result = await page.evaluate(function () {
     const s = FB.state;
+    // Exercise the three relevant courts through their real government AI.
+    // Repeated whole-world seasonal passes obscure this local succession case.
+    function courtAI(state, rid) { FB.governments.forRealm(state, rid).use.ai.offices(state, rid); }
+    const regionalRuler = FB.materializeRealmRuler(s, 'croatia');
+    regionalRuler.skills.dip = 10;
     s.turn = 90;
-    FB.authoritySeason(s);
+    courtAI(s, 'croatia');
     const regional = s.authority.appointments.filter(function (row) {
-      return row.institutionId !== 'italy' && row.institutionId !== 'byzantium' &&
+      return row.institutionId === 'croatia' &&
         FBDATA.authorityOffices[row.officeId].appointment && row.startTurn === 90;
     });
     const once = JSON.stringify(s.authority), rng = FB.getRngState();
-    FB.authoritySeason(s);
+    courtAI(s, 'croatia');
     const idempotent = once === JSON.stringify(s.authority) && rng === FB.getRngState();
     const w = s.stories.western_court_476;
     FB.authorityAppointmentTransition(s, w.westOfficeId, 'remove');
-    s.turn = 180; FB.authoritySeason(s);
+    s.turn = 180; courtAI(s, 'italy');
     const depositionKept = !s.authority.appointments.some(function (row) {
       return row.institutionId === 'italy' && row.officeId === 'imperial_office' && row.status === 'active';
     });
     const former = FB.realmRulerCharacterSnapshot(s, 'byzantium');
     const zeno = s.chars[w.zenoId];
     FB.assignRealmRulerCharacter(s, 'byzantium', zeno.id, { replaceAuthored:true });
-    s.turn = 270; FB.authoritySeason(s);
+    s.turn = 270; courtAI(s, 'byzantium');
     const claims = FB.officeClaimants(s).filter(function (row) { return row.institutionId === 'byzantium'; });
     const current = claims.find(function (row) { return row.holder.id === zeno.id; });
     const old = claims.find(function (row) { return row.holder.id === former.id; });
     const saved = JSON.parse(FB.save.serialize());
-    const authority = saved.state.authority, stamp = s.officeCourtPeriod;
+    const authority = saved.state.authority;
+    const identity = { rng:FB.getRngState() >>> 0, uid:FB.getUidCounter() };
     FB.save.restore(saved);
-    FB.authoritySeason(FB.state);
+    courtAI(FB.state, 'byzantium');
     return { regional:regional.length, idempotent:idempotent, depositionKept:depositionKept,
       current:current.status, old:old.status,
-      before:authority, after:FB.state.authority, stamp:stamp === FB.state.officeCourtPeriod };
+      before:authority, after:FB.state.authority,
+      identity:identity.rng === (FB.getRngState() >>> 0) && identity.uid === FB.getUidCounter() };
   });
-  expect(result.regional).toBeGreaterThan(0);
-  expect(result).toMatchObject({ idempotent:true, depositionKept:true, current:'active', old:'contested', stamp:true });
+  expect(result.regional).toBe(1);
+  expect(result).toMatchObject({ idempotent:true, depositionKept:true, current:'active', old:'contested', identity:true });
   expect(result.after).toEqual(result.before);
+});
+
+test('a completed office season remains settled across restore', async function ({ page }, testInfo) {
+  await start(page, testInfo);
+  const result = await page.evaluate(function () {
+    const s = FB.state;
+    s.turn = 90; s.officeCourtPeriod = 1;
+    const before = JSON.stringify(s);
+    const rng = FB.getRngState() >>> 0, uid = FB.getUidCounter();
+    FB.officeCourtSeason(s);
+    const pure = before === JSON.stringify(s);
+    const saved = JSON.parse(FB.save.serialize());
+    FB.save.restore(saved);
+    const restored = JSON.stringify(FB.state);
+    FB.officeCourtSeason(FB.state);
+    return { authority:saved.state.authority, after:FB.state.authority,
+      pure:pure, restoredPure:restored === JSON.stringify(FB.state),
+      period:FB.state.officeCourtPeriod,
+      identity:rng === (FB.getRngState() >>> 0) && uid === FB.getUidCounter() };
+  });
+  expect(result.after).toEqual(result.authority);
+  expect(result).toMatchObject({ pure:true, restoredPure:true, period:1, identity:true });
 });
 
 for (const ended of ['death','removal']) {
