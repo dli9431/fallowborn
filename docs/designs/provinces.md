@@ -362,25 +362,7 @@ province/county data schema.
 
 ## Wasteland conversion during play
 
-Wasteland provinces are impassable scenery at world build: they receive no
-settlement compilation, no population record, no market row, and no de jure
-duchy. Two player paths can convert one into a real county during play, and
-both go through the single authoritative helper `FB.materializeWasteland(state,
-pid, {culture, religion, holderId, ownerId})` in `js/world.js`. It clears the
-wasteland flag, stamps the settlers' culture and faith, sets development 1,
-assigns the political holder and sovereign owner, compiles the county's
-deterministic generated settlement slots on the spot
-(`FB.worldCompileSettlements` — the per-province half of `compileSites`,
-extracted so boot and conversion share one code path; the slots are named in
-the new settler culture), invalidates the realm caches, drops the market
-province cache (`FB.marketWorldDirty`, so the next `ensureMarket` rebuild
-seeds the new county while preserving existing rows), redraws the map, and
-writes the two shared Chronicle descriptors. The county keeps the wasteland's
-lack of a duchy, so it stays outside every de jure duchy, kingdom claim, and
-title majority forever. Population and market records then attach through
-their ordinary lazy ensure paths; the army route search reads the wasteland
-flag live, so the new county becomes marchable at once without rebuilding the
-per-world path caches.
+Wasteland provinces are impassable scenery at world build: they receive no settlement compilation, no population record, no market row, and no de jure duchy. Both noble settlement and commoner frontier homesteads convert them through FB.materializeWasteland(state, pid, {culture, religion, holderId, ownerId}) in js/world.js. It clears the wasteland flag, stamps the settlers' culture and faith, sets development 1, assigns the political holder and sovereign owner, initializes the settler population, and compiles deterministic settlement slots through FB.worldCompileSettlements. It invalidates realm and market province caches, then completes the market ledger through FB.ensureMarket before returning, preserving existing county stocks, prices and flows. Price previews and world snapshots therefore do not create a missing market row after conversion. It redraws the map and writes the two shared Chronicle descriptors. The county retains its lack of a duchy and remains outside de jure titles. Army routes read the wasteland flag live, so the county becomes marchable without rebuilding the per-world path caches.
 
 The noble caller is the `settle_waste` deed (`FB.settleWaste`), which passes
 the player as holder, adds the county to `player.provs`, and pays
