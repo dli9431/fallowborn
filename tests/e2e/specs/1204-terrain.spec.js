@@ -18,7 +18,7 @@ dependsOnRuntime(__filename,[
   'js/government_selection.js','js/authority.js','js/politics.js','js/population.js','js/localfolk.js',
   'js/treasury.js','js/religion.js','js/climate.js','js/travel.js','js/armies.js',
   'js/stories.js','js/story_campaign.js','js/story_history.js','js/save.js','js/save_v4.js',
-  'js/crazygames.js','data/distribution_crazygames.js'
+  'js/crazygames.js','data/distribution_crazygames.js','js/market.js','data/markets.js','js/actions.js'
 ]);
 
 const districts = ['draa_oases','jenne_district','gao_district','kumbi_district','siwa_oasis',
@@ -273,9 +273,11 @@ for (const row of authorityStarts) test(row.scenario + ' adopts the existing aut
       const s = FB.state, c = s.chars[s.player.charId], support = FB.governments.support;
       const local = row.form === 'assembly_polity';
       const publicRealm = local ? row.realm : 'player';
+      // The political actor resolves both an adopted player realm and a delegate.
+      const actor = FB.political.actor(s,{kind:'realm',id:publicRealm});
       return {scenario:s.start.scenarioId,adopted:s.start.rulerRealmId,old:!!s.realms[row.realm],
         form:FB.governments.forRealm(s,publicRealm).id,tier:s.player.tier,
-        holder:s.holder[row.province],identity:FB.realmRulerCharacterSnapshot(s,publicRealm).id === c.id,
+        holder:s.holder[row.province],identity:!!actor && actor.realmId === publicRealm && actor.characterId === c.id,
         mandate:!local || support.delegate(s,row.realm).id === c.id &&
           support.row(s,row.realm).id === row.realm && !support.row(s,'player') && !s.realms.player &&
           support.row(s,row.realm).selection.resolvedId === support.row(s,row.realm).mandate.id,
@@ -315,22 +317,25 @@ for (const province of ['gao_district','kath_district','palmyra_district']) {
 
 test('baseline frontier conversions and resolved campaigns survive expanded-world switching',async function ({page},info) {
   await startBaseline(page,info);
-  const source = await page.evaluate(function () {
+  const prepared = await page.evaluate(function () {
     const s = FB.state;
     FB.materializeWasteland(s,'w_sahara_c',{culture:'berber',religion:'sunni',holderId:'almohad_1204',ownerId:'almohad_1204'});
+    const marketReady = !!s.market.counties.w_sahara_c;
     const story = FB.stories.get('latin_thessalonica_1204'), rec = s.stories.latin_thessalonica_1204;
     story.day(s,rec); FB.transferProvince(s,'thessaloniki','latin_1204');
     FB.settleOrdinaryWar(s,rec.warId,'victory'); story.day(s,rec);
     const data = JSON.parse(FB.save.serialize()); data.platformSchema = 1; delete data.state.start.revision;
-    return JSON.stringify(data);
+    return {source:JSON.stringify(data),marketReady:marketReady};
   });
+  expect(prepared.marketReady).toBe(true);
   const before = await facts(page);
+  expect(before.snapshot.readsArePure).toBe(true);
   await page.evaluate(function () {
     return new Promise(function (resolve,reject) {
       FB.activateBookmark('1204',null,function (error) { if (error) reject(error); else resolve(); });
     });
   });
-  await restoreBookmark(page,source);
+  await restoreBookmark(page,prepared.source);
   expect(await facts(page)).toEqual(before);
   expect(await page.evaluate(function () {
     const s = FB.state, ids = Object.keys(s.chars), rng = FB.getRngState() >>> 0, uid = FB.getUidCounter();
