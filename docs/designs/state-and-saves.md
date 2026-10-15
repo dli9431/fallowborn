@@ -2063,6 +2063,8 @@ The 476 world saves zeno_return_476, western_office_476 and four campaign record
 
 Detached migration moves the former historical and easternReturn fields once, including existing commitment ids and terminal statuses. Legacy commanders remain null with a grandfathering marker. Migration never initializes a story, creates a historical character, reissues an appointment, transfers ownership or pays a contract. Repeating migration yields the same envelope. The v4 format and platform schema number do not change. Stories absent from 867 and 1066 remain absent.
 
+An already-declared legacy war without a saved commission or migration keeps patronGeneration null. A current campaign definition cannot add a foreign ruler dependency to that independent war. Saved commissioned and moving commitments retain the existing issuer-generation checks, and a legacy opportunity that has no war retains its patron checks.
+
 Existing-ruler start identity
 
 Optional state.start.rulerRealmId preserves the authored source realm after its one-time adoption into the player key. state.start.scenarioId identifies the scenario and state.start.onboarding selects the ruler checklist. Validation requires the source realm, scenario, bookmark and onboarding to agree, and requires the scenario's declared player tracks. Older starts without this identity remain valid. A hidden scenario can still validate an existing review save. Validation does not repeat adoption or award land, pay, recognition or offices.

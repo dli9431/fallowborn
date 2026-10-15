@@ -7,7 +7,7 @@ dependsOnRuntime(__filename, [
   'data/bookmark_476_gaul_iberia.js', 'data/bookmark_476_africa.js',
   'data/eras.js', 'data/technology.js', 'data/units.js', 'data/map_data.js', 'data/counties.js',
   'data/settlements.js', 'data/cultures.js', 'js/federates.js', 'js/authority.js',
-  'js/governments.js', 'js/politics.js', 'js/settlement.js', 'js/world.js', 'js/model.js',
+  'js/governments.js', 'js/politics.js', 'js/settlement.js', 'js/world.js', 'js/model.js', 'js/util.js',
   'js/main.js', 'js/armies.js', 'js/wars.js', 'js/fortifications.js', 'js/logistics.js',
   'js/treasury.js', 'js/lordships.js', 'js/population.js', 'js/save.js', 'js/save_v4.js',
   'js/stories.js', 'js/story_campaign.js', 'data/story_instances.js', 'data/story_campaigns.js', 'js/story_courts.js', 'js/story_track.js'
@@ -220,7 +220,10 @@ test('opening Gothic service pays and renews without replay across save restorat
     FB.treasuryCredit(s,'byzantium',1000);
     function accounts() {
       return starts.map(function (row) {
-        return Object.assign({distributionNextTurn:0},s.realms[row.federateRealmId].treasury);
+        const account = Object.assign({distributionNextTurn:0},s.realms[row.federateRealmId].treasury);
+        // Restore refreshes forecasts; balances, bills and payment stamps stay exact.
+        delete account.necessary; delete account.reserveTarget;
+        return account;
       });
     }
     const before = starts.map(function (row) { return FB.treasuryAvailable(s, row.federateRealmId); });
@@ -406,41 +409,63 @@ test('Theoderic cannot recreate a lost opening host at the migration opportunity
     expect(result).toEqual({ noMigration:true, noCommission:true, noHost:true, closed:true });
   });
 
-test('an already-declared Gothic campaign keeps its outcome without synthesizing a migration',
-  async function ({ page }, testInfo) {
-    await start(page, testInfo, '476');
-    const result = await page.evaluate(function () {
-      let s = FB.state;
-      FB.transferProvince(s, 'szekesfehervar', 'pannonia');
-      FB.authoritySetGovernment(s, 'pannonia', 'regnum');
-      s.realms.pannonia.nonTerritorial = false;
-      s.realms.pannonia.capital = 'szekesfehervar';
-      const war = FB.registerOrdinaryWar(s, 'pannonia', { enemy:'italy', target:'ravenna',
-        legacy:false, casus:{ type:'border', target:'ravenna' },
-        objectives:[{ target:'ravenna', type:'border' }] });
-      const saved = JSON.parse(FB.save.serialize());
-      // This legacy campaign predates the declaration-owned opening actors.
-      delete saved.state.bookmarkSetup;
-      const old = saved.state.stories.western_court_476;
-      delete old.railsSchema;
-      old.historical = { theoderic:'started', theodericWarId:war.id };
-      for (const id of FBDATA.bookmarks['476'].stories)
-        if (id !== 'western_court_476') delete saved.state.stories[id];
-      FB.save.restore(saved); s = FB.state;
-      s.date.year = 489; s.turn = 180;
-      FB.stories.day(s);
-      const stillRunning = s.stories.theoderic_italy_476.phase === 'started';
-      FB.transferProvince(s, 'ravenna', 'pannonia');
-      FB.settleOrdinaryWar(s, war.id, 'victory');
-      FB.stories.day(s);
-      return { stillRunning:stillRunning, result:s.stories.theoderic_italy_476.result,
-        noMigration:!(s.authority.migrations || []).some(function (row) { return row.realmId === 'pannonia'; }) &&
-          !s.stories.theoderic_italy_476.migrationId,
-        noNewHost:s.armies.filter(function (a) { return a.realm === 'pannonia'; }).length === 1 &&
-          s.armies.some(function (a) { return a.id === 'host_476_amal'; }) };
+for (const commissioned of [false,true]) {
+  test('a legacy Gothic campaign ' + (commissioned ? 'retains its saved commission dependency' : 'keeps its independent outcome') + ' without synthesizing a migration',
+    async function ({ page }, testInfo) {
+      await start(page, testInfo, '476');
+      const result = await page.evaluate(function (commissioned) {
+        let s = FB.state;
+        FB.transferProvince(s, 'szekesfehervar', 'pannonia');
+        FB.authoritySetGovernment(s, 'pannonia', 'regnum');
+        s.realms.pannonia.nonTerritorial = false;
+        s.realms.pannonia.capital = 'szekesfehervar';
+        const war = FB.registerOrdinaryWar(s, 'pannonia', { enemy:'italy', target:'ravenna',
+          legacy:false, casus:{ type:'border', target:'ravenna' },
+          objectives:[{ target:'ravenna', type:'border' }] });
+        const commission = commissioned && FB.authorityRecognize(s, { source:'imperial_commission',
+          issuer:{ kind:'realm', id:'byzantium' }, subject:{ kind:'realm', id:'pannonia' },
+          scope:{ kind:'realm', id:'pannonia' } });
+        if (!war || commissioned && !commission) throw new Error('The legacy fixture needs its declared war and commission');
+        const issuerGeneration = FB.realmRulerGeneration(s, 'byzantium');
+        const saved = JSON.parse(FB.save.serialize());
+        // This legacy campaign predates the declaration-owned opening actors.
+        delete saved.state.bookmarkSetup;
+        const old = saved.state.stories.western_court_476;
+        delete old.railsSchema;
+        old.historical = { theoderic:'started', theodericWarId:war.id };
+        if (commissioned) old.historical.theodericCommissionId = commission.id;
+        for (const id of FBDATA.bookmarks['476'].stories)
+          if (id !== 'western_court_476') delete saved.state.stories[id];
+        const bytes = JSON.stringify(saved), rng = FB.getRngState() >>> 0, uid = FB.getUidCounter();
+        FB.save.restore(saved); s = FB.state;
+        const rec = s.stories.theoderic_italy_476;
+        const migrated = rec.phase === 'started' && rec.warId === war.id && rec.migrationId === null &&
+          rec.commissionId === (commissioned ? commission.id : null) &&
+          rec.patronGeneration === (commissioned ? issuerGeneration : null);
+        const exact = bytes === JSON.stringify(saved) && rng === (FB.getRngState() >>> 0) && uid === FB.getUidCounter();
+        s.date.year = 489; s.turn = 180;
+        FB.stories.day(s);
+        const succession = issuerGeneration !== FB.realmRulerGeneration(s, 'byzantium');
+        const stillRunning = s.stories.theoderic_italy_476.phase === 'started';
+        const warRetained = !!FB.ordinaryWarById(s, war.id);
+        FB.transferProvince(s, 'ravenna', 'pannonia');
+        FB.settleOrdinaryWar(s, war.id, 'victory');
+        FB.stories.day(s);
+        return { migrated:migrated, exact:exact, succession:succession, warRetained:warRetained,
+          stillRunning:stillRunning, result:s.stories.theoderic_italy_476.result,
+          reason:s.stories.theoderic_italy_476.reason,
+          sameCommission:s.stories.theoderic_italy_476.commissionId === (commissioned ? commission.id : null),
+          noMigration:!(s.authority.migrations || []).some(function (row) { return row.realmId === 'pannonia'; }) &&
+            !s.stories.theoderic_italy_476.migrationId,
+          noNewHost:s.armies.filter(function (a) { return a.realm === 'pannonia'; }).length === 1 &&
+            s.armies.some(function (a) { return a.id === 'host_476_amal'; }) };
+      }, commissioned);
+      expect(result).toEqual({ migrated:true, exact:true, succession:true, warRetained:true,
+        stillRunning:!commissioned, result:commissioned ? 'interrupted' : 'won',
+        reason:commissioned ? 'authority_lost' : 'objective_held', sameCommission:true,
+        noMigration:true, noNewHost:true });
     });
-    expect(result).toEqual({ stillRunning:true, result:'won', noMigration:true, noNewHost:true });
-  });
+}
 
 test('service can be declined for force and expired or destroyed moving hosts never respawn',
   async function ({ page }, testInfo) {
