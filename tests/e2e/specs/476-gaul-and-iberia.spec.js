@@ -271,7 +271,7 @@ for (const bookmark of ['867','1066']) {
                 return site.site === 'toulouse_476';
               }),
               institution:FB.localInstitutionList(s).filter(function (item) {
-                return Object.prototype.hasOwnProperty.call(FBDATA.bookmarkRegions476.gaul_iberia.institutions,item.id);
+                return Object.prototype.hasOwnProperty.call(FBDATA.bookmarkRegions476.gaul_iberia.localInstitutions, item.id);
               }).length,
               events:FBDATA.events.filter(function (ev) {
                 return ev.pack === 'gaul_iberia_476' && FB.eventPeriodEnabled(s, ev);
