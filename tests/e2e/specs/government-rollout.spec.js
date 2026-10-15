@@ -276,14 +276,27 @@ for (const row of consumers) for (const consumer of row.changed.filter(function 
 
 test('JSON import supplies a different public-service constitution with exact-profile restore',async function ({page},info) {
   await openGame(page,info);
-  expect(await page.evaluate(function (fixture) {
-    const mod = JSON.parse(JSON.stringify(fixture)), b = JSON.parse(JSON.stringify(FBDATA.bookmarks['867']));
+  const payload = await page.evaluate(function (fixture) {
+    const raw = FBDATA.bookmarks['867'], revisions = {baseline:raw.revisions.baseline};
+    // This proof needs the retained baseline and selected world, rather than
+    // every historical revision copied into the browser's mod storage.
+    revisions[raw.revision] = raw.revisions[raw.revision];
+    const mod = JSON.parse(JSON.stringify(fixture)), b = JSON.parse(JSON.stringify(Object.assign({},raw,{revisions:revisions})));
     b.revisions[b.revision].realms = b.revisions[b.revision].realms.map(function (r) {
       return r.id === 'byzantium' ? Object.assign({},r,{government:'river_service_rollout',administrationProfileId:'river_service_rollout'}) : r;
     });
     mod.bookmarks = {'867':b};
-    return FB.mods.store(JSON.stringify(mod));
-  },proofMod)).not.toBe(false);
+    return JSON.stringify(mod);
+  },proofMod);
+  await Promise.all([
+    page.waitForNavigation({waitUntil:'domcontentloaded'}),
+    page.evaluate(function (payload) {
+      if (FB.mods.store(payload) === false) throw new Error('The government proof mod was rejected');
+      // store also returns undefined on quota failure; confirm persistence.
+      const stored = JSON.parse(localStorage.getItem('fb_mods') || '[]');
+      if (stored.indexOf(payload) < 0) throw new Error('The government proof mod was not stored');
+    },payload)
+  ]);
   await page.waitForFunction(function () { return window.FB && FB.game && FB.game.bootReady &&
     !!FBDATA.governmentForms.river_service_rollout; });
   await page.evaluate(function () { FB.startProgression.noteTier(3); });
