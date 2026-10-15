@@ -12,7 +12,7 @@ dependsOnRuntime(__filename, [
   'js/civic_strategies.js', 'js/civic_conversion.js', 'js/civic_validation.js', 'js/government_support.js',
   'js/government_collective.js', 'js/government_assembly.js', 'js/government_selection.js',
   'js/authority.js', 'js/world.js', 'js/model.js', 'js/station.js', 'js/lexicon.js', 'js/treasury.js',
-  'js/settlement.js', 'js/fiscal.js', 'js/technology.js',
+  'js/settlement.js', 'js/fiscal.js', 'js/technology.js', 'js/papacy.js', 'data/papacy.js',
   'js/lordships.js', 'js/wars.js', 'js/armies.js', 'js/events.js', 'js/actions.js',
   'js/progression.js', 'js/economy.js', 'js/mods.js', 'js/save.js', 'js/save_v4.js',
   'js/main.js', 'js/ui_civic.js', 'js/ui_misc.js', 'js/ui_modals.js'
@@ -91,11 +91,24 @@ for (const profile of [null,'genoese_consular','civic_service_city']) {
     const result = await page.evaluate(function (rid) {
       const s = FB.state,V = FB.civicGovernment,C = FB.governments.support,r = V.row(s,rid),p = V.profile(s,rid);
       const before = JSON.stringify(s),rng = (FB.getRngState() >>> 0),uid = FB.getUidCounter();
-      r.offices.forEach(function (o) { V.candidates(s,rid,o.id); V.officeQuote(s,rid,o.id,'nominate',{ candidateId:s.player.charId }); V.incumbent(s,rid,o.id); });
-      V.proposalQuote(s,rid,'extraordinary_tax',{ amount:2,duration:90 });
-      FB.treasurySnapshot(s); FB.aiBaseHost(s,rid); V.decision(s,rid,'treaty');
+      const mutations = [];
+      function read(label,fn) {
+        const bytes = JSON.stringify(s),random = FB.getRngState(),identity = FB.getUidCounter();
+        fn();
+        if (bytes !== JSON.stringify(s) || random !== FB.getRngState() || identity !== FB.getUidCounter()) mutations.push(label);
+      }
+      r.offices.forEach(function (o) {
+        read(o.id + ': candidates',function () { V.candidates(s,rid,o.id); });
+        read(o.id + ': nomination',function () { V.officeQuote(s,rid,o.id,'nominate',{ candidateId:s.player.charId }); });
+        read(o.id + ': incumbent',function () { V.incumbent(s,rid,o.id); });
+      });
+      read('extraordinary dues',function () { V.proposalQuote(s,rid,'extraordinary_tax',{ amount:2,duration:90 }); });
+      read('treasury',function () { FB.treasurySnapshot(s); });
+      read('field host',function () { FB.aiBaseHost(s,rid); });
+      read('treaty',function () { V.decision(s,rid,'treaty'); });
       const detached = C.members(s,rid); detached[0].weight = 10;
       return { pure:before === JSON.stringify(s) && rng === (FB.getRngState() >>> 0) && uid === FB.getUidCounter(),
+        mutations:mutations,
         faults:FB.governments.validate(),technology:FB.validateTechnologyData(true),valid:C.validate(s),
         reviewModes:['civic_magistracies','civic_public_dues','civic_public_debt','civic_public_campaigns','civic_public_grants','civic_form_adoption','institutional_foreign_rights','civic_household_careers'].map(function (id) { return FBDATA.techImpactReviews.features[id].mode; }),
         offices:r.offices.length,tenures:p.offices.map(function (o) { return o.termDays; }),
@@ -105,9 +118,43 @@ for (const profile of [null,'genoese_consular','civic_service_city']) {
         publicTreasury:FB.treasuryAvailable(s,rid),deed:FB.instantStatus(s,'civic_government').shown,
         original:FBDATA.bookmarks['1066'].realms.find(function (d) { return d.capital === 'venezia'; }).government || 'territorial' };
     },rid);
-    expect(result).toMatchObject({ pure:true,faults:[],technology:[],valid:true,noDynasty:true,publicHolder:true,
+    expect(result).toMatchObject({ pure:true,mutations:[],faults:[],technology:[],valid:true,noDynasty:true,publicHolder:true,
       household:true,publicTreasury:200,deed:true,original:'territorial',reviewModes:Array(8).fill('none'),offices:profile === 'genoese_consular' ? 2 : profile ? 3 : 1,
       tenures:profile === 'genoese_consular' ? [360,360] : profile ? [180,360,720] : [null] });
+  });
+}
+
+for (const crazygames of [false,true]) {
+  test((crazygames ? 'CrazyGames' : 'standard') + ' civic military projections preserve ruler metadata and missing papal allegiance', async function ({ page },testInfo) {
+    const rid = await start(page,testInfo,'civic_service_city',crazygames);
+    const result = await page.evaluate(function (rid) {
+      const s = FB.state,papacy = FB.ensurePapacy(s),oid = papacy.romanObedience;
+      const chief = FB.civicGovernment.chief(s,rid),mutations = [];
+      function strength(label) {
+        const before = JSON.stringify(s),rng = FB.getRngState(),uid = FB.getUidCounter();
+        const value = FB.papacyRealmStrengthMultiplier(s,rid);
+        if (before !== JSON.stringify(s) || rng !== FB.getRngState() || uid !== FB.getUidCounter()) mutations.push(label);
+        return value;
+      }
+      const baseline = strength('saved allegiance');
+      delete papacy.realmObedience[rid];
+      const missing = strength('missing allegiance');
+      papacy.realmObedience[rid] = 'inactive_civic_fixture';
+      papacy.obediences.inactive_civic_fixture = { status:'ended' };
+      const inactive = strength('inactive allegiance');
+      // The fallback must still apply an existing active sentence from Rome.
+      papacy.excommunications[oid + ':' + chief.id] = { targetId:chief.id,clearedTurn:null };
+      const sanctioned = strength('active sentence');
+      papacy.excommunications[oid + ':' + chief.id].clearedTurn = s.turn;
+      const cleared = strength('cleared sentence');
+      delete s.papacy;
+      const absent = strength('absent papal model');
+      return { mutations:mutations,baseline:baseline,missing:missing,inactive:inactive,cleared:cleared,absent:absent,
+        sanctioned:sanctioned,expectedSanction:Math.max(0.5,baseline + (FBDATA.papacy.excommunication.realmStrength || -0.10)) };
+    },rid);
+    expect(result.mutations).toEqual([]);
+    for (const key of ['missing','inactive','cleared','absent']) expect(result[key]).toBe(result.baseline);
+    expect(result.sanctioned).toBe(result.expectedSanction);
   });
 }
 
