@@ -848,6 +848,7 @@ test('building development reverses on demolition without inventing legacy loss'
       return {
         raised:raised,
         granted:record.devGranted,
+        removed:record.devRemoved,
         afterRaise:afterRaise,
         demolished:demolished,
         afterDemolition:afterDemolition,
@@ -862,7 +863,8 @@ test('building development reverses on demolition without inventing legacy loss'
 
     expect(result).toEqual({
       raised:true,
-      granted:1,
+      granted:0,
+      removed:1,
       afterRaise:6,
       demolished:true,
       afterDemolition:5,

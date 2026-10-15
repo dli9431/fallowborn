@@ -12,6 +12,16 @@ window.FB = window.FB || {};
 
   const UI = {};
   FB.ui = UI;
+
+  UI.deedInteractionBusy = function () {
+    for (const id of ['genmodal', 'eventmodal']) {
+      const modal = document.getElementById(id);
+      if (modal && !modal.classList.contains('hidden')) return true;
+    }
+    return !!((UI.eventsBusy && UI.eventsBusy()) ||
+      (UI.travelPickerOpen && UI.travelPickerOpen()) ||
+      (UI.raidPickerOpen && UI.raidPickerOpen()));
+  };
   /* Cross-file internals of the split UI. Each later file binds what it
      needs at load; mutable shared view state lives here as properties. */
   const SH = UI._shared = {};
@@ -93,7 +103,7 @@ window.FB = window.FB || {};
     const activeHost = !!(s && FB.playerHost && FB.playerHost(s));
     const greatHost = !!(s && FB.playerGreatHolyWarHostActive &&
       FB.playerGreatHolyWarHostActive(s));
-    const technology = !!(s && (FB.techUiRelevant
+    const technology = !!(landed && (FB.techUiRelevant
       ? FB.techUiRelevant(s) : landed));
     return {
       hosts:!!(player && (landed || player.war || activeHost || greatHost)),
@@ -5237,20 +5247,18 @@ window.FB = window.FB || {};
           hideTipImmediately();
           return;
         }
-        const fortTech = e.target.closest('[data-fort-tech]');
+        const fortTech = e.target.closest('#tooltip [data-fort-tech]');
         if (fortTech && fortTech.dataset.fortTech) {
           hideTipImmediately();
-          const bpid = fortTech.dataset.fortPid || (FB.state && FB.state.player && FB.state.player.provinceId);
-          const bidx = fortTech.dataset.fortIdx !== undefined ? Number(fortTech.dataset.fortIdx) : 0;
-          UI.showTechDetail(fortTech.dataset.fortTech, function () {
-            UI.showSettlement(bpid, bidx);
-          });
+          const bpid = fortTech.dataset.fortPid;
+          const bidx = Number(fortTech.dataset.fortIdx);
+          UI.showFortTechnology(bpid, bidx, fortTech.dataset.fortTech);
           return;
         }
-        const fortStart = e.target.closest('[data-fort-start]');
+        const fortStart = e.target.closest('#tooltip [data-fort-start]');
         if (fortStart && fortStart.dataset.fortStart) {
-          const pid = fortStart.dataset.fortPid || (FB.state && FB.state.player && FB.state.player.provinceId);
-          const idx = fortStart.dataset.fortIdx !== undefined ? Number(fortStart.dataset.fortIdx) : 0;
+          const pid = fortStart.dataset.fortPid;
+          const idx = Number(fortStart.dataset.fortIdx);
           const targetLevel = Number(fortStart.dataset.fortStart);
           hideTipImmediately();
           UI.showFortProject(pid, idx, targetLevel);

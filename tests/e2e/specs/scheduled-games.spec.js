@@ -2,9 +2,29 @@
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, ['index.html','data/tournaments.js','data/events_tournament.js','data/travel.js',
   'data/technology.js','js/tournaments.js','js/travel.js','js/actions.js','js/events.js','js/main.js',
-  'js/lordships.js','js/treasury.js','js/holywar.js','js/wars.js','js/rebellions.js','js/save.js','js/model.js']);
+  'js/lordships.js','js/treasury.js','js/holywar.js','js/wars.js','js/rebellions.js','js/save.js','js/model.js','js/world.js']);
 const { test, expect } = require('../support/fixture');
 const { startGames, bookGames } = require('../support/game/tournaments');
+
+test('venue names read the supplied campaign without mutating state or original geography', async function ({page},info) {
+  const ids = await startGames(page,info);
+  const r = await page.evaluate(function (ids) {
+    var s = FB.state, T = FB.tournaments, venue = {provinceId:ids.home,settlement:0};
+    var site = FB.world.sitesByProv[ids.home].list[0], original = site.name;
+    var legacy = JSON.parse(JSON.stringify(s)); delete legacy.settlementNames;
+    if (!FB.renameSettlement(s,ids.home,0,'Houlgate').ok) throw new Error('Rename was refused.');
+    var other = JSON.parse(JSON.stringify(s)); other.settlementNames[site.site] = 'New Haven';
+    var before = JSON.stringify([s,legacy,other]), rng = FB.getRngState();
+    var names = [T.venueName(s,venue),T.venueName(legacy,venue),T.venueName(other,venue),T.venueName(s,venue)];
+    var county = T.venueName(s,{provinceId:ids.home,settlement:999});
+    var missing = T.venueName(s,{provinceId:'missing_county',settlement:0});
+    return {names:names,original:original,county:county,countyName:FB.world.byId[ids.home].name,missing:missing,
+      unchanged:before === JSON.stringify([s,legacy,other]),rng:FB.getRngState() === rng,geography:site.name === original};
+  },ids);
+  expect(r.names).toEqual(['Houlgate',r.original,'New Haven','Houlgate']);
+  expect(r.county).toBe(r.countyName); expect(r.missing).toBe('missing_county');
+  expect(r.unchanged).toBe(true); expect(r.rng).toBe(true); expect(r.geography).toBe(true);
+});
 
 test('floors, multipliers, rounding and allocation conserve the frozen budget', async function ({page}, info) {
   await startGames(page,info);

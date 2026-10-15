@@ -28,6 +28,26 @@ Settings resolves the current campaign state when opened, including a null state
 
 Read-only event disclosures, including the first-duty teaching anchor, remain available by pointer and native Enter/Space activation during the event input guard. Choices, confirmations and outcome acknowledgements retain their guarded activation boundary.
 
+Recurring deed readiness is an opt-in Settings control. The ready deed button
+itself is restyled (brighter border, warm fill, soft glow) and carries an inline
+Ready again chip, rather than boxing the whole card or flashing.
+Notices switch to Deeds from any panel and close the Self/Kin drawer; dialogs and
+fast-forward defer them. The switch uses ordinary panel navigation so Back can
+return to the previous tab. Opening a collapsed section reuses its disclosure
+handler and leaves other controls mounted. Visible keyboard focus stays in place;
+if the switch hides the focused control, focus moves to the revealed deed. Revealing the notice
+also pauses time; Play resumes it. Further refreshes retain the highlight without
+scrolling or pausing again; unavailable cards lose it.
+
+Automation uses the existing labeled checkbox cards and Details disclosures for
+immediate recurring deeds. Only deeds visible for the current character's role
+and situation, with any adulthood requirement met, appear. Cooldowns and temporary
+resource shortages remain visible beside the interval and one-day cost. Saved
+selections for hidden deeds are retained; costs and political risks are disclosed
+before choosing. The shared
+Automation indicator includes recurring selections. Settings and checklist use
+the existing modal navigation, scroll restoration and mobile hit targets.
+
 CrazyGames household objectives and returning players
 
 The CrazyGames checklist includes a persistent current-objective block for courtship, the first enterprise, freedom funding or final service, and the first land plot. It reads the same live status and quote functions as the normal reviews. Natural-day refreshes update its text without replacing the checklist or its controls; enterprise progress reprices the displayed recommendation rather than scanning every business on each day. Exact refreshes and review clicks choose a current recommendation again. Dismiss and Disable guide hints retain their existing effect. This is presentation only, with no technology or eligibility change.
@@ -64,6 +84,21 @@ effective skill plus trait fit against its required value. The ±2 cap and the
 distinction from ordinary trait stat effects belong in the title Details.
 Unmet requirements use the same adjusted totals as acceptance, and stay visible
 on the card face and review. Entry jobs with no skill minima omit the fit card.
+
+Service facts show Days in this role separately from Total household service.
+Accounts and teaching keep the exact completed-working-day progress toward Lettered
+visible on role cards and appointment reviews. Self labels the saved career as
+Recorded occupation and the appointment as Work, with a role-day count patched
+on live ticks. Career reviews show completed vocational years and their New Year
+cadence; learned trainees also show their career literacy threshold in trainee years.
+These displays do not convert calendar time into earned service or career experience.
+
+Buy a plot of land opens the existing Buy Freehold Land sheet at every free rank,
+including rulers, regardless of funds or settlement capacity. Exact affordability
+and complete holdings belong to its existing focusable purchase rows and Details;
+opening the deed spends no day or money. Serfs still need freedom before the deed
+appears. The underlying purchase keeps the same local price, settlement cap and
+family-property rules at every eligible rank.
 
 The map Home control zooms Counts and lower ranks to settlement detail. Counts
 center on their home county; lower ranks center on their exact home settlement,
@@ -161,6 +196,22 @@ are relative to the character being viewed. Each link opens a character sheet;
 Back restores the originating sheet's scroll and link focus at mobile and
 desktop widths. Nieces and nephews expose ordinary arranged-match management
 without acquiring household work or education controls.
+Royal character sheets show the same court-family strip and courtesy title when
+opened directly, from a Pledged to link, or through the ruler's family. Personal
+audience restrictions do not hide family information. Direct-profile family links
+retain the originating sheet, scroll and link focus on Back; the realm sheet keeps
+its existing court navigator.
+Court chips identify relationships to the displayed person first (Wife, Husband,
+Mother, Brother, and so on). If a consort is unrelated to that person, the chip
+names the ruler explicitly: **Consort of Count Ingelram**. Likewise a ruler's
+sister viewed from the consort's sheet reads **Sister of Count Ingelram**, retaining
+the Heir marker when applicable. An unclassified relationship names the ruler's
+court instead of implying a family tie to the displayed person. Courtesy titles
+remain Countess/Duchess and their equivalents; these labels change no relationships.
+The consort chip follows the ruler's actual marriage, including the player, rather
+than requiring a generated court slot. Their recorded children therefore show both
+parents. A spouse already listed in the compact court is shown only once. These
+links retain the existing character-sheet Back, focus and scroll behavior.
 
 ## County progression reviews
 
@@ -627,6 +678,14 @@ Visible Back and Escape restore that view even when browser-history navigation i
 unavailable, including its scroll, focus, and listeners. Explicit `historyBackRender`
 callbacks still own flows requiring refreshed data; root Back is disabled and Close exits safely.
 
+Go into town retains its settlement list while showing the selected village,
+town or city's activity choices in a generic history view. Back, Escape and
+mobile browser Back restore the same list, scroll and settlement control.
+Close cancels the whole outing and clears its provisional cooldown. Browsing
+destinations spends no day and grants no tutorial credit; choosing an activity
+commits one outing day and the exact event option. Existing choice labels and
+consequence disclosures remain localized through the event data renderer.
+
 Every new or changed modal, screen, card, and confirmation must make the decision
 clear at a glance: intended benefit, exact immediate cost, duration or minimum
 commitment, and material risk or replacement consequence. Keep these essentials
@@ -1032,9 +1091,10 @@ charter, tenure, political terms, council office, and exceptional levy into the
 details. On desktop (fine pointer, wider than 1100 px and taller than 520 px) the `?`
 button stays hidden and hovering or focusing the card opens the shared `#tooltip`
 side panel just right of the card (flipping left near the viewport edge); the pointer
-may move onto the tooltip without closing it, so buttons rendered inside it — the
-fort card's `data-fort-tech` technology link and `data-fort-start` construction
-button — stay clickable from the tooltip itself. Every shared tooltip uses Georgia,
+may move onto the tooltip without closing it, so any supplementary controls rendered
+inside it stay clickable. Fort upgrade and requirement actions stay visible on the
+card face alongside the next tier and its quote; the siege audit and supporting terms move into
+Details. Every shared tooltip uses Georgia,
 14 px primary copy, and 13 px supporting copy with one line-height, spacing rhythm,
 and semantic palette: gold for headings, green for benefits, rose for danger, and
 the configured helper color for context. Copied disclosure HTML keeps its source
@@ -1561,9 +1621,13 @@ other desktop panel column: right-side navigation therefore leaves Self/Kin unto
 and Self/Kin navigation leaves Deeds/Land/Network/Chronicle untouched. Exact UI refreshes
 after game-state changes still update both visible columns, while opening the mobile
 Self/Kin drawer renders its selected pane immediately.
-For a count or higher, the selected current seat is marked **capital and home**.
-Every other directly held demesne county shows **Move capital here…**; the native
-button remains visible but disabled with the exact prestige, journey, campaign, or
+For a count or higher, Land distinguishes **home**, **capital**, and
+**capital and home**. If a granted county is already the capital while the
+household still lives at its earlier barony, it shows **Move household here…**.
+The confirmation explains that the capital stays in place and the household
+joins it, with the ordinary costs and capital-relocation lifetime choice.
+Every other directly held demesne county outside the home shows **Move capital here…**;
+the native button remains visible but disabled with the exact prestige, journey, campaign, or
 lifetime-limit reason. Its focus-managed confirmation names both seats, the prestige,
 popular-opinion and direct-vassal Standing changes, every affected vassal, the
 once-per-ruler rule, unchanged county-bound property, and any province-scoped incoming
@@ -1816,6 +1880,17 @@ performs assignment through its own existing mechanic, so the common presentatio
 not merge the underlying roles. Cards retain modal number keys, native keyboard
 activation, focus styling, and a stacked narrow-screen layout.
 
+Household-office reviews keep the first appointment blocker on each office button and
+list all unmet requirements in its shared Details disclosure. Married adult descendants
+can open a read-only review explaining why leaving the managed household prevents an
+unpaid appointment. Occupied offices name the holder, provide a portrait link, and explain
+how to dismiss a paid retainer or relieve an unpaid family holder. Person-sheet Back or
+Escape restores the office list's scroll, open disclosures and originating control.
+If eligibility changes before confirmation, the review refreshes in place and retains its
+disclosures and scroll without spending a day. Retainer dismissal previews −15 Standing,
+immediate departure and no deed-day cost; Back and Escape return to the retained
+management view and its originating Dismiss control.
+
 Asset and persistent-effect surfaces use the render-only
 `UI.assetEffectSummary`. Detailed views across freehold plots, enterprises,
 buildings, items, temporary modifiers, technology, and purchase confirmations
@@ -1839,9 +1914,9 @@ research say, no political attention — so the ledger is omitted entirely at
 that station. On full desktop layouts the ledger omits the redundant
 daily-focus row; on compact layouts that row appears first and routes to the
 top of the combined focus list. When expanded it shows the personal-attention
-assignment; national research projects/policy appear only at landed rank
-(vassals review, sovereigns manage), since commoners have no voice in the
-sovereign's research;
+assignment; national research projects/policy appear only for independent rulers
+who control their nation's research. Common households and vassals omit this row
+while retaining their Technology routes;
 political attention appears only when the independent ruler has that capacity,
 while travel and financial-contract rows appear only while active. Each native
 row routes to the authoritative existing control: the compact focus-list
@@ -2445,12 +2520,13 @@ tier-scaled fee, tax, enterprise, duration, and Popular support terms, then repe
 in a confirmation sheet before spending the day. While Guild Charters is missing, its
 technology-detail control stays inside the deed's shared desktop hover/focus tooltip or
 compact-layout `?` disclosure instead of occupying a separate Deeds row.
-Rank & Realm keeps the no-day-cost **Technology…** deed at landed rank and above; commoners
-have no research controls (sovereigns direct projects, vassals may advocate
-them), so the deed stays hidden below tier 3. `FB.techUiRelevant` is the shared
-eligibility rule for every dedicated technology route: below tier 3 the
-commitment row, deed, Land rating, Guide category and generated entries,
-contextual detail links, and modal entry points are absent. A common household
+Rank & Realm keeps the no-day-cost **Technology…** deed for Freeholders, Gentry,
+and landed rulers. Commoners can read national knowledge without research controls;
+sovereigns direct projects and vassals may advocate them. `FB.techUiRelevant` gates
+the deed, Land rating, Guide category and generated entries, contextual detail links,
+and modal entry points at tier 1. The Ongoing commitments research row additionally
+requires the player to control the effective sovereign's research. Serfs do not
+receive these dedicated technology routes. A common household
 still sees the exact named national prerequisite where it gates one of its
 careers, standards, schools, or enterprises, because that text explains the
 household choice without presenting an authority surface it cannot use. Its
@@ -2607,7 +2683,12 @@ explicit bounded bulk review.
 Network keeps Household, Connections, Trade & Guild, Political Blocs, Realm, and Local folk
 distinct. A person or realm
 appears once within a section with combined role labels, but may still appear in another
-section for a genuinely different context. Character and ruler rows open the consolidated
+section for a genuinely different context. Household includes valid unpaid family-office
+holders, including manageable siblings serving the family. Their existing portrait rows
+combine relationship, office, unpaid duty, career and the same benefit text as paid
+retainers; immediate-family holders gain this context without a duplicate row. Resident
+family and paid-retainer counts and costs retain their existing economic scope.
+Character and ruler rows open the consolidated
 authoritative cards; Governance, Household Plan, Council, guild favors, vassal favors, and
 other focused management routes remain separate. Row states such as open slots, warnings,
 commitments, opportunities, and vacancies use the same desktop tooltip or touch/tablet
@@ -2649,6 +2730,13 @@ only Back/Close, with Back disabled at the root. Whenever an enterprise is idle,
 scrollable plan beneath the ledger and uses the same tooltip/disclosure treatment as other
 helper copy. A successful no-day apply returns to this authoritative table rather than the
 intermediate Work & Enterprises sheet.
+
+After succession, Household Plan and character sheets retain education, instruction,
+work, assignment, and equipment controls for inherited resident dependents. Kin marks
+inherited siblings as family dependents rather than treating noble birth as an
+independent station. Adult cells retain the existing age/career requirements; children
+under six may choose a focus but lessons begin at six. Match authority keeps its own
+existing eligibility. All routes reuse the existing pickers and modal return state.
 
 An **Education Policy** summary and native management button sit above the Household Plan
 ledger. Its keyboard/mobile-safe flow uses a native focus select, instruction checkbox,
@@ -2884,6 +2972,13 @@ Standing is shared. War notices render both realm names as links: in Land they
 open the named ruler's character sheet, while a ruler-sheet link opens the
 opposing ruler or returns to the current realm's capital county.
 
+Court-strip kin labels come from recorded character and compact genealogy,
+relative to the displayed person. Succession order alone never implies Son,
+Daughter, Father or Mother. The designated successor retains their kin label
+alongside Heir; unknown parentage uses Court member. Opening a sibling heir
+therefore still identifies the ruler as their brother or sister. Labels are
+localized display projections and never alter saved relationships.
+
 Modal return context records only the originating view, not simulation state.
 Governance, Council, Estates, Household Plan, and card-to-card routes reconstruct the exact
 source on visible/browser Back and after an in-scope completed management action; Network,
@@ -2956,6 +3051,13 @@ and the next sequential tier. Those owned sheets provide keyboard-focusable, mob
 project and demolition controls; commoner and foreign sheets omit county building and
 fortification information. A locked tier stays visible to the holder and its action opens
 the exact technology detail.
+The next tier, current quote, duration and requirements stay on the fort card face
+with its action at every viewport size. Each construction/upgrade action carries
+its exact county and settlement; inline and tooltip handlers cannot both dispatch
+the same click. Other settlements in the directly held county expose a named link
+to the fort's actual site, including ruins, with Back retaining the originating
+sheet. Fort reviews name the settlement and county. Back and Escape preserve the site, scroll, expanded Details
+and action focus; technology Back retains the same origin.
 
 Labels reject
 deterministically on rectangle overlap in priority order (kind, head status,
@@ -2977,12 +3079,15 @@ development history move behind its hover/focus tooltip on desktop and inline de
 disclosure on touch/tablet layouts. The sheet shows matching household plots, manor, and
 enterprises when present. For the county's tier-3+ player holder, it also lists the
 buildings and ruins of the exact slot. Each building, ruin, or fort renders as a compact
-card with an icon, name, and one-line effect. Its concise stakes summary and description
+card with an icon, name, and one-line effect. Fort cards also keep the next-tier
+quote, requirements and action visible. Supplementary stakes and description
 sit behind a per-card details disclosure (a hover/focus tooltip on desktop, an inline tap
 toggle elsewhere, one or the other per layout), and demolition rides inside the owned
 card as an icon button. Authorization lives inside the sheet, so foreign, non-demesne,
 and commoner sheets omit county works entirely, while a valid tier-3+ held settlement
 keeps their information plus construction and demolition.
+
+Ruined settlement assets expose a Repair action with the current gold quote and first blocker visible. Its review names the settlement, restoration timing and post-repair upkeep, and explains that construction rewards are not repeated. Confirm rechecks the exact reviewed price, current funds, authority and standing-copy limits; changed terms redraw the review without spending. Back and Escape restore the originating settlement's scroll, expanded Details and action focus. Repairs share this flow across ordinary and CrazyGames editions; no distribution-specific assets or rules are added.
 
 ## Localization
 

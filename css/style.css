@@ -1036,6 +1036,20 @@ body:not(.picking) #game:not(.hidden) #btn-endturn.has-focus-art .focus-art.is-p
 .deed-entry[data-deed-flow="now"] .deed-main-action:hover { border-color: #e0b64f; }
 .deed-entry[data-deed-flow="choices"] .deed-main-action:hover { border-color: #a9c779; }
 .deed-entry[data-deed-flow="no-day"] .deed-main-action:hover { border-color: #91bdc2; }
+/* A recurring deed that is ready again lights the deed button itself: a
+   brighter border, warm fill, soft glow and an inline Ready again chip. */
+.deed-entry.deed-ready .deed-main-action {
+  display: flex; align-items: center; gap: 8px;
+  border-color: #e0b64f; color: #fff3d6;
+  background: linear-gradient(90deg, #4a3a1c, #2a2216 80%);
+  box-shadow: inset 4px 0 0 #f0c75e, 0 0 10px rgba(224, 182, 79, .35);
+}
+.deed-entry.deed-ready .deed-main-action:hover { border-color: #f0c75e; }
+.deed-ready-label {
+  flex: 0 0 auto; margin-left: auto; padding: 1px 8px; border-radius: 999px;
+  background: var(--ui-accent-color); color: #1a140c;
+  font-size: var(--ui-label-size); font-weight: 700; white-space: nowrap;
+}
 .deed-entry .settcard-actions { align-self: center; }
 .deed-entry .deed-details { grid-column: 1 / -1; }
 .deed-entry .deed-details > b { color: var(--ui-accent-color); }
@@ -4887,6 +4901,32 @@ textarea.modjson, textarea.savetext {
 .settings-detail-toggle-details {
   padding-top: 8px; border-top: 1px solid #4d4029;
   color: var(--helper-text-color); font-size: var(--ui-label-size); line-height: 1.4;
+}
+
+/* Scheduled games: stacked labels over full-width shared fields. The hosting
+   form pairs fields on roomy sheets and stacks them on compact screens. */
+.games-field { display: grid; gap: 4px; min-width: 0; margin-bottom: 10px; }
+.games-field[hidden] { display: none; }
+.games-field > span { color: var(--helper-text-color); font-size: var(--ui-label-size); }
+.games-field select, .games-field input {
+  box-sizing: border-box; width: 100%; min-width: 0; min-height: 44px;
+}
+.games-host-form {
+  display: grid; grid-template-columns: repeat(2, minmax(0, 1fr));
+  column-gap: 12px; align-items: end; margin-bottom: 4px;
+}
+.games-host-note, .games-host-annual { grid-column: 1 / -1; }
+.games-host-note { margin: 0 0 10px; color: var(--helper-text-color); font-size: var(--ui-label-size); }
+.games-host-annual {
+  display: flex; align-items: center; gap: 10px; min-height: 44px; margin-bottom: 10px;
+  padding: 6px 12px; box-sizing: border-box; cursor: pointer;
+  border: 1px solid var(--ui-border-color); border-radius: 8px; background: var(--ui-surface-color);
+}
+.games-host-annual:hover { border-color: #c9a24a; }
+.games-host-annual input { flex: 0 0 auto; width: 18px; height: 18px; margin: 0; }
+.games-host-annual span { min-width: 0; overflow-wrap: anywhere; }
+@media (max-width: 520px) {
+  .games-host-form { grid-template-columns: minmax(0, 1fr); }
 }
 
 /* Semantic desktop shortcuts are edited as key/action pairs. Status stays on

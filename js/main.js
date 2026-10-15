@@ -10,8 +10,49 @@ window.FB = window.FB || {};
   G.bootReady = false;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-FB.VERSION = '1.188.2';
+FB.VERSION = '1.189.7';
 FB.CHANGELOG = [
+  { v: '1.189.7', date: '2026-10-09', changes: [
+    'Player-family rulers no longer gain invented children on accession. Court family portraits show existing spouses and their recorded parent relationships.'
+  ] },
+  { v: '1.189.6', date: '2026-10-07', changes: [
+    'Resident family dependents keep their education and work controls after succession. Older saves recover the inherited household on load.'
+  ] },
+  { v: '1.189.5', date: '2026-10-06', changes: [
+    'Enterprise purchase Details buttons stay clear of scroll edges and the modal footer.'
+  ] },
+  { v: '1.189.4', date: '2026-10-05', changes: [
+    'Rulers can buy freehold plots, and Buy a plot of land opens even when funds are short.',
+    'Service and career reviews show experience and literacy progress. Household referrals explain their neutral outcome.',
+    'Network shows unpaid family officers and their contributions.',
+    'Games use renamed settlement names, and hosting forms keep labels above responsive fields.'
+  ] },
+  { v: '1.189.3', date: '2026-10-04', changes: [
+    'Households can move to an existing realm capital when their home is elsewhere. Land distinguishes the capital from the household home.',
+    'Royal character sheets retain court family links and return navigation, and relationship labels identify whose consort or relative is shown.',
+    'Go into town lets you return to the settlement list before choosing an activity and spending the day.',
+    'Ongoing commitments shows national research only for independent rulers who control it.'
+  ] },
+  { v: '1.189.2', date: '2026-10-04', changes: [
+    'Household office reviews explain unmet requirements and how to replace current holders. Ready recurring deeds can bring you to Deeds, highlight their button and pause time.'
+  ] },
+  { v: '1.189.1', date: '2026-10-04', changes: [
+    'Sibling heirs keep their family relationships after succession. Minor rulers no longer gain invented children, and affected generated heirs are repaired on load.'
+  ] },
+  { v: '1.189.0', date: '2026-10-04', changes: [
+    'Automation can repeat selected recurring deeds, and Settings can highlight and scroll to deeds when they become ready.',
+    'Technology uses symbols supported by older system fonts. Renaming your house leaves unrelated families with the same name unchanged.'
+  ] },
+  { v: '1.188.5', date: '2026-10-04', changes: [
+    'Freeholders and Gentry can now read Technology from Deeds. Adopted foundlings inherit their adopter’s status, and saved foundlings with missing status are repaired on load.'
+  ] },
+  { v: '1.188.4', date: '2026-10-03', changes: [
+    'Friend events now respect the friend’s station and keep pending choices tied to the original person.',
+    'Fort upgrade actions stay visible, target the selected settlement, and preserve the settlement view when returning.'
+  ] },
+  { v: '1.188.3', date: '2026-10-02', changes: [
+    'Ruined settlement buildings and forts can now be repaired from their settlement sheets. Serfs need stronger relationships to befriend rulers, and local rulers no longer appear as defendants in Standing Surety.'
+  ] },
   { v: '1.188.2', date: '2026-10-01', changes: [
     'Rebellion peace now settles rebellion charges, and truces prevent renewed arrests or breakaways. Uncontested player uprisings keep their independence, and AI resistance wars can reach peace.'
   ] },
@@ -4018,6 +4059,10 @@ FB.CHANGELOG = [
     }
     const p = s.player;
 
+    const automaticDeed = !G.observe && !(opts && opts.skipFocus) &&
+      FB.autoRecurringDeed && G.auto &&
+      FB.autoRecurringDeed(s, G.auto.recurringDeeds);
+
     /* skipFocus means a player-chosen one-shot deed filled this day. This is
        the authoritative completion point for picker-backed deeds; direct
        deeds also stamp at execution so their feedback does not depend on the
@@ -4030,7 +4075,7 @@ FB.CHANGELOG = [
       FB.learnMaternalCustoms(s);
       if (FB.householdServiceDay) FB.householdServiceDay(s);
       if (!p.travel) {
-        if (!(opts && opts.skipFocus)) FB.tickFocus(s);
+        if (!(opts && opts.skipFocus) && !automaticDeed) FB.tickFocus(s);
         else FB.validateFocus(s);
       }
       FB.tickSocialAttention(s);
@@ -4359,6 +4404,7 @@ FB.CHANGELOG = [
     musicOfflineFallback:null,
     musicOfflineAll:false,
     groupDeedsByActionType:false,
+    highlightReadyDeeds:false,
     repeatDeedSectionHotkeys:false,
     actionBindings:{ q:'action:livelihoods' }
   };
@@ -4448,6 +4494,7 @@ FB.CHANGELOG = [
       G.uiPrefs.musicOfflineAll = !!storedUiPrefs.musicOfflineAll;
       G.uiPrefs.groupDeedsByActionType =
         !!storedUiPrefs.groupDeedsByActionType;
+      G.uiPrefs.highlightReadyDeeds = storedUiPrefs.highlightReadyDeeds === true;
       G.uiPrefs.repeatDeedSectionHotkeys =
         !!storedUiPrefs.repeatDeedSectionHotkeys;
       if (storedUiPrefs.actionBindings &&
@@ -4882,10 +4929,10 @@ FB.CHANGELOG = [
       '🌱 The first lessons are behind you — the chronicle is yours to write.', {}));
   };
 
-  G.setPaused = function (v) {
+  G.setPaused = function (v, options) {
     G.paused = !!v;
     if (!v) notePlayerTimeStarted(); // First steps: let the days flow
-    if (FB.state && FB.ui && FB.ui.refresh) FB.ui.refresh();
+    if (FB.state && FB.ui && FB.ui.refresh) FB.ui.refresh(options);
   };
   G.togglePause = function () { G.setPaused(!G.paused); };
 
@@ -4919,7 +4966,7 @@ FB.CHANGELOG = [
   G.auto = {
     minor:false, major:false, war:false, all:false, style:'safe',
     hosts:'manual', hostResupply:true, buySupplies:true, forceSupplies:false, supplyTarget:75,
-    build:false, research:false, researchMode:'cheapest'
+    build:false, research:false, researchMode:'cheapest', recurringDeeds:{}
   };
   /* NOTE: the settings once shared a key with the AUTOSAVE SLOT (save.js)
      and each overwrote the other; they now live under their own key. */
@@ -4931,6 +4978,18 @@ FB.CHANGELOG = [
       if (storedAuto.on !== undefined && storedAuto.minor === undefined) G.auto.minor = !!storedAuto.on;
     }
   } catch (e) { /* keep defaults */ }
+  const storedRecurringDeeds = G.auto.recurringDeeds;
+  G.auto.recurringDeeds = {};
+  if (storedRecurringDeeds && typeof storedRecurringDeeds === 'object' &&
+      !Array.isArray(storedRecurringDeeds)) {
+    // Only deeds whose handler declares automatic recurrence are accepted.
+    for (const action of FB.instants || []) {
+      const id = action.id;
+      if (action.automatableRecurring === true &&
+          Object.prototype.hasOwnProperty.call(storedRecurringDeeds, id) &&
+          storedRecurringDeeds[id] === true) G.auto.recurringDeeds[id] = true;
+    }
+  }
   if (typeof G.auto.researchMode !== 'string') G.auto.researchMode = 'cheapest';
   G.auto.hostResupply = G.auto.hostResupply !== false;
   G.auto.buySupplies = G.auto.buySupplies !== false;
@@ -5027,11 +5086,11 @@ FB.CHANGELOG = [
     const schoolingAnnual = FB.schoolingYear ? FB.schoolingYear(s) : null;
     if (schoolingAnnual === false) return;
 
-    // managed descendants: schooling, then coming of age
+    // resident family dependents: schooling, then coming of age
     educationTick(s);
     FB.livelihoodYearly(s);
     for (const c of FB.householdMembers(s)) {
-      if (FB.playerDescendantKind(s, c.id) && FB.ageOf(c, year) === 16) {
+      if (FB.isHouseholdDependent(s, c.id) && FB.ageOf(c, year) === 16) {
         if (c.edu && c.edu.focus) {
           FB.gainSkill(c, c.edu.focus, 2);
           if (c.edu.focus === 'lea') FB.addTrait(c, 'literate');
@@ -5145,14 +5204,14 @@ FB.CHANGELOG = [
       }
       const a = FB.ageOf(c, year);
       let cq = (a < 5 ? 0.03 : a < 16 ? 0.006 : a < 50 ? 0.008 : a < 65 ? 0.03 : a < 80 ? 0.1 : 0.25) * mortScale;
-      const descendantKind = a < 16
-        ? FB.playerDescendantKind(s, c.id) : null;
-      const householdCharacter = descendantKind || medicalProtection || marketMortality
+      const dependent = a < 16 && (FB.playerDescendantKind(s, c.id) ||
+        FB.isInheritedHouseholdMember(s, c.id, familyLinks));
+      const householdCharacter = dependent || medicalProtection || marketMortality
         ? FB.isHouseholdCharacter(s, c.id, familyLinks) : false;
-      /* the house's resident descendants share its table: each station above serf means
+      /* the house's resident dependents share its table: each station above serf means
          better food and water — slightly fewer child deaths and slightly
          hardier children (rulers and rich merchants alike) */
-      if (descendantKind && householdCharacter) {
+      if (dependent && householdCharacter) {
         cq *= 1 - station * (FBDATA.balance.richChildMortalityBonus || 0);
         if (c.health < 8 && FB.chance(station * (FBDATA.balance.richChildHealthChance || 0))) c.health++;
       }
@@ -5400,6 +5459,7 @@ FB.CHANGELOG = [
            wedding does through FB.doKinWedding. */
         if (FB.unassignEnterpriseWorker) FB.unassignEnterpriseWorker(s, k.id);
         if (FB.clearLoadout) FB.clearLoadout(s, k.id);
+        if (FB.releaseInheritedHouseholdMember) FB.releaseInheritedHouseholdMember(s, k.id);
         k.spouseId = sp.id; sp.spouseId = k.id;
         FB.sealMarriageLineage(s, k, sp, FB.preferredMarriageLineage(s, k, sp));
         FB.touchFamily();
@@ -5526,6 +5586,10 @@ FB.CHANGELOG = [
           }
         }
         FB.touchFamily();
+        if (FB.isInheritedHouseholdMember(s, mother.id) ||
+            (father && FB.isInheritedHouseholdMember(s, father.id))) {
+          s.player.inheritedHouseholdIds.push(baby.id);
+        }
         if (FB.registerRoyalBirth) FB.registerRoyalBirth(s, baby, father, mother);
         FB.queueLifecycleEvents(s, 'household_birth', { childId:baby.id });
         if (FB.ui && FB.ui.maybeTip) {
@@ -5990,6 +6054,8 @@ FB.CHANGELOG = [
       }
       return false;
     }
+    /* Capture residents before worker, loadout, and match cleanup sees the heir. */
+    if (FB.inheritHousehold) FB.inheritHousehold(s, old, heir.id);
     /* Complete the old-save property migration before taking the inheritance
        snapshot, so former business holdings remain enterprises rather than
        being restored in both catalogues after the transition. */

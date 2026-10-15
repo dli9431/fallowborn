@@ -382,6 +382,17 @@ window.FB = window.FB || {};
     if (personal) {
       status.ready = true;
       status.mode = 'personal';
+      /* Familiarity opens an audience, but a serf's warm contact with a
+         reigning ruler does not erase the distance between their stations. */
+      if (status.playerStation === 0 && info.realmId && rawSteps) {
+        status.standingMultiplier = Math.pow(standingStep, rawSteps);
+        status.cashMultiplier = Math.pow(cashStep, rawSteps);
+        status.description = FB.T(
+          'Personal access is established; class distance leaves influence at {percent}% of its usual strength.', {
+            percent:Math.round(status.standingMultiplier * 100)
+          });
+        return status;
+      }
       status.description = FB.T(
         'An established personal relationship grants direct access.');
       return status;
@@ -654,7 +665,7 @@ window.FB = window.FB || {};
       state.player.courtingId === c.id);
     return courting
       ? FB.courtshipStandingThreshold(state, c)
-      : FB.relationshipOpinionThreshold();
+      : FB.friendshipStandingThreshold(state, c);
   };
 
   FB.socialAttentionDaysToThreshold = function (state, c, courtship) {
@@ -863,15 +874,22 @@ window.FB = window.FB || {};
     return true;
   };
 
+  FB.friendshipStandingThreshold = function (state, c) {
+    const ordinary = FB.relationshipOpinionThreshold();
+    return c && FB.playerStation(state) === 0 &&
+      FB.realmIdForRulerCharacter(state, c)
+      ? Math.max(ordinary, FBDATA.balance.serfRulerFriendshipThreshold || 80)
+      : ordinary;
+  };
+
   FB.friendCandidate = function (state, anyWarmContact) {
-    const threshold = anyWarmContact ? 0 :
-      FB.relationshipOpinionThreshold();
     const contacts = FB.friendContacts(state);
     const out = [];
     for (const id in contacts) {
       const c = state.chars[id];
       if (friendEligible(state, c) &&
-          characterStanding(state, c) >= threshold) out.push(c);
+          characterStanding(state, c) >= (anyWarmContact ? 0 :
+            FB.friendshipStandingThreshold(state, c))) out.push(c);
     }
     out.sort(function (a, b) {
       const ad = contacts[a.id], bd = contacts[b.id];
@@ -887,7 +905,7 @@ window.FB = window.FB || {};
   };
 
   FB.friendshipStatus = function (state, c) {
-    const threshold = FB.relationshipOpinionThreshold();
+    const threshold = FB.friendshipStandingThreshold(state, c);
     const contacts = state.player.friendContacts;
     const known = !!(contacts && typeof contacts === 'object' &&
       !Array.isArray(contacts) && c && contacts[c.id]);
@@ -957,7 +975,7 @@ window.FB = window.FB || {};
   FB.attentionFriendCandidate = function (state) {
     const known = FB.socialAttentionTarget(state);
     if (!known || !friendEligible(state, known) ||
-      characterStanding(state, known) < FB.relationshipOpinionThreshold()) return null;
+      characterStanding(state, known) < FB.friendshipStandingThreshold(state, known)) return null;
     return known;
   };
 
@@ -1634,8 +1652,13 @@ window.FB = window.FB || {};
       FB.characterResidence(state, c) === homeId);
   }
 
+  function eventLowbornCharacter(state, c) {
+    return !!(c && !c.dead && FB.stationOf(c) < 2 &&
+      !FB.realmIdForRulerCharacter(state, c));
+  }
+
   function participantSelectorEligible(state, c, source, homeId) {
-    if (!c || c.dead || c.id === state.player.charId ||
+    if (!eventLowbornCharacter(state, c) || c.id === state.player.charId ||
         FB.ageOf(c, state.date.year) < 16 ||
         !participantResident(state, c, homeId)) return false;
     const roles = state.roles || {};
@@ -3865,6 +3888,10 @@ window.FB = window.FB || {};
       FB.removeFamilyOffice(state, k.id);
     }
     if (k.id !== p.charId && FB.clearLoadout) FB.clearLoadout(state, k.id);
+    if (k.id !== p.charId && FB.releaseInheritedHouseholdMember) {
+      FB.releaseInheritedHouseholdMember(state, k.id);
+      FB.releaseInheritedHouseholdMember(state, sp.id);
+    }
     k.betrothedId = null; sp.betrothedId = null;
     k.spouseId = sp.id; sp.spouseId = k.id;
     sp.role = 'kinspouse';
@@ -11349,6 +11376,9 @@ window.FB = window.FB || {};
     });
     if (record.type === 'worldNews') return FB.T('World news follows');
     if (record.type === 'system') {
+      if (record.system === 'householdService' && record.action === 'refer') {
+        return FB.T('Officer decides; Standing and Popular support unchanged');
+      }
       if (record.system === 'tournament') {
         if (record.field === 'fatigue') return FB.T('Games fatigue {change}',{change:numberText(amount)});
         if (record.field === 'preparation') return FB.T('Games preparation {change}',{change:numberText(amount)});
@@ -11957,7 +11987,8 @@ window.FB = window.FB || {};
     if (fx.adoptChild) {
       const baby = FB.makeCharacter(state, {
         culture: me.culture, religion: me.religion, born: state.date.year,
-        traitsN: 0, fatherId: null, motherId: null, dyn: me.dyn
+        traitsN: 0, fatherId: null, motherId: null, dyn: me.dyn,
+        station:FB.stationOf(me), unfree:FB.isUnfreeCharacter(state, me)
       });
       me.childrenIds.push(baby.id);
       FB.touchFamily();
@@ -12431,6 +12462,8 @@ window.FB = window.FB || {};
             (option.effects.custom === 'freedom_accept_offer' ||
              option.effects.custom === 'rank_elevation_claim' ||
              option.effects.custom === 'military_settlement_grant') &&
+            !optionStatus.ready) ||
+          (option.require && option.require.custom === 'friend_local_lowborn_valid' &&
             !optionStatus.ready)) return false;
     }
 
@@ -12953,6 +12986,35 @@ window.FB = window.FB || {};
   };
   FB.fns.formalize_attention_friend = function (state) {
     return !!FB.formalizeAttentionFriend(state);
+  };
+  FB.fns.friend_vouch_valid = function (state, ctx) {
+    const friend = ctx && ctx.participants
+      ? FB.eventParticipant(state, ctx, 'friend')
+      : FB.getRole(state, 'friend', false);
+    if (!eventLowbornCharacter(state, friend)) return false;
+    const pid = ctx && ctx.locationId || state.player.provinceId;
+    const holder = FB.settlementCountyHolder(state, pid);
+    const ruler = FB.realmIdForRulerCharacter(state, friend);
+    if (ruler && FB.liegeChain(state, holder).indexOf(ruler) >= 0) return false;
+    const countyRuler = holder === 'player' ? state.player.charId :
+      (holder && FB.realmRulerCharacterSnapshot(state, holder) || {}).id;
+    if (countyRuler === friend.id) return false;
+    const slot = state.player.homeSettlement;
+    const barony = typeof slot === 'number' && FB.settlementLordship(state, pid, slot);
+    return !barony || barony.holderId !== friend.id;
+  };
+  FB.fns.friend_lowborn_valid = function (state, ctx) {
+    const friend = ctx && ctx.participants
+      ? FB.eventParticipant(state, ctx, 'friend')
+      : FB.getRole(state, 'friend', false);
+    return eventLowbornCharacter(state, friend);
+  };
+  FB.fns.friend_local_lowborn_valid = function (state, ctx) {
+    const friend = ctx && ctx.participants
+      ? FB.eventParticipant(state, ctx, 'friend')
+      : FB.getRole(state, 'friend', false);
+    return eventLowbornCharacter(state, friend) &&
+      participantResident(state, friend, participantHome(state, ctx));
   };
   FB.fns.friendship_kindled_ready = function (state) {
     const c = FB.attentionFriendCandidate(state);

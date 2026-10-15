@@ -156,6 +156,13 @@ Time passes **day by day** (90-day seasons, 360-day years).
    its existing control, or select the ledger title to collapse it.
 2. Act on **deeds** when the moment is right — one-shot acts like desperate measures, scheming, proposing
    marriage, or petitioning your lord. Each spends the day; many need time before repeating.
+   **Settings → Deeds → Scroll to ready recurring deeds** can bring a newly available
+   recurring deed into view, switch to Deeds, mark its card and pause time from any tab.
+   Use Play to continue. **⚙ Automation →
+   Automatic recurring deeds** lets you check immediate deeds to repeat while days flow.
+   Each automatic use replaces that day's focus and keeps its usual costs, risks and
+   cooldown. Deeds that open choices remain manual. Both settings default off and are
+   remembered on this browser.
    Households can open **🏠 Better the household…** without spending a day. Five living
    standards and profession-specific work outfits rise through purchased levels with
    seasonal upkeep; the sheet previews the next season before every upgrade. Better food
@@ -290,7 +297,14 @@ Time passes **day by day** (90-day seasons, 360-day years).
    passes to each succeeding household head.
    Established households can hire a limited number of paid retainers as stewards, factors,
    captains, or tutors. Their seasonal contracts pass to an heir, but their personal loyalties
-   may not. The same tab shows every source and modifier behind the current levy instead of
+   may not. To fire a paid retainer, open their character sheet, choose **Manage household
+   service…**, then **Dismiss from household service…** and confirm. Dismissal is immediate,
+   spends no day, and lowers their Standing by 15. For an unpaid family holder, choose
+   **Assign a household office… → Relieve them of [office]**; this spends one day.
+   Each office has one holder, shared between paid retainers and unpaid family. Married
+   children and grandchildren leave the managed household and cannot take an unpaid office;
+   their **Review household offices…** screen explains all current blockers.
+   The same tab shows every source and modifier behind the current levy instead of
    storing a separate army total.
 5. Watch the *Kin* tab fill in: parents, siblings, uncles and aunts, cousins, grandchildren.
    The **🌳 See the family tree** button at the top of that tab draws the whole house as a

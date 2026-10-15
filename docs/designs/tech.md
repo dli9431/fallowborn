@@ -207,8 +207,15 @@ permanent exposure:
   multiply the resulting cost by 0.65
 ```
 
-The main catalogue groups entries by domain and leaves dates off the scanning view. Each
-detail sheet displays the attestation and regional-adoption windows alongside the
+The main catalogue groups entries by domain and leaves dates off the scanning view.
+Each technology's data icon supplies the catalogue, active-project strip, detail title, and
+Guide. Coinage, mint assay, tax assessment, scutage, stone sawing, iron-tired carts,
+anatomy texts, siege engineering, trebuchets, vegetable tanning, and legume rotation
+use older money, tool, gear, book, artillery, ox, and plant symbols in place of
+newer emoji that can render as missing-glyph boxes
+on older system fonts. This is presentation only, with no technology-impact entry.
+
+Each detail sheet displays the attestation and regional-adoption windows alongside the
 effective research cost, exposure discount, and remaining progress. The historical and
 exposure multipliers remain engine inputs rather than UI arithmetic. A far-ahead project
 is therefore possible but expensive. Eligible and active projects also estimate completion
@@ -286,12 +293,20 @@ AI selection and vassal advocacy do not consult the player household preference.
 technology remains visible and manually selectable, and an explicit manual start clears its
 protection before the project is added to a slot.
 
-Dedicated technology UI follows `FB.techUiRelevant`: only tier-3+ landed rulers
-receive the catalogue, Land rating, Guide catalogue, commitment row, contextual
-detail links, or direct modal routes. When opened from a contextual requirement or tooltip
+Dedicated technology UI follows `FB.techUiRelevant`: Freeholders, Gentry, and landed rulers
+receive the catalogue, Land rating, Guide catalogue, contextual
+detail links, and direct modal routes. Freeholders and Gentry may read their sovereign
+nation's projects, completed knowledge, effects, and requirements; they receive no
+research, advocacy, or research-automation controls. Serfs do not receive these routes.
+The Ongoing commitments research row appears only for independent rulers who control
+their national projects and policy. Common households and vassals retain their other
+technology routes, including existing vassal advocacy, without this commitment row.
+This is presentation of existing national knowledge, with no gameplay eligibility
+or research change, so the technology-impact ledger's presentation exemption applies.
+When opened from a contextual requirement or tooltip
 (such as a settlement fort upgrade requirement), `UI.showTechDetail` preserves the caller's
 return context so that the **Back** button and project completion return directly to the
-originating modal rather than falling back to the national technology catalogue. Common households
+originating modal rather than falling back to the national technology catalogue. All households
 still receive the exact technology name in a locked household requirement, since national knowledge
 continues to govern careers, education, standards, and enterprises even though the
 household has no research authority.

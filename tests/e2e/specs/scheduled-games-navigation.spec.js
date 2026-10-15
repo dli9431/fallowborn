@@ -136,6 +136,41 @@ test('funding replaces the hosting form with the announced edition',async functi
   expect(await page.evaluate(()=>FB.tournaments.active(FB.state).length)).toBe(1);
 });
 
+async function hostFormBoxes(page){
+  return page.evaluate(function(){
+    function box(sel){var r=document.querySelector(sel).getBoundingClientRect();return {top:r.top,bottom:r.bottom,left:r.left,width:r.width,height:r.height};}
+    var body=document.getElementById('gm-body');
+    return {venue:box('#games-venue'),venueLabel:box('#games-venue').top>box('.games-field > span').bottom-1,
+      scale:box('#games-scales'),annual:box('.games-host-annual'),review:box('#games-review'),
+      overflow:body.scrollWidth-body.clientWidth};
+  });
+}
+
+test('the hosting form stacks labels above fields and pairs them only on roomy sheets',async function({page},info){
+  await page.setViewportSize({width:1280,height:800});
+  await startGames(page,info);
+  await page.evaluate(function(){FB.ui.showHostGames();});
+  await expect(page.getByLabel('Venue')).toBeVisible();
+  await expect(page.getByLabel('Repeat annually, subject to renewal')).not.toBeChecked();
+  let b=await hostFormBoxes(page);
+  expect(b.venueLabel).toBe(true);
+  expect(Math.abs(b.venue.top-b.scale.top)).toBeLessThanOrEqual(1);
+  expect(b.scale.left).toBeGreaterThan(b.venue.left);
+  expect(b.annual.height).toBeGreaterThanOrEqual(44);
+  expect(b.annual.width).toBeGreaterThan(b.venue.width*1.5);
+  expect(b.overflow).toBeLessThanOrEqual(0);
+  await page.setViewportSize({width:390,height:844});
+  await page.evaluate(function(){FB.ui.showHostGames(null,null,null,null);});
+  b=await hostFormBoxes(page);
+  expect(b.scale.top).toBeGreaterThan(b.venue.bottom);
+  expect(Math.abs(b.venue.width-b.review.width)).toBeLessThanOrEqual(1);
+  expect(b.venue.height).toBeGreaterThanOrEqual(44);
+  expect(b.overflow).toBeLessThanOrEqual(0);
+  await page.getByText('Repeat annually, subject to renewal').click();
+  await expect(page.locator('#games-annual')).toBeChecked();
+  await expect(page.getByLabel('Annual spending ceiling')).toBeVisible();
+});
+
 test('stopping annual recurrence requires confirmation and refreshes the calendar',async function({page},info){
   await runningEntry(page,info,null,true);
   await page.evaluate(function(){FB.ui.showGames('bookings');});

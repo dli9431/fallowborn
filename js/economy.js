@@ -1549,6 +1549,120 @@ window.FB = window.FB || {};
     return true;
   };
 
+  /* Succession changes the playable head, not the resident family's home.
+     Courtesy station and royal ancestry do not establish a separate household.
+     Never call characterResidence here: its household lookup calls us back. */
+  function inheritedFamilyEligible(state, c, familyLinks, keepTemporaryAbsence) {
+    if (!c || c.dead || c.id === state.player.charId) return false;
+    const exile = state.justice && state.justice.exiles && state.justice.exiles[c.id];
+    if (!keepTemporaryAbsence && exile && exile.endTurn > state.turn) return false;
+    if (FB.isExternalHouseholdAuthority(state, c)) return false;
+    if (c.homeProvinceId && c.homeProvinceId !== state.player.provinceId) return false;
+    if (c.abbeyVows || (c.career &&
+        FB.professionHasRole(c.career.profession, ['cloister', 'clergy']))) return false;
+    if (!keepTemporaryAbsence && FB.abbeyResidentHouse &&
+        FB.abbeyResidentHouse(state, c.id)) return false;
+    const spouse = c.spouseId && state.chars[c.spouseId];
+    if (spouse && !spouse.dead) return false;
+    const reverse = familyLinks && familyLinks.spouses;
+    const ids = reverse ? (reverse[c.id] || []) : FB.spouseLinksTo(state, c.id);
+    for (const id of ids) {
+      const other = state.chars[id];
+      if (other && !other.dead && other.spouseId === c.id) return false;
+    }
+    return true;
+  }
+
+  FB.isInheritedHouseholdMember = function (state, cid, familyLinks) {
+    return !!(state && state.player && state.chars &&
+      Array.isArray(state.player.inheritedHouseholdIds) &&
+      state.player.inheritedHouseholdIds.indexOf(cid) >= 0 &&
+      inheritedFamilyEligible(state, state.chars[cid], familyLinks));
+  };
+
+  /* Retainers and labor-only collateral kin are not family dependents. */
+  FB.isHouseholdDependent = function (state, cid, familyLinks) {
+    return !!(state && state.player && cid !== state.player.charId &&
+      (FB.playerDescendantKind(state, cid) ||
+        FB.isInheritedHouseholdMember(state, cid, familyLinks)) &&
+      FB.isHouseholdCharacter(state, cid, familyLinks));
+  };
+
+  function preserveHouseholdTutor(c, former) {
+    if (!c || !c.edu || c.edu.tutorId !== 'self') return;
+    c.edu.tutorId = former.dead ? null : former.id;
+    const policy = c.edu.policy;
+    if (policy && policy.instructionChoice === 'tutor:self' && !former.dead) {
+      policy.instructionChoice = 'tutor:' + former.id;
+    }
+  }
+
+  /* Additive format-3 repair. Only recorded former heads supply candidates;
+     dynasty membership alone never recruits an unrelated or independent kin.
+     A present empty roster is authoritative, so departed kin cannot rejoin on load. */
+  FB.ensureInheritedHousehold = function (state) {
+    const p = state.player;
+    const legacy = !Array.isArray(p.inheritedHouseholdIds);
+    const source = legacy ? [] : p.inheritedHouseholdIds.slice();
+    const links = { spouses:FB.spouseLinksSnapshot(state) };
+    if (legacy) {
+      for (const legend of (state.legends || [])) {
+        const former = legend && state.chars[legend.id];
+        if (!former || former.id === p.charId) continue;
+        const candidates = FB.spousesSnapshot(state, former);
+        for (const child of FB.childrenOf(state, former)) {
+          candidates.push(child);
+          for (const grandchild of FB.childrenOf(state, child)) candidates.push(grandchild);
+        }
+        for (const c of candidates) {
+          if (!inheritedFamilyEligible(state, c, links, true)) continue;
+          if (source.indexOf(c.id) < 0) source.push(c.id);
+          /* These relatives had no management route after the legacy handover;
+             their saved self tutor still denotes that recorded predecessor. */
+          if (!FB.playerDescendantKind(state, c.id)) preserveHouseholdTutor(c, former);
+        }
+      }
+    }
+    const clean = [], seen = {};
+    for (const id of source) {
+      if (typeof id !== 'string' || seen[id] ||
+          !inheritedFamilyEligible(state, state.chars[id], links, true)) continue;
+      seen[id] = 1;
+      /* An explicit home at the inherited seat is now the household home;
+         retain only later independent residence overrides. */
+      if (state.chars[id].homeProvinceId === p.provinceId) {
+        delete state.chars[id].homeProvinceId;
+      }
+      clean.push(id);
+    }
+    p.inheritedHouseholdIds = clean;
+    return clean;
+  };
+
+  FB.inheritHousehold = function (state, former, heirId) {
+    FB.ensureInheritedHousehold(state);
+    const ids = [];
+    const links = { spouses:FB.spouseLinksSnapshot(state) };
+    for (const c of FB.householdMembers(state)) {
+      preserveHouseholdTutor(c, former);
+      if (c.id !== heirId && inheritedFamilyEligible(state, c, links, true)) ids.push(c.id);
+    }
+    /* A temporary exile or abbey stay does not sever an existing dependency. */
+    for (const id of state.player.inheritedHouseholdIds) {
+      if (id !== heirId && ids.indexOf(id) < 0 &&
+          inheritedFamilyEligible(state, state.chars[id], links, true)) ids.push(id);
+    }
+    state.player.inheritedHouseholdIds = ids;
+    FB.ensureInheritedHousehold(state);
+  };
+
+  FB.releaseInheritedHouseholdMember = function (state, cid) {
+    const ids = state.player.inheritedHouseholdIds;
+    if (Array.isArray(ids)) state.player.inheritedHouseholdIds = ids.filter(function (id) {
+      return id !== cid;
+    });
+  };
+
   FB.householdMembers = function (state) {
     const me = playerChar(state);
     const out = [], seen = {};
@@ -1585,6 +1699,11 @@ window.FB = window.FB || {};
       for (const grandchild of FB.childrenOf(state, child)) {
         if (FB.playerDescendantKind(state, grandchild.id) === 'grandchild' &&
             !married(grandchild)) add(grandchild);
+      }
+    }
+    for (const id of (state.player.inheritedHouseholdIds || [])) {
+      if (FB.isInheritedHouseholdMember(state, id, { spouses:reverseSpouses })) {
+        add(state.chars[id]);
       }
     }
     return out;
@@ -2250,11 +2369,10 @@ window.FB = window.FB || {};
     const age = FB.ageOf(c, state.date.year);
     if (age < 6 || age >= 16) return false;
     if (c.id === state.player.charId) return true;
-    return !!(FB.playerDescendantKind(state, c.id) &&
-      !FB.spousesOf(state, c).length);
+    return FB.isHouseholdDependent(state, c.id);
   };
 
-  /* A minor player and each resident unmarried child or grandchild may
+  /* A minor player and each resident family dependent aged 6-15 may
      receive instruction. The focus is the subject; edu.school names a paid
      institution, while tutorId keeps the existing named teacher. */
   FB.educationStudents = function (state) {
@@ -2432,7 +2550,8 @@ window.FB = window.FB || {};
     const me = state.chars[state.player.charId];
     function add(id, source, first) {
       const tutor = id === 'self' ? me : state.chars[id];
-      if (!id || !tutor || tutor.dead || seen[id]) return;
+      if (!id || !tutor || tutor.dead || seen[id] ||
+          FB.ageOf(tutor, state.date.year) < 16) return;
       seen[id] = 1;
       const entry = { id:id, tutor:tutor, source:source };
       if (first) out.unshift(entry);
@@ -2452,6 +2571,9 @@ window.FB = window.FB || {};
     } else {
       add('self', 'self');
       for (const spouse of FB.spousesOf(state, me)) add(spouse.id, 'spouse');
+    }
+    for (const id of (state.player.inheritedHouseholdIds || [])) {
+      if (FB.isInheritedHouseholdMember(state, id)) add(id, 'household_family');
     }
     for (const role of ['priest', 'friend', 'lord']) {
       if (role === 'lord' && !FB.socialStation.isGentle(FB.playerStation(state), state)) continue;
@@ -3112,7 +3234,7 @@ window.FB = window.FB || {};
       const snapshot = annual.snapshots[i];
       if (!snapshot.c || snapshot.c.dead || snapshot.c.id === state.player.charId ||
           !household[snapshot.c.id] ||
-          !FB.playerDescendantKind(state, snapshot.c.id) ||
+          !FB.isHouseholdDependent(state, snapshot.c.id) ||
           FB.spousesOf(state, snapshot.c).length) continue;
       const student = studentEntry(snapshot.c);
       for (let j = 0; j < snapshot.focuses.length; j++) {
@@ -8022,6 +8144,23 @@ window.FB = window.FB || {};
     return Object.prototype.hasOwnProperty.call(FBDATA.householdServiceRoles, id)
       ? FBDATA.householdServiceRoles[id] : null;
   }
+  /* Working days after which service teaches a literacy trait: the role's own
+     declared teachesTrait when it confers literacy, otherwise the shortest such
+     declaration among household service roles. */
+  function literacyTeachingDays(def) {
+    const taught = def && def.teachesTrait;
+    return taught && FB.traitMechanic({ traits:[taught.id] }, 'literacy') ? taught.days : 0;
+  }
+  function householdLetteredDays(roleId) {
+    const own = literacyTeachingDays(serviceDef(roleId));
+    if (own) return own;
+    let days = 0;
+    Object.keys(FBDATA.householdServiceRoles).forEach(function (id) {
+      const teaching = literacyTeachingDays(FBDATA.householdServiceRoles[id]);
+      if (teaching && (!days || teaching < days)) days = teaching;
+    });
+    return days;
+  }
   FB.validateHouseholdServiceRoles = function (table) {
     const errors = [], own = function (o, k) { return !!o && Object.prototype.hasOwnProperty.call(o, k); };
     function object(o) { return !!o && typeof o === 'object' && !Array.isArray(o); }
@@ -8090,6 +8229,17 @@ window.FB = window.FB || {};
   FB.householdServiceRecord = function (state) {
     const r = state && state.player && state.player.householdService;
     return r && r.v === 1 && r.charId === state.player.charId && serviceDef(r.roleId) ? r : null;
+  };
+  FB.householdServiceProgress = function (state, roleId) {
+    const r = FB.householdServiceRecord(state);
+    const c = state.chars[state.player.charId];
+    return {
+      roleDays:r && r.experience && r.experience[roleId || r.roleId] || 0,
+      totalDays:r && r.workedDays || 0,
+      learnedDays:r && r.learnedDays || 0,
+      letteredDaysRequired:householdLetteredDays(r && r.roleId),
+      lettered:!!(c && FB.traitMechanic(c, 'literacy'))
+    };
   };
   FB.householdServiceName = function (state, roleId) {
     const def = serviceDef(roleId);
@@ -8164,7 +8314,7 @@ window.FB = window.FB || {};
     else {
       if (r && r.status === 'active' && r.roleId === roleId && matching) out.missing.push(FB.T('You already hold this appointment.'));
       if (def.maleOnly && c && c.sex !== 'm') out.missing.push(FB.T('This household guard appointment is available to men.'));
-      if (def.lettered && c && !FB.traitMechanic(c, 'literacy')) out.missing.push(FB.T('Requires Lettered. Tally assistance teaches letters after 720 working days.'));
+      if (def.lettered && c && !FB.traitMechanic(c, 'literacy')) out.missing.push(FB.T('Requires Lettered. Tally assistance teaches letters after {days} working days.', {days:householdLetteredDays()}));
       for (const check of out.qualification.skills) {
         if (!check.met) {
           const names = {ste:FB.T('Stewardship'),lea:FB.T('Learning'),mar:FB.T('Martial'),dip:FB.T('Diplomacy')};
@@ -8367,6 +8517,7 @@ window.FB = window.FB || {};
         : FB.countyPopularSupport(state, state.player.provinceId);
     }
     function impacts(state, ctx, amount) {
+      if (choice === 'routine') return [{type:'system',system:'householdService',action:'refer'}];
       amount = amount === undefined ? 3 : amount;
       if (!amount) return [];
       if (choice === 'careful') return [{type:'standing',targetKind:'character',targetId:ctx.serviceEmployerId,amount:amount,reward:amount > 0}];

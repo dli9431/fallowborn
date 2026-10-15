@@ -1,5 +1,37 @@
 # Time, focuses & automation
 
+## Recurring deed preferences
+
+Settings can opt into scrolling to and highlighting a recurring deed when it
+becomes available, pausing time when the notice is revealed. Use Play to resume;
+the same notice does not pause again. Notifications switch from any tab to Deeds
+and close the Self/Kin drawer, then open the owning section in either grouping.
+Visible keyboard focus stays in place; a control hidden by the switch hands focus
+to the revealed deed. Notifications wait through dialogs and fast-forward bursts.
+A card remains marked until used or unavailable; repeated
+refreshes do not scroll again. A fresh campaign, loaded state or successor starts
+a fresh readiness baseline rather than replaying old notifications. The pause
+uses `setPaused(true, {liveTick:true})` so its UI refresh retains mounted controls.
+
+Automation offers independent, initially unchecked selections for immediate
+recurring deeds: rival schemes, alms, mediation, squeezing taxes, mercenaries and
+extraordinary vassal taxes. The checklist shows only deeds relevant to the current
+character's role, age and situation. Cooldowns and resource shortages do not hide
+otherwise relevant deeds, and hidden selections survive role changes. Costs and
+risks remain visible in Details. Deeds that
+open choices are excluded, including immediate handlers that queue a decision.
+Consequences such as a revolt after extraordinary taxes retain normal event flow.
+At most one selected eligible deed runs at the start of a flowing day, in catalogue
+order, replacing Daily Focus for that day. Its existing handler, cooldown and
+completion credit apply once, without a nested daily tick. Manual deed days,
+Observe, travel, captivity and open dialogs cannot trigger automatic deeds.
+All ordinary eligibility is rechecked; insufficient resources leave the selection
+enabled for later. Both preferences live on this browser, outside campaign saves.
+
+Technology impact: `recurring_deed_automation` is `none`: selecting repeat uses of
+existing deeds has no credible research dependency. Each deed retains its own
+technology and other requirements. Readiness highlighting is presentation only.
+
 Household service reuses `toil` with an appointment-specific label, income and
 training; it adds no focus slot. Accepting, renewing or leaving an appointment
 spends one day with `skipFocus:true`. Read-only offers and canceled reviews spend
@@ -13,7 +45,10 @@ without consuming the seasonal story slot or excusing cash/extraordinary dues.
 Canceling the Go into town settlement picker clears its provisional cooldown
 through the shared modal dismissal callback, including Close, Escape and browser
 Back. It spends no day and grants no tutorial deed credit. Selecting a settlement
-keeps the cooldown and spends the confirmed visit day.
+opens a dismissible activity review; only choosing an activity keeps the cooldown
+and spends the visit day. Back restores the settlement picker without completing
+the deed. The committed option travels with the ordinary queued visit and resolves
+once after the daily pass, retaining event ordering and final eligibility checks.
 
 Serf daily focuses use plain activity names: Work the fields (with regional
 alternatives), Practice with the levy, and Manage the household. Their shared

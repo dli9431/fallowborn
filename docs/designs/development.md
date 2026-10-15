@@ -227,6 +227,14 @@ The settlement-scoped `walls` id is the county's one strategic fortification rat
 an ordinary repeatable building. It is deliberately absent from Raise Next and autobuild:
 the player opens an exact settlement sheet and raises the next tier there. The four
 sequential tiers are Ringwork, Towered Stronghold, Stone Castle, and Concentric Fortress.
+The fort card keeps its next tier, quote, duration, requirements and action visible;
+siege calculations remain in Details. Every fort action carries the exact county and
+settlement, and tooltip delegation handles only tooltip copies, so an inline action
+cannot also trigger a capital fallback. Other settlements in a directly held county
+link to the fort's physical site, including the county seat of legacy saves and ruins.
+Fort reviews name the settlement and county and return to that site with its scroll,
+expanded details and focus retained.
+This is a navigation and presentation fix; the existing technology gates are unchanged.
 They cost 120/220/400/750 gold up front, take 2/3/5/8 seasons, cost 2/4/8/14 gold each
 season after completion, retain 40/80/140/220 men from the field levy, award
 10/25/60/150 prestige once, and grant 5%/10%/15%/20% defense in that county.
@@ -309,13 +317,20 @@ on the first fully staffed seasonal boundary after that level is built, and is r
 by the enterprise instance rather than recalculated from the definition.
 
 A tier-3+ ruler can demolish a settlement building in the demesne without a refund.
-Demolition is permanent: the entry gains `ruined:true`, loses every ongoing bonus and
-upkeep charge, and continues to occupy that settlement slot. New construction records the
+Demolition leaves repairable ruins: the entry gains ruined:true, loses every ongoing bonus and upkeep charge, and continues to occupy that settlement slot. New construction records the
 exact applied `dev` amount as
 `devGranted`, including zero when the county was already at its ceiling. Demolition reverses
 only that recorded development. After the bounded legacy repair below, any building record
 still missing the additive field is grandfathered at zero rather than inventing a loss.
 One-time Popular support and prestige are not reversed.
+
+Settlement ruin repair
+
+The directly controlling Baron-or-higher player can repair an ordinary building from its settlement card. County forts require direct county authority. Repair reuses the ruined record, costs half the current replacement quote (excluding that record from the repeat-copy exponent), rechecks authority, funds and standing-copy limits, and does not repeat construction prestige or Popular support. Existing building and fort-tier technology is grandfathered for repair; recovery does not unlock a new asset or tier. Technology review settlement_ruin_repair is none because this is restoration of an existing asset.
+
+Ordinary repairs restore benefits and upkeep immediately. New demolition records devRemoved as the actual development removed and clears devGranted; repair restores only that recorded loss under the live county ceiling and retains the actual restored amount as devGranted. Raid ruins do not replay their already credited development. Older ruins without devRemoved restore their ongoing effects without inventing a development grant. Ruins remain occupied while unrepaired, but no longer permanently prevent restoration.
+
+Fort demolition retains its completed tier in ruinedLevel. Paid repairs take that tier's normal construction duration, with level zero and no defenses until completion. repairing marks the saved project so completion never repeats its prestige award. A previously ruined record with no retained tier restores its remaining positive level, or Ringwork if no tier survives. Repairs cannot start in a contested county or coexist with another active county fort. Succession, conquest and save/restore retain funded repairs and their target tier. Starting an unrelated new fort still follows ordinary sequential technology gates.
 
 Related: [tech.md](tech.md) for the development cap (`FB.devCap`), [war.md](war.md) for
 fort movement, battles, and sieges.

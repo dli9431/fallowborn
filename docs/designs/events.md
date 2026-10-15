@@ -4,6 +4,29 @@ Community-share triggers use kind culture or faith. The wider 476 Antioch relief
 
 Liege peace-demand choices have campaign-bound preview and receipt adapters. Comply previews white peace for the demanded war and reports its completion; Refuse previews continued war and possible peace enforcement, then reports the refusal. Stale contexts have no preview, and reading the consequences does not change state or RNG. The goldCounterparty effect key is transfer metadata for the existing gold consequence.
 
+`adoptChild` gives the foundling the protagonist's recorded station and bondage
+status alongside their dynasty, culture, and faith. Its family link remains only
+in the adopter's `childrenIds`; it never invents biological parents. See
+[characters](characters.md) and [state and saves](state-and-saves.md).
+
+Friend stories check the friend's own station independently of the player's tier.
+A Friend in Need, Standing Surety, and the enlisted-companion death story require
+a living Lowborn or Freeholder friend and exclude every reigning ruler, including
+foreign rulers and records whose personal station has not caught up with their title.
+Standing Surety retains its additional local-authority exclusions. These stories
+bind an exact required friend and recheck eligibility before display or resolution;
+promotion or replacement expires the old decision without rewards, deaths, or RNG.
+The Oath Remembered and A Friend's Warning remain suitable at every station and
+also bind the original friend, so aid never redirects to a replacement.
+
+The swarm's optional shared-work choice requires a local Lowborn or Freeholder
+friend. Its other choices remain available without a suitable friend; manual and
+automated resolution reject stale requests for help. Local neighbor and witness
+selectors also exclude Gentry, nobles, royalty, and reigning rulers before choosing
+from friends, rivals, contacts, or kin. Flight assistance keeps its existing local
+friend/rival rules: a higher-status friend can credibly help someone escape.
+These casting corrections add no capability or technology dependency.
+
 `household_service_duty` is explicitly queued after each 180 completed working
 days. Its localized forms follow the service path; exact saved protagonist,
 employer, appointment serial and case number guard all outcomes. A temporarily
@@ -26,6 +49,14 @@ Event choices use QWE/ASD/ZXC, then Shift with the same letters, for their
 action shortcuts. Digits are reserved for UI sections. Details remain ordinary
 Tab stops. Input guards cover these letter keys across choices and outcomes.
 
+The Go into town activity review is a dismissible generic modal before the
+outing is committed. Its queued visit context may carry `outingOption`, the
+authored option index selected by the player. The event presenter consumes this
+index once, rechecks eligibility and uses the normal manual resolver after the
+day's simulation. Autoresolve does not substitute another choice. If that option
+became unavailable, the ordinary required visit event asks for a valid choice.
+This navigation fix changes no activity eligibility or technology dependency.
+
 In explicitly flagged CrazyGames builds, choosing an option in `meet_suitor`
 belongs to the opening marriage search and does not mark `tut_event`. A separate
 event choice completes that First steps requirement, keeping the opening in the
@@ -41,6 +72,11 @@ Optional top-level `desc` holds supporting instructions separately from narrativ
 `text`. The event dialog localizes it through `FB.eventText` and presents it in the
 shared Details tooltip/disclosure. Choice costs and material consequences remain
 with their choices. This is display-only and does not change event resolution.
+
+Household service referral has an explicit neutral consequence in the custom impact
+adapter: the officer decides, with Standing and Popular support unchanged. The
+same semantic record appears in the preview and settled receipt, replacing the
+generic story-progress fallback without changing the once-only case resolution.
 
 Ordinary war choices describe their actual field effect. `war_supply` refills the
 event campaign's main host immediately; `{warProvisions}` quotes its capped gain.

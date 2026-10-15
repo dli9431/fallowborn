@@ -1,5 +1,11 @@
 # Mods
 
+Recurring automation is a private permission on six audited baseline handlers,
+not an inference from a deed's `immediate` flow or a new JSON capability. New mod
+deeds remain manual-only. Effective baseline cooldown and eligibility overrides
+still apply; a zero cooldown removes a deed from the recurring checklist and
+automatic execution. Existing selected ids remain inert when unsupported.
+
 **Mods** (`js/mods.js`) merge JSON from localStorage over `FBDATA` **before** world
 generation — anything reading FBDATA at load time must run after `FB.mods.applyStored()` in
 the boot path. Same-`id` entries replace; new ids are added. A mod's optional cosmetic

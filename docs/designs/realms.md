@@ -446,6 +446,27 @@ designated heir dies, that child's living descendants retain the branch's place 
 the heir's siblings. The Papal States instead carry a one-root `papalElective`
 succession whose order remains empty.
 
+Accession changes the crown and succession order, never a sibling's recorded
+parentage. Court strips show relationships relative to the viewed person, with
+Heir added separately: a sibling successor remains Brother or Sister, including
+on their own sheet. Compact ancestry supplies labels when a dead parent has
+been removed; merely sharing a court or lacking parents proves no blood relation.
+
+An empty line still receives a generated fallback. A ruler in the player's known
+family, or married or pledged into it, receives a parentless court successor rather
+than an invented child or sibling. The same protection applies to the proposed
+parent of a fallback sibling. Recorded children retain priority, including children
+born after accession; if there are none, the fallback still prevents a dead throne.
+Existing generated people in older saves are preserved, without guessing a missing
+biological parent or deleting their place in the line. Other adult rulers may receive
+a child, with at least sixteen years between their births. A minor instead
+receives a sibling through a plausible recorded parent, or a parentless
+collateral when no such parent exists. Generated siblings cannot be born after
+that parent's recorded death. A minor founding ruler's seeded court likewise
+remains collateral. This fixes genealogy, with no new player capability or
+technology-impact review required. Regression coverage lives in
+`tests/e2e/specs/royal-succession-kinship.spec.js`.
+
 **The living court is materialized eagerly; the dead compact back to members.** A realm
 opens on a real face and a full character card rather than a crest and one line, because
 its ruler, adult consort, and displayed heirs are ordinary `state.chars` records from
@@ -469,7 +490,7 @@ delegates to the same order, so equal-age members cannot differ between loading 
 display.
 
 `FB.materializeRealmRuler` creates or reuses the current `succession.rulerMemberId`,
-reparents the existing compact children beneath that member, and attaches one ordinary
+links plausible initial compact children beneath a newly created root, and attaches one ordinary
 character with the ruler’s saved identity, culture, faith, age, effective Martial,
 trait, station, and current political standing. `FB.realmRulerCharacter`,
 `FB.realmIdForRulerCharacter`, and `FB.isReigningRealmRuler` preserve that identity
@@ -482,6 +503,10 @@ the ruler's temporal rank in their own sexed form (for example Duke/Duchess), wh
 count or duke's children use Lord/Lady and royal or imperial children use
 Prince/Princess. These are display-only courtesy styles; they do not alter succession,
 station, or realm rank.
+In the court navigator, relationship labels describe the displayed person's kin
+first. An unrelated consort instead reads **Consort of {ruler}**, and relatives
+without a direct relationship name their kinship to that ruler. Court membership
+never implies that the displayed person is married to the ruler's consort.
 
 **The consort is a succession member with `role: 'consort'`.** One is seeded per
 uncommitted ruler generation, of the opposite sex to the ruler and of a plausible age.
@@ -494,7 +519,10 @@ a consort's `parentId` is legitimately `null`, which is exactly what
 is also as much of the intent as a build without the `role` concept can read. Consorts
 of past generations stay in the tree as dated tombstones and are never read as the
 sitting spouse; `FB.realmConsortMember` resolves the current generation's reservation,
-while `FB.realmConsortCharacter` resolves it only once it is an actual marriage. There
+while `FB.realmConsortCharacter` reads the ruler's actual living primary spouse,
+including an existing player spouse without a compact consort member. Stale reservations
+and former consorts do not replace that marriage. This is a read-only display lookup;
+it creates no court membership or biological links. There
 is no AI remarriage, so a generation whose consort has died simply has none. If an
 invalid generated consort is retired because a real commitment superseded it, its
 ordinary character record remains navigable; any future same-generation replacement
@@ -929,9 +957,9 @@ when a settled county has no resolvable political ruler, so ordinary Land browsi
 neither creates `provChars` nor consumes RNG.
 
 **A count-or-higher protagonist may move the realm seat once per lifetime.**
-`FB.capitalRelocationStatus` accepts only a different county held directly in the
-player's demesne, and blocks a ruler without the required prestige, during personal
-travel, personal war, or active campaign service, or after that character has already
+`FB.capitalRelocationStatus` accepts only a directly held demesne county different
+from the household home, and blocks a ruler without the required prestige, during
+personal travel, personal war, or active campaign service, or after that character has already
 used the choice. `FB.relocatePlayerCapital` revalidates atomically, spends
 `balance.capitalRelocationPrestigeCost`, applies
 `balance.capitalRelocationPopularOpinion`, and applies
@@ -943,6 +971,14 @@ Personal contacts remain intact at their prior residences; only location-scoped 
 and priest roles regenerate at the new household home. Losing the current capital
 instead uses the first surviving directly held county as a free forced fallback, moves
 the household with it, and neither consumes nor resets the lifetime choice.
+
+County investiture preserves the family's old home and barony while establishing
+the realm capital in the granted county. The existing capital remains a valid
+destination when the household lives elsewhere, for any barony/county pair.
+Moving there uses the ordinary costs and capital-relocation lifetime choice;
+the earlier commoner `travelSettlement` choice is separate and does not block it.
+The review and Chronicle describe the household joining its existing capital.
+No ownership, troop entitlement, technology gate or save schema changes.
 
 Realm, ownership, and de jure source data belong to the active start bookmark. The
 867 and 1066 definitions may therefore use different realm ids, liege chains,

@@ -3904,11 +3904,12 @@ window.FB = window.FB || {};
     opts = opts || {};
     const drawn = function () {
       const sex = opts.sex || (FB.chance(0.55) ? 'm' : 'f');
-      const max = Math.max(0, ageMax === undefined ? 28 : ageMax);
+      const min = Math.max(0, opts.ageMin || 0);
+      const max = Math.max(min, ageMax === undefined ? 28 : ageMax);
       return {
         sex:sex,
         name:FB.randomName(realm.ruler.culture, sex, null, state),
-        born:state.date.year - FB.ri(0, max)
+        born:state.date.year - FB.ri(min, max)
       };
     };
     const person = opts.scope ? FB.withSeed(opts.scope, drawn) : drawn();
@@ -4411,6 +4412,7 @@ window.FB = window.FB || {};
       } else if (papalTerritorialIds[rid]) {
         if (seedInitialPapalRuler(state, rid, { bulk:true })) made = true;
       } else {
+        if (!opts.yearly && repairGeneratedRoyalHeirs(state, r)) made = true;
         /* New games and restores retain the full defensive refresh. During an
            ordinary year, mutation paths already refresh the one affected
            house; re-reading every unchanged historical tree here was both
@@ -4698,6 +4700,7 @@ window.FB = window.FB || {};
     }
     for (const childMemberId of (member.childIds || [])) {
       const childMember = succession.members[childMemberId];
+      if (!childMember || childMember.parentId !== member.id) continue;
       const child = childMember && childMember.charId &&
         state.chars[childMember.charId];
       if (!child) continue;
@@ -4869,14 +4872,13 @@ window.FB = window.FB || {};
     return c;
   };
 
-  /* The sitting consort as a character, if one exists and is materialized. */
+  /* Consort is a marriage, not a generated court slot. An heir can bring an
+     existing spouse (including the protagonist) to the throne without adding
+     that spouse to this realm's compact succession members. Read only: old
+     reservations and former consorts never override the current marriage. */
   FB.realmConsortCharacter = function (state, rid) {
-    const m = FB.realmConsortMember(state, rid);
-    const c = m && m.alive !== false && m.charId && state.chars &&
-      state.chars[m.charId];
-    const ruler = c && FB.realmRulerCharacterSnapshot(state, rid);
-    return c && !c.dead && ruler &&
-      ruler.spouseId === c.id && c.spouseId === ruler.id ? c : null;
+    const ruler = FB.realmRulerCharacterSnapshot(state, rid);
+    return ruler && FB.spouseSnapshot ? FB.spouseSnapshot(state, ruler) : null;
   };
 
   FB.materializeRoyalStepchildren = function (state, spouse) {
@@ -4955,6 +4957,8 @@ window.FB = window.FB || {};
            parentId is legitimately null. */
         if (id === m.id || child.role === 'consort' ||
             (child.parentId || null) !== null) continue;
+        // A minor founder's seeded court is collateral, not their children.
+        if (child.born - m.born < 16) continue;
         child.parentId = m.id;
         m.childIds.push(id);
       }
@@ -5510,7 +5514,7 @@ window.FB = window.FB || {};
     if (ma.parentId === mb.id || mb.parentId === ma.id) return 'parent_child';
     function siblings(x, y) {
       return !!x && !!y && x.id !== y.id &&
-        (x.parentId || null) === (y.parentId || null);
+        !!x.parentId && x.parentId === y.parentId;
     }
     if (siblings(ma, mb)) return 'full_sibling';
     const pa = ma.parentId && members[ma.parentId];
@@ -5688,10 +5692,97 @@ window.FB = window.FB || {};
     }
   };
 
+  /* Older fallback heirs were always attached as children, even when the
+     ruler was a minor. Only the generator's own heir ids are repaired; real
+     births and adoptions keep their recorded genealogy. Identity, descendants
+     and succession order survive, and a second ensure makes no further change. */
+  function repairGeneratedRoyalHeirs(state, r) {
+    const s = r.succession;
+    if (!s || !s.members || s.papalElective) return false;
+    const prefix = 'royal_' + r.id + '_';
+    let changed = false;
+    for (const id in s.members) {
+      const member = s.members[id];
+      if (!member || id.indexOf(prefix) !== 0 ||
+          !/^g\d+_heir\d+$/.test(id.slice(prefix.length))) continue;
+      const parent = member.parentId && s.members[member.parentId];
+      if (!parent || !(member.born - parent.born < 16)) continue;
+      const ancestor = parent.parentId && s.members[parent.parentId];
+      const replacement = ancestor && ancestor.id !== member.id &&
+        member.born - ancestor.born >= 16 &&
+        member.born <= royalLastBirthYear(state, ancestor) ? ancestor : null;
+      member.parentId = replacement ? replacement.id : null;
+      parent.childIds = (parent.childIds || []).filter(function (childId) {
+        return childId !== id;
+      });
+      if (replacement) {
+        replacement.childIds = replacement.childIds || [];
+        if (replacement.childIds.indexOf(id) < 0) replacement.childIds.push(id);
+      }
+      const c = member.charId && state.chars[member.charId];
+      const cid = member.charId || courtCharId(id);
+      const oldParentId = parent.charId || courtCharId(parent.id);
+      const oldParent = state.chars[oldParentId];
+      if (oldParent) {
+        oldParent.childrenIds = (oldParent.childrenIds || []).filter(function (childId) {
+          return childId !== cid;
+        });
+      }
+      if (c) {
+        if (c.fatherId === oldParentId) c.fatherId = null;
+        if (c.motherId === oldParentId) c.motherId = null;
+        linkMaterializedRoyalFamily(state, s, member, c, { bulk:true });
+      }
+      changed = true;
+    }
+    if (changed && FB.touchFamily) FB.touchFamily();
+    return changed;
+  }
+
+  function royalLastBirthYear(state, member) {
+    const c = member.charId && state.chars[member.charId];
+    const died = member.died !== undefined ? member.died : c && c.died;
+    return died !== undefined && died !== null
+      ? Math.min(state.date.year, died) : state.date.year;
+  }
+
+  function royalHasPlayerFamily(state, member) {
+    const me = state.player && state.chars[state.player.charId];
+    const c = member && member.charId && state.chars[member.charId];
+    if (!me || !c) return false;
+    if (c.id === me.id || c.spouseId === me.id || me.spouseId === c.id ||
+        c.betrothedId === me.id || me.betrothedId === c.id) return true;
+    const kin = FB.kinOf(state).byId;
+    if (kin[c.id] || kin[c.betrothedId]) return true;
+    return FB.spousesSnapshot(state, c).some(function (spouse) {
+      return spouse.id === me.id || !!kin[spouse.id];
+    });
+  }
+
   function makeHeirIfEmpty(state, r, s) {
     if (s.order.length) return null;
     if (FB.governments.successionForRealm(state,r.id).repairEmpty === false) return null;
-    const parentId = s.authoredCourt && r.ruler.age < 12 ? null : s.rulerMemberId || null;
+    const ruler = s.rulerMemberId && s.members[s.rulerMemberId];
+    const rulerAge = ruler ? state.date.year - ruler.born : r.ruler.age;
+    const ancestor = ruler && ruler.parentId && s.members[ruler.parentId];
+    let parent = rulerAge >= 16 ? ruler :
+      (ancestor && state.date.year - ancestor.born >= 16 ? ancestor : null);
+    /* The compact-house fallback is not a birth. Never manufacture children
+       or siblings inside the player's known family to keep a throne occupied.
+       A parentless court successor preserves the existing recovery mechanism;
+       recorded births still take priority through registerRoyalBirth. */
+    if (royalHasPlayerFamily(state, ruler) || royalHasPlayerFamily(state, parent) ||
+        (s.authoredCourt && rulerAge < 12)) {
+      parent = null;
+    }
+    let ageMin = parent ? state.date.year - royalLastBirthYear(state, parent) : 0;
+    if (parent && state.date.year - parent.born - 16 < ageMin) {
+      parent = null;
+      ageMin = 0;
+    }
+    const parentId = parent ? parent.id : null;
+    const ageMax = parent ? Math.max(ageMin, Math.min(8,
+      state.date.year - parent.born - 16)) : 8;
     const generation = s.rulerGeneration === undefined ? 1 : s.rulerGeneration;
     let ordinal = 0;
     let key = 'g' + generation + '_heir' + ordinal;
@@ -5701,11 +5792,11 @@ window.FB = window.FB || {};
     }
     /* Scoped like every other court draw, so a line repaired during the yearly
        tick and the same line repaired while loading an old save agree. */
-    const m = newRoyalMember(state, r, parentId,
-      Math.max(0, Math.min(8, r.ruler.age - 16)), {
-        key:key,
-        scope:courtScope(state, r.id, key)
-      });
+    const m = newRoyalMember(state, r, parentId, ageMax, {
+      key:key,
+      ageMin:ageMin,
+      scope:courtScope(state, r.id, key)
+    });
     s.members[m.id] = m;
     if (parentId && s.members[parentId]) {
       s.members[parentId].childIds = s.members[parentId].childIds || [];
@@ -6632,6 +6723,8 @@ window.FB = window.FB || {};
       reason:'',
       fromId:fromId || null,
       destinationId:typeof destinationId === 'string' ? destinationId : null,
+      householdOnly:!!(realm && destinationId === realm.capital &&
+        destinationId !== fromId),
       prestigeCost:cost,
       popularOpinion:popularOpinion,
       vassalFavor:vassalFavor,
@@ -6652,8 +6745,12 @@ window.FB = window.FB || {};
       out.reason = FB.T('That county cannot become a capital.');
       return out;
     }
-    if (destinationId === p.provinceId || destinationId === realm.capital) {
-      out.reason = FB.T('This county is already your capital and home.');
+    // County investiture can establish a capital while retaining the old
+    // household home. That capital remains a valid relocation destination.
+    if (destinationId === p.provinceId) {
+      out.reason = destinationId === realm.capital
+        ? FB.T('This county is already your capital and home.')
+        : FB.T('Your household already lives in this county.');
       return out;
     }
     var holder = (state.holder && state.holder[destinationId]) ||
@@ -6795,13 +6892,16 @@ window.FB = window.FB || {};
       destinationId:destinationId
     };
     syncPlayerCapitalHome(state, destinationId);
-    FB.news(state, FB.msg('news.world.capital_relocated',
-      '🏰 The seat of {realm} moves from {from} to {destination}; the household follows.',
-      {
-        realm:FB.realmNameParam(state, state.realms.player),
-        from:from ? from.name : status.fromId,
-        destination:destination.name
-      }));
+    var params = {
+      realm:FB.realmNameParam(state, state.realms.player),
+      from:from ? from.name : status.fromId,
+      destination:destination.name
+    };
+    FB.news(state, status.householdOnly
+      ? FB.msg('news.world.household_to_capital',
+        '🏰 The household of {realm} moves from {from} to its existing capital at {destination}.', params)
+      : FB.msg('news.world.capital_relocated',
+        '🏰 The seat of {realm} moves from {from} to {destination}; the household follows.', params));
     return true;
   };
 

@@ -8,6 +8,14 @@ Roman tenancy adds landownerId to the existing version-1 player.tenure record an
 
 # Game state & saves
 
+Recurring deed selections live in `fb_automation.recurringDeeds` as a bounded map
+of baseline deed ids to `true`; readiness scrolling lives in
+`fb_ui.highlightReadyDeeds`. Both default off, are browser-local preferences, and
+are absent from campaign exports. Restore accepts only exact booleans and known
+automatic-deed ids. Existing campaign cooldowns remain authoritative. Readiness
+baselines, highlights and pending scroll notices are transient and reset for a
+different state or protagonist. There is no save-version change.
+
 Carolingian settlement records
 
 The five optional settlement records are state.stories.divisio_800, ordinatio_800, gifts_800, recognition_800 and verdun_800. Each stores phase, result, turn, attemptSeason, plan and approvals. Approvals map participating realm ids to generation and consent stamp; they authorize the current parties and shares, not a changed successor or plan. The first record also stores the opening cast and the treaty record stores sibling pressure and its war/rebel ids. Typed validation checks phases, turn stamps, plan beneficiaries, saved realm references and declared region/county ids. Historical character ids may outlive compacted characters. Restore never initializes a missing story, imports newly authored relatives, repays gifts or reinstates recognition. There is no envelope version bump or calendar migration.
@@ -187,6 +195,24 @@ the same state.
 
 The polity-foundation compatibility exception is unchanged: an older campaign whose own bookmark already declares a foundation can acquire its missing semantic pending record. This allocates no people, grants, wars, payments, RNG draws or uid values. Existing terminal outcomes and commitments are retained. Other newly authored stories are not initialized by restore or migration.
 
+## Inherited resident family
+
+Optional `player.inheritedHouseholdIds` is an additive array of dependent character
+ids at save format 3. Succession captures the outgoing resident family before the
+protagonist pointer changes, then retains eligible people through worker, office,
+and loadout cleanup. It does not save rendered relationships or alter parentage.
+Repeated handovers carry the same living dependents; independent marriages, ruling
+households, vows, and explicit remote homes prevent management. Temporary bans or
+abbey stays suspend management without discarding an otherwise resident saved dependency.
+Resident inherited parents' posthumous children join the same roster.
+
+Restore normalizes ids and derives a missing roster once from recorded predecessor
+legends and their surviving resident spouse/child/grandchild links. A present empty
+array is authoritative. Repair runs before equipment and education normalization,
+consumes no RNG, allocates no characters, and preserves personal station and family
+identity. Stale predecessor `self` tutoring clears on death; a living handover uses
+the predecessor's actual id. Existing named tutors and accumulated learning remain.
+
 ## Personal household service
 
 Optional `player.householdService` is a version-1 appointment for the current
@@ -234,6 +260,13 @@ JSON remains the existing news/choice artifact. See [characters](characters.md#l
 for retention and recording scope.
 
 ## Freeholder establishment
+
+Legacy foundlings with missing station are repaired from the recorded station of
+their sole adopter, identified by a `childrenIds` link and absent biological
+parents. Only living children without an explicit station or bondage marker are
+eligible; biological children, ambiguous adopter links, and recorded statuses
+remain unchanged. Repair does not invent parents, consume RNG, allocate ids,
+or bump save format 3. Repeated restores retain the repaired value.
 
 `player.freeholderGeneration` records the line depth at first freedom, using
 the same genealogical comparison as `gentryGeneration`. A later-generation heir
@@ -681,6 +714,16 @@ loads the living successor instead of resurrecting the old member or waiting for
 yearly mortality roll. That repair updates the throne and generation-stamped alliances
 but suppresses diplomacy-story queuing and live household-loadout reconciliation, which
 are in-play succession side effects rather than load migrations.
+
+The non-yearly dynastic ensure pass repairs old generated `gN_heirN` fallback
+members whose recorded parent was younger than sixteen at their birth. They
+become siblings through that parent's recorded parent only when the ancestor's
+dates permit it; otherwise they become parentless collaterals. Both compact
+parent/child links and the corresponding full-character links are reconciled.
+Character ids, names, dates, skills, descendants and succession order are kept.
+Explicit births and adoptions are outside this repair. It consumes no RNG or
+uid, adds no migration field, and is idempotent; the ordinary yearly frontier
+does not scan historical members for it. Save format remains 3.
 
 Death compaction captures its retention answer before relationship cleanup and may
 reuse the year pass's family snapshot. In addition to direct player relationships,
@@ -1356,7 +1399,7 @@ parent. A dead or missing mother ends the pregnancy on the next daily birth tick
 `{ s: settlementIndex, id, devGranted?, ruined? }`
 (per-settlement buildings — see [development.md](development.md)); `ruined:true` is an
 optional backwards-compatible tombstone that occupies the slot but provides no bonus and
-charges no upkeep. New construction with a definition-level `dev` effect saves the exact
+charges no upkeep until repaired. New construction with a definition-level dev effect saves the exact
 amount actually applied in `devGranted`, including zero at the county ceiling. Demolition
 reverses only a finite nonzero saved amount. A one-time compatibility pass recalculates
 counties currently in `player.provs` from their bookmark development plus standing
@@ -1368,6 +1411,8 @@ strings are NOT rejected: `FB.builtIn` projects them into the head settlement (`
 without mutating state during reads, and the next construction or demolition in that
 county persists the canonical object entries. This remains a no-version-bump
 compatibility path.
+
+Repair adds no save-version change. Ordinary demolition may retain devRemoved, the actual development taken away; repair restores only that known loss, records the applied result in devGranted and removes devRemoved. Existing raid ruins and older ruins without this field receive no duplicate or inferred development grant. Fort ruins retain ruinedLevel when known, and funded repairs retain targetLevel, completeTurn and repairing until completion. The repairing marker suppresses a second construction prestige award and survives save/restore and conquest.
 
 Livelihood state is additive and does not raise the save-format version. Careers
 live on characters; `character.careerHistory` maps profession ids to complete

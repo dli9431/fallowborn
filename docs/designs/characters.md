@@ -66,6 +66,19 @@ parents and siblings relative to the displayed character, deduplicated by id.
 Following a family link opens the same character sheet and preserves parent
 scroll and link focus on Back. Royal courts and local-household sheets retain
 their existing specialized family navigators.
+Royal profiles resolve their court from the character's recorded royal line,
+including when opened through a betrothal or an ordinary character link. Court
+membership, courtesy title and family visibility do not depend on the entry route
+or personal-audience eligibility. Direct profiles retain the originating profile's
+Back navigation; family links within those profiles retain scroll and focus.
+Court-strip relationship labels are relative to the displayed person. An unrelated
+consort is explicitly the named ruler's consort; a court relative without a direct
+kinship label is identified by their relationship to the named ruler or by court
+membership. These are display fallbacks, not new spouse or kinship links.
+An existing spouse who accompanies a royal heir's accession appears in the court
+strip even without a generated consort record. The same person appears as Father
+or Mother on their recorded child's sheet. A spouse who is also listed in the
+compact court appears only once; displaying either relationship never edits parentage.
 
 Succession eligibility text identifies each close relative individually: son or
 daughter, grandson or granddaughter, father or mother, brother or sister,
@@ -98,6 +111,10 @@ continues to live on ordinary character records, with no additional save field.
 Children always keep their ordinary recorded father and mother. An adopted
 child instead remains linked through the adopter's `childrenIds` without
 inventing biological parents, including after succession and save restore.
+Taking in a foundling records the adopter's personal station and bondage status,
+as well as their dynasty, culture, and faith. A Freeholder's adopted child is
+therefore a Freeholder. This corrects adoption's existing family-status behavior
+and adds no capability or technology dependency.
 `FB.childrenOf` reconciles both directions without mutating saved records; the
 Kin child list and succession review consume that same projection, so a
 surviving `fatherId` or `motherId` cannot leave a later parent-protagonist with
@@ -537,7 +554,9 @@ selection reuses an eligible local friend, rival, cultivated contact, or witness
 before materializing the one bounded `state.roles.notable` fallback. That notable is
 an adult local peer (station 0 for a serf household and never above station 1 later),
 persists under the ordinary residence and death rules, and appears in Network as a
-Neighbor only after being created. A neighbor selector excludes kin and authority
+Neighbor only after being created. Neighbor and witness selectors require Lowborn
+or Freeholder station and exclude all reigning rulers, including foreign rulers.
+A neighbor selector excludes kin and authority
 roles; a witness selector may additionally reuse an eligible resident manageable
 relative. Events never generate a friend or rival, and changing an office does not
 silently substitute a new holder for an already bound participant.
@@ -552,6 +571,8 @@ positive cultivation and gift effects and doubles cash-gift and bought-access co
 default (`rankAccessInfluenceMult`, `rankAccessCashCostMult`). A spouse, kinsperson,
 household member, named friend or rival, warm direct contact, and royal compact is already
 a personal relationship and needs no intermediary chain.
+
+A serf cultivating a reigning landed ruler retains the class-distance Standing and cash-cost multipliers even after becoming a warm contact or named friend. Personal familiarity still grants access, but does not accelerate daily cultivation or cheapen gifts. Ordinary warm contacts retain their existing access behavior. Serf-to-ruler friendship requires serfRulerFriendshipThreshold (+80 by default) rather than the ordinary +40 threshold. Manual naming, friendship stories, candidate selection and progress previews share this gate; existing named friendships remain intact. This is relationship balance with no technology dependency.
 
 This models the institutional routes visible in surviving records rather than pretending
 that medieval ranks never spoke. English manorial courts were presided over by a lord's
@@ -643,10 +664,14 @@ missing bynames only where a recorded father makes the relationship unambiguous;
 non-patronymic house naming is unchanged.
 
 **The player can rename the house.** The Self tab's Dynasty panel offers
-*Rename house*, which runs `FB.renameHouse(state, name)`. A house has no record
-of its own — membership is exactly the set of characters whose `c.dyn` equals
-the string — so a rename rewrites `c.dyn` on every character carrying the old
-string (the same rule `FB.dynastyNameSet` uses), and additionally rewrites
+*Rename house*, which runs `FB.renameHouse(state, name)`. A shared `c.dyn`
+label alone does not establish membership: unrelated local households can all
+be named “of Caen,” for example. Renaming rewrites the protagonist and recorded
+blood or adopted relatives from `FB.familyTreeMembers` whose `c.dyn` matches
+the old name, including deceased ancestors and distant collateral branches.
+The existing first-generation sibling fallback also covers older saves without
+parent records. Relatives of another house and unrelated namesakes keep their
+names. Renaming additionally rewrites
 `state.realms.player.name` when it still equals the derived `'Realm of ' + dyn`
 form and `state.realms.player.dynasty` when it matches. Validation
 (`FB.validateHouseName`) trims, then requires 2–20 characters of letters,
@@ -656,10 +681,7 @@ untouched — a patronym still shadows the dyn in `FB.fullName` while the rename
 house remains the identity underneath. Two consequences are accepted as
 realistic: heraldry seeds from the dyn string, so a rename redraws the coat of
 arms, and chronicle/legend entries already written keep the old name — history
-is not rewritten. Generic NPC commoners still carry no family name at all
-(`dyn: null`); closing that gap is left to the later genealogy feature that will
-also design cadet branches and title-derived surnames, rather than bolting a
-general NPC-naming pass onto this increment.
+is not rewritten. No new house record or save migration is required.
 
 ## Careers, training, and work
 
@@ -788,11 +810,9 @@ landed vassals petition their direct liege with that realm's title-tier terms. A
 independent landed ruler has no superior to petition.
 
 **Friendship requires an intentional relationship.** Assigning personal attention records
-an eligible living, non-family character in `player.friendContacts`. At the shared
-`balance.relationshipOpinionThreshold` (+40 by default), the character sheet offers
+an eligible living, non-family character in player.friendContacts. At the applicable threshold (normally relationshipOpinionThreshold, +40; serf-to-ruler friendship uses +80), the character sheet offers
 **Call friend**; accepting installs that exact character in the compatibility role
-`state.roles.friend` and frees the attention assignment. Existing +40 cultivated contacts
-remain nameable even when attention has moved elsewhere. A friendship story can formalize
+state.roles.friend and frees the attention assignment. Cultivated contacts meeting their applicable friendship threshold remain nameable even when attention has moved elsewhere. A friendship story can formalize
 only the currently assigned, eligible person at the same threshold: `FB.getRole` never
 generates a stranger merely because event text contains `{friend}`. Naming a replacement
 is explicit and clears sworn-friend state. Friendship, its cultivated contacts, and
@@ -849,12 +869,23 @@ Accounts service teaches Lettered after 720 worked days. Tutors also offer
 Learning training to one living child of the patron aged 6–15 per term. No
 appointment grants career licenses, private troops or independent field command.
 
+Service reviews and role cards distinguish experience in the named role from
+total household service across appointments. Accounts and teaching show the saved
+literacy progress out of 720 completed working days, or Lettered once earned.
+Self names appointment work separately from the recorded occupation and keeps its
+role-day count current on live ticks. Work & Enterprises and the occupation picker
+also identify the appointment separately; ordinary career experience still uses
+completed vocational years, and learned trainees show their annual literacy threshold.
+These displays read existing counters without changing progression or saves.
+
 Each completed term supplies one non-stacking credit for an ordinary labor
 duty, expiring after 180 days. It never excuses taxes, cash commutations or
 extraordinary dues. Every 180 worked days brings a bounded household case:
 careful handling improves patron Standing; relief improves county support;
 referral leaves those scores unchanged. The case binds to the exact protagonist,
 patron and appointment revision and can resolve only once.
+Its neutral preview and receipt explicitly say the officer decides and Standing
+and Popular support remain unchanged.
 
 Rest or another focus retains the job but earns no service wage or experience.
 Travel, captivity and campaigning suspend work. Patron replacement/death requires
@@ -926,6 +957,25 @@ non-head holder before the ordinary household transfer. The character card owns
 the ambition-guidance and family-office sheets; the Household Plan and Work view
 derive the resulting commitment from the same records.
 
+Network's Household list also merges valid family-office holders by character id,
+including serving manageable siblings. Each card combines their family relationship,
+office, unpaid duty, career and the same contribution shown for paid retainers.
+Relieving a sibling removes their service row; immediate-family members remain with
+their ordinary family context. This display does not add siblings to the resident
+wage/upkeep set or consume paid-retainer capacity. It changes no eligibility or
+technology dependency.
+
+`FB.familyOfficeStatus` supplies locale-neutral reasons to both appointment eligibility
+and its review. The review lists every unmet requirement, including marriage out of the
+managed household, minimum age and player station, occupation, captivity, and an occupied
+office. Adult children and grandchildren outside the household retain a read-only office
+review on their character sheet; this does not extend appointment eligibility. Occupied
+offices name and link their current holder. Paid holders are dismissed through Manage
+household service (immediate, no deed day, −15 Standing); unpaid family holders are relieved
+through their office review (one deed day). Failed confirmation refreshes the requirements
+without spending a day or silently replacing a holder. These are presentation changes to
+existing household rules, with no new technology dependency.
+
 **The Household Plan is a derived overview, not character state.** Network → Household
 opens one row for the living household head, each resident family member, and each paid
 retainer, in that order. The row reads the existing education, instruction, career, guild,
@@ -939,15 +989,45 @@ queued.
 ## Family, house, and household scope
 
 **Family visibility is not household control.** Work & Enterprises names its scope:
-the playable head, resident spouses and descendants, unwed siblings living with the
-household, and hired retainers appear when old enough for work or training. A spouse who
+the playable head, resident spouses and descendants, inherited resident family
+dependents, other eligible unwed siblings, and hired retainers appear when old enough
+for work or training. A spouse who
 remains an external political household authority is excluded from that managed scope.
 A visible relative outside the managed household is not assignable. Each present but
 unavailable row states the applicable age, station, faith, career, or landed-head rule. The Guide
 separately defines playable line, house, managed household, visible kin, and royal
 branch.
 
-**Manageable kin are resident unwed siblings, never household members.**
+**Resident family dependents survive succession.** The household passes with its
+home, property, and obligations; changing protagonists does not turn its former
+children into independent people. `player.inheritedHouseholdIds` retains surviving
+resident dependents before worker, office, and equipment cleanup. Unmarried adult
+and minor siblings, adopted siblings, nieces/nephews, and widowed parents or
+stepparents already in that household remain manageable, with ordinary family
+upkeep and wages. Neither inherited noble station nor royal ancestry by itself
+means the person rules a separate household. Actual rulers/local lords, married-away
+family, vowed clergy, and people with an independent residence remain outside it.
+A wedding removes inherited membership; a later widowhood does not undo that departure.
+The roster carries only known living dependents, not all members of the dynasty.
+
+`FB.isHouseholdDependent` joins resident descendants and inherited family without
+rewriting biological or adoptive relationships. Education focus, instruction,
+seasonal terms, formative stories, coming-of-age rewards, and the household's child
+health protections use this scope. Work, enterprise staffing, family offices, and
+loadouts continue through their ordinary household gates. School and career age,
+station, cost, faith, and technology requirements remain in force. A posthumous child
+of a resident inherited parent joins that household as a sibling of the new head.
+
+A predecessor's `tutorId:'self'` names the predecessor: living handover replaces it
+with that person's id; death clears the unavailable teacher and lets education
+policy refill its own choices. Named living teachers remain assigned. Inherited adult
+family are known tutoring candidates; a minor head is never offered as a teacher.
+Older saves reconstruct dependency from recorded former heads' family links once,
+without RNG draws, uid allocation, or invented parents. A saved empty roster stays
+empty. This is a continuity fix to existing household management, with no new
+technology dependency or technology-impact ledger entry.
+
+**Other manageable kin are resident unwed siblings, without household membership.**
 `FB.manageableKinKind(state, cid)` (model.js) is the single explicit rule for which
 resident relatives the player may put to work: a living sibling of the protagonist by
 recorded parentage (with the same role-plus-dynasty fallback `siblingsOf` uses for
@@ -965,10 +1045,11 @@ itself a license to redirect a married-away, landed, vowed, or ruling relative.
 Manageable siblings join `FB.householdWorkers` and pass the `managedCareerCharacter`
 gate, so Work & Enterprises, the career picker, enterprise staffing, the Household
 Plan work/assignment/equipment cells, and the shared armory treat them like household
-members — but they are never added to `FB.householdMembers`, so upkeep, family wages,
-education, instruction, and match management keep their existing descent-line
-semantics; the Household Plan shows those cells disabled with their existing
-explanations. Manageability ends cleanly: both wedding paths (`FB.doKinWedding` and
+members — but labor-only siblings are never added to `FB.householdMembers`, so upkeep,
+family wages, education, and instruction require actual household dependency;
+match management keeps its existing descent-line semantics. The Household Plan keeps
+education, instruction, and match cells disabled for labor-only siblings, with the
+existing explanations. Manageability ends cleanly: both wedding paths (`FB.doKinWedding` and
 the yearly `kinLifeTick` match) strip enterprise assignments and loadouts for any
 non-head kin, and lazy enterprise normalization clears the assignment of a worker who
 has left the labor pool. A resident sibling has no saved residence of their own, so

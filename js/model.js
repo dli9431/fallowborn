@@ -2147,12 +2147,12 @@ window.FB = window.FB || {};
     return { ok:true };
   };
 
-  /* A house is just the c.dyn string its members share, so a rename rewrites
-     every character carrying the old string — the same membership rule
-     FB.dynastyNameSet uses — plus the player realm identity when it was
-     derived from the house. Personal names and bynames are untouched, and
-     chronicle or legend text already written keeps the old name. Heraldry is
-     seeded from the dyn string, so the coat of arms is redrawn. */
+  /* A shared dyn label is not proof of kinship: unrelated local households
+     can all be named after the same county. Rename only the protagonist and
+     recorded blood/adoptive relatives carrying the old label, plus the player
+     realm identity when it was derived from the house. Personal names and
+     bynames are untouched; chronicle or legend text already written keeps the
+     old name. Heraldry is seeded from dyn, so the coat of arms is redrawn. */
   FB.renameHouse = function (state, newName) {
     const me = state && state.player && state.chars &&
       state.chars[state.player.charId];
@@ -2161,9 +2161,10 @@ window.FB = window.FB || {};
     const check = FB.validateHouseName(newName, oldDyn);
     if (!check.ok) return check;
     const nm = check.name;
-    for (const id in state.chars) {
-      const c = state.chars[id];
-      if (c && c.dyn === oldDyn) c.dyn = nm;
+    const members = FB.familyTreeMembers(state);
+    me.dyn = nm;
+    for (const member of members) {
+      if (member.c.dyn === oldDyn) member.c.dyn = nm;
     }
     const realm = state.realms && state.realms.player;
     if (realm) {
@@ -3234,15 +3235,17 @@ window.FB = window.FB || {};
      but manage their own affairs. kinManageability returns 'manageable' when
      every test passes, otherwise a blocker key; FB.manageableKinKind maps
      that to the 'sibling'/null shape playerDescendantKind callers expect.
-     Manageable kin join the labor pool and career/equipment agency WITHOUT
-     becoming household members, so upkeep and succession semantics are
-     untouched. */
+     Labor-only kin join career/equipment agency without household membership.
+     A sibling retained from a predecessor's resident family instead keeps
+     ordinary household dependency, regardless of inherited courtesy station. */
   function kinManageability(state, cid) {
     if (!state || !state.player || !state.chars) return 'not-sibling';
     const me = state.chars[state.player.charId];
     const c = state.chars[cid];
     if (!me || !c || !siblingOfPlayer(state, me, c)) return 'not-sibling';
     if (c.dead) return 'dead';
+    if (FB.isInheritedHouseholdMember &&
+        FB.isInheritedHouseholdMember(state, cid)) return 'manageable';
     const spouse = c.spouseId && state.chars[c.spouseId];
     if (spouse && !spouse.dead) return 'married';
     const reverseSpouses = FB.spouseLinksTo(state, c.id);

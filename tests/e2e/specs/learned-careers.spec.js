@@ -21,6 +21,37 @@ test.beforeEach(async function ({ page }, testInfo) {
   await startDeterministicGame(page);
 });
 
+test('learned work shows annual experience and trainee literacy progress before licensing',
+  async function ({ page }) {
+    await page.setViewportSize({width:390,height:844});
+    await page.evaluate(function () {
+      const s = FB.state, c = s.chars[s.player.charId];
+      FB.game.setPaused(true); s.player.tier = 1;
+      c.born = s.date.year - 20;
+      c.traits = c.traits.filter(function (id) { return id !== 'literate'; });
+      c.career = {profession:'physician',rank:'apprentice',experience:1,
+        startedYear:s.date.year - 1,guildRank:'none',guildStanding:0,chosen:true};
+      FB.syncPlayerCareer(s); FB.ui.showCareerPicker(c.id);
+    });
+    const current = page.locator('[data-career-current]');
+    await expect(current).toContainText('Healer’s pupil');
+    await expect(current).toContainText('Completed years: 1 · updates at New Year');
+    await expect(current).toContainText('1 / 2 trainee years toward Lettered');
+    expect(await page.locator('#gm-body').evaluate(function (body) {
+      return body.scrollWidth > body.clientWidth + 1;
+    })).toBe(false);
+    await page.evaluate(function () {
+      const s = FB.state, c = s.chars[s.player.charId];
+      FB.livelihoodYearly(s); FB.ui.showCareerPicker(c.id);
+    });
+    await expect(current).toContainText('Completed years: 2 · updates at New Year');
+    await expect(current).toContainText('LiteracyLettered');
+    await expect(current).not.toContainText('trainee years toward Lettered');
+    expect(await page.evaluate(function () {
+      return FB.state.chars[FB.state.player.charId].career.rank;
+    })).toBe('apprentice');
+  });
+
 test('learned trainees become Lettered but remain trainees until examined',
   async function ({ page }) {
     const result = await page.evaluate(function () {

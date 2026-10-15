@@ -1491,6 +1491,44 @@ window.FB = window.FB || {};
         'Only a sovereign player chooses national technology; your sovereign selects the project.')) +
         '</div>';
     }
+    const visibleDeeds = {};
+    if (s) {
+      for (const item of FB.listInstants(s, { deferEligibility:true })) {
+        visibleDeeds[item.a.id] = true;
+      }
+    }
+    const character = s && s.chars[s.player.charId];
+    const recurring = s && FB.recurringDeeds ? FB.recurringDeeds(s, true).filter(function (deed) {
+      return visibleDeeds[deed.id] && (!deed.requiresAdult ||
+        (character && FB.ageOf(character, s.date.year) >= 16));
+    }) : [];
+    if (recurring.length) {
+      h += panelh('Automatic recurring deeds');
+      h += '<p class="hint">' + esc(FB.T('Checked deeds run as soon as eligible while days flow, including fast-forward. Each spends one day instead of Daily Focus. If several are ready, they run in the order below on successive days. Deeds that open choices are excluded.')) + '</p>';
+      h += '<p class="ui-control-warning">' + esc(FB.T('Repeated deeds spend their normal resources and carry their normal risks. Travel, captivity and open dialogs suspend automatic use.')) + '</p>';
+      for (const deed of recurring) {
+        const status = FB.instantStatus(s, deed.id, { deferPreview:true });
+        const reason = status.can ? FB.T('Available now') : FB.translateKnown(status.reason);
+        let details = esc(FB.translateKnown(deed.desc(s)));
+        if (deed.id === 'squeeze_taxes') details += '<p>' + esc(FB.T('Each use reduces Popular support by 6.')) + '</p>';
+        if (deed.id === 'demand_taxes') details += '<p>' + esc(FB.T('Each use reduces eligible vassals’ Standing by 15 and may provoke revolt. Fiscal crises also reduce county Popular support.')) + '</p>';
+        if (deed.id === 'mediate') details += '<p>' + esc(FB.T('Success grants 3 Prestige and 3 Popular support, with a chance to train Diplomacy. Failure costs 2 Prestige.')) + '</p>';
+        if (deed.id === 'scheme_rival') details += '<p>' + esc(FB.T('Risks losing 4 Prestige and increases rivalry. Success grants 4 Prestige, with a chance to train Intrigue.')) + '</p>';
+        const days = deed.cooldownDays ? deed.cooldownDays(s) : deed.cd;
+        let consequence = '';
+        if (deed.id === 'give_alms') consequence = FB.T('Costs {money:cost}', { cost:10 });
+        if (deed.id === 'hire_mercs') consequence = FB.T('Costs {money:cost} plus seasonal upkeep', { cost:15 });
+        if (deed.id === 'squeeze_taxes') consequence = FB.T('Popular support −6');
+        if (deed.id === 'demand_taxes') consequence = FB.T('Vassal Standing −15 · revolt risk');
+        if (deed.id === 'mediate') consequence = FB.T('Failure: Prestige −2');
+        if (deed.id === 'scheme_rival') consequence = FB.T('Failure: Prestige −4 · increased rivalry');
+        h += cb('ar-deed-' + deed.id, a.recurringDeeds && a.recurringDeeds[deed.id] === true,
+          '<b>' + esc(actionLabel(s, deed.id, deed)) + '</b>', details);
+        h += '<p class="hint" id="ar-deed-status-' + deed.id + '">' +
+          esc(FB.T('Every {days} days · spends one day', { days:days })) +
+          ' · ' + esc(consequence) + '<br>' + esc(reason) + '</p>';
+      }
+    }
     h += '<div class="gm-footer"><button class="btn primary" id="ar-close">' + esc(FB.T('Close')) + '</button></div>';
     openModal('⚙ Automation', h, {
       modalClass:'fullsheet-modal', modalKey:'v',
@@ -1502,6 +1540,11 @@ window.FB = window.FB || {};
       a.major = $('ar-major').checked;
       a.war = $('ar-war').checked;
       a.all = $('ar-all').checked;
+      a.recurringDeeds = a.recurringDeeds || {};
+      for (const deed of recurring) {
+        if ($('ar-deed-' + deed.id).checked) a.recurringDeeds[deed.id] = true;
+        else delete a.recurringDeeds[deed.id];
+      }
       const build = $('ar-build');
       if (build) a.build = build.checked;
       const research = $('ar-research');
@@ -1542,6 +1585,11 @@ window.FB = window.FB || {};
     });
     document.querySelectorAll('input[name=ar-style]').forEach(function (r) { r.addEventListener('change', sync); });
     document.querySelectorAll('input[name=ar-hosts]').forEach(function (r) { r.addEventListener('change', sync); });
+    recurring.forEach(function (deed) {
+      const control = $('ar-deed-' + deed.id);
+      control.setAttribute('aria-describedby', 'ar-deed-status-' + deed.id);
+      control.addEventListener('change', sync);
+    });
     $('ar-close').addEventListener('click', function () { sync(); UI.closeModal(); });
   };
 
@@ -1582,6 +1630,21 @@ window.FB = window.FB || {};
           !FB.ensureEventParticipants(s, ev, item.ctx)) continue;
       if (FB.eventContextStillValid &&
           !FB.eventContextStillValid(s, ev, item.ctx)) continue;
+      /* A town outing is committed in its dismissible activity picker. Keep
+         the normal daily queue ordering, then resolve that exact choice once. */
+      if (/^visit_(village|town|city)$/.test(item.id) &&
+          Number.isInteger(item.ctx.outingOption)) {
+        const option = ev.options && ev.options[item.ctx.outingOption];
+        delete item.ctx.outingOption;
+        if (option && FB.eventOptionStatus(s, ev, option, item.ctx).ready) {
+          eventBatchNeedsSync = true;
+          eventOpen = true;
+          FB.markFired(s, ev);
+          if (chooseOption(ev, option, item.ctx) !== false) return eventOpen;
+        }
+        showEvent(ev, item.ctx);
+        return true;
+      }
       if (autoWants(ev, item)) {
         if (!autoResolve(ev, item)) eventBatchNeedsSync = true;
         continue;
@@ -8674,7 +8737,7 @@ window.FB = window.FB || {};
   }
 
   function buildingExpiryRule() {
-    return FB.T('Until demolished; permanent ruins keep the site occupied');
+    return FB.T('Until ruined; the site remains occupied and can be repaired');
   }
 
   function buildingUnavailableText(s, pid, id, d) {
@@ -8968,19 +9031,53 @@ window.FB = window.FB || {};
           { kind: settlementKindName(st.kind) })) + '</span></button>';
     }
     h += '</div><button class="btn" id="gm-cancel">Stay home</button>';
-    openModal('Where To?', h, { onDismiss:function () {
+    function dismissOuting() {
       if (!visiting && FB.state === s) {
         delete s.player.cooldowns.go_to_town;
         UI.refresh();
       }
-    } });
+    }
+    openModal('Where To?', h, { onDismiss:dismissOuting });
     document.querySelectorAll('[data-visit]').forEach(function (btn) {
       btn.addEventListener('click', function () {
-        visiting = true;
-        FB.queueEvent(FB.state, 'visit_' + btn.dataset.kind,
-          { settlement:btn.dataset.visit });
-        UI.closeModal();
-        FB.game.passDay({ skipFocus: true }); // the outing spends the day
+        const ev = FB.eventById('visit_' + btn.dataset.kind);
+        if (!ev || FB.state !== s) return;
+        const ctx = FB.eventContext(s, { settlement:btn.dataset.visit });
+        let choices = '<p>' + esc(FB.eventText(s, s.player.charId, ev, 'text', ctx)) +
+          '</p><p class="decision-cost">' + esc(FB.T('Spends one day.')) + '</p>';
+        ev.options.forEach(function (option, index) {
+          const status = FB.eventOptionStatus(s, ev, option, ctx);
+          if (!status.visible) return;
+          const detailsId = 'outing-choice-details-' + index;
+          choices += '<div class="settcard declarative-choice-card" tabindex="0" aria-describedby="' + detailsId +
+            '"><button type="button" class="actionbtn" aria-describedby="' + detailsId + '"' +
+            ' data-settlement-option="' + index + '" data-ui-action-hotkey' +
+            (status.ready ? '' : ' disabled') + '>' +
+            esc(FB.eventText(s, s.player.charId, ev, 'options.' + index + '.label', ctx)) +
+            '</button><span class="settcard-actions declarative-choice-actions">' +
+            cardInfoButton(detailsId) + '</span>' +
+            (!status.ready && status.reason ? '<p class="decision-cost">' + esc(status.reason) + '</p>' : '') +
+            '<div class="settcard-details declarative-choice-details hidden" id="' + detailsId + '">' +
+            (option.desc ? '<p>' + esc(FB.eventText(s, s.player.charId, ev,
+              'options.' + index + '.desc', ctx)) + '</p>' : '') +
+            consequenceDetailsHtml(s, FB.previewEventOption(s, ev, option, ctx)) + '</div></div>';
+        });
+        openModal(FB.eventText(s, s.player.charId, ev, 'title', ctx), choices, {
+          historyView:true, noFocus:true, onDismiss:dismissOuting
+        });
+        $('gm-body').querySelectorAll('[data-settlement-option]').forEach(function (choice) {
+          choice.addEventListener('click', function () {
+            const index = Number(choice.dataset.settlementOption);
+            if (visiting || FB.state !== s || s.player.dead ||
+                !FB.eventContextStillValid(s, ev, ctx) ||
+                !FB.eventOptionStatus(s, ev, ev.options[index], ctx).ready) return;
+            visiting = true;
+            ctx.outingOption = index;
+            FB.queueEvent(s, ev.id, ctx);
+            UI.closeModal();
+            FB.game.passDay({ skipFocus:true });
+          });
+        });
       });
     });
     $('gm-cancel').addEventListener('click', UI.closeModal);
@@ -9442,7 +9539,7 @@ window.FB = window.FB || {};
       const next = FB.fortLevelDef(currentLevel + 1);
       const status = own
         ? FB.fortProjectStatus(s, pid, idx, currentLevel + 1) : null;
-      detailsHtml += '<div class="fort-next-tier"><b>' + esc(FB.T('Next: {fort}', {
+      h += '<div class="fort-next-tier"><b>' + esc(FB.T('Next: {fort}', {
         fort:fortName(s, currentLevel + 1)
       })) + '</b><span class="adesc">' + esc(FB.T(
         '{money:cost} upfront · {seasons} seasons · {upkeep} upkeep · {garrison} garrison · requires {technology}', {
@@ -9450,8 +9547,8 @@ window.FB = window.FB || {};
           garrison:next.garrison, technology:fortRequirementNames(s, next)
         })) + '</span></div>';
       if (own && status && status.ok) {
-        detailsHtml += '<button class="actionbtn fort-project-action" data-fort-start="' +
-          (currentLevel + 1) + '">🏰 ' + esc(FB.T('Begin {fort}…', {
+        h += '<button class="actionbtn fort-project-action" data-fort-start="' +
+          (currentLevel + 1) + '" data-fort-pid="' + esc(pid) + '" data-fort-idx="' + esc(idx) + '">🏰 ' + esc(FB.T('Begin {fort}…', {
             fort:fortName(s, currentLevel + 1)
           })) + '<span class="adesc">' + esc(FB.T(
             'Pay {money:cost} now; completes in {seasons} seasons.', {
@@ -9460,14 +9557,14 @@ window.FB = window.FB || {};
       } else if (own && status && status.reason === 'technology' &&
           status.missingTech.length) {
         for (const missingTech of status.missingTech) {
-          detailsHtml += '<button class="actionbtn fort-tech-action" data-fort-tech="' +
+          h += '<button class="actionbtn fort-tech-action" data-fort-tech="' +
             esc(missingTech) + '" data-fort-pid="' + esc(pid) + '" data-fort-idx="' + esc(idx) + '">' + esc(FB.T('Requires {technology}.', {
               technology:technologyName(s, missingTech)
             })) + '<span class="adesc">' +
             esc(FB.T('Open the technology entry.')) + '</span></button>';
         }
       } else if (own && status) {
-        detailsHtml += '<button class="actionbtn" disabled>' + esc(FB.T('Begin {fort}', {
+        h += '<button class="actionbtn" disabled>' + esc(FB.T('Begin {fort}', {
           fort:fortName(s, currentLevel + 1)
         })) + '<span class="adesc">' + esc(fortProjectReason(s, status, next)) +
           '</span></button>';
@@ -9484,7 +9581,9 @@ window.FB = window.FB || {};
     const def = FB.fortLevelDef(targetLevel);
     if (!status.ok || !def) return UI.showSettlement(pid, idx);
     const finish = fortDateText(s, status.completeTurn);
-    const body = '<div class="gm-body-text"><p>' + esc(FB.T(
+    const site = FB.settlementsOf(s, pid)[idx];
+    const body = '<div class="gm-body-text">' + kv('Settlement', esc(site.name)) +
+      kv('County', esc(FB.L(FB.world.byId[pid].name))) + '<p>' + esc(FB.T(
       'Pay {money:cost} now to begin {fort}. Work cannot be cancelled or refunded; it survives succession and conquest and completes {finish}.', {
         cost:status.cost, fort:fortName(s, targetLevel), finish:finish
       })) + '</p><p>' + esc(FB.T(
@@ -9496,14 +9595,49 @@ window.FB = window.FB || {};
         fort:fortName(s, targetLevel), cost:status.cost
       })) + '</button></div><button class="btn" id="fort-project-back">' +
       esc(FB.T('Back')) + '</button>';
-    openModal(FB.T('Raise {fort}?', { fort:fortName(s, targetLevel) }), body);
+    const returnToSettlement = settlementFortReturn(pid, idx);
+    openModal(FB.T('Raise {fort}?', { fort:fortName(s, targetLevel) }), body, {
+      historyView:true, historyBackRender:returnToSettlement
+    });
     $('fort-project-confirm').addEventListener('click', function () {
       if (FB.startFortProject(FB.state, pid, idx, targetLevel)) UI.refresh();
-      UI.showSettlement(pid, idx);
+      modalHistoryBack(returnToSettlement);
     });
     $('fort-project-back').addEventListener('click', function () {
-      UI.showSettlement(pid, idx);
+      modalHistoryBack(returnToSettlement);
     });
+  };
+
+  function settlementFortReturn(pid, idx) {
+    const root = $('gm-body');
+    const scroll = root.scrollTop;
+    const expanded = Array.prototype.map.call(root.querySelectorAll(
+      '.settcard-details:not(.hidden)'), function (detail) { return detail.id; });
+    const control = document.activeElement;
+    const start = control && control.getAttribute('data-fort-start');
+    const tech = control && control.getAttribute('data-fort-tech');
+    return function () {
+      UI.showSettlement(pid, idx);
+      expanded.forEach(function (id) {
+        const detail = $(id);
+        if (detail) detail.classList.remove('hidden');
+        $('gm-body').querySelectorAll('[aria-controls]').forEach(function (button) {
+          if (button.getAttribute('aria-controls') === id) button.setAttribute('aria-expanded', 'true');
+        });
+      });
+      const buttons = $('gm-body').querySelectorAll('[data-fort-start], [data-fort-tech]');
+      let focus = $('gm-cancel');
+      for (const button of buttons) {
+        if ((start && button.getAttribute('data-fort-start') === start) ||
+            (tech && button.getAttribute('data-fort-tech') === tech)) focus = button;
+      }
+      if (focus) focus.focus({ preventScroll:true });
+      $('gm-body').scrollTop = scroll;
+    };
+  }
+
+  UI.showFortTechnology = function (pid, idx, id) {
+    UI.showTechDetail(id, settlementFortReturn(pid, idx));
   };
 
   function settlementCommunityAxisHtml(s, communities, kind, dominantId) {
@@ -9996,8 +10130,19 @@ window.FB = window.FB || {};
               recurringCost:FB.T('None'),
               effect:FB.T('No current benefit'),
               transferRule:buildingTransferRule(),
-              expiry:FB.T('Permanent ruins; the site remains occupied')
+              expiry:FB.T('Until repaired; the site remains occupied')
             }), null);
+          const repair = FB.repairBuildingStatus(s, pid, idx, id);
+          h += reviewActionsHtml(reviewActionCardHtml({
+            id:'sett-repair-' + cardSeq, data:{ repair:id },
+            label:FB.T('Repair {building} for {money:cost}', { building:name, cost:repair.cost }),
+            disabled:!repair.ready, warn:!repair.ready,
+            note:repair.reason || (repair.fort
+              ? FB.T('No active defenses until repairs complete')
+              : FB.T('Restores the building and its seasonal benefits and upkeep')),
+            details:'<p>' + esc(repair.reason || FB.T(
+              'Repair restores the existing building at half its current replacement cost. Construction rewards are not awarded again.')) + '</p>'
+          }));
         } else {
           h += settAssetCard(detId, d.icon, name,
             buildingEffects(d, id).join(' · '),
@@ -10028,7 +10173,8 @@ window.FB = window.FB || {};
           technology:fortRequirementNames(s, firstFort)
         })) + '</span></div>';
       if (fortStatus.ok) {
-        h += '<button class="actionbtn fort-project-action" data-fort-start="1">🏰 ' +
+        h += '<button class="actionbtn fort-project-action" data-fort-start="1" data-fort-pid="' +
+          esc(pid) + '" data-fort-idx="' + esc(idx) + '">🏰 ' +
           esc(FB.T('Begin {fort}…', { fort:fortName(s, 1) })) + '</button>';
       } else if (fortStatus.reason === 'technology' && fortStatus.missingTech.length) {
         h += '<button class="actionbtn fort-tech-action" data-fort-tech="' +
@@ -10042,6 +10188,14 @@ window.FB = window.FB || {};
         })) + '<span class="adesc">' + esc(fortProjectReason(s, fortStatus, firstFort)) +
           '</span></button>';
       }
+    }
+    const countyFort = managesCounty && FB.fortAt(s, pid, true);
+    const countyFortSite = countyFort && FB.settlementsOf(s, pid)[countyFort.s];
+    if (countyFortSite && countyFort.s !== idx) {
+      h += '<button type="button" class="actionbtn" id="settlement-county-fort">🏰 ' +
+        esc(FB.T('Manage the county fort in {settlement}…', {
+          settlement:countyFortSite.name
+        })) + '</button>';
     }
     const localLocationId = FB.localFolkCurrentLocationId
       ? FB.localFolkCurrentLocationId(s) : null;
@@ -10215,28 +10369,85 @@ window.FB = window.FB || {};
     if (canRaise) {
       $('gm-raise').addEventListener('click', function () { UI.showBuildings(pid, idx); });
     }
-    document.querySelectorAll('[data-fort-start]').forEach(function (button) {
+    if ($('settlement-county-fort')) $('settlement-county-fort').onclick = function () {
+      UI.showSettlement(pid, countyFort.s, { historyView:true });
+    };
+    $('gm-body').querySelectorAll('[data-fort-start]').forEach(function (button) {
       button.addEventListener('click', function () {
         UI.showFortProject(pid, idx, Number(button.dataset.fortStart));
       });
     });
-    document.querySelectorAll('[data-fort-tech]').forEach(function (button) {
+    $('gm-body').querySelectorAll('[data-fort-tech]').forEach(function (button) {
       button.addEventListener('click', function () {
         const bpid = button.dataset.fortPid || pid;
         const bidx = button.dataset.fortIdx !== undefined ? Number(button.dataset.fortIdx) : idx;
-        UI.showTechDetail(button.dataset.fortTech, function () {
-          UI.showSettlement(bpid, bidx);
-        });
+        UI.showFortTechnology(bpid, bidx, button.dataset.fortTech);
       });
     });
     bindCardInfoToggles($('gm-body'));
+    $('gm-body').querySelectorAll('[data-repair]').forEach(function (button) {
+      button.addEventListener('click', function () {
+        const id = button.dataset.repair;
+        const scroll = $('gm-body').scrollTop;
+        const opened = Array.prototype.map.call($('gm-body').querySelectorAll('.settcard-details:not(.hidden)'), function (el) { return el.id; });
+        const controlId = button.id;
+        function returnToSettlement() {
+          UI.showSettlement(pid, idx, options);
+          opened.forEach(function (detailId) {
+            const el = $(detailId); if (el) el.classList.remove('hidden');
+            $('gm-body').querySelectorAll('[aria-controls]').forEach(function (toggle) {
+              if (toggle.getAttribute('aria-controls') === detailId) toggle.setAttribute('aria-expanded', 'true');
+            });
+          });
+          const control = $(controlId) || $('gm-cancel');
+          if (control) control.focus({ preventScroll:true });
+          $('gm-body').scrollTop = scroll;
+        }
+        function reviewRepair(replacing) {
+          const current = FB.state;
+          const status = FB.repairBuildingStatus(current, pid, idx, id);
+          const def = FBDATA.buildings[id];
+          const name = dt(current, 'building', id, def, 'name');
+          const effect = status.fort
+            ? FB.T('Defenses return when repairs finish {finish}.', {
+              finish:fortDateText(current, status.completeTurn)
+            }) : FB.T('The building resumes its seasonal benefits and upkeep immediately.');
+          const upkeep = status.fort ? (FB.fortLevelDef(status.targetLevel) || {}).upkeep : def.upkeep;
+          const details = '<p>' + esc(FB.T(
+            'Repairs cost half the current replacement price, are not refunded, and do not repeat construction prestige or Popular support.')) + '</p>';
+          const body = '<div class="gm-body-text">' + kv('Settlement', esc(st.name)) +
+            kv('Repair cost', esc(FB.T('{money:cost}', { cost:status.cost }))) +
+            kv('Seasonal upkeep after repair', esc(assetSeasonalMoneyCost(upkeep || 0))) +
+            '<p>' + esc(effect) + '</p></div>' + reviewActionsHtml(reviewActionCardHtml({
+              id:'building-repair-confirm', disabled:!status.ready,
+              label:FB.T('Repair {building} for {money:cost}', { building:name, cost:status.cost }),
+              note:status.reason, warn:!status.ready, details:details
+            })) + '<div class="gm-footer"><button type="button" class="btn" id="building-repair-back">' + esc(FB.T('Back')) + '</button></div>';
+          openModal(FB.T('Repair {building}', { building:name }), body, {
+            historyView:true, replaceView:!!replacing, historyBackRender:returnToSettlement
+          });
+          bindCardInfoToggles($('gm-body'));
+          $('building-repair-back').onclick = UI.backModal;
+          $('building-repair-confirm').onclick = function () {
+            if (!FB.repairBuilding(FB.state, pid, idx, id, status.cost)) {
+              UI.toast('Repair terms changed. Review the settlement again.');
+              reviewRepair(true);
+              return;
+            }
+            UI.refresh();
+            modalHistoryBack(returnToSettlement);
+          };
+        }
+        reviewRepair();
+      });
+    });
     document.querySelectorAll('[data-demolish]').forEach(function (btn) {
       btn.addEventListener('click', function () {
         const id = btn.dataset.demolish;
         const d = FBDATA.buildings[id];
         const name = dt(FB.state, 'building', id, d, 'name');
         let body = '<div class="gm-body-text"><p>' + esc(FB.T(
-          'Demolishing {building} is permanent and gives no refund. Its ongoing benefits and upkeep will end, and ruins will occupy this settlement.',
+          'Demolishing {building} gives no refund. Its ongoing benefits and upkeep will end, and ruins will occupy this settlement until repaired.',
           { building: name })) + '</p></div><div class="gm-list">' +
           '<button class="actionbtn op-bad" id="gm-demolish-confirm">' +
           esc(FB.T('Demolish {building}', { building: name })) + '</button></div>' +
@@ -12384,7 +12595,8 @@ window.FB = window.FB || {};
       UI.showCharModal(returnContext.characterId, returnContext.returnContext,
         false, returnContext.realmId || null);
       if (returnContext.familyFocus) {
-        const button = $('gm-body').querySelector('[data-baron-family-cid="' + returnContext.familyFocus + '"]');
+        const button = $('gm-body').querySelector('[data-baron-family-cid="' + returnContext.familyFocus +
+          '"], [data-realm-family-cid="' + returnContext.familyFocus + '"]');
         if (button) button.focus({ preventScroll:true });
         $('gm-body').scrollTop = returnContext.scrollTop || 0;
       }
@@ -12505,6 +12717,67 @@ window.FB = window.FB || {};
     return h + '</div>';
   }
 
+  /* Succession order includes siblings and other collateral branches. A
+     court place is never evidence of parentage, including on an heir's sheet.
+     Compact members retain the same ancestry when a dead parent was removed. */
+  function realmCourtRelation(s, subject, c, fallback) {
+    if (!subject || !c) return fallback;
+    if (FB.spousesSnapshot(s, subject).some(function (spouse) {
+      return spouse.id === c.id;
+    })) return FB.T(c.sex === 'f' ? 'Wife' : 'Husband');
+    const line = subject.royalLine, otherLine = c.royalLine;
+    const sameCourt = line && otherLine && line.realmId === otherLine.realmId;
+    const realm = sameCourt && s.realms[line.realmId];
+    const members = realm && realm.succession && realm.succession.members;
+    const a = members && members[line.memberId];
+    const b = members && members[otherLine.memberId];
+    function childOf(parent, child) {
+      return child.fatherId === parent.id || child.motherId === parent.id ||
+        (parent.childrenIds || []).indexOf(child.id) >= 0;
+    }
+    /* Authored courts record father and mother; generated courts one parent. */
+    function memberParents(m) {
+      return m ? [m.fatherId || m.parentId, m.motherId].filter(Boolean) : [];
+    }
+    function memberSiblings(x, y) {
+      return !!x && !!y && x.id !== y.id && ((x.siblingIds || []).indexOf(y.id) >= 0 ||
+        memberParents(x).some(function (id) { return memberParents(y).indexOf(id) >= 0; }));
+    }
+    if (childOf(c, subject) || (a && b && memberParents(a).indexOf(b.id) >= 0)) {
+      return FB.T(c.sex === 'f' ? 'Mother' : 'Father');
+    }
+    if (childOf(subject, c) || (a && b && memberParents(b).indexOf(a.id) >= 0)) {
+      return FB.T(c.sex === 'f' ? 'Daughter' : 'Son');
+    }
+    const degree = FB.kinshipDegreeSnapshot(s, subject, c);
+    if (degree === 'full_sibling' || degree === 'half_sibling') {
+      return FB.T(c.sex === 'f' ? 'Sister' : 'Brother');
+    }
+    if (degree === 'grandparent') {
+      const grandparent = FB.parentsOf(s, subject).some(function (parent) {
+        return childOf(c, parent);
+      }) || (a && b && memberParents(a).some(function (id) {
+        return memberParents(members[id]).indexOf(b.id) >= 0;
+      }));
+      return grandparent
+        ? FB.T(c.sex === 'f' ? 'Grandmother' : 'Grandfather')
+        : FB.T(c.sex === 'f' ? 'Granddaughter' : 'Grandson');
+    }
+    if (degree === 'avuncular') {
+      const auntOrUncle = FB.parentsOf(s, subject).some(function (parent) {
+        const kin = FB.kinshipDegreeSnapshot(s, parent, c);
+        return kin === 'full_sibling' || kin === 'half_sibling';
+      }) || (a && b && memberParents(a).some(function (id) {
+        return memberSiblings(members[id], b);
+      }));
+      return auntOrUncle
+        ? FB.T(c.sex === 'f' ? 'Aunt' : 'Uncle')
+        : FB.T(c.sex === 'f' ? 'Niece' : 'Nephew');
+    }
+    if (degree === 'cousin') return FB.T('Cousin');
+    return fallback;
+  }
+
   function realmCourtStripHtml(s, rid, subjectId) {
     const rows = [];
     const realm = s.realms[rid];
@@ -12512,55 +12785,14 @@ window.FB = window.FB || {};
     const consort = FB.realmConsortCharacter && FB.realmConsortCharacter(s, rid);
     const succession = s.realms[rid] && s.realms[rid].succession;
     const family = realmFamilySnapshot(s, rid);
-    const childIds = {};
-    for (const member of family) {
-      if (member.charId) childIds[member.charId] = 1;
-    }
-    function parentRelation(parent, fallback) {
-      if (!subjectId || subjectId === parent.id) return fallback;
-      if (ruler && consort && subjectId === ruler.id &&
-          parent.id === consort.id) return fallback;
-      if (ruler && consort && subjectId === consort.id &&
-          parent.id === ruler.id) {
-        return FB.T(parent.sex === 'f' ? 'Wife' : 'Husband');
-      }
-      if (succession && succession.authoredCourt) return royalRelation(parent);
-      return FB.T(parent.sex === 'f' ? 'Mother' : 'Father');
-    }
-    function royalRelation(relative) {
-      const subject = s.chars[subjectId];
-      if (!subject || !subject.royalLine || !relative.royalLine) return FB.T('Relative');
-      const degree = FB.royalKinshipDegree(s, subject, relative);
-      const member = succession.members[relative.royalLine.memberId];
-      const origin = succession.members[subject.royalLine.memberId];
-      if (!member || !origin) return FB.T('Relative');
-      const parents = [origin.fatherId || origin.parentId, origin.motherId];
-      if (degree === 'parent_child') return parents.indexOf(member.id) >= 0
-        ? FB.T(relative.sex === 'f' ? 'Mother' : 'Father')
-        : FB.T(relative.sex === 'f' ? 'Daughter' : 'Son');
-      if (degree === 'full_sibling') return FB.T(relative.sex === 'f' ? 'Sister' : 'Brother');
-      if (degree === 'avuncular') {
-        const older = parents.some(function (id) {
-          const parent = succession.members[id];
-          return parent && FB.royalKinshipDegree(s, { royalLine:{ realmId:rid, memberId:id } }, relative) === 'full_sibling';
-        });
-        return older ? FB.T(relative.sex === 'f' ? 'Aunt' : 'Uncle') : FB.T(relative.sex === 'f' ? 'Niece' : 'Nephew');
-      }
-      if (degree === 'grandparent') {
-        const ancestor = parents.some(function (id) {
-          const parent = succession.members[id];
-          return parent && [parent.fatherId || parent.parentId, parent.motherId].indexOf(member.id) >= 0;
-        });
-        return ancestor ? FB.T(relative.sex === 'f' ? 'Grandmother' : 'Grandfather')
-          : FB.T(relative.sex === 'f' ? 'Granddaughter' : 'Grandson');
-      }
-      if (degree === 'cousin') return FB.T('Cousin');
-      return FB.T('Relative');
-    }
+    const subject = s.chars[subjectId] || ruler;
+    const rulerName = ruler ? FB.T('{title} {name}', {
+      title:FB.realmRankTitle(s, realm), name:ruler.name
+    }) : null;
     if (ruler && ruler.id !== subjectId) {
       rows.push({
         c:ruler,
-        rel:parentRelation(ruler, FB.T('Ruler')),
+        rel:realmCourtRelation(s, subject, ruler, FB.T('Ruler')),
         ruler:true,
         role:'ruler'
       });
@@ -12568,22 +12800,29 @@ window.FB = window.FB || {};
     if (consort && consort.id !== subjectId) {
       rows.push({
         c:consort,
-        rel:parentRelation(consort, FB.T('Consort')),
+        rel:realmCourtRelation(s, subject, consort, rulerName
+          ? FB.T('Consort of {ruler}', { ruler:rulerName }) : FB.T('Consort')),
         role:'consort'
       });
     }
     for (const member of family) {
       const c = member.charId && s.chars[member.charId];
-      if (!c || c.dead || c.id === subjectId) continue;
+      if (!c || c.dead || c.id === subjectId ||
+          (ruler && c.id === ruler.id) || (consort && c.id === consort.id)) continue;
+      let courtRelation = FB.T('Court member');
+      if (rulerName && subject !== ruler) {
+        const rulerRelation = realmCourtRelation(s, ruler, c, null);
+        courtRelation = rulerRelation
+          ? FB.T('{relation} of {ruler}', { relation:rulerRelation, ruler:rulerName })
+          : FB.T('Member of {ruler}’s court', { ruler:rulerName });
+      }
+      const relation = realmCourtRelation(s, subject, c, courtRelation);
       rows.push({
         c:c,
         heir:succession && succession.heirId === member.id,
         role:'child',
         rel:succession && succession.heirId === member.id
-          ? FB.T('Heir')
-          : (succession && succession.authoredCourt ? royalRelation(c) : subjectId && childIds[subjectId]
-            ? FB.T(c.sex === 'f' ? 'Sister' : 'Brother')
-            : FB.T(c.sex === 'f' ? 'Daughter' : 'Son'))
+          ? FB.T('{relation} · Heir', { relation:relation }) : relation
       });
     }
     if (!rows.length) return '';
@@ -18663,10 +18902,10 @@ window.FB = window.FB || {};
         action:null
       };
     }
-    if (c.id !== s.player.charId && !FB.playerDescendantKind(s, c.id)) {
+    if (c.id !== s.player.charId && !FB.isHouseholdDependent(s, c.id)) {
       return {
         content:householdPlanLines(FB.T('Not applicable'),
-          FB.T('Education is managed for the household head and descendants')),
+          FB.T('Education is managed for resident family dependents')),
         action:null
       };
     }
@@ -18688,10 +18927,10 @@ window.FB = window.FB || {};
         action:null
       };
     }
-    if (c.id !== s.player.charId && !FB.playerDescendantKind(s, c.id)) {
+    if (c.id !== s.player.charId && !FB.isHouseholdDependent(s, c.id)) {
       return {
         content:householdPlanLines(FB.T('Not applicable'),
-          FB.T('Instruction is managed for the household head and descendants')),
+          FB.T('Instruction is managed for resident family dependents')),
         action:null
       };
     }
@@ -18916,10 +19155,8 @@ window.FB = window.FB || {};
     for (const c of FB.householdMembers(s)) {
       if (c.id !== head.id) add(c, 'family');
     }
-    /* Manageable kin (resident unwed siblings) get work, assignment, and
-       equipment cells like household members; education, instruction, and
-       match cells stay disabled with their existing explanations — those
-       are managed for the descent line only. */
+    /* Labor-only siblings get work and equipment cells. Inherited dependents
+       already joined the family rows above, including their education controls. */
     if (FB.manageableKinKind) {
       for (const id in s.chars) {
         const c = s.chars[id];
@@ -18988,7 +19225,7 @@ window.FB = window.FB || {};
       matchDowrySummary, matchGoldSummary, matchPrestigeSummary
     ].join(' · ');
     const planIntro = FB.T(
-      'Every living person managed by the household is shown here — including unwed siblings living under your roof, who take work and equipment but keep their own education and matches. Select an available cell to open its existing detailed controls.');
+      'Resident family dependents stay with the household through succession, including siblings and widowed parents. Their education, work, and equipment remain manageable. Other eligible unwed siblings can help with work and equipment. Select an available cell to open its detailed controls.');
     let h = '<div class="household-plan-content">' + householdPolicySummaryHtml(
         'education-policy-summary', FB.T('Education Policy'),
         [educationFocusSummary, educationInstructionSummary],
@@ -19874,14 +20111,44 @@ window.FB = window.FB || {};
     });
   };
 
-  UI.showFamilyOffice = function (cid, returnContext) {
+  function familyOfficeReasonText(s, reason) {
+    if (reason.type === 'dead') return FB.T('A deceased person cannot hold a household office.');
+    if (reason.type === 'captivity') return FB.T('They cannot serve while captive.');
+    if (reason.type === 'married_descendant') return FB.T('Married children and grandchildren leave the managed household and cannot hold an unpaid family office.');
+    if (reason.type === 'household') return FB.T('They must belong to your managed family to hold an unpaid household office.');
+    if (reason.type === 'age') return FB.T('Requires age {age} or older.', { age:reason.age });
+    if (reason.type === 'station') return FB.T('Requires station {station}.', { station:FB.stationName(reason.tier) });
+    if (reason.type === 'custom') return FB.T('This office is restricted by the realm’s custom.');
+    if (reason.type === 'career') {
+      const career = FBDATA.careers[reason.profession];
+      return FB.T('Requires the {career} occupation.', {
+        career:career ? dt(s, 'career', reason.profession, career, 'name') : reason.profession
+      });
+    }
+    if (reason.type === 'current') return FB.T('Relieve them of {office} before assigning another office.', { office:positionName(s, reason.office) });
+    if (reason.type === 'occupied') {
+      const holder = s.chars[reason.charId];
+      return FB.T(reason.paid
+        ? 'Already held by {name}. Open their character sheet, then Manage household service to dismiss them before appointing a replacement.'
+        : 'Already held by {name}. Relieve them of this family office before appointing a replacement.',
+      { name:holder ? FB.fullName(holder) : FB.T('Unknown holder') });
+    }
+    return FB.T('This household office is unavailable.');
+  }
+
+  UI.showFamilyOffice = function (cid, returnContext, replaceView) {
     const s = FB.state;
     const c = s && s.chars[cid];
     if (!c || !FB.isAgencyFamilyMember ||
-        !FB.isAgencyFamilyMember(s, cid)) return;
+        (!FB.isAgencyFamilyMember(s, cid) && !FB.playerDescendantKind(s, cid))) return;
+    const oldScroll = replaceView ? $('gm-body').scrollTop : 0;
+    const oldFocus = document.activeElement;
+    const focusedOffice = replaceView && oldFocus && oldFocus.getAttribute('data-family-office');
+    const openDetails = replaceView ? Array.prototype.map.call(
+      $('gm-body').querySelectorAll('.settcard-details:not(.hidden)'), function (detail) { return detail.id; }) : [];
     const current = FB.familyOfficeRecord(s, cid);
     let h = UI.charCardHtml(s, c) + '<p class="hint">' + esc(FB.T(
-      'Family offices are unpaid duties. The holder keeps their occupation, but leaves enterprise work while serving. One person and one holder per office.')) +
+      'Family offices are unpaid duties for managed family members. Married children and grandchildren leave the managed household. The holder keeps their occupation, but leaves enterprise work while serving. Each office has one holder, shared with paid retainers.')) +
       '</p><div class="gm-list">';
     for (const office in FBDATA.positions) {
       const def = FBDATA.positions[office];
@@ -19891,36 +20158,26 @@ window.FB = window.FB || {};
       const occupied = retainer
         ? s.chars[retainer.charId] : familyHolder;
       const already = current && current.office === office;
-      const eligible = already || FB.canAppointFamilyOffice(s, office, cid);
-      let reason = '';
-      if (already) reason = FB.T('This is their current household office.');
-      else if (current) reason = FB.T(
-        'Relieve them of {office} before assigning another office.', {
-          office:positionName(s, current.office)
-        });
-      else if (occupied) reason = FB.T('Already held by {name}.', {
-        name:occupied.name
-      });
-      else if (!FB.station.reaches(s.player, def.minTier || 0, s)) {
-        reason = FB.T('Requires station {station}.', {
-          station:FB.stationName(def.minTier || 0)
-        });
-      } else if (def.maleOnly && c.sex !== 'm') {
-        reason = FB.T('This office is restricted by the realm’s custom.');
-      } else {
-        reason = FB.T('Requires the {career} occupation.', {
-          career:FBDATA.careers[def.profession]
-            ? dt(s, 'career', def.profession,
-              FBDATA.careers[def.profession], 'name') : def.profession
-        });
+      const status = FB.familyOfficeStatus(s, office, cid);
+      const reasons = status.reasons.map(function (reason) { return familyOfficeReasonText(s, reason); });
+      let details = '<p>' + esc(positionDesc(s, office)) + '</p>';
+      if (!already && reasons.length) {
+        details += '<b>' + esc(FB.T('Requirements not met')) + '</b><ul>';
+        for (const reason of reasons) details += '<li>' + esc(reason) + '</li>';
+        details += '</ul>';
       }
-      h += '<button class="actionbtn" data-family-office="' + esc(office) + '"' +
-        (!eligible || already ? ' disabled' : '') + '>' +
-        esc(def.icon + ' ' + positionName(s, office)) +
-        '<span class="adesc">' + esc(positionDesc(s, office)) + ' ' +
-        esc(eligible && !already
-          ? (positionEffectText(office) || FB.T('Provides its listed household benefit.'))
-          : reason) + '</span></button>';
+      h += reviewActionCardHtml({
+        data:{ familyOffice:office }, detailsId:'family-office-details-' + office,
+        disabled:!status.can || already, warn:!status.can && !already,
+        labelHtml:esc(def.icon + ' ' + positionName(s, office)),
+        note:already ? FB.T('This is their current household office.') : status.can
+          ? FB.T('{benefit} · unpaid family duty · spends one day · replaces enterprise work', {
+            benefit:positionEffectText(office) || FB.T('Provides its listed household benefit.')
+          }) : reasons[0],
+        details:details
+      });
+      if (occupied && !already) h += reviewPeopleHtml(reviewPersonHtml(occupied,
+        FB.T('Current holder: {office}', { office:positionName(s, office) }), 'family-office-holder-' + office));
     }
     if (current) {
       h += '<button class="actionbtn danger" id="family-office-remove">' +
@@ -19934,15 +20191,40 @@ window.FB = window.FB || {};
       esc(FB.T('Back')) + '</button></div>';
     openModal(FB.T('Household office for {name}', { name:c.name }), h, {
       historyView:true,
-      noFocus:true,
-      historyBackRender:function () {
-        UI.showCharModal(cid, returnContext && returnContext.returnContext);
-      }
+      replaceView:!!replaceView,
+      noFocus:true
     });
     FB.paintFaces($('gm-body'), s);
+    for (const office in FBDATA.positions) {
+      const holderButton = $('family-office-holder-' + office);
+      if (!holderButton) continue;
+      const record = FB.retainerOfficeRecord(s, office);
+      const holder = record ? s.chars[record.charId] : FB.familyOfficeHolder(s, office);
+      if (holder) holderButton.addEventListener('click', function () {
+        UI.showCharModal(holder.id, { view:'family-office', characterId:cid, returnContext:returnContext });
+      });
+    }
+    if (replaceView) {
+      for (const id of openDetails) {
+        const detail = $(id);
+        if (!detail) continue;
+        detail.classList.remove('hidden');
+        const toggle = document.querySelector('[aria-controls="' + id + '"]');
+        if (toggle) toggle.setAttribute('aria-expanded', 'true');
+      }
+      if (focusedOffice) {
+        const button = document.querySelector('[data-family-office="' + focusedOffice + '"]');
+        if (button) (button.disabled ? button.closest('.review-action-card') : button).focus({ preventScroll:true });
+      }
+      $('gm-body').scrollTop = oldScroll;
+    }
     document.querySelectorAll('[data-family-office]').forEach(function (button) {
       button.addEventListener('click', function () {
-        if (!FB.appointFamilyOffice(s, button.dataset.familyOffice, cid)) return;
+        if (!FB.appointFamilyOffice(FB.state, button.dataset.familyOffice, cid)) {
+          UI.showFamilyOffice(cid, returnContext, true);
+          UI.toast(FB.T('The appointment is unavailable. Review the current requirements.'));
+          return;
+        }
         UI.closeModal();
         FB.game.passDay({ skipFocus:true });
         resumeManagementAfterDay(returnContext);
@@ -19973,10 +20255,11 @@ window.FB = window.FB || {};
       const blockedTier = !FB.station.reaches(s.player, def.minTier || 0, s);
       const blockedGold = (def.pay || 0) > 0 &&
         s.player.gold < (def.pay || 0);
-      const occupied = FB.retainerOfficeRecord(s, id) ||
+      const paidHolder = FB.retainerOfficeRecord(s, id);
+      const occupied = paidHolder ||
         (FB.familyOfficeHolder && FB.familyOfficeHolder(s, id));
       const blocker = occupied
-        ? FB.T('This household office is already filled.')
+        ? familyOfficeReasonText(s, { type:'occupied', charId:occupied.charId || occupied.id, paid:!!paidHolder })
         : blockedTier
           ? FB.T('Requires station {station}.', { station:FB.stationName(def.minTier || 0) })
           : blockedGold
@@ -20039,9 +20322,12 @@ window.FB = window.FB || {};
       if (FB.retainerRecords(s).length >= FB.retainerCapacity(s)) {
         return FB.T('Household retainer capacity is full.');
       }
-      if (FB.retainerOfficeRecord(s, office) ||
-          (FB.familyOfficeHolder && FB.familyOfficeHolder(s, office))) {
-        return FB.T('This household office is already filled.');
+      const paidHolder = FB.retainerOfficeRecord(s, office);
+      const holder = paidHolder || (FB.familyOfficeHolder && FB.familyOfficeHolder(s, office));
+      if (holder) {
+        return familyOfficeReasonText(s, {
+          type:'occupied', charId:holder.charId || holder.id, paid:!!paidHolder
+        });
       }
       if ((def.pay || 0) > 0 && s.player.gold < (def.pay || 0)) {
         return FB.T('Requires the first seasonal pay of {money:pay}.', {
@@ -20137,7 +20423,7 @@ window.FB = window.FB || {};
       }) + reviewActionCardHtml({
         id:'retainer-dismiss', danger:true,
         labelHtml:esc(FB.T('Dismiss from household service…')),
-        note:FB.T('The retainer leaves immediately and remembers the slight.')
+        note:FB.T('Leaves immediately · −15 Standing · spends no day')
       })) +
       '<div class="gm-footer"><button type="button" class="btn" id="gm-cancel">' +
       esc(FB.T('Back')) + '</button></div>';
@@ -20184,14 +20470,14 @@ window.FB = window.FB || {};
       reviewActionsHtml(reviewActionCardHtml({
         id:'retainer-dismiss-confirm', danger:true,
         label:FB.T('Dismiss {name}', { name:c.name }),
-        note:FB.T('The retainer leaves immediately and remembers the slight.'),
+        note:FB.T('Leaves immediately · −15 Standing · spends no day'),
         details:'<p>' + esc(FB.T(
           'Dismiss {name} as {position}? Enterprise work, tutoring, and household equipment assignments will end.',
           { name:c.name, position:positionName(s, record.office) })) + '</p>'
       })) +
       '<div class="gm-footer"><button type="button" class="btn" id="gm-cancel">' +
       esc(FB.T('Keep in service')) + '</button></div>';
-    openModal(FB.T('Dismiss Retainer'), h);
+    openModal(FB.T('Dismiss Retainer'), h, { historyView:true });
     FB.paintFaces($('gm-body'), s);
     $('retainer-dismiss-confirm').addEventListener('click', function () {
       if (!FB.removeRetainer(s, cid, 'dismissed')) return;
@@ -20199,7 +20485,7 @@ window.FB = window.FB || {};
       UI.refresh();
     });
     $('gm-cancel').addEventListener('click', function () {
-      UI.showRetainerManage(cid, returnContext);
+      modalHistoryBack(function () { UI.showRetainerManage(cid, returnContext); });
     });
   };
 
@@ -20281,6 +20567,13 @@ window.FB = window.FB || {};
             ? ' · ' + FB.guildTitle(career) : ''),
         roles.join(' · ')
       ];
+      const service = c.id === me.id && FB.householdServiceRecord(s);
+      if (service && service.status !== 'ended') {
+        metadata[0] = FB.T('Recorded occupation — {career}', {career:metadata[0]});
+        metadata.unshift(FB.T('Household service — {office}', {
+          office:FB.householdServiceName(s, service.roleId)
+        }));
+      }
       if (def && def.guild && career.guildRank !== 'none') {
         metadata.push(FB.T(
           'Guild Standing {standing} · +{gain} per active vocational year · maximum {maximum}', {
@@ -20568,6 +20861,8 @@ window.FB = window.FB || {};
     const career = FB.careerOf(s, c);
     const activeCareerDef = career && FBDATA.careers[career.profession];
     const landedSelf = c.id === s.player.charId && FB.station.isLanded(s.player, s);
+    const service = c.id === s.player.charId && FB.householdServiceRecord(s);
+    const employed = service && service.status !== 'ended';
     /* Work & Enterprises grammar: a current-work fact card, then option cards
        whose face keeps name, fee and first blocker; descriptions and full
        requirement audits sit behind each card's Details. */
@@ -20577,7 +20872,22 @@ window.FB = window.FB || {};
         ? 'Choose an apprenticeship. It teaches a trade until age sixteen and may cost an entry fee.'
         : 'Choose their occupation. Changing work spends the day; experience in the old trade is set aside.'));
     let currentWork = reviewPeopleHtml(reviewPersonHtml(c, FB.T('Age {age}', { age:age }), null)) +
-      kv(landedSelf ? 'Former calling' : 'Occupation', esc(FB.careerTitle(s, c)));
+      kv(landedSelf ? 'Former calling' : employed ? 'Recorded occupation' : 'Occupation', esc(FB.careerTitle(s, c)));
+    if (career.chosen) currentWork += kv('Vocational experience', esc(FB.T(
+      landedSelf ? 'Completed years: {years}' : 'Completed years: {years} · updates at New Year', {
+        years:career.experience || 0
+      })));
+    if (activeCareerDef && activeCareerDef.learned) {
+      const lettered = !!FB.traitMechanic(c, 'literacy');
+      const needed = Math.max(1, Number(activeCareerDef.literacyYears) || 2);
+      if (lettered) currentWork += kv('Literacy', esc(FB.T('Lettered')));
+      else if (career.rank === 'apprentice') currentWork += kv('Career letters training', esc(FB.T(
+        '{done} / {needed} trainee years toward Lettered', {
+          done:Math.min(career.experience || 0, needed), needed:needed
+        })));
+    }
+    if (employed) currentWork += kv('Household appointment', esc(FB.householdServiceName(s, service.roleId))) +
+      serviceProgressRows(s, service.roleId, true);
     if (activeCareerDef && activeCareerDef.guild && career.guildRank !== 'none') {
       currentWork += kv('Guild rank', esc(FB.T('{rank} · Guild Standing {standing}', {
         rank:FB.guildTitle(career), standing:Math.round(career.guildStanding || 0)
@@ -24003,7 +24313,8 @@ window.FB = window.FB || {};
     const record = FB.realmTechRecord(s, rid);
     const traditions = FB.techTraditionsForRealm(s, rid).map(techTraditionName);
     const projects = FB.techCandidates(s, rid);
-    const canControlResearch = rid === 'player' && FB.isPlayerSovereign(s);
+    const canControlResearch = FB.station.isLanded(s.player, s) &&
+      rid === 'player' && FB.isPlayerSovereign(s);
     const researchAuto = FB.game.auto || {};
     let h = '<div class="tech-summary">' +
       kv('Sovereign nation', esc(realm ? realm.name : rid)) +
@@ -24133,7 +24444,8 @@ window.FB = window.FB || {};
 
   UI.showTechAutomation = function () {
     const s = FB.state;
-    if (!s || !FB.techUiRelevant(s) || !FB.isPlayerSovereign(s)) return false;
+    if (!s || !FB.techUiRelevant(s) || !FB.station.isLanded(s.player, s) ||
+        !FB.isPlayerSovereign(s)) return false;
     const auto = FB.game.auto;
     const current = auto.research ? techAutomationMode(auto.researchMode) : 'off';
     function choice(mode, label, desc) {
@@ -24184,7 +24496,8 @@ window.FB = window.FB || {};
     const record = FB.realmTechRecord(s, rid);
     const item = FB.techCandidate(s, id, rid);
     if (!item) return backAction();
-    const canChoose = rid === 'player' && FB.isPlayerSovereign(s);
+    const canChoose = FB.station.isLanded(s.player, s) &&
+      rid === 'player' && FB.isPlayerSovereign(s);
     const cost = item.breakdown || FB.techCostBreakdown(s, id, rid);
     const tradition = techTraditionName(cost.tradition);
     const exposureDiscount = Math.round((1 - cost.exposureMultiplier) * 100);
@@ -24317,7 +24630,8 @@ window.FB = window.FB || {};
 
   UI.showTechSwitch = function (id, returnContext) {
     const s = FB.state, def = FBDATA.tech[id];
-    if (!def || !FB.techUiRelevant(s) || !FB.isPlayerSovereign(s)) return false;
+    if (!def || !FB.techUiRelevant(s) || !FB.station.isLanded(s.player, s) ||
+        !FB.isPlayerSovereign(s)) return false;
     const rid = FB.techRealmId(s);
     const record = FB.realmTechRecord(s, rid);
     const item = FB.techCandidate(s, id, rid);
@@ -25302,22 +25616,24 @@ window.FB = window.FB || {};
         consequence:FB.T('Guidance changes their yearly personal progress and family requests.'),
         route:'family-ambition'
       });
-      if (FB.ageOf(c, s.date.year) >= 16) {
-        addInteractionAction(model, {
-          id:'management.family.office',
-          group:'management',
-          label:FB.T('Assign a household office…'),
-          detail:familyOffice
-            ? FB.T('Currently serving as {office}.', {
-              office:positionName(s, familyOffice.office)
-            })
-            : FB.T('Match their occupation to an available household office.'),
-          enabled:true,
-          blockedReason:null,
-          consequence:FB.T('An office replaces enterprise work and spends the day.'),
-          route:'family-office'
-        });
-      }
+    }
+    if (!c.dead && FB.ageOf(c, s.date.year) >= 16 && (agencyFamily || descendantKind)) {
+      addInteractionAction(model, {
+        id:'management.family.office',
+        group:'management',
+        label:FB.T(agencyFamily ? 'Assign a household office…' : 'Review household offices…'),
+        detail:!agencyFamily ? familyOfficeReasonText(s, {
+          type:FB.spousesOf(s, c).length ? 'married_descendant' : 'household'
+        }) : familyOffice
+          ? FB.T('Currently serving as {office}.', {
+            office:positionName(s, familyOffice.office)
+          })
+          : FB.T('Match their occupation to an available household office.'),
+        enabled:true,
+        blockedReason:null,
+        consequence:FB.T(agencyFamily ? 'An office replaces enterprise work and spends the day.' : 'Review requirements without changing appointments.'),
+        route:'family-office'
+      });
     }
     if (retainer) {
       addInteractionAction(model, {
@@ -25348,7 +25664,7 @@ window.FB = window.FB || {};
         route:'retainer-hire'
       });
     }
-    const managedMinor = (descendantKind || c.id === me.id) &&
+    const managedMinor = FB.isHouseholdDependent(s, c.id) &&
       household && FB.ageOf(c, s.date.year) < 16;
     if (managedMinor) {
       addInteractionAction(model, {
@@ -25488,10 +25804,11 @@ window.FB = window.FB || {};
   UI.characterInteractionCard = buildCharacterInteractionCard;
 
   function royalCourtCharacterContext(s, cid, returnContext) {
-    if (!returnContext || !returnContext.realmFamily ||
-        returnContext.view !== 'realm' ||
-        !returnContext.realmId || !s.realms[returnContext.realmId]) return null;
-    const rid = returnContext.realmId;
+    const c = s.chars[cid];
+    const rid = returnContext && returnContext.realmFamily &&
+      returnContext.view === 'realm' ? returnContext.realmId :
+      (c && !c.dead && c.royalLine && c.royalLine.realmId);
+    if (!rid || !s.realms[rid] || !s.realms[rid].alive) return null;
     const ruler = interactionRealmRulerCharacter(s, rid);
     const consort = FB.realmConsortCharacter && FB.realmConsortCharacter(s, rid);
     if (ruler && ruler.id === cid) {
@@ -25512,8 +25829,12 @@ window.FB = window.FB || {};
     const familyButtons = root.querySelectorAll('[data-realm-family-cid]');
     for (let i = 0; i < familyButtons.length; i++) {
       familyButtons[i].addEventListener('click', function () {
+        if (returnContext.view === 'character') {
+          returnContext.scrollTop = root.scrollTop;
+          returnContext.familyFocus = familyButtons[i].getAttribute('data-realm-family-cid');
+        }
         UI.showCharModal(familyButtons[i].getAttribute(
-          'data-realm-family-cid'), returnContext, true);
+          'data-realm-family-cid'), returnContext, returnContext.view === 'realm');
       });
     }
   }
@@ -25870,7 +26191,8 @@ window.FB = window.FB || {};
     const initialRealmId = hintedRealm && hintedRealm.alive
       ? realmIdHint
       : (FB.realmIdForRulerCharacter &&
-        FB.realmIdForRulerCharacter(s, c));
+        FB.realmIdForRulerCharacter(s, c)) ||
+        (!c.dead && c.royalLine && c.royalLine.realmId);
     if (initialRealmId && FB.ensureRealmCourtForDisplay) {
       FB.ensureRealmCourtForDisplay(s, initialRealmId);
     }
@@ -25886,6 +26208,8 @@ window.FB = window.FB || {};
       s.realms.player && s.realms.player.alive ? 'player' : null;
     const displayRealmId = model.realmId || selfRealmId;
     const royalCourt = royalCourtCharacterContext(s, cid, returnContext);
+    const royalFamilyNavigation = royalCourt && returnContext &&
+      returnContext.realmFamily && returnContext.view === 'realm';
     if (royalCourt) model.showContext = false;
     const cardOptions = { skillsGuide:true, mapHome:true, renameFamily:true };
     if (royalCourt) {
@@ -25903,10 +26227,13 @@ window.FB = window.FB || {};
       cardOptions.cardClass = 'realm-ruler-card';
     }
     const courtRealmId = model.realmId || (royalCourt && royalCourt.rid);
-    const familyContext = courtRealmId ? {
+    const familyContext = courtRealmId ? (royalFamilyNavigation || model.realmId ? {
       view:'realm', realmId:courtRealmId, returnContext:returnContext,
       realmFamily:true
-    } : null;
+    } : {
+      view:'character', characterId:c.id, returnContext:returnContext,
+      realmId:realmIdHint
+    }) : null;
     let h = UI.charCardHtml(s, c, false, true, cardOptions);
     if (displayRealmId) h += realmWarNoticeHtml(s, displayRealmId);
     if (courtRealmId) h += realmCourtStripHtml(s, courtRealmId, c.id);
@@ -25947,7 +26274,7 @@ window.FB = window.FB || {};
     /* Back walks the sheet-to-sheet return chain, which can loop between two
        linked rulers; always offer a plain Close that dismisses the modal
        stack outright. */
-    const backable = !royalCourt && !!returnContext;
+    const backable = !royalFamilyNavigation && !!returnContext;
     h += '<div class="gm-footer"><button type="button" class="btn" id="cm-close">' +
       esc(backable ? FB.T('Back') : FB.T('Close')) + '</button>' +
       (backable
@@ -25961,10 +26288,11 @@ window.FB = window.FB || {};
       : FB.fullName(c);
     openModal(modalTitle, h, {
       modalClass:'fullsheet-modal interaction-modal character-interaction-modal',
-      historyView:!!returnContext && !royalCourt,
+      historyView:!!returnContext && !royalFamilyNavigation,
       replaceView:!!replaceView,
       historyBackRender:returnContext && (returnContext.view === 'marriage-finder' ||
         returnContext.view === 'abbeys' ||
+        returnContext.view === 'family-office' ||
         returnContext.view === 'religious-office-result' ||
         returnContext.view === 'settlement-founding')
         ? null : function () {
@@ -26364,7 +26692,7 @@ window.FB = window.FB || {};
       });
     }
     $('cm-close').addEventListener('click', function () {
-      if (returnContext && !royalCourt) {
+      if (returnContext && !royalFamilyNavigation) {
         modalHistoryBack(function () {
           interactionReturn(returnContext);
         });
@@ -26870,6 +27198,23 @@ window.FB = window.FB || {};
   function serviceTraitRule() {
     return FB.T('Role-specific traits adjust each required skill by at most 2 points either way, in addition to their usual stat effects. Experience, literacy and Standing still apply.');
   }
+  function serviceLiteracyProgressText(s) {
+    const progress = FB.householdServiceProgress(s);
+    return progress.lettered ? FB.T('Lettered') : FB.T(
+      '{done} / {needed} working days toward Lettered', {
+        done:Math.min(progress.learnedDays, progress.letteredDaysRequired),
+        needed:progress.letteredDaysRequired
+      });
+  }
+  function serviceProgressRows(s, roleId, includeTotal) {
+    const progress = FB.householdServiceProgress(s, roleId);
+    let h = kv('Days in this role', esc(FB.T('{days} working days', {days:progress.roleDays})));
+    if (includeTotal) h += kv('Total household service', esc(FB.T('{days} working days', {days:progress.totalDays})));
+    if (FBDATA.householdServiceRoles[roleId].path === 'letters') {
+      h += kv('Letters training', esc(serviceLiteracyProgressText(s)));
+    }
+    return h;
+  }
   function serviceQualificationHtml(s, status) {
     const fit = status.qualification;
     if (!fit.skills.length) return '';
@@ -26903,7 +27248,9 @@ window.FB = window.FB || {};
     let state = 'unavailable', label = FB.T('Unavailable'), note;
     if (current) {
       state = 'current'; label = FB.T('Current');
-      note = FB.T('{days} working days completed', { days:record.workedDays });
+      note = FB.T('{days} working days in this role', {
+        days:FB.householdServiceProgress(s, id).roleDays
+      });
     } else if (offer.ready) {
       state = 'available';
       label = offer.renewal ? FB.T('Renewal available') : FB.T('Available');
@@ -26929,7 +27276,9 @@ window.FB = window.FB || {};
       esc(FB.householdServiceName(s, id)) + '</span><span class="adesc">' +
       esc(servicePayText(def)) + '</span><span class="adesc' +
       (state === 'unavailable' ? ' service-blocker' : '') + '">' + esc(note) +
-      '</span></span></span><span class="large-list-face-state' +
+      '</span>' + (def.path === 'letters' ? '<span class="adesc" data-service-literacy>' +
+        esc(serviceLiteracyProgressText(s)) + '</span>' : '') +
+      '</span></span><span class="large-list-face-state' +
       (state === 'current' ? ' service-current' : '') + '">' + esc(label) + '</span></button>' +
       '<span class="settcard-actions large-list-work-actions"><button type="button" ' +
       'class="btn small settcard-info" aria-expanded="false" aria-controls="' + detailsId +
@@ -26955,7 +27304,7 @@ window.FB = window.FB || {};
       const def = FBDATA.householdServiceRoles[r.roleId];
       h += kv('Appointment', esc(serviceRoleIcon(r.roleId) + ' ' + FB.householdServiceName(s, r.roleId))) +
         kv('Pay', esc(servicePayText(def))) +
-        kv('Completed service', esc(FB.T('{days} working days', { days:r.workedDays })));
+        serviceProgressRows(s, r.roleId, true);
       if (!status.reason) h += kv('Status', esc(s.player.focus === 'toil'
         ? FB.T('Working') : FB.T('Paused: your Daily Focus is elsewhere')));
     } else {
@@ -26996,6 +27345,7 @@ window.FB = window.FB || {};
     h += '</div><div class="gm-footer"><button type="button" class="btn" id="service-close">' + esc(FB.T('Close')) + '</button></div>';
     openModal(FB.T('Service household'), h, {modalClass:'fullsheet-modal household-service-modal',historyView:true,replaceView:!!replace,
       noFocus:!!view, titleDetailsHtml:'<p>' + esc(FB.T('Earn a place in your local lord’s household through useful work. Service does not change your station or free your family.')) + '</p><p>' +
+        esc(FB.T('Freedom does not end an accepted household appointment. Your recorded occupation is kept separately. Only completed work with the appointment’s Daily Focus earns service days; rest and other focuses do not. Accounts and teaching work count toward Lettered.')) + '</p><p>' +
         esc(FB.T('Promotions require completed work, relevant skills, trait fit and Standing. Every 90 working days improves Standing with the patron and officer, offers training and covers one ordinary labor duty within the next 180 days. Taxes and extraordinary dues remain payable.')) + '</p><p>' +
         esc(serviceTraitRule()) + '</p><p>' +
         esc(FB.T('Travel, captivity and campaigning pause service. A new patron must renew your appointment. Moving home or becoming a landed ruler ends it. Your heir does not inherit the job.')) + '</p>'});
@@ -27035,13 +27385,14 @@ window.FB = window.FB || {};
       esc(serviceRoleIcon(roleId) + ' ' + FB.householdServiceName(s, roleId)) + '</h4>';
     if (status.patron) h += reviewPeopleHtml(reviewPersonHtml(status.patron, FB.T('Patron'), null));
     if (leaving) {
-      h += kv('Completed service', esc(FB.T('{days} working days', { days:r ? r.workedDays : 0 }))) +
+      h += serviceProgressRows(s, roleId, true) +
         kv('Pay lost', esc(servicePayText(def))) +
         kv('Afterwards', esc(FB.T('Ordinary livelihood'))) +
         kv('Experience', esc(FB.T('Kept for this life')));
     } else {
       h += kv('Pay', esc(servicePayText(def))) +
         kv('Training', esc(serviceTrainingText(def))) +
+        serviceProgressRows(s, roleId, false) +
         kv('Daily Focus', esc(FB.T('Switches to this work'))) +
         kv('Each 90 working days', esc(FB.T('+2 Standing with the patron, +3 with the officer')));
     }
@@ -27067,7 +27418,9 @@ window.FB = window.FB || {};
       esc(FB.T('Value to patron: {money:value} per 90 working days after your pay.', { value:def.value })) + '</p><p>' +
       esc(FB.T('Each 90 working days: +2 Standing with the patron, +3 with the household officer, and a 50% chance of gaining one point in the next training skill.')) + '</p><p>' +
       esc(FB.T('Each completed term covers one ordinary labor duty within 180 days. Taxes and extraordinary dues remain payable. Every 180 working days brings a household responsibility to resolve.')) + '</p>';
-    if (def.path === 'letters') details += '<p>' + esc(FB.T('Complete 720 working days in accounts or teaching to become Lettered.')) + '</p>';
+    if (def.path === 'letters') details += '<p>' + esc(FB.T('Complete {days} working days in accounts or teaching to become Lettered.', {
+      days:FB.householdServiceProgress(s).letteredDaysRequired
+    })) + '</p>';
     if (leaving) details = '<p>' + esc(FB.T('Leave this appointment and return to your ordinary livelihood. Your completed experience remains available during this life.')) + '</p>';
     function back() { UI.showHouseholdService(false, view); }
     openModal(leaving ? FB.T('Leave household service') : FB.T('Review household appointment'), h, {
@@ -28869,7 +29222,7 @@ window.FB = window.FB || {};
     const s = FB.state;
     const c = s.chars[cid];
     if (!c || c.dead || !FB.isHouseholdCharacter(s, cid) ||
-        (c.id !== s.player.charId && !FB.playerDescendantKind(s, cid)) ||
+        (c.id !== s.player.charId && !FB.isHouseholdDependent(s, cid)) ||
         FB.ageOf(c, s.date.year) >= 16) return;
     const self = c.id === s.player.charId;
     const policy = FB.ensureEducationPolicy(s);
@@ -28968,7 +29321,7 @@ window.FB = window.FB || {};
     const s = FB.state;
     const c = s.chars[cid];
     if (!c || c.dead || !FB.isHouseholdCharacter(s, cid) ||
-        (c.id !== s.player.charId && !FB.playerDescendantKind(s, cid)) ||
+        (c.id !== s.player.charId && !FB.isHouseholdDependent(s, cid)) ||
         FB.ageOf(c, s.date.year) >= 16) return;
     const me = s.chars[s.player.charId];
     const self = c.id === me.id;
@@ -31069,7 +31422,11 @@ window.FB = window.FB || {};
         'set-group-deeds-by-action-type',
         'Group Deeds by action type',
         'Keep Daily Focus first, then group actions into one-shot and recurring deeds, personal decisions, and ruler decisions instead of thematic sections.',
-        G.uiPrefs.groupDeedsByActionType);
+        G.uiPrefs.groupDeedsByActionType) + settingsDetailToggle(
+        'set-highlight-ready-deeds',
+        'Scroll to ready recurring deeds',
+        'When a recurring deed becomes available, switch to Deeds, open its section, scroll to it, highlight it and pause time. Notifications wait while a dialog or fast-forward is active. Use Play to continue. Keyboard focus stays where it is unless the previous control is hidden by the tab switch. Off by default.',
+        G.uiPrefs.highlightReadyDeeds);
     h += '<div class="gm-body-text" style="margin-top:8px"><p>' +
       esc(FB.T('Guidance')) + '</p></div>' +
       '<label class="autorow"><input type="checkbox" id="set-hide-beginner-hints"' +
@@ -31255,6 +31612,11 @@ window.FB = window.FB || {};
       G.saveUiPrefs();
       markActionsDirty();
       if (FB.state) renderActions();
+    });
+    $('set-highlight-ready-deeds').addEventListener('change', function () {
+      G.uiPrefs.highlightReadyDeeds = $('set-highlight-ready-deeds').checked;
+      G.saveUiPrefs();
+      if (UI.refreshRecurringDeedAlerts) UI.refreshRecurringDeedAlerts();
     });
     $('set-hide-beginner-hints').addEventListener('change', function () {
       G.uiPrefs.hideBeginnerHints = $('set-hide-beginner-hints').checked;
@@ -32327,7 +32689,7 @@ window.FB = window.FB || {};
       guideBody([], [
         FB.T('Playable line: the current protagonist and the eligible successor you can continue as. The chronicle, family property, enterprises, contracts, role-orientation history, and most money survive; prestige, piety, and Popular support are reduced. Personal Standing, courtship, plots, attention, cooldowns, and the named-heir choice reset for the new life.'),
         FB.T('House or dynasty: characters sharing the house identity. A chosen relative joins the playable house at succession; house membership by itself does not make someone controllable or resident.'),
-        FB.T('Managed household: the playable head, resident spouses and descendants, and hired retainers that Work & Enterprises can assign when age, station, faith, and career rules allow. Unwed, unlanded, unvowed siblings living at the household home can also be put to work, though they never join the household itself; marriage, land, vows, or moving away ends that.'),
+        FB.T('Managed household: the playable head, resident spouses and descendants, family dependents retained through succession, and hired retainers. Inherited siblings and widowed parents keep their education, work, and equipment controls while dependent; noble birth alone does not make them independent. Marriage, a separate ruling household, vows, or moving away ends inherited dependency. Other eligible unwed siblings at home may help with work and equipment.'),
         FB.T('Visible family: the broader family tree, including dead kin and relatives living elsewhere. Visibility is not control.'),
         FB.T('Royal branch: the designated crown successor’s branch. A marriage tie alone does not redirect a crown into the playable line.')
       ]), 'dynasty house kin relatives resident controllable assignable work royal branch');

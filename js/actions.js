@@ -2768,7 +2768,7 @@ window.FB = window.FB || {};
         FB.ui.showSerfHostileDeeds();
       }
     } },
-  { id: 'scheme_rival', requiresAdult:true,
+  { id: 'scheme_rival', requiresAdult:true, automatableRecurring:true,
     desc: function (s) {
       const r = FB.getRole(s, 'rival');
       return r
@@ -3411,7 +3411,7 @@ window.FB = window.FB || {};
         FB.ui.showGreatHolyWarSettlement();
       }
     } },
-  { id: 'give_alms', requiresAdult:true,
+  { id: 'give_alms', automatableRecurring:true, requiresAdult:true,
     desc:function (s) { return FB.T('Bread and coin for the poor at the {temple} gate. ({money:amount})', {temple:FB.templeWord(me(s).religion),amount:FBDATA.deedRoutines.give_alms.costs && FBDATA.deedRoutines.give_alms.costs.gold || 0}); },
     show: function () { return true; } },
   { id: 'begin_plot', opensChoices:true, noConsume: true, requiresAdult:true,
@@ -3425,7 +3425,7 @@ window.FB = window.FB || {};
     run: function () {
       if (FB.ui && FB.ui.showIntrigueAssets) FB.ui.showIntrigueAssets();
     } },
-  { id: 'mediate', requiresAdult:true,
+  { id: 'mediate', automatableRecurring:true, requiresAdult:true,
     show: function (s) { return !FB.station.isLanded(s.player, s); },
     run: function (s) {
       const policy = FBDATA.actionPolicies.mediate;
@@ -3558,11 +3558,7 @@ window.FB = window.FB || {};
         { gold: FB.landPlotCost(s) });
     },
     show: function (s) { return canBuyFreeholdLand(s); },
-    can: function (s) {
-      if (!FB.landAvailable(s).length) return 'No more land is for sale here.';
-      if (s.player.gold < FB.landPlotCost(s)) return FB.T('Not enough money.');
-      return true;
-    },
+    can: function () { return true; },
     run: function () {
       if (FB.ui && FB.ui.showLandMarket) FB.ui.showLandMarket();
     } },
@@ -3684,7 +3680,7 @@ window.FB = window.FB || {};
       return FB.station.isLanded(s.player, s) &&
         !(FB.playerChurchOfficeOnly && FB.playerChurchOfficeOnly(s));
     } },
-  { id: 'squeeze_taxes',
+  { id: 'squeeze_taxes', automatableRecurring:true,
     show: function (s) {
       return FB.station.isLanded(s.player, s) &&
         !(FB.playerChurchOfficeOnly && FB.playerChurchOfficeOnly(s));
@@ -3763,9 +3759,8 @@ window.FB = window.FB || {};
         slots:FB.techSlotCount(s, rid)
       });
     },
-    /* Only landed ranks can use the sheet: sovereigns direct national
-       research, vassals advocate projects at court (FB.canAdvocateTech).
-       Commoners see named household gates, not the national catalogue. */
+    /* Freeholders and gentry read the catalogue; sovereigns direct national
+       research and landed vassals advocate projects at court. */
     show: function (s) { return FB.techUiRelevant(s); },
     run: function (s) { if (FB.ui && FB.ui.showTech) FB.ui.showTech(); } },
   { id: 'hold_feast',
@@ -3989,7 +3984,7 @@ window.FB = window.FB || {};
       return !!(FB.playerHost && FB.playerHost(s));
     },
     run: function (s) { if (FB.demusterPlayerHost) FB.demusterPlayerHost(s); } },
-  { id: 'hire_mercs',
+  { id: 'hire_mercs', automatableRecurring:true,
     desc: function (s) {
       const w = s.player.war;
       const n = (w && w.mercCos) || 0;
@@ -4143,7 +4138,7 @@ window.FB = window.FB || {};
         FB.ui.showGrantLand(options && options.returnContext);
       }
     } },
-  { id: 'demand_taxes',
+  { id: 'demand_taxes', automatableRecurring:true,
     desc: function (s) { return FB.T('Demand extraordinary taxes from eligible {term:vassal.other}. Their Standing falls by 15. During a fiscal crisis, their directly held counties also lose 10 Popular support for one year; repeated extraction refreshes this penalty.'); },
     show: function (s) { return FB.playerVassals(s).length >= 1; },
     can: function (s) {
@@ -9529,7 +9524,7 @@ window.FB = window.FB || {};
      to heirs. Contiguous holdings are worked more efficiently; five plots in
      one place may be declared a manor and raise the family into the gentry. */
   function canBuyFreeholdLand(state) {
-    return FB.station.isFreeholder(state.player, state) || FB.station.isGentry(state.player, state);
+    return FB.station.isFree(state.player, state);
   }
 
   FB.landPlotCost = function (state, quantity) {
@@ -10479,10 +10474,14 @@ window.FB = window.FB || {};
      cost × buildingRepeatCostGrowth^(copies standing) — the price climbs
      instead of the bonus shrinking */
   FB.buildCost = function (state, pid, id, realmId) {
+    return buildingCost(state, pid, id, realmId,
+      FB.buildingCountIn(state, pid, id, true), 1);
+  };
+
+  function buildingCost(state, pid, id, realmId, copies, multiplier) {
     const def = FBDATA.buildings[id];
     if (!def || def.fort) return 0;
-    const copies = FB.buildingCountIn(state, pid, id, true);
-    let c = def.cost * Math.pow(FBDATA.balance.buildingRepeatCostGrowth || 1.5, copies) *
+    let c = def.cost * multiplier * Math.pow(FBDATA.balance.buildingRepeatCostGrowth || 1.5, copies) *
       Math.max(0, FB.techCostFactor(state, 'build', realmId) -
         (!realmId && FB.councilBonus ? FB.councilBonus(state, 'build') : 0));
     c *= Math.max(0, 1 +
@@ -10490,7 +10489,7 @@ window.FB = window.FB || {};
     if (!realmId && state.player.flags.mason_visit) c *= 0.75;
     return FB.marketCostQuote ? FB.marketCostQuote(state, c,
       def.marketBasket, pid, 'up') : Math.round(c);
-  };
+  }
 
   FB.canBuildAt = function (state, pid, idx, id, context) {
     const def = FBDATA.buildings[id];
@@ -10645,6 +10644,78 @@ window.FB = window.FB || {};
     return true;
   };
 
+  FB.repairBuildingStatus = function (state, pid, idx, id) {
+    const out = { ready:false, cost:0, reason:'', fort:false, targetLevel:0, completeTurn:null };
+    const def = FBDATA.buildings[id];
+    if (!state || !def || typeof idx !== 'number' || !isFinite(idx) ||
+        Math.floor(idx) !== idx || idx < 0) {
+      out.reason = FB.T('This building cannot be repaired.');
+      return out;
+    }
+    const ruin = FB.builtIn(state, pid).filter(function (entry) {
+      return entry.s === idx && entry.id === id && entry.ruined;
+    })[0];
+    if (!ruin) {
+      out.reason = FB.T('There are no ruins of this building to repair.');
+      return out;
+    }
+    if (def.fort === true) {
+      const fort = FB.fortProjectStatus(state, pid, idx, 0, { repair:true });
+      out.fort = true;
+      out.ready = fort.ok;
+      out.cost = fort.cost;
+      out.targetLevel = fort.targetLevel;
+      out.completeTurn = fort.completeTurn;
+      out.reason = fort.ok ? '' : fort.reason === 'gold'
+        ? FB.T('Requires {money:cost}.', { cost:fort.cost })
+        : fort.reason === 'contested'
+          ? FB.T('Repairs cannot begin while the county is contested.')
+          : FB.T('You must hold the county at Baron rank or higher, with no other active fort.');
+      return out;
+    }
+    const context = FB.buildingContext(state, pid);
+    out.cost = buildingCost(state, pid, id, null,
+      Math.max(0, FB.buildingCountIn(state, pid, id, true) - 1), 0.5);
+    if (!FB.settlementConstructionAuthority(state, pid, idx).direct || idx >= context.visibleCount) {
+      out.reason = FB.T('You must hold this settlement directly at Baron rank or higher.');
+    } else if ((def.maxCounty && FB.buildingCountIn(state, pid, id, false) >= def.maxCounty) ||
+        (def.maxDemesne && buildingContextDemesneCount(state, context, id) >= def.maxDemesne)) {
+      out.reason = FB.T('The standing-building limit has already been reached.');
+    } else if (!isFinite(out.cost) || !isFinite(Number(state.player.gold)) || state.player.gold < out.cost) {
+      out.reason = FB.T('Requires {money:cost}.', { cost:out.cost });
+    } else {
+      out.ready = true;
+    }
+    return out;
+  };
+
+  FB.repairBuilding = function (state, pid, idx, id, quotedCost) {
+    const status = FB.repairBuildingStatus(state, pid, idx, id);
+    if (!status.ready || quotedCost !== undefined && quotedCost !== status.cost) return false;
+    if (status.fort) return !!FB.startFortProject(state, pid, idx,
+      status.targetLevel, { repair:true });
+    const record = builtInForWrite(state, pid).filter(function (entry) {
+      return entry.s === idx && entry.id === id && entry.ruined;
+    })[0];
+    if (!record) return false;
+    state.player.gold -= status.cost;
+    delete state.player.flags.mason_visit;
+    delete record.ruined;
+    const removed = Number(record.devRemoved);
+    if (isFinite(removed) && removed > 0) {
+      record.devGranted = (Number(record.devGranted) || 0) +
+        FB.changeCountyDevelopment(state, pid, removed, 'building_repair');
+    }
+    delete record.devRemoved;
+    FB.invalidateBuildingIndex(state, pid);
+    if (FB.reconcileSettlementCommunities) FB.reconcileSettlementCommunities(state, pid);
+    FB.news(state, FB.msg('news.action.building_repaired',
+      '{building} is repaired in {province}.', {
+        building:FB.dataParam('building', id), province:FB.world.byId[pid].name
+      }));
+    return true;
+  };
+
   FB.demolishBuilding = function (state, pid, idx, id) {
     if (!state) return false;
     const fortification = FB.isFortificationBuilding(id);
@@ -10658,7 +10729,8 @@ window.FB = window.FB || {};
         FB.invalidateBuildingIndex(state, pid);
         const granted = Number(record.devGranted);
         if (isFinite(granted) && granted) {
-          FB.changeCountyDevelopment(state, pid, -granted, 'demolition');
+          record.devRemoved = -FB.changeCountyDevelopment(state, pid, -granted, 'demolition');
+          record.devGranted = 0;
         }
         if (FB.reconcileSettlementCommunities) {
           FB.reconcileSettlementCommunities(state, pid);
@@ -12717,6 +12789,32 @@ window.FB = window.FB || {};
     return action ? instantStatusReadyTurnForAction(state, action) : null;
   };
 
+  /* Private handler permission: data flow alone cannot identify deeds that
+     resolve without opening choices. Mod-added deeds remain manual-only. */
+  FB.recurringDeeds = function (state, automaticOnly) {
+    return (FB.instants || []).filter(function (action) {
+      const days = Number(actionCooldownDays(state, action));
+      return !action.compatibilityAlias && !action.declarative &&
+        isFinite(days) && days > 0 && (!automaticOnly ||
+          (action.automatableRecurring === true && !action.opensChoices &&
+            !action.noConsume && !action.deferCooldown));
+    });
+  };
+
+  FB.autoRecurringDeed = function (state, selected) {
+    const p = state.player;
+    if (!selected || !Object.keys(selected).some(function (id) { return selected[id] === true; }) ||
+        p.travel || (p.flags && p.flags.in_prison) ||
+        (FB.intrigueCaptivityOf && FB.intrigueCaptivityOf(state, p.charId)) ||
+        (FB.ui && FB.ui.deedInteractionBusy && FB.ui.deedInteractionBusy())) return false;
+    for (const action of FB.recurringDeeds(state, true)) {
+      if (Object.prototype.hasOwnProperty.call(selected, action.id) &&
+          selected[action.id] === true &&
+          FB.runInstant(state, action.id, { automaticDay:true }) === true) return true;
+    }
+    return false;
+  };
+
   FB.listInstants = function (state, options) {
     const deferEligibility = !!(options && options.deferEligibility);
     const out = [];
@@ -12852,6 +12950,10 @@ window.FB = window.FB || {};
   };
 
   FB.runInstant = function (state, id, options) {
+    const automaticDay = !!(options && options.automaticDay);
+    if (automaticDay && !FB.recurringDeeds(state, true).some(function (action) {
+      return action.id === id;
+    })) return false;
     const status = FB.instantStatus(state, id);
     if (!status.shown || !status.can) return;
     if (id === 'seek_match' && !(options && options.localMatch) &&
@@ -12871,6 +12973,10 @@ window.FB = window.FB || {};
       if (declarative && a.cd !== undefined) {
         state.player.cooldowns = state.player.cooldowns || {};
         state.player.cooldowns[id] = state.turn;
+      }
+      if (automaticDay) {
+        if (FB.noteDeedCompleted) FB.noteDeedCompleted(state, id);
+        return true; // passDay owns this day's simulation, not a nested tick
       }
       if (a.noConsume) {
         if (declarative && FB.noteDeedCompleted) {
