@@ -514,7 +514,19 @@ test('a ruler can review a return from dynastic government without bypassing pro
 
 test('a real seasonal continuation replays exactly and keeps recognition and hereditary ledgers bounded', async function ({page},testInfo) {
   await start(page,testInfo);
-  await page.evaluate(function () { FB.state.date.day=89; FB.state.turn=88; });
+  const openingPreferences = await page.evaluate(function () {
+    const s = FB.state;
+    s.date.day=89; s.turn=88;
+    // A direct clock jump must also expire the first-turn heir preferences.
+    Object.keys(s.realms).forEach(function (id) {
+      const succession = s.realms[id].succession;
+      if (succession && succession.openingPreferredId) FB.refreshRealmSuccession(s,id);
+    });
+    return Object.keys(s.realms).filter(function (id) {
+      return !!(s.realms[id].succession && s.realms[id].succession.openingPreferredId);
+    });
+  });
+  expect(openingPreferences).toEqual([]);
   const source=await page.evaluate(function () { return JSON.parse(FB.save.serialize()); });
   expect(await advanceTo(page,'season',2)).toEqual({days:2,stop:null});
   const first=await page.evaluate(function () { const d=JSON.parse(FB.save.serialize());return {state:d.state,rng:d.rng>>>0,uid:d.uid}; });
