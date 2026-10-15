@@ -24,7 +24,7 @@ dependsOnRuntime(__filename,[
   'js/save.js','js/save_v4.js','js/mods.js','js/climate.js','js/travel.js','js/wars.js',
   'js/governments.js','js/government_support.js','js/government_assembly.js',
   'js/government_administration.js','js/government_ecclesiastical.js','js/authority.js',
-  'js/treasury.js','js/lordships.js','js/stories.js','js/events.js','js/systems.js',
+  'js/treasury.js','js/lordships.js','js/stories.js','js/events.js','js/systems.js','js/actions.js',
   'js/crazygames.js','data/distribution_crazygames.js','js/market.js'
 ]);
 
@@ -273,22 +273,29 @@ test('new local courts inherit through existing people without remaking land or 
   await startDistrict(page,info,'kath_district');
   const result = await page.evaluate(function () {
     const s = FB.state, ownership = JSON.stringify([s.owner,s.holder]);
-    const household = JSON.parse(JSON.stringify(s.player));
+    const expectedHousehold = JSON.parse(JSON.stringify(s.player));
     const rows = ['gao_867','wagadu_867','afrighids_867'].map(function (id) {
       const r = s.realms[id], heir = FB.authoredRoyalMemberSnapshot(s,id,'offspring');
       const ruler = FB.realmRulerCharacterSnapshot(s,id), generation = r.succession.rulerGeneration;
+      // Accession carries this person's existing Standing into the court.
+      const standing = FB.standingOf(s,{kind:'character',id:heir.charId});
+      if (id === s.player.liege) expectedHousehold.liegeOp = standing;
+      else expectedHousehold.liegeOps[id] = standing;
       FB.killChar(s,ruler);
       const next = FB.realmRulerCharacterSnapshot(s,id);
       return {id:id,heir:next.id === heir.charId,once:r.succession.rulerGeneration === generation + 1,
         dynasty:next.dyn === ruler.dyn,form:FB.governments.forRealm(s,id).id};
     });
+    const inheritedHousehold = JSON.parse(JSON.stringify(s.player));
     const source = JSON.parse(FB.save.serialize()), rng = FB.getRngState() >>> 0, uid = FB.getUidCounter();
     FB.save.restore(source);
     return {rows:rows,land:ownership === JSON.stringify([FB.state.owner,FB.state.holder]),
-      household:JSON.parse(JSON.stringify(FB.state.player)),originalHousehold:household,
+      household:JSON.parse(JSON.stringify(FB.state.player)),expectedHousehold:expectedHousehold,
+      inheritedHousehold:inheritedHousehold,
       random:rng === (FB.getRngState() >>> 0) && uid === FB.getUidCounter()};
   });
-  expect(result.household).toEqual(result.originalHousehold);
+  expect(result.inheritedHousehold).toEqual(result.expectedHousehold);
+  expect(result.household).toEqual(result.inheritedHousehold);
   expect(result).toMatchObject({rows:['gao_867','wagadu_867','afrighids_867'].map(function (id) {
     return {id:id,heir:true,once:true,dynasty:true,form:'regnum'};
   }),land:true,random:true});
