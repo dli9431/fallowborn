@@ -800,10 +800,13 @@ for (const distribution of ['standard','CrazyGames']) {
         return FB.save.serialize();
       });
       const before = await page.evaluate(datedArabianFacts);
+      expect(before.abbeys.houses.find(function (h) { return h.id === 'test_arabian_property'; })).toMatchObject({
+        capital:8,treasury:0,restrictedFunds:{maintenance:2,learning:6},activitySpent:2});
       await page.evaluate(function () { FB.state.turn++; FB.religiousActivityTick(FB.state); });
       const after = await page.evaluate(datedArabianFacts);
+      // Total spending includes the foundation's 2 and the completed lesson's 3.
       expect(after.abbeys.houses.find(function (h) { return h.id === 'test_arabian_property'; })).toMatchObject({
-        capital:8,treasury:0,restrictedFunds:{maintenance:2,learning:3},activitySpent:3});
+        capital:8,treasury:0,restrictedFunds:{maintenance:2,learning:3},activitySpent:5});
       await page.evaluate(function () {
         return new Promise(function (resolve,reject) {
           FB.activateBookmark('1204',null,function (error) { if (error) reject(error); else resolve(); });
