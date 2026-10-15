@@ -343,7 +343,9 @@ for (const id of ['867','1066']) {
           resolve({ same:before === JSON.stringify(FB.bookmark(id)),
             events:FBDATA.events.filter(function (ev) { return ev.pack === 'iberia_full_476' && FB.eventPeriodEnabled(FB.state,ev); }).length,
             rails:FBDATA.bookmarkRegions476.gaul_iberia.storyIds.some(function (story) { return !!(FB.state.stories && FB.state.stories[story]); }),
-            institutions:FB.localInstitutionList(FB.state).length });
+            institutions:FB.localInstitutionList(FB.state).filter(function (item) {
+              return Object.prototype.hasOwnProperty.call(FBDATA.bookmarkRegions476.gaul_iberia.localInstitutions, item.id);
+            }).length });
         });
       });
     },id);
