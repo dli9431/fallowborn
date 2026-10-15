@@ -11,7 +11,7 @@ dependsOnRuntime(__filename, [
   'js/government_ai.js', 'js/government_administration.js', 'js/world.js', 'js/main.js',
   'js/starts.js', 'js/treasury.js', 'js/authority.js', 'js/institutions.js', 'js/systems.js',
   'js/station.js', 'js/progression.js', 'js/justice.js', 'js/wars.js', 'js/save.js', 'js/save_v4.js',
-  'js/actions.js', 'js/lordships.js', 'js/ui_modals.js', 'js/stories.js', 'js/story_government_selection.js'
+  'js/actions.js', 'js/lordships.js', 'js/ui_modals.js', 'js/stories.js', 'js/story_government_selection.js', 'js/util.js'
 ]);
 
 async function start(page, testInfo, fictional) {
@@ -37,6 +37,27 @@ async function start(page, testInfo, fictional) {
     });
   }, fictional);
   expect(error).toBe(null);
+}
+
+async function expectCrownRestore(page, realmId) {
+  const checkpoints = await page.evaluate(function (rid) {
+    function facts() {
+      const s = FB.state;
+      return { selection:FB.governmentSelection.state(s,rid), treasury:s.realms[rid].treasury,
+        householdGold:s.player.gold, rng:FB.getRngState() >>> 0, uid:FB.getUidCounter() };
+    }
+    const before = JSON.parse(JSON.stringify(facts()));
+    FB.save.restore(JSON.parse(FB.save.serialize()));
+    return { before:before, after:facts() };
+  }, realmId);
+  for (const facts of [checkpoints.before,checkpoints.after]) {
+    // Repair refreshes these forecasts from current territory and commitments.
+    // Every ledger field, including bills, cooldowns and settlement stamps, stays exact.
+    delete facts.treasury.necessary;
+    delete facts.treasury.reserveTarget;
+    if (facts.treasury.distributionNextTurn === undefined) facts.treasury.distributionNextTurn = 0;
+  }
+  expect(checkpoints.after).toEqual(checkpoints.before);
 }
 
 test('the protagonist receives private estate income while the public account settles its own costs', async function ({page},testInfo) {
@@ -121,25 +142,22 @@ for (const fictional of [false, true]) {
       const agreed = S.apply(s,q), review = S.quote(s,rid,{ action:'resolve', actor:actor });
       const heads = JSON.stringify(s.religiousHeads), coronations = JSON.stringify(s.authority.appointments);
       const elected = S.apply(s,review), settled = JSON.stringify(s), duplicate = S.apply(s,review);
-      const exact = { rng:FB.getRngState(), uid:FB.getUidCounter(), selection:JSON.stringify(S.state(s,rid)), crown:JSON.stringify(s.realms[rid].treasury) };
-      const source = JSON.parse(FB.save.serialize()); FB.save.restore(source);
       return { pure:pure, agreed:agreed, elected:elected, duplicate:duplicate, unchanged:settled === JSON.stringify(s),
         publicCost:initial - treasury.gold, cost:p.negotiationCost, sameAccount:s.realms[rid].treasury === treasury,
         private:c.gold === 31 && old.gold === 19 && s.player.gold === purse && c.dyn === 'Independent House',
         dynasty:s.realms[rid].dynasty, generation:t.rulerGeneration === generation + 1,
         property:owned === JSON.stringify([s.owner,s.holder,s.player.holdings,s.settlementLordships]),
         religion:heads === JSON.stringify(s.religiousHeads) && coronations === JSON.stringify(s.authority.appointments),
-        restore:JSON.stringify(S.state(FB.state,rid)) === exact.selection && JSON.stringify(FB.state.realms[rid].treasury) === exact.crown &&
-          FB.getRngState() === exact.rng && FB.getUidCounter() === exact.uid,
-        winner:S.state(FB.state,rid).vacancy.accessionId === candidate.id,
+        winner:S.state(s,rid).vacancy.accessionId === candidate.id,
         forms:FB.governments.validate(), bookmark:FB.validateBookmark(FB.bookmark('711')),
         technology:FB.validateTechnologyData(), reviews:['elective_crown_nomination','elective_crown_accession',
           'elective_crown_obligations','elective_crown_property'].map(function (id) { return FBDATA.techImpactReviews.features[id].mode; }) };
     }, candidate);
     expect(result).toMatchObject({ pure:true, agreed:true, elected:true, duplicate:false, unchanged:true,
       sameAccount:true, private:true, dynasty:'Independent House', generation:true, property:true, religion:true,
-      restore:true, winner:true, forms:[], bookmark:[], technology:[], reviews:['none','none','none','none'] });
+      winner:true, forms:[], bookmark:[], technology:[], reviews:['none','none','none','none'] });
     expect(result.publicCost).toBe(result.cost);
+    await expectCrownRestore(page,'visigoths_711');
   });
 }
 
@@ -304,13 +322,10 @@ test('protagonist accession and household succession keep the public account and
     FB.ui.closeModal(); FB.game.setPaused(true);
     const released = !s.realms.player && s.realms[rid].treasury === treasury && s.player.gold === 37 &&
       privateProperty === JSON.stringify(s.player.holdings);
-    const cash = JSON.stringify(treasury), uid = FB.getUidCounter(), rng = FB.getRngState();
-    FB.save.restore(JSON.parse(FB.save.serialize()));
-    return {nominated:nominated,resolved:resolved,adopted:adopted,routed:routed,household:household,released:released,
-      restore:JSON.stringify(FB.state.realms[rid].treasury) === cash && FB.state.player.gold === 37 &&
-        FB.getUidCounter() === uid && FB.getRngState() === rng};
+    return {nominated:nominated,resolved:resolved,adopted:adopted,routed:routed,household:household,released:released};
   });
-  expect(result).toEqual({nominated:true,resolved:true,adopted:true,routed:true,household:true,released:true,restore:true});
+  expect(result).toEqual({nominated:true,resolved:true,adopted:true,routed:true,household:true,released:true});
+  await expectCrownRestore(page,'visigoths_711');
 });
 
 for (const fictional of [false,true]) {
