@@ -9,8 +9,8 @@ dependsOnRuntime(__filename, [
   'js/portrait.js', 'js/siteart.js', 'js/util.js', 'js/model.js', 'js/items.js',
   'js/localfolk.js', 'js/armies.js', 'js/world.js', 'js/mods.js', 'js/i18n.js',
   'js/lexicon.js', 'js/station.js', 'js/main.js', 'js/ui_topbar.js',
-  'js/ui_misc.js', 'js/stories.js', 'js/story_campaign.js', 'data/story_instances.js',
-  'js/story_courts.js', 'data/distribution_crazygames.js', 'js/crazygames.js'
+  'js/ui_misc.js', 'js/ui_panels.js', 'js/stories.js', 'js/story_campaign.js', 'data/story_instances.js',
+  'js/story_courts.js', 'js/story_track.js', 'data/distribution_crazygames.js', 'js/crazygames.js'
 ]);
 const { test, expect } = require('../support/fixture');
 const { openGame } = require('../support/game/navigation');
@@ -272,7 +272,12 @@ for (const scenario of ['federate_476','curialis_476']) {
     await page.evaluate(function(){FB.game.setPaused(true);});
     await page.getByRole('button',{name:'Begin',exact:true}).click();
     await page.locator('[data-tab="actions"]').click();
-    await expect(page.locator('[data-story-card]')).toHaveCount(3);
+    const storyIds=['zeno_return_476','suevic_frontier_476','western_office_476',
+      scenario==='federate_476'?'federate_track_476':'curialis_track_476'];
+    await expect(page.locator('[data-story-card]')).toHaveCount(storyIds.length);
+    for (const id of storyIds) {
+      await expect(page.locator('[data-story-card="'+id+'"]')).toBeVisible();
+    }
     const result=await page.evaluate(function(){
       const s=FB.state;
       return {era:FB.campaignEra(s),currency:FB.currencyLabel(s),
