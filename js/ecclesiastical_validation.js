@@ -72,7 +72,7 @@
       var p = E.profile(s,rid), office = offices[r.officeId], holder = s.religiousHeads && s.religiousHeads[r.officeId];
       if (r.temporalRecognitionId !== null) {
         var proof = (s.authority.recognitions || []).filter(function (proof) { return proof.id === r.temporalRecognitionId; })[0];
-        if (!p.layRecognition || !proof || proof.source !== 'imperial_commission' || proof.issuer.kind !== 'realm' ||
+        if (!p.layRecognition || !proof || !FB.legitimacySourceHasMandate(proof.source,'court') || proof.issuer.kind !== 'realm' ||
             proof.subject.kind !== 'character' || !proof.scope || proof.scope.kind !== 'realm' || proof.scope.id !== rid) fault();
       }
       if (p.source === 'papal_election' && holder && holder !== rid) {

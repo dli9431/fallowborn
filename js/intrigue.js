@@ -768,13 +768,10 @@ window.FB = window.FB || {};
   };
 
   function traitAccompliceMotive(c) {
-    var traits = c && c.traits || [];
-    var score = 0;
-    if (traits.indexOf('deceitful') >= 0) score += 0.10;
-    if (traits.indexOf('ambitious') >= 0 || traits.indexOf('greedy') >= 0) score += 0.05;
-    if (traits.indexOf('cruel') >= 0 || traits.indexOf('wrathful') >= 0) score += 0.05;
-    if (traits.indexOf('honest') >= 0) score -= 0.10;
-    if (traits.indexOf('kind') >= 0 || traits.indexOf('patient') >= 0) score -= 0.05;
+    var score = FB.traitMechanic(c, 'accompliceDeception') + FB.traitMechanic(c, 'accompliceAmbition');
+    score += FB.traitMechanic(c, 'accompliceViolence');
+    score -= FB.traitMechanic(c, 'accompliceIntegrity');
+    score -= FB.traitMechanic(c, 'accompliceMercy');
     return FB.clamp(score, -0.20, 0.20);
   }
 
@@ -816,9 +813,9 @@ window.FB = window.FB || {};
   function refusalLeakChance(state, actor, c, target) {
     var traits = c && c.traits || [];
     var chance = 0.25;
-    if (traits.indexOf('honest') >= 0) chance += 0.12;
-    if (traits.indexOf('kind') >= 0) chance += 0.08;
-    if (traits.indexOf('zealous') >= 0) chance += 0.08;
+    chance += FB.traitMechanic(c, 'refusalIntegrity');
+    chance += FB.traitMechanic(c, 'refusalMercy');
+    chance += FB.traitMechanic(c, 'refusalFaith');
     if (target && (c.spouseId === target.id || target.spouseId === c.id ||
         c.fatherId === target.id || c.motherId === target.id ||
         target.fatherId === c.id || target.motherId === c.id ||
@@ -893,7 +890,7 @@ window.FB = window.FB || {};
     var success = finite(def.baseChance, 0.25) + actorInt * 0.035 -
       targetInt * 0.02 + targetStanding / 500 + finite(method.success, 0) +
       councilIntrigueBonus(state, actorId);
-    if (actor.traits && actor.traits.indexOf('schemer') >= 0) success += 0.05;
+    success += FB.traitMechanic(actor, 'schemeSuccess');
     var accomplice = accompliceId && character(state, accompliceId);
     var acceptance = null, leak = null, sameResidence = false;
     if (accomplice && !accomplice.dead) {
@@ -1474,10 +1471,8 @@ window.FB = window.FB || {};
     var tradition = religion && FB.faithValue(state, religion, 'legalTradition').value;
     var culture = target && target.culture || '';
     if (tradition && tradition !== FBDATA.faithDefaults.legalTradition) return tradition;
-    if (/greek|byzant/i.test(culture) || /byzant/i.test(String(rid))) {
-      return 'byzantine';
-    }
-    return tradition || 'latin';
+    var defaults = FBDATA.authoringDefaults.intrigueLaw;
+    return defaults.realms[rid] || defaults.cultures[culture] || tradition || defaults.default;
   }
 
   FB.intrigueSentenceProjection = function (state, hearing) {
@@ -1793,14 +1788,11 @@ window.FB = window.FB || {};
   function aiTraitWeight(actor, aim) {
     var traits = actor && actor.traits || [];
     var weight = 1;
-    if (traits.indexOf('cruel') >= 0 || traits.indexOf('deceitful') >= 0 ||
-        traits.indexOf('wrathful') >= 0 || traits.indexOf('ambitious') >= 0 ||
-        traits.indexOf('greedy') >= 0) weight += 0.6;
-    if (aim === 'expand_realm' || aim === 'amass_wealth' ||
-        aim === 'strengthen_crown') weight += 0.5;
-    if (traits.indexOf('kind') >= 0 || traits.indexOf('honest') >= 0 ||
-        traits.indexOf('content') >= 0 || traits.indexOf('patient') >= 0 ||
-        aim === 'keep_peace') weight *= 0.15;
+    weight += FB.traitMechanic(actor, 'intrigueAggression');
+    var policy = FB.rulerAimPolicy(aim);
+    if (policy) weight += policy.intrigueAggression;
+    var restraint = FB.traitMechanic(actor, 'intrigueRestraint');
+    if (restraint || policy && policy.intrigueRestraint) weight *= restraint || policy.intrigueRestraint;
     return weight;
   }
 
@@ -1861,15 +1853,7 @@ window.FB = window.FB || {};
         intrigue.aiSchemes.length < maxSchemes;
         ci++) {
       var candidate = candidates[ci];
-      var schemeIds = HOSTILE_IDS.slice();
-      if (candidate.actor.traits.indexOf('greedy') >= 0) {
-        schemeIds = ['blackmail', 'sabotage', 'fabricated_charge',
-          'abduction', 'assassination'];
-      } else if (candidate.actor.traits.indexOf('cruel') >= 0 ||
-          candidate.actor.traits.indexOf('wrathful') >= 0) {
-        schemeIds = ['assassination', 'abduction', 'sabotage',
-          'fabricated_charge', 'blackmail'];
-      }
+      var schemeIds = FB.traitSchemeOrder(candidate.actor) || HOSTILE_IDS.slice();
       var chosen = null;
       for (var si = 0; si < schemeIds.length && !chosen; si++) {
         var pool = aiTargetPool(state, candidate.actor, candidate.rid,

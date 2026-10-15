@@ -2,13 +2,41 @@
 window.FB = window.FB || {};
 (function () {
   'use strict';
-  // Register English fallbacks at boot, including when a saved Chronicle is opened
-  // before any ambition completes in this session and locale catalogs are stale.
-  const foundationMessages = {
-    normandy:FB.msg('news.ambition.normandy', '{realm} establishes Normandy.'),
-    norway:FB.msg('news.ambition.norway', '{realm} unifies Norway.'),
-    england:FB.msg('news.ambition.england', '{realm} unites England.'),
-    sicily:FB.msg('news.ambition.sicily', '{realm} establishes the Sicilian crown.')
+  FB.registerAmbitionMessages = function () {
+    definitions().forEach(function (d) { FB.registerMessage('news.ambition.' + d.id, { text:d.news }); });
+  };
+  FB.validateHistoricalAmbitions = function (rows) {
+    const errors = [], seen = {}, titles = { duchies:{}, kingdoms:{} }, provinces = {};
+    if (!Array.isArray(rows) || rows.length > 128) return ['historicalAmbitions must contain at most 128 records.'];
+    Object.keys(FBDATA.bookmarks || {}).forEach(function (id) {
+      FB.bookmarkRevisions(id).forEach(function (bm) {
+        Object.assign(titles.duchies, bm.duchies); Object.assign(titles.kingdoms, bm.kingdoms);
+        Object.keys(bm.provinces || {}).forEach(function (key) { const row = bm.provinces[key]; provinces[row.id || key] = true; });
+      });
+    });
+    Object.assign(titles.duchies, FBDATA.duchies); Object.assign(titles.kingdoms, FBDATA.kingdoms);
+    (FBDATA.provinces || []).forEach(function (p) { provinces[p.id] = true; });
+    rows.forEach(function (d) {
+      if (!d || typeof d !== 'object' || Array.isArray(d)) { errors.push('historicalAmbitions requires records.'); return; }
+      const path = 'historicalAmbitions.' + d.id;
+      if (typeof d.id !== 'string' || !/^[a-z][a-z0-9_]*$/.test(d.id) || seen[d.id] || ['tax_reward','levy_reward'].indexOf(d.id) >= 0) errors.push(path + ' needs a unique stable id.');
+      seen[d.id] = true;
+      Object.keys(d).forEach(function (key) {
+        if (['id','name','desc','news','region','tier','culture','capital','share','prestige','bonus','amount','days','foundedYear','established','island','mainland'].indexOf(key) < 0) errors.push(path + '.' + key + ' is unsupported.');
+      });
+      ['name','desc','news'].forEach(function (key) { if (typeof d[key] !== 'string' || !d[key] || d[key].length > 2000) errors.push(path + '.' + key + ' needs bounded text.'); });
+      if ([5,6].indexOf(d.tier) < 0 || !Object.prototype.hasOwnProperty.call(titles[d.tier === 5 ? 'duchies' : 'kingdoms'], d.region)) errors.push(path + '.region needs a title of the declared tier.');
+      if (d.culture !== undefined && !FBDATA.cultures[d.culture]) errors.push(path + '.culture is unknown.');
+      if (d.capital !== undefined && !provinces[d.capital]) errors.push(path + '.capital is unknown.');
+      if (typeof d.share !== 'number' || !isFinite(d.share) || d.share <= 0 || d.share > 1) errors.push(path + '.share must be in (0,1].');
+      if (!Number.isInteger(d.prestige) || d.prestige < 0 || d.prestige > 10000 || ['tax','levy'].indexOf(d.bonus) < 0 || typeof d.amount !== 'number' || !isFinite(d.amount) || d.amount < 0 || d.amount > 1 || !Number.isInteger(d.days) || d.days < 1 || d.days > 36000) errors.push(path + ' has invalid reward terms.');
+      if (d.foundedYear !== undefined && (!Number.isInteger(d.foundedYear) || d.foundedYear < 1 || d.foundedYear > 10000)) errors.push(path + '.foundedYear is out of bounds.');
+      if (d.established !== undefined && (!Array.isArray(d.established) || d.established.length > 128 || d.established.some(function (id, i) { return !FBDATA.bookmarks[id] || d.established.indexOf(id) !== i; }))) errors.push(path + '.established needs unique bookmark ids.');
+      if (d.island !== undefined || d.mainland !== undefined) {
+        if (!titles.duchies[d.island] || !Array.isArray(d.mainland) || !d.mainland.length || d.mainland.length > 32 || d.mainland.some(function (id, i) { return !titles.duchies[id] || d.mainland.indexOf(id) !== i; })) errors.push(path + ' needs an island duchy and unique mainland duchies.');
+      }
+    });
+    return errors;
   };
   const rewardMessages = {
     tax:FB.msg('news.ambition.tax_reward',
@@ -88,17 +116,17 @@ window.FB = window.FB || {};
     const checks = [];
     function check(label, met, progress) { checks.push({ label:label, met:!!met, progress:!!progress }); }
     check(FB.T('Count rank or higher'), FB.station.rulesRealm({ tier:tier, realmId:rid }, state));
-    if (d.culture) check(FB.T('Norse ruler'), culture(state, rid) === d.culture);
+    if (d.culture) check(FB.T('{culture} ruler', { culture:FB.dataText(state, null, 'culture', d.culture, FBDATA.cultures[d.culture], 'name', {}) }), culture(state, rid) === d.culture);
     check(FB.T('Regional counties: {have}/{need}', { have:have, need:need }),
       counties.length > 0 && have >= need, true);
-    if (d.capital) check(FB.T('Control Rouen'), holds(state, rid, d.capital));
+    if (d.capital) check(FB.T('Control {county}', { county:FB.world.byId[d.capital] && FB.world.byId[d.capital].name || d.capital }), holds(state, rid, d.capital));
     if (d.island) {
       const island = FB.duchyCounties(d.island);
       const islandHave = island.filter(function (pid) { return holds(state, rid, pid); }).length;
       const islandNeed = Math.max(1, Math.ceil(island.length / 2));
       check(FB.T('Island counties: {have}/{need}', { have:islandHave, need:islandNeed }),
         islandHave >= islandNeed, true);
-      check(FB.T('Control a county in Apulia or Calabria'), d.mainland.some(function (did) {
+      check(FB.T('Control a county in: {regions}', { regions:d.mainland.map(function (id) { return FBDATA.duchies[id] && FBDATA.duchies[id].name || id; }).join(', ') }), d.mainland.some(function (did) {
         return FB.duchyCounties(did).some(function (pid) { return holds(state, rid, pid); });
       }));
     }
@@ -127,7 +155,7 @@ window.FB = window.FB || {};
   FB.completeHistoricalAmbition = function (state, id, rid) {
     rid = rid || 'player';
     const status = FB.historicalAmbitionStatus(state, id, rid);
-    if (!status || !status.ready || !foundationMessages[id] || !rewardMessages[status.definition.bonus]) return null;
+    if (!status || !status.ready || !rewardMessages[status.definition.bonus]) return null;
     const d = status.definition, player = rid === 'player';
     if (player && status.elevation && !FB.claimRankElevation(state,
         FB.rankElevationContext(state, status.elevation), { combinedResult:true })) return null;
@@ -156,7 +184,7 @@ window.FB = window.FB || {};
     // Snapshot the founder, rather than looking up a later ruler when rendering history.
     const founder = player ? FB.fullName(state.chars[state.player.charId]) : r.ruler.name;
     const params = { realm:founder };
-    FB.news(state, FB.message(foundationMessages[id].key, params));
+    FB.news(state, FB.message('news.ambition.' + id, params));
     if (player) {
       const rewardParams = { prestige:d.prestige, gold:status.cost.gold,
         paidPrestige:status.cost.prestige, piety:status.cost.piety,
@@ -211,4 +239,5 @@ window.FB = window.FB || {};
       }
     });
   };
+  FB.registerAmbitionMessages();
 })();

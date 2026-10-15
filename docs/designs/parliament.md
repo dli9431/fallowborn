@@ -362,3 +362,14 @@ parliamentActive asks sitsInEstates on the player's era/form ladder and independ
 Availability boundary
 
 The estates system gates membership, assembly events, motions, policies and consent privileges. Scutage additionally requires the scutage system; a saved scutage vote supplies no silver-for-service entitlement while disabled. Policy listings and motion forecasts filter content requirements before calculating or presenting a vote. See docs/designs/systems.md.
+
+Authoring contracts
+
+Annual estates agendas are ordered parliamentAgendas records. They select existing events using war, aid headroom, consent, capabilities and home-county modifiers. Agenda reads do not create obligation records. Motion outcomes remain policies.resultEvent declarations resolved through the existing pending-motion and event transactions. See docs/MODDING.md for bounds and composition.
+
+
+Collective pressure gates take the candidate demand definition and test its declared privilege. Faith holder selection follows the privilege schema, and sanctuary recognizes equivalent existing effects. Ordered ruler-aim motion/family weights live in agencyRules and apply through the shared vote projection.
+
+policyGovernance supplies crown-level tolerance and community conversion adjustments. Authority, religion and population share one pure projection, and the ordinary policy transaction retains fees, dates and saved level ids. Local ordinance definitions retain their shared annual voting cadence and one-ordinance limit; their effects are bounded and validated.
+
+Motion posture comes from the policy definition, then authoringDefaults.motionPostures. The declared fallback preserves legacy complete replacements that omitted posture, without retaining a historical motion/trait table in the engine. An explicitly empty posture disables those contributions.

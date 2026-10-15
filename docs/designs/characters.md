@@ -1414,3 +1414,15 @@ The city_republic ladder preserves all eight personal station bands with profess
 Clerical Standing and institutional office
 
 Ecclesiastical household progression retains the existing station bands and service roles. Spiritual eligibility and chapter or temporal recognition are separate requirements; wealth and Standing cannot buy an unconditional office. Institutional public property remains outside private succession. See ecclesiastical-principality.md.
+
+
+Declared trait mechanics
+
+The traitMechanics catalogue supplies the supported literacy, prayer, social, intrigue, justice, religious and AI-policy effects documented in docs/MODDING.md. Consumers read the same effective rules for player previews and AI actors, with no historical trait-id branches. Existing numerical defaults and prerequisite checks are retained. Grouped alternative motives use their maximum contribution; independent yield/support channels use their documented sums. Legacy saved-trait migration and trait-award identities remain separate compatibility concerns. This conversion introduces no technology dependency, saved ledger or additional RNG draw.
+
+Household service appointments expose typed promotion, training and trait teaching through householdServiceRoles. Religious contested ranks use religiousOfficeRanks together with faith routes. Quick-start cards choose declared scenarios and family presets and use ordinary character construction. Public shapes and limits are documented in docs/MODDING.md.
+
+
+Ruler aim response policies now include ordered motion/family weights, marriage and petition bonuses, intrigue aggression/restraint, and conversion motivations/scores. Both household proposal paths and the ruler agency consumer read these parameters. The seven saved aim identities, bounded annual scheduling and canonical consent/resource checks remain structural engine contracts.
+
+Holy-war ruler preferences, court loyalty, conversion resistance and rivalry formation now read the corresponding traitMechanics channels. Single-trait ruler summaries and multi-trait characters share the reader; signed channels retain their sum and unsigned alternatives their maximum. No historical trait identity selects those behaviors.

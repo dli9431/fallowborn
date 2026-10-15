@@ -1,11 +1,11 @@
 /* Reusable political story mechanics. Historical selectors and presentation belong to declarations. */
 (function () {
   'use strict';
-  function service_negotiation(def) {
+  function service_negotiation(def, context) {
     function cast(s, role) { return FB.stories.resolve(s, def.cast[role]); }
     function operation(id) { return choiceOperation(def, id); }
 
-    var p = def.parameters, TRACK = def.id, ID = def.id, R = FB.startRealmId, X = FB.storyCourts.context(def.courtStoryId);
+    var p = def.parameters, TRACK = def.id, ID = def.id, R = FB.startRealmId, X = FB.storyCourts.context(def.courtStoryId, context);
     var actor = X.actor, person = X.person, host = X.host, alive = X.alive;
     var recognize = X.recognize, recognizeOrExisting = X.recognizeOrExisting;
     var appointment = X.appointment, news = X.news;
@@ -577,11 +577,11 @@
       review:review, apply:apply, validate:validate };
   }
 
-  function civic_mandate(def) {
+  function civic_mandate(def, context) {
     function cast(s, role) { return FB.stories.resolve(s, def.cast[role]); }
     function operation(id) { return choiceOperation(def, id); }
 
-    var p = def.parameters, TRACK = def.id, ID = def.id, R = FB.startRealmId, X = FB.storyCourts.context(def.courtStoryId);
+    var p = def.parameters, TRACK = def.id, ID = def.id, R = FB.startRealmId, X = FB.storyCourts.context(def.courtStoryId, context);
     function quote(s, t, id) {
       var op = operation(id);
       var w = X.world(s), me = s.chars[s.player.charId];
@@ -680,11 +680,11 @@
     };
   }
 
-  function claim_restoration(def) {
+  function claim_restoration(def, context) {
     function cast(s, role) { return FB.stories.resolve(s, def.cast[role]); }
     function operation(id) { return choiceOperation(def, id); }
 
-    var p = def.parameters, TRACK = def.id, ID = def.id, R = FB.startRealmId, X = FB.storyCourts.context(def.courtStoryId);
+    var p = def.parameters, TRACK = def.id, ID = def.id, R = FB.startRealmId, X = FB.storyCourts.context(def.courtStoryId, context);
     function quote(s, t, id) {
       var op = operation(id);
       var w = X.world(s), ref = X.person(t.claimantId), owner = s.owner[p.targetProvinceId];
@@ -898,7 +898,7 @@
     if (mechanic === 'resolution') return ['contract','court','civic'];
     return ['civic','recognition','court'].indexOf(mechanic) >= 0 ? ['contract'] : [];
   }
-  function validateTrack(def) {
+  function validateTrack(def, context) {
     function need(ok, field) { if (!ok) throw new Error('Invalid political track declaration: ' + field + '.'); }
     need(own(profiles, def.profile), 'profile');
     FB.storyCourts.validateChoices(def, Object.keys(contracts[def.profile]));
@@ -950,13 +950,13 @@
       });
     }
     Object.keys(def.stages).forEach(function (stageId) { need(reached[stageId], 'unreachable stage'); });
-    FB.storyCourts.validateLinked(def, roles);
+    FB.storyCourts.validateLinked(def, roles, context);
   }
   FB.storyCourts.trackPhase = function (id, t) {
     var story = FB.stories.get(id);
     return story && story.declaration && story.declaration.type === 'political_track'
       ? phase(story.declaration, t) : t.phase;
   };
-  FB.stories.registerType('political_track', function (def) { return profiles[def.profile](def); }, 'js/story_track.js', validateTrack);
+  FB.stories.registerType('political_track', function (def, context) { return profiles[def.profile](def, context); }, 'js/story_track.js', validateTrack);
 
 })();

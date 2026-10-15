@@ -2691,7 +2691,7 @@ window.FB = window.FB || {};
     document.querySelectorAll('[data-travel-purpose]').forEach(function (button) {
       button.addEventListener('click', function () {
         const purposeId = button.getAttribute('data-travel-purpose');
-        if (purposeId === 'trade') {
+        if (FB.travelPurposeKind(purposeId) === 'trade') {
           UI.showTradeVentureSetup('travel');
           return;
         }
@@ -3339,7 +3339,7 @@ window.FB = window.FB || {};
     const pr = FB.world.byId[item.destinationId];
     const minimumStay = FBDATA.balance.travelMinStayDays || 90;
     const ruler = FB.station.mayArrangeDynasticMarriage(s.player, s);
-    const gateway = SH.travelPicker.purpose === 'frontier' && item.gatewayId
+    const gateway = FB.travelPurposeKind(SH.travelPicker.purpose) === 'frontier' && item.gatewayId
       ? (FB.world.byId[item.gatewayId] || {}).name || item.gatewayId : '';
     let facts = kv('Destination', esc(pr.name)) +
       kv('Distance', esc(FB.T('{legs} county legs', { legs:item.legs }))) +
@@ -4287,7 +4287,7 @@ window.FB = window.FB || {};
     const t = s && s.player.travel;
     const eligible = s && FB.frontierSettlementEligible
       ? FB.frontierSettlementEligible(s) : false;
-    if (!s || !t || t.purpose !== 'frontier' || eligible !== true) {
+    if (!s || !t || FB.travelPurposeKind(t.purpose) !== 'frontier' || eligible !== true) {
       if (eligible && typeof eligible === 'string') UI.toast(eligible);
       return;
     }
@@ -4352,7 +4352,7 @@ window.FB = window.FB || {};
     const spouse = residence && s.chars[residence.spouseId];
     const destination = residence && FB.world.byId[residence.destinationId];
     if (!s || !t || !residence || !protagonist || !spouse || !destination ||
-        t.purpose !== 'relationship' ||
+        FB.travelPurposeKind(t.purpose) !== 'relationship' ||
         t.phase !== 'arrived' ||
         t.currentId !== residence.destinationId ||
         t.destinationId !== residence.destinationId) {
@@ -20786,7 +20786,7 @@ window.FB = window.FB || {};
     if (religiousAdvance) {
       const faithStep = religiousAdvance.step;
       if (faithStep.maleOnly && c.sex !== 'm') {
-        religiousNote = FB.abbeyAccess(s) && religiousAdvance.path.id === 'catholic_monastic'
+        religiousNote = FB.abbeyAccess(s) && !!(FBDATA.religiousOfficeRanks[religiousAdvance.path.id] || {}).abbot
           ? reviewActionCardHtml({ id:'career-abbey-office', label:FB.T('Abbey offices and privileges'),
             note:FB.T('An abbess can govern an endowed house and seek royal protection and papal exemption.') })
           : '<p class="hint">' + esc(FB.T(
@@ -20796,12 +20796,10 @@ window.FB = window.FB || {};
         const faithTitle = FB.religiousRankTitle(s, c, {
           id:religiousAdvance.path.id, step:faithStep
         });
-        const abbotStatus = religiousAdvance.path.id === 'catholic_monastic' &&
-          faithStep.id === 'abbot' &&
+        const abbotStatus = FB.religiousOfficeStep(religiousAdvance.path.id, faithStep.id, 'abbot') &&
           FB.abbotAppointmentStatus ? FB.abbotAppointmentStatus(s, c) : null;
-        const coreBishopPath = religiousAdvance.path.id === 'catholic_monastic' ||
-          religiousAdvance.path.id === 'catholic_clerical';
-        const bishopStatus = coreBishopPath && faithStep.id === 'bishop' &&
+        const coreBishopPath = FB.religiousOfficeStep(religiousAdvance.path.id, faithStep.id, 'bishop');
+        const bishopStatus = coreBishopPath &&
           FB.bishopAppointmentStatus ? FB.bishopAppointmentStatus(s, c) : null;
         const officeStatus = bishopStatus || abbotStatus;
         /* Appointment rows remain inspectable when ineligible so the modal
@@ -20989,14 +20987,11 @@ window.FB = window.FB || {};
     });
     if (religious) religious.addEventListener('click', function () {
       const advance = FB.religiousAdvance(s, c);
-      if (advance && advance.path.id === 'catholic_monastic' &&
-          advance.step.id === 'abbot') {
+      if (advance && FB.religiousOfficeStep(advance.path.id, advance.step.id, 'abbot')) {
         UI.showAbbotElection(c.id, returnContext);
         return;
       }
-      if (advance && (advance.path.id === 'catholic_monastic' ||
-          advance.path.id === 'catholic_clerical') &&
-          advance.step.id === 'bishop') {
+      if (advance && FB.religiousOfficeStep(advance.path.id, advance.step.id, 'bishop')) {
         UI.showBishopAppointment(c.id, returnContext);
         return;
       }
@@ -21167,13 +21162,13 @@ window.FB = window.FB || {};
   }
   function abbeyActionNote(id) {
     const d = FBDATA.abbeys.actions[id];
-    if (id === 'rents') return FB.T('Abbey treasury +{money:gain}; community support −{loss}.', { gain:d.treasury, loss:-d.support });
-    if (id === 'school') return FB.T('Spend {money:cost} from the abbey; teach each pupil Learning +{learning}, subject to the skill cap; support +{support}.', d);
-    if (id === 'relief') return FB.T('Spend {money:cost} from the abbey; support +{support}, Popular support +{popular}, piety +{piety}.', d);
-    if (id === 'mediate') return FB.T('Spend {money:cost} from the abbey; support +{support}, prestige +{prestige}, connections +{standing} Standing. Settling a current dispute gives the lord Standing +{lord}.', {
+    if (d.kind === 'rents') return FB.T('Abbey treasury +{money:gain}; community support −{loss}.', { gain:d.treasury, loss:-d.support });
+    if (d.kind === 'school') return FB.T('Spend {money:cost} from the abbey; teach each pupil Learning +{learning}, subject to the skill cap; support +{support}.', d);
+    if (d.kind === 'relief') return FB.T('Spend {money:cost} from the abbey; support +{support}, Popular support +{popular}, piety +{piety}.', d);
+    if (d.kind === 'mediate') return FB.T('Spend {money:cost} from the abbey; support +{support}, prestige +{prestige}, connections +{standing} Standing. Settling a current dispute gives the lord Standing +{lord}.', {
       cost:d.cost, support:d.support, prestige:d.prestige, standing:d.standing, lord:d.lordStanding });
-    if (id === 'patronage') return FB.T('Spend {money:cost} from the abbey; connected patrons subscribe {money:capital} to its permanent endowment; prestige +{prestige}.', d);
-    if (id === 'defend') return FB.T('Spend {money:cost} from the abbey. Success gives support +{support} and lord Standing −{lord}; failure loses up to {money:loss} more, support −{failSupport} and lord Standing −{failLord}.', {
+    if (d.kind === 'patronage') return FB.T('Spend {money:cost} from the abbey; connected patrons subscribe {money:capital} to its permanent endowment; prestige +{prestige}.', d);
+    if (d.kind === 'defend') return FB.T('Spend {money:cost} from the abbey. Success gives support +{support} and lord Standing −{lord}; failure loses up to {money:loss} more, support −{failSupport} and lord Standing −{failLord}.', {
       cost:d.cost, support:d.support, lord:-d.lordStanding, loss:d.failLoss,
       failSupport:-d.failSupport, failLord:-d.failLordStanding });
     return FB.T('Spend {money:cost} from the abbey; support −{loss} and lord Standing +{lord}. End the dispute.', {
@@ -21272,14 +21267,11 @@ window.FB = window.FB || {};
           body += reviewFactsCard(FB.T('Disputed rights'), reviewPeopleHtml(abbeyPerson(l, FB.T('Challenges the abbey'))) +
             kv('Lost rents', esc(FB.T('Up to {money:loss} each season until the dispute is settled', { loss:A.disputeLoss }))));
         }
-        const acts = [
-          ['rents', FB.T('Manage rents')],
-          ['school', FB.T('Fund schooling')],
-          ['relief', FB.T('Distribute relief')],
-          ['mediate', FB.T('Mediate disputes')],
-          ['patronage', FB.T('Solicit an endowment')]
-        ];
-        if (h.dispute) acts.push(['defend', FB.T('Defend the charter')], ['concede', FB.T('Concede the dispute')]);
+        const acts = Object.keys(A.actions).filter(function (id) {
+          return h.dispute || ['defend','concede'].indexOf(A.actions[id].kind) < 0;
+        }).map(function (id) {
+          return [id, FB.dataText(s, s.player.charId, 'abbeyAction', id, A.actions[id], 'name', {})];
+        });
         acts.forEach(function (row) {
           const q = FB.abbeyActionStatus(s, h, row[0]);
           const effects = abbeyActionNote(row[0]);
@@ -21603,7 +21595,7 @@ window.FB = window.FB || {};
     const status = c && FB.bishopAppointmentStatus &&
       FB.bishopAppointmentStatus(s, c);
     if (!status || !status.visible) return;
-    const policy = FBDATA.papacy.investiture.policies[status.policyId];
+    const policy = FB.papalPolicies()[status.policyId];
     const authorityNames = {
       lay:'Temporal sovereign',
       canonical:'Recognized Pope',
@@ -21689,7 +21681,7 @@ window.FB = window.FB || {};
       FB.investiturePolicyForPlayer(s);
     const policyId = investiture && investiture.policy ||
       record.investiturePolicy || 'canonical';
-    const policy = FBDATA.papacy.investiture.policies[policyId];
+    const policy = FB.papalPolicies()[policyId];
     const papacy = FB.ensurePapacy(s);
     const obedienceId = FB.papalObedienceForCharacter(s, me) ||
       papacy.romanObedience;
@@ -21971,7 +21963,7 @@ window.FB = window.FB || {};
         let details;
         if (record) {
           const orderName = papalDefinitionText(s, 'papalCardinalOrder',
-            FBDATA.papacy.cardinalOrders, record.order, 'name', 'Cardinal');
+            FB.papalOrders(), record.order, 'name', 'Cardinal');
           const blocName = papalDefinitionText(s, 'papalCardinalBloc',
             FBDATA.papacy.blocs, record.bloc, 'name', record.bloc);
           details = kv('Order', esc(orderName)) +
@@ -22028,7 +22020,7 @@ window.FB = window.FB || {};
     const authorityBand = FB.papalAuthorityBand(obedience.authority);
     const investiture = FB.investiturePolicyForPlayer(s);
     const policy = investiture &&
-      FBDATA.papacy.investiture.policies[investiture.policy];
+      FB.papalPolicies()[investiture.policy];
     const isPlayerPope = obedience.claimantId === s.player.charId;
     const isPlayerElector = obedience.college.indexOf(s.player.charId) >= 0 &&
       FB.isCardinal(s, me);
@@ -22103,17 +22095,14 @@ window.FB = window.FB || {};
     }
 
     if (papacy.pendingInvestitureDemand) {
-      h += '<section class="papacy-alert" role="status">' +
-        panelh('Papal investiture demand') +
-        '<p>' + esc(FB.T(
-          'The Pope demands canonical investiture. Acceptance strengthens Papal authority; refusal creates grounds for excommunication.')) +
-        '</p><div class="modal-actions"><button class="btn primary" ' +
-        'data-investiture-answer="canonical">' +
-        esc(FB.T('Accept canonical investiture')) + '</button>' +
-        (FB.papalInstitutionActive(s, 'investiture_concordat')
-          ? '<button class="btn" data-investiture-answer="concordat">' +
-            esc(FB.T('Offer a concordat')) + '</button>' : '') +
-        '<button class="btn danger" data-investiture-answer="refuse">' +
+      h += '<section class="papacy-alert" role="status">' + panelh('Papal investiture demand') +
+        '<p>' + esc(FB.T('Acceptance strengthens Papal authority; refusal creates grounds for excommunication.')) + '</p><div class="modal-actions">';
+      const policies = FB.papalPolicies();
+      for (const id of Object.keys(policies)) if (policies[id].kind !== 'lay' && FB.papalPolicyAvailable(s, id)) {
+        h += '<button class="btn" data-investiture-answer="' + esc(id) + '">' +
+          esc(dt(s, 'papalInvestiturePolicy', id, policies[id], 'name')) + '</button>';
+      }
+      h += '<button class="btn danger" data-investiture-answer="refuse">' +
         esc(FB.T('Refuse the command')) + '</button></div></section>';
     }
     if (papacy.pendingSchism) {
@@ -22184,17 +22173,16 @@ window.FB = window.FB || {};
           h += '<div class="progressnote">' +
             esc(FB.T('Choose one tactic for this ballot.')) +
             '</div><div class="papacy-tactics">';
-          for (const tactic of FBDATA.papacy.tactics) {
+          for (const tactic of FB.papalTactics()) {
             if (tactic.closedFrom && s.date.year >= tactic.closedFrom) continue;
-            const disabled = tactic.id === 'backing' && s.player.prestige < 100;
+            const disabled = s.player.prestige < tactic.prestigeCost || tactic.kind === 'backing' && election.law.enclosed;
             const tacticName = dt(s, 'papalElectionTactic', tactic.id,
               tactic, 'name');
             const tacticDesc = dt(s, 'papalElectionTactic', tactic.id,
               tactic, 'desc');
             const tacticDetailsId = 'papal-tactic-details-' + tactic.id;
-            const tacticDetails = '<p>' + esc(tacticDesc) + '</p>' +
-              (disabled ? '<p class="warnote">' + esc(FB.T(
-                'Requires at least 100 prestige.')) + '</p>' : '');
+            const tacticDetails = '<p>' + esc(tacticDesc) + '</p><p>' + esc(FB.T(
+              'Prestige cost: {cost}. Election support: {bonus}.', { cost:tactic.prestigeCost, bonus:tactic.bonus })) + '</p>';
             h += '<div class="papacy-tactic-card settcard"><button ' +
               'class="btn small" data-papal-tactic="' + esc(tactic.id) + '"' +
               (disabled ? ' disabled' : '') + '>' + esc(tacticName) +
@@ -22238,10 +22226,9 @@ window.FB = window.FB || {};
           ? 'data-petition-investiture' : null;
       if (policyAction && !isPlayerPope) {
         h += '<div class="papacy-tactics">';
-        for (const policyId in FBDATA.papacy.investiture.policies) {
-          if (policyId === 'concordat' &&
-              !FB.papalInstitutionActive(s, 'investiture_concordat')) continue;
-          const item = FBDATA.papacy.investiture.policies[policyId];
+        for (const policyId in FB.papalPolicies()) {
+          if (!FB.papalPolicyAvailable(s, policyId)) continue;
+          const item = FB.papalPolicies()[policyId];
           h += '<button class="btn small" ' + policyAction + '="' +
             esc(policyId) + '"' +
             (investiture.policy === policyId ? ' disabled' : '') + '>' +
@@ -22380,7 +22367,7 @@ window.FB = window.FB || {};
     });
     document.querySelectorAll('[data-papal-tactic]').forEach(function (b) {
       b.addEventListener('click', function () {
-        const tactic = FBDATA.papacy.tactics.filter(function (item) {
+        const tactic = FB.papalTactics().filter(function (item) {
           return item.id === b.dataset.papalTactic;
         })[0];
         if (tactic && tactic.target !== 'none') {
@@ -22506,7 +22493,8 @@ window.FB = window.FB || {};
     const election = papacy.elections[obedienceId];
     if (!obedience || !election) return;
     let ids = obedience.college.slice();
-    if (tacticId === 'withdraw' && election.compromiseId) {
+    const chosenTactic = FB.papalTactics().find(function (row) { return row.id === tacticId; });
+    if (chosenTactic && chosenTactic.kind === 'withdraw' && election.compromiseId) {
       ids.push(election.compromiseId);
     }
     ids = ids.filter(function (id, index, all) {
@@ -22529,7 +22517,7 @@ window.FB = window.FB || {};
     }
     h += '</div><button class="btn" id="gm-cancel">' +
       esc(FB.T('Back')) + '</button>';
-    const tactic = FBDATA.papacy.tactics.filter(function (item) {
+    const tactic = FB.papalTactics().filter(function (item) {
       return item.id === tacticId;
     })[0];
     openModal(tactic ? dt(s, 'papalElectionTactic', tactic.id,

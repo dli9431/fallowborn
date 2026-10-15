@@ -35,3 +35,33 @@ FBDATA.tournaments = {
     assist:{ name:'Assist a teammate', power:-1, fatigue:2, risk:0.7 }
   }
 };
+
+/* Behaviour is separate from presentation so older complete content records
+   and their fingerprints retain their meaning. New ids supply both records. */
+FBDATA.tournamentRules = {
+  legacyProgrammeCapability:'couched_lance', defaultTactic:'balanced', unattendedTactic:'conservative', defaultScale:'local', spectatorTrack:'watch',
+  scales:{
+    local:{ capacityBand:0, venueKinds:[], serviceCommission:0, aiPriority:0 },
+    regional:{ capacityBand:1, venueKinds:['town','city'], serviceCommission:2, aiPriority:10 },
+    grand:{ capacityBand:2, venueKinds:['city'], serviceCommission:4, aiPriority:20 }
+  },
+  programmes:{
+    martial:{ contests:['melee','archery','wrestling','perform'], priority:10 },
+    mounted:{ contests:['melee','archery','wrestling','perform'], priority:30,
+      faithTraditions:['furusiyya'], cultureTraditions:['steppe'] },
+    lists:{ contests:['joust','archery','wrestling','perform'], priority:20, capability:'couched_lance' }
+  },
+  tracks:{
+    joust:{ resolution:'duel', prize:'headline', capability:'couched_lance', loseForfeit:true },
+    melee:{ resolution:'team', prize:'headline' },
+    archery:{ resolution:'score', prize:'archery', serf:true, openVictory:true },
+    wrestling:{ resolution:'duel', prize:'wrestling', serf:true, openVictory:true },
+    perform:{ resolution:'score', prize:'perform', averageSkills:['dip','lea'] },
+    trade:{ stake:10 },
+    carrying:{ serf:true }, kitchens:{ serf:true }, stables:{ serf:true },
+    repairs:{ serf:true }, guarding:{ serf:true }, treatment:{ serf:true }, watch:{ serf:true }
+  },
+  tactics:{
+    conservative:{}, balanced:{}, aggressive:{}, assist:{ resolutions:['team'], teamPower:2 }
+  }
+};

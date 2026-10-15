@@ -391,3 +391,10 @@ The released-catalogue browser ratchet inspects unmodded definitions before any 
 Religious institution catalogues
 
 religiousAffiliations and religiousInstitutionProfiles are same-id replacement catalogues composed before detached validation. Complete bookmark localInstitutions tables place profileId references in inhabited settlement layouts or explicit off-map scopes. The mod gate checks same-mod role, faith, school, selection and jurisdiction references before installation, storage or RNG allocation. Unknown fields and unbounded memberships are rejected. No default school, monastery, office incumbent or population is inferred from a faith or culture. See docs/MODDING.md and docs/designs/religious-institutions.md.
+
+
+Imported behavior catalogues
+
+storyInstances, eventChances, authorityOffices, legitimacySources and customaryBases are supported complete-record roots. All candidate story products and their dependent bookmark/start references validate before installation. New message sources publish only after acceptance. Stored same-name replacement rebuilds the proposed ordered stack from base definitions, including enabled bundled mods, before writing localStorage. This retains a detached base catalogue for import validation; it is not campaign state. Newly exposed roots participate in the effective fingerprint when a mod authors them, preserving older fingerprints when those roots remain unused. Public schemas are in docs/MODDING.md and the shared contract in docs/data-authoring.md.
+
+The retained prospective-import baseline copies public authoring inputs and faith/geography defaults, excluding generated language and music catalogues from serialization. Whole-stack validation remains necessary for same-name replacement and dependent imports. The local-only transient FB.mods.timing report exposes snapshot and stack-validation cost; no unmeasured performance acceptance is implied. Playable miniature worlds and large focused subsystem fixtures are separately named in docs/MODDING.md.

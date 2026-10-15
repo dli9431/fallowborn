@@ -253,25 +253,16 @@ window.FB = window.FB || {};
     }
   }
 
-  function activeOfficeConfirmationRecord(state) {
-    var records = state && Array.isArray(state.privileges)
-      ? state.privileges : [];
-    for (var i = 0; i < records.length; i++) {
-      var record = records[i];
-      if (record && record.defId === 'office_confirmation' &&
-          (!isFinite(Number(record.endTurn)) || state.turn < record.endTurn)) {
-        return record;
-      }
-    }
-    return null;
-  }
-
   function electiveCouncilSeatIds(state) {
     if (!FB.systemEnabled(state, 'royal_council')) return [];
-    var record = activeOfficeConfirmationRecord(state);
-    var def = record && privilegeDef(record.defId);
-    var seats = def && def.effect && def.effect.seats;
-    return Array.isArray(seats) ? seats.slice() : [];
+    const records = state && Array.isArray(state.privileges) ? state.privileges : [], seats = [];
+    for (const record of records) {
+      const def = record && privilegeDef(record.defId), effect = def && def.effect;
+      if (!effect || effect.kind !== 'council_confirmation' ||
+          isFinite(Number(record.endTurn)) && state.turn >= record.endTurn) continue;
+      for (const id of effect.seats || []) if (seats.indexOf(id) < 0) seats.push(id);
+    }
+    return seats;
   }
 
   FB.electiveCouncilSeatIds = electiveCouncilSeatIds;
@@ -280,8 +271,9 @@ window.FB = window.FB || {};
   };
 
   function councilElectionDefinition(seatId) {
-    return seatId === 'treasurer' ? 'council_treasurer_confirmation' :
-      (seatId === 'constable' ? 'council_constable_confirmation' : null);
+    const table = FBDATA.elections || {};
+    for (const id of Object.keys(table)) if (table[id].kind === 'council' && table[id].office === seatId) return id;
+    return null;
   }
 
   function ensureCouncilTerms(state, store) {
@@ -473,7 +465,7 @@ window.FB = window.FB || {};
     }
     if (FB.professionHasRole(career.profession, 'trading') && finite(def.merchantLearning, 0)) {
       var learning = FB.skillOf(c, 'lea');
-      if (!c.traits || c.traits.indexOf('literate') < 0) {
+      if (!FB.traitMechanic(c, 'literacy')) {
         missing.push(FB.T('Lettered'));
       }
       if (learning < def.merchantLearning) {
@@ -566,7 +558,7 @@ window.FB = window.FB || {};
     out.learning = FB.professionHasRole(status.career.profession, 'trading')
       ? finite(status.def.merchantLearning, 0) : 0;
     out.lettered = !out.learning ||
-      (c.traits && c.traits.indexOf('literate') >= 0);
+      !!FB.traitMechanic(c, 'literacy');
     out.missing = status.missing;
     out.blocked = !status.ready;
     out.vacancy = status.vacancy;
@@ -1376,7 +1368,7 @@ window.FB = window.FB || {};
     }
     if (effect.kind === 'council_confirmation' && FB.station.mayHoldCouncil(state.player, state)) {
       var record = {
-        id:'privilege:council_confirmation:office_confirmation:player',
+        id:'privilege:council_confirmation:' + defId + ':player',
         defId:defId,
         holderType:'institution', holderId:'council:player',
         grantorType:options.grantorType || 'realm',
@@ -1515,23 +1507,25 @@ window.FB = window.FB || {};
   }
 
   FB.fns = FB.fns || {};
-  FB.fns.collective_demand_commons = function (state) {
+  FB.fns.collective_demand_commons = function (state, definition) {
+    if (!definition || !privilegeDef(definition.privilege)) return false;
     var counties = (state.player.provs || []).filter(function (pid) {
-      return uprisingHeld(state, pid) && !FB.hasPrivilege(state, 'confirmed_custom', pid);
+      return uprisingHeld(state, pid) && !FB.hasPrivilege(state, definition.privilege, pid);
     }).sort(function (a, b) { return FB.countyPopularSupport(state, a) - FB.countyPopularSupport(state, b) || compareId(a, b); });
     var pid = counties[0] || state.player.provinceId;
     var voice = FB.countyPopularSupport(state, pid);
-    if (!pid || voice > -20 || FB.hasPrivilege(state, 'confirmed_custom', pid)) {
+    if (!pid || voice > -20 || FB.hasPrivilege(state, definition.privilege, pid)) {
       return false;
     }
     return demandResult(-voice + 10, pid,
       [{ id:'common_voice', value:voice }]);
   };
 
-  FB.fns.collective_demand_tax = function (state) {
+  FB.fns.collective_demand_tax = function (state, definition) {
+    if (!definition || !privilegeDef(definition.privilege)) return false;
     var pid = state.player.provinceId;
     var taxes = recentMistreatment(state, 'extraordinary_tax');
-    if (!pid || !taxes.length || FB.hasPrivilege(state, 'tax_concession', pid)) {
+    if (!pid || !taxes.length || FB.hasPrivilege(state, definition.privilege, pid)) {
       return false;
     }
     var voice = FB.countyPopularSupport(state, pid);
@@ -1540,23 +1534,28 @@ window.FB = window.FB || {};
        { id:'common_voice', value:voice }]);
   };
 
-  FB.fns.collective_demand_guild = function (state) {
+  FB.fns.collective_demand_guild = function (state, definition) {
+    if (!definition || !privilegeDef(definition.privilege)) return false;
     var pid = state.player.provinceId;
     if (!pid || !FB.hasModifier || !FB.hasModifier(state, 'contested_tolls', pid) ||
-        FB.hasPrivilege(state, 'market_charter', pid)) return false;
+        FB.hasPrivilege(state, definition.privilege, pid)) return false;
     return demandResult(45 + Math.max(0, -FB.countyPopularSupport(state, pid)), pid,
       [{ id:'contested_tolls', value:1 }]);
   };
 
-  FB.fns.collective_demand_sanctuary = function (state) {
+  FB.fns.collective_demand_sanctuary = function (state, definition) {
+    if (!definition || !privilegeDef(definition.privilege)) return false;
     var pid = state.player.provinceId;
     var persecution = recentMistreatment(state, 'religious_persecution');
     var burden = pid && FB.hasModifier &&
       (FB.hasModifier(state, 'muster_burden', pid) ||
        FB.hasModifier(state, 'settlement_grudge', pid));
     if ((!burden && !persecution.length) ||
-        FB.hasPrivilege(state, 'sanctuary', pid) ||
-        FB.hasPrivilege(state, 'levy_exemption', pid)) return false;
+        FB.hasPrivilege(state, definition.privilege, pid) ||
+        Object.keys(FBDATA.privileges).some(function (id) {
+          var other = privilegeDef(id), effect = privilegeDef(definition.privilege).effect;
+          return other && other.effect && other.effect.kind === effect.kind && other.effect.id === effect.id && FB.hasPrivilege(state, id, pid);
+        })) return false;
     return demandResult(38 + persecution.length * 15 +
       Math.max(0, -FB.countyPopularSupport(state, pid)), pid,
       [{ id:'coercive_local_burden', value:burden ? 1 : 0 },
@@ -1564,7 +1563,7 @@ window.FB = window.FB || {};
   };
 
   FB.fns.collective_demand_magnates = function (state) {
-    if (!FB.station.mayHoldCouncil(state.player, state) || FB.hasPrivilege(state, 'office_confirmation', 'player')) {
+    if (!FB.station.mayHoldCouncil(state.player, state) || electiveCouncilSeatIds(state).length > 0) {
       return false;
     }
     var vassals = FB.playerVassals ? FB.playerVassals(state) : [];
@@ -1607,7 +1606,7 @@ window.FB = window.FB || {};
       if (isFinite(lastYear) && state.date.year - lastYear <
           Math.max(1, Math.round(finite(def.cooldownYears, 3)))) continue;
       var gate = def.gate && FB.fns[def.gate];
-      var result = gate ? gate(state) : false;
+      var result = gate ? gate(state, def) : false;
       if (!result || typeof result !== 'object') continue;
       var opposition = store && store.opposition &&
         store.opposition[def.constituency];
@@ -1727,10 +1726,11 @@ window.FB = window.FB || {};
   };
 
   function demandHolder(state, pending) {
-    if (pending.privilegeId === 'office_confirmation') {
+    const definition = privilegeDef(pending.privilegeId);
+    if (definition && definition.effect && definition.effect.kind === 'council_confirmation') {
       return { type:'institution', id:'council:player' };
     }
-    if (pending.privilegeId === 'sanctuary') {
+    if (definition && definition.holderTypes.indexOf('faith') >= 0) {
       var province = FB.world.byId[pending.scopeId];
       return { type:'faith', id:(province && FB.countyReligion
         ? FB.countyReligion(state, pending.scopeId)
@@ -2428,6 +2428,40 @@ window.FB = window.FB || {};
     return null;
   };
 
+  /* Pure projection used by authority, religion and community conversion. */
+  FB.realmPolicyGovernance = function (state) {
+    var out = { tolerance:null, coercivePressure:0, coerciveResistance:0, peacefulResistance:0 };
+    realmPolicyEntryList(state).forEach(function (entry) {
+      var levels = FBDATA.policyGovernance[entry.id];
+      var rule = levels && levels[FB.realmPolicyLevelId(state, entry.id)];
+      if (!rule) return;
+      if (out.tolerance === null && rule.tolerance) out.tolerance = rule.tolerance;
+      ['coercivePressure','coerciveResistance','peacefulResistance'].forEach(function (key) {
+        out[key] += rule[key] || 0;
+      });
+    });
+    return out;
+  };
+
+  /* The first active governance level, in ordinary policy order, that
+     satisfies test, with its policy id; null when no declared level does. */
+  function realmPolicyGovernanceSource(state, test) {
+    var entries = realmPolicyEntryList(state);
+    for (var i = 0; i < entries.length; i++) {
+      var levels = FBDATA.policyGovernance[entries[i].id];
+      var rule = levels && levels[FB.realmPolicyLevelId(state, entries[i].id)];
+      if (rule && test(rule)) return { policyId:entries[i].id, rule:rule };
+    }
+    return null;
+  }
+
+  /* The policy whose declared tolerance governs (first declared wins, as in
+     FB.realmPolicyGovernance) when that tolerance is persecution. */
+  function realmPolicyPersecutionSource(state) {
+    var source = realmPolicyGovernanceSource(state, function (rule) { return !!rule.tolerance; });
+    return source && source.rule.tolerance === 'persecution' ? source : null;
+  }
+
   /* Directly held counties whose faith lies outside the realm's fold —
      anything short of 'same' or 'in_fold' counts as a minority community.
      Read-only; policy never rewrites a county's faith. */
@@ -2799,10 +2833,10 @@ window.FB = window.FB || {};
      for exactly as long as the policy stands. */
   FB.realmPolicyYearly = function (state) {
     if (!FB.realmPolicyActive(state)) return;
-    if (FB.realmPolicyLevelId(state, 'religious_tolerance') === 'persecution' &&
-        FB.realmPolicyMinorityCounties(state).length) {
+    var source = realmPolicyPersecutionSource(state);
+    if (source && FB.realmPolicyMinorityCounties(state).length) {
       FB.notePoliticalMistreatment(state, 'religious_persecution', {
-        policyId:'religious_tolerance', sustained:true
+        policyId:source.policyId, sustained:true
       });
     }
   };
@@ -2841,7 +2875,7 @@ window.FB = window.FB || {};
 
   FB.fns.realm_policy_persecution_due = function (state) {
     return FB.realmPolicyActive(state) &&
-      FB.realmPolicyLevelId(state, 'religious_tolerance') === 'persecution' &&
+      !!realmPolicyPersecutionSource(state) &&
       FB.realmPolicyMinorityCounties(state).length > 0;
   };
   FB.fns.realm_policy_encouraged_settlement_due = function (state) {
@@ -2851,7 +2885,7 @@ window.FB = window.FB || {};
   };
   FB.fns.realm_policy_protected_worship_due = function (state) {
     return FB.realmPolicyActive(state) &&
-      FB.realmPolicyLevelId(state, 'religious_tolerance') === 'protected_worship' &&
+      !!realmPolicyGovernanceSource(state, function (rule) { return rule.protectsWorship === true; }) &&
       FB.realmPolicyMinorityCounties(state).length > 0;
   };
 
@@ -2870,9 +2904,10 @@ window.FB = window.FB || {};
   }
 
   FB.fns.realm_policy_persecution_noted = function (state) {
-    FB.notePoliticalMistreatment(state, 'religious_persecution', {
-      policyId:'religious_tolerance', source:'event'
-    });
+    var source = realmPolicyPersecutionSource(state), details = {};
+    if (source) details.policyId = source.policyId;
+    details.source = 'event';
+    FB.notePoliticalMistreatment(state, 'religious_persecution', details);
   };
   FB.fns.realm_policy_settlers_welcome = function (state) {
     var target = leastDevelopedHeldCounty(state);
@@ -3053,7 +3088,9 @@ window.FB = window.FB || {};
     var sites = FB.world.sitesByProv && FB.world.sitesByProv[def.provinceId];
     return !!(sites && sites.list.some(function (site) { return site.site === def.site; }) && controller(s, def));
   }
-  function recognition(s, source, issuer, subject, scope) {
+  function recognition(s, mandate, issuer, subject, scope) {
+    var source = FB.legitimacySourceFor(s,mandate,issuer);
+    if (!source) return null;
     var existing = FB.political.legitimacy(s, subject, scope, source).filter(function (r) {
       return r.issuer.kind === issuer.kind && r.issuer.id === issuer.id;
     })[0];
@@ -3140,7 +3177,7 @@ window.FB = window.FB || {};
       (def.communionWith || []).forEach(function (targetId) {
         var target = defs[targetId], holder = target && FB.religiousOfficeSnapshot(s, target.officeId);
         if (row(s, targetId) && holder) FB.authorityRecognize(s, {
-          source:'church_support', issuer:{kind:'religious-office',id:def.officeId},
+          source:FB.legitimacySourceFor(s,'religious_head',{kind:'religious-office',id:def.officeId}), issuer:{kind:'religious-office',id:def.officeId},
           subject:{kind:'character',id:holder.id}
         });
       });
@@ -3197,7 +3234,7 @@ window.FB = window.FB || {};
     var actor = FB.political.actor(s, subject);
     var pending = record.petitions[subjectKey(subject)] || null;
     var offices = FB.religiousOffices(s);
-    var mediationIds = FB.political.legitimacy(s, subject, county(def), 'church_support').filter(function (rec) {
+    var mediationIds = FB.legitimacyByMandate(s, subject, county(def), 'religious_head').filter(function (rec) {
       return offices[rec.issuer.id] && offices[rec.issuer.id].religionId === def.religion;
     }).map(function (rec) { return rec.id; });
     var policy = treatment(s, def.provinceId);
@@ -3281,14 +3318,14 @@ window.FB = window.FB || {};
       (!p.terms.tolerance || !f.persecution) && (!p.terms.taxRelief || !f.extraction) &&
       (church(def) || f.faithId === def.religion || f.mediationIds.length > 0) &&
       s.turn < p.expiresTurn && (!p.terms.contractId || (FB.political.contract(s, p.terms.contractId) || {}).effective) &&
-      FB.political.legitimacy(s, subject, county(def), church(def) ? 'church_support' : 'civic_acceptance')
+      FB.legitimacyByMandate(s, subject, county(def), church(def) ? 'religious_head' : 'community')
         .some(function (r) { return r.id === p.recognitionId; }));
   };
   FB.localInstitutionRights = function (s, id, issuerId) {
     var def = FB.localInstitutionDefinitions(s)[id], r = row(s, id);
     var rep = def && r && representative(s, def, r);
     if (!enabled(s, def) || !rep || church(def) || controller(s, def) !== issuerId) return null;
-    var proof = recognition(s, 'civic_acceptance', county(def), person(rep.id), county(def));
+    var proof = recognition(s, 'community', county(def), person(rep.id), county(def));
     if (!proof) return null;
     ['peace','consent'].forEach(function (power) {
       var right = FB.authorityEstablishRight(s, { issuer:{ kind:'realm', id:issuerId },
@@ -3317,7 +3354,7 @@ window.FB = window.FB || {};
     } else {
       var ballot = fresh.action === 'refuse' ? null : FB.politicalBallot(fresh.electorates);
       var passed = !!(ballot && ballot.passed);
-      var rec = passed && recognition(s, church(def) ? 'church_support' : 'civic_acceptance',
+      var rec = passed && recognition(s, church(def) ? 'religious_head' : 'community',
         def.officeId ? { kind:'religious-office', id:def.officeId } : church(def)
           ? person(f.representativeId) : county(def), fresh.subject, county(def));
       if (passed && !rec) return false;
@@ -3378,7 +3415,7 @@ window.FB = window.FB || {};
     if (!q.allowed || reviewed && reviewed.stamp !== q.stamp) return null;
     var def = FB.localInstitutionDefinitions(s)[id];
     var scope = { kind:'county', id:provinceId };
-    return recognition(s, 'church_support', def.officeId ? { kind:'religious-office', id:def.officeId }
+    return recognition(s, 'religious_head', def.officeId ? { kind:'religious-office', id:def.officeId }
       : person(row(s, id).representativeId), subject, scope);
   };
   FB.localInstitutionsSeason = function (s) {

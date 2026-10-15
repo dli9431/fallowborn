@@ -462,20 +462,28 @@
   territory.beginMigration = FB.federateBeginMigration;
   territory.court = Q.movingPolities;
 
-  FB.validateFederateData = function () {
+  FB.validateFederateData = function (stories) {
     var errors = [], terms = FBDATA.federateContractTerms || {};
-    for (var storyId in FBDATA.federateServiceStarts || {}) {
+    if (typeof terms !== 'object' || Array.isArray(terms) || Object.keys(terms).length > 128) return ['federateContractTerms must contain at most 128 records.'];
+    var openings = FBDATA.federateServiceStarts || {};
+    if (typeof openings !== 'object' || Array.isArray(openings) || Object.keys(openings).length > 128) return ['federateServiceStarts must contain at most 128 openings.'];
+    for (var storyId in openings) {
       var starts = FBDATA.federateServiceStarts[storyId];
-      if (!Array.isArray(starts) || starts.some(function (row) {
-        return !row || !terms[row.templateId] || !row.patronRealmId || !row.federateRealmId ||
-          !row.hostId || row.patronRealmId === row.federateRealmId;
+      var story = stories && stories.get(storyId);
+      if (stories && (!story || !story.declaration || story.declaration.type !== 'court_settlement')) errors.push('federateServiceStarts.' + storyId + ' needs a compiled world story.');
+      if (!Array.isArray(starts) || starts.length > 32 || starts.some(function (row) {
+        return !row || Object.keys(row).some(function (key) { return ['templateId','patronRealmId','federateRealmId','hostId','payPerSeason','initialPay','endTurn'].indexOf(key) < 0; }) || !terms[row.templateId] || !row.patronRealmId || !row.federateRealmId ||
+          !row.hostId || row.patronRealmId === row.federateRealmId ||
+          ['payPerSeason','initialPay','endTurn'].some(function (key) { return row[key] !== undefined && (!Number.isFinite(row[key]) || row[key] < 0 || row[key] > 100000); }) ||
+          row.endTurn !== undefined && !Number.isInteger(row.endTurn) ||
+          stories && story && story.declaration && !(story.declaration.opening.hosts || []).some(function (army) { return army.id === row.hostId && army.realm === row.federateRealmId; });
       })) errors.push(FB.T('Invalid opening federate services: {id}.', { id:storyId }));
     }
     for (var id in terms) if (own(terms, id)) {
       var def = terms[id];
-      if (!def || !Number.isFinite(def.payPerSeason) || def.payPerSeason < 0 ||
-          def.initialPay !== undefined && (!Number.isFinite(def.initialPay) || def.initialPay < 0) ||
-          !Number.isInteger(def.durationDays) || def.durationDays <= 0 ||
+      if (!/^[a-z][a-z0-9_]*$/.test(id) || !def || typeof def !== 'object' || Array.isArray(def) || Object.keys(def).some(function (key) { return ['payPerSeason','initialPay','durationDays','renewWindowDays','service','land','recognition','autoRenew'].indexOf(key) < 0; }) || !Number.isFinite(def.payPerSeason) || def.payPerSeason < 0 || def.payPerSeason > 10000 ||
+          def.initialPay !== undefined && (!Number.isFinite(def.initialPay) || def.initialPay < 0 || def.initialPay > 100000) ||
+          !Number.isInteger(def.durationDays) || def.durationDays <= 0 || def.durationDays > 36000 ||
           !Number.isInteger(def.renewWindowDays) || def.renewWindowDays < 0 ||
           def.renewWindowDays >= def.durationDays || typeof def.autoRenew !== 'boolean' ||
           ['host','none'].indexOf(def.service) < 0 || ['optional','conquest','none'].indexOf(def.land) < 0 ||
@@ -483,14 +491,15 @@
         errors.push(FB.T('Invalid federate contract terms {id}.', { id:id }));
     }
     var chains = FBDATA.federateMigrations || {};
+    if (typeof chains !== 'object' || Array.isArray(chains) || Object.keys(chains).length > 128) return errors.concat(['federateMigrations must contain at most 128 records.']);
     for (var key in chains) if (own(chains, key)) {
       var chain = chains[key];
-      if (!chain || !terms[chain.templateId] || !FBDATA.governmentForms[chain.settlementForm] ||
+      if (!/^[a-z][a-z0-9_]*$/.test(key) || !chain || Object.keys(chain).some(function (field) { return ['realmId','patronRealmId','hostId','origin','target','firstYear','lastYear','durationDays','templateId','settlementForm','men','units'].indexOf(field) < 0; }) || !terms[chain.templateId] || !FBDATA.governmentForms[chain.settlementForm] ||
           !Number.isInteger(chain.firstYear) || !Number.isInteger(chain.lastYear) ||
-          chain.lastYear < chain.firstYear || !Number.isInteger(chain.durationDays) || chain.durationDays <= 0 ||
+          chain.lastYear < chain.firstYear || !Number.isInteger(chain.durationDays) || chain.durationDays <= 0 || chain.durationDays > 36000 ||
           ['realmId','patronRealmId','hostId','origin','target'].some(function (field) {
             return typeof chain[field] !== 'string' || !chain[field];
-          }) || chain.realmId === chain.patronRealmId || !Number.isInteger(chain.men) || chain.men <= 0 ||
+          }) || chain.realmId === chain.patronRealmId || !Number.isInteger(chain.men) || chain.men <= 0 || chain.men > 1000000 ||
           !chain.units || Object.keys(chain.units).some(function (unit) {
             return !FBDATA.unitClasses[unit] || !Number.isInteger(chain.units[unit]) || chain.units[unit] < 0;
           }) || Object.keys(chain.units).reduce(function (n, unit) { return n + chain.units[unit]; }, 0) !== chain.men)

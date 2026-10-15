@@ -142,3 +142,47 @@ FBDATA.balance.mercContractAbandonStanding = -8;
    new county's head settlement. */
 FBDATA.balance.frontierMilestonesRequired = 4;
 FBDATA.balance.frontierSettlementPlots = 1;
+
+/* Mechanical roles and event references are independent of authored purpose ids. */
+FBDATA.travelRules = {
+  "tournament": {
+    "kind": "tournament",
+    "encounters": "tournament"
+  },
+  "pilgrimage": {
+    "kind": "pilgrimage",
+    "encounters": "pilgrimage",
+    "arrivalEvent": "travel_capstone_pilgrimage"
+  },
+  "trade": {
+    "kind": "trade",
+    "encounters": "trade",
+    "arrivalEvent": "travel_capstone_trade"
+  },
+  "study": {
+    "kind": "study",
+    "encounters": "study",
+    "arrivalEvent": "travel_capstone_study"
+  },
+  "service": {
+    "kind": "service",
+    "encounters": "service",
+    "arrivalEvent": "travel_capstone_service"
+  },
+  "expedition": {
+    "kind": "expedition",
+    "encounters": "expedition",
+    "arrivalEvent": "travel_capstone_expedition"
+  },
+  "frontier": {
+    "kind": "frontier",
+    "encounters": "frontier",
+    "arrivalEvent": "travel_capstone_frontier"
+  },
+  "relationship": {
+    "kind": "relationship",
+    "encounters": "relationship",
+    "arrivalEvent": "travel_capstone_relationship"
+  }
+};
+FBDATA.travelDefaults = { trade:"trade", relationship:"relationship", tournament:"tournament" };

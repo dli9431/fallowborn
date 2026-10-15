@@ -163,6 +163,14 @@ testing the charter under Protected Worship. They introduce cultural and
 religious pressure, invited specialists, merchants, and refugees as narrative
 and ledger effects without claiming a demographic simulation.
 
+The persecution and refugee hooks read `FBDATA.policyGovernance`, not policy
+or level ids. The persecution story and the yearly mistreatment note follow
+the governing declared tolerance (the first active level that declares one,
+as in the shared governance projection) when it is `persecution`, and record
+that level's policy id. The refugee story follows any active level declaring
+`protectsWorship`. A mod's own crown policy therefore drives these stories
+the same way the built-in Religious Tolerance levels do.
+
 Governance's Institution section shows each family's standing level and opens
 the **Royal laws & policy** sheet (`UI.showRealmPolicies`), which lists every
 level in a dedicated policy card. Concise ongoing effects, immediate numeric

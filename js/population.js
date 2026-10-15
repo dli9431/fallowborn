@@ -1633,19 +1633,12 @@ window.FB = window.FB || {};
         state, pid, 'communityFaithPressure'));
     }
     if (provinceOwner(state, pid) === 'player' &&
-        kind === 'faith' && FB.realmPolicyLevelId) {
-      var tolerance = FB.realmPolicyLevelId(state, 'religious_tolerance');
-      if (tolerance === 'persecution' && policyId === 'coercive') {
-        pressure += 0.15;
-        resistance += 0.15;
-      } else if (tolerance === 'protected_worship' &&
-          policyId === 'coercive') {
-        pressure -= 0.15;
-        resistance += 0.10;
-      } else if (tolerance === 'tolerated_minorities' &&
-          policyId !== 'coercive') {
-        resistance -= 0.05;
-      }
+        kind === 'faith' && FB.realmPolicyGovernance) {
+      var governance = FB.realmPolicyGovernance(state);
+      if (policyId === 'coercive') {
+        pressure += governance.coercivePressure;
+        resistance += governance.coerciveResistance;
+      } else resistance += governance.peacefulResistance;
     }
     return { pressure:pressure, resistance:resistance };
   }

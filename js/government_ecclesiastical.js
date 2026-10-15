@@ -40,7 +40,7 @@
     var p = E.profile(s,rid), c = E.incumbent(s,rid), realm = s.realms[rid];
     if (!p || !c || c.captive || c.exiled || FB.justiceCustodyOf && FB.justiceCustodyOf(s,c.id)) return false;
     if (!p.layRecognition) return true;
-    return !!realm.liege && Q.legitimacy(s,{ kind:'character',id:c.id },{ kind:'realm',id:rid },'imperial_commission').some(function (proof) {
+    return !!realm.liege && FB.legitimacyByMandate(s,{ kind:'character',id:c.id },{ kind:'realm',id:rid },'court').some(function (proof) {
       return proof.id === E.row(s,rid).temporalRecognitionId && proof.issuer.kind === 'realm' && proof.issuer.id === realm.liege;
     });
   };
@@ -125,7 +125,7 @@
         old.issuerGeneration = FB.realmRulerGeneration(s,old.issuer.id); old.status = 'active'; old.startTurn = s.turn; old.endTurn = null;
         success = old;
       } else {
-        success = FB.authorityRecognize(s,{ source:'imperial_commission',issuer:{ kind:'realm',id:s.realms[rid].liege },
+        success = FB.authorityRecognize(s,{ source:FB.legitimacySourceFor(s,'court',{kind:'realm',id:s.realms[rid].liege}),issuer:{ kind:'realm',id:s.realms[rid].liege },
           subject:{ kind:'character',id:c.id },scope:{ kind:'realm',id:rid } });
         if (success) row.temporalRecognitionId = success.id;
       }

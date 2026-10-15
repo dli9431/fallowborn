@@ -3574,10 +3574,9 @@ window.FB = window.FB || {};
       const exposed = status && status.shown && status.can &&
         UI.revealDeedAction && UI.revealDeedAction('go_to_town');
       if (exposed) {
-        const osricStart = s.telemetry && s.telemetry.quickStart === 'osric_867';
-        return UI.maybeTip('first-deed', osricStart
-          ? '💡 You are Osric, a {term:serf} in Barcelona. Try Go into town as your first deed: pick a settlement and what to do there, then press Play to see what happens next.'
-          : '💡 Try Go into town as your first deed: pick a settlement and what to do there, then press Play to see what happens next.',
+        const start = s.telemetry && FB.quickStartOf(s.telemetry.quickStart);
+        return UI.maybeTip('first-deed', start && start.firstDeedTip ||
+          '💡 Try Go into town as your first deed: pick a settlement and what to do there, then press Play to see what happens next.',
           '#tab-actions [data-action-id="go_to_town"]', {
             noNext:true, revealDeed:'go_to_town'
           });

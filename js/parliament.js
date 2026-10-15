@@ -152,10 +152,10 @@ window.FB = window.FB || {};
     const terms = FB.parliamentTerms(state);
     const politics = FB.politicalSummary
       ? FB.politicalSummary(state) : null;
-    const pending = [];
+    const pending = [], agendaEvents = Object.keys(FBDATA.parliamentAgendas).map(function (id) { return FBDATA.parliamentAgendas[id].event; });
     for (const item of (state.eventQueue || [])) {
       if (item && typeof item.id === 'string' &&
-          item.id.indexOf('parliament_') === 0) pending.push(item.id);
+          (item.id.indexOf('parliament_') === 0 || agendaEvents.indexOf(item.id) >= 0)) pending.push(item.id);
     }
     return {
       formed:terms.formed,
@@ -428,35 +428,39 @@ window.FB = window.FB || {};
   /* The locale-neutral agenda pool keeps annual cadence separate from story
      eligibility. Local disputes stay attached to the snapshotted home county;
      wartime service business replaces the peacetime charter/relief briefs. */
+  FB.validateParliamentAgendas = function (table) {
+    const errors = [];
+    if (!table || typeof table !== 'object' || Array.isArray(table) || Object.keys(table).length > 64) return ['parliamentAgendas needs at most 64 records.'];
+    for (const id of Object.keys(table)) {
+      const d = table[id], path = 'parliamentAgendas.' + id;
+      if (!/^[a-z][a-z0-9_]*$/.test(id) || !d || typeof d !== 'object' || Array.isArray(d)) { errors.push(path + ' needs a stable id and record.'); continue; }
+      for (const key of Object.keys(d)) if (['event','order','war','aidRoom','revocationConsent','capabilities','notModifiers','anyModifiers'].indexOf(key) < 0) errors.push(path + '.' + key + ' is unsupported.');
+      if (!(FBDATA.events || []).some(function (event) { return event.id === d.event; })) errors.push(path + '.event is unknown.');
+      if (!Number.isInteger(d.order) || d.order < 0 || d.order > 10000) errors.push(path + '.order must be an integer from zero to 10000.');
+      for (const flag of ['war','aidRoom','revocationConsent']) if (d[flag] !== undefined && typeof d[flag] !== 'boolean') errors.push(path + '.' + flag + ' must be boolean.');
+      for (const field of ['capabilities','notModifiers','anyModifiers']) if (d[field] !== undefined) {
+        const refs = field === 'capabilities' ? FBDATA.capabilities : FBDATA.modifiers;
+        if (!Array.isArray(d[field]) || !d[field].length || d[field].length > 8 || d[field].some(function (v,i,list) { return !Object.prototype.hasOwnProperty.call(refs,v) || list.indexOf(v) !== i; })) errors.push(path + '.' + field + ' needs one to eight distinct known references.');
+      }
+    }
+    return errors;
+  };
   FB.parliamentSessionCandidates = function (state) {
     if (!FB.parliamentActive(state)) return [];
-    const B = FBDATA.balance;
-    const terms = FB.parliamentTerms(state);
-    const pid = state.player.provinceId;
-    const has = function (id) {
-      return !!(pid && FB.hasModifier && FB.hasModifier(state, id, pid));
-    };
-    const out = ['parliament_session', 'parliament_grievance'];
-    if (FB.isRealmAtWar(state, state.player.liege)) {
-      out.push('parliament_subsidy', 'parliament_levy_concession');
-    } else {
-      if ((!FB.hasCapability ||
-          (FB.hasCapability(state, 'permanent_markets') &&
-           FB.hasCapability(state, 'sealed_documents'))) &&
-          !has('market_charter') && !has('contested_tolls')) {
-        out.push('parliament_market_charter');
-      }
-      if (!has('levy_exemption') && !has('settlement_grudge')) {
-        out.push('parliament_sanctuary_relief');
-      }
-    }
-    if (terms.aid < (B.parliamentAidMax || 0.40) - 0.001 &&
-        !terms.revocationConsent) {
-      out.push('parliament_aid_hike');
-    }
-    if (has('contested_tolls') || has('settlement_grudge')) {
-      out.push('parliament_local_redress');
-    }
+    const B = FBDATA.balance, terms = FB.parliamentTerms(state), pid = state.player.provinceId;
+    const has = function (id) { return !!(pid && FB.hasModifier && FB.hasModifier(state, id, pid)); };
+    const war = FB.isRealmAtWar(state, state.player.liege), table = FBDATA.parliamentAgendas;
+    const ids = Object.keys(table), out = [];
+    ids.slice().sort(function (a,b) { return table[a].order - table[b].order || ids.indexOf(a) - ids.indexOf(b); }).forEach(function (id) {
+      const d = table[id];
+      if (d.war !== undefined && !!war !== d.war) return;
+      if (d.aidRoom !== undefined && (terms.aid < (B.parliamentAidMax || .40) - .001) !== d.aidRoom) return;
+      if (d.revocationConsent !== undefined && !!terms.revocationConsent !== d.revocationConsent) return;
+      if ((d.capabilities || []).some(function (key) { return FB.hasCapability && !FB.hasCapability(state,key); })) return;
+      if ((d.notModifiers || []).some(has)) return;
+      if (d.anyModifiers && !d.anyModifiers.some(has)) return;
+      out.push(d.event);
+    });
     return out;
   };
 

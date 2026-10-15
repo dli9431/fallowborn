@@ -118,12 +118,8 @@ window.FB = window.FB || {};
     }
     return out;
   };
-  var namedChance = FB.namedChance;
-  FB.namedChance = function (state, key, ctx) {
-    if (key === 'revolt_negotiation') return terms(state, ctx).negotiationChance;
-    if (key === 'revolt_suppression') return terms(state, ctx).suppressionChance;
-    return namedChance(state, key, ctx);
-  };
+  FB.registerChancePolicy('revolt_negotiation', function (state, ctx) { return terms(state, ctx).negotiationChance; });
+  FB.registerChancePolicy('revolt_suppression', function (state, ctx) { return terms(state, ctx).suppressionChance; });
   var optionStatus = FB.eventOptionStatus;
   FB.eventOptionStatus = function (state, ev, option, ctx) {
     var result = optionStatus(state, ev, option, ctx);

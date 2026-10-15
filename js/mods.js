@@ -19,6 +19,39 @@ window.FBMODS = window.FBMODS || [];
   let legacyBookmarkLimited = false;
   let effectiveFingerprint = '';
   let modFailure = '';
+  const authoringRoots = ['positionRules','policyGovernance','marketRaidYields','authoringDefaults','actionPolicies','rulerFaithTargets','federateServiceStarts','federateMigrations','rankPrestigeYearly','historicalAmbitions','federateContractTerms','tenureArchetypes','tenureDuties','tenureRights','freedomBargaining','freedomTerms','storyInstances','focusRoutines','deedRoutines','deedEvents','eventChances','eventSubscriptions','tournamentRules','councilSeatRoles','enterpriseMechanics','specializationMarketEffects','householdStandardDemand','abbeys','householdServiceRoles','religiousOfficeRanks','papacyRules','travelRules','travelDefaults','parliamentAgendas','agencyRules','quickStarts','traitMechanics','authorityOffices','legitimacySources','customaryBases'];
+  const authoredRoots = Object.create(null);
+  let baseCatalogues = null;
+  var timingAllowed = location.protocol === 'file:' || /^(localhost|127\.0\.0\.1|\[?::1\]?)$/.test(location.hostname);
+  var timingEnabled = timingAllowed && /(?:^|[?&])modTiming=1(?:&|$)/.test(location.search);
+  var timingRows = [];
+  M.timing = {
+    enable:function (on) { timingEnabled = timingAllowed && !!on; timingRows = []; return timingEnabled; },
+    read:function () { return timingRows.map(function (row) { return Object.assign({}, row); }); }
+  };
+  function timeStart() { return timingEnabled ? performance.now() : null; }
+  function timeEnd(kind, start, facts) {
+    if (start === null) return;
+    var row = Object.assign({ operation:kind, elapsedMs:performance.now() - start }, facts || {});
+    timingRows.push(row); if (timingRows.length > 64) timingRows.shift();
+  }
+  function captureBaseCatalogues() {
+    if (baseCatalogues || FB.platform.isCrazyGames) return;
+    var started = timeStart(), definitions = {};
+    // Retain read-only auxiliary references; copy only the authorable inputs.
+    // Generated locale/music catalogues never enter this serialized snapshot.
+    Object.keys(PUBLIC_KEYS).concat(['faithDefaults','defaultGeography']).forEach(function (key) {
+      if (own(FBDATA, key)) definitions[key] = FBDATA[key];
+    });
+    var serialized = null;
+    try {
+      serialized = JSON.stringify(definitions);
+      baseCatalogues = Object.assign({}, FBDATA, JSON.parse(serialized));
+    } finally {
+      timeEnd('base_snapshot', started, { roots:Object.keys(definitions).length,
+        jsonCodeUnits:serialized === null ? 0 : serialized.length, accepted:!!baseCatalogues });
+    }
+  }
 
   M.assertReady = function () {
     if (modFailure) throw new Error(modFailure);
@@ -178,11 +211,6 @@ window.FBMODS = window.FBMODS || [];
       return;
     }
     if (typeof mod !== 'object' || mod === null) { if (FB.ui) FB.ui.toast('Mod must be a JSON object.'); return; }
-    const requirementErrors = M.validate(mod);
-    if (requirementErrors.length) {
-      if (FB.ui) FB.ui.toast('Mod requirements failed: {message}', { message:requirementErrors.join(' ') });
-      return false;
-    }
     const all = readAll();
     // re-applying a mod (same text, or same "name") replaces the stored
     // copy rather than stacking another on the pile
@@ -197,6 +225,12 @@ window.FBMODS = window.FBMODS || [];
       }
     }
     if (idx >= 0) all[idx] = jsonText; else all.push(jsonText);
+    const requirementErrors = validateStoredStack(all);
+    if (timingEnabled && window.console && console.info) console.info('Mod authoring timing', JSON.stringify(M.timing.read()));
+    if (requirementErrors.length) {
+      if (FB.ui) FB.ui.toast('Mod requirements failed: {message}', { message:requirementErrors.join(' ') });
+      return false;
+    }
     try { localStorage.setItem(KEY, JSON.stringify(all)); }
     catch (e) {
       if (FB.ui) FB.ui.toast('Could not store mod: {message}', { message: e.message });
@@ -238,28 +272,35 @@ window.FBMODS = window.FBMODS || [];
   /* This is the complete public top-level runtime-mod surface. Tables that
      are generated artifacts or engine aliases are intentionally absent. */
   const PUBLIC_KEYS = {
+    rulerFaithTargets:true, federateServiceStarts:true, federateMigrations:true,
+    actionPolicies:true, deedRoutines:true,
+    rankPrestigeYearly:true,
+    historicalAmbitions:true, federateContractTerms:true,
     name:true, bookmarks:true, defaultBookmark:true, eras:true, wardrobes:true,
-    startScenarios:true, familyPresets:true,
-    focuses:true, deeds:true, deedSections:true, countyCommunityPolicies:true,
+    startScenarios:true, familyPresets:true, quickStarts:true, storyInstances:true,
+    authorityOffices:true, legitimacySources:true, customaryBases:true,
+    focuses:true, focusRoutines:true, deedEvents:true, deeds:true, deedSections:true, countyCommunityPolicies:true,
     provinces:true, realms:true, empires:true, kingdoms:true, duchies:true,
-    events:true, eventPacks:true, straits:true, crossingClasses:true, scripted:true,
+    events:true, eventPacks:true, eventChances:true, eventSubscriptions:true, straits:true, crossingClasses:true, scripted:true,
     cultureTraditions:true, cultures:true, cultureDoctrineDefaults:true,
-    doctrineCatalogs:true, religions:true, religiousPaths:true,
+    doctrineCatalogs:true, religions:true, religiousPaths:true, religiousOfficeRanks:true,
     religiousAffiliations:true, religiousInstitutionProfiles:true, religiousActivities:true, religiousPatronage:true,
-    traits:true,
+    traits:true, traitMechanics:true,
     ailments:true, modifiers:true, buildings:true, forts:true,
     techDomains:true, techTraditions:true, tech:true, techCaps:true,
     capabilities:true,
     techImpactReviews:true, unitClasses:true, holdings:true, careers:true,
+    positionRules:true, policyGovernance:true, marketRaidYields:true, authoringDefaults:true,
     positions:true, localCouncilMotions:true, feudalServiceCharters:true,
-    schooling:true, enterprises:true, auctionLotTypes:true,
+    tenureArchetypes:true, tenureDuties:true, tenureRights:true, freedomTerms:true, freedomBargaining:true,
+    schooling:true, abbeys:true, householdServiceRoles:true, enterprises:true, enterpriseMechanics:true, specializationMarketEffects:true, householdStandardDemand:true, auctionLotTypes:true,
     householdStandards:true, marketGoods:true, marketEndowmentTypes:true,
-    marketEndowments:true, travelPurposes:true, travelSites:true, tournaments:true,
+    marketEndowments:true, travelPurposes:true, travelRules:true, travelDefaults:true, travelSites:true, tournaments:true, tournamentRules:true,
     finance:true, plots:true, intrigue:true, legalTraditions:true, justiceSentences:true, governmentForms:true, administrationProfiles:true, aristocraticProfiles:true, items:true, itemPools:true,
     rulerTraits:true, raidingTraditions:true, councilSeats:true, constituencyProfiles:true, mobileProfiles:true, civicProfiles:true, ecclesiasticalProfiles:true,
-    councilRules:true, politicalBlocs:true,
+    councilRules:true, councilSeatRoles:true, politicalBlocs:true, parliamentAgendas:true, agencyRules:true,
     policies:true, elections:true, privileges:true, collectiveDemands:true,
-    settlementNames:true, settlementSites:true, settlementLayouts:true, titles:true, papacy:true,
+    settlementNames:true, settlementSites:true, settlementLayouts:true, titles:true, papacy:true, papacyRules:true,
     currency:true, balance:true, land:true, seas:true, rivers:true,
     bounds:true, geographies:true, seasonKinds:true, climateZones:true,
     lexicons:true, architectureStyles:true
@@ -463,7 +504,7 @@ window.FBMODS = window.FBMODS || [];
   }
 
   function prepareActionCatalogs(mod) {
-    if (!own(mod, 'focuses') && !own(mod, 'deeds') && !own(mod, 'deedSections')) return null;
+    if (!own(mod, 'focuses') && !own(mod, 'deeds') && !own(mod, 'deedSections') && !own(mod, 'focusRoutines') && !own(mod, 'deedEvents') && !own(mod, 'deedRoutines') && !own(mod, 'actionPolicies')) return null;
     if (!FB.validateActionData || !FB.installActionData) {
       fail('actions', 'cannot be configured before the action engine loads.');
     }
@@ -486,6 +527,7 @@ window.FBMODS = window.FBMODS || [];
     }
     const references = {
       deedSections:sections,
+      actionPolicies:FBDATA.actionPolicies, focusRoutines:FBDATA.focusRoutines, deedEvents:FBDATA.deedEvents, deedRoutines:FBDATA.deedRoutines,
       tech:combinedTable(FBDATA.tech, mod.tech, 'tech'),
       careers:combinedTable(FBDATA.careers, mod.careers, 'careers'),
       traits:combinedTable(FBDATA.traits, mod.traits, 'traits'),
@@ -655,7 +697,7 @@ window.FBMODS = window.FBMODS || [];
   /* Start rules a scenario carries as data (docs/MODDING.md): where it is
      offered, its fixed birthplace and identity, its family shapes and its
      player-track stories. */
-  function validateStartRules(scenario, rules, path) {
+  function validateStartRules(scenario, rules, path, stories) {
     function freshBookmark(id) {
       var raw = rules.bookmarks[id];
       return FB.bookmarkRevisions(id, raw).find(function (bm) {
@@ -759,7 +801,7 @@ window.FBMODS = window.FBMODS || [];
     }
     if (own(scenario, 'tracks')) {
       const tracks = {};
-      for (const story of (FB.stories ? FB.stories.list() : [])) {
+      for (const story of ((stories || FB.stories).list())) {
         if (story.kind === 'track') tracks[story.id] = story;
       }
       validateIdList(scenario.tracks, path + '.tracks', tracks, true);
@@ -796,7 +838,7 @@ window.FBMODS = window.FBMODS || [];
     }
   }
 
-  function validateStartScenarios(mod) {
+  function validateStartScenarios(mod, stories) {
     const scenarios = combinedList(FBDATA.startScenarios,
       mod.startScenarios, 'startScenarios');
     const refs = {
@@ -806,7 +848,7 @@ window.FBMODS = window.FBMODS || [];
       itemPools:combinedTable(FBDATA.itemPools, mod.itemPools, 'itemPools'),
       focuses:{}
     };
-    for (const focus of (FB.focuses || [])) refs.focuses[focus.id] = focus;
+    for (const focus of (FBDATA.focuses || [])) refs.focuses[focus.id] = focus;
     if (Array.isArray(mod.focuses)) {
       for (const focus of mod.focuses) {
         if (plainObject(focus) && typeof focus.id === 'string') {
@@ -885,7 +927,7 @@ window.FBMODS = window.FBMODS || [];
       }
       validateStartEffects(scenario.startEffects, scenario, refs,
         path + '.startEffects');
-      validateStartRules(scenario, rules, path);
+      validateStartRules(scenario, rules, path, stories);
     }
     for (const id in baselineTiers) {
       if (!found[id]) fail('startScenarios', 'must retain baseline id ' + id + '.');
@@ -1372,11 +1414,198 @@ window.FBMODS = window.FBMODS || [];
         fail('councilSeats', 'must retain baseline id ' + seatId + '.');
       }
     }
+    const roles = FBDATA.councilSeatRoles;
+    if (!plainObject(roles)) fail('councilSeatRoles', 'must be an object keyed by seat id.');
+    for (const id of Object.keys(roles)) {
+      if (!own(seats, id)) fail('councilSeatRoles.' + id, 'names an unknown seat.');
+      validateIdList(roles[id], 'councilSeatRoles.' + id, { market:true,muster:true }, true);
+    }
+    const confirmationSeats = {};
+    for (const id of Object.keys(FBDATA.elections)) {
+      const election = FBDATA.elections[id];
+      if (election.kind !== 'council') continue;
+      if (!own(seats, election.office) || confirmationSeats[election.office]) fail('elections.' + id, 'needs a unique existing council office.');
+      confirmationSeats[election.office] = true;
+    }
     const rules = own(mod, 'councilRules')
       ? mod.councilRules : FBDATA.councilRules;
     onlyFields(rules, { schemerTraits:true }, 'councilRules');
     validateIdList(rules.schemerTraits, 'councilRules.schemerTraits',
       traits, true);
+  }
+
+  function validateRemainingAuthoring(mod) {
+    function fields(row, names, at) {
+      var allowed = {}; names.forEach(function (key) { allowed[key] = true; }); onlyFields(row, allowed, at);
+    }
+    function rows(table, at, limit) {
+      if (!plainObject(table) || Object.keys(table).length > limit) fail(at, 'exceeds its record limit.');
+      Object.keys(table).forEach(function (id) {
+        if (!/^[a-z][a-z0-9_]*$/.test(id) || !plainObject(table[id])) fail(at + '.' + id, 'needs a stable id and record.');
+      });
+    }
+    function amount(value, low, high, at) {
+      if (!finiteNumber(value) || value < low || value > high) fail(at, 'is outside its numeric bounds.');
+    }
+    ['positions','localCouncilMotions'].forEach(function (root) {
+      var table = FBDATA[root]; rows(table, root, 128);
+      Object.keys(table).forEach(function (id) {
+        var d = table[id], at = root + '.' + id;
+        fields(d, root === 'positions' ? ['name','desc','icon','kind','profession','minTier','pay','quality','maleOnly','fx'] : ['name','desc','icon','fx'], at);
+        requiredText(d.name, at + '.name'); requiredText(d.desc, at + '.desc');
+        if (root === 'positions') {
+          if (['earned','retainer','service'].indexOf(d.kind) < 0) fail(at + '.kind', 'is unsupported.');
+          if (d.profession !== undefined && !own(FBDATA.careers, d.profession)) fail(at + '.profession', 'is unknown.');
+          if (d.minTier !== undefined) integerRange(d.minTier, 0, FB.station.bandCount - 1, at + '.minTier');
+          if (d.pay !== undefined) amount(d.pay, 0, 10000, at + '.pay');
+          if (d.quality !== undefined) amount(d.quality, 0, 100, at + '.quality');
+          if (d.maleOnly !== undefined && typeof d.maleOnly !== 'boolean') fail(at + '.maleOnly', 'must be boolean.');
+        }
+        if (d.fx !== undefined) {
+          fields(d.fx, root === 'positions' ? ['gold','enterprise','retinue','tax'] : ['gold','enterprise','retinue'], at + '.fx');
+          Object.keys(d.fx).forEach(function (key) { amount(d.fx[key], 0, key === 'enterprise' || key === 'tax' ? 2 : 10000, at + '.fx.' + key); });
+        }
+      });
+    });
+    rows(FBDATA.positionRules, 'positionRules', 128);
+    Object.keys(FBDATA.positionRules).forEach(function (id) {
+      var rule = FBDATA.positionRules[id], def = FBDATA.positions[id], at = 'positionRules.' + id;
+      fields(rule, ['teaches','localCouncil'], at);
+      if (!def) fail(at, 'needs an effective position.');
+      Object.keys(rule).forEach(function (key) { if (typeof rule[key] !== 'boolean') fail(at + '.' + key, 'must be boolean.'); });
+      if (rule.teaches && def.kind !== 'retainer' || rule.localCouncil && def.kind !== 'earned') fail(at, 'does not match its position kind.');
+    });
+    rows(FBDATA.policyGovernance, 'policyGovernance', 64);
+    Object.keys(FBDATA.policyGovernance).forEach(function (id) {
+      var levels = FBDATA.policyGovernance[id], def = FBDATA.policies[id], at = 'policyGovernance.' + id;
+      rows(levels, at, 32);
+      if (!def || def.institution !== 'crown' || !Array.isArray(def.levels)) fail(at, 'needs a crown policy with levels.');
+      Object.keys(levels).forEach(function (level) {
+        var rule = levels[level]; fields(rule, ['tolerance','coercivePressure','coerciveResistance','peacefulResistance','protectsWorship'], at + '.' + level);
+        if (!def.levels.some(function (row) { return row.id === level; })) fail(at + '.' + level, 'needs an effective policy level.');
+        Object.keys(rule).forEach(function (key) {
+          if (key === 'tolerance') { if (['persecution','preference','tolerant'].indexOf(rule[key]) < 0) fail(at, 'needs a supported tolerance.'); }
+          else if (key === 'protectsWorship') { if (typeof rule[key] !== 'boolean') fail(at + '.' + level + '.' + key, 'must be boolean.'); }
+          else amount(rule[key], -1, 1, at + '.' + level + '.' + key);
+        });
+      });
+    });
+    rows(FBDATA.marketRaidYields, 'marketRaidYields', 128);
+    Object.keys(FBDATA.marketRaidYields).forEach(function (id) {
+      var rule = FBDATA.marketRaidYields[id], at = 'marketRaidYields.' + id;
+      fields(rule, ['gold','provisions','wares','materials','transport','luxuries'], at);
+      if (mod.marketRaidYields && own(mod.marketRaidYields, id) && !own(FBDATA.marketEndowmentTypes, id)) fail(at, 'needs an effective endowment.');
+      Object.keys(rule).forEach(function (key) { amount(rule[key], 0, 1000, at + '.' + key); });
+    });
+    var defaults = FBDATA.authoringDefaults;
+    fields(defaults, ['learning','intrigueLaw','motionPostures'], 'authoringDefaults');
+    rows(defaults.motionPostures, 'authoringDefaults.motionPostures', 128);
+    Object.keys(defaults.motionPostures).forEach(function (id) {
+      var row = defaults.motionPostures[id], at = 'authoringDefaults.motionPostures.' + id;
+      if (!own(FBDATA.policies,id)) fail(at, 'needs an effective policy.');
+      fields(row,['aidSlope','martialSlope','ageSlope','economicPowerSlope','traits'],at);
+      Object.keys(row).forEach(function (key) {
+        if (key !== 'traits') amount(row[key],-1000,1000,at + '.' + key);
+        else {
+          if (!plainObject(row.traits) || Object.keys(row.traits).length > 128) fail(at + '.traits','needs at most 128 weights.');
+          Object.keys(row.traits).forEach(function (trait) {
+            if (!own(FBDATA.traits,trait)) fail(at + '.traits.' + trait,'needs an effective trait.');
+            amount(row.traits[trait],-100,100,at + '.traits.' + trait);
+          });
+        }
+      });
+    });
+    if (!own(FBDATA.techTraditions, defaults.learning)) fail('authoringDefaults.learning', 'needs a learning tradition.');
+    var law = defaults.intrigueLaw;
+    fields(law, ['default','cultures','realms'], 'authoringDefaults.intrigueLaw');
+    if (!own(FBDATA.legalTraditions, law.default)) fail('authoringDefaults.intrigueLaw.default', 'needs a legal tradition.');
+    ['cultures','realms'].forEach(function (key) {
+      var map = law[key];
+      if (!plainObject(map) || Object.keys(map).length > 256) fail('authoringDefaults.intrigueLaw.' + key, 'needs at most 256 mappings.');
+      Object.keys(map).forEach(function (id) {
+        if (!own(FBDATA.legalTraditions, map[id]) || key === 'cultures' && !own(FBDATA.cultures, id)) fail('authoringDefaults.intrigueLaw.' + key + '.' + id, 'has an unknown reference.');
+        if (key === 'realms' && mod.authoringDefaults && own(mod.authoringDefaults, 'intrigueLaw') && !Object.keys(FBDATA.bookmarks).some(function (bid) {
+          return FB.bookmarkRevisions(bid, FBDATA.bookmarks[bid]).some(function (bm) {
+            return (bm.realms || []).some(function (realm) { return realm.id === id; });
+          });
+        })) fail('authoringDefaults.intrigueLaw.realms.' + id, 'needs a bookmark realm.');
+      });
+    });
+  }
+
+  function validateInstitutionDefinitions() {
+    function table(name) {
+      const value = FBDATA[name];
+      if (!plainObject(value) || Object.keys(value).length > 256) fail(name,'needs at most 256 records.');
+      for (const id of Object.keys(value)) if (!/^[a-z][a-z0-9_]*$/.test(id) || !plainObject(value[id])) fail(name + '.' + id,'needs a stable id and record.');
+      return value;
+    }
+    function fields(row,names,path) { const allowed = {}; names.forEach(function (key) { allowed[key] = true; }); onlyFields(row,allowed,path); }
+    function amount(value,low,high,path) { if (!finiteNumber(value) || value < low || value > high) fail(path,'is outside its numeric bounds.'); }
+    function strings(value,path) { if (!Array.isArray(value) || value.length > 32 || value.some(function (text) { return typeof text !== 'string' || !text || text.length > 2000; })) fail(path,'needs at most 32 bounded text entries.'); }
+    const elections = table('elections'), privileges = table('privileges'), demands = table('collectiveDemands');
+    for (const id of Object.keys(elections)) {
+      const d = elections[id], at = 'elections.' + id;
+      fields(d,['name','desc','icon','system','systems','kind','office','order','termDays','campaignDays','nominationCost','defeatCooldownDays','requiredRank','minimumOfficeDays','stewardship','prestige','guildStanding','merchantLearning','electorates','rivals','tactics'],at);
+      requiredText(d.name,at + '.name'); requiredText(d.desc,at + '.desc');
+      if (d.kind !== 'guild' && d.kind !== 'council') fail(at + '.kind','must be guild or council.');
+      if (d.kind === 'guild' ? ['officer','guildmaster'].indexOf(d.office) < 0 : !own(FBDATA.councilSeats,d.office)) fail(at + '.office','is not a supported office.');
+      for (const key of ['termDays','campaignDays','defeatCooldownDays']) integerRange(d[key],1,36000,at + '.' + key);
+      amount(d.nominationCost,0,100000,at + '.nominationCost');
+      for (const key of ['order','minimumOfficeDays','stewardship','prestige','guildStanding','merchantLearning']) if (d[key] !== undefined) amount(d[key],0,100000,at + '.' + key);
+      if (d.requiredRank !== undefined && ['master','officer'].indexOf(d.requiredRank) < 0) fail(at + '.requiredRank','is unsupported.');
+      if (!Array.isArray(d.electorates) || !d.electorates.length || d.electorates.length > 32) fail(at + '.electorates','needs one to 32 constituencies.');
+      const voters = {};
+      for (const row of d.electorates) {
+        fields(row,['id','name','weight','base','standingRate','stewardshipRate','diplomacyRate','martialRate','prestigeRate','rankRate'],at + '.electorates');
+        if (typeof row.id !== 'string' || !/^[a-z][a-z0-9_]*$/.test(row.id) || own(voters,row.id)) fail(at + '.electorates','needs unique stable ids.');
+        voters[row.id] = true; requiredText(row.name,at + '.electorates.name');
+        integerRange(row.weight,1,100,at + '.electorates.weight'); amount(row.base,0,1,at + '.electorates.base');
+        for (const key of ['standingRate','stewardshipRate','diplomacyRate','martialRate','prestigeRate','rankRate']) if (row[key] !== undefined) amount(row[key],-1,1,at + '.electorates.' + key);
+      }
+      if (!Array.isArray(d.rivals) || !d.rivals.length || d.rivals.length > 32) fail(at + '.rivals','needs one to 32 rivals.');
+      const rivals = {};
+      for (const row of d.rivals) { fields(row,['id','name'],at + '.rivals'); requiredText(row.name,at + '.rivals.name'); if (typeof row.id !== 'string' || !/^[a-z][a-z0-9_]*$/.test(row.id) || own(rivals,row.id)) fail(at + '.rivals','needs unique stable ids.'); rivals[row.id] = true; }
+      if (!plainObject(d.tactics) || !Object.keys(d.tactics).length || Object.keys(d.tactics).length > 32) fail(at + '.tactics','needs one to 32 tactics.');
+      for (const key of Object.keys(d.tactics)) {
+        const tactic = d.tactics[key], path = at + '.tactics.' + key;
+        if (!/^[a-z][a-z0-9_]*$/.test(key)) fail(path,'needs a stable id.');
+        fields(tactic,['name','desc','icon','support','gold','guildStanding','authority'],path);
+        requiredText(tactic.name,path + '.name'); requiredText(tactic.desc,path + '.desc');
+        for (const cost of ['gold','guildStanding','authority']) if (tactic[cost] !== undefined) amount(tactic[cost],0,cost === 'gold' ? 100000 : 100,path + '.' + cost);
+        if (!plainObject(tactic.support)) fail(path + '.support','must be a constituency map.');
+        for (const voter of Object.keys(tactic.support)) { if (!own(voters,voter)) fail(path + '.support','names an unknown constituency.'); amount(tactic.support[voter],-1,1,path + '.support.' + voter); }
+      }
+    }
+    for (const id of Object.keys(privileges)) {
+      const d = privileges[id], at = 'privileges.' + id;
+      fields(d,['name','desc','icon','order','system','systems','requiresTech','holderTypes','scopeTypes','rights','exemptions','obligations','duration','revocation','effect','sourceEvents'],at);
+      requiredText(d.name,at + '.name'); requiredText(d.desc,at + '.desc');
+      validateIdList(d.holderTypes,at + '.holderTypes',{house:1,guild:1,county:1,faith:1,institution:1},false);
+      validateIdList(d.scopeTypes,at + '.scopeTypes',{county:1,realm:1},false);
+      for (const key of ['rights','exemptions','obligations']) strings(d[key],at + '.' + key);
+      if (['contract','modifier','indefinite','policy'].indexOf(d.duration) < 0 || ['term_only','protected_term','estates_vote','council_consent','policy_change'].indexOf(d.revocation) < 0) fail(at,'has an unknown duration or revocation rule.');
+      const effect = d.effect; fields(effect,['kind','id','seats'],at + '.effect');
+      if (effect.kind === 'modifier') { if (!own(FBDATA.modifiers,effect.id)) fail(at + '.effect.id','names an unknown modifier.'); }
+      else if (effect.kind === 'obligation') { if (effect.id !== 'revocationConsent') fail(at + '.effect.id','is not a supported obligation.'); }
+      else if (effect.kind === 'council_confirmation') {
+        validateIdList(effect.seats,at + '.effect.seats',FBDATA.councilSeats,false);
+        if (effect.seats.some(function (seat) { return !Object.keys(elections).some(function (id) { return elections[id].kind === 'council' && elections[id].office === seat; }); })) fail(at + '.effect.seats','needs an election for every confirmed office.');
+      } else if (effect.kind !== 'guild_monopoly') fail(at + '.effect.kind','is not a supported privilege operation.');
+      if (effect.kind !== 'council_confirmation' && effect.seats !== undefined || ['modifier','obligation'].indexOf(effect.kind) < 0 && effect.id !== undefined) fail(at + '.effect','has incompatible operation fields.');
+      if (d.sourceEvents !== undefined) {
+        validateIdList(d.sourceEvents,at + '.sourceEvents',null,true);
+        if (d.sourceEvents.length > 32 || d.sourceEvents.some(function (id) { return !/^[a-z][a-z0-9_]*$/.test(id); })) fail(at + '.sourceEvents','needs bounded provenance ids.');
+      }
+    }
+    const gates = ['collective_demand_commons','collective_demand_tax','collective_demand_guild','collective_demand_sanctuary','collective_demand_magnates'];
+    for (const id of Object.keys(demands)) {
+      const d = demands[id], at = 'collectiveDemands.' + id;
+      fields(d,['name','constituency','privilege','order','minTier','gate','cooldownYears','system','systems'],at);
+      requiredText(d.name,at + '.name');
+      if (!own(privileges,d.privilege) || gates.indexOf(d.gate) < 0 || ['commons','guild','faith','magnates'].indexOf(d.constituency) < 0) fail(at,'needs a known privilege, constituency and registered gate.');
+      integerRange(d.minTier,0,7,at + '.minTier'); integerRange(d.cooldownYears,0,100,at + '.cooldownYears'); amount(d.order,0,100000,at + '.order');
+    }
   }
 
   function validateSerfFreedomEventEffects(mod) {
@@ -1771,7 +2000,63 @@ window.FBMODS = window.FBMODS || [];
     }
   }
 
-  function validateBeforeApply(mod) {
+  function validateAuthorityDefinitions(mod) {
+    var fields = {
+      authorityOffices:{ name:true, desc:true, powers:true, scopes:true, succession:true, recognitionSources:true, appointment:true, publicRole:true },
+      legitimacySources:{ name:true, succession:true, issuerKinds:true, characterRoles:true, mandate:true, countyRights:true, institutional:true },
+      customaryBases:{}
+    };
+    Object.keys(fields).forEach(function (key) {
+      Object.keys(mod[key] || {}).forEach(function (id) {
+        var d = mod[key][id], path = key + '.' + id;
+        onlyFields(d, fields[key], path);
+        if (key !== 'customaryBases') requiredText(d.name, path + '.name');
+        if (d.appointment !== undefined) onlyFields(d.appointment,
+          { gold:true, prestige:true, skill:true, minimum:true, imperialOnly:true, annual:true }, path + '.appointment');
+      });
+    });
+    var errors = FB.validateAuthorityData();
+    if (errors.length) fail('authority', errors.join(' '));
+  }
+
+  function validateQuickStarts(mod) {
+    if (!own(mod, 'quickStarts')) return;
+    if (!Array.isArray(mod.quickStarts) || FBDATA.quickStarts.length > 64) fail('quickStarts', 'must contain at most 64 effective starts.');
+    const seen = {}, scenarios = {}, presets = {};
+    FBDATA.startScenarios.forEach(function (row) { scenarios[row.id] = row; });
+    FBDATA.familyPresets.forEach(function (row) { presets[row.id] = row; });
+    if (FBDATA.quickStarts.filter(function (row) { return row.distributionDefault; }).length > 1)
+      fail('quickStarts', 'must have at most one distributionDefault.');
+    mod.quickStarts.forEach(function (row) {
+      const path = 'quickStarts.' + (row && row.id);
+      onlyFields(row, { id:true,bookmarkId:true,provinceId:true,settlementSite:true,culture:true,religion:true,
+        sex:true,characterName:true,portraitProfile:true,scenarioId:true,familyPreset:true,distributionDefault:true,firstDeedTip:true }, path);
+      if (typeof row.id !== 'string' || !/^[a-z][a-z0-9_]*$/.test(row.id) || seen[row.id]) fail(path, 'needs a unique snake_case id.');
+      seen[row.id] = true;
+      requiredText(row.characterName, path + '.characterName');
+      if (row.sex !== 'm' && row.sex !== 'f') fail(path + '.sex', 'must be m or f.');
+      if (!own(scenarios, row.scenarioId) || !own(presets, row.familyPreset)) fail(path, 'needs an existing scenario and family preset.');
+      if (row.distributionDefault !== undefined && typeof row.distributionDefault !== 'boolean') fail(path + '.distributionDefault', 'must be boolean.');
+      if (row.firstDeedTip !== undefined) requiredText(row.firstDeedTip, path + '.firstDeedTip');
+      if (row.portraitProfile !== undefined && !own(FBDATA.portraitProfiles, row.portraitProfile)) fail(path + '.portraitProfile', 'is unknown.');
+      const bm = FB.bookmark(row.bookmarkId), scenario = scenarios[row.scenarioId];
+      if (!bm || !FB.startProvinceAllowed(scenario, bm, row.provinceId) ||
+          scenario.bookmarkIds && scenario.bookmarkIds.indexOf(row.bookmarkId) < 0 ||
+          scenario.eras && scenario.eras.indexOf(FB.bookmarkEra(bm)) < 0 ||
+          scenario.familyPresets && !own(scenario.familyPresets, row.familyPreset) ||
+          scenario.sex && scenario.sex !== row.sex ||
+          scenario.startCulture && scenario.startCulture !== row.culture ||
+          scenario.startReligion && scenario.startReligion !== row.religion ||
+          scenario.characterName && scenario.characterName !== row.characterName)
+        fail(path, 'conflicts with its scenario requirements.');
+      const pr = bm && (bm.provinces || []).filter(function (p) { return p.id === row.provinceId && !p.wasteland; })[0];
+      if (!pr || !(pr.settlements || []).some(function (site) { return site.site === row.settlementSite; }) ||
+          !FB.provinceCommunities(pr).some(function (community) { return community.culture === row.culture && community.religion === row.religion; }))
+        fail(path, 'needs a settled site and represented community in its bookmark.');
+    });
+  }
+
+  function validateBeforeApply(mod, stories) {
     if (!plainObject(mod)) throw new Error('Mod data must be an object.');
     for (const key in mod) {
       if (own(mod, key) && !own(PUBLIC_KEYS, key)) {
@@ -1790,6 +2075,7 @@ window.FBMODS = window.FBMODS || [];
       });
     }
     if (own(mod, 'legalTraditions') || own(mod, 'justiceSentences') || own(mod, 'governmentForms') || own(mod, 'administrationProfiles') || own(mod, 'aristocraticProfiles') || own(mod, 'religions') || own(mod, 'civicProfiles') || own(mod, 'ecclesiasticalProfiles') || own(mod, 'constituencyProfiles')) validateJustice(mod);
+    if (mod.authorityOffices || mod.legitimacySources || mod.customaryBases) validateAuthorityDefinitions(mod);
     if (mod.constituencyProfiles) {
       const profiles = combinedTable(FBDATA.constituencyProfiles, mod.constituencyProfiles, 'constituencyProfiles');
       const problems = FB.governments.support.validateProfiles(profiles);
@@ -1810,7 +2096,7 @@ window.FBMODS = window.FBMODS || [];
     if (own(mod, 'careers')) validateCareers(mod);
     if (own(mod, 'rulerTraits')) validateRulerTraits(mod);
     if (own(mod, 'raidingTraditions')) validateRaidingTraditions(mod);
-    if (own(mod, 'startScenarios')) validateStartScenarios(mod);
+    if (own(mod, 'startScenarios')) validateStartScenarios(mod, stories);
     if (own(mod, 'familyPresets')) validateFamilyPresets(mod);
     if (own(mod, 'religiousPaths') || own(mod, 'religions')) {
       validateReligiousPaths(mod);
@@ -1819,8 +2105,9 @@ window.FBMODS = window.FBMODS || [];
     if (institutionFaults.length) fail('religiousInstitutionProfiles', institutionFaults.join(' '));
     var activityFaults = FB.religiousActivityCatalogFaults(FBDATA);
     if (activityFaults.length) fail('religiousActivities', activityFaults.join(' '));
-    if (own(mod, 'councilSeats') || own(mod, 'councilRules')) {
+    if (own(mod, 'councilSeats') || own(mod, 'councilRules') || own(mod, 'councilSeatRoles') || own(mod, 'elections') || own(mod, 'privileges') || own(mod, 'collectiveDemands')) {
       validateCouncilDefinitions(mod);
+      validateInstitutionDefinitions();
     }
     if (own(mod, 'buildings')) validateBuildings(mod);
     if (own(mod, 'architectureStyles')) {
@@ -1838,12 +2125,54 @@ window.FBMODS = window.FBMODS || [];
     if (own(mod, 'lexicons')) validateLexicons(mod);
     if (own(mod, 'unitClasses')) validateUnitClasses(mod);
     if (own(mod, 'capabilities') || own(mod, 'tech')) validateCapabilities(mod);
+    validateRemainingAuthoring(mod);
     validateCommunityPolicies(mod);
     validateCommunityEvents(mod);
     validateSerfFreedomEventEffects(mod);
     validateEventParticipants(mod);
     validateEducationEvents(mod);
     validateContentPeriods(mod);
+    validateQuickStarts(mod);
+    if (own(mod, 'tournaments')) onlyFields(mod.tournaments, { scales:true,programmes:true,tracks:true,tactics:true }, 'tournaments');
+    if (own(mod, 'marketGoods') || own(mod, 'marketEndowmentTypes') || own(mod, 'marketEndowments')) {
+      const marketFaults = FB.validateMarketData(FBDATA.marketGoods, FBDATA.marketEndowmentTypes, FBDATA.marketEndowments,
+        { provinces:FBDATA.provinces, duchies:FBDATA.duchies });
+      if (marketFaults.length) fail('market', marketFaults.join(' '));
+    }
+    const rankFaults = FB.validateRankPrestige(FBDATA.rankPrestigeYearly);
+    if (rankFaults.length) fail('rankPrestigeYearly', rankFaults.join(' '));
+    const ambitionFaults = FB.validateHistoricalAmbitions(FBDATA.historicalAmbitions);
+    if (ambitionFaults.length) fail('historicalAmbitions', ambitionFaults.join(' '));
+    const religionInstitutionFaults = FB.validateReligionInstitutionsData();
+    if (religionInstitutionFaults.length) fail('rulerFaithTargets', religionInstitutionFaults.join(' '));
+    const federateFaults = FB.validateFederateData(stories);
+    if (federateFaults.length) fail('federateContractTerms', federateFaults.join(' '));
+    FB.validateTenureData(FBDATA.tenureArchetypes, FBDATA.tenureDuties, FBDATA.tenureRights, FBDATA.events);
+    FB.validateFreedomTerms(FBDATA.freedomTerms, FBDATA.freedomBargaining);
+    const agencyFaults = FB.validateAgencyRules(FBDATA.agencyRules);
+    if (agencyFaults.length) fail('agencyRules', agencyFaults.join(' '));
+    const agendaFaults = FB.validateParliamentAgendas(FBDATA.parliamentAgendas);
+    if (agendaFaults.length) fail('parliamentAgendas', agendaFaults.join(' '));
+    const travelFaults = FB.validateTravelRules();
+    if (travelFaults.length) fail('travelRules', travelFaults.join(' '));
+    const papacyRuleFaults = FB.validatePapacyRules();
+    if (papacyRuleFaults.length) fail('papacyRules', papacyRuleFaults.join(' '));
+    const officeRankFaults = FB.validateReligiousOfficeRanks(FBDATA.religiousOfficeRanks);
+    if (officeRankFaults.length) fail('religiousOfficeRanks', officeRankFaults.join(' '));
+    const abbeyFaults = FB.validateAbbeyData(FBDATA.abbeys);
+    if (abbeyFaults.length) fail('abbeys', abbeyFaults.join(' '));
+    const serviceFaults = FB.validateHouseholdServiceRoles(FBDATA.householdServiceRoles);
+    if (serviceFaults.length) fail('householdServiceRoles', serviceFaults.join(' '));
+    const enterpriseFaults = FB.validateEnterpriseMechanics();
+    if (enterpriseFaults.length) fail('enterpriseMechanics', enterpriseFaults.join(' '));
+    const tournamentFaults = FB.tournaments.validateData(FBDATA.tournaments, FBDATA.tournamentRules);
+    if (tournamentFaults.length) fail('tournamentRules', tournamentFaults.join(' '));
+    const lifecycleFaults = FB.validateEventLifecycle(FBDATA.eventSubscriptions, FBDATA.events);
+    if (lifecycleFaults.length) fail('events', lifecycleFaults.join(' '));
+    const traitFaults = FB.validateTraitMechanics(FBDATA.traitMechanics);
+    if (traitFaults.length) fail('traitMechanics', traitFaults.join(' '));
+    const chanceFaults = FB.validateEventChances(FBDATA.eventChances, FBDATA.events);
+    if (chanceFaults.length) fail('eventChances', chanceFaults.join(' '));
     for (const tableId of ['events','traits','policies','privileges','elections',
         'politicalBlocs','religiousPaths','feudalServiceCharters','councilSeats']) {
       const table = mod[tableId] || {};
@@ -1917,12 +2246,12 @@ window.FBMODS = window.FBMODS || [];
   function prepareRequirements(mod) {
     if (!plainObject(mod)) throw new Error('Mod data must be an object.');
     var live = FBDATA, staged = Object.assign({}, live), prepared;
-    ['eras','wardrobes','settlementLayouts'].forEach(function (key) {
+    ['positionRules','policyGovernance','marketRaidYields','authoringDefaults','actionPolicies','federateServiceStarts','federateMigrations','rankPrestigeYearly','federateContractTerms','tenureArchetypes','tenureDuties','tenureRights','freedomBargaining','eras','wardrobes','settlementLayouts','storyInstances','focusRoutines','deedRoutines','deedEvents','eventChances','eventSubscriptions','tournamentRules','councilSeatRoles','enterpriseMechanics','specializationMarketEffects','householdStandardDemand','abbeys','householdServiceRoles','religiousOfficeRanks','papacyRules','travelRules','travelDefaults','parliamentAgendas','agencyRules','traitMechanics','authorityOffices','legitimacySources','customaryBases'].forEach(function (key) {
       if (own(mod, key) && !plainObject(mod[key])) fail(key, 'must be an object keyed by id.');
     });
-    var lists = ['startScenarios','familyPresets','events','travelSites','provinces','realms'];
+    var lists = ['historicalAmbitions','freedomTerms','startScenarios','familyPresets','quickStarts','events','travelSites','provinces','realms'];
     Object.keys(mod).forEach(function (key) {
-      if (['name','bookmarks','lexicons','balance','techCaps','forts','tournaments','intrigue','papacy','currency',
+      if (['name','bookmarks','lexicons','balance','techCaps','forts','tournaments','tournamentRules','intrigue','papacy','papacyRules','abbeys','currency',
           'bounds','land','seas','rivers','straits','scripted','defaultBookmark'].indexOf(key) >= 0) return;
       if (lists.indexOf(key) >= 0) staged[key] = combinedList(live[key], mod[key], key);
       else if (own(PUBLIC_KEYS, key) && plainObject(mod[key])) staged[key] = combinedTable(live[key], mod[key], key);
@@ -1944,6 +2273,52 @@ window.FBMODS = window.FBMODS || [];
     if (mod.forts) staged.forts = Object.assign({}, live.forts, mod.forts,
       { levels:Object.assign({}, live.forts.levels, mod.forts.levels) });
     if (mod.papacy) staged.papacy = mod.papacy;
+    if (mod.papacyRules) {
+      staged.papacyRules = Object.assign({}, live.papacyRules, mod.papacyRules);
+      ['tactics','orders','policies'].forEach(function (key) {
+        staged.papacyRules[key] = combinedTable(live.papacyRules[key], mod.papacyRules[key], 'papacyRules.' + key);
+      });
+    }
+    if (mod.abbeys) staged.abbeys = Object.assign({}, live.abbeys, mod.abbeys,
+      { actions:combinedTable(live.abbeys.actions, mod.abbeys.actions, 'abbeys.actions') });
+    ['marketGoods','marketEndowmentTypes','marketEndowments'].forEach(function (key) {
+      if (own(mod, key)) staged[key] = mod[key];
+    });
+    if (own(mod, 'rulerFaithTargets')) {
+      if (!Array.isArray(mod.rulerFaithTargets)) fail('rulerFaithTargets','must be an array.');
+      staged.rulerFaithTargets = mod.rulerFaithTargets.slice();
+    }
+    if (mod.rulerTraits) staged.rulerTraits = mod.rulerTraits.slice();
+    if (mod.intrigue) staged.intrigue = Object.assign({}, live.intrigue, mod.intrigue,
+      { methodProfiles:combinedTable(live.intrigue.methodProfiles, mod.intrigue.methodProfiles, 'intrigue.methodProfiles') });
+    if (mod.tournaments) {
+      staged.tournaments = JSON.parse(JSON.stringify(live.tournaments));
+      ['scales','programmes','tracks','tactics'].forEach(function (group) {
+        Object.keys(mod.tournaments[group] || {}).forEach(function (id) {
+          if (!plainObject(mod.tournaments[group][id])) fail('tournaments.' + group + '.' + id, 'must be an object.');
+          staged.tournaments[group][id] = Object.assign({}, staged.tournaments[group][id], mod.tournaments[group][id]);
+        });
+      });
+    }
+    if (mod.tournaments && mod.tournaments.programmes) {
+      staged.tournamentRules = JSON.parse(JSON.stringify(live.tournamentRules));
+      Object.keys(mod.tournaments.programmes).forEach(function (id) {
+        var patch = mod.tournaments.programmes[id], rule = staged.tournamentRules.programmes[id];
+        if (!rule) return;
+        if (own(patch, 'headline')) rule.contests[0] = patch.headline;
+        if (own(patch, 'requiresTech')) {
+          if (patch.requiresTech) rule.capability = staged.tournamentRules.legacyProgrammeCapability;
+          else delete rule.capability;
+        }
+      });
+    }
+    if (own(mod, 'tournamentRules')) {
+      var priorRules = staged.tournamentRules;
+      staged.tournamentRules = Object.assign({}, staged.tournamentRules, mod.tournamentRules);
+      ['scales','programmes','tracks','tactics'].forEach(function (group) {
+        staged.tournamentRules[group] = combinedTable(priorRules[group], mod.tournamentRules[group], 'tournamentRules.' + group);
+      });
+    }
     if (own(mod, 'currency')) staged.currency = mod.currency;
     if (mod.doctrineCatalogs) {
       staged.doctrineCatalogs = Object.assign({}, live.doctrineCatalogs);
@@ -1972,7 +2347,9 @@ window.FBMODS = window.FBMODS || [];
     }
     try {
       window.FBDATA = staged; reset();
-      prepared = validateBeforeApply(mod);
+      var stories = FB.stories.compile(staged.storyInstances || {});
+      prepared = validateBeforeApply(mod, stories);
+      prepared.stories = stories;
       var problems = FB.balanceLayers.problems(mod.balance);
       if (problems.length) fail('balance', problems.map(FB.balanceLayers.describe).join(' '));
       // Project legacy patches into the original default world, as boot does.
@@ -2000,14 +2377,43 @@ window.FBMODS = window.FBMODS || [];
       }
       var ids = Object.keys(staged.bookmarks);
       for (var i = 0; i < ids.length; i++) {
-        var errors = FB.validateBookmark(staged.bookmarks[ids[i]]);
+        var errors = FB.validateBookmark(staged.bookmarks[ids[i]], false, stories);
         if (errors.length) fail('requirements', errors.join(' '));
       }
       if (!own(staged.bookmarks, staged.defaultBookmark)) fail('defaultBookmark', 'must name a registered bookmark.');
+      if (prepared.actions) {
+        staged.focuses = prepared.actions.focuses; staged.deeds = prepared.actions.deeds;
+        staged.deedSections = prepared.actions.sections;
+      }
+      if (mod.balance) staged.balance = Object.assign({}, staged.balance, mod.balance);
     } finally {
       window.FBDATA = live; reset();
     }
+    prepared.data = staged;
     return prepared;
+  }
+
+  /* Replacing a stored mod must not validate against its removed records.
+     Recompose the proposed ordered stack without publishing any products. */
+  function validateStoredStack(all) {
+    var live = FBDATA, started = timeStart(), validated = 0;
+    try {
+      window.FBDATA = baseCatalogues || live;
+      var enabled = readEnabled(), bundled = M.bundled();
+      enabled.forEach(function (id) {
+        if (!bundled.some(function (mod) { return mod.id === id; })) throw new Error('Missing enabled mod: ' + id);
+      });
+      bundled.forEach(function (mod) {
+        if (enabled.indexOf(mod.id) >= 0) { window.FBDATA = prepareRequirements(mod.data).data; validated++; }
+      });
+      all.forEach(function (source) { window.FBDATA = prepareRequirements(JSON.parse(source)).data; validated++; });
+      return [];
+    } catch (error) { return [error.message]; }
+    finally {
+      window.FBDATA = live;
+      FB.invalidateCultureData(); FB.invalidateReligionData(); FB.lexicon.reset();
+      timeEnd('stored_stack', started, { validated:validated });
+    }
   }
 
   M.validate = function (mod) {
@@ -2017,7 +2423,10 @@ window.FBMODS = window.FBMODS || [];
 
   M.apply = function (mod) {
     if (FB.platform.isCrazyGames) throw new Error('Custom mods are unavailable in this edition.');
-    const prepared = prepareRequirements(mod);
+    const started = timeStart();
+    var prepared;
+    try { prepared = prepareRequirements(mod); }
+    finally { timeEnd('apply_validation', started, {accepted:!!prepared}); }
     mod = FB.titleIds.normalizeMod(mod);
     if (own(mod, 'marketGoods') || own(mod, 'marketEndowmentTypes') ||
         own(mod, 'marketEndowments')) {
@@ -2232,6 +2641,9 @@ window.FBMODS = window.FBMODS || [];
       }
     }
     if (mod.schooling) for (const k in mod.schooling) FBDATA.schooling[k] = mod.schooling[k];
+    ['enterpriseMechanics','specializationMarketEffects','householdStandardDemand'].forEach(function (key) {
+      if (mod[key]) mergeTable(FBDATA[key], mod[key]);
+    });
     if (mod.enterprises) for (const k in mod.enterprises) FBDATA.enterprises[k] = mod.enterprises[k];
     if (mod.auctionLotTypes) mergeTable(FBDATA.auctionLotTypes,
       mod.auctionLotTypes);
@@ -2248,9 +2660,7 @@ window.FBMODS = window.FBMODS || [];
       ['scales','programmes','tracks','tactics'].forEach(function (group) {
         if (!mod.tournaments[group]) return;
         for (const id in mod.tournaments[group]) {
-          if (Object.prototype.hasOwnProperty.call(FBDATA.tournaments[group],id)) {
-            Object.assign(FBDATA.tournaments[group][id],mod.tournaments[group][id]);
-          }
+          FBDATA.tournaments[group][id] = Object.assign({}, FBDATA.tournaments[group][id], mod.tournaments[group][id]);
         }
       });
     }
@@ -2264,6 +2674,7 @@ window.FBMODS = window.FBMODS || [];
     if (mod.familyPresets) {
       mergeById(FBDATA.familyPresets, mod.familyPresets, 'id');
     }
+    if (mod.councilSeatRoles) mergeTable(FBDATA.councilSeatRoles, mod.councilSeatRoles);
     if (mod.councilSeats) mergeTable(FBDATA.councilSeats, mod.councilSeats);
     if (own(mod, 'councilRules')) FBDATA.councilRules = mod.councilRules;
     if (own(mod, 'rulerTraits')) {
@@ -2373,6 +2784,20 @@ window.FBMODS = window.FBMODS || [];
       if (legacyGeography) legacyGeography.rivers = mod.rivers;
     }
     if (own(mod, 'defaultBookmark')) FBDATA.defaultBookmark = mod.defaultBookmark;
+    if (mod.rulerFaithTargets) FBDATA.rulerFaithTargets = mod.rulerFaithTargets.slice();
+    if (mod.rankPrestigeYearly) mergeTable(FBDATA.rankPrestigeYearly, mod.rankPrestigeYearly);
+    if (mod.historicalAmbitions) {
+      mergeById(FBDATA.historicalAmbitions, mod.historicalAmbitions, 'id');
+      FB.registerAmbitionMessages();
+    }
+    ['federateServiceStarts','federateMigrations','federateContractTerms','tenureArchetypes','tenureDuties','tenureRights','freedomBargaining'].forEach(function (key) { if (mod[key]) mergeTable(FBDATA[key], mod[key]); });
+    if (mod.freedomTerms) mergeById(FBDATA.freedomTerms, mod.freedomTerms, 'id');
+    if (mod.freedomTerms || mod.freedomBargaining) FB.invalidateFreedomTerms();
+    if (mod.tenureArchetypes || mod.tenureDuties || mod.tenureRights) FB.invalidateEventIndex();
+    if (mod.actionPolicies) mergeTable(FBDATA.actionPolicies,mod.actionPolicies);
+    if (mod.deedRoutines) { mergeTable(FBDATA.deedRoutines,mod.deedRoutines); FB.registerDeedRoutineMessages(); }
+    if (mod.deedEvents) mergeTable(FBDATA.deedEvents, mod.deedEvents);
+    if (mod.focusRoutines) mergeTable(FBDATA.focusRoutines, mod.focusRoutines);
     if (prepared.actions) {
       FB.installActionData(prepared.actions.focuses, prepared.actions.deeds, prepared.actions.sections);
     }
@@ -2385,10 +2810,38 @@ window.FBMODS = window.FBMODS || [];
         mod.doctrineCatalogs || mod.techTraditions) && FB.invalidateCultureData) {
       FB.invalidateCultureData();
     }
+    ['authorityOffices','legitimacySources','customaryBases'].forEach(function (key) {
+      if (mod[key]) mergeTable(FBDATA[key], mod[key]);
+    });
+    ['positionRules','policyGovernance','marketRaidYields','authoringDefaults'].forEach(function (key) {
+      if (mod[key]) mergeTable(FBDATA[key], mod[key]);
+    });
+    if (mod.traitMechanics) mergeTable(FBDATA.traitMechanics, mod.traitMechanics);
+    if (mod.tournaments || mod.tournamentRules) Object.assign(FBDATA.tournamentRules, prepared.data.tournamentRules);
+    if (mod.agencyRules) mergeTable(FBDATA.agencyRules, mod.agencyRules);
+    if (mod.parliamentAgendas) mergeTable(FBDATA.parliamentAgendas, mod.parliamentAgendas);
+    if (mod.travelRules) mergeTable(FBDATA.travelRules, mod.travelRules);
+    if (mod.travelDefaults) mergeTable(FBDATA.travelDefaults, mod.travelDefaults);
+    if (mod.papacyRules) Object.assign(FBDATA.papacyRules, prepared.data.papacyRules);
+    if (mod.religiousOfficeRanks) mergeTable(FBDATA.religiousOfficeRanks, mod.religiousOfficeRanks);
+    if (mod.abbeys) Object.assign(FBDATA.abbeys, prepared.data.abbeys);
+    if (mod.householdServiceRoles) mergeTable(FBDATA.householdServiceRoles, mod.householdServiceRoles);
+    if (mod.quickStarts) mergeById(FBDATA.quickStarts, mod.quickStarts, 'id');
+    if (mod.eventSubscriptions) {
+      mergeTable(FBDATA.eventSubscriptions, mod.eventSubscriptions);
+      FB.invalidateEventIndex();
+    }
+    if (mod.eventChances) mergeTable(FBDATA.eventChances, mod.eventChances);
+    if (mod.storyInstances) mergeTable(FBDATA.storyInstances, mod.storyInstances);
+    FB.stories.publish(prepared.stories);
+    authoringRoots.forEach(function (key) { if (own(mod, key)) authoredRoots[key] = true; });
+    // Newly exposed roots join the fingerprint only when authored. Otherwise
+    // exposing an existing engine table would invalidate unchanged older mods.
     // Bind to the definitions actually installed, including inherited defaults
     // and bundled payloads. Snapshot before activation swaps the legacy tables.
     var effective = {};
     Object.keys(PUBLIC_KEYS).concat(['faithDefaults','defaultGeography']).forEach(function (key) {
+      if (authoringRoots.indexOf(key) >= 0 && !authoredRoots[key]) return;
       if (own(FBDATA, key)) effective[key] = FBDATA[key];
     });
     effectiveFingerprint = M.fingerprint(effective);
@@ -2396,6 +2849,7 @@ window.FBMODS = window.FBMODS || [];
   };
 
   M.applyStored = function () {
+    captureBaseCatalogues();
     currencySupplied = false;
     currencyInvalid = false;
     legacyBookmarkLimited = false;

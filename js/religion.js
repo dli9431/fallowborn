@@ -64,23 +64,23 @@ window.FB = window.FB || {};
     const local = FB.political.communityGovernance(s, pid);
     return !(g && g.tolerance === 'persecution') &&
       !(local && local.identity && local.realmId === rid &&
-        rid === 'player' && FB.realmPolicyActive(s) && FB.realmPolicyLevelId(s, 'religious_tolerance') === 'persecution') &&
+        rid === 'player' && FB.realmPolicyActive(s) && FB.realmPolicyGovernance(s).tolerance === 'persecution') &&
       FB.political.worshipProtected(s, pid);
   }
   function recognize(s, officeId, rid, pid) {
     const subject = { kind:'realm', id:rid }, scope = { kind:'county', id:pid };
-    const prior = FB.political.legitimacy(s, subject, scope, 'church_support').filter(function (r) {
+    const prior = FB.legitimacyByMandate(s, subject, scope, 'religious_head').filter(function (r) {
       return r.issuer.id === officeId;
     })[0];
     if (prior) return prior.id;
     /* Replaced bishops must consent anew; an obsolete row cannot prevent
        an explicit fresh act, and never acquires its replacement's signature. */
     (s.authority && s.authority.recognitions || []).forEach(function (r) {
-      if (r.status === 'active' && r.source === 'church_support' && r.issuer.id === officeId &&
+      if (r.status === 'active' && FB.legitimacySourceHasMandate(r.source,'religious_head') && r.issuer.id === officeId &&
           r.subject.kind === 'realm' && r.subject.id === rid && r.scope && r.scope.id === pid)
         FB.authorityRecognitionTransition(s, r.id, 'revoke');
     });
-    const rec = FB.authorityRecognize(s, { source:'church_support',
+    const rec = FB.authorityRecognize(s, { source:FB.legitimacySourceFor(s,'religious_head',{kind:'religious-office',id:officeId}),
       issuer:{ kind:'religious-office', id:officeId }, subject:subject, scope:scope });
     return rec && rec.id;
   }
@@ -196,7 +196,7 @@ window.FB = window.FB || {};
       const offices = officeTable(s);
       (s.authority && s.authority.recognitions || []).forEach(function (rec) {
         const office = offices[rec.issuer.id];
-        if (rec.status === 'active' && rec.source === 'church_support' && rec.subject.kind === 'realm' &&
+        if (rec.status === 'active' && FB.legitimacySourceHasMandate(rec.source,'religious_head') && rec.subject.kind === 'realm' &&
             rec.subject.id === rid && office && FB.faithInFold(s, office.religionId, out.from) &&
             !FB.faithInFold(s, office.religionId, target)) out.lostRecognitionIds.push(rec.id);
       });
@@ -268,7 +268,7 @@ window.FB = window.FB || {};
     const targetShare = total ? next / total : 0;
     const spouse = c && FB.spousesSnapshot(s, c).some(function (person) { return FB.faithInFold(s, person.religion, target); });
     const score = Math.round(40 * (targetShare - (total ? old / total : 0))) +
-      (q.bishops.length ? 8 : 0) + (spouse ? 12 : 0) - (c && (c.traits || []).indexOf('zealous') >= 0 ? 20 : 0);
+      (q.bishops.length ? 8 : 0) + (spouse ? 12 : 0) - FB.traitMechanic(c, 'conversionResistance', true);
     return { allowed:q.ok && q.relation !== 'in_fold' && (targetShare >= balance('rulerConversionAIMinShare', 0.35) || spouse) &&
       score >= balance('rulerConversionAIThreshold', 24), score:score, targetShare:targetShare, quote:q };
   };
@@ -333,7 +333,7 @@ window.FB = window.FB || {};
   };
   FB.validateReligionInstitutionsData = function () {
     const targets = FBDATA.rulerFaithTargets, errors = [];
-    if (!Array.isArray(targets) || !targets.length) return [FB.T('Public ruler faith targets must be a nonempty list.')];
+    if (!Array.isArray(targets) || !targets.length || targets.length > 128) return [FB.T('Public ruler faith targets must be a nonempty list.')];
     targets.forEach(function (id, i) {
       if (typeof id !== 'string' || !FB.faithAssignable(id, null) || targets.indexOf(id) !== i)
         errors.push(FB.T('Invalid public ruler faith target {id}.', { id:String(id) }));

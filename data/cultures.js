@@ -876,3 +876,9 @@ FBDATA.religions = {
       religiousPaths:{ lay:'samaritan_lay', professions:{} }
     } }
 };
+
+/* Fallback identities are declarations, never name-pattern inference. */
+FBDATA.authoringDefaults = {
+  learning:'latin',
+  intrigueLaw:{ default:'latin', cultures:{ greek:'byzantine' }, realms:{ byzantium:'byzantine', byzantium_1066:'byzantine', byzantium_711:'byzantine' } }
+};

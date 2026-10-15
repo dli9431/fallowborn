@@ -146,11 +146,11 @@ FBDATA.authorityOffices = {
     appointment:{ gold:0, prestige:40, skill:'mar', minimum:7 } }
 };
 FBDATA.legitimacySources = {
-  army_acclamation:{ name:'Army acclamation', succession:'reaffirm' },
-  imperial_commission:{ name:'Imperial commission', succession:'reaffirm' },
-  dynastic_succession:{ name:'Dynastic succession', succession:'continues' },
-  civic_acceptance:{ name:'Civic acceptance', succession:'reaffirm' },
-  church_support:{ name:'Church support', succession:'reaffirm' }
+  army_acclamation:{ name:'Army acclamation', succession:'reaffirm', issuerKinds:['host','religious-institution'], mandate:'command', countyRights:false },
+  imperial_commission:{ name:'Imperial commission', succession:'reaffirm', issuerKinds:['realm','religious-institution'], mandate:'court', countyRights:true },
+  dynastic_succession:{ name:'Dynastic succession', succession:'continues', issuerKinds:['realm','religious-institution'], mandate:'succession', countyRights:true },
+  civic_acceptance:{ name:'Civic acceptance', succession:'reaffirm', issuerKinds:['county','religious-institution'], mandate:'community', countyRights:true },
+  church_support:{ name:'Church support', succession:'reaffirm', issuerKinds:['character','religious-office','religious-institution'], characterRoles:['priest','monk'], mandate:'religious_head', countyRights:false }
 };
 FBDATA.customaryBases = {
   tenure:{}, judgment:{}, recognition:{}, possession:{}
@@ -266,7 +266,7 @@ FBDATA.administrationProfiles = {
 
 /* Great offices are stable save ids. Added seats receive the Council's
    ordinary vacancy, appointment, Standing, and effectiveness behavior;
-   special institutional/event consumers continue to name their core ids. */
+   councilSeatRoles supplies the supported special decision roles. */
 FBDATA.councilSeats = {
   seneschal: {
     systems:['royal_council'],
@@ -304,6 +304,8 @@ FBDATA.councilSeats = {
     station:'mayHoldCouncil', tierMin:6, holderEligibility:'direct_vassal'
   }
 };
+
+FBDATA.councilSeatRoles = { treasurer:['market'], constable:['muster'] };
 
 FBDATA.councilRules = {
   schemerTraits:[
@@ -554,5 +556,63 @@ FBDATA.collectiveDemands = {
   magnate_confirmation: {
     name:'Demand of the Magnates', constituency:'magnates', privilege:'office_confirmation',
     order:4, minTier:6, gate:'collective_demand_magnates', cooldownYears:4
+  }
+};
+
+/* Annual estate business, selected after the shared seasonal eligibility gate. */
+FBDATA.parliamentAgendas = {
+  "session": {
+    "event": "parliament_session",
+    "order": 0
+  },
+  "grievance": {
+    "event": "parliament_grievance",
+    "order": 1
+  },
+  "subsidy": {
+    "event": "parliament_subsidy",
+    "war": true,
+    "order": 2
+  },
+  "levy_concession": {
+    "event": "parliament_levy_concession",
+    "war": true,
+    "order": 3
+  },
+  "market": {
+    "event": "parliament_market_charter",
+    "war": false,
+    "capabilities": [
+      "permanent_markets",
+      "sealed_documents"
+    ],
+    "notModifiers": [
+      "market_charter",
+      "contested_tolls"
+    ],
+    "order": 4
+  },
+  "sanctuary": {
+    "event": "parliament_sanctuary_relief",
+    "war": false,
+    "notModifiers": [
+      "levy_exemption",
+      "settlement_grudge"
+    ],
+    "order": 5
+  },
+  "aid": {
+    "event": "parliament_aid_hike",
+    "aidRoom": true,
+    "revocationConsent": false,
+    "order": 6
+  },
+  "redress": {
+    "event": "parliament_local_redress",
+    "anyModifiers": [
+      "contested_tolls",
+      "settlement_grudge"
+    ],
+    "order": 7
   }
 };

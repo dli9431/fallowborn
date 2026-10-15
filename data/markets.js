@@ -263,3 +263,10 @@ FBDATA.balance.marketCorridorReturnBonus = 0.10;
     };
   }
 })();
+
+/* Raid bonuses take the strongest local endowment in each basket. */
+FBDATA.marketRaidYields = {
+  grain:{ provisions:12 }, pastoral:{ provisions:12, transport:6 }, fisheries:{ provisions:12 },
+  wine_oil:{ gold:20, luxuries:1 }, wool_textiles:{ wares:8 }, timber:{ materials:10 },
+  metalworking:{ materials:10 }, horse_breeding:{ transport:6 }, luxury_entrepot:{ gold:20, luxuries:1 }
+};

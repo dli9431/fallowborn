@@ -821,6 +821,18 @@ def extract_structured(inv: Inventory) -> None:
                         f"data/ambitions.js:{line}", f"Historical ambition {item_id}, {field}.",
                         TOKEN_RE.findall(record["text"]))
 
+        for branch, record, line in branch_records(item.get("news")):
+            inv.add(f"news.ambition.{item_id}", record,
+                    f"data/ambitions.js:{line}", f"Historical foundation announcement {item_id}.",
+                    TOKEN_RE.findall(record["text"]))
+
+    for item_id, item_node in (node_object(find_assignment(DATA / "actions.js", "FBDATA", "deedRoutines")) or {}).items():
+        message = node_object((node_object(item_node) or {}).get("message")) or {}
+        key = node_string(message.get("key"))
+        for branch, record, line in branch_records(message.get("text")):
+            if key:
+                inv.add(key, record, f"data/actions.js:{line}", f"Deed announcement {item_id}.", TOKEN_RE.findall(record["text"]))
+
     # Local represented interests are nested in typed policy declarations.
     assembly_path = DATA / "assembly_polities.js"
     for table, namespace in (("assemblyOpenings", "assemblyOpening"), ("assemblyCounties", "assemblyCounty")):

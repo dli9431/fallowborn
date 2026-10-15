@@ -150,9 +150,8 @@
     var tolerance = g && g.tolerance;
     /* Existing royal proclamations override the local default for that realm. */
     if (rid === 'player' && FB.realmPolicyActive(s)) {
-      var level = FB.realmPolicyLevelId(s, 'religious_tolerance');
-      if (level) tolerance = level === 'persecution' ? 'persecution' :
-        level === 'confessional_preference' ? 'preference' : 'tolerant';
+      var declaredTolerance = FB.realmPolicyGovernance(s).tolerance;
+      if (declaredTolerance) tolerance = declaredTolerance;
     }
     var delta = g && g.declared ?
       faith * (tolerance === 'persecution' ? -6 : tolerance === 'tolerant' ? 2 : -1) +
@@ -194,21 +193,22 @@
       FB.authoritySetIdentity(s, reviewed.realmId, reviewed.value);
   };
   function validIssuer(s, issuer, source) {
-    if (!issuer || typeof issuer.id !== 'string') return false;
+    var definition = FBDATA.legitimacySources[source];
+    if (!issuer || typeof issuer.id !== 'string' || !definition ||
+        !Array.isArray(definition.issuerKinds) || definition.issuerKinds.indexOf(issuer.kind) < 0) return false;
     if (issuer.kind === 'religious-institution') return !!(FB.religiousInstitutionIssuerValid &&
       FB.religiousInstitutionIssuerValid(s, issuer.id, source));
-    if (source === 'church_support' && issuer.kind === 'character') {
+    if (issuer.kind === 'character') {
       var cleric = s.chars && s.chars[issuer.id];
-      return !!(cleric && !cleric.dead && ['priest','monk'].indexOf(cleric.role) >= 0);
+      return !!(cleric && !cleric.dead && (definition.characterRoles || []).indexOf(cleric.role) >= 0);
     }
-    if ((source === 'imperial_commission' ||
-         source === 'dynastic_succession') && issuer.kind === 'realm')
+    if (issuer.kind === 'realm')
       return !!Q.actor(s, issuer);
-    if (source === 'army_acclamation' && issuer.kind === 'host')
+    if (issuer.kind === 'host')
       return !!host(s, issuer.id);
-    if (source === 'civic_acceptance' && issuer.kind === 'county')
+    if (issuer.kind === 'county')
       return !!scope(s, issuer);
-    if (source === 'church_support' && issuer.kind === 'religious-office') {
+    if (issuer.kind === 'religious-office') {
       var holder = s.religiousHeads && s.religiousHeads[issuer.id];
       var headId = typeof holder === 'string' ? holder : holder && holder.id;
       return !!(headId && (s.chars && s.chars[headId]
@@ -278,7 +278,7 @@
       status:'active' };
     s.authority.recognitions.push(row);
     if (at && at.kind === 'county' &&
-        ['imperial_commission','civic_acceptance','dynastic_succession'].indexOf(row.source) >= 0) {
+        def.countyRights === true) {
       var holder = FB.settlementCountyHolder(s, at.id);
       if (holder) for (var power of ['peace','revenue','consent']) {
         if (!Q.power(s, subject, power, { provinceId:at.id }).allowed) continue;
@@ -493,7 +493,7 @@
         (definition.recognition !== 'none' || !terms.recognitionId) &&
         (definition.recognition !== 'required' || acknowledged)) &&
       (!terms.recognitionId || acknowledged && activeRecognition(s, acknowledged) &&
-        acknowledged.source === 'imperial_commission' &&
+        FBDATA.legitimacySources[acknowledged.source].mandate === 'court' &&
         same(acknowledged.issuer, { kind:'realm', id:patron.realmId }) &&
         same(acknowledged.subject, { kind:'realm', id:federate.realmId }) &&
         (!acknowledged.scope ||
@@ -1025,18 +1025,20 @@
     var q = FB.officeAppointmentQuote(s, reviewed.actor, reviewed.terms);
     if (!q.allowed || !sameQuote(q, reviewed)) return false;
     var t = q.terms, patron = { kind:'realm', id:t.institutionId };
-    var proof = Q.legitimacy(s, t.holder, t.scope, 'imperial_commission').filter(function (row) {
+    var source = officeCommissionSource(FBDATA.authorityOffices[t.officeId]);
+    if (!source) return false;
+    var proof = Q.legitimacy(s, t.holder, t.scope, source).filter(function (row) {
       return same(row.issuer, patron) && same(row.scope, t.scope);
     })[0];
     if (!proof) {
       proof = list(s, 'recognitions').filter(function (row) {
-        return row.status === 'active' && row.source === 'imperial_commission' &&
+        return row.status === 'active' && row.source === source &&
           same(row.issuer, patron) && same(row.subject, t.holder) && same(row.scope, t.scope) &&
           (row.endTurn === null || row.endTurn > s.turn);
       })[0];
       if (proof) FB.authorityRecognitionTransition(s, proof.id, 'reaffirm');
       else proof = FB.authorityRecognize(s, { issuer:patron, subject:t.holder,
-        source:'imperial_commission', scope:t.scope });
+        source:source, scope:t.scope });
     }
     if (!proof) return false;
     var row = FB.authorityAppoint(s, { officeId:t.officeId, institutionId:t.institutionId,
@@ -1112,24 +1114,41 @@
     }
     return out;
   };
+  FB.legitimacySourceHasMandate = function (sourceId, mandate) {
+    var def = FBDATA.legitimacySources[sourceId];
+    return !!def && def.mandate === mandate;
+  };
+  FB.legitimacySourceFor = function (s, mandate, issuer, allowed) {
+    var ids = allowed || Object.keys(FBDATA.legitimacySources);
+    for (var id of ids) if (FB.legitimacySourceHasMandate(id,mandate) && validIssuer(s,issuer,id)) return id;
+    return null;
+  };
+  FB.legitimacyByMandate = function (s, subject, scope, mandate) {
+    return Q.legitimacy(s,subject,scope).filter(function (row) { return FB.legitimacySourceHasMandate(row.source,mandate); });
+  };
   FB.officeRecognitionMandates = function (s, actor) {
     var a = ref(s, actor), out = [];
     if (!a || !FB.systemEnabled(s, 'roman_offices', a.kind === 'realm' ? { realm:a.id } : { character:a.id })) return out;
     if (a.kind === 'character' && (FB.justiceCustodyOf(s, a.id) || s.chars[a.id].unfree ||
         FB.ageOf(s.chars[a.id], s.date.year) < 16)) return out;
+    function addMandates(policy, issuer) {
+      Object.keys(FBDATA.legitimacySources).forEach(function (id) {
+        if (FBDATA.legitimacySources[id].mandate === policy && validIssuer(s, issuer, id))
+          out.push({ source:id, issuer:copy(issuer) });
+      });
+    }
     var rid = a.kind === 'realm' ? a.id : Object.keys(s.realms).filter(function (id) { return courtActor(s, a, id); })[0];
-    if (rid && officeCatalogue(s, rid).length) out.push({ source:'imperial_commission', issuer:{ kind:'realm', id:rid } });
+    if (rid && officeCatalogue(s, rid).length) addMandates('court', { kind:'realm', id:rid });
     for (var army of s.armies || []) if (Q.power(s, a, 'ban', { hostId:army.id }).allowed && army.men > 0)
-      out.push({ source:'army_acclamation', issuer:{ kind:'host', id:army.id } });
+      addMandates('command', { kind:'host', id:army.id });
     var counties = Q.grantedCounties(s, a, 'consent');
     if (rid) counties = counties.concat(FB.realmTerritory(s, rid));
     for (var pid of counties.filter(function (id, i, all) { return all.indexOf(id) === i; }))
       if (Q.power(s, a, 'consent', { provinceId:pid }).allowed)
-        out.push({ source:'civic_acceptance', issuer:{ kind:'county', id:pid } });
+        addMandates('community', { kind:'county', id:pid });
     for (var id in s.religiousHeads || {}) {
       var head = s.religiousHeads[id], headId = typeof head === 'string' ? head : head && head.id;
-      if (headId === a.id && validIssuer(s, { kind:'religious-office', id:id }, 'church_support'))
-        out.push({ source:'church_support', issuer:{ kind:'religious-office', id:id } });
+      if (headId === a.id) addMandates('religious_head', { kind:'religious-office', id:id });
     }
     return out;
   };
@@ -1215,13 +1234,14 @@
     });
     var claims = FB.officeClaimants(s).filter(function (row) { return row.institutionId === rid; });
     if (claims.length || successionClaim) {
-      var at = { kind:'realm', id:rid }, proof = Q.legitimacy(s, holder, at, 'dynastic_succession')[0];
+      var at = { kind:'realm', id:rid }, source = FB.legitimacySourceFor(s,'succession',actor,FBDATA.authorityOffices.imperial_office.recognitionSources);
+      var proof = source && Q.legitimacy(s,holder,at,source)[0];
       /* An explicit deposition or vacancy is not undone just because a
          seasonal AI pass found no active emperor. */
-      if (successionClaim && !list(s, 'appointments').some(function (row) {
+      if (successionClaim && source && !list(s, 'appointments').some(function (row) {
         return row.institutionId === rid && row.officeId === 'imperial_office' && activeAppointment(s, row);
       })) {
-        if (!proof) proof = FB.authorityRecognize(s, { source:'dynastic_succession', issuer:actor, subject:holder, scope:at });
+        if (!proof) proof = FB.authorityRecognize(s, { source:source, issuer:actor, subject:holder, scope:at });
         FB.authorityAppoint(s, { officeId:'imperial_office', institutionId:rid, appointer:actor,
           holder:holder, scope:at, recognitionId:proof && proof.id });
       }
@@ -1229,7 +1249,9 @@
         return row.institutionId === rid && same(row.holder, holder);
       })[0];
       if (current) {
-        var mandate = { source:'imperial_commission', issuer:actor };
+        var mandate = FB.officeRecognitionMandates(s,actor).filter(function (row) {
+          return FB.legitimacySourceHasMandate(row.source,'court') && same(row.issuer,actor);
+        })[0];
         var declaration = FB.officeClaimQuote(s, actor, current, mandate, 'recognize');
         if (declaration.allowed) FB.officeDeclareClaim(s, declaration);
       }
@@ -1272,6 +1294,13 @@
     }
   };
 
+  function officeCommissionSource(def) {
+    return (def.recognitionSources || []).filter(function (id) {
+      var source = FBDATA.legitimacySources[id];
+      return source && source.mandate === 'court' && source.issuerKinds.indexOf('realm') >= 0;
+    })[0] || null;
+  }
+
   FB.validateAuthorityData = function () {
     var errors = [], offices = FBDATA.authorityOffices,
       sources = FBDATA.legitimacySources, bases = FBDATA.customaryBases,
@@ -1302,7 +1331,7 @@
             !Number.isFinite(def.appointment.prestige) || def.appointment.prestige < 0 ||
             FB.SKILLS.indexOf(def.appointment.skill) < 0 ||
             !Number.isFinite(def.appointment.minimum) || def.appointment.minimum < 0 ||
-            !def.publicRole && def.recognitionSources.indexOf('imperial_commission') < 0 ||
+            !def.publicRole && !officeCommissionSource(def) ||
             def.appointment.imperialOnly !== undefined && typeof def.appointment.imperialOnly !== 'boolean' ||
             def.appointment.annual !== undefined && typeof def.appointment.annual !== 'boolean'))
         errors.push(FB.T('Invalid authority office {id}.', { id:id }));
@@ -1310,7 +1339,17 @@
     if (!sources || typeof sources !== 'object') errors.push(FB.T('Legitimacy sources are missing.'));
     else for (var source in sources) if (own(sources, source)) {
       if (!/^[a-z][a-z0-9_]*$/.test(source) || !sources[source] ||
-          ['reaffirm','continues'].indexOf(sources[source].succession) < 0)
+          ['reaffirm','continues'].indexOf(sources[source].succession) < 0 ||
+          typeof sources[source].name !== 'string' || !sources[source].name ||
+          !Array.isArray(sources[source].issuerKinds) || !sources[source].issuerKinds.length ||
+          sources[source].issuerKinds.some(function (kind, i, all) {
+            return ['realm','host','county','character','religious-office','religious-institution'].indexOf(kind) < 0 || all.indexOf(kind) !== i;
+          }) || sources[source].mandate !== undefined &&
+            ['court','command','community','religious_head','succession'].indexOf(sources[source].mandate) < 0 ||
+          sources[source].countyRights !== undefined && typeof sources[source].countyRights !== 'boolean' ||
+          sources[source].issuerKinds.indexOf('character') >= 0 &&
+            (!Array.isArray(sources[source].characterRoles) || !sources[source].characterRoles.length ||
+              sources[source].characterRoles.some(function (role) { return typeof role !== 'string' || !/^[a-z][a-z0-9_]*$/.test(role); })))
         errors.push(FB.T('Invalid legitimacy source {id}.', { id:source }));
     }
     if (!bases || typeof bases !== 'object') errors.push(FB.T('Customary bases are missing.'));

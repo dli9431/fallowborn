@@ -188,26 +188,26 @@ window.FBDATA = window.FBDATA || {};
      to 867 and the next three to 1066 so their visual order also makes the
      date split legible without another control. */
   FBDATA.quickStarts = [
-    { id:'osric_867', bookmarkId:'867', provinceId:'barcelona',
+    { id:'osric_867', distributionDefault:true, firstDeedTip:'💡 You are Osric, a {term:serf} in Barcelona. Try Go into town as your first deed: pick a settlement and what to do there, then press Play to see what happens next.', scenarioId:'serf', familyPreset:'standard', bookmarkId:'867', provinceId:'barcelona',
       settlementSite:'barcelona',
       culture:'iberian', religion:'catholic', sex:'m', characterName:'Osric',
       portraitProfile:'osric' },
-    { id:'aed_867', bookmarkId:'867', provinceId:'galway',
+    { id:'aed_867', scenarioId:'serf', familyPreset:'standard', bookmarkId:'867', provinceId:'galway',
       settlementSite:'rathcroghan',
       culture:'gaelic', religion:'catholic', sex:'m', characterName:'Aed' },
-    { id:'freydis_867', bookmarkId:'867', provinceId:'uppsala',
+    { id:'freydis_867', scenarioId:'serf', familyPreset:'standard', bookmarkId:'867', provinceId:'uppsala',
       settlementSite:'uppsala',
       culture:'norse', religion:'norse_pagan', sex:'f', characterName:'Freydis' },
-    { id:'kahina_867', bookmarkId:'867', provinceId:'tunis',
+    { id:'kahina_867', scenarioId:'serf', familyPreset:'standard', bookmarkId:'867', provinceId:'tunis',
       settlementSite:'tunis',
       culture:'berber', religion:'sunni', sex:'f', characterName:'Kahina' },
-    { id:'gormlaith_1066', bookmarkId:'1066', provinceId:'ulaid',
+    { id:'gormlaith_1066', scenarioId:'serf', familyPreset:'standard', bookmarkId:'1066', provinceId:'ulaid',
       settlementSite:'downpatrick',
       culture:'gaelic', religion:'catholic', sex:'f', characterName:'Gormlaith' },
-    { id:'biera_1066', bookmarkId:'1066', provinceId:'norrland',
+    { id:'biera_1066', scenarioId:'serf', familyPreset:'standard', bookmarkId:'1066', provinceId:'norrland',
       settlementSite:'norrland_head',
       culture:'sami', religion:'norse_pagan', sex:'m', characterName:'Biera' },
-    { id:'ahmad_1066', bookmarkId:'1066', provinceId:'fustat',
+    { id:'ahmad_1066', scenarioId:'serf', familyPreset:'standard', bookmarkId:'1066', provinceId:'fustat',
       settlementSite:'fustat',
       culture:'arabic', religion:'shia', sex:'m', characterName:'Ahmad' }
   ];

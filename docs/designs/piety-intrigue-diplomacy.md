@@ -342,3 +342,12 @@ The gifts_800 and recognition_800 data instances negotiate Frankish-Abbasid fund
 Faith office and tradition selection
 
 Absolution and religious head claims use the current faith's effective head office, registered succession strategy and balance references. Papal sanctions and remedies remain scoped to the recognized office's obedience; other offices may author flat-price absolution. Intrigue sentence forms read legalTradition while preserving existing cultural precedence. Character-held heads participate in clergy-policy Standing changes as characters, without requiring a temporal realm.
+
+
+Declared trait mechanics
+
+The traitMechanics catalogue supplies the supported literacy, prayer, social, intrigue, justice, religious and AI-policy effects documented in docs/MODDING.md. Consumers read the same effective rules for player previews and AI actors, with no historical trait-id branches. Existing numerical defaults and prerequisite checks are retained. Grouped alternative motives use their maximum contribution; independent yield/support channels use their documented sums. Legacy saved-trait migration and trait-award identities remain separate compatibility concerns. This conversion introduces no technology dependency, saved ledger or additional RNG draw.
+
+Papal and religious authoring
+
+papacyRules declares tactic kinds and costs, cardinal-order allocation and shortlist roles, investiture kinds and institution gates, and default selections. UI and AI resolve those same effective records. religiousOfficeRanks maps each vocation's contested office and candidate ranks without assuming a particular faith path or rank index. Appointments still use canonical office transactions; automatic religious advancement cannot buy a contested office.

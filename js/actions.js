@@ -62,9 +62,6 @@ window.FB = window.FB || {};
       }
     }, { skill: key, value: FB.skillOf(m, key) }));
   }
-  function patronageResearch(state) {
-    return 2 + Math.min(3, FB.skillOf(me(state), 'lea') / 10);
-  }
   function activeCareer(state) {
     return FB.careerOf ? FB.careerOf(state, me(state)) : null;
   }
@@ -85,23 +82,6 @@ window.FB = window.FB || {};
     const specialization = FB.careerSpecialization &&
       FB.careerSpecialization(state, me(state));
     return specialization && specialization.fx || {};
-  }
-  function administrationGold(state) {
-    return 2 + FB.skillOf(me(state), 'ste') / 4 +
-      FB.skillOf(me(state), 'lea') / 8 +
-      (Number(specializationFx(state).focusGold) || 0);
-  }
-  function medicineGold(state) {
-    return 1 + FB.skillOf(me(state), 'lea') / 3 +
-      (Number(specializationFx(state).focusGold) || 0);
-  }
-  function scholarshipGold(state) {
-    return 0.5 + FB.skillOf(me(state), 'lea') / 10 +
-      (Number(specializationFx(state).focusGold) || 0);
-  }
-  function scholarshipResearch(state) {
-    return 1 + Math.min(2, FB.skillOf(me(state), 'lea') / 10) +
-      (Number(specializationFx(state).focusResearch) || 0);
   }
   function craftTradeFocusGold(state) {
     return Number(specializationFx(state).focusGold) || 0;
@@ -191,29 +171,14 @@ window.FB = window.FB || {};
   const FOCUS_HANDLERS = [
 
   { id: 'study',
-    show: function (s) { return !adult(s); },
-    tick: function (s) { if (skillDch(0.5)) skillUp(s, FB.pick(['lea', 'ste', 'dip'])); } },
+    show: function (s) { return !adult(s); } },
   { id: 'play',
-    show: function (s) { return !adult(s); },
-    tick: function (s) {
-      me(s).health = FB.clamp(me(s).health + 0.012, 0, 10);
-      // girls are schooled in conduct and letters, not at arms
-      if (skillDch(0.3)) skillUp(s, me(s).sex === 'f' ? 'dip' : 'mar');
-    } },
+    show: function (s) { return !adult(s); } },
 
   { id: 'rest',
-    show: adult,
-    tick: function (s) { me(s).health = FB.clamp(me(s).health + 0.014, 0, 10); } },
+    show: adult },
   { id: 'pray',
-    show: adult,
-    tick: function (s) {
-      const z = me(s).traits.indexOf('zealous') >= 0 ? 2 : 0;
-      s.player.piety += (3 + z) / D;
-      const pr = FB.getRole(s, 'priest', false);
-      if (pr) FB.adjustStanding(s, { kind:'character', id:pr.id }, 2 / D,
-        'focus:pray');
-    },
-    gain: function (s) { return { piety: 3 + (me(s).traits.indexOf('zealous') >= 0 ? 2 : 0) }; } },
+    show: adult },
   { id: 'toil',
     show: function (s) {
       const service = FB.householdServiceRecord(s);
@@ -231,8 +196,8 @@ window.FB = window.FB || {};
       if (service && service.status === 'active') { FB.tickHouseholdService(s); return; }
       const base = FB.rf(FBDATA.balance.serfWage[0], FBDATA.balance.serfWage[1]);
       s.player.gold += FB.serfHarvestQuote(s, base).gold / D;
-      if (dch(0.1)) {
-        me(s).health = Math.max(0, me(s).health - 1);
+      if (dch(FBDATA.actionPolicies.toil.injuryChance)) {
+        me(s).health = Math.max(0, me(s).health - FBDATA.actionPolicies.toil.injuryHealth);
         FB.news(s, FB.msg('news.action.labor_hurts', 'The labor grinds you down.', {}));
       }
     },
@@ -246,211 +211,91 @@ window.FB = window.FB || {};
       return !FB.station.isGentle(s.player, s) && adult(s) &&
         !FB.professionHasRole(s.player.profession, 'cloister') && !female(s) &&
         !qualifiedRole(s, 'arms');
-    },
-    tick: function (s) { if (skillDch(0.6)) skillUp(s, 'mar'); } },
+    } },
 
   { id: 'work_land',
     show: function (s) {
       return FB.station.isFreeholder(s.player, s) && FB.professionHasRole(s.player.profession, 'labor');
-    },
-    tick: function (s) {
-      let g = FB.rf(FBDATA.balance.freeWage[0], FBDATA.balance.freeWage[1]);
-      if (s.player.flags.own_ox) g += 1;
-      s.player.gold += g / D;
-    },
-    gain: function (s) {
-      let g = (FBDATA.balance.freeWage[0] + FBDATA.balance.freeWage[1]) / 2;
-      if (s.player.flags.own_ox) g += 1;
-      return { gold: g };
     } },
   { id: 'market',
-    show: function (s) { return FB.station.isFreeholder(s.player, s) && adult(s); },
-    tick: function (s) {
-      s.player.gold += (1 + FB.skillOf(me(s), 'ste') / 3) / D;
-      if (skillDch(0.35)) skillUp(s, 'ste');
-    },
-    gain: function (s) { return { gold: 1 + FB.skillOf(me(s), 'ste') / 3 }; } },
+    show: function (s) { return FB.station.isFreeholder(s.player, s) && adult(s); } },
   { id: 'keep_house',
-    show: function (s) { return female(s) && adult(s) && !FB.station.isLanded(s.player, s); },
-    tick: function (s) {
-      s.player.gold += (1 + FB.skillOf(me(s), 'ste') / 3) / D;
-      if (skillDch(0.4)) skillUp(s, FB.pick(['ste', 'dip']));
-    },
-    gain: function (s) { return { gold: 1 + FB.skillOf(me(s), 'ste') / 3 }; } },
+    show: function (s) { return female(s) && adult(s) && !FB.station.isLanded(s.player, s); } },
 
   { id: 'craft_work',
     show: function (s) {
       return FB.professionHasRole(s.player.profession, 'craft') && !FB.station.isLanded(s.player, s);
-    },
-    tick: function (s) {
-      s.player.gold += (FB.rf(2, 5) + (s.player.flags.guild_member ? 1 : 0) +
-        craftTradeFocusGold(s)) / D;
-      if (skillDch(0.3)) skillUp(s, 'ste');
-    },
-    gain: function (s) {
-      return { gold:3.5 + (s.player.flags.guild_member ? 1 : 0) +
-        craftTradeFocusGold(s) };
     } },
   { id: 'trade_run',
-    desc: function (s) { return s.player.gold < 10 ? 'Little stock, little profit — but a start.' : 'Buy low here, sell high there.'; },
+    desc: function (s) { return s.player.gold < FBDATA.actionPolicies.trade_run.stockThreshold ? 'Little stock, little profit — but a start.' : 'Buy low here, sell high there.'; },
     show: function (s) {
       return FB.professionHasRole(s.player.profession, 'trading') && !FB.station.isLanded(s.player, s);
     },
     tick: function (s) {
       const ste = FB.skillOf(me(s), 'ste');
-      const c = 0.55 + ste * 0.015;
-      let g = c * (9 + ste / 2) - (1 - c) * 6; // expected seasonal profit
-      if (s.player.gold < 10) g *= 0.3;
-      s.player.gold += (Math.max(0.5, g) + craftTradeFocusGold(s)) / D;
-      if (skillDch(0.4)) skillUp(s, 'ste');
+      const policy = FBDATA.actionPolicies.trade_run;
+      const c = policy.successBase + ste * policy.skillChance;
+      let g = c * (policy.profitBase + ste / policy.profitSkillDivisor) - (1 - c) * policy.loss; // expected seasonal profit
+      if (s.player.gold < policy.stockThreshold) g *= policy.poorStockFactor;
+      s.player.gold += (Math.max(policy.minimum, g) + craftTradeFocusGold(s)) / D;
+      if (skillDch(policy.trainingChance)) skillUp(s, 'ste');
     },
     gain: function (s) {
       const ste = FB.skillOf(me(s), 'ste');
-      const c = 0.55 + ste * 0.015;
-      let g = c * (9 + ste / 2) - (1 - c) * 6;
-      if (s.player.gold < 10) g *= 0.3;
-      return { gold:Math.max(0.5, g) + craftTradeFocusGold(s) };
+      const policy = FBDATA.actionPolicies.trade_run;
+      const c = policy.successBase + ste * policy.skillChance;
+      let g = c * (policy.profitBase + ste / policy.profitSkillDivisor) - (1 - c) * policy.loss;
+      if (s.player.gold < policy.stockThreshold) g *= policy.poorStockFactor;
+      return { gold:Math.max(policy.minimum, g) + craftTradeFocusGold(s) };
     } },
 
   { id: 'keep_records',
     show: function (s) {
       return !FB.station.isLanded(s.player, s) && qualifiedCareer(s, 'administration');
-    },
-    tick: function (s) {
-      s.player.gold += administrationGold(s) / D;
-      const standing = Number(specializationFx(s).focusStanding) || 0;
-      if (standing) {
-        const target = administrationStandingTarget(s);
-        if (target) FB.adjustStanding(s, target,
-          standing / D, 'focus:keep_records');
-      }
-      if (skillDch(0.35)) skillUp(s, FB.pick(['ste', 'lea']));
-    },
-    gain: function (s) { return { gold:administrationGold(s) }; } },
-
+    } },
   { id: 'practice_physic',
     show: function (s) {
       return !FB.station.isLanded(s.player, s) && qualifiedCareer(s, 'physician');
-    },
-    tick: function (s) {
-      s.player.gold += medicineGold(s) / D;
-      if (skillDch(0.45)) skillUp(s, 'lea');
-    },
-    gain: function (s) { return { gold:medicineGold(s) }; } },
-
+    } },
   { id: 'scholarly_work',
     show: function (s) {
       return !FB.station.isLanded(s.player, s) && qualifiedCareer(s, 'scholar');
-    },
-    tick: function (s) {
-      const fx = specializationFx(s);
-      s.player.gold += scholarshipGold(s) / D;
-      s.player.prestige += (Number(fx.focusPrestige) || 0) / D;
-      FB.addResearch(s, scholarshipResearch(s) / D);
-      if (skillDch(0.5)) skillUp(s, 'lea');
-    },
-    gain: function (s) {
-      return {
-        gold:scholarshipGold(s),
-        prestige:Number(specializationFx(s).focusPrestige) || 0
-      };
     } },
-
   { id: 'drill',
     show: function (s) {
       return afield(s) ||
         (!FB.station.isLanded(s.player, s) && qualifiedRole(s, 'arms') && !female(s));
-    },
-    tick: function (s) {
-      s.player.gold += 1 / D;
-      if (skillDch(0.7)) skillUp(s, 'mar');
-    },
-    gain: function () { return { gold: 1 }; } },
+    } },
   { id: 'stand_guard',
     show: function (s) {
       return !FB.station.isLanded(s.player, s) && qualifiedRole(s, 'arms') && !female(s);
-    },
-    tick: function (s) {
-      s.player.gold += 2 / D;
-      const lord = FB.getRole(s, 'lord', false);
-      if (lord) FB.adjustStanding(s, { kind:'character', id:lord.id }, 2 / D,
-        'focus:stand_guard');
-    },
-    gain: function () { return { gold: 2 }; } },
+    } },
 
   { id: 'copy_books',
     show: function (s) {
       return !!(FB.abbeyOf && FB.abbeyOf(s)) || (!FB.station.isLanded(s.player, s) &&
         FB.professionHasRole(s.player.profession, ['cloister', 'clergy']));
-    },
-    tick: function (s) {
-      s.player.piety += 2 / D;
-      if (skillDch(0.6)) skillUp(s, 'lea');
-      if (dch(0.6)) FB.addTrait(me(s), 'literate');
-    },
-    gain: function () { return { piety: 2 }; } },
+    } },
   { id: 'serve_church',
     show: function (s) {
       return !!(FB.abbeyOf && FB.abbeyOf(s)) || (!FB.station.isLanded(s.player, s) &&
         FB.professionHasRole(s.player.profession, ['cloister', 'clergy']));
-    },
-    tick: function (s) {
-      s.player.piety += 4 / D;
-      s.player.prestige += 2 / D;
-      FB.setCountySupport(s, s.player.provinceId, FB.clamp(FB.countySupportBase(s, s.player.provinceId) + 2 / D, -100, 100));
-    },
-    gain: function () { return { piety: 4, prestige: 2 }; } },
+    } },
 
   { id: 'manage_manor',
-    show: function (s) { return FB.station.isGentry(s.player, s); },
-    tick: function (s) {
-      const B = FBDATA.balance;
-      s.player.gold += (FB.rf(B.manorIncome[0], B.manorIncome[1]) + FB.skillOf(me(s), 'ste') / 4) / D;
-    },
-    gain: function (s) {
-      const B = FBDATA.balance;
-      return { gold: (B.manorIncome[0] + B.manorIncome[1]) / 2 + FB.skillOf(me(s), 'ste') / 4 };
-    } },
+    show: function (s) { return FB.station.isGentry(s.player, s); } },
   { id: 'serve_lord',
-    show: function (s) { return FB.station.isGentry(s.player, s); },
-    tick: function (s) {
-      const lord = FB.getRole(s, 'lord', true);
-      if (lord) FB.adjustStanding(s, { kind:'character', id:lord.id }, 6 / D,
-        'focus:serve_lord');
-      s.player.prestige += 2 / D;
-      if (skillDch(0.3)) skillUp(s, 'dip');
-    },
-    gain: function () { return { prestige: 2 }; } },
+    show: function (s) { return FB.station.isGentry(s.player, s); } },
   /* the chatelaine's road: noblewomen command through the household and the
      court, not the drill yard — Standing and polish instead of swordplay */
   { id: 'courtly_graces',
-    desc: function (s) {
-      const recipient = s.player.liege && s.realms[s.player.liege];
-      return FB.T('Each season: +2 prestige, up to +4 Standing with {recipient}, and a chance to train Diplomacy. The prestige gain is fixed; higher Diplomacy does not increase it.', {
-        recipient:recipient ? recipient.name : FB.T('your local lord')
-      });
-    },
-    show: function (s) { return female(s) && adult(s) && FB.station.isGentle(s.player, s); },
-    tick: function (s) {
-      if (s.player.liege) {
-        FB.adjustStanding(s, { kind:'realm', id:s.player.liege }, 4 / D,
-          'focus:courtly_graces');
-      }
-      else {
-        const lord = FB.getRole(s, 'lord', true);
-        if (lord) FB.adjustStanding(s, { kind:'character', id:lord.id }, 4 / D,
-          'focus:courtly_graces');
-      }
-      s.player.prestige += 2 / D;
-      if (skillDch(0.5)) skillUp(s, 'dip');
-    },
-    gain: function () { return { prestige: 2 }; } },
+    desc: function () { return FB.T('Cultivate your reputation, your Standing with your patron and your Diplomacy.'); },
+    show: function (s) { return female(s) && adult(s) && FB.station.isGentle(s.player, s); } },
   { id: 'train_arms',
     show: function (s) {
       return FB.station.isGentle(s.player, s) && adult(s) && !female(s) &&
         !(!FB.station.isLanded(s.player, s) && qualifiedRole(s, 'arms'));
-    },
-    tick: function (s) { if (skillDch(0.6)) skillUp(s, 'mar'); } },
+    } },
   { id: 'lead_host',
     desc: function (s) {
       return s.player.war ? 'Command your men in the field. (steadies the host for the next field battle)'
@@ -472,10 +317,10 @@ window.FB = window.FB || {};
           FB.playerGreatHolyWarHostActive(s))) {
         const command = FB.activeMilitaryCommand && FB.activeMilitaryCommand(s);
         const patronId = command ? command.patronRealmId : s.player.liege;
-        FB.adjustStanding(s, { kind:'realm', id:patronId }, 4 / D,
+        FB.adjustStanding(s, { kind:'realm', id:patronId }, FBDATA.actionPolicies.lead_host.standing / D,
           'focus:lead_host');
       }
-      if (skillDch(0.5)) skillUp(s, 'mar');
+      if (skillDch(FBDATA.actionPolicies.lead_host.trainingChance)) skillUp(s, 'mar');
     } },
   { id: 'scheming',
     desc: function (s) {
@@ -494,7 +339,7 @@ window.FB = window.FB || {};
       if (!def) { s.player.plot = null; return; }
       if (def.hostile && FB.intrigueTickPlayerPlot) {
         FB.intrigueTickPlayerPlot(s);
-        if (skillDch(0.25)) skillUp(s, 'int');
+        if (skillDch(FBDATA.actionPolicies.scheming.trainingChance)) skillUp(s, 'int');
         return;
       }
       if (def.target && !FB.plotTargetValid(s, def, pl.context)) {
@@ -519,10 +364,11 @@ window.FB = window.FB || {};
         FB.fns.plot_end(s);
         return;
       }
-      pl.power += (2 + FB.skillOf(me(s), 'int') / 3) / D;
-      if (skillDch(0.25)) skillUp(s, 'int');
+      const policy = FBDATA.actionPolicies.scheming;
+      pl.power += (policy.powerBase + FB.skillOf(me(s), 'int') / policy.powerSkillDivisor) / D;
+      if (skillDch(FBDATA.actionPolicies.scheming.trainingChance)) skillUp(s, 'int');
       if (pl.sprung) return;
-      if (dch(Math.min(0.30, 0.12 + (pl.exposure || 0) * 0.06))) {
+      if (dch(Math.min(policy.discoveryCap, policy.discoveryBase + (pl.exposure || 0) * policy.exposureFactor))) {
         pl.sprung = 1;
         const discoveredCtx = {};
         for (const key in (pl.context || {})) discoveredCtx[key] = pl.context[key];
@@ -542,37 +388,16 @@ window.FB = window.FB || {};
   { id: 'shepherd_diocese',
     show: function (s) {
       return !!(FB.hasBishopric && FB.hasBishopric(s, me(s)));
-    },
-    tick: function (s) {
-      s.player.piety += 4 / D;
-      FB.setCountySupport(s, s.player.provinceId, FB.clamp(FB.countySupportBase(s, s.player.provinceId) + 2 / D, -100, 100));
-      if (skillDch(0.35)) skillUp(s, 'lea');
-    },
-    gain: function () { return { piety:4 }; } },
+    } },
   { id: 'administer_temporalities',
     show: function (s) {
       return !!(FB.hasBishopric && FB.hasBishopric(s, me(s)));
-    },
-    tick: function (s) {
-      s.player.gold += FB.bishopricIncome(s) * 0.15 / D;
-      if (s.player.liege) {
-        FB.adjustStanding(s, { kind:'realm', id:s.player.liege }, 2 / D,
-          'focus:administer_temporalities');
-      }
-      if (skillDch(0.30)) skillUp(s, 'ste');
-    },
-    gain: function (s) { return { gold:FB.bishopricIncome(s) * 0.15 }; } },
+    } },
   { id: 'govern',
     show: function (s) {
       return FB.station.isLanded(s.player, s) &&
         !(FB.playerChurchOfficeOnly && FB.playerChurchOfficeOnly(s));
-    },
-    tick: function (s) {
-      s.player.gold += FB.playerTax(s) * 0.15 / D;
-      FB.setCountySupport(s, s.player.provinceId, FB.clamp(FB.countySupportBase(s, s.player.provinceId) + 3 / D, -100, 100));
-      if (skillDch(0.25)) skillUp(s, 'ste');
-    },
-    gain: function (s) { return { gold: FB.playerTax(s) * 0.15 }; } },
+    } },
   { id: 'patronize',
     desc: function (s) {
       const record = FB.realmTechRecord(s);
@@ -584,13 +409,7 @@ window.FB = window.FB || {};
         })
         : FB.T('Fund learned people; their work is banked until the nation begins a technology.');
     },
-    show: function (s) { return FB.station.isLanded(s.player, s) && adult(s); },
-    tick: function (s) {
-      FB.addResearch(s, patronageResearch(s) / D);
-      s.player.gold -= 2 / D;
-      if (skillDch(0.3)) skillUp(s, 'lea');
-    },
-    gain: function () { return { gold: -2 }; } }
+    show: function (s) { return FB.station.isLanded(s.player, s) && adult(s); } },
   ];
 
   /* ================= CONVERSION (faith & culture) =================
@@ -1772,15 +1591,18 @@ window.FB = window.FB || {};
 
   let validatedFreedomTerms = null;
 
+  FB.invalidateFreedomTerms = function () { validatedFreedomTerms = null; };
+
   FB.validateFreedomTerms = function (catalogue, timing) {
     catalogue = catalogue || FBDATA.freedomTerms;
     timing = timing || FBDATA.freedomBargaining;
-    if (!Array.isArray(catalogue) || !catalogue.length) {
+    if (!Array.isArray(catalogue) || !catalogue.length || catalogue.length > 32) {
       throw new Error('Freedom terms must be a non-empty array.');
     }
     if (!timing || typeof timing !== 'object') {
       throw new Error('Freedom bargaining timings are required.');
     }
+    for (const key of Object.keys(timing)) if (['petitionMinStanding','offerDays','petitionCooldownDays','finalServiceDays'].indexOf(key) < 0) throw new Error('freedomBargaining.' + key + ' is unsupported.');
     const timingKeys = ['petitionMinStanding','offerDays',
       'petitionCooldownDays','finalServiceDays'];
     for (let i = 0; i < timingKeys.length; i++) {
@@ -1791,7 +1613,7 @@ window.FB = window.FB || {};
     }
     if (timing.petitionMinStanding < -100 ||
         timing.petitionMinStanding > 100 || timing.offerDays <= 0 ||
-        timing.petitionCooldownDays < timing.offerDays ||
+        timing.petitionCooldownDays < timing.offerDays || timing.petitionCooldownDays > 7200 ||
         timing.finalServiceDays < 0 || timing.finalServiceDays > 360) {
       throw new Error('Freedom bargaining timings are outside their bounds.');
     }
@@ -1807,6 +1629,7 @@ window.FB = window.FB || {};
           !/^[a-z][a-z0-9_]*$/.test(term.id) || seen[term.id]) {
         throw new Error('Freedom terms require unique lowercase ids.');
       }
+      for (const key of Object.keys(term)) if (['id','minStanding','maxStanding','priceFactor','serviceDays'].indexOf(key) < 0) throw new Error('freedomTerms.' + term.id + '.' + key + ' is unsupported.');
       seen[term.id] = 1;
       const min = term.minStanding;
       const max = term.maxStanding === undefined ? 100 : term.maxStanding;
@@ -1816,7 +1639,7 @@ window.FB = window.FB || {};
           ' has invalid Standing bounds.');
       }
       if (typeof term.priceFactor !== 'number' ||
-          !isFinite(term.priceFactor) || term.priceFactor <= 0) {
+          !isFinite(term.priceFactor) || term.priceFactor <= 0 || term.priceFactor > 10) {
         throw new Error('Freedom term ' + term.id +
           ' has an invalid price factor.');
       }
@@ -2955,19 +2778,18 @@ window.FB = window.FB || {};
     show: function (s) { return !!FB.getRole(s, 'rival'); },
     run: function (s) {
       const r = FB.getRole(s, 'rival');
-      const inn = FB.skillOf(me(s), 'int');
+      const policy = FBDATA.actionPolicies.scheme_rival;
       // a rival who trusts you never sees the knife coming
-      if (FB.chance(0.35 + inn * 0.03 +
-          (r ? FB.standingOf(s, { kind:'character', id:r.id }) : 0) / 500)) {
-        FB.applyEffects(s, { prestige: 4, skills: { int: FB.chance(0.5) ? 1 : 0 } });
-        FB.adjustStanding(s, { kind:'character', id:r.id }, -10,
+      if (FB.chance(socialDeedChance(s, 'scheme_rival'))) {
+        FB.applyEffects(s, { prestige: policy.successPrestige, skills: { int: FB.chance(policy.trainingChance) ? 1 : 0 } });
+        FB.adjustStanding(s, { kind:'character', id:r.id }, policy.successStanding,
           'deed:scheme_rival');
-        FB.changeRivalHeat(s, 10);
+        FB.changeRivalHeat(s, policy.successHeat);
         FB.news(s, FB.msg('news.action.scheme_rival_success',
           'Your quiet work costs {name} dearly.', { name: r.name }));
       } else {
-        FB.applyEffects(s, { prestige: -4 });
-        FB.changeRivalHeat(s, 14);
+        FB.applyEffects(s, { prestige: policy.failurePrestige });
+        FB.changeRivalHeat(s, policy.failureHeat);
         FB.news(s, FB.msg('news.action.scheme_rival_failure',
           'The scheme unravels, and fingers point at you.', {}));
       }
@@ -3145,7 +2967,7 @@ window.FB = window.FB || {};
       return s.player.travel && s.player.travel.phase === 'return'
         ? FB.T('You are already traveling home.')
         : (s.player.travel && s.player.travel.phase === 'arrived'
-          ? (s.player.travel.purpose === 'relationship'
+          ? (FB.travelPurposeKind(s.player.travel.purpose) === 'relationship'
             ? FB.T('Return along the saved route after the required visit. You may remain together as long as you like.')
             : (FB.station.isLanded(s.player, s)
               ? FB.T('Return along the saved route after the required residence. You may remain as a guest as long as you like.')
@@ -3161,7 +2983,7 @@ window.FB = window.FB || {};
     },
     run: function (s) {
       const t = s.player.travel;
-      if (t && t.phase === 'arrived' && t.purpose === 'trade' &&
+      if (t && t.phase === 'arrived' && FB.travelPurposeKind(t.purpose) === 'trade' &&
           !t.returnVenture && FB.ui && FB.ui.showReturnCargoPrompt) {
         FB.ui.showReturnCargoPrompt();
         return;
@@ -3184,11 +3006,11 @@ window.FB = window.FB || {};
     },
     show: function (s) {
       const t = s.player.travel;
-      return !!(t && t.phase === 'arrived' && t.purpose === 'trade');
+      return !!(t && t.phase === 'arrived' && FB.travelPurposeKind(t.purpose) === 'trade');
     },
     can: function (s) {
       const t = s.player.travel;
-      if (!t || t.phase !== 'arrived' || t.purpose !== 'trade') {
+      if (!t || t.phase !== 'arrived' || FB.travelPurposeKind(t.purpose) !== 'trade') {
         return FB.T('You must reach a trade venture market first.');
       }
       if (t.returnVenture) {
@@ -3225,7 +3047,7 @@ window.FB = window.FB || {};
     },
     show: function (s) {
       return !!(s.player.travel && s.player.travel.phase === 'arrived' &&
-        s.player.travel.purpose !== 'frontier' &&
+        FB.travelPurposeKind(s.player.travel.purpose) !== 'frontier' &&
         FB.station.isFreeUnlanded(s.player, s) &&
         !s.player.travelSettlement);
     },
@@ -3245,7 +3067,7 @@ window.FB = window.FB || {};
       });
     },
     show: function (s) {
-      return !!(s.player.travel && s.player.travel.purpose === 'frontier' &&
+      return !!(s.player.travel && FB.travelPurposeKind(s.player.travel.purpose) === 'frontier' &&
         s.player.travel.phase === 'arrived' &&
         FB.station.isFreeUnlanded(s.player, s) &&
         !s.player.travelSettlement);
@@ -3285,8 +3107,7 @@ window.FB = window.FB || {};
     can: function (s) {
       return FB.playerExcommunicated && FB.playerExcommunicated(s)
         ? FB.T('The excommunicated may not seek a blessing.') : true;
-    },
-    run: function (s) { FB.queueEvent(s, 'seek_blessing', {}); } },
+    } },
   { id: 'seek_absolution', opensChoices:true, noConsume: true, requiresAdult:true,
     desc: function (s) {
       const status = FB.faithHasSystem(FB.playerHeadFaith(s), 'papacy', s) && FB.papalAbsolutionStatus &&
@@ -3591,16 +3412,8 @@ window.FB = window.FB || {};
       }
     } },
   { id: 'give_alms', requiresAdult:true,
-    desc: function (s) {
-      return FB.T('Bread and coin for the poor at the {temple} gate. ({money:10})',
-        { temple: FB.templeWord(me(s).religion) });
-    },
-    show: function () { return true; },
-    can: function (s) { return s.player.gold >= 10 ? true : 'Nothing to spare.'; },
-    run: function (s) {
-      FB.applyEffects(s, { gold: -10, piety: 8, popularOpinion: 3 });
-      FB.news(s, FB.msg('news.action.alms', '🕯 Gave alms to the poor.', {}));
-    } },
+    desc:function (s) { return FB.T('Bread and coin for the poor at the {temple} gate. ({money:amount})', {temple:FB.templeWord(me(s).religion),amount:FBDATA.deedRoutines.give_alms.costs && FBDATA.deedRoutines.give_alms.costs.gold || 0}); },
+    show: function () { return true; } },
   { id: 'begin_plot', opensChoices:true, noConsume: true, requiresAdult:true,
     show: function (s) { return !s.player.plot &&
       !s.player.flags.in_prison && !(FB.intrigueCaptivityOf &&
@@ -3615,13 +3428,13 @@ window.FB = window.FB || {};
   { id: 'mediate', requiresAdult:true,
     show: function (s) { return !FB.station.isLanded(s.player, s); },
     run: function (s) {
-      const dip = FB.skillOf(me(s), 'dip');
-      if (FB.chance(0.4 + dip * 0.03)) {
-        FB.applyEffects(s, { prestige: 3, popularOpinion: 3, skills: { dip: FB.chance(0.6) ? 1 : 0 } });
+      const policy = FBDATA.actionPolicies.mediate;
+      if (FB.chance(socialDeedChance(s, 'mediate'))) {
+        FB.applyEffects(s, { prestige: policy.successPrestige, popularOpinion: policy.successOpinion, skills: { dip: FB.chance(policy.trainingChance) ? 1 : 0 } });
         FB.news(s, FB.msg('news.action.mediate_success',
           '🤝 Your judgment mends a feud; both houses owe you thanks.', {}));
       } else {
-        FB.applyEffects(s, { prestige: -2 });
+        FB.applyEffects(s, { prestige: policy.failurePrestige });
         FB.news(s, FB.msg('news.action.mediate_failure',
           '🤝 Both sides leave angrier — at each other, and at you.', {}));
       }
@@ -3638,14 +3451,6 @@ window.FB = window.FB || {};
       return !!f &&
         FB.standingOf(s, { kind:'character', id:f.id }) >= 40 &&
         !s.player.flags.sworn_friend;
-    },
-    run: function (s) {
-      FB.applyEffects(s, {
-        setFlag: 'sworn_friend', prestige: 4,
-        opinion: { role: 'friend', amt: 20 }
-      });
-      FB.news(s, FB.msg('news.action.brotherhood',
-        'Swore an oath of brotherhood.', {}));
     } },
   { id: 'send_envoy', opensChoices:true, noConsume: true,
     show: function (s) { return FB.station.rulesRealm(s.player, s) && FB.isPlayerSovereign(s); },
@@ -3878,16 +3683,11 @@ window.FB = window.FB || {};
     show: function (s) {
       return FB.station.isLanded(s.player, s) &&
         !(FB.playerChurchOfficeOnly && FB.playerChurchOfficeOnly(s));
-    },
-    run: function (s) { FB.queueEvent(s, 'hold_court_event', {}); } },
+    } },
   { id: 'squeeze_taxes',
     show: function (s) {
       return FB.station.isLanded(s.player, s) &&
         !(FB.playerChurchOfficeOnly && FB.playerChurchOfficeOnly(s));
-    },
-    run: function (s) {
-      const tax = Math.max(4, Math.round(FB.playerTax(s) * 0.8));
-      FB.applyEffects(s, { gold: tax, popularOpinion: -6 });
     } },
   { id: 'grant_monopoly', opensChoices:true, noConsume: true,
     desc: function (s) {
@@ -3938,29 +3738,19 @@ window.FB = window.FB || {};
   { id: 'visit_diocese',
     show: function (s) {
       return !!(FB.hasBishopric && FB.hasBishopric(s, me(s)));
-    },
-    run: function (s) { FB.queueEvent(s, 'bishop_visit_diocese', {}); } },
+    } },
   { id: 'ecclesiastical_court',
     show: function (s) {
       return !!(FB.hasBishopric && FB.hasBishopric(s, me(s)));
-    },
-    run: function (s) { FB.queueEvent(s, 'bishop_ecclesiastical_court', {}); } },
+    } },
   { id: 'convene_synod',
     show: function (s) {
       return !!(FB.hasBishopric && FB.hasBishopric(s, me(s)));
-    },
-    can: function (s) {
-      return s.player.gold >= 10 ? true : FB.T('Costs {money:10}.');
-    },
-    run: function (s) {
-      s.player.gold -= 10;
-      FB.queueEvent(s, 'bishop_synod', {});
     } },
   { id: 'extraordinary_tithe',
     show: function (s) {
       return !!(FB.hasBishopric && FB.hasBishopric(s, me(s)));
-    },
-    run: function (s) { FB.queueEvent(s, 'bishop_extraordinary_tithe', {}); } },
+    } },
   { id: 'adopt_tech', opensChoices:true, noConsume: true,
     desc: function (s) {
       const rid = FB.techRealmId(s);
@@ -3985,8 +3775,7 @@ window.FB = window.FB || {};
         : FB.T('Meat, mead, and politics.');
     },
     show: function (s) { return FB.station.isLanded(s.player, s); },
-    can: function (s) { return s.player.gold >= 5 ? true : 'Too poor to feast anyone.'; },
-    run: function (s) { FB.queueEvent(s, 'court_feast', {}); } },
+    can: function (s) { return s.player.gold >= 5 ? true : 'Too poor to feast anyone.'; } },
   { id:'county_challenge', opensChoices:true, noConsume:true, deferCooldown:true,
     desc:function () { return FB.T('Review a county challenge and the superior’s position.'); },
     show:function (s) { return FB.landedBaron(s); },
@@ -4799,6 +4588,10 @@ window.FB = window.FB || {};
       validateActionConditions(def.visibility,
         'deed.' + def.id + '.visibility', references, errors, false);
     }
+    if ((references.deedRoutines || FBDATA.deedRoutines)[def.id]) {
+      if (['effects','costs','queueEvent','choices','capability'].some(function (key) { return def[key] !== undefined; })) errors.push(path + ' routine supplies its entire transaction.');
+      return;
+    }
     validateDeclarativeCapability(def, 'deed', 'deed.' + def.id, errors);
     if (def.capability === 'resource_choice') {
       if (def.costs !== undefined || def.effects !== undefined ||
@@ -4900,7 +4693,7 @@ window.FB = window.FB || {};
       }
     }
     if (def.seasonal === undefined && def.dailyEffects === undefined &&
-        def.skillChances === undefined) {
+        def.skillChances === undefined && !(references.focusRoutines || FBDATA.focusRoutines)[def.id]) {
       errors.push('focus.' + def.id +
         ' must declare seasonal, dailyEffects, or skillChances.');
     }
@@ -5082,10 +4875,10 @@ window.FB = window.FB || {};
       if (!baseline && !declarative) {
         errors.push(kind + ' catalogue cannot add id ' + def.id + '.');
       }
+      const orderLimit = declarative ? 100000 : records.length - 1;
       if (typeof def.order !== 'number' || Math.floor(def.order) !== def.order ||
-          def.order < 0 || def.order >= records.length) {
-        errors.push(kind + '.' + def.id + ' order must be an integer from 0 to ' +
-          (records.length - 1) + '.');
+          def.order < 0 || def.order > orderLimit) {
+        errors.push(kind + '.' + def.id + ' order must be an integer from 0 to ' + orderLimit + '.');
       } else if (actionOwn(seenOrders, def.order)) {
         errors.push(kind + ' catalogue must not repeat order ' + def.order + '.');
       }
@@ -5109,7 +4902,7 @@ window.FB = window.FB || {};
       }
       const handler = handlers[def.handler];
       if (kind === 'focus') {
-        if (typeof handler.show !== 'function' || typeof handler.tick !== 'function') {
+        if (typeof handler.show !== 'function' || typeof handler.tick !== 'function' && !(references.focusRoutines || FBDATA.focusRoutines)[def.id]) {
           errors.push(kind + '.' + def.id + ' handler is incomplete.');
         }
         const vocations = Array.isArray(def.vocational)
@@ -5147,7 +4940,7 @@ window.FB = window.FB || {};
           validateDeclarativeFocus(def, references, errors);
         }
       } else {
-        if (typeof handler.show !== 'function' || typeof handler.run !== 'function') {
+        if (typeof handler.show !== 'function' || typeof handler.run !== 'function' && !(references.deedEvents || FBDATA.deedEvents)[def.id] && !(references.deedRoutines || FBDATA.deedRoutines)[def.id]) {
           errors.push(kind + '.' + def.id + ' handler is incomplete.');
         }
         const sections = references.deedSections || FBDATA.deedSections;
@@ -5215,6 +5008,10 @@ window.FB = window.FB || {};
   FB.validateActionData = function (focusDefinitions, deedDefinitions, references) {
     const refs = references || FBDATA;
     return FB.validateDeedSections(refs.deedSections || FBDATA.deedSections, refs).concat(
+      FB.validateActionPolicies(refs.actionPolicies || FBDATA.actionPolicies),
+      FB.validateDeedRoutines(refs.deedRoutines || FBDATA.deedRoutines, deedDefinitions || FBDATA.deeds, refs),
+      FB.validateDeedEvents(refs.deedEvents || FBDATA.deedEvents, deedDefinitions || FBDATA.deeds, refs),
+      FB.validateFocusRoutines(refs.focusRoutines || FBDATA.focusRoutines, focusDefinitions || FBDATA.focuses, refs),
       validateActionRecords(focusDefinitions || FBDATA.focuses,
         FOCUS_HANDLER_BY_ID, FOCUS_BASELINE_IDS, 'focus', refs),
       validateActionRecords(deedDefinitions || FBDATA.deeds,
@@ -5499,6 +5296,282 @@ window.FB = window.FB || {};
     }
   }
 
+  function socialDeedChance(state, id) {
+    const policy = FBDATA.actionPolicies[id], rival = id === 'scheme_rival' ? FB.getRole(state,'rival',false) : null;
+    return FB.clamp(policy.successBase + FB.skillOf(me(state),id === 'mediate' ? 'dip' : 'int') * policy.skillChance +
+      (rival ? FB.standingOf(state,{kind:'character',id:rival.id}) / policy.standingDivisor : 0),0,1);
+  }
+  function socialDeedPreview(state, id) {
+    const policy = FBDATA.actionPolicies[id], notes = [
+      FB.T('Success chance: {chance}%', {chance:Math.round(socialDeedChance(state,id) * 1000) / 10}),
+      FB.T('Prestige on success: {success}; on failure: {failure}.', {success:policy.successPrestige,failure:policy.failurePrestige}),
+      FB.T('Training on success: {chance}%.', {chance:policy.trainingChance * 100})
+    ];
+    if (id === 'mediate') notes.push(FB.T('Popular opinion on success: {amount}.',{amount:policy.successOpinion}));
+    else {
+      notes.push(FB.T('Rival Standing on success: {amount}.',{amount:policy.successStanding}));
+      notes.push(FB.T('Rival heat on success: {success}; on failure: {failure}.',{success:policy.successHeat,failure:policy.failureHeat}));
+    }
+    return {notes:notes, chance:socialDeedChance(state,id)};
+  }
+  function statefulFocusPreview(state, action) {
+    const id = action.id, policy = FBDATA.actionPolicies[id], steps = [];
+    const skill = id === 'trade_run' ? 'ste' : id === 'lead_host' ? 'mar' : 'int';
+    if (policy.trainingChance !== undefined) steps.push({kind:'training',chance:policy.trainingChance,skill:skill});
+    const preview = focusRoutinePreview(state,action,steps), gain = action.gain ? action.gain(state) : {};
+    for (const resource of Object.keys(gain)) preview.seasonal.push({type:resource,amount:gain[resource] * vocationalMultiplier(state,action),reward:true});
+    if (id === 'toil') {
+      const service = FB.householdServiceRecord(state);
+      if (!service || service.status !== 'active') preview.notes.push(FB.T('Each season, injury risk: {chance}%; health lost per injury: {health}.', {chance:Math.round((1 - Math.pow(1 - policy.injuryChance / D,D)) * 1000) / 10,health:policy.injuryHealth}));
+    }
+    if (id === 'lead_host' && !state.player.war && !(FB.playerGreatHolyWarHostActive && FB.playerGreatHolyWarHostActive(state))) preview.notes.push(FB.T('Patron Standing per season: {amount}.',{amount:policy.standing}));
+    if (id === 'scheming') {
+      const plot = state.player.plot, def = plot && FBDATA.plots[plot.id];
+      if (def && !def.hostile) {
+        preview.notes.push(FB.T('Plot power per season: {amount}.',{amount:policy.powerBase + FB.skillOf(me(state),'int') / policy.powerSkillDivisor}));
+        const chance = Math.min(policy.discoveryCap,policy.discoveryBase + (plot.exposure || 0) * policy.exposureFactor);
+        preview.notes.push(FB.T('Discovery risk per season: {chance}%.',{chance:Math.round((1 - Math.pow(1 - chance / D,D)) * 1000) / 10}));
+      }
+    }
+    return preview;
+  }
+
+  FB.validateActionPolicies = function (table) {
+    const schemas = {
+      toil:{ injuryChance:[0,1], injuryHealth:[0,10] },
+      trade_run:{ successBase:[0,1], skillChance:[0,.1], profitBase:[0,100], profitSkillDivisor:[1,100], loss:[0,100], stockThreshold:[0,10000], poorStockFactor:[0,1], minimum:[0,100], trainingChance:[0,1] },
+      lead_host:{ standing:[-100,100], trainingChance:[0,1] },
+      scheming:{ powerBase:[0,100], powerSkillDivisor:[1,100], trainingChance:[0,1], discoveryCap:[0,1], discoveryBase:[0,1], exposureFactor:[0,1] },
+      scheme_rival:{ successBase:[0,1], skillChance:[0,.1], standingDivisor:[100,10000], trainingChance:[0,1], successPrestige:[-100,100], successStanding:[-100,100], successHeat:[0,100], failureHeat:[0,100], failurePrestige:[-100,100] },
+      mediate:{ successBase:[0,1], skillChance:[0,.1], trainingChance:[0,1], successPrestige:[-100,100], successOpinion:[-100,100], failurePrestige:[-100,100] }
+    }, errors = [];
+    if (!table || typeof table !== 'object' || Array.isArray(table)) return ['actionPolicies must be a policy table.'];
+    for (const id of Object.keys(table)) if (!Object.prototype.hasOwnProperty.call(schemas,id)) errors.push('actionPolicies.' + id + ' is not a registered transaction.');
+    for (const id of Object.keys(schemas)) {
+      const policy = table[id], schema = schemas[id], at = 'actionPolicies.' + id;
+      if (!policy || typeof policy !== 'object' || Array.isArray(policy)) { errors.push(at + ' needs a complete policy.'); continue; }
+      for (const key of Object.keys(policy)) if (!Object.prototype.hasOwnProperty.call(schema,key)) errors.push(at + '.' + key + ' is unsupported.');
+      for (const key of Object.keys(schema)) {
+        const value = policy[key], bounds = schema[key];
+        if (typeof value !== 'number' || !Number.isFinite(value) || value < bounds[0] || value > bounds[1]) errors.push(at + '.' + key + ' is outside its numeric bounds.');
+      }
+      if (id === 'scheming' && policy.discoveryBase > policy.discoveryCap) errors.push(at + '.discoveryBase exceeds its cap.');
+    }
+    return errors;
+  };
+
+  FB.validateDeedRoutines = function (table, definitions, refs) {
+    refs = refs || FBDATA;
+    const errors = [], deeds = {}, messages = {};
+    function object(v) { return !!v && typeof v === 'object' && !Array.isArray(v); }
+    function fields(v, allowed, path) { for (const key of Object.keys(v)) if (allowed.indexOf(key) < 0) errors.push(path + '.' + key + ' is unsupported.'); }
+    function number(n, low, high, path) { if (typeof n !== 'number' || !Number.isFinite(n) || n < low || n > high) errors.push(path + ' is out of bounds.'); }
+    for (const d of definitions) deeds[d.id] = d;
+    if (!object(table) || Object.keys(table).length > 128) return ['deedRoutines needs at most 128 records.'];
+    for (const id of Object.keys(table)) {
+      const d = table[id], def = deeds[id], handler = def && DEED_HANDLER_BY_ID[def.handler], path = 'deedRoutines.' + id;
+      if (!def || !handler || def.handler !== 'declarative_deed' && typeof handler.run === 'function' || (refs.deedEvents || FBDATA.deedEvents)[id]) errors.push(path + ' needs an action with shared transaction dispatch.');
+      if (!object(d)) { errors.push(path + ' must be a record.'); continue; }
+      fields(d, ['costs','effects','queueEvent','income','message'], path);
+      if (d.costs !== undefined) validateDeclarativeResourceMap(d.costs,path + '.costs',errors,true);
+      if (!!d.effects === !!d.queueEvent) errors.push(path + ' needs exactly one effects record or queueEvent.');
+      if (d.queueEvent !== undefined && !actionEventKnown(refs.events,d.queueEvent)) errors.push(path + '.queueEvent is unknown.');
+      if (d.effects !== undefined) {
+        if (!object(d.effects)) errors.push(path + '.effects must be a record.');
+        else {
+          fields(d.effects,['gold','piety','prestige','popularOpinion','setFlag','opinion'],path + '.effects');
+          for (const key of ['gold','piety','prestige','popularOpinion']) if (d.effects[key] !== undefined) number(d.effects[key],-10000,10000,path + '.effects.' + key);
+          if (d.effects.setFlag !== undefined && (typeof d.effects.setFlag !== 'string' || !/^[a-z][a-z0-9_]*$/.test(d.effects.setFlag))) errors.push(path + '.effects.setFlag needs a stable flag.');
+          if (d.effects.opinion !== undefined) {
+            const opinion = d.effects.opinion;
+            if (!object(opinion)) errors.push(path + '.effects.opinion must be a record.');
+            else { fields(opinion,['role','amt'],path + '.effects.opinion'); if (['friend','rival','priest','lord'].indexOf(opinion.role) < 0) errors.push(path + '.effects.opinion.role is unsupported.'); number(opinion.amt,-100,100,path + '.effects.opinion.amt'); }
+          }
+        }
+      }
+      if (d.income !== undefined) {
+        if (!object(d.income) || !d.effects) errors.push(path + '.income requires effects and a tax calculation.');
+        else { fields(d.income,['kind','factor','minimum'],path + '.income'); if (d.income.kind !== 'tax') errors.push(path + '.income.kind is unknown.'); number(d.income.factor,0,2,path + '.income.factor'); number(d.income.minimum,0,10000,path + '.income.minimum'); }
+      }
+      if (d.message !== undefined) {
+        if (!object(d.message) || typeof d.message.key !== 'string' || !/^news\.action\.[a-z][a-z0-9_]*$/.test(d.message.key) || messages[d.message.key] || typeof d.message.text !== 'string' || !d.message.text || d.message.text.length > 2000) errors.push(path + '.message needs unique action news and bounded text.');
+        else { fields(d.message,['key','text'],path + '.message'); messages[d.message.key] = true; }
+      }
+    }
+    return errors;
+  };
+  FB.registerDeedRoutineMessages = function () {
+    Object.keys(FBDATA.deedRoutines).forEach(function (id) { const m = FBDATA.deedRoutines[id].message; if (m) FB.registerMessage(m.key,{text:m.text}); });
+  };
+  function deedRoutineEffects(state, routine) {
+    const effects = Object.assign({}, routine.effects);
+    if (routine.income) effects.gold = (effects.gold || 0) + Math.max(routine.income.minimum, Math.round(FB.playerTax(state) * routine.income.factor));
+    return effects;
+  }
+  function deedRoutinePreview(state, def, routine) {
+    const out = declarativeDeedPreview(state,{costs:routine.costs,queueEvent:routine.queueEvent},!def.noConsume);
+    if (routine.effects) out.effects = FB.previewEventOption(state,{id:def.id},{effects:deedRoutineEffects(state,routine)},{}).sections.reduce(function (rows,section) { return rows.concat(section.impacts); },[]);
+    return out;
+  }
+  function runDeedRoutine(state, routine) {
+    if (!declarativeCostStatus(state,routine).ready) return false;
+    for (const resource of Object.keys(routine.costs || {})) state.player[resource] -= routine.costs[resource];
+    if (routine.effects) FB.applyEffects(state,deedRoutineEffects(state,routine));
+    if (routine.queueEvent) FB.queueEvent(state,routine.queueEvent,{});
+    if (routine.message) FB.news(state,FB.message(routine.message.key,{}));
+    return true;
+  }
+
+  FB.validateDeedEvents = function (table, definitions, refs) {
+    refs = refs || FBDATA;
+    const errors = [], deeds = {};
+    for (const d of definitions) deeds[d.id] = d;
+    if (!table || typeof table !== 'object' || Array.isArray(table) || Object.keys(table).length > 128) return ['deedEvents must be a bounded event-binding table.'];
+    for (const id of Object.keys(table)) {
+      const def = deeds[id], handler = def && DEED_HANDLER_BY_ID[def.handler];
+      if (!def || !handler || typeof handler.run === 'function') errors.push('deedEvents.' + id + ' needs a deed with shared event dispatch.');
+      if (typeof table[id] !== 'string' || !(refs.events || FBDATA.events).some(function (event) { return event.id === table[id]; })) errors.push('deedEvents.' + id + ' names an unknown event.');
+    }
+    return errors;
+  };
+
+  FB.validateFocusRoutines = function (table, definitions, refs) {
+    const errors = [], skills = ['dip','mar','ste','int','lea']; refs = refs || FBDATA;
+    function object(o) { return !!o && typeof o === 'object' && !Array.isArray(o); }
+    function fields(o, names, path) { for (const k of Object.keys(o)) if (names.indexOf(k) < 0) errors.push(path + '.' + k + ' is unsupported.'); }
+    function number(v, min, max, path) { if (typeof v !== 'number' || !Number.isFinite(v) || v < min || v > max) errors.push(path + ' is outside its numeric bounds.'); }
+    if (!object(table) || Object.keys(table).length > 128) return ['focusRoutines must have at most 128 records.'];
+    const focuses = {}; for (const d of definitions) focuses[d.id] = d;
+    for (const id of Object.keys(table)) {
+      const path = 'focusRoutines.' + id, steps = table[id], def = focuses[id];
+      if (!def || def.handler !== 'declarative_focus' && FOCUS_HANDLER_BY_ID[def.handler] && FOCUS_HANDLER_BY_ID[def.handler].tick) errors.push(path + ' needs a declarative focus or a focus with shared work operations.');
+      if (!Array.isArray(steps) || !steps.length || steps.length > 8) { errors.push(path + ' needs one to eight ordered steps.'); continue; }
+      for (let i = 0; i < steps.length; i++) {
+        const d = steps[i], at = path + '[' + i + ']';
+        if (!object(d)) { errors.push(at + ' must be an operation record.'); continue; }
+        if (d.kind === 'resource' || d.kind === 'research') {
+          fields(d, d.kind === 'resource' ? ['kind','resource','base','balanceRange','range','terms'] : ['kind','base','balanceRange','range','terms'], at);
+          if (d.kind === 'resource' && DECLARATIVE_RESOURCES.indexOf(d.resource) < 0) errors.push(at + '.resource is unknown.');
+          if (d.balanceRange !== undefined || d.range !== undefined) {
+            const range = d.range || (refs.balance || FBDATA.balance)[d.balanceRange];
+            if (d.base !== undefined || d.balanceRange !== undefined && d.range !== undefined || !Array.isArray(range) || range.length !== 2 || range[0] > range[1] || range.some(function (n) { return !Number.isFinite(n) || Math.abs(n) > 100000; })) errors.push(at + '.balanceRange needs a bounded numeric pair instead of base.');
+          } else number(d.base, -100000, 100000, at + '.base');
+          if (d.terms !== undefined && (!Array.isArray(d.terms) || d.terms.length > 8)) errors.push(at + '.terms needs at most eight modifiers.');
+          else for (const term of d.terms || []) {
+            if (!object(term)) { errors.push(at + ' has an invalid modifier.'); continue; }
+            if (term.kind === 'skill') {
+              fields(term, ['kind','id','divisor','cap'], at + '.terms');
+              if (term.cap !== undefined) number(term.cap, 0, 10000, at + '.cap');
+              if (skills.indexOf(term.id) < 0) errors.push(at + ' names an unknown skill.');
+              number(term.divisor, 1, 10000, at + '.divisor');
+            } else if (term.kind === 'flag') {
+              fields(term, ['kind','id','amount'], at + '.terms');
+              if (typeof term.id !== 'string' || !/^[a-z][a-z0-9_]*$/.test(term.id)) errors.push(at + ' has an invalid flag.');
+              number(term.amount, -100000, 100000, at + '.amount');
+            } else if (term.kind === 'trait') {
+              fields(term, ['kind','id'], at + '.terms');
+              if (term.id !== 'prayerPiety' || d.resource !== 'piety') errors.push(at + ' has an unsupported trait yield channel.');
+            } else if (term.kind === 'specialization') {
+              fields(term, ['kind','id'], at + '.terms');
+              const channel = d.kind === 'research' ? 'focusResearch' : d.resource === 'gold' ? 'focusGold' : d.resource === 'prestige' ? 'focusPrestige' : null;
+              if (term.id !== channel) errors.push(at + ' has an incompatible specialization channel.');
+            } else if (term.kind === 'income') {
+              fields(term, ['kind','id','factor'], at + '.terms');
+              if (d.resource !== 'gold' || ['tax','bishopric'].indexOf(term.id) < 0) errors.push(at + ' names an unsupported income source.');
+              number(term.factor, 0, 1, at + '.factor');
+            } else errors.push(at + ' has an unknown modifier kind.');
+          }
+        } else if (d.kind === 'health' || d.kind === 'countySupport') {
+          fields(d, ['kind','amount'], at); number(d.amount, d.kind === 'health' ? -.1 : -100, d.kind === 'health' ? .1 : 100, at + '.amount');
+        } else if (d.kind === 'standing') {
+          fields(d, ['kind','role','create','amount','specialization'], at);
+          if (d.specialization !== undefined && d.specialization !== 'focusStanding') errors.push(at + '.specialization is unknown.');
+          if (['lord','priest','liege','liegeOrLord','administration'].indexOf(d.role) < 0 || typeof d.create !== 'boolean') errors.push(at + ' needs a supported role and boolean create.');
+          number(d.amount, -100, 100, at + '.amount');
+        } else if (d.kind === 'trait') {
+          fields(d, ['kind','id','chance'], at);
+          if (!actionOwn(refs.traits, d.id)) errors.push(at + ' names an unknown trait.');
+          number(d.chance, 0, 1, at + '.chance');
+        } else if (d.kind === 'training') {
+          fields(d, ['kind','chance','skill','skills','sexSkills'], at);
+          number(d.chance, 0, 1, at + '.chance');
+          if ([d.skill,d.skills,d.sexSkills].filter(function (v) { return v !== undefined; }).length !== 1) errors.push(at + ' needs exactly one skill selector.');
+          const selected = d.skill ? [d.skill] : d.skills || (object(d.sexSkills) ? [d.sexSkills.f,d.sexSkills.m] : []);
+          if (!Array.isArray(selected) || !selected.length || selected.length > 5 || selected.some(function (k) { return skills.indexOf(k) < 0; })) errors.push(at + ' needs known training skills.');
+          if (d.sexSkills && object(d.sexSkills)) fields(d.sexSkills, ['f','m'], at + '.sexSkills');
+        } else errors.push(at + '.kind is unknown.');
+      }
+    }
+    return errors;
+  };
+  function routineResource(state, step, random) {
+    const range = step.range || step.balanceRange && FBDATA.balance[step.balanceRange];
+    let amount = range ? (random ? FB.rf(range[0], range[1]) : (range[0] + range[1]) / 2) : step.base;
+    for (const term of step.terms || []) {
+      if (term.kind === 'skill') amount += Math.min(term.cap === undefined ? Infinity : term.cap, FB.skillOf(me(state), term.id) / term.divisor);
+      if (term.kind === 'specialization') amount += Number(specializationFx(state)[term.id]) || 0;
+      if (term.kind === 'income') amount += (term.id === 'tax' ? FB.playerTax(state) : FB.bishopricIncome(state)) * term.factor;
+      if (term.kind === 'flag' && state.player.flags[term.id]) amount += term.amount;
+      if (term.kind === 'trait') amount += FB.traitMechanic(me(state), term.id, true);
+    }
+    return amount;
+  }
+  function routineGain(state, steps) {
+    const gain = {};
+    for (const step of steps) if (step.kind === 'resource') gain[step.resource] = (gain[step.resource] || 0) + routineResource(state, step, false);
+    return gain;
+  }
+  function tickFocusRoutine(state, id, steps) {
+    for (const step of steps) {
+      if (step.kind === 'resource') state.player[step.resource] += routineResource(state, step, true) / D;
+      else if (step.kind === 'research') FB.addResearch(state, routineResource(state, step, true) / D);
+      else if (step.kind === 'health') me(state).health = FB.clamp(me(state).health + step.amount, 0, 10);
+      else if (step.kind === 'training') {
+        if (skillDch(step.chance)) skillUp(state, step.skills ? FB.pick(step.skills) : step.sexSkills ? step.sexSkills[me(state).sex] : step.skill);
+      } else if (step.kind === 'trait') { if (dch(step.chance)) FB.addTrait(me(state), step.id); }
+      else if (step.kind === 'countySupport') FB.setCountySupport(state, state.player.provinceId, FB.clamp(FB.countySupportBase(state, state.player.provinceId) + step.amount / D, -100, 100));
+      else if (step.kind === 'standing') {
+        const amount = routineStandingAmount(state, step);
+        if (!amount) continue;
+        const target = routineStandingTarget(state, step);
+        if (target) FB.adjustStanding(state, target, amount / D, 'focus:' + id);
+      }
+    }
+  }
+  function routineStandingAmount(state, step) {
+    return step.amount + (step.specialization ? Number(specializationFx(state)[step.specialization]) || 0 : 0);
+  }
+  function routineStandingTarget(state, step) {
+    if (step.role === 'administration') return administrationStandingTarget(state);
+    if (step.role === 'liege' || step.role === 'liegeOrLord' && state.player.liege) return state.player.liege ? { kind:'realm', id:state.player.liege } : null;
+    const c = FB.getRole(state, step.role === 'liegeOrLord' ? 'lord' : step.role, step.create);
+    return c ? { kind:'character', id:c.id } : null;
+  }
+  function focusRoutinePreview(state, def, steps) {
+    const preview = { seasonal:[], daily:[], training:[], notes:[] }, mult = vocationalMultiplier(state, def);
+    const gain = routineGain(state, steps);
+    for (const key of Object.keys(gain)) preview.seasonal.push({ type:key, amount:gain[key] * mult, reward:true });
+    for (const step of steps) {
+      if (step.kind === 'standing') preview.notes.push(FB.T('Standing with {role}: {amount} per season', {
+        role:step.role === 'priest' ? FB.T('your local priest') : FB.T('your lord or patron'), amount:routineStandingAmount(state, step)
+      }));
+      if (step.kind === 'research') preview.notes.push(FB.T('Research: {amount} per season', { amount:routineResource(state,step,false) }));
+      if (step.kind === 'countySupport') preview.notes.push(FB.T('County support: {amount} per season', { amount:step.amount }));
+      if (step.kind === 'trait') preview.notes.push(FB.T('{trait}: {chance}% chance per season', {
+        trait:FB.dataText(state, state.player.charId, 'trait', step.id, FBDATA.traits[step.id], 'name', {}),
+        chance:Math.round((1 - Math.pow(1 - step.chance / D, D)) * 1000) / 10
+      }));
+      if (step.kind === 'health') preview.daily.push({ type:'health', amount:FB.clamp(me(state).health + step.amount, 0, 10) - me(state).health });
+      if (step.kind === 'training') {
+        const selected = step.skills || [step.sexSkills ? step.sexSkills[me(state).sex] : step.skill];
+        const rate = FBDATA.balance.focusSkillGainRate === undefined ? 1 : FBDATA.balance.focusSkillGainRate;
+        const daily = FB.clamp(step.chance * rate / D, 0, 1) / selected.length;
+        for (const skill of selected) preview.training.push({ skill:skill, dailyChance:daily, seasonChance:1 - Math.pow(1 - daily, D) });
+      }
+    }
+    return preview;
+  }
+
   function projectActionDefinition(def, handler, kind, coreLabels) {
     const out = {};
     for (const key in def) {
@@ -5596,6 +5669,21 @@ window.FB = window.FB || {};
         return actionEligibilityMet(state, def.eligibility)
           ? true : actionEligibilityReason(state, kind, def);
       };
+    }
+    if (kind === 'focus' && FBDATA.actionPolicies[def.id]) out.preview = function (state) { return statefulFocusPreview(state,out); };
+    if (kind === 'action' && (def.id === 'mediate' || def.id === 'scheme_rival')) out.preview = function (state) { return socialDeedPreview(state,def.id); };
+    if (kind === 'action' && FBDATA.deedRoutines[def.id]) {
+      const routine = FBDATA.deedRoutines[def.id], originalCan = out.can;
+      out.can = function (state) { const guarded = originalCan ? originalCan(state) : true; if (guarded !== true) return guarded; const cost = declarativeCostStatus(state,routine); return cost.ready ? true : cost.reason; };
+      out.preview = function (state) { return deedRoutinePreview(state,out,routine); };
+      out.run = function (state) { return runDeedRoutine(state,routine); };
+    }
+    if (kind === 'action' && FBDATA.deedEvents[def.id]) out.run = function (state) { FB.queueEvent(state, FBDATA.deedEvents[def.id], {}); };
+    if (kind === 'focus' && FBDATA.focusRoutines[def.id]) {
+      const routine = FBDATA.focusRoutines[def.id];
+      out.tick = function (state) { tickFocusRoutine(state, def.id, routine); };
+      out.gain = function (state) { return routineGain(state, routine); };
+      out.preview = function (state) { return focusRoutinePreview(state, def, routine); };
     }
     if (def.system || def.systems) {
       const systemShow = out.show, systemCan = out.can, systemRun = out.run, systemTick = out.tick;
@@ -11854,9 +11942,7 @@ window.FB = window.FB || {};
 
     let baseGold = Math.round((dev * 7 + mar * 2 + (isSack ? 30 : 12)) * mult * hostSurvivalFrac);
     if (buildingCount) baseGold += Math.round(buildingCount * 6 * mult * hostSurvivalFrac);
-    if (endowments.indexOf('luxury_entrepot') >= 0 || endowments.indexOf('wine_oil') >= 0) {
-      baseGold += Math.round(20 * mult * hostSurvivalFrac);
-    }
+    baseGold += Math.round(FB.marketRaidYield(endowments, 'gold') * mult * hostSurvivalFrac);
     if (fortLevel > 0) {
       const fortDampener = Math.max(0.40, 1 - fortLevel * (isSack ? 0.12 : 0.20));
       baseGold = Math.round(baseGold * fortDampener);
@@ -11872,20 +11958,11 @@ window.FB = window.FB || {};
     const goods = { provisions:0, wares:0, materials:0, transport:0, luxuries:0 };
     if (success) {
       goods.provisions = Math.round((10 + dev * 2) * mult * hostSurvivalFrac);
-      if (endowments.indexOf('grain') >= 0 || endowments.indexOf('pastoral') >= 0 || endowments.indexOf('fisheries') >= 0) {
-        goods.provisions += Math.round(12 * mult * hostSurvivalFrac);
-      }
-      if (endowments.indexOf('wool_textiles') >= 0) goods.wares += Math.round(8 * mult * hostSurvivalFrac);
-      else goods.wares += Math.round(4 * mult * hostSurvivalFrac);
-      if (endowments.indexOf('timber') >= 0 || endowments.indexOf('metalworking') >= 0) {
-        goods.materials += Math.round(10 * mult * hostSurvivalFrac);
-      } else goods.materials += Math.round(3 * mult * hostSurvivalFrac);
-      if (endowments.indexOf('horse_breeding') >= 0 || endowments.indexOf('pastoral') >= 0) {
-        goods.transport += Math.round(6 * mult * hostSurvivalFrac);
-      }
-      if (endowments.indexOf('luxury_entrepot') >= 0 || endowments.indexOf('wine_oil') >= 0 || isSack) {
-        goods.luxuries += Math.round((isSack ? 3 : 1) * mult * hostSurvivalFrac);
-      }
+      goods.provisions += Math.round(FB.marketRaidYield(endowments, 'provisions') * mult * hostSurvivalFrac);
+      goods.wares = Math.round(FB.marketRaidYield(endowments, 'wares', 4) * mult * hostSurvivalFrac);
+      goods.materials = Math.round(FB.marketRaidYield(endowments, 'materials', 3) * mult * hostSurvivalFrac);
+      goods.transport = Math.round(FB.marketRaidYield(endowments, 'transport') * mult * hostSurvivalFrac);
+      goods.luxuries = Math.round(FB.marketRaidYield(endowments, 'luxuries', isSack ? 3 : 0) * mult * hostSurvivalFrac);
       if (victoryGrade === 'costly') {
         for (const k in goods) goods[k] = Math.round(goods[k] * 0.60);
       }
@@ -12816,4 +12893,5 @@ window.FB = window.FB || {};
       }
     }
   };
+  FB.registerDeedRoutineMessages();
 })();

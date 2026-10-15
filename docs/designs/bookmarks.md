@@ -112,3 +112,10 @@ African local participation review revisions
 data/african_religious_rollout.js loads after data/islamic_profiles.js and appends _african_v1 to the existing 476 wider_v2, 493 world_v2, 711 terrain_v2, 800/867/1066 inhabited_v2 and 1204 inhabited_v2 source revisions and their current descendants. Each revision supplies a complete localInstitutions table preserving all prior declarations and adding one leaderless freshOnly lay group. Source geography, layouts, opening actors, populations, courts, governments, starts and fresh selectors remain intact. Existing composed Islamic court revisions retain their court identities when an African review group is added.
 
 The groups locate bounded household participation at existing Garama, Kairouan, Kumbi district and Gao settlement anchors. These simulation bindings establish no historical building, sacred destination, specialist, population proportion or public office. Ghana references possible voluntary learning property but seeds no house or land. Saved source revisions retain their original institution definitions; restoration also preserves missing freshOnly groups rather than creating new records. Historical holds and independent opening decisions are recorded in docs/research/african-religious-rollout.md. Owner acceptance and fresh selection remain separate from declaration composition.
+
+
+Imported story references
+
+Bookmark and start validation accepts an explicit detached story context from the mod loader. Same-file storyInstances and startScenarios can therefore refer to each other without temporary publication into the active registry. Every affected retained world revision is checked. Fresh campaign creation initializes only declared attachments; loading an older matching campaign never fills absent story records.
+
+The two playable authoring examples own separate three-county geography bases and fictional people and identities. They use ordinary bookmark, local-institution, household-start and story declarations. They contain no copied historical bookmark or central historical office dependency.

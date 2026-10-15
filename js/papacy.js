@@ -447,10 +447,10 @@ window.FB = window.FB || {};
     var seat = FB.world && FB.world.byId && FB.world.byId[officeSeat(state)];
     var seatCulture = seat && FB.countyCulture
       ? FB.countyCulture(state, seat.id) : seat && seat.culture;
-    var culture = index % 3 === 0 ? 'italian' :
-      pope && pope.culture || seatCulture || 'italian';
+    var culture = index % 3 === 0 ? cardinalCulture(state, 'cardinalCulture', seatCulture) :
+      pope && pope.culture || seatCulture || cardinalCulture(state, 'cardinalCulture', seatCulture);
     if (!(FB.cultureExists && FB.cultureExists(culture, state))) {
-      culture = pope && pope.culture || 'frankish';
+      culture = pope && pope.culture || cardinalCulture(state, 'fallbackCulture', seatCulture);
     }
     var c = FB.makeCharacter(state, {
       sex:office(state).head.holderSex || 'm',
@@ -470,14 +470,8 @@ window.FB = window.FB || {};
       FB.setCareer(state, c, FB.roleCareer(index % 3 === 0 ? 'cloister' : 'clergy'), 'master');
     }
     c.religiousRanks = c.religiousRanks || {};
-    if (c.career && FB.professionHasRole(c.career.profession, 'cloister')) {
-      var path = FB.faithValue(state, c.religion, 'religiousPaths.professions.monk').value;
-      if (path) c.religiousRanks[path] = 4;
-    }
-    else {
-      var clericalPath = FB.faithValue(state, c.religion, 'religiousPaths.professions.priest').value;
-      if (clericalPath) c.religiousRanks[clericalPath] = 5;
-    }
+    var rankPath = FB.religiousOfficePath(state, c, 'bishop');
+    if (rankPath) c.religiousRanks[rankPath.id] = rankPath.index;
     c.clericalPiety = FB.ri(250, 900);
     c.clericalPrestige = FB.ri(150, 600);
     c.curialOpinion = FB.ri(15, 70);
@@ -485,14 +479,102 @@ window.FB = window.FB || {};
     return c;
   }
 
+  function cardinalCulture(state, role, seatCulture) {
+    var source = FBDATA.papacyRules[role];
+    return source.kind === 'culture' ? source.id : source.kind === 'seat' ? seatCulture || FB.eraDefaultCulture(state) : FB.eraDefaultCulture(state);
+  }
+  function papalCatalogue(group, base) {
+    var map = {}, out = [], rules = FBDATA.papacyRules[group];
+    if (Array.isArray(base)) base.forEach(function (row) { map[row.id] = row; });
+    else Object.keys(base).forEach(function (id) { map[id] = Object.assign({ id:id }, base[id]); });
+    Object.keys(rules).forEach(function (id) { if (!map[id]) map[id] = { id:id }; });
+    Object.keys(map).forEach(function (id) { out.push(Object.assign({}, map[id], rules[id])); });
+    return out;
+  }
+  FB.papalTactics = function () { return papalCatalogue('tactics', definition().tactics); };
+  FB.papalOrders = function () { return papalCatalogue('orders', definition().cardinalOrders); };
+  FB.papalPolicies = function () {
+    var map = {};
+    papalCatalogue('policies', definition().investiture.policies).forEach(function (row) { map[row.id] = row; });
+    return map;
+  };
+  FB.papalPolicyDefault = function (role) { return FBDATA.papacyRules.defaultPolicies[role]; };
+  FB.papalPolicyKind = function (id) { return (FB.papalPolicies()[id] || {}).kind; };
+  FB.papalPolicyAvailable = function (state, id) {
+    var policy = FB.papalPolicies()[id];
+    return !!policy && (!policy.institution || FB.papalInstitutionActive(state, policy.institution));
+  };
+  FB.validatePapacyRules = function () {
+    var rules = FBDATA.papacyRules, errors = [];
+    function object(o) { return !!o && typeof o === 'object' && !Array.isArray(o); }
+    function fields(o, allowed, path) { Object.keys(o).forEach(function (k) { if (allowed.indexOf(k) < 0) errors.push(path + '.' + k + ' is unsupported.'); }); }
+    function number(n, min, max, path) { if (typeof n !== 'number' || !isFinite(n) || n < min || n > max) errors.push(path + ' is outside its numeric bounds.'); }
+    if (!object(rules)) return ['papacyRules must be a record.'];
+    if (!Array.isArray(definition().tactics) || !Array.isArray(definition().cardinalOrders) || !definition().investiture || !object(definition().investiture.policies)) return ['papacy requires tactics, cardinalOrders and investiture.policies.'];
+    if (['orders','tactics','policies'].some(function (group) { return !object(rules[group]); })) return ['papacyRules requires orders, tactics and policies tables.'];
+    fields(rules, ['orders','tactics','policies','defaultPolicies','defaultOrder','incumbentTitle','cardinalCulture','fallbackCulture'], 'papacyRules');
+    for (var role of ['cardinalCulture','fallbackCulture']) {
+      var source = rules[role];
+      if (!object(source)) { errors.push('papacyRules.' + role + ' needs a culture source.'); continue; }
+      fields(source, ['kind','id'], 'papacyRules.' + role);
+      if (['culture','seat','era'].indexOf(source.kind) < 0 || source.kind === 'culture' && !Object.prototype.hasOwnProperty.call(FBDATA.cultures, source.id) || source.kind !== 'culture' && source.id !== undefined) errors.push('papacyRules.' + role + ' has an invalid source.');
+    }
+    for (var group of ['orders','tactics','policies']) {
+      if (!object(rules[group]) || Object.keys(rules[group]).length > 32) { errors.push('papacyRules.' + group + ' needs at most 32 records.'); continue; }
+      var base = group === 'orders' ? definition().cardinalOrders : group === 'tactics' ? definition().tactics : definition().investiture.policies;
+      var rows = papalCatalogue(group, base);
+      for (var row of rows) {
+        var path = 'papacyRules.' + group + '.' + row.id;
+        if (!/^[a-z][a-z0-9_]*$/.test(row.id) || typeof row.name !== 'string' || !row.name.trim()) errors.push(path + ' needs a stable id and name.');
+        if (!object(rules[group][row.id])) { errors.push(path + ' needs a role record.'); continue; }
+        if (group === 'orders') {
+          fields(row, ['id','name','minimum','share','shortlist'], path);
+          number(row.minimum, 0, 18, path + '.minimum'); number(row.share, 0, 1, path + '.share');
+          if (!Number.isInteger(row.minimum) || typeof row.shortlist !== 'boolean') errors.push(path + ' needs integer minimum and boolean shortlist.');
+        } else if (group === 'tactics') {
+          fields(row, ['id','name','desc','target','closedFrom','kind','bonus','prestigeCost'], path);
+          var targets = { negotiate:'elector',doctrine:'none',benefice:'elector',backing:'none',withdraw:'candidate' };
+          if (!Object.prototype.hasOwnProperty.call(targets, row.kind) || row.target !== targets[row.kind]) errors.push(path + ' needs a supported kind and matching target.');
+          if (typeof row.desc !== 'string' || !row.desc.trim()) errors.push(path + '.desc is required.');
+          number(row.bonus, 0, 100, path + '.bonus'); number(row.prestigeCost, 0, 1000, path + '.prestigeCost');
+          if (row.closedFrom !== undefined) number(row.closedFrom, 1, 10000, path + '.closedFrom');
+        } else {
+          fields(row, ['id','name','desc','tax','strength','piety','kind','institution'], path);
+          if (['lay','canonical','concordat'].indexOf(row.kind) < 0) errors.push(path + '.kind is unsupported.');
+          number(row.tax, -.5, .5, path + '.tax'); number(row.strength, -.5, .5, path + '.strength'); number(row.piety, -100, 100, path + '.piety');
+          if (row.institution !== undefined && !Object.prototype.hasOwnProperty.call(definition().institutions, row.institution)) errors.push(path + '.institution is unknown.');
+          if (typeof row.desc !== 'string' || !row.desc.trim()) errors.push(path + '.desc is required.');
+        }
+      }
+    }
+    var orders = FB.papalOrders();
+    if (!orders.length || orders.reduce(function (n,row) { return n + row.minimum; },0) > 18 || orders.reduce(function (n,row) { return n + row.share; },0) > 1) errors.push('papacyRules.orders exceeds the bounded college allocation.');
+    for (var group of ['tactics','cardinalOrders']) {
+      var seen = {};
+      if (definition()[group].length > 32 || definition()[group].some(function (row) { if (!object(row) || typeof row.id !== 'string' || seen[row.id]) return true; seen[row.id] = true; return false; })) errors.push('papacy.' + group + ' needs at most 32 distinct records.');
+    }
+    if (!object(rules.defaultPolicies)) errors.push('papacyRules.defaultPolicies must name secular, religious and compromise defaults.');
+    else {
+      fields(rules.defaultPolicies, ['secular','religious','compromise'], 'papacyRules.defaultPolicies');
+      var policies = FB.papalPolicies(), kinds = { secular:'lay', religious:'canonical', compromise:'concordat' };
+      for (var role of Object.keys(kinds)) if (!policies[rules.defaultPolicies[role]] || policies[rules.defaultPolicies[role]].kind !== kinds[role]) errors.push('papacyRules.defaultPolicies.' + role + ' needs the matching policy kind.');
+    }
+    if (!rules.orders || !rules.orders[rules.defaultOrder]) errors.push('papacyRules.defaultOrder is unknown.');
+    if (typeof rules.incumbentTitle !== 'string' || !rules.incumbentTitle.trim()) errors.push('papacyRules.incumbentTitle is required.');
+    return errors;
+  };
   function nextCardinalOrder(papacy, obedience) {
-    var counts = { bishop:0, priest:0, deacon:0 };
+    var orders = FB.papalOrders(), counts = {};
+    orders.forEach(function (row) { counts[row.id] = 0; });
     for (var i = 0; i < obedience.college.length; i++) {
       var record = papacy.cardinals[obedience.college[i]];
       if (record && counts[record.order] !== undefined) counts[record.order]++;
     }
-    if (counts.bishop < Math.max(2, Math.floor(obedience.college.length / 4))) return 'bishop';
-    return counts.priest <= counts.deacon ? 'priest' : 'deacon';
+    for (var row of orders) if (counts[row.id] < Math.max(row.minimum, Math.floor(obedience.college.length * row.share))) return row.id;
+    var balanced = orders.filter(function (row) { return !row.shortlist; });
+    if (!balanced.length) balanced = orders;
+    balanced.sort(function (a, b) { return counts[a.id] - counts[b.id] || orders.indexOf(a) - orders.indexOf(b); });
+    return balanced[0].id;
   }
 
   function nextRomanTitle(state, papacy, obedience) {
@@ -508,8 +590,7 @@ window.FB = window.FB || {};
 
   function cardinalBloc(c) {
     if (c.career && FB.professionHasRole(c.career.profession, 'cloister')) return 'monastic';
-    if (c.traits && (c.traits.indexOf('zealous') >= 0 ||
-        c.traits.indexOf('honest') >= 0)) return 'reform';
+    if (FB.traitMechanic(c, 'papalReformBloc') > 0) return 'reform';
     return 'curial';
   }
 
@@ -530,6 +611,7 @@ window.FB = window.FB || {};
         !obedience || obedience.college.length >= (definition().hardCap || 18)) {
       return false;
     }
+    if (opts.order && !FBDATA.papacyRules.orders[opts.order]) return false;
     var old = papacy.cardinals[c.id];
     if (old && old.office === 'cardinal') return old;
     var record = old || { charId:c.id };
@@ -585,8 +667,8 @@ window.FB = window.FB || {};
     var record = papacy.cardinals[claimant.id] || { charId:claimant.id };
     record.office = 'pope';
     record.obedienceId = obedience.id;
-    record.order = record.order || 'bishop';
-    record.titleChurch = record.titleChurch || 'Ostia';
+    record.order = record.order || FBDATA.papacyRules.defaultOrder;
+    record.titleChurch = record.titleChurch || FBDATA.papacyRules.incumbentTitle;
     record.bloc = record.bloc || cardinalBloc(claimant);
     record.electedTurn = record.electedTurn === undefined ? state.turn : record.electedTurn;
     papacy.cardinals[claimant.id] = record;
@@ -1023,7 +1105,7 @@ window.FB = window.FB || {};
           (FB.intrigueCaptivityOf && FB.intrigueCaptivityOf(state, c.id)) ||
           election.withdrawn[id]) continue;
       if (election.law.shortlist === 'bishops' && election.round <= 1 &&
-          record.order !== 'bishop') continue;
+          !(FBDATA.papacyRules.orders[record.order] || {}).shortlist) continue;
       ids.push(id);
     }
     if (!ids.length && election.law.shortlist === 'bishops') {
@@ -1120,15 +1202,14 @@ window.FB = window.FB || {};
     if (electorRecord && candidateRecord &&
         electorRecord.bloc === candidateRecord.bloc) score += 12;
     if (candidate.traits) {
-      if (candidate.traits.indexOf('zealous') >= 0 &&
-          electorRecord && electorRecord.bloc === 'reform') score += 6;
-      if (candidate.traits.indexOf('ambitious') >= 0) score += 2;
-      if (candidate.traits.indexOf('cruel') >= 0) score -= 4;
+      if (electorRecord && electorRecord.bloc === 'reform') score += FB.traitMechanic(candidate, 'papalReformSupport', true);
+      score += FB.traitMechanic(candidate, 'papalSupport', true);
+      score -= FB.traitMechanic(candidate, 'papalPenalty', true);
     }
     var promises = election.promises || [];
     for (var i = 0; i < promises.length; i++) {
       if (promises[i].fromId === candidate.id &&
-          promises[i].toId === elector.id) score += 20;
+          promises[i].toId === elector.id) score += promises[i].support === undefined ? 20 : promises[i].support;
     }
     score += Number(election.backing[candidate.id]) || 0;
     var endorsement = election.endorsements &&
@@ -1137,9 +1218,9 @@ window.FB = window.FB || {};
 
     var effects = election.roundEffects || {};
     if (candidate.id === state.player.charId) {
-      if (effects.negotiateId === elector.id) score += 24;
+      if (effects.negotiateId === elector.id) score += effects.negotiateBonus === undefined ? 24 : effects.negotiateBonus;
       if (effects.doctrine && electorRecord &&
-          candidateRecord && electorRecord.bloc === candidateRecord.bloc) score += 14;
+          candidateRecord && electorRecord.bloc === candidateRecord.bloc) score += effects.doctrineBonus === undefined ? 14 : effects.doctrineBonus;
     }
     if (election.endorsements) {
       for (var fromId in election.endorsements) {
@@ -1467,7 +1548,7 @@ window.FB = window.FB || {};
 
     var record = papacy.cardinals[c.id] || {
       charId:c.id,
-      order:'bishop',
+      order:FBDATA.papacyRules.defaultOrder,
       titleChurch:'Ostia',
       bloc:cardinalBloc(c),
       obedienceId:obedience.id
@@ -1526,20 +1607,26 @@ window.FB = window.FB || {};
 
   function applyElectionTactic(state, election, tacticId, targetId) {
     var tactic = null;
-    var tactics = definition().tactics || [];
+    var tactics = FB.papalTactics();
     for (var i = 0; i < tactics.length; i++) {
       if (tactics[i].id === tacticId) tactic = tactics[i];
     }
     if (!tactic || tactic.closedFrom && state.date.year >= tactic.closedFrom) return false;
     var playerId = state.player.charId;
     if (!FB.isCardinal(state, playerId)) return false;
+    if (state.player.prestige < tactic.prestigeCost || tactic.kind === 'backing' && election.law.enclosed) return false;
+    if (tactic.target === 'elector' && papacyState(state).obediences[election.obedienceId].college.indexOf(targetId) < 0) return false;
+    if (tactic.target === 'candidate' && electionCandidateIds(state, election, papacyState(state).obediences[election.obedienceId]).indexOf(targetId) < 0 && targetId !== election.compromiseId) return false;
+    if (tactic.target !== 'none' && (!targetId || targetId === playerId || !state.chars[targetId] || state.chars[targetId].dead)) return false;
     election.roundEffects = {};
-    if (tacticId === 'negotiate') {
+    if (tactic.kind === 'negotiate') {
       if (!targetId || targetId === playerId) return false;
       election.roundEffects.negotiateId = targetId;
-    } else if (tacticId === 'doctrine') {
+      if (tactic.bonus !== 24) election.roundEffects.negotiateBonus = tactic.bonus;
+    } else if (tactic.kind === 'doctrine') {
       election.roundEffects.doctrine = true;
-    } else if (tacticId === 'benefice') {
+      if (tactic.bonus !== 14) election.roundEffects.doctrineBonus = tactic.bonus;
+    } else if (tactic.kind === 'benefice') {
       if (!targetId || targetId === playerId) return false;
       var promise = {
         id:'benefice_' + election.id + '_' + election.round + '_' + targetId,
@@ -1548,18 +1635,19 @@ window.FB = window.FB || {};
         madeTurn:state.turn,
         fulfilled:false
       };
+      if (tactic.bonus !== 20) promise.support = tactic.bonus;
       election.promises.push(promise);
       election.roundEffects.beneficeId = targetId;
-    } else if (tacticId === 'backing') {
-      if (election.law.enclosed || state.player.prestige < 100) return false;
-      state.player.prestige -= 100;
-      election.backing[playerId] = (election.backing[playerId] || 0) + 18;
-    } else if (tacticId === 'withdraw') {
+    } else if (tactic.kind === 'backing') {
+      if (election.law.enclosed) return false;
+      election.backing[playerId] = (election.backing[playerId] || 0) + tactic.bonus;
+    } else if (tactic.kind === 'withdraw') {
       if (!targetId || targetId === playerId) return false;
       election.withdrawn[playerId] = true;
       election.endorsements = election.endorsements || {};
       election.endorsements[playerId] = targetId;
     }
+    state.player.prestige -= tactic.prestigeCost;
     election.lastPlayerTactic = {
       id:tacticId, targetId:targetId || null, round:election.round + 1
     };
@@ -1674,7 +1762,7 @@ window.FB = window.FB || {};
     if (!record || typeof record !== 'object' || Array.isArray(record)) {
       record = {
         sovereign:sovereign,
-        policy:sovereign === romanRealmId(state) ? 'canonical' : 'lay',
+        policy:sovereign === romanRealmId(state) ? FB.papalPolicyDefault('religious') : FB.papalPolicyDefault('secular'),
         setTurn:state.turn,
         demandedTurn:null,
         demandObedience:null,
@@ -1682,7 +1770,7 @@ window.FB = window.FB || {};
       };
       papacy.investiture[sovereign] = record;
     }
-    if (!definition().investiture.policies[record.policy]) record.policy = 'lay';
+    if (!FB.papalPolicies()[record.policy]) record.policy = FB.papalPolicyDefault('secular');
     return record;
   }
 
@@ -1692,16 +1780,16 @@ window.FB = window.FB || {};
     var records = papacy && papacy.investiture;
     var record = records && records[sovereign];
     if (record && typeof record === 'object' && !Array.isArray(record)) {
-      if (definition().investiture.policies[record.policy]) return record;
+      if (FB.papalPolicies()[record.policy]) return record;
       var repaired = copyObject(record);
-      repaired.policy = 'lay';
+      repaired.policy = FB.papalPolicyDefault('secular');
       return repaired;
     }
     var roman = FB.religiousHeadSnapshot &&
       FB.religiousHeadSnapshot(state, officeFaith(state));
     return {
       sovereign:sovereign,
-      policy:roman && roman.id === sovereign ? 'canonical' : 'lay',
+      policy:roman && roman.id === sovereign ? FB.papalPolicyDefault('religious') : FB.papalPolicyDefault('secular'),
       setTurn:state.turn,
       demandedTurn:null,
       demandObedience:null,
@@ -1724,7 +1812,7 @@ window.FB = window.FB || {};
     var me = playerChar(state);
     if (!me || !catholicFaith(state, me) || FB.playerPope(state)) return 0;
     var record = FB.investiturePolicyForPlayer(state);
-    var policy = record && definition().investiture.policies[record.policy];
+    var policy = record && FB.papalPolicies()[record.policy];
     return policy ? policy.tax || 0 : 0;
   };
 
@@ -1734,7 +1822,7 @@ window.FB = window.FB || {};
     if (catholicReligion(state, religionId)) {
       var investiture = FB.investiturePolicyForRealm(state, rid);
       var policy = investiture &&
-        definition().investiture.policies[investiture.policy];
+        FB.papalPolicies()[investiture.policy];
       rate += policy ? policy.strength || 0 : 0;
     }
     var target = rid === 'player' ? playerChar(state) :
@@ -1750,7 +1838,7 @@ window.FB = window.FB || {};
     var me = playerChar(state);
     if (!me || !catholicFaith(state, me) || FB.playerPope(state)) return 0;
     var record = FB.investiturePolicyForPlayer(state);
-    var policy = record && definition().investiture.policies[record.policy];
+    var policy = record && FB.papalPolicies()[record.policy];
     if (!policy) return 0;
     if (policy.piety < 0 && !(FB.isPlayerSovereign &&
         FB.isPlayerSovereign(state))) return 0;
@@ -1758,12 +1846,11 @@ window.FB = window.FB || {};
   };
 
   FB.setInvestiturePolicy = function (state, policyId, rid, imposed) {
-    var policies = definition().investiture.policies || {};
+    var policies = FB.papalPolicies() || {};
     var sovereign = realmSovereign(state, rid || 'player');
     var record = ensureInvestitureRecord(state, sovereign);
     if (!record || !policies[policyId]) return false;
-    if (policyId === 'concordat' &&
-        !FB.papalInstitutionActive(state, 'investiture_concordat')) return false;
+    if (!FB.papalPolicyAvailable(state, policyId)) return false;
     var former = record.policy;
     record.policy = policyId;
     record.setTurn = state.turn;
@@ -1787,8 +1874,8 @@ window.FB = window.FB || {};
       ? (FB.playerLevy ? FB.playerLevy(state) : 0)
       : (FB.realmStrength ? FB.realmStrength(state, targetRealm) : 0);
     var resistance = rank * 12 + Math.sqrt(Math.max(0, strength)) * 0.6;
-    if (realm && realm.ruler && realm.ruler.trait === 'proud') resistance += 10;
-    if (realm && realm.ruler && realm.ruler.trait === 'zealous') resistance -= 8;
+    var personality = realm && realm.ruler && FBDATA.traitMechanics[realm.ruler.trait];
+    resistance += personality && personality.investitureResistance || 0;
     return obedience.authority + (pope ? FB.skillOf(pope, 'dip') * 2 +
       FB.skillOf(pope, 'lea') : 0) - resistance;
   }
@@ -1803,7 +1890,7 @@ window.FB = window.FB || {};
     var gate = definition().authority.gates.investiture || 25;
     if (!obedience || !obedience.claimantId || obedience.authority < gate ||
         !FB.papalInstitutionActive(state, 'investiture_reform') ||
-        !record || record.policy !== 'lay' ||
+        !record || FB.papalPolicyKind(record.policy) !== 'lay' ||
         !catholicReligion(state, realmReligion(state, sovereign))) return false;
     record.demandedTurn = state.turn;
     record.demandObedience = obedience.id;
@@ -1821,8 +1908,8 @@ window.FB = window.FB || {};
       FB.rf(-20, 20) >= 45;
     if (accepts) {
       FB.setInvestiturePolicy(state,
-        FB.papalInstitutionActive(state, 'investiture_concordat') &&
-        FB.chance(0.35) ? 'concordat' : 'canonical', sovereign, true);
+        FB.papalPolicyAvailable(state, FB.papalPolicyDefault('compromise')) &&
+        FB.chance(0.35) ? FB.papalPolicyDefault('compromise') : FB.papalPolicyDefault('religious'), sovereign, true);
     } else {
       record.refusedTurn = state.turn;
       FB.adjustPapalAuthority(state, obedience.id,
@@ -1840,9 +1927,8 @@ window.FB = window.FB || {};
     var obedience = papacy.obediences[pending.obedienceId];
     delete papacy.pendingInvestitureDemand;
     if (accept) {
-      var policy = policyId === 'concordat' &&
-        FB.papalInstitutionActive(state, 'investiture_concordat')
-        ? 'concordat' : 'canonical';
+      var policy = FB.papalPolicyKind(policyId) !== 'lay' && FB.papalPolicyAvailable(state, policyId)
+        ? policyId : FB.papalPolicyDefault('religious');
       return FB.setInvestiturePolicy(state, policy, 'player', true);
     }
     var record = ensureInvestitureRecord(state, 'player');
@@ -1854,7 +1940,7 @@ window.FB = window.FB || {};
   };
 
   FB.petitionLiegeInvestiture = function (state, policyId) {
-    if (!state.player.liege || !definition().investiture.policies[policyId]) return false;
+    if (!state.player.liege || !FB.papalPolicies()[policyId]) return false;
     var sovereign = realmSovereign(state, state.player.liege);
     var chance = FB.clamp(0.25 + FB.skillOf(playerChar(state), 'dip') * 0.025 +
       FB.standingOf(state, {
@@ -2087,7 +2173,7 @@ window.FB = window.FB || {};
     if (sentence.cause === 'investiture_refusal') {
       var policy = sentence.targetRealmId &&
         FB.investiturePolicyForRealm(state, sentence.targetRealmId);
-      return !!(policy && policy.policy !== 'lay');
+      return !!(policy && FB.papalPolicyKind(policy.policy) !== 'lay');
     }
     if (sentence.cause === 'occupy_rome') {
       return state.owner && state.owner[officeSeat(state)] !== sentence.targetRealmId;
@@ -2430,7 +2516,7 @@ window.FB = window.FB || {};
       var outsider = starterCardinalCharacter(state, 23);
       outsider.compromiseCandidate = true;
       FB.appointCardinal(state, outsider, winner.id, winner.claimantId, {
-        silent:true, order:'bishop', bloc:'reform'
+        silent:true, order:FBDATA.papacyRules.defaultOrder, bloc:'reform'
       });
       if (winner.claimantId) {
         var oldRecord = papalRecord(state, winner.claimantId);
@@ -2912,7 +2998,7 @@ window.FB = window.FB || {};
       var sovereigns = livingCatholicSovereigns(state);
       for (var i = 0; i < sovereigns.length; i++) {
         var record = ensureInvestitureRecord(state, sovereigns[i]);
-        if (record.policy === 'lay' &&
+        if (FB.papalPolicyKind(record.policy) === 'lay' &&
             FB.papalObedienceForRealm(state, sovereigns[i]) === obedience.id) {
           lay.push(sovereigns[i]);
         }

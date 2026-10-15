@@ -2350,13 +2350,12 @@ FB.CHANGELOG = [
     document.querySelectorAll('#title button[disabled]').forEach(function (button) {
       button.disabled = false;
     });
-    if (FB.stories) FB.stories.seal(); // stories register at load time only
     G.bootReady = true;
     /* CrazyGames: build Play as Osric's world after the title paints, so the
        click only sets up the campaign. The title itself stays world-free. */
     if (FB.platform.isCrazyGames) {
       const osric = (FBDATA.quickStarts || []).filter(function (candidate) {
-        return candidate.id === 'osric_867';
+        return candidate.distributionDefault === true;
       })[0];
       if (osric) requestAnimationFrame(function () {
         setTimeout(function () { FB.prepareBookmark(osric.bookmarkId); }, 0);
@@ -2375,8 +2374,11 @@ FB.CHANGELOG = [
     FB.loadSelectedLocale(function (loaded) {
       /* Mods establish the effective English source before hashes are checked.
          A changed mod string therefore falls back to that exact current English. */
-      FB.stories.load(); // all type scripts have loaded; validate mod bookmarks against their instances
+      FB.sealChancePolicies();
+      FB.stories.sealTypes();
+      FB.stories.load(); // base instances; each mod compiles a detached candidate
       FB.mods.applyStored();
+      FB.stories.seal(); // effective instances are fixed before any world is generated
       if (FB.configureReligions) FB.configureReligions();
       if (FB.configureCultures) FB.configureCultures();
       if (FB.indexEventMessages) FB.indexEventMessages();
@@ -2469,14 +2471,15 @@ FB.CHANGELOG = [
   function wireMenus() {
     if (FB.platform.isCrazyGames) {
       const newGameLabel = $('btn-newgame').querySelector('[data-i18n]');
-      newGameLabel.setAttribute('data-i18n', 'Play as Osric');
-      newGameLabel.textContent = FB.T('Play as Osric');
+      const direct = (FBDATA.quickStarts || []).find(function (row) { return row.distributionDefault; });
+      newGameLabel.removeAttribute('data-i18n');
+      newGameLabel.textContent = FB.T('Play as {name}', { name:direct ? direct.characterName : '' });
       $('btn-choose-beginning').classList.remove('hidden');
     }
     $('btn-newgame').addEventListener('click', function () {
       if (!FB.platform.isCrazyGames) { showNewGame(); return; }
       const definition = (FBDATA.quickStarts || []).filter(function (candidate) {
-        return candidate.id === 'osric_867';
+        return candidate.distributionDefault === true;
       })[0];
       const details = quickStartDetails(definition);
       if (!details) { showNewGame(); return; }
@@ -2660,6 +2663,10 @@ FB.CHANGELOG = [
     FB.ui.showScreen('bookmarks');
   }
 
+  FB.quickStartOf = function (id) {
+    return (FBDATA.quickStarts || []).filter(function (definition) { return definition.id === id; })[0] || null;
+  };
+
   function quickStartDetails(definition) {
     if (!definition || !definition.id || !definition.bookmarkId ||
         !definition.provinceId || !definition.settlementSite ||
@@ -2667,7 +2674,11 @@ FB.CHANGELOG = [
         (definition.sex !== 'm' && definition.sex !== 'f')) return null;
     if (!FB.bookmarkAvailable(definition.bookmarkId)) return null;
     const bookmark = FB.bookmark(definition.bookmarkId);
-    if (!bookmark) return null;
+    const scenario = FBDATA.startScenarios.find(function (row) { return row.id === definition.scenarioId; });
+    const preset = familyPresetById(definition.familyPreset);
+    if (!bookmark || !scenario || !preset || !scenarioUnlocked(scenario, definition.bookmarkId) ||
+        !FB.startProvinceAllowed(scenario, bookmark, definition.provinceId) ||
+        scenarioFamilyPresets(scenario).indexOf(preset) < 0) return null;
     const province = bookmark.provinces.filter(function (candidate) {
       return candidate.id === definition.provinceId && !candidate.wasteland;
     })[0];
@@ -2688,6 +2699,7 @@ FB.CHANGELOG = [
     if (!community || settlementIdx < 0) return null;
     return {
       bookmark:bookmark,
+      scenario:scenario, preset:preset,
       province:province,
       community:community,
       settlement:settlements[settlementIdx],
@@ -2706,21 +2718,21 @@ FB.CHANGELOG = [
       sex:definition.sex,
       culture:details.community.culture,
       religion:details.community.religion,
-      born:details.bookmark.date.year - FBDATA.balance.startAge,
-      station:0,
-      role:FB.roleCareer('labor'),
+      born:details.bookmark.date.year - (details.scenario.startAge || details.preset.age || FBDATA.balance.startAge),
+      station:details.scenario.tier,
+      role:details.scenario.profession,
       health:8,
       traits:[]
     }, details.bookmark.date.year, {
-      state:null, tier:0, profession:FB.roleCareer('labor'), suppressEquipment:true
+      state:null, tier:details.scenario.tier, profession:details.scenario.profession, suppressEquipment:true
     });
   }
 
   function beginQuickStart(definition, details) {
     const scenario = FBDATA.startScenarios.filter(function (candidate) {
-      return candidate.id === 'serf';
+      return candidate.id === definition.scenarioId;
     })[0];
-    if (!scenario || !scenarioUnlocked(scenario)) return;
+    if (!scenario || !scenarioUnlocked(scenario, definition.bookmarkId)) return;
     const seed = G.pending && G.pending.seed || freshSeed();
     G.pending = {
       seed:seed,
@@ -2729,7 +2741,7 @@ FB.CHANGELOG = [
       provinceId:definition.provinceId,
       sex:definition.sex,
       name:definition.characterName,
-      familyPreset:'standard',
+      familyPreset:definition.familyPreset,
       settlementIdx:details.settlementIdx,
       culture:details.community.culture,
       religion:details.community.religion,
@@ -2767,8 +2779,9 @@ FB.CHANGELOG = [
       button.className = 'quickstart-card';
       button.setAttribute('data-quick-start', definition.id);
       button.setAttribute('aria-label', FB.T(
-        'Quick Start as {name}, {Term:serf} in {location}, {culture} and {religion}, {season} {year} AD', {
+        'Quick Start as {name}, {title} in {location}, {culture} and {religion}, {season} {year} AD', {
           name:definition.characterName,
+          title:FB.T(START_TIER_NAMES[Math.min(3, details.scenario.tier)]),
           location:location,
           culture:FB.renderKey(
             'culture.' + details.community.culture + '.name.default',
@@ -2791,7 +2804,7 @@ FB.CHANGELOG = [
       }
       meta('quickstart-name', definition.characterName);
       meta('quickstart-meta quickstart-title-location', FB.T('{title} | {location}', {
-        title:FB.T('{Term:serf}'),
+        title:FB.T(START_TIER_NAMES[Math.min(3, details.scenario.tier)]),
         location:FB.L(details.province.name)
       }));
       meta('quickstart-meta quickstart-home', FB.T('Home: {settlement}', {
@@ -3290,7 +3303,7 @@ FB.CHANGELOG = [
     const seedStr = (G.pending && G.pending.seed) || freshSeed();
     const quickStartId = G.pending && G.pending.quickStartId || 'custom';
     const directCrazyGamesStart = FB.platform.isCrazyGames &&
-      quickStartId === 'osric_867';
+      !!(FB.quickStartOf(quickStartId) || {}).distributionDefault;
     FB.seedRng(FB.hashSeed(seedStr));
     const bookmark = FB.activeBookmark;
     const start = {
@@ -3410,7 +3423,7 @@ FB.CHANGELOG = [
        without introducing a second code format or touching the seeded stream. */
     for (const definition of (FBDATA.quickStarts || [])) {
       if (definition.portraitProfile && definition.bookmarkId === bookmark.id &&
-          sc.id === 'serf' && preset.id === 'standard' &&
+          sc.id === definition.scenarioId && preset.id === definition.familyPreset &&
           definition.provinceId === provId && definition.characterName === name &&
           definition.sex === sex && definition.culture === cultureId &&
           definition.religion === religionId &&
@@ -5022,9 +5035,9 @@ FB.CHANGELOG = [
         if (c.edu && c.edu.focus) {
           FB.gainSkill(c, c.edu.focus, 2);
           if (c.edu.focus === 'lea') FB.addTrait(c, 'literate');
-          FB.queueEvent(s, 'child_educated', { childId:c.id });
+          FB.queueLifecycleEvents(s, 'child_education', { childId:c.id });
         } else {
-          FB.queueEvent(s, 'child_comes_of_age', { childId:c.id });
+          FB.queueLifecycleEvents(s, 'child_adulthood', { childId:c.id });
         }
       }
     }
@@ -5034,9 +5047,9 @@ FB.CHANGELOG = [
       if (me.edu && me.edu.focus) {
         FB.gainSkill(me, me.edu.focus, 2);
         if (me.edu.focus === 'lea') FB.addTrait(me, 'literate');
-        FB.queueEvent(s, 'player_educated', {});
+        FB.queueLifecycleEvents(s, 'player_education', {});
       } else {
-        FB.queueEvent(s, 'player_comes_of_age', {});
+        FB.queueLifecycleEvents(s, 'player_adulthood', {});
       }
     }
 
@@ -5514,7 +5527,7 @@ FB.CHANGELOG = [
         }
         FB.touchFamily();
         if (FB.registerRoyalBirth) FB.registerRoyalBirth(s, baby, father, mother);
-        FB.queueEvent(s, 'child_born_flavor', { childId:baby.id });
+        FB.queueLifecycleEvents(s, 'household_birth', { childId:baby.id });
         if (FB.ui && FB.ui.maybeTip) {
           FB.ui.maybeTip('first-heir',
             '💡 A child of the house! Heirs carry the chronicle forward; as they grow, their education is set from the Kin tab.',
