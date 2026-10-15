@@ -46,4 +46,6 @@ The technology-impact ledger has independent none decisions for royal recognitio
 
 Acceptance coverage
 
+Opening household ages are compared only when the bookmark supplies an integer start year. Missing dates, null dates and malformed years return the shared invalid start date diagnostic without throwing; the other household, dynasty and jurisdiction checks still run. Valid years continue to enforce the profile's minimumAge. tests/e2e/specs/bookmark-requirements.spec.js covers these malformed dates through the combined validator while checking catalogue, RNG and uid purity.
+
 tests/e2e/specs/aristocratic-monarchy.spec.js covers both consumers, descent versus office, pure reads, accepted and refused recognition, stale ancestry/principals/costs, vacancy, minority and stewardship recovery, provincial contributions, funded concessions, probate, governor replacement, external protection and paid tribute, conquest/conversion, AI treasury, detached rejection, legacy opening retention, player crown and household succession, mobile review, exact restore/replay and bounded seasonal and annual frontier checks. The government dispatch, lineage, administrative and 476 wider suites declare the new dependencies. Owner execution must establish runtime acceptance, genuine campaign succession, existing-bookmark parity, source ratchets and mobile/iframe appearance.
