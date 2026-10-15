@@ -2,7 +2,8 @@
 const path = require('node:path');
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
-  'data/eras.js', 'data/geographies.js', 'data/cultures.js', 'data/map_data.js',
+  'index.html', 'data/eras.js', 'data/geographies.js', 'data/cultures.js', 'data/map_data.js',
+  'data/music_catalog.js', 'data/distribution_crazygames.js', 'js/crazygames.js', 'js/main.js',
   'js/siteart.js', 'js/util.js', 'js/model.js', 'js/world.js', 'js/mods.js',
   'js/i18n.js', 'js/music.js', 'js/mapview.js', 'js/armies.js', 'js/population.js',
   'js/ui_topbar.js', 'js/ui_misc.js'
@@ -310,7 +311,10 @@ test('CrazyGames skips audio initialization even if a catalog is present',
     });
     await openCrazyGame(page, testInfo);
     expect(await page.evaluate(function () {
-      return { audio:window.__presentationAudioCount, available:FB.music.available(),
+      FB.music.init();
+      return { audio:window.__presentationAudioCount,
+        declaredCatalog:!!(FBDATA.musicCatalog && FBDATA.musicCatalog.tracks.length),
+        supported:FB.music.supported(), catalog:FB.music.catalog(),
         bank:FB.music.resolveBank({ player:{}, chars:{} }) };
-    })).toEqual({ audio:0, available:false, bank:null });
+    })).toEqual({ audio:0, declaredCatalog:true, supported:false, catalog:null, bank:null });
   });
