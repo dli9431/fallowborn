@@ -252,17 +252,22 @@ for (const fictional of [false,true]) {
     const result = await page.evaluate(function (at) {
       const s = FB.state,E = FB.ecclesiasticalGovernment;
       if (E.profile(s,at.rid).layRecognition) E.apply(s,E.review(s,at.rid,'recognize',{}));
-      function facts(state) { return JSON.stringify([E.row(state,at.rid),state.religiousHeads,state.localInstitutions,
-        state.authority.rights,state.authority.recognitions,state.realms[at.rid].treasury,Object.keys(state.chars).sort()]); }
-      const before = facts(s),rng = FB.getRngState(),uid = FB.getUidCounter(),source = JSON.parse(FB.save.serialize());
+      // Recognition changes fiscal projections; save a completed setup rather
+      // than estimates from before the chapter bargain and recognition.
+      FB.treasuryInitialize(s);
+      function facts(state) { return JSON.parse(JSON.stringify([E.row(state,at.rid),state.religiousHeads,state.localInstitutions,
+        state.authority.rights,state.authority.recognitions,state.realms[at.rid].treasury,Object.keys(state.chars).sort()])); }
+      const before = facts(s),rng = FB.getRngState() >>> 0,uid = FB.getUidCounter(),source = JSON.parse(FB.save.serialize());
       FB.save.restore(source);
-      const exact = before === facts(FB.state) && rng === FB.getRngState() && uid === FB.getUidCounter();
+      const after = facts(FB.state),identity = rng === (FB.getRngState() >>> 0) && uid === FB.getUidCounter();
       const malformed = JSON.parse(JSON.stringify(source)); delete malformed.state.localInstitutions[at.chapterId];
       const live = FB.state,bytes = JSON.stringify(live); let rejected = false;
       try { FB.save.restore(malformed); } catch (error) { rejected = true; }
-      return { exact:exact,rejected:rejected,unchanged:live === FB.state && bytes === JSON.stringify(live) };
+      return { before:before,after:after,identity:identity,rejected:rejected,
+        unchanged:live === FB.state && bytes === JSON.stringify(live) && rng === (FB.getRngState() >>> 0) && uid === FB.getUidCounter() };
     },at);
-    expect(result).toEqual({ exact:true,rejected:true,unchanged:true });
+    expect(result.after).toEqual(result.before);
+    expect(result).toMatchObject({ identity:true,rejected:true,unchanged:true });
   });
 }
 
@@ -322,7 +327,7 @@ for (const crazygames of [false,true]) {
     await expect(page.locator('[data-ecclesiastical-list]')).toBeVisible();
     const at = await seedLocalInstitution(page,false);
     await page.evaluate(function (at) { FB.ui.showEcclesiasticalGovernment(at.rid); },at);
-    await page.getByRole('button',{ name:'Review temporal recognition',exact:true }).click();
+    await page.getByRole('button',{ name:/^Review temporal recognition\b/ }).click();
     await expect(page.locator('#gm-body')).toContainText('Exact decision terms');
     await expect(page.locator('#gm-body')).toContainText('Opening prelate');
     await page.evaluate(function () { FB.state.turn++; });
