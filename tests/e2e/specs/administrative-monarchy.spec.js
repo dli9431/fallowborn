@@ -9,12 +9,12 @@ dependsOnRuntime(__filename, [
   'index.html', 'data/bookmark_800.js', 'data/bookmark_800_history.js',
   'data/aristocratic_courts.js', 'js/government_aristocracy.js',
   'data/political_institutions.js', 'data/eras.js', 'data/systems.js',
-  'data/actions.js', 'data/lexicons.js', 'data/technology.js', 'data/cultures.js',
+  'data/actions.js', 'data/lexicons.js', 'data/technology.js', 'data/cultures.js', 'data/economy.js', 'data/map_data.js',
   'js/governments.js', 'js/government_recognition.js', 'js/government_administration.js',
   'js/government_selection.js', 'js/government_lineage.js',
   'js/government_continuity.js', 'js/government_levy.js', 'js/government_revenue.js',
   'js/government_council.js', 'js/government_ai.js', 'js/government_diplomacy.js',
-  'js/world.js', 'js/authority.js', 'js/treasury.js', 'js/lordships.js', 'js/fiscal.js',
+  'js/world.js', 'js/authority.js', 'js/treasury.js', 'js/lordships.js', 'js/settlement.js', 'js/population.js', 'js/fiscal.js',
   'js/actions.js', 'js/armies.js', 'js/wars.js', 'js/justice.js', 'js/model.js', 'js/station.js',
   'js/progression.js', 'js/religion.js', 'js/papacy.js', 'js/systems.js', 'js/lexicon.js',
   'js/mods.js', 'js/main.js', 'js/save.js', 'js/save_v4.js', 'js/messages.js', 'js/i18n.js',
@@ -51,9 +51,20 @@ async function start(page, testInfo, distribution) {
 async function prepare(page, rid) {
   await page.evaluate(function (rid) {
     const s = FB.state, c = s.chars[s.player.charId];
-    // Exclude rounding residue from a fully allocated source.
-    const pid = FB.realmHeldCounties(s,rid).find(function (pid) { return FB.publicCountyIncome(s,rid,pid) > 0.000001; });
-    if (!pid) throw new Error('No productive fixture source');
+    const pid = s.realms[rid].capital;
+    const site = FB.settlementGrantSites(s,pid,rid)[0];
+    if (!site) throw new Error('The public source needs an existing secondary settlement');
+    // Large directly held empires have severe personal capacity penalties.
+    // A separate one-estate household supplies real customary dues without
+    // changing those rules or treating its private gross receipts as public.
+    const sourceHolder = FB.makeCharacter(s,{id:'admin_source_' + rid,name:'Local estate holder',sex:'m',
+      culture:FB.countyCulture(s,pid),religion:FB.countyReligion(s,pid),born:s.date.year-30,station:3,traits:[]});
+    sourceHolder.homeProvinceId = pid;
+    FB.SKILLS.forEach(function (skill) { sourceHolder.skills[skill] = 1; });
+    s.chars[sourceHolder.id] = sourceHolder;
+    if (!FB.assignSettlementLordship(s,pid,site.settlement,sourceHolder.id))
+      throw new Error('The independent source household was not established');
+    if (!(FB.publicCountyIncome(s,rid,pid) > 0.000001)) throw new Error('No productive fixture source');
     s.player.provinceId = pid; s.player.liege = rid; s.player.travel = null;
     s.player.prestige = 1000; s.player.gold = 1000;
     c.unfree = false; c.born = s.date.year - 24;
@@ -61,6 +72,7 @@ async function prepare(page, rid) {
     s.realms[rid].treasury.gold = 1000;
     window.ADMIN = {
       rid:rid, pid:pid, me:{kind:'character',id:c.id}, patron:{kind:'realm',id:rid},
+      source:{holderId:sourceHolder.id,settlement:site.settlement},
       input:function (office) { return {institutionId:rid,officeId:office || FB.administrationProfile(s,rid).governor,
         holderId:c.id,provinceId:pid,scope:{kind:'county',id:pid}}; },
       appoint:function (office) {
@@ -139,6 +151,8 @@ test('salary, withheld receipts, audit and repayment conserve one real treasury 
   await start(page,testInfo); await prepare(page,'abbasid');
   const result = await page.evaluate(function () {
     const s = FB.state, a = ADMIN, row = a.appoint(), account = s.realms[a.rid].treasury;
+    const sourceFiscal = FB.settlementFiscalProjection(s,a.pid,a.source.settlement);
+    const sourceProperty = JSON.stringify(FB.settlementLordship(s,a.pid,a.source.settlement));
     const remit = FB.publicOfficeApply(s,FB.publicOfficeQuote(s,a.me,row.id,'remit',0.75));
     const total = s.player.gold + account.gold, gold = s.player.gold;
     s.turn += 90;
@@ -157,10 +171,13 @@ test('salary, withheld receipts, audit and repayment conserve one real treasury 
     const restored = FB.publicOfficeApply(s,FB.publicOfficeQuote(s,a.patron,row.id,'confirm'));
     return {remit:remit,salary:salary,source:source,conserved:conserved,positive:arrears>0,
       credited:s.player.gold-gold,audit:audit,suspended:suspended,repaid:repaid,once:once,restored:restored,
-      arrears:row.publicTerms.arrears,repeat:repeat};
+      arrears:row.publicTerms.arrears,repeat:repeat,
+      duesBacked:sourceFiscal.amounts.dues > 0 && last.gross >= sourceFiscal.amounts.dues && last.gross < sourceFiscal.amounts.gross,
+      separateProperty:a.source.holderId !== s.player.charId && s.holder[a.pid] === a.rid &&
+        sourceProperty === JSON.stringify(FB.settlementLordship(s,a.pid,a.source.settlement))};
   });
   expect(result).toMatchObject({remit:true,salary:true,source:true,conserved:true,positive:true,
-    audit:true,suspended:true,repaid:true,once:true,restored:true,arrears:0,repeat:true});
+    audit:true,suspended:true,repaid:true,once:true,restored:true,arrears:0,repeat:true,duesBacked:true,separateProperty:true});
   expect(result.credited).toBeGreaterThan(0);
 });
 
