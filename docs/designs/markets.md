@@ -431,3 +431,5 @@ Empty or blocked withdrawals cause no penalties. Hostile Standing does not itsel
 declare war. Ordinary AI purchases and enemy requisition remain unchanged.
 Technology impact `forced_army_provisions` is **none**: coercive emergency food
 collection needs no research; paid provisioning remains the ordinary alternative.
+
+marketRaidYields declares the strongest local endowment bonus per raid basket, including coin. Existing raid strength, fortification, casualty and victory arithmetic still applies. Production and flow remain marketEndowmentTypes fields. New endowment ids can participate without a raid-specific engine edit.

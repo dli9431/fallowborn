@@ -5,7 +5,7 @@
   function num(n, fallback) { return typeof n === 'number' && isFinite(n) ? n : fallback; }
   function person(s, id) { return s.chars && s.chars[id]; }
   function live(s, id) { var c = person(s, id); return !!(c && !c.dead); }
-  function cruel(c) { return !!(c && c.traits && c.traits.indexOf('cruel') >= 0); }
+  function cruel(c) { return FB.traitMechanic(c, 'harshJustice') > 0; }
   function realmOf(s, id) {
     return id === s.player.charId ? (FB.station.rulesRealm(s.player, s) ? 'player' : null) :
       FB.realmIdForRulerCharacter(s, id);
@@ -390,7 +390,7 @@
     j.pending = { id:'justice-response-' + j.nextId++, kind:kind, actorId:actor,
       targetId:target, offenseId:offenseId || null, sentence:sentence || null,
       generation:s.generation, courtKind:courtKind };
-    FB.queueEvent(s, kind === 'arrest' ? 'justice_arrest' : 'justice_hearing', {
+    FB.queueLifecycleEvents(s, kind === 'arrest' ? 'justice_arrest' : 'justice_hearing', {
       justiceId:j.pending.id, studentId:actor, sentence:sentence || null
     });
     return true;

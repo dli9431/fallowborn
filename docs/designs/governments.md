@@ -96,3 +96,10 @@ city_republic composes explicit civic holders, magistracy succession, fixed inst
 Ecclesiastical institutions
 
 ecclesiastical_principality binds a canonical religious office to continuing temporal jurisdiction. All ten dispatch slots are explicit. institutionalProperty is a shared succession capability used by civic and ecclesiastical forms alongside publicCrown to keep private settlement actors separate from public institutions. See docs/designs/ecclesiastical-principality.md.
+
+
+Runtime definition composition
+
+Effective JSON government profiles, constituencies and authority office definitions resolve together during staged mod validation. Same-file forms may name newly authored offices and profiles. Public authority declarations describe powers, scopes, issuer policies and qualifications; they cannot replace the registered government strategy implementation or bypass its canonical ledgers. Two ordinary JSON examples under tests/e2e/fixtures/authoring combine civic or mobile profiles with newly imported stories.
+
+Council special decisions select an effective seat by its councilSeatRoles declaration. Confirmation elections name their office and office-confirmation privileges name the affected seats. New seat ids reuse ordinary eligibility and Standing checks.

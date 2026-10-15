@@ -353,3 +353,11 @@ The targeted repeatable tournament purpose permits free adults through tier 7. I
 Religious activity adapters
 
 travelSiteSnapshot reads one authored site through the ordinary route, eligibility and history constraints without repairing travel or household standards. Explicit religious activity journeys attach a declaration to the same player.travel record. Their start-turn context makes a stale capstone reject before reward effects, and completion records a journey without asserting a separately performed rite. Activity profiles add no second route, charge or pilgrimage reward. Existing unwrapped saved journeys remain unchanged. See docs/designs/religious-activities.md.
+
+Arrival subscriptions
+
+Arrival at the declared destination emits travel_arrival through the shared eventSubscriptions catalogue after the existing foreign-culture encounter check. The event context includes locationId and destinationId and retains the ordinary protagonist defaults. These queued entries carry travel:true, so journey cleanup removes them with other pending travel events. The subscription has no authority to bypass a journey, destination or contract transaction.
+
+Authoring contracts
+
+Travel purpose identity is independent of its algorithm. travelRules declares the shared journey kind, encounter purpose and arrival event, while travelDefaults selects automatic trade, social and scheduled-games entry points. New purpose ids keep their own saved history and use the existing cost, route, patron, settlement and stale-journey checks. The complete field contract is in docs/MODDING.md.

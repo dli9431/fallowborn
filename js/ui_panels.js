@@ -649,7 +649,7 @@ window.FB = window.FB || {};
       status += ' · ' + FB.T('{days} travel days remain', { days:days });
     } else if (travel.phase === 'arrived' && FB.travelStayDays) {
       const stayed = FB.travelStayDays(s);
-      status += ' · ' + (travel.purpose === 'relationship'
+      status += ' · ' + (FB.travelPurposeKind(travel.purpose) === 'relationship'
         ? FB.T('{days} days into the visit', { days:stayed })
         : (FB.station.isLanded(s.player, s)
           ? FB.T('{days} days in guest residence', { days:stayed })
@@ -684,7 +684,7 @@ window.FB = window.FB || {};
     }
     /* A frontier withdrawal shows its gateway, work milestones, residence
        progress, and whether the permanent homestead is available yet. */
-    if (travel.purpose === 'frontier' && FB.frontierStatus) {
+    if (FB.travelPurposeKind(travel.purpose) === 'frontier' && FB.frontierStatus) {
       const frontier = FB.frontierStatus(s);
       if (frontier) {
         status += ' · ' + FB.T('gateway: {gateway}', {
@@ -1435,6 +1435,7 @@ window.FB = window.FB || {};
             previewHtml += '</div></div>';
             details.innerHTML += previewHtml;
           }
+          for (const note of item.preview.notes || []) details.innerHTML += '<p class="hint">' + esc(note) + '</p>';
         }
         row.appendChild(btn);
         row.appendChild(actions);
@@ -1498,6 +1499,7 @@ window.FB = window.FB || {};
         }
         html += '</div></div>';
       }
+      for (const note of preview.notes || []) html += '<p class="hint">' + esc(note) + '</p>';
       return html;
     }
     function appendFocus(item, container) {

@@ -2052,10 +2052,7 @@ window.FB = window.FB || {};
         (a.c.id < b.c.id ? -1 : 1);
     });
     const pick = candidates[0];
-    let mult = 1;
-    const traits = pick.c.traits || [];
-    for (const t of ['wrathful', 'proud', 'cruel', 'ambitious']) if (traits.indexOf(t) >= 0) mult += 0.2;
-    for (const t of ['patient', 'humble', 'kind', 'content']) if (traits.indexOf(t) >= 0) mult -= 0.15;
+    const mult = 1 + FB.traitMechanic(pick.c, 'rivalryWeight', true);
     const hostility = 1 +
       Math.max(0, -characterStanding(state, pick.c) - 40) / 60;
     const baseChance = rivalBalance('rivalClaimChance', 0.05);
@@ -4700,293 +4697,302 @@ window.FB = window.FB || {};
     return FB.formatSource(state, state.player.charId, source, ctx);
   };
 
-  /* ---------- named chance formulas ---------- */
-  FB.namedChance = function (state, key, ctx) {
-    const p = state.player;
-    const me = state.chars[p.charId];
-    const f = p.flags;
-    switch (key) {
-      case 'serf_flight': {
-        const kind = FB.eventParticipantKind &&
-          FB.eventParticipantKind(ctx, 'confidant');
-        const balance = FBDATA.balance;
-        const base = kind === 'friend' ? balance.serfFlightFriendChance
-          : (kind === 'rival' ? balance.serfFlightRivalChance
-            : balance.serfFlightUnaccompaniedChance);
-        const covered = FB.freedomCoveredCharacterIds
-          ? FB.freedomCoveredCharacterIds(state, []) : [me.id];
-        const familyMembers = Math.max(0, covered.length - 1);
-        const configuredPenalty = Number(balance.serfFlightFamilyMemberPenalty);
-        const penalty = isFinite(configuredPenalty) && configuredPenalty >= 0
-          ? configuredPenalty : 0.05;
-        const configuredMinimum = Number(balance.serfFlightMinimumChance);
-        const minimum = isFinite(configuredMinimum)
-          ? FB.clamp(configuredMinimum, 0, 0.95) : 0.10;
-        return FB.clamp(base - familyMembers * penalty, minimum, 0.95);
-      }
-      case 'harvest': {
-        let c = 0.55 + FB.skillOf(me, 'ste') * 0.018;
-        if (f.crop_safe) c += 0.15;
-        if (f.crop_risky) c -= 0.08;
-        if (f.blessed_crops) c += 0.12;
-        if (f.crop_ruined) c = 0.05;
-        const pr = FB.world.byId[p.provinceId];
-        if (pr && pr.terrain === 'farmland') c += 0.08;
-        return FB.clamp(c, 0.05, 0.95);
-      }
-      case 'battle': {
-        let c = 0.40 + FB.skillOf(me, 'mar') * 0.028;
-        if (me.traits.indexOf('brave') >= 0) c += 0.05;
-        if (me.traits.indexOf('craven') >= 0) c -= 0.1;
-        c += FB.holdingBonus(state, 'battle') + FB.itemBonus(state, 'battle');
-        if (f.blessed_war) c += 0.06;
-        return FB.clamp(c, 0.1, 0.92);
-      }
-      case 'proposal': {
-        const s = FB.getRole(state, 'suitor', false);
-        if (FB.crazyGamesFirstCharacter(state) && s &&
-            FB.proposalStatus(state, s).ready) return 1;
-        let c = 0.3 + characterStanding(state, s) / 180 +
-          p.prestige / 600 + p.tier * 0.05;
-        const gap = s ? FB.socialStation.gap(s, FB.playerStation(state), state) : 0;
-        if (gap > 0) c -= gap * FBDATA.balance.proposalStationPenalty; // marrying up is hard
-        else c += Math.min(0.1, -gap * 0.05); // marrying down is easy
-        if (me.traits.indexOf('comely') >= 0) c += 0.08;
-        if (me.traits.indexOf('homely') >= 0) c -= 0.08;
-        if (s && FB.faithHasSystem(s.religion, 'papacy', state) &&
-            FB.playerExcommunicated && FB.playerExcommunicated(state)) {
-          c -= 0.2;
-        }
-        if (s && s.royalLine &&
-            !(FB.isReigningRealmRuler &&
-              FB.isReigningRealmRuler(state, s))) {
-          c += realmStanding(state, s.royalLine.realmId) / 400;
-          const aim = FB.rulerAimSnapshot &&
-            FB.rulerAimSnapshot(state, s.royalLine.realmId);
-          if (aim && aim.id === 'secure_dynasty') c += 0.12;
-          else if (aim && aim.id === 'keep_peace') c += 0.04;
-          else if (aim && aim.id === 'strengthen_crown') c -= 0.05;
-          return FB.clamp(c, 0.05, 0.9);
-        }
-        return FB.clamp(c, 0.05, 0.95);
-      }
-      case 'sibling_proposal': {
-        const sibling = p.courtingId && state.chars[p.courtingId];
-        return sibling ? FB.siblingProposalChance(state, sibling) : 0.05;
-      }
-      case 'sibling_exposure_denial': {
-        const sibling = p.courtingId && state.chars[p.courtingId];
-        let c = 0.25 + FB.skillOf(me, 'int') * 0.025;
-        c += FB.traitBonus(me, 'courtship', 'siblingIllicitAccept') || 0;
-        if (sibling) c += FB.skillOf(sibling, 'int') * 0.005;
-        return FB.clamp(c, 0.10, 0.80);
-      }
-      case 'fabricate_claim': {
-        const c = 0.30 + FB.skillOf(me, 'int') * 0.03 +
-          FB.skillOf(me, 'lea') * 0.01 + p.prestige / 1000;
-        return FB.clamp(c, 0.10, 0.90);
-      }
-      case 'plot_discovery':
-        return p.plot && p.plot.id === 'fabricate_claim'
-          ? FB.namedChance(state, 'fabricate_claim') : 0.35;
-      case 'rival_peace': {
-        const rival = FB.getRole(state, 'rival', false);
-        let c = 0.45 + FB.skillOf(me, 'dip') * 0.02;
-        if (rival) c += characterStanding(state, rival) / 200;
-        c -= FB.rivalHeat(state) / 250;
-        if (me.traits.indexOf('kind') >= 0) c += 0.08;
-        if (me.traits.indexOf('proud') >= 0) c -= 0.05;
-        return FB.clamp(c, 0.1, 0.9);
-      }
-      case 'house_claim': {
-        // pressing a child's claim on the late spouse's house: standing and
-        // cunning against their lawyers and pride
-        let c = 0.3 + p.prestige / 400 + FB.skillOf(me, 'dip') * 0.02 + FB.skillOf(me, 'int') * 0.02;
-        return FB.clamp(c, 0.1, 0.85);
-      }
-      case 'annulment': {
-        // the church weighs a plea to unmake a marriage: piety, learning,
-        // and high office speak loudest
-        let c = 0.35 + p.piety / 300 + FB.skillOf(me, 'lea') * 0.018;
-        if (f.bishop) c += 0.2;
-        return FB.clamp(c, 0.1, 0.9);
-      }
-      case 'skill_dip': return FB.clamp(0.30 + FB.skillOf(me, 'dip') * 0.04, 0.1, 0.9);
-      case 'skill_ste': {
-        let c = 0.30 + FB.skillOf(me, 'ste') * 0.04;
-        if (FB.hasHouseholdAsset(state, 'fine_tools') ||
-          FB.hasHouseholdAsset(state, 'workshop')) c += 0.06;
-        return FB.clamp(c, 0.1, 0.9);
-      }
-      case 'travel_trade':
-        return FB.clamp(0.28 + FB.skillOf(me, 'ste') * 0.045, 0.1, 0.92);
-      case 'skill_int': return FB.clamp(0.30 + FB.skillOf(me, 'int') * 0.04, 0.1, 0.9);
-      case 'skill_lea': {
-        let c = 0.30 + FB.skillOf(me, 'lea') * 0.04;
-        if (FB.holdingList(state).indexOf('letters') >= 0) c += 0.08;
-        if (FB.professionHasRole(p.profession, ['cloister', 'clergy'])) c += 0.05;
-        return FB.clamp(c, 0.1, 0.9);
-      }
-      case 'rights_dip': {
-        const lord = FB.getRole(state, 'lord', false);
-        let c = 0.22 + FB.skillOf(me, 'dip') * 0.04 + p.prestige / 900;
-        if (f.rights_evidence) c += 0.18;
-        if (lord) c += characterStanding(state, lord) / 500;
-        return FB.clamp(c, 0.1, 0.9);
-      }
-      case 'rights_ste': {
-        let c = 0.25 + FB.skillOf(me, 'ste') * 0.04;
-        if (f.rights_evidence) c += 0.18;
-        if (FB.professionHasRole(p.profession, ['labor', 'craft', 'trading'])) c += 0.05;
-        return FB.clamp(c, 0.1, 0.9);
-      }
-      case 'rights_int': {
-        let c = 0.24 + FB.skillOf(me, 'int') * 0.04;
-        if (f.rights_evidence) c += 0.18;
-        if (f.rights_collaborator) c += 0.05;
-        return FB.clamp(c, 0.1, 0.9);
-      }
-      case 'rights_lea': {
-        let c = 0.24 + FB.skillOf(me, 'lea') * 0.04;
-        const hs = FB.holdingList(state);
-        if (f.rights_evidence) c += 0.18;
-        if (hs.indexOf('letters') >= 0) c += 0.08;
-        if (FB.professionHasRole(p.profession, ['cloister', 'clergy'])) c += 0.05;
-        return FB.clamp(c, 0.1, 0.9);
-      }
-      case 'swarm': {
-        let c = 0.35 + FB.skillOf(me, 'ste') * 0.035;
-        if (FB.hasHouseholdAsset(state, 'hearth_garden')) c += 0.1;
-        if (FB.hasHouseholdAsset(state, 'orchard')) c += 0.12;
-        return FB.clamp(c, 0.15, 0.9);
-      }
-      case 'war_battle': {
-        const w = p.war;
-        if (!w) return 0.5;
-        const enemy = state.realms[w.enemy];
-        const bal = FBDATA.balance;
-        const cs = bal.mercCompanySize || 150;
-        // real men: the fielded host if there is one, else the levy the
-        // muster would raise (worn by the host's condition either way); a
-        // side still re-forming a shattered host fields only a remnant.
-        // Composition counts: men-at-arms and archers punch above levy weight
-        const host = FB.playerHost ? FB.playerHost(state) : null;
-        let myMen, myQ;
-        if (host) {
-          myMen = host.men * (w.strength || 1);
-          myQ = FB.compQuality ? FB.compQuality(host.units, host.men) : 1;
-        } else {
-          const comp = FB.playerComposition ? FB.playerComposition(state)
-            : { levy: FB.playerLevy(state), arch: 0, cav:0, ret: 0 };
-          const units = {};
-          for (const key in comp) units[key] = comp[key];
-          units.mercs = (w.mercCos || 0) * cs;
-          let men = 0;
-          for (const key in units) men += Math.max(0, Number(units[key]) || 0);
-          const fl = bal.armyMinMen || 40;
-          if (men < fl) { units.levy = (units.levy || 0) + fl - men; men = fl; }
-          myQ = FB.compQuality ? FB.compQuality(units, men) : 1;
-          myMen = men * (FB.rearmScale ? FB.rearmScale(state, 'player') : 1) * (w.strength || 1);
-        }
-        const myStr = myMen * myQ * (1 + FB.skillOf(me, 'mar') / (bal.battleMarPlayer || 14));
-        const ehost = FB.hostOf ? FB.hostOf(state, w.enemy) : null;
-        const enMen = ehost ? ehost.men
-          : FB.aiBaseHost(state, w.enemy) *
-            (FB.rearmScale ? FB.rearmScale(state, w.enemy) : 1);
-        const enQ = ehost
-          ? (FB.compQuality ? FB.compQuality(ehost.units, ehost.men) : 1)
-          : (FB.aiHostQuality ? FB.aiHostQuality(state, w.enemy) : 1);
-        const enStr = enMen * enQ * (1 + (enemy ? enemy.ruler.mar : 5) /
-          (bal.battleMarAI || 22)) * (1 + FB.techBonus(state, 'battle', w.enemy));
-        let c = myStr / (myStr + enStr);
-        c += Math.min(90, w.led || 0) / 90 * 0.1;              // a season spent leading the host
-        c += w.rested ? 0.05 : 0;                              // a refit
-        c += (w.mass ? 0.05 : 0);                              // the great levy
-        /* field-battle estimate (the war card, the siege sortie roll): when
-           defending, read the fort bonus of the invaded county when a live
-           host supplies one; otherwise fall back to the defended seat. The
-           same terms multiply real battle power in battlePower (js/armies.js). */
-        if (w.defending && FB.fortBattleBonus) {
-          const invader = FB.enemyHostInPlayerLandsArmy
-            ? FB.enemyHostInPlayerLandsArmy(state) : null;
-          c += FB.fortBattleBonus(state,
-            (invader && invader.at) || w.enemyTarget || FB.homeProv(state),
-            { realm:'player' });
-        }
-        c += FB.techBonus(state, 'battle') + FB.holdingBonus(state, 'battle') +
-          FB.itemBonus(state, 'battle') + (FB.householdStandardEffect
-            ? FB.householdStandardEffect(state, 'battle') : 0);
-        if (f.blessed_war) c += 0.06;
-        return FB.clamp(c, 0.1, 0.9);
-      }
-      case 'liege_grant': {
-        // no land adjoining the player's to give → the suit fails outright
-        if (FB.station.isBaron(p, state) && !FB.liegeHomeCountyGrantAuthority(state)) return 0;
-        if (FB.station.rulesRealm(p, state) && !FB.liegeGrantCandidates(state).length) return 0;
-        const aim = p.liege && FB.rulerAimSnapshot &&
-          FB.rulerAimSnapshot(state, p.liege);
-        const aimValue = aim && aim.id === 'expand_realm' ? 0.04 :
-          (aim && aim.id === 'strengthen_crown' ? -0.04 : 0);
-        return FB.liegeGrantChance(state,
-          FB.clamp(0.05 + realmStanding(state, p.liege) / 450 +
-            p.prestige / 1800 + aimValue, 0.02, 0.35));
-      }
-      case 'county_petition': {
-        // stripping a disgraced vassal for the player's sake: the liege's love
-        // for the player, his name, and his war service against the victim's
-        // own (poor) standing (p.petitionPid set by the picker)
-        const hp = p.petitionPid ? state.holder[p.petitionPid] : null;
-        const hr = hp ? state.realms[hp] : null;
-        if (!hr || !hr.alive) return 0;
-        const fav = hr.favor || 0;
-        const aim = p.liege && FB.rulerAimSnapshot &&
-          FB.rulerAimSnapshot(state, p.liege);
-        const aimValue = aim && aim.id === 'expand_realm' ? 0.05 :
-          (aim && aim.id === 'strengthen_crown' ? -0.05 : 0);
-        return FB.liegeGrantChance(state,
-          FB.clamp(0.35 + realmStanding(state, p.liege) / 300 +
-            p.prestige / 1500 +
-            (p.warService || 0) / 80 - fav / 150 + aimValue,
-          0.1, 0.85));
-      }
-      case 'appeal_outcome': {
-        // a suit carried over the liege's head: charm, cunning, and how the
-        // high lord already feels about you (p.appealRid set by the picker)
-        const rid = p.appealRid;
-        let c = FBDATA.balance.appealBase + FB.skillOf(me, 'dip') * 0.025 + FB.skillOf(me, 'int') * 0.025;
-        if (rid) c += realmStanding(state, rid) / 200;
-        return FB.clamp(c, 0.05, 0.9);
-      }
-      case 'vassal_comply': {
-        // a vassal asked to surrender his fief (p.revokeRid set by the picker)
-        const rid2 = p.revokeRid;
-        let c2 = 0.35 + FB.skillOf(me, 'dip') * 0.025 + p.prestige / 800;
-        if (rid2) c2 += realmStanding(state, rid2) / 150;
-        return FB.clamp(c2, 0.05, 0.95);
-      }
-      case 'parliament_vote': {
-        // a motion before the estates: rank, diplomacy, name, and the liege's love
-        return FB.parliamentVoteChance ? FB.parliamentVoteChance(state) : 0.5;
-      }
-      case 'parliament_redress_vote': {
-        return FB.parliamentVoteChance
-          ? FB.parliamentVoteChance(state, true) : 0.5;
-      }
-      case 'plot': {
-        let c = 0.30 + FB.skillOf(me, 'int') * 0.04;
-        c += FB.councilBonus ? FB.councilBonus(state, 'plot') : 0; // the Chamberlain's quiet machinery
-        // a trusting victim is easier to ensnare — when the plot in motion has
-        // a personal target's Standing with the player counts too
-        const trole = p.plot && (p.plot.id === 'ruin_rival' ? 'rival' : p.plot.id === 'widow_veil' ? 'spouse' : null);
-        const targetId = p.plot && p.plot.context && p.plot.context.characterId;
-        const tgt = targetId ? state.chars[targetId] :
-          (trole ? FB.getRole(state, trole, false) : null);
-        if (tgt) c += characterStanding(state, tgt) / 500;
-        return FB.clamp(c, 0.15, 0.9);
-      }
-      default: return 0.5;
-    }
+  /* Chance declarations are bounded arithmetic, not expressions or state
+     paths. Policy functions remain trusted, session-fixed engine code. */
+  var chancePolicies = Object.create(null), chanceDependencies = Object.create(null), chancePoliciesSealed = false;
+  FB.registerChancePolicy = function (id, policy, dependencies) {
+    if (chancePoliciesSealed || !/^[a-z][a-z0-9_]*$/.test(id) || chancePolicies[id] || typeof policy !== 'function')
+      throw new Error('Invalid or sealed chance policy ' + id + '.');
+    chancePolicies[id] = policy;
+    chanceDependencies[id] = dependencies || [];
   };
+  FB.sealChancePolicies = function () { chancePoliciesSealed = true; };
+  FB.validateEventChances = function (table, events) {
+    var errors = [];
+    function plain(v) { return !!v && typeof v === 'object' && !Array.isArray(v); }
+    function own(v, key) { return !!v && Object.prototype.hasOwnProperty.call(v, key); }
+    function finite(n) { return typeof n === 'number' && Number.isFinite(n); }
+    function fields(row, keys) { return plain(row) && Object.keys(row).every(function (key) { return keys.indexOf(key) >= 0; }); }
+    function list(values, known) { return Array.isArray(values) && values.length > 0 && values.length <= 16 && values.every(function (id, i) {
+      return typeof id === 'string' && values.indexOf(id) === i && (!known || own(known, id));
+    }); }
+    if (!plain(table)) return ['eventChances must be an object keyed by id.'];
+    Object.keys(table).forEach(function (id) {
+      var d = table[id], path = 'eventChances.' + id;
+      function bad(field) { errors.push(path + (field ? '.' + field : '') + ' is invalid.'); }
+      if (!/^[a-z][a-z0-9_]*$/.test(id) || !plain(d)) { bad(''); return; }
+      if (own(d, 'policy')) {
+        if (!fields(d, ['policy']) || !own(chancePolicies, d.policy)) bad('policy');
+        return;
+      }
+      if (!fields(d, ['base','baseBalance','min','max','steps']) ||
+          own(d, 'base') === own(d, 'baseBalance') ||
+          own(d, 'base') && (!finite(d.base) || Math.abs(d.base) > 10) ||
+          own(d, 'baseBalance') && (!own(FBDATA.balance, d.baseBalance) || !finite(FBDATA.balance[d.baseBalance])) ||
+          !finite(d.min) || !finite(d.max) || d.min < 0 || d.max > 1 || d.min > d.max ||
+          !Array.isArray(d.steps) || d.steps.length > 32) { bad(''); return; }
+      d.steps.forEach(function (step, i) {
+        var weighted = ['skill','resource','standing','realmStanding','rivalHeat'];
+        var conditional = ['flag','trait','terrain','holding','assetAny','careerRoles'];
+        var allowed = ['kind'], valid = plain(step);
+        if (!valid) { bad('steps.' + i); return; }
+        if (weighted.indexOf(step.kind) >= 0) {
+          allowed = allowed.concat(['factor','divisor']);
+          valid = own(step, 'factor') !== own(step, 'divisor') &&
+            (own(step, 'factor') ? finite(step.factor) && Math.abs(step.factor) <= 10 :
+              finite(step.divisor) && Math.abs(step.divisor) >= 1 && Math.abs(step.divisor) <= 1000000);
+          if (step.kind === 'skill' || step.kind === 'resource') {
+            allowed.push('id'); valid = valid && (step.kind === 'skill' ? FB.SKILLS : ['gold','prestige','piety']).indexOf(step.id) >= 0;
+          }
+          if (step.kind === 'standing' || step.kind === 'realmStanding') {
+            allowed.push('role'); valid = valid && (step.kind === 'standing' ? ['lord','rival','suitor','spouse','friend'] :
+              ['liege','appeal','revocation']).indexOf(step.role) >= 0;
+          }
+        } else if (conditional.indexOf(step.kind) >= 0) {
+          allowed = allowed.concat(['add','set']);
+          valid = own(step, 'add') !== own(step, 'set') &&
+            (own(step, 'add') ? finite(step.add) && Math.abs(step.add) <= 1 : finite(step.set) && step.set >= 0 && step.set <= 1);
+          if (step.kind === 'assetAny' || step.kind === 'careerRoles') {
+            allowed.push('ids');
+            valid = valid && list(step.ids, step.kind === 'careerRoles' ? FB.CAREER_ROLES : FBDATA.holdings);
+          } else {
+            allowed.push('id'); valid = valid && typeof step.id === 'string' && /^[a-z][a-z0-9_]*$/.test(step.id);
+            if (step.kind === 'trait') valid = valid && own(FBDATA.traits, step.id);
+            if (step.kind === 'holding') valid = valid && own(FBDATA.holdings, step.id);
+          }
+        } else if (step.kind === 'equipmentBonus') {
+          allowed.push('id'); valid = step.id === 'battle';
+        } else valid = false;
+        if (!valid || !fields(step, allowed)) bad('steps.' + i);
+      });
+    });
+    var visiting = Object.create(null), visited = Object.create(null);
+    function dependency(id, depth) {
+      if (visiting[id] || depth > 32) { errors.push('eventChances.' + id + ' has cyclic or excessive policy dependencies.'); return; }
+      if (visited[id]) return;
+      if (!own(table, id)) { errors.push('eventChances.' + id + ' is required by a chance policy.'); return; }
+      visiting[id] = true;
+      var def = table[id];
+      (def && chanceDependencies[def.policy] || []).forEach(function (next) { dependency(next, depth + 1); });
+      delete visiting[id]; visited[id] = true;
+    }
+    Object.keys(table).forEach(function (id) { dependency(id, 0); });
+    (events || []).forEach(function (event) {
+      (event.options || []).forEach(function (option, i) {
+        if (typeof option.chance === 'string' && !own(table, option.chance))
+          errors.push('events.' + event.id + '.options.' + i + '.chance references unknown eventChances.' + option.chance + '.');
+      });
+    });
+    return errors;
+  };
+  FB.namedChance = function (state, key, ctx) {
+    var d = FBDATA.eventChances && FBDATA.eventChances[key];
+    if (!d) return 0.5; // Preserve the legacy direct-call fallback.
+    if (d.policy) return chancePolicies[d.policy](state, ctx);
+    var p = state.player, me = state.chars[p.charId];
+    var value = d.baseBalance ? FBDATA.balance[d.baseBalance] : d.base;
+    d.steps.forEach(function (step) {
+      var amount = null, yes = false, who, rid;
+      switch (step.kind) {
+        case 'skill': amount = FB.skillOf(me, step.id); break;
+        case 'resource': amount = p[step.id]; break;
+        case 'standing': who = FB.getRole(state, step.role, false); amount = who ? characterStanding(state, who) : 0; break;
+        case 'realmStanding':
+          rid = step.role === 'liege' ? p.liege : step.role === 'appeal' ? p.appealRid : p.revokeRid;
+          amount = rid ? realmStanding(state, rid) : 0; break;
+        case 'rivalHeat': amount = FB.rivalHeat(state); break;
+        case 'flag': yes = !!p.flags[step.id]; break;
+        case 'trait': yes = me.traits.indexOf(step.id) >= 0; break;
+        case 'terrain': yes = !!FB.world.byId[p.provinceId] && FB.world.byId[p.provinceId].terrain === step.id; break;
+        case 'holding': yes = FB.holdingList(state).indexOf(step.id) >= 0; break;
+        case 'assetAny': yes = step.ids.some(function (id) { return FB.hasHouseholdAsset(state, id); }); break;
+        case 'careerRoles': yes = FB.professionHasRole(p.profession, step.ids); break;
+        case 'equipmentBonus': value += FB.holdingBonus(state, step.id) + FB.itemBonus(state, step.id); break;
+      }
+      if (amount !== null) value += step.divisor !== undefined ? amount / step.divisor : amount * step.factor;
+      if (yes) value = step.set !== undefined ? step.set : value + step.add;
+    });
+    return FB.clamp(value, d.min, d.max);
+  };
+
+  /* ---------- named chance policies ---------- */
+  FB.registerChancePolicy('serf_flight', function (state, ctx) {
+    const p = state.player, me = state.chars[p.charId], f = p.flags;
+    const kind = FB.eventParticipantKind &&
+      FB.eventParticipantKind(ctx, 'confidant');
+    const balance = FBDATA.balance;
+    const base = kind === 'friend' ? balance.serfFlightFriendChance
+      : (kind === 'rival' ? balance.serfFlightRivalChance
+        : balance.serfFlightUnaccompaniedChance);
+    const covered = FB.freedomCoveredCharacterIds
+      ? FB.freedomCoveredCharacterIds(state, []) : [me.id];
+    const familyMembers = Math.max(0, covered.length - 1);
+    const configuredPenalty = Number(balance.serfFlightFamilyMemberPenalty);
+    const penalty = isFinite(configuredPenalty) && configuredPenalty >= 0
+      ? configuredPenalty : 0.05;
+    const configuredMinimum = Number(balance.serfFlightMinimumChance);
+    const minimum = isFinite(configuredMinimum)
+      ? FB.clamp(configuredMinimum, 0, 0.95) : 0.10;
+    return FB.clamp(base - familyMembers * penalty, minimum, 0.95);
+  });
+  FB.registerChancePolicy('proposal', function (state, ctx) {
+    const p = state.player, me = state.chars[p.charId], f = p.flags;
+    const s = FB.getRole(state, 'suitor', false);
+    if (FB.crazyGamesFirstCharacter(state) && s &&
+        FB.proposalStatus(state, s).ready) return 1;
+    let c = 0.3 + characterStanding(state, s) / 180 +
+      p.prestige / 600 + p.tier * 0.05;
+    const gap = s ? FB.socialStation.gap(s, FB.playerStation(state), state) : 0;
+    if (gap > 0) c -= gap * FBDATA.balance.proposalStationPenalty; // marrying up is hard
+    else c += Math.min(0.1, -gap * 0.05); // marrying down is easy
+    c += FB.traitMechanic(me, 'courtshipProposal', true);
+    if (s && FB.faithHasSystem(s.religion, 'papacy', state) &&
+        FB.playerExcommunicated && FB.playerExcommunicated(state)) {
+      c -= 0.2;
+    }
+    if (s && s.royalLine &&
+        !(FB.isReigningRealmRuler &&
+          FB.isReigningRealmRuler(state, s))) {
+      c += realmStanding(state, s.royalLine.realmId) / 400;
+      const aim = FB.rulerAimSnapshot &&
+        FB.rulerAimSnapshot(state, s.royalLine.realmId);
+      if (aim) c += FB.rulerAimPolicy(aim).courtshipBonus;
+      return FB.clamp(c, 0.05, 0.9);
+    }
+    return FB.clamp(c, 0.05, 0.95);
+  });
+  FB.registerChancePolicy('sibling_proposal', function (state, ctx) {
+    const p = state.player, me = state.chars[p.charId], f = p.flags;
+    const sibling = p.courtingId && state.chars[p.courtingId];
+    return sibling ? FB.siblingProposalChance(state, sibling) : 0.05;
+  });
+  FB.registerChancePolicy('sibling_exposure_denial', function (state, ctx) {
+    const p = state.player, me = state.chars[p.charId], f = p.flags;
+    const sibling = p.courtingId && state.chars[p.courtingId];
+    let c = 0.25 + FB.skillOf(me, 'int') * 0.025;
+    c += FB.traitBonus(me, 'courtship', 'siblingIllicitAccept') || 0;
+    if (sibling) c += FB.skillOf(sibling, 'int') * 0.005;
+    return FB.clamp(c, 0.10, 0.80);
+  });
+  FB.registerChancePolicy('plot_discovery', function (state, ctx) {
+    const p = state.player, me = state.chars[p.charId], f = p.flags;
+    return p.plot && p.plot.id === 'fabricate_claim'
+      ? FB.namedChance(state, 'fabricate_claim') : 0.35;
+  }, ['fabricate_claim']);
+  FB.registerChancePolicy('war_battle', function (state, ctx) {
+    const p = state.player, me = state.chars[p.charId], f = p.flags;
+    const w = p.war;
+    if (!w) return 0.5;
+    const enemy = state.realms[w.enemy];
+    const bal = FBDATA.balance;
+    const cs = bal.mercCompanySize || 150;
+    // real men: the fielded host if there is one, else the levy the
+    // muster would raise (worn by the host's condition either way); a
+    // side still re-forming a shattered host fields only a remnant.
+    // Composition counts: men-at-arms and archers punch above levy weight
+    const host = FB.playerHost ? FB.playerHost(state) : null;
+    let myMen, myQ;
+    if (host) {
+      myMen = host.men * (w.strength || 1);
+      myQ = FB.compQuality ? FB.compQuality(host.units, host.men) : 1;
+    } else {
+      const comp = FB.playerComposition ? FB.playerComposition(state)
+        : { levy: FB.playerLevy(state), arch: 0, cav:0, ret: 0 };
+      const units = {};
+      for (const key in comp) units[key] = comp[key];
+      units.mercs = (w.mercCos || 0) * cs;
+      let men = 0;
+      for (const key in units) men += Math.max(0, Number(units[key]) || 0);
+      const fl = bal.armyMinMen || 40;
+      if (men < fl) { units.levy = (units.levy || 0) + fl - men; men = fl; }
+      myQ = FB.compQuality ? FB.compQuality(units, men) : 1;
+      myMen = men * (FB.rearmScale ? FB.rearmScale(state, 'player') : 1) * (w.strength || 1);
+    }
+    const myStr = myMen * myQ * (1 + FB.skillOf(me, 'mar') / (bal.battleMarPlayer || 14));
+    const ehost = FB.hostOf ? FB.hostOf(state, w.enemy) : null;
+    const enMen = ehost ? ehost.men
+      : FB.aiBaseHost(state, w.enemy) *
+        (FB.rearmScale ? FB.rearmScale(state, w.enemy) : 1);
+    const enQ = ehost
+      ? (FB.compQuality ? FB.compQuality(ehost.units, ehost.men) : 1)
+      : (FB.aiHostQuality ? FB.aiHostQuality(state, w.enemy) : 1);
+    const enStr = enMen * enQ * (1 + (enemy ? enemy.ruler.mar : 5) /
+      (bal.battleMarAI || 22)) * (1 + FB.techBonus(state, 'battle', w.enemy));
+    let c = myStr / (myStr + enStr);
+    c += Math.min(90, w.led || 0) / 90 * 0.1;              // a season spent leading the host
+    c += w.rested ? 0.05 : 0;                              // a refit
+    c += (w.mass ? 0.05 : 0);                              // the great levy
+    /* field-battle estimate (the war card, the siege sortie roll): when
+       defending, read the fort bonus of the invaded county when a live
+       host supplies one; otherwise fall back to the defended seat. The
+       same terms multiply real battle power in battlePower (js/armies.js). */
+    if (w.defending && FB.fortBattleBonus) {
+      const invader = FB.enemyHostInPlayerLandsArmy
+        ? FB.enemyHostInPlayerLandsArmy(state) : null;
+      c += FB.fortBattleBonus(state,
+        (invader && invader.at) || w.enemyTarget || FB.homeProv(state),
+        { realm:'player' });
+    }
+    c += FB.techBonus(state, 'battle') + FB.holdingBonus(state, 'battle') +
+      FB.itemBonus(state, 'battle') + (FB.householdStandardEffect
+        ? FB.householdStandardEffect(state, 'battle') : 0);
+    if (f.blessed_war) c += 0.06;
+    return FB.clamp(c, 0.1, 0.9);
+  });
+  FB.registerChancePolicy('liege_grant', function (state, ctx) {
+    const p = state.player, me = state.chars[p.charId], f = p.flags;
+    // no land adjoining the player's to give → the suit fails outright
+    if (FB.station.isBaron(p, state) && !FB.liegeHomeCountyGrantAuthority(state)) return 0;
+    if (FB.station.rulesRealm(p, state) && !FB.liegeGrantCandidates(state).length) return 0;
+    const aim = p.liege && FB.rulerAimSnapshot &&
+      FB.rulerAimSnapshot(state, p.liege);
+    const aimValue = aim ? FB.rulerAimPolicy(aim).liegeGrantBonus : 0;
+    return FB.liegeGrantChance(state,
+      FB.clamp(0.05 + realmStanding(state, p.liege) / 450 +
+        p.prestige / 1800 + aimValue, 0.02, 0.35));
+  });
+  FB.registerChancePolicy('county_petition', function (state, ctx) {
+    const p = state.player, me = state.chars[p.charId], f = p.flags;
+    // stripping a disgraced vassal for the player's sake: the liege's love
+    // for the player, his name, and his war service against the victim's
+    // own (poor) standing (p.petitionPid set by the picker)
+    const hp = p.petitionPid ? state.holder[p.petitionPid] : null;
+    const hr = hp ? state.realms[hp] : null;
+    if (!hr || !hr.alive) return 0;
+    const fav = hr.favor || 0;
+    const aim = p.liege && FB.rulerAimSnapshot &&
+      FB.rulerAimSnapshot(state, p.liege);
+    const aimValue = aim ? FB.rulerAimPolicy(aim).countyPetitionBonus : 0;
+    return FB.liegeGrantChance(state,
+      FB.clamp(0.35 + realmStanding(state, p.liege) / 300 +
+        p.prestige / 1500 +
+        (p.warService || 0) / 80 - fav / 150 + aimValue,
+      0.1, 0.85));
+  });
+  FB.registerChancePolicy('parliament_vote', function (state, ctx) {
+    const p = state.player, me = state.chars[p.charId], f = p.flags;
+    // a motion before the estates: rank, diplomacy, name, and the liege's love
+    return FB.parliamentVoteChance ? FB.parliamentVoteChance(state) : 0.5;
+  });
+  FB.registerChancePolicy('parliament_redress_vote', function (state, ctx) {
+    const p = state.player, me = state.chars[p.charId], f = p.flags;
+    return FB.parliamentVoteChance
+      ? FB.parliamentVoteChance(state, true) : 0.5;
+  });
+  FB.registerChancePolicy('plot', function (state, ctx) {
+    const p = state.player, me = state.chars[p.charId], f = p.flags;
+    let c = 0.30 + FB.skillOf(me, 'int') * 0.04;
+    c += FB.councilBonus ? FB.councilBonus(state, 'plot') : 0; // the Chamberlain's quiet machinery
+    // a trusting victim is easier to ensnare — when the plot in motion has
+    // a personal target's Standing with the player counts too
+    const trole = p.plot && (p.plot.id === 'ruin_rival' ? 'rival' : p.plot.id === 'widow_veil' ? 'spouse' : null);
+    const targetId = p.plot && p.plot.context && p.plot.context.characterId;
+    const tgt = targetId ? state.chars[targetId] :
+      (trole ? FB.getRole(state, trole, false) : null);
+    if (tgt) c += characterStanding(state, tgt) / 500;
+    return FB.clamp(c, 0.15, 0.9);
+  });
+
 
   /* ---------- trigger evaluation ---------- */
   function triggerSnapshotValue(snapshot, key, build) {
@@ -5549,6 +5555,78 @@ window.FB = window.FB || {};
     return FB.bindEventParticipants(state, ev, ctx);
   };
 
+  /* Lifecycle names describe engine moments, never event identities. The
+     subscriptions are compiled once and retain catalogue declaration order. */
+  const lifecycleHooks = ['household_birth','child_education','child_adulthood',
+    'player_education','player_adulthood','home_raid','protection_offer',
+    'justice_arrest','justice_hearing','travel_arrival'];
+  let lifecycleIndex = null;
+  FB.validateEventLifecycle = function (table, events) {
+    const errors = [], counts = {};
+    function object(value) { return value && typeof value === 'object' && !Array.isArray(value); }
+    if (!object(table)) return ['eventSubscriptions must be an object keyed by event id.'];
+    const known = Object.create(null);
+    for (const ev of events || []) known[ev.id] = true;
+    for (const id of Object.keys(table)) {
+      const path = 'eventSubscriptions.' + id, rows = table[id];
+      if (!known[id]) errors.push(path + ' names an unknown event.');
+      if (!Array.isArray(rows) || rows.length > lifecycleHooks.length) {
+        errors.push(path + ' must contain bounded hook subscriptions.'); continue;
+      }
+      const seen = {};
+      for (const row of rows) {
+        if (!object(row) || lifecycleHooks.indexOf(row.hook) < 0 || seen[row.hook] ||
+            Object.keys(row).some(function (key) { return ['hook','require'].indexOf(key) < 0; })) {
+          errors.push(path + ' has an unknown, duplicate or malformed hook.'); continue;
+        }
+        seen[row.hook] = true; counts[row.hook] = (counts[row.hook] || 0) + 1;
+        if (counts[row.hook] > 32) errors.push(path + ' exceeds 32 subscribers per hook.');
+        if (row.require === undefined) continue;
+        if (!object(row.require)) { errors.push(path + '.require must be an object.'); continue; }
+        for (const key of Object.keys(row.require)) {
+          const value = row.require[key];
+          if (['goldMin','goldMax','prestigeMin','pietyMin','minAge','maxAge','yearMin','yearMax'].indexOf(key) >= 0) {
+            if (typeof value !== 'number' || !isFinite(value) || Math.abs(value) > 1000000)
+              errors.push(path + '.require.' + key + ' must be a bounded number.');
+          } else if (['flags','notFlags','cultures','professions','holdings','notHoldings'].indexOf(key) >= 0) {
+            const table = key === 'cultures' ? FBDATA.cultures : key === 'professions' ? FBDATA.careers :
+              key === 'holdings' || key === 'notHoldings' ? FBDATA.holdings : null;
+            if (!Array.isArray(value) || !value.length || value.length > 16 || value.some(function (id, i) {
+              return typeof id !== 'string' || !/^[a-z][a-z0-9_]*$/.test(id) || value.indexOf(id) !== i ||
+                table && !Object.prototype.hasOwnProperty.call(table, id);
+            })) errors.push(path + '.require.' + key + ' contains invalid references.');
+          } else if (['married','hasChildren','atWar'].indexOf(key) >= 0) {
+            if (typeof value !== 'boolean') errors.push(path + '.require.' + key + ' must be boolean.');
+          } else errors.push(path + '.require.' + key + ' is unsupported.');
+        }
+      }
+    }
+    return errors;
+  };
+  FB.queueLifecycleEvents = function (state, hook, ctx, extra) {
+    if (lifecycleHooks.indexOf(hook) < 0) throw new Error('Unknown event lifecycle hook: ' + hook);
+    if (!lifecycleIndex) {
+      const faults = FB.validateEventLifecycle(FBDATA.eventSubscriptions, FBDATA.events);
+      if (faults.length) throw new Error(faults.join(' '));
+      lifecycleIndex = Object.create(null);
+      for (const ev of FBDATA.events) for (const row of FBDATA.eventSubscriptions[ev.id] || []) {
+        (lifecycleIndex[row.hook] || (lifecycleIndex[row.hook] = [])).push({ event:ev, require:row.require });
+      }
+    }
+    const queued = [];
+    for (const row of lifecycleIndex[hook] || []) {
+      const ev = row.event;
+      if (!FB.eventPeriodEnabled(state, ev) || !FB.systemContentEnabled(state, ev) ||
+          ev.once && state.player.fired[ev.id] ||
+          ev.cooldown && state.player.cooldowns[ev.id] !== undefined &&
+            state.turn - state.player.cooldowns[ev.id] < ev.cooldown * 90 ||
+          !FB.checkTrigger(state, row.require, ctx)) continue;
+      const item = FB.queueEvent(state, ev.id, ctx, extra);
+      if (item) queued.push(item);
+    }
+    return queued;
+  };
+
   FB.queueEvent = function (state, id, ctx, extra) {
     const ev = FB.eventById(id);
     if (!FB.eventPeriodEnabled(state, ev) || !FB.systemContentEnabled(state, ev)) return null;
@@ -5938,6 +6016,7 @@ window.FB = window.FB || {};
   };
   FB.invalidateEventIndex = function () {
     eventIndex = null;
+    lifecycleIndex = null;
     compiledPeriods = null;
     eraEvents = null;
     yearEvents = null;
@@ -5993,7 +6072,7 @@ window.FB = window.FB || {};
     return null;
   }
 
-  FB.validateTenureData = function (catalogue, dutiesCatalogue, rightsCatalogue) {
+  FB.validateTenureData = function (catalogue, dutiesCatalogue, rightsCatalogue, eventDefinitions) {
     catalogue = catalogue || (FBDATA && FBDATA.tenureArchetypes);
     dutiesCatalogue = dutiesCatalogue || (FBDATA && FBDATA.tenureDuties);
     rightsCatalogue = rightsCatalogue || (FBDATA && FBDATA.tenureRights);
@@ -6008,6 +6087,21 @@ window.FB = window.FB || {};
       throw new Error('Tenure rights catalogue must be an object.');
     }
 
+    function tenureEvent(id) {
+      return eventDefinitions ? eventDefinitions.some(function (row) { return row.id === id; }) : FB.eventById(id);
+    }
+    function fields(row, keys, path) {
+      if (!row || typeof row !== 'object' || Array.isArray(row)) throw new Error(path + ' must be a record.');
+      for (const key of Object.keys(row)) if (keys.indexOf(key) < 0) throw new Error(path + '.' + key + ' is unsupported.');
+    }
+    for (const pair of [[catalogue,'tenureArchetypes'],[dutiesCatalogue,'tenureDuties'],[rightsCatalogue,'tenureRights']]) {
+      if (Array.isArray(pair[0]) || Object.keys(pair[0]).length > 128) throw new Error(pair[1] + ' must contain at most 128 records.');
+      for (const id of Object.keys(pair[0])) if (!/^[a-z][a-z0-9_]*$/.test(id)) throw new Error(pair[1] + '.' + id + ' needs a stable id.');
+    }
+    function dueDate(row, path) {
+      fields(row, ['season','day','cycle'], path);
+      if (calendarSeasonIndex(row.season) === undefined || !Number.isInteger(row.day) || row.day < 1 || row.day > 90 || !Number.isInteger(row.cycle) || row.cycle < 0 || row.cycle > 20) throw new Error(path + ' must be a bounded calendar date.');
+    }
     const knownTerrains = ['farmland', 'forest', 'hills', 'mountains', 'desert', 'steppe', 'marsh', 'tundra', 'plains', 'oasis', 'coast', 'floodplain'];
     const knownSettlementKinds = ['village', 'town', 'castle', 'monastery', 'city', 'camp'];
     const knownTraditions = FBDATA.cultureTraditions ? Object.keys(FBDATA.cultureTraditions) : [];
@@ -6038,6 +6132,7 @@ window.FB = window.FB || {};
     for (const dutyKey in dutiesCatalogue) {
       if (!Object.prototype.hasOwnProperty.call(dutiesCatalogue, dutyKey)) continue;
       const dDef = dutiesCatalogue[dutyKey];
+      fields(dDef, ['name','desc','nameKey','descKey'], 'tenureDuties.' + dutyKey);
       if (!dDef || typeof dDef !== 'object') throw new Error('Tenure duty ' + dutyKey + ' must be an object.');
       if (!dDef.name && !dDef.nameKey) throw new Error('Tenure duty ' + dutyKey + ' missing name/nameKey.');
       if (!dDef.desc && !dDef.descKey) throw new Error('Tenure duty ' + dutyKey + ' missing desc/descKey.');
@@ -6046,6 +6141,7 @@ window.FB = window.FB || {};
     for (const rightKey in rightsCatalogue) {
       if (!Object.prototype.hasOwnProperty.call(rightsCatalogue, rightKey)) continue;
       const rDef = rightsCatalogue[rightKey];
+      fields(rDef, ['name','desc','nameKey','descKey'], 'tenureRights.' + rightKey);
       if (!rDef || typeof rDef !== 'object') throw new Error('Tenure right ' + rightKey + ' must be an object.');
       if (!rDef.name && !rDef.nameKey) throw new Error('Tenure right ' + rightKey + ' missing name/nameKey.');
       if (!rDef.desc && !rDef.descKey) throw new Error('Tenure right ' + rightKey + ' missing desc/descKey.');
@@ -6061,12 +6157,16 @@ window.FB = window.FB || {};
       seenArchetypeKeys[archKey] = true;
 
       const arch = catalogue[archKey];
+      fields(arch, ['id','systems','system','priority','name','desc','nameKey','summaryKey','descKey','workLabel','workDescription','workLabelKey','workDescriptionKey','selector','duties','rights','contextSlots','conditionalDuties','transitionTerms'], 'tenureArchetypes.' + archKey);
+      if (arch.id !== archKey) throw new Error('tenureArchetypes.' + archKey + '.id must match its key.');
+      const systemFaults = FB.systems.validateContent(arch, 'tenureArchetypes.' + archKey);
+      if (systemFaults.length) throw new Error(systemFaults.join(' '));
       if (!arch || typeof arch !== 'object') throw new Error('Archetype ' + archKey + ' must be an object.');
       const archId = arch.id || archKey;
       if (seenArchetypeIds[archId]) throw new Error('Duplicate archetype ID: ' + archId);
       seenArchetypeIds[archId] = true;
 
-      if (typeof arch.priority !== 'number' || arch.priority < 0) {
+      if (!Number.isInteger(arch.priority) || arch.priority < 0 || arch.priority > 10000) {
         throw new Error('Archetype ' + archKey + ' priority must be a non-negative number.');
       }
       if ((!arch.name && !arch.nameKey) || (!arch.desc && !arch.summaryKey && !arch.descKey)) {
@@ -6096,7 +6196,7 @@ window.FB = window.FB || {};
       for (let a = 0; a < arraySelectors.length; a++) {
         const rule = arraySelectors[a];
         if (sel[rule.field] === undefined) continue;
-        if (!Array.isArray(sel[rule.field]) || !sel[rule.field].length) {
+        if (!Array.isArray(sel[rule.field]) || !sel[rule.field].length || sel[rule.field].length > 512) {
           throw new Error('Archetype ' + archKey + ' selector ' + rule.field +
             ' must be a non-empty array.');
         }
@@ -6156,19 +6256,26 @@ window.FB = window.FB || {};
         throw new Error('Archetype ' + archKey + ' names unknown faith ancestor: ' + sel.faithAncestor);
       }
       const slots = arch.contextSlots || [];
+      if (!Array.isArray(slots) || slots.length > 4) throw new Error('tenureArchetypes.' + archKey + '.contextSlots exceeds four slots.');
       const seenSlotIds = {};
       for (let s = 0; s < slots.length; s++) {
         const slot = slots[s];
         if (!slot || !slot.id) throw new Error('Archetype ' + archKey + ' context slot missing id.');
         if (seenSlotIds[slot.id]) throw new Error('Archetype ' + archKey + ' duplicate context slot ID: ' + slot.id);
         seenSlotIds[slot.id] = true;
-        if (!slot.fallback || !FB.eventById(slot.fallback)) {
+        if (!slot.fallback || !tenureEvent(slot.fallback)) {
           throw new Error('Archetype ' + archKey + ' context slot ' + slot.id + ' missing valid fallback event.');
         }
+        fields(slot, ['id','cases','fallback','fallbackFirstDue'], 'tenureArchetypes.' + archKey + '.contextSlots');
+        if (slot.fallbackFirstDue !== undefined) dueDate(slot.fallbackFirstDue, 'tenure context fallbackFirstDue');
         const cases = slot.cases || [];
+        if (!Array.isArray(cases) || cases.length > 16) throw new Error('Tenure context slots allow at most sixteen cases.');
         for (let c = 0; c < cases.length; c++) {
           const cs = cases[c];
-          if (!cs.eventId || !FB.eventById(cs.eventId)) {
+          fields(cs, ['terrainAny','settlementKindsAny','eventId','firstDue'], 'tenureArchetypes.' + archKey + '.contextSlots.cases');
+          if (cs.firstDue !== undefined) dueDate(cs.firstDue, 'tenure context firstDue');
+          for (const key of ['terrainAny','settlementKindsAny']) if (cs[key] !== undefined && (!Array.isArray(cs[key]) || !cs[key].length || cs[key].length > 16)) throw new Error('Tenure context ' + key + ' must be a bounded non-empty array.');
+          if (!cs.eventId || !tenureEvent(cs.eventId)) {
             throw new Error('Archetype ' + archKey + ' slot ' + slot.id + ' case missing valid eventId.');
           }
           if (cs.terrainAny) {
@@ -6195,6 +6302,12 @@ window.FB = window.FB || {};
       const archDutyIds = {};
       for (let i = 0; i < duties.length; i++) {
         const d = duties[i];
+        fields(d, ['id','eventId','firstDue','intervalTurns'], 'tenureArchetypes.' + archKey + '.duties');
+        if (d.firstDue !== undefined) dueDate(d.firstDue, 'tenureArchetypes.' + archKey + '.duties.firstDue');
+        else {
+          const slot = slots.filter(function (row) { return row.id === d.id; })[0];
+          if (!slot || !slot.fallbackFirstDue || (slot.cases || []).some(function (row) { return !row.firstDue; })) throw new Error('Tenure duty ' + d.id + ' needs a date or fully dated context slot.');
+        }
         if (!d || !d.id) throw new Error('Archetype ' + archKey + ' duty missing id.');
         if (archDutyIds[d.id]) throw new Error('Archetype ' + archKey + ' duplicate duty ID: ' + d.id);
         archDutyIds[d.id] = true;
@@ -6202,10 +6315,10 @@ window.FB = window.FB || {};
         if (!dutiesCatalogue[d.id]) {
           throw new Error('Archetype ' + archKey + ' duty ' + d.id + ' missing from duties catalogue.');
         }
-        if (typeof d.intervalTurns !== 'number' || d.intervalTurns <= 0) {
+        if (!Number.isInteger(d.intervalTurns) || d.intervalTurns <= 0 || d.intervalTurns > 7200) {
           throw new Error('Archetype ' + archKey + ' duty ' + d.id + ' intervalTurns must be positive.');
         }
-        const hasEvent = d.eventId && FB.eventById(d.eventId);
+        const hasEvent = d.eventId && tenureEvent(d.eventId);
         const hasSlot = seenSlotIds[d.id];
         if (!hasEvent && !hasSlot) {
           throw new Error('Archetype ' + archKey + ' duty ' + d.id + ' must have either a valid eventId or contextSlot mapping.');
@@ -6213,15 +6326,17 @@ window.FB = window.FB || {};
       }
 
       const conditional = arch.conditionalDuties || [];
+      if (!Array.isArray(conditional) || conditional.length > 8) throw new Error('Tenure conditional duties exceed eight records.');
       for (let cd = 0; cd < conditional.length; cd++) {
         const cDuty = conditional[cd];
+        fields(cDuty, ['id','eventId'], 'tenureArchetypes.' + archKey + '.conditionalDuties');
         if (!cDuty || !cDuty.id) throw new Error('Archetype ' + archKey + ' conditional duty missing id.');
         if (archDutyIds[cDuty.id]) throw new Error('Archetype ' + archKey + ' duplicate duty ID: ' + cDuty.id);
         archDutyIds[cDuty.id] = true;
         if (!dutiesCatalogue[cDuty.id]) {
           throw new Error('Archetype ' + archKey + ' conditional duty ' + cDuty.id + ' missing from duties catalogue.');
         }
-        if (!cDuty.eventId || !FB.eventById(cDuty.eventId)) {
+        if (!cDuty.eventId || !tenureEvent(cDuty.eventId)) {
           throw new Error('Archetype ' + archKey + ' conditional duty ' + cDuty.id + ' names unknown eventId.');
         }
       }
@@ -6239,6 +6354,10 @@ window.FB = window.FB || {};
         archRightIds[rId] = true;
         if (!rightsCatalogue[rId]) {
           throw new Error('Archetype ' + archKey + ' right ' + rId + ' missing from rights catalogue.');
+        }
+        if (typeof rItem === 'object') {
+          fields(rItem, ['rightId','terrainAny'], 'tenureArchetypes.' + archKey + '.rights');
+          if (rItem.terrainAny !== undefined && (!Array.isArray(rItem.terrainAny) || !rItem.terrainAny.length || rItem.terrainAny.length > 16)) throw new Error('Tenure right terrainAny must be a bounded array.');
         }
         if (typeof rItem === 'object' && rItem.terrainAny) {
           for (let t = 0; t < rItem.terrainAny.length; t++) {
@@ -6277,7 +6396,7 @@ window.FB = window.FB || {};
             Object.keys(additional).sort().join(',') !==
               'eventId,firstDueSeason,id,intervalTurns' ||
             !dutiesCatalogue[additional.id] ||
-            !additional.eventId || !FB.eventById(additional.eventId) ||
+            !additional.eventId || !tenureEvent(additional.eventId) ||
             calendarSeasonIndex(additional.firstDueSeason) === undefined ||
             additional.intervalTurns !== 1440) {
           throw new Error('Archetype ' + archKey +
@@ -6286,11 +6405,11 @@ window.FB = window.FB || {};
       }
     }
 
-    if (!catalogue.dependent_farming || unconditionalFallbackCount !== 1) {
+    if (unconditionalFallbackCount !== 1) {
       throw new Error('Tenure catalogue must contain exactly one unconditional fallback archetype (found ' + unconditionalFallbackCount + ').');
     }
 
-    if (catalogue === FBDATA.tenureArchetypes) {
+    if (!eventDefinitions && catalogue === FBDATA.tenureArchetypes) {
       _validatedTenureCatalogue = catalogue;
     }
     return catalogue;
@@ -6383,12 +6502,6 @@ window.FB = window.FB || {};
         matched.push(arch.id);
         if (!selected) selected = arch;
       }
-    }
-    if (!selected) {
-      selected = archetypes.length ? archetypes[archetypes.length - 1].arch : null;
-      if (catalogue.dependent_farming && archetypes.some(function (item) {
-        return item.arch === catalogue.dependent_farming;
-      })) selected = catalogue.dependent_farming;
     }
     return {
       selected:selected,
@@ -12226,7 +12339,7 @@ window.FB = window.FB || {};
 
   FB.eventNeedsOutcome = function (ev, option, receipt) {
     if (!ev || !receipt || receipt.automated || ev.id === 'decision_outcome' ||
-        ev.id === 'wardeath_friend' || ev.id === 'child_born_flavor' ||
+        ev.id === 'wardeath_friend' || ev.nameChild ||
         /^rank_elevation_|^field_battle_|^ghw_field_battle_/.test(ev.id) ||
         ev.contextValidator === 'parliament_motion_context_valid') return false;
     if (receipt.milestones && receipt.milestones.length) return true;
@@ -12505,7 +12618,7 @@ window.FB = window.FB || {};
       !FB.marriageLineageContract(me, s);
     if (!legacyPledge && !FB.sealMarriageLineage(state, me, s, lineage)) return false;
     const weddingTravel = p.travel && FB.station.isLanded(p, state) &&
-      p.travel.purpose === 'relationship' &&
+      FB.travelPurposeKind(p.travel.purpose) === 'relationship' &&
       p.travel.phase === 'arrived' &&
       p.travel.currentId === p.travel.destinationId &&
       p.travel.targetCharId === s.id

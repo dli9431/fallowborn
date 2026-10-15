@@ -109,3 +109,6 @@ The legacy message parameter remains compatible with existing catalogs and saves
 older entries containing only a realm name retain their original attribution.
 The extractor recognizes `ambition.<id>.name.default` and `.desc.default`; no
 catalog regeneration is required to play in English or use English fallback.
+
+
+Regional foundations use the historicalAmbitions JSON root with complete-record replacement, bounded terms and effective world/title references. Completion and seasonal AI select declarations directly; no historical id whitelist supplies permission or news. Culture, capital and mainland requirement labels reflect the declaration. Publication registers its durable news text under the existing stable message namespace; candidate validation does not touch the message registry. The ordinary rank and county transactions, reward order and baseline announcements remain unchanged.

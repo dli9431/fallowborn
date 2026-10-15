@@ -270,3 +270,16 @@ FBDATA.policies = {
     ]
   }
 };
+
+/* Shared governance effects of an active crown policy level. */
+FBDATA.policyGovernance = {
+  religious_tolerance:{
+    persecution:{ tolerance:'persecution', coercivePressure:0.15, coerciveResistance:0.15 },
+    confessional_preference:{ tolerance:'preference' },
+    tolerated_minorities:{ tolerance:'tolerant', peacefulResistance:-0.05 },
+    protected_worship:{ tolerance:'tolerant', coercivePressure:-0.15, coerciveResistance:0.10, protectsWorship:true }
+  }
+};
+
+/* Legacy complete policy replacements may omit posture; defaults remain data. */
+FBDATA.authoringDefaults.motionPostures = { redress:FBDATA.policies.redress.posture, scutage:FBDATA.policies.scutage.posture };

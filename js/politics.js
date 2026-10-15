@@ -365,13 +365,11 @@ window.FB = window.FB || {};
       score += 12;
       reasons.push(reason('shared_faith', 12));
     }
-    var traitScores = {
-      content:20, humble:15, patient:12, honest:12, kind:10,
-      ambitious:-20, proud:-10, deceitful:-10, cynical:-8
-    };
-    var traitScore = traitScores[house.traitId] || 0;
-    if (house.traitId === 'zealous' && ruler &&
-        FB.faithInFold(state, ruler.religion, house.religion)) traitScore = 10;
+    var temperament = { trait:house.traitId };
+    var traitScore = FB.traitMechanic(temperament, 'courtLoyalty', true);
+    if (ruler && FB.faithInFold(state, ruler.religion, house.religion)) {
+      traitScore += FB.traitMechanic(temperament, 'courtSharedFaithLoyalty', true);
+    }
     if (traitScore) {
       score += traitScore;
       reasons.push(reason('temperament', traitScore, {
@@ -1022,22 +1020,11 @@ window.FB = window.FB || {};
     };
   }
 
-  /* No-catalog fallback postures for the two original motions. The shipped
-     catalog (data/policies.js) carries these same values in each def's
-     `posture`, so behavior is identical whether read from data or fallback. */
-  var FALLBACK_POSTURES = {
-    redress:{ aidSlope:100, ageSlope:2, economicPowerSlope:6, traits:{
-      ambitious:5, greedy:8, proud:5, content:-5, generous:-5 } },
-    scutage:{ aidSlope:-60, martialSlope:2, ageSlope:4,
-      economicPowerSlope:6, traits:{
-      brave:-10, craven:12, greedy:5, patient:4, wrathful:-6 } }
-  };
-
   function policyPosture(motionId) {
     var def = policyDef(motionId);
     if (def && def.posture && typeof def.posture === 'object' &&
         !Array.isArray(def.posture)) return def.posture;
-    return FALLBACK_POSTURES[motionId] || {};
+    return FBDATA.authoringDefaults.motionPostures[motionId] || {};
   }
 
   function weightedMemberAverage(bloc, getter) {

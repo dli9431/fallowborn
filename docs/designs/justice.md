@@ -339,3 +339,10 @@ A justified secular sentence that consumes a recorded offense can establish the 
 Gallic and Iberian personal law in 476
 
 Gallo-Roman and Hispano-Roman parties map to late_roman in Gothic and the regional successor traditions. Burgundian, Suevic, Frankish, Armorican and Alamannic customs are complete data records in the regional declaration, composed into FBDATA.legalTraditions after the shared sentence definitions load. Their personal-law policies preserve Roman law for provincials, the local custom for elite parties and a local mixed court with a Roman assessor. These records describe bounded court practices, without backdating the later Salic, Burgundian or Alarician codifications. Gothic custom also stands for the law of Euric's court without inventing an exact promulgation date. Regional tenure seeds establish scoped Peace and Revenue, independently of ownership or church recognition. Technology impact remains none for dual_jurisdiction and authority_customary_rights because these are existing legal relationships.
+
+
+Declared trait mechanics
+
+The traitMechanics catalogue supplies the supported literacy, prayer, social, intrigue, justice, religious and AI-policy effects documented in docs/MODDING.md. Consumers read the same effective rules for player previews and AI actors, with no historical trait-id branches. Existing numerical defaults and prerequisite checks are retained. Grouped alternative motives use their maximum contribution; independent yield/support channels use their documented sums. Legacy saved-trait migration and trait-award identities remain separate compatibility concerns. This conversion introduces no technology dependency, saved ledger or additional RNG draw.
+
+Intrigue law selection no longer matches culture or realm names against a historical regular expression. authoringDefaults.intrigueLaw explicitly supplies realm/culture mappings and the missing-law fallback, after nondefault faith law. Baseline Byzantine realm ids and Greek culture remain data declarations. General justice continues to use its existing government, elite and personal-law precedence.

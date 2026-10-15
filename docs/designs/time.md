@@ -751,3 +751,13 @@ Optional institution hooks consult the system resolver before daily, seasonal an
 Deeds sections and travel presentation
 
 The Deeds registry in data/actions.js assigns each deed a primary section and optional alternate layout placement. js/actions.js validates section references and system availability along with action metadata, then replaces the effective section catalogue and action projections together. Section availability composes with the private show guard. Travelling-list membership is declared with availableWhileTraveling rather than a second engine list of deed ids; travel commitments resolve their entry controls from action metadata. This refactor preserves day consumption, cooldowns, seeded execution, save fields and technology eligibility.
+
+
+Declared trait mechanics
+
+The traitMechanics catalogue supplies the supported literacy, prayer, social, intrigue, justice, religious and AI-policy effects documented in docs/MODDING.md. Consumers read the same effective rules for player previews and AI actors, with no historical trait-id branches. Existing numerical defaults and prerequisite checks are retained. Grouped alternative motives use their maximum contribution; independent yield/support channels use their documented sums. Legacy saved-trait migration and trait-award identities remain separate compatibility concerns. This conversion introduces no technology dependency, saved ledger or additional RNG draw.
+
+
+Simple alms, oath, extra-tax and synod transactions now read deedRoutines, using canonical event effects, current cost checks and shared previews. New declarative deeds may use the same bounded transaction shape. Eligibility, cooldowns and elapsed-day accounting remain owned by the action engine. Bespoke institution, property, travel and office transactions retain their dedicated handlers.
+
+Stateful toil, trading, command and plotting retain their canonical owners. Bounded actionPolicies supplies their injury, return, training, standing and plot-pressure tuning; focus details use those same values.

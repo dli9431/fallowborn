@@ -102,7 +102,7 @@
       text(note) + '<div class="settcard-details hidden" id="' + id + '-details">' + details + '</div></div>';
   }
   function riskText(track, tactic) {
-    var d = D.tracks[track], t = D.tactics[tactic || 'balanced'];
+    var d = D.tracks[track], t = D.tactics[tactic || T.defaultTactic()];
     if (!d || !d.injury) return '';
     return FB.T('Injury {risk}% per round, {severe}% severe and possibly fatal', {risk:percent(d.injury * t.risk),severe:percent(d.severe * t.risk)});
   }
@@ -158,7 +158,7 @@
     if (FB.station.isLanded(s.player, s)) h += button('games-host', FB.T('Host games…'));
     var annual = (s.tournaments && s.tournaments.annual || []).filter(function (a) { return a.hostId === s.player.charId; })[0];
     if (annual) h += fact(FB.T('Annual spending ceiling'), money(annual.ceiling)) + fact(FB.T('Next intended edition'), date(annual.nextTurn)) + button('games-stop', FB.T('Stop annual recurrence…'));
-    var journey = s.player.travel && s.player.travel.purpose === 'tournament' && s.player.travel.phase !== 'return' ? s.player.travel : null;
+    var journey = s.player.travel && FB.travelPurposeKind(s.player.travel.purpose) === 'tournament' && s.player.travel.phase !== 'return' ? s.player.travel : null;
     if (journey) h += button('games-return', FB.T('Begin the funded return home…'));
     show(FB.T('Events calendar'), h, { replace:replace, back:back });
     el('games-filter').addEventListener('change', function () { UI.showGames(this.value, true, ids, back); });
@@ -215,9 +215,9 @@
     }
     if (!eligible.ok) h += text(eligible.reason);
     Object.keys(e.contests).forEach(function (track) {
-      var f = e.contests[track], purse = ['joust','melee'].indexOf(track) >= 0 ? 'headline' : track, risk = riskText(track);
+      var f = e.contests[track], purse = T.trackPolicy(track).prize, risk = riskText(track);
       var details = text(FB.T('Eight named entrants; three rounds. Skill, equipment, health, preparation and fatigue decide individual performance.'));
-      if (track === 'melee') details += text(FB.T('The winning team shares the headline purse equally among four teammates.'));
+      if (T.trackPolicy(track).resolution === 'team') details += text(FB.T('The winning team shares the headline purse equally among four teammates.'));
       details += entrantsHtml(s, f, track);
       h += infoCard('games-field-' + track, label('tracks', track),
         FB.T('Promised purse {money:prize} · {rounds}/3 rounds completed', {prize:e.funding.prizes[purse],rounds:f.round}) + (risk ? ' · ' + risk : ''), details);
@@ -229,7 +229,7 @@
         fact(FB.T('Fatigue'), FB.T('{fatigue} · round strength -{penalty}', {fatigue:p.fatigue,penalty:Math.round(p.fatigue * 6.5) / 10})) +
         fact(FB.T('Payments earned'), money(p.paid + (p.prizePaid || 0)));
       if (p.tradeSettled) h += fact(FB.T('Trading profit or loss'),money(p.tradeProfit));
-      var q = T.roundPreview(s, id, s.player.charId, 'balanced');
+      var q = T.roundPreview(s, id, s.player.charId, T.defaultTactic());
       if (q && p.status === 'active') {
         h += fact(FB.T('Next round'), date(q.dueTurn));
         h += button('games-round', FB.T('Review round tactics…'));
@@ -320,7 +320,7 @@
     var s = FB.state, choices = [], cards = '';
     Object.keys(D.tactics).forEach(function (tactic) {
       var q = T.roundPreview(s,id,s.player.charId,tactic);
-      if (!q || (tactic === 'assist' && q.track !== 'melee')) return;
+      if (!q) return;
       choices.push(q);
       var odds = q.scored ? FB.T('Score base {power}, plus a roll from 0 to 12 · fatigue +{fatigue}',{power:Math.round(q.power*10)/10,fatigue:q.fatigue}) :
         FB.T('Round win chance {chance}% · fatigue +{fatigue}',{chance:Math.round(q.chance*100),fatigue:q.fatigue});
@@ -401,8 +401,15 @@
     var q = T.quote(FB.state, spec), f = q.funding;
     var h = fact(FB.T('Venue'),T.venueName(q)) + fact(FB.T('Opening'),date(q.startTurn)) + fact(FB.T('Current recurring net / season'),money(q.income.projection)) +
       fact(FB.T('Recorded seasonal average'),money(q.income.average)) + fact(FB.T('Reference income'),money(q.income.reference));
-    if (f) h += fact(FB.T('Funding due now'),money(f.total)) + fact(FB.T('Headline prize'),money(f.prizes.headline)) + fact(FB.T('Archery prize'),money(f.prizes.archery)) + fact(FB.T('Wrestling prize'),money(f.prizes.wrestling)) +
-      fact(FB.T('Performer awards'),money(f.prizes.perform)) + fact(FB.T('Workforce and entertainment'),money(f.services)) + fact(FB.T('Preparation and hospitality'),money(f.preparation)) + fact(FB.T('Treasury remaining'),money(q.treasury-f.total));
+    if (f) {
+      h += fact(FB.T('Funding due now'),money(f.total));
+      const programme = FBDATA.tournamentRules.programmes[q.programme];
+      for (const track of programme.contests) {
+        const rule = FBDATA.tournamentRules.tracks[track], def = D.tracks[track];
+        h += fact(FB.T('{contest} prize', { contest:FB.dataText(FB.state, FB.state.player.charId, 'tournamentTrack', track, def, 'name', {}) }), money(f.prizes[rule.prize]));
+      }
+      h += fact(FB.T('Workforce and entertainment'),money(f.services)) + fact(FB.T('Preparation and hospitality'),money(f.preparation)) + fact(FB.T('Treasury remaining'),money(q.treasury-f.total));
+    }
     if (f && q.available !== q.treasury) h += fact(FB.T('Uncommitted treasury remaining'),money(q.available-f.total));
     var details = text(FB.T('The reference is the greatest of zero, current recurring net and up to four seasonal samples. Daily focus, campaign spending and one-time transactions are excluded.')) +
       text(FB.T('Funding is the greater of {money:minimum} and {multiple} times reference income, rounded upward to 25.',{minimum:D.scales[q.scale].minimum,multiple:D.scales[q.scale].multiplier}));

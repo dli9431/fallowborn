@@ -1458,7 +1458,7 @@ test('milestone-four phase C adds previewable declarative deeds with atomic exec
     const setup = await page.evaluate(function () {
       const s = FB.state;
       const p = s.player;
-      // Appended orders must be unique and below the merged catalog length.
+      // Imported action orders are unique and bounded independently of catalog length.
       const originalCount = FBDATA.deeds.length;
       const rngBefore = JSON.stringify(FB.getRngState());
       const eventWasAbsent = FB.eventById('e2e_declarative_followup') === null;
@@ -1791,7 +1791,7 @@ test('milestone-four phase C rejects unsafe declarative deeds without mutation',
           'must have a description source'),
         attempt({ deeds:[deed({ spendsDay:'yes' })] },
           'spendsDay must be boolean'),
-        attempt({ deeds:[deed({ order:77 })] },
+        attempt({ deeds:[deed({ order:100001 })] },
           'must not repeat order 77'),
         attempt({ deeds:[deed({ visibility:{
           reason:'Hidden.', flagsAll:['e2e_hidden']

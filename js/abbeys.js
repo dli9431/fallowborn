@@ -21,6 +21,50 @@ window.FB = window.FB || {};
   FB.msg('news.abbey.resident', '⛪ {name} enters the community at {house} for a temporary stay, without religious vows.');
   FB.msg('news.abbey.school', '⛪ {name} funds instruction for the pupils at {house}.');
   function cfg() { return FBDATA.abbeys; }
+  FB.validateAbbeyData = function (data) {
+    const errors = [];
+    function object(value) { return !!value && typeof value === 'object' && !Array.isArray(value); }
+    function number(value, min, max, path) {
+      if (typeof value !== 'number' || !Number.isFinite(value) || value < min || value > max) errors.push(path + ' is outside its numeric bounds.');
+    }
+    if (!object(data) || !object(data.actions)) return ['abbeys needs a configuration and an actions table.'];
+    const scalar = ['maxHouses','foundationCost','foundationCapital','donation','capitalYield','existingRent','upkeep',
+      'allowance','residentUpkeep','residentCapacity','electionCooldown','invitationCooldown','vacancyDays','guestDays',
+      'pupilDays','privilegeCost','disputeLoss','electionPrestige','foundationPrestige','endowmentPiety','endowmentSupport',
+      'dismissStanding','refugeStanding','privilegeIncome','privilegePrestige','privilegeTroops'];
+    for (const key of Object.keys(data)) if (key !== 'actions' && scalar.indexOf(key) < 0) errors.push('abbeys.' + key + ' is unsupported.');
+    for (const key of scalar) number(data[key], 0, 1000000, 'abbeys.' + key);
+    for (const pair of [['maxHouses',12],['residentCapacity',3]]) {
+      number(data[pair[0]], 1, pair[1], 'abbeys.' + pair[0]);
+      if (!Number.isInteger(data[pair[0]])) errors.push('abbeys.' + pair[0] + ' must be an integer.');
+    }
+    const effects = { rents:['treasury','support'], school:['support','learning'], relief:['support','popular','piety'],
+      mediate:['support','prestige','standing','lordStanding'], patronage:['capital','prestige','standing'],
+      defend:['support','lordStanding','failLoss','failSupport','failLordStanding'], concede:['support','lordStanding'] };
+    if (Object.keys(data.actions).length > 32) errors.push('abbeys.actions exceeds 32 entries.');
+    for (const id of Object.keys(data.actions)) {
+      const d = data.actions[id], path = 'abbeys.actions.' + id;
+      if (!/^[a-z][a-z0-9_]*$/.test(id) || !object(d) || !Object.prototype.hasOwnProperty.call(effects, d.kind)) { errors.push(path + ' needs a supported action kind.'); continue; }
+      const fields = effects[d.kind];
+      for (const key of Object.keys(d)) if (fields.concat(['name','kind','cost','days', d.kind === 'defend' ? 'chance' : '']).indexOf(key) < 0) errors.push(path + '.' + key + ' is unsupported.');
+      if (typeof d.name !== 'string' || !d.name.trim()) errors.push(path + '.name is required.');
+      number(d.cost, 0, 100000, path + '.cost');
+      number(d.days, ['defend','concede'].indexOf(d.kind) >= 0 ? 0 : 1, 3600, path + '.days');
+      if (!Number.isInteger(d.days)) errors.push(path + '.days must be an integer.');
+      for (const key of fields) number(d[key], ['support','popular','standing','lordStanding','failSupport','failLordStanding'].indexOf(key) >= 0 ? -100 : 0,
+        key === 'learning' ? 5 : 100000, path + '.' + key);
+      if (d.kind === 'defend') {
+        if (!object(d.chance)) errors.push(path + '.chance is required.');
+        else {
+          const keys = ['base','diplomacy','privilege','min','max'];
+          for (const key of Object.keys(d.chance)) if (keys.indexOf(key) < 0) errors.push(path + '.chance.' + key + ' is unsupported.');
+          for (const key of keys) number(d.chance[key], 0, 1, path + '.chance.' + key);
+          if (d.chance.min > d.chance.max) errors.push(path + '.chance has a reversed clamp.');
+        }
+      }
+    }
+    return errors;
+  };
   function me(s) { return s.chars[s.player.charId]; }
   function houses(s) {
     if (!FB.systemAvailable(s, 'abbeys')) return [];
@@ -194,18 +238,19 @@ window.FB = window.FB || {};
   function candidateChecks(s, c, h) {
     const missing = [];
     const career = c && c.career;
-    const rank = Math.max(c && c.religiousRanks && c.religiousRanks.catholic_monastic || 0,
-      c && c.id === s.player.charId && s.player.flags.abbot ? 3 : 0);
+    const officePath = c && FB.religiousOfficePath(s, c, 'abbot');
+    const rank = Math.max(officePath && c.religiousRanks && c.religiousRanks[officePath.id] || 0,
+      officePath && c.id === s.player.charId && s.player.flags.abbot ? officePath.index : 0);
     const age = c ? FB.ageOf(c, s.date.year) : 0;
-    const vocation = rank >= 2 && career && FB.professionHasRole(career.profession, 'cloister') &&
+    const vocation = officePath && rank >= officePath.candidateIndex && career && FB.professionHasRole(career.profession, 'cloister') &&
       career.experience >= 10;
     const mature = c && age >= 35 && FB.socialStation.isGentle(c, s) && FB.skillOf(c, 'ste') >= 10;
     check(c && available(s, c) && c.sex === 'f', FB.T('An available Catholic woman'), missing);
     check(age >= 24, FB.T('Age 24'), missing);
     check(c && unmarried(s, c), FB.T('Unmarried or widowed, without a betrothal'), missing);
     check(c && FB.skillOf(c, 'lea') >= 9, FB.T('Learning 9'), missing);
-    check(vocation || mature || rank >= 3, FB.T('Ten monastic years as a prioress, an existing abbess, or age 35 with noble standing and Stewardship 10'), missing);
-    check(c && (!FB.systemEnabled(s, 'excommunication', { character:c }) || !(c.traits || []).includes('excommunicated')), FB.T('Good standing with the Church'), missing);
+    check(vocation || mature || officePath && rank >= officePath.index, FB.T('Ten monastic years as a prioress, an existing abbess, or age 35 with noble standing and Stewardship 10'), missing);
+    check(c && (!FB.systemEnabled(s, 'excommunication', { character:c }) || !FB.traitMechanic(c, 'excommunication')), FB.T('Good standing with the Church'), missing);
     check(c && !FB.abbeyOf(s, c) && !(FB.hasBishopric && FB.hasBishopric(s, c)), FB.T('No other religious office'), missing);
     check(c && (c.id === s.player.charId || !FB.realmIdForRulerCharacter(s, c)), FB.T('Available to reside at the abbey'), missing);
     if (h) check(!h.holderId, FB.T('A vacant abbacy'), missing);
@@ -238,7 +283,8 @@ window.FB = window.FB || {};
     h.holderId = c.id; h.appointedTurn = s.turn; delete h.vacancyTurn;
     c.abbeyVows = true;
     c.religiousRanks = c.religiousRanks || {};
-    c.religiousRanks.catholic_monastic = Math.max(3, c.religiousRanks.catholic_monastic || 0);
+    const path = FB.religiousOfficePath(s, c, 'abbot');
+    if (path) c.religiousRanks[path.id] = Math.max(path.index, c.religiousRanks[path.id] || 0);
     c.homeProvinceId = h.provinceId;
     if (FB.unassignEnterpriseWorker) FB.unassignEnterpriseWorker(s, c.id);
     if (c.id === s.player.charId) {
@@ -375,11 +421,11 @@ window.FB = window.FB || {};
     check(h.treasury >= d.cost, FB.T('Abbey treasury needs {money:cost}', { cost:d.cost }), missing);
     const left = Math.max(0, (h.cooldowns[id] === undefined ? -Infinity : h.cooldowns[id]) + d.days - s.turn);
     check(!left, FB.T('{days} days remaining', { days:left }), missing);
-    if (id === 'defend' || id === 'concede') check(!!h.dispute, FB.T('An unresolved dispute'), missing);
-    if (id === 'school') check(h.residents.some(function (r) { return r.kind === 'pupil'; }), FB.T('At least one pupil'), missing);
-    if (id === 'patronage') check(h.connections.some(function (r) { return standing(s, r.charId) >= 20; }), FB.T('A living connected patron with Standing 20'), missing);
-    return status(missing, { cost:d.cost, days:d.days, chance:id === 'defend'
-      ? FB.clamp(0.45 + FB.skillOf(me(s), 'dip') * 0.02 + h.privileges.length * 0.15, 0.25, 0.9) : undefined });
+    if (d.kind === 'defend' || d.kind === 'concede') check(!!h.dispute, FB.T('An unresolved dispute'), missing);
+    if (d.kind === 'school') check(h.residents.some(function (r) { return r.kind === 'pupil'; }), FB.T('At least one pupil'), missing);
+    if (d.kind === 'patronage') check(h.connections.some(function (r) { return standing(s, r.charId) >= 20; }), FB.T('A living connected patron with Standing 20'), missing);
+    return status(missing, { cost:d.cost, days:d.days, chance:d.kind === 'defend'
+      ? FB.clamp(d.chance.base + FB.skillOf(me(s), 'dip') * d.chance.diplomacy + h.privileges.length * d.chance.privilege, d.chance.min, d.chance.max) : undefined });
   };
   FB.runAbbeyAction = function (s, h, id) {
     const q = FB.abbeyActionStatus(s, h, id);
@@ -387,33 +433,33 @@ window.FB = window.FB || {};
     h.treasury -= q.cost; h.cooldowns[id] = s.turn;
     const d = cfg().actions[id];
     let accepted = true;
-    if (id === 'rents') { h.treasury += d.treasury; h.support += d.support; }
-    if (id === 'school') {
+    if (d.kind === 'rents') { h.treasury += d.treasury; h.support += d.support; }
+    if (d.kind === 'school') {
       h.support += d.support;
       h.residents.forEach(function (r) {
         if (r.kind === 'pupil' && s.chars[r.charId] && !s.chars[r.charId].dead) FB.gainSkill(s.chars[r.charId], 'lea', d.learning);
       });
     }
-    if (id === 'relief') { h.support += d.support; FB.applyEffects(s, { popularOpinion:d.popular, piety:d.piety }); }
-    if (id === 'mediate') {
+    if (d.kind === 'relief') { h.support += d.support; FB.applyEffects(s, { popularOpinion:d.popular, piety:d.piety }); }
+    if (d.kind === 'mediate') {
       h.support += d.support; s.player.prestige += d.prestige;
       h.connections.forEach(function (r) { adjust(s, r.charId, d.standing); });
       if (h.dispute) { adjust(s, h.dispute.lordId, d.lordStanding); delete h.dispute; }
     }
-    if (id === 'patronage') {
+    if (d.kind === 'patronage') {
       /* The gift is a bounded institutional subscription, not a debit from
          an invented private treasury belonging to the named contact. */
       h.capital += d.capital; s.player.prestige += d.prestige;
       h.connections.forEach(function (r) { if (standing(s, r.charId) >= 20) adjust(s, r.charId, d.standing); });
     }
-    if (id === 'defend') {
+    if (d.kind === 'defend') {
       accepted = FB.chance(q.chance);
       h.support += accepted ? d.support : d.failSupport;
       adjust(s, h.dispute.lordId, accepted ? d.lordStanding : d.failLordStanding);
       if (!accepted) h.treasury = Math.max(0, h.treasury - d.failLoss);
       delete h.dispute;
     }
-    if (id === 'concede') { adjust(s, h.dispute.lordId, d.lordStanding); h.support += d.support; delete h.dispute; }
+    if (d.kind === 'concede') { adjust(s, h.dispute.lordId, d.lordStanding); h.support += d.support; delete h.dispute; }
     h.support = FB.clamp(h.support, 0, 100);
     const messages = {
       rents:'news.abbey.rents',
@@ -424,7 +470,7 @@ window.FB = window.FB || {};
       defend:'news.abbey.defend',
       concede:'news.abbey.concede'
     };
-    const message = messages[id];
+    const message = messages[d.kind];
     news(s, message, h);
     return { accepted:accepted };
   };

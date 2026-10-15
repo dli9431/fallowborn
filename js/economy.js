@@ -383,7 +383,7 @@ window.FB = window.FB || {};
         needed:years, current:career.experience
       }));
     }
-    if (!hasTrait(c, 'literate')) missing.push(FB.T('Lettered'));
+    if (!FB.traitMechanic(c, 'literacy')) missing.push(FB.T('Lettered'));
     for (const skill in skillRequirements) {
       const needed = Math.max(0, Number(skillRequirements[skill]) || 0);
       const current = FB.skillOf(c, skill);
@@ -686,7 +686,7 @@ window.FB = window.FB || {};
     for (const id in FBDATA.positions) {
       const def = FBDATA.positions[id];
       if (def.kind !== 'earned' || !flags[id]) continue;
-      if (id === 'councilman' && FB.localCouncilValidate &&
+      if (FBDATA.positionRules[id] && FBDATA.positionRules[id].localCouncil && FB.localCouncilValidate &&
           !FB.localCouncilValidate(state, true)) continue;
       out.push(id);
     }
@@ -826,6 +826,40 @@ window.FB = window.FB || {};
     return routes && typeof routes === 'object' ? routes : null;
   }
 
+  FB.religiousOfficeStep = function (pathId, stepId, office) {
+    const roles = FBDATA.religiousOfficeRanks[pathId];
+    return !!(roles && roles[office] && roles[office] === stepId);
+  };
+  FB.religiousOfficePath = function (state, c, office) {
+    const routes = religiousRoutes(state, c), professions = routes && routes.professions || {};
+    const career = c && FB.careerOf(state, c), preferred = career && professions[career.profession];
+    const ids = [preferred].concat(Object.keys(professions).map(function (id) { return professions[id]; }));
+    for (const id of ids) {
+      const roles = FBDATA.religiousOfficeRanks[id], def = FBDATA.religiousPaths[id];
+      if (!roles || !roles[office] || !def || !FB.systemContentEnabled(state, def, { character:c }) ||
+          def.faiths && !def.faiths.some(function (faith) { return FB.faithIsA(c.religion, faith, state); })) continue;
+      const index = def.ranks.findIndex(function (row) { return row.id === roles[office]; });
+      if (index >= 0) return { id:id, index:index, step:def.ranks[index],
+        candidateIndex:def.ranks.findIndex(function (row) { return row.id === roles.abbeyCandidate; }) };
+    }
+    return null;
+  };
+  FB.validateReligiousOfficeRanks = function (table) {
+    const errors = [];
+    if (!table || typeof table !== 'object' || Array.isArray(table) || Object.keys(table).length > 128) return ['religiousOfficeRanks must be a table of at most 128 paths.'];
+    for (const id of Object.keys(table)) {
+      const roles = table[id], path = FBDATA.religiousPaths[id];
+      if (!path || path.kind !== 'vocation' || !roles || typeof roles !== 'object' || Array.isArray(roles)) { errors.push('religiousOfficeRanks.' + id + ' needs a vocation and office map.'); continue; }
+      const seen = {};
+      for (const role of Object.keys(roles)) {
+        if (['abbot','bishop','abbeyCandidate'].indexOf(role) < 0 || !path.ranks.some(function (row) { return row.id === roles[role]; }) || seen[roles[role]]) errors.push('religiousOfficeRanks.' + id + '.' + role + ' needs a distinct existing rank.');
+        seen[roles[role]] = true;
+      }
+      if (roles.abbot && roles.abbeyCandidate && path.ranks.findIndex(function (r) { return r.id === roles.abbeyCandidate; }) >= path.ranks.findIndex(function (r) { return r.id === roles.abbot; })) errors.push('religiousOfficeRanks.' + id + '.abbeyCandidate must precede the abbot rank.');
+      if (roles.abbot && !roles.abbeyCandidate || roles.abbeyCandidate && !roles.abbot) errors.push('religiousOfficeRanks.' + id + ' needs abbot and abbeyCandidate together.');
+    }
+    return errors;
+  };
   function religiousLayPathId(state, c) {
     const local = FB.religiousInstitutionCharacterPaths ? FB.religiousInstitutionCharacterPaths(state, c) : [];
     const lay = local.filter(function (id) { return FBDATA.religiousPaths[id].kind === 'lay' && religiousPathAllowed(state, c, id); })[0];
@@ -836,8 +870,10 @@ window.FB = window.FB || {};
   }
 
   function religiousPathId(state, c) {
-    if (FB.abbeyOf && FB.abbeyOf(state, c) &&
-        FB.faithHasSystem(c.religion, 'papacy', state)) return 'catholic_monastic';
+    if (FB.abbeyOf && FB.abbeyOf(state, c) && FB.faithHasSystem(c.religion, 'papacy', state)) {
+      const officePath = FB.religiousOfficePath(state, c, 'abbot');
+      if (officePath) return officePath.id;
+    }
     const local = FB.religiousInstitutionCharacterPaths ? FB.religiousInstitutionCharacterPaths(state, c) : [];
     const paths = local.filter(function (id) { return religiousPathAllowed(state, c, id); });
     const vocation = paths.filter(function (id) { return FBDATA.religiousPaths[id].kind !== 'lay'; })[0];
@@ -909,7 +945,7 @@ window.FB = window.FB || {};
 
   FB.religiousRankTitle = function (state, c, path) {
     const abbey = FB.abbeyOf && FB.abbeyOf(state, c);
-    if (abbey && (!path || (path.id === 'catholic_monastic' && path.step.id === 'abbot'))) {
+    if (abbey && (!path || FB.religiousOfficeStep(path.id, path.step.id, 'abbot'))) {
       return FB.abbeyTitle(abbey);
     }
     if (FB.isPapalClaimant && FB.isPapalClaimant(state, c)) return FB.T('Pope');
@@ -919,6 +955,23 @@ window.FB = window.FB || {};
     const field = c.sex === 'f' && path.step.name_f ? 'name_f' : 'name';
     return FB.dataText(state, c.id, 'religiousPath',
       path.id + '.ranks.' + path.step.id, path.step, field, {});
+  };
+
+  FB.validateRankPrestige = function (rates) {
+    const errors = [], religious = { bishop:true, cardinal:true, pope:true }, guild = { member:true, master:true, officer:true, guildmaster:true };
+    Object.keys(FBDATA.religiousPaths || {}).forEach(function (id) {
+      (FBDATA.religiousPaths[id].ranks || []).forEach(function (rank) { religious[rank.id] = true; });
+    });
+    if (!rates || typeof rates !== 'object' || Array.isArray(rates)) return ['rankPrestigeYearly must be a record.'];
+    Object.keys(rates).forEach(function (key) { if (['ruling','guild','religious'].indexOf(key) < 0) errors.push('rankPrestigeYearly.' + key + ' is unsupported.'); });
+    ['ruling','guild','religious'].forEach(function (key) {
+      const table = rates[key];
+      if (!table || typeof table !== 'object' || Array.isArray(table) || Object.keys(table).length > 256) { errors.push('rankPrestigeYearly.' + key + ' needs a bounded rate table.'); return; }
+      Object.keys(table).forEach(function (id) {
+        if ((key === 'ruling' ? !/^[0-7]$/.test(id) : !(key === 'guild' ? guild : religious)[id]) || typeof table[id] !== 'number' || !isFinite(table[id]) || table[id] < 0 || table[id] > 1000) errors.push('Invalid rankPrestigeYearly.' + key + '.' + id + ' rate.');
+      });
+    });
+    return errors;
   };
 
   /* Current ranks only; no promotion reward, saved prose, or RNG use. */
@@ -1092,16 +1145,10 @@ window.FB = window.FB || {};
   };
 
   function setBishopRank(state, c) {
-    const activeId = religiousPathId(state, c);
-    const pathId = activeId === 'catholic_monastic'
-      ? activeId : 'catholic_clerical';
-    const def = FBDATA.religiousPaths[pathId];
-    let bishopIndex = def.ranks.length - 1;
-    for (let i = 0; i < def.ranks.length; i++) {
-      if (def.ranks[i].id === 'bishop') bishopIndex = i;
-    }
+    const path = FB.religiousOfficePath(state, c, 'bishop');
+    if (!path) return;
     c.religiousRanks = c.religiousRanks || {};
-    c.religiousRanks[pathId] = bishopIndex;
+    c.religiousRanks[path.id] = path.index;
   }
 
   FB.installBishopric = function (state, c, status, opts) {
@@ -1171,8 +1218,8 @@ window.FB = window.FB || {};
     c = c || playerChar(state);
     const path = c && FB.religiousPathOf(state, c);
     const step = path && path.next;
-    const visible = !!(path && path.id === 'catholic_monastic' &&
-      step && step.id === 'abbot');
+    const visible = !!(path && step && FB.religiousOfficeStep(path.id, step.id, 'abbot') &&
+      FB.faithHasSystem(c.religion, 'papacy', state));
     if (!visible) return { visible:false, ready:false, missing:[] };
     if (c.sex === 'f' && FB.abbeyAppointmentStatus) {
       const election = FB.abbeyAppointmentStatus(state, FB.abbeyAt(state, state.player.provinceId), c);
@@ -1256,7 +1303,7 @@ window.FB = window.FB || {};
 
   function bishopCandidateExcommunicated(state, c, obedienceId) {
     if (!FB.systemEnabled(state, 'excommunication', { character:c })) return false;
-    if (c.traits && c.traits.indexOf('excommunicated') >= 0) return true;
+    if (FB.traitMechanic(c, 'excommunication') > 0) return true;
     return !!(FB.excommunicationOf &&
       FB.excommunicationOf(state, c.id, obedienceId));
   }
@@ -1283,11 +1330,9 @@ window.FB = window.FB || {};
     c = c || playerChar(state);
     const path = c && FB.religiousPathOf(state, c);
     const step = path && path.next;
-    const corePath = path && (path.id === 'catholic_monastic' ||
-      path.id === 'catholic_clerical');
+    const corePath = path && step && FB.religiousOfficeStep(path.id, step.id, 'bishop');
     const visible = !!(c && corePath &&
-      FB.faithHasSystem(c.religion, 'papacy', state) && step &&
-      step.id === 'bishop');
+      FB.faithHasSystem(c.religion, 'papacy', state) && step);
     if (!visible) return { visible:false, ready:false, missing:[] };
     const cfg = catholicOfficeBalance('bishopric');
     const missing = [];
@@ -1310,11 +1355,11 @@ window.FB = window.FB || {};
     let support = papalOpinion;
     let appointerKind = 'canonical';
     let appointerId = pope && pope.id || null;
-    if (policyId === 'lay') {
+    if (FB.papalPolicyKind(policyId) === 'lay') {
       support = local.opinion;
       appointerKind = 'lay';
       appointerId = local.id;
-    } else if (policyId === 'concordat') {
+    } else if (FB.papalPolicyKind(policyId) === 'concordat') {
       support = (papalOpinion + local.opinion) / 2;
       appointerKind = 'concordat';
       appointerId = pope && pope.id || local.id;
@@ -1446,10 +1491,8 @@ window.FB = window.FB || {};
     if (!advance || advance.blocked) return false;
     const path = advance.path;
     const step = advance.step;
-    const coreBishop = (path.id === 'catholic_monastic' ||
-      path.id === 'catholic_clerical') && step.id === 'bishop';
-    if ((path.id === 'catholic_monastic' && step.id === 'abbot') ||
-        coreBishop) return false; // core contested offices use appointment flows
+    const coreBishop = FB.religiousOfficeStep(path.id, step.id, 'bishop');
+    if (FB.religiousOfficeStep(path.id, step.id, 'abbot') || coreBishop) return false; // core contested offices use appointment flows
     state.player.gold -= step.gold || 0;
     state.player.prestige += step.prestigeGain || 0;
     c.religiousRanks = c.religiousRanks || {};
@@ -2420,7 +2463,7 @@ window.FB = window.FB || {};
       }
     }
     for (const record of (FB.retainerRecords ? FB.retainerRecords(state) : [])) {
-      if (record.office === 'tutor') add(record.charId, 'household_tutor');
+      if (FBDATA.positionRules[record.office] && FBDATA.positionRules[record.office].teaches) add(record.charId, 'household_tutor');
     }
     if (current) {
       add(currentId === 'self' ? 'self' : current.id, 'current_tutor');
@@ -5377,7 +5420,7 @@ window.FB = window.FB || {};
         if (FB.chance(0.65)) FB.gainSkill(c, def.skill, 1);
         if (def.learned) {
           const literacyYears = Math.max(1, Number(def.literacyYears) || 2);
-          if (career.experience >= literacyYears && !hasTrait(c, 'literate')) {
+          if (career.experience >= literacyYears && !FB.traitMechanic(c, 'literacy')) {
             FB.addTrait(c, 'literate');
             FB.news(state, FB.msg('news.career.lettered',
               '📜 {name} learns to read and write through sustained training.', {
@@ -5427,7 +5470,7 @@ window.FB = window.FB || {};
     }
     if (career.guildRank === 'master') {
       const merchantLearning = FB.professionHasRole(career.profession, 'trading') ? 6 : 0;
-      const lettered = !merchantLearning || hasTrait(c, 'literate');
+      const lettered = !merchantLearning || FB.traitMechanic(c, 'literacy') > 0;
       const learning = FB.skillOf(c, 'lea');
       const step = { to:'officer', cost:25, prestige:60, need:10,
         learning:merchantLearning, lettered:lettered,
@@ -5437,7 +5480,7 @@ window.FB = window.FB || {};
     }
     if (career.guildRank === 'officer') {
       const merchantLearning = FB.professionHasRole(career.profession, 'trading') ? 8 : 0;
-      const lettered = !merchantLearning || hasTrait(c, 'literate');
+      const lettered = !merchantLearning || FB.traitMechanic(c, 'literacy') > 0;
       const learning = FB.skillOf(c, 'lea');
       const step = { to:'guildmaster', cost:50, prestige:120, need:12,
         learning:merchantLearning, lettered:lettered,
@@ -6039,6 +6082,60 @@ window.FB = window.FB || {};
     return slots.outgoing;
   };
 
+  FB.enterpriseMechanics = function (type) { return FBDATA.enterpriseMechanics[type] || {}; };
+  FB.enterpriseOutputShares = function (type, specialization) {
+    const rule = FB.enterpriseMechanics(type);
+    return rule.outputBySpecialization && rule.outputBySpecialization[specialization] || rule.output || {};
+  };
+  FB.validateEnterpriseMechanics = function () {
+    const errors = [], specializations = {}, goods = FBDATA.marketGoods || {};
+    function own(table, id) { return !!table && Object.prototype.hasOwnProperty.call(table, id); }
+    function object(value) { return !!value && typeof value === 'object' && !Array.isArray(value); }
+    function rates(row, known, max, path, conserved) {
+      if (!object(row)) { errors.push(path + ' must be a rate table.'); return; }
+      let total = 0;
+      for (const key of Object.keys(row)) {
+        const value = row[key];
+        if (!own(known, key) || typeof value !== 'number' || !Number.isFinite(value) || value < 0 || value > max)
+          errors.push(path + '.' + key + ' is an invalid rate or reference.');
+        total += value;
+      }
+      if (conserved && total > 1.000000001) errors.push(path + ' cannot allocate more than the physical output.');
+    }
+    for (const id of Object.keys(FBDATA.careers)) Object.assign(specializations, FBDATA.careers[id].specializations || {});
+    const routes = { local:true,overland:true,water:true };
+    for (const root of ['enterpriseMechanics','specializationMarketEffects','householdStandardDemand']) {
+      const table = FBDATA[root];
+      if (!object(table)) { errors.push(root + ' must be a table.'); continue; }
+      if (Object.keys(table).length > 2048) errors.push(root + ' exceeds 2048 records.');
+      for (const id of Object.keys(table)) {
+        const row = table[id], path = root + '.' + id;
+        if (root === 'specializationMarketEffects') {
+          if (!own(specializations, id)) errors.push(path + ' names an unknown specialization.');
+          rates(row, routes, 1, path); continue;
+        }
+        if (root === 'householdStandardDemand') {
+          if (!own(FBDATA.householdStandards, id)) errors.push(path + ' names an unknown household standard.');
+          rates(row, goods, 100, path); continue;
+        }
+        if (!own(FBDATA.enterprises, id) || !object(row)) { errors.push(path + ' needs an enterprise and a record.'); continue; }
+        for (const key of Object.keys(row)) if (['output','outputBySpecialization','distribution','monopoly','tradeFinance'].indexOf(key) < 0) errors.push(path + '.' + key + ' is unsupported.');
+        if (row.output !== undefined) rates(row.output, goods, 1, path + '.output', true);
+        if (row.distribution !== undefined) rates(row.distribution, routes, 1, path + '.distribution');
+        if (row.tradeFinance !== undefined && typeof row.tradeFinance !== 'boolean') errors.push(path + '.tradeFinance must be boolean.');
+        if (row.monopoly !== undefined && ['craft','trade'].indexOf(row.monopoly) < 0) errors.push(path + '.monopoly is unsupported.');
+        if (row.outputBySpecialization !== undefined) {
+          if (!object(row.outputBySpecialization)) errors.push(path + '.outputBySpecialization must be a table.');
+          else for (const key of Object.keys(row.outputBySpecialization)) {
+            if (!own(specializations, key)) errors.push(path + '.outputBySpecialization.' + key + ' is unknown.');
+            rates(row.outputBySpecialization[key], goods, 1, path + '.outputBySpecialization.' + key, true);
+          }
+        }
+      }
+    }
+    return errors;
+  };
+
   FB.guildMonopolyEnterpriseBonus = function (state, profession, enterprise) {
     profession = monopolyProfession(profession);
     if (!profession) return 0;
@@ -6052,22 +6149,19 @@ window.FB = window.FB || {};
       }
       if (!enterprise) continue;
       if (record.mode === 'craft') {
-        if (enterprise.type !== 'workshop_business') continue;
+        if (FB.enterpriseMechanics(enterprise.type).monopoly !== 'craft') continue;
         const workerId = enterpriseAssignedIds(enterprise)[0];
         const worker = workerId && state.chars[workerId];
         const career = worker && FB.careerOf(state, worker);
-        const produced = career && career.specialization === 'smith' ? 'materials' :
-          career && career.specialization === 'cooper' ? 'transport' : 'wares';
-        if (produced === record.goodId) total += record.enterpriseBonus;
+        const shares = FB.enterpriseOutputShares(enterprise.type, career && career.specialization);
+        if (shares[record.goodId] > 0) total += record.enterpriseBonus;
       } else if (record.mode === 'local') {
-        if ((enterprise.type === 'market_stall_business' ||
-            enterprise.type === 'trade_house_business') &&
+        if (FB.enterpriseMechanics(enterprise.type).monopoly === 'trade' &&
             enterprise.provinceId === (record.originId || state.player.provinceId)) {
           total += record.enterpriseBonus;
         }
       } else if (record.mode === 'corridor' &&
-          (enterprise.type === 'market_stall_business' ||
-           enterprise.type === 'trade_house_business') &&
+          FB.enterpriseMechanics(enterprise.type).monopoly === 'trade' &&
           (enterprise.provinceId === record.originId ||
            enterprise.provinceId === record.destinationId)) {
         total += record.enterpriseBonus;
@@ -6997,7 +7091,7 @@ window.FB = window.FB || {};
 
   function hasTradeHouse(state) {
     for (const enterprise of FB.enterpriseList(state)) {
-      if (enterprise.type === 'trade_house_business') return true;
+      if (FB.enterpriseMechanics(enterprise.type).tradeFinance) return true;
     }
     return false;
   }
@@ -7359,7 +7453,7 @@ window.FB = window.FB || {};
     if (!state || !state.player) return FB.T('No traveler is ready to trade.');
     const p = state.player;
     const t = p.travel;
-    if (!t || t.phase !== 'arrived' || t.purpose !== 'trade') {
+    if (!t || t.phase !== 'arrived' || FB.travelPurposeKind(t.purpose) !== 'trade') {
       return FB.T('You must reach a trade venture market first.');
     }
     if (t.returnVenture) {
@@ -7410,7 +7504,7 @@ window.FB = window.FB || {};
     stake = Math.floor(Number(stake) || 0);
     if (!def || FB.tradeVentureStakes(state).indexOf(stake) < 0) return null;
     const t = state && state.player && state.player.travel;
-    if (!t || t.phase !== 'arrived' || t.purpose !== 'trade') return null;
+    if (!t || t.phase !== 'arrived' || FB.travelPurposeKind(t.purpose) !== 'trade') return null;
     const destId = t.destinationId || t.currentId;
     const homeId = t.homeId;
     const commodity = goodId && FBDATA.marketGoods && FBDATA.marketGoods[goodId];
@@ -7928,6 +8022,61 @@ window.FB = window.FB || {};
     return Object.prototype.hasOwnProperty.call(FBDATA.householdServiceRoles, id)
       ? FBDATA.householdServiceRoles[id] : null;
   }
+  FB.validateHouseholdServiceRoles = function (table) {
+    const errors = [], own = function (o, k) { return !!o && Object.prototype.hasOwnProperty.call(o, k); };
+    function object(o) { return !!o && typeof o === 'object' && !Array.isArray(o); }
+    function number(v, min, max, path) { if (typeof v !== 'number' || !Number.isFinite(v) || v < min || v > max) errors.push(path + ' is outside its numeric bounds.'); }
+    function fields(o, allowed, path) { for (const key of Object.keys(o)) if (allowed.indexOf(key) < 0) errors.push(path + '.' + key + ' is unsupported.'); }
+    const skills = ['mar','dip','int','ste','lea'];
+    if (!object(table) || Object.keys(table).length > 64) return ['householdServiceRoles needs at most 64 records.'];
+    for (const id of Object.keys(table)) {
+      const d = table[id], path = 'householdServiceRoles.' + id;
+      if (!/^[a-z][a-z0-9_]*$/.test(id) || !object(d)) { errors.push(path + ' must be a record with a stable id.'); continue; }
+      fields(d, ['position','path','previous','days','standing','wage','value','training','skills','lettered','maleOnly','traitFit','focusLabel','namesByTenure','teachesTrait','pupilTraining','coversDuties'], path);
+      if (!own(FBDATA.positions, d.position) || ['estate','letters','trade','arms'].indexOf(d.path) < 0) errors.push(path + ' needs a known position and service path.');
+      if (typeof d.focusLabel !== 'string' || !d.focusLabel.trim()) errors.push(path + '.focusLabel is required.');
+      number(d.wage, 0, 100, path + '.wage'); number(d.value, 0, 100, path + '.value');
+      if (d.standing !== undefined) number(d.standing, -100, 100, path + '.standing');
+      if (d.previous !== undefined) {
+        if (!own(table, d.previous)) errors.push(path + '.previous is unknown.');
+        number(d.days, 1, 36000, path + '.days');
+      }
+      if (d.coversDuties !== undefined && (!Array.isArray(d.coversDuties) || d.coversDuties.length > 32 || d.coversDuties.some(function (id,i,ids) { return !own(FBDATA.tenureDuties,id) || ids.indexOf(id) !== i; }))) errors.push(path + '.coversDuties needs at most 32 distinct known duties.');
+      for (const flag of ['lettered','maleOnly']) if (d[flag] !== undefined && typeof d[flag] !== 'boolean') errors.push(path + '.' + flag + ' must be boolean.');
+      if (!Array.isArray(d.training) || !d.training.length || d.training.length > 5 || d.training.some(function (k) { return skills.indexOf(k) < 0; })) errors.push(path + '.training needs one to five known skills.');
+      if (!object(d.skills)) errors.push(path + '.skills must be a table.');
+      else for (const k of Object.keys(d.skills)) { if (skills.indexOf(k) < 0) errors.push(path + '.skills.' + k + ' is unknown.'); number(d.skills[k], 0, 30, path + '.skills.' + k); }
+      if (d.traitFit !== undefined) {
+        if (!object(d.traitFit)) errors.push(path + '.traitFit must be a table.');
+        else for (const k of Object.keys(d.traitFit)) { if (!own(FBDATA.traits, k)) errors.push(path + '.traitFit.' + k + ' is unknown.'); number(d.traitFit[k], -2, 2, path + '.traitFit.' + k); }
+      }
+      if (d.namesByTenure !== undefined) {
+        if (!object(d.namesByTenure)) errors.push(path + '.namesByTenure must be a table.');
+        else for (const k of Object.keys(d.namesByTenure)) if (!own(FBDATA.tenureArchetypes, k) || typeof d.namesByTenure[k] !== 'string' || !d.namesByTenure[k].trim()) errors.push(path + '.namesByTenure.' + k + ' needs a known tenure and name.');
+      }
+      if (d.teachesTrait !== undefined) {
+        if (!object(d.teachesTrait)) errors.push(path + '.teachesTrait must be a record.');
+        else {
+          fields(d.teachesTrait, ['id','days'], path + '.teachesTrait');
+          if (!own(FBDATA.traits, d.teachesTrait.id)) errors.push(path + '.teachesTrait.id is unknown.');
+          number(d.teachesTrait.days, 1, 36000, path + '.teachesTrait.days');
+          if (!Number.isInteger(d.teachesTrait.days)) errors.push(path + '.teachesTrait.days must be an integer.');
+        }
+      }
+      if (d.pupilTraining !== undefined) {
+        if (!object(d.pupilTraining)) errors.push(path + '.pupilTraining must be a record.');
+        else {
+          fields(d.pupilTraining, ['skill','chance'], path + '.pupilTraining');
+          if (skills.indexOf(d.pupilTraining.skill) < 0) errors.push(path + '.pupilTraining.skill is unknown.');
+          number(d.pupilTraining.chance, 0, 1, path + '.pupilTraining.chance');
+        }
+      }
+      const seen = {}; let next = id;
+      while (next && own(table, next) && object(table[next]) && !seen[next]) { seen[next] = true; next = table[next].previous; }
+      if (next && seen[next]) errors.push(path + ' has a cyclic promotion requirement.');
+    }
+    return errors;
+  };
   function serviceHome(p) { return p.provinceId; }
   function serviceSettlement(p) {
     return p.homeSettlement === undefined ? (p.settlement || 0) : p.homeSettlement;
@@ -7945,10 +8094,8 @@ window.FB = window.FB || {};
   FB.householdServiceName = function (state, roleId) {
     const def = serviceDef(roleId);
     if (!def) return '';
-    if (roleId === 'reeve') {
-      const tenure = FB.activeSerfTenure && FB.activeSerfTenure(state);
-      if (tenure && tenure.archetypeId === 'latin_manorial') return FB.T('Reeve');
-    }
+    const tenure = FB.activeSerfTenure && FB.activeSerfTenure(state);
+    if (tenure && def.namesByTenure && def.namesByTenure[tenure.archetypeId]) return FB.T(def.namesByTenure[tenure.archetypeId]);
     return FB.dataText(state, state.player.charId, 'position', def.position,
       FBDATA.positions[def.position], 'name', {});
   };
@@ -7961,21 +8108,8 @@ window.FB = window.FB || {};
   FB.householdServiceFocusLabel = function (state) {
     const r = FB.householdServiceRecord(state);
     if (!r || r.status === 'ended') return '';
-    switch (r.roleId) {
-      case 'helper': return FB.T('Help on the lord’s estate');
-      case 'storekeeper': return FB.T('Tend the household stores');
-      case 'reeve': return FB.T('Oversee estate work');
-      case 'steward': return FB.T('Manage the lord’s household');
-      case 'tally': return FB.T('Assist with household tallies');
-      case 'clerk': return FB.T('Keep household accounts');
-      case 'tutor': return FB.T('Teach the household’s children');
-      case 'carrier': return FB.T('Carry household deliveries');
-      case 'buyer': return FB.T('Buy household provisions');
-      case 'factor': return FB.T('Manage household purchasing');
-      case 'watch': return FB.T('Keep the household watch');
-      case 'guard': return FB.T('Stand household guard');
-      default: return FB.T('Drill the household guard');
-    }
+    const def = serviceDef(r.roleId);
+    return FB.dataText(state, r.charId, 'householdServiceRole', r.roleId, def, 'focusLabel', {});
   };
   function serviceQualification(state, c, def) {
     const out = {traitBonus:0, traits:[], skills:[]};
@@ -8030,7 +8164,7 @@ window.FB = window.FB || {};
     else {
       if (r && r.status === 'active' && r.roleId === roleId && matching) out.missing.push(FB.T('You already hold this appointment.'));
       if (def.maleOnly && c && c.sex !== 'm') out.missing.push(FB.T('This household guard appointment is available to men.'));
-      if (def.lettered && c && c.traits.indexOf('literate') < 0) out.missing.push(FB.T('Requires Lettered. Tally assistance teaches letters after 720 working days.'));
+      if (def.lettered && c && !FB.traitMechanic(c, 'literacy')) out.missing.push(FB.T('Requires Lettered. Tally assistance teaches letters after 720 working days.'));
       for (const check of out.qualification.skills) {
         if (!check.met) {
           const names = {ste:FB.T('Stewardship'),lea:FB.T('Learning'),mar:FB.T('Martial'),dip:FB.T('Diplomacy')};
@@ -8146,11 +8280,13 @@ window.FB = window.FB || {};
     r.workedDays++;
     r.experience[r.roleId] = (r.experience[r.roleId] || 0) + 1;
     r.valueDelivered += value;
-    if (def.path === 'letters') {
+    if (def.teachesTrait) {
       r.learnedDays++;
-      if (r.learnedDays >= 720 && state.chars[r.charId].traits.indexOf('literate') < 0) {
-        FB.addTrait(state.chars[r.charId], 'literate');
-        FB.news(state, FB.msg('news.service.lettered', 'Household service taught you to read and write.', {}));
+      if (r.learnedDays >= def.teachesTrait.days && state.chars[r.charId].traits.indexOf(def.teachesTrait.id) < 0) {
+        FB.addTrait(state.chars[r.charId], def.teachesTrait.id);
+        FB.news(state, FB.traitMechanic(state.chars[r.charId], 'literacy')
+          ? FB.msg('news.service.lettered', 'Household service taught you to read and write.', {})
+          : FB.msg('news.service.learned_trait', 'Household service taught you {trait}.', { trait:FB.dataParam('trait', def.teachesTrait.id) }));
       }
     }
     if (r.workedDays % 90 === 0) {
@@ -8160,12 +8296,12 @@ window.FB = window.FB || {};
         {kind:'character',id:officer.id}, 3, 'household-service');
       const skill = def.training[(r.workedDays / 90 - 1) % def.training.length];
       if (FB.chance(0.5)) FB.gainSkill(state.chars[r.charId], skill, 1);
-      if (r.roleId === 'tutor') {
+      if (def.pupilTraining) {
         const children = status.patron.childrenIds || [];
         for (let i = 0; i < children.length; i++) {
           const child = state.chars[children[i]];
           if (child && !child.dead && FB.ageOf(child, state.date.year) >= 6 && FB.ageOf(child, state.date.year) < 16) {
-            if (FB.chance(0.5)) FB.gainSkill(child, 'lea', 1);
+            if (FB.chance(def.pupilTraining.chance)) FB.gainSkill(child, def.pupilTraining.skill, 1);
             break;
           }
         }
@@ -8180,7 +8316,7 @@ window.FB = window.FB || {};
     const r = FB.householdServiceRecord(state);
     return !!(r && r.status === 'active' && r.reliefUntil >= state.turn &&
       FB.householdServiceStatus(state).workReady && duty && !duty.commutationGold &&
-      ['week_work','household_service','herd_service','woodland_service','boat_service','customary_labor','irrigation_labor'].indexOf(duty.id) >= 0);
+      (serviceDef(r.roleId).coversDuties || []).indexOf(duty.id) >= 0);
   };
   FB.repairHouseholdService = function (state) {
     const raw = state.player.householdService;

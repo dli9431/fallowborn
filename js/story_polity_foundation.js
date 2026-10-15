@@ -155,9 +155,6 @@
   }
   FB.stories.registerType('polity_foundation', function (def) {
     validateDefinition(def);
-    for (var event in def.news || {}) {
-      var msg = def.news[event]; FB.registerMessage(msg.key, { text:msg.text });
-    }
     return { id:def.id, kind:'world', requires:def.requires || [], init:fresh,
       day:function (s, rec) { day(s, rec, FB.stories.definition(s, def)); },
       foundRevolt:function (s, rec, group, counties) { return foundRevolt(s, rec, FB.stories.definition(s, def), group, counties); },

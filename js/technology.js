@@ -202,7 +202,8 @@ window.FB = window.FB || {};
           (def.religions || []).indexOf(faith) >= 0) out.push(id);
     }
     out = unique(out);
-    return out.length ? out : ['latin'];
+    var fallback = FB.cultureValue(state, FB.eraDefaultCulture(state), 'doctrines.learning').value;
+    return out.length ? out : fallback && table[fallback] ? [fallback] : [];
   };
 
   function adoptionWindowForTraditions(def, traditions) {
@@ -1134,20 +1135,16 @@ window.FB = window.FB || {};
     if (def.domain === 'warfare') {
       score *= 1 + Math.max(0, Number(realm.aggression) || 0) * 0.4;
       if (realm.war) score *= 2;
-      if (['ambitious','wrathful','proud','brave'].indexOf(trait) >= 0) score *= 1.4;
-    } else if (def.domain === 'agriculture' || def.domain === 'crafts') {
-      if (['greedy','content','patient'].indexOf(trait) >= 0) score *= 1.25;
-    } else if (def.domain === 'learning') {
-      if (['patient','humble','honest'].indexOf(trait) >= 0) score *= 1.4;
     } else if (def.domain === 'governance') {
       score *= 1 + Math.max(0, (realm.rank || 1) - 2) * 0.2;
-      if (['ambitious','patient','deceitful'].indexOf(trait) >= 0) score *= 1.3;
     } else if (def.domain === 'commerce') {
       if (techAIRealmCoastal(context)) score *= 1.2;
-      if (trait === 'greedy') score *= 1.4;
     } else if (def.domain === 'seafaring') {
       score *= techAIRealmCoastal(context) ? 1.8 : 0.45;
     }
+    var traitRules = (FBDATA.traitMechanics || {})[trait];
+    var weight = traitRules && traitRules.researchWeights && traitRules.researchWeights[def.domain];
+    if (weight !== undefined) score *= weight;
     var seaTransport = def.fx && def.fx.seaTransport;
     if (typeof seaTransport === 'number' && isFinite(seaTransport) &&
         seaTransport >

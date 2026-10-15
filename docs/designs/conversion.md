@@ -366,3 +366,6 @@ Papal apostasy sanctions require the excommunication system for the former faith
 
 
 A successful realm-wide faith conversion updates an existing declared eliteFaithId along with the realm official faith. Personal and household conversion leave the institutional declaration unchanged. Community populations remain intact, and the original conversion costs, cooldown and eligibility still apply.
+
+
+rulerFaithTargets is a validated whole-list JSON root shared by ruler conversion, annual conversion AI and the church-council menu. It resolves newly imported faith ids in the candidate catalogue and retains all existing authority, cost and eligibility checks.

@@ -1008,7 +1008,8 @@ window.FB = window.FB || {};
   /* Cross-catalogue requirements are checked on the prepared definition,
      before activation changes the live world. No init hooks, RNG or saved
      representatives participate in authoring validation. */
-  FB.bookmarkRequirementFaults = function (definition, platform) {
+  FB.bookmarkRequirementFaults = function (definition, platform, storyContext) {
+    var stories = storyContext || FB.stories;
     var errors = [], era = FBDATA.eras[platform.era];
     var geography = FB.geography(FB.bookmarkGeography(definition));
     var provinces = {}, realms = {}, cultures = {}, faiths = {}, starts = {};
@@ -1094,7 +1095,7 @@ window.FB = window.FB || {};
       if (Array.isArray(req.governments) && !req.governments.some(function (id) { return forms.indexOf(id) >= 0; })) fault(owner, 'requires an absent government form.');
     }
     function story(id, kind, attached, owner) {
-      var def = FB.stories.get(id);
+      var def = stories.get(id);
       if (!def || def.kind !== kind) { fault(owner, 'unregistered ' + kind + ' story ' + id + '.'); return; }
       (def.requires || []).forEach(function (required) {
         if (attached.indexOf(required) < 0) fault(owner, 'story ' + id + ' requires unattached story ' + required + '.');
@@ -1105,7 +1106,7 @@ window.FB = window.FB || {};
       }
       requirements(def.requirements, 'story ' + id, null, null, attached);
       if (def.declaration) {
-        FB.stories.definitionFaults(def.declaration, definition, attached).forEach(function (error) {
+        stories.definitionFaults(def.declaration, definition, attached).forEach(function (error) {
           errors.push(error);
         });
         requirements(def.declaration.requirements, 'story ' + id, null, null, attached);
@@ -1115,7 +1116,7 @@ window.FB = window.FB || {};
         function futureRealms(required) {
           if (visited[required] || attached.indexOf(required) < 0) return;
           visited[required] = true;
-          var prerequisite = FB.stories.get(required), declaration = prerequisite && prerequisite.declaration;
+          var prerequisite = stories.get(required), declaration = prerequisite && prerequisite.declaration;
           if (declaration && declaration.grant) storyRealms[declaration.grant.realmId] = true;
           if (declaration && declaration.realm) storyRealms[declaration.realm.id] = true;
           (declaration && Array.isArray(declaration.regions) ? declaration.regions : []).forEach(function (region) {
@@ -1317,7 +1318,8 @@ window.FB = window.FB || {};
     return errors;
   };
 
-  FB.validateBookmark = function (definition, resolvedRevision) {
+  FB.validateBookmark = function (definition, resolvedRevision, storyContext) {
+    var stories = storyContext || FB.stories;
     var errors = [];
     var label = definition && definition.id ? definition.id : '?';
     function fault(text) { errors.push('Bookmark ' + label + ': ' + text); }
@@ -1334,7 +1336,7 @@ window.FB = window.FB || {};
         revisionSiblings = siblings;
         try {
           Object.keys(definition.revisions).forEach(function (revision) {
-            errors = errors.concat(FB.validateBookmark(resolveBookmarkRevision(definition, revision), true));
+            errors = errors.concat(FB.validateBookmark(resolveBookmarkRevision(definition, revision), true, stories));
           });
         } finally { revisionSiblings = outer; }
       } catch (revisionError) { fault(revisionError.message); }
@@ -1395,7 +1397,7 @@ window.FB = window.FB || {};
         !Array.isArray(definition.scripted))) return errors;
     var platform = FB.resolveBookmarkPlatform(definition);
     for (var pf = 0; pf < platform.faults.length; pf++) fault(platform.faults[pf]);
-    FB.bookmarkRequirementFaults(definition, platform).forEach(fault);
+    FB.bookmarkRequirementFaults(definition, platform, stories).forEach(fault);
     FB.validateClimateData().forEach(fault);
     FB.validateBuildingData(FBDATA.buildings, true).forEach(fault);
     FB.validateUnitClassRoles(FBDATA.unitClasses, true).forEach(fault);
@@ -1418,7 +1420,7 @@ window.FB = window.FB || {};
     if (definition.stories !== undefined) {
       if (!Array.isArray(definition.stories)) fault('stories must be a list.');
       else for (var si = 0; si < definition.stories.length; si++) {
-        var storyDef = FB.stories && FB.stories.get(definition.stories[si]);
+        var storyDef = stories && stories.get(definition.stories[si]);
         if (!storyDef || storyDef.kind !== 'world') {
           fault('story ' + definition.stories[si] + ' is not a registered world story.');
         }
@@ -3429,8 +3431,7 @@ window.FB = window.FB || {};
         FB.playerExcommunicatedBy) {
       return !!FB.playerExcommunicatedBy(state);
     }
-    return !!(c && c.traits &&
-      c.traits.indexOf('excommunicated') >= 0);
+    return FB.traitMechanic(c, 'excommunication') > 0;
   };
 
   FB.applySacrilegiousWarConsequences = function (state, religionId) {
@@ -9276,7 +9277,7 @@ window.FB = window.FB || {};
       !p.flags.home_burned2;
     if (p.flags.home_burned) { delete p.flags.home_burned; p.flags.home_burned2 = 1; }
     else p.flags.home_burned = 1;
-    FB.queueEvent(state, 'devastation_raiders', {});
+    FB.queueLifecycleEvents(state, 'home_raid', {});
     if (firstSerfBurn && p.tenureTransition &&
         FB.noteSerfHomeTransition) {
       FB.noteSerfHomeTransition(state, 'war_pressure', null, null, {
@@ -9292,7 +9293,7 @@ window.FB = window.FB || {};
     /* after the second burning the lord's steward makes his offer — but only
        a freeholder has a freedom left to sell */
     if (p.flags.home_burned2 && FB.station.isFreeholder(p, state)) {
-      FB.queueEvent(state, 'devastation_protection', {});
+      FB.queueLifecycleEvents(state, 'protection_offer', {});
     }
   };
   FB.fns = FB.fns || {};

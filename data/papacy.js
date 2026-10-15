@@ -262,3 +262,19 @@ window.FBDATA = window.FBDATA || {};
     }
   };
 })();
+
+/* Typed roles compose with the original presentation and balance catalogue. */
+FBDATA.papacyRules = {
+  cardinalCulture:{ kind:'culture', id:'italian' }, fallbackCulture:{ kind:'culture', id:'frankish' },
+  defaultOrder:'bishop', incumbentTitle:'Ostia',
+  defaultPolicies:{ secular:'lay', religious:'canonical', compromise:'concordat' },
+  orders:{ bishop:{ minimum:2, share:.25, shortlist:true }, priest:{ minimum:0, share:0, shortlist:false }, deacon:{ minimum:0, share:0, shortlist:false } },
+  tactics:{
+    negotiate:{ kind:'negotiate', bonus:24, prestigeCost:0 },
+    doctrine:{ kind:'doctrine', bonus:14, prestigeCost:0 },
+    benefice:{ kind:'benefice', bonus:20, prestigeCost:0 },
+    backing:{ kind:'backing', bonus:18, prestigeCost:100 },
+    withdraw:{ kind:'withdraw', bonus:0, prestigeCost:0 }
+  },
+  policies:{ lay:{ kind:'lay' }, canonical:{ kind:'canonical' }, concordat:{ kind:'concordat', institution:'investiture_concordat' } }
+};

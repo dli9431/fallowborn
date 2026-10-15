@@ -83,3 +83,205 @@ flux:            { name:'The flux', icon:'🤮', kind:'sickness', desc:'The bell
 winter_chill:    { name:'A chilling cough', icon:'🥶', kind:'sickness', desc:'A wet cough that settles deep in the chest.' },
 pestilence:      { name:'Pestilence', icon:'☠', kind:'sickness', desc:'The great mortality walks, and it stopped here.' }
 };
+
+/* Behavioral declarations are separate from retained trait presentation records. */
+FBDATA.traitMechanics = {
+  "brave": {
+    "tournamentPower": 1,
+    "researchWeights": {
+      "warfare": 1.4
+    }
+  },
+  "craven": {
+    "tournamentElitePenalty": 1
+  },
+  "zealous": {
+    "prayerPiety": 2,
+    "familyFaith": 1,
+    "coerciveConversion": 1,
+    "refusalFaith": 0.08,
+    "papalReformBloc": 1,
+    "papalReformSupport": 6,
+    "rulerAims": {
+      "defend_faith": 40
+    },
+    "investitureResistance": -8,
+    "holyWarParticipation": 200,
+    "holyWarLongVow": 1,
+    "holyWarSacredDesire": 1,
+    "holyWarStanding": 0.5,
+    "courtSharedFaithLoyalty": 10,
+    "conversionResistance": 20
+  },
+  "greedy": {
+    "familyWealth": 1,
+    "accompliceAmbition": 0.05,
+    "intrigueAggression": 0.6,
+    "rulerAims": {
+      "amass_wealth": 30
+    },
+    "schemeOrder": {
+      "priority": 2,
+      "ids": [
+        "blackmail",
+        "sabotage",
+        "fabricated_charge",
+        "abduction",
+        "assassination"
+      ]
+    },
+    "researchWeights": {
+      "agriculture": 1.25,
+      "crafts": 1.25,
+      "commerce": 1.4
+    }
+  },
+  "ambitious": {
+    "familyService": 1,
+    "accompliceAmbition": 0.05,
+    "intrigueAggression": 0.6,
+    "papalSupport": 2,
+    "rulerAims": {
+      "expand_realm": 20
+    },
+    "researchWeights": {
+      "warfare": 1.4,
+      "governance": 1.3
+    },
+    "courtLoyalty": -20,
+    "rivalryWeight": 0.2,
+    "holyWarLongVow": 1,
+    "holyWarCrownDesire": 1
+  },
+  "wrathful": {
+    "accompliceViolence": 0.05,
+    "intrigueAggression": 0.6,
+    "rulerAims": {
+      "expand_realm": 20
+    },
+    "schemeOrder": {
+      "priority": 1,
+      "ids": [
+        "assassination",
+        "abduction",
+        "sabotage",
+        "fabricated_charge",
+        "blackmail"
+      ]
+    },
+    "researchWeights": {
+      "warfare": 1.4
+    },
+    "rivalryWeight": 0.2
+  },
+  "content": {
+    "intrigueRestraint": 0.15,
+    "rulerAims": {
+      "keep_peace": 10
+    },
+    "researchWeights": {
+      "agriculture": 1.25,
+      "crafts": 1.25
+    },
+    "courtLoyalty": 20,
+    "rivalryWeight": -0.15
+  },
+  "kind": {
+    "accompliceMercy": 0.05,
+    "refusalMercy": 0.08,
+    "intrigueRestraint": 0.15,
+    "rulerAims": {
+      "keep_peace": 10
+    },
+    "courtLoyalty": 10,
+    "rivalryWeight": -0.15
+  },
+  "patient": {
+    "accompliceMercy": 0.05,
+    "intrigueRestraint": 0.15,
+    "rulerAims": {
+      "keep_peace": 10
+    },
+    "researchWeights": {
+      "agriculture": 1.25,
+      "crafts": 1.25,
+      "learning": 1.4,
+      "governance": 1.3
+    },
+    "courtLoyalty": 12,
+    "rivalryWeight": -0.15
+  },
+  "proud": {
+    "familyService": 1,
+    "researchWeights": {
+      "warfare": 1.4
+    },
+    "investitureResistance": 10,
+    "courtLoyalty": -10,
+    "rivalryWeight": 0.2
+  },
+  "deceitful": {
+    "accompliceDeception": 0.1,
+    "intrigueAggression": 0.6,
+    "researchWeights": {
+      "governance": 1.3
+    },
+    "courtLoyalty": -10
+  },
+  "cruel": {
+    "accompliceViolence": 0.05,
+    "intrigueAggression": 0.6,
+    "harshJustice": 1,
+    "papalPenalty": 4,
+    "schemeOrder": {
+      "priority": 1,
+      "ids": [
+        "assassination",
+        "abduction",
+        "sabotage",
+        "fabricated_charge",
+        "blackmail"
+      ]
+    },
+    "rivalryWeight": 0.2
+  },
+  "honest": {
+    "accompliceIntegrity": 0.1,
+    "refusalIntegrity": 0.12,
+    "intrigueRestraint": 0.15,
+    "papalReformBloc": 1,
+    "researchWeights": {
+      "learning": 1.4
+    },
+    "courtLoyalty": 12
+  },
+  "schemer": {
+    "schemeSuccess": 0.05
+  },
+  "literate": {
+    "literacy": 1
+  },
+  "excommunicated": {
+    "excommunication": 1
+  },
+  "pilgrim": {
+    "pilgrimageExperience": 1
+  },
+  "comely": {
+    "courtshipProposal": 0.08
+  },
+  "homely": {
+    "courtshipProposal": -0.08
+  },
+  "humble": {
+    "researchWeights": {
+      "learning": 1.4
+    },
+    "courtLoyalty": 15,
+    "rivalryWeight": -0.15
+  },
+  "cynical": {
+    "courtLoyalty": -8,
+    "holyWarStanding": -0.5
+  }
+};

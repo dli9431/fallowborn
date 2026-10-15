@@ -194,7 +194,6 @@
   FB.storyPartition = { quote:partitionQuote, grant:grantPartition };
   FB.stories.registerType('partition', function (def) {
     partitionDefinition(def);
-    Object.keys(def.news || {}).forEach(function (key) { FB.registerMessage(def.news[key].key, { text:def.news[key].text }); });
     return { id:def.id, kind:'world', requires:def.requires || [],
       init:function (s) {
         var d = effective(s, def), actor = ruler(s, d.actor.realmId);
@@ -363,7 +362,6 @@
   };
   FB.stories.registerType('holy_war', function (def) {
     holyDefinition(def);
-    Object.keys(def.news || {}).forEach(function (key) { FB.registerMessage(def.news[key].key, { text:def.news[key].text }); });
     return { id:def.id, kind:'world', requires:def.requires || [],
       init:function (s) {
         var seeded = [];

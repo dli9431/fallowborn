@@ -347,3 +347,530 @@ FBDATA.deeds = [
   { id:'seek_station', availableWhileTraveling:true, label:'🏛 Seek station recognition', order:93,
     section:'realm', group:'realm', flow:'choices', handler:'seek_station' }
 ];
+
+/* Ordered daily work operations; resources and Standing are seasonal rates. */
+FBDATA.focusRoutines = {
+  "study": [
+    {
+      "kind": "training",
+      "chance": 0.5,
+      "skills": [
+        "lea",
+        "ste",
+        "dip"
+      ]
+    }
+  ],
+  "play": [
+    {
+      "kind": "health",
+      "amount": 0.012
+    },
+    {
+      "kind": "training",
+      "chance": 0.3,
+      "sexSkills": {
+        "f": "dip",
+        "m": "mar"
+      }
+    }
+  ],
+  "rest": [
+    {
+      "kind": "health",
+      "amount": 0.014
+    }
+  ],
+  "pray": [
+    {
+      "kind": "resource",
+      "resource": "piety",
+      "base": 3,
+      "terms": [
+        {
+          "kind": "trait",
+          "id": "prayerPiety"
+        }
+      ]
+    },
+    {
+      "kind": "standing",
+      "role": "priest",
+      "create": false,
+      "amount": 2
+    }
+  ],
+  "militia": [
+    {
+      "kind": "training",
+      "chance": 0.6,
+      "skill": "mar"
+    }
+  ],
+  "work_land": [
+    {
+      "kind": "resource",
+      "resource": "gold",
+      "balanceRange": "freeWage",
+      "terms": [
+        {
+          "kind": "flag",
+          "id": "own_ox",
+          "amount": 1
+        }
+      ]
+    }
+  ],
+  "market": [
+    {
+      "kind": "resource",
+      "resource": "gold",
+      "base": 1,
+      "terms": [
+        {
+          "kind": "skill",
+          "id": "ste",
+          "divisor": 3
+        }
+      ]
+    },
+    {
+      "kind": "training",
+      "chance": 0.35,
+      "skill": "ste"
+    }
+  ],
+  "keep_house": [
+    {
+      "kind": "resource",
+      "resource": "gold",
+      "base": 1,
+      "terms": [
+        {
+          "kind": "skill",
+          "id": "ste",
+          "divisor": 3
+        }
+      ]
+    },
+    {
+      "kind": "training",
+      "chance": 0.4,
+      "skills": [
+        "ste",
+        "dip"
+      ]
+    }
+  ],
+  "drill": [
+    {
+      "kind": "resource",
+      "resource": "gold",
+      "base": 1
+    },
+    {
+      "kind": "training",
+      "chance": 0.7,
+      "skill": "mar"
+    }
+  ],
+  "stand_guard": [
+    {
+      "kind": "resource",
+      "resource": "gold",
+      "base": 2
+    },
+    {
+      "kind": "standing",
+      "role": "lord",
+      "create": false,
+      "amount": 2
+    }
+  ],
+  "copy_books": [
+    {
+      "kind": "resource",
+      "resource": "piety",
+      "base": 2
+    },
+    {
+      "kind": "training",
+      "chance": 0.6,
+      "skill": "lea"
+    },
+    {
+      "kind": "trait",
+      "id": "literate",
+      "chance": 0.6
+    }
+  ],
+  "serve_church": [
+    {
+      "kind": "resource",
+      "resource": "piety",
+      "base": 4
+    },
+    {
+      "kind": "resource",
+      "resource": "prestige",
+      "base": 2
+    },
+    {
+      "kind": "countySupport",
+      "amount": 2
+    }
+  ],
+  "manage_manor": [
+    {
+      "kind": "resource",
+      "resource": "gold",
+      "balanceRange": "manorIncome",
+      "terms": [
+        {
+          "kind": "skill",
+          "id": "ste",
+          "divisor": 4
+        }
+      ]
+    }
+  ],
+  "serve_lord": [
+    {
+      "kind": "standing",
+      "role": "lord",
+      "create": true,
+      "amount": 6
+    },
+    {
+      "kind": "resource",
+      "resource": "prestige",
+      "base": 2
+    },
+    {
+      "kind": "training",
+      "chance": 0.3,
+      "skill": "dip"
+    }
+  ],
+  "train_arms": [
+    {
+      "kind": "training",
+      "chance": 0.6,
+      "skill": "mar"
+    }
+  ],
+  "shepherd_diocese": [
+    {
+      "kind": "resource",
+      "resource": "piety",
+      "base": 4
+    },
+    {
+      "kind": "countySupport",
+      "amount": 2
+    },
+    {
+      "kind": "training",
+      "chance": 0.35,
+      "skill": "lea"
+    }
+  ],
+  "craft_work": [
+    {
+      "kind": "resource",
+      "resource": "gold",
+      "range": [
+        2,
+        5
+      ],
+      "terms": [
+        {
+          "kind": "flag",
+          "id": "guild_member",
+          "amount": 1
+        },
+        {
+          "kind": "specialization",
+          "id": "focusGold"
+        }
+      ]
+    },
+    {
+      "kind": "training",
+      "chance": 0.3,
+      "skill": "ste"
+    }
+  ],
+  "keep_records": [
+    {
+      "kind": "resource",
+      "resource": "gold",
+      "base": 2,
+      "terms": [
+        {
+          "kind": "skill",
+          "id": "ste",
+          "divisor": 4
+        },
+        {
+          "kind": "skill",
+          "id": "lea",
+          "divisor": 8
+        },
+        {
+          "kind": "specialization",
+          "id": "focusGold"
+        }
+      ]
+    },
+    {
+      "kind": "standing",
+      "role": "administration",
+      "create": false,
+      "amount": 0,
+      "specialization": "focusStanding"
+    },
+    {
+      "kind": "training",
+      "chance": 0.35,
+      "skills": [
+        "ste",
+        "lea"
+      ]
+    }
+  ],
+  "practice_physic": [
+    {
+      "kind": "resource",
+      "resource": "gold",
+      "base": 1,
+      "terms": [
+        {
+          "kind": "skill",
+          "id": "lea",
+          "divisor": 3
+        },
+        {
+          "kind": "specialization",
+          "id": "focusGold"
+        }
+      ]
+    },
+    {
+      "kind": "training",
+      "chance": 0.45,
+      "skill": "lea"
+    }
+  ],
+  "scholarly_work": [
+    {
+      "kind": "resource",
+      "resource": "gold",
+      "base": 0.5,
+      "terms": [
+        {
+          "kind": "skill",
+          "id": "lea",
+          "divisor": 10
+        },
+        {
+          "kind": "specialization",
+          "id": "focusGold"
+        }
+      ]
+    },
+    {
+      "kind": "resource",
+      "resource": "prestige",
+      "base": 0,
+      "terms": [
+        {
+          "kind": "specialization",
+          "id": "focusPrestige"
+        }
+      ]
+    },
+    {
+      "kind": "research",
+      "base": 1,
+      "terms": [
+        {
+          "kind": "skill",
+          "id": "lea",
+          "divisor": 10,
+          "cap": 2
+        },
+        {
+          "kind": "specialization",
+          "id": "focusResearch"
+        }
+      ]
+    },
+    {
+      "kind": "training",
+      "chance": 0.5,
+      "skill": "lea"
+    }
+  ],
+  "courtly_graces": [
+    {
+      "kind": "standing",
+      "role": "liegeOrLord",
+      "create": true,
+      "amount": 4
+    },
+    {
+      "kind": "resource",
+      "resource": "prestige",
+      "base": 2,
+      "terms": []
+    },
+    {
+      "kind": "training",
+      "chance": 0.5,
+      "skill": "dip"
+    }
+  ],
+  "administer_temporalities": [
+    {
+      "kind": "resource",
+      "resource": "gold",
+      "base": 0,
+      "terms": [
+        {
+          "kind": "income",
+          "id": "bishopric",
+          "factor": 0.15
+        }
+      ]
+    },
+    {
+      "kind": "standing",
+      "role": "liege",
+      "create": false,
+      "amount": 2
+    },
+    {
+      "kind": "training",
+      "chance": 0.3,
+      "skill": "ste"
+    }
+  ],
+  "govern": [
+    {
+      "kind": "resource",
+      "resource": "gold",
+      "base": 0,
+      "terms": [
+        {
+          "kind": "income",
+          "id": "tax",
+          "factor": 0.15
+        }
+      ]
+    },
+    {
+      "kind": "countySupport",
+      "amount": 3
+    },
+    {
+      "kind": "training",
+      "chance": 0.25,
+      "skill": "ste"
+    }
+  ],
+  "patronize": [
+    {
+      "kind": "research",
+      "base": 2,
+      "terms": [
+        {
+          "kind": "skill",
+          "id": "lea",
+          "divisor": 10,
+          "cap": 3
+        }
+      ]
+    },
+    {
+      "kind": "resource",
+      "resource": "gold",
+      "base": -2,
+      "terms": []
+    },
+    {
+      "kind": "training",
+      "chance": 0.3,
+      "skill": "lea"
+    }
+  ]
+};
+
+FBDATA.deedEvents = {
+  "seek_blessing": "seek_blessing",
+  "hold_court": "hold_court_event",
+  "visit_diocese": "bishop_visit_diocese",
+  "ecclesiastical_court": "bishop_ecclesiastical_court",
+  "extraordinary_tithe": "bishop_extraordinary_tithe",
+  "hold_feast": "court_feast"
+};
+
+/* Small transactions share the existing effect and event interpreter. */
+FBDATA.deedRoutines = {
+  give_alms:{ costs:{gold:10}, effects:{piety:8,popularOpinion:3},
+    message:{key:'news.action.alms',text:'🕯 Gave alms to the poor.'} },
+  swear_friend:{ effects:{setFlag:'sworn_friend',prestige:4,opinion:{role:'friend',amt:20}},
+    message:{key:'news.action.brotherhood',text:'Swore an oath of brotherhood.'} },
+  squeeze_taxes:{ income:{kind:'tax',factor:0.8,minimum:4}, effects:{popularOpinion:-6} },
+  convene_synod:{ costs:{gold:10}, queueEvent:'bishop_synod' }
+};
+
+/* Policy values for canonical stateful work and social transactions. */
+FBDATA.actionPolicies = {
+  "toil": {
+    "injuryChance": 0.1,
+    "injuryHealth": 1
+  },
+  "trade_run": {
+    "successBase": 0.55,
+    "skillChance": 0.015,
+    "profitBase": 9,
+    "profitSkillDivisor": 2,
+    "loss": 6,
+    "stockThreshold": 10,
+    "poorStockFactor": 0.3,
+    "minimum": 0.5,
+    "trainingChance": 0.4
+  },
+  "lead_host": {
+    "standing": 4,
+    "trainingChance": 0.5
+  },
+  "scheming": {
+    "powerBase": 2,
+    "powerSkillDivisor": 3,
+    "trainingChance": 0.25,
+    "discoveryCap": 0.3,
+    "discoveryBase": 0.12,
+    "exposureFactor": 0.06
+  },
+  "scheme_rival": {
+    "successBase": 0.35,
+    "skillChance": 0.03,
+    "standingDivisor": 500,
+    "trainingChance": 0.5,
+    "successPrestige": 4,
+    "successStanding": -10,
+    "successHeat": 10,
+    "failureHeat": 14,
+    "failurePrestige": -4
+  },
+  "mediate": {
+    "successBase": 0.4,
+    "skillChance": 0.03,
+    "trainingChance": 0.6,
+    "successPrestige": 3,
+    "successOpinion": 3,
+    "failurePrestige": -2
+  }
+};

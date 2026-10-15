@@ -3,6 +3,96 @@ window.FB = window.FB || {};
 (function () {
   'use strict';
   var T = FB.tournaments = {}, D = FBDATA.tournaments;
+  function rules() { return FBDATA.tournamentRules; }
+  function trackRule(id) { return rules().tracks[id] || {}; }
+  function scaleRule(id) { return rules().scales[id] || {}; }
+  function programmeRule(id) { return rules().programmes[id] || {}; }
+  function tacticRule(id) { return rules().tactics[id] || {}; }
+  T.trackPolicy = trackRule;
+  T.defaultTactic = function () { return rules().defaultTactic; };
+  T.validateData = function (data, policies) {
+    var errors = [], groups = ['scales','programmes','tracks','tactics'];
+    function object(value) { return !!value && typeof value === 'object' && !Array.isArray(value); }
+    function fields(value, allowed, path) {
+      if (!object(value)) { errors.push(path + ' must be an object.'); return false; }
+      Object.keys(value).forEach(function (key) { if (allowed.indexOf(key) < 0) errors.push(path + '.' + key + ' is unsupported.'); });
+      return true;
+    }
+    function number(value, min, max, path) {
+      if (typeof value !== 'number' || !isFinite(value) || value < min || value > max) errors.push(path + ' is outside its numeric bounds.');
+    }
+    function ids(value, known, max, path, empty) {
+      if (!Array.isArray(value) || !empty && !value.length || value.length > max || value.some(function (id, i) {
+        return typeof id !== 'string' || value.indexOf(id) !== i || known && !own(known, id);
+      })) { errors.push(path + ' contains invalid or repeated references.'); return false; }
+      return true;
+    }
+    if (!object(data)) return ['tournaments must be an object.'];
+    if (!fields(policies, groups.concat(['legacyProgrammeCapability','defaultTactic','unattendedTactic','defaultScale','spectatorTrack']), 'tournamentRules')) return errors;
+    if (!own(FBDATA.capabilities, policies.legacyProgrammeCapability)) errors.push('tournamentRules.legacyProgrammeCapability is unknown.');
+    groups.forEach(function (group) {
+      if (!object(data[group]) || !object(policies[group])) { errors.push('tournamentRules.' + group + ' must be a table.'); return; }
+      if (Object.keys(data[group]).length > 64) errors.push('tournaments.' + group + ' exceeds 64 records.');
+      Object.keys(policies[group]).forEach(function (id) { if (!own(data[group], id)) errors.push('tournamentRules.' + group + '.' + id + ' has no content record.'); });
+      Object.keys(data[group]).forEach(function (id) {
+        var d = data[group][id], r = policies[group][id], path = 'tournamentRules.' + group + '.' + id;
+        if (!/^[a-z][a-z0-9_]*$/.test(id) || !object(d) || typeof d.name !== 'string' || !d.name.length) errors.push('tournaments.' + group + '.' + id + ' is malformed.');
+        if (!object(d) || !object(r)) { errors.push(path + ' needs a behaviour record.'); return; }
+        if (group === 'tracks') {
+          fields(d, ['name','contest','elite','male','skill','injury','severe','career','wage'], 'tournaments.tracks.' + id);
+          fields(r, ['resolution','prize','capability','loseForfeit','serf','openVictory','averageSkills','stake'], path);
+          if (['mar','dip','int','ste','lea'].indexOf(d.skill) < 0) errors.push(path + ' needs a known skill.');
+          ['contest','elite','male'].forEach(function (key) { if (d[key] !== undefined && typeof d[key] !== 'boolean') errors.push(path + '.' + key + ' must be boolean.'); });
+          ['loseForfeit','serf','openVictory'].forEach(function (key) { if (r[key] !== undefined && typeof r[key] !== 'boolean') errors.push(path + '.' + key + ' must be boolean.'); });
+          if (d.contest) {
+            if (['duel','team','score'].indexOf(r.resolution) < 0 || ['headline','archery','wrestling','perform'].indexOf(r.prize) < 0) errors.push(path + ' needs a resolution policy and prize account.');
+            number(d.injury, 0, 1, path + '.injury'); number(d.severe, 0, d.injury, path + '.severe');
+          } else if (r.resolution || r.prize || r.loseForfeit || r.openVictory) errors.push(path + ' has contest rules on a non-contest.');
+          if (r.loseForfeit && r.resolution !== 'duel') errors.push(path + '.loseForfeit requires paired elimination.');
+          if (r.averageSkills) ids(r.averageSkills, { mar:1,dip:1,int:1,ste:1,lea:1 }, 5, path + '.averageSkills');
+          if (r.stake !== undefined) { number(r.stake, 1, 1000, path + '.stake'); if (d.contest || d.wage) errors.push(path + ' cannot combine a trade stake with a contest or wage.'); }
+          if (d.wage !== undefined) number(d.wage, 0.01, 1000, path + '.wage');
+          if (d.career !== undefined && !own(FBDATA.careers, d.career)) errors.push(path + '.career is unknown.');
+        } else if (group === 'programmes') {
+          fields(d, ['name','headline','eras','yearMin','yearMax','requiresTech'], 'tournaments.programmes.' + id);
+          var periodFault = FB.contentPeriodFault(d);
+          if (periodFault) errors.push(path + ' ' + periodFault);
+          fields(r, ['contests','priority','capability','faithTraditions','cultureTraditions'], path);
+          number(r.priority, 0, 1000, path + '.priority');
+          var prizes = {};
+          if (ids(r.contests, data.tracks, 4, path + '.contests')) r.contests.forEach(function (track) {
+            var policy = policies.tracks && policies.tracks[track];
+            if (!data.tracks[track].contest || !policy || prizes[policy.prize]) errors.push(path + ' needs contests with distinct prize accounts.');
+            if (policy) prizes[policy.prize] = true;
+          });
+          if (r.cultureTraditions) ids(r.cultureTraditions, FBDATA.cultureTraditions, 16, path + '.cultureTraditions');
+          if (r.faithTraditions) ids(r.faithTraditions, null, 16, path + '.faithTraditions');
+        } else if (group === 'scales') {
+          fields(d, ['name','tier','minimum','multiplier','difficulty','prestige'], 'tournaments.scales.' + id);
+          fields(r, ['capacityBand','venueKinds','serviceCommission','aiPriority'], path);
+          number(r.capacityBand, 0, 2, path + '.capacityBand');
+          if (Math.floor(r.capacityBand) !== r.capacityBand) errors.push(path + '.capacityBand must be an integer.');
+          number(r.serviceCommission, 0, 12, path + '.serviceCommission'); number(r.aiPriority, 0, 1000, path + '.aiPriority');
+          ids(r.venueKinds, { village:1,town:1,city:1 }, 3, path + '.venueKinds', true);
+          number(d.tier, 0, 7, path + '.tier'); number(d.minimum, 1, 1000000, path + '.minimum');
+          number(d.multiplier, 0, 100, path + '.multiplier'); number(d.difficulty, 0, 50, path + '.difficulty'); number(d.prestige, 0, 1000, path + '.prestige');
+        } else {
+          fields(d, ['name','power','fatigue','risk'], 'tournaments.tactics.' + id);
+          fields(r, ['resolutions','teamPower'], path);
+          if (r.resolutions) ids(r.resolutions, { duel:1,team:1,score:1 }, 3, path + '.resolutions');
+          if (r.teamPower !== undefined) number(r.teamPower, -10, 10, path + '.teamPower');
+          number(d.power, -10, 10, path + '.power'); number(d.fatigue, 0, 10, path + '.fatigue'); number(d.risk, 0, 5, path + '.risk');
+        }
+        if (r.capability !== undefined && !own(FBDATA.capabilities, r.capability)) errors.push(path + '.capability is unknown.');
+      });
+    });
+    ['defaultTactic','unattendedTactic'].forEach(function (key) {
+      if (!own(data.tactics, policies[key]) || !own(policies.tactics, policies[key]) || policies.tactics[policies[key]].resolutions) errors.push('tournamentRules.' + key + ' must name an unrestricted tactic.');
+    });
+    if (!own(data.scales, policies.defaultScale)) errors.push('tournamentRules.defaultScale is unknown.');
+    if (!own(data.tracks, policies.spectatorTrack) || data.tracks[policies.spectatorTrack].contest) errors.push('tournamentRules.spectatorTrack must name a non-contest.');
+    return errors;
+  };
   var notices = {
     announced:FB.msg('news.tournament.announced','Games are announced at {venue}; {money:funding} is committed.',{}),
     victory:FB.msg('news.tournament.victory','Won a competition at the games in {venue}.',{}),
@@ -86,10 +176,16 @@ window.FB = window.FB || {};
   };
   T.defaultProgramme = function (s, id, venue) {
     var c = character(s,id), religion = c && FB.religionOf(c.religion, s), culture = c && FBDATA.cultures[c.culture];
-    if ((religion && religion.tournamentTradition === 'furusiyya' || culture && culture.tradition === 'steppe') &&
-        FB.contentPeriodEnabled(s, D.programmes.mounted)) return 'mounted';
-    if (FB.contentPeriodEnabled(s, D.programmes.lists) && tech(s, venue)) return 'lists';
-    return FB.contentPeriodEnabled(s, D.programmes.martial) ? 'martial' : null;
+    var chosen = null, priority = -Infinity;
+    Object.keys(D.programmes).forEach(function (id) {
+      var policy = programmeRule(id);
+      if (!FB.contentPeriodEnabled(s, D.programmes[id]) || !tech(s, venue, policy.capability)) return;
+      if ((policy.faithTraditions || policy.cultureTraditions) &&
+          !(religion && (policy.faithTraditions || []).indexOf(religion.tournamentTradition) >= 0) &&
+          !(culture && (policy.cultureTraditions || []).indexOf(culture.tradition) >= 0)) return;
+      if (policy.priority > priority) { chosen = id; priority = policy.priority; }
+    });
+    return chosen;
   };
   T.ensure = function (s) {
     if (!FB.systemAvailable(s, 'tournaments')) return null;
@@ -122,12 +218,12 @@ window.FB = window.FB || {};
       if (kingdom(e.provinceId) !== k) return;
       occupants.push({ id:e.id, closeTurn:e.closeTurn, provinceId:e.provinceId, settlement:e.settlement });
       used[0]++;
-      if (e.scale !== 'local') used[1]++;
-      if (e.scale === 'grand') used[2]++;
+      if (scaleRule(e.scale).capacityBand > 0) used[1]++;
+      if (scaleRule(e.scale).capacityBand === 2) used[2]++;
     });
     return { kingdom:k, counties:count, limits:limits, used:used, occupants:occupants,
       ok:events.length < D.worldCap && county.length === 0 && used[0] < limits[0] &&
-        (scale === 'local' || used[1] < limits[1]) && (scale !== 'grand' || used[2] < limits[2]),
+        (scaleRule(scale).capacityBand === 0 || used[1] < limits[1]) && (scaleRule(scale).capacityBand !== 2 || used[2] < limits[2]),
       county:county, world:events.length };
   };
   function chainWar(s, rid) {
@@ -241,11 +337,10 @@ window.FB = window.FB || {};
     if (!site || !authority.direct) reasons.push(FB.T('The host must directly own this established settlement.'));
     var presentation = site && FB.settlementsOf(s, e.provinceId)[e.settlement];
     var kind = presentation && presentation.kind || site && site.kind;
-    if (spec.scale === 'regional' && ['town','city'].indexOf(kind) < 0) reasons.push(FB.T('Regional games require a town or city.'));
-    if (spec.scale === 'grand' && kind !== 'city') reasons.push(FB.T('Grand games require a city.'));
+    if (scale && scaleRule(spec.scale).venueKinds.length && scaleRule(spec.scale).venueKinds.indexOf(kind) < 0) reasons.push(FB.T('This scale requires a suitable settlement: {kinds}.', { kinds:scaleRule(spec.scale).venueKinds.join(', ') }));
     if (!prog) reasons.push(FB.T('Choose a programme.'));
     if (prog && !FB.contentPeriodEnabled(s, prog)) reasons.push(FB.T('This programme is unavailable in the current period.'));
-    if (prog && prog.requiresTech && !tech(s, e)) reasons.push(FB.T('Formal lists require the venue sovereign’s Couched Cavalry Lance.'));
+    if (prog && !tech(s, e, programmeRule(spec.programme).capability)) reasons.push(FB.T('The venue sovereign must complete {name}.', { name:capabilityLabel(programmeRule(spec.programme).capability) }));
     var start = spec.startTurn, last = root(s).starts[id];
     if (!Number.isInteger(start) || start - s.turn < D.noticeMin || start - s.turn > D.noticeMax || !fairWeather(s, start, e.provinceId)) reasons.push(FB.T('Choose a spring or summer date with 60 to 180 days’ notice.'));
     if (last !== undefined && start - last < D.spacing) reasons.push(FB.T('A host’s editions must start at least 360 days apart.'));
@@ -273,7 +368,7 @@ window.FB = window.FB || {};
     return { id:e.id + ':' + track + ':entrant:' + i, name:FB.pick(names), ability:Math.max(2, strength(e) + FB.ri(-2, 5)), health:FB.ri(7, 10), culture:c.culture };
   }
   function field(s, e) {
-    var tracks = [D.programmes[e.programme].headline, 'archery', 'wrestling', 'perform'], used = {};
+    var tracks = programmeRule(e.programme).contests, used = {};
     tracks.forEach(function (track) {
       var entrants = [];
       for (var i = 0; i < 8; i++) {
@@ -366,12 +461,18 @@ window.FB = window.FB || {};
     var standing = player(s, id) ? FB.standingOf(s, { kind:'character', id:e.hostId }) : 0;
     return tier(s, id) === 1 && c.sex === 'm' && trainedInRole(c, 'arms') && FB.skillSnapshot(s,c, 'mar') >= 8 && ((circuit && circuit.openWins > 0) || standing >= 40);
   }
-  function tech(s, e) {
+  function capabilityLabel(capability) {
+    return Object.keys(FBDATA.tech).filter(function (id) {
+      return (FBDATA.tech[id].capabilities || []).indexOf(capability) >= 0;
+    }).map(function (id) { return FB.T(FBDATA.tech[id].name); }).join(' / ') || FB.T('the required technology');
+  }
+  function tech(s, e, capability) {
+    if (!capability) return true;
     var sovereign = FB.topRealm(s, holder(s, e.provinceId));
     var record = s.realmTech && s.realmTech[sovereign];
     // The existing technology reader handles bookmark knowledge on an isolated copy.
-    return record ? FB.techListCapabilityLevel(record.completed, 'couched_lance') > 0
-      : FB.hasCapability(copy(s), 'couched_lance', sovereign);
+    return record ? FB.techListCapabilityLevel(record.completed, capability) > 0
+      : FB.hasCapability(copy(s), capability, sovereign);
   }
   T.entry = function (s, eventId, id, track) {
     var e = T.get(s, eventId), c = character(s, id), d = D.tracks[track], reasons = [], terms = { fee:0, forfeit:0, contract:0, stake:0 };
@@ -382,8 +483,8 @@ window.FB = window.FB || {};
     if (old) reasons.push(FB.T('One primary activity is allowed per edition.'));
     if (e.participants.length >= D.participantCap) reasons.push(FB.T('This edition has no participant places left.'));
     if (tier(s, id) === 0 && home(s, id) !== e.provinceId) reasons.push(FB.T('{Term:serf.other} may attend only in their home county.'));
-    if (tier(s,id) === 0 && ['watch','archery','wrestling','carrying','kitchens','stables','repairs','guarding','treatment'].indexOf(track) < 0) {
-      reasons.push(FB.T('{Term:serf.other} may spectate, work, or enter open archery and wrestling.'));
+    if (tier(s,id) === 0 && !trackRule(track).serf) {
+      reasons.push(FB.T('This activity is not open to {term:serf.other}.'));
     }
     if (d && d.male && c && c.sex !== 'm') reasons.push(FB.T('This contest or specialist work is open to adult men.'));
     if (d && d.contest && c && c.health < 3) reasons.push(FB.T('Recover to Health 3 before entering a competition.'));
@@ -401,18 +502,18 @@ window.FB = window.FB || {};
         reasons.push(FB.T('The existing career rank and sex requirements still apply.'));
       }
     }
-    if (track === 'joust' && !tech(s, e)) reasons.push(FB.T('The venue sovereign requires Couched Cavalry Lance; open games and company remain available.'));
+    if (!tech(s, e, trackRule(track).capability)) reasons.push(FB.T('The venue sovereign must complete {name}.', { name:capabilityLabel(trackRule(track).capability) }));
     if (d && d.contest && !e.contests[track]) reasons.push(FB.T('This competition is outside the programme.'));
     if (d && d.contest && (s.turn >= e.startTurn + 1 || (e.contests[track] && e.contests[track].round > 0))) reasons.push(FB.T('This competition has already begun.'));
     if (d && d.contest && e.participants.some(function (p) { return p.track === track && p.status === 'active'; })) reasons.push(FB.T('The named competition field is already complete.'));
     if (d && d.wage) {
       var career = c && c.career, wageDef = career && FBDATA.careers[career.profession];
       var wage = wageDef ? (career.rank === 'master' ? wageDef.masterWage : wageDef.wage) : d.wage;
-      var commission = d.career ? (e.scale === 'grand' ? 4 : e.scale === 'regional' ? 2 : 0) : 0;
+      var commission = d.career ? scaleRule(e.scale).serviceCommission : 0;
       terms.contract = Math.max(1, Math.min(12, Math.ceil(num(wage) * 7 / 90 * D.servicePremium) + commission));
       if (e.services - e.serviceCommitted < terms.contract) reasons.push(FB.T('All remaining service funds are contracted.'));
     }
-    if (track === 'trade') terms.stake = 10;
+    terms.stake = trackRule(track).stake || 0;
     if (available(s, id) < terms.fee + terms.forfeit + terms.stake) reasons.push(FB.T('You cannot cover the entry, forfeit reserve and trade stake.'));
     return { ok:!reasons.length, reasons:reasons, terms:terms, sponsored:d && d.elite && sponsorship(s, id, e),
       present:present(s, id, e), eventId:eventId, charId:id, track:track,
@@ -426,7 +527,7 @@ window.FB = window.FB || {};
     T.ensure(s);
     var p = { charId:q.charId, household:player(s,q.charId), track:q.track, status:'active', joinedTurn:s.turn,
       terms:copy(q.terms), feeUnused:q.terms.fee, forfeit:q.terms.forfeit, tradeStake:q.terms.stake,
-      sponsored:q.sponsored, techAccepted:q.track === 'joust', round:0, fatigue:0, preparation:0, prepared:false,
+      sponsored:q.sponsored, techAccepted:!!trackRule(q.track).capability, round:0, fatigue:0, preparation:0, prepared:false,
       score:0, paid:0, workDays:0, lastWork:null, social:{}, incident:null, skillAwarded:false };
     e.participants.push(p);
     if (d.wage) e.serviceCommitted += p.terms.contract;
@@ -460,7 +561,7 @@ window.FB = window.FB || {};
     if (player(s, id)) { T.ensure(s); s.player.circuit.earnings += amount; }
     return true;
   }
-  function bucket(track) { return ['joust','melee'].indexOf(track) >= 0 ? 'headline' : track; }
+  function bucket(track) { return trackRule(track).prize; }
   function power(s, e, track, entrantId) {
     var f = e.contests[track], row = f.entrants.filter(function (r) { return r.id === entrantId; })[0];
     if (!row) return 0;
@@ -468,25 +569,25 @@ window.FB = window.FB || {};
     var c = character(s, row.charId), p = T.participant(e, row.charId);
     if (!c || c.dead || !p || p.status !== 'active' || p.missed) return -100;
     var skill = FB.skillSnapshot(s,c, D.tracks[track].skill);
-    if (track === 'perform') skill = (FB.skillSnapshot(s,c, 'dip') + FB.skillSnapshot(s,c, 'lea')) / 2;
-    var traits = (c.traits || []).indexOf('brave') >= 0 ? 1 : 0;
-    if ((c.traits || []).indexOf('craven') >= 0 && D.tracks[track].elite) traits--;
+    if (trackRule(track).averageSkills) skill = trackRule(track).averageSkills.reduce(function (total, id) { return total + FB.skillSnapshot(s,c,id); }, 0) / trackRule(track).averageSkills.length;
+    var traits = FB.traitMechanic(c, 'tournamentPower');
+    if (D.tracks[track].elite) traits -= FB.traitMechanic(c, 'tournamentElitePenalty');
     var gear = D.tracks[track].elite ? Math.min(3, FB.itemBonusReadOnly(s, 'battle', c.id) * 20 + (p.sponsored ? 1 : 0)) : 0;
     return skill + traits + gear + (c.health - 7) * 0.4 + p.preparation - p.fatigue * 0.65;
   }
   T.roundPreview = function (s, eventId, id, tactic) {
     var e = T.get(s, eventId), p = T.participant(e, id), t = D.tactics[tactic];
     if (!live(e) || !p || !t || p.status !== 'active' || !e.contests[p.track]) return null;
-    if (tactic === 'assist' && p.track !== 'melee') return null;
+    if (tacticRule(tactic).resolutions && tacticRule(tactic).resolutions.indexOf(trackRule(p.track).resolution) < 0) return null;
     var f = e.contests[p.track], d = D.tracks[p.track], el = T.eligibility(s, id, e);
     var index = f.active.indexOf(id), opponent = f.active[index % 2 ? index - 1 : index + 1];
     var a = power(s, e, p.track, id) + t.power;
     var b = opponent ? power(s, e, p.track, opponent) : strength(e);
-    if (p.track === 'melee' && tactic === 'assist') a += 2;
-    if (p.track === 'melee') {
+    if (trackRule(p.track).resolution === 'team') a += tacticRule(tactic).teamPower || 0;
+    if (trackRule(p.track).resolution === 'team') {
       a = 0; b = 0;
       f.active.forEach(function (other, i) {
-        var value = power(s, e, p.track, other) + (other === id ? t.power + (tactic === 'assist' ? 2 : 0) : 0);
+        var value = power(s, e, p.track, other) + (other === id ? t.power + (tacticRule(tactic).teamPower || 0) : 0);
         if ((i < 4) === (index < 4)) a += value / 4; else b += value / 4;
       });
     }
@@ -496,7 +597,7 @@ window.FB = window.FB || {};
     var ok = el.ok && present(s, id, e) && !p.missed && f.round < 3 && p.round === f.round &&
       s.turn >= due && s.turn < e.closeTurn && index >= 0;
     return { ok:ok, reason:!el.ok ? el.reason : !present(s, id, e) ? FB.T('Reach the venue first.') : !ok ? FB.T('The next round is not ready.') : '',
-      eventId:eventId, charId:id, track:p.track, round:f.round, tactic:tactic, power:a, chance:chance, scored:p.track === 'archery' || p.track === 'perform',
+      eventId:eventId, charId:id, track:p.track, round:f.round, tactic:tactic, power:a, chance:chance, scored:trackRule(p.track).resolution === 'score',
       opponent:opponent, injury:injury, severe:d.severe * t.risk, fatigue:t.fatigue, dueTurn:due,
       signature:JSON.stringify([eventId,id,p.track,f.round,tactic,a,b,chance,injury,p.fatigue,p.preparation,s.turn]) };
   };
@@ -514,7 +615,7 @@ window.FB = window.FB || {};
     var p = candidate && candidate.status === 'active' && !candidate.missed && character(s,id) && !character(s,id).dead && character(s,id).health > 0 ? candidate : null;
     f.winner = id;
     var purse = e.remaining[bucket(track)];
-    if (track === 'melee' && p) {
+    if (trackRule(track).resolution === 'team' && p) {
       var share = Math.floor(purse / 4);
       if (credit(s,e,'prize:' + track,p.charId,bucket(track),share)) p.prizePaid = share;
       credit(s,e,'prize:' + track + ':teammates',null,bucket(track),purse-share);
@@ -523,7 +624,7 @@ window.FB = window.FB || {};
       p.won = true;
       if (player(s, id)) {
         s.player.circuit.victories++; s.player.circuit.reputation += 4;
-        if (track === 'archery' || track === 'wrestling') s.player.circuit.openWins++;
+        if (trackRule(track).openVictory) s.player.circuit.openWins++;
         s.player.prestige += D.scales[e.scale].prestige;
         notify(s, 'victory', 'Won a competition at the games in {venue}.', { venue:T.venueName(e) });
         if (FB.noteLifeEvent) FB.noteLifeEvent(s, id, 'tournament', { venue:T.venueName(e) });
@@ -535,7 +636,7 @@ window.FB = window.FB || {};
     // One mutation owns all eight entrants and every pair in this round.
     old.forEach(function (id) {
       if (!live(e) || e.awaitingSuccessor) return;
-      var p = T.participant(e, id), tactic = selection && selection.charId === id ? selection.tactic : 'balanced';
+      var p = T.participant(e, id), tactic = selection && selection.charId === id ? selection.tactic : rules().defaultTactic;
       var attending = p && p.status === 'active' && !p.missed && present(s,id,e) && T.eligibility(s,id,e).ok;
       if (p && p.status === 'active' && !attending && !p.missed) {
         // Missing the opening round forfeits the field, not the unspent escrow.
@@ -546,7 +647,7 @@ window.FB = window.FB || {};
       }
       var t = D.tactics[tactic], base = power(s, e, track, id) + t.power;
       if (p && !attending) base = -100;
-      if (track === 'melee' && tactic === 'assist') base += 2;
+      if (trackRule(track).resolution === 'team') base += tacticRule(tactic).teamPower || 0;
       bases[id] = base;
       scores[id] = base + FB.ri(0, 12);
       if (attending) {
@@ -565,7 +666,7 @@ window.FB = window.FB || {};
       }
     });
     if (!live(e) || e.awaitingSuccessor) return;
-    if (track === 'joust' || track === 'wrestling') {
+    if (trackRule(track).resolution === 'duel') {
       for (var i = 0; i < old.length; i += 2) {
         var chance = bases[old[i]] <= -100 ? 0 : bases[old[i + 1]] <= -100 ? 1 :
           FB.clamp(0.5 + (bases[old[i]] - bases[old[i + 1]]) / 24, 0.08, 0.92);
@@ -575,11 +676,11 @@ window.FB = window.FB || {};
         var lost = T.participant(e, loser);
         if (lost) {
           lost.eliminated = true;
-          if (track === 'joust' && lost.forfeit) { pay(s, e.hostId, lost.forfeit); lost.forfeit = 0; }
+          if (trackRule(track).loseForfeit && lost.forfeit) { pay(s, e.hostId, lost.forfeit); lost.forfeit = 0; }
         }
       }
       f.active = next;
-    } else if (track === 'melee') {
+    } else if (trackRule(track).resolution === 'team') {
       var left = 0, right = 0;
       old.forEach(function (id, i) { if (i < 4) left += bases[id] / 4; else right += bases[id] / 4; });
       var leftWon = FB.rng() < FB.clamp(0.5 + (left - right) / 24, 0.08, 0.92);
@@ -589,7 +690,7 @@ window.FB = window.FB || {};
     if (f.round === 3) {
       var finalIds = f.active.slice().sort(function (a, b) { return num(f.scores[b]) - num(f.scores[a]) || (a < b ? -1 : 1); });
       if (finalIds.length) {
-        if (track === 'melee') {
+        if (trackRule(track).resolution === 'team') {
           var team = f.active.indexOf(finalIds[0]) < 4 ? f.active.slice(0, 4) : f.active.slice(4);
           var member = team.filter(function (id) { var p = T.participant(e,id); return p && p.status === 'active' && !p.missed; })[0];
           win(s, e, track, member || finalIds[0]);
@@ -716,7 +817,7 @@ window.FB = window.FB || {};
       a.hostId = heir.id; return true;
     });
     var t = s.player.travel;
-    if (t && t.purpose === 'tournament' && t.phase !== 'return') {
+    if (t && FB.travelPurposeKind(t.purpose) === 'tournament' && t.phase !== 'return') {
       var e = T.get(s, t.tournamentId);
       if (!live(e) && (!e || e.status === 'cancelled') || !T.eligibility(s, s.player.charId, e).ok) T.returnHome(s, true);
     }
@@ -767,13 +868,13 @@ window.FB = window.FB || {};
         var reserve = Math.max(500, Math.max(0, nets[id]) * 4, num(account(s, id) && account(s, id).reserveTarget));
         if (available(s, id) < reserve + 500) continue;
         var spec = { hostId:id, provinceId:candidate.site.provinceId, settlement:candidate.site.settlement,
-          scale:'local', programme:'martial', startTurn:dates[0] };
+          scale:rules().defaultScale, programme:null, startTurn:dates[0] };
         spec.programme = T.defaultProgramme(s,id,spec);
         if (!T.capacity(s, spec.provinceId, spec.scale).ok) continue;
         if (FB.rng() >= 0.12) continue;
         spec.startTurn = dates[FB.ri(0, dates.length - 1)];
         var q = T.quote(s, spec, fiscal);
-        ['grand','regional'].some(function (scale) {
+        Object.keys(D.scales).filter(function (id) { return scaleRule(id).aiPriority > scaleRule(rules().defaultScale).aiPriority; }).sort(function (a,b) { return scaleRule(b).aiPriority - scaleRule(a).aiPriority; }).some(function (scale) {
           var larger = T.quote(s,Object.assign({},spec,{scale:scale}),fiscal);
           if (!larger.ok || larger.available - larger.funding.total < reserve) return false;
           q = larger; return true;
@@ -815,12 +916,12 @@ window.FB = window.FB || {};
         var p = T.participant(e, s.player.charId);
         if (p && p.status === 'active' && !p.missed && p.track === track && f.active.indexOf(p.charId) >= 0 && present(s, p.charId, e) && !(FB.game && FB.game.observe)) {
           if (s.turn === due) queueRound(s, e, p, f.round);
-          else if (s.turn > due) resolveField(s, e, track, { charId:p.charId, tactic:'conservative' });
+          else if (s.turn > due) resolveField(s, e, track, { charId:p.charId, tactic:rules().unattendedTactic });
         } else resolveField(s, e, track, null);
       });
     });
     var travel = s.player.travel;
-    if (travel && travel.purpose === 'tournament' && travel.phase === 'arrived') {
+    if (travel && FB.travelPurposeKind(travel.purpose) === 'tournament' && travel.phase === 'arrived') {
       var edition = T.get(s, travel.tournamentId);
       var onward = T.active(s).some(function (other) {
         var p = T.participant(other,s.player.charId);
@@ -835,7 +936,7 @@ window.FB = window.FB || {};
       })[0];
       if (invitation) {
         invitation.invited = s.player.charId;
-        FB.queueEvent(s, 'scheduled_games_invitation', context(s, invitation, s.player.charId, 'watch', 0, 'invitation'));
+        FB.queueEvent(s, 'scheduled_games_invitation', context(s, invitation, s.player.charId, rules().spectatorTrack, 0, 'invitation'));
       }
     }
   };
@@ -846,7 +947,7 @@ window.FB = window.FB || {};
     var el = T.eligibility(s, id, e), origin = t ? t.currentId : s.player.provinceId;
     if (!el.ok) out.reasons.push(el.reason);
     if (!FB.station.isFree(s.player, s)) out.reasons.push(FB.T('{Term:serf.other} cannot take to the road.'));
-    if (t && (t.purpose !== 'tournament' || t.phase !== 'arrived')) out.reasons.push(FB.T('Finish the current journey before booking this road.'));
+    if (t && (FB.travelPurposeKind(t.purpose) !== 'tournament' || t.phase !== 'arrived')) out.reasons.push(FB.T('Finish the current journey before booking this road.'));
     var p = t && T.participant(T.get(s, t.tournamentId), id);
     if (p && p.status === 'active' && t.tournamentId !== eventId) out.reasons.push(FB.T('Withdraw from the current activity before travelling onward.'));
     if (FB.justiceExileBlocks && (FB.justiceExileBlocks(s, id, e.provinceId) || FB.justiceExileBlocks(s, id, s.player.provinceId))) out.reasons.push(FB.T('Exile prevents this journey or its return home.'));
@@ -859,9 +960,9 @@ window.FB = window.FB || {};
       }
       var shadow = copy(s); shadow.player.provinceId = origin;
       out.legDays = FB.travelLegDaysSnapshot(shadow);
-      out.outbound = origin === e.provinceId ? 0 : FB.travelCostSnapshot('tournament', FB.travelRouteUnits(origin,route) / 2, shadow);
+      out.outbound = origin === e.provinceId ? 0 : FB.travelCostSnapshot(FB.travelDefault('tournament'), FB.travelRouteUnits(origin,route) / 2, shadow);
       shadow.player.provinceId = e.provinceId;
-      out.returnReserve = e.provinceId === s.player.provinceId ? 0 : FB.travelCostSnapshot('tournament', FB.travelRouteUnits(e.provinceId,back) / 2, shadow);
+      out.returnReserve = e.provinceId === s.player.provinceId ? 0 : FB.travelCostSnapshot(FB.travelDefault('tournament'), FB.travelRouteUnits(e.provinceId,back) / 2, shadow);
       out.oldReserve = t ? num(t.returnReserve) : 0;
       out.cost = out.outbound + out.returnReserve - out.oldReserve;
       out.arrivalTurn = s.turn + FB.travelRouteUnits(origin,route) * out.legDays;
@@ -881,7 +982,7 @@ window.FB = window.FB || {};
     if (q.local) return true;
     if (!pay(s, s.player.charId, -q.cost)) return false;
     var old = s.player.travel;
-    var t = s.player.travel = { purpose:'tournament', tournamentId:q.eventId, charId:s.player.charId,
+    var t = s.player.travel = { purpose:FB.travelDefault('tournament'), tournamentId:q.eventId, charId:s.player.charId,
       homeId:q.homeId, currentId:q.originId, destinationId:T.get(s, q.eventId).provinceId,
       phase:'outbound', remainingRoute:q.route.slice(), outboundRoute:q.route.slice(),
       visited:old ? (old.visited || [q.homeId]).slice() : [q.homeId],
@@ -895,7 +996,7 @@ window.FB = window.FB || {};
   };
   T.returnHome = function (s, forced) {
     var t = s.player.travel;
-    if (!t || t.purpose !== 'tournament' || t.phase === 'return') return false;
+    if (!t || FB.travelPurposeKind(t.purpose) !== 'tournament' || t.phase === 'return') return false;
     var c = character(s, s.player.charId);
     if (!c || c.dead || c.health <= 0 || s.player.dead || s.player.flags.in_prison || t.charId !== s.player.charId) return false;
     var current = T.get(s,t.tournamentId), participant = T.participant(current,s.player.charId);
@@ -946,7 +1047,7 @@ window.FB = window.FB || {};
         p.paid += due; e.serviceCommitted = Math.max(0, e.serviceCommitted - due);
       }
     }
-    if (p.track === 'trade' && p.tradeStake > 0 && s.turn >= e.closeTurn - 1) {
+    if (trackRule(p.track).stake && p.tradeStake > 0 && s.turn >= e.closeTurn - 1) {
       // Existing merchant skill/chance and the local commodity stock are authoritative.
       var goods = Object.keys(FBDATA.marketGoods || {}).sort(), good = goods[0];
       if (good) {
@@ -978,7 +1079,7 @@ window.FB = window.FB || {};
       tournamentKind:kind, venue:T.venueName(e), tournamentHost:FB.fullName(character(s, e.hostId)) };
   }
   function queueRound(s, e, p, round) {
-    var q = T.roundPreview(s, e.id, p.charId, 'balanced');
+    var q = T.roundPreview(s, e.id, p.charId, rules().defaultTactic);
     var ctx = context(s, e, p.charId, p.track, round, 'round');
     ctx.injuryRisk = Math.round(q.injury * 100); ctx.severeRisk = Math.round(q.severe * 1000) / 10;
     ctx.roundNumber = round + 1;
@@ -997,7 +1098,7 @@ window.FB = window.FB || {};
     if (ctx.tournamentKind === 'host') return e.hostId === id && e.incidents.pending === ctx.tournamentRound;
     if (!p || p.status !== 'active' || p.track !== ctx.tournamentTrack || !present(s, id, e)) return false;
     if (ctx.tournamentKind === 'round') {
-      var q = T.roundPreview(s, e.id, id, 'balanced');
+      var q = T.roundPreview(s, e.id, id, rules().defaultTactic);
       return !!q && q.ok && q.round === ctx.tournamentRound;
     }
     return !!p.incident && p.incident.kind === ctx.tournamentKind && p.incident.serial === ctx.tournamentRound;
@@ -1023,7 +1124,7 @@ window.FB = window.FB || {};
   };
   FB.fns = FB.fns || {};
   FB.fns.scheduled_games_valid = T.contextValid;
-  FB.fns.scheduled_games_team = function (s, ctx) { return T.contextValid(s, ctx) && ctx.tournamentTrack === 'melee'; };
+  FB.fns.scheduled_games_team = function (s, ctx) { return T.contextValid(s, ctx) && trackRule(ctx.tournamentTrack).resolution === 'team'; };
   ['conservative','balanced','aggressive','assist','withdraw'].forEach(function (tactic) {
     var key = 'scheduled_games_' + tactic;
     FB.fns[key] = function (s, ctx) {

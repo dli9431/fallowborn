@@ -423,3 +423,16 @@ Ecclesiastical chapter assent uses the existing local congregation bargain. A di
 Scoped institutional recognition
 
 The religious-institution issuer kind references a declared profile institution in localInstitutions. Its source must explicitly declare institutional:true and reaffirm succession. The default institution_support source grants no public rights. Effective support requires current qualified constituents, declared jurisdiction and any required canonical leader. Control, constituency or leader changes suspend recognition until explicit consenting renewal. A dispute revokes the existing authority record. Profile institutions use their own reviewed action contract; legacy civic bargains and episcopal appointments cannot supply substitute consent. See docs/designs/religious-institutions.md.
+
+
+Runtime authority authoring
+
+Authority offices, legitimacy sources and customary bases have explicit runtime JSON roots. Legitimacy declarations select permitted issuer kinds, optional character roles, a public mandate policy and whether existing county powers may establish recognition-based customary rights. The shared recognition picker enumerates these declared policies. An ordinary office petition resolves the first allowed court-mandate source in the office's recognitionSources; it does not require a historical source id. Public administration still owns its own commissions. All sources pass the existing living-actor, issuer-generation, scope and institutional checks. Court AI and household petitions share the same office quote/apply transaction. Existing declaration changes preserve their former behavior and saved ids; no schema or technology-impact change is required.
+
+
+Federate contract templates are complete-record JSON declarations with bounded pay and duration. Imported story instances can name new templates. Pure term expansion, consent and payment retain the existing canonical contract ledger, including renewed ruler consent and repeat-payment rejection.
+
+
+Opening service arrays and migration declarations are validated JSON roots. Service arrays reference compiled court-settlement instances and their declared hosts; restore never reruns opening offers. Migrations keep explicit parties, route anchors, template and conserved unit composition.
+
+Source mandate roles now govern religious mediation, church communion, temporal recognition and court AI as well as ordinary office petitions. Reads filter exact saved recognitions by the current declared role; writes select an eligible source and preserve that source id in the canonical record.

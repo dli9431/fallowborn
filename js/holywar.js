@@ -369,7 +369,7 @@ window.FB = window.FB || {};
 
   function participantScore(state, rid) {
     var realm = state.realms[rid], zeal = 0;
-    if (realm && realm.ruler && realm.ruler.trait === 'zealous') zeal = 200;
+    zeal = FB.traitMechanic(realm && realm.ruler, 'holyWarParticipation');
     return paperStrength(state, rid) + ((realm && realm.rank) || 1) * 100 + zeal;
   }
 
@@ -406,7 +406,7 @@ window.FB = window.FB || {};
       strengths[rid] = base * (FB.rearmScale ? FB.rearmScale(state, rid) : 1);
       var row = { id:rid, strength:strengths[rid],
         score:Math.max(1, base) + (realm.rank || 1) * 100 +
-          (realm.ruler && realm.ruler.trait === 'zealous' ? 200 : 0) };
+          FB.traitMechanic(realm.ruler, 'holyWarParticipation') };
       (inFold ? attackers : defenders).push(row);
     }
     function byScore(a, b) {
@@ -584,16 +584,15 @@ window.FB = window.FB || {};
       participant.mustered = !!participant.mustered;
       return participant;
     }
-    var realm = state.realms[participant.realm], trait = realm && realm.ruler &&
-      realm.ruler.trait;
+    var realm = state.realms[participant.realm], ruler = realm && realm.ruler;
     var hash = stableNumber(campaign.id + ':' + participant.realm);
-    var longVow = trait === 'zealous' || trait === 'ambitious';
+    var longVow = FB.traitMechanic(ruler, 'holyWarLongVow');
     participant.vowSeasons = longVow
       ? (deterministic ? (hash % 3 ? 12 : 8) : (FB.chance(0.67) ? 12 : 8))
       : (deterministic ? (hash % 2 ? 8 : 4) : (FB.chance(0.4) ? 8 : 4));
-    if (trait === 'zealous') {
+    if (FB.traitMechanic(ruler, 'holyWarSacredDesire')) {
       participant.desire = { kind:'sacred', id:null };
-    } else if (trait === 'ambitious') {
+    } else if (FB.traitMechanic(ruler, 'holyWarCrownDesire')) {
       participant.desire = { kind:'crown', id:null };
     } else {
       var land = deterministic ? hash % 2 === 0 : FB.chance(0.5);
@@ -1552,13 +1551,13 @@ window.FB = window.FB || {};
     if (sponsor === 'player') {
       var character = state.chars[state.player.charId];
       return {
-        culture:character ? character.culture : 'frankish',
+        culture:character ? character.culture : FB.eraDefaultCulture(state),
         dynasty:character ? (character.dyn || character.name) : 'player'
       };
     }
     var realm = state.realms[sponsor];
     return {
-      culture:realm && realm.ruler ? realm.ruler.culture : 'frankish',
+      culture:realm && realm.ruler ? realm.ruler.culture : FB.eraDefaultCulture(state),
       dynasty:realm && (realm.dynasty || (realm.ruler && realm.ruler.name)) || sponsor
     };
   }
@@ -1936,7 +1935,7 @@ window.FB = window.FB || {};
   function officeScore(state, campaign, claimant, identity) {
     var standing = claimant === 'player'
       ? FB.clamp((state.player.piety || 0) / 500, 0, 1)
-      : identity.trait === 'zealous' ? 1 : identity.trait === 'cynical' ? 0 : 0.5;
+      : FB.clamp(0.5 + FB.traitMechanic(identity, 'holyWarStanding', true), 0, 1);
     var service = 0, mode = null;
     if (claimant === 'player') {
       var pledge = playerPledgeFor(state, campaign);

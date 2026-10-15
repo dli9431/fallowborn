@@ -125,7 +125,7 @@ window.FB = window.FB || {};
           break;
         }
       }
-      if (out.learning === undefined) out.learning = 'latin';
+      if (out.learning === undefined) out.learning = FBDATA.authoringDefaults.learning;
     }
     return out;
   }
@@ -2277,6 +2277,74 @@ window.FB = window.FB || {};
       if (isFinite(value)) total += value;
     }
     return total;
+  };
+
+  /* Bounded behavioral traits share these reads across player previews and
+     AI decisions. Max combines alternative motives; sum combines yields. */
+  FB.traitMechanic = function (c, key, sum) {
+    var value = 0;
+    (c && (c.traits || (c.trait ? [c.trait] : [])) || []).forEach(function (id) {
+      var rule = FBDATA.traitMechanics && FBDATA.traitMechanics[id];
+      var n = rule && rule[key];
+      if (typeof n === 'number' && Number.isFinite(n)) value = sum ? value + n : Math.max(value, n);
+    });
+    return value;
+  };
+  FB.traitAimWeight = function (c, aim) {
+    var weight = 0;
+    (c && (c.traits || (c.trait ? [c.trait] : [])) || []).forEach(function (id) {
+      var rule = FBDATA.traitMechanics && FBDATA.traitMechanics[id];
+      weight = Math.max(weight, rule && rule.rulerAims && rule.rulerAims[aim] || 0);
+    });
+    return weight;
+  };
+  FB.traitSchemeOrder = function (c) {
+    var selected = null;
+    (c && (c.traits || (c.trait ? [c.trait] : [])) || []).forEach(function (id) {
+      var rule = FBDATA.traitMechanics && FBDATA.traitMechanics[id], order = rule && rule.schemeOrder;
+      if (order && (!selected || order.priority > selected.priority)) selected = order;
+    });
+    return selected ? selected.ids.slice() : null;
+  };
+  FB.validateTraitMechanics = function (table) {
+    var errors = [], flags = ['familyFaith','familyWealth','familyService','coerciveConversion',
+      'literacy','excommunication','pilgrimageExperience','harshJustice','papalReformBloc','holyWarLongVow','holyWarSacredDesire','holyWarCrownDesire'];
+    var chances = ['accompliceDeception','accompliceAmbition','accompliceViolence','accompliceIntegrity',
+      'accompliceMercy','refusalIntegrity','refusalMercy','refusalFaith','schemeSuccess','intrigueRestraint'];
+    var amounts = ['tournamentPower','tournamentElitePenalty','prayerPiety','intrigueAggression','papalReformSupport','papalSupport','papalPenalty'];
+    function own(o, key) { return !!o && Object.prototype.hasOwnProperty.call(o, key); }
+    function plain(o) { return !!o && typeof o === 'object' && !Array.isArray(o); }
+    if (!plain(table)) return ['traitMechanics must be an object keyed by trait id.'];
+    Object.keys(table).forEach(function (id) {
+      var row = table[id], path = 'traitMechanics.' + id;
+      if (!own(FBDATA.traits, id) || !plain(row)) { errors.push(path + ' requires an effective trait and a record.'); return; }
+      Object.keys(row).forEach(function (key) {
+        var n = row[key], valid = false;
+        if (flags.indexOf(key) >= 0) valid = n === 0 || n === 1;
+        else if (chances.indexOf(key) >= 0) valid = typeof n === 'number' && Number.isFinite(n) && n >= 0 && n <= 1;
+        else if (amounts.indexOf(key) >= 0) valid = typeof n === 'number' && Number.isFinite(n) && n >= 0 && n <= 100;
+        else if (key === 'holyWarParticipation') valid = typeof n === 'number' && Number.isFinite(n) && n >= 0 && n <= 1000;
+        else if (['holyWarStanding','rivalryWeight'].indexOf(key) >= 0) valid = typeof n === 'number' && Number.isFinite(n) && n >= -1 && n <= 1;
+        else if (['courtLoyalty','courtSharedFaithLoyalty','conversionResistance'].indexOf(key) >= 0) valid = typeof n === 'number' && Number.isFinite(n) && n >= -100 && n <= 100;
+        else if (key === 'investitureResistance') valid = typeof n === 'number' && Number.isFinite(n) && n >= -100 && n <= 100;
+        else if (key === 'researchWeights') valid = plain(n) && Object.keys(n).every(function (domain) {
+          return ['warfare','agriculture','crafts','learning','governance','commerce','seafaring'].indexOf(domain) >= 0 &&
+            typeof n[domain] === 'number' && Number.isFinite(n[domain]) && n[domain] >= 0 && n[domain] <= 4;
+        });
+        else if (key === 'courtshipProposal') valid = typeof n === 'number' && Number.isFinite(n) && n >= -1 && n <= 1;
+        else if (key === 'rulerAims') valid = plain(n) && Object.keys(n).every(function (aim) {
+          return ['secure_dynasty','expand_realm','amass_wealth','defend_faith','strengthen_crown','win_independence','keep_peace'].indexOf(aim) >= 0 &&
+            typeof n[aim] === 'number' && Number.isFinite(n[aim]) && n[aim] >= 0 && n[aim] <= 100;
+        });
+        else if (key === 'schemeOrder') valid = plain(n) && Object.keys(n).every(function (k) { return ['priority','ids'].indexOf(k) >= 0; }) &&
+          Number.isInteger(n.priority) && n.priority >= 1 && n.priority <= 100 &&
+          Array.isArray(n.ids) && n.ids.length > 0 && n.ids.length <= 16 && n.ids.every(function (plot, i) {
+            return own(FBDATA.plots, plot) && FBDATA.plots[plot].hostile === true && n.ids.indexOf(plot) === i;
+          });
+        if (!valid) errors.push(path + '.' + key + ' is invalid.');
+      });
+    });
+    return errors;
   };
 
   FB.ensureTraitProgress = function (state) {

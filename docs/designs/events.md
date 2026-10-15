@@ -1116,3 +1116,12 @@ The outer_476 pack declares late_antique membership and years 476-649. Eight eve
 Estate release selectors
 
 Registered estate-tenure system data owns the blocked career roles, release career and rank, and flight event id. The event registry resolves that id for queueing, context validation and once-only flight completion. Release quotes include the declared career, rank and event so a changed declaration cannot reuse an earlier review. The existing freedom-route enums, skills, family coverage and saved tenure records retain their meanings; this internal refactor adds no technology gate.
+
+
+Data-defined chances
+
+eventChances supplies ordered bounded arithmetic for ordinary named chances and explicit registered policies for algorithms that need canonical family, military or negotiation calculations. Previews and event resolution read the same declaration. Trait and role references resolve against effective data, and missing roles never materialize people. Imports reject unknown operations, missing referenced chances and invalid numeric ranges before mutation. Eighteen existing arithmetic formulas retain their original addition order, conditional overrides and final clamps. Registered policies are session-fixed trusted code. This is an authoring refactor with no new technology dependency or save field.
+
+Lifecycle subscriptions
+
+FBDATA.eventSubscriptions maps stable event ids to bounded lifecycle subscriptions. FB.validateEventLifecycle validates the effective candidate table without publishing it. FB.queueLifecycleEvents selects declared subscribers in event catalogue order and uses FB.queueEvent for canonical contexts and participant binding. The index is transient and invalidates with the event catalogue. Birth, education, adulthood, home raids, protection offers, justice requests and travel arrival expose named engine moments. Conditions, system/period availability and once/cooldown gates filter delivery; subscriptions never run effects or consume randomness. Event payloads and saved queue records retain their existing formats. See docs/MODDING.md for the supported hooks and condition fields.

@@ -340,7 +340,6 @@
   }
   function factory(def) {
     definition(def);
-    Object.keys(def.news).forEach(function (key) { FB.registerMessage(def.news[key].key, { text:def.news[key].text }); });
     function effective(s) { return FB.stories.definition(s, def); }
     function labels(rec) {
       var states = { pending:FB.T('Awaiting conditions'), planned:FB.T('Awaiting succession'),

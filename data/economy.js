@@ -34,14 +34,14 @@ FBDATA.abbeys = {
   endowmentPiety:8, endowmentSupport:5, dismissStanding:5, refugeStanding:10,
   privilegeIncome:2, privilegePrestige:20, privilegeTroops:20,
   actions:{
-    rents:{ cost:0, days:360, treasury:8, support:-8 },
-    school:{ cost:8, days:180, support:5, learning:1 },
-    relief:{ cost:10, days:180, support:8, popular:3, piety:3 },
-    mediate:{ cost:4, days:180, support:4, prestige:6, standing:4, lordStanding:5 },
-    patronage:{ cost:4, days:360, capital:20, prestige:4, standing:2 },
-    defend:{ cost:12, days:0, support:8, lordStanding:-5,
+    rents:{ kind:'rents', name:'Manage rents', cost:0, days:360, treasury:8, support:-8 },
+    school:{ kind:'school', name:'Fund schooling', cost:8, days:180, support:5, learning:1 },
+    relief:{ kind:'relief', name:'Distribute relief', cost:10, days:180, support:8, popular:3, piety:3 },
+    mediate:{ kind:'mediate', name:'Mediate disputes', cost:4, days:180, support:4, prestige:6, standing:4, lordStanding:5 },
+    patronage:{ kind:'patronage', name:'Solicit an endowment', cost:4, days:360, capital:20, prestige:4, standing:2 },
+    defend:{ kind:'defend', name:'Defend the charter', chance:{ base:.45,diplomacy:.02,privilege:.15,min:.25,max:.9 }, cost:12, days:0, support:8, lordStanding:-5,
       failLoss:8, failSupport:-8, failLordStanding:-10 },
-    concede:{ cost:8, days:0, support:-5, lordStanding:8 }
+    concede:{ kind:'concede', name:'Concede the dispute', cost:8, days:0, support:-5, lordStanding:8 }
   }
 };
 
@@ -448,31 +448,31 @@ FBDATA.positions = {
    traitFit is role suitability beyond ordinary skill effects: its sum is
    capped at +/-2 and applied only to appointment skill checks. */
 FBDATA.householdServiceRoles = {
-  helper:{ position:'service_helper', path:'estate', wage:2.5, value:0.5, training:['ste','dip'], skills:{} },
-  storekeeper:{ position:'service_storekeeper', path:'estate', previous:'helper', days:90, standing:10, wage:3, value:1, training:['ste','dip'], skills:{ste:4},
+  helper:{ coversDuties:['week_work','household_service','herd_service','woodland_service','boat_service','customary_labor','irrigation_labor'], focusLabel:'Help on the lord’s estate', position:'service_helper', path:'estate', wage:2.5, value:0.5, training:['ste','dip'], skills:{} },
+  storekeeper:{ coversDuties:['week_work','household_service','herd_service','woodland_service','boat_service','customary_labor','irrigation_labor'], focusLabel:'Tend the household stores', position:'service_storekeeper', path:'estate', previous:'helper', days:90, standing:10, wage:3, value:1, training:['ste','dip'], skills:{ste:4},
     traitFit:{honest:1,temperate:1,greedy:-1,deceitful:-1,drunkard:-1} },
-  reeve:{ position:'service_reeve', path:'estate', previous:'storekeeper', days:360, standing:25, wage:4, value:1.5, training:['ste','dip'], skills:{ste:7,dip:4},
+  reeve:{ coversDuties:['week_work','household_service','herd_service','woodland_service','boat_service','customary_labor','irrigation_labor'], focusLabel:'Oversee estate work', namesByTenure:{latin_manorial:'Reeve'}, position:'service_reeve', path:'estate', previous:'storekeeper', days:360, standing:25, wage:4, value:1.5, training:['ste','dip'], skills:{ste:7,dip:4},
     traitFit:{honest:1,patient:1,rent_shrewd:1,cruel:-1,deceitful:-1,wrathful:-1} },
-  steward:{ position:'steward', path:'estate', previous:'reeve', days:720, standing:40, wage:5, value:2, training:['ste','dip'], skills:{ste:10,lea:6}, lettered:true,
+  steward:{ coversDuties:['week_work','household_service','herd_service','woodland_service','boat_service','customary_labor','irrigation_labor'], focusLabel:'Manage the lord’s household', position:'steward', path:'estate', previous:'reeve', days:720, standing:40, wage:5, value:2, training:['ste','dip'], skills:{ste:10,lea:6}, lettered:true,
     traitFit:{honest:1,patient:1,rent_shrewd:1,deceitful:-1,greedy:-1,drunkard:-1} },
-  tally:{ position:'service_tally', path:'letters', wage:2.5, value:0.5, training:['lea','ste'], skills:{lea:4},
+  tally:{ coversDuties:['week_work','household_service','herd_service','woodland_service','boat_service','customary_labor','irrigation_labor'], focusLabel:'Assist with household tallies', teachesTrait:{id:'literate',days:720}, position:'service_tally', path:'letters', wage:2.5, value:0.5, training:['lea','ste'], skills:{lea:4},
     traitFit:{patient:1,honest:1,wrathful:-1,deceitful:-1} },
-  clerk:{ position:'service_clerk', path:'letters', previous:'tally', days:180, standing:15, wage:3.5, value:1, training:['lea','ste'], skills:{lea:6,ste:4}, lettered:true,
+  clerk:{ coversDuties:['week_work','household_service','herd_service','woodland_service','boat_service','customary_labor','irrigation_labor'], focusLabel:'Keep household accounts', teachesTrait:{id:'literate',days:720}, position:'service_clerk', path:'letters', previous:'tally', days:180, standing:15, wage:3.5, value:1, training:['lea','ste'], skills:{lea:6,ste:4}, lettered:true,
     traitFit:{patient:1,honest:1,rent_shrewd:1,deceitful:-1,drunkard:-1} },
-  tutor:{ position:'tutor', path:'letters', previous:'clerk', days:720, standing:40, wage:5, value:1.5, training:['lea','dip'], skills:{lea:10,dip:6}, lettered:true,
+  tutor:{ coversDuties:['week_work','household_service','herd_service','woodland_service','boat_service','customary_labor','irrigation_labor'], focusLabel:'Teach the household’s children', teachesTrait:{id:'literate',days:720}, pupilTraining:{skill:'lea',chance:.5}, position:'tutor', path:'letters', previous:'clerk', days:720, standing:40, wage:5, value:1.5, training:['lea','dip'], skills:{lea:10,dip:6}, lettered:true,
     traitFit:{kind:1,patient:1,hearth_steady:1,cruel:-2,wrathful:-1} },
-  carrier:{ position:'service_carrier', path:'trade', wage:2.5, value:0.5, training:['ste','dip'], skills:{} },
-  buyer:{ position:'service_buyer', path:'trade', previous:'carrier', days:180, standing:15, wage:3.5, value:1, training:['ste','dip'], skills:{ste:4,dip:4},
+  carrier:{ coversDuties:['week_work','household_service','herd_service','woodland_service','boat_service','customary_labor','irrigation_labor'], focusLabel:'Carry household deliveries', position:'service_carrier', path:'trade', wage:2.5, value:0.5, training:['ste','dip'], skills:{} },
+  buyer:{ coversDuties:['week_work','household_service','herd_service','woodland_service','boat_service','customary_labor','irrigation_labor'], focusLabel:'Buy household provisions', position:'service_buyer', path:'trade', previous:'carrier', days:180, standing:15, wage:3.5, value:1, training:['ste','dip'], skills:{ste:4,dip:4},
     traitFit:{honest:1,patient:1,roadwise:1,greedy:-1,deceitful:-1} },
-  factor:{ position:'factor', path:'trade', previous:'buyer', days:720, standing:40, wage:5, value:2, training:['ste','dip'], skills:{ste:9,dip:7}, lettered:true,
+  factor:{ coversDuties:['week_work','household_service','herd_service','woodland_service','boat_service','customary_labor','irrigation_labor'], focusLabel:'Manage household purchasing', position:'factor', path:'trade', previous:'buyer', days:720, standing:40, wage:5, value:2, training:['ste','dip'], skills:{ste:9,dip:7}, lettered:true,
     traitFit:{honest:1,patient:1,roadwise:1,greedy:-1,deceitful:-1} },
-  watch:{ position:'service_watch', path:'arms', wage:2.5, value:0.5, training:['mar','dip'], skills:{mar:4}, maleOnly:true,
+  watch:{ coversDuties:['week_work','household_service','herd_service','woodland_service','boat_service','customary_labor','irrigation_labor'], focusLabel:'Keep the household watch', position:'service_watch', path:'arms', wage:2.5, value:0.5, training:['mar','dip'], skills:{mar:4}, maleOnly:true,
     traitFit:{brave:1,veteran:1,muster_bred:1,craven:-1,drunkard:-1} },
-  guard:{ position:'service_guard', path:'arms', previous:'watch', days:180, standing:15, wage:3.5, value:1, training:['mar','dip'], skills:{mar:6}, maleOnly:true,
+  guard:{ coversDuties:['week_work','household_service','herd_service','woodland_service','boat_service','customary_labor','irrigation_labor'], focusLabel:'Stand household guard', position:'service_guard', path:'arms', previous:'watch', days:180, standing:15, wage:3.5, value:1, training:['mar','dip'], skills:{mar:6}, maleOnly:true,
     traitFit:{brave:1,veteran:1,muster_bred:1,craven:-1,drunkard:-1} },
-  sergeant:{ position:'service_sergeant', path:'arms', previous:'guard', days:360, standing:25, wage:4, value:1.5, training:['mar','dip'], skills:{mar:9,dip:4}, maleOnly:true,
+  sergeant:{ coversDuties:['week_work','household_service','herd_service','woodland_service','boat_service','customary_labor','irrigation_labor'], focusLabel:'Drill the household guard', position:'service_sergeant', path:'arms', previous:'guard', days:360, standing:25, wage:4, value:1.5, training:['mar','dip'], skills:{mar:9,dip:4}, maleOnly:true,
     traitFit:{brave:1,veteran:1,patient:1,craven:-1,wrathful:-1,drunkard:-1} },
-  captain:{ position:'captain', path:'arms', previous:'sergeant', days:1080, standing:45, wage:5, value:2, training:['mar','dip'], skills:{mar:12,dip:6}, maleOnly:true,
+  captain:{ coversDuties:['week_work','household_service','herd_service','woodland_service','boat_service','customary_labor','irrigation_labor'], focusLabel:'Drill the household guard', position:'captain', path:'arms', previous:'sergeant', days:1080, standing:45, wage:5, value:2, training:['mar','dip'], skills:{mar:12,dip:6}, maleOnly:true,
     traitFit:{brave:1,veteran:1,patient:1,muster_bred:1,craven:-1,wrathful:-1,drunkard:-1} }
 };
 
@@ -1390,3 +1390,32 @@ FBDATA.finance = {
     }
   }
 };
+
+/* Physical production, merchant networks and household demand are authored
+   independently of enterprise ids and cosmetic standard names. */
+FBDATA.enterpriseMechanics = {
+  field_strip:{ output:{ provisions:1 } }, orchard_business:{ output:{ provisions:1 } },
+  fishing_boat_business:{ output:{ provisions:1 } },
+  press_business:{ output:{ provisions:.45,luxuries:.55 } },
+  workshop_business:{ output:{ wares:1 }, outputBySpecialization:{ smith:{ materials:1 }, cooper:{ transport:1 } }, monopoly:'craft' },
+  market_stall_business:{ distribution:{ local:.08 }, monopoly:'trade' },
+  trade_house_business:{ distribution:{ local:.07,overland:.08,water:.08 }, monopoly:'trade', tradeFinance:true }
+};
+FBDATA.specializationMarketEffects = {
+  broker:{ local:.08 }, caravan_factor:{ overland:.12 }, maritime_factor:{ water:.16 }
+};
+FBDATA.householdStandardDemand = {
+  board:{ provisions:1.8 }, wares:{ wares:1.4 }, quarters:{ materials:1.1 },
+  luxuries:{ luxuries:1.4 }, transport:{ transport:1.5 },
+  outfit_farmer:{ materials:.5,wares:.4 }, outfit_craftsman:{ materials:.5,wares:.4 },
+  outfit_merchant:{ materials:.5,wares:.4,transport:.35 }, outfit_soldier:{ materials:.5,wares:.4,transport:.35 },
+  outfit_monk:{ materials:.5,wares:.4 }, outfit_priest:{ materials:.5,wares:.4 }, outfit_noble:{ materials:.5,wares:.4 }
+};
+
+/* Contested office ranks route through the canonical appointment flows. */
+FBDATA.religiousOfficeRanks = {
+  catholic_monastic:{ abbot:"abbot", bishop:"bishop", abbeyCandidate:"prior" },
+  catholic_clerical:{ bishop:"bishop" }
+};
+
+FBDATA.positionRules = { tutor:{ teaches:true }, councilman:{ localCouncil:true } };

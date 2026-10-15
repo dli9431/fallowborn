@@ -9,6 +9,44 @@ window.FB = window.FB || {};
   }
   function me(state) { return state.chars[state.player.charId]; }
   function purpose(id) { return FBDATA.travelPurposes && FBDATA.travelPurposes[id]; }
+  FB.travelPurposeKind = function (id) { return (FBDATA.travelRules[id] || {}).kind; };
+  FB.travelDefault = function (kind) { return FBDATA.travelDefaults[kind]; };
+  function purposeMatches(actual, selected) {
+    return actual === selected || (FBDATA.travelRules[actual] || {}).encounters === selected;
+  }
+  FB.validateTravelRules = function () {
+    const errors = [], table = FBDATA.travelRules, defaults = FBDATA.travelDefaults, purposes = FBDATA.travelPurposes;
+    const kinds = ['pilgrimage','trade','study','service','expedition','frontier','relationship','tournament'];
+    function object(o) { return !!o && typeof o === 'object' && !Array.isArray(o); }
+    function fields(o, keys, path) { for (const key of Object.keys(o)) if (keys.indexOf(key) < 0) errors.push(path + '.' + key + ' is unsupported.'); }
+    if (!object(table) || !object(defaults) || !object(purposes) || Object.keys(purposes).length > 128) return ['travelRules requires bounded purpose, role and default tables.'];
+    fields(defaults, ['trade','relationship','tournament'], 'travelDefaults');
+    for (const kind of ['trade','relationship','tournament']) if (!table[defaults[kind]] || table[defaults[kind]].kind !== kind) errors.push('travelDefaults.' + kind + ' needs a matching purpose.');
+    for (const id of Object.keys(table)) if (!Object.prototype.hasOwnProperty.call(purposes, id)) errors.push('travelRules.' + id + ' has no purpose definition.');
+    for (const id of Object.keys(purposes)) {
+      const def = purposes[id], rule = table[id], path = 'travelRules.' + id;
+      if (!/^[a-z][a-z0-9_]*$/.test(id) || !object(rule) || !object(def)) { errors.push(path + ' needs a purpose and role record.'); continue; }
+      fields(rule, ['kind','encounters','arrivalEvent'], path);
+      fields(def, ['name','icon','desc','cost','stake','minTier','maxTier','mode','minDev','targeted','repeatable','eras','yearMin','yearMax','system','systems'], 'travelPurposes.' + id);
+      if (kinds.indexOf(rule.kind) < 0) errors.push(path + '.kind is unknown.');
+      for (const key of ['name','desc']) if (typeof def[key] !== 'string' || !def[key].trim()) errors.push('travelPurposes.' + id + '.' + key + ' is required.');
+      for (const key of ['cost','stake','minTier','maxTier','minDev']) {
+        const n = def[key];
+        if (key === 'cost' || n !== undefined) if (typeof n !== 'number' || !Number.isFinite(n) || n < 0 || n > (key === 'minTier' || key === 'maxTier' ? 7 : 100000)) errors.push('travelPurposes.' + id + '.' + key + ' is outside its numeric bounds.');
+      }
+      if (['minTier','maxTier'].some(function (key) { return def[key] !== undefined && !Number.isInteger(def[key]); }) || def.minTier !== undefined && def.maxTier !== undefined && def.minTier > def.maxTier) errors.push('travelPurposes.' + id + ' has an invalid tier range.');
+      for (const key of ['targeted','repeatable']) if (def[key] !== undefined && typeof def[key] !== 'boolean') errors.push('travelPurposes.' + id + '.' + key + ' must be boolean.');
+      const targeted = rule.kind === 'relationship' || rule.kind === 'tournament';
+      if (!!def.targeted !== targeted || !targeted && ['sites','developed','capitals','foreign','frontier'].indexOf(def.mode) < 0 || rule.kind === 'frontier' && def.mode !== 'frontier' || rule.kind !== 'frontier' && def.mode === 'frontier') errors.push('travelPurposes.' + id + ' has an incompatible target mode.');
+      if (!purposes[rule.encounters] || !table[rule.encounters] || table[rule.encounters].kind !== rule.kind) errors.push(path + '.encounters needs a purpose of the same kind.');
+      if (rule.kind !== 'tournament' && !(FBDATA.events || []).some(function (event) { return event.id === rule.arrivalEvent; })) errors.push(path + '.arrivalEvent is unknown.');
+      if (rule.kind === 'tournament' && rule.arrivalEvent !== undefined) errors.push(path + ' delegates arrival to scheduled games.');
+      const period = FB.contentPeriodFault(def); if (period) errors.push(path + ' ' + period);
+      errors.push.apply(errors, FB.systems.validateContent(def, 'travelPurposes.' + id));
+    }
+    return errors;
+  };
+
   function settled(pid) {
     const pr = FB.world && FB.world.byId[pid];
     return !!(pr && !pr.wasteland && pr.culture && pr.religion);
@@ -165,7 +203,7 @@ window.FB = window.FB || {};
        milestones accrue during the stay. A damaged record is dropped, never
        invented; the tick and validation paths then cancel the journey because
        the attempt can no longer be resolved honestly. */
-    if (t && t.purpose === 'frontier') {
+    if (t && FB.travelPurposeKind(t.purpose) === 'frontier') {
       const frontier = t.frontier;
       if (!frontier || typeof frontier !== 'object' || Array.isArray(frontier) ||
           typeof frontier.gatewayId !== 'string' ||
@@ -891,6 +929,7 @@ window.FB = window.FB || {};
     if (!c || FB.ageOf(c, state.date.year) < 16) {
       return FB.T('Only an adult can take to the road.');
     }
+    if (def && !FB.systemContentEnabled(state, def)) return FB.T('This travel purpose is unavailable.');
     if (purposeId !== undefined && !def) {
       return FB.T('That travel purpose is unavailable.');
     }
@@ -909,7 +948,7 @@ window.FB = window.FB || {};
     if (FB.atWarPersonally(state)) return FB.T('You cannot leave while personally at war.');
     const last = p.cooldowns && p.cooldowns.take_road;
     const cd = balance('travelCooldownDays', 360);
-    if (purposeId !== 'tournament' && last !== undefined && state.turn - last < cd) {
+    if (FB.travelPurposeKind(purposeId) !== 'tournament' && last !== undefined && state.turn - last < cd) {
       return FB.T('Ready in {days} days.', {days:cd - (state.turn - last)});
     }
     return true;
@@ -944,9 +983,9 @@ window.FB = window.FB || {};
     if (!pid || pid === p.provinceId || seen[pid] || !settled(pid)) return;
     if (FB.justiceExileBlocks && FB.justiceExileBlocks(state, p.charId, pid)) return;
     if (!opts.ignoreHistory) {
-      if (purposeId === 'pilgrimage' &&
-        (historyHas(state, 'pilgrimage') || me(state).traits.indexOf('pilgrim') >= 0)) return;
-      if (purposeId !== 'pilgrimage' && !(def && def.repeatable) &&
+      if (FB.travelPurposeKind(purposeId) === 'pilgrimage' &&
+        ((state.player.travelHistory || []).some(function (entry) { return FB.travelPurposeKind(entry.purpose) === 'pilgrimage'; }) || FB.traitMechanic(me(state), 'pilgrimageExperience') > 0)) return;
+      if (FB.travelPurposeKind(purposeId) !== 'pilgrimage' && !(def && def.repeatable) &&
           historyHas(state, purposeId, pid)) return;
     }
     const route = search === undefined
@@ -995,7 +1034,7 @@ window.FB = window.FB || {};
     for (let i = 0; i < candidates.length; i++) {
       const pr = candidates[i];
       if (!pr.wasteland && (state.dev[pr.id] || pr.dev0 || 1) >= minDev) {
-        addDestination(state, out, seen, opts.purpose || 'trade',
+        addDestination(state, out, seen, opts.purpose || FB.travelDefault('trade'),
           pr.id, null, opts, search);
       }
     }
@@ -1108,7 +1147,7 @@ window.FB = window.FB || {};
     let upfront = choice.cost;
     let overhead = choice.cost;
     if (venturePayload && venturePayload.kind === 'trade_venture' &&
-        purposeId === 'trade' && FB.tradeVenturePreview &&
+        FB.travelPurposeKind(purposeId) === 'trade' && FB.tradeVenturePreview &&
         FB.tradeVentureCanStart) {
       const stake = Math.floor(Number(venturePayload.stake) || 0);
       const goodId = venturePayload.goodId || null;
@@ -1171,7 +1210,7 @@ window.FB = window.FB || {};
        settlement: the anchor gateway, its political holder and controlling
        sovereign, and the protagonist. The route, cost, and departure turn are
        already snapshotted on the journey record itself. */
-    if (purposeId === 'frontier' && choice.gatewayId) {
+    if (FB.travelPurposeKind(purposeId) === 'frontier' && choice.gatewayId) {
       p.travel.frontier = {
         gatewayId: choice.gatewayId,
         holderId: (state.holder && state.holder[choice.gatewayId]) || null,
@@ -1239,7 +1278,7 @@ window.FB = window.FB || {};
     if (ctx.activityJourneyTurn === undefined && !(t && t.religiousActivity)) return true;
     if (!ev || !ev.travel || ev.travel.kind !== 'capstone') return true;
     return !!(t && t.religiousActivity && t.phase === 'arrived' && !t.completed &&
-      ctx.activityJourneyTurn === t.startTurn && ctx.destinationId === t.destinationId && ev.travel.purpose === t.purpose &&
+      ctx.activityJourneyTurn === t.startTurn && ctx.destinationId === t.destinationId && purposeMatches(t.purpose, ev.travel.purpose) &&
       FB.religiousActivityJourneyReady(state, t));
   };
 
@@ -1247,7 +1286,7 @@ window.FB = window.FB || {};
     const out = {
       eligible:false,
       characterId:c && c.id || null,
-      purpose:'relationship'
+      purpose:FB.travelDefault('relationship')
     };
     if (!c || c.dead || c.id === state.player.charId) {
       out.reason = FB.T('That character cannot receive a visit.');
@@ -1268,7 +1307,7 @@ window.FB = window.FB || {};
       out.reason = access.reason;
       return out;
     }
-    const eligible = FB.travelEligible(state, 'relationship', options);
+    const eligible = FB.travelEligible(state, FB.travelDefault('relationship'), options);
     if (eligible !== true) {
       out.reason = eligible;
       return out;
@@ -1307,8 +1346,8 @@ window.FB = window.FB || {};
     out.legDays = legDays;
     out.days = FB.travelRouteUnits(state.player.provinceId,route) * legDays;
     out.cost = readOnly
-      ? FB.travelCostSnapshot('relationship', route, state)
-      : FB.travelCost('relationship', route, state);
+      ? FB.travelCostSnapshot(FB.travelDefault('relationship'), route, state)
+      : FB.travelCost(FB.travelDefault('relationship'), route, state);
     out.minimumStay = balance('travelMinStayDays', 90);
     out.daysToThreshold = activeDays;
     out.daysFromDeparture = activeDays === null ? null : out.days + activeDays;
@@ -1332,7 +1371,7 @@ window.FB = window.FB || {};
 
     const targetRulerRealm = FB.realmIdForRulerCharacter
       ? FB.realmIdForRulerCharacter(state, c) : null;
-    const started = beginJourney(state, 'relationship', {
+    const started = beginJourney(state, FB.travelDefault('relationship'), {
       destinationId:preview.destinationId,
       destinationRealm:c.royalLine ? c.royalLine.realmId : null,
       route:preview.route,
@@ -1362,9 +1401,9 @@ window.FB = window.FB || {};
       const ev = events[i];
       if (!ev.travel || ev.travel.kind !== kind) continue;
       if (kind !== 'work' && travel.seenEvents[ev.id]) continue;
-      if (ev.travel.purpose && ev.travel.purpose !== travel.purpose) continue;
+      if (ev.travel.purpose && !purposeMatches(travel.purpose, ev.travel.purpose)) continue;
       if (kind === 'work' && def && def.targeted &&
-          ev.travel.purpose !== travel.purpose) continue;
+          !purposeMatches(travel.purpose, ev.travel.purpose)) continue;
       if (!FB.station.reaches(state.player, ev.travel.minTier, state)) continue;
       if (FB.station.exceeds(state.player, ev.travel.maxTier, state)) continue;
       /* contract:true stories exist only while a mercenary contract is
@@ -1374,8 +1413,8 @@ window.FB = window.FB || {};
       /* A frontier withdrawal happens in an empty waste: only purpose-written
          survival and work stories exist there, never the settled-county work
          that presumes neighbors, stalls, or a hall. */
-      if (kind === 'work' && travel.purpose === 'frontier' &&
-          ev.travel.purpose !== 'frontier') continue;
+      if (kind === 'work' && FB.travelPurposeKind(travel.purpose) === 'frontier' &&
+          !purposeMatches(travel.purpose, ev.travel.purpose)) continue;
       out.push(ev);
     }
     return out;
@@ -1421,7 +1460,7 @@ window.FB = window.FB || {};
   }
 
   function servicePatronAlive(state, t) {
-    if (t.purpose !== 'service') return true;
+    if (FB.travelPurposeKind(t.purpose) !== 'service') return true;
     const realm = t.destinationRealm && state.realms[t.destinationRealm];
     return !!(realm && realm.alive && realm.capital === t.destinationId);
   }
@@ -1431,7 +1470,7 @@ window.FB = window.FB || {};
      lives on the journey record, so every ordinary travel exit — return,
      turn back, settlement, succession, or cancellation — disposes of it. */
   FB.mercContractOffer = function (state, t) {
-    if (!t || t.purpose !== 'service' || t.contract) return false;
+    if (!t || FB.travelPurposeKind(t.purpose) !== 'service' || t.contract) return false;
     if (!servicePatronAlive(state, t)) return false;
     if (!FB.isRealmAtWar(state, t.destinationRealm)) return false;
     const career = FB.careerOf && FB.careerOf(state, me(state));
@@ -1506,7 +1545,7 @@ window.FB = window.FB || {};
      still empty land. Anything else ends the attempt through the ordinary
      journey cleanup — no homestead, no property. */
   function frontierAttemptValid(state, t) {
-    if (!t || t.purpose !== 'frontier') return true;
+    if (!t || FB.travelPurposeKind(t.purpose) !== 'frontier') return true;
     const frontier = t.frontier;
     if (!frontier || typeof frontier.gatewayId !== 'string') return false;
     if (frontier.charId !== state.player.charId) return false;
@@ -1530,11 +1569,12 @@ window.FB = window.FB || {};
     if (culture && culture !== c.culture && !t.encounters.culture) {
       queueEncounter(state, 'culture');
     }
-    if (t.purpose === 'tournament') {
+    FB.queueLifecycleEvents(state, 'travel_arrival', { locationId:t.currentId, destinationId:t.destinationId }, { travel:true });
+    if (FB.travelPurposeKind(t.purpose) === 'tournament') {
       t.stayStartTurn = state.turn; t.stayStarted = true; t.completed = true;
       return;
     }
-    if (t.purpose === 'service' && !servicePatronAlive(state, t)) {
+    if (FB.travelPurposeKind(t.purpose) === 'service' && !servicePatronAlive(state, t)) {
       queueItem(state, 'travel_patron_gone', t);
     } else if (FB.mercContractOffer(state, t)) {
       queueItem(state, 'travel_capstone_mercenary', t, {
@@ -1543,7 +1583,7 @@ window.FB = window.FB || {};
         mercSeasons:mercContractSeasonsTotal()
       });
     } else {
-      queueItem(state, 'travel_capstone_' + t.purpose, t);
+      queueItem(state, FBDATA.travelRules[t.purpose].arrivalEvent, t);
     }
   }
 
@@ -1685,13 +1725,13 @@ window.FB = window.FB || {};
     if (p.dead || !purpose(t.purpose) ||
       !purposeTierAllowed(state, purpose(t.purpose)) ||
       (p.flags && p.flags.in_prison) ||
-      (t.purpose !== 'tournament' && FB.atWarPersonally(state)) ||
+      (FB.travelPurposeKind(t.purpose) !== 'tournament' && FB.atWarPersonally(state)) ||
       !frontierAttemptValid(state, t)) {
       FB.travelCancel(state);
       return;
     }
     if (t.phase === 'arrived') {
-      if (t.purpose !== 'tournament') tickDestinationStay(state);
+      if (FB.travelPurposeKind(t.purpose) !== 'tournament') tickDestinationStay(state);
       return;
     }
     if (!t.remainingRoute.length) {
@@ -1699,7 +1739,7 @@ window.FB = window.FB || {};
       else arriveDestination(state);
       return;
     }
-    if (t.purpose === 'tournament' && FB.justiceExileBlocks &&
+    if (FB.travelPurposeKind(t.purpose) === 'tournament' && FB.justiceExileBlocks &&
         FB.justiceExileBlocks(state, p.charId, t.remainingRoute[0])) return;
     t.legDaysLeft--;
     if (t.legDaysLeft > 0) return;
@@ -1719,11 +1759,11 @@ window.FB = window.FB || {};
     const t = FB.travelEnsure(state);
     if (!t) return FB.T('No journey is in progress.');
     if (t.phase === 'return') return FB.T('Already returning home.');
-    if (t.purpose === 'tournament') return true;
+    if (FB.travelPurposeKind(t.purpose) === 'tournament') return true;
     if (t.phase !== 'arrived') return true;
     const remaining = balance('travelMinStayDays', 90) - stayDays(state, t);
     if (remaining <= 0) return true;
-    if (t.purpose === 'relationship') {
+    if (FB.travelPurposeKind(t.purpose) === 'relationship') {
       return FB.T('Remain on the visit for {days} more days before returning home.', {
         days:remaining
       });
@@ -1741,7 +1781,7 @@ window.FB = window.FB || {};
   FB.travelSettlementEligible = function (state) {
     const p = state.player;
     const t = FB.travelEnsure(state);
-    if (t && t.purpose === 'tournament') return FB.T('A games journey preserves the household home.');
+    if (t && FB.travelPurposeKind(t.purpose) === 'tournament') return FB.T('A games journey preserves the household home.');
     if (!t || t.phase !== 'arrived') return FB.T('Reach the destination first.');
     if (!FB.station.isFreeUnlanded(p, state)) {
       return FB.T('Only freeholders and gentry may relocate the household this way.');
@@ -1798,7 +1838,7 @@ window.FB = window.FB || {};
     if (!p || !t || !residence) {
       return FB.T('No post-marriage residence decision is pending.');
     }
-    if (t.purpose !== 'relationship' ||
+    if (FB.travelPurposeKind(t.purpose) !== 'relationship' ||
         residence.destinationId !== t.destinationId) {
       return FB.T('This journey is not the wedding visit that created the decision.');
     }
@@ -1981,7 +2021,7 @@ window.FB = window.FB || {};
 
   FB.travelTurnBack = function (state) {
     const t = FB.travelEnsure(state);
-    if (t && t.purpose === 'tournament' && FB.tournaments) return FB.tournaments.returnHome(state, false);
+    if (t && FB.travelPurposeKind(t.purpose) === 'tournament' && FB.tournaments) return FB.tournaments.returnHome(state, false);
     if (!t || FB.travelReturnEligible(state) !== true) return false;
     clearQueued(state);
     if (t.phase === 'outbound' && t.venture && t.venture.status === 'active') {
@@ -2004,7 +2044,7 @@ window.FB = window.FB || {};
 
   FB.travelReturn = function (state) {
     const t = FB.travelEnsure(state);
-    if (t && t.purpose === 'tournament' && FB.tournaments) return FB.tournaments.returnHome(state, false);
+    if (t && FB.travelPurposeKind(t.purpose) === 'tournament' && FB.tournaments) return FB.tournaments.returnHome(state, false);
     if (!t || t.phase !== 'arrived' || FB.travelReturnEligible(state) !== true) return false;
     clearQueued(state);
     t.phase = 'return';
@@ -2043,7 +2083,7 @@ window.FB = window.FB || {};
   FB.frontierSettlementEligible = function (state) {
     const p = state.player;
     const t = FB.travelEnsure(state);
-    if (!t || t.purpose !== 'frontier') {
+    if (!t || FB.travelPurposeKind(t.purpose) !== 'frontier') {
       return FB.T('Only a withdrawal into the wastes can found a frontier homestead.');
     }
     if (t.phase !== 'arrived') return FB.T('Reach the wasteland first.');
@@ -2087,7 +2127,7 @@ window.FB = window.FB || {};
      permanent settlement is available. Nothing here is saved state. */
   FB.frontierStatus = function (state) {
     const t = FB.travelEnsure(state);
-    if (!t || t.purpose !== 'frontier' || !t.frontier) return null;
+    if (!t || FB.travelPurposeKind(t.purpose) !== 'frontier' || !t.frontier) return null;
     const gateway = FB.world.byId[t.frontier.gatewayId];
     const required = frontierMilestonesRequired();
     const stayed = stayDays(state, t);
@@ -2155,7 +2195,7 @@ window.FB = window.FB || {};
     const p = state && state.player;
     if (!p || !p.travel) return false;
     const traveler = me(state);
-    if (!silent && p.travel.purpose === 'tournament' && traveler && !traveler.dead && traveler.health > 0 && !p.dead &&
+    if (!silent && FB.travelPurposeKind(p.travel.purpose) === 'tournament' && traveler && !traveler.dead && traveler.health > 0 && !p.dead &&
         !(p.flags && p.flags.in_prison) && p.travel.charId === p.charId &&
         FB.atWarPersonally(state) && FB.tournaments) {
       FB.tournaments.returnHome(state, true);
@@ -2198,7 +2238,7 @@ window.FB = window.FB || {};
     if (p.dead || !purpose(t.purpose) ||
       !purposeTierAllowed(state, purpose(t.purpose)) ||
       (p.flags && p.flags.in_prison) ||
-      (t.purpose !== 'tournament' && FB.atWarPersonally(state)) ||
+      (FB.travelPurposeKind(t.purpose) !== 'tournament' && FB.atWarPersonally(state)) ||
       !frontierAttemptValid(state, t)) {
       FB.travelCancel(state);
       return false;
@@ -2217,9 +2257,9 @@ window.FB = window.FB || {};
     t.workEvents = 0;
     t.nextWorkTurn = state.turn + nextWorkDelay();
     clearQueued(state);
-    queueItem(state, t.purpose === 'relationship'
+    queueItem(state, FB.travelPurposeKind(t.purpose) === 'relationship'
       ? 'travel_arrival_choice_relationship'
-      : (t.purpose === 'frontier'
+      : (FB.travelPurposeKind(t.purpose) === 'frontier'
         ? 'travel_arrival_choice_frontier'
         : (FB.station.isLanded(state.player, state)
           ? 'travel_arrival_choice_ruler' : 'travel_arrival_choice')), t);
@@ -2227,7 +2267,7 @@ window.FB = window.FB || {};
 
   FB.travelTradeSettle = function (state, outcome, multiplier) {
     const t = FB.travelEnsure(state);
-    if (!t || t.purpose !== 'trade') return false;
+    if (!t || FB.travelPurposeKind(t.purpose) !== 'trade') return false;
     const venture = t.venture;
     if (venture) {
       if (venture.status !== 'active') {
@@ -2301,7 +2341,7 @@ window.FB = window.FB || {};
      completion, and renewal so a collapsed or pacified realm cannot pay. */
   FB.fns.merc_contract_accept = function (state) {
     const t = FB.travelEnsure(state);
-    if (!t || t.purpose !== 'service' || t.phase !== 'arrived') return false;
+    if (!t || FB.travelPurposeKind(t.purpose) !== 'service' || t.phase !== 'arrived') return false;
     /* The stay must always begin — a war that ends between arrival and
        resolution degrades the signature to ordinary court service rather
        than stranding the traveler in a stay that never starts. */
@@ -2380,7 +2420,7 @@ window.FB = window.FB || {};
      family’s Travel Journal exactly once per protagonist life. */
   FB.fns.travel_expedition_record = function (state) {
     const t = FB.travelEnsure(state);
-    if (!t || t.purpose !== 'expedition' || t.phase !== 'arrived') return false;
+    if (!t || FB.travelPurposeKind(t.purpose) !== 'expedition' || t.phase !== 'arrived') return false;
     const p = state.player;
     const pr = FB.world.byId[t.destinationId];
     const culture = pr && countyCulture(state, pr.id);
@@ -2404,18 +2444,18 @@ window.FB = window.FB || {};
      only send the traveler home once the ordinary minimum stay has passed. */
   FB.fns.frontier_milestone = function (state) {
     const t = FB.travelEnsure(state);
-    if (!t || t.purpose !== 'frontier' || !t.frontier) return false;
+    if (!t || FB.travelPurposeKind(t.purpose) !== 'frontier' || !t.frontier) return false;
     t.frontier.milestones = (t.frontier.milestones || 0) + 1;
     return true;
   };
   FB.fns.frontier_leave_ready = function (state) {
     const t = FB.travelEnsure(state);
-    return !!(t && t.purpose === 'frontier' &&
+    return !!(t && FB.travelPurposeKind(t.purpose) === 'frontier' &&
       FB.travelReturnEligible(state) === true);
   };
   FB.fns.frontier_go_home = function (state) {
     const t = FB.travelEnsure(state);
-    if (!t || t.purpose !== 'frontier' || t.phase !== 'arrived') return false;
+    if (!t || FB.travelPurposeKind(t.purpose) !== 'frontier' || t.phase !== 'arrived') return false;
     if (FB.travelReturnEligible(state) !== true) return false;
     return FB.travelReturn(state);
   };

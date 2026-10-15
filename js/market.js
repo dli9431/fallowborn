@@ -144,6 +144,15 @@
     };
   }
 
+  FB.marketRaidYield = function (endowments, key, fallback) {
+    var amount = fallback || 0;
+    endowments.forEach(function (id) {
+      var row = FBDATA.marketRaidYields[id];
+      if (row && typeof row[key] === 'number') amount = Math.max(amount, row[key]);
+    });
+    return amount;
+  };
+
   FB.validateMarketData = function (goods, types, endowments, geography) {
     const faults = [];
     if (!goods || typeof goods !== 'object' || Array.isArray(goods)) {
@@ -379,16 +388,8 @@
       const level = Math.max(0, Math.floor(Number(standards[id]) || 0));
       if (!level) continue;
       if (FB.householdStandardActive && !FB.householdStandardActive(state, id)) continue;
-      if (id === 'board') demand.provisions += level * 1.8;
-      else if (id === 'wares') demand.wares += level * 1.4;
-      else if (id === 'quarters') demand.materials += level * 1.1;
-      else if (id === 'luxuries') demand.luxuries += level * 1.4;
-      else if (id === 'transport') demand.transport += level * 1.5;
-      else if (id.indexOf('outfit_') === 0) {
-        demand.materials += level * 0.5;
-        demand.wares += level * 0.4;
-        if (id === 'outfit_merchant' || id === 'outfit_soldier') demand.transport += level * 0.35;
-      }
+      const rates = FBDATA.householdStandardDemand[id] || {};
+      for (const good of Object.keys(rates)) demand[good] = (demand[good] || 0) + level * rates[good];
     }
     const retainers = state.player.retainers || [];
     demand.provisions += retainers.length * 4;
@@ -408,16 +409,8 @@
     const career = FB.careerOf && worker ? FB.careerOf(state, worker) : null;
     const specId = specialization && (specialization.id || specialization.key) ||
       career && career.specialization;
-    if (enterprise.type === 'field_strip' || enterprise.type === 'orchard_business' ||
-        enterprise.type === 'fishing_boat_business') out.provisions = amount;
-    else if (enterprise.type === 'press_business') {
-      out.provisions = amount * 0.45;
-      out.luxuries = amount * 0.55;
-    } else if (enterprise.type === 'workshop_business') {
-      if (specId === 'smith') out.materials = amount;
-      else if (specId === 'cooper') out.transport = amount;
-      else out.wares = amount;
-    }
+    const shares = FB.enterpriseOutputShares(enterprise.type, specId);
+    for (const good of Object.keys(shares)) out[good] = amount * shares[good];
     return out;
   };
 
@@ -425,18 +418,12 @@
     const out = { local:0, overland:0, water:0 };
     if (!enterprise || !FB.enterpriseYield || FB.enterpriseYield(state,
         enterprise) <= 0) return out;
-    if (enterprise.type === 'market_stall_business') out.local += 0.08;
-    if (enterprise.type === 'trade_house_business') {
-      out.local += 0.07;
-      out.overland += 0.08;
-      out.water += 0.08;
-    }
+    const base = FB.enterpriseMechanics(enterprise.type).distribution || {};
+    for (const key of Object.keys(base)) out[key] += base[key];
     const worker = enterprise.workerId && state.chars[enterprise.workerId];
     const career = worker && FB.careerOf ? FB.careerOf(state, worker) : null;
-    const specId = career && career.specialization;
-    if (specId === 'broker') out.local += 0.08;
-    if (specId === 'caravan_factor') out.overland += 0.12;
-    if (specId === 'maritime_factor') out.water += 0.16;
+    const extra = career && FBDATA.specializationMarketEffects[career.specialization] || {};
+    for (const key of Object.keys(extra)) out[key] += extra[key];
     return out;
   };
 

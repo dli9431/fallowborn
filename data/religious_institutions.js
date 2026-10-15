@@ -403,7 +403,7 @@ FBDATA.techImpactReviews.features.arabian_local_congregations_711 = {
   mode:'none', rationale:'Voluntary local congregation membership depends on presence and consent, without a discovery requirement or a priestly office.'
 };
 FBDATA.legitimacySources.institution_support = {
-  name:'Institutional recognition', succession:'reaffirm', institutional:true
+  name:'Institutional recognition', succession:'reaffirm', issuerKinds:['religious-institution'], countyRights:false, institutional:true
 };
 FBDATA.techImpactReviews.features.religious_institution_membership = {
   mode:'none', rationale:'Membership and school affiliation depend on declared qualification and consent, without a discovery requirement.'

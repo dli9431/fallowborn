@@ -607,3 +607,15 @@ A civic polity uses its existing realm treasury. Public borrowing transfers real
 Ecclesiastical public accounts
 
 Ecclesiastical receipts, remittances, military service and expense retain canonical fiscal owners. Vacancy powers and control gate public sources while private settlement production stays private. Reviewed appointment and temporal recognition fees debit only available institutional funds above the declared reserve. No new salary, loan store or treasury is created. See ecclesiastical-principality.md.
+
+
+Declared trait mechanics
+
+The traitMechanics catalogue supplies the supported literacy, prayer, social, intrigue, justice, religious and AI-policy effects documented in docs/MODDING.md. Consumers read the same effective rules for player previews and AI actors, with no historical trait-id branches. Existing numerical defaults and prerequisite checks are retained. Grouped alternative motives use their maximum contribution; independent yield/support channels use their documented sums. Legacy saved-trait migration and trait-award identities remain separate compatibility concerns. This conversion introduces no technology dependency, saved ledger or additional RNG draw.
+
+Enterprise output and distribution now resolve through enterpriseMechanics and specializationMarketEffects. Household demand resolves through householdStandardDemand. The same staffed production and canonical finance/market operations consume built-in and imported records; no alternate ledger is introduced.
+
+
+Tenure, freedom bands, bargaining timing and annual rank prestige are validated JSON roots. Candidate imports check effective event, culture, faith and bookmark references before publication. Tenure formation uses the highest-priority matching system-enabled declaration; its single unconditional fallback has no privileged id. Freedom offers continue to freeze their reviewed terms, and cache invalidation occurs only after accepted publication. The harbor-contracts.json and dune-contracts.json subsystem fixtures supply different calendars and service terms.
+
+positionRules.teaches controls retained teachers, while positionRules.localCouncil requests the existing earned-seat check. Bounded position and local ordinance effects remain canonical income/retinue contributions. The new authoring fields do not alter saved contracts or education arrangements.

@@ -7,6 +7,7 @@
 (function () {
   'use strict';
   var registry = [], byId = {}, types = {}, typeFiles = {}, validators = {}, sealed = false;
+  var nativeStories = [], typesSealed = false;
   var KINDS = { world:true, track:true };
   var HOOKS = ['appliesTo', 'init', 'day', 'season', 'year', 'title', 'intro',
     'status', 'choices', 'quote', 'blocker', 'review', 'apply',
@@ -76,7 +77,8 @@
     }
     return null;
   }
-  function declarationFaults(def, bm, attached) {
+  function declarationFaults(def, bm, attached, context) {
+    var lookup = context || FB.stories, entries = lookup.list();
     var errors = [];
     function bad(detail) { errors.push('story ' + String(def && def.id) + ': ' + detail); }
     if (!plain(def) || !own(types, def.type)) { bad('unknown story type'); return errors; }
@@ -90,8 +92,8 @@
         day(def.lastDate) < day(def.firstDate))) bad('invalid date window');
     if (def.requires !== undefined && (!Array.isArray(def.requires) || def.requires.some(function (id, i) {
       return typeof id !== 'string' || id === def.id || def.requires.indexOf(id) !== i ||
-        !own(byId, id) || attached && attached.indexOf(id) < 0 ||
-        byId[def.id] && registry.indexOf(byId[id]) >= registry.indexOf(byId[def.id]);
+        !lookup.get(id) || attached && attached.indexOf(id) < 0 ||
+        lookup.get(def.id) && entries.indexOf(lookup.get(id)) >= entries.indexOf(lookup.get(def.id));
     }))) bad('unreachable requires');
     function walk(row) {
       if (!row || typeof row !== 'object') return;
@@ -108,7 +110,7 @@
           })) bad('unresolved province reference');
         }
         if (row.storyId) {
-          var parent = byId[row.storyId];
+          var parent = lookup.get(row.storyId);
           if (!parent || parent.fields && parent.fields.indexOf(row.field) < 0) bad('unresolved story field reference');
         }
         return;
@@ -130,39 +132,115 @@
       });
     }
     if (validators[def.type]) {
-      try { validators[def.type](def); } catch (error) { bad(error.message); }
+      try { validators[def.type](def, lookup); } catch (error) { bad(error.message); }
     }
     return errors;
   }
-  function registerInstances(anchor, placement, final) {
-    var table = FBDATA.storyInstances || {}, pending = Object.keys(table).filter(function (id) {
-      var d = table[id];
-      return !own(byId, id) && (final || d[placement] === anchor);
+  function validateModule(def, context) {
+    if (!def || typeof def.id !== 'string' || !/^[a-z][a-z0-9_]*$/.test(def.id))
+      throw new Error('A story needs a lowercase slug id.');
+    if (context.get(def.id)) throw new Error('Duplicate story ' + def.id + '.');
+    if (!own(KINDS, def.kind) || typeof def.init !== 'function')
+      throw new Error('Story ' + def.id + ' needs a kind and init hook.');
+    HOOKS.forEach(function (hook) {
+      if (def[hook] !== undefined && typeof def[hook] !== 'function')
+        throw new Error('Story ' + def.id + ' hook ' + hook + ' must be a function.');
     });
-    while (pending.length) {
-      var ready = [];
-      pending.forEach(function (id) {
-        if (own(byId, id)) { ready.push(id); return; }
-        var d = table[id];
-        if (!plain(d) || d.id !== id) throw new Error('Invalid story instance ' + id + '.');
-        // Data anchors pull their own batches into the dispatch boundary.
-        if (final && [d.registrationBefore,d.registrationAfter].some(function (anchor) {
-          return anchor && own(table, anchor) && !own(byId, anchor);
-        })) return;
-        if ((d.requires || []).every(function (required) { return own(byId, required); })) {
-          FB.stories.registerData(d); ready.push(id);
-        }
+    if (def.requires !== undefined && (!Array.isArray(def.requires) ||
+        def.requires.some(function (id) { return !context.get(id); })))
+      throw new Error('Story ' + def.id + ' requires a story registered before it.');
+  }
+
+  /* Factories build detached products. Their context resolves dependencies in
+     this candidate, never by temporarily replacing the live registry. */
+  function compile(table) {
+    if (!plain(table)) throw new Error('Mod data storyInstances must be an object keyed by id.');
+    table = JSON.parse(JSON.stringify(table));
+    var ordered = [], index = Object.create(null), visiting = Object.create(null);
+    var natives = Object.create(null), ids = Object.keys(table);
+    if (ids.length > 2048) throw new Error('storyInstances exceeds the 2048 instance limit.');
+    var context = {
+      get:function (id) { return own(index, id) ? index[id] : null; },
+      list:function () { return ordered.slice(); },
+      definitionFaults:function (def, bm, attached) { return declarationFaults(def, bm, attached, context); }
+    };
+    nativeStories.forEach(function (story) { natives[story.id] = story; });
+    ids.forEach(function (id) {
+      var d = table[id], path = 'storyInstances.' + id;
+      if (!plain(d) || d.id !== id || !/^[a-z][a-z0-9_]*$/.test(id) || own(natives, id))
+        throw new Error('Invalid or duplicate ' + path + '.');
+      if (!own(types, d.type)) throw new Error(path + ': unknown story type.');
+      if (d.requires !== undefined && (!Array.isArray(d.requires) || d.requires.length > 32 || d.requires.some(function (ref, i) {
+        return typeof ref !== 'string' || ref === id || d.requires.indexOf(ref) !== i || !own(table, ref) && !own(natives, ref);
+      }))) throw new Error(path + ': unreachable requires.');
+      ['registrationBefore','registrationAfter'].forEach(function (key) {
+        if (d[key] !== undefined && (typeof d[key] !== 'string' || d[key] === id || !own(table, d[key]) && !own(natives, d[key])))
+          throw new Error(path + '.' + key + ': unknown or cyclic registration anchor.');
       });
-      if (!ready.length) throw new Error('Unreachable story instance dependencies: ' + pending.join(', ') + '.');
-      pending = pending.filter(function (id) { return ready.indexOf(id) < 0; });
+      if (d.registrationBefore && d.registrationAfter) throw new Error(path + ': choose one registration anchor.');
+      if (d.news !== undefined) {
+        if (!plain(d.news)) throw new Error(path + '.news must be an object.');
+        Object.keys(d.news).forEach(function (key) {
+          var message = d.news[key];
+          if (!plain(message) || !/^(?:news|fx|legend|event)\.[a-z0-9_.-]+$/.test(message.key) || typeof message.text !== 'string')
+            throw new Error(path + '.news.' + key + ': invalid message.');
+        });
+      }
+    });
+    function add(id, native) {
+      if (visiting[id]) throw new Error('Cyclic story registration anchor: ' + id + '.');
+      visiting[id] = true;
+      batch(id, 'registrationBefore', false);
+      var d = table[id], story = native;
+      if (!native) {
+        var faults = declarationFaults(d, null, null, context);
+        if (faults.length) throw new Error('storyInstances.' + id + ': ' + faults.join('\n'));
+        story = types[d.type](d, context);
+        story.declaration = d;
+      }
+      validateModule(story, context);
+      ordered.push(story); index[id] = story;
+      batch(id, 'registrationAfter', false);
+      delete visiting[id];
     }
+    function batch(anchor, placement, final) {
+      var pending = ids.filter(function (id) { return !own(index, id) && (final || table[id][placement] === anchor); });
+      while (pending.length) {
+        var ready = [];
+        pending.forEach(function (id) {
+          if (own(index, id)) { ready.push(id); return; }
+          var d = table[id];
+          if (final && [d.registrationBefore,d.registrationAfter].some(function (ref) {
+            return ref && !own(index, ref);
+          })) return;
+          if ((d.requires || []).every(function (ref) { return own(index, ref); })) {
+            add(id); ready.push(id);
+          }
+        });
+        if (!ready.length) throw new Error('Unreachable story instance dependencies or anchors: ' + pending.join(', ') + '.');
+        pending = pending.filter(function (id) { return ready.indexOf(id) < 0; });
+      }
+    }
+    nativeStories.forEach(function (story) { add(story.id, story); });
+    batch(null, null, true);
+    return context;
+  }
+
+  function publish(candidate) {
+    var next = candidate.list(), nextIndex = Object.create(null);
+    next.forEach(function (story) { nextIndex[story.id] = story; });
+    registry = next; byId = nextIndex;
+    next.forEach(function (story) {
+      var news = story.declaration && story.declaration.news || {};
+      Object.keys(news).forEach(function (key) { FB.registerMessage(news[key].key, { text:news[key].text }); });
+    });
   }
 
   FB.stories = {
     /* Trusted classic scripts register reusable factories before boot seals
        the registry. Definitions contain data, not executable save fields. */
     registerType:function (id, factory, file, validator) {
-      if (sealed) throw new Error('Story types register at load time only.');
+      if (typesSealed) throw new Error('Story types register at load time only.');
       if (!/^[a-z][a-z0-9_]*$/.test(id) || own(types, id) || typeof factory !== 'function')
         throw new Error('Invalid or duplicate story type ' + id + '.');
       types[id] = factory;
@@ -172,50 +250,26 @@
     registerData:function (def) {
       if (sealed) throw new Error('Stories register at load time only.');
       if (!def || !own(types, def.type)) throw new Error('Unknown story type.');
-      var faults = declarationFaults(def);
-      if (faults.length) throw new Error(faults.join('\n'));
-      var story = types[def.type](def);
-      // Keep authored requirements available to the pre-generation gate.
-      // This declaration is never copied into a saved story record.
-      story.declaration = def;
-      return FB.stories.register(story);
+      var table = Object.assign({}, FBDATA.storyInstances || {});
+      if (own(table, def.id)) throw new Error('Duplicate story ' + def.id + '.');
+      table[def.id] = def;
+      var candidate = compile(table);
+      FBDATA.storyInstances = table; publish(candidate);
+      return byId[def.id];
     },
-    /* def: { id, kind:'world'|'track', requires:[story ids], and any of the
-       HOOKS above }. A required story must already be registered, so the
-       registration order is also the attachment and dispatch order. */
+    /* Native adapters are trusted scripts, never JSON content. */
     register:function (def) {
-      if (sealed) throw new Error('Stories register at load time only: ' +
-        String(def && def.id) + '.');
-      if (!def || typeof def.id !== 'string' || !/^[a-z][a-z0-9_]*$/.test(def.id))
-        throw new Error('A story needs a lowercase slug id.');
-      if (own(byId, def.id)) throw new Error('Duplicate story ' + def.id + '.');
-      registerInstances(def.id, 'registrationBefore', false);
-      if (!own(KINDS, def.kind))
-        throw new Error('Story ' + def.id + ' needs kind world or track.');
-      if (typeof def.init !== 'function')
-        throw new Error('Story ' + def.id + ' needs an init hook.');
-      for (var i = 0; i < HOOKS.length; i++) {
-        if (def[HOOKS[i]] !== undefined && typeof def[HOOKS[i]] !== 'function')
-          throw new Error('Story ' + def.id + ' hook ' + HOOKS[i] + ' must be a function.');
-      }
-      if (def.requires !== undefined && (!Array.isArray(def.requires) ||
-          def.requires.some(function (id) { return !own(byId, id); })))
-        throw new Error('Story ' + def.id + ' requires a story registered before it.');
-      registry.push(def);
-      byId[def.id] = def;
-      registerInstances(def.id, 'registrationAfter', false);
+      if (sealed) throw new Error('Stories register at load time only: ' + String(def && def.id) + '.');
+      validateModule(def, FB.stories);
+      nativeStories.push(def);
+      registry.push(def); byId[def.id] = def;
       return def;
     },
-    /* Boot calls this once every script has loaded. */
-    load:function () {
-      registerInstances(null, null, true);
-      Object.keys(FBDATA.storyInstances || {}).forEach(function (id) {
-        var d = FBDATA.storyInstances[id];
-        if (d.registrationBefore && !own(byId, d.registrationBefore) ||
-            d.registrationAfter && !own(byId, d.registrationAfter)) throw new Error('Unknown story registration anchor ' + id + '.');
-      });
-    },
-    seal:function () { FB.stories.load(); sealed = true; },
+    compile:compile,
+    publish:publish,
+    load:function () { publish(compile(FBDATA.storyInstances || {})); },
+    sealTypes:function () { typesSealed = true; },
+    seal:function () { sealed = true; typesSealed = true; },
     typeFiles:function () { return Object.assign({}, typeFiles); },
     definitionFaults:declarationFaults,
     referenceValid:referenceValid,

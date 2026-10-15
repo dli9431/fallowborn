@@ -87,7 +87,7 @@
 
   FB.storyCourts = { validateParameters:validateParameters, validateChoices:validateChoices, validateLinked:validateLinked,
     choiceOperation:choiceOperation, stageChoices:stageChoices,
-    context:function (id) { var story = FB.stories.get(id); return story && story.context; } };
+    context:function (id, context) { var story = (context || FB.stories).get(id); return story && story.context; } };
   function courtFactory(def) {
     var p = def.parameters, WORLD = def.id, TRACK = p.serviceTrackId, R = FB.startRealmId;
     function world(s) { return FB.stories.record(s, WORLD); }
@@ -569,9 +569,9 @@
       validate:validate, migrate:migrate, restore:restoreInstitutions };
   }
 
-  function restorationFactory(def) {
+  function restorationFactory(def, context) {
     function cast(s, role) { return FB.stories.resolve(s, def.cast[role]); }
-    var p = def.parameters, RETURN = def.id, R = FB.startRealmId, X = FB.storyCourts.context(def.courtStoryId);
+    var p = def.parameters, RETURN = def.id, R = FB.startRealmId, X = FB.storyCourts.context(def.courtStoryId, context);
     function plain(row) { return !!row && typeof row === 'object' && !Array.isArray(row); }
     function ruler(s, id) {
       id = FB.startRealmId(s, id);
@@ -671,10 +671,10 @@
         if (!rec.legacy && def.commanders.some(function (row) { return !rec[row.field]; })) bad(RETURN, def.commanders[0].field);
       } };
   }
-  function officeFactory(def) {
+  function officeFactory(def, context) {
     function cast(s, role) { return FB.stories.resolve(s, def.cast[role]); }
     var p = def.parameters, R = FB.startRealmId, OFFICE = def.id, RETURN = p.returnStoryId, PATRON_REALM = p.patronRealmId,
-      CAMPAIGNS = def.legacyCampaigns, X = FB.storyCourts.context(def.courtStoryId);
+      CAMPAIGNS = def.legacyCampaigns, X = FB.storyCourts.context(def.courtStoryId, context);
     function plain(row) { return !!row && typeof row === 'object' && !Array.isArray(row); }
     function ruler(s, id) {
       id = FB.startRealmId(s, id);
@@ -868,10 +868,10 @@
     d.treasuries.forEach(function (row) { need(Number.isFinite(row.gold) && row.gold >= 0, 'treasury'); });
     need(Array.isArray(def.legacyRails) && plain(def.legacy), 'legacy compatibility');
   }
-  function validateLinked(def, roles) {
+  function validateLinked(def, roles, context) {
     validateParameters(def);
     need(typeof def.courtStoryId === 'string' && (def.requires || []).indexOf(def.courtStoryId) >= 0, 'court dependency');
-    var court = FB.stories.get(def.courtStoryId);
+    var court = (context || FB.stories).get(def.courtStoryId);
     need(court && court.declaration && court.declaration.type === 'court_settlement', 'court type');
     need(plain(def.cast) && Object.keys(def.cast).every(function (role) {
       return FB.stories.referenceValid(def.cast[role], def);
@@ -879,14 +879,14 @@
     (roles || []).forEach(function (role) { need(!!def.cast[role], 'cast role ' + role); });
   }
   FB.stories.registerType('court_settlement', courtFactory, 'js/story_courts.js', validateCourt);
-  FB.stories.registerType('ruler_restoration', restorationFactory, 'js/story_courts.js', function (def) {
-    validateLinked(def, ['sittingRuler','returningRuler']); need(Array.isArray(def.commanders) && def.commanders.length > 0, 'commanders');
+  FB.stories.registerType('ruler_restoration', restorationFactory, 'js/story_courts.js', function (def, context) {
+    validateLinked(def, ['sittingRuler','returningRuler'], context); need(Array.isArray(def.commanders) && def.commanders.length > 0, 'commanders');
     var fields = {};
     def.commanders.forEach(function (row) { need(plain(row) && typeof row.field === 'string' && !fields[row.field] &&
       characterValid(row.character), 'commander'); fields[row.field] = true; });
   });
-  FB.stories.registerType('contested_office', officeFactory, 'js/story_courts.js', function (def) {
-    validateLinked(def, ['patronRuler']); need(plain(def.legacyCampaigns) && Array.isArray(def.legacyRails) && plain(def.legacyDisplacedCourt), 'legacy rails');
+  FB.stories.registerType('contested_office', officeFactory, 'js/story_courts.js', function (def, context) {
+    validateLinked(def, ['patronRuler'], context); need(plain(def.legacyCampaigns) && Array.isArray(def.legacyRails) && plain(def.legacyDisplacedCourt), 'legacy rails');
   });
 
 })();

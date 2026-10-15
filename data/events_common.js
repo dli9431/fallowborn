@@ -13,6 +13,483 @@
 window.FBDATA = window.FBDATA || {};
 FBDATA.events = FBDATA.events || [];
 
+/* Ordered arithmetic is shared by event previews and resolution. */
+FBDATA.eventSubscriptions = {
+  child_born_flavor:[{ hook:'household_birth' }],
+  child_educated:[{ hook:'child_education' }],
+  child_comes_of_age:[{ hook:'child_adulthood' }],
+  player_educated:[{ hook:'player_education' }],
+  player_comes_of_age:[{ hook:'player_adulthood' }],
+  devastation_raiders:[{ hook:'home_raid' }],
+  devastation_protection:[{ hook:'protection_offer' }],
+  justice_arrest:[{ hook:'justice_arrest' }],
+  justice_hearing:[{ hook:'justice_hearing' }]
+};
+
+FBDATA.eventChances = {
+  "harvest": {
+    "base": 0.55,
+    "min": 0.05,
+    "max": 0.95,
+    "steps": [
+      {
+        "kind": "skill",
+        "id": "ste",
+        "factor": 0.018
+      },
+      {
+        "kind": "flag",
+        "id": "crop_safe",
+        "add": 0.15
+      },
+      {
+        "kind": "flag",
+        "id": "crop_risky",
+        "add": -0.08
+      },
+      {
+        "kind": "flag",
+        "id": "blessed_crops",
+        "add": 0.12
+      },
+      {
+        "kind": "flag",
+        "id": "crop_ruined",
+        "set": 0.05
+      },
+      {
+        "kind": "terrain",
+        "id": "farmland",
+        "add": 0.08
+      }
+    ]
+  },
+  "battle": {
+    "base": 0.4,
+    "min": 0.1,
+    "max": 0.92,
+    "steps": [
+      {
+        "kind": "skill",
+        "id": "mar",
+        "factor": 0.028
+      },
+      {
+        "kind": "trait",
+        "id": "brave",
+        "add": 0.05
+      },
+      {
+        "kind": "trait",
+        "id": "craven",
+        "add": -0.1
+      },
+      {
+        "kind": "equipmentBonus",
+        "id": "battle"
+      },
+      {
+        "kind": "flag",
+        "id": "blessed_war",
+        "add": 0.06
+      }
+    ]
+  },
+  "fabricate_claim": {
+    "base": 0.3,
+    "min": 0.1,
+    "max": 0.9,
+    "steps": [
+      {
+        "kind": "skill",
+        "id": "int",
+        "factor": 0.03
+      },
+      {
+        "kind": "skill",
+        "id": "lea",
+        "factor": 0.01
+      },
+      {
+        "kind": "resource",
+        "id": "prestige",
+        "divisor": 1000
+      }
+    ]
+  },
+  "rival_peace": {
+    "base": 0.45,
+    "min": 0.1,
+    "max": 0.9,
+    "steps": [
+      {
+        "kind": "skill",
+        "id": "dip",
+        "factor": 0.02
+      },
+      {
+        "kind": "standing",
+        "role": "rival",
+        "divisor": 200
+      },
+      {
+        "kind": "rivalHeat",
+        "divisor": -250
+      },
+      {
+        "kind": "trait",
+        "id": "kind",
+        "add": 0.08
+      },
+      {
+        "kind": "trait",
+        "id": "proud",
+        "add": -0.05
+      }
+    ]
+  },
+  "house_claim": {
+    "base": 0.3,
+    "min": 0.1,
+    "max": 0.85,
+    "steps": [
+      {
+        "kind": "resource",
+        "id": "prestige",
+        "divisor": 400
+      },
+      {
+        "kind": "skill",
+        "id": "dip",
+        "factor": 0.02
+      },
+      {
+        "kind": "skill",
+        "id": "int",
+        "factor": 0.02
+      }
+    ]
+  },
+  "annulment": {
+    "base": 0.35,
+    "min": 0.1,
+    "max": 0.9,
+    "steps": [
+      {
+        "kind": "resource",
+        "id": "piety",
+        "divisor": 300
+      },
+      {
+        "kind": "skill",
+        "id": "lea",
+        "factor": 0.018
+      },
+      {
+        "kind": "flag",
+        "id": "bishop",
+        "add": 0.2
+      }
+    ]
+  },
+  "skill_dip": {
+    "base": 0.3,
+    "min": 0.1,
+    "max": 0.9,
+    "steps": [
+      {
+        "kind": "skill",
+        "id": "dip",
+        "factor": 0.04
+      }
+    ]
+  },
+  "skill_ste": {
+    "base": 0.3,
+    "min": 0.1,
+    "max": 0.9,
+    "steps": [
+      {
+        "kind": "skill",
+        "id": "ste",
+        "factor": 0.04
+      },
+      {
+        "kind": "assetAny",
+        "ids": [
+          "fine_tools",
+          "workshop"
+        ],
+        "add": 0.06
+      }
+    ]
+  },
+  "travel_trade": {
+    "base": 0.28,
+    "min": 0.1,
+    "max": 0.92,
+    "steps": [
+      {
+        "kind": "skill",
+        "id": "ste",
+        "factor": 0.045
+      }
+    ]
+  },
+  "skill_int": {
+    "base": 0.3,
+    "min": 0.1,
+    "max": 0.9,
+    "steps": [
+      {
+        "kind": "skill",
+        "id": "int",
+        "factor": 0.04
+      }
+    ]
+  },
+  "skill_lea": {
+    "base": 0.3,
+    "min": 0.1,
+    "max": 0.9,
+    "steps": [
+      {
+        "kind": "skill",
+        "id": "lea",
+        "factor": 0.04
+      },
+      {
+        "kind": "holding",
+        "id": "letters",
+        "add": 0.08
+      },
+      {
+        "kind": "careerRoles",
+        "ids": [
+          "cloister",
+          "clergy"
+        ],
+        "add": 0.05
+      }
+    ]
+  },
+  "rights_dip": {
+    "base": 0.22,
+    "min": 0.1,
+    "max": 0.9,
+    "steps": [
+      {
+        "kind": "skill",
+        "id": "dip",
+        "factor": 0.04
+      },
+      {
+        "kind": "resource",
+        "id": "prestige",
+        "divisor": 900
+      },
+      {
+        "kind": "flag",
+        "id": "rights_evidence",
+        "add": 0.18
+      },
+      {
+        "kind": "standing",
+        "role": "lord",
+        "divisor": 500
+      }
+    ]
+  },
+  "rights_ste": {
+    "base": 0.25,
+    "min": 0.1,
+    "max": 0.9,
+    "steps": [
+      {
+        "kind": "skill",
+        "id": "ste",
+        "factor": 0.04
+      },
+      {
+        "kind": "flag",
+        "id": "rights_evidence",
+        "add": 0.18
+      },
+      {
+        "kind": "careerRoles",
+        "ids": [
+          "labor",
+          "craft",
+          "trading"
+        ],
+        "add": 0.05
+      }
+    ]
+  },
+  "rights_int": {
+    "base": 0.24,
+    "min": 0.1,
+    "max": 0.9,
+    "steps": [
+      {
+        "kind": "skill",
+        "id": "int",
+        "factor": 0.04
+      },
+      {
+        "kind": "flag",
+        "id": "rights_evidence",
+        "add": 0.18
+      },
+      {
+        "kind": "flag",
+        "id": "rights_collaborator",
+        "add": 0.05
+      }
+    ]
+  },
+  "rights_lea": {
+    "base": 0.24,
+    "min": 0.1,
+    "max": 0.9,
+    "steps": [
+      {
+        "kind": "skill",
+        "id": "lea",
+        "factor": 0.04
+      },
+      {
+        "kind": "flag",
+        "id": "rights_evidence",
+        "add": 0.18
+      },
+      {
+        "kind": "holding",
+        "id": "letters",
+        "add": 0.08
+      },
+      {
+        "kind": "careerRoles",
+        "ids": [
+          "cloister",
+          "clergy"
+        ],
+        "add": 0.05
+      }
+    ]
+  },
+  "swarm": {
+    "base": 0.35,
+    "min": 0.15,
+    "max": 0.9,
+    "steps": [
+      {
+        "kind": "skill",
+        "id": "ste",
+        "factor": 0.035
+      },
+      {
+        "kind": "assetAny",
+        "ids": [
+          "hearth_garden"
+        ],
+        "add": 0.1
+      },
+      {
+        "kind": "assetAny",
+        "ids": [
+          "orchard"
+        ],
+        "add": 0.12
+      }
+    ]
+  },
+  "appeal_outcome": {
+    "baseBalance": "appealBase",
+    "min": 0.05,
+    "max": 0.9,
+    "steps": [
+      {
+        "kind": "skill",
+        "id": "dip",
+        "factor": 0.025
+      },
+      {
+        "kind": "skill",
+        "id": "int",
+        "factor": 0.025
+      },
+      {
+        "kind": "realmStanding",
+        "role": "appeal",
+        "divisor": 200
+      }
+    ]
+  },
+  "vassal_comply": {
+    "base": 0.35,
+    "min": 0.05,
+    "max": 0.95,
+    "steps": [
+      {
+        "kind": "skill",
+        "id": "dip",
+        "factor": 0.025
+      },
+      {
+        "kind": "resource",
+        "id": "prestige",
+        "divisor": 800
+      },
+      {
+        "kind": "realmStanding",
+        "role": "revocation",
+        "divisor": 150
+      }
+    ]
+  },
+  "serf_flight": {
+    "policy": "serf_flight"
+  },
+  "proposal": {
+    "policy": "proposal"
+  },
+  "sibling_proposal": {
+    "policy": "sibling_proposal"
+  },
+  "sibling_exposure_denial": {
+    "policy": "sibling_exposure_denial"
+  },
+  "plot_discovery": {
+    "policy": "plot_discovery"
+  },
+  "war_battle": {
+    "policy": "war_battle"
+  },
+  "liege_grant": {
+    "policy": "liege_grant"
+  },
+  "county_petition": {
+    "policy": "county_petition"
+  },
+  "parliament_vote": {
+    "policy": "parliament_vote"
+  },
+  "parliament_redress_vote": {
+    "policy": "parliament_redress_vote"
+  },
+  "plot": {
+    "policy": "plot"
+  },
+  "revolt_negotiation": {
+    "policy": "revolt_negotiation"
+  },
+  "revolt_suppression": {
+    "policy": "revolt_suppression"
+  }
+};
+
+
 (function () {
   var firstEvent = FBDATA.events.length;
   FBDATA.eventPacks = FBDATA.eventPacks || {};
