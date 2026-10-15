@@ -14,7 +14,7 @@ dependsOnRuntime(__filename,[
   'data/cultures.js','data/technology.js','data/travel.js','data/story_campaigns_711.js','data/story_instances.js',
   'js/world.js','js/main.js','js/model.js','js/population.js','js/settlement.js','js/climate.js',
   'js/travel.js','js/armies.js','js/governments.js','js/government_administration.js',
-  'js/authority.js','js/lordships.js','js/treasury.js',
+  'js/authority.js','js/lordships.js','js/treasury.js','js/market.js',
   'js/stories.js','js/story_campaign.js','js/story_polity_foundation.js','js/save.js','js/save_v4.js',
   'js/starts.js','js/technology.js','js/crazygames.js','data/distribution_crazygames.js'
 ]);

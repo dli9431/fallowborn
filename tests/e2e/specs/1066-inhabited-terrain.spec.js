@@ -16,7 +16,7 @@ dependsOnRuntime(__filename,[
   'js/authority.js','js/politics.js','js/population.js','js/settlement.js','js/lordships.js',
   'js/governments.js','js/government_selection.js','js/government_lineage.js','js/government_assembly.js',
   'js/government_support.js','js/government_continuity.js','js/government_levy.js','js/government_revenue.js',
-  'js/treasury.js','js/climate.js','js/travel.js','js/armies.js','js/religion.js','js/station.js','js/model.js','js/modifiers.js',
+  'js/treasury.js','js/climate.js','js/travel.js','js/armies.js','js/religion.js','js/station.js','js/model.js','js/modifiers.js','js/market.js',
   'js/crazygames.js','data/distribution_crazygames.js'
 ]);
 

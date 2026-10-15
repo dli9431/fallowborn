@@ -7664,6 +7664,8 @@ window.FB = window.FB || {};
     if (FB.rememberSettlementSites) FB.rememberSettlementSites(state, pid);
     FB.invalidateRealmCache();
     if (FB.marketWorldDirty) FB.marketWorldDirty();
+    // Finish the saved county ledger here, before a price preview can read it.
+    if (FB.ensureMarket) FB.ensureMarket(state);
     FB.checkTierPromotions(state);
     if (FB.ui && FB.ui.mapDirty) FB.ui.mapDirty();
     FB.news(state, FB.msg('news.world.wasteland_settlement_record',

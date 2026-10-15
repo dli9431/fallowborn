@@ -25,7 +25,7 @@ dependsOnRuntime(__filename,[
   'js/governments.js','js/government_support.js','js/government_assembly.js',
   'js/government_administration.js','js/government_ecclesiastical.js','js/authority.js',
   'js/treasury.js','js/lordships.js','js/stories.js','js/events.js','js/systems.js',
-  'js/crazygames.js','data/distribution_crazygames.js'
+  'js/crazygames.js','data/distribution_crazygames.js','js/market.js'
 ]);
 
 async function startDistrict(page,info,id,crazygames) {

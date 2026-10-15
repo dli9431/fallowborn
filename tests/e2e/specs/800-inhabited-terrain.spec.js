@@ -19,7 +19,7 @@ dependsOnRuntime(__filename,[
   'js/travel.js','js/armies.js','js/wars.js','js/stories.js','js/story_settlements.js','js/royal_settlements.js',
   'js/governments.js','js/government_administration.js','js/government_recognition.js',
   'js/government_ecclesiastical.js','js/authority.js','js/treasury.js','js/save.js','js/save_v4.js',
-  'js/starts.js','js/technology.js','js/crazygames.js'
+  'js/starts.js','js/technology.js','js/crazygames.js','js/market.js'
 ]);
 
 const CURRENT = 'inhabited_v2_governments_v2_islamic_v1_learning_v1';
