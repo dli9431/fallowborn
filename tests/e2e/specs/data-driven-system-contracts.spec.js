@@ -3,7 +3,7 @@ const { test, expect } = require('../support/fixture');
 const { openGame } = require('../support/game/navigation');
 const { startDeterministicGame } = require('../support/game/start');
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
-dependsOnRuntime(__filename, ['js/politics.js','data/markets.js','data/cultures.js','js/intrigue.js','js/story_government_selection.js','data/policies.js','js/ecclesiastical_validation.js','js/government_ecclesiastical.js','js/religion.js','js/ambitions.js','js/federates.js','data/ambitions.js','js/agency.js','data/travel.js','js/parliament.js','data/events_common.js','data/political_institutions.js','data/religious_institutions.js',
+dependsOnRuntime(__filename, ['js/save.js','js/technology.js','js/politics.js','data/markets.js','data/cultures.js','js/intrigue.js','js/story_government_selection.js','data/policies.js','js/ecclesiastical_validation.js','js/government_ecclesiastical.js','js/religion.js','js/ambitions.js','js/federates.js','data/ambitions.js','js/agency.js','data/travel.js','js/parliament.js','data/events_common.js','data/political_institutions.js','data/religious_institutions.js',
   'data/papacy.js','js/papacy.js','data/actions.js','js/actions.js','js/ui_panels.js','data/economy.js','data/starts.js','js/abbeys.js','js/market.js','js/council.js','js/institutions.js','js/starts.js','data/tournaments.js','js/tournaments.js','data/traits.js','js/travel.js','js/events.js','js/rebellions.js','js/mods.js','js/authority.js','js/main.js','js/model.js','js/economy.js']);
 
 test('declared chance formulas preserve arithmetic order and pure shared previews', async function ({ page }, info) {
@@ -170,7 +170,8 @@ for (const id of ['study','play','rest','pray','militia','work_land','market','k
       const expected = JSON.stringify(facts(s)); FB.save.restore(before); def.tick(FB.state);
       return { expected:expected, actual:JSON.stringify(facts(FB.state)) };
     }, id);
-    expect(result.actual).toBe(result.expected);
+    // Restore can reorder research object keys without changing any saved values.
+    expect(JSON.parse(result.actual)).toEqual(JSON.parse(result.expected));
   });
 }
 
