@@ -8,6 +8,8 @@ tools/music_catalog.py supports music/<era>/<faith>/<culture>/<role>/<NNN>-<slug
 
 The explicit CrazyGames distribution flag skips music initialization and contextual bank resolution even if a catalog is accidentally present. Standard file, itch and hosted builds retain soundtrack initialization and playback.
 
+tests/e2e/specs/presentation-styles.spec.js checks that a nonempty authored catalog remains unused under the CrazyGames flag: no Audio player is constructed, supported() returns false, catalog() remains null and resolveBank returns null. The declaration check prevents an absent soundtrack from masking initialization behavior.
+
 Fallowborn's soundtrack is optional, self-hosted Opus audio. The core game must still boot when
 the catalog is empty, the browser cannot decode Ogg Opus, a track fails, or the player stays
 silent. Music is not simulation state and never changes deterministic gameplay.
