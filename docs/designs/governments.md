@@ -68,6 +68,8 @@ Ladder: inherited_ladder is an empty bands overlay delegating to the campaign's 
 
 Boundaries and verification
 
+The alternate-strategy fixture stages a player realm directly, then completes its historical technology seed and Papal model through seedRealmTechnology and ensurePapacyState before checking public reads. The test asserts those records exist and still requires every tax, levy, council, war and consent projection to preserve saved state, RNG and uid. Setup belongs to realm creation rather than an unmeasured first read.
+
 The original dispatch platform is internal infrastructure with no technology gate. The assembly consumer adds reviewed capabilities and a bounded saved contract, documented with its technology decisions in docs/designs/assembly-polity.md. Presentation continues to use the existing public projections, localized error patterns and transaction reviews. Source ratchets apply to every new strategy module. Numerical/list variations belong in data, with only council seat selection and AI war chance added as typed parameters here; unsupported parameter slots and keys are rejected.
 
 The government-dispatch specification covers registration and form validation, compatibility aliases, test-only alternative strategies, data-only composed forms, bounded seasonal replay and restore in all three baseline bookmarks, read purity and daily cache invalidation/cost reporting. Existing parity-fresh, authority, federation, council, economy, war, station, mod and save suites remain the behavior references. Fixed-seed equality and elapsed-time comparisons must be established by the owner-controlled harness and profiler, not inferred from source inspection.

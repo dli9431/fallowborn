@@ -166,7 +166,7 @@ test('site names and province names follow a bookmark start year and culture',
       });
       expect(result.romaCulture).toBe('roman');
       expect(result.roma).toBe('Urbs Roma');
-      expect(result.sites).toEqual(['roma:Rome', 'ostia:Ostia Antica']);
+      expect(result.sites).toEqual(['roma:Roma', 'ostia:Ostia Antica']);
     } finally {
       await page.evaluate(function () {
         const names = FBDATA.geographies.europe_regional.names;

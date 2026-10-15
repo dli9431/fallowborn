@@ -17,6 +17,7 @@ dependsOnRuntime(__filename, [
   'js/government_continuity.js', 'js/government_recognition.js', 'js/government_administration.js', 'js/world.js', 'js/actions.js', 'js/council.js',
   'js/authority.js', 'js/armies.js', 'js/lordships.js', 'js/treasury.js', 'js/fiscal.js',
   'js/economy.js', 'js/wars.js', 'js/federates.js', 'js/politics.js', 'js/mods.js',
+  'js/technology.js', 'js/papacy.js', 'data/papacy.js',
   'js/station.js', 'js/save.js', 'js/save_v4.js'
 ]);
 const { test, expect } = require('../support/fixture');
@@ -121,6 +122,11 @@ test('alternate strategies change public consumers without changing pure-read st
     // The fixture gives the protagonist a living realm only inside this test.
     s.realms.player = Object.assign({}, s.realms[rid], { id:'player', alive:true });
     s.player.tier = 6;
+    // Complete the new realm's explicit setup before testing pure consumers.
+    FB.seedRealmTechnology(s,'player');
+    const papacy = FB.ensurePapacyState(s);
+    const initializedPlayer = s.realmTech.player.historicalSeeded === 1 && !!papacy &&
+      !!papacy.obediences[papacy.realmObedience.player];
     select('council','player');
     const council = FB.councilSeats(s);
     select('consent','player');
@@ -146,11 +152,11 @@ test('alternate strategies change public consumers without changing pure-read st
       breakaway:breakaway, declaration:declaration, accession:accession, unchangedRuler:unchangedRuler,
       refusedCounty:refusedCounty, holderChoice:holderChoice, expectedHolder:expectedHolder, consent:consent.allowed,
       council:council.length, characterConsent:characterConsent, invalidConsent:invalidConsent, deniedMuster:deniedMuster, ladder:ladder,
-      mutations:mutations };
+      initializedPlayer:initializedPlayer, mutations:mutations };
   });
   expect(result).toMatchObject({ levy:19, revenue:31, breakaway:0, declaration:'fixture refusal',
     accession:null, unchangedRuler:true, refusedCounty:true, consent:false, council:0,
-    characterConsent:false, invalidConsent:false, deniedMuster:true, ladder:false, mutations:[] });
+    characterConsent:false, invalidConsent:false, deniedMuster:true, ladder:false, initializedPlayer:true, mutations:[] });
   expect(result.settlementLevy).toBe(result.expectedSettlementLevy);
   expect(result.holderChoice).toBe(result.expectedHolder);
 });
