@@ -1826,9 +1826,17 @@ window.FB = window.FB || {};
       rate += policy ? policy.strength || 0 : 0;
     }
     var target = rid === 'player' ? playerChar(state) :
-      FB.realmRulerCharacter && FB.realmRulerCharacter(state, rid);
-    if (target && FB.excommunicationOf(state, target.id,
-        FB.papalObedienceForRealm(state, rid))) {
+      FB.realmRulerCharacterSnapshot && FB.realmRulerCharacterSnapshot(state, rid);
+    // Strength is a projection: neither refresh ruler metadata nor create an
+    // allegiance or Papal model while quoting an army's available strength.
+    var papacy = savedPapacy(state), sovereign = realmSovereign(state, rid), obedienceId = null;
+    if (papacy && sovereign && catholicReligion(state, realmReligion(state, sovereign))) {
+      obedienceId = papacy.realmObedience[sovereign];
+      if (!papacy.obediences[obedienceId] || papacy.obediences[obedienceId].status !== 'active') {
+        obedienceId = papacy.romanObedience;
+      }
+    }
+    if (papacy && target && FB.excommunicationOf(state, target.id, obedienceId)) {
       rate += definition().excommunication.realmStrength || -0.10;
     }
     return Math.max(0.5, 1 + rate);

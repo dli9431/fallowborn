@@ -29,6 +29,10 @@ recognized-Pope lookups then return `null`, and Papal absolution is unavailable.
 definition that deliberately remains under Rome must explicitly retain
 `properties.head`. See [religions.md](religions.md) for the inheritance rule.
 
+Realm strength projections
+
+The military strength multiplier reads the incumbent through realmRulerCharacterSnapshot and consults the existing Papal model. Missing or inactive realm allegiance falls back to the Roman obedience for the projection without writing that choice. Existing active excommunication sentences still reduce strength, while cleared sentences do not. A missing Papal model contributes no sentence and is never initialized by the projection. Army quotes preserve saved ruler metadata, Papal state, RNG and uid counters.
+
 ## Bishoprics and investiture
 
 The Bishopric sheet uses the shared responsive label/value rows. Its see, Church
