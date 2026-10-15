@@ -4,6 +4,7 @@ const path = require('path');
 const {test,expect} = require('../support/fixture');
 const {openGame} = require('../support/game/navigation');
 const {startParityGame} = require('../support/game/parity');
+const {restoreBookmark} = require('../support/game/bookmark-acceptance');
 const {releasedCatalogue} = require('../support/released-catalogue');
 const {dependsOnRuntime} = require('../support/runtime-dependencies');
 
@@ -537,9 +538,12 @@ test('1204 local role promises distinguish married Greek clergy, Latin clergy an
       c.born = 1170; c.sex = 'm'; c.skills.int = 8; c.role = 'priest';
       c.career = {profession:'priest',experience:10};
       c.religion = p.religion = 'orthodox';
+      FB.spousesSnapshot(s,c).forEach(function (spouse) { spouse.spouseId = null; });
+      c.spouseId = null;
       var spouse = FB.makeCharacter(s,{name:'Fictional spouse',sex:'f',culture:'greek',religion:'orthodox',
         born:1174,role:'farmer',station:1});
       spouse.homeProvinceId = 'constantinople'; spouse.spouseId = c.id; c.spouseId = spouse.id;
+      FB.touchFamily();
       var actor = {kind:'character',id:c.id}, greek = 'constantinople_greek_service_1204';
       function admit(iid,role) {
         return FB.religiousInstitutionQuote(s,iid,actor,'admit',{roleId:role});
@@ -555,6 +559,7 @@ test('1204 local role promises distinguish married Greek clergy, Latin clergy an
       var lay = admit(latin,'household');
       var household = lay.allowed && FB.religiousInstitutionApply(s,lay) && !FB.religiousHouseholdRule(s,c,'priest').unmarried;
       c.spouseId = null; spouse.spouseId = null;
+      FB.touchFamily();
       var single = admit(latin,'priest'), admitted = single.allowed && FB.religiousInstitutionApply(s,single);
       var latinVow = FB.religiousHouseholdRule(s,c,'priest').unmarried;
       c.role = 'farmer'; c.career.profession = 'farmer';
@@ -581,23 +586,30 @@ test('local minority relief preserves communities, incumbents, papacy and active
         icon:'+',relationToParent:'in_fold',properties:{clergyMarriage:true}})) throw new Error('Reform failed');
       if (!FB.startCountyCommunityProject(s,'alexandria',{kind:'faith',target:'eastern',
         sponsor:s.owner.alexandria,policy:'integrative'})) throw new Error('Project failed');
-      return {text:FB.save.serialize(),gold:s.player.gold,activity:JSON.stringify(c.religiousActivity),
-        protected:JSON.stringify([s.religiousHeads,s.religiousHeadVacancies,s.papacy || null,s.authority,
-          s.population,s.faiths,s.churchCouncils || null,s.rulerFaithDecisions || null,c.career])};
+      var text = FB.save.serialize(), packed = JSON.parse(text).state;
+      return {text:text,gold:s.player.gold,activity:JSON.stringify(c.religiousActivity),
+        protected:[packed.religiousHeads,packed.religiousHeadVacancies,packed.papacy || null,packed.authority,
+          packed.population,packed.faiths,packed.churchCouncils || null,packed.rulerFaithDecisions || null,
+          packed.chars[packed.player.charId].career]};
     });
     await startDatedChurch(page,testInfo,'1204','inhabited_v2','constantinople');
-    expect(await page.evaluate(function (saved) {
-      FB.save.restore(JSON.parse(saved.text)); var s = FB.state, c = s.chars[s.player.charId];
-      var protectedFacts = JSON.stringify([s.religiousHeads,s.religiousHeadVacancies,s.papacy || null,s.authority,
-        s.population,s.faiths,s.churchCouncils || null,s.rulerFaithDecisions || null,c.career]);
-      var restored = saved.protected === protectedFacts && saved.activity === JSON.stringify(c.religiousActivity);
+    await restoreBookmark(page,saved.text);
+    const result = await page.evaluate(function (saved) {
+      var s = FB.state, c = s.chars[s.player.charId];
+      var packed = JSON.parse(FB.save.serialize()).state;
+      var protectedFacts = [packed.religiousHeads,packed.religiousHeadVacancies,packed.papacy || null,packed.authority,
+        packed.population,packed.faiths,packed.churchCouncils || null,packed.rulerFaithDecisions || null,
+        packed.chars[packed.player.charId].career];
+      var restored = saved.activity === JSON.stringify(c.religiousActivity);
       var gold = s.player.gold, piety = s.player.piety;
       s.turn = c.religiousActivity.dueTurn; FB.religiousActivitiesTick(s);
       var completed = !c.religiousActivity && s.player.piety === piety + 1;
-      return {restored:restored,gold:saved.gold === gold && gold === 18 && s.player.gold === gold,
+      return {protected:protectedFacts,restored:restored,gold:saved.gold === gold && gold === 18 && s.player.gold === gold,
         completed:completed,repeat:!FB.religiousActivityQuote(s,'alexandrian_relief_800',c.id).allowed,
         opening:s.start.id,absent:!s.localInstitutions.constantinople_greek_service_1204};
-    },saved)).toEqual({restored:true,gold:true,completed:true,repeat:true,opening:'800',absent:true});
+    },saved);
+    expect(result.protected).toEqual(saved.protected);
+    expect(result).toMatchObject({restored:true,gold:true,completed:true,repeat:true,opening:'800',absent:true});
   });
 
 
@@ -627,8 +639,14 @@ test('Samarkand service is local and voluntary while later AI creates no unverif
 test('existing councils, official profession and their support restore without replay or primary-faith migration',
   async function ({page},testInfo) {
     await startEarly(page,testInfo);
-    expect(await page.evaluate(function () {
+    const result = await page.evaluate(function () {
       var s = FB.state; FB.treasuryTransfer(s,null,'italy',500);
+      // The historical incumbent is fifteen. This fixture exercises the
+      // adult ruler's council and profession, not the minority restriction.
+      var ruler = FB.realmRulerCharacter(s,'italy');
+      ruler.born = s.date.year - 30;
+      s.realms.italy.ruler.born = ruler.born; s.realms.italy.ruler.age = 30;
+      ruler.religion = s.realms.italy.religion = s.authority.governments.italy.eliteFaithId = 'homoian';
       var before = JSON.stringify(s), rng = FB.getRngState(), uid = FB.getUidCounter();
       var q = FB.churchCouncilQuote(s,'italy','nicene');
       var pure = before === JSON.stringify(s) && rng === FB.getRngState() && uid === FB.getUidCounter();
@@ -636,15 +654,17 @@ test('existing councils, official profession and their support restore without r
       var result = FB.conveneChurchCouncil(s,q);
       var conversion = FB.rulerFaithConversionStatus(s,'italy','nicene');
       var professed = FB.applyRulerFaithConversion(s,'italy','nicene',conversion);
-      var facts = JSON.stringify([s.churchCouncils,s.rulerFaithDecisions,s.authority,s.religiousHeads,
-        s.population,s.player.profession,s.chars[s.player.charId].career,s.treasuryAccounting]);
-      var save = FB.save.serialize(); FB.save.restore(JSON.parse(save)); s = FB.state;
-      var restored = facts === JSON.stringify([s.churchCouncils,s.rulerFaithDecisions,s.authority,s.religiousHeads,
-        s.population,s.player.profession,s.chars[s.player.charId].career,s.treasuryAccounting]);
+      function facts(packed) { return [packed.churchCouncils,packed.rulerFaithDecisions,packed.authority,packed.religiousHeads,
+        packed.population,packed.player.profession,packed.chars[packed.player.charId].career,packed.treasuryAccounting]; }
+      var save = FB.save.serialize(), original = facts(JSON.parse(save).state);
+      FB.save.restore(JSON.parse(save)); s = FB.state;
+      var restored = facts(JSON.parse(FB.save.serialize()).state);
       var repeatBefore = JSON.stringify(s);
       var repeated = FB.conveneChurchCouncil(s,q);
-      return {pure:pure,council:!!result,professed:professed,restored:restored,
+      return {pure:pure,council:!!result,professed:professed,original:original,restored:restored,
         once:repeated === null && repeatBefore === JSON.stringify(s),
         held:held === JSON.stringify([s.owner,s.holder]),east:FB.religiousOfficeSnapshot(s,'east_syriac_catholicos').name};
-    })).toEqual({pure:true,council:true,professed:true,restored:true,once:true,held:true,east:'Babowai'});
+    });
+    expect(result.restored).toEqual(result.original);
+    expect(result).toMatchObject({pure:true,council:true,professed:true,once:true,held:true,east:'Babowai'});
   });

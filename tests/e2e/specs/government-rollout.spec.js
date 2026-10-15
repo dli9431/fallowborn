@@ -286,15 +286,15 @@ test('JSON import supplies a different public-service constitution with exact-pr
   },proofMod)).not.toBe(false);
   await page.waitForFunction(function () { return window.FB && FB.game && FB.game.bootReady &&
     !!FBDATA.governmentForms.river_service_rollout; });
-  await page.evaluate(function () {
-    return new Promise(function (resolve,reject) {
-      FB.activateBookmark('867',null,function (error) {
-        if (error) { reject(error); return; }
-        FB.game.pending = {seed:'GOVERNMENT-MOD'};
-        FB.game.startObserve(); FB.game.setPaused(true); resolve();
-      });
-    });
-  });
+  await page.evaluate(function () { FB.startProgression.noteTier(3); });
+  await page.getByRole('button',{name:'New Game',exact:true}).click();
+  await page.locator('#btn-bm-seed').click();
+  await page.locator('#ng-seed').fill('GOVERNMENTMOD-867-farmer-london-m-Review-established');
+  await page.locator('#ng-seed').press('Enter');
+  await expect(page.locator('#chargen:not(.hidden)')).toBeVisible();
+  await page.getByRole('button',{name:'Begin Your Story',exact:true}).click();
+  await page.getByRole('button',{name:'Begin',exact:true}).click();
+  await page.evaluate(function () { FB.game.setPaused(true); });
   const result = await page.evaluate(function () {
     const s = FB.state, p = FB.administrationProfile(s,'byzantium'), data = JSON.parse(FB.save.serialize());
     const ledger = JSON.stringify(data.state.authority);

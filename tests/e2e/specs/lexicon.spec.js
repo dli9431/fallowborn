@@ -32,7 +32,8 @@ const LATE_WORDS = Object.assign({}, BASE_WORDS, {
   knight:['mounted retainer','mounted retainers'], baron:['decurion','decurions'],
   serf:['dependent','dependents'], manor:['villa estate','villa estates'],
   crown_authority:['public authority','public authority','Public Authority'],
-  duchy:['district','districts'], kingdom:['realm','realms'],
+  // This journey's home is governed by the Roman civic lexicon.
+  duchy:['province','provinces'], kingdom:['diocese','dioceses'], empire:['prefecture','prefectures'],
   duke:['dux','duces'], duchess:['ducissa','ducissae'], king:['rex','reges'],
   queen:['regina','reginae'], emperor:['augustus','augusti'], empress:['augusta','augustae']
 });
@@ -341,6 +342,14 @@ const ALLOWED = new Map([
   ['market endowment duchies must be an object.', 'market schema diagnostic'],
   ['market endowments name unknown duchy ', 'market schema diagnostic'],
   ['market duchy ', 'market schema diagnostic'],
+  [' needs an island duchy and unique mainland duchies.', 'ambition schema diagnostic'],
+  ['A holy-war story must name existing kingdoms.', 'story schema diagnostic'],
+  ['unknown kingdom ', 'bookmark schema diagnostic'],
+  ['declare one provinceIds or duchies list.', 'bookmark schema diagnostic'],
+  [' greatHolyWar has invalid sacred kingdom ', 'holy-war schema diagnostic'],
+  [' greatHolyWar has invalid crisis kingdom ', 'holy-war schema diagnostic'],
+  [' kingdom', 'map search keyword, never displayed'],
+  [' duchy', 'map search keyword, never displayed'],
   ['governance realm council parliament estates crown authority vassal king emperor',
     'Guide search keywords, never displayed']
 ]);

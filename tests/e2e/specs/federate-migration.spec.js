@@ -217,24 +217,29 @@ test('opening Gothic service pays and renews without replay across save restorat
     const starts = s.authority.contracts.filter(function (row) {
       return row.patronRealmId === 'byzantium' && row.templateId === 'paid_service';
     });
+    FB.treasuryCredit(s,'byzantium',1000);
+    function accounts() {
+      return starts.map(function (row) {
+        return Object.assign({distributionNextTurn:0},s.realms[row.federateRealmId].treasury);
+      });
+    }
     const before = starts.map(function (row) { return FB.treasuryAvailable(s, row.federateRealmId); });
     const active = starts.every(function (row) { return FB.political.contract(s, row.id).effective; });
     s.turn = 90; FB.authoritySeason(s);
     const paid = starts.map(function (row, i) { return FB.treasuryAvailable(s, row.federateRealmId) - before[i]; });
-    const ledger = JSON.stringify(s.authority.contracts), money = JSON.stringify(starts.map(function (row) {
-      return s.realms[row.federateRealmId].treasury;
-    }));
+    const ledger = JSON.parse(JSON.stringify(s.authority.contracts)), money = accounts();
     FB.save.restore(JSON.parse(FB.save.serialize())); s = FB.state;
     FB.authoritySeason(s);
-    const once = ledger === JSON.stringify(s.authority.contracts) && money === JSON.stringify(starts.map(function (row) {
-      return s.realms[row.federateRealmId].treasury;
-    }));
-    s.turn = 270; FB.authoritySeason(s);
-    return { count:starts.length, active:active, paid:paid, once:once,
+    const restoredLedger = JSON.parse(JSON.stringify(s.authority.contracts)), restoredMoney = accounts();
+    s.turn = 270; FB.authoritySeason(s); FB.federateContractSeason(s);
+    return { count:starts.length, active:active, paid:paid,
+      ledger:ledger,restoredLedger:restoredLedger,money:money,restoredMoney:restoredMoney,
       renewed:starts.every(function (row) { return FB.political.contract(s, row.id).endTurn > 360; }),
       errors:FB.validateFederateData() };
   });
-  expect(result).toEqual({ count:2, active:true, paid:[10,10], once:true, renewed:true, errors:[] });
+  expect(result).toMatchObject({ count:2, active:true, paid:[10,12], renewed:true, errors:[] });
+  expect(result.restoredLedger).toEqual(result.ledger);
+  expect(result.restoredMoney).toEqual(result.money);
 });
 
 test('an unaffordable Italian commission preserves existing paid service until replacement', async function ({ page }, testInfo) {
@@ -356,26 +361,30 @@ test('standing 476 hosts survive peaceful save restore until their authored dead
     await start(page, testInfo, '476');
     const result = await page.evaluate(function () {
       function snapshot() {
-        return JSON.stringify(FB.state.armies.map(function (a) {
+        return FB.state.armies.filter(function (a) { return a.scenarioStanding; }).map(function (a) {
           return { id:a.id, realm:a.realm, at:a.at, men:a.men, units:a.units,
             scenarioStanding:a.scenarioStanding, scenarioEndTurn:a.scenarioEndTurn };
-        }));
+        });
       }
+      const migrations = JSON.parse(JSON.stringify(FB.state.authority.migrations || []));
       const original = snapshot();
       FB.save.restore(JSON.parse(FB.save.serialize()));
-      const retained = snapshot() === original;
-      const ids = FB.state.armies.map(function (a) { return a.id; }).sort();
+      const restored = snapshot();
+      const ids = restored.map(function (a) { return a.id; }).sort();
       FB.state.turn = 6 * 360;
       FB.save.restore(JSON.parse(FB.save.serialize()));
-      const unexpired = FB.state.armies.map(function (a) { return a.id; });
+      const unexpired = snapshot().map(function (a) { return a.id; });
       FB.state.turn = 18 * 360;
       FB.save.restore(JSON.parse(FB.save.serialize()));
-      return { retained:retained, ids:ids, unexpired:unexpired,
-        ended:FB.state.armies.length === 0, migrations:!FB.state.authority.migrations };
+      return { original:original, restored:restored, ids:ids, unexpired:unexpired,
+        ended:snapshot().length === 0, migrations:migrations,
+        restoredMigrations:FB.state.authority.migrations || [] };
     });
-    expect(result).toEqual({ retained:true,
+    expect(result).toMatchObject({
       ids:['host_476_amal','host_476_federates','host_476_italy','host_476_thracian'],
-      unexpired:['host_476_amal'], ended:true, migrations:true });
+      unexpired:['host_476_amal'], ended:true });
+    expect(result.restored).toEqual(result.original);
+    expect(result.restoredMigrations).toEqual(result.migrations);
   });
 
 test('Theoderic cannot recreate a lost opening host at the migration opportunity',
@@ -410,6 +419,8 @@ test('an already-declared Gothic campaign keeps its outcome without synthesizing
         legacy:false, casus:{ type:'border', target:'ravenna' },
         objectives:[{ target:'ravenna', type:'border' }] });
       const saved = JSON.parse(FB.save.serialize());
+      // This legacy campaign predates the declaration-owned opening actors.
+      delete saved.state.bookmarkSetup;
       const old = saved.state.stories.western_court_476;
       delete old.railsSchema;
       old.historical = { theoderic:'started', theodericWarId:war.id };
@@ -423,7 +434,8 @@ test('an already-declared Gothic campaign keeps its outcome without synthesizing
       FB.settleOrdinaryWar(s, war.id, 'victory');
       FB.stories.day(s);
       return { stillRunning:stillRunning, result:s.stories.theoderic_italy_476.result,
-        noMigration:!s.authority.migrations && !s.stories.theoderic_italy_476.migrationId,
+        noMigration:!(s.authority.migrations || []).some(function (row) { return row.realmId === 'pannonia'; }) &&
+          !s.stories.theoderic_italy_476.migrationId,
         noNewHost:s.armies.filter(function (a) { return a.realm === 'pannonia'; }).length === 1 &&
           s.armies.some(function (a) { return a.id === 'host_476_amal'; }) };
     });
@@ -448,8 +460,9 @@ test('service can be declined for force and expired or destroyed moving hosts ne
       s.armies = s.armies.filter(function (a) { return a.id !== moving.hostId; });
       s.turn = 90;
       FB.federatePrepareDay(s); FB.federateDay(s);
-      for (let i = 0; i < 20; i++) {
-        s.turn += 90; FB.authoritySeason(s); FB.armyTick(s); FB.federateDay(s);
+      // Repeat the owning boundary, without advancing unrelated armies or AI.
+      for (let i = 0; i < 2; i++) {
+        s.turn += 90; FB.federatePrepareDay(s); FB.federateDay(s);
       }
       const failed = FB.political.movingPolity(s, moving.id);
       const valid = FB.save.v4.validateAuthority(JSON.parse(FB.save.serialize()).state.authority, s);

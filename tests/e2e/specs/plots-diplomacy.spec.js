@@ -476,6 +476,9 @@ test('diplomatic selectors bind the correct direction, pact, alliance, and gener
       s.pacts[targets[0]] = pactEnd;
       FB.adjustStanding(s, { kind:'realm', id:targets[1] }, 55,
         'test:predecessor');
+      const family = s.realms[targets[1]].succession;
+      const heir = FB.materializeRoyalMember(s,targets[1],family.heirId);
+      const heirStanding = FB.standingOf(s,{kind:'character',id:heir.id});
       const oldGeneration = FB.realmRulerGeneration(s, targets[1]);
       const oldChance = FBDATA.balance.diplomacySuccessionChance;
       FBDATA.balance.diplomacySuccessionChance = 1;
@@ -495,7 +498,7 @@ test('diplomatic selectors bind the correct direction, pact, alliance, and gener
         provoke:provoke,
         pact:pact,
         alliance:alliance,
-        oldGeneration:oldGeneration,
+        oldGeneration:oldGeneration, heirStanding:heirStanding,
         queued:queued,
         alliedAfterSuccession:FB.areAllied(s, 'player', targets[1]),
         standingAfterSuccession:FB.standingOf(s, {
@@ -519,10 +522,8 @@ test('diplomatic selectors bind the correct direction, pact, alliance, and gener
     expect(result.queued.ctx.rulerGeneration).toBe(result.oldGeneration + 1);
     expect(result.queued.ctx.formerAlliance).toBe('yes');
     expect(result.alliedAfterSuccession).toBe(false);
-    /* The predecessor's cultivated +55 does not survive succession; the heir
-       reigns with their own seeded court disposition, rolled in -5..20. */
-    expect(result.standingAfterSuccession).toBeGreaterThanOrEqual(-5);
-    expect(result.standingAfterSuccession).toBeLessThanOrEqual(20);
+    // The successor keeps their own faith-adjusted personal standing.
+    expect(result.standingAfterSuccession).toBe(result.heirStanding);
     expect(result.validBefore).toBe(true);
     expect(result.validAfter).toBe(false);
     expect(result.pendingPactBefore).toBe(true);

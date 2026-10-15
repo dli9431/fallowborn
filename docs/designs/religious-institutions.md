@@ -1,3 +1,7 @@
+Malformed opening diagnostics
+
+Definition validation returns diagnostics for an absent date or a malformed jurisdiction list without dereferencing either value. Validation remains read-only. The 476 and 493 regional population composers do not generate Buddhist clergy or congregations from resident population shares alone; those shares remain present, while unaccepted institutional foundations stay absent.
+
 Religious institutions and affiliation
 
 Optional declarations

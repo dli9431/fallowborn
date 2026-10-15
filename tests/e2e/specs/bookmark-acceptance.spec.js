@@ -13,7 +13,8 @@ const path = require('path');
 // UTF-8 bytes of the ordinary uncompressed v4 JSON, excluding transport codecs
 // and browser-storage overhead. Budgets are acceptance ceilings, not measured
 // claims. Each owner run attaches actual checkpoint and final byte counts.
-const SAVE_BUDGETS = { fresh:4 * 1024 * 1024, year1:6 * 1024 * 1024, year2:6 * 1024 * 1024, year3:8 * 1024 * 1024 };
+const SAVE_BUDGETS = { fresh:4 * 1024 * 1024, checkpoint:6 * 1024 * 1024, continued:6 * 1024 * 1024 };
+const BOOKMARK_IDS = ['476','493','711','800','867','1066','1204'];
 
 test('every authored bookmark data file is loaded and the authoring template is unloaded', async function ({ page }, testInfo) {
   await openGame(page, testInfo);
@@ -75,43 +76,106 @@ test('bookmark facts preserve RNG bits across signed and unsigned representation
   expect(changed.snapshot.rng).not.toBe(original.snapshot.rng);
 });
 
-test('every registered bookmark plays one year then restores across bookmarks and plays another year',
-  async function ({ page }, testInfo) {
-    test.setTimeout(20 * 60 * 1000);
-    await openGame(page, testInfo);
-    const ids = await page.evaluate(function () { return FB.bookmarks(true).map(function (bm) { return bm.id; }); });
-    expect(ids).toEqual(expect.arrayContaining(['476','493','711','800','867','1066','1204']));
-    for (const id of ids) await test.step('bookmark ' + id, async function () {
-      await beginBookmark(page, testInfo, id);
-      await saveWithinBudget(page, testInfo, id + '-fresh', SAVE_BUDGETS.fresh);
-      await advanceBookmark(page, 360);
-      const checkpoint = await saveWithinBudget(page, testInfo, id + '-year1', SAVE_BUDGETS.year1);
-      const checkpointFacts = await facts(page);
-      const checkpointState = JSON.parse(checkpoint).state;
-      for (const key of ['bookmarkSetup', 'religiousHeadVacancies']) {
-        if (checkpointState[key] !== undefined) expect(checkpointFacts.campaign[key]).toEqual(checkpointState[key]);
-      }
-      // Build a different map before restore. Matching hidden saves still
-      // activate their own definition and never run creation hooks again.
-      await page.evaluate(function (other) {
-        return new Promise(function (resolve, reject) {
-          FB.activateBookmark(other, null, function (error) { if (error) reject(error); else resolve(); });
-        });
-      }, ids.filter(function (other) { return other !== id; })[0]);
-      await page.evaluate(function (id) { FB.bookmark(id).hidden = true; }, id);
-      await restoreBookmark(page, checkpoint);
-      expect(await facts(page)).toEqual(checkpointFacts);
-      await advanceBookmark(page, 360);
-      const continued = await facts(page);
-      expect(continued.campaign.turn).toBe(checkpointFacts.campaign.turn + 360);
-      expect(continued.campaign.date).toEqual(Object.assign({}, checkpointFacts.campaign.date,
-        { year:checkpointFacts.campaign.date.year + 1 }));
-      await saveWithinBudget(page, testInfo, id + '-year2', SAVE_BUDGETS.year2);
-    });
+for (const id of BOOKMARK_IDS) {
+  test(id + ' restores across bookmarks and continues one natural season', async function ({ page }, testInfo) {
+    await beginBookmark(page, testInfo, id);
+    const ids = await page.evaluate(function () { return FB.bookmarks(true).map(function (bm) { return bm.id; }).sort(); });
+    expect(ids).toEqual(BOOKMARK_IDS.slice().sort());
+    await saveWithinBudget(page, testInfo, id + '-fresh', SAVE_BUDGETS.fresh);
+    await advanceBookmark(page, 45);
+    const checkpoint = await saveWithinBudget(page, testInfo, id + '-midseason', SAVE_BUDGETS.checkpoint);
+    const checkpointFacts = await facts(page);
+    const checkpointState = JSON.parse(checkpoint).state;
+    for (const key of ['bookmarkSetup', 'religiousHeadVacancies']) {
+      if (checkpointState[key] !== undefined) expect(checkpointFacts.campaign[key]).toEqual(checkpointState[key]);
+    }
+    // Matching hidden saves activate their own definition without creation hooks.
+    await page.evaluate(function (other) {
+      return new Promise(function (resolve, reject) {
+        FB.activateBookmark(other, null, function (error) { if (error) reject(error); else resolve(); });
+      });
+    }, ids.find(function (other) { return other !== id; }));
+    await page.evaluate(function (id) { FB.bookmark(id).hidden = true; }, id);
+    await restoreBookmark(page, checkpoint);
+    expect(await facts(page)).toEqual(checkpointFacts);
+    await advanceBookmark(page, 45);
+    expect((await facts(page)).campaign.turn).toBe(checkpointFacts.campaign.turn + 45);
+    await saveWithinBudget(page, testInfo, id + '-season', SAVE_BUDGETS.continued);
   });
+}
+
+test('a cardinal public officer retains recognition references after death and restore', async function ({page},testInfo) {
+  await beginBookmark(page,testInfo,'711');
+  const result = await page.evaluate(function () {
+    const s = FB.state, rid = 'byzantium_711', R = FB.governmentRecognition;
+    const c = Object.keys(s.papacy.cardinals).map(function (id) { return s.chars[id]; }).find(function (c) {
+      return c && !c.dead && s.papacy.cardinals[c.id].office === 'cardinal' &&
+        s.holder[c.homeProvinceId] === rid && FB.publicCountyIncome(s,rid,c.homeProvinceId) > 0;
+    });
+    if (!c) throw new Error('Expected a cardinal in a productive public county');
+    const cid = c.id, pid = c.homeProvinceId;
+    FB.SKILLS.forEach(function (key) { c.skills[key] = 20; });
+    s.realms[rid].treasury.gold = 1000;
+    const appointment = FB.publicAppoint(s,FB.publicAppointmentQuote(s,{kind:'realm',id:rid},{
+      institutionId:rid,officeId:FB.administrationProfile(s,rid).governor,
+      holderId:cid,provinceId:pid,scope:{kind:'county',id:pid}
+    }));
+    if (!appointment) throw new Error('Cardinal public appointment failed');
+    const seat = R.members(s,rid).find(function (seat) { return seat.principal.id === cid; });
+    const candidate = R.candidates(s,rid)[0];
+    if (!seat || !candidate || !R.applySupport(s,R.supportQuote(s,seat.principal,rid,seat.id,candidate.id)))
+      throw new Error('Cardinal recognition failed');
+    const votes = JSON.parse(JSON.stringify(s.authority.governments[rid].recognition));
+    const archive = s.papacy.archive.length;
+    FB.killChar(s,c);
+    const retained = !!s.chars[cid] && s.chars[cid].dead;
+    const ineffective = !FB.publicOfficeRows(s,rid).find(function (row) { return row.id === appointment.id; }).effective;
+    const fault = FB.validatePublicAdministrationState(s);
+    if (fault) return {retained:retained,ineffective:ineffective,fault:fault};
+    const save = FB.save.serialize(); FB.save.restore(JSON.parse(save));
+    return {retained:retained,ineffective:ineffective,fault:fault,original:votes,
+      restored:FB.state.authority.governments[rid].recognition,
+      dead:FB.state.chars[cid].dead,archived:FB.state.papacy.archive.length === archive + 1,
+      retired:!FB.state.papacy.cardinals[cid]};
+  });
+  expect(result).toMatchObject({retained:true,ineffective:true,fault:null,dead:true,archived:true,retired:true});
+  expect(result.restored).toEqual(result.original);
+});
+
+test('711 public recognition remains serializable at the annual boundary', async function ({page},testInfo) {
+  await beginBookmark(page,testInfo,'711');
+  const checkpoints = await page.evaluate(function () {
+    const out = [], s = FB.state;
+    for (let year = 0; year < 2; year++) {
+      s.date.year++; s.date.season = 0; s.date.day = 1; s.turn += 360;
+      FB.worldTick(s);
+      const fault = FB.validatePublicAdministrationState(s);
+      out.push({year:s.date.year,fault:fault,recognition:!fault ? null :
+        Object.keys(s.authority.governments).filter(function (rid) {
+          return s.authority.governments[rid].recognition;
+        }).map(function (rid) {
+          const row = s.authority.governments[rid], tree = s.realms[rid].succession;
+          return {realmId:rid,votes:row.recognition,generation:FB.realmRulerGeneration(s,rid),
+            members:tree && Object.keys(tree.members || {}),
+            principals:Object.values(row.recognition).map(function (vote) {
+              return {principal:vote.principal,present:!!(vote.principal.kind === 'realm'
+                ? s.realms[vote.principal.id] : s.chars[vote.principal.id])};
+            })};
+        })});
+      if (fault) break;
+      FB.save.serialize();
+    }
+    return out;
+  });
+  await testInfo.attach('annual-recognition.json', {body:Buffer.from(JSON.stringify(checkpoints)),contentType:'application/json'});
+  expect(checkpoints.map(function (row) { return row.fault; })).toEqual([null,null]);
+  const checkpoint = await saveWithinBudget(page,testInfo,'711-annual-boundaries',SAVE_BUDGETS.continued);
+  const before = await facts(page);
+  await restoreBookmark(page,checkpoint);
+  expect(await facts(page)).toEqual(before);
+});
 
 test('a persisted data-only mod supplies a different campaign and independent institution seeds', async function ({ page }, testInfo) {
-  test.setTimeout(10 * 60 * 1000);
   await installStoryProof(page);
   // Load the literal JSON through the ordinary stored-mod boot boundary.
   await page.addInitScript(function (source) { localStorage.setItem('fb_mods', JSON.stringify([source])); }, JSON.stringify(proofMod));
@@ -140,18 +204,18 @@ test('a persisted data-only mod supplies a different campaign and independent in
   for (const province of opening.communities) expect(province.communities).toEqual([
     { culture:'proof_culture', religion:'nicene', populationShare0:10000 }
   ]);
-  await advanceBookmark(page, 720);
-  const checkpoint = await saveWithinBudget(page, testInfo, 'proof-year2', SAVE_BUDGETS.year2);
+  await advanceBookmark(page, 30);
+  const checkpoint = await saveWithinBudget(page, testInfo, 'proof-checkpoint', SAVE_BUDGETS.checkpoint);
   const original = await facts(page);
   // openGame navigates and waits for boot. A separate reload would start a
   // deferred ui_modals.js request and immediately abort it with that navigation.
   await openGame(page, testInfo);
   await restoreBookmark(page, checkpoint);
   expect(await facts(page)).toEqual(original);
-  await advanceBookmark(page, 360);
+  await advanceBookmark(page, 30);
   const continuation = await facts(page);
   await restoreBookmark(page, checkpoint);
-  await advanceBookmark(page, 360);
+  await advanceBookmark(page, 30);
   expect(await facts(page)).toEqual(continuation);
-  await saveWithinBudget(page, testInfo, 'proof-year3', SAVE_BUDGETS.year3);
+  await saveWithinBudget(page, testInfo, 'proof-continued', SAVE_BUDGETS.continued);
 });

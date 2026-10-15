@@ -13,8 +13,11 @@ dependsOnRuntime(__filename, [
 const { test, expect } = require('../support/fixture');
 const { openGame } = require('../support/game/navigation');
 
-async function start(page, testInfo, bookmark) {
+async function start(page, testInfo, bookmark, revision) {
   await openGame(page, testInfo);
+  if (revision) await page.evaluate(function (o) {
+    FBDATA.bookmarks[o.bookmark].revision = o.revision;
+  }, { bookmark:bookmark, revision:revision });
   await page.getByRole('button', { name:'New Game', exact:true }).click();
   await page.locator('#btn-bm-seed').click();
   const code = 'AUTHORITY-' + bookmark + '-serf-london-f-Ada';
@@ -30,7 +33,7 @@ async function start(page, testInfo, bookmark) {
 
 for (const bookmark of ['867', '1066']) {
   test(bookmark + ' keeps legacy power and Council consent without authority records', async function ({ page }, testInfo) {
-    await start(page, testInfo, bookmark);
+    await start(page, testInfo, bookmark, 'baseline');
     const result = await page.evaluate(function () {
       const s = FB.state, q = FB.political, pid = s.player.provinceId;
       const rid = FB.settlementCountyHolder(s, pid);

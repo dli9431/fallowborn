@@ -161,13 +161,19 @@ test('private settlement inheritance does not inherit the institutional county o
     if (!FB.assignSettlementLordship(s,pid,1,c.id)) throw new Error('Private estate could not be assigned');
     const privateActor = FB.settlementActor(s,{ kind:'character',id:c.id });
     const isolated = !FB.directSettlements(s,{ kind:'realm',id:rid }).some(function (site) { return site.provinceId === pid && site.settlement === 1; });
+    const personalSite = FB.directSettlements(s,privateActor).some(function (site) {
+      return site.provinceId === pid && site.settlement === 1;
+    });
+    const publicAuthority = FB.settlementConstructionAuthority(s,pid,1,{ kind:'realm',id:rid }).direct;
     const owner = s.owner[pid],holder = s.holder[pid],account = s.realms[rid].treasury.gold;
     FB.killChar(s,c); FB.settlementLordshipsCharacterDied(s,c.id);
-    return { isolated:isolated,personalActor:privateActor.kind === 'character' && privateActor.id === c.id,
+    return { isolated:isolated,personalSite:personalSite,publicAuthority:publicAuthority,
+      personalActor:privateActor.kind === 'character' && privateActor.id === c.id,
       heir:FB.settlementHolder(s,pid,1).id === child.id,publicProperty:s.owner[pid] === owner && s.holder[pid] === holder,
       publicFunds:s.realms[rid].treasury.gold === account,notIncumbent:!E.incumbent(s,rid) || E.incumbent(s,rid).id !== child.id };
   });
-  expect(result).toEqual({ isolated:true,personalActor:true,heir:true,publicProperty:true,publicFunds:true,notIncumbent:true });
+  expect(result).toEqual({ isolated:true,personalSite:true,publicAuthority:false,
+    personalActor:true,heir:true,publicProperty:true,publicFunds:true,notIncumbent:true });
 });
 
 test('local qualification and removal are independent of wealth and temporal recognition', async function ({ page },info) {
@@ -252,17 +258,19 @@ for (const fictional of [false,true]) {
     const result = await page.evaluate(function (at) {
       const s = FB.state,E = FB.ecclesiasticalGovernment;
       if (E.profile(s,at.rid).layRecognition) E.apply(s,E.review(s,at.rid,'recognize',{}));
-      function facts(state) { return JSON.stringify([E.row(state,at.rid),state.religiousHeads,state.localInstitutions,
-        state.authority.rights,state.authority.recognitions,state.realms[at.rid].treasury,Object.keys(state.chars).sort()]); }
-      const before = facts(s),rng = FB.getRngState(),uid = FB.getUidCounter(),source = JSON.parse(FB.save.serialize());
+      function facts(state) { return JSON.parse(JSON.stringify([E.row(state,at.rid),state.religiousHeads,state.localInstitutions,
+        state.authority.rights,state.authority.recognitions,state.realms[at.rid].treasury,Object.keys(state.chars).sort()])); }
+      const before = facts(s),rng = FB.getRngState() >>> 0,uid = FB.getUidCounter(),source = JSON.parse(FB.save.serialize());
       FB.save.restore(source);
-      const exact = before === facts(FB.state) && rng === FB.getRngState() && uid === FB.getUidCounter();
+      const after = facts(FB.state),identity = rng === (FB.getRngState() >>> 0) && uid === FB.getUidCounter();
       const malformed = JSON.parse(JSON.stringify(source)); delete malformed.state.localInstitutions[at.chapterId];
       const live = FB.state,bytes = JSON.stringify(live); let rejected = false;
       try { FB.save.restore(malformed); } catch (error) { rejected = true; }
-      return { exact:exact,rejected:rejected,unchanged:live === FB.state && bytes === JSON.stringify(live) };
+      return { before:before,after:after,identity:identity,rejected:rejected,
+        unchanged:live === FB.state && bytes === JSON.stringify(live) && rng === (FB.getRngState() >>> 0) && uid === FB.getUidCounter() };
     },at);
-    expect(result).toEqual({ exact:true,rejected:true,unchanged:true });
+    expect(result.after).toEqual(result.before);
+    expect(result).toMatchObject({ identity:true,rejected:true,unchanged:true });
   });
 }
 
@@ -270,9 +278,10 @@ test('save restore preserves exact identity and rejects malformed binding before
   await start(page,info);
   const result = await page.evaluate(function () {
     const E = FB.ecclesiasticalGovernment,rid = 'papacy_1204',source = JSON.parse(FB.save.serialize());
-    const before = JSON.stringify([E.row(FB.state,rid),FB.state.papacy]),rng = FB.getRngState(),uid = FB.getUidCounter();
+    const before = JSON.parse(JSON.stringify([E.row(FB.state,rid),FB.state.papacy])),rng = FB.getRngState() >>> 0,uid = FB.getUidCounter();
     FB.save.restore(source);
-    const exact = before === JSON.stringify([E.row(FB.state,rid),FB.state.papacy]) && rng === FB.getRngState() && uid === FB.getUidCounter();
+    const after = JSON.parse(JSON.stringify([E.row(FB.state,rid),FB.state.papacy]));
+    const identity = rng === (FB.getRngState() >>> 0) && uid === FB.getUidCounter();
     const changes = [function (r) { r.schema = 2; },function (r) { r.profileId = 'missing'; },function (r) { r.officeId = 'missing'; },
       function (r) { r.institutionId = 'invented'; },function (r) { r.scope.push(r.scope[0]); },function (r) { r.scope = ['invented']; },
       function (r) { r.election = {}; },function (r) { r.temporalRecognitionId = 'missing'; },
@@ -282,11 +291,12 @@ test('save restore preserves exact identity and rejects malformed binding before
       change(input.state.authority.governments[rid].ecclesiastical,input.state);
       const payload = JSON.stringify(input); let failed = false;
       try { FB.save.restore(input); } catch (error) { failed = true; }
-      return failed && FB.state === live && bytes === JSON.stringify(live) && payload === JSON.stringify(input) && rng === FB.getRngState() && uid === FB.getUidCounter();
+      return failed && FB.state === live && bytes === JSON.stringify(live) && payload === JSON.stringify(input) && rng === (FB.getRngState() >>> 0) && uid === FB.getUidCounter();
     });
-    return { exact:exact,rejected:rejected };
+    return { before:before,after:after,identity:identity,rejected:rejected };
   });
-  expect(result).toEqual({ exact:true,rejected:Array(10).fill(true) });
+  expect(result.after).toEqual(result.before);
+  expect(result).toMatchObject({ identity:true,rejected:Array(10).fill(true) });
 });
 
 test('legacy papal form restores unchanged and explicit adoption never runs another election', async function ({ page },info) {
@@ -320,6 +330,11 @@ for (const crazygames of [false,true]) {
     await page.locator('#ecclesiastical-person').click();
     await page.keyboard.press('Escape');
     await expect(page.locator('[data-ecclesiastical-list]')).toBeVisible();
+    await expect(page.locator('#ecclesiastical-person')).toBeFocused();
+    await page.locator('#ecclesiastical-person').click();
+    await page.locator('[data-modal-nav="back"]').click();
+    await expect(page.locator('[data-ecclesiastical-list]')).toBeVisible();
+    await expect(page.locator('#ecclesiastical-person')).toBeFocused();
     const at = await seedLocalInstitution(page,false);
     await page.evaluate(function (at) { FB.ui.showEcclesiasticalGovernment(at.rid); },at);
     await page.getByRole('button',{ name:'Review temporal recognition',exact:true }).click();

@@ -29,9 +29,11 @@ const authorityStarts = [
   {scenario:'siwa_delegate_1204',province:'siwa_oasis',realm:'siwa_households_1204',form:'assembly_polity',tier:1}
 ];
 function journey(province,scenario,family,seed) {
-  const name = scenario === 'muhammad_1204' ? 'Muhammad II' : 'Review';
+  const name = scenario === 'muhammad_1204' ? 'Muhammad_II' : 'Review';
+  const suffix = scenario === 'muhammad_1204' ? '-standard-0-persian.sunni' :
+    family === 'standard' ? '' : '-' + (family || 'established');
   return {bookmark:'1204',code:(seed || 'TERRAIN1204') + '-1204-' + (scenario || 'farmer') +
-    '-' + province + '-m-' + name + '-' + (family || 'established')};
+    '-' + province + '-m-' + name + suffix};
 }
 async function saveWithin(page,limit) {
   const source = await page.evaluate(function () { return FB.save.serialize(); });
@@ -72,7 +74,7 @@ for (const flag of [false,true]) test('dated districts, communities, rights and 
       const counts = function (world) { return [world.provinces.length,
         world.provinces.filter(function (p) { return !p.wasteland; }).length,
         world.provinces.filter(function (p) { return p.wasteland; }).length]; };
-      const before = JSON.stringify([s.population,s.owner,s.holder,s.localInstitutions,s.stories,s.governmentSupport]);
+      const before = JSON.stringify([s.population,s.owner,s.holder,s.localInstitutions,s.stories,s.governmentSupport,s.authority.rights]);
       const rng = FB.getRngState() >>> 0, uid = FB.getUidCounter();
       FB.save.restore(JSON.parse(FB.save.serialize()));
       return {faults:FB.validateBookmark(FBDATA.bookmarks['1204']),
@@ -82,8 +84,18 @@ for (const flag of [false,true]) test('dated districts, communities, rights and 
           return d.provinces.filter(function (n) { return n.id === p.id; }).length + (d.deferred[p.id] ? 1 : 0) === 1;
         }),scenery:Object.keys(d.scenery).length,
         remnants:Object.keys(d.scenery).every(function (id) { return FB.world.byId[id].wasteland; }),
-        domains:d.provinces.every(function (p) { return !!s.owner[p.id] && !!s.holder[p.id] &&
-          FB.topRealm(s,s.holder[p.id]) === s.owner[p.id] && FB.world.byId[p.id].customaryRights.length === 2; }),
+        domains:d.provinces.every(function (p) {
+          const restored = FB.state, declaration = FB.campaignProvince(restored,p.id);
+          const rights = restored.authority.rights.filter(function (right) {
+            return right.status === 'active' && right.scope.kind === 'county' && right.scope.id === p.id &&
+              right.basis === 'possession' && right.beneficiary.kind === 'realm' &&
+              right.beneficiary.id === restored.holder[p.id];
+          });
+          return !!restored.owner[p.id] && !!restored.holder[p.id] &&
+            FB.topRealm(restored,restored.holder[p.id]) === restored.owner[p.id] &&
+            declaration.customaryRights.length === 2 && rights.length === 2 &&
+            rights.map(function (right) { return right.power; }).sort().join(',') === 'peace,revenue';
+        }),
         communities:d.provinces.every(function (p) { return FB.provinceCommunities(FB.world.byId[p.id])
           .reduce(function (n,c) { return n + c.populationShare0; },0) === 10000; }),
         institutions:d.provinces.every(function (p) { return FB.provinceCommunities(FB.world.byId[p.id]).every(function (c,index) {
@@ -91,7 +103,7 @@ for (const flag of [false,true]) test('dated districts, communities, rights and 
           return row && row.site === layout[p.id][0].site && row.religion === c.religion;
         }); }),
         independent:sources === JSON.stringify([FBDATA.bookmarks['1066'],FBDATA.bookmarks['867']]),
-        kept:before === JSON.stringify([FB.state.population,FB.state.owner,FB.state.holder,FB.state.localInstitutions,FB.state.stories,FB.state.governmentSupport]),
+        kept:before === JSON.stringify([FB.state.population,FB.state.owner,FB.state.holder,FB.state.localInstitutions,FB.state.stories,FB.state.governmentSupport,FB.state.authority.rights]),
         pure:rng === (FB.getRngState() >>> 0) && uid === FB.getUidCounter(),unchangedLayouts:unchangedLayouts,
         promoted:layout.sarakhs_oasis[0].site === 'geo_sarakhs_1159716' &&
           layout.nurata_foothills[0].site === 'nurata_foothills_inhabited_1204' &&
@@ -114,22 +126,37 @@ test('revision-only starts belong to their world while unknown or listed referen
   await openGame(page,info);
   const result = await page.evaluate(function () {
     const root = FBDATA.bookmarks['1204'], before = JSON.stringify([root,FBDATA.startScenarios]);
+    const rng = FB.getRngState(), uid = FB.getUidCounter();
     const siwa = FBDATA.startScenarios.filter(function (s) { return s.id === 'siwa_delegate_1204'; })[0];
     const misspelt = Object.assign({},siwa,{id:'e2e_misspelt_birthplace_1204',fixedProvinceId:'e2e_no_such_district'});
     const listed = Object.assign({},root,{revisions:Object.assign({},root.revisions,
       {baseline:Object.assign({},root.revisions.baseline,{starts:['siwa_delegate_1204']})})});
     const full = FB.validateBookmark(root), explicit = FB.validateBookmark(listed);
-    let unknown;
+    const resolved = FB.validateBookmark(FB.bookmark('1204','baseline'));
+    const resolvedListed = FB.validateBookmark(Object.assign({},FB.bookmark('1204','baseline'),
+      {starts:['siwa_delegate_1204']}));
+    // A detached candidate must not borrow a removed world from the live registry.
+    const baselineOnly = Object.assign({},root,{revision:'baseline',revisions:{baseline:root.revisions.baseline}});
+    const missingSibling = FB.validateBookmark(baselineOnly);
+    let unknown, resolvedUnknown;
     FBDATA.startScenarios.push(misspelt);
-    try { unknown = FB.validateBookmark(root); } finally { FBDATA.startScenarios.pop(); }
+    try {
+      unknown = FB.validateBookmark(root);
+      resolvedUnknown = FB.validateBookmark(FB.bookmark('1204','baseline'));
+    } finally { FBDATA.startScenarios.pop(); }
     const has = function (errors,text) { return errors.some(function (e) { return e.indexOf(text) >= 0; }); };
-    return {full:full,
+    return {full:full,resolved:resolved,
       unknown:has(unknown,'start e2e_misspelt_birthplace_1204: unknown inhabited province e2e_no_such_district.') &&
         unknown.every(function (e) { return e.indexOf('e2e_misspelt_birthplace_1204') >= 0; }),
       explicit:has(explicit,'start siwa_delegate_1204: unknown inhabited province siwa_oasis.'),
-      pure:before === JSON.stringify([root,FBDATA.startScenarios])};
+      resolvedUnknown:has(resolvedUnknown,'start e2e_misspelt_birthplace_1204: unknown inhabited province e2e_no_such_district.'),
+      resolvedExplicit:has(resolvedListed,'start siwa_delegate_1204: unknown inhabited province siwa_oasis.'),
+      missingSibling:has(missingSibling,'start siwa_delegate_1204: unknown inhabited province siwa_oasis.'),
+      afterRejection:FB.validateBookmark(FB.bookmark('1204','baseline')),
+      pure:before === JSON.stringify([root,FBDATA.startScenarios]) && rng === FB.getRngState() && uid === FB.getUidCounter()};
   });
-  expect(result).toEqual({full:[],unknown:true,explicit:true,pure:true});
+  expect(result).toEqual({full:[],resolved:[],unknown:true,explicit:true,resolvedUnknown:true,
+    resolvedExplicit:true,missingSibling:true,afterRejection:[],pure:true});
 });
 
 test('court, community and mobile claims do not replace each other',async function ({page},info) {
@@ -240,7 +267,6 @@ for (const seed of ['TERRAIN1204A','TERRAIN1204B']) test(seed + ' retains author
 for (const row of authorityStarts) test(row.scenario + ' adopts the existing authority, saves and plays a season',
   async function ({page},info) {
     test.skip(info.project.name !== 'chromium-served','Bounded authority journeys run once.');
-    test.setTimeout(240000);
     await startHistoricalGame(page,info,journey(row.province,row.scenario,'standard'));
     await injectBrowserHarness(page);
     expect(await page.evaluate(function (row) {
@@ -378,14 +404,10 @@ test('an expanded save restores its own geography after selecting other dates an
 
 test('observer AI advances the expanded world and preserves its save budget',async function ({page},info) {
   test.skip(info.project.name !== 'chromium-served','Bounded observer review runs once.');
-  test.setTimeout(240000); await openGame(page,info);
+  await startHistoricalGame(page,info,journey('london'));
   await page.evaluate(function () {
-    return new Promise(function (resolve,reject) {
-      FB.activateBookmark('1204',null,function (error) {
-        if (error) { reject(error); return; }
-        FB.game.pending = {seed:'TERRAIN1204-OBSERVER'}; FB.game.startObserve(); FB.game.setPaused(true); resolve();
-      });
-    });
+    // Characterless Observe sessions are not saved; retain a normal household.
+    FB.game.observe = true;
   });
   await injectBrowserHarness(page); await advanceBookmark(page,90);
   const source = await saveWithin(page,8 * 1024 * 1024), before = await facts(page);

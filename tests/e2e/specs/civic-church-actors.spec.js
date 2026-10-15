@@ -7,6 +7,7 @@ dependsOnRuntime(__filename, [
   'data/bookmark_476.js', 'data/bookmarks.js', 'data/settlements.js',
   'data/bookmark_476_italy.js', 'data/bookmark_476_dalmatia_east.js',
   'data/bookmark_476_gaul_iberia.js', 'data/bookmark_476_africa.js',
+  'data/bookmark_476_outer.js', 'data/bookmark_476_wider.js',
   'data/political_institutions.js', 'data/technology.js', 'data/systems.js',
   'data/modifiers.js', 'js/institutions.js', 'js/politics.js', 'js/parliament.js',
   'js/model.js', 'js/authority.js', 'js/federates.js', 'js/station.js', 'js/governments.js',
@@ -72,8 +73,11 @@ test('researched civic seats and head offices are distinct, pure and period scop
     'soissons_council','strasbourg_council','sufetula_council','syracusae_council','tarragona_council',
     'thessalonica_council','ticinum_council','toledo_council','toulouse_council','tournai_council',
     'tours_council','trier_council','troyes_council','vannes_council','verona_council','vienne_council',
-    'zaragoza_council']);
-  expect(result.sees).toBe(86);
+    'zaragoza_council',
+    'alexandria_council_476','antioch_council','candia_council_476','ctesiphon_council_476',
+    'edessa_council_476','fayyum_council_476','fustat_council_476','nicosia_council_476',
+    'trebizond_council_476','uppakra_assembly_476','viroconium_assembly_476','weser_assembly_476'].sort());
+  expect(result.sees).toBe(108);
   expect(result.periodRoute).toBe('standing');
   expect(result.pure).toBe(true);
   expect(result.quote).toBe(true);

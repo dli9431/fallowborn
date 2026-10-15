@@ -379,7 +379,7 @@ test('save fingerprints stamp and refuse a life from another mod set',
         stateStayedEmpty:FB.state === null
       };
     }, saved)).toEqual({
-      activeSig:expect.stringMatching(/^1-/),
+      activeSig:expect.stringMatching(/^effective-1-[a-f0-9]{64}$/),
       marker:29,
       mismatch:true,
       loaded:false,

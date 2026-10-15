@@ -31,7 +31,8 @@ function installActivities() {
   FBDATA.religiousInstitutionProfiles.test_activity_school = {
     name:'Fictional local school', faithIds:[c.religion], period:{ yearMin:1, yearMax:null }, system:null,
     roles:{ learner:{ name:'Learner', minAge:16, sexes:[], unmarried:false, professions:[], skills:{}, affiliationId:null } },
-    selection:null, recognition:null, actions:['admit','withdraw'], fees:{}, affiliationIds:[]
+    selection:null, recognition:{ roles:[], sources:[], quorum:1, requiresLeader:false, protectedWorship:false },
+    actions:['admit','withdraw'], fees:{}, affiliationIds:[]
   };
   var defs = Object.assign({}, FB.campaignBookmark(s).localInstitutions || {});
   defs.test_activity_school = { city:'Fictional local school', kind:'school', provinceId:pid,
@@ -390,8 +391,9 @@ test('missing property, changed recipient, capacity and an unfunded service fail
 test('outreach funds one matching county or settlement project without resetting its fractional progress', async function ({ page }) {
   const result = await page.evaluate(function () {
     var s = FB.state, f = activityFixture; foundActivityHouse();
-    s.owner[f.pid] = 'player'; s.holder[f.pid] = 'player';
-    s.realms.player.alive = true; s.realms.player.liege = null;
+    s.player.tier = 4; s.player.provs = [f.pid]; s.player.liege = null;
+    FB.foundPlayerRealm(s);
+    FB.transferProvince(s, f.pid, 'player');
     var rec = s.population.counties[f.pid];
     function project() { return { target:s.chars[f.cid].religion, sponsor:'player', policy:'voluntary', startTurn:s.turn,
       progress:0.375, converted:12, resistance:0.2, lastTransfer:2, lastYear:s.date.year }; }

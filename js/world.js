@@ -1002,8 +1002,17 @@ window.FB = window.FB || {};
   };
 
   // Inhabited province and realm ids across the revisions of the bookmark
-  // being validated, set only while FB.validateBookmark checks each revision.
+  // being validated, scoped to a catalogue or resolved-world validation.
   var revisionSiblings = null;
+  function bookmarkRevisionSiblings(definition) {
+    var siblings = { provinces:{}, realms:{} };
+    Object.keys(definition.revisions).forEach(function (revision) {
+      var resolved = resolveBookmarkRevision(definition, revision);
+      (resolved.provinces || []).forEach(function (p) { if (p && !p.wasteland) siblings.provinces[p.id] = true; });
+      (resolved.realms || []).forEach(function (r) { if (r) siblings.realms[r.id] = true; });
+    });
+    return siblings;
+  }
 
   /* Cross-catalogue requirements are checked on the prepared definition,
      before activation changes the live world. No init hooks, RNG or saved
@@ -1266,7 +1275,10 @@ window.FB = window.FB || {};
       if (plainRecord(start.trackLocations)) Object.keys(start.trackLocations).forEach(function (track) {
         var places = start.trackLocations[track];
         (Array.isArray(places) ? places : []).forEach(function (pid) {
-          if (!provinces[pid] || provinces[pid].wasteland || !FB.startProvinceAllowed(start, definition, pid))
+          // An explicit empty birthplace list disables the entire start,
+          // including its tracks, but cannot hide an invalid county reference.
+          if (!provinces[pid] || provinces[pid].wasteland ||
+              (!(Array.isArray(locations) && !locations.length) && !FB.startProvinceAllowed(start, definition, pid)))
             fault(owner, 'track ' + track + ' location ' + pid + ' is not an available beginning.');
         });
       });
@@ -1323,22 +1335,30 @@ window.FB = window.FB || {};
     return errors;
   };
 
-  FB.validateBookmark = function (definition, resolvedRevision, storyContext) {
+  FB.validateBookmark = function validateBookmarkDefinition(definition, resolvedRevision, storyContext) {
     var stories = storyContext || FB.stories;
     var errors = [];
     var label = definition && definition.id ? definition.id : '?';
     function fault(text) { errors.push('Bookmark ' + label + ': ' + text); }
     if (!definition || typeof definition !== 'object') return ['Bookmark definition is missing.'];
+    // Activation validates one resolved world. Give it the same sibling start
+    // scope as catalogue validation, without replacing its own declarations.
+    // A candidate catalogue below always supplies its own sibling scope.
+    var registered = bookmarkDefinition(definition.id);
+    if (!resolvedRevision && definition.revisions === undefined && registered && registered.revisions && !revisionSiblings) {
+      var priorSiblings = revisionSiblings;
+      try {
+        revisionSiblings = bookmarkRevisionSiblings(registered);
+        return validateBookmarkDefinition(definition, true, stories);
+      } catch (siblingError) { fault(siblingError.message); }
+      finally { revisionSiblings = priorSiblings; }
+      return errors;
+    }
     if (definition.revisions !== undefined && !resolvedRevision) {
       try {
         resolveBookmarkRevision(definition);
-        var siblings = { provinces:{}, realms:{} }, outer = revisionSiblings;
-        Object.keys(definition.revisions).forEach(function (revision) {
-          var resolved = resolveBookmarkRevision(definition, revision);
-          (resolved.provinces || []).forEach(function (p) { if (p && !p.wasteland) siblings.provinces[p.id] = true; });
-          (resolved.realms || []).forEach(function (r) { if (r) siblings.realms[r.id] = true; });
-        });
-        revisionSiblings = siblings;
+        var outer = revisionSiblings;
+        revisionSiblings = bookmarkRevisionSiblings(definition);
         try {
           Object.keys(definition.revisions).forEach(function (revision) {
             errors = errors.concat(FB.validateBookmark(resolveBookmarkRevision(definition, revision), true, stories));

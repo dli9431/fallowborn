@@ -166,6 +166,12 @@ test('annual AI evaluation considers live local following and runs once per year
     ruler.traits = ruler.traits.filter(function (id) { return id !== 'zealous'; });
     const before = JSON.stringify(s), rng = FB.getRngState();
     const evaluation = FB.rulerFaithConversionEvaluation(s, 'italy', 'nicene');
+    const alternatives = FBDATA.rulerFaithTargets.map(function (target) {
+      return FB.rulerFaithConversionEvaluation(s, 'italy', target);
+    }).filter(function (row) { return row.allowed; }).sort(function (a, b) {
+      return b.score - a.score || a.quote.targetId.localeCompare(b.quote.targetId);
+    });
+    const preferred = alternatives[0].quote.targetId;
     const pure = before === JSON.stringify(s) && rng === FB.getRngState();
     ruler.traits.push('zealous');
     const zealousBefore = JSON.stringify(s), zealousRng = FB.getRngState();
@@ -181,13 +187,16 @@ test('annual AI evaluation considers live local following and runs once per year
       FB.save.restore(JSON.parse(FB.save.serialize()));
       const restored = FB.state, restoredBefore = JSON.stringify(restored), restoredRng = FB.getRngState();
       FB.religionYear(restored);
-      return { eligible:evaluation.allowed, pure:pure, converted:s.realms.italy.religion === 'nicene',
+      return { eligible:evaluation.allowed, pure:pure, preferred:preferred,
+        converted:s.realms.italy.religion === preferred,
+        decision:s.rulerFaithDecisions.conversions.italy.to,
         zealPenalty:evaluation.score - zealous.score, zealousPure:zealousPure,
         once:once, year:restored.rulerFaithDecisions.lastAIYear,
         restoredOnce:restoredBefore === JSON.stringify(restored) && restoredRng === FB.getRngState() };
     } finally { FBDATA.balance.rulerConversionAIChance = old; }
   });
-  expect(result).toEqual({ eligible:true, pure:true, converted:true, zealPenalty:20, zealousPure:true,
+  expect(result).toEqual({ eligible:true, pure:true, preferred:'chalcedonian', decision:'chalcedonian',
+    converted:true, zealPenalty:20, zealousPure:true,
     once:true, year:476, restoredOnce:true });
 });
 

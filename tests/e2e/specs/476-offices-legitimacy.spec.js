@@ -4,7 +4,7 @@ dependsOnRuntime(__filename, [
   'data/story_instances.js',
   'data/story_courts_476.js',
   'data/political_institutions.js', 'data/actions.js', 'data/technology.js',
-  'data/systems.js', 'data/eras.js', 'data/bookmarks.js', 'data/bookmark_476.js',
+  'data/systems.js', 'data/eras.js', 'data/bookmarks.js', 'data/bookmark_476.js', 'data/government_rollout.js',
   'data/bookmark_476_italy.js', 'data/bookmark_476_dalmatia_east.js', 'data/starts.js',
   'js/authority.js', 'js/governments.js', 'js/federates.js', 'js/actions.js',
   'js/story_courts.js', 'js/story_track.js', 'js/stories.js', 'js/systems.js', 'js/progression.js',
@@ -250,16 +250,17 @@ test('government AI appoints and contests on succession without reversing a depo
     const claims = FB.officeClaimants(s).filter(function (row) { return row.institutionId === 'byzantium'; });
     const current = claims.find(function (row) { return row.holder.id === zeno.id; });
     const old = claims.find(function (row) { return row.holder.id === former.id; });
-    const saved = FB.save.serialize();
-    const authority = JSON.stringify(s.authority), stamp = s.officeCourtPeriod;
-    FB.save.restore(JSON.parse(saved));
+    const saved = JSON.parse(FB.save.serialize());
+    const authority = saved.state.authority, stamp = s.officeCourtPeriod;
+    FB.save.restore(saved);
     FB.authoritySeason(FB.state);
     return { regional:regional.length, idempotent:idempotent, depositionKept:depositionKept,
       current:current.status, old:old.status,
-      restored:authority === JSON.stringify(FB.state.authority), stamp:stamp === FB.state.officeCourtPeriod };
+      before:authority, after:FB.state.authority, stamp:stamp === FB.state.officeCourtPeriod };
   });
   expect(result.regional).toBeGreaterThan(0);
-  expect(result).toMatchObject({ idempotent:true, depositionKept:true, current:'active', old:'contested', restored:true, stamp:true });
+  expect(result).toMatchObject({ idempotent:true, depositionKept:true, current:'active', old:'contested', stamp:true });
+  expect(result.after).toEqual(result.before);
 });
 
 for (const ended of ['death','removal']) {
@@ -299,6 +300,7 @@ for (const bookmark of ['867','1066']) {
     await start(page, testInfo, bookmark);
     const result = await page.evaluate(function () {
       const s = FB.state, before = JSON.stringify(s), rng = FB.getRngState();
+      const authorityBefore = JSON.parse(JSON.stringify(s.authority));
       const sections = FB.deeds.sections(s, 'theme');
       const enabled = FB.systemEnabled(s, 'roman_offices');
       const courts = FB.officeCourts(s), claims = FB.officeClaimants(s);
@@ -306,9 +308,15 @@ for (const bookmark of ['867','1066']) {
       return { enabled:enabled, courts:courts, claims:claims,
         visible:sections.some(function (row) { return row.id === 'offices'; }),
         pure:before === JSON.stringify(s) && rng === FB.getRngState(),
-        authority:Object.prototype.hasOwnProperty.call(s, 'authority') };
+        authorityBefore:authorityBefore, authorityAfter:s.authority,
+        romanAppointments:(s.authority.appointments || []).filter(function (row) {
+          const def = FBDATA.authorityOffices[row.officeId];
+          return !!def.appointment && !def.publicRole;
+        }) };
     });
-    expect(result).toEqual({ enabled:false, courts:[], claims:[], visible:false, pure:true, authority:false });
+    expect(result).toMatchObject({ enabled:false, courts:[], claims:[], visible:false, pure:true, romanAppointments:[] });
+    expect(result.authorityBefore.governments).not.toEqual({});
+    expect(result.authorityAfter).toEqual(result.authorityBefore);
   });
 }
 
@@ -328,12 +336,20 @@ for (const width of [390,1280]) {
     await page.locator('#office-kind').selectOption('defensor_civitatis');
     const review = page.locator('[data-office-petition] [data-office-review]');
     const details = page.locator('[data-office-petition] .settcard-info');
-    await details.click();
+    if (width === 390) {
+      await details.click();
+      await expect(details).toHaveAttribute('aria-expanded','true');
+    } else {
+      await expect(details).toBeHidden();
+      await review.focus();
+      await expect(page.locator('#tooltip')).toBeVisible();
+    }
     await review.click();
     await expect(page.locator('#office-confirm')).toBeVisible();
     await page.keyboard.press('Escape');
     await expect(page.locator('#office-court')).toHaveValue('croatia');
-    await expect(details).toHaveAttribute('aria-expanded','true');
+    if (width === 390) await expect(details).toHaveAttribute('aria-expanded','true');
+    else await expect(details).toBeHidden();
     await expect(review).toBeFocused();
     await review.click();
     await page.evaluate(function () { FB.state.player.gold++; });

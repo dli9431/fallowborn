@@ -529,16 +529,21 @@
         !Array.isArray(data.members) || data.members.length < p.members.length || data.members.length > MAX_MEMBERS ||
         data.lastPeriod !== undefined && !integer(data.lastPeriod, -10000000, 10000000)) fail();
     var publicAccount = realm(s, rid).treasury;
-    if (p.procedure && realm(s, rid).alive && (!publicAccount || publicAccount.version !== 1 || publicAccount.retired ||
+    if (p.procedure && realm(s, rid).alive !== false && (!publicAccount || publicAccount.version !== 1 || publicAccount.retired ||
         typeof publicAccount.gold !== 'number' || !isFinite(publicAccount.gold) ||
         typeof publicAccount.militaryAccrued !== 'number' || !isFinite(publicAccount.militaryAccrued) ||
         publicAccount.militaryAccrued < 0)) fail();
     var nominations = Object.keys(t.members).filter(function (id) { return t.members[id].role === 'electoral_candidate'; });
     if (nominations.filter(function (id) { return alive(s, t.members[id]); }).length > MAX_CANDIDATES || nominations.length && !p.candidatePool || nominations.some(function (id) {
-      var m = t.members[id], c = s.chars[m.charId];
-      if (!c) return m.alive !== false;
-      return !c.royalLine || c.royalLine.realmId !== rid || c.royalLine.memberId !== id ||
-        id !== 'royal_' + data.originRealmId + '_electoral_' + c.id || m.parentId !== null ||
+      var m = t.members[id], cid = m.charId, c = s.chars[cid];
+      if (!c) return m.alive !== false && !own(m, 'died');
+      /* Validation precedes inflation. Character ids and null parents may be
+         omitted by the compact serializer; their table keys remain canonical. */
+      var memberId = c.royalLine && c.royalLine.memberId;
+      if (memberId === undefined && cid.indexOf('ro_') === 0) memberId = 'royal_' + cid.slice(3);
+      return !c.royalLine || c.royalLine.realmId !== rid || memberId !== id ||
+        id !== 'royal_' + data.originRealmId + '_electoral_' + cid ||
+        m.parentId !== undefined && m.parentId !== null ||
         m.fatherId || m.motherId || m.born !== c.born || m.sex !== c.sex;
     })) fail();
     var ids = [], types = ['royal_member','character','county','institution'];

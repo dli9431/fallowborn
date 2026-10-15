@@ -24,8 +24,8 @@ for (const id of ['867','1066']) for (const flag of [false,true]) {
         counties:b.provinces.length,start:[s.start.id,s.start.revision,s.start.geography],
         preview:FB.bookmark(id,'inhabited_v2_governments_v2').provinces.length,
         absent:!FB.world.byId.kath_district};
-    },id)).toEqual({defaultBookmark:'867',revision:'governments_v2',geography:'europe_regional',
-      counties:498,start:[id,'governments_v2','europe_regional'],preview:527,absent:true});
+    },id)).toEqual({defaultBookmark:'867',revision:id === '867' ? 'governments_v2_islamic_v1' : 'governments_v2_islamic_v1_institutions_v1',geography:'europe_regional',
+      counties:498,start:[id,id === '867' ? 'governments_v2_islamic_v1' : 'governments_v2_islamic_v1_institutions_v1','europe_regional'],preview:527,absent:true});
   });
 }
 

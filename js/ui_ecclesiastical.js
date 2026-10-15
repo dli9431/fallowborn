@@ -100,7 +100,12 @@
     list.scrollTop = view.scroll || 0; body.scrollTop = view.bodyScroll || 0;
     if (view.focus && SH.$(view.focus)) SH.$(view.focus).focus({ preventScroll:true });
     var person = SH.$('ecclesiastical-person');
-    if (person) person.onclick = function () { UI.showCharModal(E.incumbent(s,rid).id); };
+    if (person) person.onclick = function () {
+      var incumbent = E.incumbent(s,rid);
+      if (incumbent) UI.showCharModal(incumbent.id, {
+        view:'ecclesiastical-government',realmId:rid,restore:position()
+      });
+    };
     list.querySelectorAll('[data-ecclesiastical-review]').forEach(function (button) {
       button.onclick = function () {
         var entry = entries[Number(button.getAttribute('data-ecclesiastical-review'))],q = entry.q,pos = position();

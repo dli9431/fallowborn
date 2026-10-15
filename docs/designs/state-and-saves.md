@@ -1,3 +1,7 @@
+Fresh campaign defaults and replay
+
+New player and observer states initialize the existing empty inherited-household roster, close-age match preference, travel fields and truce ledger before play. War accessors bind during world creation, so the first query cannot change the serialized player shape. New treasury accounts include the existing zero distribution cooldown. These are the same defaults already supplied during restore, with no envelope or subsystem schema change. The observer placeholder records its existing founder and completed parent initialization, preventing a direct checkpoint restore from inventing a family. Observer mode remains session-only; observer regression checkpoints use direct save restoration in that session rather than the household load flow.
+
 Dated religious definitions
 
 Faith availability is catalogue metadata and adds no save-envelope field, campaign catalogue version, world revision or load-time migration. Retained released ids and effective defaults keep their existing compatibility ratchet. Restore resolves saved faiths, generated ancestry, office ids, relations and active population projects through existence-based validation, without applying fresh authoring date gates to those facts. New projects and conversions recheck current availability before their ordinary apply. Loading never changes a mixed population, creates an institution or awards a religious milestone. Failed generated-faith creation leaves saved counters and state unchanged. See docs/designs/religions.md and tests/e2e/specs/religion-coverage-rollout.spec.js.
@@ -2213,3 +2217,7 @@ Optional character religiousActivity and religiousActivityHistory, player.travel
 Dated local office restoration
 
 Fresh dated offices retain the existing religiousHeads and religiousHeadVacancies ledgers. Service membership, optional affiliations, personal communion letters, paid activity commitments, reform definitions, papal state, council support, rulerFaithDecisions and population communityProjects retain their canonical owners. Added freshOnly definitions never create absent rows or people on load. Communion letters are existing authority recognition records with exact issuer generation and counterpart character, not a repair instruction. Opening revisions restore their own complete institutional table after another campaign has been active.
+
+Optional geography validation
+
+A saved geography stamp must match its resolved bookmark revision when present. An absent stamp remains valid for retained definitions that declare no geography; the normal bookmark fallback supplies the world without fabricating a saved field. Legacy test saves begin in the retained baseline before removing version stamps, so their people and county records still belong to that world.

@@ -246,6 +246,7 @@
       army = { id:spec.hostId, realm:spec.realmId, at:spec.origin, from:spec.origin,
         men:spec.men, size:spec.men, units:copy(spec.units), supply:100,
         path:[], goal:null, moveLeft:0, warId:null };
+      FB.hostUnits(army);
       s.armies.push(army);
     }
     var courtIds = [ruler.id].concat(ruler.spouseId || [], ruler.childrenIds || []);

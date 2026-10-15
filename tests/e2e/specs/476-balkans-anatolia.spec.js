@@ -180,8 +180,11 @@ test('an unversioned core opening restores under its retained revision without s
   async function ({ page }, testInfo) {
     await openGame(page,testInfo);
     await page.evaluate(function () {
-      const bm = FB.bookmark('476');
-      window.regionalOpening = {opening:bm.opening,revision:bm.openingRevision,stories:bm.stories,institutions:bm.localInstitutions,realms:bm.realms,starts:FBDATA.startScenarios,startSelectors:bm.starts};
+      window.regionalOpening = {definition:FBDATA.bookmarks['476'],starts:FBDATA.startScenarios};
+      // Build the retained world itself; changing a resolved fresh copy cannot
+      // replace the wider revision that activation would otherwise select.
+      const bm = JSON.parse(JSON.stringify(FB.bookmark('476','baseline')));
+      FBDATA.bookmarks['476'] = bm;
       bm.opening = bm.openingRevisions.core_v1; bm.openingRevision = 'core_v1';
       // core_v1 predates the Sasanian households, so use the original court declaration
       // and set aside the Peroz start that needs the aristocratic form.
@@ -201,6 +204,7 @@ test('an unversioned core opening restores under its retained revision without s
       });
       FB.startProgression.noteTier(3);
     });
+    expect(await page.evaluate(function () { return FB.validateBookmark(FB.bookmark('476')); })).toEqual([]);
     const full = page.locator('#btn-choose-beginning');
     if (await full.isVisible()) await full.click();
     else await page.getByRole('button',{name:'New Game',exact:true}).click();
@@ -209,10 +213,13 @@ test('an unversioned core opening restores under its retained revision without s
     await expect(page.locator('#chargen:not(.hidden)')).toBeVisible();
     await page.getByRole('button',{name:'Begin Your Story',exact:true}).click();
     await page.getByRole('button',{name:'Begin',exact:true}).click();
+    expect(await page.evaluate(function () {
+      return [FB.state.start.revision,FB.state.bookmarkSetup.revision];
+    })).toEqual(['baseline','core_v1']);
     const result = await page.evaluate(function () {
       const saved = JSON.parse(FB.save.serialize()); delete saved.state.bookmarkSetup.revision;
-      const bm = FB.bookmark('476'), kept = window.regionalOpening;
-      bm.opening = kept.opening; bm.openingRevision = kept.revision; bm.stories = kept.stories; bm.localInstitutions = kept.institutions; bm.realms = kept.realms; FBDATA.startScenarios = kept.starts; bm.starts = kept.startSelectors;
+      FBDATA.bookmarks['476'] = window.regionalOpening.definition;
+      FBDATA.startScenarios = window.regionalOpening.starts;
       const ids = Object.keys(saved.state.chars).sort().join(','), opening = JSON.stringify(saved.state.bookmarkSetup);
       const institutions = JSON.stringify(saved.state.localInstitutions), authority = JSON.stringify(saved.state.authority);
       FB.save.restore(saved);

@@ -220,12 +220,15 @@ for (const crazygames of [false, true]) {
         await injectBrowserHarness(page);
         const result = await page.evaluate(function () {
           const opening = FB.state.start.id;
+          const profession = FB.state.player.profession;
           const record = JSON.stringify(FB.state.stories);
           FB.save.restore(JSON.parse(FB.save.serialize()));
-          const unchanged = record === JSON.stringify(FB.state.stories);
+          const unchanged = record === JSON.stringify(FB.state.stories) &&
+            profession === FB.state.player.profession;
           const run = FBTEST.advanceDays({ days:30, maxDays:30, maxEvents:80,
             maxInterruptions:0, checkEvery:10, style:'first' });
-          return { opening:opening, profession:FB.state.player.profession,
+          // Natural events may change careers during the following month.
+          return { opening:opening, profession:profession,
             unchanged:unchanged, advanced:run.advanced,
             attached:FB.stories.attached(FB.state),
             valid:FB.save.v4.validatePlatform(JSON.parse(FB.save.serialize()).state) };

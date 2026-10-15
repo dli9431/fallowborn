@@ -1,4 +1,10 @@
+Institutional estate reads
+
+Direct settlement and local holding queries use the government institutionalProperty capability for every public institution, including civic magistracies. A current officeholder's private estate does not become a public holding through the ruler alias. Capacity and county-penalty previews read Stewardship through FB.skillSnapshot, so inspecting public finances does not initialize or repair household inventory.
+
 Colonate tenancy
+
+The CrazyGames first-land guide checks the ordinary local land availability and current price against household funds. The market remains accessible when funds are short, while the guide continues to explain saving until a purchase is affordable. This changes guidance only, with no eligibility, price or technology change.
 
 The colonate system is disabled by default and enabled by late_antique. The events module shares its dependent-household scheduler, tenure presentation, paid freedom, final service and family history with manorial_tenure. Each saved archetype retains its own system membership; disabled records remain dormant. The medieval catalogue, timing, obligations and freedom routes are unchanged.
 

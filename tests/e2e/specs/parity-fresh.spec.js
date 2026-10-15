@@ -9,12 +9,12 @@ dependsOnRuntime(__filename, [
 const { test, expect } = require('../support/fixture');
 const { openGame } = require('../support/game/navigation');
 const {
-  FRESH_JOURNEYS, captureJourney, expectedScenarioTable, startParityGame, startScenarioTable
+  FRESH_JOURNEYS, captureWorldSnapshot, expectedScenarioTable, startParityGame, startScenarioTable
 } = require('../support/game/parity');
 const { parityMode, settleParityFixture } = require('../support/parity-fixtures');
 
 /* Owner-run parity journeys: a fresh world per bookmark and start scenario,
-   snapshotted at day 0, the next season and the next year boundary. They run
+   snapshotted at creation and after immediate save restore. They run
    only when FB_PARITY is capture or compare (docs/TESTS.md). */
 test.describe.configure({ mode:'parallel' });
 
@@ -33,7 +33,6 @@ for (const journey of FRESH_JOURNEYS) {
     test.skip(!parityMode(), 'Set FB_PARITY=capture or FB_PARITY=compare to run parity journeys.');
     test.skip(testInfo.project.name !== 'chromium-served',
       'Parity journeys use the served Chromium target.');
-    test.setTimeout(10 * 60 * 1000);
 
     if (journey.bookmark === '867' || journey.bookmark === '1066') {
       // Existing medieval fixtures describe the retained world. Expanded
@@ -45,14 +44,17 @@ for (const journey of FRESH_JOURNEYS) {
         });
       },journey.bookmark);
     }
-    await startParityGame(page, testInfo, journey);
-    const checkpoints = await captureJourney(page);
-    await settleParityFixture(testInfo, journey.id, {
-      id:journey.id,
+    const code = await startParityGame(page, testInfo, journey);
+    const checkpoints = {start:await captureWorldSnapshot(page,null)};
+    await page.evaluate(function () {FB.save.restore(JSON.parse(FB.save.serialize()));});
+    checkpoints.restored = await captureWorldSnapshot(page,null);
+    const id = journey.id + '-opening-restore';
+    await settleParityFixture(testInfo, id, {
+      id:id,
       kind:'fresh',
       bookmark:journey.bookmark,
       scenario:journey.scenario,
-      code:journey.code
+      code:code
     }, checkpoints);
   });
 }

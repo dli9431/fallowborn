@@ -1,8 +1,14 @@
+Civic treaty counterparties
+
+Acceptance of a mobile agreement is a reviewed transaction. A civic counterparty supplies its executive and constituency decision through FB.civicGovernment.decision, with the agreement's terms and its own payment burden. An access or tribute receipt is not a payment by the receiving city; protection charges the city its agreed price. The returned decision is part of the review, so changed incumbents, eligibility, ballots or diplomatic skill invalidate confirmation. Refusal leaves payments and the agreement untouched.
+
 Mobile confederation
 
 The mobile_confederation form composes ten complete strategies. Its saved coalition belongs to authority.governments[realmId].mobile. No culture, religion, date, terrain or historical identity selects the form. County holders remain ordinary public holders. A countyless coalition can retain living principals, a court, treasury, food and civilian following after its field host is lost.
 
 People and places
+
+Fresh moving hosts and recovery hosts initialize every registered unit class, including zero-count classes, through FB.hostUnits before entering the army list. Serialization and restore therefore retain the same composition without adding missing class entries; population, recruitment and casualty totals remain unchanged.
 
 Members have stable ids, living character principals, realm scopes, weights, allegiance and explicit recruitment shares. Each member owns civilian and resting-fighter demographic pools. A deployed host has mobileFollowing, mobileCourt and mobileRoster. The roster partitions its actual men by member, culture and religion; it does not add another force total. Recruitment removes people from those pools, pays the treasury training cost and checks the existing unit-class eligibility. Casualties remove roster people once. Ordinary county reinforcement and professional replacement batches never refill a mobile roster or charge it for invented recruits. Demuster at the camp returns only surviving fighters. Generic host splitting is unavailable for this roster; reorganization requires returning fighters first.
 

@@ -90,12 +90,12 @@ for (const profile of [null,'genoese_consular','civic_service_city']) {
     const rid = await start(page,testInfo,profile);
     const result = await page.evaluate(function (rid) {
       const s = FB.state,V = FB.civicGovernment,C = FB.governments.support,r = V.row(s,rid),p = V.profile(s,rid);
-      const before = JSON.stringify(s),rng = FB.getRngState(),uid = FB.getUidCounter();
+      const before = JSON.stringify(s),rng = (FB.getRngState() >>> 0),uid = FB.getUidCounter();
       r.offices.forEach(function (o) { V.candidates(s,rid,o.id); V.officeQuote(s,rid,o.id,'nominate',{ candidateId:s.player.charId }); V.incumbent(s,rid,o.id); });
       V.proposalQuote(s,rid,'extraordinary_tax',{ amount:2,duration:90 });
       FB.treasurySnapshot(s); FB.aiBaseHost(s,rid); V.decision(s,rid,'treaty');
       const detached = C.members(s,rid); detached[0].weight = 10;
-      return { pure:before === JSON.stringify(s) && rng === FB.getRngState() && uid === FB.getUidCounter(),
+      return { pure:before === JSON.stringify(s) && rng === (FB.getRngState() >>> 0) && uid === FB.getUidCounter(),
         faults:FB.governments.validate(),technology:FB.validateTechnologyData(true),valid:C.validate(s),
         reviewModes:['civic_magistracies','civic_public_dues','civic_public_debt','civic_public_campaigns','civic_public_grants','civic_form_adoption','institutional_foreign_rights','civic_household_careers'].map(function (id) { return FBDATA.techImpactReviews.features[id].mode; }),
         offices:r.offices.length,tenures:p.offices.map(function (o) { return o.termDays; }),
@@ -225,9 +225,9 @@ test('reviewed campaigns, peace and county grants reject territorial bypasses', 
     const target = Object.keys(FB.world.adj.zadar).find(function (pid) { return FB.warTargetDefender(s,rid,pid) && FB.warTargetDefender(s,rid,pid) !== rid; });
     const defender = FB.warTargetDefender(s,rid,target),cause = { type:'aggression',enemy:defender,target:target };
     const raw = !FB.registerOrdinaryWar(s,rid,{ enemy:defender,target:target,casus:cause,objectives:[cause],legacy:false });
-    const q = V.warQuote(s,rid,{ causes:[cause] }),before = JSON.stringify(s),random = FB.getRngState(),identity = FB.getUidCounter();
+    const q = V.warQuote(s,rid,{ causes:[cause] }),before = JSON.stringify(s),random = (FB.getRngState() >>> 0),identity = FB.getUidCounter();
     V.warQuote(s,rid,{ causes:[cause] });
-    const pure = before === JSON.stringify(s) && random === FB.getRngState() && identity === FB.getUidCounter();
+    const pure = before === JSON.stringify(s) && random === (FB.getRngState() >>> 0) && identity === FB.getUidCounter();
     const declared = V.launchWar(s,q),duplicate = !V.launchWar(s,q),war = FB.ordinaryWarBetween(s,rid,defender);
     if (!war) throw new Error('Civic campaign did not open');
     war.seasons = 4;
@@ -272,8 +272,8 @@ test('explicit conversion reviews existing people and preserves old family, publ
     const rightsBytes = JSON.stringify(s.authority.rights),propertyBytes = JSON.stringify({ plots:s.player.landPlots,enterprises:s.player.enterprises });
     const debtBytes = JSON.stringify(s.economy.loans);
     const family = JSON.stringify(s.realms[oldId].succession),wallet = s.player.gold,oldRuler = FB.realmRulerCharacterSnapshot(s,oldId).id;
-    const terms = { profileId:'civic_service_city',incumbents:founders },before = JSON.stringify(s),rng = FB.getRngState(),uid = FB.getUidCounter();
-    const q = V.conversionQuote(s,oldId,terms),pure = before === JSON.stringify(s) && rng === FB.getRngState() && uid === FB.getUidCounter();
+    const terms = { profileId:'civic_service_city',incumbents:founders },before = JSON.stringify(s),rng = (FB.getRngState() >>> 0),uid = FB.getUidCounter();
+    const q = V.conversionQuote(s,oldId,terms),pure = before === JSON.stringify(s) && rng === (FB.getRngState() >>> 0) && uid === FB.getUidCounter();
     FB.ui.showCivicConstitution(oldId,{ profileId:terms.profileId,nominees:founders });
     document.getElementById('civic-conversion-review').click();
     const review = document.getElementById('gm-body').textContent;
@@ -287,11 +287,11 @@ test('explicit conversion reviews existing people and preserves old family, publ
     const adopted = V.convert(s,fresh),duplicate = !V.convert(s,fresh),r = V.row(s,oldId);
     const sameFamily = family === JSON.stringify(s.realms[oldId].succession);
     const dormant = FB.realmIdForRulerCharacter(s,oldRuler) === null && FB.governments.successionForRealm(s,oldId).civicLeadership;
-    const serialized = JSON.parse(FB.save.serialize()),identity = [FB.getRngState(),FB.getUidCounter()]; FB.save.restore(serialized);
+    const serialized = JSON.parse(FB.save.serialize()),identity = [(FB.getRngState() >>> 0),FB.getUidCounter()]; FB.save.restore(serialized);
     return { pure:pure,visible:visible,stalePrivateDebt:stalePrivateDebt,stale:stale,adopted:adopted,duplicate:duplicate,sameFamily:sameFamily,dormant:!!dormant,
       publicFunds:FB.treasuryAvailable(FB.state,oldId),wallet:FB.state.player.gold === wallet,privateDebt:debtBytes === JSON.stringify(FB.state.economy.loans),rights:r.rights.length,
       publicRights:rightsBytes === JSON.stringify(FB.state.authority.rights),privateProperty:propertyBytes === JSON.stringify({ plots:FB.state.player.landPlots,enterprises:FB.state.player.enterprises }),
-      restored:JSON.stringify(V.row(FB.state,oldId)) === JSON.stringify(r) && identity[0] === FB.getRngState() && identity[1] === FB.getUidCounter(),
+      restored:JSON.stringify(V.row(FB.state,oldId)) === JSON.stringify(r) && identity[0] === (FB.getRngState() >>> 0) && identity[1] === FB.getUidCounter(),
       valid:V.validate(FB.state) };
   });
   expect(result).toEqual({ pure:true,visible:true,stalePrivateDebt:true,stale:true,adopted:true,duplicate:true,sameFamily:true,dormant:true,
@@ -393,8 +393,8 @@ test('detached civic saves reject malformed offices, terms, source shares and du
   const result = await page.evaluate(function (rid) {
     const V = FB.civicGovernment,s = FB.state,source = JSON.parse(FB.save.serialize());
     const saved = JSON.stringify(V.row(s,rid)),members = JSON.stringify(FB.governments.support.row(s,rid));
-    const rng = FB.getRngState(),uid = FB.getUidCounter(); FB.save.restore(source);
-    const exact = saved === JSON.stringify(V.row(FB.state,rid)) && members === JSON.stringify(FB.governments.support.row(FB.state,rid)) && rng === FB.getRngState() && uid === FB.getUidCounter();
+    const rng = (FB.getRngState() >>> 0),uid = FB.getUidCounter(); FB.save.restore(source);
+    const exact = saved === JSON.stringify(V.row(FB.state,rid)) && members === JSON.stringify(FB.governments.support.row(FB.state,rid)) && rng === (FB.getRngState() >>> 0) && uid === FB.getUidCounter();
     const mutations = [
       function (r) { r.schema = 2; },function (r) { r.profileId = 'missing_profile'; },
       function (r) { r.institutionId = 'another_polity'; },function (r) { r.offices[0].incumbentId = 'missing_person'; },
@@ -407,9 +407,9 @@ test('detached civic saves reject malformed offices, terms, source shares and du
     ];
     const rejected = mutations.map(function (change) {
       const input = JSON.parse(JSON.stringify(source)); change(input.state.authority.governments[rid].civic,input.state);
-      const bytes = JSON.stringify(input),live = FB.state,random = FB.getRngState(),identity = FB.getUidCounter();
+      const bytes = JSON.stringify(input),live = FB.state,random = (FB.getRngState() >>> 0),identity = FB.getUidCounter();
       let failed = false; try { FB.save.restore(input); } catch (error) { failed = true; }
-      return failed && FB.state === live && bytes === JSON.stringify(input) && random === FB.getRngState() && identity === FB.getUidCounter();
+      return failed && FB.state === live && bytes === JSON.stringify(input) && random === (FB.getRngState() >>> 0) && identity === FB.getUidCounter();
     });
     return { exact:exact,rejected:rejected };
   },rid);
@@ -431,7 +431,7 @@ test('civic profile mods validate effective tables atomically', async function (
 });
 
 test('legacy territorial Venice remains territorial and acquires no new civic opening', async function ({ page },testInfo) {
-  const journey = { bookmark:'1204',code:'OLD-CIVIC-1204-farmer-venezia-m-Leo' };
+  const journey = { bookmark:'1204',code:'OLDCIVIC-1204-farmer-venezia-m-Leo' };
   // Recreate the previous declaration before world creation; no production
   // source or existing save corpus is rewritten for this compatibility case.
   const { openGame } = require('../support/game/navigation');
@@ -440,6 +440,7 @@ test('legacy territorial Venice remains territorial and acquires no new civic op
     // Revision layers may copy realm records, so edit Venice in every layer.
     const b = FBDATA.bookmarks['1204'];
     [b].concat(Object.values(b.revisions || {})).forEach(function (layer) {
+      if (layer.stories) layer.stories = layer.stories.filter(function (id) { return id !== 'venetian_offices_1204'; });
       (layer.realms || []).filter(function (r) { return r.id === 'venice_1204'; }).forEach(function (d) {
         d.government = 'territorial'; delete d.civicProfileId; delete d.constituency; delete d.civicRights;
       });
@@ -459,10 +460,10 @@ test('legacy territorial Venice remains territorial and acquires no new civic op
         d.government = 'city_republic'; d.civicProfileId = 'venice_1204'; d.constituency = 'venetian_councils';
       });
     });
-    const before = JSON.stringify(source.state.realms.venice_1204.ruler),rng = FB.getRngState(),uid = FB.getUidCounter();
+    const before = JSON.stringify(source.state.realms.venice_1204.ruler),rng = (FB.getRngState() >>> 0),uid = FB.getUidCounter();
     FB.save.restore(source); const s = FB.state;
     return { government:FB.governments.forRealm(s,'venice_1204').id,noOpening:!FB.civicGovernment.row(s,'venice_1204'),
-      ruler:JSON.stringify(s.realms.venice_1204.ruler) === before,identity:rng === FB.getRngState() && uid === FB.getUidCounter() };
+      ruler:JSON.stringify(s.realms.venice_1204.ruler) === before,identity:rng === (FB.getRngState() >>> 0) && uid === FB.getUidCounter() };
   });
   expect(result).toEqual({ government:'territorial',noOpening:true,ruler:true,identity:true });
 });
@@ -481,7 +482,7 @@ test('ordinary civic household replays one natural season', async function ({ pa
   const rid = await start(page,testInfo),source = await page.evaluate(function () { return JSON.parse(FB.save.serialize()); });
   async function snapshot() { return page.evaluate(function (rid) { return { civic:FB.civicGovernment.row(FB.state,rid),
     electorate:FB.governments.support.row(FB.state,rid),holder:FB.state.holder,owner:FB.state.owner,
-    household:FB.state.player,rng:FB.getRngState(),uid:FB.getUidCounter(),date:FB.state.date }; },rid); }
+    household:FB.state.player,rng:(FB.getRngState() >>> 0),uid:FB.getUidCounter(),date:FB.state.date }; },rid); }
   expect((await advanceTo(page,'season',100)).stop).toBeNull(); const first = await snapshot();
   await page.evaluate(function (source) { FB.save.restore(source); },source);
   expect((await advanceTo(page,'season',100)).stop).toBeNull(); expect(await snapshot()).toEqual(first);
@@ -492,7 +493,7 @@ for (const crazygames of [false,true]) {
     await page.setViewportSize({ width:390,height:720 });
     const rid = await start(page,testInfo,null,crazygames); await electPlayer(page,rid);
     await page.evaluate(function (rid) { FB.ui.showCivicGovernment(rid); },rid);
-    const dues = page.getByRole('button',{ name:'Review extraordinary dues',exact:true }); await expect(dues).toBeEnabled();
+    const dues = page.getByRole('button',{ name:/^Review extraordinary dues Immediate cost:/ }); await expect(dues).toBeEnabled();
     await dues.click(); await expect(page.locator('#civic-confirm')).toBeVisible();
     await page.keyboard.press('Escape'); await expect(page.locator('#civic-partner')).toBeVisible();
     await dues.click();

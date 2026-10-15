@@ -130,18 +130,27 @@ test('alternate strategies change public consumers without changing pure-read st
     const deniedMuster = FB.raisePlayerHost(s) === null;
     select('ladder','player');
     const ladder = FB.station.mayHoldCouncil(s.player,s);
-    const before = JSON.stringify(s), rng = FB.getRngState(), uid = FB.getUidCounter();
-    FB.playerTaxParts(s); FB.playerLevy(s); FB.councilSummary(s); FB.warCauses(s,true,true);
-    G.forRealm(s,rid); FB.political.consent(s,{kind:'realm',id:rid},'war',{});
+    const mutations = [];
+    [ ['playerTaxParts',function () { FB.playerTaxParts(s); }],
+      ['playerLevy',function () { FB.playerLevy(s); }],
+      ['councilSummary',function () { FB.councilSummary(s); }],
+      ['warCauses',function () { FB.warCauses(s,true,true); }],
+      ['government',function () { G.forRealm(s,rid); }],
+      ['consent',function () { FB.political.consent(s,{kind:'realm',id:rid},'war',{}); }]
+    ].forEach(function (read) {
+      const before = JSON.stringify(s), rng = FB.getRngState(), uid = FB.getUidCounter();
+      read[1]();
+      if (before !== JSON.stringify(s) || rng !== FB.getRngState() || uid !== FB.getUidCounter()) mutations.push(read[0]);
+    });
     return { levy:levy, revenue:revenue, settlementLevy:settlementLevy, expectedSettlementLevy:expectedSettlementLevy,
       breakaway:breakaway, declaration:declaration, accession:accession, unchangedRuler:unchangedRuler,
       refusedCounty:refusedCounty, holderChoice:holderChoice, expectedHolder:expectedHolder, consent:consent.allowed,
       council:council.length, characterConsent:characterConsent, invalidConsent:invalidConsent, deniedMuster:deniedMuster, ladder:ladder,
-      pure:JSON.stringify(s) === before && rng === FB.getRngState() && uid === FB.getUidCounter() };
+      mutations:mutations };
   });
   expect(result).toMatchObject({ levy:19, revenue:31, breakaway:0, declaration:'fixture refusal',
     accession:null, unchangedRuler:true, refusedCounty:true, consent:false, council:0,
-    characterConsent:false, invalidConsent:false, deniedMuster:true, ladder:false, pure:true });
+    characterConsent:false, invalidConsent:false, deniedMuster:true, ladder:false, mutations:[] });
   expect(result.settlementLevy).toBe(result.expectedSettlementLevy);
   expect(result.holderChoice).toBe(result.expectedHolder);
 });

@@ -228,14 +228,14 @@ test('invalid v4 input preserves live state, RNG, identity counters and stored s
     expect(errors[19].message).toContain('state.stories.western_court_476');
     expect(errors[20].message).toContain('rng');
     expect(errors[21].message).toContain('uid');
-    expect(errors[22].message).toContain('state.start');
+    expect(errors[22].message).toContain('platformSchema');
     expect(errors[23].message).toContain('state.situation476');
     expect(errors[24].message).toContain('Unsupported save schema at platformSchema: 3');
   });
 
 test('optional platform fields round trip absent, stamped and present',
   async function ({ page }, testInfo) {
-    await start(page, testInfo, '867');
+    await start(page, testInfo, '867', 'baseline');
     const result = await page.evaluate(function () {
       const own = function (o, k) { return Object.prototype.hasOwnProperty.call(o, k); };
       const bookmark = FBDATA.bookmarks['867'];
@@ -363,13 +363,15 @@ test('localStorage v3 Continue upgrades only on a successful v4 save',
     await page.addInitScript(function () {
       Object.defineProperty(window, 'indexedDB', { configurable:true, value:undefined });
     });
-    await start(page, testInfo, '867');
+    await start(page, testInfo, '867', 'baseline');
     const legacy = await page.evaluate(function () {
       FB.save.flushPending();
       const data = JSON.parse(FB.save.serialize());
       data.v = 3;
       delete data.titleIds;
       delete data.authoritySchema;
+      delete data.platformSchema;
+      delete data.state.start.revision;
       const raw = JSON.stringify(data);
       localStorage.setItem('fb_auto', raw);
       FB.state = null;
@@ -624,6 +626,11 @@ for (const bookmark of ['493','711','800','1204']) {
         Object.defineProperty(window, 'indexedDB', { configurable:true, value:undefined });
       });
       await start(page, testInfo, bookmark);
+      if (bookmark === '1204') expect(await page.evaluate(function () {
+        return FB.state.armies.every(function (host) {
+          return FB.unitClassIds().every(function (id) {return Number.isInteger(host.units[id]) && host.units[id] >= 0;});
+        });
+      })).toBe(true);
       expectStorageRoundTrip(await page.evaluate(checkStorageRoundTrip));
     });
 }

@@ -140,7 +140,7 @@ window.FB = window.FB || {};
     const out = [], candidates = Object.create(null);
     let cid = actor.kind === 'character' ? actor.id : null;
     let rid = actor.kind === 'realm' ? actor.id : null;
-    var publicCrown = rid && FB.electiveCrown && FB.electiveCrown(state, rid);
+    var publicCrown = rid && FB.governments.institutionalProperty(state, rid);
     if (rid === 'player' && !publicCrown) cid = state.player.charId;
     else if (rid) {
       const c = FB.realmRulerCharacterSnapshot(state, rid);
@@ -172,7 +172,8 @@ window.FB = window.FB || {};
     const count = FB.settlementVisibleCount(state, pid);
     const ruler = actor.kind === 'realm' && actor.id !== 'player' ?
       FB.realmRulerCharacterSnapshot(state, actor.id) : null;
-    const cid = actor.id === 'player' && actor.kind === 'realm' ? state.player.charId : ruler && ruler.id;
+    const cid = actor.kind === 'realm' && FB.governments.institutionalProperty(state, actor.id) ? null :
+      actor.id === 'player' && actor.kind === 'realm' ? state.player.charId : ruler && ruler.id;
     profileCount('local holding counties checked');
     for (let slot = 0; slot < count; slot++) {
       profileCount('local holding sites checked');
@@ -209,7 +210,7 @@ window.FB = window.FB || {};
     const rid = actorRealm(state, actor, sites.length ? sites[0].provinceId : home);
     const c = actor.kind === 'character' ? state.chars[actor.id] : actor.id === 'player'
       ? state.chars[state.player.charId] : FB.realmRulerCharacterSnapshot(state, actor.id);
-    const ste = c ? FB.skillOf(c, 'ste') : 0;
+    const ste = c ? FB.skillSnapshot(state, c, 'ste') : 0;
     const bonus = FB.techBonus ? FB.techBonus(state, 'domain', rid) : 0;
     const limit = (FBDATA.balance.settlementDomainBase || 2) +
       Math.floor(ste / (FBDATA.balance.domainStewPer || 5)) + bonus;
@@ -223,7 +224,7 @@ window.FB = window.FB || {};
     if (actor.kind !== 'realm') return 1;
     if (actor.id === 'player') return FB.domainPenalty(state);
     const c = FB.realmRulerCharacterSnapshot(state, actor.id);
-    const cap = (FBDATA.balance.domainBase || 4) + Math.floor((c ? FB.skillOf(c, 'ste') : 0) /
+    const cap = (FBDATA.balance.domainBase || 4) + Math.floor((c ? FB.skillSnapshot(state, c, 'ste') : 0) /
       (FBDATA.balance.domainStewPer || 5)) + FB.techBonus(state, 'domain', actor.id);
     return Math.pow(1 - (FBDATA.balance.overDomainPenalty || 0.15),
       Math.max(0, FB.realmHeldCounties(state, actor.id).length - cap));

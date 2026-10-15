@@ -3382,7 +3382,7 @@ FB.CHANGELOG = [
       realmTech: {}, realmTechMigration: 2, techSeeded:0,
       itemInstances: {}, itemNextId: 1,
       armies: [], armyDown: {}, armyDownSurvival: {}, armyDetachmentDown: {},
-      alliances: [],
+      alliances: [], truces: {},
       faiths: {}, faithRelations: {}, faithNextId: 1,
       cultures: {}, cultureNextId: 1,
       religiousHeads: {},
@@ -3394,7 +3394,7 @@ FB.CHANGELOG = [
       siblingCourtships: {},
       politics: null,
       player: {
-        charId: null, houseFounderId:null,
+        charId: null, houseFounderId:null, inheritedHouseholdIds:[],
         tier: sc.tier, profession: sc.profession, professionBack: null,
         gold: sc.gold, prestige: sc.prestige, piety: sc.piety,
         provinceId: provId, homeSettlement: settIdx, liege: null, liegeOp: 0, liegeOps: {},
@@ -3415,6 +3415,7 @@ FB.CHANGELOG = [
         giftDeliveries: [],
         rivalContacts: {}, rivalPeace: {}, rivalry: null,
         provs: [], war: null, greatHolyWar: null, plot: null,
+        travel:null, travelSettlement:null, travelHistory:[],
         aggressiveWars: [],
         focus: null, dead: false,
         localCouncil:null, castellany:null,
@@ -3424,7 +3425,7 @@ FB.CHANGELOG = [
         enterprises: [], enterpriseLabor: [], retainers: [], householdStandards: {},
         educationPolicy: { focus:null, instructionMode:'manual', feeCap:0 },
         matchPolicy: {
-          enabled:false, minStation:0, maxDowry:null,
+          enabled:false, agePreference:'close', minStation:0, maxDowry:null,
           maxGold:null, maxPrestige:null
         },
         guildMonopolies: { incoming:null, outgoing:null },
@@ -3442,6 +3443,7 @@ FB.CHANGELOG = [
     if (FB.ensureHistoricalAmbitions) FB.ensureHistoricalAmbitions(state);
     FB.state = state;
     FB.initPolitics(state);
+    if (FB.ensureWars) FB.ensureWars(state);
     if (FB.repairForts) FB.repairForts(state);
     FB.scriptedTick(state);
     scheduleSlots(state);
@@ -3733,7 +3735,7 @@ FB.CHANGELOG = [
       realmTech: {}, realmTechMigration: 2, techSeeded:0,
       itemInstances: {}, itemNextId: 1,
       armies: [], armyDown: {}, armyDownSurvival: {}, armyDetachmentDown: {},
-      alliances: [],
+      alliances: [], truces: {},
       faiths: {}, faithRelations: {}, faithNextId: 1,
       cultures: {}, cultureNextId: 1,
       religiousHeads: {},
@@ -3745,7 +3747,8 @@ FB.CHANGELOG = [
       siblingCourtships: {},
       politics: null,
       player: {
-        charId: null, tier: 0, profession: FB.roleCareer('labor'), professionBack: null,
+        charId: null, houseFounderId:null, inheritedHouseholdIds:[], familyParentMigration:1,
+        tier: 0, profession: FB.roleCareer('labor'), professionBack: null,
         gold: 0, prestige: 0, piety: 0,
         provinceId: home.id, liege: null, liegeOp: 0, liegeOps: {},
         faithStandingMigration:0, realmStandingFaithBases:{},
@@ -3761,6 +3764,7 @@ FB.CHANGELOG = [
         giftDeliveries: [],
         rivalContacts: {}, rivalPeace: {}, rivalry: null,
         provs: [], war: null, greatHolyWar: null, plot: null,
+        travel:null, travelSettlement:null, travelHistory:[],
         aggressiveWars: [],
         focus: null, dead: false, holdings: [], retainers: [],
         localCouncil:null, castellany:null,
@@ -3769,7 +3773,7 @@ FB.CHANGELOG = [
         householdStandards: {},
         educationPolicy: { focus:null, instructionMode:'manual', feeCap:0 },
         matchPolicy: {
-          enabled:false, minStation:0, maxDowry:null,
+          enabled:false, agePreference:'close', minStation:0, maxDowry:null,
           maxGold:null, maxPrestige:null
         },
         guildMonopolies: { incoming:null, outgoing:null },
@@ -3782,15 +3786,17 @@ FB.CHANGELOG = [
     if (FB.ensureHistoricalAmbitions) FB.ensureHistoricalAmbitions(state);
     FB.state = state;
     FB.initPolitics(state);
+    if (FB.ensureWars) FB.ensureWars(state);
     if (FB.repairForts) FB.repairForts(state);
     FB.scriptedTick(state);
     // a placeholder soul, never shown — some panels dereference it blindly
     const me = FB.makeCharacter(state, {
       name: FB.randomName(home.culture, 'm'), sex: 'm',
       culture: home.culture, religion: home.religion,
-      born: start.year - 30, quality: 0, traitsN: 0
+      born: start.year - 30, quality: 0, traitsN: 0, station:0, unfree:true
     });
     state.player.charId = me.id;
+    state.player.houseFounderId = me.id;
     if (FB.ensurePapacyState && FB.systemAvailable(state, 'papacy')) FB.ensurePapacyState(state);
     if (FB.ecclesiasticalGovernment) FB.ecclesiasticalGovernment.initialize(state, FBDATA.realms);
     if (FB.ensurePopulationState) FB.ensurePopulationState(state);

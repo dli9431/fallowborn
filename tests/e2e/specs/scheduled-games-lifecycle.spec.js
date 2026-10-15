@@ -36,6 +36,8 @@ test('formal jousting reads venue technology and grandfathers an accepted entry'
   const ids=await startGames(page,info);
   await page.evaluate(function(){
     var s=FB.state,tech=FB.realmTechRecord(s,'player');
+    // Formal lists are a dated programme as well as a venue technology gate.
+    s.date.year=1100;
     tech.completed.push('cavalry_lances');
     var item=FB.grantItem(s,'padded_jack',{quality:'plain'});FB.equipItem(s,s.player.charId,'body',item);
   });

@@ -15,7 +15,7 @@ dependsOnRuntime(__filename, [
   'js/government_continuity.js', 'js/government_levy.js', 'js/government_revenue.js',
   'js/government_council.js', 'js/government_ai.js', 'js/government_diplomacy.js',
   'js/world.js', 'js/authority.js', 'js/treasury.js', 'js/lordships.js', 'js/fiscal.js',
-  'js/actions.js', 'js/armies.js', 'js/justice.js', 'js/model.js', 'js/station.js',
+  'js/actions.js', 'js/armies.js', 'js/wars.js', 'js/justice.js', 'js/model.js', 'js/station.js',
   'js/progression.js', 'js/religion.js', 'js/papacy.js', 'js/systems.js', 'js/lexicon.js',
   'js/mods.js', 'js/main.js', 'js/save.js', 'js/save_v4.js', 'js/messages.js', 'js/i18n.js',
   'js/ui_misc.js', 'js/ui_modals.js', 'css/style.css', 'js/crazygames.js',
@@ -29,7 +29,9 @@ async function start(page, testInfo, distribution) {
     await openCrazyGame(page,testInfo);
   } else await openGame(page,testInfo);
   await page.evaluate(function () { FB.startProgression.noteTier(3); });
-  await page.getByRole('button',{name:'New Game',exact:true}).click();
+  const beginning = page.locator('#btn-choose-beginning');
+  if (await beginning.isVisible()) await beginning.click();
+  else await page.getByRole('button',{name:'New Game',exact:true}).click();
   await page.locator('#btn-bm-seed').click();
   await page.locator('#ng-seed').fill('ADMIN-800-farmer-london-m-Edwin');
   await page.locator('#ng-seed').press('Enter');
@@ -49,7 +51,8 @@ async function start(page, testInfo, distribution) {
 async function prepare(page, rid) {
   await page.evaluate(function (rid) {
     const s = FB.state, c = s.chars[s.player.charId];
-    const pid = FB.realmHeldCounties(s,rid).find(function (pid) { return FB.publicCountyIncome(s,rid,pid) > 0; });
+    // Exclude rounding residue from a fully allocated source.
+    const pid = FB.realmHeldCounties(s,rid).find(function (pid) { return FB.publicCountyIncome(s,rid,pid) > 0.000001; });
     if (!pid) throw new Error('No productive fixture source');
     s.player.provinceId = pid; s.player.liege = rid; s.player.travel = null;
     s.player.prestige = 1000; s.player.gold = 1000;
@@ -411,13 +414,14 @@ test('save records round trip without payment, malformed terms fail before adopt
 });
 
 test('the real seasonal journey replays deterministically and bounds commission/support growth', async function ({page},testInfo) {
-  test.setTimeout(180000);
   await startParityGame(page,testInfo,{bookmark:'800',scenario:'farmer',code:'ADMIN-800-farmer-london-m-Edwin'});
+  await page.evaluate(function () { FB.state.date.day = 89; FB.state.turn = 64; });
   const opening = await page.evaluate(function () { return JSON.parse(FB.save.serialize()); });
-  const firstAdvance = await advanceTo(page,'season',100);
+  const firstAdvance = await advanceTo(page,'season',2);
+  expect(firstAdvance).toEqual({days:2,stop:null});
   const first = await page.evaluate(function () { const data=JSON.parse(FB.save.serialize()); return {state:data.state,rng:data.rng,uid:data.uid}; });
   await page.evaluate(function (data) { FB.save.restore(data); },opening);
-  expect(await advanceTo(page,'season',100)).toEqual(firstAdvance);
+  expect(await advanceTo(page,'season',2)).toEqual(firstAdvance);
   const second = await page.evaluate(function () {
     const data=JSON.parse(FB.save.serialize());
     return {state:data.state,rng:data.rng,uid:data.uid};

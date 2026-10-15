@@ -6,7 +6,7 @@ dependsOnRuntime(__filename, [
   'data/bookmark_476.js',
   'data/bookmark_476_italy.js', 'data/bookmark_476_dalmatia_east.js',
   'data/bookmark_476_gaul_iberia.js', 'data/bookmark_476_africa.js', 'data/eras.js', 'js/actions.js', 'js/mods.js',
-  'js/systems.js', 'js/i18n.js', 'js/stories.js', 'js/story_campaign.js',
+  'js/systems.js', 'js/world.js', 'js/i18n.js', 'js/stories.js', 'js/story_campaign.js',
   'data/story_instances.js', 'data/story_campaigns.js', 'js/story_courts.js',
   'js/story_track.js', 'js/ui_panels.js', 'js/ui_modals.js',
   'js/ui_misc.js', 'js/keys.js', 'js/main.js', 'css/style.css'
@@ -129,9 +129,10 @@ test('disabled systems and section availability hide content and reject deed exe
     await startRegistryGame(page, testInfo);
     await addModSection(page);
     const result = await page.evaluate(function () {
-      const s = FB.state, bookmark = FB.bookmark(s.start.id);
+      const s = FB.state, bookmark = FBDATA.bookmarks[s.start.id];
       const originalSystems = bookmark.systems;
       bookmark.systems = { disable:['royal_council'] };
+      if (FB.systemEnabled(s, 'royal_council')) throw new Error('The campaign must see the disabled system');
       const before = JSON.stringify(s), rng = FB.getRngState();
       const disabled = FB.instantStatus(s, 'e2e_petition');
       FB.runInstant(s, 'e2e_petition', { choiceId:'accept' });

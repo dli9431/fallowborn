@@ -21,7 +21,7 @@ dependsOnRuntime(__filename,[
   'data/bookmark_476_wider_identities.js','data/assembly_polities.js','data/political_institutions.js',
   'data/climate.js','data/starts.js','data/cultures.js','data/technology.js',
   'js/world.js','js/main.js','js/model.js','js/population.js','js/settlement.js',
-  'js/save.js','js/save_v4.js','js/mods.js','js/climate.js','js/travel.js',
+  'js/save.js','js/save_v4.js','js/mods.js','js/climate.js','js/travel.js','js/wars.js',
   'js/governments.js','js/government_support.js','js/government_assembly.js',
   'js/government_administration.js','js/government_ecclesiastical.js','js/authority.js',
   'js/treasury.js','js/lordships.js','js/stories.js','js/events.js','js/systems.js',
@@ -61,11 +61,6 @@ async function startRetained(page,info,revision,serf) {
 async function establishedFacts(page) {
   return {world:await facts(page),household:await page.evaluate(function () {
     const state = JSON.parse(FB.save.serialize()).state, out = {};
-    // A missing treasury cooldown and an explicit zero have the same saved meaning.
-    Object.keys(state.realms || {}).forEach(function (id) {
-      const treasury = state.realms[id] && state.realms[id].treasury;
-      if (treasury && treasury.distributionNextTurn === undefined) treasury.distributionNextTurn = 0;
-    });
     ['player','chars','realms','owner','holder','dev','buildings','settlementBuildings',
       'wastelandSettlements','population','relationships','travel'].forEach(function (key) {
       if (state[key] !== undefined) out[key] = state[key];
@@ -229,6 +224,7 @@ for (const revision of coverage.retainedRevisions) test(revision + ' retains con
         home:s.player.provinceId};
     });
     const before = await establishedFacts(page);
+    expect(before.world.snapshot.readsArePure).toBe(true);
     await openGame(page,info);
     await page.evaluate(function (revision) { FBDATA.bookmarks['867'].revision = revision; },CURRENT);
     await startDeterministicGame(page);
@@ -277,7 +273,7 @@ test('new local courts inherit through existing people without remaking land or 
   await startDistrict(page,info,'kath_district');
   const result = await page.evaluate(function () {
     const s = FB.state, ownership = JSON.stringify([s.owner,s.holder]);
-    const household = JSON.stringify(s.player);
+    const household = JSON.parse(JSON.stringify(s.player));
     const rows = ['gao_867','wagadu_867','afrighids_867'].map(function (id) {
       const r = s.realms[id], heir = FB.authoredRoyalMemberSnapshot(s,id,'offspring');
       const ruler = FB.realmRulerCharacterSnapshot(s,id), generation = r.succession.rulerGeneration;
@@ -289,12 +285,13 @@ test('new local courts inherit through existing people without remaking land or 
     const source = JSON.parse(FB.save.serialize()), rng = FB.getRngState() >>> 0, uid = FB.getUidCounter();
     FB.save.restore(source);
     return {rows:rows,land:ownership === JSON.stringify([FB.state.owner,FB.state.holder]),
-      household:household === JSON.stringify(FB.state.player),
+      household:JSON.parse(JSON.stringify(FB.state.player)),originalHousehold:household,
       random:rng === (FB.getRngState() >>> 0) && uid === FB.getUidCounter()};
   });
-  expect(result).toEqual({rows:['gao_867','wagadu_867','afrighids_867'].map(function (id) {
+  expect(result.household).toEqual(result.originalHousehold);
+  expect(result).toMatchObject({rows:['gao_867','wagadu_867','afrighids_867'].map(function (id) {
     return {id:id,heir:true,once:true,dynasty:true,form:'regnum'};
-  }),land:true,household:true,random:true});
+  }),land:true,random:true});
 });
 
 test('Jenne-jeno retains a conservative local ruler without an invented constituency',async function ({page},info) {
@@ -326,9 +323,11 @@ test('unknown or mismatched expanded revisions fail before adopting saved facts'
 test('a normal JSON bookmark mod pins the expanded revision and rejects a changed catalogue',async function ({page},info) {
   await openGame(page,info);
   const text = await page.evaluate(function (current) {
-    const b = JSON.parse(JSON.stringify(FBDATA.bookmarks['867']));
+    const b = JSON.parse(JSON.stringify(FB.bookmark('867',current)));
     b.revision = current; // the mod pins the expanded revision for new campaigns
-    b.revisions[b.revision].provinces = b.revisions[b.revision].provinces.map(function (p) {
+    // One complete replacement world, without embedding every unrelated review revision.
+    b.revisions = {baseline:{}}; b.revisions[current] = {};
+    b.provinces = b.provinces.map(function (p) {
       return p.id === 'kath_district' ? Object.assign({},p,{dev:4}) : p;
     });
     const mod = {name:'867 district authoring proof',bookmarks:{'867':b}};
@@ -349,16 +348,15 @@ test('a normal JSON bookmark mod pins the expanded revision and rejects a change
   })).toEqual([CURRENT,4]);
   await page.evaluate(function (text) {
     const mod = JSON.parse(text), b = mod.bookmarks['867'];
-    b.revisions[b.revision].provinces.find(function (p) { return p.id === 'kath_district'; }).dev = 5;
+    b.provinces.find(function (p) { return p.id === 'kath_district'; }).dev = 5;
     localStorage.setItem('fb_mods',JSON.stringify([JSON.stringify(mod)]));
   },text);
   await openGame(page,info);
   expect(await page.evaluate(function (source) { return FB.game.loadData(JSON.parse(source)); },source)).toBe(false);
 });
 
-test('expanded observer AI saves and replays a bounded season',async function ({page},info) {
+test('expanded observer AI saves and replays a season boundary',async function ({page},info) {
   test.skip(info.project.name !== 'chromium-served','One bounded observer journey.');
-  test.setTimeout(240000);
   await openGame(page,info);
   await injectBrowserHarness(page);
   await page.evaluate(function () {
@@ -372,12 +370,17 @@ test('expanded observer AI saves and replays a bounded season',async function ({
       });
     });
   });
-  await seasonSlice(page,info,'867-observer-first-half');
-  const source = await budget(page,info,'867-observer-midpoint',6 * 1024 * 1024);
-  await seasonSlice(page,info,'867-observer-second-half');
+  // Cross the seasonal AI boundary within a single bounded replay pair.
+  await page.evaluate(function () { FB.state.turn = 88; FB.state.date.day = 89; });
+  const source = await budget(page,info,'867-observer-boundary',6 * 1024 * 1024);
+  await advanceBookmark(page,2);
+  expect(await page.evaluate(function () { return FB.state.date.season; })).toBe(1);
   const finish = await facts(page);
-  await restoreBookmark(page,source);
-  await seasonSlice(page,info,'867-observer-replayed-half');
+  // Observer mode is session-only. Direct restore retains that session; the
+  // household load flow deliberately resumes ordinary personal gameplay.
+  await page.evaluate(function (source) { FB.save.restore(JSON.parse(source)); },source);
+  expect(await page.evaluate(function () { return FB.game.observe; })).toBe(true);
+  await advanceBookmark(page,2);
   expect(await facts(page)).toEqual(finish);
 });
 

@@ -652,7 +652,8 @@ test('funded support of a mixed congregation preserves one existing conversion p
       const s = FB.state, c = s.chars[s.player.charId];
       if (!FB.religiousPatronageApply(s,FB.religiousPatronageQuote(s,'test_arabian_giving',c.id,'foundation',{
         land:{provinceId:'medina',settlement:0,count:1}}))) throw new Error('Expected fictional property.');
-      s.owner.medina = 'player'; s.holder.medina = 'player'; s.realms.player.alive = true; s.realms.player.liege = null;
+      FB.setPlayerTier(s,4,{attachLiege:false}); s.player.provs = ['medina']; s.player.liege = null;
+      FB.foundPlayerRealm(s); FB.transferProvince(s,'medina','player');
       FBDATA.religiousPatronage.test_arabian_giving.outreach = ['voluntary'];
       const rec = s.population.counties.medina;
       /* Fictional mixed population tests continuity, not historical proportions. */
@@ -713,8 +714,10 @@ test('quarterly congregation service AI uses bounded attempts, its own treasury 
 
 function datedArabianFacts() {
   const s = FB.state, c = s.chars[s.player.charId];
+  // The envelope stamps its detached authority copy; compare the live ledger
+  // independently of that serialization-only schema marker.
   return JSON.parse(JSON.stringify({start:s.start,rng:FB.getRngState() >>> 0,uid:FB.getUidCounter(),
-    owner:s.owner,holder:s.holder,authority:s.authority,population:s.population,institutions:s.localInstitutions,
+    owner:s.owner,holder:s.holder,authority:Object.assign({},s.authority,{schema:undefined}),population:s.population,institutions:s.localInstitutions,
     heads:s.religiousHeads,vacancies:s.religiousHeadVacancies,abbeys:s.abbeys,
     player:[s.player.gold,s.player.piety,s.player.prestige,s.player.travel,s.player.travelHistory,s.player.profession],
     identity:[c.religion,c.religiousRanks || null,c.religiousAffiliations || null],
@@ -785,13 +788,15 @@ for (const distribution of ['standard','CrazyGames']) {
         if (!FB.religiousActivityApply(s,FB.religiousActivityQuote(s,'test_arabian_learning',spouse.id)))
           throw new Error('Expected an independent household lesson.');
         c.religiousRanks = {muslim_lay:2};
-        s.player.travelHistory = [{purpose:'pilgrimage',destinationId:'medina',turn:s.turn}];
         const rec = s.population.counties.medina;
         if (FB.convertCountyCommunity(s,'medina',{kind:'faith',target:'jewish',amount:1}).count !== 1)
           throw new Error('Expected a conserved fictional minority fixture.');
         rec.communityProjects = {faith:{target:c.religion,sponsor:s.owner.medina,policy:'voluntary',startTurn:0,
           progress:0.375,converted:12,resistance:0.2,lastTransfer:2,lastYear:s.date.year}};
         if (!FB.travelStart(s,'pilgrimage','mecca',null)) throw new Error('Expected an existing Mecca itinerary.');
+        // Model an already travelling legacy save. Fresh repeated pilgrimages
+        // are unavailable; retained history must not cancel an existing route.
+        s.player.travelHistory = [{purpose:'pilgrimage',destinationId:'medina',turn:s.turn}];
         return FB.save.serialize();
       });
       const before = await page.evaluate(datedArabianFacts);

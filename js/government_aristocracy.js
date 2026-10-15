@@ -262,7 +262,12 @@
     t.status = q.action === 'withhold' ? 'withheld' : 'assent'; t.changedTurn = s.turn;
     if (q.supportCost) FB.setCountySupport(s,m.scope.id,FB.countySupportBase(s,m.scope.id) - q.supportCost);
     var gov = government(s,q.realmId);
-    if (gov.recognition) delete gov.recognition[m.id];
+    // Changed burdens invalidate a pledge, but do not reverse this principal's
+    // explicit refusal of royal recognition in the same generation.
+    var refusal = gov.recognition && gov.recognition[m.id];
+    if (gov.recognition && !(refusal && refusal.candidateId === null &&
+        refusal.generation === FB.realmRulerGeneration(s,q.realmId) && same(refusal.principal,row.holder)))
+      delete gov.recognition[m.id];
     FB.news(s,FB.msg('news.aristocratic.provincial','Provincial obligations in {place} are reviewed by {person}; public jurisdiction and private estates remain separate.',
       {place:FB.world.byId[m.scope.id].name,person:s.chars[row.holder.id].name}));
     return true;
@@ -572,6 +577,10 @@
       row.recognition = {}; delete row.publicVacancy; delete t.designatedHeirId;
       row.lastAccession = {generation:q.rulerGeneration,memberId:heir.id,cause:cause,turn:s.turn,minor:q.minor};
       t.rulerMemberId = id; t.rulerGeneration = q.rulerGeneration + 1;
+      t.order = t.order.filter(function (memberId) { return memberId !== id; });
+      if (t.dynasticOrder) t.dynasticOrder = t.dynasticOrder.filter(function (memberId) { return memberId !== id; });
+      t.heirId = t.order[0] || null;
+      if (t.openingPreferredId === id) delete t.openingPreferredId;
       s.realms.player.ruler.generation = t.rulerGeneration;
       policy.resolved(s,'player',q);
       return;

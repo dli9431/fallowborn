@@ -539,7 +539,9 @@ test('lay support funds one existing voluntary project without a second progress
     await layHousehold(page,testInfo);
     expect(await page.evaluate(function () {
       const s = FB.state, f = buddhistFixture, h = foundLayHouse('tapa_sardar');
-      s.owner.ghazni = 'player'; s.holder.ghazni = 'player'; s.realms.player.alive = true; s.realms.player.liege = null;
+      s.player.tier = 4; s.player.provs = ['ghazni']; s.player.liege = null;
+      FB.foundPlayerRealm(s);
+      s.owner.ghazni = 'player'; s.holder.ghazni = 'player'; FB.invalidateRealmCache();
       const rec = s.population.counties.ghazni;
       rec.communityProjects = {faith:{target:'buddhist_711',sponsor:'player',policy:'voluntary',startTurn:s.turn,
         progress:0.375,converted:12,resistance:0.2,lastTransfer:2,lastYear:s.date.year}};

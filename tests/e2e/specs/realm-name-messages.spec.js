@@ -35,51 +35,47 @@ async function arrangeRealms(page) {
 test('news recorded in a translated locale keeps historical English provenance through restore',
   async function ({ page }) {
     const fixture = await arrangeRealms(page);
-    const result = await page.evaluate(function (args) {
-      return new Promise(function (resolve) {
-        localStorage.setItem('fb_lang', 'fr');
-        FB.loadSelectedLocale(function (loaded) {
-          const s = FB.state, realm = s.realms[args.rid];
-          const snapshot = FB.realmNameParam(s, realm).$realmName;
-          FBDATA.lang.fr.entries[snapshot.term.key] = {
-            text:'circonscription', hash:FB.i18nHash({ text:'province' })
-          };
-          FBDATA.lang.fr.entries['ui:{style} of {name}'] = {
-            text:'{style} de {name}', hash:FB.i18nHash({ text:'{style} of {name}' })
-          };
-          FB.finalizeLocale(loaded);
-          const liveFrench = realm.name;
-          s.pacts = s.pacts || {}; s.pacts[realm.id] = s.turn + 720;
-          const ended = FB.fns.diplomacy_end_pact(s, { realmId:realm.id });
-          const entry = s.log.find(function (e) { return e.msg && e.msg.key === 'news.diplomacy.pact_ended'; });
-          const captured = entry.msg.params.realm.$realmName;
-          const french = FB.newsText(entry, s);
-          FB.setRealmTitle(s, realm, 'county', realm.capital, 'A Different Place');
-          s.authority.governments[realm.id] = { formId:'territorial' };
-          FBDATA.lexicons.governments.roman_civic.terms.duchy.one = 'changed province';
-          FB.lexicon.reset();
-          FB.markRealmDead(s, realm.id);
-          const saved = JSON.parse(FB.save.serialize());
-          FB.save.restore(FB.save.v4.migrate(saved));
-          const restoredEntry = FB.state.log.find(function (e) {
-            return e.msg && e.msg.key === 'news.diplomacy.pact_ended';
-          });
-          delete FB.state.realms[args.rid];
-          const restoredFrench = FB.newsText(restoredEntry, FB.state);
-          localStorage.setItem('fb_lang', 'en');
-          FB.loadSelectedLocale(function (englishLoaded) {
-            FB.finalizeLocale(englishLoaded);
-            const archiveEntry = FB.chronicleEntries(FB.state).find(function (e) {
-              return e.msg && e.msg.key === 'news.diplomacy.pact_ended';
-            });
-            resolve({ ended:ended, liveFrench:liveFrench, french:french,
-              restoredFrench:restoredFrench, english:FB.newsText(restoredEntry, FB.state),
-              archiveEnglish:FB.newsText(archiveEntry, FB.state),
-              captured:captured, restored:restoredEntry.msg.params.realm.$realmName,
-              hasTranslationInSnapshot:JSON.stringify(captured).indexOf('circonscription') >= 0 });
-          });
-        });
+    const result = await page.evaluate(async function (args) {
+      localStorage.setItem('fb_lang', 'fr');
+      const loaded = await new Promise(function (resolve) {FB.loadSelectedLocale(resolve);});
+      const s = FB.state, realm = s.realms[args.rid];
+      const snapshot = FB.realmNameParam(s, realm).$realmName;
+      FBDATA.lang.fr.entries[snapshot.term.key] = {
+        text:'circonscription', hash:FB.i18nHash({ text:'province' })
+      };
+      FBDATA.lang.fr.entries['ui:{style} of {name}'] = {
+        text:'{style} de {name}', hash:FB.i18nHash({ text:'{style} of {name}' })
+      };
+      FB.finalizeLocale(loaded);
+      const liveFrench = realm.name;
+      s.pacts = s.pacts || {}; s.pacts[realm.id] = s.turn + 720;
+      const ended = FB.fns.diplomacy_end_pact(s, { realmId:realm.id });
+      const entry = s.log.find(function (e) { return e.msg && e.msg.key === 'news.diplomacy.pact_ended'; });
+      const captured = entry.msg.params.realm.$realmName;
+      const french = FB.newsText(entry, s);
+      FB.setRealmTitle(s, realm, 'county', realm.capital, 'A Different Place');
+      s.authority.governments[realm.id].formId = 'territorial';
+      FBDATA.lexicons.governments.roman_civic.terms.duchy.one = 'changed province';
+      FB.lexicon.reset();
+      FB.markRealmDead(s, realm.id);
+      const saved = JSON.parse(FB.save.serialize());
+      FB.save.restore(FB.save.v4.migrate(saved));
+      const restoredEntry = FB.state.log.find(function (e) {
+        return e.msg && e.msg.key === 'news.diplomacy.pact_ended';
       });
+      delete FB.state.realms[args.rid];
+      const restoredFrench = FB.newsText(restoredEntry, FB.state);
+      localStorage.setItem('fb_lang', 'en');
+      const englishLoaded = await new Promise(function (resolve) {FB.loadSelectedLocale(resolve);});
+      FB.finalizeLocale(englishLoaded);
+      const archiveEntry = FB.chronicleEntries(FB.state).find(function (e) {
+        return e.msg && e.msg.key === 'news.diplomacy.pact_ended';
+      });
+      return { ended:ended, liveFrench:liveFrench, french:french,
+        restoredFrench:restoredFrench, english:FB.newsText(restoredEntry, FB.state),
+        archiveEnglish:FB.newsText(archiveEntry, FB.state),
+        captured:captured, restored:restoredEntry.msg.params.realm.$realmName,
+        hasTranslationInSnapshot:JSON.stringify(captured).indexOf('circonscription') >= 0 };
     }, fixture);
     expect(result.ended).toBe(true);
     expect(result.liveFrench).toBe('Circonscription de ' + fixture.place);

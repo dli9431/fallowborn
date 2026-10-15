@@ -76,6 +76,10 @@ test('a fictional track negotiates its own declared payments and duration withou
   await beginBookmark(page, testInfo, 'proof_courts_900', 'proof_court_household');
   const result = await page.evaluate(function () {
     const s = FB.state, track = 'proof_service', t = s.stories[track];
+    const terms = FB.stories.get(track).declaration.parameters;
+    // The patron must personally hold the estate it promises in this contract.
+    s.holder[terms.targetProvinceId] = terms.patronRealmId;
+    FB.invalidateRealmCache();
     const before = JSON.stringify([s.owner,s.holder,s.settlementLordships]);
     const patronGold = FB.treasuryAvailable(s, 'proof_senior');
     function apply(id) { return FB.stories.apply(s, track, id, FB.stories.quote(s, track, id)); }
@@ -142,11 +146,11 @@ test('476 records retain their ids and old schema, and invalid track records fai
   await beginBookmark(page, testInfo, '476', 'federate_476');
   const result = await page.evaluate(function () {
     const saved = JSON.parse(FB.save.serialize()), state = FB.state;
-    function facts(s) { return JSON.stringify([s.stories,s.owner,s.holder,s.authority,s.armies,s.bookmarkSetup]); }
+    function facts(s) { return [s.stories,s.owner,s.holder,s.authority,s.armies,s.bookmarkSetup]; }
     const before = facts(saved.state);
     const rng = (FB.getRngState() >>> 0), uid = FB.getUidCounter();
     FB.save.restore(saved);
-    const retained = before === facts(JSON.parse(FB.save.serialize()).state);
+    const retained = facts(JSON.parse(FB.save.serialize()).state);
     const live = FB.state;
     const invalidPhases = ['arbitrary_stage',['delegate'],null];
     const rejected = invalidPhases.every(function (phase) {
@@ -154,11 +158,12 @@ test('476 records retain their ids and old schema, and invalid track records fai
       try { FB.save.restore(corrupt); } catch (error) { return error.message.indexOf('state.stories.federate_track_476') >= 0; }
       return false;
     });
-    return { retained:retained, rejected:rejected, detached:FB.state === live,
+    return { before:before,retained:retained, rejected:rejected, detached:FB.state === live,
       rng:rng === (FB.getRngState() >>> 0), uid:uid === FB.getUidCounter(),
       ids:Object.keys(FB.state.stories), noReplay:FB.state.armies.length === saved.state.armies.length };
   });
-  expect(result).toMatchObject({ retained:true,rejected:true,detached:true,rng:true,uid:true,noReplay:true });
+  expect(result.retained).toEqual(result.before);
+  expect(result).toMatchObject({ rejected:true,detached:true,rng:true,uid:true,noReplay:true });
   expect(result.ids).toContain('western_court_476');
   expect(result.ids).toContain('federate_track_476');
 });
@@ -171,20 +176,20 @@ test('authored track branches, shortened stages and changed routes survive the s
     const service = FB.stories.get('proof_service'), civic = FB.stories.get('proof_civic');
     const sizes = [Object.keys(service.declaration.stages).length, Object.keys(civic.declaration.stages).length,
       Object.keys(FB.stories.get('proof_claim').declaration.stages).length];
-    const before = JSON.stringify(s), rng = FB.getRngState(), uid = FB.getUidCounter();
+    const before = JSON.stringify(s), rng = (FB.getRngState() >>> 0), uid = FB.getUidCounter();
     const reviewed = FB.stories.quote(s, 'proof_service', 'proof_accept_delegate');
     const choice = service.declaration.choices.accept_delegate;
     choice.nextStage = 'orders';
     const stale = FB.stories.apply(s, 'proof_service', 'proof_accept_delegate', reviewed);
-    const unchanged = before === JSON.stringify(s) && rng === FB.getRngState() && uid === FB.getUidCounter();
+    const unchanged = before === JSON.stringify(s) && rng === (FB.getRngState() >>> 0) && uid === FB.getUidCounter();
     choice.nextStage = 'commission_audience';
     function apply(story, id) { return FB.stories.apply(s, story, id, FB.stories.quote(s, story, id)); }
     const branch = apply('proof_service', 'proof_accept_delegate'), branchPhase = s.stories.proof_service.phase;
     const civicDone = apply('proof_civic', 'proof_keep_household'), claimDone = apply('proof_claim', 'proof_keep_dalmatia');
     const labels = [FB.stories.status(s, 'proof_service').name, FB.stories.status(s, 'proof_civic').name];
-    const saved = JSON.parse(FB.save.serialize()), phases = JSON.stringify(s.stories), savedRng = FB.getRngState(), savedUid = FB.getUidCounter();
+    const saved = JSON.parse(FB.save.serialize()), phases = JSON.stringify(s.stories), savedRng = (FB.getRngState() >>> 0), savedUid = FB.getUidCounter();
     FB.save.restore(saved); s = FB.state;
-    const restored = phases === JSON.stringify(s.stories) && savedRng === FB.getRngState() && savedUid === FB.getUidCounter();
+    const restored = phases === JSON.stringify(s.stories) && savedRng === (FB.getRngState() >>> 0) && savedUid === FB.getUidCounter();
     const phasesBefore = [s.stories.proof_service.phase,s.stories.proof_civic.phase,s.stories.proof_claim.phase];
     const finished = apply('proof_service', 'proof_leave_dispute');
     s.turn = FB.stories.get('proof_court').declaration.parameters.pressureTurn;

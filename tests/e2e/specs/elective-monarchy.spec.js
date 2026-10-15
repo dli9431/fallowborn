@@ -4,39 +4,43 @@ const { test, expect } = require('../support/fixture');
 const { openGame } = require('../support/game/navigation');
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
-  'index.html', 'data/bookmark_711.js', 'data/political_institutions.js', 'data/technology.js',
+  'index.html', 'data/bookmark_711.js', 'data/bookmark_711_terrain.js', 'data/government_rollout.js', 'data/political_institutions.js', 'data/technology.js',
   'data/actions.js', 'data/lexicons.js', 'data/story_instances.js', 'js/government_selection.js',
   'js/government_elective.js', 'js/government_lineage.js', 'js/governments.js',
   'js/government_continuity.js', 'js/government_levy.js', 'js/government_revenue.js',
   'js/government_ai.js', 'js/government_administration.js', 'js/world.js', 'js/main.js',
   'js/starts.js', 'js/treasury.js', 'js/authority.js', 'js/institutions.js', 'js/systems.js',
   'js/station.js', 'js/progression.js', 'js/justice.js', 'js/wars.js', 'js/save.js', 'js/save_v4.js',
-  'js/actions.js', 'js/lordships.js', 'js/ui_modals.js', 'js/stories.js', 'js/story_government_selection.js'
+  'js/actions.js', 'js/lordships.js', 'js/ui_misc.js', 'js/ui_modals.js', 'js/stories.js', 'js/story_government_selection.js'
 ]);
 
 async function start(page, testInfo, fictional) {
   await openGame(page, testInfo);
   if (fictional) await page.addScriptTag({ path:path.resolve(__dirname, '../fixtures/elective-monarchy.js') });
-  const error = await page.evaluate(function (fictional) {
-    return new Promise(function (resolve) {
-      FB.activateBookmark('711', null, function (error) {
-        if (error) { resolve(error.message); return; }
-        if (fictional) {
-          const f = FB_ELECTIVE_FIXTURE;
-          FBDATA.governmentForms[f.formId] = Object.assign({}, FBDATA.governmentForms.elective_monarchy, { selectionProfile:f.profile });
-          // Revision layers may copy realm records, so edit the realm in every layer.
-          const b = FBDATA.bookmarks['711'];
-          [b].concat(Object.values(b.revisions || {})).forEach(function (layer) {
-            (layer.realms || []).filter(function (r) { return r.id === f.realmId; }).forEach(function (r) { r.government = f.formId; });
-          });
-          FB.governments.invalidate();
-        }
-        FB.game.pending = { seed:'ELECTIVE-CROWN-REVIEW' };
-        FB.game.startObserve(); FB.game.setPaused(true); resolve(null);
+  await page.evaluate(function (fictional) {
+    FBDATA.bookmarks['711'].hidden = false;
+    if (fictional) {
+      const f = FB_ELECTIVE_FIXTURE;
+      FBDATA.governmentForms[f.formId] = Object.assign({}, FBDATA.governmentForms.elective_monarchy, { selectionProfile:f.profile });
+      // Revision layers may copy realm records, so edit the realm in every layer.
+      const b = FBDATA.bookmarks['711'];
+      [b].concat(Object.values(b.revisions || {})).forEach(function (layer) {
+        (layer.realms || []).filter(function (r) { return r.id === f.realmId; }).forEach(function (r) { r.government = f.formId; });
       });
-    });
+      FB.governments.invalidate();
+    }
+    FB.startProgression.noteTier(3);
   }, fictional);
-  expect(error).toBe(null);
+  // Save journeys need a resumable household with its ordinary genealogy.
+  // Apply fixture declarations before activation copies the selected world.
+  await page.getByRole('button', {name:'New Game',exact:true}).click();
+  await page.locator('#btn-bm-seed').click();
+  await page.locator('#ng-seed').fill('ELECTIVE-711-farmer-toledo-m-Review-established');
+  await page.locator('#ng-seed').press('Enter');
+  await expect(page.locator('#chargen:not(.hidden)')).toBeVisible();
+  await page.getByRole('button', {name:'Begin Your Story',exact:true}).click();
+  await page.getByRole('button', {name:'Begin',exact:true}).click();
+  await page.evaluate(function () { FB.game.setPaused(true); });
 }
 
 test('the protagonist receives private estate income while the public account settles its own costs', async function ({page},testInfo) {
@@ -45,7 +49,7 @@ test('the protagonist receives private estate income while the public account se
   const result = await page.evaluate(function (candidate) {
     const s = FB.state, S = FB.governmentSelection, rid = 'visigoths_711', c = s.chars[candidate.cid];
     s.player.charId = c.id; s.player.provinceId = 'toledo'; FB.setPlayerTier(s,3,{attachLiege:false}); s.player.gold = 37;
-    FB.assignSettlementLordship(s,'toledo',0,c.id);
+    if (!FB.assignSettlementLordship(s,'toledo',1,c.id)) throw new Error('Private estate grant failed');
     S.apply(s,S.quote(s,rid,{action:'negotiate',actor:{kind:'realm',id:rid},candidateId:candidate.id,terms:S.profile(s,rid).terms}));
     const resolved = S.apply(s,S.quote(s,rid,{action:'resolve',actor:{kind:'realm',id:rid}}));
     const fiscal = FB.settlementActorFiscal(s,{kind:'character',id:c.id});
@@ -59,8 +63,8 @@ test('the protagonist receives private estate income while the public account se
     publicAccount.gold -= 1000; publicAccount.militaryAccrued = 5; FB.electivePublicSeason(s,13);
     return {resolved:resolved,privateGain:s.player.gold - 37,net:net,publicGain:publicAccount.gold - opening,
       insulated:insulated,publicLines:forecast.lines.some(function (line) { return line.label === FB.T('Rents from your lands') || line.label === FB.T('Government administration'); }),
-      separate:!FB.directSettlements(s).some(function (site) { return site.provinceId === 'toledo' && site.settlement === 0; }),
-      owned:FB.settlementHolder(s,'toledo',0).id === c.id};
+      separate:!FB.directSettlements(s).some(function (site) { return site.provinceId === 'toledo' && site.settlement === 1; }),
+      owned:FB.settlementHolder(s,'toledo',1).id === c.id};
   },candidate);
   expect(result.resolved).toBe(true); expect(result.separate).toBe(true); expect(result.owned).toBe(true);
   expect(result.insulated).toBe(true); expect(result.publicLines).toBe(false);
@@ -130,7 +134,7 @@ for (const fictional of [false, true]) {
         property:owned === JSON.stringify([s.owner,s.holder,s.player.holdings,s.settlementLordships]),
         religion:heads === JSON.stringify(s.religiousHeads) && coronations === JSON.stringify(s.authority.appointments),
         restore:JSON.stringify(S.state(FB.state,rid)) === exact.selection && JSON.stringify(FB.state.realms[rid].treasury) === exact.crown &&
-          FB.getRngState() === exact.rng && FB.getUidCounter() === exact.uid,
+          (FB.getRngState() >>> 0) === (exact.rng >>> 0) && FB.getUidCounter() === exact.uid,
         winner:S.state(FB.state,rid).vacancy.accessionId === candidate.id,
         forms:FB.governments.validate(), bookmark:FB.validateBookmark(FB.bookmark('711')),
         technology:FB.validateTechnologyData(), reviews:['elective_crown_nomination','elective_crown_accession',
@@ -231,6 +235,38 @@ test('AI shares refusal and budget rules and does not repeat a seasonal round', 
   expect(result).toEqual({declined:true,repeated:true,unpaid:true,generation:true,bounded:true});
 });
 
+test('electoral candidate validation accepts compact defaults without repairing or weakening identity', async function ({ page }, testInfo) {
+  await start(page,testInfo);
+  const candidate = await prepare(page);
+  expect(candidate.nominated).toBe(true);
+  const result = await page.evaluate(function (candidate) {
+    const S = FB.governmentSelection, rid = 'visigoths_711', live = FB.state;
+    const expanded = JSON.parse(JSON.stringify(live)), compact = JSON.parse(FB.save.serialize()).state;
+    const before = JSON.stringify(live), rng = FB.getRngState(), uid = FB.getUidCounter();
+    const accepted = [expanded,compact].map(function (state) {
+      const bytes = JSON.stringify(state);
+      return S.validate(state,rid,state.authority.governments[rid].selection) && bytes === JSON.stringify(state);
+    });
+    const rejected = [
+      function (state) { state.chars[candidate.cid].royalLine.memberId = 'invented'; },
+      function (state) { state.chars[candidate.cid].royalLine.realmId = 'achila_711'; },
+      function (state) { state.realms[rid].succession.members[candidate.id].parentId = 'invented'; },
+      function (state) { delete state.chars[candidate.cid]; },
+      function (state) { delete state.realms[rid].treasury; }
+    ].map(function (damage) {
+      const state = JSON.parse(JSON.stringify(compact)); damage(state);
+      const bytes = JSON.stringify(state);
+      try { S.validate(state,rid,state.authority.governments[rid].selection); return false; }
+      catch (error) { return /Invalid government selection state/.test(error.message) && bytes === JSON.stringify(state); }
+    });
+    return { accepted:accepted, rejected:rejected,
+      omitted:compact.chars[candidate.cid].id === undefined &&
+        compact.realms[rid].succession.members[candidate.id].parentId === undefined && compact.realms[rid].alive === undefined,
+      pure:FB.state === live && before === JSON.stringify(live) && rng === FB.getRngState() && uid === FB.getUidCounter() };
+  },candidate);
+  expect(result).toEqual({accepted:[true,true],rejected:[true,true,true,true,true],omitted:true,pure:true});
+});
+
 test('missing old-save selection stays absent and malformed results fail on a detached copy', async function ({ page }, testInfo) {
   await start(page,testInfo);
   await prepare(page);
@@ -239,7 +275,7 @@ test('missing old-save selection stays absent and malformed results fail on a de
     const old = JSON.parse(JSON.stringify(source));
     old.state.authority.governments[rid].formId = 'territorial'; delete old.state.authority.governments[rid].selection;
     const rng = old.rng, uid = old.uid; FB.save.restore(old);
-    const legacy = !S.state(FB.state,rid) && FB.governments.forRealm(FB.state,rid).id === 'territorial' && FB.getRngState() === rng && FB.getUidCounter() === uid;
+    const legacy = !S.state(FB.state,rid) && FB.governments.forRealm(FB.state,rid).id === 'territorial' && (FB.getRngState() >>> 0) === (rng >>> 0) && FB.getUidCounter() === uid;
     FB.save.restore(source); const active = FB.state, before = JSON.stringify(active);
     const failures = [];
     [function (d) { d.members[0].weight = 10; }, function (d) { d.vacancy.accessionId = 'invented'; },
@@ -308,7 +344,7 @@ test('protagonist accession and household succession keep the public account and
     FB.save.restore(JSON.parse(FB.save.serialize()));
     return {nominated:nominated,resolved:resolved,adopted:adopted,routed:routed,household:household,released:released,
       restore:JSON.stringify(FB.state.realms[rid].treasury) === cash && FB.state.player.gold === 37 &&
-        FB.getUidCounter() === uid && FB.getRngState() === rng};
+        FB.getUidCounter() === uid && (FB.getRngState() >>> 0) === (rng >>> 0)};
   });
   expect(result).toEqual({nominated:true,resolved:true,adopted:true,routed:true,household:true,released:true,restore:true});
 });
@@ -319,22 +355,22 @@ for (const fictional of [false,true]) {
     const candidate = await prepare(page,fictional);
     const result = await page.evaluate(function (candidate) {
       const s = FB.state, S = FB.governmentSelection, rid = 'visigoths_711', c = s.chars[candidate.cid];
-      FB.assignSettlementLordship(s,'toledo',0,c.id);
-      const holder = JSON.stringify(FB.settlementHolder(s,'toledo',0));
+      if (!FB.assignSettlementLordship(s,'toledo',1,c.id)) throw new Error('Private estate grant failed');
+      const holder = JSON.stringify(FB.settlementHolder(s,'toledo',1));
       const privateBefore = FB.settlementActorFiscal(s,{kind:'character',id:c.id}).tax;
       const publicBefore = FB.settlementActorFiscal(s,{kind:'realm',id:rid}).tax;
       const buildingsDuring = FB.governments.call(s,rid,'revenue','buildingIncome',{
-        provinceId:'toledo',settlement:1,holder:{kind:'realm',id:rid},amount:10});
+        provinceId:'toledo',settlement:0,holder:{kind:'realm',id:rid},amount:10});
       S.apply(s,S.quote(s,rid,{action:'negotiate',actor:{kind:'realm',id:rid},candidateId:candidate.id,terms:S.profile(s,rid).terms}));
       const accession = S.apply(s,S.quote(s,rid,{action:'resolve',actor:{kind:'realm',id:rid}}));
       const privateAfter = FB.settlementActorFiscal(s,{kind:'character',id:c.id});
       const publicSites = FB.directSettlements(s,{kind:'realm',id:rid});
-      const projection = FB.settlementFiscalProjection(s,'toledo',0);
+      const projection = FB.settlementFiscalProjection(s,'toledo',1);
       const privateAccount = FB.baronyAccount(s,c.id).gold;
       s.turn += 90; FB.settleBaronyAccounts(s,Math.floor(s.turn/90));
       return {accession:accession,privateBefore:privateBefore,privateAfter:privateAfter.tax,publicBefore:publicBefore,
-        retained:holder === JSON.stringify(FB.settlementHolder(s,'toledo',0)),
-        excluded:!publicSites.some(function (site) { return site.provinceId === 'toledo' && site.settlement === 0; }),
+        retained:holder === JSON.stringify(FB.settlementHolder(s,'toledo',1)),
+        excluded:!publicSites.some(function (site) { return site.provinceId === 'toledo' && site.settlement === 1; }),
         paid:FB.baronyAccount(s,c.id).gold - privateAccount,net:projection.amounts.net,buildingsDuring:buildingsDuring};
     },candidate);
     expect(result.accession).toBe(true); expect(result.retained).toBe(true); expect(result.excluded).toBe(true);
@@ -370,7 +406,7 @@ test('actual death opens one vacancy; empty and minor pools survive interrupted 
     FB.save.restore(JSON.parse(FB.save.serialize()));
     return {death:death,minority:minority,empty:empty,generation:t.rulerGeneration === gen,
       bounded:Object.keys(FB.state.realms[rid].succession.members).length === count,
-      restore:record === JSON.stringify(S.state(FB.state,rid)) && uid === FB.getUidCounter() && rng === FB.getRngState()};
+      restore:record === JSON.stringify(S.state(FB.state,rid)) && uid === FB.getUidCounter() && (rng >>> 0) === (FB.getRngState() >>> 0)};
   });
   expect(result).toEqual({death:'death',minority:'minority',empty:'vacant',generation:true,bounded:true,restore:true});
 });
@@ -401,19 +437,29 @@ for (const width of [390,1280]) {
     await start(page,testInfo);
     const candidate = await prepare(page);
     await page.evaluate(function (candidate) {
-      const s = FB.state, m = FB.governmentSelection.constituency(s,'visigoths_711')[0];
-      s.player.charId = m.currentPrincipal.id; s.player.provinceId = 'toledo';
+      const s = FB.state;
+      s.player.charId = candidate.cid; s.player.provinceId = 'toledo';
+      FB.setPlayerTier(s,3,{attachLiege:false});
+      s.player.gold = candidate.profile.negotiationCost + 20;
       FB.ui.showLocalKingship({realmId:'visigoths_711',candidateId:candidate.id});
     },candidate);
     await expect(page.locator('#gm-body')).toContainText('Who can stand');
-    const disclosure = page.locator('#lineage-action-negotiate summary');
-    await disclosure.click();
+    await page.locator('#lineage-terms').selectOption('1');
+    const disclosure = page.locator('[aria-controls="lineage-action-negotiate"]');
+    const expanded = await disclosure.isVisible();
+    if (expanded) await disclosure.click();
     const button = page.locator('[data-lineage-review="negotiate"]');
+    await expect(button).toBeEnabled();
+    await expect(button).toHaveAttribute('aria-describedby','lineage-action-negotiate');
     await button.scrollIntoViewIfNeeded(); await button.focus();
     const scroll = await page.locator('#gm-body').evaluate(function (el) { return el.scrollTop; });
     await button.click(); await page.keyboard.press('Escape');
     await expect(page.locator('#lineage-candidate')).toHaveValue(candidate.id);
-    expect(await page.locator('#lineage-action-negotiate').evaluate(function (el) { return el.open; })).toBe(true);
+    await expect(page.locator('#lineage-terms')).toHaveValue('1');
+    if (expanded) {
+      await expect(disclosure).toHaveAttribute('aria-expanded','true');
+      await expect(page.locator('#lineage-action-negotiate')).toBeVisible();
+    }
     expect(await page.locator('#gm-body').evaluate(function (el) { return Math.abs(el.scrollTop); })).toBeGreaterThanOrEqual(scroll - 2);
     await expect(button).toBeFocused();
   });

@@ -88,9 +88,9 @@ test('technology search discovers unlocks and locked links follow role access',
     await commonWorkshop.click();
     await expect(page.locator('[data-enterprise-blocker="technology"]'))
       .toContainText('Requires Horizontal Loom');
-    await expect(page.locator(
-      '[data-enterprise-requirement-tech="horizontal_loom"]'))
-      .toHaveCount(0);
+    await page.locator('[data-enterprise-requirement-tech="horizontal_loom"]').click();
+    await expect(page.getByRole('heading', { name:/Horizontal Loom/ })).toBeVisible();
+    await expect(page.locator('#tech-start, #tech-switch, #tech-pause, #tech-auto-protection')).toHaveCount(0);
   });
 
 test('locked monopoly deed keeps Guild Charters in its shared details surface',
@@ -506,9 +506,9 @@ test('the Guide keeps the role orientations and every deep link',
 
     await page.locator('#guide-search').fill('Workshop');
     const technology = page.locator('[data-guide-entry="tech-horizontal_loom"]');
-    await expect(technology).toHaveCount(0);
-    await expect(page.locator('#guide-category option[value="technology"]'))
-      .toHaveCount(0);
+    await expect(technology).toBeVisible();
+    await expect(technology).toContainText('Horizontal Loom');
+    await expect(page.locator('#guide-category option[value="technology"]')).toHaveCount(1);
 
     await page.evaluate(function () {
       FB.state.player.tier = 3;

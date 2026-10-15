@@ -176,8 +176,11 @@ window.FB = window.FB || {};
       terms:offers[Number($('lineage-terms').value)], bodyScroll:$('gm-body').scrollTop,
       focus:document.activeElement && document.activeElement.dataset.lineageReview,
       fieldFocus:document.activeElement && ['lineage-candidate','lineage-terms'].indexOf(document.activeElement.id) >= 0 ? document.activeElement.id : null,
-      details:Array.from(list.querySelectorAll('details[open]')).map(function (node) { return node.id; }) }; }
-    (view.details || []).forEach(function (key) { const node = $(key); if (node) node.open = true; });
+      details:Array.from(list.querySelectorAll('.settcard-info[aria-expanded="true"]')).map(function (node) { return node.getAttribute('aria-controls'); }) }; }
+    (view.details || []).forEach(function (key) {
+      const node = $(key), button = list.querySelector('[aria-controls="' + key + '"]');
+      if (node && button) { node.classList.remove('hidden'); button.setAttribute('aria-expanded', 'true'); }
+    });
     $('gm-body').scrollTop = view.bodyScroll || 0;
     if (view.fieldFocus && $(view.fieldFocus)) $(view.fieldFocus).focus({ preventScroll:true });
     if (view.focus) { const node = list.querySelector('[data-lineage-review="' + view.focus + '"]'); if (node) node.focus({ preventScroll:true }); }
@@ -1511,7 +1514,7 @@ window.FB = window.FB || {};
         const reason = status.can ? FB.T('Available now') : FB.translateKnown(status.reason);
         let details = esc(FB.translateKnown(deed.desc(s)));
         if (deed.id === 'squeeze_taxes') details += '<p>' + esc(FB.T('Each use reduces Popular support by 6.')) + '</p>';
-        if (deed.id === 'demand_taxes') details += '<p>' + esc(FB.T('Each use reduces eligible vassals’ Standing by 15 and may provoke revolt. Fiscal crises also reduce county Popular support.')) + '</p>';
+        if (deed.id === 'demand_taxes') details += '<p>' + esc(FB.T('Each use reduces eligible {term:vassal.other}’ Standing by 15 and may provoke revolt. Fiscal crises also reduce county Popular support.')) + '</p>';
         if (deed.id === 'mediate') details += '<p>' + esc(FB.T('Success grants 3 Prestige and 3 Popular support, with a chance to train Diplomacy. Failure costs 2 Prestige.')) + '</p>';
         if (deed.id === 'scheme_rival') details += '<p>' + esc(FB.T('Risks losing 4 Prestige and increases rivalry. Success grants 4 Prestige, with a chance to train Intrigue.')) + '</p>';
         const days = deed.cooldownDays ? deed.cooldownDays(s) : deed.cd;
@@ -1519,7 +1522,7 @@ window.FB = window.FB || {};
         if (deed.id === 'give_alms') consequence = FB.T('Costs {money:cost}', { cost:10 });
         if (deed.id === 'hire_mercs') consequence = FB.T('Costs {money:cost} plus seasonal upkeep', { cost:15 });
         if (deed.id === 'squeeze_taxes') consequence = FB.T('Popular support −6');
-        if (deed.id === 'demand_taxes') consequence = FB.T('Vassal Standing −15 · revolt risk');
+        if (deed.id === 'demand_taxes') consequence = FB.T('{Term:vassal} Standing −15 · revolt risk');
         if (deed.id === 'mediate') consequence = FB.T('Failure: Prestige −2');
         if (deed.id === 'scheme_rival') consequence = FB.T('Failure: Prestige −4 · increased rivalry');
         h += cb('ar-deed-' + deed.id, a.recurringDeeds && a.recurringDeeds[deed.id] === true,
@@ -11067,7 +11070,7 @@ window.FB = window.FB || {};
     const fields = { subject:'subjectId', scope:'scope', search:'search', minAge:'minAge', maxAge:'maxAge', faith:'faith', rank:'rank', availability:'availability', heirs:'heirs', sort:'sort' };
     function render() {
       let rows = '';
-      const previewFaces = [];
+      const previewFaces = [], realmDetails = {};
       FB.marriageCandidateQuery(FB.state, prefs).forEach(function (row) {
         const terms = row.terms;
         const requirements = row.threshold !== null ? FB.T('Requires +{standing} personal Standing before proposing.', { standing:row.threshold }) : '';
@@ -11075,14 +11078,21 @@ window.FB = window.FB || {};
           ? FB.T('{chance}% acceptance chance', { chance:Math.round(row.status.chance * 100) })
           : '');
         const realm = FB.state.realms[row.realmId];
-        const capital = FB.world.byId[realm.capital];
+        if (!realmDetails[row.realmId]) {
+          const capital = FB.world.byId[realm.capital];
+          const levies = FB.realmHostAvailability(FB.state, row.realmId);
+          realmDetails[row.realmId] = {
+            count:FB.realmTerritory(FB.state, row.realmId).length,
+            capital:capital ? capital.name : FB.T('Unknown'),
+            current:Math.round(levies.current), maximum:Math.round(levies.maximum)
+          };
+        }
+        const facts = realmDetails[row.realmId];
         const land = FB.T('{realm}: {count} counties. Capital: {capital}.', {
-          realm:realm.name, count:FB.realmTerritory(FB.state, row.realmId).length,
-          capital:capital ? capital.name : FB.T('Unknown')
+          realm:realm.name, count:facts.count, capital:facts.capital
         });
-        const levies = FB.realmHostAvailability(FB.state, row.realmId);
         const realmStats = FB.T('Realm levies: {current}/{max} men', {
-          current:Math.round(levies.current), max:Math.round(levies.maximum)
+          current:facts.current, max:facts.maximum
         });
         const detailsId = 'finder-details-' + row.key;
         const character = row.characterId && FB.state.chars[row.characterId];
@@ -12586,6 +12596,8 @@ window.FB = window.FB || {};
       UI.showMarriageFinder(null, undefined, true);
     } else if (returnContext.view === 'household-service') {
       UI.showHouseholdService(false, returnContext.restore);
+    } else if (returnContext.view === 'ecclesiastical-government') {
+      UI.showEcclesiasticalGovernment(returnContext.realmId, returnContext.restore);
     } else if (returnContext.view === 'abbeys') {
       UI.showAbbeys();
     } else if (returnContext.view === 'governance') {
@@ -15836,7 +15848,7 @@ window.FB = window.FB || {};
           details:'<p>' + esc(FB.T('Applies to the governing institution and its directly held counties. Existing communities remain intact.')) + '</p>' })) +
         '<div class="gm-footer">' +
         '<button type="button" class="btn" id="identity-cancel">' + esc(FB.T('Not now')) + '</button></div>',
-        { historyView:true, modalClass:'fullsheet-modal', historyBackRender:function () { UI.showGoverningIdentity(rid); } });
+        { historyView:true, modalClass:'fullsheet-modal' });
       $('identity-cancel').onclick = function () { UI.backModal(); };
       $('identity-confirm').onclick = function () {
         if (FB.state !== s || !FB.governanceEligible(s) || !FB.station.rulesRealm(s.player, s) ||
@@ -26328,6 +26340,7 @@ window.FB = window.FB || {};
         returnContext.view === 'abbeys' ||
         returnContext.view === 'family-office' ||
         returnContext.view === 'religious-office-result' ||
+        returnContext.view === 'ecclesiastical-government' ||
         returnContext.view === 'settlement-founding')
         ? null : function () {
         interactionReturn(returnContext);

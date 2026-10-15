@@ -28,7 +28,7 @@
   }
   function empty(state, gold) {
     return { version:1, gold:gold, militaryAccrued:0, lastSettledSeason:season(state),
-      lastRevaluedYear:state.date.year, lastSummary:null, retired:false };
+      lastRevaluedYear:state.date.year, lastSummary:null, retired:false, distributionNextTurn:0 };
   }
   function sovereignIndex(realms, ids) {
     const out = Object.create(null);

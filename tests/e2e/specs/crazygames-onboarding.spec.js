@@ -585,6 +585,10 @@ for (const viewport of [
       await expect(page.locator('.coachmark')).toContainText('Your household is free. Save for your first land plot');
       expect(await page.evaluate(function () {
         const s = FB.state;
+        return { marketOpen:FB.instantStatus(s, 'buy_land').can, affordable:s.player.gold >= FB.landPlotCost(s) };
+      })).toEqual({ marketOpen:true, affordable:false });
+      expect(await page.evaluate(function () {
+        const s = FB.state;
         return { tier:s.player.tier, plots:FB.landPlots(s).length,
           children:s.chars[s.player.charId].childrenIds.length,
           familyDone:!!s.player.flags.tut_track_family_legacy,

@@ -114,7 +114,7 @@
         !plain(realm.ruler) || typeof realm.ruler.name !== 'string' || !realm.ruler.name ||
         ['m','f'].indexOf(realm.ruler.sex) < 0 || !FBDATA.cultures[realm.ruler.culture] ||
         !Number.isInteger(realm.ruler.born) || realm.ruler.born > def.firstYear - 16 ||
-        !Number.isFinite(realm.ruler.mar) || FBDATA.rulerTraits.indexOf(realm.ruler.trait) < 0)
+        !Number.isFinite(realm.ruler.mar) || !Object.prototype.hasOwnProperty.call(FBDATA.traits, realm.ruler.trait))
       throw new Error('Invalid polity foundation definition.');
     for (var event in def.news || {})
       if (['founded','failed','diverted'].indexOf(event) < 0 || !plain(def.news[event]) ||

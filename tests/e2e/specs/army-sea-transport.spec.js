@@ -36,7 +36,7 @@ test('validates, bookmarks, and compiles crossing classes separately from adjace
           : pair[1] + '|' + pair[0];
       }
       function definition(overrides) {
-        const source = FB.bookmark('867');
+        const source = FB.bookmark('867', 'baseline');
         const copy = {};
         for (const key in source) copy[key] = source[key];
         copy.id = 'sea_validation';

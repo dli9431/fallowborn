@@ -2819,7 +2819,11 @@ window.FB = window.FB || {};
     }
     delete papacy.grounds[c.id];
     removeDeadCardinalSocialState(state, c);
-    if (record && !opts.preserve && !neededByPlayerGenealogy(state, c)) {
+    // A cardinal can also hold a public commission or recognition seat.
+    // Those ledgers retain the person after death, just as court compaction does.
+    var publicReference = FB.publicAdministrationReferencesCharacter &&
+      FB.publicAdministrationReferencesCharacter(state,c.id);
+    if (record && !opts.preserve && !publicReference && !neededByPlayerGenealogy(state, c)) {
       delete state.chars[c.id];
     }
     return !!(record || claimantObedience);

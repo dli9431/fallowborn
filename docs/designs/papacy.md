@@ -1,3 +1,7 @@
+Cardinals in public service
+
+A deceased cardinal is archived and removed from active papal office as usual, but its character record remains when public administration still references it through an appointment, recognition vote or candidate record. Death makes public service ineffective; it does not erase the person required by saved political records. The public-administration retention query is shared with court compaction.
+
 # Papacy, Cardinals, elections, and schism
 
 ## Scope and historical abstraction

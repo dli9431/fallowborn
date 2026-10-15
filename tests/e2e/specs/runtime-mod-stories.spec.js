@@ -11,13 +11,25 @@ dependsOnRuntime(__filename, ['data/markets.js','js/story_government_selection.j
   'js/story_campaign.js','js/story_history.js','js/story_settlements.js','js/story_polity_foundation.js',
   'js/mods.js','js/world.js','js/main.js','js/messages.js','js/save.js','js/save_v4.js']);
 
+async function storeAndReload(page, mod, storyId) {
+  await Promise.all([
+    page.waitForNavigation({waitUntil:'domcontentloaded'}),
+    page.evaluate(function (input) {
+      if (FB.mods.store(JSON.stringify(input)) === false) throw new Error('Mod import was rejected');
+    }, mod)
+  ]);
+  await page.waitForFunction(function (id) {
+    return window.FB && FB.game && FB.game.bootReady && !!FB.stories.get(id);
+  }, storyId);
+}
+
 test('ordinary file import creates new stories and branching tracks, reloads and removes them', async function ({ page }, info) {
   await openGame(page, info);
   const base = await page.evaluate(function () { return FB.stories.list().map(function (d) { return d.id; }); });
   await page.evaluate(function () { FB.ui.showMods(); });
   await page.locator('#modfile').setInputFiles(path.resolve(__dirname, '../fixtures/authoring/harbor-contracts.json'));
-  await page.locator('#mod-apply').click();
-  await page.waitForFunction(function () { return FB.game.bootReady && !!FB.stories.get('harbor_court'); });
+  await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}), page.locator('#mod-apply').click()]);
+  await page.waitForFunction(function () { return window.FB && FB.game && FB.game.bootReady && !!FB.stories.get('harbor_court'); });
   const imported = await page.evaluate(function () { return {
     order:FB.stories.list().map(function (d) { return d.id; }),
     faults:FB.validateBookmark(FB.bookmark('harbor_courts_900')),
@@ -46,8 +58,8 @@ test('ordinary file import creates new stories and branching tracks, reloads and
   });
   expect(journey).toEqual({ pure:true, applied:true, repeated:false, resumed:true, replay:true, result:'declined', same:true });
   await page.evaluate(function () { FB.ui.showMods(); });
-  await page.locator('#mod-clear').click();
-  await page.waitForFunction(function () { return FB.game.bootReady && !FB.stories.get('harbor_court'); });
+  await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}), page.locator('#mod-clear').click()]);
+  await page.waitForFunction(function () { return window.FB && FB.game && FB.game.bootReady && !FB.stories.get('harbor_court'); });
   expect(await page.evaluate(function () { return FB.stories.list().map(function (d) { return d.id; }); })).toEqual(base);
 });
 
@@ -98,27 +110,25 @@ test('candidate compilation is detached and same-id overrides rebuild dependents
 
 test('prospective stored stacks honor import order and reject a dangling same-name replacement', async function ({ page },info) {
   await openGame(page,info);
+  await storeAndReload(page,harbor,'harbor_court');
+  await storeAndReload(page,dune,'dune_court');
   const result = await page.evaluate(function (mods) {
     const before = JSON.stringify(FBDATA), stories = FB.stories.list(), rng = FB.getRngState(), uid = FB.getUidCounter();
-    const first = FB.mods.store(JSON.stringify(mods[0])), second = FB.mods.store(JSON.stringify(mods[1]));
     const stored = localStorage.getItem('fb_mods');
     const replacement = JSON.parse(JSON.stringify(mods[0])); delete replacement.storyInstances;
     const rejected = FB.mods.store(JSON.stringify(replacement));
-    return { first:first,second:second,rejected:rejected,stored:stored === localStorage.getItem('fb_mods'),
+    return { rejected:rejected,stored:stored === localStorage.getItem('fb_mods'),
       names:FB.mods.list().map(function (row) { return row.name; }),pure:before === JSON.stringify(FBDATA) &&
         stories.every(function (story,i) { return story === FB.stories.list()[i]; }) && rng === FB.getRngState() && uid === FB.getUidCounter() };
   },[harbor,dune]);
-  expect(result).toMatchObject({ first:true,second:true,rejected:false,stored:true,pure:true });
+  expect(result).toMatchObject({ rejected:false,stored:true,pure:true });
   expect(result.names).toEqual([harbor.name,dune.name]);
-  await page.reload();
-  await page.waitForFunction(function () { return FB.game.bootReady && !!FB.stories.get('dune_court'); });
   expect(await page.evaluate(function () { return [!!FB.stories.get('harbor_court'),FBDATA.agencyRules.familyProgressChance]; })).toEqual([true,.2]);
 });
 
 test('changing imported graph content rejects the old save before state adoption', async function ({ page },info) {
   await openGame(page,info);
-  await page.evaluate(function (mod) { FB.mods.store(JSON.stringify(mod)); },harbor);
-  await page.reload(); await page.waitForFunction(function () { return FB.game.bootReady && !!FB.stories.get('harbor_court'); });
+  await storeAndReload(page,harbor,'harbor_court');
   await beginBookmark(page,info,'harbor_courts_900','harbor_court_household');
   const result = await page.evaluate(function () {
     const saved = JSON.parse(FB.save.serialize());

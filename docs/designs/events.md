@@ -1161,3 +1161,9 @@ eventChances supplies ordered bounded arithmetic for ordinary named chances and 
 Lifecycle subscriptions
 
 FBDATA.eventSubscriptions maps stable event ids to bounded lifecycle subscriptions. FB.validateEventLifecycle validates the effective candidate table without publishing it. FB.queueLifecycleEvents selects declared subscribers in event catalogue order and uses FB.queueEvent for canonical contexts and participant binding. The index is transient and invalidates with the event catalogue. Birth, education, adulthood, home raids, protection offers, justice requests and travel arrival expose named engine moments. Conditions, system/period availability and once/cooldown gates filter delivery; subscriptions never run effects or consume randomness. Event payloads and saved queue records retain their existing formats. See docs/MODDING.md for the supported hooks and condition fields.
+
+Event pack membership must be explicit even for declarations inserted before a file's bulk pack assignment. The colonate crop, account and flight events belong to the peasant pack; their colonate system gate still determines availability. Period regressions distinguish the original shared packs from later additions limited to another era.
+
+Social station queries
+
+Friendship thresholds and lowborn participant selection ask the named social-station queries, preserving the current era and government interpretation. Numeric comparisons remain only in validated data boundaries recorded by the station source lint.

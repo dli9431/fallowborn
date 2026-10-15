@@ -9,7 +9,8 @@ dependsOnRuntime(__filename, [
   'js/starts.js', 'js/stories.js', 'js/story_courts.js',
   'data/story_instances.js', 'js/story_campaign.js', 'js/story_track.js',
   'js/main.js', 'js/world.js', 'js/model.js', 'js/armies.js', 'js/wars.js',
-  'js/authority.js', 'js/federates.js', 'js/institutions.js', 'js/treasury.js',
+  'js/authority.js', 'js/federates.js', 'js/mobile_confederations.js', 'data/mobile_confederations.js',
+  'data/bookmark_476_wider.js', 'js/institutions.js', 'js/treasury.js',
   'js/station.js', 'js/governments.js', 'js/technology.js', 'js/logistics.js',
   'js/mods.js', 'js/save.js', 'js/save_v4.js', 'js/ui_panels.js',
   'js/modifiers.js', 'js/events.js', 'js/bookmark_setup.js', 'js/religion.js', 'js/ui_misc.js'
@@ -67,7 +68,9 @@ async function winRavenna(page) {
 test('unreviewed ruler starts reject start codes and direct creation', async function ({ page }, testInfo) {
   await openGame(page, testInfo);
   const hidden = await page.evaluate(function () {
-    return FBDATA.startScenarios.filter(function (sc) { return sc.rulerRealmId; })
+    return FBDATA.startScenarios.filter(function (sc) {
+      return sc.rulerRealmId && sc.bookmarkIds && sc.bookmarkIds.includes('476');
+    })
       .every(function (sc) { return sc.hidden && sc.alwaysUnlocked; });
   });
   expect(hidden).toBe(true);

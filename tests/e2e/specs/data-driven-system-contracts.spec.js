@@ -3,7 +3,8 @@ const { test, expect } = require('../support/fixture');
 const { openGame } = require('../support/game/navigation');
 const { startDeterministicGame } = require('../support/game/start');
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
-dependsOnRuntime(__filename, ['js/politics.js','data/markets.js','data/cultures.js','js/intrigue.js','js/story_government_selection.js','data/policies.js','js/ecclesiastical_validation.js','js/government_ecclesiastical.js','js/religion.js','js/ambitions.js','js/federates.js','data/ambitions.js','js/agency.js','data/travel.js','js/parliament.js','data/events_common.js','data/political_institutions.js','data/religious_institutions.js',
+
+dependsOnRuntime(__filename, ['js/save.js','js/save_v4.js','js/technology.js','js/politics.js','data/markets.js','data/cultures.js','js/intrigue.js','js/story_government_selection.js','data/policies.js','js/ecclesiastical_validation.js','js/government_ecclesiastical.js','js/religion.js','js/ambitions.js','js/federates.js','data/ambitions.js','js/agency.js','data/travel.js','js/parliament.js','data/events_common.js','data/political_institutions.js','data/religious_institutions.js',
   'data/papacy.js','js/papacy.js','data/actions.js','js/actions.js','js/ui_panels.js','data/economy.js','data/starts.js','js/abbeys.js','js/market.js','js/council.js','js/institutions.js','js/starts.js','data/tournaments.js','js/tournaments.js','data/traits.js','js/travel.js','js/events.js','js/rebellions.js','js/mods.js','js/authority.js','js/main.js','js/model.js','js/economy.js']);
 
 test('declared chance formulas preserve arithmetic order and pure shared previews', async function ({ page }, info) {
@@ -166,7 +167,16 @@ for (const id of ['study','play','rest','pray','militia','work_land','market','k
       if (id === 'administer_temporalities') { p.gold += FB.bishopricIncome(s) * .15 / D; if (p.liege) FB.adjustStanding(s,{kind:'realm',id:p.liege},2 / D,'focus:administer_temporalities'); train(.3,'ste'); }
       if (id === 'govern') { p.gold += FB.playerTax(s) * .15 / D; FB.setCountySupport(s,p.provinceId,FB.clamp(FB.countySupportBase(s,p.provinceId) + 3 / D,-100,100)); train(.25,'ste'); }
       if (id === 'patronize') { FB.addResearch(s,(2 + Math.min(3,FB.skillOf(c,'lea') / 10)) / D); p.gold -= 2 / D; train(.3,'lea'); }
-      function facts(state) { const me = state.chars[state.player.charId]; return { gold:state.player.gold,piety:state.player.piety,prestige:state.player.prestige,health:me.health,skills:me.skills,traits:me.traits,standing:state.standing,countySupport:FB.countySupportBase(state,state.player.provinceId),research:FB.realmTechRecord(state),rng:FB.getRngState() >>> 0,uid:FB.getUidCounter() }; } // restore stores RNG bits unsigned
+      function facts(state) {
+        const me = state.chars[state.player.charId];
+        const research = JSON.parse(JSON.stringify(FB.realmTechRecord(state)));
+        // Exposure is a set; restore may reorder it without changing research.
+        research.exposed.sort();
+        return { gold:state.player.gold,piety:state.player.piety,prestige:state.player.prestige,
+          health:me.health,skills:me.skills,traits:me.traits,standing:state.standing,
+          countySupport:FB.countySupportBase(state,state.player.provinceId),research:research,
+          rng:FB.getRngState() >>> 0,uid:FB.getUidCounter() };
+      }
       const expected = JSON.stringify(facts(s)); FB.save.restore(before); def.tick(FB.state);
       return { expected:expected, actual:JSON.stringify(facts(FB.state)) };
     }, id);

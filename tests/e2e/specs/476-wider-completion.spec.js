@@ -132,14 +132,21 @@ test('bounded oases keep scenery, dry routes and the original geography',async f
 test('an imported fictional geography can expand without replacing its baseline',async function ({page},testInfo) {
   await openGame(page,testInfo);
   expect(await page.evaluate(function () {
-    const base = JSON.parse(JSON.stringify(FB.bookmark('867')));
+    const base = JSON.parse(JSON.stringify(FB.bookmark('867','baseline')));
     base.id = 'e2e_revision'; base.hidden = false; base.name = 'Fictional river survey';
+    // This fictional campaign does not inherit bookmark-scoped historical faiths.
+    base.realms.forEach(function (r) {
+      if (r.religion === 'zaydi') r.religion = 'shia';
+      if (r.religion === 'ibadi') r.religion = 'sunni';
+    });
     base.revision = 'survey';
     base.starts = [];
     base.revisions = {baseline:{},survey:{geography:'e2e_survey',starts:['e2e_survey_household'],
       startLocations:{e2e_survey_household:['e2e_oasis']}}};
     const county = Object.assign({},base.provinces.find(function (p) { return p.id === 'tripoli'; }),
       {id:'e2e_oasis',name:'Small basin'});
+    // The new county generates its own sites instead of copying Tripoli's ids.
+    delete county.settlements;
     const start = {id:'e2e_survey_household',name:'Basin household',desc:'A local beginning.',
       bookmarkIds:['e2e_revision'],fixedProvinceId:'e2e_oasis',startCulture:county.culture,
       startReligion:county.religion,tier:0,profession:'farmer',gold:5,prestige:0,piety:0,
@@ -148,6 +155,8 @@ test('an imported fictional geography can expand without replacing its baseline'
       provinceAdditions:[{id:'e2e_oasis',name:'Small basin',x:9,y:28,terrain:'desert',maxRadiusKm:35}],
       landRoutes:[['tripoli','e2e_oasis',4]]}},bookmarks:{e2e_revision:base},startScenarios:[start]};
     base.revisions.survey.provinces = base.provinces.concat([county]);
+    const faults = FB.mods.validate(mod);
+    if (faults.length) throw new Error(faults.join('\n'));
     return FB.mods.store(JSON.stringify(mod));
   })).not.toBe(false);
   await page.waitForFunction(function () { return window.FB && FB.game && FB.game.bootReady &&
@@ -156,23 +165,33 @@ test('an imported fictional geography can expand without replacing its baseline'
     return [FB.bookmark('e2e_revision').geography,FB.bookmark('e2e_revision','baseline').geography,
       FB.geography('e2e_survey').provinces.length,FB.validateBookmark(FBDATA.bookmarks.e2e_revision)];
   })).toEqual(['e2e_survey','europe_regional',499,[]]);
-  const created = await page.evaluate(function () {
+  await page.evaluate(function () {
     return new Promise(function (resolve,reject) {
       FB.activateBookmark('e2e_revision',null,function (error) {
         if (error) { reject(error); return; }
-        FB.game.pending = {seed:'FICTIONAL-SURVEY'};
-        FB.game.startObserve(); FB.game.setPaused(true);
-        const source = FB.save.serialize(), rng = FB.getRngState(), uid = FB.getUidCounter();
-        FB.save.restore(JSON.parse(source));
-        resolve({revision:FB.state.start.revision,geography:FB.activeGeographyId,
-          route:FB.landRouteUnits('tripoli','e2e_oasis'),
-          dry:!FB.waterCrossing('tripoli','e2e_oasis'),
-          deterministic:rng === FB.getRngState() && uid === FB.getUidCounter(),
-          save:source});
+        FB.game.pending = {seed:'FICTIONALSURVEY',bookmarkId:'e2e_revision',name:'Review',sex:'m',
+          scenario:FBDATA.startScenarios.find(function (s) { return s.id === 'e2e_survey_household'; })};
+        FB.game.pickMode = true;
+        if (!FB.game.pickProvince(FB.world.byId.e2e_oasis) || !FB.game.pickSettlement({pid:'e2e_oasis',index:0})) {
+          reject(new Error('Imported household birthplace was rejected')); return;
+        }
+        resolve();
       });
     });
   });
-  expect(created).toMatchObject({revision:'survey',geography:'e2e_survey',route:4,dry:true,deterministic:true});
+  await expect(page.locator('#chargen:not(.hidden)')).toBeVisible();
+  await page.getByRole('button',{name:'Begin Your Story',exact:true}).click();
+  await page.evaluate(function () { FB.game.setPaused(true); });
+  await page.getByRole('button',{name:'Begin',exact:true}).click();
+  const created = await page.evaluate(function () {
+    const source = FB.save.serialize(), rng = FB.getRngState() >>> 0, uid = FB.getUidCounter();
+    FB.save.restore(JSON.parse(source));
+    return {revision:FB.state.start.revision,geography:FB.activeGeographyId,
+      route:FB.landRouteUnits('tripoli','e2e_oasis'),dry:!FB.waterCrossing('tripoli','e2e_oasis'),
+      baseline:FB.bookmark('e2e_revision','baseline').provinces.length,
+      deterministic:rng === (FB.getRngState() >>> 0) && uid === FB.getUidCounter(),save:source};
+  });
+  expect(created).toMatchObject({revision:'survey',geography:'e2e_survey',route:4,dry:true,baseline:498,deterministic:true});
   await restoreBookmark(page,created.save);
   expect(await page.evaluate(function () { return FB.state.start.revision; })).toBe('survey');
 });
@@ -198,11 +217,16 @@ test('dry corridors charge matching household and host time without water capaci
     const army = {realm:'garama_local_476',men:100};
     const host = FB.armyLegQuote(s,army,'garama','tripoli');
     const ordinary = FB.armyLegQuote(s,army,'sirte','tripoli');
-    return {units:units,next:FB.travelNextLegDays(t),weighted:FB.travelRouteUnits('garama',route) >= 7,
+    const weighted = FB.travelRouteUnits('garama',route);
+    // Least-time routing may choose a cheaper chain of ordinary neighbors.
+    // The explicitly reviewed corridor still costs its full seven units.
+    return {units:units,next:FB.travelNextLegDays(t),
+      weighted:!!route && route[route.length - 1] === 'tripoli' && weighted > 0 && weighted <= units,
+      direct:FB.travelRouteUnits('garama',['tripoli']),
       supplies:long > base,dry:!FB.waterCrossing('garama','tripoli'),
       host:!host.water && host.totalDays > ordinary.totalDays,
       pure:rng === FB.getRngState() && uid === FB.getUidCounter()};
-  })).toEqual({units:7,next:21,weighted:true,supplies:true,dry:true,host:true,pure:true});
+  })).toEqual({units:7,next:21,weighted:true,direct:7,supplies:true,dry:true,host:true,pure:true});
 });
 
 test('invalid geography extensions fail without mutating registries or random state',async function ({page},testInfo) {
@@ -466,12 +490,26 @@ test('revision-only counties, titles, starts and story parties participate in ca
     const curialis = FBDATA.startScenarios.find(function (s) { return s.id === 'curialis_476'; });
     const disabledStart = FB.validateBookmark(disabled).length === 0 &&
       !FB.startProvinceAllowed(curialis,disabledBookmark,'ravenna');
+    const disabledImport = FB.mods.validate({bookmarks:{'476':disabled},startScenarios:[curialis]});
+    const invalidTrack = JSON.parse(JSON.stringify(curialis));
+    invalidTrack.trackLocations.curialis_track_476 = ['missing_district'];
+    const invalidDisabledImport = FB.mods.validate({bookmarks:{'476':disabled},startScenarios:[invalidTrack]});
+    const restricted = JSON.parse(JSON.stringify(disabled));
+    restricted.revisions.wider_v2.startLocations.curialis_476 = ['paris'];
+    const excludedTrack = FB.validateBookmark(restricted).some(function (error) {
+      return error.indexOf('curialis_track_476') >= 0 && error.indexOf('ravenna') >= 0;
+    });
     return {titles:titles,counties:counties,badCounty:badCounty,agreement:agreement,badAgreement:badAgreement,
       technology:technology,invalidStarts:invalidStarts,disabledStart:disabledStart,
+      disabledImport:disabledImport,excludedTrack:excludedTrack,
+      invalidDisabledImport:invalidDisabledImport.some(function (error) {
+        return /missing_district/.test(error);
+      }),
       pure:before === JSON.stringify(FBDATA.bookmarks) && rng === FB.getRngState() && uid === FB.getUidCounter()};
   });
   expect(result).toEqual({titles:true,counties:true,badCounty:true,agreement:true,badAgreement:true,
-    technology:true,invalidStarts:[true,true,true,true,true],disabledStart:true,pure:true});
+      technology:true,invalidStarts:[true,true,true,true,true],disabledStart:true,
+      disabledImport:[],excludedTrack:true,invalidDisabledImport:true,pure:true});
 });
 
 test('parentless wider cultures satisfy the 476 appearance requirements',async function ({page},testInfo) {
@@ -583,7 +621,7 @@ test('open federate and curialis roles begin where their institutions live and a
     await page.getByRole('button',{name:'Begin',exact:true}).click();
     expect(await page.evaluate(function () {
       const s = FB.state;
-      return {province:s.player.provinceId,scenario:s.start.scenarioId,
+      return {province:s.player.provinceId,scenario:s.telemetry.scenario,
         western:!!s.stories.western_court_476,track:!!s.stories.federate_track_476};
     })).toEqual({province:rules.away,scenario:'federate_476',western:true,track:false});
   });

@@ -92,6 +92,7 @@ test('476 resolves its period county names and heads from the date without mutat
   async function ({ page }, testInfo) {
     test.setTimeout(120 * 1000);
     await openGame(page, testInfo);
+    const original = await page.evaluate(function () { return JSON.stringify(FBDATA.bookmarks['476']); });
     expect(await activate(page, '476')).toBe(null);
     const late = await page.evaluate(function () {
       const raw = FB.bookmark('476').provinces.filter(function (p) {
@@ -122,7 +123,8 @@ test('476 resolves its period county names and heads from the date without mutat
       ['salona_476', 'Salona', 'city', true]
     ]);
     expect(late.explicit).toBe('paris_476');
-    expect(late.raw).toEqual([['barcelona', 'Barcelona', true], ['split', 'Split', true]]);
+    expect(late.raw).toEqual([['barcelona', 'Barcino', true], ['split', 'Salona', true]]);
+    expect(await page.evaluate(function () { return JSON.stringify(FBDATA.bookmarks['476']); })).toBe(original);
     expect(late.geography).toBe('europe_regional_2');
 
     for (const id of ['867', '1066']) {
@@ -144,13 +146,15 @@ test('site names and province names follow a bookmark start year and culture',
     await page.evaluate(function () {
       const names = FBDATA.geographies.europe_regional.names;
       window.__savedNames = { roma:names.provinces.roma, ostia:names.sites.ostia };
+      window.__savedNames.revision = FBDATA.bookmarks['476'].revision;
       names.provinces.roma = [{ to:600, name:'Urbs' },
         { to:600, name:'Urbs Roma', culture:'roman' }];
       names.sites.ostia = [{ to:600, name:'Ostia Antica' }];
-      FBDATA.bookmarks.geo_names = Object.assign({}, FB.bookmark('476','baseline'), { id:'geo_names',revision:'baseline' });
+      // Retain the registered bookmark identity and its dated start contracts.
+      FBDATA.bookmarks['476'].revision = 'baseline';
     });
     try {
-      expect(await activate(page, 'geo_names')).toBe(null);
+      expect(await activate(page, '476')).toBe(null);
       const result = await page.evaluate(function () {
         return {
           roma:FB.world.byId.roma.name,
@@ -170,7 +174,8 @@ test('site names and province names follow a bookmark start year and culture',
         else delete names.provinces.roma;
         if (window.__savedNames.ostia) names.sites.ostia = window.__savedNames.ostia;
         else delete names.sites.ostia;
-        delete FBDATA.bookmarks.geo_names;
+        FBDATA.bookmarks['476'].revision = window.__savedNames.revision;
+        delete window.__savedNames;
       });
     }
   });
@@ -290,7 +295,7 @@ test('concurrent activations of one bookmark keep different saved bases separate
     test.setTimeout(180 * 1000);
     await openGame(page, testInfo);
     const result = await page.evaluate(async function () {
-      const bm = FB.bookmark('867'), baseId = FB.bookmarkGeography(bm);
+      const bm = FB.bookmark('867','baseline'), baseId = FB.bookmarkGeography(bm);
       const base = FBDATA.geographies[baseId];
       FBDATA.geographies.e2e_queued_base = Object.assign({}, base, { gridWidth:900 });
       FBDATA.bookmarks.e2e_queued = Object.assign({}, bm, { id:'e2e_queued', revision:'baseline',
@@ -359,7 +364,7 @@ test('legacy geometry mods replace the default geography and new bases validate'
     expect(result.rejected).toContain('must join two different known basins');
     expect(result.accepted).toBe(true);
     expect(result.faults).toEqual([]);
-    expect(result.unknownBookmark).toContain('unknown geography nowhere');
+    expect(result.unknownBookmark).toContain('Unknown geography nowhere');
     expect(result.badHook).toContain('names unknown province atlantis');
     expect(result.badName).toContain('province roma has an invalid dated name at index 0');
     expect(result.badLayout).toContain('unknown settlement layout missing_layout');

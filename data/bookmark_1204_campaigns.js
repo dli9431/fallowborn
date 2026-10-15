@@ -524,4 +524,5 @@ FBDATA.bookmarkContent['1204'].campaigns = {
   }
 };
 Object.assign(FBDATA.storyCampaigns, FBDATA.bookmarkContent['1204'].campaigns);
-FBDATA.bookmarkCandidates['1204'].stories = Object.keys(FBDATA.bookmarkContent['1204'].campaigns);
+FBDATA.bookmarkCandidates['1204'].stories = FBDATA.bookmarkCandidates['1204'].stories.concat(
+  Object.keys(FBDATA.bookmarkContent['1204'].campaigns));

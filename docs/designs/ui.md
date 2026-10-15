@@ -1,4 +1,10 @@
+Court cultivation preview
+
+Cultivate the court names the actual Standing recipient and displays its fixed seasonal prestige and Standing rewards alongside Diplomacy training. The amounts come from the declared focus routine. Previewing the focus uses a non-creating role lookup and cannot create a patron, spend RNG or repair inventory.
+
 Estate and freedom review
+
+CrazyGames land coachmarks distinguish opening the land market from purchasing a plot. Ready guidance requires current funds and an available local settlement; an enabled market button alone never implies affordability. Governing-identity review returns retain the mounted selectors and their originating focus. Ecclesiastical incumbent sheets use the shared modal history so Back and Escape restore the institution list, scroll and disclosures.
 
 The colonus opening exposes Review estate & freedom in both Deeds layouts. Station & home names the living estate possessor separately from the county controller, lists saved rights and dues and explains that cultivation grants no owned land. Shared action cards open separate military consent, ordination consent and flight reviews. Requirements, family coverage, costs, risks and blockers remain visible, with expanded Details for consequences. Reviews use the ordinary portrait rows, modal history and full-width controls. Back and Escape restore the originating route control; stale confirmation changes no state and replaces the review with current blockers. Lawful outcome Continue returns to Station & home. Flight closes the review and queues an ordinary event. Medieval tenure sheets and their action remain unchanged. Beginner, land and CrazyGames tips point to the estate deed while that legal form is active.
 
@@ -3858,3 +3864,9 @@ The Religious communities deed selects a managed household participant, then sho
 District religious activity review
 
 Local activity Details and confirmation use the existing fact rows to show actual destination, permitted districts and required worship protection alongside payer, cost, time, completion benefit and interruption. Disabled reviews retain the same scope disclosure. Back and Escape retain the household participant, disclosure state, list/body scroll and originating action focus. Activity names use structured data and all new row labels use localization. See religious-activities.md.
+
+Local kingship and elective crown reviews retain shared action-card disclosure ids and their aria-expanded state when returning from confirmation. Candidate and obligation selectors, body scroll and action focus remain attached to that same review. Political rank and relationship words in construction blockers, peace decisions and council explanations use lexicon placeholders inside localized strings.
+
+Marriage finder realm detail reads
+
+A finder redraw shares the county count, capital and current/maximum host availability across candidates from the same realm. The cache lives only for that redraw, so filter changes and reopened views read current facts. Court and character return tests use the modal Back control, preserving filter disclosure, scroll and focused action. Close continues to exit the modal stack.

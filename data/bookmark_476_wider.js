@@ -302,6 +302,8 @@
   ['dvin','axum','dongola','balkh','samarkand','sanaa','medina','qatif','merv','tara'].forEach(function (id) {
     var p = additions[id];
     p.communities.forEach(function (community,index) {
+      // Population evidence alone does not establish an accepted Buddhist house.
+      if (community.religion === 'buddhist_476') return;
       region.institutions[id + '_community_' + index + '_476'] = {city:p.name,kind:'congregation',
         provinceId:id,site:id + '_wider_476',culture:community.culture,religion:community.religion,
         representative:{role:'priest'}};

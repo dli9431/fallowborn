@@ -65,11 +65,12 @@ test('1204 is offered in the picker and ordinary start codes reach character cre
     return { registered:FBDATA.bookmarks['1204'] === FBDATA.bookmarkCandidates['1204'], offered:FB.bookmarks().map(function (b) { return b.id; }),
       faults:FB.validateBookmark(b), diagnostics:FB.communityShareDiagnostics(b),
       date:b.date, era:b.era, geography:b.geography, scripted:b.scripted,
-      stories:b.stories.length, storiesRegistered:b.stories.every(function (id) { return !!FB.stories.get(id); }) };
+      stories:b.stories.length, civicStory:b.stories.indexOf('venetian_offices_1204') >= 0,
+      storiesRegistered:b.stories.every(function (id) { return !!FB.stories.get(id); }) };
   });
   expect(state).toMatchObject({ registered:true, faults:[], diagnostics:[],
     date:{ year:1204, season:0, day:76 }, era:'high_medieval', geography:'europe_regional_2',
-    scripted:[], stories:16, storiesRegistered:true });
+    scripted:[], stories:16, civicStory:true, storiesRegistered:true });
   expect(state.offered).toContain('1204');
   const fullStart = page.locator('#btn-choose-beginning');
   if (await fullStart.isVisible()) await fullStart.click();

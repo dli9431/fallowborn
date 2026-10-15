@@ -1,5 +1,42 @@
 {
   "version": 1,
   "about": "Engine lines outside js/station.js allowed to compare a .tier or .rank member with a number. Matched by file and trimmed source line. Kinds: save keeps an old save readable; validation checks authored or mod data against the fixed tier and rank scales. Every other check asks a named FB.station or FB.realmRank query.",
-  "entries": []
+  "entries": [
+    {
+      "file": "js/ambitions.js",
+      "source": "if ([5,6].indexOf(d.tier) < 0 || !Object.prototype.hasOwnProperty.call(titles[d.tier === 5 ? 'duchies' : 'kingdoms'], d.region)) errors.push(path + '.region needs a title of the declared tier.');",
+      "kind": "validation",
+      "reason": "Checks authored ambition tiers against their matching regional title catalog."
+    },
+    {
+      "file": "js/bookmark_setup.js",
+      "source": "!Number.isInteger(p.station) || p.station < 0 || p.station > 7 || !counties[p.home] ||",
+      "kind": "validation",
+      "reason": "Validates authored person station bounds before creation."
+    },
+    {
+      "file": "js/story_courts.js",
+      "source": "Number.isInteger(c.age) && c.age >= 0 && Number.isInteger(c.station) && c.station >= 0;",
+      "kind": "validation",
+      "reason": "Validates the minimum numeric station in an authored court profile."
+    },
+    {
+      "file": "js/story_history.js",
+      "source": "!Number.isInteger(g.rank) || g.rank < 1 || g.rank > 4 ||",
+      "kind": "validation",
+      "reason": "Validates story grant ranks against the saved title rank scale."
+    },
+    {
+      "file": "js/story_settlements.js",
+      "source": "!id(row.grant.titleId) || !integer(row.grant.rank) || row.grant.rank < 1 || row.grant.rank > 4 ||",
+      "kind": "validation",
+      "reason": "Validates settlement grant ranks before applying the story."
+    },
+    {
+      "file": "js/world.js",
+      "source": "if (profile.station !== undefined && (!Number.isInteger(profile.station) || profile.station < 0 || profile.station > 7)) fault('invalid representative station.');",
+      "kind": "validation",
+      "reason": "Validates modded representative station bounds before activation."
+    }
+  ]
 }

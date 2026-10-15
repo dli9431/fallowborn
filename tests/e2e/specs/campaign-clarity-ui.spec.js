@@ -63,10 +63,13 @@ test('court cultivation explains fixed rewards and names its Standing recipient'
     me.skills.dip = 10;
     const low = FB.focusDescription(s, f), lowGain = f.gain(s);
     me.skills.dip = 50;
+    const before = JSON.stringify(s), rng = FB.getRngState(), uid = FB.getUidCounter();
     const high = FB.focusDescription(s, f), highGain = f.gain(s);
-    return { low:low, high:high, lowGain:lowGain, highGain:highGain, recipient:s.realms[ids.liege].name };
+    return { low:low, high:high, lowGain:lowGain, highGain:highGain, recipient:s.realms[ids.liege].name,
+      pure:before === JSON.stringify(s) && rng === FB.getRngState() && uid === FB.getUidCounter() };
   }, ids);
   expect(r.low).toBe(r.high);
+  expect(r.pure).toBe(true);
   expect(r.high).toContain(r.recipient);
   expect(r.high).toContain('+2 prestige');
   expect(r.high).toContain('+4 Standing');

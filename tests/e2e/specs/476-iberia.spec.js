@@ -225,18 +225,18 @@ for (const opening of [
       // This is a schema regression, not an owner-supplied historical save corpus.
       await page.evaluate(function (input) {
         const before = input.before;
-        const bm = FBDATA.bookmarks['476'];
-        window.iberiaCurrentDefinition = JSON.parse(JSON.stringify(bm));
+        window.iberiaCurrentDefinition = FBDATA.bookmarks['476'];
         window.iberiaCurrentStarts = FBDATA.startScenarios;
+        // Override the retained world, not root fields hidden by wider_v2.
+        const bm = JSON.parse(JSON.stringify(FB.bookmark('476','baseline')));
+        FBDATA.bookmarks['476'] = bm;
         bm.openingRevision = input.opening.revision;
         bm.opening = bm.openingRevisions[bm.openingRevision];
         // Earlier revisions predate the Sasanian households, so use the original court declaration
         // and set aside the Peroz start that needs the aristocratic form.
         FBDATA.startScenarios = FBDATA.startScenarios.filter(function (sc) { return sc.rulerRealmId !== 'sasanian_476'; });
-        Object.values(bm.revisions).forEach(function (revision) {
-          revision.starts = revision.starts.filter(function (id) {
-            return FBDATA.startScenarios.some(function (sc) { return sc.id === id; });
-          });
+        bm.starts = bm.starts.filter(function (id) {
+          return FBDATA.startScenarios.some(function (sc) { return sc.id === id; });
         });
         bm.realms = bm.realms.map(function (r) {
           return r.id === 'sasanian_476' ? FBDATA.bookmarkRegions476.outer.realms.find(function (o) { return o.id === r.id; }) : r;
@@ -250,6 +250,7 @@ for (const opening of [
         before.institutionIdsToOmit.forEach(function (id) { delete bm.localInstitutions[id]; });
         FB.startProgression.noteTier(3);
       },{ before:previous, opening:opening });
+      expect(await page.evaluate(function () { return FB.validateBookmark(FB.bookmark('476')); })).toEqual([]);
       const full = page.locator('#btn-choose-beginning');
       if (await full.isVisible()) await full.click();
       else await page.getByRole('button',{ name:'New Game',exact:true }).click();
@@ -260,6 +261,11 @@ for (const opening of [
       await page.getByRole('button',{ name:'Begin Your Story',exact:true }).click();
       await page.getByRole('button',{ name:'Begin',exact:true }).click();
       await expect(page.locator('#genmodal')).toHaveClass(/hidden/);
+      expect(await page.evaluate(function (omitted) {
+        const s = FB.state;
+        return {world:s.start.revision,opening:s.bookmarkSetup.revision,owner:s.owner.alava,
+          absent:omitted.every(function (id) { return !s.realms[id]; })};
+      },previous.realmIdsToOmit)).toEqual({world:'baseline',opening:opening.revision,owner:'aquitaine',absent:true});
       const result = await page.evaluate(function (input) {
         const before = input.before;
         FB.game.setPaused(true);
@@ -343,7 +349,9 @@ for (const id of ['867','1066']) {
           resolve({ same:before === JSON.stringify(FB.bookmark(id)),
             events:FBDATA.events.filter(function (ev) { return ev.pack === 'iberia_full_476' && FB.eventPeriodEnabled(FB.state,ev); }).length,
             rails:FBDATA.bookmarkRegions476.gaul_iberia.storyIds.some(function (story) { return !!(FB.state.stories && FB.state.stories[story]); }),
-            institutions:FB.localInstitutionList(FB.state).length });
+            institutions:FB.localInstitutionList(FB.state).filter(function (item) {
+              return Object.prototype.hasOwnProperty.call(FBDATA.bookmarkRegions476.gaul_iberia.institutions,item.id);
+            }).length });
         });
       });
     },id);

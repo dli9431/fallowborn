@@ -92,7 +92,7 @@ for (const fictional of [false, true]) {
         influence:r.members.map(function (m) { return m.weight; }), fee:p.selection.nominationCost,
         service:p.eligibility.minServiceYears, term:p.selection.termDays, levy:levy, maxLevy:p.obligations.maxLevy,
         income:income, maxDues:p.obligations.maxDues,
-        original:FB.bookmark('476').provinces.find(function (q) { return q.id === 'tallinn'; }).wasteland,
+        original:FB.bookmark('476', 'baseline').provinces.find(function (q) { return q.id === 'tallinn'; }).wasteland,
         visible:FB.instantStatus(s, 'community_assembly').shown };
     }, rid);
     expect(result).toMatchObject({ errors:[], technology:[], review:'none', pure:true, noGrant:true,
@@ -222,13 +222,33 @@ test('collective refusal, bounded dues and public payments share the reviewed tr
   expect(result.duesGain).toBeLessThanOrEqual(3);
 });
 
+async function provisionPartner(page, rid) {
+  return page.evaluate(function (rid) {
+    const s = FB.state, C = FB.governments.support;
+    const partner = Object.keys(s.realms).find(function (id) {
+      const form = FB.governments.forRealm(s,id);
+      return id !== rid && form && form.id === 'regnum' && FB.treasuryCounterparty(s,id) &&
+        !FB.isRealmAtWar(s,id) && FB.recruitmentTerritory(s,id).rally;
+    });
+    if (!partner) throw new Error('A settled independent partner is required');
+    // Stage spare field troops explicitly; historical garrisons may consume
+    // the opening levy before a support agreement can be offered.
+    FB.recruitmentTerritory(s,partner).eligible.forEach(function (pid) {
+      s.dev[pid] = 10; FB.setCountySupport(s,pid,100);
+    });
+    C.row(s,rid).scopes.forEach(function (pid) { s.dev[pid] = 6; FB.setCountySupport(s,pid,100); });
+    s.realms[partner].treasury.gold = 1000;
+    if (FB.aiBaseHost(s,partner) <= 100 || FB.aiBaseHost(s,rid) <= 1)
+      throw new Error('The support fixture needs spare troops on both sides');
+    return partner;
+  },rid);
+}
+
 test('service conserves troops and external authority has one declared power and duration', async function ({ page }, testInfo) {
   const rid = await start(page, testInfo);
-  const result = await page.evaluate(function (rid) {
+  const partner = await provisionPartner(page,rid);
+  const result = await page.evaluate(function ({rid,partner}) {
     const s = FB.state, C = FB.governments.support, r = C.row(s, rid), pid = r.scopes[0];
-    s.dev[pid] = 6;
-    const partner = Object.keys(s.realms).find(function (id) { return id !== rid && !C.isDelegated(s, id) && FB.treasuryCounterparty(s, id) && FB.aiBaseHost(s, id) > 100; });
-    s.realms[partner].treasury.gold = 1000;
     const ownBefore = FB.aiBaseHost(s, rid), otherBefore = FB.aiBaseHost(s, partner);
     const levy = Math.max(1, Math.floor(ownBefore / 2));
     const service = C.agree(s, C.agreementQuote(s, rid, { kind:'service', externalRealmId:partner, amount:0, duration:90, levy:levy }));
@@ -246,16 +266,15 @@ test('service conserves troops and external authority has one declared power and
     return { service:service, authority:authority, conserved:Math.abs((ownBefore - ownAfter) - (otherAfter - otherBefore)) <= 1,
       reduced:ownAfter < ownBefore, command:command, noRevenue:noRevenue, partnerRefusal:partnerRefusal,
       expired:!FB.political.power(s, actor, 'ban', { provinceId:pid }).allowed && FB.aiBaseHost(s, rid) === ownBefore };
-  }, rid);
+  }, {rid:rid,partner:partner});
   expect(result).toEqual({ service:true, authority:true, conserved:true, reduced:true, command:true, noRevenue:true, partnerRefusal:true, expired:true });
 });
 
 test('protection and occupied autonomy preserve the community and conserve support', async function ({ page }, testInfo) {
   const rid = await start(page, testInfo);
-  const result = await page.evaluate(function (rid) {
+  const partner = await provisionPartner(page,rid);
+  const result = await page.evaluate(function ({rid,partner}) {
     const s = FB.state, C = FB.governments.support, r = C.row(s, rid), pid = r.scopes[0];
-    const partner = Object.keys(s.realms).find(function (id) { return id !== rid && !C.isDelegated(s, id) &&
-      FB.treasuryCounterparty(s, id) && !FB.isRealmAtWar(s, id) && FB.aiBaseHost(s, id) > 100; });
     const enemy = Object.keys(s.realms).find(function (id) { return id !== rid && id !== partner &&
       s.realms[id].alive && !C.isDelegated(s, id); });
     s.realms[partner].treasury.gold = 1000;
@@ -270,7 +289,7 @@ test('protection and occupied autonomy preserve the community and conserve suppo
     return { autonomy:autonomy, localControl:s.owner[pid] === rid && s.holder[pid] === rid,
       mandate:r.mandate.id === mandate, wallet:s.player.gold === wallet, war:!!war,
       gain:gain, loss:loss, obligations:obligations, valid:C.validate(s) };
-  }, rid);
+  }, {rid:rid,partner:partner});
   expect(result).toMatchObject({ autonomy:true, localControl:true, mandate:true, wallet:true,
     war:true, obligations:'existing_obligations', valid:true });
   expect(result.gain).toBeGreaterThan(0);

@@ -876,7 +876,7 @@ window.FB = window.FB || {};
 
   FB.friendshipStandingThreshold = function (state, c) {
     const ordinary = FB.relationshipOpinionThreshold();
-    return c && FB.playerStation(state) === 0 &&
+    return c && FB.socialStation.isLowborn(FB.playerStation(state), state) &&
       FB.realmIdForRulerCharacter(state, c)
       ? Math.max(ordinary, FBDATA.balance.serfRulerFriendshipThreshold || 80)
       : ordinary;
@@ -1653,7 +1653,7 @@ window.FB = window.FB || {};
   }
 
   function eventLowbornCharacter(state, c) {
-    return !!(c && !c.dead && FB.stationOf(c) < 2 &&
+    return !!(c && !c.dead && !FB.socialStation.isGentle(c, state) &&
       !FB.realmIdForRulerCharacter(state, c));
   }
 
@@ -11404,7 +11404,7 @@ window.FB = window.FB || {};
           : FB.T('End the demanded war in white peace');
         if (record.action === 'peace_demand_refused') return record.resolved
           ? FB.T('Peace demand refused; this war continues')
-          : FB.T('Continue this war; the liege may enforce the peace');
+          : FB.T('Continue this war; the {term:liege} may enforce the peace');
         return record.action === 'ended' ? FB.T('The current war ends')
           : FB.T('Campaign or host conditions change');
       }

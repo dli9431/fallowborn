@@ -1223,6 +1223,8 @@ FBDATA.aristocraticProfiles['sasanian_493'] = {
   ['baghdad','dvin','axum','sanaa','medina','balkh','samarkand','tara'].forEach(function (id) {
     var p = additions[id];
     p.communities.forEach(function (community,index) {
+      // Population evidence alone does not establish an accepted Buddhist house.
+      if (community.religion === 'buddhist_476') return;
       institutions[id + '_community_' + index + '_493'] = {city:p.name,kind:'congregation',
         provinceId:id,site:layout[id][0].site,culture:community.culture,
         religion:community.religion,representative:{role:'priest'}};

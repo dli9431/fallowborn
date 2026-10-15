@@ -4,7 +4,7 @@
 window.FBDATA = window.FBDATA || {};
 FBDATA.events = FBDATA.events || [];
 FBDATA.events.push(
-{ id:'colonus_crop_due', systems:['colonate'], title:'The Estate’s Crop Share',
+{ id:'colonus_crop_due', pack:'peasant', systems:['colonate'], title:'The Estate’s Crop Share',
   trigger:{ never:true }, contextValidator:'colonus_duty_valid',
   participants:[{ slot:'possessor', source:'context', required:true, sameHome:true }],
   text:'The estate account names the share due from your household. {possessor} expects grain or its value. Cultivating these fields has given your family use of the land, not ownership.',
@@ -13,7 +13,7 @@ FBDATA.events.push(
     { label:'Pay its value.', desc:'Pay {money:3} instead of delivering the crop share.', require:{ goldMin:3 }, effects:{ gold:-3, standingCharacter:{ participant:'possessor', amt:3 } } },
     { label:'Withhold the share.', desc:'Keep today’s harvest and lose the possessor’s goodwill. The tenancy continues.', effects:{ prestige:-3, standingCharacter:{ participant:'possessor', amt:-12 } } }
   ] },
-{ id:'colonus_accounts_due', systems:['colonate'], title:'The Registered Estate Account',
+{ id:'colonus_accounts_due', pack:'peasant', systems:['colonate'], title:'The Registered Estate Account',
   trigger:{ never:true }, contextValidator:'colonus_duty_valid',
   participants:[{ slot:'possessor', source:'context', required:true, sameHome:true }],
   text:'{possessor} checks the household’s cultivation account and rent. A new court has not erased your registered attachment to these fields.',
@@ -22,7 +22,7 @@ FBDATA.events.push(
     { label:'Work off the due.', desc:'Extra estate work settles today’s account.', effects:{ health:-1, standingCharacter:{ participant:'possessor', amt:2 } } },
     { label:'Dispute the account.', desc:'Refuse today’s demand; the possessor’s consent becomes harder to obtain.', effects:{ prestige:-2, standingCharacter:{ participant:'possessor', amt:-8 } } }
   ] },
-{ id:'colonus_flight', systems:['colonate'], title:'Beyond the Estate Register',
+{ id:'colonus_flight', pack:'peasant', systems:['colonate'], title:'Beyond the Estate Register',
   trigger:{ never:true }, contextValidator:'colonus_flight_valid',
   participants:[{ slot:'possessor', source:'context', required:true, sameHome:true }],
   text:'Leaving without consent risks pursuit and return to {possessor}’s estate. Reaching a town grants no automatic lawful freedom. Tonight your household can still try the road.',

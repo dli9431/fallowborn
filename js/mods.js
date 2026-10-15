@@ -704,7 +704,7 @@ window.FBMODS = window.FBMODS || [];
         return (bm.revision || 'baseline') === (raw.revision || 'baseline');
       });
     }
-    /* An existing-ruler start is checked in each world revision that offers
+    /* A fixed start is checked in each world revision that offers
        it: one that lists it, or, without a starts list, one holding its fixed
        birthplace. A start no revision offers keeps the fresh-world check. */
     function offeringBookmarks(id, scenario) {
@@ -773,8 +773,9 @@ window.FBMODS = window.FBMODS || [];
       }
       /* Ordinary starts choose a resident community. Existing rulers keep
          the court identity already checked above, even among other residents. */
-      for (const bookmarkId of scenario.bookmarkIds) {
-        const bookmark = freshBookmark(bookmarkId);
+      for (const bookmark of [].concat.apply([], scenario.bookmarkIds.map(function (bookmarkId) {
+        return offeringBookmarks(bookmarkId, scenario);
+      }))) {
         const provinces = bookmark.provinces || [];
         const county = provinces.filter(function (province) {
           return province && province.id === scenario.fixedProvinceId &&
@@ -784,7 +785,7 @@ window.FBMODS = window.FBMODS || [];
         if (!county || !(Array.isArray(locations) && !locations.length) &&
             !FB.startProvinceAllowed(scenario, bookmark, county.id)) {
           fail(path + '.fixedProvinceId', 'is not a settled county of bookmark ' +
-            bookmarkId + '.');
+            bookmark.id + '.');
         }
         const paired = !!scenario.rulerRealmId || FB.provinceCommunities(county).some(function (community) {
           return community.culture === scenario.startCulture &&
@@ -792,7 +793,7 @@ window.FBMODS = window.FBMODS || [];
         });
         if (!paired) {
           fail(path + '.startCulture', 'and startReligion must be a community of ' +
-            scenario.fixedProvinceId + ' in bookmark ' + bookmarkId + '.');
+            scenario.fixedProvinceId + ' in bookmark ' + bookmark.id + '.');
         }
       }
     }
@@ -843,8 +844,12 @@ window.FBMODS = window.FBMODS || [];
           for (const bookmarkId of (Array.isArray(scenario.bookmarkIds) ? scenario.bookmarkIds : [])) {
             if (!own(rules.bookmarks, bookmarkId)) continue;
             const bookmark = freshBookmark(bookmarkId);
+            const locations = bookmark && bookmark.startLocations && bookmark.startLocations[scenario.id];
             for (const provinceId of list) {
-              if (!bookmark || !FB.startProvinceAllowed(scenario, bookmark, provinceId)) {
+              const province = bookmark && Array.isArray(bookmark.provinces) &&
+                bookmark.provinces.find(function (p) { return p.id === provinceId; });
+              if (!province || province.wasteland ||
+                  (!(Array.isArray(locations) && !locations.length) && !FB.startProvinceAllowed(scenario, bookmark, provinceId))) {
                 fail(placePath, provinceId + ' is not an available beginning of bookmark ' + bookmarkId + '.');
               }
             }

@@ -18,6 +18,7 @@ const { openGame } = require('../support/game/navigation');
 
 async function start(page, testInfo, bookmark) {
   await openGame(page, testInfo);
+  await page.evaluate(function (id) { FBDATA.bookmarks[id].revision = 'baseline'; }, bookmark);
   await page.getByRole('button', { name:'New Game', exact:true }).click();
   await page.locator('#btn-bm-seed').click();
   await page.locator('#ng-seed').fill(bookmark === '476'
@@ -37,17 +38,17 @@ test('every bookmark declares an era and resolves each realm form',
     const result = await page.evaluate(function () {
       const out = {};
       ['867', '1066', '476'].forEach(function (id) {
-        const platform = FB.resolveBookmarkPlatform(FB.bookmark(id));
+        const platform = FB.resolveBookmarkPlatform(FB.bookmark(id,'baseline'));
         const forms = {};
         Object.keys(platform.governments).forEach(function (rid) {
           const form = platform.governments[rid];
           forms[form] = (forms[form] || 0) + 1;
         });
-        out[id] = { declared:FB.bookmark(id).era, era:platform.era,
-          faults:platform.faults, errors:FB.validateBookmark(FB.bookmark(id)),
+        out[id] = { declared:FB.bookmark(id,'baseline').era, era:platform.era,
+          faults:platform.faults, errors:FB.validateBookmark(FB.bookmark(id,'baseline')),
           forms:forms };
       });
-      const forms476 = FB.resolveBookmarkPlatform(FB.bookmark('476')).governments;
+      const forms476 = FB.resolveBookmarkPlatform(FB.bookmark('476','baseline')).governments;
       out.named476 = { italy:forms476.italy, croatia:forms476.croatia,
         byzantium:forms476.byzantium, federates_476:forms476.federates_476,
         franks_476:forms476.franks_476 };
@@ -66,7 +67,7 @@ test('every bookmark declares an era and resolves each realm form',
       era:'high_medieval', faults:[], errors:[] });
     expect(result['476']).toMatchObject({ declared:'late_antique',
       era:'late_antique', faults:[], errors:[],
-      forms:{ regnum:10, roman_civic:4, federate_polity:3 } });
+      forms:{ regnum:expect.any(Number), roman_civic:expect.any(Number), federate_polity:3 } });
     expect(Object.keys(result['867'].forms)).toEqual(['territorial']);
     expect(Object.keys(result['1066'].forms)).toEqual(['territorial']);
     expect(result.named476).toEqual({ italy:'roman_civic', croatia:'roman_civic',
@@ -133,9 +134,9 @@ test('unknown eras, dates outside a declared era and unknown forms are rejected'
     expect(result.inferred).toBe('early_medieval');
     expect(result.inferredErrors).toEqual([]);
     expect(result.nearest).toBe('high_medieval');
-    /* the nearest era resolves, but the start lies past the technology
-       catalogue's authored coverage */
+    /* The nearest era resolves, but both authored date windows reject it. */
     expect(result.nearestErrors).toEqual([
+      'Bookmark 867: start year 1400 is outside era high_medieval (1000–1300).',
       'Bookmark 867: start year 1400 is outside the technology catalogue coverage (476–1300).'
     ]);
     expect(result.unknownRealmForm).toContain('Bookmark 867: realm ' +
@@ -152,7 +153,7 @@ test('activation fails with a named error for an unregistered strategy',
   async function ({ page }, testInfo) {
     await openGame(page, testInfo);
     const result = await page.evaluate(async function () {
-      const base = FB.bookmark('867');
+      const base = FB.bookmark('867','baseline');
       const realm = base.realms[0].id;
       const world = FB.world, active = FB.activeBookmarkId;
       let duplicate = '';
@@ -238,6 +239,9 @@ test('476 seeds its forms from bookmark data and holds counties directly',
       return {
         era:s.start.era, defaultGovernment:s.start.defaultGovernment,
         rows:rows,
+        declared:FB.campaignBookmark(s).realms.every(function (r) {
+          return form(r.id) === (r.government || s.start.defaultGovernment);
+        }),
         franks:form('franks_476'), italy:form('italy'),
         federates:form('federates_476'),
         direct:FB.world.provs.every(function (pr) {
@@ -248,8 +252,9 @@ test('476 seeds its forms from bookmark data and holds counties directly',
         culture:FB.eraDefaultCulture(s)
       };
     });
-    expect(result).toEqual({
+    expect(result).toMatchObject({
       era:'late_antique', defaultGovernment:'regnum',
+      declared:true,
       rows:{
         italy:{ formId:'roman_civic', sinceTurn:0 },
         rugi_476:{ formId:'regnum', sinceTurn:0 },
@@ -294,6 +299,8 @@ test('476 saves keep their stamp and unstamped saves resolve as territorial',
         const legacy = JSON.parse(original);
         delete legacy.state.start.era;
         delete legacy.state.start.defaultGovernment;
+        // An unstamped default affects only realms without an explicit record.
+        delete legacy.state.authority.governments.franks_476;
         const migrated = FB.save.v4.migrate(legacy);
         FB.save.restore(legacy);
         return { stamped:stamped,

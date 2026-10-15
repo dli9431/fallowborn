@@ -50,7 +50,8 @@ test('superseded faiths retain descendants, offices and relations but are not fr
         });
       }
       replace(realms); replace(provinces);
-      FBDATA.bookmarks['867'].revisions = {baseline:{},renewed:{realms:realms,provinces:provinces}};
+      FBDATA.bookmarks['867'].revisions = Object.assign({},FBDATA.bookmarks['867'].revisions,
+        {renewed:{realms:realms,provinces:provinces}});
       result.retainedDefinition = !FB.validateBookmark(FB.bookmark('867','baseline')).some(function (e) {
         return e.indexOf('fresh revision names legacy faith') >= 0;
       });
@@ -79,6 +80,7 @@ test('legacy metadata is validated without changing live data or random state', 
 test('baseline government assignments and authoritative stamps survive legacy migration under a new revision',
   async function ({page}, testInfo) {
     await openGame(page, testInfo);
+    await page.evaluate(function () {FBDATA.bookmarks['867'].revision='baseline';});
     await startDeterministicGame(page);
     const source = await page.evaluate(function () {
       const data = JSON.parse(FB.save.serialize());
@@ -87,7 +89,7 @@ test('baseline government assignments and authoritative stamps survive legacy mi
       FB.governments.invalidate();
       const realms = JSON.parse(JSON.stringify(root.realms));
       realms.forEach(function (r) { r.government = 'e2e_new_court'; });
-      root.revision = 'renewed'; root.revisions = {baseline:{},renewed:{realms:realms}};
+      root.revision = 'renewed'; root.revisions = Object.assign({},root.revisions,{renewed:{realms:realms}});
       data.platformSchema = 1; delete data.state.start.revision;
       return JSON.stringify(data);
     });

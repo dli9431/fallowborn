@@ -95,9 +95,19 @@ test('Glass Road negotiates paid access and resolves its campaign through natura
     const s = FB.state, M = FB.mobile, rid = 'dune_coalition', id = M.row(s,rid).agreements[0].id;
     const total = FB.treasuryAvailable(s,rid) + FB.treasuryAvailable(s,'dune_oasis');
     const review = M.review(s,{realmId:rid,action:'accept',terms:{agreementId:id},actor:{kind:'realm',id:'dune_oasis'}});
-    return {accepted:!!M.commit(s,review),repeated:!!M.commit(s,review),
+    const chief = FB.civicGovernment.chief(s,'dune_oasis'), diplomacy = chief.skills.dip;
+    chief.skills.dip++;
+    const stale = !M.commit(s,review);
+    chief.skills.dip = diplomacy;
+    const support = FB.countySupportBase(s,'dune_well');
+    FB.setCountySupport(s,'dune_well',-100);
+    const denied = M.review(s,{realmId:rid,action:'accept',terms:{agreementId:id},actor:{kind:'realm',id:'dune_oasis'}});
+    const before = JSON.stringify(s), refused = !denied.review.allowed && !M.commit(s,denied) && before === JSON.stringify(s);
+    FB.setCountySupport(s,'dune_well',support);
+    const fresh = M.review(s,{realmId:rid,action:'accept',terms:{agreementId:id},actor:{kind:'realm',id:'dune_oasis'}});
+    return {stale:stale,refused:refused,accepted:!!M.commit(s,fresh),repeated:!!M.commit(s,fresh),
       conserved:total === FB.treasuryAvailable(s,rid) + FB.treasuryAvailable(s,'dune_oasis')};
-  })).toEqual({accepted:true,repeated:false,conserved:true});
+  })).toEqual({stale:true,refused:true,accepted:true,repeated:false,conserved:true});
   await advanceBookmark(page,1);
   const intermediate = await save(page);
   async function outcome() {

@@ -56,16 +56,23 @@ test('creation and ducal recognition use the subject government and proper place
     s.authority.governments[realm.id].formId = 'roman_civic';
     counties.forEach(function (pid) { s.owner[pid] = s.holder[pid] = realm.id; });
     FB.invalidateRealmCache();
+    const civicBlocked = FB.recognizeCompleteDuchy(s, realm.id, { silent:true }) === null;
+    // Ordinary ducal recognition belongs to the territorial ladder.
+    s.start.era = 'early_medieval';
+    s.authority.governments[realm.id].formId = 'territorial';
     const promoted = FB.recognizeCompleteDuchy(s, realm.id, { silent:true });
+    s.start.era = 'late_antique';
+    s.authority.governments[realm.id].formId = 'roman_civic';
     const before = realm.name;
     const snapshot = FB.realmRulerTitleSnapshot(s, realm, s.chars[s.player.charId]);
     // The player's terminology must not decide a foreign realm's name.
-    s.authority.governments[realm.id] = { formId:'regnum' };
+    s.authority.governments[realm.id].formId = 'regnum';
     const foreign = realm.name;
-    s.authority.governments[realm.id] = { formId:'roman_civic' };
-    return { promoted:promoted, did:did, before:before, foreign:foreign,
+    s.authority.governments[realm.id].formId = 'roman_civic';
+    return { civicBlocked:civicBlocked, promoted:promoted, did:did, before:before, foreign:foreign,
       place:place, snapshotPlace:snapshot.place, id:realm.titleId, kind:realm.titleKind };
   });
+  expect(result.civicBlocked).toBe(true);
   expect(result.promoted).toBe(result.did);
   expect(result.kind).toBe('duchy');
   expect(result.id).toBe(result.did);

@@ -85,6 +85,7 @@ test('a bookmark outside the catalogue coverage or its era window is rejected by
       'Bookmark 867: start year 400 is outside the technology catalogue coverage (476–1300).');
     expect(result.early.join('\n')).not.toContain('technology window');
     expect(result.late).toEqual([
+      'Bookmark 867: start year 1350 is outside era high_medieval (1000–1300).',
       'Bookmark 867: start year 1350 is outside the technology catalogue coverage (476–1300).'
     ]);
     expect(result.windowErrors).toContain(

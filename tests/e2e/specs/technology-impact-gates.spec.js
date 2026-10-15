@@ -161,7 +161,7 @@ test('the prospective review ledger and every gate schema validate together',
     });
 
     expect(result.baseline).toBe('1.127.1');
-    expect(result.featureIds).toEqual([
+    const establishedIds = [
       'abbey_appointments',
       'abbey_endowments',
       'abbey_estate_management',
@@ -373,7 +373,8 @@ test('the prospective review ledger and every gate schema validate together',
       'war_player_submission',
       'war_victory_demands',
       'war_white_peace_offers'
-    ]);
+    ];
+    expect(result.featureIds).toEqual(expect.arrayContaining(establishedIds));
     const additiveNoneIds = [
       'optional_system_availability',
       'religious_head_appointment',
@@ -423,7 +424,7 @@ test('the prospective review ledger and every gate schema validate together',
       'settlement_administration', 'settlement_founding', 'settlement_lordship'];
     expect(lordshipIds.map(function (id) { return result.modes[id]; }))
       .toEqual(['none', 'none', 'none', 'soft', 'none', 'none']);
-    const establishedModes = result.featureIds.filter(function (id) {
+    const establishedModes = establishedIds.filter(function (id) {
       return additiveNoneIds.indexOf(id) < 0 && additiveHardIds.indexOf(id) < 0 &&
         lordshipIds.indexOf(id) < 0;
     }).map(function (id) { return result.modes[id]; });

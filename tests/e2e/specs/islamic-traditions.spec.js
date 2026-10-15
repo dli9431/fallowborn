@@ -2,6 +2,7 @@
 const {test,expect} = require('../support/fixture');
 const {dependsOnRuntime} = require('../support/runtime-dependencies');
 const {openGame} = require('../support/game/navigation');
+const {openCrazyGame} = require('../support/game/crazygames-title');
 const {startHistoricalGame} = require('../support/game/historical-start');
 const {restoreBookmark} = require('../support/game/bookmark-acceptance');
 const {releasedCatalogue} = require('../support/released-catalogue');
@@ -289,7 +290,8 @@ for (const crazygames of [false,true]) {
       },selectedRevisions['800'])).toEqual({revision:true,admitted:true,affiliated:true,wrongSchool:true,pure:true,
         started:true,dates:[true,true,true],noVow:true,noOffice:true,unchanged:true});
       const saved = await page.evaluate(function () { return FB.save.serialize(); });
-      await openGame(page,info);
+      if (crazygames) await openCrazyGame(page,info);
+      else await openGame(page,info);
       await restoreBookmark(page,saved);
       expect(await page.evaluate(function () {
         const s = FB.state, c = s.chars[s.player.charId];
@@ -359,7 +361,8 @@ for (const crazygames of [false,true]) {
             Object.keys(selected).forEach(function (id) { FBDATA.bookmarks[id].revision = selected[id]; });
           },{once:true});
         },selectedRevisions);
-        await openGame(page,info);
+        if (crazygames) await openCrazyGame(page,info);
+        else await openGame(page,info);
         await restoreBookmark(page,saved);
         expect(await page.evaluate(retainedFacts)).toEqual(before);
         expect(await page.evaluate(function () {
@@ -495,7 +498,7 @@ test('two city-level circles validate in composed revisions without changing any
         activities:FB.religiousActivityCatalogFaults(FBDATA),technology:FB.validateTechnologyData(true),
         review:FBDATA.techImpactReviews.features.islamic_scholarly_learning.mode,
         pure:before === JSON.stringify(FBDATA) && rng === FB.getRngState() && uid === FB.getUidCounter()};
-    },circles)).toEqual({valid:true,revisions:2,selected:true,institutions:[],activities:[],
+    },circles)).toEqual({valid:true,revisions:3,selected:true,institutions:[],activities:[],
       technology:[],review:'none',pure:true});
   });
 

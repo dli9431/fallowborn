@@ -154,4 +154,6 @@ Existing-ruler scenario codes use the normal bookmark, scenario, county, sex, na
 
 Regional birthplace rules
 
+An explicitly empty startLocations list also disables a start's place-bound tracks. Bookmark and runtime JSON validation still require those track counties to exist and be inhabited, but do not require a disabled start to be playable there. Nonempty location lists retain the ordinary track birthplace checks.
+
 An effective bookmark revision may declare startLocations, mapping scenario ids to eligible inhabited county ids. Missing entries add no location constraint; an empty list disables that beginning. FB.startProvinceAllowed intersects the declared locations with fixed birthplaces and required systems under the county's opening faith and government. Offering, seed parsing, random selection, map picks and final creation use this shared gate before creating a household. A rejected code or final birthplace consumes no campaign RNG or uid. This policy does not change restored households or restrict later movement. The wider 476 Colonus scenario uses a positive estate-region list rather than admitting every inhabited county.

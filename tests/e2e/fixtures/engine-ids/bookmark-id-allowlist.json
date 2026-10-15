@@ -34,7 +34,7 @@
     },
     {
       "file": "js/mods.js",
-      "source": "return id !== '1066' || !legacyBookmarkLimited;",
+      "source": "return !modFailure && (id !== '1066' || !legacyBookmarkLimited);",
       "kind": "legacy_contract",
       "reason": "Legacy mods that predate 1066 support limit that bookmark."
     },

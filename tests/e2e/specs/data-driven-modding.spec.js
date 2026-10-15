@@ -2,6 +2,7 @@
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
   'data/story_instances.js',
+  'data/story_campaigns_711.js',
   'data/story_courts_476.js',
   'data/map_data.js',
   'data/starts.js',
@@ -31,6 +32,7 @@ dependsOnRuntime(__filename, [
   'js/stories.js',
   'js/story_courts.js',
   'js/story_track.js',
+  'js/story_polity_foundation.js',
   'js/ui_misc.js',
   'js/ui_panels.js',
   'js/ui_modals.js',
@@ -42,10 +44,28 @@ const { test, expect } = require('../support/fixture');
 const { openGame } = require('../support/game/navigation');
 const { startDeterministicGame } = require('../support/game/start');
 
+async function expectBaselineRest(page) {
+  const result = await page.evaluate(function () {
+    const s = FB.state, c = s.chars[s.player.charId], health = c.health;
+    const before = JSON.stringify(s), rng = FB.getRngState(), uid = FB.getUidCounter();
+    c.health = 5;
+    FB.focuses.find(function (focus) { return focus.id === 'rest'; }).tick(s);
+    const after = c.health;
+    c.health = health;
+    return { health:after, unchanged:before === JSON.stringify(s),
+      identity:rng === FB.getRngState() && uid === FB.getUidCounter() };
+  });
+  expect(result).toEqual({ health:5.014, unchanged:true, identity:true });
+}
+
 test('milestone-zero registries merge through mods and drive their engine consumers',
   async function ({ page }, testInfo) {
     await openGame(page, testInfo);
-    await page.evaluate(function () {
+    const authoredFoundations = await page.evaluate(function () {
+      function foundations() {
+        return Object.values(FBDATA.storyInstances).filter(function (def) { return def.type === 'polity_foundation'; });
+      }
+      const before = JSON.stringify(foundations());
       FB.mods.apply({
         traits:{
           e2e_tempered:{
@@ -100,7 +120,10 @@ test('milestone-zero registries merge through mods and drive their engine consum
           }
         }
       });
+      return { count:foundations().length, unchanged:before === JSON.stringify(foundations()) };
     });
+    expect(authoredFoundations.count).toBeGreaterThan(0);
+    expect(authoredFoundations.unchanged).toBe(true);
     await startDeterministicGame(page);
 
     const result = await page.evaluate(function () {
@@ -272,8 +295,14 @@ test('milestone-zero mod validation rejects unknown data before mutation',
         intrigue:FBDATA.intrigue,
         raidingTraditions:FBDATA.raidingTraditions,
         itemPools:FBDATA.itemPools,
-        rulerTraits:FBDATA.rulerTraits
+        rulerTraits:FBDATA.rulerTraits,
+        storyInstances:FBDATA.storyInstances
       });
+      const invalidFoundation = JSON.parse(JSON.stringify(Object.values(FBDATA.storyInstances)
+        .find(function (def) { return def.type === 'polity_foundation'; })));
+      invalidFoundation.realm.ruler.trait = 'missing_founder_trait';
+      const foundationPatch = {};
+      foundationPatch[invalidFoundation.id] = invalidFoundation;
       const cases = [
         { data:{ mysteryRegistry:{} }, includes:'not a supported top-level' },
         { data:{ intrigue:{ methodProfiles:{
@@ -289,7 +318,8 @@ test('milestone-zero mod validation rejects unknown data before mutation',
           includes:'references unknown id missing_trait' },
         { data:{ plots:{ broken_profile:{
           methods:[{ id:'bad', profile:'missing_profile' }]
-        } } }, includes:'unknown intrigue profile missing_profile' }
+        } } }, includes:'unknown intrigue profile missing_profile' },
+        { data:{ storyInstances:foundationPatch }, includes:'Invalid polity foundation definition' }
       ];
       const errors = cases.map(function (entry) {
         try {
@@ -308,15 +338,17 @@ test('milestone-zero mod validation rejects unknown data before mutation',
           intrigue:FBDATA.intrigue,
           raidingTraditions:FBDATA.raidingTraditions,
           itemPools:FBDATA.itemPools,
-          rulerTraits:FBDATA.rulerTraits
+          rulerTraits:FBDATA.rulerTraits,
+          storyInstances:FBDATA.storyInstances
         })
       };
     });
 
-    expect(result.errors).toHaveLength(6);
-    expect(result.errors.every(function (entry) {
-      return !!entry && entry.matched;
-    })).toBe(true);
+    expect(result.errors).toHaveLength(7);
+    for (const entry of result.errors) {
+      expect(entry).not.toBe(null);
+      expect(entry.matched, entry.message).toBe(true);
+    }
     expect(result.errors[5].message).toContain(
       'unknown intrigue profile missing_profile');
     expect(result.unchanged).toBe(true);
@@ -1042,7 +1074,6 @@ test('milestone-four phase A projects protected baseline action catalogues and r
       const originalDeedDef = FBDATA.deeds[deedIndex];
       const originalFocus = FB.focuses[focusIndex];
       const originalDeed = FB.instants[deedIndex];
-      const originalFocusShow = originalFocus.show;
       const originalPlayerFocus = FB.state.player.focus;
       const revision = FB.actionCatalogRevision;
       let rebuilt;
@@ -1065,6 +1096,11 @@ test('milestone-four phase A projects protected baseline action catalogues and r
         FB.validateFocus(FB.state);
         const focusIndexFresh = FB.state.player.focus === 'rest';
         FB.focuses = rebuiltFocuses;
+        const character = FB.state.chars[FB.state.player.charId], health = character.health;
+        character.health = 5;
+        projectedFocus.tick(FB.state);
+        const focusHealth = character.health;
+        character.health = health;
         rebuilt = {
           revision:FB.actionCatalogRevision === revision + 1,
           focusLabel:projectedFocus.label,
@@ -1072,11 +1108,12 @@ test('milestone-four phase A projects protected baseline action catalogues and r
           deedLabel:projectedDeed.label,
           deedDesc:projectedDeed.desc(FB.state),
           focusIndexFresh:focusIndexFresh,
+          focusHealth:focusHealth,
           deedIndexFresh:FB.instantStatus(FB.state, 'scheme_rival').action === projectedDeed,
-          focusHandlerStable:projectedFocus.show === originalFocusShow &&
-            projectedFocus.tick === originalFocus.tick,
-          deedHandlerStable:projectedDeed.show === originalDeed.show &&
-            projectedDeed.run === originalDeed.run
+          focusHandlerRetained:projectedFocus.handler === originalFocus.handler &&
+            projectedFocus.show(FB.state) && typeof projectedFocus.tick === 'function',
+          deedHandlerRetained:projectedDeed.handler === originalDeed.handler &&
+            typeof projectedDeed.run === 'function'
         };
       } finally {
         FBDATA.focuses[focusIndex] = originalFocusDef;
@@ -1110,7 +1147,7 @@ test('milestone-four phase A projects protected baseline action catalogues and r
       };
     });
 
-    expect(result.counts).toEqual([28, 102]);
+    expect(result.counts).toEqual([28, 104]);
     expect(result.gamesOrder).toEqual([
       'take_road', 'games_calendar', 'host_games', 'travel_turn_back'
     ]);
@@ -1128,12 +1165,14 @@ test('milestone-four phase A projects protected baseline action catalogues and r
       deedLabel:'Indexed Scheme',
       deedDesc:'A rebuilt deed description.',
       focusIndexFresh:true,
+      focusHealth:5.014,
       deedIndexFresh:true,
-      focusHandlerStable:true,
-      deedHandlerStable:true
+      focusHandlerRetained:true,
+      deedHandlerRetained:true
     });
     expect(result.restored[0]).toBe('🛌 Rest and mend');
     expect(result.restored[1]).toContain('Scheme against');
+    await expectBaselineRest(page);
   });
 
 test('milestone-four phase A rejects malformed internal action data without mutation',
@@ -1288,8 +1327,8 @@ test('milestone-four phase B composes bounded overrides with protected action ha
         }),
         deedReady:ready.shown && ready.can,
         sameModTrait:!!FBDATA.traits.e2e_action_ready_trait,
-        focusHandlerStable:rest.tick === originalFocus.tick,
-        deedHandlerStable:alms.run === originalDeed.run,
+        focusHandlerRetained:rest.handler === originalFocus.handler && typeof rest.tick === 'function',
+        deedHandlerRetained:alms.handler === originalDeed.handler && typeof alms.run === 'function',
         dynamicPresentationOverridden:match.uiLabel === undefined &&
           match.label === '💍 Chartered match' &&
           match.desc(s) === 'Use the chartered marriage search.'
@@ -1349,7 +1388,7 @@ test('milestone-four phase B composes bounded overrides with protected action ha
       deedDesc:'Give alms under the action charter.',
       group:'work', layoutGroup:'personal', cooldown:7, requirements:[],
       focusVisible:true, deedReady:true, sameModTrait:true,
-      focusHandlerStable:true, deedHandlerStable:true,
+      focusHandlerRetained:true, deedHandlerRetained:true,
       dynamicPresentationOverridden:true
     });
     expect(result.handlerBlocked).toBe('Requires 10 gold.');
@@ -1369,6 +1408,7 @@ test('milestone-four phase B composes bounded overrides with protected action ha
       cooldown:result.execution.expectedCooldown,
       label:'🕯 Chartered alms'
     });
+    await expectBaselineRest(page);
   });
 
 test('milestone-four phase B rejects unsafe overrides before any catalogue mutation',
@@ -1792,7 +1832,7 @@ test('milestone-four phase C rejects unsafe declarative deeds without mutation',
         attempt({ deeds:[deed({ spendsDay:'yes' })] },
           'spendsDay must be boolean'),
         attempt({ deeds:[deed({ order:100001 })] },
-          'must not repeat order 77'),
+          'order must be an integer from 0 to 100000'),
         attempt({ deeds:[deed({ visibility:{
           reason:'Hidden.', flagsAll:['e2e_hidden']
         } })] }, 'visibility.reason is not recognized'),
@@ -1822,9 +1862,10 @@ test('milestone-four phase C rejects unsafe declarative deeds without mutation',
       ];
     });
 
-    expect(result.every(function (entry) {
-      return entry.rejected && entry.unchanged;
-    })).toBe(true);
+    for (const entry of result) {
+      expect(entry.rejected, entry.message).toBe(true);
+      expect(entry.unchanged, entry.message).toBe(true);
+    }
   });
 
 test('milestone-four phase D adds deterministic declarative focuses and restores safely',
@@ -1929,7 +1970,7 @@ test('milestone-four phase D adds deterministic declarative focuses and restores
         ordinaryDefault:ordinaryDefault,
         afieldChoices:afieldChoices,
         homeMissingAfield:afieldChoices.indexOf('e2e_declarative_study') < 0,
-        baselineHandlerStable:rest.tick === originalRest.tick,
+        baselineHandlerRetained:rest.handler === originalRest.handler && typeof rest.tick === 'function',
         partialReplacementRejected:partialReplacementRejected,
         rngPure:rngPure
       };
@@ -1957,7 +1998,8 @@ test('milestone-four phase D adds deterministic declarative focuses and restores
     expect(setup.ordinaryDefault).toBe('trade_run');
     expect(setup.afieldChoices).toContain('e2e_declarative_afield');
     expect(setup.homeMissingAfield).toBe(true);
-    expect(setup.baselineHandlerStable).toBe(true);
+    expect(setup.baselineHandlerRetained).toBe(true);
+    await expectBaselineRest(page);
     expect(setup.partialReplacementRejected).toBe(true);
     expect(setup.rngPure).toBe(true);
 

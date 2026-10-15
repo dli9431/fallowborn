@@ -1870,6 +1870,9 @@ test('Phase 5 local authority succession keeps exact people, queues one review, 
       const checkpointLordId = tenure.authorityCheckpoint.localLordId;
       const dutiesBefore = JSON.stringify(tenure.duties);
       const rightsBefore = JSON.stringify(tenure.rights);
+      const heirId = state.realms[tenure.authorityCheckpoint.holderRealmId].succession.heirId;
+      const heir = state.realms[tenure.authorityCheckpoint.holderRealmId].succession.members[heirId];
+      const existingHeirId = heir.charId;
       const rngBefore = JSON.stringify(FB.getRngState());
       FB.killChar(state, oldLord);
       const afterDeath = state.player.tenureTransition;
@@ -1910,7 +1913,8 @@ test('Phase 5 local authority succession keeps exact people, queues one review, 
         rightsUnchanged:JSON.stringify(tenure.rights) === rightsBefore,
         historyOutcome:tenure.transitionHistory.length &&
           tenure.transitionHistory[tenure.transitionHistory.length - 1].outcome,
-        rngChangedByReplacement:rngBefore !== rngAfterReplacement
+        existingHeir:existingHeirId === replacement.id,
+        rngPreserved:rngBefore === rngAfterReplacement
       };
     });
 
@@ -1932,7 +1936,8 @@ test('Phase 5 local authority succession keeps exact people, queues one review, 
     expect(result.dutiesUnchanged).toBe(true);
     expect(result.rightsUnchanged).toBe(true);
     expect(result.historyOutcome).toBe('confirmed');
-    expect(result.rngChangedByReplacement).toBe(true);
+    expect(result.existingHeir).toBe(true);
+    expect(result.rngPreserved).toBe(true);
   });
 
 test('Phase 5 authority snapshots remain pure and unresolved historical rulers fall back to their realm',

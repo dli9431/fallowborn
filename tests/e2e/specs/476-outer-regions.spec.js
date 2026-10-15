@@ -346,7 +346,7 @@ test('one 476 bookmark carries every Wave 12 consumer and retires the separate w
         cashel:b.stories.indexOf('cashel_recognition_476') >= 0,
         starts:['farmer_476','craftsman_476','cleric_476','peroz_476','mobile_household_476',
           'federate_476','curialis_476','colonus_476'].every(function (id) { return offered.indexOf(id) >= 0; }),
-        anchors:[disabled.filter(function (p) { return !/^w_/.test(p.id); }).length,
+        anchors:[disabled.filter(function (p) { return !/^w_/.test(p.id); }).map(function (p) { return p.id; }).sort(),
           disabled.filter(function (p) { return /^w_/.test(p.id); }).length],
         faults:FB.validateBookmark(b)
       };
@@ -354,7 +354,7 @@ test('one 476 bookmark carries every Wave 12 consumer and retires the separate w
     expect(result).toEqual({ retired:[], stale:[],
       revisions:['wider_v2','wider_v2',['wider_v2']],
       governments:['aristocratic_monarchy','lineage_kingship','assembly_polity','mobile_confederation'],
-      cashel:true, starts:true, anchors:[0,21], faults:[] });
+      cashel:true, starts:true, anchors:[['gurganj_district','kath_district','kumbi_district','timbuktu_district'],21], faults:[] });
   });
 
 test('a merged 476 save restores, while retired wider and mobile ids fail without changing the live campaign',

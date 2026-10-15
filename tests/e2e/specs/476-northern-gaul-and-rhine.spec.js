@@ -4,7 +4,7 @@ const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
   'data/story_courts_476.js',
   'index.html', 'data/bookmarks.js', 'data/bookmark_476.js',
-  'data/bookmark_476_gaul_iberia.js', 'data/political_institutions.js',
+  'data/bookmark_476_gaul_iberia.js', 'data/bookmark_476_wider.js', 'data/political_institutions.js',
   'data/story_campaigns.js', 'data/cultures.js', 'data/technology.js',
   'data/settlements.js', 'data/starts.js', 'data/eras.js', 'data/systems.js',
   'data/geographies.js', 'data/counties.js', 'data/map_data.js', 'data/climate.js',
@@ -85,7 +85,7 @@ for (const crazygames of [false,true]) {
       expect(result).toMatchObject({ faults:[], institutions:true, generated:true, mother:true,
         roman:'roman_civic', rights:true, parisName:'Parisii', minority:true, campaign:'pending', tech:'none', valid:true });
       expect(result.named).toEqual([['Remigius',false],['Principius',false],['Lupus',false],['Perpetuus',false]]);
-      expect(result.owners).toEqual(['west_francia','west_francia','west_francia','west_francia',
+      expect(result.owners).toEqual(['west_francia','west_francia','west_francia','franks_476',
         'franks_476','rhein_franks_476','rhein_franks_476','alamanni_476','armorica_476','armorica_476','armorica_476']);
     });
 }
@@ -219,13 +219,15 @@ for (const divergence of ['capital','target','dead','timeout']) {
         if (mode === 'dead') s.chars[w.clovisId].dead = true;
         if (mode === 'timeout') s.date.year = 507;
         story.day(s, s.stories[id]);
-        const before = JSON.stringify([s.stories[id],s.owner,s.wars]);
-        FB.save.restore(JSON.parse(FB.save.serialize()));
+        const saved = JSON.parse(FB.save.serialize());
+        const before = [saved.state.stories[id],saved.state.owner,saved.state.wars || {}];
+        FB.save.restore(saved);
         story.day(FB.state, FB.state.stories[id]);
         return { result:FB.state.stories[id].result, war:FB.state.stories[id].warId,
-          once:before === JSON.stringify([FB.state.stories[id],FB.state.owner,FB.state.wars]) };
+          before:before, after:[FB.state.stories[id],FB.state.owner,FB.state.wars] };
       }, divergence);
-      expect(result).toEqual({ result:divergence === 'dead' ? 'interrupted' : 'diverted', war:null, once:true });
+      expect(result).toMatchObject({ result:divergence === 'dead' ? 'interrupted' : 'diverted', war:null });
+      expect(result.after).toEqual(result.before);
     });
 }
 
@@ -234,20 +236,24 @@ test('a campaign created with the pre-expansion 476 declarations restores under 
     await openGame(page, testInfo);
     const result = await page.evaluate(function (ids) {
       return new Promise(function (resolve, reject) {
-        const bm = FB.bookmark('476');
+        // Replace the registered revision fields. FB.bookmark resolves a new
+        // wrapper, so assigning fields on that wrapper never changes activation.
+        const raw = FBDATA.bookmarks['476'], bm = raw.revisions[raw.revision];
         const realm = bm.realms.find(function (r) { return r.id === 'franks_476'; });
         const current = { institutions:bm.localInstitutions, stories:bm.stories, court:realm.royalCourt };
         // Reconstruct the old declaration shape before creating and serializing
         // a real campaign. This is not an owner-provided historical save fixture.
         bm.localInstitutions = Object.assign({}, current.institutions);
         ids.forEach(function (id) { delete bm.localInstitutions[id]; });
-        bm.stories = current.stories.filter(function (id) { return id !== 'clovis_alamanni_476'; });
+        bm.stories = (current.stories || raw.stories).filter(function (id) { return id !== 'clovis_alamanni_476'; });
         realm.royalCourt = JSON.parse(JSON.stringify(current.court));
         realm.royalCourt.members = realm.royalCourt.members.filter(function (m) { return m.id !== 'basina'; });
         delete realm.royalCourt.spouseId;
         delete realm.royalCourt.members[0].motherId;
         function reinstate() {
-          bm.localInstitutions = current.institutions; bm.stories = current.stories; realm.royalCourt = current.court;
+          bm.localInstitutions = current.institutions;
+          if (current.stories === undefined) delete bm.stories; else bm.stories = current.stories;
+          realm.royalCourt = current.court;
         }
         FB.activateBookmark('476', null, function (fault) {
           if (fault) { reinstate(); reject(fault); return; }
@@ -255,24 +261,29 @@ test('a campaign created with the pre-expansion 476 declarations restores under 
             FB.game.pending = { seed:'NORTHGAUL-LEGACY' };
             FB.game.startObserve(); FB.game.setPaused(true);
             const saved = JSON.parse(FB.save.serialize());
-            const live = FB.state;
-            const old = JSON.stringify([live.owner,live.holder,live.population,
-              live.bookmarkSetup,live.stories,live.realms.franks_476.succession]);
+            const live = saved.state;
+            const old = [live.owner,live.holder,live.population,
+              live.bookmarkSetup,live.stories,live.realms.franks_476.succession];
             const existing = Object.keys(live.localInstitutions);
-            const institutions = JSON.stringify(existing.map(function (id) { return live.localInstitutions[id]; }));
+            const institutions = existing.map(function (id) { return live.localInstitutions[id]; });
+            const absentBefore = !FB.state.stories.clovis_alamanni_476 &&
+              !FB.authoredRoyalMemberSnapshot(FB.state, 'franks_476', 'basina');
             reinstate();
             FB.save.restore(saved);
             const s = FB.state;
-            resolve({ preserved:old === JSON.stringify([s.owner,s.holder,s.population,s.bookmarkSetup,
-              s.stories,s.realms.franks_476.succession]),
-              institutions:institutions === JSON.stringify(existing.map(function (id) { return s.localInstitutions[id]; })),
+            resolve({ before:old, after:[s.owner,s.holder,s.population,s.bookmarkSetup,
+              s.stories,s.realms.franks_476.succession],
+              institutionsBefore:institutions,
+              institutionsAfter:existing.map(function (id) { return s.localInstitutions[id]; }), absentBefore:absentBefore,
               absent:!s.stories.clovis_alamanni_476 && !FB.authoredRoyalMemberSnapshot(s, 'franks_476', 'basina'),
               valid:FB.save.v4.validatePlatform(JSON.parse(FB.save.serialize()).state) });
           } catch (error) { reinstate(); reject(error); }
         });
       });
     }, addedInstitutions);
-    expect(result).toEqual({ preserved:true, institutions:true, absent:true, valid:true });
+    expect(result).toMatchObject({ absentBefore:true, absent:true, valid:true });
+    expect(result.after).toEqual(result.before);
+    expect(result.institutionsAfter).toEqual(result.institutionsBefore);
   });
 
 test('an owner-supplied pre-expansion 476 export imports without replaying the new campaign',

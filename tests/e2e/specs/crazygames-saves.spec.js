@@ -2,7 +2,7 @@
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, ['index.html', 'js/crazygames.js', 'js/save.js', 'js/save_v4.js', 'js/main.js',
   'js/ui_misc.js', 'js/ui_modals.js', 'js/util.js', 'js/mods.js',
-  'data/distribution_crazygames.js', 'data/events_intrigue.js']);
+  'data/distribution_crazygames.js', 'data/events_intrigue.js', 'data/bookmarks.js', 'js/world.js']);
 const { test, expect } = require('../support/fixture');
 const { openGame, targetUrl } = require('../support/game/navigation');
 const { startDeterministicGame } = require('../support/game/start');
@@ -33,6 +33,10 @@ for (const mode of ['sdk', 'localstorage']) {
           window.FB_CRAZYGAMES_STORAGE = 'localstorage';
         });
         await boot(page, testInfo);
+        if (version !== 4) await page.evaluate(function () {
+          // A missing revision is a legacy baseline, not a fresh government world.
+          FBDATA.bookmarks['867'].revision = 'baseline';
+        });
         await startDeterministicGame(page);
         expect(await save(page)).toBe(true);
         expect(await page.evaluate(async function (version) {
@@ -60,6 +64,9 @@ for (const mode of ['sdk', 'localstorage']) {
         await expect.poll(function () {
           return page.evaluate(function () { return FB.state && FB.state.player.gold; });
         }).toBe(4321);
+        if (version !== 4) expect(await page.evaluate(function () {
+          return FB.state.start.revision;
+        })).toBe('baseline');
         expect(await save(page)).toBe(true);
         await page.reload();
         await page.waitForFunction(function () { return window.FB && FB.game && FB.game.bootReady; });

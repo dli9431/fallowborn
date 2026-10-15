@@ -289,7 +289,17 @@ window.FB = window.FB || {};
   /* the chatelaine's road: noblewomen command through the household and the
      court, not the drill yard — Standing and polish instead of swordplay */
   { id: 'courtly_graces',
-    desc: function () { return FB.T('Cultivate your reputation, your Standing with your patron and your Diplomacy.'); },
+    desc: function (s) {
+      const steps = FBDATA.focusRoutines.courtly_graces;
+      const standing = steps.find(function (step) { return step.kind === 'standing'; });
+      const target = standing && routineStandingTarget(s, Object.assign({},standing,{create:false}));
+      const recipient = target && (target.kind === 'realm' ? s.realms[target.id] : s.chars[target.id]);
+      return FB.T('+{prestige} prestige and +{standing} Standing with {recipient} per season, with a chance to train Diplomacy.', {
+        prestige:routineGain(s,steps).prestige || 0,
+        standing:standing ? routineStandingAmount(s,standing) : 0,
+        recipient:recipient ? recipient.name : FB.T('your lord or patron')
+      });
+    },
     show: function (s) { return female(s) && adult(s) && FB.station.isGentle(s.player, s); } },
   { id: 'train_arms',
     show: function (s) {
@@ -10670,14 +10680,14 @@ window.FB = window.FB || {};
         ? FB.T('Requires {money:cost}.', { cost:fort.cost })
         : fort.reason === 'contested'
           ? FB.T('Repairs cannot begin while the county is contested.')
-          : FB.T('You must hold the county at Baron rank or higher, with no other active fort.');
+          : FB.T('You must hold the county at {Term:baron} rank or higher, with no other active fort.');
       return out;
     }
     const context = FB.buildingContext(state, pid);
     out.cost = buildingCost(state, pid, id, null,
       Math.max(0, FB.buildingCountIn(state, pid, id, true) - 1), 0.5);
     if (!FB.settlementConstructionAuthority(state, pid, idx).direct || idx >= context.visibleCount) {
-      out.reason = FB.T('You must hold this settlement directly at Baron rank or higher.');
+      out.reason = FB.T('You must hold this settlement directly at {Term:baron} rank or higher.');
     } else if ((def.maxCounty && FB.buildingCountIn(state, pid, id, false) >= def.maxCounty) ||
         (def.maxDemesne && buildingContextDemesneCount(state, context, id) >= def.maxDemesne)) {
       out.reason = FB.T('The standing-building limit has already been reached.');

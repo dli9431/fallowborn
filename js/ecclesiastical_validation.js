@@ -34,11 +34,12 @@
     return !d || d.officeId !== t.officeId || !office.head.local || !chapter || chapter.officeId ||
       chapter.kind !== 'congregation' || chapter.provinceId !== d.provinceId ? ['invalid local office or chapter binding'] : [];
   };
-  E.definitionFaults = function (d,formId,bookmark) {
+  E.definitionFaults = function (d,formId,bookmark,campaign) {
     var form = FBDATA.governmentForms[formId], bound = form && (G.strategy('succession',form.succession) || {}).officeBound;
     if (!bound) return d.ecclesiastical !== undefined ? ['ecclesiastical binding requires institutional government'] : [];
     var defs = bookmark && bookmark.localInstitutions || FBDATA.localInstitutions || {},
-      state = { start:{ id:bookmark && bookmark.id },realms:{},chars:{},faiths:{},faithRelations:{} };
+      state = campaign || { start:{ id:bookmark && bookmark.id,revision:bookmark && bookmark.revision },
+        realms:{},chars:{},faiths:{},faithRelations:{} };
     var offices = FB.religiousOffices(state), errors = E.bindingFaults(d.ecclesiastical,defs,offices);
     if (d.royalCourt || d.constituency || d.id === 'player') errors.push('institutional jurisdiction is not a hereditary household');
     var p = d.ecclesiastical && FBDATA.ecclesiasticalProfiles[d.ecclesiastical.profileId];

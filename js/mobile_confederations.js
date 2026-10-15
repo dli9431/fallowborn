@@ -247,7 +247,14 @@
       if (!a || a.status !== 'offered' || a.endTurn <= s.turn || ar !== a.partnerId ||
           FB.realmRulerGeneration(s, rid) !== a.generations[0] || FB.realmRulerGeneration(s, a.partnerId) !== a.generations[1] ||
           FB.armiesHostile(s, { realm:rid }, { realm:a.partnerId })) return no('partner');
-      if (!Q.consent(s,request.actor,'treaty',{externalRealmId:rid,kind:a.kind}).allowed) return no('partner');
+      var partnerTerms = Object.assign({},a,{externalRealmId:rid,
+        agreementPrice:a.price,price:a.kind === 'protection' ? a.price : 0});
+      // This is the reviewed treaty transaction. Civic partners must approve
+      // its actual burden through their executive and constituency.
+      q.partnerConsent = FB.civicGovernment && FB.civicGovernment.active(s,a.partnerId)
+        ? FB.civicGovernment.decision(s,a.partnerId,'treaty',partnerTerms)
+        : Q.consent(s,request.actor,'treaty',{externalRealmId:rid,kind:a.kind});
+      if (!q.partnerConsent.allowed) return no('partner');
       if (a.kind === 'access' && a.countyIds.some(function (pid) {
         return !accessControl(s, a.partnerId, pid) || a.capacity + allocated(s, pid, a.id) > capacity(s, pid);
       })) return no('capacity');
@@ -360,6 +367,7 @@
     var m = M.migration(s, rid), a = { id:m.hostId, realm:rid, at:m.at, from:m.at,
       men:0, size:0, units:{}, supply:0, path:[], goal:null, moveLeft:0,
       warId:null, migrationId:m.id, mobileFollowing:true, mobileCourt:false, mobileFood:0, mobileRoster:[] };
+    FB.hostUnits(a);
     s.armies.push(a); return a;
   }
   function returnHost(s, army) {

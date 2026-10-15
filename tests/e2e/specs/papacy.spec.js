@@ -477,7 +477,7 @@ test('choosing a Papal name shows the successful accession', async function ({ p
   await page.locator('[data-papal-name]').first().click();
   await expect(page.locator('#gm-title')).toHaveText('Elected Pope');
   await expect.poll(function () { return page.evaluate(function () { return !FB.ui.eventInputGuarded(); }); }).toBe(true);
-  await expect(page.locator('[data-religious-office-result]')).toContainText('family property enters custody');
+  await expect(page.locator('[data-religious-office-result]')).toContainText('your household retains its own possessions');
   expect(await page.evaluate(function () { return !!FB.playerPope(FB.state); })).toBe(true);
   await expect.poll(function () { return page.evaluate(function () { return !FB.ui.eventInputGuarded(); }); }).toBe(true);
   await page.locator('#office-result-continue').click();

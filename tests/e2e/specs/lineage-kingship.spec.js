@@ -215,15 +215,16 @@ test('optional save state stays absent and malformed selection fails on a detach
       return rejected && text === JSON.stringify(input) && before === JSON.stringify(FB.state) && rng === FB.getRngState() && uid === FB.getUidCounter();
     });
     const old = JSON.parse(JSON.stringify(source)); delete old.state.authority.governments[rid].selection;
-    const members = JSON.stringify(old.state.realms[rid].succession.members);
+    const members = JSON.parse(JSON.stringify(FB.state.realms[rid].succession.members));
     const once = FB.save.v4.migrate(old), twice = FB.save.v4.migrate(once);
     FB.save.restore(once);
     return { failures:failures, absent:!S.state(FB.state, rid), idempotent:JSON.stringify(once) === JSON.stringify(twice),
-      genealogy:members === JSON.stringify(FB.state.realms[rid].succession.members),
+      members:members, genealogy:FB.state.realms[rid].succession.members,
       rng:(FB.getRngState() >>> 0) === (source.rng >>> 0), uid:FB.getUidCounter() === source.uid };
   });
   expect(result.failures).toEqual([true, true, true, true, true, true]);
-  expect(result.absent && result.idempotent && result.genealogy && result.rng && result.uid).toBe(true);
+  expect(result.genealogy).toEqual(result.members);
+  expect(result.absent && result.idempotent && result.rng && result.uid).toBe(true);
 });
 
 test('commoners can improve standing but cannot buy lineage; the review retains navigation', async function ({ page }, testInfo) {
@@ -337,7 +338,10 @@ for (const bookmark of ['476', '867', '1066']) {
     const journey = FRESH_JOURNEYS.find(function (r) { return r.bookmark === bookmark; });
     await startParityGame(page, testInfo, journey);
     const result = await page.evaluate(function () {
-      const source = JSON.parse(FB.save.serialize()), before = JSON.stringify(source.state.authority.governments);
+      const source = JSON.parse(FB.save.serialize());
+      // Model an older campaign with its saved forms but no selection ledger.
+      Object.values(source.state.authority.governments).forEach(function (row) { delete row.selection; });
+      const before = JSON.stringify(source.state.authority.governments);
       FB.save.restore(source);
       return { absent:!Object.values(FB.state.authority.governments).some(function (r) { return r.selection; }),
         stable:before === JSON.stringify(FB.state.authority.governments),

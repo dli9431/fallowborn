@@ -1,4 +1,10 @@
+Composed world-story lists
+
+The 1204 campaign package appends its campaigns to the world-story list already declared by the bookmark. This preserves the independently registered Venetian office contest and its save identity alongside the fifteen dated campaigns.
+
 Stories and start scenarios
+
+A polity foundation's explicitly authored ruler trait must exist in the effective traits catalogue. It need not remain in rulerTraits, which controls random ruler generation and missing-temperament repair. Replacing that random pool through JSON mods leaves existing foundation declarations intact; an unknown authored trait still fails detached validation.
 
 colonus_476 adds a bound estate opening with standard and established family presets, Roman/Nicene defaults and an authored introduction. It reuses ordinary tenure events and the estate review without a bespoke story record or player track. The introductory pointer and post-first-steps coachmark target review_colonate instead of the medieval tenure Deed. System requirements are checked by scenarioOffered for every new-campaign entry point. Existing saves without this start remain unchanged.
 

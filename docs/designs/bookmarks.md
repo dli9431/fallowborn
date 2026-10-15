@@ -1,3 +1,7 @@
+Revision-scoped fixed starts
+
+Mod validation checks a fixed resident-community start against every revision that offers it, using the same offering rules as fixed existing-ruler starts. It does not require an expanded-only start to fit an older fresh selection that does not offer it. Start identity, settled location and required community still validate in each offering revision.
+
 Bookmark platform and authoring
 
 Purpose

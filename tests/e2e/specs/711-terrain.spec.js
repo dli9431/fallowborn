@@ -25,15 +25,28 @@ async function start(page,info,county,flag) {
 }
 
 async function observe(page,revision,seed) {
+  // Observe a resumable household so save checks do not compare an observer's
+  // parentless placeholder against the ordinary household restore repairs.
   await page.evaluate(function (input) {
     return new Promise(function (resolve,reject) {
       FB.activateBookmark('711',null,function (error) {
         if (error) { reject(error); return; }
-        FB.game.pending = {seed:input.seed};
-        FB.game.startObserve(); FB.game.setPaused(true); resolve();
+        FB.startProgression.noteTier(1);
+        FB.game.pending = {seed:input.seed,bookmarkId:'711',name:'Observer',sex:'m',
+          familyPreset:'established',scenario:FBDATA.startScenarios.find(function (row) { return row.id === 'farmer'; })};
+        FB.game.pickMode = true;
+        if (!FB.game.pickProvince(FB.world.byId.london) || !FB.game.pickSettlement({pid:'london',index:0})) {
+          reject(new Error('Observer household birthplace was rejected')); return;
+        }
+        resolve();
       },{revision:input.revision});
     });
-  },{revision:revision,seed:seed || 'TERRAIN711-OBSERVER'});
+  },{revision:revision,seed:seed || 'TERRAIN711OBSERVER'});
+  await expect(page.locator('#chargen:not(.hidden)')).toBeVisible();
+  await page.getByRole('button',{name:'Begin Your Story',exact:true}).click();
+  await page.evaluate(function () { FB.game.setPaused(true); });
+  await page.getByRole('button',{name:'Begin',exact:true}).click();
+  await page.evaluate(function () { FB.game.observe = true; FB.game.setPaused(true); });
 }
 
 async function checkpoint(page,ceiling) {
@@ -71,7 +84,16 @@ test('711 dates every physical addition and keeps earlier revisions independentl
         return p.id === 'w_steppe_e' || JSON.stringify(p) === JSON.stringify(b.provinces.find(function (n) { return n.id === p.id; }));
       }),
       stories:JSON.stringify(b.stories) === JSON.stringify(old.stories),
-      institutions:JSON.stringify(b.localInstitutions) === JSON.stringify(old.localInstitutions),
+      institutions:Object.keys(old.localInstitutions).every(function (id) {
+        return JSON.stringify(b.localInstitutions[id]) === JSON.stringify(old.localInstitutions[id]);
+      }),
+      addedInstitutions:Object.keys(b.localInstitutions).filter(function (id) {
+        return !Object.prototype.hasOwnProperty.call(old.localInstitutions,id);
+      }).sort(),
+      newCongregations:['medina_congregation_711','sanaa_congregation_711'].map(function (id) {
+        const d = b.localInstitutions[id];
+        return [d.kind,d.provinceId,d.religion,d.vacant,d.freshOnly];
+      }),
       generated:['middle_niger_711','niger_bend_711','ghadames_711','khwarazm_711'].every(function (id) {
         const r = b.realms.find(function (r) { return r.id === id; });
         return r.ruler.generated && !r.ruler.name && !r.liege;
@@ -83,6 +105,10 @@ test('711 dates every physical addition and keeps earlier revisions independentl
     count:527,inhabited:485,retained:true,original:true,government:true,composed:true,
     unchanged:true,stories:true,institutions:true,generated:true,mode:'none'});
   expect(result.inventory).toEqual(result.physical);
+  expect(result.addedInstitutions).toEqual(['medina_congregation_711','sanaa_congregation_711']);
+  expect(result.newCongregations).toEqual([
+    ['congregation','medina','sunni',true,true],['congregation','sanaa','sunni',true,true]
+  ]);
 });
 
 for (const flag of [false,true]) test('711 district raster, residents and dry connections, distribution ' + flag,
@@ -224,7 +250,7 @@ for (const rid of ['middle_niger_711','niger_bend_711','ghadames_711','khwarazm_
 test('expanded 711 observer advances a season and another seed does not contaminate replay',async function ({page},info) {
   test.skip(info.project.name !== 'chromium-served','One bounded observer season.');
   await openGame(page,info);
-  await observe(page,audit.revision,'711-TERRAIN-FIRST');
+  await observe(page,audit.revision,'711TERRAINFIRST');
   const first = await checkpoint(page,4 * 1024 * 1024);
   for (let batch = 0; batch < 3; batch++) await page.evaluate(function () {
     for (let day = 0; day < 30; day++) {
@@ -233,8 +259,9 @@ test('expanded 711 observer advances a season and another seed does not contamin
     }
   });
   const season = await facts(page),source = await checkpoint(page,6 * 1024 * 1024);
-  await observe(page,audit.revision,'711-TERRAIN-SECOND');
-  expect(await page.evaluate(function () { return FB.state.seed; })).toBe('711-TERRAIN-SECOND');
+  expect(season.snapshot.readsArePure).toBe(true);
+  await observe(page,audit.revision,'711TERRAINSECOND');
+  expect(await page.evaluate(function () { return FB.state.seed; })).toBe('711TERRAINSECOND-711-farmer-london-m-Observer-established');
   await restoreBookmark(page,source);
   expect(await facts(page)).toEqual(season);
   await restoreBookmark(page,first);
@@ -257,7 +284,8 @@ for (const revision of ['baseline','governments_v2']) test('retained ' + revisio
         records:JSON.stringify([s.population,s.wastelandSettlements,s.owner,s.holder,s.stories,s.localInstitutions,s.player.gold])};
     },revision);
     const before = await facts(page);
-    await observe(page,audit.revision,'711-EXPANDED-SWITCH');
+    expect(before.snapshot.readsArePure).toBe(true);
+    await observe(page,audit.revision,'711EXPANDEDSWITCH');
     const expanded = await checkpoint(page,4 * 1024 * 1024),expandedFacts = await facts(page);
     await restoreBookmark(page,prepared.source);
     expect(await facts(page)).toEqual(before);

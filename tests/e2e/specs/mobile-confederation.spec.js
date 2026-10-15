@@ -50,9 +50,12 @@ for (const fictional of [false,true]) {
         counties:FB.realmTerritory(s,rid).length,noDynasty:!s.realms[rid].succession,
         levy:FB.aiBaseHost(s,rid),total:M.total(s,rid),initial:r.accounting.initial,
         civilians:r.members.reduce(function (n,m) {return n+m.civilians.reduce(function (v,c) {return v+c.count;},0);},0),
-        host:M.host(s,rid).men,valid:M.validate(s),errors:FB.governments.validate()};
+        host:M.host(s,rid).men,valid:M.validate(s),errors:FB.governments.validate(),
+        normalized:FB.unitClassIds().every(function (id) {
+          return Number.isInteger(M.host(s,rid).units[id]) && M.host(s,rid).units[id] >= 0;
+        })};
     },rid);
-    expect(result).toMatchObject({pure:true,counties:0,noDynasty:true,levy:0,valid:true,errors:[]});
+    expect(result).toMatchObject({pure:true,counties:0,noDynasty:true,levy:0,valid:true,errors:[],normalized:true});
     expect(result.total).toBe(result.initial);expect(result.civilians+result.host).toBe(result.total);
   });
   test(label+' conserves recruitment, casualties, defeat and recovery',async function ({page},testInfo) {
@@ -69,9 +72,12 @@ for (const fictional of [false,true]) {
       const recovered=M.commit(s,M.review(s,req));army=M.host(s,rid);
       return {recruited:recruited,conserved:initial===afterRecruit,charged:charged,expected:review.review.cost,
         alive:alive,once:once,recovered:recovered,following:following,afterRecovery:M.total(s,rid),
-        fighterLoss:lost,dead:dead,host:army && army.men,valid:M.validate(s)};
+        fighterLoss:lost,dead:dead,host:army && army.men,valid:M.validate(s),
+        normalized:!!army && FB.unitClassIds().every(function (id) {
+          return Number.isInteger(army.units[id]) && army.units[id] >= 0;
+        })};
     },rid);
-    expect(result).toMatchObject({recruited:true,conserved:true,alive:true,once:true,recovered:true,host:20,valid:true});
+    expect(result).toMatchObject({recruited:true,conserved:true,alive:true,once:true,recovered:true,host:20,valid:true,normalized:true});
     expect(result.charged).toBeCloseTo(result.expected,8);expect(result.dead).toBeGreaterThanOrEqual(result.fighterLoss);
     expect(result.afterRecovery).toBe(result.following);
   });
@@ -130,11 +136,15 @@ test('professional losses cannot create county replacements or automatic followi
     FB.transferProvince(s,'cherson',rid);
     if(!act('demuster') || !act('recruit',{count:60,unitId:FB.unitRoleClass('household')})) throw new Error('Professional following did not recruit');
     const army=M.host(s,rid),total=M.total(s,rid),losses=FB.applyHostLosses(army,10,s);FB.noteCohortLosses(s,rid,losses);
-    FB.provisionArmy(s,army);const gold=FB.treasuryAvailable(s,rid);s.turn++;FB.armyTick(s);FB.federateDay(s);
+    FB.provisionArmy(s,army);
+    const gold=FB.treasuryAvailable(s,rid), treasury=s.realms[rid].treasury.gold;
+    const upkeep=FB.hostFieldUpkeepParts(s,army).total/90;
+    s.turn++;FB.armyTick(s);FB.federateDay(s);
     return {men:army.men,people:total-M.total(s,rid),ledger:!!(s.armyCohorts && s.armyCohorts[rid]),
-      gold:FB.treasuryAvailable(s,rid)===gold,valid:M.validate(s)};
+      gold:s.realms[rid].treasury.gold===treasury,upkeep:gold-FB.treasuryAvailable(s,rid),expectedUpkeep:upkeep,valid:M.validate(s)};
   },rid);
-  expect(result).toEqual({men:50,people:10,ledger:false,gold:true,valid:true});
+  expect(result).toMatchObject({men:50,people:10,ledger:false,gold:true,valid:true});
+  expect(result.upkeep).toBeCloseTo(result.expectedUpkeep,8);
 });
 test('protected field movement leaves civilians at camp and court movement needs separate access',async function ({page},testInfo) {
   const rid=await start(page,testInfo,true);
@@ -317,17 +327,25 @@ test('saved coalition restores exactly and malformed records fail without mutati
   expect(result).toEqual({restored:true,kept:true,identity:true,rejected:Array(12).fill(true),valid:true});
 });
 test('mobile review preserves scroll, disclosure and focus through cancel and stale confirmation',async function ({page},testInfo) {
+  await page.setViewportSize({width:390,height:844});
   const rid=await start(page,testInfo);
   await page.evaluate(function (rid) {FB.ui.showMobileConfederation(rid);},rid);
-  const work=page.getByRole('button',{name:'Work with the following',exact:true});await expect(work).toBeEnabled();
+  const work=page.getByRole('button',{name:/^Work with the following/});await expect(work).toBeEnabled();
   const id=await work.getAttribute('id');await page.locator('[aria-controls="'+id+'-details"]').click();await work.focus();
-  await page.evaluate(function () {document.getElementById('gm-body').scrollTop=100;});
-  await work.click();await expect(page.locator('#mobile-confirm')).toBeVisible();await page.keyboard.press('Escape');
+  await work.scrollIntoViewIfNeeded();
+  function scrollPosition() {return {list:document.getElementById('mobile-list').scrollTop,body:document.getElementById('gm-body').scrollTop};}
+  const scroll=await page.evaluate(scrollPosition);
+  expect(scroll.list+scroll.body).toBeGreaterThan(0);
+  await work.press('Enter');await expect(page.locator('#mobile-confirm')).toBeVisible();await page.keyboard.press('Escape');
   await expect(work).toBeFocused();await expect(page.locator('[aria-controls="'+id+'-details"]')).toHaveAttribute('aria-expanded','true');
-  expect(await page.evaluate(function () {return document.getElementById('gm-body').scrollTop;})).toBeGreaterThan(0);
+  expect(await page.evaluate(scrollPosition)).toEqual(scroll);
   await work.click();const gold=await page.evaluate(function (rid) {FB.mobile.row(FB.state,rid).food--;return FB.state.player.gold;},rid);
   await page.locator('#mobile-confirm').click();await expect(page.getByRole('heading',{name:'Terms changed',exact:true})).toBeVisible();
   expect(await page.evaluate(function () {return FB.state.player.gold;})).toBe(gold);
+  await page.locator('#mobile-continue').click();
+  await expect(work).toBeFocused();
+  await expect(page.locator('[aria-controls="'+id+'-details"]')).toHaveAttribute('aria-expanded','true');
+  expect(await page.evaluate(scrollPosition)).toEqual(scroll);
 });
 test('the same fresh coalition is available in the CrazyGames distribution',async function ({page},testInfo) {
   const rid=await start(page,testInfo,false,true);

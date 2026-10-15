@@ -30,7 +30,10 @@ for (const bookmark of ['867', '1066']) {
     const result = await page.evaluate(function () {
       const s = FB.state, papacy = FB.ensurePapacy(s);
       return {
-        excluded:FBDATA.events.filter(function (ev) { return !FB.eventPeriodEnabled(s, ev); }).map(function (ev) { return ev.id; }),
+        excluded:FBDATA.events.filter(function (ev) {
+          const pack = FBDATA.eventPacks[ev.pack];
+          return pack && pack.eras.indexOf(s.start.era) >= 0 && !FB.eventPeriodEnabled(s, ev);
+        }).map(function (ev) { return ev.id; }),
         established:Object.keys(s.historicalAmbitions).sort(),
         counts:papacy.regnalNameCounts,
         authority:papacy.obediences[papacy.romanObedience].authority
@@ -234,7 +237,7 @@ test('campaign profession effects respect career periods and restore the unchang
     const s = FB.state, p = s.player, c = s.chars[p.charId], year = s.date.year;
     FB.careerOf(s,c).experience = 23;
     const civilian = JSON.stringify(c.career), profession = p.profession;
-    const base = Object.assign({}, FBDATA.careers.soldier, { requiresTech:null });
+    const base = Object.assign({}, FBDATA.careers.soldier, { requiresTech:null, maleOnly:false });
     const results = ['setFlag','setFlag2'].map(function (flagKey) {
       const fx = { profession:'e2e_period_service' };
       fx[flagKey] = 'on_campaign';
@@ -295,7 +298,7 @@ test('year tables, papal institution milestones and tournament thresholds read a
     return { seeds:seeds, milestones:milestones, changed:changed,
       earlier:FB.tournaments.defaultProgramme(s,s.player.charId,{ provinceId:home }) };
   });
-  expect(result.seeds).toEqual([null,null,8,8,8,19,19]);
+  expect(result.seeds).toEqual([null,7,8,8,8,19,19]);
   expect(result.milestones).toEqual([[false,true],[false,true],[false,true],[false,true],[false,true]]);
   expect(result.changed).toBe('lists'); expect(result.earlier).toBe('martial');
 });

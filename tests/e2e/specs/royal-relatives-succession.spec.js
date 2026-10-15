@@ -11,18 +11,18 @@ dependsOnRuntime(__filename, [
 ]);
 const { test, expect } = require('../support/fixture');
 const { startParityGame } = require('../support/game/parity');
+const { startHistoricalGame } = require('../support/game/historical-start');
 const { openGame } = require('../support/game/navigation');
 
-async function start(page, testInfo) {
-  await startParityGame(page, testInfo, { bookmark:'476',
-    code:'ROYALKIN-476-federate_476-ravenna-m-Marcus-standard-0-gothic.homoian' });
+async function start(page, testInfo, crazygames) {
+  await startHistoricalGame(page, testInfo, { bookmark:'476',
+    code:'ROYALKIN-476-federate_476-ravenna-m-Marcus-standard-0-gothic.homoian' }, !!crazygames);
 }
 
 for (const crazy of [false, true]) {
   test('authored kin, pure court reads and immediate save identity with flag ' + crazy,
     async function ({ page }, testInfo) {
-      if (crazy) await page.addInitScript(function () { window.FB_DISTRIBUTION = 'crazygames'; });
-      await start(page, testInfo);
+      await start(page, testInfo, crazy);
       const result = await page.evaluate(function () {
         const s = FB.state, r = s.realms.aghlabids, family = r.succession;
         const huneric = FB.authoredRoyalMemberSnapshot(s, r.id, 'huneric');
@@ -30,7 +30,7 @@ for (const crazy of [false, true]) {
         const son = s.chars[huneric.charId], king = FB.realmRulerCharacterSnapshot(s, r.id);
         const saved = JSON.parse(FB.save.serialize());
         const before = JSON.stringify(s), rng = FB.getRngState(), uid = FB.getUidCounter();
-        FB.realmFamilySnapshot(s, r.id); FB.royalKinshipDegree(s, king, son);
+        FB.realmFamilySnapshot(s, r.id); FB.royalKinshipDegreeSnapshot(s, king, son);
         FB.political.actor(s, { kind:'realm', id:r.id });
         const pure = before === JSON.stringify(s) && rng === FB.getRngState() && uid === FB.getUidCounter();
         FB.save.restore(saved);
@@ -71,7 +71,7 @@ test('ordinary deaths select surviving uncles and nephews and suspend a mandate 
       const suspended = !FB.political.power(s, person, 'peace', { provinceId:'tunis' }).allowed;
       const uncle = member('theoderic');
       const nephew = member('gunthamund');
-      const avuncular = FB.royalKinshipDegree(s, first, { royalLine:{ realmId:r.id, memberId:nephew.id } });
+      const avuncular = FB.royalKinshipDegreeSnapshot(s, first, { royalLine:{ realmId:r.id, memberId:nephew.id } });
       kill('huneric');
       const second = FB.realmRulerCharacterSnapshot(s, r.id).id === uncle.charId;
       kill('godagis'); kill('theoderic');
@@ -231,13 +231,19 @@ test('lazy materialization and dead-record compaction preserve both ancestry and
   async function ({ page }, testInfo) {
     await start(page, testInfo);
     const result = await page.evaluate(function () {
-      const s = FB.state, r = s.realms.aghlabids;
+      const s = FB.state;
+      // A detached court has no opening office or story retaining its father.
+      const definition = FBDATA.realms.find(function (d) {return d.id === 'aghlabids';});
+      const r = s.realms.e2e_compaction_court = {id:'e2e_compaction_court',name:'Compaction court',
+        capital:'tunis',rank:3,religion:'homoian',alive:true,
+        ruler:JSON.parse(JSON.stringify(s.realms.aghlabids.ruler))};
+      FB.initializeRoyalCourts(s,[{id:r.id,royalCourt:JSON.parse(JSON.stringify(definition.royalCourt))}]);
       const hilderic = FB.authoredRoyalMemberSnapshot(s, r.id, 'hilderic');
       const c = FB.materializeRoyalMember(s, r.id, hilderic.id);
       const repeat = FB.materializeRoyalMember(s, r.id, hilderic.id);
       const father = s.chars[c.fatherId], fatherId = father.royalLine.memberId;
       const motherId = hilderic.motherId;
-      FB.killChar(s, father);
+      FB.courtMemberDied(s,r.succession.members[fatherId],father);
       const compacted = !s.chars[father.id] && r.succession.members[fatherId].charId === null;
       FB.save.restore(JSON.parse(FB.save.serialize()));
       const restored = FB.authoredRoyalMemberSnapshot(FB.state, r.id, 'hilderic');
@@ -316,13 +322,18 @@ test('malformed saved policy and genealogy fail before state, RNG or uid adoptio
 
 test('an older generated 476 family receives no historical actors on restore',
   async function ({ page }, testInfo) {
+    await page.addInitScript(function () {
+      document.addEventListener('DOMContentLoaded',function () {
+        const initialize = FB.initializeRoyalCourts;
+        FB.initializeRoyalCourts = function (state,definitions) {
+          FB.initializeRoyalCourts = initialize;
+          return initialize(state,definitions.filter(function (d) {return d.id !== 'aghlabids';}));
+        };
+      },{once:true});
+    });
     await start(page, testInfo);
     const result = await page.evaluate(function () {
       const s = FB.state, r = s.realms.aghlabids;
-      Object.keys(s.chars).forEach(function (id) {
-        if (s.chars[id].royalLine && s.chars[id].royalLine.realmId === r.id) delete s.chars[id];
-      });
-      delete r.succession;
       FB.ensureRealmCourt(s, r.id);
       const saved = JSON.parse(FB.save.serialize());
       const family = JSON.stringify(saved.state.realms.aghlabids.succession);
@@ -331,7 +342,7 @@ test('an older generated 476 family receives no historical actors on restore',
       return { unchanged:family === JSON.stringify(next.state.realms.aghlabids.succession),
         policy:FB.state.realms.aghlabids.succession.policyId || null,
         absent:!FB.authoredRoyalMemberSnapshot(FB.state, r.id, 'huneric'),
-        rng:FB.getRngState() === saved.rng, uid:FB.getUidCounter() === saved.uid };
+        rng:(FB.getRngState() >>> 0) === (saved.rng >>> 0), uid:FB.getUidCounter() === saved.uid };
     });
     expect(result).toEqual({ unchanged:true, policy:null, absent:true, rng:true, uid:true });
   });
@@ -345,7 +356,7 @@ test('Clovis and Burgundian story actors share the data-authored court identitie
       const gundobad = FB.authoredRoyalMemberSnapshot(s, 'burgundy', 'gundobad');
       const godegisel = FB.authoredRoyalMemberSnapshot(s, 'burgundy', 'godegisel');
       const uncle = FB.realmRulerCharacterSnapshot(s, 'burgundy');
-      const relation = FB.royalKinshipDegree(s, uncle, s.chars[gundobad.charId]);
+      const relation = FB.royalKinshipDegreeSnapshot(s, uncle, s.chars[gundobad.charId]);
       const bound = w.clovisId === clovis.charId && w.gundobadId === gundobad.charId && w.godegiselId === godegisel.charId;
       const unique = ['Clovis','Gundobad','Godegisel'].every(function (name) {
         return Object.keys(s.chars).filter(function (id) { return s.chars[id].name === name && s.chars[id].royalLine; }).length === 1;
@@ -373,7 +384,7 @@ for (const bookmark of ['867','1066']) {
         const courts = JSON.stringify(Object.keys(saved.state.realms).map(function (id) { return saved.state.realms[id].succession; }));
         FB.save.restore(saved);
         const next = JSON.parse(FB.save.serialize());
-        return { untouched:untouched, rng:FB.getRngState() === saved.rng, uid:FB.getUidCounter() === saved.uid,
+        return { untouched:untouched, rng:(FB.getRngState() >>> 0) === (saved.rng >>> 0), uid:FB.getUidCounter() === saved.uid,
           courts:courts === JSON.stringify(Object.keys(next.state.realms).map(function (id) { return next.state.realms[id].succession; })) };
       });
       expect(result).toEqual({ untouched:true, rng:true, uid:true, courts:true });

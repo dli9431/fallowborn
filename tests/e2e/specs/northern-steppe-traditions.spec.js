@@ -506,6 +506,8 @@ test('a Christian local authority preserves northern households and one existing
     await page.evaluate(stageNorthernObservance,{province:'uppsala',faith:'norse_pagan',gold:1});
     expect(await page.evaluate(function () {
       const s = FB.state, c = s.chars[s.player.charId], rid = s.holder.uppsala || s.owner.uppsala;
+      // Stage both households explicitly; the fresh revision may be wholly Christian.
+      FB.convertCountyCommunity(s,'uppsala',{kind:'faith',target:'norse_pagan',amount:1000});
       const converted = FB.convertCountyCommunity(s,'uppsala',{kind:'faith',target:'catholic',amount:100});
       if (!converted || converted.count !== 100) throw new Error('Mixed community setup failed');
       if (!FB.startCountyCommunityProject(s,'uppsala',{kind:'faith',target:'catholic',sponsor:rid,policy:'voluntary'}))
@@ -603,13 +605,12 @@ test('a mobile court keeps mixed religious members and conserved people when its
           totals:totals,ids:r.members.map(function (m) { return m.id; })});
       }
       const destination = Object.keys(FB.world.adj[origin]).sort().find(function (pid) {
-        const plan = FB.armyOrderPlan(s,army,pid);
-        return s.owner[pid] === 'byzantium' && plan.ok && plan.path.length &&
-          plan.path.every(function (p) { return s.owner[p] === 'byzantium'; });
+        return s.owner[pid] && !FB.waterCrossing(origin,pid);
       });
-      if (!destination) throw new Error('Expected the existing Roman-facing route');
-      const path = FB.armyOrderPlan(s,army,destination).path;
-      path.forEach(function (pid) { FB.transferProvince(s,pid,rid); });
+      if (!destination) throw new Error('Expected an inhabited land neighbor');
+      FB.transferProvince(s,destination,rid);
+      const route = FB.armyOrderPlan(s,army,destination);
+      if (!route.ok || !route.path.length || route.path.some(function (pid) {return pid !== origin && pid !== destination;})) throw new Error('Expected a direct permitted land route');
       const population = JSON.stringify([s.population.counties[origin],s.population.counties[destination]]);
       const identitiesBefore = identities(), total = M.total(s,rid);
       const review = M.review(s,{realmId:rid,action:'move',terms:{countyId:destination},actor:{kind:'realm',id:rid}});
@@ -683,6 +684,8 @@ test('legacy pagan and Tengri doctrine, generated households and unrelated holy-
       const transfer = FB.convertCountyCommunity(s,s.player.provinceId,{kind:'faith',target:id,amount:100});
       if (!transfer || transfer.count !== 100) throw new Error('Generated minority setup failed');
       FBTEST.makeGreatHolyWar({phase:'preparation',capturedCounties:[],includePlayer:false});
+      FB.repairGreatHolyWar(s);
+      FB.ensureModifiers(s);
       return FB.save.serialize();
     });
     function retained() {

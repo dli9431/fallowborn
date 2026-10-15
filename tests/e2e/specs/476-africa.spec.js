@@ -6,26 +6,25 @@ dependsOnRuntime(__filename, [
   'data/bookmarks.js', 'data/settlements.js', 'data/geographies.js',
   'data/intrigue.js', 'data/political_institutions.js', 'data/story_campaigns.js',
   'data/eras.js', 'data/systems.js', 'data/economy.js', 'data/cultures.js',
-  'data/distribution_crazygames.js', 'js/world.js', 'js/institutions.js',
+  'data/distribution_crazygames.js', 'js/crazygames.js', 'js/world.js', 'js/institutions.js',
   'js/authority.js', 'js/justice.js', 'js/population.js', 'js/events.js',
   'js/stories.js', 'js/story_campaign.js', 'data/story_instances.js',
   'js/story_courts.js', 'js/wars.js', 'js/armies.js',
   'js/save.js', 'js/save_v4.js', 'js/main.js', 'js/modifiers.js', 'js/model.js'
 ]);
 const { test, expect } = require('../support/fixture');
-const { startParityGame } = require('../support/game/parity');
+const { startHistoricalGame } = require('../support/game/historical-start');
 const { openGame } = require('../support/game/navigation');
 
-async function start(page, testInfo) {
-  await startParityGame(page, testInfo, { bookmark:'476',
-    code:'AFRICA476-476-federate_476-ravenna-m-Marcus-standard-0-gothic.homoian' });
+async function start(page, testInfo, crazygames) {
+  await startHistoricalGame(page, testInfo, { bookmark:'476',
+    code:'AFRICA476-476-federate_476-ravenna-m-Marcus-standard-0-gothic.homoian' }, crazygames);
 }
 
 for (const crazygames of [false, true]) {
   test('Africa smoke and save retain authored courts, communities and sites with flag ' + crazygames,
     async function ({ page }, testInfo) {
-      if (crazygames) await page.addInitScript(function () { window.FB_DISTRIBUTION = 'crazygames'; });
-      await start(page, testInfo);
+      await start(page, testInfo, crazygames);
       const result = await page.evaluate(function () {
         const s = FB.state, region = FBDATA.bookmarkRegions476.africa;
         const initial = region.provinces.map(function (p) {
@@ -147,8 +146,7 @@ test('African event content follows local communities, profession and the late a
 for (const crazygames of [false, true]) {
   test('African household goodwill reaches county support, previews and saved receipts with flag ' + crazygames,
     async function ({ page }, testInfo) {
-      if (crazygames) await page.addInitScript(function () { window.FB_DISTRIBUTION = 'crazygames'; });
-      await start(page, testInfo);
+      await start(page, testInfo, crazygames);
       const results = await page.evaluate(function () {
         const initial = JSON.parse(FB.save.serialize());
         return [

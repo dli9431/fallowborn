@@ -3380,12 +3380,16 @@ window.FB = window.FB || {};
     const land = FB.instantStatus(s, 'buy_land');
     if (!land.shown) return false;
     const cost = FB.landPlotCost(s);
-    return crazyGamesProgressTip(land.can ? 'cg-land-ready' : 'cg-land-saving',
-      land.can
+    const available = FB.landAvailable(s).length > 0;
+    const ready = land.can && available && p.gold >= cost;
+    const reason = !land.can ? land.reason : !available
+      ? FB.T('No land is available here.') : '';
+    return crazyGamesProgressTip(ready ? 'cg-land-ready' : 'cg-land-saving',
+      ready
         ? FB.T('💡 Your household is free and can afford its first land plot for {money:cost}. In Rank & Realm, use Buy a plot of land and choose a settlement. This will be property your family can inherit.', { cost:cost })
         : FB.T('💡 Your household is free. Save for your first land plot: the current price is {money:cost}; you have {money:funds}. {status} Keep your enterprise staffed and use an earning Daily Focus. Buy a plot of land is in Rank & Realm.', {
-          cost:cost, funds:Math.floor(p.gold), status:FB.translateKnown(land.reason)
-        }), land.can ? 'buy_land' : 'livelihoods');
+          cost:cost, funds:Math.floor(p.gold), status:FB.translateKnown(reason)
+        }), ready ? 'buy_land' : 'livelihoods');
   }
 
   UI.resumeCrazyGamesHouseholdTips = function () {

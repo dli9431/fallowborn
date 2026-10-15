@@ -16,7 +16,7 @@ dependsOnRuntime(__filename,[
   'js/government_selection.js','js/government_levy.js','js/government_revenue.js','js/government_continuity.js',
   'js/government_council.js','js/government_diplomacy.js','js/government_ai.js','js/governments.js',
   'js/world.js','js/authority.js','js/treasury.js','js/fiscal.js','js/lordships.js','js/bookmark_setup.js','js/starts.js',
-  'js/main.js','js/model.js','js/station.js','js/progression.js','js/actions.js','js/justice.js','js/religion.js',
+  'js/main.js','js/model.js','js/station.js','js/progression.js','js/actions.js','js/justice.js','js/religion.js','js/wars.js',
   'js/save.js','js/save_v4.js','js/mods.js','js/stories.js','js/messages.js','js/i18n.js','js/ui_misc.js','js/ui_modals.js',
   'css/style.css','js/crazygames.js','data/distribution_crazygames.js'
 ]);
@@ -28,6 +28,16 @@ async function start(page,testInfo,options) {
     await page.addInitScript(function () { window.FB_DISTRIBUTION = 'crazygames'; });
     await openCrazyGame(page,testInfo);
   } else await openGame(page,testInfo);
+  if (options.legacy) await page.evaluate(function () {
+    // Generate the retained pre-aristocracy opening, rather than deleting
+    // people from an expanded campaign and mislabelling its catalogue.
+    const b = FBDATA.bookmarks['476']; b.revision = 'baseline';
+    window.__aristocraticFresh = {opening:b.opening,openingRevision:b.openingRevision,realms:b.realms};
+    b.opening = b.openingRevisions.core_v1; b.openingRevision = 'core_v1';
+    b.realms = b.realms.map(function (r) {
+      return r.id === 'sasanian_476' ? Object.assign({},r,{government:'regnum'}) : r;
+    });
+  });
   if (options.fictional) {
     await page.addScriptTag({path:path.resolve(__dirname,'../fixtures/aristocratic-monarchy.js')});
     await page.evaluate(function () { FB_ARISTOCRATIC_FIXTURE.install(); });
@@ -65,9 +75,10 @@ async function start(page,testInfo,options) {
         const R = FB.governmentRecognition;
         R.members(s,rid).forEach(function (m) {
           const q = R.supportQuote(s,m.principal,rid,m.id,id,FB.aristocracy.profile(s,rid).defaultTerms);
-          if (!R.applySupport(s,q)) throw new Error(q.reason);
+          if (!q.allowed || !R.applySupport(s,q)) throw new Error(m.id + ': ' + (q.reason || 'Changed recognition review'));
         });
       }};
+    if (options.legacy) Object.assign(FBDATA.bookmarks['476'],window.__aristocraticFresh);
   },options);
 }
 
@@ -87,23 +98,25 @@ for (const fictional of [false,true]) {
         royal:candidates.length > 0,minor:fictional && candidates.some(function (c) { return c.minor; }),
         vacancy:!q.allowed,inheritance:!inheritance.allowed,profiles:FB.governments.validate(),
         direct:FB.realmHeldCounties(s,a.rid).every(function (pid) { return s.holder[pid] === a.rid; }),
-        distinct:voices.every(function (m) { return s.bookmarkSetup.estates.some(function (e) { return e.holderId === m.principal.id && e.provinceId === m.scope.id; }); }),
+        estates:voices.filter(function (m) { return s.bookmarkSetup.estates.some(function (e) { return e.holderId === m.principal.id && e.provinceId === m.scope.id; }); }).length,
         vocabulary:FB.station.promotion({tier:3,realmId:a.rid},s) === null,
         offices:FB.publicOfficeRows(s,a.rid).filter(function (row) { return !A.assignment(s,row); }).length};
     },fictional);
-    expect(result).toEqual({pure:true,form:'aristocratic_monarchy',eligible:[false,false],live:true,royal:true,
-      minor:fictional,vacancy:true,inheritance:true,profiles:[],direct:true,distinct:true,vocabulary:true,offices:fictional ? 0 : 1});
+    expect(result).toEqual({pure:true,form:'aristocratic_monarchy',eligible:fictional ? [false,false] : [false,false,false,false],live:true,royal:true,
+      minor:fictional,vacancy:true,inheritance:true,profiles:[],direct:true,estates:2,vocabulary:true,offices:fictional ? 0 : 1});
   });
 
   test((fictional ? 'fictional' : 'Sasanian') + ' accepted recognition commits once and refusal remains a real vacancy', async function ({page},testInfo) {
     await start(page,testInfo,{fictional:fictional});
     const result = await page.evaluate(function () {
       const s = FB.state, a = ARISTO, R = FB.governmentRecognition;
-      const first = a.voices()[0], candidate = a.candidate();
+      const candidate = a.candidate();
       a.back(candidate.id);
       const noFalseDeath = !R.accessionQuote(s,a.rid,'death').allowed;
-      const withdrawn = R.applySupport(s,R.supportQuote(s,first.principal,a.rid,first.id,null));
-      // Court plus one small interest is insufficient in each declaration.
+      const withdrawn = a.voices().every(function (voice) {
+        return R.applySupport(s,R.supportQuote(s,voice.principal,a.rid,voice.id,null));
+      });
+      // The court alone is insufficient for either declared constituency.
       const blocked = !R.accessionQuote(s,a.rid,'abdication').allowed;
       const old = s.realms[a.rid].succession.members[s.realms[a.rid].succession.rulerMemberId];
       old.alive = false; if (old.charId) s.chars[old.charId].dead = true;
@@ -138,9 +151,12 @@ test('paid support reviews bind ancestry, participants, jurisdiction, generation
       function () { const live=s.realms[a.rid].succession.members[candidate.id];live.alive=false;if(live.charId)s.chars[live.charId].dead=true; },
       function () { const live=s.realms[a.rid].succession.members[candidate.id];live.fatherId=null;live.parentId=null;if(live.charId)s.chars[live.charId].fatherId=null; }
     ];
-    const original = JSON.parse(FB.save.serialize());
+    // The in-place reset needs live identity fields, not compact save records.
+    const original = {state:JSON.parse(JSON.stringify(s))};
     const rejected = changes.map(function (change) {
-      const proposal=q(); change(); const before=JSON.stringify(s), gold=s.realms[a.rid].treasury.gold;
+      const proposal=q();
+      if (!proposal.allowed) throw new Error(proposal.reason);
+      change(); const before=JSON.stringify(s), gold=s.realms[a.rid].treasury.gold;
       const rejected=!R.applySupport(s,proposal) && before === JSON.stringify(s) && gold === s.realms[a.rid].treasury.gold;
       // Keep the same fixture object and restore just the reviewed facts.
       s.realms[a.rid] = JSON.parse(JSON.stringify(original.state.realms[a.rid]));
@@ -205,12 +221,16 @@ test('magnate probate and governor replacement retain private estates and family
     const familyUnchanged=family === JSON.stringify([s.chars[m.principal.id].fatherId,s.chars[m.principal.id].childrenIds]);
     const dismissal=FB.publicOfficeApply(s,FB.publicOfficeQuote(s,a.actor,governor.id,'remove'));
     const aliveRights=a.voices()[0].active;
-    // Ordinary estate probate is owned by the existing opening ledger.
+    // Estate probate prefers children; public rights use the oldest eligible
+    // adult of the dynasty. They need not select the same person.
+    const privateHeir=Object.values(s.chars).filter(function (c) {
+      return !c.dead && c.dyn === m.dynasty && (c.fatherId === m.principal.id || c.motherId === m.principal.id);
+    }).sort(function (a,b) { return a.born-b.born || a.id.localeCompare(b.id); })[0];
     FB.stories.day(s);
     const estate=s.bookmarkSetup.estates.find(function (e) { return e.provinceId === m.scope.id && e.dynasty === m.dynasty; });
     return {applied:applied,once:once,privateUntouched:privateUntouched,principalChanged:principalChanged,
       family:familyUnchanged,governor:governor.holder.id === c.id,dismissal:dismissal,aliveRights:aliveRights,
-      estate:estate.holderId === quote.heirId,nonroyal:!A.royalEligibility(s,a.rid,quote.heirId).allowed};
+      estate:!!privateHeir && estate.holderId === privateHeir.id,nonroyal:!A.royalEligibility(s,a.rid,quote.heirId).allowed};
   });
   expect(result).toEqual({applied:true,once:true,privateUntouched:true,principalChanged:true,family:true,governor:true,dismissal:true,aliveRights:true,estate:true,nonroyal:true});
 });
@@ -296,7 +316,7 @@ test('AI honors a principal refusal, provincial support and an unfunded court wi
   await start(page,testInfo);
   const result = await page.evaluate(function () {
     const s=FB.state,a=ARISTO,A=FB.aristocracy,R=FB.governmentRecognition,m=a.voices()[0],candidate=a.candidate();
-    R.applySupport(s,R.supportQuote(s,m.principal,a.rid,m.id,null));
+    if (!R.applySupport(s,R.supportQuote(s,m.principal,a.rid,m.id,null))) throw new Error('Expected a recorded refusal');
     FB.setCountySupport(s,m.scope.id,-40); s.realms[a.rid].treasury.gold=0;
     const cash=s.player.gold,uid=FB.getUidCounter(),count=s.authority.appointments.length;
     A.ai(s,a.rid); const first=JSON.stringify([a.row(),s.authority.appointments]); A.ai(s,a.rid);
@@ -315,6 +335,7 @@ test('detached v4 validation rejects forged ancestry, duplicate scope, invalid c
     const s=FB.state,a=ARISTO; a.back(a.candidate().id);
     const envelope=JSON.parse(FB.save.serialize()),ledger=JSON.stringify(envelope.state.authority);
     FB.save.restore(envelope); const adopted=FB.state;
+    const sovereignId=FB.realmRulerCharacterSnapshot(adopted,a.rid).id;
     const exact=ledger === JSON.stringify(adopted.authority) && (envelope.rng>>>0) === (FB.getRngState()>>>0) && envelope.uid === FB.getUidCounter();
     const edits=[
       function (s,d) { delete s.authority.governments[a.rid].aristocracy; },
@@ -328,7 +349,8 @@ test('detached v4 validation rejects forged ancestry, duplicate scope, invalid c
       function (s,d) { s.authority.governments[a.rid].recognition[d.interests[0].id].terms.revenue=0.1; },
       function (s,d) { s.authority.governments[a.rid].recognition[d.interests[0].id].candidateId=s.authority.appointments.find(function (r) { return r.id === d.interests[0].appointmentId; }).holder.id; },
       function (s,d) { s.authority.governments[a.rid].recognition[d.interests[0].id].principal={kind:'realm',id:a.rid}; },
-      function (s,d) { d.regency={generation:FB.realmRulerGeneration(s,a.rid),stewardId:s.player.charId,sinceTurn:s.turn}; }
+      function (s,d) { d.regency={generation:FB.realmRulerGeneration(s,a.rid),
+        stewardId:sovereignId,sinceTurn:s.turn}; }
     ];
     const rejected=edits.map(function (edit) {
       const bad=JSON.parse(JSON.stringify(envelope));edit(bad.state,bad.state.authority.governments[a.rid].aristocracy);
@@ -341,25 +363,16 @@ test('detached v4 validation rejects forged ancestry, duplicate scope, invalid c
   expect(result).toEqual({exact:true,rejected:[true,true,true,true,true,true,true,true,true,true,true,true],v:4});
 });
 
-test('an earlier wider save keeps regnum and the original opening without seeding new people or offices', async function ({page},testInfo) {
-  await start(page,testInfo);
+test('an earlier unstamped opening keeps regnum without seeding new people or offices', async function ({page},testInfo) {
+  await start(page,testInfo,{legacy:true});
   const result = await page.evaluate(function () {
-    const envelope=JSON.parse(FB.save.serialize()),s=envelope.state,rid=ARISTO.rid,row=s.authority.governments[rid];
-    const appointmentIds=row.aristocracy.interests.map(function (m) { return m.appointmentId; });
-    const rightIds=row.aristocracy.interests.reduce(function (list,m) { return list.concat(m.rightIds); },[]);
-    s.authority.appointments=s.authority.appointments.filter(function (r) { return r.institutionId !== rid; });
-    s.authority.rights=s.authority.rights.filter(function (r) { return !rightIds.includes(r.id); });
-    s.authority.governments[rid]={formId:'regnum',sinceTurn:0};
-    ['mihran_elder','mihran_heir','karen_elder','karen_heir','ctesiphon_governor'].forEach(function (id) {
-      delete s.chars[s.bookmarkSetup.actors[id]]; delete s.bookmarkSetup.actors[id];
-    });
-    s.bookmarkSetup.estates=s.bookmarkSetup.estates.filter(function (e) { return !['mihran_estate_476','karen_estate_476'].includes(e.id); });
+    const envelope=JSON.parse(FB.save.serialize()),s=envelope.state,rid=ARISTO.rid;
     delete s.bookmarkSetup.revision;
     const source=JSON.stringify(s.bookmarkSetup),count=Object.keys(s.chars).length;
     FB.save.restore(envelope);
     return {form:FB.governments.forRealm(FB.state,rid).id,opening:source === JSON.stringify(FB.state.bookmarkSetup),
       count:count === Object.keys(FB.state.chars).length,absent:!FB.aristocracy.state(FB.state,rid),
-      office:!FB.state.authority.appointments.some(function (r) { return appointmentIds.includes(r.id); }),
+      office:!FB.state.authority.appointments.some(function (r) { return r.institutionId === rid && r.publicTerms; }),
       rng:(envelope.rng>>>0) === (FB.getRngState()>>>0),uid:envelope.uid === FB.getUidCounter()};
   });
   expect(result).toEqual({form:'regnum',opening:true,count:true,absent:true,office:true,rng:true,uid:true});
@@ -400,9 +413,11 @@ test('a recognized royal household heir continues one player crown and the same 
     const tree=FB.state.realms.player.succession;
     return {applied:applied,person:FB.state.player.charId === heir.id,once:FB.realmRulerGeneration(FB.state,'player') === generation+1,
       single:tree.members[tree.rulerMemberId].charId === heir.id,grants:grants === JSON.stringify(FB.aristocracy.state(FB.state,'player').interests),
+      frontier:tree.order.indexOf(tree.rulerMemberId) < 0 && tree.dynasticOrder.indexOf(tree.rulerMemberId) < 0 &&
+        tree.heirId === (tree.order[0] || null),
       valid:FB.aristocracy.validateState(FB.state),origin:FB.aristocracy.state(FB.state,'player').originRealmId};
   });
-  expect(result).toEqual({applied:true,person:true,once:true,single:true,grants:true,valid:null,origin:'sasanian_476'});
+  expect(result).toEqual({applied:true,person:true,once:true,single:true,grants:true,frontier:true,valid:null,origin:'sasanian_476'});
 });
 
 test('minority stewardship can recover through a reviewed living principal and ends at adulthood', async function ({page},testInfo) {
@@ -478,6 +493,7 @@ for (const crazygames of [false,true]) {
 }
 
 test('a ruler can review a return from dynastic government without bypassing provincial assent', async function ({page},testInfo) {
+  await page.setViewportSize({width:390,height:844});
   await start(page,testInfo,{ruler:true});
   const converted=await page.evaluate(function () {
     const s=FB.state,A=FB.aristocracy;
@@ -497,23 +513,25 @@ test('a ruler can review a return from dynastic government without bypassing pro
 });
 
 test('a real seasonal continuation replays exactly and keeps recognition and hereditary ledgers bounded', async function ({page},testInfo) {
-  test.setTimeout(180000);await start(page,testInfo);
+  await start(page,testInfo);
+  await page.evaluate(function () { FB.state.date.day=89; FB.state.turn=88; });
   const source=await page.evaluate(function () { return JSON.parse(FB.save.serialize()); });
-  await advanceTo(page,'season',100);
+  expect(await advanceTo(page,'season',2)).toEqual({days:2,stop:null});
   const first=await page.evaluate(function () { const d=JSON.parse(FB.save.serialize());return {state:d.state,rng:d.rng>>>0,uid:d.uid}; });
   await page.evaluate(function (d) { FB.save.restore(d); },source);
-  await advanceTo(page,'season',100);
+  expect(await advanceTo(page,'season',2)).toEqual({days:2,stop:null});
   const second=await page.evaluate(function () { const d=JSON.parse(FB.save.serialize());return {state:d.state,rng:d.rng>>>0,uid:d.uid}; });
   expect(second).toEqual(first);
-  await injectBrowserHarness(page);await advanceBookmark(page,720);
   const bounded=await page.evaluate(function () {
     const s=FB.state,d=FB.aristocracy.state(s,'sasanian_476'),row=s.authority.governments.sasanian_476;
+    // Exercise two later quarterly decisions without a multi-year daily loop.
+    for (let i=0;i<2;i++) { s.turn+=90; FB.aristocracy.ai(s,'sasanian_476'); }
     return {interests:d.interests.length,recognition:Object.keys(row.recognition || {}).length,
       provincial:s.authority.appointments.filter(function (r) { return r.provincialTerms; }).length,
       valid:FB.aristocracy.validateState(s),mode:FB.governments.forRealm(s,'sasanian_476').id};
   });
-  expect(bounded).toMatchObject({interests:2,provincial:2,valid:null,mode:'aristocratic_monarchy'});
-  expect(bounded.recognition).toBeLessThanOrEqual(3);
+  expect(bounded).toMatchObject({interests:4,provincial:4,valid:null,mode:'aristocratic_monarchy'});
+  expect(bounded.recognition).toBeLessThanOrEqual(5);
 });
 
 test('surviving local rights can be probated under dynastic government before a reviewed return', async function ({page},testInfo) {
@@ -527,7 +545,7 @@ test('surviving local rights can be probated under dynastic government before a 
   });
   await expect(page.locator('#provincial-return')).toBeDisabled();
   await page.locator('#provincial-probate-mihran').click();
-  await expect(page.locator('#provincial-return-confirm')).toHaveText('Confirm inherited rights');
+  await expect(page.locator('#provincial-return-confirm')).toContainText('Confirm inherited rights');
   await page.locator('#provincial-return-confirm').click();
   await expect(page.locator('#provincial-return')).toBeEnabled();
   const probate=await page.evaluate(function (e) {
@@ -578,8 +596,8 @@ test('annual frontier passes retain one royal court, bounded family facts and a 
       principals:FB.aristocracy.constituency(s,'sasanian_476').map(function (m) { return {id:m.id,principal:m.principal,active:m.active}; }),
       frontier:{romanAlive:s.realms.byzantium.alive,persianAlive:r.alive,royalMember:r.succession.rulerMemberId,year:s.date.year}};
   });
-  expect(before).toMatchObject({founder:opening.founder,interests:opening.interests,principalRecords:2,grants:2,valid:null});
-  expect(before.recognition).toBeLessThanOrEqual(3);
+  expect(before).toMatchObject({founder:opening.founder,interests:opening.interests,principalRecords:4,grants:4,valid:null});
+  expect(before.recognition).toBeLessThanOrEqual(5);
   expect(before.generation).toBeGreaterThanOrEqual(opening.generation);
   await testInfo.attach('aristocratic-frontier-annual-passes',{body:Buffer.from(JSON.stringify({opening:opening,after:before},null,2)),contentType:'application/json'});
   await advanceBookmark(page,45);

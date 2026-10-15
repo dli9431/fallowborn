@@ -47,6 +47,11 @@ test('manual saves confirm committed data and survive reload without a localStor
 
 for (const version of [3, 'prototype-v4', 4]) {
   test(version + ' slots copy exact bytes only after commit and a local recovery copy wins', async function ({ page }, testInfo) {
+    if (version !== 4) await page.addInitScript(function () {
+      document.addEventListener('DOMContentLoaded',function () {
+        FBDATA.bookmarks['867'].revision = 'baseline';
+      },{once:true});
+    });
     await start(page, testInfo);
     await page.evaluate(function () {
       FB.state.player.gold = 100;

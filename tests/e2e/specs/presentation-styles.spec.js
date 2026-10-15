@@ -9,6 +9,8 @@ dependsOnRuntime(__filename, [
 ]);
 const { test, expect } = require('../support/fixture');
 const { openGame } = require('../support/game/navigation');
+const { openCrazyGame } = require('../support/game/crazygames-title');
+const { mockCrazyGames } = require('../support/crazygames');
 const { startDeterministicGame } = require('../support/game/start');
 
 test('867 and 1066 keep the original settlement and house pixels without consuming RNG',
@@ -147,7 +149,7 @@ test('topbar and card emblems follow the period while the title retains its cres
   async function ({ page }, testInfo) {
     await openGame(page, testInfo);
     await startDeterministicGame(page);
-    const result = await page.evaluate(function () {
+    const result = await page.evaluate(async function () {
       FB.game.setPaused(true);
       const s = FB.state, me = s.chars[s.player.charId];
       s.start.era = 'late_antique';
@@ -157,9 +159,10 @@ test('topbar and card emblems follow the period while the title retains its cres
       const title = document.createElement('canvas'); title.width = 48; title.height = 56;
       FB.drawCrest(title, 'Fallowborn', null);
       const titlePixels = title.toDataURL();
-      ['standard', 'chi_rho', 'tamga'].forEach(function (style) {
+      for (const style of ['standard', 'chi_rho', 'tamga']) {
         FBDATA.eras.late_antique.emblem = style;
-        FB.ui.refreshNow();
+        FB.ui.refresh();
+        await new Promise(function (resolve) { requestAnimationFrame(resolve); });
         const top = document.getElementById('crest');
         variants.push(top.toDataURL());
         keys.push(FB.crestVisualKey(me.dyn || me.name, s));
@@ -169,7 +172,7 @@ test('topbar and card emblems follow the period while the title retains its cres
         matches.push(root.firstChild.toDataURL() === top.toDataURL());
         FB.drawCrest(title, 'Fallowborn', null);
         matches.push(titlePixels === title.toDataURL());
-      });
+      }
       return { matches:matches, distinct:new Set(variants.concat(original)).size,
         keys:new Set(keys).size, rng:FB.getRngState() === rng };
     });
@@ -197,7 +200,7 @@ test('music prefers the era and retains exact, lineage, role and general fallbac
     await openGame(page, testInfo);
     const result = await page.evaluate(function () {
       const s = { start:{ id:'476', era:'late_antique' },
-        player:{ charId:'me', tier:3, profession:'farmer', flags:{} },
+        player:{ charId:'me', tier:6, profession:'farmer', flags:{} },
         chars:{ me:{ id:'me', religion:'homoian', culture:'roman' } }, realms:{} };
       function bank() { const b = FB.music.resolveBank(s); return b && b.id; }
       const out = [bank()];
@@ -299,12 +302,13 @@ test('map art follows live county culture and player-host badges refresh when th
 
 test('CrazyGames skips audio initialization even if a catalog is present',
   async function ({ page }, testInfo) {
+    await mockCrazyGames(page);
     await page.addInitScript(function () {
       window.FB_DISTRIBUTION = 'crazygames';
       window.__presentationAudioCount = 0;
       window.Audio = function () { window.__presentationAudioCount++; };
     });
-    await openGame(page, testInfo);
+    await openCrazyGame(page, testInfo);
     expect(await page.evaluate(function () {
       return { audio:window.__presentationAudioCount, available:FB.music.available(),
         bank:FB.music.resolveBank({ player:{}, chars:{} }) };

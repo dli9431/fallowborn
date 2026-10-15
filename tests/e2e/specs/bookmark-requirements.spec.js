@@ -7,7 +7,7 @@ dependsOnRuntime(__filename, ['index.html', 'data', 'js']);
 
 const cases = [
   ['unknown era', 'era', /unknown era missing_era/],
-  ['unknown geography', 'geography', /unknown geography missing_geography/],
+  ['unknown geography', 'geography', /unknown geography missing_geography/i],
   ['unknown form', 'form', /unknown government missing_form/],
   ['unregistered strategy', 'strategy', /holders strategy missing_strategy/],
   ['unregistered world story', 'story', /missing_story.*(?:registered|unregistered)|unregistered.*missing_story/],
@@ -34,7 +34,7 @@ const cases = [
   ['unknown faith-head system', 'head_system', /[Uu]nknown system missing_system/],
   ['unknown garment', 'garment', /unknown garment missing_garment/],
   ['capability without a grant', 'capability', /granted by no technology/],
-  ['missing climate', 'climate', /no climate zone resolves/],
+  ['missing climate', 'climate', /defaultClimateZone must name a climate zone/],
   ['unknown season kind', 'season', /four known season kinds/],
   ['unknown knowledge province', 'knowledge_province', /unknown provinces missing_province/],
   ['unknown knowledge basin', 'knowledge_basin', /unknown basins missing_basin/],
@@ -152,7 +152,7 @@ test('bookmark validation leaves legacy technology defaults untouched until acce
       return !(FBDATA.tech[id].reqAny || []).length;
     })[0];
     delete FBDATA.tech[id].reqAny;
-    const invalid = JSON.parse(JSON.stringify(FB.bookmark('867')));
+    const invalid = JSON.parse(JSON.stringify(FB.bookmark('867', 'baseline')));
     invalid.id = 'invalid_technology_review'; invalid.requirements = { provinces:['missing_province'] };
     FBDATA.bookmarks[invalid.id] = invalid;
     const before = JSON.stringify(FBDATA), state = FB.state, world = FB.world;
@@ -181,8 +181,11 @@ test('late antique faith heads share their campaign sees without blocking activa
     await new Promise(function (resolve, reject) {
       FB.activateBookmark('476', null, function (error) { if (error) reject(error); else resolve(); });
     });
-    const bm = JSON.parse(JSON.stringify(FB.bookmark('476')));
-    bm.localInstitutions.rome_see.religion = 'proof_nicene';
+    const bm = JSON.parse(JSON.stringify(FBDATA.bookmarks['476']));
+    [bm].concat(Object.values(bm.revisions || {})).forEach(function (layer) {
+      if (layer.localInstitutions && layer.localInstitutions.rome_see)
+        layer.localInstitutions.rome_see.religion = 'proof_nicene';
+    });
     const mod = { bookmarks:[bm], religions:{ proof_nicene:{ name:'Proof communion',
       group:'nicene', relationToParent:'in_fold', properties:{} } } };
     const before = JSON.stringify(FBDATA), errors = FB.mods.validate(mod);
@@ -224,6 +227,9 @@ test('local sees reject incompatible central offices and duplicate office seeds'
 test('bookmark replacements recheck existing ruler and fixed-community starts', async function ({ page }, testInfo) {
   await openGame(page, testInfo);
   const results = await page.evaluate(function () {
+    // The bundled federate role now has several camps. Give this fixture a
+    // fixed birthplace so it continues to exercise the fixed-community gate.
+    FBDATA.startScenarios.find(function (s) { return s.id === 'federate_476'; }).fixedProvinceId = 'ravenna';
     return ['ruler', 'community'].map(function (change) {
       const bm = JSON.parse(JSON.stringify(FB.bookmark('476')));
       if (change === 'ruler') bm.realms.filter(function (r) { return r.id === 'croatia'; })[0].ruler.name = 'Another ruler';
@@ -300,10 +306,20 @@ test('malformed dates and community lists return diagnostics through the opening
     county.communities = {};
     county.settlements = [Object.assign({}, entry, { communities:[{ culture:county.culture,
       religion:county.religion, populationShare0:10000 }] })];
-    return [FB.validateBookmark(missingDate).join('\n'), FB.validateBookmark(invalidCommunities).join('\n')];
+    const malformedScope = JSON.parse(JSON.stringify(FB.bookmark('493')));
+    const institution = Object.values(malformedScope.localInstitutions).find(function (d) { return !!d.profileId; });
+    if (!institution) throw new Error('Expected a profile institution');
+    institution.jurisdictionIds = null;
+    const before = JSON.stringify(FBDATA), rng = FB.getRngState(), uid = FB.getUidCounter();
+    const faults = [FB.validateBookmark(missingDate).join('\n'), FB.validateBookmark(invalidCommunities).join('\n'),
+      FB.validateBookmark(malformedScope).join('\n')];
+    if (before !== JSON.stringify(FBDATA) || rng !== FB.getRngState() || uid !== FB.getUidCounter())
+      throw new Error('Malformed definition validation changed the catalogue or identity');
+    return faults;
   });
   expect(results[0]).toContain('invalid start date');
   expect(results[1]).toContain('Invalid settlement community partition');
+  expect(results[2]).toContain('invalid local jurisdiction');
 });
 
 test('invalid activation preserves the active world, RNG and state', async function ({ page }, testInfo) {
@@ -311,7 +327,7 @@ test('invalid activation preserves the active world, RNG and state', async funct
   const result = await page.evaluate(function () {
     const world = FB.world, bookmark = FB.activeBookmark, state = FB.state;
     const rng = FB.getRngState(), uid = FB.getUidCounter(), provinces = FBDATA.provinces;
-    FBDATA.bookmarks.invalid_activation = Object.assign({}, FB.bookmark('867'),
+    FBDATA.bookmarks.invalid_activation = Object.assign({}, FB.bookmark('867', 'baseline'),
       { id:'invalid_activation', requirements:{ provinces:['missing_province'] } });
     return new Promise(function (resolve) {
       FB.activateBookmark('invalid_activation', null, function (error) {
@@ -369,7 +385,7 @@ test('same-mod era, form, culture, wardrobe, layout and lexicon satisfy the comp
     const early = copy(FBDATA.eras.early_medieval); early.to = 998; early.technology.to = 998;
     const era = copy(early); era.from = 999; era.to = 999; era.technology.from = 999; era.technology.to = 999;
     era.defaultGovernment = 'proof_form'; era.defaultCulture = 'proof_culture'; era.costume = 'proof_wardrobe';
-    const bm = copy(FB.bookmark('867')); bm.id = 'proof_era_date'; bm.era = 'proof_era'; bm.date.year = 999;
+    const bm = copy(FB.bookmark('867', 'baseline')); bm.id = 'proof_era_date'; bm.era = 'proof_era'; bm.date.year = 999;
     bm.settlementLayout = 'proof_layout'; bm.starts = ['proof_era_start']; bm.stories = [];
     bm.realms[0].government = 'proof_form';
     const scenario = copy(FBDATA.startScenarios.filter(function (s) { return s.id === 'farmer'; })[0]);

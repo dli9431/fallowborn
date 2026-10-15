@@ -215,7 +215,7 @@ test('compact court review restores filters, scroll and keyboard focus', async f
   });
   expect(saved.scroll).toBeGreaterThan(0);
   await button.press('Enter');
-  await page.locator('#cm-close').click();
+  await page.locator('[data-modal-nav="back"]').click();
   await expect(page.locator('#finder-scope')).toHaveValue('all');
   await expect(page.locator('#finder-availability')).toHaveValue('all');
   await expect(page.locator('[data-finder-court="' + saved.court + '"]').first()).toBeFocused();
@@ -443,7 +443,7 @@ for (const width of [320, 390]) {
     expect(saved).toBeGreaterThan(0);
     await button.press('Enter');
     if (width === 320) await page.goBack();
-    else await page.locator('#cm-close').click();
+    else await page.locator('[data-modal-nav="back"]').click();
     await expect(button).toBeFocused();
     expect(await page.locator('#gm-body').evaluate(function (body) { return body.scrollTop; })).toBe(saved);
     await expect(page.locator('#finder-filters')).toHaveAttribute('open', '');
@@ -590,6 +590,35 @@ test('finder-origin travel cancellation fallback opens finder instead of charact
   await expect(page.locator('#cm-close')).toHaveCount(0);
 });
 
+
+test('finder computes shared realm details once per render without retaining stale counts', async function ({ page }) {
+  const result = await page.evaluate(function () {
+    const query = FB.marriageCandidateQuery, availability = FB.realmHostAvailability;
+    const candidates = query(FB.state,{scope:'all',availability:'all'});
+    const byRealm = {};
+    candidates.forEach(function (row) {(byRealm[row.realmId] || (byRealm[row.realmId] = [])).push(row);});
+    const rid = Object.keys(byRealm).find(function (id) {return byRealm[id].length > 1;});
+    if (!rid) throw new Error('Expected several candidates from one court');
+    let calls = 0, current = 750;
+    FB.marriageCandidateQuery = function () {return byRealm[rid];};
+    FB.realmHostAvailability = function () {calls++; return {current:current,maximum:1200};};
+    const before = JSON.stringify(FB.state), rng = FB.getRngState(), uid = FB.getUidCounter();
+    try {
+      FB.ui.showMarriageFinder();
+      const first = Array.from(document.querySelectorAll('.finder-realm-stats')).map(function (node) {return node.textContent;});
+      const firstCalls = calls;
+      current = 900;
+      document.getElementById('finder-search').dispatchEvent(new Event('input',{bubbles:true}));
+      return {firstCalls:firstCalls,calls:calls,cards:first.length,
+        first:first.every(function (text) {return text === 'Realm levies: 750/1200 men';}),
+        fresh:Array.from(document.querySelectorAll('.finder-realm-stats')).every(function (node) {
+          return node.textContent === 'Realm levies: 900/1200 men';
+        }),pure:before === JSON.stringify(FB.state) && rng === FB.getRngState() && uid === FB.getUidCounter()};
+    } finally {FB.marriageCandidateQuery=query;FB.realmHostAvailability=availability;}
+  });
+  expect(result.cards).toBeGreaterThan(1);
+  expect(result).toMatchObject({firstCalls:1,calls:2,first:true,fresh:true,pure:true});
+});
 
 test('realm levy tooltip always shows both current and maximum men', async function ({ page }) {
   await page.evaluate(function () {

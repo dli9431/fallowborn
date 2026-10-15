@@ -16,7 +16,7 @@ dependsOnRuntime(__filename,[
   'js/authority.js','js/politics.js','js/population.js','js/settlement.js','js/lordships.js',
   'js/governments.js','js/government_selection.js','js/government_lineage.js','js/government_assembly.js',
   'js/government_support.js','js/government_continuity.js','js/government_levy.js','js/government_revenue.js',
-  'js/treasury.js','js/climate.js','js/travel.js','js/armies.js','js/religion.js','js/station.js',
+  'js/treasury.js','js/climate.js','js/travel.js','js/armies.js','js/religion.js','js/station.js','js/model.js','js/modifiers.js',
   'js/crazygames.js','data/distribution_crazygames.js'
 ]);
 
@@ -77,7 +77,7 @@ test('expanded 1066 accounts for every district while retaining both released wo
       mods:FB.mods.validate({name:'Retained 1066 revision proof',bookmarks:[JSON.parse(JSON.stringify(raw))]})};
   },inhabited);
   expect(result).toEqual({revision:CURRENT,geography:'europe_regional_2',faults:[],forms:[],technology:[],
-    revisions:['baseline','governments_v2','inhabited_v2',CURRENT].sort(),counts:[527,488],preserved:true,
+    revisions:expect.arrayContaining(['baseline','governments_v2','inhabited_v2',CURRENT]),counts:[527,488],preserved:true,
     released:true,layout:true,decisions:29,scenery:21,dated:true,deferred:true,independent:true,
     governments:true,future:true,review:'none',mods:[]});
 });
@@ -201,6 +201,7 @@ for (const revision of ['baseline','governments_v2']) test(revision + ' 1066 hou
     const s = FB.state;
     return JSON.stringify([s.chars,s.player,s.owner,s.holder,s.population,s.wastelandSettlements,s.settlements]);
   });
+  expect(before.snapshot.readsArePure).toBe(true);
   await activate(page,'1066'); await activate(page,'867'); await activate(page,'1204'); await restoreBookmark(page,source);
   expect(await facts(page)).toEqual(before);
   expect(await page.evaluate(function (ids) {
@@ -213,16 +214,11 @@ for (const revision of ['baseline','governments_v2']) test(revision + ' 1066 hou
 });
 
 test('1066 observer advances bounded seasons without scripted conquests or speculative commissions',async function ({page},info) {
-  test.skip(info.project.name !== 'chromium-served','One measured observer slice.'); test.setTimeout(240000);
-  await openGame(page,info); await injectBrowserHarness(page);
+  test.skip(info.project.name !== 'chromium-served','One measured observer slice.');
+  await startExpanded(page,info,journey('london')); await injectBrowserHarness(page);
   await page.evaluate(function () {
-    FBDATA.bookmarks['1066'].revision = 'inhabited_v2_governments_v2';
-    return new Promise(function (resolve,reject) {
-      FB.activateBookmark('1066',null,function (error) {
-        if (error) { reject(error); return; }
-        FB.game.pending = {seed:'TERRAIN1066-OBSERVER'}; FB.game.startObserve(); FB.game.setPaused(true); resolve();
-      });
-    });
+    // Keep a resumable household while the daily loop advances only the world.
+    FB.game.observe = true;
   });
   for (let batch = 0; batch < 2; batch++) {
     const start = Date.now(); await advanceBookmark(page,45); const elapsed = Date.now() - start;

@@ -269,15 +269,18 @@ test('711 Hindu review adds only two vacant lay groups and preserves every sourc
     expect(await page.evaluate(function () {
       const before = JSON.stringify(FBDATA), rng = FB.getRngState(), uid = FB.getUidCounter();
       const source = FB.bookmark('711','terrain_v2_governments_v2');
+      // The opt-in Hindu branch predates additions to the selected Christian
+      // rollout. Its institution source is the retained terrain revision.
+      const institutions = FB.bookmark('711','terrain_v2').localInstitutions;
       const review = FB.bookmark('711','hindu_service_v2_governments_v2');
       const ids = ['debal_temple_service_711','brahmanabad_ritual_support_711'];
       const profiles = ids.map(function (id) { return FBDATA.religiousInstitutionProfiles[review.localInstitutions[id].profileId]; });
       return {selected:FBDATA.bookmarks['711'].revision,
         unchanged:['provinces','realms','religiousHeads'].every(function (key) {
           return JSON.stringify(review[key]) === JSON.stringify(source[key]);
-        }),prior:Object.keys(source.localInstitutions).every(function (id) {
-          return JSON.stringify(review.localInstitutions[id]) === JSON.stringify(source.localInstitutions[id]);
-        }),newIds:Object.keys(review.localInstitutions).filter(function (id) { return !source.localInstitutions[id]; }).sort(),
+        }),prior:Object.keys(institutions).every(function (id) {
+          return JSON.stringify(review.localInstitutions[id]) === JSON.stringify(institutions[id]);
+        }),newIds:Object.keys(review.localInstitutions).filter(function (id) { return !institutions[id]; }).sort(),
         sites:ids.map(function (id) { return review.localInstitutions[id].site; }),
         vacant:ids.every(function (id) { const d = review.localInstitutions[id];
           return d.vacant && d.freshOnly && !d.officeId && !d.representative && d.kind === 'ritual_community';

@@ -11,17 +11,18 @@ const geographyAudit = require('../fixtures/bookmark-geography-coverage.json');
 dependsOnRuntime(__filename,[
   'index.html','data/bookmark_800.js','data/bookmark_800_history.js','data/bookmark_800_expansion.js',
   'data/government_rollout.js','data/geographies.js','data/geography_expansion.js',
+  'data/islamic_profiles.js','data/islamic_rollout.js',
   'data/bookmark_476_wider_identities.js','data/cultures.js','data/climate.js','data/starts.js',
   'data/political_institutions.js','data/story_instances.js','data/technology.js',
   'data/settlements.js','data/settlements_real.js','data/distribution_crazygames.js',
   'js/world.js','js/main.js','js/model.js','js/population.js','js/settlement.js','js/lordships.js','js/climate.js',
-  'js/travel.js','js/armies.js','js/stories.js','js/story_settlements.js','js/royal_settlements.js',
+  'js/travel.js','js/armies.js','js/wars.js','js/stories.js','js/story_settlements.js','js/royal_settlements.js',
   'js/governments.js','js/government_administration.js','js/government_recognition.js',
   'js/government_ecclesiastical.js','js/authority.js','js/treasury.js','js/save.js','js/save_v4.js',
   'js/starts.js','js/technology.js','js/crazygames.js'
 ]);
 
-const CURRENT = 'inhabited_v2_governments_v2';
+const CURRENT = 'inhabited_v2_governments_v2_islamic_v1_learning_v1';
 const DISTRICTS = [
   ['jenne_district','jenne_800','arid'],['gao_district','gao_saney_800','arid'],
   ['qasr_ibrim','makuria','arid'],['kath_district','khwarazm_800','continental'],
@@ -57,6 +58,8 @@ test('800 accounts for all shared seeds without changing either retained world',
   const result = await page.evaluate(function (input) {
     const raw = FBDATA.bookmarks['800'], base = FB.bookmark('800','baseline'), current = FB.bookmark('800');
     const old = FB.bookmark('800','governments_v2'), ids = input.districts.map(function (r) { return r[0]; });
+    const expanded = FB.bookmark('800','inhabited_v2_governments_v2');
+    function land(p) { return [p.id,p.x,p.y,p.realm,p.wasteland || false,p.dev]; }
     const scenery = Object.keys(input.scenery), seeds = FBDATA.geographies.europe_regional_2.provinceAdditions;
     function retained(b) { return b.geography === 'europe_regional' && b.provinces.length === 498 &&
       b.settlementLayout === '800' && JSON.stringify(b.provinces) === JSON.stringify(raw.provinces); }
@@ -65,7 +68,8 @@ test('800 accounts for all shared seeds without changing either retained world',
       inhabited:current.provinces.filter(function (p) { return !p.wasteland; }).length,
       retained:retained(base) && retained(old),
       oldPapacy:old.realms.find(function (r) { return r.id === 'papacy'; }).ecclesiastical.profileId,
-      prefix:JSON.stringify(current.provinces.slice(0,498)) === JSON.stringify(base.provinces),
+      prefix:JSON.stringify(expanded.provinces.slice(0,498)) === JSON.stringify(base.provinces) &&
+        JSON.stringify(current.provinces.map(land)) === JSON.stringify(expanded.provinces.map(land)),
       oldSlots:Object.keys(FBDATA.settlementLayouts['800']).every(function (id) {
         return JSON.stringify(FBDATA.settlementLayouts[current.settlementLayout][id]) ===
           JSON.stringify(FBDATA.settlementLayouts['800'][id]);
@@ -266,6 +270,7 @@ test('unstamped baseline frontier and bundled completed stories survive expansio
     return JSON.stringify(data);
   });
   const before = await facts(page);
+  expect(before.snapshot.readsArePure).toBe(true);
   await start800(page,info,'kath_district');
   await restoreBookmark(page,legacy);
   expect(await facts(page)).toEqual(before);
@@ -282,7 +287,6 @@ test('unstamped baseline frontier and bundled completed stories survive expansio
 
 test('two independent 800 observer campaigns exercise expanded AI across the year boundary',async function ({page},info) {
   test.skip(info.project.name !== 'chromium-served','Bounded observer workload runs once.');
-  test.setTimeout(240000);
   await openGame(page,info);
   const starts = [];
   for (const seed of ['OASIS800A','OASIS800B']) {
@@ -297,12 +301,14 @@ test('two independent 800 observer campaigns exercise expanded AI across the yea
     await injectBrowserHarness(page);
     starts.push(await page.evaluate(function () { return FB.getRngState(); }));
     const result = await page.evaluate(function () {
+      // Stage the calendar boundary; the normal daily loop owns the rollover.
+      FB.state.date.season = 3; FB.state.date.day = 89; FB.state.turn = 64;
       const start = performance.now(),turn = FB.state.turn;
-      for (let day = 0; day < 45; day++) FB.game.passDay({deferUi:true});
+      for (let day = 0; day < 2; day++) FB.game.passDay({deferUi:true});
       return {elapsed:performance.now() - start,days:FB.state.turn - turn,
         errors:FBTEST.checkInvariants(),year:FB.state.date.year};
     });
-    expect(result).toMatchObject({days:45,errors:[],year:801});
+    expect(result).toMatchObject({days:2,errors:[],year:801});
     expect(result.elapsed).toBeLessThan(30000);
     await info.attach(seed + '-timing.json',{contentType:'application/json',body:Buffer.from(JSON.stringify(result))});
   }

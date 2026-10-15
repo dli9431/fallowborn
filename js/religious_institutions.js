@@ -393,9 +393,11 @@
     if (!keys(d, ['city','kind','profileId','provinceId','site','religion','culture','officeId','freshOnly','vacant',
         'offMap','patronRealmId','jurisdictionIds','abbeyId']) || typeof d.city !== 'string' || d.city.length > 160 ||
         d.offMap !== undefined && d.offMap !== true) fault('unknown field or invalid scope.');
-    if (p.faithIds.indexOf(d.religion) < 0 || !period(p.period, definition.date.year)) fault('profile does not permit this faith or date.');
+    if (p.faithIds.indexOf(d.religion) < 0 || !definition.date ||
+        !period(p.period, definition.date.year)) fault('profile does not permit this faith or date.');
     if (!ids(d.jurisdictionIds, 16, function (v) { return provinces.indexOf(v) >= 0; })) fault('invalid local jurisdiction.');
-    if (d.provinceId !== null && d.jurisdictionIds.indexOf(d.provinceId) < 0) fault('jurisdiction must include the seat.');
+    if (d.provinceId !== null && (!Array.isArray(d.jurisdictionIds) ||
+        d.jurisdictionIds.indexOf(d.provinceId) < 0)) fault('jurisdiction must include the seat.');
     if (d.provinceId === null && (!d.offMap || d.site !== null) || d.provinceId !== null && d.offMap !== undefined) fault('off-map scope must be explicit.');
     if (d.patronRealmId !== undefined && (d.provinceId !== null || !(definition.realms || []).some(function (r) { return r.id === d.patronRealmId; }))) fault('invalid off-map patron.');
     if (d.provinceId === null && p.selection && p.selection.policy === 'patron' && !d.patronRealmId) fault('patron selection needs an explicit off-map patron.');

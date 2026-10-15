@@ -34,6 +34,16 @@ FRESH_JOURNEYS.push({
   code:PARITY_SEED + '-476-curialis_476-ravenna-m-Marcus-established'
 });
 
+// Resolve newer openings through their own declared birthplace and family rules.
+['cleric_476','colonus_476','craftsman_476','farmer_476','mobile_household_476',
+  'nepos_476','odoacer_476','peroz_476','peroz_sasanian_476','syagrius_476',
+  'cleric_493','craftsman_493','curialis_493','farmer_493',
+  'muhammad_1204','siwa_delegate_1204'].forEach(function (scenario) {
+  const bookmark = scenario.split('_').pop();
+  FRESH_JOURNEYS.push({id:'fresh-' + bookmark + '-' + scenario,
+    bookmark:bookmark,scenario:scenario,declaredOpening:true});
+});
+
 /* Fixed samples. Deeds and focuses are listed whether or not a start can see
    them, so a gating change shows up as a changed status. */
 const SAMPLE_DEEDS = [
@@ -67,14 +77,38 @@ async function settleForParity(page) {
 
 async function startParityGame(page, testInfo, journey) {
   await openGame(page, testInfo);
+  let code = journey.code;
+  if (journey.declaredOpening) code = await page.evaluate(function (input) {
+    const scenario = FBDATA.startScenarios.find(function (s) {return s.id === input.scenario;});
+    if (!scenario) throw new Error('Missing authored parity start ' + input.scenario);
+    scenario.hidden = false;
+    const current = FB.bookmark(input.bookmark);
+    const candidates = [current].concat(FB.bookmarkRevisions(input.bookmark));
+    const bookmark = candidates.find(function (b) {
+      return (!b.starts || b.starts.indexOf(scenario.id) >= 0) &&
+        b.provinces.some(function (p) {return FB.startProvinceAllowed(scenario,b,p.id);});
+    });
+    if (!bookmark) throw new Error('No compatible revision for ' + scenario.id);
+    FBDATA.bookmarks[input.bookmark].hidden = false;
+    FBDATA.bookmarks[input.bookmark].revision = bookmark.revision;
+    const county = bookmark.provinces.find(function (p) {return FB.startProvinceAllowed(scenario,bookmark,p.id);});
+    const declared = FB.provinceCommunities(county).find(function (c) {
+      return c.culture === scenario.startCulture && c.religion === scenario.startReligion;
+    });
+    const family = scenario.familyPresets ? Object.keys(scenario.familyPresets)[0] : 'established';
+    const name = (scenario.characterName || 'Parity').replace(/ /g,'_');
+    const code = 'PARITY-' + input.bookmark + '-' + scenario.id + '-' + county.id + '-m-' + name + '-' + family;
+    return code + (declared && (declared.culture !== county.culture || declared.religion !== county.religion)
+      ? '-0-' + declared.culture + '.' + declared.religion : '');
+  }, journey);
   await page.evaluate(function () { FB.startProgression.noteTier(3); });
   const fullStartButton = page.locator('#btn-choose-beginning');
   if (await fullStartButton.isVisible()) await fullStartButton.click();
   else await page.getByRole('button', { name:'New Game', exact:true }).click();
   await page.locator('#btn-bm-seed').click();
   const seedInput = page.locator('#ng-seed');
-  await seedInput.fill(journey.code);
-  await expect(seedInput).toHaveValue(journey.code);
+  await seedInput.fill(code);
+  await expect(seedInput).toHaveValue(code);
   await seedInput.press('Enter');
   await expect(page.locator('#chargen:not(.hidden)')).toBeVisible();
   await page.getByRole('button', { name:'Begin Your Story', exact:true })
@@ -88,13 +122,14 @@ async function startParityGame(page, testInfo, journey) {
     return { bookmark:FB.state.start.id, seed:FB.state.seed };
   });
   expect(started.bookmark).toBe(journey.bookmark);
-  expect(started.seed).toBe(journey.code);
+  expect(started.seed).toBe(code);
   await settleForParity(page);
   /* Journeys are not tutorial tests; drop the synthetic tutorial in every
      tree the same way, as the shared start journey does. */
   await page.evaluate(function () {
     if (FB.state.player.flags) delete FB.state.player.flags.tutorial;
   });
+  return code;
 }
 
 async function loadParitySave(page, testInfo, text) {
@@ -375,8 +410,12 @@ async function startScenarioTable(page) {
 function expectedScenarioTable() {
   const out = {};
   ORDINARY_SCENARIOS.forEach(function (id) { out[id] = 'any'; });
-  out.federate_476 = ['476'];
-  out.curialis_476 = ['476'];
+  FRESH_JOURNEYS.forEach(function (journey) {
+    if (out[journey.scenario] === 'any') return;
+    const dates = out[journey.scenario] || (out[journey.scenario] = []);
+    if (!dates.includes(journey.bookmark)) dates.push(journey.bookmark);
+    dates.sort();
+  });
   return out;
 }
 
