@@ -23,8 +23,13 @@ async function start(page, testInfo, fictional) {
     await page.evaluate(function () {
       const f = FB_LINEAGE_FIXTURE;
       FBDATA.governmentForms[f.formId] = Object.assign({}, FBDATA.governmentForms.lineage_kingship, { selectionProfile:f.profile });
-      const row = FBDATA.bookmarks['476'].realms.find(function (r) { return r.id === f.realmId; });
-      Object.assign(row, { name:'River Kin Fixture', government:f.formId, ruler:f.ruler, royalCourt:f.royalCourt });
+      // Revision layers may copy realm records, so edit the realm in every layer.
+      const b = FBDATA.bookmarks['476'];
+      [b].concat(Object.values(b.revisions || {})).forEach(function (layer) {
+        (layer.realms || []).filter(function (r) { return r.id === f.realmId; }).forEach(function (row) {
+          Object.assign(row, { name:'River Kin Fixture', government:f.formId, ruler:f.ruler, royalCourt:f.royalCourt });
+        });
+      });
       FB.governments.invalidate();
     });
   }

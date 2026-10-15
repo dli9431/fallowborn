@@ -309,7 +309,7 @@ FBDATA.councilSeatRoles = { treasurer:['market'], constable:['muster'], almoner:
 
 FBDATA.councilRules = {
   schemerTraits:[
-    'ambitious','deceitful','proud','envious','cruel','wrathful'
+    'ambitious','deceitful','proud','cruel','wrathful'
   ]
 };
 

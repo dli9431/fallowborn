@@ -128,8 +128,9 @@
     return errors;
   };
   var validateBookmark = FB.validateBookmark;
-  FB.validateBookmark = function (bm) {
-    var errors = validateBookmark(bm).concat(FB.openingDefinitionFaults(bm));
+  // forward the revision flag and candidate story registry to the base check
+  FB.validateBookmark = function (bm, resolvedRevision, storyContext) {
+    var errors = validateBookmark(bm, resolvedRevision, storyContext).concat(FB.openingDefinitionFaults(bm));
     if (bm && (bm.openingRevision !== undefined || bm.openingRevisions !== undefined || bm.openingLegacyRevision !== undefined)) {
       var versions = bm.openingRevisions;
       if (!plain(bm.opening) || !plain(versions) || !slug(bm.openingRevision) || !own(versions, bm.openingRevision) ||

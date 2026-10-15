@@ -288,7 +288,7 @@ test('legacy Jewish households, generated ancestry and an ongoing project surviv
    dated communities tested separately below. */
 async function communalHousehold(page, testInfo, crazygames) {
   await startHistoricalGame(page, testInfo, {
-    bookmark:'476', code:'COMMUNAL-476-curialis_476-ravenna-m-Marcus-established-0-roman.nicene'
+    bookmark:'476', code:'COMMUNAL-476-curialis_476-ravenna-m-Marcus-established' // canonical: Ravenna's own community
   }, !!crazygames);
   await household(page);
   await page.evaluate(function () {
@@ -655,7 +655,7 @@ test('poor household study uses the shared narrow-screen review and retains Deta
     await expect(review).toBeEnabled();
     await card.getByRole('button',{name:'Details',exact:true}).click();
     await review.click();
-    await expect(page.locator('#gm-body')).toContainText('Jewish household study');
+    await expect(page.locator('#gm-title')).toContainText('Jewish household study'); // the review is titled by its activity
     await expect(page.locator('#gm-body')).toContainText('Household purse');
     await expect(page.locator('#gm-body')).toContainText('2 days at this location');
     expect(await page.evaluate(function () {
@@ -714,10 +714,10 @@ for (const distribution of ['standard','CrazyGames']) {
 const DATED_COMMUNAL_OPENINGS = [
   {id:'476',source:'wider_v2',revision:'jewish_samaritan_v3',pid:'baghdad',culture:'syriac',groups:3},
   {id:'493',source:'world_v2',revision:'jewish_samaritan_v3',pid:'baghdad',culture:'syriac',groups:3},
-  {id:'711',source:'terrain_v2_governments_v2',revision:'jewish_samaritan_v3_governments_v2',pid:'jerusalem',culture:'syriac',groups:1},
+  {id:'711',source:'terrain_v2_governments_v2',revision:'jewish_samaritan_v3_governments_v2',pid:'jerusalem',culture:'arabic',groups:1},
   {id:'800',source:'inhabited_v2_governments_v2',revision:'jewish_samaritan_v3_governments_v2',pid:'jerusalem',culture:'syriac',groups:2},
-  {id:'867',source:'inhabited_v2_governments_v2',revision:'jewish_samaritan_v3_governments_v2',pid:'atil',culture:'khazar',groups:0},
-  {id:'1066',source:'inhabited_v2_governments_v2',revision:'jewish_samaritan_v3_governments_v2',pid:'metz',culture:'frankish',groups:2},
+  {id:'867',source:'inhabited_v2_governments_v2',revision:'jewish_samaritan_v3_governments_v2',pid:'atil',culture:'khazar',groups:0,principal:true},
+  {id:'1066',source:'inhabited_v2_governments_v2',revision:'jewish_samaritan_v3_governments_v2',pid:'metz',culture:'ashkenazi',groups:2},
   {id:'1204',source:'inhabited_v2',revision:'jewish_samaritan_v3',pid:'alexandria',culture:'arabic',groups:3}
 ];
 
@@ -730,7 +730,9 @@ async function startCommunalOpening(page,testInfo,input,crazygames) {
   const scenario = input.id === '476' ? 'farmer_476' : input.id === '493' ? 'farmer_493' : 'farmer';
   const faith = input.faith || 'jewish';
   await startHistoricalGame(page,testInfo,{bookmark:input.id,
-    code:'DATED-' + input.id + '-' + scenario + '-' + input.pid + '-f-Sara-established-0-' + input.culture + '.' + faith},!!crazygames);
+    // canonical codes omit the county's own community
+    code:'DATED-' + input.id + '-' + scenario + '-' + input.pid + '-f-Sara-established' +
+      (input.principal && !input.faith ? '' : '-0-' + input.culture + '.' + faith)},!!crazygames);
   expect(await page.evaluate(function () {
     const s = FB.state;
     return {revision:s.start.revision,faith:s.chars[s.player.charId].religion,pid:s.player.provinceId};

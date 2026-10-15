@@ -166,7 +166,7 @@ for (const id of ['study','play','rest','pray','militia','work_land','market','k
       if (id === 'administer_temporalities') { p.gold += FB.bishopricIncome(s) * .15 / D; if (p.liege) FB.adjustStanding(s,{kind:'realm',id:p.liege},2 / D,'focus:administer_temporalities'); train(.3,'ste'); }
       if (id === 'govern') { p.gold += FB.playerTax(s) * .15 / D; FB.setCountySupport(s,p.provinceId,FB.clamp(FB.countySupportBase(s,p.provinceId) + 3 / D,-100,100)); train(.25,'ste'); }
       if (id === 'patronize') { FB.addResearch(s,(2 + Math.min(3,FB.skillOf(c,'lea') / 10)) / D); p.gold -= 2 / D; train(.3,'lea'); }
-      function facts(state) { const me = state.chars[state.player.charId]; return { gold:state.player.gold,piety:state.player.piety,prestige:state.player.prestige,health:me.health,skills:me.skills,traits:me.traits,standing:state.standing,countySupport:FB.countySupportBase(state,state.player.provinceId),research:FB.realmTechRecord(state),rng:FB.getRngState(),uid:FB.getUidCounter() }; }
+      function facts(state) { const me = state.chars[state.player.charId]; return { gold:state.player.gold,piety:state.player.piety,prestige:state.player.prestige,health:me.health,skills:me.skills,traits:me.traits,standing:state.standing,countySupport:FB.countySupportBase(state,state.player.provinceId),research:FB.realmTechRecord(state),rng:FB.getRngState() >>> 0,uid:FB.getUidCounter() }; } // restore stores RNG bits unsigned
       const expected = JSON.stringify(facts(s)); FB.save.restore(before); def.tick(FB.state);
       return { expected:expected, actual:JSON.stringify(facts(FB.state)) };
     }, id);

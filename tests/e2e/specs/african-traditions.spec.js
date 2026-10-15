@@ -65,7 +65,8 @@ async function startAfricanPlay(page,info,date,property,crazygames) {
     },{once:true});
   },{date:date,revision:revision});
   await startHistoricalGame(page,info,{bookmark:date,
-    code:'AFRICANPLAY' + date + '-' + date + '-farmer-' + pid + '-f-Review-established' +
+    code:'AFRICANPLAY' + date + '-' + date + '-' + (date === '476' || date === '493' ? 'farmer_' + date : 'farmer') +
+      '-' + pid + '-f-Review-established' +
       (date === '1066' ? '-0-soninke_1066.sunni' : '')},crazygames);
   await page.evaluate(installAfricanPlaySeat,property);
 }
@@ -273,7 +274,7 @@ test('Ghana outreach supports one existing voluntary project without a second co
     expect(await page.evaluate(function () {
       var s = FB.state, f = africanPlay, h = foundAfricanLearningHouse();
       s.owner[f.pid] = 'player'; s.holder[f.pid] = 'player';
-      s.realms.player.alive = true; s.realms.player.liege = null;
+      FB.foundPlayerRealm(s); s.realms.player.liege = null; // the household now rules this county
       var rec = s.population.counties[f.pid], communities = JSON.stringify(rec.communities);
       rec.communityProjects = {faith:{target:'sunni',sponsor:'player',policy:'voluntary',startTurn:s.turn,
         progress:0.375,converted:12,resistance:0.2,lastTransfer:2,lastYear:s.date.year}};
@@ -324,8 +325,10 @@ test('Ghana public patronage uses the local-practice ruler account and respects 
 
 function africanPlayFacts() {
   var s = FB.state, f = africanPlay;
+  // Saves omit a zero faith Standing base; absent and zero have the same meaning.
+  var person = Object.assign({faithStandingBase:0},s.chars[f.cid]);
   return JSON.parse(JSON.stringify({start:s.start,date:s.date,turn:s.turn,
-    rng:FB.getRngState() >>> 0,uid:FB.getUidCounter(),person:s.chars[f.cid],
+    rng:FB.getRngState() >>> 0,uid:FB.getUidCounter(),person:person,
     purse:[s.player.gold,s.player.piety,s.player.prestige,s.player.landPlots],
     property:s.abbeys,population:s.population,owner:s.owner,holder:s.holder,
     institution:s.localInstitutions[f.iid],heads:s.religiousHeads,faiths:s.faiths,
@@ -564,7 +567,8 @@ async function startAfricanDated(page,info,row,crazygames,retained) {
     },{once:true});
   },{id:row.id,revision:row.prior + (retained ? '' : '_african_v1')});
   await startHistoricalGame(page,info,{bookmark:row.id,
-    code:'AFRICANDATED' + row.id + '-' + row.id + '-farmer-' + row.pid + '-f-Review-established' +
+    code:'AFRICANDATED' + row.id + '-' + row.id + '-' + (row.id === '476' || row.id === '493' ? 'farmer_' + row.id : 'farmer') +
+      '-' + row.pid + '-f-Review-established' +
       (row.identity ? '-0-' + row.identity : '')},crazygames);
 }
 
@@ -594,7 +598,8 @@ test('seven African review openings preserve complete earlier worlds and validat
           const prior = FB.bookmark(row.id,id.replace(/_african_v1$/,'')), next = FB.bookmark(row.id,id);
           const a = Object.assign({},prior), b = Object.assign({},next);
           delete a.revision; delete b.revision; delete a.localInstitutions; delete b.localInstitutions;
-          const existing = prior.localInstitutions === undefined ? FBDATA.localInstitutions || {} : prior.localInstitutions;
+          // a world without its own table starts empty, never with the legacy 476 catalogue
+          const existing = prior.localInstitutions || {};
           const unchanged = Object.assign({},next.localInstitutions); delete unchanged[row.iid];
           return JSON.stringify(a) === JSON.stringify(b) && JSON.stringify(existing) === JSON.stringify(unchanged);
         });

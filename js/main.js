@@ -3398,7 +3398,7 @@ FB.CHANGELOG = [
         tier: sc.tier, profession: sc.profession, professionBack: null,
         gold: sc.gold, prestige: sc.prestige, piety: sc.piety,
         provinceId: provId, homeSettlement: settIdx, liege: null, liegeOp: 0, liegeOps: {},
-        familyParentMigration:1,
+        familyParentMigration:1, ducalRankMigration:1,
         faithStandingMigration:0, realmStandingFaithBases:{},
         foreignPolicy: {},
         warService: startEffects.warService || 0,
@@ -3627,7 +3627,11 @@ FB.CHANGELOG = [
     }
     if (FB.stories) FB.stories.start(state, { tracks:FB.startTracks(sc, provId) });
     state.seasonMark.gold = state.player.gold;
+    // A new campaign is fresh: fresh-only institutions join its opening roster.
+    if (FB.ensureLocalInstitutions) FB.ensureLocalInstitutions(state, null, { fresh:true });
     if (FB.ensureInstitutions) FB.ensureInstitutions(state, { silent:true });
+    // Restore ensures the games ledger; a new campaign starts in that same shape.
+    if (FB.tournaments) FB.tournaments.ensure(state);
     state.player.focus = startEffects.focus || FB.defaultFocus(state);
     const firstPlayerOnboarding = !G.uiPrefs.tipsGrandfathered &&
       !G.uiPrefs.onboardingStarted;
@@ -3747,7 +3751,7 @@ FB.CHANGELOG = [
         faithStandingMigration:0, realmStandingFaithBases:{},
         warService: 0, liegeGrants: 0, gentryGeneration: null,
         freeholderGeneration: null,
-        developmentBaselineMigration: 1,
+        developmentBaselineMigration: 1, ducalRankMigration: 1,
         militaryCommand:null,
         lineDepth: 1,
         traitProgress: {},
@@ -3801,6 +3805,7 @@ FB.CHANGELOG = [
     // A watcher has no scenario, so only the bookmark's world stories attach.
     if (FB.stories) FB.stories.start(state, {});
     if (FB.ensureLocalInstitutions) FB.ensureLocalInstitutions(state, null, { fresh:true });
+    if (FB.tournaments) FB.tournaments.ensure(state);
     G.observe = true;
     G.paused = false;
     document.body.classList.add('observing');

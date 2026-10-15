@@ -20,9 +20,12 @@ async function start(page, testInfo, options) {
   const bookmark = options.bookmark || '476';
   const scenario = options.scenario || 'colonus_476';
   const province = options.province || 'ravenna';
+  const family = options.family || 'standard';
+  // Each site starts in the county's own Nicene community (Roman at Ravenna and
+  // Tunis, Gallo-Roman at Laon), so the canonical code spells only the family.
+  const tail = family !== 'standard' ? '-' + family : '';
   await startHistoricalGame(page, testInfo, { bookmark:bookmark,
-    code:'COLONATE-' + bookmark + '-' + scenario + '-' + province + '-m-Marcus-' +
-      (options.family || 'standard') + '-0-roman.nicene' }, !!options.crazygames);
+    code:'COLONATE-' + bookmark + '-' + scenario + '-' + province + '-m-Marcus' + tail }, !!options.crazygames);
 }
 
 for (const site of [
@@ -82,7 +85,8 @@ test('tenure behavior, career targets, flight events and review deeds resolve fr
       // A differently named system retains the declared tenure behavior.
       FBDATA.systems.fixture_estate = Object.assign({}, system, { id:'fixture_estate', defaultEnabled:true });
       delete FBDATA.systems.colonate;
-      FBDATA.tenureArchetypes[s.player.tenure.archetypeId].systems = ['fixture_estate'];
+      const archetype = FBDATA.tenureArchetypes[s.player.tenure.archetypeId], archetypeSystems = archetype.systems;
+      archetype.systems = ['fixture_estate'];
       const enabled = FB.tenureEnabled(s) && FB.colonateTenure(s) === s.player.tenure;
       rules.reviewDeedId = 'review_serf_tenure';
       const deed = FB.colonateReviewDeed().id;
@@ -103,6 +107,9 @@ test('tenure behavior, career targets, flight events and review deeds resolve fr
         before === JSON.stringify(s) && rng === FB.getRngState();
       const quote = FB.colonateReleaseStatus(s, military.id);
       const released = !!FB.resolveColonateRelease(s, military.id, quote.quote);
+      // Restore the shipped catalogue so later UI refreshes resolve declared systems.
+      FBDATA.systems.colonate = system; delete FBDATA.systems.fixture_estate;
+      archetype.systems = archetypeSystems;
       return { enabled:!!enabled, deed:deed, event:event, stillBlocked:stillBlocked, permitted:permitted,
         ordinationBlocked:ordinationBlocked, ordinationEnabled:ordinationEnabled,
         stale:stale, released:released, career:me.career.profession, rank:me.career.rank };
@@ -193,7 +200,7 @@ for (const route of ['purchase','military_service','ordination']) {
         const again = route === 'purchase' ? FB.resolveSerfFreedom(s, { route:route })
           : FB.resolveColonateRelease(s, route, quote.quote);
         const saved = JSON.parse(FB.save.serialize());
-        const rng = JSON.stringify(FB.getRngState()), uid = FB.getUidCounter();
+        const rng = FB.getRngState() >>> 0, uid = FB.getUidCounter(); // restore stores RNG bits unsigned
         FB.save.restore(saved);
         const restored = FB.state;
         return { released:!!released, again:again, spent:before - p.gold,
@@ -205,7 +212,7 @@ for (const route of ['purchase','military_service','ordination']) {
           familyFree:members.every(function (id) { return !FB.isUnfreeCharacter(restored, restored.chars[id]); }),
           collateralBound:collateral.every(function (id) { return FB.isUnfreeCharacter(restored, restored.chars[id]); }),
           historyRestored:JSON.stringify(saved.state.player.familyFreedom) === JSON.stringify(restored.player.familyFreedom),
-          rngStable:rng === JSON.stringify(FB.getRngState()), uidStable:uid === FB.getUidCounter() };
+          rngStable:rng === (FB.getRngState() >>> 0), uidStable:uid === FB.getUidCounter() };
       }, route);
       expect(result).toMatchObject({ released:true, again:false, tier:1, ended:'closed',
         route:route, lawful:true, noLand:true, familyFree:true, collateralBound:true,
@@ -243,7 +250,8 @@ test('changed consent, bishop, family, custody and disabled systems reject stale
       const child = s.chars[me.childrenIds[0]];
       child.dead = true; const family = refused('military_service', military); child.dead = false;
       p.tenure.revision++; const revision = refused('military_service', military); p.tenure.revision--;
-      const bm = FB.bookmark(s.start.id), systems = bm.systems;
+      // FB.bookmark resolves a fresh copy; systems live on the base definition
+      const bm = FBDATA.bookmarks[s.start.id], systems = bm.systems;
       bm.systems = { disable:['colonate'] };
       const disabled = refused('military_service', military) && !FB.activeSerfTenure(s) &&
         FB.ensureSerfTenure(s, 'legacy_repair') === null && !FB.instantStatus(s, 'review_colonate').shown;

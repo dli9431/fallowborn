@@ -1084,6 +1084,7 @@ test('restore recognizes a pre-existing complete duchy with one bounded count pa
         }
       };
       var saved = JSON.parse(FB.save.serialize());
+      delete saved.state.player.ducalRankMigration; // an older save predates the one-time repair
       FB.save.restore(saved);
       FB.repairCompleteDuchyRanks = originalRepair;
       s = FB.state;

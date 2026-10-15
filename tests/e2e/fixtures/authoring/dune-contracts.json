@@ -2212,6 +2212,7 @@
       "tier": 1,
       "gold": 40,
       "profession": "soldier",
+      "sex": "m",
       "startCulture": "frankish",
       "startReligion": "nicene",
       "bookmarkIds": [
@@ -10158,7 +10159,8 @@
             "mar": 14,
             "trait": "ambitious",
             "sex": "m"
-          }
+          },
+          "government": "dune_crown"
         },
         {
           "id": "dune_south",
@@ -12623,6 +12625,26 @@
           "roman_offices"
         ],
         "disable": [
+          "feudal_service"
+        ]
+      }
+    },
+    "dune_crown": {
+      "legalTradition": {
+        "default": "faith"
+      },
+      "levy": "feudal_levy",
+      "revenue": "demesne_revenue",
+      "council": "royal_council",
+      "diplomacy": "territorial_diplomacy",
+      "holders": "direct",
+      "succession": "dynastic",
+      "territory": "fixed",
+      "consent": "territorial",
+      "ladder": "inherited_ladder",
+      "ai": "federate_contracts",
+      "systems": {
+        "enable": [
           "feudal_service"
         ]
       }

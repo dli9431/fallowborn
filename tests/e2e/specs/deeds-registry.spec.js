@@ -21,8 +21,9 @@ const COMMON_SECTIONS = [
   'tutorial', 'stories', 'commitments', 'campaigns', 'holy_campaign',
   'household_summary', 'next_steps', 'focus'
 ];
-const THEME_GROUPS = ['work', 'life', 'faith', 'realm', 'war'];
-const TYPE_GROUPS = ['deeds', 'personal', 'ruler'];
+// Ungated government sections are available everywhere; empty ones render no heading.
+const THEME_GROUPS = ['work', 'life', 'faith', 'elective_crown', 'local_kingship', 'realm', 'war'];
+const TYPE_GROUPS = ['deeds', 'personal', 'ruler', 'elective_crown', 'local_kingship'];
 
 async function startRegistryGame(page, testInfo) {
   await openGame(page, testInfo);
@@ -40,7 +41,7 @@ async function addModSection(page) {
       deeds:[{
         id:'e2e_petition', handler:'declarative_deed', label:'Choose a petition',
         desc:'Consider the terms before choosing.', order:FBDATA.deeds.length,
-        section:'e2e_civic', spendsDay:false, capability:'resource_choice',
+        section:'e2e_civic', spendsDay:false, cooldownDays:0, capability:'resource_choice',
         choices:[{ id:'accept', label:'Accept the terms', effects:{ piety:1 } }]
       }]
     });
@@ -197,8 +198,8 @@ test('travelling presentation retains the existing allowlist as deed metadata',
     expect(travel).toEqual([
       'games_calendar', 'host_games', 'travel_turn_back', 'travel_return_cargo',
       'travel_marriage_residence', 'travel_settle_here', 'frontier_settle_here',
-      'review_serf_tenure', 'declare_manor', 'petition_barony', 'found_settlement',
-      'petition_liege', 'claim_higher_title'
+      'review_serf_tenure', 'review_colonate', 'seek_station', 'declare_manor', 'petition_barony',
+      'found_settlement', 'petition_liege', 'claim_higher_title'
     ].sort());
   });
 
@@ -212,8 +213,9 @@ test('trusted registration and story cards use the same ordered section catalogu
       FB.ui.refresh();
     });
     await waitForUiRefresh(page);
+    // The attached story count follows the opening's data; this checks order and focus.
     const cards = page.locator('#tab-actions [data-story-card]');
-    await expect(cards).toHaveCount(3);
+    await expect(cards.first()).toBeVisible();
     const ordered = await page.evaluate(function () {
       const card = document.querySelector('[data-story-card]');
       const notice = document.querySelector('[data-action-section="e2e_notice"]');

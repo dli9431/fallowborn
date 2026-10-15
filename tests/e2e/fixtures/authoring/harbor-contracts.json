@@ -2196,6 +2196,7 @@
       "tier": 1,
       "gold": 40,
       "profession": "soldier",
+      "sex": "m",
       "startCulture": "frankish",
       "startReligion": "nicene",
       "bookmarkIds": [
@@ -10171,7 +10172,8 @@
             "mar": 14,
             "trait": "ambitious",
             "sex": "m"
-          }
+          },
+          "government": "harbor_crown"
         },
         {
           "id": "harbor_south",
@@ -10262,7 +10264,6 @@
           "capital": "venezia",
           "aggression": 0,
           "rank": 2,
-          "liege": "harbor_issuer",
           "techTraditions": [
             "latin",
             "byzantine"
@@ -10276,7 +10277,8 @@
             "sex": "m"
           },
           "government": "harbor_council",
-          "civicProfileId": "harbor_rotation"
+          "civicProfileId": "harbor_rotation",
+          "constituency": "harbor_households"
         },
         {
           "id": "asturias",
@@ -12561,7 +12563,8 @@
         }
       },
       "starts": [
-        "harbor_court_household"
+        "harbor_court_household",
+        "harbor_civic_household"
       ],
       "opening": {
         "actors": {},
@@ -12622,6 +12625,26 @@
           "roman_offices"
         ],
         "disable": [
+          "feudal_service"
+        ]
+      }
+    },
+    "harbor_crown": {
+      "legalTradition": {
+        "default": "faith"
+      },
+      "levy": "feudal_levy",
+      "revenue": "demesne_revenue",
+      "council": "royal_council",
+      "diplomacy": "territorial_diplomacy",
+      "holders": "direct",
+      "succession": "dynastic",
+      "territory": "fixed",
+      "consent": "territorial",
+      "ladder": "inherited_ladder",
+      "ai": "federate_contracts",
+      "systems": {
+        "enable": [
           "feudal_service"
         ]
       }

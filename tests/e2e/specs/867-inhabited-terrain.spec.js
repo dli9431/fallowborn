@@ -61,6 +61,11 @@ async function startRetained(page,info,revision,serf) {
 async function establishedFacts(page) {
   return {world:await facts(page),household:await page.evaluate(function () {
     const state = JSON.parse(FB.save.serialize()).state, out = {};
+    // A missing treasury cooldown and an explicit zero have the same saved meaning.
+    Object.keys(state.realms || {}).forEach(function (id) {
+      const treasury = state.realms[id] && state.realms[id].treasury;
+      if (treasury && treasury.distributionNextTurn === undefined) treasury.distributionNextTurn = 0;
+    });
     ['player','chars','realms','owner','holder','dev','buildings','settlementBuildings',
       'wastelandSettlements','population','relationships','travel'].forEach(function (key) {
       if (state[key] !== undefined) out[key] = state[key];
@@ -119,9 +124,15 @@ test('867 revisions account for all scenery and retain the released catalogue',a
       }),
       governmentOnly:JSON.stringify(FB.bookmark('867','governments_v2').realms) ===
         JSON.stringify(b.realms.slice(0,old.realms.length)),
-      inheritance:['stories','scripted','localInstitutions','opening','openingRevisions','religiousHeads'].every(function (key) {
+      // Dated church services join both governments_v2 worlds; the expanded one
+      // may add district-only services but keeps every retained institution.
+      inheritance:['stories','scripted','opening','openingRevisions','religiousHeads'].every(function (key) {
         return JSON.stringify(old[key]) === JSON.stringify(b[key]);
-      }),
+      }) && (function (retained) {
+        return Object.keys(retained).every(function (id) {
+          return JSON.stringify(retained[id]) === JSON.stringify((b.localInstitutions || {})[id]);
+        });
+      })(FB.bookmark('867','governments_v2').localInstitutions || {}),
       tech:FBDATA.techImpactReviews.features.period_867_district_habitation.mode,
       technology:FB.validateTechnologyData(true)};
     out.pure = original === JSON.stringify(raw) && rng === FB.getRngState() && uid === FB.getUidCounter();
@@ -314,8 +325,9 @@ test('unknown or mismatched expanded revisions fail before adopting saved facts'
 
 test('a normal JSON bookmark mod pins the expanded revision and rejects a changed catalogue',async function ({page},info) {
   await openGame(page,info);
-  const text = await page.evaluate(function () {
+  const text = await page.evaluate(function (current) {
     const b = JSON.parse(JSON.stringify(FBDATA.bookmarks['867']));
+    b.revision = current; // the mod pins the expanded revision for new campaigns
     b.revisions[b.revision].provinces = b.revisions[b.revision].provinces.map(function (p) {
       return p.id === 'kath_district' ? Object.assign({},p,{dev:4}) : p;
     });
@@ -325,7 +337,7 @@ test('a normal JSON bookmark mod pins the expanded revision and rejects a change
     const text = JSON.stringify(mod);
     localStorage.setItem('fb_mods',JSON.stringify([text]));
     return text;
-  });
+  },CURRENT);
   await openGame(page,info);
   await startDeterministicGame(page);
   const source = await page.evaluate(function () { return FB.save.serialize(); });

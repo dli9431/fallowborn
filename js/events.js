@@ -6787,8 +6787,8 @@ window.FB = window.FB || {};
     else if (route === 'flight' && ((p.flags.colonus_flight_until || 0) > state.turn ||
         (state.eventQueue || []).some(function (e) { return e.id === FB.colonateFlightEvent().id; }))) out.reason = FB.T('Another flight cannot be attempted yet.');
     else if (route !== 'flight' && FB.standingOf(state, { kind:'character', id:owner.id }) < 20) out.reason = FB.T('Requires +20 Standing with the possessor for consent.');
-    else if (route === 'military_service' && (me.sex !== 'm' || FB.stat(me, 'mar') < 4)) out.reason = FB.T('Military service requires a man with Martial 4.');
-    else if (route === 'ordination' && (me.sex !== 'm' || p.piety < 25 || FB.stat(me, 'lea') < 3)) out.reason = FB.T('Ordination requires a man with Learning 3 and 25 piety.');
+    else if (route === 'military_service' && (me.sex !== 'm' || FB.skillOf(me, 'mar') < 4)) out.reason = FB.T('Military service requires a man with Martial 4.');
+    else if (route === 'ordination' && (me.sex !== 'm' || p.piety < 25 || FB.skillOf(me, 'lea') < 3)) out.reason = FB.T('Ordination requires a man with Learning 3 and 25 piety.');
     const church = tenure && route === 'ordination' ? colonateChurch(state) : null;
     if (!out.reason && route === 'ordination' && !church) out.reason = FB.T('Requires a living local bishop of your faith.');
     const profession = routeDef && routeDef.careerId || null;
@@ -8651,7 +8651,7 @@ window.FB = window.FB || {};
       if (!lord) { out.reason = 'missing_lord'; return out; }
     } else if (route === 'flight') {
       if (!ctx.event || (ctx.event.id !== 'flee_serfdom' &&
-          (ctx.event.id !== FB.colonateFlightEvent().id || !FB.fns.colonus_flight_valid(state, ctx)))) {
+          (ctx.event.id !== FB.colonateFlightEvent().id || !FB.fns.colonus_flight_valid(state, ctx.effectContext)))) {
         out.reason = 'flight_context'; return out;
       }
       lord = null;

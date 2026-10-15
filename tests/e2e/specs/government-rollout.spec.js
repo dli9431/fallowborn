@@ -43,6 +43,7 @@ async function startGovernmentRevision(page,info,row,flag) {
   await page.addInitScript(function (row) {
     document.addEventListener('DOMContentLoaded',function () {
       FBDATA.bookmarks[row.bookmark].revision = row.revision;
+      FBDATA.bookmarks[row.bookmark].hidden = false; // review a date hidden from new campaigns
     },{once:true});
   },row);
   await startHistoricalGame(page,info,journey(row),flag);
@@ -170,7 +171,9 @@ for (const row of consumers.filter(function (row) { return row.changed.length; }
           pure:before === JSON.stringify(s) && rng === FB.getRngState() && uid === FB.getUidCounter()};
       },row);
       expect(result).toEqual({revision:row.revision,pure:true,profiles:row.changed.map(function (c) {
-        const detail = {realm:c.realm,form:c.form,profile:c.profile,direct:true,feudal:false};
+        // 867 and 1066 keep feudal service as a final campaign layer (docs/designs/systems.md)
+        const detail = {realm:c.realm,form:c.form,profile:c.profile,direct:true,
+          feudal:row.bookmark === '867' || row.bookmark === '1066'};
         return c.mode ? Object.assign(detail,{mode:c.mode,minor:c.minor,officers:c.officers,service:c.service,public:true})
           : Object.assign(detail,{law:c.law,oneIncumbent:true,duplicate:true,vacancyLevy:c.vacancyLevy});
       })});
@@ -253,13 +256,18 @@ for (const row of consumers) for (const consumer of row.changed.filter(function 
     await startGovernmentRevision(page,info,row);
     const result = await page.evaluate(function (rid) {
       const s = FB.state,E = FB.ecclesiasticalGovernment,incumbent = E.incumbent(s,rid);
-      const property = JSON.stringify([s.owner,s.holder,s.player]),cash = s.realms[rid].treasury.gold;
+      // travel bookkeeping fills its defaults lazily and is not property
+      function holdings() {
+        const p = Object.assign({},s.player); delete p.travel; delete p.travelSettlement; delete p.travelHistory;
+        return JSON.stringify([s.owner,s.holder,p]);
+      }
+      const property = holdings(),cash = s.realms[rid].treasury.gold;
       FB.killChar(s,incumbent);
       const election = JSON.stringify(s.papacy.elections),college = JSON.stringify(s.papacy.obediences);
       E.tick(s,rid); E.tick(s,rid);
       return {vacant:E.incumbent(s,rid) === null,election:!!s.papacy.elections[s.papacy.romanObedience],
         once:election === JSON.stringify(s.papacy.elections) && college === JSON.stringify(s.papacy.obediences),
-        property:property === JSON.stringify([s.owner,s.holder,s.player]),cash:cash === s.realms[rid].treasury.gold,
+        property:property === holdings(),cash:cash === s.realms[rid].treasury.gold,
         revenue:E.decision(s,rid,'revenue').allowed,levy:E.decision(s,rid,'levy').allowed};
     },consumer.realm);
     expect(result).toEqual({vacant:true,election:true,once:true,property:true,cash:true,revenue:true,levy:consumer.vacancyLevy});

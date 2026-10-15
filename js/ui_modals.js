@@ -3645,14 +3645,23 @@ window.FB = window.FB || {};
     const facts = (status.owner ? reviewPeopleHtml(reviewPersonHtml(status.owner, FB.T('Estate possessor'), null)) : '') +
       kv('Requirements', esc(requirements)) + kv('Cost', esc(flight ? FB.T('Charged only after successful escape') : FB.T('No payment'))) +
       kv('Status', esc(status.ready ? FB.T('Ready for your decision') : status.reason));
+    /* Back redraws current statuses; restore the route opener after the
+       sheet's ordinary initial focus has settled. */
+    function returnToRankDetails() {
+      UI.showRankDetails();
+      setTimeout(function () {
+        const origin = document.querySelector('[data-colonate-route="' + route + '"]');
+        if (origin) origin.focus({ preventScroll:true });
+      }, 0);
+    }
     openModal(title, reviewFactsCard('', facts) + reviewActionsHtml(reviewActionCardHtml({
       id:'colonus-release-confirm', label:flight ? FB.T('Consider flight tonight') : FB.T('Accept consented release'),
       disabled:!status.ready, note:status.reason, details:'<p>' + esc(details) + '</p>'
     })) + '<div class="gm-footer"><button type="button" class="btn" id="colonus-release-back">' +
       esc(FB.T('Back')) + '</button></div>', { historyView:true, replaceView:!!replaceView, historyBack:true,
-        historyBackRender:UI.showRankDetails, titleDetailsHtml:'<p>' + esc(details) + '</p>' });
+        historyBackRender:returnToRankDetails, titleDetailsHtml:'<p>' + esc(details) + '</p>' });
     FB.paintFaces($('gm-body'), s);
-    $('colonus-release-back').onclick = function () { modalHistoryBack(UI.showRankDetails); };
+    $('colonus-release-back').onclick = function () { modalHistoryBack(returnToRankDetails); };
     $('colonus-release-confirm').onclick = function () {
       if (!FB.resolveColonateRelease(s, route, status.quote)) {
         UI.toast(FB.T('Circumstances changed. Review the route again.'));

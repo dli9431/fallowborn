@@ -1773,7 +1773,11 @@ window.FB = window.FB || {};
        realm-wide scan to yearly fast-forward simulation. */
     if (FB.repairCompleteDuchyRanks) {
       restoreRepair('ducal recognition', function () {
+        // once per older campaign; new campaigns keep their authored count ranks
+        const player = FB.state.player;
+        if (player.ducalRankMigration === 1) return;
         FB.repairCompleteDuchyRanks(FB.state);
+        player.ducalRankMigration = 1;
       });
     }
     if (FB.ensureHistoricalAmbitions) restoreRepair('historical ambitions', function () {

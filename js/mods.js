@@ -704,6 +704,17 @@ window.FBMODS = window.FBMODS || [];
         return (bm.revision || 'baseline') === (raw.revision || 'baseline');
       });
     }
+    /* An existing-ruler start is checked in each world revision that offers
+       it: one that lists it, or, without a starts list, one holding its fixed
+       birthplace. A start no revision offers keeps the fresh-world check. */
+    function offeringBookmarks(id, scenario) {
+      var all = FB.bookmarkRevisions(id, rules.bookmarks[id]);
+      var offered = all.filter(function (bm) {
+        return Array.isArray(bm.starts) ? bm.starts.indexOf(scenario.id) >= 0
+          : FB.startProvinceAllowed(scenario, bm, scenario.fixedProvinceId);
+      });
+      return offered.length ? offered : [freshBookmark(id)];
+    }
     if (own(scenario, 'bookmarkIds')) {
       validateIdList(scenario.bookmarkIds, path + '.bookmarkIds', rules.bookmarks);
     }
@@ -716,24 +727,29 @@ window.FBMODS = window.FBMODS || [];
     if (own(scenario, 'hidden') && typeof scenario.hidden !== 'boolean') fail(path + '.hidden', 'must be true or false.');
     if (own(scenario, 'onboarding') && scenario.onboarding !== 'ruler') fail(path + '.onboarding', 'must be ruler.');
     if (own(scenario, 'rulerRealmId')) {
+      // Delegated leadership seats a representative, who may be unnamed.
+      const delegated = !!scenario.governmentForm && FBDATA.governmentForms[scenario.governmentForm] &&
+        !FB.governments.problems(scenario.governmentForm).length &&
+        !!FB.governments.resolve(scenario.governmentForm).use.succession.delegatedLeadership;
       if (typeof scenario.rulerRealmId !== 'string' || !scenario.rulerRealmId ||
           !scenario.bookmarkIds || !scenario.bookmarkIds.length || !scenario.fixedProvinceId ||
-          !scenario.characterName || !scenario.governmentForm ||
+          !scenario.characterName && !delegated || !scenario.governmentForm ||
           scenario.onboarding !== 'ruler' || !scenario.familyPresets ||
           Object.keys(scenario.familyPresets).join(',') !== 'standard')
         fail(path + '.rulerRealmId', 'needs a fixed bookmark, named identity, government, ruler onboarding and standard court family.');
-      requiredText(scenario.characterName, path + '.characterName');
-      if (scenario.characterName.length > 20 || !FBDATA.governmentForms[scenario.governmentForm])
+      if (!delegated || own(scenario, 'characterName')) requiredText(scenario.characterName, path + '.characterName');
+      if (scenario.characterName && scenario.characterName.length > 20 || !FBDATA.governmentForms[scenario.governmentForm])
         fail(path + '.characterName', 'needs a start-code name and a known government.');
-      for (const bookmarkId of scenario.bookmarkIds) {
-        const bookmark = freshBookmark(bookmarkId);
+      for (const bookmark of [].concat.apply([], scenario.bookmarkIds.map(function (bookmarkId) {
+        return offeringBookmarks(bookmarkId, scenario);
+      }))) {
         const realm = (bookmark.realms || []).filter(function (row) { return row.id === scenario.rulerRealmId; })[0];
-        const ruler = realm && realm.ruler;
+        const ruler = FB.startRulerProfile(bookmark, realm, scenario.governmentForm);
         const eraId = FB.bookmarkEra(bookmark), era = FBDATA.eras[eraId];
         if (!ruler || ruler.name !== scenario.characterName || ruler.sex !== scenario.sex ||
             ruler.culture !== scenario.startCulture || realm.religion !== scenario.startReligion ||
             !era || (realm.government || era.defaultGovernment) !== scenario.governmentForm ||
-            FB.station.realmRank({ tier:scenario.tier, formId:scenario.governmentForm, era:eraId }, {}) !== realm.rank)
+            !delegated && FB.station.realmRank({ tier:scenario.tier, formId:scenario.governmentForm, era:eraId }, {}) !== realm.rank)
           fail(path + '.rulerRealmId', 'must match the authored ruler and government in every offered bookmark.');
       }
     } else if (own(scenario, 'characterName') || own(scenario, 'governmentForm') || own(scenario, 'onboarding'))

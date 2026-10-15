@@ -1275,6 +1275,11 @@ window.FB = window.FB || {};
     if (era) cultures[era.defaultCulture] = true;
     Object.keys(cultures).forEach(function (id) {
       var culture = FB.cultureOf(id, null), look = culture.appearanceEras && culture.appearanceEras[platform.era] || culture.appearance;
+      // Portraits borrow the era default culture's face profile when a lineage has none.
+      if (!plainRecord(look) && era && era.defaultCulture !== id) {
+        var fallback = FB.cultureOf(era.defaultCulture, null);
+        look = fallback && (fallback.appearanceEras && fallback.appearanceEras[platform.era] || fallback.appearance);
+      }
       if (!plainRecord(look)) fault('culture ' + id, 'no appearance profile resolves.');
       (culture.dyn === 'plain' ? ['male','female','family'] : ['male','female']).forEach(function (key) {
         var variant = culture.nameEras && culture.nameEras[platform.era] && culture.nameEras[platform.era][key];

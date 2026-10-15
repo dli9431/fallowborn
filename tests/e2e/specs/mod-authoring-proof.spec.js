@@ -36,7 +36,7 @@ for (const prefix of ['harbor','dune']) {
       const focus = FB.focuses.find(function (f) { return f.id === 'pray'; });
       return { yield:focus.gain(s).piety, literate:FB.traitMechanic(me, 'literacy'),
         peace:FB.traitAimWeight(me, 'keep_peace'), wealth:FB.traitAimWeight(me, 'amass_wealth'),
-        pure:before === JSON.stringify(s) && rng === FB.getRngState(), faults:FB.validateTraitMechanics(FBDATA.traitMechanics) };
+        pure:before === JSON.stringify(s) && (rng >>> 0) === (FB.getRngState() >>> 0), faults:FB.validateTraitMechanics(FBDATA.traitMechanics) };
     }, prefix);
     expect(result).toEqual({ yield:prefix === 'harbor' ? 6 : 8, literate:1,
       peace:prefix === 'harbor' ? 70 : 0, wealth:prefix === 'dune' ? 60 : 0, pure:true, faults:[] });
@@ -65,7 +65,7 @@ for (const prefix of ['harbor','dune']) {
         borders:borders === JSON.stringify([s.owner,s.holder,s.settlementLordships]),
         restored:JSON.stringify(FB.state.stories) === JSON.stringify(saved.state.stories) &&
           JSON.stringify(FB.state.authority) === JSON.stringify(saved.state.authority),
-        rng:rng === FB.getRngState(), uid:uid === FB.getUidCounter() };
+        rng:(rng >>> 0) === (FB.getRngState() >>> 0), uid:uid === FB.getUidCounter() };
     }, prefix);
     expect(result.choices).toEqual([true,true,true]);
     expect(result.paid).toBe(result.expected);
@@ -131,7 +131,7 @@ for (const prefix of ['harbor','dune']) {
       const saved = JSON.parse(FB.save.serialize()); FB.save.restore(saved);
       return { absent:absent.length, present:queue.length, owner:queue[0] && queue[0].ctx.protagonistId,
         expected:s.player.charId, retained:JSON.stringify(FB.state.eventQueue) === JSON.stringify(saved.state.eventQueue),
-        rng:rng === FB.getRngState(), uid:uid === FB.getUidCounter(),
+        rng:(rng >>> 0) === (FB.getRngState() >>> 0), uid:uid === FB.getUidCounter(),
         reward:FB.eventById(id).options[0].effects.prestige };
     }, prefix);
     expect(result).toMatchObject({ absent:0, present:1, retained:true, rng:true, uid:true, reward:prefix === 'harbor' ? 3 : 6 });
@@ -147,14 +147,15 @@ for (const prefix of ['harbor','dune']) {
       s.turn = e.startTurn + 1;
       const before = JSON.stringify(s), rng = FB.getRngState(), uid = FB.getUidCounter();
       const q = T.roundPreview(s, e.id, s.player.charId, args.prefix + '_method');
-      const pure = before === JSON.stringify(s) && rng === FB.getRngState() && uid === FB.getUidCounter();
+      const pure = before === JSON.stringify(s) && (rng >>> 0) === (FB.getRngState() >>> 0) && uid === FB.getUidCounter();
       const pending = JSON.parse(FB.save.serialize());
       function resolve() {
         const state = FB.state, review = T.roundPreview(state, e.id, state.player.charId, args.prefix + '_method');
         const first = T.resolveRound(state, review), repeated = T.resolveRound(state, review);
         return { first:first, repeated:repeated, state:JSON.stringify(state), rng:FB.getRngState(), uid:FB.getUidCounter() };
       }
-      const first = resolve(); FB.save.restore(pending); const replay = resolve();
+      // restore canonicalizes the live state, so both runs start from the restored save
+      FB.save.restore(pending); const first = resolve(); FB.save.restore(pending); const replay = resolve();
       return { entered:!!entered, pure:pure, ready:q && q.ok, scored:q && q.scored,
         first:first.first, repeated:first.repeated, replay:JSON.stringify(first) === JSON.stringify(replay),
         contests:Object.keys(e.contests), policy:T.trackPolicy(track).resolution };
@@ -174,7 +175,7 @@ for (const prefix of ['harbor','dune']) {
     const result = await page.evaluate(function () {
       const s = FB.state, c = s.chars[s.player.charId];
       return { name:c.name, province:s.player.provinceId, profession:s.player.profession,
-        start:s.start.scenarioId, quickStart:s.telemetry.quickStart };
+        start:s.telemetry.scenario, quickStart:s.telemetry.quickStart };
     });
     expect(result).toMatchObject({ name:prefix === 'harbor' ? 'Mara' : 'Tal',
       province:prefix === 'harbor' ? 'barcelona' : 'galway', start:'serf', quickStart:prefix + '_beginning' });
@@ -232,7 +233,7 @@ for (const prefix of ['harbor','dune']) {
     const result = await page.evaluate(function (prefix) {
       const s = FB.state, c = s.chars[s.player.charId], p = s.player;
       p.tier = 2; c.station = 2; c.sex = 'f'; c.religion = 'catholic'; p.gold = 1000; p.piety = 300; p.prestige = 300;
-      const h = FB.foundAbbey(s); h.holderId = c.id; h.treasury = 100; h.support = 50;
+      const h = FB.foundAbbey(s); h.holderId = c.id; h.appointedTurn = s.turn; h.treasury = 100; h.support = 50;
       const id = prefix + '_alms', def = FBDATA.abbeys.actions[id], privateGold = p.gold, piety = p.piety;
       const q = FB.abbeyActionStatus(s, h, id), first = FB.runAbbeyAction(s, h, id), repeated = FB.runAbbeyAction(s, h, id);
       const saved = JSON.parse(FB.save.serialize()); FB.save.restore(saved);
@@ -257,7 +258,7 @@ for (const prefix of ['harbor','dune']) {
       const before = JSON.stringify(s), rng = FB.getRngState();
       const path = FB.religiousPathOf(s, c), q = FB.abbotAppointmentStatus(s, c);
       const office = FB.religiousOfficePath(s, c, 'abbot');
-      const pure = before === JSON.stringify(s) && rng === FB.getRngState();
+      const pure = before === JSON.stringify(s) && (rng >>> 0) === (FB.getRngState() >>> 0);
       return { id:path.id, next:path.next.id, visible:q.visible, office:office.step.id,
         pure:pure, automatic:FB.takeReligiousStep(s, c), rank:c.religiousRanks[id] };
     }, prefix);
@@ -274,7 +275,7 @@ for (const prefix of ['harbor','dune']) {
       const status = FB.focusStatus(s,id), f = FB.focuses.find(function (row) { return row.id === id; });
       const expected = (prefix === 'harbor' ? 2 : 5) + FB.skillOf(c,'ste') / (prefix === 'harbor' ? 4 : 8);
       const before = JSON.stringify(s), rng = FB.getRngState(), preview = f.preview(s), gain = f.gain(s);
-      const pure = before === JSON.stringify(s) && rng === FB.getRngState(), save = JSON.parse(FB.save.serialize());
+      const pure = before === JSON.stringify(s) && (rng >>> 0) === (FB.getRngState() >>> 0), save = JSON.parse(FB.save.serialize());
       function run() { const state = FB.state, gold = state.player.gold; f.tick(state); return { paid:state.player.gold-gold,health:state.chars[state.player.charId].health,rng:FB.getRngState(),uid:FB.getUidCounter() }; }
       const first = run(); FB.save.restore(save); const replay = run();
       return { can:status.can, expected:expected, gain:gain.gold, preview:preview.seasonal[0].amount, pure:pure, first:first, replay:JSON.stringify(first) === JSON.stringify(replay) };
@@ -349,7 +350,7 @@ for (const prefix of ['harbor','dune']) {
       for (const rid in s.realms) if (s.realms[rid]) delete s.realms[rid].war;
       const terms = FB.parliamentEnsure(s); terms.aid = .25;
       const before = JSON.stringify(s), rng = FB.getRngState(), first = FB.parliamentSessionCandidates(s);
-      const pure = before === JSON.stringify(s) && rng === FB.getRngState();
+      const pure = before === JSON.stringify(s) && (rng >>> 0) === (FB.getRngState() >>> 0);
       terms.aid = FBDATA.balance.parliamentAidMax || .4;
       const second = FB.parliamentSessionCandidates(s);
       return { pure:pure, first:first.indexOf(prefix + '_assembly') >= 0, second:second.indexOf(prefix + '_assembly') >= 0 };
@@ -361,8 +362,10 @@ for (const prefix of ['harbor','dune']) {
     const result = await page.evaluate(function (prefix) {
       const s = FB.state, rid = s.owner[s.player.provinceId], r = s.realms[rid];
       const candidate = FB.techCandidates(s,rid,true).find(function (row) { return row.available && row.def.domain === 'learning'; });
-      r.ruler.trait = null; const ordinary = FB.techAIScore(s,candidate.id,rid);
-      r.ruler.trait = prefix + '_discipline'; const preferred = FB.techAIScore(s,candidate.id,rid);
+      // realm.ruler mirrors the ruler character's first trait on each sync
+      const ruler = FB.realmRulerCharacterSnapshot(s,rid);
+      ruler.traits = []; const ordinary = FB.techAIScore(s,candidate.id,rid);
+      ruler.traits = [prefix + '_discipline']; const preferred = FB.techAIScore(s,candidate.id,rid);
       return { ratio:preferred/ordinary,faults:FB.validateAgencyRules(FBDATA.agencyRules),
         chance:FBDATA.agencyRules.familyProgressChance, cooldown:FBDATA.agencyRules.approachCooldownYears };
     }, prefix);
@@ -407,6 +410,7 @@ test('imported civic household wins and resigns a declared office through shared
   await beginBookmark(page,info,'harbor_courts_900','harbor_civic_household');
   const property = await page.evaluate(function () {
     const s = FB.state, V = FB.civicGovernment, o = V.row(s,'harbor_commune').offices[0];
+    s.chars[s.player.charId].skills.dip = 8; // the declared constituency requires Diplomacy 2
     if (o.incumbentId) V.officeApply(s,V.officeQuote(s,'harbor_commune',o.id,'resign',{ characterId:o.incumbentId }));
     FB.ui.showCivicGovernment('harbor_commune');
     return JSON.stringify([s.owner,s.holder,s.settlementLordships,s.player.provs]);
@@ -440,7 +444,7 @@ for (const prefix of ['harbor','dune']) {
       FB.adjustStanding(s, target, 65 - FB.standingOf(s,target), 'test:authored_offer');
       const before = JSON.stringify(s), rng = FB.getRngState(), uid = FB.getUidCounter();
       const status = FB.freedomPetitionStatus(s);
-      const pure = before === JSON.stringify(s) && rng === FB.getRngState() && uid === FB.getUidCounter();
+      const pure = before === JSON.stringify(s) && (rng >>> 0) === (FB.getRngState() >>> 0) && uid === FB.getUidCounter();
       const offer = FB.createFreedomOffer(s, 'petition');
       const repeat = FB.createFreedomOffer(s, 'petition') === offer;
       const saved = JSON.parse(FB.save.serialize()); FB.save.restore(saved);
@@ -462,7 +466,7 @@ for (const prefix of ['harbor','dune']) {
       FB.foundPlayerRealm(s); FB.invalidateRealmCache();
       const before = JSON.stringify(s), rng = FB.getRngState(), uid = FB.getUidCounter();
       const quote = FB.historicalAmbitionStatus(s,id);
-      const pure = before === JSON.stringify(s) && rng === FB.getRngState() && uid === FB.getUidCounter();
+      const pure = before === JSON.stringify(s) && (rng >>> 0) === (FB.getRngState() >>> 0) && uid === FB.getUidCounter();
       const prestige = p.prestige, done = FB.completeHistoricalAmbition(s,id), repeat = FB.completeHistoricalAmbition(s,id);
       const saved = JSON.parse(FB.save.serialize()); FB.save.restore(saved);
       return { ready:quote.ready,pure:pure,done:!!done,repeat:repeat,gain:p.prestige-prestige,
@@ -480,7 +484,7 @@ for (const prefix of ['harbor','dune']) {
       const s = FB.state, patron = prefix + '_senior', federate = prefix + '_partner', id = prefix + '_compact';
       const before = JSON.stringify(s), rng = FB.getRngState(), uid = FB.getUidCounter();
       const terms = FB.political.contractTerms(s,id,{patronRealmId:patron,federateRealmId:federate});
-      const pure = before === JSON.stringify(s) && rng === FB.getRngState() && uid === FB.getUidCounter();
+      const pure = before === JSON.stringify(s) && (rng >>> 0) === (FB.getRngState() >>> 0) && uid === FB.getUidCounter();
       const total = FB.treasuryAvailable(s,patron) + FB.treasuryAvailable(s,federate);
       const offered = FB.authorityOfferContractTemplate(s,id,{patronRealmId:patron,federateRealmId:federate});
       const first = FB.authorityConsentContract(s,offered.id,patron);
@@ -506,7 +510,7 @@ for (const prefix of ['harbor','dune']) {
       const s = FB.state, id = prefix + '_gift'; s.player.gold = 50;
       const before = JSON.stringify(s), rng = FB.getRngState(), uid = FB.getUidCounter();
       const status = FB.instantStatus(s,id);
-      const pure = before === JSON.stringify(s) && rng === FB.getRngState() && uid === FB.getUidCounter();
+      const pure = before === JSON.stringify(s) && (rng >>> 0) === (FB.getRngState() >>> 0) && uid === FB.getUidCounter();
       const gold = s.player.gold, piety = s.player.piety;
       FB.runInstant(s,id);
       const paid = s.player.gold;
@@ -530,7 +534,7 @@ for (const prefix of ['harbor','dune']) {
       return {count:rows.length,host:row && row.hostId,pay:row && row.payPerSeason,
         duration:row && row.endTurn,faith:FBDATA.rulerFaithTargets.indexOf(prefix + '_rite') >= 0,
         retained:JSON.stringify(FB.state.authority.contracts) === JSON.stringify(saved.state.authority.contracts),
-        pure:rng === FB.getRngState() && uid === FB.getUidCounter()};
+        pure:(rng >>> 0) === (FB.getRngState() >>> 0) && uid === FB.getUidCounter()};
     },prefix);
     expect(result).toEqual({count:1,host:prefix + '_independent_host',pay:prefix === 'harbor' ? 2 : 4,
       duration:prefix === 'harbor' ? 180 : 270,faith:true,retained:true,pure:true});
@@ -550,7 +554,7 @@ for (const prefix of ['harbor','dune']) {
       const mediation = FB.instants.find(function (d) { return d.id === 'mediate'; });
       const before = JSON.stringify(s), rng = FB.getRngState(), uid = FB.getUidCounter();
       const projected = focus.gain(s).gold, preview = focus.preview(s), social = mediation.preview(s);
-      const pure = before === JSON.stringify(s) && rng === FB.getRngState() && uid === FB.getUidCounter();
+      const pure = before === JSON.stringify(s) && (rng >>> 0) === (FB.getRngState() >>> 0) && uid === FB.getUidCounter();
       const gold = p.gold, prestige = p.prestige;
       focus.tick(s); mediation.run(s);
       return {pure:pure,projected:projected,preview:preview.seasonal[0].amount,actual:(p.gold - gold) * 90,
@@ -607,7 +611,7 @@ for (const prefix of ['harbor','dune']) {
       p.gold = 100;
       const proclaimed = FB.realmPolicyProclaim(s,prefix + '_peace','edict');
       const before = JSON.stringify(s), rng = FB.getRngState(), governance = FB.realmPolicyGovernance(s);
-      const pure = before === JSON.stringify(s) && rng === FB.getRngState();
+      const pure = before === JSON.stringify(s) && (rng >>> 0) === (FB.getRngState() >>> 0);
       const saved = JSON.parse(FB.save.serialize()); FB.save.restore(saved);
       const restored = JSON.stringify(FB.realmPolicyGovernance(FB.state)) === JSON.stringify(governance);
       // Focused stub of the minority-county reader only; the declared policy hooks run unchanged.

@@ -663,7 +663,9 @@
     return errors;
   };
   var validateBookmark = FB.validateBookmark;
-  FB.validateBookmark = function (bm) { return validateBookmark(bm).concat(A.openingFaults(bm)); };
+  FB.validateBookmark = function (bm, resolvedRevision, storyContext) {
+    return validateBookmark(bm, resolvedRevision, storyContext).concat(A.openingFaults(bm));
+  };
   A.validateState = function (s) {
     var fault = null, referenced = {};
     Object.keys(s.authority && s.authority.governments || {}).forEach(function (rid) {

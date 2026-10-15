@@ -42,7 +42,9 @@ test('papal death keeps institutional property and uses the canonical election o
   await start(page,info);
   const result = await page.evaluate(function () {
     const s = FB.state,E = FB.ecclesiasticalGovernment,rid = 'papacy_1204',c = E.incumbent(s,rid);
-    const owners = JSON.stringify(s.owner),holders = JSON.stringify(s.holder),household = JSON.stringify(s.player);
+    // travel bookkeeping fills its defaults lazily and is not household state
+    function householdFacts() { const p = Object.assign({},s.player); delete p.travel; delete p.travelSettlement; delete p.travelHistory; return JSON.stringify(p); }
+    const owners = JSON.stringify(s.owner),holders = JSON.stringify(s.holder),household = householdFacts();
     const treasury = s.realms[rid].treasury.gold,binding = JSON.stringify(E.row(s,rid));
     FB.killChar(s,c);
     const election = s.papacy.elections[s.papacy.romanObedience],id = election && election.id;
@@ -52,7 +54,7 @@ test('papal death keeps institutional property and uses the canonical election o
       sameCollege:college === JSON.stringify(s.papacy.obediences[s.papacy.romanObedience].college),
       property:owners === JSON.stringify(s.owner) && holders === JSON.stringify(s.holder),
       funds:treasury === s.realms[rid].treasury.gold,binding:binding === JSON.stringify(E.row(s,rid)),
-      household:household === JSON.stringify(s.player),receipts:E.decision(s,rid,'revenue').allowed,
+      household:household === householdFacts(),receipts:E.decision(s,rid,'revenue').allowed,
       offensive:!E.decision(s,rid,'war').allowed,secondElection:!E.review(s,rid,'appoint',{ candidateId:s.player.charId }).allowed };
   });
   expect(result).toEqual({ vacancy:true,election:true,sameElection:true,sameCollege:true,property:true,funds:true,binding:true,

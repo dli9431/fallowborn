@@ -24,7 +24,11 @@ async function start(page, testInfo, fictional) {
         if (fictional) {
           const f = FB_ELECTIVE_FIXTURE;
           FBDATA.governmentForms[f.formId] = Object.assign({}, FBDATA.governmentForms.elective_monarchy, { selectionProfile:f.profile });
-          FBDATA.bookmarks['711'].realms.find(function (r) { return r.id === f.realmId; }).government = f.formId;
+          // Revision layers may copy realm records, so edit the realm in every layer.
+          const b = FBDATA.bookmarks['711'];
+          [b].concat(Object.values(b.revisions || {})).forEach(function (layer) {
+            (layer.realms || []).filter(function (r) { return r.id === f.realmId; }).forEach(function (r) { r.government = f.formId; });
+          });
           FB.governments.invalidate();
         }
         FB.game.pending = { seed:'ELECTIVE-CROWN-REVIEW' };

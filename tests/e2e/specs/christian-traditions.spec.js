@@ -446,13 +446,17 @@ datedChurchCases.forEach(function (o) {
         var names = offices.map(function (id) { var c = FB.religiousOfficeSnapshot(s,id); return c && c.name || null; });
         var group = o.service && FB.religiousInstitutionSnapshot(s,o.service);
         var pure = before === JSON.stringify(s) && rng === FB.getRngState() && uid === FB.getUidCounter();
-        var facts = JSON.stringify([s.localInstitutions,s.religiousHeads,s.religiousHeadVacancies,
-          s.papacy || null,s.chars,s.population,s.authority]);
+        // Compare saved forms: restore inflates compacted defaults that live records omit.
+        function saved() {
+          var d = JSON.parse(FB.save.serialize()).state;
+          return JSON.stringify([d.localInstitutions,d.religiousHeads,d.religiousHeadVacancies,
+            d.papacy || null,d.chars,d.population,d.authority]);
+        }
+        var facts = saved();
         var text = FB.save.serialize(); FB.save.restore(JSON.parse(text)); s = FB.state;
         FB.ensureLocalInstitutions(s); FB.ensureReligiousHeads(s);
         return {names:names,pure:pure,service:!o.service || !!group && group.available && !group.holder,
-          preserved:facts === JSON.stringify([s.localInstitutions,s.religiousHeads,s.religiousHeadVacancies,
-            s.papacy || null,s.chars,s.population,s.authority]),
+          preserved:facts === saved(),
           restored:s.start.id === o.id && s.start.revision === o.revision,
           independent:FB.religiousHeadSnapshot(s,'east_syriac') === null,
           offMap:FB.localInstitutionList(s).filter(function (i) { return i.def.officeSystem === null && i.def.provinceId === null; })
@@ -570,7 +574,7 @@ test('local minority relief preserves communities, incumbents, papacy and active
       if (!q.allowed || !FB.religiousInstitutionApply(s,q)) throw new Error('Admission failed');
       var name = 'alexandrian_relief_800', actor = {kind:'character',id:c.id};
       var before = JSON.stringify(s), rng = FB.getRngState(), uid = FB.getUidCounter();
-      var review = FB.religiousActivityQuote(s,actor,name,'begin',{});
+      var review = FB.religiousActivityQuote(s,name,c.id);
       if (before !== JSON.stringify(s) || rng !== FB.getRngState() || uid !== FB.getUidCounter()) throw new Error('Impure activity review');
       if (!review.allowed || !FB.religiousActivityApply(s,review)) throw new Error('Participation failed');
       if (!FB.createFaith(s,{id:'fictional_christian_reform',name:'Fictional household reform',parent:'eastern',
@@ -591,7 +595,7 @@ test('local minority relief preserves communities, incumbents, papacy and active
       s.turn = c.religiousActivity.dueTurn; FB.religiousActivitiesTick(s);
       var completed = !c.religiousActivity && s.player.piety === piety + 1;
       return {restored:restored,gold:saved.gold === gold && gold === 18 && s.player.gold === gold,
-        completed:completed,repeat:!FB.religiousActivityQuote(s,{kind:'character',id:c.id},'alexandrian_relief_800','begin',{}).allowed,
+        completed:completed,repeat:!FB.religiousActivityQuote(s,'alexandrian_relief_800',c.id).allowed,
         opening:s.start.id,absent:!s.localInstitutions.constantinople_greek_service_1204};
     },saved)).toEqual({restored:true,gold:true,completed:true,repeat:true,opening:'800',absent:true});
   });
@@ -606,7 +610,7 @@ test('Samarkand service is local and voluntary while later AI creates no unverif
       c.religion = s.player.religion = 'east_syriac'; c.born = 760; s.player.gold = 20;
       var q = FB.religiousInstitutionQuote(s,iid,{kind:'character',id:c.id},'admit',{roleId:'household'});
       var entered = q.allowed && FB.religiousInstitutionApply(s,q);
-      var activity = FB.religiousActivityQuote(s,{kind:'character',id:c.id},iid,'begin',{});
+      var activity = FB.religiousActivityQuote(s,iid,c.id);
       s.player.provinceId = 'baghdad';
       var stale = !FB.religiousActivityApply(s,activity), gold = s.player.gold;
       s.player.provinceId = 'samarkand';

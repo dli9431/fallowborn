@@ -179,12 +179,16 @@ window.FB = window.FB || {};
   function listFor(state, scope, pid, create) {
     // Full-store repair belongs to load/tick boundaries. A local query must
     // never walk unrelated counties, even when another county is malformed.
-    if (!state.modifiers || typeof state.modifiers !== 'object' || Array.isArray(state.modifiers)) state.modifiers = {};
-    if (!state.modifiers.county || typeof state.modifiers.county !== 'object' || Array.isArray(state.modifiers.county)) state.modifiers.county = {};
     if (scope === 'county') {
       if (!pid || !FB.world.byId[pid]) return null;
+      const store = state.modifiers;
+      const valid = !!store && typeof store === 'object' && !Array.isArray(store) &&
+        !!store.county && typeof store.county === 'object' && !Array.isArray(store.county);
+      // A read of an absent ledger is empty and must not create save state.
+      if (!create && !(valid && own(store.county, pid))) return [];
+      if (!store || typeof store !== 'object' || Array.isArray(store)) state.modifiers = {};
+      if (!valid) state.modifiers.county = {};
       const county = state.modifiers.county;
-      if (!own(county, pid) && !create) return [];
       county[pid] = repairList(county[pid], 'county');
       return county[pid];
     }

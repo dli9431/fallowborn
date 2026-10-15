@@ -437,8 +437,13 @@ test('legacy territorial Venice remains territorial and acquires no new civic op
   const { openGame } = require('../support/game/navigation');
   await openGame(page,testInfo);
   await page.evaluate(function () {
-    const d = FBDATA.bookmarks['1204'].realms.find(function (r) { return r.id === 'venice_1204'; });
-    d.government = 'territorial'; delete d.civicProfileId; delete d.constituency; delete d.civicRights;
+    // Revision layers may copy realm records, so edit Venice in every layer.
+    const b = FBDATA.bookmarks['1204'];
+    [b].concat(Object.values(b.revisions || {})).forEach(function (layer) {
+      (layer.realms || []).filter(function (r) { return r.id === 'venice_1204'; }).forEach(function (d) {
+        d.government = 'territorial'; delete d.civicProfileId; delete d.constituency; delete d.civicRights;
+      });
+    });
   });
   // startParityGame opens the existing game URL again, so use the owner-facing
   // seed controls directly while the isolated legacy declaration is active.
@@ -448,8 +453,12 @@ test('legacy territorial Venice remains territorial and acquires no new civic op
   await page.locator('#btn-bm-seed').click(); await page.locator('#ng-seed').fill(journey.code); await page.locator('#ng-seed').press('Enter');
   await page.getByRole('button',{ name:'Begin Your Story',exact:true }).click(); await page.getByRole('button',{ name:'Begin',exact:true }).press('Enter');
   const result = await page.evaluate(function () {
-    const source = JSON.parse(FB.save.serialize()),d = FBDATA.bookmarks['1204'].realms.find(function (r) { return r.id === 'venice_1204'; });
-    d.government = 'city_republic'; d.civicProfileId = 'venice_1204'; d.constituency = 'venetian_councils';
+    const source = JSON.parse(FB.save.serialize()),b = FBDATA.bookmarks['1204'];
+    [b].concat(Object.values(b.revisions || {})).forEach(function (layer) {
+      (layer.realms || []).filter(function (r) { return r.id === 'venice_1204'; }).forEach(function (d) {
+        d.government = 'city_republic'; d.civicProfileId = 'venice_1204'; d.constituency = 'venetian_councils';
+      });
+    });
     const before = JSON.stringify(source.state.realms.venice_1204.ruler),rng = FB.getRngState(),uid = FB.getUidCounter();
     FB.save.restore(source); const s = FB.state;
     return { government:FB.governments.forRealm(s,'venice_1204').id,noOpening:!FB.civicGovernment.row(s,'venice_1204'),

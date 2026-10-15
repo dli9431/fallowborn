@@ -11,17 +11,24 @@ async function seedLocalInstitution(page, fictional) {
       properties:{ head:null },systems:{ papacy:false } }) : 'catholic';
     if (!faith) throw new Error('Fixture faith was not accepted');
     bm.systems.enable.push('episcopal_sees');
-    bm.localInstitutions = Object.assign({},FB.localInstitutionDefinitions(s));
+    // Revisioned worlds resolve these fields from the campaign's revision layer.
+    function layer(field) {
+      const revisions = bm.revisions || {}, selected = revisions[s.start.revision || 'baseline'];
+      if (selected && selected[field] !== undefined) return selected;
+      return revisions.baseline && revisions.baseline[field] !== undefined ? revisions.baseline : bm;
+    }
+    const institutions = layer('localInstitutions'), realms = layer('realms');
+    institutions.localInstitutions = Object.assign({},FB.localInstitutionDefinitions(s));
     const sites = FB.world.sitesByProv[pid].list, site = sites[0].site;
     const see = { kind:'see',city:'Durham',site:site,provinceId:pid,culture:'english',religion:faith,
       officeId:officeId,chapterId:chapterId,officeProfile:{ holderSex:fictional ? null : 'm',holderRole:'priest',minAge:30 } };
-    bm.localInstitutions[institutionId] = see;
-    bm.localInstitutions[chapterId] = { kind:'congregation',city:'Chapter',site:site,provinceId:pid,culture:'english',religion:faith };
+    institutions.localInstitutions[institutionId] = see;
+    institutions.localInstitutions[chapterId] = { kind:'congregation',city:'Chapter',site:site,provinceId:pid,culture:'english',religion:faith };
     const d = { id:rid,name:fictional ? 'Sanctuary institution' : 'Episcopal lordship fixture',capital:pid,rank:1,
       government:'ecclesiastical_principality',religion:faith,
       ecclesiastical:{ profileId:fictional ? 'sanctuary_temporal' : 'durham_temporal',officeId:officeId,institutionId:institutionId },
       ruler:{ name:'Opening prelate',sex:fictional ? 'f' : 'm',born:s.date.year - 45 },liege:fictional ? null : 'england_1204' };
-    bm.realms.push(d);
+    realms.realms = realms.realms.concat([d]);
     s.realms[rid] = { id:rid,name:d.name,capital:pid,color:'#6b8796',rank:1,alive:true,liege:d.liege,
       religion:faith,aggression:0,op:0,war:null,ruler:{ name:d.ruler.name,sex:d.ruler.sex,born:d.ruler.born,culture:'english',mar:3,generation:1 } };
     s.holder[pid] = rid; s.owner[pid] = d.liege || rid;

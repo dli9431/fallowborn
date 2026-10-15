@@ -30,7 +30,8 @@ FRESH_JOURNEYS.push({
   id:'fresh-476-curialis_476',
   bookmark:'476',
   scenario:'curialis_476',
-  code:PARITY_SEED + '-476-curialis_476-ravenna-m-Marcus-established-0-roman.nicene'
+  // Roman Nicene is Ravenna's own community, so the canonical code omits it
+  code:PARITY_SEED + '-476-curialis_476-ravenna-m-Marcus-established'
 });
 
 /* Fixed samples. Deeds and focuses are listed whether or not a start can see

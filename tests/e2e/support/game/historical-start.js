@@ -8,6 +8,12 @@ const { openCrazyGame } = require('./crazygames-title');
 // Historical review journeys choose their title contract explicitly. Keep the
 // standard parity helper and the universal navigation fixture unchanged.
 async function startHistoricalGame(page, testInfo, journey, crazygames) {
+  // A review journey may start a date hidden from new campaigns.
+  await page.addInitScript(function (id) {
+    document.addEventListener('DOMContentLoaded', function () {
+      if (window.FBDATA && FBDATA.bookmarks && FBDATA.bookmarks[id]) FBDATA.bookmarks[id].hidden = false;
+    }, { once:true });
+  }, journey.bookmark);
   if (!crazygames) return startParityGame(page, testInfo, journey);
   await mockCrazyGames(page);
   await page.addInitScript(function () {

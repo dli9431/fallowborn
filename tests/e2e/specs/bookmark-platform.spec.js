@@ -48,6 +48,7 @@ async function registerReview(page, hidden) {
   return page.evaluate(function (isHidden) {
     const clone = function (v) { return JSON.parse(JSON.stringify(v)); };
     const def = clone(FB.bookmark('476'));
+    delete def.revision; // the resolved copy carries no revision catalogue
     def.id = 'sibling_review'; def.name = 'Sibling review';
     def.date = { year:493, season:0, day:1 }; def.hidden = isHidden;
     def.stories = [];
@@ -58,6 +59,16 @@ async function registerReview(page, hidden) {
         realmId:'italy', scope:{ kind:'realm', id:'italy' } } },
       estates:[], claims:[], migrations:[]
     };
+    // the minimal opening replaces the copied opening revision catalogue
+    delete def.openingRevision; delete def.openingRevisions; delete def.openingLegacyRevision;
+    // without the copied royal trees, aristocratic courts use the era default government
+    def.realms.forEach(function (realm) {
+      const form = FBDATA.governmentForms[realm.government];
+      if (!form || !form.aristocraticProfileId) return;
+      ['government','royalCourt','aristocraticProfileId','administrationProfileId'].forEach(function (key) {
+        delete realm[key];
+      });
+    });
     const base = FBDATA.localInstitutions;
     def.localInstitutions = {
       rome_see:clone(base.rome_see), constantinople_see:clone(base.constantinople_see),
@@ -72,7 +83,16 @@ async function registerReview(page, hidden) {
     scenario.id = 'sibling_commoner'; scenario.bookmarkIds = [def.id]; scenario.tracks = [];
     delete scenario.trackLocations;
     scenario.intro = 'A civic household begins its review campaign.';
-    FB.mods.apply({ name:'Sibling platform fixture', bookmarks:[def], startScenarios:[scenario] });
+    def.starts = [scenario.id];
+    // A sibling world extends the 476-scoped faiths its copied communities use.
+    const religions = {};
+    Object.keys(FBDATA.religions).forEach(function (id) {
+      const availability = FBDATA.religions[id].availability;
+      if (!availability || !availability.bookmarkIds || availability.bookmarkIds.indexOf('476') < 0) return;
+      religions[id] = clone(FBDATA.religions[id]);
+      religions[id].availability.bookmarkIds = availability.bookmarkIds.concat(def.id);
+    });
+    FB.mods.apply({ name:'Sibling platform fixture', bookmarks:[def], startScenarios:[scenario], religions:religions });
     return FB.validateBookmark(FB.bookmark(def.id));
   }, hidden);
 }
@@ -199,13 +219,14 @@ test('data-only institutions remain independent across activation orders and mat
     }, saved);
     expect(restored).toEqual({ ledger:true, vacancies:true, heads:true, dead:true,
       east:'Eastern reviewer', error:null, count:true });
-    expect(await page.evaluate(function (json) { return FB.game.loadData(JSON.parse(json)); }, original)).toBe(true);
-    await expect(page.locator('#game:not(.hidden)')).toBeVisible();
+    // Saves bind to the exact effective catalogue: the pre-review save is another
+    // world while the review mod is active. The 476 definitions stay uncontaminated.
+    expect(await page.evaluate(function (json) { return FB.save.otherWorld(JSON.parse(json)); }, original)).toBe(true);
     expect(await page.evaluate(function () {
-      return { id:FB.state.start.id, rome:FB.religiousOfficeSnapshot(FB.state, 'rome_bishop').name,
-        east:FB.religiousOfficeSnapshot(FB.state, 'constantinople_patriarch').name,
+      const local = FB.bookmark('476').localInstitutions;
+      return { rome:local.rome_see.historicalName, east:local.constantinople_see.historicalName,
         faults:FB.validateBookmark(FB.bookmark('476')) };
-    })).toEqual({ id:'476', rome:'Simplicius', east:'Acacius', faults:[] });
+    })).toEqual({ rome:'Simplicius', east:'Acacius', faults:[] });
   });
 
 test('bookmark and runtime-mod validation reject invalid visibility, seats, offices and representative profiles',
@@ -246,7 +267,26 @@ test('visibility composes with legacy mod restrictions and explicit empty instit
     const result = await page.evaluate(function () {
       const def = JSON.parse(JSON.stringify(FB.bookmark('476')));
       def.id = 'empty_review'; def.stories = []; def.localInstitutions = {};
-      FB.mods.apply({ bookmarks:[def] });
+      delete def.revision; def.starts = [];
+      // without its stories the copy keeps no story-bound opening actors or courts
+      def.opening = { actors:{}, appointments:{}, estates:[], claims:[], migrations:[] };
+      delete def.openingRevision; delete def.openingRevisions; delete def.openingLegacyRevision;
+      def.realms.forEach(function (realm) {
+        const form = FBDATA.governmentForms[realm.government];
+        if (!form || !form.aristocraticProfileId) return;
+        ['government','royalCourt','aristocraticProfileId','administrationProfileId'].forEach(function (key) {
+          delete realm[key];
+        });
+      });
+      // the sibling world extends the 476-scoped faiths its copied communities use
+      const religions = {};
+      Object.keys(FBDATA.religions).forEach(function (id) {
+        const availability = FBDATA.religions[id].availability;
+        if (!availability || !availability.bookmarkIds || availability.bookmarkIds.indexOf('476') < 0) return;
+        religions[id] = JSON.parse(JSON.stringify(FBDATA.religions[id]));
+        religions[id].availability.bookmarkIds = availability.bookmarkIds.concat(def.id);
+      });
+      FB.mods.apply({ bookmarks:[def], religions:religions });
       const state = { start:{ id:def.id, era:def.era }, chars:{}, realms:{}, player:{} };
       FB.ensureLocalInstitutions(state);
       const local = FB.localInstitutionDefinitions(state);

@@ -2221,6 +2221,8 @@ window.FB = window.FB || {};
       c.faithStandingBase = faithBase;
       if (opts.opinion === undefined) c.opinion = faithBase;
     }
+    // Restore inflates a compacted zero, so live characters carry it explicitly too.
+    if (!own(c, 'faithStandingBase')) c.faithStandingBase = 0;
     if (Object.prototype.hasOwnProperty.call(opts, 'byname')) {
       c.byname = opts.byname;
     } else if (state && FB.cultureOf(c.culture).dyn === 'patronym' &&
