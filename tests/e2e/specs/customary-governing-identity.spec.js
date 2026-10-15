@@ -7,7 +7,7 @@ dependsOnRuntime(__filename, [
   'js/politics.js', 'js/lordships.js', 'js/treasury.js', 'js/title_ids.js',
   'js/modifiers.js', 'js/model.js', 'js/actions.js', 'js/institutions.js',
   'js/save.js', 'js/save_v4.js', 'js/ui_misc.js', 'js/ui_modals.js',
-  'js/governments.js', 'js/station.js', 'js/story_courts.js',
+  'js/governments.js', 'js/government_aristocracy.js', 'js/station.js', 'js/story_courts.js',
   'data/cultures.js', 'data/bookmark_476.js', 'data/bookmark_476_italy.js',
   'data/bookmark_476_dalmatia_east.js', 'data/bookmark_476_gaul_iberia.js',
   'data/bookmark_476_africa.js', 'data/bookmarks.js', 'data/intrigue.js',
@@ -41,19 +41,26 @@ test('476 seeds provincial court rights and elite identities separately from com
   const result = await page.evaluate(function () {
     const s = FB.state, before = JSON.stringify(s), rng = FB.getRngState();
     const g = FB.political.governingIdentity(s, 'aquitaine');
-    const rights = s.authority.rights.filter(function (r) { return r.basis === 'tenure'; });
+    // Provincial seeds belong to realms. Hereditary interests also create
+    // tenure rights, but their beneficiaries are the existing characters.
+    const rights = s.authority.rights.filter(function (r) {
+      return r.basis === 'tenure' && r.beneficiary.kind === 'realm';
+    }).map(function (r) {
+      return { province:r.scope.id, issuer:r.issuer.id, holder:r.beneficiary.id,
+        power:r.power, basisRef:r.basisRef };
+    });
     const local = FB.political.communityGovernance(s, 'toulouse');
     const b = FB.campaignBookmark(s), expectedRights = [];
     b.provinces.forEach(function (province) {
       (province.customaryRights || []).filter(function (right) { return right.basis === 'tenure'; })
-        .forEach(function (right) { expectedRights.push({ province:province.id, holder:right.realmId || province.realm, right:right }); });
+        .forEach(function (right) {
+          expectedRights.push({ province:province.id, issuer:province.realm, holder:right.realmId || province.realm,
+            power:right.power, basisRef:right.basisRef || null });
+        });
     });
-    const seeded = expectedRights.length > 0 && rights.length === expectedRights.length && expectedRights.every(function (entry) {
-      return rights.some(function (r) {
-        return r.scope.id === entry.province && r.power === entry.right.power && r.beneficiary.kind === 'realm' &&
-          r.beneficiary.id === entry.holder && r.basisRef === entry.right.basisRef;
-      });
-    });
+    function ordered(rows) {
+      return rows.sort(function (a,b) { return JSON.stringify(a).localeCompare(JSON.stringify(b)); });
+    }
     const declared = b.realms.every(function (realm) {
       const authored = realm.governingIdentity;
       const live = FB.political.governingIdentity(s, realm.id);
@@ -65,7 +72,7 @@ test('476 seeds provincial court rights and elite identities separately from com
     });
     const detached = FB.political.governingIdentity(s, 'aquitaine');
     detached.rules.consent = 'missing'; detached.eliteCultureId = 'missing';
-    return { errors:FB.validateBookmark(b), seeded:seeded, declared:declared,
+    return { errors:FB.validateBookmark(b), seeded:{ expected:ordered(expectedRights), actual:ordered(rights) }, declared:declared,
       courtSeat:s.realms.west_francia.capital,
       culture:g.eliteCultureId, faith:g.eliteFaithId, law:g.legalIdentityId,
       faithShare:local.otherFaithShare, cultureShare:local.otherCultureShare,
@@ -75,7 +82,9 @@ test('476 seeds provincial court rights and elite identities separately from com
       tech:['governing_identity','dual_jurisdiction','community_tolerance','community_taxation',
         'community_justice'].every(function (id) { return FBDATA.techImpactReviews.features[id].mode === 'none'; }) };
   });
-  expect(result).toMatchObject({ errors:[], seeded:true, declared:true, courtSeat:'laon',
+  expect(result.seeded.expected.length).toBeGreaterThan(0);
+  expect(result.seeded.actual).toEqual(result.seeded.expected);
+  expect(result).toMatchObject({ errors:[], declared:true, courtSeat:'laon',
     culture:'gothic', faith:'homoian',
     law:'euric_code_476', communities:[['gallo_roman','nicene'],['gothic','homoian']], pure:true, tech:true });
   expect(result.faithShare).toBeCloseTo(0.8, 3);
