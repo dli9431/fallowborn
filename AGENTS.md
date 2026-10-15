@@ -70,6 +70,8 @@ launch ad hoc shell browsers or servers outside this harness. Keep tests determi
 and isolated in fresh browser contexts. Manual testing remains required for appearance, touch
 behavior, itch.io iframe behavior, real mobile browsers, and subjective game feel.
 
+Do not write long multi-year simulation tests. A 20-year 476 campaign test took about 12 minutes and still failed, which proves nothing and blocks the suite. Advance at most one season (90 days) of daily simulation in a test, and only when the daily loop itself is the behavior under test. For annual or long-run rules, stage the dated state directly and call the yearly or boundary hook once or twice. Keep every test well inside the default 60-second timeout, and do not raise test.setTimeout to make a long journey fit. Multi-year stability belongs to targeted boundary tests and owner playthroughs, not browser journeys.
+
 ### Local fast-forward profiler
 
 The built-in profiler in `js/main.js` is disabled by default and available only

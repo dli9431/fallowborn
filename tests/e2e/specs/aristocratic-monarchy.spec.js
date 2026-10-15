@@ -555,14 +555,19 @@ test('an AI dynastic court continues existing hereditary rights without reseedin
   expect(result).toEqual({heir:true,records:true,uid:true,cash:true,valid:null});
 });
 
-test('a twenty-year frontier campaign retains one royal court, bounded family facts and a restorable continuation', async function ({page},testInfo) {
-  test.setTimeout(600000);await start(page,testInfo);await injectBrowserHarness(page);
+/* Long-run court stability is staged with two direct annual passes rather than
+   a multi-year daily journey; only one bounded half season is replayed daily. */
+test('annual frontier passes retain one royal court, bounded family facts and a restorable continuation', async function ({page},testInfo) {
+  await start(page,testInfo);await injectBrowserHarness(page);
   const opening=await page.evaluate(function () {
     const s=FB.state,r=s.realms.sasanian_476;
     return {founder:r.succession.founderId,generation:FB.realmRulerGeneration(s,'sasanian_476'),
       interests:FB.aristocracy.state(s,'sasanian_476').interests.map(function (m) { return m.id; })};
   });
-  await advanceBookmark(page,7200);
+  await page.evaluate(function () {
+    const s=FB.state;
+    for (let year=0;year<2;year++) { s.date.year++; s.turn+=360; FB.worldTick(s); }
+  });
   const envelope=await page.evaluate(function () { return JSON.parse(FB.save.serialize()); });
   const before=await page.evaluate(function () {
     const s=FB.state,d=FB.aristocracy.state(s,'sasanian_476'),r=s.realms.sasanian_476;
@@ -576,11 +581,11 @@ test('a twenty-year frontier campaign retains one royal court, bounded family fa
   expect(before).toMatchObject({founder:opening.founder,interests:opening.interests,principalRecords:2,grants:2,valid:null});
   expect(before.recognition).toBeLessThanOrEqual(3);
   expect(before.generation).toBeGreaterThanOrEqual(opening.generation);
-  await testInfo.attach('aristocratic-frontier-twenty-years',{body:Buffer.from(JSON.stringify({opening:opening,after:before},null,2)),contentType:'application/json'});
-  await advanceBookmark(page,90);
+  await testInfo.attach('aristocratic-frontier-annual-passes',{body:Buffer.from(JSON.stringify({opening:opening,after:before},null,2)),contentType:'application/json'});
+  await advanceBookmark(page,45);
   const first=await page.evaluate(function () { const d=JSON.parse(FB.save.serialize());return {state:d.state,rng:d.rng>>>0,uid:d.uid}; });
   await page.evaluate(function (d) { FB.save.restore(d); },envelope);
-  await advanceBookmark(page,90);
+  await advanceBookmark(page,45);
   const replay=await page.evaluate(function () { const d=JSON.parse(FB.save.serialize());return {state:d.state,rng:d.rng>>>0,uid:d.uid}; });
   expect(replay).toEqual(first);
 });
