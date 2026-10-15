@@ -49,6 +49,9 @@ async function seedLocalInstitution(page, fictional) {
     E.initialize(s,[d]); FB.treasuryInitialize(s); s.realms[rid].treasury.gold = 200;
     s.player.provinceId = pid; s.player.liege = rid;
     FB.localInstitutionSettle(s,chapterId,{ kind:'realm',id:rid },{ provision:true,protection:true,courts:true,tolerance:true,taxRelief:true });
+    // Enabling sees exposes other canonical offices; complete their vacancy
+    // ledger and refresh fiscal estimates after the staged chapter bargain.
+    FB.ensureReligiousHeads(s); FB.treasuryInitialize(s);
     return { rid:rid,pid:pid,officeId:officeId,institutionId:institutionId,chapterId:chapterId,
       incumbent:incumbent.id,replacement:replacement.id,faith:faith };
   },!!fictional);
