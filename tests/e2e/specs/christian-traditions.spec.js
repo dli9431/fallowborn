@@ -602,7 +602,7 @@ test('local minority relief preserves communities, incumbents, papacy and active
         packed.chars[packed.player.charId].career];
       var restored = saved.activity === JSON.stringify(c.religiousActivity);
       var gold = s.player.gold, piety = s.player.piety;
-      s.turn = c.religiousActivity.dueTurn; FB.religiousActivitiesTick(s);
+      s.turn = c.religiousActivity.dueTurn; FB.religiousActivityTick(s);
       var completed = !c.religiousActivity && s.player.piety === piety + 1;
       return {protected:protectedFacts,restored:restored,gold:saved.gold === gold && gold === 18 && s.player.gold === gold,
         completed:completed,repeat:!FB.religiousActivityQuote(s,'alexandrian_relief_800',c.id).allowed,
