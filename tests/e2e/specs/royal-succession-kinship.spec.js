@@ -192,7 +192,7 @@ for (const width of [390, 1280]) {
       await page.locator('#cm-close').click();
       await page.evaluate(function (id) { FB.ui.showCharModal(id); }, ids.sibling);
       await expect(page.locator('#gm-title')).toHaveText(title);
-      await expect(page.locator('.court-strip')).toHaveText(family);
+      expect(await page.locator('.court-strip').innerText()).toBe(family);
       await link(ids.extra).focus();
       const familyScroll = await page.locator('#gm-body').evaluate(function (body) {
         return body.scrollTop;
@@ -209,7 +209,7 @@ for (const width of [390, 1280]) {
       await page.evaluate(function (rid) { FB.ui.showLiegeModal(rid); }, ids.rid);
       await link(ids.sibling).click();
       await expect(page.locator('#gm-title')).toHaveText(title);
-      await expect(page.locator('.court-strip')).toHaveText(family);
+      expect(await page.locator('.court-strip').innerText()).toBe(family);
       expect(await page.evaluate(function () {
         return { save:FB.save.serialize(), rng:FB.getRngState() };
       })).toEqual(before);
@@ -383,7 +383,8 @@ test('restore repairs the generated minor-parent link without replacing the heir
       const data = JSON.parse(FB.save.serialize());
       const restored = FB.save.restore(data);
       const after = FB.state, su = after.realms[ids.rid].succession;
-      const restoreRngUnchanged = FB.getRngState() === data.rng;
+      // restore stores RNG bits unsigned
+      const restoreRngUnchanged = (FB.getRngState() >>> 0) === (data.rng >>> 0);
       const restoreUidUnchanged = FB.getUidCounter() === data.uid;
       const heir = after.chars[ids.sibling];
       const first = FB.save.serialize(), rng = FB.getRngState(), uid = FB.getUidCounter();

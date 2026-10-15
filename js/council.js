@@ -446,7 +446,7 @@ window.FB = window.FB || {};
       !!homeCounty(state) && FB.domainOver(state) > 0;
   };
   FB.fns.council_sanctuary_due = function (state) {
-    return !!effectiveSeat(state, 'almoner') && !!homeCounty(state) &&
+    return !!FB.councilDecisionSeat(state, 'almonry') && !!homeCounty(state) &&
       !localModifier(state, 'levy_exemption') &&
       !localModifier(state, 'contested_tolls');
   };
@@ -754,13 +754,13 @@ window.FB = window.FB || {};
     noteBoardDecision(state, 4, -5, 'domain_refuse');
   };
   FB.fns.council_sanctuary_confirm = function (state) {
-    noteSeatDecision(state, 'almoner', -3, 6, 'sanctuary_confirm');
+    noteSeatDecision(state, 'almonry', -3, 6, 'sanctuary_confirm');
   };
   FB.fns.council_sanctuary_tax = function (state) {
-    noteSeatDecision(state, 'almoner', 3, -8, 'sanctuary_tax');
+    noteSeatDecision(state, 'almonry', 3, -8, 'sanctuary_tax');
   };
   FB.fns.council_sanctuary_relief = function (state) {
-    noteSeatDecision(state, 'almoner', -1, 4, 'sanctuary_relief');
+    noteSeatDecision(state, 'almonry', -1, 4, 'sanctuary_relief');
   };
   FB.fns.council_war_chest = function (state) {
     const p = state.player;

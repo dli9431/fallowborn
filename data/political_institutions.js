@@ -305,7 +305,7 @@ FBDATA.councilSeats = {
   }
 };
 
-FBDATA.councilSeatRoles = { treasurer:['market'], constable:['muster'] };
+FBDATA.councilSeatRoles = { treasurer:['market'], constable:['muster'], almoner:['almonry'] };
 
 FBDATA.councilRules = {
   schemerTraits:[

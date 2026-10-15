@@ -405,6 +405,7 @@
       {
         "path": [
           "text",
+          "forms",
           "cases",
           "death"
         ],
@@ -413,6 +414,7 @@
       {
         "path": [
           "text",
+          "forms",
           "cases",
           "corporal"
         ],
@@ -426,6 +428,7 @@
       {
         "path": [
           "text",
+          "forms",
           "cases",
           "execution"
         ],
@@ -434,6 +437,7 @@
       {
         "path": [
           "text",
+          "forms",
           "cases",
           "blinding_deposition"
         ],
@@ -442,6 +446,7 @@
       {
         "path": [
           "text",
+          "forms",
           "cases",
           "qisas"
         ],

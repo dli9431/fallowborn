@@ -31,10 +31,8 @@ async function restrictedBoot(page, testInfo) {
 
 for (const distribution of ['standard', 'crazygames']) {
   test(distribution + ' preserves friend station checks through the battle remembrance overlay', async function ({ page }, testInfo) {
-    if (distribution === 'crazygames') {
-      await page.addInitScript(function () { window.FB_DISTRIBUTION = 'crazygames'; });
-    }
-    await openGame(page, testInfo);
+    if (distribution === 'crazygames') await openRestrictedGame(page, testInfo);
+    else await openGame(page, testInfo);
     await startDeterministicGame(page);
     const result = await page.evaluate(function () {
       const s = FB.state, p = s.player;
@@ -112,7 +110,7 @@ for (const distribution of ['standard', 'crazygames']) {
       const death = text('death'), corporal = text('corporal');
       const initial = text('custody'), extension = text('custody', 'extension');
       const intrigue = FB.eventById('intrigue_hearing');
-      return { selector:event.text.param, death:death, corporal:corporal,
+      return { selector:event.text.forms.param, death:death, corporal:corporal,
         initial:initial, extension:extension, options:event.options.length,
         intrigue:['execution','blinding_deposition','qisas'].map(function (sentence) {
           return FB.eventText(s, s.player.charId, intrigue, 'text', { sentence:sentence });

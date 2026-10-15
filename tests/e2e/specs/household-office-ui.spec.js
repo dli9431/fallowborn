@@ -49,6 +49,19 @@ async function startHousehold(page, testInfo, options) {
   }, options || {});
 }
 
+/* Touch-width layouts disclose card details with the ? button; desktop pointers
+   read the same described-by details in the hover tooltip, so the button is hidden. */
+async function revealOfficeDetails(page, office) {
+  const id = 'family-office-details-' + office;
+  const toggle = page.locator('[aria-controls="' + id + '"]');
+  if (await toggle.isVisible()) {
+    await toggle.click();
+    return true;
+  }
+  await expect(page.locator('[data-family-office="' + office + '"]')).toHaveAttribute('aria-describedby', id);
+  return false;
+}
+
 for (const viewport of [
   { name:'desktop', width:1505, height:900 },
   { name:'mobile', width:390, height:844 }
@@ -195,7 +208,7 @@ for (const viewport of [
         await expect(factor).toBeDisabled();
         await expect(factor).toContainText('Married children and grandchildren');
         const toggle = page.locator('[aria-controls="family-office-details-factor"]');
-        await toggle.click();
+        const disclosed = await revealOfficeDetails(page, 'factor');
         const details = page.locator('#family-office-details-factor');
         await expect(details).toContainText('cannot hold an unpaid family office');
         await expect(details).toContainText('Already held by Genovefa');
@@ -208,8 +221,10 @@ for (const viewport of [
         await holder.click();
         await expect(page.locator('#gm-body')).toContainText('Genovefa');
         await page.keyboard.press('Escape');
-        await expect(toggle).toHaveAttribute('aria-expanded', 'true');
-        await expect(details).toBeVisible();
+        if (disclosed) {
+          await expect(toggle).toHaveAttribute('aria-expanded', 'true');
+          await expect(details).toBeVisible();
+        }
         await expect(holder).toBeFocused();
         await expect.poll(function () {
           return page.locator('#gm-body').evaluate(function (el) { return el.scrollTop; });
@@ -239,7 +254,7 @@ for (const viewport of [
         await page.evaluate(function (cid) { FB.ui.showFamilyOffice(cid); }, ids.daughter);
         const factor = page.locator('[data-family-office="factor"]');
         await expect(factor).toBeEnabled();
-        await page.locator('[aria-controls="family-office-details-factor"]').click();
+        const disclosed = await revealOfficeDetails(page, 'factor');
         await page.evaluate(function (cid) {
           var s = FB.state;
           s.player.retainers.push({ charId:cid, office:'factor', pay:2, startedTurn:s.turn, unpaid:0 });
@@ -250,7 +265,7 @@ for (const viewport of [
         await factor.click();
         await expect(factor).toBeDisabled();
         await expect(factor).toContainText('Already held by Genovefa');
-        await expect(page.locator('#family-office-details-factor')).toBeVisible();
+        if (disclosed) await expect(page.locator('#family-office-details-factor')).toBeVisible();
         await expect(factor.locator('xpath=ancestor::*[contains(@class,"review-action-card")]')).toBeFocused();
         expect(await page.locator('#gm-body').evaluate(function (el) { return el.scrollTop; })).toBe(scroll);
         const state = await page.evaluate(function () {
@@ -323,7 +338,7 @@ test('reviews disclose age, station, occupation and unpaid holder requirements',
       s.chars[cid].born = s.date.year - 15;
       FB.ui.showFamilyOffice(cid);
     }, ids.daughter);
-    await page.locator('[aria-controls="family-office-details-steward"]').click();
+    await revealOfficeDetails(page, 'steward');
     await expect(page.locator('#family-office-details-steward')).toContainText('Requires age 16');
     await expect(page.locator('#family-office-details-steward')).toContainText('Requires station Gentry');
     await expect(page.locator('#family-office-details-steward')).toContainText('occupation');

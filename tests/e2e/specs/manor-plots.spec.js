@@ -92,7 +92,8 @@ for (const setup of [{tier:1,width:390},{tier:6,width:1360}]) {
       const row = page.locator('[data-land-settlement="0"]');
       await expect(row).toHaveAttribute('aria-disabled', 'true');
       await expect(row).toContainText(before.price + ' · not affordable');
-      await row.click();
+      // Playwright treats aria-disabled rows as disabled; force the blocked click
+      await row.click({ force:true });
       expect(await page.evaluate(function () {
         return {turn:FB.state.turn,gold:FB.state.player.gold,plots:FB.state.player.landPlots.length};
       })).toEqual({turn:before.turn,gold:0,plots:0});

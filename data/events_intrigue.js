@@ -19,7 +19,7 @@ FBDATA.events.push(
   ] },
 { id:'justice_hearing', title:'Judgment in Captivity',
   trigger:{ never:true }, contextValidator:'justice_response_valid',
-  text:{ select:'value', param:'sentenceKind', cases:{
+  text:{ forms:{ select:'value', param:'sentenceKind', cases:{
     fine:'You are held in {student}’s custody. The proposed sentence is {sentenceName}: pay {money:sentenceAmount} and be released.',
     ransom:'You are held in {student}’s custody. The proposed sentence is {sentenceName}: pay {money:sentenceAmount} and be released without pardoning unresolved offenses.',
     penance:'You are held in {student}’s custody. The proposed sentence is {sentenceName}: lose {sentencePietyCost} piety and {sentencePrestigeCost} prestige, then be released.',
@@ -33,7 +33,7 @@ FBDATA.events.push(
     forfeiture:'You are held in {student}’s custody. The proposed sentence is {sentenceName}: forfeiture of titles and lands within the ruler’s authority, then release.',
     pardon:'You are held in {student}’s custody. The proposed sentence is {sentenceName}: release.',
     other:'You are held in {student}’s custody. The ruler will hear your answer before passing sentence.'
-  } },
+  } } },
   options:[
     { label:'Plead for clemency.', desc:'Diplomacy and weaker evidence improve the chance of pardon. If refused, the announced sentence is carried out.', effects:{ custom:'justice_plead' } },
     { label:'Challenge the evidence.', desc:'Intrigue and weaker evidence improve the chance of acquittal. If the challenge fails, the announced sentence is carried out.', effects:{ custom:'justice_challenge' } },
@@ -52,7 +52,7 @@ FBDATA.events.push(
   ] },
 { id:'intrigue_hearing', title:'Called to Answer',
   trigger:{ never:true }, contextValidator:'intrigue_hearing_valid',
-  text:{ select:'value', param:'sentence', cases:{
+  text:{ forms:{ select:'value', param:'sentence', cases:{
     compensation:'Evidence links your house to a hostile scheme. The lawful court projects compensation of {money:fine}, but will hear your answer first.',
     penance:'Evidence links your house to a hostile scheme. The lawful court projects public religious penance, but will hear your answer first.',
     prison:'Evidence links your house to a hostile scheme. The lawful court projects a year of imprisonment, but will hear your answer first.',
@@ -63,7 +63,7 @@ FBDATA.events.push(
     execution:'Evidence links your house to a hostile scheme. The lawful court projects execution, but will hear your answer first.',
     qisas:'Evidence links your house to a proven killing. The lawful court projects qisas, but diya or another answer may still be heard.',
     other:'Evidence links your house to a hostile scheme. The lawful court convenes to judge the proof and hear your answer.'
-  } },
+  } } },
   options:[
     { label:'Challenge the proof.', desc:'Put your Intrigue against the strength of the evidence.', effects:{ custom:'intrigue_hearing_challenge' } },
     { label:'Offer compensation.', require:{ custom:'intrigue_hearing_can_pay' }, desc:'Pay the projected fine, diya, or wergild and accept public blame.', effects:{ custom:'intrigue_hearing_pay' } },

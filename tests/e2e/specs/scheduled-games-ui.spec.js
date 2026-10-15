@@ -7,15 +7,19 @@ const { test, expect } = require('../support/fixture');
 const { startGames, bookGames } = require('../support/game/tournaments');
 const { openGame } = require('../support/game/navigation');
 const { openCrazyGame } = require('../support/game/crazygames-title');
+const { mockCrazyGames } = require('../support/crazygames');
 const { startDeterministicGame } = require('../support/game/start');
 
 for (const distribution of ['standard','crazygames']) {
   test('a Baron\'s renamed venue survives loading throughout hosting in '+distribution, async function ({page},info) {
-    if (distribution === 'crazygames') await page.addInitScript(function () {
-      window.FB_DISTRIBUTION = 'crazygames'; window.FB_CRAZYGAMES_STORAGE = 'localstorage';
-    });
+    if (distribution === 'crazygames') {
+      await mockCrazyGames(page);
+      await page.addInitScript(function () {
+        window.FB_DISTRIBUTION = 'crazygames'; window.FB_CRAZYGAMES_STORAGE = 'localstorage';
+      });
+    }
     await page.setViewportSize({width:390,height:844});
-    const ids = await startGames(page,info);
+    const ids = await startGames(page,info,distribution === 'crazygames' ? {open:openCrazyGame} : null);
     await page.evaluate(function (ids) {
       var s = FB.state, p = s.player;
       p.tier = 3; p.provs = []; p.homeSettlement = 1; p.liege = ids.hostRealm;
@@ -94,8 +98,8 @@ for(const viewport of [{width:1280,height:800},{width:390,height:844}]){
 test('hosting reviews give allocations and reject a stale treasury without payment',async function({page},info){
   await startGames(page,info);
   await page.evaluate(function(){FB.ui.showHostGames();});
-  await expect(page.getByLabel('Venue',{exact:true})).toBeVisible();
-  await expect(page.getByLabel('Scale',{exact:true})).toBeVisible();
+  await expect(page.getByRole('combobox',{name:'Venue',exact:true})).toBeVisible();
+  await expect(page.getByRole('combobox',{name:'Scale',exact:true})).toBeVisible();
   await page.locator('#games-review').click();
   await expect(page.locator('#gm-body')).toContainText('Reference income');
   await expect(page.locator('#gm-body')).toContainText('Preparation and hospitality');
@@ -105,7 +109,7 @@ test('hosting reviews give allocations and reject a stale treasury without payme
   expect(await page.evaluate(()=>FB.tournaments.active(FB.state).length)).toBe(0);
   expect(await page.evaluate(()=>FB.state.player.gold)).toBe(gold);
   await page.locator('#games-back').click();
-  await expect(page.getByLabel('Venue',{exact:true})).toBeVisible();
+  await expect(page.getByRole('combobox',{name:'Venue',exact:true})).toBeVisible();
 });
 
 test('Events is an independent keyboard-accessible overlay with exact settlement anchors',async function({page},info){

@@ -1352,7 +1352,7 @@ test('milestone-four phase B composes bounded overrides with protected action ha
       focusHandlerStable:true, deedHandlerStable:true,
       dynamicPresentationOverridden:true
     });
-    expect(result.handlerBlocked).toBe('Nothing to spare.');
+    expect(result.handlerBlocked).toBe('Requires 10 gold.');
     expect(result.dataBlocked).toEqual({
       can:false, reason:'The action charter is not satisfied.'
     });

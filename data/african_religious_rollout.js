@@ -53,9 +53,9 @@
       var point = site && (geography.sites || FBDATA.settlementSites)[site];
       if (!p || p.wasteland || !site || !point || point.x < -11 || point.x > 70 || point.y < 13 || point.y > 66)
         throw new Error('Missing in-bounds African meeting scope: ' + row.bookmark + '/' + sourceId);
-      var defs = copy(source.localInstitutions === undefined
-        ? base.localInstitutions === undefined ? FBDATA.localInstitutions || {} : base.localInstitutions
-        : source.localInstitutions);
+      // A world without its own table starts empty; the legacy 476 catalogue
+      // has no seats in other bookmarks' geographies.
+      var defs = copy(source.localInstitutions || base.localInstitutions || {});
       if (defs[row.institution]) throw new Error('Duplicate African local institution: ' + row.institution);
       defs[row.institution] = {city:row.city,kind:row.bookmark === '476' || row.bookmark === '493'
           ? 'ritual_community' : 'congregation',

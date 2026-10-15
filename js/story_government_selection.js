@@ -68,14 +68,14 @@
     })) throw new Error('Civic candidacy needs an effective civic realm and office.');
   }
   FB.stories.registerType('civic_candidacy', function (def) {
-    var V = FB.civicGovernment;
+    var civicGov = FB.civicGovernment;
     function office(s) {
-      var row = V.row(s, def.realmId);
+      var row = civicGov.row(s, def.realmId);
       return row && row.offices.filter(function (o) { return o.id === def.officeId; })[0];
     }
     function quote(s, rec, id) {
       var op = id === def.choices.stand.id ? 'stand' : id === def.choices.decline.id ? 'decline' : null;
-      var review = op === 'stand' ? V.officeQuote(s, def.realmId, def.officeId, 'nominate', {candidateId:s.player.charId}) : null;
+      var review = op === 'stand' ? civicGov.officeQuote(s, def.realmId, def.officeId, 'nominate', {candidateId:s.player.charId}) : null;
       return { id:id, operation:op, allowed:!!op && rec.phase === 'offered' && rec.charId === s.player.charId &&
         !s.player.dead && (op === 'decline' || !!review && review.allowed), phase:rec.phase, charId:s.player.charId, review:review };
     }
@@ -101,7 +101,7 @@
         if (!q.allowed || JSON.stringify(q) !== JSON.stringify(reviewed)) return false;
         if (q.operation === 'decline') end(s,rec,'declined');
         else {
-          if (!V.officeApply(s,q.review)) return false;
+          if (!civicGov.officeApply(s,q.review)) return false;
           rec.phase = 'nominated'; rec.officeGeneration = office(s).generation;
         }
         return true;

@@ -961,7 +961,8 @@ shortcut entry in its own Keyboard section. Touch and compact layouts omit that 
 global-key badges.
 The desktop Deeds panel has its own two-stage keyboard layer. `1` selects Daily Focus and
 `2`–`6` select Work & Wealth, Life & Family, Faith & Community, Rank & Realm, and War &
-Diplomacy respectively. Selection opens a closed category, scrolls its heading to the top of
+Diplomacy respectively. Numbers follow the rendered headings: an available section with no
+listed deed shows no heading and takes no number, so later sections keep consecutive keys. Selection opens a closed category, scrolls its heading to the top of
 the panel, focuses and highlights it, and assigns `Q W E / A S D / Z X C` to its first nine
 rendered focuses or deeds. Taking a focus or deed never changes this keyboard selection merely
 because its button belongs to another section. By default, pressing the active section's number

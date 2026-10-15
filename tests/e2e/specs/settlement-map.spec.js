@@ -1590,7 +1590,9 @@ test('mods merge physical sites and compile complete province presentations',
           provinces:[replacement]
         });
         const definition = {};
-        for (const key in FB.bookmark('867')) definition[key] = FB.bookmark('867')[key];
+        for (const key in FB.bookmark('867', 'baseline')) definition[key] = FB.bookmark('867', 'baseline')[key];
+        // copy the retained baseline; the copy has no revision catalogue
+        delete definition.revision;
         definition.id = 'e2e_sites';
         definition.provinces = FBDATA.provinces;
         FBDATA.bookmarks.e2e_sites = definition;
@@ -1657,7 +1659,9 @@ test('a legacy mod without site data keeps deterministic generated settlements',
         }
         FB.mods.apply({ provinces:[replacement] });
         const definition = {};
-        for (const key in FB.bookmark('867')) definition[key] = FB.bookmark('867')[key];
+        for (const key in FB.bookmark('867', 'baseline')) definition[key] = FB.bookmark('867', 'baseline')[key];
+        // copy the retained baseline; the copy has no revision catalogue
+        delete definition.revision;
         definition.id = 'e2e_legacy';
         definition.provinces = FBDATA.provinces;
         FBDATA.bookmarks.e2e_legacy = definition;

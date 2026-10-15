@@ -62,7 +62,8 @@ async function outingState(page) {
           return body.scrollTop;
         });
         expect(scroll).toBeGreaterThan(0);
-        await destination.click();
+        // a click would let Playwright scroll the row clear of the sticky footer first
+        await destination.dispatchEvent('click');
         await expect(page.locator('[data-settlement-option]').first()).toBeVisible();
         await expect(page.locator('.gm-footer').getByRole('button', {
           name:'Back', exact:true

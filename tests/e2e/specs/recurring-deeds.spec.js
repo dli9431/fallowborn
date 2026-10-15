@@ -106,7 +106,7 @@ test('checklist retains relevant deeds during cooldowns and resource shortages a
       FB.ui.showAutoResolve();
     });
     await expect(page.locator('#ar-deed-give_alms')).toBeVisible();
-    await expect(page.locator('#ar-deed-status-give_alms')).toContainText('Nothing to spare');
+    await expect(page.locator('#ar-deed-status-give_alms')).toContainText('Requires 10 gold.');
     await expect(page.locator('#ar-deed-mediate')).toBeVisible();
     await expect(page.locator('#ar-deed-status-mediate')).toContainText('Ready in 60 days');
     await expect(page.locator('#ar-deed-scheme_rival')).toHaveCount(0);

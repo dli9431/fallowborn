@@ -189,9 +189,13 @@ window.FB = window.FB || {};
     return FB.deeds.sections(FB.state, deedGroupingStyle());
   }
 
+  /* Deed sections with no listed deed render no header, so they take no
+     section number either. renderActions refreshes this before any hint. */
+  let emptyDeedSections = {};
   function deedActionGroups() {
     return deedPanelSections().filter(function (section) {
-      return section.type === 'focus' || section.type === 'deeds';
+      return section.type === 'focus' ||
+        section.type === 'deeds' && !emptyDeedSections[section.id];
     });
   }
 
@@ -1439,7 +1443,10 @@ window.FB = window.FB || {};
     }
     const retainedDetails = [];
     box.querySelectorAll('[aria-controls][aria-expanded="true"]').forEach(function (button) {
-      if (retaining) retainedDetails.push(button.getAttribute('aria-controls'));
+      // the commitments ledger keeps its own saved collapse preference
+      if (retaining && button.id !== 'ongoing-commitments-toggle') {
+        retainedDetails.push(button.getAttribute('aria-controls'));
+      }
     });
     box.textContent = '';
     const focuses = FB.listFocusChoices ? FB.listFocusChoices(s)
@@ -1450,6 +1457,13 @@ window.FB = window.FB || {};
        technology, and eligibility explanation. Defer that deeper work until
        a group's controls are actually constructed. */
     const instants = FB.listInstants(s, { deferEligibility:true });
+    const sectionItems = {};
+    emptyDeedSections = {};
+    for (const group of sections) {
+      if (group.type !== 'deeds') continue;
+      sectionItems[group.id] = FB.deeds.items(s, group, groupingStyle, instants);
+      if (!sectionItems[group.id].length && !group.statusLine) emptyDeedSections[group.id] = true;
+    }
     const visibleSignature = instants.map(function (item) {
       return item.a.id;
     }).join('|');
@@ -1705,8 +1719,8 @@ window.FB = window.FB || {};
         box.insertAdjacentHTML('beforeend', deedStaticSectionHtml(s, group));
         continue;
       }
-      const ga = FB.deeds.items(s, group, groupingStyle, instants);
-      if (!ga.length && !group.statusLine) continue;
+      const ga = sectionItems[group.id];
+      if (emptyDeedSections[group.id]) continue;
       if (!Object.prototype.hasOwnProperty.call(actionGroupsOpen, group.id)) {
         actionGroupsOpen[group.id] = !!group.open;
       }

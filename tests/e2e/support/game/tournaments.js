@@ -2,8 +2,9 @@
 const { openGame } = require('./navigation');
 const { startDeterministicGame } = require('./start');
 
-async function startGames(page, testInfo) {
-  await openGame(page, testInfo);
+// options.open replaces the standard title, e.g. a CrazyGames boot with its SDK double.
+async function startGames(page, testInfo, options) {
+  await ((options && options.open) || openGame)(page, testInfo);
   await startDeterministicGame(page);
   return page.evaluate(function () {
     FB.game.setPaused(true);

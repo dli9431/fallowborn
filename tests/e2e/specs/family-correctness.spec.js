@@ -217,7 +217,7 @@ for (const sex of ['m', 'f']) {
             sameFaith:child.religion === me.religion
           };
           const payload = JSON.parse(FB.save.serialize());
-          const rng = JSON.stringify(payload.rng);
+          const rng = payload.rng >>> 0;
           FB.save.restore(payload);
           const restored = FB.state;
           const adopted = restored.chars[child.id];
@@ -225,7 +225,7 @@ for (const sex of ['m', 'f']) {
             before:before, station:FB.stationOf(adopted),
             unfree:FB.isUnfreeCharacter(restored, adopted),
             parents:[adopted.fatherId, adopted.motherId],
-            rngStable:JSON.stringify(FB.getRngState()) === rng
+            rngStable:(FB.getRngState() >>> 0) === rng
           };
         }, { sex:sex, tier:tier });
         expect(result.before).toEqual({
@@ -263,7 +263,7 @@ test('restore repairs only unambiguous unstamped foundlings and preserves freeho
       records[me.fatherId].childrenIds.push(adoptedIds[4]); // ambiguous adopters
       delete records[adoptedIds[5]].station;
       records[adoptedIds[5]].unfree = true; // even unstamped bondage is authoritative
-      const rng = JSON.stringify(payload.rng);
+      const rng = payload.rng >>> 0;
       const uid = payload.uid;
       FB.save.restore(payload);
       function statuses() {
@@ -279,7 +279,7 @@ test('restore repairs only unambiguous unstamped foundlings and preserves freeho
       const again = JSON.parse(FB.save.serialize());
       FB.save.restore(again);
       const second = statuses();
-      const stable = JSON.stringify(FB.getRngState()) === rng && again.uid === uid;
+      const stable = (FB.getRngState() >>> 0) === rng && again.uid === uid;
       FB.game.die('Synthetic succession test');
       FB.ui.closeModal();
       const succeeded = FB.game.succeedTo(adoptedIds[0]);
@@ -332,7 +332,7 @@ test('an adopted successor stays parentless and does not absorb founder siblings
       const parentRoleIds = Object.keys(s.chars).filter(function (id) {
         return s.chars[id].role === 'parent';
       }).sort();
-      const savedRng = JSON.stringify(payload.rng);
+      const savedRng = payload.rng >>> 0;
 
       FB.save.restore(payload);
       const restored = FB.state;
@@ -358,7 +358,7 @@ test('an adopted successor stays parentless and does not absorb founder siblings
         }).sort(),
         expectedParentRoleIds:parentRoleIds,
         migration:restored.player.familyParentMigration,
-        rngStable:JSON.stringify(FB.getRngState()) === savedRng
+        rngStable:(FB.getRngState() >>> 0) === savedRng
       };
     });
 

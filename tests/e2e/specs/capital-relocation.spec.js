@@ -321,7 +321,9 @@ for (const pair of grantedCapitalPairs) {
       await expect(page.getByRole('heading', { name:'Move household to ' + setup.capitalName + '?' })).toBeVisible();
       await expect(page.locator('[data-capital-relocation]')).toContainText('Your capital is already at ' + setup.capitalName);
       await expect(page.locator('#capital-relocation-confirm')).toContainText('Move the household to ' + setup.capitalName);
-      await expect(page.locator('#capital-relocation-cancel')).toContainText('Keep the household in ' + setup.homeName);
+      // The shared footer normalizes the cancel control into Close (docs/designs/ui.md).
+      await expect(page.locator('#capital-relocation-cancel')).toHaveText('Close');
+      await expect(page.locator('#capital-relocation-cancel')).toHaveAttribute('data-modal-nav', 'close');
       await page.locator('#capital-relocation-cancel').click();
       await expect(page.locator('#genmodal')).toHaveClass(/hidden/);
       await expect(move).toBeFocused();

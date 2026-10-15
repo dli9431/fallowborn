@@ -1418,7 +1418,7 @@ window.FBMODS = window.FBMODS || [];
     if (!plainObject(roles)) fail('councilSeatRoles', 'must be an object keyed by seat id.');
     for (const id of Object.keys(roles)) {
       if (!own(seats, id)) fail('councilSeatRoles.' + id, 'names an unknown seat.');
-      validateIdList(roles[id], 'councilSeatRoles.' + id, { market:true,muster:true }, true);
+      validateIdList(roles[id], 'councilSeatRoles.' + id, { market:true,muster:true,almonry:true }, true);
     }
     const confirmationSeats = {};
     for (const id of Object.keys(FBDATA.elections)) {

@@ -12599,6 +12599,12 @@ window.FB = window.FB || {};
           '"], [data-realm-family-cid="' + returnContext.familyFocus + '"]');
         if (button) button.focus({ preventScroll:true });
         $('gm-body').scrollTop = returnContext.scrollTop || 0;
+      } else if (returnContext.commitmentFocus) {
+        const focus = returnContext.commitmentFocus;
+        const link = $('gm-body').querySelector('[data-interaction-commitment="' + focus.commitment +
+          '"] [data-interaction-character="' + focus.characterId + '"]');
+        if (link) link.focus({ preventScroll:true });
+        $('gm-body').scrollTop = returnContext.scrollTop || 0;
       }
     } else if (returnContext.view === 'family-tree') {
       UI.showFamilyTree(returnContext.familyTreeState);
@@ -18570,6 +18576,7 @@ window.FB = window.FB || {};
   const ENTERPRISE_STAFFING_RETURN = 'enterprise-staffing-preview';
   let householdPlanDetailSerial = 0;
   let householdPlanReturnPosition = null;
+  let householdPlanReturnFocus = null;
 
   function returnsToHouseholdPlan(returnContext) {
     return returnContext === HOUSEHOLD_PLAN_RETURN;
@@ -18778,8 +18785,8 @@ window.FB = window.FB || {};
       detailsId + '">' + details + '</div></div>';
   }
 
-  function rememberHouseholdPlanPosition(cid) {
-    if (!eventChoiceUsesDisclosure()) return;
+  function rememberHouseholdPlanPosition(cid, action) {
+    householdPlanReturnFocus = { cid:String(cid), action:String(action) };
     const ledger = $('gm-body').querySelector('.household-plan-content');
     if (!ledger) return;
     const rows = ledger.querySelectorAll('tr[data-household-plan-cid]');
@@ -18800,9 +18807,14 @@ window.FB = window.FB || {};
   }
 
   function restoreHouseholdPlanPosition() {
-    const position = householdPlanReturnPosition;
+    const position = householdPlanReturnPosition, focus = householdPlanReturnFocus;
     householdPlanReturnPosition = null;
-    if (!position || !eventChoiceUsesDisclosure()) return;
+    householdPlanReturnFocus = null;
+    // Back returns keyboard focus to the control that opened the child sheet
+    const opener = focus && $('gm-body').querySelector(
+      '[data-household-plan-action="' + focus.action + '"][data-household-plan-cid="' + focus.cid + '"]');
+    if (opener) opener.focus({ preventScroll:true });
+    if (!position) return;
     window.requestAnimationFrame(function () {
       const ledger = $('gm-body').querySelector('.household-plan-content');
       if (!ledger) return;
@@ -19316,7 +19328,7 @@ window.FB = window.FB || {};
         const action = actions[i].getAttribute('data-household-plan-action');
         const cid = actions[i].getAttribute('data-household-plan-cid');
         const target = actions[i].getAttribute('data-household-plan-target');
-        rememberHouseholdPlanPosition(cid);
+        rememberHouseholdPlanPosition(cid, action);
         if (action === 'education') UI.showEduFocus(cid, HOUSEHOLD_PLAN_RETURN);
         else if (action === 'instruction') UI.showTutorPick(cid, HOUSEHOLD_PLAN_RETURN);
         else if (action === 'work') UI.showCareerPicker(cid, HOUSEHOLD_PLAN_RETURN);
@@ -19342,6 +19354,7 @@ window.FB = window.FB || {};
     }
     $('household-plan-close').addEventListener('click', function () {
       householdPlanReturnPosition = null;
+      householdPlanReturnFocus = null;
       UI.closeModal();
     });
   };
@@ -24433,7 +24446,15 @@ window.FB = window.FB || {};
     $('tech-status').addEventListener('change', applyFilters);
     document.querySelectorAll('[data-tech-open]').forEach(function (button) {
       button.addEventListener('click', function () {
-        UI.showTechDetail(button.dataset.techOpen);
+        const scroll = $('gm-body').scrollTop, opened = button.dataset.techOpen;
+        // Back keeps the filtered catalogue position and its opener focused
+        UI.showTechDetail(opened, function () {
+          const shown = UI.showTech();
+          const origin = $('gm-body').querySelector('[data-tech-open="' + opened + '"]');
+          if (origin) origin.focus({ preventScroll:true });
+          $('gm-body').scrollTop = scroll;
+          return shown;
+        });
       });
     });
     const autoButton = $('tech-auto');
@@ -25845,8 +25866,12 @@ window.FB = window.FB || {};
       links[i].addEventListener('click', function () {
         const targetId = links[i].getAttribute('data-interaction-character');
         if (!targetId || !FB.state.chars[targetId]) return;
+        const group = links[i].closest('[data-interaction-commitment]');
         UI.showCharModal(targetId, {
-          view:'character', characterId:cid, returnContext:returnContext
+          view:'character', characterId:cid, returnContext:returnContext,
+          scrollTop:$('gm-body').scrollTop,
+          commitmentFocus:group ? { commitment:group.getAttribute('data-interaction-commitment'),
+            characterId:targetId } : null
         });
       });
     }
