@@ -215,11 +215,18 @@ for (const revision of ['baseline','governments_v2']) test(revision + ' 1066 hou
 
 test('1066 observer advances bounded seasons without scripted conquests or speculative commissions',async function ({page},info) {
   test.skip(info.project.name !== 'chromium-served','One measured observer slice.');
-  await startExpanded(page,info,journey('london')); await injectBrowserHarness(page);
+  await openGame(page,info);
+  await page.evaluate(function (revision) {
+    FBDATA.bookmarks['1066'].revision = revision;
+    FBDATA.bookmarks['1066'].hidden = false;
+  },CURRENT);
+  await activate(page,'1066');
   await page.evaluate(function () {
-    // Keep a resumable household while the daily loop advances only the world.
-    FB.game.observe = true;
+    FB.game.pending = {seed:'TERRAIN1066-OBSERVER'};
+    if (FB.game.startObserve() === false) throw new Error('The 1066 observer opening was rejected.');
+    FB.game.setPaused(true);
   });
+  await injectBrowserHarness(page);
   for (let batch = 0; batch < 2; batch++) {
     const start = Date.now(); await advanceBookmark(page,45); const elapsed = Date.now() - start;
     await info.attach('1066-observer-batch-' + batch + '.json',{contentType:'application/json',body:Buffer.from(JSON.stringify({days:45,elapsed:elapsed,ceiling:30000}))});
@@ -232,5 +239,10 @@ test('1066 observer advances bounded seasons without scripted conquests or specu
     }) && s.owner.kumbi_district === 'wagadu_1066';
   })).toBe(true);
   const source = await saveBudget(page,info,'1066-observer-midpoint',6 * 1024 * 1024), before = await facts(page);
-  await restoreBookmark(page,source); expect(await facts(page)).toEqual(before);
+  expect(await page.evaluate(function (source) {
+    // Observation is session-only; household loading would leave this mode.
+    FB.save.restore(JSON.parse(source)); FB.game.setPaused(true);
+    return {observing:FB.game.observe,errors:FBTEST.checkInvariants()};
+  },source)).toEqual({observing:true,errors:[]});
+  expect(await facts(page)).toEqual(before);
 });
