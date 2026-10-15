@@ -795,7 +795,10 @@
           rec.actorId = campaign.actor.character ? w[campaign.actor.character.field] || null : ruler(s, campaign.actor.realmId) && ruler(s, campaign.actor.realmId).id;
           rec.actorGeneration = FB.realmRulerGeneration(s, campaign.actor.realmId);
           rec.targetOwnerId = war ? war.defender : s.owner[campaign.target.provinceId];
-          if (campaign.commission) rec.patronGeneration = FB.realmRulerGeneration(s, campaign.commission.issuerRealmId);
+          // An existing independent war did not acquire a patron's mandate
+          // merely because the current declaration requires one for new wars.
+          if (campaign.commission && (!rec.warId || rec.commissionId || rec.migrationId))
+            rec.patronGeneration = FB.realmRulerGeneration(s, campaign.commission.issuerRealmId);
         }
         s.stories[id] = rec;
       }
