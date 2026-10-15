@@ -8,7 +8,7 @@ const {injectBrowserHarness} = require('../support/game/browser-harness');
 const audit = require('../fixtures/711-terrain.json');
 
 dependsOnRuntime(__filename,[
-  'index.html','data/bookmark_711.js','data/bookmark_711_terrain.js','data/government_rollout.js',
+  'index.html','data/bookmark_711.js','data/bookmark_711_terrain.js','data/government_rollout.js','data/christian_rollout.js',
   'data/bookmark_476_wider_identities.js','data/geography_expansion.js','data/geographies.js',
   'data/counties.js','data/climate.js','data/political_institutions.js','data/starts.js',
   'data/cultures.js','data/technology.js','data/travel.js','data/story_campaigns_711.js','data/story_instances.js',
@@ -61,6 +61,7 @@ test('711 dates every physical addition and keeps earlier revisions independentl
     const raw = FBDATA.bookmarks['711'], b = FB.bookmark('711'), old = FB.bookmark('711','baseline');
     const government = FB.bookmark('711','governments_v2'), terrain = FB.bookmark('711','terrain_v2');
     const retained = audit.retained.concat([].concat.apply([],Object.values(audit.scenery)));
+    const christianIds = ['alexandrian_patriarch_711','alexandrian_service_711','ctesiphon_catholicos_711','ibrim_service_711'];
     return {
       faults:FB.validateBookmark(raw),technology:FB.validateTechnologyData(),
       revision:b.revision,geography:b.geography,count:b.provinces.length,
@@ -94,6 +95,13 @@ test('711 dates every physical addition and keeps earlier revisions independentl
         const d = b.localInstitutions[id];
         return [d.kind,d.provinceId,d.religion,d.vacant,d.freshOnly];
       }),
+      christianInstitutions:christianIds.map(function (id) {
+        const d = b.localInstitutions[id];
+        return [d.kind,d.provinceId,d.religion,!!d.vacant,d.freshOnly];
+      }),
+      earlierChristianAbsent:[old,government,terrain].every(function (revision) {
+        return christianIds.every(function (id) { return !Object.prototype.hasOwnProperty.call(revision.localInstitutions,id); });
+      }),
       generated:['middle_niger_711','niger_bend_711','ghadames_711','khwarazm_711'].every(function (id) {
         const r = b.realms.find(function (r) { return r.id === id; });
         return r.ruler.generated && !r.ruler.name && !r.liege;
@@ -103,11 +111,18 @@ test('711 dates every physical addition and keeps earlier revisions independentl
   },audit);
   expect(result).toMatchObject({faults:[],technology:[],revision:audit.revision,geography:audit.geography,
     count:527,inhabited:485,retained:true,original:true,government:true,composed:true,
-    unchanged:true,stories:true,institutions:true,generated:true,mode:'none'});
+    unchanged:true,stories:true,institutions:true,earlierChristianAbsent:true,generated:true,mode:'none'});
   expect(result.inventory).toEqual(result.physical);
-  expect(result.addedInstitutions).toEqual(['medina_congregation_711','sanaa_congregation_711']);
+  expect(result.addedInstitutions).toEqual([
+    'alexandrian_patriarch_711','alexandrian_service_711','ctesiphon_catholicos_711','ibrim_service_711',
+    'medina_congregation_711','sanaa_congregation_711'
+  ]);
   expect(result.newCongregations).toEqual([
     ['congregation','medina','sunni',true,true],['congregation','sanaa','sunni',true,true]
+  ]);
+  expect(result.christianInstitutions).toEqual([
+    ['patriarchate',null,'eastern',false,true],['congregation','alexandria','eastern',true,true],
+    ['patriarchate',null,'east_syriac',true,true],['congregation','qasr_ibrim','eastern',true,true]
   ]);
 });
 
