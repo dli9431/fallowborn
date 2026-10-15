@@ -223,6 +223,14 @@ test('optional save state stays absent and malformed selection fails on a detach
       rng:(FB.getRngState() >>> 0) === (source.rng >>> 0), uid:FB.getUidCounter() === source.uid };
   });
   expect(result.failures).toEqual([true, true, true, true, true, true]);
+  // Save compaction may omit an unknown parent. Preserve every concrete
+  // parent reference and the rest of each member's genealogy exactly.
+  for (const members of [result.members,result.genealogy]) {
+    for (const id of Object.keys(members)) {
+      if (members[id].fatherId === undefined) members[id].fatherId = null;
+      if (members[id].motherId === undefined) members[id].motherId = null;
+    }
+  }
   expect(result.genealogy).toEqual(result.members);
   expect(result.absent && result.idempotent && result.rng && result.uid).toBe(true);
 });
