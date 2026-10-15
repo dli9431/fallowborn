@@ -23,6 +23,18 @@ test.beforeEach(async function ({ page }, testInfo) {
   });
 });
 
+async function openNavigationFinder(page, charactersOnly) {
+  await page.evaluate(function (charactersOnly) {
+    const query = FB.marriageCandidateQuery;
+    // Navigation needs a scrollable list, bounded independently of world size.
+    FB.marriageCandidateQuery = function (state, options) {
+      const rows = query(state, options);
+      return rows.filter(function (row) { return !charactersOnly || !!row.characterId; }).slice(0, 12);
+    };
+    FB.ui.showMarriageFinder();
+  }, charactersOnly);
+}
+
 for (const width of [320, 390, 528]) {
   test('match cards keep names and touch actions readable at width ' + width, async function ({ page }) {
     await page.setViewportSize({ width:width, height:740 });
@@ -201,24 +213,26 @@ test('fresh dynastic searches and clearing a court default to nearby courts', as
 });
 
 test('compact court review restores filters, scroll and keyboard focus', async function ({ page }) {
-  await page.evaluate(function () { FB.ui.showMarriageFinder(); });
+  await openNavigationFinder(page, false);
   await page.locator('#finder-filters > summary').click();
   await page.locator('#finder-scope').selectOption('all');
   await page.locator('#finder-availability').selectOption('all');
+  await expect(page.locator('#finder-results .settcard')).toHaveCount(12);
   const button = page.locator('[data-finder-court]').nth(8);
   await expect(button).toBeVisible();
   await button.scrollIntoViewIfNeeded();
   await button.focus();
   const saved = await page.evaluate(function () {
     const body = document.getElementById('gm-body');
-    return { scroll:body.scrollTop, court:document.activeElement.dataset.finderCourt };
+    return { scroll:body.scrollTop };
   });
   expect(saved.scroll).toBeGreaterThan(0);
   await button.press('Enter');
   await page.locator('[data-modal-nav="back"]').click();
   await expect(page.locator('#finder-scope')).toHaveValue('all');
   await expect(page.locator('#finder-availability')).toHaveValue('all');
-  await expect(page.locator('[data-finder-court="' + saved.court + '"]').first()).toBeFocused();
+  await expect(page.locator('#finder-filters')).toHaveAttribute('open', '');
+  await expect(button).toBeFocused();
   expect(await page.locator('#gm-body').evaluate(function (el) { return el.scrollTop; })).toBe(saved.scroll);
 });
 
@@ -431,10 +445,11 @@ test('all court candidates have portraits without materializing characters', asy
 for (const width of [320, 390]) {
   test('match actions fit and character Back retains position at ' + width, async function ({ page }) {
     await page.setViewportSize({ width:width, height:844 });
-    await page.evaluate(function () { FB.ui.showMarriageFinder(); });
+    await openNavigationFinder(page, true);
     await page.locator('#finder-filters > summary').click();
     await page.locator('#finder-scope').selectOption('all');
     await page.locator('#finder-availability').selectOption('all');
+    await expect(page.locator('#finder-results .settcard')).toHaveCount(12);
     await expect(page.locator('#finder-results')).not.toContainText('Review courtship and travel requirements.');
     const button = page.locator('[data-finder-character]').nth(8);
     await button.scrollIntoViewIfNeeded();
@@ -446,6 +461,8 @@ for (const width of [320, 390]) {
     else await page.locator('[data-modal-nav="back"]').click();
     await expect(button).toBeFocused();
     expect(await page.locator('#gm-body').evaluate(function (body) { return body.scrollTop; })).toBe(saved);
+    await expect(page.locator('#finder-scope')).toHaveValue('all');
+    await expect(page.locator('#finder-availability')).toHaveValue('all');
     await expect(page.locator('#finder-filters')).toHaveAttribute('open', '');
     const overflow = await page.locator('#finder-results .finder-card-actions').evaluateAll(function (groups) {
       return groups.reduce(function (failures, group) {
