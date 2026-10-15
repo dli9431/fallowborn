@@ -14,7 +14,7 @@ dependsOnRuntime(__filename, [
   'js/governments.js', 'js/systems.js', 'js/justice.js', 'js/events.js', 'js/technology.js', 'js/bookmark_setup.js',
   'js/stories.js', 'js/story_campaign.js', 'data/story_instances.js',
   'js/story_courts.js', 'js/story_track.js', 'js/treasury.js', 'js/wars.js', 'js/armies.js',
-  'js/main.js', 'js/save.js', 'js/save_v4.js', 'js/messages.js', 'js/i18n.js', 'js/crazygames.js'
+  'js/main.js', 'js/save.js', 'js/save_v4.js', 'js/util.js', 'js/messages.js', 'js/i18n.js', 'js/crazygames.js'
 ]);
 const { test, expect } = require('../support/fixture');
 const { openGame } = require('../support/game/navigation');
@@ -260,14 +260,17 @@ test('a campaign created with the pre-expansion 476 declarations restores under 
           try {
             FB.game.pending = { seed:'NORTHGAUL-LEGACY' };
             FB.game.startObserve(); FB.game.setPaused(true);
-            const saved = JSON.parse(FB.save.serialize());
-            const live = saved.state;
-            const old = [live.owner,live.holder,live.population,
-              live.bookmarkSetup,live.stories,live.realms.franks_476.succession];
+            // Compare expanded runtime facts on both sides. Save compaction
+            // omits court defaults and identities that restore reconstructs.
+            const live = FB.state;
+            const old = JSON.parse(JSON.stringify([live.owner,live.holder,live.population,
+              live.bookmarkSetup,live.stories,live.realms.franks_476.succession]));
             const existing = Object.keys(live.localInstitutions);
-            const institutions = existing.map(function (id) { return live.localInstitutions[id]; });
+            const institutions = JSON.parse(JSON.stringify(existing.map(function (id) { return live.localInstitutions[id]; })));
             const absentBefore = !FB.state.stories.clovis_alamanni_476 &&
               !FB.authoredRoyalMemberSnapshot(FB.state, 'franks_476', 'basina');
+            const rng = FB.getRngState() >>> 0, uid = FB.getUidCounter();
+            const saved = JSON.parse(FB.save.serialize());
             reinstate();
             FB.save.restore(saved);
             const s = FB.state;
@@ -276,12 +279,13 @@ test('a campaign created with the pre-expansion 476 declarations restores under 
               institutionsBefore:institutions,
               institutionsAfter:existing.map(function (id) { return s.localInstitutions[id]; }), absentBefore:absentBefore,
               absent:!s.stories.clovis_alamanni_476 && !FB.authoredRoyalMemberSnapshot(s, 'franks_476', 'basina'),
+              identity:rng === (FB.getRngState() >>> 0) && uid === FB.getUidCounter(),
               valid:FB.save.v4.validatePlatform(JSON.parse(FB.save.serialize()).state) });
           } catch (error) { reinstate(); reject(error); }
         });
       });
     }, addedInstitutions);
-    expect(result).toMatchObject({ absentBefore:true, absent:true, valid:true });
+    expect(result).toMatchObject({ absentBefore:true, absent:true, identity:true, valid:true });
     expect(result.after).toEqual(result.before);
     expect(result.institutionsAfter).toEqual(result.institutionsBefore);
   });
