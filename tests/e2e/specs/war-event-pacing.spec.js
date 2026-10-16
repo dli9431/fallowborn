@@ -361,14 +361,19 @@ test('adjacent hosts plan from start-of-day counties and fight only after co-loc
           path:[emptyTarget], goal:emptyTarget, supply:100, manual:1
         },
         {
-          id:'simultaneous-enemy', realm:enemyId, men:500, size:500,
-          units:{ levy:500, arch:0, cav:0, ret:0, mercs:0 },
+          // Clear the AI's attack-power margin so it pursues the occupied county.
+          id:'simultaneous-enemy', realm:enemyId, men:2500, size:2500,
+          units:{ levy:2500, arch:0, cav:0, ret:0, mercs:0 },
           at:enemySource, from:enemySource, moveLeft:0,
           path:[], goal:null, supply:100
         }
       ];
 
       try {
+        const pursuit = FB.armyPursuitGoal(s, s.armies[1]);
+        if (pursuit !== playerSource) {
+          throw new Error('Expected the stronger enemy to pursue the player starting county.');
+        }
         FB.armyTick(s);
         return {
           playerAt:s.armies[0] && s.armies[0].at,

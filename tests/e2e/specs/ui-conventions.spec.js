@@ -142,8 +142,10 @@ test('Automation explanations work with hover, keyboard focus, and compact discl
   await expect(page.locator('#tooltip')).toContainText('Everyday happenings');
   await card.hover();
   await expect(page.locator('#tooltip')).toContainText('Everyday happenings');
-  await expect(page.locator('.ui-control-warning')).toBeVisible();
-  await expect(page.locator('.ui-control-warning')).toContainText('mortal danger');
+  const dangerWarning = page.locator('.ui-control-row')
+    .filter({ has:page.locator('#ar-all') }).locator('.ui-control-warning');
+  await expect(dangerWarning).toBeVisible();
+  await expect(dangerWarning).toContainText('mortal danger');
   await page.setViewportSize({ width:390, height:850 });
   const disclosure = card.locator('.settcard-info');
   await expect(disclosure).toBeVisible();
