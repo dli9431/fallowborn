@@ -2494,9 +2494,7 @@ Declarative resource-choice modals use the same presentation: the face keeps the
 label and a plain immediate-cost or unavailable line, while authored explanation and the
 full cost/effect breakdown live in the shared tooltip or touch disclosure rather than a
 second row of visible consequence chips.
-Authored `showWhenTechLocked` choices stay in their original order with an exact requirement;
-they are disabled below tier 3 and act only as technology-detail links for tier-3+ players.
-Autoresolve excludes them until the technology is complete.
+Authored showWhenTechLocked choices stay in their original order with an exact requirement. They are disabled for dependent households and act only as technology-detail links for free households. Autoresolve excludes them until the technology is complete.
 
 The Institution section and Network's Trade & Guild summary also open the shared
 **Privileges & collective demands** sheet. Its title tooltip explains the durable-contract

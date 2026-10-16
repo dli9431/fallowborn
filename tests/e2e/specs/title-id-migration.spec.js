@@ -310,13 +310,21 @@ test('the frozen envelope rejects ambiguous title registries before state or ide
     await start(page, testInfo, '867');
     const result = await page.evaluate(function () {
       const source = JSON.parse(FB.save.serialize()), bytes = JSON.stringify(source);
-      const bookmark = FB.bookmark('867'), original = bookmark.duchies;
+      const definition = FBDATA.bookmarks[source.state.start.id];
+      const revision = source.state.start.revision || 'baseline';
+      const bookmark = definition.revisions ? definition.revisions[revision] : definition;
+      const original = bookmark.duchies;
+      const duchies = FB.campaignBookmark(source.state).duchies;
       const live = FB.state, rng = FB.getRngState(), uid = FB.getUidCounter();
       let message = '';
       try {
-        bookmark.duchies = Object.assign({}, original, { d_essex:original.essex });
+        // Restore resolves this saved revision again, so corrupt its declaration.
+        bookmark.duchies = Object.assign({}, duchies, { d_essex:duchies.essex });
         try { FB.save.restore(source); } catch (error) { message = error.message; }
-      } finally { bookmark.duchies = original; }
+      } finally {
+        if (original === undefined) delete bookmark.duchies;
+        else bookmark.duchies = original;
+      }
       return { header:[source.v,source.titleIds,source.authoritySchema,source.platformSchema],
         message:message, unchanged:FB.state === live && FB.getRngState() === rng &&
           FB.getUidCounter() === uid && JSON.stringify(source) === bytes };

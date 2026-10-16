@@ -2,6 +2,9 @@
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
   'js/events.js',
+  'js/technology.js',
+  'js/station.js',
+  'data/technology.js',
   'js/ui_modals.js',
   'data/events_tournament.js'
 ]);
@@ -227,12 +230,26 @@ test('jousting is visibly gated while the melee and social fallbacks remain',
       hasText:'Ride in the joust'
     });
     await expect(lockedJoust).toBeVisible();
-    await expect(lockedJoust).toBeDisabled();
+    await expect(lockedJoust).toBeEnabled();
     await expect(lockedJoust).toContainText('Requires Couched Cavalry Lance');
-    await expect(lockedJoust).not.toContainText('Open the technology entry');
+    await expect(lockedJoust).toContainText('Open the technology entry');
     await expect(page.locator('#ev-options .evopt', {
       hasText:'Fight in the melee'
     })).toBeEnabled();
+    await expect.poll(function () {
+      return page.evaluate(function () { return FB.ui.eventInputGuarded(); });
+    }).toBe(false);
+    const beforeTechnology = await page.evaluate(function () {
+      return { save:FB.save.serialize(), rng:FB.getRngState(), uid:FB.getUidCounter() };
+    });
+    await lockedJoust.click();
+    await expect(page.locator('#gm-title')).toContainText('Couched Cavalry Lance');
+    expect(await page.evaluate(function () {
+      return { save:FB.save.serialize(), rng:FB.getRngState(), uid:FB.getUidCounter() };
+    })).toEqual(beforeTechnology);
+    await page.evaluate(function () { FB.ui.closeModal(); });
+    await expect(page.locator('#eventmodal:not(.hidden)')).toBeVisible();
+    await expect(lockedJoust).toContainText('Requires Couched Cavalry Lance');
   });
 
 test('options with unmet purses stay hidden and cannot spend unavailable gold',

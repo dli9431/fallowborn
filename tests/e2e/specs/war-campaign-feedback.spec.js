@@ -369,6 +369,8 @@ test('Empty Bedrolls is loss-aware and seeded desertion changes live troops',
       var snapshot = JSON.stringify(s);
       function desertOnce() {
         var copy = JSON.parse(snapshot);
+        // Canonical wars serialize without the derived player.war accessor.
+        FB.ensureWars(copy);
         FB.setRngState(246813579);
         FB.fns.war_desert(copy, {}, event);
         var host = FB.playerHost(copy);
@@ -384,6 +386,7 @@ test('Empty Bedrolls is loss-aware and seeded desertion changes live troops',
       var first = desertOnce();
       var second = desertOnce();
       var paid = JSON.parse(snapshot);
+      FB.ensureWars(paid);
       var pay = FB.warDeserterPayment(paid);
       var goldBefore = paid.player.gold;
       var menBefore = FB.playerHost(paid).men;
