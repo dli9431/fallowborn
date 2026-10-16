@@ -23,7 +23,7 @@ test.beforeEach(async function ({ page }, testInfo) {
   });
 });
 
-async function openNavigationFinder(page, charactersOnly) {
+async function boundFinderResults(page, charactersOnly) {
   await page.evaluate(function (charactersOnly) {
     const query = FB.marriageCandidateQuery;
     // Navigation needs a scrollable list, bounded independently of world size.
@@ -31,8 +31,12 @@ async function openNavigationFinder(page, charactersOnly) {
       const rows = query(state, options);
       return rows.filter(function (row) { return !charactersOnly || !!row.characterId; }).slice(0, 12);
     };
-    FB.ui.showMarriageFinder();
   }, charactersOnly);
+}
+
+async function openNavigationFinder(page, charactersOnly) {
+  await boundFinderResults(page, charactersOnly);
+  await page.evaluate(function () { FB.ui.showMarriageFinder(); });
 }
 
 for (const width of [320, 390, 528]) {
@@ -189,7 +193,7 @@ test('both subjects browse scopes and filters without writing state or consuming
 });
 
 test('fresh dynastic searches and clearing a court default to nearby courts', async function ({ page }) {
-  await page.evaluate(function () { FB.ui.showMarriageFinder(); });
+  await openNavigationFinder(page, false);
   await expect(page.locator('#finder-scope')).toHaveValue('near');
   await page.locator('#finder-filters > summary').click();
   await page.locator('#finder-scope').selectOption('all');
@@ -347,6 +351,7 @@ test('selected royal match reviews lineage and retains its subject after an unre
 
 
 test('descendant sheets link to the preselected finder without changing the game', async function ({ page }) {
+  await boundFinderResults(page, false);
   await page.evaluate(function () { FB.ui.showCharModal(window.discoveryChildId); });
   await page.getByRole('button', { name:'Find a marriage', exact:false }).click();
   const childId = await page.evaluate(function () { return window.discoveryChildId; });

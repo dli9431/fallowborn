@@ -66,9 +66,11 @@ test('institution history is not serialized daily and repairs honor mutations an
     FB.ensureInstitutions = function () { repairs++; return repair.apply(this, arguments); };
     let quietRepairs, expired, mutationRepaired, replacementRepaired;
     try {
-      for (let i = 0; i < 90; i++) { s.turn++; FB.institutionsDay(s); }
+      // Stay before the seasonal institution AI, which can change political
+      // inputs and legitimately invalidate the daily repair cache.
+      for (let i = 0; i < 30; i++) { s.turn++; FB.institutionsDay(s); }
       quietRepairs = repairs;
-      s.turn += 10;
+      s.turn += 70;
       FB.institutionsDay(s);
       expired = !Object.prototype.hasOwnProperty.call(s.elections.cooldowns, 'performance');
       const prior = repairs;

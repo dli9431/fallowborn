@@ -39,7 +39,7 @@
     if (!bound) return d.ecclesiastical !== undefined ? ['ecclesiastical binding requires institutional government'] : [];
     var defs = bookmark && bookmark.localInstitutions || FBDATA.localInstitutions || {},
       state = campaign || { start:{ id:bookmark && bookmark.id,revision:bookmark && bookmark.revision },
-        realms:{},chars:{},faiths:{},faithRelations:{} };
+        date:bookmark && bookmark.date || {}, realms:{},chars:{},faiths:{},faithRelations:{} };
     var offices = FB.religiousOffices(state), errors = E.bindingFaults(d.ecclesiastical,defs,offices);
     if (d.royalCourt || d.constituency || d.id === 'player') errors.push('institutional jurisdiction is not a hereditary household');
     var p = d.ecclesiastical && FBDATA.ecclesiasticalProfiles[d.ecclesiastical.profileId];
