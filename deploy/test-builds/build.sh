@@ -11,6 +11,8 @@
 # settings and mods apart from every other build on the shared origin. A
 # branch whose music matches the root branch shares the root soundtrack
 # (nginx falls back to /music/), so the site holds one copy of unchanged audio.
+# A branch whose js/util.js predates the storage scope would share the root
+# build's saves, so it is not published; /branches/ names it with the reason.
 # /branches/ lists every build. Used only by deploy/test-builds/Dockerfile.
 set -eu
 
@@ -70,6 +72,7 @@ rm -rf "$out/tools"
 stamp "$out" "$root_sha" "" "$root_branch $root_short"
 entries="$(json_entry "$root_branch" "/" "$root_sha" "$(date_of "$root_branch")" own)"
 seen=" "
+skipped=""
 
 for branch in $(git --git-dir="$git" for-each-ref --format='%(refname:short)' refs/heads | sort); do
   case "$skip" in *" $branch "*) continue ;; esac
@@ -79,6 +82,11 @@ for branch in $(git --git-dir="$git" for-each-ref --format='%(refname:short)' re
   case "$reserved" in *" $name "*) echo "Skipping $branch: /$name/ is reserved." >&2; continue ;; esac
   case "$seen" in *" $name "*) echo "Skipping $branch: /$name/ is already used." >&2; continue ;; esac
   seen="$seen$name "
+  if ! git --git-dir="$git" grep -q "FB_STORAGE_SCOPE" "refs/heads/$branch" -- js/util.js; then
+    echo "Skipping $branch: no storage scope support; merge dev into it." >&2
+    skipped="$skipped$(printf '%s' "$branch" | sed 's/[\\"]//g') "
+    continue
+  fi
   sha="$(commit_of "$branch")"
   short="$(printf '%s' "$sha" | cut -c1-7)"
   dir="$out/$name"
@@ -101,9 +109,11 @@ done
 
 mkdir -p "$out/branches"
 printf '[%s]\n' "$entries" > "$out/branches/builds.json"
-python3 - "$out/branches/builds.json" "$out/branches/index.html" <<'PY'
+printf '%s\n' "$skipped" > "$work/skipped.txt"
+python3 - "$out/branches/builds.json" "$out/branches/index.html" "$work/skipped.txt" <<'PY'
 import html, json, sys
 builds = json.load(open(sys.argv[1], encoding='utf-8'))
+skipped = open(sys.argv[3], encoding='utf-8').read().split()
 rows = ''.join(
     '<li><a href="%s">%s</a><span>%s · %s</span></li>' % (
         html.escape(b['path']), html.escape(b['branch']),
@@ -119,7 +129,9 @@ page = ('<!doctype html><html lang="en"><head><meta charset="utf-8">'
         'span{color:#b5a68a}p{color:#b5a68a}</style></head><body><main>'
         '<h1>Fallowborn test builds</h1><p>Each build keeps its own saves and settings. '
         'Download a save file to move a life between builds.</p><ul>' + rows +
-        '</ul></main></body></html>\n')
+        '</ul>' + (('<p>Not published until dev is merged into them (their saves would '
+        'mix with the root build): ' + html.escape(', '.join(skipped)) + '.</p>') if skipped else '') +
+        '</main></body></html>\n')
 open(sys.argv[2], 'w', encoding='utf-8').write(page)
 PY
 rm -rf "$work"
