@@ -284,16 +284,34 @@ globals. **Load order matters** — do not reorder the `<script>` tags casually:
   `data/music_catalog.js`, then the event packs (including `events_lifepaths.js`
   after `events_paths.js`, and
   `events_intrigue.js` after tournament events and before ruler-agency events).
-- Engine second, all writing to `window.FB`: `util → messages → i18n → title_ids →
-  model → station → lexicon → music → portrait → siteart → balance → governments → world → climate → settlement → fortifications → holywar → population → modifiers →
-  economy → market → papacy → armies → travel → mapview → events → items → actions → ambitions → intrigue → justice →
-  technology → council → agency → politics → authority → progression → parliament → institutions →
-  ui (ui_misc → ui_panels → ui_topbar) → keys → save → save_v4 → mods → stories →
-  story modules (each registers itself, a required story first) → main`. The generated English
-  catalog is absent from an ordinary English boot; a translated boot dynamically loads it
-  before the selected locale. The four `ui_*.js` files are one system split for size:
-  `ui_misc.js` loads first and owns the shared internals (`FB.ui._shared`) the other three
-  bind at load. An inert hidden asset pointer keeps `ui_modals.js` available to deployment
+- Engine second, all writing to `window.FB`, in this `index.html` order:
+  - core: `util → messages → i18n → title_ids → model → station → lexicon → music → portrait →
+    siteart → balance → governments → systems → world → climate → lordships → settlement →
+    fortifications → holywar → population → modifiers → economy → abbeys → market → papacy →
+    armies → travel → localfolk → mapview → events → items → actions → ambitions → intrigue →
+    justice → technology → council → agency → politics → authority → progression → parliament →
+    institutions → religion → wars → rebellions → logistics → treasury → federates →
+    tournaments → fiscal`
+  - government strategies: `government_levy → government_revenue → government_council →
+    government_diplomacy → government_ai → government_continuity → government_selection →
+    government_lineage → government_support → government_collective → government_assembly →
+    government_recognition → government_administration → government_aristocracy →
+    mobile_confederations → government_elective → government_civic → civic_transactions →
+    civic_strategies → civic_conversion → civic_validation → local_office_appointments →
+    religious_institutions → religious_activities → government_ecclesiastical →
+    ecclesiastical_strategies → ecclesiastical_validation`
+  - UI: `ui_misc → ui_assembly → ui_mobile → ui_civic → ui_ecclesiastical →
+    ui_religious_institutions → ui_religious_activities → ui_panels → ui_topbar → ui_wars →
+    ui_tournaments`
+  - persistence and stories: `keys → crazygames → save → save_v4 → mods → starts → stories →
+    bookmark_setup → story_campaign → story_history → story_agreements → royal_settlements →
+    story_polity_foundation → story_settlements → story_courts → story_government_selection →
+    story_track → main`
+
+  The generated English catalog is absent from an ordinary English boot; a translated boot
+  dynamically loads it before the selected locale. The UI is one system split by file:
+  `ui_misc.js` loads first and owns the shared internals (`FB.ui._shared`) that the panel, top
+  bar, feature sheet and lazily loaded `ui_modals.js` files bind at load. An inert hidden asset pointer keeps `ui_modals.js` available to deployment
   stamping and offline precaching without requesting it speculatively. `main.js` appends the
   script after the title shell has had a chance to paint and before setting `FB.game.bootReady`.
   Preserve that dependency order when changing boot.

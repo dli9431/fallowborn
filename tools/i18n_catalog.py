@@ -1561,6 +1561,14 @@ def extract_structured(inv: Inventory) -> None:
                 inv.add(f"province.{candidate_id}.{province_id}.name.{branch}", record,
                         f"{candidate_rel}:{line}",
                         f"Review {candidate_id} county {province_id}, display name.", ())
+    # A composed candidate declares period names of copied titles separately.
+    composed_path = DATA / "bookmark_1204.js"
+    composed_rel = composed_path.relative_to(ROOT).as_posix()
+    composed = node_object(find_keyed_assignment(composed_path, "FBDATA", "bookmarkContent", "1204")) or {}
+    for item_id, name_node in (node_object(composed.get("kingdomNames")) or {}).items():
+        for branch, record, line in branch_records(name_node):
+            inv.add(f"kingdom.1204.{item_id}.name.{branch}", record,
+                    f"{composed_rel}:{line}", f"Review 1204 kingdom {item_id}, period name.", ())
     # A retained world and its expansion can name the same county differently.
     # Keep revision owners separate; exact-source aliases serve live map labels.
     expansion_path = DATA / "bookmark_493_world.js"

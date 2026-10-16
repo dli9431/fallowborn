@@ -34,12 +34,14 @@ Usage:
   python tools/settlement_import.py --limit 10     # first 10 counties
   python tools/settlement_import.py --county blois # one county
   python tools/settlement_import.py --offline      # cache only, no network
-  python tools/settlement_import.py --bookmarks 867,1066,711  # other bookmarks
+  python tools/settlement_import.py --bookmarks 867,1066,476  # other bookmarks
 
 Layouts are keyed by bookmark id (default 867 and 1066). A requested bookmark
 without a curated layout of its own in data/settlements.js is filled on top of
 the geography's default layout (DEFAULT_LAYOUT, the 867 layout), matching the
-engine's fallback at activation.
+engine's fallback at activation. A bookmark that authors its settlements in
+its own data/bookmark_<id>*.js files (711, 800, 1204, 493) is refused, since
+filling it from the 867 fallback would ignore its curated rows.
 
 GeoNames zips cache in tools/geonames_cache/ and Overpass responses in
 tools/osm_overpass_cache.json (both gitignored), so an interrupted run
@@ -113,6 +115,29 @@ def js_unescape(s):
 
 def js_escape(s):
     return "'" + s.replace('\\', '\\\\').replace("'", "\\'") + "'"
+
+
+def refuse_dated_layouts(bookmarks, curated_all):
+    """Refuse bookmarks whose settlements are authored outside settlements.js.
+
+    Later dates (476, 493, 711, 800, 1204 and dated revisions) declare their
+    own layouts or per-county settlement rows in data/bookmark_<id>*.js, often
+    on the europe_regional_2 geography. Filling such a bookmark on top of the
+    867 fallback would silently ignore its curated rows, so stop instead.
+    """
+    data_dir = os.path.dirname(SETTLEMENTS_JS)
+    refused = []
+    for bookmark in bookmarks:
+        if bookmark in curated_all:
+            continue
+        dated = sorted(name for name in os.listdir(data_dir)
+                       if re.match(r'^bookmark_' + re.escape(bookmark) + r'(_[a-z0-9_]+)?\.js$', name))
+        if dated:
+            refused.append('%s (settlements authored in %s)' % (bookmark, ', '.join('data/' + n for n in dated)))
+    if refused:
+        raise SystemExit('These bookmarks declare their own settlement layouts outside '
+                         'data/settlements.js; this importer fills only the shared base layouts: ' +
+                         '; '.join(refused))
 
 
 def parse_counties(path):
@@ -1072,6 +1097,7 @@ def main():
 
     counties = parse_counties(COUNTIES_JS)
     sites_cur, curated_all = parse_settlements(SETTLEMENTS_JS)
+    refuse_dated_layouts(bookmarks, curated_all)
     curated = {b: curated_layout(curated_all, b) for b in bookmarks}
     bounds, land, seas = parse_bounds_and_land(MAP_DATA_JS)
     proj = Projection(bounds)

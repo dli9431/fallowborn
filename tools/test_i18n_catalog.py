@@ -12,6 +12,20 @@ class StaticHtmlExtractionTests(unittest.TestCase):
         self.assertIn('{province}', inventory.entries['scenario.mobile_household_476.intro.default']['text'])
         self.assertNotIn(i18n_catalog.source_key('Cherson'), inventory.entries)
 
+    def test_declared_period_titles_and_conversion_options(self):
+        inventory = i18n_catalog.Inventory()
+        i18n_catalog.extract_structured(inventory)
+        self.assertEqual(inventory.entries['kingdom.1204.asturias.name.default']['text'], 'León and Castile')
+        self.assertEqual(inventory.entries['kingdom.1204.rus.name.default']['text'], 'Kievan Rus')
+        selections = i18n_catalog.Inventory()
+        i18n_catalog.extract_government_selections(selections)
+        self.assertEqual(selections.entries['governmentSelection.assembly_polity.transformation.regnum.name.default']['text'],
+                         'Review government settlement')
+        self.assertEqual(selections.entries['governmentSelection.aristocratic_monarchy.transformation.regnum.name.default']['text'],
+                         'Review dynastic government')
+        self.assertEqual(selections.entries['governmentSelection.regnum.transformation.aristocratic_monarchy.name.default']['text'],
+                         'Review return to royal recognition')
+
     def test_non_display_blocks_are_blank_without_shifting_source_lines(self):
         source = (
             '<script>\nwindow.telemetry = "title=\\"Private code\\"";\n</script>\n'
