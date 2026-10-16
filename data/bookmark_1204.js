@@ -458,6 +458,14 @@ FBDATA.bookmarkContent['1204'] = {
     "bordeaux":{"dev":7},
     "toulouse":{"dev":7},
     "aghmat":{"name":"Marrakesh","dev":7}
+  },
+  /* Period names of existing de jure kingdoms in 1204. */
+  kingdomNames:{ asturias:'León and Castile', west_francia:'France', east_francia:'Germany',
+    pannonia:'Hungary', rus:'Kievan Rus' },
+  /* Settlements that lead a county's layout, ahead of its other rows: Marrakesh
+     is Aghmat's county seat in 1204. */
+  layoutLeads:{
+    aghmat:[{ site:'geo_marrakesh_2542997', name:'Marrakesh', kind:'city' },{ site:'aghmat', name:'Aghmat', kind:'town' }]
   }
 };
 
@@ -1465,23 +1473,24 @@ FBDATA.bookmarkContent['1204'] = {
       return site;
     });
   });
-  FBDATA.settlementLayouts['1204'].aghmat = [
-    { site:'geo_marrakesh_2542997', name:'Marrakesh', kind:'city' },
-    { site:'aghmat', name:'Aghmat', kind:'town' }
-  ].concat(FBDATA.settlementLayouts['1204'].aghmat.filter(function (entry) {
-    return entry.site !== 'geo_marrakesh_2542997' && entry.site !== 'aghmat';
-  }));
+  Object.keys(content.layoutLeads).forEach(function (id) {
+    var lead = content.layoutLeads[id], rows = FBDATA.settlementLayouts['1204'][id];
+    if (!rows) throw new Error('Invalid 1204 layout lead: ' + id);
+    var sites = lead.map(function (entry) { return entry.site; });
+    FBDATA.settlementLayouts['1204'][id] = clone(lead).concat(rows.filter(function (entry) {
+      return sites.indexOf(entry.site) < 0;
+    }));
+  });
   provinces.forEach(function (row) {
     var layout = FBDATA.settlementLayouts['1204'][row.id];
     if (layout) row.settlements = clone(layout);
   });
   var duchies = clone(FBDATA.duchies), kingdoms = clone(FBDATA.kingdoms);
   var empires = clone(FBDATA.empires);
-  kingdoms.asturias.name = 'León and Castile';
-  kingdoms.west_francia.name = 'France';
-  kingdoms.east_francia.name = 'Germany';
-  kingdoms.pannonia.name = 'Hungary';
-  kingdoms.rus.name = 'Kievan Rus';
+  Object.keys(content.kingdomNames).forEach(function (id) {
+    if (!kingdoms[id]) throw new Error('Invalid 1204 kingdom name: ' + id);
+    kingdoms[id].name = content.kingdomNames[id];
+  });
   // Promotion groupings express continuity; a claim is not actual control.
   FBDATA.bookmarkCandidates = FBDATA.bookmarkCandidates || {};
   FBDATA.bookmarkCandidates['1204'] = {
