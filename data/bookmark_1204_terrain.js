@@ -127,6 +127,27 @@
       vychegda_district:'Local communities and outside tribute must be independently located and dated.',
       onega_district:'Novgorodian collection rights do not establish exclusive possession; research local jurisdiction.',
       torne_district:'Research communities and selection inside latitude 66 without importing later Swedish colonial borders.'
+    },
+    /* Existing records this revision changes, as declared field rows applied
+       over the retained opening. The Gur Khan's subordinate courts keep their
+       own holders; the separately dated Bamiyan branch holds this existing
+       town and its nearby valley, with no second site or population. */
+    realmChanges:{
+      khwarazm_1204:{capital:'gurganj_district',government:'regnum',liege:'qara_khitai_1204'},
+      karakhanid_1204:{government:'regnum',liege:'qara_khitai_1204'},
+      makuria_1204:{government:'regnum'}
+    },
+    provinceChanges:{
+      bamiyan:{realm:'bamiyan_court_1204'}
+    },
+    /* Existing fill presentations promoted into their own bounded districts:
+       each new district's first site reuses the named presentation, and the
+       source counties drop the promoted or superseded sites. Only this
+       revision changes the layouts; baseline slot indices stay put. */
+    promotedSites:{sarakhs_oasis:'geo_sarakhs_1159716',nurata_foothills:'geo_nurota_1513087'},
+    layoutRemovals:{
+      merv:['geo_sarakhs_1159716','geo_sarahs_1218456'],
+      bukhara:['geo_nurota_1513087']
     }
   };
 
@@ -134,13 +155,11 @@
   var revision = 'inhabited_v2', layoutId = '1204_inhabited_v2';
   function clone(value) { return JSON.parse(JSON.stringify(value)); }
   var layout = clone(FBDATA.settlementLayouts['1204']);
-  // Promote existing fill presentations into their own bounded districts.
-  // Only this new revision changes the layouts; baseline slot indices stay put.
-  var promotedSites = {sarakhs_oasis:'geo_sarakhs_1159716',nurata_foothills:'geo_nurota_1513087'};
-  layout.merv = layout.merv.filter(function (entry) {
-    return entry.site !== 'geo_sarakhs_1159716' && entry.site !== 'geo_sarahs_1218456';
+  var promotedSites = d.promotedSites;
+  Object.keys(d.layoutRemovals).forEach(function (pid) {
+    if (!layout[pid]) throw new Error('Invalid 1204 layout removal: ' + pid);
+    layout[pid] = layout[pid].filter(function (entry) { return d.layoutRemovals[pid].indexOf(entry.site) < 0; });
   });
-  layout.bukhara = layout.bukhara.filter(function (entry) { return entry.site !== 'geo_nurota_1513087'; });
   var seeds = {}, additions = {};
   FBDATA.geographies.europe_regional_2.provinceAdditions.forEach(function (seed) { seeds[seed.id] = seed; });
   Object.assign(FBDATA.constituencyProfiles, d.constituencies);
@@ -171,13 +190,11 @@
       male:['Zhilugu','Dashi','Yilie'],female:['Pusuwan','Tapuyan']}
   };
   Object.assign(FBDATA.cultures,FBDATA.bookmarkCultures1204Terrain);
+  Object.keys(d.realmChanges).forEach(function (id) {
+    if (!b.realms.some(function (r) { return r.id === id; })) throw new Error('Invalid 1204 realm change: ' + id);
+  });
   var realms = b.realms.map(function (r) {
-    if (r.id === 'khwarazm_1204') return Object.assign({},clone(r),{
-      capital:'gurganj_district',government:'regnum',liege:'qara_khitai_1204'});
-    if (r.id === 'karakhanid_1204') return Object.assign({},clone(r),{
-      government:'regnum',liege:'qara_khitai_1204'});
-    if (r.id === 'makuria_1204') return Object.assign({},clone(r),{government:'regnum'});
-    return clone(r);
+    return Object.assign({},clone(r),clone(d.realmChanges[r.id] || {}));
   }).concat(clone(d.realms));
   FBDATA.mobileProfiles.eastern_qipchaq_1204 = {
     minAge:18,threshold:0.6,maxMembers:8,maxAgreements:8,recruitShare:0.15,recruitCost:0.03,
@@ -187,12 +204,13 @@
     members:[{id:'river_followers',weight:2,pledge:0.15,population:900},
       {id:'steppe_followers',weight:2,pledge:0.1,population:700}]
   };
+  Object.keys(d.provinceChanges).forEach(function (id) {
+    if (!b.provinces.some(function (p) { return p.id === id; })) throw new Error('Invalid 1204 county change: ' + id);
+  });
   var provinces = b.provinces.map(function (p) {
-    // The separately dated Bamiyan branch holds this existing town and its
-    // nearby valley. No second Bamiyan site or population is constructed.
-    var out = clone(p);
-    if (p.id === 'bamiyan') out.realm = 'bamiyan_court_1204';
-    if (p.id === 'merv' || p.id === 'bukhara') out.settlements = clone(layout[p.id]);
+    // A county that lost promoted sites takes this revision's trimmed layout.
+    var out = Object.assign(clone(p),clone(d.provinceChanges[p.id] || {}));
+    if (d.layoutRemovals[p.id]) out.settlements = clone(layout[p.id]);
     return out;
   }).concat(FBDATA.geographies.europe_regional_2.provinceAdditions.map(function (seed) {
     if (additions[seed.id]) return additions[seed.id];
