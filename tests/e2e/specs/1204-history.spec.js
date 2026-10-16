@@ -334,15 +334,19 @@ test('old campaigns receive no new history or people and malformed historical sa
       people.forEach(function (id) { delete old.state.chars[id]; });
       ['thessalonica_partition_1204','athens_partition_1204','achaia_partition_1204','latin_bithynia_1204','latin_athens_1204','latin_achaia_1204','fifth_crusade_call_1204']
         .forEach(function (id) { delete old.state.stories[id]; });
+      const retainedStories = Object.keys(old.state.stories).sort();
       old.state.greatHolyWarHistory.campaigns = [];
       FB.save.restore(old);
       FB.stories.restore(FB.state);
       return { faults:faults, crossBookmark:crossBookmark, history:FB.state.greatHolyWarHistory.campaigns,
-        attached:Object.keys(FB.state.stories).length, created:!!FB.state.realms.thessalonica_latin_1204,
+        attached:Object.keys(FB.state.stories).sort(), retainedStories:retainedStories,
+        created:!!FB.state.realms.thessalonica_latin_1204,
         peopleAdded:people.some(function (id) { return !!FB.state.chars[id]; }) };
     });
     expect(result.faults).toEqual([true,true,true]); expect(result.history).toEqual([]);
     expect(result.crossBookmark).toBe(true);
-    expect(result.attached).toBe(8); expect(result.created).toBe(false);
+    expect(result.attached).toEqual(result.retainedStories);
+    expect(result.attached).toContain('venetian_offices_1204');
+    expect(result.created).toBe(false);
     expect(result.peopleAdded).toBe(false);
   });

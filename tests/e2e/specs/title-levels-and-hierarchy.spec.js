@@ -22,6 +22,8 @@ async function startWorld(page, testInfo, id, noHierarchy) {
     if (input.noHierarchy) {
       const book = JSON.parse(JSON.stringify(FB.bookmark('867')));
       book.id = input.id;
+      // This resolved snapshot has no revision catalogue of its own.
+      book.revision = 'baseline';
       delete book.duchies; delete book.kingdoms; delete book.empires;
       book.provinces.forEach(function (pr) { delete pr.duchy; });
       FBDATA.bookmarks[input.id] = book;
@@ -215,9 +217,14 @@ test('level words resolve by era and government and holders follow rank and sex'
   });
   expect(result).toEqual({ district:'district', roman:'province', diocese:'diocese',
     kingdom:'kingdom', holder:'Dux', female:'Regina' });
+  const labels = await page.evaluate(function () {
+    return ['duchy','kingdom'].map(function (kind) {
+      return FB.titleLevels.name(FB.state, kind, { form:'other', capital:true });
+    });
+  });
   await page.evaluate(function () { FB.ui.setMapFilterOverlay(true); });
-  await expect(page.locator('[data-map-mode="duchy"] b')).toHaveText(/Districts|Provinces/);
-  await expect(page.locator('[data-map-mode="kingdom"] b')).toHaveText(/Realms|Kingdoms|Dioceses/);
+  await expect(page.locator('[data-map-mode="duchy"] b')).toHaveText(labels[0]);
+  await expect(page.locator('[data-map-mode="kingdom"] b')).toHaveText(labels[1]);
 });
 
 test('absent title filters remain visible and explain their disabled state', async function ({ page }, testInfo) {
