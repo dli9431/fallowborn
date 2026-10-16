@@ -3,6 +3,7 @@ const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
   'js/politics.js',
   'js/world.js',
+  'js/wars.js',
   'js/parliament.js',
   'js/technology.js',
   'js/events.js',
@@ -188,7 +189,7 @@ test('the catalog drives availability, wartime gates, and per-family cooldowns',
       var scutageAfter = FB.parliamentMotionStatus(s, 'scutage');
       /* Wartime opens the war family and the emergency subsidy; the
          emergency rule ignores the already-spent 'aid' family hearing. */
-      s.realms[setup.polityId].war = { enemy:setup.unrelatedId };
+      FB.registerOrdinaryWar(s, setup.polityId, { enemy:setup.unrelatedId });
       var wartime = {
         emergency:FB.parliamentMotionStatus(s, 'emergency_subsidy'),
         authorize:FB.parliamentMotionStatus(s, 'war_authorization'),
@@ -198,7 +199,7 @@ test('the catalog drives availability, wartime gates, and per-family cooldowns',
       var subsidyFamily = s.politics.pendingMotion
         ? s.politics.pendingMotion.family : null;
       FB.parliamentWithdrawMotion(s);
-      delete s.realms[setup.polityId].war;
+      s.realms[setup.polityId].war = null;
       var peaceAgain = FB.parliamentMotionStatus(s, 'emergency_subsidy');
       return {
         ids:list.map(function (entry) { return entry.id; }),

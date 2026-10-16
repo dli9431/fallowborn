@@ -583,9 +583,14 @@
       if (!Array.isArray(tree.publicCandidateIds) || tree.publicCandidateIds.length > 8 ||
           tree.publicCandidateIds.some(function (id,i) { var m = R.candidateMember(s,rid,id);
             if (rid === 'player') return !m || tree.publicCandidateIds.indexOf(id) !== i;
-            return !m || tree.publicCandidateIds.indexOf(id) !== i || !m.charId || !s.chars[m.charId] ||
-              !s.chars[m.charId].royalLine || s.chars[m.charId].royalLine.realmId !== rid ||
-              s.chars[m.charId].royalLine.memberId !== id;
+            // Detached v4 validation precedes inflation. Only the canonical
+            // royal character/member links may be omitted by compaction.
+            var derivedId = typeof id === 'string' && id.indexOf('royal_') === 0
+              ? 'ro_' + id.slice('royal_'.length) : null;
+            var cid = m && (m.charId === undefined ? derivedId : m.charId);
+            var c = cid && s.chars && s.chars[cid], line = c && c.royalLine;
+            return !m || tree.publicCandidateIds.indexOf(id) !== i || !line || line.realmId !== rid ||
+              (line.memberId === undefined ? cid !== derivedId : line.memberId !== id);
           })) fault = 'state.realms.' + rid + '.succession.publicCandidateIds';
     });
     return fault;

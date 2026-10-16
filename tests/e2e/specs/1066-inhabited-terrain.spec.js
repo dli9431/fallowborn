@@ -15,6 +15,7 @@ dependsOnRuntime(__filename,[
   'js/world.js','js/main.js','js/save.js','js/save_v4.js','js/bookmark_setup.js','js/mods.js',
   'js/authority.js','js/politics.js','js/population.js','js/settlement.js','js/lordships.js',
   'js/governments.js','js/government_selection.js','js/government_lineage.js','js/government_assembly.js',
+  'js/government_administration.js','js/government_recognition.js',
   'js/government_support.js','js/government_continuity.js','js/government_levy.js','js/government_revenue.js',
   'js/treasury.js','js/climate.js','js/travel.js','js/armies.js','js/religion.js','js/station.js','js/model.js','js/modifiers.js','js/market.js',
   'js/crazygames.js','data/distribution_crazygames.js'
@@ -199,18 +200,58 @@ for (const revision of ['baseline','governments_v2']) test(revision + ' 1066 hou
   },revision);
   const before = await facts(page), property = await page.evaluate(function () {
     const s = FB.state;
-    return JSON.stringify([s.chars,s.player,s.owner,s.holder,s.population,s.wastelandSettlements,s.settlements]);
+    return JSON.parse(JSON.stringify([s.chars,s.player,s.owner,s.holder,s.population,s.wastelandSettlements,s.settlements]));
   });
   expect(before.snapshot.readsArePure).toBe(true);
   await activate(page,'1066'); await activate(page,'867'); await activate(page,'1204'); await restoreBookmark(page,source);
   expect(await facts(page)).toEqual(before);
   expect(await page.evaluate(function (ids) {
     const s = FB.state;
-    return {property:JSON.stringify([s.chars,s.player,s.owner,s.holder,s.population,s.wastelandSettlements,s.settlements]),
+    return {property:JSON.parse(JSON.stringify([s.chars,s.player,s.owner,s.holder,s.population,s.wastelandSettlements,s.settlements])),
       retained:ids.every(function (id) { return !FB.world.byId[id]; }),revision:s.start.revision};
   },inhabited)).toEqual({property:property,retained:true,revision:revision});
   const saved = await page.evaluate(function () { return FB.save.serialize(); });
   await restoreBookmark(page,saved); expect(await facts(page)).toEqual(before);
+});
+
+test('compacted public candidates preserve identity and reject malformed links before adoption',async function ({page},info) {
+  await startExpanded(page,info,journey('london'));
+  const result = await page.evaluate(function () {
+    const rid = 'byzantium_1066', s = FB.state, tree = s.realms[rid].succession;
+    const id = Object.keys(tree.members).find(function (id) {
+      return id !== tree.rulerMemberId && tree.members[id].charId === 'ro_' + id.slice('royal_'.length);
+    });
+    if (!id) throw new Error('Expected an existing royal character for the saved public slate.');
+    const cid = tree.members[id].charId;
+    tree.publicCandidateIds = [id];
+    const source = FB.save.serialize(), packed = JSON.parse(source);
+    const rng = FB.getRngState() >>> 0, uid = FB.getUidCounter();
+    const compact = packed.state.realms[rid].succession.members[id].charId === undefined &&
+      packed.state.chars[cid].royalLine.memberId === undefined;
+    const migrated = FB.save.v4.migrate(packed);
+    function rejected(change) {
+      const data = JSON.parse(source);
+      change(data.state.realms[rid].succession, data.state.chars[cid], data.state);
+      try { FB.save.v4.migrate(data); return false; } catch (error) { return true; }
+    }
+    const invalid = [
+      rejected(function (t) { t.publicCandidateIds.push(id); }),
+      rejected(function (t) { t.members[id].charId = null; }),
+      rejected(function (t) { t.members[id].charId = 'missing_candidate'; }),
+      rejected(function (t,c) { c.royalLine.memberId = tree.rulerMemberId; }),
+      rejected(function (t,c) { c.royalLine.realmId = 'france'; }),
+      rejected(function (t,c,state) { delete state.chars[cid]; })
+    ];
+    const pure = source === FB.save.serialize() && rng === (FB.getRngState() >>> 0) && uid === FB.getUidCounter();
+    FB.save.restore(packed);
+    const restored = FB.state.realms[rid].succession;
+    return { compact:compact, retained:migrated.state.realms[rid].succession.publicCandidateIds,
+      expected:[id], invalid:invalid, pure:pure, linked:restored.members[id].charId === cid &&
+        FB.state.chars[cid].royalLine.memberId === id,
+      identity:rng === (FB.getRngState() >>> 0) && uid === FB.getUidCounter() };
+  });
+  expect(result).toMatchObject({ compact:true, invalid:Array(6).fill(true), pure:true, linked:true, identity:true });
+  expect(result.retained).toEqual(result.expected);
 });
 
 test('1066 observer advances bounded seasons without scripted conquests or speculative commissions',async function ({page},info) {
