@@ -8,6 +8,7 @@ dependsOnRuntime(__filename, [
   'js/items.js',
   'js/population.js',
   'js/save.js',
+  'js/wars.js',
   'js/ui_modals.js',
   'data/events_lifepaths.js',
   'data/events_travel.js',
@@ -48,13 +49,11 @@ test('mercenary contracts pay, complete, and never strand the traveler',
           return r && !r.liege && d.destinationRealm !== homeRealm && r.capital === d.destinationId;
         })[0];
       if (!destination) return { setup:false };
-      /* wars are sovereign-level: a war planted on a vassal realm is
-         invisible to the contract offer and stripped by repairWars */
       const warRealmId = destination.destinationRealm;
-      // clear every war, then set the patron at war with a war-free sovereign
-      for (const rid in state.realms) {
-        if (state.realms[rid]) delete state.realms[rid].war;
-      }
+      // Wars live in the registry; deleting a compatibility accessor leaves
+      // its campaign active and makes later assignments invisible to readers.
+      state.wars = {};
+      FB.repairWars(state);
       let enemyId = null;
       for (const rid in state.realms) {
         const realm = state.realms[rid];
@@ -64,7 +63,9 @@ test('mercenary contracts pay, complete, and never strand the traveler',
           break;
         }
       }
-      state.realms[warRealmId].war = { enemy:enemyId, startedTurn:state.turn };
+      const war = FB.registerOrdinaryWar(state, warRealmId,
+        { enemy:enemyId, startedTurn:state.turn });
+      if (!war) throw new Error('The mercenary patron needs an active campaign');
 
       const offer = FB.mercContractOffer(state, {
         purpose:'service', destinationId:destination.destinationId,
@@ -387,13 +388,17 @@ test('soldier, physician, scholar, and author paths gate and resolve',
           enemyId = enemyId || rid;
         }
       }
-      const originalWar = state.realms[homeRealmId].war;
-      state.realms[homeRealmId].war = { enemy:enemyId, startedTurn:state.turn };
+      state.wars = {};
+      FB.repairWars(state);
+      const war = FB.registerOrdinaryWar(state, homeRealmId,
+        { enemy:enemyId, startedTurn:state.turn });
+      if (!war) throw new Error('The soldier needs an active home campaign');
       out.scoutsWar = FB.checkTrigger(state, byId('soldier_command_scouts').trigger);
-      delete state.realms[homeRealmId].war;
+      war.status = 'ended';
+      war.endedTurn = state.turn;
+      FB.repairWars(state);
       out.scoutsPeace = FB.checkTrigger(state, byId('soldier_command_scouts').trigger);
       out.drillPeace = FB.checkTrigger(state, byId('soldier_muster_drill').trigger);
-      if (originalWar) state.realms[homeRealmId].war = originalWar;
       // command risk: the failure branch is a real wound
       const healthBefore = me.health;
       FB.applyEffects(state,

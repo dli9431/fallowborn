@@ -233,16 +233,22 @@ async function provisionPartner(page, rid) {
       FB.setCountySupport(s, pid, 100);
     });
     FB.invalidateRealmCache();
-    // Choose a willing settled partner by its actual deployable force. A rally
-    // county alone does not guarantee spare troops after garrison deductions.
-    const partner = Object.keys(s.realms).find(function (id) {
+    // Choose a willing settled partner, then stage its source capacity. The
+    // dated opening does not promise a peaceful court with spare field troops.
+    const partner = Object.keys(s.realms).sort().find(function (id) {
       const form = FB.governments.forRealm(s, id);
       return id !== rid && form && form.id === 'regnum' && !s.realms[id].liege &&
         FB.treasuryCounterparty(s, id) && !FB.isRealmAtWar(s, id) &&
-        FB.aiBaseHost(s, id) > 100 && FB.political.consent(s,
+        FB.recruitmentTerritory(s, id).rally && FB.political.consent(s,
           { kind:'realm', id:id }, 'treaty', { externalRealmId:rid, kind:'protection' }).allowed;
     });
-    if (!partner) throw new Error('A settled partner with more than 100 deployable troops is required');
+    if (!partner) throw new Error('A peaceful settled treaty partner is required');
+    FB.realmHeldCounties(s, partner).forEach(function (pid) {
+      s.dev[pid] = Math.max(20, s.dev[pid] || 1);
+      FB.setCountySupport(s, pid, 100);
+    });
+    FB.invalidateRealmCache();
+    if (FB.aiBaseHost(s, partner) <= 100) throw new Error('The staged partner needs more than 100 deployable troops');
     const local = FB.aiBaseHost(s, rid);
     if (local <= 1) throw new Error('The staged community needs spare troops; available: ' + local);
     s.realms[partner].treasury.gold = 1000;
