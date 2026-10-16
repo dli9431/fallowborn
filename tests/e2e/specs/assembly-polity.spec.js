@@ -233,34 +233,45 @@ async function provisionPartner(page, rid) {
       FB.setCountySupport(s, pid, 100);
     });
     FB.invalidateRealmCache();
-    // Choose a willing settled partner, then stage its source capacity. The
-    // dated opening does not promise a peaceful court with spare field troops.
-    const partner = Object.keys(s.realms).sort().find(function (id) {
+    // Choose a willing settled partner whose staged source capacity actually
+    // musters a surplus. The dated opening does not promise a peaceful court
+    // with spare field troops, and a small frontier court may stay at the
+    // minimum host however its counties are staged.
+    const candidates = Object.keys(s.realms).sort().filter(function (id) {
       const form = FB.governments.forRealm(s, id);
       return id !== rid && form && form.id === 'regnum' && !s.realms[id].liege &&
         FB.treasuryCounterparty(s, id) && !FB.isRealmAtWar(s, id) &&
         FB.recruitmentTerritory(s, id).rally && FB.political.consent(s,
           { kind:'realm', id:id }, 'treaty', { externalRealmId:rid, kind:'protection' }).allowed;
     });
-    if (!partner) throw new Error('A peaceful settled treaty partner is required');
-    const territory = FB.recruitmentTerritory(s, partner);
+    if (!candidates.length) throw new Error('A peaceful settled treaty partner is required');
     // Field hosts read eligible recruitment counties, including subordinate
     // territory and private sites outside the directly held county list.
-    // Provision a bounded surplus against the opening's real garrison costs.
-    let capacity = 0;
-    for (let step = 0; step < 4; step++) {
+    // Provision a bounded surplus against the opening's real garrison costs,
+    // restoring each rejected candidate before trying the next.
+    const rejected = [];
+    const partner = candidates.find(function (id) {
+      const territory = FB.recruitmentTerritory(s, id), saved = {};
       territory.eligible.forEach(function (pid) {
-        s.dev[pid] = Math.max(20 * Math.pow(2, step), s.dev[pid] || 1);
+        saved[pid] = { dev:s.dev[pid], support:(s.countySupport || {})[pid] };
+        s.dev[pid] = Math.max(20, s.dev[pid] || 1);
         FB.setCountySupport(s, pid, 100);
       });
       FB.invalidateRealmCache();
-      capacity = FB.aiBaseHost(s, partner);
-      if (capacity > 100) break;
-    }
-    if (capacity <= 100) throw new Error('The staged partner needs more than 100 deployable troops: ' +
-      JSON.stringify({ realm:partner, capacity:capacity, eligible:territory.eligible,
-        held:FB.realmHeldCounties(s, partner), blocked:territory.blocked,
-        garrison:FB.fortGarrisonBurden(s, partner, partner, territory) }));
+      const capacity = FB.aiBaseHost(s, id);
+      if (capacity > 100) return true;
+      rejected.push({ realm:id, capacity:capacity, eligible:territory.eligible.map(function (pid) {
+        return { id:pid, dev:s.dev[pid], support:FB.countyPopularSupport(s, pid),
+          levy:FB.modBonus(s, 'levy', pid), modifiers:FB.countyModifierRecords(s, pid).map(function (m) { return m.id; }) };
+      }), blocked:territory.blocked, garrison:FB.fortGarrisonBurden(s, id, id, territory) });
+      territory.eligible.forEach(function (pid) {
+        if (saved[pid].dev === undefined) delete s.dev[pid]; else s.dev[pid] = saved[pid].dev;
+        if (saved[pid].support === undefined) delete s.countySupport[pid]; else s.countySupport[pid] = saved[pid].support;
+      });
+      FB.invalidateRealmCache();
+      return false;
+    });
+    if (!partner) throw new Error('A staged partner needs more than 100 deployable troops: ' + JSON.stringify(rejected));
     const local = FB.aiBaseHost(s, rid);
     if (local <= 1) throw new Error('The staged community needs spare troops; available: ' + local);
     s.realms[partner].treasury.gold = 1000;
