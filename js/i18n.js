@@ -8,7 +8,7 @@ window.FBDATA = window.FBDATA || {};
 
   const CATALOG_SCHEMA = 1;
   const HASH_SCHEMA = 1;
-  const LANG_KEY = 'fb_lang';
+  const LANG_KEY = FB.storageKey('fb_lang');
   const TOKEN_RX = /\{((?:money:(?:[A-Za-z_][A-Za-z0-9_]*|[-+]?(?:\d+(?:\.\d+)?|\.\d+)))|(?:[A-Za-z_][A-Za-z0-9_]*))\}/g;
   const MONEY_LITERAL_RX = /^[-+]?(?:\d+(?:\.\d+)?|\.\d+)$/;
   const CURRENCY_DEF_FIELDS = {

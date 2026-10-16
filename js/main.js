@@ -2392,7 +2392,7 @@ FB.CHANGELOG = [
   /* the title screen must say which world it will spawn: with mods active
      (bundled or stored), new lives and the map behind the menu are modded ones */
   function refreshTitle() {
-    $('title-version').textContent = 'v' + FB.VERSION;
+    $('title-version').textContent = 'v' + FB.VERSION + (FB.buildLabel ? ' · ' + FB.buildLabel : '');
     const saved = FB.save.read('auto');
     $('btn-continue').classList.toggle('hidden', !saved);
     const preview = $('continue-preview');
@@ -4216,7 +4216,7 @@ FB.CHANGELOG = [
   let storedTipsLayer = false;
   let storedOnboardingLayer = false;
   try {
-    const storedUiPrefs = JSON.parse(localStorage.getItem('fb_ui') || 'null');
+    const storedUiPrefs = JSON.parse(localStorage.getItem(FB.storageKey('fb_ui')) || 'null');
     if (storedUiPrefs && typeof storedUiPrefs === 'object') {
       if (typeof storedUiPrefs.speedIdx === 'number' &&
           isFinite(storedUiPrefs.speedIdx) &&
@@ -4320,7 +4320,7 @@ FB.CHANGELOG = [
      fresh player) never starts the lessons. Once decided either way the
      stored tipsSeen/tipsGrandfathered keys keep this from re-deciding. */
   G.saveUiPrefs = function () {
-    try { localStorage.setItem('fb_ui', JSON.stringify(G.uiPrefs)); } catch (e) { /* private mode */ }
+    try { localStorage.setItem(FB.storageKey('fb_ui'), JSON.stringify(G.uiPrefs)); } catch (e) { /* private mode */ }
   };
   function initializeReturningPlayerOnboarding() {
     // IndexedDB slots must be loaded before deciding whether this is an upgrade.
@@ -4764,7 +4764,7 @@ FB.CHANGELOG = [
   /* NOTE: the settings once shared a key with the AUTOSAVE SLOT (save.js)
      and each overwrote the other; they now live under their own key. */
   try {
-    const storedAuto = JSON.parse(localStorage.getItem('fb_automation') || 'null');
+    const storedAuto = JSON.parse(localStorage.getItem(FB.storageKey('fb_automation')) || 'null');
     if (storedAuto && typeof storedAuto === 'object') {
       for (const ak in G.auto) if (storedAuto[ak] !== undefined) G.auto[ak] = storedAuto[ak];
       // pre-1.25 the master switch `on` governed everyday events — now `minor`
@@ -4786,7 +4786,7 @@ FB.CHANGELOG = [
   G.auto.forceSupplies = G.auto.forceSupplies === true;
   G.auto.supplyTarget = FB.clamp(isFinite(Number(G.auto.supplyTarget)) ? Number(G.auto.supplyTarget) : 75, 25, 100);
   G.saveAuto = function () {
-    try { localStorage.setItem('fb_automation', JSON.stringify(G.auto)); } catch (e) { /* private mode */ }
+    try { localStorage.setItem(FB.storageKey('fb_automation'), JSON.stringify(G.auto)); } catch (e) { /* private mode */ }
   };
 
   function pauseForBackground() {
