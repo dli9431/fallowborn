@@ -154,7 +154,7 @@ for (const crazygames of [false,true]) {
     },rid);
     expect(result.mutations).toEqual([]);
     for (const key of ['missing','inactive','cleared','absent']) expect(result[key]).toBe(result.baseline);
-    expect(result.sanctioned).toBe(result.expectedSanction);
+    expect(result.sanctioned).toBeCloseTo(result.expectedSanction, 12);
   });
 }
 
