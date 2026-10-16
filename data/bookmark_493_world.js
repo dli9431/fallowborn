@@ -1142,6 +1142,55 @@ FBDATA.bookmarkExpansion493 = {
     "e_493_persia":{"name":"Iranian districts"},
     "e_493_eastern":{"name":"Eastern frontier districts"},
     "e_493_steppe":{"name":"Pontic and steppe districts"}
+  },
+  revision:'world_v2', layoutId:'493_world_v2', geography:'europe_regional_2',
+  /* Stable institution and office ids; the old revision keeps its null sites.
+     No named 476 incumbent, vacancy or appointment is borrowed. */
+  seeRelocations:{ counties:['alexandria','antioch','jerusalem'], suffix:'_see' },
+  /* County commissions are a bounded simulation of provincial delegation,
+     not claims that every map cell historically possessed a praeses. */
+  civilDelegates:{ realm:'east_493', actorSuffix:'_delegate_493', officeId:'praeses',
+    actor:{ sex:'m', born:454, station:3, role:'notable', skills:{ste:8,dip:7} } },
+  councils:{ counties:['alexandria','fustat','antioch','edessa','jerusalem','tarsos'], suffix:'_council_493', kind:'council' },
+  /* Generated principals of the declared magnate interests and their heirs. */
+  magnates:{ principalSuffix:'_principal_493', heirSuffix:'_heir_493', sex:'m', role:'notable',
+    actor:{ born:448, station:3, skills:{ste:8,mar:7} }, heir:{ born:474, station:2, skills:{ste:6,mar:6} },
+    rows:[
+      {id:'mihran',county:'rayy',culture:'persian',religion:'zoroastrian',dynasty:'Mihran'},
+      {id:'karen',county:'hamadan',culture:'persian',religion:'zoroastrian',dynasty:'Karen'},
+      {id:'dvin',county:'dvin',culture:'armenian',religion:'caucasian_christian_476',dynasty:'Dvin household'}
+    ] },
+  actors:{
+    ctesiphon_delegate_493:{sex:'m',culture:'persian',religion:'zoroastrian',
+      born:456,station:3,role:'notable',home:'baghdad',skills:{ste:9,mar:5}}
+  },
+  /* Population evidence alone does not establish an accepted Buddhist house. */
+  congregations:{ counties:['baghdad','dvin','axum','sanaa','medina','balkh','samarkand','tara'],
+    excludeReligions:['buddhist_476'], suffix:'_493', kind:'congregation', representative:{role:'priest'} },
+  /* The incumbent belongs to a spiritual office, independently of the shah.
+     Local service groups are playable reconstructions, not named buildings. */
+  institutions:{
+    ctesiphon_catholicos_493:{city:'Ctesiphon',kind:'patriarchate',
+      provinceId:'baghdad',site:'baghdad_outer_476',culture:'syriac',religion:'east_syriac',
+      officeId:'east_syriac_catholicos',historicalName:'Acacius',freshOnly:true,jurisdictionIds:['baghdad']},
+    ctesiphon_church_service_493:{city:'Ctesiphon',kind:'congregation',
+      provinceId:'baghdad',site:'baghdad_outer_476',culture:'syriac',religion:'east_syriac',
+      profileId:'east_syriac_church_service',vacant:true,freshOnly:true,jurisdictionIds:['baghdad']},
+    dvin_church_service_493:{city:'Dvin',kind:'congregation',
+      provinceId:'dvin',site:'dvin_493',culture:'armenian',religion:'caucasian_christian_476',
+      profileId:'dvin_church_service',vacant:true,freshOnly:true,jurisdictionIds:['dvin']}
+  },
+  crossings:[
+    ['candia','athens','open'],['nicosia','tarsos','open'],
+    ['iona','glasgow','coastal'],['lewis','inverness','coastal'],
+    ['man','carlisle','coastal'],['man','dublin','coastal'],
+    ['ulaid','glasgow','coastal'],['wexford','cardigan','coastal'],
+    ['canterbury','boulogne','narrow'],['visby','kalmar','open'],
+    ['roskilde','lund','narrow'],['turku','uppsala','open']
+  ],
+  techImpactReviews:{
+    period_493_world_habitation:{mode:'none',
+      rationale:'Established households, ordinary local authority and provincial service require no discovery. Existing travel, production, equipment and government requirements remain authoritative.'}
   }
 };
 /* The profile is date-owned. It reuses office mechanics, not a 476 court or
@@ -1176,7 +1225,7 @@ FBDATA.aristocraticProfiles['sasanian_493'] = {
   var additions = {}, seeds = {}, institutions = copy(b.localInstitutions);
   var opening = copy(b.opening), layout = copy(FBDATA.settlementLayouts['493']);
   FBDATA.geographies.europe_regional.provinces.forEach(function (p) { seeds[p.id] = p; });
-  FBDATA.geographies.europe_regional_2.provinceAdditions.forEach(function (p) { seeds[p.id] = p; });
+  FBDATA.geographies[content.geography].provinceAdditions.forEach(function (p) { seeds[p.id] = p; });
   content.provinces.forEach(function (p) {
     additions[p.id] = copy(p);
     layout[p.id] = copy(content.settlementLayouts[p.id]);
@@ -1186,151 +1235,111 @@ FBDATA.aristocraticProfiles['sasanian_493'] = {
       FBDATA.settlementSites[site] = {x:position[0],y:position[1]};
     }
   });
-  FBDATA.settlementLayouts['493_world_v2'] = layout;
-  /* Stable institution and office ids; the old revision keeps its null sites.
-     No named 476 incumbent, vacancy or appointment is borrowed. */
-  ['alexandria','antioch','jerusalem'].forEach(function (id) {
-    institutions[id + '_see'].provinceId = id;
-    institutions[id + '_see'].site = layout[id][0].site;
+  FBDATA.settlementLayouts[content.layoutId] = layout;
+  function firstSite(id) {
+    if (!layout[id] || !layout[id].length) throw new Error('Missing 493 settlement: ' + id);
+    return layout[id][0].site;
+  }
+  function addition(id) {
+    if (!additions[id]) throw new Error('Unknown 493 county: ' + id);
+    return additions[id];
+  }
+  content.seeRelocations.counties.forEach(function (id) {
+    var see = institutions[id + content.seeRelocations.suffix];
+    if (!see) throw new Error('Unknown 493 see: ' + id);
+    see.provinceId = id;
+    see.site = firstSite(id);
   });
-  /* County commissions are a bounded simulation of provincial delegation,
-     not claims that every map cell historically possessed a praeses. */
+  var d = content.civilDelegates;
   content.provinces.forEach(function (p) {
-    if (p.realm !== 'east_493') return;
-    var actor = p.id + '_delegate_493';
-    opening.actors[actor] = {sex:'m',culture:p.culture,religion:p.religion,born:454,
-      station:3,role:'notable',home:p.id,skills:{ste:8,dip:7}};
-    opening.appointments[actor] = {officeId:'praeses',actorId:actor,realmId:'east_493',
+    if (p.realm !== d.realm) return;
+    var actor = p.id + d.actorSuffix;
+    opening.actors[actor] = {sex:d.actor.sex,culture:p.culture,religion:p.religion,born:d.actor.born,
+      station:d.actor.station,role:d.actor.role,home:p.id,skills:copy(d.actor.skills)};
+    opening.appointments[actor] = {officeId:d.officeId,actorId:actor,realmId:d.realm,
       scope:{kind:'county',id:p.id}};
   });
-  ['alexandria','fustat','antioch','edessa','jerusalem','tarsos'].forEach(function (id) {
-    var p = additions[id];
-    institutions[id + '_council_493'] = {city:p.name,kind:'council',provinceId:id,
-      site:layout[id][0].site,culture:p.culture,religion:p.religion};
+  content.councils.counties.forEach(function (id) {
+    var p = addition(id);
+    institutions[id + content.councils.suffix] = {city:p.name,kind:content.councils.kind,provinceId:id,
+      site:firstSite(id),culture:p.culture,religion:p.religion};
   });
-  ['mihran','karen','dvin'].forEach(function (id,index) {
-    var county = ['rayy','hamadan','dvin'][index], actor = id + '_principal_493';
-    var culture = index === 2 ? 'armenian' : 'persian';
-    var faith = index === 2 ? 'caucasian_christian_476' : 'zoroastrian';
-    var dynasty = ['Mihran','Karen','Dvin household'][index];
-    opening.actors[actor] = {sex:'m',culture:culture,religion:faith,born:448,
-      station:3,role:'notable',dyn:dynasty,home:county,skills:{ste:8,mar:7}};
-    opening.actors[id + '_heir_493'] = {sex:'m',culture:culture,religion:faith,born:474,
-      station:2,role:'notable',dyn:dynasty,father:actor,home:county,skills:{ste:6,mar:6}};
+  var m = content.magnates;
+  m.rows.forEach(function (row) {
+    var actor = row.id + m.principalSuffix;
+    opening.actors[actor] = {sex:m.sex,culture:row.culture,religion:row.religion,born:m.actor.born,
+      station:m.actor.station,role:m.role,dyn:row.dynasty,home:row.county,skills:copy(m.actor.skills)};
+    opening.actors[row.id + m.heirSuffix] = {sex:m.sex,culture:row.culture,religion:row.religion,born:m.heir.born,
+      station:m.heir.station,role:m.role,dyn:row.dynasty,father:actor,home:row.county,skills:copy(m.heir.skills)};
   });
-  opening.actors.ctesiphon_delegate_493 = {sex:'m',culture:'persian',religion:'zoroastrian',
-    born:456,station:3,role:'notable',home:'baghdad',skills:{ste:9,mar:5}};
-  ['baghdad','dvin','axum','sanaa','medina','balkh','samarkand','tara'].forEach(function (id) {
-    var p = additions[id];
+  Object.keys(content.actors).forEach(function (id) { opening.actors[id] = copy(content.actors[id]); });
+  var cg = content.congregations;
+  cg.counties.forEach(function (id) {
+    var p = addition(id);
     p.communities.forEach(function (community,index) {
-      // Population evidence alone does not establish an accepted Buddhist house.
-      if (community.religion === 'buddhist_476') return;
-      institutions[id + '_community_' + index + '_493'] = {city:p.name,kind:'congregation',
-        provinceId:id,site:layout[id][0].site,culture:community.culture,
-        religion:community.religion,representative:{role:'priest'}};
+      if (cg.excludeReligions.indexOf(community.religion) >= 0) return;
+      institutions[id + '_community_' + index + cg.suffix] = {city:p.name,kind:cg.kind,
+        provinceId:id,site:firstSite(id),culture:community.culture,
+        religion:community.religion,representative:copy(cg.representative)};
     });
   });
-  /* The incumbent belongs to a spiritual office, independently of the shah.
-     Local service groups are playable reconstructions, not named buildings. */
-  institutions.ctesiphon_catholicos_493 = {city:'Ctesiphon',kind:'patriarchate',
-    provinceId:'baghdad',site:'baghdad_outer_476',culture:'syriac',religion:'east_syriac',
-    officeId:'east_syriac_catholicos',historicalName:'Acacius',freshOnly:true,jurisdictionIds:['baghdad']};
-  institutions.ctesiphon_church_service_493 = {city:'Ctesiphon',kind:'congregation',
-    provinceId:'baghdad',site:'baghdad_outer_476',culture:'syriac',religion:'east_syriac',
-    profileId:'east_syriac_church_service',vacant:true,freshOnly:true,jurisdictionIds:['baghdad']};
-  institutions.dvin_church_service_493 = {city:'Dvin',kind:'congregation',
-    provinceId:'dvin',site:'dvin_493',culture:'armenian',religion:'caucasian_christian_476',
-    profileId:'dvin_church_service',vacant:true,freshOnly:true,jurisdictionIds:['dvin']};
-  var crossings = [
-    ['candia','athens','open'],['nicosia','tarsos','open'],
-    ['iona','glasgow','coastal'],['lewis','inverness','coastal'],
-    ['man','carlisle','coastal'],['man','dublin','coastal'],
-    ['ulaid','glasgow','coastal'],['wexford','cardigan','coastal'],
-    ['canterbury','boulogne','narrow'],['visby','kalmar','open'],
-    ['roskilde','lund','narrow'],['turku','uppsala','open']
-  ];
+  Object.keys(content.institutions).forEach(function (id) { institutions[id] = copy(content.institutions[id]); });
   var straits = copy(b.straits), classes = copy(b.crossingClasses);
-  crossings.forEach(function (row) {
+  content.crossings.forEach(function (row) {
     var pair = row.slice(0,2);
     straits.push(pair); classes[pair.slice().sort().join('|')] = row[2];
   });
   var expanded = {
-    geography:'europe_regional_2',
+    geography:content.geography,
     provinces:b.provinces.map(function (p) { return additions[p.id] || copy(p); }).concat(
-      FBDATA.geographies.europe_regional_2.provinceAdditions.map(function (p) {
+      FBDATA.geographies[content.geography].provinceAdditions.map(function (p) {
         return additions[p.id] || copy(p);
       })),
     realms:copy(b.realms).concat(copy(content.realms)),
     duchies:Object.assign({},b.duchies,content.duchies),
     kingdoms:Object.assign({},b.kingdoms,content.kingdoms),
     empires:Object.assign({},b.empires,content.empires),
-    settlementLayout:'493_world_v2', localInstitutions:institutions,
+    settlementLayout:content.layoutId, localInstitutions:institutions,
     climate:{zone:b.climate.zone,provinces:Object.assign({},b.climate.provinces,content.climates)},
     straits:straits,crossingClasses:classes,
-    opening:opening,openingRevision:'world_v2',openingRevisions:{world_v2:opening},
-    openingLegacyRevision:'world_v2'
+    opening:opening,openingRevision:content.revision,openingRevisions:{},
+    openingLegacyRevision:content.revision
   };
+  expanded.openingRevisions[content.revision] = opening;
   /* No opening transaction, story initialization or catalogue binding runs on
      restore. Unstamped supported saves resolve the untouched baseline. */
   /* Open roles declare where they begin with a typed birthplaces rule in
      data/starts.js: a church household in a county with a declared see or
      patriarchate, a curialis in a county with a declared city council. */
-  b.revision = 'world_v2';
-  b.revisions = {baseline:{},world_v2:expanded};
-  FBDATA.techImpactReviews.features.period_493_world_habitation = {mode:'none',
-    rationale:'Established households, ordinary local authority and provincial service require no discovery. Existing travel, production, equipment and government requirements remain authoritative.'};
+  b.revision = content.revision;
+  b.revisions = {baseline:{}};
+  b.revisions[content.revision] = expanded;
+  Object.keys(content.techImpactReviews).forEach(function (id) {
+    FBDATA.techImpactReviews.features[id] = content.techImpactReviews[id];
+  });
 })();
 
 /* Independent 493 reconstructions. Sanctuary occupation does not erase
    Samaritan households; no summit destination or canonical priest is declared.
    New minority weights are simulation quantities, never historical percentages.
    Retained revisions and the fresh default remain unchanged. */
-(function () {
-  'use strict';
-  var b = FBDATA.bookmarks['493'], source = b.revisions.world_v2;
-  var world = Object.assign({},b,b.revisions.baseline,source);
-  function copy(value) { return JSON.parse(JSON.stringify(value)); }
-  var provinces = copy(world.provinces), institutions = copy(world.localInstitutions || {});
-  var layout = world.settlementLayout ? copy(FBDATA.settlementLayouts[world.settlementLayout]) : null;
-  function county(pid) { return provinces.filter(function (p) { return p.id === pid; })[0]; }
-  function minority(pid,faith,culture) {
-    var p = county(pid);
-    if (!p || p.wasteland) throw new Error('Missing communal county: ' + pid);
-    var rows = p.communities || [{culture:p.culture,religion:p.religion,populationShare0:10000}];
-    if (rows.some(function (row) { return row.religion === faith; })) return;
-    var largest = rows.reduce(function (a,row) { return row.populationShare0 > a.populationShare0 ? row : a; },rows[0]);
-    if (!(largest.populationShare0 >= 100)) throw new Error('Missing communal population weight: ' + pid);
-    largest.populationShare0 -= 100;
-    rows.push({culture:culture,religion:faith,populationShare0:100,paired:true});
-    p.communities = rows;
-  }
-  function nablus(name) {
-    var p = county('jerusalem'), rows = layout ? layout.jerusalem : p.settlements;
-    FBDATA.settlementSites.samaria_neapolis_w15 = {x:35.26,y:32.22,
-      names:[{from:400,to:649,name:'Neapolis'},{from:650,name:'Nablus'}]};
-    rows.push({site:'samaria_neapolis_w15',name:name,kind:'town'});
-    if (p.settlements) p.settlements = copy(rows);
-  }
-  function place(iid,pid,site,city,kind,faith,culture,profile,property) {
-    var p = county(pid), rows = layout ? layout[pid] : p.settlements;
-    if (!rows || !rows.length || site && !rows.some(function (row) { return row.site === site; }))
-      throw new Error('Missing communal settlement: ' + iid);
-    institutions[iid] = {city:city,kind:kind,provinceId:pid,site:site || rows[0].site,
-      religion:faith,culture:culture,profileId:profile,jurisdictionIds:[pid],
-      vacant:true,freshOnly:true};
-    if (property) institutions[iid].abbeyId = property;
-  }
-  minority('baghdad','jewish','syriac');
-  minority('sardis','jewish','greek');
-  minority('jerusalem','samaritan','syriac');
-  nablus('Neapolis');
-  place('jewish_meso_study_circle_493','baghdad',null,'Ctesiphon','school','jewish','syriac','jewish_study_circle_early');
-  place('jewish_sardis_congregation_493','sardis',null,'Sardis','congregation','jewish','greek','jewish_sardis_congregation','jewish_sardis_property_493');
-  place('nablus_samaritan_congregation_493','jerusalem','samaria_neapolis_w15','Neapolis','congregation','samaritan','syriac','samaritan_lay_congregation');
-  var changes = {provinces:provinces,localInstitutions:institutions};
-  if (layout) {
-    FBDATA.settlementLayouts['493_jewish_samaritan_v3'] = layout;
-    changes.settlementLayout = '493_jewish_samaritan_v3';
-  }
-  b.revisions.jewish_samaritan_v3 = Object.assign({},source,changes);
-})();
+FBDATA.communalRevisions = FBDATA.communalRevisions || {};
+FBDATA.communalRevisions['493'] = {
+  source:'world_v2', revision:'jewish_samaritan_v3', layoutId:'493_jewish_samaritan_v3',
+  minorities:[
+    {county:'baghdad',religion:'jewish',culture:'syriac'},
+    {county:'sardis',religion:'jewish',culture:'greek'},
+    {county:'jerusalem',religion:'samaritan',culture:'syriac'}
+  ],
+  sites:[
+    {id:'samaria_neapolis_w15',county:'jerusalem',name:'Neapolis',kind:'town'}
+  ],
+  institutions:[
+    {id:'jewish_meso_study_circle_493',county:'baghdad',site:null,city:'Ctesiphon',kind:'school',
+      religion:'jewish',culture:'syriac',profileId:'jewish_study_circle_early'},
+    {id:'jewish_sardis_congregation_493',county:'sardis',site:null,city:'Sardis',kind:'congregation',
+      religion:'jewish',culture:'greek',profileId:'jewish_sardis_congregation',abbeyId:'jewish_sardis_property_493'},
+    {id:'nablus_samaritan_congregation_493',county:'jerusalem',site:'samaria_neapolis_w15',city:'Neapolis',kind:'congregation',
+      religion:'samaritan',culture:'syriac',profileId:'samaritan_lay_congregation'}
+  ]
+};

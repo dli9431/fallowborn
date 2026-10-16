@@ -18,7 +18,7 @@ dependsOnRuntime(__filename, [
   'data/starts.js', 'data/geographies.js', 'data/geography_expansion.js',
   'data/bookmark_476_outer.js', 'data/bookmark_476_dalmatia_east.js',
   'data/bookmark_493.js', 'data/bookmark_1204.js',
-  'data/bookmark_1066_inhabited.js', 'data/bookmark_1204_terrain.js',
+  'data/bookmark_1066_inhabited.js', 'data/bookmark_1204_terrain.js', 'data/communal_revisions.js',
   'js/model.js', 'js/economy.js', 'js/events.js', 'js/actions.js',
   'js/population.js', 'js/world.js', 'js/mods.js', 'js/systems.js',
   'js/save.js', 'js/save_v4.js', 'js/technology.js', 'js/ui_modals.js',

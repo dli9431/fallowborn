@@ -2,9 +2,10 @@
    existing public contracts. District labels do not assert a later city's
    existence. Shares, development and unnamed officials are simulation choices.
 
-   Every regional decision is declared in FBDATA.bookmarkWider476 and
-   FBDATA.bookmarkCommunal476. The builders below apply those tables to the
-   retained opening and name no county, realm, faith or start. */
+   Every regional decision is declared in FBDATA.bookmarkWider476 and the
+   date's FBDATA.communalRevisions table. The builder below and
+   data/communal_revisions.js apply those tables to the retained opening and
+   name no county, realm, faith or start. */
 FBDATA.bookmarkWider476 = {
   bookmarkId:'476', revision:'wider_v2', layoutId:'476_wider_v2', geography:'europe_regional_2',
   /* District names apply from 375 to 649; later names are not inherited. */
@@ -497,20 +498,17 @@ FBDATA.bookmarkWider476 = {
    Samaritan households imply no Gerizim route or priesthood.
    New minority weights are simulation quantities, never historical percentages.
    Retained revisions and the fresh default remain unchanged. */
-FBDATA.bookmarkCommunal476 = {
-  bookmarkId:'476', source:'wider_v2', revision:'jewish_samaritan_v3', layoutId:'476_jewish_samaritan_v3',
-  /* A minority takes this share from the county's largest community. */
-  minorityShare:100,
+FBDATA.communalRevisions = FBDATA.communalRevisions || {};
+FBDATA.communalRevisions['476'] = {
+  source:'wider_v2', revision:'jewish_samaritan_v3', layoutId:'476_jewish_samaritan_v3',
   minorities:[
     {county:'baghdad',religion:'jewish',culture:'syriac'},
     {county:'sardis',religion:'jewish',culture:'greek'},
     {county:'jerusalem',religion:'samaritan',culture:'syriac'}
   ],
   sites:[
-    {id:'samaria_neapolis_w15',county:'jerusalem',name:'Neapolis',kind:'town',
-      position:{x:35.26,y:32.22,names:[{from:400,to:649,name:'Neapolis'},{from:650,name:'Nablus'}]}}
+    {id:'samaria_neapolis_w15',county:'jerusalem',name:'Neapolis',kind:'town'}
   ],
-  /* A null site uses the county's first settlement. */
   institutions:[
     {id:'jewish_meso_study_circle_476',county:'baghdad',site:null,city:'Ctesiphon',kind:'school',
       religion:'jewish',culture:'syriac',profileId:'jewish_study_circle_early'},
@@ -520,46 +518,3 @@ FBDATA.bookmarkCommunal476 = {
       religion:'samaritan',culture:'syriac',profileId:'samaritan_lay_congregation'}
   ]
 };
-
-(function () {
-  'use strict';
-  var d = FBDATA.bookmarkCommunal476;
-  var b = FBDATA.bookmarks[d.bookmarkId], source = b.revisions[d.source];
-  var world = Object.assign({},b,b.revisions.baseline,source);
-  function copy(value) { return JSON.parse(JSON.stringify(value)); }
-  var provinces = copy(world.provinces), institutions = copy(world.localInstitutions || {});
-  var layout = world.settlementLayout ? copy(FBDATA.settlementLayouts[world.settlementLayout]) : null;
-  function county(pid) { return provinces.filter(function (p) { return p.id === pid; })[0]; }
-  d.minorities.forEach(function (m) {
-    var p = county(m.county);
-    if (!p || p.wasteland) throw new Error('Missing communal county: ' + m.county);
-    var rows = p.communities || [{culture:p.culture,religion:p.religion,populationShare0:10000}];
-    if (rows.some(function (row) { return row.religion === m.religion; })) return;
-    var largest = rows.reduce(function (a,row) { return row.populationShare0 > a.populationShare0 ? row : a; },rows[0]);
-    if (!(largest.populationShare0 >= d.minorityShare)) throw new Error('Missing communal population weight: ' + m.county);
-    largest.populationShare0 -= d.minorityShare;
-    rows.push({culture:m.culture,religion:m.religion,populationShare0:d.minorityShare,paired:true});
-    p.communities = rows;
-  });
-  d.sites.forEach(function (s) {
-    var p = county(s.county), rows = layout ? layout[s.county] : p.settlements;
-    FBDATA.settlementSites[s.id] = copy(s.position);
-    rows.push({site:s.id,name:s.name,kind:s.kind});
-    if (p.settlements) p.settlements = copy(rows);
-  });
-  d.institutions.forEach(function (i) {
-    var p = county(i.county), rows = layout ? layout[i.county] : p.settlements;
-    if (!rows || !rows.length || i.site && !rows.some(function (row) { return row.site === i.site; }))
-      throw new Error('Missing communal settlement: ' + i.id);
-    institutions[i.id] = {city:i.city,kind:i.kind,provinceId:i.county,site:i.site || rows[0].site,
-      religion:i.religion,culture:i.culture,profileId:i.profileId,jurisdictionIds:[i.county],
-      vacant:true,freshOnly:true};
-    if (i.abbeyId) institutions[i.id].abbeyId = i.abbeyId;
-  });
-  var changes = {provinces:provinces,localInstitutions:institutions};
-  if (layout) {
-    FBDATA.settlementLayouts[d.layoutId] = layout;
-    changes.settlementLayout = d.layoutId;
-  }
-  b.revisions[d.revision] = Object.assign({},source,changes);
-})();

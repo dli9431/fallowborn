@@ -189,42 +189,18 @@
    testimony; 1066 continuity is reconstruction, without staffing, courts or journey access.
    New minority weights are simulation quantities, never historical percentages.
    Retained revisions and the fresh default remain unchanged. */
-(function () {
-  'use strict';
-  var b = FBDATA.bookmarks['1066'], source = b.revisions.inhabited_v2;
-  var world = Object.assign({},b,b.revisions.baseline,source);
-  function copy(value) { return JSON.parse(JSON.stringify(value)); }
-  var provinces = copy(world.provinces), institutions = copy(world.localInstitutions || {});
-  var layout = world.settlementLayout ? copy(FBDATA.settlementLayouts[world.settlementLayout]) : null;
-  function county(pid) { return provinces.filter(function (p) { return p.id === pid; })[0]; }
-  function minority(pid,faith,culture) {
-    var p = county(pid);
-    if (!p || p.wasteland) throw new Error('Missing communal county: ' + pid);
-    var rows = p.communities || [{culture:p.culture,religion:p.religion,populationShare0:10000}];
-    if (rows.some(function (row) { return row.religion === faith; })) return;
-    var largest = rows.reduce(function (a,row) { return row.populationShare0 > a.populationShare0 ? row : a; },rows[0]);
-    if (!(largest.populationShare0 >= 100)) throw new Error('Missing communal population weight: ' + pid);
-    largest.populationShare0 -= 100;
-    rows.push({culture:culture,religion:faith,populationShare0:100,paired:true});
-    p.communities = rows;
-  }
-  function place(iid,pid,site,city,kind,faith,culture,profile,property) {
-    var p = county(pid), rows = layout ? layout[pid] : p.settlements;
-    if (!rows || !rows.length || site && !rows.some(function (row) { return row.site === site; }))
-      throw new Error('Missing communal settlement: ' + iid);
-    institutions[iid] = {city:city,kind:kind,provinceId:pid,site:site || rows[0].site,
-      religion:faith,culture:culture,profileId:profile,jurisdictionIds:[pid],
-      vacant:true,freshOnly:true};
-    if (property) institutions[iid].abbeyId = property;
-  }
-  minority('fustat','karaite','arabic');
-  minority('jerusalem','karaite','syriac');
-  place('fustat_karaite_congregation_1066','fustat','fustat','Fustat','congregation','karaite','arabic','karaite_lay_congregation');
-  place('jerusalem_karaite_congregation_1066','jerusalem','jerusalem','Jerusalem','congregation','karaite','syriac','karaite_lay_congregation');
-  var changes = {provinces:provinces,localInstitutions:institutions};
-  if (layout) {
-    FBDATA.settlementLayouts['1066_jewish_samaritan_v3'] = layout;
-    changes.settlementLayout = '1066_jewish_samaritan_v3';
-  }
-  b.revisions.jewish_samaritan_v3 = Object.assign({},source,changes);
-})();
+FBDATA.communalRevisions = FBDATA.communalRevisions || {};
+FBDATA.communalRevisions['1066'] = {
+  source:'inhabited_v2', revision:'jewish_samaritan_v3', layoutId:'1066_jewish_samaritan_v3',
+  minorities:[
+    {county:'fustat',religion:'karaite',culture:'arabic'},
+    {county:'jerusalem',religion:'karaite',culture:'syriac'}
+  ],
+  sites:[],
+  institutions:[
+    {id:'fustat_karaite_congregation_1066',county:'fustat',site:'fustat',city:'Fustat',kind:'congregation',
+      religion:'karaite',culture:'arabic',profileId:'karaite_lay_congregation'},
+    {id:'jerusalem_karaite_congregation_1066',county:'jerusalem',site:'jerusalem',city:'Jerusalem',kind:'congregation',
+      religion:'karaite',culture:'syriac',profileId:'karaite_lay_congregation'}
+  ]
+};

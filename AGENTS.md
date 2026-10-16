@@ -502,7 +502,7 @@ index.html loads data/story_instances.js after bookmark instance sources, includ
 
 Expanded 476 load order
 
-data/geography_expansion.js follows data/geographies.js. data/bookmark_476_wider_identities.js and data/bookmark_476_wider.js follow data/mobile_confederations.js, after all merged opening and government consumers are declared. These scripts author the wider_v2 world revision while retaining the merged baseline. Saved-campaign readers use FB.campaignBookmark(state); FB.bookmark(id) selects the current fresh revision. Public authoring contracts are in docs/MODDING.md.
+data/geography_expansion.js follows data/geographies.js. data/bookmark_476_wider_identities.js and data/bookmark_476_wider.js follow data/mobile_confederations.js, after all merged opening and government consumers are declared. These scripts author the wider_v2 world revision while retaining the merged baseline. Saved-campaign readers use FB.campaignBookmark(state); FB.bookmark(id) selects the current fresh revision. Public authoring contracts are in docs/MODDING.md. Each dated expansion script declares its communal-minority table in FBDATA.communalRevisions; data/communal_revisions.js follows data/bookmark_1204_terrain.js and builds those jewish_samaritan_v3 revisions before data/government_rollout.js and the other rollouts derive from them.
 
 
 Data authoring contract
