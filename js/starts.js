@@ -16,12 +16,44 @@
   };
   /* Birthplace eligibility is pure and declaration-scoped, before a world or
      household exists. All new-campaign entry points share this gate. */
+  /* A start's birthplaces rule names where it may begin as a union of typed
+     selectors, resolved against the world revision being played:
+       institutions   local institution kinds; their declared counties
+       capitalsOf     government form ids; capitals of realms with that form
+       realms         realm ids; counties those realms hold at the opening
+       counties       county ids
+       storyCounties  true: the start's own trackLocations counties
+     The same rule therefore follows each revision's own declarations. */
+  FB.startBirthplaces = function (scenario, bookmark) {
+    var rule = scenario && scenario.birthplaces;
+    if (!rule || !bookmark) return null;
+    var places = Object.create(null);
+    var kinds = rule.institutions || [], forms = rule.capitalsOf || [], realms = rule.realms || [];
+    var institutions = bookmark.localInstitutions || {};
+    Object.keys(institutions).forEach(function (id) {
+      var d = institutions[id];
+      if (d && d.provinceId && kinds.indexOf(d.kind) >= 0) places[d.provinceId] = true;
+    });
+    (bookmark.realms || []).forEach(function (r) {
+      if (r && r.capital && forms.indexOf(r.government) >= 0) places[r.capital] = true;
+    });
+    if (realms.length) (bookmark.provinces || []).forEach(function (p) {
+      if (realms.indexOf(p.realm) >= 0) places[p.id] = true;
+    });
+    (rule.counties || []).forEach(function (id) { places[id] = true; });
+    if (rule.storyCounties === true) Object.keys(scenario.trackLocations || {}).forEach(function (track) {
+      (scenario.trackLocations[track] || []).forEach(function (id) { places[id] = true; });
+    });
+    return places;
+  };
   FB.startProvinceAllowed = function (scenario, bookmark, provinceId) {
     if (!scenario || !bookmark || scenario.fixedProvinceId && scenario.fixedProvinceId !== provinceId) return false;
     var province = (bookmark.provinces || []).find(function (p) { return p.id === provinceId; });
     if (!province || province.wasteland) return false;
     var locations = bookmark.startLocations && bookmark.startLocations[scenario.id];
     if (locations !== undefined && (!Array.isArray(locations) || locations.indexOf(provinceId) < 0)) return false;
+    var birthplaces = FB.startBirthplaces(scenario, bookmark);
+    if (birthplaces && !birthplaces[provinceId]) return false;
     var realm = (bookmark.realms || []).find(function (r) { return r.id === province.realm; });
     var required = (scenario.systems || []).concat(scenario.system ? [scenario.system] : []);
     return required.every(function (id) {

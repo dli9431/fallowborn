@@ -15,6 +15,9 @@
      trackLocations: optional { trackId:[countyIds] }; a listed track attaches
        only to a beginning in one of its counties, elsewhere the start is an
        ordinary household
+     birthplaces: optional typed rule for where the start may begin
+       (institutions, capitalsOf, realms, counties, storyCounties); see
+       FB.startBirthplaces in js/starts.js
      intro, intro_f, intro_muslim, intro_other: the opening text */
 window.FBDATA = window.FBDATA || {};
 
@@ -70,8 +73,15 @@ window.FBDATA = window.FBDATA || {};
         standard:{ name:'Free household', diff:'age 24 · federate service' }
       },
       tracks:['federate_track_476'], trackLocations:{ federate_track_476:['ravenna'] },
+      /* a federate host's camp, or where the role's own story places its host */
+      birthplaces:{ capitalsOf:['federate_polity'], storyCounties:true },
       intro:'You are {name}, a free federate soldier of {province}. The host lives on promised pay, and the courts it serves each want a different settlement. Your household can work and trade while you decide whom to serve. At Ravenna, the western court story in Deeds follows the host’s pay dispute; personal standing and a command are separate rewards.' },
     { id:'colonus_476', bookmarkIds:['476'], systems:['colonate'], alwaysUnlocked:true,
+      /* Estate tenure is positively scoped: regional imperial estates and the
+         authored Gallic and African estate archetypes. */
+      birthplaces:{ realms:['italy','croatia','byzantium'],
+        counties:['laon','paris','reims','orleans','lyon','arles','toulouse','bordeaux',
+          'tunis','kairouan','tripoli','sirte'] },
       name:'Colonus', desc:'A Roman tenant household bound to an estate. Meet crop and account dues, earn the possessor’s consent, buy release or risk flight.',
       tier:0, profession:'colonus', gold:5, prestige:0, piety:0,
       startAge:24, startCulture:'roman', startReligion:'nicene',
@@ -90,6 +100,7 @@ window.FBDATA = window.FBDATA || {};
         standard:{ name:'Unmarried curialis', diff:'age 30 · parents and siblings' }
       },
       tracks:['curialis_track_476'], trackLocations:{ curialis_track_476:['ravenna'] },
+      birthplaces:{ institutions:['council'] },
       intro:'You are {name}, a curialis of {province}. Civic accounts and family obligations fill your days while distant courts and hosts negotiate. A council mandate can bring standing, but it does not give you the city’s land or treasury. At Ravenna, your civic story in Deeds follows the western court’s mandate; elsewhere, keep working for your household. Rank & Realm distinguishes your standing from the powers of an appointment.' },
     { id:'farmer_476', bookmarkIds:['476'], alwaysUnlocked:true,
       name:'Free Farming Household',
@@ -119,12 +130,14 @@ window.FBDATA = window.FBDATA || {};
       tier:1, profession:'craftsman', gold:15, prestige:5, piety:0,
       intro:'You are {name}, learning a craft in {province}. Workshop orders and household obligations fill your days; a new ruler has not changed the work already on your bench.' },
     { id:'cleric_493', bookmarkIds:['493'], alwaysUnlocked:true,
+      birthplaces:{ institutions:['see','patriarchate'] },
       name:'Church Household',
       desc:'Begin in local religious service with letters and piety.',
       tier:1, profession:'monk', gold:2, prestige:0, piety:25,
       startCulture:'roman', startReligion:'nicene',
       intro:'You are {name}, serving the church in {province}. Letters, prayer and neighbors’ needs give your household a place in the city. Local religious authority remains separate from the ruling court.' },
     { id:'curialis_493', bookmarkIds:['493'], alwaysUnlocked:true,
+      birthplaces:{ institutions:['council'] },
       startCulture:'roman', startReligion:'nicene',
       name:'Curialis',
       desc:'Keep civic accounts for a council city in the new kingdoms.',

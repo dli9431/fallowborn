@@ -725,6 +725,27 @@ window.FBMODS = window.FBMODS || [];
       fail(path + '.alwaysUnlocked', 'must be true or false.');
     }
     if (own(scenario, 'hidden') && typeof scenario.hidden !== 'boolean') fail(path + '.hidden', 'must be true or false.');
+    if (own(scenario, 'birthplaces')) {
+      const rule = scenario.birthplaces, rulePath = path + '.birthplaces';
+      if (!rule || typeof rule !== 'object' || Array.isArray(rule) || !Object.keys(rule).length) {
+        fail(rulePath, 'must name at least one birthplace selector.');
+      } else {
+        onlyFields(rule, { institutions:true, capitalsOf:true, realms:true, counties:true, storyCounties:true }, rulePath);
+        ['institutions', 'capitalsOf', 'realms', 'counties'].forEach(function (key) {
+          if (own(rule, key) && (!Array.isArray(rule[key]) || !rule[key].length || rule[key].some(function (id, index) {
+            return typeof id !== 'string' || !id || rule[key].indexOf(id) !== index;
+          }))) fail(rulePath + '.' + key, 'must be a non-empty list of unique ids.');
+        });
+        if (Array.isArray(rule.capitalsOf)) rule.capitalsOf.forEach(function (id) {
+          if (typeof id === 'string' && !own(FBDATA.governmentForms || {}, id)) {
+            fail(rulePath + '.capitalsOf', 'unknown government form ' + id + '.');
+          }
+        });
+        if (own(rule, 'storyCounties') && (rule.storyCounties !== true || !scenario.trackLocations)) {
+          fail(rulePath + '.storyCounties', 'must be true and needs trackLocations.');
+        }
+      }
+    }
     if (own(scenario, 'onboarding') && scenario.onboarding !== 'ruler') fail(path + '.onboarding', 'must be ruler.');
     if (own(scenario, 'rulerRealmId')) {
       // Delegated leadership seats a representative, who may be unnamed.
@@ -908,7 +929,7 @@ window.FBMODS = window.FBMODS || [];
         fixedProvinceId:true, startAge:true, startCulture:true,
         startReligion:true, familyPresets:true, tracks:true, trackLocations:true, hidden:true,
         rulerRealmId:true, governmentForm:true, characterName:true, onboarding:true, requirements:true,
-        system:true, systems:true
+        system:true, systems:true, birthplaces:true
       }, path);
       if (!/^[a-z][a-z0-9_]*$/.test(scenario.id || '')) {
         fail(path + '.id', 'must be a lowercase start-code id.');

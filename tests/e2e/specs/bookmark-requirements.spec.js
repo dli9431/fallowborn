@@ -449,3 +449,41 @@ test('an applicability hook failure returns a named diagnostic', async function 
   });
   expect(errors.join('\n')).toContain('applicability failed: proof hook failed');
 });
+
+test('a typed birthplaces rule follows each revision and runtime JSON mods validate it', async function ({ page }, testInfo) {
+  await openGame(page, testInfo);
+  const result = await page.evaluate(function () {
+    const start = function (id) { return FBDATA.startScenarios.find(function (s) { return s.id === id; }); };
+    const fresh = FB.bookmark('476'), before = JSON.stringify([FBDATA.startScenarios, FBDATA.bookmarks['476']]);
+    const allowed = function (id, bm) {
+      return bm.provinces.filter(function (p) { return FB.startProvinceAllowed(start(id), bm, p.id); }).map(function (p) { return p.id; });
+    };
+    // Councils, federate camps and the story county come from the world, not a computed list.
+    const councils = Object.keys(fresh.localInstitutions).map(function (id) { return fresh.localInstitutions[id]; })
+      .filter(function (d) { return d.kind === 'council'; }).map(function (d) { return d.provinceId; });
+    const curialis = allowed('curialis_476', fresh), federate = allowed('federate_476', fresh);
+    const camps = fresh.realms.filter(function (r) { return r.government === 'federate_polity'; }).map(function (r) { return r.capital; });
+    // A mod realm with a federate government becomes a camp with no code change.
+    const added = JSON.parse(JSON.stringify(fresh));
+    const host = added.realms.find(function (r) { return r.government === 'regnum' && added.provinces.some(function (p) { return p.id === r.capital && !p.wasteland; }); });
+    host.government = 'federate_polity';
+    const faults = function (rule) {
+      const scenario = Object.assign(JSON.parse(JSON.stringify(start('farmer_476'))), { id:'e2e_birthplace_rule', birthplaces:rule });
+      return FB.mods.validate({ startScenarios:[scenario] }).join('\n');
+    };
+    return {
+      noLists:fresh.startLocations === undefined,
+      curialis:curialis.length > 0 && curialis.every(function (id) { return councils.indexOf(id) >= 0; }),
+      federate:federate.indexOf('ravenna') >= 0 && federate.every(function (id) { return id === 'ravenna' || camps.indexOf(id) >= 0; }),
+      newCamp:FB.startProvinceAllowed(start('federate_476'), added, host.capital) && !FB.startProvinceAllowed(start('federate_476'), fresh, host.capital),
+      valid:faults({ institutions:['council'] }),
+      empty:/birthplace selector/.test(faults({})),
+      unknownField:/birthplaces/.test(faults({ institution:['council'] })),
+      unknownForm:/unknown government form e2e_missing/.test(faults({ capitalsOf:['e2e_missing'] })),
+      orphanStory:/needs trackLocations/.test(faults({ storyCounties:true })),
+      pure:before === JSON.stringify([FBDATA.startScenarios, FBDATA.bookmarks['476']])
+    };
+  });
+  expect(result).toEqual({ noLists:true, curialis:true, federate:true, newCamp:true, valid:'',
+    empty:true, unknownField:true, unknownForm:true, orphanStory:true, pure:true });
+});

@@ -351,43 +351,12 @@
   }
   var retainedStarts = startsFor(b,'peroz_sasanian_476');
   expanded.starts = startsFor(expanded,'peroz_476');
-  /* Estate tenure is positively scoped, not inferred from a bookmark-wide
-     colonate switch. Regional imperial estates and the authored Gallic and
-     African estate archetypes supply these opening locations. */
-  /* Open roles begin where their institutions live: a curialis in a county
-     with a declared city council, a federate soldier at a federate host's
-     camp or where the role's own story places its host. */
-  function roleLocations(world) {
-    var councils = {}, camps = {};
-    var institutions = world.localInstitutions || {};
-    Object.keys(institutions).forEach(function (id) {
-      var d = institutions[id];
-      if (d && d.kind === 'council' && d.provinceId) councils[d.provinceId] = true;
-    });
-    (world.realms || []).forEach(function (r) {
-      if (r.government === 'federate_polity' && r.capital) camps[r.capital] = true;
-    });
-    FBDATA.startScenarios.forEach(function (s) {
-      if (s.id !== 'federate_476') return;
-      Object.keys(s.trackLocations || {}).forEach(function (track) {
-        s.trackLocations[track].forEach(function (id) { camps[id] = true; });
-      });
-    });
-    function settled(table) {
-      return world.provinces.filter(function (p) { return !p.wasteland && table[p.id]; })
-        .map(function (p) { return p.id; });
-    }
-    return {federate_476:settled(camps),curialis_476:settled(councils)};
-  }
-  expanded.startLocations = Object.assign({colonus_476:expanded.provinces.filter(function (p) {
-    return !p.wasteland && (['italy','croatia','byzantium'].indexOf(p.realm) >= 0 ||
-      ['laon','paris','reims','orleans','lyon','arles','toulouse','bordeaux',
-        'tunis','kairouan','tripoli','sirte'].indexOf(p.id) >= 0);
-  }).map(function (p) { return p.id; })},roleLocations(expanded));
+  /* Open roles declare where they begin with a typed birthplaces rule in
+     data/starts.js, resolved against each revision's own declarations. */
   /* Root fields are the retained merged opening. Revisions replace whole
      fields; an unstamped supported save selects this baseline. */
   b.revision = 'wider_v2';
-  b.revisions = {baseline:{starts:retainedStarts,startLocations:roleLocations(b)},wider_v2:expanded};
+  b.revisions = {baseline:{starts:retainedStarts},wider_v2:expanded};
   FBDATA.techImpactReviews.features.period_476_wider_habitation = {mode:'none',
     rationale:'Established regional households, existing civil offices and local political relationships require no technological discovery. Existing travel, equipment and production requirements remain in force.'};
   FBDATA.techImpactReviews.features.bounded_overland_corridors = {mode:'none',
