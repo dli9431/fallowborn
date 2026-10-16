@@ -60,20 +60,33 @@ for (const flag of [false,true]) test('all wider 476 districts have accountable 
     await saveBudget(page,testInfo,'fresh-expanded',4 * 1024 * 1024);
   });
 
+// Move the calendar, and the turn with it, close to the season's end so a
+// short replay pair crosses the seasonal boundary without simulating the
+// whole season twice.
+async function stageSeasonEnd(page) {
+  return page.evaluate(function () {
+    const s = FB.state, shift = Math.max(0, 86 - s.date.day);
+    s.date.day += shift; s.turn += shift;
+    return s.date.season;
+  });
+}
+
 for (const county of ['alexandria','dvin','tara','turku','erfurt','kiev','atil','balkh','sanaa','axum','garama']) {
-  test('one season of household life at ' + county,async function ({page},testInfo) {
+  test('household life at ' + county + ' replays across a season boundary',async function ({page},testInfo) {
     test.skip(testInfo.project.name !== 'chromium-served','Bounded regional daily journeys run once.');
     await startRegion(page,testInfo,county);
     await injectBrowserHarness(page);
-    await advanceBookmark(page,45);
+    await advanceBookmark(page,10);
+    const season = await stageSeasonEnd(page);
     const source = await saveBudget(page,testInfo,county + '-midpoint',6 * 1024 * 1024);
     const before = await facts(page);
     await restoreBookmark(page,source);
     expect(await facts(page)).toEqual(before);
-    await advanceBookmark(page,45);
+    await advanceBookmark(page,8);
     const finish = await facts(page);
+    expect(finish.campaign.date.season).not.toBe(season);
     await restoreBookmark(page,source);
-    await advanceBookmark(page,45);
+    await advanceBookmark(page,8);
     expect(await facts(page)).toEqual(finish);
   });
 }

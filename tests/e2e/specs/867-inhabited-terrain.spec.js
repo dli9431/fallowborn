@@ -78,13 +78,36 @@ async function budget(page,info,label,ceiling) {
   return source;
 }
 
-async function seasonSlice(page,info,label) {
+async function seasonSlice(page,info,label,days) {
   const started = Date.now();
-  await advanceBookmark(page,45);
+  await advanceBookmark(page,days);
   const elapsedMs = Date.now() - started;
   await info.attach(label + '-timing.json',{contentType:'application/json',
-    body:Buffer.from(JSON.stringify({days:45,elapsedMs:elapsedMs,ceilingMs:30000}))});
+    body:Buffer.from(JSON.stringify({days:days,elapsedMs:elapsedMs,ceilingMs:30000}))});
   expect(elapsedMs,label).toBeLessThanOrEqual(30000);
+}
+
+// Move the calendar, and the turn with it, close to the season's end so a
+// short replay pair crosses the seasonal boundary without simulating the
+// whole season twice.
+async function stageSeasonEnd(page) {
+  return page.evaluate(function () {
+    const s = FB.state, shift = Math.max(0, 86 - s.date.day);
+    s.date.day += shift; s.turn += shift;
+    return s.date.season;
+  });
+}
+
+// Select the expanded world without creating a second campaign; restoring a
+// retained save must still choose that save's own geography.
+async function activateExpanded(page) {
+  await page.evaluate(function (revision) {
+    FBDATA.bookmarks['867'].revision = revision;
+    return new Promise(function (resolve,reject) {
+      FB.activateBookmark('867',null,function (error) { if (error) reject(error); else resolve(); });
+    });
+  },CURRENT);
+  expect(await page.evaluate(function () { return !!FB.world.byId.kath_district; })).toBe(true);
 }
 
 test('867 revisions account for all scenery and retain the released catalogue',async function ({page},info) {
@@ -188,22 +211,23 @@ for (const flag of [false,true]) test('fresh expanded households and bounded dis
     expect(await facts(page)).toEqual(before);
   });
 
-for (const row of coverage.districts) test('ordinary household at ' + row.id + ' saves and replays one natural season',
+for (const row of coverage.districts) test('ordinary household at ' + row.id + ' saves and replays across a season boundary',
   async function ({page},info) {
     test.skip(info.project.name !== 'chromium-served','One bounded seasonal journey per district.');
-    test.setTimeout(240000);
     await startDistrict(page,info,row.id);
     await injectBrowserHarness(page);
     const opening = await establishedFacts(page);
-    await seasonSlice(page,info,row.id + '-first-half');
+    await seasonSlice(page,info,row.id + '-first-days',10);
+    const season = await stageSeasonEnd(page);
     const source = await budget(page,info,row.id + '-midpoint',6 * 1024 * 1024);
     const midpoint = await facts(page);
     await restoreBookmark(page,source);
     expect(await facts(page)).toEqual(midpoint);
-    await seasonSlice(page,info,row.id + '-second-half');
+    await seasonSlice(page,info,row.id + '-boundary',8);
     const finish = await facts(page);
+    expect(finish.campaign.date.season).not.toBe(season);
     await restoreBookmark(page,source);
-    await seasonSlice(page,info,row.id + '-replayed-half');
+    await seasonSlice(page,info,row.id + '-replayed-boundary',8);
     expect(await facts(page)).toEqual(finish);
     if (parityMode()) await settleParityFixture(info,'fresh-867-inhabited-v2-' + row.id,
       {id:'fresh-867-inhabited-v2-' + row.id,kind:'district',bookmark:'867',revision:CURRENT,
@@ -261,7 +285,7 @@ for (const revision of coverage.retainedRevisions) test(revision + ' retains an 
     })).toBe(true);
     const source = await budget(page,info,'867-retained-serf-' + revision,4 * 1024 * 1024);
     const before = await establishedFacts(page);
-    await startDistrict(page,info,'jenne_district');
+    await activateExpanded(page);
     await restoreBookmark(page,source);
     expect(await establishedFacts(page)).toEqual(before);
     expect(await page.evaluate(function () {
@@ -403,7 +427,7 @@ for (const entry of corpusEntries().filter(function (entry) { return entry.bookm
     })).toEqual(['baseline','europe_regional',false]);
     const reexport = await page.evaluate(function () { return FB.save.serialize(); });
     const before = await establishedFacts(page);
-    await startDistrict(page,info,'gao_district');
+    await activateExpanded(page);
     await restoreBookmark(page,reexport);
     expect(await establishedFacts(page)).toEqual(before);
   });

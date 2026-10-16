@@ -619,8 +619,10 @@ test('seven African review openings preserve complete earlier worlds and validat
     },AFRICAN_DATED)).toEqual({results:[true,true,true,true,true,true,true],institutions:[],activities:[],pure:true});
   });
 
+// The distribution flag changes storage and presentation, not the placed
+// activity rules, so one dated world reviews the CrazyGames path.
 for (const row of AFRICAN_DATED) {
-  for (const crazygames of [false,true]) {
+  for (const crazygames of row.id === '1204' ? [false,true] : [false]) {
     test(row.id + ' placed lay activity and membership retain minorities and restore, CrazyGames ' + crazygames,
       async function ({page},info) {
         await startAfricanDated(page,info,row,crazygames,false);

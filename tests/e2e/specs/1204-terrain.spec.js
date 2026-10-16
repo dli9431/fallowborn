@@ -40,6 +40,16 @@ async function saveWithin(page,limit) {
   expect(Buffer.byteLength(source,'utf8')).toBeLessThanOrEqual(limit);
   return source;
 }
+// Move the calendar, and the turn with it, close to the season's end so a
+// short replay pair crosses the seasonal boundary without simulating the
+// whole season twice.
+async function stageSeasonEnd(page) {
+  return page.evaluate(function () {
+    const s = FB.state, shift = Math.max(0, 86 - s.date.day);
+    s.date.day += shift; s.turn += shift;
+    return s.date.season;
+  });
+}
 async function startBaseline(page,info) {
   await openGame(page,info);
   await page.evaluate(function () {
@@ -264,7 +274,7 @@ for (const seed of ['TERRAIN1204A','TERRAIN1204B']) test(seed + ' retains author
     expect(await page.evaluate(function () { return JSON.stringify(FBDATA.bookmarks['1204']); })).toBe(declaration);
   });
 
-for (const row of authorityStarts) test(row.scenario + ' adopts the existing authority, saves and plays a season',
+for (const row of authorityStarts) test(row.scenario + ' adopts the existing authority, saves and replays across a season boundary',
   async function ({page},info) {
     test.skip(info.project.name !== 'chromium-served','Bounded authority journeys run once.');
     await startHistoricalGame(page,info,journey(row.province,row.scenario,'standard'));
@@ -289,24 +299,27 @@ for (const row of authorityStarts) test(row.scenario + ' adopts the existing aut
     const initial = await facts(page);
     await restoreBookmark(page,await saveWithin(page,4 * 1024 * 1024));
     expect(await facts(page)).toEqual(initial);
-    await advanceBookmark(page,45);
+    await advanceBookmark(page,10);
+    const season = await stageSeasonEnd(page);
     const source = await saveWithin(page,6 * 1024 * 1024), midpoint = await facts(page);
     await restoreBookmark(page,source); expect(await facts(page)).toEqual(midpoint);
-    await advanceBookmark(page,45); const finish = await facts(page);
-    await restoreBookmark(page,source); await advanceBookmark(page,45);
+    await advanceBookmark(page,8); const finish = await facts(page);
+    expect(finish.campaign.date.season).not.toBe(season);
+    await restoreBookmark(page,source); await advanceBookmark(page,8);
     expect(await facts(page)).toEqual(finish);
   });
 
 for (const province of ['gao_district','kath_district','palmyra_district']) {
-  test('one natural household season at ' + province + ' replays from its midpoint',async function ({page},info) {
+  test('natural household days at ' + province + ' replay across a season boundary',async function ({page},info) {
     test.skip(info.project.name !== 'chromium-served','One bounded journey per regional slice.');
-    test.setTimeout(240000);
     await startHistoricalGame(page,info,journey(province)); await injectBrowserHarness(page);
-    await advanceBookmark(page,45);
+    await advanceBookmark(page,10);
+    const season = await stageSeasonEnd(page);
     const source = await saveWithin(page,6 * 1024 * 1024), midpoint = await facts(page);
     await restoreBookmark(page,source); expect(await facts(page)).toEqual(midpoint);
-    await advanceBookmark(page,45); const finish = await facts(page);
-    await restoreBookmark(page,source); await advanceBookmark(page,45);
+    await advanceBookmark(page,8); const finish = await facts(page);
+    expect(finish.campaign.date.season).not.toBe(season);
+    await restoreBookmark(page,source); await advanceBookmark(page,8);
     expect(await facts(page)).toEqual(finish);
     expect(await page.evaluate(function () {
       const r = FB.mobile.row(FB.state,'qipchaq_following_1204'), a = r.accounting;

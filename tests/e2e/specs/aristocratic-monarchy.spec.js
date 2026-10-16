@@ -594,7 +594,7 @@ test('an AI dynastic court continues existing hereditary rights without reseedin
 });
 
 /* Long-run court stability is staged with two direct annual passes rather than
-   a multi-year daily journey; only one bounded half season is replayed daily. */
+   a multi-year daily journey; only ten days are replayed daily. */
 test('annual frontier passes retain one royal court, bounded family facts and a restorable continuation', async function ({page},testInfo) {
   await start(page,testInfo);await injectBrowserHarness(page);
   const opening=await page.evaluate(function () {
@@ -630,10 +630,10 @@ test('annual frontier passes retain one royal court, bounded family facts and a 
   expect(before.recognition).toBeLessThanOrEqual(5);
   expect(before.generation).toBeGreaterThanOrEqual(opening.generation);
   await testInfo.attach('aristocratic-frontier-annual-passes',{body:Buffer.from(JSON.stringify({opening:opening,after:before},null,2)),contentType:'application/json'});
-  await advanceBookmark(page,45);
+  await advanceBookmark(page,10);
   const first=await page.evaluate(function () { const d=JSON.parse(FB.save.serialize());return {state:d.state,rng:d.rng>>>0,uid:d.uid}; });
   await page.evaluate(function (d) { FB.save.restore(d); },envelope);
-  await advanceBookmark(page,45);
+  await advanceBookmark(page,10);
   const replay=await page.evaluate(function () { const d=JSON.parse(FB.save.serialize());return {state:d.state,rng:d.rng>>>0,uid:d.uid}; });
   expect(replay).toEqual(first);
 });

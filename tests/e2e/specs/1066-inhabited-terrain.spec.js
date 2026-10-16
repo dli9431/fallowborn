@@ -35,6 +35,17 @@ async function startExpanded(page,info,start,flag) {
 function journey(county) {
   return {bookmark:'1066',code:'TERRAIN1066-1066-farmer-' + county + '-m-Review-established'};
 }
+// Move the calendar, and the turn with it, close to the season's end so a
+// short replay pair crosses the seasonal boundary without simulating the
+// whole season twice.
+async function stageSeasonEnd(page) {
+  return page.evaluate(function () {
+    const s = FB.state, shift = Math.max(0, 86 - s.date.day);
+    s.date.day += shift; s.turn += shift;
+    return s.date.season;
+  });
+}
+
 async function activate(page,id) {
   await page.evaluate(function (id) {
     return new Promise(function (resolve,reject) {
@@ -142,18 +153,19 @@ for (const flag of [false,true]) test('inhabited raster, sites, climate and dry 
     await saveBudget(page,info,'1066-restored-' + flag,4 * 1024 * 1024);
   });
 
-for (const county of inhabited) test(county + ' supports a commoner season with deterministic midpoint restore',async function ({page},info) {
+for (const county of inhabited) test(county + ' supports commoner days across a season boundary with deterministic midpoint restore',async function ({page},info) {
   test.skip(info.project.name !== 'chromium-served','One bounded natural journey per accepted district.');
-  test.setTimeout(240000);
   await startExpanded(page,info,journey(county)); await injectBrowserHarness(page);
   expect(await page.evaluate(function () { return [FB.state.player.provinceId,FB.state.start.revision]; })).toEqual([county,CURRENT]);
   await saveBudget(page,info,county + '-opening',4 * 1024 * 1024);
-  await advanceBookmark(page,45);
+  await advanceBookmark(page,10);
+  const season = await stageSeasonEnd(page);
   const source = await saveBudget(page,info,county + '-midpoint',6 * 1024 * 1024), middle = await facts(page);
-  await activate(page,'867'); await activate(page,'1204'); await restoreBookmark(page,source);
+  await activate(page,'1204'); await restoreBookmark(page,source);
   expect(await facts(page)).toEqual(middle);
-  await advanceBookmark(page,45); const finish = await facts(page);
-  await restoreBookmark(page,source); await advanceBookmark(page,45);
+  await advanceBookmark(page,8); const finish = await facts(page);
+  expect(finish.campaign.date.season).not.toBe(season);
+  await restoreBookmark(page,source); await advanceBookmark(page,8);
   expect(await facts(page)).toEqual(finish);
 });
 

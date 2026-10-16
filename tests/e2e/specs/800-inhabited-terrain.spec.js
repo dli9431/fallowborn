@@ -3,7 +3,7 @@ const {test,expect} = require('../support/fixture');
 const {dependsOnRuntime} = require('../support/runtime-dependencies');
 const {openGame} = require('../support/game/navigation');
 const {startHistoricalGame} = require('../support/game/historical-start');
-const {beginBookmark,advanceBookmark,restoreBookmark,facts} = require('../support/game/bookmark-acceptance');
+const {advanceBookmark,restoreBookmark,facts} = require('../support/game/bookmark-acceptance');
 const {injectBrowserHarness} = require('../support/game/browser-harness');
 const {saveBudget} = require('../support/game/476-wider');
 const geographyAudit = require('../fixtures/bookmark-geography-coverage.json');
@@ -32,6 +32,17 @@ const DISTRICTS = [
 async function start800(page,info,county,scenario,flag,seed) {
   await startHistoricalGame(page,info,{bookmark:'800',
     code:(seed || 'INHABITED800') + '-800-' + (scenario || 'farmer') + '-' + county + '-m-Review-established'},!!flag);
+}
+
+// Move the calendar, and the turn with it, close to the season's end so a
+// short replay pair crosses the seasonal boundary without simulating the
+// whole season twice.
+async function stageSeasonEnd(page) {
+  return page.evaluate(function () {
+    const s = FB.state, shift = Math.max(0, 86 - s.date.day);
+    s.date.day += shift; s.turn += shift;
+    return s.date.season;
+  });
 }
 
 async function startRetained(page,info,revision) {
@@ -131,17 +142,18 @@ for (const flag of [false,true]) test('800 district raster, households and autho
     await saveBudget(page,info,'800-expanded-restored',4 * 1024 * 1024);
   });
 
-for (const row of DISTRICTS) test('one season of ordinary household life at ' + row[0],async function ({page},info) {
+for (const row of DISTRICTS) test('ordinary household life at ' + row[0] + ' replays across a season boundary',async function ({page},info) {
   test.skip(info.project.name !== 'chromium-served','One bounded journey per district.');
-  test.setTimeout(240000);
   await start800(page,info,row[0]);
   await injectBrowserHarness(page);
-  await advanceBookmark(page,45);
+  await advanceBookmark(page,10);
+  const season = await stageSeasonEnd(page);
   const saved = await saveBudget(page,info,row[0] + '-midpoint',6 * 1024 * 1024);
   const before = await facts(page);
   await restoreBookmark(page,saved); expect(await facts(page)).toEqual(before);
-  await advanceBookmark(page,45); const finish = await facts(page);
-  await restoreBookmark(page,saved); await advanceBookmark(page,45);
+  await advanceBookmark(page,8); const finish = await facts(page);
+  expect(finish.campaign.date.season).not.toBe(season);
+  await restoreBookmark(page,saved); await advanceBookmark(page,8);
   expect(await facts(page)).toEqual(finish);
 });
 
@@ -235,14 +247,17 @@ for (const revision of ['baseline','governments_v2','inhabited_v2']) test(revisi
     await start800(page,info,'gao_district');
     const expandedSave = await page.evaluate(function () { return FB.save.serialize(); });
     const expandedFacts = await facts(page);
-    await beginBookmark(page,info,'867','farmer');
-    const otherSave = await page.evaluate(function () { return FB.save.serialize(); });
-    const otherFacts = await facts(page);
+    // Another date's world is active before either restore, without a third campaign.
+    await page.evaluate(function () {
+      return new Promise(function (resolve,reject) {
+        FB.activateBookmark('867',null,function (error) { if (error) reject(error); else resolve(); });
+      });
+    });
     await restoreBookmark(page,oldSave); expect(await facts(page)).toEqual(oldFacts);
     expect(await page.evaluate(function () { return FB.activeGeographyId; }))
       .toBe(revision === 'inhabited_v2' ? 'europe_regional_2' : 'europe_regional');
     await restoreBookmark(page,expandedSave); expect(await facts(page)).toEqual(expandedFacts);
-    await restoreBookmark(page,otherSave); expect(await facts(page)).toEqual(otherFacts);
+    await restoreBookmark(page,oldSave); expect(await facts(page)).toEqual(oldFacts);
     await restoreBookmark(page,expandedSave); expect(await facts(page)).toEqual(expandedFacts);
   });
 

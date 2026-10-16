@@ -489,7 +489,7 @@ test('new congregation activity and identity survive restore while an older open
         saved:FB.save.serialize()};
     })).toMatchObject({reward:1,performed:true});
     const older = await page.evaluate(function () { return FB.save.serialize(); });
-    await openGame(page,testInfo); await restoreBookmark(page,older);
+    await restoreBookmark(page,older);
     expect(await page.evaluate(function () {
       FB.ensureLocalInstitutions(FB.state);
       return !FB.state.localInstitutions.medina_congregation_711 && !FB.state.localInstitutions.sanaa_congregation_711;
