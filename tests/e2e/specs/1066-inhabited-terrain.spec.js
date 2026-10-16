@@ -94,7 +94,7 @@ test('expanded 1066 accounts for every district while retaining both released wo
     governments:true,future:true,review:'none',mods:[]});
 });
 
-for (const flag of [false,true]) test('inhabited raster, sites, climate and dry routes, CrazyGames ' + flag,
+for (const flag of [false,true]) test('inhabited raster, sites, climate, dry routes and compact character health, CrazyGames ' + flag,
   async function ({page},info) {
     await startExpanded(page,info,journey('kumbi_district'),flag);
     const result = await page.evaluate(function (ids) {
@@ -147,9 +147,31 @@ for (const flag of [false,true]) test('inhabited raster, sites, climate and dry 
       expect(route).toMatchObject({units:route.expected,adjacent:true,dry:true,household:3 * route.expected,cost:true});
       expect(route.host).toBeGreaterThan(0);
     }
+    const health = await page.evaluate(function () {
+      const s = FB.state, me = s.chars[s.player.charId], actors = [];
+      for (let i = 0; i < 2; i++) actors.push(FB.makeCharacter(s, {
+        name:'Health review ' + i,sex:'m',born:s.date.year - 30,
+        culture:me.culture,religion:me.religion,traits:[]
+      }));
+      const initial = actors.map(function (c) { return c.health; });
+      actors[1].health = 3;
+      const packed = JSON.parse(FB.save.serialize()).state.chars;
+      return {initial:initial,
+        missing:Object.keys(s.chars).filter(function (id) { return s.chars[id].health === undefined; }),
+        compact:!Object.prototype.hasOwnProperty.call(packed[actors[0].id],'health'),
+        wounded:packed[actors[1].id].health,
+        expected:actors.map(function (c) { return [c.id,c.health]; })};
+    });
+    expect(health).toMatchObject({initial:[8,8],missing:[],compact:true,wounded:3});
     const source = await saveBudget(page,info,'1066-fresh-' + flag,4 * 1024 * 1024), before = await facts(page);
     await activate(page,'1204'); await restoreBookmark(page,source);
     expect(await facts(page)).toEqual(before);
+    expect(await page.evaluate(function (rows) {
+      return rows.map(function (row) {
+        const c = FB.state.chars[row[0]];
+        return [row[0],c && c.health];
+      });
+    },health.expected)).toEqual(health.expected);
     await saveBudget(page,info,'1066-restored-' + flag,4 * 1024 * 1024);
   });
 

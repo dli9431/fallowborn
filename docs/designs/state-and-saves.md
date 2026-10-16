@@ -771,6 +771,8 @@ holder resembles a character, realm, court member, building, and technology reco
 This keeps the wire form identical while bounding the per-property work of routine
 seasonal snapshots.
 
+New characters carry health 8 from FB.makeCharacter before serialization, including religious officeholders. Compaction can omit that default and restore it without changing the live character's health facts. Explicit nondefault health remains on the wire and survives restore. The 1066 inhabited-terrain specification covers fresh defaults, injured characters and compact health restoration in both ordinary and CrazyGames distributions, alongside the retained baseline and governments_v2 whole-character preservation checks. The save format and legacy inflation default are unchanged.
+
 **The ensure chain on load is not RNG-protected, and court materialization consumes
 randomness.** `S.restore` sets the saved RNG state and then runs the whole chain; only
 `FB.ensureStepRelations` saves and restores the stream around itself. Court generation
