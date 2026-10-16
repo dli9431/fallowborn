@@ -92,7 +92,8 @@ test('availability scopes abbey residents without querying abbey eligibility or 
         realm:s.holder[county] || s.owner[county], faith:holder.religion, bookmark:{}
       });
       const pure = before === JSON.stringify(s) && rng === FB.getRngState() && uid === FB.getUidCounter();
-      FB.bookmark(s.start.id).systems = { disable:['abbeys'] };
+      // FB.bookmark resolves a copy; availability overrides live on the base declaration.
+      FBDATA.bookmarks[s.start.id].systems = { disable:['abbeys'] };
       return { queries:queries, expected:expected, pure:pure,
         residence:[FB.characterResidence(s, holder), FB.characterResidence(s, resident)],
         county:county, disabledOffice:FB.abbeyOf(s, holder) };
@@ -186,7 +187,7 @@ test('mods can tag actions and choices, and disabled focus ticks stay idle',
       });
       const focus = FB.focusStatus(s, 'e2e_optional_focus').action;
       const enabled = FB.declarativeChoiceStatuses(s, 'e2e_optional_choice').length;
-      FB.bookmark(s.start.id).systems = { disable:['abbeys'] };
+      FBDATA.bookmarks[s.start.id].systems = { disable:['abbeys'] };
       const before = JSON.stringify(s), rng = FB.getRngState(), uid = FB.getUidCounter();
       focus.tick(s);
       const choice = FB.declarativeChoiceStatus(s, 'e2e_optional_choice', 'accept');
@@ -243,7 +244,7 @@ test('disabled lifecycle hooks stay idle across season and year boundaries and o
     await startDeterministicGame(page);
     const result = await page.evaluate(function () {
       const s = FB.state, calls = {};
-      FB.bookmark(s.start.id).systems = { disable:FB.systems.ids() };
+      FBDATA.bookmarks[s.start.id].systems = { disable:FB.systems.ids() };
       function spy(object, key) {
         calls[key] = 0;
         object[key] = function () { calls[key]++; };
@@ -279,7 +280,7 @@ test('disabled saved institutions stay dormant and their traits contribute no ef
     await startDeterministicGame(page);
     const result = await page.evaluate(function () {
       const s = FB.state, c = s.chars[s.player.charId];
-      FB.bookmark(s.start.id).systems = { disable:FB.systems.ids() };
+      FBDATA.bookmarks[s.start.id].systems = { disable:FB.systems.ids() };
       const rid = Object.keys(s.realms).find(function (id) {
         return id !== 'player' && s.realms[id].alive;
       });
@@ -324,7 +325,7 @@ test('disabled queued events are discarded before context repair or participant 
     await startDeterministicGame(page);
     const result = await page.evaluate(function () {
       const s = FB.state, ctx = {};
-      FB.bookmark(s.start.id).systems = { disable:['manorial_tenure'] };
+      FBDATA.bookmarks[s.start.id].systems = { disable:['manorial_tenure'] };
       s.slotDays = [];
       s.eventQueue = [{ id:'serf_tenure_review', ctx:ctx }];
       const rng = FB.getRngState(), uid = FB.getUidCounter();
@@ -345,7 +346,7 @@ test('disabled saved holy wars cannot block play, settle, repair or earn service
     await startDeterministicGame(page);
     const result = await page.evaluate(function () {
       const s = FB.state;
-      FB.bookmark(s.start.id).systems = { disable:['great_holy_wars'] };
+      FBDATA.bookmarks[s.start.id].systems = { disable:['great_holy_wars'] };
       s.greatHolyWar = { id:'e2e_dormant_call', callingReligion:'catholic',
         callerRealm:'papacy', phase:'settlement', contribution:{ player:1 },
         settlement:{ pendingPlayer:{ sovereign:true }, case:{ status:'open' } } };
