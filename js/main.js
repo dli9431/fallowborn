@@ -2543,8 +2543,10 @@ FB.CHANGELOG = [
     $('btn-ng-back').addEventListener('click', function () { showBookmarks(true); });
     $('btn-pick-back').addEventListener('click', function () {
       /* with a county chosen, Back steps from the settlement stage to the
-         province stage instead of leaving the picker */
-      if (G.pickStage === 'settlement' && G.pending && G.pending.provinceId) {
+         province stage instead of leaving the picker. A story start opened
+         on its county already, so Back returns to the beginnings. */
+      if (G.pickStage === 'settlement' && G.pending && G.pending.provinceId &&
+          !storyPlaceIds(G.pending.scenario).length) {
         G.pending.provinceId = null;
         G.pending.settlementIdx = 0;
         G.pickStage = 'province';
@@ -2554,6 +2556,7 @@ FB.CHANGELOG = [
         return;
       }
       G.pickMode = false;
+      G.pickStage = 'province';
       document.body.classList.remove('picking');
       FB.ui.showScreen('newgame', setupRestore('newgame'));
     });
@@ -2582,7 +2585,7 @@ FB.CHANGELOG = [
       });
     });
     $('btn-cg-back').addEventListener('click', function () {
-      if (G.pending && G.pending.scenario && G.pending.scenario.fixedProvinceId)
+      if (existingRulerStart(G.pending && G.pending.scenario))
         showScenarios(true);
       else showPickProv();
     });
@@ -2897,7 +2900,16 @@ FB.CHANGELOG = [
 
   /* An open role whose story is bound to named counties is a story start:
      the story attaches only to a birthplace in one of those counties. */
+  /* An existing court or office goes straight to character creation. A
+     fixed-place household is a story start shown on its own county. */
+  function existingRulerStart(sc) {
+    return !!(sc && sc.fixedProvinceId && sc.rulerRealmId);
+  }
+  function fixedPlaceStart(sc) {
+    return !!(sc && sc.fixedProvinceId && !sc.rulerRealmId);
+  }
   function storyPlaceIds(sc) {
+    if (fixedPlaceStart(sc)) return [sc.fixedProvinceId];
     const ids = [];
     Object.keys(sc && sc.trackLocations || {}).forEach(function (track) {
       (sc.trackLocations[track] || []).forEach(function (id) {
@@ -2924,14 +2936,14 @@ FB.CHANGELOG = [
     });
     const box = $('scenariolist');
     box.innerHTML = '';
-    /* A fixed place or an existing court makes a historical start; an open
-       role bound to a story's counties is a story start; every other role is
-       an open start chosen on the map. Headings appear only when a date
-       offers more than one kind. */
+    /* An existing court or office makes a historical start; a fixed-place
+       household or a role bound to a story's counties is a story start;
+       every other role is an open start chosen on the map. Headings appear
+       only when a date offers more than one kind. */
     const offered = FBDATA.startScenarios.filter(function (sc) {
       return scenarioOffered(sc, bookmark.id);
     });
-    const historical = offered.filter(function (sc) { return !!(sc.fixedProvinceId || sc.rulerRealmId); });
+    const historical = offered.filter(function (sc) { return !!sc.rulerRealmId; });
     const story = offered.filter(function (sc) {
       return historical.indexOf(sc) < 0 && storyPlaceIds(sc).length > 0;
     });
@@ -2972,7 +2984,9 @@ FB.CHANGELOG = [
         '</h3><p>' +
         FB.esc(FB.dataText(null, null, 'scenario', sc.id, sc, 'desc', {})) +
         '</p>' + (places
-          ? '<p class="scenario-story">' + FB.esc(FB.T('Story start: choose {places} as your birthplace.', { places:places })) + '</p>'
+          ? '<p class="scenario-story">' + FB.esc(fixedPlaceStart(sc)
+            ? FB.T('Story start: begins in {places}.', { places:places })
+            : FB.T('Story start: begins in {places}. Another birthplace gives an ordinary household.', { places:places })) + '</p>'
           : '') + (locked
           ? '<p class="scenario-lock">' + FB.esc(scenarioUnlockText(sc, false)) + '</p>'
           : '');
@@ -2986,7 +3000,7 @@ FB.CHANGELOG = [
               scenario:scenario,
               provinceId:null
             };
-            if (scenario.fixedProvinceId) {
+            if (existingRulerStart(scenario)) {
               G.pending.provinceId = scenario.fixedProvinceId;
               G.pending.culture = scenario.startCulture;
               G.pending.religion = scenario.startReligion;
@@ -3037,10 +3051,23 @@ FB.CHANGELOG = [
       while (cur && realmById[cur] && realmById[cur].liege && g++ < 10) cur = realmById[cur].liege;
       return cur || rid;
     }
+    /* A beginning limited to certain counties (an estate role, council
+       cities, federate camps, a fixed household) keeps only those in color. */
+    const pickScenario = G.pending && G.pending.scenario;
+    const offeredCounties = {};
+    let limited = false;
+    for (const pr of FB.world.provs) {
+      if (pr.wasteland) continue;
+      if (FB.startProvinceAllowed(pickScenario, FB.activeBookmark, pr.id)) offeredCounties[pr.id] = true;
+      else limited = true;
+    }
+    G.pickLimited = limited;
     FB.map.setOwnerFns(
       function (pid) { const pr = FB.world.byId[pid]; return pr ? topOf(pr.realm0) : null; },
       function (rid) { return realmById[rid] ? realmById[rid].color : '#777777'; },
-      FBDATA.realms.filter(function (r) { return !r.liege; }).map(function (r) { return r.capital; })
+      FBDATA.realms.filter(function (r) { return !r.liege; }).map(function (r) { return r.capital; }),
+      null, null,
+      limited ? function (pid) { return !offeredCounties[pid]; } : null
     );
     FB.map.resize();
     FB.map.buildBase();
@@ -3058,6 +3085,18 @@ FB.CHANGELOG = [
       FB.map.select(null);
     }
     updatePickInfo();
+    /* A story start opens on its county, already chosen. A role bound to
+       story counties may still tap any other allowed county; a fixed-place
+       household chooses only a settlement there. */
+    if (!chosen) {
+      const scenario = G.pending && G.pending.scenario;
+      const storyCounty = storyPlaceIds(scenario).map(function (id) {
+        return FB.world.byId[id];
+      }).filter(function (pr) {
+        return pr && !pr.wasteland && FB.startProvinceAllowed(scenario, FB.activeBookmark, pr.id);
+      })[0];
+      if (storyCounty) G.pickProvince(storyCounty);
+    }
   }
 
   G.pickProvince = function (pr) {
@@ -3146,9 +3185,15 @@ FB.CHANGELOG = [
     const storyPlaces = storyPlaceNames(scenario);
     if (!G.pending || !G.pending.provinceId) {
       el.textContent = FB.T('No province chosen yet. Tap the map or use Random Province.');
-      if (storyPlaces) el.appendChild(pickStoryLine(FB.T(
-        'Story start: choose {places}. Elsewhere this role begins as an ordinary household.',
-        { places:storyPlaces })));
+      if (G.pickLimited && !fixedPlaceStart(scenario)) {
+        const limit = pickStoryLine(FB.T('Only the counties in color offer this beginning.'));
+        limit.className = 'pick-limit';
+        el.appendChild(limit);
+      }
+      if (storyPlaces) el.appendChild(pickStoryLine(fixedPlaceStart(scenario)
+        ? FB.T('Story start: choose {places}.', { places:storyPlaces })
+        : FB.T('Story start: choose {places}. Elsewhere this role begins as an ordinary household.',
+          { places:storyPlaces })));
       $('btn-pick-random').textContent = FB.T('Random Province');
       return;
     }

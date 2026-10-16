@@ -353,6 +353,7 @@ html.music-choice-resolved #music-choice { display: none !important; }
 .pick-location-meta { color: var(--helper-text-color); margin-top: 2px; }
 .pick-community { margin-top: 7px; }
 .pick-story { margin-top: 7px; color: var(--ui-accent-color); }
+.pick-limit { margin-top: 7px; color: var(--helper-text-color); }
 .cg-fixed { margin: 0; text-align: center; }
 .cg-place { color: var(--helper-text-color); font-size: 14px; }
 .picksett-field {

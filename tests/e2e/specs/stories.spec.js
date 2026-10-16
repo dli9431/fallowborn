@@ -216,7 +216,7 @@ test('the start picker and family presets follow scenario data',
     if (await page.locator('#pickprov:not(.hidden)').count()) await page.locator('#btn-pick-back').click();
     await page.locator('#btn-ng-back').click();
     await page.locator('#bookmarklist .scencard', { hasText:/\b476:/ }).click();
-    await expect(page.locator('#scenariolist .scen-group')).toHaveText(['Historical starts', 'Story starts', 'Open starts']);
+    await expect(page.locator('#scenariolist .scen-group')).toHaveText(['Story starts', 'Open starts']);
     const cards = page.locator('#scenariolist .scencard');
     // Seven 476 starts (federate, colonus, curialis, three free households and
     // the Pontic household) plus the Observe card; hidden ruler starts stay out.

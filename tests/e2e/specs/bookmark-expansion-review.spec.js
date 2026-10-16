@@ -117,6 +117,9 @@ for (const revision of ['baseline','inhabited_v2']) {
     await expect(card).toBeEnabled();
     if (revision === 'baseline') await expect(page.getByRole('heading',{name:'Siwa Delegate',exact:true})).toHaveCount(0);
     await card.click();
+    // A fixed-place household opens its own county on the birthplace map.
+    await expect(page.locator('#pickprov:not(.hidden)')).toBeVisible();
+    await page.locator('#btn-pick-random').click();
     await expect(page.locator('#chargen:not(.hidden)')).toBeVisible();
     await page.getByRole('button',{name:'Begin Your Story',exact:true}).click();
     await page.getByRole('button',{name:'Begin',exact:true}).click();

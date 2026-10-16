@@ -622,7 +622,7 @@ test('open federate and curialis roles begin where their institutions live and a
     await page.evaluate(function () { FB.game.uiPrefs.hideTips = true; FB.game.uiPrefs.hideBeginnerHints = true; });
     await page.getByRole('button',{name:'New Game',exact:true}).click();
     await page.locator('#bookmarklist .scencard',{hasText:/\b476:/}).click();
-    await expect(page.locator('#scenariolist .scen-group')).toHaveText(['Historical starts','Story starts','Open starts']);
+    await expect(page.locator('#scenariolist .scen-group')).toHaveText(['Story starts','Open starts']);
     await page.locator('#scenariolist .scencard',{hasText:'Federate Soldier'}).click();
     await expect(page.locator('#pickprov:not(.hidden)')).toBeVisible();
     expect(await page.evaluate(function (id) {

@@ -12,6 +12,9 @@ window.FB = window.FB || {};
   const SEA_TOP = [58, 108, 158], SEA_BOT = [36, 76, 122];
   const DEFAULT_FOCUS_COLOR = '#e8dec4';
   const POLITICAL_COLOR_STRENGTH = 0.58;
+  /* A muted county recedes toward a dark neutral, distinct from the pale
+     wasteland wash, so the counties that remain in color read as the choice. */
+  const MUTED_COUNTY = [56, 50, 44], MUTED_STRENGTH = 0.68;
   const FOCUS_SHADE = [18, 28, 38];
 
   const M = {
@@ -197,9 +200,13 @@ window.FB = window.FB || {};
   };
 
   /* ---------- base image ---------- */
-  M.setOwnerFns = function (ownerOf, colorOf, capitals, holderOf, colorOpacityOf) {
+  /* mutedOf(pid), optional: true dims that county in the baked base. The
+     birthplace picker uses it for counties a beginning does not offer; any
+     other caller omits it, which clears the muting. */
+  M.setOwnerFns = function (ownerOf, colorOf, capitals, holderOf, colorOpacityOf, mutedOf) {
     M.countyBorderCache = null;
     M.ownerOf = ownerOf; M.colorOf = colorOf; M.capitals = capitals || [];
+    M.mutedOf = typeof mutedOf === 'function' ? mutedOf : null;
     /* lookup for the per-label capital star; rebuilt with the capitals list */
     M.capitalSet = {};
     for (const cap of M.capitals) M.capitalSet[cap] = 1;
@@ -245,6 +252,7 @@ window.FB = window.FB || {};
       let col;
       if (pr.wasteland) {
         col = FB.mix(tint, [150, 142, 128], 0.35);
+        if (M.mutedOf && M.mutedOf(pr.id)) col = FB.mix(col, MUTED_COUNTY, MUTED_STRENGTH);
       } else {
         const own = owners[i] !== '~none' ? owners[i] : null;
         const rc = M.colorOf && own ? M.colorOf(own) : '#888888';
@@ -252,6 +260,7 @@ window.FB = window.FB || {};
           ? FB.clamp(M.colorOpacityOf(own), 0, 1) : 1;
         col = FB.mix(FB.hexToRgb(rc), tint,
           1 - POLITICAL_COLOR_STRENGTH * opacity);
+        if (M.mutedOf && M.mutedOf(pr.id)) col = FB.mix(col, MUTED_COUNTY, MUTED_STRENGTH);
       }
       colors.push(col);
     }
