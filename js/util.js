@@ -192,6 +192,24 @@ window.FB = window.FB || {};
       isLocal: isLocal, isFile: isFile, isCrazyGames: isCrazyGames };
   })();
 
+  /* Storage scope. A test build served under a branch path on a shared
+     origin sets window.FB_STORAGE_SCOPE (lowercase letters, digits and dashes)
+     so its saves, settings, language, automation and mods never mix with
+     another build there. Every other distribution leaves it unset, which keeps
+     each existing key and database name exactly as before. An optional
+     window.FB_BUILD_LABEL names the test build on the title screen. */
+  FB.storageScope = (function () {
+    const scope = window.FB_STORAGE_SCOPE;
+    return typeof scope === 'string' && /^[a-z0-9][a-z0-9-]{0,39}$/.test(scope) ? scope : '';
+  })();
+  FB.storageKey = function (name) {
+    return FB.storageScope ? name + '@' + FB.storageScope : name;
+  };
+  FB.buildLabel = (function () {
+    const label = window.FB_BUILD_LABEL;
+    return typeof label === 'string' ? label.slice(0, 80) : '';
+  })();
+
   /* Install metadata belongs only to the first-party hosted origin. Keeping it
      out of static index markup avoids file:// and itch manifest fetches. */
   if (FB.platform.isPlay) {

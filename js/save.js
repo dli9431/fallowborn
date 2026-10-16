@@ -31,7 +31,7 @@ window.FB = window.FB || {};
   };
   const PREFIX = 'fb_';
   const crazy = FB.crazySave || null;
-  const START_PROGRESSION_KEY = PREFIX + 'progression';
+  const START_PROGRESSION_KEY = FB.storageKey(PREFIX + 'progression');
   const HIGHEST_START_TIER = 3;
   let serializingBuildingRecords = null;
   const ROYAL_COMPACT_KEYS = {
@@ -634,7 +634,7 @@ window.FB = window.FB || {};
     return raw;
   }
 
-  function key(slot) { return PREFIX + (slot === 'auto' ? 'auto' : 'slot' + slot); }
+  function key(slot) { return FB.storageKey(PREFIX + (slot === 'auto' ? 'auto' : 'slot' + slot)); }
 
   /* storage probe — some browsers refuse localStorage outright (iOS in-app
      webviews, "block all cookies", old private modes); better to know at boot
@@ -758,7 +758,11 @@ window.FB = window.FB || {};
   const databaseSlots = Object.create(null), databaseWrites = Object.create(null);
   let storageInitialized = false, deletionBusy = false;
   const slotEpochs = Object.create(null);
-  function savedSlotKey(name) { return name === key('auto') || /^fb_slot[0-9]+$/.test(name); }
+  /* A scoped build's slots carry its scope suffix; an unscoped build matches
+     only unsuffixed slots, so neither sees the other's saves. */
+  const SLOT_PATTERN = new RegExp('^fb_slot[0-9]+' +
+    (FB.storageScope ? '@' + FB.storageScope : '') + '$');
+  function savedSlotKey(name) { return name === key('auto') || SLOT_PATTERN.test(name); }
   function localSlot(name) {
     try { return localStorage.getItem(name); } catch (error) { return null; }
   }
@@ -815,7 +819,7 @@ window.FB = window.FB || {};
     const timeout = setTimeout(function () { finish(null); }, 5000);
     try {
       if (!window.indexedDB) { finish(null); return; }
-      request = indexedDB.open('fallowborn-saves', 1);
+      request = indexedDB.open(FB.storageKey('fallowborn-saves'), 1);
       request.onupgradeneeded = function () {
         if (!request.result.objectStoreNames.contains('slots')) request.result.createObjectStore('slots');
       };
@@ -1408,7 +1412,7 @@ window.FB = window.FB || {};
     try {
       for (let i = 0; i < localStorage.length; i++) {
         const k = localStorage.key(i);
-        if (k === PREFIX + 'auto' || (k && k.indexOf(PREFIX + 'slot') === 0)) {
+        if (k && savedSlotKey(k)) {
           if (localStorage.getItem(k)) return true;
         }
       }

@@ -11,8 +11,8 @@ window.FBMODS = window.FBMODS || [];
 
   const M = {};
   FB.mods = M;
-  const KEY = 'fb_mods';
-  const BKEY = 'fb_mods_bundled';
+  const KEY = FB.storageKey('fb_mods');
+  const BKEY = FB.storageKey('fb_mods_bundled');
   const legacyWorldBookmarkId = FBDATA.defaultBookmark;
   let currencySupplied = false;
   let currencyInvalid = false;

@@ -154,6 +154,37 @@ the worker fingerprint and generated asset list plus the manifest and icon dimen
 older local workflows. CI applies the play check to the built nginx image. The private itch
 staging check remains part of the separate release workflow.
 
+## test.fallowborn.com (branch test builds)
+
+The test app builds `deploy/test-builds/Dockerfile`, never the repository-root `Dockerfile`.
+At build time `deploy/test-builds/build.sh` clones every pushed branch from the public
+repository except `main`: `dev` is served at `/` and every other branch under `/<name>/`,
+where `<name>` is the branch name lowercased with any other character turned into a dash
+(`v2/foo` becomes `/v2-foo/`). `/branches/` lists every build with its commit and date.
+Each build stamps its own `?v=` cache key exactly as the play build does. A branch whose
+`music/` matches `dev` ships no audio of its own; nginx serves the root copy for the same
+path, so the image holds one copy of unchanged audio.
+
+Builds share one origin, so the test build injects `window.FB_STORAGE_SCOPE` (the branch
+path name) into each branch's `index.html`. `js/util.js` turns it into `FB.storageKey(name)`,
+which suffixes every browser storage key and the save database name (`fb_slot1@476`,
+`fallowborn-saves@476`). Saves, start progression, settings, language, automation and mods
+therefore never cross between builds. The root `dev` build sets no scope, so its existing
+saves stay where they were. Every other distribution leaves the flag unset and keeps the
+released keys exactly. `window.FB_BUILD_LABEL` (branch and short commit) is appended to the
+title-screen version. To move a life between builds, download its save file and load it in
+the other build. No test build registers the service worker or install manifest, sends
+telemetry, or is indexed by search engines (`X-Robots-Tag: noindex`).
+
+`.github/workflows/test-builds.yml` redeploys the test app through its Coolify deploy webhook
+whenever a branch other than `main` is pushed or deleted. It needs the repository secrets
+`COOLIFY_TEST_BUILDS_WEBHOOK` and `COOLIFY_API_TOKEN` and skips without them. A push runs
+the workflow file in the pushed commit, so a branch triggers rebuilds once it contains the
+file; branch deletion runs the default branch's copy. The workflow, the test build files and
+`.github/` are outside every shipped allowlist: the play `Dockerfile` copies an explicit
+folder list, `.dockerignore` excludes `.github`, and the itch and CrazyGames packagers stage
+only their game folders.
+
 ## The `file://` rule
 
 Never add `?v=` to the **committed** `index.html`: query strings break `file://` loads, and the

@@ -8,7 +8,7 @@ window.FBDATA = window.FBDATA || {};
 
   const CATALOG_SCHEMA = 1;
   const HASH_SCHEMA = 1;
-  const LANG_KEY = 'fb_lang';
+  const LANG_KEY = FB.storageKey('fb_lang');
   /* {name}, {money:name} or {money:12}, and {term:id}, {term:id.other},
      {term:id.title} or {Term:...} (a lexicon term, js/lexicon.js). */
   const TOKEN_RX = /\{((?:money:(?:[A-Za-z_][A-Za-z0-9_]*|[-+]?(?:\d+(?:\.\d+)?|\.\d+)))|(?:[Tt]erm:[a-z][a-z0-9_]*(?:\.(?:one|other|title))?)|(?:[A-Za-z_][A-Za-z0-9_]*))\}/g;
