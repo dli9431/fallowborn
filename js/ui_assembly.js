@@ -126,8 +126,10 @@
       add(FB.T('Review local autonomy under tribute'), C.agreementQuote(s, rid,
         { kind:'tribute', externalRealmId:occupier, amount:5, duration:360, occupationSettlement:true }), C.agree,
         FB.T('A one-time public payment restores local military control under a tribute agreement. The assembly mandate, community jurisdiction and household property remain in force.'));
-      add(FB.T('Review government settlement'), C.conversionQuote(s, rid, { formId:'regnum', externalRealmId:occupier }), C.acceptConversion,
-        FB.T('Collective assent accepts a different government and ends the delegate mandate. Local military occupation ends; the polity, households and existing obligations remain. This is a separate political settlement.'));
+      FB.governments.transformationTargets(FB.governments.forRealm(s, rid).id).forEach(function (option) {
+        add(FB.T(option.name), C.conversionQuote(s, rid, { formId:option.formId, externalRealmId:occupier }), C.acceptConversion,
+          FB.T('Collective assent accepts a different government and ends the delegate mandate. Local military occupation ends; the polity, households and existing obligations remain. This is a separate political settlement.'));
+      });
     }
     var history = r.decisions.map(function (d) { return kv(operation(d.operation), d.status === 'approved'
       ? FB.T('Approved for these exact terms') : d.status === 'refused' ? FB.T('Consent withheld') : FB.T('Executed')); }).join('');

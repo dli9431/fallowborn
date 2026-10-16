@@ -227,6 +227,9 @@ FBDATA.governmentForms = {
   regnum:{ legalTradition:{ default:'faith', cultures:{ greek:'byzantine' },
     realms:{ byzantium:'byzantine', byzantium_1066:'byzantine' } }, levy:'feudal_levy', revenue:'demesne_revenue', council:'royal_council', diplomacy:'territorial_diplomacy', holders:'direct', succession:'dynastic',
     territory:'fixed', consent:'territorial', ladder:'inherited_ladder', ai:'roman_offices',
+    /* A former magnate court that adopted this form may return to royal
+       recognition; the aristocratic quote still requires its surviving facts. */
+    transformationOptions:[{ formId:'aristocratic_monarchy', name:'Review return to royal recognition' }],
     officeCatalogue:['defensor_civitatis','praeses','tribunus','consularis','corrector','comes_rei_privatae','dux','patricius','consul'], systems:{ disable:['feudal_service'] } },
   roman_civic:{ legalTradition:{ default:'faith', cultures:{ greek:'byzantine' },
     realms:{ byzantium:'byzantine', byzantium_1066:'byzantine' } }, levy:'feudal_levy', revenue:'demesne_revenue', council:'royal_council', diplomacy:'territorial_diplomacy', holders:'direct', succession:'office',

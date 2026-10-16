@@ -7,6 +7,8 @@
     consent:'reserved_consent', levy:'community_levy', revenue:'community_dues',
     council:'represented_interests', diplomacy:'community_relations', ai:'community_decisions',
     ladder:'local_service', officeCatalogue:[],
+    /* An occupied assembly may accept this government as a settlement. */
+    transformationOptions:[{ formId:'regnum', name:'Review government settlement' }],
     systems:{ disable:['feudal_service','roman_offices','royal_council','estates'] }
   };
   FBDATA.constituencyProfiles = {

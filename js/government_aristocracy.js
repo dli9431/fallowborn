@@ -276,6 +276,7 @@
     var data = A.state(s,rid), row = government(s,rid), p = data && FBDATA.aristocraticProfiles[data.profileId];
     var target = FBDATA.governmentForms[formId], returning = !!target && !!target.aristocraticProfileId, sitting = current(s,rid);
     var allowed = !!data && !!p && !!target && !!row && row.formId !== formId && court(s,rid,actor) &&
+      G.transformationTargets(row.formId).some(function (o) { return o.formId === formId; }) &&
       !G.problems(formId).length && !row.publicVacancy && !data.regency &&
       live(s,sitting) && s.date.year - sitting.born >= p.minimumAge &&
       // Reuse surviving facts. A conversion cannot conjure an opening household.

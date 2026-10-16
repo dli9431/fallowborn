@@ -323,12 +323,14 @@ test('protection and occupied autonomy preserve the community and conserve suppo
     const war = FB.registerOrdinaryWar(s, enemy, { enemy:rid, target:pid, legacy:false });
     const gain = FB.aiBaseHost(s, rid) - local, loss = outside - FB.aiBaseHost(s, partner);
     const obligations = C.conversionQuote(s, rid, { formId:'regnum', externalRealmId:partner }).reason;
+    // Only a government the assembly form declares may be its settlement.
+    const undeclared = C.conversionQuote(s, rid, { formId:'territorial', externalRealmId:partner }).reason;
     return { autonomy:autonomy, localControl:s.owner[pid] === rid && s.holder[pid] === rid,
       mandate:r.mandate.id === mandate, wallet:s.player.gold === wallet, war:!!war,
-      gain:gain, loss:loss, obligations:obligations, valid:C.validate(s) };
+      gain:gain, loss:loss, obligations:obligations, undeclared:undeclared, valid:C.validate(s) };
   }, { rid:rid, partner:partner });
   expect(result).toMatchObject({ autonomy:true, localControl:true, mandate:true, wallet:true,
-    war:true, obligations:'existing_obligations', valid:true });
+    war:true, obligations:'existing_obligations', undeclared:'outside_scope', valid:true });
   expect(result.gain).toBeGreaterThan(0);
   expect(Math.abs(result.gain - result.loss)).toBeLessThanOrEqual(1);
 });

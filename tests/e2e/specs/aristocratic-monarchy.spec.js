@@ -9,7 +9,7 @@ const {advanceBookmark} = require('../support/game/bookmark-acceptance');
 const {injectBrowserHarness} = require('../support/game/browser-harness');
 const {dependsOnRuntime} = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename,[
-  'index.html','data/aristocratic_courts.js','data/starts.js','data/bookmark_476.js','data/bookmark_476_outer.js',
+  'index.html','data/aristocratic_courts.js','data/assembly_polities.js','data/starts.js','data/bookmark_476.js','data/bookmark_476_outer.js',
   'data/bookmark_476_italy.js','data/bookmark_476_wider.js','data/political_institutions.js','data/eras.js','data/lexicons.js','data/technology.js',
   'data/actions.js','data/systems.js','data/cultures.js','data/story_courts_476.js',
   'js/government_aristocracy.js','js/government_recognition.js','js/government_administration.js','js/government_lineage.js',
@@ -297,6 +297,27 @@ test('conversion and conquest preserve surviving local rights, households and mi
       inactive:!a.voices()[0].active,estate:s.bookmarkSetup.estates.some(function (e) { return e.holderId === m.principal.id; })};
   });
   expect(result).toEqual({stale:true,blocked:true,changed:true,oldForm:'regnum',returning:true,preserved:true,conquest:true,rights:true,inactive:true,estate:true});
+});
+
+test('government changes come only from targets the current form declares', async function ({page},testInfo) {
+  await start(page,testInfo);
+  const result = await page.evaluate(function () {
+    const s=FB.state,a=ARISTO,A=FB.aristocracy,G=FB.governments,forms=FBDATA.governmentForms;
+    const ids=function (formId) { return G.transformationTargets(formId).map(function (o) { return o.formId; }); };
+    const targets={aristocratic:ids('aristocratic_monarchy'),regnum:ids('regnum'),assembly:ids('assembly_polity')};
+    const before=JSON.stringify(s);
+    const undeclared=A.conversionQuote(s,a.actor,a.rid,'territorial').allowed;
+    const saved=forms.aristocratic_monarchy.transformationOptions;
+    forms.aristocratic_monarchy.transformationOptions=[];
+    const withdrawn=A.conversionQuote(s,a.actor,a.rid,'regnum').allowed;
+    forms.aristocratic_monarchy.transformationOptions=[{formId:'e2e_missing_form',name:'Review a missing form'}];
+    const invalid=G.validate().indexOf('Invalid transformation options for government aristocratic_monarchy.') >= 0;
+    forms.aristocratic_monarchy.transformationOptions=saved;
+    return {targets:targets,undeclared:undeclared,withdrawn:withdrawn,invalid:invalid,
+      valid:G.validate().filter(function (e) { return e.indexOf('transformation options') >= 0; }),pure:before === JSON.stringify(s)};
+  });
+  expect(result).toEqual({targets:{aristocratic:['regnum'],regnum:['aristocratic_monarchy'],assembly:['regnum']},
+    undeclared:false,withdrawn:false,invalid:true,valid:[],pure:true});
 });
 
 test('alliances protect distinct courts while a funded tribute transfers cash without appointment or religious conversion', async function ({page},testInfo) {

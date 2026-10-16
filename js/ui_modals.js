@@ -415,7 +415,9 @@ window.FB = window.FB || {};
     view = view || {};
     FB.game.setPaused(true);
     const data = A.state(s,rid), actor = officeActor(s);
-    const target = Object.keys(FBDATA.governmentForms).find(function (id) {
+    const target = FB.governments.transformationTargets(FB.governments.forRealm(s,rid).id).map(function (option) {
+      return option.formId;
+    }).find(function (id) {
       return !!FBDATA.governmentForms[id].aristocraticProfileId && !FB.governments.problems(id).length;
     });
     const q = target && A.conversionQuote(s,actor,rid,target);
@@ -591,8 +593,11 @@ window.FB = window.FB || {};
         });
         h += reviewFactsCard(title,body,' data-hereditary-interest="' + esc(m.id) + '"');
       });
-      h += reviewFactsCard(FB.T('Government continuity'),card('conversion',aristocracy.conversionQuote(s,actor,rid,'regnum'),
-        FB.T('Review dynastic government'),FB.T('Every hereditary interest must assent. Existing families, estates, communities and surviving local rights retain their holders.')));
+      const conversions = FB.governments.transformationTargets(FB.governments.forRealm(s,rid).id).map(function (option,index) {
+        return card(index ? 'conversion-' + option.formId : 'conversion',aristocracy.conversionQuote(s,actor,rid,option.formId),
+          FB.T(option.name),FB.T('Every hereditary interest must assent. Existing families, estates, communities and surviving local rights retain their holders.'));
+      }).join('');
+      if (conversions) h += reviewFactsCard(FB.T('Government continuity'),conversions);
     }
     const candidates = R.candidates(s,rid), members = R.members(s,rid), tree = s.realms[rid].succession;
     const candidate = candidates.find(function (row) { return row.id === view.candidate; }) || candidates[0];

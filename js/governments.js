@@ -218,6 +218,12 @@ window.FB = window.FB || {};
         var office = FBDATA.authorityOffices && FBDATA.authorityOffices[id];
         return !office || !office.appointment || catalogue.indexOf(id) !== index;
       }))) errors.push(FB.T('Invalid office catalogue for government {id}.', { id:formId }));
+      var options = forms[formId].transformationOptions;
+      if (options !== undefined && (!Array.isArray(options) || options.some(function (o, index) {
+        return !o || typeof o !== 'object' || typeof o.formId !== 'string' || !own(forms, o.formId) ||
+          o.formId === formId || typeof o.name !== 'string' || !o.name ||
+          options.findIndex(function (other) { return other && other.formId === o.formId; }) !== index;
+      }))) errors.push(FB.T('Invalid transformation options for government {id}.', { id:formId }));
       var ladder = forms[formId].ladder && G.strategy('ladder', forms[formId].ladder);
       if (forms[formId].selectionProfile !== undefined && FB.governmentSelection)
         errors.push.apply(errors, FB.governmentSelection.profileFaults(forms[formId].selectionProfile).map(function (detail) {
@@ -230,6 +236,18 @@ window.FB = window.FB || {};
         FB.T('Government form {form}', { form:formId })));
     }
     return errors;
+  };
+
+  /* The government changes a form declares as data ({ formId, name }
+     targets). Selection, assembly and aristocratic reviews offer only these
+     targets, and their quotes refuse any other. */
+  G.transformationTargets = function (formId) {
+    var forms = FBDATA.governmentForms || {}, form = own(forms, formId) ? forms[formId] : null;
+    return (form && Array.isArray(form.transformationOptions) ? form.transformationOptions : [])
+      .filter(function (o) {
+        return o && typeof o.formId === 'string' && own(forms, o.formId) && o.formId !== formId &&
+          typeof o.name === 'string' && !!o.name;
+      });
   };
 
   /* Built-in strategies whose consumers still run today's shared code.

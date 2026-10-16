@@ -2167,7 +2167,15 @@ def extract_government_selections(inv: Inventory) -> None:
     source = DATA / "political_institutions.js"
     forms = node_object(find_assignment(source, "FBDATA", "governmentForms")) or {}
     rel = source.relative_to(ROOT).as_posix()
-    for form_id, form_node in forms.items():
+    entries = [(form_id, form_node, rel) for form_id, form_node in forms.items()]
+    # Forms declared in their own data files carry transformation options too.
+    for filename, form_id in (("assembly_polities.js", "assembly_polity"),
+                              ("aristocratic_courts.js", "aristocratic_monarchy")):
+        form_source = DATA / filename
+        form_node = find_assignment(form_source, "governmentForms", form_id)
+        if form_node is not None:
+            entries.append((form_id, form_node, form_source.relative_to(ROOT).as_posix()))
+    for form_id, form_node, rel in entries:
         form = node_object(form_node) or {}
         profile = node_object(form.get("selectionProfile")) or {}
         for group, rows in (("member", node_array(profile.get("members")) or []),

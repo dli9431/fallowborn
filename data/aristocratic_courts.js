@@ -77,6 +77,9 @@ FBDATA.governmentForms.aristocratic_monarchy = {
   consent:'provincial_assent', levy:'provincial_obligations', revenue:'provincial_receipts',
   council:'magnate_council', diplomacy:'territorial_diplomacy', ai:'aristocratic_court', ladder:'aristocratic_careers',
   aristocraticProfileId:'chartered_court', administrationProfileId:'chartered_provinces',
+  /* Government continuity: the dynastic form the court and its hereditary
+     interests may jointly adopt. */
+  transformationOptions:[{ formId:'regnum', name:'Review dynastic government' }],
   officeCatalogue:['provincial_governor','provincial_receiver','provincial_commander',
     'sasanian_shahrab','sasanian_receiver','sasanian_host_commander'],
   systems:{ enable:['public_offices'], disable:['roman_offices','feudal_service','scutage','estates','crown_bloc','royal_council'] }

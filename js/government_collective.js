@@ -48,6 +48,7 @@
       Number.isInteger(t.duration) && t.duration > 0 && t.duration <= 360;
     if (operation === 'grant' || operation === 'pledge') return false;
     if (operation === 'conversion') return FBDATA.governmentForms[t.formId] && t.formId !== FB.governments.forRealm(s, rid).id &&
+      FB.governments.transformationTargets(FB.governments.forRealm(s, rid).id).some(function (o) { return o.formId === t.formId; }) &&
       typeof t.externalRealmId === 'string' && t.externalRealmId !== rid && s.realms[t.externalRealmId] && s.realms[t.externalRealmId].alive &&
       r.scopes.every(function (pid) { return s.owner[pid] === rid || s.owner[pid] === t.externalRealmId; });
     if (operation === 'treaty') return t.warId !== undefined
