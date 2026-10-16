@@ -409,8 +409,11 @@ test('authored and generated settlement data is deterministic and read-only',
         minGap:minGap,
         rngUnchanged:JSON.stringify(FB.getRngState()) === JSON.stringify(before.rng),
         stateUnchanged:JSON.stringify(s) === before.serialized,
-        noSiteFieldsInState:before.serialized.indexOf('generated__') < 0 &&
-          before.serialized.indexOf('"site":') < 0,
+        // Institution seats legitimately persist a site id. Compiled map
+        // presentations belong to FB.world, outside the saved state.
+        noSiteFieldsInState:!Object.prototype.hasOwnProperty.call(s, 'sitesByProv') &&
+          !Object.prototype.hasOwnProperty.call(s, 'sitesRender') &&
+          !Object.prototype.hasOwnProperty.call(s, 'sites'),
         development:FB.settlementDevelopment(s, 'roma')
       };
     });

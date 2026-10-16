@@ -135,11 +135,11 @@ test('frozen fields and bounded contacts survive serialization; old saves initia
   const r=await page.evaluate(function(id){
     var s=FB.state,T=FB.tournaments,e=T.get(s,id);
     T.enter(s,T.entry(s,id,s.player.charId,'archery'));
-    var field=JSON.stringify(e.contests),funding=JSON.stringify(e.funding),rng=FB.getRngState();
+    var field=JSON.stringify(e.contests),funding=JSON.stringify(e.funding),rng=FB.getRngState()>>>0;
     var packed=JSON.parse(FB.save.serialize());FB.save.restore(packed);s=FB.state;e=T.get(s,id);
     var equal=field===JSON.stringify(e.contests)&&funding===JSON.stringify(e.funding),contacts=s.player.circuit.contacts.length;
     delete s.tournaments;delete s.player.circuit;T.ensure(s);
-    return {equal:equal,contacts:contacts,empty:T.active(s).length,samples:s.tournaments.samples,version:s.tournaments.version,rng:FB.getRngState()===rng};
+    return {equal:equal,contacts:contacts,empty:T.active(s).length,samples:s.tournaments.samples,version:s.tournaments.version,rng:(FB.getRngState()>>>0)===rng};
   },id);
   expect(r.equal).toBe(true);expect(r.contacts).toBeLessThanOrEqual(8);expect(r.empty).toBe(0);expect(r.samples).toEqual({});expect(r.version).toBe(1);expect(r.rng).toBe(true);
 });

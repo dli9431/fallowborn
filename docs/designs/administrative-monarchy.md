@@ -56,6 +56,8 @@ Public administration is a scoped Deeds sheet. It shows the court/profile, treas
 
 Save and technology decisions
 
+Public candidate validation accepts only the canonical royal character/member links omitted by save compaction, before inflation or live-state adoption. Explicit wrong links, missing characters and duplicate candidate ids still fail validation. Restoring these links creates no people or ancestry and consumes no RNG or uid.
+
 Optional schema-1 publicTerms, administrationProfileId, recognition, publicVacancy, lastAccession and compact publicCandidateIds are reviewed save-v4 additions inside existing canonical ledgers. Detached validation rejects unknown profiles, malformed amounts/sources, duplicate scope assignments, overlapping shares, invalid support principals/candidates and malformed vacancy/accession records before adoption. Restore never seeds a profile from revised bookmark content, appoints officers, funds pay, resolves a vacancy or reruns an opening reward. Resolution/projection caches and review quotes stay transient. Existing subsystem and envelope versions remain unchanged; schema 1 belongs to the optional assignment record.
 
 Technology impact is none independently for public_service_appointments, public_fiscal_assignments, public_military_obligations and public_sovereign_recognition. Baseline personal service, assessment, source assignment, remittance, audit and recognition have no credible research prerequisite. Participants, jurisdiction, consent and actual resources constrain them. Existing equipment and advanced military technology remain in force; no accounting/logistics hard gate is invented.
