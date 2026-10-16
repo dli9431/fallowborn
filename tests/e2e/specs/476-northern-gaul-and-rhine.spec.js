@@ -271,6 +271,8 @@ test('a campaign created with the pre-expansion 476 declarations restores under 
               !FB.authoredRoyalMemberSnapshot(FB.state, 'franks_476', 'basina');
             const rng = FB.getRngState() >>> 0, uid = FB.getUidCounter();
             const saved = JSON.parse(FB.save.serialize());
+            const clovis = FB.authoredRoyalMemberSnapshot(live, 'franks_476', 'clovis');
+            const savedClovis = saved.state.realms.franks_476.succession.members[clovis.id];
             reinstate();
             FB.save.restore(saved);
             const s = FB.state;
@@ -279,13 +281,14 @@ test('a campaign created with the pre-expansion 476 declarations restores under 
               institutionsBefore:institutions,
               institutionsAfter:existing.map(function (id) { return s.localInstitutions[id]; }), absentBefore:absentBefore,
               absent:!s.stories.clovis_alamanni_476 && !FB.authoredRoyalMemberSnapshot(s, 'franks_476', 'basina'),
+              savedMother:savedClovis.motherId,
               identity:rng === (FB.getRngState() >>> 0) && uid === FB.getUidCounter(),
               valid:FB.save.v4.validatePlatform(JSON.parse(FB.save.serialize()).state) });
           } catch (error) { reinstate(); reject(error); }
         });
       });
     }, addedInstitutions);
-    expect(result).toMatchObject({ absentBefore:true, absent:true, identity:true, valid:true });
+    expect(result).toMatchObject({ absentBefore:true, absent:true, savedMother:null, identity:true, valid:true });
     expect(result.after).toEqual(result.before);
     expect(result.institutionsAfter).toEqual(result.institutionsBefore);
   });

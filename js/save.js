@@ -250,7 +250,9 @@ window.FB = window.FB || {};
         }
       }
     }
-    if (CHARACTER_COMPACT_KEYS[key] && holder &&
+    // Court members share character-shaped fields, but load does not supply
+    // character defaults for them. Preserve their explicit null ancestry.
+    if (CHARACTER_COMPACT_KEYS[key] && holder && !royalMemberRecord(holder) &&
         (holder.royalLine || characterRecord(holder))) {
       if (key === 'id') return undefined;
       if (key === 'childrenIds' && Array.isArray(value) && !value.length) {
