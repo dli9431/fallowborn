@@ -176,14 +176,11 @@ title-screen version. To move a life between builds, download its save file and 
 the other build. No test build registers the service worker or install manifest, sends
 telemetry, or is indexed by search engines (`X-Robots-Tag: noindex`).
 
-`.github/workflows/test-builds.yml` redeploys the test app through its Coolify deploy webhook
-whenever a branch other than `main` is pushed or deleted. It needs the repository secrets
-`COOLIFY_TEST_BUILDS_WEBHOOK` and `COOLIFY_API_TOKEN` and skips without them. A push runs
-the workflow file in the pushed commit, so a branch triggers rebuilds once it contains the
-file; branch deletion runs the default branch's copy. The workflow, the test build files and
-`.github/` are outside every shipped allowlist: the play `Dockerfile` copies an explicit
-folder list, `.dockerignore` excludes `.github`, and the itch and CrazyGames packagers stage
-only their game folders.
+The test app is redeployed by hand from Coolify after pushing; nothing calls the Coolify API,
+so it can stay disabled. One redeploy rebuilds every branch, so new, updated and deleted
+branches all appear after the next one. The test build files are outside every shipped
+allowlist: the play `Dockerfile` copies an explicit folder list and the itch and CrazyGames
+packagers stage only their game folders.
 
 ## The `file://` rule
 
