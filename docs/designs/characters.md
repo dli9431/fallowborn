@@ -145,6 +145,8 @@ missing a field one of those readers consults produces a card or a face that dis
 with the sheet printed beside it. `FB.makeCharacter` fills all of it; the court paths do
 not bypass it.
 
+FB.makeCharacter initializes health to 8 for every new character, including religious officeholders. Creation paths may then assign another value, such as newborn health or later injuries. The shared default matches compact-save inflation, so saving and restoring a newly created character does not introduce a health field that was absent in live state. This default consumes no additional RNG draws.
+
 Portrait invalidation is narrower than the character record. One normalized descriptor
 resolves the exact visual outputs: identity DNA, age, sex, culture palette (and the
 culture it was borrowed from), faith group and faith, station, profession, the resolved

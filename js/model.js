@@ -2204,6 +2204,7 @@ window.FB = window.FB || {};
       skills: {},
       opinion: opts.opinion !== undefined ? opts.opinion : 0,
       fertility: FB.rf(0.7, 1.3),
+      health: 8,
       station: opts.station !== undefined ? opts.station : null,
       spouseId: null, fatherId: opts.fatherId || null, motherId: opts.motherId || null,
       childrenIds: []
