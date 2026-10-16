@@ -31,12 +31,20 @@ async function start(page,testInfo,options) {
   if (options.legacy) await page.evaluate(function () {
     // Generate the retained pre-aristocracy opening, rather than deleting
     // people from an expanded campaign and mislabelling its catalogue.
-    const b = FBDATA.bookmarks['476']; b.revision = 'baseline';
-    window.__aristocraticFresh = {opening:b.opening,openingRevision:b.openingRevision,realms:b.realms};
+    window.__aristocraticFresh = FBDATA.bookmarks['476'];
+    const b = Object.assign({},FB.bookmark('476','baseline'));
+    b.revision = 'baseline';
     b.opening = b.openingRevisions.core_v1; b.openingRevision = 'core_v1';
     b.realms = b.realms.map(function (r) {
-      return r.id === 'sasanian_476' ? Object.assign({},r,{government:'regnum'}) : r;
+      if (r.id !== 'sasanian_476') return r;
+      const legacy = Object.assign({},r,{government:'regnum'});
+      delete legacy.aristocraticProfileId; delete legacy.administrationProfileId;
+      return legacy;
     });
+    b.starts = b.starts.filter(function (id) {
+      return FBDATA.startScenarios.find(function (r) { return r.id === id; }).rulerRealmId !== 'sasanian_476';
+    });
+    FBDATA.bookmarks['476'] = b;
   });
   if (options.fictional) {
     await page.addScriptTag({path:path.resolve(__dirname,'../fixtures/aristocratic-monarchy.js')});
@@ -78,7 +86,7 @@ async function start(page,testInfo,options) {
           if (!q.allowed || !R.applySupport(s,q)) throw new Error(m.id + ': ' + (q.reason || 'Changed recognition review'));
         });
       }};
-    if (options.legacy) Object.assign(FBDATA.bookmarks['476'],window.__aristocraticFresh);
+    if (options.legacy) FBDATA.bookmarks['476'] = window.__aristocraticFresh;
   },options);
 }
 
@@ -594,10 +602,20 @@ test('annual frontier passes retain one royal court, bounded family facts and a 
     return {founder:r.succession.founderId,generation:FB.realmRulerGeneration(s,'sasanian_476'),
       interests:FB.aristocracy.state(s,'sasanian_476').interests.map(function (m) { return m.id; })};
   });
-  await page.evaluate(function () {
+  const annualRestore=await page.evaluate(function () {
     const s=FB.state;
     for (let year=0;year<2;year++) { s.date.year++; s.turn+=360; FB.worldTick(s); }
+    function court() {
+      return JSON.parse(JSON.stringify({aristocracy:FB.aristocracy.state(FB.state,'sasanian_476'),
+        grants:FB.state.authority.appointments.filter(function (row) { return row.provincialTerms; })}));
+    }
+    const staged=court();
+    // Direct annual staging skips seasonal payroll, producer snapshots and
+    // court refreshes. Adopt that staged world before comparing continuations.
+    FB.save.restore(JSON.parse(FB.save.serialize()));
+    return {staged:staged,restored:court()};
   });
+  expect(annualRestore.restored).toEqual(annualRestore.staged);
   const envelope=await page.evaluate(function () { return JSON.parse(FB.save.serialize()); });
   const before=await page.evaluate(function () {
     const s=FB.state,d=FB.aristocracy.state(s,'sasanian_476'),r=s.realms.sasanian_476;
