@@ -243,12 +243,24 @@ async function provisionPartner(page, rid) {
           { kind:'realm', id:id }, 'treaty', { externalRealmId:rid, kind:'protection' }).allowed;
     });
     if (!partner) throw new Error('A peaceful settled treaty partner is required');
-    FB.realmHeldCounties(s, partner).forEach(function (pid) {
-      s.dev[pid] = Math.max(20, s.dev[pid] || 1);
-      FB.setCountySupport(s, pid, 100);
-    });
-    FB.invalidateRealmCache();
-    if (FB.aiBaseHost(s, partner) <= 100) throw new Error('The staged partner needs more than 100 deployable troops');
+    const territory = FB.recruitmentTerritory(s, partner);
+    // Field hosts read eligible recruitment counties, including subordinate
+    // territory and private sites outside the directly held county list.
+    // Provision a bounded surplus against the opening's real garrison costs.
+    let capacity = 0;
+    for (let step = 0; step < 4; step++) {
+      territory.eligible.forEach(function (pid) {
+        s.dev[pid] = Math.max(20 * Math.pow(2, step), s.dev[pid] || 1);
+        FB.setCountySupport(s, pid, 100);
+      });
+      FB.invalidateRealmCache();
+      capacity = FB.aiBaseHost(s, partner);
+      if (capacity > 100) break;
+    }
+    if (capacity <= 100) throw new Error('The staged partner needs more than 100 deployable troops: ' +
+      JSON.stringify({ realm:partner, capacity:capacity, eligible:territory.eligible,
+        held:FB.realmHeldCounties(s, partner), blocked:territory.blocked,
+        garrison:FB.fortGarrisonBurden(s, partner, partner, territory) }));
     const local = FB.aiBaseHost(s, rid);
     if (local <= 1) throw new Error('The staged community needs spare troops; available: ' + local);
     s.realms[partner].treasury.gold = 1000;
