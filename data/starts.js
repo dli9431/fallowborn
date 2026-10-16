@@ -202,6 +202,12 @@ window.FBDATA = window.FBDATA || {};
       intro:'You are {name}, a craftsman of {province}. Baldwin holds the city, the crusaders’ partition is unfinished, and Greek courts gather beyond the walls. Your workshop must find a living under whichever authority prevails.' }
   ];
 
+  /* 476 BRANCH REVIEW SWITCH. While true, every beginning is open to every
+     player: hidden candidates (the 476 courts) are offered and the
+     earned-station ladder is unlocked. Owner testing only; set this to false
+     or delete it before the branch ships. */
+  FBDATA.reviewOpenStarts = true;
+
   /* Curated one-click Serf lives. Each one names an exact physical settlement
      site, which the start screen resolves to that bookmark's stable slot and
      proper name. Names are generated-person proper names; every other label

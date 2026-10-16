@@ -2106,7 +2106,7 @@ FB.CHANGELOG = [
   /* A scenario is offered where its data allows: an optional bookmarkIds
      list and an optional eras list, matched against the bookmark's era. */
   function scenarioOffered(scenario, bookmarkId) {
-    if (!scenario || scenario.hidden) return false;
+    if (!scenario || scenario.hidden && !FBDATA.reviewOpenStarts) return false;
     if (!FB.bookmarkAvailable(bookmarkId)) return false;
     if (scenario.bookmarkIds && scenario.bookmarkIds.indexOf(bookmarkId) < 0) return false;
     const offeredBookmark = FB.bookmark(bookmarkId);
@@ -2133,7 +2133,7 @@ FB.CHANGELOG = [
     if (!scenario) return false;
     const selected = bookmarkId || FB.activeBookmarkId || FBDATA.defaultBookmark;
     if (!scenarioOffered(scenario, selected)) return false;
-    if (scenario.alwaysUnlocked) return true;
+    if (scenario.alwaysUnlocked || FBDATA.reviewOpenStarts) return true;
     return !FB.startProgression ||
       FB.startProgression.isTierUnlocked(scenario.tier);
   }
