@@ -20,7 +20,12 @@ async function importProof(page, info, prefix, begin) {
   await openGame(page, info);
   await page.evaluate(function () { FB.ui.showMods(); });
   await page.locator('#modfile').setInputFiles(path.resolve(__dirname, '../fixtures/authoring/' + prefix + '-contracts.json'));
-  await page.locator('#mod-apply').click();
+  // File reading and mod validation precede the reload. Wait for that document
+  // before polling its deferred boot, rather than spending the boot wait on both.
+  await Promise.all([
+    page.waitForEvent('domcontentloaded'),
+    page.locator('#mod-apply').click()
+  ]);
   await page.waitForFunction(function (prefix) { return window.FB && FB.game && FB.game.bootReady && !!FB.stories.get(prefix + '_court'); }, prefix);
   if (begin !== false) await beginBookmark(page, info, prefix + '_courts_900', prefix + '_court_household');
 }
@@ -360,16 +365,20 @@ for (const prefix of ['harbor','dune']) {
   test(prefix + ' imported research preference changes the ordinary ruler score', async function ({ page }, info) {
     await importProof(page, info, prefix, false); await startDeterministicGame(page);
     const result = await page.evaluate(function (prefix) {
-      const s = FB.state, rid = s.owner[s.player.provinceId], r = s.realms[rid];
+      const s = FB.state, rid = s.owner[s.player.provinceId];
       const candidate = FB.techCandidates(s,rid,true).find(function (row) { return row.available && row.def.domain === 'learning'; });
       // realm.ruler mirrors the ruler character's first trait on each sync
       const ruler = FB.realmRulerCharacterSnapshot(s,rid);
-      ruler.traits = []; const ordinary = FB.techAIScore(s,candidate.id,rid);
-      ruler.traits = [prefix + '_discipline']; const preferred = FB.techAIScore(s,candidate.id,rid);
+      ruler.traits = []; FB.realmRulerCharacter(s,rid);
+      const ordinary = FB.techAIScore(s,candidate.id,rid);
+      ruler.traits = [prefix + '_discipline']; FB.realmRulerCharacter(s,rid);
+      const before = JSON.stringify(s), rng = FB.getRngState(), uid = FB.getUidCounter();
+      const preferred = FB.techAIScore(s,candidate.id,rid);
       return { ratio:preferred/ordinary,faults:FB.validateAgencyRules(FBDATA.agencyRules),
-        chance:FBDATA.agencyRules.familyProgressChance, cooldown:FBDATA.agencyRules.approachCooldownYears };
+        chance:FBDATA.agencyRules.familyProgressChance, cooldown:FBDATA.agencyRules.approachCooldownYears,
+        pure:before === JSON.stringify(s) && (rng >>> 0) === (FB.getRngState() >>> 0) && uid === FB.getUidCounter() };
     }, prefix);
-    expect(result).toEqual({ ratio:prefix === 'harbor' ? 2 : .5,faults:[],chance:prefix === 'harbor' ? .8 : .2,cooldown:prefix === 'harbor' ? 3 : 7 });
+    expect(result).toEqual({ ratio:prefix === 'harbor' ? 2 : .5,faults:[],chance:prefix === 'harbor' ? .8 : .2,cooldown:prefix === 'harbor' ? 3 : 7,pure:true });
   });
 }
 
