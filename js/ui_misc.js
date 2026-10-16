@@ -1914,7 +1914,9 @@ window.FB = window.FB || {};
   }
   UI.paintTitleCrest = paintTitleCrest;
 
-  UI.showScreen = function (id) {
+  /* restore, for a Back into a setup list: { scrollTop, focus } returns the
+     player to the chosen card instead of the top of the list. */
+  UI.showScreen = function (id, restore) {
     UI.coachmarkReset(); // a screen switch retires any lesson in flight
     if (id !== null && SH.travelPicker) {
       SH.closeTravelPicker(false);
@@ -1938,12 +1940,20 @@ window.FB = window.FB || {};
       id === 'pickprov' || id === 'chargen');
     if (FB.music && FB.music.refreshTitleToggle) FB.music.refreshTitleToggle();
     if (id === null && UI.resizeMobilePanes) UI.resizeMobilePanes();
+    const restoreScroll = restore && typeof restore.scrollTop === 'number' ? restore.scrollTop : null;
+    if (id && restoreScroll !== null) $(id).scrollTop = restoreScroll;
     if (id && id !== 'loading') {
       setTimeout(function () {
         const scr = $(id);
         if (scr.classList.contains('hidden')) return;
-        const b = scr.querySelector('input[type=text], button:not(:disabled):not(.hidden)');
-        if (b) b.focus();
+        const wanted = restore && restore.focus && restore.focus.isConnected &&
+          !restore.focus.disabled && restore.focus.getClientRects().length ? restore.focus : null;
+        /* the first editable field or enabled button that is actually shown */
+        const b = wanted || [].filter.call(
+          scr.querySelectorAll('input[type=text]:not([readonly]), button:not(:disabled):not(.hidden)'),
+          function (el) { return el.getClientRects().length > 0; })[0];
+        if (restoreScroll !== null) scr.scrollTop = restoreScroll;
+        if (b) b.focus(restore ? { preventScroll:true } : undefined);
       }, 0);
     }
   };

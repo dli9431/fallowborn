@@ -46,6 +46,11 @@ async function start(page, testInfo, def) {
   await expect(page.locator('#cg-name')).toHaveValue(def.name.replace(/_/g, ' '));
   await expect(page.locator('#cg-name')).toHaveAttribute('readonly', '');
   await expect(page.locator('#cg-reroll')).toBeDisabled();
+  // The fixed ruler reads as a summary rather than controls that cannot change.
+  await expect(page.locator('#cg-name-field')).toBeHidden();
+  await expect(page.locator('#cg-sex-row')).toBeHidden();
+  await expect(page.locator('#cg-fixed .pick-location-title')).toHaveText(def.name.replace(/_/g, ' '));
+  await expect(page.locator('#btn-cg-start')).toBeFocused();
   await expect(page.locator('#cg-community')).toHaveClass(/hidden/);
   await page.getByRole('button', { name:'Begin Your Story', exact:true }).click();
   await page.getByRole('button', { name:'Begin', exact:true }).click();

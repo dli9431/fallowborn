@@ -115,7 +115,7 @@ for (const revision of ['baseline','inhabited_v2']) {
     await page.locator('#bookmarklist button').filter({hasText:'The Fall of Constantinople'}).click();
     const card = page.locator('#scenariolist button').filter({has:page.getByRole('heading',{name:'Late mod farmer',exact:true})});
     await expect(card).toBeEnabled();
-    if (revision === 'baseline') await expect(page.getByRole('heading',{name:'Siwa delegate',exact:true})).toHaveCount(0);
+    if (revision === 'baseline') await expect(page.getByRole('heading',{name:'Siwa Delegate',exact:true})).toHaveCount(0);
     await card.click();
     await expect(page.locator('#chargen:not(.hidden)')).toBeVisible();
     await page.getByRole('button',{name:'Begin Your Story',exact:true}).click();

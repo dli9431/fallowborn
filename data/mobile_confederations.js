@@ -40,7 +40,7 @@
      Priscus attests displaced followings and Roman diplomacy, not a precise
      476 boundary or an identifiable incumbent at this simulated camp. */
   FBDATA.mobileScenarioPresentation = {mobile_household_476:{
-    name:'Pontic household',desc:'Begin as a free household near the mobile following at Cherson.',
+    name:'Pontic Household',desc:'Begin as a free household near the mobile following at Cherson.',
     intro:'You are {name}, a free farmer of {province}. Nearby mobile households bargain for access and supplies. Open Mobile coalition in Deeds to review their following or seek local paid service.'
   }};
   var b = FBDATA.bookmarks['476'];

@@ -91,13 +91,13 @@
         characterName:'Muhammad II',
         name:'Muhammad II at Gurganj',desc:'Hold the Khwarazmian court under Qara Khitai suzerainty. Later conquests remain opportunities.',
         sex:'m',tier:6,profession:'noble',gold:120,prestige:150,piety:10,onboarding:'ruler',
-        familyPresets:{standard:{name:'Existing court household',diff:'age 35 - existing court family',desc:'Keep Muhammad II and the generated supporting household.'}},
+        familyPresets:{standard:{name:'Existing court household',diff:'age 35 · existing court family',desc:'Keep Muhammad II and the generated supporting household.'}},
         intro:'You are Muhammad II at Gurganj. Your court holds its districts directly, while Qara Khitai suzerainty remains above it. The towns keep their residents. Steppe followers bargain separately for access and service; later conquests supply no opening possessions.'},
       {id:'siwa_delegate_1204',bookmarkIds:['1204'],alwaysUnlocked:true,rulerRealmId:'siwa_households_1204',
         governmentForm:'assembly_polity',fixedProvinceId:'siwa_oasis',startCulture:'berber',startReligion:'sunni',
-        name:'Siwa delegate',desc:'Represent oasis cultivators and fortified households through local consent.',
+        name:'Siwa Delegate',desc:'Represent oasis cultivators and fortified households through local consent.',
         sex:'m',tier:1,profession:'farmer',gold:30,prestige:40,piety:0,onboarding:'ruler',
-        familyPresets:{standard:{name:'Existing representative',diff:'local public mandate',desc:'Keep the selected representative and public mandate. Begin a separate private household.'}},
+        familyPresets:{standard:{name:'Existing representative',diff:'local public mandate',desc:'You hold the oasis’s public mandate. Your own household and property stay separate from the office.'}},
         intro:'You represent the households at Siwa. Local government in Deeds shows limited dues, defensive service and reserved consent. Gardens, households and public resources remain distinct.'}
     ],
     // Every original scenery anchor retains a remnant. A split is bounded

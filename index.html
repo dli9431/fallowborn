@@ -379,14 +379,15 @@
       <div id="chargen" class="screen hidden">
         <h2 data-i18n="Who are you?">Who are you?</h2>
         <div class="cgform">
-          <label
+          <div id="cg-fixed" class="pickinfo cg-fixed hidden"></div>
+          <label id="cg-name-field"
             ><span data-i18n="Name">Name</span>
             <input id="cg-name" type="text" maxlength="20"
           /></label>
           <button id="cg-reroll" class="btn small">
             <span data-i18n="🎲 Random name">&#127922; Random name</span>
           </button>
-          <div class="row gap">
+          <div id="cg-sex-row" class="row gap">
             <label class="radio"
               ><input type="radio" name="cg-sex" value="m" checked />
               <span data-i18n="Man">Man</span></label
@@ -396,6 +397,7 @@
               <span data-i18n="Woman">Woman</span></label
             >
           </div>
+          <div id="cg-place" class="cg-place"></div>
           <div id="cg-community" class="cgfamily"></div>
           <div id="cg-family" class="cgfamily"></div>
           <div id="cg-summary" class="pickinfo"></div>

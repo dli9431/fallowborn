@@ -28,7 +28,7 @@ window.FBDATA = window.FBDATA || {};
       characterName:'Peroz', sex:'m', startCulture:'persian', startReligion:'zoroastrian',
       name:'Peroz and the magnate court', desc:'Govern through royal kin, inherited family interests and appointed provincial officers.',
       tier:7, profession:'noble', gold:120, prestige:180, piety:20,
-      familyPresets:{ standard:{ name:'Existing royal household', diff:'age 46 - existing court family',
+      familyPresets:{ standard:{ name:'Existing royal household', diff:'age 46 · existing court family',
         desc:'Keep the declared royal kin and generated supporting households.' } }, tracks:[], onboarding:'ruler',
       intro:'You are Peroz at Ctesiphon. Public administration in Deeds shows your royal candidates, provincial family rights and appointed officers. Review actual receipts and military burdens with the magnates. Balash has royal ancestry, but recognition decides accession. Your subjects retain their own worship and private estates.' },
     { id:'nepos_476', bookmarkIds:['476'], hidden:true, alwaysUnlocked:true,
@@ -37,7 +37,7 @@ window.FBDATA = window.FBDATA || {};
       name:'Julius Nepos at Salona',
       desc:'Hold Dalmatia while maintaining a contested western imperial claim. Seek recognition without confusing a mandate with possession of Italy.',
       tier:6, profession:'noble', gold:120, prestige:180, piety:20,
-      familyPresets:{ standard:{ name:'Dalmatian court household', diff:'age 46 - existing court family', desc:'Keep the court’s seeded family. Unattested relatives are generated campaign characters.' } },
+      familyPresets:{ standard:{ name:'Dalmatian court household', diff:'age 46 · existing court family', desc:'Keep the court’s seeded family. Unattested relatives are generated campaign characters.' } },
       tracks:['nepos_track_476'], onboarding:'ruler',
       intro:'You are Julius Nepos at Salona. Dalmatia is in your hands; Italy is not. Your western imperial claim survives alongside Romulus’s office at Ravenna. Review Offices & Legitimacy and the western claim story in Deeds, then decide whether to pursue recognition, restoration through an ordinary campaign, or Dalmatian rule.' },
     { id:'odoacer_476', bookmarkIds:['476'], hidden:true, alwaysUnlocked:true,
@@ -46,7 +46,7 @@ window.FBDATA = window.FBDATA || {};
       name:'Odoacer and the federate host',
       desc:'Lead an existing host near Ticinum without county ownership. Review paid service or contest Ravenna; civic recognition and territorial rule remain separate.',
       tier:4, profession:'soldier', gold:0, prestige:120, piety:0,
-      familyPresets:{ standard:{ name:'Federate court household', diff:'age 43 - existing court family', desc:'Keep the host court’s seeded family. Unattested relatives are generated campaign characters.' } },
+      familyPresets:{ standard:{ name:'Federate court household', diff:'age 43 · existing court family', desc:'Keep the host court’s seeded family. Unattested relatives are generated campaign characters.' } },
       onboarding:'ruler',
       intro:'You are Odoacer with the federate host near Ticinum. You command its existing soldiers, but hold no county. Open the western court story in Deeds to review paid service or an ordinary campaign for Ravenna. Contracts require both courts’ consent; victory alone supplies neither civic acceptance nor an imperial office. The map’s army controls command your host.' },
     { id:'syagrius_476', bookmarkIds:['476'], hidden:true, alwaysUnlocked:true,
@@ -55,7 +55,7 @@ window.FBDATA = window.FBDATA || {};
       name:'Syagrius at Soissons',
       desc:'Govern the northern Gallic Roman domain between Frankish and Gothic courts. Keep local support and decide how to meet a living Frankish challenge.',
       tier:6, profession:'noble', gold:120, prestige:150, piety:10,
-      familyPresets:{ standard:{ name:'Gallic court household', diff:'age 46 - existing court family', desc:'Keep the court’s seeded family. Unattested relatives are generated campaign characters.' } },
+      familyPresets:{ standard:{ name:'Gallic court household', diff:'age 46 · existing court family', desc:'Keep the court’s seeded family. Unattested relatives are generated campaign characters.' } },
       onboarding:'ruler',
       intro:'You are Syagrius at Soissons. Your Roman domain has its own treasury and resident communities. Review Governance and Offices & Legitimacy in Deeds, manage your actual territory and prepare for neighboring courts. If Clovis inherits and challenges your domain, the story offers a decision; no historical date hands over your land.' },
     { id:'federate_476', bookmarkIds:['476'],
@@ -76,7 +76,7 @@ window.FBDATA = window.FBDATA || {};
       tier:0, profession:'colonus', gold:5, prestige:0, piety:0,
       startAge:24, startCulture:'roman', startReligion:'nicene',
       familyPresets:{
-        standard:{ name:'Young tenant household', diff:'age 24 - parents and siblings' },
+        standard:{ name:'Young tenant household', diff:'age 24 · parents and siblings' },
         established:{ name:'Established tenant household', diff:'spouse and young children' }
       },
       intro:'You are {name}, a colonus of {province}. Your household cultivates an estate’s land; use of its fields and dwelling gives you no ownership. Crop and account dues continue whichever daily focus you choose. Open Review estate & freedom in Deeds to meet the possessor, inspect your obligations and review purchase, consented military service, consented ordination or risky flight. Release includes your spouse and descendants; parents and siblings need separate paid release. Flight grants no lawful charter.' },
@@ -178,7 +178,28 @@ window.FBDATA = window.FBDATA || {};
     { id:'baron', eras:['early_medieval','high_medieval'], name:'Petty Baron',
       desc:'Rule a small barony under a powerful liege.',
       tier:3, profession:'noble', gold:80, prestige:150, piety:0,
-      intro:'You are {name}, Baron in {province}, sworn to {realm}. Your tower is small and your ambitions are welcome to be otherwise.' }
+      intro:'You are {name}, Baron in {province}, sworn to {realm}. Your tower is small and your ambitions are welcome to be otherwise.' },
+    /* One household at each later date's headline place. Like the Pontic
+       household, a date-specific beginning is always open. */
+    { id:'toledo_household_711', bookmarkIds:['711'], alwaysUnlocked:true,
+      fixedProvinceId:'toledo', startCulture:'hispano_roman', startReligion:'catholic',
+      name:'Toledo Household',
+      desc:'Begin as a free household in Toledo, the Gothic royal city, as rival kings face a crossing from North Africa.',
+      tier:1, profession:'craftsman', gold:15, prestige:5, piety:0,
+      intro:'You are {name}, a free craftsman of {province}. The royal city waits on news from the south, where rival Gothic kings and a force from North Africa contend. Your workshop and household carry on whichever court prevails.' },
+    { id:'aachen_household_800', bookmarkIds:['800'], alwaysUnlocked:true,
+      fixedProvinceId:'aachen', startCulture:'frankish', startReligion:'catholic',
+      name:'Aachen Household',
+      desc:'Begin as a free household at Aachen, seat of Charlemagne’s palace, as news of his imperial crown arrives from Rome.',
+      tier:1, profession:'farmer', gold:20, prestige:5, piety:0,
+      startEffects:{ landPlots:1 },
+      intro:'You are {name}, a free farmer of {province}. The palace draws officials, clergy and petitioners, and news of the imperial crown has crossed the Alps. Your fields and family come first, though the court’s business may still reach your door.' },
+    { id:'constantinople_household_1204', bookmarkIds:['1204'], alwaysUnlocked:true,
+      fixedProvinceId:'constantinople', startCulture:'greek', startReligion:'orthodox',
+      name:'Constantinople Household',
+      desc:'Begin as a Greek household in Constantinople under its new Latin rulers.',
+      tier:1, profession:'craftsman', gold:15, prestige:5, piety:0,
+      intro:'You are {name}, a craftsman of {province}. Baldwin holds the city, the crusaders’ partition is unfinished, and Greek courts gather beyond the walls. Your workshop must find a living under whichever authority prevails.' }
   ];
 
   /* Curated one-click Serf lives. Each one names an exact physical settlement

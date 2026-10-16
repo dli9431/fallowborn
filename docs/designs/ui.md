@@ -1452,9 +1452,13 @@ constructor, and reaches the normal story introduction without exposing the inte
 screens. A missing bookmark, county, exact settlement site, or exact community under an active
 mod removes only the invalid shortcut; the ordinary path remains available. This is a setup presentation shortcut
 over existing Serf eligibility, not a new gameplay capability, so it needs no technology-impact
-ledger entry.
+ledger entry. Each portrait is dressed for its own bookmark's era rather than for whichever date
+was last previewed, so returning from another date never changes a Quick Start face. Card contents
+stack from the top, so a card with fewer wrapped lines stays aligned with its row. At 820 pixels
+and narrower, Quick Start is one horizontally scrolling row with snap points and the next card
+peeking in at the edge, so the starting dates begin on the first phone screen.
 
-The beginning screen lists fixed-place and existing-ruler starts under **Historical starts** and map-chosen roles under **Open starts**, as full-width gold section headings in the card grid. The headings appear only when a date offers both kinds, so dates with only open roles keep a plain list. An open card whose story is bound to named counties adds one gold line, for example "Story start: begin in Ravenna.", so the player knows where the story runs before choosing a county.
+The beginning screen lists fixed-place and existing-ruler starts under **Historical starts**, map-chosen roles whose story is bound to named counties under **Story starts**, and every other map-chosen role under **Open starts**, as full-width gold section headings in the card grid. The headings appear only when a date offers more than one kind, so dates with only open roles keep a plain list. A story-start card adds one gold line, for example "Story start: choose Ravenna as your birthplace.", so the player knows where the story runs before choosing a county. The birthplace bar repeats that guidance before a county is chosen, then says whether the chosen county begins the story or an ordinary household, naming the story's counties in the second case. Before the first locked card, one full-width note explains that locked beginnings open when any life reaches their station and that beginnings written for a specific date are always open. Every later date leads with one always-open household at its headline place: Toledo in 711, Aachen in 800 and Constantinople in 1204, alongside the Pontic Household in 476.
 
 The ordinary path proceeds directly through bookmark → social scenario → province → character,
 rolling a fresh seed before the starting-date screen so the ordinary path has no preliminary
@@ -1497,7 +1501,17 @@ community is present. A single-community county omits that redundant picker and 
 principal pair; Back to the same county preserves the chosen pair. Family cards carry their own
 age and household summaries, while the final card shows only the world seed and points to the full
 shareable start code in the in-game menu. Returning from scenarios goes back to the bookmark list
-without wiring another set of map listeners. Hosted telemetry emits a distinct viewed event for
+without wiring another set of map listeners. Every Back into a setup list, from beginnings to dates,
+from the birthplace map to beginnings, and from a fixed-place character screen to beginnings,
+restores that list's scroll position and focuses the card that was chosen, found again by its
+stable bookmark or scenario id after the list rebuilds. A screen opened without a return target
+focuses its first shown, editable field or enabled button. The starting-date and beginning lists
+reserve bottom padding for the title music controls, so their Back row always scrolls clear of the
+corner the controls occupy; the birthplace and character screens still hide those controls on
+phone-sized screens. Character creation names the birthplace on every start, which matters for
+fixed-place starts that skip the map. An existing court or office start fixes who the player is,
+so its name and sex appear as a summary card instead of read-only controls, and focus starts on
+Begin Your Story. Hosted telemetry emits a distinct viewed event for
 starting date, the optional seed dialog, beginning, birthplace, and character creation. Each
 screen emits once per New Game attempt, so revisiting it with Back does not inflate the setup
 funnel; bookmark and scenario are the only step-specific context. Once character creation

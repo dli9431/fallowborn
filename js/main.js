@@ -2540,7 +2540,7 @@ FB.CHANGELOG = [
     $('btn-changelog').addEventListener('click', function () { FB.ui.showChangelog(); });
     $('btn-bm-back').addEventListener('click', function () { FB.ui.showScreen('title'); });
     $('btn-bm-seed').addEventListener('click', function () { showSeedInput(); });
-    $('btn-ng-back').addEventListener('click', function () { showBookmarks(); });
+    $('btn-ng-back').addEventListener('click', function () { showBookmarks(true); });
     $('btn-pick-back').addEventListener('click', function () {
       /* with a county chosen, Back steps from the settlement stage to the
          province stage instead of leaving the picker */
@@ -2555,7 +2555,7 @@ FB.CHANGELOG = [
       }
       G.pickMode = false;
       document.body.classList.remove('picking');
-      FB.ui.showScreen('newgame');
+      FB.ui.showScreen('newgame', setupRestore('newgame'));
     });
     $('btn-pick-random').addEventListener('click', function () {
       /* settlement stage: the primary button commits the dropdown choice */
@@ -2583,7 +2583,7 @@ FB.CHANGELOG = [
     });
     $('btn-cg-back').addEventListener('click', function () {
       if (G.pending && G.pending.scenario && G.pending.scenario.fixedProvinceId)
-        showScenarios();
+        showScenarios(true);
       else showPickProv();
     });
     $('btn-cg-start').addEventListener('click', function () { beginCampaignStart(); });
@@ -2595,7 +2595,25 @@ FB.CHANGELOG = [
   function showNewGame() {
     newGameTelemetrySeen = {};
     G.pending = { seed:freshSeed() };
+    setupReturn = { bookmarks:null, newgame:null };
     showBookmarks();
+  }
+
+  /* Back to a setup list returns to the card that was chosen: its scroll
+     position and keyboard focus. The lists rebuild on return, so cards are
+     found again by their stable bookmark or scenario id. */
+  let setupReturn = { bookmarks:null, newgame:null };
+  function rememberSetupCard(screen, key) {
+    setupReturn[screen] = { scrollTop:$(screen).scrollTop, key:key };
+  }
+  function setupRestore(screen) {
+    const saved = setupReturn[screen];
+    if (!saved) return undefined;
+    const attr = screen === 'bookmarks' ? 'data-bookmark' : 'data-scenario';
+    const focus = [].filter.call($(screen).querySelectorAll('[' + attr + ']'), function (el) {
+      return el.getAttribute(attr) === saved.key;
+    })[0] || null;
+    return { scrollTop:saved.scrollTop, focus:focus };
   }
 
   /* Shared starts are an advanced path behind the starting-date screen, so
@@ -2677,7 +2695,7 @@ FB.CHANGELOG = [
     });
   }
 
-  function showBookmarks() {
+  function showBookmarks(back) {
     trackNewGameScreen('starting-date');
     renderQuickStarts();
     const box = $('bookmarklist');
@@ -2685,13 +2703,16 @@ FB.CHANGELOG = [
     const bookmarks = FB.bookmarks(false);
     for (const bookmark of bookmarks) {
       const el = document.createElement('button');
+      el.type = 'button';
       el.className = 'scencard';
+      el.setAttribute('data-bookmark', bookmark.id);
       el.innerHTML = '<h3>' + FB.esc(FB.T('{season} {year}: {name}', {
         season:FB.seasonName(bookmark.date.season),
         year:bookmark.date.year, name:FB.L(bookmark.name || bookmark.id)
       })) + '</h3><p>' + FB.esc(FB.L(bookmark.desc || '')) + '</p>';
       (function (selected) {
         el.addEventListener('click', function () {
+          rememberSetupCard('bookmarks', selected.id);
           activatePendingBookmark(selected.id, showScenarios);
         });
       })(bookmark);
@@ -2701,7 +2722,7 @@ FB.CHANGELOG = [
     const warning = FB.mods && FB.mods.bookmarkWarning ? FB.mods.bookmarkWarning() : '';
     note.textContent = warning ? FB.T(warning) : '';
     note.classList.toggle('hidden', !warning);
-    FB.ui.showScreen('bookmarks');
+    FB.ui.showScreen('bookmarks', back ? setupRestore('bookmarks') : undefined);
   }
 
   FB.quickStartOf = function (id) {
@@ -2763,7 +2784,8 @@ FB.CHANGELOG = [
       station:details.scenario.tier,
       role:details.scenario.profession,
       health:8,
-      traits:[]
+      traits:[],
+      era:FB.bookmarkEra(details.bookmark)
     }, details.bookmark.date.year, {
       state:null, tier:details.scenario.tier, profession:details.scenario.profession, suppressEquipment:true
     });
@@ -2873,7 +2895,28 @@ FB.CHANGELOG = [
     divider.classList.toggle('hidden', empty);
   }
 
-  function showScenarios() {
+  /* An open role whose story is bound to named counties is a story start:
+     the story attaches only to a birthplace in one of those counties. */
+  function storyPlaceIds(sc) {
+    const ids = [];
+    Object.keys(sc && sc.trackLocations || {}).forEach(function (track) {
+      (sc.trackLocations[track] || []).forEach(function (id) {
+        if (ids.indexOf(id) < 0) ids.push(id);
+      });
+    });
+    return ids;
+  }
+  function storyPlaceNames(sc) {
+    const bookmark = FB.activeBookmark || {};
+    return storyPlaceIds(sc).map(function (id) {
+      const province = FB.world && FB.world.byId && FB.world.byId[id] ||
+        (bookmark.provinces || []).filter(function (row) { return row.id === id; })[0];
+      return province && typeof province.name === 'string' ? FB.L(province.name) : id;
+    }).join(', ');
+  }
+
+  function showScenarios(back) {
+    if (!back) setupReturn.newgame = null;
     const bookmark = FB.activeBookmark;
     trackNewGameScreen('beginning', { start_bookmark:bookmark.id });
     $('ng-heading').textContent = FB.T('Choose Your Beginning in {year} AD', {
@@ -2881,54 +2924,62 @@ FB.CHANGELOG = [
     });
     const box = $('scenariolist');
     box.innerHTML = '';
-    /* A fixed place or an existing court makes a historical start; every
-       other role is an open start chosen on the map. Headings appear only
-       when a date offers both kinds. */
+    /* A fixed place or an existing court makes a historical start; an open
+       role bound to a story's counties is a story start; every other role is
+       an open start chosen on the map. Headings appear only when a date
+       offers more than one kind. */
     const offered = FBDATA.startScenarios.filter(function (sc) {
       return scenarioOffered(sc, bookmark.id);
     });
     const historical = offered.filter(function (sc) { return !!(sc.fixedProvinceId || sc.rulerRealmId); });
-    const open = offered.filter(function (sc) { return historical.indexOf(sc) < 0; });
+    const story = offered.filter(function (sc) {
+      return historical.indexOf(sc) < 0 && storyPlaceIds(sc).length > 0;
+    });
+    const open = offered.filter(function (sc) {
+      return historical.indexOf(sc) < 0 && story.indexOf(sc) < 0;
+    });
+    const kinds = [historical, story, open].filter(function (list) { return list.length; }).length;
     function groupHeading(text) {
-      if (!historical.length || !open.length) return;
+      if (kinds < 2) return;
       const heading = document.createElement('h3');
       heading.className = 'scen-group';
       heading.textContent = text;
       box.appendChild(heading);
     }
-    function storyPlaces(sc) {
-      const ids = [];
-      Object.keys(sc.trackLocations || {}).forEach(function (track) {
-        (sc.trackLocations[track] || []).forEach(function (id) {
-          if (ids.indexOf(id) < 0) ids.push(id);
-        });
-      });
-      return ids.map(function (id) {
-        const province = FB.world && FB.world.byId && FB.world.byId[id] ||
-          (bookmark.provinces || []).filter(function (row) { return row.id === id; })[0];
-        return province && typeof province.name === 'string' ? FB.L(province.name) : id;
-      }).join(', ');
-    }
-    for (const sc of historical.concat(open)) {
+    let lockNoted = false;
+    for (const sc of historical.concat(story, open)) {
       if (sc === historical[0]) groupHeading(FB.T('Historical starts'));
+      if (sc === story[0]) groupHeading(FB.T('Story starts'));
       if (sc === open[0]) groupHeading(FB.T('Open starts'));
       const el = document.createElement('button');
       const locked = !scenarioUnlocked(sc);
+      /* One note before the first locked card says why some beginnings are
+         open on every date and others wait for an earned station. */
+      if (locked && !lockNoted) {
+        lockNoted = true;
+        const note = document.createElement('p');
+        note.className = 'hint scen-note';
+        note.textContent = FB.T('Locked beginnings open when any of your lives reaches their station. Beginnings written for a specific date are always open.');
+        box.appendChild(note);
+      }
       el.type = 'button';
       el.className = 'scencard' + (locked ? ' locked' : '');
+      el.setAttribute('data-scenario', sc.id);
       if (locked) el.setAttribute('aria-disabled', 'true');
+      const places = storyPlaceNames(sc);
       el.innerHTML = '<h3>' + (locked ? '🔒 ' : '') +
         FB.esc(FB.dataText(null, null, 'scenario', sc.id, sc, 'name', {})) +
         '</h3><p>' +
         FB.esc(FB.dataText(null, null, 'scenario', sc.id, sc, 'desc', {})) +
-        '</p>' + (storyPlaces(sc)
-          ? '<p class="scenario-story">' + FB.esc(FB.T('Story start: begin in {places}.', { places:storyPlaces(sc) })) + '</p>'
+        '</p>' + (places
+          ? '<p class="scenario-story">' + FB.esc(FB.T('Story start: choose {places} as your birthplace.', { places:places })) + '</p>'
           : '') + (locked
           ? '<p class="scenario-lock">' + FB.esc(scenarioUnlockText(sc, false)) + '</p>'
           : '');
       if (!locked) {
         (function (scenario) {
           el.addEventListener('click', function () {
+            rememberSetupCard('newgame', scenario.id);
             G.pending = {
               seed:G.pending && G.pending.seed,
               bookmarkId:bookmark.id,
@@ -2955,7 +3006,7 @@ FB.CHANGELOG = [
       '</p>';
     obs.addEventListener('click', function () { G.startObserve(); });
     box.appendChild(obs);
-    FB.ui.showScreen('newgame');
+    FB.ui.showScreen('newgame', back ? setupRestore('newgame') : undefined);
   }
 
   /* birthplace picking is two stages on the same map screen: first a county,
@@ -3082,10 +3133,22 @@ FB.CHANGELOG = [
     return n > 0 ? FB.clamp(idx, 0, n - 1) : 0;
   }
 
+  function pickStoryLine(text) {
+    const line = document.createElement('div');
+    line.className = 'pick-story';
+    line.textContent = text;
+    return line;
+  }
+
   function updatePickInfo() {
     const el = $('pickinfo');
+    const scenario = G.pending && G.pending.scenario;
+    const storyPlaces = storyPlaceNames(scenario);
     if (!G.pending || !G.pending.provinceId) {
       el.textContent = FB.T('No province chosen yet. Tap the map or use Random Province.');
+      if (storyPlaces) el.appendChild(pickStoryLine(FB.T(
+        'Story start: choose {places}. Elsewhere this role begins as an ordinary household.',
+        { places:storyPlaces })));
       $('btn-pick-random').textContent = FB.T('Random Province');
       return;
     }
@@ -3100,6 +3163,12 @@ FB.CHANGELOG = [
       '<div class="pick-community">' + FB.esc(FB.T('Communities: {communities}', {
         communities:communities.map(communityLabel).join(' → ')
       })) + '</div>';
+    if (storyPlaces) {
+      el.appendChild(pickStoryLine(storyPlaceIds(scenario).indexOf(pr.id) >= 0
+        ? FB.T('Story start: this birthplace begins the role’s story.')
+        : FB.T('This birthplace begins an ordinary household. The story starts in {places}.',
+          { places:storyPlaces })));
+    }
     /* One compact native picker replaces the settlement button row. The
        county seat is index 0 and every newly selected county resets to it. */
     const kindName = FB.ui._shared.settlementKindName;
@@ -3153,6 +3222,17 @@ FB.CHANGELOG = [
     const sex = document.querySelector('input[name=cg-sex]:checked').value;
     $('cg-name').value = G.pending.scenario.characterName || G.pending.name ||
       FB.randomName(G.pending.culture, sex);
+    /* An existing court or office fixes who you are, so its name and sex
+       read as a summary instead of controls that cannot change. */
+    $('cg-name-field').classList.toggle('hidden', !!fixedIdentity);
+    $('cg-reroll').classList.toggle('hidden', !!fixedIdentity);
+    $('cg-sex-row').classList.toggle('hidden', !!fixedIdentity);
+    const fixedBox = $('cg-fixed');
+    fixedBox.classList.toggle('hidden', !fixedIdentity);
+    fixedBox.innerHTML = fixedIdentity
+      ? '<div class="pick-location-title">' + FB.esc($('cg-name').value) + '</div>' +
+        '<div class="pick-location-meta">' + FB.esc(FB.T(sex === 'f' ? 'Woman' : 'Man')) + '</div>'
+      : '';
     /* Culture and faith are chosen as one authored county community. The
        pending pair survives a trip back to the same county; pickProvince
        restores the principal pair when the county actually changes. */
@@ -3163,6 +3243,14 @@ FB.CHANGELOG = [
       pr, G.pending.culture, G.pending.religion);
     G.pending.culture = currentCommunity.culture;
     G.pending.religion = currentCommunity.religion;
+    /* Fixed-place starts skip the map, so every start names its birthplace. */
+    const birthSite = FB.settlementsOf(null, pr.id)[G.pending.settlementIdx || 0];
+    const provinceName = FB.L(pr.name);
+    $('cg-place').textContent = FB.T('Birthplace: {place}', {
+      place:birthSite && birthSite.name && birthSite.name !== provinceName
+        ? FB.T('{settlement}, {province}', { settlement:birthSite.name, province:provinceName })
+        : provinceName
+    });
     const communityBox = $('cg-community');
     /* the community choice only exists when the county actually holds more
        than one — a single-community county has nothing to ask */
@@ -3229,7 +3317,9 @@ FB.CHANGELOG = [
       });
     });
     updateCgSummary();
-    if (!options.quickStart) FB.ui.showScreen('chargen');
+    if (!options.quickStart) {
+      FB.ui.showScreen('chargen', fixedIdentity ? { focus:$('btn-cg-start') } : undefined);
+    }
   }
 
   function selectedFamilyPreset() {

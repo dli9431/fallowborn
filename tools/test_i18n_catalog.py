@@ -8,7 +8,7 @@ class StaticHtmlExtractionTests(unittest.TestCase):
         inventory = i18n_catalog.Inventory()
         i18n_catalog.extract_mobile_presentations(inventory)
         self.assertNotIn('bookmark.476_mobile.name.default', inventory.entries)
-        self.assertEqual(inventory.entries['scenario.mobile_household_476.name.default']['text'], 'Pontic household')
+        self.assertEqual(inventory.entries['scenario.mobile_household_476.name.default']['text'], 'Pontic Household')
         self.assertIn('{province}', inventory.entries['scenario.mobile_household_476.intro.default']['text'])
         self.assertNotIn(i18n_catalog.source_key('Cherson'), inventory.entries)
 

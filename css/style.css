@@ -352,6 +352,9 @@ html.music-choice-resolved #music-choice { display: none !important; }
 }
 .pick-location-meta { color: var(--helper-text-color); margin-top: 2px; }
 .pick-community { margin-top: 7px; }
+.pick-story { margin-top: 7px; color: var(--ui-accent-color); }
+.cg-fixed { margin: 0; text-align: center; }
+.cg-place { color: var(--helper-text-color); font-size: 14px; }
 .picksett-field {
   display: block; margin-top: 10px; color: var(--helper-text-color);
   font-size: var(--ui-label-size); text-align: left;
@@ -370,6 +373,8 @@ html.music-choice-resolved #music-choice { display: none !important; }
   gap: 9px; width: 100%;
 }
 .quickstart-card {
+  /* a column from the top, so shorter cards in a row stay aligned */
+  display: flex; flex-direction: column; justify-content: flex-start;
   min-width: 0; overflow: hidden; padding: 6px 6px 9px;
   background: var(--ui-card-color); border: 1px solid var(--ui-border-color); border-radius: 8px;
   color: inherit; cursor: pointer; font: inherit; text-align: center;
@@ -400,11 +405,25 @@ html.music-choice-resolved #music-choice { display: none !important; }
   content: ''; height: 1px; flex: 1 1 auto; background: #66522f;
 }
 
+/* Narrow screens keep Quick Start to one swipeable row, so the starting
+   dates begin on the first screen instead of below every portrait. The next
+   card peeks in at the edge to show the row continues. */
 @media (max-width: 820px) {
-  #quickstartlist { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  #quickstartlist {
+    grid-template-columns: none; grid-auto-flow: column;
+    grid-auto-columns: minmax(124px, 30%);
+    overflow-x: auto; overscroll-behavior-x: contain;
+    scroll-snap-type: x proximity; scroll-padding: 0 4px; padding: 3px 4px 8px;
+  }
+  .quickstart-card { scroll-snap-align: start; }
 }
 @media (max-width: 480px) {
-  #quickstartlist { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  #quickstartlist { grid-auto-columns: minmax(118px, 38%); }
+}
+/* The title music controls sit in the bottom-left corner over these
+   scrolling lists; reserve room so their Back row can scroll clear. */
+#bookmarks, #newgame {
+  padding-bottom: calc(76px + env(safe-area-inset-bottom));
 }
 
 /* scenario cards */
@@ -413,6 +432,7 @@ html.music-choice-resolved #music-choice { display: none !important; }
   gap: 12px; width: min(100%, 900px); margin-bottom: 16px;
 }
 .scencard {
+  display: flex; flex-direction: column; justify-content: flex-start;
   background: var(--ui-card-color); border: 1px solid var(--ui-border-color); border-radius: 8px;
   padding: 12px; text-align: left; cursor: pointer; color: inherit; font-size: 14px;
 }
@@ -426,6 +446,7 @@ html.music-choice-resolved #music-choice { display: none !important; }
   grid-column: 1 / -1; margin: 4px 0 -4px;
   color: var(--ui-accent-color); font-size: 16px; font-weight: 700;
 }
+#scenariolist .scen-note { grid-column: 1 / -1; max-width: none; margin: 0; }
 .scencard .scenario-story { color: var(--ui-accent-color); margin-top: 6px; font-size: 13px; }
 .scencard.locked {
   background: #201f1d; border-color: #484641; color: var(--helper-text-color); cursor: default;
@@ -434,7 +455,7 @@ html.music-choice-resolved #music-choice { display: none !important; }
 .scencard.locked h3 { color: var(--helper-text-color); }
 .scencard.locked p { color: var(--helper-text-color); }
 .scencard.locked .scenario-lock {
-  color: var(--helper-text-color); font-weight: 600; margin-top: 8px;
+  color: var(--helper-text-color); font-weight: 600; margin-top: auto; padding-top: 8px;
 }
 
 .cgform { display: flex; flex-direction: column; gap: 10px; align-items: center; margin-bottom: 16px; }

@@ -255,9 +255,9 @@ for (const scenario of ['federate_476','curialis_476']) {
     await expect(bookmark).toContainText('Roman cities');
     await bookmark.click();
     const start=page.locator('#scenariolist .scencard').filter({hasText:scenario==='federate_476'?'Federate Soldier':'Curialis'});
-    await expect(page.locator('#scenariolist .scen-group')).toHaveText(['Historical starts','Open starts']);
+    await expect(page.locator('#scenariolist .scen-group')).toHaveText(['Historical starts','Story starts','Open starts']);
     await expect(start).toHaveCount(1);
-    await expect(start).toContainText('Story start: begin in Ravenna.');
+    await expect(start).toContainText('Story start: choose Ravenna as your birthplace.');
     await start.click();
     // An open role chooses its county; the Ravenna story attaches only there.
     await expect(page.locator('#pickprov:not(.hidden)')).toBeVisible();

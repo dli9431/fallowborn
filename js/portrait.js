@@ -570,11 +570,14 @@ window.FB = window.FB || {};
     return religion && plainObjectV2(religion.attire) ? religion.attire : {};
   }
   /* The wardrobe dressing a subject: their government form's costume, then
-     its era's, then the first wardrobe declared. */
-  function wardrobeIdOf(state, formId) {
+     its era's, then the first wardrobe declared. A subject's own era (a
+     stateless preview such as a Quick Start card) outranks the campaign era,
+     which without a state falls back to whichever bookmark is active. */
+  function wardrobeIdOf(state, formId, subjectEra) {
     var tables = FBDATA.wardrobes || {}, own = Object.prototype.hasOwnProperty;
     var eras = FBDATA.eras || {}, forms = FBDATA.governmentForms || {};
-    var eraId = FB.campaignEra ? FB.campaignEra(state) : null;
+    var eraId = typeof subjectEra === 'string' && own.call(eras, subjectEra) ? subjectEra
+      : FB.campaignEra ? FB.campaignEra(state) : null;
     var era = eraId && own.call(eras, eraId) ? eras[eraId] : null;
     var form = typeof formId === 'string' && own.call(forms, formId) ? forms[formId] : null;
     if (form && typeof form.costume === 'string' && own.call(tables, form.costume)) {
@@ -845,7 +848,7 @@ window.FB = window.FB || {};
     var religion = FB.religionOf ? FB.religionOf(c.religion, state) : null;
     var faith = religion && religion.group || '';
     var ladderContext = FB.station.context(isPlayer ? state.player : c, state);
-    var wardrobeId = wardrobeIdOf(state, ladderContext.formId);
+    var wardrobeId = wardrobeIdOf(state, ladderContext.formId, c.era);
     var attire = faithAttire(religion);
     var dress = {
       wardrobe:plainObjectV2(FBDATA.wardrobes && FBDATA.wardrobes[wardrobeId])
