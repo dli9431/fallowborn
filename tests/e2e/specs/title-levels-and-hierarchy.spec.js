@@ -6,7 +6,7 @@ dependsOnRuntime(__filename, [
   'js/actions.js', 'js/wars.js', 'js/holywar.js', 'js/main.js', 'js/model.js',
   'js/save.js', 'js/save_v4.js', 'js/ambitions.js', 'js/station.js',
   'js/ui_panels.js', 'js/ui_modals.js', 'js/governments.js',
-  'data/lexicons.js', 'data/technology.js', 'data/political_institutions.js',
+  'data/lexicons.js', 'data/technology.js', 'data/political_institutions.js', 'data/cultures.js',
   'data/bookmarks.js', 'data/bookmark_476.js',
   'data/bookmark_476_italy.js', 'data/bookmark_476_dalmatia_east.js',
   'data/bookmark_476_gaul_iberia.js', 'data/bookmark_476_africa.js', 'data/eras.js', 'data/counties.js'
@@ -20,7 +20,9 @@ async function startWorld(page, testInfo, id, noHierarchy) {
   await openGame(page, testInfo);
   const error = await page.evaluate(function (input) {
     if (input.noHierarchy) {
-      const book = JSON.parse(JSON.stringify(FB.bookmark('867')));
+      // The synthetic bookmark uses the retained world, whose ruler faiths
+      // do not require the historical bookmark id of a fresh court profile.
+      const book = JSON.parse(JSON.stringify(FB.bookmark('867', 'baseline')));
       book.id = input.id;
       // This resolved snapshot has no revision catalogue of its own.
       book.revision = 'baseline';
