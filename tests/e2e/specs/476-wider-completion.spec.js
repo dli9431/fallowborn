@@ -2,6 +2,7 @@
 const {test,expect} = require('../support/fixture');
 const {dependsOnRuntime} = require('../support/runtime-dependencies');
 const {openGame} = require('../support/game/navigation');
+const { useReleasedStartRules } = require('../support/game/released-starts');
 const {startRegion,startBaseline476,saveBudget} = require('../support/game/476-wider');
 const {advanceBookmark,restoreBookmark,facts} = require('../support/game/bookmark-acceptance');
 const {injectBrowserHarness} = require('../support/game/browser-harness');
@@ -497,8 +498,9 @@ test('revision-only counties, titles, starts and story parties participate in ca
       candidate.revisions.wider_v2.startLocations = policy;
       return FB.validateBookmark(candidate).some(function (error) { return error.indexOf('startLocations') >= 0; });
     });
+    // startLocations remains a bookmark override layered over each start's birthplaces rule.
     const disabled = JSON.parse(JSON.stringify(raw));
-    disabled.revisions.wider_v2.startLocations.curialis_476 = [];
+    disabled.revisions.wider_v2.startLocations = {curialis_476:[]};
     const disabledBookmark = FB.bookmarkRevisions('476',disabled).find(function (b) { return b.revision === 'wider_v2'; });
     const curialis = FBDATA.startScenarios.find(function (s) { return s.id === 'curialis_476'; });
     const disabledStart = FB.validateBookmark(disabled).length === 0 &&
@@ -582,6 +584,7 @@ test('expanded observer checkpoints retain the existing budgets',async function 
 
 test('open federate and curialis roles begin where their institutions live and attach the Ravenna story only there',
   async function ({page},testInfo) {
+    await useReleasedStartRules(page);
     await openGame(page,testInfo);
     const rules = await page.evaluate(function () {
       const before = JSON.stringify(FBDATA), rng = FB.getRngState(), uid = FB.getUidCounter();
@@ -608,8 +611,12 @@ test('open federate and curialis roles begin where their institutions live and a
           ravenna:FB.startProvinceAllowed(federate,b,'ravenna') && FB.startProvinceAllowed(curialis,b,'ravenna')};
       }
       const wider = FB.bookmark('476'), baseline = FB.bookmark('476','baseline');
-      const away = wider.startLocations.federate_476.filter(function (id) { return id !== 'ravenna'; })[0];
-      const civic = wider.startLocations.curialis_476.filter(function (id) { return id !== 'ravenna'; })[0];
+      // The roles' typed birthplaces rules resolve their counties; no bookmark list is computed.
+      const beginnings = function (start) {
+        return wider.provinces.filter(function (p) { return p.id !== 'ravenna' && FB.startProvinceAllowed(start,wider,p.id); })
+          .map(function (p) { return p.id; });
+      };
+      const away = beginnings(federate)[0], civic = beginnings(curialis)[0];
       return {wider:check(wider),baseline:check(baseline),away:away,
         tracks:[FB.startTracks(federate,'ravenna'),FB.startTracks(federate,away),
           FB.startTracks(curialis,'ravenna'),FB.startTracks(curialis,civic)],

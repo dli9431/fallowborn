@@ -17,6 +17,7 @@ dependsOnRuntime(__filename, [
 ]);
 const { test, expect } = require('../support/fixture');
 const { openGame } = require('../support/game/navigation');
+const { useReleasedStartRules } = require('../support/game/released-starts');
 const { injectBrowserHarness } = require('../support/game/browser-harness');
 
 const STARTS = [
@@ -71,6 +72,7 @@ async function winRavenna(page) {
 }
 
 test('unreviewed ruler starts reject start codes and direct creation', async function ({ page }, testInfo) {
+  await useReleasedStartRules(page);
   await openGame(page, testInfo);
   const hidden = await page.evaluate(function () {
     return FBDATA.startScenarios.filter(function (sc) {

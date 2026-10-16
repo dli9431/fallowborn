@@ -218,8 +218,9 @@ window.FBDATA = window.FBDATA || {};
   /* 476 BRANCH REVIEW SWITCH. While true, every beginning is open to every
      player: hidden candidates (the 476 courts) are offered and the
      earned-station ladder is unlocked. Owner testing only; set this to false
-     or delete it before the branch ships. */
-  FBDATA.reviewOpenStarts = true;
+     or delete it before the branch ships. Specifications of the released
+     rules preset it to false before the data scripts run. */
+  if (FBDATA.reviewOpenStarts === undefined) FBDATA.reviewOpenStarts = true;
 
   /* Curated one-click Serf lives. Each one names an exact physical settlement
      site, which the start screen resolves to that bookmark's stable slot and

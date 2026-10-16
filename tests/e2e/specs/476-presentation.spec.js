@@ -14,6 +14,7 @@ dependsOnRuntime(__filename, [
 ]);
 const { test, expect } = require('../support/fixture');
 const { openGame } = require('../support/game/navigation');
+const { useReleasedStartRules } = require('../support/game/released-starts');
 const { startHistoricalGame } = require('../support/game/historical-start');
 const { waitForUiRefresh } = require('../support/game/ui');
 
@@ -247,6 +248,7 @@ test('period stock and unit restrictions retain owned equipment and reject malfo
 for (const scenario of ['federate_476','curialis_476']) {
   test('476 '+scenario+' opening and purse fit the phone start flow',async function({page},testInfo){
     await page.setViewportSize({width:390,height:844});
+    await useReleasedStartRules(page);
     await openGame(page,testInfo);
     await expect(page.locator('#title .subtitle')).toContainText('late antiquity');
     await page.evaluate(function(){FB.game.uiPrefs.hideTips=true;FB.game.uiPrefs.hideBeginnerHints=true;});

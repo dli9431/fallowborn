@@ -2,6 +2,7 @@
 const { test, expect } = require('../support/fixture');
 const { openGame } = require('../support/game/navigation');
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
+const { useReleasedStartRules } = require('../support/game/released-starts');
 
 dependsOnRuntime(__filename, [
   'index.html', 'css/style.css', 'data/starts.js', 'data/wardrobes.js', 'data/eras.js',
@@ -89,6 +90,7 @@ test('phone setup lists keep Back clear of the music controls and return to the 
   });
 
 test('story starts are grouped and say where their story begins', async function ({ page }, testInfo) {
+  await useReleasedStartRules(page);
   await openGame(page, testInfo);
   await newGame(page);
   await chooseDate(page, '476');
@@ -150,6 +152,7 @@ test('a beginning limited to some counties keeps only those in color on the birt
 
 test('fixed-place households are story starts shown on their own county',
   async function ({ page }, testInfo) {
+    await useReleasedStartRules(page);
     await openGame(page, testInfo);
     await newGame(page);
     for (const date of [{ id:'711', start:'Toledo Household' }, { id:'800', start:'Aachen Household' }]) {
@@ -218,3 +221,18 @@ test('an existing court reads as a fixed identity and a Constantinople household
         culture:me.culture, religion:me.religion, tier:s.player.tier };
     })).toMatchObject({ bookmark:'1204', county:'constantinople', culture:'greek', religion:'orthodox', tier:1 });
   });
+
+test('the 476 branch review switch opens hidden and earned beginnings', async function ({ page }, testInfo) {
+  await openGame(page, testInfo);
+  expect(await page.evaluate(function () { return FBDATA.reviewOpenStarts; })).toBe(true);
+  await newGame(page);
+  await chooseDate(page, '476');
+  // The hidden courts are offered under Historical starts and nothing is locked.
+  await expect(page.locator('#scenariolist .scen-group')).toHaveText(['Historical starts', 'Story starts', 'Open starts']);
+  await expect(page.locator('#scenariolist [data-scenario="nepos_476"]')).toHaveCount(1);
+  await expect(page.locator('#scenariolist .scencard.locked')).toHaveCount(0);
+  await page.locator('#btn-ng-back').click();
+  await chooseDate(page, '867');
+  await expect(page.locator('#scenariolist [data-scenario="baron"]')).not.toHaveClass(/locked/);
+  await expect(page.locator('#scenariolist .scen-note')).toHaveCount(0);
+});

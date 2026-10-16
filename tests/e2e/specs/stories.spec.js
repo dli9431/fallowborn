@@ -18,6 +18,7 @@ dependsOnRuntime(__filename, [
 ]);
 const { test, expect } = require('../support/fixture');
 const { openGame } = require('../support/game/navigation');
+const { useReleasedStartRules } = require('../support/game/released-starts');
 
 async function startCode(page, testInfo, code) {
   await openGame(page, testInfo);
@@ -201,6 +202,7 @@ test('invalid story records are rejected before adoption',
 
 test('the start picker and family presets follow scenario data',
   async function ({ page }, testInfo) {
+    await useReleasedStartRules(page);
     await startCode(page, testInfo, CODE_476);
     await expect(page.locator('#chargen:not(.hidden)')).toBeVisible();
     const family = page.locator('#cg-family label');

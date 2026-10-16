@@ -21,8 +21,10 @@ dependsOnRuntime(__filename, [
 
 const { test, expect } = require('../support/fixture');
 const { openGame } = require('../support/game/navigation');
+const { useReleasedStartRules } = require('../support/game/released-starts');
 
 test.beforeEach(async function ({ page }, testInfo) {
+  await useReleasedStartRules(page);
   await openGame(page, testInfo);
   await page.evaluate(function () { FB.startProgression.reset(); });
 });
