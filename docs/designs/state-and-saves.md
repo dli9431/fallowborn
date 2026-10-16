@@ -730,7 +730,10 @@ save/export/import cannot silently retarget a plot in progress.
 **Game state is one serializable object** (`FB.state`), created in `js/main.js`. Political
 ownership lives in `state.owner` / `state.holder` / `state.dev` / `state.realms`, not in
 world data. `js/save.js` snapshots `FB.state` + RNG state + uid counter to localStorage;
-the raster is rebuilt deterministically at boot, so saves only reference ids.
+the raster is rebuilt deterministically at boot, so saves only reference ids. Every browser
+storage key and the save database name pass through `FB.storageKey`, which is the identity
+except in a branch test build, where it adds that build's `@<branch>` suffix (see the test
+builds section of `docs/deployment.md`).
 `state.start:{id,year,season,day}` identifies the bookmark and campaign origin. Loading
 first inspects that field, activates the matching complete world, and only then restores
 state and RNG. A missing field means the legacy 867 bookmark, preserving every old

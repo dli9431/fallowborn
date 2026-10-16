@@ -1,0 +1,40 @@
+# Redeploy test.fallowborn.com when any branch other than main is pushed or
+# deleted. The test site (deploy/test-builds) rebuilds every pushed branch, so
+# one trigger covers new, updated and removed branch builds. main never
+# triggers it; play.fallowborn.com deploys main through its own Coolify app.
+#
+# Repository secrets (Settings > Secrets and variables > Actions):
+#   COOLIFY_TEST_BUILDS_WEBHOOK  the test app's Coolify deploy webhook URL
+#   COOLIFY_API_TOKEN            a Coolify API token allowed to deploy it
+# Without the webhook secret the job skips, so forks and unconfigured copies
+# do nothing.
+name: Test builds
+
+on:
+  push:
+    branches-ignore:
+      - main
+  delete:
+
+permissions: {}
+
+concurrency:
+  group: test-builds
+  cancel-in-progress: true
+
+jobs:
+  redeploy:
+    if: github.event_name == 'push' || github.event.ref_type == 'branch'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger the test.fallowborn.com deploy
+        env:
+          WEBHOOK: ${{ secrets.COOLIFY_TEST_BUILDS_WEBHOOK }}
+          TOKEN: ${{ secrets.COOLIFY_API_TOKEN }}
+        run: |
+          if [ -z "$WEBHOOK" ]; then
+            echo "COOLIFY_TEST_BUILDS_WEBHOOK is not set; skipping."
+            exit 0
+          fi
+          curl --fail --silent --show-error --max-time 30 \
+            -H "Authorization: Bearer $TOKEN" "$WEBHOOK"
