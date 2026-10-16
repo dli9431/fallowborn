@@ -6,7 +6,7 @@ const { startHistoricalGame } = require('../support/game/historical-start');
 const { restoreBookmark } = require('../support/game/bookmark-acceptance');
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
-  'index.html', 'data/religious_institutions.js', 'data/political_institutions.js',
+  'index.html', 'data/religious_institutions.js', 'data/political_institutions.js', 'data/ecclesiastical_profiles.js',
   'data/cultures.js', 'data/technology.js', 'js/religious_institutions.js',
   'js/model.js', 'js/world.js', 'js/authority.js', 'js/institutions.js',
   'js/local_office_appointments.js', 'js/mods.js', 'js/save.js', 'js/save_v4.js',
@@ -130,6 +130,25 @@ test('repeated reviews leave state, RNG, ids, money and canonical support unchan
     return before === JSON.stringify(s) && rng === FB.getRngState() && uid === FB.getUidCounter();
   });
   expect(result).toBe(true);
+});
+
+test('detached temporal office validation uses the declared opening year', async function ({ page }) {
+  const result = await page.evaluate(function () {
+    var s = FB.state, bookmark = FB.campaignBookmark(s), year = s.date.year;
+    FBDATA.ecclesiasticalProfiles.test_profile_temporal = Object.assign({}, FBDATA.ecclesiasticalProfiles.sanctuary_temporal,
+      { name:'Fictional temporal binding', source:'institution_profile', chapter:false,
+        appointmentCost:0, layRecognition:false });
+    FBDATA.religiousInstitutionProfiles.test_school.period = { yearMin:year, yearMax:year };
+    var realm = { id:'test_temporal', ecclesiastical:{ profileId:'test_profile_temporal',
+      officeId:'test_school_office', institutionId:'test_school' } };
+    var before = JSON.stringify(s), rng = FB.getRngState(), uid = FB.getUidCounter();
+    var valid = FB.ecclesiasticalGovernment.definitionFaults(realm, 'ecclesiastical_principality', bookmark);
+    var expired = FB.ecclesiasticalGovernment.definitionFaults(realm, 'ecclesiastical_principality',
+      Object.assign({}, bookmark, { date:Object.assign({}, bookmark.date, { year:year + 1 }) }));
+    return { valid:valid, expired:expired,
+      pure:before === JSON.stringify(s) && rng === FB.getRngState() && uid === FB.getUidCounter() };
+  });
+  expect(result).toEqual({ valid:[], expired:['invalid religious office reference'], pure:true });
 });
 
 test('membership and scoped incompatible affiliations never convert people or communities', async function ({ page }) {

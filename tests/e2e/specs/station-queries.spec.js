@@ -139,7 +139,8 @@ test('station and realm rank queries give the feudal ladder answers',
         isImperial:function (t) { return t >= 7; },
         mayCommand:function (t) { return t >= 3; },
         mayAdministerJustice:function (t) { return t >= 3; },
-        mayArrangeDynasticMarriage:function (t) { return t >= 3; }
+        mayArrangeDynasticMarriage:function (t) { return t >= 3; },
+        maySeekCounty:function () { return false; }
       };
       const rankRules = {
         isCounty:function (r) { return r === 1; },
@@ -154,7 +155,8 @@ test('station and realm rank queries give the feudal ladder answers',
       const roles = ['serf', 'commoner', 'gentry', 'lord', 'lord', 'lord', 'crowned', 'crowned'];
       const tierHelpers = ['reaches','exceeds','societalRole','bandCount','meanings','has',
         'socialClass','realmRank','above','higherTier','same','promotion','next','previous','succession',
-        'tierFor','lowerSocialClass','titlesValid','context','definition','validateLadder'];
+        'tierFor','lowerSocialClass','titlesValid','context','definition','validateLadder',
+        'usesStanding','subject'];
 
       Object.keys(S).forEach(function (name) {
         if (!tierRules[name] && tierHelpers.indexOf(name) < 0) out.push('untested station query ' + name);
@@ -171,12 +173,21 @@ test('station and realm rank queries give the feudal ladder answers',
         });
         if (S.societalRole(t) !== roles[t]) out.push('societalRole ' + t);
         if (FB.societalRole(t) !== roles[t]) out.push('FB.societalRole ' + t);
+        if (S.usesStanding(t, null)) out.push('feudal usesStanding ' + t);
+        if (S.usesStanding({ tier:t, era:'late_antique' }, null) !== (t >= 1))
+          out.push('late antique usesStanding ' + t);
+        const subject = { tier:t };
+        if (S.subject(subject, null) !== subject) out.push('subject tier ' + t);
         for (let limit = -1; limit <= 8; limit++) {
           if (S.reaches({ tier:t }, limit) !== (t >= limit)) out.push('reaches ' + t + ' ' + limit);
           if (S.exceeds({ tier:t }, limit) !== (t > limit)) out.push('exceeds ' + t + ' ' + limit);
         }
         if (!S.reaches({ tier:t }, undefined)) out.push('an absent minimum blocks tier ' + t);
         if (S.exceeds({ tier:t }, undefined)) out.push('an absent maximum blocks tier ' + t);
+      }
+      for (let social = 0; social <= 4; social++) {
+        if (S.subject({ station:social }, null).tier !== social)
+          out.push('subject social station ' + social);
       }
       for (let r = 0; r <= 4; r++) {
         Object.keys(rankRules).forEach(function (name) {

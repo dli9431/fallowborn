@@ -6,6 +6,7 @@ dependsOnRuntime(__filename, [
   'js/model.js',
   'js/save.js', 'js/save_v4.js',
   'js/world.js',
+  'js/governments.js', 'js/papacy.js', 'data/map_data.js',
   'js/wars.js',
   'data/bookmarks.js'
 ]);
@@ -952,9 +953,8 @@ test('compaction never runs retroactively over a loaded save',
     });
   });
 
-test('a long run leaves the record count bound by the map, not by the years',
+test('aged courts compact dead records at a single annual boundary',
   async function ({ page }) {
-    test.slow();
     expect(await page.evaluate(function () {
       const s = FB.state;
       function counts() {
@@ -965,31 +965,47 @@ test('a long run leaves the record count bound by the map, not by the years',
         return { living:living, dead:dead, total:living + dead };
       }
       const start = counts();
-      /* Drive the realm simulation directly: this is the yearly world work,
-         without the day ticker or the player's own life in the way. */
-      for (let year = 0; year < 60; year++) {
-        s.date.year++;
-        s.turn += 360; // keep turn and date consistent for turn-derived clocks
+      const eligible = [];
+      const familyLinks = FB.familyLinksSnapshot(s);
+      for (const rid in s.realms) {
+        const r = s.realms[rid], family = r && r.succession;
+        if (!r || !r.alive || rid === 'player' || !family ||
+            FB.papacyTerritorialRealm(s, rid)) continue;
+        const selection = FB.governments.successionForRealm(s, rid);
+        if (selection.mobileLeadership || selection.delegatedLeadership) continue;
+        for (const id in family.members) {
+          const m = family.members[id], c = m.charId && s.chars[m.charId];
+          if (!c || c.dead || m.alive === false || id === family.rulerMemberId ||
+              m.branchRef && s.realms[m.branchRef.realmId] && s.realms[m.branchRef.realmId].alive ||
+              FB.isReigningRealmRuler(s, c) ||
+              FB.courtRecordRetained(s, c, familyLinks.kinById, familyLinks)) continue;
+          eligible.push({ member:m, charId:c.id });
+        }
+      }
+      // Age the existing families without simulating intervening years.
+      // At this age the staged mortality scale guarantees every eligible
+      // relative dies, exercising compaction through the real annual owner.
+      s.date.year += 100;
+      s.turn += 36000;
+      const mortality = FBDATA.balance.mortalityBase;
+      FBDATA.balance.mortalityBase = 1;
+      try {
         FB.worldTick(s);
+      } finally {
+        FBDATA.balance.mortalityBase = mortality;
       }
       const end = counts();
-      let realms = 0;
-      for (const rid in s.realms) {
-        const r = s.realms[rid];
-        if (r && r.alive && rid !== 'player') realms++;
-      }
       return {
-        realms:realms,
-        startTotal:start.total,
-        endTotal:end.total,
-        /* Sixty years is roughly three generations of AI rulers. Unbounded
-           accumulation would land far above the living court population; the
-           bound here is deliberately generous, because it is the growth
-           *shape* under test and not an exact figure. */
+        exercised:eligible.length > 0,
+        compacted:eligible.every(function (entry) {
+          return !s.chars[entry.charId] && entry.member.alive === false && !entry.member.charId;
+        }),
         withinBound:end.total < start.total * 2,
         deadRecordsStaySmall:end.dead < start.total
       };
     })).toMatchObject({
+      exercised:true,
+      compacted:true,
       withinBound:true,
       deadRecordsStaySmall:true
     });

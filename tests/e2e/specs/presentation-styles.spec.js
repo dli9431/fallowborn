@@ -198,6 +198,11 @@ test('music prefers the era and retains exact, lineage, role and general fallbac
       return route.fulfill({ contentType:'application/javascript',
         body:'FBDATA.musicCatalog=' + JSON.stringify({ schema:1, intros:[], tracks:[], banks:banks }) + ';' });
     });
+    // This empty routing catalog has no boot music choice. Resolve the
+    // preference before navigation so the title helper cannot race its shell.
+    await page.addInitScript(function () {
+      localStorage.setItem('fb_ui', JSON.stringify({ musicChoice:'off' }));
+    });
     await openGame(page, testInfo);
     const result = await page.evaluate(function () {
       const s = { start:{ id:'476', era:'late_antique' },
