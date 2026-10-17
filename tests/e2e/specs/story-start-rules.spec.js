@@ -11,6 +11,7 @@ dependsOnRuntime(__filename, [
   'data/story_households_711.js', 'data/story_households_800.js',
   'data/story_households_1204.js', 'data/story_households_pontic_476.js',
   'data/starts_perspectives.js', 'data/story_households_perspectives.js',
+  'data/starts_york_wessex_867.js', 'data/story_households_867.js',
   'data/start_ambitions.js', 'data/story_courts_476.js',
   'data/bookmark_476.js', 'data/bookmark_476_wider.js', 'data/bookmark_476_italy.js',
   'data/story_ruler_agendas.js', 'data/story_instances.js', 'data/story_campaigns_711.js',
@@ -274,7 +275,7 @@ for (const profile of [
     await Promise.all([page.waitForNavigation({ waitUntil:'domcontentloaded' }), page.locator('#mod-apply').click()]);
     await page.waitForFunction(function () { return window.FB && FB.game && FB.game.bootReady && !!FB.stories.get('hill_household_example'); });
     await chooseDate(page, '867');
-    await expect(page.locator('#scenariolist .scen-group')).toHaveText(['Story starts', 'Open starts']);
+    await expect(page.locator('#scenariolist .scen-group')).toHaveText(['Historical starts', 'Story starts', 'Open starts']);
     const card = page.locator('#scenariolist [data-scenario="' + profile.start + '"]');
     await expect(card.locator('.scenario-story')).toHaveText('Story start: begins in ' + profile.place + '.');
     await card.click();
