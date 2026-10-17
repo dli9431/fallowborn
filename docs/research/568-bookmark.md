@@ -36,6 +36,8 @@ The 132 courts include one Eastern Roman court at Constantinople, one Sasanian c
 
 The hidden date has two ordinary map-chosen roles, farmer_568 and craftsman_568, declared in data/starts_568.js. Their startLocations lists include all 506 inhabited counties; the existing community picker supplies local identities. These generic household and resource defaults are simulation choices. They offer no named Alboin, royal relative, bishop, retired general or fixed-place storyline. Historical identity, personal faith, family, origin, route and institution holds remain separate. Matching saves retain migration_v1 and the opening actor ids; restore does not run the composer or seed a replacement household. There is no new schema or independently gateable technology capability.
 
+Alboin's named opening and personal agenda remain unavailable while his opening faith, working age and royal household remain unresolved. The Lombard court has one anonymous generated principal, with no authored historical spouse or child. tests/e2e/specs/568-alboin-start.spec.js covers that distinction, omission from setup and start codes even when the date is locally made visible for review, and rejection of direct-entry metadata attempting to adopt the anonymous principal as Alboin.
+
 First-pass world, quadrant a
 
 data/bookmark_568_scaffold_a.js supplies five regions: italy (40 inhabited counties), iran_caucasus (36 inhabited counties and two scenery cells), central_europe (24), iberia_north_interior (20) and britain_west (six). They total 128 physical counties, including 126 inhabited counties. The file itself stages provisional records; data/bookmark_568.js publishes them with the other quadrants. Regional corrections remain separate work.
