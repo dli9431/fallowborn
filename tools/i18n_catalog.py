@@ -740,7 +740,22 @@ def extract_terrain_1204(inv: Inventory) -> None:
                             TOKEN_RE.findall(record["text"]))
 
 
+def extract_geography_additions(inv: Inventory) -> None:
+    """Read physical display labels without evaluating geography composers."""
+    for source in sorted(DATA.glob("geography_*.js")):
+        rel = source.relative_to(ROOT).as_posix()
+        for seed_node in node_array(find_local_assignment(source, "PROVINCE_ADDITIONS")) or []:
+            seed = node_object(seed_node) or {}
+            seed_id = node_string(seed.get("id"))
+            if not seed_id:
+                continue
+            for branch, record, line in branch_records(seed.get("name")):
+                inv.add(f"province.{seed_id}.name.{branch}", record, f"{rel}:{line}",
+                        "Physical scenery label; habitation is declared separately.", ())
+
+
 def extract_structured(inv: Inventory) -> None:
+    extract_geography_additions(inv)
     extract_terrain_1204(inv)
     for path in EVENT_FILES + [path for path, _ in REGION_FILES]:
         rel = path.relative_to(ROOT).as_posix()

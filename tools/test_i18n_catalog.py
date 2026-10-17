@@ -1,6 +1,33 @@
 import unittest
+import tempfile
+from pathlib import Path
+from unittest.mock import patch
 
 import i18n_catalog
+
+
+class GeographyAdditionExtractionTests(unittest.TestCase):
+    def test_independent_literal_geography_labels_have_source_owners(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            data = root / 'data'
+            data.mkdir()
+            (data / 'geography_islands.js').write_text(
+                "var PROVINCE_ADDITIONS = [{id:'survey_island',name:'Island district',x:1,y:2}];\n"
+                "throw new Error('Static extraction must not execute this file');\n", encoding='utf-8')
+            (data / 'geography_hills.js').write_text(
+                "var PROVINCE_ADDITIONS = [{id:'survey_hills',name:'Northern hills'},"
+                "{name:'Unowned label'}, {id:'no_label'}];", encoding='utf-8')
+            (data / 'geography_other.js').write_text(
+                "var OTHER = [{id:'not_a_seed',name:'Unrelated'}];", encoding='utf-8')
+            inventory = i18n_catalog.Inventory()
+            with patch.object(i18n_catalog, 'ROOT', root), patch.object(i18n_catalog, 'DATA', data):
+                i18n_catalog.extract_geography_additions(inventory)
+            self.assertEqual(inventory.entries['province.survey_island.name.default']['text'], 'Island district')
+            self.assertEqual(inventory.entries['province.survey_hills.name.default']['text'], 'Northern hills')
+            self.assertNotIn('province.not_a_seed.name.default', inventory.entries)
+            self.assertNotIn('province.no_label.name.default', inventory.entries)
+            self.assertIn(i18n_catalog.source_key('Northern hills'), inventory.entries)
 
 
 class StaticHtmlExtractionTests(unittest.TestCase):
