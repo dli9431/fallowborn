@@ -1,6 +1,7 @@
 'use strict';
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
+  'data/story_household_effects_476_493.js', 'js/story_household_observer.js',
   'data/story_courts_476.js',
   'data/map_data.js', 'data/counties.js', 'data/bookmarks.js',
   'data/climate.js', 'data/geographies.js', 'js/climate.js',
@@ -122,7 +123,7 @@ test('476 bookmark and free federate start preserve 867 and 1066 data',
     expect(result.older).toEqual([[], []]);
     expect(result.noIslam).toBe(true);
     expect(result.sites).toEqual(['ravenna_476', 'classis_476']);
-    expect(result.stories).toEqual(['western_court_476','zeno_return_476',
+    expect(result.stories.filter(function (id) { return id.indexOf('household_effects_') !== 0; })).toEqual(['western_court_476','zeno_return_476',
       'clovis_syagrius_476','theoderic_italy_476','eastern_africa_476','eastern_italy_476',
       'rugian_frontier_476','sicilian_tribute_476','norican_evacuation_476',
       'thracian_pressure_476','amal_epirus_476',

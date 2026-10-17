@@ -1,6 +1,7 @@
 'use strict';
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
+  'data/story_household_effects_476_493.js', 'js/story_household_observer.js',
   'data/story_courts_476.js',
   'index.html', 'css/style.css', 'data/eras.js', 'data/wardrobes.js',
   'data/cultures.js', 'data/lexicons.js', 'data/map_data.js', 'data/units.js',
@@ -275,7 +276,7 @@ for (const scenario of ['federate_476','curialis_476']) {
     await page.evaluate(function(){FB.game.setPaused(true);});
     await page.getByRole('button',{name:'Begin',exact:true}).click();
     await page.locator('[data-tab="actions"]').click();
-    const storyIds=['zeno_return_476','suevic_frontier_476','western_office_476',
+    const storyIds=['zeno_return_476','suevic_frontier_476','western_office_476','household_effects_western_court_476',
       scenario==='federate_476'?'federate_track_476':'curialis_track_476'];
     await expect(page.locator('[data-story-card]')).toHaveCount(storyIds.length);
     for (const id of storyIds) {

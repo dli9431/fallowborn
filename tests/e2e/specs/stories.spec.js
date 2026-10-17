@@ -1,6 +1,7 @@
 'use strict';
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
+  'data/story_household_effects_476_493.js', 'js/story_household_observer.js',
   'data/story_courts_476.js',
   'data/story_households_711.js', 'js/story_household.js',
   'data/story_households_800.js',
@@ -112,7 +113,7 @@ test('stories register in order at load time only and resolve by id',
     expect(result.unknown).toBeNull();
     expect(result.late).toContain('load time only');
     expect(result.registered).toBe(false);
-    expect(result.bookmark).toEqual(WORLD_STORIES.concat(['cashel_recognition_476']));
+    expect(result.bookmark.filter(function (id) { return id.indexOf('household_effects_') !== 0; })).toEqual(WORLD_STORIES.concat(['cashel_recognition_476']));
     expect(result.tracks).toEqual(['peroz_476:peroz_agenda_476','nepos_476:nepos_track_476','odoacer_476:odoacer_agenda_476','syagrius_476:syagrius_agenda_476','federate_476:federate_track_476','curialis_476:curialis_track_476','toledo_household_711:toledo_household_track_711','aachen_household_800:aachen_household_track_800','constantinople_household_1204:constantinople_household_track_1204','mobile_household_476:pontic_household_track_476','peroz_sasanian_476:peroz_agenda_476','muhammad_1204:muhammad_agenda_1204','siwa_delegate_1204:siwa_agenda_1204']);
   });
 

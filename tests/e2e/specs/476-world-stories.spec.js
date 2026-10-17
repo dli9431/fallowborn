@@ -1,6 +1,7 @@
 'use strict';
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
+  'data/story_household_effects_476_493.js', 'js/story_household_observer.js',
   'data/story_courts_476.js',
   'index.html', 'data/story_campaigns.js', 'data/bookmarks.js', 'data/bookmark_476.js',
   'data/eras.js', 'data/systems.js', 'js/systems.js', 'data/cultures.js',
@@ -68,10 +69,10 @@ for (const crazygames of [false,true]) {
             .map(function (id) { return FBDATA.techImpactReviews.features[id].mode; }),
           valid:FB.save.v4.validatePlatform(JSON.parse(FB.save.serialize()).state) };
       });
-      expect(result.attached).toEqual(['western_court_476'].concat(RAILS, ['cashel_recognition_476','federate_track_476']));
+      expect(result.attached.filter(function (id) { return id.indexOf('household_effects_') !== 0; })).toEqual(['western_court_476'].concat(RAILS, ['cashel_recognition_476','federate_track_476']));
       expect(result).toMatchObject({ pure:true, world:true, noLegacy:true, valid:true, modes:['none','none','none'] });
       // The Suevic frontier window opens in 476, so its campaign card shows from the start.
-      expect(result.cards).toEqual(['zeno_return_476','suevic_frontier_476','western_office_476','federate_track_476']);
+      expect(result.cards.filter(function (id) { return id.indexOf('household_effects_') !== 0; })).toEqual(['zeno_return_476','suevic_frontier_476','western_office_476','federate_track_476']);
     });
 }
 

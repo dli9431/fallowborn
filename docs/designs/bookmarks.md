@@ -137,3 +137,7 @@ The existing mobile_household_476 opening attaches pontic_household_track_476 on
 Bookmark and start validation accepts an explicit detached story context from the mod loader. Same-file storyInstances and startScenarios can therefore refer to each other without temporary publication into the active registry. Every affected retained world revision is checked. Fresh campaign creation initializes only declared attachments; loading an older matching campaign never fills absent story records.
 
 The two playable authoring examples own separate three-county geography bases and fictional people and identities. They use ordinary bookmark, local-institution, household-start and story declarations. They contain no copied historical bookmark or central historical office dependency.
+
+Local household responses in the early openings
+
+data/story_household_effects_476_493.js appends one household_observer per existing source to every 476 and 493 revision that already lists that source. The twenty-four sources retain their original campaigns, courts, public payments, populations and recognition records. The declarations cover 128 local beats, with pending restoration and unissued civilian-route notices explicitly silent. Households receive costless reports and reviews of existing records, including the actual route counts and public tribute account. Paid supply, relief transfers, immediate named-family evacuation and new legal duties are outside these notices. No released 867 or 1066 world declaration changes.

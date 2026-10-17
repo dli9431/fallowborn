@@ -1,6 +1,7 @@
 'use strict';
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
+  'data/story_household_effects_476_493.js', 'js/story_household_observer.js',
   'data/bookmark_493_world.js', 'data/geography_expansion.js',
   'data/bookmark_476_outer.js', 'data/bookmark_476_wider_identities.js',
   'data/aristocratic_courts.js', 'data/assembly_polities.js',
@@ -89,7 +90,7 @@ test('493 is a registered independent hidden review candidate at every new-campa
         stories:b.stories, registered:b.stories.every(function (id) { return !!FB.stories.get(id); }) };
     });
     expect(definition).toEqual({ hidden:true, faults:[], independent:true,
-      offered:false, inspectable:true, stories:CAMPAIGNS, registered:true });
+      offered:false, inspectable:true, stories:CAMPAIGNS.concat(CAMPAIGNS.map(function (id) { return 'household_effects_' + id; })), registered:true });
     const full = page.locator('#btn-choose-beginning');
     if (await full.isVisible()) await full.click();
     else await page.getByRole('button', { name:'New Game', exact:true }).click();
