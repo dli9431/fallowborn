@@ -304,6 +304,7 @@
   FB.stories.registerType('campaign', function (def) {
     validateDefinition(def);
     return { id:def.id, kind:'world', requires:def.requires || [], init:fresh,
+      choiceIds:['face_campaign','leave_campaign'],
       day:function (s, rec) { day(s, rec, FB.stories.definition(s, def)); },
       choices:function (s, rec) {
         var effective = FB.stories.definition(s, def);

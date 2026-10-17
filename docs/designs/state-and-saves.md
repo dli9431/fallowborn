@@ -1,3 +1,9 @@
+Personal ruler agenda contract review
+
+The v4 freeze is reopened for the optional ruler_agenda track record, schema 1. It stores subjectId, original ruler generation, delegated mandateId or null, openedTurn, current ordered step, status, outcomeTurn and at most sixteen decisions containing stageId, choiceId and turn. The four statuses distinguish an open, completed, voluntarily stopped or interrupted personal program. Decisions must follow the effective declaration in order; early completion requires an authored finish choice. Unknown fields, stages, choices, invalid ordering and future turn stamps fail detached validation.
+
+The envelope and subsystem versions retain their meanings. No prior record is reinterpreted and no migration initializes an absent agenda. Existing saves, including those created with the same scenario before agenda attachment was authored, keep their missing records. Restore resumes only saved choices and never calls init or apply, pays, grants, obtains consent or declares war. Historical subject ids may outlive compacted characters. The next ordinary story lifecycle boundary interrupts a still-open program after a real incumbent or mandate change. Pending, completed, absent and malformed-record coverage belongs to ruler-agenda-type.spec.js and ruler-agendas.spec.js.
+
 Fresh campaign defaults and replay
 
 Optional household story records

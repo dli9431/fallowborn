@@ -18,6 +18,10 @@ FB.activateBookmark prepares a detached definition: it normalizes rank-scoped ti
 
 A new campaign stamps its bookmark, creation date, era, geography and default government. FB.campaignEra uses this stamp rather than changing era when the live year crosses an era boundary. Saves retain semantic ids and facts, not rendered display text or copied registry definitions. Restoration activates the matching bookmark, then adopts validated saved facts; it does not recreate authored relatives, incumbent bishops, appointments, grants or story rewards.
 
+Personal ruler programs
+
+data/story_ruler_agendas.js attaches four dated reviews to each existing Peroz, Odoacer, Syagrius, Muhammad II and Siwa Delegate opening. Both retained and expanded Peroz scenario ids share one agenda. Existing revision/start eligibility and hidden flags remain authoritative; the Nepos restoration track retains its separate identity and behavior. The agendas use the existing courts, conditional campaigns and public institutions. Date windows pace reviews without forcing battles, deaths, border transfers, conversion or a renewed mandate. Unavailable or unsupported political operations retain explicit priority/conclusion alternatives.
+
 Requirement gate
 
 FB.validateBookmark combines the existing geography, era, government-strategy, technology, faith, culture, legal-tradition, wardrobe, lexicon, item-presentation, system, balance, opening and world-reference validators with FB.bookmarkRequirementFaults. Validation includes hidden definitions. Hiding incomplete content prevents new campaigns; it does not exempt malformed data from the authoring gate.
