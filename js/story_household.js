@@ -60,7 +60,7 @@
     need(slug(def.homeProvinceId) && ['household','protagonist'].indexOf(def.continuity) >= 0, 'home or continuity');
     need(plain(def.stages) && Object.keys(def.stages).length > 0 && Object.keys(def.stages).length <= 64 &&
       slug(def.initialStage) && own(def.stages, def.initialStage), 'stages');
-    need(def.continuity === 'protagonist' ? own(def.stages, def.interruptedStage) &&
+    need(def.continuity === 'protagonist' ? slug(def.interruptedStage) && own(def.stages, def.interruptedStage) &&
       def.stages[def.interruptedStage].terminal === true : def.interruptedStage === undefined, 'interruption route');
     function focus(id) { return (FBDATA.focuses || []).some(function (f) { return f.id === id && f.vocational; }); }
     function dependency(id) { need((def.requires || []).indexOf(id) >= 0 && context.get(id), 'story dependency'); }
@@ -116,7 +116,7 @@
       need(Array.isArray(stage.choices) && stage.choices.length <= 12 &&
         Array.isArray(stage.transitions) && stage.transitions.length <= 16, 'stage lists');
       need(!stage.terminal || !stage.choices.length && !stage.transitions.length, 'terminal routes');
-      need(!stage.afterWork || !stage.terminal && keys(stage.afterWork, ['focusId','provinceId','next']) &&
+      need(stage.afterWork === undefined || !stage.terminal && keys(stage.afterWork, ['focusId','provinceId','next']) &&
         focus(stage.afterWork.focusId) && slug(stage.afterWork.provinceId) && own(def.stages, stage.afterWork.next) && stage.afterWork.next !== id, 'work route');
       need(stage.terminal || stage.choices.length + stage.transitions.length > 0 || stage.afterWork, 'unfinished dead end');
       if (stage.incident) {
@@ -314,9 +314,10 @@
       title:function () { return FB.T(def.title); }, intro:function () { return FB.T(def.intro); },
       day:update, season:update, year:update,
       householdFocusPaid:function (s, t, focusId) {
-        var stage = def.stages[t.phase], work = stage.afterWork;
+        var stage = def.stages[t.phase], work = stage.afterWork, key = incident(s, t, stage);
         if (!work || !living(s) || def.continuity === 'protagonist' && t.actorId !== s.player.charId ||
           s.player.travel || work.focusId !== focusId || s.player.provinceId !== work.provinceId ||
+          stage.incident && (!key || receipt(s, key) || s.player.provinceId !== stage.incident.provinceId || present(s) !== stage.incident.provinceId) ||
           stage.transitions.some(function (r) { return test(s, r.when); })) return;
         close(s, t, stage, 'resolved'); move(s, t, work.next);
       },

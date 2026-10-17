@@ -42,13 +42,18 @@ test('JSON work graphs charge once and observe actual focus income without repla
     const gold = s.player.gold;
     FB.tickFocus(s);
     const paid = s.stories[id].phase, gained = s.player.gold > gold;
+    // The graph can revisit a supply review, but its earlier decision is durable.
+    const completed = s.stories[id].phase;
+    s.stories[id].phase = 'supplies';
+    const chargedTwice = choose('buy');
+    s.stories[id].phase = completed;
     const done = JSON.stringify(s.stories[id]), funds = s.player.gold;
     FB.save.restore(JSON.parse(FB.save.serialize())); s = FB.state;
     return { poor:poor, unchanged:unchanged, stale:stale, bought:bought, charged:charged, repeat:repeat,
       selected:selected, unearned:unearned, gift:gift, pendingRetained:pendingRetained, paid:paid, gained:gained,
-      restored:done === JSON.stringify(s.stories[id]) && funds === s.player.gold };
+      chargedTwice:chargedTwice, restored:done === JSON.stringify(s.stories[id]) && funds === s.player.gold };
   })).toEqual({ poor:false, unchanged:true, stale:false, bought:true, charged:true, repeat:false,
-    selected:true, unearned:'working', gift:'working', pendingRetained:true, paid:'paid', gained:true, restored:true });
+    selected:true, unearned:'working', gift:'working', pendingRetained:true, paid:'paid', gained:true, chargedTwice:false, restored:true });
 });
 
 test('the independent field graph uses field income and household continuity', async function ({ page }, info) {
@@ -78,7 +83,7 @@ test('personal work interrupts on death and rejects a successor before lifecycle
   })).toEqual({ inherited:false, phase:'interrupted', original:true, unchanged:true });
 });
 
-for (const fault of ['focus','expense','work_target','personal_route']) {
+for (const fault of ['focus','expense','work_target','null_work','personal_route']) {
   test('malformed JSON work ' + fault + ' rejects without mutations', async function ({ page }, info) {
     await openGame(page, info);
     const result = await page.evaluate(function (input) {
@@ -86,6 +91,7 @@ for (const fault of ['focus','expense','work_target','personal_route']) {
       if (input.fault === 'focus') d.stages.select_work.choices[0].operation.focusId = 'missing_focus';
       if (input.fault === 'expense') d.stages.supplies.choices[0].operation.amount = -3;
       if (input.fault === 'work_target') d.stages.working.afterWork.next = 'missing_stage';
+      if (input.fault === 'null_work') d.stages.working.afterWork = null;
       if (input.fault === 'personal_route') d.interruptedStage = 'working';
       const before = JSON.stringify(FBDATA), rng = FB.getRngState(), uid = FB.getUidCounter();
       const errors = FB.mods.validate(m);
