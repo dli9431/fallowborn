@@ -8759,6 +8759,8 @@ window.FB = window.FB || {};
 
   function buildingUnavailableText(s, pid, id, d) {
     const pr = FB.world.byId[pid];
+    const applicability = FB.buildingApplicabilityStatus(s, pid, id);
+    if (!applicability.ready) return applicability.reason;
     if (d.requiresTech && !FB.techRequirementMet(s, d.requiresTech)) {
       return techRequirementText(s, d.requiresTech);
     }
@@ -9480,6 +9482,7 @@ window.FB = window.FB || {};
       cost:status.cost
     });
     if (status.reason === 'rank') return FB.T('Requires {Term:baron} rank or higher.');
+    if (status.reason === 'applicability') return status.applicability.reason;
     if (status.reason === 'contested') return FB.T('Construction cannot begin while the county is contested.');
     if (status.reason === 'ruins') return FB.T('Fort ruins occupy this settlement; choose another site in the county.');
     if (status.reason === 'other_settlement') return FB.T('This county’s fort stands in another settlement.');

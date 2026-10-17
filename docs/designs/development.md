@@ -1,5 +1,13 @@
 # Development & buildings
 
+Construction applicability
+
+Optional building applicability limits new construction by inclusive live-year bounds, stamped campaign era, physical county, declared primary resident culture and the payer's sovereign technology traditions. Different dimensions combine; alternatives within a list match individually. The pure buildingApplicabilityStatus projection supplies the same first localized blocker to player construction, automation, realm AI, private barons, fort funding and the Building Works picker. Ordinary authority, price, development, siting, technology and occupancy still apply, and confirmation recomputes live eligibility before spending.
+
+Resident culture belongs to the target county's current population identity, with the province declaration used only when runtime identity is absent. A minority, ruler culture or unrelated player residence cannot replace it. A realm payer follows its sovereign; private barons use the target county holder's sovereign through the canonical settlement actor and technology resolver. Generated cultures match exact ids, with no ancestry equivalence. Unresolved context blocks the gated candidate. Bundled and ordinary JSON declarations share strict detached validation and exact mod fingerprints; see docs/MODDING.md for the field contract.
+
+Existing buildings retain effects and upkeep after context changes. Repairs restore their existing asset without applying new-construction applicability; already funded fort projects complete normally. New fort upgrades are new commitments and recheck applicability. No saved building shape, migration, opening inventory, technology completion or rendered status is introduced. The construction_applicability technology-impact review is none: historical place, date and social context are permissions rather than discoveries, and ordinary baseline activities remain available. Existing optional building technology requirements stay independent.
+
 ## Settlement founding
 
 The charter review shows County capacity as established sites out of eight (`x/8`).

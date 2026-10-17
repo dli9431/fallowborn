@@ -56,11 +56,131 @@ window.FB = window.FB || {};
     return null;
   };
 
+  function buildingScopeReferences() {
+    var counties = Object.create(null);
+    function add(rows) {
+      if (!Array.isArray(rows)) return;
+      rows.forEach(function (row) {
+        if (row && typeof row.id === 'string') counties[row.id] = true;
+      });
+    }
+    add(FBDATA.provinces);
+    Object.keys(FBDATA.geographies || {}).forEach(function (id) {
+      var geography = FBDATA.geographies[id];
+      if (!geography) return;
+      add(geography.provinces);
+      add(geography.provinceAdditions);
+    });
+    return { eras:FBDATA.eras || {}, countyIds:counties,
+      cultures:FBDATA.cultures || {}, traditions:FBDATA.techTraditions || {} };
+  }
+
+  function buildingScopeFaults(scope, refs) {
+    var errors = [], own = Object.prototype.hasOwnProperty;
+    if (!scope || typeof scope !== 'object' || Array.isArray(scope))
+      return ['applicability must be an object.'];
+    var allowed = { yearMin:1, yearMax:1, eras:1, countyIds:1, cultures:1, traditions:1 };
+    Object.keys(scope).forEach(function (key) {
+      if (!own.call(allowed, key)) errors.push('applicability has unknown key ' + key + '.');
+    });
+    ['yearMin','yearMax'].forEach(function (key) {
+      if (scope[key] !== undefined && (typeof scope[key] !== 'number' ||
+          !isFinite(scope[key]) || Math.floor(scope[key]) !== scope[key]))
+        errors.push('applicability.' + key + ' must be a finite integer.');
+    });
+    if (scope.yearMin !== undefined && scope.yearMax !== undefined && scope.yearMin > scope.yearMax)
+      errors.push('applicability yearMin must not exceed yearMax.');
+    ['eras','countyIds','cultures','traditions'].forEach(function (key) {
+      var list = scope[key];
+      if (list === undefined) return;
+      if (!Array.isArray(list) || !list.length) {
+        errors.push('applicability.' + key + ' must be a nonempty list.');
+        return;
+      }
+      var seen = Object.create(null);
+      list.forEach(function (id) {
+        if (typeof id !== 'string' || !own.call(refs[key], id))
+          errors.push('applicability.' + key + ' has unknown reference ' + String(id) + '.');
+        else if (seen[id]) errors.push('applicability.' + key + ' has duplicate ' + id + '.');
+        seen[id] = true;
+      });
+    });
+    return errors;
+  }
+
+  /* New construction only. Read the target's declared resident identity and
+     the payer's sovereign knowledge without normalizing or creating state. */
+  FB.buildingApplicabilityStatus = function (state, pid, id, payer) {
+    var def = FBDATA.buildings && FBDATA.buildings[id];
+    function blocked(code, reason) { return { ready:false, code:code, reason:reason }; }
+    if (!def) return blocked('unavailable', FB.T('This building is unavailable.'));
+    if (def.applicability === undefined) return { ready:true, code:null, reason:'' };
+    var scope = def.applicability;
+    var pr = FB.world && FB.world.byId && FB.world.byId[pid];
+    if (!scope || typeof scope !== 'object' || Array.isArray(scope) || !state || !pr || pr.wasteland)
+      return blocked('context', FB.T('Construction context is unavailable.'));
+    var year = state.date && state.date.year;
+    if (scope.yearMin !== undefined || scope.yearMax !== undefined) {
+      if (typeof year !== 'number' || !isFinite(year) || Math.floor(year) !== year)
+        return blocked('context', FB.T('Construction context is unavailable.'));
+      if (scope.yearMin !== undefined && year < scope.yearMin)
+        return blocked('yearMin', FB.T('Construction is available from {year}.', { year:scope.yearMin }));
+      if (scope.yearMax !== undefined && year > scope.yearMax)
+        return blocked('yearMax', FB.T('Construction was available through {year}.', { year:scope.yearMax }));
+    }
+    if (scope.eras) {
+      if (state.start && state.start.era !== undefined &&
+          !Object.prototype.hasOwnProperty.call(FBDATA.eras, state.start.era))
+        return blocked('context', FB.T('Construction context is unavailable.'));
+      if (scope.eras.indexOf(FB.campaignEra(state)) < 0)
+        return blocked('eras', FB.T('Construction is unavailable in this campaign era.'));
+    }
+    if (scope.countyIds && scope.countyIds.indexOf(pid) < 0)
+      return blocked('countyIds', FB.T('Construction is unavailable in this county.'));
+    if (scope.cultures) {
+      var population = state.population && state.population.counties && state.population.counties[pid];
+      var culture = population && population.identity ? population.identity.culture : pr.culture;
+      if (!culture || !FB.cultureExists(culture, state))
+        return blocked('context', FB.T('Construction context is unavailable.'));
+      if (scope.cultures.indexOf(culture) < 0)
+        return blocked('cultures', FB.T('Construction is unavailable for this county’s resident culture.'));
+    }
+    if (scope.traditions) {
+      if (!state.player || !state.realms || !state.chars)
+        return blocked('context', FB.T('Construction context is unavailable.'));
+      var actor = FB.settlementActor(state, payer);
+      var realmId = actor.kind === 'realm' ? actor.id : FB.settlementCountyHolder(state, pid);
+      if (realmId === 'player' && !(state.realms && state.realms.player && state.realms.player.alive))
+        realmId = FB.settlementCountyHolder(state, pid);
+      var realm = realmId && state.realms && state.realms[realmId];
+      if ((actor.kind !== 'realm' && actor.kind !== 'character') || !realm || !realm.alive ||
+          actor.kind === 'character' &&
+          (!state.chars[actor.id] || state.chars[actor.id].dead))
+        return blocked('context', FB.T('Construction context is unavailable.'));
+      var sovereign = FB.techRealmId(state, realmId);
+      if (!state.realms[sovereign] || !state.realms[sovereign].alive)
+        return blocked('context', FB.T('Construction context is unavailable.'));
+      var learningCulture = FB.techCulture(state, sovereign);
+      var explicit = state.realms[sovereign].techTraditions;
+      if (!(Array.isArray(explicit) && explicit.length) &&
+          (!learningCulture || !FB.cultureExists(learningCulture, state)))
+        return blocked('context', FB.T('Construction context is unavailable.'));
+      var traditions = FB.techTraditionsForRealm(state, sovereign);
+      if (!traditions.length || traditions.some(function (tradition) {
+        return !Object.prototype.hasOwnProperty.call(FBDATA.techTraditions, tradition);
+      })) return blocked('context', FB.T('Construction context is unavailable.'));
+      if (!traditions.some(function (tradition) { return scope.traditions.indexOf(tradition) >= 0; }))
+        return blocked('traditions', FB.T('Construction is unavailable for the payer’s national learning traditions.'));
+    }
+    return { ready:true, code:null, reason:'' };
+  };
+
   /* Validation errors for a buildings table (an empty list when valid).
      requireRole: shipped data must declare every role explicitly. */
   FB.validateBuildingData = function (table, requireRole) {
     var errors = [];
     var forts = [];
+    var scopeRefs = null;
     for (var id in table || {}) {
       if (!Object.prototype.hasOwnProperty.call(table, id)) continue;
       var def = table[id];
@@ -86,6 +206,12 @@ window.FB = window.FB || {};
       }
       if (def.settlementDraw !== undefined && typeof def.settlementDraw !== 'boolean') {
         errors.push('Building ' + id + ' settlementDraw must be true or false.');
+      }
+      if (def.applicability !== undefined) {
+        if (!scopeRefs) scopeRefs = buildingScopeReferences();
+        buildingScopeFaults(def.applicability, scopeRefs).forEach(function (error) {
+          errors.push('Building ' + id + ' ' + error);
+        });
       }
     }
     if (forts.length !== 1) {
@@ -348,6 +474,14 @@ window.FB = window.FB || {};
       result.currentLevel = Number(fort.level) || 0;
       if (fort.s !== result.settlement) { result.reason = 'other_settlement'; return result; }
       if (fort.targetLevel) { result.reason = 'active_project'; return result; }
+    }
+    if (!repairing) {
+      var applicability = FB.buildingApplicabilityStatus(state, pid, FB.fortificationBuildingId(), realmId);
+      if (!applicability.ready) {
+        result.reason = 'applicability';
+        result.applicability = applicability;
+        return result;
+      }
     }
     var expected = repairing ? Math.max(1, Math.min(4,
       Math.floor(Number(ruins.ruinedLevel || ruins.level) || 1))) : fort ? result.currentLevel + 1 : 1;
@@ -800,6 +934,7 @@ window.FB = window.FB || {};
   function nextAiTier(state, rid, pid) {
     var fort = FB.fortAt(state, pid);
     if (fort && fort.targetLevel) return 0;
+    if (!FB.buildingApplicabilityStatus(state, pid, FB.fortificationBuildingId(), rid).ready) return 0;
     var next = fort ? (Number(fort.level) || 0) + 1 : 1;
     var highest = highestSupportedLevel(state, rid);
     return next <= highest ? next : 0;
