@@ -9,7 +9,8 @@ dependsOnRuntime(__filename, ['index.html','js/story_ruler_agenda.js','js/story_
   'js/government_aristocracy.js','js/government_administration.js','js/government_recognition.js',
   'js/government_support.js','js/government_collective.js','js/government_assembly.js','js/mobile_confederations.js',
   'js/government_selection.js','js/treasury.js','js/world.js','js/mods.js','js/save.js','js/save_v4.js',
-  'js/main.js','data/starts.js','data/aristocratic_courts.js','data/bookmark_1204_terrain.js','data/technology.js']);
+  'js/main.js','data/starts.js','data/aristocratic_courts.js','data/bookmark_1204_terrain.js','data/technology.js',
+  'data/story_ruler_agendas.js']);
 
 async function importedStart(page, info, scenario) {
   await openGame(page, info);
@@ -103,6 +104,27 @@ for (const scenario of ['peroz_476','siwa_delegate_1204']) {
     expect(result).toEqual({ stale:false, status:'agenda_interrupted', once:true, choices:[] });
   });
 }
+
+test('bundled source-fact agendas compile at boot and keep their fact key distinct from story references', async function ({ page }, info) {
+  await openGame(page, info);
+  const result = await page.evaluate(function () {
+    function compiles(table) { try { FB.stories.compile(table); return true; } catch (e) { return false; } }
+    const facts = Object.keys(FBDATA.rulerAgendas).reduce(function (n, id) {
+      return n + FBDATA.rulerAgendas[id].stages.reduce(function (m, stage) {
+        return m + stage.choices.filter(function (c) { return c.operation === 'agenda_story_fact' && typeof c.stateField === 'string'; }).length;
+      }, 0);
+    }, 0);
+    const legacy = JSON.parse(JSON.stringify(FBDATA.storyInstances));
+    const choice = legacy.odoacer_agenda_476.stages[0].choices.find(function (c) { return c.operation === 'agenda_story_fact'; });
+    choice.field = choice.stateField; delete choice.stateField;
+    const ids = FB.stories.list().map(function (r) { return r.id; }).join(), rng = FB.getRngState();
+    const bundled = compiles(FBDATA.storyInstances), old = compiles(legacy);
+    return { registered:['peroz_agenda_476','odoacer_agenda_476','syagrius_agenda_476','muhammad_agenda_1204','siwa_agenda_1204']
+      .every(function (id) { return !!FB.stories.get(id); }), facts:facts, bundled:bundled, legacyField:old,
+      pure:ids === FB.stories.list().map(function (r) { return r.id; }).join() && rng === FB.getRngState() };
+  });
+  expect(result).toEqual({ registered:true, facts:5, bundled:true, legacyField:false, pure:true });
+});
 
 for (const fault of ['operation','unknown_field','duplicate_choice','reserved_choice','source','source_choice','terms','date','no_fallback']) {
   test('agenda declaration rejects ' + fault + ' without registry, campaign, RNG or identity mutation', async function ({ page }, info) {

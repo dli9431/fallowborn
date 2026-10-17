@@ -26,7 +26,7 @@
       need(Array.isArray(stage.choices) && stage.choices.length > 0 && stage.choices.length <= 12, 'choices');
       need(stage.choices.some(function (c) { return c.operation === 'agenda_priority'; }), 'unconditional alternative');
       stage.choices.forEach(function (c) {
-        need(keys(c, ['id','label','detail','operation','storyId','choiceId','field','values','interestId','revenue','levy','amount','duration',
+        need(keys(c, ['id','label','detail','operation','storyId','choiceId','stateField','values','interestId','revenue','levy','amount','duration',
           'recordKind','otherRealmId','recordOperation']) && slug(c.id) && c.id !== 'agenda_stop_program' && !choices[c.id], 'choice fields or duplicate');
         choices[c.id] = true;
         need(text(c.label) && text(c.detail) && operations.indexOf(c.operation) >= 0, 'choice operation or display');
@@ -37,8 +37,8 @@
           if (c.operation === 'agenda_story_choice') {
             fields.push('choiceId'); need(slug(c.choiceId) && c.storyId !== def.id, 'source choice');
           } else {
-            fields = fields.concat(['field','values']);
-            need(['result','aiResolution','governanceResolved','playerDecision'].indexOf(c.field) >= 0 &&
+            fields = fields.concat(['stateField','values']);
+            need(['result','aiResolution','governanceResolved','playerDecision'].indexOf(c.stateField) >= 0 &&
               Array.isArray(c.values) && c.values.length > 0 && c.values.length <= 16 && c.values.every(function (v, i) {
                 return slug(v) && c.values.indexOf(v) === i;
               }), 'source fact');
@@ -123,7 +123,7 @@
       }
       if (c.operation === 'agenda_story_fact') {
         var saved = FB.stories.record(s, c.storyId);
-        return saved && typeof saved[c.field] === 'string' ? { value:saved[c.field], allowed:c.values.indexOf(saved[c.field]) >= 0 } : null;
+        return saved && typeof saved[c.stateField] === 'string' ? { value:saved[c.stateField], allowed:c.values.indexOf(saved[c.stateField]) >= 0 } : null;
       }
       if (c.operation === 'agenda_provincial_terms') return FB.aristocracy.provincialQuote(s,
         { kind:'realm', id:realm(s) }, realm(s), c.interestId, 'negotiate', { revenue:c.revenue, levy:c.levy });

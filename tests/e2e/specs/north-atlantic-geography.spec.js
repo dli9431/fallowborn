@@ -132,6 +132,26 @@ test('the physical child preserves metadata and scenery while retained dates kee
     defaults:['europe_regional','europe_regional','europe_regional'],retainedMaps:true});
 });
 
+test('both opt-in revisions load together and share one physical Birsay site', async function ({page}, info) {
+  await openGame(page, info);
+  const result = await page.evaluate(function () {
+    const site = 'birsay_locality_site';
+    return {
+      revisions:['867','1066'].map(function (id) {
+        const b = FB.bookmark(id, 'north_atlantic_v1');
+        return b && b.geography;
+      }),
+      layouts:['867','1066'].map(function (id) {
+        const rows = FBDATA.settlementLayouts[FB.bookmark(id, 'north_atlantic_v1').settlementLayout].orkney || [];
+        return rows.some(function (row) { return row.site === site; });
+      }),
+      site:FBDATA.settlementSites[site]
+    };
+  });
+  expect(result).toEqual({revisions:['europe_north_atlantic_2','europe_north_atlantic_2'],
+    layouts:[true,true], site:{x:-3.32,y:59.13}});
+});
+
 test('JSON candidates reject malformed inheritance and geometry transactionally', async function ({page}, info) {
   await openGame(page, info);
   expect(await page.evaluate(function () {

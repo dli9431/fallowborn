@@ -8,7 +8,8 @@ const proof = require('../fixtures/authoring/opening-goals.json');
 dependsOnRuntime(__filename, ['index.html','js/story_opening_goals.js','js/stories.js','js/story_household.js','js/main.js',
   'js/government_collective.js','js/government_support.js','js/government_recognition.js','js/government_aristocracy.js',
   'js/treasury.js','js/events.js','js/starts.js','js/mods.js','js/save.js','js/save_v4.js','js/ui_modals.js',
-  'data/starts.js','data/bookmark_711.js','data/bookmark_1204_terrain.js','data/actions.js','data/technology.js']);
+  'data/starts.js','data/bookmark_711.js','data/bookmark_1204_terrain.js','data/actions.js','data/technology.js',
+  'data/start_ambitions.js']);
 
 async function importedStart(page, info, publicProfile) {
   await openGame(page, info);
@@ -86,6 +87,22 @@ test('dismissal rechecks the current actor, death archives remaining goals, and 
   });
   expect(result).toMatchObject({ stale:false, dismissed:true, twice:false, unchangedPerson:true, archived:'archived', once:true, noFriend:true });
   expect(result.unavailable).toContain('died');
+});
+
+test('a story-person contact keeps its record key distinct from story references and resolves at the opening', async function ({ page }, info) {
+  await startParityGame(page, info, { bookmark:'476', scenario:'nepos_476', declaredOpening:true });
+  const result = await page.evaluate(function () {
+    function compiles(table) { try { FB.stories.compile(table); return true; } catch (e) { return false; } }
+    const s = FB.state, t = s.stories.opening_nepos_476, zeno = FB.stories.record(s, 'western_court_476').zenoId;
+    const legacy = JSON.parse(JSON.stringify(FBDATA.storyInstances));
+    const person = legacy.opening_nepos_476.contacts[0].person;
+    person.field = person.stateField; delete person.stateField;
+    const before = JSON.stringify(s), rng = FB.getRngState();
+    return { selector:FBDATA.storyInstances.opening_nepos_476.contacts[0].person, linked:!!zeno && !!t && t.contacts.zeno_link === zeno,
+      bundled:compiles(FBDATA.storyInstances), legacyField:compiles(legacy), pure:before === JSON.stringify(s) && rng === FB.getRngState() };
+  });
+  expect(result).toEqual({ selector:{ source:'story', storyId:'western_court_476', stateField:'zenoId' }, linked:true,
+    bundled:true, legacyField:false, pure:true });
 });
 
 for (const fault of ['criterion','amount','selector','source_choice','unknown_field','future_receipt','earnings_cap']) {

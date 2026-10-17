@@ -39,7 +39,7 @@ FBDATA.rulerAgendas = {
           { id:'odoacer_paid_service', label:'Review paid service', detail:'Use the western court’s actual reviewed service terms.', operation:'agenda_story_choice', storyId:'western_court_476', choiceId:'accept_service' },
           { id:'odoacer_contest_city', label:'Contest Ravenna', detail:'Use the existing court decision. Actual armies must secure the city.', operation:'agenda_story_choice', storyId:'western_court_476', choiceId:'contest_ravenna' },
           { id:'odoacer_keep_host', label:'Keep the host outside the bargain', detail:'Close the court’s opening choice without pay or a campaign.', operation:'agenda_story_choice', storyId:'western_court_476', choiceId:'keep_host' },
-          { id:'odoacer_record_bargain', label:'Record the existing host decision', detail:'Observe the court’s saved resolution without repeating its transaction.', operation:'agenda_story_fact', storyId:'western_court_476', field:'aiResolution', values:['negotiated','war','won','failed','declined'] },
+          { id:'odoacer_record_bargain', label:'Record the existing host decision', detail:'Observe the court’s saved resolution without repeating its transaction.', operation:'agenda_story_fact', storyId:'western_court_476', stateField:'aiResolution', values:['negotiated','war','won','failed','declined'] },
           { id:'odoacer_defer_bargain', label:'Leave the court decision for later', detail:'Record a priority only. The original western court decision remains available on its own story card.', operation:'agenda_priority' }
         ] },
       { id:'odoacer_holding_the_city', name:'Holding the city', year:476, season:0,
@@ -47,7 +47,7 @@ FBDATA.rulerAgendas = {
         choices:[
           { id:'odoacer_civic_rule', label:'Review Ravenna’s civic government', detail:'Use the existing civic settlement decision and its actual institutional agreement.', operation:'agenda_story_choice', storyId:'western_court_476', choiceId:'accept_civic_rule' },
           { id:'odoacer_host_rule', label:'Retain the host government after victory', detail:'Use the existing government choice without gaining another mandate.', operation:'agenda_story_choice', storyId:'western_court_476', choiceId:'retain_host_rule' },
-          { id:'odoacer_record_government', label:'Record the existing government decision', detail:'Observe a saved civic or federate decision without making it again.', operation:'agenda_story_fact', storyId:'western_court_476', field:'governanceResolved', values:['civic','federate'] },
+          { id:'odoacer_record_government', label:'Record the existing government decision', detail:'Observe a saved civic or federate decision without making it again.', operation:'agenda_story_fact', storyId:'western_court_476', stateField:'governanceResolved', values:['civic','federate'] },
           { id:'odoacer_keep_arrangements', label:'Keep the present arrangements', detail:'Record no government change. You can return to the western court’s own decision after actual conquest.', operation:'agenda_priority' },
           { id:'odoacer_finish_host', label:'Conclude with service or independent command', detail:'End this program without requiring possession of Ravenna.', operation:'agenda_finish' }
         ] },
@@ -62,7 +62,7 @@ FBDATA.rulerAgendas = {
         choices:[
           { id:'odoacer_face_campaign', label:'Face the existing campaign', detail:'Authorize only the source campaign. The program grants no victory or second host.', operation:'agenda_story_choice', storyId:'theoderic_italy_476', choiceId:'face_campaign' },
           { id:'odoacer_leave_campaign', label:'Close this opportunity for ordinary diplomacy', detail:'Use the source campaign’s decline. Ordinary relations and independent wars remain available.', operation:'agenda_story_choice', storyId:'theoderic_italy_476', choiceId:'leave_campaign' },
-          { id:'odoacer_record_campaign', label:'Record the actual campaign conclusion', detail:'Observe its won, failed, diverted or interrupted result without recreating the opportunity.', operation:'agenda_story_fact', storyId:'theoderic_italy_476', field:'result', values:['won','failed','diverted','interrupted'] },
+          { id:'odoacer_record_campaign', label:'Record the actual campaign conclusion', detail:'Observe its won, failed, diverted or interrupted result without recreating the opportunity.', operation:'agenda_story_fact', storyId:'theoderic_italy_476', stateField:'result', values:['won','failed','diverted','interrupted'] },
           { id:'odoacer_keep_defense', label:'Retain present defensive arrangements', detail:'Conclude the personal program without forcing the campaign or a historical death. Its own card and ordinary armies keep their current rules.', operation:'agenda_priority' }
         ] }
     ] },
@@ -86,13 +86,13 @@ FBDATA.rulerAgendas = {
         choices:[
           { id:'syagrius_face_challenge', label:'Face the existing challenge', detail:'Use the campaign’s current authorization. Real war determines its outcome.', operation:'agenda_story_choice', storyId:'clovis_syagrius_476', choiceId:'face_campaign' },
           { id:'syagrius_leave_challenge', label:'Use ordinary diplomacy instead', detail:'Close only the authored campaign opportunity through its own decline.', operation:'agenda_story_choice', storyId:'clovis_syagrius_476', choiceId:'leave_campaign' },
-          { id:'syagrius_record_challenge', label:'Record the actual challenge conclusion', detail:'Observe the world story’s own result, including changed inheritance or ownership.', operation:'agenda_story_fact', storyId:'clovis_syagrius_476', field:'result', values:['won','failed','diverted','interrupted'] },
+          { id:'syagrius_record_challenge', label:'Record the actual challenge conclusion', detail:'Observe the world story’s own result, including changed inheritance or ownership.', operation:'agenda_story_fact', storyId:'clovis_syagrius_476', stateField:'result', values:['won','failed','diverted','interrupted'] },
           { id:'syagrius_keep_policy', label:'Retain ordinary policy', detail:'Make no campaign decision here. The source card and ordinary diplomacy remain available.', operation:'agenda_priority' }
         ] },
       { id:'syagrius_domain_after_challenge', name:'The surviving domain', year:486, season:0,
         text:'Review the court and counties that actually survive through ordinary government. An ongoing war remains ongoing; this personal conclusion cannot arrange refuge, surrender or execution.',
         choices:[
-          { id:'syagrius_record_result', label:'Record the concluded challenge', detail:'Observe its actual conclusion without a second award or forced loss.', operation:'agenda_story_fact', storyId:'clovis_syagrius_476', field:'result', values:['won','failed','diverted','interrupted'] },
+          { id:'syagrius_record_result', label:'Record the concluded challenge', detail:'Observe its actual conclusion without a second award or forced loss.', operation:'agenda_story_fact', storyId:'clovis_syagrius_476', stateField:'result', values:['won','failed','diverted','interrupted'] },
           { id:'syagrius_keep_domain', label:'Conclude with the present domain', detail:'Complete this personal review without changing possession or resolving any ongoing ordinary war.', operation:'agenda_priority' }
         ] }
     ] },

@@ -83,10 +83,10 @@
         fields.push('actorId'); need(slug(p.actorId), 'opening actor');
         if (bm && c.required) need(own(bm.opening && bm.opening.actors, p.actorId), 'required actor');
       } else if (p.source === 'story') {
-        fields = fields.concat(['storyId','field']);
-        need(FB.stories.referenceValid({ kind:'story', storyId:p.storyId, field:p.field }, d) && context.get(p.storyId), 'story person');
+        fields = fields.concat(['storyId','stateField']);
+        need(FB.stories.referenceValid({ kind:'story', storyId:p.storyId, field:p.stateField }, d) && context.get(p.storyId), 'story person');
         var parent = context.get(p.storyId);
-        need(!parent.fields || parent.fields.indexOf(p.field) >= 0, 'story person field');
+        need(!parent.fields || parent.fields.indexOf(p.stateField) >= 0, 'story person field');
       } else need(false, 'person source');
       need(keys(p, fields), 'person fields');
     });
@@ -145,6 +145,7 @@
       return c && c.id || member && member.charId || null;
     }
     var ref = Object.assign({}, p, { kind:p.source }); delete ref.source;
+    if (ref.stateField !== undefined) { ref.field = ref.stateField; delete ref.stateField; }
     return FB.stories.resolve(s, ref);
   }
   function earningRules(d) {

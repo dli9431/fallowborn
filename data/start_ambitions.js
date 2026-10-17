@@ -119,7 +119,7 @@ FBDATA.openingProfiles = {
         "person": {
           "source": "story",
           "storyId": "western_court_476",
-          "field": "zenoId"
+          "stateField": "zenoId"
         }
       }
     ],

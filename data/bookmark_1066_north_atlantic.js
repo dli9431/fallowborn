@@ -134,11 +134,14 @@
     copy(source.climate && source.climate.provinces || {}));
   var layoutId = '1066_north_atlantic_v1';
   var layout = copy(FBDATA.settlementLayouts[source.settlementLayout || '1066']);
+  /* Physical sites shared with the 867 revision keep one location; the
+     others sit at their province seed. */
+  var sharedSites = {birsay_locality_site:{x:-3.32,y:59.13}};
   Object.keys(REVISION_CONTENT.settlementLayout).forEach(function (pid) {
     var rows = REVISION_CONTENT.settlementLayout[pid];
     var seed = geography.provinceAdditions.filter(function (p) { return p.id === pid; })[0];
     rows.forEach(function (row) {
-      var site = {x:seed.x,y:seed.y}, retained = FBDATA.settlementSites[row.site];
+      var site = copy(sharedSites[row.site] || {x:seed.x,y:seed.y}), retained = FBDATA.settlementSites[row.site];
       if (retained && (retained.x !== site.x || retained.y !== site.y))
         throw new Error('Conflicting island site: ' + row.site);
       FBDATA.settlementSites[row.site] = site;
