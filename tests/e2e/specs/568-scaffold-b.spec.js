@@ -7,7 +7,8 @@ const {openCrazyGame} = require('../support/game/crazygames-title');
 const {mockCrazyGames} = require('../support/crazygames');
 
 dependsOnRuntime(__filename,[
-  'index.html','data/bookmark_568_scaffold_b.js','data/bookmark_568_identities.js',
+  'index.html','data/bookmark_568.js','data/starts_568.js',
+  'data/bookmark_568_scaffold_b.js','data/bookmark_568_identities.js',
   'data/bookmark_493.js','data/bookmark_493_world.js','data/bookmark_476_wider.js',
   'data/bookmark_476_wider_identities.js','data/bookmarks.js','data/counties.js',
   'data/geographies.js','data/geography_expansion.js','data/cultures.js',
@@ -184,13 +185,13 @@ test('568 scaffold registration is inert and owns detached source values',async 
       });
     });
     const scripts = Array.prototype.map.call(document.scripts,function (s) { return s.getAttribute('src'); });
-    return {faults:faults,noPartialWorld:!FBDATA.bookmarks['568'],
+    return {faults:faults,hiddenWorld:FBDATA.bookmarks['568'].hidden,
       registered:scripts.indexOf('data/bookmark_568_scaffold_b.js') > scripts.indexOf('data/bookmark_493_world.js'),
       after:JSON.stringify({bookmarks:FBDATA.bookmarks,cultures:FBDATA.cultures,religions:FBDATA.religions,
         layouts:FBDATA.settlementLayouts,sites:FBDATA.settlementSites,active:FB.activeBookmarkId})};
   },Object.keys(coverage));
   expect(result.faults).toEqual([]);
-  expect(result.noPartialWorld).toBe(true);
+  expect(result.hiddenWorld).toBe(true);
   expect(result.registered).toBe(true);
   expect(result.after).toBe(before);
 });
