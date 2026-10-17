@@ -60,6 +60,10 @@ Mod validation checks a fixed resident-community start against every revision th
 
 Bookmark platform and authoring
 
+Spring 1241 regional staging
+
+data/bookmark_1241_scaffold_b.js supplies literal southern Rus, northern British/Irish, Iberian, northern German and Italian blocks under FBDATA.bookmarkRegions1241. The blocks stage 132 inhabited counties and 23 locally owned courts using independent copies of the retained 1204 inhabited_v2 resident and settlement inputs. England and the imperial/Sicilian court remain unique external definitions. Loading registers no bookmark, opening people, live layout or historical transaction. docs/research/1241-bookmark.md records the limited named incumbents, generated principals, territorial Venetian fallback, existing papal-office binding and unresolved control boundaries. Complete-world composition must resolve every outside reference before activation. This is existing bookmark content with no new capability, technology gate or saved field.
+
 Optional spring 867 North Atlantic world
 
 data/bookmark_867_north_atlantic.js composes the effective inhabited_v2_governments_v2_islamic_v1 world into the opt-in north_atlantic_v1 revision on europe_north_atlantic_2. It retains all supported source fields, institutions, ordered slots, stories and opening offers, then adds four inhabited local districts and nine Icelandic scenery districts. Fresh selectors and retained revisions keep their prior meanings. No new start, Iceland gateway or settlement driver is supplied. The four generated territorial custodians exercise ordinary county ownership, revenue, peace, levy and dynastic succession powers. This is a bounded local-authority simulation, with no attested earl or assembly constitution asserted. The dated evidence and population approximations are in docs/research/867-north-atlantic.md. Technology impact period_867_north_atlantic_habitation is none; existing gameplay gates remain in force. Household sea travel retains its coarse route-unit clock.
