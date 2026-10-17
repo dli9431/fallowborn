@@ -2,6 +2,10 @@ Spring 568 bookmark: first-pass world
 
 Status: a complete hidden first-pass world, registered by data/bookmark_568.js as The Lombards Depart, Spring 568 (season 0, day 1), migration_v1 on europe_regional_2. All 22 regions cover 527 physical cells exactly once, including 506 inhabited counties and 21 scenery cells. The four scaffold files remain the regional world sources. Their borrowed quantities and generated local principals remain provisional; composition resolves references without accepting unresolved historical claims. Existing openings and retained revisions keep their definitions.
 
+Lombard migrant household availability
+
+The fixed lombard_migrant_household_568 beginning remains undeclared. Upper Pannonia's current resident table pairs langobard_568 with homoian; it does not supply a langobard_568/germanic_pagan household perspective. The governing court's traditional faith does not establish that resident pairing. Enabling the fixed household requires a reviewed starting location, a compatible resident declaration and its complete personal storyline together. The ordinary map-chosen farmer_568 role is a separate beginning. Personal travel does not itself move relatives or establish participation in a migrating following.
+
 Evidence and presentation
 
 Paul the Deacon, History of the Langobards, translated by William Dudley Foulke (1906), Book II.7 describes departure from Pannonia with households; II.26 describes a following comprising several peoples. This later narrative supports keeping a following's political label separate from each person's culture and faith. It does not establish population shares, a uniform appearance, precise name frequencies or a common religion. The accessible translation and its editorial apparatus were consulted separately on 2026-10-17. https://elfinspell.com/MedievalMatter/PaultheDeacon-PaulusDiaconus/HistoryOfTheLangobards/PaulTheDeacon-Book2.html
