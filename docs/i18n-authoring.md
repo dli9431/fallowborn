@@ -29,6 +29,10 @@ are. Nothing here breaks `file://`: catalogs are `.js` globals, and any new Engl
 lookup miss or stale source hash falls back to English), so an unrouted string is a bug even
 though the game still *runs*.
 
+Revision-owned bookmark labels
+
+Literal FBDATA.bookmarkRevisionContent_<suffix> objects in data/bookmark_*.js may organize a dated revision's presentation. Each object supplies bookmarkId and revision strings, literal provinces and realms arrays, duchies, kingdoms, empires and cultures maps, and a layouts map of county ids to settlement slots. The static extractor reads name fields with distinct bookmark/revision owners and exact-source aliases; culture names retain their global culture owner. It does not execute composers or extract ruler names. These are source organization tables, not new JSON mod roots. Compose their records into the ordinary bookmark, culture and settlement-layout catalogues. Keep labels literal and retain old revision owners.
+
 ## Route new text by where it lives
 
 - **UI chrome (built as HTML/DOM in `js/*.js`):** wrap with `FB.T('English text', params?)`

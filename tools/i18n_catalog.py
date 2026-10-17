@@ -754,8 +754,47 @@ def extract_geography_additions(inv: Inventory) -> None:
                         "Physical scenery label; habitation is declared separately.", ())
 
 
+def extract_bookmark_revision_content(inv: Inventory) -> None:
+    """Read literal revision-owned presentation tables, never their composers."""
+    for source in sorted(DATA.glob("bookmark_*.js")):
+        rel = source.relative_to(ROOT).as_posix()
+        owners = re.findall(r"FBDATA\.(bookmarkRevisionContent_[A-Za-z0-9_]+)\s*=", source.read_text(encoding="utf-8"))
+        for owner in dict.fromkeys(owners):
+            content = node_object(find_assignment(source, "FBDATA", owner)) or {}
+            bookmark = node_string(content.get("bookmarkId"))
+            revision = node_string(content.get("revision"))
+            if not bookmark or not revision:
+                continue
+            scope = bookmark + "." + revision
+
+            def label(namespace, identity, node):
+                for branch, record, line in branch_records(node):
+                    inv.add(f"{namespace}.{identity}.name.{branch}", record,
+                            f"{rel}:{line}", "Revision-owned display label.", ())
+
+            for table, kind in (("provinces", "province"), ("realms", "realm")):
+                for item_node in node_array(content.get(table)) or []:
+                    item = node_object(item_node) or {}
+                    identity = node_string(item.get("id"))
+                    if identity:
+                        label(kind, scope + "." + identity, item.get("name"))
+            for table, kind in (("duchies", "duchy"), ("kingdoms", "kingdom"),
+                                ("empires", "empire"), ("cultures", "culture")):
+                for identity, item_node in (node_object(content.get(table)) or {}).items():
+                    item = node_object(item_node) or {}
+                    label(kind, identity if kind == "culture" else scope + "." + identity,
+                          item.get("name"))
+            for slots in (node_object(content.get("layouts")) or {}).values():
+                for slot_node in node_array(slots) or []:
+                    slot = node_object(slot_node) or {}
+                    identity = node_string(slot.get("site"))
+                    if identity:
+                        label("settlement", scope + "." + identity, slot.get("name"))
+
+
 def extract_structured(inv: Inventory) -> None:
     extract_geography_additions(inv)
+    extract_bookmark_revision_content(inv)
     extract_terrain_1204(inv)
     for path in EVENT_FILES + [path for path, _ in REGION_FILES]:
         rel = path.relative_to(ROOT).as_posix()
