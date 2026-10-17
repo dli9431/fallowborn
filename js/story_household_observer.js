@@ -139,7 +139,8 @@
     function occurrence(s, t, e, pid) {
       var c = t.controls[pid];
       if (e.code === 'won' && c && c.turn !== null && c.after === sovereign(s, pid) &&
-          c.after === FB.startRealmId(s, source.actor.realmId) && c.turn >= row(s).startedTurn)
+          s.owner[pid] === FB.startRealmId(s, source.actor.realmId) &&
+          c.after === FB.topRealm(s, FB.startRealmId(s, source.actor.realmId)) && c.turn >= row(s).startedTurn)
         return { source:'control', milestone:'rule_changed', provinceId:pid, turn:c.turn, before:c.before, after:c.after };
       return { source:def.sourceStoryId, milestone:e.code, provinceId:pid, turn:e.turn, before:null, after:null };
     }

@@ -65,7 +65,8 @@ test('a personal incident wins before its own dispatch and victory aliases actua
     const hidden = FB.stories.status(s,id) === null, untouched = Object.keys(t.householdReceipts).length === 0;
     const q = FB.stories.quote(s,'pass_household_track','personal');
     const personal = FB.stories.apply(s,'pass_household_track','personal',q);
-    s.turn = 8; FB.transferProvince(s,'dune_pass','dune_coalition');
+    s.turn = 8; s.realms.dune_coalition.liege = 'dune_oasis'; FB.invalidateRealmCache();
+    FB.transferProvince(s,'dune_pass','dune_coalition');
     Object.assign(s.stories.dune_settlement,{phase:'resolved',result:'won',outcomeTurn:8});
     module.day(s,t);
     const item = t.pending.filter(function (n) { return n.beatId === 'road_household_notice_won'; })[0];
