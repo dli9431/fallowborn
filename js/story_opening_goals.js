@@ -148,7 +148,7 @@
     return FB.stories.resolve(s, ref);
   }
   function earningRules(d) {
-    var out = {};
+    var out = Object.create(null);
     function visit(c) {
       if (c.kind === 'any') c.conditions.forEach(visit);
       if (c.kind === 'earnings') { var id = c.focusIds.join('|'); out[id] = Math.max(out[id] || 0, c.amount); }
@@ -156,7 +156,7 @@
     d.goals.forEach(function (g) { visit(g.criterion); }); return out;
   }
   function pactRules(d) {
-    var out = {};
+    var out = Object.create(null);
     function visit(c) { if (c.kind === 'any') c.conditions.forEach(visit); if (c.kind === 'pact') out[c.realmId] = null; }
     d.goals.forEach(function (g) { visit(g.criterion); }); return out;
   }
@@ -179,13 +179,22 @@
   };
   function factory(d) {
     var rules = earningRules(d);
+    function progress(s, t, c) {
+      if (c.kind === 'any') return c.conditions.map(function (row) { return progress(s, t, row); }).filter(Boolean).join(' ');
+      if (c.kind === 'earnings') return FB.T('Earned work: {earned}/{required} gold.', { earned:Math.floor(t.earnings[c.focusIds.join('|')] || 0), required:c.amount });
+      if (c.kind === 'reserve') return FB.T('Private reserve: {current}/{required} gold.', { current:Math.floor(s.player.gold), required:c.amount });
+      return '';
+    }
     function fresh(s, t, id) {
       var goal = d.goals.filter(function (g) { return id === 'dismiss_' + g.id; })[0];
       return { allowed:!!goal && t.ready && personal(s, t) && (!goal.office || ownsOffice(s, d, t)) && t.goals[goal.id].status === 'pending',
         facts:{ actor:s.player.charId, turn:s.turn, office:office(s, d), record:copy(t) } };
     }
     return { id:d.id, kind:'track', requires:d.requires,
-      appliesTo:function (s) { return eligible(s, d); },
+      appliesTo:function (s) {
+        var o = office(s, d);
+        return eligible(s, d) && (!o || o.characterId === s.player.charId && o.jurisdiction);
+      },
       init:function (s) {
         var goals = {}, earnings = {}, pacts = pactRules(d);
         d.goals.forEach(function (g) { goals[g.id] = { status:'pending', turn:null }; });
@@ -209,6 +218,7 @@
         var lines = d.goals.map(function (g) {
           var row = t.goals[g.id], state = row.status === 'pending' && (!personal(s, t) || g.office && !ownsOffice(s, d, t)) ? 'archived' : row.status;
           return FB.T('{goal}: {status}. {detail}', { goal:FB.T(g.name), status:labels[state], detail:FB.T(g.text) }) +
+            (state === 'pending' ? ' ' + progress(s, t, g.criterion) : '') +
             (g.criterion.kind === 'hold' && state === 'pending' ? ' ' + FB.T(g.criterion.reason) : '');
         });
         return { phase:'opening_objectives', name:FB.T('Your opening goals'), lines:lines };
@@ -249,7 +259,10 @@
         need(t.lastEarnedTurn === null || integer(t.lastEarnedTurn) && t.lastEarnedTurn >= t.openedTurn && (!s || t.lastEarnedTurn <= s.turn));
         var pactIds = Object.keys(pactRules(d)); need(Object.keys(t.pacts).length === pactIds.length);
         pactIds.forEach(function (rid) { need(own(t.pacts, rid) && (t.pacts[rid] === null || integer(t.pacts[rid]))); });
-        if (s) need(s.start && t.scenarioId === s.start.scenarioId && t.bookmarkId === s.start.id && t.revision === FB.campaignBookmark(s).revision && t.openedTurn <= s.turn);
+        if (s) {
+          need(s.start && !!s.chars[t.actorId] && t.scenarioId === s.start.scenarioId && t.bookmarkId === s.start.id && t.revision === FB.campaignBookmark(s).revision && t.openedTurn <= s.turn);
+          d.contacts.forEach(function (c) { need(t.contacts[c.id] === null || own(s.chars, t.contacts[c.id])); });
+        }
       }
     };
   }
