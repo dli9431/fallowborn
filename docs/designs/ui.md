@@ -3894,3 +3894,7 @@ Local kingship and elective crown reviews retain shared action-card disclosure i
 Marriage finder realm detail reads
 
 A finder redraw shares the county count, capital and current/maximum host availability across candidates from the same realm. The cache lives only for that redraw, so filter changes and reopened views read current facts. Court and character return tests use the modal Back control, preserving filter disclosure, scroll and focused action. Close continues to exit the modal stack.
+
+Opening-profile goals and contacts
+
+Optional opening goals use the shared story card and sheet in both Deeds layouts. Each goal shows its description and Pending, Completed, Dismissed or Archived state. A held goal names its unavailable operation. Setting aside a goal uses the existing review, fresh quote, confirmation and outcome Continue, with no cost or reward. Named people use focusable action buttons with identity, relationship purpose and current availability; opening their ordinary character sheet grants no interaction access. Character Back returns to the originating story sheet through shared modal history, retaining its scroll and originating control. Closing that story retains the ordinary Deeds card focus and scroll. Missing people remain visible with a reason and an inert action.

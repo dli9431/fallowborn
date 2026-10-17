@@ -2255,6 +2255,36 @@ def extract_ruler_agendas(inv: Inventory) -> None:
                     add(f"stage.{stage_id}.choice.{choice_id}.{field}", choice.get(field))
 
 
+def extract_opening_goals(inv: Inventory) -> None:
+    source = DATA / "start_ambitions.js"
+    if not source.exists():
+        return
+    declarations = node_object(find_assignment(source, "FBDATA", "openingProfiles")) or {}
+    rel = source.relative_to(ROOT).as_posix()
+    for story_id, story_node in declarations.items():
+        story = node_object(story_node) or {}
+
+        def add(field: str, node: Node | None) -> None:
+            for _, record, line in branch_records(node):
+                inv.add(f"openingProfile.{story_id}.{field}", record, f"{rel}:{line}",
+                        "Optional opening goals and named people.", TOKEN_RE.findall(record["text"]))
+
+        for field in ("title", "intro"):
+            add(field, story.get(field))
+        for goal_node in node_array(story.get("goals")) or []:
+            goal = node_object(goal_node) or {}
+            goal_id = node_string(goal.get("id"))
+            for field in ("name", "text"):
+                add(f"goal.{goal_id}.{field}", goal.get(field))
+            criterion = node_object(goal.get("criterion")) or {}
+            add(f"goal.{goal_id}.reason", criterion.get("reason"))
+        for contact_node in node_array(story.get("contacts")) or []:
+            contact = node_object(contact_node) or {}
+            contact_id = node_string(contact.get("id"))
+            for field in ("label", "text"):
+                add(f"contact.{contact_id}.{field}", contact.get(field))
+
+
 def extract_government_selections(inv: Inventory) -> None:
     source = DATA / "political_institutions.js"
     forms = node_object(find_assignment(source, "FBDATA", "governmentForms")) or {}
@@ -2315,6 +2345,7 @@ def build_inventory() -> Inventory:
     extract_household_stories(inv)
     extract_household_observers(inv)
     extract_ruler_agendas(inv)
+    extract_opening_goals(inv)
     extract_government_selections(inv)
     extract_mobile_presentations(inv)
     extract_lexicons(inv)

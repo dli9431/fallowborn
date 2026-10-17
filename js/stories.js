@@ -11,7 +11,7 @@
   var KINDS = { world:true, track:true };
   var HOOKS = ['appliesTo', 'init', 'day', 'season', 'year', 'title', 'intro',
     'status', 'choices', 'quote', 'blocker', 'review', 'apply',
-    'validate', 'migrate', 'restore', 'foundRevolt', 'appliesToBookmark', 'observe'];
+    'validate', 'migrate', 'restore', 'foundRevolt', 'appliesToBookmark', 'observe', 'people'];
   function own(o, key) {
     return !!o && Object.prototype.hasOwnProperty.call(o, key);
   }
@@ -140,7 +140,7 @@
       });
     }
     if (validators[def.type]) {
-      try { validators[def.type](def, lookup); } catch (error) { bad(error.message); }
+      try { validators[def.type](def, lookup, bm); } catch (error) { bad(error.message); }
     }
     return errors;
   }
@@ -372,7 +372,10 @@
     apply:function (s, id, choiceId, reviewed) {
       var story = FB.stories.get(id), rec = record(s, id);
       var applied = !!(story && rec && story.apply && story.apply(s, rec, choiceId, reviewed));
-      if (applied) observe(s, id);
+      if (applied) {
+        observe(s, id);
+        if (FB.openingGoals) FB.openingGoals.note(s, { storyId:id, choiceId:choiceId });
+      }
       return applied;
     }
   };
@@ -424,6 +427,13 @@
         for (var line of status.lines || []) html += '<p class="hint">' + esc(line) + '</p>';
       }
       html += '</div>';
+      var people = story.people ? story.people(s, rec) : [];
+      people.forEach(function (person) {
+        var c = person.characterId && s.chars[person.characterId];
+        html += '<button type="button" class="actionbtn" data-story-person="' + esc(person.characterId || '') +
+          '" aria-disabled="' + (!c) + '"><b>' + esc(person.label) + (c ? ': ' + esc(FB.fullName(c)) : '') +
+          '</b><br><span class="hint">' + esc(person.detail) + ' ' + esc(person.reason) + '</span></button>';
+      });
       for (var choice of FB.stories.choices(s, id)) {
         var quote = FB.stories.quote(s, id, choice.id);
         html += '<button type="button" class="actionbtn" data-story-choice="' +
@@ -436,6 +446,12 @@
       document.querySelectorAll('[data-story-choice]').forEach(function (node) {
         node.addEventListener('click', function () {
           reviewChoice(id, node.getAttribute('data-story-choice'));
+        });
+      });
+      document.querySelectorAll('[data-story-person]').forEach(function (node) {
+        node.addEventListener('click', function () {
+          var cid = node.getAttribute('data-story-person');
+          if (cid && FB.state.chars[cid]) UI.showCharModal(cid, { view:'story', storyId:id });
         });
       });
     };

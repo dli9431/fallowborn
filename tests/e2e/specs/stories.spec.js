@@ -9,7 +9,7 @@ dependsOnRuntime(__filename, [
   'data/story_households_1204.js',
   'data/story_households_pontic_476.js',
   'data/starts_perspectives.js', 'data/story_households_perspectives.js',
-  'data/story_ruler_agendas.js',
+  'data/story_ruler_agendas.js', 'data/start_ambitions.js', 'js/story_opening_goals.js',
   'index.html', 'js/starts.js', 'js/story_track.js', 'js/stories.js', 'js/story_campaign.js', 'data/story_instances.js',
   'js/bookmark_setup.js', 'js/story_agreements.js',
   'data/bookmark_800_history.js', 'js/story_settlements.js', 'js/royal_settlements.js',
@@ -91,7 +91,7 @@ test('stories register in order at load time only and resolve by id',
         bookmark:FBDATA.bookmarks['476'].stories,
         tracks:FBDATA.startScenarios.filter(function (sc) {
           return sc.tracks;
-        }).map(function (sc) { return sc.id + ':' + sc.tracks.join(','); })
+        }).map(function (sc) { return sc.id + ':' + sc.tracks.filter(function (id) { return FB.stories.get(id).declaration.type !== 'opening_profile'; }).join(','); })
       };
     });
     // The catalogue lists before/after batches before their data anchors.

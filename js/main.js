@@ -3770,6 +3770,7 @@ FB.CHANGELOG = [
     // A new campaign is fresh: fresh-only institutions join its opening roster.
     if (FB.ensureLocalInstitutions) FB.ensureLocalInstitutions(state, null, { fresh:true });
     if (FB.ensureInstitutions) FB.ensureInstitutions(state, { silent:true });
+    if (FB.openingGoals) FB.openingGoals.start(state);
     // Restore ensures the games ledger; a new campaign starts in that same shape.
     if (FB.tournaments) FB.tournaments.ensure(state);
     state.player.focus = startEffects.focus || FB.defaultFocus(state);
@@ -4318,6 +4319,7 @@ FB.CHANGELOG = [
          than silently discarding which obligation went unpaid. */
       const publicNet = income - buildingUpkeep - modifierUpkeep - FB.playerGovernmentCosts(s, taxParts).total;
       if (!(FB.electivePublicSeason && FB.electivePublicSeason(s, publicNet, taxParts))) p.gold += publicNet;
+      if (FB.openingGoals) FB.openingGoals.fiscal(s, 'player', income);
       p.gold += FB.holdingBonus(s, 'gold') + FB.landYield(s) + FB.itemBonus(s, 'gold') +
         (FB.positionBonus ? FB.positionBonus(s, 'gold') : 0);
       FB.livelihoodSeason(s);

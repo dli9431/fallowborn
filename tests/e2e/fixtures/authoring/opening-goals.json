@@ -1,0 +1,155 @@
+{
+  "name": "Opening goal authoring examples",
+  "storyInstances": {
+    "proof_private_goals": {
+      "id": "proof_private_goals",
+      "type": "opening_profile",
+      "title": "A private household",
+      "intro": "Work earnings and savings have separate evidence.",
+      "scenarioIds": [
+        "toledo_household_711"
+      ],
+      "provinceIds": [
+        "toledo"
+      ],
+      "goals": [
+        {
+          "id": "proof_earn",
+          "name": "Earn three gold",
+          "text": "Earn three gold through the ordinary rules.",
+          "criterion": {
+            "kind": "earnings",
+            "amount": 3,
+            "focusIds": [
+              "craft_work"
+            ]
+          }
+        },
+        {
+          "id": "proof_reserve",
+          "name": "Keep a reserve",
+          "text": "Keep a reserve through the ordinary rules.",
+          "criterion": {
+            "kind": "reserve",
+            "amount": 999
+          }
+        }
+      ],
+      "contacts": [
+        {
+          "id": "proof_target",
+          "label": "Court authority",
+          "text": "A named authority, without an audience or friendship.",
+          "linkKind": "target",
+          "required": true,
+          "person": {
+            "source": "realm_ruler",
+            "realmId": "visigoths_711"
+          }
+        }
+      ]
+    },
+    "proof_public_goals": {
+      "id": "proof_public_goals",
+      "type": "opening_profile",
+      "title": "A public mandate",
+      "intro": "Public decisions do not enrich the delegate.",
+      "scenarioIds": [
+        "siwa_delegate_1204"
+      ],
+      "officeRealmId": "siwa_households_1204",
+      "goals": [
+        {
+          "id": "proof_consent",
+          "name": "Resolve constituent consent",
+          "text": "Resolve constituent consent through the ordinary rules.",
+          "criterion": {
+            "kind": "event",
+            "eventKind": "profile_consent",
+            "realmId": "siwa_households_1204"
+          },
+          "office": true
+        },
+        {
+          "id": "proof_receipt",
+          "name": "Settle public receipts",
+          "text": "Settle public receipts through the ordinary rules.",
+          "criterion": {
+            "kind": "event",
+            "eventKind": "profile_receipt",
+            "realmId": "siwa_households_1204"
+          },
+          "office": true
+        }
+      ],
+      "contacts": [
+        {
+          "id": "proof_remote",
+          "label": "A remote court",
+          "text": "Ordinary access remains required.",
+          "linkKind": "target",
+          "required": true,
+          "person": {
+            "source": "realm_ruler",
+            "realmId": "ayyubid_1204"
+          }
+        }
+      ]
+    }
+  },
+  "startScenarios": [
+    {
+      "id": "toledo_household_711",
+      "bookmarkIds": [
+        "711"
+      ],
+      "alwaysUnlocked": true,
+      "fixedProvinceId": "toledo",
+      "startCulture": "hispano_roman",
+      "startReligion": "catholic",
+      "name": "Private goal example",
+      "desc": "A household with optional work and reserve goals.",
+      "tier": 1,
+      "profession": "craftsman",
+      "gold": 15,
+      "prestige": 5,
+      "piety": 0,
+      "tracks": [
+        "proof_private_goals"
+      ],
+      "intro": "Review the optional goals in Deeds."
+    },
+    {
+      "id": "siwa_delegate_1204",
+      "bookmarkIds": [
+        "1204"
+      ],
+      "alwaysUnlocked": true,
+      "rulerRealmId": "siwa_households_1204",
+      "governmentForm": "assembly_polity",
+      "fixedProvinceId": "siwa_oasis",
+      "startCulture": "berber",
+      "startReligion": "sunni",
+      "sex": "m",
+      "tier": 1,
+      "profession": "farmer",
+      "gold": 30,
+      "prestige": 40,
+      "piety": 0,
+      "onboarding": "ruler",
+      "name": "Local agenda example",
+      "desc": "A delegated public account through a personal agenda.",
+      "familyPresets": {
+        "standard": {
+          "name": "Existing representative",
+          "diff": "public mandate",
+          "desc": "Keep the existing representative."
+        }
+      },
+      "tracks": [
+        "proof_public_goals"
+      ],
+      "intro": "Review the public agenda in Deeds."
+    }
+  ]
+}

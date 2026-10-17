@@ -1,6 +1,7 @@
 'use strict';
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
+  'data/start_ambitions.js', 'js/story_opening_goals.js',
   'data/bookmark_476_wider.js', 'data/bookmark_476_wider_identities.js', 'data/geography_expansion.js',
   'data/story_courts_476.js',
   'index.html', 'data/bookmarks.js', 'data/bookmark_476.js',
@@ -290,7 +291,7 @@ test('one regional daily season resolves both bounded rails and retains communit
     await start(page,testInfo); await injectBrowserHarness(page);
     await page.evaluate(function () {
       const s = FB.state;
-      FB.game.observe = true; delete s.stories.curialis_track_476;
+      FB.game.observe = true; delete s.stories.curialis_track_476; delete s.stories.opening_curialis_476;
       s.player.provinceId = 'thessaloniki';
       window.regionalChance = FB.chance; FB.chance = function (p) { return p >= 1; };
       // Stage Zeno's return, then open the season in 482: the Thracian window

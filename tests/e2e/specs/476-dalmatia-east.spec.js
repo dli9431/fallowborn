@@ -1,6 +1,7 @@
 'use strict';
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
+  'data/start_ambitions.js', 'js/story_opening_goals.js',
   'data/bookmark_476_wider.js', 'data/bookmark_476_wider_identities.js', 'data/geography_expansion.js',
   'data/story_courts_476.js',
   'index.html', 'data/bookmarks.js', 'data/bookmark_476.js',
@@ -210,7 +211,7 @@ test('one world season retains regional institutions before staged Zeno and Theo
     await injectBrowserHarness(page);
     await page.evaluate(function () {
       FB.game.observe = true;
-      delete FB.state.stories.federate_track_476;
+      delete FB.state.stories.federate_track_476; delete FB.state.stories.opening_federate_476;
       // This journey isolates the original eastern return and Italian rail.
       // The full regional campaign journey lives in 476-balkans-anatolia.spec.js.
       delete FB.state.stories.thracian_pressure_476;

@@ -154,8 +154,7 @@
       if (id === 'agenda_stop_program') { close(s, t, 'agenda_stopped'); return true; }
       var c = choice(t, id), q = fresh.facts.source;
       if (c.operation === 'agenda_story_choice') {
-        var story = context.get(c.storyId);
-        if (!story.apply || !story.apply(s, FB.stories.record(s, c.storyId), c.choiceId, q)) return false;
+        if (!FB.stories.apply(s, c.storyId, c.choiceId, q)) return false;
       } else if (c.operation === 'agenda_provincial_terms' && !FB.aristocracy.apply(s, q)) return false;
       else if (c.operation === 'agenda_dues' && !C.imposeDues(s, q)) return false;
       else if (c.operation === 'agenda_mobile_offer' && !FB.mobile.commit(s, q.reviewed)) return false;

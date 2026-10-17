@@ -2,6 +2,7 @@
 const fs = require('fs');
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
+  'data/start_ambitions.js', 'js/story_opening_goals.js',
   'data/story_courts_476.js',
   'index.html', 'data/bookmarks.js', 'data/bookmark_476.js',
   'data/bookmark_476_gaul_iberia.js', 'data/bookmark_476_wider.js', 'data/political_institutions.js',
@@ -322,7 +323,7 @@ test('one season of northern world simulation retains valid institutions and sav
     await start476(page, testInfo);
     await page.evaluate(function () {
       FB.game.observe = true;
-      delete FB.state.stories.curialis_track_476;
+      delete FB.state.stories.curialis_track_476; delete FB.state.stories.opening_curialis_476;
       FB.state.player.provinceId = 'laon';
     });
     for (let half = 0; half < 2; half++) {

@@ -112,3 +112,7 @@ catalog regeneration is required to play in English or use English fallback.
 
 
 Regional foundations use the historicalAmbitions JSON root with complete-record replacement, bounded terms and effective world/title references. Completion and seasonal AI select declarations directly; no historical id whitelist supplies permission or news. Culture, capital and mainland requirement labels reflect the declaration. Publication registers its durable news text under the existing stable message namespace; candidate validation does not touch the message registry. The ordinary rank and county transactions, reward order and baseline announcements remain unchanged.
+
+Optional opening goals
+
+Opening-profile goals are personal scenario objectives exposed through the shared story surface. Their capped work counters, savings thresholds, observed public decisions and fixed named-person links belong to opening_profile records. They do not alter the regional foundation catalogue, its AI, relevance, title recognition or rewards, or managed-family ambitions. Technology impact is none for the separate opening_goals and opening_contacts capabilities; underlying transactions keep their existing gates.

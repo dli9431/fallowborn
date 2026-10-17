@@ -2250,3 +2250,7 @@ Fresh dated offices retain the existing religiousHeads and religiousHeadVacancie
 Optional geography validation
 
 A saved geography stamp must match its resolved bookmark revision when present. An absent stamp remains valid for retained definitions that declare no geography; the normal bookmark fallback supplies the world without fabricating a saved field. Legacy test saves begin in the retained baseline before removing version stamps, so their people and county records still belong to that world.
+
+Optional opening-profile contract
+
+opening_profile reopens the v4 story contract only for its optional schema:1 record. It stores the initial actor, scenario, birthplace, bookmark and revision, opening turn, ready marker, original office snapshot or null, bounded goal status/turn receipts, once-resolved contact character ids, capped vocational earnings, last payment turn and opening pact expiries. The owning validator rejects unknown fields, unknown goal/contact keys, malformed statuses, future stamps, wrong scenario/revision, invalid office snapshots and earnings above their declared caps before adoption. No envelope version or mandatory record changes. Old saves missing the profile remain missing. Restore validates and projects existing records without initializing people, introducing contacts, observing payments or completing goals. The next ordinary lifecycle boundary archives unfinished goals after death or recall. Completed and dismissed decisions remain recorded and never generate a reward.
