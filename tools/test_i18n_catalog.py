@@ -71,6 +71,46 @@ class BookmarkRevisionExtractionTests(unittest.TestCase):
                 self.assertNotIn(i18n_catalog.source_key(text), inventory.entries)
 
 
+class RevisionContentExtractionTests(unittest.TestCase):
+    def test_independent_revision_labels_are_extracted_without_execution(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            data = root / 'data'
+            data.mkdir()
+            (data / 'bookmark_river_review.js').write_text(
+                "var REVISION_CONTENT = {bookmarkId:'river',revisionId:'local_v1',"
+                "realms:[{id:'river_court',name:'River council'}],"
+                "provinces:[{id:'riverbank',name:'Riverbank farms'}],"
+                "duchies:{river_district:{name:'River district'}},"
+                "settlementLayout:{riverbank:[{site:'landing',name:'River landing'}]},"
+                "constituencyProfiles:{river_voice:{members:[{id:'boats',name:'Boat households'}]}}};\n"
+                "throw new Error('Do not execute a composer');", encoding='utf-8')
+            (data / 'bookmark_hill_review.js').write_text(
+                "var REVISION_CONTENT = {bookmarkId:'hill',revisionId:'review_v2',"
+                "realms:[{id:'hill_court',name:'Hill court'}],"
+                "kingdoms:{hill_country:{name:'Hill country'}},"
+                "settlementLayout:{ridge:[{name:'Ridge hamlet'}]}};", encoding='utf-8')
+            (data / 'bookmark_unowned.js').write_text(
+                "var REVISION_CONTENT = {realms:[{id:'missing_scope',name:'Unowned'}]};", encoding='utf-8')
+            inventory = i18n_catalog.Inventory()
+            with patch.object(i18n_catalog, 'ROOT', root), patch.object(i18n_catalog, 'DATA', data):
+                i18n_catalog.extract_revision_content(inventory)
+            expected = {
+                'realm.river.local_v1.river_court.name.default': 'River council',
+                'province.river.local_v1.riverbank.name.default': 'Riverbank farms',
+                'duchy.river.local_v1.river_district.name.default': 'River district',
+                'settlement.river.local_v1.landing.name.default': 'River landing',
+                'constituencyMember.river_voice.boats.name.default': 'Boat households',
+                'realm.hill.review_v2.hill_court.name.default': 'Hill court',
+                'kingdom.hill.review_v2.hill_country.name.default': 'Hill country',
+                'settlement.hill.review_v2.ridge.0.name.default': 'Ridge hamlet'
+            }
+            for key, text in expected.items():
+                self.assertEqual(inventory.entries[key]['text'], text)
+                self.assertIn(i18n_catalog.source_key(text), inventory.entries)
+            self.assertFalse(any('missing_scope' in key for key in inventory.entries))
+
+
 class StaticHtmlExtractionTests(unittest.TestCase):
     def test_mobile_opening_display_owners(self):
         inventory = i18n_catalog.Inventory()

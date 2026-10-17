@@ -792,9 +792,48 @@ def extract_bookmark_revision_content(inv: Inventory) -> None:
                         label("settlement", scope + "." + identity, slot.get("name"))
 
 
+def extract_revision_content(inv: Inventory) -> None:
+    """Read literal date-owned revision labels without running their composers."""
+    for source in sorted(DATA.glob("bookmark_*.js")):
+        content = node_object(find_local_assignment(source, "REVISION_CONTENT")) or {}
+        bookmark_id = node_string(content.get("bookmarkId"))
+        revision_id = node_string(content.get("revisionId"))
+        if not bookmark_id or not revision_id:
+            continue
+        rel = source.relative_to(ROOT).as_posix()
+
+        def label(owner: str, node: Node | None) -> None:
+            for branch, record, line in branch_records(node):
+                inv.add(f"{owner}.name.{branch}", record, f"{rel}:{line}",
+                        "Date-owned world revision display label.", TOKEN_RE.findall(record["text"]))
+
+        for table, kind in (("provinces", "province"), ("realms", "realm")):
+            for row_node in node_array(content.get(table)) or []:
+                row = node_object(row_node) or {}
+                row_id = node_string(row.get("id"))
+                if row_id:
+                    label(f"{kind}.{bookmark_id}.{revision_id}.{row_id}", row.get("name"))
+        for table, kind in (("duchies", "duchy"), ("kingdoms", "kingdom"), ("empires", "empire")):
+            for row_id, row_node in (node_object(content.get(table)) or {}).items():
+                label(f"{kind}.{bookmark_id}.{revision_id}.{row_id}",
+                      (node_object(row_node) or {}).get("name"))
+        for county_id, rows in (node_object(content.get("settlementLayout")) or {}).items():
+            for index, row_node in enumerate(node_array(rows) or []):
+                row = node_object(row_node) or {}
+                site_id = node_string(row.get("site")) or f"{county_id}.{index}"
+                label(f"settlement.{bookmark_id}.{revision_id}.{site_id}", row.get("name"))
+        for profile_id, profile_node in (node_object(content.get("constituencyProfiles")) or {}).items():
+            for member_node in node_array((node_object(profile_node) or {}).get("members")) or []:
+                member = node_object(member_node) or {}
+                member_id = node_string(member.get("id"))
+                if member_id:
+                    label(f"constituencyMember.{profile_id}.{member_id}", member.get("name"))
+
+
 def extract_structured(inv: Inventory) -> None:
     extract_geography_additions(inv)
     extract_bookmark_revision_content(inv)
+    extract_revision_content(inv)
     extract_terrain_1204(inv)
     for path in EVENT_FILES + [path for path, _ in REGION_FILES]:
         rel = path.relative_to(ROOT).as_posix()

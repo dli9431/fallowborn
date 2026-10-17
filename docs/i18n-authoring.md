@@ -1,5 +1,7 @@
 Office and legitimacy presentation
 
+Date-owned revision files may keep literal labels in a local REVISION_CONTENT object with bookmarkId and revisionId strings. The static extractor reads its provinces and realms arrays, duchies/kingdoms/empires tables, settlementLayout county arrays and constituencyProfiles member names. Each label receives a revision-scoped owner (constituency members retain their profile-scoped owners) and an exact-source alias for the ordinary runtime renderers. Compose those literal fields into the existing bookmark schema without executing a composer during extraction. This source organization adds no runtime mod root.
+
 Household story presentation
 
 Additional start files use data/starts_<suffix>.js and a literal FBDATA.startScenarios_<suffix> array, then append those rows to FBDATA.startScenarios. The static extractor assigns the same scenario.<id> display owners and family-preset owners as the central start file, with each source file's own location. Runtime selection and opening text keep the existing scenario localization route.

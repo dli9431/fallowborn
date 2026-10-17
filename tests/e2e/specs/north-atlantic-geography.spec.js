@@ -7,7 +7,7 @@ const {startDeterministicGame} = require('../support/game/start');
 dependsOnRuntime(__filename, [
   'index.html', 'data/geographies.js', 'data/geography_expansion.js',
   'data/geography_north_atlantic.js', 'data/map_data.js', 'data/counties.js',
-  'data/bookmark_867_north_atlantic.js',
+  'data/bookmark_867_north_atlantic.js', 'data/bookmark_1066_north_atlantic.js',
   'data/bookmarks.js', 'data/bookmark_867_expansion.js', 'data/government_rollout.js',
   'data/islamic_profiles.js', 'data/islamic_institutions.js', 'data/settlements.js',
   'data/climate.js', 'data/eras.js', 'data/starts.js', 'data/technology.js', 'data/traits.js',
@@ -83,7 +83,7 @@ async function importSurvey(page) {
   });
 }
 
-test('the child preserves complete inherited metadata and adds scenery without selecting a fresh world', async function ({page}, info) {
+test('the physical child preserves metadata and scenery while retained dates keep their maps', async function ({page}, info) {
   await openGame(page, info);
   const result = await page.evaluate(function () {
     const parent = FB.geography('europe_regional_2'), g = FB.geography('europe_north_atlantic_2');
@@ -119,7 +119,8 @@ test('the child preserves complete inherited metadata and adds scenery without s
       defaults:[FBDATA.defaultGeography,FB.bookmark('867').geography,FB.bookmark('1066').geography],
       retainedMaps:FB.bookmarks(true).every(function (b) {
         return b.geography !== 'europe_north_atlantic_2' && FB.bookmarkRevisions(b.id).every(function (r) {
-          return r.revision === 'north_atlantic_v1' || r.geography !== 'europe_north_atlantic_2';
+          return (['867','1066'].indexOf(b.id) >= 0 && r.revision === 'north_atlantic_v1') ||
+            r.geography !== 'europe_north_atlantic_2';
         });
       })
     };
