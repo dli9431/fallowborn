@@ -1,0 +1,29 @@
+{
+  "name": "Household paid work examples",
+  "storyInstances": {
+    "bench_work_example": {
+      "id": "bench_work_example", "type": "household_track", "title": "Replace the bench tools", "intro": "An invented artisan buys supplies and works.",
+      "homeProvinceId": "paris", "continuity": "protagonist", "interruptedStage": "interrupted", "initialStage": "supplies",
+      "stages": {
+        "supplies": {"name": "Supplies", "text": "Buy basic materials.", "choices": [{"id": "buy", "label": "Buy supplies", "detail": "Pay three units from the private purse.", "operation": {"kind": "household_expense", "amount": 3}, "next": "select_work"}], "transitions": []},
+        "select_work": {"name": "Select work", "text": "The ordinary focus owns wages.", "choices": [{"id": "work", "label": "Work the bench", "detail": "Choose ordinary craft work.", "operation": {"kind": "set_focus", "focusId": "craft_work"}, "next": "working"}], "transitions": []},
+        "working": {"name": "Working", "text": "Wait for real income.", "choices": [{"id": "stop", "label": "Stop", "detail": "Leave this plan.", "operation": {"kind": "record_decision"}, "next": "interrupted"}], "transitions": [], "afterWork": {"focusId": "craft_work", "provinceId": "paris", "next": "paid"}},
+        "paid": {"name": "Work paid", "text": "The ordinary focus paid.", "terminal": true, "choices": [], "transitions": []},
+        "interrupted": {"name": "Interrupted", "text": "The plan ended.", "terminal": true, "choices": [], "transitions": []}
+      }
+    },
+    "field_work_example": {
+      "id": "field_work_example", "type": "household_track", "title": "Field supplies", "intro": "A different household chooses fieldwork.",
+      "homeProvinceId": "aachen", "continuity": "household", "initialStage": "select_work",
+      "stages": {
+        "select_work": {"name": "Fieldwork", "text": "Choose ordinary fieldwork.", "choices": [{"id": "work", "label": "Work the fields", "detail": "Choose the ordinary focus without payment.", "operation": {"kind": "set_focus", "focusId": "work_land"}, "next": "working"}], "transitions": []},
+        "working": {"name": "Working", "text": "Await real fieldwork income.", "choices": [{"id": "stop", "label": "Stop", "detail": "Keep ordinary household life.", "operation": {"kind": "record_decision"}, "next": "closed"}], "transitions": [], "afterWork": {"focusId": "work_land", "provinceId": "aachen", "next": "closed"}},
+        "closed": {"name": "Household carries on", "text": "No extra reward.", "terminal": true, "choices": [], "transitions": []}
+      }
+    }
+  },
+  "startScenarios": [
+    {"id": "bench_work_example_start", "name": "Bench household", "desc": "An invented artisan.", "intro": "Work at home.", "bookmarkIds": ["867"], "fixedProvinceId": "paris", "alwaysUnlocked": true, "tier": 1, "profession": "craftsman", "gold": 15, "prestige": 5, "piety": 0, "tracks": ["bench_work_example"], "trackLocations": {"bench_work_example": ["paris"]}},
+    {"id": "field_work_example_start", "name": "Field household", "desc": "An invented farmer.", "intro": "Work the fields.", "bookmarkIds": ["867"], "fixedProvinceId": "aachen", "alwaysUnlocked": true, "tier": 1, "profession": "farmer", "gold": 15, "prestige": 5, "piety": 0, "tracks": ["field_work_example"], "trackLocations": {"field_work_example": ["aachen"]}}
+  ]
+}

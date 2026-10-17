@@ -4,6 +4,7 @@ dependsOnRuntime(__filename, [
   'data/story_courts_476.js',
   'data/story_households_711.js', 'js/story_household.js',
   'data/story_households_800.js',
+  'data/story_households_1204.js',
   'data/story_ruler_agendas.js',
   'index.html', 'js/starts.js', 'js/story_track.js', 'js/stories.js', 'js/story_campaign.js', 'data/story_instances.js',
   'js/bookmark_setup.js', 'js/story_agreements.js',
@@ -111,7 +112,7 @@ test('stories register in order at load time only and resolve by id',
     expect(result.late).toContain('load time only');
     expect(result.registered).toBe(false);
     expect(result.bookmark).toEqual(WORLD_STORIES.concat(['cashel_recognition_476']));
-    expect(result.tracks).toEqual(['peroz_476:peroz_agenda_476','nepos_476:nepos_track_476','odoacer_476:odoacer_agenda_476','syagrius_476:syagrius_agenda_476','federate_476:federate_track_476','curialis_476:curialis_track_476','toledo_household_711:toledo_household_track_711','aachen_household_800:aachen_household_track_800','peroz_sasanian_476:peroz_agenda_476','muhammad_1204:muhammad_agenda_1204','siwa_delegate_1204:siwa_agenda_1204']);
+    expect(result.tracks).toEqual(['peroz_476:peroz_agenda_476','nepos_476:nepos_track_476','odoacer_476:odoacer_agenda_476','syagrius_476:syagrius_agenda_476','federate_476:federate_track_476','curialis_476:curialis_track_476','toledo_household_711:toledo_household_track_711','aachen_household_800:aachen_household_track_800','constantinople_household_1204:constantinople_household_track_1204','peroz_sasanian_476:peroz_agenda_476','muhammad_1204:muhammad_agenda_1204','siwa_delegate_1204:siwa_agenda_1204']);
   });
 
 test('a branch save holding state.situation476 migrates once into both story records',

@@ -48,6 +48,13 @@
       return !!(story && t && story.declaration && story.declaration.type === 'household_track' &&
         story.apply(s, t, action.choiceId, action.reviewed, true));
     },
+    focusPaid:function (s, focusId, amount) {
+      if (!(amount > 0)) return;
+      FB.stories.list().forEach(function (story) {
+        var t = FB.stories.record(s, story.id);
+        if (t && story.householdFocusPaid) story.householdFocusPaid(s, t, focusId);
+      });
+    },
     owner:function (s, key) {
       var list = FB.stories.list();
       for (var i = 0; i < list.length; i++) {
@@ -60,13 +67,16 @@
 
   function validate(def, context) {
     function need(ok, field) { if (!ok) throw new Error('Invalid household track: ' + field + '.'); }
-    need(keys(def, ['id','type','title','intro','homeProvinceId','continuity','initialStage',
+    need(keys(def, ['id','type','title','intro','homeProvinceId','continuity','interruptedStage','initialStage',
       'stages','jobs','requires','requirements','registrationBefore','registrationAfter']), 'fields');
     need(typeof def.title === 'string' && def.title.length > 0 && def.title.length <= 240 &&
       typeof def.intro === 'string' && def.intro.length <= 4000, 'presentation');
-    need(slug(def.homeProvinceId) && def.continuity === 'household', 'home or continuity');
+    need(slug(def.homeProvinceId) && ['household','protagonist'].indexOf(def.continuity) >= 0, 'home or continuity');
     need(plain(def.stages) && Object.keys(def.stages).length > 0 && Object.keys(def.stages).length <= 64 &&
       slug(def.initialStage) && own(def.stages, def.initialStage), 'stages');
+    need(def.continuity === 'protagonist' ? slug(def.interruptedStage) && own(def.stages, def.interruptedStage) &&
+      def.stages[def.interruptedStage].terminal === true : def.interruptedStage === undefined, 'interruption route');
+    function focus(id) { return (FBDATA.focuses || []).some(function (f) { return f.id === id && f.vocational; }); }
     function dependency(id) { need((def.requires || []).indexOf(id) >= 0 && context.get(id), 'story dependency'); }
     var jobs = def.jobs || {};
     need(plain(jobs) && Object.keys(jobs).length <= 8, 'jobs');
@@ -107,6 +117,8 @@
           }), 'job state');
       } else if (p.kind === 'job_available' || p.kind === 'job_patron') {
         need(keys(p, ['kind','jobId']) && own(jobs, p.jobId), 'job condition');
+      } else if (p.kind === 'civic_right') {
+        need(keys(p, ['kind','realmId','provinceId','evidenceId']) && slug(p.realmId) && slug(p.provinceId) && slug(p.evidenceId), 'civic right');
       } else if (p.kind === 'story_state') {
         need(keys(p, ['kind','storyId','stateField','values']) && ['phase','result'].indexOf(p.stateField) >= 0 &&
           Array.isArray(p.values) && p.values.length > 0 && p.values.length <= 16 &&
@@ -117,6 +129,8 @@
     function operation(op) {
       need(plain(op), 'operation');
       if (op.kind === 'record_decision') need(keys(op, ['kind']), 'decision terms');
+      else if (op.kind === 'set_focus') need(keys(op, ['kind','focusId']) && focus(op.focusId), 'focus terms');
+      else if (op.kind === 'household_expense') need(keys(op, ['kind','amount']) && Number.isFinite(op.amount) && op.amount > 0 && op.amount <= 100, 'expense terms');
       else if (op.kind === 'convert_faith') need(keys(op, ['kind','faithId','scope']) &&
         own(FBDATA.religions, op.faithId) && ['self','household'].indexOf(op.scope) >= 0, 'conversion terms');
       else if (op.kind === 'travel_site') {
@@ -134,14 +148,16 @@
     }
     Object.keys(def.stages).forEach(function (id) {
       var stage = def.stages[id];
-      need(slug(id) && keys(stage, ['name','text','terminal','choices','transitions','incident','afterIncident']), 'stage fields');
+      need(slug(id) && keys(stage, ['name','text','terminal','choices','transitions','incident','afterIncident','afterWork']), 'stage fields');
       need(typeof stage.name === 'string' && stage.name.length > 0 && stage.name.length <= 240 &&
         typeof stage.text === 'string' && stage.text.length <= 4000, 'stage presentation');
       need(stage.terminal === undefined || stage.terminal === true, 'terminal');
       need(Array.isArray(stage.choices) && stage.choices.length <= 12 &&
         Array.isArray(stage.transitions) && stage.transitions.length <= 16, 'stage lists');
       need(!stage.terminal || !stage.choices.length && !stage.transitions.length, 'terminal routes');
-      need(stage.terminal || stage.choices.length + stage.transitions.length > 0, 'unfinished dead end');
+      need(stage.afterWork === undefined || !stage.terminal && keys(stage.afterWork, ['focusId','provinceId','next']) &&
+        focus(stage.afterWork.focusId) && slug(stage.afterWork.provinceId) && own(def.stages, stage.afterWork.next) && stage.afterWork.next !== id, 'work route');
+      need(stage.terminal || stage.choices.length + stage.transitions.length > 0 || stage.afterWork, 'unfinished dead end');
       if (stage.incident) {
         need(!stage.terminal && own(def.stages, stage.afterIncident) && stage.afterIncident !== id, 'incident closure route');
         var inc = stage.incident;
@@ -167,13 +183,16 @@
       var id = pending.shift(); if (reached[id]) continue; reached[id] = true;
       def.stages[id].choices.concat(def.stages[id].transitions).forEach(function (r) { pending.push(r.next); });
       if (def.stages[id].afterIncident) pending.push(def.stages[id].afterIncident);
+      if (def.stages[id].afterWork) pending.push(def.stages[id].afterWork.next);
+      if (def.interruptedStage) pending.push(def.interruptedStage);
     }
     need(Object.keys(def.stages).every(function (id) { return reached[id]; }), 'unreachable stage');
     // Every stage must have a route to an explicit terminal, even in a cyclic graph.
     var finishes = Object.create(null);
     Object.keys(def.stages).forEach(function (id) { if (def.stages[id].terminal) finishes[id] = true; });
     for (var n = 0; n < 64; n++) Object.keys(def.stages).forEach(function (id) {
-      if (finishes[def.stages[id].afterIncident] || def.stages[id].choices.concat(def.stages[id].transitions).some(function (r) { return finishes[r.next]; })) finishes[id] = true;
+      if (finishes[def.stages[id].afterIncident] || def.stages[id].afterWork && finishes[def.stages[id].afterWork.next] ||
+        def.stages[id].choices.concat(def.stages[id].transitions).some(function (r) { return finishes[r.next]; })) finishes[id] = true;
     });
     need(Object.keys(def.stages).every(function (id) { return finishes[id]; }), 'no terminal route');
     Object.keys(def.stages).forEach(function (origin) {
@@ -186,6 +205,7 @@
         var stage = def.stages[id];
         stage.choices.concat(stage.transitions).forEach(function (r) { todo.push(r.next); });
         if (stage.afterIncident) todo.push(stage.afterIncident);
+        if (stage.afterWork) todo.push(stage.afterWork.next);
       }
     });
   }
@@ -274,6 +294,11 @@
       if (p.kind === 'job_available') return availableJob(s, t, p.jobId);
       if (p.kind === 'job_patron') return patron(s, t, p.jobId);
       if (p.kind === 'job_state') return p.states.indexOf(t.jobs && t.jobs[p.jobId] ? t.jobs[p.jobId].status : 'missing') >= 0;
+      if (p.kind === 'civic_right') {
+        var rid = FB.startRealmId(s, p.realmId), civic = FB.civicGovernment.row(s, rid);
+        return !!civic && civic.rights.some(function (r) { return r.evidenceId === p.evidenceId &&
+          r.provinceId === p.provinceId && FB.civicGovernment.rightEffective(s, rid, r); });
+      }
       var row = FB.stories.record(s, p.storyId);
       return !!row && p.values.indexOf(row[p.stateField]) >= 0;
     }
@@ -308,6 +333,10 @@
         var current = sovereign(s, id), o = t.controls[id];
         if (o.after !== current) t.controls[id] = { before:o.after, after:current, turn:s.turn };
       });
+      if (def.stages[t.phase].terminal) return;
+      if (def.continuity === 'protagonist' && (!living(s) || t.actorId !== s.player.charId)) {
+        close(s, t, def.stages[t.phase], 'expired'); move(s, t, def.interruptedStage); return;
+      }
       if (!living(s)) return;
       if (t.actorId !== s.player.charId) { t.actorId = s.player.charId; t.revision++; }
       // One automatic edge per boundary; malformed cyclic content cannot spin a tick.
@@ -319,6 +348,12 @@
       }
     }
     function operation(s, op, t) {
+      if (op.kind === 'set_focus') {
+        var f = FB.focusStatus(s, op.focusId);
+        return { allowed:f.can && !s.player.travel, reason:f.reason, terms:{ focusId:op.focusId, preview:f.preview } };
+      }
+      if (op.kind === 'household_expense') return { allowed:s.player.gold >= op.amount,
+        reason:FB.T('The household needs the full expense in its private purse.'), terms:{ amount:op.amount } };
       if (op.kind === 'spend_day') return { allowed:freeDay(s), terms:null, reason:FB.T('A free action day at home is required.') };
       if (op.kind === 'start_job' || op.kind === 'work_job' || op.kind === 'settle_job') {
         var j = def.jobs[op.jobId], row = t.jobs && t.jobs[op.jobId], rid = payer(s, j);
@@ -347,7 +382,7 @@
       var stage = def.stages[t.phase], choice = stage.choices.filter(function (c) { return c.id === id; })[0];
       var op = choice ? operation(s, choice.operation, t) : { allowed:false, terms:null };
       var key = incident(s, t, stage), closed = key && receipt(s, key);
-      var facts = { turn:s.turn, actor:s.player.charId, alive:living(s), phase:t.phase, revision:t.revision,
+      var facts = { turn:s.turn, actor:s.player.charId, alive:living(s) && (def.continuity !== 'protagonist' || t.actorId === s.player.charId), phase:t.phase, revision:t.revision,
         home:s.player.provinceId, presence:present(s), funds:[s.player.gold,s.player.piety,s.player.prestige],
         travel:s.player.travel,
         control:Object.keys(places).map(function (pid) { return [pid,s.owner[pid],s.holder[pid],sovereign(s, pid)]; }),
@@ -355,10 +390,11 @@
         family:FB.householdMembers(s).map(function (c) { return [c.id,!!c.dead,c.religion,c.culture]; }),
         stageReady:!stage.transitions.some(function (r) { return test(s, r.when, t); }),
         local:!stage.incident || s.player.provinceId === stage.incident.provinceId && present(s) === stage.incident.provinceId,
-        when:!!choice && test(s, choice.when, t), incident:key, closed:closed || null, terms:op.terms,
+        when:!!choice && test(s, choice.when, t), spent:!!choice && choice.operation.kind === 'household_expense' && own(t.decisions, t.phase),
+        incident:key, closed:closed || null, terms:op.terms,
         graph:def };
       if (choice && choice.operation.kind === 'convert_faith') facts.modifier = FBDATA.modifiers && FBDATA.modifiers['zealot_unrest'];
-      return { id:id, allowed:!!choice && living(s) && facts.stageReady && facts.local && facts.when && op.allowed &&
+      return { id:id, allowed:!!choice && facts.alive && !facts.spent && facts.stageReady && facts.local && facts.when && op.allowed &&
         (!stage.incident || !!key && !closed), reason:op.reason || FB.T('The local situation has changed. Review the household again.'),
         facts:facts, stamp:JSON.stringify(facts) };
     }
@@ -394,6 +430,11 @@
         finishJob(s, job, 'settled', op.resolution,
           op.resolution === 'hearing' ? job.escrow : op.resolution === 'settlement' ? terms.settlementGold : 0);
       }
+      if (op.kind === 'household_expense') s.player.gold -= op.amount;
+      if (op.kind === 'set_focus') {
+        FB.setFocus(s, op.focusId);
+        if (s.player.focus !== op.focusId) return false;
+      }
       if (op.kind === 'convert_faith' && !FB.applyConversion(s, 'faith', op.faithId, op.scope)) return false;
       if (op.kind === 'travel_site' && !FB.travelStart(s, q.facts.terms.purpose, q.facts.terms.destinationId, q.facts.terms.destinationRealm)) return false;
       if (op.kind === 'settle_household' && !FB.travelSettle(s)) return false;
@@ -418,6 +459,14 @@
       },
       title:function () { return FB.T(def.title); }, intro:function () { return FB.T(def.intro); },
       day:update, season:update, year:update,
+      householdFocusPaid:function (s, t, focusId) {
+        var stage = def.stages[t.phase], work = stage.afterWork, key = incident(s, t, stage);
+        if (!work || !living(s) || def.continuity === 'protagonist' && t.actorId !== s.player.charId ||
+          s.player.travel || work.focusId !== focusId || s.player.provinceId !== work.provinceId ||
+          stage.incident && (!key || receipt(s, key) || s.player.provinceId !== stage.incident.provinceId || present(s) !== stage.incident.provinceId) ||
+          stage.transitions.some(function (r) { return test(s, r.when, t); })) return;
+        close(s, t, stage, 'resolved'); move(s, t, work.next);
+      },
       householdIncident:function (s, t, key) {
         if (def.stages[t.phase].terminal || !living(s) || receipt(s, key)) return false;
         return Object.keys(def.stages).some(function (id) {
@@ -451,6 +500,10 @@
           dayOperation(op) ? FB.T('Spend one action day. Daily Focus income is replaced for that day.') : FB.T('This settlement spends no action day.'),
           FB.T('Interrupted work earns only its completed share of the undisputed fee. Completed work keeps its full reserved entitlement. The contract expires {days} days after acceptance.', { days:j.expiresDays })];
         }
+        if (op.kind === 'household_expense') return [FB.T('Pay {money:amount} from the private household purse once for this stage.', { amount:terms.amount }),
+          FB.T('This buys the described household supplies. It grants no land, workshop holding or income bonus.')];
+        if (op.kind === 'set_focus') return [FB.T('Select ordinary paid work. Choosing the focus pays nothing; its normal daily work supplies any income.'),
+          FB.T('The household story acknowledges work only after the focus actually pays at the declared home. Ordinary work eligibility and risks apply.')];
         if (op.kind === 'convert_faith') return [FB.T('Cost: {piety} piety and {prestige} prestige.', { piety:terms.pietyCost, prestige:terms.prestigeCost }),
           op.scope === 'self' ? FB.T('Only your own faith changes. Your relatives keep theirs.') : FB.T('Household members adopting this faith: {names}.',
             { names:FB.householdMembers(s).filter(function (c) { return !c.dead; }).map(function (c) { return FB.fullName(c); }).join(', ') }),

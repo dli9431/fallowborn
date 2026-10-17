@@ -1,5 +1,9 @@
 Revision-scoped fixed starts
 
+The Constantinople household start carries constantinople_household_track_1204 from data/story_households_1204.js on every offered 1204 revision. Its reconstruction begins after the sack without a second opening loss. Supplies are a small private expense; local, Latin and effective Venetian-quarter customer contexts use actual ordinary craft income. Informational religious choices neither require an optional congregation nor change the household’s faith. The personal Nicaean journey requires current Nicaean possession and ordinary routes and funds, with family settlement remaining a separate later transaction. Death interrupts this protagonist’s unfinished plan. World campaigns, courts, households and baseline geography retain their existing declarations.
+
+Technology impact for constantinople_foothold_journey is none. The dated civilian journey uses ordinary route costs, free status and later residence and work gates. Its arrival event grants no payment, enlistment, office or household move. Exact historical workshop rights, wages, parish buildings and alternative Epirote or Trebizond routes remain outside this declaration.
+
 Mod validation checks a fixed resident-community start against every revision that offers it, using the same offering rules as fixed existing-ruler starts. It does not require an expanded-only start to fit an older fresh selection that does not offer it. Start identity, settled location and required community still validate in each offering revision.
 
 Bookmark platform and authoring

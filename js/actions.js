@@ -12957,6 +12957,9 @@ window.FB = window.FB || {};
         if (gained > 0) state.player[key] += gained * (mult - 1);
       }
     }
+    if (f.vocational && FB.householdStories && state.player.gold > before.gold) {
+      FB.householdStories.focusPaid(state, f.id, state.player.gold - before.gold);
+    }
   };
 
   FB.runInstant = function (state, id, options) {
