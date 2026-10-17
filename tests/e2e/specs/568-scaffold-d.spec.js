@@ -6,7 +6,8 @@ const {dependsOnRuntime} = require('../support/runtime-dependencies');
 const {openGame} = require('../support/game/navigation');
 
 dependsOnRuntime(__filename,[
-  'index.html','data/bookmark_568_scaffold_d.js','data/bookmark_568_identities.js',
+  'index.html','data/bookmark_568.js','data/starts_568.js',
+  'data/bookmark_568_scaffold_d.js','data/bookmark_568_identities.js',
   'data/bookmark_493.js','data/bookmark_493_world.js','data/bookmark_476_wider.js',
   'data/bookmark_476_wider_identities.js','data/bookmarks.js','data/counties.js',
   'data/bookmark_476_italy.js','data/bookmark_476_gaul_iberia.js',
@@ -26,7 +27,7 @@ const packets = {
 };
 const keys = Object.keys(packets);
 
-test('568 quadrant d loads from index with exact disjoint coverage and no partial bookmark', async function ({page},testInfo) {
+test('568 quadrant d loads from index with exact disjoint coverage in the hidden bookmark', async function ({page},testInfo) {
   await openGame(page,testInfo);
   const result = await page.evaluate(function (expected) {
     var seen = {}, duplicates = [], actual = {}, scenery = [], inhabited = 0;
@@ -40,7 +41,7 @@ test('568 quadrant d loads from index with exact disjoint coverage and no partia
       });
     });
     return {actual:actual,duplicates:duplicates,count:Object.keys(seen).length,
-      inhabited:inhabited,scenery:scenery.sort(),registered:!!FBDATA.bookmarks['568'],
+      inhabited:inhabited,scenery:scenery.sort(),hidden:FBDATA.bookmarks['568'].hidden,
       publishedLayout:!!FBDATA.settlementLayouts['568']};
   },packets);
   expect(result.actual).toEqual(packets);
@@ -49,8 +50,8 @@ test('568 quadrant d loads from index with exact disjoint coverage and no partia
   expect(result.inhabited).toBe(127);
   expect(result.scenery).toEqual(['w_syrian','w_steppe_e','w_ural','w_taiga','w_north',
     'w_sahara_w','w_sahara_c','w_sahara_e','w_sahel','w_nubia'].sort());
-  expect(result.registered).toBe(false);
-  expect(result.publishedLayout).toBe(false);
+  expect(result.hidden).toBe(true);
+  expect(result.publishedLayout).toBe(true);
 });
 
 test('568 quadrant d reload changes no released definition, effective catalogue or seeded state', async function ({page},testInfo) {

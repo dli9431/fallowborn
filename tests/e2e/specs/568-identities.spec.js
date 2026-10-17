@@ -8,7 +8,9 @@ const {mockCrazyGames} = require('../support/crazygames');
 const {releasedCatalogue} = require('../support/released-catalogue');
 const {dependsOnRuntime} = require('../support/runtime-dependencies');
 
-dependsOnRuntime(__filename, ['index.html','data/bookmark_568_identities.js',
+dependsOnRuntime(__filename, ['index.html','data/bookmark_568.js','data/starts_568.js',
+  'data/bookmark_568_scaffold_a.js','data/bookmark_568_scaffold_b.js',
+  'data/bookmark_568_scaffold_c.js','data/bookmark_568_scaffold_d.js','data/bookmark_568_identities.js',
   'data/bookmark_476_wider_identities.js','data/cultures.js','data/bookmarks.js',
   'data/eras.js','js/model.js','js/world.js','js/starts.js','js/crazygames.js']);
 
@@ -20,7 +22,7 @@ const FAITHS = ['insular_traditional_476','finnic_traditional_476','woodland_tra
   'buddhist_476','brahmanical_476','sahel_traditional_476'];
 
 for (const crazygames of [false,true]) {
-  test('568 identities stay inert on ' + (crazygames ? 'CrazyGames' : 'standard') + ' boot',
+  test('568 identities serve the hidden world on ' + (crazygames ? 'CrazyGames' : 'standard') + ' boot',
     async function ({page},testInfo) {
       if (crazygames) {
         await mockCrazyGames(page);
@@ -44,8 +46,8 @@ for (const crazygames of [false,true]) {
           loaded:!!script && scripts.indexOf('data/bookmark_568_identities.js') >
             scripts.indexOf('data/bookmark_476_wider_identities.js'),
           cultures:cultures,
-          absent:cultures.every(function (id) { return !FB.cultureExists(id,null); }),
-          noPartialWorld:!FBDATA.bookmarks['568'],
+          published:cultures.every(function (id) { return FB.cultureExists(id,null); }),
+          hiddenWorld:FBDATA.bookmarks['568'].hidden,
           faiths:faiths,
           additions:faiths.every(function (id) {
             return JSON.stringify(additions[id]) === '{"bookmarkIds":["568"]}';
@@ -54,21 +56,21 @@ for (const crazygames of [false,true]) {
             const ids = FB.faithAvailability(id,null).bookmarkIds;
             const expected = id === 'buddhist_476' ? ['476','493','1204'] :
               id === 'sahel_traditional_476' ? ['476','493','711','800','867','1204'] : ['476','493'];
-            return JSON.stringify(ids) === JSON.stringify(expected);
+            return JSON.stringify(ids) === JSON.stringify(expected.concat(['568']));
           }),
           culturesValid:FB.configureCultures(null),
           religionsValid:FB.validateReligionData(null),
           worldsValid:baselineIds.map(function (id) { return FB.validateBookmark(FB.bookmark(id)); })
         };
-      })).toEqual({distribution:crazygames,loaded:true,cultures:CULTURES,absent:true,
-        noPartialWorld:true,faiths:FAITHS,additions:true,priorPermissions:true,
+      })).toEqual({distribution:crazygames,loaded:true,cultures:CULTURES,published:true,
+        hiddenWorld:true,faiths:FAITHS,additions:true,priorPermissions:true,
         culturesValid:[],religionsValid:[],worldsValid:[[],[],[],[],[],[],[]]});
       const fixture = JSON.parse(fs.readFileSync(path.join(__dirname,'../fixtures/released-catalogue.json'),'utf8'));
       expect((await page.evaluate(releasedCatalogue,fixture.selection)).hashes).toEqual(fixture.hashes);
     });
 }
 
-test('the staged definitions compile with exact 568 faith additions and retained-date parity',
+test('the published definitions compile with exact 568 faith additions and retained-date parity',
   async function ({page},testInfo) {
     await openGame(page,testInfo);
     expect(await page.evaluate(function () {
@@ -76,6 +78,7 @@ test('the staged definitions compile with exact 568 faith additions and retained
       const consumers = ['community','character','ruler','institution','start','story','conversion','project'];
       const faiths = Object.keys(FBDATA.bookmarkFaithAvailability568);
       const rawCultures = FBDATA.cultures, rawReligions = FBDATA.religions;
+      const originalBookmark = FBDATA.bookmarks['568'];
       const before = JSON.stringify([rawCultures,rawReligions,FBDATA.bookmarks]);
       const rng = FB.getRngState(), uid = FB.getUidCounter();
       const prior = faiths.map(function (faith) {
@@ -88,7 +91,7 @@ test('the staged definitions compile with exact 568 faith additions and retained
       const doctrine = faiths.map(function (id) { return JSON.stringify(FB.religionOf(id,null)); });
       const candidate = {id:'568',era:'late_antique',date:{year:568,season:0,day:1}};
       try {
-        // Catalogue-only publication example. No partial world enters shipped data.
+        // Repeat the additive publication in an isolated catalogue to verify idempotence.
         FBDATA.bookmarks['568'] = candidate;
         FBDATA.cultures = Object.assign({},rawCultures,
           JSON.parse(JSON.stringify(FBDATA.bookmarkCultures568)));
@@ -134,15 +137,12 @@ test('the staged definitions compile with exact 568 faith additions and retained
           }),
           exact:faiths.every(function (id) {
             return JSON.stringify(FB.faithAvailability(id,null).bookmarkIds) ===
-              JSON.stringify(rawReligions[id].availability.bookmarkIds.concat(['568']));
+              JSON.stringify(rawReligions[id].availability.bookmarkIds);
           }),
           previous:JSON.stringify(prior) === JSON.stringify(after),
           doctrine:faiths.every(function (id,i) { return doctrine[i] === JSON.stringify(FB.religionOf(id,null)); }),
           originals:before === JSON.stringify([rawCultures,rawReligions,
-            Object.keys(FBDATA.bookmarks).reduce(function (out,id) {
-              if (id !== '568') out[id] = FBDATA.bookmarks[id];
-              return out;
-            },{})]),
+            Object.assign({},FBDATA.bookmarks,{'568':originalBookmark})]),
           noNewFaith:Object.keys(FBDATA.religions).length === Object.keys(rawReligions).length,
           sasanianHeld:!FB.faithHistoricalAvailable('zoroastrian_sasanian_476',candidate,'ruler'),
           broad:['nicene','chalcedonian','miaphysite','homoian','jewish','east_syriac',
@@ -154,7 +154,7 @@ test('the staged definitions compile with exact 568 faith additions and retained
           pure:rng === FB.getRngState() && uid === FB.getUidCounter()};
       } finally {
         FBDATA.cultures = rawCultures; FBDATA.religions = rawReligions;
-        delete FBDATA.bookmarks['568'];
+        FBDATA.bookmarks['568'] = originalBookmark;
         FB.invalidateCultureData(); FB.invalidateReligionData();
       }
     })).toEqual({compiled:[
@@ -166,20 +166,23 @@ test('the staged definitions compile with exact 568 faith additions and retained
     doctrine:true,originals:true,noNewFaith:true,sasanianHeld:true,broad:true,pure:true});
   });
 
-test('the 568 bookmark addition cannot waive a narrower faith window or consumer restriction',
+test('the composer preserves a narrower faith window and consumer restriction on repeated publication',
   async function ({page},testInfo) {
     await openGame(page,testInfo);
+    await page.evaluate(function () {
+      const id = 'insular_traditional_476';
+      FBDATA.religions[id] = Object.assign({},FBDATA.religions[id],{
+        availability:{yearMin:476,yearMax:550,eras:['late_antique'],
+          bookmarkIds:['476','493'],consumers:['community']}});
+    });
+    await page.addScriptTag({path:path.resolve(__dirname,'../../../data/bookmark_568.js')});
+    await page.addScriptTag({path:path.resolve(__dirname,'../../../data/bookmark_568.js')});
     expect(await page.evaluate(function () {
-      const id = 'insular_traditional_476', original = FBDATA.religions[id];
-      const candidate = {id:'568',era:'late_antique',date:{year:568,season:0,day:1}};
-      try {
-        FBDATA.bookmarks['568'] = candidate;
-        const strict = {yearMin:476,yearMax:550,eras:['late_antique'],
-          bookmarkIds:['476','493'],consumers:['community']};
-        const availability = Object.assign({},strict,{bookmarkIds:strict.bookmarkIds.concat(
-          FBDATA.bookmarkFaithAvailability568[id].bookmarkIds)});
-        FBDATA.religions[id] = Object.assign({},original,{availability:availability});
-        FB.invalidateReligionData();
+        const id = 'insular_traditional_476', candidate = FB.bookmark('568');
+        const availability = FBDATA.religions[id].availability;
+        FB.invalidateCultureData(); FB.invalidateReligionData();
+        const preserved = JSON.stringify(availability) === JSON.stringify({
+          yearMin:476,yearMax:550,eras:['late_antique'],bookmarkIds:['476','493','568'],consumers:['community']});
         const yearBlocked = !FB.faithHistoricalAvailable(id,candidate,'community');
         const earlier = FB.faithHistoricalAvailable(id,FB.bookmark('493'),'community');
         availability.yearMax = 568;
@@ -188,13 +191,8 @@ test('the 568 bookmark addition cannot waive a narrower faith window or consumer
         const consumerBlocked = !FB.faithHistoricalAvailable(id,candidate,'start');
         const eraBlocked = !FB.faithHistoricalAvailable(id,
           {id:'568',era:'high_medieval',date:candidate.date},'community');
-        return {yearBlocked:yearBlocked,earlier:earlier,allowed:allowed,
+        return {preserved:preserved,yearBlocked:yearBlocked,earlier:earlier,allowed:allowed,
           consumerBlocked:consumerBlocked,eraBlocked:eraBlocked,
           valid:FB.validateReligionData(null)};
-      } finally {
-        FBDATA.religions[id] = original;
-        delete FBDATA.bookmarks['568'];
-        FB.invalidateReligionData();
-      }
-    })).toEqual({yearBlocked:true,earlier:true,allowed:true,consumerBlocked:true,eraBlocked:true,valid:[]});
+    })).toEqual({preserved:true,yearBlocked:true,earlier:true,allowed:true,consumerBlocked:true,eraBlocked:true,valid:[]});
   });

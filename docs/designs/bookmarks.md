@@ -1,5 +1,11 @@
 Revision-scoped fixed starts
 
+Spring 568 composition
+
+data/bookmark_568.js composes all 22 first-pass regional blocks into the hidden migration_v1 world on europe_regional_2. It covers 527 physical cells, with 506 inhabited counties and 21 scenery cells, and keeps each of the 132 courts unique. Regional rows, titles, climate, layouts and opening records are copied into the date-owned definition. The composer publishes its two culture definitions, fifteen additive faith selectors and the existing Sasanian administration/recognition profiles before engine compilation. No other bookmark or retained revision is rewritten.
+
+data/starts_568.js offers two ordinary map-chosen roles, farmer_568 and craftsman_568, through the existing start schema. Both permit every inhabited county and use its ordinary community selection. Their age, family, money and plot use the established generic role defaults. They create no named historical protagonist, fixed story household, clerical institution or civic mandate. The hidden date blocks picker, codes, direct creation and Observe while allowing isolated definition review and matching save restore. Named and fixed-household stories remain separately authored content. This composition adds no engine capability, saved field or technology gate.
+
 York households and the West Saxon court
 
 data/starts_york_wessex_867.js adds Æthelred I at Winchester through the existing Wessex ruler constructor and an invented York artisan household through the ordinary fixed-place start. The court keeps its original ruler, generated family, territories, government and actual resources. Winchester is its declared game seat, without an exact opening-day itinerary claim. The artisan defaults to the English Catholic community, age twenty-four, free station, craftsman profession and fifteen private gold; standard and established family shapes retain ordinary resident-community selection. These household details are simulation choices.

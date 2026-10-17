@@ -8,7 +8,8 @@ const {mockCrazyGames} = require('../support/crazygames');
 const {dependsOnRuntime} = require('../support/runtime-dependencies');
 
 dependsOnRuntime(__filename,[
-  'index.html','data/bookmark_568_scaffold_a.js','data/bookmark_568_identities.js',
+  'index.html','data/bookmark_568.js','data/starts_568.js',
+  'data/bookmark_568_scaffold_a.js','data/bookmark_568_identities.js',
   'data/bookmark_493.js','data/bookmark_493_world.js','data/bookmark_476_wider.js',
   'data/bookmark_476_wider_identities.js','data/counties.js','data/geographies.js','data/geography_expansion.js',
   'data/cultures.js','data/traits.js','data/climate.js',
@@ -53,10 +54,10 @@ for (const crazygames of [false,true]) {
         loaded:scripts.indexOf('data/bookmark_568_scaffold_a.js') > scripts.indexOf('data/bookmark_493_world.js'),
         blocks:keys.every(function (key) { return !!FBDATA.bookmarkRegions568[key]; }),
         sibling:!!FBDATA.bookmarkRegions568.siblingSentinel,
-        noWorld:!FBDATA.bookmarks['568'],noLayout:!FBDATA.settlementLayouts['568'],
-        noPolicies:!FBDATA.administrationProfiles.sasanian_provinces_568 && !FBDATA.aristocraticProfiles.sasanian_568};
+        hiddenWorld:FBDATA.bookmarks['568'].hidden,layout:!!FBDATA.settlementLayouts['568'],
+        policies:!!FBDATA.administrationProfiles.sasanian_provinces_568 && !!FBDATA.aristocraticProfiles.sasanian_568};
     },Object.keys(packets))).toEqual({distribution:crazygames,loaded:true,blocks:true,sibling:true,
-      noWorld:true,noLayout:true,noPolicies:true});
+      hiddenWorld:true,layout:true,policies:true});
   });
 }
 
@@ -107,7 +108,7 @@ test('568 quadrant a resolves local references and declares shared courts only o
       FBDATA.religions = Object.assign({},oldReligions);
       Object.keys(FBDATA.bookmarkFaithAvailability568).forEach(function (id) {
         const old = oldReligions[id], availability = JSON.parse(JSON.stringify(old.availability));
-        availability.bookmarkIds = availability.bookmarkIds.concat(['568']);
+        if (availability.bookmarkIds.indexOf('568') < 0) availability.bookmarkIds.push('568');
         FBDATA.religions[id] = Object.assign({},old,{availability:availability});
       });
       FB.invalidateReligionData();

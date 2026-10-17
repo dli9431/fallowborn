@@ -466,6 +466,20 @@ class StructuredDataExtractionTests(unittest.TestCase):
         for name in ('Kawad I', 'Jamasp', 'Yazdegerd II'):
             self.assertNotIn(i18n_catalog.source_key(name), inventory.entries)
 
+    def test_568_composition_and_open_role_labels_have_literal_source_owners(self):
+        inventory = i18n_catalog.Inventory()
+        i18n_catalog.extract_structured(inventory)
+        for key, text, source in (
+            ('bookmark.568.name.default', 'The Lombards Depart', 'bookmark_568.js'),
+            ('scenario.farmer_568.name.default', 'Free Farming Household', 'starts_568.js'),
+            ('scenario.craftsman_568.name.default', 'Artisan’s Apprentice', 'starts_568.js'),
+        ):
+            self.assertEqual(inventory.entries[key]['text'], text)
+            self.assertIn(source, inventory.meta[key]['location'])
+        self.assertIn('bookmark.568.desc.default', inventory.entries)
+        self.assertIn('scenario.farmer_568.intro.default', inventory.entries)
+        self.assertIn('scenario.craftsman_568.intro.default', inventory.entries)
+
     def test_493_review_content_has_display_and_durable_message_owners(self):
         inventory = i18n_catalog.Inventory()
         i18n_catalog.extract_structured(inventory)

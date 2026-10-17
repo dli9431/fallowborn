@@ -9,6 +9,7 @@ const {releasedCatalogue} = require('../support/released-catalogue');
 const {dependsOnRuntime} = require('../support/runtime-dependencies');
 
 dependsOnRuntime(__filename,[
+  'data/bookmark_568.js','data/bookmark_568_identities.js',
   'data/cultures.js','data/bookmarks.js','data/bookmark_476.js','data/bookmark_476_outer.js',
   'data/bookmark_476_wider_identities.js','data/bookmark_476_wider.js','data/bookmark_493.js',
   'data/bookmark_493_world.js','data/bookmark_711.js','data/bookmark_711_terrain.js',
@@ -46,7 +47,7 @@ test('the Arabian early profile has independent defaults and retains the release
         roles:[profile.roles.priestM,profile.roles.priestF,profile.roles.monasticM,profile.roles.monasticF],
         paths:profile.religiousPaths || null,errors:FB.validateReligionData(null),
         pure:before === JSON.stringify(FBDATA) && rng === FB.getRngState() && uid === FB.getUidCounter()};
-    })).toEqual({lineage:['arabian_traditional_476'],availability:{bookmarkIds:['476','493']},
+    })).toEqual({lineage:['arabian_traditional_476'],availability:{bookmarkIds:['476','493','568']},
       head:null,war:null,law:{value:'customary',sourceId:'arabian_traditional_476'},
       marriage:{m:1,f:1},clergyMarriage:true,
       roles:['Ritual keeper','Ritual keeper','Devotee','Devotee'],paths:null,errors:[],pure:true});
