@@ -266,7 +266,7 @@
       }
     };
   }
-  FB.stories.registerType('opening_profile', factory, 'js/story_opening_goals.js', check);
+  FB.stories.registerType('opening_profile', factory, 'js/story_opening_goals.js', check, { storyline:false });
   var military = FB.treasuryCommitMilitary;
   FB.treasuryCommitMilitary = function (s, batch) {
     var before = s.treasuryAccounting && s.treasuryAccounting.lastMilitaryTurn, funds = FB.treasuryAvailable(s, 'player');

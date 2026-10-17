@@ -69,6 +69,13 @@
         Array.isArray(places[id]) && places[id].indexOf(provinceId) >= 0;
     });
   };
+  /* Optional companion tracks still attach, but cannot supply a storyline.
+     Import validation uses its detached candidate registry. */
+  FB.startStoryTracks = function (scenario, provinceId, stories) {
+    return FB.startTracks(scenario, provinceId).filter(function (id) {
+      return (stories || FB.stories).isStoryline(id);
+    });
+  };
   function delegatedStart(s) {
     var scenario = s && s.start && FBDATA.startScenarios.find(function (row) { return row.id === s.start.scenarioId; });
     return !!(scenario && scenario.rulerRealmId && !FB.governments.problems(scenario.governmentForm).length &&

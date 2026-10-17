@@ -845,7 +845,7 @@ window.FBMODS = window.FBMODS || [];
       validateIdList(scenario.tracks, path + '.tracks', tracks, true);
     }
     if (scenario.fixedProvinceId && !scenario.rulerRealmId &&
-        !FB.startTracks(scenario, scenario.fixedProvinceId).length) {
+        !FB.startStoryTracks(scenario, scenario.fixedProvinceId, stories).length) {
       fail(path + '.tracks', 'a fixed-place household needs a player track at its fixed birthplace.');
     }
     if (own(scenario, 'trackLocations')) {
