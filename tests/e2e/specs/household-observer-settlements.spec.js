@@ -82,6 +82,19 @@ test('a diplomatic notice restores once and absent observers remain absent', asy
   })).toEqual({retained:true,applied:true,again:false,closed:true,missing:true});
 });
 
+test('a refreshed review also withdraws a local report after its actual host leaves', async function ({page}, info) {
+  await imported(page, info);
+  expect(await page.evaluate(function () {
+    const s = FB.state, id = 'road_household_notice';
+    s.turn = 10; s.player.provinceId = 'dune_well';
+    Object.assign(s.stories.dune_settlement,{phase:'started',startedTurn:10,warId:'review_war'});
+    s.armies.push({id:'review_host',realm:'dune_coalition',men:30,warId:'review_war',at:'dune_well'});
+    FB.stories.get(id).day(s,s.stories[id]); const offered = FB.stories.quote(s,id,'records').allowed;
+    s.armies = s.armies.filter(function (a) { return a.id !== 'review_host'; });
+    return {offered:offered,refreshed:FB.stories.quote(s,id,'records').allowed};
+  })).toEqual({offered:true,refreshed:false});
+});
+
 for (const fault of ['trigger','service','effect','source']) {
   test('new source adapters reject malformed JSON '+fault+' without publishing', async function ({page}, info) {
     await openGame(page, info);

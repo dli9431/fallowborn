@@ -217,9 +217,11 @@
       while (ids.length > 64) delete t.householdReceipts[ids.shift()];
     }
     function available(s, t, item) {
+      var b = beat(item.beatId);
       return living(s) && s.player.provinceId === item.provinceId && present(s) === item.provinceId &&
         s.turn <= item.expiresTurn && JSON.stringify(currentControl(s, item.provinceId)) === JSON.stringify(item.control) &&
-        events(s).some(function (e) { return e.code === beat(item.beatId).trigger && e.token === item.sourceToken; }) &&
+        events(s).some(function (e) { return e.code === b.trigger && e.token === item.sourceToken &&
+          (b.reach === 'previous' || e.places.indexOf(item.provinceId) >= 0); }) &&
         !FB.householdStories.receipt(s, item.key) && !FB.householdStories.owner(s, item.key);
     }
     function poll(s, t) {
