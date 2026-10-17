@@ -8,6 +8,12 @@ FBDATA.events = FBDATA.events || [];
   FBDATA.eventPacks.travel = { eras:['late_antique','early_medieval','high_medieval'] };
 
 FBDATA.events.push(
+{ id:'volhynian_visit_arrival_1241', title:'A Visitor in Lutsk',
+  trigger:{ never:true }, travel:{ kind:'capstone', purpose:'volhynian_visit_1241' },
+  text:'You have reached Lutsk. Your household keeps its permanent home. Local work, a return journey and any later household move follow their ordinary requirements.',
+  options:[{ label:'Begin the visit.', desc:'Remain a visitor without an arrival payment, land grant or household move.',
+    effects:{ custom:'travel_capstone_done' } }]
+},
 { id:'ravenna_bononia_arrival_568', title:'A Visitor in Bononia',
   trigger:{ never:true }, travel:{ kind:'capstone', purpose:'ravenna_visit_568' },
   text:'You have reached Bononia. Your family remains at home. Local work and residence may open a path to a later household move.',
