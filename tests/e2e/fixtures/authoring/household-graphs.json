@@ -24,6 +24,7 @@
       "stages": {
         "wait": {
           "name": "A bounded wait", "text": "The opportunity closes in a later year.",
+          "incident": {"source": "control", "provinceId": "aachen", "milestone": "rule_changed"}, "afterIncident": "expired",
           "choices": [{ "id": "remain", "label": "Remain at home", "detail": "A local decision needs actual presence.", "when": {"all": [{"kind": "home", "provinceId": "aachen"}, {"kind": "present", "provinceId": "aachen"}]}, "operation": {"kind": "record_decision"}, "next": "remained" }],
           "transitions": [{ "when": {"kind": "year", "min": 868, "max": 10000}, "next": "expired" }]
         },

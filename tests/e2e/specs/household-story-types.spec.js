@@ -86,6 +86,32 @@ for (const fault of ['operation','predicate','reference','unreachable','dead_end
   });
 }
 
+test('control receipts prefer the personal track before dispatch and remain closed across restore', async function ({ page }, info) {
+  await importExamples(page, info);
+  await beginBookmark(page, info, '867', 'hill_household_example_start');
+  expect(await page.evaluate(function () {
+    const s = FB.state, id = 'hill_household_example', t = s.stories[id];
+    const baseline = FB.stories.quote(s, id, 'remain').allowed;
+    const old = FB.topRealm(s, s.owner.aachen);
+    const other = Object.keys(s.realms).filter(function (rid) {
+      return rid !== 'player' && s.realms[rid].alive && FB.topRealm(s, rid) === rid && rid !== old;
+    }).sort()[0];
+    s.turn = 7;
+    FB.transferProvince(s, 'aachen', other);
+    const q = FB.stories.quote(s, id, 'remain'), key = q.facts.incident;
+    const preferred = FB.householdStories.owner(s, key);
+    const notConsumed = !FB.householdStories.receipt(s, key);
+    FB.stories.get(id).day(s, t);
+    const applied = FB.stories.apply(s, id, 'remain', FB.stories.quote(s, id, 'remain'));
+    const closure = FB.householdStories.receipt(s, key), data = JSON.stringify(t);
+    const saved = JSON.parse(FB.save.serialize()); FB.save.restore(saved);
+    return { baseline:baseline, preferred:preferred, notConsumed:notConsumed, applied:applied,
+      status:closure.status, key:JSON.parse(key), retained:data === JSON.stringify(FB.state.stories[id]),
+      repeated:FB.stories.apply(FB.state, id, 'remain', q), ownerAfter:FB.householdStories.owner(FB.state, key) };
+  })).toMatchObject({ baseline:false, preferred:'hill_household_example', notConsumed:true, applied:true,
+    status:'resolved', retained:true, repeated:false, ownerAfter:null });
+});
+
 test('invalid household records reject before save adoption', async function ({ page }, info) {
   await importExamples(page, info);
   await beginBookmark(page, info, '867', 'quay_household_example_start');

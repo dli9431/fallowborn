@@ -64,7 +64,7 @@
         list.forEach(function (v) { predicate(v, depth + 1); }); return;
       }
       if (p.not) { need(keys(p, ['not']), 'negation'); predicate(p.not, depth + 1); return; }
-      if (p.kind === 'home' || p.kind === 'present' || p.kind === 'arrived' || p.kind === 'at_war') {
+      if (p.kind === 'home' || p.kind === 'present' || p.kind === 'arrived' || p.kind === 'at_war' || p.kind === 'journey') {
         need(keys(p, ['kind','provinceId']) && slug(p.provinceId), 'location predicate');
       } else if (p.kind === 'sovereign') {
         need(keys(p, ['kind','provinceId','realmId']) && slug(p.provinceId) && slug(p.realmId), 'sovereign predicate');
@@ -168,6 +168,7 @@
       if (p.kind === 'home') return s.player.provinceId === p.provinceId;
       if (p.kind === 'present') return present(s) === p.provinceId;
       if (p.kind === 'arrived') return !!s.player.travel && s.player.travel.phase === 'arrived' && s.player.travel.destinationId === p.provinceId;
+      if (p.kind === 'journey') return !!s.player.travel && s.player.travel.destinationId === p.provinceId;
       if (p.kind === 'sovereign') return sovereign(s, p.provinceId) === FB.startRealmId(s, p.realmId);
       if (p.kind === 'identity') { var c = s.chars[s.player.charId]; return !!c && (!p.cultureId || c.culture === p.cultureId) && (!p.faithId || c.religion === p.faithId); }
       if (p.kind === 'year') return s.date.year >= p.min && s.date.year <= p.max;
@@ -179,7 +180,11 @@
       if (!inc) return null;
       if (inc.source === 'control') {
         var o = t.controls[inc.provinceId];
-        if (!o || o.turn === null || o.after !== sovereign(s, inc.provinceId)) return null;
+        var current = sovereign(s, inc.provinceId);
+        // World observers may run before this track's day hook. Project the
+        // same transition without consuming or mutating the saved baseline.
+        if (o && o.after !== current) o = { before:o.after, after:current, turn:s.turn };
+        if (!o || o.turn === null) return null;
         return { source:inc.source, milestone:inc.milestone, provinceId:inc.provinceId, turn:o.turn, before:o.before, after:o.after };
       }
       var row = FB.stories.record(s, inc.storyId);
@@ -238,10 +243,11 @@
         identity:[s.chars[s.player.charId].culture,s.chars[s.player.charId].religion],
         family:FB.householdMembers(s).map(function (c) { return [c.id,!!c.dead,c.religion,c.culture]; }),
         stageReady:!stage.transitions.some(function (r) { return test(s, r.when); }),
+        local:!stage.incident || s.player.provinceId === stage.incident.provinceId && present(s) === stage.incident.provinceId,
         when:!!choice && test(s, choice.when), incident:key, closed:closed || null, terms:op.terms,
         graph:def };
       if (choice && choice.operation.kind === 'convert_faith') facts.modifier = FBDATA.modifiers && FBDATA.modifiers.zealot_unrest;
-      return { id:id, allowed:!!choice && living(s) && facts.stageReady && facts.when && op.allowed &&
+      return { id:id, allowed:!!choice && living(s) && facts.stageReady && facts.local && facts.when && op.allowed &&
         (!stage.incident || !!key && !closed), reason:op.reason || FB.T('The local situation has changed. Review the household again.'),
         facts:facts, stamp:JSON.stringify(facts) };
     }
@@ -291,22 +297,25 @@
         if (op.kind === 'settle_household') return [FB.T('Move the household through the ordinary settlement rules. This uses your one permanent move in this lifetime.')];
         return [FB.T('Record this decision without a payment, grant or change of identity.')];
       },
-      validate:function (t) {
+      validate:function (t, s) {
         function need(ok) { if (!ok) throw new Error('Invalid household story record: ' + def.id + '.'); }
         need(keys(t, ['version','householdId','actorId','phase','revision','stageTurn','decisions','controls','householdReceipts']) && t.version === 1 &&
           typeof t.householdId === 'string' && t.householdId.length > 0 && typeof t.actorId === 'string' && t.actorId.length > 0 &&
           own(def.stages, t.phase) && integer(t.revision) && integer(t.stageTurn) && plain(t.decisions) && plain(t.controls) && plain(t.householdReceipts));
+        need(!s || t.stageTurn <= s.turn);
         need(Object.keys(t.decisions).length <= 64 && Object.keys(t.householdReceipts).length <= 64);
         Object.keys(t.decisions).forEach(function (id) {
           var d = t.decisions[id];
           need(own(def.stages, id) && keys(d, ['choiceId','turn','actorId']) && integer(d.turn) && typeof d.actorId === 'string' &&
             def.stages[id].choices.some(function (c) { return c.id === d.choiceId; }));
+          need(!s || d.turn <= s.turn);
         });
         need(Object.keys(t.controls).length === Object.keys(controls).length);
         Object.keys(t.controls).forEach(function (id) {
           var c = t.controls[id];
           need(controls[id] && keys(c, ['before','after','turn']) && (c.before === null || typeof c.before === 'string') &&
             (c.after === null || typeof c.after === 'string') && (c.turn === null || integer(c.turn)));
+          need(!s || c.turn === null || c.turn <= s.turn);
         });
         Object.keys(t.householdReceipts).forEach(function (key) {
           var r = t.householdReceipts[key], parts;
@@ -315,6 +324,12 @@
             typeof parts[1] === 'string' && typeof parts[2] === 'string' && typeof parts[3] === 'string' && integer(parts[4]) &&
             (parts[5] === null || typeof parts[5] === 'string') && (parts[6] === null || typeof parts[6] === 'string') &&
             keys(r, ['owner','status','turn']) && r.owner === def.id && ['resolved','expired'].indexOf(r.status) >= 0 && integer(r.turn));
+          need(key === JSON.stringify(parts) && (!s || r.turn <= s.turn && parts[4] <= r.turn));
+          need(Object.keys(def.stages).some(function (id) {
+            var inc = def.stages[id].incident;
+            return inc && parts[1] === (inc.source === 'control' ? inc.source : inc.storyId) &&
+              parts[2] === inc.milestone && parts[3] === inc.provinceId;
+          }));
         });
       }
     };

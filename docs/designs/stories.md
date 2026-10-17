@@ -16,6 +16,8 @@ The optional new record reopens the frozen v4 story contract only for this type:
 
 Technology impact: household_story_decisions uses none. Narrative decisions and news have no discovery prerequisite; the adapters preserve ordinary conversion and travel gates. They add no new conversion doctrine or immediate family movement.
 
+Receipt ownership also projects a newly changed sovereign before this track's own day hook, so a world observer dispatched earlier can defer to the personal scene without mutating its baseline. Local incident choices require both home and actual presence in the affected county. Saved closures must match a declared source, milestone and county and cannot contain future stamps. A journey predicate observes an active ordinary journey to the named county separately from arrival; this lets an interrupted journey close without mistaking its first day at home for an interruption.
+
 A polity foundation's explicitly authored ruler trait must exist in the effective traits catalogue. It need not remain in rulerTraits, which controls random ruler generation and missing-temperament repair. Replacing that random pool through JSON mods leaves existing foundation declarations intact; an unknown authored trait still fails detached validation.
 
 colonus_476 adds a bound estate opening with standard and established family presets, Roman/Nicene defaults and an authored introduction. It reuses ordinary tenure events and the estate review without a bespoke story record or player track. The introductory pointer and post-first-steps coachmark target review_colonate instead of the medieval tenure Deed. System requirements are checked by scenarioOffered for every new-campaign entry point. Existing saves without this start remain unchanged.
