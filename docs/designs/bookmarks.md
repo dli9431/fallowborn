@@ -76,6 +76,8 @@ data/bookmark_568_scaffold_c.js loads after the source 493 expansion and stages 
 
 Bookmark platform and authoring
 
+The hidden Spring 1096 opening includes pilgrim_household_1096 at Cologne through data/starts_pilgrim_1096.js. It is an invented established craft household with ordinary resources and no opening property, public mandate, vow or host membership. Its complete local storyline and optional goals live in data/story_pilgrim_1096.js; personal pilgrimage uses the existing destination and canonical journey transaction. New-game visibility remains governed by the hidden bookmark. Retained worlds and restored people, journeys and receipts keep their existing contracts. This date-owned content adds no engine capability or new technology dependency.
+
 Spring 1241 regional staging
 
 data/bookmark_1241_scaffold_b.js supplies literal southern Rus, northern British/Irish, Iberian, northern German and Italian blocks under FBDATA.bookmarkRegions1241. The blocks stage 132 inhabited counties and 23 locally owned courts using independent copies of the retained 1204 inhabited_v2 resident and settlement inputs. England and the imperial/Sicilian court remain unique external definitions. Loading registers no bookmark, opening people, live layout or historical transaction. docs/research/1241-bookmark.md records the limited named incumbents, generated principals, territorial Venetian fallback, existing papal-office binding and unresolved control boundaries. Complete-world composition must resolve every outside reference before activation. This is existing bookmark content with no new capability, technology gate or saved field.
