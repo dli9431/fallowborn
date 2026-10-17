@@ -5,7 +5,8 @@ const {beginBookmark,restoreBookmark,facts} = require('../support/game/bookmark-
 const {dependsOnRuntime} = require('../support/runtime-dependencies');
 
 dependsOnRuntime(__filename,[
-  'index.html','data/bookmark_568.js','data/starts_568.js','data/bookmark_568_identities.js',
+  'index.html','data/bookmark_568.js','data/starts_568.js','data/starts_568_ravenna.js',
+  'data/story_households_568_ravenna.js','data/bookmark_568_identities.js',
   'data/bookmark_568_scaffold_a.js','data/bookmark_568_scaffold_b.js',
   'data/bookmark_568_scaffold_c.js','data/bookmark_568_scaffold_d.js',
   'data/bookmarks.js','data/bookmark_493.js','data/bookmark_493_world.js',
@@ -73,38 +74,32 @@ test('568 composes every physical county once, in ledger order, with unique cour
       faults:[],validated:[],pure:true});
   });
 
-test('568 remains hidden from picker, codes, direct creation and Observe', async function ({page},testInfo) {
-  await openGame(page,testInfo);
-  expect(await page.evaluate(function () {
-    return {hidden:FB.bookmark('568').hidden,offered:FB.bookmarkAvailable('568'),
-      listed:FB.bookmarks().some(function (b) { return b.id === '568'; }),
-      inspectable:FB.bookmarks(true).some(function (b) { return b.id === '568'; })};
-  })).toEqual({hidden:true,offered:false,listed:false,inspectable:true});
-  const full = page.locator('#btn-choose-beginning');
-  if (await full.isVisible()) await full.click();
-  else await page.getByRole('button',{name:'New Game',exact:true}).click();
-  await expect(page.locator('#bookmarklist')).not.toContainText('The Lombards Depart');
-  await page.locator('#btn-bm-seed').click();
-  await page.locator('#ng-seed').fill('REVIEW568-568-farmer_568-ravenna-m-Review');
-  await page.locator('#ng-seed').press('Enter');
-  await expect(page.locator('#ng-seed-err')).toContainText('hidden for new campaigns');
-  await page.locator('#ng-cancel').click();
-  expect(await page.evaluate(function () {
-    return new Promise(function (resolve) {
-      FB.activateBookmark('568',null,function (error) { resolve(error && error.message || null); });
-    });
-  })).toBeNull();
-  expect(await page.evaluate(function () {
-    FB.game.pending = {bookmarkId:'568',seed:'REVIEW568',provinceId:'ravenna',
-      scenario:FBDATA.startScenarios.find(function (s) { return s.id === 'farmer_568'; })};
-    const state = FB.state, rng = FB.getRngState(), uid = FB.getUidCounter();
-    return {start:FB.game.start(),observe:FB.game.startObserve(),
-      unchanged:state === FB.state && rng === FB.getRngState() && uid === FB.getUidCounter()};
-  })).toEqual({start:false,observe:false,unchanged:true});
-});
+test('568 is offered in the picker with its implemented starts, and ordinary codes reach creation',
+  async function ({page},testInfo) {
+    await openGame(page,testInfo);
+    expect(await page.evaluate(function () {
+      return {hidden:FB.bookmark('568').hidden === true,offered:FB.bookmarkAvailable('568'),
+        listed:FB.bookmarks().some(function (b) { return b.id === '568'; })};
+    })).toEqual({hidden:false,offered:true,listed:true});
+    const full = page.locator('#btn-choose-beginning');
+    if (await full.isVisible()) await full.click();
+    else await page.getByRole('button',{name:'New Game',exact:true}).click();
+    await expect(page.locator('#bookmarklist')).toContainText('The Lombards Depart');
+    await page.locator('#bookmarklist [data-bookmark="568"]').click();
+    for (const id of ['farmer_568','craftsman_568','ravenna_household_568'])
+      await expect(page.locator('#scenariolist [data-scenario="' + id + '"]')).toBeVisible();
+    for (const id of ['alboin_568','lombard_migrant_household_568'])
+      await expect(page.locator('#scenariolist [data-scenario="' + id + '"]')).toHaveCount(0);
+    await page.locator('#btn-ng-back').click();
+    await page.locator('#btn-bm-seed').click();
+    await page.locator('#ng-seed').fill('REVIEW568-568-farmer_568-ravenna-m-Review');
+    await page.locator('#ng-seed').press('Enter');
+    await expect(page.locator('#chargen:not(.hidden)')).toBeVisible();
+    expect(await page.evaluate(function () { return FB.state; })).toBeNull();
+  });
 
 for (const scenario of ['farmer_568','craftsman_568']) {
-  test('568 seeded ' + scenario + ' restores its hidden world after another date is activated',
+  test('568 seeded ' + scenario + ' restores its world while hidden after another date is activated',
     async function ({page},testInfo) {
       await beginBookmark(page,testInfo,'568',scenario);
       expect(await page.evaluate(function () {

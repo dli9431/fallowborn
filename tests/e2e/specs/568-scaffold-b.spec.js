@@ -185,13 +185,13 @@ test('568 scaffold registration is inert and owns detached source values',async 
       });
     });
     const scripts = Array.prototype.map.call(document.scripts,function (s) { return s.getAttribute('src'); });
-    return {faults:faults,hiddenWorld:FBDATA.bookmarks['568'].hidden,
+    return {faults:faults,selectableWorld:FB.bookmarkAvailable('568'),
       registered:scripts.indexOf('data/bookmark_568_scaffold_b.js') > scripts.indexOf('data/bookmark_493_world.js'),
       after:JSON.stringify({bookmarks:FBDATA.bookmarks,cultures:FBDATA.cultures,religions:FBDATA.religions,
         layouts:FBDATA.settlementLayouts,sites:FBDATA.settlementSites,active:FB.activeBookmarkId})};
   },Object.keys(coverage));
   expect(result.faults).toEqual([]);
-  expect(result.hiddenWorld).toBe(true);
+  expect(result.selectableWorld).toBe(true);
   expect(result.registered).toBe(true);
   expect(result.after).toBe(before);
 });

@@ -27,7 +27,7 @@ const packets = {
 };
 const keys = Object.keys(packets);
 
-test('568 quadrant d loads from index with exact disjoint coverage in the hidden bookmark', async function ({page},testInfo) {
+test('568 quadrant d loads from index with exact disjoint coverage in the selectable bookmark', async function ({page},testInfo) {
   await openGame(page,testInfo);
   const result = await page.evaluate(function (expected) {
     var seen = {}, duplicates = [], actual = {}, scenery = [], inhabited = 0;
@@ -41,7 +41,7 @@ test('568 quadrant d loads from index with exact disjoint coverage in the hidden
       });
     });
     return {actual:actual,duplicates:duplicates,count:Object.keys(seen).length,
-      inhabited:inhabited,scenery:scenery.sort(),hidden:FBDATA.bookmarks['568'].hidden,
+      inhabited:inhabited,scenery:scenery.sort(),selectable:FB.bookmarkAvailable('568'),
       publishedLayout:!!FBDATA.settlementLayouts['568']};
   },packets);
   expect(result.actual).toEqual(packets);
@@ -50,7 +50,7 @@ test('568 quadrant d loads from index with exact disjoint coverage in the hidden
   expect(result.inhabited).toBe(127);
   expect(result.scenery).toEqual(['w_syrian','w_steppe_e','w_ural','w_taiga','w_north',
     'w_sahara_w','w_sahara_c','w_sahara_e','w_sahel','w_nubia'].sort());
-  expect(result.hidden).toBe(true);
+  expect(result.selectable).toBe(true);
   expect(result.publishedLayout).toBe(true);
 });
 

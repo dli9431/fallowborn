@@ -22,7 +22,7 @@ const FAITHS = ['insular_traditional_476','finnic_traditional_476','woodland_tra
   'buddhist_476','brahmanical_476','sahel_traditional_476'];
 
 for (const crazygames of [false,true]) {
-  test('568 identities serve the hidden world on ' + (crazygames ? 'CrazyGames' : 'standard') + ' boot',
+  test('568 identities serve the selectable world on ' + (crazygames ? 'CrazyGames' : 'standard') + ' boot',
     async function ({page},testInfo) {
       if (crazygames) {
         await mockCrazyGames(page);
@@ -47,7 +47,7 @@ for (const crazygames of [false,true]) {
             scripts.indexOf('data/bookmark_476_wider_identities.js'),
           cultures:cultures,
           published:cultures.every(function (id) { return FB.cultureExists(id,null); }),
-          hiddenWorld:FBDATA.bookmarks['568'].hidden,
+          selectableWorld:FB.bookmarkAvailable('568'),
           faiths:faiths,
           additions:faiths.every(function (id) {
             return JSON.stringify(additions[id]) === '{"bookmarkIds":["568"]}';
@@ -63,7 +63,7 @@ for (const crazygames of [false,true]) {
           worldsValid:baselineIds.map(function (id) { return FB.validateBookmark(FB.bookmark(id)); })
         };
       })).toEqual({distribution:crazygames,loaded:true,cultures:CULTURES,published:true,
-        hiddenWorld:true,faiths:FAITHS,additions:true,priorPermissions:true,
+        selectableWorld:true,faiths:FAITHS,additions:true,priorPermissions:true,
         culturesValid:[],religionsValid:[],worldsValid:[[],[],[],[],[],[],[]]});
       const fixture = JSON.parse(fs.readFileSync(path.join(__dirname,'../fixtures/released-catalogue.json'),'utf8'));
       expect((await page.evaluate(releasedCatalogue,fixture.selection)).hashes).toEqual(fixture.hashes);
