@@ -768,7 +768,7 @@ window.FBMODS = window.FBMODS || [];
         const ruler = FB.startRulerProfile(bookmark, realm, scenario.governmentForm);
         const eraId = FB.bookmarkEra(bookmark), era = FBDATA.eras[eraId];
         if (!ruler || ruler.name !== scenario.characterName || ruler.sex !== scenario.sex ||
-            ruler.culture !== scenario.startCulture || realm.religion !== scenario.startReligion ||
+            ruler.culture !== scenario.startCulture || FB.startRulerFaith(bookmark, realm) !== scenario.startReligion ||
             !era || (realm.government || era.defaultGovernment) !== scenario.governmentForm ||
             !delegated && FB.station.realmRank({ tier:scenario.tier, formId:scenario.governmentForm, era:eraId }, {}) !== realm.rank)
           fail(path + '.rulerRealmId', 'must match the authored ruler and government in every offered bookmark.');

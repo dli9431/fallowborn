@@ -28,6 +28,8 @@ data/story_ruler_agendas.js attaches four dated reviews to each existing Peroz, 
 
 Requirement gate
 
+Existing-ruler start faith uses the declared realm religion, or that revision's capital religion when the realm omits it, matching ordinary political initialization. FB.startRulerFaith is a pure definition read shared by the picker, bookmark requirements and imported-start validation. It never reads the active map or materializes a court. Missing identity still fails validation; off-capital household residence does not change the court's faith.
+
 FB.validateBookmark combines the existing geography, era, government-strategy, technology, faith, culture, legal-tradition, wardrobe, lexicon, item-presentation, system, balance, opening and world-reference validators with FB.bookmarkRequirementFaults. Validation includes hidden definitions. Hiding incomplete content prevents new campaigns; it does not exempt malformed data from the authoring gate.
 
 Dates use whole years, calendar seasons 0 through 3 and days 1 through 90. The year must fit the resolved era, its optional technology window and the authored technology catalogue coverage. Unknown eras, geographies, forms, behavior strategies, world stories, player tracks, offered starts and optional systems fail by name. Every attached story dependency must be in that campaign's attached world/track set.

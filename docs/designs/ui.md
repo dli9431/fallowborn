@@ -1,5 +1,7 @@
 Court cultivation preview
 
+The ruler checklist offers Review a court story only while an attached story card exists, or after that review has already been completed. A court without stories continues through Rank & Realm and advancing time. It receives no fabricated story receipt or completion flag. This presentation adjustment adds no capability or technology dependency; existing story navigation, Back, dismissal and restore behavior remain shared.
+
 Household story reviews
 
 Finite-job reviews show the actual living payer, total fee, required action days, undisputed payment, disputed remainder, completed shifts and money already paid. A settlement names its exact additional payment and day cost before confirmation. The review explains expiry and interrupted-work terms. Each shift and hearing replaces Daily Focus for one day; an immediate smaller settlement or waiver spends no day. Stale quotes and blocked days spend nothing and retain the ordinary story review flow. Job state and payments remain available in the story status after a terminal decision.

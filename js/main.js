@@ -2125,7 +2125,7 @@ FB.CHANGELOG = [
       })[0];
       const ruler = FB.startRulerProfile(bookmark, realm, scenario.governmentForm);
       if (!ruler || ruler.name !== scenario.characterName || ruler.sex !== scenario.sex ||
-          ruler.culture !== scenario.startCulture || realm.religion !== scenario.startReligion ||
+          ruler.culture !== scenario.startCulture || FB.startRulerFaith(bookmark, realm) !== scenario.startReligion ||
           (realm.government || FBDATA.eras[FB.bookmarkEra(bookmark)].defaultGovernment) !== scenario.governmentForm)
         return false;
     }
@@ -4757,9 +4757,14 @@ FB.CHANGELOG = [
     { id:'ruler_play', icon:'🏛', event:null,
       when:function (s) { return s.start && s.start.onboarding === 'ruler'; },
       title:function () { return FB.T('Ruling a court'); },
-      note:function () { return FB.T('Review Governance, Offices & Legitimacy and your current story in Deeds. An office or contract grants only its named powers; territory follows actual possession.'); },
+      note:function (s) {
+        return FB.stories.cards(s).length
+          ? FB.T('Review Governance, Offices & Legitimacy and your current story in Deeds. An office or contract grants only its named powers; territory follows actual possession.')
+          : FB.T('Review Governance and Offices & Legitimacy in Deeds. An office or contract grants only its named powers; territory follows actual possession.');
+      },
       steps:[
-        { id:'ruler_story', label:function () { return FB.T('Review a court story in Deeds'); } },
+        { id:'ruler_story', when:function (s) { return !!s.player.flags.tut_ruler_story || FB.stories.cards(s).length > 0; },
+          label:function () { return FB.T('Review a court story in Deeds'); } },
         { id:'ruler_governance', label:function () { return FB.T('Review Rank & Realm'); } },
         { id:'unpause', label:function () { return FB.T('Let the days flow'); } }
       ] },
