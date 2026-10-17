@@ -9,21 +9,27 @@ FBDATA.householdTracks_1204 = {
     requires:['latin_bithynia_1204','nicaean_return_1204'],
     requirements:{ provinces:['constantinople','nicaea'], realms:['latin_1204','nicaea_1204'] },
     stages:{
-      inventory:{ name:'What remains', text:'The fires and plunder are past, but the loss of customers is still felt at home. Your family takes stock of its workroom and the roads out of the city.',
+      inventory:{ name:'A household after the sack', text:'The fires and plunder are past. Residents and newcomers must find customers, shelter and a way forward. Your household takes stock of its livelihood and the roads out of the city.',
         choices:[
           { id:'recover', label:'Try to recover local work', detail:'Review basic supplies and the household’s ordinary livelihood.', operation:{ kind:'record_decision' }, next:'workroom' },
           { id:'customers', label:'Look for new customers', detail:'Consider work without promising a wage, appointment or change of faith.', operation:{ kind:'record_decision' }, next:'workroom' },
           { id:'consider_leaving', label:'Consider leaving the city', detail:'Review the road after taking stock. This records an intention without moving anyone.', operation:{ kind:'record_decision' }, next:'workroom' }
         ], transitions:[] },
-      workroom:{ name:'Replacing the basics', text:'Basic materials could help the family begin again. They do not buy a workshop holding or guarantee that customers will return.',
+      new_arrival:{ name:'A new household in the city', text:'Your Latin artisan family is seeking a foothold after the conquest. New customers and lodgings must be found under the present court.',
+        choices:[
+          { id:'find_work', label:'Look for ordinary repair work', detail:'Consider household supplies and customers. No house, confiscated property or public appointment is granted.', operation:{ kind:'record_decision' }, next:'workroom' },
+          { id:'keep_options', label:'Keep the family’s options open', detail:'Review the same ordinary livelihood and road choices without claiming a lost pre-sack home.', operation:{ kind:'record_decision' }, next:'workroom' }
+        ], transitions:[] },
+      workroom:{ name:'Household basics', text:'Basic materials could help the family establish its work. They do not buy a workshop holding or guarantee customers.',
         choices:[
           { id:'buy_supplies', label:'Buy basic household supplies', detail:'Pay {money:3} once from the private purse for replacement materials and shelter supplies. No property or production bonus is granted.', operation:{ kind:'household_expense', amount:3 }, next:'church' },
           { id:'earn_first', label:'Seek ordinary work first', detail:'Keep the purse intact and consider available customers. Actual craft income comes from ordinary daily work.', operation:{ kind:'record_decision' }, next:'church' },
           { id:'postpone', label:'Postpone the purchase', detail:'Spend nothing and leave the household’s work options open.', operation:{ kind:'record_decision' }, next:'church' }
         ], transitions:[] },
-      church:{ name:'Worship under new authority', text:'Greek worship continues amid Latin claims to church authority. Taking a customer’s work changes neither your faith nor your relatives’ faith. Religious dealings list the congregations available locally and their participation requirements.',
+      church:{ name:'Worship under new authority', text:'Greek and Latin worship have different claims to church authority in the city. Your household keeps its own faith while seeking customers. Religious dealings list the congregations available locally and their participation requirements.',
         choices:[
-          { id:'greek_worship', label:'Keep Greek worship and review local participation', detail:'Use religious dealings for any available Greek congregation. If no group is available, keep worship unchanged. Participation requires its own review.', operation:{ kind:'record_decision' }, next:'patron' },
+          { id:'greek_worship', label:'Keep Greek worship and review local participation', detail:'Use religious dealings for any available Greek congregation. If no group is available, keep worship unchanged. Participation requires its own review.', when:{ kind:'identity', faithId:'orthodox' }, operation:{ kind:'record_decision' }, next:'patron' },
+          { id:'latin_worship', label:'Keep Latin worship and review local participation', detail:'Keep your present faith. Joining an available Latin congregation needs its own ordinary review; this choice grants no membership.', when:{ kind:'identity', faithId:'catholic' }, operation:{ kind:'record_decision' }, next:'patron' },
           { id:'latin_information', label:'Consider the Latin community’s position', detail:'Record an information choice. It appoints no patriarch, joins no congregation and changes no household identity.', operation:{ kind:'record_decision' }, next:'patron' },
           { id:'unchanged', label:'Leave religious participation unchanged', detail:'Continue without a religious transaction or extra charge.', operation:{ kind:'record_decision' }, next:'patron' }
         ], transitions:[] },
@@ -45,9 +51,16 @@ FBDATA.householdTracks_1204 = {
         choices:[{ id:'defer_work', label:'Reconsider before working', detail:'Keep the household free of an invented contract.', operation:{ kind:'record_decision' }, next:'roads_unprepared' }], transitions:[] },
       roads:{ name:'Stay, work or leave', text:'Ordinary craft work has actually paid in Constantinople. You can build on that foothold, keep working for now or consider a personal journey toward Nicaea. Campaigns and later changes of rule remain independent.',
         choices:[
+          { id:'neighbour', label:'Consider helping a neighbouring household', detail:'Review a small private supplies purchase, keep the money for your family or consider departure.', operation:{ kind:'record_decision' }, next:'neighbour' },
           { id:'stay', label:'Commit to rebuilding here', detail:'Record a local recovery after actual paid work. It promises no safety, title or restored workshop holding.', operation:{ kind:'record_decision' }, next:'stayed' },
           { id:'serve', label:'Continue ordinary paid work for now', detail:'Record that ordinary work has begun. No second wage, court appointment or conversion is applied.', operation:{ kind:'record_decision' }, next:'served' },
           { id:'leave', label:'Inspect the journey to Nicaea', detail:'Review an ordinary personal journey. The family remains home until a later eligible permanent settlement.', operation:{ kind:'record_decision' }, next:'departure' }
+        ], transitions:[] },
+      neighbour:{ name:'Neighbours and household stores', text:'A neighbouring household is also trying to make a living. You could set aside a small bundle of household supplies, or keep your money for your own dependants.',
+        choices:[
+          { id:'share_supplies', label:'Buy supplies to share', detail:'Spend {money:2} once from the private purse on household supplies to share. This grants no property, relationship bonus or protection.', operation:{ kind:'household_expense', amount:2 }, next:'stayed' },
+          { id:'keep_reserves', label:'Keep the reserves for your family', detail:'Spend nothing and continue rebuilding here without a penalty.', operation:{ kind:'record_decision' }, next:'stayed' },
+          { id:'review_road', label:'Consider the road instead', detail:'Review ordinary personal travel without moving relatives.', operation:{ kind:'record_decision' }, next:'departure' }
         ], transitions:[] },
       roads_unprepared:{ name:'Plans remain uncertain', text:'The household has not completed the proposed craft work. You can return to its customers, inspect departure or set this plan aside.',
         choices:[
@@ -109,9 +122,11 @@ FBDATA.householdTracks_1204 = {
   var nicaean = { kind:'sovereign', provinceId:'nicaea', realmId:'nicaea_1204' };
   var quarter = { kind:'civic_right', realmId:'venice_1204', provinceId:'constantinople', evidenceId:'venetian_quarter_1204' };
   function route(when, next) { return { when:when, next:next }; }
-  ['inventory','workroom','church','patron','local_work','customer_work','quarter_work','roads','roads_unprepared','departure','departure_wait'].forEach(function (id) {
+  ['inventory','new_arrival','workroom','church','patron','local_work','customer_work','quarter_work','roads','neighbour','roads_unprepared','departure','departure_wait'].forEach(function (id) {
     def.stages[id].transitions = [route({ not:local }, 'remote'), route({ not:latin }, 'changed_world')];
   });
+  def.stages.inventory.transitions.push(route({ kind:'identity', cultureId:'frankish', faithId:'catholic' }, 'new_arrival'));
+  def.stages.new_arrival.transitions.push(route({ not:{ kind:'identity', cultureId:'frankish', faithId:'catholic' } }, 'inventory'));
   def.stages.patron.choices[1].when = latin;
   def.stages.patron.choices[2].when = { all:[latin,quarter] };
   def.stages.quarter_work.transitions.push(route({ not:quarter }, 'changed_world'));

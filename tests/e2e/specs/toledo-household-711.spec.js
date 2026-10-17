@@ -89,14 +89,15 @@ test('wartime court business and the later Toledo campaign remain separate house
     const news = t.phase;
     function choose(c) { return FB.stories.apply(s, id, c, FB.stories.quote(s, id, c)); }
     const work = choose('continue_work'); module.day(s, t);
+    const perspective = t.phase, deferred = choose('wait'); module.day(s, t);
     const court = t.phase, followed = choose('seek_news');
     s.date.year = 715; s.turn = 1440; s.stories.toledo_campaign_711.phase = 'started';
     module.day(s, t); const approach = t.phase, remain = choose('remain');
     s.stories.toledo_campaign_711.phase = 'resolved'; s.stories.toledo_campaign_711.result = 'failed';
     module.day(s, t);
-    return { war:!!war, news:news, work:work, court:court, followed:followed, approach:approach, remain:remain,
+    return { war:!!war, news:news, work:work, perspective:perspective, deferred:deferred, court:court, followed:followed, approach:approach, remain:remain,
       final:t.phase, money:money === s.player.gold, owner:owner === s.owner.toledo };
-  })).toEqual({ war:true, news:'news', work:true, court:'court', followed:true, approach:'approach', remain:true,
+  })).toEqual({ war:true, news:'news', work:true, perspective:'roman_roots', deferred:true, court:'court', followed:true, approach:'approach', remain:true,
     final:'quiet', money:true, owner:true });
 });
 
