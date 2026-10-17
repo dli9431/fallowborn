@@ -5,6 +5,7 @@ const { openCrazyGame } = require('../support/game/crazygames-title');
 const { injectBrowserHarness } = require('../support/game/browser-harness');
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
+  'data/story_household_effects_711_800_1204.js', 'js/story_household_observer.js',
   'data/government_rollout.js','js/government_ecclesiastical.js','js/ecclesiastical_strategies.js',
   'data/islamic_profiles.js','data/islamic_rollout.js',
   'data/story_courts_476.js',
@@ -134,7 +135,7 @@ test('800 activates the full world, period communities and subordinate courts', 
         return FB.world.byId[id].settlements[0].name;
       }),
       traditions:[realm('carolingian_800').techTraditions, realm('abbasid').techTraditions],
-      stories:FB.stories.attached(s) };
+      stories:FB.stories.attached(s).filter(function (id) { return id.indexOf('household_effects_') !== 0; }) };
   });
   expect(result).toMatchObject({ faults:[],
     start:{ id:'800', year:800, season:3, day:25, era:'early_medieval', geography:'europe_regional_2', revision:'inhabited_v2_governments_v2_islamic_v1_learning_v1' },
@@ -162,7 +163,7 @@ for (const scenario of ['serf','farmer','apprentice','monk','soldier','knight','
       });
       FB.save.restore(JSON.parse(FB.save.serialize())); s = FB.state;
       return { scenario:s.telemetry.scenario, date:s.date, future:future,
-        heads:s.religiousHeads, stories:FB.stories.attached(s),
+        heads:s.religiousHeads, stories:FB.stories.attached(s).filter(function (id) { return id.indexOf('household_effects_') !== 0; }),
         restored:before === JSON.stringify({ start:s.start, owner:s.owner, holder:s.holder,
           heads:s.religiousHeads, stories:s.stories, counts:s.papacy.regnalNameCounts }),
         sourceUnchanged:source === JSON.stringify(FB.bookmark('800')),

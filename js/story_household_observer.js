@@ -19,7 +19,15 @@
     contested_office:['review','survived','deposed','restored','interrupted'],
     tribute_cession:['pending','active','installment','breached','diverted','interrupted'],
     civilian_migration:['pending','active','batch','completed','diverted','interrupted'],
-    government_contest:['open','resolved','changed']
+    government_contest:['open','resolved','changed'],
+    polity_foundation:['rebelling','founded','failed','diverted'],
+    partition:['granted','declined','diverted','interrupted'],
+    succession_partition:['agreed','executed','declined','expired','interrupted','diverted'],
+    designated_succession:['agreed','declined','expired','interrupted','diverted'],
+    diplomatic_exchange:['agreed','declined','expired','interrupted','diverted'],
+    recognition:['agreed','declined','expired','interrupted','diverted'],
+    treaty_settlement:['agreed','pressure','declined','expired','interrupted','diverted'],
+    holy_war:['called','won','failed','declined','diverted']
   };
   function validate(def, context) {
     function need(ok, field) { if (!ok) throw new Error('Invalid household observer: ' + field + '.'); }
@@ -57,6 +65,15 @@
     function row(s) { return FB.stories.record(s, def.sourceStoryId); }
     function host(s, id) { return (s.armies || []).filter(function (a) { return a.id === id && a.men > 0; })[0]; }
     function service(s) { return source.parameters && FB.stories.record(s, source.parameters.serviceTrackId); }
+    function parties(s) {
+      var r = row(s) || {}, ids = [source.actor && source.actor.realmId, source.source && source.source.realmId,
+        r.realmId, r.callerRealmId].filter(Boolean);
+      return ids.map(function (id) {
+        var rid = FB.startRealmId(s, id), realm = s.realms[rid], person = FB.realmRulerCharacterSnapshot(s, rid);
+        return [rid, !!(realm && realm.alive), realm && FB.realmRulerGeneration(s, rid),
+          person && person.id || null, !!(person && person.dead)];
+      });
+    }
     function events(s) {
       var r = row(s), out = [], p = source.parameters || {};
       if (!r) return out;
@@ -121,6 +138,50 @@
         if (r.routes.some(function (route) { return route.moved > 0; }))
           add('batch', s.turn, [r.lastPeriod,r.routes.map(function (route) { return [route.from,route.to,route.moved]; })], ends);
         if (r.result) add(r.result, r.outcomeTurn, r.result, ends.length ? ends : undefined);
+      } else if (source.type === 'polity_foundation') {
+        var revolt = r.rebellionId && FB.rebellionById(s, r.rebellionId);
+        if (r.phase === 'rebelling' && revolt && revolt.counties[source.realm.capital])
+          add('rebelling', r.startedTurn, r.rebellionId, [source.realm.capital]);
+        if (r.result) add(r.result, r.outcomeTurn, r.result, r.result === 'founded' ?
+          r.counties.filter(function (pid) { return s.owner[pid] === FB.startRealmId(s, r.realmId); }) : []);
+      } else if (source.type === 'partition') {
+        if (r.result) add(r.result, r.outcomeTurn, r.result, r.result === 'granted' ?
+          r.grantedCounties.filter(function (pid) { return s.holder[pid] === FB.startRealmId(s, r.realmId); }) : []);
+      } else if (['succession_partition','designated_succession','diplomatic_exchange','recognition','treaty_settlement'].indexOf(source.type) >= 0) {
+        var places = [source.actor.capital];
+        if (source.source) places.push(source.source.capital);
+        if (source.type === 'succession_partition') (r.plan && r.plan.shares || []).forEach(function (share) {
+          var realm = s.realms[FB.startRealmId(s, share.realmId)];
+          if (realm && realm.alive) places.push(realm.capital);
+        });
+        if (source.type === 'recognition') places = places.concat(FB.stories.resolve(s, source.region));
+        if (source.type === 'designated_succession' || source.type === 'treaty_settlement')
+          (r.plan && r.plan.shares || []).forEach(function (share) {
+            var region = source.regions.filter(function (v) { return v.id === share.region; })[0];
+            places = places.concat(share.counties || region && FB.stories.resolve(s, region.selector) || []);
+          });
+        // Planning an inheritance is an agreement, not its later execution.
+        if (source.type === 'succession_partition' && r.phase === 'planned') add('agreed', r.turn, r.turn, places);
+        if (r.result) add(r.result, r.turn, [r.result,r.turn], places);
+        var pressure = r.pressure, war = pressure && pressure.warId && FB.ordinaryWars(s).filter(function (w) {
+          return w.id === pressure.warId && w.attacker === FB.startRealmId(s, source.actor.realmId) &&
+            w.defender === FB.startRealmId(s, pressure.rebelId);
+        })[0];
+        if (war && !r.result) {
+          var armies = (s.armies || []).filter(function (a) { return a.men > 0 && a.warId === war.id; });
+          var rebel = s.realms[war.defender];
+          add('pressure', s.turn, war.id, [source.actor.capital,rebel && rebel.capital].filter(Boolean)
+            .concat(armies.map(function (a) { return a.at; })));
+        }
+      } else if (source.type === 'holy_war') {
+        var call = s.greatHolyWar, past = (s.greatHolyWarHistory && s.greatHolyWarHistory.campaigns || []).filter(function (h) {
+          return h.id === r.campaignId && !h.historical && h.religion === source.religion && h.turn >= r.calledTurn;
+        })[0];
+        if (r.phase === 'started' && call && call.id === r.campaignId && call.calledTurn === r.calledTurn &&
+            call.callingReligion === source.religion)
+          add('called', r.calledTurn, r.campaignId, call.objectiveCounties.slice());
+        if (r.result && (['won','failed'].indexOf(r.result) < 0 || past || r.reason === 'campaign_missing'))
+          add(r.result, r.outcomeTurn, [r.campaignId,r.result], past ? FB.kingdomCounties(past.target) : []);
       } else if (source.type === 'government_contest') {
         var rid = FB.startRealmId(s, r.realmId), realm = s.realms[rid];
         var selection = realm && realm.alive && FB.governmentSelection.state(s, rid), vacancy = selection && selection.vacancy;
@@ -142,7 +203,7 @@
     }
     function occurrence(s, t, e, pid) {
       var c = t.controls[pid];
-      if (e.code === 'won' && c && c.turn !== null && c.after === sovereign(s, pid) &&
+      if (source.type === 'campaign' && e.code === 'won' && c && c.turn !== null && c.after === sovereign(s, pid) &&
           s.owner[pid] === FB.startRealmId(s, source.actor.realmId) &&
           c.after === FB.topRealm(s, FB.startRealmId(s, source.actor.realmId)) && c.turn >= row(s).startedTurn)
         return { source:'control', milestone:'rule_changed', provinceId:pid, turn:c.turn, before:c.before, after:c.after };
@@ -156,9 +217,11 @@
       while (ids.length > 64) delete t.householdReceipts[ids.shift()];
     }
     function available(s, t, item) {
+      var b = beat(item.beatId);
       return living(s) && s.player.provinceId === item.provinceId && present(s) === item.provinceId &&
         s.turn <= item.expiresTurn && JSON.stringify(currentControl(s, item.provinceId)) === JSON.stringify(item.control) &&
-        events(s).some(function (e) { return e.code === beat(item.beatId).trigger && e.token === item.sourceToken; }) &&
+        events(s).some(function (e) { return e.code === b.trigger && e.token === item.sourceToken &&
+          (b.reach === 'previous' || e.places.indexOf(item.provinceId) >= 0); }) &&
         !FB.householdStories.receipt(s, item.key) && !FB.householdStories.owner(s, item.key);
     }
     function poll(s, t) {
@@ -188,7 +251,8 @@
         if (FB.householdStories.receipt(s, key) || t.pending.some(function (item) { return item.key === key; })) return;
         if (t.reached.indexOf(pid) < 0) { t.reached.push(pid); if (t.reached.length > 32) t.reached.shift(); }
         // A later result supersedes unaccepted notices from this source.
-        if (['won','failed','diverted','interrupted','contest_won','contest_failed','diverged'].indexOf(e.code) >= 0) {
+        if (['won','failed','diverted','interrupted','contest_won','contest_failed','diverged',
+          'founded','granted','agreed','executed','declined','expired'].indexOf(e.code) >= 0) {
           t.pending.forEach(function (item) { closure(s, t, item, 'expired'); }); t.pending = [];
         }
         var item = { beatId:b.id, key:key, provinceId:pid, event:event, sourceToken:e.token, offeredTurn:s.turn,
@@ -202,7 +266,7 @@
       var item = selected(s, t), b = item && beat(item.beatId);
       var choice = b && b.choices.filter(function (c) { return c.id === id; })[0];
       var facts = { turn:s.turn, actorId:s.player.charId, alive:living(s), home:s.player.provinceId, presence:present(s),
-        revision:t.revision, item:item, source:row(s), events:events(s), service:service(s),
+        revision:t.revision, item:item, source:row(s), events:events(s), service:service(s), parties:parties(s),
         tenure:s.player.tenure || null, control:item && currentControl(s, item.provinceId), definition:def };
       return { id:id, allowed:!!choice, reason:FB.T('This local notice is no longer available. Review the household again.'),
         facts:facts, stamp:JSON.stringify(facts) };

@@ -1,6 +1,7 @@
 'use strict';
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
+  'data/story_household_effects_711_800_1204.js', 'js/story_household_observer.js',
   'data/ecclesiastical_profiles.js', 'js/government_ecclesiastical.js', 'js/ecclesiastical_strategies.js',
   'js/ecclesiastical_validation.js', 'js/local_office_appointments.js', 'js/ui_ecclesiastical.js',
   'data/story_courts_476.js',
@@ -70,7 +71,7 @@ test('1204 is offered in the picker and ordinary start codes reach character cre
   });
   expect(state).toMatchObject({ registered:true, faults:[], diagnostics:[],
     date:{ year:1204, season:0, day:76 }, era:'high_medieval', geography:'europe_regional_2',
-    scripted:[], stories:16, civicStory:true, storiesRegistered:true });
+    scripted:[], stories:31, civicStory:true, storiesRegistered:true });
   expect(state.offered).toContain('1204');
   const fullStart = page.locator('#btn-choose-beginning');
   if (await fullStart.isVisible()) await fullStart.click();
@@ -183,7 +184,7 @@ test('the silent English distribution retains the same world and save identity',
           { realm:'Latin Empire', province:'Thessalonica' }), { state:FB.state }) };
     });
     expect(result).toEqual({ flag:true, bookmark:'1204', owner:'latin_1204', head:'papacy_1204',
-      registered:true, stories:16,
+      registered:true, stories:31,
       message:'The court of Latin Empire secures Thessalonica through its campaign.' });
   });
 
@@ -265,5 +266,5 @@ test('one season of ordinary household play retains a valid world and saves at t
       return { year:FB.state.date.year, turn:FB.state.turn, errors:FBTEST.checkInvariants(),
         ordinary:!FB.game.observe, start:FB.state.start.id, stories:Object.keys(s.stories).length };
     });
-    expect(end).toEqual({ year:1204, turn:90, errors:[], ordinary:true, start:'1204', stories:16 });
+    expect(end).toEqual({ year:1204, turn:90, errors:[], ordinary:true, start:'1204', stories:31 });
   });
