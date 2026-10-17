@@ -2171,6 +2171,30 @@ def extract_story_courts(inv: Inventory) -> None:
                             TOKEN_RE.findall(record["text"]))
 
 
+def extract_household_stories(inv: Inventory) -> None:
+    for source in sorted(DATA.glob("story_households_*.js")):
+        table = source.stem.replace("story_households_", "householdTracks_")
+        declarations = node_object(find_assignment(source, "FBDATA", table)) or {}
+        rel = source.relative_to(ROOT).as_posix()
+        for story_id, story_node in declarations.items():
+            story = node_object(story_node) or {}
+            def add(field: str, node: Node | None) -> None:
+                for _, record, line in branch_records(node):
+                    inv.add(f"householdStory.{story_id}.{field}", record, f"{rel}:{line}",
+                            "Household story presentation.", TOKEN_RE.findall(record["text"]))
+            for field in ("title", "intro"):
+                add(field, story.get(field))
+            for stage_id, stage_node in (node_object(story.get("stages")) or {}).items():
+                stage = node_object(stage_node) or {}
+                for field in ("name", "text"):
+                    add(f"stage.{stage_id}.{field}", stage.get(field))
+                for choice_node in node_array(stage.get("choices")) or []:
+                    choice = node_object(choice_node) or {}
+                    choice_id = node_string(choice.get("id"))
+                    for field in ("label", "detail"):
+                        add(f"stage.{stage_id}.choice.{choice_id}.{field}", choice.get(field))
+
+
 def extract_government_selections(inv: Inventory) -> None:
     source = DATA / "political_institutions.js"
     forms = node_object(find_assignment(source, "FBDATA", "governmentForms")) or {}
@@ -2228,6 +2252,7 @@ def build_inventory() -> Inventory:
     inv = Inventory()
     extract_structured(inv)
     extract_story_courts(inv)
+    extract_household_stories(inv)
     extract_government_selections(inv)
     extract_mobile_presentations(inv)
     extract_lexicons(inv)
