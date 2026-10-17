@@ -4,6 +4,8 @@ Date-owned revision files may keep literal labels in a local REVISION_CONTENT ob
 
 Literal FBDATA.bookmarkRegions<date>.<region> assignments in data/bookmark_<date>_scaffold_<quadrant>.js are extracted statically by extract_scaffold_regions. Dates are numeric and quadrant suffixes use lowercase letters. Province, realm, duchy, kingdom, empire and settlement names receive date-scoped owners and ordinary exact-source aliases; dated names are separately scoped. Multiple regional assignments in one file are supported. Ruler names, ids, dates and executable expressions are not display labels. The source tables stage ordinary bookmark fields and introduce no runtime mod root. Add source declarations and extractor coverage without regenerating integration catalogs on a feature branch.
 
+Regional administrationProfiles and aristocraticProfiles maps may stage date-owned profiles alongside their opening actors. Their literal names use the existing administrationProfile and aristocraticProfile owners; provincial interest names use aristocraticInterest.<profile>.<interest>.name owners. Dynasty strings and historical personal names remain proper names. The complete bookmark composer publishes these maps into the ordinary profile catalogues before validation; extraction itself publishes nothing.
+
 Household story presentation
 
 Additional start files use data/starts_<suffix>.js and a literal FBDATA.startScenarios_<suffix> array, then append those rows to FBDATA.startScenarios. The static extractor assigns the same scenario.<id> display owners and family-preset owners as the central start file, with each source file's own location. Runtime selection and opening text keep the existing scenario localization route.
