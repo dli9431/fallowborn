@@ -12597,7 +12597,9 @@ window.FB = window.FB || {};
       UI.closeModal();
       return;
     }
-    if (returnContext.view === 'marriage-finder') {
+    if (returnContext.view === 'story') {
+      UI.showStorySheet(returnContext.storyId);
+    } else if (returnContext.view === 'marriage-finder') {
       UI.showMarriageFinder(null, undefined, true);
     } else if (returnContext.view === 'household-service') {
       UI.showHouseholdService(false, returnContext.restore);

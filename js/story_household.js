@@ -52,7 +52,7 @@
       if (!(amount > 0)) return;
       FB.stories.list().forEach(function (story) {
         var t = FB.stories.record(s, story.id);
-        if (t && story.householdFocusPaid) story.householdFocusPaid(s, t, focusId);
+        if (t && story.householdFocusPaid) story.householdFocusPaid(s, t, focusId, amount);
       });
     },
     owner:function (s, key) {
