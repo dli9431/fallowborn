@@ -35,6 +35,8 @@ Revision-owned bookmark labels
 
 Staged culture names in FBDATA.bookmarkCultures568 in data/bookmark_568_identities.js use the ordinary culture.<id>.name.default owner and exact-source alias. The static extractor reads these literal declarations before the complete date publishes them into FBDATA.cultures. Generated personal-name pools remain untranslated. These staging tables add no runtime JSON mod root and extraction does not activate their bookmark.
 
+Staged faith labels in the literal FBDATA.bookmarkReligions1096 table in data/identities_1096.js use the ordinary religion.<id> owners, including words and roles. The static extractor reads them before the complete bookmark publishes the definitions into FBDATA.religions. This source catalogue is not a JSON mod root; imported definitions still use religions. Extraction never activates a bookmark or executes its declaration script.
+
 Literal FBDATA.bookmarkRevisionContent_<suffix> objects in data/bookmark_*.js may organize a dated revision's presentation. Each object supplies bookmarkId and revision strings, literal provinces and realms arrays, duchies, kingdoms, empires and cultures maps, and a layouts map of county ids to settlement slots. The static extractor reads name fields with distinct bookmark/revision owners and exact-source aliases; culture names retain their global culture owner. It does not execute composers or extract ruler names. These are source organization tables, not new JSON mod roots. Compose their records into the ordinary bookmark, culture and settlement-layout catalogues. Keep labels literal and retain old revision owners.
 
 ## Route new text by where it lives
