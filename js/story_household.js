@@ -74,7 +74,7 @@
       } else if (p.kind === 'year') {
         need(keys(p, ['kind','min','max']) && integer(p.min) && integer(p.max) && p.min <= p.max && p.max <= 10000, 'year predicate');
       } else if (p.kind === 'story_state') {
-        need(keys(p, ['kind','storyId','field','values']) && ['phase','result'].indexOf(p.field) >= 0 &&
+        need(keys(p, ['kind','storyId','stateField','values']) && ['phase','result'].indexOf(p.stateField) >= 0 &&
           Array.isArray(p.values) && p.values.length > 0 && p.values.length <= 16 &&
           p.values.every(function (v) { return v === null || slug(v); }), 'story state predicate');
         dependency(p.storyId);
@@ -110,7 +110,7 @@
         if (inc.source === 'control') need(!inc.storyId && inc.milestone === 'rule_changed', 'control incident');
         else { need(inc.source === 'story' && ['started','won','failed','diverted','interrupted'].indexOf(inc.milestone) >= 0, 'story incident'); dependency(inc.storyId); }
       } else need(stage.afterIncident === undefined, 'orphan incident route');
-      var seen = {};
+      var seen = Object.create(null);
       stage.choices.forEach(function (choice) {
         need(keys(choice, ['id','label','detail','when','next','operation']) && slug(choice.id) && !seen[choice.id], 'choice');
         seen[choice.id] = true;
@@ -123,7 +123,7 @@
         predicate(route.when, 0);
       });
     });
-    var reached = {}, pending = [def.initialStage];
+    var reached = Object.create(null), pending = [def.initialStage];
     while (pending.length) {
       var id = pending.shift(); if (reached[id]) continue; reached[id] = true;
       def.stages[id].choices.concat(def.stages[id].transitions).forEach(function (r) { pending.push(r.next); });
@@ -131,7 +131,7 @@
     }
     need(Object.keys(def.stages).every(function (id) { return reached[id]; }), 'unreachable stage');
     // Every stage must have a route to an explicit terminal, even in a cyclic graph.
-    var finishes = {};
+    var finishes = Object.create(null);
     Object.keys(def.stages).forEach(function (id) { if (def.stages[id].terminal) finishes[id] = true; });
     for (var n = 0; n < 64; n++) Object.keys(def.stages).forEach(function (id) {
       if (finishes[def.stages[id].afterIncident] || def.stages[id].choices.concat(def.stages[id].transitions).some(function (r) { return finishes[r.next]; })) finishes[id] = true;
@@ -139,7 +139,7 @@
     need(Object.keys(def.stages).every(function (id) { return finishes[id]; }), 'no terminal route');
     Object.keys(def.stages).forEach(function (origin) {
       if (!def.stages[origin].incident) return;
-      var visited = {}, todo = def.stages[origin].choices.concat(def.stages[origin].transitions).map(function (r) { return r.next; });
+      var visited = Object.create(null), todo = def.stages[origin].choices.concat(def.stages[origin].transitions).map(function (r) { return r.next; });
       todo.push(def.stages[origin].afterIncident);
       while (todo.length) {
         var id = todo.pop(); need(id !== origin, 'incident cycle');
@@ -152,7 +152,7 @@
   }
 
   function factory(def) {
-    var controls = {}, places = {};
+    var controls = Object.create(null), places = Object.create(null);
     function scan(v) {
       if (!v || typeof v !== 'object') return;
       if (v.source === 'control') controls[v.provinceId] = true;
@@ -172,9 +172,9 @@
       if (p.kind === 'sovereign') return sovereign(s, p.provinceId) === FB.startRealmId(s, p.realmId);
       if (p.kind === 'identity') { var c = s.chars[s.player.charId]; return !!c && (!p.cultureId || c.culture === p.cultureId) && (!p.faithId || c.religion === p.faithId); }
       if (p.kind === 'year') return s.date.year >= p.min && s.date.year <= p.max;
-      if (p.kind === 'at_war') { var r = s.realms[sovereign(s, p.provinceId)]; return !!r && !!r.war; }
+      if (p.kind === 'at_war') return FB.isRealmAtWar(s, sovereign(s, p.provinceId));
       var row = FB.stories.record(s, p.storyId);
-      return !!row && p.values.indexOf(row[p.field]) >= 0;
+      return !!row && p.values.indexOf(row[p.stateField]) >= 0;
     }
     function event(s, t, inc) {
       if (!inc) return null;

@@ -60,17 +60,22 @@ test('the independent dated graph expires without a reward or replay', async fun
   })).toEqual({ phase:'expired', stale:false, once:true, money:true, rng:true });
 });
 
-for (const fault of ['operation','predicate','reference','unreachable','dead_end','unknown_key','incident_cycle']) {
+for (const fault of ['operation','predicate','reference','unreachable','dead_end','unknown_key','incident_cycle','prototype_cycle']) {
   test('invalid household ' + fault + ' rejects without publishing or consuming state', async function ({ page }, info) {
     await openGame(page, info);
     const result = await page.evaluate(function (input) {
       const m = input.mod, d = m.storyInstances.quay_household_example;
       if (input.fault === 'operation') d.stages.invitation.choices[0].operation = { kind:'give_gold', amount:50 };
       if (input.fault === 'predicate') d.stages.invitation.choices[0].when = { kind:'eval', expression:'true' };
-      if (input.fault === 'reference') d.stages.invitation.choices[0].when = { kind:'story_state', storyId:'missing_story', field:'phase', values:['started'] };
+      if (input.fault === 'reference') d.stages.invitation.choices[0].when = { kind:'story_state', storyId:'missing_story', stateField:'phase', values:['started'] };
       if (input.fault === 'unreachable') d.stages.orphan = { name:'Orphan', text:'Unused.', terminal:true, choices:[], transitions:[] };
       if (input.fault === 'dead_end') { d.stages.prepared.terminal = undefined; }
       if (input.fault === 'unknown_key') d.stages.invitation.effects = { gold:50 };
+      if (input.fault === 'prototype_cycle') {
+        d.initialStage = 'constructor';
+        d.stages = { constructor:{ name:'An unfinished loop', text:'No terminal exists.', transitions:[],
+          choices:[{ id:'again', label:'Again', detail:'This graph cannot finish.', next:'constructor', operation:{ kind:'record_decision' } }] } };
+      }
       if (input.fault === 'incident_cycle') {
         d.stages.invitation.incident = { source:'control', provinceId:'paris', milestone:'rule_changed' };
         d.stages.invitation.afterIncident = 'prepared';
