@@ -44,7 +44,9 @@ test('independent explicit and inherited-faith courts import through Mods and re
   await page.locator('#modfile').setInputFiles(path.resolve(__dirname, '../fixtures/authoring/ruler-faith-starts.json'));
   await Promise.all([page.waitForNavigation({ waitUntil:'domcontentloaded' }), page.locator('#mod-apply').click()]);
   await page.waitForFunction(function () { return window.FB && FB.game && FB.game.bootReady; });
-  await page.getByRole('button', { name:'New Game', exact:true }).click();
+  const full = page.locator('#btn-choose-beginning');
+  if (await full.isVisible()) await full.click();
+  else await page.getByRole('button', { name:'New Game', exact:true }).click();
   await page.locator('#bookmarklist [data-bookmark="1066"]').click();
   await expect(page.getByRole('button', { name:'English court example' })).toBeVisible();
   await page.locator('#btn-bm-seed').click();
@@ -56,6 +58,7 @@ test('independent explicit and inherited-faith courts import through Mods and re
   expect(await page.evaluate(function () {
     const s = FB.state;
     s.player.flags.tutorial = 1;
+    delete s.player.flags.tutorial_done;
     delete s.player.flags.tut_track_ruler_play;
     delete s.player.flags.tut_ruler_story;
     const status = FB.tutorialStatus(s);

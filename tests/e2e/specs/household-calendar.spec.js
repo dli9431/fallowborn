@@ -23,13 +23,13 @@ test('JSON calendar choices include both boundaries, expire after them and survi
   expect(await page.evaluate(function () {
     let s = FB.state;
     const id = 'calendar_choice_example';
-    function allowed(season, day) { s.date.season = season; s.date.day = day; return FB.stories.quote(s, id, 'decide').allowed; }
+    function allowed(season, day) { s.date.season = season; s.date.day = day; s.turn = season*90+day-1; return FB.stories.quote(s, id, 'decide').allowed; }
     const bounds = [allowed(1,90), allowed(2,1), allowed(2,8), allowed(2,9)];
-    s.date.day = 8;
+    s.date.day = 8; s.turn = 187;
     const q = FB.stories.quote(s, id, 'decide'), before = JSON.stringify(s), rng = FB.getRngState(), uid = FB.getUidCounter();
     FB.stories.quote(s, id, 'decide');
     const pure = before === JSON.stringify(s) && rng === FB.getRngState() && uid === FB.getUidCounter();
-    s.date.day = 9;
+    s.date.day = 9; s.turn = 188;
     const stale = FB.stories.apply(s, id, 'decide', q);
     FB.stories.get(id).day(s, s.stories[id]);
     const closed = JSON.stringify(s.stories[id]), saved = JSON.parse(FB.save.serialize());
