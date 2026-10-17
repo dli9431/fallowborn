@@ -123,3 +123,21 @@ test('invalid household records reject before save adoption', async function ({ 
     return rejected && FB.state === before && rng === FB.getRngState() && uid === FB.getUidCounter();
   })).toBe(true);
 });
+
+test('dated journey gates apply before departure and preserve an existing commitment', async function ({ page }, info) {
+  await importExamples(page, info);
+  await beginBookmark(page, info, '867', 'quay_household_example_start');
+  expect(await page.evaluate(function () {
+    const s = FB.state, purpose = 'household_example_journey';
+    const early = FB.travelEligible(s, purpose, { readOnly:true }) === true;
+    s.date.year = 868; s.turn = 360; s.player.gold = 1000;
+    const available = FB.travelEligible(s, purpose, { readOnly:true }) === true;
+    const started = FB.travelStart(s, purpose, 'aachen');
+    s.date.year = 870; s.turn = 1080;
+    FB.travelTick(s);
+    const grandfathered = !!s.player.travel;
+    FB.travelCancel(s);
+    const late = FB.travelEligible(s, purpose, { readOnly:true }) === true;
+    return { early:early, available:available, started:started, grandfathered:grandfathered, late:late };
+  })).toEqual({ early:false, available:true, started:true, grandfathered:true, late:false });
+});

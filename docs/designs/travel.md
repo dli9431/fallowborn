@@ -1,5 +1,9 @@
 # Overland travel
 
+Dated purpose eligibility
+
+The ordinary departure gate enforces a purpose's declared eras and yearMin/yearMax as well as its system and rank gates. Read-only destination previews and direct starts use the same gate. An already-started journey keeps its commitment across the end of that authoring window; its ordinary interruption and settlement rules still apply.
+
 Adult serfs cannot travel overland. Freeholders and gentry (tiers 1–2) may use
 every ordinary purpose; barons and higher may make relationship visits,
 pilgrimages, and study journeys. A journey begins as personal and temporary:

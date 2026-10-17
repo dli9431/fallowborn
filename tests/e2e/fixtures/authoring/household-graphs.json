@@ -1,5 +1,10 @@
 {
   "name": "Household graph examples",
+  "travelPurposes": {
+    "household_example_journey": {"name": "A dated journey", "desc": "An ordinary personal journey within its declared period.", "cost": 0, "minTier": 1, "maxTier": 2, "mode": "sites", "eras": ["early_medieval"], "yearMin": 868, "yearMax": 869}
+  },
+  "travelRules": {"household_example_journey": {"kind": "service", "encounters": "service", "arrivalEvent": "travel_capstone_service"}},
+  "travelSites": [{"id": "household_example_destination", "purpose": "household_example_journey", "provinceId": "aachen"}],
   "storyInstances": {
     "quay_household_example": {
       "id": "quay_household_example", "type": "household_track",
