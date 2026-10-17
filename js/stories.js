@@ -11,7 +11,7 @@
   var KINDS = { world:true, track:true };
   var HOOKS = ['appliesTo', 'init', 'day', 'season', 'year', 'title', 'intro',
     'status', 'choices', 'quote', 'blocker', 'review', 'apply',
-    'validate', 'migrate', 'restore', 'foundRevolt', 'appliesToBookmark'];
+    'validate', 'migrate', 'restore', 'foundRevolt', 'appliesToBookmark', 'observe'];
   function own(o, key) {
     return !!o && Object.prototype.hasOwnProperty.call(o, key);
   }
@@ -26,7 +26,15 @@
     var list = attachedList(s);
     for (var i = 0; i < list.length; i++) {
       if (list[i][hook]) list[i][hook](s, record(s, list[i].id));
+      if (hook !== 'restore') observe(s, list[i].id);
     }
+  }
+  // Observers consume committed facts, including boundaries inside a source
+  // dispatch. Restore deliberately never delivers new household opportunities.
+  function observe(s, sourceId) {
+    attachedList(s).forEach(function (story) {
+      if (story.observe) story.observe(s, record(s, story.id), sourceId);
+    });
   }
 
   function plain(v) { return !!v && typeof v === 'object' && !Array.isArray(v); }
@@ -284,6 +292,7 @@
     },
     list:function () { return registry.slice(); },
     record:record,
+    observe:observe,
     attached:function (s) {
       return attachedList(s).map(function (story) { return story.id; });
     },
@@ -362,7 +371,9 @@
     },
     apply:function (s, id, choiceId, reviewed) {
       var story = FB.stories.get(id), rec = record(s, id);
-      return !!(story && rec && story.apply && story.apply(s, rec, choiceId, reviewed));
+      var applied = !!(story && rec && story.apply && story.apply(s, rec, choiceId, reviewed));
+      if (applied) observe(s, id);
+      return applied;
     }
   };
 

@@ -1,5 +1,15 @@
 Composed world-story lists
 
+Local household observers
+
+household_observer is a world-story type in js/story_household_observer.js. Each declaration observes one required source and declares local places, bounded notice beats, expiry and costless review/continue choices. Typed adapters read campaigns, court settlements, restorations, repeated office history, tribute payments, conserved civilian routes and canonical succession vacancies. Source ids, dates, places and presentation belong to data. A notice never creates wages, household taxes, service, relief recipients, journeys, population movements, accession or property changes. Unsupported purchases and relief use a local notice and existing deeds instead of promising a transaction.
+
+The registry dispatches observe after each committed lifecycle hook and successful story choice. Campaign negotiation and civilian-route authorization explicitly expose intermediate committed boundaries before a single dispatch can advance again. Restore performs no observation. Fresh attachment baselines existing source facts; a declared opening notice may explain the new household's setting without replaying a historical transaction. A pending timer alone delivers nothing. Local delivery requires both permanent home and actual presence; a campaign route uses real matching hosts or war-linked armies, never an assumed itinerary. Endings aimed at previously reached households remain silent when the opportunity never started locally.
+
+Observer records retain source cursors, control baselines, the continuing household, current decision maker, at most eight pending notices, sixteen decisions, thirty-two reached counties and sixty-four receipt closures. Repeated office entries use their authoritative turn/result, tribute uses successful paidThroughTurn and relocation batches use actual route counters. Initial seeds and missing saved records never become new offers on load. Cursors prevent replay after old presentation history is trimmed. A new heir reviews fresh terms without replaying family receipts. A changed controller or ruler generation, departure, source divergence or expiry invalidates an unaccepted notice.
+
+The common household receipt tuple is unchanged. An actual campaign victory aliases the observed transfer of control when the source's successful actor matches that transfer. An attached personal track owns a matching incident before its own day hook. Observer presentation and quotes neither claim nor close that incident; silent expiry also respects the personal owner. Confirmation rechecks source facts, actor, presence, control, tenure, receipt ownership and the declaration. The existing story sheet owns navigation and focus restoration. Technology impact household_world_notices is none; underlying ordinary transactions keep their own gates.
+
 The 1204 campaign package appends its campaigns to the world-story list already declared by the bookmark. This preserves the independently registered Venetian office contest and its save identity alongside the fifteen dated campaigns.
 
 Personal ruler agendas

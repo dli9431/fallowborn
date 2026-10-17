@@ -122,6 +122,7 @@
         Object.assign({}, spec, { endTurn:rec.deadline }));
       if (!created) return;
       rec.migrationId = created.id; rec.phase = 'negotiating';
+      FB.stories.observe(s, def.id);
       moving = created;
     }
     if (moving.status === 'settled') { finish(s, rec, def, 'won', 'settled'); return; }
