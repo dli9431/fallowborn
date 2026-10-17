@@ -8,6 +8,8 @@ Regional administrationProfiles and aristocraticProfiles maps may stage date-own
 
 Household story presentation
 
+Household presentation sources may also use data/story_<suffix>.js with literal FBDATA.householdTracks_<suffix> and FBDATA.openingProfiles_<suffix> tables. data/story_novgorod_1241.js uses this convention. The static extractor preserves the same householdStory and openingProfile display owners and exact-source aliases as story_households_<suffix>.js, without executing the source. Scenario text remains in data/starts_novgorod_1241.js under the ordinary scenario owners. No generated catalogues are changed by feature authoring.
+
 Additional start files use data/starts_<suffix>.js and a literal FBDATA.startScenarios_<suffix> array, then append those rows to FBDATA.startScenarios. The static extractor assigns the same scenario.<id> display owners and family-preset owners as the central start file, with each source file's own location. Runtime selection and opening text keep the existing scenario localization route.
 
 Data files named data/story_households_<suffix>.js declare their literal source table as FBDATA.householdTracks_<suffix> before composing it into storyInstances. The extractor reads title, intro, stage name/text and choice label/detail into householdStory.<id> owners. Runtime graph presentation uses FB.T and its exact-source aliases, including effective English fallback for JSON imports. Graph ids, decisions, receipts and saved records contain no rendered prose. Adapter review chrome uses literal FB.T phrases. Feature work extends extraction support without regenerating catalogs.

@@ -14,6 +14,8 @@ dependsOnRuntime(__filename,[
   'data/bookmarks.js','data/bookmark_1204.js','data/bookmark_1204_terrain.js',
   'data/map_data.js','data/counties.js','data/geographies.js','data/geography_expansion.js',
   'data/cultures.js','data/eras.js','data/starts.js','data/settlements.js',
+  'data/starts_novgorod_1241.js','data/story_novgorod_1241.js',
+  'js/stories.js','js/story_household.js','js/story_opening_goals.js',
   'data/settlements_real.js','data/government_rollout.js','data/ecclesiastical_profiles.js',
   'data/climate.js','js/world.js','js/model.js','js/starts.js','js/main.js','js/util.js',
   'js/bookmark_setup.js','js/ecclesiastical_strategies.js','js/ecclesiastical_validation.js',
@@ -70,7 +72,9 @@ test('1241 composes all physical counties in ledger order with unique courts and
       counts:[b.provinces.length,Object.keys(counties).length,b.realms.length,Object.keys(courts).length,inhabited.length],
       metadata:[b.name,b.date,b.era,b.geography,b.revision,b.openingRevision],
       starts:Object.keys(b.startLocations).every(function (id) {
-        return JSON.stringify(b.startLocations[id]) === JSON.stringify(inhabited);
+        const scenario = FBDATA.startScenarios.find(function (row) { return row.id === id; });
+        const places = scenario && scenario.fixedProvinceId ? [scenario.fixedProvinceId] : inhabited;
+        return JSON.stringify(b.startLocations[id]) === JSON.stringify(places);
       }),
       headBindings:b.religiousHeads,climates:['torne_district','palmyra_district','siwa_oasis'].map(function (id) {
         return b.climate.provinces[id];
