@@ -28,6 +28,8 @@ Technology impact: ruler_agendas uses none. Scheduling personal reviews and obse
 
 Stories and start scenarios
 
+The 1241 Hungarian farming household uses the existing protagonist-continuity graph and opening_profile. The county-head settlement anchors an explicitly fictional rural household; no separate historical estate is claimed. Ordinary farm work, a once-per-stage private supplies purchase, optional personal travel and later canonical settlement supply the choices. The graph observes only the home sovereign’s real war status and its closure, with complete quiet, stay and defer branches. Those reviews assert no local host, combat, requisition, hosted-following encounter or protection. Optional goals distinguish actual farm earnings from a private reserve and record a stay or settlement decision without a reward. Death or succession archives unfinished personal content. No new factory, saved field or technology interaction is introduced; existing household, opening-goal and travel gates retain their meanings.
+
 Household graphs
 
 Resident-community perspectives use the existing identity predicate, not a family-preset identity override. Opening stages and religious choices inspect the current protagonist's selected culture and faith. Ordinary creation, shared start codes and restore keep the family's canonical identities. An ancestry choice supplies no rank, public authority or automatic obligation.

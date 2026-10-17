@@ -2,6 +2,8 @@
 
 Dated purpose eligibility
 
+hungarian_visit_1241 is a sites-mode personal visit to the existing Bratislava county, offered to freeholders and gentry in 1241. It uses the ordinary expedition road encounters, reviewed five-gold purpose fee plus route provisions, and a separate arrival acknowledgment that grants nothing. The destination is a simulation option, not a historical refugee itinerary or protection agreement. Relatives and property remain at home during the visit; later household settlement uses ordinary residence, work and lifetime-move gates and preserves existing property records. This is content under the existing travel contract with no new capability, saved field or technology gate.
+
 FB.travelRealmSnapshot reads one living court destination for a non-targeted capitals-mode purpose without initializing travel history or household standards. Household mobile stories use it only when that capital matches the actual stationary civilian camp. Acceptance still calls ordinary travelStart, and the existing return or turn-back transaction owns the return journey. Relatives and permanent holdings stay at home.
 
 The ordinary departure gate enforces a purpose's declared eras and yearMin/yearMax as well as its system and rank gates. Read-only destination previews and direct starts use the same gate. An already-started journey keeps its commitment across the end of that authoring window; its ordinary interruption and settlement rules still apply.
