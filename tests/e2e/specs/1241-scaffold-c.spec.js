@@ -5,7 +5,7 @@ const {dependsOnRuntime} = require('../support/runtime-dependencies');
 const {openGame} = require('../support/game/navigation');
 
 dependsOnRuntime(__filename,[
-  'index.html','data/bookmark_1241_scaffold_a.js','data/bookmark_1241_scaffold_b.js',
+  'index.html','data/bookmark_1241.js','data/bookmark_1241_scaffold_a.js','data/bookmark_1241_scaffold_b.js',
   'data/bookmark_1241_scaffold_c.js','data/bookmark_1204.js','data/bookmark_1204_terrain.js',
   'data/bookmarks.js','data/counties.js','data/map_data.js','data/cultures.js','data/traits.js',
   'data/eras.js','data/geographies.js','data/geography_expansion.js',

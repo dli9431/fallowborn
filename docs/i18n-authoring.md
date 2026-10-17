@@ -37,6 +37,8 @@ though the game still *runs*.
 
 Revision-owned bookmark labels
 
+data/bookmark_1241.js declares its literal name and description in FBDATA.bookmarkCandidates['1241']; the generic candidate extractor assigns bookmark.1241 owners without executing composition. Regional labels keep their scaffold owners, and the published faith keeps its religion.sahel_local_practice_1241 owners. Publication copies display fields without rewriting their sources. Proper personal names and stable ids remain untranslated; integration catalogue generation is separately authorized.
+
 data/bookmark_568.js keeps its literal name and description in FBDATA.bookmarkCandidates['568'] before publishing the composed world. The generic candidate extractor assigns bookmark.568 owners. data/starts_568.js uses the ordinary literal FBDATA.startScenarios_568 array and scenario.<id> owners. The composer copies regional display records without changing their source owners. Static extraction does not execute composition or initialize people.
 
 Staged culture names in FBDATA.bookmarkCultures568 in data/bookmark_568_identities.js use the ordinary culture.<id>.name.default owner and exact-source alias. The static extractor reads these literal declarations before the complete date publishes them into FBDATA.cultures. Generated personal-name pools remain untranslated. These staging tables add no runtime JSON mod root and extraction does not activate their bookmark.

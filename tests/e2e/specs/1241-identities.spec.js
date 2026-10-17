@@ -7,12 +7,12 @@ const {releasedCatalogue} = require('../support/released-catalogue');
 const {dependsOnRuntime} = require('../support/runtime-dependencies');
 
 dependsOnRuntime(__filename,[
-  'index.html','data/identities_1241.js','data/bookmark_476_wider_identities.js',
+  'index.html','data/bookmark_1241.js','data/identities_1241.js','data/bookmark_476_wider_identities.js',
   'data/cultures.js','data/bookmarks.js','data/eras.js','data/geographies.js',
   'js/model.js','js/mods.js','js/world.js','js/ui_misc.js','js/ui_modals.js'
 ]);
 
-test('staged local practice leaves effective faiths and existing worlds unchanged',async function ({page},info) {
+test('reloading staged local practice leaves its published faith and existing worlds unchanged',async function ({page},info) {
   await openGame(page,info);
   const fixture = JSON.parse(fs.readFileSync(path.join(__dirname,'../fixtures/released-catalogue.json'),'utf8'));
   expect((await page.evaluate(releasedCatalogue,fixture.selection)).hashes).toEqual(fixture.hashes);
@@ -29,15 +29,17 @@ test('staged local practice leaves effective faiths and existing worlds unchange
     return {ids:Object.keys(staged),definition:staged.sahel_local_practice_1241,expected:expected,
       independent:staged.sahel_local_practice_1241 !== source &&
         staged.sahel_local_practice_1241.properties !== source.properties,
-      dormant:!FBDATA.bookmarks['1241'] && !FBDATA.religions.sahel_local_practice_1241 &&
-        !FB.faithExists('sahel_local_practice_1241',null),
+      published:!!FBDATA.bookmarks['1241'] && FB.faithExists('sahel_local_practice_1241',null) &&
+        JSON.stringify(FBDATA.religions.sahel_local_practice_1241) === JSON.stringify(staged.sahel_local_practice_1241) &&
+        FBDATA.religions.sahel_local_practice_1241 !== staged.sahel_local_practice_1241 &&
+        FBDATA.religions.sahel_local_practice_1241.properties !== staged.sahel_local_practice_1241.properties,
       pure:before.data === JSON.stringify(FBDATA) && before.state === JSON.stringify(FB.state) &&
         before.rng === FB.getRngState() && before.uid === FB.getUidCounter(),
       faults:FB.validateReligionData(null)};
   },before);
   expect(result.definition).toEqual(result.expected);
-  expect({ids:result.ids,independent:result.independent,dormant:result.dormant,pure:result.pure,faults:result.faults})
-    .toEqual({ids:['sahel_local_practice_1241'],independent:true,dormant:true,pure:true,faults:[]});
+  expect({ids:result.ids,independent:result.independent,published:result.published,pure:result.pure,faults:result.faults})
+    .toEqual({ids:['sahel_local_practice_1241'],independent:true,published:true,pure:true,faults:[]});
 });
 
 test('ordinary JSON import publishes the local profile only for its dated assignments',async function ({page},info) {
