@@ -2417,10 +2417,19 @@ def extract_ruler_agendas(inv: Inventory) -> None:
 
 
 def extract_opening_goals(inv: Inventory) -> None:
-    source = DATA / "start_ambitions.js"
+    sources = [(DATA / "start_ambitions.js", "openingProfiles")]
+    sources.extend(
+        (source, source.stem.replace("story_households_", "openingProfiles_"))
+        for source in sorted(DATA.glob("story_households_*.js"))
+    )
+    for source, table in sources:
+        extract_opening_goal_source(inv, source, table)
+
+
+def extract_opening_goal_source(inv: Inventory, source: Path, table: str) -> None:
     if not source.exists():
         return
-    declarations = node_object(find_assignment(source, "FBDATA", "openingProfiles")) or {}
+    declarations = node_object(find_assignment(source, "FBDATA", table)) or {}
     rel = source.relative_to(ROOT).as_posix()
     for story_id, story_node in declarations.items():
         story = node_object(story_node) or {}
