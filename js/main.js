@@ -4207,6 +4207,8 @@ FB.CHANGELOG = [
       return undefined;
     }
     const p = s.player;
+    if (opts && opts.householdAction && (G.observe || !opts.skipFocus ||
+        !FB.householdStories || !FB.householdStories.commitDay(s, opts.householdAction))) return undefined;
 
     const automaticDeed = !G.observe && !(opts && opts.skipFocus) &&
       FB.autoRecurringDeed && G.auto &&

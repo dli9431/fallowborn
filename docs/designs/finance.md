@@ -1,5 +1,9 @@
 # Coin & Credit
 
+Finite household work escrow
+
+Household-track jobs debit the consenting AI payer's active treasury through treasuryTransfer before their first shift. The track owns the finite escrow, pays earned work into the private household purse and records every paid, refunded and still-held amount. A job never draws an anonymous source for wages. Unclaimed money refunds through the original treasury and its canonical retirement recipient; if that recipient is unavailable the saved balance remains held. Repeated choices, changed control, death and restore cannot duplicate or erase a fee. These commitments are independent of recurring household service, public-office budgets and military wages. household_finite_jobs has no discovery prerequisite.
+
 Period currency presentation
 
 An era or geography can declare currency as a label/icon pair or as the existing complete currency presentation definition. FB.currencyDef, FB.currencyLabel and FB.money resolve it at display time using the stamped campaign era and geography, so loading another period does not leave a stale purse. FB.money accepts an optional state in its options; the currency helpers accept state directly. Omitted state uses FB.state, and a missing campaign uses the active bookmark preview.

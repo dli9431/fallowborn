@@ -1,5 +1,9 @@
 # Time, focuses & automation
 
+Finite household work
+
+Reviewed household start_job, work_job, spend_day and hearing settlements enter passDay with a typed householdAction. The ordinary event, pending public-decision, travel-picker and death blockers run before the transaction. The day loop revalidates and commits the current story quote before any work or money changes, then fills exactly one day with skipFocus:true. Acceptance funds escrow and performs the first shift in that same action day; later shifts require separate reviews. A failed preflight advances no calendar and creates no contract. Ordinary focus income and recurring deed automation do not run for that day. Other ordinary daily systems and event risks retain their order. Costless narrative decisions and immediate account settlements still spend no day.
+
 ## Recurring deed preferences
 
 Settings can opt into scrolling to and highlighting a recurring deed when it
