@@ -1272,6 +1272,9 @@ window.FB = window.FB || {};
       if (start.tracks !== undefined) list(start.tracks, owner + '.tracks', function (track) {
         story(track, 'track', worldStories.concat(start.tracks), owner);
       });
+      if (start.fixedProvinceId && !start.rulerRealmId &&
+          !FB.startTracks(start, start.fixedProvinceId).length)
+        fault(owner, 'a fixed-place household needs a player track at its fixed birthplace.');
       if (plainRecord(start.trackLocations)) Object.keys(start.trackLocations).forEach(function (track) {
         var places = start.trackLocations[track];
         (Array.isArray(places) ? places : []).forEach(function (pid) {

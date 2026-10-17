@@ -622,6 +622,10 @@ retain their original tiers because old-life progression repair derives the star
 station from the saved start code. Other fields may be replaced. Same-mod career,
 holding, item, and item-pool additions resolve before mutation.
 
+Story start validation
+
+Story starts require an actual player track. A scenario with fixedProvinceId and no rulerRealmId must declare a non-empty tracks list with at least one registered track retained at that county by FB.startTracks. Omitting trackLocations for a track leaves it eligible at the fixed birthplace; listing locations for it must include that birthplace if it is the only track. Unknown ids and world stories cannot substitute for player tracks. Scenario and offered-bookmark validation reject an unsupported fixed household before import or publication. Historical ruler starts and map-chosen open roles remain allowed without a track. Story grouping considers only location entries belonging to the scenario's tracks. Existing saved campaigns are not initialized again by these new-campaign rules.
+
 Existing-ruler scenario fields
 
 hidden is an optional boolean; true excludes a scenario from the picker, start codes and direct creation. rulerRealmId identifies an existing named realm in every offered bookmark. It requires bookmarkIds, fixedProvinceId, governmentForm, characterName, sex, startCulture, startReligion, onboarding: ruler, and familyPresets containing only standard. The identity and government must match the authored bookmark court. A ruler scenario's tier may span the registered station bands; ordinary scenarios remain 0-3. characterName must fit the existing 20-character start-code limit.
