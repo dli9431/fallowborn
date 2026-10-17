@@ -30,6 +30,47 @@ class GeographyAdditionExtractionTests(unittest.TestCase):
             self.assertIn(i18n_catalog.source_key('Northern hills'), inventory.entries)
 
 
+class BookmarkRevisionExtractionTests(unittest.TestCase):
+    def test_independent_revision_labels_and_aliases_without_executing_composers(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            data = root / 'data'
+            data.mkdir()
+            (data / 'bookmark_coast.js').write_text(
+                "FBDATA.bookmarkRevisionContent_coast = {bookmarkId:'survey',revision:'coast_v1',"
+                "cultures:{coastal:{name:'Coastal households'}},"
+                "provinces:[{id:'bay',name:'Bay district'}],"
+                "realms:[{id:'local',name:'Bay custodian',ruler:{name:'Untranslated person'}}],"
+                "duchies:{bay:{name:'Bay grouping'}},"
+                "layouts:{bay:[{site:'farm',name:'Bay farms'}]}};\n"
+                "throw new Error('Must never execute composers');", encoding='utf-8')
+            (data / 'bookmark_valley.js').write_text(
+                "FBDATA.bookmarkRevisionContent_valley = {bookmarkId:'survey',revision:'valley_v2',"
+                "provinces:[{id:'bay',name:'Valley district'},{name:'Unowned label'}],"
+                "kingdoms:{valley:{name:'Valley grouping'}},empires:{hills:{name:'Hill country'}},"
+                "layouts:{bay:[{site:'farm',name:'Valley farms'}]}};"
+                "FBDATA.bookmarkRevisionContent_incomplete = {provinces:[{id:'bad',name:'Missing scope'}]};",
+                encoding='utf-8')
+            inventory = i18n_catalog.Inventory()
+            with patch.object(i18n_catalog, 'ROOT', root), patch.object(i18n_catalog, 'DATA', data):
+                i18n_catalog.extract_bookmark_revision_content(inventory)
+            for key, text in (
+                ('province.survey.coast_v1.bay.name.default', 'Bay district'),
+                ('province.survey.valley_v2.bay.name.default', 'Valley district'),
+                ('realm.survey.coast_v1.local.name.default', 'Bay custodian'),
+                ('culture.coastal.name.default', 'Coastal households'),
+                ('duchy.survey.coast_v1.bay.name.default', 'Bay grouping'),
+                ('kingdom.survey.valley_v2.valley.name.default', 'Valley grouping'),
+                ('empire.survey.valley_v2.hills.name.default', 'Hill country'),
+                ('settlement.survey.coast_v1.farm.name.default', 'Bay farms'),
+                ('settlement.survey.valley_v2.farm.name.default', 'Valley farms'),
+            ):
+                self.assertEqual(inventory.entries[key]['text'], text)
+                self.assertIn(i18n_catalog.source_key(text), inventory.entries)
+            for text in ('Untranslated person', 'Unowned label', 'Missing scope'):
+                self.assertNotIn(i18n_catalog.source_key(text), inventory.entries)
+
+
 class StaticHtmlExtractionTests(unittest.TestCase):
     def test_mobile_opening_display_owners(self):
         inventory = i18n_catalog.Inventory()
