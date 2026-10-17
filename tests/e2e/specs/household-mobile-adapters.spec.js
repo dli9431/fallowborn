@@ -18,7 +18,7 @@ async function importedStart(page, info) {
   await page.locator('#modfile').setInputFiles(path.resolve(__dirname, '../fixtures/authoring/camp-work-example.json'));
   await Promise.all([page.waitForNavigation({ waitUntil:'domcontentloaded' }), page.locator('#mod-apply').click()]);
   await page.waitForFunction(function () { return window.FB && FB.game && FB.game.bootReady && !!FB.stories.get('short_camp_service_example'); });
-  await beginBookmark(page, info, '476', 'short_camp_service_start');
+  await beginBookmark(page, info, '476', 'mobile_household_476');
 }
 
 test('an ordinary JSON import pays canonical camp work once and restores without replay', async function ({ page }, info) {

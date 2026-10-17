@@ -24,6 +24,6 @@
     }
   },
   "startScenarios": [
-    {"id": "short_camp_service_start", "name": "Short camp service", "desc": "An independent one-payment example.", "intro": "Begin near a civilian camp.", "bookmarkIds": ["476"], "fixedProvinceId": "cherson", "startCulture": "greek", "startReligion": "chalcedonian", "alwaysUnlocked": true, "tier": 1, "profession": "farmer", "gold": 20, "prestige": 5, "piety": 0, "tracks": ["short_camp_service_example"], "trackLocations": {"short_camp_service_example": ["cherson"]}}
+    {"id": "mobile_household_476", "name": "Short camp service", "desc": "An independent one-payment example.", "intro": "Begin near a civilian camp.", "bookmarkIds": ["476"], "fixedProvinceId": "cherson", "startCulture": "greek", "startReligion": "chalcedonian", "alwaysUnlocked": true, "tier": 1, "profession": "farmer", "gold": 20, "prestige": 5, "piety": 0, "tracks": ["short_camp_service_example"], "trackLocations": {"short_camp_service_example": ["cherson"]}}
   ]
 }

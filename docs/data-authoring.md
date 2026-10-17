@@ -22,7 +22,7 @@ Keep per-tick work bounded. Resolve declaration graphs at import or activation; 
 
 Implemented extension surfaces
 
-household_track also supports mobile_state and bounded elapsed/travelling conditions, canonical mobile_work, capitals-purpose travel_mobile and return_home. The camp-work-example.json import gives an independently authored paid-work graph with a shorter expiry and its own start. The shipped farmer graph additionally offers supply review, stationary completion and conditional travel. Neither changes coalition authority, membership or household movement rules.
+household_track also supports mobile_state and bounded elapsed/travelling conditions, canonical mobile_work, capitals-purpose travel_mobile and return_home. The camp-work-example.json import gives an independently authored paid-work graph with a shorter expiry and a replacement of the existing offered household opening. The shipped farmer graph additionally offers supply review, stationary completion and conditional travel. Neither changes coalition authority, membership or household movement rules.
 
 The household_track story type supports bounded household graphs, explicit location/identity/date/source conditions, semantic incident references and canonical conversion, sites-mode journey and later settlement adapters. It shares the ordinary story sheet and detached JSON compilation path. The household-graphs.json fixture supplies independent costless and conditional graphs plus a dated journey. Immediate family evacuation, finite work contracts and world-incident delivery are separate capabilities; the type does not implement them by accepting arbitrary effects.
 
