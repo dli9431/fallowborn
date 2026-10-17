@@ -6,7 +6,8 @@ const { beginBookmark } = require('../support/game/bookmark-acceptance');
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, ['index.html','data/start_ambitions.js','data/starts.js','data/story_courts_476.js',
   'data/story_ruler_agendas.js','data/story_campaigns.js','data/story_households_711.js','data/story_households_800.js',
-  'data/story_households_1204.js','data/story_households_pontic_476.js','data/bookmark_476_wider.js',
+  'data/story_households_1204.js','data/story_households_pontic_476.js','data/starts_perspectives.js',
+  'data/story_households_perspectives.js','data/bookmark_476_wider.js','data/economy.js','js/actions.js',
   'data/bookmark_1204_terrain.js','data/technology.js','data/actions.js','js/story_opening_goals.js','js/stories.js',
   'js/story_household.js','js/story_track.js','js/story_ruler_agenda.js','js/mobile_confederations.js','js/starts.js','js/main.js','js/world.js','js/events.js','js/treasury.js',
   'js/government_aristocracy.js','js/government_support.js','js/government_collective.js','js/government_recognition.js',
@@ -18,6 +19,7 @@ const starts = [
   ['federate_476','opening_federate_476'], ['curialis_476','opening_curialis_476'], ['mobile_household_476','opening_pontic_476'],
   ['toledo_household_711','opening_toledo_711'], ['aachen_household_800','opening_aachen_800'],
   ['constantinople_household_1204','opening_constantinople_1204'],
+  ['constantinople_merchant_household_1204','opening_constantinople_merchant_1204'],
   ['muhammad_1204','opening_muhammad_1204'], ['siwa_delegate_1204','opening_siwa_1204']
 ];
 
@@ -37,12 +39,13 @@ for (const pair of starts) {
       const friends = restored.player.friendContacts || {};
       return { profiles:profiles, ready:t.ready, actor:t.actorId === s.player.charId, goals:Object.keys(t.goals).length,
         people:people.length, person:!!person, noFriend:!friends[person.id], pure:pure, retained:retained,
-        named:pair[0].indexOf('peroz') === 0 ? person.name : null,
+        named:person.name,
         faithSame:restored.chars[restored.player.charId].religion === s.chars[s.player.charId].religion };
     }, pair);
     expect(result).toMatchObject({ profiles:[pair[1]], ready:true, actor:true, goals:3, people:1, person:true,
       noFriend:true, pure:true, retained:true, faithSame:true });
     if (pair[0].startsWith('peroz')) expect(result.named).toBe('Balash');
+    if (pair[0] === 'constantinople_merchant_household_1204') expect(result.named).toBe('Baldwin of Flanders');
   });
 }
 
@@ -62,7 +65,54 @@ test('all offering revisions validate their profiles and retain the two separate
   });
   expect(result.errors).toEqual([]);
   expect(result.peroz.every(function (n) { return n <= 1; })).toBe(true);
-  expect(result).toMatchObject({ profiles:12, goals:36, technology:['none','none'] });
+  expect(result).toMatchObject({ profiles:13, goals:39, technology:['none','none'] });
+});
+
+test('merchant market earnings stay separate from the opening purse and private reserve', async function ({ page }, info) {
+  await startParityGame(page, info, { bookmark:'1204', scenario:'constantinople_merchant_household_1204', declaredOpening:true });
+  const result = await page.evaluate(function () {
+    const s = FB.state, id = 'constantinople_merchant_track_1204', t = s.stories.opening_constantinople_merchant_1204;
+    const profile = FB.stories.get('opening_constantinople_merchant_1204');
+    const opening = s.player.gold === 15 && t.earnings.market === 0 &&
+      Object.keys(t.goals).every(function (key) { return t.goals[key].status === 'pending'; });
+    s.player.gold = 30; profile.day(s,t);
+    const reserveOnly = t.goals.merchant_reserve_1204.status === 'completed' && t.goals.merchant_livelihood_1204.status === 'pending';
+    FB.householdStories.focusPaid(s,'craft_work',15);
+    const otherWork = t.earnings.market === 0;
+    const cash = s.player.gold, applied = FB.stories.apply(s,id,'local_trade',FB.stories.quote(s,id,'local_trade'));
+    const noWage = cash === s.player.gold && t.earnings.market === 0 && s.player.focus === 'market';
+    s.turn++; FB.tickFocus(s);
+    const paid = s.player.gold - cash, actual = paid > 0 && t.earnings.market === Math.min(15,paid);
+    t.earnings.market = 15 - 0.000001;
+    s.turn++; FB.tickFocus(s);
+    const afterWork = s.player.gold, record = JSON.stringify(t); profile.day(s,t); profile.day(s,t);
+    return { opening:opening, reserveOnly:reserveOnly, otherWork:otherWork, applied:applied, noWage:noWage, actual:actual,
+      completed:t.goals.merchant_livelihood_1204.status, once:record === JSON.stringify(t), noReward:afterWork === s.player.gold };
+  });
+  expect(result).toEqual({ opening:true, reserveOnly:true, otherWork:true, applied:true, noWage:true, actual:true,
+    completed:'completed', once:true, noReward:true });
+});
+
+test('merchant household goals accept staying and resettlement while leaving other endings pending', async function ({ page }, info) {
+  await startParityGame(page, info, { bookmark:'1204', scenario:'constantinople_merchant_household_1204', declaredOpening:true });
+  const result = await page.evaluate(function () {
+    const s = FB.state, id = 'constantinople_merchant_track_1204', profileId = 'opening_constantinople_merchant_1204';
+    function choose(choice) { return FB.stories.apply(s,id,choice,FB.stories.quote(s,id,choice)); }
+    const planned = choose('decline_deal') && choose('keep_reserves');
+    const baseline = JSON.stringify(s.stories[profileId]), cash = s.player.gold;
+    const stayed = choose('stay') && s.stories[profileId].goals.merchant_home_1204.status === 'completed';
+    const statuses = {};
+    ['resettled','deferred','temporary','remote','destination_changed','interrupted_journey','interrupted'].forEach(function (phase) {
+      // Stage terminal source records to exercise the profile's exact conclusion boundary.
+      s.stories[id].phase = phase;
+      const profile = s.stories[profileId] = JSON.parse(baseline);
+      FB.stories.get(profileId).day(s,profile);
+      statuses[phase] = profile.goals.merchant_home_1204.status;
+    });
+    return { planned:planned, stayed:stayed, statuses:statuses, noReward:cash === s.player.gold };
+  });
+  expect(result).toEqual({ planned:true, stayed:true, statuses:{ resettled:'completed', deferred:'pending', temporary:'pending',
+    remote:'pending', destination_changed:'pending', interrupted_journey:'pending', interrupted:'pending' }, noReward:true });
 });
 
 for (const scenario of ['federate_476','curialis_476']) {
