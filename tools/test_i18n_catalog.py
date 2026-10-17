@@ -112,6 +112,22 @@ class RevisionContentExtractionTests(unittest.TestCase):
 
 
 class ScaffoldRegionExtractionTests(unittest.TestCase):
+    def test_western_1096_labels_are_registered_by_the_structured_inventory(self):
+        inventory = i18n_catalog.Inventory()
+        i18n_catalog.extract_structured(inventory)
+        for key, text in (
+            ('province.1096.paris.name.default', 'Paris'),
+            ('province.1096.ghadames_oasis.name.default', 'Ghadames'),
+            ('realm.1096.toulouse_1096.name.default', 'County of Toulouse'),
+            ('realm.1096.almoravid_1096.name.default', 'Almoravid realm'),
+            ('kingdom.1096.asturias.name.default', 'Leon and Castile'),
+            ('settlement.1096.ghadames_oasis_inhabited_1066.name.default', 'Ghadames'),
+        ):
+            self.assertEqual(inventory.entries[key]['text'], text)
+            self.assertIn('bookmark_1096_scaffold_a.js', inventory.meta[key]['location'])
+            self.assertIn(i18n_catalog.source_key(text), inventory.entries)
+        self.assertNotIn(i18n_catalog.source_key('Yusuf ibn Tashfin'), inventory.entries)
+
     def test_multiple_regions_and_dates_have_scoped_owners_without_execution(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

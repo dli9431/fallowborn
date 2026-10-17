@@ -216,6 +216,10 @@ data/starts_perspectives.js adds constantinople_merchant_household_1204, Harbor 
 
 Technology decision: these perspectives author content through existing household identity, work, expense and travel contracts. They add no independently gateable capability; their existing technology reviews and transaction requirements remain authoritative.
 
+Spring 1096 western regional staging
+
+data/bookmark_1096_scaffold_a.js supplies five literal blocks under FBDATA.bookmarkRegions1096: west_north, west_south, iberia_north, iberia_south and maghreb. Loading stages 132 physical county declarations, title chains, 20 dated territorial courts and independent settlement layouts. It registers no bookmark or live opening transaction. Its only outside court references are hre_1096 and fatimid_1096; complete composition must resolve those once. Existing worlds, active layouts and campaign state remain untouched. The research note docs/research/1096-bookmark.md records the copied first-pass resident/layout assumptions, generated identity holds and capital proxies. This content stages ordinary bookmark fields and introduces no gameplay capability, saved schema or technology gate.
+
 Optional goals for existing beginnings
 
 Opening profiles are companion tracks. They attach through the ordinary tracks and trackLocations rules, but cannot satisfy a fixed household's storyline requirement or place an open role under Story starts. Scenario, bookmark and picker checks use FB.startStoryTracks and the story type's trusted classification; imported instances are checked in the detached candidate registry. No birthplace, saved story record or underlying goal behavior changes.
