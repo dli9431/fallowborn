@@ -12,6 +12,8 @@ Purpose
 
 A bookmark is an atomic political opening on a reusable physical geography. It declares a date, era, sovereign realms, county communities, title hierarchy, crossings, optional institutions and opening people, world stories and available starts. Shared simulation code resolves these declarations through registries. Content authors do not add date selectors to the engine.
 
+The optional europe_north_atlantic_2 physical base adds scenery and a crossing catalogue without selecting a dated world. An adopting bookmark or revision must author every physical row's habitation, its complete permitted crossings, date-owned layout and institutions. Parent default layouts are preserved as a physical fallback, not evidence for new island settlements. Existing worlds and fresh selectors retain their current geography. No old save is moved to the wider raster, and household ocean travel retains its current coarse route-unit clock. The implementation and acceptance limits are recorded in docs/research/north-atlantic-geography.md.
+
 The shipped dates are 476, 493, 711, 800, 867, 1066 and 1204. Registration and acceptance are separate: a registered definition with hidden:true is unavailable for every new-campaign route while inspection and matching saves remain accessible. Changing hidden to false is an owner acceptance decision. Candidate source tables are organizational conveniences; only FBDATA.bookmarks is the runtime registry.
 
 Ownership and lifetime

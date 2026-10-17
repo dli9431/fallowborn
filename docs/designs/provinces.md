@@ -645,6 +645,10 @@ The unreleased europe_regional_2 base contains 29 bounded additions and 527 tota
 
 The expanded base supplies per-district climate defaults and a period-scoped Eastern steppe label; each bookmark's climate and names retain precedence. Inherited grid width, map scale, ordinary seed positions and the released europe_regional definition remain unchanged. This is an in-place extension of an unreleased base, so existing development wider_v2 rasters require renewed review. It is not a mechanism for changing a released base. Supported original-world saves still resolve their original geography and preserve converted frontier sites. Technology impact remains none under bounded_overland_corridors.
 
+North Atlantic physical child
+
+data/geography_north_atlantic.js declares europe_north_atlantic_2, extending europe_regional_2 with a -25 to 70 longitude and 13 to 67.5 latitude window at gridWidth 1290. It appends independently derived Iceland, Faroese, Orcadian, Shetland and Lewis/Harris rings and thirteen scenery anchors. Caithness has a 30 km extent to keep its mainland landing district out of subsidiary Orkney islands; the other twelve additions are uncapped. The expected resolved inventory is 540 seeds. Parent geometry, seed order, complete mapScale, climate/name metadata, dry routes, shared sites and retained base meanings survive. The new geography adds seven water pairs as a catalogue for intentional consumers. No existing bookmark adopts it. docs/research/north-atlantic-geography.md records the public source, ring inventory, geographic abstractions and physical acceptance work.
+
 Retained geography ids
 
 Geography extensions inherit retiredProvinceIds monotonically. A child can append retired ids but cannot clear an ancestor's list. Validation rejects duplicate retirement entries, malformed ids and any active seed reusing a retired id, including an independent full base. Released geography hashes cover the resolved base; the shared settlement-site catalogue remains available for independently authored dates. Saved geography must agree with the resolved bookmark revision even for an implicit baseline.
