@@ -44,9 +44,9 @@ the lordship review remains `none`, and individual building gates still apply.
 
 ## Settlement lordship accounting (Phase 3)
 
-The Deeds building summary retains its compact icon grid with one row per directly held settlement, including empty
-holdings. Each row opens its exact settlement; building counts remain local to it. Its holding count reads "Settlements"; the cap
-still counts only directly held settlements. Settlement sheets describe a player
+The Deeds building summary has one full-width button per directly held settlement, including empty holdings. Names, localized building labels, standing counts and separately labeled ruin counts wrap inside the card without hover. Empty holdings say No buildings. Only types actually present contribute columns; catalogue availability does not add an asset. A matrix is used only when its measured localized content, counts, gaps and row padding fit the actual card container. Container changes are observed where ResizeObserver exists, with window resize as the fallback. Layout changes preserve the same buttons. Every row is at least 44 CSS pixels high and opens its exact county and settlement. Deeds redraws retain these button nodes for modal return focus, alongside panel scroll and ordinary Back, Cancel, Escape and browser Back. This is presentation only and needs no technology impact entry.
+
+The holding count reads "Settlements"; the cap still counts only directly held settlements. Settlement sheets describe a player
 holding as "held by you", including personal baronies within another ruler's county.
 
 Ordinary construction and demolition require direct settlement lordship. A territorial

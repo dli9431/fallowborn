@@ -2659,15 +2659,37 @@ button.linklike { background: none; border: 0; padding: 0; font: inherit; color:
   .hostile-report-facts { grid-template-columns: minmax(0, 1fr); }
 }
 .progressnote { background: var(--ui-card-color); border: 1px solid var(--ui-border-color); border-radius: 8px; padding: 8px 10px; font-size: var(--ui-label-size); margin-bottom: 8px; }
-/* Deeds demesne-buildings ledger: county rows against shared building columns */
+/* Direct settlement assets: wrapping rows, with a matrix only when measured to fit. */
+.bldsummary { min-width: 0; }
 .bldsummary .bldhead { display: block; margin-bottom: 4px; }
-.bldsummary .bldgrid { display: grid; align-items: center; row-gap: 2px; overflow-x: auto; }
-.bldsummary .bldprov { background: none; border: 0; border-radius: 8px; padding: 0 2px; font: inherit; font-size: var(--ui-label-size); text-align: left; color: var(--helper-text-color); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.bldsummary button.bldprov { cursor: pointer; }
-.bldsummary button.bldprov:hover, .bldsummary button.bldprov:focus-visible { color: var(--main-text-color); text-decoration: underline; }
-.bldsummary .bldcell { text-align: center; font-size: var(--ui-label-size); line-height: 1.3; white-space: nowrap; }
-.bldsummary .bldmiss { color: var(--helper-text-color); opacity: .35; }
-.bldsummary .bldcnt { font-size: var(--ui-label-size); vertical-align: super; color: var(--ui-accent-color); margin-left: 1px; }
+.bldsummary .bldgrid { display: grid; gap: 4px; min-width: 0; }
+.bldsummary .bldheaders { display: none; }
+.bldsummary .bldprov {
+  display: grid; gap: 4px 10px; width: 100%; min-width: 0; min-height: 44px;
+  background: var(--ui-surface-color); border: 1px solid var(--ui-border-color);
+  border-radius: 8px; padding: 8px 10px; font: inherit; text-align: left;
+  color: var(--main-text-color); cursor: pointer; white-space: normal;
+  overflow-wrap: anywhere;
+}
+.bldsummary .bldprov:hover { border-color: var(--ui-accent-color); }
+.bldsummary .bldprov:focus-visible { outline: 2px solid var(--ui-accent-color); outline-offset: -2px; }
+.bldsummary .bldname { min-width: 0; font-weight: bold; }
+.bldsummary .bldassets { display: grid; gap: 4px; min-width: 0; }
+.bldsummary .bldcell, .bldsummary .bldempty { min-width: 0; line-height: 1.4; color: var(--helper-text-color); }
+.bldsummary .bldmiss { display: none; }
+.bldsummary .bldassets:empty { display: none; }
+.bldsummary .bldruined { font-style: italic; }
+.bldmatrix .bldprov, .bldmatrix .bldheaders,
+.bldmeasuring .bldprov, .bldmeasuring .bldheaders {
+  display: grid; grid-template-columns: var(--building-columns); align-items: center;
+  column-gap: 10px;
+}
+.bldmatrix .bldheaders, .bldmeasuring .bldheaders { padding: 8px 10px; border: 1px solid transparent; }
+.bldmatrix .bldassets, .bldmeasuring .bldassets { display: contents; }
+.bldmatrix .bldmiss, .bldmeasuring .bldmiss { display: block; }
+.bldmatrix .bldempty, .bldmeasuring .bldempty { display: none; }
+.bldmeasuring .bldgrid { width: max-content; }
+.bldmeasuring .bldname, .bldmeasuring .bldcell { white-space: nowrap; }
 .warnote { border-color: #8a4030; }
 .character-war-campaign {
   min-width: 0; margin-top: 12px; padding: 12px;

@@ -1234,6 +1234,57 @@ window.FB = window.FB || {};
     });
   }
 
+  let buildingSummaryObserver = null;
+  function fitBuildingSummaries() {
+    document.querySelectorAll('.bldsummary').forEach(function (summary) {
+      const grid = summary.querySelector('.bldgrid');
+      const header = grid.querySelector('.bldheaders');
+      const available = grid.clientWidth;
+      if (!available || summary._buildingFitWidth === available) return;
+      summary._buildingFitWidth = available;
+      if (!header) return;
+      const scroller = $('sidebody'), scroll = scroller.scrollTop;
+      // Measure the actual localized content, including counts and row padding.
+      // Both presentations retain the same buttons and modal return targets.
+      summary.style.setProperty('--building-columns',
+        'repeat(' + header.children.length + ', max-content)');
+      summary.classList.add('bldmeasuring');
+      const widths = [];
+      grid.querySelectorAll('.bldheaders, .bldprov').forEach(function (row) {
+        const cells = row.querySelectorAll('.bldname, .bldcell');
+        cells.forEach(function (cell, i) {
+          widths[i] = Math.max(widths[i] || 0,
+            Math.ceil(cell.getBoundingClientRect().width));
+        });
+      });
+      const rowStyle = window.getComputedStyle(grid.querySelector('.bldprov'));
+      const minimum = widths.reduce(function (sum, width) { return sum + width; }, 0) +
+        parseFloat(rowStyle.paddingLeft) + parseFloat(rowStyle.paddingRight) +
+        parseFloat(rowStyle.borderLeftWidth) + parseFloat(rowStyle.borderRightWidth) +
+        (widths.length - 1) * parseFloat(rowStyle.columnGap);
+      summary.style.setProperty('--building-columns', widths.map(function (width, i) {
+        return i ? width + 'px' : 'minmax(' + width + 'px, 1fr)';
+      }).join(' '));
+      summary.classList.remove('bldmeasuring');
+      summary.classList.toggle('bldmatrix', minimum <= available);
+      scroller.scrollTop = scroll;
+    });
+  }
+
+  function observeBuildingSummaries(box) {
+    if (buildingSummaryObserver) buildingSummaryObserver.disconnect();
+    fitBuildingSummaries();
+    if (window.ResizeObserver) {
+      if (!buildingSummaryObserver) {
+        buildingSummaryObserver = new window.ResizeObserver(fitBuildingSummaries);
+      }
+      box.querySelectorAll('.bldsummary').forEach(function (summary) {
+        buildingSummaryObserver.observe(summary);
+      });
+    }
+  }
+  window.addEventListener('resize', fitBuildingSummaries);
+
   function deedStaticSectionHtml(s, section) {
     let h = '';
     switch (section.type) {
@@ -1343,9 +1394,11 @@ window.FB = window.FB || {};
         for (const site of bldSites) {
           const bp = site.provinceId, cells = {};
           for (const e of FB.builtIn(s, bp)) {
-            if (e.s !== site.settlement || e.ruined || !FBDATA.buildings[e.id]) continue;
+            if (e.s !== site.settlement || !FBDATA.buildings[e.id]) continue;
             if (FB.isFortificationBuilding(e.id) && !FB.canManageCountyBuildings(s, bp)) continue;
-            cells[e.id] = (cells[e.id] || 0) + 1;
+            if (!cells[e.id]) cells[e.id] = { count:0, ruins:0 };
+            if (e.ruined) cells[e.id].ruins++;
+            else cells[e.id].count++;
             bldTypes[e.id] = true;
           }
           bldByProv[bp + ':' + site.settlement] = cells;
@@ -1353,41 +1406,53 @@ window.FB = window.FB || {};
         const bldCols = [];
         for (const id in FBDATA.buildings) if (bldTypes[id]) bldCols.push(id);
         if (bldSites.length) {
-          let grid = '<span class="bldprov bldcolhead"></span>';
-          for (const id of bldCols) {
-            const d = FBDATA.buildings[id];
-            grid += '<span class="bldcell bldcolhead" title="' +
-              esc(dt(s, 'building', id, d, 'name')) + '">' + d.icon + '</span>';
+          let grid = '';
+          if (bldCols.length) {
+            grid += '<div class="bldheaders" aria-hidden="true"><span class="bldname">' +
+              esc(FB.T('Settlement')) + '</span>';
+            for (const id of bldCols) {
+              const d = FBDATA.buildings[id];
+              grid += '<span class="bldcell bldcolhead">' +
+                esc(dt(s, 'building', id, d, 'name')) + '</span>';
+            }
+            grid += '</div>';
           }
           for (const site of bldSites) {
             const bp = site.provinceId;
             const settlement = FB.settlementsOf(s, bp)[site.settlement];
             const cells = bldByProv[bp + ':' + site.settlement];
-            grid += '<button type="button" class="bldprov" data-bldprov="' +
+            grid += '<button type="button" class="bldprov" id="bldsite-' +
+              esc(bp) + '-' + site.settlement + '" data-bldprov="' +
               esc(bp) + '" data-bldsett="' + site.settlement + '" title="' +
               esc(FB.T('See the buildings of {settlement}', {
                 settlement: settlement.name
-              })) + '">' + esc(settlement.name) + '</button>';
+              })) + '"><span class="bldname">' + esc(settlement.name) +
+              '</span><span class="bldassets">';
             for (const id of bldCols) {
               const d = FBDATA.buildings[id];
               const name = dt(s, 'building', id, d, 'name');
-              const n = cells[id] || 0;
-              if (n) {
-                grid += '<span class="bldcell" title="' + esc(name) +
-                  (n > 1 ? ' ×' + n : '') + '">' + d.icon +
-                  (n > 1 ? '<span class="bldcnt">' + n + '</span>' : '') +
-                  '</span>';
+              const counts = cells[id];
+              if (counts) {
+                grid += '<span class="bldcell"><span aria-hidden="true">' +
+                  esc(d.icon) + '</span> ';
+                if (counts.count) grid += '<span class="bldstanding">' +
+                  esc(FB.T('{building} ×{count}', { building:name, count:counts.count })) + '</span>';
+                if (counts.count && counts.ruins) grid += '<br>';
+                if (counts.ruins) grid += '<span class="bldruined">' +
+                  esc(FB.T('{building} ×{count} (ruined)', { building:name, count:counts.ruins })) + '</span>';
+                grid += '</span>';
               } else {
                 const none = FB.T('No {building}', { building: name });
-                grid += '<span class="bldcell bldmiss" title="' + esc(none) +
-                  '" aria-label="' + esc(none) + '">·</span>';
+                grid += '<span class="bldcell bldmiss">' + esc(none) + '</span>';
               }
             }
+            grid += '</span>';
+            if (!Object.keys(cells).length) grid += '<span class="bldempty">' +
+              esc(FB.T('No buildings')) + '</span>';
+            grid += '</button>';
           }
           h += '<div class="progressnote bldsummary"><span class="bldhead">🏗 ' +
-            esc(FB.T('Buildings')) + '</span><div class="bldgrid" style="' +
-            'grid-template-columns:minmax(96px,1fr)' + (bldCols.length ? ' repeat(' +
-            bldCols.length + ', 24px)' : '') + '">' + grid + '</div></div>';
+            esc(FB.T('Buildings')) + '</span><div class="bldgrid">' + grid + '</div></div>';
         }
       }
       break;
@@ -1431,6 +1496,10 @@ window.FB = window.FB || {};
     const scroller = $('sidebody');
     const retaining = actionsRenderedState === s;
     const retainedScroll = retaining ? scroller.scrollTop : 0;
+    const retainedBuildingButtons = {};
+    if (retaining) box.querySelectorAll('[data-bldprov]').forEach(function (button) {
+      retainedBuildingButtons[button.id] = button;
+    });
     const oldFocus = document.activeElement;
     let retainedFocus = null;
     if (retaining && oldFocus && box.contains(oldFocus)) {
@@ -1775,6 +1844,14 @@ window.FB = window.FB || {};
       });
     });
     box.querySelectorAll('[data-bldprov]').forEach(function (btn) {
+      const retained = retainedBuildingButtons[btn.id];
+      if (retained) {
+        // Modal history can still hold this exact trigger while Deeds refreshes.
+        retained.innerHTML = btn.innerHTML;
+        retained.title = btn.title;
+        btn.parentNode.replaceChild(retained, btn);
+        return;
+      }
       btn.addEventListener('click', function () {
         const pid = btn.dataset.bldprov;
         FB.map.centerOn(pid);
@@ -1878,6 +1955,7 @@ window.FB = window.FB || {};
       });
     });
     FB.localizeTree(box);
+    observeBuildingSummaries(box);
     if (SH.bindCardInfoToggles) SH.bindCardInfoToggles(box);
     actionsRenderedState = s;
     actionsRenderedLocale = FB.locale;

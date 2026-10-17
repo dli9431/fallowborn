@@ -338,7 +338,7 @@ test('raises buildings in two held counties from the narrow county ledger',
     expect(built).toEqual({ home:1, other:1 });
   });
 
-test('deeds icon grid includes every held settlement including empty sites',
+test('deeds building summary includes every held settlement including empty sites',
   async function ({ page }, testInfo) {
     await openGame(page, testInfo);
     await startDeterministicGame(page);
@@ -387,31 +387,28 @@ test('deeds icon grid includes every held settlement including empty sites',
     await expect(page.locator('#tab-actions')).toContainText('Settlements:');
     await expect(page.locator('#tab-actions')).not.toContainText('Direct settlements:');
 
-    // one column per building type standing in the demesne, in data order
+    // Only actual assets contribute types, in data order. Ruins stay visible.
     const heads = grid.locator('.bldcell.bldcolhead');
     await expect(heads).toHaveCount(3);
-    await expect(heads.nth(0)).toHaveText('⚙');
-    await expect(heads.nth(1)).toHaveText('🌾');
-    await expect(heads.nth(2)).toHaveText('⚖');
+    await expect(heads.nth(0)).toHaveText('Watermill');
+    await expect(heads.nth(1)).toHaveText('Granary');
+    await expect(heads.nth(2)).toHaveText('Market Square');
 
     // both counties appear as clickable name cells
     const countyCells = grid.locator('button.bldprov');
     await expect(countyCells).toHaveCount(names.held);
 
-    // the two watermills fold into one cell with a count badge
-    const millPair = grid.locator('.bldcell[title="Watermill ×2"]');
+    // Visible localized labels carry counts without requiring hover.
+    const millPair = grid.locator('.bldstanding').filter({ hasText:'Watermill ×2' });
     await expect(millPair).toHaveCount(1);
-    await expect(millPair.locator('.bldcnt')).toHaveText('2');
-
-    // gaps read as dimmed markers: home lacks a market, the other county's
-    // ruined watermill does not fill its mill cell, and it has no granary
-    await expect(grid.locator('.bldcell.bldmiss[title="No Market Square"]'))
+    await expect(grid.locator('.bldruined')).toHaveText('Watermill ×1 (ruined)');
+    await expect(grid.locator('.bldcell.bldmiss').filter({ hasText:'No Market Square' }))
       .toHaveCount(names.held - 1);
-    await expect(grid.locator('.bldcell.bldmiss[title="No Watermill"]'))
+    await expect(grid.locator('.bldcell.bldmiss').filter({ hasText:'No Watermill' }))
+      .toHaveCount(names.held - 2);
+    await expect(grid.locator('.bldcell.bldmiss').filter({ hasText:'No Granary' }))
       .toHaveCount(names.held - 1);
-    await expect(grid.locator('.bldcell.bldmiss[title="No Granary"]'))
-      .toHaveCount(names.held - 1);
-    await expect(grid.locator('.bldcell[title="Market Square"]:not(.bldcolhead)'))
+    await expect(grid.locator('.bldstanding').filter({ hasText:'Market Square ×1' }))
       .toHaveCount(1);
 
     // clicking a county name opens its head settlement's sheet
