@@ -1,0 +1,17 @@
+{
+  "name": "Two existing courts",
+  "startScenarios": [
+    { "id":"inherited_court_example", "bookmarkIds":["1066"], "alwaysUnlocked":true,
+      "name":"English court example", "desc":"An existing court whose faith follows its capital.",
+      "fixedProvinceId":"london", "rulerRealmId":"england_1066", "characterName":"Harold Godwinson",
+      "sex":"m", "startCulture":"english", "startReligion":"catholic", "governmentForm":"territorial",
+      "onboarding":"ruler", "tier":6, "profession":"noble", "gold":20, "prestige":0, "piety":0,
+      "familyPresets":{"standard":{}}, "intro":"Your existing court awaits." },
+    { "id":"explicit_court_example", "bookmarkIds":["476"], "alwaysUnlocked":true,
+      "name":"Dalmatian court example", "desc":"An existing court with an explicit faith.",
+      "fixedProvinceId":"split", "rulerRealmId":"croatia", "characterName":"Julius Nepos",
+      "sex":"m", "startCulture":"roman", "startReligion":"nicene", "governmentForm":"roman_civic",
+      "onboarding":"ruler", "tier":6, "profession":"noble", "gold":20, "prestige":0, "piety":0,
+      "familyPresets":{"standard":{}}, "intro":"Your existing court awaits." }
+  ]
+}

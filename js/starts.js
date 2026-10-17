@@ -14,6 +14,11 @@
       name:seed.name,sex:seed.sex || 'm',culture:province.culture
     } : null;
   };
+  FB.startRulerFaith = function (bookmark, realm) {
+    if (!bookmark || !realm) return null;
+    var capital = (bookmark.provinces || []).find(function (p) { return p.id === realm.capital; });
+    return realm.religion || (capital ? capital.religion : null);
+  };
   /* Birthplace eligibility is pure and declaration-scoped, before a world or
      household exists. All new-campaign entry points share this gate. */
   /* A start's birthplaces rule names where it may begin as a union of typed

@@ -1,5 +1,9 @@
 Composed world-story lists
 
+Household calendar windows
+
+calendar_window compares inclusive [year, season, day] endpoints on the existing 360-day calendar. Data owns expiry and peaceful alternatives, and dates do not establish battles, duties or political results. Technology impact for household_calendar_windows is none: ordinary dated household decisions need no discovery. The calendar-households.json import demonstrates a bounded decision and a separate automatic expiry using the same pure compiler and shared story consumer. Existing records retain their schema and exact definition fingerprint.
+
 Local household observers
 
 Foundation, partition, living-family settlement, diplomatic and holy-war adapters read committed source records. Inheritance agreement and execution are separate milestones. Pressure requires its matching ordinary war; religious calls require the actual live campaign and outcomes its matching nonhistorical history. Grant reach uses the saved counties and current holder, while quiet closures require previous local reach. Source-party life and generation join the reviewed facts. No new observer save fields are needed. Technology impact extends household_world_notices with mode none: these local reports and personal responses require no discovery, and every underlying transaction retains its own eligibility. The household-settlement-observers.json import supplies independent diplomatic and inheritance configurations.

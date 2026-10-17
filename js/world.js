@@ -1263,7 +1263,7 @@ window.FB = window.FB || {};
         var startingRealm = realms[start.rulerRealmId], ruler = FB.startRulerProfile(definition, startingRealm, start.governmentForm);
         if (!startingRealm) fault(owner, 'unknown ruler realm ' + start.rulerRealmId + '.');
         else if (!ruler || ruler.name !== start.characterName || ruler.sex !== start.sex ||
-            ruler.culture !== start.startCulture || startingRealm.religion !== start.startReligion ||
+            ruler.culture !== start.startCulture || FB.startRulerFaith(definition, startingRealm) !== start.startReligion ||
             platform.governments[start.rulerRealmId] !== start.governmentForm ||
             FB.realmRank.tier({ rank:startingRealm.rank, formId:start.governmentForm, era:platform.era }, {}) !== start.tier)
           fault(owner, 'existing ruler identity, government and rank must match realm ' + start.rulerRealmId + '.');

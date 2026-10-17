@@ -8,6 +8,12 @@ FBDATA.events = FBDATA.events || [];
   FBDATA.eventPacks.travel = { eras:['late_antique','early_medieval','high_medieval'] };
 
 FBDATA.events.push(
+{ id:'thegn_london_arrival_1066', title:'A Visitor in London',
+  trigger:{ never:true }, travel:{ kind:'capstone', purpose:'thegn_south_1066' },
+  text:'You have reached London. Your relatives and private property remain at home. Work here needs its own agreement, and any later household move follows the ordinary residence rules.',
+  options:[{ label:'Begin the stay.', desc:'Remain a visitor without wages, enlistment, land or an immediate household move.',
+    effects:{ custom:'travel_capstone_done' } }]
+},
 { id:'household_nicaea_arrival_1204', title:'A Temporary Foothold',
   trigger:{ never:true }, travel:{ kind:'capstone', purpose:'constantinople_resettlement_1204' },
   text:'You have reached Nicaea. Your family remains at its permanent home. Ordinary local work and residence may make a later household move possible; the journey guarantees no appointment, protection or house.',

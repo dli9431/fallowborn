@@ -1,0 +1,30 @@
+{
+  "name":"Calendar household examples",
+  "storyInstances":{
+    "calendar_choice_example":{
+      "id":"calendar_choice_example", "type":"household_track", "title":"An autumn choice", "intro":"A dated household plan.",
+      "homeProvinceId":"paris", "continuity":"household", "initialStage":"waiting",
+      "stages":{
+        "waiting":{"name":"An autumn window", "text":"Decide during the first eight days of autumn.", "choices":[
+          {"id":"decide", "label":"Record the plan", "detail":"A costless decision.", "when":{"kind":"calendar_window","firstDay":[867,2,1],"lastDay":[867,2,8]}, "operation":{"kind":"record_decision"}, "next":"done"}
+        ],"transitions":[{"when":{"kind":"calendar_window","firstDay":[867,2,9],"lastDay":[10000,3,90]},"next":"expired"}]},
+        "done":{"name":"Plan recorded","text":"The decision was made.","terminal":true,"choices":[],"transitions":[]},
+        "expired":{"name":"Window closed","text":"The decision was left open.","terminal":true,"choices":[],"transitions":[]}
+      }
+    },
+    "calendar_expiry_example":{
+      "id":"calendar_expiry_example", "type":"household_track", "title":"A winter deadline", "intro":"A different household ends its wait in winter.",
+      "homeProvinceId":"aachen", "continuity":"household", "initialStage":"waiting",
+      "stages":{
+        "waiting":{"name":"Before winter", "text":"The household may close its plan early.", "choices":[
+          {"id":"finish", "label":"Finish early", "detail":"A costless decision.", "operation":{"kind":"record_decision"}, "next":"done"}
+        ],"transitions":[{"when":{"kind":"calendar_window","firstDay":[867,3,1],"lastDay":[10000,3,90]},"next":"done"}]},
+        "done":{"name":"Wait ended","text":"No historical event is implied.","terminal":true,"choices":[],"transitions":[]}
+      }
+    }
+  },
+  "startScenarios":[
+    {"id":"calendar_choice_start","name":"Autumn household","desc":"A bounded decision.","intro":"A household considers autumn.","bookmarkIds":["867"],"fixedProvinceId":"paris","alwaysUnlocked":true,"tier":1,"profession":"farmer","gold":20,"prestige":0,"piety":0,"tracks":["calendar_choice_example"]},
+    {"id":"calendar_expiry_start","name":"Winter household","desc":"A winter expiry.","intro":"A household considers winter.","bookmarkIds":["867"],"fixedProvinceId":"aachen","alwaysUnlocked":true,"tier":1,"profession":"farmer","gold":20,"prestige":0,"piety":0,"tracks":["calendar_expiry_example"]}
+  ]
+}
