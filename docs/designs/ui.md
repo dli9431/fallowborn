@@ -6,6 +6,10 @@ Construction group reviews
 
 Building ledger cards show shared county occupancy including ruins and the remaining number allowed by both group and existing per-id limits. Unavailable cards and Details use the same localized construction-group reason as the purchase gate. Grouped demolition reviews explain removal, no refund, freed capacity and the effect on record-derived repeat prices. Existing grouped ruins offer both ordinary repair and deliberate demolition. The existing settlement, ledger, disclosure and modal navigation controls retain their shared behavior.
 
+Settlement building summaries
+
+The Deeds household Buildings card uses full-width settlement buttons with wrapping names, localized asset names and explicit standing and ruined counts. Empty settlements have a localized No buildings summary; unavailable catalogue entries do not appear as assets. Each target is at least 44 CSS pixels high with visible keyboard focus. A matrix appears only after its intrinsic localized widths, counts, gaps, borders and padding fit the measured card container. Resizing that container reuses the same buttons, with window resize as a fallback where ResizeObserver is absent. No horizontal scroller is required. Redraws retain each surviving county/site button so ordinary settlement, construction, rename and detail navigation can restore focus and the Deeds scroll position through Back, Cancel, Escape and browser Back. This changes presentation only, with no technology decision.
+
 Court cultivation preview
 
 The ruler checklist offers Review a court story only while an attached story card exists, or after that review has already been completed. A court without stories continues through Rank & Realm and advancing time. It receives no fabricated story receipt or completion flag. This presentation adjustment adds no capability or technology dependency; existing story navigation, Back, dismissal and restore behavior remain shared.
