@@ -1,5 +1,9 @@
 Authored royal courts and succession
 
+Spring 568 first-pass courts
+
+The Italy, Iran/Caucasus, central European, northern Iberian and western British blocks in data/bookmark_568_scaffold_a.js stage 22 courts. Khosrow I is the single named incumbent; uncertain local incumbents are generated campaign principals, born 533 as a working age choice, without copied ancestors or spouses. Local courts use regnum as a limited first-pass continuity model. The Sasanian court retains aristocratic_monarchy through date-owned administration and recognition profiles with three anonymous provincial interests, one anonymous governor and an empty declared royal family. Numeric terms and weights are simulation choices. Complete composition publishes each block's administrationProfiles and aristocraticProfiles into the existing catalogues before validation. No new strategy, state record or independently gateable capability is added. Existing recognition, appointment, consent and succession consumers keep their current technology rules.
+
 Conditional court foundations
 
 FB.foundPolity(state, definition, counties, formerRealmId) establishes a declared independent court only on the eligible counties supplied by a conditional foundation story or an earned revolt settlement. It refuses an existing realm id, unknown or impassable counties, duplicate counties, inconsistent former ownership and player-controlled holders. It uses ordinary government, treasury, technology inheritance, transfer and eager royal-court creation transactions. The declared ruler becomes a normal materialized character with ordinary dynastic succession. Source communities, other surviving source counties and armies are preserved. Eligibility and bounded historical outcomes belong to the reusable polity_foundation story, not a date selector in the world engine. This baseline local independence capability has technology impact none.

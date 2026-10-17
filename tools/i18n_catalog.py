@@ -876,6 +876,22 @@ def extract_scaffold_regions(inv: Inventory) -> None:
                     for branch, record, line in branch_records(slot.get("name")):
                         inv.add(f"settlement.{bookmark_id}.{site_id}.name.{branch}", record,
                                 f"{rel}:{line}", "Regional first-pass settlement name.", ())
+            for table, namespace in (("administrationProfiles", "administrationProfile"),
+                                     ("aristocraticProfiles", "aristocraticProfile")):
+                for profile_id, profile_node in (node_object(declaration.get(table)) or {}).items():
+                    profile = node_object(profile_node) or {}
+                    for branch, record, line in branch_records(profile.get("name")):
+                        inv.add(f"{namespace}.{profile_id}.name.{branch}", record,
+                                f"{rel}:{line}", "Staged regional court policy name.", ())
+                    if table == "aristocraticProfiles":
+                        for interest_node in node_array(profile.get("interests")) or []:
+                            interest = node_object(interest_node) or {}
+                            interest_id = node_string(interest.get("id"))
+                            if not interest_id:
+                                continue
+                            for branch, record, line in branch_records(interest.get("name")):
+                                inv.add(f"aristocraticInterest.{profile_id}.{interest_id}.name.{branch}",
+                                        record, f"{rel}:{line}", "Staged regional provincial interest.", ())
 
 
 def extract_structured(inv: Inventory) -> None:
