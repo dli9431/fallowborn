@@ -1,0 +1,46 @@
+{
+  "name": "Finite household work examples",
+  "storyInstances": {
+    "quay_work_example": {
+      "id": "quay_work_example", "type": "household_track", "title": "A short delivery", "intro": "An invented funded delivery with a disputed balance.",
+      "homeProvinceId": "paris", "continuity": "household", "initialStage": "offer",
+      "requirements": {"realms": ["west_francia"], "provinces": ["paris"]},
+      "jobs": {"delivery": {"payerRealmId": "west_francia", "provinceId": "paris", "days": 3, "fee": 4, "completionGold": 2, "settlementGold": 1, "expiresDays": 30, "yearMin": 867, "yearMax": 870}},
+      "stages": {
+        "offer": {"name": "A funded offer", "text": "Reserve the fee and work the first day, or decline.", "choices": [
+          {"id": "accept", "label": "Work the first day", "detail": "Three action days for four gold, with two gold paid on completion.", "operation": {"kind": "start_job", "jobId": "delivery"}, "next": "work"},
+          {"id": "decline", "label": "Decline", "detail": "Spend nothing.", "operation": {"kind": "record_decision"}, "next": "done"}
+        ], "transitions": []},
+        "work": {"name": "Work in progress", "text": "Each shift fills one action day.", "choices": [
+          {"id": "shift", "label": "Work a day", "detail": "Replace Daily Focus for this day.", "operation": {"kind": "work_job", "jobId": "delivery"}, "next": "work"}
+        ], "transitions": [
+          {"when": {"kind": "job_state", "jobId": "delivery", "states": ["disputed"]}, "next": "account"},
+          {"when": {"kind": "job_state", "jobId": "delivery", "states": ["cancelled", "expired"]}, "next": "done"}
+        ]},
+        "account": {"name": "The remaining account", "text": "The remaining two gold are held in escrow.", "choices": [
+          {"id": "settlement", "label": "Take one gold", "detail": "The other gold returns to the payer.", "operation": {"kind": "settle_job", "jobId": "delivery", "resolution": "settlement"}, "next": "done"},
+          {"id": "hearing", "label": "Spend a day at a hearing", "detail": "Recover the two gold still owed.", "operation": {"kind": "settle_job", "jobId": "delivery", "resolution": "hearing"}, "next": "done"},
+          {"id": "waive", "label": "Abandon the balance", "detail": "Refund the unpaid balance.", "operation": {"kind": "settle_job", "jobId": "delivery", "resolution": "waive"}, "next": "done"}
+        ], "transitions": [{"when": {"kind": "job_state", "jobId": "delivery", "states": ["cancelled", "expired"]}, "next": "done"}]},
+        "done": {"name": "Account closed", "text": "Ordinary household life continues.", "terminal": true, "choices": [], "transitions": []}
+      }
+    },
+    "hill_work_example": {
+      "id": "hill_work_example", "type": "household_track", "title": "A maintenance day", "intro": "A different one-day job pays its entire fee on completion.",
+      "homeProvinceId": "aachen", "continuity": "household", "initialStage": "offer",
+      "requirements": {"realms": ["lotharingia"], "provinces": ["aachen"]},
+      "jobs": {"maintenance": {"payerRealmId": "lotharingia", "provinceId": "aachen", "days": 1, "fee": 8, "completionGold": 8, "settlementGold": 0, "expiresDays": 10, "yearMin": 867, "yearMax": 869}},
+      "stages": {
+        "offer": {"name": "A maintenance offer", "text": "One local action day, paid from the living court's treasury.", "choices": [
+          {"id": "accept", "label": "Work for eight gold", "detail": "Reserve and earn the entire fee in one action day.", "operation": {"kind": "start_job", "jobId": "maintenance"}, "next": "done"},
+          {"id": "decline", "label": "Keep the day free", "detail": "Spend nothing.", "operation": {"kind": "record_decision"}, "next": "done"}
+        ], "transitions": []},
+        "done": {"name": "The day is over", "text": "No further payment can be claimed.", "terminal": true, "choices": [], "transitions": []}
+      }
+    }
+  },
+  "startScenarios": [
+    {"id": "quay_work_example_start", "name": "Delivery household", "desc": "A finite paid-work example.", "intro": "Consider a delivery.", "bookmarkIds": ["867"], "fixedProvinceId": "paris", "alwaysUnlocked": true, "tier": 1, "profession": "farmer", "gold": 40, "prestige": 5, "piety": 0, "tracks": ["quay_work_example"], "trackLocations": {"quay_work_example": ["paris"]}},
+    {"id": "hill_work_example_start", "name": "Maintenance household", "desc": "An independent paid-work example.", "intro": "Consider maintenance.", "bookmarkIds": ["867"], "fixedProvinceId": "aachen", "alwaysUnlocked": true, "tier": 1, "profession": "farmer", "gold": 40, "prestige": 5, "piety": 0, "tracks": ["hill_work_example"], "trackLocations": {"hill_work_example": ["aachen"]}}
+  ]
+}

@@ -10,6 +10,15 @@
   function sovereign(s, id) { return s.owner[id] ? FB.topRealm(s, s.owner[id]) : null; }
   function living(s) { var c = s.chars[s.player.charId]; return !!c && !c.dead && !s.player.dead; }
   function shadow(s) { return Object.assign({}, s, { player:JSON.parse(JSON.stringify(s.player)) }); }
+  function dayOperation(op) {
+    return op.kind === 'start_job' || op.kind === 'work_job' || op.kind === 'spend_day' ||
+      op.kind === 'settle_job' && op.resolution === 'hearing';
+  }
+  function freeDay(s) {
+    var p = s.player, c = s.chars[p.charId], f = p.flags || {};
+    return living(s) && FB.ageOf(c, s.date.year) >= 16 && !p.travel && !p.war && !f.in_prison &&
+      !(FB.intrigueCaptivityOf && FB.intrigueCaptivityOf(s, p.charId)) && !FB.atWarPersonally(s);
+  }
   function household(s) {
     var ids = Object.keys(s.stories || {});
     for (var i = 0; i < ids.length; i++) {
@@ -34,6 +43,11 @@
     return null;
   }
   FB.householdStories = { householdId:household, receiptKey:receiptKey, receipt:receipt,
+    commitDay:function (s, action) {
+      var story = FB.stories.get(action.storyId), t = FB.stories.record(s, action.storyId);
+      return !!(story && t && story.declaration && story.declaration.type === 'household_track' &&
+        story.apply(s, t, action.choiceId, action.reviewed, true));
+    },
     owner:function (s, key) {
       var list = FB.stories.list();
       for (var i = 0; i < list.length; i++) {
@@ -47,13 +61,26 @@
   function validate(def, context) {
     function need(ok, field) { if (!ok) throw new Error('Invalid household track: ' + field + '.'); }
     need(keys(def, ['id','type','title','intro','homeProvinceId','continuity','initialStage',
-      'stages','requires','requirements','registrationBefore','registrationAfter']), 'fields');
+      'stages','jobs','requires','requirements','registrationBefore','registrationAfter']), 'fields');
     need(typeof def.title === 'string' && def.title.length > 0 && def.title.length <= 240 &&
       typeof def.intro === 'string' && def.intro.length <= 4000, 'presentation');
     need(slug(def.homeProvinceId) && def.continuity === 'household', 'home or continuity');
     need(plain(def.stages) && Object.keys(def.stages).length > 0 && Object.keys(def.stages).length <= 64 &&
       slug(def.initialStage) && own(def.stages, def.initialStage), 'stages');
     function dependency(id) { need((def.requires || []).indexOf(id) >= 0 && context.get(id), 'story dependency'); }
+    var jobs = def.jobs || {};
+    need(plain(jobs) && Object.keys(jobs).length <= 8, 'jobs');
+    Object.keys(jobs).forEach(function (id) {
+      var j = jobs[id], req = def.requirements || {};
+      need(slug(id) && keys(j, ['payerRealmId','provinceId','days','fee','completionGold','settlementGold','expiresDays','yearMin','yearMax']), 'job fields');
+      need(slug(j.payerRealmId) && slug(j.provinceId) && (req.realms || []).indexOf(j.payerRealmId) >= 0 &&
+        (req.provinces || []).indexOf(j.provinceId) >= 0, 'job references');
+      need(integer(j.days) && j.days >= 1 && j.days <= 30 && integer(j.fee) && j.fee >= 1 && j.fee <= 1000 &&
+        integer(j.completionGold) && j.completionGold <= j.fee && integer(j.settlementGold) &&
+        j.settlementGold <= j.fee - j.completionGold && integer(j.expiresDays) &&
+        j.expiresDays >= j.days && j.expiresDays <= 360 && integer(j.yearMin) && integer(j.yearMax) &&
+        j.yearMin <= j.yearMax && j.yearMax <= 10000, 'job bounds');
+    });
     var predicateCount = 0;
     function predicate(p, depth) {
       if (p === undefined) return;
@@ -73,6 +100,13 @@
           (!p.cultureId || own(FBDATA.cultures, p.cultureId)) && (!p.faithId || own(FBDATA.religions, p.faithId)), 'identity predicate');
       } else if (p.kind === 'year') {
         need(keys(p, ['kind','min','max']) && integer(p.min) && integer(p.max) && p.min <= p.max && p.max <= 10000, 'year predicate');
+      } else if (p.kind === 'job_state') {
+        need(keys(p, ['kind','jobId','states']) && own(jobs, p.jobId) && Array.isArray(p.states) &&
+          p.states.length > 0 && p.states.length <= 6 && p.states.every(function (v) {
+            return ['missing','working','disputed','settled','cancelled','expired'].indexOf(v) >= 0;
+          }), 'job state');
+      } else if (p.kind === 'job_available' || p.kind === 'job_patron') {
+        need(keys(p, ['kind','jobId']) && own(jobs, p.jobId), 'job condition');
       } else if (p.kind === 'story_state') {
         need(keys(p, ['kind','storyId','stateField','values']) && ['phase','result'].indexOf(p.stateField) >= 0 &&
           Array.isArray(p.values) && p.values.length > 0 && p.values.length <= 16 &&
@@ -91,6 +125,11 @@
           return site.id === op.travelSiteId && purpose && !purpose.targeted && purpose.mode === 'sites';
         }), 'travel terms');
       } else if (op.kind === 'settle_household') need(keys(op, ['kind']), 'settlement terms');
+      else if (op.kind === 'spend_day') need(keys(op, ['kind']), 'day terms');
+      else if (op.kind === 'start_job' || op.kind === 'work_job')
+        need(keys(op, ['kind','jobId']) && own(jobs, op.jobId), 'work terms');
+      else if (op.kind === 'settle_job') need(keys(op, ['kind','jobId','resolution']) && own(jobs, op.jobId) &&
+        ['settlement','hearing','waive'].indexOf(op.resolution) >= 0, 'account terms');
       else need(false, 'unknown operation');
     }
     Object.keys(def.stages).forEach(function (id) {
@@ -160,11 +199,70 @@
       Object.keys(v).forEach(function (k) { scan(v[k]); });
     }
     scan(def.stages);
-    function test(s, p) {
+    scan(def.jobs);
+    function payer(s, j) { return FB.startRealmId(s, j.payerRealmId); }
+    function patron(s, t, id) {
+      var j = def.jobs[id], rid = payer(s, j), r = s.realms[rid];
+      var person = FB.stories.ruler(s, j.payerRealmId);
+      return rid !== 'player' && !!r && r.alive && !!person && !person.dead &&
+        !!t.jobPatrons && !!t.jobPatrons[id] && person.id === t.jobPatrons[id] && sovereign(s, j.provinceId) === rid;
+    }
+    function localJob(s, j) { return s.player.provinceId === j.provinceId && present(s) === j.provinceId; }
+    function availableJob(s, t, id) {
+      var j = def.jobs[id], rid = payer(s, j), r = s.realms[rid];
+      return !!t.jobs && !own(t.jobs, id) && FB.station.isFree(s.player, s) && freeDay(s) && localJob(s, j) && patron(s, t, id) &&
+        s.date.year >= j.yearMin && s.date.year <= j.yearMax &&
+        !Object.keys(s.stories || {}).some(function (sid) {
+          var jobs = s.stories[sid].jobs || {};
+          return Object.keys(jobs).some(function (jid) { return jobs[jid].status === 'working'; });
+        }) && s.treasuryAccounting && s.treasuryAccounting.mode === 'active' && r.treasury &&
+        !r.treasury.retired && FB.treasuryAvailable(s, rid) >= j.fee;
+    }
+    function liveJob(s, t, id) {
+      var j = def.jobs[id], row = t.jobs && t.jobs[id];
+      return !!row && row.workerId === s.player.charId && freeDay(s) && localJob(s, j) &&
+        patron(s, t, id) && row.payerId === payer(s, j) && s.turn < row.expiresTurn && s.date.year <= j.yearMax;
+    }
+    function payWorker(s, row, amount) {
+      s.player.gold += amount; row.paid += amount; row.escrow -= amount;
+    }
+    function refund(s, row) {
+      if (!row.escrow) return;
+      var rid = row.payerId, visited = Object.create(null);
+      while (rid && !visited[rid]) {
+        visited[rid] = true;
+        var r = s.realms[rid], a = r && r.treasury;
+        if (a && a.retired) { rid = a.retirement && a.retirement.recipient; continue; }
+        if (!s.treasuryAccounting || s.treasuryAccounting.mode !== 'active') return;
+        if (FB.treasuryTransfer(s, null, rid, row.escrow)) {
+          row.refunded += row.escrow; row.escrow = 0;
+        }
+        return;
+      }
+      // An absent recipient leaves a refundable balance in this saved escrow.
+    }
+    function finishJob(s, row, status, resolution, payment) {
+      payWorker(s, row, payment); row.status = status; row.resolution = resolution;
+      row.closedTurn = s.turn; refund(s, row);
+    }
+    function reconcileJobs(s, t) {
+      Object.keys(t.jobs || {}).forEach(function (id) {
+        var row = t.jobs[id], j = def.jobs[id];
+        if (row.status !== 'working' && row.status !== 'disputed') { refund(s, row); return; }
+        if (!liveJob(s, t, id)) {
+          var expired = s.turn >= row.expiresTurn || s.date.year > j.yearMax;
+          // Completed work earns its guaranteed fee; an interrupted shift contract
+          // earns only its completed fraction of the undisputed component.
+          var due = row.status === 'disputed' ? row.escrow : Math.floor(j.completionGold * row.daysWorked / j.days) - row.paid;
+          finishJob(s, row, expired ? 'expired' : 'cancelled', 'interrupted', due); t.revision++;
+        }
+      });
+    }
+    function test(s, p, t) {
       if (!p) return true;
-      if (p.all) return p.all.every(function (v) { return test(s, v); });
-      if (p.any) return p.any.some(function (v) { return test(s, v); });
-      if (p.not) return !test(s, p.not);
+      if (p.all) return p.all.every(function (v) { return test(s, v, t); });
+      if (p.any) return p.any.some(function (v) { return test(s, v, t); });
+      if (p.not) return !test(s, p.not, t);
       if (p.kind === 'home') return s.player.provinceId === p.provinceId;
       if (p.kind === 'present') return present(s) === p.provinceId;
       if (p.kind === 'arrived') return !!s.player.travel && s.player.travel.phase === 'arrived' && s.player.travel.destinationId === p.provinceId;
@@ -173,6 +271,9 @@
       if (p.kind === 'identity') { var c = s.chars[s.player.charId]; return !!c && (!p.cultureId || c.culture === p.cultureId) && (!p.faithId || c.religion === p.faithId); }
       if (p.kind === 'year') return s.date.year >= p.min && s.date.year <= p.max;
       if (p.kind === 'at_war') return FB.isRealmAtWar(s, sovereign(s, p.provinceId));
+      if (p.kind === 'job_available') return availableJob(s, t, p.jobId);
+      if (p.kind === 'job_patron') return patron(s, t, p.jobId);
+      if (p.kind === 'job_state') return p.states.indexOf(t.jobs && t.jobs[p.jobId] ? t.jobs[p.jobId].status : 'missing') >= 0;
       var row = FB.stories.record(s, p.storyId);
       return !!row && p.values.indexOf(row[p.stateField]) >= 0;
     }
@@ -202,6 +303,7 @@
     }
     function move(s, t, next) { t.phase = next; t.revision++; t.stageTurn = s.turn; }
     function update(s, t) {
+      reconcileJobs(s, t);
       Object.keys(controls).forEach(function (id) {
         var current = sovereign(s, id), o = t.controls[id];
         if (o.after !== current) t.controls[id] = { before:o.after, after:current, turn:s.turn };
@@ -213,10 +315,19 @@
       var key = incident(s, t, stage);
       if (key && receipt(s, key)) { move(s, t, stage.afterIncident); return; }
       for (var i = 0; i < stage.transitions.length; i++) {
-        if (test(s, stage.transitions[i].when)) { close(s, t, stage, 'expired'); move(s, t, stage.transitions[i].next); return; }
+        if (test(s, stage.transitions[i].when, t)) { close(s, t, stage, 'expired'); move(s, t, stage.transitions[i].next); return; }
       }
     }
-    function operation(s, op) {
+    function operation(s, op, t) {
+      if (op.kind === 'spend_day') return { allowed:freeDay(s), terms:null, reason:FB.T('A free action day at home is required.') };
+      if (op.kind === 'start_job' || op.kind === 'work_job' || op.kind === 'settle_job') {
+        var j = def.jobs[op.jobId], row = t.jobs && t.jobs[op.jobId], rid = payer(s, j);
+        return { allowed:op.kind === 'start_job' ? availableJob(s, t, op.jobId) :
+          liveJob(s, t, op.jobId) && row.status === (op.kind === 'work_job' ? 'working' : 'disputed'),
+          reason:FB.T('The original living payer must still control this county. Work needs a free local day and a funded, unexpired contract.'),
+          terms:{ definition:j, row:row || null, payerId:rid, rulerId:FB.stories.resolve(s, { kind:'realm_ruler', realmId:j.payerRealmId }),
+            funds:FB.treasuryAvailable(s, rid), ready:freeDay(s), patron:patron(s, t, op.jobId), accounting:s.treasuryAccounting && s.treasuryAccounting.mode } };
+      }
       if (op.kind === 'convert_faith') {
         var c = FB.conversionStatus(s, 'faith', op.faithId, op.scope);
         return { allowed:!!c.ok && !!c.encountered, reason:c.reason, terms:c };
@@ -234,7 +345,7 @@
     }
     function quote(s, t, id) {
       var stage = def.stages[t.phase], choice = stage.choices.filter(function (c) { return c.id === id; })[0];
-      var op = choice ? operation(s, choice.operation) : { allowed:false, terms:null };
+      var op = choice ? operation(s, choice.operation, t) : { allowed:false, terms:null };
       var key = incident(s, t, stage), closed = key && receipt(s, key);
       var facts = { turn:s.turn, actor:s.player.charId, alive:living(s), phase:t.phase, revision:t.revision,
         home:s.player.provinceId, presence:present(s), funds:[s.player.gold,s.player.piety,s.player.prestige],
@@ -242,19 +353,47 @@
         control:Object.keys(places).map(function (pid) { return [pid,s.owner[pid],s.holder[pid],sovereign(s, pid)]; }),
         identity:[s.chars[s.player.charId].culture,s.chars[s.player.charId].religion],
         family:FB.householdMembers(s).map(function (c) { return [c.id,!!c.dead,c.religion,c.culture]; }),
-        stageReady:!stage.transitions.some(function (r) { return test(s, r.when); }),
+        stageReady:!stage.transitions.some(function (r) { return test(s, r.when, t); }),
         local:!stage.incident || s.player.provinceId === stage.incident.provinceId && present(s) === stage.incident.provinceId,
-        when:!!choice && test(s, choice.when), incident:key, closed:closed || null, terms:op.terms,
+        when:!!choice && test(s, choice.when, t), incident:key, closed:closed || null, terms:op.terms,
         graph:def };
       if (choice && choice.operation.kind === 'convert_faith') facts.modifier = FBDATA.modifiers && FBDATA.modifiers['zealot_unrest'];
       return { id:id, allowed:!!choice && living(s) && facts.stageReady && facts.local && facts.when && op.allowed &&
         (!stage.incident || !!key && !closed), reason:op.reason || FB.T('The local situation has changed. Review the household again.'),
         facts:facts, stamp:JSON.stringify(facts) };
     }
-    function apply(s, t, id, reviewed) {
+    function apply(s, t, id, reviewed, committingDay) {
       var q = quote(s, t, id);
       if (!q.allowed || !reviewed || reviewed.id !== id || reviewed.stamp !== q.stamp) return false;
       var stage = def.stages[t.phase], choice = stage.choices.filter(function (c) { return c.id === id; })[0], op = choice.operation;
+      if (committingDay && !dayOperation(op)) return false;
+      if (dayOperation(op) && !committingDay) {
+        if (FB.state !== s || !FB.game || FB.game.observe || !FB.game.passDay) return false;
+        var revision = t.revision;
+        FB.game.passDay({ skipFocus:true, householdAction:{ storyId:def.id, choiceId:id, reviewed:reviewed } });
+        return t.revision !== revision;
+      }
+      if (op.kind === 'start_job' || op.kind === 'work_job') {
+        var j = def.jobs[op.jobId], row = t.jobs[op.jobId];
+        if (op.kind === 'start_job') {
+          var rid = payer(s, j);
+          if (!FB.treasuryTransfer(s, rid, null, j.fee)) return false;
+          row = t.jobs[op.jobId] = { payerId:rid, workerId:s.player.charId, openedTurn:s.turn,
+            expiresTurn:s.turn + j.expiresDays, daysWorked:0, paid:0, refunded:0, escrow:j.fee,
+            status:'working', resolution:null, closedTurn:null };
+        }
+        row.daysWorked++;
+        if (row.daysWorked === j.days) {
+          payWorker(s, row, j.completionGold);
+          if (row.escrow) row.status = 'disputed';
+          else finishJob(s, row, 'settled', 'completed', 0);
+        }
+      }
+      if (op.kind === 'settle_job') {
+        var job = t.jobs[op.jobId], terms = def.jobs[op.jobId];
+        finishJob(s, job, 'settled', op.resolution,
+          op.resolution === 'hearing' ? job.escrow : op.resolution === 'settlement' ? terms.settlementGold : 0);
+      }
       if (op.kind === 'convert_faith' && !FB.applyConversion(s, 'faith', op.faithId, op.scope)) return false;
       if (op.kind === 'travel_site' && !FB.travelStart(s, q.facts.terms.purpose, q.facts.terms.destinationId, q.facts.terms.destinationRealm)) return false;
       if (op.kind === 'settle_household' && !FB.travelSettle(s)) return false;
@@ -267,8 +406,15 @@
       init:function (s) {
         var rows = {};
         Object.keys(controls).forEach(function (id) { rows[id] = { before:null, after:sovereign(s, id), turn:null }; });
-        return { version:1, householdId:household(s), actorId:s.player.charId, phase:def.initialStage,
+        var rec = { version:1, householdId:household(s), actorId:s.player.charId, phase:def.initialStage,
           revision:0, stageTurn:s.turn, decisions:{}, controls:rows, householdReceipts:{} };
+        if (def.jobs) {
+          rec.jobs = {}; rec.jobPatrons = {};
+          Object.keys(def.jobs).forEach(function (id) {
+            rec.jobPatrons[id] = FB.stories.resolve(s, { kind:'realm_ruler', realmId:def.jobs[id].payerRealmId });
+          });
+        }
+        return rec;
       },
       title:function () { return FB.T(def.title); }, intro:function () { return FB.T(def.intro); },
       day:update, season:update, year:update,
@@ -279,11 +425,32 @@
           return inc && s.player.provinceId === inc.provinceId && present(s) === inc.provinceId && incident(s, t, def.stages[id]) === key;
         });
       },
-      status:function (s, t) { var stage = def.stages[t.phase]; return { phase:t.phase, name:FB.T(stage.name), lines:[FB.T(stage.text)] }; },
+      status:function (s, t) {
+        var stage = def.stages[t.phase], lines = [FB.T(stage.text)];
+        Object.keys(t.jobs || {}).forEach(function (id) {
+          var row = t.jobs[id];
+          lines.push(FB.T('Work: {days}/{total} action days. Paid: {paid} gold. Held: {held} gold. Refunded: {refunded} gold.',
+            { days:row.daysWorked, total:def.jobs[id].days, paid:row.paid, held:row.escrow, refunded:row.refunded }));
+        });
+        return { phase:t.phase, name:FB.T(stage.name), lines:lines };
+      },
       choices:function (s, t) { return def.stages[t.phase].choices.map(function (c) { return { id:c.id, label:FB.T(c.label), detail:FB.T(c.detail) }; }); },
       quote:quote, apply:apply, blocker:function (s, t, reason) { return reason; },
       review:function (s, t, id, q) {
         var choice = def.stages[t.phase].choices.filter(function (c) { return c.id === id; })[0], op = choice.operation, terms = q.facts.terms;
+        if (op.kind === 'spend_day') return [FB.T('Spend one action day. Daily Focus income is replaced for that day.')];
+        if (op.kind === 'start_job' || op.kind === 'work_job' || op.kind === 'settle_job') {
+          var j = def.jobs[op.jobId], row = t.jobs && t.jobs[op.jobId];
+          return [FB.T('Payer: {name}. Total reserved fee: {fee} gold for {days} action days.',
+            { name:FB.fullName(FB.stories.ruler(s, j.payerRealmId)), fee:j.fee, days:j.days }),
+          FB.T('Paid on completion: {gold} gold. Disputed balance: {balance} gold.', { gold:j.completionGold, balance:j.fee - j.completionGold }),
+          FB.T('Completed working days: {days}. Payment already received: {gold} gold.', { days:row ? row.daysWorked : 0, gold:row ? row.paid : 0 }),
+          op.kind === 'settle_job' ? FB.T('This choice pays {gold} gold from escrow. Unclaimed money returns to the payer.',
+            { gold:op.resolution === 'hearing' ? row.escrow : op.resolution === 'settlement' ? j.settlementGold : 0 }) :
+            FB.T('Work one day now, replacing Daily Focus income. Further shifts require another reviewed action.'),
+          dayOperation(op) ? FB.T('Spend one action day. Daily Focus income is replaced for that day.') : FB.T('This settlement spends no action day.'),
+          FB.T('Interrupted work earns only its completed share of the undisputed fee. Completed work keeps its full reserved entitlement. The contract expires {days} days after acceptance.', { days:j.expiresDays })];
+        }
         if (op.kind === 'convert_faith') return [FB.T('Cost: {piety} piety and {prestige} prestige.', { piety:terms.pietyCost, prestige:terms.prestigeCost }),
           op.scope === 'self' ? FB.T('Only your own faith changes. Your relatives keep theirs.') : FB.T('Household members adopting this faith: {names}.',
             { names:FB.householdMembers(s).filter(function (c) { return !c.dead; }).map(function (c) { return FB.fullName(c); }).join(', ') }),
@@ -303,10 +470,43 @@
       },
       validate:function (t, s) {
         function need(ok) { if (!ok) throw new Error('Invalid household story record: ' + def.id + '.'); }
-        need(keys(t, ['version','householdId','actorId','phase','revision','stageTurn','decisions','controls','householdReceipts']) && t.version === 1 &&
+        need(keys(t, ['version','householdId','actorId','phase','revision','stageTurn','decisions','controls','householdReceipts','jobs','jobPatrons']) && t.version === 1 &&
           typeof t.householdId === 'string' && t.householdId.length > 0 && typeof t.actorId === 'string' && t.actorId.length > 0 &&
           own(def.stages, t.phase) && integer(t.revision) && integer(t.stageTurn) && plain(t.decisions) && plain(t.controls) && plain(t.householdReceipts));
         need(!s || t.stageTurn <= s.turn);
+        need(own(t, 'jobs') === own(t, 'jobPatrons'));
+        if (own(t, 'jobs')) {
+          need(!!def.jobs && plain(t.jobs) && plain(t.jobPatrons) && Object.keys(t.jobs).length <= 8 &&
+            Object.keys(t.jobPatrons).length === Object.keys(def.jobs).length);
+          Object.keys(t.jobPatrons).forEach(function (id) {
+            need(own(def.jobs, id) && (t.jobPatrons[id] === null || typeof t.jobPatrons[id] === 'string'));
+          });
+          Object.keys(t.jobs).forEach(function (id) {
+            var r = t.jobs[id], j = def.jobs[id];
+            need(own(def.jobs, id) && keys(r, ['payerId','workerId','openedTurn','expiresTurn','daysWorked','paid','refunded','escrow','status','resolution','closedTurn']));
+            need(typeof r.payerId === 'string' && r.payerId.length > 0 && typeof r.workerId === 'string' && r.workerId.length > 0 &&
+              integer(r.openedTurn) && r.expiresTurn === r.openedTurn + j.expiresDays && (!s || r.openedTurn <= s.turn) &&
+              integer(r.daysWorked) && r.daysWorked >= 1 && r.daysWorked <= j.days && integer(r.paid) &&
+              integer(r.refunded) && integer(r.escrow) && r.paid + r.refunded + r.escrow === j.fee &&
+              ['working','disputed','settled','cancelled','expired'].indexOf(r.status) >= 0);
+            need(!!t.jobPatrons[id] && (!s || r.payerId === payer(s, j)));
+            need(!s || r.daysWorked <= s.turn - r.openedTurn + 1);
+            var open = r.status === 'working' || r.status === 'disputed';
+            need(open ? r.resolution === null && r.closedTurn === null && r.refunded === 0 :
+              ['completed','settlement','hearing','waive','interrupted'].indexOf(r.resolution) >= 0 &&
+              integer(r.closedTurn) && r.closedTurn >= r.openedTurn && (!s || r.closedTurn <= s.turn));
+            if (r.status === 'working') need(r.daysWorked < j.days && r.paid === 0);
+            if (r.status === 'disputed') need(r.daysWorked === j.days && r.paid === j.completionGold && r.escrow > 0);
+            if (r.status === 'settled') {
+              need(r.daysWorked === j.days);
+              need(r.paid === (r.resolution === 'waive' ? j.completionGold : r.resolution === 'settlement' ?
+                j.completionGold + j.settlementGold : j.fee));
+              need(['completed','settlement','hearing','waive'].indexOf(r.resolution) >= 0);
+            }
+            if (r.status === 'cancelled' || r.status === 'expired') need(r.resolution === 'interrupted' &&
+              r.paid === (r.daysWorked === j.days ? j.fee : Math.floor(j.completionGold * r.daysWorked / j.days)));
+          });
+        }
         need(Object.keys(t.decisions).length <= 64 && Object.keys(t.householdReceipts).length <= 64);
         Object.keys(t.decisions).forEach(function (id) {
           var d = t.decisions[id];
