@@ -2,6 +2,10 @@
 window.FBDATA = window.FBDATA || {};
 
 FBDATA.travelPurposes = {
+  constantinople_resettlement_1204: {
+    name:'Seek a foothold at Nicaea', icon:'🧭', desc:'Go ahead alone and seek a later household move through ordinary residence and local work.',
+    cost:5, minTier:1, maxTier:2, mode:'sites', repeatable:true, eras:['high_medieval'], yearMin:1204, yearMax:1225
+  },
   toledo_refuge_711: {
     name:'Seek refuge in the northern uplands', icon:'🧭',
     desc:'Go ahead alone to seek a foothold for a later household move. The road and its destination promise no protection.',
@@ -77,6 +81,7 @@ FBDATA.travelPurposes = {
 /* A site may restrict a purpose to exact religions or broad religion groups.
    Province ids are stable save/mod ids from data/counties.js. */
 FBDATA.travelSites = [
+  { id:'constantinople_nicaea_1204', purpose:'constantinople_resettlement_1204', provinceId:'nicaea' },
   { id:'toledo_northern_refuge_711', purpose:'toledo_refuge_711', provinceId:'oviedo' },
   { id:'pilgrim_roma', purpose:'pilgrimage', provinceId:'roma',
     religions:['catholic'] },
@@ -152,6 +157,9 @@ FBDATA.balance.frontierSettlementPlots = 1;
 
 /* Mechanical roles and event references are independent of authored purpose ids. */
 FBDATA.travelRules = {
+  constantinople_resettlement_1204: {
+    kind:'service', encounters:'service', arrivalEvent:'household_nicaea_arrival_1204'
+  },
   toledo_refuge_711: {
     kind:'service', encounters:'service', arrivalEvent:'toledo_refuge_arrival_711'
   },

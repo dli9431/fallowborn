@@ -24,6 +24,8 @@ Implemented extension surfaces
 
 The household_track story type supports bounded household graphs, explicit location/identity/date/source conditions, semantic incident references and canonical conversion, sites-mode journey and later settlement adapters. It shares the ordinary story sheet and detached JSON compilation path. The household-graphs.json fixture supplies independent costless and conditional graphs plus a dated journey. Immediate family evacuation, finite work contracts and world-incident delivery are separate capabilities; the type does not implement them by accepting arbitrary effects.
 
+The household-work.json fixture supplies independent artisan and farmer graphs through an ordinary JSON import. They expose the reviewed private-expense and vocational-focus adapters, actual paid-focus completion edges, and protagonist versus household continuity. Civic-right predicates read the existing effective public right. These extensions retain the same semantic record shape and never manufacture wages or imported executable behavior.
+
 Runtime storyInstances uses registered world-story and political-track types. eventChances uses bounded arithmetic or registered chance policies. authorityOffices and legitimacySources expose the existing scoped authority transactions. Government forms compose registered strategies and their effective profiles. Religious institutions, activities and affiliations retain their owning canonical schemas. Existing declarative deeds and focuses retain their bounded resource, choice, training and fallback adapters. Other public keys keep the individual extension limits stated in docs/MODDING.md; metadata editing does not imply an executable extension interface.
 
 Examples and distribution

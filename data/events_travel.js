@@ -8,6 +8,12 @@ FBDATA.events = FBDATA.events || [];
   FBDATA.eventPacks.travel = { eras:['late_antique','early_medieval','high_medieval'] };
 
 FBDATA.events.push(
+{ id:'household_nicaea_arrival_1204', title:'A Temporary Foothold',
+  trigger:{ never:true }, travel:{ kind:'capstone', purpose:'constantinople_resettlement_1204' },
+  text:'You have reached Nicaea. Your family remains at its permanent home. Ordinary local work and residence may make a later household move possible; the journey guarantees no appointment, protection or house.',
+  options:[{ label:'Begin the stay.', desc:'Remain a visitor under the present court, without wages, military enlistment or an immediate family move.',
+    effects:{ custom:'travel_capstone_done' } }]
+},
 { id:'toledo_refuge_arrival_711', title:'A Foothold in the Uplands',
   trigger:{ never:true }, travel:{ kind:'capstone', purpose:'toledo_refuge_711' },
   text:'You have reached the northern uplands. Your relatives remain at home. Local work and residence may make a later household move possible; neither the road nor the current court promises safety.',
