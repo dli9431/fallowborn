@@ -112,6 +112,22 @@ class RevisionContentExtractionTests(unittest.TestCase):
 
 
 class ScaffoldRegionExtractionTests(unittest.TestCase):
+    def test_1241_regional_names_have_scoped_owners(self):
+        inventory = i18n_catalog.Inventory()
+        i18n_catalog.extract_scaffold_regions(inventory)
+        for key, text in (
+            ('realm.1241.kyiv_local_1241.name.default', 'Kyiv local administration'),
+            ('realm.1241.castile_leon_1241.name.default', 'Crowns of Castile and Leon'),
+            ('realm.1241.venice_1241.name.default', 'Venetian commune'),
+            ('province.1241.volodymyr.name.default', 'Volodymyr'),
+            ('kingdom.1241.asturias.name.default', 'León and Castile'),
+            ('settlement.1241.roma.name.default', 'Rome'),
+        ):
+            self.assertEqual(inventory.entries[key]['text'], text)
+            self.assertIn('bookmark_1241_scaffold_b.js', inventory.meta[key]['location'])
+            self.assertIn(i18n_catalog.source_key(text), inventory.entries)
+        self.assertNotIn(i18n_catalog.source_key('Ferdinand III'), inventory.entries)
+
     def test_western_1096_labels_are_registered_by_the_structured_inventory(self):
         inventory = i18n_catalog.Inventory()
         i18n_catalog.extract_structured(inventory)
