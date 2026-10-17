@@ -1,0 +1,47 @@
+{
+  "name": "Local practice eligibility review",
+  "geographies": {
+    "e2e_sahel_faith_lands": {
+      "bounds": {"lonMin": 0, "lonMax": 6, "latMin": 0, "latMax": 5},
+      "land": [[0.5, 0.5, 5.5, 0.5, 5.5, 4.5, 0.5, 4.5]],
+      "gridWidth": 240,
+      "provinces": [
+        {"id": "e2e_sahel_faith_west", "x": 1.5, "y": 2.5, "terrain": "farmland"},
+        {"id": "e2e_sahel_faith_east", "x": 4.5, "y": 2.5, "terrain": "farmland"}
+      ],
+      "seas": [], "rivers": [], "sites": {}, "defaultLayout": null
+    }
+  },
+  "bookmarks": {
+    "1241": {
+      "id": "1241", "name": "Fictional local observances", "hidden": true,
+      "date": {"year": 1241, "season": 0, "day": 1}, "era": "high_medieval",
+      "geography": "e2e_sahel_faith_lands", "settlementLayout": null,
+      "religiousHeads": {}, "localInstitutions": {}, "stories": [], "starts": [],
+      "provinces": [
+        {"id": "e2e_sahel_faith_west", "name": "Western fields", "realm": "e2e_sahel_west_court",
+          "culture": "sahelian_476", "religion": "sahel_local_practice_1241", "dev": 3,
+          "duchy": "e2e_sahel_faith_district", "population0": 12000,
+          "communities": [{"culture": "sahelian_476", "religion": "sahel_local_practice_1241", "populationShare0": 10000}]},
+        {"id": "e2e_sahel_faith_east", "name": "Eastern fields", "realm": "e2e_sahel_east_court",
+          "culture": "sahelian_476", "religion": "sunni", "dev": 3,
+          "duchy": "e2e_sahel_faith_district", "population0": 12000,
+          "communities": [{"culture": "sahelian_476", "religion": "sunni", "populationShare0": 10000}]}
+      ],
+      "realms": [
+        {"id": "e2e_sahel_west_court", "name": "Western court", "capital": "e2e_sahel_faith_west",
+          "color": "#ae8851", "government": "territorial", "rank": 1, "aggression": 0,
+          "religion": "sahel_local_practice_1241",
+          "ruler": {"generated": true, "sex": "f", "culture": "sahelian_476", "born": 1211, "mar": 4, "trait": "patient"}},
+        {"id": "e2e_sahel_east_court", "name": "Eastern court", "capital": "e2e_sahel_faith_east",
+          "color": "#81916b", "government": "territorial", "rank": 1, "aggression": 0,
+          "religion": "sunni",
+          "ruler": {"generated": true, "sex": "m", "culture": "sahelian_476", "born": 1211, "mar": 4, "trait": "patient"}}
+      ],
+      "duchies": {"e2e_sahel_faith_district": {"name": "Field district", "kingdom": "e2e_sahel_faith_country"}},
+      "kingdoms": {"e2e_sahel_faith_country": {"name": "Field country", "empire": "e2e_sahel_faith_horizon"}},
+      "empires": {"e2e_sahel_faith_horizon": {"name": "Field horizon"}},
+      "scripted": [], "straits": [], "crossingClasses": {}
+    }
+  }
+}
