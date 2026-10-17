@@ -2,6 +2,10 @@ Construction applicability presentation
 
 Building Works shows the pure construction-applicability projection's first current blocker on an unavailable building card, alongside its existing price, capacity and disabled Raise control. Calendar, campaign era, target county, resident culture and paying sovereign context are read again on activation before any charge. Fort reviews use the same applicability reason for a new project. Existing settlement and county identity, card Details, keyboard order, scroll, Back and dismissal remain on the shared modal paths. This adds no navigation route or saved display text.
 
+Construction group reviews
+
+Building ledger cards show shared county occupancy including ruins and the remaining number allowed by both group and existing per-id limits. Unavailable cards and Details use the same localized construction-group reason as the purchase gate. Grouped demolition reviews explain removal, no refund, freed capacity and the effect on record-derived repeat prices. Existing grouped ruins offer both ordinary repair and deliberate demolition. The existing settlement, ledger, disclosure and modal navigation controls retain their shared behavior.
+
 Court cultivation preview
 
 The ruler checklist offers Review a court story only while an attached story card exists, or after that review has already been completed. A court without stories continues through Rank & Realm and advancing time. It receives no fabricated story receipt or completion flag. This presentation adjustment adds no capability or technology dependency; existing story navigation, Back, dismissal and restore behavior remain shared.

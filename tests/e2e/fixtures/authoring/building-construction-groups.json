@@ -1,0 +1,29 @@
+{
+  "name": "County construction capacity examples",
+  "buildings": {
+    "review_guest_house": {
+      "name": "Guest House", "icon": "H", "role": "care", "cost": 10, "tax": 1,
+      "desc": "A modest paid guest house.", "aiBuildOrder": -100,
+      "constructionGroup": { "id": "guest_foundations", "maxCounty": 1 }
+    },
+    "review_quiet_house": {
+      "name": "Quiet House", "icon": "Q", "role": "care", "cost": 15, "tax": 2,
+      "desc": "An alternative house on the same county capacity.", "aiBuildOrder": -99,
+      "constructionGroup": { "id": "guest_foundations", "maxCounty": 1 }
+    },
+    "review_workshop": {
+      "name": "Small Workshop", "icon": "W", "role": "industry", "cost": 20, "tax": 3,
+      "desc": "A workshop in a separate two-place group.", "aiBuildOrder": -98,
+      "constructionGroup": { "id": "workshop_foundations", "maxCounty": 2 }
+    },
+    "review_yard": {
+      "name": "Work Yard", "icon": "Y", "role": "industry", "cost": 25, "tax": 4,
+      "desc": "A second member of the two-place group.", "aiBuildOrder": -97,
+      "constructionGroup": { "id": "workshop_foundations", "maxCounty": 2 }
+    },
+    "review_open_hall": {
+      "name": "Open Hall", "icon": "O", "role": "care", "cost": 30,
+      "desc": "An ungrouped building sharing a role with the guest houses."
+    }
+  }
+}

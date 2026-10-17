@@ -181,6 +181,7 @@ window.FB = window.FB || {};
     var errors = [];
     var forts = [];
     var scopeRefs = null;
+    var groups = Object.create(null);
     for (var id in table || {}) {
       if (!Object.prototype.hasOwnProperty.call(table, id)) continue;
       var def = table[id];
@@ -212,6 +213,23 @@ window.FB = window.FB || {};
         buildingScopeFaults(def.applicability, scopeRefs).forEach(function (error) {
           errors.push('Building ' + id + ' ' + error);
         });
+      }
+      if (def.constructionGroup !== undefined) {
+        var group = def.constructionGroup;
+        if (!group || typeof group !== 'object' || Array.isArray(group) ||
+            !Object.prototype.hasOwnProperty.call(group, 'id') ||
+            !Object.prototype.hasOwnProperty.call(group, 'maxCounty') ||
+            Object.keys(group).some(function (key) { return key !== 'id' && key !== 'maxCounty'; }) ||
+            typeof group.id !== 'string' || !/^[a-z][a-z0-9_]{0,63}$/.test(group.id) ||
+            group.id === '__proto__' || group.id === 'constructor' || group.id === 'prototype' ||
+            typeof group.maxCounty !== 'number' || !isFinite(group.maxCounty) ||
+            Math.floor(group.maxCounty) !== group.maxCounty || group.maxCounty < 1 || group.maxCounty > 2048) {
+          errors.push('Building ' + id + ' constructionGroup needs a safe id and integer maxCounty from 1 to 2048, with no other fields.');
+        } else if (groups[group.id] !== undefined && groups[group.id] !== group.maxCounty) {
+          errors.push('Building ' + id + ' constructionGroup disagrees on maxCounty for ' + group.id + '.');
+        } else {
+          groups[group.id] = group.maxCounty;
+        }
       }
     }
     if (forts.length !== 1) {
@@ -483,6 +501,10 @@ window.FB = window.FB || {};
         return result;
       }
     }
+    if (!fort && !repairing && FB.buildingConstructionGroupStatus) {
+      var groupStatus = FB.buildingConstructionGroupStatus(state, pid, FB.fortificationBuildingId());
+      if (!groupStatus.ok) { result.reason = 'construction_group'; return result; }
+    }
     var expected = repairing ? Math.max(1, Math.min(4,
       Math.floor(Number(ruins.ruinedLevel || ruins.level) || 1))) : fort ? result.currentLevel + 1 : 1;
     result.targetLevel = targetLevel || expected;
@@ -555,8 +577,19 @@ window.FB = window.FB || {};
 
   FB.demolishFort = function (state, pid, settlement) {
     if (!playerHolds(state, pid)) return false;
-    var fort = FB.fortAtSettlement(state, pid, settlement, false);
+    var building = FBDATA.buildings[FB.fortificationBuildingId()];
+    var grouped = !!(building && building.constructionGroup);
+    var fort = FB.fortAtSettlement(state, pid, settlement, grouped);
     if (!fort) return false;
+    if (grouped) {
+      var list = rawBuildings(state, pid), at = list.indexOf(fort);
+      if (at < 0) return false;
+      list.splice(at, 1);
+      FB.invalidateFortIndex();
+      if (FB.reconcileSettlementCommunities) FB.reconcileSettlementCommunities(state, pid);
+      if (FB.map) FB.map.request();
+      return true;
+    }
     fort.ruinedLevel = Math.max(1, fort.level ||
       (fort.repairing ? fort.targetLevel : 0) || fort.ruinedLevel || 1);
     fort.ruined = true;
@@ -935,6 +968,8 @@ window.FB = window.FB || {};
     var fort = FB.fortAt(state, pid);
     if (fort && fort.targetLevel) return 0;
     if (!FB.buildingApplicabilityStatus(state, pid, FB.fortificationBuildingId(), rid).ready) return 0;
+    if (!fort && FB.buildingConstructionGroupStatus &&
+        !FB.buildingConstructionGroupStatus(state, pid, FB.fortificationBuildingId()).ok) return 0;
     var next = fort ? (Number(fort.level) || 0) + 1 : 1;
     var highest = highestSupportedLevel(state, rid);
     return next <= highest ? next : 0;
