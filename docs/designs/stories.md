@@ -2,8 +2,6 @@ Composed world-story lists
 
 The 1204 campaign package appends its campaigns to the world-story list already declared by the bookmark. This preserves the independently registered Venetian office contest and its save identity alongside the fifteen dated campaigns.
 
-Stories and start scenarios
-
 Personal ruler agendas
 
 js/story_ruler_agenda.js registers ruler_agenda, a bounded ordered program on the shared story surface. Each review has an authored earliest year and season, choices and an unconditional retain-arrangements alternative. The whole program can be set aside even before its next review date. Agendas bind the original protagonist, source court, ruler generation and any delegated mandate. Death, succession, recall and lost delegated jurisdiction interrupt the unfinished program. A supported change of government does not interrupt a surviving ruler merely because the form changed.
@@ -11,6 +9,8 @@ js/story_ruler_agenda.js registers ruler_agenda, a bounded ordered program on th
 Priority choices record only the decision. Political choices delegate to the existing world-story review, provincial negotiation, collective dues or outside-party mobile-offer transaction. Those owners retain funds, consent, jurisdiction, stale-review and technology checks. Observation choices require a matching canonical story result, effective appointment, current-generation recognition, active mobile agreement or executed collective decision. Opening a sheet is never proof of execution. Initial effective appointments may be reviewed without dismissing an official. Missing parties or institutions leave the retain-arrangements route usable. No agenda pays an additional reward, creates an army, changes a border or schedules a historical death.
 
 Technology impact: ruler_agendas uses none. Scheduling personal reviews and observing or accessing existing political decisions has no credible discovery prerequisite. Each underlying transaction retains its own eligibility and technology rules. The reusable type and its ordinary JSON import share the same bounded declaration validator, review surface and save contract.
+
+Stories and start scenarios
 
 A polity foundation's explicitly authored ruler trait must exist in the effective traits catalogue. It need not remain in rulerTraits, which controls random ruler generation and missing-temperament repair. Replacing that random pool through JSON mods leaves existing foundation declarations intact; an unknown authored trait still fails detached validation.
 

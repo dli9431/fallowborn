@@ -158,3 +158,20 @@ test('a territorial ruler losing the whole domain cannot continue the original c
   });
   expect(result).toEqual({ stale:false, samePerson:true, status:'agenda_interrupted' });
 });
+
+test('changing an imported agenda under the same mod name rejects its old campaign fingerprint', async function ({ page }, info) {
+  await importedStart(page,info,'peroz_476');
+  const saved = await page.evaluate(function () { return JSON.parse(FB.save.serialize()); });
+  const changed = JSON.parse(JSON.stringify(proof));
+  changed.storyInstances.proof_royal_agenda.stages[1].year = 478;
+  await page.evaluate(function () { FB.ui.showMods(); });
+  await page.locator('#modfile').setInputFiles({ name:'ruler-agendas.json', mimeType:'application/json', buffer:Buffer.from(JSON.stringify(changed)) });
+  await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}),page.locator('#mod-apply').click()]);
+  await page.waitForFunction(function () { return window.FB && FB.game && FB.game.bootReady && FB.stories.get('proof_royal_agenda'); });
+  const result = await page.evaluate(function (saved) {
+    const live = FB.state, rng = FB.getRngState(), uid = FB.getUidCounter(), source = JSON.stringify(saved);
+    let rejected = false; try { FB.save.restore(saved); } catch (_) { rejected = true; }
+    return { rejected:rejected, pure:live === FB.state && rng === FB.getRngState() && uid === FB.getUidCounter() && source === JSON.stringify(saved) };
+  },saved);
+  expect(result).toEqual({ rejected:true, pure:true });
+});
