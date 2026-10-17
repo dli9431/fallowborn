@@ -139,3 +139,16 @@ test('optional agenda save extension preserves absence and rejects malformed rec
   });
   expect(result).toEqual({ rejected:true, pure:true, absent:true });
 });
+
+test('a territorial ruler losing the whole domain cannot continue the original court program', async function ({ page }, info) {
+  await importedStart(page, info, 'peroz_476');
+  const result = await page.evaluate(function () {
+    const s = FB.state, id = 'proof_royal_agenda', t = s.stories[id], person = s.player.charId;
+    const q = FB.stories.quote(s,id,'proof_keep_terms');
+    FB.realmTerritory(s,'player').slice().forEach(function (pid) { FB.transferProvince(s,pid,'byzantium'); });
+    const stale = FB.stories.apply(s,id,'proof_keep_terms',q);
+    FB.stories.get(id).day(s,t);
+    return { stale:stale, samePerson:person === s.player.charId, status:t.status };
+  });
+  expect(result).toEqual({ stale:false, samePerson:true, status:'agenda_interrupted' });
+});

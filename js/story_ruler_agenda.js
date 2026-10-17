@@ -77,7 +77,8 @@
       var c = delegated ? C.delegate(s, rid) : r && r.alive && FB.stories.ruler(s, def.subjectRealmId);
       return { id:c && c.id || null, generation:FB.realmRulerGeneration(s, rid),
         mandateId:delegated && row && row.mandate ? row.mandate.id : null,
-        jurisdiction:!delegated || !!row && row.scopes.every(function (pid) { return s.owner[pid] === rid && s.holder[pid] === rid; }) };
+        jurisdiction:!!(r && r.alive) && (delegated ? !!row && row.scopes.every(function (pid) { return s.owner[pid] === rid && s.holder[pid] === rid; }) :
+          !!r.nonTerritorial || FB.realmTerritory(s, rid).length > 0) };
     }
     function current(s, t) {
       var f = subject(s), c = s.chars[t.subjectId];
