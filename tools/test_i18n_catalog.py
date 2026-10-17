@@ -161,6 +161,21 @@ class JavascriptLexerTests(unittest.TestCase):
 
 
 class StructuredDataExtractionTests(unittest.TestCase):
+    def test_1096_local_faiths_have_staged_display_owners(self):
+        inventory = i18n_catalog.Inventory()
+        i18n_catalog.extract_structured(inventory)
+        for key, text in (
+            ('religion.ghana_local_practice_1096.name.default', 'Ghana local practice'),
+            ('religion.ghana_local_practice_1096.words.deity.default', 'the sacred powers'),
+            ('religion.ghana_local_practice_1096.roles.monasticF.default', 'Devotee'),
+            ('religion.niger_traditional_1096.name.default', 'Middle Niger traditional worship'),
+            ('religion.niger_traditional_1096.words.deity.default', 'the spirits'),
+            ('religion.niger_traditional_1096.roles.priestM.default', 'Ritual keeper'),
+        ):
+            self.assertEqual(inventory.entries[key]['text'], text)
+            self.assertIn('identities_1096.js', inventory.meta[key]['location'])
+            self.assertIn(i18n_catalog.source_key(text), inventory.entries)
+
     def test_staged_faith_labels_are_read_without_executing_their_source(self):
         source = i18n_catalog.DATA / 'identities_1096.js'
         original_read = Path.read_text
