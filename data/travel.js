@@ -2,6 +2,9 @@
 window.FBDATA = window.FBDATA || {};
 
 FBDATA.travelPurposes = {
+  ravenna_visit_568:{ name:'Visit Bononia', icon:'🧭',
+    desc:'Go ahead alone to look for local opportunities. Your household keeps its home until a later eligible settlement.',
+    cost:5, minTier:1, maxTier:2, mode:'sites', repeatable:true, eras:['late_antique'], yearMin:568, yearMax:580 },
   soldier_crossing_711:{ name:'Seek opportunities across the strait', icon:'🧭',
     desc:'Make a personal journey toward Malaga or Toledo. Your household stays at home, and work keeps its ordinary requirements.',
     cost:5, minTier:1, maxTier:2, mode:'sites', repeatable:true, eras:['early_medieval'], yearMin:711, yearMax:718 },
@@ -86,6 +89,7 @@ FBDATA.travelPurposes = {
 /* A site may restrict a purpose to exact religions or broad religion groups.
    Province ids are stable save/mod ids from data/counties.js. */
 FBDATA.travelSites = [
+  { id:'ravenna_bononia_568', purpose:'ravenna_visit_568', provinceId:'bologna' },
   { id:'soldier_malaga_711', purpose:'soldier_crossing_711', provinceId:'malaga' },
   { id:'soldier_toledo_711', purpose:'soldier_crossing_711', provinceId:'toledo' },
   { id:'thegn_london_1066', purpose:'thegn_south_1066', provinceId:'london' },
@@ -165,6 +169,7 @@ FBDATA.balance.frontierSettlementPlots = 1;
 
 /* Mechanical roles and event references are independent of authored purpose ids. */
 FBDATA.travelRules = {
+  ravenna_visit_568:{ kind:'expedition', encounters:'ravenna_visit_568', arrivalEvent:'ravenna_bononia_arrival_568' },
   soldier_crossing_711:{ kind:'expedition', encounters:'expedition', arrivalEvent:'soldier_arrival_711' },
   thegn_south_1066:{ kind:'service', encounters:'service', arrivalEvent:'thegn_london_arrival_1066' },
   constantinople_resettlement_1204: {

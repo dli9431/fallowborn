@@ -8,6 +8,12 @@ FBDATA.events = FBDATA.events || [];
   FBDATA.eventPacks.travel = { eras:['late_antique','early_medieval','high_medieval'] };
 
 FBDATA.events.push(
+{ id:'ravenna_bononia_arrival_568', title:'A Visitor in Bononia',
+  trigger:{ never:true }, travel:{ kind:'capstone', purpose:'ravenna_visit_568' },
+  text:'You have reached Bononia. Your family remains at home. Local work and residence may open a path to a later household move.',
+  options:[{ label:'Begin the visit.', desc:'Remain a visitor and review ordinary work or the return journey.',
+    effects:{ custom:'travel_capstone_done' } }]
+},
 { id:'soldier_arrival_711', title:'A Personal Arrival',
   trigger:{ never:true }, travel:{ kind:'capstone', purpose:'soldier_crossing_711' },
   text:'You have reached {location}. Your relatives remain at their permanent home. People here have their own households and livelihoods. Local work, any service agreement and a later household move require their ordinary terms.',
