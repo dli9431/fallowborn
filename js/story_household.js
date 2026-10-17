@@ -54,6 +54,9 @@
     need(plain(def.stages) && Object.keys(def.stages).length > 0 && Object.keys(def.stages).length <= 64 &&
       slug(def.initialStage) && own(def.stages, def.initialStage), 'stages');
     function dependency(id) { need((def.requires || []).indexOf(id) >= 0 && context.get(id), 'story dependency'); }
+    function mobileRealm(id) {
+      need(slug(id) && (def.requirements && def.requirements.realms || []).indexOf(id) >= 0, 'mobile realm dependency');
+    }
     var predicateCount = 0;
     function predicate(p, depth) {
       if (p === undefined) return;
@@ -69,6 +72,7 @@
           (p.sinceCampaign === undefined || p.sinceCampaign === true), 'elapsed predicate');
       } else if (p.kind === 'travelling') need(keys(p, ['kind']), 'journey predicate');
       else if (p.kind === 'mobile_state') {
+        mobileRealm(p.realmId);
         need(keys(p, ['kind','realmId','condition','provinceId']) && slug(p.realmId) &&
           ['active','camp','present','moving','scarce'].indexOf(p.condition) >= 0 &&
           (p.condition === 'camp' ? slug(p.provinceId) : p.provinceId === undefined), 'mobile predicate');
@@ -99,8 +103,9 @@
           return site.id === op.travelSiteId && purpose && !purpose.targeted && purpose.mode === 'sites';
         }), 'travel terms');
       } else if (op.kind === 'settle_household') need(keys(op, ['kind']), 'settlement terms');
-      else if (op.kind === 'mobile_work') need(keys(op, ['kind','realmId']) && slug(op.realmId), 'mobile work terms');
+      else if (op.kind === 'mobile_work') { mobileRealm(op.realmId); need(keys(op, ['kind','realmId']), 'mobile work terms'); }
       else if (op.kind === 'travel_mobile') {
+        mobileRealm(op.realmId);
         var purpose = FBDATA.travelPurposes && FBDATA.travelPurposes[op.purposeId];
         need(keys(op, ['kind','realmId','purposeId']) && slug(op.realmId) && purpose && !purpose.targeted && purpose.mode === 'capitals', 'mobile journey terms');
       } else if (op.kind === 'return_home') need(keys(op, ['kind']), 'return terms');

@@ -8,7 +8,7 @@ const { dependsOnRuntime } = require('../support/runtime-dependencies');
 
 dependsOnRuntime(__filename, ['index.html','data/mobile_confederations.js','data/technology.js',
   'data/bookmark_476_wider.js','data/travel.js','data/starts.js','js/story_household.js','js/stories.js',
-  'js/mobile_confederations.js','js/government_selection.js','js/governments.js','js/federates.js',
+  'js/mobile_confederations.js','js/government_selection.js','js/governments.js','js/federates.js','js/authority.js',
   'js/travel.js','js/market.js','js/treasury.js','js/population.js','js/model.js','js/world.js',
   'js/mods.js','js/starts.js','js/main.js','js/save.js','js/save_v4.js','js/ui_misc.js']);
 
@@ -75,13 +75,35 @@ test('the independently configured twelve-day boundary closes without pay or RNG
   })).toEqual({ expiredQuote:false, phase:'closed', money:true, rng:true, once:true });
 });
 
-for (const fault of ['leader_operation','extra_work_terms','bad_purpose','unbounded_wait','bad_clock','unknown_mobile_condition','mixed_mobile_fields']) {
+test('optional admission at a visited camp conserves people and leaves named relatives at home', async function ({ page }, info) {
+  await importedStart(page, info);
+  expect(await page.evaluate(function () {
+    const s = FB.state, rid = 'pontic_following_476', M = FB.mobile, host = M.host(s, rid);
+    host.at = 'tomis'; host.from = 'tomis'; host.path = []; host.goal = null; host.moveLeft = 0; host.mobileCourt = true;
+    FB.federateDay(s); FB.transferProvince(s, 'tomis', rid);
+    s.player.gold = 1000;
+    const journey = FB.travelStart(s, 'service', 'tomis', rid);
+    const request = { realmId:rid, action:'join', terms:{ countyId:'tomis', count:10 }, actor:{ kind:'character', id:s.player.charId } };
+    const remote = M.review(s, request).review.allowed;
+    // Stage actual arrival through the journey owner, without simulating its outbound route.
+    s.player.travel.currentId = 'tomis'; s.player.travel.remainingRoute = []; FB.travelTick(s);
+    const people = s.population.counties.tomis.count + M.total(s, rid);
+    const kin = FB.householdMembers(s).filter(function (c) { return c.id !== s.player.charId; }).map(function (c) { return [c.id,c.homeProvinceId]; });
+    const admitted = M.commit(s, M.review(s, request));
+    return { journey:journey, remote:remote, admitted:admitted,
+      conserved:people === s.population.counties.tomis.count + M.total(s, rid), home:s.player.provinceId,
+      relatives:kin.every(function (row) { return s.chars[row[0]].homeProvinceId === row[1]; }) };
+  })).toEqual({ journey:true, remote:false, admitted:true, conserved:true, home:'cherson', relatives:true });
+});
+
+for (const fault of ['leader_operation','extra_work_terms','missing_realm','bad_purpose','unbounded_wait','bad_clock','unknown_mobile_condition','mixed_mobile_fields']) {
   test('malformed mobile graph ' + fault + ' rejects detached', async function ({ page }, info) {
     await openGame(page, info);
     const result = await page.evaluate(function (input) {
       const m = input.mod, d = m.storyInstances.short_camp_service_example, op = d.stages.offer.choices[0].operation;
       if (input.fault === 'leader_operation') op.kind = 'mobile_settle';
       if (input.fault === 'extra_work_terms') op.amount = 500;
+      if (input.fault === 'missing_realm') op.realmId = 'missing_realm';
       if (input.fault === 'bad_purpose') d.stages.offer.choices[0].operation = { kind:'travel_mobile', realmId:'pontic_following_476', purposeId:'pilgrimage' };
       if (input.fault === 'unbounded_wait') d.stages.offer.transitions[0].when.minDays = 1441;
       if (input.fault === 'bad_clock') d.stages.offer.transitions[0].when.sinceCampaign = 'opening';
