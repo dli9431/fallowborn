@@ -2218,9 +2218,13 @@ FB.CHANGELOG = [
         { text:religion.name }, {});
   }
 
+  function startCodeName(name) {
+    return (name || '').replace(/-/g, '').replace(/\s+/g, '_');
+  }
+
   function seedCode(seed, bookmarkId, scenId, provId, sex, name, presetId,
       settlementIdx, cultureId, religionId, province) {
-    const n = (name || '').replace(/-/g, '').replace(/\s+/g, '_');
+    const n = startCodeName(name);
     const code = seed + '-' + bookmarkId + '-' + scenId + '-' + provId + '-' + sex + '-' + n;
     const nonPrincipal = province &&
       (cultureId !== province.culture || religionId !== province.religion);
@@ -2275,7 +2279,7 @@ FB.CHANGELOG = [
       const name = parts[namePart].replace(/_/g, ' ').trim();
       if (!seed || !scen || !prov || !FB.startProvinceAllowed(scen, bookmark, prov.id) || (sex !== 'm' && sex !== 'f') ||
         !name || name.length > 20 ||
-          scen.characterName && name !== scen.characterName) return { error: bad };
+          scen.characterName && name !== startCodeName(scen.characterName).replace(/_/g, ' ')) return { error: bad };
       if (scen.sex && sex !== scen.sex) {
         return { error: 'That start code pairs a scenario and a sex that don’t go together.' };
       }
@@ -2318,7 +2322,7 @@ FB.CHANGELOG = [
       if (scen.rulerRealmId && (cultureId !== scen.startCulture || religionId !== scen.startReligion || settlementIdx !== 0)) return { error:bad };
       return {
         seed:seed, bookmarkId:bookmarkId, scenario:scen,
-        provinceId:prov.id, sex:sex, name:name, familyPreset:familyPreset,
+        provinceId:prov.id, sex:sex, name:scen.characterName || name, familyPreset:familyPreset,
         settlementIdx:settlementIdx, culture:cultureId, religion:religionId
       };
     }

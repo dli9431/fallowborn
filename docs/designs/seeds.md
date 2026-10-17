@@ -150,6 +150,8 @@ The hidden 493 review candidate has independent farmer_493, craftsman_493, cleri
 
 Fixed ruler identities
 
+Fixed ruler names use the same space and hyphen normalization for code generation and comparison. After matching the encoded token, the parser restores the exact scenario characterName for the character screen and campaign. A hyphenated sovereign therefore reopens from the code the game generated, while altered names, sex, county, family and community remain subject to the ordinary identity gates. Ordinary household code spelling, RNG draws and saved names retain their existing behavior. This is a codec consistency fix with no new capability or technology requirement.
+
 Existing-ruler scenario codes use the normal bookmark, scenario, county, sex, name and optional standard-family/settlement/community fields. They require the authored name and sex, fixed county and settlement slot zero. An omitted community defaults to the scenario's authored ruler community, which may differ from the county's principal community. An explicit community must match that identity. Hidden definitions reject codes before any new campaign is created. Ordinary codes retain their existing defaults and generation order.
 
 Regional birthplace rules
