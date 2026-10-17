@@ -10510,6 +10510,7 @@ window.FB = window.FB || {};
     if (!def || def.fort || typeof idx !== 'number' || !isFinite(idx) ||
         Math.floor(idx) !== idx || !FB.settlementConstructionAuthority(state, pid, idx).direct ||
         idx < 0 || idx >= context.visibleCount) return false;
+    if (!FB.buildingApplicabilityStatus(state, pid, id).ready) return false;
     if (def.requiresTech && !FB.techRequirementMet(state, def.requiresTech)) return false;
     if (context.index.occupied[(idx | 0) + ':' + id]) return false;
     if (def.devMin && (state.dev[pid] || 1) < def.devMin) return false;
@@ -10529,6 +10530,7 @@ window.FB = window.FB || {};
     const sts = FB.settlementsOf ? FB.settlementsOf(state, pid) : [];
     if (!sts[idx] || !FB.settlementConstructionAuthority(state, pid, idx, rid).direct) return false;
     const actor = FB.settlementActor(state, rid);
+    if (!FB.buildingApplicabilityStatus(state, pid, id, actor).ready) return false;
     const techRealm = actor.kind === 'realm' ? actor.id : FB.settlementCountyHolder(state, pid);
     if (def.requiresTech && FB.techRequirementMet &&
         !FB.techRequirementMet(state, def.requiresTech, techRealm)) return false;

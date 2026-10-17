@@ -1,3 +1,7 @@
+Construction applicability presentation
+
+Building Works shows the pure construction-applicability projection's first current blocker on an unavailable building card, alongside its existing price, capacity and disabled Raise control. Calendar, campaign era, target county, resident culture and paying sovereign context are read again on activation before any charge. Fort reviews use the same applicability reason for a new project. Existing settlement and county identity, card Details, keyboard order, scroll, Back and dismissal remain on the shared modal paths. This adds no navigation route or saved display text.
+
 Court cultivation preview
 
 The ruler checklist offers Review a court story only while an attached story card exists, or after that review has already been completed. A court without stories continues through Rank & Realm and advancing time. It receives no fabricated story receipt or completion flag. This presentation adjustment adds no capability or technology dependency; existing story navigation, Back, dismissal and restore behavior remain shared.

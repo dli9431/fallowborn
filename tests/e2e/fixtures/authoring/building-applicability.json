@@ -1,0 +1,24 @@
+{
+  "name": "Two construction scope examples",
+  "buildings": {
+    "dated_copy_room": {
+      "role": "scholarship", "name": "Dated Copy Room", "icon": "X",
+      "desc": "A paid local copying room within a limited construction window.",
+      "cost": 7, "tax": 1, "devMin": 2, "maxCounty": 1, "aiBuildOrder": -2,
+      "applicability": {
+        "yearMin": 860, "yearMax": 900, "eras": ["early_medieval"],
+        "countyIds": ["york"], "cultures": ["english"], "traditions": ["latin"]
+      }
+    },
+    "dated_guest_court": {
+      "role": "care", "name": "Dated Guest Court", "icon": "Y",
+      "desc": "A separately funded guest court in another local learning context.",
+      "cost": 9, "upkeep": 1, "devMin": 2, "maxCounty": 1, "aiBuildOrder": -1,
+      "applicability": {
+        "yearMin": 880, "yearMax": 940, "eras": ["early_medieval", "high_medieval"],
+        "countyIds": ["toledo", "sevilla"], "cultures": ["andalusi", "arabic"],
+        "traditions": ["islamic", "persianate"]
+      }
+    }
+  }
+}
