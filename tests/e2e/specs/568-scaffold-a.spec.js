@@ -54,10 +54,10 @@ for (const crazygames of [false,true]) {
         loaded:scripts.indexOf('data/bookmark_568_scaffold_a.js') > scripts.indexOf('data/bookmark_493_world.js'),
         blocks:keys.every(function (key) { return !!FBDATA.bookmarkRegions568[key]; }),
         sibling:!!FBDATA.bookmarkRegions568.siblingSentinel,
-        hiddenWorld:FBDATA.bookmarks['568'].hidden,layout:!!FBDATA.settlementLayouts['568'],
+        selectableWorld:FB.bookmarkAvailable('568'),layout:!!FBDATA.settlementLayouts['568'],
         policies:!!FBDATA.administrationProfiles.sasanian_provinces_568 && !!FBDATA.aristocraticProfiles.sasanian_568};
     },Object.keys(packets))).toEqual({distribution:crazygames,loaded:true,blocks:true,sibling:true,
-      hiddenWorld:true,layout:true,policies:true});
+      selectableWorld:true,layout:true,policies:true});
   });
 }
 

@@ -19,7 +19,7 @@
   FBDATA.bookmarkCandidates['568'] = {
     id:'568', name:'The Lombards Depart',
     desc:'Imperial cities, Frankish courts and Lombard households share a changing world before the departure from Pannonia. Local lives and rival courts follow their own choices.',
-    date:{year:568,season:0,day:1}, era:'late_antique', hidden:true,
+    date:{year:568,season:0,day:1}, era:'late_antique',
     geography:'europe_regional_2', settlementLayout:'568',
     revision:'migration_v1', revisions:{baseline:{},migration_v1:{}},
     openingRevision:'migration_v1', openingLegacyRevision:'migration_v1',

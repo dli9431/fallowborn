@@ -23,7 +23,7 @@ const packets = {
   central_asia_sindh:'ghor balkh termez zaranj bust kandahar ghazni kabul bamiyan bukhara samarkand usrushana chach tiz panjgur qusdar mansura debal shebar_valley gomal_valley thar_margin nurata_foothills lower_syr_darya kath_district gurganj_district w_registan w_hindukush w_sulaiman w_thar w_karakum w_kyzylkum'.split(' ')
 };
 
-test('568 quadrant c has exact disjoint coverage in the complete hidden world', async function ({page},testInfo) {
+test('568 quadrant c has exact disjoint coverage in the complete selectable world', async function ({page},testInfo) {
   await openGame(page,testInfo);
   const coverage = await page.evaluate(function (expected) {
     const seen = {}, duplicates = [], actual = {}, scenery = [];
@@ -38,14 +38,14 @@ test('568 quadrant c has exact disjoint coverage in the complete hidden world', 
     });
     const scripts = Array.prototype.map.call(document.scripts,function (script) { return script.getAttribute('src'); });
     return {actual:actual,duplicates:duplicates,count:Object.keys(seen).length,scenery:scenery.sort(),
-      hidden:FBDATA.bookmarks['568'].hidden,liveLayout:!!FBDATA.settlementLayouts['568'],
+      selectable:FB.bookmarkAvailable('568'),liveLayout:!!FBDATA.settlementLayouts['568'],
       afterSource:scripts.indexOf('data/bookmark_568_scaffold_c.js') > scripts.indexOf('data/bookmark_493_world.js')};
   },packets);
   expect(coverage.actual).toEqual(packets);
   expect(coverage.duplicates).toEqual([]);
   expect(coverage.count).toBe(134);
   expect(coverage.scenery).toEqual(['w_lapland','w_registan','w_hindukush','w_sulaiman','w_thar','w_karakum','w_kyzylkum'].sort());
-  expect(coverage.hidden).toBe(true);
+  expect(coverage.selectable).toBe(true);
   expect(coverage.liveLayout).toBe(true);
   expect(coverage.afterSource).toBe(true);
 });

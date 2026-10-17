@@ -32,13 +32,13 @@ async function departure(page,info) {
   for (const choice of ['seek_customers','defer_work','inspect_road']) expect(await choose(page,choice)).toBe(true);
 }
 
-test('Ravenna binds a complete local storyline and optional goals to the hidden 568 world', async function ({page},info) {
+test('Ravenna binds a complete local storyline and optional goals to the selectable 568 world', async function ({page},info) {
   await openGame(page,info);
   expect(await page.evaluate(function () {
     const b = FB.bookmark('568'), sc = FBDATA.startScenarios.find(function (r) { return r.id === 'ravenna_household_568'; });
     const before = JSON.stringify(FBDATA), rng = FB.getRngState(), uid = FB.getUidCounter();
     const errors = FB.validateBookmark(b), county = b.provinces.find(function (p) { return p.id === 'ravenna'; });
-    return {errors:errors,hidden:b.hidden,bookmarks:sc.bookmarkIds,
+    return {errors:errors,selectable:FB.bookmarkAvailable('568'),bookmarks:sc.bookmarkIds,
       local:FB.startProvinceAllowed(sc,b,'ravenna'),away:FB.startProvinceAllowed(sc,b,'bologna'),
       tracks:FB.startTracks(sc,'ravenna'),awayTracks:FB.startTracks(sc,'bologna'),
       storyline:FB.startStoryTracks(sc,'ravenna'),
@@ -47,7 +47,7 @@ test('Ravenna binds a complete local storyline and optional goals to the hidden 
       community:county.communities.some(function (c) { return c.culture === sc.startCulture && c.religion === sc.startReligion; }),
       sourceFree:!FBDATA.storyInstances.ravenna_household_track_568.requires,
       pure:before === JSON.stringify(FBDATA) && rng === FB.getRngState() && uid === FB.getUidCounter()};
-  })).toEqual({errors:[],hidden:true,bookmarks:['568'],local:true,away:false,
+  })).toEqual({errors:[],selectable:true,bookmarks:['568'],local:true,away:false,
     tracks:[ID,'opening_ravenna_568'],awayTracks:[],storyline:[ID],family:['established'],
     resources:[1,'craftsman',15,5,0],noGrant:true,community:true,sourceFree:true,pure:true});
   await beginBookmark(page,info,'568','ravenna_household_568');
