@@ -2,6 +2,9 @@
 window.FBDATA = window.FBDATA || {};
 
 FBDATA.travelPurposes = {
+  soldier_crossing_711:{ name:'Seek opportunities across the strait', icon:'🧭',
+    desc:'Make a personal journey toward Malaga or Toledo. Your household stays at home, and work keeps its ordinary requirements.',
+    cost:5, minTier:1, maxTier:2, mode:'sites', repeatable:true, eras:['early_medieval'], yearMin:711, yearMax:718 },
   thegn_south_1066:{ name:'Seek work in London', icon:'🧭', desc:'Go ahead alone to seek ordinary local opportunities. Your household remains at home.',
     cost:5, minTier:1, maxTier:2, mode:'sites', repeatable:true, eras:['high_medieval'], yearMin:1066, yearMax:1066 },
   constantinople_resettlement_1204: {
@@ -83,6 +86,8 @@ FBDATA.travelPurposes = {
 /* A site may restrict a purpose to exact religions or broad religion groups.
    Province ids are stable save/mod ids from data/counties.js. */
 FBDATA.travelSites = [
+  { id:'soldier_malaga_711', purpose:'soldier_crossing_711', provinceId:'malaga' },
+  { id:'soldier_toledo_711', purpose:'soldier_crossing_711', provinceId:'toledo' },
   { id:'thegn_london_1066', purpose:'thegn_south_1066', provinceId:'london' },
   { id:'constantinople_nicaea_1204', purpose:'constantinople_resettlement_1204', provinceId:'nicaea' },
   { id:'toledo_northern_refuge_711', purpose:'toledo_refuge_711', provinceId:'oviedo' },
@@ -160,6 +165,7 @@ FBDATA.balance.frontierSettlementPlots = 1;
 
 /* Mechanical roles and event references are independent of authored purpose ids. */
 FBDATA.travelRules = {
+  soldier_crossing_711:{ kind:'expedition', encounters:'expedition', arrivalEvent:'soldier_arrival_711' },
   thegn_south_1066:{ kind:'service', encounters:'service', arrivalEvent:'thegn_london_arrival_1066' },
   constantinople_resettlement_1204: {
     kind:'service', encounters:'service', arrivalEvent:'household_nicaea_arrival_1204'

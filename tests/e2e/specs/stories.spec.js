@@ -11,6 +11,7 @@ dependsOnRuntime(__filename, [
   'data/starts_perspectives.js', 'data/story_households_perspectives.js',
   'data/starts_claimants_1066.js', 'data/story_households_1066.js',
   'data/starts_york_wessex_867.js', 'data/story_households_867.js',
+  'data/starts_crossing_711.js', 'data/story_households_crossing_711.js',
   'data/story_ruler_agendas.js', 'data/start_ambitions.js', 'js/story_opening_goals.js',
   'index.html', 'js/starts.js', 'js/story_track.js', 'js/stories.js', 'js/story_campaign.js', 'data/story_instances.js',
   'js/bookmark_setup.js', 'js/story_agreements.js',
@@ -118,7 +119,7 @@ test('stories register in order at load time only and resolve by id',
     expect(result.late).toContain('load time only');
     expect(result.registered).toBe(false);
     expect(result.bookmark.filter(function (id) { return id.indexOf('household_effects_') !== 0; })).toEqual(WORLD_STORIES.concat(['cashel_recognition_476']));
-    expect(result.tracks).toEqual(['peroz_476:peroz_agenda_476','nepos_476:nepos_track_476','odoacer_476:odoacer_agenda_476','syagrius_476:syagrius_agenda_476','federate_476:federate_track_476','curialis_476:curialis_track_476','toledo_household_711:toledo_household_track_711','aachen_household_800:aachen_household_track_800','constantinople_household_1204:constantinople_household_track_1204','mobile_household_476:pontic_household_track_476','peroz_sasanian_476:peroz_agenda_476','muhammad_1204:muhammad_agenda_1204','siwa_delegate_1204:siwa_agenda_1204','constantinople_merchant_household_1204:constantinople_merchant_track_1204','thegn_household_1066:thegn_track_1066','york_household_867:york_household_track_867']);
+    expect(result.tracks).toEqual(['peroz_476:peroz_agenda_476','nepos_476:nepos_track_476','odoacer_476:odoacer_agenda_476','syagrius_476:syagrius_agenda_476','federate_476:federate_track_476','curialis_476:curialis_track_476','toledo_household_711:toledo_household_track_711','aachen_household_800:aachen_household_track_800','constantinople_household_1204:constantinople_household_track_1204','mobile_household_476:pontic_household_track_476','peroz_sasanian_476:peroz_agenda_476','muhammad_1204:muhammad_agenda_1204','siwa_delegate_1204:siwa_agenda_1204','constantinople_merchant_household_1204:constantinople_merchant_track_1204','thegn_household_1066:thegn_track_1066','york_household_867:york_household_track_867','crossing_soldier_711:crossing_soldier_track_711']);
   });
 
 test('a branch save holding state.situation476 migrates once into both story records',

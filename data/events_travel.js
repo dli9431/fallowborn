@@ -8,6 +8,12 @@ FBDATA.events = FBDATA.events || [];
   FBDATA.eventPacks.travel = { eras:['late_antique','early_medieval','high_medieval'] };
 
 FBDATA.events.push(
+{ id:'soldier_arrival_711', title:'A Personal Arrival',
+  trigger:{ never:true }, travel:{ kind:'capstone', purpose:'soldier_crossing_711' },
+  text:'You have reached {location}. Your relatives remain at their permanent home. People here have their own households and livelihoods. Local work, any service agreement and a later household move require their ordinary terms.',
+  options:[{ label:'Begin the stay.', desc:'Remain a visitor under the current ruler, with no arrival payment, land grant or household move.',
+    effects:{ custom:'travel_capstone_done' } }]
+},
 { id:'thegn_london_arrival_1066', title:'A Visitor in London',
   trigger:{ never:true }, travel:{ kind:'capstone', purpose:'thegn_south_1066' },
   text:'You have reached London. Your relatives and private property remain at home. Work here needs its own agreement, and any later household move follows the ordinary residence rules.',
