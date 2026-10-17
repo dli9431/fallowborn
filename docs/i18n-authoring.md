@@ -16,6 +16,8 @@ Those same household files may declare a literal FBDATA.openingProfiles_<suffix>
 
 Authority office names and descriptions use authorityOffice.<id>.<field>.default; legitimacy source names use legitimacySource.<id>.name.default. The static extractor reads both tables from data/political_institutions.js, and FB.officeText and FB.legitimacySourceName render their FB.dataText paths. Powers, scope, status, eligibility, terms, selectors and review consequences use FB.T. Historical people and physical place names remain proper names. Appointment and recognition outcomes use news.office.appointment, news.office.recognize and news.office.contest message descriptors; no rendered office or source label is saved. Add the source and extraction support on a feature branch without regenerating integration catalogs.
 
+Household presentation tables in data/story_*.js are discovered by their literal FBDATA.householdTracks_<suffix> and FBDATA.openingProfiles_<suffix> assignments. The filename may describe the start rather than the story type. Existing householdStory and openingProfile owners and exact-source aliases remain the same. Discovery parses source literals and never executes story scripts.
+
 # i18n authoring guide
 
 Local institutional presentation
