@@ -111,6 +111,58 @@ class RevisionContentExtractionTests(unittest.TestCase):
             self.assertFalse(any('missing_scope' in key for key in inventory.entries))
 
 
+class ScaffoldRegionExtractionTests(unittest.TestCase):
+    def test_multiple_regions_and_dates_have_scoped_owners_without_execution(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            data = root / 'data'
+            data.mkdir()
+            (data / 'bookmark_420_scaffold_a.js').write_text(
+                "FBDATA.bookmarkRegions420.bank = {"
+                "provinces:[{id:'landing',name:'River landing',names:[{name:'Old landing'}]},"
+                "{name:'Unowned county'}],"
+                "realms:[{id:'river',name:'River court',ruler:{name:'Proper person'}}],"
+                "duchies:{shared:{name:'River district'}},"
+                "kingdoms:{country:{name:'River country'}},"
+                "empires:{region:{name:'River region'}},"
+                "settlementLayouts:{landing:[{site:'wharf',name:'River wharf'}]}};\n"
+                "FBDATA.bookmarkRegions420.ridge = {"
+                "provinces:[{id:'ridge',name:'Hill farms'}],"
+                "layouts:{ridge:[{name:'Hill hamlet'}]}};\n"
+                "throw new Error('Never execute staged data');", encoding='utf-8')
+            (data / 'bookmark_421_scaffold_c.js').write_text(
+                "FBDATA.bookmarkRegions421.plain = {"
+                "provinces:[{id:'landing',name:'Later landing'}],"
+                "duchies:{shared:{name:'Later district'}}};\n"
+                "FBDATA.bookmarkRegions420.foreign = {"
+                "provinces:[{id:'foreign',name:'Wrong dated table'}]};", encoding='utf-8')
+            (data / 'bookmark_bad_scaffold_a.js').write_text(
+                "FBDATA.bookmarkRegions420.other = {"
+                "provinces:[{id:'other',name:'Unscoped file'}]};", encoding='utf-8')
+            inventory = i18n_catalog.Inventory()
+            with patch.object(i18n_catalog, 'ROOT', root), patch.object(i18n_catalog, 'DATA', data):
+                i18n_catalog.extract_scaffold_regions(inventory)
+            expected = {
+                'province.420.landing.name.default': 'River landing',
+                'province.420.landing.name.dated.0.default': 'Old landing',
+                'realm.420.river.name.default': 'River court',
+                'duchy.420.shared.name.default': 'River district',
+                'kingdom.420.country.name.default': 'River country',
+                'empire.420.region.name.default': 'River region',
+                'settlement.420.wharf.name.default': 'River wharf',
+                'province.420.ridge.name.default': 'Hill farms',
+                'settlement.420.ridge.0.name.default': 'Hill hamlet',
+                'province.421.landing.name.default': 'Later landing',
+                'duchy.421.shared.name.default': 'Later district',
+            }
+            for key, text in expected.items():
+                self.assertEqual(inventory.entries[key]['text'], text)
+                self.assertIn(i18n_catalog.source_key(text), inventory.entries)
+                self.assertIn('scaffold_', inventory.meta[key]['location'])
+            for text in ('Proper person', 'Unowned county', 'Wrong dated table', 'Unscoped file'):
+                self.assertNotIn(i18n_catalog.source_key(text), inventory.entries)
+
+
 class StaticHtmlExtractionTests(unittest.TestCase):
     def test_mobile_opening_display_owners(self):
         inventory = i18n_catalog.Inventory()
