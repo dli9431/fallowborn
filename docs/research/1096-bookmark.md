@@ -1,6 +1,16 @@
+Spring 1096 bookmark
+
+data/bookmark_1096.js registers The First Crusade as a hidden baseline opening on europe_regional_2, year 1096, season 0, day 1. Its 23 regions cover all 527 physical counties exactly once: 488 inhabited presentations and 39 scenery rows, including unresolved district habitation. Its 110 courts are defined once across the four regional sources. The opening remains unavailable through the picker, start codes, direct creation and observer entry. Matching saved campaigns can still restore it.
+
+The composition order is west_north, west_south, iberia_north, iberia_south, empire_rhine, empire_alps, italy_north, italy_south, britain_south, britain_north_ireland, nordic_baltic, central_danube, rus_steppe, balkans, anatolia_caucasus, syria_palestine, jazira, egypt, arabia, iran_iraq, eastern_edge, maghreb and horn_sahel. The composer copies the records and ordered layouts into independent world tables. Regional title declarations override a detached copy of the 1066 baseline title groups; that fallback supplies coarse title presentation only. Physical crossings and climate defaults come from the existing geography, with regional climate exceptions retained.
+
+Only ordinary compatible household starts are currently available for isolated review. startLocations is empty until dated starts add their supported places. No historical start, expedition host, opening campaign, vow, appointment, estate grant, claim or migration is authored here. Local institutions are explicitly empty. The existing Catholic and Sunni head mechanisms reference the single papal and Abbasid courts; these broad bindings do not establish a researched local institution roster or universal recognition. The Byzantine court uses the existing byzantine_1066 administration profile and the papal temporal court uses papal_temporal_1066, as disclosed first-pass abstractions. Named households, religious affiliations, borders and start eligibility retain the regional holds below.
+
+The regional source files remain the world files and receive later corrections in place. Fresh creation uses the ordinary bookmark pipeline; restoration uses the saved world identity, people, resources and receipts without reinitializing historical content. This composition adds no engine capability, technology gate, JSON authoring root or saved field. Standard and CrazyGames loaders use the same tracked data declarations with their existing distribution rules.
+
 1096 local-faith declarations
 
-data/identities_1096.js stages ghana_local_practice_1096 and niger_traditional_1096 in FBDATA.bookmarkReligions1096. Loading the file alone installs neither definition in FBDATA.religions and registers no bookmark, community, court, head, institution or start. Publication belongs to the complete dated bookmark, after its id is registered: the existing availability validator rejects unknown bookmark ids. The composer must publish detached copies before ordinary religion and world validation.
+data/identities_1096.js stages ghana_local_practice_1096 and niger_traditional_1096 in FBDATA.bookmarkReligions1096. Loading that file alone installs neither definition in FBDATA.religions and registers no bookmark, community, court, head, institution or start. data/bookmark_1096.js publishes detached copies together with the complete world before ordinary religion and bookmark validation. The existing availability validator continues to reject unknown bookmark ids.
 
 Both profiles restrict fresh assignment to bookmark 1096 through top-level availability.bookmarkIds. They preserve the corresponding ghana_local_practice_1066 and niger_traditional_1066 declarations from data/bookmark_1066_inhabited.js, changing only that local eligibility metadata. The original profiles and every retained world remain unchanged. There is no new culture; soninke_1066 and middle_niger_1066 remain existing broad naming and appearance pools rather than evidence of a uniform dated ethnicity.
 
@@ -64,7 +74,7 @@ Spring 1096 opening
 
 Status
 
-The regional declarations below are a first pass built from the separate 1066 world, with explicit changes to its courts. They are staged data, awaiting composition into a complete opening. County populations, development, settlement slots, broad title groups and most territorial partitions remain simulation inputs inherited from that baseline. A named ruler does not establish the exact borders, household, officeholders or religious institutions of a region. Each regional replacement will supply its own evidence and remove the corresponding first-pass block.
+The regional declarations below are a first pass built from the separate 1066 world, with explicit changes to its courts. They now form the complete hidden opening. County populations, development, settlement slots, broad title groups and most territorial partitions remain simulation inputs inherited from that baseline. A named ruler does not establish the exact borders, household, officeholders or religious institutions of a region. Later regional corrections supply their own evidence and update the corresponding block in place.
 
 Imperial, Italian, northern British and Balkan first pass
 
@@ -90,7 +100,7 @@ All six named rulers have lightweight profiles only. Supporting relatives remain
 
 Composition and display ownership
 
-Each region has one literal bookmarkRevisionContent_1096_<region> payload with bookmarkId 1096 and baseline revision. Its bookmarkRegions1096 entry references the same payload. The existing static localization extractor reads province, realm and layout display names through that literal owner without running a composer; ruler names remain proper names. Complete composition must install all regions and their layouts together, resolve england_1096 from the southern British region, and preserve the sole Byzantine, Croatian and imperial courts referenced by other regions. Only a region's replacement removes its scaffold payload. These blocks register no date or institution themselves.
+Each region has one literal bookmarkRevisionContent_1096_<region> payload with bookmarkId 1096 and baseline revision. Its bookmarkRegions1096 entry references the same payload. The existing static localization extractor reads province, realm and layout display names through that literal owner without running a composer; ruler names remain proper names. Complete composition installs all regions and their layouts together, resolves england_1096 from the southern British region, and preserves the sole Byzantine, Croatian and imperial courts referenced by other regions. Later corrections update the existing regional payloads. These blocks register no date or institution themselves.
 
 Consulted references for the court changes
 
@@ -152,7 +162,7 @@ torne_district, upper_kama, vychegda_district, onega_district and sarysu_corrido
 
 Composition and replacement
 
-Each FBDATA.bookmarkRegions1096 payload exposes provinces, realms and layouts. A literal FBDATA.bookmarkRevisionContent_1096_<region> table owns the same payload, with bookmarkId 1096 and baseline revision, so the existing static localization extractor can find its county, realm and settlement labels. No new authoring root, shared runtime behavior, technology capability or saved field is introduced. The complete composer must install each payload's layouts and resolve the three foreign courts after all regions are available. Replacing a regional payload must preserve its exact physical allocation and remove its first-pass definition so that composition has one owner for every county and court.
+Each FBDATA.bookmarkRegions1096 payload exposes provinces, realms and layouts. A literal FBDATA.bookmarkRevisionContent_1096_<region> table owns the same payload, with bookmarkId 1096 and baseline revision, so the existing static localization extractor can find its county, realm and settlement labels. No new authoring root, shared runtime behavior, technology capability or saved field is introduced. The complete composer installs each payload's layouts and resolves the three foreign courts after all regions are available. Corrections preserve the exact physical allocation and edit the existing payload so that composition retains one owner for every county and court.
 
 Spring 1096 first pass: Anatolia, Syria, Egypt and the eastern and southern regions
 

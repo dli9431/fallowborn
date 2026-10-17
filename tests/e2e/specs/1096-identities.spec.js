@@ -7,14 +7,14 @@ const {releasedCatalogue} = require('../support/released-catalogue');
 const {dependsOnRuntime} = require('../support/runtime-dependencies');
 
 dependsOnRuntime(__filename,[
-  'index.html','data/identities_1096.js','data/bookmark_1066_inhabited.js','data/cultures.js',
+  'index.html','data/identities_1096.js','data/bookmark_1096.js','data/bookmark_1066_inhabited.js','data/cultures.js',
   'data/bookmarks.js','data/eras.js','data/geographies.js','data/government_rollout.js',
   'js/model.js','js/mods.js','js/world.js'
 ]);
 
 const ids = ['ghana_local_practice_1096','niger_traditional_1096'];
 
-test('staged local faiths leave existing worlds and effective identities unchanged',async function ({page},info) {
+test('published local faiths are detached, dated and preserve released worlds',async function ({page},info) {
   await openGame(page,info);
   const fixture = JSON.parse(fs.readFileSync(path.join(__dirname,'../fixtures/released-catalogue.json'),'utf8'));
   expect((await page.evaluate(releasedCatalogue,fixture.selection)).hashes).toEqual(fixture.hashes);
@@ -33,13 +33,17 @@ test('staged local faiths leave existing worlds and effective identities unchang
         return JSON.stringify(staged[id]) === JSON.stringify(expected) && staged[id] !== source &&
           staged[id].properties !== source.properties;
       }),
-      dormant:!!FBDATA.bookmarks['1096'] || input.ids.every(function (id) {
-        return !FB.faithExists(id,null) && !FBDATA.religions[id];
+      published:input.ids.every(function (id) {
+        return FB.faithExists(id,null) && FBDATA.religions[id] !== staged[id] &&
+          FBDATA.religions[id].properties !== staged[id].properties &&
+          JSON.stringify(FBDATA.religions[id]) === JSON.stringify(staged[id]) &&
+          FB.faithHistoricalAvailable(id,FB.bookmark('1096'),'community') &&
+          !FB.faithHistoricalAvailable(id,FB.bookmark('1066'),'community');
       }),
       pure:input.before.data === JSON.stringify(FBDATA) && input.before.state === JSON.stringify(FB.state) &&
         input.before.rng === FB.getRngState() && input.before.uid === FB.getUidCounter(),
       faults:FB.validateReligionData(null)};
-  },{ids:ids,before:before})).toEqual({ids:ids.slice().sort(),independent:true,dormant:true,pure:true,faults:[]});
+  },{ids:ids,before:before})).toEqual({ids:ids.slice().sort(),independent:true,published:true,pure:true,faults:[]});
 });
 
 test('the staged profiles validate and import through ordinary JSON with bookmark-only eligibility',async function ({page},info) {
