@@ -1,6 +1,7 @@
 'use strict';
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
+  'data/story_household_effects_711_800_1204.js', 'js/story_household_observer.js',
   'data/government_rollout.js','js/government_administration.js','js/government_recognition.js',
   'data/story_courts_476.js',
   'index.html', 'data/bookmark_711.js', 'data/bookmark_711_terrain.js', 'data/geography_expansion.js',
@@ -150,7 +151,7 @@ test('711 activation owns a full map, mixed communities and a separate hierarchy
       }
       const inhabited = b.provinces.filter(function (p) { return !p.wasteland; });
       return { faults:FB.validateBookmark(b), diagnostics:FB.communityShareDiagnostics(b),
-        attached:FB.stories.attached(s), era:s.start.era, geography:s.start.geography,
+        attached:FB.stories.attached(s).filter(function (id) { return id.indexOf('household_effects_') !== 0; }), era:s.start.era, geography:s.start.geography,
         owners:inhabited.every(function (p) { return s.owner[p.id] === sovereign(p.realm) && !!s.realms[s.holder[p.id]]; }),
         hierarchy:inhabited.every(function (p) {
           const d = b.duchies[p.duchy], k = d && b.kingdoms[d.kingdom];
@@ -230,7 +231,7 @@ for (const crazygames of [false, true]) {
           // Natural events may change careers during the following month.
           return { opening:opening, profession:profession,
             unchanged:unchanged, advanced:run.advanced,
-            attached:FB.stories.attached(FB.state),
+            attached:FB.stories.attached(FB.state).filter(function (id) { return id.indexOf('household_effects_') !== 0; }),
             valid:FB.save.v4.validatePlatform(JSON.parse(FB.save.serialize()).state) };
         });
         expect(result).toEqual({ opening:'711', profession:scenario === 'serf' ? 'farmer' : 'craftsman', unchanged:true,
