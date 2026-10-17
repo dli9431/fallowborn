@@ -5,7 +5,7 @@ const { openGame } = require('../support/game/navigation');
 const { startParityGame } = require('../support/game/parity');
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 const proof = require('../fixtures/authoring/ruler-agendas.json');
-dependsOnRuntime(__filename, ['index.html','js/story_ruler_agenda.js','js/stories.js','js/starts.js',
+dependsOnRuntime(__filename, ['index.html','js/story_ruler_agenda.js','js/story_campaign.js','data/story_campaigns.js','js/stories.js','js/starts.js',
   'js/government_aristocracy.js','js/government_administration.js','js/government_recognition.js',
   'js/government_support.js','js/government_collective.js','js/government_assembly.js','js/mobile_confederations.js',
   'js/government_selection.js','js/treasury.js','js/world.js','js/mods.js','js/save.js','js/save_v4.js',
@@ -104,7 +104,7 @@ for (const scenario of ['peroz_476','siwa_delegate_1204']) {
   });
 }
 
-for (const fault of ['operation','unknown_field','duplicate_choice','reserved_choice','source','terms','date','no_fallback']) {
+for (const fault of ['operation','unknown_field','duplicate_choice','reserved_choice','source','source_choice','terms','date','no_fallback']) {
   test('agenda declaration rejects ' + fault + ' without registry, campaign, RNG or identity mutation', async function ({ page }, info) {
     await openGame(page, info);
     const result = await page.evaluate(function (input) {
@@ -115,6 +115,11 @@ for (const fault of ['operation','unknown_field','duplicate_choice','reserved_ch
       if (input.fault === 'duplicate_choice') d.stages[1].choices[0].id = c.id;
       if (input.fault === 'reserved_choice') c.id = 'agenda_stop_program';
       if (input.fault === 'source') { c.operation = 'agenda_story_choice'; c.storyId = 'missing_source'; c.choiceId = 'accept'; }
+      if (input.fault === 'source_choice') {
+        d.requires = ['theoderic_italy_476'];
+        d.stages[0].choices[0] = { id:'proof_unknown_source_choice', label:'Unknown', detail:'Invalid source choice.',
+          operation:'agenda_story_choice', storyId:'theoderic_italy_476', choiceId:'not_a_campaign_choice' };
+      }
       if (input.fault === 'terms') c.revenue = 2;
       if (input.fault === 'date') d.stages[0].season = 4;
       if (input.fault === 'no_fallback') d.stages[0].choices.pop();

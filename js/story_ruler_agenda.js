@@ -45,8 +45,11 @@
           }
           var source = context.get(c.storyId);
           need(source.kind === 'world' && (!source.declaration || source.declaration.type !== def.type), 'world source');
-          if (c.operation === 'agenda_story_choice' && source.declaration && source.declaration.choices)
-            need(Object.keys(source.declaration.choices).some(function (key) { return source.declaration.choices[key].id === c.choiceId; }), 'unknown source choice');
+          if (c.operation === 'agenda_story_choice') {
+            var declared = source.declaration && source.declaration.choices;
+            var ids = declared ? Object.keys(declared).map(function (key) { return declared[key].id; }) : source.choiceIds;
+            need(Array.isArray(ids) && ids.indexOf(c.choiceId) >= 0, 'unknown or unsupported source choice');
+          }
         } else if (c.operation === 'agenda_provincial_terms') {
           fields = fields.concat(['interestId','revenue','levy']);
           need(slug(c.interestId) && Number.isFinite(c.revenue) && c.revenue >= 0 && c.revenue <= 1 &&
