@@ -246,7 +246,7 @@
         local:!stage.incident || s.player.provinceId === stage.incident.provinceId && present(s) === stage.incident.provinceId,
         when:!!choice && test(s, choice.when), incident:key, closed:closed || null, terms:op.terms,
         graph:def };
-      if (choice && choice.operation.kind === 'convert_faith') facts.modifier = FBDATA.modifiers && FBDATA.modifiers.zealot_unrest;
+      if (choice && choice.operation.kind === 'convert_faith') facts.modifier = FBDATA.modifiers && FBDATA.modifiers['zealot_unrest'];
       return { id:id, allowed:!!choice && living(s) && facts.stageReady && facts.local && facts.when && op.allowed &&
         (!stage.incident || !!key && !closed), reason:op.reason || FB.T('The local situation has changed. Review the household again.'),
         facts:facts, stamp:JSON.stringify(facts) };
@@ -263,6 +263,7 @@
       move(s, t, choice.next); return true;
     }
     return { id:def.id, kind:'track', requires:def.requires,
+      appliesTo:function (s) { return living(s) && s.player.provinceId === def.homeProvinceId; },
       init:function (s) {
         var rows = {};
         Object.keys(controls).forEach(function (id) { rows[id] = { before:null, after:sovereign(s, id), turn:null }; });
@@ -284,11 +285,14 @@
       review:function (s, t, id, q) {
         var choice = def.stages[t.phase].choices.filter(function (c) { return c.id === id; })[0], op = choice.operation, terms = q.facts.terms;
         if (op.kind === 'convert_faith') return [FB.T('Cost: {piety} piety and {prestige} prestige.', { piety:terms.pietyCost, prestige:terms.prestigeCost }),
-          op.scope === 'self' ? FB.T('Only your own faith changes. Your relatives keep theirs.') : FB.T('Your living household members adopt this faith.'),
+          op.scope === 'self' ? FB.T('Only your own faith changes. Your relatives keep theirs.') : FB.T('Household members adopting this faith: {names}.',
+            { names:FB.householdMembers(s).filter(function (c) { return !c.dead; }).map(function (c) { return FB.fullName(c); }).join(', ') }),
           FB.T('Popular opinion: {n}.', { n:terms.popularOpinion }),
           FB.T('Old-fold Standing: {standing} with {n} courts. Vassal Standing: {vassal} with {count} courts.',
             { standing:terms.foldStanding, n:terms.oldFoldRealmIds.length, vassal:terms.vassalStanding, count:terms.vassalIds.length }),
-          op.scope === 'household' ? FB.T('The ordinary household conversion unrest applies at home.') : FB.T('No household conversion unrest is added.'),
+          op.scope === 'household' && q.facts.modifier ? FB.T('Household unrest for {days} days: {unrest}% unrest, {support} Popular support, {tax}% tax and {levy}% levy.',
+            { days:q.facts.modifier.days, unrest:Math.round(100 * (q.facts.modifier.fx.unrest || 0)), support:q.facts.modifier.fx.commonVoice || 0,
+              tax:Math.round(100 * (q.facts.modifier.fx.tax || 0)), levy:Math.round(100 * (q.facts.modifier.fx.levy || 0)) }) : FB.T('No household conversion unrest is added.'),
           terms.excommunicates ? FB.T('The old obedience may excommunicate you for apostasy.') : FB.T('No papal excommunication applies.'),
           FB.T('Culture, property, taxes and safety are not guaranteed by conversion.')];
         if (op.kind === 'travel_site') return [FB.T('Journey price: {gold}. Route time: {days} days.', { gold:terms.cost, days:terms.days }),

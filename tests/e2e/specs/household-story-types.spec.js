@@ -25,6 +25,7 @@ test('ordinary JSON import supplies two different household graphs with durable 
     const id = 'quay_household_example', before = JSON.stringify(s), rng = FB.getRngState(), uid = FB.getUidCounter();
     const q = FB.stories.quote(s, id, 'keep_private');
     FB.stories.cards(s); FB.stories.choices(s, id);
+    const wrongHome = FB.stories.start(s, { tracks:['hill_household_example'] }).length;
     const pure = before === JSON.stringify(s) && rng === FB.getRngState() && uid === FB.getUidCounter();
     s.player.gold++;
     const stale = FB.stories.apply(s, id, 'keep_private', q);
@@ -37,10 +38,10 @@ test('ordinary JSON import supplies two different household graphs with durable 
     // Matching older saves remain without a newly introduced optional track.
     delete saved.state.stories[id];
     FB.save.restore(saved);
-    return { pure:pure, stale:stale, applied:applied, repeated:repeated, retained:retained,
+    return { pure:pure, wrongHome:wrongHome, stale:stale, applied:applied, repeated:repeated, retained:retained,
       missing:!FB.state.stories || !FB.state.stories[id] };
   });
-  expect(result).toEqual({ pure:true, stale:false, applied:true, repeated:false, retained:true, missing:true });
+  expect(result).toEqual({ pure:true, wrongHome:0, stale:false, applied:true, repeated:false, retained:true, missing:true });
 });
 
 test('the independent dated graph expires without a reward or replay', async function ({ page }, info) {
