@@ -7,6 +7,7 @@
 (function () {
   'use strict';
   var registry = [], byId = {}, types = {}, typeFiles = {}, validators = {}, sealed = false;
+  var typeStorylines = {};
   var nativeStories = [], typesSealed = false;
   var KINDS = { world:true, track:true };
   var HOOKS = ['appliesTo', 'init', 'day', 'season', 'year', 'title', 'intro',
@@ -14,6 +15,10 @@
     'validate', 'migrate', 'restore', 'foundRevolt', 'appliesToBookmark', 'observe', 'people'];
   function own(o, key) {
     return !!o && Object.prototype.hasOwnProperty.call(o, key);
+  }
+  function isStoryline(story) {
+    return !!(story && story.kind === 'track' &&
+      (!story.declaration || typeStorylines[story.declaration.type] !== false));
   }
   function record(s, id) {
     return s && s.stories && own(s.stories, id) ? s.stories[id] : null;
@@ -170,6 +175,7 @@
     var context = {
       get:function (id) { return own(index, id) ? index[id] : null; },
       list:function () { return ordered.slice(); },
+      isStoryline:function (id) { return isStoryline(context.get(id)); },
       definitionFaults:function (def, bm, attached) { return declarationFaults(def, bm, attached, context); }
     };
     nativeStories.forEach(function (story) { natives[story.id] = story; });
@@ -247,13 +253,14 @@
   FB.stories = {
     /* Trusted classic scripts register reusable factories before boot seals
        the registry. Definitions contain data, not executable save fields. */
-    registerType:function (id, factory, file, validator) {
+    registerType:function (id, factory, file, validator, options) {
       if (typesSealed) throw new Error('Story types register at load time only.');
       if (!/^[a-z][a-z0-9_]*$/.test(id) || own(types, id) || typeof factory !== 'function')
         throw new Error('Invalid or duplicate story type ' + id + '.');
       types[id] = factory;
       typeFiles[id] = file;
       validators[id] = validator;
+      typeStorylines[id] = !(options && options.storyline === false);
     },
     registerData:function (def) {
       if (sealed) throw new Error('Stories register at load time only.');
@@ -290,6 +297,7 @@
     get:function (id) {
       return typeof id === 'string' && own(byId, id) ? byId[id] : null;
     },
+    isStoryline:function (id) { return isStoryline(FB.stories.get(id)); },
     list:function () { return registry.slice(); },
     record:record,
     observe:observe,

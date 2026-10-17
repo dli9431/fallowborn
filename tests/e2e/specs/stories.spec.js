@@ -91,7 +91,7 @@ test('stories register in order at load time only and resolve by id',
         bookmark:FBDATA.bookmarks['476'].stories,
         tracks:FBDATA.startScenarios.filter(function (sc) {
           return sc.tracks;
-        }).map(function (sc) { return sc.id + ':' + sc.tracks.filter(function (id) { return FB.stories.get(id).declaration.type !== 'opening_profile'; }).join(','); })
+        }).map(function (sc) { return sc.id + ':' + sc.tracks.filter(function (id) { return FB.stories.isStoryline(id); }).join(','); })
       };
     });
     // The catalogue lists before/after batches before their data anchors.

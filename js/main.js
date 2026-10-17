@@ -2110,7 +2110,7 @@ FB.CHANGELOG = [
      list and an optional eras list, matched against the bookmark's era. */
   function scenarioOffered(scenario, bookmarkId) {
     if (!scenario || scenario.hidden && !FBDATA.reviewOpenStarts) return false;
-    if (fixedPlaceStart(scenario) && !FB.startTracks(scenario, scenario.fixedProvinceId).length) return false;
+    if (fixedPlaceStart(scenario) && !FB.startStoryTracks(scenario, scenario.fixedProvinceId).length) return false;
     if (!FB.bookmarkAvailable(bookmarkId)) return false;
     if (scenario.bookmarkIds && scenario.bookmarkIds.indexOf(bookmarkId) < 0) return false;
     const offeredBookmark = FB.bookmark(bookmarkId);
@@ -2903,7 +2903,7 @@ FB.CHANGELOG = [
   }
 
   /* Existing courts and offices are historical starts. Story starts have
-     a player track at their fixed birthplace or in named story counties;
+     a storyline at their fixed birthplace or in named story counties;
      an open role elsewhere begins without that location-bound track. */
   function existingRulerStart(sc) {
     return !!(sc && sc.fixedProvinceId && sc.rulerRealmId);
@@ -2912,11 +2912,12 @@ FB.CHANGELOG = [
     return !!(sc && sc.fixedProvinceId && !sc.rulerRealmId);
   }
   function storyPlaceIds(sc) {
-    if (fixedPlaceStart(sc)) return FB.startTracks(sc, sc.fixedProvinceId).length ? [sc.fixedProvinceId] : [];
+    if (fixedPlaceStart(sc)) return FB.startStoryTracks(sc, sc.fixedProvinceId).length ? [sc.fixedProvinceId] : [];
     const ids = [];
     (sc && sc.tracks || []).forEach(function (track) {
       const places = sc.trackLocations && sc.trackLocations[track];
       (Array.isArray(places) ? places : []).forEach(function (id) {
+        if (FB.startStoryTracks(sc, id).indexOf(track) < 0) return;
         if (ids.indexOf(id) < 0) ids.push(id);
       });
     });
@@ -2941,9 +2942,9 @@ FB.CHANGELOG = [
     const box = $('scenariolist');
     box.innerHTML = '';
     /* Existing courts and offices are historical starts. A story start
-       has a player track at its fixed birthplace or named story counties;
+       has a storyline at its fixed birthplace or named story counties;
        every other role is an open start chosen on the map. Validation
-       rejects fixed households without a track at home. Headings appear
+       rejects fixed households without a storyline at home. Headings appear
        only when a date offers more than one kind. */
     const offered = FBDATA.startScenarios.filter(function (sc) {
       return scenarioOffered(sc, bookmark.id);

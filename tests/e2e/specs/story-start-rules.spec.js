@@ -10,9 +10,13 @@ dependsOnRuntime(__filename, [
   'data/bookmark_800.js', 'data/bookmark_1204.js', 'data/mobile_confederations.js',
   'data/story_households_711.js', 'data/story_households_800.js',
   'data/story_households_1204.js', 'data/story_households_pontic_476.js',
+  'data/starts_perspectives.js', 'data/story_households_perspectives.js',
+  'data/start_ambitions.js', 'data/story_courts_476.js',
+  'data/bookmark_476.js', 'data/bookmark_476_wider.js', 'data/bookmark_476_italy.js',
   'data/story_ruler_agendas.js', 'data/story_instances.js', 'data/story_campaigns_711.js',
   'data/bookmark_1204_terrain.js', 'js/starts.js', 'js/mods.js', 'js/world.js',
   'js/main.js', 'js/stories.js', 'js/story_household.js', 'js/story_ruler_agenda.js',
+  'js/story_opening_goals.js', 'js/story_track.js',
   'js/save.js', 'js/save_v4.js', 'js/ui_misc.js', 'js/ui_modals.js'
 ]);
 
@@ -28,7 +32,7 @@ test('shipped fixed households have registered tracks in every offered world rev
     return FBDATA.startScenarios.filter(function (sc) {
       return sc.fixedProvinceId && !sc.rulerRealmId;
     }).map(function (sc) {
-      const tracks = FB.startTracks(sc, sc.fixedProvinceId);
+      const tracks = FB.startStoryTracks(sc, sc.fixedProvinceId);
       const revisions = [];
       sc.bookmarkIds.forEach(function (id) {
         FB.bookmarkRevisions(id, FBDATA.bookmarks[id]).forEach(function (bm) {
@@ -51,7 +55,7 @@ test('shipped fixed households have registered tracks in every offered world rev
   }
 });
 
-for (const fault of ['missing', 'empty', 'excluded', 'unknown', 'world']) {
+for (const fault of ['missing', 'empty', 'excluded', 'unknown', 'world', 'profile']) {
   test('a fixed household with ' + fault + ' tracks rejects an import without mutation', async function ({ page }, info) {
     await openGame(page, info);
     const result = await page.evaluate(function (fault) {
@@ -68,6 +72,14 @@ for (const fault of ['missing', 'empty', 'excluded', 'unknown', 'world']) {
       const rng = FB.getRngState(), uid = FB.getUidCounter(), storage = localStorage.getItem('fb_mods');
       const messages = JSON.stringify(FB.englishMessages());
       const mod = { name:'Invalid fixed household', startScenarios:[sc] };
+      if (fault === 'profile') {
+        sc.tracks = ['profile_only_household'];
+        sc.trackLocations = { profile_only_household:['toledo'] };
+        mod.storyInstances = { profile_only_household:{ id:'profile_only_household', type:'opening_profile',
+          title:'Optional reserve', intro:'A goal without a household storyline.',
+          scenarioIds:[sc.id], provinceIds:['toledo'], contacts:[],
+          goals:[{ id:'reserve', name:'Keep a reserve', text:'Keep twenty gold.', criterion:{ kind:'reserve', amount:20 } }] } };
+      }
       const errors = FB.mods.validate(mod), stored = FB.mods.store(JSON.stringify(mod));
       let rejected = false;
       try { FB.mods.apply(mod); } catch (_) { rejected = true; }
@@ -91,9 +103,10 @@ test('bookmark validation rejects missing and filtered tracks without exempting 
     const rng = FB.getRngState(), uid = FB.getUidCounter();
     const rows = [];
     try {
-      ['missing', 'excluded', 'hidden', 'disabled'].forEach(function (fault) {
+      ['missing', 'excluded', 'hidden', 'disabled', 'profile'].forEach(function (fault) {
         const sc = JSON.parse(JSON.stringify(original));
         if (fault === 'excluded') sc.trackLocations.toledo_household_track_711 = ['oviedo'];
+        else if (fault === 'profile') sc.tracks = sc.tracks.filter(function (id) { return !FB.stories.isStoryline(id); });
         else { delete sc.tracks; delete sc.trackLocations; }
         if (fault === 'hidden') sc.hidden = true;
         FBDATA.startScenarios[index] = sc;
@@ -117,15 +130,16 @@ test('bookmark validation rejects missing and filtered tracks without exempting 
   expect(result.pure).toBe(true);
 });
 
-test('the picker, start codes and direct creation refuse a fixed household whose track was removed', async function ({ page }, info) {
+for (const fault of ['missing', 'profile']) test('the picker, start codes and direct creation refuse a fixed household with ' + fault + ' storyline', async function ({ page }, info) {
   await openGame(page, info);
   await chooseDate(page, '711');
-  await page.evaluate(function () {
+  await page.evaluate(function (fault) {
     const sc = FBDATA.startScenarios.find(function (row) { return row.id === 'toledo_household_711'; });
-    delete sc.tracks;
+    if (fault === 'profile') sc.tracks = sc.tracks.filter(function (id) { return !FB.stories.isStoryline(id); });
+    else delete sc.tracks;
     // Location metadata on its own cannot supply the missing storyline.
     FBDATA.startScenarios.find(function (row) { return row.id === 'serf'; }).trackLocations = { orphan_track:['toledo'] };
-  });
+  }, fault);
   expect(await page.evaluate(function () {
     const before = FB.state, rng = FB.getRngState(), uid = FB.getUidCounter();
     FB.game.pending = { scenario:FBDATA.startScenarios.find(function (sc) { return sc.id === 'toledo_household_711'; }),
@@ -141,6 +155,78 @@ test('the picker, start codes and direct creation refuse a fixed household whose
   await page.locator('#ng-seed').press('Enter');
   await expect(page.locator('#ng-seed-err')).toContainText('doesn’t parse');
   await expect(page.locator('#chargen')).toHaveClass(/hidden/);
+});
+
+test('located opening goals leave an open role outside the Story group and still attach', async function ({ page }, info) {
+  await openGame(page, info);
+  const mod = await page.evaluate(function () {
+    const sc = JSON.parse(JSON.stringify(FBDATA.startScenarios.find(function (row) { return row.id === 'farmer_476'; })));
+    sc.tracks = ['profile_only_open_role'];
+    sc.trackLocations = { profile_only_open_role:['pavia'] };
+    return { name:'Open role companion goals', startScenarios:[sc],
+      storyInstances:{ profile_only_open_role:{ id:'profile_only_open_role', type:'opening_profile',
+        title:'Optional reserve', intro:'A goal without a household storyline.',
+        scenarioIds:[sc.id], provinceIds:['pavia'], contacts:[],
+        goals:[{ id:'reserve', name:'Keep a reserve', text:'Keep twenty gold.', criterion:{ kind:'reserve', amount:20 } }] } } };
+  });
+  await page.evaluate(function () { FB.ui.showMods(); });
+  await page.locator('#modfile').setInputFiles({ name:'open-role-companion.json', mimeType:'application/json',
+    buffer:Buffer.from(JSON.stringify(mod)) });
+  await Promise.all([page.waitForNavigation({ waitUntil:'domcontentloaded' }), page.locator('#mod-apply').click()]);
+  await page.waitForFunction(function () { return window.FB && FB.game && FB.game.bootReady && FB.stories.get('profile_only_open_role'); });
+  await chooseDate(page, '476');
+  const card = page.locator('#scenariolist [data-scenario="farmer_476"]');
+  await expect(card.locator('.scenario-story')).toHaveCount(0);
+  expect(await card.evaluate(function (el) {
+    let previous = el.previousElementSibling;
+    while (previous && !previous.classList.contains('scen-group')) previous = previous.previousElementSibling;
+    return previous && previous.textContent;
+  })).toBe('Open starts');
+  await card.click();
+  await expect(page.locator('#pickprov:not(.hidden)')).toBeVisible();
+  expect(await page.evaluate(function () { return FB.game.pending.provinceId; })).toBeNull();
+  await expect(page.locator('#pickinfo .pick-story')).toHaveCount(0);
+  await beginBookmark(page, info, '476', 'farmer_476');
+  expect(await page.evaluate(function () {
+    const sc = FBDATA.startScenarios.find(function (row) { return row.id === 'farmer_476'; });
+    const s = FB.state, record = JSON.stringify(s.stories.profile_only_open_role);
+    FB.save.restore(JSON.parse(FB.save.serialize()));
+    return { tracks:FB.startTracks(sc, 'pavia'), stories:FB.startStoryTracks(sc, 'pavia'),
+      attached:!!FB.state.stories.profile_only_open_role, home:s.player.provinceId,
+      retained:record === JSON.stringify(FB.state.stories.profile_only_open_role) };
+  })).toEqual({ tracks:['profile_only_open_role'], stories:[], attached:true, home:'pavia', retained:true });
+});
+
+for (const role of ['federate_476', 'curialis_476']) {
+  test(role + ' keeps its Ravenna story and ordinary households elsewhere', async function ({ page }, info) {
+    await openGame(page, info);
+    await chooseDate(page, '476');
+    const card = page.locator('#scenariolist [data-scenario="' + role + '"]');
+    await expect(card.locator('.scenario-story')).toHaveText('Story start: begins in Ravenna. Another birthplace gives an ordinary household.');
+    await card.click();
+    await expect(page.locator('#pickinfo .pick-location-title')).toHaveText('Ravenna');
+    expect(await page.evaluate(function (role) {
+      const sc = FB.game.pending.scenario, home = FB.startTracks(sc, 'ravenna');
+      const county = FB.bookmark('476').provinces.find(function (p) {
+        return p.id !== 'ravenna' && !p.wasteland && FB.startProvinceAllowed(sc, FB.bookmark('476'), p.id);
+      });
+      if (!county) throw new Error('No ordinary birthplace for ' + role);
+      return { home:FB.startStoryTracks(sc, 'ravenna'), companion:home.some(function (id) { return !FB.stories.isStoryline(id); }),
+        moved:FB.game.pickProvince(FB.world.byId[county.id]), away:FB.startStoryTracks(sc, county.id) };
+    }, role)).toEqual({ home:[role === 'federate_476' ? 'federate_track_476' : 'curialis_track_476'], companion:true, moved:true, away:[] });
+    await expect(page.locator('#pickinfo .pick-story')).toHaveText('This birthplace begins an ordinary household. The story starts in Ravenna.');
+  });
+}
+
+test('the Harbor Merchant household remains a Story start', async function ({ page }, info) {
+  await openGame(page, info);
+  await chooseDate(page, '1204');
+  const card = page.locator('#scenariolist [data-scenario="constantinople_merchant_household_1204"]');
+  await expect(card.locator('.scenario-story')).toHaveText('Story start: begins in Constantinople.');
+  await card.click();
+  await expect(page.locator('#pickinfo .pick-location-title')).toHaveText('Constantinople');
+  expect(await page.evaluate(function () { return FB.startStoryTracks(FB.game.pending.scenario, 'constantinople'); }))
+    .toEqual(['constantinople_merchant_track_1204']);
 });
 
 test('historical rulers and map-chosen open roles remain valid without player tracks', async function ({ page }, info) {
