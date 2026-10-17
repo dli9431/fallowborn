@@ -8,7 +8,7 @@ dependsOnRuntime(__filename, ['index.html','data/story_household_effects_476_493
   'data/story_courts_476.js','data/story_campaigns.js','data/bookmark_493_history.js','data/story_instances.js',
   'data/starts.js','data/technology.js','js/story_household_observer.js','js/story_household.js','js/stories.js',
   'js/story_campaign.js','js/story_courts.js','js/story_track.js','js/story_agreements.js','js/story_government_selection.js',
-  'js/government_selection.js','js/world.js','js/treasury.js','js/population.js','js/starts.js','js/main.js',
+  'js/government_selection.js','js/world.js','js/authority.js','js/treasury.js','js/population.js','js/starts.js','js/main.js',
   'js/save.js','js/save_v4.js','js/wars.js','js/armies.js','js/ui_panels.js']);
 
 test('all existing sources have bounded household coverage on each offered revision', async function ({ page }, info) {
@@ -103,6 +103,35 @@ test('repeated office history is keyed to each real result and turn without repl
     return {accepted:accepted,history:t.history.map(function (h) { return h.beatId; }),
       receipts:Object.keys(t.householdReceipts).length,stable:before === JSON.stringify(t)};
   })).toEqual({accepted:[true,true,true],history:['office476_survived','office476_deposed','office476_restored'],receipts:3,stable:true});
+});
+
+test('personal service contest and breached terms cannot be reported as a completed accord', async function ({ page }, info) {
+  await beginBookmark(page,info,'476','federate_476');
+  expect(await page.evaluate(function () {
+    const s = FB.state, sourceId = 'western_court_476', id = 'household_effects_'+sourceId;
+    const p = FB.stories.get(sourceId).declaration.parameters, w = s.stories[sourceId];
+    const module = FB.stories.get(id), observer = s.stories[id], track = s.stories[p.serviceTrackId];
+    FB.stories.apply(s,id,'continue',FB.stories.quote(s,id,'continue'));
+    const context = FB.storyCourts.context(sourceId);
+    const contract = FB.authorityOfferContract(s,context.serviceTerms(s,w,p));
+    if (!contract || !FB.authorityConsentContract(s,contract.id,p.patronRealmId) ||
+        !FB.authorityConsentContract(s,contract.id,p.serviceRealmId)) throw new Error('A real service agreement is required.');
+    FB.treasuryCredit(s,p.patronRealmId,p.immediatePay);
+    if (!FB.treasuryTransfer(s,p.patronRealmId,p.serviceRealmId,p.immediatePay)) throw new Error('The public payment must commit.');
+    track.contractId = contract.id;
+    FB.authorityContractTransition(s,contract.id,'breach',p.serviceRealmId);
+    const army = s.armies.filter(function (a) { return a.id === p.serviceHostId; })[0];
+    if (!army) throw new Error('The service host must exist.');
+    s.turn = 10; army.warId = p.contestWarId;
+    s.realms[p.serviceRealmId].war = {enemy:p.patronRealmId,years:0,captures:0,casus:{type:'border'}};
+    track.phase = 'battle'; track.result = 'contested'; w.aiResolution = null;
+    const gold = s.player.gold, source = JSON.stringify([w,track,s.realms,s.armies]);
+    module.day(s,observer);
+    const beats = observer.pending.map(function (n) { return n.beatId; });
+    return {contest:beats.indexOf('court476_contest') >= 0,changed:beats.indexOf('court476_terms_changed') >= 0,
+      accord:beats.indexOf('court476_paid_accord') >= 0,gold:gold === s.player.gold,
+      source:source === JSON.stringify([w,track,s.realms,s.armies])};
+  })).toEqual({contest:true,changed:true,accord:false,gold:true,source:true});
 });
 
 test('two actual tribute installments are public receipts and never household tax or wages', async function ({ page }, info) {

@@ -82,13 +82,16 @@
         add('opening', 0, true);
         if (r.pressureNoted) add('pressure', s.turn, true,
           [p.targetProvinceId,command && command.at].filter(Boolean));
-        var result = t && t.result;
-        if (r.aiResolution === 'negotiated' || t && t.contractId && result && ['declined','terms_lapsed'].indexOf(result) < 0)
+        var result = t && t.result, agreement = t && t.contractId && FB.political.contract(s, t.contractId);
+        if (r.aiResolution === 'negotiated' || t && t.contractId && result === 'negotiated')
           add('paid_accord', integer(t && t.outcomeTurn) ? t.outcomeTurn : s.turn, r.contractId || t && t.contractId);
         if (t && t.role !== 'outside' && t.contractId && t.lastAllocatedPeriod > 0)
           add('service_period', s.turn, [t.contractId,t.lastAllocatedPeriod]);
-        if (r.aiResolution === 'war' || t && t.warId && !t.result)
-          add('contest', s.turn, r.aiWarId || t.warId,
+        var court = s.realms[FB.startRealmId(s, p.serviceRealmId)];
+        var personalContest = result === 'contested' && command && command.warId === p.contestWarId &&
+          court && court.war && court.war.enemy === FB.startRealmId(s, p.patronRealmId);
+        if (r.aiResolution === 'war' || personalContest)
+          add('contest', s.turn, r.aiWarId || command && command.warId,
             [p.targetProvinceId,command && command.at].filter(Boolean));
         if ((r.aiResolution === 'won' || result === 'contested_victory') &&
             s.owner[p.targetProvinceId] === FB.startRealmId(s, p.serviceRealmId)) add('contest_won', s.turn, 'won');
@@ -102,7 +105,8 @@
         if (r.courtAt === p.retreatProvinceId && !r.courtMove)
           add('route_arrival', s.turn, r.courtAt, [p.retreatProvinceId]);
         if (r.courtMove === 'interrupted' || r.courtAt === 'displaced') add('route_interrupted', s.turn, [r.courtMove,r.courtAt]);
-        if (result === 'terms_lapsed') add('terms_changed', t.outcomeTurn, result);
+        if (agreement && (agreement.status !== 'active' || !agreement.effective))
+          add('terms_changed', s.turn, [t.contractId,agreement.status,!!agreement.effective]);
       } else if (source.type === 'contested_office') {
         if (s.turn >= p.officeReviewTurn && !r.result) add('review', p.officeReviewTurn, true);
         (r.history || []).forEach(function (h) { add(h.result === 'diverted' ? 'interrupted' : h.result, h.turn, [h.turn,h.result,h.officeId]); });
