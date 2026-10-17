@@ -1,5 +1,11 @@
 Revision-scoped fixed starts
 
+The Nicaean court in 1204
+
+data/starts_laskaris_1204.js offers laskaris_1204 as an always-open Historical start at Nicaea on compatible 1204 revisions. It adopts the existing Theodore Laskaris, territorial government, rank, family, holdings and treasury. Supporting kin remain generated. The opening uses the shared ruler checklist and ordinary campaign reviews for latin_bithynia_1204 and nicaean_return_1204. Those campaigns follow the adopted realm and retain their existing date windows, player authorization and actual war outcomes.
+
+Nicaea is the existing court's opening anchor. This start supplies no imperial coronation, named historical relatives, land award or guaranteed restoration. Technology impact: no new entry is required because selecting an existing ruler adds no independently gateable capability; all existing political and military gates continue to apply. The 1204 worlds and other starts retain their declarations.
+
 Spring claimant courts and a York household
 
 data/starts_claimants_1066.js adds existing-court openings for Harold Godwinson in London, William the Bastard in Rouen and Harald Hardrada in Trondheim. Adoption retains each living actor, existing relatives, territorial government, actual court resources and county structure. Normandy retains the French liege. These starts grant no English succession right, overseas occupation or scheduled invasion. Their birthplace anchors do not assert a day-specific royal itinerary.

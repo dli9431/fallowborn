@@ -38,7 +38,7 @@ FRESH_JOURNEYS.push({
 ['cleric_476','colonus_476','craftsman_476','farmer_476','mobile_household_476',
   'nepos_476','odoacer_476','peroz_476','peroz_sasanian_476','syagrius_476',
   'cleric_493','craftsman_493','curialis_493','farmer_493',
-  'muhammad_1204','siwa_delegate_1204',
+  'muhammad_1204','siwa_delegate_1204','laskaris_1204',
   'toledo_household_711','aachen_household_800','constantinople_household_1204'].forEach(function (scenario) {
   const bookmark = scenario.split('_').pop();
   FRESH_JOURNEYS.push({id:'fresh-' + bookmark + '-' + scenario,
