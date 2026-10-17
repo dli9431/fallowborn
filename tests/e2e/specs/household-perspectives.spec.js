@@ -4,13 +4,13 @@ const { openGame } = require('../support/game/navigation');
 const { beginBookmark } = require('../support/game/bookmark-acceptance');
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 
-dependsOnRuntime(__filename, ['index.html','data/starts.js','data/starts_perspectives.js',
+dependsOnRuntime(__filename, ['index.html','data/starts.js','data/starts_perspectives.js','data/start_ambitions.js',
   'data/story_households_711.js','data/story_households_1204.js','data/story_households_perspectives.js',
   'data/bookmark_711.js','data/bookmark_711_terrain.js','data/story_campaigns_711.js',
   'data/bookmark_1204.js','data/bookmark_1204_terrain.js','data/bookmark_1204_campaigns.js',
   'data/cultures.js','data/communal_revisions.js','data/government_rollout.js',
   'data/actions.js','data/economy.js','data/travel.js','data/events_travel.js',
-  'js/starts.js','js/stories.js','js/story_household.js','js/story_campaign.js',
+  'js/starts.js','js/stories.js','js/story_household.js','js/story_opening_goals.js','js/story_campaign.js',
   'js/main.js','js/model.js','js/world.js','js/actions.js','js/travel.js',
   'js/government_civic.js','js/civic_transactions.js','js/save.js','js/save_v4.js',
   'js/i18n.js','js/ui_misc.js','js/ui_panels.js']);
@@ -131,7 +131,7 @@ for (const [culture, faith] of [['greek','orthodox'],['frankish','catholic']]) {
   });
 }
 
-test('the harbor start validates every offering revision and attaches only its own track', async function ({ page }, info) {
+test('the harbor start validates every offering revision and attaches its household track and opening profile', async function ({ page }, info) {
   await openGame(page, info);
   expect(await page.evaluate(function () {
     const sc = FBDATA.startScenarios.find(function (r) { return r.id === 'constantinople_merchant_household_1204'; }), id = 'constantinople_merchant_track_1204';
@@ -144,7 +144,7 @@ test('the harbor start validates every offering revision and attaches only its o
       elsewhere:FBDATA.startScenarios.filter(function (r) { return r.id !== sc.id && (r.tracks || []).indexOf(id) >= 0; }).length,
       dates:sc.bookmarkIds, property:!!sc.startEffects };
   })).toEqual({ valid:true, defaults:['italian','catholic','merchant',15], families:['established','standard'],
-    tracks:[TRACK], away:[], elsewhere:0, dates:['1204'], property:false });
+    tracks:[TRACK,'opening_constantinople_merchant_1204'], away:[], elsewhere:0, dates:['1204'], property:false });
 });
 
 for (const [culture, faith] of [['italian','catholic'],['greek','orthodox'],['frankish','catholic']]) {

@@ -666,6 +666,70 @@ FBDATA.openingProfiles = {
       "constantinople"
     ]
   },
+  "opening_constantinople_merchant_1204": {
+    "id": "opening_constantinople_merchant_1204",
+    "type": "opening_profile",
+    "title": "Opening goals and people",
+    "intro": "These optional goals belong to this life. They grant no extra payment or reward. Named people retain their ordinary access rules.",
+    "scenarioIds": [
+      "constantinople_merchant_household_1204"
+    ],
+    "goals": [
+      {
+        "id": "merchant_livelihood_1204",
+        "name": "Earn an ordinary trading livelihood",
+        "text": "Receive {money:15} of actual ordinary market earnings after the opening. Gifts, loans, booty and opening stock do not count.",
+        "criterion": {
+          "kind": "earnings",
+          "amount": 15,
+          "focusIds": [
+            "market"
+          ]
+        }
+      },
+      {
+        "id": "merchant_reserve_1204",
+        "name": "Keep a household reserve",
+        "text": "Hold {money:30} in private funds.",
+        "criterion": {
+          "kind": "reserve",
+          "amount": 30
+        }
+      },
+      {
+        "id": "merchant_home_1204",
+        "name": "Complete the household course",
+        "text": "Conclude the decision to stay or complete ordinary permanent household resettlement. Deferred plans and temporary personal travel do not complete this goal.",
+        "criterion": {
+          "kind": "household_phase",
+          "storyId": "constantinople_merchant_track_1204",
+          "phases": [
+            "stayed",
+            "resettled"
+          ]
+        }
+      }
+    ],
+    "contacts": [
+      {
+        "id": "baldwin_link",
+        "label": "Current opening authority",
+        "text": "A named incumbent to approach through ordinary channels. No friendship, privileged access, citizenship or property grant follows.",
+        "linkKind": "target",
+        "required": true,
+        "person": {
+          "source": "realm_ruler",
+          "realmId": "latin_1204"
+        }
+      }
+    ],
+    "requires": [
+      "constantinople_merchant_track_1204"
+    ],
+    "provinceIds": [
+      "constantinople"
+    ]
+  },
   "opening_muhammad_1204": {
     "id": "opening_muhammad_1204",
     "type": "opening_profile",
