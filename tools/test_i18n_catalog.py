@@ -161,6 +161,35 @@ class JavascriptLexerTests(unittest.TestCase):
 
 
 class StructuredDataExtractionTests(unittest.TestCase):
+    def test_staged_faith_labels_are_read_without_executing_their_source(self):
+        source = i18n_catalog.DATA / 'identities_1096.js'
+        original_read = Path.read_text
+
+        def read_text(path, *args, **kwargs):
+            if path == source:
+                return (
+                    "FBDATA.bookmarkReligions1096 = {"
+                    "e2e_local_rite:{name:'River observance',"
+                    "properties:{words:{deity:'the river spirits'}}},"
+                    "e2e_hill_rite:{name:'Hill observance',"
+                    "properties:{roles:{priestF:'Keeper'}}}};"
+                    "throw new Error('Static extraction must not execute this source');"
+                )
+            return original_read(path, *args, **kwargs)
+
+        inventory = i18n_catalog.Inventory()
+        with patch.object(Path, 'read_text', read_text):
+            i18n_catalog.extract_structured(inventory)
+        for key, text in (
+            ('religion.e2e_local_rite.name.default', 'River observance'),
+            ('religion.e2e_local_rite.words.deity.default', 'the river spirits'),
+            ('religion.e2e_hill_rite.name.default', 'Hill observance'),
+            ('religion.e2e_hill_rite.roles.priestF.default', 'Keeper'),
+        ):
+            self.assertEqual(inventory.entries[key]['text'], text)
+            self.assertIn('identities_1096.js', inventory.meta[key]['location'])
+            self.assertIn(i18n_catalog.source_key(text), inventory.entries)
+
     def test_867_district_labels_have_independent_display_owners(self):
         inventory = i18n_catalog.Inventory()
         i18n_catalog.extract_structured(inventory)
