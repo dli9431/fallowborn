@@ -261,6 +261,226 @@ class JavascriptLexerTests(unittest.TestCase):
             i18n_catalog.lex_js(source)
 
 
+class SupplementalCatalogueExtractionTests(unittest.TestCase):
+    TECHNOLOGY = (
+        "add('copying',{default:'Old copying',muslim:'Court copying'},'x','learning',"
+        "[1,900],[400,900],[],{default:'Old method',muslim:'Court method'},{});\n"
+        "add('retained','Retained craft','x','crafts',[1,900],[400,900],[],"
+        "'Unchanged craft',{});\n"
+    )
+    BUILDINGS = (
+        "FBDATA.buildings = {hall:{name:{default:'Old hall',muslim:'Court hall'},"
+        "desc:'Old assembly room',cost:40},"
+        "shed:{name:'Retained shed',desc:'Unchanged shelter'}};\n"
+    )
+
+    def extract(self, files, namespace):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            data = root / 'data'
+            data.mkdir()
+            sources = {'technology.js': self.TECHNOLOGY, 'map_data.js': self.BUILDINGS}
+            sources.update(files)
+            for name, source in sources.items():
+                (data / name).write_text(source, encoding='utf-8')
+            inventory = i18n_catalog.Inventory()
+            with patch.object(i18n_catalog, 'ROOT', root), \
+                    patch.object(i18n_catalog, 'DATA', data), \
+                    patch.object(i18n_catalog, 'TECHNOLOGY_FILE', data / 'technology.js'):
+                i18n_catalog.extract_catalogue_displays(inventory, namespace)
+            inventory.finish_alias_meta()
+            return inventory
+
+    def test_two_independent_supplements_use_existing_owners_without_execution(self):
+        files = {
+            'technology_coast.js': (
+                "FBDATA.tech_shore = {soundings:{name:'Sounding practice',"
+                "desc:'Check {depth} fathoms',cost:20,fx:{seaMovement:0.01}}};\n"
+                "throw new Error('Never execute the composer');"
+            ),
+            'technology_ridge.js': (
+                "FBDATA.tech_upland = {terraces:{name:{default:'Upland terraces',"
+                "muslim:'Hill terraces'},desc:'Maintain the hillside',cost:35}};"
+            ),
+            'buildings_coast.js': (
+                "FBDATA.buildings_landing = {wharf:{name:'Timber landing',"
+                "desc:'A place for boats',cost:25}};"
+            ),
+            'buildings_ridge.js': (
+                "FBDATA.buildings_hill = {bothy:{name:'Hill shelter',"
+                "desc:{default:'Rest on the ridge',jewish:'Rest above the valley'},cost:10}};\n"
+                "throw new Error('Do not initialize the game');"
+            ),
+        }
+        for namespace, expected in (
+            ('tech', {
+                'tech.soundings.name.default': 'Sounding practice',
+                'tech.soundings.desc.default': 'Check {depth} fathoms',
+                'tech.terraces.name.default': 'Upland terraces',
+                'tech.terraces.name.muslim': 'Hill terraces',
+            }),
+            ('building', {
+                'building.wharf.name.default': 'Timber landing',
+                'building.bothy.name.default': 'Hill shelter',
+                'building.bothy.desc.jewish': 'Rest above the valley',
+            }),
+        ):
+            with self.subTest(namespace=namespace):
+                inventory = self.extract(files, namespace)
+                for key, text in expected.items():
+                    self.assertEqual(inventory.entries[key], {'text': text})
+                    self.assertEqual(inventory.entries[i18n_catalog.source_key(text)], {'text': text})
+                self.assertNotIn(i18n_catalog.source_key('Never execute the composer'), inventory.entries)
+        self.assertEqual(self.extract(files, 'tech').meta['tech.soundings.desc.default']['glossary'], ['depth'])
+
+    def test_complete_corrections_keep_keys_and_explicit_compatible_variants(self):
+        files = {
+            'technology_revision.js': (
+                "FBDATA.techCorrections_review = {copying:{"
+                "name:{default:'Organized copying',muslim:'Court copying'},"
+                "desc:{default:'Revised method',muslim:'Court method'},cost:20}};"
+            ),
+            'buildings_revision.js': (
+                "FBDATA.buildingCorrections_review = {hall:{"
+                "name:{default:'Assembly hall',muslim:'Court hall'},"
+                "desc:'Revised assembly room',cost:40}};"
+            ),
+        }
+        for namespace, item_id, default, branch, stale, source in (
+            ('tech', 'copying', 'Organized copying', 'Court copying', 'Old copying', 'technology_revision.js'),
+            ('building', 'hall', 'Assembly hall', 'Court hall', 'Old hall', 'buildings_revision.js'),
+        ):
+            with self.subTest(namespace=namespace):
+                inventory = self.extract(files, namespace)
+                prefix = namespace + '.' + item_id + '.name.'
+                self.assertEqual(inventory.entries[prefix + 'default'], {'text': default})
+                self.assertEqual(inventory.entries[prefix + 'muslim'], {'text': branch})
+                self.assertEqual(inventory.meta[prefix + 'muslim']['location'], 'data/' + source)
+                self.assertNotIn(i18n_catalog.source_key(stale), inventory.entries)
+                self.assertNotIn(i18n_catalog.source_key('Old method'), inventory.entries)
+                self.assertNotIn(i18n_catalog.source_key('Old assembly room'), inventory.entries)
+
+    def test_replacement_drops_removed_branches_and_keeps_shared_live_aliases(self):
+        inventory = self.extract({
+            'technology_revision.js': (
+                "FBDATA.techCorrections_review = {copying:{name:'Retained craft',"
+                "desc:'New method'}};"
+            )
+        }, 'tech')
+        self.assertNotIn('tech.copying.name.muslim', inventory.entries)
+        self.assertNotIn('tech.copying.desc.muslim', inventory.entries)
+        self.assertNotIn(i18n_catalog.source_key('Court copying'), inventory.entries)
+        alias = i18n_catalog.source_key('Retained craft')
+        self.assertEqual(inventory.entries[alias], {'text': 'Retained craft'})
+        self.assertCountEqual(inventory.alias_locations[alias], ['data/technology.js', 'data/technology_revision.js'])
+
+    def test_multiple_literal_tables_in_one_file_keep_their_distinct_roles(self):
+        inventory = self.extract({'technology_packet.js': (
+            "FBDATA.tech_additions = {new_craft:{name:'New craft',desc:'Another method'}};\n"
+            "FBDATA.techCorrections_older = {copying:{name:'Revised copying',desc:'Revised method'}};\n"
+            "if (FBDATA.tech_additions === null) { throw new Error('Never execute'); }"
+        )}, 'tech')
+        self.assertEqual(inventory.entries['tech.new_craft.name.default'], {'text': 'New craft'})
+        self.assertEqual(inventory.entries['tech.copying.name.default'], {'text': 'Revised copying'})
+        self.assertEqual(inventory.entries['tech.retained.name.default'], {'text': 'Retained craft'})
+        self.assertNotIn(i18n_catalog.source_key('Old copying'), inventory.entries)
+
+    def test_duplicate_additions_including_legacy_ids_are_errors_even_when_equal(self):
+        for namespace, filename, table, item_id, name in (
+            ('tech', 'technology_one.js', 'tech_one', 'copying', 'Old copying'),
+            ('building', 'buildings_one.js', 'buildings_one', 'hall', 'Old hall'),
+        ):
+            with self.subTest(namespace=namespace):
+                with self.assertRaisesRegex(ValueError, 'duplicate .* definition ' + item_id):
+                    self.extract({filename: 'FBDATA.' + table + ' = {' + item_id +
+                                  ":{name:'" + name + "',desc:'Duplicate'}};"}, namespace)
+        with self.assertRaisesRegex(ValueError, 'duplicate tech definition added'):
+            self.extract({
+                'technology_one.js': "FBDATA.tech_one = {added:{name:'One',desc:'First'}};",
+                'technology_two.js': "FBDATA.tech_two = {added:{name:'One',desc:'First'}};",
+            }, 'tech')
+
+    def test_corrections_require_one_existing_owner(self):
+        for namespace, filename, prefix, item_id in (
+            ('tech', 'technology_', 'techCorrections_', 'copying'),
+            ('building', 'buildings_', 'buildingCorrections_', 'hall'),
+        ):
+            with self.subTest(namespace=namespace):
+                with self.assertRaisesRegex(ValueError, 'correction of missing'):
+                    self.extract({filename + 'one.js': 'FBDATA.' + prefix +
+                                  "one = {missing:{name:'Missing',desc:'No original'}};"}, namespace)
+                source = " = {" + item_id + ":{name:'Correction',desc:'One owner only'}};"
+                with self.assertRaisesRegex(ValueError, 'duplicate .* correction owner'):
+                    self.extract({filename + 'one.js': 'FBDATA.' + prefix + 'one' + source,
+                                  filename + 'two.js': 'FBDATA.' + prefix + 'two' + source}, namespace)
+
+    def test_duplicate_literal_ids_fields_and_faith_owners_are_rejected(self):
+        for literal in (
+            "{new_id:{name:'One',desc:'First'},new_id:{name:'One',desc:'First'}}",
+            "{new_id:{name:'One',name:'One',desc:'First'}}",
+            "{new_id:{name:{default:'One',muslim:'Two',muslim:'Two'},desc:'First'}}",
+        ):
+            with self.subTest(literal=literal):
+                with self.assertRaisesRegex(ValueError, 'duplicate literal key'):
+                    self.extract({'technology_one.js': 'FBDATA.tech_one = ' + literal + ';'}, 'tech')
+
+    def test_dynamic_or_incomplete_display_maps_cannot_silently_lose_text(self):
+        for literal in (
+            'makeDefinitions()',
+            "{new_id:makeDefinition()}",
+            "{new_id:{name:translatedName(),desc:'First'}}",
+            "{new_id:{name:'One' + suffix,desc:'First'}}",
+            "{new_id:{name:{default:'One',muslim:translatedName()},desc:'First'}}",
+            "{new_id:{name:'One'}}",
+            "{new_id:{name:'One',desc:'First'}} || fallback",
+            "{...otherDefinitions,new_id:{name:'One',desc:'First'}}",
+            "{[computed]:{name:'One',desc:'First'}}",
+            "{new_id:{name:'One',desc:'First'}",
+        ):
+            with self.subTest(literal=literal):
+                with self.assertRaises(ValueError):
+                    self.extract({'technology_one.js': 'FBDATA.tech_one = ' + literal + ';'}, 'tech')
+
+    def test_later_direct_field_or_branch_overrides_cannot_hide_a_conflict(self):
+        for namespace, filename, table, reference in (
+            ('tech', 'technology_review.js', 'techCorrections_review', 'FBDATA.tech.copying.name'),
+            ('tech', 'technology_review.js', 'techCorrections_review', "FBDATA.tech['copying'].name.muslim"),
+            ('building', 'buildings_review.js', 'buildingCorrections_review', "FBDATA.buildings.hall['name']['muslim']"),
+        ):
+            item_id = 'copying' if namespace == 'tech' else 'hall'
+            source = 'FBDATA.' + table + ' = {' + item_id + ":{name:'Reviewed',desc:'Reviewed description'}};"
+            with self.subTest(reference=reference):
+                with self.assertRaisesRegex(ValueError, 'unsupported .* display override'):
+                    self.extract({filename: source + reference + " = 'Late variant';"}, namespace)
+                inventory = self.extract({filename: source + 'consume(' + reference + ');'}, namespace)
+                self.assertEqual(inventory.entries[namespace + '.' + item_id + '.name.default'], {'text': 'Reviewed'})
+
+    def test_comment_string_and_unrelated_table_are_not_declarations(self):
+        inventory = self.extract({'technology_notes.js': (
+            "// FBDATA.tech_false = {fake:{name:'Comment label',desc:'Comment'}};\n"
+            "var note = \"FBDATA.tech_false = {fake:{name:'String label'}}\";\n"
+            "FBDATA.techDomains_other = {domain:{name:'Domain label'}};\n"
+            "FBDATA.tech_real = {actual:{name:'Actual label',desc:'Actual description'}};"
+        )}, 'tech')
+        for text in ('Comment label', 'String label', 'Domain label'):
+            self.assertNotIn(i18n_catalog.source_key(text), inventory.entries)
+        self.assertEqual(inventory.entries['tech.actual.name.default'], {'text': 'Actual label'})
+
+    def test_legacy_sources_and_variants_keep_their_ordinary_owners(self):
+        inventory = i18n_catalog.Inventory()
+        i18n_catalog.extract_structured(inventory)
+        for key, text, source in (
+            ('tech.seed_selection.name.default', 'Seed Selection', 'data/technology.js'),
+            ('tech.scriptoria.name.muslim', 'Paper Workshops', 'data/technology.js'),
+            ('building.library.name.default', 'Library', 'data/map_data.js'),
+            ('building.library.name.muslim', 'House of Wisdom', 'data/map_data.js'),
+            ('building.cathedral.name.pagan', 'Grand Sanctuary', 'data/map_data.js'),
+        ):
+            self.assertEqual(inventory.entries[key], {'text': text})
+            self.assertEqual(inventory.meta[key]['location'], source)
+            self.assertIn(i18n_catalog.source_key(text), inventory.entries)
+
+
 class StructuredDataExtractionTests(unittest.TestCase):
     def test_staged_568_culture_labels_have_ordinary_localization_owners(self):
         inventory = i18n_catalog.Inventory()

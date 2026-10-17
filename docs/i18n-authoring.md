@@ -16,6 +16,14 @@ Those same household files may declare a literal FBDATA.openingProfiles_<suffix>
 
 Authority office names and descriptions use authorityOffice.<id>.<field>.default; legitimacy source names use legitimacySource.<id>.name.default. The static extractor reads both tables from data/political_institutions.js, and FB.officeText and FB.legitimacySourceName render their FB.dataText paths. Powers, scope, status, eligibility, terms, selectors and review consequences use FB.T. Historical people and physical place names remain proper names. Appointment and recognition outcomes use news.office.appointment, news.office.recognize and news.office.contest message descriptors; no rendered office or source label is saved. Add the source and extraction support on a feature branch without regenerating integration catalogs.
 
+Supplemental technology and building presentation
+
+Files named data/technology_<suffix>.js may declare literal FBDATA.tech_<suffix> maps for additions and FBDATA.techCorrections_<suffix> maps for complete replacements. Files named data/buildings_<suffix>.js use FBDATA.buildings_<suffix> and FBDATA.buildingCorrections_<suffix>. Table suffixes may differ from the filename, and one file may declare several maps. The static extractor resolves all definitions before registering text, without executing a composer. These tables organize source only; they introduce no runtime registry, JSON mod root or public add helper.
+
+Each supplemental row supplies literal name and desc fields, either strings or maps of literal faith branches. Complete corrections own the final fields, including every branch that should remain; omitted branches disappear rather than inheriting stale English. Existing tech.<id>.<field>.<branch> and building.<id>.<field>.<branch> owners remain stable. Compatible variants keep their keys, and exact-English aliases and source locations come from the final definition. Unchanged base definitions retain their existing owners and sources. Numeric, history, prerequisite and effect fields are not translated.
+
+An addition must have a new id, and a correction must target an existing definition with exactly one correction owner. Repeated ids, fields or variant branches are errors even when their English matches. Dynamic or missing display fields are rejected. Put any changed faith variant in that complete correction; direct field or branch assignments in these catalogue source files are rejected because they could overwrite the extracted English later. Reading a display field does not override it. Runtime composers still add or replace individual ids after the base tables under their ordinary validation; extraction does not run or validate their gameplay transactions. Catalogue generation remains a separately authorized integration step.
+
 # i18n authoring guide
 
 Local institutional presentation
