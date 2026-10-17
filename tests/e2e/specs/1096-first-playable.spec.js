@@ -14,6 +14,8 @@ dependsOnRuntime(__filename,[
   'data/bookmarks.js','data/bookmark_1066_inhabited.js','data/map_data.js',
   'data/counties.js','data/geographies.js','data/geography_expansion.js',
   'data/cultures.js','data/eras.js','data/starts.js','data/settlements.js',
+  'data/starts_pilgrim_1096.js','data/story_pilgrim_1096.js',
+  'js/stories.js','js/story_household.js','js/story_opening_goals.js',
   'data/settlements_real.js','data/government_rollout.js','data/ecclesiastical_profiles.js',
   'js/world.js','js/model.js','js/starts.js','js/main.js','js/save.js','js/save_v4.js'
 ]);
@@ -80,7 +82,7 @@ test('1096 composes every physical county and court once with valid detached ref
     ['verdun','lower_lotharingia_1096'],['liege','hre_1096'],['toulouse','toulouse_1096'],
     ['constantinople','byzantium_1096'],['nicaea','rum_1096'],['jerusalem','jerusalem_1096'],['mainz','hre_1096']
   ]);
-  expect(result.starts).toEqual({});
+  expect(result.starts.pilgrim_household_1096).toEqual(['cologne']);
   expect(result.stories).toEqual([]);
   expect(result.opening).toEqual({actors:{},appointments:{},estates:[],claims:[],migrations:[]});
 });

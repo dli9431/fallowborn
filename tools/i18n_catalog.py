@@ -2448,9 +2448,17 @@ def extract_story_courts(inv: Inventory) -> None:
                             TOKEN_RE.findall(record["text"]))
 
 
+def story_table_sources(prefix: str):
+    """Locate literal presentation tables without depending on story filenames."""
+    for source in sorted(DATA.glob("story_*.js")):
+        tables = re.findall(r"FBDATA\.([A-Za-z0-9_]+)\s*=", source.read_text(encoding="utf-8"))
+        for table in sorted(set(tables)):
+            if table.startswith(prefix):
+                yield source, table
+
+
 def extract_household_stories(inv: Inventory) -> None:
-    for source in sorted(DATA.glob("story_households_*.js")):
-        table = source.stem.replace("story_households_", "householdTracks_")
+    for source, table in story_table_sources("householdTracks_"):
         declarations = node_object(find_assignment(source, "FBDATA", table)) or {}
         rel = source.relative_to(ROOT).as_posix()
         for story_id, story_node in declarations.items():
@@ -2527,10 +2535,7 @@ def extract_ruler_agendas(inv: Inventory) -> None:
 
 def extract_opening_goals(inv: Inventory) -> None:
     sources = [(DATA / "start_ambitions.js", "openingProfiles")]
-    sources.extend(
-        (source, source.stem.replace("story_households_", "openingProfiles_"))
-        for source in sorted(DATA.glob("story_households_*.js"))
-    )
+    sources.extend(story_table_sources("openingProfiles_"))
     for source, table in sources:
         extract_opening_goal_source(inv, source, table)
 
