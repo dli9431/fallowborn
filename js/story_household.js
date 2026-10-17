@@ -6,6 +6,11 @@
   function slug(v) { return typeof v === 'string' && /^[a-z][a-z0-9_]*$/.test(v); }
   function keys(o, allowed) { return plain(o) && Object.keys(o).every(function (k) { return allowed.indexOf(k) >= 0; }); }
   function integer(v) { return Number.isInteger(v) && v >= 0; }
+  function calendarDay(v) {
+    return Array.isArray(v) && v.length === 3 && integer(v[0]) && v[0] <= 10000 &&
+      integer(v[1]) && v[1] < 4 && integer(v[2]) && v[2] >= 1 && v[2] <= 90
+      ? v[0] * 360 + v[1] * 90 + v[2] - 1 : null;
+  }
   function present(s) { return s.player.travel ? s.player.travel.currentId : s.player.provinceId; }
   function sovereign(s, id) { return s.owner[id] ? FB.topRealm(s, s.owner[id]) : null; }
   function living(s) { var c = s.chars[s.player.charId]; return !!c && !c.dead && !s.player.dead; }
@@ -122,6 +127,9 @@
           (!p.cultureId || own(FBDATA.cultures, p.cultureId)) && (!p.faithId || own(FBDATA.religions, p.faithId)), 'identity predicate');
       } else if (p.kind === 'year') {
         need(keys(p, ['kind','min','max']) && integer(p.min) && integer(p.max) && p.min <= p.max && p.max <= 10000, 'year predicate');
+      } else if (p.kind === 'calendar_window') {
+        need(keys(p, ['kind','firstDay','lastDay']) && calendarDay(p.firstDay) !== null &&
+          calendarDay(p.lastDay) !== null && calendarDay(p.firstDay) <= calendarDay(p.lastDay), 'calendar window');
       } else if (p.kind === 'job_state') {
         need(keys(p, ['kind','jobId','states']) && own(jobs, p.jobId) && Array.isArray(p.states) &&
           p.states.length > 0 && p.states.length <= 6 && p.states.every(function (v) {
@@ -320,6 +328,10 @@
       if (p.kind === 'sovereign') return sovereign(s, p.provinceId) === FB.startRealmId(s, p.realmId);
       if (p.kind === 'identity') { var c = s.chars[s.player.charId]; return !!c && (!p.cultureId || c.culture === p.cultureId) && (!p.faithId || c.religion === p.faithId); }
       if (p.kind === 'year') return s.date.year >= p.min && s.date.year <= p.max;
+      if (p.kind === 'calendar_window') {
+        var today = calendarDay([s.date.year, s.date.season, s.date.day]);
+        return today !== null && today >= calendarDay(p.firstDay) && today <= calendarDay(p.lastDay);
+      }
       if (p.kind === 'at_war') return FB.isRealmAtWar(s, sovereign(s, p.provinceId));
       if (p.kind === 'job_available') return availableJob(s, t, p.jobId);
       if (p.kind === 'job_patron') return patron(s, t, p.jobId);

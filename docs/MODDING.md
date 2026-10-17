@@ -5887,6 +5887,8 @@ Runtime story instance lifecycle
 
 Household tracks
 
+The calendar_window predicate accepts kind, firstDay and lastDay only. Each endpoint is [year, season, day], with year 0-10000, season 0-3 and day 1-90. Endpoints are inclusive and ordered on the ordinary 360-day calendar. The predicate reads the actual campaign date and never marks an incident, battle or outcome. Use a later window for expiry; a stage entered late must not replay an obsolete opportunity. No saved fields are added.
+
 Finite work extension
 
 An optional jobs map on household_track declares at most eight semantic job ids. Each complete record accepts payerRealmId, provinceId, days (1-30), fee (1-1000 integer gold), completionGold (0-fee), settlementGold (0 through fee minus completionGold), expiresDays (days through 360), yearMin and yearMax (0-10000, inclusive and ordered). Declare the payer realm and county in requirements.realms and requirements.provinces. All references are checked for each offered world revision. Unknown keys and unsupported operations fail detached compilation. The payer must be an AI court with an active spendable treasury, the original living opening ruler and actual local sovereignty. A player-controlled court cannot grant itself this offer. The accepting worker must be a free adult at home, outside personal war, travel and captivity, with no other unfinished work contract. Numbers and exact work disputes are simulation terms supplied by content.
