@@ -153,3 +153,59 @@ torne_district, upper_kama, vychegda_district, onega_district and sarysu_corrido
 Composition and replacement
 
 Each FBDATA.bookmarkRegions1096 payload exposes provinces, realms and layouts. A literal FBDATA.bookmarkRevisionContent_1096_<region> table owns the same payload, with bookmarkId 1096 and baseline revision, so the existing static localization extractor can find its county, realm and settlement labels. No new authoring root, shared runtime behavior, technology capability or saved field is introduced. The complete composer must install each payload's layouts and resolve the three foreign courts after all regions are available. Replacing a regional payload must preserve its exact physical allocation and remove its first-pass definition so that composition has one owner for every county and court.
+
+Spring 1096 first pass: Anatolia, Syria, Egypt and the eastern and southern regions
+
+data/bookmark_1096_scaffold_d.js declares seven independent regional blocks: anatolia_caucasus (26 physical rows), syria_palestine (11), egypt (8), arabia (14), iran_iraq (28), eastern_edge (31) and horn_sahel (13). Their 131 rows comprise 107 inhabited presentations, eleven retained district holds and thirteen broad scenery rows. The blocks own 38 courts. They load as inert declarations; they register no bookmark, playable start, person, institution, claim, migration or campaign. Full world composition remains separate.
+
+The public source is the explicit 1066 inhabited_v2 declaration, before later religious and government revisions. County communities, their numerical shares, development, physical sites and settlement slot order are copied into independent literals. These are first-pass simulation assumptions, not new findings about 1096. Changing the court does not convert residents. The two local-faith substitutions in the Sahel preserve the source settings under the separately staged 1096 ids. In particular, the copied Egyptian and Levantine communities are not a complete account of Coptic, Syriac, Jewish or other local residents; their omissions and proportions require independent dated review.
+
+Each unnamed principal uses the ordinary generated-ruler contract, with a simulated birth year 1061 inside the working adult range 1041-1076, no historical name and no authored genealogy. Court rank, territorial government, aggression, martial score, trait, colors and broad identity are simulation choices. They do not reconstruct an official's legal mandate, historical personality or precise fiscal jurisdiction. No new liege link is inferred from a religious claim or recognition. Three named incumbents have separately referenced birth years below; no family roster, marriage, future successor or scheduled death is imported from 1066.
+
+Anatolia and the Caucasus
+
+Rum uses Nicaea as its anchor. Dorylaion, Ancyra, Amorion and Ikonion share its coarse first-pass jurisdiction. Caesarea and Sebasteia use a separate Danishmendid court; Smyrna, Sardis and Ephesos use a western Anatolian court; Tarsos and Adana use a Cilician court with broad Armenian/Eastern-Christian presentation. Attaleia, Trebizond, Sinope and Cyprus reference the single byzantium_1096 court declared in the Balkan region. Van, Ani, Kars and Dvin reference seljuk_1096 from iran_iraq. Georgia is anchored at Kutaisi, Alania at Magas, and a Caspian frontier court at Derbent includes Samandar. These are county-scale reconstructions, not researched frontier lines or proof of uniform authority.
+
+Generated-ruler holds: rum_1096, danishmendid_1096, smyrna_local_1096, cilician_courts_1096, georgia_1096, alania_1096 and caspian_local_1096. Kilij Arslan's identity and Nicaean accession do not resolve his disputed birth. Isin Demirkent, Kilicarslan I, TDV Islam Ansiklopedisi, opening birth discussion and the return to Nicaea in late 1092/early 1093, explicitly questions the reported 1085 birth and marks Caka's 1095 death date as tentative. This block therefore supplies neither an invented historical age nor a named Smyrna successor. The reference supports the bounded sequence, not the larger territorial allocations. https://islamansiklopedisi.org.tr/kilicarslan-i
+
+Alania's Turkic court presentation reuses an existing broad naming pool; it is not an identification of Alan language or ethnicity. Cilician authority, Georgian and Armenian local jurisdictions, disputed western control and the named households remain evidence holds. No later Nicaean siege outcome, Konya capital transfer, Rubenid kingdom or Georgian conquest is an opening fact.
+
+Syria and Palestine
+
+Aleppo, Damascus, Homs, Antioch and Jerusalem have separate courts. Hama and Manbij share the Aleppo bloc; Amman shares the provisional Jerusalem bloc. Acre references fatimid_1096 as a coastal-control approximation, without giving Egypt Jerusalem. No Syrian Tripoli sovereign owns the whole Homs county, and the Libyan Tripoli county remains a separate place. Antioch and Jerusalem use the existing territorial government as a bounded effective-control abstraction, without an authored governorship mandate or permanent Seljuk allegiance.
+
+Generated-ruler holds: aleppo_1096, damascus_1096, homs_local_1096, antioch_1096 and jerusalem_1096. Their generic campaign principals do not impersonate Ridwan, Duqaq, Yaghi-Siyan, Sokman or Ilghazi. Births, sole opening incumbency, households, city/citadel boundaries, subordinate offices, recognition and local institutions remain unresolved. Court Sunni classification does not replace the source residents. Future crusader rule and the later Egyptian recovery of Jerusalem are absent.
+
+Egypt and Arabia
+
+fatimid_1096 is defined once in egypt at the existing Fustat/Cairo county anchor. Its external Acre and Barqa references share that court. The generated incumbent is an explicit al-Musta'li biography hold; the old al-Mustansir household is absent. No vizier, caliphal religious authority or field command is manufactured. Broad Shia court faith is a first-pass affiliation abstraction that does not settle the post-1094 succession and communion questions or reuse an expired focused profile.
+
+Generated-ruler holds in Arabia: sulayhid_1096 at Sanaa, omani_courts_1096 at Nizwa, mecca_1096, medina_1096, yamama_1096 and bahrain_1096 at Qatif. The Sanaa anchor does not assert Arwa's literal residence or resolve her co-rule and delegated Aden authority. The Omani court's broad Sunni setting is an eligibility placeholder, not a claim that Ibadi tradition is Sunni. Mecca and Medina use provisional Shia court affiliation; their inherited source community presentation also remains explicitly unresearched. Yamama and Bahrain acquire local courts rather than continuing direct Great Seljuk ownership. No Egyptian superiority, compulsory tribute or transit consent follows from these affiliations.
+
+Iraq and Iran
+
+seljuk_1096 has Berkyaruk, born 1081, at an Isfahan court anchor. abbasid_1096 has al-Mustazhir, born 1078, at Baghdad. Their source-sized residual county partitions are distinct effective-control approximations. Berkyaruk remains fifteen under the game's whole-year opening convention; the data does not replace his birth with an adult year. Generated supporting households are simulation people, and the source Alp Arslan and al-Qa'im profiles are absent. There is no new guardianship contract or personal start in this block.
+
+Abdulkerim Ozaydin, Berkyaruk, TDV Islam Ansiklopedisi, opening paragraph and the 1094 recognition and 1095-1097 rebellion passages, supplies the 1081 birth and contested succession context. These passages do not establish every provincial border or an opening Sanjar appointment. https://islamansiklopedisi.org.tr/berkyaruk
+
+Abdulkerim Ozaydin, Mustazhir-Billah, TDV Islam Ansiklopedisi, opening birth and accession paragraphs, supplies the 1078 birth and 1094 accession. Religious recognition remains distinct from direct county possession or military command. https://islamansiklopedisi.org.tr/mustazhir-billah
+
+Generated-ruler holds: khorasan_1096 at Merv and kerman_1096 at Kerman. Nishapur, Herat, Balkh and Termez share the Khorasan bloc; Bam and Hormuz share Kirman. Arslan Arghun's contemporary rebellion does not supply his missing birth or exact holdings, and no later Sanjar settlement is installed. Central Iranian and Sarakhs district habitation, communities, possession-based customary rights and climate settings retain their source simulation assumptions. Local Persian and other communities remain separate from the Turkic court labels.
+
+Central Asia and the eastern edge
+
+ghaznavid_1096 has Ibrahim ibn Masud, born 1033, at Ghazni, with broad Persianate court presentation. Erdogan Mercil, Ibrahim b. Mesud-i Gaznevi, TDV Islam Ansiklopedisi, opening birth and accession paragraphs and the 1059-1099 reign heading, supports those limited biographical choices. The court label does not identify the dynasty's ancestry with the language of every subject. https://islamansiklopedisi.org.tr/ibrahim-b-mesud-i-gaznevi
+
+Generated-ruler holds: sistan_1096 at Zaranj, karakhanid_1096 at Samarkand, makran_1096 at Tiz, sindh_1096 at Mansura, ghor_local_1096 at Ghor, khwarazm_local_1096 at Gurganj and lower_syr_local_1096 at the Lower Syr Darya district. The Sindh Persian/Shia court and Makran Persian/Sunni court are coarse presentation placeholders requiring local review. Kath and Gurganj share one Khwarazm court; Balkh and Termez reference the Khorasan court rather than a second sultan. The old historical profiles and the 1066 Lower Syr outside claim are absent. No new local dynasty, Seljuk dependency, remount pool or later Khwarazm empire is implied.
+
+Nubia, the Horn and the Sahel
+
+Generated-ruler holds: makuria_1096 at Dongola, alodia_1096 at Soba, ethiopian_courts_1096 at Axum, zeila_local_1096 at Zeila, wagadu_1096 at Kumbi, jenne_1096 at Jenne-jeno and gao_1096 at Gao. Soba is separately controlled from Makuria, and Zeila no longer inherits Yemen's territorial color. Axum is a coarse map anchor without a dated Zagwe roster or a foundation claim for Lalibela. Qasr Ibrim provisionally references Makuria and retains the source's local Miaphysite community. No Jan Seyum or Tunka Manin survival is inferred from the earlier date.
+
+The Wagadu and Niger communities use ghana_local_practice_1096 and niger_traditional_1096 from the inert 1096 faith table. Soninke and Middle Niger naming pools, religious mixtures and population weights are inherited presentation choices; neither a conquest of Ghana nor a royal conversion is scheduled. The script does not publish the faiths into the effective catalogue. Complete composition must publish detached definitions together with the full bookmark, preserving the original 1066 profiles' eligibility and doctrine.
+
+Retained district holds and composition
+
+palmyra_district, siwa_oasis, najran_oasis, tayma_oasis, eastern_iran_oases, shebar_valley, gomal_valley, thar_margin, nurata_foothills, chad_lakeshore and timbuktu_district retain their source scenery treatment. Their gameplay flag records missing dated habitation and jurisdiction declarations, not historical emptiness. The thirteen broad scenery rows also remain present exactly once. No fabricated local court fills these evidence gaps.
+
+The seven literal FBDATA.bookmarkRegions1096 blocks use the existing regional content schema and static localization route. Each owns its rows, title tables, layouts, climate exceptions and court definitions; shared physical sites remain existing catalogue references. The only court defined outside this quadrant is byzantium_1096. The complete composer must install the region layouts, preserve climate exceptions and combine every block before validation. No new JSON root, engine behavior, technology capability, save field or distribution flag is introduced. Historical starts, institutional rights and final regional corrections retain their separate evidence requirements.
