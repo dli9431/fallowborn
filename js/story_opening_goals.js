@@ -298,6 +298,13 @@
     if (result) FB.openingGoals.note(s, { kind:'profile_royal_choice', realmId:q.realmId });
     return result;
   };
+  var support = FB.governmentRecognition.applySupport;
+  FB.governmentRecognition.applySupport = function (s, q) {
+    var result = support(s, q), a = q && q.actor;
+    if (result && a && (a.kind === 'character' && a.id === s.player.charId || a.kind === 'realm' && a.id === 'player'))
+      FB.openingGoals.note(s, { kind:'profile_royal_choice', realmId:q.realmId });
+    return result;
+  };
   var consent = FB.governments.support.assent;
   FB.governments.support.assent = function (s, q) {
     var row = q && FB.governments.support.row(s, q.realmId), serial = row && row.serial;
