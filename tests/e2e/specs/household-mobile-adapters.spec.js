@@ -75,7 +75,7 @@ test('the independently configured twelve-day boundary closes without pay or RNG
   })).toEqual({ expiredQuote:false, phase:'closed', money:true, rng:true, once:true });
 });
 
-for (const fault of ['leader_operation','extra_work_terms','bad_purpose','unbounded_wait','unknown_mobile_condition','mixed_mobile_fields']) {
+for (const fault of ['leader_operation','extra_work_terms','bad_purpose','unbounded_wait','bad_clock','unknown_mobile_condition','mixed_mobile_fields']) {
   test('malformed mobile graph ' + fault + ' rejects detached', async function ({ page }, info) {
     await openGame(page, info);
     const result = await page.evaluate(function (input) {
@@ -84,6 +84,7 @@ for (const fault of ['leader_operation','extra_work_terms','bad_purpose','unboun
       if (input.fault === 'extra_work_terms') op.amount = 500;
       if (input.fault === 'bad_purpose') d.stages.offer.choices[0].operation = { kind:'travel_mobile', realmId:'pontic_following_476', purposeId:'pilgrimage' };
       if (input.fault === 'unbounded_wait') d.stages.offer.transitions[0].when.minDays = 1441;
+      if (input.fault === 'bad_clock') d.stages.offer.transitions[0].when.sinceCampaign = 'opening';
       const p = d.stages.offer.transitions[1].when.not;
       if (input.fault === 'unknown_mobile_condition') p.condition = 'field_host_conquest';
       if (input.fault === 'mixed_mobile_fields') p.provinceId = 'cherson';

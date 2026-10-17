@@ -65,7 +65,8 @@
       }
       if (p.not) { need(keys(p, ['not']), 'negation'); predicate(p.not, depth + 1); return; }
       if (p.kind === 'elapsed') {
-        need(keys(p, ['kind','minDays']) && integer(p.minDays) && p.minDays <= 1440, 'elapsed predicate');
+        need(keys(p, ['kind','minDays','sinceCampaign']) && integer(p.minDays) && p.minDays <= 1440 &&
+          (p.sinceCampaign === undefined || p.sinceCampaign === true), 'elapsed predicate');
       } else if (p.kind === 'travelling') need(keys(p, ['kind']), 'journey predicate');
       else if (p.kind === 'mobile_state') {
         need(keys(p, ['kind','realmId','condition','provinceId']) && slug(p.realmId) &&
@@ -178,7 +179,7 @@
       if (p.all) return p.all.every(function (v) { return test(s, v, t); });
       if (p.any) return p.any.some(function (v) { return test(s, v, t); });
       if (p.not) return !test(s, p.not, t);
-      if (p.kind === 'elapsed') return s.turn - t.stageTurn >= p.minDays;
+      if (p.kind === 'elapsed') return s.turn - (p.sinceCampaign ? 0 : t.stageTurn) >= p.minDays;
       if (p.kind === 'travelling') return !!s.player.travel;
       if (p.kind === 'mobile_state') {
         var mobile = FB.mobile.householdSnapshot(s, FB.startRealmId(s, p.realmId));
