@@ -58,6 +58,10 @@ Technology impact for constantinople_foothold_journey is none. The dated civilia
 
 Mod validation checks a fixed resident-community start against every revision that offers it, using the same offering rules as fixed existing-ruler starts. It does not require an expanded-only start to fit an older fresh selection that does not offer it. Start identity, settled location and required community still validate in each offering revision.
 
+568 regional first pass
+
+data/bookmark_568_scaffold_c.js loads after the source 493 expansion and stages five literal blocks under FBDATA.bookmarkRegions568: balkans, frankish_northwest, britain_north, scandinavia_baltic and central_asia_sindh. Its 127 inhabited counties and seven scenery cells remain inert until complete composition. The blocks use ordinary province, realm, title, layout and climate fields, with one imperial sovereign and one declaration per Frankish court. Metz is an external capital supplied by another block. Named courts have no invented consort or descendants; other principals are generated campaign people. The public evidence and explicit first-pass limitations are in docs/research/568-bookmark.md. Source snapshots never read the current mutable source bookmark at activation, and retained worlds stay separate. Technology impact is none: these declarations add no capability or eligibility rule.
+
 Bookmark platform and authoring
 
 Spring 1241 regional staging
