@@ -255,6 +255,20 @@ class StructuredDataExtractionTests(unittest.TestCase):
             self.assertIn('identities_1096.js', inventory.meta[key]['location'])
             self.assertIn(i18n_catalog.source_key(text), inventory.entries)
 
+    def test_1241_local_faith_has_staged_display_owners(self):
+        inventory = i18n_catalog.Inventory()
+        i18n_catalog.extract_structured(inventory)
+        for key, text in (
+            ('religion.sahel_local_practice_1241.name.default', 'Sahelian local practices'),
+            ('religion.sahel_local_practice_1241.words.deity.default', 'the sacred powers'),
+            ('religion.sahel_local_practice_1241.words.cleric.default', 'ritual keeper'),
+            ('religion.sahel_local_practice_1241.roles.monasticF.default', 'Devotee'),
+            ('religion.sahel_local_practice_1241.roles.priestM.default', 'Ritual keeper'),
+        ):
+            self.assertEqual(inventory.entries[key]['text'], text)
+            self.assertIn('identities_1241.js', inventory.meta[key]['location'])
+            self.assertIn(i18n_catalog.source_key(text), inventory.entries)
+
     def test_staged_faith_labels_are_read_without_executing_their_source(self):
         source = i18n_catalog.DATA / 'identities_1096.js'
         original_read = Path.read_text
