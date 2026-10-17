@@ -1,5 +1,11 @@
 Composed world-story lists
 
+Novgorod household in 1241
+
+data/starts_novgorod_1241.js offers a fictional age-24 Rus/Orthodox freeholder craftsman at Novgorod, with the ordinary standard generated family and no authored property or public office. data/story_novgorod_1241.js appends its protagonist-bound household_track and optional opening_profile after the common instance catalogue. Eight local decisions cover household priorities, actual craft work, earlier frontier context, public affairs, neighbours, postponing a journey, present livelihood and the future. Every review has a costless continuation; selecting craft work pays only through the ordinary focus owner, and the work-wait stage can be left unpaid. The story offers no named journey or historical recall notice. Leaving the local setting, death, succession or a campaign year of deferral closes unfinished plans without replay for an heir. Completed records and absent records retain their ordinary restore semantics.
+
+The optional goals observe actual craft earnings, a private reserve and the concluded local graph. No named contact, institution membership, reward, new saved field or gameplay capability is added. This content reuses the existing household_story_decisions and household_story_work technology decisions of none; ordinary work and travel keep their underlying gates. The historical Alexander opening remains absent because its exact opening placement, household and invited-prince authority are unresolved.
+
 Household calendar windows
 
 calendar_window compares inclusive [year, season, day] endpoints on the existing 360-day calendar. Data owns expiry and peaceful alternatives, and dates do not establish battles, duties or political results. Technology impact for household_calendar_windows is none: ordinary dated household decisions need no discovery. The calendar-households.json import demonstrates a bounded decision and a separate automatic expiry using the same pure compiler and shared story consumer. Existing records retain their schema and exact definition fingerprint.
