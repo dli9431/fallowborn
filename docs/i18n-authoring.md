@@ -1,5 +1,9 @@
 Office and legitimacy presentation
 
+Household story presentation
+
+Data files named data/story_households_<suffix>.js declare their literal source table as FBDATA.householdTracks_<suffix> before composing it into storyInstances. The extractor reads title, intro, stage name/text and choice label/detail into householdStory.<id> owners. Runtime graph presentation uses FB.T and its exact-source aliases, including effective English fallback for JSON imports. Graph ids, decisions, receipts and saved records contain no rendered prose. Adapter review chrome uses literal FB.T phrases. Feature work extends extraction support without regenerating catalogs.
+
 Authority office names and descriptions use authorityOffice.<id>.<field>.default; legitimacy source names use legitimacySource.<id>.name.default. The static extractor reads both tables from data/political_institutions.js, and FB.officeText and FB.legitimacySourceName render their FB.dataText paths. Powers, scope, status, eligibility, terms, selectors and review consequences use FB.T. Historical people and physical place names remain proper names. Appointment and recognition outcomes use news.office.appointment, news.office.recognize and news.office.contest message descriptors; no rendered office or source label is saved. Add the source and extraction support on a feature branch without regenerating integration catalogs.
 
 # i18n authoring guide

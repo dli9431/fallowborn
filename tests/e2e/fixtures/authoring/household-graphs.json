@@ -1,0 +1,45 @@
+{
+  "name": "Household graph examples",
+  "travelPurposes": {
+    "household_example_journey": {"name": "A dated journey", "desc": "An ordinary personal journey within its declared period.", "cost": 0, "minTier": 1, "maxTier": 2, "mode": "sites", "eras": ["early_medieval"], "yearMin": 868, "yearMax": 869}
+  },
+  "travelRules": {"household_example_journey": {"kind": "service", "encounters": "service", "arrivalEvent": "travel_capstone_service"}},
+  "travelSites": [{"id": "household_example_destination", "purpose": "household_example_journey", "provinceId": "aachen"}],
+  "storyInstances": {
+    "quay_household_example": {
+      "id": "quay_household_example", "type": "household_track",
+      "title": "A household decision", "intro": "An invented household considers its plans.",
+      "homeProvinceId": "paris", "continuity": "household", "initialStage": "invitation",
+      "stages": {
+        "invitation": {
+          "name": "An invitation", "text": "Keep the household private or make preparations.",
+          "choices": [
+            { "id": "keep_private", "label": "Remain private", "detail": "Record a refusal without payment.", "operation": {"kind": "record_decision"}, "next": "private_life" },
+            { "id": "prepare", "label": "Prepare", "detail": "Make plans without buying anything.", "operation": {"kind": "record_decision"}, "next": "prepared" }
+          ], "transitions": []
+        },
+        "private_life": { "name": "A private household", "text": "The invitation was declined.", "terminal": true, "choices": [], "transitions": [] },
+        "prepared": { "name": "Plans recorded", "text": "Preparations promise no political result.", "terminal": true, "choices": [], "transitions": [] }
+      }
+    },
+    "hill_household_example": {
+      "id": "hill_household_example", "type": "household_track",
+      "title": "Waiting for a new year", "intro": "A different household follows a dated decision.",
+      "homeProvinceId": "aachen", "continuity": "household", "initialStage": "wait",
+      "stages": {
+        "wait": {
+          "name": "A bounded wait", "text": "The opportunity closes in a later year.",
+          "incident": {"source": "control", "provinceId": "aachen", "milestone": "rule_changed"}, "afterIncident": "expired",
+          "choices": [{ "id": "remain", "label": "Remain at home", "detail": "A local decision needs actual presence.", "when": {"all": [{"kind": "home", "provinceId": "aachen"}, {"kind": "present", "provinceId": "aachen"}]}, "operation": {"kind": "record_decision"}, "next": "remained" }],
+          "transitions": [{ "when": {"kind": "year", "min": 868, "max": 10000}, "next": "expired" }]
+        },
+        "remained": { "name": "Still at home", "text": "The household stayed.", "terminal": true, "choices": [], "transitions": [] },
+        "expired": { "name": "Opportunity closed", "text": "The date passed without a decision.", "terminal": true, "choices": [], "transitions": [] }
+      }
+    }
+  },
+  "startScenarios": [
+    { "id": "quay_household_example_start", "name": "Quay household", "desc": "An invented household graph example.", "intro": "Begin a private household.", "bookmarkIds": ["867"], "fixedProvinceId": "paris", "alwaysUnlocked": true, "tier": 1, "profession": "farmer", "gold": 40, "prestige": 5, "piety": 0, "tracks": ["quay_household_example"], "trackLocations": {"quay_household_example": ["paris"]} },
+    { "id": "hill_household_example_start", "name": "Hill household", "desc": "A different dated household graph.", "intro": "Begin a household near the hills.", "bookmarkIds": ["867"], "fixedProvinceId": "aachen", "alwaysUnlocked": true, "tier": 1, "profession": "farmer", "gold": 40, "prestige": 5, "piety": 0, "tracks": ["hill_household_example"], "trackLocations": {"hill_household_example": ["aachen"]} }
+  ]
+}

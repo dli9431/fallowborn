@@ -1,5 +1,11 @@
 # Overland travel
 
+Dated purpose eligibility
+
+The ordinary departure gate enforces a purpose's declared eras and yearMin/yearMax as well as its system and rank gates. Read-only destination previews and direct starts use the same gate. An already-started journey keeps its commitment across the end of that authoring window; its ordinary interruption and settlement rules still apply.
+
+The dated toledo_refuge_711 purpose supplies a personal journey to the existing northern-upland county in 711-730. Its sites-mode destination does not depend on a future court making that county a capital. Service-road encounters remain ordinary, while its separate arrival acknowledgment pays nothing and starts the existing destination stay. The protagonist goes ahead alone; later permanent household settlement retains its ordinary gates. Technology impact toledo_refuge_journey is none, because seeking refuge adds no discovery requirement or guaranteed protection.
+
 Adult serfs cannot travel overland. Freeholders and gentry (tiers 1–2) may use
 every ordinary purpose; barons and higher may make relationship visits,
 pilgrimages, and study journeys. A journey begins as personal and temporary:

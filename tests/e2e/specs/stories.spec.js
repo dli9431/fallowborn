@@ -2,6 +2,7 @@
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
   'data/story_courts_476.js',
+  'data/story_households_711.js', 'js/story_household.js',
   'index.html', 'js/starts.js', 'js/story_track.js', 'js/stories.js', 'js/story_campaign.js', 'data/story_instances.js',
   'js/bookmark_setup.js', 'js/story_agreements.js',
   'data/bookmark_800_history.js', 'js/story_settlements.js', 'js/royal_settlements.js',
@@ -108,7 +109,7 @@ test('stories register in order at load time only and resolve by id',
     expect(result.late).toContain('load time only');
     expect(result.registered).toBe(false);
     expect(result.bookmark).toEqual(WORLD_STORIES.concat(['cashel_recognition_476']));
-    expect(result.tracks).toEqual(['peroz_476:','nepos_476:nepos_track_476','federate_476:federate_track_476','curialis_476:curialis_track_476','peroz_sasanian_476:']);
+    expect(result.tracks).toEqual(['peroz_476:','nepos_476:nepos_track_476','federate_476:federate_track_476','curialis_476:curialis_track_476','toledo_household_711:toledo_household_track_711','peroz_sasanian_476:']);
   });
 
 test('a branch save holding state.situation476 migrates once into both story records',

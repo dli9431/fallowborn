@@ -929,7 +929,7 @@ window.FB = window.FB || {};
     if (!c || FB.ageOf(c, state.date.year) < 16) {
       return FB.T('Only an adult can take to the road.');
     }
-    if (def && !FB.systemContentEnabled(state, def)) return FB.T('This travel purpose is unavailable.');
+    if (def && (!FB.contentPeriodEnabled(state, def) || !FB.systemContentEnabled(state, def))) return FB.T('This travel purpose is unavailable.');
     if (purposeId !== undefined && !def) {
       return FB.T('That travel purpose is unavailable.');
     }

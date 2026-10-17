@@ -111,6 +111,8 @@ window.FBDATA = window.FBDATA || {};
   FBDATA.techImpactReviews = {
     baselineVersion:'1.127.1',
     features:{
+      household_story_decisions:{ mode:'none', rationale:'Household decisions and local news require no discovery. Conversion and journey adapters retain their ordinary eligibility and costs.' },
+      toledo_refuge_journey:{ mode:'none', rationale:'Seeking a temporary northern foothold is an ordinary personal journey. Existing free-status, adulthood, route, cost and later settlement gates apply; no discovery authorizes flight or guarantees safety.' },
       jewish_samaritan_lay_profiles:{ mode:'none', rationale:'Ordinary communal participation and household study do not require a discovery, wealth, land or religious office. Specialist qualification and local recognition remain separate institutional requirements.' },
       faith_catalogue_availability:{ mode:'none', rationale:'Religious identity has dated historical availability and consumer eligibility. Worship, profession and existing communities are baseline social conditions, independent of discovery.' },
       iranian_local_faith_contexts:{ mode:'none', rationale:'Dated court affiliation, local worship and existing legal context are social conditions. Distinguishing learners from fire custodians introduces no discovery requirement or automatic institutional office.' },

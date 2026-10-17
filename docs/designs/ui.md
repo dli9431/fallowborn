@@ -1,5 +1,9 @@
 Court cultivation preview
 
+Household story reviews
+
+Household graphs use the existing Deeds story card and reviewed story sheet, including Back, Escape, Close, scroll and focus restoration. Unavailable choices remain reviewable with their current blocker. Decision reviews distinguish costless plans from actual transactions. Faith conversion names self or household scope and shows current costs and ordinary penalties. Journey reviews show price, route time and the actual protagonist travelling alone; arrival does not certify relatives' safety or household relocation. Permanent settlement is a separate reviewed choice with its ordinary residence, work and lifetime-move gates. Stale quotes perform no action and require review again.
+
 Cultivate the court names the actual Standing recipient and displays its fixed seasonal prestige and Standing rewards alongside Diplomacy training. The amounts come from the declared focus routine. Previewing the focus uses a non-creating role lookup and cannot create a patron, spend RNG or repair inventory.
 
 Estate and freedom review

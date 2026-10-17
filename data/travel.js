@@ -2,6 +2,12 @@
 window.FBDATA = window.FBDATA || {};
 
 FBDATA.travelPurposes = {
+  toledo_refuge_711: {
+    name:'Seek refuge in the northern uplands', icon:'🧭',
+    desc:'Go ahead alone to seek a foothold for a later household move. The road and its destination promise no protection.',
+    cost:5, minTier:1, maxTier:2, mode:'sites', repeatable:true,
+    eras:['early_medieval'], yearMin:711, yearMax:730
+  },
   tournament: {
     name:'Scheduled games', icon:'🏆', desc:'Travel to a funded gathering, with the return journey reserved.',
     cost:0, minTier:1, maxTier:7, targeted:true, repeatable:true
@@ -71,6 +77,7 @@ FBDATA.travelPurposes = {
 /* A site may restrict a purpose to exact religions or broad religion groups.
    Province ids are stable save/mod ids from data/counties.js. */
 FBDATA.travelSites = [
+  { id:'toledo_northern_refuge_711', purpose:'toledo_refuge_711', provinceId:'oviedo' },
   { id:'pilgrim_roma', purpose:'pilgrimage', provinceId:'roma',
     religions:['catholic'] },
   { id:'pilgrim_santiago', purpose:'pilgrimage', provinceId:'santiago',
@@ -145,6 +152,9 @@ FBDATA.balance.frontierSettlementPlots = 1;
 
 /* Mechanical roles and event references are independent of authored purpose ids. */
 FBDATA.travelRules = {
+  toledo_refuge_711: {
+    kind:'service', encounters:'service', arrivalEvent:'toledo_refuge_arrival_711'
+  },
   "tournament": {
     "kind": "tournament",
     "encounters": "tournament"

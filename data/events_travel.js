@@ -8,6 +8,12 @@ FBDATA.events = FBDATA.events || [];
   FBDATA.eventPacks.travel = { eras:['late_antique','early_medieval','high_medieval'] };
 
 FBDATA.events.push(
+{ id:'toledo_refuge_arrival_711', title:'A Foothold in the Uplands',
+  trigger:{ never:true }, travel:{ kind:'capstone', purpose:'toledo_refuge_711' },
+  text:'You have reached the northern uplands. Your relatives remain at home. Local work and residence may make a later household move possible; neither the road nor the current court promises safety.',
+  options:[{ label:'Begin the stay.', desc:'Arrival grants no title, protection, wages or immediate household move.',
+    effects:{ custom:'travel_capstone_done' } }]
+},
 /* ---------- culture mismatch archetypes ---------- */
 { id:'travel_culture_language', title:'A Word Mislaid', trigger:{never:true},
   travel:{kind:'culture'},
