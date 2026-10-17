@@ -77,7 +77,7 @@
   }
   function location(s, actor) {
     var c = actor && actor.kind === 'character' && s.chars[actor.id];
-    return c && (s.player && s.player.charId === c.id ? s.player.provinceId : c.homeProvinceId);
+    return c && (s.player && s.player.charId === c.id ? s.player.travel ? s.player.travel.currentId : s.player.provinceId : c.homeProvinceId);
   }
   M.total = function (s, rid) {
     var r = M.row(s, rid);
@@ -111,6 +111,16 @@
         !FB.armiesHostile(s, { realm:rid }, { realm:a.partnerId });
     })[0];
   }
+  M.householdSnapshot = function (s, rid) {
+    var r = M.row(s, rid), m = M.migration(s, rid), p = M.profile(s, rid);
+    if (!r || !m || !p) return null;
+    var market = FB.marketProvisionSnapshot(s, m.at), access = activeAccess(s, rid, m.at), host = M.host(s, rid);
+    return { realmId:rid, active:!!(s.realms[rid] && s.realms[rid].alive && M.active(s, rid) && r.status === 'active'),
+      provinceId:m.at, moving:!!(host && host.mobileCourt && (host.moveLeft > 0 || (host.path || []).length)), food:r.food,
+      scarce:r.food < M.total(s, rid) * p.foodPerPerson * 30,
+      treasury:FB.treasuryAvailable(s, rid), marketFood:market ? market.stock : 0,
+      access:access ? copy(access) : null };
+  };
   M.passage = function (s, rid, pid, court) {
     return s.owner[pid] === rid || !!activeAccess(s, rid, pid) ||
       !!(s.owner[pid] && FB.armiesHostile(s, { realm:rid }, { realm:s.owner[pid] })) ||
@@ -170,7 +180,7 @@
       s.owner, s.holder, s.population && s.population.counties[t.countyId],
       s.realms[rid].ruler, t.partnerId && s.realms[t.partnerId],
       FB.treasuryAvailable(s, rid), t.partnerId && FB.treasuryAvailable(s, t.partnerId),
-      s.authority.contracts, s.authority.governments, s.player && [s.player.charId, s.player.provinceId, s.player.gold],
+      s.authority.contracts, s.authority.governments, s.player && [s.player.charId, s.player.provinceId, s.player.gold, s.player.travel || null],
       s.market && s.market.counties && s.market.counties[t.countyId]]);
   }
   /* All requests, including AI requests, carry an actual acting principal.

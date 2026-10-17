@@ -91,6 +91,9 @@
         j.expiresDays >= j.days && j.expiresDays <= 360 && integer(j.yearMin) && integer(j.yearMax) &&
         j.yearMin <= j.yearMax && j.yearMax <= 10000, 'job bounds');
     });
+    function mobileRealm(id) {
+      need(slug(id) && (def.requirements && def.requirements.realms || []).indexOf(id) >= 0, 'mobile realm dependency');
+    }
     var predicateCount = 0;
     function predicate(p, depth) {
       if (p === undefined) return;
@@ -101,7 +104,16 @@
         list.forEach(function (v) { predicate(v, depth + 1); }); return;
       }
       if (p.not) { need(keys(p, ['not']), 'negation'); predicate(p.not, depth + 1); return; }
-      if (p.kind === 'home' || p.kind === 'present' || p.kind === 'arrived' || p.kind === 'at_war' || p.kind === 'journey') {
+      if (p.kind === 'elapsed') {
+        need(keys(p, ['kind','minDays','sinceCampaign']) && integer(p.minDays) && p.minDays <= 1440 &&
+          (p.sinceCampaign === undefined || p.sinceCampaign === true), 'elapsed predicate');
+      } else if (p.kind === 'travelling') need(keys(p, ['kind']), 'journey predicate');
+      else if (p.kind === 'mobile_state') {
+        mobileRealm(p.realmId);
+        need(keys(p, ['kind','realmId','condition','provinceId']) && slug(p.realmId) &&
+          ['active','camp','present','moving','scarce'].indexOf(p.condition) >= 0 &&
+          (p.condition === 'camp' ? slug(p.provinceId) : p.provinceId === undefined), 'mobile predicate');
+      } else if (p.kind === 'home' || p.kind === 'present' || p.kind === 'arrived' || p.kind === 'at_war' || p.kind === 'journey') {
         need(keys(p, ['kind','provinceId']) && slug(p.provinceId), 'location predicate');
       } else if (p.kind === 'sovereign') {
         need(keys(p, ['kind','provinceId','realmId']) && slug(p.provinceId) && slug(p.realmId), 'sovereign predicate');
@@ -144,6 +156,12 @@
         need(keys(op, ['kind','jobId']) && own(jobs, op.jobId), 'work terms');
       else if (op.kind === 'settle_job') need(keys(op, ['kind','jobId','resolution']) && own(jobs, op.jobId) &&
         ['settlement','hearing','waive'].indexOf(op.resolution) >= 0, 'account terms');
+      else if (op.kind === 'mobile_work') { mobileRealm(op.realmId); need(keys(op, ['kind','realmId']), 'mobile work terms'); }
+      else if (op.kind === 'travel_mobile') {
+        mobileRealm(op.realmId);
+        var purpose = FBDATA.travelPurposes && FBDATA.travelPurposes[op.purposeId];
+        need(keys(op, ['kind','realmId','purposeId']) && slug(op.realmId) && purpose && !purpose.targeted && purpose.mode === 'capitals', 'mobile journey terms');
+      } else if (op.kind === 'return_home') need(keys(op, ['kind']), 'return terms');
       else need(false, 'unknown operation');
     }
     Object.keys(def.stages).forEach(function (id) {
@@ -211,11 +229,12 @@
   }
 
   function factory(def) {
-    var controls = Object.create(null), places = Object.create(null);
+    var controls = Object.create(null), places = Object.create(null), mobileRealms = Object.create(null);
     function scan(v) {
       if (!v || typeof v !== 'object') return;
       if (v.source === 'control') controls[v.provinceId] = true;
       if (v.provinceId) places[v.provinceId] = true;
+      if (v.kind === 'mobile_state' || v.kind === 'mobile_work' || v.kind === 'travel_mobile') mobileRealms[v.realmId] = true;
       Object.keys(v).forEach(function (k) { scan(v[k]); });
     }
     scan(def.stages);
@@ -283,6 +302,17 @@
       if (p.all) return p.all.every(function (v) { return test(s, v, t); });
       if (p.any) return p.any.some(function (v) { return test(s, v, t); });
       if (p.not) return !test(s, p.not, t);
+      if (p.kind === 'elapsed') return s.turn - (p.sinceCampaign ? 0 : t.stageTurn) >= p.minDays;
+      if (p.kind === 'travelling') return !!s.player.travel;
+      if (p.kind === 'mobile_state') {
+        var mobile = FB.mobile.householdSnapshot(s, FB.startRealmId(s, p.realmId));
+        if (!mobile || !mobile.active) return false;
+        if (p.condition === 'active') return true;
+        if (p.condition === 'camp') return mobile.provinceId === p.provinceId;
+        if (p.condition === 'present') return mobile.provinceId === present(s);
+        if (p.condition === 'moving') return mobile.moving;
+        return mobile.scarce;
+      }
       if (p.kind === 'home') return s.player.provinceId === p.provinceId;
       if (p.kind === 'present') return present(s) === p.provinceId;
       if (p.kind === 'arrived') return !!s.player.travel && s.player.travel.phase === 'arrived' && s.player.travel.destinationId === p.provinceId;
@@ -348,6 +378,21 @@
       }
     }
     function operation(s, op, t) {
+      if (op.kind === 'mobile_work') {
+        var request = { realmId:FB.startRealmId(s, op.realmId), action:'work', terms:{}, actor:{ kind:'character', id:s.player.charId } };
+        var review = FB.mobile.review(s, request);
+        return { allowed:!!review.review.allowed, reason:FB.T('Paid camp work requires actual presence, age sixteen, an available worker, food, treasury funds and no previous payment today.'), terms:review };
+      }
+      if (op.kind === 'travel_mobile') {
+        var rid = FB.startRealmId(s, op.realmId), mobile = FB.mobile.householdSnapshot(s, rid);
+        var dest = mobile && mobile.active && !mobile.moving && FB.travelRealmSnapshot(s, op.purposeId, rid);
+        return { allowed:!!dest && dest.destinationId === mobile.provinceId && s.player.gold >= dest.cost,
+          reason:FB.T('A stationary living camp, an ordinary reachable court destination and the full journey price are required.'), terms:dest || null };
+      }
+      if (op.kind === 'return_home') {
+        var eligible = FB.travelReturnEligible(shadow(s));
+        return { allowed:eligible === true, reason:eligible === true ? '' : eligible, terms:s.player.travel };
+      }
       if (op.kind === 'set_focus') {
         var f = FB.focusStatus(s, op.focusId);
         return { allowed:f.can && !s.player.travel, reason:f.reason, terms:{ focusId:op.focusId, preview:f.preview } };
@@ -393,6 +438,9 @@
         when:!!choice && test(s, choice.when, t), spent:!!choice && choice.operation.kind === 'household_expense' && own(t.decisions, t.phase),
         incident:key, closed:closed || null, terms:op.terms,
         graph:def };
+      if (Object.keys(mobileRealms).length) facts.mobile = Object.keys(mobileRealms).sort().map(function (rid) {
+        return FB.mobile.householdSnapshot(s, FB.startRealmId(s, rid));
+      });
       if (choice && choice.operation.kind === 'convert_faith') facts.modifier = FBDATA.modifiers && FBDATA.modifiers['zealot_unrest'];
       return { id:id, allowed:!!choice && facts.alive && !facts.spent && facts.stageReady && facts.local && facts.when && op.allowed &&
         (!stage.incident || !!key && !closed), reason:op.reason || FB.T('The local situation has changed. Review the household again.'),
@@ -438,6 +486,9 @@
       if (op.kind === 'convert_faith' && !FB.applyConversion(s, 'faith', op.faithId, op.scope)) return false;
       if (op.kind === 'travel_site' && !FB.travelStart(s, q.facts.terms.purpose, q.facts.terms.destinationId, q.facts.terms.destinationRealm)) return false;
       if (op.kind === 'settle_household' && !FB.travelSettle(s)) return false;
+      if (op.kind === 'mobile_work' && !FB.mobile.commit(s, q.facts.terms)) return false;
+      if (op.kind === 'travel_mobile' && !FB.travelStart(s, q.facts.terms.purpose, q.facts.terms.destinationId, q.facts.terms.destinationRealm)) return false;
+      if (op.kind === 'return_home' && !(s.player.travel.phase === 'arrived' ? FB.travelReturn(s) : FB.travelTurnBack(s))) return false;
       close(s, t, stage, 'resolved');
       t.decisions[t.phase] = { choiceId:id, turn:s.turn, actorId:s.player.charId };
       move(s, t, choice.next); return true;
@@ -481,6 +532,14 @@
           lines.push(FB.T('Work: {days}/{total} action days. Paid: {paid} gold. Held: {held} gold. Refunded: {refunded} gold.',
             { days:row.daysWorked, total:def.jobs[id].days, paid:row.paid, held:row.escrow, refunded:row.refunded }));
         });
+        Object.keys(mobileRealms).sort().forEach(function (rid) {
+          var row = FB.mobile.householdSnapshot(s, FB.startRealmId(s, rid));
+          if (!row || !row.active) { lines.push(FB.T('The mobile following is no longer available.')); return; }
+          lines.push(FB.T('Civilian camp: {place}. Food stock: {food}. Public treasury: {money:gold}. Local market food: {market}.',
+            { place:FB.world.byId[row.provinceId].name, food:Math.floor(row.food), gold:row.treasury, market:Math.floor(row.marketFood) }));
+          lines.push(row.access ? FB.T('Current lawful access is active; pasture and recruitment remain subject to its terms.') :
+            FB.T('No current lawful access concession is active here. Work does not negotiate one.'));
+        });
         return { phase:t.phase, name:FB.T(stage.name), lines:lines };
       },
       choices:function (s, t) { return def.stages[t.phase].choices.map(function (c) { return { id:c.id, label:FB.T(c.label), detail:FB.T(c.detail) }; }); },
@@ -515,7 +574,10 @@
               tax:Math.round(100 * (q.facts.modifier.fx.tax || 0)), levy:Math.round(100 * (q.facts.modifier.fx.levy || 0)) }) : FB.T('No household conversion unrest is added.'),
           terms.excommunicates ? FB.T('The old obedience may excommunicate you for apostasy.') : FB.T('No papal excommunication applies.'),
           FB.T('Culture, property, taxes and safety are not guaranteed by conversion.')];
-        if (op.kind === 'travel_site') return [FB.T('Journey price: {gold}. Route time: {days} days.', { gold:terms.cost, days:terms.days }),
+        if (op.kind === 'mobile_work') return [FB.T('The coalition pays you {money:gold} from its treasury and consumes one food unit.', { gold:terms.review.cost }),
+          FB.T('This is one paid service today. It grants no membership, pasture, land, conversion or authority over the following.')];
+        if (op.kind === 'return_home') return [FB.T('Use the existing journey to return home. Ordinary minimum-stay rules still apply; completion requires actual arrival.')];
+        if (op.kind === 'travel_site' || op.kind === 'travel_mobile') return [FB.T('Journey price: {gold}. Route time: {days} days.', { gold:terms.cost, days:terms.days }),
           FB.T('Traveller: {name}. Relatives remain at home until an ordinary household settlement.', { name:FB.fullName(s.chars[s.player.charId]) }),
           FB.T('Travel risks and interruptions apply. Arrival grants no land or protection.')];
         if (op.kind === 'settle_household') return [FB.T('Move the household through the ordinary settlement rules. This uses your one permanent move in this lifetime.')];

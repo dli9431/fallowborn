@@ -132,6 +132,8 @@ data/story_households_800.js attaches aachen_household_track_800 only to aachen_
 
 Imported story references
 
+The existing mobile_household_476 opening attaches pontic_household_track_476 only at Cherson. data/story_households_pontic_476.js declares farm and paid-work choices, live supply/access reviews and a first-campaign-season conclusion if the civilian camp stays. Only actual court movement opens the departure branch; an ordinary field march does not. Optional personal travel follows the current stationary court through ordinary Paid service and requires actual camp presence before work. Return completion waits for actual arrival home. Membership remains a separate Mobile coalition Deed; the story neither transfers named kin nor changes property, identity, diplomacy or the following's political choices. The following and its exact location are simulation choices, without a dated historical migration or compulsory shortage.
+
 Bookmark and start validation accepts an explicit detached story context from the mod loader. Same-file storyInstances and startScenarios can therefore refer to each other without temporary publication into the active registry. Every affected retained world revision is checked. Fresh campaign creation initializes only declared attachments; loading an older matching campaign never fills absent story records.
 
 The two playable authoring examples own separate three-county geography bases and fictional people and identities. They use ordinary bookmark, local-institution, household-start and story declarations. They contain no copied historical bookmark or central historical office dependency.
