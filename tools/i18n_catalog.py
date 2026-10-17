@@ -830,7 +830,56 @@ def extract_revision_content(inv: Inventory) -> None:
                     label(f"constituencyMember.{profile_id}.{member_id}", member.get("name"))
 
 
+def extract_scaffold_regions(inv: Inventory) -> None:
+    """Read inert regional literals without registering or executing a world."""
+    for path in sorted(DATA.glob("bookmark_*_scaffold_*.js")):
+        match = re.fullmatch(r"bookmark_(\d+)_scaffold_[a-z]+", path.stem)
+        if not match:
+            continue
+        bookmark_id = match.group(1)
+        owner = "bookmarkRegions" + bookmark_id
+        tokens = lex_js(path.read_text(encoding="utf-8"))
+        rel = path.relative_to(ROOT).as_posix()
+        for i in range(len(tokens) - 6):
+            if ([token.value for token in tokens[i:i + 4]] != ["FBDATA", ".", owner, "."]
+                    or tokens[i + 4].kind != "ident" or tokens[i + 5].value != "="):
+                continue
+            parser = Parser(tokens)
+            parser.i = i + 6
+            declaration = node_object(parser.parse_value()) or {}
+            for table, kind in (("provinces", "province"), ("realms", "realm")):
+                for item_node in node_array(declaration.get(table)) or []:
+                    item = node_object(item_node) or {}
+                    item_id = node_string(item.get("id"))
+                    if not item_id:
+                        continue
+                    for branch, record, line in branch_records(item.get("name")):
+                        inv.add(f"{kind}.{bookmark_id}.{item_id}.name.{branch}", record,
+                                f"{rel}:{line}", "Regional first-pass display name.", ())
+                    for index, dated_node in enumerate(node_array(item.get("names")) or []):
+                        dated = node_object(dated_node) or {}
+                        for branch, record, line in branch_records(dated.get("name")):
+                            inv.add(f"{kind}.{bookmark_id}.{item_id}.name.dated.{index}.{branch}", record,
+                                    f"{rel}:{line}", "Dated regional display name.", ())
+            for table, kind in (("duchies", "duchy"), ("kingdoms", "kingdom"), ("empires", "empire")):
+                for item_id, item_node in (node_object(declaration.get(table)) or {}).items():
+                    item = node_object(item_node) or {}
+                    for branch, record, line in branch_records(item.get("name")):
+                        inv.add(f"{kind}.{bookmark_id}.{item_id}.name.{branch}", record,
+                                f"{rel}:{line}", "Regional first-pass title name.", ())
+            layouts = {**(node_object(declaration.get("layouts")) or {}),
+                       **(node_object(declaration.get("settlementLayouts")) or {})}
+            for county_id, layout_node in layouts.items():
+                for index, slot_node in enumerate(node_array(layout_node) or []):
+                    slot = node_object(slot_node) or {}
+                    site_id = node_string(slot.get("site")) or f"{county_id}.{index}"
+                    for branch, record, line in branch_records(slot.get("name")):
+                        inv.add(f"settlement.{bookmark_id}.{site_id}.name.{branch}", record,
+                                f"{rel}:{line}", "Regional first-pass settlement name.", ())
+
+
 def extract_structured(inv: Inventory) -> None:
+    extract_scaffold_regions(inv)
     extract_geography_additions(inv)
     extract_bookmark_revision_content(inv)
     extract_revision_content(inv)
