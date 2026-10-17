@@ -2237,6 +2237,10 @@ Profile rows optionally retain aiPeriod as an integer from zero through floor(tu
 
 Religious activity retention
 
+Optional household observers
+
+household_observer adds only its optional version-1 story record, validated through the existing story registry before adoption. It preserves bounded source cursors, control stamps, local offers, continuing household identity and the shared receipt closures. The v4 envelope and other story records keep their existing meanings. Missing observers remain missing; matching saves resume their pending notices without observation during restore, new people, money, population movement or source initialization. Normal lifecycle boundaries own subsequent delivery and expiry.
+
 Optional character religiousActivity and religiousActivityHistory, player.travel.religiousActivity, abbeys.houses activity property, population project activitySupport and religiousActivityAI.period remain with their canonical owners. validateReligiousActivityState checks saved campaign references and bounded frozen terms without live eligibility checks or initialization. Loading preserves legacy standing, routes and property; the normal daily tick owns completion and interruption. See docs/designs/religious-activities.md for limits and review behavior.
 
 Dated local office restoration

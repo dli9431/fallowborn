@@ -222,6 +222,7 @@
         }).reduce(function (n,c) { return n+c.count; },0);
         return { from:route.from,to:route.to,planned:Math.floor(eligible*d.share),moved:0 };
       });
+      FB.stories.observe(s, d.id);
     }
     if (!s.realms[d.actor.realmId] || !s.realms[d.actor.realmId].alive ||
         !ruler(s,d.actor.realmId) || ruler(s,d.actor.realmId).dead || ruler(s,d.actor.realmId).id !== r.actorId ||

@@ -2195,6 +2195,31 @@ def extract_household_stories(inv: Inventory) -> None:
                         add(f"stage.{stage_id}.choice.{choice_id}.{field}", choice.get(field))
 
 
+def extract_household_observers(inv: Inventory) -> None:
+    for source in sorted(DATA.glob("story_household_effects_*.js")):
+        table = source.stem.replace("story_household_effects_", "householdEffects_")
+        declarations = node_object(find_assignment(source, "FBDATA", table)) or {}
+        rel = source.relative_to(ROOT).as_posix()
+        for story_id, story_node in declarations.items():
+            story = node_object(story_node) or {}
+            def add(field: str, node: Node | None) -> None:
+                for _, record, line in branch_records(node):
+                    inv.add(f"householdObserver.{story_id}.{field}", record, f"{rel}:{line}",
+                            "Local household notice.", TOKEN_RE.findall(record["text"]))
+            for field in ("title", "intro"):
+                add(field, story.get(field))
+            for beat_node in node_array(story.get("beats")) or []:
+                beat = node_object(beat_node) or {}
+                beat_id = node_string(beat.get("id"))
+                for field in ("name", "text"):
+                    add(f"beat.{beat_id}.{field}", beat.get(field))
+                for choice_node in node_array(beat.get("choices")) or []:
+                    choice = node_object(choice_node) or {}
+                    choice_id = node_string(choice.get("id"))
+                    for field in ("label", "detail"):
+                        add(f"beat.{beat_id}.choice.{choice_id}.{field}", choice.get(field))
+
+
 def extract_ruler_agendas(inv: Inventory) -> None:
     source = DATA / "story_ruler_agendas.js"
     if not source.exists():
@@ -2281,6 +2306,7 @@ def build_inventory() -> Inventory:
     extract_structured(inv)
     extract_story_courts(inv)
     extract_household_stories(inv)
+    extract_household_observers(inv)
     extract_ruler_agendas(inv)
     extract_government_selections(inv)
     extract_mobile_presentations(inv)
