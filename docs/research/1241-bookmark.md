@@ -10,6 +10,12 @@ Existing ordinary map-chosen roles can use every inhabited county through startL
 
 index.html loads the composer immediately after data/bookmark_1241_scaffold_d.js and before data/communal_revisions.js. The existing tracked data-directory distribution allowlists and index-derived offline discovery include it without a packaging change. Focused composition coverage is in tests/e2e/specs/1241-first-playable.spec.js, including reference validity, hidden access routes, deterministic creation and matching hidden-world restore. The regional and identity specifications retain their separate coverage.
 
+Named ruler openings
+
+Bela and Yaroslav have no playable starting scenarios in this version. Hungary retains its named Bela IV background profile without an authored royal household; Vladimir retains an unnamed generated principal. Neither court supplies an accepted historical family or personal opening location. No personal ruler agenda, goals or contact profile is registered for either start. Their household, location and authority declarations must be supported before these named openings can be offered.
+
+tests/e2e/specs/1241-ruler-starts.spec.js covers the distinction between background courts and playable people, omission from setup and start codes when the date is locally exposed for review, and direct lookup rejection without changing campaign state, RNG, uid or data definitions. It does not establish historical adoption or a playable agenda.
+
 Local-practice declaration
 
 data/identities_1241.js stages one faith, sahel_local_practice_1241, in FBDATA.bookmarkReligions1241. Loading that source alone registers no bookmark or effective faith. data/bookmark_1241.js registers the complete world and publishes a detached copy into FBDATA.religions before ordinary catalogue and world validation. The existing availability validator rejects unknown bookmark selectors, so the staged table itself never activates the profile.
