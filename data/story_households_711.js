@@ -10,6 +10,25 @@ FBDATA.householdTracks_711 = {
     requirements:{ provinces:['toledo','oviedo'], realms:['visigoths_711','umayyad_711'] },
     stages:{
       waiting:{ name:'Waiting for news', text:'Work continues while the southern campaign remains an opportunity. No report has yet established a crossing.', choices:[], transitions:[] },
+      roman_roots:{ name:'The family workshop', text:'Your Hispano-Roman household keeps its Catholic worship and its craft. Family ties and daily customers matter while the rival courts contend.',
+        choices:[
+          { id:'work', label:'Keep the craft work going', detail:'Select ordinary Work the bench. Income comes only from actual daily work.', operation:{ kind:'set_focus', focusId:'craft_work' }, next:'household_work' },
+          { id:'wait', label:'Keep the household’s plans open', detail:'Continue watching the city without a payment or new obligation.', operation:{ kind:'record_decision' }, next:'after_identity' }
+        ], transitions:[] },
+      gothic_roots:{ name:'A Gothic household in the city', text:'Your Gothic family shares the city’s Catholic worship. The workshop needs customers and your relatives need a living as the kings contend.',
+        choices:[
+          { id:'work', label:'Put the family craft first', detail:'Select ordinary Work the bench, with no royal service or special wage attached.', operation:{ kind:'set_focus', focusId:'craft_work' }, next:'household_work' },
+          { id:'wait', label:'Keep clear of court commitments', detail:'Record a household priority without changing rank, property or allegiance.', operation:{ kind:'record_decision' }, next:'after_identity' }
+        ], transitions:[] },
+      jewish_roots:{ name:'Keeping household continuity', text:'Your Jewish household looks to its worship, tools and family ties while the city waits for news. The family must make its own livelihood decisions amid uncertain authority.',
+        choices:[
+          { id:'work', label:'Keep the workshop and family practice', detail:'Select ordinary craft work. Worship and relatives’ identities remain unchanged; only actual work earns income.', operation:{ kind:'set_focus', focusId:'craft_work' }, next:'household_work' },
+          { id:'wait', label:'Keep the family’s options open', detail:'Record preparations without a religious bargain, charge or departure.', operation:{ kind:'record_decision' }, next:'after_identity' }
+        ], transitions:[] },
+      household_work:{ name:'At the bench', text:'The household has chosen craft work. A day’s actual positive craft income, rather than savings or a promise, completes this work decision.',
+        afterWork:{ focusId:'craft_work', provinceId:'toledo', next:'after_identity' },
+        choices:[{ id:'defer', label:'Set work plans aside for now', detail:'Continue waiting without claiming completed work or earnings.', operation:{ kind:'record_decision' }, next:'after_identity' }], transitions:[] },
+      after_identity:{ name:'Family life and uncertain news', text:'The household keeps its own priorities while watching the fortunes of Toledo.', choices:[], transitions:[] },
       news:{ name:'News from the south', text:'A crossing campaign has begun. News of an army is no guarantee that it will reach Toledo.',
         incident:{ source:'story', storyId:'strait_crossing_711', milestone:'started', provinceId:'toledo' }, afterIncident:'after_news',
         choices:[
@@ -35,6 +54,7 @@ FBDATA.householdTracks_711 = {
         incident:{ source:'control', milestone:'rule_changed', provinceId:'toledo' }, afterIncident:'stay',
         choices:[
           { id:'stay', label:'Stay with the present faith', detail:'Keep your household identity and continue under current obligations. No extra historical tax is charged.', operation:{ kind:'record_decision' }, next:'stay' },
+          { id:'jewish_continuity', label:'Keep the family’s Jewish practice', detail:'Remain with your present worship and livelihood. This grants no agreement with the new court or exemption from current obligations.', when:{ kind:'identity', faithId:'jewish' }, operation:{ kind:'record_decision' }, next:'stay' },
           { id:'consider_conversion', label:'Consider Islam', detail:'Review the ordinary cost and consequences for yourself or your household. This records an intention only.', operation:{ kind:'record_decision' }, next:'conversion' },
           { id:'leave', label:'Consider leaving for the north', detail:'Review a personal journey first. Arrival and the later permanent household move are separate.', operation:{ kind:'record_decision' }, next:'refuge' }
         ], transitions:[] },
@@ -101,12 +121,23 @@ FBDATA.householdTracks_711 = {
     return [route({ not:local }, 'remote'), route(muslim, 'changed_rule'),
       route({ all:[{ not:gothic }, { not:muslim }] }, 'other_rule')];
   }
-  ['waiting','news','after_news','court','watch','approach','under_threat'].forEach(function (id) {
+  ['waiting','roman_roots','gothic_roots','jewish_roots','household_work','after_identity','news','after_news','court','watch','approach','under_threat'].forEach(function (id) {
     def.stages[id].transitions = common();
     def.stages[id].transitions.push(route(closed, 'quiet'));
   });
   def.stages.waiting.transitions.push(route({ any:[crossingStarted,crossingWon] }, 'news'));
   def.stages.waiting.transitions.push(route(campaign, 'approach'));
+  def.stages.roman_roots.transitions.push(route({ not:{ kind:'identity', cultureId:'hispano_roman', faithId:'catholic' } }, 'after_identity'));
+  def.stages.gothic_roots.transitions.push(route({ not:{ kind:'identity', cultureId:'gothic', faithId:'catholic' } }, 'after_identity'));
+  def.stages.jewish_roots.transitions.push(route({ not:{ kind:'identity', faithId:'jewish' } }, 'after_identity'));
+  ['roman_roots','gothic_roots','jewish_roots','household_work','after_identity','after_news'].forEach(function (id) {
+    def.stages[id].transitions.push(route(campaign, 'approach'));
+  });
+  def.stages.after_news.transitions.push(route({ kind:'identity', faithId:'jewish' }, 'jewish_roots'));
+  def.stages.after_news.transitions.push(route({ kind:'identity', cultureId:'gothic', faithId:'catholic' }, 'gothic_roots'));
+  def.stages.after_news.transitions.push(route({ kind:'identity', cultureId:'hispano_roman', faithId:'catholic' }, 'roman_roots'));
+  def.stages.after_identity.transitions.push(route({ kind:'at_war', provinceId:'toledo' }, 'court'));
+  def.stages.after_identity.transitions.push(route({ not:{ kind:'at_war', provinceId:'toledo' } }, 'watch'));
   def.stages.after_news.transitions.push(route({ kind:'at_war', provinceId:'toledo' }, 'court'));
   def.stages.after_news.transitions.push(route({ not:{ kind:'at_war', provinceId:'toledo' } }, 'watch'));
   def.stages.watch.transitions.push(route(campaign, 'approach'));

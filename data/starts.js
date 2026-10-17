@@ -210,7 +210,7 @@ window.FBDATA = window.FBDATA || {};
     { id:'constantinople_household_1204', bookmarkIds:['1204'], alwaysUnlocked:true,
       fixedProvinceId:'constantinople', startCulture:'greek', startReligion:'orthodox',
       name:'Constantinople Household',
-      desc:'Begin as a Greek household in Constantinople under its new Latin rulers.',
+      desc:'Begin as an artisan household in Constantinople under its new Latin rulers. Choose among the city’s resident communities.',
       tier:1, profession:'craftsman', gold:15, prestige:5, piety:0,
       intro:'You are {name}, a craftsman of {province}. Baldwin holds the city, the crusaders’ partition is unfinished, and Greek courts gather beyond the walls. Your workshop must find a living under whichever authority prevails.' }
   ];

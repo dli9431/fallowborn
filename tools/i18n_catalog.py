@@ -1747,10 +1747,17 @@ def extract_structured(inv: Inventory) -> None:
                 (),
             )
 
-    scenarios = node_array(
-        find_assignment(STARTS_FILE, "FBDATA", "startScenarios")
-    ) or []
-    for index, item_node in enumerate(scenarios):
+    scenario_sources = [(STARTS_FILE, "startScenarios")]
+    scenario_sources.extend(
+        (source, "startScenarios_" + source.stem.removeprefix("starts_"))
+        for source in sorted(DATA.glob("starts_*.js"))
+    )
+    scenarios = []
+    for source, table in scenario_sources:
+        scenarios.extend((source, item) for item in
+                         node_array(find_assignment(source, "FBDATA", table)) or [])
+    for index, (source, item_node) in enumerate(scenarios):
+        rel = source.relative_to(ROOT).as_posix()
         item = node_object(item_node) or {}
         item_id = node_string(item.get("id")) or str(index)
         for field in (
@@ -1761,7 +1768,7 @@ def extract_structured(inv: Inventory) -> None:
                 inv.add(
                     f"scenario.{item_id}.{field}.{branch}",
                     record,
-                    f"data/starts.js:{line}",
+                    f"{rel}:{line}",
                     f"New-game scenario {item_id}, {field}.",
                     TOKEN_RE.findall(record["text"]),
                 )
@@ -1774,7 +1781,7 @@ def extract_structured(inv: Inventory) -> None:
                     inv.add(
                         f"scenario.{item_id}.familyPresets.{preset_id}.{field}.{branch}",
                         record,
-                        f"data/starts.js:{line}",
+                        f"{rel}:{line}",
                         f"New-game scenario {item_id}, family preset {preset_id}, {field}.",
                         TOKEN_RE.findall(record["text"]),
                     )
