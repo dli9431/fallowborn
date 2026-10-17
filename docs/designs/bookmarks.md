@@ -26,6 +26,12 @@ data/starts_laskaris_1204.js offers laskaris_1204 as an always-open Historical s
 
 Nicaea is the existing court's opening anchor. This start supplies no imperial coronation, named historical relatives, land award or guaranteed restoration. Technology impact: no new entry is required because selecting an existing ruler adds no independently gateable capability; all existing political and military gates continue to apply. The 1204 worlds and other starts retain their declarations.
 
+Frankish court at Soissons
+
+data/starts_clovis_493.js adds clovis_493, an existing-ruler opening at the inherited Soissons anchor in county laon. It adopts franks_493 with Frankish culture, Germanic pagan faith, regnum government and tier 6, retaining Clovis, the seeded Theuderic, generated supporting people, existing territory and actual treasury. The scenario and date both retain their hidden flags. This row is compatible with baseline, world_v2 and jewish_samaritan_v3 and changes no world declaration or fresh revision selector.
+
+The court household is a simulation roster. The start adds no named queen, wedding or exact residence claim. Marriage chronology, named relatives, bishop contacts and baptism chronology remain unresolved. The existing Upper Rhine, Burgundian and Toulouse campaign opportunities follow the adopted court through ordinary story-reference mapping and require its decisions and live conditions. They grant no scheduled victories, ruler deaths, conversion or territorial transfers. Public profession uses the ordinary reviewed ruler conversion with its costs, peace, encounter, household, support, recognition and once-per-ruler rules. The opening resources do not fund immediate conversion. This content adds no capability or technology prerequisite; the existing public_ruler_conversion review remains none.
+
 Spring claimant courts and a York household
 
 data/starts_claimants_1066.js adds existing-court openings for Harold Godwinson in London, William the Bastard in Rouen and Harald Hardrada in Trondheim. Adoption retains each living actor, existing relatives, territorial government, actual court resources and county structure. Normandy retains the French liege. These starts grant no English succession right, overseas occupation or scheduled invasion. Their birthplace anchors do not assert a day-specific royal itinerary.
