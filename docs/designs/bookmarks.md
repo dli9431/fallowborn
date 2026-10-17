@@ -122,6 +122,10 @@ data/african_religious_rollout.js loads after data/islamic_profiles.js and appen
 The groups locate bounded household participation at existing Garama, Kairouan, Kumbi district and Gao settlement anchors. These simulation bindings establish no historical building, sacred destination, specialist, population proportion or public office. Ghana references possible voluntary learning property but seeds no house or land. Saved source revisions retain their original institution definitions; restoration also preserves missing freshOnly groups rather than creating new records. Historical holds and independent opening decisions are recorded in docs/research/african-religious-rollout.md. Owner acceptance and fresh selection remain separate from declaration composition.
 
 
+Aachen household opening
+
+data/story_households_800.js attaches aachen_household_track_800 only to aachen_household_800 at Aachen, retaining the ordinary family shapes, Frankish Latin Christian identity and existing free farm. The household hears a relative report of the Roman coronation, may accept a funded three-day delivery in 801, resolve its reserved disputed fee, hear a one-day explanation of imperial instructions in 802 and consider a separately funded voluntary supply day. Refusal, missed windows, changed control, a dead original payer and departure preserve ordinary household play. The opening closes after 802. A calendar creates no levy, tax, office, royal audience or distant campaign participation. Further work and any actual duty remain with ordinary systems. No local displaced-neighbor encounter is added.
+
 Imported story references
 
 Bookmark and start validation accepts an explicit detached story context from the mod loader. Same-file storyInstances and startScenarios can therefore refer to each other without temporary publication into the active registry. Every affected retained world revision is checked. Fresh campaign creation initializes only declared attachments; loading an older matching campaign never fills absent story records.
