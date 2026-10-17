@@ -1,5 +1,11 @@
 Revision-scoped fixed starts
 
+Spring 1241 composition
+
+data/bookmark_1241.js registers the hidden baseline opening The Mongol Invasion on europe_regional_2 at year 1241, season 0, day 1. It composes all 30 date-owned regional blocks in coverage order into 527 physical cells, 491 inhabited counties, 36 scenery cells and 103 distinct courts. County, court, title, climate and ordered layout records are detached from the source blocks. Repeated shared title parents must agree; missing regions, duplicate counties, duplicate courts and conflicting declarations fail composition. The four scaffold files remain the regional sources for corrections. No earlier world or retained revision is rewritten.
+
+The complete world publishes the dated Sahel faith, resolves shared foreign courts and binds the Catholic and Sunni offices to the one papal and generated Abbasid court respectively. Empty opening ledgers, local institutions, stories and scripted history introduce no operational invasion or historical household. Existing ordinary roles use inhabited counties through the normal resident and role gates. Named historical and fixed story starts remain separately authored content. The hidden date rejects new campaigns through every entry route and supports matching saved-world restore. The declaration reuses the bookmark platform, with no new capability, saved field or technology gate. Evidence, generated-person assumptions and the first-pass limits are recorded in docs/research/1241-bookmark.md.
+
 Spring 568 composition
 
 data/bookmark_568.js composes all 22 first-pass regional blocks into the hidden migration_v1 world on europe_regional_2. It covers 527 physical cells, with 506 inhabited counties and 21 scenery cells, and keeps each of the 132 courts unique. Regional rows, titles, climate, layouts and opening records are copied into the date-owned definition. The composer publishes its two culture definitions, fifteen additive faith selectors and the existing Sasanian administration/recognition profiles before engine compilation. No other bookmark or retained revision is rewritten.

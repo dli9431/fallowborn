@@ -6,7 +6,7 @@ const {dependsOnRuntime} = require('../support/runtime-dependencies');
 const {openGame} = require('../support/game/navigation');
 
 dependsOnRuntime(__filename,[
-  'index.html','data/bookmark_1241_scaffold_a.js','data/bookmark_1204.js',
+  'index.html','data/bookmark_1241.js','data/bookmark_1241_scaffold_a.js','data/bookmark_1204.js',
   'data/bookmark_1204_terrain.js','data/bookmarks.js','data/counties.js',
   'data/map_data.js','data/geographies.js','data/geography_expansion.js',
   'data/settlements.js','data/settlements_real.js','data/cultures.js',
@@ -22,7 +22,7 @@ const packets = {
   france_south_alps:'bordeaux agen perigueux poitiers angouleme limoges toulouse albi cahors rodez clermont le_puy bayonne auch narbonne beziers carcassonne dijon besancon auxerre lyon macon vienne arles marseille avignon nice geneva chambery grenoble'.split(' ')
 };
 
-test('1241 quadrant a stages exact disjoint coverage without publishing a partial world', async function ({page}, testInfo) {
+test('1241 quadrant a reloads exact disjoint coverage without changing the composed world', async function ({page}, testInfo) {
   await openGame(page,testInfo);
   const before = await page.evaluate(function () {
     return JSON.stringify({bookmarks:FBDATA.bookmarks,layouts:FBDATA.settlementLayouts,
@@ -55,7 +55,7 @@ test('1241 quadrant a stages exact disjoint coverage without publishing a partia
   expect(coverage.inhabited).toBe(124);
   expect(coverage.scenery).toEqual(['onega_district','vychegda_district','upper_kama',
     'sarysu_corridor','w_north','w_taiga','w_steppe_e','w_ural'].sort());
-  expect(coverage.published).toBe(false);
+  expect(coverage.published).toBe(true);
 });
 
 test('1241 quadrant a preserves retained source residents and ordered settlement slots independently', async function ({page}, testInfo) {

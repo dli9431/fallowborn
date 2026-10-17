@@ -480,6 +480,17 @@ class StructuredDataExtractionTests(unittest.TestCase):
         self.assertIn('scenario.farmer_568.intro.default', inventory.entries)
         self.assertIn('scenario.craftsman_568.intro.default', inventory.entries)
 
+    def test_1241_composition_labels_have_literal_source_owners(self):
+        inventory = i18n_catalog.Inventory()
+        i18n_catalog.extract_structured(inventory)
+        for key, text in (
+            ('bookmark.1241.name.default', 'The Mongol Invasion'),
+            ('bookmark.1241.desc.default', 'Hungarian and Rus households face an uncertain spring while rival courts pursue their own priorities.'),
+        ):
+            self.assertEqual(inventory.entries[key]['text'], text)
+            self.assertIn('bookmark_1241.js', inventory.meta[key]['location'])
+            self.assertIn(i18n_catalog.source_key(text), inventory.entries)
+
     def test_493_review_content_has_display_and_durable_message_owners(self):
         inventory = i18n_catalog.Inventory()
         i18n_catalog.extract_structured(inventory)

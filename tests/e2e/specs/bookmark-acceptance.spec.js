@@ -14,7 +14,7 @@ const path = require('path');
 // and browser-storage overhead. Budgets are acceptance ceilings, not measured
 // claims. Each owner run attaches actual checkpoint and final byte counts.
 const SAVE_BUDGETS = { fresh:4 * 1024 * 1024, checkpoint:6 * 1024 * 1024, continued:6 * 1024 * 1024 };
-const BOOKMARK_IDS = ['476','493','568','711','800','867','1066','1096','1204'];
+const BOOKMARK_IDS = ['476','493','568','711','800','867','1066','1096','1204','1241'];
 
 test('every authored bookmark data file is loaded and the authoring template is unloaded', async function ({ page }, testInfo) {
   await openGame(page, testInfo);
