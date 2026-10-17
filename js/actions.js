@@ -10218,6 +10218,7 @@ window.FB = window.FB || {};
     standing:Object.create(null),
     usable:Object.create(null),
     occupied:Object.create(null),
+    constructionGroups:Object.create(null),
     bySettlement:Object.create(null),
     bonuses:Object.create(null),
     bonusCounts:Object.create(null),
@@ -10280,6 +10281,7 @@ window.FB = window.FB || {};
       standing:Object.create(null),
       usable:Object.create(null),
       occupied:Object.create(null),
+      constructionGroups:Object.create(null),
       bySettlement:Object.create(null),
       bonuses:Object.create(null),
       bonusCounts:Object.create(null),
@@ -10320,7 +10322,12 @@ window.FB = window.FB || {};
         all:Object.create(null), standing:Object.create(null), bonuses:Object.create(null), bonusCounts:Object.create(null)
       });
       local.all[id] = (local.all[id] || 0) + 1;
-      index.occupied[settlement + ':' + id] = 1;
+      const siteKey = settlement + ':' + id;
+      const group = FBDATA.buildings[id] && FBDATA.buildings[id].constructionGroup;
+      if (!index.occupied[siteKey] && group) {
+        index.constructionGroups[group.id] = (index.constructionGroups[group.id] || 0) + 1;
+      }
+      index.occupied[siteKey] = 1;
       if (entry.ruined) continue;
       index.visibleFloor = Math.max(index.visibleFloor, settlement + 1);
       local.standing[id] = (local.standing[id] || 0) + 1;
@@ -10375,6 +10382,23 @@ window.FB = window.FB || {};
   FB.buildingCountIn = function (state, pid, id, includeRuins) {
     const index = buildingIndexFor(state, pid);
     return (includeRuins ? index.all[id] : index.standing[id]) || 0;
+  };
+
+  /* Physical occupancy is shared across holders and includes ruins. Reuse
+     the county index rather than walking assets for every candidate/site. */
+  FB.buildingConstructionGroupStatus = function (state, pid, id) {
+    const def = FBDATA.buildings[id];
+    const group = def && def.constructionGroup;
+    const out = { ok:true, count:0, limit:null, remaining:null, reason:'' };
+    if (!group) return out;
+    out.limit = group.maxCounty;
+    out.count = buildingIndexFor(state, pid).constructionGroups[group.id] || 0;
+    out.remaining = Math.max(0, out.limit - out.count);
+    out.ok = out.remaining > 0;
+    if (!out.ok) out.reason = FB.T('This construction group is full in this county ({count}/{limit}, including ruins).', {
+      count:out.count, limit:out.limit
+    });
+    return out;
   };
 
   FB.buildingCount = function (state, id, includeRuins) {
@@ -10517,6 +10541,7 @@ window.FB = window.FB || {};
     if (def.terrains && (!pr || def.terrains.indexOf(pr.terrain) < 0)) return false;
     if (def.homeOnly && FB.homeProv(state) !== pid) return false;
     if (def.maxCounty && FB.buildingCountIn(state, pid, id, false) >= def.maxCounty) return false;
+    if (!FB.buildingConstructionGroupStatus(state, pid, id).ok) return false;
     if (def.maxDemesne &&
         buildingContextDemesneCount(state, context, id) >= def.maxDemesne) return false;
     return true;
@@ -10541,6 +10566,7 @@ window.FB = window.FB || {};
     if (def.coastal && !pr.coastal) return false;
     if (def.terrains && def.terrains.indexOf(pr.terrain) < 0) return false;
     if (def.maxCounty && FB.buildingCountIn(state, pid, id, false) >= def.maxCounty) return false;
+    if (!FB.buildingConstructionGroupStatus(state, pid, id).ok) return false;
     if (def.homeOnly && (actor.kind !== 'realm' || !state.realms[actor.id] || state.realms[actor.id].capital !== pid)) return false;
     if (def.maxDemesne) {
       let copies = 0;
@@ -10727,18 +10753,21 @@ window.FB = window.FB || {};
   };
 
   FB.demolishBuilding = function (state, pid, idx, id) {
-    if (!state) return false;
+    if (!state || !FBDATA.buildings[id]) return false;
     const fortification = FB.isFortificationBuilding(id);
     if (!fortification && !FB.settlementConstructionAuthority(state, pid, idx).direct) return false;
     if (fortification) return !!FB.demolishFort && FB.demolishFort(state, pid, idx);
     const done = FB.builtIn(state, pid);
+    const grouped = !!FBDATA.buildings[id].constructionGroup;
     for (let i = 0; i < done.length; i++) {
-      if (done[i].id === id && done[i].s === idx && !done[i].ruined) {
+      if (done[i].id === id && done[i].s === idx && (!done[i].ruined || grouped)) {
         const record = builtInForWrite(state, pid)[i];
+        const wasRuined = !!record.ruined;
+        if (grouped) builtInForWrite(state, pid).splice(i, 1);
         record.ruined = true;
         FB.invalidateBuildingIndex(state, pid);
         const granted = Number(record.devGranted);
-        if (isFinite(granted) && granted) {
+        if (!wasRuined && isFinite(granted) && granted) {
           record.devRemoved = -FB.changeCountyDevelopment(state, pid, -granted, 'demolition');
           record.devGranted = 0;
         }

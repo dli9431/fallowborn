@@ -1,5 +1,13 @@
 # Development & buildings
 
+Shared construction capacity
+
+Optional constructionGroup declarations reserve county capacity across named building types, independently of their roles. A group has a structural id and one agreed integer maxCounty between 1 and 2048. Validation of the effective built-in or JSON-composed table rejects malformed or inconsistent groups. Physical standing and ruined records count once per county/type/site across every settlement and holder, using the unsaved county building index. Enumeration and the building ledger reuse that aggregation; confirmation checks live capacity before any charge. Player, autoBuild, baron and annual AI eligibility share the same projection. The ledger shows occupied/limit, includes ruins, caps remaining copies and explains the actual group blocker.
+
+Existing over-limit assets continue working and repairs remain available under their ordinary authority, price and per-id gates. Fort upgrades and already funded projects retain their place. Demolishing a grouped asset or grouped ruin removes its record and releases capacity without refund; removed copies also leave the record-derived repeat-price count. Other demolition keeps persistent ruins. Existing raid ruins remain occupied until repaired or deliberately demolished. Removal uses the existing development reversal, population reconciliation and cache invalidation boundaries, without a replacement transaction or a saved group counter.
+
+Technology impact construction_group_limits is none: shared physical capacity is an occupancy rule rather than a discovery. Individual building and fort technology requirements remain authoritative.
+
 ## Settlement founding
 
 The charter review shows County capacity as established sites out of eight (`x/8`).

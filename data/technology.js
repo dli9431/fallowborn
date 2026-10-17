@@ -111,6 +111,7 @@ window.FBDATA = window.FBDATA || {};
   FBDATA.techImpactReviews = {
     baselineVersion:'1.127.1',
     features:{
+      construction_group_limits:{ mode:'none', rationale:'Shared physical construction capacity is a county occupancy rule, independent of discovery. Existing assets and repairs retain their ordinary effects and technology requirements.' },
       household_story_decisions:{ mode:'none', rationale:'Household decisions and local news require no discovery. Conversion and journey adapters retain their ordinary eligibility and costs.' },
       household_calendar_windows:{ mode:'none', rationale:'Ordinary calendar windows pace household decisions without proving any historical event. Work, travel and political transactions retain their existing eligibility.' },
       thegn_southern_journey:{ mode:'none', rationale:'A dated personal journey to seek ordinary work needs no discovery. Existing route prices, risks, worker eligibility and later residence rules remain authoritative.' },

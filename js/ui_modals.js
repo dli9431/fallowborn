@@ -8753,7 +8753,10 @@ window.FB = window.FB || {};
     return FB.T('Follows settlement lordship; private household property is separate');
   }
 
-  function buildingExpiryRule() {
+  function buildingExpiryRule(id) {
+    if (id && FBDATA.buildings[id] && FBDATA.buildings[id].constructionGroup) {
+      return FB.T('Ruins occupy construction capacity until repaired or demolished; demolition removes the building');
+    }
     return FB.T('Until ruined; the site remains occupied and can be repaired');
   }
 
@@ -8769,6 +8772,8 @@ window.FB = window.FB || {};
     if (d.maxCounty && FB.buildingCountIn(s, pid, id, false) >= d.maxCounty) {
       return FB.T('Only {count} may stand in one county.', { count: d.maxCounty });
     }
+    const group = FB.buildingConstructionGroupStatus(s, pid, id);
+    if (!group.ok) return group.reason;
     if (d.devMin && (s.dev[pid] || 1) < d.devMin) {
       return FB.T('Requires development {development}.', { development: d.devMin });
     }
@@ -8861,10 +8866,15 @@ window.FB = window.FB || {};
         if (d.maxCounty) remaining = Math.min(remaining, Math.max(0, d.maxCounty - standing));
         const demesneStanding = d.maxDemesne ? FB.buildingCount(s, id, false) : 0;
         if (d.maxDemesne) remaining = Math.min(remaining, Math.max(0, d.maxDemesne - demesneStanding));
+        const group = FB.buildingConstructionGroupStatus(s, pid, id);
+        if (group.limit !== null) remaining = Math.min(remaining, group.remaining);
         let capacity = FB.T('{standing} built in this county · {remaining} more can be raised now', {
           standing:standing, remaining:remaining
         });
         if (d.maxCounty) capacity += ' · ' + FB.T('County limit: {count}', { count:d.maxCounty });
+        if (group.limit !== null) capacity += ' · ' + FB.T('Construction group: {count}/{limit} occupied, including ruins', {
+          count:group.count, limit:group.limit
+        });
         if (d.maxDemesne) capacity += ' · ' + FB.T('Across your counties: {built}/{limit}', {
           built:demesneStanding, limit:d.maxDemesne
         });
@@ -8896,7 +8906,7 @@ window.FB = window.FB || {};
             recurringCost:assetSeasonalMoneyCost(d.upkeep),
             effect:effects,
             transferRule:buildingTransferRule(),
-            expiry:buildingExpiryRule()
+            expiry:buildingExpiryRule(id)
           }) + '<div class="hint settdesc">' +
             esc(dt(s, 'building', id, d, 'desc')) + ' ' + esc(repeat) + '</div>';
         } else {
@@ -8911,7 +8921,7 @@ window.FB = window.FB || {};
             recurringCost:assetSeasonalMoneyCost(d.upkeep),
             effect:effects,
             transferRule:buildingTransferRule(),
-            expiry:buildingExpiryRule()
+            expiry:buildingExpiryRule(id)
           }) + '<div class="hint settdesc">' +
             esc(dt(s, 'building', id, d, 'desc')) + '</div>';
         }
@@ -9005,7 +9015,7 @@ window.FB = window.FB || {};
           recurringCost:assetSeasonalMoneyCost(b.def.upkeep),
           effect:effects,
           transferRule:buildingTransferRule(),
-          expiry:buildingExpiryRule()
+          expiry:buildingExpiryRule(b.id)
         }) + '<div class="hint settdesc">' +
           esc(dt(s, 'building', b.id, b.def, 'desc')) + ' ' + esc(repeat) + '</div>',
         '<button type="button" class="btn small primary settcard-raise"' +
@@ -9480,6 +9490,8 @@ window.FB = window.FB || {};
       cost:status.cost
     });
     if (status.reason === 'rank') return FB.T('Requires {Term:baron} rank or higher.');
+    if (status.reason === 'construction_group') return FB.buildingConstructionGroupStatus(
+      s, status.pid, FB.fortificationBuildingId()).reason;
     if (status.reason === 'contested') return FB.T('Construction cannot begin while the county is contested.');
     if (status.reason === 'ruins') return FB.T('Fort ruins occupy this settlement; choose another site in the county.');
     if (status.reason === 'other_settlement') return FB.T('This county’s fort stands in another settlement.');
@@ -10147,8 +10159,8 @@ window.FB = window.FB || {};
               recurringCost:FB.T('None'),
               effect:FB.T('No current benefit'),
               transferRule:buildingTransferRule(),
-              expiry:FB.T('Until repaired; the site remains occupied')
-            }), null);
+              expiry:d.constructionGroup ? buildingExpiryRule(id) : FB.T('Until repaired; the site remains occupied')
+            }), d.constructionGroup ? id : null);
           const repair = FB.repairBuildingStatus(s, pid, idx, id);
           h += reviewActionsHtml(reviewActionCardHtml({
             id:'sett-repair-' + cardSeq, data:{ repair:id },
@@ -10169,7 +10181,7 @@ window.FB = window.FB || {};
               recurringCost:assetSeasonalMoneyCost(d.upkeep),
               effect:buildingEffects(d, id).join(' · '),
               transferRule:buildingTransferRule(),
-              expiry:buildingExpiryRule()
+              expiry:buildingExpiryRule(id)
             }) + '<div class="hint settdesc">' +
               esc(dt(s, 'building', id, d, 'desc')) + '</div>',
             id);
@@ -10463,9 +10475,12 @@ window.FB = window.FB || {};
         const id = btn.dataset.demolish;
         const d = FBDATA.buildings[id];
         const name = dt(FB.state, 'building', id, d, 'name');
-        let body = '<div class="gm-body-text"><p>' + esc(FB.T(
+        const consequence = d.constructionGroup ? FB.T(
+          'Demolishing {building} gives no refund. The building is removed, its benefits and upkeep end, and its construction group gains a free place. Removed copies no longer count toward repeat prices.',
+          { building:name }) : FB.T(
           'Demolishing {building} gives no refund. Its ongoing benefits and upkeep will end, and ruins will occupy this settlement until repaired.',
-          { building: name })) + '</p></div><div class="gm-list">' +
+          { building: name });
+        let body = '<div class="gm-body-text"><p>' + esc(consequence) + '</p></div><div class="gm-list">' +
           '<button class="actionbtn op-bad" id="gm-demolish-confirm">' +
           esc(FB.T('Demolish {building}', { building: name })) + '</button></div>' +
           '<button class="btn" id="gm-demolish-back">' + esc(FB.T('Keep it')) + '</button>';
