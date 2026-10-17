@@ -244,9 +244,10 @@ def lex_js(text: str) -> list[Token]:
 
 
 class Parser:
-    def __init__(self, tokens: list[Token]):
+    def __init__(self, tokens: list[Token], *, strict_objects: bool = False):
         self.tokens = tokens
         self.i = 0
+        self.strict_objects = strict_objects
 
     def peek(self, value: str | None = None) -> Token | None:
         if self.i >= len(self.tokens):
@@ -295,20 +296,30 @@ class Parser:
         while self.peek() and not self.peek("}"):
             key_token = self.take()
             if key_token.kind not in ("ident", "string", "number"):
+                if self.strict_objects:
+                    raise ValueError(f"nonliteral object key at line {key_token.line}")
                 self.skip_to_delimiter("}")
                 continue
             key = key_token.value
             if not self.peek(":"):
+                if self.strict_objects:
+                    raise ValueError(f"nonliteral object member at line {key_token.line}")
                 self.skip_to_delimiter("}")
                 continue
             self.take()
+            if self.strict_objects and key in out:
+                raise ValueError(f"duplicate literal key {key} at line {key_token.line}")
             out[key] = self.parse_value()
             if self.peek(","):
                 self.take()
             elif not self.peek("}"):
+                if self.strict_objects:
+                    raise ValueError(f"nonliteral object value at line {key_token.line}")
                 self.skip_to_delimiter("}")
         if self.peek("}"):
             self.take()
+        elif self.strict_objects:
+            raise ValueError(f"unterminated literal object at line {start.line}")
         return Node("object", out, start.line)
 
     def parse_array(self) -> Node:
@@ -319,9 +330,13 @@ class Parser:
             if self.peek(","):
                 self.take()
             elif not self.peek("]"):
+                if self.strict_objects:
+                    raise ValueError(f"nonliteral array value at line {start.line}")
                 self.skip_to_delimiter("]")
         if self.peek("]"):
             self.take()
+        elif self.strict_objects:
+            raise ValueError(f"unterminated literal array at line {start.line}")
         return Node("array", out, start.line)
 
     def skip_expression(self) -> Node:
@@ -475,6 +490,110 @@ def parse_technologies(path: Path) -> list[tuple[str, Node, Node]]:
         if technology_id:
             technologies.append((technology_id, args[1], args[7]))
     return technologies
+
+
+def catalogue_literal_maps(path: Path, namespace: str) -> list[tuple[str, Node]]:
+    """Read authored catalogue tables, rejecting ambiguous display mutations."""
+    prefixes = ("tech_", "techCorrections_") if namespace == "tech" else (
+        "buildings_", "buildingCorrections_")
+    registry = "tech" if namespace == "tech" else "buildings"
+    tokens = lex_js(path.read_text(encoding="utf-8"))
+    maps = []
+
+    def member(position: int) -> tuple[str | None, int]:
+        if (position + 1 < len(tokens) and tokens[position].value == "."
+                and tokens[position + 1].kind == "ident"):
+            return tokens[position + 1].value, position + 2
+        if (position + 2 < len(tokens) and tokens[position].value == "["
+                and tokens[position + 2].value == "]"):
+            return tokens[position + 1].value, position + 3
+        return None, position
+
+    for i in range(len(tokens) - 3):
+        if (tokens[i].kind != "ident" or tokens[i].value != "FBDATA"
+                or tokens[i + 1].value != "." or tokens[i + 2].kind != "ident"):
+            continue
+        table = tokens[i + 2].value
+        if table == registry:
+            # A later field/faith-branch assignment must not silently override
+            # the final literal definition that supplies translation hashes.
+            _, j = member(i + 3)
+            field, j = member(j)
+            _, j = member(j)
+            if (field in DATA_FIELDS and j < len(tokens) and tokens[j].value == "="
+                    and (j + 1 == len(tokens) or tokens[j + 1].value != "=")):
+                raise ValueError(f"unsupported {registry} display override in {path.name}:"
+                                 f"{tokens[i].line}; use one complete correction map")
+        if (not any(re.fullmatch(re.escape(prefix) + r"[A-Za-z0-9_]+", table)
+                    for prefix in prefixes) or tokens[i + 3].value != "="
+                or i + 4 < len(tokens) and tokens[i + 4].value == "="):
+            continue
+        parser = Parser(tokens, strict_objects=True)
+        parser.i = i + 4
+        declaration = parser.parse_value()
+        if (declaration.kind != "object" or parser.peek() is not None
+                and parser.peek().value not in (";", ",", ")")):
+            raise ValueError(f"{path.name}: {table} must be a literal object")
+        maps.append((table, declaration))
+    return maps
+
+
+def extract_catalogue_displays(inv: Inventory, namespace: str) -> None:
+    """Resolve complete additions/corrections before publishing display aliases."""
+    definitions: dict[str, tuple[dict[str, Node], Path]] = {}
+    if namespace == "tech":
+        for item_id, name, desc in parse_technologies(TECHNOLOGY_FILE):
+            if item_id in definitions:
+                raise ValueError(f"duplicate tech definition {item_id}")
+            definitions[item_id] = ({"name": name, "desc": desc}, TECHNOLOGY_FILE)
+        pattern, correction_prefix = "technology_*.js", "techCorrections_"
+        base = TECHNOLOGY_FILE
+    else:
+        base = DATA / "map_data.js"
+        root = node_object(find_assignment(base, "FBDATA", "buildings")) or {}
+        definitions.update((item_id, (node_object(node) or {}, base))
+                           for item_id, node in root.items())
+        pattern, correction_prefix = "buildings_*.js", "buildingCorrections_"
+
+    additions, corrections = [], []
+    # Include base files in the mutation audit, but supplements alone own maps.
+    catalogue_literal_maps(base, namespace)
+    for path in sorted(DATA.glob(pattern)):
+        for table, declaration in catalogue_literal_maps(path, namespace):
+            target = corrections if table.startswith(correction_prefix) else additions
+            for item_id, node in declaration.value.items():
+                definition = node_object(node)
+                if definition is None:
+                    raise ValueError(f"{path.name}: {table}.{item_id} must be a literal definition")
+                for field in DATA_FIELDS:
+                    display = definition.get(field)
+                    branches = branch_records(display)
+                    if (not branches or display.kind == "object" and
+                            len(branches) != len(display.value)):
+                        raise ValueError(f"{path.name}: {table}.{item_id}.{field}"
+                                         " must contain literal display strings")
+                target.append((item_id, definition, path))
+
+    for item_id, definition, path in additions:
+        if item_id in definitions:
+            raise ValueError(f"duplicate {namespace} definition {item_id} in {path.name}")
+        definitions[item_id] = (definition, path)
+    corrected = set()
+    for item_id, definition, path in corrections:
+        if item_id not in definitions:
+            raise ValueError(f"correction of missing {namespace} definition {item_id} in {path.name}")
+        if item_id in corrected:
+            raise ValueError(f"duplicate {namespace} correction owner {item_id} in {path.name}")
+        corrected.add(item_id)
+        definitions[item_id] = (definition, path)
+
+    for item_id, (definition, path) in definitions.items():
+        rel = path.relative_to(ROOT).as_posix()
+        for field in DATA_FIELDS:
+            for branch, record, line in branch_records(definition.get(field)):
+                inv.add(f"{namespace}.{item_id}.{field}.{branch}", record, f"{rel}:{line}",
+                        f"{namespace} {item_id}, {field}, faith branch {branch}.",
+                        TOKEN_RE.findall(record["text"]))
 
 
 def stable_json(value: Any) -> str:
@@ -1107,18 +1226,8 @@ def extract_structured(inv: Inventory) -> None:
                             f'data/religious_institutions.js:{line}', 'Local religious role.', ())
 
     for data_name, namespace in STRUCTURED_DATA.items():
-        if data_name == "tech":
-            rel = TECHNOLOGY_FILE.relative_to(ROOT).as_posix()
-            for item_id, name_node, desc_node in parse_technologies(TECHNOLOGY_FILE):
-                for field, node in (("name", name_node), ("desc", desc_node)):
-                    for branch, record, line in branch_records(node):
-                        inv.add(
-                            f"{namespace}.{item_id}.{field}.{branch}",
-                            record,
-                            f"{rel}:{line}",
-                            f"{namespace} {item_id}, {field}, faith branch {branch}.",
-                            TOKEN_RE.findall(record["text"]),
-                        )
+        if data_name in ("tech", "buildings"):
+            extract_catalogue_displays(inv, namespace)
             continue
         if data_name in ("techDomains", "techTraditions"):
             path = TECHNOLOGY_FILE
