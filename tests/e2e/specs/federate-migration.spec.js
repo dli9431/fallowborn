@@ -1,6 +1,7 @@
 'use strict';
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
+  'data/start_ambitions.js', 'js/story_opening_goals.js',
   'data/story_courts_476.js',
   'index.html', 'data/bookmarks.js', 'data/bookmark_476.js', 'data/political_institutions.js',
   'data/bookmark_476_italy.js', 'data/bookmark_476_dalmatia_east.js',
@@ -284,7 +285,7 @@ test('daily accounting sustains the Amal host through one season with random ris
   await start(page, testInfo, '476');
   const opening = await page.evaluate(function () {
     FB.game.observe = true;
-    delete FB.state.stories.federate_track_476;
+    delete FB.state.stories.federate_track_476; delete FB.state.stories.opening_federate_476;
     // Isolate the funding journey from random mortality and diplomacy. Dates,
     // treasury, provisions and armies tick normally.
     window.wave5OriginalChance = FB.chance;

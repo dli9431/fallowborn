@@ -1,6 +1,7 @@
 'use strict';
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
+  'data/start_ambitions.js', 'js/story_opening_goals.js',
   'data/story_courts_476.js',
   'index.html', 'data/bookmarks.js', 'data/bookmark_476.js',
   'data/bookmark_476_gaul_iberia.js', 'data/cultures.js', 'data/geographies.js',
@@ -223,7 +224,7 @@ test('one observer season retains valid courts, sites and bounded regional stori
     await start476(page, testInfo);
     await page.evaluate(function () {
       FB.game.observe = true;
-      delete FB.state.stories.curialis_track_476;
+      delete FB.state.stories.curialis_track_476; delete FB.state.stories.opening_curialis_476;
     });
     await page.evaluate(function () {
       for (let day = 0; day < 90; day++) {

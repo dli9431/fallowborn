@@ -1,6 +1,7 @@
 'use strict';
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
+  'data/start_ambitions.js', 'js/story_opening_goals.js',
   'data/story_courts_476.js','data/bookmark_476_wider.js',
   'index.html','data/bookmarks.js','data/bookmark_476.js','data/bookmark_476_gaul_iberia.js',
   'data/bookmark_476_italy.js','data/bookmark_476_dalmatia_east.js','data/cultures.js','data/intrigue.js','data/settlements.js',
@@ -300,7 +301,7 @@ test('one season in Iberia keeps conserved communities, valid courts and bounded
     await start(page,testInfo);
     await page.evaluate(function () {
       FB.game.observe = true;
-      delete FB.state.stories.curialis_track_476;
+      delete FB.state.stories.curialis_track_476; delete FB.state.stories.opening_curialis_476;
       FB.state.player.provinceId = 'merida';
       FB.state.chars[FB.state.player.charId].homeProvinceId = 'merida';
     });
