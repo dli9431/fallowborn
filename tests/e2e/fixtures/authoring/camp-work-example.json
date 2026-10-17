@@ -1,0 +1,29 @@
+{
+  "name": "Short camp service example",
+  "storyInstances": {
+    "short_camp_service_example": {
+      "id": "short_camp_service_example", "type": "household_track",
+      "title": "A short service opportunity", "intro": "Take one paid service or let a short opportunity pass.",
+      "homeProvinceId": "cherson", "continuity": "household", "initialStage": "offer",
+      "requirements": {"provinces": ["cherson"], "realms": ["pontic_following_476"]},
+      "stages": {
+        "offer": {
+          "name": "Twelve days to decide", "text": "This independent graph ends after one payment, a refusal or twelve days.",
+          "choices": [
+            {"id": "work", "label": "Take one paid service", "detail": "Use the actual treasury and food stock.", "operation": {"kind": "mobile_work", "realmId": "pontic_following_476"}, "next": "paid"},
+            {"id": "decline", "label": "Decline", "detail": "No transaction takes place.", "operation": {"kind": "record_decision"}, "next": "closed"}
+          ],
+          "transitions": [
+            {"when": {"kind": "elapsed", "minDays": 12}, "next": "closed"},
+            {"when": {"not": {"kind": "mobile_state", "realmId": "pontic_following_476", "condition": "active"}}, "next": "closed"}
+          ]
+        },
+        "paid": {"name": "Service paid", "text": "The canonical work transaction completed once.", "terminal": true, "choices": [], "transitions": []},
+        "closed": {"name": "Opportunity closed", "text": "No service payment was made by this track.", "terminal": true, "choices": [], "transitions": []}
+      }
+    }
+  },
+  "startScenarios": [
+    {"id": "short_camp_service_start", "name": "Short camp service", "desc": "An independent one-payment example.", "intro": "Begin near a civilian camp.", "bookmarkIds": ["476"], "fixedProvinceId": "cherson", "startCulture": "greek", "startReligion": "chalcedonian", "alwaysUnlocked": true, "tier": 1, "profession": "farmer", "gold": 20, "prestige": 5, "piety": 0, "tracks": ["short_camp_service_example"], "trackLocations": {"short_camp_service_example": ["cherson"]}}
+  ]
+}

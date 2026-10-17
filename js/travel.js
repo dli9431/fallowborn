@@ -1273,6 +1273,15 @@ window.FB = window.FB || {};
     return out[0] || null;
   };
 
+  FB.travelRealmSnapshot = function (state, purposeId, realmId) {
+    const def = purpose(purposeId), realm = state.realms[realmId];
+    if (!def || def.targeted || def.mode !== 'capitals' || !realm || !realm.alive ||
+        FB.travelEligible(state, purposeId, { readOnly:true }) !== true) return null;
+    const out = [], seen = {};
+    addDestination(state, out, seen, purposeId, realm.capital, realmId, { readOnly:true });
+    return out[0] || null;
+  };
+
   FB.travelActivityCapstoneValid = function (state, ev, ctx) {
     const t = state.player.travel;
     if (ctx.activityJourneyTurn === undefined && !(t && t.religiousActivity)) return true;

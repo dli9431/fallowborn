@@ -2,6 +2,8 @@ Court cultivation preview
 
 Household story reviews
 
+Mobile-work reviews identify the treasury payer, exact personal payment and one food unit consumed, with no membership or leader authority implied. The shared story surface also shows current camp, food, public funds, market stock and lawful access. Court-journey reviews name the sole traveller and ordinary route price; return reviews retain ordinary minimum stays and require actual arrival before a returned-home conclusion. Cancel, Back and Escape preserve the existing story sheet and its originating Deeds card.
+
 Household graphs use the existing Deeds story card and reviewed story sheet, including Back, Escape, Close, scroll and focus restoration. Unavailable choices remain reviewable with their current blocker. Decision reviews distinguish costless plans from actual transactions. Faith conversion names self or household scope and shows current costs and ordinary penalties. Journey reviews show price, route time and the actual protagonist travelling alone; arrival does not certify relatives' safety or household relocation. Permanent settlement is a separate reviewed choice with its ordinary residence, work and lifetime-move gates. Stale quotes perform no action and require review again.
 
 Cultivate the court names the actual Standing recipient and displays its fixed seasonal prestige and Standing rewards alongside Diplomacy training. The amounts come from the declared focus routine. Previewing the focus uses a non-creating role lookup and cannot create a patron, spend RNG or repair inventory.
