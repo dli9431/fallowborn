@@ -104,7 +104,7 @@ for (const scenario of ['peroz_476','siwa_delegate_1204']) {
   });
 }
 
-for (const fault of ['operation','unknown_field','duplicate_choice','source','terms','date','no_fallback']) {
+for (const fault of ['operation','unknown_field','duplicate_choice','reserved_choice','source','terms','date','no_fallback']) {
   test('agenda declaration rejects ' + fault + ' without registry, campaign, RNG or identity mutation', async function ({ page }, info) {
     await openGame(page, info);
     const result = await page.evaluate(function (input) {
@@ -113,6 +113,7 @@ for (const fault of ['operation','unknown_field','duplicate_choice','source','te
       if (input.fault === 'operation') c.operation = 'arbitrary_write';
       if (input.fault === 'unknown_field') c.statePath = 'player.gold';
       if (input.fault === 'duplicate_choice') d.stages[1].choices[0].id = c.id;
+      if (input.fault === 'reserved_choice') c.id = 'agenda_stop_program';
       if (input.fault === 'source') { c.operation = 'agenda_story_choice'; c.storyId = 'missing_source'; c.choiceId = 'accept'; }
       if (input.fault === 'terms') c.revenue = 2;
       if (input.fault === 'date') d.stages[0].season = 4;

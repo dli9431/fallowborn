@@ -17,7 +17,7 @@
     need(keys(def, ['id','type','subjectRealmId','title','intro','requires','stages','registrationBefore','registrationAfter']), 'fields');
     need(slug(def.subjectRealmId) && text(def.title) && text(def.intro), 'subject or display');
     need(Array.isArray(def.stages) && def.stages.length > 0 && def.stages.length <= 16, 'stages');
-    var stages = {}, choices = {};
+    var stages = Object.create(null), choices = Object.create(null);
     def.stages.forEach(function (stage) {
       need(keys(stage, ['id','name','text','year','season','choices']) && slug(stage.id) && !stages[stage.id], 'stage');
       stages[stage.id] = true;
@@ -27,7 +27,7 @@
       need(stage.choices.some(function (c) { return c.operation === 'agenda_priority'; }), 'unconditional alternative');
       stage.choices.forEach(function (c) {
         need(keys(c, ['id','label','detail','operation','storyId','choiceId','field','values','interestId','revenue','levy','amount','duration',
-          'recordKind','otherRealmId','recordOperation']) && slug(c.id) && !choices[c.id], 'choice fields or duplicate');
+          'recordKind','otherRealmId','recordOperation']) && slug(c.id) && c.id !== 'agenda_stop_program' && !choices[c.id], 'choice fields or duplicate');
         choices[c.id] = true;
         need(text(c.label) && text(c.detail) && operations.indexOf(c.operation) >= 0, 'choice operation or display');
         var fields = ['id','label','detail','operation'];
