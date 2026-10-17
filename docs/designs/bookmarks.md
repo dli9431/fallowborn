@@ -18,6 +18,10 @@ Mod validation checks a fixed resident-community start against every revision th
 
 Bookmark platform and authoring
 
+Optional spring 867 North Atlantic world
+
+data/bookmark_867_north_atlantic.js composes the effective inhabited_v2_governments_v2_islamic_v1 world into the opt-in north_atlantic_v1 revision on europe_north_atlantic_2. It retains all supported source fields, institutions, ordered slots, stories and opening offers, then adds four inhabited local districts and nine Icelandic scenery districts. Fresh selectors and retained revisions keep their prior meanings. No new start, Iceland gateway or settlement driver is supplied. The four generated territorial custodians exercise ordinary county ownership, revenue, peace, levy and dynastic succession powers. This is a bounded local-authority simulation, with no attested earl or assembly constitution asserted. The dated evidence and population approximations are in docs/research/867-north-atlantic.md. Technology impact period_867_north_atlantic_habitation is none; existing gameplay gates remain in force. Household sea travel retains its coarse route-unit clock.
+
 Purpose
 
 A bookmark is an atomic political opening on a reusable physical geography. It declares a date, era, sovereign realms, county communities, title hierarchy, crossings, optional institutions and opening people, world stories and available starts. Shared simulation code resolves these declarations through registries. Content authors do not add date selectors to the engine.
