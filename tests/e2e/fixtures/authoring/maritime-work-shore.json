@@ -249,6 +249,86 @@
               "launchSourceId": "work_slip"
             }
           ]
+        },
+        "new_works": {
+          "siteResourceAssignments": [
+            {
+              "id": "work_slip",
+              "profileId": "work_launch",
+              "countyId": "resource_quay",
+              "siteId": "resource_intake",
+              "suitability": {
+                "launching": true
+              },
+              "rights": {
+                "kind": "holder"
+              }
+            }
+          ],
+          "openingInfrastructure": {
+            "version": 1,
+            "placements": [
+              {
+                "countyId": "resource_quay",
+                "siteId": "resource_slip",
+                "buildingId": "boat_supply_store",
+                "condition": "standing"
+              }
+            ]
+          },
+          "productionSites": [
+            {
+              "id": "boat_plant",
+              "countyId": "resource_quay",
+              "siteId": "resource_intake",
+              "buildingId": "boat_workshop",
+              "recipeIds": [
+                "prepare_boat_work"
+              ],
+              "openingLots": []
+            },
+            {
+              "id": "boat_supplier",
+              "countyId": "resource_quay",
+              "siteId": "resource_slip",
+              "buildingId": "boat_supply_store",
+              "recipeIds": [
+                "prepare_boat_work"
+              ],
+              "openingLots": [
+                {
+                  "goodId": "wood_lot",
+                  "quantity": 8
+                },
+                {
+                  "goodId": "cord_lot",
+                  "quantity": 6
+                }
+              ]
+            }
+          ],
+          "maritimeWorkAssignments": [
+            {
+              "id": "licensed_work",
+              "profileId": "maintained_shore",
+              "productionSiteId": "boat_plant",
+              "launchSourceId": "work_slip"
+            }
+          ],
+          "productionExchangeAssignments": [
+            {
+              "id": "timber_delivery",
+              "profileId": "timber_delivery",
+              "fromSiteId": "boat_supplier",
+              "toSiteId": "boat_plant"
+            },
+            {
+              "id": "cordage_delivery",
+              "profileId": "cordage_delivery",
+              "fromSiteId": "boat_supplier",
+              "toSiteId": "boat_plant"
+            }
+          ]
         }
       }
     }
@@ -260,6 +340,18 @@
       "role": "industry",
       "cost": 25,
       "upkeep": 1,
+      "maxCounty": 1,
+      "productionRecipeIds": [
+        "prepare_boat_work"
+      ],
+      "maritimeWorkProfileId": "maintained_shore"
+    },
+    "boat_supply_store": {
+      "name": "Boat material store",
+      "desc": "A finite owned fictional material depot.",
+      "role": "industry",
+      "cost": 12,
+      "upkeep": 0,
       "maxCounty": 1
     }
   },
@@ -317,6 +409,24 @@
       "unitValue": 6,
       "invoiceShare": 0.1,
       "termDays": 7
+    }
+  },
+  "productionExchangeProfiles": {
+    "timber_delivery": {
+      "goodId": "wood_lot",
+      "marketGoodId": "materials",
+      "basePrice": 1,
+      "mode": "owned",
+      "quantityLimit": 8,
+      "budget": 100
+    },
+    "cordage_delivery": {
+      "goodId": "cord_lot",
+      "marketGoodId": "materials",
+      "basePrice": 1,
+      "mode": "owned",
+      "quantityLimit": 8,
+      "budget": 100
     }
   }
 }
