@@ -680,3 +680,7 @@ building_profile_selection has technology impact none for typed authoring and se
 Inherited profile identity
 
 building_profile_inheritance is none because retaining the identity of property is accounting. No research is inferred or required to keep or repair an inherited asset. Current operation still needs its real input and permission owners, and optional new machinery construction retains its exact hard or soft requirement and ungated fallback.
+
+Horizontal milling technology decision
+
+horizontal_milling is hard on water_power for the optional horizontal_mill profile of mill. Hand and animal grinding remain available without organized powered machinery. requiresTechMode:replace gives this simpler alternative its reviewed requirement while the ordinary undershot Watermill retains its original gate and values. Missing Water Power remains visible in the shared profile review and the technology sheet discovers the actual profile consumer. Existing property, funded service receipts and repair retain their identity after knowledge loss; real water, site compatibility, permission and funded operation still control current benefits. No discovery or national research scalar is added.

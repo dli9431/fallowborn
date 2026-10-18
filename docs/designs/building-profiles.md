@@ -1,6 +1,6 @@
 Construction profiles
 
-buildingProfiles author optional construction variants of an existing physical building. The base building id, role, settlement slot, county and demesne limits, shared construction group, geographic flags and repeat-price count remain canonical. A profile replaces only named supported numeric fields; omitted fields inherit the base value. Numbers are never added to their base counterparts. Bundled profiles are initially empty. Existing unprofiled assets keep their exact defaults and receive no profile on boot or restore.
+buildingProfiles author optional construction variants of an existing physical building. The base building id, role, settlement slot, county and demesne limits, shared construction group, geographic flags and repeat-price count remain canonical. A profile replaces only named supported numeric fields; omitted fields inherit the base value. Numbers are never added to their base counterparts. Bundled profiles declare optional alternatives without initializing property. Existing unprofiled assets keep their exact defaults and receive no profile on boot or restore.
 
 Authoring
 
