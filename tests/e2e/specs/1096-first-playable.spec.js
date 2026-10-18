@@ -9,6 +9,7 @@ const {releasedCatalogue} = require('../support/released-catalogue');
 
 dependsOnRuntime(__filename,[
   'index.html','data/bookmark_1096.js','data/identities_1096.js',
+  'data/bookmark_1096_campaigns.js','data/story_household_effects_1096.js','data/story_world_1096.js',
   'data/bookmark_1096_scaffold_a.js','data/bookmark_1096_scaffold_b.js',
   'data/bookmark_1096_scaffold_c.js','data/bookmark_1096_scaffold_d.js',
   'data/bookmarks.js','data/bookmark_1066_inhabited.js','data/map_data.js',
@@ -84,7 +85,7 @@ test('1096 composes every physical county and court once with valid detached ref
     ['constantinople','byzantium_1096'],['nicaea','rum_1096'],['jerusalem','jerusalem_1096'],['mainz','hre_1096']
   ]);
   expect(result.starts.pilgrim_household_1096).toEqual(['cologne']);
-  expect(result.stories).toEqual([]);
+  expect(result.stories).toEqual(['eastern_undertaking_1096','eastern_undertaking_households_1096']);
   expect(result.opening).toEqual({actors:{},appointments:{},estates:[],claims:[],migrations:[]});
 });
 

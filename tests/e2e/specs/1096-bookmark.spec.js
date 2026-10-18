@@ -11,6 +11,7 @@ const released = require('../fixtures/released-catalogue.json');
 
 dependsOnRuntime(__filename,[
   'index.html','data/bookmark_1096.js','data/identities_1096.js','data/institutions_1096.js',
+  'data/bookmark_1096_campaigns.js','data/story_household_effects_1096.js','data/story_world_1096.js',
   'data/bookmark_1096_scaffold_a.js','data/bookmark_1096_scaffold_b.js',
   'data/bookmark_1096_scaffold_c.js','data/bookmark_1096_scaffold_d.js',
   'data/bookmarks.js','data/counties.js','data/map_data.js','data/geographies.js',
@@ -101,7 +102,7 @@ test('the corrected world has complete date-owned hierarchy, layouts, identities
     'tunis_local_1096','smolensk_1096','polotsk_1096','ghaznavid_1096','khorasan_1096']);
   expect(result.anchors).toEqual(['kairouan','lubeck',1035]);
   expect(result.opening).toEqual({actors:{},appointments:{},estates:[],claims:[],migrations:[]});
-  expect(result.stories).toEqual([]);
+  expect(result.stories).toEqual(['eastern_undertaking_1096','eastern_undertaking_households_1096']);
   expect(result.scripted).toEqual([]);
   expect((await page.evaluate(releasedCatalogue,released.selection)).hashes).toEqual(released.hashes);
 });
@@ -272,7 +273,7 @@ for (const household of [{county:'mainz',identity:'ashkenazi.jewish'},{county:'q
     expect(result.heads.sunni).toBe('abbasid_1096');
     expect(result.heads.durham_bishop).toBeNull();
     expect(result.durham.representativeId).toBeNull();
-    expect(result.worldStories).toEqual([]);
+    expect(result.worldStories).toEqual(['eastern_undertaking_1096','eastern_undertaking_households_1096']);
     expect(result.expedition).toBe(false);
     expect(result.validation).toEqual([]);
   });
