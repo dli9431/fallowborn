@@ -11,7 +11,7 @@ dependsOnRuntime(__filename, [
   'js/government_revenue.js','js/government_ai.js','js/government_diplomacy.js','js/world.js','js/population.js',
   'js/armies.js','js/fortifications.js','js/federates.js','js/logistics.js','js/market.js','js/treasury.js',
   'js/authority.js','js/wars.js','js/model.js','js/main.js','js/actions.js','js/ui_misc.js',
-  'js/save.js','js/save_v4.js','js/mods.js'
+  'js/save.js','js/save_v4.js','js/mods.js','js/starts.js'
 ]);
 async function start(page,testInfo,fictional,crazygames) {
   await startHistoricalGame(page,testInfo,{bookmark:'476',

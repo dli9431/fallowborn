@@ -50,6 +50,8 @@
     rationale:'A retained personal mandate or a living superior commissioning an eligible member is a political relationship. Death, custody, recall and issuer succession suspend authority without changing private station or bypassing ordinary military technology.'};
   FBDATA.techImpactReviews.features.mobile_command_scope = {mode:'none',
     rationale:'Explicit public operation permissions depend on a valid commission and canonical resources, local rights and outside consent. The commission provides no county revenue or technological exception.'};
+  FBDATA.techImpactReviews.features.mobile_hosted_opening = {mode:'none',
+    rationale:'An already accepted opening concession records a political relationship under living parties, direct local possession and finite capacity. It grants no equipment, transport, personal safety or technological exception.'};
   /* The fresh 476 opening inhabits Cherson and adds the Pontic following.
      Priscus attests displaced followings and Roman diplomacy, not a precise
      476 boundary or an identifiable incumbent at this simulated camp. */
