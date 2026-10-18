@@ -14,7 +14,7 @@ dependsOnRuntime(__filename, [
   'index.html', 'data/map_data.js', 'data/technology.js', 'data/technology_early_refinements.js', 'data/technology_foundations.js',
   'data/technology_learning.js', 'data/buildings_learning_care.js',
   'data/technology_civic_military.js', 'data/buildings_civic_military.js',
-  'data/technology_maritime.js', 'data/buildings_maritime.js', 'data/economy_maritime.js',
+  'data/technology_maritime.js', 'data/buildings_maritime.js', 'data/buildings_boathouses.js', 'data/economy_maritime.js',
   'data/technology_wind.js', 'data/buildings_wind.js', 'data/economy.js',
   'data/technology_transmission.js','data/buildings_early_worship.js','data/buildings_fish_drying.js','data/building_profiles.js','data/building_institutions.js',
   'data/bookmarks.js', 'data/bookmark_867_expansion.js', 'data/bookmark_1066_inhabited.js',
@@ -118,8 +118,8 @@ test('all supplements compose once with stable effects, grants, budgets and rele
       'vertical_axis_windmill','pastoral_waterworks','tuna_trapping','cotton_cultivation',
       'sugar_processing','manuscript_scholarship','galley_yard_practice','horizontal_watermill',
       'bog_iron','seasonal_pasture_management','motte_and_bailey'];
-    const heldBuildings = ['paper_workshop',
-      'bloomery_smithy','horizontal_mill','boathouse','shieling','fairground',
+    const heldBuildings = [
+      'horizontal_mill','shieling','fairground',
       'relay_station','pasture_well_network','felt_yard','timber_streetworks','tonnara',
       'cotton_preparation_yard','sugar_workshop','mint_workshop','funduq','notarial_office',
       'manuscript_library','cathedral_school','galley_yard','episcopal_complex','congregational_mosque',
@@ -145,9 +145,9 @@ test('all supplements compose once with stable effects, grants, budgets and rele
   });
   expect(r.techOwners).toEqual({ duplicates:[], stale:[], counts:[9,6,12,8,1,1] });
   expect(r.buildingOwners).toEqual({ duplicates:[], stale:[], counts:[3,3,1,1] });
-  expect(r.counts).toEqual([195,27]);
+  expect(r.counts).toEqual([195,30]);
   expect(r.techIds).toEqual(r.baseIds.concat(['aqueduct_maintenance','qanat_construction','cistern_engineering','masonry_circuits','hypocaust_heating','diversion_dams']).sort());
-  expect(r.addedBuildings.slice().sort()).toEqual(['hospice','fish_drying_station','aqueduct','qanat_waterworks','urban_cisterns','monastic_house','public_bath','diversion_headworks'].sort());
+  expect(r.addedBuildings.slice().sort()).toEqual(['hospice','boathouse','paper_workshop','bloomery_smithy','fish_drying_station','aqueduct','qanat_waterworks','urban_cisterns','monastic_house','public_bath','diversion_headworks'].sort());
   expect(r.scalarChanges.sort()).toEqual(['capitularies','paper_making','paper_scholarship']);
   expect(r.buildingChanges).toEqual([]);
   expect(r.caps).toEqual(r.baseCaps); expect(r.grants).toEqual(r.baseGrants);
@@ -155,7 +155,7 @@ test('all supplements compose once with stable effects, grants, budgets and rele
   expect(r.unexpected).toEqual([]); expect(r.errors).toEqual([]); expect(r.inferredWorlds).toEqual([]);
   const supplements = ['data/technology_early_refinements.js','data/technology_foundations.js','data/technology_learning.js',
     'data/buildings_learning_care.js','data/technology_civic_military.js','data/buildings_civic_military.js',
-    'data/technology_maritime.js','data/buildings_maritime.js','data/technology_wind.js','data/buildings_wind.js',
+    'data/technology_maritime.js','data/buildings_maritime.js','data/buildings_boathouses.js','data/technology_wind.js','data/buildings_wind.js',
     'data/technology_transmission.js','data/technology_waterworks.js','data/technology_masonry_circuits.js','data/buildings_waterworks.js'];
   for (const source of supplements) {
     expect(r.sources.filter(function (s) { return s === source; })).toHaveLength(1);

@@ -30,6 +30,8 @@ Authority office names and descriptions use authorityOffice.<id>.<field>.default
 
 Supplemental technology and building presentation
 
+data/buildings_boathouses.js uses literal FBDATA.buildings_boathouses for building.boathouse name/desc. Its finite material and recipe labels live in the canonical literal productionGoods/productionRecipes tables in data/production.js, and its invoice profile uses the literal maritimeWorkProfiles table in data/maritime_work.js. These retain the existing productionGood, productionRecipe and maritimeWorkProfile owners, exact-source aliases and ordinary imported English fallback. No extractor change, generated catalogue or saved prose is introduced.
+
 data/technology_transmission.js uses the same complete literal correction convention for paper_making. Its unchanged name and description retain tech.paper_making display owners and exact-English aliases; the regional schedule is untranslated metadata. Paper Scholarship and Royal Capitularies retain their existing learning and civic/military source owners.
 
 Files named data/technology_<suffix>.js may declare literal FBDATA.tech_<suffix> maps for additions and FBDATA.techCorrections_<suffix> maps for complete replacements. Files named data/buildings_<suffix>.js use FBDATA.buildings_<suffix> and FBDATA.buildingCorrections_<suffix>. Table suffixes may differ from the filename, and one file may declare several maps. The static extractor resolves all definitions before registering text, without executing a composer. These tables organize source only; they introduce no runtime registry, JSON mod root or public add helper.

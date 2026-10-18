@@ -1,3 +1,7 @@
+Boathouse work catalogue
+
+data/buildings_boathouses.js adds the modest boathouse with cost 25, upkeep 1, devMin 0, county limit 1, shipyard role, coastal siting and AI priority 32. Construction uses inclusive 650-1300 Nordic learning-tradition applicability and no technology gate. It grants no passive scalar. Actual useful work requires the existing production and maritime assignments, finite owned timber/cordage, paid action days and current lawful co-located launching capacity. The existing household enterprise invoice owner consumes that paid contribution once, at most ten percent of the unchanged ordinary invoice, and charges the remainder with normal staffing and technology. No source, historical asset, goods or enterprise is installed. building_boathouse has technology impact none for basic shelter; optional enterprise stages keep their existing reviews. See docs/research/boathouses.md and docs/designs/maritime-work.md for exact values, ordinary examples, evidence limits and receipt continuity.
+
 # Development & buildings
 
 Physical resource declarations
@@ -10,7 +14,7 @@ Optional institutionProfile building declarations and bookmark buildingInstituti
 
 Composed construction catalogue
 
-The effective catalogue has 20 buildings: the nineteen retained ids plus hospice. Eight complete replacements preserve every existing numeric field, role and AI priority while updating the declared presentation, prerequisite or applicability. Construction scope and group capacity share the normal authority and paid transaction; inherited works and repairs retain their separate contracts. Annual AI keeps the full priority table, finite purchase budget and existing reserves, including each proposed building's upkeep. The combined JSON example and regression spec in docs/research/technology-and-buildings.md cover these boundaries together without installing historical inventories or creating institutional rights.
+The effective catalogue has 21 buildings: the nineteen retained ids plus hospice and boathouse. Eight complete replacements preserve every existing numeric field, role and AI priority while updating the declared presentation, prerequisite or applicability. Construction scope and group capacity share the normal authority and paid transaction; inherited works and repairs retain their separate contracts. Annual AI keeps the full priority table, finite purchase budget and existing reserves, including each proposed building's upkeep. The combined JSON example and regression spec in docs/research/technology-and-buildings.md cover these boundaries together without installing historical inventories or creating institutional rights.
 
 Post-mill construction
 

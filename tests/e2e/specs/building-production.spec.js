@@ -253,6 +253,6 @@ test('a mismatched live water claim cannot substitute for the reserved recipe in
 
 test('bundled released worlds have no production assignment or inferred material inventory',async function({page},info){
   await openGame(page,info);
-  expect(await page.evaluate(function(){return {goods:Object.keys(FBDATA.productionGoods),recipes:Object.keys(FBDATA.productionRecipes),
-    plans:['867','1066'].map(function(id){return FB.compileProduction(FB.bookmark(id));})};})).toEqual({goods:[],recipes:[],plans:[{sites:[],errors:[]},{sites:[],errors:[]}]});
+  expect(await page.evaluate(function(){return ['867','1066'].map(function(id){const p=FB.compileProduction(FB.bookmark(id));
+    return {sites:p.sites,errors:p.errors};});})).toEqual([{sites:[],errors:[]},{sites:[],errors:[]}]);
 });

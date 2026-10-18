@@ -1,0 +1,339 @@
+{
+  "name": "Boathouse river landing",
+  "siteResourceProfiles": {
+    "work_launch": {
+      "name": "Licensed river landing",
+      "kind": "access",
+      "unit": "launching",
+      "capacity": 2,
+      "periodDays": 7
+    }
+  },
+  "geographies": {
+    "boathouse_river_land": {
+      "bounds": {
+        "lonMin": 0,
+        "lonMax": 6,
+        "latMin": 0,
+        "latMax": 5
+      },
+      "land": [
+        [
+          0.5,
+          0.5,
+          5.5,
+          0.5,
+          5.5,
+          4.5,
+          0.5,
+          4.5
+        ]
+      ],
+      "gridWidth": 240,
+      "seas": [],
+      "rivers": [
+        [
+          1.5,
+          4.3,
+          1.5,
+          2,
+          2.2,
+          0.5
+        ]
+      ],
+      "defaultLayout": "boathouse_river_layout",
+      "provinces": [
+        {
+          "id": "resource_quay",
+          "x": 1.5,
+          "y": 2,
+          "terrain": "farmland"
+        },
+        {
+          "id": "resource_bank",
+          "x": 3.1,
+          "y": 2,
+          "terrain": "farmland"
+        },
+        {
+          "id": "resource_rocks",
+          "x": 4.7,
+          "y": 2,
+          "terrain": "hills"
+        }
+      ],
+      "sites": {
+        "resource_intake": {
+          "x": 1.5,
+          "y": 2
+        },
+        "resource_cistern": {
+          "x": 3.1,
+          "y": 2
+        },
+        "resource_slip": {
+          "x": 1.7,
+          "y": 2
+        }
+      }
+    }
+  },
+  "settlementLayouts": {
+    "boathouse_river_layout": {
+      "resource_quay": [
+        {
+          "site": "resource_intake",
+          "name": "Intake Town",
+          "kind": "town"
+        },
+        {
+          "site": "resource_slip",
+          "name": "Slip Village",
+          "kind": "village"
+        }
+      ],
+      "resource_bank": [
+        {
+          "site": "resource_cistern",
+          "name": "Bank Village",
+          "kind": "village"
+        }
+      ]
+    }
+  },
+  "startScenarios": [
+    {
+      "id": "boathouse_river_ruler",
+      "name": "The boat-work holder",
+      "desc": "A fictional existing holder of a paid boat-work site.",
+      "intro": "Review finite owned materials and the ordinary enterprise invoice.",
+      "tier": 5,
+      "profession": "noble",
+      "gold": 500,
+      "prestige": 0,
+      "piety": 0,
+      "bookmarkIds": [
+        "boathouse_river"
+      ],
+      "eras": [
+        "early_medieval"
+      ],
+      "alwaysUnlocked": true,
+      "rulerRealmId": "boathouse_river_court",
+      "governmentForm": "regnum",
+      "fixedProvinceId": "resource_quay",
+      "characterName": "Ivo Reed",
+      "sex": "m",
+      "startCulture": "norse",
+      "startReligion": "catholic",
+      "onboarding": "ruler",
+      "familyPresets": {
+        "standard": {
+          "name": "Existing court",
+          "diff": "Existing court household"
+        }
+      }
+    }
+  ],
+  "bookmarks": {
+    "boathouse_river": {
+      "id": "boathouse_river",
+      "name": "Boathouse river",
+      "desc": "A fictional licensed river worksite with conserved material and paid work, not a historical inventory.",
+      "date": {
+        "year": 900,
+        "season": 0,
+        "day": 1
+      },
+      "era": "early_medieval",
+      "geography": "boathouse_river_land",
+      "religiousHeads": {},
+      "localInstitutions": {},
+      "stories": [],
+      "starts": [
+        "boathouse_river_ruler"
+      ],
+      "scripted": [],
+      "straits": [],
+      "crossingClasses": {},
+      "provinces": [
+        {
+          "id": "resource_quay",
+          "name": "Quay",
+          "realm": "boathouse_river_court",
+          "culture": "norse",
+          "religion": "catholic",
+          "dev": 5
+        },
+        {
+          "id": "resource_bank",
+          "name": "Bank",
+          "realm": "boathouse_river_court",
+          "culture": "norse",
+          "religion": "catholic",
+          "dev": 3
+        },
+        {
+          "id": "resource_rocks",
+          "name": "Rocky scenery",
+          "wasteland": true
+        }
+      ],
+      "realms": [
+        {
+          "id": "boathouse_river_court",
+          "name": "River court",
+          "capital": "resource_quay",
+          "color": "#458c96",
+          "aggression": 0,
+          "rank": 2,
+          "government": "regnum",
+          "ruler": {
+            "name": "Ivo Reed",
+            "culture": "norse",
+            "born": 868,
+            "mar": 6,
+            "trait": "patient"
+          },
+          "techTraditions": [
+            "nordic"
+          ]
+        }
+      ],
+      "duchies": {},
+      "kingdoms": {},
+      "empires": {},
+      "revision": "supplied",
+      "revisions": {
+        "baseline": {},
+        "supplied": {
+          "siteResourceAssignments": [
+            {
+              "id": "work_slip",
+              "profileId": "work_launch",
+              "countyId": "resource_quay",
+              "siteId": "resource_intake",
+              "suitability": {
+                "launching": true
+              },
+              "rights": {
+                "kind": "holder"
+              }
+            }
+          ],
+          "openingInfrastructure": {
+            "version": 1,
+            "placements": [
+              {
+                "countyId": "resource_quay",
+                "siteId": "resource_intake",
+                "buildingId": "boathouse",
+                "condition": "standing"
+              }
+            ]
+          },
+          "productionSites": [
+            {
+              "id": "boat_plant",
+              "countyId": "resource_quay",
+              "siteId": "resource_intake",
+              "buildingId": "boathouse",
+              "recipeIds": [
+                "prepare_boathouse_work"
+              ],
+              "openingLots": [
+                {
+                  "goodId": "boathouse_timber",
+                  "quantity": 8
+                },
+                {
+                  "goodId": "boathouse_cordage",
+                  "quantity": 6
+                }
+              ]
+            }
+          ],
+          "maritimeWorkAssignments": [
+            {
+              "id": "licensed_work",
+              "profileId": "river_boathouse_work",
+              "productionSiteId": "boat_plant",
+              "launchSourceId": "work_slip"
+            }
+          ]
+        }
+      }
+    }
+  },
+  "enterprises": {
+    "river_fishing_business": {
+      "name": "River fishing business",
+      "icon": "B",
+      "cost": 60,
+      "profession": "farmer",
+      "yield": 2,
+      "laborPay": 1,
+      "requiresTech": "knarrs",
+      "upgrades": [
+        {
+          "name": "Decked river boat",
+          "cost": 180,
+          "staff": 2,
+          "requiresTech": "sternpost_rudder",
+          "desc": "Paid river enterprise with normal staffing.",
+          "fx": {
+            "populationCapacity": 0.01
+          }
+        }
+      ],
+      "desc": "A fictional river enterprise with ordinary paid staffing."
+    }
+  },
+  "enterpriseMechanics": {
+    "river_fishing_business": {
+      "output": {
+        "provisions": 1
+      },
+      "maritimeWork": true
+    }
+  },
+  "productionRecipes": {
+    "prepare_boathouse_work": {
+      "name": "Prepare river boat work",
+      "desc": "Two paid action days and finite timber and cordage for a river invoice.",
+      "inputs": [
+        {
+          "goodId": "boathouse_timber",
+          "quantity": 1
+        },
+        {
+          "goodId": "boathouse_cordage",
+          "quantity": 2
+        }
+      ],
+      "outputs": [
+        {
+          "goodId": "boathouse_work",
+          "quantity": 1
+        }
+      ],
+      "workDays": 2,
+      "workPrice": 4,
+      "requiresTech": [],
+      "impactReviewId": "conserved_production_batches"
+    }
+  },
+  "maritimeWorkProfiles": {
+    "river_boathouse_work": {
+      "name": "Maintained river boathouse work",
+      "desc": "A finite contribution to a paid river enterprise invoice.",
+      "enterpriseType": "river_fishing_business",
+      "recipeId": "prepare_boathouse_work",
+      "goodId": "boathouse_work",
+      "quantity": 1,
+      "unitValue": 3,
+      "invoiceShare": 0.05,
+      "termDays": 14
+    }
+  }
+}
