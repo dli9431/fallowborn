@@ -1,5 +1,11 @@
 Preparation-aware expedition stories
 
+Spring 1096 declaration boundary
+
+data/expeditions_1096.js loads after the complete bookmark and publishes an empty storyExpeditions1096 source batch into the existing storyInstances catalogue. There are no accepted historical preparation or program declarations, mobile commands, formation reserves, funding grants or expedition routes in this opening. Ordinary household play remains available. A calendar boundary and an existing named court cannot supply an expedition's missing operational facts. The empty source adds no gameplay capability, technology decision or saved record; the existing preparation, program and movement contracts retain their own technology and resource gates.
+
+The focused expeditions-1096.spec.js covers the absent historical consumers through opening, dated reviews and matching restore. Independent fictional ordinary Mods imports exercise the available shared formation, current passage, actual movement and command/account restore contracts. Those examples establish engine behavior only; they establish no historical itinerary, crossing permission or force budget.
+
 The expedition_program world-story type composes one attached expedition_preparation and that same single-host command's existing mobile.expeditionProgram. The story stores intent and immutable original references. Preparation owns consent, reserves, funding and formation; the mobile program owns step order, cursors, tickets and current religious objectives. Army, migration, population, market, public accounts, vows and paid service retain their existing owners. No historical declaration or geographic crossing is supplied by this capability.
 
 Declaration
