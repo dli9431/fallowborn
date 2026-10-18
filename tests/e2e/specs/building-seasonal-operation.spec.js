@@ -5,7 +5,7 @@ const {openGame}=require('../support/game/navigation');
 const {beginBookmark}=require('../support/game/bookmark-acceptance');
 const {dependsOnRuntime}=require('../support/runtime-dependencies');
 const examples={dry:require('../fixtures/authoring/building-seasons-dry.json'),pasture:require('../fixtures/authoring/building-seasons-pasture.json')};
-dependsOnRuntime(__filename,['index.html','data/building_seasons.js','data/production.js','data/production_economy.js','data/building_operations.js','data/building_profiles.js','data/climate.js','data/technology.js',
+dependsOnRuntime(__filename,['index.html','data/production_fish_drying.js','data/buildings_seasonal_pasture.js','data/production_seasonal_pasture.js','data/building_seasons.js','data/production.js','data/production_economy.js','data/building_operations.js','data/building_profiles.js','data/climate.js','data/technology.js',
   'js/building_seasons.js','js/production.js','js/production_economy.js','js/building_operations.js','js/building_profiles.js','js/site_resources.js','js/climate.js','js/world.js','js/mods.js',
   'js/main.js','js/save.js','js/save_v4.js','js/actions.js','js/population.js','js/settlement.js','js/lordships.js','js/treasury.js','js/home_authority.js','js/ui_modals.js','js/ui_misc.js']);
 async function boot(page,info,kind,ruler,custom) {
@@ -316,8 +316,8 @@ test('bundled worlds and legacy saves retain no inferred season owner',async fun
   await beginBookmark(page,info,'867');
   const r=await page.evaluate(function(){
     const s=FB.state,before=JSON.stringify(s);FB.buildingSeasons.validate(s);FB.buildingSeasons.boundary(s);
-    return {table:Object.keys(FBDATA.buildingSeasonProfiles),plans:['867','1066'].map(function(id){return FB.buildingSeasons.compile(FB.bookmark(id));}),
+    return {table:Object.keys(FBDATA.buildingSeasonProfiles).sort(),plans:['867','1066'].map(function(id){return FB.buildingSeasons.compile(FB.bookmark(id));}),
       absent:s.buildingSeasons===undefined,pure:before===JSON.stringify(s)};
   });
-  expect(r).toEqual({table:[],plans:[{assignments:[],errors:[]},{assignments:[],errors:[]}],absent:true,pure:true});
+  expect(r).toEqual({table:['fish_drying_cool','shieling_summer'],plans:[{assignments:[],errors:[]},{assignments:[],errors:[]}],absent:true,pure:true});
 });

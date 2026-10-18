@@ -1035,18 +1035,44 @@ def extract_building_profiles(inv: Inventory, data: Path = DATA) -> None:
                             TOKEN_RE.findall(record["text"]))
 
 
-def extract_production_supplements(inv: Inventory, data: Path = DATA) -> None:
-    for path in sorted(data.glob("production_*.js")):
-        source = path.read_text(encoding="utf-8")
-        for root, namespace in (("productionGoods", "productionGood"), ("productionRecipes", "productionRecipe")):
-            for match in re.finditer(r"FBDATA\.(" + root + r"_[A-Za-z0-9_]+)\s*=", source):
-                additions = node_object(find_assignment(path, "FBDATA", match.group(1))) or {}
-                for item_id, node in additions.items():
-                    item = node_object(node) or {}
-                    for field in ("name", "desc", "fallback") if root == "productionRecipes" else ("name", "desc"):
-                        for branch, record, line in branch_records(item.get(field)):
+def extract_production_supplements(inv: Inventory, data: Path | None = None) -> None:
+    """Read additive literal production tables without running their composers."""
+    data = DATA if data is None else data
+    for registry, namespace in (("productionGoods", "productionGood"),
+                                ("productionRecipes", "productionRecipe")):
+        base = data / "production.js"
+        seen = set(node_object(find_assignment(base, "FBDATA", registry)) or {}) if base.exists() else set()
+        for path in sorted(data.glob("production_*.js")):
+            tokens = lex_js(path.read_text(encoding="utf-8"))
+            for i in range(len(tokens) - 4):
+                if (tokens[i].value != "FBDATA" or tokens[i + 1].value != "."
+                        or not re.fullmatch(registry + r"_[A-Za-z0-9_]+", tokens[i + 2].value)
+                        or tokens[i + 3].value != "=" or tokens[i + 4].value == "="):
+                    continue
+                parser = Parser(tokens, strict_objects=True)
+                parser.i = i + 4
+                declaration = parser.parse_value()
+                table = node_object(declaration)
+                if table is None or parser.peek() is not None and parser.peek().value != ";":
+                    raise ValueError(f"{path.name}: production supplement must be a literal map")
+                for item_id, item_node in table.items():
+                    if item_id in seen:
+                        raise ValueError(f"duplicate {registry} definition {item_id} in {path.name}")
+                    seen.add(item_id)
+                    item = node_object(item_node) or {}
+                    fields = ("name", "desc", "fallback") if registry == "productionRecipes" else ("name", "desc")
+                    for field in fields:
+                        display = item.get(field)
+                        if display is None and field != "name":
+                            continue
+                        branches = branch_records(display)
+                        if (not branches or display.kind not in ("string", "object")
+                                or display.kind == "object" and len(branches) != len(display.value)):
+                            raise ValueError(f"{path.name}: {item_id}.{field} needs literal display text")
+                        for branch, record, line in branches:
                             inv.add(f"{namespace}.{item_id}.{field}.{branch}", record,
-                                    f"data/{path.name}:{line}", "Finite production display.", TOKEN_RE.findall(record["text"]))
+                                    f"data/{path.name}:{line}", "Additive production display.",
+                                    TOKEN_RE.findall(record["text"]))
 
 
 def extract_structured(inv: Inventory) -> None:

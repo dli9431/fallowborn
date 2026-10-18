@@ -8786,6 +8786,9 @@ window.FB = window.FB || {};
       const candidates = FB.settlementsOf(s, pid).map(function (v, idx) { return FB.buildingInstitutionStatus(s, pid, idx, id); });
       if (!candidates.some(function (q) { return q.allowed; })) return candidates.length ? candidates[0].reason : FB.T('An available institution at this exact site is required.');
     }
+    if (d.seasonProfile && !FB.settlementsOf(s,pid).some(function (v,idx) {
+      return FB.buildingSeasons.constructionReady(s,pid,idx,id,FB.settlementActor(s),d);
+    })) return FB.T('Requires a declared seasonal site, a permitted local season, lawful water or grazing, available care and work, real deliverable inputs, and construction and processing funds.');
     if (d.operationProfile && !FB.settlementsOf(s,pid).some(function (v,idx) {
       return FB.buildingOperations.constructionReady(s,pid,idx,id,FB.settlementActor(s));
     })) return FB.T('Requires a declared lawful water route, actual available water, and funded construction, work and upkeep.');

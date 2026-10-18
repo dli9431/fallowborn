@@ -1,0 +1,402 @@
+{
+  "name": "Fictional faroes parent farm allocation",
+  "geographies": {
+    "pasture_faroes_land": {
+      "bounds": {
+        "lonMin": 0,
+        "lonMax": 6,
+        "latMin": 0,
+        "latMax": 5
+      },
+      "land": [
+        [
+          0.5,
+          0.5,
+          5.5,
+          0.5,
+          5.5,
+          4.5,
+          0.5,
+          4.5
+        ]
+      ],
+      "gridWidth": 240,
+      "seas": [],
+      "rivers": [],
+      "defaultLayout": null,
+      "provinces": [
+        {
+          "id": "faroes",
+          "x": 1.5,
+          "y": 1.5,
+          "terrain": "hills"
+        },
+        {
+          "id": "pasture_buyer",
+          "x": 3.1,
+          "y": 1.5,
+          "terrain": "hills"
+        }
+      ],
+      "sites": {
+        "farmstead": {
+          "x": 1.5,
+          "y": 1.5
+        },
+        "quay_store": {
+          "x": 3.1,
+          "y": 1.5
+        }
+      }
+    }
+  },
+  "siteResourceProfiles": {
+    "pasture_places": {
+      "name": "Finite grazing places",
+      "kind": "access",
+      "unit": "grazing",
+      "capacity": 2,
+      "periodDays": 90
+    }
+  },
+  "enterprises": {
+    "field_strip": {
+      "name": "Existing parent farm",
+      "icon": "*",
+      "cost": 20,
+      "profession": "farmer",
+      "yield": 6,
+      "laborPay": 1,
+      "terrains": [
+        "hills"
+      ],
+      "desc": "A fictional operating farm. No livestock count or people are awarded by seasonal processing."
+    }
+  },
+  "enterpriseMechanics": {
+    "field_strip": {
+      "output": {
+        "provisions": 1
+      },
+      "typedProduction": {
+        "parent_farm_allocation": {
+          "marketGoodId": "provisions",
+          "marketUnits": 12
+        }
+      }
+    }
+  },
+  "productionExchangeProfiles": {
+    "sell_pasture_output": {
+      "goodId": "pasture_provisions",
+      "marketGoodId": "provisions",
+      "basePrice": 6,
+      "mode": "market",
+      "quantityLimit": 1,
+      "budget": 20
+    },
+    "parent_delivery": {
+      "goodId": "parent_farm_allocation",
+      "marketGoodId": "provisions",
+      "basePrice": 1,
+      "mode": "owned",
+      "quantityLimit": 1,
+      "budget": 1
+    }
+  },
+  "startScenarios": [
+    {
+      "id": "pasture_faroes_ruler",
+      "name": "Farm holder",
+      "desc": "A fictional farm holder.",
+      "intro": "Review the existing farm and grazing rights.",
+      "tier": 5,
+      "profession": "noble",
+      "gold": 200,
+      "prestige": 0,
+      "piety": 0,
+      "bookmarkIds": [
+        "pasture_faroes"
+      ],
+      "eras": [
+        "early_medieval"
+      ],
+      "alwaysUnlocked": true,
+      "rulerRealmId": "farm_court",
+      "governmentForm": "regnum",
+      "fixedProvinceId": "faroes",
+      "characterName": "Arno Stone",
+      "sex": "m",
+      "startCulture": "frankish",
+      "startReligion": "catholic",
+      "onboarding": "ruler",
+      "familyPresets": {
+        "standard": {
+          "name": "Established household",
+          "diff": "age 24"
+        }
+      }
+    }
+  ],
+  "bookmarks": {
+    "pasture_faroes": {
+      "id": "pasture_faroes",
+      "name": "Fictional farm country",
+      "desc": "Independent simulation accounts, not historical infrastructure.",
+      "date": {
+        "year": 950,
+        "season": 0,
+        "day": 1
+      },
+      "era": "early_medieval",
+      "geography": "pasture_faroes_land",
+      "settlementLayout": null,
+      "religiousHeads": {},
+      "localInstitutions": {},
+      "stories": [],
+      "starts": [
+        "pasture_faroes_ruler"
+      ],
+      "scripted": [],
+      "straits": [],
+      "crossingClasses": {},
+      "provinces": [
+        {
+          "id": "faroes",
+          "name": "Farm county",
+          "realm": "farm_court",
+          "culture": "frankish",
+          "religion": "catholic",
+          "dev": 5,
+          "settlements": [
+            {
+              "site": "farmstead",
+              "name": "Parent farm",
+              "kind": "village"
+            }
+          ]
+        },
+        {
+          "id": "pasture_buyer",
+          "name": "Buyer county",
+          "realm": "buyer_court",
+          "culture": "frankish",
+          "religion": "catholic",
+          "dev": 3,
+          "settlements": [
+            {
+              "site": "quay_store",
+              "name": "Buyer store",
+              "kind": "village"
+            }
+          ]
+        }
+      ],
+      "realms": [
+        {
+          "id": "farm_court",
+          "name": "Farm court",
+          "capital": "faroes",
+          "color": "#aa7944",
+          "aggression": 0,
+          "rank": 2,
+          "government": "regnum",
+          "ruler": {
+            "name": "Arno Stone",
+            "culture": "frankish",
+            "born": 918,
+            "mar": 6,
+            "trait": "patient"
+          }
+        },
+        {
+          "id": "buyer_court",
+          "name": "Buyer court",
+          "capital": "pasture_buyer",
+          "color": "#779955",
+          "aggression": 0,
+          "rank": 1,
+          "government": "regnum",
+          "ruler": {
+            "name": "Odo Vale",
+            "culture": "frankish",
+            "born": 920,
+            "mar": 5,
+            "trait": "patient"
+          }
+        }
+      ],
+      "duchies": {},
+      "kingdoms": {},
+      "empires": {},
+      "climate": {
+        "zone": "northern_temperate",
+        "provinces": {}
+      },
+      "siteResourceAssignments": [
+        {
+          "id": "farm_grazing",
+          "profileId": "pasture_places",
+          "countyId": "faroes",
+          "siteId": "farmstead",
+          "suitability": {
+            "grazing": true
+          },
+          "rights": {
+            "kind": "holder"
+          }
+        }
+      ],
+      "openingInfrastructure": {
+        "version": 1,
+        "placements": [
+          {
+            "countyId": "faroes",
+            "siteId": "farmstead",
+            "buildingId": "shieling",
+            "condition": "standing"
+          },
+          {
+            "countyId": "pasture_buyer",
+            "siteId": "quay_store",
+            "buildingId": "granary",
+            "condition": "standing"
+          },
+          {
+            "countyId": "faroes",
+            "siteId": "farmstead",
+            "buildingId": "parent_allocation_depot",
+            "condition": "standing"
+          }
+        ]
+      },
+      "productionSites": [
+        {
+          "id": "farm_outpost",
+          "countyId": "faroes",
+          "siteId": "farmstead",
+          "buildingId": "shieling",
+          "recipeIds": [
+            "prepare_pasture_allocation"
+          ],
+          "openingLots": []
+        },
+        {
+          "id": "buyer_store",
+          "countyId": "pasture_buyer",
+          "siteId": "quay_store",
+          "buildingId": "granary",
+          "recipeIds": [
+            "prepare_pasture_allocation"
+          ],
+          "openingLots": []
+        },
+        {
+          "id": "parent_store",
+          "countyId": "faroes",
+          "siteId": "farmstead",
+          "buildingId": "parent_allocation_depot",
+          "recipeIds": [
+            "prepare_pasture_allocation"
+          ],
+          "openingLots": []
+        }
+      ],
+      "productionProducerAssignments": [
+        {
+          "id": "parent_share",
+          "profileId": "shieling_parent_allocation",
+          "siteId": "parent_store"
+        }
+      ],
+      "productionExchangeAssignments": [
+        {
+          "id": "pasture_sale",
+          "profileId": "sell_pasture_output",
+          "fromSiteId": "farm_outpost",
+          "toSiteId": "buyer_store"
+        },
+        {
+          "id": "parent_delivery",
+          "profileId": "parent_delivery",
+          "fromSiteId": "parent_store",
+          "toSiteId": "farm_outpost"
+        }
+      ],
+      "buildingSeasonAssignments": [
+        {
+          "id": "pasture_term",
+          "profileId": "shieling_summer",
+          "operationId": null,
+          "productionSiteId": "farm_outpost",
+          "resources": [
+            {
+              "sourceId": "farm_grazing",
+              "amount": 1
+            }
+          ]
+        },
+        {
+          "id": "parent_stock_term",
+          "profileId": "parent_stock_life",
+          "operationId": null,
+          "productionSiteId": "parent_store",
+          "resources": []
+        }
+      ],
+      "revisions": {
+        "new_works": {
+          "name": "Construct an empty seasonal outpost",
+          "openingInfrastructure": {
+            "version": 1,
+            "placements": [
+              {
+                "countyId": "pasture_buyer",
+                "siteId": "quay_store",
+                "buildingId": "granary",
+                "condition": "standing"
+              },
+              {
+                "countyId": "faroes",
+                "siteId": "farmstead",
+                "buildingId": "parent_allocation_depot",
+                "condition": "standing"
+              }
+            ]
+          }
+        }
+      }
+    }
+  },
+  "buildings": {
+    "parent_allocation_depot": {
+      "name": "Existing parent farm store",
+      "desc": "Fictional existing storage for actual allocated farm output.",
+      "icon": "*",
+      "role": "industry",
+      "cost": 5,
+      "upkeep": 0,
+      "devMin": 0,
+      "maxCounty": 1,
+      "aiBuildOrder": 99,
+      "settlementDraw": false
+    }
+  },
+  "buildingSeasonProfiles": {
+    "parent_stock_life": {
+      "seasonKinds": [
+        "summer"
+      ],
+      "periodDays": 90,
+      "maxDays": 90,
+      "care": false,
+      "stockLives": [
+        {
+          "goodId": "parent_farm_allocation",
+          "days": 10
+        }
+      ],
+      "benefit": null
+    }
+  }
+}

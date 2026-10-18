@@ -4040,3 +4040,7 @@ Water-service input review
 The existing Water service confirmation includes every declared material quantity and localized production good name alongside exact water, work/upkeep payment and funded end day. The first blocker names unavailable local owned stock. It uses the same confirmation, keyboard controls, stale-review handling, Back, Escape, disclosure and originating-focus restoration. An unheated alternative remains visible through the ordinary construction profile picker when its own assignment is eligible. No new modal route or saved prose is introduced.
 
 Maritime production construction uses the existing Building Works unavailable-card pattern. Its localized blocker identifies an empty declared boat-work site, licensed launching capacity, finite materials, available work and private funds for construction, processing and the remaining enterprise invoice. Ordinary industrial cards retain the funded-buyer explanation. Shared confirmation, selectors, disclosures, scrolling and originating focus retain their existing behavior.
+
+Seasonal construction requirements
+
+Building Works uses the shared seasonal construction projection for unavailable required-season cards. The existing price, disabled construction control and Details explain the declared site, local season, lawful water or grazing, care/work, actual deliverable inputs and construction/processing funds. Input delivery, opening the term and paid production remain separate ordinary reviews. Existing layout, keyboard controls, disclosures and retained modal navigation are unchanged.

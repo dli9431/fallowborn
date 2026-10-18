@@ -5,7 +5,7 @@ const {openGame}=require('../support/game/navigation');
 const {beginBookmark}=require('../support/game/bookmark-acceptance');
 const {dependsOnRuntime}=require('../support/runtime-dependencies');
 const examples={fiber:require('../fixtures/authoring/production-fiber.json'),iron:require('../fixtures/authoring/production-iron.json')};
-dependsOnRuntime(__filename,['data/relay_services.js','js/relay_services.js',
+dependsOnRuntime(__filename,['data/production_early_industry.js','data/production_fish_drying.js','data/buildings_seasonal_pasture.js','data/production_seasonal_pasture.js','data/relay_services.js','js/relay_services.js',
   'data/building_profiles.js','js/building_profiles.js','data/production_economy.js','js/production_economy.js','index.html','data/production.js','data/technology.js','js/production.js','js/site_resources.js',
   'js/world.js','js/title_ids.js','js/mods.js','js/main.js','js/save.js','js/save_v4.js','js/lordships.js','js/treasury.js',
   'js/politics.js','js/economy.js','js/model.js','js/technology.js','js/ui_modals.js','js/ui_misc.js','js/starts.js']);
@@ -253,6 +253,6 @@ test('a mismatched live water claim cannot substitute for the reserved recipe in
 
 test('bundled released worlds have no production assignment or inferred material inventory',async function({page},info){
   await openGame(page,info);
-  expect(await page.evaluate(function(){return ['867','1066'].map(function(id){const p=FB.compileProduction(FB.bookmark(id));
-    return {sites:p.sites,errors:p.errors};});})).toEqual([{sites:[],errors:[]},{sites:[],errors:[]}]);
+  expect(await page.evaluate(function(){return {goods:Object.keys(FBDATA.productionGoods).sort(),recipes:Object.keys(FBDATA.productionRecipes).sort(),
+    plans:['867','1066'].map(function(id){return FB.compileProduction(FB.bookmark(id));})};})).toEqual({goods:['heating_fuel','workshop_fiber','bloomery_ore','workshop_fuel','bloomery_iron_lot','workshop_paper','smithy_tools','fresh_fish','dried_provisions','parent_farm_allocation','pasture_provisions','boathouse_timber','boathouse_cordage','boathouse_work'].sort(),recipes:['workshop_papermaking','bloomery_smelting','smithy_forging','dry_fish','prepare_pasture_allocation','prepare_boathouse_work'].sort(),plans:[{sites:[],errors:[]},{sites:[],errors:[]}]});
 });
