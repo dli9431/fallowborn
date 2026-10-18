@@ -3798,6 +3798,7 @@ FB.CHANGELOG = [
     // A new campaign is fresh: fresh-only institutions join its opening roster.
     if (FB.ensureLocalInstitutions) FB.ensureLocalInstitutions(state, null, { fresh:true });
     if (FB.ensureInstitutions) FB.ensureInstitutions(state, { silent:true });
+    if (FB.production) FB.production.initialize(state);
     if (FB.openingGoals) FB.openingGoals.start(state);
     // Restore ensures the games ledger; a new campaign starts in that same shape.
     if (FB.tournaments) FB.tournaments.ensure(state);
@@ -3984,6 +3985,7 @@ FB.CHANGELOG = [
     if (FB.stories) FB.stories.start(state, {});
     if (FB.ensureLocalInstitutions) FB.ensureLocalInstitutions(state, null, { fresh:true });
     if (FB.tournaments) FB.tournaments.ensure(state);
+    if (FB.production) FB.production.initialize(state);
     G.observe = true;
     G.paused = false;
     document.body.classList.add('observing');
@@ -4241,6 +4243,8 @@ FB.CHANGELOG = [
       return undefined;
     }
     const p = s.player;
+    if (opts && opts.productionAction && (G.observe || !opts.skipFocus || opts.householdAction ||
+        !FB.production.commitDay(s,opts.productionAction))) return undefined;
     if (opts && opts.householdAction && (G.observe || !opts.skipFocus ||
         !FB.householdStories || !FB.householdStories.commitDay(s, opts.householdAction))) return undefined;
 

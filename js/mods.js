@@ -287,7 +287,7 @@ window.FBMODS = window.FBMODS || [];
     religiousAffiliations:true, religiousInstitutionProfiles:true, religiousActivities:true, religiousPatronage:true,
     traits:true, traitMechanics:true,
     ailments:true, modifiers:true, buildings:true, forts:true, siteResourceProfiles:true,
-    buildingInstitutionProfiles:true, buildingOperationProfiles:true,
+    buildingInstitutionProfiles:true, buildingOperationProfiles:true, productionGoods:true, productionRecipes:true,
     techDomains:true, techTraditions:true, tech:true, techCaps:true,
     capabilities:true,
     techImpactReviews:true, unitClasses:true, holdings:true, careers:true,
@@ -2108,6 +2108,11 @@ window.FBMODS = window.FBMODS || [];
     if (!plainObject(mod)) throw new Error('Mod data must be an object.');
     if (own(mod,'siteResourceProfiles') && !plainObject(mod.siteResourceProfiles))
       fail('siteResourceProfiles','must be an object keyed by id.');
+    ['productionGoods','productionRecipes'].forEach(function (key) {
+      if (own(mod,key) && !plainObject(mod[key])) fail(key,'must be an object keyed by id.');
+    });
+    var productionErrors = FB.production.catalogFaults(FBDATA);
+    if (productionErrors.length) fail('production',productionErrors.join(' '));
     var resourceErrors = FB.siteResources.profileFaults(FBDATA.siteResourceProfiles);
     if (resourceErrors.length) fail('siteResourceProfiles',resourceErrors.join(' '));
     for (const key in mod) {
@@ -2820,6 +2825,8 @@ window.FBMODS = window.FBMODS || [];
     if (mod.eras) mergeTable(FBDATA.eras, mod.eras);
     if (mod.wardrobes) mergeTable(FBDATA.wardrobes, mod.wardrobes);
     if (mod.settlementLayouts) mergeTable(FBDATA.settlementLayouts, mod.settlementLayouts);
+    if (mod.productionGoods) mergeTable(FBDATA.productionGoods, mod.productionGoods);
+    if (mod.productionRecipes) mergeTable(FBDATA.productionRecipes, mod.productionRecipes);
     if (mod.siteResourceProfiles) mergeTable(FBDATA.siteResourceProfiles, mod.siteResourceProfiles);
     if (mod.buildingOperationProfiles) mergeTable(FBDATA.buildingOperationProfiles, mod.buildingOperationProfiles);
     if (mod.geographies) mergeTable(FBDATA.geographies, mod.geographies);

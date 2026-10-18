@@ -1,0 +1,388 @@
+{
+  "name": "Finite fiber batch workshop",
+  "siteResourceProfiles": {
+    "river_flow": {
+      "name": "River intake",
+      "desc": "A bounded seven-day water allocation.",
+      "kind": "flow",
+      "unit": "water",
+      "capacity": 12,
+      "periodDays": 7
+    },
+    "river_store": {
+      "name": "Quay cistern",
+      "kind": "storage",
+      "unit": "water",
+      "capacity": 5
+    },
+    "river_launch": {
+      "name": "Launching space",
+      "kind": "access",
+      "unit": "launching",
+      "capacity": 2,
+      "periodDays": 1
+    }
+  },
+  "geographies": {
+    "production_fiber_land": {
+      "bounds": {
+        "lonMin": 0,
+        "lonMax": 6,
+        "latMin": 0,
+        "latMax": 5
+      },
+      "land": [
+        [
+          0.5,
+          0.5,
+          5.5,
+          0.5,
+          5.5,
+          4.5,
+          0.5,
+          4.5
+        ]
+      ],
+      "gridWidth": 240,
+      "seas": [],
+      "rivers": [],
+      "defaultLayout": "production_fiber_layout",
+      "provinces": [
+        {
+          "id": "resource_quay",
+          "x": 1.5,
+          "y": 2,
+          "terrain": "farmland"
+        },
+        {
+          "id": "resource_bank",
+          "x": 3.1,
+          "y": 2,
+          "terrain": "farmland"
+        },
+        {
+          "id": "resource_rocks",
+          "x": 4.7,
+          "y": 2,
+          "terrain": "hills"
+        }
+      ],
+      "sites": {
+        "resource_intake": {
+          "x": 1.5,
+          "y": 2
+        },
+        "resource_cistern": {
+          "x": 3.1,
+          "y": 2
+        },
+        "resource_slip": {
+          "x": 1.7,
+          "y": 2
+        }
+      }
+    }
+  },
+  "settlementLayouts": {
+    "production_fiber_layout": {
+      "resource_quay": [
+        {
+          "site": "resource_intake",
+          "name": "Intake Town",
+          "kind": "town"
+        },
+        {
+          "site": "resource_slip",
+          "name": "Slip Village",
+          "kind": "village"
+        }
+      ],
+      "resource_bank": [
+        {
+          "site": "resource_cistern",
+          "name": "Bank Village",
+          "kind": "village"
+        }
+      ]
+    }
+  },
+  "startScenarios": [
+    {
+      "id": "production_fiber_ruler",
+      "name": "The river holder",
+      "desc": "An existing fictional ruler.",
+      "intro": "Review the river's finite capacity.",
+      "tier": 5,
+      "profession": "noble",
+      "gold": 12,
+      "prestige": 0,
+      "piety": 0,
+      "bookmarkIds": [
+        "production_fiber"
+      ],
+      "eras": [
+        "early_medieval"
+      ],
+      "alwaysUnlocked": true,
+      "rulerRealmId": "production_fiber_court",
+      "governmentForm": "regnum",
+      "fixedProvinceId": "resource_quay",
+      "characterName": "Ivo Reed",
+      "sex": "m",
+      "startCulture": "frankish",
+      "startReligion": "catholic",
+      "onboarding": "ruler",
+      "familyPresets": {
+        "standard": {
+          "name": "Existing court",
+          "diff": "Existing court household"
+        }
+      }
+    },
+    {
+      "id": "production_fiber_household",
+      "name": "River household",
+      "desc": "A fictional household.",
+      "intro": "Your household lives beside the river.",
+      "tier": 1,
+      "profession": "farmer",
+      "gold": 12,
+      "prestige": 0,
+      "piety": 0,
+      "bookmarkIds": [
+        "production_fiber"
+      ],
+      "eras": [
+        "early_medieval"
+      ],
+      "alwaysUnlocked": true,
+      "startAge": 24,
+      "familyPresets": {
+        "standard": {
+          "name": "Established household",
+          "diff": "age 24"
+        }
+      }
+    }
+  ],
+  "bookmarks": {
+    "production_fiber": {
+      "id": "production_fiber",
+      "name": "River allocation",
+      "desc": "A fictional river resource world.",
+      "date": {
+        "year": 900,
+        "season": 0,
+        "day": 1
+      },
+      "era": "early_medieval",
+      "geography": "production_fiber_land",
+      "religiousHeads": {},
+      "localInstitutions": {},
+      "stories": [],
+      "starts": [
+        "production_fiber_ruler",
+        "production_fiber_household"
+      ],
+      "scripted": [],
+      "straits": [],
+      "crossingClasses": {},
+      "provinces": [
+        {
+          "id": "resource_quay",
+          "name": "Quay",
+          "realm": "production_fiber_court",
+          "culture": "frankish",
+          "religion": "catholic",
+          "dev": 5
+        },
+        {
+          "id": "resource_bank",
+          "name": "Bank",
+          "realm": "production_fiber_court",
+          "culture": "frankish",
+          "religion": "catholic",
+          "dev": 3
+        },
+        {
+          "id": "resource_rocks",
+          "name": "Rocky scenery",
+          "wasteland": true
+        }
+      ],
+      "realms": [
+        {
+          "id": "production_fiber_court",
+          "name": "River court",
+          "capital": "resource_quay",
+          "color": "#458c96",
+          "aggression": 0,
+          "rank": 2,
+          "government": "regnum",
+          "ruler": {
+            "name": "Ivo Reed",
+            "culture": "frankish",
+            "born": 868,
+            "mar": 6,
+            "trait": "patient"
+          }
+        }
+      ],
+      "duchies": {},
+      "kingdoms": {},
+      "empires": {},
+      "revision": "supplied",
+      "revisions": {
+        "baseline": {},
+        "supplied": {
+          "siteResourceAssignments": [
+            {
+              "id": "river_intake",
+              "profileId": "river_flow",
+              "countyId": "resource_quay",
+              "siteId": "resource_intake",
+              "suitability": {
+                "source": true,
+                "gradient": true
+              },
+              "rights": {
+                "kind": "holder"
+              }
+            },
+            {
+              "id": "river_cistern",
+              "profileId": "river_store",
+              "countyId": "resource_bank",
+              "siteId": "resource_cistern",
+              "connectedSourceId": "river_intake",
+              "suitability": {
+                "catchment": false
+              },
+              "rights": {
+                "kind": "holder"
+              }
+            },
+            {
+              "id": "river_slip",
+              "profileId": "river_launch",
+              "countyId": "resource_quay",
+              "siteId": "resource_slip",
+              "suitability": {
+                "launching": true
+              },
+              "rights": {
+                "kind": "holder"
+              }
+            }
+          ],
+          "openingInfrastructure": {
+            "version": 1,
+            "placements": [
+              {
+                "countyId": "resource_quay",
+                "siteId": "resource_intake",
+                "buildingId": "fiber_works",
+                "condition": "standing"
+              }
+            ]
+          },
+          "productionSites": [
+            {
+              "id": "fiber_plant",
+              "countyId": "resource_quay",
+              "siteId": "resource_intake",
+              "buildingId": "fiber_works",
+              "recipeIds": [
+                "rag_paper",
+                "bind_paper"
+              ],
+              "sourceId": "river_intake",
+              "openingLots": [
+                {
+                  "goodId": "rag_fiber",
+                  "quantity": 6
+                }
+              ]
+            }
+          ]
+        },
+        "dry": {
+          "siteResourceAssignments": [],
+          "productionSites": [],
+          "openingInfrastructure": {
+            "version": 1,
+            "placements": []
+          }
+        }
+      }
+    }
+  },
+  "buildings": {
+    "fiber_works": {
+      "name": "Fiber works",
+      "desc": "A finite paid batch facility with no passive income or population effect.",
+      "role": "industry",
+      "cost": 30,
+      "upkeep": 1,
+      "maxCounty": 1
+    }
+  },
+  "productionGoods": {
+    "rag_fiber": {
+      "name": "Clean rag fiber",
+      "unit": "fiber_units",
+      "mass": 1
+    },
+    "paper_lot": {
+      "name": "Paper lot",
+      "unit": "paper_units",
+      "mass": 1
+    },
+    "bound_paper": {
+      "name": "Bound paper packet",
+      "unit": "packet_units",
+      "mass": 1
+    }
+  },
+  "productionRecipes": {
+    "rag_paper": {
+      "name": "Prepare paper",
+      "inputs": [
+        {
+          "goodId": "rag_fiber",
+          "quantity": 2
+        }
+      ],
+      "outputs": [
+        {
+          "goodId": "paper_lot",
+          "quantity": 1
+        }
+      ],
+      "workDays": 2,
+      "workPrice": 3,
+      "requiresTech": [],
+      "water": 1,
+      "impactReviewId": "conserved_production_batches"
+    },
+    "bind_paper": {
+      "name": "Bind paper",
+      "inputs": [
+        {
+          "goodId": "paper_lot",
+          "quantity": 1
+        }
+      ],
+      "outputs": [
+        {
+          "goodId": "bound_paper",
+          "quantity": 1
+        }
+      ],
+      "workDays": 1,
+      "workPrice": 1,
+      "requiresTech": [],
+      "impactReviewId": "conserved_production_batches"
+    }
+  }
+}

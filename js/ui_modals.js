@@ -10088,6 +10088,80 @@ window.FB = window.FB || {};
     return true;
   };
 
+  UI.showProduction = function (pid,idx,back,view,replace) {
+    view = view || {dispositions:{},scroll:0};
+    const s=FB.state,P=FB.production,site=FB.settlementsOf(s,pid)[idx],actions=[];
+    if (!site) return;
+    const holder=FB.settlementHolder(s,pid,idx);
+    const actor=holder && holder.kind === 'realm' && holder.id === 'player' ? holder : {kind:'character',id:s.player.charId};
+    const rows=P.snapshot(s,pid,site.site);
+    function name(ns,key,table) { return dt(s,ns,key,table[key],'name'); }
+    function goods(list) { return list.map(function (x) { return FB.T('{amount} {good} ({unit})',{
+      amount:x.quantity,good:name('productionGood',x.goodId,FBDATA.productionGoods),unit:FBDATA.productionGoods[x.goodId].unit}); }).join(', '); }
+    function action(label,request) {
+      const q=P.quote(s,request),n=actions.length;actions.push(q);
+      return reviewActionCardHtml({id:'production-action-'+n,label:label,data:{productionReview:n},disabled:!q.allowed,warn:!q.allowed,note:P.reason(q)});
+    }
+    let h='<p class="hint">'+esc(FB.T('Batches reserve actual owned materials and pay the full processing cost upfront. Work replaces the ordinary daily focus. Cancellation releases materials but does not refund processing costs. No sale or passive bonus is awarded.'))+'</p>';
+    rows.forEach(function (row) {
+      h+='<div class="governance-card review-fact-card"><div class="panelh">'+esc(dt(s,'building',row.site.buildingId,FBDATA.buildings[row.site.buildingId],'name'))+'</div>';
+      row.lots.forEach(function (lot) { h+=kv(name('productionGood',lot.goodId,FBDATA.productionGoods),esc(FB.T('{available} available / {remaining} remaining ({unit})',{
+        available:lot.available,remaining:lot.remaining,unit:lot.unit}))); });
+      row.site.recipeIds.forEach(function (key) {
+        const recipe=FBDATA.productionRecipes[key],selection=view.dispositions[key] || 'store';
+        h+='<div class="governance-card review-fact-card"><div class="panelh">'+esc(name('productionRecipe',key,FBDATA.productionRecipes))+'</div>'+
+          kv('Inputs',esc(goods(recipe.inputs)))+kv('Outputs',esc(goods(recipe.outputs)))+kv('Processing cost',esc(FB.T('{gold} gold, paid once',{gold:recipe.workPrice})))+
+          kv('Work',esc(FB.T('{days} action days',{days:recipe.workDays})))+
+          (recipe.desc ? '<p class="hint">'+esc(dt(s,'productionRecipe',key,recipe,'desc'))+'</p>' : '')+
+          kv('Technology',esc(recipe.requiresTech.map(function(id){return dt(s,'tech',id,FBDATA.tech[id],'name');}).join(', ') || FB.T('None')))+
+          (recipe.fallback ? '<p class="hint">'+esc(dt(s,'productionRecipe',key,recipe,'fallback'))+'</p>' : '')+
+          (recipe.water ? kv('Water',esc(FB.T('{amount} reserved source units',{amount:recipe.water}))) : '')+
+          '<label for="production-disposition-'+esc(key)+'">'+esc(FB.T('Output disposition'))+'</label><select class="select" id="production-disposition-'+esc(key)+'" data-production-disposition="'+esc(key)+'">'+
+          '<option value="store"'+(selection==='store'?' selected':'')+'>'+esc(FB.T('Keep as owned lots'))+'</option><option value="use"'+(selection==='use'?' selected':'')+'>'+esc(FB.T('Consume the output, with no bonus'))+'</option></select>'+
+          reviewActionsHtml(action(FB.T('Reserve and fund batch'),{operation:'reserve',siteId:row.site.id,actor:actor,recipeId:key,disposition:selection}))+'</div>';
+      });
+      row.batches.forEach(function (b) {
+        const recipe=FBDATA.productionRecipes[b.recipeId];
+        h+='<div class="governance-card review-fact-card"><div class="panelh">'+esc(name('productionRecipe',b.recipeId,FBDATA.productionRecipes))+'</div>'+
+          kv('Paid processing cost',String(b.paid))+kv('Work completed',esc(FB.T('{done} / {total} days',{done:b.workTurns.length,total:recipe.workDays})))+
+          '<p class="hint">'+esc(b.status==='committed'?FB.T('Completed once'):b.status==='cancelled'?FB.T('Cancelled; materials released'):FB.T('Materials reserved'))+'</p>';
+        if (b.status==='reserved') ['work','finish','cancel'].forEach(function (op) {
+          h+=reviewActionsHtml(action(op==='work'?FB.T('Work one day'):op==='finish'?FB.T('Finish batch'):FB.T('Cancel batch'),{operation:op,siteId:row.site.id,actor:actor,batchId:b.id}));
+        });
+        h+='</div>';
+      });h+='</div>';
+    });
+    h+='<div class="gm-footer"><button class="btn" id="gm-cancel">'+esc(FB.T('Back'))+'</button></div>';
+    function list(replace) { UI.showProduction(pid,idx,back,view,replace); }
+    function remember() { view.scroll=$('gm-body').scrollTop; }
+    openModal(FB.T('Production batches'),h,{replaceView:!!replace,historyView:true,historyBack:true,historyBackRender:back});
+    $('gm-body').scrollTop=view.scroll;
+    $('gm-body').querySelectorAll('[data-production-disposition]').forEach(function (input) {
+      input.onchange=function () { remember();view.dispositions[input.dataset.productionDisposition]=input.value;const id=input.id;list(true);if($(id))$(id).focus({preventScroll:true}); };
+    });
+    $('gm-body').querySelectorAll('[data-production-review]').forEach(function (button) {
+      button.onclick=function () {
+        remember();const q=actions[Number(button.dataset.productionReview)],origin=button.id;
+        function restore() { list();if($(origin))$(origin).focus({preventScroll:true});$('gm-body').scrollTop=view.scroll; }
+        const reserve=q.request.operation==='reserve';
+        let info='<div class="governance-card review-fact-card">'+kv('Processing cost',esc(reserve?FB.T('{gold} gold, non-refundable',{gold:q.cost}):FB.T('Already paid')))+
+          kv('Payer',esc(q.payer && q.payer.kind==='realm'?FB.T('Public treasury'):FB.T('Original private account')))+
+          kv('Action day',esc(q.request.operation==='work'?FB.T('One day; replaces Daily Focus'):FB.T('None')))+'<p>'+esc(P.reason(q))+'</p></div>';
+        if (reserve) {
+          const recipe=FBDATA.productionRecipes[q.request.recipeId];
+          info+='<p>'+esc(FB.T('Reserve {inputs}; after {days} paid workdays, produce {outputs}.',{inputs:goods(recipe.inputs),days:recipe.workDays,outputs:goods(recipe.outputs)}))+'</p>';
+        }
+        info+='<div class="gm-footer"><button class="btn" id="gm-cancel">'+esc(FB.T('Back'))+'</button><button class="btn primary" id="production-confirm">'+esc(FB.T('Confirm'))+'</button></div>';
+        openModal(FB.T('Review production batch'),info,{historyView:true,historyBack:true,historyBackRender:restore});
+        $('production-confirm').disabled=!q.allowed;
+        $('production-confirm').onclick=function () {
+          if (!P.perform(FB.state,q)) UI.toast(FB.T('Terms changed. Review the current batch.'));
+          UI.refresh();modalHistoryBack(restore);
+        };
+      };
+    });
+  };
+
   UI.showSiteResources = function (pid,idx,back,view,replace) {
     view = view || {amounts:{},scroll:0};
     const s = FB.state, R = FB.siteResources, site = FB.settlementsOf(s,pid)[idx];
@@ -10241,6 +10315,7 @@ window.FB = window.FB || {};
     if (managesSettlement && FB.station.isLanded(s.player, s)) h += '<button type="button" class="actionbtn" id="settlement-host-games">' + esc(FB.T('Host games…')) + '</button>';
     if (FB.siteResources.snapshot(s,pid,st.site).length) h += '<button type="button" class="actionbtn" id="settlement-resources">' + esc(FB.T('Review site resources')) + '</button>';
     if ((s.buildings[pid] || []).some(function (r) { return r.s === idx && r.waterOperation; })) h += '<button type="button" class="actionbtn" id="settlement-water">' + esc(FB.T('Review water service')) + '</button>';
+    if (FB.production.snapshot(s,pid,st.site).length) h += '<button type="button" class="actionbtn" id="settlement-production">' + esc(FB.T('Review production batches')) + '</button>';
     const countyRuler = holdId === 'player' ? s.chars[s.player.charId] : FB.realmRulerCharacterSnapshot(s, holdId);
     h += '<div class="gm-body-text">' + kv('Count', esc(countyRuler ? FB.fullName(countyRuler) :
       (s.realms[holdId] ? s.realms[holdId].name : FB.T('None')))) + '</div>';
@@ -10473,6 +10548,17 @@ window.FB = window.FB || {};
       guide:guideModalOption('settlement-guide', 'settlements-development',
         'Guide: settlements and development')
     });
+    if ($('settlement-production')) $('settlement-production').onclick = function () {
+      const scroll=$('gm-body').scrollTop;
+      const expanded=Array.prototype.map.call($('gm-body').querySelectorAll('.settcard-details:not(.hidden)'),function(el){return el.id;});
+      UI.showProduction(pid,idx,function () {
+        UI.showSettlement(pid,idx,options);
+        expanded.forEach(function(id){const el=$(id);if(el)el.classList.remove('hidden');
+          $('gm-body').querySelectorAll('[aria-controls]').forEach(function(b){if(b.getAttribute('aria-controls')===id)b.setAttribute('aria-expanded','true');});});
+        if($('settlement-production'))$('settlement-production').focus({preventScroll:true});
+        $('gm-body').scrollTop=scroll;
+      });
+    };
     if ($('settlement-resources')) $('settlement-resources').onclick = function () {
       const scroll = $('gm-body').scrollTop;
       const expanded = Array.prototype.map.call($('gm-body').querySelectorAll('.settcard-details:not(.hidden)'),function (el) { return el.id; });
@@ -24467,6 +24553,12 @@ window.FB = window.FB || {};
           addContent(entry.kind, target);
         }
       }
+    }
+
+    for (const recipeId in (FBDATA.productionRecipes || {})) {
+      const recipe=FBDATA.productionRecipes[recipeId];
+      if (techRequiresId(recipe.requiresTech,id)) add('productionRecipe:'+recipeId,
+        FB.T('Production: {recipe}',{recipe:dt(s,'productionRecipe',recipeId,recipe,'name')}));
     }
 
     for (const careerId in (FBDATA.careers || {})) {

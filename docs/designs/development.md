@@ -526,3 +526,7 @@ the immediately following building-index invalidation receives
 militaryAlreadyInvalidated=true to avoid a second notification. Standalone
 construction/demolition invalidations retain their own military notification.
 No read may intervene between that notification and the building eviction.
+
+Finite material production
+
+Optional productionSites bind actual nonfort buildings to finite input/output recipes without adding a building-effect channel. Construction, standing and upkeep retain their existing owners; a batch creates only its declared conserved goods after real paid work. Capture, ruin, replacement or lost original permission suspends completion while property remains. Explicit fictional opening lots require a real standing openingInfrastructure placement. No bundled inventory is added. See docs/designs/production.md for transactions, work, account boundaries, saves and supported authoring limits.

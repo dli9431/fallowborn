@@ -319,3 +319,7 @@ tools/test_i18n_technology_buildings.py checks all 36 technology corrections, ei
 Local incident display ownership
 
 Native local incident tables use literal FBDATA.localThreats_<suffix> declarations in data/story_*.js. Static extraction discovers those tables independently of the filename and gives title/intro and each choice label/detail localThreat.<instance> and localThreat.<instance>.choice.<choice> owners, with ordinary exact-English aliases used by the shared story renderer. Character ids, actor kinds, localities, operations and lifecycle data remain untranslated identity/protocol. Shared status and review chrome uses literal FB.T calls. Runtime JSON imports use their ordinary English fallback. No native incident content or generated catalog is added by the shared type.
+
+Production display owners
+
+Literal FBDATA.productionGoods and FBDATA.productionRecipes in data/production.js use productionGood and productionRecipe structured namespaces for name/desc. Production recipes additionally extract their top-level fallback display. The static extractor reads declarations without executing the game; unit ids, input/output references, quantities, prices and impact-review ids remain structural. Ordinary imported names/descriptions/fallback use the same display owner and safe English fallback. Dynamic batch reviews use FB.T, with no rendered explanation saved in lots or receipts. tools/test_i18n_production.py covers independent literal catalogues and fallback without executing a declaration.

@@ -96,6 +96,8 @@ STRUCTURED_DATA = {
     "seasonKinds": "seasonKind",
     "climateZones": "climateZone",
     "siteResourceProfiles": "siteResourceProfile",
+    "productionGoods": "productionGood",
+    "productionRecipes": "productionRecipe",
     "storyCampaigns": "storyCampaign",
     "storyFoundations": "storyFoundation",
 }
@@ -1238,6 +1240,8 @@ def extract_structured(inv: Inventory) -> None:
             path = DATA / "intrigue.js"
         elif data_name in ("seasonKinds", "climateZones"):
             path = DATA / "climate.js"
+        elif data_name in ("productionGoods", "productionRecipes"):
+            path = DATA / "production.js"
         elif data_name == "siteResourceProfiles":
             path = DATA / "site_resources.js"
         elif data_name == "storyCampaigns":
@@ -1344,6 +1348,8 @@ def extract_structured(inv: Inventory) -> None:
         for item_id, item_node, rel in entries:
             item = node_object(item_node) or {}
             fields = DATA_FIELDS + (("earned",) if data_name == "traits" else ())
+            if data_name == "productionRecipes":
+                fields += ("fallback",)
             if data_name == "religions":
                 fields += ("adjective", "collective")
             for field in fields:
