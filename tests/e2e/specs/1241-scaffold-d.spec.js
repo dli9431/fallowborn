@@ -2,14 +2,18 @@
 const {test,expect} = require('../support/fixture');
 const {dependsOnRuntime} = require('../support/runtime-dependencies');
 const {openGame} = require('../support/game/navigation');
+const {restoreBookmark} = require('../support/game/bookmark-acceptance');
 
 dependsOnRuntime(__filename,[
   'index.html','data/bookmark_1241.js','data/bookmark_1241_scaffold_d.js','data/identities_1241.js',
+  'data/bookmark_1241_scaffold_a.js','data/bookmark_1241_scaffold_b.js','data/bookmark_1241_scaffold_c.js',
   'data/bookmark_1204.js','data/bookmark_1204_terrain.js','data/bookmarks.js',
   'data/counties.js','data/map_data.js','data/cultures.js','data/eras.js',
   'data/geographies.js','data/geography_expansion.js','data/settlements.js',
   'data/settlements_real.js','data/bookmark_476_wider_identities.js',
-  'data/political_institutions.js','js/model.js','js/world.js'
+  'data/political_institutions.js','data/starts.js','data/government_rollout.js',
+  'js/model.js','js/world.js','js/population.js','js/main.js','js/starts.js',
+  'js/bookmark_setup.js','js/save.js','js/save_v4.js','js/ui_misc.js','js/i18n.js'
 ]);
 
 const coverage = {
@@ -109,11 +113,11 @@ test('1241 quadrant d covers its exact physical partition with valid dated refer
       inhabited:Object.keys(rows).filter(function (id) { return !rows[id].wasteland; }).length,
       outside:Object.keys(outside).sort()};
   },coverage);
-  expect(result).toEqual({faults:[],total:131,courts:35,inhabited:106,
+  expect(result).toEqual({faults:[],total:131,courts:38,inhabited:106,
     outside:['egypt_1241','hre_1241','rum_1241']});
 });
 
-test('1241 quadrant d preserves retained 1204 residents and trimmed settlement order independently',async function ({page},info) {
+test('1241 quadrant d preserves uncorrected residents and trimmed settlement order independently',async function ({page},info) {
   await openGame(page,info);
   const faults = await page.evaluate(function (keys) {
     const source = FB.bookmark('1204','inhabited_v2'), old = {}, faults = [];
@@ -133,8 +137,13 @@ test('1241 quadrant d preserves retained 1204 residents and trimmed settlement o
         communities.forEach(function (c) {
           if (c.religion === 'sahel_traditional_476') c.religion = 'sahel_local_practice_1241';
         });
+        if (p.id === 'yamama') communities[0].culture = 'arabic';
+        if (p.id === 'qom') communities.splice(0,communities.length,
+          {culture:'persian',religion:'shia',populationShare0:8000},
+          {culture:'persian',religion:'sunni',populationShare0:2000});
         if (JSON.stringify(p.communities) !== JSON.stringify(communities) || p.dev !== prior.dev ||
-            p.culture !== prior.culture) faults.push('residents '+p.id);
+            p.culture !== communities[0].culture || p.religion !== communities[0].religion)
+          faults.push('residents '+p.id);
         if (JSON.stringify(b.layouts[p.id]) !== JSON.stringify(layouts[p.id])) faults.push('ordered slots '+p.id);
         if (p.communities === prior.communities || p.communities[0] === prior.communities[0] ||
             b.layouts[p.id] === layouts[p.id] || b.layouts[p.id][0] === layouts[p.id][0])
@@ -146,7 +155,7 @@ test('1241 quadrant d preserves retained 1204 residents and trimmed settlement o
   expect(faults).toEqual([]);
 });
 
-test('1241 quadrant d removes source dynasties without converting residents or fabricating commanders',async function ({page},info) {
+test('1241 quadrant d binds corrected rulers and keeps uncertain people and jurisdictions provisional',async function ({page},info) {
   await openGame(page,info);
   const data = await page.evaluate(function (keys) {
     const courts = {}, rows = {};
@@ -158,33 +167,63 @@ test('1241 quadrant d removes source dynasties without converting residents or f
     return {courts:courts,rows:rows};
   },Object.keys(coverage));
   const r = data.courts, p = data.rows;
+  const named = {
+    bohemia_1241:['Wenceslas I',1205,'m'],georgia_1241:['Rusudan',1194,'f'],
+    almohad_1241:['Abd al-Wahid II al-Rashid',1218,'m'],
+    abbasid_1241:['al-Mustansir Billah',1192,'m']
+  };
   Object.keys(r).forEach(function (id) {
     expect(id).toMatch(/_1241$/);
-    expect(r[id].ruler.generated).toBe(true);
-    expect(r[id].ruler.name).toBeUndefined();
-    expect(r[id].ruler.born).toBeGreaterThanOrEqual(1186);
-    expect(r[id].ruler.born).toBeLessThanOrEqual(1221);
+    if (named[id]) {
+      expect([r[id].ruler.name,r[id].ruler.born,r[id].ruler.sex]).toEqual(named[id]);
+      expect(r[id].ruler.generated).toBeUndefined();
+    } else {
+      expect(r[id].ruler.generated).toBe(true);
+      expect(r[id].ruler.name).toBeUndefined();
+      expect(r[id].ruler.born).toBe(1206);
+    }
     ['royalCourt','mobile','nonTerritorial','civicRights','institutions','recognition'].forEach(function (field) {
       expect(r[id][field]).toBeUndefined();
     });
-    if (id !== 'bohemia_1241') expect(r[id].liege).toBeUndefined();
+    if (id !== 'bohemia_1241' && id !== 'zayyanid_1241') expect(r[id].liege).toBeUndefined();
   });
   expect(r.bohemia_1241.liege).toBe('hre_1241');
+  expect(r.zayyanid_1241.liege).toBe('almohad_1241');
+  expect(r.georgia_1241.capital).toBe('kutaisi');
+  expect(r.pomerelia_local_1241).toMatchObject({capital:'gdansk',religion:'catholic',
+    ruler:{generated:true,culture:'slavic'}});
+  expect(r.zayyanid_1241).toMatchObject({capital:'tlemcen',religion:'sunni',
+    ruler:{generated:true,culture:'berber'}});
+  expect(r.alodia_1241).toMatchObject({capital:'soba',religion:'eastern',
+    ruler:{generated:true,culture:'nubian'}});
+  expect(r.makuria_1241.name).toBe('Makuria');
+  expect(r.kerman_local_1241.name).toBe('Qutlugh-Khanid Kirman');
+  expect(r.sistan_1241.name).toBe('Mihrabanid Sistan');
+  expect(Object.keys(r).filter(function (id) { return r[id].ruler.generated; })).toHaveLength(34);
   ['khwarazm_1241','ghurid_1241','karakhanid_1241','qara_khitai_1241',
     'qipchaq_following_1241','mongol_western_command_1241','koten_following_1241'].forEach(function (id) {
     expect(r[id]).toBeUndefined();
   });
   const owners = {
-    krakow:'silesia_1241',plock:'mazovia_local_1241',gdansk:'mazovia_local_1241',van:'rum_1241',
+    krakow:'silesia_1241',plock:'mazovia_local_1241',gdansk:'pomerelia_local_1241',van:'rum_1241',
     samandar:'caspian_local_1241',sanaa:'rasulid_yemen_1241',zeila:'rasulid_yemen_1241',
     tunis:'hafsid_1241',kairouan:'hafsid_1241',constantine:'hafsid_1241',tripoli:'hafsid_1241',
-    aghmat:'almohad_1241',sirte:'egypt_1241',barqa:'egypt_1241',tabriz:'azerbaijan_local_1241',
+    aghmat:'almohad_1241',tlemcen:'zayyanid_1241',sirte:'almohad_1241',barqa:'egypt_1241',
+    soba:'alodia_1241',dongola:'makuria_1241',qasr_ibrim:'makuria_1241',tabriz:'azerbaijan_local_1241',
     rayy:'iran_west_local_1241',kerman:'kerman_local_1241',bam:'kerman_local_1241',hormuz:'kerman_local_1241',
     herat:'khorasan_local_1241',sarakhs_oasis:'khorasan_local_1241',samarkand:'transoxiana_local_1241',
     gurganj_district:'khwarazm_local_1241',balkh:'balkh_local_1241',bamiyan:'bamiyan_local_1241',
     shebar_valley:'bamiyan_local_1241'
   };
   Object.keys(owners).forEach(function (id) { expect(p[id].realm).toBe(owners[id]); });
+  expect(p.yamama.culture).toBe('arabic');
+  expect(p.yamama.communities).toEqual([{culture:'arabic',religion:'sunni',populationShare0:10000}]);
+  expect(p.qom.religion).toBe('shia');
+  expect(p.qom.communities).toEqual([
+    {culture:'persian',religion:'shia',populationShare0:8000},
+    {culture:'persian',religion:'sunni',populationShare0:2000}
+  ]);
+  expect(r.iran_west_local_1241.religion).toBe('sunni');
   expect(p.gao_district.religion).toBe('sahel_local_practice_1241');
   expect(r.gao_court_1241.religion).toBe('sunni');
   expect(p.gao_district.communities.map(function (c) { return [c.religion,c.populationShare0]; }))
@@ -199,6 +238,80 @@ test('1241 quadrant d removes source dynasties without converting residents or f
     expect(p[id].realm).toBeUndefined();
   });
 });
+
+test('1241 corrected communities and courts reach fresh play and matching restore without reseeding',
+  async function ({page},info) {
+    await openGame(page,info);
+    const full = page.locator('#btn-choose-beginning');
+    if (await full.isVisible()) await full.click();
+    else await page.getByRole('button',{name:'New Game',exact:true}).click();
+    await page.locator('#btn-bm-seed').click();
+    await page.locator('#ng-seed').fill('CORRECT1241-1241-serf-qom-m-Review-standard-0-persian.sunni');
+    await page.locator('#ng-seed').press('Enter');
+    await expect(page.locator('#chargen:not(.hidden)')).toBeVisible();
+    await expect(page.locator('input[name=cg-community]')).toHaveCount(2);
+    await expect(page.locator('input[name=cg-community]').nth(1)).toBeChecked();
+    await page.getByRole('button',{name:'Begin Your Story',exact:true}).click();
+    await expect(page.locator('#game:not(.hidden)')).toBeVisible();
+    await page.evaluate(function () { FB.game.setPaused(true); });
+    await page.getByRole('button',{name:'Begin',exact:true}).click();
+    const checkpoint = await page.evaluate(function () { return FB.save.serialize(); });
+    function snapshot() {
+      const s = FB.state, me = s.chars[s.player.charId], b = FB.campaignBookmark(s);
+      const faults = FB.validateBookmark(b), populations = {};
+      ['qom','yamama'].forEach(function (id) {
+        const communities = FB.countyCommunities(s,id), total = FB.countyPopulation(s,id);
+        const authored = FB.world.byId[id].communities;
+        if (communities.reduce(function (sum,c) { return sum + c.count; },0) !== total ||
+            total !== FB.countyPopulationBaseline(s,id)) faults.push('population total '+id);
+        communities.forEach(function (c,index) {
+          const declared = authored[index];
+          if (!declared || c.culture !== declared.culture || c.religion !== declared.religion ||
+              Math.abs(c.count - total * declared.populationShare0 / 10000) > 1)
+            faults.push('population share '+id);
+        });
+        populations[id] = communities.map(function (c) { return [c.culture,c.religion,c.count]; });
+      });
+      const rulers = ['bohemia_1241','georgia_1241','almohad_1241','abbasid_1241'].map(function (id) {
+        const r = s.realms[id], succession = r.succession;
+        const member = succession && succession.members[succession.rulerMemberId];
+        const person = member && s.chars[member.charId];
+        if (!person || person.name !== r.ruler.name || person.born !== r.ruler.born || person.sex !== r.ruler.sex)
+          faults.push('ruler identity '+id);
+        return [id,r.ruler.name,r.ruler.born,r.ruler.sex,r.capital,member && member.charId];
+      });
+      return {faults:faults,home:s.player.provinceId,identity:[me.culture,me.religion],turn:s.turn,
+        populations:populations,rulers:rulers,heads:s.religiousHeads,
+        owners:['gdansk','tlemcen','soba','qom'].map(function (id) { return s.owner[id]; }),
+        courtFaith:s.realms.iran_west_local_1241.religion,
+        characterIds:Object.keys(s.chars).sort(),rng:FB.getRngState() >>> 0,uid:FB.getUidCounter()};
+    }
+    const original = await page.evaluate(snapshot);
+    expect(original.faults).toEqual([]);
+    expect(original.home).toBe('qom');
+    expect(original.identity).toEqual(['persian','sunni']);
+    expect(original.turn).toBe(0);
+    expect(original.owners).toEqual(['pomerelia_local_1241','zayyanid_1241','alodia_1241','iran_west_local_1241']);
+    expect(original.courtFaith).toBe('sunni');
+    expect(original.populations.qom.map(function (c) { return c.slice(0,2); }))
+      .toEqual([['persian','shia'],['persian','sunni']]);
+    expect(original.populations.yamama.map(function (c) { return c.slice(0,2); })).toEqual([['arabic','sunni']]);
+    expect(original.rulers.map(function (r) { return r.slice(0,5); })).toEqual([
+      ['bohemia_1241','Wenceslas I',1205,'m','praha'],
+      ['georgia_1241','Rusudan',1194,'f','kutaisi'],
+      ['almohad_1241','Abd al-Wahid II al-Rashid',1218,'m','aghmat'],
+      ['abbasid_1241','al-Mustansir Billah',1192,'m','baghdad']
+    ]);
+    expect(new Set(original.rulers.map(function (r) { return r[5]; })).size).toBe(4);
+    expect(original.heads.sunni).toBe('abbasid_1241');
+    await page.evaluate(function () {
+      return new Promise(function (resolve,reject) {
+        FB.activateBookmark('1204',null,function (error) { if (error) reject(error); else resolve(); });
+      });
+    });
+    await restoreBookmark(page,checkpoint);
+    expect(await page.evaluate(snapshot)).toEqual(original);
+  });
 
 test('1241 quadrant d loading and edits leave effective worlds and sibling blocks untouched',async function ({page},info) {
   await openGame(page,info);
