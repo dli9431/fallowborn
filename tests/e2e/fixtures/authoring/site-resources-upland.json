@@ -1,0 +1,49 @@
+{
+  "name": "Upland catchment and pasture example",
+  "authorityOffices": {
+    "resource_keeper": {"name": "Resource keeper", "desc": "An exact scoped allocation permission.", "powers": ["revenue"], "scopes": ["county", "realm"], "succession": "reaffirm", "recognitionSources": []}
+  },
+  "siteResourceProfiles": {
+    "upland_catchment": {"name": "Rain catchment", "kind": "flow", "unit": "water", "capacity": 3, "periodDays": 30},
+    "upland_tank": {"name": "Hill tank", "kind": "storage", "unit": "water", "capacity": 8},
+    "upland_pasture": {"name": "Summer grazing places", "kind": "access", "unit": "grazing", "capacity": 4, "periodDays": 90}
+  },
+  "geographies": {
+    "resource_upland_land": {
+      "bounds": {"lonMin": 0, "lonMax": 6, "latMin": 0, "latMax": 5},
+      "land": [[0.5, 0.5, 5.5, 0.5, 5.5, 4.5, 0.5, 4.5]], "gridWidth": 240, "seas": [], "rivers": [], "defaultLayout": null,
+      "provinces": [{"id": "resource_hill", "x": 1.5, "y": 1.5, "terrain": "hills"}, {"id": "resource_fold", "x": 3.1, "y": 1.5, "terrain": "hills"}],
+      "sites": {"resource_roof": {"x": 1.5, "y": 1.5}, "resource_tank": {"x": 1.7, "y": 1.5}, "resource_grazing": {"x": 3.1, "y": 1.5}}
+    }
+  },
+  "startScenarios": [{
+    "id": "resource_upland_household", "name": "Hill household", "desc": "A fictional household.", "intro": "Your household lives in the hills.",
+    "tier": 1, "profession": "farmer", "gold": 12, "prestige": 0, "piety": 0, "bookmarkIds": ["resource_upland"], "eras": ["early_medieval"],
+    "alwaysUnlocked": true, "startAge": 24, "familyPresets": {"standard": {"name": "Established household", "diff": "age 24"}}
+  }],
+  "bookmarks": {
+    "resource_upland": {
+      "id": "resource_upland", "name": "Upland allocation", "desc": "An independent fictional catchment example.", "date": {"year": 950, "season": 0, "day": 1},
+      "era": "early_medieval", "geography": "resource_upland_land", "settlementLayout": null, "religiousHeads": {}, "localInstitutions": {}, "stories": [],
+      "starts": ["resource_upland_household"], "scripted": [], "straits": [], "crossingClasses": {},
+      "provinces": [
+        {"id": "resource_hill", "name": "Hill", "realm": "resource_hill_court", "culture": "frankish", "religion": "catholic", "dev": 5,
+          "settlements": [{"site": "resource_roof", "name": "Roof Town", "kind": "town"}, {"site": "resource_tank", "name": "Tank Village", "kind": "village"}]},
+        {"id": "resource_fold", "name": "Fold", "realm": "resource_fold_court", "culture": "frankish", "religion": "catholic", "dev": 3,
+          "settlements": [{"site": "resource_grazing", "name": "Fold Village", "kind": "village"}]}
+      ],
+      "realms": [
+        {"id": "resource_hill_court", "name": "Hill court", "capital": "resource_hill", "color": "#aa7944", "aggression": 0, "rank": 2, "government": "regnum",
+          "ruler": {"name": "Arno Stone", "culture": "frankish", "born": 918, "mar": 6, "trait": "patient"}},
+        {"id": "resource_fold_court", "name": "Fold court", "capital": "resource_fold", "color": "#779955", "aggression": 0, "rank": 1, "government": "regnum",
+          "ruler": {"name": "Odo Vale", "culture": "frankish", "born": 920, "mar": 5, "trait": "patient"}}
+      ],
+      "duchies": {}, "kingdoms": {}, "empires": {},
+      "siteResourceAssignments": [
+        {"id": "upland_roof", "profileId": "upland_catchment", "countyId": "resource_hill", "siteId": "resource_roof", "suitability": {"source": true, "catchment": true}, "rights": {"kind": "holder"}},
+        {"id": "upland_tank", "profileId": "upland_tank", "countyId": "resource_hill", "siteId": "resource_tank", "connectedSourceId": "upland_roof", "suitability": {"catchment": true}, "rights": {"kind": "holder"}},
+        {"id": "upland_fold", "profileId": "upland_pasture", "countyId": "resource_fold", "siteId": "resource_grazing", "suitability": {"grazing": true}, "rights": {"kind": "permission", "institutionId": "resource_fold_court", "officeId": "resource_keeper"}}
+      ]
+    }
+  }
+}

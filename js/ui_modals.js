@@ -10012,6 +10012,83 @@ window.FB = window.FB || {};
     return true;
   };
 
+  UI.showSiteResources = function (pid,idx,back,view,replace) {
+    view = view || {amounts:{},scroll:0};
+    const s = FB.state, R = FB.siteResources, site = FB.settlementsOf(s,pid)[idx];
+    if (!site) return;
+    const holds = FB.settlementConstructionAuthority(s,pid,idx).direct;
+    const holder = FB.settlementHolder(s,pid,idx);
+    const actor = holds && holder && holder.kind === 'realm' && holder.id === 'player'
+      ? {kind:'realm',id:'player'} : {kind:'character',id:s.player.charId};
+    const rows = R.snapshot(s,pid,site.site,actor), actions = [];
+    function operation(label,request) {
+      const q = R.quote(s,request), n = actions.length; actions.push(q);
+      return reviewActionCardHtml({id:'resource-action-' + n,label:label,data:{resourceReview:n},
+        disabled:!q.allowed,warn:!q.allowed,note:R.reason(q)});
+    }
+    let h = '<p class="hint">' + esc(FB.T('Allocations grant no building, goods, income or population bonus. Water stores begin empty and fill only from a reserved connected source.')) + '</p>';
+    rows.forEach(function (row) {
+      const p = FBDATA.siteResourceProfiles[row.profileId];
+      const unit = row.unit === 'water' ? FB.T('water units') : row.unit === 'grazing' ? FB.T('grazing places') : FB.T('launching places');
+      h += '<div class="governance-card review-fact-card"><div class="panelh">' + esc(dt(s,'siteResourceProfile',row.profileId,p,'name')) + '</div>' +
+        kv('Capacity',esc(FB.T('{amount} {unit}',{amount:row.capacity,unit:unit}))) +
+        kv('Available',String(row.available)) + kv('Reserved',String(row.reserved)) +
+        (row.kind === 'storage' ? kv('Stored water',String(row.stock)) : kv('Used this period',String(row.consumed))) +
+        (p.desc ? '<p class="hint">' + esc(dt(s,'siteResourceProfile',row.profileId,p,'desc')) + '</p>' : '') +
+        '<p class="hint">' + esc(row.periodDays ? FB.T('Capacity renews every {days} days. Unused reservations expire at the period boundary.',{days:row.periodDays}) :
+          FB.T('Stored water does not renew. Reservations remain until used or released.')) + '</p>' +
+        '<label for="resource-amount-' + esc(row.id) + '">' + esc(FB.T('Amount to reserve')) + '</label>' +
+        '<input type="number" min="1" max="' + row.capacity + '" step="1" id="resource-amount-' + esc(row.id) +
+        '" data-resource-amount="' + esc(row.id) + '" value="' + esc(String(view.amounts[row.id] || 1)) + '">' +
+        reviewActionsHtml(operation(FB.T('Reserve capacity'),{operation:'reserve',sourceId:row.id,actor:actor,amount:Number(view.amounts[row.id] || 1)}));
+      row.reservations.forEach(function (claim) {
+        const c = s.chars[claim.characterId];
+        h += '<p>' + esc(FB.T('{person}: {amount} reserved',{person:c ? FB.fullName(c) : FB.T('Unknown holder'),amount:claim.amount})) + '</p>';
+        const request = {sourceId:row.id,actor:actor,reservationId:claim.id};
+        h += reviewActionsHtml(operation(FB.T('Release reservation'),Object.assign({operation:'release'},request)) +
+          operation(FB.T('Use allocation'),Object.assign({operation:'consume'},request)));
+        R.compile(FB.campaignBookmark(s)).sources.filter(function (to) { return to.connectedSourceId === row.id; }).forEach(function (to) {
+          const name = FB.settlementDisplayName(s,to.countyId,to.slot);
+          h += reviewActionsHtml(operation(FB.T('Store at {site}',{site:name}),Object.assign({operation:'transfer',destinationId:to.id},request)));
+        });
+      });
+      h += '</div>';
+    });
+    h += '<div class="gm-footer"><button class="btn" id="gm-cancel">' + esc(FB.T('Back')) + '</button></div>';
+    function list(replace) { UI.showSiteResources(pid,idx,back,view,replace); }
+    openModal(FB.T('Site resources'),h,{replaceView:!!replace,historyView:true,historyBack:true,historyBackRender:back});
+    $('gm-body').scrollTop = view.scroll;
+    function remember() {
+      view.scroll = $('gm-body').scrollTop;
+      $('gm-body').querySelectorAll('[data-resource-amount]').forEach(function (input) { view.amounts[input.dataset.resourceAmount] = input.value; });
+    }
+    $('gm-body').querySelectorAll('[data-resource-amount]').forEach(function (input) {
+      input.onchange = function () { const focused = input.id; remember(); list(true); if ($(focused)) $(focused).focus({preventScroll:true}); };
+    });
+    $('gm-body').querySelectorAll('[data-resource-review]').forEach(function (button) {
+      button.onclick = function () {
+        remember(); const q = actions[Number(button.dataset.resourceReview)], origin = button.id;
+        function restore() { list(); if ($(origin)) $(origin).focus({preventScroll:true}); $('gm-body').scrollTop = view.scroll; }
+        const request = q.request, row = rows.find(function (r) { return r.id === request.sourceId; });
+        const claim = row.reservations.find(function (c) { return c.id === request.reservationId; });
+        const amount = claim ? claim.amount : request.amount;
+        openModal(FB.T('Review allocation'),'<div class="governance-card review-fact-card">' + kv('Amount',String(amount)) +
+          kv('Payment',esc(FB.T('None'))) + '<p>' + esc(R.reason(q)) + '</p><p>' + esc(request.operation === 'release' ?
+            FB.T('Release returns reserved capacity without creating water or goods.') : request.operation === 'transfer' ?
+            FB.T('Move this actual allocation into its connected store. The source is debited once.') : request.operation === 'consume' ?
+            FB.T('Use up this allocation. This action creates no goods or operating benefit.') :
+            FB.T('Reserve this amount for the current holder. It is unavailable to competing claims until released, used or expired.')) +
+          '</p></div><div class="gm-footer"><button class="btn" id="gm-cancel">' + esc(FB.T('Back')) +
+          '</button><button class="btn primary" id="resource-confirm">' + esc(FB.T('Confirm')) + '</button></div>',
+          {historyView:true,historyBack:true,historyBackRender:restore});
+        $('resource-confirm').onclick = function () {
+          if (!R.commit(FB.state,q)) UI.toast(FB.T('Terms changed. Review the current allocation.'));
+          UI.refresh(); modalHistoryBack(restore);
+        };
+      };
+    });
+  };
+
   UI.showSettlement = function (pid, idx, options) {
     options = options || {};
     const s = FB.state;
@@ -10039,6 +10116,7 @@ window.FB = window.FB || {};
         kind:settlementKindName(st.kind), county:FB.L(pr.name), holder:'__settlement_holder__'
       })).replace('__settlement_holder__', holderMarkup) + '</p></div>';
     if (managesSettlement && FB.station.isLanded(s.player, s)) h += '<button type="button" class="actionbtn" id="settlement-host-games">' + esc(FB.T('Host games…')) + '</button>';
+    if (FB.siteResources.snapshot(s,pid,st.site).length) h += '<button type="button" class="actionbtn" id="settlement-resources">' + esc(FB.T('Review site resources')) + '</button>';
     const countyRuler = holdId === 'player' ? s.chars[s.player.charId] : FB.realmRulerCharacterSnapshot(s, holdId);
     h += '<div class="gm-body-text">' + kv('Count', esc(countyRuler ? FB.fullName(countyRuler) :
       (s.realms[holdId] ? s.realms[holdId].name : FB.T('None')))) + '</div>';
@@ -10271,6 +10349,17 @@ window.FB = window.FB || {};
       guide:guideModalOption('settlement-guide', 'settlements-development',
         'Guide: settlements and development')
     });
+    if ($('settlement-resources')) $('settlement-resources').onclick = function () {
+      const scroll = $('gm-body').scrollTop;
+      const expanded = Array.prototype.map.call($('gm-body').querySelectorAll('.settcard-details:not(.hidden)'),function (el) { return el.id; });
+      UI.showSiteResources(pid,idx,function () {
+        UI.showSettlement(pid,idx,options);
+        expanded.forEach(function (id) { const el = $(id); if (el) el.classList.remove('hidden');
+          $('gm-body').querySelectorAll('[aria-controls]').forEach(function (b) { if (b.getAttribute('aria-controls') === id) b.setAttribute('aria-expanded','true'); }); });
+        if ($('settlement-resources')) $('settlement-resources').focus({preventScroll:true});
+        $('gm-body').scrollTop = scroll;
+      });
+    };
     if (managesSettlement) {
       const edit = document.createElement('button');
       edit.type = 'button'; edit.className = 'character-rename'; edit.id = 'settlement-rename';

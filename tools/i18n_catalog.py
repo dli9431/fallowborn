@@ -95,6 +95,7 @@ STRUCTURED_DATA = {
     "tenureRights": "tenureRight",
     "seasonKinds": "seasonKind",
     "climateZones": "climateZone",
+    "siteResourceProfiles": "siteResourceProfile",
     "storyCampaigns": "storyCampaign",
     "storyFoundations": "storyFoundation",
 }
@@ -1237,6 +1238,8 @@ def extract_structured(inv: Inventory) -> None:
             path = DATA / "intrigue.js"
         elif data_name in ("seasonKinds", "climateZones"):
             path = DATA / "climate.js"
+        elif data_name == "siteResourceProfiles":
+            path = DATA / "site_resources.js"
         elif data_name == "storyCampaigns":
             path = DATA / "story_campaigns.js"
         elif data_name == "storyFoundations":
