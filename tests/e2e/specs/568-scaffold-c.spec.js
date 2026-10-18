@@ -3,6 +3,7 @@
 const path = require('path');
 const {test,expect} = require('../support/fixture');
 const {openGame} = require('../support/game/navigation');
+const {beginBookmark,restoreBookmark} = require('../support/game/bookmark-acceptance');
 const {dependsOnRuntime} = require('../support/runtime-dependencies');
 
 dependsOnRuntime(__filename,[
@@ -12,7 +13,8 @@ dependsOnRuntime(__filename,[
   'data/bookmark_476_wider_identities.js','data/counties.js','data/map_data.js',
   'data/geographies.js','data/geography_expansion.js','data/settlements.js',
   'data/cultures.js','data/political_institutions.js','data/assembly_polities.js',
-  'data/climate.js','js/model.js','js/world.js'
+  'data/climate.js','js/model.js','js/world.js','js/governments.js',
+  'js/population.js','js/main.js','js/save.js','js/save_v4.js'
 ]);
 
 const packets = {
@@ -135,7 +137,11 @@ test('568 quadrant c resolves physical, political, identity and title references
       });
       Object.keys(realms).forEach(function (id) {
         const r = realms[id], capital = provinces[r.capital];
-        if (!/_568$/.test(id) || r.liege || r.mobile) faults.push(id + ': inherited superior or mobile state');
+        if (!/_568$/.test(id) || r.mobile) faults.push(id + ': inherited identity or mobile state');
+        const superior = id === 'bukhara_568' || id === 'samarkand_568' ? 'western_turks_568' : null;
+        if ((r.liege || null) !== superior) faults.push(id + ': wrong superior');
+        if (superior && (!realms[superior] || realms[superior].rank <= r.rank || realms[superior].liege))
+          faults.push(id + ': invalid superior hierarchy');
         if (id === 'austrasia_568') {
           if (r.capital !== 'metz') faults.push(id + ': wrong external capital');
         } else if (!capital || capital.wasteland || capital.realm !== id) faults.push(id + ': invalid capital');
@@ -203,4 +209,96 @@ test('568 quadrant c redates imperial and Frankish courts and retains regional l
   expect(result.retired).toBe(true);
   expect(result.district).toEqual([1,'village','gurganj_district_site']);
   expect(result.corridors).toBe(true);
+});
+
+test('568 corrected quadrant c reaches the composed world while disputed rows retain their scaffold values', async function ({page},testInfo) {
+  await openGame(page,testInfo);
+  const result = await page.evaluate(function () {
+    const b = FB.bookmark('568'), provinces = {}, realms = {};
+    b.provinces.forEach(function (p) { provinces[p.id] = p; });
+    b.realms.forEach(function (r) { realms[r.id] = r; });
+    const man = provinces.man;
+    return {
+      tours:[provinces.tours.realm,provinces.tours.culture,provinces.tours.religion,provinces.tours.dev],
+      man:[man.realm,man.culture,man.religion,man.dev,man.communities],
+      manCourt:[realms.man_local_568.capital,realms.man_local_568.religion],
+      shareTotal:man.communities.reduce(function (sum,c) { return sum + c.populationShare0; },0),
+      eligible:man.communities.every(function (c) { return FB.faithHistoricalAvailable(c.religion,b,'community'); }),
+      localHolders:['bukhara','samarkand','usrushana','nurata_foothills'].map(function (id) { return provinces[id].realm; }),
+      hierarchy:['bukhara_568','samarkand_568','western_turks_568'].map(function (id) {
+        const r = realms[id];
+        return [r.id,r.capital,r.rank,r.liege || null,r.ruler.generated];
+      }),
+      turkicCourts:b.realms.filter(function (r) { return r.id === 'western_turks_568'; }).length,
+      heldFrankish:['paris','chartres','troyes','rennes','nantes'].map(function (id) { return provinces[id].realm; }),
+      armorica:realms.armorica_568.capital,guntram:realms.burgundy_568.ruler.born,
+      heldNorthern:['scone','inverness','edinburgh','stirling'].map(function (id) {
+        const p = provinces[id]; return [p.realm,p.religion];
+      }),
+      heldEastern:['bactria_568','sistan_568','arachosia_568','kabul_568','makran_568','indus_568',
+        'lower_syr_darya_local_568','kath_district_local_568','gurganj_district_local_568']
+        .every(function (id) { return !realms[id].liege; }),
+      validated:FB.validateBookmark(b)
+    };
+  });
+  expect(result).toEqual({
+    tours:['austrasia_568','gallo_roman','nicene',4],
+    man:['man_local_568','brittonic','insular_traditional_476',1,[
+      {culture:'brittonic',religion:'insular_traditional_476',populationShare0:7500},
+      {culture:'brittonic',religion:'nicene',populationShare0:2500}
+    ]],
+    manCourt:['man','insular_traditional_476'],shareTotal:10000,eligible:true,
+    localHolders:['bukhara_568','samarkand_568','samarkand_568','samarkand_568'],
+    hierarchy:[['bukhara_568','bukhara',1,'western_turks_568',true],
+      ['samarkand_568','samarkand',1,'western_turks_568',true],
+      ['western_turks_568','chach',2,null,true]],turkicCourts:1,
+    heldFrankish:['neustria_568','neustria_568','austrasia_568','armorica_568','armorica_568'],
+    armorica:'rennes',guntram:532,
+    heldNorthern:[['pictish_east_568','insular_traditional_476'],['pictish_north_568','insular_traditional_476'],
+      ['northern_britons_568','nicene'],['northern_britons_568','nicene']],
+    heldEastern:true,validated:[]
+  });
+});
+
+test('568 corrected sovereignty, local holders and mixed Man residents survive campaign creation and restore', async function ({page},testInfo) {
+  await beginBookmark(page,testInfo,'568','farmer_568');
+  function snapshot() {
+    const s = FB.state, communities = FB.countyCommunities(s,'man');
+    return {
+      tours:[s.owner.tours,s.holder.tours],
+      sogdiana:['bukhara','samarkand','usrushana','nurata_foothills'].map(function (id) {
+        return [s.owner[id],s.holder[id],FB.topRealm(s,s.holder[id])];
+      }),
+      courts:['bukhara_568','samarkand_568','western_turks_568'].map(function (id) {
+        const r = s.realms[id], ruler = FB.realmRulerCharacterSnapshot(s,id);
+        return [r.id,r.capital,r.rank,r.liege,ruler && ruler.id];
+      }),
+      man:[s.owner.man,s.holder.man,s.realms.man_local_568.religion],
+      communities:communities,
+      partitioned:communities.reduce(function (sum,c) { return sum + c.count; },0) === FB.countyPopulation(s,'man'),
+      christianShare:FB.countyReligionShare(s,'man','nicene'),
+      errors:FBTEST.checkInvariants(),saveErrors:FB.save.v4.validatePlatform(s)
+    };
+  }
+  const before = await page.evaluate(snapshot);
+  expect(before.tours).toEqual(['austrasia_568','austrasia_568']);
+  expect(before.sogdiana).toEqual([
+    ['western_turks_568','bukhara_568','western_turks_568'],
+    ['western_turks_568','samarkand_568','western_turks_568'],
+    ['western_turks_568','samarkand_568','western_turks_568'],
+    ['western_turks_568','samarkand_568','western_turks_568']
+  ]);
+  expect(before.courts.every(function (r) { return typeof r[4] === 'string' && !!r[4]; })).toBe(true);
+  expect(new Set(before.courts.map(function (r) { return r[4]; })).size).toBe(3);
+  expect(before.man).toEqual(['man_local_568','man_local_568','insular_traditional_476']);
+  expect(before.communities.map(function (c) { return [c.culture,c.religion]; })).toEqual([
+    ['brittonic','insular_traditional_476'],['brittonic','nicene']
+  ]);
+  expect(before.partitioned).toBe(true);
+  expect(before.christianShare).toBeCloseTo(0.25,3);
+  expect(before.errors).toEqual([]);
+  expect(before.saveErrors).toEqual([]);
+  const save = await page.evaluate(function () { return FB.save.serialize(); });
+  await restoreBookmark(page,save);
+  expect(await page.evaluate(snapshot)).toEqual(before);
 });
