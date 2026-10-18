@@ -8,7 +8,8 @@
   function slug(v) { return typeof v === 'string' && /^[a-z][a-z0-9_]*$/.test(v); }
   function integer(v) { return Number.isInteger(v) && v >= 0; }
   function text(v, max) { return typeof v === 'string' && v.length > 0 && v.length <= max; }
-  function present(s) { return s.player.travel ? s.player.travel.currentId : s.player.provinceId; }
+  function present(s) { return s.player.travel && s.player.travel.participationId && FB.expeditionParticipants && FB.expeditionParticipants.location(s) ||
+    (s.player.travel ? s.player.travel.currentId : s.player.provinceId); }
   function living(s) { var c = s.chars[s.player.charId]; return !!c && !c.dead && !s.player.dead; }
   function sovereign(s, pid) { return s.owner[pid] ? FB.topRealm(s, s.owner[pid]) : null; }
   var EVENTS = {

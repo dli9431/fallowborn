@@ -1,3 +1,9 @@
+Personal expedition carriage
+
+An admitted expedition protagonist uses the ordinary temporary travel record with a typed participationId. Civilian position projects from the real migration; a combatant follows its existing counted host position. No independent route advances alongside either carrier. The permanent household home and family remain unchanged. A carried stay offers no destination work event, capstone, settlement entitlement or automatic relationship benefit.
+
+Admission, refusal, commander consent and leave belong to the personal story. Leaving retains a temporary stay at the reached checkpoint. A separate pure return quote prices the actual route from that county using current transport and ordinary provisions pricing. Its revalidating commit charges the private purse once and starts the ordinary return ticker. Repeated or stale confirmation charges nothing. Return cancellation preserves the reached county, while actual arrival releases the personal carrier once. These rules grant no protection, family transport or new equipment access. Technology impact personal_expedition_admission is none; the ordinary road and transport gates remain.
+
 # Overland travel
 
 Dated purpose eligibility

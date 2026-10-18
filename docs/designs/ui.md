@@ -1,3 +1,7 @@
+Personal expedition reviews
+
+The shared story sheet exposes individual role requests, host consent state, finite term, named-person capacity and actual location. Reviews state that participation is unpaid and grants no troops, equipment, command, vow or family carriage. Leave ends only admission; the return road has its own visible private cost and travel time. Refusal and leaving remain available without a payment. Stale quotes change nothing. The existing story sheet supplies Back, Escape, Close, retained scroll and originating-card focus.
+
 Construction applicability presentation
 
 Building Works shows the pure construction-applicability projection's first current blocker on an unavailable building card, alongside its existing price, capacity and disabled Raise control. Calendar, campaign era, target county, resident culture and paying sovereign context are read again on activation before any charge. Fort reviews use the same applicability reason for a new project. Existing settlement and county identity, card Details, keyboard order, scroll, Back and dismissal remain on the shared modal paths. This adds no navigation route or saved display text.

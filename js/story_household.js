@@ -11,7 +11,8 @@
       integer(v[1]) && v[1] < 4 && integer(v[2]) && v[2] >= 1 && v[2] <= 90
       ? v[0] * 360 + v[1] * 90 + v[2] - 1 : null;
   }
-  function present(s) { return s.player.travel ? s.player.travel.currentId : s.player.provinceId; }
+  function present(s) { return s.player.travel && s.player.travel.participationId && FB.expeditionParticipants && FB.expeditionParticipants.location(s) ||
+    (s.player.travel ? s.player.travel.currentId : s.player.provinceId); }
   function sovereign(s, id) { return s.owner[id] ? FB.topRealm(s, s.owner[id]) : null; }
   function living(s) { var c = s.chars[s.player.charId]; return !!c && !c.dead && !s.player.dead; }
   function shadow(s) { return Object.assign({}, s, { player:JSON.parse(JSON.stringify(s.player)) }); }
