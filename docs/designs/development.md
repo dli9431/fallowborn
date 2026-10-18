@@ -530,3 +530,7 @@ No read may intervene between that notification and the building eviction.
 Finite material production
 
 Optional productionSites bind actual nonfort buildings to finite input/output recipes without adding a building-effect channel. Construction, standing and upkeep retain their existing owners; a batch creates only its declared conserved goods after real paid work. Capture, ruin, replacement or lost original permission suspends completion while property remains. Explicit fictional opening lots require a real standing openingInfrastructure placement. No bundled inventory is added. See docs/designs/production.md for transactions, work, account boundaries, saves and supported authoring limits.
+
+Selected construction profiles
+
+Optional buildingProfiles replace supported construction scalars on one existing base building. Shared occupancy, group and repeat-price counts include profiled/default assets and ruins together. The selected transaction uses the normal payer and reserve checks, awards only replacement development/opinion/prestige, and preserves an explicit version-1 identity without changing old unprofiled records. Strategic profiles retain canonical fort tier values and their identity through funded completion. The schema, quote/commit, exact site and institution requirements, independent ordinary imports and current consumer boundaries are in docs/designs/building-profiles.md.

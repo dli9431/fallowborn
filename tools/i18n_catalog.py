@@ -1016,7 +1016,24 @@ def extract_scaffold_regions(inv: Inventory) -> None:
                                         record, f"{rel}:{line}", "Staged regional provincial interest.", ())
 
 
+def extract_building_profiles(inv: Inventory, data: Path = DATA) -> None:
+    sources = [(data / "building_profiles.js", "buildingProfiles")]
+    for path in sorted(data.glob("building_profiles_*.js")):
+        sources.extend((path, match.group(1)) for match in re.finditer(
+            r"FBDATA\.(buildingProfiles_[A-Za-z0-9_]+)\s*=", path.read_text(encoding="utf-8")))
+    for path, table in sources:
+        profiles = node_object(find_assignment(path, "FBDATA", table)) or {}
+        for profile_id, profile_node in profiles.items():
+            item = node_object(profile_node) or {}
+            for field in ("name", "desc"):
+                for branch, record, line in branch_records(item.get(field)):
+                    inv.add(f"buildingProfile.{profile_id}.{field}.{branch}", record,
+                            f"data/{path.name}:{line}", "Construction profile display.",
+                            TOKEN_RE.findall(record["text"]))
+
+
 def extract_structured(inv: Inventory) -> None:
+    extract_building_profiles(inv)
     extract_scaffold_regions(inv)
     extract_geography_additions(inv)
     extract_bookmark_revision_content(inv)

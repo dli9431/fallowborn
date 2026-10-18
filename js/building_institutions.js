@@ -71,8 +71,8 @@ window.FB = window.FB || {};
   function record(s, pid, idx, id) {
     return (s.buildings && s.buildings[pid] || []).filter(function (r) { return r && r.s === idx && r.id === id; })[0] || null;
   }
-  function current(s, pid, idx, id, a) {
-    var def = FBDATA.buildings[id], profileId = def && def.institutionProfile;
+  function current(s, pid, idx, id, a, definition) {
+    var def = definition || FBDATA.buildings[id], profileId = def && def.institutionProfile;
     if (!profileId) return { allowed:true, reason:'', binding:null };
     var p = profiles(FBDATA)[profileId], bm = FB.campaignBookmark(s), defs = FB.localInstitutionDefinitions(s);
     var physical = FB.world.sitesByProv && FB.world.sitesByProv[pid];
@@ -105,12 +105,12 @@ window.FB = window.FB || {};
     return { allowed:!reason, reason:reason || '', binding:binding };
   }
   function foundation(b) { return b.propertyId ? 'property:' + b.propertyId : 'institution:' + b.institutionId; }
-  FB.buildingInstitutionStatus = function (s, pid, idx, id, a, existing) {
+  FB.buildingInstitutionStatus = function (s, pid, idx, id, a, existing, definition) {
     a = actor(s, a);
     if (!keys(a, ['kind','id']) || ['character','realm'].indexOf(a.kind) < 0 || typeof a.id !== 'string')
       return { allowed:false, reason:FB.T('A lawful builder and payer are required.'), binding:null };
     if (existing && !existing.institutionBinding) return { allowed:true, reason:'', binding:null };
-    var q = current(s, pid, idx, id, a), b = q.binding;
+    var q = current(s, pid, idx, id, a, definition || existing && FB.buildingProfiles.assetDefinition(existing)), b = q.binding;
     if (!q.allowed || !b) return q;
     var roles = profiles(FBDATA)[b.profileId].exclusiveRoles;
     var occupied = !existing && (s.buildings && s.buildings[pid] || []).some(function (raw) {
@@ -138,7 +138,7 @@ window.FB = window.FB || {};
     a = actor(s, a); mode = mode || 'construct';
     if (!keys(a, ['kind','id']) || ['character','realm'].indexOf(a.kind) < 0 || typeof a.id !== 'string' ||
         !Number.isSafeInteger(idx) || idx < 0) return null;
-    var r = record(s, pid, idx, id), q = current(s, pid, idx, id, a);
+    var r = record(s, pid, idx, id), q = current(s, pid, idx, id, a, r && FB.buildingProfiles.assetDefinition(r));
     var status = FB.buildingInstitutionStatus(s, pid, idx, id, a, mode === 'reaffirm' ? r : null);
     if (mode === 'reaffirm' && r && r.institutionBinding && q.binding) {
       q.binding.revision = r.institutionBinding.revision + 1;
@@ -178,7 +178,7 @@ window.FB = window.FB || {};
         var b = r.institutionBinding, d = b && defs[b.institutionId], p = b && profiles(FBDATA)[b.profileId];
         var slots = FB.campaignBookmark(s).provinces.filter(function (v) { return v.id === pid; });
         if (!keys(b, ['v','profileId','institutionId','siteId','propertyId','builder','payer','incumbentId','generation','boundTurn','revision']) || b.v !== 1 ||
-            !p || !d || !FBDATA.buildings[r.id] || FBDATA.buildings[r.id].institutionProfile !== b.profileId ||
+            !p || !d || !FB.buildingProfiles.assetDefinition(r) || FB.buildingProfiles.assetDefinition(r).institutionProfile !== b.profileId ||
             d.site !== b.siteId || d.provinceId !== pid || !slots.length ||
             !Number.isSafeInteger(r.s) || r.s < 0 || !Number.isSafeInteger(b.boundTurn) || b.boundTurn < 0 || b.boundTurn > s.turn ||
             !Number.isSafeInteger(b.revision) || b.revision < 1 ||

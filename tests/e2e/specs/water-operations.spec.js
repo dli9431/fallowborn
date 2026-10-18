@@ -6,7 +6,8 @@ const {beginBookmark} = require('../support/game/bookmark-acceptance');
 const {dependsOnRuntime} = require('../support/runtime-dependencies');
 const examples = {river:require('../fixtures/authoring/water-operations-river.json'),
   catchment:require('../fixtures/authoring/water-operations-catchment.json')};
-dependsOnRuntime(__filename,['index.html','data/building_operations.js','data/site_resources.js','data/technology.js',
+dependsOnRuntime(__filename,[
+  'data/building_profiles.js','js/building_profiles.js','index.html','data/building_operations.js','data/site_resources.js','data/technology.js',
   'js/building_operations.js','js/site_resources.js','js/world.js','js/actions.js','js/fortifications.js',
   'js/population.js','js/technology.js','js/lordships.js','js/treasury.js','js/home_authority.js',
   'js/building_institutions.js','js/mods.js','js/save.js','js/save_v4.js','js/ui_modals.js','js/ui_misc.js']);

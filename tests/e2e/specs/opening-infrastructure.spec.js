@@ -6,6 +6,7 @@ const { restoreBookmark } = require('../support/game/bookmark-acceptance');
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 
 dependsOnRuntime(__filename, [
+  'data/building_profiles.js','js/building_profiles.js',
   'index.html', 'js/world.js', 'js/main.js', 'js/starts.js', 'js/fortifications.js',
   'js/save.js', 'js/save_v4.js', 'js/actions.js', 'js/treasury.js', 'js/population.js',
   'js/market.js', 'js/lordships.js', 'js/governments.js', 'js/government_administration.js',

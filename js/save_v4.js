@@ -84,6 +84,7 @@
     if (state.situation476 !== undefined) field('state.situation476');
     if (state.start !== undefined && !plain(state.start)) field('state.start');
     if (FB.validateOpeningInfrastructureState) FB.validateOpeningInfrastructureState(state);
+    if (FB.buildingProfiles) FB.buildingProfiles.validate(state);
     if (FB.siteResources) FB.siteResources.validate(state);
     if (FB.buildingOperations) FB.buildingOperations.validate(state);
     if (FB.production) FB.production.validate(state);

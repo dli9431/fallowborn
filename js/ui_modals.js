@@ -8864,6 +8864,82 @@ window.FB = window.FB || {};
     });
   }
 
+  function buildingProfileRows(s) {
+    let h = '';
+    for (const buildingId in FBDATA.buildings) {
+      if (!FB.buildingProfiles.ids(buildingId).length) continue;
+      h += '<button type="button" class="actionbtn" data-profile-building="' + esc(buildingId) + '">' +
+        esc(FB.T('Choose a construction profile for {building}', {building:dt(s,'building',buildingId,FBDATA.buildings[buildingId],'name')})) + '</button>';
+    }
+    return h;
+  }
+  function bindBuildingProfiles(pid,idx) {
+    document.querySelectorAll('[data-profile-building]').forEach(function (button) {
+      button.onclick = function () { UI.showBuildingProfiles(pid,idx,button.dataset.profileBuilding); };
+    });
+  }
+  UI.showBuildingProfiles = function (pid,idx,buildingId,selected,replace) {
+    const s = FB.state, ids = FB.buildingProfiles.ids(buildingId), sites = FB.settlementsOf(s,pid);
+    if (!ids.length || !sites.length) return false;
+    selected = selected || {profileId:ids[0],slot:idx == null ? 0 : idx};
+    const p = FBDATA.buildingProfiles[selected.profileId];
+    if (!p || p.buildingId !== buildingId) return false;
+    const d = FB.buildingProfiles.definition(buildingId,selected.profileId);
+    const request = {countyId:pid,settlement:selected.slot,buildingId:buildingId,profileId:selected.profileId,
+      actor:{kind:'character',id:s.player.charId}};
+    const q = FB.buildingProfiles.quote(s,request);
+    let h = '<label class="building-county-picker"><span>' + esc(FB.T('Construction profile')) +
+      '</span><select id="gm-profile-choice">';
+    ids.forEach(function (id) { h += '<option value="' + esc(id) + '"' + (id === selected.profileId ? ' selected' : '') + '>' +
+      esc(dt(s,'buildingProfile',id,FBDATA.buildingProfiles[id],'name')) + '</option>'; });
+    h += '</select></label><label class="building-county-picker"><span>' + esc(FB.T('Settlement')) +
+      '</span><select id="gm-profile-site">';
+    sites.forEach(function (site,slot) { if (idx == null || idx === slot) h += '<option value="' + slot + '"' +
+      (slot === selected.slot ? ' selected' : '') + '>' + esc(FB.L(site.name)) + '</option>'; });
+    h += '</select></label>' + reviewFactsCard(FB.T('Selected works'),
+      kv('Profile',esc(dt(s,'buildingProfile',selected.profileId,p,'name'))) +
+      kv('Description',esc(dt(s,'buildingProfile',selected.profileId,p,'desc'))) +
+      kv('Construction price',esc(FB.T('{money:cost}',{cost:q.cost || 0}))) +
+      kv('Maintenance',esc(assetSeasonalMoneyCost(d.fort ? FB.fortLevelDef((q.context && q.context.fort.targetLevel) || 1).upkeep : d.upkeep))) +
+      kv('Technology',esc((d.requiresTech || []).map(function (id) { return dt(s,'tech',id,FBDATA.tech[id],'name'); }).join(', ') || FB.T('None'))) +
+      kv('Effects',esc(d.fort ? FB.T('Canonical fort tier, construction duration and work requirements apply.') : buildingEffects(d,buildingId).join(' / ') || FB.T('None')))) +
+      '<p class="hint">' + esc(FB.T('One physical asset. Shared site and county limits include default buildings and ruins.')) + '</p>' +
+      reviewActionsHtml(reviewActionCardHtml({id:'gm-profile-review',label:FB.T('Review construction'),disabled:!q.allowed,note:q.reason || FB.T('Pay the quoted price once from your household account.')})) +
+      '<button type="button" class="btn" id="gm-profile-back">' + esc(FB.T('Back')) + '</button>';
+    openModal(FB.T('Construction profiles'),h,{replaceView:!!replace,historyView:true,historyBack:true});
+    $('gm-profile-back').onclick = UI.backModal;
+    function change() {
+      const values = {profileId:$('gm-profile-choice').value,slot:Number($('gm-profile-site').value)};
+      const focus = document.activeElement && document.activeElement.id, scroll = $('gm-body').scrollTop;
+      UI.showBuildingProfiles(pid,idx,buildingId,values,true);
+      if (focus && $(focus)) $(focus).focus();
+      $('gm-body').scrollTop = scroll;
+    }
+    $('gm-profile-choice').onchange = change; $('gm-profile-site').onchange = change;
+    $('gm-profile-review').onclick = function () {
+      const body = reviewFactsCard(FB.T('Construction terms'),
+        kv('Profile',esc(dt(s,'buildingProfile',selected.profileId,p,'name'))) +
+        kv('Settlement',esc(FB.L(sites[selected.slot].name))) +
+        kv('Price',esc(FB.T('{money:cost}',{cost:q.cost})))) +
+        '<p class="hint">' + esc(FB.T('Construction retains one asset at this site. Operating inputs and maintenance remain separate requirements.')) + '</p>' +
+        '<p class="warnote" id="gm-profile-status" role="status"></p>' +
+        reviewActionsHtml(reviewActionCardHtml({id:'gm-profile-confirm',label:FB.T('Confirm construction'),note:FB.T('Pay {money:cost} now.',{cost:q.cost})})) +
+        '<button type="button" class="btn" id="gm-profile-cancel">' + esc(FB.T('Cancel')) + '</button>';
+      openModal(FB.T('Review construction'),body,{historyView:true,historyBack:true});
+      $('gm-profile-cancel').onclick = UI.backModal;
+      $('gm-profile-confirm').onclick = function () {
+        if (FB.state !== s || !FB.buildingProfiles.commit(s,q)) {
+          $('gm-profile-status').textContent = FB.T('The terms changed. Go back and review these works again.'); return;
+        }
+        UI.refresh();
+        $('gm-profile-confirm').disabled = true;
+        $('gm-profile-status').textContent = FB.T('Construction funded.');
+        $('gm-profile-cancel').textContent = FB.T('Continue');
+      };
+    };
+    return true;
+  };
+
   /* Keep county choice in reach while the long building ledger scrolls.
      Native selects use the platform's dependable full-screen picker on
      phones and remain keyboard-accessible on desktop. */
@@ -8931,7 +9007,7 @@ window.FB = window.FB || {};
           'Manual construction remains available here.')) + '</span></label>' +
         '<p class="hint">' + esc(FB.T(
           'Each settlement can hold one of each building. Ruins still occupy that place. Some buildings have a county or realm-wide limit. Each additional copy in a county costs {percent}% more.',
-          { percent: growth })) + '</p>' + institutionalBuildingRows(s, pid) + '<div class="gm-list">';
+          { percent: growth })) + '</p>' + buildingProfileRows(s) + institutionalBuildingRows(s, pid) + '<div class="gm-list">';
       let cardSeq = 0;
       for (const id in FBDATA.buildings) {
         const d = FBDATA.buildings[id];
@@ -9020,6 +9096,7 @@ window.FB = window.FB || {};
       });
       bindCardInfoToggles($('gm-body'));
       bindInstitutionalBuildingRows(pid, idx, keep);
+      bindBuildingProfiles(pid, idx);
       document.querySelectorAll('[data-bquick]').forEach(function (btn) {
         btn.addEventListener('click', function () {
           const scrollTop = $('gm-body').scrollTop;
@@ -9068,7 +9145,7 @@ window.FB = window.FB || {};
         return d.icon + ' ' + esc(e.ruined ? FB.T('Ruins of {building}', { building: name }) : name);
       }).join(' · ') + '</p>';
     }
-    h += institutionalBuildingRows(s, pid) + '<div class="gm-list">';
+    h += buildingProfileRows(s) + institutionalBuildingRows(s, pid) + '<div class="gm-list">';
     let cardSeq = 0;
     for (const b of FB.buildable(s, pid, idx, buildingContext)) {
       const short = s.player.gold < b.cost;
@@ -9105,6 +9182,7 @@ window.FB = window.FB || {};
     });
     bindCardInfoToggles($('gm-body'));
     bindInstitutionalBuildingRows(pid, idx, keep);
+    bindBuildingProfiles(pid, idx);
     document.querySelectorAll('[data-build]').forEach(function (btn) {
       btn.addEventListener('click', function () {
         const focusId = btn.dataset.build;
@@ -10425,7 +10503,7 @@ window.FB = window.FB || {};
         const d = FB.buildingOperations.effects(s,pid,e);
         if (!FBDATA.buildings[id]) continue;
         const detId = 'settcard-details-' + (++cardSeq);
-        const name = dt(s, 'building', id, d, 'name');
+        const name = e.buildingProfile ? dt(s,'buildingProfile',e.buildingProfile.id,FBDATA.buildingProfiles[e.buildingProfile.id],'name') : dt(s, 'building', id, d, 'name');
         if (FB.isFortificationBuilding(id) && !e.ruined) {
           h += fortAssetHtml(s, pid, idx, e, true, detId);
           continue;
@@ -24553,6 +24631,16 @@ window.FB = window.FB || {};
           addContent(entry.kind, target);
         }
       }
+    }
+
+    for (const profileId in (FBDATA.buildingProfiles || {})) {
+      const profile = FBDATA.buildingProfiles[profileId];
+      const effective = FB.buildingProfiles.definition(profile.buildingId,profileId);
+      if (techRequiresId(effective.requiresTech,id)) add('buildingProfile:' + profileId,
+        FB.T('Construction profile: {profile} ({building})',{
+          profile:dt(s,'buildingProfile',profileId,profile,'name'),
+          building:dt(s,'building',profile.buildingId,FBDATA.buildings[profile.buildingId],'name')
+        }));
     }
 
     for (const recipeId in (FBDATA.productionRecipes || {})) {
