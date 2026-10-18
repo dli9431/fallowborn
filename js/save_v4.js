@@ -88,6 +88,7 @@
     if (FB.siteResources) FB.siteResources.validate(state);
     if (FB.buildingOperations) FB.buildingOperations.validate(state);
     if (FB.production) FB.production.validate(state);
+    if (FB.buildingSeasons) FB.buildingSeasons.validate(state);
     if (FB.validateBuildingInstitutionState) FB.validateBuildingInstitutionState(state);
     validateRoyalCourts(state);
     if (FB.validateStartingRealm) FB.validateStartingRealm(state);

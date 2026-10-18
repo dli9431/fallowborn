@@ -37,3 +37,9 @@ The settlement sheet links to Water service only for actual bound assets. Shared
 Selected asset definitions
 
 A construction profile may select an existing operationProfile with an exact ordinary assignment. Construction readiness, bound effects and work/upkeep quotes read the selected replacement definition. Profiled service receipts additionally retain the exact optional buildingProfile fingerprint so a deliberately removed asset cannot erase the original price provenance; unprofiled receipts keep their existing shape. This adds no water, operating benefit or second capacity owner at construction or restore. Complete profile operating-policy and consumer extensions are documented separately in docs/designs/building-profiles.md.
+
+Seasonal composition
+
+An optional buildingSeasonAssignments consumer now requires a reviewed local operating term before paid water service. The canonical service end is additionally capped by that original term; work cost stays fixed and upkeep uses the exact actual funded days. Shared effects and the building-index key include current seasonal eligibility, without changing unbound assets or replaying payments. The seasonal owner records no second water balance and can grant no stock-backed benefit at a water-operation consumer. See docs/designs/building-seasons.md.
+
+Seasonal AI is dispatched on the first actual campaign day, declared period boundaries and local calendar transitions, with the annual pass retained. dayAI opens only useful seasonal windows and invokes the canonical water AI filtered to those assignments, at most 32 service payments. Unopted water works keep their ordinary annual cadence. Production still needs its actual canonical worker and never receives an automatic second shift. Repeating either boundary or dispatch is harmless.

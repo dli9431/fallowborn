@@ -10341,6 +10341,58 @@ window.FB = window.FB || {};
     });
   };
 
+  UI.showBuildingSeasons = function (pid, idx, back, view) {
+    view = view || {scroll:0,expanded:[]};
+    const s=FB.state,S=FB.buildingSeasons,payer=FB.settlementActor(s),actions=[];
+    let h='<p class="hint">'+esc(FB.T('Seasonal terms retain property and people when work stops. Opening a term grants no output. Stock committed to a benefit is spent once; expired stock is unavailable.'))+'</p>';
+    S.snapshot(s,pid,idx).forEach(function(row){
+      const a=row.assignment,d=FBDATA.buildings[a.buildingId];
+      h+='<div class="governance-card review-fact-card"><div class="panelh">'+esc(dt(s,'building',a.buildingId,d,'name'))+'</div>'+kv(FB.T('Local season'),FB.localSeasonName(s,pid));
+      h+=kv(FB.T('Available seasons'),a.profile.seasonKinds.map(function(k){return FB.seasonKindName(s,k);}).join(', '));
+      if(row.term)h+=kv(FB.T('Committed through day'),row.term.untilTurn);
+      if(a.profile.care)h+='<p class="hint">'+esc(FB.T('The original adult holder must remain local and available for care. Ordinary processing still uses its paid action days.'))+'</p>';
+      let facts='';
+      if(a.profile.benefit){
+        const benefit=a.profile.benefit,good=FBDATA.productionGoods[benefit.goodId],values={};values[benefit.effect]=d[benefit.effect];
+        facts='<p>'+esc(FB.T('Commit {n} units of {good} for {benefit}, for at most {days} days.',{n:benefit.quantity,
+          good:dt(s,'productionGood',benefit.goodId,good,'name'),benefit:buildingEffects(values,a.buildingId).join(' · '),days:benefit.days}))+'</p>';
+        h+=facts;
+      }
+      function action(q,label){
+        const n=actions.length;actions.push({quote:q,facts:facts});
+        h+=reviewActionsHtml(reviewActionCardHtml({id:'season-action-'+n,data:{seasonReview:n},label:label,disabled:!q.allowed,warn:!q.allowed,note:S.reason(q),details:'<p>'+esc(S.reason(q))+'</p>'}));
+      }
+      action(S.quote(s,{operation:'open',assignmentId:a.id,actor:payer,lotId:null}),FB.T('Review operating term'));
+      if(a.productionSiteId!==null)FB.production.snapshot(s,pid,a.siteId).filter(function(x){return x.site.id===a.productionSiteId;}).forEach(function(x){x.lots.forEach(function(lot){
+        const good=FBDATA.productionGoods[lot.goodId],life=a.profile.stockLives.find(function(l){return l.goodId===lot.goodId;});
+        h+=kv(dt(s,'productionGood',lot.goodId,good,'name'),FB.T('{n} available units',{n:lot.available}));
+        if(life)h+='<p class="hint">'+esc(FB.T('Lifetime: {days} days from actual receipt. Unused remainder is lost once at expiry.',{days:life.days}))+'</p>';
+        if(a.profile.benefit && a.profile.benefit.goodId===lot.goodId)action(S.quote(s,{operation:'allocate',assignmentId:a.id,actor:payer,lotId:lot.id}),FB.T('Review stock commitment'));
+      });});
+      h+='</div>';
+    });
+    h+='<div class="gm-footer"><button class="btn" id="gm-cancel">'+esc(FB.T('Back'))+'</button></div>';
+    openModal(FB.T('Seasonal operation'),h,{historyView:true,historyBack:true,historyBackRender:back});
+    view.expanded.forEach(function(id){if($(id))$(id).classList.remove('hidden');});
+    $('gm-body').querySelectorAll('[aria-controls]').forEach(function(el){if(view.expanded.indexOf(el.getAttribute('aria-controls'))>=0)el.setAttribute('aria-expanded','true');});
+    $('gm-body').scrollTop=view.scroll;
+    $('gm-body').querySelectorAll('[data-season-review]').forEach(function(button){button.onclick=function(){
+      view.scroll=$('gm-body').scrollTop;
+      view.expanded=Array.from($('gm-body').querySelectorAll('.settcard-details:not(.hidden)')).map(function(el){return el.id;});
+      const entry=actions[Number(button.dataset.seasonReview)],q=entry.quote,origin=button.id;
+      function restore(){
+        UI.showBuildingSeasons(pid,idx,back,view);
+        if($(origin)){const focus=$(origin).disabled ? $(origin).parentElement.querySelector('.settcard-info') : $(origin);if(focus)focus.focus({preventScroll:true});}
+        $('gm-body').scrollTop=view.scroll;
+      }
+      openModal(FB.T('Review seasonal commitment'),'<div class="governance-card review-fact-card"><p>'+esc(S.reason(q))+'</p>'+entry.facts+'<p>'+esc(FB.T('Current rights, local season, original asset and finite inputs are checked again. Changed terms spend nothing.'))+'</p></div>'+
+        '<div class="gm-footer"><button class="btn" id="gm-cancel">'+esc(FB.T('Back'))+'</button><button class="btn primary" id="season-confirm">'+esc(FB.T('Commit'))+'</button></div>',
+        {historyView:true,historyBack:true,historyBackRender:restore});
+      $('season-confirm').disabled=!q.allowed;
+      $('season-confirm').onclick=function(){if(!S.commit(FB.state,q))UI.toast(FB.T('Terms changed. Review seasonal operation again.'));UI.refresh();modalHistoryBack(restore);};
+    };});
+  };
+
   UI.showWaterOperations = function (pid, idx, back, view, replace) {
     view = view || {scroll:0};
     const s = FB.state, O = FB.buildingOperations, actions = [];
@@ -10418,6 +10470,7 @@ window.FB = window.FB || {};
     if (FB.siteResources.snapshot(s,pid,st.site).length) h += '<button type="button" class="actionbtn" id="settlement-resources">' + esc(FB.T('Review site resources')) + '</button>';
     if ((s.buildings[pid] || []).some(function (r) { return r.s === idx && r.waterOperation; })) h += '<button type="button" class="actionbtn" id="settlement-water">' + esc(FB.T('Review water service')) + '</button>';
     if (FB.production.snapshot(s,pid,st.site).length) h += '<button type="button" class="actionbtn" id="settlement-production">' + esc(FB.T('Review production batches')) + '</button>';
+    if (FB.buildingSeasons.snapshot(s,pid,idx).length) h += '<button type="button" class="actionbtn" id="settlement-seasons">' + esc(FB.T('Review seasonal operation')) + '</button>';
     const countyRuler = holdId === 'player' ? s.chars[s.player.charId] : FB.realmRulerCharacterSnapshot(s, holdId);
     h += '<div class="gm-body-text">' + kv('Count', esc(countyRuler ? FB.fullName(countyRuler) :
       (s.realms[holdId] ? s.realms[holdId].name : FB.T('None')))) + '</div>';
@@ -10650,6 +10703,17 @@ window.FB = window.FB || {};
       guide:guideModalOption('settlement-guide', 'settlements-development',
         'Guide: settlements and development')
     });
+    if ($('settlement-seasons')) $('settlement-seasons').onclick = function () {
+      const scroll=$('gm-body').scrollTop;
+      const expanded=Array.prototype.map.call($('gm-body').querySelectorAll('.settcard-details:not(.hidden)'),function(el){return el.id;});
+      UI.showBuildingSeasons(pid,idx,function(){
+        UI.showSettlement(pid,idx,options);
+        expanded.forEach(function(id){if($(id))$(id).classList.remove('hidden');
+          $('gm-body').querySelectorAll('[aria-controls]').forEach(function(el){if(el.getAttribute('aria-controls')===id)el.setAttribute('aria-expanded','true');});});
+        if($('settlement-seasons'))$('settlement-seasons').focus({preventScroll:true});
+        $('gm-body').scrollTop=scroll;
+      });
+    };
     if ($('settlement-production')) $('settlement-production').onclick = function () {
       const scroll=$('gm-body').scrollTop;
       const expanded=Array.prototype.map.call($('gm-body').querySelectorAll('.settcard-details:not(.hidden)'),function(el){return el.id;});

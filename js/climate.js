@@ -35,14 +35,14 @@ window.FB = window.FB || {};
   /* Bookmark climate assignments precede those of the shared physical base.
      Each layer uses its county exception, then its zone; the final fallback
      is FBDATA.defaultClimateZone. No shared geography record is mutated. */
-  FB.climateZoneOf = function (provinceId) {
-    const bookmark = FB.activeBookmark;
+  FB.climateZoneOf = function (provinceId, definition) {
+    const bookmark = definition || FB.activeBookmark;
     const local = bookmark && plain(bookmark.climate) ? bookmark.climate : null;
     const overrides = local && plain(local.provinces) ? local.provinces : null;
     if (overrides && typeof provinceId === 'string' && own(overrides, provinceId) &&
         FB.climateZone(overrides[provinceId])) return overrides[provinceId];
     if (local && FB.climateZone(local.zone)) return local.zone;
-    const geography = FB.activeGeography;
+    const geography = definition ? FB.geography(FB.bookmarkGeography(definition)) : FB.activeGeography;
     const climate = geography && plain(geography.climate) ? geography.climate : null;
     const assigned = climate && plain(climate.provinces) ? climate.provinces : null;
     if (assigned && typeof provinceId === 'string' && own(assigned, provinceId) &&
@@ -52,8 +52,8 @@ window.FB = window.FB || {};
   };
 
   /* The season kind a county has in a calendar season (0 to 3). */
-  FB.seasonKindAt = function (provinceId, calendarSeason) {
-    const zone = FB.climateZone(FB.climateZoneOf(provinceId));
+  FB.seasonKindAt = function (provinceId, calendarSeason, definition) {
+    const zone = FB.climateZone(FB.climateZoneOf(provinceId, definition));
     const kind = zone && Array.isArray(zone.seasons)
       ? zone.seasons[calendarIndex(calendarSeason)] : null;
     return FB.seasonKind(kind) ? kind : null;

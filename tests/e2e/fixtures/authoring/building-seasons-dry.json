@@ -1,0 +1,477 @@
+{
+  "name": "Seasonal drying and finite water service",
+  "siteResourceProfiles": {
+    "river_flow": {
+      "name": "River intake",
+      "desc": "A bounded seven-day water allocation.",
+      "kind": "flow",
+      "unit": "water",
+      "capacity": 12,
+      "periodDays": 7
+    },
+    "river_store": {
+      "name": "Quay cistern",
+      "kind": "storage",
+      "unit": "water",
+      "capacity": 5
+    },
+    "river_launch": {
+      "name": "Launching space",
+      "kind": "access",
+      "unit": "launching",
+      "capacity": 2,
+      "periodDays": 1
+    }
+  },
+  "geographies": {
+    "season_dry_land": {
+      "bounds": {
+        "lonMin": 0,
+        "lonMax": 6,
+        "latMin": 0,
+        "latMax": 5
+      },
+      "land": [
+        [
+          0.5,
+          0.5,
+          5.5,
+          0.5,
+          5.5,
+          4.5,
+          0.5,
+          4.5
+        ]
+      ],
+      "gridWidth": 240,
+      "seas": [],
+      "rivers": [],
+      "defaultLayout": "season_dry_layout",
+      "provinces": [
+        {
+          "id": "resource_quay",
+          "x": 1.5,
+          "y": 2,
+          "terrain": "farmland"
+        },
+        {
+          "id": "resource_bank",
+          "x": 3.1,
+          "y": 2,
+          "terrain": "farmland"
+        },
+        {
+          "id": "resource_rocks",
+          "x": 4.7,
+          "y": 2,
+          "terrain": "hills"
+        }
+      ],
+      "sites": {
+        "resource_intake": {
+          "x": 1.5,
+          "y": 2
+        },
+        "resource_cistern": {
+          "x": 3.1,
+          "y": 2
+        },
+        "resource_slip": {
+          "x": 1.7,
+          "y": 2
+        }
+      }
+    }
+  },
+  "settlementLayouts": {
+    "season_dry_layout": {
+      "resource_quay": [
+        {
+          "site": "resource_intake",
+          "name": "Intake Town",
+          "kind": "town"
+        },
+        {
+          "site": "resource_slip",
+          "name": "Slip Village",
+          "kind": "village"
+        }
+      ],
+      "resource_bank": [
+        {
+          "site": "resource_cistern",
+          "name": "Bank Village",
+          "kind": "village"
+        }
+      ]
+    }
+  },
+  "startScenarios": [
+    {
+      "id": "season_dry_ruler",
+      "name": "The river holder",
+      "desc": "An existing fictional ruler.",
+      "intro": "Review actual seasonal fish, fuel and water.",
+      "tier": 5,
+      "profession": "noble",
+      "gold": 12,
+      "prestige": 0,
+      "piety": 0,
+      "bookmarkIds": [
+        "season_dry"
+      ],
+      "eras": [
+        "early_medieval"
+      ],
+      "alwaysUnlocked": true,
+      "rulerRealmId": "season_dry_court",
+      "governmentForm": "regnum",
+      "fixedProvinceId": "resource_quay",
+      "characterName": "Ivo Reed",
+      "sex": "m",
+      "startCulture": "frankish",
+      "startReligion": "catholic",
+      "onboarding": "ruler",
+      "familyPresets": {
+        "standard": {
+          "name": "Existing court",
+          "diff": "Existing court household"
+        }
+      }
+    },
+    {
+      "id": "season_dry_household",
+      "name": "River household",
+      "desc": "A fictional household.",
+      "intro": "Your household lives beside the river.",
+      "tier": 1,
+      "profession": "farmer",
+      "gold": 12,
+      "prestige": 0,
+      "piety": 0,
+      "bookmarkIds": [
+        "season_dry"
+      ],
+      "eras": [
+        "early_medieval"
+      ],
+      "alwaysUnlocked": true,
+      "startAge": 24,
+      "familyPresets": {
+        "standard": {
+          "name": "Established household",
+          "diff": "age 24"
+        }
+      }
+    }
+  ],
+  "bookmarks": {
+    "season_dry": {
+      "id": "season_dry",
+      "name": "Drying coast",
+      "desc": "A fictional river resource world.",
+      "date": {
+        "year": 900,
+        "season": 1,
+        "day": 1
+      },
+      "era": "early_medieval",
+      "geography": "season_dry_land",
+      "religiousHeads": {},
+      "localInstitutions": {},
+      "stories": [],
+      "starts": [
+        "season_dry_ruler",
+        "season_dry_household"
+      ],
+      "scripted": [],
+      "straits": [],
+      "crossingClasses": {},
+      "provinces": [
+        {
+          "id": "resource_quay",
+          "name": "Quay",
+          "realm": "season_dry_court",
+          "culture": "frankish",
+          "religion": "catholic",
+          "dev": 5
+        },
+        {
+          "id": "resource_bank",
+          "name": "Bank",
+          "realm": "season_dry_court",
+          "culture": "frankish",
+          "religion": "catholic",
+          "dev": 3
+        },
+        {
+          "id": "resource_rocks",
+          "name": "Rocky scenery",
+          "wasteland": true
+        }
+      ],
+      "realms": [
+        {
+          "id": "season_dry_court",
+          "name": "River court",
+          "capital": "resource_quay",
+          "color": "#458c96",
+          "aggression": 0,
+          "rank": 2,
+          "government": "regnum",
+          "ruler": {
+            "name": "Ivo Reed",
+            "culture": "frankish",
+            "born": 868,
+            "mar": 6,
+            "trait": "patient"
+          }
+        }
+      ],
+      "duchies": {},
+      "kingdoms": {},
+      "empires": {},
+      "revision": "supplied",
+      "revisions": {
+        "baseline": {},
+        "supplied": {
+          "siteResourceAssignments": [
+            {
+              "id": "river_intake",
+              "profileId": "river_flow",
+              "countyId": "resource_quay",
+              "siteId": "resource_intake",
+              "suitability": {
+                "source": true,
+                "gradient": true
+              },
+              "rights": {
+                "kind": "holder"
+              }
+            },
+            {
+              "id": "river_cistern",
+              "profileId": "river_store",
+              "countyId": "resource_bank",
+              "siteId": "resource_cistern",
+              "connectedSourceId": "river_intake",
+              "suitability": {
+                "catchment": false
+              },
+              "rights": {
+                "kind": "holder"
+              }
+            },
+            {
+              "id": "river_slip",
+              "profileId": "river_launch",
+              "countyId": "resource_quay",
+              "siteId": "resource_slip",
+              "suitability": {
+                "launching": true
+              },
+              "rights": {
+                "kind": "holder"
+              }
+            }
+          ],
+          "openingInfrastructure": {
+            "version": 1,
+            "placements": [
+              {
+                "countyId": "resource_quay",
+                "siteId": "resource_intake",
+                "buildingId": "fiber_works",
+                "condition": "standing"
+              },
+              {
+                "countyId": "resource_bank",
+                "siteId": "resource_cistern",
+                "buildingId": "coast_service_works",
+                "condition": "standing"
+              }
+            ]
+          },
+          "productionSites": [
+            {
+              "id": "drying_plant",
+              "countyId": "resource_quay",
+              "siteId": "resource_intake",
+              "buildingId": "fiber_works",
+              "recipeIds": [
+                "dry_fish"
+              ],
+              "sourceId": "river_intake",
+              "openingLots": [
+                {
+                  "goodId": "fresh_fish",
+                  "quantity": 6
+                },
+                {
+                  "goodId": "dry_fuel",
+                  "quantity": 3
+                }
+              ]
+            }
+          ],
+          "buildingSeasonAssignments": [
+            {
+              "id": "drying_term",
+              "profileId": "dry_window",
+              "operationId": null,
+              "productionSiteId": "drying_plant",
+              "resources": []
+            },
+            {
+              "id": "coast_water_term",
+              "profileId": "dry_water_window",
+              "operationId": "coast_water",
+              "productionSiteId": null,
+              "resources": []
+            }
+          ],
+          "buildingOperationAssignments": [
+            {
+              "id": "coast_water",
+              "profileId": "coast_service",
+              "buildingId": "coast_service_works",
+              "countyId": "resource_bank",
+              "siteId": "resource_cistern",
+              "sourceId": "river_intake",
+              "stores": [
+                "river_cistern"
+              ],
+              "demandId": "coast_demand"
+            }
+          ]
+        },
+        "dry": {
+          "siteResourceAssignments": [],
+          "productionSites": [],
+          "openingInfrastructure": {
+            "version": 1,
+            "placements": []
+          },
+          "buildingSeasonAssignments": [],
+          "buildingOperationAssignments": []
+        }
+      },
+      "climate": {
+        "zone": "mediterranean",
+        "provinces": {}
+      }
+    }
+  },
+  "buildings": {
+    "fiber_works": {
+      "name": "Drying works",
+      "desc": "Paid finite batches and a committed short protection window.",
+      "role": "industry",
+      "cost": 30,
+      "upkeep": 1,
+      "maxCounty": 1,
+      "populationFamineProtection": 0.03
+    },
+    "coast_service_works": {
+      "name": "Coast water works",
+      "desc": "Finite paid seasonal service.",
+      "role": "civic",
+      "cost": 6,
+      "upkeep": 2,
+      "maxCounty": 1,
+      "populationCapacity": 0.03,
+      "operationProfile": "coast_service",
+      "settlementDraw": false
+    }
+  },
+  "productionGoods": {
+    "fresh_fish": {
+      "name": "Fresh fish",
+      "unit": "fish_units",
+      "mass": 1
+    },
+    "dry_fuel": {
+      "name": "Drying fuel",
+      "unit": "fuel_units",
+      "mass": 1
+    },
+    "dry_provisions": {
+      "name": "Dried provisions",
+      "unit": "provision_units",
+      "mass": 1
+    }
+  },
+  "productionRecipes": {
+    "dry_fish": {
+      "name": "Dry actual fish",
+      "inputs": [
+        {
+          "goodId": "fresh_fish",
+          "quantity": 2
+        },
+        {
+          "goodId": "dry_fuel",
+          "quantity": 1
+        }
+      ],
+      "outputs": [
+        {
+          "goodId": "dry_provisions",
+          "quantity": 1
+        }
+      ],
+      "water": 1,
+      "workDays": 1,
+      "workPrice": 3,
+      "requiresTech": [],
+      "impactReviewId": "conserved_production_batches"
+    }
+  },
+  "buildingSeasonProfiles": {
+    "dry_window": {
+      "seasonKinds": [
+        "dry_summer",
+        "cool_season"
+      ],
+      "periodDays": 7,
+      "maxDays": 7,
+      "care": false,
+      "stockLives": [
+        {
+          "goodId": "fresh_fish",
+          "days": 4
+        },
+        {
+          "goodId": "dry_provisions",
+          "days": 8
+        }
+      ],
+      "benefit": {
+        "goodId": "dry_provisions",
+        "quantity": 1,
+        "effect": "populationFamineProtection",
+        "days": 3
+      }
+    },
+    "dry_water_window": {
+      "seasonKinds": [
+        "dry_summer",
+        "cool_season"
+      ],
+      "periodDays": 7,
+      "maxDays": 7,
+      "care": false,
+      "stockLives": [],
+      "benefit": null
+    }
+  },
+  "buildingOperationProfiles": {
+    "coast_service": {
+      "mode": "use",
+      "amount": 2,
+      "periodDays": 7,
+      "workCost": 2,
+      "effect": "populationCapacity"
+    }
+  }
+}

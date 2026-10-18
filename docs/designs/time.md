@@ -800,3 +800,7 @@ The traitMechanics catalogue supplies the supported literacy, prayer, social, in
 Simple alms, oath, extra-tax and synod transactions now read deedRoutines, using canonical event effects, current cost checks and shared previews. New declarative deeds may use the same bounded transaction shape. Eligibility, cooldowns and elapsed-day accounting remain owned by the action engine. Bespoke institution, property, travel and office transactions retain their dedicated handlers.
 
 Stateful toil, trading, command and plotting retain their canonical owners. Bounded actionPolicies supplies their injury, return, training, standing and plot-pressure tuning; focus details use those same values.
+
+Seasonal physical boundaries
+
+After the canonical date advances, optional buildingSeasons first records once-only term interruptions and stock expiry against existing resource/production owners, before other daily consumers. A separate bounded due-period/local-season AI dispatch reuses the same useful funded water-service transactions; it performs no production shift or population update. Player and observer dates share this checkpoint. Pure projections already hide expired stock and benefits, and restore never runs either checkpoint. See docs/designs/building-seasons.md.
