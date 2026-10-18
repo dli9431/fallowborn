@@ -411,6 +411,7 @@
       career && career.specialization;
     const shares = FB.enterpriseOutputShares(enterprise.type, specId);
     for (const good of Object.keys(shares)) out[good] = amount * shares[good];
+    if (FB.productionEconomy) FB.productionEconomy.subtractOutput(state,enterprise,out);
     return out;
   };
 
@@ -855,6 +856,11 @@
     return Math.max(0, cap);
   }
 
+  FB.productionMarketLink = function(state,from,to,goodId) {
+    const edge=stableEdgeList().find(function(e){return e.from===from && e.to===to || e.from===to && e.to===from;});
+    if (!edge || FB.isRealmAtWar(state,state.owner[from]) || FB.isRealmAtWar(state,state.owner[to])) return false;
+    return edgeCapacity(state,edge,goodId,null)>0;
+  };
   function capacityMatrix(state, ids, edges, context) {
     const capacities = [];
     for (let g = 0; g < ids.length; g++) {
@@ -915,6 +921,7 @@
   FB.marketSeason = function (state) {
     const market = FB.ensureMarket(state);
     if (!market || market.lastTurn === state.turn) return false;
+    if (FB.productionEconomy) FB.productionEconomy.harvest(state);
     // Requisition records actual daily damage; paid foreign visitors cause
     // scarcity without an additional blanket war-disruption penalty.
     if (!FB.provisionArmy) syncWarShocks(state);

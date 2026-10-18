@@ -5391,7 +5391,7 @@ window.FB = window.FB || {};
       if (amount && def) {
         lines.push({
           label:def.icon + ' ' + FB.dataText(state, state.player.charId, 'enterprise',
-            e.type, def, 'name', {}), amount:amount
+            e.type, def, 'name', {}), amount:Math.max(0,amount - (FB.productionEconomy ? FB.productionEconomy.incomeDiverted(state,e) : 0))
         });
       }
     }
@@ -6245,7 +6245,7 @@ window.FB = window.FB || {};
           rates(row, goods, 100, path); continue;
         }
         if (!own(FBDATA.enterprises, id) || !object(row)) { errors.push(path + ' needs an enterprise and a record.'); continue; }
-        for (const key of Object.keys(row)) if (['output','outputBySpecialization','distribution','monopoly','tradeFinance'].indexOf(key) < 0) errors.push(path + '.' + key + ' is unsupported.');
+        for (const key of Object.keys(row)) if (['output','outputBySpecialization','distribution','monopoly','tradeFinance','typedProduction'].indexOf(key) < 0) errors.push(path + '.' + key + ' is unsupported.');
         if (row.output !== undefined) rates(row.output, goods, 1, path + '.output', true);
         if (row.distribution !== undefined) rates(row.distribution, routes, 1, path + '.distribution');
         if (row.tradeFinance !== undefined && typeof row.tradeFinance !== 'boolean') errors.push(path + '.tradeFinance must be boolean.');

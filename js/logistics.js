@@ -321,7 +321,8 @@
       const output = number(allOutput.provisions);
       if (!output) continue;
       const pid = enterprise.provinceId, current = data.counties[pid] || emptyCounty();
-      const income = number(FB.enterprisePhysicalYield(state, enterprise));
+      const income = Math.max(0, number(FB.enterprisePhysicalYield(state, enterprise)) -
+        (FB.productionEconomy ? FB.productionEconomy.incomeDiverted(state, enterprise) : 0));
       let totalOutput = 0;
       for (const good in allOutput) totalOutput += number(allOutput[good]);
       rows.push({ uid:enterprise.uid, pid:pid, output:output,

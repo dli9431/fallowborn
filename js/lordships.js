@@ -391,6 +391,11 @@ window.FB = window.FB || {};
     const reserve = (fiscal.upkeep + fiscal.duesOut) * (FBDATA.balance.realmReserveSeasons || 2);
     return Math.max(0, FB.baronyAccount(state, cid).gold - reserve);
   };
+  FB.creditBaronyAccount = function (state, cid, amount) {
+    const root=table(state), account=root && root.accounts && root.accounts[cid];
+    if (!account || !Number.isFinite(amount) || amount<0) return false;
+    account.gold+=amount; return true;
+  };
   FB.spendBaronyConstruction = function (state, cid, amount, upkeep) {
     const root = table(state), account = root && root.accounts && root.accounts[cid];
     if (!account || !isFinite(amount) || amount < 0 || amount + (upkeep || 0) *

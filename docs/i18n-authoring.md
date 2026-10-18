@@ -335,3 +335,7 @@ js/household_party_camp.js uses complete literal FB.T messages for family-place 
 Construction profile display owners
 
 Literal FBDATA.buildingProfiles in data/building_profiles.js and literal FBDATA.buildingProfiles_<suffix> in data/building_profiles_*.js extract name and desc as buildingProfile.<id>.name.default and buildingProfile.<id>.desc.default. Extraction parses static tables without executing composition code. Runtime selectors, reviews and reverse technology consumers use the same buildingProfile owner through dataText; imported JSON uses normal English fallback. Saved markers contain only stable ids, versions and fingerprints. tools/test_i18n_building_profiles.py covers an independent root and supplement. Generated catalogues remain unchanged until separately requested integration.
+
+Finite supplier presentation
+
+Production exchange/producer profiles and assignments contain only structural fields and no new display namespace. Goods retain their productionGood static owners from data/production.js and ordinary imported English fallback. Settlement exchange cards and confirmation reasons use literal FB.T phrases for unit quantity, current price, finite demand/budget and actual account type; kv labels retain their ordinary localized route. Saved economic receipts contain ids and numeric quantities, never rendered status or prose. Feature work does not regenerate any catalogue.

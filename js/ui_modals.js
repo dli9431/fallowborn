@@ -10176,11 +10176,16 @@ window.FB = window.FB || {};
     function name(ns,key,table) { return dt(s,ns,key,table[key],'name'); }
     function goods(list) { return list.map(function (x) { return FB.T('{amount} {good} ({unit})',{
       amount:x.quantity,good:name('productionGood',x.goodId,FBDATA.productionGoods),unit:FBDATA.productionGoods[x.goodId].unit}); }).join(', '); }
-    function action(label,request) {
-      const q=P.quote(s,request),n=actions.length;actions.push(q);
-      return reviewActionCardHtml({id:'production-action-'+n,label:label,data:{productionReview:n},disabled:!q.allowed,warn:!q.allowed,note:P.reason(q)});
+    function accountName(who) {
+      if(!who)return FB.T('Unavailable');
+      const c=who.kind==='character' && s.chars[who.id],r=who.kind==='realm' && s.realms[who.id];
+      return c ? c.name : r ? r.name : FB.T('Unavailable');
     }
-    let h='<p class="hint">'+esc(FB.T('Batches reserve actual owned materials and pay the full processing cost upfront. Work replaces the ordinary daily focus. Cancellation releases materials but does not refund processing costs. No sale or passive bonus is awarded.'))+'</p>';
+    function action(label,request) {
+      const q=request.routeId ? FB.productionEconomy.quote(s,request) : P.quote(s,request),n=actions.length;actions.push(q);
+      return reviewActionCardHtml({id:'production-action-'+n,label:label,data:{productionReview:n},disabled:!q.allowed,warn:!q.allowed,note:q.exchange?FB.productionEconomy.reason(q):P.reason(q)});
+    }
+    let h='<p class="hint">'+esc(FB.T('Batches reserve actual owned materials and pay the full processing cost upfront. Work replaces the ordinary daily focus. Cancellation releases materials but does not refund processing costs. Completed lots can be exchanged only with a declared funded counterparty.'))+'</p>';
     rows.forEach(function (row) {
       h+='<div class="governance-card review-fact-card"><div class="panelh">'+esc(dt(s,'building',row.site.buildingId,FBDATA.buildings[row.site.buildingId],'name'))+'</div>';
       row.lots.forEach(function (lot) { h+=kv(name('productionGood',lot.goodId,FBDATA.productionGoods),esc(FB.T('{available} available / {remaining} remaining ({unit})',{
@@ -10209,6 +10214,18 @@ window.FB = window.FB || {};
         h+='</div>';
       });h+='</div>';
     });
+    FB.productionEconomy.snapshot(s,pid,site.site).forEach(function(route) {
+      const profile=FBDATA.productionExchangeProfiles[route.profileId];
+      const operation=profile.mode==='owned'?'transfer':(rows.some(function(row){return row.site.id===route.fromSiteId;})?'sell':'buy');
+      const q=FB.productionEconomy.quote(s,{operation:operation,routeId:route.id,actor:actor,quantity:1});
+      h+='<div class="governance-card review-fact-card"><div class="panelh">'+esc(name('productionGood',profile.goodId,FBDATA.productionGoods))+'</div>'+
+        kv('Quantity',esc(FB.T('1 ({unit})',{unit:FBDATA.productionGoods[profile.goodId].unit})))+
+        kv('Supplier',esc(accountName(q.seller)))+kv('Buyer',esc(accountName(q.buyer)))+
+        kv('Current price',esc(FB.money(q.cost || 0)))+
+        kv('Remaining demand',String(q.remainingDemand===undefined?profile.quantityLimit:q.remainingDemand))+
+        kv('Remaining budget',esc(FB.money(q.remainingBudget===undefined?profile.budget:q.remainingBudget)))+
+        reviewActionsHtml(action(operation==='transfer'?FB.T('Move one owned unit'):operation==='sell'?FB.T('Sell one unit'):FB.T('Buy one unit'),q.request))+'</div>';
+    });
     h+='<div class="gm-footer"><button class="btn" id="gm-cancel">'+esc(FB.T('Back'))+'</button></div>';
     function list(replace) { UI.showProduction(pid,idx,back,view,replace); }
     function remember() { view.scroll=$('gm-body').scrollTop; }
@@ -10221,10 +10238,17 @@ window.FB = window.FB || {};
       button.onclick=function () {
         remember();const q=actions[Number(button.dataset.productionReview)],origin=button.id;
         function restore() { list();if($(origin))$(origin).focus({preventScroll:true});$('gm-body').scrollTop=view.scroll; }
-        const reserve=q.request.operation==='reserve';
+        const reserve=q.request.operation==='reserve',exchange=q.exchange;
         let info='<div class="governance-card review-fact-card">'+kv('Processing cost',esc(reserve?FB.T('{gold} gold, non-refundable',{gold:q.cost}):FB.T('Already paid')))+
           kv('Payer',esc(q.payer && q.payer.kind==='realm'?FB.T('Public treasury'):FB.T('Original private account')))+
-          kv('Action day',esc(q.request.operation==='work'?FB.T('One day; replaces Daily Focus'):FB.T('None')))+'<p>'+esc(P.reason(q))+'</p></div>';
+          kv('Action day',esc(q.request.operation==='work'?FB.T('One day; replaces Daily Focus'):FB.T('None')))+'<p>'+esc(exchange?FB.productionEconomy.reason(q):P.reason(q))+'</p></div>';
+        if(exchange)info='<div class="governance-card review-fact-card">'+kv('Current price',esc(FB.money(q.cost || 0)))+
+          kv('Supplier',esc(accountName(q.seller)))+kv('Buyer',esc(accountName(q.buyer)))+
+          kv('Material',esc(name('productionGood',q.goodId,FBDATA.productionGoods)))+
+          kv('Quantity',esc(FB.T('{amount} ({unit})',{amount:q.request.quantity,unit:FBDATA.productionGoods[q.goodId].unit})))+
+          kv('Supplier account',esc(q.recipient && q.recipient.kind==='realm'?FB.T('Supplier public account'):FB.T('Supplier private account')))+
+          kv('Buyer account',esc(q.payer && q.payer.kind==='realm'?FB.T('Buyer public account'):FB.T('Buyer private account')))+
+          '<p>'+esc(FB.productionEconomy.reason(q))+'</p></div>';
         if (reserve) {
           const recipe=FBDATA.productionRecipes[q.request.recipeId];
           info+='<p>'+esc(FB.T('Reserve {inputs}; after {days} paid workdays, produce {outputs}.',{inputs:goods(recipe.inputs),days:recipe.workDays,outputs:goods(recipe.outputs)}))+'</p>';
@@ -10233,7 +10257,7 @@ window.FB = window.FB || {};
         openModal(FB.T('Review production batch'),info,{historyView:true,historyBack:true,historyBackRender:restore});
         $('production-confirm').disabled=!q.allowed;
         $('production-confirm').onclick=function () {
-          if (!P.perform(FB.state,q)) UI.toast(FB.T('Terms changed. Review the current batch.'));
+          if (!(exchange?FB.productionEconomy.commit(FB.state,q):P.perform(FB.state,q))) UI.toast(FB.T('Terms changed. Review the current batch.'));
           UI.refresh();modalHistoryBack(restore);
         };
       };
