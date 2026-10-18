@@ -110,6 +110,61 @@
   };
   function civilians(r) { return r.members.reduce(function (n, m) { return n + sum(m.civilians); }, 0); }
   function reserve(r) { return r.members.reduce(function (n, m) { return n + sum(m.reserve); }, 0); }
+  function hostRation(s,army,p) {
+    return army ? army.men*p.foodPerPerson*Math.max(0.1,
+      FB.armyProvisionUse(s,army)/Math.max(0.1,FBDATA.balance.supplyDrainBase || 1.2)) : 0;
+  }
+  function hostCapacity(army,p) {
+    return army.men*p.foodPerPerson*(p.supplyPolicy ? p.supplyPolicy.carryDays : 30);
+  }
+  function hostLoadTarget(s,army,p) {
+    var capacity=hostCapacity(army,p);
+    return p.supplyPolicy ? Math.min(capacity,hostRation(s,army,p)*p.supplyPolicy.targetDays) : capacity;
+  }
+  function recruitmentPools(s,rid) {
+    var r=M.row(s,rid), living=M.members(s,rid);
+    return r.members.map(function (a) {
+      var active=living.some(function (b) {return b.id===a.id && b.allegiance;}), field=deployed(s,rid,a.id);
+      return {memberId:a.id,count:active ? Math.min(sum(a.reserve)+sum(a.civilians),
+        Math.max(0,Math.floor((sum(a.civilians)+sum(a.reserve)+field)*a.pledge)-field)) : 0};
+    });
+  }
+  /* A policy projects existing inventories and transactions. It has no purse,
+     food ledger, pasture grant or restore-time initializer of its own. */
+  M.supplySnapshot = function (s,rid) {
+    var r=M.row(s,rid), p=M.profile(s,rid), moving=M.migration(s,rid), policy=p && p.supplyPolicy;
+    if (!r || !moving || !policy) return null;
+    var army=M.host(s,rid), local=!!army && army.at===moving.at;
+    var campDaily=(civilians(r)+reserve(r))*p.foodPerPerson, fieldDaily=hostRation(s,army,p);
+    var fieldCapacity=army ? hostCapacity(army,p) : 0;
+    var fieldTarget=army ? hostLoadTarget(s,army,p) : 0;
+    var target=campDaily*policy.targetDays+(local ? Math.max(0,fieldTarget-(army.mobileFood || 0)) : 0);
+    var stock=FB.marketProvisionSnapshot(s,moving.at), unitPrice=stock && s.owner[moving.at]!==rid ? stock.price*0.1125 : 0;
+    var spendable=Math.max(0,FB.treasuryAvailable(s,rid)-policy.cashReserve);
+    var buy=Math.max(0,Math.min(Math.ceil(Math.max(0,target-r.food)),Math.floor(stock && stock.stock || 0),
+      unitPrice>0 ? Math.floor(spendable/unitPrice) : Number.MAX_SAFE_INTEGER));
+    if (!safe(s,rid,moving.at) || !stock) buy=0;
+    var result={campDaily:campDaily,fieldDaily:fieldDaily,fieldLocal:local,campTarget:target,fieldTarget:fieldTarget,
+      fieldCapacity:fieldCapacity,targetDays:policy.targetDays,carryDays:policy.carryDays,cashReserve:policy.cashReserve,
+      purchase:{countyId:moving.at,count:buy,direction:'buy',provisioning:true},replacement:null};
+    var replacement=policy.replacement;
+    if (replacement && (!army || local) && !committed(s,rid) && r.food+(local ? army.mobileFood || 0 : 0)>=campDaily+fieldDaily) {
+      var count=Math.min(Math.max(0,replacement.targetMen-(army ? army.men : 0)),replacement.maxPerReview,
+        recruitmentPools(s,rid).reduce(function (n,a) {return n+a.count;},0),
+        p.recruitCost>0 ? Math.floor(spendable/p.recruitCost) : Number.MAX_SAFE_INTEGER);
+      if (count>0) replacement.unitIds.some(function (unitId) {
+        var terms={count:count,unitId:unitId};
+        if (!M.quote(s,{realmId:rid,action:'recruit',terms:terms,actor:{kind:'realm',id:rid}}).allowed) return false;
+        terms.provisioning=true;result.replacement=terms;return true;
+      });
+    }
+    return result;
+  };
+  M.supplyReview = function (s,rid,action,actor) {
+    if (action!=='trade' && action!=='recruit') return null;
+    var snapshot=M.supplySnapshot(s,rid), terms=snapshot && (action==='trade' ? snapshot.purchase : snapshot.replacement);
+    return M.review(s,{realmId:rid,action:action,terms:terms || {provisioning:true},actor:actor || {kind:'realm',id:rid}});
+  };
   function deployed(s, rid, mid) {
     return (s.armies || []).filter(function (a) { return a.realm === rid && a.mobileFollowing; })
       .reduce(function (n, a) { return n + (a.mobileRoster || []).filter(function (c) { return c.memberId === mid; }).reduce(function (v, c) { return v + c.count; }, 0); }, 0);
@@ -140,9 +195,10 @@
     var r = M.row(s, rid), m = M.migration(s, rid), p = M.profile(s, rid);
     if (!r || !m || !p) return null;
     var market = FB.marketProvisionSnapshot(s, m.at), access = activeAccess(s, rid, m.at), host = M.host(s, rid);
+    var supply=p.supplyPolicy && M.supplySnapshot(s,rid);
     return { realmId:rid, active:!!(s.realms[rid] && s.realms[rid].alive && M.active(s, rid) && r.status === 'active'),
       provinceId:m.at, moving:!!(host && host.mobileCourt && (host.moveLeft > 0 || (host.path || []).length)), food:r.food,
-      scarce:r.food < M.total(s, rid) * p.foodPerPerson * 30,
+      scarce:r.food < (supply ? supply.campTarget : M.total(s, rid) * p.foodPerPerson * 30),
       treasury:FB.treasuryAvailable(s, rid), marketFood:market ? market.stock : 0,
       access:access ? copy(access) : null };
   };
@@ -153,11 +209,12 @@
   };
   function validTerms(action,t) {
     var fields = {pledge:['memberId','allegiance','pledge'],support:['candidateId'],select:['candidateId'],propose:['operation','proposal'],
-      assent:['assent'],recruit:['count','unitId'],demuster:[],move:['countyId'],offer:['kind','partnerId','countyIds','capacity','allowRecruit','price','duration','levy'],
+      assent:['assent'],recruit:['count','unitId','provisioning'],demuster:[],move:['countyId'],offer:['kind','partnerId','countyIds','capacity','allowRecruit','price','duration','levy'],
       accept:['agreementId'],join:['countyId','count'],replace_member:['memberId','candidateId'],leave:['memberId','countyId'],settle:['countyId','count','final'],
-      work:[],trade:['countyId','count','direction'],war:['causes'],peace:['warId'],service:['agreementId','warId'],march:['countyId'],
+      work:[],trade:['countyId','count','direction','provisioning'],war:['causes'],peace:['warId'],service:['agreementId','warId'],march:['countyId'],
       land:['countyId'],contract:['contractId','signature']};
     if (!fields[action] || !keys(t,fields[action]) || JSON.stringify(t).length>4096) return false;
+    if (t.provisioning!==undefined && t.provisioning!==true) return false;
     if (action==='contract' && (typeof t.contractId!=='string' || typeof t.signature!=='string')) return false;
     if (['count','capacity','price','duration','levy'].some(function (k) {return t[k]!==undefined && !whole(t[k]);})) return false;
     return true;
@@ -246,7 +303,7 @@
       FB.treasuryAvailable(s, rid), t.partnerId && FB.treasuryAvailable(s, t.partnerId),
       s.authority.contracts, s.authority.governments, s.player && [s.player.charId, s.player.provinceId, s.player.gold, s.player.travel || null],
       s.market && s.market.counties && s.market.counties[t.countyId],
-      r.command ? M.commandSnapshot(s,rid) : null]);
+      r.command ? M.commandSnapshot(s,rid) : null, t.provisioning ? M.profile(s,rid).supplyPolicy : null]);
   }
   /* All requests, including AI requests, carry an actual acting principal.
      Refused and stale reviews have no side effects, UID use or RNG draws. */
@@ -256,6 +313,12 @@
     if (!r || !p || !M.active(s, rid) || r.status !== 'active') return q;
     if (!validTerms(action,t)) {q.reason='operation';return q;}
     if (r.command && !M.commandPermits(s,rid,action)) {q.reason='command';return q;}
+    if (t.provisioning) {
+      var supply=M.supplySnapshot(s,rid), expected=supply && (action==='trade' ? supply.purchase : supply.replacement);
+      if (!expected || !expected.count || Object.keys(expected).some(function (k) {return t[k]!==expected[k];})) {
+        q.reason='provisioning';return q;
+      }
+    }
     var ar = actorRealm(s, request.actor), am = actorMember(s, rid, request.actor), leader = ar === rid && !!M.leader(s, rid);
     q.signature = stamp(s, rid, t, request.actor);
     function no(reason) { q.reason = reason; return q; }
@@ -278,11 +341,9 @@
       if (!leader || !moving || army && (army.at!==moving.at || army.moveLeft>0) || !whole(t.count) || !t.count || !FBDATA.unitClasses[t.unitId]) return no('commitment');
       if (FBDATA.unitClasses[t.unitId].hired || !FB.unitClassUnlocked(s, t.unitId, rid)) return no('technology');
       q.plan = []; var need = t.count;
-      r.members.forEach(function (a) {
-        var active = M.members(s, rid).some(function (b) { return b.id === a.id && b.allegiance; });
-        var n = active ? Math.min(need, Math.max(0, Math.floor((sum(a.civilians) + sum(a.reserve) + deployed(s, rid, a.id)) * a.pledge) - deployed(s, rid, a.id))) : 0;
-        n = Math.min(n, sum(a.reserve) + sum(a.civilians));
-        if (n) q.plan.push({ memberId:a.id, count:n }); need -= n;
+      recruitmentPools(s,rid).forEach(function (a) {
+        var n=Math.min(need,a.count);
+        if (n) q.plan.push({memberId:a.memberId,count:n});need-=n;
       });
       if (need) return no('following');
       var roster = copy(army && army.mobileRoster || []);
@@ -494,7 +555,7 @@
         });
       });
       army.men += t.count; army.size = Math.max(army.size, army.men); army.units[t.unitId] = (army.units[t.unitId] || 0) + t.count;
-      army.supply=FB.clamp((army.mobileFood || 0)/Math.max(0.01,army.men*M.profile(s,rid).foodPerPerson*30)*100,0,100);
+      army.supply=FB.clamp((army.mobileFood || 0)/Math.max(0.01,hostCapacity(army,M.profile(s,rid)))*100,0,100);
       delete r.defeatKey;
     } else if (q.action === 'demuster') { returnHost(s, army); army.mobileFollowing = false; FB.disbandArmy(s, army); }
     else if (q.action === 'move' || q.action === 'march') {
@@ -703,8 +764,8 @@
       if (!migration) throw new Error('Invalid mobile migration');
       r.migrationId = migration.id;
       var army = M.host(s, d.id); army.mobileFollowing = true; army.mobileCourt = false; army.mobileRoster = [];
-      var capacity=army.men*p.foodPerPerson*30;
-      army.mobileFood=Math.min(r.food,capacity);r.food-=army.mobileFood;
+      var capacity=hostCapacity(army,p);
+      army.mobileFood=Math.min(r.food,hostLoadTarget(s,army,p));r.food-=army.mobileFood;
       army.supply=capacity ? army.mobileFood/capacity*100 : 0;
       var muster=plan ? plan.muster : [{memberId:r.members[0].id,count:d.mobile.fighters}];
       muster.forEach(function (part) {
@@ -790,16 +851,17 @@
       if(ruler && ruler.id!==s.player.charId && government && government.use.ai.canNegotiate(s,offered.partnerId,{}))
         enact(s,rid,'accept',{agreementId:offered.id},{kind:'realm',id:offered.partnerId});
     }
-    if (r.food < M.total(s, rid) * p.foodPerPerson * 90)
+    if (!p.supplyPolicy && r.food < M.total(s, rid) * p.foodPerPerson * 90)
       enact(s, rid, 'trade', {countyId:at,count:100,direction:'buy'});
-    else if(r.food>M.total(s,rid)*p.foodPerPerson*180)
+    else if(!p.supplyPolicy && r.food>M.total(s,rid)*p.foodPerPerson*180)
       enact(s,rid,'trade',{countyId:at,count:100,direction:'sell'});
-    if (!M.host(s, rid) && !committed(s, rid)) enact(s, rid, 'recruit', {count:60,unitId:FB.unitRoleClass('levy_infantry')});
-    var own = FB.realmHeldCounties(s, rid);
+    if (!p.supplyPolicy && !M.host(s, rid) && !committed(s, rid)) enact(s, rid, 'recruit', {count:60,unitId:FB.unitRoleClass('levy_infantry')});
+    var own = FB.realmHeldCounties(s, rid), supply=p.supplyPolicy && M.supplySnapshot(s,rid);
+    var shortage=r.food<(supply ? Math.max(0,supply.campTarget-supply.campDaily) : M.total(s,rid)*p.foodPerPerson*30);
     if (own.indexOf(at) >= 0 && !committed(s, rid)) {
       var settlement = {countyId:at,count:M.total(s,rid),final:true};
       if (approvalAI(s,rid,'settle',settlement)) enact(s,rid,'settle',settlement);
-    } else if (M.host(s, rid) && r.food < M.total(s,rid) * p.foodPerPerson * 30) {
+    } else if (M.host(s, rid) && shortage) {
       var destination = r.agreements.filter(function (a) { return a.kind === 'access' && a.status === 'active' && a.endTurn > s.turn; })
         .reduce(function (all,a) { return all.concat(a.countyIds); }, []).filter(function (pid) { return pid !== at; }).sort()[0];
       if (destination) enact(s,rid,'move',{countyId:destination});
@@ -855,6 +917,11 @@
         s.mobilePastures.used[m.at]=used+production;
         r.food += production * p.pasturePerPerson;
       }
+      var leader=M.leader(s,rid);
+      if (p.supplyPolicy && leader && leader.id!==s.player.charId) {
+        M.commit(s,M.supplyReview(s,rid,'trade'));
+        M.commit(s,M.supplyReview(s,rid,'recruit'));
+      }
       var need = (civilians(r) + reserve(r)) * p.foodPerPerson;
       if (r.food < need) {
         var left = Math.min(civilians(r)+reserve(r), Math.ceil((need - r.food) / p.foodPerPerson * p.starvationShare)), lost = left;
@@ -889,15 +956,16 @@
     if (!p) return provision(s,army);
     if(army.mobileProvisionTurn===s.turn) return 0;
     army.mobileProvisionTurn=s.turn;
-    var capacity=army.men*p.foodPerPerson*30, court=M.migration(s,army.realm);
+    var capacity=hostLoadTarget(s,army,p), court=M.migration(s,army.realm);
     if(court && court.at===army.at) {
       var refill=Math.min(r.food,Math.max(0,capacity-(army.mobileFood || 0)));
       r.food-=refill;army.mobileFood=(army.mobileFood || 0)+refill;
     }
-    var use=army.men*p.foodPerPerson*Math.max(0.1,FB.armyProvisionUse(s,army)/Math.max(0.1,FBDATA.balance.supplyDrainBase || 1.2));
+    var use=hostRation(s,army,p);
     var paid=Math.min(army.mobileFood || 0,use);
     army.mobileFood=Math.max(0,(army.mobileFood || 0)-paid);
-    army.supply=capacity ? FB.clamp(army.mobileFood/capacity*100,0,100) : 0;
+    var carrying=hostCapacity(army,p);
+    army.supply=carrying ? FB.clamp(army.mobileFood/carrying*100,0,100) : 0;
     return paid;
   };
   var order = FB.orderArmy;
@@ -1043,12 +1111,12 @@
   function plain(v) {return !!v && typeof v === 'object' && !Array.isArray(v);}
   function keys(v,allowed) {return plain(v) && Object.keys(v).every(function (k) {return allowed.indexOf(k) >= 0;});}
   function boundedNumber(n,max) {return Number.isFinite(n) && n >= 0 && n <= max;}
-  M.validateProfiles = function (profiles) {
-    var errors = []; profiles = profiles || FBDATA.mobileProfiles || {};
+  M.validateProfiles = function (profiles,units) {
+    var errors = []; profiles = profiles || FBDATA.mobileProfiles || {};units=units || FBDATA.unitClasses;
     Object.keys(profiles).forEach(function (id) {
       var p = profiles[id], seen = [];
       if (!keys(p,['minAge','threshold','maxMembers','maxAgreements','recruitShare','recruitCost','foodPerPerson','pasturePerPerson',
-          'accessDays','accessPrice','starvationShare','defeatShare','settlementForm','regions','members']) ||
+          'accessDays','accessPrice','starvationShare','defeatShare','settlementForm','regions','members','supplyPolicy']) ||
           !whole(p.minAge) || p.minAge < 16 || p.minAge > 80 || !Number.isFinite(p.threshold) || p.threshold <= 0.5 || p.threshold > 1 ||
           !whole(p.maxMembers) || !p.maxMembers || p.maxMembers > 24 || !whole(p.maxAgreements) || !p.maxAgreements || p.maxAgreements > 12 ||
           !boundedNumber(p.recruitShare,0.5) || !boundedNumber(p.recruitCost,100) || !boundedNumber(p.foodPerPerson,1) || !p.foodPerPerson ||
@@ -1060,10 +1128,21 @@
             if (!keys(m,['id','weight','pledge','population']) || typeof m.id !== 'string' || !m.id || seen.indexOf(m.id) >= 0 ||
                 !whole(m.weight) || !m.weight || m.weight > 100 || !boundedNumber(m.pledge,p.recruitShare) || !whole(m.population) || !m.population || m.population > 10000000) return true;
             seen.push(m.id); return false;
-          })) errors.push(FB.T('Invalid mobile profile {id}.',{id:id}));
+          }) || p.supplyPolicy!==undefined && !supplyPolicyValid(p.supplyPolicy,units)) errors.push(FB.T('Invalid mobile profile {id}.',{id:id}));
     });
     return errors;
   };
+  function supplyPolicyValid(p,units) {
+    if (!keys(p,['schema','targetDays','carryDays','cashReserve','replacement']) || p.schema!==1 ||
+        !whole(p.targetDays) || p.targetDays<1 || p.targetDays>30 || !whole(p.carryDays) || p.carryDays<1 || p.carryDays>30 ||
+        !boundedNumber(p.cashReserve,1000000000000)) return false;
+    var r=p.replacement;
+    return r===undefined || keys(r,['targetMen','maxPerReview','unitIds']) && whole(r.targetMen) && r.targetMen<=100000000 &&
+      whole(r.maxPerReview) && r.maxPerReview>0 && r.maxPerReview<=10000 && Array.isArray(r.unitIds) &&
+      r.unitIds.length>0 && r.unitIds.length<=8 && r.unitIds.every(function (id,i) {
+        return typeof id==='string' && !!units[id] && !units[id].hired && r.unitIds.indexOf(id)===i;
+      });
+  }
   M.definitionFaults = function (d,formId,provinces,realms,profiles,bookmark) {
     profiles = profiles || FBDATA.mobileProfiles;
     var mobile = G.resolve(formId).use.territory.mobileFollowing;
