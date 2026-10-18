@@ -1669,7 +1669,9 @@ window.FB = window.FB || {};
         const participants = state.greatHolyWar.participants[campName] || [];
         for (const participant of participants) {
           if (!participant.sovereign) continue;
-          const enemy = enemyOf(FB.greatHolyWarCamp(state, participant.realm));
+          const currentCamp = FB.greatHolyWarCamp(state, participant.realm);
+          if (!currentCamp) continue;
+          const enemy = enemyOf(currentCamp);
           m[participant.realm] = enemy || '__great_holy_war__';
         }
       }

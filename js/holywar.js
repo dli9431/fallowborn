@@ -101,6 +101,7 @@ window.FB = window.FB || {};
 
   function participantRealmValid(state, participant) {
     if (!participant || !participant.realm) return false;
+    if (participant.mobileVow) return mobileVowCurrent(state, participant);
     if (!participant.sovereign) return participant.realm === 'player';
     return livingSovereign(state, participant.realm);
   }
@@ -363,6 +364,10 @@ window.FB = window.FB || {};
   FB.realmInOrdinaryWar = ordinaryWarInvolves;
 
   function paperStrength(state, rid) {
+    if (FB.mobile && FB.mobile.active(state, rid)) {
+      var host = FB.mobile.host(state, rid);
+      return host && host.men > 0 ? host.men : 0;
+    }
     if (rid === 'player') return Math.max(1, FB.playerLevy(state));
     return Math.max(1, FB.aiBaseHost(state, rid));
   }
@@ -381,6 +386,7 @@ window.FB = window.FB || {};
     if (!history.firstLaunched[religionId]) return targets[0];
     var strengths = {}, attackers = [], defenders = [], owners = {};
     function baseStrength(rid) {
+      if (FB.mobile && FB.mobile.active(state, rid)) return paperStrength(state, rid);
       return Math.max(0, rid === 'player' ? FB.playerLevy(state) : FB.aiBaseHost(state, rid));
     }
     function strength(rid) {
@@ -392,6 +398,8 @@ window.FB = window.FB || {};
     }
     for (var rid in state.realms) {
       if (rid === 'player' || !livingSovereign(state, rid)) continue;
+      if (FB.mobile && FB.mobile.active(state, rid) && (!mobileBinding(state, rid, true) ||
+          FB.mobile.row(state, rid).leaderId === state.player.charId)) continue;
       var faith = FB.realmReligionId(state, rid);
       var inFold = FB.faithInFold(state, religionId, faith);
       if (inFold && rid === callerRealm) continue;
@@ -633,6 +641,8 @@ window.FB = window.FB || {};
     for (var rid in state.realms) {
       if (rid === 'player' || rid === campaign.callerRealm ||
           !livingSovereign(state, rid)) continue;
+      if (FB.mobile && FB.mobile.active(state, rid) && (!mobileBinding(state, rid, true) ||
+          FB.mobile.row(state, rid).leaderId === state.player.charId)) continue;
       if (!FB.faithInFold(state, faith, FB.realmReligionId(state, rid))) continue;
       var ruler = FB.realmRulerCharacter &&
         FB.realmRulerCharacter(state, rid);
@@ -649,6 +659,14 @@ window.FB = window.FB || {};
     var cap = B('greatHolyWarVolunteersPerCamp', 8);
     for (var i = 0; i < candidates.length && voluntaryCount(campaign, 'attackers') < cap; i++) {
       if (i >= 2 && !FB.chance(0.55)) continue;
+      if (FB.mobile && FB.mobile.active(state, candidates[i])) {
+        var mobileLeader = FB.mobile.leader(state, candidates[i]);
+        if (mobileLeader && mobileLeader.id !== state.player.charId) {
+          var review = FB.mobileGreatHolyWarReview(state, candidates[i], mobileLeader.id, 'join');
+          if (review.allowed) FB.commitMobileGreatHolyWar(state, review);
+        }
+        continue;
+      }
       addParticipant(campaign, 'attackers', participantRecord(state, campaign, {
         realm:candidates[i], sovereign:true, mandatory:false, voluntary:true,
         joinedTurn:state.turn
@@ -686,6 +704,8 @@ window.FB = window.FB || {};
     for (var rid in state.realms) {
       if (rid === 'player' || !livingSovereign(state, rid) ||
           participantOf(campaign, 'defenders', rid)) continue;
+      if (FB.mobile && FB.mobile.active(state, rid) && (!mobileBinding(state, rid, true) ||
+          FB.mobile.row(state, rid).leaderId === state.player.charId)) continue;
       var faith = FB.realmReligionId(state, rid);
       if (!faith ||
           !opposedToCall(state, faith, campaign.callingReligion)) continue;
@@ -698,6 +718,14 @@ window.FB = window.FB || {};
     var cap = B('greatHolyWarVolunteersPerCamp', 8);
     for (var j = 0; j < candidates.length && voluntaryCount(campaign, 'defenders') < cap; j++) {
       if (!FB.chance(0.3)) continue;
+      if (FB.mobile && FB.mobile.active(state, candidates[j])) {
+        var mobileLeader = FB.mobile.leader(state, candidates[j]);
+        if (mobileLeader && mobileLeader.id !== state.player.charId) {
+          var review = FB.mobileGreatHolyWarReview(state, candidates[j], mobileLeader.id, 'join');
+          if (review.allowed) FB.commitMobileGreatHolyWar(state, review);
+        }
+        continue;
+      }
       addParticipant(campaign, 'defenders', {
         realm:candidates[j], sovereign:true, mandatory:false, voluntary:true,
         joinedTurn:state.turn
@@ -772,6 +800,200 @@ window.FB = window.FB || {};
     return null;
   }
 
+  /* References belong to the canonical participant, never a second force or
+     contribution ledger. This one-host path requires an explicit war mandate;
+     a collective constitution needs its own consent adapter. */
+  function mobileBinding(state, rid, requireHost) {
+    var M = FB.mobile, row = M && M.row(state, rid), moving = row && M.migration(state, rid);
+    var leader = row && M.leader(state, rid), host = moving && M.host(state, rid);
+    if (!row || !M.active(state, rid) || row.status !== 'active' || row.columns || !row.command ||
+        !M.commandPermits(state, rid, 'war') || !leader || !moving ||
+        ['failed','settled'].indexOf(moving.status) >= 0 ||
+        requireHost && (!host || host.men <= 0 || !host.mobileFollowing || host.realm !== rid ||
+          host.warId && host.warId !== 'holy' || host.moveLeft > 0 || (host.path || []).length) ||
+        row.agreements.some(function (a) {return a.kind === 'protection' && a.status === 'active' && a.endTurn > state.turn;}) ||
+        (state.authority.contracts || []).some(function (c) {return c.federateRealmId === rid &&
+          FB.political.contract(state, c.id).effective;}) ||
+        FB.realmInOrdinaryWar(state, rid)) return null;
+    return {schema:1, leaderId:leader.id, generation:FB.realmRulerGeneration(state, rid),
+      hostId:moving.hostId, joinedTurn:state.turn, endedTurn:null, status:'active'};
+  }
+
+  function mobileVowCurrent(state, part) {
+    var vow = part.mobileVow, binding = vow && mobileBinding(state, part.realm, false);
+    var campaign = enabledCampaign(state), faith = campaign && FB.realmReligionId(state, part.realm);
+    var camp = campaign && participantOf(campaign, 'attackers', part.realm) === part ? 'attackers' : 'defenders';
+    return !!(vow && vow.status === 'active' && binding && campaign &&
+      binding.leaderId === vow.leaderId && binding.generation === vow.generation && binding.hostId === vow.hostId &&
+      [faith, state.chars[vow.leaderId].religion].every(function (religion) {
+        return camp === 'attackers' ? FB.faithInFold(state, campaign.callingReligion, religion) :
+          opposedToCall(state, religion, campaign.callingReligion);
+      }));
+  }
+
+  function releaseMobileHost(state, part) {
+    var host = FB.mobile && FB.mobile.host(state, part.realm);
+    if (host && host.id === part.mobileVow.hostId && host.warId === 'holy') {
+      host.warId = null; host.path = []; host.goal = null; host.moveLeft = 0;
+    }
+  }
+
+  function reconcileMobileVows(state, campaign) {
+    ['attackers','defenders'].forEach(function (camp) {
+      campaign.participants[camp].forEach(function (part) {
+        if (!part.mobileVow) return;
+        var vow = part.mobileVow;
+        if (vow.status === 'active' && !mobileVowCurrent(state, part)) {
+          vow.status = 'interrupted'; vow.endedTurn = state.turn;
+          part.vowOutcome = 'unfulfilled'; releaseMobileHost(state, part);
+        }
+        var host = FB.mobile.host(state, part.realm);
+        if (vow.status === 'active' && campaign.phase === 'active' && host && host.men > 0 &&
+            host.id === vow.hostId && (!host.warId || host.warId === 'holy')) {
+          host.warId = 'holy'; host.mobileCourt = false; FB.greatHolyWarMarkMuster(state, part.realm);
+        }
+      });
+    });
+  }
+
+  FB.mobileGreatHolyWarReview = function (state, rid, actorId, action) {
+    var campaign = enabledCampaign(state), part = campaign &&
+      (participantOf(campaign, 'attackers', rid) || participantOf(campaign, 'defenders', rid));
+    var binding = mobileBinding(state, rid, action === 'join'), camp = null;
+    if (action === 'withdraw' && part) camp = participantOf(campaign, 'attackers', rid) === part ? 'attackers' : 'defenders';
+    else if (campaign && binding) {
+      var faith = FB.realmReligionId(state, rid);
+      camp = FB.faithInFold(state, campaign.callingReligion, faith) ? 'attackers' :
+        opposedToCall(state, faith, campaign.callingReligion) ? 'defenders' : null;
+    }
+    var allowed = !!(campaign && binding && binding.leaderId === actorId &&
+      (action === 'join' ? campaign.phase === 'preparation' && !part && camp &&
+        voluntaryCount(campaign, camp) < B('greatHolyWarVolunteersPerCamp', 8) :
+        action === 'withdraw' && part && part.mobileVow && part.mobileVow.status === 'active' &&
+        (campaign.phase === 'preparation' || campaign.phase === 'active')));
+    var leader = binding && state.chars[binding.leaderId];
+    if (allowed && action === 'join' && (camp === 'attackers' ?
+        !FB.faithInFold(state, campaign.callingReligion, leader.religion) :
+        !opposedToCall(state, leader.religion, campaign.callingReligion))) allowed = false;
+    if (allowed && action === 'join' && camp === 'attackers' && papalFaith(state, leader.religion) &&
+        FB.excommunicationOf && FB.excommunicationOf(state, leader.id, FB.papalObedienceForRealm(state, rid))) allowed = false;
+    return {realmId:rid, actorId:actorId, action:action, camp:camp, allowed:allowed,
+      campaignId:campaign && campaign.id || null, cost:0,
+      terms:{seasons:4, desire:{kind:'honor', id:null}, hostId:binding && binding.hostId || null,
+        leaderId:binding && binding.leaderId || null, generation:binding && binding.generation || null},
+      signature:JSON.stringify([state.turn, campaign, binding, leader,
+        FB.mobile && FB.mobile.host(state, rid), FB.mobile && FB.mobile.row(state, rid)])};
+  };
+
+  FB.commitMobileGreatHolyWar = function (state, review) {
+    if (!review || !review.allowed || JSON.stringify(review) !== JSON.stringify(
+        FB.mobileGreatHolyWarReview(state, review.realmId, review.actorId, review.action))) return false;
+    if (review.action === 'join') return FB.joinGreatHolyWar(state, review.camp, review.realmId,
+      {seasons:review.terms.seasons, desire:review.terms.desire});
+    var campaign = enabledCampaign(state), part = participantOf(campaign, review.camp, review.realmId);
+    if (!part || !part.mobileVow) return false;
+    part.mobileVow.status = 'withdrawn'; part.mobileVow.endedTurn = state.turn;
+    part.vowOutcome = part.mustered && part.served >= part.vowSeasons ? 'fulfilled' : 'broken';
+    releaseMobileHost(state, part);
+    return true;
+  };
+
+  FB.mobileGreatHolyWarEffective = function (state, rid) {
+    var campaign = enabledCampaign(state), part = campaign &&
+      (participantOf(campaign, 'attackers', rid) || participantOf(campaign, 'defenders', rid));
+    return !!(part && part.mobileVow && mobileVowCurrent(state, part));
+  };
+
+  function personalMobileBinding(state) {
+    var matches = [];
+    Object.keys(state.authority && state.authority.governments || {}).forEach(function (rid) {
+      var M = FB.mobile, row = M.row(state, rid), leader = row && M.active(state, rid) && M.leader(state, rid);
+      if (row && row.command && row.status === 'active' && leader && leader.id === state.player.charId)
+        matches.push({realmId:rid, participationId:null});
+    });
+    Object.keys(state.stories || {}).forEach(function (id) {
+      var module = FB.stories && FB.stories.get(id), record = state.stories[id];
+      if (module && module.declaration && module.declaration.type === 'expedition_participation' &&
+          record.actorId === state.player.charId && record.status === 'active' && record.locationHeld &&
+          state.turn < record.endTurn) matches.push({realmId:FB.startRealmId(state, module.declaration.host.realmId), participationId:id});
+    });
+    return matches.length === 1 ? {schema:1, actorId:state.player.charId, realmId:matches[0].realmId,
+      participationId:matches[0].participationId} : null;
+  }
+
+  function personalMobileCurrent(state, pledge) {
+    var ref = pledge && pledge.mobileParticipation, current = ref && personalMobileBinding(state);
+    if (!current || JSON.stringify(ref) !== JSON.stringify(current)) return false;
+    var campaign = enabledCampaign(state), camp = campaign && FB.greatHolyWarCamp(state, ref.realmId);
+    if (!campaign || camp !== pledge.camp || playerCompatibleCamp(state, campaign) !== pledge.camp) return false;
+    if (ref.participationId) {
+      var record = state.stories[ref.participationId];
+      var moving = FB.mobile.migration(state, ref.realmId);
+      var module = FB.stories.get(ref.participationId), leader = FB.mobile.leader(state, ref.realmId);
+      var character = state.chars[ref.actorId], selected = module.declaration.roles.filter(function (r) {return r.id === record.roleId;})[0];
+      if (!character || character.dead || character.captive || character.imprisoned || character.prisonerOf || character.exiled ||
+          FB.justiceCustodyOf && FB.justiceCustodyOf(state, character.id) || !selected || !leader || record.leaderId !== leader.id) return false;
+      if (selected.kind === 'combatant') {
+        var host = FB.mobile.host(state, ref.realmId);
+        if (!host || host.id !== record.hostId || host.men <= 0 || (host.mobileRoster || []).reduce(function (n, c) {
+          return n + (c.memberId === selected.memberId && c.culture === character.culture && c.religion === character.religion ? c.count : 0);
+        }, 0) < record.slot) return false;
+      }
+      return !!(moving && record.generation === FB.realmRulerGeneration(state, ref.realmId) &&
+        record.migrationId === moving.id && FB.expeditionParticipants.location(state));
+    }
+    var field = FB.mobile.host(state, ref.realmId);
+    return !!(field && field.men > 0 && field.warId === 'holy');
+  }
+
+  FB.validateMobileHolyWarState = function (state) {
+    function need(ok) { if (!ok) throw new Error(FB.T('Invalid mobile holy-war reference.')); }
+    function exact(value, fields) {
+      return !!value && typeof value === 'object' && !Array.isArray(value) &&
+        Object.keys(value).length === fields.length && fields.every(function (key) {
+          return Object.prototype.hasOwnProperty.call(value, key);
+        });
+    }
+    function turn(n) { return Number.isSafeInteger(n) && n >= 0 && n <= state.turn; }
+    var campaign = state.greatHolyWar, seen = {};
+    if (campaign && campaign.participants) ['attackers','defenders'].forEach(function (camp) {
+      (campaign.participants[camp] || []).forEach(function (part) {
+        if (part.mobileVow === undefined) return;
+        var vow = part.mobileVow, row = FB.mobile.row(state, part.realm), moving = row && FB.mobile.migration(state, part.realm);
+        need(exact(vow, ['schema','leaderId','generation','hostId','joinedTurn','endedTurn','status']) &&
+          vow.schema === 1 && !!row && !!moving && !row.columns && !!row.command &&
+          !!state.chars[vow.leaderId] &&
+          Number.isSafeInteger(vow.generation) && vow.generation > 0 &&
+          vow.generation <= FB.realmRulerGeneration(state, part.realm) &&
+          vow.hostId === moving.hostId && turn(vow.joinedTurn) && vow.joinedTurn === part.joinedTurn &&
+          ['active','withdrawn','interrupted'].indexOf(vow.status) >= 0 &&
+          (vow.status === 'active' ? vow.endedTurn === null : turn(vow.endedTurn) && vow.endedTurn >= vow.joinedTurn) &&
+          part.sovereign === true && part.voluntary === true && part.mandatory === false && !seen[part.realm]);
+        if (camp === 'attackers') need(typeof part.mustered === 'boolean' &&
+          Number.isSafeInteger(part.served) && part.served >= 0 && [4,8,12].indexOf(part.vowSeasons) >= 0);
+        seen[part.realm] = true;
+      });
+    });
+    var pledge = state.player && state.player.greatHolyWar, ref = pledge && pledge.mobileParticipation;
+    if (!pledge) return true;
+    need(pledge.mode === 'mobile' ? ref !== undefined : ref === undefined);
+    if (ref !== undefined) {
+      need(exact(ref, ['schema','actorId','realmId','participationId']) && ref.schema === 1 &&
+        !!state.chars[ref.actorId] && !!FB.mobile.row(state, ref.realmId) && pledge.landEligible === false &&
+        !!campaign && pledge.campaignId === campaign.id);
+      if (ref.participationId !== null) {
+        var module = FB.stories.get(ref.participationId), record = state.stories && state.stories[ref.participationId];
+        need(!!module && module.declaration.type === 'expedition_participation' && !!record &&
+          record.actorId === ref.actorId && FB.startRealmId(state, module.declaration.host.realmId) === ref.realmId);
+      } else need(FB.mobile.row(state, ref.realmId).members.some(function (m) {return m.principal.id === ref.actorId;}) ||
+        state.chars[ref.actorId].dead || pledge.renewalRequired || pledge.withdrawn);
+      need(!!pledge.vowTerms && typeof pledge.vowTerms.mustered === 'boolean' &&
+        Number.isSafeInteger(pledge.vowTerms.served) && pledge.vowTerms.served >= 0);
+      need(!!participantOf(campaign, pledge.camp, 'player') || pledge.withdrawn);
+    }
+    return true;
+  };
+
   FB.playerGreatHolyWarJoinCamp = function (state) {
     var campaign = enabledCampaign(state);
     if (!campaign || campaign.phase !== 'preparation') return null;
@@ -797,18 +1019,24 @@ window.FB = window.FB || {};
       if (!compatible || (camp && camp !== compatible)) return false;
       camp = compatible;
       if (camp === 'attackers' && FB.fiscalRestriction && FB.fiscalRestriction(state)) return false;
-      var sovereign = FB.isPlayerSovereign(state);
+      var mobilePersonal = personalMobileBinding(state);
+      var sovereign = !mobilePersonal && FB.isPlayerSovereign(state);
       var top = FB.playerRealmId(state);
-      var mode = sovereign ? 'host'
+      var mode = mobilePersonal ? 'mobile' : sovereign ? 'host'
         : (top && participantOf(campaign, camp, top) ? 'liege' : 'expedition');
       state.player.greatHolyWar = {
         campaignId:campaign.id, camp:camp, mode:mode, vow:true,
         mandatory:!!participantOf(campaign, camp, 'player'),
-        withdrawn:false, landEligible:camp === 'attackers',
+        withdrawn:false, landEligible:camp === 'attackers' && !mobilePersonal,
         renewalRequired:false,
         vowTerms:defaultPlayerVowTerms(campaign, vowTerms),
         vowOutcome:null
       };
+      if (mobilePersonal) {
+        state.player.greatHolyWar.mobileParticipation = mobilePersonal;
+        state.player.greatHolyWar.vowTerms.served = 0;
+        state.player.greatHolyWar.vowTerms.mustered = false;
+      }
       if (!eligibleBeneficiary(state,
           state.player.greatHolyWar.vowTerms.beneficiary)) {
         state.player.greatHolyWar.vowTerms.beneficiary = null;
@@ -832,6 +1060,13 @@ window.FB = window.FB || {};
         }));
       return true;
     }
+    var mobileVow = null;
+    if (FB.mobile && FB.mobile.active(state, realmId)) {
+      var currentLeader = FB.mobile.leader(state, realmId);
+      var mobileReview = FB.mobileGreatHolyWarReview(state, realmId, currentLeader && currentLeader.id, 'join');
+      if (!mobileReview.allowed || mobileReview.camp !== camp) return false;
+      mobileVow = mobileBinding(state, realmId, true);
+    }
     var topRealm = sovereignRealm(state, realmId);
     if (topRealm !== realmId || !livingSovereign(state, realmId)) return false;
     var realmReligion = FB.realmReligionId(state, realmId);
@@ -852,6 +1087,11 @@ window.FB = window.FB || {};
       realm:realmId, sovereign:true, mandatory:false, voluntary:true,
       joinedTurn:state.turn
     };
+    if (mobileVow) {
+      joiningRecord.mobileVow = mobileVow;
+      joiningRecord.vowSeasons = 4;
+      joiningRecord.desire = {kind:'honor', id:null};
+    }
     if (camp === 'attackers') {
       if (vowTerms && typeof vowTerms === 'object') {
         joiningRecord.vowSeasons = [4,8,12].indexOf(vowTerms.seasons) >= 0
@@ -862,6 +1102,7 @@ window.FB = window.FB || {};
           Math.floor(vowTerms.served || 0));
         joiningRecord.mustered = !!vowTerms.mustered;
       }
+      if (mobileVow) { joiningRecord.served = 0; joiningRecord.mustered = false; }
       participantRecord(state, campaign, joiningRecord, false);
     }
     addParticipant(campaign, camp, joiningRecord);
@@ -934,7 +1175,7 @@ window.FB = window.FB || {};
     var campaign = enabledCampaign(state);
     var pledge = state && state.player.greatHolyWar;
     if (!campaign || !pledge || pledge.campaignId !== campaign.id ||
-        !pledge.renewalRequired) return false;
+        !pledge.renewalRequired || pledge.mode === 'mobile' && !personalMobileCurrent(state, pledge)) return false;
     pledge.renewalRequired = false;
     pledge.vow = true;
     pledge.withdrawn = false;
@@ -971,8 +1212,9 @@ window.FB = window.FB || {};
       if (personal) return personal;
     }
     var top = rid === 'player' ? 'player' : sovereignRealm(state, rid);
-    if (participantOf(campaign, 'attackers', top)) return 'attackers';
-    if (participantOf(campaign, 'defenders', top)) return 'defenders';
+    var attacker = participantOf(campaign, 'attackers', top), defender = participantOf(campaign, 'defenders', top);
+    if (attacker && participantRealmValid(state, attacker)) return 'attackers';
+    if (defender && participantRealmValid(state, defender)) return 'defenders';
     return null;
   };
 
@@ -1036,7 +1278,7 @@ window.FB = window.FB || {};
       var camp = camps[c], list = campaign.participants[camp], out = [], seen = {};
       for (var i = 0; i < list.length; i++) {
         var part = list[i];
-        if (!participantRealmValid(state, part) || seen[part.realm]) continue;
+        if ((!part.mobileVow && !participantRealmValid(state, part)) || seen[part.realm]) continue;
         seen[part.realm] = 1;
         out.push(part);
       }
@@ -1044,9 +1286,9 @@ window.FB = window.FB || {};
     }
     if (campaign.phase === 'active') {
       var leader = participantOf(campaign, 'attackers', campaign.leaderRealm);
-      if (!leader || !leader.sovereign) {
+      if (!leader || !leader.sovereign || !participantRealmValid(state, leader)) {
         var candidates = campaign.participants.attackers.filter(function (part) {
-          return part.sovereign;
+          return part.sovereign && participantRealmValid(state, part);
         });
         candidates.sort(function (a, b) {
           return (paperStrength(state, b.realm) - paperStrength(state, a.realm)) ||
@@ -1103,6 +1345,11 @@ window.FB = window.FB || {};
     for (var i = 0; i < list.length; i++) {
       var part = list[i];
       if (!part.sovereign || !participantRealmValid(state, part)) continue;
+      if (part.mobileVow || FB.mobile && FB.mobile.active(state, part.realm)) {
+        var mobileHost = FB.mobile.host(state, part.realm);
+        if (mobileHost && mobileHost.men > 0 && (!mobileHost.warId || mobileHost.warId === 'holy')) total += mobileHost.men;
+        continue;
+      }
       /* fielded strength counts every host the realm has out — the main
          body and any detachment */
       var hosts = current && FB.hostsOf ? FB.hostsOf(state, part.realm).filter(function (host) { return !host.warId || host.warId === 'holy'; }) : [];
@@ -1126,6 +1373,9 @@ window.FB = window.FB || {};
     var campaign = enabledCampaign(state);
     if (!campaign) return;
     var history = ensureHistory(state);
+    ['attackers','defenders'].forEach(function (camp) {
+      campaign.participants[camp].forEach(function (part) { if (part.mobileVow) releaseMobileHost(state, part); });
+    });
     history.cooldownUntil[campaign.callingReligion] = state.turn +
       B('greatHolyWarCollapseCooldownDays', 2880);
     var collapsedPledge = playerPledgeFor(state, campaign);
@@ -1170,7 +1420,7 @@ window.FB = window.FB || {};
     pruneParticipants(state, campaign);
     var sovereignAttackers = [];
     for (var k = 0; k < campaign.participants.attackers.length; k++) {
-      if (campaign.participants.attackers[k].sovereign) {
+      if (campaign.participants.attackers[k].sovereign && participantRealmValid(state, campaign.participants.attackers[k])) {
         sovereignAttackers.push(campaign.participants.attackers[k].realm);
       }
     }
@@ -1190,6 +1440,7 @@ window.FB = window.FB || {};
     if (FB.tournaments && FB.systemAvailable(state, 'tournaments')) FB.tournaments.reconcile(state);
     campaign.launchedTurn = state.turn;
     campaign.deadlineTurn = state.turn + B('greatHolyWarDeadlineDays', 2880);
+    reconcileMobileVows(state, campaign);
     /* armyTick has already run on the launch day. Queue the second announcement
        on the following tick, after the newly active sovereign hosts have raised. */
     campaign.musterEventPending = true;
@@ -1202,6 +1453,7 @@ window.FB = window.FB || {};
         (launchPledge.mode === 'liege' || launchPledge.mode === 'expedition')) {
       launchPledge.vowTerms.mustered = true;
     }
+    if (launchPledge && launchPledge.mode === 'mobile') FB.greatHolyWarMarkMuster(state, 'player');
     if (FB.playerGreatHolyWarHostActive(state)) {
       if (FB.warFooting) FB.warFooting(state);
       else if (FB.raisePlayerHost) FB.raisePlayerHost(state);
@@ -1524,12 +1776,17 @@ window.FB = window.FB || {};
     if (rid === 'player') {
       var pledge = playerPledgeFor(state, campaign);
       if (!pledge || pledge.withdrawn || pledge.renewalRequired ||
-          !pledge.vowTerms) return false;
+          !pledge.vowTerms || pledge.mode === 'mobile' && !personalMobileCurrent(state, pledge)) return false;
       pledge.vowTerms.mustered = true;
       return true;
     }
     var participant = participantOf(campaign, 'attackers', rid);
     if (!participant) return false;
+    if (participant.mobileVow) {
+      var field = FB.mobile.host(state, rid);
+      if (!mobileVowCurrent(state, participant) || !field || field.men <= 0 ||
+          field.id !== participant.mobileVow.hostId || field.warId !== 'holy') return false;
+    }
     participant.mustered = true;
     return true;
   };
@@ -1967,6 +2224,12 @@ window.FB = window.FB || {};
     for (var i = 0; i < attackers.length; i++) {
       var part = attackers[i];
       if (!participantRealmValid(state, part)) continue;
+      var personal = playerPledgeFor(state, campaign);
+      if (part.realm === 'player' && personal && personal.mobileParticipation) {
+        var commandPart = participantOf(campaign, 'attackers', personal.mobileParticipation.realmId);
+        if (commandPart && commandPart.mobileVow && commandPart.mobileVow.leaderId === personal.mobileParticipation.actorId &&
+            participantRealmValid(state, commandPart)) continue;
+      }
       if (asset.land && part.realm === 'player' &&
           !playerLandEligible(state, campaign)) continue;
       add({
@@ -2012,7 +2275,7 @@ window.FB = window.FB || {};
     var headId = head && head.id;
     var seats = [], attackers = campaign.participants.attackers || [];
     for (var i = 0; i < attackers.length; i++) {
-      if (attackers[i].sovereign &&
+      if (attackers[i].sovereign && participantRealmValid(state, attackers[i]) &&
           seats.indexOf(attackers[i].realm) < 0) seats.push(attackers[i].realm);
     }
     if (headId && seats.indexOf(headId) < 0) seats.push(headId);
@@ -2194,6 +2457,9 @@ window.FB = window.FB || {};
   }
 
   function finalize(state, campaign) {
+    ['attackers','defenders'].forEach(function (camp) {
+      campaign.participants[camp].forEach(function (part) { if (part.mobileVow) releaseMobileHost(state, part); });
+    });
     var history = ensureHistory(state);
     var pledge = playerPledgeFor(state, campaign);
     var settlementCase = campaign.settlement && campaign.settlement.case;
@@ -3040,6 +3306,7 @@ window.FB = window.FB || {};
         state && state.greatHolyWar && !enabledCampaign(state)) return null;
     var campaign = enabledCampaign(state);
     if (!campaign || campaign.phase !== 'active') return;
+    reconcileMobileVows(state, campaign);
     /* Holy war progress is earned daily, but abandoned works decay and
        a fort's sortie attrition both pulse only at the seasonal boundary. */
     var siegeCounties = campaign.objectiveCounties.concat(Object.keys(campaign.occupations).filter(function (pid) {
@@ -3082,6 +3349,10 @@ window.FB = window.FB || {};
         if (list[i].realm === 'player') {
           var pledge = state.player.greatHolyWar;
           if (!pledge || pledge.renewalRequired || pledge.withdrawn) continue;
+          if (pledge.mode === 'mobile') {
+            if (personalMobileCurrent(state, pledge)) FB.greatHolyWarMarkMuster(state, 'player');
+            continue;
+          }
         }
         served[list[i].realm] = 1;
         if (camps[c] === 'attackers' && list[i].realm !== 'player') {
@@ -3093,13 +3364,13 @@ window.FB = window.FB || {};
     var playerPledge = state.player.greatHolyWar;
     if (playerPledge && playerPledge.campaignId === campaign.id &&
         !playerPledge.withdrawn && !playerPledge.renewalRequired &&
-        playerPledge.vowTerms) {
+        playerPledge.vowTerms && (playerPledge.mode !== 'mobile' || personalMobileCurrent(state, playerPledge))) {
       playerPledge.vowTerms.served =
         Math.max(0, Math.floor(playerPledge.vowTerms.served || 0)) + 1;
     }
     if (playerPledge && playerPledge.campaignId === campaign.id &&
         !playerPledge.withdrawn && !playerPledge.renewalRequired &&
-        playerPledge.mode !== 'host') {
+        playerPledge.mode !== 'host' && playerPledge.mode !== 'mobile') {
       state.eventQueue.push({
         id:FB.chance(0.35) ? 'ghw_expedition_danger' : 'ghw_expedition_service',
         ctx:{}
@@ -3158,10 +3429,12 @@ window.FB = window.FB || {};
   };
 
   FB.fns.ghw_service_safe = function (state) {
+    if (state.player.greatHolyWar && state.player.greatHolyWar.mode === 'mobile') return false;
     var campaign = enabledCampaign(state);
     if (campaign) addContribution(state, campaign, 'player', 1);
   };
   FB.fns.ghw_service_danger = function (state) {
+    if (state.player.greatHolyWar && state.player.greatHolyWar.mode === 'mobile') return false;
     var campaign = enabledCampaign(state);
     if (campaign) addContribution(state, campaign, 'player', 3);
   };
@@ -3267,6 +3540,7 @@ window.FB = window.FB || {};
       }
       return;
     }
+    reconcileMobileVows(state, campaign);
     if (campaign.phase === 'preparation') {
       pruneParticipants(state, campaign);
       var head = FB.religiousHeadOf(state, campaign.callingReligion);
@@ -3302,7 +3576,7 @@ window.FB = window.FB || {};
     pruneParticipants(state, campaign);
     var attackerCount = 0;
     for (var i = 0; i < campaign.participants.attackers.length; i++) {
-      if (campaign.participants.attackers[i].sovereign) attackerCount++;
+      if (campaign.participants.attackers[i].sovereign && participantRealmValid(state, campaign.participants.attackers[i])) attackerCount++;
     }
     if (!attackerCount) {
       FB.resolveGreatHolyWar(state, 'defenders', 'no_attackers');
@@ -3403,7 +3677,7 @@ window.FB = window.FB || {};
     var pledge = state.player.greatHolyWar;
     if (pledge && (pledge.campaignId !== campaign.id ||
         (pledge.camp !== 'attackers' && pledge.camp !== 'defenders') ||
-        ['host','liege','expedition'].indexOf(pledge.mode) < 0)) {
+        ['host','liege','expedition','mobile'].indexOf(pledge.mode) < 0)) {
       state.player.greatHolyWar = null;
       pledge = null;
     }

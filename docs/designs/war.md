@@ -2196,3 +2196,11 @@ Mobile hosts partition ordinary men with a demographic mobileRoster. Recruitment
 Mobile column transactions
 
 Declared mobile columns use reviewed ordinary army routes and aggression-war previews under exact current command scope. Each host keeps its own location, units, demographic roster, carried food and war reference. Split and merge cannot cross a war commitment; starting one column's campaign preserves every other host's war. Generic automatic detachments and raw split/merge shortcuts cannot create unowned mobile rosters. Canonical applyHostLosses still allocates every casualty once; remote disband disperses survivors rather than returning them to an absent camp. One explicit escort follows ordinary court arrivals, while other field hosts remain independent. The technology decisions for column orders and reorganization are none, with ordinary class and transport gates retained.
+
+Mobile religious participation
+
+Technology decision mobile_religious_vows is none. Vow identity and real-host accounting have no discovery prerequisite. Existing unit, route, access, provisioning and command rules continue to apply.
+
+The campaign binds an explicit one-host command to its existing host and original leader generation through an optional participant-owned mobileVow reference. Preparation strength uses actual mobile men even when territorial paper levy is zero. Launch neither raises another host nor carries the civilian camp; ordinary army goals, access, supplies and roster losses remain in charge. Faith or command changes interrupt military eligibility while retaining the original vow. Withdrawal retains survivors, past contribution and its outcome, and cannot enroll a second copy.
+
+Actual admission and a personal religious vow remain independent. A mobile personal vow has no territorial host, passive duplicate credit or synthetic expedition-service events. Its real carrier and current consent gate muster and service. An admitted civilian can survive field defeat at the camp; a combatant requires their surviving counted position. Leaving admission does not silently erase the vow. The canonical occupation and settlement owners alone assign any earned award once; ordinary cadet awards do not move the mobile court or settle its population. Collective and multiple-column commands require separate adapters.

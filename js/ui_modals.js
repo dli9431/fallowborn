@@ -6119,6 +6119,8 @@ window.FB = window.FB || {};
       let total = 0;
       const roster = rows.map(function (part) {
         const hosts = (s.armies || []).filter(function (host) {
+          if (part.mobileVow && (!FB.mobileGreatHolyWarEffective(s,part.realm) || host.id !== part.mobileVow.hostId)) return false;
+          if (part.realm === 'player' && s.player.greatHolyWar && s.player.greatHolyWar.mode === 'mobile') return false;
           return host.realm === part.realm && host.men > 0 && !host.rebellionId &&
             (!host.warId || host.warId === 'holy');
         });
@@ -6132,6 +6134,8 @@ window.FB = window.FB || {};
         if (part.realm === campaign.leaderRealm) row += '<div>' + esc(FB.T('Military leader')) + '</div>';
         if (part.realm === campaign.callerRealm) row += '<div>' + esc(FB.T('Caller')) + '</div>';
         if (realm && realm.alive === false) row += '<div>' + esc(FB.T('Realm no longer active')) + '</div>';
+        if (part.mobileVow) row += kv('Vow', esc(part.mobileVow.status === 'withdrawn' ? FB.T('Withdrawn') :
+          FB.mobileGreatHolyWarEffective(s,part.realm) ? FB.T('Active') : FB.T('Interrupted')));
         row += kv('Field troops', esc(menText(s, men))) +
           kv('Field hosts', esc(String(hosts.length))) +
           kv('Contribution points', esc(String(Math.round(score * 10) / 10))) +

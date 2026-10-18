@@ -130,6 +130,23 @@
         details:'<p>'+esc(details)+'</p>'+termsHtml(s,q.terms,rid)+routeHtml(s,q),data:{mobileReview:i}});
     }
     function number(id,fallback) { return view[id] !== undefined ? view[id] : fallback; }
+    if (s.greatHolyWar && r.command && FB.mobileGreatHolyWarReview) {
+      var holyTarget=FBDATA.kingdoms[s.greatHolyWar.targetKingdom];
+      facts+=kv(FB.T('Religious campaign'),FB.holyWarName(s,s.greatHolyWar.callingReligion))+
+        kv(FB.T('Target'),holyTarget ? holyTarget.name : s.greatHolyWar.targetKingdom);
+      var holyJoin = FB.mobileGreatHolyWarReview(s,rid,actor.id,'join');
+      var holyLeave = FB.mobileGreatHolyWarReview(s,rid,actor.id,'withdraw');
+      [holyJoin,holyLeave].forEach(function (q) {
+        var label = q.action === 'join' ? FB.T('Pledge the existing host') : FB.T('Withdraw the host from the holy war');
+        var detail = FB.T('The vow requests honor for four seasons of service. Only the existing field host serves; the civilian camp stays in place. No fighters, food, land or personal vow are granted. Withdrawal retains losses and recorded service; an unfinished vow is broken.');
+        var i=actions.length;
+        actions.push({label:label,holy:true,review:{review:q}});
+        parts+=SH.reviewActionCardHtml({id:'mobile-action-'+i,label:label,disabled:!q.allowed,warn:!q.allowed,
+          note:q.allowed ? FB.T('No immediate payment. Review before committing.') :
+            FB.T('A current war mandate, compatible faith and available host are required. Existing vows cannot be enrolled again.'),
+          details:'<p>'+esc(detail)+'</p>',data:{mobileReview:i}});
+      });
+    }
     var count = Number(number('mobile-count',50)), destination = number('mobile-county',migration.at);
     var price = Number(number('mobile-price',profile.accessPrice)), days = Number(number('mobile-days',profile.accessDays));
     var options = Object.keys(s.owner).filter(function (pid) {return !!s.owner[pid];}).sort().map(function (pid) {
@@ -298,13 +315,16 @@
       button.onclick=function () {
         var entry=actions[Number(button.getAttribute('data-mobile-review'))], pos=position(), q=entry.review.review;
         function back() {var v=copyView(pos);v.replace=true;UI.showMobileConfederation(rid,v);}
-        UI.openModal(entry.label,SH.reviewFactsCard(FB.T('Exact terms'),termsHtml(s,q.terms,rid)+routeHtml(s,q)+
+        UI.openModal(entry.label,SH.reviewFactsCard(FB.T('Exact terms'),(entry.holy ?
+          '<p>'+esc(FB.T('This binds the current commander and existing field host to the current religious campaign, requesting honor for four seasons of service. The civilian camp remains separate. No troops, supplies, land or personal vow are created. Withdrawal preserves casualties and earlier service.'))+'</p>' :
+          termsHtml(s,q.terms,rid)+routeHtml(s,q))+
           kv(FB.T('Immediate cost'),FB.money(q.cost || 0,s)))+SH.reviewActionsHtml(SH.reviewActionCardHtml({
             id:'mobile-confirm',label:FB.T('Confirm decision'),note:FB.T('Current people, principals, position, ownership, stock and funds are checked again.'),
             details:'<p>'+esc(FB.T('A stale review spends nothing and transfers no people.'))+'</p>'})),
           {modalClass:'fullsheet-modal',historyView:true,historyBack:true,historyBackRender:back});
         SH.$('mobile-confirm').onclick=function () {
-          var success=s===FB.state && (entry.funding ? FB.homeAuthority.fund(s,q) : M.commit(s,entry.review));
+          var success=s===FB.state && (entry.holy ? FB.commitMobileGreatHolyWar(s,q) :
+            entry.funding ? FB.homeAuthority.fund(s,q) : M.commit(s,entry.review));
           UI.openModal(success ? FB.T('Decision recorded') : FB.T('Terms changed'),
             SH.reviewFactsCard('', '<p>'+esc(success ? FB.T('The decision is recorded.') : FB.T('Review the current terms again.'))+'</p>')+
             '<button type="button" class="actionbtn" id="mobile-continue">'+esc(FB.T('Continue'))+'</button>',{replaceView:true});
