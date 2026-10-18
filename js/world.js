@@ -5427,6 +5427,7 @@ window.FB = window.FB || {};
     if (FB.maritimeWork && FB.maritimeWork.referencesCharacter(state,c.id)) return true;
     if (FB.relayServices && FB.relayServices.referencesCharacter(state,c.id)) return true;
     if (FB.buildingSeasons && FB.buildingSeasons.referencesCharacter(state,c.id)) return true;
+    if (FB.buildingOperations.referencesInputCharacter(state,c.id)) return true;
     if (FB.publicAdministrationReferencesCharacter && FB.publicAdministrationReferencesCharacter(state,c.id)) return true;
     if (FB.federateReferencesCharacter && FB.federateReferencesCharacter(state, c.id)) return true;
     if (FB.settlementLordshipReferencesCharacter &&

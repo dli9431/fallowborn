@@ -377,3 +377,7 @@ The expedition_preparation factory routes every shared status, choice, blocker, 
 Expedition story composition display
 
 expedition_program title/intro use the ordinary story instance display owners and imported English fallback. Shared intent, deadline, original person, step and cost chrome uses literal FB.T messages with named placeholders in js/story_expedition_program.js. Status/reason ids, original references and canonical cursors remain untranslated; rendered prose is never saved. No catalogue command is needed on this branch.
+
+Water-service material display
+
+Water-service input quantities and names use literal FB.T with productionGood name owners through FB.dataText. Policy inputs and production.waterInputs contain only structural identities and numbers. Shared confirmation shows the exact named materials, water quantity, payment and finite term. Imported goods retain ordinary English fallback. No generated catalogue is changed.

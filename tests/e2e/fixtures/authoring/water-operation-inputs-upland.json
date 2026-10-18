@@ -1,0 +1,422 @@
+{
+  "name": "Finite service inputs upland",
+  "authorityOffices": {
+    "resource_keeper": {
+      "name": "Resource keeper",
+      "desc": "An exact scoped allocation permission.",
+      "powers": [
+        "revenue"
+      ],
+      "scopes": [
+        "county",
+        "realm"
+      ],
+      "succession": "reaffirm",
+      "recognitionSources": []
+    }
+  },
+  "siteResourceProfiles": {
+    "upland_catchment": {
+      "name": "Rain catchment",
+      "kind": "flow",
+      "unit": "water",
+      "capacity": 3,
+      "periodDays": 30
+    },
+    "upland_tank": {
+      "name": "Hill tank",
+      "kind": "storage",
+      "unit": "water",
+      "capacity": 8
+    },
+    "upland_pasture": {
+      "name": "Summer grazing places",
+      "kind": "access",
+      "unit": "grazing",
+      "capacity": 4,
+      "periodDays": 90
+    }
+  },
+  "geographies": {
+    "resource_upland_land": {
+      "bounds": {
+        "lonMin": 0,
+        "lonMax": 6,
+        "latMin": 0,
+        "latMax": 5
+      },
+      "land": [
+        [
+          0.5,
+          0.5,
+          5.5,
+          0.5,
+          5.5,
+          4.5,
+          0.5,
+          4.5
+        ]
+      ],
+      "gridWidth": 240,
+      "seas": [],
+      "rivers": [],
+      "defaultLayout": null,
+      "provinces": [
+        {
+          "id": "resource_hill",
+          "x": 1.5,
+          "y": 1.5,
+          "terrain": "hills"
+        },
+        {
+          "id": "resource_fold",
+          "x": 3.1,
+          "y": 1.5,
+          "terrain": "hills"
+        }
+      ],
+      "sites": {
+        "resource_roof": {
+          "x": 1.5,
+          "y": 1.5
+        },
+        "resource_tank": {
+          "x": 1.7,
+          "y": 1.5
+        },
+        "resource_grazing": {
+          "x": 3.1,
+          "y": 1.5
+        }
+      }
+    }
+  },
+  "startScenarios": [
+    {
+      "id": "resource_upland_household",
+      "name": "Hill household",
+      "desc": "A fictional household.",
+      "intro": "Your household lives in the hills.",
+      "tier": 1,
+      "profession": "farmer",
+      "gold": 12,
+      "prestige": 0,
+      "piety": 0,
+      "bookmarkIds": [
+        "resource_upland"
+      ],
+      "eras": [
+        "early_medieval"
+      ],
+      "alwaysUnlocked": true,
+      "startAge": 24,
+      "familyPresets": {
+        "standard": {
+          "name": "Established household",
+          "diff": "age 24"
+        }
+      },
+      "fixedProvinceId": "resource_fold"
+    }
+  ],
+  "bookmarks": {
+    "resource_upland": {
+      "id": "resource_upland",
+      "name": "Upland allocation",
+      "desc": "An independent fictional catchment example.",
+      "date": {
+        "year": 950,
+        "season": 0,
+        "day": 1
+      },
+      "era": "early_medieval",
+      "geography": "resource_upland_land",
+      "settlementLayout": null,
+      "religiousHeads": {},
+      "localInstitutions": {},
+      "stories": [],
+      "starts": [
+        "resource_upland_household"
+      ],
+      "scripted": [],
+      "straits": [],
+      "crossingClasses": {},
+      "provinces": [
+        {
+          "id": "resource_hill",
+          "name": "Hill",
+          "realm": "resource_hill_court",
+          "culture": "frankish",
+          "religion": "catholic",
+          "dev": 8,
+          "settlements": [
+            {
+              "site": "resource_roof",
+              "name": "Roof Town",
+              "kind": "town"
+            },
+            {
+              "site": "resource_tank",
+              "name": "Tank Village",
+              "kind": "village"
+            }
+          ]
+        },
+        {
+          "id": "resource_fold",
+          "name": "Fold",
+          "realm": "resource_fold_court",
+          "culture": "frankish",
+          "religion": "catholic",
+          "dev": 8,
+          "settlements": [
+            {
+              "site": "resource_grazing",
+              "name": "Fold Village",
+              "kind": "village"
+            }
+          ]
+        }
+      ],
+      "realms": [
+        {
+          "id": "resource_hill_court",
+          "name": "Hill court",
+          "capital": "resource_hill",
+          "color": "#aa7944",
+          "aggression": 0,
+          "rank": 1,
+          "government": "regnum",
+          "ruler": {
+            "name": "Arno Stone",
+            "culture": "frankish",
+            "born": 918,
+            "mar": 6,
+            "trait": "patient"
+          },
+          "techTraditions": [
+            "latin"
+          ],
+          "techSeed": {
+            "complete": [
+              "cistern_engineering"
+            ]
+          },
+          "liege": "resource_fold_court"
+        },
+        {
+          "id": "resource_fold_court",
+          "name": "Fold court",
+          "capital": "resource_fold",
+          "color": "#779955",
+          "aggression": 0,
+          "rank": 2,
+          "government": "regnum",
+          "ruler": {
+            "name": "Odo Vale",
+            "culture": "frankish",
+            "born": 920,
+            "mar": 5,
+            "trait": "patient"
+          },
+          "techTraditions": [
+            "latin"
+          ],
+          "techSeed": {
+            "complete": [
+              "cistern_engineering"
+            ]
+          }
+        }
+      ],
+      "duchies": {},
+      "kingdoms": {},
+      "empires": {},
+      "siteResourceAssignments": [
+        {
+          "id": "upland_roof",
+          "profileId": "upland_catchment",
+          "countyId": "resource_hill",
+          "siteId": "resource_roof",
+          "suitability": {
+            "source": true,
+            "catchment": true
+          },
+          "rights": {
+            "kind": "holder"
+          }
+        },
+        {
+          "id": "upland_tank",
+          "profileId": "upland_tank",
+          "countyId": "resource_hill",
+          "siteId": "resource_tank",
+          "connectedSourceId": "upland_roof",
+          "suitability": {
+            "catchment": true
+          },
+          "rights": {
+            "kind": "holder"
+          }
+        },
+        {
+          "id": "upland_fold",
+          "profileId": "upland_pasture",
+          "countyId": "resource_fold",
+          "siteId": "resource_grazing",
+          "suitability": {
+            "grazing": true
+          },
+          "rights": {
+            "kind": "permission",
+            "institutionId": "resource_fold_court",
+            "officeId": "resource_keeper"
+          }
+        }
+      ],
+      "openingInfrastructure": {
+        "version": 1,
+        "placements": [
+          {
+            "countyId": "resource_hill",
+            "siteId": "resource_tank",
+            "buildingId": "input_store",
+            "condition": "standing"
+          }
+        ]
+      },
+      "buildingOperationAssignments": [
+        {
+          "countyId": "resource_hill",
+          "siteId": "resource_tank",
+          "sourceId": "upland_roof",
+          "stores": [
+            "upland_tank"
+          ],
+          "id": "service_plain",
+          "buildingId": "input_service",
+          "profileId": "plain_service",
+          "demandId": "service_users"
+        },
+        {
+          "countyId": "resource_hill",
+          "siteId": "resource_tank",
+          "sourceId": "upland_roof",
+          "stores": [
+            "upland_tank"
+          ],
+          "id": "service_fueled",
+          "buildingId": "input_service",
+          "profileId": "fueled_service",
+          "demandId": "service_users"
+        }
+      ],
+      "productionSites": [
+        {
+          "id": "service_yard",
+          "countyId": "resource_hill",
+          "siteId": "resource_tank",
+          "buildingId": "input_store",
+          "recipeIds": [
+            "prepare_service_fuel"
+          ],
+          "openingLots": [
+            {
+              "goodId": "service_wood",
+              "quantity": 12
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "productionGoods": {
+    "service_fuel": {
+      "name": "Prepared service fuel",
+      "unit": "fuel_bundle",
+      "mass": 1
+    },
+    "service_wood": {
+      "name": "Service feedstock",
+      "unit": "raw_bundle",
+      "mass": 1
+    }
+  },
+  "productionRecipes": {
+    "prepare_service_fuel": {
+      "name": "Prepare service fuel",
+      "inputs": [
+        {
+          "goodId": "service_wood",
+          "quantity": 2
+        }
+      ],
+      "outputs": [
+        {
+          "goodId": "service_fuel",
+          "quantity": 1
+        }
+      ],
+      "workDays": 2,
+      "workPrice": 2,
+      "requiresTech": [],
+      "impactReviewId": "conserved_production_batches"
+    }
+  },
+  "buildings": {
+    "input_service": {
+      "name": "Optional service house",
+      "desc": "A fictional funded water service without construction awards.",
+      "role": "care",
+      "cost": 20,
+      "upkeep": 2,
+      "devMin": 0,
+      "maxCounty": 1,
+      "migrationAttraction": 0.5,
+      "operationProfile": "plain_service"
+    },
+    "input_store": {
+      "name": "Material preparation yard",
+      "desc": "Finite local materials without passive returns.",
+      "role": "industry",
+      "cost": 20,
+      "maxCounty": 1
+    }
+  },
+  "buildingProfiles": {
+    "input_variant": {
+      "buildingId": "input_service",
+      "name": "Fueled service house",
+      "desc": "One physical asset with a fueled replacement service.",
+      "replace": {
+        "cost": 25,
+        "migrationAttraction": 1
+      },
+      "requiresTech": [],
+      "operationProfile": "fueled_service",
+      "inheritance": "retain"
+    }
+  },
+  "buildingOperationProfiles": {
+    "plain_service": {
+      "mode": "use",
+      "amount": 1,
+      "periodDays": 7,
+      "workCost": 1,
+      "effect": "migrationAttraction"
+    },
+    "fueled_service": {
+      "mode": "use",
+      "amount": 1,
+      "periodDays": 10,
+      "workCost": 3,
+      "effect": "migrationAttraction",
+      "inputs": [
+        {
+          "goodId": "service_fuel",
+          "quantity": 2
+        }
+      ]
+    }
+  }
+}

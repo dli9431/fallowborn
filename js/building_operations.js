@@ -21,12 +21,16 @@
     Object.keys(table).forEach(function (key) {
       var p = table[key];
       if (!id(key) || !object(p) || !['mode','amount','periodDays','workCost','effect'].every(function (k) { return own(p,k); }) ||
-          Object.keys(p).some(function (k) { return ['mode','amount','periodDays','workCost','effect','sourceRequirements'].indexOf(k) < 0; }) ||
+          Object.keys(p).some(function (k) { return ['mode','amount','periodDays','workCost','effect','sourceRequirements','inputs'].indexOf(k) < 0; }) ||
           ['store','use'].indexOf(p.mode) < 0 || !integer(p.amount,1,1000000) ||
           !integer(p.periodDays,1,90) || !money(p.workCost) || p.workCost <= 0 ||
           (p.mode === 'store' ? p.effect !== null : !effectKeys(p).length || effectKeys(p).length > effects.length ||
             effectKeys(p).some(function (k,i,a) { return effects.indexOf(k) < 0 || a.indexOf(k) !== i; })))
         out.push('buildingOperationProfiles.' + key + ': invalid water service terms.');
+      if (p && own(p,'inputs') && (p.mode !== 'use' || !Array.isArray(p.inputs) || !p.inputs.length || p.inputs.length > 8 ||
+          p.inputs.some(function (x,i) { return !keys(x,['goodId','quantity']) || !own(c.productionGoods,x.goodId) ||
+            !integer(x.quantity,1,10000) || p.inputs.slice(0,i).some(function (v) { return v.goodId === x.goodId; }); })))
+        out.push('buildingOperationProfiles.' + key + ': invalid finite production inputs.');
       var r = p && p.sourceRequirements;
       if (r !== undefined && (!keys(r,['originKind','originSuitability','minStores']) ||
           ['flow','storage'].indexOf(r.originKind) < 0 || !integer(r.minStores,0,8) ||
@@ -66,12 +70,12 @@
       var requirements = p && p.sourceRequirements, origin = route[0];
       var suitable = !requirements || origin && origin.profile.kind === requirements.originKind &&
         a.stores.length >= requirements.minStores && requirements.originSuitability.every(function (k) { return origin.suitability[k] === true; });
-      if (!suitable || !p || !d || !(d.operationProfile === a.profileId || FB.buildingProfiles.ids(a.buildingId).some(function (id) { return FB.buildingProfiles.definition(a.buildingId,id).operationProfile === a.profileId; })) || !pr || slot === undefined || slot < 0 || occupied[asset] ||
+      if (!suitable || !p || !d || !(d.operationProfile === a.profileId || FB.buildingProfiles.ids(a.buildingId).some(function (id) { return FB.buildingProfiles.definition(a.buildingId,id).operationProfile === a.profileId; })) || !pr || slot === undefined || slot < 0 || occupied[JSON.stringify([asset,a.profileId])] ||
           route.some(function (v,i) { return !v || v.profile.unit !== 'water' || i > 0 && (v.profile.kind !== 'storage' || v.connectedSourceId !== route[i-1].id); }) ||
           !last || last.countyId !== a.countyId || last.siteId !== a.siteId ||
           p.mode === 'store' && !a.stores.length || route[0] && route[0].profile.kind === 'access' ||
           p.mode === 'use' && (demands[a.demandId] && demands[a.demandId] !== demandSite || demandKeys.some(function (k) { return demandSites[k] && demandSites[k] !== a.demandId; }))) { fault(); return; }
-      occupied[asset] = true;
+      occupied[JSON.stringify([asset,a.profileId])] = true;
       if (p.mode === 'use') { demands[a.demandId] = demandSite; demandKeys.forEach(function (k) { demandSites[k] = a.demandId; }); }
       out.assignments.push(Object.assign(copy(a),{slot:slot,profile:copy(p)}));
     });
@@ -96,6 +100,8 @@
     return cache.definition;
   }
   function assignment(s,pid,slot,buildingId,operationProfile) {
+    var current = record(s,pid,slot,buildingId);
+    operationProfile = operationProfile || current && current.waterOperation && current.waterOperation.profileId;
     return plan(s).assignments.find(function (a) { return a.countyId === pid && a.slot === slot && a.buildingId === buildingId && (!operationProfile || a.profileId === operationProfile); });
   }
   function record(s,pid,slot,buildingId) {
@@ -190,6 +196,83 @@
     }
     return {resources:shadow.siteResources,sources:used,steps:steps};
   }
+  // Materials remain canonical owned production lots, never a second fuel stock.
+  function inputPlan(s,a,who) {
+    if (!a.profile.inputs) return [];
+    var r = s.production, ledger = r && r.waterInputs;
+    if (!r || r.revision >= 1000000 || r.nextId >= 1000000 || ledger && ledger.records.length >= 512) return null;
+    var lots = [];
+    FB.production.snapshot(s,a.countyId,a.siteId).forEach(function (row) {
+      if (row.asset && equal(row.asset.owner,who) && FB.production.authority(s,row.site,who))
+        lots = lots.concat(row.lots);
+    });
+    lots.sort(function (x,y) { return x.id-y.id; });
+    var inputs = [];
+    var enough = a.profile.inputs.every(function (need) {
+      var left = need.quantity;
+      lots.forEach(function (lot) {
+        if (left && lot.goodId === need.goodId && lot.unit === FBDATA.productionGoods[need.goodId].unit) {
+          var quantity = Math.min(left,lot.available);
+          if (quantity) { inputs.push({lotId:lot.id,quantity:quantity}); left -= quantity; }
+        }
+      });
+      return !left;
+    });
+    return enough ? inputs : null;
+  }
+  O.validateInputs = function (s) {
+    function fail() { throw new Error(FB.T('Invalid saved water-service material use.')); }
+    var r = s.production, ledger = r && r.waterInputs, out = {ids:[],used:{},revision:0};
+    var root = s.buildingOperations, assignments = plan(s).assignments;
+    var receipts = root && root.receipts || {};
+    if (ledger !== undefined && (!keys(ledger,['version','records']) || ledger.version !== 1 ||
+        !Array.isArray(ledger.records) || !ledger.records.length || ledger.records.length > 512)) fail();
+    var revisions = {}, last = {}, priorId = 0, priorRevision = 0;
+    (ledger && ledger.records || []).forEach(function (v) {
+      var a = v && assignments.find(function (a) { return a.id === v.assignmentId; });
+      if (!keys(v,['id','assignmentId','assetId','operationRevision','actor','characterId','generation','turn','untilTurn','inputs']) ||
+          !a || !a.profile.inputs || !root || !integer(v.id,priorId+1,r.nextId-1) || !id(v.assetId) ||
+          !integer(v.operationRevision,priorRevision+1,root.revision) || revisions[v.operationRevision] || !actorValid(v.actor) ||
+          !own(s.chars,v.characterId) || (v.actor.kind === 'character' ? v.actor.id !== v.characterId || v.generation !== null :
+            !own(s.realms,v.actor.id) || !integer(v.generation,0,FB.realmRulerGeneration(s,v.actor.id))) ||
+          !integer(v.turn,0,s.turn) || !integer(v.untilTurn,v.turn+1,(Math.floor(v.turn/a.profile.periodDays)+1)*a.profile.periodDays) ||
+          last[v.assetId] && (last[v.assetId].turn >= v.turn || last[v.assetId].untilTurn > v.turn) ||
+          !Array.isArray(v.inputs) || !v.inputs.length || v.inputs.length > 512) fail();
+      var totals = {}, seen = {}, sites = FB.compileProduction(FB.campaignBookmark(s)).sites;
+      v.inputs.forEach(function (x) {
+        var lot = x && r.lots.find(function (l) { return l.id === x.lotId; });
+        var asset = lot && r.assets.find(function (b) { return b.id === lot.assetId; });
+        var source = asset && sites.find(function (b) { return b.id === asset.siteId; });
+        var batch = lot && lot.origin.kind === 'batch' && r.batches.find(function (b) { return b.id === lot.origin.batchId; });
+        var trade = lot && (lot.origin.kind === 'exchange' || lot.origin.kind === 'producer') && r.economy &&
+          r.economy.receipts.find(function (e) { return e.id === lot.origin.receiptId; });
+        if (!keys(x,['lotId','quantity']) || !lot || seen[x.lotId] || lot.id >= v.id ||
+            !integer(x.quantity,1,lot.quantity) || !equal(lot.owner,v.actor) || !source ||
+            source.countyId !== a.countyId || source.siteId !== a.siteId || asset.openedTurn > v.turn ||
+            batch && (batch.status !== 'committed' || batch.disposition !== 'store' || batch.closedTurn > v.turn) ||
+            trade && trade.turn > v.turn || v.turn >= FB.buildingSeasons.lotExpiry(s,lot)) fail();
+        seen[x.lotId] = true; totals[lot.goodId] = (totals[lot.goodId] || 0) + x.quantity;
+        out.used[lot.id] = (out.used[lot.id] || 0) + x.quantity;
+      });
+      if (Object.keys(totals).length !== a.profile.inputs.length ||
+          a.profile.inputs.some(function (x) { return totals[x.goodId] !== x.quantity; })) fail();
+      revisions[v.operationRevision] = true; last[v.assetId] = v; priorId = v.id; priorRevision = v.operationRevision;
+      out.ids.push(v.id); out.revision++;
+    });
+    Object.keys(last).forEach(function (key) { if (!receipts[key] || receipts[key].revision !== last[key].operationRevision) fail(); });
+    Object.keys(receipts).forEach(function (key) {
+      var v = receipts[key], a = assignments.find(function (a) { return a.id === v.assignmentId; });
+      var input = last[key];
+      if (a && a.profile.inputs && (!input || input.operationRevision !== v.revision || input.assignmentId !== a.id ||
+          input.turn !== v.turn || input.untilTurn !== v.untilTurn || !equal(input.actor,v.actor) ||
+          input.characterId !== v.authority.characterId || input.generation !== v.authority.generation) ||
+          input && (!a || !a.profile.inputs || input.operationRevision !== v.revision)) fail();
+    });
+    return out;
+  };
+  O.referencesInputCharacter = function (s,cid) {
+    return !!(s.production && s.production.waterInputs && s.production.waterInputs.records.some(function (v) { return v.characterId === cid; }));
+  };
   O.quote = function (s,request) {
     var q = {allowed:false,reason:'asset',request:object(request) ? copy(request) : null};
     if (!keys(request,['countyId','settlement','buildingId','actor']) || !actorValid(request.actor) ||
@@ -199,6 +282,7 @@
     O.validate(s);
     FB.buildingSeasons.validate(s);
     var who = identity(s,request.actor,request.countyId,request.settlement), old = receipt(s,r), p = a.profile;
+    if (p.inputs) FB.production.validate(s);
     q.reason = 'authority';
     if (!who || r.buildingProfile && !FB.buildingProfiles.operationReady(s,request.countyId,r) ||
         r.institutionBinding && !FB.buildingInstitutionOperating(s,request.countyId,r)) return q;
@@ -207,6 +291,10 @@
     q.reason = 'period';
     var period = Math.floor(s.turn / p.periodDays);
     if (old && old.period >= period) return q;
+    q.reason = 'inputs';
+    if (p.inputs) q.materials = copy(p.inputs);
+    var inputs = inputPlan(s,a,request.actor);
+    if (!inputs) return q;
     var root = s.buildingOperations;
     if (root && root.revision >= Number.MAX_SAFE_INTEGER) return q;
     if (root && !root.receipts[r.waterOperation.id] && Object.keys(root.receipts).length >= 2048) return q;
@@ -229,8 +317,9 @@
     q.reason = 'funds';
     if (!money(cost,2000000) || !Number.isFinite(balance) || !Number.isFinite(floor) || balance < cost + floor) return q;
     q.allowed = true; q.reason = null; q.cost = cost; q.workCost = p.workCost; q.untilTurn = until; q.mode = p.mode;
+    if (p.inputs) q.inputs = inputs;
     q.period = period; q.amount = p.amount; q.authority = who; q.sources = staged.sources;
-    q.signature = JSON.stringify([s.turn,definition(s),r,s.buildingOperations || null,s.siteResources || null,staged.steps,balance,floor,q]);
+    q.signature = JSON.stringify([s.turn,definition(s),r,s.buildingOperations || null,s.siteResources || null,staged.steps,balance,floor,p.inputs ? s.production : null,q]);
     return q;
   };
   O.commit = function (s,review) {
@@ -252,6 +341,15 @@
       actor:copy(request.actor),authority:q.authority,turn:s.turn,untilTurn:q.untilTurn,period:q.period,
       amount:q.amount,paid:q.cost,sources:q.sources,demandId:a.demandId,resourceRevision:staged.resources.revision};
     if (r.buildingProfile) next.receipts[r.waterOperation.id].buildingProfile = FB.buildingProfiles.stamp(r.id,r.buildingProfile.id);
+    if (a.profile.inputs) {
+      var production = copy(s.production);
+      if (!production.waterInputs) production.waterInputs = {version:1,records:[]};
+      q.inputs.forEach(function (x) { production.lots.find(function (l) { return l.id === x.lotId; }).remaining -= x.quantity; });
+      production.waterInputs.records.push({id:production.nextId++,assignmentId:a.id,assetId:r.waterOperation.id,
+        operationRevision:next.revision,actor:copy(request.actor),characterId:q.authority.characterId,
+        generation:q.authority.generation,turn:s.turn,untilTurn:q.untilTurn,inputs:copy(q.inputs)});
+      production.revision++; s.production = production;
+    }
     s.siteResources = staged.resources; s.buildingOperations = next; r.waterOperation.revision = next.revision;
     FB.invalidateBuildingIndex(s,request.countyId);
     return true;
@@ -262,7 +360,7 @@
     if (!d || !d.operationProfile) return true;
     var a = assignment(s,pid,slot,buildingId,d.operationProfile);
     if (a && !FB.buildingSeasons.prospective(s,a.id)) return false;
-    if (!a || plan(s).errors.length || !identity(s,who,pid,slot) || !stage(s,a,who)) return false;
+    if (!a || plan(s).errors.length || !identity(s,who,pid,slot) || !stage(s,a,who) || !inputPlan(s,a,who)) return false;
     if (s.buildingOperations && Object.keys(s.buildingOperations.receipts).length >= 2048) return false;
     var prospective = a.profile.workCost + (d.upkeep || 0) * a.profile.periodDays / 90;
     var floor = reserveFloor(s,who);
@@ -282,9 +380,14 @@
     return count;
   };
   O.reason = function (q) {
+    var materials = (q.materials || []).map(function (x) {
+      return FB.T('{quantity} {good}',{quantity:x.quantity,good:FB.dataText(FB.state,null,'productionGood',x.goodId,FBDATA.productionGoods[x.goodId],'name',{})});
+    }).join(', ');
     if (q.allowed && q.mode === 'store') return FB.T('Store {amount} actual water units and pay {money:cost} for work and upkeep through day {day}. Storage grants no operating benefit.',{amount:q.amount,cost:q.cost,day:q.untilTurn});
+    if (q.allowed && q.inputs) return FB.T('Consume {materials}, use {amount} water units and pay {money:cost} for work and upkeep through day {day}. Materials and water are spent once; the service expires at the stated day.',{materials:materials,amount:q.amount,cost:q.cost,day:q.untilTurn});
     if (q.allowed) return FB.T('Use {amount} water units and pay {money:cost} for work and upkeep through day {day}. The declared service benefits are available only for this funded term.',{amount:q.amount,cost:q.cost,day:q.untilTurn});
     if (q.reason === 'season') return FB.T('Review the local seasonal operating term before funding this service.');
+    if (q.reason === 'inputs') return FB.T('Requires {materials} as owned, unreserved, unexpired production materials at this exact site.',{materials:materials});
     if (q.reason === 'water') return FB.T('The lawful connected route needs enough unreserved water and storage room.');
     if (q.reason === 'funds') return FB.T('Work and upkeep must be funded while retaining existing reserves.');
     if (q.reason === 'period') return FB.T('This service or its shared demand was already funded for the current period.');
@@ -304,7 +407,7 @@
         if (b.revision && (!root || !root.receipts || !root.receipts[b.id] || root.receipts[b.id].revision !== b.revision)) fail();
       });
     });
-    if (root === undefined) return true;
+    if (root === undefined) { O.validateInputs(s); return true; }
     if (p.errors.length || !keys(root,['version','definition','revision','receipts']) || root.version !== 1 || root.definition !== definition(s) ||
         !integer(root.revision,1,Number.MAX_SAFE_INTEGER) || !object(root.receipts) || !Object.keys(root.receipts).length ||
         Object.keys(root.receipts).length > 2048 || !s.siteResources) fail();
@@ -346,6 +449,7 @@
       if (s.turn < v.untilTurn && a.profile.mode === 'use') { if (demands[v.demandId]) fail(); demands[v.demandId] = true; }
       revisions[v.revision] = true;
     });
+    O.validateInputs(s);
     if (!revisions[root.revision]) fail();
     Object.keys(consumed).forEach(function (key) { if (s.siteResources.sources[key].consumed < consumed[key]) fail(); });
     return true;
