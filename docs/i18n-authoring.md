@@ -351,3 +351,7 @@ Literal FBDATA.siegeSupportProfiles in data/siege_support.js uses siegeSupportPr
 Maintained maritime work presentation
 
 Literal FBDATA.maritimeWorkProfiles in data/maritime_work.js uses maritimeWorkProfile.<id>.name.default and maritimeWorkProfile.<id>.desc.default owners with exact-source aliases and ordinary imported-English fallback. Static extraction reads display prose only and never runs production or invoice transactions. The shared settlement review renders these fields through FB.dataText; invoice, contribution, quantity, private payer, expiry, blockers and confirmation consequences use literal FB.T phrases with named placeholders. Saved receipts contain structural ids and numbers only. No generated catalog command is needed for feature authoring.
+
+Engineered water display ownership
+
+data/technology_waterworks.js declares tech_waterworks and data/buildings_waterworks.js declares buildings_waterworks. Their three new tech and three building rows retain the ordinary tech.<id>.name/desc.default and building.<id>.name/desc.default owners and final-English aliases. Operation policies contain only structural ids and numeric terms, with no new display owner. Existing technology requirements and Water service reviews expose current missing knowledge, input and payment through the shared localized UI. No rendered status is saved and no generated catalogue changes accompany these declarations.

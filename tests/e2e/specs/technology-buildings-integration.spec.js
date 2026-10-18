@@ -9,6 +9,7 @@ const released = require('../fixtures/released-catalogue.json');
 const example = require('../fixtures/authoring/technology-buildings-composition.json');
 
 dependsOnRuntime(__filename, [
+  'data/technology_waterworks.js', 'data/buildings_waterworks.js',
   'index.html', 'data/map_data.js', 'data/technology.js', 'data/technology_early_refinements.js', 'data/technology_foundations.js',
   'data/technology_learning.js', 'data/buildings_learning_care.js',
   'data/technology_civic_military.js', 'data/buildings_civic_military.js',
@@ -112,11 +113,11 @@ test('all supplements compose once with stable effects, grants, budgets and rele
           JSON.stringify(base.buildings[id][key]) !== JSON.stringify(FBDATA.buildings[id][key]);
       });
     });
-    const heldTech = ['aqueduct_maintenance','qanat_construction','masonry_circuits','stockfish_curing',
+    const heldTech = ['masonry_circuits','stockfish_curing',
       'vertical_axis_windmill','pastoral_waterworks','tuna_trapping','cotton_cultivation',
       'sugar_processing','manuscript_scholarship','galley_yard_practice','horizontal_watermill',
       'bog_iron','seasonal_pasture_management','motte_and_bailey'];
-    const heldBuildings = ['aqueduct','qanat_waterworks','public_bath','urban_cisterns','paper_workshop',
+    const heldBuildings = ['public_bath','paper_workshop',
       'bloomery_smithy','horizontal_mill','boathouse','fish_drying_station','shieling','fairground',
       'relay_station','pasture_well_network','felt_yard','timber_streetworks','tonnara',
       'cotton_preparation_yard','sugar_workshop','mint_workshop','funduq','notarial_office',
@@ -143,8 +144,9 @@ test('all supplements compose once with stable effects, grants, budgets and rele
   });
   expect(r.techOwners).toEqual({ duplicates:[], stale:[], counts:[9,6,12,8,1,1] });
   expect(r.buildingOwners).toEqual({ duplicates:[], stale:[], counts:[3,3,1,1] });
-  expect(r.counts).toEqual([189,20]); expect(r.techIds).toEqual(r.baseIds);
-  expect(r.addedBuildings).toEqual(['hospice']);
+  expect(r.counts).toEqual([192,23]);
+  expect(r.techIds).toEqual(r.baseIds.concat(['aqueduct_maintenance','qanat_construction','cistern_engineering']).sort());
+  expect(r.addedBuildings).toEqual(['hospice','aqueduct','qanat_waterworks','urban_cisterns']);
   expect(r.scalarChanges.sort()).toEqual(['capitularies','paper_making','paper_scholarship']);
   expect(r.buildingChanges).toEqual([]);
   expect(r.caps).toEqual(r.baseCaps); expect(r.grants).toEqual(r.baseGrants);
@@ -153,7 +155,7 @@ test('all supplements compose once with stable effects, grants, budgets and rele
   const supplements = ['data/technology_early_refinements.js','data/technology_foundations.js','data/technology_learning.js',
     'data/buildings_learning_care.js','data/technology_civic_military.js','data/buildings_civic_military.js',
     'data/technology_maritime.js','data/buildings_maritime.js','data/technology_wind.js','data/buildings_wind.js',
-    'data/technology_transmission.js'];
+    'data/technology_transmission.js','data/technology_waterworks.js','data/buildings_waterworks.js'];
   for (const source of supplements) {
     expect(r.sources.filter(function (s) { return s === source; })).toHaveLength(1);
     expect(r.sources.indexOf(source)).toBeGreaterThan(r.sources.indexOf('data/technology.js'));
@@ -182,7 +184,7 @@ for (const bookmark of ['867','1066']) for (const revision of ['baseline',null])
       }
       const corrected = seeded(); let prior;
       try {
-        FBDATA.tech = JSON.parse(JSON.stringify(window.__compositionBase.tech));
+        FBDATA.tech = JSON.parse(JSON.stringify(Object.assign({},window.__compositionBase.tech,FBDATA.tech_waterworks)));
         // Compare prerequisite composition under the same transmission policy.
         // The full pre-policy delta is covered by early-knowledge-transmission.spec.js.
         ['paper_making','paper_scholarship','capitularies'].forEach(function (id) {

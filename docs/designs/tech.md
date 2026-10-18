@@ -680,3 +680,9 @@ building_profile_selection has technology impact none for typed authoring and se
 Inherited profile identity
 
 building_profile_inheritance is none because retaining the identity of property is accounting. No research is inferred or required to keep or repair an inherited asset. Current operation still needs its real input and permission owners, and optional new machinery construction retains its exact hard or soft requirement and ungated fallback.
+
+Engineered water knowledge
+
+aqueduct_maintenance, qanat_construction and cistern_engineering are optional hard construction gates, each recorded separately in techImpactReviews. Their costs are 50, 50 and 20 research, with no passive national effects or grants. The graph uses lime_mortar plus geometry, irrigation_channels plus geometry, and lime_mortar alone respectively. Ordinary wells, water carriage, channels, domestic collection and inherited repairs remain available. Literal adoption pairs model transmission rather than faith membership or measured installation dates.
+
+Fresh campaigns may complete these discoveries under the historical policy; retained campaigns and partial projects are never reseeded. Earlier Latin aqueduct completion can close geometry early and therefore includes its existing 0.1 research effect, even though the new discoveries themselves have empty fx. At 867/1066 existing prerequisites are already complete, so the added knowledge supplies no extra national scalar there. Physical works need separate lawful sources, funded service and property. See docs/research/engineered-waterworks.md for exact schedules, evidence boundaries and accounting.

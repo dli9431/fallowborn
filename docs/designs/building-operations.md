@@ -1,6 +1,6 @@
 Building water operations
 
-Water service composes the existing physical resource owner with ordinary nonfort buildings. The bundled buildingOperationProfiles table is empty. No historical facility, source, catchment, stock, population, workforce, technology completion or income is inferred. The two complete ordinary JSON imports water-operations-river.json and water-operations-catchment.json demonstrate supplied conveyance and competing demand versus an initially dry tank requiring a separately paid fill.
+Water service composes the existing physical resource owner with ordinary nonfort buildings. The bundled buildingOperationProfiles table contains optional engineered-water policies; these assign no physical source or asset. No historical facility, source, catchment, stock, population, workforce, technology completion or income is inferred. The two complete ordinary JSON imports water-operations-river.json and water-operations-catchment.json demonstrate supplied conveyance and competing demand versus an initially dry tank requiring a separately paid fill.
 
 Declarations and intrinsic boundaries
 
