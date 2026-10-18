@@ -6,7 +6,7 @@ FBDATA.bookmarkCandidates['1241'] = {
   id:'1241', name:'The Mongol Invasion',
   desc:'Hungarian and Rus households face an uncertain spring while rival courts pursue their own priorities.',
   date:{year:1241,season:0,day:1}, era:'high_medieval',
-  geography:'europe_regional_2', hidden:true,
+  geography:'europe_regional_2',
   revision:'baseline', revisions:{baseline:{}}, settlementLayout:'1241',
   openingRevision:'baseline', openingLegacyRevision:'baseline',
   opening:{actors:{},appointments:{},estates:[],claims:[],migrations:[]},
