@@ -1,5 +1,11 @@
 # National technology
 
+Wind-powered milling
+
+data/technology_wind.js preserves the windmill id, water_power prerequisite, cost 100, effects, unlocks, capabilities and every inherited adoption pair. Wind-Powered Milling distinguishes eastern vertical-axis mechanisms from later western post mills; the attestation envelope is 900-1200, a rounded evidence bound rather than an invention year. The building's independent inclusive 1150 construction permission does not prevent earlier knowledge or remove saved completions and projects. Fresh historical knowledge still uses the ordinary graph and adoption policy; restore does not reseed it. Source limits are in docs/research/windmills.md.
+
+The existing building_windmill review remains soft with windmill, with ordinary grinding and watermills as baseline alternatives. The physical date boundary has impact none under the existing construction_applicability review, and adds no discovery. This changes no capability grant or national cap.
+
 Manuscript learning and care
 
 data/technology_learning.js preserves six ids, costs, adoption matrices and effects while separating manuscript learning from paper. Scriptoria unlocks Library; Paper Scholarship remains an independent efficiency refinement. Universities requires scholarly_networks and scriptoria, Advanced Legal Studies requires scholarly_networks and written_law, and Scholastic Method requires scholarly_networks and translation_schools. Translation Networks asserts no single academy. Canon law retains legal_studies/scriptoria requirements. Fresh historical seeding closes the effective graph and honors omissions; restore retains completed knowledge without reseeding or retroactive prerequisite awards. No technology, research slot or capability grant is added.

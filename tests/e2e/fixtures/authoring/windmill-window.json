@@ -1,0 +1,12 @@
+{
+  "name": "Later mill construction window example",
+  "buildings": {
+    "windowed_windmill": {
+      "role": "milling", "name": "Windowed Wind Mill", "icon": "W",
+      "desc": "An independent paid milling facility with a limited construction window.",
+      "cost": 60, "tax": 1, "dev": 1, "populationCapacity": 0.02,
+      "maxCounty": 1, "requiresTech": "windmill", "aiBuildOrder": 10,
+      "applicability": { "yearMin": 1170, "yearMax": 1190 }
+    }
+  }
+}
