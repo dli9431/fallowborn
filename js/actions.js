@@ -7091,28 +7091,15 @@ window.FB = window.FB || {};
        appends lines for one def key (tax feeds gold, piety feeds piety)
        and returns the summed amount for the tax arithmetic below */
     function addBuildings(stat, key, multiplier, isUpkeep) {
-      let count;
-      if (FB.buildingBonusCounts) {
-        count = FB.buildingBonusCounts(state, key);
-      } else {
-        count = {};
-        for (const pid of FB.demesne(state)) {
-          for (const e of FB.builtIn(state, pid)) {
-            const def = FB.buildingOperations ? FB.buildingOperations.effects(state, pid, e) : FBDATA.buildings[e.id];
-            if (!e.ruined && def && def[key]) {
-              count[e.id] = (count[e.id] || 0) + 1;
-            }
-          }
-        }
-      }
       let sum = 0;
-      for (const bid in count) {
-        const def = FBDATA.buildings[bid];
-        const amt = def[key] * count[bid] * (multiplier || 1);
+      for (const row of FB.buildingProfiles.effectRows(state,key)) {
+        const amt = row.amount * (multiplier || 1);
         sum += amt;
-        let label = dataName('building', bid, def) + (count[bid] > 1 ? ' ×' + count[bid] : '');
-        if (isUpkeep) label = FB.T('{building} upkeep', { building: label });
-        add(stat, label, amt);
+        const def = row.profileId ? Object.assign({icon:FBDATA.buildings[row.buildingId].icon},FBDATA.buildingProfiles[row.profileId]) : FBDATA.buildings[row.buildingId];
+        let label = dataName(row.profileId ? 'buildingProfile' : 'building', row.profileId || row.buildingId, def) +
+          (row.count > 1 ? ' ×' + row.count : '');
+        if (isUpkeep) label = FB.T('{building} upkeep', { building:label });
+        add(stat,label,amt);
       }
       return sum;
     }
@@ -10160,7 +10147,12 @@ window.FB = window.FB || {};
       if (FB.isProtected(state, 'autoBuildCounty', pid)) continue;
       const context = FB.buildingContext(state, pid, demesneContext);
       for (let idx = 0; idx < context.visibleCount; idx++) {
-        for (const b of FB.buildable(state, pid, idx, context)) {
+        const options = FB.buildable(state, pid, idx, context);
+        for (const id in FBDATA.buildings) for (const profileId of FB.buildingProfiles.ids(id)) {
+          if (FB.canBuildAt(state,pid,idx,id,context,profileId)) options.push({id:id,profileId:profileId,
+            def:FB.buildingProfiles.definition(id,profileId),cost:FB.buildCost(state,pid,id,undefined,profileId)});
+        }
+        for (const b of options) {
           if (b.def.upkeep && steadyGold < b.def.upkeep) continue;
           if (!best || b.cost < best.cost) { best = b; bestPid = pid; bestIdx = idx; }
         }
@@ -10168,7 +10160,7 @@ window.FB = window.FB || {};
     }
     // keep a prudent reserve so upkeep and events never find an empty chest
     if (!best || state.player.gold < best.cost + 25) return false;
-    return FB.build(state, bestPid, bestIdx, best.id);
+    return FB.build(state, bestPid, bestIdx, best.id, best.profileId);
   };
 
   /* ================= demesne buildings =================
@@ -10667,8 +10659,8 @@ window.FB = window.FB || {};
       ? context : FB.buildingContext(state, pid);
     let count = 0;
     for (const id in FBDATA.buildings) {
-      if (!FBDATA.buildings[id].fort &&
-          FB.canBuildAt(state, pid, idx, id, context)) count++;
+      if (!FBDATA.buildings[id].fort && (FB.canBuildAt(state, pid, idx, id, context) ||
+          FB.buildingProfiles.ids(id).some(function (profileId) { return FB.canBuildAt(state,pid,idx,id,context,profileId); }))) count++;
     }
     return count;
   };
@@ -10729,7 +10721,7 @@ window.FB = window.FB || {};
 
   FB.repairBuildingStatus = function (state, pid, idx, id) {
     const out = { ready:false, cost:0, reason:'', fort:false, targetLevel:0, completeTurn:null };
-    const def = FBDATA.buildings[id];
+    let def = FBDATA.buildings[id];
     if (!state || !def || typeof idx !== 'number' || !isFinite(idx) ||
         Math.floor(idx) !== idx || idx < 0) {
       out.reason = FB.T('This building cannot be repaired.');
@@ -10742,6 +10734,8 @@ window.FB = window.FB || {};
       out.reason = FB.T('There are no ruins of this building to repair.');
       return out;
     }
+    def = FB.buildingProfiles.assetDefinition(ruin);
+    if (!def) return out;
     if (def.fort === true) {
       const fort = FB.fortProjectStatus(state, pid, idx, 0, { repair:true });
       out.fort = true;
@@ -10758,7 +10752,7 @@ window.FB = window.FB || {};
     }
     const context = FB.buildingContext(state, pid);
     out.cost = buildingCost(state, pid, id, null,
-      Math.max(0, FB.buildingCountIn(state, pid, id, true) - 1), 0.5);
+      Math.max(0, FB.buildingCountIn(state, pid, id, true) - 1), 0.5, ruin.buildingProfile && ruin.buildingProfile.id);
     const institutional = FB.buildingInstitutionStatus(state, pid, idx, id, undefined, ruin);
     if (!institutional.allowed) {
       out.reason = institutional.reason;

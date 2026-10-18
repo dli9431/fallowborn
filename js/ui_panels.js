@@ -4363,7 +4363,8 @@ window.FB = window.FB || {};
     }
     if (entry.kind === 'building') {
       const def = FBDATA.buildings[entry.buildingId];
-      const name = def ? dt(s, 'building', entry.buildingId, def, 'name') : entry.buildingId;
+      const name = entry.profileId ? dt(s,'buildingProfile',entry.profileId,FBDATA.buildingProfiles[entry.profileId],'name') :
+        def ? dt(s, 'building', entry.buildingId, def, 'name') : entry.buildingId;
       return entry.count > 1 ? FB.T('{building} ×{count}', {
         building:name, count:entry.count
       }) : name;

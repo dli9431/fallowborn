@@ -1,0 +1,423 @@
+{
+  "name": "Inherited profile river authoring world",
+  "buildings": {
+    "profile_work": {
+      "name": "Ordinary foundation works",
+      "desc": "One physical asset with default upkeep and awards.",
+      "icon": "W",
+      "role": "worship",
+      "cost": 40,
+      "upkeep": 1,
+      "piety": 1,
+      "dev": 1,
+      "maxCounty": 2,
+      "constructionGroup": {
+        "id": "profile_foundation",
+        "maxCounty": 2
+      }
+    }
+  },
+  "geographies": {
+    "inventory_estuary_land": {
+      "bounds": {
+        "lonMin": 0,
+        "lonMax": 6,
+        "latMin": 0,
+        "latMax": 5
+      },
+      "land": [
+        [
+          0.5,
+          0.5,
+          5.5,
+          0.5,
+          5.5,
+          4.5,
+          0.5,
+          4.5
+        ]
+      ],
+      "gridWidth": 240,
+      "seas": [],
+      "rivers": [],
+      "defaultLayout": "inventory_estuary_layout",
+      "provinces": [
+        {
+          "id": "inventory_quay",
+          "x": 1.5,
+          "y": 2,
+          "terrain": "farmland"
+        },
+        {
+          "id": "inventory_marsh",
+          "x": 3.1,
+          "y": 2,
+          "terrain": "farmland"
+        },
+        {
+          "id": "inventory_ridge",
+          "x": 4.7,
+          "y": 2,
+          "terrain": "hills"
+        },
+        {
+          "id": "inventory_scenery",
+          "x": 3.1,
+          "y": 4,
+          "terrain": "hills"
+        }
+      ],
+      "sites": {
+        "inventory_quay_hall": {
+          "x": 1.4,
+          "y": 2
+        },
+        "inventory_quay_store": {
+          "x": 1.7,
+          "y": 2
+        },
+        "inventory_marsh_town": {
+          "x": 3.1,
+          "y": 2
+        },
+        "inventory_ridge_tower": {
+          "x": 4.7,
+          "y": 2
+        }
+      }
+    }
+  },
+  "settlementLayouts": {
+    "inventory_estuary_layout": {
+      "inventory_quay": [
+        {
+          "site": "inventory_quay_hall",
+          "name": "Quay Hall",
+          "kind": "town"
+        },
+        {
+          "site": "inventory_quay_store",
+          "name": "Quay Stores",
+          "kind": "village"
+        }
+      ],
+      "inventory_marsh": [
+        {
+          "site": "inventory_marsh_town",
+          "name": "Marsh Town",
+          "kind": "village"
+        }
+      ],
+      "inventory_ridge": [
+        {
+          "site": "inventory_ridge_tower",
+          "name": "Ridge Tower",
+          "kind": "village"
+        }
+      ]
+    }
+  },
+  "startScenarios": [
+    {
+      "id": "inventory_estuary_household",
+      "name": "Estuary household",
+      "desc": "A fictional household.",
+      "intro": "Your family lives beside the estuary.",
+      "tier": 1,
+      "profession": "farmer",
+      "gold": 12,
+      "prestige": 0,
+      "piety": 0,
+      "bookmarkIds": [
+        "inventory_estuary"
+      ],
+      "eras": [
+        "early_medieval"
+      ],
+      "alwaysUnlocked": true,
+      "startAge": 24,
+      "familyPresets": {
+        "standard": {
+          "name": "Established household",
+          "diff": "age 24"
+        }
+      }
+    }
+  ],
+  "bookmarks": {
+    "inventory_estuary": {
+      "id": "inventory_estuary",
+      "name": "The Estuary",
+      "desc": "A fictional inventory example.",
+      "date": {
+        "year": 900,
+        "season": 0,
+        "day": 1
+      },
+      "era": "early_medieval",
+      "geography": "inventory_estuary_land",
+      "religiousHeads": {},
+      "localInstitutions": {
+        "binding_institution": {
+          "city": "Lantern See",
+          "kind": "see",
+          "provinceId": "inventory_quay",
+          "site": "inventory_quay_hall",
+          "religion": "catholic",
+          "culture": "frankish",
+          "officeId": "binding_bishop",
+          "officeSystem": null,
+          "historicalName": "Hale"
+        },
+        "binding_second_institution": {
+          "city": "Storehouse See",
+          "kind": "see",
+          "provinceId": "inventory_quay",
+          "site": "inventory_quay_store",
+          "religion": "catholic",
+          "culture": "frankish",
+          "officeId": "binding_second_bishop",
+          "officeSystem": null,
+          "historicalName": "Maren"
+        }
+      },
+      "stories": [],
+      "starts": [
+        "inventory_estuary_household"
+      ],
+      "scripted": [],
+      "straits": [],
+      "crossingClasses": {},
+      "provinces": [
+        {
+          "id": "inventory_quay",
+          "name": "Quay",
+          "realm": "inventory_estuary_court",
+          "culture": "frankish",
+          "religion": "catholic",
+          "dev": 3
+        },
+        {
+          "id": "inventory_marsh",
+          "name": "Marsh",
+          "realm": "inventory_estuary_court",
+          "culture": "frankish",
+          "religion": "catholic",
+          "dev": 2
+        },
+        {
+          "id": "inventory_ridge",
+          "name": "Ridge",
+          "realm": "inventory_ridge_court",
+          "culture": "frankish",
+          "religion": "catholic",
+          "dev": 2
+        },
+        {
+          "id": "inventory_scenery",
+          "name": "Uninhabited upland",
+          "wasteland": true
+        }
+      ],
+      "realms": [
+        {
+          "id": "inventory_estuary_court",
+          "name": "Estuary court",
+          "capital": "inventory_quay",
+          "color": "#458c96",
+          "aggression": 0,
+          "rank": 2,
+          "government": "regnum",
+          "ruler": {
+            "name": "Ivo Reed",
+            "culture": "frankish",
+            "born": 868,
+            "mar": 6,
+            "trait": "patient"
+          },
+          "techSeed": {
+            "complete": [
+              "ringworks"
+            ]
+          }
+        },
+        {
+          "id": "inventory_ridge_court",
+          "name": "Ridge court",
+          "capital": "inventory_ridge",
+          "color": "#aa7944",
+          "aggression": 0,
+          "rank": 1,
+          "government": "regnum",
+          "liege": "inventory_estuary_court",
+          "ruler": {
+            "name": "Odo Vale",
+            "culture": "frankish",
+            "born": 870,
+            "mar": 5,
+            "trait": "patient"
+          }
+        }
+      ],
+      "duchies": {},
+      "kingdoms": {},
+      "empires": {},
+      "buildingInstitutionAssignments": [
+        {
+          "profileId": "seat_works",
+          "institutionId": "binding_institution"
+        },
+        {
+          "profileId": "seat_works",
+          "institutionId": "binding_second_institution"
+        }
+      ],
+      "siteResourceAssignments": [
+        {
+          "id": "profile_intake",
+          "profileId": "profile_river_flow",
+          "countyId": "inventory_quay",
+          "siteId": "inventory_quay_hall",
+          "suitability": {
+            "source": true,
+            "gradient": true
+          },
+          "rights": {
+            "kind": "holder"
+          }
+        }
+      ],
+      "buildingOperationAssignments": [
+        {
+          "id": "profile_demand",
+          "profileId": "profile_water_use",
+          "buildingId": "profile_work",
+          "countyId": "inventory_quay",
+          "siteId": "inventory_quay_hall",
+          "sourceId": "profile_intake",
+          "stores": [],
+          "demandId": "profile_foundation_demand"
+        }
+      ],
+      "revision": "inherited",
+      "revisions": {
+        "baseline": {},
+        "inherited": {
+          "openingInfrastructure": {
+            "version": 1,
+            "placements": [
+              {
+                "countyId": "inventory_quay",
+                "siteId": "inventory_quay_hall",
+                "buildingId": "profile_work",
+                "profileId": "river_serviced",
+                "condition": "standing"
+              }
+            ]
+          }
+        },
+        "empty": {
+          "openingInfrastructure": {
+            "version": 1,
+            "placements": []
+          }
+        }
+      }
+    }
+  },
+  "buildingInstitutionProfiles": {
+    "seat_works": {
+      "kinds": [
+        "see"
+      ],
+      "property": "seat",
+      "permission": "holder",
+      "incumbent": "required",
+      "exclusiveRoles": [
+        "worship"
+      ]
+    }
+  },
+  "siteResourceProfiles": {
+    "profile_river_flow": {
+      "name": "Foundation water",
+      "desc": "Finite river service at the actual foundation.",
+      "kind": "flow",
+      "unit": "water",
+      "capacity": 6,
+      "periodDays": 7
+    }
+  },
+  "buildingOperationProfiles": {
+    "profile_water_use": {
+      "mode": "use",
+      "amount": 1,
+      "periodDays": 7,
+      "workCost": 2,
+      "effect": "piety"
+    }
+  },
+  "buildingProfiles": {
+    "river_serviced": {
+      "buildingId": "profile_work",
+      "name": "Water-serviced foundation",
+      "desc": "A paid optional water variant at an authorized existing foundation.",
+      "replace": {
+        "cost": 30,
+        "upkeep": 0,
+        "dev": 0,
+        "piety": 2
+      },
+      "requiresTech": [
+        "water_power"
+      ],
+      "siteResourceProfile": "profile_river_flow",
+      "operationProfile": "profile_water_use",
+      "institutionProfile": "seat_works",
+      "techImpactReview": "profile_water_machinery",
+      "applicability": {
+        "yearMin": 1000,
+        "yearMax": 1100
+      },
+      "inheritance": "retain"
+    },
+    "river_modest": {
+      "buildingId": "profile_work",
+      "name": "Modest foundation works",
+      "desc": "A cheaper ordinary alternative without a machinery gate or operating service.",
+      "replace": {
+        "cost": 15,
+        "upkeep": 0,
+        "piety": 0,
+        "dev": 0
+      },
+      "requiresTech": [],
+      "inheritance": "retain"
+    },
+    "river_enclosure": {
+      "buildingId": "walls",
+      "name": "River enclosure works",
+      "desc": "An optional construction path retaining the canonical strategic fort tiers.",
+      "replace": {},
+      "requiresTech": [],
+      "applicability": {
+        "yearMin": 900,
+        "yearMax": 900
+      },
+      "inheritance": "retain"
+    }
+  },
+  "techImpactReviews": {
+    "baselineVersion": "1.127.1",
+    "features": {
+      "profile_water_machinery": {
+        "mode": "hard",
+        "tech": [
+          "water_power"
+        ],
+        "fallback": "Modest foundation works and ordinary worship remain available.",
+        "rationale": "Optional powered equipment uses water-power knowledge; neither ordinary premises nor worship require it."
+      }
+    }
+  }
+}

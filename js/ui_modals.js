@@ -8806,11 +8806,13 @@ window.FB = window.FB || {};
   function institutionalBuildingRows(s, pid) {
     let h = '';
     for (const r of FB.builtIn(s, pid)) {
-      if (!r.institutionBinding) continue;
-      const status = FB.buildingInstitutionStatus(s, pid, r.s, r.id, r.institutionBinding.payer, r);
-      const d = FBDATA.buildings[r.id];
-      h += '<div class="hint">' + esc(dt(s, 'building', r.id, d, 'name')) + ': ' +
-        esc(status.allowed ? FB.T('Institutional permission is current; maintenance uses its recorded payer.') : status.reason) +
+      const d = FB.buildingProfiles.assetDefinition(r);
+      if (!r.institutionBinding && !(r.buildingProfile && d && d.institutionProfile)) continue;
+      const status = FB.buildingInstitutionStatus(s, pid, r.s, r.id, r.institutionBinding && r.institutionBinding.payer, r);
+      const name = r.buildingProfile ? dt(s,'buildingProfile',r.buildingProfile.id,FBDATA.buildingProfiles[r.buildingProfile.id],'name') : dt(s,'building',r.id,d,'name');
+      h += '<div class="hint">' + esc(name) + ': ' +
+        esc(!r.institutionBinding ? FB.T('No current institutional permission. Review before operating these works.') :
+          status.allowed ? FB.T('Institutional permission is current; maintenance uses its recorded payer.') : status.reason) +
         ' <button type="button" class="btn small" data-institution-building="' + esc(r.id) + '" data-institution-slot="' + r.s + '">' +
         esc(FB.T('Review permission')) + '</button></div>';
     }
@@ -10399,10 +10401,11 @@ window.FB = window.FB || {};
     const payer = FB.settlementActor(s);
     let h = '<p class="hint">' + esc(FB.T('Water service pays for work and upkeep once for a finite term. Storage alone grants no benefit. Unfunded or interrupted works retain their property.')) + '</p>';
     (s.buildings[pid] || []).filter(function (r) { return r.s === idx && r.waterOperation; }).forEach(function (r) {
-      const d = FBDATA.buildings[r.id], current = O.effects(s,pid,r);
+      const d = FB.buildingProfiles.assetDefinition(r), current = O.effects(s,pid,r);
+      const name = r.buildingProfile ? dt(s,'buildingProfile',r.buildingProfile.id,FBDATA.buildingProfiles[r.buildingProfile.id],'name') : dt(s,'building',r.id,d,'name');
       const q = O.quote(s,{countyId:pid,settlement:idx,buildingId:r.id,actor:payer}), n = actions.length;
       actions.push(q);
-      h += '<div class="governance-card review-fact-card"><div class="panelh">' + esc(dt(s,'building',r.id,d,'name')) + '</div>' +
+      h += '<div class="governance-card review-fact-card"><div class="panelh">' + esc(name) + '</div>' +
         '<p>' + esc(r.ruined ? FB.T('Ruined: no current benefit.') : buildingEffects(current,r.id).join(' · ')) + '</p>' +
         reviewActionsHtml(reviewActionCardHtml({id:'water-action-' + n,data:{waterReview:n},label:FB.T('Review water service'),
           disabled:!q.allowed,warn:!q.allowed,note:O.reason(q),details:'<p>' + esc(O.reason(q)) + '</p>'})) + '</div>';
@@ -10565,7 +10568,7 @@ window.FB = window.FB || {};
         property.join('<br>') + '</p></div>';
     }
     const canRaise = managesSettlement &&
-      FB.buildable(s, pid, idx).length > 0;
+      FB.buildableCount(s, pid, idx) > 0;
     if (canRaise) {
       h += '<div class="gm-list" style="margin-bottom:8px;"><button class="actionbtn" id="gm-raise">' +
         esc(FB.T('🏗 Raise a building…')) + '</button></div>';
@@ -10619,7 +10622,7 @@ window.FB = window.FB || {};
               transferRule:buildingTransferRule(),
               expiry:buildingExpiryRule(id)
             }) + '<div class="hint settdesc">' +
-              esc(dt(s, 'building', id, d, 'desc')) + '</div>',
+              esc(e.buildingProfile ? dt(s,'buildingProfile',e.buildingProfile.id,FBDATA.buildingProfiles[e.buildingProfile.id],'desc') : dt(s, 'building', id, d, 'desc')) + '</div>',
             id);
         }
       }
@@ -10917,13 +10920,15 @@ window.FB = window.FB || {};
         function reviewRepair(replacing) {
           const current = FB.state;
           const status = FB.repairBuildingStatus(current, pid, idx, id);
-          const def = FBDATA.buildings[id];
-          const name = dt(current, 'building', id, def, 'name');
+          const asset = FB.builtIn(current,pid).find(function (r) { return r.id === id && r.s === idx; });
+          const def = asset ? FB.buildingProfiles.assetDefinition(asset) : FBDATA.buildings[id];
+          const name = asset && asset.buildingProfile ? dt(current,'buildingProfile',asset.buildingProfile.id,FBDATA.buildingProfiles[asset.buildingProfile.id],'name') : dt(current, 'building', id, def, 'name');
           const effect = status.fort
             ? FB.T('Defenses return when repairs finish {finish}.', {
               finish:fortDateText(current, status.completeTurn)
-            }) : FB.T('The building resumes its seasonal benefits and upkeep immediately.');
-          const upkeep = status.fort ? (FB.fortLevelDef(status.targetLevel) || {}).upkeep : def.upkeep;
+            }) : asset && asset.buildingProfile ? FB.T('Repairs restore the physical asset. Required permission, inputs and funded operating terms still apply.') :
+              FB.T('The building resumes its seasonal benefits and upkeep immediately.');
+          const upkeep = status.fort ? (FB.fortLevelDef(status.targetLevel) || {}).upkeep : def.operationProfile ? 0 : def.upkeep;
           const details = '<p>' + esc(FB.T(
             'Repairs cost half the current replacement price, are not refunded, and do not repeat construction prestige or Popular support.')) + '</p>';
           const body = '<div class="gm-body-text">' + kv('Settlement', esc(st.name)) +
@@ -10955,8 +10960,9 @@ window.FB = window.FB || {};
     document.querySelectorAll('[data-demolish]').forEach(function (btn) {
       btn.addEventListener('click', function () {
         const id = btn.dataset.demolish;
-        const d = FBDATA.buildings[id];
-        const name = dt(FB.state, 'building', id, d, 'name');
+        const asset = FB.builtIn(FB.state,pid).find(function (r) { return r.id === id && r.s === idx; });
+        const d = asset ? FB.buildingProfiles.assetDefinition(asset) : FBDATA.buildings[id];
+        const name = asset && asset.buildingProfile ? dt(FB.state,'buildingProfile',asset.buildingProfile.id,FBDATA.buildingProfiles[asset.buildingProfile.id],'name') : dt(FB.state, 'building', id, d, 'name');
         const consequence = d.constructionGroup ? FB.T(
           'Demolishing {building} gives no refund. The building is removed, its benefits and upkeep end, and its construction group gains a free place. Removed copies no longer count toward repeat prices.',
           { building:name }) : FB.T(

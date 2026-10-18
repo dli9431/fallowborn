@@ -676,3 +676,7 @@ conserved_production_batches is none: conserved stock accounting and ordinary pa
 Construction profile discovery
 
 building_profile_selection has technology impact none for typed authoring and selection. Profiles with additional machinery technologies require a separate exact hard or soft review, retain base construction gates and show the missing technology while the ordinary alternative stays available. The technology sheet discovers each real buildingProfile consumer using its profile name and owning base building, without a synthetic building id or research reward. Existing assets and funded projects keep their saved identity; construction eligibility does not reassign it. See docs/designs/building-profiles.md.
+
+Inherited profile identity
+
+building_profile_inheritance is none because retaining the identity of property is accounting. No research is inferred or required to keep or repair an inherited asset. Current operation still needs its real input and permission owners, and optional new machinery construction retains its exact hard or soft requirement and ungated fallback.
