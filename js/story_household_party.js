@@ -56,7 +56,7 @@
   };
   function available(s,t,id) {
     var held=P.reservedBy(s,id);
-    return homeAvailable(s,id) && (!held || held === t.partyId);
+    return (homeAvailable(s,id) || P.camps && P.camps.associationAvailable(s,t,id)) && (!held || held === t.partyId);
   }
   function cared(s,t,m) {
     var a=member(t,m.caregiverId);
@@ -153,7 +153,7 @@
       t.revision++; return true;
     }
     function day(s,t) {
-      if (P.journeys && t.version === 2) { P.journeys.tick(s,t); return; }
+      if (P.journeys && t.version >= 2) { P.journeys.tick(s,t); return; }
       if (t.status !== 'forming') return;
       if (t.actorId !== s.player.charId || s.player.dead || !free(s,s.chars[t.actorId])) {
         t.status='closed'; t.closedTurn=s.turn; t.closeReason=t.actorId !== s.player.charId ? 'succession' : 'actor'; t.revision++; return;
@@ -179,10 +179,11 @@
     var memberFields=['personId','kind','caregiverId','status','invitedTurn','endTurn','decidedTurn','consentActorId'];
     function validate(t,s) {
       function need(ok) { if (!ok) throw new Error(FB.T('Invalid v4 save field at {path}.',{path:'state.stories.'+def.id})); }
-      need(exact(t,t.version === 2 ? fields.concat(['journey']) : fields) && (t.version === 1 || t.version === 2 && !!def.journey) && t.partyId === def.id && ref(t.actorId) && t.householdId === t.actorId && whole(t.revision) &&
+      need(exact(t,t.version >= 2 ? fields.concat(['journey']) : fields) && (t.version === 1 || t.version === 2 && !!def.journey &&
+        def.journey.kind === 'ordinary_journey' || t.version === 3 && !!def.journey) && t.partyId === def.id && ref(t.actorId) && t.householdId === t.actorId && whole(t.revision) &&
         whole(t.openedTurn) && ['forming','closed'].indexOf(t.status) >= 0);
       need(t.status === 'forming' ? t.closedTurn === null && t.closeReason === null : whole(t.closedTurn) && t.closedTurn >= t.openedTurn &&
-        (['finished','actor','succession'].indexOf(t.closeReason) >= 0 || t.version === 2 && t.closeReason === 'departed'));
+        (['finished','actor','succession'].indexOf(t.closeReason) >= 0 || t.version >= 2 && t.closeReason === 'departed'));
       need(Array.isArray(t.members) && t.members.length <= def.maxMembers);
       t.members.forEach(function (m,i) {
         need(exact(m,memberFields) && ref(m.personId) && t.members.every(function (v,j) { return i === j || v.personId !== m.personId; }) &&
@@ -207,7 +208,7 @@
           }
         }
       });
-      if (t.version === 2) P.journeys.validate(t,s,def);
+      if (t.version >= 2) P.journeys.validate(t,s,def);
       if (s) need(t.actorId === s.player.houseFounderId && t.openedTurn <= s.turn && (t.closedTurn === null || t.closedTurn <= s.turn) &&
         (t.status === 'closed' || has(s.chars,t.actorId) && s.chars[t.actorId].id === t.actorId));
     }
