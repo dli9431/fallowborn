@@ -323,3 +323,7 @@ Native local incident tables use literal FBDATA.localThreats_<suffix> declaratio
 Production display owners
 
 Literal FBDATA.productionGoods and FBDATA.productionRecipes in data/production.js use productionGood and productionRecipe structured namespaces for name/desc. Production recipes additionally extract their top-level fallback display. The static extractor reads declarations without executing the game; unit ids, input/output references, quantities, prices and impact-review ids remain structural. Ordinary imported names/descriptions/fallback use the same display owner and safe English fallback. Dynamic batch reviews use FB.T, with no rendered explanation saved in lots or receipts. tools/test_i18n_production.py covers independent literal catalogues and fallback without executing a declaration.
+
+Named camp and survivor presentation
+
+js/household_party_camp.js uses complete literal FB.T messages for family-place requests, current host consent, deadlines, affected/excluded people, private road costs and new survivor recovery. Imported household_party title and intro retain their existing effective-English fallback. Proper names, stable actor/migration/generation references, capacity and route facts stay locale-neutral. Personal-admission status, county location and permanent residence remain separate facts. No rendered prose is saved and no new extraction root or generated catalogue is needed.

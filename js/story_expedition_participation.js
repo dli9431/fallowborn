@@ -62,7 +62,9 @@
   P.location = function (s) {
     if (s.player.travel && s.player.travel.participationId && s.player.travel.phase === 'return') return s.player.travel.currentId;
     var found=rows(s).filter(function (v) { return v.t.actorId === s.player.charId && v.t.locationHeld; })[0];
-    return found ? (['active','suspended'].indexOf(found.t.status) >= 0 && carrier(s,found.def,found.t) || found.t.lastPlace) : null;
+    var named=found && FB.householdParties && FB.householdParties.camps &&
+      FB.householdParties.camps.personalLocation(s,found.id);
+    return named || (found ? (['active','suspended'].indexOf(found.t.status) >= 0 && carrier(s,found.def,found.t) || found.t.lastPlace) : null);
   };
   P.arrivedHome = function (s) { P.checkpoint(s,s.player.provinceId,true); };
   P.checkpoint = function (s,pid,released) {
@@ -132,6 +134,7 @@
     function eligible(s,t,f) {
       var c=s.chars[t.actorId];
       return t.actorId === s.player.charId && !s.player.dead && free(s,c) && FB.ageOf(c,s.date.year) >= 16 &&
+        !(FB.householdParties && FB.householdParties.journeys && FB.householdParties.journeys.location(s,t.actorId)) &&
         FB.station.isFreeUnlanded(s.player,s) && (!s.player.travel || s.player.travel.participationId === def.id) && !(s.player.flags && s.player.flags.in_prison) &&
         !FB.atWarPersonally(s) && !!f.leader && !!f.r && f.r.status === 'active' && present(s,t,f) &&
         !Object.keys(s.authority.governments).some(function (rid) {
@@ -175,7 +178,7 @@
         facts:copy([def,t,s.turn,s.date,s.player,s.chars[t.actorId],f,s.authority.contracts,rows(s),s.owner,s.holder])};
     }
     function close(s,t,status,reason) {
-      var at=carrier(s,def,t);
+      var at=FB.householdParties && FB.householdParties.camps && FB.householdParties.camps.personalCheckpoint(s,def.id) || carrier(s,def,t);
       if (at && t.locationHeld) { t.lastPlace=at; t.lastTurn=s.turn; }
       t.status=status; t.endedTurn=s.turn; t.reason=reason; t.revision++;
       if (s.player.travel && s.player.travel.participationId === def.id && t.lastPlace) FB.travelUpdateTemporaryCarrier(s,t.lastPlace);

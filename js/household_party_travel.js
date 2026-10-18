@@ -2,14 +2,16 @@
 (function () {
   'use strict';
   var P=FB.householdParties, J=P.journeys={};
-  J.actions=['depart_journey','separate_person','rejoin_person','party_return','party_settle'];
+  J.actions=['depart_journey','separate_person','rejoin_person','party_return','party_settle',
+    'request_camp','accept_camp','decline_camp','camp_return','survivor_return'];
   function copy(v) { return JSON.parse(JSON.stringify(v)); }
   function same(a,b) { return JSON.stringify(a) === JSON.stringify(b); }
   function exact(o,fields) { return !!o && typeof o === 'object' && !Array.isArray(o) &&
     Object.keys(o).length === fields.length && Object.keys(o).every(function(k){return fields.indexOf(k)>=0;}); }
   function whole(n) { return Number.isSafeInteger(n) && n>=0; }
   function rows(s) { return Object.keys(s.stories || {}).sort().map(function(id){return s.stories[id];}).filter(function(t){
-    return t && t.version===2 && t.journey && t.journey.kind==='ordinary_journey';
+    return t && (t.version===2 || t.version===3) && t.journey &&
+      (t.journey.kind==='ordinary_journey' || t.journey.kind==='mobile_camp');
   }); }
   function holds(m) { return m.status==='following' || m.status==='separated' || m.status==='withdrawn'; }
   function live(s,id) {
@@ -28,22 +30,26 @@
     });
   }
   function travel(s,t) {
-    var v=s.player.travel,j=t.journey,c=j.carrier;
-    return t.actorId===s.player.charId && v && v.householdPartyId===t.partyId && v.startTurn===c.startTurn &&
+    var v=s.player.travel,j=t.journey,c=j.recovery || j.carrier;
+    return (c.actorId || t.actorId)===s.player.charId && v && v.householdPartyId===t.partyId && v.startTurn===c.startTurn &&
       v.purpose===c.purposeId && v.homeId===j.homeId && v.destinationId===c.destinationId ? v : null;
   }
   function find(s,id) { return rows(s).filter(function(t){return t.journey.members.some(function(m){return m.personId===id&&holds(m);});})[0] || null; }
   J.location=function(s,id) {
     var t=find(s,id); if(!t) return null;
+    if(t.journey.kind==='mobile_camp' && !t.journey.recovery) return P.camps.location(s,t,id);
     var m=t.journey.members.filter(function(v){return v.personId===id;})[0],v=travel(s,t);
     return m.status==='following' && v ? v.currentId : m.lastPlace;
   };
   J.travelling=function(s,id) {
     var t=find(s,id),v=t && travel(s,t);
+    if(t && t.journey.kind==='mobile_camp' && !t.journey.recovery) return P.camps.moving(s,t,id);
     return !!(v && v.phase!=='arrived' && t.journey.members.some(function(m){return m.personId===id&&m.status==='following';}));
   };
-  J.away=function(s,id) { var at=J.location(s,id);return !!at && (at!==s.player.provinceId || J.travelling(s,id)); };
+  J.away=function(s,id) { var at=J.location(s,id),t=find(s,id);return !!at &&
+    (at!==s.player.provinceId || J.travelling(s,id) || t.journey.kind==='mobile_camp' && t.journey.status==='active'); };
   J.check=function(def,context,bm) {
+    if(def.journey && def.journey.kind==='mobile_camp') return P.camps.check(def,context,bm);
     var d=def.journey,site=d && (FBDATA.travelSites || []).filter(function(v){return v.id===d.travelSiteId;})[0];
     var purpose=site && FBDATA.travelPurposes[site.purpose];
     if(!exact(d,['kind','travelSiteId']) || d.kind!=='ordinary_journey' || !purpose || purpose.targeted || purpose.mode!=='sites' ||
@@ -61,11 +67,14 @@
     return FB[method](view,{partyReview:true});
   }
   function affected(t,id) {
-    return t.journey.members.filter(function(m){return holds(m) && (m.personId===id || m.caregiverId===id);}).map(function(m){return m.personId;});
+    var target=t.journey.members.filter(function(m){return m.personId===id;})[0],anchor=target && target.caregiverId || id;
+    return t.journey.members.filter(function(m){return holds(m) && (m.personId===anchor || m.caregiverId===anchor);}).map(function(m){return m.personId;});
   }
   function site(def) { return (FBDATA.travelSites || []).filter(function(v){return v.id===def.journey.travelSiteId;})[0]; }
   J.review=function(s,def,t,action,actorId,personId) {
-    var owner=actorId===t.actorId && actorId===s.player.charId && live(s,actorId) && !s.player.dead;
+    if(P.camps.handles(t,action)) return P.camps.review(s,def,t,action,actorId,personId);
+    var reviewer=t.journey && t.journey.recovery ? t.journey.recovery.actorId : t.actorId;
+    var owner=actorId===reviewer && actorId===s.player.charId && live(s,actorId) && !s.player.dead;
     var ids=[],excluded=[],road=null,allowed=false,cost=0,j=t.journey,v=j && travel(s,t),actor=s.chars[t.actorId];
     if(action==='depart_journey' && def.journey && t.version===1 && t.status==='forming') {
       var snapshot=P.snapshot(s,def.id),destination=site(def);
@@ -82,7 +91,7 @@
         var target=j.members.filter(function(m){return m.personId===personId;})[0];
         allowed=ids.length>0 && !!target && target.status==='following' &&
           (owner || actorId===personId && target.caregiverId===null && live(s,actorId));
-        if(personId===t.actorId) ids=following(t).map(function(m){return m.personId;});
+        if(personId===reviewer) ids=following(t).map(function(m){return m.personId;});
       }
       if(action==='rejoin_person') {
         var returning=j.members.filter(function(m){return m.personId===personId;})[0];
@@ -125,6 +134,7 @@
         s.authority,s.owner,s.holder,rows(s),actor || null])};
   };
   J.commit=function(s,def,t,q) {
+    if(P.camps.handles(t,q.action)) return P.camps.commit(s,def,t,q);
     var fresh=J.review(s,def,t,q.action,q.actorId,q.personId);
     if(!fresh.allowed || !same(q,fresh)) return false;
     if(q.action==='depart_journey') {
@@ -140,7 +150,7 @@
           return {personId:id,caregiverId:m.caregiverId,status:'following',lastPlace:v.currentId,lastTurn:s.turn};})};
     } else if(q.action==='separate_person') {
       J.checkpoint(s,t);
-      if(q.people.indexOf(t.actorId)>=0) J.interrupt(s,t);
+      if(q.people.indexOf(t.journey.recovery ? t.journey.recovery.actorId : t.actorId)>=0) J.interrupt(s,t);
       t.journey.members.forEach(function(m){if(q.people.indexOf(m.personId)>=0)m.status='withdrawn';});
     } else if(q.action==='rejoin_person') {
       t.journey.members.forEach(function(m){if(q.people.indexOf(m.personId)>=0)m.status=travel(s,t) && !s.player.travel.partyInterrupted ? 'following' : 'separated';});
@@ -157,11 +167,13 @@
     t.revision++; return true;
   };
   J.checkpoint=function(s,t) {
+    if(t.journey.kind==='mobile_camp' && !t.journey.recovery) return P.camps.checkpoint(s,t);
     var v=travel(s,t); if(!v)return;
     following(t).forEach(function(m){if(m.lastPlace!==v.currentId){m.lastPlace=v.currentId;m.lastTurn=s.turn;t.revision++;}});
     if(t.journey.status!==v.phase && !v.partyInterrupted){t.journey.status=v.phase;t.revision++;}
   };
   J.interrupt=function(s,t) {
+    if(t.journey.kind==='mobile_camp' && !t.journey.recovery) return P.camps.interrupt(s,t);
     J.checkpoint(s,t);
     t.journey.status='interrupted';t.revision++;
     var v=travel(s,t);
@@ -175,24 +187,26 @@
     return true;
   };
   J.tick=function(s,t) {
+    if(t.journey.kind==='mobile_camp' && !t.journey.recovery) return P.camps.tick(s,t);
     var j=t.journey,v=travel(s,t);
+    var actorId=j.recovery ? j.recovery.actorId : t.actorId;
     if(j.status==='settled' || j.status==='returned')return;
     if(v)J.checkpoint(s,t);
-    if(v && (!live(s,t.actorId) || s.player.dead))J.interrupt(s,t);
+    if(v && (!live(s,actorId) || s.player.dead))J.interrupt(s,t);
     if(!v && following(t).length)J.interrupt(s,t);
     j.members.forEach(function(m){if(holds(m) && (s.chars[m.personId] || {}).dead){m.status='dead';t.revision++;}});
-    if(v && (s.player.dead || (s.chars[t.actorId] || {}).dead))s.player.travel=null;
+    if(v && (s.player.dead || (s.chars[actorId] || {}).dead))s.player.travel=null;
     var failed=[];
     j.members.forEach(function(m){if(m.status==='following' && (!live(s,m.personId) || conflict(s,m.personId) ||
-      m.caregiverId && (!live(s,m.caregiverId) || FB.ageOf(s.chars[m.personId],s.date.year)>=16)))failed.push(m.personId);});
+      m.caregiverId && m.personId!==actorId && (!live(s,m.caregiverId) || FB.ageOf(s.chars[m.personId],s.date.year)>=16)))failed.push(m.personId);});
     j.members.forEach(function(m){if(m.caregiverId && failed.indexOf(m.personId)>=0 && !(s.chars[m.personId] || {}).dead &&
         FB.ageOf(s.chars[m.personId],s.date.year)<16 && failed.indexOf(m.caregiverId)<0)failed.push(m.caregiverId);});
-    if(failed.indexOf(t.actorId)>=0)J.interrupt(s,t);
+    if(failed.indexOf(actorId)>=0)J.interrupt(s,t);
     j.members.forEach(function(m){if(failed.indexOf(m.personId)>=0){
       m.status=(s.chars[m.personId] || {}).dead ? 'dead' : 'separated';t.revision++;
     }});
     // A child never continues on a carrier after the named parent leaves it.
-    j.members.forEach(function(m){if(m.status==='following' && m.caregiverId && !following(t).some(function(c){return c.personId===m.caregiverId;})){
+    j.members.forEach(function(m){if(m.status==='following' && m.caregiverId && m.personId!==actorId && !following(t).some(function(c){return c.personId===m.caregiverId;})){
       m.status='separated';t.revision++;
     }});
   };
@@ -212,7 +226,8 @@
     following(t).forEach(function(m){m.status='settled';});
     t.journey.status='settled';t.revision++;
   };
-  J.validate=function(t,s,def) {
+  J.validate=function(t,s,def,recovery) {
+    if(t.version===3) return P.camps.validate(t,s,def);
     function need(ok){if(!ok)throw new Error(FB.T('Invalid v4 save field at {path}.',{path:'state.stories.'+t.partyId+'.journey'}));}
     var j=t.journey;
     need(t.status==='closed' && t.closeReason==='departed' && exact(j,['schema','kind','homeId','startedTurn','status','carrier','members']) &&
@@ -228,7 +243,7 @@
         ['following','separated','withdrawn','dead','returned','settled'].indexOf(m.status)>=0 &&
         j.members.every(function(n,k){return i===k || n.personId!==m.personId;}));
       if(m.caregiverId)need(j.members.some(function(c){return c.personId===m.caregiverId && c.caregiverId===null &&
-        (m.status!=='following' || c.status==='following');}));
+        (m.status!=='following' || recovery && m.personId===recovery.actorId || c.status==='following');}));
       if(j.status==='returned' || j.status==='settled')need(m.status!=='following');
       if(s){
         var c=s.chars[m.personId];
@@ -248,11 +263,13 @@
       if(c.householdResidenceId!==undefined)need(typeof c.householdResidenceId==='string' && Object.prototype.hasOwnProperty.call(s.owner,c.householdResidenceId));
     });
     var v=s.player.travel;
-    rows(s).forEach(function(t){if((following(t).length || t.journey.status==='interrupted') && t.actorId===s.player.charId && !s.player.dead && !(s.chars[t.actorId] || {}).dead)need(!!travel(s,t));});
+    P.camps.validateState(s);
+    rows(s).forEach(function(t){if(t.version===2 && (following(t).length || t.journey.status==='interrupted') && t.actorId===s.player.charId && !s.player.dead && !(s.chars[t.actorId] || {}).dead)need(!!travel(s,t));});
     if(!v)return;
     if(v.partyInterrupted!==undefined)need(v.partyInterrupted===true && !!v.householdPartyId && v.phase==='arrived');
     if(v.householdPartyId===undefined)return;
     var t=s.stories && s.stories[v.householdPartyId];
+    if(t && t.version===3) return P.camps.validateRoad(s,t);
     need(t && t.version===2 && t.journey && !!travel(s,t) && !v.participationId &&
       Object.prototype.hasOwnProperty.call(s.owner,v.currentId) && ['outbound','arrived','return'].indexOf(v.phase)>=0 &&
       whole(v.startTurn) && v.startTurn<=s.turn && Number.isFinite(v.legDays) && v.legDays>0 &&
@@ -277,6 +294,7 @@
   };
   function name(s,id){return s.chars[id] ? FB.fullName(s.chars[id]) : FB.T('Unavailable person');}
   J.menu=function(s,def,t) {
+    if(t.version===3 || def.journey && def.journey.kind==='mobile_camp' || t.version===2 && t.actorId!==s.player.charId) return P.camps.menu(s,def,t);
     if(!def.journey || t.actorId!==s.player.charId)return [];
     var out=[];
     function add(action,id,label){out.push({id:JSON.stringify([action,id || null]),action:action,personId:id || null,caregiverId:null,
@@ -291,11 +309,11 @@
     }
     return out;
   };
-  J.describe=function(s,t,q) {return [FB.T('Private cost: {money:cost}.',{cost:q.cost}),
+  J.describe=function(s,t,q) {if(q.campReview)return P.camps.describe(s,t,q);return [FB.T('Private cost: {money:cost}.',{cost:q.cost}),
     FB.T('Travel time: {days} days.',{days:q.road && q.road.days || 0}),
     FB.T('Travellers or affected people: {names}.',{names:q.people.map(function(id){return name(s,id);}).join(', ') || FB.T('Nobody')}),
     FB.T('Excluded from this decision: {names}.',{names:q.excluded.map(function(id){return name(s,id);}).join(', ') || FB.T('Nobody')}),
     FB.T('The ordinary journey supplies movement. Separation preserves the reached county. Settlement changes only the eligible people still accompanying you.')];};
-  J.lines=function(s,t){return t.version===2 ? t.journey.members.map(function(m){var pid=J.location(s,m.personId) || m.lastPlace;
-    return FB.T('{name}: {place}.',{name:name(s,m.personId),place:FB.world.byId[pid] ? FB.world.byId[pid].name : pid});}) : [];};
+  J.lines=function(s,t){return t.version>=2 ? t.journey.members.map(function(m){var pid=J.location(s,m.personId) || m.lastPlace;
+    return FB.T('{name}: {place}.',{name:name(s,m.personId),place:FB.world.byId[pid] ? FB.world.byId[pid].name : pid});}).concat(P.camps.lines(s,t)) : [];};
 })();

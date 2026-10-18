@@ -276,6 +276,23 @@ window.FB = window.FB || {};
     return true;
   };
 
+  FB.travelRecoveryRoadQuote = function (state,from,home,count) {
+    const actor=me(state),purposeId=FB.travelDefault('relationship'),def=purpose(purposeId);
+    const route=from && FB.travelRoute(from,home),legDays=FB.travelLegDaysSnapshot(state);
+    const shadow=Object.assign({},state,{player:Object.assign({},state.player,{provinceId:from})});
+    const cost=route && route.length ? FB.travelCostSnapshot(null,route,shadow)*count : 0;
+    return {from:from,route:route,cost:cost,legDays:legDays,days:route ? FB.travelRouteUnits(from,route)*legDays : 0,
+      allowed:!!(actor && !actor.dead && (actor.health===undefined || actor.health>0) && !state.player.dead &&
+        Number.isSafeInteger(count) && count>0 && count<=16 && home===state.player.provinceId &&
+        FB.station.isFreeUnlanded(state.player,state) && def && purposeTierAllowed(state,def) &&
+        FB.contentPeriodEnabled(state,def) && FB.systemContentEnabled(state,def) &&
+        !actor.captive && !actor.prisonerOf && !actor.imprisoned && !actor.exiled && !actor.travel && !actor.religiousActivity &&
+        !(FB.intrigueCaptivityOf && FB.intrigueCaptivityOf(state,actor.id)) &&
+        !(FB.justiceCustodyOf && FB.justiceCustodyOf(state,actor.id)) && !(state.player.flags && state.player.flags.in_prison) &&
+        !FB.atWarPersonally(state) && !!route && state.player.gold>=cost &&
+        !route.some(function(pid){return FB.justiceExileBlocks && FB.justiceExileBlocks(state,actor.id,pid);}))};
+  };
+
   FB.travelPartyReturnStart = function (state,id,from,home,route,legDays,purposeId,cost) {
     clearQueued(state);
     state.player.travel={purpose:purposeId,householdPartyId:id,homeId:home,destinationId:home,destinationRealm:null,
