@@ -185,3 +185,7 @@ maritimeWorkProfiles and effective maritimeWorkAssignments are typed ordinary JS
 Reached-stop provisions
 
 relayServiceProfiles and effective relayServiceAssignments bind explicit typed provision lots at existing production sites to one directed real host-arrival edge and recipient realm. The independent road/coast ordinary imports contrast owned withdrawal with a paid foreign supplier, different crossing, stock, conversion and finite consent terms. Detached definitions, original-principal consent, shared player/AI review/commit, exact fingerprinting and strict optional production.relay receipts use the same built-in consumers. The ordinary military supply owner receives actual food; no stock, speed, remount, message, personal-travel refund or historical station is inferred. Exact fields and intrinsic personal-journey boundaries are in docs/MODDING.md and docs/designs/relay-provisions.md.
+
+Strategic material variants
+
+fortProfiles extends a canonical fort buildingProfile with a typed material identity and bounded canonical-level requirement map. Complete independent fort-profiles-timber.json and fort-profiles-masonry.json worlds import through ordinary Mods and differ in knowledge, scope and inherited standing/ruined property. Player reviews, annual AI work, inherited compilation, repairs, technology reverse consumers and strict optional saves compose the existing strategic fort owner. No numeric fort effect, stock account, historical mapping or new building id is supplied. The exact supported boundary is in docs/designs/fort-profiles.md.

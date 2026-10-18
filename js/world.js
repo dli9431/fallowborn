@@ -1665,6 +1665,7 @@ window.FB = window.FB || {};
     FB.validateClimateData().forEach(fault);
     FB.validateBuildingData(FBDATA.buildings, true).forEach(fault);
     FB.buildingProfiles.catalogFaults(FBDATA).forEach(fault);
+    FB.fortProfiles.catalogFaults(FBDATA).forEach(fault);
     FB.buildingInstitutionCatalogFaults(FBDATA).forEach(fault);
     FB.buildingInstitutionDefinitionFaults(definition, FBDATA).forEach(fault);
     FB.validateUnitClassRoles(FBDATA.unitClasses, true).forEach(fault);

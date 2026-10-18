@@ -680,3 +680,7 @@ building_profile_selection has technology impact none for typed authoring and se
 Inherited profile identity
 
 building_profile_inheritance is none because retaining the identity of property is accounting. No research is inferred or required to keep or repair an inherited asset. Current operation still needs its real input and permission owners, and optional new machinery construction retains its exact hard or soft requirement and ungated fallback.
+
+Fort material eligibility
+
+fort_material_identity has impact none: material identity, inherited property and paid-project continuity do not require discovery. An optional material's independently declared new-construction requirements require an exact hard review with ordinary fortification as fallback. Each level map replaces only its selected canonical level construction requirement; ordinary paths and numbers remain unchanged. Exact missing knowledge and level-specific reverse consumers remain visible. Funded work and inherited repair retain their profile after chronology or knowledge changes. See docs/designs/fort-profiles.md.

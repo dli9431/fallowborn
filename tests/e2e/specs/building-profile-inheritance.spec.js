@@ -7,7 +7,8 @@ const {dependsOnRuntime} = require('../support/runtime-dependencies');
 const examples = {river:require('../fixtures/authoring/building-profile-inheritance-river.json'),
   hill:require('../fixtures/authoring/building-profile-inheritance-hill.json')};
 const seasonalExample = require('../fixtures/authoring/building-seasons-dry.json');
-dependsOnRuntime(__filename,['index.html','data/building_profiles.js','data/building_operations.js',
+dependsOnRuntime(__filename,[
+  'data/fort_profiles.js', 'js/fort_profiles.js','index.html','data/building_profiles.js','data/building_operations.js',
   'data/building_institutions.js','data/building_seasons.js','data/site_resources.js','data/technology.js',
   'js/building_profiles.js','js/building_operations.js','js/building_institutions.js','js/building_seasons.js',
   'js/site_resources.js','js/production.js','js/production_economy.js','js/actions.js','js/world.js',

@@ -44,3 +44,7 @@ building_profile_selection is none: a choice of a typed construction definition 
 
 
 building_profile_inheritance is none: retaining an existing physical asset is property accounting. Actual operation still needs permission, resources and payment; optional new construction retains its independently declared machinery gates.
+
+Fort material extension
+
+Optional fortProfiles entries share their canonical fort buildingProfile key, display and inheritance policy, adding only material identity and supported level requirements. Selected material construction uses the ordinary gold or annual work-budget owner, not a treasury building purchase. Material fingerprints additionally include the fort profile and canonical level table, while all existing nonmaterial fingerprints remain unchanged. Pending fortProfileProject provenance and level-specific reverse technology consumers are described in docs/designs/fort-profiles.md. No default building replacement values or historical inventory change.

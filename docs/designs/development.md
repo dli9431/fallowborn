@@ -542,3 +542,7 @@ Explicit inherited profile policy and placements use the same base asset, limits
 Maintained boat-work facilities
 
 An explicitly declared standing production facility can support a co-located licensed maritime-work assignment without a new building effect or historical inventory. Its completed owned paid output contributes only to an actual household enterprise invoice through the canonical enterprise owner. The facility itself supplies no income, fleet, military capacity or enterprise. At most ten percent of the live invoice is substituted, with ordinary technology, staffing, remaining payment and current launching rights retained. There is no bundled boathouse content or installation in this shared capability. See docs/designs/maritime-work.md for the none technology review and exact consumer.
+
+Fort material identity
+
+Typed fortProfiles compose existing strategic building profiles, inherited inventory and sequential projects without replacing canonical defense, garrison, upkeep, duration, costs, work or prestige. They add no development, population, materials, passive bonus or second strongpoint. Exact eligibility, annual AI, repair and restore contracts: docs/designs/fort-profiles.md.

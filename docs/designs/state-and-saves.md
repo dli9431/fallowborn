@@ -2417,3 +2417,7 @@ Optional state.production.maritime version 1 stores only a structural definition
 Relay provenance
 
 Optional production.relay version 1 shares production's existing ids, revision and stock conservation. It retains exact original consent parties/generations, finite terms, real army arrivals and once-only input, payment and carrying receipts. Validation rejects duplicate/missing references, altered units/prices, erased opted-in owners and unreconciled stock before adoption. Host loss, source demolition or principal death preserves immutable history without authorizing new withdrawals. Restore records no movement, permission, payment or resupply. See docs/designs/relay-provisions.md for bounds and full schema.
+
+Optional material fort provenance
+
+Mapped material forts reuse buildingProfile version 1, with the exact fort profile and canonical level table added only to their definition fingerprint. Active opted-in work carries strict optional fortProfileProject version 1 with profileId, fromLevel, targetLevel, startedTurn, completeTurn, repair, realmId, cost and work. It must match the ordinary fort project, retained level, duration and original payer/work facts. Completion/demolition remove pending provenance; matching restore never constructs missing projects, reschedules original material completion turns, initializes identities or grants payment/prestige. Other profile fingerprints, legacy forts, save envelopes and subsystem versions remain unchanged. Full invariants: docs/designs/fort-profiles.md.

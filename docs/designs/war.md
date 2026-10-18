@@ -2230,3 +2230,7 @@ Technology impact: finite_siege_carriage is none because transporting already pa
 Reached-stop provisions
 
 The ordinary march notifies the optional relay owner only after a real county transition. A reviewed supplier agreement and an unused exact arrival allow finite typed production lots to load the existing carried-food owner. armyProvisionLoadQuote/Load uses the ordinary mouth-weighted provisions-per-supply-point calculation, or the mobile host's real food/carrying capacity. It grants no route, extra host, troops, independent supply counter or altered drain. Dead/remote/hostile/over-capacity/stale cases refuse without spending. The finite_relay_provisions technology decision is none; ordinary route, crossing and equipment gates remain. See docs/designs/relay-provisions.md.
+
+Material identity on canonical forts
+
+Optional fortProfiles vary material and technology/date eligibility at supported canonical levels. Every military and siege reader continues to use the same fort record and canonical level values; a keep cannot supply a second strategic fort or material siege bonus. Funded work survives conquest with its original completion turn and payer provenance, without replaying payment. Inherited repairs keep their selected identity outside construction windows. See docs/designs/fort-profiles.md for the authoring and strict-save boundary.
