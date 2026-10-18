@@ -1,5 +1,11 @@
 # Development & buildings
 
+Learning and care catalogue
+
+data/buildings_learning_care.js adds Charitable Guesthouse (hospice) with cost 55, upkeep 1, devMin 2, maxCounty 1, crisis protection 0.03 and no technology requirement or construction award. Library now requires scriptoria, retaining cost 80, upkeep 1, devMin 4 and research 1 counted once nationally, including delegated sites. Hospital preserves all existing prices, effects and its hospitals requirement. Hospital and Guesthouse share care_foundation capacity one across the county's actual standing and ruined records. Old over-limit assets retain effects and repairs; demolition removes grouped records without refund and new construction needs room. This supplies no endowed institution, qualification or automatic replacement.
+
+manuscript_library_access is soft with scriptoria and ordinary learning as fallback. charitable_guesthouse is none, funded through ordinary authority, construction and upkeep. Hospital retains its soft hospitals review. Monumental Vaulted Sanctuary replaces the Cathedral display with compatible faith variants; its existing ribbed_vaulting gate applies to optional monumental scale, with temple and ordinary worship as fallbacks. Great Temple and University definitions remain unchanged. See docs/research/learning-and-care.md for source limits and docs/designs/tech.md for the manuscript prerequisite changes.
+
 Construction applicability
 
 Optional building applicability limits new construction by inclusive live-year bounds, stamped campaign era, physical county, declared primary resident culture and the payer's sovereign technology traditions. Different dimensions combine; alternatives within a list match individually. The pure buildingApplicabilityStatus projection supplies the same first localized blocker to player construction, automation, realm AI, private barons, fort funding and the Building Works picker. Ordinary authority, price, development, siting, technology and occupancy still apply, and confirmation recomputes live eligibility before spending.
@@ -158,11 +164,11 @@ Technology `fx.devCap` is labeled as the development ceiling above the base of 1
 for every county in the nation that owns it, not as current development.
 
 Built-in productive and trade buildings contribute economic development when raised:
-Watermills, Post Windmills, Stone Bridges, Market Squares, Harbors, Cathedrals, Civic Guildhalls,
+Watermills, Post Windmills, Stone Bridges, Market Squares, Harbors, Monumental Vaulted Sanctuaries, Civic Guildhalls,
 Naval Arsenals, and Merchant Exchanges each supply +1 development. Granaries provide resilience and famine
 protection instead (+35% famine protection); Libraries (+1) and Universities (+2) contribute national research;
-Great Temples (+10%) and Cathedrals (+15%) provide religious prestige and crisis protection; Endowed Hospitals
-mitigate epidemics (+10% crisis protection, +5% famine protection); Watermills (+5%), Post Windmills (+5%), and Harbors (+3%)
+Great Temples (+10%) and Monumental Vaulted Sanctuaries (+15%) provide religious prestige and crisis protection; Endowed Hospitals
+mitigate epidemics (+10% crisis protection, +5% famine protection), with Charitable Guesthouses (+3% crisis protection) as a modest alternative; Watermills (+5%), Post Windmills (+5%), and Harbors (+3%)
 expand county carrying capacity; Bridges (+1), Markets (+2), and Exchanges (+3) increase migration attraction; and
 keeps, fortifications, barracks, archery grounds, foundries, and naval arsenals reinforce territorial defense and field forces.
 Every copy is still subject to the county's development ceiling.

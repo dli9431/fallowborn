@@ -471,10 +471,10 @@ class SupplementalCatalogueExtractionTests(unittest.TestCase):
         i18n_catalog.extract_structured(inventory)
         for key, text, source in (
             ('tech.crop_rotation.name.default', 'Two-Course Rotation', 'data/technology.js'),
-            ('tech.scriptoria.name.muslim', 'Paper Workshops', 'data/technology.js'),
-            ('building.library.name.default', 'Library', 'data/map_data.js'),
-            ('building.library.name.muslim', 'House of Wisdom', 'data/map_data.js'),
-            ('building.cathedral.name.pagan', 'Grand Sanctuary', 'data/map_data.js'),
+            ('tech.manuscript_codex.name.default', 'Manuscript Codex', 'data/technology.js'),
+            ('tech.paper_making.name.default', 'Papermaking', 'data/technology.js'),
+            ('building.temple.name.default', 'Great {temple}', 'data/map_data.js'),
+            ('building.university.name.muslim', 'Madrasa and College', 'data/map_data.js'),
         ):
             self.assertEqual(inventory.entries[key], {'text': text})
             self.assertEqual(inventory.meta[key]['location'], source)
@@ -507,6 +507,26 @@ class SupplementalCatalogueExtractionTests(unittest.TestCase):
                     self.assertEqual(inventory.entries[key], {'text': text})
                     self.assertEqual(inventory.meta[key]['location'], 'data/technology_foundations.js')
                     self.assertIn(i18n_catalog.source_key(text), inventory.entries)
+
+    def test_learning_and_care_corrections_own_final_display_fields(self):
+        inventory = i18n_catalog.Inventory()
+        i18n_catalog.extract_structured(inventory)
+        for key, text, source in (
+            ('tech.scriptoria.name.muslim', 'Organized Copying', 'data/technology_learning.js'),
+            ('tech.translation_schools.name.default', 'Translation Networks', 'data/technology_learning.js'),
+            ('tech.legal_studies.name.default', 'Advanced Legal Studies', 'data/technology_learning.js'),
+            ('building.library.name.default', 'Library', 'data/buildings_learning_care.js'),
+            ('building.cathedral.name.default', 'Monumental Vaulted Sanctuary', 'data/buildings_learning_care.js'),
+            ('building.cathedral.name.muslim', 'Monumental Vaulted Mosque', 'data/buildings_learning_care.js'),
+            ('building.hospice.name.default', 'Charitable Guesthouse', 'data/buildings_learning_care.js'),
+            ('building.hospital.name.muslim', 'Bimaristan', 'data/buildings_learning_care.js'),
+        ):
+            self.assertEqual(inventory.entries[key], {'text': text})
+            self.assertEqual(inventory.meta[key]['location'], source)
+            self.assertIn(i18n_catalog.source_key(text), inventory.entries)
+        self.assertNotIn('building.library.name.muslim', inventory.entries)
+        for removed in ('Paper Workshops', 'House of Wisdom', 'Professional Legal Studies'):
+            self.assertNotIn(i18n_catalog.source_key(removed), inventory.entries)
 
 
 class StructuredDataExtractionTests(unittest.TestCase):

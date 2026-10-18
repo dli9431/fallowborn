@@ -1,0 +1,355 @@
+{
+  "fork": "9ae467e59a1b3b4587cc2ae0eca8578be0901c56",
+  "tech": {
+    "scriptoria": {
+      "cost": 50,
+      "history": {
+        "attested": [
+          500,
+          850
+        ],
+        "adoption": {
+          "default": [
+            570,
+            850
+          ],
+          "latin": [
+            520,
+            800
+          ],
+          "byzantine": [
+            500,
+            780
+          ],
+          "islamic": [
+            500,
+            780
+          ],
+          "persianate": [
+            580,
+            860
+          ],
+          "slavic": [
+            605,
+            885
+          ],
+          "nordic": [
+            610,
+            890
+          ],
+          "steppe": [
+            600,
+            880
+          ],
+          "baltic_finnic": [
+            625,
+            905
+          ],
+          "caucasian": [
+            595,
+            875
+          ],
+          "northeast_african": [
+            605,
+            885
+          ]
+        }
+      },
+      "fx": {
+        "research": 0.25
+      }
+    },
+    "translation_schools": {
+      "cost": 50,
+      "history": {
+        "attested": [
+          650,
+          1050
+        ],
+        "adoption": {
+          "default": [
+            760,
+            1070
+          ],
+          "latin": [
+            780,
+            1090
+          ],
+          "byzantine": [
+            690,
+            1000
+          ],
+          "islamic": [
+            690,
+            1000
+          ],
+          "persianate": [
+            700,
+            1010
+          ],
+          "slavic": [
+            795,
+            1105
+          ],
+          "nordic": [
+            800,
+            1110
+          ],
+          "steppe": [
+            790,
+            1100
+          ],
+          "baltic_finnic": [
+            815,
+            1125
+          ],
+          "caucasian": [
+            785,
+            1095
+          ],
+          "northeast_african": [
+            795,
+            1105
+          ]
+        }
+      },
+      "fx": {
+        "research": 0.25
+      }
+    },
+    "paper_scholarship": {
+      "cost": 50,
+      "history": {
+        "attested": [
+          750,
+          1050
+        ],
+        "adoption": {
+          "default": [
+            830,
+            1080
+          ],
+          "latin": [
+            850,
+            1100
+          ],
+          "byzantine": [
+            830,
+            1080
+          ],
+          "islamic": [
+            760,
+            1010
+          ],
+          "persianate": [
+            770,
+            1020
+          ],
+          "slavic": [
+            865,
+            1115
+          ],
+          "nordic": [
+            870,
+            1120
+          ],
+          "steppe": [
+            860,
+            1110
+          ],
+          "baltic_finnic": [
+            885,
+            1135
+          ],
+          "caucasian": [
+            855,
+            1105
+          ],
+          "northeast_african": [
+            865,
+            1115
+          ]
+        }
+      },
+      "fx": {
+        "research": 0.25
+      }
+    },
+    "universities": {
+      "cost": 150,
+      "history": {
+        "attested": [
+          1000,
+          1250
+        ],
+        "adoption": {
+          "default": [
+            1100,
+            1270
+          ],
+          "latin": [
+            1050,
+            1220
+          ],
+          "byzantine": [
+            1100,
+            1270
+          ],
+          "islamic": [
+            1030,
+            1200
+          ],
+          "persianate": [
+            1110,
+            1280
+          ],
+          "slavic": [
+            1135,
+            1305
+          ],
+          "nordic": [
+            1140,
+            1310
+          ],
+          "steppe": [
+            1130,
+            1300
+          ],
+          "baltic_finnic": [
+            1155,
+            1325
+          ],
+          "caucasian": [
+            1125,
+            1295
+          ],
+          "northeast_african": [
+            1135,
+            1305
+          ]
+        }
+      },
+      "fx": {
+        "research": 0.35,
+        "education": 0.03
+      }
+    },
+    "scholastic_method": {
+      "cost": 150,
+      "history": {
+        "attested": [
+          1050,
+          1250
+        ],
+        "adoption": {
+          "default": [
+            1150,
+            1280
+          ],
+          "latin": [
+            1100,
+            1230
+          ],
+          "byzantine": [
+            1150,
+            1280
+          ],
+          "islamic": [
+            1080,
+            1210
+          ],
+          "persianate": [
+            1160,
+            1290
+          ],
+          "slavic": [
+            1185,
+            1315
+          ],
+          "nordic": [
+            1190,
+            1320
+          ],
+          "steppe": [
+            1180,
+            1310
+          ],
+          "baltic_finnic": [
+            1205,
+            1335
+          ],
+          "caucasian": [
+            1175,
+            1305
+          ],
+          "northeast_african": [
+            1185,
+            1315
+          ]
+        }
+      },
+      "fx": {
+        "research": 0.2,
+        "education": 0.02
+      }
+    },
+    "legal_studies": {
+      "cost": 150,
+      "history": {
+        "attested": [
+          1000,
+          1250
+        ],
+        "adoption": {
+          "default": [
+            1120,
+            1280
+          ],
+          "latin": [
+            1070,
+            1230
+          ],
+          "byzantine": [
+            1050,
+            1210
+          ],
+          "islamic": [
+            1050,
+            1210
+          ],
+          "persianate": [
+            1130,
+            1290
+          ],
+          "slavic": [
+            1155,
+            1315
+          ],
+          "nordic": [
+            1160,
+            1320
+          ],
+          "steppe": [
+            1150,
+            1310
+          ],
+          "baltic_finnic": [
+            1175,
+            1335
+          ],
+          "caucasian": [
+            1145,
+            1305
+          ],
+          "northeast_african": [
+            1155,
+            1315
+          ]
+        }
+      },
+      "fx": {
+        "education": 0.015
+      }
+    }
+  }
+}
