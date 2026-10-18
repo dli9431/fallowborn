@@ -365,3 +365,7 @@ Mixed building and profile supplements
 Literal buildingProfiles_<suffix> tables are also extracted from data/buildings_*.js so a facility catalogue can own variants without an extra loader file. They use the existing buildingProfile name/desc owners and static extraction, including files which also hold ordinary building declarations. Runtime JSON retains English fallback. No catalogue regeneration is needed during feature work.
 
 Literal siteResourceProfiles_<suffix> in the same buildings supplements extract name/desc under siteResourceProfile owners. This keeps physical source labels localizable without adding an extra runtime file.
+
+Production supplements
+
+Literal FBDATA.productionGoods_<suffix> and FBDATA.productionRecipes_<suffix> maps in data/production_*.js use the existing productionGood and productionRecipe name/desc/fallback owners. Static extraction reads the maps without executing their composition. Units, quantities, prices and references remain untranslated; new English uses normal authored fallback. Compose each unique addition into its ordinary root before runtime validation. Catalogue generation remains a separate owner request.

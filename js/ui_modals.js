@@ -8789,6 +8789,9 @@ window.FB = window.FB || {};
     if (d.operationProfile && !FB.settlementsOf(s,pid).some(function (v,idx) {
       return FB.buildingOperations.constructionReady(s,pid,idx,id,FB.settlementActor(s));
     })) return FB.T('Requires a declared lawful water route, actual available water, and funded construction, work and upkeep.');
+    if (d.productionRecipeIds && !FB.settlementsOf(s,pid).some(function (v,idx) {
+      return FB.production.industrialConstructionReady(s,pid,idx,id,FB.settlementActor(s));
+    })) return FB.T('Requires an empty declared production site, lawful finite inputs, available work and water, a funded buyer, and construction and processing reserves.');
     if (d.devMin && (s.dev[pid] || 1) < d.devMin) {
       return FB.T('Requires development {development}.', { development: d.devMin });
     }

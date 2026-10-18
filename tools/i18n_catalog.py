@@ -1035,7 +1035,22 @@ def extract_building_profiles(inv: Inventory, data: Path = DATA) -> None:
                             TOKEN_RE.findall(record["text"]))
 
 
+def extract_production_supplements(inv: Inventory, data: Path = DATA) -> None:
+    for path in sorted(data.glob("production_*.js")):
+        source = path.read_text(encoding="utf-8")
+        for root, namespace in (("productionGoods", "productionGood"), ("productionRecipes", "productionRecipe")):
+            for match in re.finditer(r"FBDATA\.(" + root + r"_[A-Za-z0-9_]+)\s*=", source):
+                additions = node_object(find_assignment(path, "FBDATA", match.group(1))) or {}
+                for item_id, node in additions.items():
+                    item = node_object(node) or {}
+                    for field in ("name", "desc", "fallback") if root == "productionRecipes" else ("name", "desc"):
+                        for branch, record, line in branch_records(item.get(field)):
+                            inv.add(f"{namespace}.{item_id}.{field}.{branch}", record,
+                                    f"data/{path.name}:{line}", "Finite production display.", TOKEN_RE.findall(record["text"]))
+
+
 def extract_structured(inv: Inventory) -> None:
+    extract_production_supplements(inv)
     extract_building_profiles(inv)
     extract_scaffold_regions(inv)
     extract_geography_additions(inv)

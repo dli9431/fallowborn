@@ -8586,7 +8586,7 @@ window.FB = window.FB || {};
         }
 
         if (chosen) {
-          if (chosen.profileId || chosen.def.institutionProfile || chosen.def.operationProfile) {
+          if (chosen.profileId || chosen.def.institutionProfile || chosen.def.operationProfile || chosen.def.productionRecipeIds) {
             if (!reserves || !FB.buildRealm(state, rid, chosen.pid, chosen.s, chosen.id,
                 reserves[rid] + (chosen.def.upkeep || 0) * reserveSeasons, chosen.profileId)) continue;
             reserves[rid] += (chosen.def.upkeep || 0) * reserveSeasons;

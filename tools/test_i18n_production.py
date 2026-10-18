@@ -39,5 +39,20 @@ class ProductionExtractionTests(unittest.TestCase):
             self.assertNotIn('productionGood.iron.unit.default', inventory.entries)
 
 
+    def test_literal_supplements_keep_existing_owners_without_execution(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / 'production_example.js').write_text(
+                "FBDATA.productionGoods_example={pulp:{name:'Clean pulp',desc:'Finite fiber.',unit:'fiber_units'}};"
+                "FBDATA.productionRecipes_example={paper:{name:'Make paper',desc:'Use actual water.',"
+                "fallback:'Ordinary copying remains available.'}};throw new Error('Never execute');", encoding='utf-8')
+            inventory = i18n_catalog.Inventory()
+            i18n_catalog.extract_production_supplements(inventory, root)
+            self.assertEqual(inventory.entries['productionGood.pulp.name.default'], {'text': 'Clean pulp'})
+            self.assertEqual(inventory.entries['productionRecipe.paper.fallback.default'],
+                             {'text': 'Ordinary copying remains available.'})
+            self.assertNotIn('productionGood.pulp.unit.default', inventory.entries)
+
+
 if __name__ == '__main__':
     unittest.main()
