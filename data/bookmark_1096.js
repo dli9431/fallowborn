@@ -6,7 +6,7 @@ FBDATA.bookmarkCandidates['1096'] = {
   id:'1096', name:'The First Crusade',
   desc:'Western households consider the journey east while imperial and local courts pursue their own priorities.',
   date:{year:1096,season:0,day:1}, era:'high_medieval',
-  geography:'europe_regional_2', hidden:true,
+  geography:'europe_regional_2',
   revision:'baseline', revisions:{baseline:{}},
   settlementLayout:'1096', localInstitutions:{},
   religiousHeads:{catholic:'papacy_1096',sunni:'abbasid_1096'},

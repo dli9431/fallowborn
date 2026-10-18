@@ -32,20 +32,20 @@ async function departure(page,info) {
   for (const choice of ['take_stock','review_journey']) expect(await choose(page,choice)).toBe(true);
 }
 
-test('a complete Cologne household and goals are registered behind the hidden bookmark gate', async function ({page},info) {
+test('a complete Cologne household and goals are registered for the selectable 1096 bookmark', async function ({page},info) {
   await openGame(page,info);
   expect(await page.evaluate(function () {
     const b = FB.bookmark('1096'), sc = FBDATA.startScenarios.find(function (r) { return r.id === 'pilgrim_household_1096'; });
     const source = JSON.stringify(FBDATA), rng = FB.getRngState(), uid = FB.getUidCounter();
     const errors = FB.validateBookmark(b), county = b.provinces.find(function (p) { return p.id === 'cologne'; });
-    return {errors:errors,hidden:b.hidden,offered:FB.bookmarkAvailable('1096'),bookmarks:sc.bookmarkIds,
+    return {errors:errors,hidden:b.hidden === true,offered:FB.bookmarkAvailable('1096'),bookmarks:sc.bookmarkIds,
       local:FB.startProvinceAllowed(sc,b,'cologne'),away:FB.startProvinceAllowed(sc,b,'mainz'),
       tracks:FB.startTracks(sc,'cologne'),awayTracks:FB.startTracks(sc,'mainz'),storyline:FB.startStoryTracks(sc,'cologne'),
       family:Object.keys(sc.familyPresets),resources:[sc.startAge,sc.tier,sc.profession,sc.gold,sc.prestige,sc.piety],
       noGrant:!sc.startEffects && !sc.rulerRealmId,community:county.communities.some(function (c) { return c.culture === sc.startCulture && c.religion === sc.startReligion; }),
       sourceFree:!FBDATA.storyInstances.pilgrim_household_track_1096.requires,
       pure:source === JSON.stringify(FBDATA) && rng === FB.getRngState() && uid === FB.getUidCounter()};
-  })).toEqual({errors:[],hidden:true,offered:false,bookmarks:['1096'],local:true,away:false,
+  })).toEqual({errors:[],hidden:false,offered:true,bookmarks:['1096'],local:true,away:false,
     tracks:[ID,'opening_pilgrim_1096'],awayTracks:[],storyline:[ID],family:['established'],
     resources:[30,1,'craftsman',15,5,0],noGrant:true,community:true,sourceFree:true,pure:true});
   await beginBookmark(page,info,'1096','pilgrim_household_1096');

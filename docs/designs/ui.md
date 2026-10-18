@@ -1510,6 +1510,8 @@ technology credibly gates or improves it.
 
 The 476 branch offers 476, 711, 800, 867, 1066 and 1204 in chronological order through the ordinary starting-date picker. The merged 711, 800 and 1204 data registers before title boot, so selecting a date, using its start code and loading its save after a reload need no console setup. Quick Start keeps its existing authored lives. The independent 493 definition is registered as a hidden review candidate; new-campaign entry points reject it while matching saved review campaigns remain loadable. Historical review gaps remain in the individual bookmark documents.
 
+Spring 1096 is also selectable as The First Crusade. Its beginning screen offers the always-unlocked Cologne Pilgrim Household with its local storyline and optional goals, alongside ordinary compatible roles under their existing progression gates. Selecting the household keeps birthplace selection within Cologne. Start codes and Observe use the ordinary date-availability boundary. Historical ruler starts remain unavailable while their required evidence is unresolved; regional first-pass limits are recorded in docs/research/1096-bookmark.md.
+
 Bookmark
 cards use the same responsive grid and native-button keyboard behavior as scenario
 cards. Their date and bookmark name use a colon rather than a dash, and their heading
