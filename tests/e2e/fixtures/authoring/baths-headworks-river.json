@@ -1,0 +1,699 @@
+{
+  "name": "Baths and downstream headworks river",
+  "siteResourceProfiles": {
+    "river_flow": {
+      "name": "River intake",
+      "desc": "A bounded seven-day water allocation.",
+      "kind": "flow",
+      "unit": "water",
+      "capacity": 12,
+      "periodDays": 7
+    },
+    "river_store": {
+      "name": "Quay cistern",
+      "kind": "storage",
+      "unit": "water",
+      "capacity": 5
+    },
+    "river_launch": {
+      "name": "Launching space",
+      "kind": "access",
+      "unit": "launching",
+      "capacity": 2,
+      "periodDays": 1
+    }
+  },
+  "geographies": {
+    "resource_river_land": {
+      "bounds": {
+        "lonMin": 0,
+        "lonMax": 6,
+        "latMin": 0,
+        "latMax": 5
+      },
+      "land": [
+        [
+          0.5,
+          0.5,
+          5.5,
+          0.5,
+          5.5,
+          4.5,
+          0.5,
+          4.5
+        ]
+      ],
+      "gridWidth": 240,
+      "seas": [],
+      "rivers": [],
+      "defaultLayout": "resource_river_layout",
+      "provinces": [
+        {
+          "id": "resource_quay",
+          "x": 1.5,
+          "y": 2,
+          "terrain": "farmland"
+        },
+        {
+          "id": "resource_bank",
+          "x": 3.1,
+          "y": 2,
+          "terrain": "farmland"
+        },
+        {
+          "id": "resource_rocks",
+          "x": 4.7,
+          "y": 2,
+          "terrain": "hills"
+        }
+      ],
+      "sites": {
+        "resource_intake": {
+          "x": 1.5,
+          "y": 2
+        },
+        "resource_cistern": {
+          "x": 3.1,
+          "y": 2
+        },
+        "resource_slip": {
+          "x": 1.7,
+          "y": 2
+        }
+      }
+    }
+  },
+  "settlementLayouts": {
+    "resource_river_layout": {
+      "resource_quay": [
+        {
+          "site": "resource_intake",
+          "name": "Intake Town",
+          "kind": "town"
+        },
+        {
+          "site": "resource_slip",
+          "name": "Slip Village",
+          "kind": "village"
+        }
+      ],
+      "resource_bank": [
+        {
+          "site": "resource_cistern",
+          "name": "Bank Village",
+          "kind": "village"
+        }
+      ]
+    }
+  },
+  "startScenarios": [
+    {
+      "id": "resource_river_ruler",
+      "name": "The river holder",
+      "desc": "An existing fictional ruler.",
+      "intro": "Review the river's finite capacity.",
+      "tier": 5,
+      "profession": "noble",
+      "gold": 12,
+      "prestige": 0,
+      "piety": 0,
+      "bookmarkIds": [
+        "resource_river"
+      ],
+      "eras": [
+        "late_antique"
+      ],
+      "alwaysUnlocked": true,
+      "rulerRealmId": "resource_river_court",
+      "governmentForm": "regnum",
+      "fixedProvinceId": "resource_quay",
+      "characterName": "Ivo Reed",
+      "sex": "m",
+      "startCulture": "frankish",
+      "startReligion": "catholic",
+      "onboarding": "ruler",
+      "familyPresets": {
+        "standard": {
+          "name": "Existing court",
+          "diff": "Existing court household"
+        }
+      }
+    },
+    {
+      "id": "resource_river_household",
+      "name": "River household",
+      "desc": "A fictional household.",
+      "intro": "Your household lives beside the river.",
+      "tier": 1,
+      "profession": "farmer",
+      "gold": 12,
+      "prestige": 0,
+      "piety": 0,
+      "bookmarkIds": [
+        "resource_river"
+      ],
+      "eras": [
+        "late_antique"
+      ],
+      "alwaysUnlocked": true,
+      "startAge": 24,
+      "familyPresets": {
+        "standard": {
+          "name": "Established household",
+          "diff": "age 24"
+        }
+      }
+    }
+  ],
+  "bookmarks": {
+    "resource_river": {
+      "id": "resource_river",
+      "name": "River allocation",
+      "desc": "A fictional river resource world.",
+      "date": {
+        "year": 600,
+        "season": 0,
+        "day": 1
+      },
+      "era": "late_antique",
+      "geography": "resource_river_land",
+      "religiousHeads": {},
+      "localInstitutions": {},
+      "stories": [],
+      "starts": [
+        "resource_river_ruler",
+        "resource_river_household"
+      ],
+      "scripted": [],
+      "straits": [],
+      "crossingClasses": {},
+      "provinces": [
+        {
+          "id": "resource_quay",
+          "name": "Quay",
+          "realm": "resource_river_court",
+          "culture": "frankish",
+          "religion": "catholic",
+          "dev": 8
+        },
+        {
+          "id": "resource_bank",
+          "name": "Bank",
+          "realm": "resource_river_court",
+          "culture": "frankish",
+          "religion": "catholic",
+          "dev": 8
+        },
+        {
+          "id": "resource_rocks",
+          "name": "Rocky scenery",
+          "wasteland": true
+        }
+      ],
+      "realms": [
+        {
+          "id": "resource_river_court",
+          "name": "River court",
+          "capital": "resource_quay",
+          "color": "#458c96",
+          "aggression": 0,
+          "rank": 2,
+          "government": "regnum",
+          "ruler": {
+            "name": "Ivo Reed",
+            "culture": "frankish",
+            "born": 568,
+            "mar": 6,
+            "trait": "patient"
+          },
+          "techTraditions": [
+            "byzantine"
+          ],
+          "techSeed": {
+            "complete": [
+              "lime_mortar",
+              "hypocaust_heating",
+              "diversion_dams",
+              "aqueduct_maintenance"
+            ]
+          }
+        }
+      ],
+      "duchies": {},
+      "kingdoms": {},
+      "empires": {},
+      "revision": "supplied",
+      "revisions": {
+        "baseline": {},
+        "supplied": {
+          "siteResourceAssignments": [
+            {
+              "id": "river_intake",
+              "profileId": "river_flow",
+              "countyId": "resource_quay",
+              "siteId": "resource_intake",
+              "suitability": {
+                "source": true,
+                "gradient": true,
+                "groundwater": true,
+                "river": true
+              },
+              "rights": {
+                "kind": "holder"
+              }
+            },
+            {
+              "id": "river_cistern",
+              "profileId": "river_store",
+              "countyId": "resource_bank",
+              "siteId": "resource_cistern",
+              "connectedSourceId": "river_intake",
+              "suitability": {
+                "catchment": false
+              },
+              "rights": {
+                "kind": "holder"
+              }
+            },
+            {
+              "id": "river_slip",
+              "profileId": "river_launch",
+              "countyId": "resource_quay",
+              "siteId": "resource_slip",
+              "suitability": {
+                "launching": true
+              },
+              "rights": {
+                "kind": "holder"
+              }
+            }
+          ],
+          "buildingOperationAssignments": [
+            {
+              "countyId": "resource_bank",
+              "siteId": "resource_cistern",
+              "sourceId": "river_intake",
+              "stores": [
+                "river_cistern"
+              ],
+              "id": "bath_plain",
+              "buildingId": "public_bath",
+              "profileId": "public_bath_service",
+              "demandId": "bathing_users"
+            },
+            {
+              "countyId": "resource_bank",
+              "siteId": "resource_cistern",
+              "sourceId": "river_intake",
+              "stores": [
+                "river_cistern"
+              ],
+              "id": "bath_heated",
+              "buildingId": "public_bath",
+              "profileId": "hypocaust_bath_service",
+              "demandId": "bathing_users"
+            },
+            {
+              "countyId": "resource_bank",
+              "siteId": "resource_cistern",
+              "sourceId": "river_intake",
+              "stores": [
+                "river_cistern"
+              ],
+              "id": "headworks_delivery",
+              "buildingId": "diversion_headworks",
+              "profileId": "downstream_diversion",
+              "demandId": "downstream_capacity"
+            },
+            {
+              "countyId": "resource_bank",
+              "siteId": "resource_cistern",
+              "sourceId": "river_intake",
+              "stores": [
+                "river_cistern"
+              ],
+              "id": "aqueduct_delivery_alternative",
+              "buildingId": "aqueduct",
+              "profileId": "aqueduct_delivery",
+              "demandId": "downstream_capacity"
+            }
+          ],
+          "openingInfrastructure": {
+            "version": 1,
+            "placements": [
+              {
+                "countyId": "resource_bank",
+                "siteId": "resource_cistern",
+                "buildingId": "fuel_preparation_yard",
+                "condition": "standing"
+              }
+            ]
+          },
+          "productionSites": [
+            {
+              "id": "service_yard",
+              "countyId": "resource_bank",
+              "siteId": "resource_cistern",
+              "buildingId": "fuel_preparation_yard",
+              "recipeIds": [
+                "prepare_service_fuel",
+                "use_service_fuel"
+              ],
+              "openingLots": [
+                {
+                  "goodId": "service_wood",
+                  "quantity": 12
+                }
+              ]
+            }
+          ]
+        },
+        "standing": {
+          "siteResourceAssignments": [
+            {
+              "id": "river_intake",
+              "profileId": "river_flow",
+              "countyId": "resource_quay",
+              "siteId": "resource_intake",
+              "suitability": {
+                "source": true,
+                "gradient": true,
+                "groundwater": true,
+                "river": true
+              },
+              "rights": {
+                "kind": "holder"
+              }
+            },
+            {
+              "id": "river_cistern",
+              "profileId": "river_store",
+              "countyId": "resource_bank",
+              "siteId": "resource_cistern",
+              "connectedSourceId": "river_intake",
+              "suitability": {
+                "catchment": false
+              },
+              "rights": {
+                "kind": "holder"
+              }
+            },
+            {
+              "id": "river_slip",
+              "profileId": "river_launch",
+              "countyId": "resource_quay",
+              "siteId": "resource_slip",
+              "suitability": {
+                "launching": true
+              },
+              "rights": {
+                "kind": "holder"
+              }
+            }
+          ],
+          "buildingOperationAssignments": [
+            {
+              "countyId": "resource_bank",
+              "siteId": "resource_cistern",
+              "sourceId": "river_intake",
+              "stores": [
+                "river_cistern"
+              ],
+              "id": "bath_plain",
+              "buildingId": "public_bath",
+              "profileId": "public_bath_service",
+              "demandId": "bathing_users"
+            },
+            {
+              "countyId": "resource_bank",
+              "siteId": "resource_cistern",
+              "sourceId": "river_intake",
+              "stores": [
+                "river_cistern"
+              ],
+              "id": "bath_heated",
+              "buildingId": "public_bath",
+              "profileId": "hypocaust_bath_service",
+              "demandId": "bathing_users"
+            },
+            {
+              "countyId": "resource_bank",
+              "siteId": "resource_cistern",
+              "sourceId": "river_intake",
+              "stores": [
+                "river_cistern"
+              ],
+              "id": "headworks_delivery",
+              "buildingId": "diversion_headworks",
+              "profileId": "downstream_diversion",
+              "demandId": "downstream_capacity"
+            },
+            {
+              "countyId": "resource_bank",
+              "siteId": "resource_cistern",
+              "sourceId": "river_intake",
+              "stores": [
+                "river_cistern"
+              ],
+              "id": "aqueduct_delivery_alternative",
+              "buildingId": "aqueduct",
+              "profileId": "aqueduct_delivery",
+              "demandId": "downstream_capacity"
+            }
+          ],
+          "openingInfrastructure": {
+            "version": 1,
+            "placements": [
+              {
+                "countyId": "resource_bank",
+                "siteId": "resource_cistern",
+                "buildingId": "fuel_preparation_yard",
+                "condition": "standing"
+              },
+              {
+                "countyId": "resource_bank",
+                "siteId": "resource_cistern",
+                "buildingId": "public_bath",
+                "condition": "standing",
+                "profileId": "hypocaust_bath"
+              }
+            ]
+          },
+          "productionSites": [
+            {
+              "id": "service_yard",
+              "countyId": "resource_bank",
+              "siteId": "resource_cistern",
+              "buildingId": "fuel_preparation_yard",
+              "recipeIds": [
+                "prepare_service_fuel",
+                "use_service_fuel"
+              ],
+              "openingLots": [
+                {
+                  "goodId": "service_wood",
+                  "quantity": 12
+                }
+              ]
+            }
+          ]
+        },
+        "ruined": {
+          "siteResourceAssignments": [
+            {
+              "id": "river_intake",
+              "profileId": "river_flow",
+              "countyId": "resource_quay",
+              "siteId": "resource_intake",
+              "suitability": {
+                "source": true,
+                "gradient": true,
+                "groundwater": true,
+                "river": true
+              },
+              "rights": {
+                "kind": "holder"
+              }
+            },
+            {
+              "id": "river_cistern",
+              "profileId": "river_store",
+              "countyId": "resource_bank",
+              "siteId": "resource_cistern",
+              "connectedSourceId": "river_intake",
+              "suitability": {
+                "catchment": false
+              },
+              "rights": {
+                "kind": "holder"
+              }
+            },
+            {
+              "id": "river_slip",
+              "profileId": "river_launch",
+              "countyId": "resource_quay",
+              "siteId": "resource_slip",
+              "suitability": {
+                "launching": true
+              },
+              "rights": {
+                "kind": "holder"
+              }
+            }
+          ],
+          "buildingOperationAssignments": [
+            {
+              "countyId": "resource_bank",
+              "siteId": "resource_cistern",
+              "sourceId": "river_intake",
+              "stores": [
+                "river_cistern"
+              ],
+              "id": "bath_plain",
+              "buildingId": "public_bath",
+              "profileId": "public_bath_service",
+              "demandId": "bathing_users"
+            },
+            {
+              "countyId": "resource_bank",
+              "siteId": "resource_cistern",
+              "sourceId": "river_intake",
+              "stores": [
+                "river_cistern"
+              ],
+              "id": "bath_heated",
+              "buildingId": "public_bath",
+              "profileId": "hypocaust_bath_service",
+              "demandId": "bathing_users"
+            },
+            {
+              "countyId": "resource_bank",
+              "siteId": "resource_cistern",
+              "sourceId": "river_intake",
+              "stores": [
+                "river_cistern"
+              ],
+              "id": "headworks_delivery",
+              "buildingId": "diversion_headworks",
+              "profileId": "downstream_diversion",
+              "demandId": "downstream_capacity"
+            },
+            {
+              "countyId": "resource_bank",
+              "siteId": "resource_cistern",
+              "sourceId": "river_intake",
+              "stores": [
+                "river_cistern"
+              ],
+              "id": "aqueduct_delivery_alternative",
+              "buildingId": "aqueduct",
+              "profileId": "aqueduct_delivery",
+              "demandId": "downstream_capacity"
+            }
+          ],
+          "openingInfrastructure": {
+            "version": 1,
+            "placements": [
+              {
+                "countyId": "resource_bank",
+                "siteId": "resource_cistern",
+                "buildingId": "fuel_preparation_yard",
+                "condition": "standing"
+              },
+              {
+                "countyId": "resource_bank",
+                "siteId": "resource_cistern",
+                "buildingId": "public_bath",
+                "condition": "ruined",
+                "profileId": "hypocaust_bath"
+              }
+            ]
+          },
+          "productionSites": [
+            {
+              "id": "service_yard",
+              "countyId": "resource_bank",
+              "siteId": "resource_cistern",
+              "buildingId": "fuel_preparation_yard",
+              "recipeIds": [
+                "prepare_service_fuel",
+                "use_service_fuel"
+              ],
+              "openingLots": [
+                {
+                  "goodId": "service_wood",
+                  "quantity": 12
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "openingInfrastructure": {
+        "version": 1,
+        "placements": []
+      }
+    }
+  },
+  "productionGoods": {
+    "service_wood": {
+      "name": "Split wood",
+      "unit": "raw_bundle",
+      "mass": 1
+    },
+    "service_ash": {
+      "name": "Spent fuel residue",
+      "unit": "ash_bundle",
+      "mass": 1
+    }
+  },
+  "productionRecipes": {
+    "prepare_service_fuel": {
+      "name": "Prepare service fuel",
+      "inputs": [
+        {
+          "goodId": "service_wood",
+          "quantity": 2
+        }
+      ],
+      "outputs": [
+        {
+          "goodId": "heating_fuel",
+          "quantity": 1
+        }
+      ],
+      "workDays": 1,
+      "workPrice": 2,
+      "requiresTech": [],
+      "impactReviewId": "conserved_production_batches"
+    },
+    "use_service_fuel": {
+      "name": "Other paid fuel use",
+      "inputs": [
+        {
+          "goodId": "heating_fuel",
+          "quantity": 1
+        }
+      ],
+      "outputs": [
+        {
+          "goodId": "service_ash",
+          "quantity": 1
+        }
+      ],
+      "workDays": 1,
+      "workPrice": 1,
+      "requiresTech": [],
+      "impactReviewId": "conserved_production_batches"
+    }
+  },
+  "buildings": {
+    "fuel_preparation_yard": {
+      "name": "Fuel preparation yard",
+      "desc": "Finite local materials without passive returns.",
+      "role": "industry",
+      "cost": 20,
+      "maxCounty": 1
+    }
+  }
+}

@@ -381,3 +381,7 @@ expedition_program title/intro use the ordinary story instance display owners an
 Water-service material display
 
 Water-service input quantities and names use literal FB.T with productionGood name owners through FB.dataText. Policy inputs and production.waterInputs contain only structural identities and numbers. Shared confirmation shows the exact named materials, water quantity, payment and finite term. Imported goods retain ordinary English fallback. No generated catalogue is changed.
+
+Bath and headworks display owners
+
+The literal tech_baths_headworks and buildings_baths_headworks supplements use existing tech and building name/desc extraction. buildingProfiles_baths_headworks uses the existing buildingProfile display owner. heating_fuel lives in the ordinary productionGoods assignment in data/production.js and uses productionGood.heating_fuel name/desc. No production-supplement extractor or generated catalogue is required. This keeps the small fuel display addition independent of optional manufacturing supplements. Static extraction coverage is authored in tools/test_i18n_baths_headworks.py; execution and catalogue generation remain owner-controlled.

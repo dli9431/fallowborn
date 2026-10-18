@@ -1,0 +1,33 @@
+Baths and downstream diversion
+
+Implemented distinction
+
+Public Bath is an optional maintained masonry facility rather than access to all bathing. Its base investment costs 65 gold with upkeep 2 per season and devMin 4, one per county, AI priority 26. Funded unheated service gives migration attraction 0.5. Heated Public Bath is one replacement profile costing 80, with the same upkeep and development requirement and attraction 1 in place of 0.5. Hypocaust Heating costs 20 research and requires Lime Mortar. The profile is discoverable as its actual technology consumer, without a fictitious separate heated-bath building. Domestic bathing, ordinary hearths, unheated investment and inherited repairs remain available. There is no health or disease claim, charitable bed, institution, office, degree or faith effect.
+
+Diversion Headworks costs 75 gold, upkeep 2, devMin 2, one per county and AI priority 29. Its optional technology costs 50 research and requires Irrigation Channels and Lime Mortar. Only funded independently serviced downstream demand supplies population capacity 0.02. Ordinary earth banks and irrigation remain available. Both facilities have inclusive construction years 476-1300; new headworks additionally requires the paying sovereign's Islamic, Persianate or Byzantine learning traditions. The bath is unrestricted by tradition. Construction awards no development, population or prestige and draws no new settlement. Prices, priorities, attraction, capacity, resource units and windows are simulation choices, not measured historical yields or universal disappearance dates.
+
+Finite physical operation
+
+An actual declared river flow, source and gradient suitability, lawful source/route rights and at least one connected store must reach the headworks receiver's exact physical site. Water passes through the conserved route and is consumed once for the final demand. An aqueduct or qanat serving that same site/effect demand cannot add a second capacity reward; a separately supplied bath uses a distinct allocation. A generic catchment without declared river suitability cannot substitute for the headworks intake. Source declarations are date-owned evidence decisions, never inferred from terrain or technology.
+
+Each bath/headworks service consumes two actual water units and pays work cost 2 plus upkeep prorated for its actual funded days, at most 30. Source-period boundaries may shorten that service. Heating additionally consumes one owned unreserved unexpired prepared heating-fuel bundle at the exact receiving site. The canonical production ledger preserves original lots, paid manufacture/transfer history, people and accounts, all previous material debits and current receipt identity. There is no off-map supplier, automatic purchase, free opening fuel, passive enterprise return or new labor allocation. New service needs fresh inputs after expiry; currently paid service supplies no perpetual benefit. Public reserves and household money stay with their canonical payers. Loss of authority, water rights or standing condition suspends the benefit without moving residents or removing property. Inherited repair uses its retained replacement price beyond construction windows, without a new research gate.
+
+History and simulation schedules
+
+The heating evidence envelope -100/600 and diversion envelope -500/600 describe broad knowledge evidence, not precise invention years. Vitruvius, On Architecture V.10.1-5 (Gwilt translation), gives prescriptions for heated bath floors and furnaces. It supports an engineered heating distinction rather than continuity of every bath or a clinical benefit. https://penelope.uchicago.edu/Thayer/E/Roman/Texts/Vitruvius/5*.html
+
+The Quseir Amra property description and Brief synthesis describe an early eighth-century bath and water apparatus. This is a later regional comparison, not an opening installation or a uniform operating system for every region. https://whc.unesco.org/en/list/327/
+
+UNESCO's Landmarks of the Ancient Kingdom of Saba, Marib property description identifies ancient irrigation infrastructure, while Shushtar Historical Hydraulic System describes a multi-period ensemble of canals, tunnels, dams and basins. These support distinguishing diversion engineering from all ordinary banks and channels. They do not establish an intact opening inventory, lawful holder, condition, capacity or funded modern-style service at either named site. https://whc.unesco.org/en/list/1700/ and https://whc.unesco.org/en/list/1315/
+
+These source attributions carry the catalogue's established evidence scope; no new local inventory or technical continuity claim is accepted here. Regional adoption schedules remain explicit simulation parameters independent of those evidence envelopes. Pair order below is default, Latin, Byzantine, Islamic, Persianate, Slavic, Nordic, Steppe, Baltic/Finnic, Caucasian and Northeast African. Mixed traditions select one whole pair by earliest emergence, then earliest widespread; a transmission tradition does not assign religion.
+
+Hypocaust Heating: 600/1100; 1/400; 1/500; 500/850; 300/850; 800/1150; 850/1200; 850/1250; 950/1300; 300/900; 100/700.
+
+Diversion Headworks: 400/1050; 1/650; 1/600; -500/400; 200/450; 700/1100; 850/1200; 800/1150; 900/1250; 200/800; 1/600.
+
+At 867 Latin, Byzantine, Islamic, Persianate and Northeast African single-tradition historical policies complete both nodes; Caucasian completes diversion only. At 1066 Caucasian completes both and default completes diversion. Other single-tradition policies complete neither at these dates. Both nodes are exposed at 1066; at 867 Baltic/Finnic exposes neither and every other schedule exposes both. Omitting Lime Mortar removes both descendants. No passive national effect or existing-id completion is added at these two released dates. Actual sovereign exceptions and mixed schedules still apply. Retained campaigns keep completion and partial projects without historical reseeding.
+
+Authoring and acceptance boundary
+
+The independent ordinary baths-headworks-river.json and baths-headworks-upland.json imports vary source quantities/periods, local materials and paid recipe work, learning tradition and physical route. Both exercise actual manufacture, unheated/heated service, downstream demand and standing/ruined profile inventory. Their finite feedstock ratios are dimensionless demonstration budgets, not reconstructed fuel consumption. The bundled fuel good has no automatic producer or stock. Neither import places a real historical asset. Matching saves preserve stock and property without replay; malformed provenance and reused fuel reject before adoption. Runtime, device, performance and game-feel acceptance remain owner review.
