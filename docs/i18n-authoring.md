@@ -365,3 +365,7 @@ Mixed building and profile supplements
 Literal buildingProfiles_<suffix> tables are also extracted from data/buildings_*.js so a facility catalogue can own variants without an extra loader file. They use the existing buildingProfile name/desc owners and static extraction, including files which also hold ordinary building declarations. Runtime JSON retains English fallback. No catalogue regeneration is needed during feature work.
 
 Literal siteResourceProfiles_<suffix> in the same buildings supplements extract name/desc under siteResourceProfile owners. This keeps physical source labels localizable without adding an extra runtime file.
+
+Fish preservation display owners
+
+The literal buildings_fish_drying map retains building.fish_drying_station name and description owners. Additive productionGoods_fish_drying and productionRecipes_fish_drying maps in production_fish_drying.js use the productionGood and productionRecipe namespaces through the additive production extractor. Season and producer policies contain only references and numbers. Ordinary JSON display text keeps English fallback. Existing shared reviews use FB.T; no rendered prose enters lots, batches or seasonal receipts. Generated catalogues remain unchanged on the feature branch.

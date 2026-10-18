@@ -1,0 +1,347 @@
+{
+  "name": "Fictional cool fish preservation",
+  "climateZones": {
+    "cool_drying_coast": {
+      "name": "Declared cool coastal weather",
+      "seasons": [
+        "cool_season",
+        "summer",
+        "autumn",
+        "winter"
+      ]
+    }
+  },
+  "geographies": {
+    "fish_cool_land": {
+      "bounds": {
+        "lonMin": 0,
+        "lonMax": 6,
+        "latMin": 0,
+        "latMax": 5
+      },
+      "land": [
+        [
+          0.5,
+          0.5,
+          5.5,
+          0.5,
+          5.5,
+          4.5,
+          0.5,
+          4.5
+        ]
+      ],
+      "gridWidth": 240,
+      "seas": [],
+      "rivers": [],
+      "defaultLayout": null,
+      "provinces": [
+        {
+          "id": "fjord_quay",
+          "x": 1.3,
+          "y": 1.2,
+          "terrain": "hills"
+        },
+        {
+          "id": "fjord_bank",
+          "x": 3.7,
+          "y": 2.7,
+          "terrain": "hills"
+        }
+      ],
+      "sites": {
+        "fjord_racks": {
+          "x": 1.3,
+          "y": 1.2
+        },
+        "fjord_store": {
+          "x": 3.7,
+          "y": 2.7
+        }
+      }
+    }
+  },
+  "startScenarios": [
+    {
+      "id": "fish_cool_ruler",
+      "name": "Coastal holder",
+      "desc": "Fictional conserved preservation review.",
+      "intro": "Review actual stock and local weather.",
+      "tier": 5,
+      "profession": "noble",
+      "gold": 100,
+      "prestige": 0,
+      "piety": 0,
+      "bookmarkIds": [
+        "fish_cool"
+      ],
+      "eras": [
+        "early_medieval"
+      ],
+      "alwaysUnlocked": true,
+      "familyPresets": {
+        "standard": {
+          "name": "Established household",
+          "diff": "age 24"
+        }
+      },
+      "rulerRealmId": "fish_cool_court",
+      "governmentForm": "regnum",
+      "fixedProvinceId": "fjord_quay",
+      "characterName": "Ivar Holm",
+      "sex": "m",
+      "startCulture": "norse",
+      "startReligion": "catholic",
+      "onboarding": "ruler"
+    },
+    {
+      "id": "fish_cool_household",
+      "name": "Coastal household",
+      "desc": "Fictional conserved preservation review.",
+      "intro": "Review actual stock and local weather.",
+      "tier": 1,
+      "profession": "farmer",
+      "gold": 100,
+      "prestige": 0,
+      "piety": 0,
+      "bookmarkIds": [
+        "fish_cool"
+      ],
+      "eras": [
+        "early_medieval"
+      ],
+      "alwaysUnlocked": true,
+      "familyPresets": {
+        "standard": {
+          "name": "Established household",
+          "diff": "age 24"
+        }
+      },
+      "startAge": 24
+    }
+  ],
+  "bookmarks": {
+    "fish_cool": {
+      "id": "fish_cool",
+      "name": "Fictional cool coast",
+      "desc": "Simulation units and explicit facilities, without a historical inventory claim.",
+      "date": {
+        "year": 850,
+        "season": 0,
+        "day": 1
+      },
+      "era": "early_medieval",
+      "geography": "fish_cool_land",
+      "settlementLayout": null,
+      "climate": {
+        "zone": "cool_drying_coast",
+        "provinces": {}
+      },
+      "religiousHeads": {},
+      "localInstitutions": {},
+      "stories": [],
+      "starts": [
+        "fish_cool_ruler",
+        "fish_cool_household"
+      ],
+      "scripted": [],
+      "straits": [],
+      "crossingClasses": {},
+      "provinces": [
+        {
+          "id": "fjord_quay",
+          "name": "Drying quay",
+          "realm": "fish_cool_court",
+          "culture": "norse",
+          "religion": "catholic",
+          "dev": 5,
+          "settlements": [
+            {
+              "site": "fjord_racks",
+              "name": "Drying quay",
+              "kind": "town"
+            }
+          ]
+        },
+        {
+          "id": "fjord_bank",
+          "name": "Buyer shore",
+          "realm": "fish_cool_buyer",
+          "culture": "norse",
+          "religion": "catholic",
+          "dev": 5,
+          "settlements": [
+            {
+              "site": "fjord_store",
+              "name": "Buyer shore",
+              "kind": "town"
+            }
+          ]
+        }
+      ],
+      "realms": [
+        {
+          "id": "fish_cool_court",
+          "name": "Drying quay court",
+          "capital": "fjord_quay",
+          "color": "#458c96",
+          "aggression": 0,
+          "rank": 2,
+          "government": "regnum",
+          "ruler": {
+            "name": "Ivar Holm",
+            "culture": "norse",
+            "born": 818,
+            "mar": 6,
+            "trait": "patient"
+          }
+        },
+        {
+          "id": "fish_cool_buyer",
+          "name": "Buyer shore court",
+          "capital": "fjord_bank",
+          "color": "#779955",
+          "aggression": 0,
+          "rank": 2,
+          "government": "regnum",
+          "ruler": {
+            "name": "Freya Vale",
+            "culture": "norse",
+            "born": 815,
+            "mar": 6,
+            "trait": "patient"
+          }
+        }
+      ],
+      "duchies": {},
+      "kingdoms": {},
+      "empires": {},
+      "openingInfrastructure": {
+        "version": 1,
+        "placements": [
+          {
+            "countyId": "fjord_quay",
+            "siteId": "fjord_racks",
+            "buildingId": "fish_drying_station",
+            "condition": "standing"
+          },
+          {
+            "countyId": "fjord_bank",
+            "siteId": "fjord_store",
+            "buildingId": "preserved_store",
+            "condition": "standing"
+          }
+        ]
+      },
+      "productionSites": [
+        {
+          "id": "drying_plant",
+          "countyId": "fjord_quay",
+          "siteId": "fjord_racks",
+          "buildingId": "fish_drying_station",
+          "recipeIds": [
+            "dry_fish"
+          ],
+          "openingLots": [
+            {
+              "goodId": "generic_food",
+              "quantity": 10
+            }
+          ]
+        },
+        {
+          "id": "provisions_buyer",
+          "countyId": "fjord_bank",
+          "siteId": "fjord_store",
+          "buildingId": "preserved_store",
+          "recipeIds": [
+            "dry_fish"
+          ],
+          "openingLots": []
+        }
+      ],
+      "productionProducerAssignments": [
+        {
+          "id": "actual_catch",
+          "profileId": "fish_drying_catch",
+          "siteId": "drying_plant"
+        }
+      ],
+      "productionExchangeAssignments": [
+        {
+          "id": "provisions_sale",
+          "profileId": "dry_sale",
+          "fromSiteId": "drying_plant",
+          "toSiteId": "provisions_buyer"
+        }
+      ],
+      "buildingSeasonAssignments": [
+        {
+          "id": "drying_window",
+          "profileId": "fish_drying_cool",
+          "operationId": null,
+          "productionSiteId": "drying_plant",
+          "resources": []
+        },
+        {
+          "id": "buyer_window",
+          "profileId": "buyer_preserved",
+          "operationId": null,
+          "productionSiteId": "provisions_buyer",
+          "resources": []
+        }
+      ]
+    }
+  },
+  "productionGoods": {
+    "generic_food": {
+      "name": "Generic food",
+      "unit": "food_units",
+      "mass": 1
+    }
+  },
+  "productionExchangeProfiles": {
+    "dry_sale": {
+      "goodId": "dried_provisions",
+      "marketGoodId": "provisions",
+      "basePrice": 3,
+      "mode": "market",
+      "quantityLimit": 2,
+      "budget": 12
+    }
+  },
+  "buildings": {
+    "preserved_store": {
+      "name": "Preserved stores",
+      "desc": "Finite received provisions only.",
+      "role": "food_store",
+      "cost": 20,
+      "upkeep": 1,
+      "maxCounty": 1,
+      "populationFamineProtection": 0.03,
+      "seasonProfile": "buyer_preserved"
+    }
+  },
+  "buildingSeasonProfiles": {
+    "buyer_preserved": {
+      "seasonKinds": [
+        "cool_season"
+      ],
+      "periodDays": 5,
+      "maxDays": 3,
+      "care": false,
+      "stockLives": [
+        {
+          "goodId": "dried_provisions",
+          "days": 12
+        }
+      ],
+      "benefit": {
+        "goodId": "dried_provisions",
+        "quantity": 1,
+        "effect": "populationFamineProtection",
+        "days": 3
+      }
+    }
+  }
+}

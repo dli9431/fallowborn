@@ -694,3 +694,7 @@ Fresh campaigns may complete these discoveries under the historical policy; reta
 Horizontal milling technology decision
 
 horizontal_milling is hard on water_power for the optional horizontal_mill profile of mill. Hand and animal grinding remain available without organized powered machinery. requiresTechMode:replace gives this simpler alternative its reviewed requirement while the ordinary undershot Watermill retains its original gate and values. Missing Water Power remains visible in the shared profile review and the technology sheet discovers the actual profile consumer. Existing property, funded service receipts and repair retain their identity after knowledge loss; real water, site compatibility, permission and funded operation still control current benefits. No discovery or national research scalar is added.
+
+Baseline fish preservation
+
+baseline_fish_drying is none. Actual fish, suitable local weather, paid work and finite local reservation govern the optional Fish Drying Station. No stockfish discovery or new research effect is added; ordinary household fishing and preservation remain available. The existing commercial fishing enterprise retains its separate soft review and all paid staffing and upgrade gates. The typed diversion adapter allocates actual output and suppresses the matching market and ordinary-income share once.

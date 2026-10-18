@@ -238,14 +238,14 @@
     economy.receipts.forEach(function(x){
       var a=x && asset(x.assetId),l=x && lot(x.lotId),profile,good;
       if(!x || !int(x.id,1,r.nextId-1) || seen[x.id] || !a || !l || l.assetId!==a.id || !eq(l.owner,a.owner) ||
-        l.id<=x.id || a.id>=x.id || !int(x.turn,0,s.turn) || x.period!==Math.floor(x.turn/90) ||
+        l.id<=x.id || a.id>=x.id || !int(x.turn,a.openedTurn,s.turn) || x.period!==Math.floor(x.turn/90) ||
         !int(x.quantity,1,10000) || l.quantity!==x.quantity || !eq(l.origin,{kind:x.kind,receiptId:x.id}) || linked[l.id])fail();
       seen[x.id]=true;linked[l.id]=true;out.ids.push(x.id);
       if(x.kind==='exchange') {
         var route=p.routes.find(function(z){return z.id===x.routeId;}),source=asset(x.fromAssetId);
         profile=route && FBDATA.productionExchangeProfiles[route.profileId];
         if(!keys(x,['id','kind','routeId','turn','period','fromAssetId','assetId','seller','buyer','sellerIdentity','buyerIdentity','payer','recipient','inputs','lotId','quantity','unitPrice','paid']) ||
-          !profile || !source || source.siteId!==route.fromSiteId || a.siteId!==route.toSiteId || !eq(x.seller,source.owner) || !eq(x.buyer,a.owner) ||
+          !profile || !source || source.openedTurn>x.turn || source.siteId!==route.fromSiteId || a.siteId!==route.toSiteId || !eq(x.seller,source.owner) || !eq(x.buyer,a.owner) ||
           !identity(s,x.payer) || !identity(s,x.recipient) || !person(x.sellerIdentity,x.seller) || !person(x.buyerIdentity,x.buyer) ||
           !(eq(x.payer,x.buyer) || x.buyer.kind==='realm' && x.buyer.id==='player' && x.payer.kind==='character' && x.payer.id===x.buyerIdentity.characterId) ||
           !(eq(x.recipient,x.seller) || x.seller.kind==='realm' && x.seller.id==='player' && x.recipient.kind==='character' && x.recipient.id===x.sellerIdentity.characterId) ||
