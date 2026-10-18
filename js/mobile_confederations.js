@@ -1183,7 +1183,7 @@
     if (!mobile) return d.mobile === undefined ? [] : [FB.T('A mobile opening requires a mobile territory strategy.')];
     var t = d.mobile, p = t && profiles[t.profileId], byId = {};
     provinces.forEach(function (pr) {byId[pr.id]=pr;});
-    if (!keys(t,['profileId','patronRealmId','origin','target','food','fighters','treasury','opening','command','sponsorship','hostedAccess','columns','funding']) || !p ||
+    if (!keys(t,['profileId','patronRealmId','origin','target','food','fighters','treasury','opening','command','sponsorship','hostedAccess','columns','funding','expeditionProgram']) || !p ||
         (t.sponsorship!==undefined ? !M.independent(t) || !t.command || !t.opening :
           !Object.prototype.hasOwnProperty.call(realms,t.patronRealmId) || t.patronRealmId === d.id) || !d.nonTerritorial ||
         !byId[t.origin] || byId[t.origin].wasteland || !byId[t.target] || byId[t.target].wasteland ||
@@ -1287,7 +1287,7 @@
       var p = M.profile(s,rid), moving = M.migration(s,rid), ids = {}, principals = {};
       if (moving && !M.migrationSponsorshipValid(s,moving)) fault(rid,'sponsorship');
       if (!keys(r,['schema','profileId','migrationId','status','serial','revision','leaderId','selection','decision','food','lastDay','lastAI',
-          'worked','agreements','accounting','members','defeatKey','openingBindings','command','openingAccess','columns']) || [1,2,3].indexOf(r.schema)<0 || !p || !moving || moving.realmId !== rid ||
+          'worked','agreements','accounting','members','defeatKey','openingBindings','command','openingAccess','columns','expeditionProgram']) || [1,2,3].indexOf(r.schema)<0 || !p || !moving || moving.realmId !== rid ||
           !['active','settled','dispersed'].includes(r.status) || !whole(r.serial) || !whole(r.revision) || !whole(r.lastDay) || r.lastDay > s.turn ||
           r.lastAI !== undefined && (!whole(r.lastAI) || r.lastAI>Math.floor(s.turn/90)) || !boundedNumber(r.food,1000000000000) ||
           !keys(r.accounting,['initial','arrivals','dead','settled','dispersed']) || Object.keys(r.accounting).length !== 5 ||

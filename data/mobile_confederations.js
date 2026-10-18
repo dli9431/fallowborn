@@ -68,6 +68,8 @@
     rationale:'Reassigning existing commanders and reorganizing conserved fighters creates no people or equipment. Optional recovery selects an eligible class and a camp-local column within one command-wide replacement target, living member pledges and available public funds; normal unit qualifications remain binding.'};
   FBDATA.techImpactReviews.features.mobile_column_settlement = {mode:'none',
     rationale:'Civilian settlement and final reunion use ordinary conserved population and lawful land transactions. Final settlement requires every surviving field host to return and demuster; no technology can substitute for their arrival.'};
+  FBDATA.techImpactReviews.features.expedition_program_reviews = {mode:'none',
+    rationale:'Bounded intent and pure reviews depend on actual command, living consent and existing resources. Canonical route, equipment, supply and war technology requirements remain binding; ordinary manual operations remain available.'};
   FBDATA.techImpactReviews.features.home_decision_presence = {mode:'none',
     rationale:'Local public decisions depend on actual presence and a living incumbent, without a credible discovery prerequisite. Existing commitments and ordinary private actions remain available.'};
   FBDATA.techImpactReviews.features.home_decision_delegation = {mode:'none',

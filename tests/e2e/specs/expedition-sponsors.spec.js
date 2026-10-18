@@ -8,7 +8,7 @@ const examples={harbor:require('../fixtures/authoring/mobile-expedition-harbor.j
   dune:require('../fixtures/authoring/mobile-expedition-dune.json')};
 const sponsored=require('../fixtures/authoring/mobile-command-dune.json');
 dependsOnRuntime(__filename,['index.html','data/mobile_confederations.js','data/units.js','data/technology.js',
-  'js/mobile_confederations.js','js/mobile_command.js','js/mobile_columns.js','js/federates.js','js/government_continuity.js',
+  'js/mobile_confederations.js','js/mobile_command.js','js/expedition_programs.js','js/mobile_columns.js','js/federates.js','js/government_continuity.js',
   'js/governments.js','js/government_selection.js','js/government_support.js','js/bookmark_setup.js','js/world.js','js/mods.js',
   'js/authority.js','js/treasury.js','js/armies.js','js/population.js','js/settlement.js','js/starts.js','js/util.js',
   'js/save.js','js/save_v4.js','js/ui_mobile.js','js/ui_misc.js','js/main.js','js/wars.js','js/model.js','js/station.js','js/technology.js']);

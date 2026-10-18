@@ -122,3 +122,10 @@ household_party.journey selects an existing ordinary sites-mode destination thro
 Buildings at existing institutions
 
 buildingInstitutionProfiles and effective bookmark/revision buildingInstitutionAssignments bind optional nonfort building construction to real existing institutions, exact physical foundations, current permission, original incumbents and explicit builder/maintenance payers. The complete building-institutions-see.json and building-institutions-house.json examples import through the normal Mods picker and contrast an office-bound seat with explicitly paid endowed property. Their canonical construction, reaffirmation, fiscal projections and strict optional asset references create no institution, successor or public/private transfer. Unbound old works remain unchanged. See docs/MODDING.md and docs/designs/building-institutions.md for authorable variation and intrinsic boundaries.
+
+
+Bounded expedition intent
+
+Optional mobile.expeditionProgram declarations select the existing command's real single host or declared column slots, finite opportunity windows, actual field/camp waypoints, resource thresholds and exact living-member/access requirements. Trusted adapters project canonical route, supply, one-objective aggression and outside access-offer reviews; JSON never registers callbacks, writes checkpoints or controls outcomes. The public review contract initializes identity checkpoints once and performs no daily dispatch. Ordinary manual actions retain their existing gates and remain available without a program.
+
+Complete independent ordinary imports expedition-program-harbor.json and expedition-program-dune.json vary field versus camp movement, windows, command continuity, forces, supply policy and outside terms. Their focused spec checks real imports, pure rejected candidates, exact current reviews, stale refusal, strict optional saves and matching restore without replay. Program execution, redirect/withdraw transactions, other war objective packages and named household carriage require their own supported owners. See docs/designs/expedition-programs.md and docs/MODDING.md.

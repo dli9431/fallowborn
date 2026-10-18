@@ -6,7 +6,7 @@ const { startHistoricalGame } = require('../support/game/historical-start');
 
 dependsOnRuntime(__filename, [
   'index.html','data/mobile_confederations.js','data/actions.js','data/lexicons.js','data/technology.js',
-  'data/bookmark_476.js','data/units.js','js/mobile_confederations.js','js/mobile_command.js','js/mobile_columns.js','js/ui_mobile.js',
+  'data/bookmark_476.js','data/units.js','js/mobile_confederations.js','js/mobile_command.js','js/expedition_programs.js','js/mobile_columns.js','js/ui_mobile.js',
   'js/governments.js','js/government_selection.js','js/government_continuity.js','js/government_levy.js',
   'js/government_revenue.js','js/government_ai.js','js/government_diplomacy.js','js/world.js','js/population.js',
   'js/armies.js','js/fortifications.js','js/federates.js','js/logistics.js','js/market.js','js/treasury.js',
