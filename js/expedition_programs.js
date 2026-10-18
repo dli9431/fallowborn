@@ -372,6 +372,15 @@
     }
   });
   E.reviewControl=function (s,request) {return S.reviewSource(s,'expedition_program',request);};
+  /* Lifecycle closure releases only this owner's prospective orders. It is
+     also valid after the original mandate expires; it grants no operation. */
+  E.endIntent=function (s,rid) {
+    var r=M.row(s,rid),p=r && r.expeditionProgram;
+    if (!p || p.status!=='active') return false;
+    stopOrders(s,rid);p.status='cancelled';
+    p.steps.forEach(function (v) {if (v.status==='pending') v.status='cancelled';});
+    changed(r);return true;
+  };
   /* Observe the common transaction boundary, including direct UI/source calls.
      Only our own successful commits carry the synchronous dispatch permit. */
   var commitSource=S.commitSource;
@@ -434,6 +443,7 @@
     activeRealms(s,function (rid,r,saved,p) {
       var leader=M.leader(s,rid);
       if (!p || !recordValid(p,saved) || r.status!=='active' || !leader || leader.id===s.player.charId || !M.commandValid(s,rid)) return;
+      if (FB.expeditionStoryPrograms && !FB.expeditionStoryPrograms.allowMobileAI(s,rid)) return;
       var e=execution(saved);if (e.paused || e.lastTurn===s.turn) return;
       e.lastTurn=Math.min(1440,s.turn);changed(r);
       var used=Object.create(null);

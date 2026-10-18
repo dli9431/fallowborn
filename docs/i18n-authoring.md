@@ -373,3 +373,7 @@ The literal buildings_fish_drying map retains building.fish_drying_station name 
 Expedition preparation text
 
 The expedition_preparation factory routes every shared status, choice, blocker, portrait label and public training/provision cost phrase through literal FB.T strings with named placeholders. Imported title/intro fields use effective English fallback through the normal story renderer. Source/actor ids, schema enums, fingerprints, reserves and formation receipts remain locale-neutral; no rendered prose is saved. No bundled instance or new structured extraction namespace is introduced. A future bundled declaration must use a supported literal presentation source before shipping; catalog generation remains separately authorized.
+
+Expedition story composition display
+
+expedition_program title/intro use the ordinary story instance display owners and imported English fallback. Shared intent, deadline, original person, step and cost chrome uses literal FB.T messages with named placeholders in js/story_expedition_program.js. Status/reason ids, original references and canonical cursors remain untranslated; rendered prose is never saved. No catalogue command is needed on this branch.
