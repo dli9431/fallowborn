@@ -1,5 +1,9 @@
 # Wars
 
+Household evidence boundary
+
+Field hosts and mobile columns retain their own actual county positions and exact ordinary-war assignments. Household campaign notices may read those living hosts through the existing campaign source adapter, without moving a host or resolving combat. A civilian camp, intended route or campaign objective supplies no actual battle fact. Player war feedback and tracked ruler life events retain their existing distinct scopes; they are not a universal household battle ledger. A campaign result or change of county control establishes neither a local clash nor a settlement attack, casualties, household loss or relief entitlement. The observer's costless shared receipt changes only its recorded response. See docs/designs/stories.md for campaign reach, expiry and exact-site source requirements.
+
 Program-owned religious objectives
 
 An opted-in single-host expedition program may observe the canonical active religious campaign objective and issue an ordinary scoped march to its existing mustered mobileVow host. Program arrival proves only actual field presence. Combat, occupation, contribution, settlement and vow obligations remain with the existing campaign owner; no second campaign, levy, host, award or territory write is introduced. Ordinary strategic AI and offensive coordination withhold competing orders for that exact program host, including paused or terminal intent. Broken-host retreat, actual movement, supply consumption and battle remain canonical. Successful manual replacement orders pause prospective intent and survive its later expiry. The expedition_live_religious_objective technology review is none, with all ordinary military, transport, authority and access gates retained. Public declarations and persistence are documented in docs/designs/expedition-programs.md.
