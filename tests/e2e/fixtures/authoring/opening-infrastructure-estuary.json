@@ -1,0 +1,84 @@
+{
+  "name": "Estuary inherited works",
+  "buildings": {
+    "inventory_store": {
+      "name": "Inherited store", "role": "food_store", "cost": 30, "maxDemesne": 1,
+      "requiresTech": "universities", "devMin": 9, "applicability": {"yearMin": 4000}
+    },
+    "inventory_workshop": {
+      "name": "Inherited workshop", "role": "industry", "cost": 40, "maxCounty": 2,
+      "constructionGroup": {"id": "inventory_work_sites", "maxCounty": 2}
+    },
+    "inventory_yard": {
+      "name": "Inherited yard", "role": "industry", "cost": 20,
+      "constructionGroup": {"id": "inventory_work_sites", "maxCounty": 2}
+    }
+  },
+  "geographies": {
+    "inventory_estuary_land": {
+      "bounds": {"lonMin": 0, "lonMax": 6, "latMin": 0, "latMax": 5},
+      "land": [[0.5, 0.5, 5.5, 0.5, 5.5, 4.5, 0.5, 4.5]],
+      "gridWidth": 240, "seas": [], "rivers": [], "defaultLayout": "inventory_estuary_layout",
+      "provinces": [
+        {"id": "inventory_quay", "x": 1.5, "y": 2, "terrain": "farmland"},
+        {"id": "inventory_marsh", "x": 3.1, "y": 2, "terrain": "farmland"},
+        {"id": "inventory_ridge", "x": 4.7, "y": 2, "terrain": "hills"},
+        {"id": "inventory_scenery", "x": 3.1, "y": 4, "terrain": "hills"}
+      ],
+      "sites": {
+        "inventory_quay_hall": {"x": 1.4, "y": 2},
+        "inventory_quay_store": {"x": 1.7, "y": 2},
+        "inventory_marsh_town": {"x": 3.1, "y": 2},
+        "inventory_ridge_tower": {"x": 4.7, "y": 2}
+      }
+    }
+  },
+  "settlementLayouts": {
+    "inventory_estuary_layout": {
+      "inventory_quay": [
+        {"site": "inventory_quay_hall", "name": "Quay Hall", "kind": "town"},
+        {"site": "inventory_quay_store", "name": "Quay Stores", "kind": "village"}
+      ],
+      "inventory_marsh": [{"site": "inventory_marsh_town", "name": "Marsh Town", "kind": "village"}],
+      "inventory_ridge": [{"site": "inventory_ridge_tower", "name": "Ridge Tower", "kind": "village"}]
+    }
+  },
+  "startScenarios": [{
+    "id": "inventory_estuary_household", "name": "Estuary household", "desc": "A fictional household.",
+    "intro": "Your family lives beside the estuary.", "tier": 1, "profession": "farmer",
+    "gold": 12, "prestige": 0, "piety": 0, "bookmarkIds": ["inventory_estuary"],
+    "eras": ["early_medieval"], "alwaysUnlocked": true, "startAge": 24,
+    "familyPresets": {"standard": {"name": "Established household", "diff": "age 24"}}
+  }],
+  "bookmarks": {
+    "inventory_estuary": {
+      "id": "inventory_estuary", "name": "The Estuary", "desc": "A fictional inventory example.",
+      "date": {"year": 900, "season": 0, "day": 1}, "era": "early_medieval",
+      "geography": "inventory_estuary_land", "religiousHeads": {}, "localInstitutions": {},
+      "stories": [], "starts": ["inventory_estuary_household"], "scripted": [], "straits": [], "crossingClasses": {},
+      "provinces": [
+        {"id": "inventory_quay", "name": "Quay", "realm": "inventory_estuary_court", "culture": "frankish", "religion": "catholic", "dev": 3},
+        {"id": "inventory_marsh", "name": "Marsh", "realm": "inventory_estuary_court", "culture": "frankish", "religion": "catholic", "dev": 2},
+        {"id": "inventory_ridge", "name": "Ridge", "realm": "inventory_ridge_court", "culture": "frankish", "religion": "catholic", "dev": 2},
+        {"id": "inventory_scenery", "name": "Uninhabited upland", "wasteland": true}
+      ],
+      "realms": [
+        {"id": "inventory_estuary_court", "name": "Estuary court", "capital": "inventory_quay", "color": "#458c96", "aggression": 0, "rank": 2, "government": "regnum",
+          "ruler": {"name": "Ivo Reed", "culture": "frankish", "born": 868, "mar": 6, "trait": "patient"}},
+        {"id": "inventory_ridge_court", "name": "Ridge court", "capital": "inventory_ridge", "color": "#aa7944", "aggression": 0, "rank": 1, "government": "regnum", "liege": "inventory_estuary_court",
+          "ruler": {"name": "Odo Vale", "culture": "frankish", "born": 870, "mar": 5, "trait": "patient"}}
+      ],
+      "duchies": {}, "kingdoms": {}, "empires": {},
+      "revision": "inherited", "revisions": {
+        "baseline": {},
+        "inherited": {"openingInfrastructure": {"version": 1, "placements": [
+          {"countyId": "inventory_quay", "siteId": "inventory_quay_store", "buildingId": "inventory_store", "condition": "standing"},
+          {"countyId": "inventory_quay", "siteId": "inventory_quay_hall", "buildingId": "inventory_workshop", "condition": "ruined"},
+          {"countyId": "inventory_quay", "siteId": "inventory_quay_store", "buildingId": "inventory_yard", "condition": "standing"},
+          {"countyId": "inventory_ridge", "siteId": "inventory_ridge_tower", "buildingId": "walls", "condition": "ruined", "level": 2}
+        ]}},
+        "empty": {"openingInfrastructure": {"version": 1, "placements": []}}
+      }
+    }
+  }
+}

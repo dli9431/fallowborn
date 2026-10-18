@@ -38,6 +38,10 @@ data/starts_laskaris_1204.js offers laskaris_1204 as an always-open Historical s
 
 Nicaea is the existing court's opening anchor. This start supplies no imperial coronation, named historical relatives, land award or guaranteed restoration. Technology impact: no new entry is required because selecting an existing ruler adds no independently gateable capability; all existing political and military gates continue to apply. The 1204 worlds and other starts retain their declarations.
 
+Opening infrastructure definitions
+
+openingInfrastructure is an optional complete bookmark/revision field. The revision resolver inherits or replaces it as one value, retaining the difference between an absent legacy policy and an explicit empty inventory. Ordinary JSON imports validate every retained and selected revision against its own resolved sites and holder scopes. compileOpeningInfrastructure returns stable layout indexes and a complete valid inventory without touching activation, RNG, people or campaign ledgers. Exact mod fingerprints already include the nested declaration. This contract supplies validation and compilation only; fresh-game application and saved explicit-fort policy are separate work. No historical bookmark opts in through this change. See MODDING.md and development.md for the placement schema and limits.
+
 Frankish court at Soissons
 
 data/starts_clovis_493.js adds clovis_493, an existing-ruler opening at the inherited Soissons anchor in county laon. It adopts franks_493 with Frankish culture, Germanic pagan faith, regnum government and tier 6, retaining Clovis, the seeded Theuderic, generated supporting people, existing territory and actual treasury. The scenario and date both retain their hidden flags. This row is compatible with baseline, world_v2 and jewish_samaritan_v3 and changes no world declaration or fresh revision selector.

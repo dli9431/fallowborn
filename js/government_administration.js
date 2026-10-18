@@ -332,6 +332,7 @@
     return 1 - profile.finance.serviceShare + (commissioned ? profile.finance.serviceShare : 0);
   }
   G.register('holders','public_offices', { assign:function (s,rid) { G.strategy('holders','direct').assign(s,rid); },
+    openingHolders:function (definition,rid) { return G.strategy('holders','direct').openingHolders(definition,rid); },
     conquest:function (s,rid) { return rid; }, vacancy:function (s,rid) { return rid; } });
   var levy = Object.assign({}, G.strategy('levy','feudal_levy'));
   var baseLevy = levy.settlementBase;

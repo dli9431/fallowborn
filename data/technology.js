@@ -111,6 +111,7 @@ window.FBDATA = window.FBDATA || {};
   FBDATA.techImpactReviews = {
     baselineVersion:'1.127.1',
     features:{
+      inherited_opening_infrastructure:{ mode:'none', rationale:'Inherited physical assets do not imply current knowledge or permission to reproduce them. The opening declaration validates stable sites and conserved inventory limits without purchasing, founding or granting an institution.' },
       construction_group_limits:{ mode:'none', rationale:'Shared physical construction capacity is a county occupancy rule, independent of discovery. Existing assets and repairs retain their ordinary effects and technology requirements.' },
       household_story_decisions:{ mode:'none', rationale:'Household decisions and local news require no discovery. Conversion and journey adapters retain their ordinary eligibility and costs.' },
       household_calendar_windows:{ mode:'none', rationale:'Ordinary calendar windows pace household decisions without proving any historical event. Work, travel and political transactions retain their existing eligibility.' },
