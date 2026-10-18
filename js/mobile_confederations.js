@@ -943,7 +943,7 @@
         r.food += production * p.pasturePerPerson;
       }
       var leader=M.leader(s,rid);
-      if (p.supplyPolicy && leader && leader.id!==s.player.charId) {
+      if (p.supplyPolicy && leader && leader.id!==s.player.charId && !r.expeditionProgram) {
         M.commit(s,M.supplyReview(s,rid,'trade'));
         if (r.columns) M.columnSupplyDay(s,rid);
         else M.commit(s,M.supplyReview(s,rid,'recruit'));
