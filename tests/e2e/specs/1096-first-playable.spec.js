@@ -17,7 +17,8 @@ dependsOnRuntime(__filename,[
   'data/starts_pilgrim_1096.js','data/story_pilgrim_1096.js',
   'js/stories.js','js/story_household.js','js/story_opening_goals.js',
   'data/settlements_real.js','data/government_rollout.js','data/ecclesiastical_profiles.js',
-  'js/world.js','js/model.js','js/starts.js','js/main.js','js/save.js','js/save_v4.js'
+  'js/world.js','js/model.js','js/starts.js','js/main.js','js/save.js','js/save_v4.js',
+  'js/ui_misc.js','js/ui_modals.js'
 ]);
 
 const regionOrder = [
@@ -108,36 +109,65 @@ test('1096 preserves released definitions and rejects malformed worlds without m
   expect(result).toEqual({rejected:[true,true,true,true],pure:true});
 });
 
-test('1096 stays hidden through picker, start code, direct creation and observation',async function ({page},info) {
+test('1096 is offered with its pilgrim household and ordinary roles while held starts remain absent',async function ({page},info) {
   await openGame(page,info);
   expect(await page.evaluate(function () {
-    return {hidden:FB.bookmark('1096').hidden,offered:FB.bookmarks().some(function (b) { return b.id === '1096'; }),
-      inspectable:FB.bookmarks(true).some(function (b) { return b.id === '1096'; })};
-  })).toEqual({hidden:true,offered:false,inspectable:true});
+    return {hidden:FB.bookmark('1096').hidden === true,available:FB.bookmarkAvailable('1096'),
+      offered:FB.bookmarks().some(function (b) { return b.id === '1096'; })};
+  })).toEqual({hidden:false,available:true,offered:true});
   const full = page.locator('#btn-choose-beginning');
   if (await full.isVisible()) await full.click();
   else await page.getByRole('button',{name:'New Game',exact:true}).click();
-  await expect(page.locator('#bookmarklist')).not.toContainText('The First Crusade');
-  await page.locator('#btn-bm-seed').click();
-  await page.locator('#ng-seed').fill('REVIEW1096-1096-farmer-cologne-m-Review-established');
-  await page.locator('#ng-seed').press('Enter');
-  await expect(page.locator('#ng-seed-err')).toContainText('hidden for new campaigns');
-  await page.locator('#ng-cancel').click();
-  await page.evaluate(function () {
-    return new Promise(function (resolve,reject) {
-      FB.activateBookmark('1096',null,function (error) { if (error) reject(error); else resolve(); });
-    });
-  });
+  await expect(page.locator('#bookmarklist [data-bookmark="1096"]')).toContainText('The First Crusade');
+  await page.locator('#bookmarklist [data-bookmark="1096"]').press('Enter');
+  await expect(page.locator('#ng-heading')).toHaveText('Choose Your Beginning in 1096 AD');
+  expect(await page.evaluate(function () { return FB.activeBookmarkId; })).toBe('1096');
+  for (const id of ['serf','farmer','apprentice','pilgrim_household_1096'])
+    await expect(page.locator('#scenariolist [data-scenario="' + id + '"]')).toBeVisible();
+  const pilgrim = page.locator('#scenariolist [data-scenario="pilgrim_household_1096"]');
+  await expect(pilgrim).not.toHaveAttribute('aria-disabled','true');
+  await expect(page.locator('#scenariolist [data-scenario$="_1096"]')).toHaveCount(1);
   expect(await page.evaluate(function () {
-    FB.game.pending = {bookmarkId:'1096',seed:'REVIEW1096',provinceId:'cologne',
-      scenario:FBDATA.startScenarios.find(function (s) { return s.id === 'farmer'; })};
-    const state = FB.state, rng = FB.getRngState(), uid = FB.getUidCounter();
-    return {start:FB.game.start(),observe:FB.game.startObserve(),
-      unchanged:state === FB.state && rng === FB.getRngState() && uid === FB.getUidCounter()};
-  })).toEqual({start:false,observe:false,unchanged:true});
+    return FBDATA.startScenarios.filter(function (sc) {
+      return sc.bookmarkIds && sc.bookmarkIds.indexOf('1096') >= 0 && !sc.hidden;
+    }).map(function (sc) { return sc.id; });
+  })).toEqual(['pilgrim_household_1096']);
+  await pilgrim.press('Enter');
+  await expect(page.locator('#pickprov:not(.hidden)')).toBeVisible();
+  expect(await page.evaluate(function () {
+    const pending = FB.game.pending;
+    return {scenario:pending.scenario.id,allowed:FB.startProvinceAllowed(pending.scenario,FB.activeBookmark,'cologne'),
+      elsewhere:FB.startProvinceAllowed(pending.scenario,FB.activeBookmark,'mainz'),state:FB.state};
+  })).toEqual({scenario:'pilgrim_household_1096',allowed:true,elsewhere:false,state:null});
 });
 
-test('a seeded 1096 household replays and restores its hidden world across bookmark activation',async function ({page},info) {
+for (const scenario of ['serf','pilgrim_household_1096']) {
+  test('1096 ' + scenario + ' starts from an ordinary code without changing visibility',async function ({page},info) {
+    await openGame(page,info);
+    const full = page.locator('#btn-choose-beginning');
+    if (await full.isVisible()) await full.click();
+    else await page.getByRole('button',{name:'New Game',exact:true}).click();
+    const family = scenario === 'pilgrim_household_1096' ? 'established' : 'standard';
+    await page.locator('#btn-bm-seed').click();
+    await page.locator('#ng-seed').fill('VISIBLE1096-1096-' + scenario + '-cologne-m-Review-' + family);
+    await page.locator('#ng-seed').press('Enter');
+    await expect(page.locator('#chargen:not(.hidden)')).toBeVisible();
+    expect(await page.evaluate(function () { return FB.state; })).toBeNull();
+    await page.getByRole('button',{name:'Begin Your Story',exact:true}).click();
+    await page.getByRole('button',{name:'Begin',exact:true}).click();
+    await expect(page.locator('#game:not(.hidden)')).toBeVisible();
+    expect(await page.evaluate(function () {
+      FB.game.setPaused(true);
+      const s = FB.state, c = s.chars[s.player.charId];
+      return {bookmark:s.start.id,hidden:FB.bookmark('1096').hidden === true,home:s.player.provinceId,
+        identity:[c.culture,c.religion],pilgrim:!!s.stories.pilgrim_household_track_1096,
+        goals:!!s.stories.opening_pilgrim_1096};
+    })).toEqual({bookmark:'1096',hidden:false,home:'cologne',identity:['german','catholic'],
+      pilgrim:scenario === 'pilgrim_household_1096',goals:scenario === 'pilgrim_household_1096'});
+  });
+}
+
+test('a seeded 1096 household replays and restores after its world is hidden across bookmark activation',async function ({page},info) {
   await beginBookmark(page,info,'1096','farmer');
   const checkpoint = await page.evaluate(function () { return FB.save.serialize(); });
   const original = await facts(page);
