@@ -1,5 +1,9 @@
 # Development & buildings
 
+Post-mill construction
+
+data/buildings_wind.js retains the windmill id and Post Windmill name, with cost 45, tax 2, development 1, population capacity 0.05, maxCounty 2 and AI priority 9. New construction needs windmill knowledge and applicability.yearMin 1150, inclusive, through the shared player, automation, annual realm AI and private-baron checks. Knowledge may precede permission. The boundary applies only to new construction; existing assets retain effects, upkeep and ordinary repairs after eligibility changes, with no saved-record migration or installation replay. Ordinary grinding and watermills remain available. The existing soft building_windmill review and none construction_applicability review cover these independent conditions. The terrain/grain abstraction is unchanged; sources and the rounded-date limits are in docs/research/windmills.md.
+
 Learning and care catalogue
 
 data/buildings_learning_care.js adds Charitable Guesthouse (hospice) with cost 55, upkeep 1, devMin 2, maxCounty 1, crisis protection 0.03 and no technology requirement or construction award. Library now requires scriptoria, retaining cost 80, upkeep 1, devMin 4 and research 1 counted once nationally, including delegated sites. Hospital preserves all existing prices, effects and its hospitals requirement. Hospital and Guesthouse share care_foundation capacity one across the county's actual standing and ruined records. Old over-limit assets retain effects and repairs; demolition removes grouped records without refund and new construction needs room. This supplies no endowed institution, qualification or automatic replacement.
