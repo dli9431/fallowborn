@@ -10,6 +10,10 @@ Mobile column ownership presentation
 
 The shared mobile-command sheet shows each opted-in numbered column's actual commander, field position, fighters, carried food and current authority alongside the separate camp and its stock. Retired hosts remain identified as retired. One-host actions retain their visible disabled review with the column-specific blocker. The existing controls, modal history, Details, scroll and focus behavior remain shared. Column decisions use the shared reviewed controls described under Reviewed column controls.
 
+Water service reviews
+
+Actual bound settlement assets expose Review water service. Shared Governance fact cards and action cards show current receipt-derived benefits or the first blocker, actual water units, paid work/upkeep and finite funded term. Store reviews state that storage grants no operating benefit. A separate confirmation rechecks all source revisions, asset identity, demand competition, authority and payer cash before charging once. Back, Escape and return after success or stale confirmation preserve list scroll and originating focus. Returning to the settlement also restores its disclosures and scroll. Native full-width controls use the existing keyboard/mobile modal history. Prospective construction labels explain their separate water-service requirement; existing-asset summaries use the live projection. All chrome uses literal FB.T, with no saved rendered status or new display namespace.
+
 Construction applicability presentation
 
 Building Works shows the pure construction-applicability projection's first current blocker on an unavailable building card, alongside its existing price, capacity and disabled Raise control. Calendar, campaign era, target county, resident culture and paying sovereign context are read again on activation before any charge. Fort reviews use the same applicability reason for a new project. Existing settlement and county identity, card Details, keyboard order, scroll, Back and dismissal remain on the shared modal paths. This adds no navigation route or saved display text.

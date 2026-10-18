@@ -7098,7 +7098,7 @@ window.FB = window.FB || {};
         count = {};
         for (const pid of FB.demesne(state)) {
           for (const e of FB.builtIn(state, pid)) {
-            const def = FBDATA.buildings[e.id];
+            const def = FB.buildingOperations ? FB.buildingOperations.effects(state, pid, e) : FBDATA.buildings[e.id];
             if (!e.ruined && def && def[key]) {
               count[e.id] = (count[e.id] || 0) + 1;
             }
@@ -10267,7 +10267,9 @@ window.FB = window.FB || {};
       ? FB.buildingInstitutionCountyKey(state, pid, raw) : '';
     /* Array replacement and direct append/pop are common in compatibility
        code and test setup, so detect both without walking the records again. */
-    if (previous && previous.raw === raw && previous.institutionKey === institutionKey &&
+    const operationKey = raw && raw.some(function (r) { return r && r.waterOperation; })
+      ? FB.buildingOperations.countyKey(state, pid, raw) : '';
+    if (previous && previous.raw === raw && previous.institutionKey === institutionKey && previous.operationKey === operationKey &&
         previous.length === (raw ? raw.length : 0)) return previous;
 
     if (!raw) {
@@ -10278,6 +10280,7 @@ window.FB = window.FB || {};
     const index = {
       raw:raw,
       institutionKey:institutionKey,
+      operationKey:operationKey,
       length:raw.length,
       list:raw,
       all:Object.create(null),
@@ -10340,7 +10343,7 @@ window.FB = window.FB || {};
       if (!fortification || (Number(entry.level) || 0) > 0) {
         index.usable[id] = (index.usable[id] || 0) + 1;
       }
-      const def = FBDATA.buildings[id];
+      const def = FB.buildingOperations ? FB.buildingOperations.effects(state, pid, entry) : FBDATA.buildings[id];
       if (!fortification && !(def && def.fort)) index.standingNonFort++;
       if (!def || def.fort) continue;
       if (entry.institutionBinding && !FB.buildingInstitutionOperating(state, pid, entry)) continue;
@@ -10540,6 +10543,7 @@ window.FB = window.FB || {};
         idx < 0 || idx >= context.visibleCount) return false;
     if (!FB.buildingApplicabilityStatus(state, pid, id).ready) return false;
     if (!FB.buildingInstitutionStatus(state, pid, idx, id).allowed) return false;
+    if (!FB.buildingOperations.constructionReady(state, pid, idx, id, FB.settlementActor(state))) return false;
     if (def.requiresTech && !FB.techRequirementMet(state, def.requiresTech)) return false;
     if (context.index.occupied[(idx | 0) + ':' + id]) return false;
     if (def.devMin && (state.dev[pid] || 1) < def.devMin) return false;
@@ -10562,6 +10566,7 @@ window.FB = window.FB || {};
     const actor = FB.settlementActor(state, rid);
     if (!FB.buildingApplicabilityStatus(state, pid, id, actor).ready) return false;
     if (!FB.buildingInstitutionStatus(state, pid, idx, id, rid).allowed) return false;
+    if (!FB.buildingOperations.constructionReady(state, pid, idx, id, actor)) return false;
     const techRealm = actor.kind === 'realm' ? actor.id : FB.settlementCountyHolder(state, pid);
     if (def.requiresTech && FB.techRequirementMet &&
         !FB.techRequirementMet(state, def.requiresTech, techRealm)) return false;
@@ -10596,6 +10601,7 @@ window.FB = window.FB || {};
     if (!FB.spendBaronyConstruction(state, cid, cost, def.upkeep || 0)) return false;
     const record = { s:idx, id:id };
     if (institutional.binding) record.institutionBinding = institutional.binding;
+    FB.buildingOperations.bind(state, pid, record);
     builtInForWrite(state, pid).push(record);
     FB.invalidateBuildingIndex(state, pid);
     if (def.dev) record.devGranted = FB.changeCountyDevelopment(state, pid, def.dev, 'building');
@@ -10616,6 +10622,7 @@ window.FB = window.FB || {};
     if (!FB.treasurySpendOptional(state, rid, cost, reserve)) return false;
     const entry = { s:idx, id:id };
     if (institutional.binding) entry.institutionBinding = institutional.binding;
+    FB.buildingOperations.bind(state, pid, entry);
     builtInForWrite(state, pid).push(entry);
     FB.invalidateBuildingIndex(state, pid);
     if (def.dev) entry.devGranted = FB.changeCountyDevelopment(state, pid, def.dev, 'ai_construction');
@@ -10692,6 +10699,7 @@ window.FB = window.FB || {};
     delete state.player.flags.mason_visit; // the mason's discount is spent
     const record = { s: idx, id: id };
     if (institutional.binding) record.institutionBinding = institutional.binding;
+    FB.buildingOperations.bind(state, pid, record);
     done.push(record);
     FB.invalidateBuildingIndex(state, pid);
     if (def.dev) {

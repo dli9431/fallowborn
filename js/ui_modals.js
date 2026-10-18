@@ -8731,6 +8731,7 @@ window.FB = window.FB || {};
       amount: d.migrationAttraction
     }));
     if (FB.buildingRole(id) === 'food_store') fx.push(FB.T('Unlocks granary choices during famine'));
+    if (d.operationProfile) fx.push(FB.T('Requires a separate funded water-service allocation. An idle facility grants no ongoing benefit.'));
     return fx;
   }
 
@@ -8781,6 +8782,9 @@ window.FB = window.FB || {};
       const candidates = FB.settlementsOf(s, pid).map(function (v, idx) { return FB.buildingInstitutionStatus(s, pid, idx, id); });
       if (!candidates.some(function (q) { return q.allowed; })) return candidates.length ? candidates[0].reason : FB.T('An available institution at this exact site is required.');
     }
+    if (d.operationProfile && !FB.settlementsOf(s,pid).some(function (v,idx) {
+      return FB.buildingOperations.constructionReady(s,pid,idx,id,FB.settlementActor(s));
+    })) return FB.T('Requires a declared lawful water route, actual available water, and funded construction, work and upkeep.');
     if (d.devMin && (s.dev[pid] || 1) < d.devMin) {
       return FB.T('Requires development {development}.', { development: d.devMin });
     }
@@ -10157,6 +10161,53 @@ window.FB = window.FB || {};
     });
   };
 
+  UI.showWaterOperations = function (pid, idx, back, view, replace) {
+    view = view || {scroll:0};
+    const s = FB.state, O = FB.buildingOperations, actions = [];
+    const payer = FB.settlementActor(s);
+    let h = '<p class="hint">' + esc(FB.T('Water service pays for work and upkeep once for a finite term. Storage alone grants no benefit. Unfunded or interrupted works retain their property.')) + '</p>';
+    (s.buildings[pid] || []).filter(function (r) { return r.s === idx && r.waterOperation; }).forEach(function (r) {
+      const d = FBDATA.buildings[r.id], current = O.effects(s,pid,r);
+      const q = O.quote(s,{countyId:pid,settlement:idx,buildingId:r.id,actor:payer}), n = actions.length;
+      actions.push(q);
+      h += '<div class="governance-card review-fact-card"><div class="panelh">' + esc(dt(s,'building',r.id,d,'name')) + '</div>' +
+        '<p>' + esc(r.ruined ? FB.T('Ruined: no current benefit.') : buildingEffects(current,r.id).join(' · ')) + '</p>' +
+        reviewActionsHtml(reviewActionCardHtml({id:'water-action-' + n,data:{waterReview:n},label:FB.T('Review water service'),
+          disabled:!q.allowed,warn:!q.allowed,note:O.reason(q),details:'<p>' + esc(O.reason(q)) + '</p>'})) + '</div>';
+    });
+    h += '<div class="gm-footer"><button class="btn" id="gm-cancel">' + esc(FB.T('Back')) + '</button></div>';
+    openModal(FB.T('Water service'),h,{replaceView:!!replace,historyView:true,historyBack:true,historyBackRender:back});
+    (view.expanded || []).forEach(function (id) {
+      if ($(id)) $(id).classList.remove('hidden');
+      $('gm-body').querySelectorAll('[aria-controls]').forEach(function (el) { if (el.getAttribute('aria-controls') === id) el.setAttribute('aria-expanded','true'); });
+    });
+    $('gm-body').scrollTop = view.scroll;
+    $('gm-body').querySelectorAll('[data-water-review]').forEach(function (button) {
+      button.onclick = function () {
+        view.scroll = $('gm-body').scrollTop;
+        view.expanded = Array.from($('gm-body').querySelectorAll('.settcard-details:not(.hidden)')).map(function (el) { return el.id; });
+        const q = actions[Number(button.dataset.waterReview)], origin = button.id;
+        function restore() {
+          UI.showWaterOperations(pid,idx,back,view);
+          if ($(origin)) {
+            const focus = $(origin).disabled ? $(origin).parentElement.querySelector('.settcard-info') : $(origin);
+            if (focus) focus.focus({preventScroll:true});
+          }
+          $('gm-body').scrollTop = view.scroll;
+        }
+        openModal(FB.T('Review water service'),'<div class="governance-card review-fact-card"><p>' + esc(O.reason(q)) + '</p>' +
+          '<p>' + esc(FB.T('The complete route and payer are checked again. A changed source, holder, balance or competing allocation cancels this review without payment.')) + '</p></div>' +
+          '<div class="gm-footer"><button class="btn" id="gm-cancel">' + esc(FB.T('Back')) + '</button>' +
+          '<button class="btn primary" id="water-confirm">' + esc(FB.T('Fund service')) + '</button></div>',
+          {historyView:true,historyBack:true,historyBackRender:restore});
+        $('water-confirm').onclick = function () {
+          if (!O.commit(FB.state,q)) UI.toast(FB.T('Terms changed. Review water service again.'));
+          UI.refresh(); modalHistoryBack(restore);
+        };
+      };
+    });
+  };
+
   UI.showSettlement = function (pid, idx, options) {
     options = options || {};
     const s = FB.state;
@@ -10185,6 +10236,7 @@ window.FB = window.FB || {};
       })).replace('__settlement_holder__', holderMarkup) + '</p></div>';
     if (managesSettlement && FB.station.isLanded(s.player, s)) h += '<button type="button" class="actionbtn" id="settlement-host-games">' + esc(FB.T('Host games…')) + '</button>';
     if (FB.siteResources.snapshot(s,pid,st.site).length) h += '<button type="button" class="actionbtn" id="settlement-resources">' + esc(FB.T('Review site resources')) + '</button>';
+    if ((s.buildings[pid] || []).some(function (r) { return r.s === idx && r.waterOperation; })) h += '<button type="button" class="actionbtn" id="settlement-water">' + esc(FB.T('Review water service')) + '</button>';
     const countyRuler = holdId === 'player' ? s.chars[s.player.charId] : FB.realmRulerCharacterSnapshot(s, holdId);
     h += '<div class="gm-body-text">' + kv('Count', esc(countyRuler ? FB.fullName(countyRuler) :
       (s.realms[holdId] ? s.realms[holdId].name : FB.T('None')))) + '</div>';
@@ -10291,8 +10343,8 @@ window.FB = window.FB || {};
       let cardSeq = 0;
       for (const e of done) {
         const id = e.id;
-        const d = FBDATA.buildings[id];
-        if (!d) continue;
+        const d = FB.buildingOperations.effects(s,pid,e);
+        if (!FBDATA.buildings[id]) continue;
         const detId = 'settcard-details-' + (++cardSeq);
         const name = dt(s, 'building', id, d, 'name');
         if (FB.isFortificationBuilding(id) && !e.ruined) {
@@ -10425,6 +10477,19 @@ window.FB = window.FB || {};
         expanded.forEach(function (id) { const el = $(id); if (el) el.classList.remove('hidden');
           $('gm-body').querySelectorAll('[aria-controls]').forEach(function (b) { if (b.getAttribute('aria-controls') === id) b.setAttribute('aria-expanded','true'); }); });
         if ($('settlement-resources')) $('settlement-resources').focus({preventScroll:true});
+        $('gm-body').scrollTop = scroll;
+      });
+    };
+    if ($('settlement-water')) $('settlement-water').onclick = function () {
+      const scroll = $('gm-body').scrollTop;
+      const expanded = Array.from($('gm-body').querySelectorAll('.settcard-details:not(.hidden)')).map(function (el) { return el.id; });
+      UI.showWaterOperations(pid,idx,function () {
+        UI.showSettlement(pid,idx,options);
+        expanded.forEach(function (id) {
+          const el = $(id); if (el) el.classList.remove('hidden');
+          $('gm-body').querySelectorAll('[aria-controls]').forEach(function (b) { if (b.getAttribute('aria-controls') === id) b.setAttribute('aria-expanded','true'); });
+        });
+        if ($('settlement-water')) $('settlement-water').focus({preventScroll:true});
         $('gm-body').scrollTop = scroll;
       });
     };

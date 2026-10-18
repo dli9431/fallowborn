@@ -287,7 +287,7 @@ window.FBMODS = window.FBMODS || [];
     religiousAffiliations:true, religiousInstitutionProfiles:true, religiousActivities:true, religiousPatronage:true,
     traits:true, traitMechanics:true,
     ailments:true, modifiers:true, buildings:true, forts:true, siteResourceProfiles:true,
-    buildingInstitutionProfiles:true,
+    buildingInstitutionProfiles:true, buildingOperationProfiles:true,
     techDomains:true, techTraditions:true, tech:true, techCaps:true,
     capabilities:true,
     techImpactReviews:true, unitClasses:true, holdings:true, careers:true,
@@ -2162,6 +2162,9 @@ window.FBMODS = window.FBMODS || [];
       validateInstitutionDefinitions();
     }
     if (own(mod, 'buildings')) validateBuildings(mod);
+    if (own(mod,'buildingOperationProfiles') && !plainObject(mod.buildingOperationProfiles)) fail('buildingOperationProfiles','must be an object keyed by id.');
+    var operationFaults = FB.buildingOperations.catalogFaults(FBDATA);
+    if (operationFaults.length) fail('buildingOperationProfiles',operationFaults.join(' '));
     var buildingInstitutionFaults = FB.buildingInstitutionCatalogFaults(FBDATA);
     if (own(mod, 'buildingInstitutionProfiles') && !plainObject(mod.buildingInstitutionProfiles)) fail('buildingInstitutionProfiles', 'must be an object keyed by id.');
     if (buildingInstitutionFaults.length) fail('buildingInstitutionProfiles', buildingInstitutionFaults[0]);
@@ -2818,6 +2821,7 @@ window.FBMODS = window.FBMODS || [];
     if (mod.wardrobes) mergeTable(FBDATA.wardrobes, mod.wardrobes);
     if (mod.settlementLayouts) mergeTable(FBDATA.settlementLayouts, mod.settlementLayouts);
     if (mod.siteResourceProfiles) mergeTable(FBDATA.siteResourceProfiles, mod.siteResourceProfiles);
+    if (mod.buildingOperationProfiles) mergeTable(FBDATA.buildingOperationProfiles, mod.buildingOperationProfiles);
     if (mod.geographies) mergeTable(FBDATA.geographies, mod.geographies);
     if (mod.architectureStyles) mergeTable(FBDATA.architectureStyles, mod.architectureStyles);
     /* The legacy top-level geometry keys replace the geometry of the default
