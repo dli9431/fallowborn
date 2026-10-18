@@ -70,6 +70,10 @@
     rationale:'Civilian settlement and final reunion use ordinary conserved population and lawful land transactions. Final settlement requires every surviving field host to return and demuster; no technology can substitute for their arrival.'};
   FBDATA.techImpactReviews.features.expedition_program_reviews = {mode:'none',
     rationale:'Bounded intent and pure reviews depend on actual command, living consent and existing resources. Canonical route, equipment, supply and war technology requirements remain binding; ordinary manual operations remain available.'};
+  FBDATA.techImpactReviews.features.expedition_program_dispatch = {mode:'none',
+    rationale:'Executing finite intent depends on the current mandate, consent, actual hosts and conserved public resources. Every canonical movement, supply, equipment and war gate remains binding; manual operations need no program.'};
+  FBDATA.techImpactReviews.features.expedition_program_control = {mode:'none',
+    rationale:'Pausing, cancelling and selecting an eligible declared alternative depend on living command authority. Political intent has no credible discovery prerequisite and grants no route, money, outside acceptance or outcome.'};
   FBDATA.techImpactReviews.features.home_decision_presence = {mode:'none',
     rationale:'Local public decisions depend on actual presence and a living incumbent, without a credible discovery prerequisite. Existing commitments and ordinary private actions remain available.'};
   FBDATA.techImpactReviews.features.home_decision_delegation = {mode:'none',
