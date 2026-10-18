@@ -19,7 +19,7 @@ window.FBMODS = window.FBMODS || [];
   let legacyBookmarkLimited = false;
   let effectiveFingerprint = '';
   let modFailure = '';
-  const authoringRoots = ['buildingProfiles','positionRules','policyGovernance','marketRaidYields','authoringDefaults','actionPolicies','rulerFaithTargets','federateServiceStarts','federateMigrations','rankPrestigeYearly','historicalAmbitions','federateContractTerms','tenureArchetypes','tenureDuties','tenureRights','freedomBargaining','freedomTerms','storyInstances','focusRoutines','deedRoutines','deedEvents','eventChances','eventSubscriptions','tournamentRules','councilSeatRoles','enterpriseMechanics','specializationMarketEffects','householdStandardDemand','abbeys','householdServiceRoles','religiousOfficeRanks','papacyRules','travelRules','travelDefaults','parliamentAgendas','agencyRules','quickStarts','traitMechanics','authorityOffices','legitimacySources','customaryBases'];
+  const authoringRoots = ['siegeSupportProfiles','buildingProfiles','positionRules','policyGovernance','marketRaidYields','authoringDefaults','actionPolicies','rulerFaithTargets','federateServiceStarts','federateMigrations','rankPrestigeYearly','historicalAmbitions','federateContractTerms','tenureArchetypes','tenureDuties','tenureRights','freedomBargaining','freedomTerms','storyInstances','focusRoutines','deedRoutines','deedEvents','eventChances','eventSubscriptions','tournamentRules','councilSeatRoles','enterpriseMechanics','specializationMarketEffects','householdStandardDemand','abbeys','householdServiceRoles','religiousOfficeRanks','papacyRules','travelRules','travelDefaults','parliamentAgendas','agencyRules','quickStarts','traitMechanics','authorityOffices','legitimacySources','customaryBases'];
   const authoredRoots = Object.create(null);
   let baseCatalogues = null;
   var timingAllowed = location.protocol === 'file:' || /^(localhost|127\.0\.0\.1|\[?::1\]?)$/.test(location.hostname);
@@ -287,7 +287,7 @@ window.FBMODS = window.FBMODS || [];
     religiousAffiliations:true, religiousInstitutionProfiles:true, religiousActivities:true, religiousPatronage:true,
     traits:true, traitMechanics:true,
     ailments:true, modifiers:true, buildings:true, forts:true, siteResourceProfiles:true,
-    buildingInstitutionProfiles:true, buildingOperationProfiles:true, buildingProfiles:true, productionGoods:true, productionRecipes:true, productionExchangeProfiles:true, productionProducerProfiles:true,
+    buildingInstitutionProfiles:true, buildingOperationProfiles:true, buildingProfiles:true, productionGoods:true, productionRecipes:true, productionExchangeProfiles:true, productionProducerProfiles:true, siegeSupportProfiles:true,
     buildingSeasonProfiles:true,
     techDomains:true, techTraditions:true, tech:true, techCaps:true,
     capabilities:true,
@@ -2118,6 +2118,9 @@ window.FBMODS = window.FBMODS || [];
     if (own(mod,'buildingSeasonProfiles') && !plainObject(mod.buildingSeasonProfiles)) fail('buildingSeasonProfiles','must be an object keyed by id.');
     var seasonErrors = FB.buildingSeasons.catalogFaults(FBDATA);
     if (seasonErrors.length) fail('buildingSeasonProfiles',seasonErrors.join(' '));
+    if (own(mod,'siegeSupportProfiles') && !plainObject(mod.siegeSupportProfiles)) fail('siegeSupportProfiles','must be an object keyed by id.');
+    var siegeErrors = FB.siegeSupport.catalogFaults(FBDATA);
+    if (siegeErrors.length) fail('siegeSupportProfiles',siegeErrors.join(' '));
     var productionErrors = FB.production.catalogFaults(FBDATA).concat(FB.productionEconomy.catalogFaults(FBDATA));
     if (productionErrors.length) fail('production',productionErrors.join(' '));
     var resourceErrors = FB.siteResources.profileFaults(FBDATA.siteResourceProfiles);
@@ -2834,6 +2837,7 @@ window.FBMODS = window.FBMODS || [];
     if (mod.wardrobes) mergeTable(FBDATA.wardrobes, mod.wardrobes);
     if (mod.settlementLayouts) mergeTable(FBDATA.settlementLayouts, mod.settlementLayouts);
     if (mod.buildingSeasonProfiles) mergeTable(FBDATA.buildingSeasonProfiles, mod.buildingSeasonProfiles);
+    if (mod.siegeSupportProfiles) mergeTable(FBDATA.siegeSupportProfiles, mod.siegeSupportProfiles);
     if (mod.productionGoods) mergeTable(FBDATA.productionGoods, mod.productionGoods);
     if (mod.productionRecipes) mergeTable(FBDATA.productionRecipes, mod.productionRecipes);
     if (mod.productionExchangeProfiles) mergeTable(FBDATA.productionExchangeProfiles, mod.productionExchangeProfiles);

@@ -467,13 +467,14 @@
     var economic = FB.productionEconomy ? FB.productionEconomy.validate(s) : {ids:[],used:{},revision:0};
     economic.ids.forEach(unique);
     Object.keys(economic.used).forEach(function(key){ if (!lots[key]) fail(); used[key]+=economic.used[key]; });
+    if (FB.siegeSupport) FB.siegeSupport.validate(s);
     var held=reservationTotals(r);
     r.lots.forEach(function (lot) {
       if (lot.origin.kind === 'batch') {
         var b=batches[lot.origin.batchId];
         if (!b || b.status !== 'committed' || b.outputs.indexOf(lot.id) < 0) fail();
       }
-      if (lot.quantity-lot.remaining !== used[lot.id]+FB.buildingSeasons.debited(s,lot.id) || (held[lot.id] || 0)>lot.remaining) fail();
+      if (lot.quantity-lot.remaining !== used[lot.id]+FB.buildingSeasons.debited(s,lot.id)+(FB.siegeSupport ? FB.siegeSupport.debited(s,lot.id) : 0) || (held[lot.id] || 0)>lot.remaining) fail();
     });
     var delivered={};
     r.batches.forEach(function(b){

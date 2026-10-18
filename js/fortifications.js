@@ -938,10 +938,15 @@ window.FB = window.FB || {};
       status.stalled = options.contested ? 'contested' : 'shortage';
       return status;
     }
+    var equipment = 0;
+    if (FB.siegeSupport) {
+      FB.siegeSupport.runAI(state, hosts);
+      equipment = FB.siegeSupport.pulse(state, pid, record, hosts);
+    }
     var losses = status.attrition
       ? applyProportionalLosses(state, hosts, status.attrition) : lossTotals();
     record[progressKey] = (Number(record[progressKey]) || 0) +
-      (options.progressAmount === undefined ? 1 : options.progressAmount);
+      (options.progressAmount === undefined ? 1 : options.progressAmount) + equipment;
     record.lastSiegeTurn = state.turn;
     if (options.playerCampaign && status.level && FB.adjustWarStrength) {
       FB.adjustWarStrength(state, -(config().campaignStrengthLoss || 0.05), {
