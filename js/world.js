@@ -35,7 +35,7 @@ window.FB = window.FB || {};
   var REVISION_FIELDS = ['geography','opening','openingRevision','provinces','realms',
     'duchies','kingdoms','empires','straits','crossingClasses','localInstitutions',
     'settlementLayout','climate','religiousHeads','starts','stories','storyRegions','scripted',
-    'openingRevisions','openingLegacyRevision','startLocations','openingInfrastructure'];
+    'openingRevisions','openingLegacyRevision','startLocations','openingInfrastructure','siteResourceAssignments'];
   function resolveBookmarkRevision(base, revision) {
     if (!base) return null;
     var selected = revision === undefined ? base.revision || 'baseline' : revision;
@@ -511,6 +511,15 @@ window.FB = window.FB || {};
     var geography = FB.geography(FB.bookmarkGeography(definition));
     return geography ? resolveGeography(normalized, definition, geography) : normalized;
   }
+
+  FB.compileSiteResources = function (definition) {
+    try {
+      return FB.siteResources.compilePrepared(preparedDefinition(definition.revisions
+        ? resolveBookmarkRevision(definition) : definition));
+    } catch (error) {
+      return {sources:[],errors:['siteResourceAssignments: ' + error.message]};
+    }
+  };
 
   /* Inherited inventory is compiled from the effective world's ordered sites,
      never the active map, generated names, construction gates or a campaign.
@@ -1573,6 +1582,7 @@ window.FB = window.FB || {};
     try { definition = preparedDefinition(definition); }
     catch (error) { return [error.message]; }
     openingInfrastructurePlan(definition).errors.forEach(fault);
+    if (FB.siteResources) FB.siteResources.compilePrepared(definition).errors.forEach(fault);
     if (FB.localInstitutionDefinitionFaults) {
       var localErrors = FB.localInstitutionDefinitionFaults(definition);
       for (var le = 0; le < localErrors.length; le++) fault(localErrors[le]);

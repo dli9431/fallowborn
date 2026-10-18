@@ -286,7 +286,7 @@ window.FBMODS = window.FBMODS || [];
     doctrineCatalogs:true, religions:true, religiousPaths:true, religiousOfficeRanks:true,
     religiousAffiliations:true, religiousInstitutionProfiles:true, religiousActivities:true, religiousPatronage:true,
     traits:true, traitMechanics:true,
-    ailments:true, modifiers:true, buildings:true, forts:true,
+    ailments:true, modifiers:true, buildings:true, forts:true, siteResourceProfiles:true,
     techDomains:true, techTraditions:true, tech:true, techCaps:true,
     capabilities:true,
     techImpactReviews:true, unitClasses:true, holdings:true, careers:true,
@@ -2105,6 +2105,10 @@ window.FBMODS = window.FBMODS || [];
 
   function validateBeforeApply(mod, stories) {
     if (!plainObject(mod)) throw new Error('Mod data must be an object.');
+    if (own(mod,'siteResourceProfiles') && !plainObject(mod.siteResourceProfiles))
+      fail('siteResourceProfiles','must be an object keyed by id.');
+    var resourceErrors = FB.siteResources.profileFaults(FBDATA.siteResourceProfiles);
+    if (resourceErrors.length) fail('siteResourceProfiles',resourceErrors.join(' '));
     for (const key in mod) {
       if (own(mod, key) && !own(PUBLIC_KEYS, key)) {
         fail(key, 'is not a supported top-level mod key.');
@@ -2808,6 +2812,7 @@ window.FBMODS = window.FBMODS || [];
     if (mod.eras) mergeTable(FBDATA.eras, mod.eras);
     if (mod.wardrobes) mergeTable(FBDATA.wardrobes, mod.wardrobes);
     if (mod.settlementLayouts) mergeTable(FBDATA.settlementLayouts, mod.settlementLayouts);
+    if (mod.siteResourceProfiles) mergeTable(FBDATA.siteResourceProfiles, mod.siteResourceProfiles);
     if (mod.geographies) mergeTable(FBDATA.geographies, mod.geographies);
     if (mod.architectureStyles) mergeTable(FBDATA.architectureStyles, mod.architectureStyles);
     /* The legacy top-level geometry keys replace the geometry of the default
