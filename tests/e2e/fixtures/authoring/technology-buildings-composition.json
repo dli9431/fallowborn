@@ -1,0 +1,76 @@
+{
+  "name": "Manuscript rooms and inherited works",
+  "buildings": {
+    "composition_reading_room": {
+      "name": "Manuscript reading room", "role": "scholarship", "cost": 35,
+      "upkeep": 1, "research": 0.5, "requiresTech": "scriptoria", "maxCounty": 1,
+      "applicability": {"yearMin": 1100, "yearMax": 1160, "eras": ["high_medieval"],
+        "countyIds": ["composition_port"], "cultures": ["frankish"], "traditions": ["latin"]},
+      "constructionGroup": {"id": "composition_reading_places", "maxCounty": 1}
+    },
+    "composition_paper_room": {
+      "name": "Paper collection room", "role": "scholarship", "cost": 50,
+      "upkeep": 2, "research": 0.75, "requiresTech": "paper_scholarship", "maxCounty": 1,
+      "applicability": {"yearMin": 1150, "yearMax": 1200, "countyIds": ["composition_port"]},
+      "constructionGroup": {"id": "composition_reading_places", "maxCounty": 1}
+    }
+  },
+  "geographies": {
+    "composition_land": {
+      "bounds": {"lonMin": 0, "lonMax": 6, "latMin": 0, "latMax": 5},
+      "land": [[0.5, 0.5, 5.5, 0.5, 5.5, 4.5, 0.5, 4.5]],
+      "gridWidth": 240, "seas": [], "rivers": [], "defaultLayout": "composition_layout",
+      "provinces": [
+        {"id": "composition_port", "x": 1.6, "y": 2, "terrain": "farmland"},
+        {"id": "composition_hill", "x": 4.4, "y": 2, "terrain": "hills"}
+      ],
+      "sites": {
+        "composition_hall": {"x": 1.4, "y": 2},
+        "composition_guesthouse": {"x": 1.6, "y": 2},
+        "composition_manuscripts": {"x": 1.8, "y": 2},
+        "composition_tower": {"x": 4.4, "y": 2}
+      }
+    }
+  },
+  "settlementLayouts": {
+    "composition_layout": {
+      "composition_port": [
+        {"site": "composition_hall", "name": "River Hall", "kind": "town"},
+        {"site": "composition_guesthouse", "name": "Guesthouse Village", "kind": "village"},
+        {"site": "composition_manuscripts", "name": "Manuscript Village", "kind": "village"}
+      ],
+      "composition_hill": [{"site": "composition_tower", "name": "Hill Tower", "kind": "village"}]
+    }
+  },
+  "bookmarks": {
+    "composition_world": {
+      "id": "composition_world", "name": "The River and Hill", "desc": "A fictional construction example.",
+      "date": {"year": 1149, "season": 0, "day": 1}, "era": "high_medieval",
+      "geography": "composition_land", "religiousHeads": {}, "localInstitutions": {},
+      "stories": [], "starts": ["farmer"], "scripted": [], "straits": [], "crossingClasses": {},
+      "provinces": [
+        {"id": "composition_port", "name": "River County", "realm": "composition_crown", "culture": "frankish", "religion": "catholic", "dev": 8},
+        {"id": "composition_hill", "name": "Hill County", "realm": "composition_march", "culture": "frankish", "religion": "catholic", "dev": 5}
+      ],
+      "realms": [
+        {"id": "composition_crown", "name": "River court", "capital": "composition_port", "color": "#458c96", "aggression": 0, "rank": 2, "government": "regnum",
+          "ruler": {"name": "Ivo Reed", "culture": "frankish", "born": 1117, "mar": 6, "trait": "patient"},
+          "techSeed": {"complete": ["scriptoria", "windmill", "ringworks", "castle_towers"], "omit": ["paper_scholarship"]}},
+        {"id": "composition_march", "name": "Hill court", "capital": "composition_hill", "color": "#aa7944", "aggression": 0, "rank": 1, "government": "regnum", "liege": "composition_crown",
+          "ruler": {"name": "Odo Vale", "culture": "frankish", "born": 1119, "mar": 5, "trait": "patient"}}
+      ],
+      "duchies": {}, "kingdoms": {}, "empires": {},
+      "revision": "inherited", "revisions": {
+        "baseline": {},
+        "inherited": {"openingInfrastructure": {"version": 1, "placements": [
+          {"countyId": "composition_port", "siteId": "composition_hall", "buildingId": "library", "condition": "standing"},
+          {"countyId": "composition_port", "siteId": "composition_guesthouse", "buildingId": "hospice", "condition": "standing"},
+          {"countyId": "composition_port", "siteId": "composition_manuscripts", "buildingId": "composition_reading_room", "condition": "ruined"},
+          {"countyId": "composition_hill", "siteId": "composition_tower", "buildingId": "windmill", "condition": "ruined"},
+          {"countyId": "composition_hill", "siteId": "composition_tower", "buildingId": "walls", "condition": "ruined", "level": 2}
+        ]}},
+        "empty": {"openingInfrastructure": {"version": 1, "placements": []}}
+      }
+    }
+  }
+}
