@@ -1,0 +1,554 @@
+{
+  "name": "Finite road relay provisions",
+  "siteResourceProfiles": {
+    "river_flow": {
+      "name": "River intake",
+      "desc": "A bounded seven-day water allocation.",
+      "kind": "flow",
+      "unit": "water",
+      "capacity": 12,
+      "periodDays": 7
+    },
+    "river_store": {
+      "name": "Quay cistern",
+      "kind": "storage",
+      "unit": "water",
+      "capacity": 5
+    },
+    "river_launch": {
+      "name": "Launching space",
+      "kind": "access",
+      "unit": "launching",
+      "capacity": 2,
+      "periodDays": 1
+    }
+  },
+  "geographies": {
+    "relay_services_road_land": {
+      "bounds": {
+        "lonMin": 0,
+        "lonMax": 6,
+        "latMin": 0,
+        "latMax": 5
+      },
+      "land": [
+        [
+          0.5,
+          0.5,
+          5.5,
+          0.5,
+          5.5,
+          4.5,
+          0.5,
+          4.5
+        ]
+      ],
+      "gridWidth": 240,
+      "seas": [],
+      "rivers": [],
+      "defaultLayout": "relay_services_road_layout",
+      "provinces": [
+        {
+          "id": "resource_quay",
+          "x": 1.5,
+          "y": 2,
+          "terrain": "farmland"
+        },
+        {
+          "id": "resource_bank",
+          "x": 3.1,
+          "y": 2,
+          "terrain": "farmland"
+        },
+        {
+          "id": "resource_rocks",
+          "x": 4.7,
+          "y": 2,
+          "terrain": "hills"
+        }
+      ],
+      "sites": {
+        "resource_intake": {
+          "x": 1.5,
+          "y": 2
+        },
+        "resource_cistern": {
+          "x": 3.1,
+          "y": 2
+        },
+        "resource_slip": {
+          "x": 1.7,
+          "y": 2
+        }
+      }
+    }
+  },
+  "settlementLayouts": {
+    "relay_services_road_layout": {
+      "resource_quay": [
+        {
+          "site": "resource_intake",
+          "name": "Intake Town",
+          "kind": "town"
+        },
+        {
+          "site": "resource_slip",
+          "name": "Slip Village",
+          "kind": "village"
+        }
+      ],
+      "resource_bank": [
+        {
+          "site": "resource_cistern",
+          "name": "Bank Village",
+          "kind": "village"
+        }
+      ]
+    }
+  },
+  "startScenarios": [
+    {
+      "id": "relay_services_road_ruler",
+      "name": "The river holder",
+      "desc": "An existing fictional ruler.",
+      "intro": "Review the river's finite capacity.",
+      "tier": 5,
+      "profession": "noble",
+      "gold": 12,
+      "prestige": 0,
+      "piety": 0,
+      "bookmarkIds": [
+        "relay_services_road"
+      ],
+      "eras": [
+        "early_medieval"
+      ],
+      "alwaysUnlocked": true,
+      "rulerRealmId": "relay_services_road_court",
+      "governmentForm": "regnum",
+      "fixedProvinceId": "resource_quay",
+      "characterName": "Ivo Reed",
+      "sex": "m",
+      "startCulture": "frankish",
+      "startReligion": "catholic",
+      "onboarding": "ruler",
+      "familyPresets": {
+        "standard": {
+          "name": "Existing court",
+          "diff": "Existing court household"
+        }
+      }
+    },
+    {
+      "id": "relay_services_road_household",
+      "name": "River household",
+      "desc": "A fictional household.",
+      "intro": "Your household lives beside the river.",
+      "tier": 1,
+      "profession": "farmer",
+      "gold": 12,
+      "prestige": 0,
+      "piety": 0,
+      "bookmarkIds": [
+        "relay_services_road"
+      ],
+      "eras": [
+        "early_medieval"
+      ],
+      "alwaysUnlocked": true,
+      "startAge": 24,
+      "familyPresets": {
+        "standard": {
+          "name": "Established household",
+          "diff": "age 24"
+        }
+      }
+    }
+  ],
+  "bookmarks": {
+    "relay_services_road": {
+      "id": "relay_services_road",
+      "name": "Fictional harbor exchange",
+      "desc": "Explicit fictional stock, finite demand and actual counterparties.",
+      "date": {
+        "year": 900,
+        "season": 0,
+        "day": 1
+      },
+      "era": "early_medieval",
+      "geography": "relay_services_road_land",
+      "religiousHeads": {},
+      "localInstitutions": {},
+      "stories": [],
+      "starts": [
+        "relay_services_road_ruler",
+        "relay_services_road_household"
+      ],
+      "scripted": [],
+      "straits": [],
+      "crossingClasses": {},
+      "provinces": [
+        {
+          "id": "resource_quay",
+          "name": "Quay",
+          "realm": "relay_services_road_court",
+          "culture": "frankish",
+          "religion": "catholic",
+          "dev": 5
+        },
+        {
+          "id": "resource_bank",
+          "name": "Bank",
+          "realm": "supplier_bank_court",
+          "culture": "frankish",
+          "religion": "catholic",
+          "dev": 3
+        },
+        {
+          "id": "resource_rocks",
+          "name": "Rocky scenery",
+          "wasteland": true
+        }
+      ],
+      "realms": [
+        {
+          "id": "relay_services_road_court",
+          "name": "River court",
+          "capital": "resource_quay",
+          "color": "#458c96",
+          "aggression": 0,
+          "rank": 2,
+          "government": "regnum",
+          "ruler": {
+            "name": "Ivo Reed",
+            "culture": "frankish",
+            "born": 868,
+            "mar": 6,
+            "trait": "patient"
+          }
+        },
+        {
+          "id": "supplier_bank_court",
+          "name": "Bank buyer",
+          "capital": "resource_bank",
+          "color": "#8c7565",
+          "aggression": 0,
+          "rank": 2,
+          "government": "regnum",
+          "ruler": {
+            "name": "Lena Bank",
+            "culture": "frankish",
+            "born": 865,
+            "mar": 5,
+            "trait": "patient"
+          }
+        }
+      ],
+      "duchies": {},
+      "kingdoms": {},
+      "empires": {},
+      "revision": "supplied",
+      "revisions": {
+        "baseline": {},
+        "supplied": {
+          "siteResourceAssignments": [
+            {
+              "id": "river_intake",
+              "profileId": "river_flow",
+              "countyId": "resource_quay",
+              "siteId": "resource_intake",
+              "suitability": {
+                "source": true,
+                "gradient": true
+              },
+              "rights": {
+                "kind": "holder"
+              }
+            },
+            {
+              "id": "river_cistern",
+              "profileId": "river_store",
+              "countyId": "resource_bank",
+              "siteId": "resource_cistern",
+              "connectedSourceId": "river_intake",
+              "suitability": {
+                "catchment": false
+              },
+              "rights": {
+                "kind": "holder"
+              }
+            },
+            {
+              "id": "river_slip",
+              "profileId": "river_launch",
+              "countyId": "resource_quay",
+              "siteId": "resource_slip",
+              "suitability": {
+                "launching": true
+              },
+              "rights": {
+                "kind": "holder"
+              }
+            }
+          ],
+          "openingInfrastructure": {
+            "version": 1,
+            "placements": [
+              {
+                "countyId": "resource_quay",
+                "siteId": "resource_intake",
+                "buildingId": "fiber_works",
+                "condition": "standing"
+              },
+              {
+                "countyId": "resource_quay",
+                "siteId": "resource_slip",
+                "buildingId": "fiber_works",
+                "condition": "standing"
+              },
+              {
+                "countyId": "resource_bank",
+                "siteId": "resource_cistern",
+                "buildingId": "fiber_works",
+                "condition": "standing"
+              }
+            ]
+          },
+          "productionSites": [
+            {
+              "id": "fish_source",
+              "countyId": "resource_quay",
+              "siteId": "resource_intake",
+              "buildingId": "fiber_works",
+              "recipeIds": [
+                "dry_fish",
+                "ration_meal"
+              ],
+              "openingLots": [
+                {
+                  "goodId": "fresh_fish",
+                  "quantity": 6
+                },
+                {
+                  "goodId": "generic_food",
+                  "quantity": 10
+                },
+                {
+                  "goodId": "relay_rations",
+                  "quantity": 4
+                }
+              ]
+            },
+            {
+              "id": "fish_plant",
+              "countyId": "resource_quay",
+              "siteId": "resource_slip",
+              "buildingId": "fiber_works",
+              "recipeIds": [
+                "dry_fish"
+              ],
+              "openingLots": []
+            },
+            {
+              "id": "fish_buyer",
+              "countyId": "resource_bank",
+              "siteId": "resource_cistern",
+              "buildingId": "fiber_works",
+              "recipeIds": [
+                "dry_fish"
+              ],
+              "openingLots": []
+            }
+          ],
+          "productionExchangeAssignments": [
+            {
+              "id": "owned_delivery",
+              "profileId": "owned_fish",
+              "fromSiteId": "fish_source",
+              "toSiteId": "fish_plant"
+            },
+            {
+              "id": "fish_market",
+              "profileId": "sell_fish",
+              "fromSiteId": "fish_source",
+              "toSiteId": "fish_buyer"
+            },
+            {
+              "id": "dry_market",
+              "profileId": "sell_dried",
+              "fromSiteId": "fish_plant",
+              "toSiteId": "fish_buyer"
+            }
+          ],
+          "productionProducerAssignments": [
+            {
+              "id": "local_share",
+              "profileId": "local_output",
+              "siteId": "fish_source"
+            }
+          ],
+          "relayServiceAssignments": [
+            {
+              "id": "arrival_provisions",
+              "profileId": "local_provisions",
+              "sourceSiteId": "fish_source",
+              "fromCountyId": "resource_bank",
+              "recipientRealmId": "relay_services_road_court",
+              "routeMode": "land"
+            }
+          ]
+        },
+        "dry": {
+          "siteResourceAssignments": [],
+          "productionSites": [],
+          "openingInfrastructure": {
+            "version": 1,
+            "placements": []
+          }
+        }
+      }
+    }
+  },
+  "buildings": {
+    "fiber_works": {
+      "name": "Fiber works",
+      "desc": "A finite paid batch facility with no passive income or population effect.",
+      "role": "industry",
+      "cost": 30,
+      "upkeep": 1,
+      "maxCounty": 3
+    }
+  },
+  "productionGoods": {
+    "fresh_fish": {
+      "name": "Fresh fish",
+      "unit": "fish_units",
+      "mass": 1
+    },
+    "dried_food": {
+      "name": "Dried provisions",
+      "unit": "provisions_units",
+      "mass": 1
+    },
+    "generic_food": {
+      "name": "Generic provisions",
+      "unit": "food_units",
+      "mass": 1
+    },
+    "relay_rations": {
+      "name": "Packed road rations",
+      "unit": "ration_lots",
+      "mass": 1,
+      "provisionUnits": 0.05
+    }
+  },
+  "productionRecipes": {
+    "dry_fish": {
+      "name": "Dry a fish lot",
+      "inputs": [
+        {
+          "goodId": "fresh_fish",
+          "quantity": 2
+        }
+      ],
+      "outputs": [
+        {
+          "goodId": "dried_food",
+          "quantity": 1
+        }
+      ],
+      "workDays": 1,
+      "workPrice": 2,
+      "requiresTech": [],
+      "impactReviewId": "conserved_production_batches"
+    },
+    "ration_meal": {
+      "name": "Prepare a ration meal",
+      "inputs": [
+        {
+          "goodId": "relay_rations",
+          "quantity": 2
+        }
+      ],
+      "outputs": [
+        {
+          "goodId": "dried_food",
+          "quantity": 1
+        }
+      ],
+      "workDays": 1,
+      "workPrice": 1,
+      "requiresTech": [],
+      "impactReviewId": "conserved_production_batches"
+    }
+  },
+  "productionExchangeProfiles": {
+    "owned_fish": {
+      "goodId": "fresh_fish",
+      "marketGoodId": "provisions",
+      "basePrice": 2,
+      "mode": "owned",
+      "quantityLimit": 6,
+      "budget": 20
+    },
+    "sell_fish": {
+      "goodId": "fresh_fish",
+      "marketGoodId": "provisions",
+      "basePrice": 2,
+      "mode": "market",
+      "quantityLimit": 4,
+      "budget": 20
+    },
+    "sell_dried": {
+      "goodId": "dried_food",
+      "marketGoodId": "provisions",
+      "basePrice": 3,
+      "mode": "market",
+      "quantityLimit": 2,
+      "budget": 20
+    }
+  },
+  "enterprises": {
+    "harbor_fishery": {
+      "name": "Working fishery",
+      "icon": "*",
+      "cost": 20,
+      "profession": "farmer",
+      "yield": 6,
+      "desc": "An explicit fictional staffed producer; quantities are simulation units."
+    }
+  },
+  "enterpriseMechanics": {
+    "harbor_fishery": {
+      "output": {
+        "provisions": 1
+      },
+      "typedProduction": {
+        "fresh_fish": {
+          "marketGoodId": "provisions",
+          "marketUnits": 12
+        }
+      }
+    }
+  },
+  "productionProducerProfiles": {
+    "local_output": {
+      "enterpriseType": "harbor_fishery",
+      "goodId": "fresh_fish",
+      "marketGoodId": "provisions",
+      "marketUnits": 12,
+      "share": 0.5,
+      "maxQuantity": 2
+    }
+  },
+  "relayServiceProfiles": {
+    "local_provisions": {
+      "goodId": "relay_rations",
+      "marketUnits": 0.05,
+      "mode": "owned",
+      "basePrice": 2,
+      "maxQuantity": 4,
+      "duration": 12
+    }
+  }
+}

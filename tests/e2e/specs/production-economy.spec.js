@@ -4,7 +4,7 @@ const {test,expect}=require('../support/fixture');
 const {openGame}=require('../support/game/navigation');
 const {dependsOnRuntime}=require('../support/runtime-dependencies');
 const examples={harbor:require('../fixtures/authoring/production-suppliers-harbor.json'),inland:require('../fixtures/authoring/production-suppliers-inland.json')};
-dependsOnRuntime(__filename,['data/building_profiles.js','js/building_profiles.js','index.html','data/production.js','data/production_economy.js','data/technology.js','data/economy.js',
+dependsOnRuntime(__filename,['data/relay_services.js','js/relay_services.js','data/building_profiles.js','js/building_profiles.js','index.html','data/production.js','data/production_economy.js','data/technology.js','data/economy.js',
   'js/production.js','js/production_economy.js','js/market.js','js/logistics.js','js/economy.js','js/lordships.js','js/treasury.js',
   'js/world.js','js/mods.js','js/main.js','js/starts.js','js/save.js','js/save_v4.js','js/ui_modals.js','js/ui_misc.js','js/model.js']);
 async function boot(page,info,kind) {
