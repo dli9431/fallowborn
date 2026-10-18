@@ -19,11 +19,18 @@
     if (!object(table) || Object.keys(table).length > 128) return ['buildingOperationProfiles must be a table of at most 128 policies.'];
     Object.keys(table).forEach(function (key) {
       var p = table[key];
-      if (!id(key) || !keys(p,['mode','amount','periodDays','workCost','effect']) ||
+      if (!id(key) || !object(p) || !['mode','amount','periodDays','workCost','effect'].every(function (k) { return own(p,k); }) ||
+          Object.keys(p).some(function (k) { return ['mode','amount','periodDays','workCost','effect','sourceRequirements'].indexOf(k) < 0; }) ||
           ['store','use'].indexOf(p.mode) < 0 || !integer(p.amount,1,1000000) ||
           !integer(p.periodDays,1,90) || !money(p.workCost) || p.workCost <= 0 ||
           (p.mode === 'store' ? p.effect !== null : effects.indexOf(p.effect) < 0))
         out.push('buildingOperationProfiles.' + key + ': invalid water service terms.');
+      var r = p && p.sourceRequirements;
+      if (r !== undefined && (!keys(r,['originKind','originSuitability','minStores']) ||
+          ['flow','storage'].indexOf(r.originKind) < 0 || !integer(r.minStores,0,8) ||
+          !Array.isArray(r.originSuitability) || r.originSuitability.length > 4 ||
+          r.originSuitability.some(function (k,i) { return ['source','catchment','gradient','groundwater'].indexOf(k) < 0 || r.originSuitability.indexOf(k) !== i; })))
+        out.push('buildingOperationProfiles.' + key + ': invalid physical source requirements.');
     });
     Object.keys(c.buildings || {}).forEach(function (key) {
       var d = c.buildings[key], p = d && table[d.operationProfile];
@@ -37,7 +44,7 @@
   };
   O.compilePrepared = function (bm) {
     var out = {assignments:[],errors:O.catalogFaults(FBDATA)}, rows = bm && bm.buildingOperationAssignments;
-    if (rows === undefined) return out;
+    if (rows === undefined || out.errors.length) return out;
     function fault() { out.errors.push('buildingOperationAssignments: invalid asset, route, source or demand.'); }
     if (!Array.isArray(rows) || rows.length > 256) { fault(); return out; }
     var sources = R.compilePrepared(bm), seen = {}, occupied = {}, demands = {}, demandSites = {};
@@ -53,7 +60,10 @@
       var route = [a.sourceId].concat(a.stores).map(function (key) { return sources.sources.find(function (v) { return v.id === key; }); });
       var last = route[route.length - 1], asset = JSON.stringify([a.countyId,a.siteId,a.buildingId]);
       var demandSite = JSON.stringify([a.countyId,a.siteId,p && p.effect]);
-      if (!p || !d || !(d.operationProfile === a.profileId || FB.buildingProfiles.ids(a.buildingId).some(function (id) { return FB.buildingProfiles.definition(a.buildingId,id).operationProfile === a.profileId; })) || !pr || slot === undefined || slot < 0 || occupied[asset] ||
+      var requirements = p && p.sourceRequirements, origin = route[0];
+      var suitable = !requirements || origin && origin.profile.kind === requirements.originKind &&
+        a.stores.length >= requirements.minStores && requirements.originSuitability.every(function (k) { return origin.suitability[k] === true; });
+      if (!suitable || !p || !d || !(d.operationProfile === a.profileId || FB.buildingProfiles.ids(a.buildingId).some(function (id) { return FB.buildingProfiles.definition(a.buildingId,id).operationProfile === a.profileId; })) || !pr || slot === undefined || slot < 0 || occupied[asset] ||
           route.some(function (v,i) { return !v || v.profile.unit !== 'water' || i > 0 && (v.profile.kind !== 'storage' || v.connectedSourceId !== route[i-1].id); }) ||
           !last || last.countyId !== a.countyId || last.siteId !== a.siteId ||
           p.mode === 'store' && !a.stores.length || route[0] && route[0].profile.kind === 'access' ||

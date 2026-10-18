@@ -684,3 +684,9 @@ building_profile_inheritance is none because retaining the identity of property 
 Fort material eligibility
 
 fort_material_identity has impact none: material identity, inherited property and paid-project continuity do not require discovery. An optional material's independently declared new-construction requirements require an exact hard review with ordinary fortification as fallback. Each level map replaces only its selected canonical level construction requirement; ordinary paths and numbers remain unchanged. Exact missing knowledge and level-specific reverse consumers remain visible. Funded work and inherited repair retain their profile after chronology or knowledge changes. See docs/designs/fort-profiles.md.
+
+Engineered water knowledge
+
+aqueduct_maintenance, qanat_construction and cistern_engineering are optional hard construction gates, each recorded separately in techImpactReviews. Their costs are 50, 50 and 20 research, with no passive national effects or grants. The graph uses lime_mortar plus geometry, irrigation_channels plus geometry, and lime_mortar alone respectively. Ordinary wells, water carriage, channels, domestic collection and inherited repairs remain available. Literal adoption pairs model transmission rather than faith membership or measured installation dates.
+
+Fresh campaigns may complete these discoveries under the historical policy; retained campaigns and partial projects are never reseeded. Earlier Latin aqueduct completion can close geometry early and therefore includes its existing 0.1 research effect, even though the new discoveries themselves have empty fx. At 867/1066 existing prerequisites are already complete, so the added knowledge supplies no extra national scalar there. Physical works need separate lawful sources, funded service and property. See docs/research/engineered-waterworks.md for exact schedules, evidence boundaries and accounting.

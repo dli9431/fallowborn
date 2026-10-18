@@ -355,3 +355,7 @@ Literal FBDATA.maritimeWorkProfiles in data/maritime_work.js uses maritimeWorkPr
 Fort material display
 
 fortProfiles entries deliberately contain structural material ids and numeric level requirement maps only. Their key refers to an existing buildingProfile, whose literal name and desc use the normal buildingProfile structured owner and buildingProfiles_<suffix> static supplement extraction. Material labels belong in that display prose, never in engine id dispatch. The existing profile selector, fort Details and reverse technology sheet render through those owners; all new blockers use FB.T. No generated catalogue change is required on the feature branch.
+
+Engineered water display ownership
+
+data/technology_waterworks.js declares tech_waterworks and data/buildings_waterworks.js declares buildings_waterworks. Their three new tech and three building rows retain the ordinary tech.<id>.name/desc.default and building.<id>.name/desc.default owners and final-English aliases. Operation policies contain only structural ids and numeric terms, with no new display owner. Existing technology requirements and Water service reviews expose current missing knowledge, input and payment through the shared localized UI. No rendered status is saved and no generated catalogue changes accompany these declarations.

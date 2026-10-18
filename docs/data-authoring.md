@@ -189,3 +189,7 @@ relayServiceProfiles and effective relayServiceAssignments bind explicit typed p
 Strategic material variants
 
 fortProfiles extends a canonical fort buildingProfile with a typed material identity and bounded canonical-level requirement map. Complete independent fort-profiles-timber.json and fort-profiles-masonry.json worlds import through ordinary Mods and differ in knowledge, scope and inherited standing/ruined property. Player reviews, annual AI work, inherited compilation, repairs, technology reverse consumers and strict optional saves compose the existing strategic fort owner. No numeric fort effect, stock account, historical mapping or new building id is supplied. The exact supported boundary is in docs/designs/fort-profiles.md.
+
+Engineered water catalogue composition
+
+The complete engineered-waterworks-supplied.json and engineered-waterworks-rain.json ordinary Mods imports contrast a lawful gradient/groundwater intake feeding competing conveyance demand with a small rain-catchment store under an actual vassal payer. The latter has no aqueduct, aquifer or conveyance assignment. Both compose the bundled optional facilities through existing siteResourceProfiles, effective siteResourceAssignments and buildingOperationAssignments, with initially empty opening inventories and stores. sourceRequirements rejects unsupported physical routes before publication; actual stock, authority, work and reserves are rechecked by the same player/AI transaction. No historical source, placement or water amount is inferred from technology, culture or terrain.
