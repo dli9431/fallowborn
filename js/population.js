@@ -86,7 +86,7 @@ window.FB = window.FB || {};
     var bonus = 0;
     for (var i = 0; i < built.length; i++) {
       var b = built[i];
-      if (!b || b.ruined) continue;
+      if (!b || b.ruined || b.institutionBinding && !FB.buildingInstitutionOperating(state, pid, b)) continue;
       var def = FBDATA.buildings && FBDATA.buildings[b.id];
       if (def && def[key]) bonus += Number(def[key]) || 0;
     }
@@ -661,6 +661,7 @@ window.FB = window.FB || {};
       for (var bi = 0; bi < built.length; bi++) {
         var entry = built[bi];
         if (entry && entry.s === i && !entry.ruined &&
+            (!entry.institutionBinding || FB.buildingInstitutionOperating(state, pid, entry)) &&
             (FBDATA.buildings[entry.id] || {}).settlementDraw === true) weight++;
       }
       weights.push(weight);

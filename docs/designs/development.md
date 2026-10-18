@@ -1,5 +1,9 @@
 # Development & buildings
 
+Existing institutional foundations
+
+Optional institutionProfile building declarations and bookmark buildingInstitutionAssignments compose the existing local institution, actual endowed property, lawful holder, original office and builder/maintenance payer. One physical foundation cannot pay construction awards for several alternative works, including through ruins. Player, automation, private barons and realm construction share the pure gate. Changed permission suspends only bound ongoing benefits and upkeep until explicit reaffirmation; physical assets and past construction remain. Unbound legacy buildings keep their current behavior. Technology impact building_institution_binding is none, with ordinary optional building technologies retained. Exact public contracts, payer boundaries and save behavior are in docs/designs/building-institutions.md.
+
 Composed construction catalogue
 
 The effective catalogue has 20 buildings: the nineteen retained ids plus hospice. Eight complete replacements preserve every existing numeric field, role and AI priority while updating the declared presentation, prerequisite or applicability. Construction scope and group capacity share the normal authority and paid transaction; inherited works and repairs retain their separate contracts. Annual AI keeps the full priority table, finite purchase budget and existing reserves, including each proposed building's upkeep. The combined JSON example and regression spec in docs/research/technology-and-buildings.md cover these boundaries together without installing historical inventories or creating institutional rights.

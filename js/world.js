@@ -35,7 +35,7 @@ window.FB = window.FB || {};
   var REVISION_FIELDS = ['geography','opening','openingRevision','provinces','realms',
     'duchies','kingdoms','empires','straits','crossingClasses','localInstitutions',
     'settlementLayout','climate','religiousHeads','starts','stories','storyRegions','scripted',
-    'openingRevisions','openingLegacyRevision','startLocations','openingInfrastructure'];
+    'openingRevisions','openingLegacyRevision','startLocations','openingInfrastructure','buildingInstitutionAssignments'];
   function resolveBookmarkRevision(base, revision) {
     if (!base) return null;
     var selected = revision === undefined ? base.revision || 'baseline' : revision;
@@ -1620,6 +1620,8 @@ window.FB = window.FB || {};
     FB.bookmarkRequirementFaults(definition, platform, stories).forEach(fault);
     FB.validateClimateData().forEach(fault);
     FB.validateBuildingData(FBDATA.buildings, true).forEach(fault);
+    FB.buildingInstitutionCatalogFaults(FBDATA).forEach(fault);
+    FB.buildingInstitutionDefinitionFaults(definition, FBDATA).forEach(fault);
     FB.validateUnitClassRoles(FBDATA.unitClasses, true).forEach(fault);
     /* coverage, the era's technology window and realm traditions; a realm
        fault the catalogue-wide check already reported is not repeated */
@@ -8510,6 +8512,14 @@ window.FB = window.FB || {};
         }
 
         if (chosen) {
+          if (chosen.def.institutionProfile) {
+            if (!reserves || !FB.buildRealm(state, rid, chosen.pid, chosen.s, chosen.id,
+                reserves[rid] + (chosen.def.upkeep || 0) * reserveSeasons)) continue;
+            reserves[rid] += (chosen.def.upkeep || 0) * reserveSeasons;
+            if (annualBudget) annualBudget.snapshot = null;
+            builtThisYear++;
+            continue;
+          }
           if (reserves && !FB.treasurySpendOptional(state, rid, chosen.cost,
               reserves[rid] + (chosen.def.upkeep || 0) * reserveSeasons)) continue;
           if (reserves) reserves[rid] += (chosen.def.upkeep || 0) * reserveSeasons;
@@ -8974,7 +8984,7 @@ window.FB = window.FB || {};
           if (FB.recruitmentCountyBlocked(state, 'player', site.provinceId)) continue;
           const a = FB.settlementFiscalProjection(state, site.provinceId, site.settlement, context).amounts;
           for (const built of FB.builtIn(state, site.provinceId)) {
-            if (built.s !== site.settlement || built.ruined) continue;
+            if (built.s !== site.settlement || built.ruined || built.institutionBinding && !FB.buildingInstitutionOperating(state, site.provinceId, built)) continue;
             const def = FBDATA.buildings[built.id];
             if (def && def[key]) add(unit, 'building', def[key] * a.countyPenalty *
               a.settlementPenalty * (1 - a.serviceRate), { buildingId:built.id, count:1 });
@@ -8990,7 +9000,7 @@ window.FB = window.FB || {};
         for (const pid of FB.demesne(state)) {
           for (const built of FB.builtIn(state, pid)) {
             const def = FBDATA.buildings[built.id];
-            if (!built.ruined && def && def[key]) {
+            if (!built.ruined && def && def[key] && (!built.institutionBinding || FB.buildingInstitutionOperating(state, pid, built))) {
               count[built.id] = (count[built.id] || 0) + 1;
             }
           }
