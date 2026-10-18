@@ -120,7 +120,8 @@
     });
     return out;
   };
-  FB.adoptStartingRealm = function (s, scenario) {
+  FB.adoptStartingRealm = function (s, scenario, options) {
+    options = options || {};
     var id = scenario.rulerRealmId, realm = s.realms[id], p = s.player;
     if (!realm || !realm.alive || s.realms.player ||
         !FB.realmRulerCharacterSnapshot(s, id) ||
@@ -139,8 +140,8 @@
       s.politics = null;
       if (FB.invalidatePoliticsState) FB.invalidatePoliticsState();
       FB.rebuildRulerIndex(s); FB.invalidateRealmCache();
-      if (FB.ensureAgency) FB.ensureAgency(s);
-      if (FB.ensurePolitics) FB.ensurePolitics(s);
+      if (!options.deferSetup && FB.ensureAgency) FB.ensureAgency(s);
+      if (!options.deferSetup && FB.ensurePolitics) FB.ensurePolitics(s);
       return true;
     }
     p.provs = FB.realmHeldCounties(s, id).slice();
@@ -199,8 +200,8 @@
     if (FB.invalidatePoliticsState) FB.invalidatePoliticsState();
     FB.rebuildRulerIndex(s); FB.invalidateRealmCache();
     if (FB.invalidateSettlementLordships) FB.invalidateSettlementLordships(s);
-    if (FB.ensureAgency) FB.ensureAgency(s);
-    if (FB.ensurePolitics) FB.ensurePolitics(s);
+    if (!options.deferSetup && FB.ensureAgency) FB.ensureAgency(s);
+    if (!options.deferSetup && FB.ensurePolitics) FB.ensurePolitics(s);
     return true;
   };
   FB.validateStartingRealm = function (s) {

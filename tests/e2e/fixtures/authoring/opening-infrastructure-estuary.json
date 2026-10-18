@@ -3,7 +3,8 @@
   "buildings": {
     "inventory_store": {
       "name": "Inherited store", "role": "food_store", "cost": 30, "maxDemesne": 1,
-      "requiresTech": "universities", "devMin": 9, "applicability": {"yearMin": 4000}
+      "requiresTech": "universities", "devMin": 9, "applicability": {"yearMin": 4000},
+      "upkeep": 2, "populationCapacity": 0.2, "dev": 2, "prestige": 25, "piety": 3
     },
     "inventory_workshop": {
       "name": "Inherited workshop", "role": "industry", "cost": 40, "maxCounty": 2,
@@ -49,13 +50,24 @@
     "gold": 12, "prestige": 0, "piety": 0, "bookmarkIds": ["inventory_estuary"],
     "eras": ["early_medieval"], "alwaysUnlocked": true, "startAge": 24,
     "familyPresets": {"standard": {"name": "Established household", "diff": "age 24"}}
+  }, {
+    "id": "inventory_estuary_ruler", "name": "The estuary ruler", "desc": "Rule the fictional estuary court.",
+    "intro": "You lead the existing estuary court.", "tier": 5, "profession": "noble",
+    "gold": 12, "prestige": 0, "piety": 0, "bookmarkIds": ["inventory_estuary"],
+    "eras": ["early_medieval"], "alwaysUnlocked": true, "rulerRealmId": "inventory_estuary_court",
+    "governmentForm": "regnum", "fixedProvinceId": "inventory_quay", "characterName": "Ivo Reed",
+    "sex": "m", "startCulture": "frankish", "startReligion": "catholic", "onboarding": "ruler",
+    "familyPresets": {"standard": {"name": "Existing court", "diff": "Existing court household"}}
   }],
   "bookmarks": {
     "inventory_estuary": {
       "id": "inventory_estuary", "name": "The Estuary", "desc": "A fictional inventory example.",
       "date": {"year": 900, "season": 0, "day": 1}, "era": "early_medieval",
       "geography": "inventory_estuary_land", "religiousHeads": {}, "localInstitutions": {},
-      "stories": [], "starts": ["inventory_estuary_household"], "scripted": [], "straits": [], "crossingClasses": {},
+      "stories": [], "starts": ["inventory_estuary_household", "inventory_estuary_ruler"],
+      "scripted": [{"id": "inventory_marsh_claim", "year": 901, "season": 0, "day": 1,
+        "realm": "inventory_estuary_court", "targets": ["inventory_marsh"], "news": "The estuary court renews its claim to the marsh."}],
+      "straits": [], "crossingClasses": {},
       "provinces": [
         {"id": "inventory_quay", "name": "Quay", "realm": "inventory_estuary_court", "culture": "frankish", "religion": "catholic", "dev": 3},
         {"id": "inventory_marsh", "name": "Marsh", "realm": "inventory_estuary_court", "culture": "frankish", "religion": "catholic", "dev": 2},
@@ -64,7 +76,7 @@
       ],
       "realms": [
         {"id": "inventory_estuary_court", "name": "Estuary court", "capital": "inventory_quay", "color": "#458c96", "aggression": 0, "rank": 2, "government": "regnum",
-          "ruler": {"name": "Ivo Reed", "culture": "frankish", "born": 868, "mar": 6, "trait": "patient"}},
+          "ruler": {"name": "Ivo Reed", "culture": "frankish", "born": 868, "mar": 6, "trait": "patient"}, "techSeed": {"complete": ["ringworks"]}},
         {"id": "inventory_ridge_court", "name": "Ridge court", "capital": "inventory_ridge", "color": "#aa7944", "aggression": 0, "rank": 1, "government": "regnum", "liege": "inventory_estuary_court",
           "ruler": {"name": "Odo Vale", "culture": "frankish", "born": 870, "mar": 5, "trait": "patient"}}
       ],
