@@ -5,7 +5,7 @@ const {openGame}=require('../support/game/navigation');
 const {beginBookmark}=require('../support/game/bookmark-acceptance');
 const {dependsOnRuntime}=require('../support/runtime-dependencies');
 dependsOnRuntime(__filename,['index.html','data/mobile_confederations.js','data/units.js','data/technology.js',
-  'js/mobile_columns.js','js/mobile_confederations.js','js/mobile_command.js','js/federates.js',
+  'js/expedition_programs.js','js/mobile_columns.js','js/mobile_confederations.js','js/mobile_command.js','js/federates.js',
   'js/armies.js','js/wars.js','js/treasury.js','js/home_authority.js','js/population.js','js/settlement.js','js/technology.js',
   'js/governments.js','js/government_selection.js','js/government_continuity.js','js/government_support.js',
   'js/bookmark_setup.js','js/mods.js','js/world.js','js/starts.js','js/authority.js','js/model.js',

@@ -89,3 +89,8 @@ Every read suspends command immediately for invalid home office/generation, cust
 Technology impact: mobile_command_continuity remains none and now explicitly includes office-conditioned landed mandates. Identity, current office, consent and a finite political term have no credible discovery prerequisite. Ordinary unit, road, equipment and resource gates remain binding. Public grants and private donations retain their separately reviewed homeAuthority decisions.
 
 For an explicit infrastructure home start, bookmarkSetup seeds only the original opening actors before ordinary home adoption. Authored followings and stories wait until population, market and treasury setup is complete, then initialize once through the normal story boundary. This preserves the building holder mapping and prevents an early unbacked migration or replayed opening funds.
+
+
+Bounded expedition reviews
+
+An optional mobile.expeditionProgram binds finite intent to the same declared command and actual single host or column scope. Pure reviews recheck the current mandate, living required members, exact actor, actual camp/host, finite resources and current passage before delegating canonical operations. No program grants command, outside acceptance, private rank, funds or success. The expedition_program_reviews technology decision is none, with every ordinary equipment, route and war gate retained. This contract adds no daily dispatcher or command succession policy. See docs/designs/expedition-programs.md.

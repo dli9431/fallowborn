@@ -5,7 +5,7 @@ const {startAuthority,examples}=require('../support/game/expedition-authority');
 const {dependsOnRuntime}=require('../support/runtime-dependencies');
 dependsOnRuntime(__filename,['index.html','data/mobile_confederations.js','data/political_institutions.js',
   'js/home_authority.js','js/treasury.js','js/authority.js','js/governments.js','js/government_continuity.js',
-  'js/mobile_confederations.js','js/mobile_command.js','js/mobile_columns.js','js/model.js','js/bookmark_setup.js',
+  'js/mobile_confederations.js','js/mobile_command.js','js/expedition_programs.js','js/mobile_columns.js','js/model.js','js/bookmark_setup.js',
   'js/starts.js','js/main.js','js/mods.js','js/save.js','js/save_v4.js','js/ui_misc.js','js/ui_mobile.js']);
 
 for(const prefix of ['harbor','dune']) {

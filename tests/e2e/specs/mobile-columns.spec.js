@@ -7,7 +7,7 @@ const {dependsOnRuntime}=require('../support/runtime-dependencies');
 const examples={harbor:require('../fixtures/authoring/mobile-columns-harbor.json'),
   dune:require('../fixtures/authoring/mobile-columns-dune.json')};
 dependsOnRuntime(__filename,['index.html','data/mobile_confederations.js','data/units.js','data/technology.js',
-  'js/mobile_confederations.js','js/mobile_command.js','js/mobile_columns.js','js/federates.js',
+  'js/mobile_confederations.js','js/mobile_command.js','js/expedition_programs.js','js/mobile_columns.js','js/federates.js',
   'js/governments.js','js/government_selection.js','js/government_continuity.js','js/government_support.js',
   'js/bookmark_setup.js','js/world.js','js/mods.js','js/authority.js','js/treasury.js','js/armies.js',
   'js/population.js','js/settlement.js','js/starts.js','js/util.js','js/save.js','js/save_v4.js',

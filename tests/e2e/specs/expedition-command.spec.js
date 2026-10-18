@@ -7,7 +7,7 @@ const {dependsOnRuntime}=require('../support/runtime-dependencies');
 const harbor=require('../fixtures/authoring/landed-expedition-harbor.json');
 
 dependsOnRuntime(__filename,['index.html','data/mobile_confederations.js','data/units.js','data/technology.js',
-  'js/mobile_confederations.js','js/mobile_command.js','js/mobile_columns.js','js/home_authority.js','js/authority.js',
+  'js/mobile_confederations.js','js/mobile_command.js','js/expedition_programs.js','js/mobile_columns.js','js/home_authority.js','js/authority.js',
   'js/governments.js','js/government_selection.js','js/government_support.js','js/government_continuity.js',
   'js/world.js','js/model.js','js/events.js','js/starts.js','js/bookmark_setup.js','js/main.js','js/station.js',
   'js/treasury.js','js/federates.js','js/population.js','js/market.js','js/armies.js','js/technology.js',
