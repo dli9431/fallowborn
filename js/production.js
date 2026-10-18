@@ -205,10 +205,12 @@
   // Construction enrolls an empty asset only; opening inventories remain once-only.
   P.constructionReady = function(s,siteId,who) {
     var p=plan(s),a=p.sites.find(function(x){return x.id===siteId;}),r=s.production;
-    return !!a && !p.errors.length && !!r && r.definition===definition(p) && r.assets.length<128 && r.nextId<MAX &&
+    return !!a && !p.errors.length && !!r && r.definition===definition(p) && r.assets.length<128 && r.nextId<MAX && r.revision<MAX &&
       !!original(s,who) && !!money(s,who) && eq(FB.settlementHolder(s,a.countyId,a.slot),who);
   };
   P.bindConstruction = function(s,pid,b) {
+    var d=FB.buildingProfiles.assetDefinition(b);
+    if (!d || !d.seasonProfile) return;
     var p=plan(s),a=p.sites.find(function(x){return x.countyId===pid && x.slot===b.s && x.buildingId===b.id;}),r=s.production;
     if (!a || b.productionAsset || !r) return;
     var who=FB.settlementHolder(s,pid,b.s);
@@ -408,6 +410,7 @@
       if (!keys(a,['id','siteId','owner','openedTurn','constructed']) || !siteTable[a.siteId] || !identity(a.owner) ||
           (a.constructed===undefined ? a.openedTurn!==0 || openings[a.siteId] : a.constructed!==true || !int(a.openedTurn,0,s.turn))) fail();
       var d=siteTable[a.siteId],opening=originalAssets.placements.find(function(x){return x.countyId===d.countyId && x.siteId===d.siteId && x.buildingId===d.buildingId && x.condition==='standing';});
+      if (a.constructed && !FBDATA.buildings[d.buildingId].seasonProfile) fail();
       if (a.constructed===undefined && (!opening || !eq(a.owner,{kind:'realm',id:FB.startRealmId(s,opening.holderId)}))) fail();
       unique(a.id);assets[a.id]=a;if (a.constructed===undefined) openings[a.siteId]=a;
     });

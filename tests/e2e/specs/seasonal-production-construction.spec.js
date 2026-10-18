@@ -53,3 +53,13 @@ test('unbound required seasonal assets are idle and warm local construction is r
   });
   expect(r).toEqual({cold:true,warm:false,pure:true,idle:0});
 });
+test('a full production revision journal refuses seasonal construction before charging',async function({page},info){
+  await boot(page,info);
+  const r=await page.evaluate(function(){
+    const s=FB.state,a=FB.buildingSeasons.compile(FB.campaignBookmark(s)).assignments[0],who=FB.settlementHolder(s,a.countyId,a.slot);
+    s.realms[who.id].treasury.gold=10000;s.production.revision=1000000;
+    const before=JSON.stringify(s),built=FB.buildRealm(s,who.id,a.countyId,a.slot,a.buildingId);
+    return {built:built,pure:before===JSON.stringify(s)};
+  });
+  expect(r).toEqual({built:false,pure:true});
+});
