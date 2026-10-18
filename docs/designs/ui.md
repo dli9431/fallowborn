@@ -1,3 +1,7 @@
+Mobile column ownership presentation
+
+The shared mobile-command sheet shows each opted-in numbered column's actual commander, field position, fighters, carried food and current authority alongside the separate camp and its stock. Retired hosts remain identified as retired. One-host actions retain their visible disabled review with the column-specific blocker. The existing controls, modal history, Details, scroll and focus behavior remain shared. No column order or reorganization action is offered by this ownership contract.
+
 Construction applicability presentation
 
 Building Works shows the pure construction-applicability projection's first current blocker on an unavailable building card, alongside its existing price, capacity and disabled Raise control. Calendar, campaign era, target county, resident culture and paying sovereign context are read again on activation before any charge. Fort reviews use the same applicability reason for a new project. Existing settlement and county identity, card Details, keyboard order, scroll, Back and dismissal remain on the shared modal paths. This adds no navigation route or saved display text.

@@ -4,6 +4,8 @@ Acceptance of a mobile agreement is a reviewed transaction. A civic counterparty
 
 Mobile confederation
 
+Optional bounded command columns partition an authored opening's existing force and food into canonical hosts while retaining one civilian camp and account. The complete contract, strict optional saves, read-only commander scopes and currently unavailable one-host shortcuts are in docs/designs/mobile-columns.md. Existing single-host defaults retain their original schemas and behavior.
+
 Personal work and admission use the protagonist's actual journey location when away from the permanent home. The canonical review stamp includes the current journey so departure or arrival invalidates a previous review. householdSnapshot is a pure detached projection of active status, civilian camp, actual court movement, finite food, thirty-day scarcity, treasury, local market stock and the current lawful access concession. Household stories observe it and delegate work through the same review and commit as the ordinary Deed. They cannot negotiate access or command the field host.
 
 The mobile_confederation form composes ten complete strategies. Its saved coalition belongs to authority.governments[realmId].mobile. No culture, religion, date, terrain or historical identity selects the form. County holders remain ordinary public holders. A countyless coalition can retain living principals, a court, treasury, food and civilian following after its field host is lost.

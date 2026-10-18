@@ -1,5 +1,7 @@
 Mobile command and personal continuity
 
+An optional bounded column set extends command scope to distinct existing member principals and canonical hosts while retaining the same overall mandate, camp and account. This opening contract exposes pure ownership and authority projections; column-specific operations are separate. See docs/designs/mobile-columns.md for schema, conservation, normal military gates, none technology decision and blocked one-host shortcuts. Declarations without columns retain the single-host behavior below.
+
 Mobility is selected by the territory strategy's mobileFollowing marker. Coalition elections are selected separately by coalition_leadership succession. The hosted_following and expedition_command forms retain the same population, migration, camp, host and finite stock owners while selecting retained_principal or superior_commission succession, command_consent and command_receipts. No date, people, culture or historical identity selects these policies.
 
 The retained policy keeps its declared opening leader without a replacement constitution. Death leaves a vacancy. There is no automatic child, majority election, generated replacement or commission by a host-country ruler. This narrow policy does not claim to reconstruct a historical following's political customs.

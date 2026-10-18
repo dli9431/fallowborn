@@ -255,6 +255,9 @@
     var q = { allowed:false, reason:'inactive', realmId:rid, action:action, terms:t, cost:0, signature:null };
     if (!r || !p || !M.active(s, rid) || r.status !== 'active') return q;
     if (!validTerms(action,t)) {q.reason='operation';return q;}
+    if (r.columns && ['recruit','demuster','move','march','leave','replace_member','settle','war','service','land','contract'].indexOf(action)>=0) {
+      q.reason='column_operation';return q;
+    }
     if (r.command && !M.commandPermits(s,rid,action)) {q.reason='command';return q;}
     var ar = actorRealm(s, request.actor), am = actorMember(s, rid, request.actor), leader = ar === rid && !!M.leader(s, rid);
     q.signature = stamp(s, rid, t, request.actor);
@@ -817,7 +820,7 @@
   FB.mobileHostLosses = M.losses;
   FB.mobileHostDisband = function (s, army) {
     if (army.mobileFollowing && M.row(s, army.realm)) {
-      if (army.men < (FBDATA.balance.armyMinMen || 40)) FB.mobileMigrationInterrupted(s,M.migration(s,army.realm),'host_lost');
+      if (!M.row(s,army.realm).columns && army.men < (FBDATA.balance.armyMinMen || 40)) FB.mobileMigrationInterrupted(s,M.migration(s,army.realm),'host_lost');
       returnHost(s,army); M.row(s,army.realm).revision++;
     }
   };
@@ -921,6 +924,7 @@
   FB.registerOrdinaryWar = function (s,rid,war) {
     var attacker = war && war.defending ? war.enemy : rid;
     if (M.active(s,attacker)) {
+      if (M.row(s,attacker) && M.row(s,attacker).columns) return null;
       var causes = war.objectives || [war.casus];
       if (!decision(s,attacker,'war',{causes:causes})) return null;
     }
@@ -928,12 +932,12 @@
   };
   var consentContract=FB.authorityConsentContract, requestMigration=FB.federateRequest, resolveMigration=FB.federateResolveSettlement;
   FB.authorityConsentContract = function (s,id,rid) {
-    if (M.active(s,rid) && !decision(s,rid,'contract',M.contractTerms(s,id))) return false;
+    if (M.active(s,rid) && (M.row(s,rid).columns || !decision(s,rid,'contract',M.contractTerms(s,id)))) return false;
     return consentContract(s,id,rid);
   };
   FB.federateRequest = function (s,id,choice,templateId,recognitionId) {
     var moving=Q.movingPolity(s,id);
-    if (moving && M.active(s,moving.realmId) && (choice!=='land' || !decision(s,moving.realmId,'land',{countyId:moving.target}))) return false;
+    if (moving && M.active(s,moving.realmId) && (M.row(s,moving.realmId).columns || choice!=='land' || !decision(s,moving.realmId,'land',{countyId:moving.target}))) return false;
     return requestMigration(s,id,choice,templateId,recognitionId);
   };
   FB.federateResolveSettlement = function (s,id,reviewed) {
@@ -1070,7 +1074,7 @@
     if (!mobile) return d.mobile === undefined ? [] : [FB.T('A mobile opening requires a mobile territory strategy.')];
     var t = d.mobile, p = t && profiles[t.profileId], byId = {};
     provinces.forEach(function (pr) {byId[pr.id]=pr;});
-    if (!keys(t,['profileId','patronRealmId','origin','target','food','fighters','treasury','opening','command','sponsorship','hostedAccess']) || !p ||
+    if (!keys(t,['profileId','patronRealmId','origin','target','food','fighters','treasury','opening','command','sponsorship','hostedAccess','columns']) || !p ||
         (t.sponsorship!==undefined ? !M.independent(t) || !t.command || !t.opening :
           !Object.prototype.hasOwnProperty.call(realms,t.patronRealmId) || t.patronRealmId === d.id) || !d.nonTerritorial ||
         !byId[t.origin] || byId[t.origin].wasteland || !byId[t.target] || byId[t.target].wasteland ||
@@ -1167,7 +1171,7 @@
       var p = M.profile(s,rid), moving = M.migration(s,rid), ids = {}, principals = {};
       if (moving && !M.migrationSponsorshipValid(s,moving)) fault(rid,'sponsorship');
       if (!keys(r,['schema','profileId','migrationId','status','serial','revision','leaderId','selection','decision','food','lastDay','lastAI',
-          'worked','agreements','accounting','members','defeatKey','openingBindings','command','openingAccess']) || [1,2,3].indexOf(r.schema)<0 || !p || !moving || moving.realmId !== rid ||
+          'worked','agreements','accounting','members','defeatKey','openingBindings','command','openingAccess','columns']) || [1,2,3].indexOf(r.schema)<0 || !p || !moving || moving.realmId !== rid ||
           !['active','settled','dispersed'].includes(r.status) || !whole(r.serial) || !whole(r.revision) || !whole(r.lastDay) || r.lastDay > s.turn ||
           r.lastAI !== undefined && (!whole(r.lastAI) || r.lastAI>Math.floor(s.turn/90)) || !boundedNumber(r.food,1000000000000) ||
           !keys(r.accounting,['initial','arrivals','dead','settled','dispersed']) || Object.keys(r.accounting).length !== 5 ||
@@ -1239,7 +1243,7 @@
       }
       (s.armies || []).filter(function (a) {return a.realm===rid && a.mobileFollowing;}).forEach(function (a) {
         pool(rid,a.mobileRoster,true);
-        if (a.id !== moving.hostId || a.migrationId !== moving.id || sum(a.mobileRoster) !== a.men || a.mobileRoster.some(function (c) {return !ids[c.memberId];}) ||
+        if ((a.id !== moving.hostId && !(M.columnHostOwned && M.columnHostOwned(s,rid,a))) || a.migrationId !== moving.id || sum(a.mobileRoster) !== a.men || a.mobileRoster.some(function (c) {return !ids[c.memberId];}) ||
             typeof a.mobileCourt !== 'boolean' || !boundedNumber(a.mobileFood,1000000000000) ||
             a.mobileProvisionTurn!==undefined && (!Number.isInteger(a.mobileProvisionTurn) || a.mobileProvisionTurn>s.turn) ||
             a.mobileCourt && moving.at !== a.at || (a.path || []).some(function (pid) {return !s.owner[pid];}) ||

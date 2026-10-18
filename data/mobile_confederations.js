@@ -56,6 +56,8 @@
     rationale:'A finite generation-bound external warrant records political authority without creating a local person, income, land or passage rights. Expiry and ordinary command eligibility govern its scope, not an invented discovery.'};
   FBDATA.techImpactReviews.features.mobile_hosted_opening = {mode:'none',
     rationale:'An already accepted opening concession records a political relationship under living parties, direct local possession and finite capacity. It grants no equipment, transport, personal safety or technological exception.'};
+  FBDATA.techImpactReviews.features.mobile_column_ownership = {mode:'none',
+    rationale:'A bounded column set partitions existing opening fighters and provisions under scoped commanders. Normal unit eligibility, conserved people, finite stores and current command authority remain binding; the single-host fallback remains available.'};
   /* The fresh 476 opening inhabits Cherson and adds the Pontic following.
      Priscus attests displaced followings and Roman diplomacy, not a precise
      476 boundary or an identifiable incumbent at this simulated camp. */
