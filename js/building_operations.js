@@ -357,7 +357,7 @@
   };
   O.constructionReady = function (s,pid,slot,buildingId,who,profileId) {
     var d = FB.buildingProfiles.definition(buildingId,profileId);
-    if (!FB.buildingSeasons.constructionReady(s,pid,slot,buildingId,who,d)) return false;
+    if (!FB.buildingSeasons.constructionReady(s,pid,slot,buildingId,who,d,profileId)) return false;
     if (!d || !d.operationProfile) return true;
     var a = assignment(s,pid,slot,buildingId,d.operationProfile);
     if (a && !FB.buildingSeasons.prospective(s,a.id)) return false;

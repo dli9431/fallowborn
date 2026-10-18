@@ -4038,3 +4038,7 @@ The shared story card/sheet exposes finite preparation/active/paused/closed inte
 Water-service input review
 
 The existing Water service confirmation includes every declared material quantity and localized production good name alongside exact water, work/upkeep payment and funded end day. The first blocker names unavailable local owned stock. It uses the same confirmation, keyboard controls, stale-review handling, Back, Escape, disclosure and originating-focus restoration. An unheated alternative remains visible through the ordinary construction profile picker when its own assignment is eligible. No new modal route or saved prose is introduced.
+
+Seasonal construction requirements
+
+Building Works uses the shared seasonal construction projection for unavailable required-season cards. The existing price, disabled construction control and Details explain the declared site, local season, lawful water or grazing, care/work, actual deliverable inputs and construction/processing funds. Input delivery, opening the term and paid production remain separate ordinary reviews. Existing layout, keyboard controls, disclosures and retained modal navigation are unchanged.

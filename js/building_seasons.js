@@ -16,7 +16,8 @@
     if (!obj(table) || Object.keys(table).length>128) return ['buildingSeasonProfiles requires at most 128 policies.'];
     Object.keys(table).forEach(function(key){
       var p=table[key],seen={};
-      if (!id(key) || !keys(p,['seasonKinds','periodDays','maxDays','care','stockLives','benefit']) ||
+      if (!id(key) || !keys(p,['seasonKinds','periodDays','maxDays','care','stockLives','benefit'].concat(own(p,'constructionInputs') ? ['constructionInputs'] : [])) ||
+          own(p,'constructionInputs') && typeof p.constructionInputs!=='boolean' ||
           !Array.isArray(p.seasonKinds) || !p.seasonKinds.length || p.seasonKinds.length>16 ||
           new Set(p.seasonKinds).size!==p.seasonKinds.length || p.seasonKinds.some(function(k){return !own(c.seasonKinds,k);}) ||
           !int(p.periodDays,1,90) || !int(p.maxDays,1,p.periodDays) || typeof p.care!=='boolean' ||
@@ -49,7 +50,7 @@
       seen[a.id]=true;
       var p=FBDATA.buildingSeasonProfiles[a.profileId],consumer=a.operationId===null ? production.sites.find(function(x){return x.id===a.productionSiteId;}) : water.assignments.find(function(x){return x.id===a.operationId;});
       var physical=consumer && JSON.stringify([consumer.countyId,consumer.siteId,consumer.buildingId]),rs={};
-      if (!p || !consumer || assets[physical] || FBDATA.buildings[consumer.buildingId].seasonProfile &&
+      if (!p || !consumer || p.constructionInputs && a.productionSiteId===null || assets[physical] || FBDATA.buildings[consumer.buildingId].seasonProfile &&
           FBDATA.buildings[consumer.buildingId].seasonProfile!==a.profileId) {fail();return;}
       assets[physical]=true;
       var definitions=[FBDATA.buildings[consumer.buildingId]].concat(FB.buildingProfiles.ids(consumer.buildingId).map(function(id){
@@ -121,11 +122,41 @@
   function assignment(s,key,value) {return plan(s).assignments.find(function(a){return a[key]===value;});}
   S.hasCounty=function(s,pid) {return plan(s).assignments.some(function(a){return a.countyId===pid;});};
   S.hasOperation=function(s,operationId) {return !!assignment(s,'operationId',operationId);};
-  S.constructionReady=function(s,pid,slot,buildingId,who,d) {
+  S.constructionReady=function(s,pid,slot,buildingId,who,d,profileId) {
     if (!d || !d.seasonProfile) return true;
     var a=plan(s).assignments.find(function(x){return x.countyId===pid && x.slot===slot && x.buildingId===buildingId && x.profileId===d.seasonProfile;});
-    return !!a && !plan(s).errors.length && a.profile.seasonKinds.indexOf(FB.localSeason(s,pid))>=0 &&
-      a.productionSiteId!==null && FB.production.constructionReady(s,a.productionSiteId,who);
+    if (!a || plan(s).errors.length || a.profile.seasonKinds.indexOf(FB.localSeason(s,pid))<0 ||
+        a.productionSiteId===null || !FB.production.constructionReady(s,a.productionSiteId,who)) return false;
+    if (!a.profile.constructionInputs) return true;
+    if (d.operationProfile || d.institutionProfile) return false;
+    // Preview only actual delivered inputs on detached state. No future harvest is assumed.
+    var t=copy(s),P=FB.production,rows=t.buildings[pid]=t.buildings[pid] || [];
+    if (building(t,a)) return false;
+    var realmId=who.kind==='realm' && who.id!=='player' ? who.id :
+      who.kind==='character' && who.id!==t.player.charId ? FB.settlementCountyHolder(t,pid) : undefined;
+    var cost=FB.buildCost(t,pid,buildingId,realmId,profileId),record={s:slot,id:buildingId};
+    FB.buildingProfiles.attach(record,profileId);rows.push(record);
+    if (!P.bindConstruction(t,pid,record) || !P.spend(t,who,cost+(d.upkeep || 0)*(FBDATA.balance.realmReserveSeasons || 2))) return false;
+    var account=P.account(t,who);
+    if (account.funds.available<account.funds.reserve) return false;
+    var site=P.compile(FB.campaignBookmark(t)).sites.find(function(x){return x.id===a.productionSiteId;});
+    var routes=FB.productionEconomy.compilePrepared(FB.campaignBookmark(t),P.compile(FB.campaignBookmark(t)).sites).routes;
+    var review=S.quote(t,{operation:'open',assignmentId:a.id,actor:who,lotId:null});
+    if (!review.allowed) return false;
+    apply(t,review,false);
+    return site.recipeIds.some(function(key){
+      var candidate=copy(t),recipe=FBDATA.productionRecipes[key];
+      var supplied=recipe.inputs.every(function(input){
+        return routes.some(function(route){
+          var profile=FBDATA.productionExchangeProfiles[route.profileId];
+          if (route.toSiteId!==site.id || profile.goodId!==input.goodId) return false;
+          var q=FB.productionEconomy.aiQuote(candidate,route.id,input.quantity,profile.mode==='owned' ? 'transfer' : 'buy');
+          return !!FB.productionEconomy.commit(candidate,q);
+        });
+      });
+      return supplied && P.quote(candidate,{operation:'reserve',siteId:site.id,actor:who,
+        recipeId:key,disposition:'store'}).allowed;
+    });
   };
   S.ready=function(s,key,value,who) {
     var a=assignment(s,key,value);if (!a) return true;
