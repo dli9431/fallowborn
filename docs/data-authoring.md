@@ -80,6 +80,8 @@ Opening-profile authoring supports optional personal goals and once-resolved nam
 
 Mobile command authoring
 
+Named command startScenarios resolve characterName, sex, startCulture and startReligion through the opening leader member's direct actor. fixedProvinceId must equal mobile.origin, and the scenario's private tier is independent of the command institution's rank. Keep the ordinary ruler onboarding and standard family preset. Existing actor parent links survive fresh boot; public stock, people, host and treasury initialize once through their existing owners after protagonist selection. The expedition-command-harbor.json and expedition-command-dune.json imports exercise this complete start path. Exact fingerprints and existing saved schemas retain their meanings.
+
 The hosted_following and expedition_command forms compose retained or superior-appointed authority independently of mobile territory. mobile.command declares the stable realm-scoped mandate, direct actor or current incumbent superior, and permitted existing operations. Typed pure validation and ordinary JSON imports share the live consumers; reviews revalidate identity, generation, eligibility and exact operation policy. The harbor and dune mobile-command JSON examples independently configure retained hosted access/work and commissioned military operations, different principal bindings and conserved musters. Schema-3 restore preserves vacancies and recall without selecting people or restoring supplies. No historical command, sponsor waiver or extra column is implied. Full schema and boundaries are in docs/MODDING.md and docs/designs/mobile-command.md.
 
 Independent expedition authoring

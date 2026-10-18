@@ -226,6 +226,20 @@
     });
     FB.touchFamily();
   }
+  /* A fresh command protagonist is an authored actor, not an uninitialized
+     court's ruler. Seed the ordinary opening once, leaving the following and
+     stories at their normal funded initialization boundary. */
+  FB.prepareStartingCommandActor = function (s, scenario) {
+    if (!s || !scenario || s.turn !== 0 || !s.player || s.player.charId !== null || s.stories !== undefined) return null;
+    var bm = FB.campaignBookmark(s), realm = bm && (bm.realms || []).filter(function (row) {
+      return row.id === scenario.rulerRealmId;
+    })[0];
+    var id = FB.startCommandActorId(bm, realm, scenario.governmentForm);
+    if (!id) return null;
+    if (!s.bookmarkSetup) FB.seedSettlementCommunities(s);
+    initialize(s);
+    return actor(s, id);
+  };
   FB.bookmarkSetupAppointments = function (s) {
     var d = definition(s), store = s.bookmarkSetup;
     if (!d || !store) return;

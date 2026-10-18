@@ -4,9 +4,25 @@
   'use strict';
   // Existing delegates are resolved from their constituency declaration.
   // This is a pure identity read; generated names remain campaign facts.
+  FB.startCommandActorId = function (bookmark, realm, formId) {
+    if (!bookmark || !realm || FB.governments.problems(formId).length ||
+        !FB.governments.resolve(formId).use.succession.commandLeadership) return null;
+    var opening = realm.mobile && realm.mobile.command && realm.mobile.opening;
+    var binding = opening && Array.isArray(opening.principals) && opening.principals.filter(function (row) {
+      return row && row.memberId === opening.leaderMemberId;
+    })[0];
+    var id = binding && binding.person && binding.person.actorId;
+    var actors = bookmark.opening && bookmark.opening.actors;
+    var actor = typeof id === 'string' && actors && Object.prototype.hasOwnProperty.call(actors, id) && actors[id];
+    return actor && !actor.ref && typeof actor.name === 'string' && actor.name ? id : null;
+  };
   FB.startRulerProfile = function (bookmark, realm, formId) {
     if (!bookmark || !realm || FB.governments.problems(formId).length) return null;
     var form = FB.governments.resolve(formId);
+    if (form.use.succession.commandLeadership) {
+      var actorId = FB.startCommandActorId(bookmark, realm, formId);
+      return actorId ? bookmark.opening.actors[actorId] : null;
+    }
     if (!form.use.succession.delegatedLeadership) return realm.ruler || null;
     var province = (bookmark.provinces || []).find(function (p) { return p.id === realm.capital; });
     var seed = realm.representative;
@@ -16,6 +32,8 @@
   };
   FB.startRulerFaith = function (bookmark, realm) {
     if (!bookmark || !realm) return null;
+    var actorId = FB.startCommandActorId(bookmark, realm, realm.government);
+    if (actorId) return bookmark.opening.actors[actorId].religion;
     var capital = (bookmark.provinces || []).find(function (p) { return p.id === realm.capital; });
     return realm.religion || (capital ? capital.religion : null);
   };
@@ -55,6 +73,12 @@
     if (!scenario || !bookmark || scenario.fixedProvinceId && scenario.fixedProvinceId !== provinceId) return false;
     var province = (bookmark.provinces || []).find(function (p) { return p.id === provinceId; });
     if (!province || province.wasteland) return false;
+    if (scenario.rulerRealmId && !FB.governments.problems(scenario.governmentForm).length &&
+        FB.governments.resolve(scenario.governmentForm).use.succession.commandLeadership) {
+      var commandRealm = (bookmark.realms || []).find(function (r) { return r.id === scenario.rulerRealmId; });
+      if (!FB.startCommandActorId(bookmark, commandRealm, scenario.governmentForm) ||
+          commandRealm.mobile.origin !== provinceId) return false;
+    }
     var locations = bookmark.startLocations && bookmark.startLocations[scenario.id];
     if (locations !== undefined && (!Array.isArray(locations) || locations.indexOf(provinceId) < 0)) return false;
     var birthplaces = FB.startBirthplaces(scenario, bookmark);

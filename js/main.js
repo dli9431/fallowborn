@@ -3594,13 +3594,17 @@ FB.CHANGELOG = [
     if (!explicitInfrastructure) FB.scriptedTick(state);
     scheduleSlots(state);
 
-    const me = sc.rulerRealmId ? FB.ensureRealmCourt(state, sc.rulerRealmId) : FB.makeCharacter(state, {
+    const commandStart = !!sc.rulerRealmId &&
+      !!FB.governments.forRealm(state, sc.rulerRealmId).use.succession.commandLeadership;
+    const me = commandStart ? FB.prepareStartingCommandActor(state, sc) :
+      sc.rulerRealmId ? FB.ensureRealmCourt(state, sc.rulerRealmId) : FB.makeCharacter(state, {
       name: name, sex: sex, culture: cultureId, religion: religionId,
       born: start.year - (sc.startAge || preset.age || FBDATA.balance.startAge),
       quality: FB.station.isGentle(sc, state) ? 2 : 0, traitsN: 2,
       station:FB.station.socialClass(sc, state), unfree:FB.station.isSerf(sc, state)
     });
-    if (sc.rulerRealmId) {
+    if (commandStart && !me) throw new Error(FB.T('Starting command has no authored principal.'));
+    if (sc.rulerRealmId && !commandStart) {
       FB.materializeRealmConsort(state, sc.rulerRealmId);
       for (const member of FB.realmFamily(state, sc.rulerRealmId)) {
         if (member.alive !== false && member.role !== 'consort' && member.charId !== me.id)
@@ -3734,7 +3738,7 @@ FB.CHANGELOG = [
 
     } // ordinary generated household
     if (explicitInfrastructure) {
-      if (sc.rulerRealmId) {
+      if (sc.rulerRealmId && !commandStart) {
         if (FB.stories) FB.stories.start(state, {});
         if (!FB.adoptStartingRealm(state, sc, { deferSetup:true }))
           throw new Error('Starting ruler could not adopt the authored realm.');
@@ -3749,6 +3753,11 @@ FB.CHANGELOG = [
     if (FB.treasuryInitialize) FB.treasuryInitialize(state,
       { adoptedPlayer:explicitInfrastructure && !!sc.rulerRealmId && !!state.realms.player });
     if (FB.mobileInitialize) FB.mobileInitialize(state, FBDATA.realms);
+    if (commandStart) {
+      if (FB.stories) FB.stories.start(state, {});
+      if (!FB.adoptStartingRealm(state, sc, { deferSetup:true }))
+        throw new Error('Starting ruler could not adopt the authored realm.');
+    }
     if (FB.localFolkArrive) FB.localFolkArrive(state, provId);
     if (FB.ensureSettlementLordships) FB.ensureSettlementLordships(state, { fresh:true });
     if (FB.station.isBaron(sc, state) && !FB.initializeBaronyStart(state)) {
@@ -3779,7 +3788,7 @@ FB.CHANGELOG = [
     if (FB.ensureIntrigue) FB.ensureIntrigue(state);
     if (FB.ensurePolitics) FB.ensurePolitics(state);
     if (explicitInfrastructure) FB.scriptedTick(state);
-    if (sc.rulerRealmId && !explicitInfrastructure) {
+    if (sc.rulerRealmId && !explicitInfrastructure && !commandStart) {
       if (FB.stories) FB.stories.start(state, {});
       if (!FB.adoptStartingRealm(state, sc))
         throw new Error('Starting ruler could not adopt the authored realm.');
