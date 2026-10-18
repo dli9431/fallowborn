@@ -339,3 +339,7 @@ Literal FBDATA.buildingProfiles in data/building_profiles.js and literal FBDATA.
 Finite supplier presentation
 
 Production exchange/producer profiles and assignments contain only structural fields and no new display namespace. Goods retain their productionGood static owners from data/production.js and ordinary imported English fallback. Settlement exchange cards and confirmation reasons use literal FB.T phrases for unit quantity, current price, finite demand/budget and actual account type; kv labels retain their ordinary localized route. Saved economic receipts contain ids and numeric quantities, never rendered status or prose. Feature work does not regenerate any catalogue.
+
+Temporary shelter presentation
+
+Literal FBDATA.householdRefuges_<suffix> tables in data/story_*.js expose title and intro under householdRefuge.<id> owners and exact-English aliases through static extraction. The extractor does not execute source or translate provider/party/site identities. Ordinary JSON imports use the same FB.T title/intro fallback; generated choices and reviews use literal FB.T chrome and locale-neutral saved facts. tools/test_i18n_household_refuges.py covers two independent source filenames without executable registration. No generated catalogue update is part of authoring.

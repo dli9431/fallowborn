@@ -2531,6 +2531,18 @@ def extract_household_observers(inv: Inventory) -> None:
                         add(f"beat.{beat_id}.choice.{choice_id}.{field}", choice.get(field))
 
 
+def extract_household_refuges(inv: Inventory) -> None:
+    for source, table in story_table_sources("householdRefuges_"):
+        declarations = node_object(find_assignment(source, "FBDATA", table)) or {}
+        rel = source.relative_to(ROOT).as_posix()
+        for story_id, story_node in declarations.items():
+            story = node_object(story_node) or {}
+            for field in ("title", "intro"):
+                for _, record, line in branch_records(story.get(field)):
+                    inv.add(f"householdRefuge.{story_id}.{field}", record, f"{rel}:{line}",
+                            "Temporary shelter presentation.", TOKEN_RE.findall(record["text"]))
+
+
 def extract_local_threats(inv: Inventory) -> None:
     for source, table in story_table_sources("localThreats_"):
         declarations = node_object(find_assignment(source, "FBDATA", table)) or {}
@@ -2677,6 +2689,7 @@ def build_inventory() -> Inventory:
     extract_household_observers(inv)
     extract_ruler_agendas(inv)
     extract_local_threats(inv)
+    extract_household_refuges(inv)
     extract_opening_goals(inv)
     extract_government_selections(inv)
     extract_mobile_presentations(inv)

@@ -1,0 +1,385 @@
+{
+  "name": "Hill consented refuge example",
+  "geographies": {
+    "shelter_hill_estuary_land": {
+      "bounds": {
+        "lonMin": 0,
+        "lonMax": 6,
+        "latMin": 0,
+        "latMax": 5
+      },
+      "land": [
+        [
+          0.5,
+          0.5,
+          5.5,
+          0.5,
+          5.5,
+          4.5,
+          0.5,
+          4.5
+        ]
+      ],
+      "gridWidth": 240,
+      "seas": [],
+      "rivers": [],
+      "defaultLayout": "shelter_hill_estuary_layout",
+      "provinces": [
+        {
+          "id": "shelter_hill_quay",
+          "x": 1.5,
+          "y": 2,
+          "terrain": "farmland"
+        },
+        {
+          "id": "shelter_hill_marsh",
+          "x": 3.1,
+          "y": 2,
+          "terrain": "farmland"
+        },
+        {
+          "id": "shelter_hill_ridge",
+          "x": 4.7,
+          "y": 2,
+          "terrain": "hills"
+        },
+        {
+          "id": "shelter_hill_scenery",
+          "x": 3.1,
+          "y": 4,
+          "terrain": "hills"
+        }
+      ],
+      "sites": {
+        "shelter_hill_quay_hall": {
+          "x": 1.4,
+          "y": 2
+        },
+        "shelter_hill_quay_store": {
+          "x": 1.7,
+          "y": 2
+        },
+        "shelter_hill_marsh_town": {
+          "x": 3.1,
+          "y": 2
+        },
+        "shelter_hill_ridge_tower": {
+          "x": 4.7,
+          "y": 2
+        }
+      }
+    }
+  },
+  "settlementLayouts": {
+    "shelter_hill_estuary_layout": {
+      "shelter_hill_quay": [
+        {
+          "site": "shelter_hill_quay_hall",
+          "name": "Quay Hall",
+          "kind": "town"
+        },
+        {
+          "site": "shelter_hill_quay_store",
+          "name": "Quay Stores",
+          "kind": "village"
+        }
+      ],
+      "shelter_hill_marsh": [
+        {
+          "site": "shelter_hill_marsh_town",
+          "name": "Marsh Town",
+          "kind": "village"
+        }
+      ],
+      "shelter_hill_ridge": [
+        {
+          "site": "shelter_hill_ridge_tower",
+          "name": "Ridge Tower",
+          "kind": "village"
+        }
+      ]
+    }
+  },
+  "startScenarios": [
+    {
+      "id": "shelter_hill_estuary_household",
+      "name": "Estuary household",
+      "desc": "A fictional household.",
+      "intro": "Your family lives beside the estuary.",
+      "tier": 1,
+      "profession": "farmer",
+      "gold": 200,
+      "prestige": 0,
+      "piety": 0,
+      "bookmarkIds": [
+        "shelter_hill_estuary"
+      ],
+      "eras": [
+        "early_medieval"
+      ],
+      "alwaysUnlocked": true,
+      "startAge": 24,
+      "familyPresets": {
+        "established": {
+          "name": "Established household",
+          "diff": "Spouse and young children"
+        }
+      },
+      "fixedProvinceId": "shelter_hill_quay",
+      "tracks": [
+        "hill_party"
+      ],
+      "trackLocations": {
+        "hill_party": [
+          "shelter_hill_quay"
+        ]
+      }
+    }
+  ],
+  "bookmarks": {
+    "shelter_hill_estuary": {
+      "id": "shelter_hill_estuary",
+      "name": "The Estuary",
+      "desc": "A fictional inventory example.",
+      "date": {
+        "year": 900,
+        "season": 0,
+        "day": 1
+      },
+      "era": "early_medieval",
+      "geography": "shelter_hill_estuary_land",
+      "religiousHeads": {},
+      "localInstitutions": {
+        "hill_refuge_seat": {
+          "city": "Hill shelter seat",
+          "kind": "see",
+          "provinceId": "shelter_hill_marsh",
+          "site": "shelter_hill_marsh_town",
+          "religion": "catholic",
+          "culture": "frankish",
+          "officeId": "hill_refuge_bishop",
+          "officeSystem": null,
+          "representative": {
+            "name": "Maren",
+            "born": 860,
+            "sex": "m",
+            "role": "priest"
+          }
+        }
+      },
+      "stories": [
+        "hill_attempt",
+        "hill_refuge"
+      ],
+      "starts": [
+        "shelter_hill_estuary_household"
+      ],
+      "scripted": [],
+      "straits": [],
+      "crossingClasses": {},
+      "provinces": [
+        {
+          "id": "shelter_hill_quay",
+          "name": "Quay",
+          "realm": "shelter_hill_estuary_court",
+          "culture": "frankish",
+          "religion": "catholic",
+          "dev": 3
+        },
+        {
+          "id": "shelter_hill_marsh",
+          "name": "Marsh",
+          "realm": "shelter_hill_estuary_court",
+          "culture": "frankish",
+          "religion": "catholic",
+          "dev": 2
+        },
+        {
+          "id": "shelter_hill_ridge",
+          "name": "Ridge",
+          "realm": "shelter_hill_ridge_court",
+          "culture": "frankish",
+          "religion": "catholic",
+          "dev": 2
+        },
+        {
+          "id": "shelter_hill_scenery",
+          "name": "Uninhabited upland",
+          "wasteland": true
+        }
+      ],
+      "realms": [
+        {
+          "id": "shelter_hill_estuary_court",
+          "name": "Estuary court",
+          "capital": "shelter_hill_marsh",
+          "color": "#458c96",
+          "aggression": 0,
+          "rank": 2,
+          "government": "regnum",
+          "ruler": {
+            "name": "Ivo Reed",
+            "culture": "frankish",
+            "born": 868,
+            "mar": 6,
+            "trait": "patient"
+          },
+          "techSeed": {
+            "complete": [
+              "ringworks"
+            ]
+          }
+        },
+        {
+          "id": "shelter_hill_ridge_court",
+          "name": "Ridge court",
+          "capital": "shelter_hill_ridge",
+          "color": "#aa7944",
+          "aggression": 0,
+          "rank": 1,
+          "government": "regnum",
+          "liege": "shelter_hill_estuary_court",
+          "ruler": {
+            "name": "Odo Vale",
+            "culture": "frankish",
+            "born": 870,
+            "mar": 5,
+            "trait": "patient"
+          }
+        }
+      ],
+      "duchies": {},
+      "kingdoms": {},
+      "empires": {},
+      "openingInfrastructure": {
+        "version": 1,
+        "placements": []
+      }
+    }
+  },
+  "travelPurposes": {
+    "hill_house_visit": {
+      "name": "Visit the hill house",
+      "icon": "H",
+      "desc": "An ordinary funded family road.",
+      "cost": 1,
+      "minTier": 1,
+      "maxTier": 2,
+      "mode": "sites",
+      "repeatable": true
+    }
+  },
+  "travelRules": {
+    "hill_house_visit": {
+      "kind": "study",
+      "encounters": "study",
+      "arrivalEvent": "travel_capstone_study"
+    }
+  },
+  "travelSites": [
+    {
+      "id": "hill_house_destination",
+      "name": "Hill house",
+      "provinceId": "shelter_hill_marsh",
+      "purpose": "hill_house_visit"
+    }
+  ],
+  "storyInstances": {
+    "hill_party": {
+      "id": "hill_party",
+      "type": "household_party",
+      "title": "Hill household party",
+      "intro": "Each named relative decides separately.",
+      "maxMembers": 4,
+      "allowDependents": true,
+      "invitationDays": 30,
+      "adultPolicy": "volunteers",
+      "journey": {
+        "kind": "ordinary_journey",
+        "travelSiteId": "hill_house_destination"
+      }
+    },
+    "hill_attempt": {
+      "id": "hill_attempt",
+      "type": "local_threat",
+      "title": "A local threat",
+      "intro": "An actor may commit an attempt or leave quietly.",
+      "actor": {
+        "kind": "protagonist"
+      },
+      "locality": {
+        "provinceId": "shelter_hill_marsh",
+        "siteId": "shelter_hill_marsh_town"
+      },
+      "firstDate": {
+        "year": 900,
+        "season": 0,
+        "day": 1
+      },
+      "lastDate": {
+        "year": 900,
+        "season": 0,
+        "day": 89
+      },
+      "ai": {
+        "policy": "hold",
+        "minPressure": 30
+      },
+      "choices": [
+        {
+          "id": "warn",
+          "label": "Intimidate",
+          "detail": "Record only this decision.",
+          "operation": "intimidate"
+        },
+        {
+          "id": "press",
+          "label": "Attempt",
+          "detail": "Record only this decision.",
+          "operation": "attempt"
+        },
+        {
+          "id": "finish",
+          "label": "End the episode",
+          "detail": "Record only this decision.",
+          "operation": "resolve"
+        },
+        {
+          "id": "leave",
+          "label": "Withdraw",
+          "detail": "Record only this decision.",
+          "operation": "withdraw"
+        }
+      ]
+    },
+    "hill_refuge": {
+      "id": "hill_refuge",
+      "type": "household_refuge",
+      "title": "Hill temporary shelter",
+      "intro": "Review exact places, permission and finite terms.",
+      "locality": {
+        "provinceId": "shelter_hill_marsh",
+        "siteId": "shelter_hill_marsh_town"
+      },
+      "provider": {
+        "institutionId": "hill_refuge_seat",
+        "officeId": "hill_refuge_bishop",
+        "realmId": "shelter_hill_estuary_court"
+      },
+      "capacity": 4,
+      "acceptanceDays": 2,
+      "termDays": 3,
+      "funding": {
+        "perPersonDay": 0.5
+      },
+      "partyIds": [
+        "hill_party"
+      ],
+      "threatIds": [
+        "hill_attempt"
+      ],
+      "providerPolicy": "volunteers",
+      "adultPolicy": "volunteers"
+    }
+  }
+}

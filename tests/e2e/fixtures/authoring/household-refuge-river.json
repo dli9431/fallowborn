@@ -1,0 +1,354 @@
+{
+  "name": "River consented refuge example",
+  "geographies": {
+    "inventory_estuary_land": {
+      "bounds": {
+        "lonMin": 0,
+        "lonMax": 6,
+        "latMin": 0,
+        "latMax": 5
+      },
+      "land": [
+        [
+          0.5,
+          0.5,
+          5.5,
+          0.5,
+          5.5,
+          4.5,
+          0.5,
+          4.5
+        ]
+      ],
+      "gridWidth": 240,
+      "seas": [],
+      "rivers": [],
+      "defaultLayout": "inventory_estuary_layout",
+      "provinces": [
+        {
+          "id": "inventory_quay",
+          "x": 1.5,
+          "y": 2,
+          "terrain": "farmland"
+        },
+        {
+          "id": "inventory_marsh",
+          "x": 3.1,
+          "y": 2,
+          "terrain": "farmland"
+        },
+        {
+          "id": "inventory_ridge",
+          "x": 4.7,
+          "y": 2,
+          "terrain": "hills"
+        },
+        {
+          "id": "inventory_scenery",
+          "x": 3.1,
+          "y": 4,
+          "terrain": "hills"
+        }
+      ],
+      "sites": {
+        "inventory_quay_hall": {
+          "x": 1.4,
+          "y": 2
+        },
+        "inventory_quay_store": {
+          "x": 1.7,
+          "y": 2
+        },
+        "inventory_marsh_town": {
+          "x": 3.1,
+          "y": 2
+        },
+        "inventory_ridge_tower": {
+          "x": 4.7,
+          "y": 2
+        }
+      }
+    }
+  },
+  "settlementLayouts": {
+    "inventory_estuary_layout": {
+      "inventory_quay": [
+        {
+          "site": "inventory_quay_hall",
+          "name": "Quay Hall",
+          "kind": "town"
+        },
+        {
+          "site": "inventory_quay_store",
+          "name": "Quay Stores",
+          "kind": "village"
+        }
+      ],
+      "inventory_marsh": [
+        {
+          "site": "inventory_marsh_town",
+          "name": "Marsh Town",
+          "kind": "village"
+        }
+      ],
+      "inventory_ridge": [
+        {
+          "site": "inventory_ridge_tower",
+          "name": "Ridge Tower",
+          "kind": "village"
+        }
+      ]
+    }
+  },
+  "startScenarios": [
+    {
+      "id": "inventory_estuary_household",
+      "name": "Estuary household",
+      "desc": "A fictional household.",
+      "intro": "Your family lives beside the estuary.",
+      "tier": 1,
+      "profession": "farmer",
+      "gold": 200,
+      "prestige": 0,
+      "piety": 0,
+      "bookmarkIds": [
+        "inventory_estuary"
+      ],
+      "eras": [
+        "early_medieval"
+      ],
+      "alwaysUnlocked": true,
+      "startAge": 24,
+      "familyPresets": {
+        "established": {
+          "name": "Established household",
+          "diff": "Spouse and young children"
+        }
+      },
+      "fixedProvinceId": "inventory_quay",
+      "tracks": [
+        "river_party"
+      ],
+      "trackLocations": {
+        "river_party": [
+          "inventory_quay"
+        ]
+      }
+    }
+  ],
+  "bookmarks": {
+    "inventory_estuary": {
+      "id": "inventory_estuary",
+      "name": "The Estuary",
+      "desc": "A fictional inventory example.",
+      "date": {
+        "year": 900,
+        "season": 0,
+        "day": 1
+      },
+      "era": "early_medieval",
+      "geography": "inventory_estuary_land",
+      "religiousHeads": {},
+      "localInstitutions": {
+        "river_refuge_seat": {
+          "city": "River shelter seat",
+          "kind": "see",
+          "provinceId": "inventory_quay",
+          "site": "inventory_quay_hall",
+          "religion": "catholic",
+          "culture": "frankish",
+          "officeId": "river_refuge_bishop",
+          "officeSystem": null,
+          "representative": {
+            "name": "Hale",
+            "born": 860,
+            "sex": "m",
+            "role": "priest"
+          }
+        }
+      },
+      "stories": [
+        "river_attempt",
+        "river_refuge"
+      ],
+      "starts": [
+        "inventory_estuary_household"
+      ],
+      "scripted": [],
+      "straits": [],
+      "crossingClasses": {},
+      "provinces": [
+        {
+          "id": "inventory_quay",
+          "name": "Quay",
+          "realm": "inventory_estuary_court",
+          "culture": "frankish",
+          "religion": "catholic",
+          "dev": 3
+        },
+        {
+          "id": "inventory_marsh",
+          "name": "Marsh",
+          "realm": "inventory_estuary_court",
+          "culture": "frankish",
+          "religion": "catholic",
+          "dev": 2
+        },
+        {
+          "id": "inventory_ridge",
+          "name": "Ridge",
+          "realm": "inventory_ridge_court",
+          "culture": "frankish",
+          "religion": "catholic",
+          "dev": 2
+        },
+        {
+          "id": "inventory_scenery",
+          "name": "Uninhabited upland",
+          "wasteland": true
+        }
+      ],
+      "realms": [
+        {
+          "id": "inventory_estuary_court",
+          "name": "Estuary court",
+          "capital": "inventory_quay",
+          "color": "#458c96",
+          "aggression": 0,
+          "rank": 2,
+          "government": "regnum",
+          "ruler": {
+            "name": "Ivo Reed",
+            "culture": "frankish",
+            "born": 868,
+            "mar": 6,
+            "trait": "patient"
+          },
+          "techSeed": {
+            "complete": [
+              "ringworks"
+            ]
+          }
+        },
+        {
+          "id": "inventory_ridge_court",
+          "name": "Ridge court",
+          "capital": "inventory_ridge",
+          "color": "#aa7944",
+          "aggression": 0,
+          "rank": 1,
+          "government": "regnum",
+          "liege": "inventory_estuary_court",
+          "ruler": {
+            "name": "Odo Vale",
+            "culture": "frankish",
+            "born": 870,
+            "mar": 5,
+            "trait": "patient"
+          }
+        }
+      ],
+      "duchies": {},
+      "kingdoms": {},
+      "empires": {},
+      "openingInfrastructure": {
+        "version": 1,
+        "placements": []
+      }
+    }
+  },
+  "storyInstances": {
+    "river_party": {
+      "id": "river_party",
+      "type": "household_party",
+      "title": "River household party",
+      "intro": "Each named relative decides separately.",
+      "maxMembers": 2,
+      "allowDependents": false,
+      "invitationDays": 30,
+      "adultPolicy": "volunteers"
+    },
+    "river_attempt": {
+      "id": "river_attempt",
+      "type": "local_threat",
+      "title": "A local threat",
+      "intro": "An actor may commit an attempt or leave quietly.",
+      "actor": {
+        "kind": "protagonist"
+      },
+      "locality": {
+        "provinceId": "inventory_quay",
+        "siteId": "inventory_quay_hall"
+      },
+      "firstDate": {
+        "year": 900,
+        "season": 0,
+        "day": 1
+      },
+      "lastDate": {
+        "year": 900,
+        "season": 0,
+        "day": 89
+      },
+      "ai": {
+        "policy": "hold",
+        "minPressure": 30
+      },
+      "choices": [
+        {
+          "id": "warn",
+          "label": "Intimidate",
+          "detail": "Record only this decision.",
+          "operation": "intimidate"
+        },
+        {
+          "id": "press",
+          "label": "Attempt",
+          "detail": "Record only this decision.",
+          "operation": "attempt"
+        },
+        {
+          "id": "finish",
+          "label": "End the episode",
+          "detail": "Record only this decision.",
+          "operation": "resolve"
+        },
+        {
+          "id": "leave",
+          "label": "Withdraw",
+          "detail": "Record only this decision.",
+          "operation": "withdraw"
+        }
+      ]
+    },
+    "river_refuge": {
+      "id": "river_refuge",
+      "type": "household_refuge",
+      "title": "River temporary shelter",
+      "intro": "Review exact places, permission and finite terms.",
+      "locality": {
+        "provinceId": "inventory_quay",
+        "siteId": "inventory_quay_hall"
+      },
+      "provider": {
+        "institutionId": "river_refuge_seat",
+        "officeId": "river_refuge_bishop",
+        "realmId": "inventory_estuary_court"
+      },
+      "capacity": 2,
+      "acceptanceDays": 20,
+      "termDays": 5,
+      "funding": {
+        "perPersonDay": 0
+      },
+      "partyIds": [
+        "river_party"
+      ],
+      "threatIds": [
+        "river_attempt"
+      ],
+      "providerPolicy": "volunteers",
+      "adultPolicy": "volunteers"
+    }
+  }
+}
