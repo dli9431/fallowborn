@@ -444,3 +444,8 @@ Federate contract templates are complete-record JSON declarations with bounded p
 Opening service arrays and migration declarations are validated JSON roots. Service arrays reference compiled court-settlement instances and their declared hosts; restore never reruns opening offers. Migrations keep explicit parties, route anchors, template and conserved unit composition.
 
 Source mandate roles now govern religious mediation, church communion, temporal recognition and court AI as well as ordinary office petitions. Reads filter exact saved recognitions by the current declared role; writes select an eligible source and preserve that source id in the canonical record.
+
+
+Scoped following command
+
+A mobile.command mandate authorizes only its exact following realm's declared operations and existing host. Its actual superior is a direct opening actor or another nonmobile realm's current materialized ruler. Appoint and recall use the shared governmentSelection review boundary and revalidate the living issuer and generation. This authority supplies no territorial appointment, local Consent, county revenue, ownership, private rank or property. Real outside access, service, land and campaign owners retain their existing checks. Detailed contract: docs/designs/mobile-command.md.

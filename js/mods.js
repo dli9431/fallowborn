@@ -751,7 +751,8 @@ window.FBMODS = window.FBMODS || [];
       // Delegated leadership seats a representative, who may be unnamed.
       const delegated = !!scenario.governmentForm && FBDATA.governmentForms[scenario.governmentForm] &&
         !FB.governments.problems(scenario.governmentForm).length &&
-        !!FB.governments.resolve(scenario.governmentForm).use.succession.delegatedLeadership;
+        !!(FB.governments.resolve(scenario.governmentForm).use.succession.delegatedLeadership ||
+          FB.governments.resolve(scenario.governmentForm).use.succession.commandLeadership);
       if (typeof scenario.rulerRealmId !== 'string' || !scenario.rulerRealmId ||
           !scenario.bookmarkIds || !scenario.bookmarkIds.length || !scenario.fixedProvinceId ||
           !scenario.characterName && !delegated || !scenario.governmentForm ||

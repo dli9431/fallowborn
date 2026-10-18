@@ -9,6 +9,12 @@
     ladder:'local_service', officeCatalogue:[],
     systems:{ disable:['feudal_service','roman_offices','public_offices','royal_council','estates','manorial_tenure'] }
   };
+  ['hosted_following','expedition_command'].forEach(function (id) {
+    FBDATA.governmentForms[id]=Object.assign({},FBDATA.governmentForms.mobile_confederation,{
+      succession:id==='hosted_following' ? 'retained_principal' : 'superior_commission',
+      consent:'command_consent',revenue:'command_receipts'
+    });
+  });
   FBDATA.mobileProfiles = {
     pontic_following:{ minAge:18, threshold:0.6, maxMembers:12, maxAgreements:12,
       recruitShare:0.2, recruitCost:0.02, foodPerPerson:0.01,
@@ -40,6 +46,10 @@
     rationale:'Binding an existing living opening person creates no new office or military technology. Custody, age, location and incumbent generation remain authoritative.'};
   FBDATA.techImpactReviews.features.mobile_opening_composition = {mode:'none',
     rationale:'An opening muster withdraws existing member people under their recruitment shares. Every authored unit retains its normal era, culture and technology eligibility.'};
+  FBDATA.techImpactReviews.features.mobile_command_continuity = {mode:'none',
+    rationale:'A retained personal mandate or a living superior commissioning an eligible member is a political relationship. Death, custody, recall and issuer succession suspend authority without changing private station or bypassing ordinary military technology.'};
+  FBDATA.techImpactReviews.features.mobile_command_scope = {mode:'none',
+    rationale:'Explicit public operation permissions depend on a valid commission and canonical resources, local rights and outside consent. The commission provides no county revenue or technological exception.'};
   /* The fresh 476 opening inhabits Cherson and adds the Pontic following.
      Priscus attests displaced followings and Roman diplomacy, not a precise
      476 boundary or an identifiable incumbent at this simulated camp. */
