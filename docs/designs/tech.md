@@ -66,8 +66,7 @@ diffusions of 476–1300. The campaign remains playable after 1300: projects do 
 hard calendar locks, exposure continues, and the historical cost curve becomes a catch-up
 discount rather than stopping.
 
-The live catalogue is `FBDATA.tech` in `data/technology.js`. It contains 187 entries in a
-directed prerequisite graph across seven built-in domains:
+The live catalogue is FBDATA.tech, composed from data/technology.js and its supplemental files. It contains 187 entries in a directed prerequisite graph across seven built-in domains:
 
 - agriculture and animal power;
 - crafts, materials, and industry;
@@ -84,6 +83,14 @@ research catalogue and bibliography are in
 The validator rejects unknown domains or traditions, malformed or reversed dates, missing
 prerequisites, cycles, invalid effects or unlock references, and bad bookmark seed
 overrides.
+
+Agricultural foundations and machinery
+
+data/technology_foundations.js supplies nine complete replacements after the base catalogue. Seed Selection and Stored Hay use [1,900] evidence ranges, and Water-Powered Stone Sawing uses [200,1100]. These rounded bounds acknowledge ancient testimony without dating invention, local continuity or a standing installation. Their explicit base costs stay 50; every inherited regional adoption pair remains unchanged. See docs/research/technology-foundations.md for the evidence and limitations.
+
+Water Power includes direct rotary drive and geared applications. Expanded Powered Milling represents a later application and organization refinement. Organized Legume Rotation retains its three_field dependency for that coordinated program; ordinary legume cultivation is older. Heavy Plough, Improved Husbandry and Selective Stockbreeding describe optional systematic improvements rather than permission for basic farming or animal care. All nine retain their prerequisites, numerical effects, unlocks and capability lists. This catalogue correction adds no separately gateable capability and therefore no technology-impact ledger entry.
+
+The earlier evidence changes the existing soft research-cost curve before regional emergence. It does not automatically complete knowledge: fresh historical seeding still follows adoption dates, explicit realm exceptions and prerequisite closure. The nine corrections preserve released starting-knowledge closure because none of those inputs changes. Saved completed ids, progress and property retain their existing meanings, and restore does not seed from current evidence dates. Culture selection restrictions apply to starting research, independently of historical seeding; a realm with several technology traditions still uses the earliest complete adoption pair.
 
 Runtime mods may add or replace `techDomains`, `techTraditions`, and `tech` entries by id.
 Domain `order` is authoritative for catalogue grouping; domain and tradition names use

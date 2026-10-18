@@ -28,6 +28,8 @@ Each supplemental row supplies literal name and desc fields, either strings or m
 
 An addition must have a new id, and a correction must target an existing definition with exactly one correction owner. Repeated ids, fields or variant branches are errors even when their English matches. Dynamic or missing display fields are rejected. Put any changed faith variant in that complete correction; direct field or branch assignments in these catalogue source files are rejected because they could overwrite the extracted English later. Reading a display field does not override it. Runtime composers still add or replace individual ids after the base tables under their ordinary validation; extraction does not run or validate their gameplay transactions. Catalogue generation remains a separately authorized integration step.
 
+data/technology_foundations.js declares literal FBDATA.techCorrections_foundations replacements for seed_selection, haymaking, stone_sawing, water_power, powered_mills, legume_rotation, heavy_plough, improved_husbandry and selective_stockbreeding. Their names and descriptions retain the ordinary tech.<id> display owners and final-English aliases. Costs, evidence ranges, source codes and regional adoption pairs remain untranslated metadata.
+
 Household presentation tables in data/story_*.js are discovered by their literal FBDATA.householdTracks_<suffix> and FBDATA.openingProfiles_<suffix> assignments. The filename may describe the start rather than the story type. Existing householdStory and openingProfile owners and exact-source aliases remain the same. Discovery parses source literals and never executes story scripts.
 
 # i18n authoring guide
