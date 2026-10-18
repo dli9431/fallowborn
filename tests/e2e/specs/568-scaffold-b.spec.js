@@ -3,6 +3,7 @@ const path = require('path');
 const {test,expect} = require('../support/fixture');
 const {dependsOnRuntime} = require('../support/runtime-dependencies');
 const {openGame} = require('../support/game/navigation');
+const {beginBookmark} = require('../support/game/bookmark-acceptance');
 const {openCrazyGame} = require('../support/game/crazygames-title');
 const {mockCrazyGames} = require('../support/crazygames');
 
@@ -13,7 +14,8 @@ dependsOnRuntime(__filename,[
   'data/bookmark_476_wider_identities.js','data/bookmarks.js','data/counties.js',
   'data/geographies.js','data/geography_expansion.js','data/cultures.js',
   'data/eras.js','data/political_institutions.js','data/settlements.js','data/map_data.js',
-  'data/settlements_real.js','js/systems.js','js/religion.js','js/model.js','js/world.js'
+  'data/settlements_real.js','js/systems.js','js/religion.js','js/model.js','js/world.js',
+  'js/main.js','js/starts.js','js/bookmark_setup.js','js/population.js'
 ]);
 
 const sourcePath = path.resolve(__dirname,'../../..','data/bookmark_568_scaffold_b.js');
@@ -24,6 +26,22 @@ const coverage = {
   ireland:'ulaid tir_eoghain tara dublin kilkenny wexford galway tuam roscommon cashel cork limerick',
   danube_avars:'szekesfehervar moson sirmium osijek gyula cluj pliska silistra vidin zagreb sisak',
   arabia:'mecca medina yamama qatif sanaa aden shibam muscat nizwa sohar najran_oasis tayma_oasis w_arabia w_nefud'
+};
+
+const correctedCommunities = {
+  winchester:[
+    {culture:'brittonic',religion:'nicene',populationShare0:7500},
+    {culture:'saxon_476',religion:'germanic_pagan',populationShare0:2500}
+  ],
+  salisbury:[
+    {culture:'brittonic',religion:'nicene',populationShare0:7500},
+    {culture:'saxon_476',religion:'germanic_pagan',populationShare0:2500}
+  ],
+  sanaa:[
+    {culture:'south_arabian_476',religion:'jewish',populationShare0:4500},
+    {culture:'south_arabian_476',religion:'arabian_traditional_476',populationShare0:3000,paired:true},
+    {culture:'south_arabian_476',religion:'miaphysite',populationShare0:2500}
+  ]
 };
 
 for (const crazy of [false,true]) {
@@ -153,6 +171,63 @@ test('568 redating keeps residents distinct from their controllers and holds nam
   expect(r.bavaria_568.liege).toBe('austrasia_568');
 });
 
+test('568 corrected owners and resident perspectives reach the opening without changing held districts',async function ({page},info) {
+  await beginBookmark(page,info,'568','farmer_568');
+  const result = await page.evaluate(function (input) {
+    const s = FB.state, b = FB.campaignBookmark(s), faults = [], counties = {}, source = {};
+    b.provinces.forEach(function (p) { counties[p.id] = p; });
+    input.keys.forEach(function (key) {
+      FBDATA.bookmarkRegions568[key].provinces.forEach(function (p) { source[p.id] = p; });
+    });
+    const owners = {};
+    ['poitiers','angouleme','perigueux','agen'].forEach(function (id) {
+      owners[id] = [counties[id].realm,s.owner[id],s.holder[id]];
+      if (JSON.stringify(counties[id]) !== JSON.stringify(source[id]) || counties[id] === source[id]) faults.push('composed county '+id);
+      if (b.realms.filter(function (r) { return r.id === s.owner[id]; }).length !== 1) faults.push('shared court '+id);
+    });
+    const communities = {}, principal = {};
+    Object.keys(input.communities).forEach(function (id) {
+      const p = counties[id], count = FB.countyPopulation(s,id), live = FB.countyCommunities(s,id);
+      communities[id] = p.communities;
+      principal[id] = [p.culture,p.religion,s.owner[id]];
+      if (JSON.stringify(p) !== JSON.stringify(source[id]) || p.communities === source[id].communities) faults.push('composed residents '+id);
+      if (count <= 0 || count !== FB.countyPopulationBaseline(s,id) ||
+          live.reduce(function (sum,c) { return sum+c.count; },0) !== count ||
+          live.length !== input.communities[id].length) faults.push('county population '+id);
+      input.communities[id].forEach(function (expected) {
+        const cohort = live.filter(function (c) { return c.culture===expected.culture && c.religion===expected.religion; })[0];
+        if (!cohort || cohort.count<=0 || Math.abs(cohort.count-count*expected.populationShare0/10000)>1) faults.push('resident population '+id);
+      });
+      const settlements = FB.settlementPopulations(s,id);
+      if (settlements.reduce(function (sum,n) { return sum+n; },0) !== count ||
+          settlements.some(function (n,index) {
+            return FB.settlementCommunities(s,id,index).reduce(function (sum,c) { return sum+c.count; },0) !== n;
+          })) faults.push('settlement population '+id);
+    });
+    const held = {};
+    ['bordeaux','limoges','bayonne','cahors','marseille','moson','szekesfehervar','sisak','zagreb',
+      'osijek','gyula','cluj','sirmium','pliska','silistra','vidin','aden','shibam'].forEach(function (id) {
+      held[id] = s.owner[id];
+    });
+    return {faults:faults,owners:owners,communities:communities,principal:principal,held:held};
+  },{keys:Object.keys(coverage),communities:correctedCommunities});
+  expect(result.faults).toEqual([]);
+  expect(result.owners).toEqual({
+    poitiers:['austrasia_568','austrasia_568','austrasia_568'],
+    angouleme:['burgundy_568','burgundy_568','burgundy_568'],
+    perigueux:['burgundy_568','burgundy_568','burgundy_568'],
+    agen:['burgundy_568','burgundy_568','burgundy_568']
+  });
+  expect(result.communities).toEqual(correctedCommunities);
+  expect(result.principal).toEqual({winchester:['brittonic','nicene','wessex_568'],
+    salisbury:['brittonic','nicene','wessex_568'],sanaa:['south_arabian_476','jewish','south_arabia_568']});
+  expect(result.held).toEqual({bordeaux:'neustria_568',limoges:'neustria_568',bayonne:'neustria_568',
+    cahors:'austrasia_568',marseille:'burgundy_568',moson:'lombards_568',szekesfehervar:'lombards_568',
+    sisak:'lombards_568',zagreb:'lombards_568',osijek:'avars_568',gyula:'avars_568',cluj:'avars_568',
+    sirmium:'east_568',pliska:'east_568',silistra:'east_568',vidin:'east_568',
+    aden:'south_arabia_568',shibam:'south_arabia_568'});
+});
+
 test('568 scaffold registration is inert and owns detached source values',async function ({page},info) {
   await openGame(page,info);
   const before = await page.evaluate(function () {
@@ -160,11 +235,11 @@ test('568 scaffold registration is inert and owns detached source values',async 
       layouts:FBDATA.settlementLayouts,sites:FBDATA.settlementSites,active:FB.activeBookmarkId});
   });
   await page.addScriptTag({path:sourcePath});
-  const result = await page.evaluate(function (keys) {
+  const result = await page.evaluate(function (input) {
     const old = FB.bookmark('493','world_v2'), originals = {}, faults = [];
     old.provinces.forEach(function (p) { originals[p.id] = p; });
     const oldLayouts = FBDATA.settlementLayouts[old.settlementLayout];
-    keys.forEach(function (key) {
+    input.keys.forEach(function (key) {
       const block = FBDATA.bookmarkRegions568[key];
       block.provinces.forEach(function (p) {
         if (p.wasteland || p.id==='najran_oasis') return;
@@ -172,7 +247,7 @@ test('568 scaffold registration is inert and owns detached source values',async 
         if (!original) { faults.push('source '+p.id); return; }
         if (p === original || p.communities === original.communities ||
             block.settlementLayouts[p.id] === oldLayouts[p.id]) faults.push('shared object '+p.id);
-        const communities = JSON.parse(JSON.stringify(original.communities));
+        const communities = JSON.parse(JSON.stringify(input.communities[p.id] || original.communities));
         const expectedLayout = JSON.parse(JSON.stringify(oldLayouts[p.id]));
         if (p.id==='gyula') expectedLayout[0].name = 'Upper Mures district';
         if (['moson','szekesfehervar','gyula','cluj'].indexOf(p.id)>=0) {
@@ -189,7 +264,7 @@ test('568 scaffold registration is inert and owns detached source values',async 
       registered:scripts.indexOf('data/bookmark_568_scaffold_b.js') > scripts.indexOf('data/bookmark_493_world.js'),
       after:JSON.stringify({bookmarks:FBDATA.bookmarks,cultures:FBDATA.cultures,religions:FBDATA.religions,
         layouts:FBDATA.settlementLayouts,sites:FBDATA.settlementSites,active:FB.activeBookmarkId})};
-  },Object.keys(coverage));
+  },{keys:Object.keys(coverage),communities:correctedCommunities});
   expect(result.faults).toEqual([]);
   expect(result.selectableWorld).toBe(true);
   expect(result.registered).toBe(true);
