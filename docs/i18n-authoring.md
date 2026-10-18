@@ -1,3 +1,7 @@
+Expedition records-review text
+
+expedition_undertaking name and desc use the existing storyCampaign dataText owner and normal imported-English fallback. Runtime chrome in js/story_expedition_agreements.js uses literal FB.T calls with named placeholders for original parties, finite turns and current county/controller/holder labels. Proper personal names and stable ids remain untranslated. No rendered prose is stored in the optional record. No bundled source instance or new extraction namespace is added; a later bundled source must use a supported literal storyCampaign display table. Generated catalogues remain an integration step requiring explicit authorization.
+
 Office and legitimacy presentation
 
 data/technology_learning.js declares literal techCorrections_learning complete replacements and data/buildings_learning_care.js declares buildingCorrections_learning_care replacements plus buildings_learning_care additions. Static extraction keeps ordinary tech.<id> and building.<id> owners and final-English aliases. Removed library faith variants and obsolete paper-workshop labels have no stale owner; the guesthouse is building.hospice. Runtime names and descriptions use the existing structured route. No generated catalogue is changed by this content work.
