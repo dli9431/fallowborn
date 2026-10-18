@@ -48,7 +48,10 @@
   };
   P.compilePrepared = function (bm) {
     var errors = P.catalogFaults(FBDATA), rows = bm && bm.productionSites, out = {sites:[],errors:errors};
-    if (rows === undefined || errors.length) return out;
+    if (rows === undefined || errors.length) {
+      if (FB.productionEconomy) errors.push.apply(errors,FB.productionEconomy.compilePrepared(bm,[]).errors);
+      return out;
+    }
     function fault(v) { errors.push('productionSites: ' + v); }
     if (!Array.isArray(rows) || rows.length > 128) { fault('requires at most 128 sites.'); return out; }
     var seen = {}, physical = {}, resource = FB.siteResources.compilePrepared(bm);
@@ -81,6 +84,7 @@
       out.sites.push(Object.assign(copy(a),{slot:slot}));
     });
     if (out.sites.reduce(function (n,a) { return n+a.openingLots.length; },0) > LIMIT) fault('opening lots exceed the global bound.');
+    if (FB.productionEconomy) errors.push.apply(errors,FB.productionEconomy.compilePrepared(bm,out.sites).errors);
     if (errors.length) out.sites = [];
     return out;
   };
@@ -139,6 +143,9 @@
     if (!Number.isFinite(s.player.gold) || s.player.gold < amount) return false;
     s.player.gold -= amount; return true;
   }
+  P.account = function(s,who) { return {payer:copy(payer(s,who)),funds:money(s,who)}; };
+  P.spend = spend;
+  P.authority = authority;
   function worker(s,a,cid) {
     var c = s.chars[cid];
     if (!alive(s,cid) || FB.characterLocation(s,c) !== a.countyId || c.war || c.armyId ||
@@ -178,6 +185,7 @@
       });
     });
     s.production = r;
+    if (FB.productionEconomy) FB.productionEconomy.initialize(s);
   };
   function reservationTotals(r) {
     var held={};
@@ -349,7 +357,7 @@
     });
     if (r === undefined) { if (stamps.length) fail();return true; }
     var p = plan(s), originalAssets = FB.compileOpeningInfrastructure(FB.campaignBookmark(s)), siteTable = {}, assets = {}, lots = {}, batches = {}, seen = {}, work = {}, claims = {}, used = {}, openings = {};
-    if (p.errors.length || !keys(r,['version','definition','revision','nextId','assets','lots','batches']) || r.version !== 1 ||
+    if (p.errors.length || !keys(r,['version','definition','revision','nextId','assets','lots','batches','economy']) || r.version !== 1 ||
         r.definition !== definition(p) || !int(r.revision,0,MAX) || !int(r.nextId,1,MAX) ||
         !Array.isArray(r.assets) || r.assets.length > 128 || !Array.isArray(r.lots) || r.lots.length > LIMIT ||
         !Array.isArray(r.batches) || r.batches.length > LIMIT) fail();
@@ -382,6 +390,8 @@
         if (!keys(lot.origin,['kind','index']) || !int(index,0,7) || !initial || initial.goodId !== lot.goodId || initial.quantity !== lot.quantity ||
             own(openings,asset.siteId + ':' + index)) fail();
         openings[asset.siteId + ':' + index]=lot.id;
+      } else if (lot.origin.kind === 'exchange' || lot.origin.kind === 'producer') {
+        if (!keys(lot.origin,['kind','receiptId']) || !int(lot.origin.receiptId,1,lot.id-1) || !r.economy) fail();
       } else if (!keys(lot.origin,['kind','batchId']) || lot.origin.kind !== 'batch' || !int(lot.origin.batchId,1,lot.id-1)) fail();
     });
     p.sites.forEach(function (a) {
@@ -439,6 +449,9 @@
       var lot=lots[x.lotId],origin=lot.origin;
       if(origin.kind==='batch' && (!batches[origin.batchId] || batches[origin.batchId].closedTurn>b.openedTurn))fail();
     });});
+    var economic = FB.productionEconomy ? FB.productionEconomy.validate(s) : {ids:[],used:{},revision:0};
+    economic.ids.forEach(unique);
+    Object.keys(economic.used).forEach(function(key){ if (!lots[key]) fail(); used[key]+=economic.used[key]; });
     var held=reservationTotals(r);
     r.lots.forEach(function (lot) {
       if (lot.origin.kind === 'batch') {
@@ -458,7 +471,7 @@
     });
     var pending={};
     r.batches.forEach(function(b){if(b.status==='reserved'){if(pending[b.assetId])fail();pending[b.assetId]=true;}});
-    if (Object.keys(seen).length !== r.nextId-1 || r.revision !== r.batches.reduce(function(n,b){return n+1+b.workTurns.length+(b.status==='reserved'?0:1);},0)) fail();
+    if (Object.keys(seen).length !== r.nextId-1 || r.revision !== r.batches.reduce(function(n,b){return n+1+b.workTurns.length+(b.status==='reserved'?0:1);},0)+economic.revision) fail();
     return true;
   };
 })();

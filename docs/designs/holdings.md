@@ -552,3 +552,7 @@ Civic membership, magistracy, public treasury and foreign rights are separate fr
 Institutional property boundary
 
 A civic or ecclesiastical officeholder remains a private settlement actor distinct from the public realm. Personal settlement inheritance follows the existing heir; public counties and spiritual offices remain institutional. Current control and vacancy rules may limit public receipts without redirecting private property.
+
+Owned material and enterprise output
+
+Optional production exchange retains original stamped physical assets and actual holder/account authority. Purchase moves existing unreserved lots between their exact owners; it neither grants property nor changes residence or staffing. Declared enterprise-output shares use existing operational household workers and wages at the real seasonal boundary, never a second workday. The same share leaves ordinary market output and enterprise proceeds once. Actual private household production cannot be diverted to an independent public treasury's asset without payment. Source lots and receipts remain inside the production owner, and capture, ruin or changed rights suspend new transactions without replacing owners or reseeding stock. See docs/designs/production.md.
