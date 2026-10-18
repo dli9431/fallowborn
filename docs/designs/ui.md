@@ -1,3 +1,7 @@
+Column supply reviews
+
+The shared mobile-command sheet shows a food target and daily ration demand for each column alongside camp stock and the one public cash reserve. The retained Field command selector targets Buy selected column supplies, Load selected column from camp and Return selected column food to camp. These actions show the actual county, quantity, immediate cost and first blocker through the existing action cards and confirmation sheet. Remote purchases require a halted host at its own accessible market; camp transfers require actual reunion. Replace pledged fighters names the chosen column and class from the one command-wide target. Back, Escape, Close and outcome Continue preserve selected column, list position, Details and originating focus through the existing modal history. Literal FB.T strings route the new chrome without saved rendered text or catalogue generation.
+
 Personal expedition reviews
 
 The shared story sheet exposes individual role requests, host consent state, finite term, named-person capacity and actual location. Reviews state that participation is unpaid and grants no troops, equipment, command, vow or family carriage. Leave ends only admission; the return road has its own visible private cost and travel time. Refusal and leaving remain available without a payment. Stale quotes change nothing. The existing story sheet supplies Back, Escape, Close, retained scroll and originating-card focus.

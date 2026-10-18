@@ -107,9 +107,14 @@
       kv(FB.T('Camp food target'),Math.ceil(supply.campTarget)) +
       kv(FB.T('Host carrying limit'),FB.T('{days} days',{days:supply.carryDays})) +
       kv(FB.T('Public cash reserve'),FB.money(supply.cashReserve,s));
+    if (supply && supply.entries) supply.entries.forEach(function (entry,index) {
+      facts+=kv(FB.T('Column {number} food target',{number:index+1}),Math.ceil(entry.target))+
+        kv(FB.T('Column {number} daily rations',{number:index+1}),entry.daily.toFixed(2));
+    });
     function add(label,action,terms,details,columnReview) {
       var transition=action==='appoint' || action==='recall';
-      if (r.command && !transition && command.operations.indexOf(action)<0) return;
+      var permission=action==='load' || action==='unload' ? 'trade' : action;
+      if (r.command && !transition && command.operations.indexOf(permission)<0) return;
       if (r.command && ['offer','war','peace','land','contract','settle','service'].indexOf(action)>=0) {
         label=action==='offer' ? terms.kind==='access' ? FB.T('Offer seasonal access') : terms.kind==='tribute' ? FB.T('Offer tribute') : FB.T('Offer protection service') :
           {war:FB.T('Review campaign'),peace:FB.T('Conclude white peace'),land:FB.T('Request land terms'),
@@ -155,6 +160,14 @@
       add(FB.T('Reunite into selected column'),'merge',{columnId:chosen,otherColumnId:other},FB.T('Both hosts must be halted at the same place with the same war commitment. Their exact units, people and food join the selected column; the other slot retires.'),true);
       add(FB.T('Demuster selected column'),'demuster',{columnId:chosen},FB.T('After actual camp reunion and completion of military service, surviving fighters enter their member resting pools and carried food returns to camp.'),true);
       add(FB.T('Recruit for selected column'),'recruit',{columnId:chosen,unitId:unit,count:count},FB.T('Train the selected class from currently pledged people at camp, paying the public treasury cost. Normal equipment and technology gates apply. A remote host cannot receive replacements.'),true);
+      if (supply) {
+        ['trade','load','unload'].forEach(function (action) {
+          var review=M.columnSupplyReview(s,rid,chosen,action,actor);
+          var labels={trade:FB.T('Buy selected column supplies'),load:FB.T('Load selected column from camp'),unload:FB.T('Return selected column food to camp')};
+          add(labels[action],action,review.request.terms,
+            FB.T('A halted column buys only at its actual local market within its carrying target and the public cash reserve. Camp transfers require actual reunion and preserve one day of camp rations when loading.'),true);
+        });
+      }
       var objective={type:'aggression',enemy:FB.warTargetDefender(s,rid,destination),target:destination};
       add(FB.T('Review selected column campaign'),'war',{columnId:chosen,causes:[objective]},FB.T('The overall commander reviews an ordinary connected war objective from this host. Other hosts keep their existing campaigns. A separate field order is required to march.'),true);
     }
@@ -222,8 +235,9 @@
     if (supply) {
       add(FB.T('Replenish supplies'),'trade',supply.purchase,
         FB.T('Buy only the current ration shortfall available locally and affordable above the public cash reserve. A remote host keeps its own food.'));
-      if (profile.supplyPolicy.replacement) add(FB.T('Replace pledged fighters'),'recruit',supply.replacement || {provisioning:true},
-        FB.T('Replace the configured shortfall from eligible pledged people, within the training budget and public cash reserve. Current rations, ordinary unit qualifications and actual camp presence remain required.'));
+      if (profile.supplyPolicy.replacement) add(FB.T('Replace pledged fighters'),'recruit',supply.replacement ||
+        (columns ? {columnId:columns.entries[0].id,count:0,provisioning:true} : {provisioning:true}),
+        FB.T('Replace the configured shortfall from eligible pledged people, within the training budget and public cash reserve. Current rations, ordinary unit qualifications and actual camp presence remain required.'),!!columns);
     }
     add(FB.T('Sell food'),'trade',{countyId:migration.at,count:count,direction:'sell'},FB.T('The county treasury pays for food delivered from the coalition’s actual stock.'));
     var terms = {kind:'access',partnerId:s.owner[destination],countyIds:[destination],capacity:count,allowRecruit:true,price:price,duration:days};
