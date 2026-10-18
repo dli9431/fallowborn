@@ -7,7 +7,7 @@ const {dependsOnRuntime} = require('../support/runtime-dependencies');
 const examples = {timber:require('../fixtures/authoring/fort-profiles-timber.json'),
   masonry:require('../fixtures/authoring/fort-profiles-masonry.json')};
 dependsOnRuntime(__filename,['index.html','data/map_data.js','data/technology.js','data/building_profiles.js',
-  'data/fort_profiles.js','js/fort_profiles.js','js/building_profiles.js','js/fortifications.js',
+  'data/fort_profiles.js','data/buildings_circuit_profiles.js','js/fort_profiles.js','js/building_profiles.js','js/fortifications.js',
   'js/actions.js','js/world.js','js/technology.js','js/mods.js','js/home_authority.js',
   'js/lordships.js','js/settlement.js','js/save.js','js/save_v4.js','js/ui_modals.js','js/ui_misc.js']);
 
@@ -43,7 +43,7 @@ for (const kind of ['timber','masonry']) {
       return {valid,errors:plan.errors,rows:rows.length,again:FB.initializeOpeningInfrastructure(s),
         identity:rows.every(function(b){return b.buildingProfile.v===1&&b.buildingProfile.inherited&&b.devGranted===0&&!b.targetLevel&&!b.fortProfileProject;}),
         pure:before===JSON.stringify(s)&&rng===FB.getRngState()&&uid===FB.getUidCounter(),
-        material:Object.values(FBDATA.fortProfiles)[0].material,review:FBDATA.techImpactReviews.features.fort_material_identity.mode};
+        material:FBDATA.fortProfiles[rows[0].buildingProfile.id].material,review:FBDATA.techImpactReviews.features.fort_material_identity.mode};
     });
     expect(r).toEqual({valid:true,errors:[],rows:kind==='timber'?1:2,again:false,identity:true,pure:true,material:kind,review:'none'});
     const saved=await page.evaluate(function(){const s=FB.state;return {text:FB.save.serialize(),buildings:JSON.parse(JSON.stringify(s.buildings)),gold:s.player.gold,prestige:s.player.prestige};});

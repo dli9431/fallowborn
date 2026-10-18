@@ -1,0 +1,280 @@
+{
+  "name": "Fictional late-antique circuit river",
+  "geographies": {
+    "inventory_estuary_land": {
+      "bounds": {
+        "lonMin": 0,
+        "lonMax": 6,
+        "latMin": 0,
+        "latMax": 5
+      },
+      "land": [
+        [
+          0.5,
+          0.5,
+          5.5,
+          0.5,
+          5.5,
+          4.5,
+          0.5,
+          4.5
+        ]
+      ],
+      "gridWidth": 240,
+      "seas": [],
+      "rivers": [],
+      "defaultLayout": "inventory_estuary_layout",
+      "provinces": [
+        {
+          "id": "inventory_quay",
+          "x": 1.5,
+          "y": 2,
+          "terrain": "farmland"
+        },
+        {
+          "id": "inventory_marsh",
+          "x": 3.1,
+          "y": 2,
+          "terrain": "farmland"
+        },
+        {
+          "id": "inventory_ridge",
+          "x": 4.7,
+          "y": 2,
+          "terrain": "hills"
+        },
+        {
+          "id": "inventory_scenery",
+          "x": 3.1,
+          "y": 4,
+          "terrain": "hills"
+        }
+      ],
+      "sites": {
+        "inventory_quay_hall": {
+          "x": 1.4,
+          "y": 2
+        },
+        "inventory_quay_store": {
+          "x": 1.7,
+          "y": 2
+        },
+        "inventory_marsh_town": {
+          "x": 3.1,
+          "y": 2
+        },
+        "inventory_ridge_tower": {
+          "x": 4.7,
+          "y": 2
+        }
+      }
+    }
+  },
+  "settlementLayouts": {
+    "inventory_estuary_layout": {
+      "inventory_quay": [
+        {
+          "site": "inventory_quay_hall",
+          "name": "Quay Hall",
+          "kind": "town"
+        },
+        {
+          "site": "inventory_quay_store",
+          "name": "Quay Stores",
+          "kind": "village"
+        }
+      ],
+      "inventory_marsh": [
+        {
+          "site": "inventory_marsh_town",
+          "name": "Marsh Town",
+          "kind": "village"
+        }
+      ],
+      "inventory_ridge": [
+        {
+          "site": "inventory_ridge_tower",
+          "name": "Ridge Tower",
+          "kind": "village"
+        }
+      ]
+    }
+  },
+  "startScenarios": [
+    {
+      "id": "inventory_estuary_household",
+      "name": "Estuary household",
+      "desc": "A fictional household.",
+      "intro": "Your family lives beside the estuary.",
+      "tier": 1,
+      "profession": "farmer",
+      "gold": 12,
+      "prestige": 0,
+      "piety": 0,
+      "bookmarkIds": [
+        "inventory_estuary"
+      ],
+      "eras": [
+        "late_antique"
+      ],
+      "alwaysUnlocked": true,
+      "startAge": 24,
+      "familyPresets": {
+        "standard": {
+          "name": "Established household",
+          "diff": "age 24"
+        }
+      }
+    },
+    {
+      "id": "inventory_estuary_ruler",
+      "name": "The estuary ruler",
+      "desc": "Rule the fictional estuary court.",
+      "intro": "You lead the existing estuary court.",
+      "tier": 5,
+      "profession": "noble",
+      "gold": 12,
+      "prestige": 0,
+      "piety": 0,
+      "bookmarkIds": [
+        "inventory_estuary"
+      ],
+      "eras": [
+        "late_antique"
+      ],
+      "alwaysUnlocked": true,
+      "rulerRealmId": "inventory_estuary_court",
+      "governmentForm": "regnum",
+      "fixedProvinceId": "inventory_quay",
+      "characterName": "Ivo Reed",
+      "sex": "m",
+      "startCulture": "frankish",
+      "startReligion": "catholic",
+      "onboarding": "ruler",
+      "familyPresets": {
+        "standard": {
+          "name": "Existing court",
+          "diff": "Existing court household"
+        }
+      }
+    }
+  ],
+  "bookmarks": {
+    "inventory_estuary": {
+      "id": "inventory_estuary",
+      "name": "The Estuary",
+      "desc": "A fictional inventory example.",
+      "date": {
+        "year": 500,
+        "season": 0,
+        "day": 1
+      },
+      "era": "late_antique",
+      "geography": "inventory_estuary_land",
+      "religiousHeads": {},
+      "localInstitutions": {},
+      "stories": [],
+      "starts": [
+        "inventory_estuary_household",
+        "inventory_estuary_ruler"
+      ],
+      "scripted": [
+        {
+          "id": "inventory_marsh_claim",
+          "year": 901,
+          "season": 0,
+          "day": 1,
+          "realm": "inventory_estuary_court",
+          "targets": [
+            "inventory_marsh"
+          ],
+          "news": "The estuary court renews its claim to the marsh."
+        }
+      ],
+      "straits": [],
+      "crossingClasses": {},
+      "provinces": [
+        {
+          "id": "inventory_quay",
+          "name": "Quay",
+          "realm": "inventory_estuary_court",
+          "culture": "frankish",
+          "religion": "catholic",
+          "dev": 3
+        },
+        {
+          "id": "inventory_marsh",
+          "name": "Marsh",
+          "realm": "inventory_estuary_court",
+          "culture": "frankish",
+          "religion": "catholic",
+          "dev": 2
+        },
+        {
+          "id": "inventory_ridge",
+          "name": "Ridge",
+          "realm": "inventory_ridge_court",
+          "culture": "frankish",
+          "religion": "catholic",
+          "dev": 2
+        },
+        {
+          "id": "inventory_scenery",
+          "name": "Uninhabited upland",
+          "wasteland": true
+        }
+      ],
+      "realms": [
+        {
+          "id": "inventory_estuary_court",
+          "name": "Estuary court",
+          "capital": "inventory_quay",
+          "color": "#458c96",
+          "aggression": 0,
+          "rank": 2,
+          "government": "regnum",
+          "ruler": {
+            "name": "Ivo Reed",
+            "culture": "frankish",
+            "born": 468,
+            "mar": 6,
+            "trait": "patient"
+          }
+        },
+        {
+          "id": "inventory_ridge_court",
+          "name": "Ridge court",
+          "capital": "inventory_ridge",
+          "color": "#aa7944",
+          "aggression": 0,
+          "rank": 1,
+          "government": "regnum",
+          "liege": "inventory_estuary_court",
+          "ruler": {
+            "name": "Odo Vale",
+            "culture": "frankish",
+            "born": 470,
+            "mar": 5,
+            "trait": "patient"
+          }
+        }
+      ],
+      "duchies": {},
+      "kingdoms": {},
+      "empires": {},
+      "openingInfrastructure": {
+        "version": 1,
+        "placements": [
+          {
+            "countyId": "inventory_ridge",
+            "siteId": "inventory_ridge_tower",
+            "buildingId": "walls",
+            "condition": "ruined",
+            "level": 2,
+            "profileId": "urban_circuit"
+          }
+        ]
+      }
+    }
+  }
+}

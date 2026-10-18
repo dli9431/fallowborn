@@ -8,7 +8,7 @@ const examples={supplied:require('../fixtures/authoring/engineered-waterworks-su
   rain:require('../fixtures/authoring/engineered-waterworks-rain.json')};
 const ids=['aqueduct_maintenance','qanat_construction','cistern_engineering'];
 const traditions=['default','latin','byzantine','islamic','persianate','slavic','nordic','steppe','baltic_finnic','caucasian','northeast_african'];
-dependsOnRuntime(__filename,['index.html','data/map_data.js','data/technology.js','data/technology_waterworks.js',
+dependsOnRuntime(__filename,['index.html','data/map_data.js','data/technology.js','data/technology_masonry_circuits.js', 'data/technology_waterworks.js',
   'data/buildings_waterworks.js','data/buildings_early_worship.js','data/buildings_fish_drying.js','data/technology_early_refinements.js','data/technology_foundations.js',
   'data/technology_learning.js','data/technology_civic_military.js','data/technology_maritime.js','data/technology_wind.js','data/technology_transmission.js',
   'data/building_operations.js','data/site_resources.js','data/bookmarks.js','data/cultures.js','data/eras.js',
@@ -46,7 +46,7 @@ test('water catalogue owns exact graph, schedules, prices, construction scopes a
       counts:[Object.keys(FBDATA.tech).length,Object.keys(FBDATA.buildings).length],
       sources:Array.from(document.scripts).map(function(e){return e.getAttribute('src');}).filter(Boolean)};
   });
-  expect(r.errors).toEqual([]);expect(r.counts).toEqual([192,25]);
+  expect(r.errors).toEqual([]);expect(r.counts).toEqual([193,25]);
   const windows=[[[400,1000],[1,400],[1,350],[200,800],[200,600],[700,1050],[800,1150],[700,1200],[900,1250],[200,700],[100,700]],
     [[600,1100],[500,1000],[200,850],[200,800],[-200,400],[850,1200],[900,1250],[500,1000],[950,1300],[300,850],[200,850]],
     [[400,850],[1,400],[1,350],[200,700],[200,700],[600,1000],[750,1100],[600,1050],[800,1200],[200,800],[1,500]]];

@@ -1,7 +1,7 @@
 'use strict';
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
-  'data/technology_waterworks.js', 'data/buildings_waterworks.js',
+  'data/technology_masonry_circuits.js', 'data/technology_waterworks.js', 'data/buildings_waterworks.js',
   'js/actions.js', 'js/lordships.js', 'js/fortifications.js',
   'js/market.js',
   'js/population.js',
@@ -69,7 +69,7 @@ test('late game buildings and technologies validate cleanly and expose expected 
     });
 
     expect(result.validationErrors).toEqual([]);
-    expect(result.techCount).toBe(192);
+    expect(result.techCount).toBe(193);
 
     expect(result.buildingChecks.university.devMin).toBe(7);
     expect(result.buildingChecks.university.requiresTech).toBe('universities');

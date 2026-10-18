@@ -6,7 +6,7 @@ const { restoreBookmark } = require('../support/game/bookmark-acceptance');
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 
 dependsOnRuntime(__filename, [
-  'data/technology_waterworks.js', 'data/buildings_waterworks.js',
+  'data/technology_masonry_circuits.js', 'data/technology_waterworks.js', 'data/buildings_waterworks.js',
   'index.html', 'data/technology.js', 'data/technology_early_refinements.js',
   'data/technology_foundations.js',
   'data/technology_learning.js', 'data/technology_civic_military.js',
@@ -44,7 +44,7 @@ async function seed(page, input) {
       realms:{transmission_review:{alive:true,liege:null,techTraditions:config.traditions,
         techSeed:config.exceptions || {}}}, realmTech:{} };
     try {
-      if (config.prior) FBDATA.tech = Object.assign({},window.__transmissionPrior,FBDATA.tech_waterworks);
+      if (config.prior) FBDATA.tech = Object.assign({},window.__transmissionPrior,FBDATA.tech_waterworks,FBDATA.tech_masonry_circuits);
       FB.seedRealmTechnologies(state,true);
       const r = state.realmTech.transmission_review, windows = {};
       ['paper_making','paper_scholarship','capitularies'].forEach(function (id) {
@@ -75,7 +75,7 @@ async function startCampaign(page, bookmark, revision) {
 test('only five adoption pairs change across the complete existing catalogue', async function ({ page }, info) {
   await openGame(page,info);
   const r = await page.evaluate(function () {
-    const expected = JSON.parse(JSON.stringify(Object.assign({},window.__transmissionPrior,FBDATA.tech_waterworks)));
+    const expected = JSON.parse(JSON.stringify(Object.assign({},window.__transmissionPrior,FBDATA.tech_waterworks,FBDATA.tech_masonry_circuits)));
     expected.paper_making.history.adoption.persianate = [650,800];
     expected.paper_making.history.adoption.islamic = [750,950];
     expected.paper_scholarship.history.adoption.islamic = [800,1000];
@@ -93,7 +93,7 @@ test('only five adoption pairs change across the complete existing catalogue', a
       owners:['paper_making','paper_scholarship','capitularies'].map(function (id) { return owners[id]; }),
       sources:Array.from(document.scripts).map(function (el) { return el.getAttribute('src'); }).filter(Boolean)};
   });
-  expect(Object.keys(r.actual)).toHaveLength(192);
+  expect(Object.keys(r.actual)).toHaveLength(193);
   expect(r.actual).toEqual(r.expected); expect(r.errors).toEqual([]); expect(r.pure).toBe(true);
   expect(r.owners).toEqual([['techCorrections_transmission'],['techCorrections_learning'],['techCorrections_civic_military']]);
   expect(r.sources.filter(function (s) { return s === 'data/technology_transmission.js'; })).toHaveLength(1);
