@@ -329,7 +329,10 @@
         q.reason='provisioning';return q;
       }
     }
-    var ar = actorRealm(s, request.actor), am = actorMember(s, rid, request.actor), leader = ar === rid && !!M.leader(s, rid);
+    var ar = actorRealm(s, request.actor), am = actorMember(s, rid, request.actor), commander=M.leader(s,rid);
+    // An explicit command query identifies its own institution. General
+    // character-to-realm lookup deliberately retains a landed home office.
+    var leader=!!commander && !!request.actor && (request.actor.kind==='character' ? request.actor.id===commander.id : ar===rid);
     q.signature = stamp(s, rid, t, request.actor);
     function no(reason) { q.reason = reason; return q; }
     var m = member(s, rid, t.memberId), moving = M.migration(s, rid), army = M.host(s, rid);
@@ -705,12 +708,14 @@
     for (var binding of o.principals) {
       var ref=binding.person, c=FB.bookmarkActor(s,ref.actorId);
       var memberDef=p.members.filter(function (m) {return m.id===binding.memberId;})[0];
-      if (!availablePerson(s,c) || s.date.year-c.born<p.minAge || location(s,{kind:'character',id:c.id})!==t.origin ||
+      var landed=M.landedOpeningMatches && M.landedOpeningMatches(s,d,binding,c);
+      if (!availablePerson(s,c) || s.date.year-c.born<p.minAge ||
+          location(s,{kind:'character',id:c.id})!==t.origin && !landed ||
           used[c.id] || occupied[c.id] ||
-          ref.kind==='realm_ruler' && (FB.realmRulerGeneration(s,d.id)!==ref.generation ||
+          ref.kind==='realm_ruler' && !landed && (FB.realmRulerGeneration(s,d.id)!==ref.generation ||
             c.name!==s.realms[d.id].ruler.name || c.born!==s.realms[d.id].ruler.born ||
             c.sex!==s.realms[d.id].ruler.sex || c.culture!==s.realms[d.id].ruler.culture || c.religion!==d.religion) ||
-          FB.isReigningRealmRuler(s,c) && FB.realmIdForRulerCharacter(s,c)!==d.id) return plan;
+          FB.isReigningRealmRuler(s,c) && FB.realmIdForRulerCharacter(s,c)!==d.id && !landed) return plan;
       used[c.id]=true;
       plan.bindings.push({memberId:memberDef.id,characterId:c.id,person:copy(ref)});
     }
@@ -763,7 +768,7 @@
       });
       var leader=plan ? r.members.filter(function (m) {return m.id===d.mobile.opening.leaderMemberId;})[0] : r.members[0];
       var incumbent=plan && plan.bindings.filter(function (b) {return b.memberId===leader.id && b.person.kind==='realm_ruler';})[0];
-      if (incumbent) {r.leaderId=incumbent.characterId;G.invalidate();FB.invalidateRealmCache();}
+      if (incumbent && incumbent.person.realmId===d.id) {r.leaderId=incumbent.characterId;G.invalidate();FB.invalidateRealmCache();}
       else install(s, d.id, leader.principal.id);
       if (d.mobile.command) M.initializeCommand(s,d);
       var units=plan ? copy(plan.units) : {};if (!plan) units[FB.unitRoleClass('levy_infantry')]=d.mobile.fighters;
@@ -1051,7 +1056,9 @@
     // Only a realm with a coalition record can have a leader; skip the form lookup for the rest.
     var root = s.authority && s.authority.governments || {};
     var rid = Object.keys(root).filter(function (id) { return !!(root[id] && root[id].mobile) && M.active(s,id) && M.leader(s,id) && M.leader(s,id).id === cid; })[0];
-    return rid || rulerRealm(s,value);
+    // An expedition is an additional office. Territorial lookup retains the
+    // person's home crown even when its command was enumerated first.
+    return rulerRealm(s,value) || M.landedHomeRealm && M.landedHomeRealm(s,cid) || rid;
   };
   FB.advanceRealmSuccession = function (s,rid,opts) {
     if (!M.active(s,rid)) return advance(s,rid,opts);
@@ -1062,9 +1069,13 @@
     return null;
   };
   FB.royalCharDied = function (s,c,rid) {
-    rid = rid || Object.keys(s.authority && s.authority.governments || {}).filter(function (id) { return M.active(s,id) && M.row(s,id) && M.row(s,id).leaderId === c.id; })[0];
-    if (rid && M.active(s,rid)) { FB.advanceRealmSuccession(s,rid,{cause:'death'}); return; }
-    return died(s,c,rid);
+    var commands=Object.keys(s.authority && s.authority.governments || {}).filter(function (id) {
+      return M.active(s,id) && M.row(s,id) && M.row(s,id).leaderId===c.id;
+    });
+    commands.forEach(function (id) {FB.advanceRealmSuccession(s,id,{cause:'death'});});
+    // The territorial owner notifies every compact home office once. It must
+    // still run when the same death also vacates a nonterritorial command.
+    return died(s,c,rid || commands[0]);
   };
   var setGovernment = FB.authoritySetGovernment;
   FB.authoritySetGovernment = function (s,rid,id,opts) {
@@ -1186,6 +1197,11 @@
         if (typeof ref.actorId!=='string' || actors[ref.actorId]) {invalid=true;return;}
         actors[ref.actorId]=true;
         actorDef=bookmark.opening && bookmark.opening.actors && bookmark.opening.actors[ref.actorId];
+        if (M.landedBindingDefinition && M.landedBindingDefinition(d,b,realms,bookmark)) {
+          identity=realms[ref.realmId].ruler;
+          if (!identity || !Number.isInteger(identity.born) || bookmark.date.year-identity.born<p.minAge) invalid=true;
+          return;
+        }
         if (!actorDef || actorDef.ref) {invalid=true;return;}
         identity=actorDef;
         if (ref.kind==='opening_actor') {

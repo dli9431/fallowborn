@@ -49,7 +49,7 @@
   FBDATA.techImpactReviews.features.mobile_opening_composition = {mode:'none',
     rationale:'An opening muster withdraws existing member people under their recruitment shares. Every authored unit retains its normal era, culture and technology eligibility.'};
   FBDATA.techImpactReviews.features.mobile_command_continuity = {mode:'none',
-    rationale:'A retained personal mandate or a living superior commissioning an eligible member is a political relationship. Death, custody, recall and issuer succession suspend authority without changing private station or bypassing ordinary military technology.'};
+    rationale:'A retained personal mandate or a living superior commissioning an eligible member is a political relationship. An office-conditioned landed command binds the same person to an existing home crown and finite nontransferable mandate. Death, custody, office loss, expiry, recall and issuer succession suspend authority without changing private station or bypassing ordinary military technology.'};
   FBDATA.techImpactReviews.features.mobile_command_scope = {mode:'none',
     rationale:'Explicit public operation permissions depend on a valid commission and canonical resources, local rights and outside consent. The commission provides no county revenue or technological exception.'};
   FBDATA.techImpactReviews.features.mobile_independent_sponsorship = {mode:'none',

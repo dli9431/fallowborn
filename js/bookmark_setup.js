@@ -240,6 +240,19 @@
     initialize(s);
     return actor(s, id);
   };
+  /* Explicit infrastructure adopts a home crown before resource setup.
+     Seed its actor references now, leaving authored followings until the
+     normal funded story boundary. */
+  FB.prepareStartingLandedHome = function (s,scenario) {
+    var bm=FB.campaignBookmark(s);
+    if (!scenario || !scenario.rulerRealmId || s.turn!==0 || s.stories!==undefined ||
+        !(bm.realms || []).some(function (d) {
+          var link=d.mobile && d.mobile.command && d.mobile.command.landedCommandLink;
+          return link && link.homeRealmId===scenario.rulerRealmId;
+        })) return false;
+    if (!s.bookmarkSetup) FB.seedSettlementCommunities(s);
+    initialize(s);return true;
+  };
   FB.bookmarkSetupAppointments = function (s) {
     var d = definition(s), store = s.bookmarkSetup;
     if (!d || !store) return;
