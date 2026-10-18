@@ -212,6 +212,8 @@
       row.hostId === army.id && row.realmId === army.realm && live(s, row.realmId));
   };
   FB.federateHostTravelling = function (s, army) {
+    if (army && army.mobileFollowing && army.warId === 'holy' && s.greatHolyWar &&
+        s.greatHolyWar.phase === 'active' && FB.greatHolyWarCamp(s, army.realm)) return false;
     var row = army && migration(s, army.migrationId);
     return !!(row && ongoing(row) && row.hostId === army.id &&
       (row.status === 'encamped' || row.status === 'service' ||
