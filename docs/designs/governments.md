@@ -109,3 +109,8 @@ Runtime definition composition
 Effective JSON government profiles, constituencies and authority office definitions resolve together during staged mod validation. Same-file forms may name newly authored offices and profiles. Public authority declarations describe powers, scopes, issuer policies and qualifications; they cannot replace the registered government strategy implementation or bypass its canonical ledgers. Two ordinary JSON examples under tests/e2e/fixtures/authoring combine civic or mobile profiles with newly imported stories.
 
 Council special decisions select an effective seat by its councilSeatRoles declaration. Confirmation elections name their office and office-confirmation privileges name the affected seats. New seat ids reuse ordinary eligibility and Standing checks.
+
+
+Mobile command composition
+
+coalition_court marks mobileFollowing independently of succession. The hosted_following and expedition_command forms select retained_principal or superior_commission succession, command_consent and command_receipts over the existing conserved following. commandLeadership prevents a retained court genealogy from overriding this selection. The existing mobile-specific annual and vacancy hooks serve these registered strategies without opening coalition elections. Institutional property and retained public realm identity keep public resources apart from a commander's private station and purse. See docs/designs/mobile-command.md for the typed commission, exact scope, technology decisions and saved contract.

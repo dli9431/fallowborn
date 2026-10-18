@@ -3916,3 +3916,8 @@ A finder redraw shares the county count, capital and current/maximum host availa
 Opening-profile goals and contacts
 
 Optional opening goals use the shared story card and sheet in both Deeds layouts. Each goal shows its description and Pending, Completed, Dismissed or Archived state. A held goal names its unavailable operation. Setting aside a goal uses the existing review, fresh quote, confirmation and outcome Continue, with no cost or reward. Named people use focusable action buttons with identity, relationship purpose and current availability; opening their ordinary character sheet grants no interaction access. Character Back returns to the originating story sheet through shared modal history, retaining its scroll and originating control. Closing that story retains the ordinary Deeds card focus and scroll. Missing people remain visible with a reason and an inert action.
+
+
+Mobile command reviews
+
+The shared mobile sheet names the commander, effective or suspended mandate, available appointing superior, separate public treasury, civilian camp and field host. Command forms omit coalition voting weights, majority thresholds, proposals and assent actions. Only declared operations are listed; current authority and canonical blockers remain visible. A living superior may review commissioning a member or recalling the mandate. These reviews disclose zero cost, stopped orders, retained people/resources and no private rank or property award. Existing modal history preserves inputs, scroll, disclosures and originating focus through review Back, Escape, stale confirmation and Continue. Suspended commands retain their supplies, people and expenses.

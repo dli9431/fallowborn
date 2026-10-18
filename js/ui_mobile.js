@@ -9,6 +9,7 @@
       inactive:FB.T('This coalition is no longer mobile.'), principal:FB.T('The acting person lacks this member or leadership mandate.'),
       candidate:FB.T('An eligible living member principal and an open leadership review are required.'),
       withheld:FB.T('Members must approve these exact terms before the leader can act.'),
+      command:FB.T('A current command mandate and permission for this operation are required.'),
       commitment:FB.T('Finish current service, movement or military commitments first.'),
       following:FB.T('The pledged following cannot supply this many fighters.'),
       technology:FB.T('The chosen unit requires its normal equipment, culture and technology qualifications.'),
@@ -49,18 +50,34 @@
     view = view || {}; var actions = [], actor = {kind:'character',id:s.player.charId}, leader = M.leader(s,rid);
     var host = M.host(s,rid), ownMember = M.members(s,rid).filter(function (m) {return m.principal.id === actor.id;})[0];
     var parts = '', people = '', facts = '';
-    if (leader) people += SH.reviewPersonHtml(leader,FB.T('Coalition leader'),'mobile-leader');
+    if (leader) people += SH.reviewPersonHtml(leader,r.command ? FB.T('Commander') : FB.T('Coalition leader'),'mobile-leader');
     facts += SH.reviewPeopleHtml(people) + kv(FB.T('Court and civilian camp'),county(migration.at)) +
       kv(FB.T('Field host'),host ? FB.T('{men} fighters at {place}',{men:host.men,place:county(host.at)}) : FB.T('No deployed host; the court survives')) +
       kv(FB.T('Civilian following'),r.members.reduce(function (n,m) {return n + m.civilians.reduce(function (v,c) {return v+c.count;},0);},0)) +
       kv(FB.T('Resting fighters'),r.members.reduce(function (n,m) {return n + m.reserve.reduce(function (v,c) {return v+c.count;},0);},0)) +
-      kv(FB.T('Food stock'),Math.floor(r.food)) + kv(FB.T('Coalition treasury'),FB.money(FB.treasuryAvailable(s,rid),s)) +
+      kv(FB.T('Food stock'),Math.floor(r.food)) + kv(r.command ? FB.T('Public treasury') : FB.T('Coalition treasury'),FB.money(FB.treasuryAvailable(s,rid),s)) +
       kv(FB.T('Carried host food'),host ? Math.floor(host.mobileFood || 0) : 0) +
       kv(FB.T('Local inhabitants'),s.population.counties[migration.at].count) +
-      kv(FB.T('County sovereignty'),s.realms[s.owner[migration.at]].name) +
-      kv(FB.T('Leadership and settlement threshold'),FB.T('{percent}% of living member weight',{percent:Math.round(profile.threshold*100)}));
+      kv(FB.T('County sovereignty'),s.realms[s.owner[migration.at]].name);
+    if (!r.command) facts += kv(FB.T('Leadership and settlement threshold'),FB.T('{percent}% of living member weight',{percent:Math.round(profile.threshold*100)}));
+    else {
+      var command=M.commandSnapshot(s,rid), superior=command.superior && s.chars[command.superior.characterId];
+      facts += kv(FB.T('Command mandate'),command.effective ? FB.T('Active') : FB.T('Suspended')) +
+        kv(FB.T('Appointing superior'),superior ? superior.name : FB.T('No current appointing superior')) +
+        '<p>'+esc(FB.T('Public command grants no private rank, land or county income. Death, custody, recall or a changed issuer requires a fresh mandate. A retained following has no automatic replacement rule.'))+'</p>';
+    }
     function add(label,action,terms,details) {
-      var review = M.review(s,{realmId:rid,action:action,terms:terms || {},actor:actor}), q = review.review, i = actions.length;
+      var transition=action==='appoint' || action==='recall';
+      if (r.command && !transition && command.operations.indexOf(action)<0) return;
+      if (r.command && ['offer','war','peace','land','contract','settle','service'].indexOf(action)>=0) {
+        label=action==='offer' ? terms.kind==='access' ? FB.T('Offer seasonal access') : terms.kind==='tribute' ? FB.T('Offer tribute') : FB.T('Offer protection service') :
+          {war:FB.T('Review campaign'),peace:FB.T('Conclude white peace'),land:FB.T('Request land terms'),
+            contract:FB.T('Accept service terms'),settle:FB.T('Review civilian settlement'),service:FB.T('Fulfil protection service')}[action];
+        details=FB.T('The commander acts within the declared mandate. Ordinary local rights, outside consent, existing service, conserved people, supplies and public funds are checked again.');
+      }
+      var request={realmId:rid,commandId:r.command && r.command.id,action:action,actor:actor};
+      if (terms && terms.candidateId) request.candidateId=terms.candidateId;
+      var review = transition ? M.reviewCommand(s,request) : M.review(s,{realmId:rid,action:action,terms:terms || {},actor:actor}), q = review.review, i = actions.length;
       actions.push({label:label,review:review});
       parts += SH.reviewActionCardHtml({id:'mobile-action-'+i,label:label,disabled:!q.allowed,warn:!q.allowed,
         note:q.allowed ? FB.T('Immediate cost: {money:cost}. Review before committing.',{cost:q.cost || 0}) : reason(q.reason),
@@ -78,9 +95,18 @@
       '<label>'+esc(FB.T('Agreement duration in days'))+'<input id="mobile-days" type="number" min="1" max="1440" step="1" value="'+esc(days)+'"></label>';
     var membership = r.members.map(function (m) {
       var c = s.chars[m.principal.id];
-      return kv(c ? c.name : FB.T('Unavailable member'),FB.T('Weight {weight}; pledge {percent}%; {status}',{
-        weight:m.weight,percent:Math.round(m.pledge*100),status:m.allegiance ? FB.T('Allegiant') : FB.T('Withheld')}));
+      var values={weight:m.weight,percent:Math.round(m.pledge*100),status:m.allegiance ? FB.T('Allegiant') : FB.T('Withheld')};
+      return kv(c ? c.name : FB.T('Unavailable member'),r.command ? FB.T('Pledge {percent}%; {status}',values) :
+        FB.T('Weight {weight}; pledge {percent}%; {status}',values));
     }).join('');
+    if (r.command && command.superior) {
+      r.members.forEach(function (m) {
+        var person=s.chars[m.principal.id];
+        add(FB.T('Commission {name}',{name:person.name}),'appoint',{candidateId:person.id},
+          FB.T('Only the living appointing superior may commission an eligible member. This costs no money and transfers no people, property or private rank. Existing host orders stop for review.'));
+      });
+      add(FB.T('Recall commander'),'recall',{},FB.T('Only the living appointing superior may recall this mandate. Existing host orders stop; people, supplies and public money remain with the following.'));
+    }
     add(FB.T('Work with the following'),'work',{},FB.T('A local adult can take one paid service per day. The coalition pays from its treasury and consumes one food unit.'));
     add(FB.T('Join with a civilian following'),'join',{countyId:migration.at,count:count},FB.T('People leave the local population through a conserved transfer. The local court must have allowed voluntary recruitment in its access agreement. Joining grants a member voice, not county ownership.'));
     if (ownMember) {
@@ -150,7 +176,7 @@
       ['mobile-count','mobile-county','mobile-price','mobile-days'].forEach(function (id) {if(SH.$(id)) v[id]=SH.$(id).value;});
       return v;
     }
-    UI.openModal(FB.T('Mobile coalition'),'<div id="mobile-list" data-modal-scroll>'+
+    UI.openModal(r.command ? FB.T('Mobile command') : FB.T('Mobile coalition'),'<div id="mobile-list" data-modal-scroll>'+
       SH.reviewFactsCard(FB.T('Court, host and population'),facts)+SH.reviewFactsCard(FB.T('Members and commitments'),membership)+
       SH.reviewFactsCard(FB.T('Review inputs'),controls)+SH.reviewActionsHtml(parts)+'</div>',
       {modalClass:'fullsheet-modal',historyView:true,replaceView:!!view.replace});
@@ -174,7 +200,7 @@
         SH.$('mobile-confirm').onclick=function () {
           var success=s===FB.state && M.commit(s,entry.review);
           UI.openModal(success ? FB.T('Decision recorded') : FB.T('Terms changed'),
-            SH.reviewFactsCard('', '<p>'+esc(success ? FB.T('The coalition decision is recorded.') : FB.T('Review the current terms again.'))+'</p>')+
+            SH.reviewFactsCard('', '<p>'+esc(success ? FB.T('The decision is recorded.') : FB.T('Review the current terms again.'))+'</p>')+
             '<button type="button" class="actionbtn" id="mobile-continue">'+esc(FB.T('Continue'))+'</button>',{replaceView:true});
           SH.$('mobile-continue').onclick=function () {SH.modalHistoryBack(back);};
           if(SH.markActionsDirty) SH.markActionsDirty();

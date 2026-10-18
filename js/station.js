@@ -102,8 +102,9 @@ window.FB = window.FB || {};
     if (s && s.player && c && c.id === s.player.charId) return s.player;
     var context = S.context(c, s), rid = c && c.id && FB.realmIdForRulerCharacter
       ? FB.realmIdForRulerCharacter(s, c.id) : null;
-    var realm = rid && s.realms[rid], tier = 0;
-    if (realm && realm.alive && R.isTerritorial(realm, s)) tier = R.tier(realm, s);
+    var realm = rid && s.realms[rid], tier = 0, form = realm && FB.governments.forRealm(s,rid);
+    if (realm && realm.alive && R.isTerritorial(realm, s) &&
+        !(form && form.use.succession.commandLeadership)) tier = R.tier(realm, s);
     else for (var i = 0; i < S.bandCount; i++) {
       var candidate = { tier:i, formId:context.formId, era:context.era };
       if (used(candidate, s) && S.socialClass(candidate, s) === socialOf(c)) { tier = i; break; }

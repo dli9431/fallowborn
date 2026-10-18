@@ -84,7 +84,8 @@
   function delegatedStart(s) {
     var scenario = s && s.start && FBDATA.startScenarios.find(function (row) { return row.id === s.start.scenarioId; });
     return !!(scenario && scenario.rulerRealmId && !FB.governments.problems(scenario.governmentForm).length &&
-      FB.governments.resolve(scenario.governmentForm).use.succession.delegatedLeadership);
+      (FB.governments.resolve(scenario.governmentForm).use.succession.delegatedLeadership ||
+       FB.governments.resolve(scenario.governmentForm).use.succession.commandLeadership));
   }
   FB.startRealmId = function (s, id) {
     return s && s.start && s.start.rulerRealmId === id && !delegatedStart(s) ? 'player' : id;
@@ -129,11 +130,13 @@
     var me = s.chars[p.charId];
     var government = FB.political.government(s, { kind:'realm', id:id });
     if (!government || government.formId !== scenario.governmentForm ||
+        !FB.governments.forRealm(s,id).use.succession.commandLeadership &&
         FB.realmRank.tier({ rank:realm.rank, formId:government.formId }, s) !== scenario.tier) return false;
     s.start.rulerRealmId = id;
     s.start.scenarioId = scenario.id;
     s.start.onboarding = scenario.onboarding;
-    if (FB.governments.support && FB.governments.support.isDelegated(s, id)) {
+    if (FB.governments.forRealm(s,id).use.succession.commandLeadership ||
+        FB.governments.support && FB.governments.support.isDelegated(s, id)) {
       // Public jurisdiction, serial ids and treasury stay with the institution.
       // The already selected delegate begins an ordinary private household.
       p.provs = []; p.liege = id; p.gold = scenario.gold; me.role = null;
