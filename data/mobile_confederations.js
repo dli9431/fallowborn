@@ -74,6 +74,8 @@
     rationale:'Executing finite intent depends on the current mandate, consent, actual hosts and conserved public resources. Every canonical movement, supply, equipment and war gate remains binding; manual operations need no program.'};
   FBDATA.techImpactReviews.features.expedition_program_control = {mode:'none',
     rationale:'Pausing, cancelling and selecting an eligible declared alternative depend on living command authority. Political intent has no credible discovery prerequisite and grants no route, money, outside acceptance or outcome.'};
+  FBDATA.techImpactReviews.features.expedition_live_religious_objective = {mode:'none',
+    rationale:'Observing the current religious campaign objective and issuing a scoped order to its existing vowed host depends on the actual campaign, original participant and command. Existing movement, access, equipment and war gates remain binding; manual orders remain available without a program.'};
   FBDATA.techImpactReviews.features.home_decision_presence = {mode:'none',
     rationale:'Local public decisions depend on actual presence and a living incumbent, without a credible discovery prerequisite. Existing commitments and ordinary private actions remain available.'};
   FBDATA.techImpactReviews.features.home_decision_delegation = {mode:'none',

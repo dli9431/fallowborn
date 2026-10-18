@@ -3280,6 +3280,7 @@ window.FB = window.FB || {};
   FB.armyOffensiveCoordination = function (state, autoMode) {
     const buckets = {}, goals = {}, marches = [];
     for (const a of state.armies || []) {
+      if (FB.expeditionPrograms && FB.expeditionPrograms.ownsOrders(state, a)) continue;
       const war = FB.ordinaryWarById(state, a.warId);
       const holy = a.warId === 'holy' && state.greatHolyWar && state.greatHolyWar.phase === 'active';
       if (!war && !holy) continue;
@@ -4658,7 +4659,10 @@ window.FB = window.FB || {};
           }
           const commandedByPlayer = a.realm !== 'player' &&
             FB.playerControlsHost(state, a);
-          if (Object.prototype.hasOwnProperty.call(coordinated.goals, a.id)) {
+          if (FB.expeditionPrograms && FB.expeditionPrograms.ownsOrders(state, a)) {
+            /* Bounded program intent retains its explicit route or quiet
+               ending. Movement, combat and forced retreat remain canonical. */
+          } else if (Object.prototype.hasOwnProperty.call(coordinated.goals, a.id)) {
             if (FB.orderArmy(state, a, coordinated.goals[a.id])) a.automatedOrder = 1;
           } else if (a.rebellionId && FB.rebelArmyGoal) {
             const goal = FB.rebelArmyGoal(state, a);
