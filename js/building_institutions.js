@@ -109,11 +109,12 @@ window.FB = window.FB || {};
     a = actor(s, a);
     if (!keys(a, ['kind','id']) || ['character','realm'].indexOf(a.kind) < 0 || typeof a.id !== 'string')
       return { allowed:false, reason:FB.T('A lawful builder and payer are required.'), binding:null };
-    if (existing && !existing.institutionBinding) return { allowed:true, reason:'', binding:null };
+    if (existing && !existing.institutionBinding && !(existing.buildingProfile && FB.buildingProfiles.assetDefinition(existing).institutionProfile))
+      return { allowed:true, reason:'', binding:null };
     var q = current(s, pid, idx, id, a, definition || existing && FB.buildingProfiles.assetDefinition(existing)), b = q.binding;
     if (!q.allowed || !b) return q;
     var roles = profiles(FBDATA)[b.profileId].exclusiveRoles;
-    var occupied = !existing && (s.buildings && s.buildings[pid] || []).some(function (raw) {
+    var occupied = (!existing || !existing.institutionBinding) && (s.buildings && s.buildings[pid] || []).some(function (raw) {
         var r = typeof raw === 'string' ? { id:raw, s:0 } : raw;
         if (!r || r === existing) return false;
         return r.institutionBinding && foundation(r.institutionBinding) === foundation(b) ||
@@ -140,10 +141,11 @@ window.FB = window.FB || {};
         !Number.isSafeInteger(idx) || idx < 0) return null;
     var r = record(s, pid, idx, id), q = current(s, pid, idx, id, a, r && FB.buildingProfiles.assetDefinition(r));
     var status = FB.buildingInstitutionStatus(s, pid, idx, id, a, mode === 'reaffirm' ? r : null);
-    if (mode === 'reaffirm' && r && r.institutionBinding && q.binding) {
-      q.binding.revision = r.institutionBinding.revision + 1;
+    if (mode === 'reaffirm' && r && q.binding && (r.institutionBinding || r.buildingProfile && r.buildingProfile.inherited)) {
+      if (!r.institutionBinding && !status.allowed) { q.allowed = false; q.reason = status.reason; }
+      q.binding.revision = r.institutionBinding ? r.institutionBinding.revision + 1 : 1;
       // Reaffirm changes permission on the same occupied asset, never its footprint.
-      var old = r.institutionBinding, prior = copy(old), next = copy(q.binding);
+      var old = r.institutionBinding, prior = old ? copy(old) : {}, next = copy(q.binding);
       delete prior.boundTurn; delete prior.revision; delete next.boundTurn; delete next.revision;
       if (same(prior, next)) { q.allowed = false; q.reason = FB.T('This institutional binding is already current.'); }
     } else if (mode === 'construct') q = status;

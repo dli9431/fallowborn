@@ -33,3 +33,7 @@ seasonal_building_commitments is none: local seasons, finite stock conservation 
 Seasonal AI is dispatched on the first actual campaign day, declared period boundaries and local calendar transitions, with the annual pass retained. dayAI opens only useful seasonal windows and invokes the canonical water AI filtered to those assignments, at most 32 service payments. Unopted water works keep their ordinary annual cadence. Production still needs its actual canonical worker and never receives an automatic second shift. Repeating either boundary or dispatch is harmless.
 
 Original seasonal people are retained through the canonical court-record reference check. The optional term is their provenance reference, including after death or interruption; pruning cannot make its strict saved identity disappear.
+
+Profile composition
+
+Seasonal detached compilation checks the base and its declared replacement alternatives for unsupported extra effect channels. A stock-backed benefit must have at least one positive supported definition; it never adds the base and profile values. Current seasonal projection receives the selected effective values from the water-operation owner. Inherited institutional profiles awaiting their first actual permission review cannot open seasonal or production work. Physical inheritance itself opens no term, renews no source and creates no lot.

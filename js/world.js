@@ -594,7 +594,7 @@ window.FB = window.FB || {};
       var path = 'placement ' + index + ' ';
       if (!plainRecord(placement) ||
           Object.keys(placement).some(function (key) {
-            return ['countyId','siteId','buildingId','condition','level'].indexOf(key) < 0;
+            return ['countyId','siteId','buildingId','condition','level','profileId'].indexOf(key) < 0;
           }) || ['countyId','siteId','buildingId'].some(function (key) {
             return typeof placement[key] !== 'string' || !placement[key];
           }) || ['standing','ruined'].indexOf(placement.condition) < 0) {
@@ -605,6 +605,10 @@ window.FB = window.FB || {};
       var building = ownKey(buildings, placement.buildingId) && buildings[placement.buildingId];
       if (!pr || pr.wasteland) { fault(path + 'must name an inhabited county.'); return; }
       if (!building) { fault(path + 'has an unknown buildingId.'); return; }
+      if (placement.profileId !== undefined) {
+        var profileFault = FB.buildingProfiles.inheritedFault(definition,placement,pr);
+        if (profileFault) { fault(path + profileFault); return; }
+      }
       var entries = Array.isArray(pr.settlements) ? pr.settlements : [];
       var slot = entries.findIndex(function (entry) { return entry && entry.site === placement.siteId; });
       var authored = entries.filter(function (entry) { return entry && !entry.fill; }).length;
@@ -646,9 +650,11 @@ window.FB = window.FB || {};
       var compiled = { countyId:pr.id, siteId:placement.siteId, buildingId:placement.buildingId,
         condition:placement.condition, s:slot, holderId:holder };
       if (fort) compiled.level = placement.level;
+      if (placement.profileId !== undefined) compiled.profileId = placement.profileId;
       out.placements.push(compiled);
     });
     // Consumers cannot accidentally apply the valid prefix of a faulty inventory.
+    FB.buildingProfiles.inventoryFaults(definition,out.placements).forEach(fault);
     if (out.errors.length) out.placements = [];
     return out;
   }
@@ -720,6 +726,7 @@ window.FB = window.FB || {};
       var record = { s:placement.s, id:placement.buildingId, devGranted:0 };
       if (placement.condition === 'ruined') record.ruined = true;
       if (placement.level !== undefined) record.level = placement.level;
+      if (placement.profileId !== undefined) FB.buildingProfiles.inherit(state,pid,record,placement);
       if (!Object.prototype.hasOwnProperty.call(staged, pid)) staged[pid] = [];
       else if (staged[pid] === original[pid]) staged[pid] = staged[pid].slice();
       staged[pid].push(record);
@@ -8328,6 +8335,9 @@ window.FB = window.FB || {};
     const p = state && state.player;
     if (!p || p.developmentBaselineMigration === 1) return false;
     p.developmentBaselineMigration = 1;
+    if (state.openingInfrastructureState || Object.keys(state.buildings || {}).some(function (pid) {
+      return (state.buildings[pid] || []).some(function (r) { return r && r.buildingProfile; });
+    })) return false;
     if (!state.dev || !Array.isArray(p.provs)) return false;
     let changed = false;
     for (const pid of p.provs) {
@@ -8427,6 +8437,7 @@ window.FB = window.FB || {};
      counties use the player's own construction deeds. */
   FB.aiBuildingsYear = function (state, annualBudget) {
     if (!state || !state.realms || !state.dev) return;
+    FB.buildingProfiles.reviewInheritedAI(state);
     const maxPerYear = (FBDATA.balance && FBDATA.balance.aiMaxBuildingsPerYear) || 1;
     const changed = developmentChangesFor(state);
 
@@ -8531,6 +8542,17 @@ window.FB = window.FB || {};
         let chosen = null;
         for (let bi = 0; bi < buildingPriority.length; bi++) {
           const bid = buildingPriority[bi];
+          if (FB.buildingProfiles.ids(bid).length) {
+            for (let slot=0; slot<settlements.length; slot++) {
+              const options = FB.buildingProfiles.aiChoices(state,{kind:'realm',id:rid},pid,slot,bid);
+              const option = options.find(function (q) {
+                return q.cost + reserves[rid] + (q.def.upkeep || 0) * reserveSeasons <= FB.treasuryAvailable(state,rid);
+              });
+              if (option) { chosen = Object.assign({pid:pid,s:slot},option); break; }
+            }
+            if (chosen) break;
+            continue;
+          }
           const bdef = FBDATA.buildings && FBDATA.buildings[bid];
           if (!bdef || bdef.fort) continue;
           if (bdef.devMin && dev < bdef.devMin) continue;
@@ -8552,9 +8574,9 @@ window.FB = window.FB || {};
         }
 
         if (chosen) {
-          if (chosen.def.institutionProfile || chosen.def.operationProfile) {
+          if (chosen.profileId || chosen.def.institutionProfile || chosen.def.operationProfile) {
             if (!reserves || !FB.buildRealm(state, rid, chosen.pid, chosen.s, chosen.id,
-                reserves[rid] + (chosen.def.upkeep || 0) * reserveSeasons)) continue;
+                reserves[rid] + (chosen.def.upkeep || 0) * reserveSeasons, chosen.profileId)) continue;
             reserves[rid] += (chosen.def.upkeep || 0) * reserveSeasons;
             if (annualBudget) annualBudget.snapshot = null;
             builtThisYear++;
@@ -9034,24 +9056,10 @@ window.FB = window.FB || {};
         }
         return;
       }
-      let count;
-      if (FB.buildingBonusCounts) {
-        count = FB.buildingBonusCounts(state, key, 'player');
-      } else {
-        count = {};
-        for (const pid of FB.demesne(state)) {
-          for (const built of FB.builtIn(state, pid)) {
-            const def = FB.buildingOperations.effects(state, pid, built);
-            if (!built.ruined && def && def[key] && (!built.institutionBinding || FB.buildingInstitutionOperating(state, pid, built))) {
-              count[built.id] = (count[built.id] || 0) + 1;
-            }
-          }
-        }
-      }
-      for (const id in count) {
-        add(unit, 'building', FBDATA.buildings[id][key] * count[id], {
-          buildingId:id, count:count[id]
-        });
+      for (const row of FB.buildingProfiles.effectRows(state,key,'player')) {
+        const detail = {buildingId:row.buildingId,count:row.count};
+        if (row.profileId) detail.profileId = row.profileId;
+        add(unit,'building',row.amount,detail);
       }
     }
 

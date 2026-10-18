@@ -37,7 +37,7 @@
       var p = table[id], d = p && c.buildings && c.buildings[p.buildingId];
       function fault(text) { out.push('buildingProfiles.' + id + ': ' + text); }
       if (!ident(id) || !keys(p,['buildingId','name','desc','replace','requiresTech','applicability',
-          'siteResourceProfile','operationProfile','institutionProfile','techImpactReview']) || !ident(p.buildingId) || !d ||
+          'siteResourceProfile','operationProfile','institutionProfile','techImpactReview','inheritance']) || !ident(p.buildingId) || !d ||
           typeof p.name !== 'string' || !p.name.trim() || p.name.length > 120 ||
           typeof p.desc !== 'string' || !p.desc.trim() || p.desc.length > 1000 || !keys(p.replace,scalars) ||
           Object.keys(p.replace).some(function (k) { return typeof p.replace[k] !== 'number' || !Number.isFinite(p.replace[k]) || p.replace[k] < 0 || p.replace[k] > 1000000; }) ||
@@ -54,6 +54,8 @@
       var effective = P.definition(p.buildingId,id,c), buildings = Object.assign({},c.buildings);
       buildings[p.buildingId] = effective;
       FB.validateBuildingData(buildings,true).forEach(fault);
+      FB.buildingOperations.catalogFaults(Object.assign({},c,{buildings:buildings})).forEach(fault);
+      if (own(p,'inheritance') && p.inheritance !== 'retain') fault('inheritance must be retain when supplied.');
       if (p.applicability !== undefined) {
         buildings[p.buildingId] = Object.assign({},effective,{applicability:p.applicability});
         FB.validateBuildingData(buildings,true).forEach(fault);
@@ -76,6 +78,107 @@
       r.buildingProfile = value;
       if (!FBDATA.buildings[r.id].fort) r.devGranted = 0;
     }
+  };
+  // Opening inventory waives construction chronology, never physical requirements.
+  P.inheritedFault = function (bm, placement, pr) {
+    var p = FBDATA.buildingProfiles[placement.profileId], d = P.definition(placement.buildingId,placement.profileId);
+    if (!ident(placement.profileId) || !p || !d || p.inheritance !== 'retain') return 'profile does not permit inherited inventory.';
+    if (d.coastal && !pr.coastal || d.terrains && d.terrains.indexOf(pr.terrain) < 0)
+      return 'inherited profile has incompatible physical terrain or coast.';
+    if (p.siteResourceProfile && !FB.siteResources.compilePrepared(bm).sources.some(function (a) {
+      return a.countyId === pr.id && a.siteId === placement.siteId && a.profileId === p.siteResourceProfile;
+    })) return 'inherited profile requires its declared physical source, including when empty.';
+    if (d.operationProfile && !(bm.buildingOperationAssignments || []).some(function (a) {
+      return a.countyId === pr.id && a.siteId === placement.siteId && a.buildingId === placement.buildingId && a.profileId === d.operationProfile;
+    })) return 'inherited profile requires its exact operation assignment.';
+    if (d.institutionProfile && !(bm.buildingInstitutionAssignments || []).some(function (a) {
+      var institution = (bm.localInstitutions || FBDATA.localInstitutions || {})[a.institutionId];
+      return a.profileId === d.institutionProfile && institution && institution.provinceId === pr.id && institution.site === placement.siteId;
+    })) return 'inherited profile requires its exact institutional assignment.';
+    return '';
+  };
+  P.inherit = function (s,pid,r,placement) {
+    P.attach(r,placement.profileId);
+    r.buildingProfile.inherited = {bookmarkId:s.start.id,revision:s.start.revision,countyId:pid,siteId:placement.siteId};
+    var d = P.assetDefinition(r);
+    if (d.operationProfile) {
+      var a = FB.compileBuildingOperations(FB.campaignBookmark(s)).assignments.find(function (a) {
+        return a.countyId === pid && a.slot === r.s && a.buildingId === r.id && a.profileId === d.operationProfile;
+      });
+      if (!a) throw new Error('Missing inherited building operation.');
+      r.waterOperation = {v:1,id:'inherited_' + FB.mods.fingerprint([s.start.id,s.start.revision,pid,r.s,r.id]),
+        profileId:a.profileId,assignmentId:a.id,revision:0};
+    }
+    // Institutional permission is reviewed against actual living offices after boot.
+  };
+  P.inventoryFaults = function (bm,placements) {
+    var out = [], foundations = {};
+    placements.forEach(function (a) {
+      var d = P.definition(a.buildingId,a.profileId);
+      if (!a.profileId || !d || !d.institutionProfile) return;
+      var row = (bm.buildingInstitutionAssignments || []).find(function (b) {
+        var i = (bm.localInstitutions || FBDATA.localInstitutions || {})[b.institutionId];
+        return b.profileId === d.institutionProfile && i && i.provinceId === a.countyId && i.site === a.siteId;
+      });
+      if (!row) return;
+      var institution = (bm.localInstitutions || FBDATA.localInstitutions)[row.institutionId];
+      var policy = FBDATA.buildingInstitutionProfiles[d.institutionProfile];
+      var foundation = institution.abbeyId ? 'property:' + institution.abbeyId : 'institution:' + row.institutionId;
+      if (foundations[foundation] || placements.some(function (b) {
+        return b !== a && b.countyId === a.countyId && b.siteId === a.siteId && policy.exclusiveRoles.indexOf(FB.buildingRole(b.buildingId)) >= 0;
+      })) out.push('openingInfrastructure: inherited institutional footprint is already occupied, including ruins.');
+      foundations[foundation] = true;
+    });
+    return out;
+  };
+  P.operationReady = function (s,pid,r) {
+    var d = P.assetDefinition(r);
+    if (!r.buildingProfile) return !!d && !r.ruined && (!r.institutionBinding || FB.buildingInstitutionOperating(s,pid,r));
+    return !!d && !r.ruined && (!d.institutionProfile || !!r.institutionBinding && FB.buildingInstitutionOperating(s,pid,r)) &&
+      (!d.operationProfile || !!r.waterOperation);
+  };
+  P.effectRows = function (s,key,recruitmentRealm) {
+    var rows = {}, out = [];
+    FB.directSettlements(s).forEach(function (site) {
+      if (recruitmentRealm && FB.recruitmentCountyBlocked(s,recruitmentRealm,site.provinceId)) return;
+      FB.builtIn(s,site.provinceId).forEach(function (r) {
+        if (r.s !== site.settlement || !P.operationReady(s,site.provinceId,r)) return;
+        var d = FB.buildingOperations.effects(s,site.provinceId,r), amount = d[key] || 0;
+        if (!amount || d.fort) return;
+        var profileId = r.buildingProfile && r.buildingProfile.id || null, id = JSON.stringify([r.id,profileId]);
+        if (!rows[id]) { rows[id] = {buildingId:r.id,profileId:profileId,count:0,amount:0}; out.push(rows[id]); }
+        rows[id].count++; rows[id].amount += amount;
+      });
+    });
+    return out;
+  };
+  P.aiChoices = function (s,actor,pid,slot,buildingId) {
+    var choices = [null].concat(P.ids(buildingId)).map(function (profileId) {
+      var d = P.definition(buildingId,profileId);
+      if (!d || d.fort || !FB.aiCanBuildAt(s,actor,pid,slot,buildingId,profileId)) return null;
+      var realm = actor.kind === 'realm' ? actor.id : FB.settlementCountyHolder(s,pid);
+      var cost = FB.buildCost(s,pid,buildingId,realm,profileId);
+      var benefit = scalars.filter(function (k) { return ['cost','upkeep','devMin'].indexOf(k) < 0; })
+        .reduce(function (n,k) { return n + (d[k] || 0); },0);
+      return benefit > 0 ? {id:buildingId,profileId:profileId,def:d,cost:cost,
+        score:benefit / Math.max(1,cost + (d.upkeep || 0) * (FBDATA.balance.realmReserveSeasons || 2))} : null;
+    }).filter(function (v) { return !!v; });
+    return choices.sort(function (a,b) { return b.score-a.score || a.cost-b.cost || (String(a.profileId) < String(b.profileId) ? -1 : String(a.profileId) > String(b.profileId) ? 1 : 0); });
+  };
+  P.reviewInheritedAI = function (s) {
+    if (!Object.keys(FBDATA.buildingProfiles).length) return 0;
+    var attempts = 0, changed = 0;
+    Object.keys(s.buildings || {}).sort().forEach(function (pid) {
+      (s.buildings[pid] || []).forEach(function (r) {
+        if (attempts >= 32 || !r || !r.buildingProfile || !r.buildingProfile.inherited || r.institutionBinding ||
+            !P.assetDefinition(r).institutionProfile) return;
+        var holder = FB.settlementHolder(s,pid,r.s);
+        if (!holder || holder.id === 'player' || holder.kind === 'character' && holder.id === s.player.charId) return;
+        attempts++;
+        if (FB.buildingInstitutionApply(s,FB.buildingInstitutionQuote(s,pid,r.s,r.id,holder,'reaffirm'))) changed++;
+      });
+    });
+    return changed;
   };
   P.status = function (s,pid,slot,buildingId,profileId,payer) {
     var p = own(FBDATA.buildingProfiles,profileId) && FBDATA.buildingProfiles[profileId];
@@ -155,15 +258,28 @@
       FB.buildBarony(s,r.actor.id,r.countyId,r.settlement,r.buildingId,r.profileId);
   };
   P.validate = function (s) {
+    var inheritedPlan = null;
     Object.keys(s.buildings || {}).forEach(function (pid) {
       (s.buildings[pid] || []).forEach(function (r) {
         if (!r || !own(r,'buildingProfile')) return;
         var b = r.buildingProfile, d = object(b) && P.definition(r.id,b.id);
-        if (!keys(b,['v','id','definition']) || Object.keys(b).length !== 3 || b.v !== 1 || !ident(b.id) ||
-            !d || !equal(b,P.stamp(r.id,b.id)) || !Number.isSafeInteger(r.s) || r.s < 0 ||
+        var identity = object(b) && {v:b.v,id:b.id,definition:b.definition};
+        if (!keys(b,['v','id','definition','inherited']) || Object.keys(b).length !== (own(b,'inherited') ? 4 : 3) || b.v !== 1 || !ident(b.id) ||
+            !d || !equal(identity,P.stamp(r.id,b.id)) || !Number.isSafeInteger(r.s) || r.s < 0 ||
             d.operationProfile && (!r.waterOperation || r.waterOperation.profileId !== d.operationProfile) ||
-            d.institutionProfile && (!r.institutionBinding || r.institutionBinding.profileId !== d.institutionProfile))
+            d.institutionProfile && (!r.institutionBinding && !b.inherited || r.institutionBinding && r.institutionBinding.profileId !== d.institutionProfile))
           throw new Error(FB.T('Invalid saved building profile.'));
+        if (own(b,'inherited')) {
+          var h = b.inherited, bm = FB.campaignBookmark(s);
+          var plan = inheritedPlan || (inheritedPlan = bm && FB.compileOpeningInfrastructure(bm));
+          var placement = plan && !plan.errors.length && plan.placements.find(function (p) {
+            return object(h) && p.countyId === pid && p.siteId === h.siteId && p.s === r.s && p.buildingId === r.id && p.profileId === b.id;
+          });
+          if (!keys(h,['bookmarkId','revision','countyId','siteId']) || Object.keys(h).length !== 4 || !s.start ||
+              h.bookmarkId !== s.start.id || h.revision !== s.start.revision || h.countyId !== pid ||
+              !placement)
+            throw new Error(FB.T('Invalid inherited building profile.'));
+        }
       });
     });
     return true;

@@ -117,6 +117,12 @@
   /* Only this projection supplies ongoing values for an opted-in record. */
   O.effects = function (s,pid,r) {
     var d = FB.buildingProfiles.assetDefinition(r) || {};
+    if (r.buildingProfile && !FB.buildingProfiles.operationReady(s,pid,r)) {
+      var dormant = Object.assign({},d);
+      ['tax','dev','pop','prestige','piety','research','levy','retinue','archers','defense','siege',
+        'populationCapacity','populationFamineProtection','populationCrisisProtection','migrationAttraction','communityFaithPressure','upkeep'].forEach(function (k) { dormant[k] = 0; });
+      return dormant;
+    }
     if (!r.waterOperation) return FB.buildingSeasons.effects(s,pid,r,d);
     var out = Object.assign({},d), p = profile(r), on = active(s,pid,r);
     effects.forEach(function (key) { out[key] = on && p.effect === key ? d[key] || 0 : 0; });
@@ -179,7 +185,8 @@
     FB.buildingSeasons.validate(s);
     var who = identity(s,request.actor,request.countyId,request.settlement), old = receipt(s,r), p = a.profile;
     q.reason = 'authority';
-    if (!who || r.institutionBinding && !FB.buildingInstitutionOperating(s,request.countyId,r)) return q;
+    if (!who || r.buildingProfile && !FB.buildingProfiles.operationReady(s,request.countyId,r) ||
+        r.institutionBinding && !FB.buildingInstitutionOperating(s,request.countyId,r)) return q;
     q.reason = 'season';
     if (!FB.buildingSeasons.ready(s,'operationId',a.id,request.actor)) return q;
     q.reason = 'period';
@@ -229,7 +236,7 @@
     next.receipts[r.waterOperation.id] = {assignmentId:a.id,assetId:r.waterOperation.id,revision:next.revision,
       actor:copy(request.actor),authority:q.authority,turn:s.turn,untilTurn:q.untilTurn,period:q.period,
       amount:q.amount,paid:q.cost,sources:q.sources,demandId:a.demandId,resourceRevision:staged.resources.revision};
-    if (r.buildingProfile) next.receipts[r.waterOperation.id].buildingProfile = copy(r.buildingProfile);
+    if (r.buildingProfile) next.receipts[r.waterOperation.id].buildingProfile = FB.buildingProfiles.stamp(r.id,r.buildingProfile.id);
     s.siteResources = staged.resources; s.buildingOperations = next; r.waterOperation.revision = next.revision;
     FB.invalidateBuildingIndex(s,request.countyId);
     return true;
@@ -295,7 +302,8 @@
         receiptFields.push('buildingProfile');
         if (!a || !equal(v.buildingProfile,FB.buildingProfiles.stamp(a.buildingId,v.buildingProfile && v.buildingProfile.id))) fail();
         receiptDef = FB.buildingProfiles.definition(a.buildingId,v.buildingProfile.id);
-        if (!receiptDef || receiptDef.operationProfile !== a.profileId || assets[key] && !equal(assets[key].record.buildingProfile,v.buildingProfile)) fail();
+        if (!receiptDef || receiptDef.operationProfile !== a.profileId || assets[key] && !equal(
+            FB.buildingProfiles.stamp(a.buildingId,assets[key].record.buildingProfile && assets[key].record.buildingProfile.id),v.buildingProfile)) fail();
       } else if (assets[key] && assets[key].record.buildingProfile) fail();
       if (!keys(v,receiptFields) ||
           !a || !id(key) || v.assetId !== key || !integer(v.revision,1,root.revision) || revisions[v.revision] || !actorValid(v.actor) ||

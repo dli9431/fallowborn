@@ -118,6 +118,7 @@
     var direct = FB.settlementConstructionAuthority(s,a.countyId,a.slot,who);
     return person && alive(s,person.characterId) && holder && (eq(holder,who) || direct.direct) &&
       !FB.recruitmentCountyBlocked(s,s.holder[a.countyId] || s.owner[a.countyId],a.countyId) && b && !b.ruined &&
+      (!b.buildingProfile || FB.buildingProfiles.operationReady(s,a.countyId,b)) &&
       (!b.institutionBinding || FB.buildingInstitutionOperating(s,a.countyId,b)) ? person : null;
   }
   function payer(s,who) {

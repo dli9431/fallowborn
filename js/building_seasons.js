@@ -46,11 +46,15 @@
       var physical=consumer && JSON.stringify([consumer.countyId,consumer.siteId,consumer.buildingId]),rs={};
       if (!p || !consumer || assets[physical]) {fail();return;}
       assets[physical]=true;
-      var d=FBDATA.buildings[consumer.buildingId];
-      if (a.productionSiteId!==null && p.benefit===null && fields.some(function(k){return !!d[k];})) {fail();return;}
+      var definitions=[FBDATA.buildings[consumer.buildingId]].concat(FB.buildingProfiles.ids(consumer.buildingId).map(function(id){
+        return FB.buildingProfiles.definition(consumer.buildingId,id);
+      }));
+      if (a.productionSiteId!==null && p.benefit===null && definitions.some(function(d){return fields.some(function(k){return !!d[k];});})) {fail();return;}
       if (a.operationId!==null ? p.benefit!==null || p.stockLives.length : p.benefit &&
-          (!(d[p.benefit.effect]>0) || d.operationProfile || d.dev || d.pop || d.prestige || d.levy || d.retinue || d.archers || d.defense || d.siege || d.communityFaithPressure ||
-            fields.some(function(k){return d[k] && k!==p.benefit.effect;}))) {fail();return;}
+          (!definitions.some(function(d){return d[p.benefit.effect]>0;}) || definitions.some(function(d){
+            return d.operationProfile || d.dev || d.pop || d.prestige || d.levy || d.retinue || d.archers || d.defense || d.siege || d.communityFaithPressure ||
+              fields.some(function(k){return d[k] && k!==p.benefit.effect;});
+          }))) {fail();return;}
       if (p.stockLives.some(function(l){return !consumer.openingLots || !consumer.openingLots.some(function(g){return g.goodId===l.goodId;}) &&
           !consumer.recipeIds.some(function(k){return FBDATA.productionRecipes[k].outputs.some(function(g){return g.goodId===l.goodId;});}) &&
           !(bm.productionExchangeAssignments || []).some(function(x){return x.toSiteId===consumer.id && FBDATA.productionExchangeProfiles[x.profileId].goodId===l.goodId;}) &&
@@ -87,6 +91,7 @@
         FB.justiceCustodyOf(s,c.id) || c.id===s.player.charId && (s.player.dead || s.player.flags.in_prison) ||
         !b || b.ruined || !FB.settlementConstructionAuthority(s,a.countyId,a.slot,who).direct ||
         FB.recruitmentCountyBlocked(s,s.holder[a.countyId] || s.owner[a.countyId],a.countyId) ||
+        b.buildingProfile && !FB.buildingProfiles.operationReady(s,a.countyId,b) ||
         b.institutionBinding && !FB.buildingInstitutionOperating(s,a.countyId,b)) return null;
     if (a.profile.care && (FB.characterLocation(s,c)!==a.countyId || c.armyId || c.war ||
         c.id===s.player.charId && (s.player.travel || s.player.war || (FB.householdServiceRecord && FB.householdServiceRecord(s))) ||

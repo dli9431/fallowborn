@@ -4014,3 +4014,7 @@ The shared story sheet presents exact consenting entrants and caregivers, separa
 Seasonal operation reviews
 
 Actual assigned settlement assets expose Review seasonal operation through the shared Governance fact/action cards. The sheet shows local and permitted seasons, original finite end, care, available actual stock and declared lifetime. Open and Allocate each have a separate confirmation stating resource consumption, stock cost and the absence of automatic output or free work. Existing paid water and production reviews show the seasonal blocker. Back, Escape and confirmation return retain scroll, disclosures and originating focus, including settlement return. Full-width native controls use the existing keyboard and phone patterns; all new chrome uses literal FB.T and existing building/good localization owners.
+
+Inherited profile presentation
+
+Settlement descriptions, repair confirmations, water-service headings and military explanation rows use the actual selected profile display owner. Repair quotes show the profile replacement price and explain that physical repair retains any required operating permission, inputs and funded term. Inherited institutional assets awaiting permission expose the ordinary Review permission flow and clearly state their dormant status. That review retains the existing Back, Escape, disclosure, scroll and originating-focus behavior. Profile choices remain reachable when only an alternative passes the current construction gates. No generated provenance or technical source metadata appears in the player flow.

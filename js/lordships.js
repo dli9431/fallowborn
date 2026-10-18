@@ -1021,6 +1021,14 @@ window.FB = window.FB || {};
       const funds = FB.baronyConstructionFunds(state, cid);
       if (funds <= 0) continue;
       for (const site of sites) for (const id of Object.keys(FBDATA.buildings).sort()) {
+        if (FB.buildingProfiles.ids(id).length) {
+          const variants = FB.buildingProfiles.aiChoices(state,{kind:'character',id:cid},site.provinceId,site.settlement,id);
+          const option = variants.find(function (q) {
+            return q.cost + (q.def.upkeep || 0) * (FBDATA.balance.realmReserveSeasons || 2) <= funds;
+          });
+          if (option) choices.push({site:site,id:id,profileId:option.profileId});
+          continue;
+        }
         const def = FBDATA.buildings[id];
         if (def.fort || !FB.aiCanBuildAt(state, { kind:'character', id:cid },
           site.provinceId, site.settlement, id)) continue;
@@ -1031,7 +1039,7 @@ window.FB = window.FB || {};
       }
       if (choices.length) {
         const chosen = FB.pick(choices);
-        FB.buildBarony(state, cid, chosen.site.provinceId, chosen.site.settlement, chosen.id);
+        FB.buildBarony(state, cid, chosen.site.provinceId, chosen.site.settlement, chosen.id, chosen.profileId);
       }
     }
     if (barons.length) root.developmentCursor = ((root.developmentCursor || 0) + visited) % barons.length;
