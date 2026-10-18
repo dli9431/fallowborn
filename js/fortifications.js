@@ -408,6 +408,7 @@ window.FB = window.FB || {};
   }
 
   function seedAiSeats(state) {
+    if (state.openingInfrastructureState !== undefined) return false;
     if (state.fortMigration) return false;
     var changed = false;
     var ids = Object.keys(state.realms || {}).sort();
@@ -435,6 +436,7 @@ window.FB = window.FB || {};
      four-season old-rate maintenance grace. */
   FB.repairForts = function (state) {
     if (!state) return;
+    FB.validateOpeningInfrastructureState(state);
     state.buildings = state.buildings || {};
     var changed = false;
     var fortId = FB.fortificationBuildingId();

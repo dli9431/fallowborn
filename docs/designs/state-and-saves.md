@@ -4,6 +4,12 @@ The v4 freeze is reopened for the optional ruler_agenda track record, schema 1. 
 
 The envelope and subsystem versions retain their meanings. No prior record is reinterpreted and no migration initializes an absent agenda. Existing saves, including those created with the same scenario before agenda attachment was authored, keep their missing records. Restore resumes only saved choices and never calls init or apply, pays, grants, obtains consent or declares war. Historical subject ids may outlive compacted characters. The next ordinary story lifecycle boundary interrupts a still-open program after a real incumbent or mandate change. Pending, completed, absent and malformed-record coverage belongs to ruler-agenda-type.spec.js and ruler-agendas.spec.js.
 
+Opening infrastructure application contract
+
+The optional state.openingInfrastructureState record has exactly version:1, explicit:true, bookmarkId (a nonempty string) and revision (a nonempty string). Presence means the explicit fresh inventory was applied, including an empty inventory. Its bookmarkId and revision must equal state.start.id and state.start.revision and resolve to an effective world with openingInfrastructure. No counters, placement copies, rendered text or mutable holder ids are saved. Unknown fields, wrong primitive types, false policy and mismatched or missing world declarations fail detached v4 validation before adoption. This additive contract reopens the frozen platform for this optional field only; existing envelope and subsystem versions retain their meanings.
+
+Only fresh player and observer boot may initialize the inventory, after political/site identity and existing-ruler adoption, before fort repair and initial population, market and treasury setup. The initializer stages the entire ordinary building ledger and marker before publication, checks every live site and opening holder and changes neither RNG nor UID. Inherited records have devGranted:0 and no construction award. Repeated initialization with a valid marker is a no-op. Restore validates the marker and keeps actual ordinary assets; it never calls the initializer, copies a current inventory or requires demolished seed records to survive. Missing legacy markers stay absent and keep the existing fortMigration behavior, even for an explicit world. Present markers suppress inferred capital forts without reinterpreting fortMigration.
+
 Fresh campaign defaults and replay
 
 Optional household story records

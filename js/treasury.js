@@ -175,7 +175,8 @@
       const sovereigns = sovereignIndex(realms, ids), tech = Object.create(null);
       for (const rid of ids) {
         count('realm reads');
-        if (!eligible(realms[rid], rid, state)) continue;
+        if (!eligible(realms[rid], rid, state) && !(settlementContext.openingPlayer === true &&
+            rid === 'player' && realms[rid] && realms[rid].alive)) continue;
         rows[rid] = { tax:0, buildings:0, income:0, duesIn:0, duesOut:0, upkeep:0, counties:0, countyIds:[], vassals:0 };
       }
       for (const pid of Object.keys(state.owner || {})) {
@@ -250,11 +251,14 @@
     });
   };
 
-  FB.treasuryInitialize = function (state) {
+  FB.treasuryInitialize = function (state, options) {
     return measured('account repair', function () {
-      const snapshot = FB.treasurySnapshot(state);
       const initial = !state.treasuryAccounting || typeof state.treasuryAccounting !== 'object' ||
         Array.isArray(state.treasuryAccounting);
+      // Explicit fresh worlds adopt before installing their inventory. Project
+      // the adopted crown once here, rather than seed an empty-ledger account.
+      const openingPlayer = initial && options && options.adoptedPlayer === true;
+      const snapshot = FB.treasurySnapshot(state, { openingPlayer:!!openingPlayer });
       if (initial) state.treasuryAccounting = { version:1, mode:'accounting',
         lastMilitaryTurn:state.turn, pendingPlayer:0 };
       state.treasuryAccounting.pendingPlayer = numeric(state.treasuryAccounting.pendingPlayer);
@@ -316,6 +320,11 @@
       }
       retries.delete(state);
       if (state.armyLogistics) delete state.armyLogistics.purses;
+      if (openingPlayer && state.realms.player && state.realms.player.treasury &&
+          !(FB.electiveCrown && FB.electiveCrown(state, 'player'))) {
+        state.player.gold = state.realms.player.treasury.gold;
+        delete state.realms.player.treasury;
+      }
       if (FB.armyProducerSnapshot) FB.armyProducerSnapshot(state);
       return snapshot;
     });

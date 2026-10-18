@@ -3588,9 +3588,10 @@ FB.CHANGELOG = [
     if (FB.ensureHistoricalAmbitions) FB.ensureHistoricalAmbitions(state);
     FB.state = state;
     FB.initPolitics(state);
+    const explicitInfrastructure = bookmark.openingInfrastructure !== undefined;
     if (FB.ensureWars) FB.ensureWars(state);
-    if (FB.repairForts) FB.repairForts(state);
-    FB.scriptedTick(state);
+    if (!explicitInfrastructure && FB.repairForts) FB.repairForts(state);
+    if (!explicitInfrastructure) FB.scriptedTick(state);
     scheduleSlots(state);
 
     const me = sc.rulerRealmId ? FB.ensureRealmCourt(state, sc.rulerRealmId) : FB.makeCharacter(state, {
@@ -3732,11 +3733,21 @@ FB.CHANGELOG = [
       }
 
     } // ordinary generated household
+    if (explicitInfrastructure) {
+      if (sc.rulerRealmId) {
+        if (FB.stories) FB.stories.start(state, {});
+        if (!FB.adoptStartingRealm(state, sc, { deferSetup:true }))
+          throw new Error('Starting ruler could not adopt the authored realm.');
+      }
+      FB.initializeOpeningInfrastructure(state);
+      if (FB.repairForts) FB.repairForts(state);
+    }
     if (FB.ensurePapacyState && FB.systemAvailable(state, 'papacy')) FB.ensurePapacyState(state);
     if (FB.ecclesiasticalGovernment) FB.ecclesiasticalGovernment.initialize(state, FBDATA.realms);
     if (FB.ensurePopulationState) FB.ensurePopulationState(state);
     if (FB.ensureMarket) FB.ensureMarket(state);
-    if (FB.treasuryInitialize) FB.treasuryInitialize(state);
+    if (FB.treasuryInitialize) FB.treasuryInitialize(state,
+      { adoptedPlayer:explicitInfrastructure && !!sc.rulerRealmId && !!state.realms.player });
     if (FB.mobileInitialize) FB.mobileInitialize(state, FBDATA.realms);
     if (FB.localFolkArrive) FB.localFolkArrive(state, provId);
     if (FB.ensureSettlementLordships) FB.ensureSettlementLordships(state, { fresh:true });
@@ -3767,7 +3778,8 @@ FB.CHANGELOG = [
     if (FB.ensureAgency) FB.ensureAgency(state);
     if (FB.ensureIntrigue) FB.ensureIntrigue(state);
     if (FB.ensurePolitics) FB.ensurePolitics(state);
-    if (sc.rulerRealmId) {
+    if (explicitInfrastructure) FB.scriptedTick(state);
+    if (sc.rulerRealmId && !explicitInfrastructure) {
       if (FB.stories) FB.stories.start(state, {});
       if (!FB.adoptStartingRealm(state, sc))
         throw new Error('Starting ruler could not adopt the authored realm.');
@@ -3933,8 +3945,8 @@ FB.CHANGELOG = [
     FB.state = state;
     FB.initPolitics(state);
     if (FB.ensureWars) FB.ensureWars(state);
-    if (FB.repairForts) FB.repairForts(state);
-    FB.scriptedTick(state);
+    if (bookmark.openingInfrastructure === undefined && FB.repairForts) FB.repairForts(state);
+    if (bookmark.openingInfrastructure === undefined) FB.scriptedTick(state);
     // a placeholder soul, never shown — some panels dereference it blindly
     const me = FB.makeCharacter(state, {
       name: FB.randomName(home.culture, 'm'), sex: 'm',
@@ -3943,6 +3955,10 @@ FB.CHANGELOG = [
     });
     state.player.charId = me.id;
     state.player.houseFounderId = me.id;
+    if (bookmark.openingInfrastructure !== undefined) {
+      FB.initializeOpeningInfrastructure(state);
+      if (FB.repairForts) FB.repairForts(state);
+    }
     if (FB.ensurePapacyState && FB.systemAvailable(state, 'papacy')) FB.ensurePapacyState(state);
     if (FB.ecclesiasticalGovernment) FB.ecclesiasticalGovernment.initialize(state, FBDATA.realms);
     if (FB.ensurePopulationState) FB.ensurePopulationState(state);
@@ -3954,6 +3970,7 @@ FB.CHANGELOG = [
       FB.ensureFaithStandingBaselines(state);
     }
 
+    if (bookmark.openingInfrastructure !== undefined) FB.scriptedTick(state);
     // A watcher has no scenario, so only the bookmark's world stories attach.
     if (FB.stories) FB.stories.start(state, {});
     if (FB.ensureLocalInstitutions) FB.ensureLocalInstitutions(state, null, { fresh:true });

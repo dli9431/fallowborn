@@ -1,5 +1,9 @@
 # Coin & Credit
 
+Fresh inherited works and opening reserves
+
+Explicit-inventory worlds defer initial population, market and treasury setup until the complete building ledger and ruler adoption are final. treasuryInitialize can include a freshly adopted player crown in its one opening fiscal snapshot, using the same reserve formula, standing upkeep and direct-holder scope as an ordinary AI crown. A dynastic crown's resulting reserve becomes the player's existing treasury purse; an elective public account stays public, and a delegated official keeps their private scenario gold. No inventory transaction credits or debits money, and repeat or restored initialization preserves current balances. Worlds without an explicit inventory retain their existing boot/adoption order and reserve behavior. This is the existing inherited_opening_infrastructure none decision, with no new finance capability or saved accounting field.
+
 Finite household work escrow
 
 Household-track jobs debit the consenting AI payer's active treasury through treasuryTransfer before their first shift. The track owns the finite escrow, pays earned work into the private household purse and records every paid, refunded and still-held amount. A job never draws an anonymous source for wages. Unclaimed money refunds through the original treasury and its canonical retirement recipient; if that recipient is unavailable the saved balance remains held. Repeated choices, changed control, death and restore cannot duplicate or erase a fee. These commitments are independent of recurring household service, public-office budgets and military wages. household_finite_jobs has no discovery prerequisite.

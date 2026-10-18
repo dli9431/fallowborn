@@ -630,6 +630,78 @@ window.FB = window.FB || {};
     }
   };
 
+  FB.validateOpeningInfrastructureState = function (state) {
+    var marker = state.openingInfrastructureState;
+    if (marker === undefined) return true;
+    var start = state.start, definition = start && FB.campaignBookmark(state);
+    if (!plainRecord(marker) || Object.keys(marker).length !== 4 ||
+        Object.keys(marker).some(function (key) {
+          return ['version','explicit','bookmarkId','revision'].indexOf(key) < 0;
+        }) || marker.version !== 1 || marker.explicit !== true ||
+        typeof marker.bookmarkId !== 'string' || !marker.bookmarkId ||
+        typeof marker.revision !== 'string' || !marker.revision || !start ||
+        marker.bookmarkId !== start.id || marker.revision !== start.revision ||
+        !definition || !plainRecord(definition.openingInfrastructure) ||
+        definition.openingInfrastructure.version !== 1 ||
+        !Array.isArray(definition.openingInfrastructure.placements)) {
+      throw new Error(FB.T('Invalid v4 save field at {path}.',
+        { path:'state.openingInfrastructureState' }));
+    }
+    return true;
+  };
+
+  /* Fresh boot only. Restore validates the marker, never applies a declaration.
+     No purchase, construction award or economic repair runs in this boundary. */
+  FB.initializeOpeningInfrastructure = function (state) {
+    if (state.openingInfrastructureState !== undefined) {
+      FB.validateOpeningInfrastructureState(state);
+      return false;
+    }
+    var definition = FB.campaignBookmark(state);
+    var plan = FB.compileOpeningInfrastructure(definition);
+    if (plan.errors.length) throw new Error(plan.errors.join('\n'));
+    if (!plan.explicit) return false;
+    function fail() {
+      throw new Error(FB.T('Opening infrastructure does not match the fresh world.'));
+    }
+    if (state.turn !== 0 || !state.start || !state.start.revision ||
+        !plainRecord(state.realms) || !plainRecord(state.owner) ||
+        !plainRecord(state.holder) || !plainRecord(state.dev) || !state.player || !FB.world ||
+        (state.buildings !== undefined && !plainRecord(state.buildings)) ||
+        !FB.activeBookmark || FB.activeBookmark.id !== state.start.id ||
+        (FB.activeBookmark.revision || 'baseline') !== state.start.revision || state.population ||
+        state.market || state.treasuryAccounting ||
+        Object.keys(state.buildings || {}).some(function (pid) {
+          return !Array.isArray(state.buildings[pid]) || state.buildings[pid].length;
+        })) fail();
+    var original = state.buildings || {}, staged = Object.assign({}, original);
+    plan.placements.forEach(function (placement) {
+      var pid = placement.countyId, expected = placement.holderId;
+      if (expected === state.start.rulerRealmId && state.realms.player && !state.realms[expected])
+        expected = 'player';
+      var holder = state.holder && state.holder[pid] || state.owner && state.owner[pid];
+      var sites = FB.world && FB.world.sitesByProv && FB.world.sitesByProv[pid];
+      var site = sites && sites.list && sites.list[placement.s];
+      if (holder !== expected || !state.realms[holder] || !state.realms[holder].alive ||
+          !site || site.site !== placement.siteId) fail();
+      var record = { s:placement.s, id:placement.buildingId, devGranted:0 };
+      if (placement.condition === 'ruined') record.ruined = true;
+      if (placement.level !== undefined) record.level = placement.level;
+      if (!Object.prototype.hasOwnProperty.call(staged, pid)) staged[pid] = [];
+      else if (staged[pid] === original[pid]) staged[pid] = staged[pid].slice();
+      staged[pid].push(record);
+    });
+    // Publish both facts together only after every placement has been checked.
+    state.buildings = staged;
+    state.openingInfrastructureState = { version:1, explicit:true,
+      bookmarkId:state.start.id, revision:state.start.revision };
+    if (FB.invalidateFortIndex) FB.invalidateFortIndex();
+    else if (FB.invalidateBuildingIndex) FB.invalidateBuildingIndex(state);
+    if (FB.marketWorldDirty) FB.marketWorldDirty();
+    if (FB.invalidatePoliticsState) FB.invalidatePoliticsState();
+    return true;
+  };
+
   /* ================= ERAS AND GOVERNMENT FORMS =================
      A bookmark declares its era (FBDATA.eras) and each realm its government
      form; a realm without one takes the era's default. The engine reads
@@ -8026,7 +8098,7 @@ window.FB = window.FB || {};
         continue;
       }
       state.flags[flag] = 1;
-      var rid = ev.realm;
+      var rid = state.openingInfrastructureState ? FB.startRealmId(state, ev.realm) : ev.realm;
       if (ev.newRealm) {
         rid = ev.newRealm.id;
         var cap = FB.world.byId[ev.newRealm.capital];
@@ -8037,7 +8109,8 @@ window.FB = window.FB || {};
           id: rid, name: ev.newRealm.name, color: ev.newRealm.color,
           capital: ev.newRealm.capital,
           aggression: ev.newRealm.aggression !== undefined ? ev.newRealm.aggression : 1,
-          rank: ev.newRealm.rank || 3, liege: ev.newRealm.liege || null,
+          rank: ev.newRealm.rank || 3, liege: (state.openingInfrastructureState
+            ? FB.startRealmId(state, ev.newRealm.liege) : ev.newRealm.liege) || null,
           techTraditions:Array.isArray(ev.newRealm.techTraditions)
             ? ev.newRealm.techTraditions.slice() : null,
           techSeed:ev.newRealm.techSeed || null,
