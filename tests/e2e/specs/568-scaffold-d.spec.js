@@ -8,13 +8,15 @@ const {openGame} = require('../support/game/navigation');
 dependsOnRuntime(__filename,[
   'index.html','data/bookmark_568.js','data/starts_568.js',
   'data/bookmark_568_scaffold_d.js','data/bookmark_568_identities.js',
+  'data/bookmark_568_scaffold_a.js','data/starts.js',
   'data/bookmark_493.js','data/bookmark_493_world.js','data/bookmark_476_wider.js',
   'data/bookmark_476_wider_identities.js','data/bookmarks.js','data/counties.js',
   'data/bookmark_476_italy.js','data/bookmark_476_gaul_iberia.js',
   'data/bookmark_476_dalmatia_east.js','data/bookmark_476_africa.js','data/bookmark_476_outer.js',
   'data/geographies.js','data/geography_expansion.js','data/settlements.js',
   'data/cultures.js','data/traits.js','data/eras.js','data/climate.js',
-  'data/political_institutions.js','data/assembly_polities.js','js/model.js','js/world.js'
+  'data/political_institutions.js','data/assembly_polities.js','js/model.js','js/world.js',
+  'js/population.js','js/main.js','js/starts.js','js/systems.js','js/ui_modals.js'
 ]);
 
 const packets = {
@@ -73,7 +75,7 @@ test('568 quadrant d reload changes no released definition, effective catalogue 
   },keys)).toEqual(blocksBefore);
 });
 
-test('568 quadrant d retains physical and resident source inputs with explicit corridor exceptions', async function ({page},testInfo) {
+test('568 quadrant d retains physical and resident source inputs outside the declared corrections', async function ({page},testInfo) {
   await openGame(page,testInfo);
   const result = await page.evaluate(function (list) {
     var primary = {}, alternate = {}, seeds = {}, faults = [], counts = {primary:0,alternate:0,newDistrict:0};
@@ -83,6 +85,8 @@ test('568 quadrant d retains physical and resident source inputs with explicit c
       FBDATA.geographies.europe_regional_2.provinceAdditions).forEach(function (p) { seeds[p.id] = p; });
     var corridors = ['siwa_oasis','sarysu_corridor','vychegda_district','draa_oases',
       'ghadames_oasis','awjila_oasis','gao_district','chad_lakeshore'];
+    var correctedFields = {mosul:['culture','religion','communities'],
+      qasr_ibrim:['communities'],ghadames_oasis:['communities'],awjila_oasis:['communities']};
     list.forEach(function (key) {
       var block = FBDATA.bookmarkRegions568[key];
       block.provinces.forEach(function (p) {
@@ -108,6 +112,7 @@ test('568 quadrant d retains physical and resident source inputs with explicit c
         counts[useAlternate ? 'alternate' : 'primary']++;
         if (!source || source.wasteland) { faults.push(p.id + ': missing inhabited source'); return; }
         ['culture','religion','dev','communities'].forEach(function (f) {
+          if ((correctedFields[p.id] || []).indexOf(f) >= 0) return;
           if (JSON.stringify(p[f]) !== JSON.stringify(source[f])) faults.push(p.id + ': changed resident input ' + f);
         });
         if (p === source || p.communities === source.communities) faults.push(p.id + ': shared source identity');
@@ -125,11 +130,11 @@ test('568 quadrant d retains physical and resident source inputs with explicit c
   expect(result).toEqual({faults:[],counts:{primary:117,alternate:8,newDistrict:2}});
 });
 
-test('568 quadrant d resolves its local schema and only the three shared external courts', async function ({page},testInfo) {
+test('568 quadrant d resolves its local schema and only the four shared external courts', async function ({page},testInfo) {
   await openGame(page,testInfo);
   const result = await page.evaluate(function (list) {
     var provinces = {}, realms = {}, groups = {duchies:{},kingdoms:{},empires:{}}, faults = [], external = {};
-    var foreign = {east_568:true,sasanian_568:true,visigoths_568:true};
+    var foreign = {east_568:true,sasanian_568:true,visigoths_568:true,suebi_568:true};
     list.forEach(function (key) {
       var block = FBDATA.bookmarkRegions568[key];
       if (block !== FBDATA['bookmarkRevisionContent_568_' + key] || block.bookmarkId !== '568' ||
@@ -214,7 +219,7 @@ test('568 quadrant d resolves its local schema and only the three shared externa
     });
     return {faults:faults,courts:Object.keys(realms).length,external:Object.keys(external).sort()};
   },keys);
-  expect(result).toEqual({faults:[],courts:36,external:['east_568','sasanian_568','visigoths_568']});
+  expect(result).toEqual({faults:[],courts:36,external:['east_568','sasanian_568','suebi_568','visigoths_568']});
 });
 
 test('568 quadrant d identities become dated-eligible through the staged faith additions', async function ({page},testInfo) {
@@ -286,4 +291,104 @@ test('568 quadrant d separates current courts, residents and held historical ide
     aures:true,auresCapital:'constantine',nobadianCourt:'miaphysite',nobadianResidents:'nile_traditional_476',
     makurianCourt:'nile_traditional_476',alodianCourt:'nile_traditional_476',
     imperialIberianResidents:'hispano_roman',romanPersianWar:false,claimedPeople:[]});
+});
+
+test('568 publishes the five corrected counties without changing neighboring held declarations', async function ({page},testInfo) {
+  await openGame(page,testInfo);
+  const result = await page.evaluate(function () {
+    var b = FB.bookmark('568'), counties = {}, before = JSON.stringify(FBDATA);
+    var rng = FB.getRngState(), uid = FB.getUidCounter();
+    b.provinces.forEach(function (p) { counties[p.id] = p; });
+    function residents(id) {
+      var p = counties[id];
+      return [p.realm,p.culture,p.religion,p.communities];
+    }
+    var faults = FB.validateBookmark(b);
+    ['mosul','qasr_ibrim','ghadames_oasis','awjila_oasis'].forEach(function (id) {
+      counties[id].communities.forEach(function (c) {
+        if (!FB.faithHistoricalAvailable(c.religion,b,'community')) faults.push(id + ': unavailable faith');
+      });
+    });
+    return {coimbra:residents('coimbra'),mosul:residents('mosul'),
+      nobadia:residents('qasr_ibrim'),ghadames:residents('ghadames_oasis'),awjila:residents('awjila_oasis'),
+      suevicCourts:b.realms.filter(function (r) { return r.id === 'suebi_568'; }).length,
+      suevicCapital:b.realms.filter(function (r) { return r.id === 'suebi_568'; })[0].capital,
+      held:{harran:residents('harran'),dongola:residents('dongola'),soba:residents('soba'),garama:residents('garama')},
+      faults:faults,pure:before === JSON.stringify(FBDATA) && rng === FB.getRngState() && uid === FB.getUidCounter()};
+  });
+  expect(result.coimbra).toEqual(['suebi_568','hispano_roman','nicene',[
+    {culture:'hispano_roman',religion:'nicene',populationShare0:8000},
+    {culture:'gothic',religion:'homoian',paired:true,populationShare0:2000}
+  ]]);
+  expect(result.mosul).toEqual(['sasanian_568','syriac','east_syriac',[
+    {culture:'syriac',religion:'east_syriac',populationShare0:7500,paired:true},
+    {culture:'persian',religion:'zoroastrian',populationShare0:2500}
+  ]]);
+  expect(result.nobadia).toEqual(['nobadia_568','nubian','nile_traditional_476',[
+    {culture:'nubian',religion:'nile_traditional_476',populationShare0:7500},
+    {culture:'nubian',religion:'miaphysite',populationShare0:2500}
+  ]]);
+  for (const name of ['ghadames','awjila']) {
+    expect(result[name]).toEqual([name + '_oasis_local_568','berber','berber_traditional',[
+      {culture:'berber',religion:'berber_traditional',populationShare0:7500},
+      {culture:'berber',religion:'nicene',populationShare0:2500}
+    ]]);
+  }
+  expect(result.suevicCourts).toBe(1);
+  expect(result.suevicCapital).toBe('lugo');
+  expect(result.held.harran).toEqual(['east_568','syriac','miaphysite',[
+    {culture:'syriac',religion:'miaphysite',populationShare0:8000},
+    {culture:'greek',religion:'chalcedonian',populationShare0:2000,paired:true}
+  ]]);
+  for (const name of ['dongola','soba']) {
+    expect(result.held[name]).toEqual([name === 'dongola' ? 'makuria_568' : 'alodia_568',
+      'nubian','nile_traditional_476',[{culture:'nubian',religion:'nile_traditional_476',populationShare0:10000}]]);
+  }
+  expect(result.held.garama).toEqual(['garama_local_568','berber','berber_traditional',[
+    {culture:'berber',religion:'berber_traditional',populationShare0:10000}
+  ]]);
+  expect(result.faults).toEqual([]);
+  expect(result.pure).toBe(true);
+});
+
+test('568 offers the Nobadian Christian beginning and seeds corrected populations with conserved totals', async function ({page},testInfo) {
+  await openGame(page,testInfo);
+  const full = page.locator('#btn-choose-beginning');
+  if (await full.isVisible()) await full.click();
+  else await page.getByRole('button',{name:'New Game',exact:true}).click();
+  await page.locator('#btn-bm-seed').click();
+  await page.locator('#ng-seed').fill('CORRECT568-568-farmer_568-qasr_ibrim-m-Review-established-0-nubian.miaphysite');
+  await page.locator('#ng-seed').press('Enter');
+  await expect(page.locator('#chargen:not(.hidden)')).toBeVisible();
+  await expect(page.locator('input[name=cg-community]')).toHaveCount(2);
+  await expect(page.locator('input[name=cg-community]').nth(1)).toBeChecked();
+  await page.getByRole('button',{name:'Begin Your Story',exact:true}).click();
+  await expect(page.locator('#game:not(.hidden)')).toBeVisible();
+  await page.evaluate(function () { FB.game.setPaused(true); });
+  await page.getByRole('button',{name:'Begin',exact:true}).click();
+  const result = await page.evaluate(function () {
+    var s = FB.state, me = s.chars[s.player.charId], populations = {}, faults = [];
+    ['mosul','qasr_ibrim','ghadames_oasis','awjila_oasis'].forEach(function (id) {
+      var p = FB.world.byId[id], communities = FB.countyCommunities(s,id);
+      var total = FB.countyPopulation(s,id);
+      if (communities.reduce(function (sum,c) { return sum + c.count; },0) !== total ||
+          total !== FB.countyPopulationBaseline(s,id)) faults.push(id + ': changed population total');
+      communities.forEach(function (c,index) {
+        var authored = p.communities[index];
+        if (!authored || c.culture !== authored.culture || c.religion !== authored.religion ||
+            Math.abs(c.count - total * authored.populationShare0 / 10000) > 1) faults.push(id + ': wrong opening share');
+      });
+      if (communities.length !== 2) faults.push(id + ': missing community');
+      populations[id] = communities.map(function (c) { return c.culture + '/' + c.religion; });
+    });
+    return {home:s.player.provinceId,identity:[me.culture,me.religion],turn:s.turn,
+      owners:['coimbra','mosul','qasr_ibrim','ghadames_oasis','awjila_oasis'].map(function (id) { return s.owner[id]; }),
+      populations:populations,faults:faults};
+  });
+  expect(result).toEqual({home:'qasr_ibrim',identity:['nubian','miaphysite'],turn:0,
+    owners:['suebi_568','sasanian_568','nobadia_568','ghadames_oasis_local_568','awjila_oasis_local_568'],
+    populations:{mosul:['syriac/east_syriac','persian/zoroastrian'],
+      qasr_ibrim:['nubian/nile_traditional_476','nubian/miaphysite'],
+      ghadames_oasis:['berber/berber_traditional','berber/nicene'],
+      awjila_oasis:['berber/berber_traditional','berber/nicene']},faults:[]});
 });
