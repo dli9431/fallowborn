@@ -94,3 +94,8 @@ mobile-expedition-harbor.json and mobile-expedition-dune.json are complete ordin
 Finite local incidents
 
 local_threat composes a typed original actor, inhabited physical locality, finite calendar opportunity, optional original controlling authority, bounded operation sequence and explicit AI intent policy through storyInstances. The river and hill local-threat JSON examples import through the normal Mods picker and differ in actual actor/presence/authority, duration and behavior. Protagonist and persistent-resident facts come from their existing owners, not a source-id presence flag. The canonical transaction records at most three immutable acts and exposes them to the existing household-locality observer adapter. Unknown effects, carriers, fields and missing opted-in saved records fail closed. No harmful outcome, protection, movement, people, money or rewards are authorable through this owner; those require separately reviewed canonical consumers.
+
+
+Named association authoring
+
+The household_party story type supports ordinary JSON declarations for bounded named household plans. Capacity, dependent eligibility, invitation deadlines and nonplayer adult reply policy vary through data, while exact saved people, actual parents, current availability and separate consent remain engine invariants. The harbor and upland household-party imports configure different complete fictional worlds and actual reply behavior through the normal Mods file picker. Neither declares a carrier or changes residence. Public operations, strict optional records and unsupported effects are documented in docs/MODDING.md and docs/designs/household-parties.md.
