@@ -37,7 +37,7 @@ FBDATA.productionRecipes_seasonal_pasture = {
     marketUnits:12, share:1, maxQuantity:1
   };
   FBDATA.buildingSeasonProfiles.shieling_summer = {
-    seasonKinds:['summer'], periodDays:90, maxDays:90, care:true,
+    seasonKinds:['summer'], periodDays:90, maxDays:90, care:true, constructionInputs:true,
     stockLives:[{goodId:'parent_farm_allocation',days:10},{goodId:'pasture_provisions',days:30}],
     benefit:null
   };

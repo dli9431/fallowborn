@@ -94,6 +94,14 @@
       "mode": "market",
       "quantityLimit": 1,
       "budget": 20
+    },
+    "parent_delivery": {
+      "goodId": "parent_farm_allocation",
+      "marketGoodId": "provisions",
+      "basePrice": 1,
+      "mode": "owned",
+      "quantityLimit": 1,
+      "budget": 1
     }
   },
   "startScenarios": [
@@ -253,6 +261,12 @@
             "siteId": "quay_store",
             "buildingId": "granary",
             "condition": "standing"
+          },
+          {
+            "countyId": "faroes",
+            "siteId": "farmstead",
+            "buildingId": "parent_allocation_depot",
+            "condition": "standing"
           }
         ]
       },
@@ -276,13 +290,23 @@
             "prepare_pasture_allocation"
           ],
           "openingLots": []
+        },
+        {
+          "id": "parent_store",
+          "countyId": "faroes",
+          "siteId": "farmstead",
+          "buildingId": "parent_allocation_depot",
+          "recipeIds": [
+            "prepare_pasture_allocation"
+          ],
+          "openingLots": []
         }
       ],
       "productionProducerAssignments": [
         {
           "id": "parent_share",
           "profileId": "shieling_parent_allocation",
-          "siteId": "farm_outpost"
+          "siteId": "parent_store"
         }
       ],
       "productionExchangeAssignments": [
@@ -291,6 +315,12 @@
           "profileId": "sell_pasture_output",
           "fromSiteId": "farm_outpost",
           "toSiteId": "buyer_store"
+        },
+        {
+          "id": "parent_delivery",
+          "profileId": "parent_delivery",
+          "fromSiteId": "parent_store",
+          "toSiteId": "farm_outpost"
         }
       ],
       "buildingSeasonAssignments": [
@@ -305,8 +335,68 @@
               "amount": 1
             }
           ]
+        },
+        {
+          "id": "parent_stock_term",
+          "profileId": "parent_stock_life",
+          "operationId": null,
+          "productionSiteId": "parent_store",
+          "resources": []
         }
-      ]
+      ],
+      "revisions": {
+        "new_works": {
+          "name": "Construct an empty seasonal outpost",
+          "openingInfrastructure": {
+            "version": 1,
+            "placements": [
+              {
+                "countyId": "pasture_buyer",
+                "siteId": "quay_store",
+                "buildingId": "granary",
+                "condition": "standing"
+              },
+              {
+                "countyId": "faroes",
+                "siteId": "farmstead",
+                "buildingId": "parent_allocation_depot",
+                "condition": "standing"
+              }
+            ]
+          }
+        }
+      }
+    }
+  },
+  "buildings": {
+    "parent_allocation_depot": {
+      "name": "Existing parent farm store",
+      "desc": "Fictional existing storage for actual allocated farm output.",
+      "icon": "*",
+      "role": "industry",
+      "cost": 5,
+      "upkeep": 0,
+      "devMin": 0,
+      "maxCounty": 1,
+      "aiBuildOrder": 99,
+      "settlementDraw": false
+    }
+  },
+  "buildingSeasonProfiles": {
+    "parent_stock_life": {
+      "seasonKinds": [
+        "summer"
+      ],
+      "periodDays": 90,
+      "maxDays": 90,
+      "care": false,
+      "stockLives": [
+        {
+          "goodId": "parent_farm_allocation",
+          "days": 10
+        }
+      ],
+      "benefit": null
     }
   }
 }

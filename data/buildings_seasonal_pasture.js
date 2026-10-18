@@ -3,7 +3,7 @@ FBDATA.buildings_seasonal_pasture = {
   shieling:{
     name:'Seasonal Pasture Outpost', icon:'🌿', role:'industry',
     cost:20, upkeep:1, devMin:0, maxCounty:1, aiBuildOrder:34,
-    settlementDraw:false, dev:0, pop:0, prestige:0,
+    settlementDraw:false, dev:0, pop:0, prestige:0, seasonProfile:'shieling_summer',
     applicability:{yearMin:850,yearMax:1300,countyIds:['faroes']},
     desc:'Summer work prepares only an existing parent farm’s allocated output. Actual local grazing rights, finite capacity, available care and paid work are required. The outpost creates no herd, people or population capacity; ordinary farming remains available.'
   }
@@ -17,6 +17,6 @@ FBDATA.buildings_seasonal_pasture = {
   });
   FBDATA.techImpactReviews.features.seasonal_parent_farm = {
     mode:'none',
-    rationale:'Ordinary seasonal farm work needs no discovery. A standing outpost only prepares a conserved share of an existing staffed farm’s output with lawful finite grazing, local care and funded work. Ordinary farming remains available; no herd, people or capacity is created.'
+    rationale:'Ordinary seasonal farm work and reviewing its actual inputs need no discovery. Construction requires real allocated parent output, lawful delivery and grazing, local care and current construction and work funds. A standing outpost only prepares that conserved share. Ordinary farming remains available; no herd, people or capacity is created.'
   };
 })();
