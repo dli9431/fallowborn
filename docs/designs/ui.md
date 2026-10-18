@@ -16,6 +16,8 @@ The ruler checklist offers Review a court story only while an attached story car
 
 Household story reviews
 
+An opted-in opening religious call uses the existing Deeds story card and reviewed Call/Decline sheet. The current player head retains the ordinary authority, hostile-target, cooldown and campaign-slot blocker; stale head or campaign facts invalidate confirmation. Declining closes the dated opportunity, while expiry or changed authority records an unavailable opportunity. No new navigation or presentation surface is added; Back, dismissal and return behavior remain the shared story flow.
+
 Finite-job reviews show the actual living payer, total fee, required action days, undisputed payment, disputed remainder, completed shifts and money already paid. A settlement names its exact additional payment and day cost before confirmation. The review explains expiry and interrupted-work terms. Each shift and hearing replaces Daily Focus for one day; an immediate smaller settlement or waiver spends no day. Stale quotes and blocked days spend nothing and retain the ordinary story review flow. Job state and payments remain available in the story status after a terminal decision.
 
 Household supply reviews disclose the exact private-purse expense and that the purchase grants no holding or income bonus. Work reviews distinguish selecting the daily focus from actual paid work, which advances the story only through the ordinary focus tick. Civic-right conditions withdraw obsolete customer choices without granting membership or citizenship. All retain the shared story sheet, current blockers and modal return behavior.
