@@ -3739,7 +3739,7 @@ FB.CHANGELOG = [
     } // ordinary generated household
     if (explicitInfrastructure) {
       if (sc.rulerRealmId && !commandStart) {
-        if (FB.stories) FB.stories.start(state, {});
+        if (!FB.prepareStartingLandedHome(state,sc) && FB.stories) FB.stories.start(state, {});
         if (!FB.adoptStartingRealm(state, sc, { deferSetup:true }))
           throw new Error('Starting ruler could not adopt the authored realm.');
       }

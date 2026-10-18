@@ -25,11 +25,101 @@
     else if (s.realms[ref.realmId] && s.realms[ref.realmId].alive) c=FB.realmRulerCharacterSnapshot(s,ref.realmId);
     return live(s,c) && s.chars[c.id] ? {characterId:c.id,generation:ref.kind==='realm_ruler' ? FB.realmRulerGeneration(s,ref.realmId) : null} : null;
   }
+  /* A home office is the declared crown, never the first mobile realm found
+     for this person. The start alias changes only its live lookup. */
+  function homeId(s,rid) {
+    var alias=FB.startRealmId(s,rid);
+    return s.realms[alias] ? alias : rid;
+  }
+  function homeRuler(s,rid) {
+    var home=homeId(s,rid), realm=s.realms[home];
+    if (!realm || !realm.alive) return null;
+    var c=home==='player' ? s.chars[s.player.charId] : FB.realmRulerCharacterSnapshot(s,home);
+    return c && !c.dead ? c : null;
+  }
+  function landedAvailable(s,c) {
+    return live(s,c) && !c.unfree && (c.health===undefined || c.health>0) &&
+      !(FB.intrigueCaptivityOf && FB.intrigueCaptivityOf(s,c.id)) &&
+      !(c.id===s.player.charId && s.player.flags && s.player.flags.in_prison);
+  }
+  M.landedBindingDefinition = function (d,b,realms,bookmark) {
+    var spec=d.mobile && d.mobile.command && d.mobile.command.landedCommandLink;
+    var ref=b && b.person, home=spec && own(realms,spec.homeRealmId) && realms[spec.homeRealmId];
+    var actor=ref && bookmark && bookmark.opening && bookmark.opening.actors &&
+      own(bookmark.opening.actors,ref.actorId) && bookmark.opening.actors[ref.actorId];
+    var form=home && FBDATA.governmentForms[home.government];
+    return !!(keys(spec,['schema','actorId','homeRealmId','homeGeneration','endTurn']) && Object.keys(spec).length===5 &&
+      spec.schema===1 && typeof spec.homeRealmId==='string' && Number.isSafeInteger(spec.homeGeneration) && spec.homeGeneration>=1 &&
+      Number.isSafeInteger(spec.endTurn) && spec.endTurn>=1 && spec.endTurn<=1440 && home && home.id!==d.id &&
+      home.id===spec.homeRealmId && !home.mobile && home.ruler && home.capital===d.mobile.origin && form && form.homeAuthority &&
+      FB.homeAuthority && FB.homeAuthority.policyValid(form.homeAuthority) &&
+      keys(ref,['kind','actorId','realmId','generation']) && Object.keys(ref).length===4 && ref.kind==='realm_ruler' &&
+      ref.actorId===spec.actorId && ref.realmId===home.id && ref.generation===spec.homeGeneration &&
+      spec.homeGeneration===(home.ruler.generation===undefined ? 1 : home.ruler.generation) &&
+      b.memberId===d.mobile.opening.leaderMemberId && keys(actor,['ref']) && Object.keys(actor).length===1 &&
+      keys(actor.ref,['kind','realmId']) && Object.keys(actor.ref).length===2 &&
+      actor.ref.kind==='realm_ruler' && actor.ref.realmId===home.id);
+  };
+  M.landedOpeningMatches = function (s,d,b,c) {
+    var bm=FB.campaignBookmark(s), realms={};
+    (bm.realms || []).forEach(function (r) {realms[r.id]=r;});
+    if (!M.landedBindingDefinition(d,b,realms,bm) || !landedAvailable(s,c)) return false;
+    var spec=d.mobile.command.landedCommandLink, home=homeId(s,spec.homeRealmId), ruler=homeRuler(s,spec.homeRealmId);
+    return !!ruler && ruler.id===c.id && FB.realmRulerGeneration(s,home)===spec.homeGeneration &&
+      s.turn<spec.endTurn && FB.homeAuthority.location(s,c)===d.mobile.origin;
+  };
+  M.landedLink = function (s,rid) {
+    var g=s.authority && s.authority.governments[rid];
+    return g && g.landedCommandLink || null;
+  };
+  M.landedHomeRealm = function (s,cid) {
+    if (!s.player || s.player.charId!==cid || !s.realms.player || !s.realms.player.alive) return null;
+    var result=null;
+    Object.keys(s.authority && s.authority.governments || {}).some(function (rid) {
+      var link=M.landedLink(s,rid), ruler=link && homeRuler(s,link.homeRealmId);
+      if (!link || link.characterId!==cid || !ruler || ruler.id!==cid ||
+          FB.realmRulerGeneration(s,homeId(s,link.homeRealmId))!==link.homeGeneration) return false;
+      result=homeId(s,link.homeRealmId);return true;
+    });
+    return result;
+  };
+  M.landedCommandReason = function (s,rid) {
+    var d=definition(s,rid), spec=d && d.landedCommandLink;
+    if (!spec) return null;
+    var link=M.landedLink(s,rid), r=M.row(s,rid), c=link && s.chars[link.characterId];
+    if (!link || !r || !r.command || !c) return 'mandate';
+    if (c.dead) return 'death';
+    if (r.status!=='active' || !s.realms[rid] || !s.realms[rid].alive) return 'closed';
+    if (!landedAvailable(s,c)) return 'custody';
+    var home=homeId(s,link.homeRealmId), ruler=homeRuler(s,link.homeRealmId);
+    if (!ruler || ruler.id!==c.id || FB.realmRulerGeneration(s,home)!==link.homeGeneration) return 'office';
+    if (s.turn>=spec.endTurn) return 'term';
+    if (!r.members.some(function (m) {return m.principal.id===c.id && m.allegiance;})) return 'member';
+    if (r.leaderId!==c.id || r.command.leaderGeneration!==link.commandGeneration ||
+        FB.realmRulerGeneration(s,rid)!==link.commandGeneration || r.command.status!=='active' ||
+        d.superior && JSON.stringify(r.command.issuer)!==JSON.stringify(issuer(s,d))) return 'mandate';
+    return null;
+  };
+  function reconcileLanded(s,rid) {
+    var link=M.landedLink(s,rid);
+    if (!link) return;
+    var reason=M.landedCommandReason(s,rid);
+    if (link.reason!==reason) {link.reason=reason;link.changedTurn=s.turn;link.revision++;}
+    if (reason) {
+      (s.armies || []).forEach(function (a) {
+        if (a.realm===rid && a.mobileFollowing) {a.path=[];a.goal=null;a.moveLeft=0;}
+      });
+    }
+  }
   M.commandSnapshot = function (s,rid) {
     var r=M.row(s,rid), d=definition(s,rid);
     if (!r || !r.command || !d) return null;
+    var home=d.landedCommandLink && homeId(s,d.landedCommandLink.homeRealmId);
+    var incumbent=home && homeRuler(s,d.landedCommandLink.homeRealmId);
     return {id:d.id,realmId:rid,superior:issuer(s,d),authority:copy(d.superior),commission:copy(r.command),operations:d.operations.slice(),
-      effective:M.commandValid(s,rid)};
+      landed:d.landedCommandLink ? {link:copy(M.landedLink(s,rid)),reason:M.landedCommandReason(s,rid),
+        home:{realmId:home,characterId:incumbent && incumbent.id || null,generation:FB.realmRulerGeneration(s,home)},
+        endTurn:d.landedCommandLink.endTurn} : null,effective:M.commandValid(s,rid)};
   };
   M.commandValid = function (s,rid) {
     var r=M.row(s,rid), d=definition(s,rid), c=r && r.command;
@@ -53,11 +143,21 @@
     r.schema=3;
     r.command={id:spec.id,status:'active',revision:0,issuer:issuer(s,spec),
       leaderGeneration:FB.realmRulerGeneration(s,d.id)};
+    if (spec.landedCommandLink) {
+      var link=spec.landedCommandLink;
+      s.authority.governments[d.id].landedCommandLink={schema:1,characterId:r.leaderId,
+        homeRealmId:link.homeRealmId,homeGeneration:link.homeGeneration,commandGeneration:r.command.leaderGeneration,
+        revision:0,reason:null,changedTurn:s.turn};
+    }
   };
   function candidate(s,rid,cid) {
     var r=M.row(s,rid), p=M.profile(s,rid), c=s.chars[cid];
     var line=c && c.royalLine, court=line && s.realms[line.realmId], tree=court && court.succession;
-    if (line && line.realmId!==rid && court && court.alive && tree && tree.rulerMemberId===line.memberId) return false;
+    var d=definition(s,rid);
+    if (d && d.landedCommandLink) {
+      var link=M.landedLink(s,rid);
+      if (!link || link.characterId!==cid || M.landedCommandReason(s,rid)) return false;
+    } else if (line && line.realmId!==rid && court && court.alive && tree && tree.rulerMemberId===line.memberId) return false;
     var current=issuer(s,definition(s,rid));
     if (current && current.characterId===cid) return false;
     return live(s,c) && s.date.year-c.born>=p.minAge && r.members.some(function (m) {
@@ -74,13 +174,13 @@
     var current=issuer(s,d);
     if (!current || current.characterId!==actor.id ||
         request.action!=='appoint' && request.action!=='recall' ||
-        request.action==='appoint' && (!candidate(s,rid,request.candidateId) ||
+        request.action==='appoint' && (d.landedCommandLink || !candidate(s,rid,request.candidateId) ||
           M.commandValid(s,rid) && request.candidateId===r.leaderId) ||
         request.action==='recall' && (request.candidateId!==undefined || r.command.status==='recalled')) return q;
     q.signature=JSON.stringify([s.turn,s.date.year,r,d,current,s.chars[current.characterId],
       request.candidateId && s.chars[request.candidateId],s.realms[rid].ruler,
       M.migration(s,rid),M.host(s,rid),s.player && [s.player.charId,s.player.tier,s.player.gold],
-      FB.treasuryAvailable(s,rid)]);
+      FB.treasuryAvailable(s,rid),M.commandSnapshot(s,rid),r.leaderId && s.chars[r.leaderId]]);
     q.allowed=true;q.reason=null;return q;
   }
   S.registerSource('mobile_command',{
@@ -99,6 +199,7 @@
       var army=M.host(s,rid);
       if (army) {army.path=[];army.goal=null;army.moveLeft=0;}
       if (M.columnStopAll) M.columnStopAll(s,rid);
+      reconcileLanded(s,rid);
       return true;
     }
   });
@@ -128,12 +229,17 @@
     var rule=form.use.succession, command=t && t.command;
     function fail() {errors.push(FB.T('Invalid mobile command declaration.'));}
     if (!rule.commandLeadership) {if (command!==undefined || form.use.territory.mobileFollowing && !rule.mobileLeadership) fail();return errors;}
-    if (!t || !t.opening || !keys(command,['id','superior','operations']) || typeof command.id!=='string' ||
+    if (!t || !t.opening || !keys(command,['id','superior','operations','landedCommandLink']) || typeof command.id!=='string' ||
         !/^[a-z][a-z0-9_]{0,95}$/.test(command.id) || !Array.isArray(command.operations) ||
         !command.operations.length || command.operations.length>operations.length ||
         command.operations.some(function (op,i) {return operations.indexOf(op)<0 || command.operations.indexOf(op)!==i;}) ||
         !form.use.territory.mobileFollowing || form.strategies.consent!=='command_consent' ||
         form.strategies.levy!=='following_levy' || form.strategies.revenue!=='command_receipts') {fail();return errors;}
+    if (command.landedCommandLink!==undefined) {
+      var binding=t.opening.principals.filter(function (b) {return b.memberId===t.opening.leaderMemberId;})[0];
+      if (!M.landedBindingDefinition(d,binding,realms,bookmark) ||
+          command.operations.some(function (op) {return ['land','contract','settle'].indexOf(op)>=0;})) fail();
+    }
     var ref=command.superior;
     if (rule===G.strategy('succession','retained_principal')) {if (ref!==null) fail();}
     else if (!ref) fail();
@@ -160,11 +266,46 @@
     }))) result.allowed=false;
     return result;
   };
+  var day=M.day, died=FB.royalCharDied;
+  M.day=function (s) {
+    Object.keys(s.authority && s.authority.governments || {}).forEach(function (rid) {reconcileLanded(s,rid);});
+    return day(s);
+  };
+  FB.mobileDay=M.day;
+  FB.royalCharDied=function (s,c,rid) {
+    var result=died(s,c,rid);
+    Object.keys(s.authority && s.authority.governments || {}).forEach(function (id) {reconcileLanded(s,id);});
+    return result;
+  };
   var validate=M.validate;
   M.validate = function (s) {
     validate(s);
+    (FB.campaignBookmark(s).realms || []).forEach(function (d) {
+      if (d.mobile && d.mobile.command && d.mobile.command.landedCommandLink && !M.landedLink(s,d.id))
+        throw new Error(FB.T('Missing saved landed command link.'));
+    });
     Object.keys(s.authority && s.authority.governments || {}).forEach(function (rid) {
       var r=M.row(s,rid), spec=definition(s,rid);
+      var link=M.landedLink(s,rid), declared=spec && spec.landedCommandLink;
+      function badLink() {throw new Error(FB.T('Invalid saved landed command link.'));}
+      if (!declared) {if (link!==null || own(s.authority.governments[rid],'landedCommandLink')) badLink();}
+      else {
+        var actor=FB.bookmarkActor(s,declared.actorId), home=homeId(s,declared.homeRealmId);
+        var initial=(FB.campaignBookmark(s).realms || []).filter(function (d) {return d.id===rid;})[0];
+        var original=r && r.openingBindings && r.openingBindings.filter(function (b) {return b.person.actorId===declared.actorId;})[0];
+        if (!keys(link,['schema','characterId','homeRealmId','homeGeneration','commandGeneration','revision','reason','changedTurn']) ||
+            Object.keys(link).length!==8 || link.schema!==1 || !actor || !original || link.characterId!==actor.id ||
+            link.characterId!==original.characterId || link.homeRealmId!==declared.homeRealmId ||
+            link.homeGeneration!==declared.homeGeneration || !s.realms[home] ||
+            link.homeGeneration>FB.realmRulerGeneration(s,home) ||
+            !Number.isSafeInteger(link.commandGeneration) || link.commandGeneration<1 ||
+            link.commandGeneration!==((initial.ruler && initial.ruler.generation) || 1)+1 ||
+            !r.command || link.commandGeneration!==r.command.leaderGeneration ||
+            !Number.isSafeInteger(link.revision) || link.revision<0 || link.revision>=Number.MAX_SAFE_INTEGER ||
+            !Number.isSafeInteger(link.changedTurn) || link.changedTurn<0 || link.changedTurn>s.turn ||
+            [null,'death','custody','office','term','member','mandate','closed'].indexOf(link.reason)<0 ||
+            link.revision===0 && (link.reason!==null || link.changedTurn!==0)) badLink();
+      }
       if (!r) return;
       function fail() {throw new Error(FB.T('Invalid saved mobile command.'));}
       if (!spec) {if (r.command!==undefined || r.schema===3) fail();return;}

@@ -3956,3 +3956,7 @@ The existing mobile command sheet adds retained selectors for the source column,
 Command funding reviews
 
 The shared mobile sheet exposes separate Contribute private funds and Grant public funds cards only under the command's declared funding policy. It shows the selected paying account, command recipient and exact contribution before confirmation; a missing public account remains an explicit funding blocker. The private household purse is identified separately from public treasuries. Amount/source controls, list scroll, disclosures and originating focus survive Back, Escape and the outcome Continue route through the existing modal history. A changed account or mandate rejects confirmation without a transfer.
+
+Landed command facts
+
+The existing mobile command sheet shows an opted-in command's home office and remaining personal term alongside its public treasury and actual mandate status. Its localized explanation states that the command cannot pass to an heir or another member and that home decisions require presence or exact civil delegation. It adds no new navigation or review operation. Existing Back, dismissal, scroll and focus behavior and current disabled-operation reviews remain shared. The original officeholder and finite term are projected from canonical declarations and records, never saved display prose.

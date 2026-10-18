@@ -87,6 +87,12 @@
     else {
       var command=M.commandSnapshot(s,rid), superior=command.superior && s.chars[command.superior.characterId];
       var external=command.authority && command.authority.kind==='external_authority';
+      if (command.landed) {
+        var homeId=FB.startRealmId(s,command.landed.link.homeRealmId);
+        facts+=kv(FB.T('Home office'),s.realms[homeId].name)+
+          kv(FB.T('Personal command term'),FB.T('{days} days remaining',{days:Math.max(0,command.landed.endTurn-s.turn)}))+
+          '<p>'+esc(FB.T('This command belongs to the original home officeholder. It cannot pass to an heir or another member. Home decisions require local presence or an existing deputy with the exact civil power.'))+'</p>';
+      }
       facts += kv(FB.T('Command mandate'),command.effective ? FB.T('Active') : FB.T('Suspended')) +
         kv(FB.T('Appointing superior'),external ? command.authority.name : superior ? superior.name : FB.T('No current appointing superior')) +
         '<p>'+esc(FB.T('Public command grants no private rank, land or county income. Death, custody, recall or a changed issuer requires a fresh mandate. A retained following has no automatic replacement rule.'))+'</p>';
