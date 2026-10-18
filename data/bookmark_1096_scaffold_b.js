@@ -32,6 +32,22 @@ FBDATA.bookmarkRevisionContent_1096_empire_rhine = {
     {id:'hre_1096', name:'Holy Roman Empire', color:'#6f7d8c', capital:'frankfurt', aggression:0, rank:4, religion:'catholic', government:'territorial', ruler:{sex:'m', culture:'german', born:1050, mar:8, trait:'patient', name:'Henry IV'}, techTraditions:['latin']},
     {id:'upper_lorraine_1096', name:'Duchy of Upper Lorraine', color:'#8994a4', capital:'nancy', aggression:0, rank:2, religion:'catholic', government:'territorial', ruler:{sex:'m', culture:'german', born:1060, mar:8, trait:'patient', generated:true}, liege:'hre_1096'}
   ],
+  duchies:{
+    luxembourg:{"name":"Luxembourg","kingdom":"lotharingia"},
+    rhineland:{"name":"Rhineland","kingdom":"east_francia"},
+    lorraine:{"name":"Lorraine","kingdom":"lotharingia"},
+    alsace:{"name":"Alsace","kingdom":"lotharingia"},
+    frisia:{"name":"Frisia","kingdom":"lotharingia"},
+    franconia:{"name":"Franconia","kingdom":"east_francia"},
+    swabia:{"name":"Swabia","kingdom":"east_francia"}
+  },
+  kingdoms:{
+    lotharingia:{"name":"Lotharingia","empire":"francia"},
+    east_francia:{"name":"Germany","empire":"francia"}
+  },
+  empires:{
+    francia:{"name":"Francia"}
+  },
   layouts:{
     aachen:[{site:'aachen', name:'Aachen', kind:'town'}, {site:'geo_venlo_2745641', name:'Venlo', kind:'village', fill:true}, {site:'geo_duren_2934486', name:'Düren', kind:'village', fill:true}, {site:'geo_heerlen_2754652', name:'Heerlen', kind:'village', fill:true}, {site:'geo_stolberg_2826595', name:'Stolberg', kind:'village', fill:true}, {site:'geo_eschweiler_2928963', name:'Eschweiler', kind:'village', fill:true}, {site:'geo_kerkrade_2752923', name:'Kerkrade', kind:'village', fill:true}],
     cologne:[{site:'cologne_head', name:'Köln', kind:'village', fill:true}, {site:'geo_dusseldorf_2934246', name:'Düsseldorf', kind:'village', fill:true}, {site:'geo_essen_2928810', name:'Essen', kind:'village', fill:true}, {site:'geo_dortmund_2935517', name:'Dortmund', kind:'village', fill:true}, {site:'geo_duisburg_2934691', name:'Duisburg', kind:'village', fill:true}, {site:'geo_bochum_2947416', name:'Bochum', kind:'village', fill:true}],
@@ -84,6 +100,20 @@ FBDATA.bookmarkRevisionContent_1096_empire_alps = {
     {id:'bavaria_1096', name:'Duchy of Bavaria', color:'#788996', capital:'munich', aggression:0, rank:2, religion:'catholic', government:'territorial', ruler:{sex:'m', culture:'german', born:1060, mar:8, trait:'patient', generated:true}, liege:'hre_1096'},
     {id:'saxony_1096', name:'Duchy of Saxony', color:'#84909c', capital:'magdeburg', aggression:0, rank:2, religion:'catholic', government:'territorial', ruler:{sex:'m', culture:'german', born:1060, mar:8, trait:'patient', generated:true}, liege:'hre_1096'}
   ],
+  duchies:{
+    swabia:{"name":"Swabia","kingdom":"east_francia"},
+    bavaria:{"name":"Bavaria","kingdom":"east_francia"},
+    ostmark:{"name":"Ostmark","kingdom":"east_francia"},
+    carantania:{"name":"Carantania","kingdom":"east_francia"},
+    saxony:{"name":"Saxony","kingdom":"east_francia"},
+    thuringia:{"name":"Thuringia","kingdom":"east_francia"}
+  },
+  kingdoms:{
+    east_francia:{"name":"Germany","empire":"francia"}
+  },
+  empires:{
+    francia:{"name":"Francia"}
+  },
   layouts:{
     ulm:[{site:'ulm_head', name:'Ulm', kind:'village', fill:true}, {site:'geo_stuttgart_2825297', name:'Stuttgart', kind:'village', fill:true}, {site:'geo_reutlingen_2847736', name:'Reutlingen', kind:'village', fill:true}, {site:'geo_esslingen_2928751', name:'Esslingen', kind:'village', fill:true}, {site:'geo_tubingen_2820860', name:'Tübingen', kind:'village', fill:true}, {site:'geo_ludwigsburg_2875392', name:'Ludwigsburg', kind:'village', fill:true}, {site:'geo_aalen_2959927', name:'Aalen', kind:'village', fill:true}],
     konstanz:[{site:'konstanz_head', name:'Konstanz', kind:'village', fill:true}, {site:'geo_sankt_gallen_2658822', name:'Sankt Gallen', kind:'village', fill:true}, {site:'geo_buchhorn_2924585', name:'Buchhorn', kind:'village', fill:true}, {site:'geo_vaduz_3042030', name:'Vaduz', kind:'village', fill:true}, {site:'geo_dornbirn_2780741', name:'Dornbirn', kind:'village', fill:true}, {site:'geo_ravensburg_2849802', name:'Ravensburg', kind:'village', fill:true}, {site:'geo_singen_2831924', name:'Singen', kind:'village', fill:true}],
@@ -136,6 +166,21 @@ FBDATA.bookmarkRevisionContent_1096_italy_north = {
     {id:'canossa_1096', name:'Canossa lands', color:'#8daa62', capital:'modena', aggression:0, rank:2, religion:'catholic', government:'territorial', ruler:{sex:'f', culture:'italian', born:1046, mar:8, trait:'patient', name:'Matilda of Canossa'}},
     {id:'venice_1096', name:'Venice', color:'#2f8f8f', capital:'venezia', aggression:0, rank:2, religion:'catholic', government:'territorial', ruler:{sex:'m', culture:'italian', born:1060, mar:8, trait:'patient', generated:true}, techTraditions:['latin', 'byzantine']}
   ],
+  duchies:{
+    piedmont:{"name":"Piedmont","kingdom":"italy"},
+    lombardy:{"name":"Lombardy","kingdom":"italy"},
+    verona:{"name":"Verona","kingdom":"italy"},
+    veneto:{"name":"Veneto","kingdom":"italy"},
+    friuli:{"name":"Friuli","kingdom":"italy"},
+    emilia:{"name":"Emilia","kingdom":"italy"},
+    tuscany:{"name":"Tuscany","kingdom":"italy"}
+  },
+  kingdoms:{
+    italy:{"name":"Italy","empire":"italia"}
+  },
+  empires:{
+    italia:{"name":"Italia"}
+  },
   layouts:{
     torino:[{site:'torino_head', name:'Torino', kind:'village', fill:true}, {site:'geo_turin_3165524', name:'Turin', kind:'village', fill:true}, {site:'geo_asti_3182714', name:'Asti', kind:'village', fill:true}, {site:'geo_moncalieri_3173180', name:'Moncalieri', kind:'village', fill:true}, {site:'geo_cuneo_3177700', name:'Cuneo', kind:'village', fill:true}, {site:'geo_rivoli_3169231', name:'Rivoli', kind:'village', fill:true}],
     aosta:[{site:'aosta_head', name:'Aosta', kind:'village', fill:true}, {site:'geo_biella_3182043', name:'Biella', kind:'village', fill:true}, {site:'geo_sitten_2658576', name:'Sitten', kind:'village', fill:true}, {site:'geo_martigny_2659748', name:'Martigny', kind:'village', fill:true}, {site:'geo_domodossola_3177532', name:'Domodossola', kind:'village', fill:true}, {site:'geo_sierre_2658606', name:'Sierre', kind:'village', fill:true}, {site:'geo_cossato_3177924', name:'Cossato', kind:'village', fill:true}],
@@ -193,6 +238,23 @@ FBDATA.bookmarkRevisionContent_1096_italy_south = {
     {id:'sicily_1096', name:'County of Sicily', color:'#5f9f72', capital:'palermo', aggression:0, rank:1, religion:'catholic', government:'territorial', ruler:{sex:'m', culture:'norman', born:1030, mar:8, trait:'patient', name:'Roger I'}},
     {id:'sardinian_judgedoms_1096', name:'Sardinian judgedoms', color:'#8fae7f', capital:'cagliari', aggression:0, rank:2, religion:'catholic', government:'territorial', ruler:{sex:'m', culture:'italian', born:1060, mar:8, trait:'patient', generated:true}}
   ],
+  duchies:{
+    spoleto:{"name":"Spoleto","kingdom":"italy"},
+    roma:{"name":"Roma","kingdom":"italy"},
+    benevento:{"name":"Benevento","kingdom":"sicily"},
+    apulia:{"name":"Apulia","kingdom":"sicily"},
+    calabria:{"name":"Calabria","kingdom":"sicily"},
+    sicily:{"name":"Sicily","kingdom":"sicily"},
+    sardinia:{"name":"Sardinia","kingdom":"italy"},
+    corsica:{"name":"Corsica","kingdom":"italy"}
+  },
+  kingdoms:{
+    italy:{"name":"Italy","empire":"italia"},
+    sicily:{"name":"Sicily","empire":"italia"}
+  },
+  empires:{
+    italia:{"name":"Italia"}
+  },
   layouts:{
     spoleto:[{site:'spoleto_head', name:'Spoleto', kind:'village', fill:true}, {site:'geo_piscaria_3171168', name:'Piscaria', kind:'village', fill:true}, {site:'geo_terni_3165771', name:'Terni', kind:'village', fill:true}, {site:'geo_teramo_3165803', name:'Teramo', kind:'village', fill:true}, {site:'geo_montesilvano_3172729', name:'Montesilvano', kind:'village', fill:true}, {site:'geo_chieti_3178796', name:'Chieti', kind:'village', fill:true}, {site:'geo_ascoli_piceno_3182749', name:'Ascoli Piceno', kind:'village', fill:true}],
     perugia:[{site:'perugia_head', name:'Perugia', kind:'village', fill:true}, {site:'geo_foligno_3176854', name:'Foligno', kind:'village', fill:true}, {site:'geo_fabriano_3177315', name:'Fabriano', kind:'village', fill:true}, {site:'geo_citta_di_castello_3178619', name:'Città di Castello', kind:'village', fill:true}, {site:'geo_bastia_umbra_3182289', name:'Bastia umbra', kind:'village', fill:true}, {site:'geo_todi_3165612', name:'Todi', kind:'village', fill:true}],
@@ -262,6 +324,29 @@ FBDATA.bookmarkRevisionContent_1096_britain_north_ireland = {
     {id:'munster_1096', name:'Munster', color:'#3f7f5f', capital:'cashel', aggression:0, rank:2, religion:'catholic', government:'territorial', ruler:{sex:'m', culture:'gaelic', born:1060, mar:8, trait:'patient', generated:true}},
     {id:'dublin_1096', name:'Dublin', color:'#4fb0d0', capital:'dublin', aggression:0, rank:2, religion:'catholic', government:'territorial', ruler:{sex:'m', culture:'norse', born:1060, mar:8, trait:'patient', generated:true}}
   ],
+  duchies:{
+    york:{"name":"York","kingdom":"england"},
+    northumbria:{"name":"Northumbria","kingdom":"england"},
+    alba:{"name":"Alba","kingdom":"alba"},
+    moray:{"name":"Moray","kingdom":"alba"},
+    lothian:{"name":"Lothian","kingdom":"alba"},
+    strathclyde:{"name":"Strathclyde","kingdom":"alba"},
+    galloway:{"name":"Galloway","kingdom":"alba"},
+    isles:{"name":"The Isles","kingdom":"alba"},
+    ulster:{"name":"Ulster","kingdom":"ireland"},
+    meath:{"name":"Meath","kingdom":"ireland"},
+    leinster:{"name":"Leinster","kingdom":"ireland"},
+    connacht:{"name":"Connacht","kingdom":"ireland"},
+    munster:{"name":"Munster","kingdom":"ireland"}
+  },
+  kingdoms:{
+    england:{"name":"England","empire":"britannia"},
+    alba:{"name":"Alba","empire":"britannia"},
+    ireland:{"name":"Ireland","empire":"britannia"}
+  },
+  empires:{
+    britannia:{"name":"Britannia"}
+  },
   layouts:{
     york:[{site:'york', name:'York', kind:'city'}, {site:'geo_leeds_2644688', name:'Leeds', kind:'village', fill:true}, {site:'geo_bradford_2654993', name:'Bradford', kind:'village', fill:true}, {site:'geo_wyke_2645425', name:'Wyke', kind:'village', fill:true}, {site:'geo_huddersfield_2646458', name:'Huddersfield', kind:'village', fill:true}, {site:'geo_doncaster_2651123', name:'Doncaster', kind:'village', fill:true}],
     scarborough:[{site:'scarborough_head', name:'Scarborough', kind:'village', fill:true}, {site:'geo_bridlington_2654728', name:'Bridlington', kind:'village', fill:true}, {site:'geo_whitby_2634135', name:'Whitby', kind:'village', fill:true}, {site:'geo_driffield_2648120', name:'Driffield', kind:'village', fill:true}, {site:'geo_hornsea_2646583', name:'Hornsea', kind:'village', fill:true}, {site:'geo_pickering_2640312', name:'Pickering', kind:'village', fill:true}],
@@ -329,6 +414,30 @@ FBDATA.bookmarkRevisionContent_1096_balkans = {
     {id:'duklja_rascia_1096', name:'Duklja and Rascia', color:'#7f6fbf', capital:'kotor', aggression:0, rank:2, religion:'orthodox', government:'territorial', ruler:{sex:'m', culture:'slavic', born:1060, mar:8, trait:'patient', generated:true}},
     {id:'croatia_1096', name:'Croatian court', color:'#4f9fbf', capital:'knin', aggression:0, rank:3, religion:'catholic', government:'territorial', ruler:{sex:'m', culture:'slavic', born:1060, mar:8, trait:'patient', generated:true}}
   ],
+  duchies:{
+    thrace:{"name":"Thrace","kingdom":"hellas"},
+    macedonia:{"name":"Macedonia","kingdom":"hellas"},
+    thessaly:{"name":"Thessaly","kingdom":"hellas"},
+    hellas:{"name":"Hellas","kingdom":"hellas"},
+    peloponnese:{"name":"Peloponnese","kingdom":"hellas"},
+    epirus:{"name":"Epirus","kingdom":"hellas"},
+    crete:{"name":"Crete","kingdom":"hellas"},
+    thrace_bulg:{"name":"Sredets","kingdom":"bulgaria"},
+    skopje:{"name":"Skopje","kingdom":"bulgaria"},
+    rascia:{"name":"Raška","kingdom":"serbia"},
+    zeta:{"name":"Zeta","kingdom":"serbia"},
+    bosnia:{"name":"Bosnia","kingdom":"serbia"},
+    croatia:{"name":"Croatia","kingdom":"croatia"}
+  },
+  kingdoms:{
+    hellas:{"name":"Hellas","empire":"byzantium"},
+    bulgaria:{"name":"Bulgaria","empire":"byzantium"},
+    serbia:{"name":"Serbia","empire":"byzantium"},
+    croatia:{"name":"Croatia","empire":"byzantium"}
+  },
+  empires:{
+    byzantium:{"name":"Byzantium"}
+  },
   layouts:{
     constantinople:[{site:'constantinople', name:'Constantinople', kind:'city'}, {site:'geo_rhegion_742394', name:'Rhegion', kind:'village', fill:true}, {site:'geo_zeytinburnu_737071', name:'Zeytinburnu', kind:'village', fill:true}, {site:'geo_corlu_748893', name:'Çorlu', kind:'village', fill:true}, {site:'geo_arnavutkoy_751868', name:'Arnavutköy', kind:'village', fill:true}, {site:'geo_basaksehir_6947639', name:'Başakşehir', kind:'village', fill:true}],
     adrianople:[{site:'adrianople_head', name:'Adrianople', kind:'village', fill:true}, {site:'geo_canakkale_749780', name:'Çanakkale', kind:'village', fill:true}, {site:'geo_rodosto_738927', name:'Rodosto', kind:'village', fill:true}, {site:'geo_arcadiopolis_741855', name:'Arcadiopolis', kind:'village', fill:true}, {site:'geo_yambol_725578', name:'Yambol', kind:'village', fill:true}, {site:'geo_k_rklareli_743166', name:'Kırklareli', kind:'village', fill:true}],
