@@ -67,6 +67,7 @@ FBDATA.bookmarkCandidates['1096'] = {
     Object.assign(bookmark.localInstitutions,copy(block.localInstitutions || {}));
     bookmark.stories = bookmark.stories.concat(copy(block.storyIds || []));
   });
+  Object.assign(bookmark.localInstitutions,copy(FBDATA.bookmarkInstitutions1096));
 
   /* Publish detached local faiths only alongside the complete dated world.
      Loading or restoring a campaign never runs a regional initializer. */

@@ -11,7 +11,7 @@ const {dependsOnRuntime} = require('../support/runtime-dependencies');
 const released = require('../fixtures/released-catalogue.json');
 
 dependsOnRuntime(__filename,[
-  'index.html','data/identities_1096.js','data/bookmark_1096.js',
+  'index.html','data/identities_1096.js','data/institutions_1096.js','data/bookmark_1096.js',
   'data/bookmark_1096_scaffold_a.js','data/bookmark_1096_scaffold_b.js',
   'data/bookmark_1096_scaffold_c.js','data/bookmark_1096_scaffold_d.js',
   'data/cultures.js','data/bookmarks.js','data/eras.js','data/starts.js',
@@ -89,12 +89,15 @@ for (const crazygames of [false,true]) {
               return c.culture === 'arabic' && c.religion === 'sunni';
             });
           }),
-          noInstitution:Object.keys(b.localInstitutions).length === 0,
+          noInventedStaff:Object.keys(b.localInstitutions).every(function (id) {
+            const d = b.localInstitutions[id];
+            return d.vacant === true && !d.representative && !d.historicalName;
+          }),
           faults:FB.validateReligionData(null),world:FB.validateBookmark(b)};
       })).toEqual({distribution:crazygames,selectors:{rabbanite:{bookmarkIds:['1096']}},
         addedOnce:true,unchanged:true,institutionOnly:[false,false,false,true,false,false,false,false],
         prior:true,jewish:true,community:true,culture:true,narrowHeld:true,
-        fatimid:'shia',egypt:true,noInstitution:true,faults:[],world:[]});
+        fatimid:'shia',egypt:true,noInventedStaff:true,faults:[],world:[]});
       expect((await page.evaluate(releasedCatalogue,released.selection)).hashes).toEqual(released.hashes);
     });
 }
@@ -190,7 +193,7 @@ for (const crazygames of [false,true]) {
     (crazygames ? 'CrazyGames' : 'standard'),async function ({page},info) {
       await startHistoricalGame(page,info,{bookmark:'1096',
         code:'IDENTITY-1096-farmer-mainz-m-Levi-established-0-ashkenazi.jewish'},crazygames);
-      const saved = await page.evaluate(function () { return JSON.stringify(FB.game.exportData()); });
+      const saved = await page.evaluate(function () { return FB.save.serialize(); });
       const before = await page.evaluate(function () {
         const s = FB.state;
         return {start:s.start,people:Object.keys(s.chars).sort().map(function (id) {
@@ -248,7 +251,7 @@ test('an ordinary JSON import can narrow the institution window without changing
     earlier:false,nextYear:false,household:false,jewish:true,faults:[]});
   await startHistoricalGame(page,info,{bookmark:'1096',
     code:'IMPORTIDENTITY-1096-farmer-mainz-f-Leah-established-0-ashkenazi.jewish'},false);
-  const saved = await page.evaluate(function () { return JSON.stringify(FB.game.exportData()); });
+  const saved = await page.evaluate(function () { return FB.save.serialize(); });
   await restoreBookmark(page,saved);
   expect(await page.evaluate(function () {
     return FB.state.chars[FB.state.player.charId].religion;
