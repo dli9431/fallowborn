@@ -8,7 +8,8 @@ const openings={harbor:require('../fixtures/authoring/mobile-opening-harbor.json
 const commands={harbor:require('../fixtures/authoring/mobile-command-harbor.json'),
   dune:require('../fixtures/authoring/mobile-command-dune.json')};
 
-dependsOnRuntime(__filename,['index.html','data/mobile_confederations.js','data/units.js','data/eras.js','data/technology.js',
+dependsOnRuntime(__filename,[
+  'js/story_expedition_preparation.js','index.html','data/mobile_confederations.js','data/units.js','data/eras.js','data/technology.js',
   'js/mobile_confederations.js','js/mobile_command.js','js/expedition_programs.js','js/mobile_columns.js','js/bookmark_setup.js','js/world.js',
   'js/governments.js','js/government_selection.js','js/government_continuity.js','js/government_support.js',
   'js/starts.js','js/model.js','js/station.js','js/mods.js','js/stories.js','js/authority.js',

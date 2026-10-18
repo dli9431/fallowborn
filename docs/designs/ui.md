@@ -4026,3 +4026,7 @@ An assigned settlement exposes Review maintained boat work beside its production
 Relay provisions reviews
 
 The settlement production sheet lists each declared approach, actual recipient host, provision material, maximum quantity and finite term. Separate supplier authorization, revocation and recipient collection cards show the current blocker. A confirmation names supplier, recipient, exact payment accounts, immediate price, quantity, actual provisions loaded and last eligible turn. Consent grants no food or passage. Stale confirmation spends nothing. Existing production modal history retains keyboard/mobile controls, list scroll, Back, Escape and originating focus. Goods use their ordinary structured-data names; dynamic chrome uses literal FB.T.
+
+Expedition preparation reviews
+
+The shared Deeds story sheet names the original commander and local provider with the existing portrait rows, shows finite preparation status/deadline, reserved external people, actual public command funds and formation food. Separate local consent, public grant and private contribution choices explain their actual source and retained money on closure. Formation review discloses current public training/provision costs and exact total; wait/refuse/stop remain available without payment or departure. Expired and interrupted outcomes stay explicit. Existing Back, Escape, Close, scroll and originating-card focus behavior remains shared. No new modal route is introduced.

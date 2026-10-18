@@ -6,7 +6,8 @@ const {beginBookmark}=require('../support/game/bookmark-acceptance');
 const {dependsOnRuntime}=require('../support/runtime-dependencies');
 const examples={harbor:require('../fixtures/authoring/expedition-program-harbor.json'),
   dune:require('../fixtures/authoring/expedition-program-dune.json')};
-dependsOnRuntime(__filename,['index.html','data/mobile_confederations.js','data/units.js','data/technology.js',
+dependsOnRuntime(__filename,[
+  'js/story_expedition_preparation.js','index.html','data/mobile_confederations.js','data/units.js','data/technology.js',
   'js/expedition_programs.js','js/mobile_columns.js','js/mobile_confederations.js','js/mobile_command.js',
   'js/government_selection.js','js/governments.js','js/authority.js','js/government_support.js','js/population.js',
   'js/market.js','js/treasury.js','js/logistics.js','js/armies.js','js/federates.js','js/technology.js','js/model.js',

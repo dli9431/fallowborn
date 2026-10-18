@@ -84,6 +84,10 @@
     rationale:'A public grant transfers available money between distinct existing public accounts under current lawful authority. It creates no income, credit or technological exception.'};
   FBDATA.techImpactReviews.features.expedition_private_contributions = {mode:'none',
     rationale:'A consenting household may contribute its actual private money to a distinct command account. No discovery gates this baseline voluntary transfer.'};
+  FBDATA.techImpactReviews.features.expedition_preparation_sources = {mode:'none',
+    rationale:'Reserving finite external cohorts or withdrawing actual local residents is conserved population accounting. Baseline participation has no credible discovery prerequisite.'};
+  FBDATA.techImpactReviews.features.expedition_later_formation = {mode:'none',
+    rationale:'Once-only formation requires the original living command, actual public funds, paid training and real local provisions. Existing unit eligibility remains binding.'};
   /* The fresh 476 opening inhabits Cherson and adds the Pontic following.
      Priscus attests displaced followings and Roman diplomacy, not a precise
      476 boundary or an identifiable incumbent at this simulated camp. */

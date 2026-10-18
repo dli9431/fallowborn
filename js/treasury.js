@@ -30,6 +30,12 @@
     return { version:1, gold:gold, militaryAccrued:0, lastSettledSeason:season(state),
       lastRevaluedYear:state.date.year, lastSummary:null, retired:false, distributionNextTurn:0 };
   }
+  function deferredFormation(state,rid) {
+    const bookmark=FB.campaignBookmark(state);
+    return !!bookmark && (bookmark.realms || []).some(function (d) {
+      return d.id===rid && d.mobile && d.mobile.preparationId!==undefined;
+    });
+  }
   function sovereignIndex(realms, ids) {
     const out = Object.create(null);
     for (const id of ids) {
@@ -311,7 +317,7 @@
         // Only explicit initial/legacy initialization grants opening reserves.
         const floors = FBDATA.balance.aiTreasuryOpeningFloor || [0, 10, 20, 30, 40];
         const seasons = FBDATA.balance.aiTreasuryOpeningSeasons;
-        const gold = initial ? Math.max(floors[Math.min(4, realm.rank)] || 0,
+        const gold = initial && !deferredFormation(state,rid) ? Math.max(floors[Math.min(4, realm.rank)] || 0,
           Math.max(0, net) * (seasons === undefined ? 2 : positive(seasons))) : 0;
         realm.treasury = empty(state, gold);
         count('accounts initialized');
@@ -325,7 +331,7 @@
           const net = fiscal.income + fiscal.duesIn - fiscal.duesOut - fiscal.upkeep - positive(fiscal.government);
           const opening = Math.max(floors[Math.min(4, realm.rank)] || 0,
             Math.max(0, net) * (periods === undefined ? 2 : positive(periods)));
-          realm.treasury = empty(state, Math.max(opening, positive(purses[rid] && purses[rid].gold)));
+          realm.treasury = empty(state, deferredFormation(state,rid) ? 0 : Math.max(opening, positive(purses[rid] && purses[rid].gold)));
         }
         state.treasuryAccounting.mode = 'active';
         state.treasuryAccounting.pendingPlayer = 0;

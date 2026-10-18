@@ -127,7 +127,7 @@
   };
   var initialize=M.initialize;
   M.initialize=function (s,defs) {
-    var fresh=defs.filter(function (d) {return d.mobile && d.mobile.expeditionProgram!==undefined && !M.row(s,d.id);});
+    var fresh=defs.filter(function (d) {return d.mobile && d.mobile.preparationId===undefined && d.mobile.expeditionProgram!==undefined && !M.row(s,d.id);});
     /* Preflight the complete batch before any existing initializer mutates it. */
     fresh.forEach(function (d) {
       var actual=declaration(s,d.id);
@@ -136,10 +136,14 @@
     });
     initialize(s,defs);
     fresh.forEach(function (d) {
-      var p=d.mobile.expeditionProgram;
+      E.initialize(s,d);
+    });
+  };
+  E.initialize=function (s,d) {
+    var p=d.mobile.expeditionProgram;
+    if (p!==undefined && !M.row(s,d.id).expeditionProgram)
       M.row(s,d.id).expeditionProgram={schema:1,id:p.id,commandId:p.commandId,definitionKey:JSON.stringify(p),status:'active',
         steps:p.steps.map(function (a) {return {id:a.id,status:'pending',cursor:0};})};
-    });
   };
   function recordValid(p,r) {
     if (!r || !keys(r,r.schema>=2 ? ['schema','id','commandId','definitionKey','status','steps','execution'] :
