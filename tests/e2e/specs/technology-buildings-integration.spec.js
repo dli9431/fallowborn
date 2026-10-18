@@ -15,7 +15,7 @@ dependsOnRuntime(__filename, [
   'data/technology_civic_military.js', 'data/buildings_civic_military.js',
   'data/technology_maritime.js', 'data/buildings_maritime.js', 'data/economy_maritime.js',
   'data/technology_wind.js', 'data/buildings_wind.js', 'data/economy.js',
-  'data/technology_transmission.js',
+  'data/technology_transmission.js','data/buildings_early_worship.js','data/buildings_fish_drying.js','data/building_profiles.js','data/building_institutions.js',
   'data/bookmarks.js', 'data/bookmark_867_expansion.js', 'data/bookmark_1066_inhabited.js',
   'data/geographies.js', 'data/geography_expansion.js', 'data/cultures.js', 'data/eras.js',
   'data/settlements.js', 'data/settlements_real.js', 'data/starts.js',
@@ -118,11 +118,11 @@ test('all supplements compose once with stable effects, grants, budgets and rele
       'sugar_processing','manuscript_scholarship','galley_yard_practice','horizontal_watermill',
       'bog_iron','seasonal_pasture_management','motte_and_bailey'];
     const heldBuildings = ['public_bath','paper_workshop',
-      'bloomery_smithy','horizontal_mill','boathouse','fish_drying_station','shieling','fairground',
+      'bloomery_smithy','horizontal_mill','boathouse','shieling','fairground',
       'relay_station','pasture_well_network','felt_yard','timber_streetworks','tonnara',
       'cotton_preparation_yard','sugar_workshop','mint_workshop','funduq','notarial_office',
       'manuscript_library','cathedral_school','galley_yard','episcopal_complex','congregational_mosque',
-      'monastic_house','timber_church','madrasa','communal_hall','assembly_booths','tower_house',
+      'timber_church','madrasa','communal_hall','assembly_booths','tower_house',
       'earl_hall','consular_hall','turf_farmstead','estate_storehouse','timber_strongpoint','urban_circuit','ribat'];
     return {
       techOwners:owners('techCorrections_', techMaps, FBDATA.tech),
@@ -144,9 +144,9 @@ test('all supplements compose once with stable effects, grants, budgets and rele
   });
   expect(r.techOwners).toEqual({ duplicates:[], stale:[], counts:[9,6,12,8,1,1] });
   expect(r.buildingOwners).toEqual({ duplicates:[], stale:[], counts:[3,3,1,1] });
-  expect(r.counts).toEqual([192,23]);
+  expect(r.counts).toEqual([192,25]);
   expect(r.techIds).toEqual(r.baseIds.concat(['aqueduct_maintenance','qanat_construction','cistern_engineering']).sort());
-  expect(r.addedBuildings).toEqual(['hospice','aqueduct','qanat_waterworks','urban_cisterns']);
+  expect(r.addedBuildings).toEqual(['hospice','aqueduct','qanat_waterworks','urban_cisterns','fish_drying_station','monastic_house']);
   expect(r.scalarChanges.sort()).toEqual(['capitularies','paper_making','paper_scholarship']);
   expect(r.buildingChanges).toEqual([]);
   expect(r.caps).toEqual(r.baseCaps); expect(r.grants).toEqual(r.baseGrants);

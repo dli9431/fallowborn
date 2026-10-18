@@ -29,7 +29,9 @@ window.FB = window.FB || {};
     if (!plain(table) || Object.keys(table).length > 128) return ['buildingInstitutionProfiles must be a bounded object.'];
     Object.keys(table).forEach(function (id) {
       var d = table[id];
-      if (!ident(id) || !keys(d, ['kinds','property','permission','incumbent','exclusiveRoles']) ||
+      var fields = ['kinds','property','permission','incumbent','exclusiveRoles'];
+      if (own(d,'requiresBinding')) fields.push('requiresBinding');
+      if (!ident(id) || !keys(d, fields) || own(d,'requiresBinding') && d.requiresBinding !== true ||
           !Array.isArray(d.kinds) || !d.kinds.length || d.kinds.length > 10 || d.kinds.some(function (k, i) {
             return ['senate','council','see','patriarchate','congregation','school','temple','monastery','ritual_community'].indexOf(k) < 0 || d.kinds.indexOf(k) !== i;
           }) || ['seat','abbey'].indexOf(d.property) < 0 || ['holder','property_patron'].indexOf(d.permission) < 0 ||
@@ -105,11 +107,23 @@ window.FB = window.FB || {};
     return { allowed:!reason, reason:reason || '', binding:binding };
   }
   function foundation(b) { return b.propertyId ? 'property:' + b.propertyId : 'institution:' + b.institutionId; }
+  FB.buildingInstitutionRequiresBinding = function (definition) {
+    var p = definition && profiles(FBDATA)[definition.institutionProfile];
+    return !!p && p.requiresBinding === true;
+  };
   FB.buildingInstitutionStatus = function (s, pid, idx, id, a, existing, definition) {
     a = actor(s, a);
     if (!keys(a, ['kind','id']) || ['character','realm'].indexOf(a.kind) < 0 || typeof a.id !== 'string')
       return { allowed:false, reason:FB.T('A lawful builder and payer are required.'), binding:null };
-    if (existing && !existing.institutionBinding && !(existing.buildingProfile && FB.buildingProfiles.assetDefinition(existing).institutionProfile))
+    // An ordinary alternative cannot reuse an already occupied bound footprint.
+    if (!existing && (s.buildings && s.buildings[pid] || []).some(function (r) {
+      if (!r || r.s !== idx) return false;
+      var d = FB.buildingProfiles.assetDefinition(r), p = d && profiles(FBDATA)[d.institutionProfile];
+      return !!p && (p.requiresBinding || r.institutionBinding || r.buildingProfile && r.buildingProfile.inherited) &&
+        p.exclusiveRoles.indexOf(FB.buildingRole(id)) >= 0;
+    })) return {allowed:false,reason:FB.T('This physical foundation is already occupied, including ruins.'),binding:null};
+    if (existing && !existing.institutionBinding && !FB.buildingInstitutionRequiresBinding(FB.buildingProfiles.assetDefinition(existing)) &&
+        !(existing.buildingProfile && FB.buildingProfiles.assetDefinition(existing).institutionProfile))
       return { allowed:true, reason:'', binding:null };
     var q = current(s, pid, idx, id, a, definition || existing && FB.buildingProfiles.assetDefinition(existing)), b = q.binding;
     if (!q.allowed || !b) return q;
@@ -129,7 +143,7 @@ window.FB = window.FB || {};
     return q;
   };
   FB.buildingInstitutionOperating = function (s, pid, r) {
-    if (!r.institutionBinding) return true;
+    if (!r.institutionBinding) return !FB.buildingInstitutionRequiresBinding(FB.buildingProfiles.assetDefinition(r));
     return FB.buildingInstitutionStatus(s, pid, r.s, r.id, r.institutionBinding.payer, r).allowed;
   };
   FB.buildingInstitutionCountyKey = function (s, pid, rows) {
@@ -141,7 +155,8 @@ window.FB = window.FB || {};
         !Number.isSafeInteger(idx) || idx < 0) return null;
     var r = record(s, pid, idx, id), q = current(s, pid, idx, id, a, r && FB.buildingProfiles.assetDefinition(r));
     var status = FB.buildingInstitutionStatus(s, pid, idx, id, a, mode === 'reaffirm' ? r : null);
-    if (mode === 'reaffirm' && r && q.binding && (r.institutionBinding || r.buildingProfile && r.buildingProfile.inherited)) {
+    if (mode === 'reaffirm' && r && q.binding && (r.institutionBinding || FB.buildingInstitutionRequiresBinding(FB.buildingProfiles.assetDefinition(r)) ||
+        r.buildingProfile && r.buildingProfile.inherited)) {
       if (!r.institutionBinding && !status.allowed) { q.allowed = false; q.reason = status.reason; }
       q.binding.revision = r.institutionBinding ? r.institutionBinding.revision + 1 : 1;
       // Reaffirm changes permission on the same occupied asset, never its footprint.

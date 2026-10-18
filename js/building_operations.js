@@ -130,7 +130,8 @@
   /* Only this projection supplies ongoing values for an opted-in record. */
   O.effects = function (s,pid,r) {
     var d = FB.buildingProfiles.assetDefinition(r) || {};
-    if (r.buildingProfile && !FB.buildingProfiles.operationReady(s,pid,r)) {
+    if (r.buildingProfile && !FB.buildingProfiles.operationReady(s,pid,r) ||
+        FB.buildingInstitutionRequiresBinding(d) && !FB.buildingInstitutionOperating(s,pid,r)) {
       var dormant = Object.assign({},d);
       ['tax','dev','pop','prestige','piety','research','levy','retinue','archers','defense','siege',
         'populationCapacity','populationFamineProtection','populationCrisisProtection','migrationAttraction','communityFaithPressure','upkeep'].forEach(function (k) { dormant[k] = 0; });

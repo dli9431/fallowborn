@@ -10,7 +10,7 @@ const baseline = require('../fixtures/learning-care-baseline.json');
 const importPath = path.resolve(__dirname, '../fixtures/authoring/learning-and-care.json');
 
 dependsOnRuntime(__filename, [
-  'data/technology_waterworks.js', 'data/buildings_waterworks.js',
+  'data/technology_waterworks.js', 'data/buildings_waterworks.js', 'data/buildings_early_worship.js','data/buildings_fish_drying.js',
   'data/technology_learning.js', 'data/buildings_learning_care.js',
   'data/technology.js', 'data/technology_early_refinements.js', 'data/map_data.js', 'data/markets.js', 'data/bookmarks.js',
   'data/eras.js', 'js/technology.js', 'js/actions.js', 'js/fortifications.js',
@@ -72,7 +72,7 @@ test('catalogue corrections retain costs and effects with explicit paper transmi
   expected.paper_scholarship.history.adoption.persianate = [800,1000];
   expect(r.retained).toEqual(expected);
   expect(r.errors).toEqual([]); expect(r.buildings).toEqual([]);
-  expect(r.techCount).toBe(192); expect(r.buildingCount).toBe(23);
+  expect(r.techCount).toBe(192); expect(r.buildingCount).toBe(25);
   expect(r.scriptoria).toEqual(['rule:scriptoria','building:library']);
   expect(r.paper).toEqual([]); expect(r.library).toBe('scriptoria');
   expect(r.reqs).toEqual([

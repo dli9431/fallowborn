@@ -8807,7 +8807,7 @@ window.FB = window.FB || {};
     let h = '';
     for (const r of FB.builtIn(s, pid)) {
       const d = FB.buildingProfiles.assetDefinition(r);
-      if (!r.institutionBinding && !(r.buildingProfile && d && d.institutionProfile)) continue;
+      if (!r.institutionBinding && !FB.buildingInstitutionRequiresBinding(d) && !(r.buildingProfile && d && d.institutionProfile)) continue;
       const status = FB.buildingInstitutionStatus(s, pid, r.s, r.id, r.institutionBinding && r.institutionBinding.payer, r);
       const name = r.buildingProfile ? dt(s,'buildingProfile',r.buildingProfile.id,FBDATA.buildingProfiles[r.buildingProfile.id],'name') : dt(s,'building',r.id,d,'name');
       h += '<div class="hint">' + esc(name) + ': ' +
