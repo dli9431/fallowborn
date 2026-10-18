@@ -9,7 +9,7 @@ const examples = {
   house:require('../fixtures/authoring/building-institutions-house.json')
 };
 dependsOnRuntime(__filename, [
-  'data/building_profiles.js','js/building_profiles.js',
+  'data/building_profiles.js','js/building_profiles.js','js/building_operations.js','js/building_seasons.js',
   'index.html','data/building_institutions.js','data/technology.js','data/map_data.js',
   'data/religious_institutions.js','data/religious_activities.js','data/political_institutions.js',
   'js/building_institutions.js','js/fortifications.js','js/actions.js','js/world.js',
@@ -18,10 +18,17 @@ dependsOnRuntime(__filename, [
   'js/save_v4.js','js/main.js','js/model.js','js/population.js','js/ui_modals.js','js/ui_misc.js'
 ]);
 
-async function start(page, info, label, npc) {
+async function start(page, info, label, npc, required) {
   await openGame(page, info);
   await page.evaluate(function () { FB.ui.showMods(); });
-  await page.locator('#modfile').setInputFiles(path.resolve(__dirname, '../fixtures/authoring/building-institutions-' + label + '.json'));
+  if (required) {
+    const source = JSON.parse(JSON.stringify(examples[label]));
+    source.buildingInstitutionProfiles.seat_works.requiresBinding = true;
+    source.bookmarks.inventory_estuary.openingInfrastructure.placements = [
+      {countyId:'inventory_quay',siteId:'inventory_quay_hall',buildingId:'binding_work',condition:'standing'}
+    ];
+    await page.locator('#modfile').setInputFiles({name:'required-foundation.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(source))});
+  } else await page.locator('#modfile').setInputFiles(path.resolve(__dirname, '../fixtures/authoring/building-institutions-' + label + '.json'));
   await Promise.all([page.waitForNavigation({ waitUntil:'domcontentloaded' }), page.locator('#mod-apply').click()]);
   await page.waitForFunction(function () { return window.FB && FB.game && FB.game.bootReady && FBDATA.buildings.binding_work; });
   const world = label === 'see' ? 'inventory_estuary' : 'inventory_uplands';
@@ -44,6 +51,23 @@ async function start(page, info, label, npc) {
     };
   }, !!npc);
 }
+
+test('an opted-in inherited unbound facility stays dormant through restore until explicit current permission', async function ({ page }, info) {
+  await start(page, info, 'see', false, true);
+  const r = await page.evaluate(function () {
+    let s = FB.state; const pid = bindingCounty;
+    const before = JSON.stringify(s.buildings), gold = s.player.gold;
+    const idle = ['tax','upkeep'].every(function (key) { return FB.buildingBonusAt(s,pid,0,key) === 0; });
+    const occupied = !FB.buildingInstitutionStatus(s,pid,0,'temple').allowed;
+    FB.save.restore(JSON.parse(FB.save.serialize())); s = FB.state;
+    const retained = before === JSON.stringify(s.buildings) && !s.buildings[pid][0].institutionBinding;
+    const q = FB.buildingInstitutionQuote(s,pid,0,'binding_work',undefined,'reaffirm');
+    const reviewed = FB.buildingInstitutionApply(s,q), repeat = FB.buildingInstitutionApply(s,q);
+    return {idle:idle,occupied:occupied,retained:retained,reviewed:reviewed,repeat:repeat,
+      noCharge:gold===s.player.gold,tax:FB.buildingBonusAt(s,pid,0,'tax'),upkeep:FB.buildingBonusAt(s,pid,0,'upkeep')};
+  });
+  expect(r).toEqual({idle:true,occupied:true,retained:true,reviewed:true,repeat:false,noCharge:true,tax:2,upkeep:2});
+});
 
 test('the see import binds the actual office and pays construction and maintenance once', async function ({ page }, info) {
   await start(page, info, 'see');
@@ -284,6 +308,7 @@ test('detached imports reject unknown, foreign and ambiguous declarations withou
   const r = await page.evaluate(function (source) {
     const changes = [function (d) { d.buildingInstitutionProfiles = []; },
       function (d) { d.buildingInstitutionProfiles.seat_works.extra = true; },
+      function (d) { d.buildingInstitutionProfiles.seat_works.requiresBinding = 'yes'; },
       function (d) { d.buildingInstitutionProfiles.seat_works.permission = 'spiritual_title'; },
       function (d) { d.buildingInstitutionProfiles.seat_works.kinds = ['unknown']; },
       function (d) { d.buildings.binding_work.institutionProfile = 'unknown'; },
@@ -297,7 +322,7 @@ test('detached imports reject unknown, foreign and ambiguous declarations withou
       return FB.mods.validate(d).length > 0 && before === JSON.stringify([FBDATA, FB.state, d]) && signature === FB.mods.sig() && rng === FB.getRngState() && uid === FB.getUidCounter();
     });
   }, examples.see);
-  expect(r).toEqual(Array(9).fill(true));
+  expect(r).toEqual(Array(10).fill(true));
 });
 
 test('unbound legacy buildings keep their effects and are not enrolled by restore or review', async function ({ page }, info) {
