@@ -6,7 +6,8 @@ const {beginBookmark}=require('../support/game/bookmark-acceptance');
 const {dependsOnRuntime}=require('../support/runtime-dependencies');
 const examples={harbor:require('../fixtures/authoring/mobile-preparation-harbor.json'),
   upland:require('../fixtures/authoring/mobile-preparation-upland.json')};
-dependsOnRuntime(__filename,['index.html','data/mobile_confederations.js','data/units.js','data/technology.js',
+dependsOnRuntime(__filename,[
+  'js/story_expedition_program.js','index.html','data/mobile_confederations.js','data/units.js','data/technology.js',
   'js/story_expedition_preparation.js','js/mobile_confederations.js','js/mobile_command.js','js/mobile_columns.js',
   'js/expedition_programs.js','js/home_authority.js','js/treasury.js','js/population.js','js/market.js',
   'js/federates.js','js/governments.js','js/government_selection.js','js/government_civic.js','js/authority.js',

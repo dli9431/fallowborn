@@ -362,3 +362,7 @@ The registered household_refuge world type composes existing named-party consent
 Expedition preparation world stories
 
 expedition_preparation registers a world story whose one optional version-1 record owns only finite unformed reserves and historical formation receipts. It composes the existing population, public funding, market and mobile constructor owners through pure reviews and one atomic staged formation. Complete wait/refuse/stop/expiry/interruption alternatives close intent without departure or effects on unrelated obligations. Shared presentation and NPC policies use the same canonical transactions. The exact typed declaration, actor/source restrictions, original-identity save validator and independent ordinary imports are documented in docs/designs/expedition-preparation.md. It is a reusable formation owner, with no historical content or second movement program.
+
+Finite expedition composition
+
+js/story_expedition_program.js registers expedition_program after expedition_preparation. Its required parent and canonical mobile program own formation and progress; the composition retains original references and a finite preparing/active/paused/closed lifecycle only. Shared reviews and direct player/AI owner calls share one attempted daily action, exact stale rejection and truthful no-departure/expiry outcomes. Missing opted-in saves fail closed without attachment or replay. See expedition-story-programs.md for the complete declaration and saved record.

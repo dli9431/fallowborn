@@ -304,6 +304,7 @@
       var e=entry(s,def.id);
       if (s.turn>=t.endTurn) {close(s,e,'expired');return;}
       if (!current(s,e).valid) {close(s,e,'interrupted');return;}
+      if (FB.expeditionStoryPrograms && !FB.expeditionStoryPrograms.allowPreparationAI(s,def.realmId)) return;
       var leader=principal(e), providerId=t.provider.characterId;
       if (t.authorizedTurn===null && providerId!==s.player.charId && def.acceptance==='volunteers') {
         P.commit(s,P.review(s,def.id,'authorize',providerId));return;
