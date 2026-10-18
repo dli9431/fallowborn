@@ -5,7 +5,9 @@ const {dependsOnRuntime} = require('../support/runtime-dependencies');
 const {openGame} = require('../support/game/navigation');
 
 dependsOnRuntime(__filename,[
-  'index.html','data/bookmark_1096_scaffold_b.js','data/bookmarks.js',
+  'index.html','data/bookmark_1096.js','data/identities_1096.js',
+  'data/bookmark_1096_scaffold_a.js','data/bookmark_1096_scaffold_b.js',
+  'data/bookmark_1096_scaffold_c.js','data/bookmark_1096_scaffold_d.js','data/bookmarks.js',
   'data/bookmark_1066_inhabited.js','data/government_rollout.js',
   'data/counties.js','data/cultures.js','data/eras.js','data/geographies.js',
   'data/geography_expansion.js','data/settlements.js','data/settlements_real.js',
@@ -122,12 +124,17 @@ test('court redating retains local residents and leaves unresolved incumbents ge
       block.realms.forEach(function (r) { realms[r.id] = r; });
       block.provinces.forEach(function (p) { provinces[p.id] = p; });
     });
-    return {realms:realms,provinces:provinces};
+    const bookmark = FB.bookmark('1096');
+    return {realms:realms,provinces:provinces,papacy:bookmark.realms.filter(function (r) {
+      return r.id === bookmark.religiousHeads.catholic;
+    }).map(function (r) {
+      return {id:r.id,name:r.ruler.name,born:r.ruler.born,capital:r.capital,religion:r.religion};
+    })};
   },Object.keys(coverage));
   const r = result.realms, p = result.provinces;
   const named = {
     hre_1096:['Henry IV',1050],canossa_1096:['Matilda of Canossa',1046],
-    papacy_1096:['Urban II',1040],bohemond_lordships_1096:['Bohemond',1054],
+    papacy_1096:['Urban II',1035],bohemond_lordships_1096:['Bohemond',1054],
     sicily_1096:['Roger I',1030],byzantium_1096:['Alexios I Komnenos',1057]
   };
   Object.keys(r).forEach(function (id) {
@@ -142,6 +149,7 @@ test('court redating retains local residents and leaves unresolved incumbents ge
     }
     expect(r[id].royalCourt).toBeUndefined();
   });
+  expect(result.papacy).toEqual([{id:'papacy_1096',name:'Urban II',born:1035,capital:'roma',religion:'catholic'}]);
   expect(r.canossa_1096.ruler.sex).toBe('f');
   expect(r.canossa_1096.liege).toBeUndefined();
   expect(r.byzantium_1096.government).toBe('administrative_monarchy');

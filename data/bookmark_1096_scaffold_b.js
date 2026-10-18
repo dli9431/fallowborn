@@ -186,7 +186,7 @@ FBDATA.bookmarkRevisionContent_1096_italy_south = {
     {id:'ajaccio', name:'Ajaccio', x:8.74, y:41.92, terrain:'mountains', duchy:'corsica', realm:'sardinian_judgedoms_1096', culture:'italian', religion:'catholic', dev:3}
   ],
   realms:[
-    {id:'papacy_1096', name:'Papal temporal court', color:'#e8e0b0', capital:'roma', aggression:0, rank:3, religion:'catholic', government:'ecclesiastical_principality', ruler:{sex:'m', culture:'frankish', born:1040, mar:8, trait:'patient', name:'Urban II'}, ecclesiastical:{profileId:'papal_temporal_1066', officeId:'catholic', institutionId:null}},
+    {id:'papacy_1096', name:'Papal temporal court', color:'#e8e0b0', capital:'roma', aggression:0, rank:3, religion:'catholic', government:'ecclesiastical_principality', ruler:{sex:'m', culture:'frankish', born:1035, mar:8, trait:'patient', name:'Urban II'}, ecclesiastical:{profileId:'papal_temporal_1066', officeId:'catholic', institutionId:null}},
     {id:'bohemond_lordships_1096', name:'Bohemond’s Apulian lordships', color:'#ab794e', capital:'taranto', aggression:0, rank:1, religion:'catholic', government:'territorial', ruler:{sex:'m', culture:'norman', born:1054, mar:8, trait:'patient', name:'Bohemond'}},
     {id:'apulia_1096', name:'Duchy of Apulia and Calabria', color:'#b87945', capital:'foggia', aggression:0, rank:2, religion:'catholic', government:'territorial', ruler:{sex:'m', culture:'norman', born:1060, mar:8, trait:'patient', generated:true}},
     {id:'capua_1096', name:'Capuan court', color:'#c98f4a', capital:'capua', aggression:0, rank:1, religion:'catholic', government:'territorial', ruler:{sex:'m', culture:'norman', born:1060, mar:8, trait:'patient', generated:true}},
