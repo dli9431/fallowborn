@@ -3944,3 +3944,7 @@ The shared mobile sheet explicitly labels an independent expedition and explains
 Local incident reviews
 
 Local incident cards use the existing shared Deeds story sheet, actor portrait link and confirmation flow. The card names its actual site, phase and committed occurrence count. Each offered choice shows its data-owned label and detail, and confirmation states that it costs no money or action days, grants no reward and resolves no harmful outcome. Unavailable choices keep the original-actor, exact-site, authority, date and separate-day blocker reviewable. Only the actual player actor receives choices; resident activity is observed as facts. Existing Back, Cancel, Escape, scroll and originating-card focus behavior remains shared.
+
+Command funding reviews
+
+The shared mobile sheet exposes separate Contribute private funds and Grant public funds cards only under the command's declared funding policy. It shows the selected paying account, command recipient and exact contribution before confirmation; a missing public account remains an explicit funding blocker. The private household purse is identified separately from public treasuries. Amount/source controls, list scroll, disclosures and originating focus survive Back, Escape and the outcome Continue route through the existing modal history. A changed account or mandate rejects confirmation without a transfer.

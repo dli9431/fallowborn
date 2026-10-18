@@ -10,7 +10,7 @@ dependsOnRuntime(__filename,['index.html','data/mobile_confederations.js','data/
   'js/main.js','js/starts.js','js/world.js','js/bookmark_setup.js','js/mobile_confederations.js','js/mobile_command.js','js/mobile_columns.js',
   'js/mods.js','js/model.js','js/station.js','js/governments.js','js/government_selection.js',
   'js/government_continuity.js','js/government_support.js','js/authority.js','js/federates.js',
-  'js/population.js','js/market.js','js/treasury.js','js/armies.js','js/fortifications.js',
+  'js/population.js','js/market.js','js/treasury.js','js/home_authority.js', 'js/armies.js','js/fortifications.js',
   'js/stories.js','js/save.js','js/save_v4.js','js/ui_misc.js','js/ui_modals.js']);
 
 async function importExample(page,info,prefix,modified) {

@@ -2049,7 +2049,7 @@ window.FBMODS = window.FBMODS || [];
 
   function validateAuthorityDefinitions(mod) {
     var fields = {
-      authorityOffices:{ name:true, desc:true, powers:true, scopes:true, succession:true, recognitionSources:true, appointment:true, publicRole:true },
+      authorityOffices:{ name:true, desc:true, powers:true, scopes:true, succession:true, recognitionSources:true, appointment:true, publicRole:true, homePowers:true },
       legitimacySources:{ name:true, succession:true, issuerKinds:true, characterRoles:true, mandate:true, countyRights:true, institutional:true },
       customaryBases:{}
     };

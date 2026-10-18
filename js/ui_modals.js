@@ -9485,6 +9485,7 @@ window.FB = window.FB || {};
 
   function fortProjectReason(s, status, def) {
     if (!status) return '';
+    if (status.reason === 'home_authority') return FB.homeAuthority.reason();
     if (status.reason === 'technology') return FB.T('Requires {technology}.', {
       technology:fortRequirementNames(s, def)
     });

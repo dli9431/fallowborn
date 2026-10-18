@@ -19,13 +19,17 @@
       capacity:FB.T('The site lacks unallocated capacity, or the commitment limit has been reached.'),
       partner:FB.T('The living outside court must accept an unchanged offer.'),
       population:FB.T('The transfer exceeds available people or would deplete the local population floor.'),
-      award:FB.T('Settlement requires owned land or an ordinary consented land award.'), food:FB.T('The seller lacks the requested food stock.')
+      award:FB.T('Settlement requires owned land or an ordinary consented land award.'), food:FB.T('The seller lacks the requested food stock.'),
+      funding:FB.T('Funding requires consent, a permitted source, distinct available accounts and an active command.')
     };
     return messages[id] || FB.T('Review the current terms again.');
   }
   function county(pid) { return FB.world.byId[pid] && FB.world.byId[pid].name || pid; }
   function termsHtml(s,t) {
     var text = '';
+    if (t.fundingKind) text += kv(FB.T('Paying account'),t.fundingKind === 'private' ? FB.T('Your private purse') :
+      FB.T('Public treasury of {realm}',{realm:s.realms[t.payerRealmId].name})) +
+      kv(FB.T('Recipient'),s.realms[t.recipientRealmId].name) + kv(FB.T('Contribution'),FB.money(t.amount,s));
     if (t.count !== undefined) text += kv(FB.T('People or food units'),t.count);
     if (t.countyId) text += kv(FB.T('County'),county(t.countyId));
     if (t.countyIds) text += kv(FB.T('Access corridor'),t.countyIds.map(county).join(', '));
@@ -114,6 +118,27 @@
       '<label>'+esc(FB.T('People or food units'))+'<input id="mobile-count" type="number" min="1" max="1000000" step="1" value="'+esc(count)+'"></label>'+
       '<label>'+esc(FB.T('Agreement price'))+'<input id="mobile-price" type="number" min="0" step="1" value="'+esc(price)+'"></label>'+
       '<label>'+esc(FB.T('Agreement duration in days'))+'<input id="mobile-days" type="number" min="1" max="1440" step="1" value="'+esc(days)+'"></label>';
+    var fundingPolicy = FB.homeAuthority.fundingPolicy(s,rid);
+    if (fundingPolicy) {
+      var amount = Number(number('mobile-funding',10)), payer = number('mobile-public-source','player');
+      var sources = Object.keys(s.realms).filter(function (source) {
+        return source !== rid && FB.homeAuthority.fundingQuote(s,{source:{kind:'public',realmId:source},
+          recipientRealmId:rid,amount:1,characterId:s.player.charId}).allowed;
+      }).sort().map(function (source) {
+        return '<option value="'+esc(source)+'"'+(source === payer ? ' selected' : '')+'>'+esc(s.realms[source].name)+'</option>';
+      }).join('');
+      controls += '<label>'+esc(FB.T('Contribution amount'))+'<input id="mobile-funding" type="number" min="1" max="'+esc(fundingPolicy.maximum)+'" step="1" value="'+esc(amount)+'"></label>'+
+        '<label>'+esc(FB.T('Public paying account'))+'<select id="mobile-public-source"><option value="">'+esc(FB.T('Choose a public account'))+'</option>'+sources+'</select></label>';
+      function funding(label,source) {
+        var q = FB.homeAuthority.fundingQuote(s,{source:source,recipientRealmId:rid,amount:amount,characterId:s.player.charId}), i = actions.length;
+        actions.push({label:label,review:{review:q},funding:true});
+        parts += SH.reviewActionCardHtml({id:'mobile-action-'+i,label:label,disabled:!q.allowed,warn:!q.allowed,
+          note:q.allowed ? FB.T('Contribution: {money:cost}. Review the paying account before confirming.',{cost:q.cost}) : reason(q.reason),
+          details:'<p>'+esc(FB.T('The selected account pays once into this command’s separate public treasury. No private rank, rights, credit or supplies are created.'))+'</p>'+termsHtml(s,q.terms),data:{mobileReview:i}});
+      }
+      if (fundingPolicy.privateContributions) funding(FB.T('Contribute private funds'),{kind:'private',characterId:s.player.charId});
+      if (fundingPolicy.publicGrants) funding(FB.T('Grant public funds'),{kind:'public',realmId:payer});
+    }
     var membership = r.members.map(function (m) {
       var c = s.chars[m.principal.id];
       var values={weight:m.weight,percent:Math.round(m.pledge*100),status:m.allegiance ? FB.T('Allegiant') : FB.T('Withheld')};
@@ -200,7 +225,7 @@
     function position() {
       var list = SH.$('mobile-list'), body=SH.$('gm-body'), v = {scroll:list ? list.scrollTop : 0,bodyScroll:body.scrollTop,details:[],focus:document.activeElement && document.activeElement.id};
       if (list) list.querySelectorAll('.settcard-info[aria-expanded="true"]').forEach(function (d) {v.details.push(d.getAttribute('aria-controls'));});
-      ['mobile-count','mobile-county','mobile-price','mobile-days'].forEach(function (id) {if(SH.$(id)) v[id]=SH.$(id).value;});
+      ['mobile-count','mobile-county','mobile-price','mobile-days','mobile-funding','mobile-public-source'].forEach(function (id) {if(SH.$(id)) v[id]=SH.$(id).value;});
       return v;
     }
     UI.openModal(r.command ? FB.T('Mobile command') : FB.T('Mobile coalition'),'<div id="mobile-list" data-modal-scroll>'+
@@ -211,8 +236,8 @@
     (view.details || []).forEach(function (id) {var node=list.querySelector('[aria-controls="'+id+'"]');if(node) node.click();});
     list.scrollTop = view.scroll || 0; SH.$('gm-body').scrollTop=view.bodyScroll || 0;
     if(view.focus && SH.$(view.focus)) SH.$(view.focus).focus({preventScroll:true});
-    ['mobile-count','mobile-county','mobile-price','mobile-days'].forEach(function (id) {
-      SH.$(id).onchange=function () {var v=position();v.replace=true;UI.showMobileConfederation(rid,v);};
+    ['mobile-count','mobile-county','mobile-price','mobile-days','mobile-funding','mobile-public-source'].forEach(function (id) {
+      if (SH.$(id)) SH.$(id).onchange=function () {var v=position();v.replace=true;UI.showMobileConfederation(rid,v);};
     });
     if(SH.$('mobile-leader')) SH.$('mobile-leader').onclick=function () {UI.showCharModal(leader.id);};
     list.querySelectorAll('[data-mobile-review]').forEach(function (button) {
@@ -225,7 +250,7 @@
             details:'<p>'+esc(FB.T('A stale review spends nothing and transfers no people.'))+'</p>'})),
           {modalClass:'fullsheet-modal',historyView:true,historyBack:true,historyBackRender:back});
         SH.$('mobile-confirm').onclick=function () {
-          var success=s===FB.state && M.commit(s,entry.review);
+          var success=s===FB.state && (entry.funding ? FB.homeAuthority.fund(s,q) : M.commit(s,entry.review));
           UI.openModal(success ? FB.T('Decision recorded') : FB.T('Terms changed'),
             SH.reviewFactsCard('', '<p>'+esc(success ? FB.T('The decision is recorded.') : FB.T('Review the current terms again.'))+'</p>')+
             '<button type="button" class="actionbtn" id="mobile-continue">'+esc(FB.T('Continue'))+'</button>',{replaceView:true});

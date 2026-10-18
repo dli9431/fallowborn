@@ -471,6 +471,9 @@ window.FB = window.FB || {};
       return result;
     }
     var realmId = options.realm || 'player';
+    if (FB.homeAuthority && !FB.homeAuthority.quote(state, realmId, 'spend', {provinceId:pid}).allowed) {
+      result.reason = 'home_authority'; return result;
+    }
     if (realmId === 'player') {
       if (!playerHolds(state, pid)) { result.reason = 'ownership'; return result; }
       if (!state.player || !FB.station.isLanded(state.player, state)) { result.reason = 'rank'; return result; }

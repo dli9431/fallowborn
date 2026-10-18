@@ -213,6 +213,9 @@ window.FB = window.FB || {};
       }
       var problems = G.problems(formId);
       for (var i = 0; i < problems.length; i++) errors.push(describe(formId, problems[i]));
+      if (forms[formId].homeAuthority !== undefined && (!FB.homeAuthority ||
+          !FB.homeAuthority.policyValid(forms[formId].homeAuthority)))
+        errors.push(FB.T('Invalid home authority policy for government {id}.', { id:formId }));
       var catalogue = forms[formId].officeCatalogue;
       if (catalogue !== undefined && (!Array.isArray(catalogue) || catalogue.some(function (id, index) {
         var office = FBDATA.authorityOffices && FBDATA.authorityOffices[id];

@@ -14,7 +14,7 @@ dependsOnRuntime(__filename, [
   'js/government_selection.js', 'js/government_lineage.js',
   'js/government_continuity.js', 'js/government_levy.js', 'js/government_revenue.js',
   'js/government_council.js', 'js/government_ai.js', 'js/government_diplomacy.js',
-  'js/world.js', 'js/authority.js', 'js/treasury.js', 'js/lordships.js', 'js/settlement.js', 'js/population.js', 'js/fiscal.js',
+  'js/world.js', 'js/home_authority.js', 'js/authority.js', 'js/treasury.js', 'js/lordships.js', 'js/settlement.js', 'js/population.js', 'js/fiscal.js',
   'js/actions.js', 'js/armies.js', 'js/wars.js', 'js/justice.js', 'js/model.js', 'js/station.js',
   'js/progression.js', 'js/religion.js', 'js/papacy.js', 'js/systems.js', 'js/lexicon.js',
   'js/mods.js', 'js/main.js', 'js/save.js', 'js/save_v4.js', 'js/messages.js', 'js/i18n.js',

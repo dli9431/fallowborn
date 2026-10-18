@@ -559,7 +559,7 @@
     var award = row && row.settlementAwards && row.settlementAwards[index];
     return activeContract(s, row) && award && !award.fulfilled
       ? FB.settlementGrantQuote(s, award.provinceId, award.settlement,
-          award.recipientId, row.patronRealmId) : null;
+          award.recipientId, row.patronRealmId, {contractId:id,awardIndex:index}) : null;
   };
   FB.authorityFulfillContractAward = function (s, id, index, reviewed) {
     var row = contract(s, id), award = row && row.settlementAwards && row.settlementAwards[index];
@@ -1324,6 +1324,7 @@
           }) ||
           ['reaffirm','continues'].indexOf(def.succession) < 0 ||
           def.publicRole !== undefined && ['governor','fiscal','commander'].indexOf(def.publicRole) < 0 ||
+          def.homePowers !== undefined && (!FB.homeAuthority || !FB.homeAuthority.powersValid(def)) ||
           !def.publicRole && !Array.isArray(def.recognitionSources) ||
           Array.isArray(def.recognitionSources) && def.recognitionSources.some(function (sourceId) {
             return !own(sources, sourceId);

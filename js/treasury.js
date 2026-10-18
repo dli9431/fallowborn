@@ -53,6 +53,29 @@
     const row = account(state, rid);
     return row ? Math.max(0, numeric(row.gold) - positive(row.militaryAccrued)) : 0;
   };
+  // Exact public accounts never fall back to an adopted ruler's private gold.
+  FB.treasuryPublicAccountSnapshot = function (state, rid) {
+    const row = state.treasuryAccounting && state.treasuryAccounting.mode === 'active' && account(state, rid);
+    return row && Number.isFinite(row.gold) && Number.isFinite(row.militaryAccrued) && row.militaryAccrued >= 0 ?
+      { realmId:rid, gold:row.gold, militaryAccrued:row.militaryAccrued,
+      available:FB.treasuryAvailable(state, rid) } : null;
+  };
+  // Low-level conserved transfer. The reviewed funding owner supplies consent.
+  FB.treasuryFundingTransfer = function (state, source, recipient, amount) {
+    const target = FB.treasuryPublicAccountSnapshot(state, recipient);
+    if (!source || !target || !Number.isFinite(amount) || amount <= 0 ||
+        target.gold + amount > Number.MAX_SAFE_INTEGER) return false;
+    if (source.kind === 'public') {
+      const from = FB.treasuryPublicAccountSnapshot(state, source.realmId);
+      if (!from || source.realmId === recipient || from.available < amount) return false;
+      return FB.treasuryTransfer(state, source.realmId, recipient, amount);
+    }
+    if (source.kind !== 'private' || source.characterId !== state.player.charId ||
+        !Number.isFinite(state.player.gold) || state.player.gold < amount) return false;
+    state.player.gold -= amount;
+    account(state, recipient).gold += amount;
+    return true;
+  };
   // null denotes an existing non-realm source/sink or prepaid courier escrow.
   // Callers own once-only lifecycle guards; no growing transaction log is kept.
   FB.treasuryTransfer = function (state, payer, recipient, amount, compulsory) {

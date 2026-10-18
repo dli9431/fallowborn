@@ -62,6 +62,14 @@
     rationale:'Individual unpaid admission depends on current host consent, actual presence and finite named-person or existing combat-position capacity. It grants no troops, equipment, vow or family carriage. Ordinary road and military technology remain authoritative.'};
   FBDATA.techImpactReviews.features.mobile_column_ownership = {mode:'none',
     rationale:'A bounded column set partitions existing opening fighters and provisions under scoped commanders. Normal unit eligibility, conserved people, finite stores and current command authority remain binding; the single-host fallback remains available.'};
+  FBDATA.techImpactReviews.features.home_decision_presence = {mode:'none',
+    rationale:'Local public decisions depend on actual presence and a living incumbent, without a credible discovery prerequisite. Existing commitments and ordinary private actions remain available.'};
+  FBDATA.techImpactReviews.features.home_decision_delegation = {mode:'none',
+    rationale:'Exact delegation depends on an existing effective civil appointment, its scope, term and current issuer generation. Military command alone supplies no civil authority.'};
+  FBDATA.techImpactReviews.features.expedition_public_funding = {mode:'none',
+    rationale:'A public grant transfers available money between distinct existing public accounts under current lawful authority. It creates no income, credit or technological exception.'};
+  FBDATA.techImpactReviews.features.expedition_private_contributions = {mode:'none',
+    rationale:'A consenting household may contribute its actual private money to a distinct command account. No discovery gates this baseline voluntary transfer.'};
   /* The fresh 476 opening inhabits Cherson and adds the Pontic following.
      Priscus attests displaced followings and Roman diplomacy, not a precise
      476 boundary or an identifiable incumbent at this simulated camp. */

@@ -908,10 +908,14 @@ window.FB = window.FB || {};
     }
     return { allowed:true, reason:null };
   };
-  FB.settlementGrantQuote = function (state, pid, slot, cid, rid) {
+  FB.settlementGrantQuote = function (state, pid, slot, cid, rid, commitment) {
+    const scope = { provinceId:pid, settlement:slot, recipientId:cid };
+    if (commitment !== undefined) scope.commitment = commitment;
     const permission = FB.political.permission(state, { kind:'realm', id:rid },
-      'grant_settlement', { provinceId:pid, settlement:slot, recipientId:cid });
+      'grant_settlement', scope);
     if (!permission.allowed) return null;
+    const promised = commitment !== undefined && FB.homeAuthority && FB.homeAuthority.committedGrant(state,rid,scope);
+    if (commitment !== undefined && !promised) return null;
     const actor = actorRef(state, { kind:'character', id:cid });
     const capacity = FB.settlementCapacityProjection(state, actor);
     capacity.directCount++;
@@ -929,7 +933,7 @@ window.FB = window.FB || {};
     const buildings = (state.buildings[pid] || []).filter(function (b) {
       return b.s === slot && !(FBDATA.buildings[b.id] || {}).fort;
     }).map(function (b) { return copy(b); });
-    return { provinceId:pid, settlement:slot, recipientId:cid, realmId:rid,
+    const quote = { provinceId:pid, settlement:slot, recipientId:cid, realmId:rid,
       grantorId:ruler && ruler.id || null, previousLordship:copy(record(state, pid, slot)), buildings:buildings,
       revenue:after.gross + after.national, upkeep:after.upkeep, dues:after.dues,
       net:after.net, service:after.levyDues + after.specialistDues,
@@ -939,11 +943,15 @@ window.FB = window.FB || {};
       directBefore:countCapacity.directCount, directAfter:countCapacity.directCount - 1,
       limit:countCapacity.limit,
       recipientCount:capacity.directCount, recipientLimit:capacity.limit, recipientPenalty:capacity.multiplier };
+    if (promised) { quote.commitment = copy(commitment); quote.commitmentSignature = JSON.stringify(promised); }
+    else if (FB.homeAuthority && FB.homeAuthority.policy(state,rid))
+      quote.homeDecision = FB.homeAuthority.quote(state,rid,'grant',{provinceId:pid});
+    return quote;
   };
   FB.confirmSettlementGrant = function (state, quote) {
     if (!quote) return false;
     const current = FB.settlementGrantQuote(state, quote.provinceId, quote.settlement,
-      quote.recipientId, quote.realmId);
+      quote.recipientId, quote.realmId, quote.commitment);
     if (!current || JSON.stringify(current) !== JSON.stringify(quote)) return false;
     if (!FB.assignSettlementLordship(state, quote.provinceId, quote.settlement, quote.recipientId)) return false;
     const c = state.chars[quote.recipientId];
