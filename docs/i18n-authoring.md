@@ -373,3 +373,7 @@ The literal buildings_fish_drying map retains building.fish_drying_station name 
 Expedition preparation text
 
 The expedition_preparation factory routes every shared status, choice, blocker, portrait label and public training/provision cost phrase through literal FB.T strings with named placeholders. Imported title/intro fields use effective English fallback through the normal story renderer. Source/actor ids, schema enums, fingerprints, reserves and formation receipts remain locale-neutral; no rendered prose is saved. No bundled instance or new structured extraction namespace is introduced. A future bundled declaration must use a supported literal presentation source before shipping; catalog generation remains separately authorized.
+
+Production supplements
+
+Literal FBDATA.productionGoods_<suffix> and FBDATA.productionRecipes_<suffix> maps in data/production_*.js use the existing productionGood and productionRecipe name/desc/fallback owners. Static extraction reads the maps without executing their composition. Units, quantities, prices and references remain untranslated; new English uses normal authored fallback. Compose each unique addition into its ordinary root before runtime validation. Catalogue generation remains a separate owner request.

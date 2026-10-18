@@ -1,0 +1,494 @@
+{
+  "name": "Fictional paper production world",
+  "siteResourceProfiles": {
+    "river_flow": {
+      "name": "River intake",
+      "desc": "A bounded seven-day water allocation.",
+      "kind": "flow",
+      "unit": "water",
+      "capacity": 12,
+      "periodDays": 7
+    },
+    "river_store": {
+      "name": "Quay cistern",
+      "kind": "storage",
+      "unit": "water",
+      "capacity": 5
+    },
+    "river_launch": {
+      "name": "Launching space",
+      "kind": "access",
+      "unit": "launching",
+      "capacity": 2,
+      "periodDays": 1
+    }
+  },
+  "geographies": {
+    "early_industry_paper_land": {
+      "bounds": {
+        "lonMin": 0,
+        "lonMax": 6,
+        "latMin": 0,
+        "latMax": 5
+      },
+      "land": [
+        [
+          0.5,
+          0.5,
+          5.5,
+          0.5,
+          5.5,
+          4.5,
+          0.5,
+          4.5
+        ]
+      ],
+      "gridWidth": 240,
+      "seas": [],
+      "rivers": [],
+      "defaultLayout": "early_industry_paper_layout",
+      "provinces": [
+        {
+          "id": "baghdad",
+          "x": 1.5,
+          "y": 2,
+          "terrain": "farmland"
+        },
+        {
+          "id": "resource_bank",
+          "x": 3.1,
+          "y": 2,
+          "terrain": "farmland"
+        },
+        {
+          "id": "resource_rocks",
+          "x": 4.7,
+          "y": 2,
+          "terrain": "hills"
+        }
+      ],
+      "sites": {
+        "resource_intake": {
+          "x": 1.5,
+          "y": 2
+        },
+        "resource_cistern": {
+          "x": 3.1,
+          "y": 2
+        },
+        "resource_slip": {
+          "x": 1.7,
+          "y": 2
+        }
+      }
+    }
+  },
+  "settlementLayouts": {
+    "early_industry_paper_layout": {
+      "baghdad": [
+        {
+          "site": "resource_intake",
+          "name": "Intake Town",
+          "kind": "town"
+        },
+        {
+          "site": "resource_slip",
+          "name": "Slip Village",
+          "kind": "village"
+        }
+      ],
+      "resource_bank": [
+        {
+          "site": "resource_cistern",
+          "name": "Bank Village",
+          "kind": "village"
+        }
+      ]
+    }
+  },
+  "startScenarios": [
+    {
+      "id": "early_industry_paper_ruler",
+      "name": "The river holder",
+      "desc": "An existing fictional ruler.",
+      "intro": "Review actual finite plant inputs and output buyers.",
+      "tier": 5,
+      "profession": "noble",
+      "gold": 500,
+      "prestige": 0,
+      "piety": 0,
+      "bookmarkIds": [
+        "early_industry_paper"
+      ],
+      "eras": [
+        "early_medieval"
+      ],
+      "alwaysUnlocked": true,
+      "rulerRealmId": "early_industry_paper_court",
+      "governmentForm": "regnum",
+      "fixedProvinceId": "baghdad",
+      "characterName": "Ivo Reed",
+      "sex": "m",
+      "startCulture": "frankish",
+      "startReligion": "catholic",
+      "onboarding": "ruler",
+      "familyPresets": {
+        "standard": {
+          "name": "Existing court",
+          "diff": "Existing court household"
+        }
+      }
+    },
+    {
+      "id": "early_industry_paper_household",
+      "name": "River household",
+      "desc": "A fictional household.",
+      "intro": "Review actual finite plant inputs and output buyers.",
+      "tier": 1,
+      "profession": "farmer",
+      "gold": 500,
+      "prestige": 0,
+      "piety": 0,
+      "bookmarkIds": [
+        "early_industry_paper"
+      ],
+      "eras": [
+        "early_medieval"
+      ],
+      "alwaysUnlocked": true,
+      "startAge": 24,
+      "familyPresets": {
+        "standard": {
+          "name": "Established household",
+          "diff": "age 24"
+        }
+      }
+    }
+  ],
+  "bookmarks": {
+    "early_industry_paper": {
+      "id": "early_industry_paper",
+      "name": "Fictional supplied Baghdad-scope paper works",
+      "desc": "An authoring simulation with explicit finite property, inputs, work and buyers; no historical inventory.",
+      "date": {
+        "year": 950,
+        "season": 0,
+        "day": 1
+      },
+      "era": "early_medieval",
+      "geography": "early_industry_paper_land",
+      "religiousHeads": {},
+      "localInstitutions": {},
+      "stories": [],
+      "starts": [
+        "early_industry_paper_ruler",
+        "early_industry_paper_household"
+      ],
+      "scripted": [],
+      "straits": [],
+      "crossingClasses": {},
+      "provinces": [
+        {
+          "id": "baghdad",
+          "name": "Fictional Baghdad-scope county",
+          "realm": "early_industry_paper_court",
+          "culture": "frankish",
+          "religion": "catholic",
+          "dev": 5
+        },
+        {
+          "id": "resource_bank",
+          "name": "Bank",
+          "realm": "supplier_bank_court",
+          "culture": "frankish",
+          "religion": "catholic",
+          "dev": 3
+        },
+        {
+          "id": "resource_rocks",
+          "name": "Rocky scenery",
+          "wasteland": true
+        }
+      ],
+      "realms": [
+        {
+          "id": "early_industry_paper_court",
+          "name": "River court",
+          "capital": "baghdad",
+          "color": "#458c96",
+          "aggression": 0,
+          "rank": 2,
+          "government": "regnum",
+          "ruler": {
+            "name": "Ivo Reed",
+            "culture": "frankish",
+            "born": 868,
+            "mar": 6,
+            "trait": "patient"
+          },
+          "techTraditions": [
+            "persianate"
+          ]
+        },
+        {
+          "id": "supplier_bank_court",
+          "name": "Bank buyer",
+          "capital": "resource_bank",
+          "color": "#8c7565",
+          "aggression": 0,
+          "rank": 2,
+          "government": "regnum",
+          "ruler": {
+            "name": "Lena Bank",
+            "culture": "frankish",
+            "born": 865,
+            "mar": 5,
+            "trait": "patient"
+          }
+        }
+      ],
+      "duchies": {},
+      "kingdoms": {},
+      "empires": {},
+      "revision": "supplied",
+      "revisions": {
+        "baseline": {},
+        "supplied": {
+          "siteResourceAssignments": [
+            {
+              "id": "river_intake",
+              "profileId": "river_flow",
+              "countyId": "baghdad",
+              "siteId": "resource_intake",
+              "suitability": {
+                "source": true,
+                "gradient": true
+              },
+              "rights": {
+                "kind": "holder"
+              }
+            }
+          ],
+          "openingInfrastructure": {
+            "version": 1,
+            "placements": [
+              {
+                "countyId": "baghdad",
+                "siteId": "resource_intake",
+                "buildingId": "paper_workshop",
+                "condition": "standing"
+              },
+              {
+                "countyId": "baghdad",
+                "siteId": "resource_slip",
+                "buildingId": "industry_depot",
+                "condition": "standing"
+              },
+              {
+                "countyId": "resource_bank",
+                "siteId": "resource_cistern",
+                "buildingId": "industry_depot",
+                "condition": "standing"
+              }
+            ]
+          },
+          "productionSites": [
+            {
+              "id": "paper_plant",
+              "countyId": "baghdad",
+              "siteId": "resource_intake",
+              "buildingId": "paper_workshop",
+              "recipeIds": [
+                "workshop_papermaking"
+              ],
+              "sourceId": "river_intake",
+              "openingLots": []
+            },
+            {
+              "id": "fiber_source",
+              "countyId": "baghdad",
+              "siteId": "resource_slip",
+              "buildingId": "industry_depot",
+              "recipeIds": [
+                "smithy_forging"
+              ],
+              "openingLots": [
+                {
+                  "goodId": "workshop_fiber",
+                  "quantity": 6
+                }
+              ]
+            },
+            {
+              "id": "paper_buyer",
+              "countyId": "resource_bank",
+              "siteId": "resource_cistern",
+              "buildingId": "industry_depot",
+              "recipeIds": [
+                "smithy_forging"
+              ],
+              "openingLots": []
+            }
+          ],
+          "productionExchangeAssignments": [
+            {
+              "id": "fiber_delivery",
+              "profileId": "paper_fiber_delivery",
+              "fromSiteId": "fiber_source",
+              "toSiteId": "paper_plant"
+            },
+            {
+              "id": "paper_sale",
+              "profileId": "workshop_paper_sale",
+              "fromSiteId": "paper_plant",
+              "toSiteId": "paper_buyer"
+            }
+          ],
+          "productionProducerAssignments": [
+            {
+              "id": "rag_share",
+              "profileId": "rag_salvage_share",
+              "siteId": "fiber_source"
+            }
+          ]
+        },
+        "new_works": {
+          "siteResourceAssignments": [
+            {
+              "id": "river_intake",
+              "profileId": "river_flow",
+              "countyId": "baghdad",
+              "siteId": "resource_intake",
+              "suitability": {
+                "source": true,
+                "gradient": true
+              },
+              "rights": {
+                "kind": "holder"
+              }
+            }
+          ],
+          "openingInfrastructure": {
+            "version": 1,
+            "placements": [
+              {
+                "countyId": "baghdad",
+                "siteId": "resource_slip",
+                "buildingId": "industry_depot",
+                "condition": "standing"
+              },
+              {
+                "countyId": "resource_bank",
+                "siteId": "resource_cistern",
+                "buildingId": "industry_depot",
+                "condition": "standing"
+              }
+            ]
+          },
+          "productionSites": [
+            {
+              "id": "paper_plant",
+              "countyId": "baghdad",
+              "siteId": "resource_intake",
+              "buildingId": "paper_workshop",
+              "recipeIds": [
+                "workshop_papermaking"
+              ],
+              "sourceId": "river_intake",
+              "openingLots": []
+            },
+            {
+              "id": "fiber_source",
+              "countyId": "baghdad",
+              "siteId": "resource_slip",
+              "buildingId": "industry_depot",
+              "recipeIds": [
+                "smithy_forging"
+              ],
+              "openingLots": [
+                {
+                  "goodId": "workshop_fiber",
+                  "quantity": 6
+                }
+              ]
+            },
+            {
+              "id": "paper_buyer",
+              "countyId": "resource_bank",
+              "siteId": "resource_cistern",
+              "buildingId": "industry_depot",
+              "recipeIds": [
+                "smithy_forging"
+              ],
+              "openingLots": []
+            }
+          ],
+          "productionExchangeAssignments": [
+            {
+              "id": "fiber_delivery",
+              "profileId": "paper_fiber_delivery",
+              "fromSiteId": "fiber_source",
+              "toSiteId": "paper_plant"
+            },
+            {
+              "id": "paper_sale",
+              "profileId": "workshop_paper_sale",
+              "fromSiteId": "paper_plant",
+              "toSiteId": "paper_buyer"
+            }
+          ],
+          "productionProducerAssignments": [
+            {
+              "id": "rag_share",
+              "profileId": "rag_salvage_share",
+              "siteId": "fiber_source"
+            }
+          ]
+        }
+      }
+    }
+  },
+  "buildings": {
+    "industry_depot": {
+      "name": "Material depot",
+      "desc": "Explicit fictional finite storage and counterparty; no passive return.",
+      "role": "industry",
+      "cost": 25,
+      "upkeep": 1,
+      "maxCounty": 2
+    }
+  },
+  "enterprises": {
+    "rag_collection": {
+      "name": "Rag collection",
+      "icon": "*",
+      "cost": 20,
+      "profession": "farmer",
+      "yield": 6,
+      "desc": "Fictional staffed recovery of finite typed fiber output."
+    }
+  },
+  "enterpriseMechanics": {
+    "rag_collection": {
+      "output": {
+        "materials": 1
+      },
+      "typedProduction": {
+        "workshop_fiber": {
+          "marketGoodId": "materials",
+          "marketUnits": 24
+        }
+      }
+    }
+  },
+  "productionProducerProfiles": {
+    "rag_salvage_share": {
+      "enterpriseType": "rag_collection",
+      "goodId": "workshop_fiber",
+      "marketGoodId": "materials",
+      "marketUnits": 24,
+      "share": 0.5,
+      "maxQuantity": 2
+    }
+  }
+}

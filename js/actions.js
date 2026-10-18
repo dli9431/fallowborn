@@ -10537,6 +10537,7 @@ window.FB = window.FB || {};
     if (profileId != null && !FB.buildingProfiles.status(state, pid, idx, id, profileId).ready) return false;
     if (!FB.buildingInstitutionStatus(state, pid, idx, id, undefined, null, def).allowed) return false;
     if (!FB.buildingOperations.constructionReady(state, pid, idx, id, FB.settlementActor(state), profileId)) return false;
+    if (!FB.production.industrialConstructionReady(state,pid,idx,id,FB.settlementActor(state),profileId)) return false;
     if (def.requiresTech && !FB.techRequirementMet(state, def.requiresTech)) return false;
     if (context.index.occupied[(idx | 0) + ':' + id]) return false;
     if (def.devMin && (state.dev[pid] || 1) < def.devMin) return false;
@@ -10561,6 +10562,7 @@ window.FB = window.FB || {};
     if (profileId != null && !FB.buildingProfiles.status(state, pid, idx, id, profileId, rid).ready) return false;
     if (!FB.buildingInstitutionStatus(state, pid, idx, id, rid, null, def).allowed) return false;
     if (!FB.buildingOperations.constructionReady(state, pid, idx, id, actor, profileId)) return false;
+    if (!FB.production.industrialConstructionReady(state,pid,idx,id,actor,profileId)) return false;
     const techRealm = actor.kind === 'realm' ? actor.id : FB.settlementCountyHolder(state, pid);
     if (def.requiresTech && FB.techRequirementMet &&
         !FB.techRequirementMet(state, def.requiresTech, techRealm)) return false;

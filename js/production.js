@@ -31,7 +31,8 @@
     Object.keys(recipes).forEach(function (key) {
       var r = recipes[key], req = r && r.requiresTech;
       var t = r && data.techImpactReviews && data.techImpactReviews.features && data.techImpactReviews.features[r.impactReviewId];
-      if (!id(key) || !keys(r,['name','desc','inputs','outputs','water','workDays','workPrice','requiresTech','impactReviewId','fallback']) ||
+      if (!id(key) || !keys(r,['name','desc','inputs','outputs','water','workDays','workPrice','requiresTech','impactReviewId','fallback','requiresSale']) ||
+          r.requiresSale !== undefined && typeof r.requiresSale !== 'boolean' ||
           !text(r.name) || r.desc !== undefined && !text(r.desc) || !amountRows(r.inputs,goods) || !amountRows(r.outputs,goods) ||
           !int(r.workDays,1,30) || !int(r.workPrice,1,10000) || r.water !== undefined && !int(r.water,1,10000) ||
           !Array.isArray(req) || req.length > 8 || new Set(req).size !== req.length || req.some(function (k) { return !own(data.tech,k); }) ||
@@ -44,6 +45,13 @@
       if (mass(r.outputs) > mass(r.inputs)) faults.push('productionRecipes.' + key + ': outputs exceed conservative input mass.');
       if (r.outputs.some(function (o) { return r.inputs.some(function (i) { return i.goodId === o.goodId; }); }))
         faults.push('productionRecipes.' + key + ': a batch cannot reproduce its own input kind.');
+    });
+    Object.keys(data.buildings || {}).forEach(function (key) {
+      var b = data.buildings[key], list = b && b.productionRecipeIds;
+      if (list === undefined) return;
+      if (b.fort || b.operationProfile || b.institutionProfile || !Array.isArray(list) || !list.length || list.length > 16 ||
+          new Set(list).size !== list.length || list.some(function (k) { return !own(recipes,k); }))
+        faults.push('Building ' + key + ': invalid finite production recipe references.');
     });
     return faults;
   };
@@ -197,6 +205,55 @@
     if (FB.productionEconomy) FB.productionEconomy.initialize(s);
     if (FB.relayServices) FB.relayServices.initialize(s);
   };
+  P.industrialConstructionReady = function (s,pid,slot,buildingId,who,profileId) {
+    var d = FB.buildingProfiles.definition(buildingId,profileId), required = d && d.productionRecipeIds;
+    if (!required) return true;
+    var p = plan(s), a = p.sites.find(function (x) { return x.countyId === pid && x.slot === slot && x.buildingId === buildingId; });
+    if (p.errors.length || d.operationProfile || d.institutionProfile || !a || built(s,a) || a.openingLots.length || !s.production || !s.production.economy ||
+        s.production.assets.length >= 128 || s.production.nextId >= MAX - 10 || s.production.revision >= MAX - 10 ||
+        s.production.assets.some(function (x) { return x.siteId === a.id; }) ||
+        !a.recipeIds.every(function (key) { return required.indexOf(key) >= 0; })) return false;
+    var holder = FB.settlementHolder(s,pid,slot);
+    if (!holder || !eq(P.account(s,holder).payer,P.account(s,who).payer)) return false;
+    // All speculative acquisition is detached and uses the ordinary exact quotes.
+    return a.recipeIds.some(function (key) {
+      var t = copy(s), recipe = FBDATA.productionRecipes[key], rows = t.buildings[pid] = t.buildings[pid] || [];
+      var cost = FB.buildCost(t,pid,buildingId,who.kind === 'realm' ? who.id : who.id === t.player.charId ? undefined : t.holder[pid],profileId);
+      var record = {s:slot,id:buildingId};FB.buildingProfiles.attach(record,profileId);rows.push(record);
+      if (!P.bindConstruction(t,pid,record)) return false;
+      if (!P.spend(t,who,cost + (d.upkeep || 0) * (FBDATA.balance.realmReserveSeasons || 2))) return false;
+      var routes = FB.productionEconomy.compilePrepared(FB.campaignBookmark(t),p.sites).routes;
+      var supplied = recipe.inputs.every(function (input) {
+        var left = input.quantity;
+        routes.filter(function (route) { return route.toSiteId === a.id && FBDATA.productionExchangeProfiles[route.profileId].goodId === input.goodId; })
+          .some(function (route) {
+            var profile = FBDATA.productionExchangeProfiles[route.profileId];
+            var q = FB.productionEconomy.aiQuote(t,route.id,left,profile.mode === 'owned' ? 'transfer' : 'buy');
+            if (!q.allowed || !FB.productionEconomy.commit(t,q)) return false;
+            left = 0;return true;
+          });
+        return !left;
+      });
+      if (!supplied || !P.aiQuote(t,a.id,'reserve',{recipeId:key,disposition:'store'}).allowed) return false;
+      return P.outletReady(t,a.id,recipe.outputs);
+    });
+  };
+  P.outletReady = function (s,siteId,outputs) {
+    var r = s.production;
+    if (!FB.productionEconomy || !r || !r.economy || r.economy.receipts.length >= LIMIT || r.nextId >= MAX - 4 || r.revision >= MAX ||
+        r.lots.length + outputs.length + r.batches.reduce(function(n,b){return n+(b.status==='reserved'?FBDATA.productionRecipes[b.recipeId].outputs.length:0);},0) >= LIMIT) return false;
+    var p = plan(s), routes = FB.productionEconomy.compilePrepared(FB.campaignBookmark(s),p.sites).routes;
+    return outputs.every(function (output) {
+      return routes.some(function (route) {
+        var profile = FBDATA.productionExchangeProfiles[route.profileId];
+        if (route.fromSiteId !== siteId || profile.goodId !== output.goodId || profile.mode !== 'market') return false;
+        var q = FB.productionEconomy.aiQuote(s,route.id,output.quantity,'sell');
+        var funds = q.buyer && P.account(s,q.buyer).funds;
+        return !!q.signature && q.remainingDemand >= output.quantity && q.remainingBudget >= q.cost &&
+          funds && funds.available >= q.cost + funds.reserve;
+      });
+    });
+  };
   function reservationTotals(r) {
     var held=FB.maritimeWork ? FB.maritimeWork.reservations({production:r}) : {};
     if (r) r.batches.forEach(function(b){if(b.status==='reserved')b.inputs.forEach(function(x){held[x.lotId]=(held[x.lotId] || 0)+x.quantity;});});
@@ -210,13 +267,16 @@
   };
   P.bindConstruction = function(s,pid,b) {
     var d=FB.buildingProfiles.assetDefinition(b);
-    if (!d || !d.seasonProfile) return;
+    if (!d || !d.seasonProfile && !d.productionRecipeIds || b.productionAsset) return false;
     var p=plan(s),a=p.sites.find(function(x){return x.countyId===pid && x.slot===b.s && x.buildingId===b.id;}),r=s.production;
-    if (!a || b.productionAsset || !r) return;
+    if (!a || !r || built(s,a) && built(s,a)!==b) return false;
+    // Seasonal replacements retain old receipts; industrial sites enroll only once.
+    if (d.productionRecipeIds && (a.openingLots.length || r.assets.some(function(x){return x.siteId===a.id;}) ||
+        !a.recipeIds.every(function(key){return d.productionRecipeIds.indexOf(key)>=0;}))) return false;
     var who=FB.settlementHolder(s,pid,b.s);
-    if (!P.constructionReady(s,a.id,who)) return;
+    if (!P.constructionReady(s,a.id,who)) return false;
     var asset={id:freshId(r),siteId:a.id,owner:copy(who),openedTurn:s.turn,constructed:true};
-    r.assets.push(asset);b.productionAsset={version:1,id:asset.id};r.revision++;
+    r.assets.push(asset);b.productionAsset={version:1,id:asset.id};r.revision++;return true;
   };
   P.snapshot = function (s,countyId,siteId) {
     var p = plan(s), r = s.production, held=reservationTotals(r);
@@ -269,8 +329,11 @@
           !q.missingTech.length && worker(s,a,auth.characterId) && funds.available >= recipe.workPrice + funds.reserve &&
           r.batches.length < LIMIT && r.lots.length + recipe.outputs.length + r.batches.reduce(function(n,b){return n+(b.status==='reserved'?FBDATA.productionRecipes[b.recipeId].outputs.length:0);},0) <= LIMIT && r.assets.length <= 128 &&
           !r.batches.some(function (b) { return b.status === 'reserved' && b.assetId === asset.id; });
+        if (recipe.requiresSale && (request.disposition !== 'store' || !P.outletReady(s,a.id,recipe.outputs))) {
+          q.allowed = false;q.reason = 'outlet';
+        }
         if (q.missingTech.length) q.reason='tech';
-        else if (!q.allowed && !q.short) q.reason = q.missingTech.length ? 'tech' : !worker(s,a,auth.characterId) ? 'work' : 'funds';
+        else if (!q.allowed && !q.short && q.reason !== 'outlet') q.reason = q.missingTech.length ? 'tech' : !worker(s,a,auth.characterId) ? 'work' : 'funds';
       } else {
         if (request.recipeId !== undefined || request.disposition !== undefined) return q;
         q.reason = 'batch';
@@ -384,6 +447,7 @@
     if (q.reason === 'tech') return FB.T('Missing technology: {tech}.',{tech:(q.missingTech || []).map(function (key) { return FB.dataText(FB.state,FB.state.player.charId,'tech',key,FBDATA.tech[key],'name',{}); }).join(', ')});
     if (q.reason === 'inputs') return FB.T('The actual asset needs enough owned, unreserved input lots and lawful water.');
     if (q.reason === 'work') return FB.T('One available local adult must spend an ordinary action day, without enterprise, service or military work.');
+    if (q.reason === 'outlet') return FB.T('Store this batch for a declared real buyer with current cash, reserves and remaining demand. Immediate use grants no sale or benefit.');
     if (q.reason === 'funds') return FB.T('The same lawful payer needs the full processing cost and ordinary reserves, with no other pending batch at this asset.');
     if (q.reason === 'batch') return FB.T('The original batch, worker, asset and authority must remain available. Complete each workday before finishing.');
     return FB.T('A living lawful asset holder, the original owner and an actual standing building are required.');
@@ -410,7 +474,10 @@
       if (!keys(a,['id','siteId','owner','openedTurn','constructed']) || !siteTable[a.siteId] || !identity(a.owner) ||
           (a.constructed===undefined ? a.openedTurn!==0 || openings[a.siteId] : a.constructed!==true || !int(a.openedTurn,0,s.turn))) fail();
       var d=siteTable[a.siteId],opening=originalAssets.placements.find(function(x){return x.countyId===d.countyId && x.siteId===d.siteId && x.buildingId===d.buildingId && x.condition==='standing';});
-      if (a.constructed && !FBDATA.buildings[d.buildingId].seasonProfile) fail();
+      var building=FBDATA.buildings[d.buildingId],industrial=building.productionRecipeIds;
+      if (a.constructed && !building.seasonProfile && (!industrial || d.openingLots.length ||
+          !d.recipeIds.every(function(key){return industrial.indexOf(key)>=0;}) ||
+          r.assets.some(function(other){return other.id!==a.id && other.siteId===a.siteId;}))) fail();
       if (a.constructed===undefined && (!opening || !eq(a.owner,{kind:'realm',id:FB.startRealmId(s,opening.holderId)}))) fail();
       unique(a.id);assets[a.id]=a;if (a.constructed===undefined) openings[a.siteId]=a;
     });
