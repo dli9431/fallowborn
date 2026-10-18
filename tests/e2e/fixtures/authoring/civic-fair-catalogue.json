@@ -1,0 +1,14 @@
+{
+  "name": "Civic fair catalogue example",
+  "tech": {
+    "annual_fairs": {
+      "name": "Recorded Fair Agreements",
+      "icon": "📜", "domain": "commerce", "cost": 33,
+      "req": ["written_law"],
+      "history": {"attested": [500, 800], "adoption": {"default": [600, 900]}},
+      "desc": "This fictional catalogue organizes fairs through written agreements.",
+      "confidence": "medium", "sources": ["MOD"],
+      "unlocks": ["rule:annual_fairs"], "capabilities": [], "fx": {"trade": 0.009}
+    }
+  }
+}
