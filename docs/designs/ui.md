@@ -3972,3 +3972,7 @@ The existing mobile command sheet shows an opted-in command's home office and re
 Named journey decisions
 
 The existing household story sheet shows each traveller's actual county alongside individual consent. Departure, separation, renewed consent, return and settlement use the shared review and confirmation flow with exact affected names, exclusions and private cost. A prepaid return displays zero additional cost; interruption recovery displays its new route cost. Settlement remains disabled until ordinary residence and work requirements are met. Back, Escape and Close retain the same story, list scroll and originating Deeds focus. Camp admission is not offered by this ordinary-journey adapter.
+
+Institutional building permission
+
+Building Works uses the same canonical institutional projection as construction and maintenance. Opted-in cards explain the exact-foundation requirement and household construction/maintenance payer, while existing bound assets show current permission or its actual blocker. Review permission names the asset, payer, zero review cost and normal recurring maintenance before an explicit reaffirmation. Back, Escape and confirmation retain county/site selection, expanded disclosures, list scroll and the exact review control's focus. Current unbound cards retain their existing patterns. See docs/designs/building-institutions.md for the authority and persistence contract.

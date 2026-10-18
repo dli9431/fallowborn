@@ -1,0 +1,309 @@
+{
+  "name": "Existing institution works: see",
+  "buildings": {
+    "binding_work": {
+      "name": "Foundation workshop",
+      "desc": "Paid physical works at an existing foundation.",
+      "icon": "H",
+      "role": "worship",
+      "cost": 24,
+      "upkeep": 2,
+      "tax": 2,
+      "dev": 1,
+      "institutionProfile": "seat_works",
+      "aiBuildOrder": 1
+    },
+    "binding_alternative": {
+      "name": "Alternative foundation works",
+      "desc": "An alternative use of the same physical foundation.",
+      "icon": "A",
+      "role": "worship",
+      "cost": 35,
+      "upkeep": 1,
+      "tax": 1,
+      "institutionProfile": "seat_works"
+    },
+    "binding_ordinary": {
+      "name": "Independent workshop",
+      "desc": "An unrelated ordinary facility.",
+      "icon": "W",
+      "role": "industry",
+      "cost": 10,
+      "tax": 1
+    }
+  },
+  "geographies": {
+    "inventory_estuary_land": {
+      "bounds": {
+        "lonMin": 0,
+        "lonMax": 6,
+        "latMin": 0,
+        "latMax": 5
+      },
+      "land": [
+        [
+          0.5,
+          0.5,
+          5.5,
+          0.5,
+          5.5,
+          4.5,
+          0.5,
+          4.5
+        ]
+      ],
+      "gridWidth": 240,
+      "seas": [],
+      "rivers": [],
+      "defaultLayout": "inventory_estuary_layout",
+      "provinces": [
+        {
+          "id": "inventory_quay",
+          "x": 1.5,
+          "y": 2,
+          "terrain": "farmland"
+        },
+        {
+          "id": "inventory_marsh",
+          "x": 3.1,
+          "y": 2,
+          "terrain": "farmland"
+        },
+        {
+          "id": "inventory_ridge",
+          "x": 4.7,
+          "y": 2,
+          "terrain": "hills"
+        },
+        {
+          "id": "inventory_scenery",
+          "x": 3.1,
+          "y": 4,
+          "terrain": "hills"
+        }
+      ],
+      "sites": {
+        "inventory_quay_hall": {
+          "x": 1.4,
+          "y": 2
+        },
+        "inventory_quay_store": {
+          "x": 1.7,
+          "y": 2
+        },
+        "inventory_marsh_town": {
+          "x": 3.1,
+          "y": 2
+        },
+        "inventory_ridge_tower": {
+          "x": 4.7,
+          "y": 2
+        }
+      }
+    }
+  },
+  "settlementLayouts": {
+    "inventory_estuary_layout": {
+      "inventory_quay": [
+        {
+          "site": "inventory_quay_hall",
+          "name": "Quay Hall",
+          "kind": "town"
+        },
+        {
+          "site": "inventory_quay_store",
+          "name": "Quay Stores",
+          "kind": "village"
+        }
+      ],
+      "inventory_marsh": [
+        {
+          "site": "inventory_marsh_town",
+          "name": "Marsh Town",
+          "kind": "village"
+        }
+      ],
+      "inventory_ridge": [
+        {
+          "site": "inventory_ridge_tower",
+          "name": "Ridge Tower",
+          "kind": "village"
+        }
+      ]
+    }
+  },
+  "startScenarios": [
+    {
+      "id": "inventory_estuary_household",
+      "name": "Estuary household",
+      "desc": "A fictional household.",
+      "intro": "Your family lives beside the estuary.",
+      "tier": 1,
+      "profession": "farmer",
+      "gold": 12,
+      "prestige": 0,
+      "piety": 0,
+      "bookmarkIds": [
+        "inventory_estuary"
+      ],
+      "eras": [
+        "early_medieval"
+      ],
+      "alwaysUnlocked": true,
+      "startAge": 24,
+      "familyPresets": {
+        "standard": {
+          "name": "Established household",
+          "diff": "age 24"
+        }
+      }
+    }
+  ],
+  "bookmarks": {
+    "inventory_estuary": {
+      "id": "inventory_estuary",
+      "name": "The Estuary",
+      "desc": "A fictional inventory example.",
+      "date": {
+        "year": 900,
+        "season": 0,
+        "day": 1
+      },
+      "era": "early_medieval",
+      "geography": "inventory_estuary_land",
+      "religiousHeads": {},
+      "localInstitutions": {
+        "binding_institution": {
+          "city": "Lantern See",
+          "kind": "see",
+          "provinceId": "inventory_quay",
+          "site": "inventory_quay_hall",
+          "religion": "catholic",
+          "culture": "frankish",
+          "officeId": "binding_bishop",
+          "officeSystem": null,
+          "historicalName": "Hale"
+        },
+        "binding_second_institution": {
+          "city": "Storehouse See",
+          "kind": "see",
+          "provinceId": "inventory_quay",
+          "site": "inventory_quay_store",
+          "religion": "catholic",
+          "culture": "frankish",
+          "officeId": "binding_second_bishop",
+          "officeSystem": null,
+          "historicalName": "Maren"
+        }
+      },
+      "stories": [],
+      "starts": [
+        "inventory_estuary_household"
+      ],
+      "scripted": [],
+      "straits": [],
+      "crossingClasses": {},
+      "provinces": [
+        {
+          "id": "inventory_quay",
+          "name": "Quay",
+          "realm": "inventory_estuary_court",
+          "culture": "frankish",
+          "religion": "catholic",
+          "dev": 3
+        },
+        {
+          "id": "inventory_marsh",
+          "name": "Marsh",
+          "realm": "inventory_estuary_court",
+          "culture": "frankish",
+          "religion": "catholic",
+          "dev": 2
+        },
+        {
+          "id": "inventory_ridge",
+          "name": "Ridge",
+          "realm": "inventory_ridge_court",
+          "culture": "frankish",
+          "religion": "catholic",
+          "dev": 2
+        },
+        {
+          "id": "inventory_scenery",
+          "name": "Uninhabited upland",
+          "wasteland": true
+        }
+      ],
+      "realms": [
+        {
+          "id": "inventory_estuary_court",
+          "name": "Estuary court",
+          "capital": "inventory_quay",
+          "color": "#458c96",
+          "aggression": 0,
+          "rank": 2,
+          "government": "regnum",
+          "ruler": {
+            "name": "Ivo Reed",
+            "culture": "frankish",
+            "born": 868,
+            "mar": 6,
+            "trait": "patient"
+          },
+          "techSeed": {
+            "complete": [
+              "ringworks"
+            ]
+          }
+        },
+        {
+          "id": "inventory_ridge_court",
+          "name": "Ridge court",
+          "capital": "inventory_ridge",
+          "color": "#aa7944",
+          "aggression": 0,
+          "rank": 1,
+          "government": "regnum",
+          "liege": "inventory_estuary_court",
+          "ruler": {
+            "name": "Odo Vale",
+            "culture": "frankish",
+            "born": 870,
+            "mar": 5,
+            "trait": "patient"
+          }
+        }
+      ],
+      "duchies": {},
+      "kingdoms": {},
+      "empires": {},
+      "openingInfrastructure": {
+        "version": 1,
+        "placements": []
+      },
+      "buildingInstitutionAssignments": [
+        {
+          "profileId": "seat_works",
+          "institutionId": "binding_institution"
+        },
+        {
+          "profileId": "seat_works",
+          "institutionId": "binding_second_institution"
+        }
+      ]
+    }
+  },
+  "buildingInstitutionProfiles": {
+    "seat_works": {
+      "kinds": [
+        "see"
+      ],
+      "property": "seat",
+      "permission": "holder",
+      "incumbent": "required",
+      "exclusiveRoles": [
+        "worship"
+      ]
+    }
+  }
+}

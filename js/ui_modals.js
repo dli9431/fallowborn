@@ -8744,6 +8744,7 @@ window.FB = window.FB || {};
         place:place
       });
     }
+    if (FBDATA.buildings[id] && FBDATA.buildings[id].institutionProfile) return FB.T('{place}; an existing lawful foundation is required. You pay construction and maintenance from your household account. Changed permission suspends operation until reviewed.', { place:place });
     return FB.T('{place}; income, upkeep and troops follow its holder. Population effects serve the county; research serves the nation', {
       place:place
     });
@@ -8776,6 +8777,10 @@ window.FB = window.FB || {};
     }
     const group = FB.buildingConstructionGroupStatus(s, pid, id);
     if (!group.ok) return group.reason;
+    if (d.institutionProfile) {
+      const candidates = FB.settlementsOf(s, pid).map(function (v, idx) { return FB.buildingInstitutionStatus(s, pid, idx, id); });
+      if (!candidates.some(function (q) { return q.allowed; })) return candidates.length ? candidates[0].reason : FB.T('An available institution at this exact site is required.');
+    }
     if (d.devMin && (s.dev[pid] || 1) < d.devMin) {
       return FB.T('Requires development {development}.', { development: d.devMin });
     }
@@ -8788,6 +8793,67 @@ window.FB = window.FB || {};
 
   function buildingOpenCount(s, pid, demesneContext) {
     return FB.buildingOpenCount(s, pid, demesneContext);
+  }
+
+  function institutionalBuildingRows(s, pid) {
+    let h = '';
+    for (const r of FB.builtIn(s, pid)) {
+      if (!r.institutionBinding) continue;
+      const status = FB.buildingInstitutionStatus(s, pid, r.s, r.id, r.institutionBinding.payer, r);
+      const d = FBDATA.buildings[r.id];
+      h += '<div class="hint">' + esc(dt(s, 'building', r.id, d, 'name')) + ': ' +
+        esc(status.allowed ? FB.T('Institutional permission is current; maintenance uses its recorded payer.') : status.reason) +
+        ' <button type="button" class="btn small" data-institution-building="' + esc(r.id) + '" data-institution-slot="' + r.s + '">' +
+        esc(FB.T('Review permission')) + '</button></div>';
+    }
+    return h;
+  }
+  function bindInstitutionalBuildingRows(pid, idx, keep) {
+    document.querySelectorAll('[data-institution-building]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        const id = btn.dataset.institutionBuilding, slot = Number(btn.dataset.institutionSlot);
+        const scroll = $('gm-body').scrollTop;
+        const details = Array.from($('gm-body').querySelectorAll('.settcard-info[aria-expanded="true"]')).map(function (el) { return el.getAttribute('aria-controls'); });
+        function back() {
+          UI.showBuildings(pid, idx, keep);
+          document.querySelectorAll('.settcard-info').forEach(function (el) {
+            if (details.indexOf(el.getAttribute('aria-controls')) >= 0 && el.getAttribute('aria-expanded') !== 'true') el.click();
+          });
+          $('gm-body').scrollTop = scroll;
+          document.querySelectorAll('[data-institution-building]').forEach(function (el) {
+            if (el.dataset.institutionBuilding === id && Number(el.dataset.institutionSlot) === slot) el.focus();
+          });
+          $('gm-body').scrollTop = scroll;
+        }
+        const s = FB.state, q = FB.buildingInstitutionQuote(s, pid, slot, id, undefined, 'reaffirm');
+        const d = FBDATA.buildings[id];
+        function incumbent(cid) { return cid && s.chars[cid] ? FB.fullName(s.chars[cid]) : q.previous && q.previous.incumbentId ? FB.T('Vacant') : FB.T('No office required'); }
+        const binding = q.binding, place = FB.settlementsOf(s, pid)[slot];
+        const previousPayer = q.previous && q.previous.payer;
+        const payerName = previousPayer && (previousPayer.kind === 'realm'
+          ? s.realms[previousPayer.id] && s.realms[previousPayer.id].name
+          : s.chars[previousPayer.id] && FB.fullName(s.chars[previousPayer.id]));
+        const body = reviewFactsCard(FB.T('Institutional permission'),
+          kv('Building', esc(dt(s, 'building', id, d, 'name'))) +
+          kv('Institution', esc(binding ? FB.localInstitutionName(binding.institutionId, s) : FB.T('Unavailable'))) +
+          kv('Property', esc(binding && binding.propertyId ? FB.T('Endowed plots at {place}', { place:place.name }) : FB.T('Institutional seat'))) +
+          kv('Recorded incumbent', esc(incumbent(q.previous && q.previous.incumbentId))) +
+          kv('Current incumbent', esc(incumbent(binding && binding.incumbentId))) +
+          kv('Previous payer', esc(payerName || FB.T('None'))) +
+          kv('Payer', esc(FB.T('Your household account'))) +
+          kv('Review cost', esc(FB.T('No payment'))) +
+          kv('Maintenance', esc(assetSeasonalMoneyCost(d.upkeep)))) +
+          '<p class="hint">' + esc(q.allowed ? FB.T('Confirm current permission for this existing asset. No office, property or funds change hands.') : q.reason) + '</p>' +
+          '<button type="button" class="btn primary" id="gm-binding-apply"' + (q.allowed ? '' : ' disabled') + '>' + esc(FB.T('Confirm permission')) + '</button>' +
+          '<button type="button" class="btn" id="gm-cancel">' + esc(FB.T('Back')) + '</button>';
+        openModal(FB.T('Review permission'), body, { historyView:true, historyBack:true, historyBackRender:back });
+        $('gm-cancel').addEventListener('click', function () { modalHistoryBack(back); });
+        $('gm-binding-apply').addEventListener('click', function () {
+          if (FB.buildingInstitutionApply(FB.state, q)) UI.refresh();
+          modalHistoryBack(back);
+        });
+      });
+    });
   }
 
   /* Keep county choice in reach while the long building ledger scrolls.
@@ -8857,7 +8923,7 @@ window.FB = window.FB || {};
           'Manual construction remains available here.')) + '</span></label>' +
         '<p class="hint">' + esc(FB.T(
           'Each settlement can hold one of each building. Ruins still occupy that place. Some buildings have a county or realm-wide limit. Each additional copy in a county costs {percent}% more.',
-          { percent: growth })) + '</p><div class="gm-list">';
+          { percent: growth })) + '</p>' + institutionalBuildingRows(s, pid) + '<div class="gm-list">';
       let cardSeq = 0;
       for (const id in FBDATA.buildings) {
         const d = FBDATA.buildings[id];
@@ -8945,6 +9011,7 @@ window.FB = window.FB || {};
         UI.refresh();
       });
       bindCardInfoToggles($('gm-body'));
+      bindInstitutionalBuildingRows(pid, idx, keep);
       document.querySelectorAll('[data-bquick]').forEach(function (btn) {
         btn.addEventListener('click', function () {
           const scrollTop = $('gm-body').scrollTop;
@@ -8993,7 +9060,7 @@ window.FB = window.FB || {};
         return d.icon + ' ' + esc(e.ruined ? FB.T('Ruins of {building}', { building: name }) : name);
       }).join(' · ') + '</p>';
     }
-    h += '<div class="gm-list">';
+    h += institutionalBuildingRows(s, pid) + '<div class="gm-list">';
     let cardSeq = 0;
     for (const b of FB.buildable(s, pid, idx, buildingContext)) {
       const short = s.player.gold < b.cost;
@@ -9029,6 +9096,7 @@ window.FB = window.FB || {};
       modalClass:'building-works-modal'
     });
     bindCardInfoToggles($('gm-body'));
+    bindInstitutionalBuildingRows(pid, idx, keep);
     document.querySelectorAll('[data-build]').forEach(function (btn) {
       btn.addEventListener('click', function () {
         const focusId = btn.dataset.build;

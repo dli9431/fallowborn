@@ -287,6 +287,7 @@ window.FBMODS = window.FBMODS || [];
     religiousAffiliations:true, religiousInstitutionProfiles:true, religiousActivities:true, religiousPatronage:true,
     traits:true, traitMechanics:true,
     ailments:true, modifiers:true, buildings:true, forts:true, siteResourceProfiles:true,
+    buildingInstitutionProfiles:true,
     techDomains:true, techTraditions:true, tech:true, techCaps:true,
     capabilities:true,
     techImpactReviews:true, unitClasses:true, holdings:true, careers:true,
@@ -2161,6 +2162,9 @@ window.FBMODS = window.FBMODS || [];
       validateInstitutionDefinitions();
     }
     if (own(mod, 'buildings')) validateBuildings(mod);
+    var buildingInstitutionFaults = FB.buildingInstitutionCatalogFaults(FBDATA);
+    if (own(mod, 'buildingInstitutionProfiles') && !plainObject(mod.buildingInstitutionProfiles)) fail('buildingInstitutionProfiles', 'must be an object keyed by id.');
+    if (buildingInstitutionFaults.length) fail('buildingInstitutionProfiles', buildingInstitutionFaults[0]);
     if (own(mod, 'architectureStyles')) {
       if (!plainObject(mod.architectureStyles)) fail('architectureStyles', 'must be an object keyed by id.');
       for (const id in mod.architectureStyles) if (own(mod.architectureStyles, id)) {
@@ -2632,6 +2636,7 @@ window.FBMODS = window.FBMODS || [];
     if (mod.religiousInstitutionProfiles) mergeTable(FBDATA.religiousInstitutionProfiles, mod.religiousInstitutionProfiles);
     if (mod.religiousActivities) mergeTable(FBDATA.religiousActivities, mod.religiousActivities);
     if (mod.religiousPatronage) mergeTable(FBDATA.religiousPatronage, mod.religiousPatronage);
+    if (mod.buildingInstitutionProfiles) mergeTable(FBDATA.buildingInstitutionProfiles, mod.buildingInstitutionProfiles);
     if (mod.legalTraditions) mergeTable(FBDATA.legalTraditions, mod.legalTraditions);
     if (mod.justiceSentences) mergeTable(FBDATA.justiceSentences, mod.justiceSentences);
     if (mod.governmentForms) { mergeTable(FBDATA.governmentForms, mod.governmentForms); FB.governments.invalidate(); }

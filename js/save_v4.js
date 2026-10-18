@@ -85,6 +85,7 @@
     if (state.start !== undefined && !plain(state.start)) field('state.start');
     if (FB.validateOpeningInfrastructureState) FB.validateOpeningInfrastructureState(state);
     if (FB.siteResources) FB.siteResources.validate(state);
+    if (FB.validateBuildingInstitutionState) FB.validateBuildingInstitutionState(state);
     validateRoyalCourts(state);
     if (FB.validateStartingRealm) FB.validateStartingRealm(state);
     if (FB.validateColonateTenure) FB.validateColonateTenure(state);
