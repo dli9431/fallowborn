@@ -1,0 +1,401 @@
+{
+  "name": "Fictional metal production world",
+  "geographies": {
+    "early_industry_metal_land": {
+      "bounds": {
+        "lonMin": 0,
+        "lonMax": 6,
+        "latMin": 0,
+        "latMax": 5
+      },
+      "land": [
+        [
+          0.5,
+          0.5,
+          5.5,
+          0.5,
+          5.5,
+          4.5,
+          0.5,
+          4.5
+        ]
+      ],
+      "gridWidth": 240,
+      "seas": [],
+      "rivers": [],
+      "defaultLayout": null,
+      "provinces": [
+        {
+          "id": "resource_hill",
+          "x": 1.5,
+          "y": 1.5,
+          "terrain": "hills"
+        },
+        {
+          "id": "resource_fold",
+          "x": 3.1,
+          "y": 1.5,
+          "terrain": "hills"
+        }
+      ],
+      "sites": {
+        "resource_roof": {
+          "x": 1.5,
+          "y": 1.5
+        },
+        "resource_tank": {
+          "x": 1.7,
+          "y": 1.5
+        },
+        "resource_grazing": {
+          "x": 3.1,
+          "y": 1.5
+        }
+      }
+    }
+  },
+  "startScenarios": [
+    {
+      "id": "early_industry_metal_household",
+      "name": "Hill household",
+      "desc": "A fictional household.",
+      "intro": "Review actual finite plant inputs and output buyers.",
+      "tier": 1,
+      "profession": "farmer",
+      "gold": 500,
+      "prestige": 0,
+      "piety": 0,
+      "bookmarkIds": [
+        "early_industry_metal"
+      ],
+      "eras": [
+        "early_medieval"
+      ],
+      "alwaysUnlocked": true,
+      "startAge": 24,
+      "familyPresets": {
+        "standard": {
+          "name": "Established household",
+          "diff": "age 24"
+        }
+      }
+    },
+    {
+      "id": "early_industry_metal_ruler",
+      "name": "The hill holder",
+      "desc": "An existing fictional ruler.",
+      "intro": "Review actual finite plant inputs and output buyers.",
+      "tier": 5,
+      "profession": "noble",
+      "gold": 500,
+      "prestige": 0,
+      "piety": 0,
+      "bookmarkIds": [
+        "early_industry_metal"
+      ],
+      "eras": [
+        "early_medieval"
+      ],
+      "alwaysUnlocked": true,
+      "familyPresets": {
+        "standard": {
+          "name": "Established household",
+          "diff": "age 24"
+        }
+      },
+      "rulerRealmId": "resource_hill_court",
+      "governmentForm": "regnum",
+      "fixedProvinceId": "resource_hill",
+      "characterName": "Arno Stone",
+      "sex": "m",
+      "startCulture": "frankish",
+      "startReligion": "catholic",
+      "onboarding": "ruler"
+    }
+  ],
+  "bookmarks": {
+    "early_industry_metal": {
+      "id": "early_industry_metal",
+      "name": "Fictional supplied upland metal works",
+      "desc": "An authoring simulation with explicit finite property, inputs, work and buyers; no historical inventory.",
+      "date": {
+        "year": 950,
+        "season": 0,
+        "day": 1
+      },
+      "era": "early_medieval",
+      "geography": "early_industry_metal_land",
+      "settlementLayout": null,
+      "religiousHeads": {},
+      "localInstitutions": {},
+      "stories": [],
+      "starts": [
+        "early_industry_metal_household",
+        "early_industry_metal_ruler"
+      ],
+      "scripted": [],
+      "straits": [],
+      "crossingClasses": {},
+      "provinces": [
+        {
+          "id": "resource_hill",
+          "name": "Hill",
+          "realm": "resource_hill_court",
+          "culture": "frankish",
+          "religion": "catholic",
+          "dev": 5,
+          "settlements": [
+            {
+              "site": "resource_roof",
+              "name": "Roof Town",
+              "kind": "town"
+            },
+            {
+              "site": "resource_tank",
+              "name": "Tank Village",
+              "kind": "village"
+            }
+          ]
+        },
+        {
+          "id": "resource_fold",
+          "name": "Fold",
+          "realm": "resource_fold_court",
+          "culture": "frankish",
+          "religion": "catholic",
+          "dev": 3,
+          "settlements": [
+            {
+              "site": "resource_grazing",
+              "name": "Fold Village",
+              "kind": "village"
+            }
+          ]
+        }
+      ],
+      "realms": [
+        {
+          "id": "resource_hill_court",
+          "name": "Hill court",
+          "capital": "resource_hill",
+          "color": "#aa7944",
+          "aggression": 0,
+          "rank": 2,
+          "government": "regnum",
+          "ruler": {
+            "name": "Arno Stone",
+            "culture": "frankish",
+            "born": 918,
+            "mar": 6,
+            "trait": "patient"
+          }
+        },
+        {
+          "id": "resource_fold_court",
+          "name": "Fold court",
+          "capital": "resource_fold",
+          "color": "#779955",
+          "aggression": 0,
+          "rank": 1,
+          "government": "regnum",
+          "ruler": {
+            "name": "Odo Vale",
+            "culture": "frankish",
+            "born": 920,
+            "mar": 5,
+            "trait": "patient"
+          }
+        }
+      ],
+      "duchies": {},
+      "kingdoms": {},
+      "empires": {},
+      "revision": "supplied",
+      "revisions": {
+        "baseline": {},
+        "supplied": {
+          "openingInfrastructure": {
+            "version": 1,
+            "placements": [
+              {
+                "countyId": "resource_hill",
+                "siteId": "resource_roof",
+                "buildingId": "bloomery_smithy",
+                "condition": "standing"
+              },
+              {
+                "countyId": "resource_fold",
+                "siteId": "resource_grazing",
+                "buildingId": "industry_depot",
+                "condition": "standing"
+              }
+            ]
+          },
+          "productionSites": [
+            {
+              "id": "metal_plant",
+              "countyId": "resource_hill",
+              "siteId": "resource_roof",
+              "buildingId": "bloomery_smithy",
+              "recipeIds": [
+                "bloomery_smelting",
+                "smithy_forging"
+              ],
+              "openingLots": []
+            },
+            {
+              "id": "metal_supplier",
+              "countyId": "resource_fold",
+              "siteId": "resource_grazing",
+              "buildingId": "industry_depot",
+              "recipeIds": [
+                "bloomery_smelting",
+                "smithy_forging"
+              ],
+              "openingLots": [
+                {
+                  "goodId": "bloomery_ore",
+                  "quantity": 4
+                },
+                {
+                  "goodId": "workshop_fuel",
+                  "quantity": 6
+                },
+                {
+                  "goodId": "bloomery_iron_lot",
+                  "quantity": 2
+                }
+              ]
+            }
+          ],
+          "productionExchangeAssignments": [
+            {
+              "id": "ore_purchase",
+              "profileId": "bloomery_ore_purchase",
+              "fromSiteId": "metal_supplier",
+              "toSiteId": "metal_plant"
+            },
+            {
+              "id": "fuel_purchase",
+              "profileId": "workshop_fuel_purchase",
+              "fromSiteId": "metal_supplier",
+              "toSiteId": "metal_plant"
+            },
+            {
+              "id": "iron_purchase",
+              "profileId": "smithy_iron_purchase",
+              "fromSiteId": "metal_supplier",
+              "toSiteId": "metal_plant"
+            },
+            {
+              "id": "iron_sale",
+              "profileId": "bloomery_iron_sale",
+              "fromSiteId": "metal_plant",
+              "toSiteId": "metal_supplier"
+            },
+            {
+              "id": "tool_sale",
+              "profileId": "smithy_tool_sale",
+              "fromSiteId": "metal_plant",
+              "toSiteId": "metal_supplier"
+            }
+          ],
+          "productionProducerAssignments": []
+        },
+        "new_works": {
+          "openingInfrastructure": {
+            "version": 1,
+            "placements": [
+              {
+                "countyId": "resource_fold",
+                "siteId": "resource_grazing",
+                "buildingId": "industry_depot",
+                "condition": "standing"
+              }
+            ]
+          },
+          "productionSites": [
+            {
+              "id": "metal_plant",
+              "countyId": "resource_hill",
+              "siteId": "resource_roof",
+              "buildingId": "bloomery_smithy",
+              "recipeIds": [
+                "bloomery_smelting",
+                "smithy_forging"
+              ],
+              "openingLots": []
+            },
+            {
+              "id": "metal_supplier",
+              "countyId": "resource_fold",
+              "siteId": "resource_grazing",
+              "buildingId": "industry_depot",
+              "recipeIds": [
+                "bloomery_smelting",
+                "smithy_forging"
+              ],
+              "openingLots": [
+                {
+                  "goodId": "bloomery_ore",
+                  "quantity": 4
+                },
+                {
+                  "goodId": "workshop_fuel",
+                  "quantity": 6
+                },
+                {
+                  "goodId": "bloomery_iron_lot",
+                  "quantity": 2
+                }
+              ]
+            }
+          ],
+          "productionExchangeAssignments": [
+            {
+              "id": "ore_purchase",
+              "profileId": "bloomery_ore_purchase",
+              "fromSiteId": "metal_supplier",
+              "toSiteId": "metal_plant"
+            },
+            {
+              "id": "fuel_purchase",
+              "profileId": "workshop_fuel_purchase",
+              "fromSiteId": "metal_supplier",
+              "toSiteId": "metal_plant"
+            },
+            {
+              "id": "iron_purchase",
+              "profileId": "smithy_iron_purchase",
+              "fromSiteId": "metal_supplier",
+              "toSiteId": "metal_plant"
+            },
+            {
+              "id": "iron_sale",
+              "profileId": "bloomery_iron_sale",
+              "fromSiteId": "metal_plant",
+              "toSiteId": "metal_supplier"
+            },
+            {
+              "id": "tool_sale",
+              "profileId": "smithy_tool_sale",
+              "fromSiteId": "metal_plant",
+              "toSiteId": "metal_supplier"
+            }
+          ],
+          "productionProducerAssignments": []
+        }
+      }
+    }
+  },
+  "buildings": {
+    "industry_depot": {
+      "name": "Material depot",
+      "desc": "Explicit fictional finite storage and counterparty; no passive return.",
+      "role": "industry",
+      "cost": 25,
+      "upkeep": 1,
+      "maxCounty": 2
+    }
+  }
+}

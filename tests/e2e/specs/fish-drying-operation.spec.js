@@ -101,6 +101,22 @@ test('real player work produces one conserved lot and allocation grants 0.03 onl
   });
   expect(r).toEqual({direct:false,worked:true,finished:true,before:0,allocated:true,again:false,effect:0.03,sold:false,raw:0,output:1,remaining:0});
 });
+test('local preserved-fish allocation remains useful when the declared buyer cannot pay',async function({page},info){
+  await boot(page,info,'cool');
+  const r=await page.evaluate(function(){
+    const s=FB.state,P=FB.production,S=FB.buildingSeasons;
+    FISH.catch();s.turn=91;s.date.day=2;FISH.open();s.realms.fish_cool_buyer.treasury.gold=0;
+    const outlet=P.outletReady(s,'drying_plant',FBDATA.productionRecipes.dry_fish.outputs);
+    const q=P.aiQuote(s,'drying_plant','reserve',{recipeId:'dry_fish',disposition:'store'}),id=P.commit(s,q);
+    const worked=P.perform(s,P.aiQuote(s,'drying_plant','work',{batchId:id})),finished=P.commit(s,P.aiQuote(s,'drying_plant','finish',{batchId:id}));
+    const lot=s.production.lots.find(function(x){return x.origin.kind==='batch';});
+    const allocated=S.commit(s,S.quote(s,{operation:'allocate',assignmentId:'drying_window',actor:FISH.actor(),lotId:lot.id}));
+    P.validate(s);S.validate(s);
+    return {outlet:outlet,reserved:!!id,worked:worked,finished:finished,allocated:allocated,effect:FISH.effect(),buyer:s.realms.fish_cool_buyer.treasury.gold};
+  });
+  expect(r).toEqual({outlet:false,reserved:true,worked:true,finished:true,allocated:true,effect:0.03,buyer:0});
+});
+
 test('a newly paid station enrolls empty and can process an actual later catch without replaying opening stock',async function({page},info){
   const custom=JSON.parse(JSON.stringify(examples.cool)),bm=custom.bookmarks.fish_cool;
   bm.productionSites[0].openingLots=[];bm.openingInfrastructure.placements=bm.openingInfrastructure.placements.filter(function(p){return p.countyId!=='fjord_quay';});

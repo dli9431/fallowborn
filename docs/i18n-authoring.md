@@ -385,3 +385,7 @@ Water-service input quantities and names use literal FB.T with productionGood na
 Bath and headworks display owners
 
 The literal tech_baths_headworks and buildings_baths_headworks supplements use existing tech and building name/desc extraction. buildingProfiles_baths_headworks uses the existing buildingProfile display owner. heating_fuel lives in the ordinary productionGoods assignment in data/production.js and uses productionGood.heating_fuel name/desc. No production-supplement extractor or generated catalogue is required. This keeps the small fuel display addition independent of optional manufacturing supplements. Static extraction coverage is authored in tools/test_i18n_baths_headworks.py; execution and catalogue generation remain owner-controlled.
+
+Production supplements
+
+Literal FBDATA.productionGoods_<suffix> and FBDATA.productionRecipes_<suffix> maps in data/production_*.js use the existing productionGood and productionRecipe name/desc/fallback owners. Static extraction reads the maps without executing their composition. Units, quantities, prices and references remain untranslated; new English uses normal authored fallback. Compose each unique addition into its ordinary root before runtime validation. Catalogue generation remains a separate owner request.
