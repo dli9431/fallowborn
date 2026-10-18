@@ -2,7 +2,15 @@
 
 Composed catalogue
 
-The current catalogue composes 36 technology corrections across the foundation, learning, civic/military, maritime and wind supplements while retaining all 187 ids. Technology costs, scalar effects, capability grants, regional adoption pairs and national caps are preserved. Source maps retain one correction owner per id; JSON uses the ordinary tech root. Fresh historical knowledge closes the effective graph, while matching saves retain completion, exposure and partial projects without reseeding. The full composition and its independent construction/property boundaries are documented in docs/research/technology-and-buildings.md, with a complete ordinary JSON example and regression coverage for retained baseline and current worlds. This composition adds no gameplay capability or technology-impact entry beyond the owning changes' existing reviews.
+The catalogue retains its 187 original technology ids and their 36 corrections across the foundation, learning, civic/military, maritime and wind supplements. Feltmaking and Regularized Bookhands bring the total to 189. The original entries keep their costs, scalar effects, capability grants and regional adoption pairs. National caps remain unchanged. Source maps retain one correction owner per id; JSON uses the ordinary tech root. Fresh historical knowledge closes the effective graph, while matching saves retain completion, exposure and partial projects without reseeding. The composition and its independent construction/property boundaries are documented in docs/research/technology-and-buildings.md.
+
+Material and bookhand refinements
+
+data/technology_early_refinements.js adds feltmaking and bookhand_standardization through the existing literal supplement format. Feltmaking costs 20, has no prerequisite and contributes -0.005 to the ordinary additive enterprise cost modifier; the enterprise cost factor still has a 0.55 floor. Regularized Bookhands costs 50, requires scriptoria and classical_grammar and adds 0.005 education within the existing 0.20 national cap. Neither adds a building, research slot, capability grant or prerequisite on another technology.
+
+Each refinement has its own soft technology-impact review. Ordinary crafts, shelter and enterprise setup remain available without feltmaking. Ordinary literacy, copying, education and Scriptoria remain available without bookhand_standardization. The writing refinement describes specialist practice within different scripts rather than a universal alphabet. Evidence bounds, regional simulation schedules and source limits are recorded in docs/research/early-refinements.md.
+
+Fresh historical seeding includes the two additions under the unchanged adoption and prerequisite rules. At 867 Feltmaking completes for eight named traditions plus the default schedule; Regularized Bookhands completes for none. At 1066 Feltmaking completes for all ten named traditions and the default schedule; Regularized Bookhands completes for six named traditions. Existing campaigns retain their actual knowledge, exposed entries, projects, progress and property; loading never adds these completions by historical date. Both remain ordinary research choices. Independent refinements-felting.json and refinements-bookhands.json imports exercise different prerequisites, prices, windows and effects through the existing Mods flow and exact saved-content checks.
 
 Wind-powered milling
 
@@ -94,7 +102,7 @@ diffusions of 476–1300. The campaign remains playable after 1300: projects do 
 hard calendar locks, exposure continues, and the historical cost curve becomes a catch-up
 discount rather than stopping.
 
-The live catalogue is FBDATA.tech, composed from data/technology.js and its supplemental files. It contains 187 entries in a directed prerequisite graph across seven built-in domains:
+The live catalogue is FBDATA.tech, composed from data/technology.js and its supplemental files. It contains 189 entries in a directed prerequisite graph across seven built-in domains:
 
 - agriculture and animal power;
 - crafts, materials, and industry;

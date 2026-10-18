@@ -1,0 +1,21 @@
+{
+  "name": "Fictional scholarly refinement alternatives",
+  "tech": {
+    "feltmaking": {
+      "name": "Household Felting", "icon": "🧶", "domain": "crafts", "cost": 18,
+      "req": [],
+      "history": {"attested": [-500, 600], "adoption": {"default": [-100, 750]}},
+      "desc": "A fictional household craft refinement offers a smaller setup saving without a spinning prerequisite.",
+      "confidence": "medium", "sources": ["MOD"],
+      "unlocks": [], "capabilities": [], "fx": {"costs": {"enterprise": -0.003}}
+    },
+    "bookhand_standardization": {
+      "name": "Scholarly Bookhands", "icon": "📜", "domain": "learning", "cost": 62,
+      "req": ["scriptoria", "classical_grammar", "translation_schools"],
+      "history": {"attested": [650, 850], "adoption": {"default": [950, 1250], "latin": [900, 1150]}},
+      "desc": "A fictional scholarly network requires translation practice for a larger education refinement.",
+      "confidence": "medium", "sources": ["MOD"],
+      "unlocks": [], "capabilities": [], "fx": {"education": 0.009}
+    }
+  }
+}

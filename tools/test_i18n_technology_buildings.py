@@ -8,6 +8,7 @@ class ComposedCatalogueExtractionTests(unittest.TestCase):
         inventory = i18n_catalog.Inventory()
         i18n_catalog.extract_structured(inventory)
         sources = (
+            ('tech', 'technology_early_refinements.js', 'tech_early_refinements', 2),
             ('tech', 'technology_foundations.js', 'techCorrections_foundations', 9),
             ('tech', 'technology_learning.js', 'techCorrections_learning', 6),
             ('tech', 'technology_civic_military.js', 'techCorrections_civic_military', 12),
@@ -37,7 +38,7 @@ class ComposedCatalogueExtractionTests(unittest.TestCase):
                         self.assertEqual(inventory.entries[key], {'text': value.value}, key)
                         self.assertEqual(inventory.meta[key]['location'], 'data/' + filename, key)
                         self.assertIn(i18n_catalog.source_key(value.value), inventory.entries)
-        self.assertEqual(len(seen), 45)
+        self.assertEqual(len(seen), 47)
         for key, text in (
             ('tech.water_power.name.default', 'Water Power'),
             ('tech.translation_schools.name.default', 'Translation Networks'),
