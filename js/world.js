@@ -36,7 +36,7 @@ window.FB = window.FB || {};
     'duchies','kingdoms','empires','straits','crossingClasses','localInstitutions',
     'settlementLayout','climate','religiousHeads','starts','stories','storyRegions','scripted',
     'openingRevisions','openingLegacyRevision','startLocations','openingInfrastructure','siteResourceAssignments',
-    'buildingInstitutionAssignments','buildingOperationAssignments','productionSites','productionExchangeAssignments','productionProducerAssignments','buildingSeasonAssignments'];
+    'buildingInstitutionAssignments','buildingOperationAssignments','productionSites','productionExchangeAssignments','productionProducerAssignments','buildingSeasonAssignments','maritimeWorkAssignments'];
   function resolveBookmarkRevision(base, revision) {
     if (!base) return null;
     var selected = revision === undefined ? base.revision || 'baseline' : revision;
@@ -5413,6 +5413,7 @@ window.FB = window.FB || {};
     if (FB.mobile && FB.mobile.referencesCharacter(state, c && c.id)) return true;
     if (!state || !c || !state.player) return false;
     if (FB.productionEconomy && FB.productionEconomy.referencesCharacter(state,c.id)) return true;
+    if (FB.maritimeWork && FB.maritimeWork.referencesCharacter(state,c.id)) return true;
     if (FB.buildingSeasons && FB.buildingSeasons.referencesCharacter(state,c.id)) return true;
     if (FB.publicAdministrationReferencesCharacter && FB.publicAdministrationReferencesCharacter(state,c.id)) return true;
     if (FB.federateReferencesCharacter && FB.federateReferencesCharacter(state, c.id)) return true;

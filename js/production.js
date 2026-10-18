@@ -50,6 +50,7 @@
     var errors = P.catalogFaults(FBDATA), rows = bm && bm.productionSites, out = {sites:[],errors:errors};
     if (rows === undefined || errors.length) {
       if (FB.productionEconomy) errors.push.apply(errors,FB.productionEconomy.compilePrepared(bm,[]).errors);
+      if (FB.maritimeWork) errors.push.apply(errors,FB.maritimeWork.compilePrepared(bm,[]).errors);
       return out;
     }
     function fault(v) { errors.push('productionSites: ' + v); }
@@ -85,6 +86,10 @@
     });
     if (out.sites.reduce(function (n,a) { return n+a.openingLots.length; },0) > LIMIT) fault('opening lots exceed the global bound.');
     if (FB.productionEconomy) errors.push.apply(errors,FB.productionEconomy.compilePrepared(bm,out.sites).errors);
+    if (FB.maritimeWork) {
+      var maritime=FB.maritimeWork.compilePrepared(bm,out.sites);
+      errors.push.apply(errors,maritime.errors);out.maritime=maritime.assignments;
+    }
     if (errors.length) out.sites = [];
     return out;
   };
@@ -188,7 +193,7 @@
     if (FB.productionEconomy) FB.productionEconomy.initialize(s);
   };
   function reservationTotals(r) {
-    var held={};
+    var held=FB.maritimeWork ? FB.maritimeWork.reservations({production:r}) : {};
     if (r) r.batches.forEach(function(b){if(b.status==='reserved')b.inputs.forEach(function(x){held[x.lotId]=(held[x.lotId] || 0)+x.quantity;});});
     return held;
   }
@@ -371,7 +376,7 @@
     });
     if (r === undefined) { if (stamps.length) fail();return true; }
     var p = plan(s), originalAssets = FB.compileOpeningInfrastructure(FB.campaignBookmark(s)), siteTable = {}, assets = {}, lots = {}, batches = {}, seen = {}, work = {}, claims = {}, used = {}, openings = {};
-    if (p.errors.length || !keys(r,['version','definition','revision','nextId','assets','lots','batches','economy']) || r.version !== 1 ||
+    if (p.errors.length || !keys(r,['version','definition','revision','nextId','assets','lots','batches','economy','maritime']) || r.version !== 1 ||
         r.definition !== definition(p) || !int(r.revision,0,MAX) || !int(r.nextId,1,MAX) ||
         !Array.isArray(r.assets) || r.assets.length > 128 || !Array.isArray(r.lots) || r.lots.length > LIMIT ||
         !Array.isArray(r.batches) || r.batches.length > LIMIT) fail();
@@ -467,6 +472,9 @@
     var economic = FB.productionEconomy ? FB.productionEconomy.validate(s) : {ids:[],used:{},revision:0};
     economic.ids.forEach(unique);
     Object.keys(economic.used).forEach(function(key){ if (!lots[key]) fail(); used[key]+=economic.used[key]; });
+    var maritime=FB.maritimeWork ? FB.maritimeWork.validate(s) : {ids:[],used:{},revision:0};
+    maritime.ids.forEach(unique);
+    Object.keys(maritime.used).forEach(function(key){if(!lots[key])fail();used[key]+=maritime.used[key];});
     var held=reservationTotals(r);
     r.lots.forEach(function (lot) {
       if (lot.origin.kind === 'batch') {
@@ -486,7 +494,7 @@
     });
     var pending={};
     r.batches.forEach(function(b){if(b.status==='reserved'){if(pending[b.assetId])fail();pending[b.assetId]=true;}});
-    if (Object.keys(seen).length !== r.nextId-1 || r.revision !== r.batches.reduce(function(n,b){return n+1+b.workTurns.length+(b.status==='reserved'?0:1);},0)+economic.revision) fail();
+    if (Object.keys(seen).length !== r.nextId-1 || r.revision !== r.batches.reduce(function(n,b){return n+1+b.workTurns.length+(b.status==='reserved'?0:1);},0)+economic.revision+maritime.revision) fail();
     return true;
   };
 })();

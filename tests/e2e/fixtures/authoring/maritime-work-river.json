@@ -1,0 +1,354 @@
+{
+  "name": "Maintained river boat work",
+  "siteResourceProfiles": {
+    "work_launch": {
+      "name": "Licensed work slip",
+      "kind": "access",
+      "unit": "launching",
+      "capacity": 2,
+      "periodDays": 7
+    }
+  },
+  "geographies": {
+    "maritime_river_land": {
+      "bounds": {
+        "lonMin": 0,
+        "lonMax": 6,
+        "latMin": 0,
+        "latMax": 5
+      },
+      "land": [
+        [
+          0.5,
+          0.5,
+          5.5,
+          0.5,
+          5.5,
+          4.5,
+          0.5,
+          4.5
+        ]
+      ],
+      "gridWidth": 240,
+      "seas": [],
+      "rivers": [],
+      "defaultLayout": "maritime_river_layout",
+      "provinces": [
+        {
+          "id": "resource_quay",
+          "x": 1.5,
+          "y": 2,
+          "terrain": "farmland"
+        },
+        {
+          "id": "resource_bank",
+          "x": 3.1,
+          "y": 2,
+          "terrain": "farmland"
+        },
+        {
+          "id": "resource_rocks",
+          "x": 4.7,
+          "y": 2,
+          "terrain": "hills"
+        }
+      ],
+      "sites": {
+        "resource_intake": {
+          "x": 1.5,
+          "y": 2
+        },
+        "resource_cistern": {
+          "x": 3.1,
+          "y": 2
+        },
+        "resource_slip": {
+          "x": 1.7,
+          "y": 2
+        }
+      }
+    }
+  },
+  "settlementLayouts": {
+    "maritime_river_layout": {
+      "resource_quay": [
+        {
+          "site": "resource_intake",
+          "name": "Intake Town",
+          "kind": "town"
+        },
+        {
+          "site": "resource_slip",
+          "name": "Slip Village",
+          "kind": "village"
+        }
+      ],
+      "resource_bank": [
+        {
+          "site": "resource_cistern",
+          "name": "Bank Village",
+          "kind": "village"
+        }
+      ]
+    }
+  },
+  "startScenarios": [
+    {
+      "id": "maritime_river_ruler",
+      "name": "The river holder",
+      "desc": "An existing fictional ruler.",
+      "intro": "Review the river's finite capacity.",
+      "tier": 5,
+      "profession": "noble",
+      "gold": 500,
+      "prestige": 0,
+      "piety": 0,
+      "bookmarkIds": [
+        "maritime_river"
+      ],
+      "eras": [
+        "early_medieval"
+      ],
+      "alwaysUnlocked": true,
+      "rulerRealmId": "maritime_river_court",
+      "governmentForm": "regnum",
+      "fixedProvinceId": "resource_quay",
+      "characterName": "Ivo Reed",
+      "sex": "m",
+      "startCulture": "frankish",
+      "startReligion": "catholic",
+      "onboarding": "ruler",
+      "familyPresets": {
+        "standard": {
+          "name": "Existing court",
+          "diff": "Existing court household"
+        }
+      }
+    }
+  ],
+  "bookmarks": {
+    "maritime_river": {
+      "id": "maritime_river",
+      "name": "River boat work",
+      "desc": "A fictional paid boat-work demonstration, with no historical installation.",
+      "date": {
+        "year": 900,
+        "season": 0,
+        "day": 1
+      },
+      "era": "early_medieval",
+      "geography": "maritime_river_land",
+      "religiousHeads": {},
+      "localInstitutions": {},
+      "stories": [],
+      "starts": [
+        "maritime_river_ruler"
+      ],
+      "scripted": [],
+      "straits": [],
+      "crossingClasses": {},
+      "provinces": [
+        {
+          "id": "resource_quay",
+          "name": "Quay",
+          "realm": "maritime_river_court",
+          "culture": "frankish",
+          "religion": "catholic",
+          "dev": 5
+        },
+        {
+          "id": "resource_bank",
+          "name": "Bank",
+          "realm": "maritime_river_court",
+          "culture": "frankish",
+          "religion": "catholic",
+          "dev": 3
+        },
+        {
+          "id": "resource_rocks",
+          "name": "Rocky scenery",
+          "wasteland": true
+        }
+      ],
+      "realms": [
+        {
+          "id": "maritime_river_court",
+          "name": "River court",
+          "capital": "resource_quay",
+          "color": "#458c96",
+          "aggression": 0,
+          "rank": 2,
+          "government": "regnum",
+          "ruler": {
+            "name": "Ivo Reed",
+            "culture": "frankish",
+            "born": 868,
+            "mar": 6,
+            "trait": "patient"
+          }
+        }
+      ],
+      "duchies": {},
+      "kingdoms": {},
+      "empires": {},
+      "revision": "supplied",
+      "revisions": {
+        "baseline": {},
+        "supplied": {
+          "siteResourceAssignments": [
+            {
+              "id": "work_slip",
+              "profileId": "work_launch",
+              "countyId": "resource_quay",
+              "siteId": "resource_intake",
+              "suitability": {
+                "launching": true
+              },
+              "rights": {
+                "kind": "holder"
+              }
+            }
+          ],
+          "openingInfrastructure": {
+            "version": 1,
+            "placements": [
+              {
+                "countyId": "resource_quay",
+                "siteId": "resource_intake",
+                "buildingId": "boat_workshop",
+                "condition": "standing"
+              }
+            ]
+          },
+          "productionSites": [
+            {
+              "id": "boat_plant",
+              "countyId": "resource_quay",
+              "siteId": "resource_intake",
+              "buildingId": "boat_workshop",
+              "recipeIds": [
+                "prepare_boat_work"
+              ],
+              "openingLots": [
+                {
+                  "goodId": "wood_lot",
+                  "quantity": 8
+                },
+                {
+                  "goodId": "cord_lot",
+                  "quantity": 6
+                }
+              ]
+            }
+          ],
+          "maritimeWorkAssignments": [
+            {
+              "id": "licensed_work",
+              "profileId": "maintained_river",
+              "productionSiteId": "boat_plant",
+              "launchSourceId": "work_slip"
+            }
+          ]
+        }
+      }
+    }
+  },
+  "buildings": {
+    "boat_workshop": {
+      "name": "Boat workshop",
+      "desc": "An owned work facility with no passive income or fleet.",
+      "role": "industry",
+      "cost": 25,
+      "upkeep": 1,
+      "maxCounty": 1
+    }
+  },
+  "productionGoods": {
+    "wood_lot": {
+      "name": "Timber",
+      "unit": "timber_units",
+      "mass": 1
+    },
+    "cord_lot": {
+      "name": "Cordage",
+      "unit": "cordage_units",
+      "mass": 1
+    },
+    "boat_work_lot": {
+      "name": "Prepared boat work",
+      "unit": "work_lots",
+      "mass": 1
+    }
+  },
+  "productionRecipes": {
+    "prepare_boat_work": {
+      "name": "Prepare maintained boat work",
+      "desc": "Actual paid material preparation.",
+      "inputs": [
+        {
+          "goodId": "wood_lot",
+          "quantity": 1
+        },
+        {
+          "goodId": "cord_lot",
+          "quantity": 1
+        }
+      ],
+      "outputs": [
+        {
+          "goodId": "boat_work_lot",
+          "quantity": 1
+        }
+      ],
+      "workDays": 2,
+      "workPrice": 4,
+      "requiresTech": [],
+      "impactReviewId": "conserved_production_batches"
+    }
+  },
+  "enterprises": {
+    "river_fishing_business": {
+      "name": "River fishing business",
+      "icon": "B",
+      "cost": 60,
+      "profession": "farmer",
+      "yield": 2,
+      "laborPay": 1,
+      "requiresTech": "knarrs",
+      "upgrades": [
+        {
+          "name": "Decked river boat",
+          "cost": 180,
+          "staff": 2,
+          "requiresTech": "sternpost_rudder",
+          "desc": "Paid river enterprise with normal staffing.",
+          "fx": {
+            "populationCapacity": 0.01
+          }
+        }
+      ],
+      "desc": "A fictional river enterprise with ordinary paid staffing."
+    }
+  },
+  "enterpriseMechanics": {
+    "river_fishing_business": {
+      "output": {
+        "provisions": 1
+      },
+      "maritimeWork": true
+    }
+  },
+  "maritimeWorkProfiles": {
+    "maintained_river": {
+      "name": "Maintained river work",
+      "desc": "A finite owned contribution toward the next ordinary invoice.",
+      "enterpriseType": "river_fishing_business",
+      "recipeId": "prepare_boat_work",
+      "goodId": "boat_work_lot",
+      "quantity": 1,
+      "unitValue": 3,
+      "invoiceShare": 0.05,
+      "termDays": 14
+    }
+  }
+}

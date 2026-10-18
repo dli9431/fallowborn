@@ -1395,7 +1395,7 @@ FBDATA.finance = {
    independently of enterprise ids and cosmetic standard names. */
 FBDATA.enterpriseMechanics = {
   field_strip:{ output:{ provisions:1 } }, orchard_business:{ output:{ provisions:1 } },
-  fishing_boat_business:{ output:{ provisions:1 } },
+  fishing_boat_business:{ output:{ provisions:1 }, maritimeWork:true },
   press_business:{ output:{ provisions:.45,luxuries:.55 } },
   workshop_business:{ output:{ wares:1 }, outputBySpecialization:{ smith:{ materials:1 }, cooper:{ transport:1 } }, monopoly:'craft' },
   market_stall_business:{ distribution:{ local:.08 }, monopoly:'trade' },

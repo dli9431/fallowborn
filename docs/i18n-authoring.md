@@ -343,3 +343,7 @@ Production exchange/producer profiles and assignments contain only structural fi
 Temporary shelter presentation
 
 Literal FBDATA.householdRefuges_<suffix> tables in data/story_*.js expose title and intro under householdRefuge.<id> owners and exact-English aliases through static extraction. The extractor does not execute source or translate provider/party/site identities. Ordinary JSON imports use the same FB.T title/intro fallback; generated choices and reviews use literal FB.T chrome and locale-neutral saved facts. tools/test_i18n_household_refuges.py covers two independent source filenames without executable registration. No generated catalogue update is part of authoring.
+
+Maintained maritime work presentation
+
+Literal FBDATA.maritimeWorkProfiles in data/maritime_work.js uses maritimeWorkProfile.<id>.name.default and maritimeWorkProfile.<id>.desc.default owners with exact-source aliases and ordinary imported-English fallback. Static extraction reads display prose only and never runs production or invoice transactions. The shared settlement review renders these fields through FB.dataText; invoice, contribution, quantity, private payer, expiry, blockers and confirmation consequences use literal FB.T phrases with named placeholders. Saved receipts contain structural ids and numbers only. No generated catalog command is needed for feature authoring.

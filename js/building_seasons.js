@@ -169,6 +169,7 @@
       var b=a.profile.benefit,lot=s.production && s.production.lots.find(function(x){return x.id===request.lotId;});
       var l=lot && life(s,lot),held=0;
       if (s.production) s.production.batches.forEach(function(batch){if(batch.status==='reserved') batch.inputs.forEach(function(x){if(x.lotId===request.lotId)held+=x.quantity;});});
+      if (FB.maritimeWork) held+=FB.maritimeWork.reservations(s)[request.lotId] || 0;
       if (!b || !l || l.assignment.id!==a.id || lot.goodId!==b.goodId || !eq(lot.owner,request.actor) || !live(s,a,old) || !eq(old.actor,request.actor) ||
           S.lotAvailable(s,lot)-held<b.quantity || (r && r.debits.some(function(d){return d.kind==='allocated' && d.termId===old.id;}))) return q;
       q.termId=old.id;q.quantity=b.quantity;q.untilTurn=Math.min(s.turn+b.days,l.born+l.days,old.untilTurn);
@@ -215,6 +216,7 @@
       // One loss receipt per lot; reserved work closes through the material owner before stock is lost.
       if (r.debits.length>=LIMIT || r.revision>=1000000) return;
       s.production.batches.forEach(function(b){if(b.status==='reserved' && b.inputs.some(function(x){return x.lotId===lot.id;})) FB.production.expireSeasonalBatch(s,b.id);});
+      if(FB.maritimeWork)FB.maritimeWork.expireLot(s,lot.id);
       r.debits.push({kind:'expired',assignmentId:l.assignment.id,lotId:lot.id,quantity:lot.remaining,turn:l.born+l.days,termId:null,untilTurn:null});
       lot.remaining=0;r.revision++;changed++;
     });

@@ -534,3 +534,7 @@ Optional productionSites bind actual nonfort buildings to finite input/output re
 Selected construction profiles
 
 Optional buildingProfiles replace supported construction scalars on one existing base building. Shared occupancy, group and repeat-price counts include profiled/default assets and ruins together. The selected transaction uses the normal payer and reserve checks, awards only replacement development/opinion/prestige, and preserves an explicit version-1 identity without changing old unprofiled records. Strategic profiles retain canonical fort tier values and their identity through funded completion. The schema, quote/commit, exact site and institution requirements, independent ordinary imports and current consumer boundaries are in docs/designs/building-profiles.md.
+
+Maintained boat-work facilities
+
+An explicitly declared standing production facility can support a co-located licensed maritime-work assignment without a new building effect or historical inventory. Its completed owned paid output contributes only to an actual household enterprise invoice through the canonical enterprise owner. The facility itself supplies no income, fleet, military capacity or enterprise. At most ten percent of the live invoice is substituted, with ordinary technology, staffing, remaining payment and current launching rights retained. There is no bundled boathouse content or installation in this shared capability. See docs/designs/maritime-work.md for the none technology review and exact consumer.
