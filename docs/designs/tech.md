@@ -1,5 +1,9 @@
 # National technology
 
+Composed catalogue
+
+The current catalogue composes 36 technology corrections across the foundation, learning, civic/military, maritime and wind supplements while retaining all 187 ids. Technology costs, scalar effects, capability grants, regional adoption pairs and national caps are preserved. Source maps retain one correction owner per id; JSON uses the ordinary tech root. Fresh historical knowledge closes the effective graph, while matching saves retain completion, exposure and partial projects without reseeding. The full composition and its independent construction/property boundaries are documented in docs/research/technology-and-buildings.md, with a complete ordinary JSON example and regression coverage for retained baseline and current worlds. This composition adds no gameplay capability or technology-impact entry beyond the owning changes' existing reviews.
+
 Wind-powered milling
 
 data/technology_wind.js preserves the windmill id, water_power prerequisite, cost 100, effects, unlocks, capabilities and every inherited adoption pair. Wind-Powered Milling distinguishes eastern vertical-axis mechanisms from later western post mills; the attestation envelope is 900-1200, a rounded evidence bound rather than an invention year. The building's independent inclusive 1150 construction permission does not prevent earlier knowledge or remove saved completions and projects. Fresh historical knowledge still uses the ordinary graph and adoption policy; restore does not reseed it. Source limits are in docs/research/windmills.md.

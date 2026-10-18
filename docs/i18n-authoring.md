@@ -302,3 +302,7 @@ The literal bookmarkTerrain1204 table in data/bookmark_1204_terrain.js exposes i
 Physical geography additions
 
 A data/geography_*.js composer may declare its new scenery seeds in a literal local PROVINCE_ADDITIONS array. extract_geography_additions reads each seed's id and name without executing the file, producing province.<id>.name.<branch> and the normal exact-source alias used by FB.L. Copying a label into the geography names table keeps the same source owner. Coordinates, terrain, geography ids and dated habitation remain separate. Catalogue regeneration is an independently authorized integration step.
+
+Composed technology and building owners
+
+tools/test_i18n_technology_buildings.py checks all 36 technology corrections, eight building corrections and the hospice addition together. Each final name/description variant retains its tech.<id> or building.<id> owner and owning supplemental source path. Source aliases follow final English; removed Library variants stay removed. data/economy_maritime.js changes fishing requirements only, so its unchanged enterprise display owner remains data/economy.js. The ordinary JSON composition example uses imported English fallback and adds no runtime catalogue file. The combined source inventory is documented in docs/research/technology-and-buildings.md.

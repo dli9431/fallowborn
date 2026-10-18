@@ -1,5 +1,9 @@
 # Development & buildings
 
+Composed construction catalogue
+
+The effective catalogue has 20 buildings: the nineteen retained ids plus hospice. Eight complete replacements preserve every existing numeric field, role and AI priority while updating the declared presentation, prerequisite or applicability. Construction scope and group capacity share the normal authority and paid transaction; inherited works and repairs retain their separate contracts. Annual AI keeps the full priority table, finite purchase budget and existing reserves, including each proposed building's upkeep. The combined JSON example and regression spec in docs/research/technology-and-buildings.md cover these boundaries together without installing historical inventories or creating institutional rights.
+
 Post-mill construction
 
 data/buildings_wind.js retains the windmill id and Post Windmill name, with cost 45, tax 2, development 1, population capacity 0.05, maxCounty 2 and AI priority 9. New construction needs windmill knowledge and applicability.yearMin 1150, inclusive, through the shared player, automation, annual realm AI and private-baron checks. Knowledge may precede permission. The boundary applies only to new construction; existing assets retain effects, upkeep and ordinary repairs after eligibility changes, with no saved-record migration or installation replay. Ordinary grinding and watermills remain available. The existing soft building_windmill review and none construction_applicability review cover these independent conditions. The terrain/grain abstraction is unchanged; sources and the rounded-date limits are in docs/research/windmills.md.
