@@ -1,5 +1,9 @@
 # Wars
 
+Program-owned religious objectives
+
+An opted-in single-host expedition program may observe the canonical active religious campaign objective and issue an ordinary scoped march to its existing mustered mobileVow host. Program arrival proves only actual field presence. Combat, occupation, contribution, settlement and vow obligations remain with the existing campaign owner; no second campaign, levy, host, award or territory write is introduced. Ordinary strategic AI and offensive coordination withhold competing orders for that exact program host, including paused or terminal intent. Broken-host retreat, actual movement, supply consumption and battle remain canonical. Successful manual replacement orders pause prospective intent and survive its later expiry. The expedition_live_religious_objective technology review is none, with all ordinary military, transport, authority and access gates retained. Public declarations and persistence are documented in docs/designs/expedition-programs.md.
+
 Opening religious preparation
 
 Opted-in holy_war stories prepare one canonical call at fresh attachment, before daily or yearly automatic call selection. Only an attached pending preparation suppresses automatic selection for its own faith while its finite window is pending. Other faiths, legacy stories and later ordinary calls retain their existing rules. A matching in-window committed campaign is adopted by exact identity; incompatible calls close the preparation without replacing the campaign. The existing campaign alone owns participants, forces, preparation, losses and settlement. No new combat or troop eligibility is introduced, and the dated_holy_war_calls technology review remains none.
