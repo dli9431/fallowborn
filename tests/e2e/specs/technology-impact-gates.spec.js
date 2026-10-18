@@ -6,7 +6,8 @@ dependsOnRuntime(__filename, [
   'js/actions.js',
   'js/technology.js',
   'data/technology.js',
-  'data/economy.js'
+  'data/economy.js',
+  'data/technology_maritime.js', 'data/buildings_maritime.js', 'data/economy_maritime.js'
 ]);
 
 const { test, expect } = require('../support/fixture');

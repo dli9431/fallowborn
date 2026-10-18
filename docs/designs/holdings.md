@@ -285,6 +285,8 @@ key; neither needs a new save field. Work & Enterprises derives localized name, 
 settlement, live yield, and staffing state when sorting or grouping instances. These are
 session UI choices. Household Plan reuses the selected sort for assignment labels, so
 drilling between the screens cannot imply a different enterprise order.
+data/economy_maritime.js changes only the Fishing Boat requirements: coastal_piloting for purchase, harbor_works for Decked Fishing Boat at upgrade index 0, and naval_levies for Fishing Flotilla at index 1. The stable enterprise id, display/localization owners, cost 40, seasonal base yield 2.5, laborPay 1.25, upgrade costs 140/420, staffing 2/3 and every population, levy and once-only development effect remain unchanged. Ordinary paid and staffed transactions own production; an unstaffed expansion supplies no yield or upgrade effects. Existing boats and completed levels keep operating without the new research requirements, and restore does not reseed knowledge or replay development. Technology impact commercial_fishing is soft with ordinary household fishing as baseline; decked_fishing_capacity and fishing_flotilla_organization are separately hard with the preceding paid boat as fallback. No northern cargo hull, sternpost rudder, graving basin, fleet or free recruitment is implied. See docs/research/technology-maritime.md.
+
 The Work & Enterprises deed remains available to adult protagonists at every station:
 landed rulers cannot resume a personal calling, but they can still manage family workers,
 owned businesses, and qualified local hires. Local hiring is a baseline labor contract;

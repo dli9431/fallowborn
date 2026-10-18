@@ -8,7 +8,8 @@ dependsOnRuntime(__filename, [
   'js/technology.js',
   'js/world.js',
   'data/map_data.js',
-  'data/technology.js'
+  'data/technology.js', 'data/technology_maritime.js',
+  'data/buildings_maritime.js', 'data/economy_maritime.js'
 ]);
 
 const { test, expect } = require('../support/fixture');
@@ -74,7 +75,7 @@ test('late game buildings and technologies validate cleanly and expose expected 
     expect(result.buildingChecks.cathedral.devMin).toBe(7);
     expect(result.buildingChecks.cathedral.requiresTech).toBe('ribbed_vaulting');
     expect(result.buildingChecks.arsenal.coastal).toBe(true);
-    expect(result.buildingChecks.arsenal.requiresTech).toBe('dry_docks');
+    expect(result.buildingChecks.arsenal.requiresTech).toBe('harbor_works');
     expect(result.buildingChecks.foundry.devMin).toBe(6);
     expect(result.buildingChecks.foundry.requiresTech).toBe('blast_furnace');
     expect(result.buildingChecks.exchange.devMin).toBe(6);
@@ -126,7 +127,7 @@ test('construction gates enforce devMin, requiresTech, and coastal requirements'
       const prov = FB.world.byId[pid];
       const origCoastal = prov.coastal;
       prov.coastal = false;
-      techRec.completed.push('harbor_works', 'stone_bridgebuilding', 'dry_docks');
+      techRec.completed.push('harbor_works');
       const canBuildArsenalInland = FB.canBuildAt(s, pid, 1, 'arsenal');
 
       prov.coastal = true;

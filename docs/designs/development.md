@@ -18,6 +18,10 @@ The strict optional openingInfrastructureState marker records the applied bookma
 
 Explicit-world opening scripts run after the inventory and initial economic setup, with scripted realm/liege references resolved through the adopted ruler's ordinary source-to-player mapping. World-story records retain their existing pre-adoption binding and typed remapping; those initializers create no population, market or treasury projection. Legacy worlds retain their original ordering. No opening fiscal or demographic projection runs against an empty inherited ledger.
 
+Naval outfitting yard
+
+data/buildings_maritime.js replaces arsenal with the Naval Outfitting Yard presentation and harbor_works construction requirement. The stable id, shipyard role, coastal condition, development minimum 5, county limit 1, cost 140, upkeep 3, tax 5, development 1, retinue 20 and AI priority 4 are unchanged. Ordinary player, private-baron and annual AI construction share the existing eligibility and paid transaction. Existing records retain their effects and repair path when knowledge changes. The existing building_arsenal technology review is hard with harbor_works, with ordinary boat work and travel as fallback. The funded workforce remains an ordinary manpower abstraction: neither discovery nor building creates a ship, fleet, command or historical yard. See docs/research/technology-maritime.md.
+
 Construction applicability
 
 Optional building applicability limits new construction by inclusive live-year bounds, stamped campaign era, physical county, declared primary resident culture and the payer's sovereign technology traditions. Different dimensions combine; alternatives within a list match individually. The pure buildingApplicabilityStatus projection supplies the same first localized blocker to player construction, automation, realm AI, private barons, fort funding and the Building Works picker. Ordinary authority, price, development, siting, technology and occupancy still apply, and confirmation recomputes live eligibility before spending.
