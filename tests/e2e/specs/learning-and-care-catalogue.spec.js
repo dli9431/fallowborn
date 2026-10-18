@@ -11,7 +11,7 @@ const importPath = path.resolve(__dirname, '../fixtures/authoring/learning-and-c
 
 dependsOnRuntime(__filename, [
   'data/technology_learning.js', 'data/buildings_learning_care.js',
-  'data/technology.js', 'data/map_data.js', 'data/markets.js', 'data/bookmarks.js',
+  'data/technology.js', 'data/technology_early_refinements.js', 'data/map_data.js', 'data/markets.js', 'data/bookmarks.js',
   'data/eras.js', 'js/technology.js', 'js/actions.js', 'js/fortifications.js',
   'js/world.js', 'js/lordships.js', 'js/treasury.js', 'js/population.js', 'js/institutions.js',
   'js/mods.js', 'js/save.js', 'js/main.js', 'js/ui_modals.js', 'js/ui_misc.js'
@@ -68,7 +68,7 @@ test('catalogue corrections retain costs, adoption, effects and stable knowledge
   }, baseline.tech);
   expect(r.retained).toEqual(baseline.tech);
   expect(r.errors).toEqual([]); expect(r.buildings).toEqual([]);
-  expect(r.techCount).toBe(187); expect(r.buildingCount).toBe(20);
+  expect(r.techCount).toBe(189); expect(r.buildingCount).toBe(20);
   expect(r.scriptoria).toEqual(['rule:scriptoria','building:library']);
   expect(r.paper).toEqual([]); expect(r.library).toBe('scriptoria');
   expect(r.reqs).toEqual([

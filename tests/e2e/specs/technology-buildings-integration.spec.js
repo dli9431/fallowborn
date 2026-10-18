@@ -9,7 +9,7 @@ const released = require('../fixtures/released-catalogue.json');
 const example = require('../fixtures/authoring/technology-buildings-composition.json');
 
 dependsOnRuntime(__filename, [
-  'index.html', 'data/map_data.js', 'data/technology.js', 'data/technology_foundations.js',
+  'index.html', 'data/map_data.js', 'data/technology.js', 'data/technology_early_refinements.js', 'data/technology_foundations.js',
   'data/technology_learning.js', 'data/buildings_learning_care.js',
   'data/technology_civic_military.js', 'data/buildings_civic_military.js',
   'data/technology_maritime.js', 'data/buildings_maritime.js', 'data/economy_maritime.js',
@@ -112,7 +112,7 @@ test('all supplements compose once with stable effects, grants, budgets and rele
       });
     });
     const heldTech = ['aqueduct_maintenance','qanat_construction','masonry_circuits','stockfish_curing',
-      'vertical_axis_windmill','feltmaking','pastoral_waterworks','tuna_trapping','cotton_cultivation',
+      'vertical_axis_windmill','pastoral_waterworks','tuna_trapping','cotton_cultivation',
       'sugar_processing','manuscript_scholarship','galley_yard_practice','horizontal_watermill',
       'bog_iron','seasonal_pasture_management','motte_and_bailey'];
     const heldBuildings = ['aqueduct','qanat_waterworks','public_bath','urban_cisterns','paper_workshop',
@@ -142,13 +142,13 @@ test('all supplements compose once with stable effects, grants, budgets and rele
   });
   expect(r.techOwners).toEqual({ duplicates:[], stale:[], counts:[9,6,12,8,1] });
   expect(r.buildingOwners).toEqual({ duplicates:[], stale:[], counts:[3,3,1,1] });
-  expect(r.counts).toEqual([187,20]); expect(r.techIds).toEqual(r.baseIds);
+  expect(r.counts).toEqual([189,20]); expect(r.techIds).toEqual(r.baseIds);
   expect(r.addedBuildings).toEqual(['hospice']);
   expect(r.scalarChanges).toEqual([]); expect(r.buildingChanges).toEqual([]);
   expect(r.caps).toEqual(r.baseCaps); expect(r.grants).toEqual(r.baseGrants);
   expect(r.fortLevels).toEqual(r.baseFortLevels);
   expect(r.unexpected).toEqual([]); expect(r.errors).toEqual([]); expect(r.inferredWorlds).toEqual([]);
-  const supplements = ['data/technology_foundations.js','data/technology_learning.js',
+  const supplements = ['data/technology_early_refinements.js','data/technology_foundations.js','data/technology_learning.js',
     'data/buildings_learning_care.js','data/technology_civic_military.js','data/buildings_civic_military.js',
     'data/technology_maritime.js','data/buildings_maritime.js','data/technology_wind.js','data/buildings_wind.js'];
   for (const source of supplements) {

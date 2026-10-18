@@ -8,7 +8,7 @@ dependsOnRuntime(__filename, [
   'js/technology.js',
   'js/world.js',
   'data/map_data.js',
-  'data/technology.js', 'data/technology_maritime.js',
+  'data/technology.js', 'data/technology_early_refinements.js', 'data/technology_maritime.js',
   'data/buildings_maritime.js', 'data/economy_maritime.js'
 ]);
 
@@ -68,7 +68,7 @@ test('late game buildings and technologies validate cleanly and expose expected 
     });
 
     expect(result.validationErrors).toEqual([]);
-    expect(result.techCount).toBe(187);
+    expect(result.techCount).toBe(189);
 
     expect(result.buildingChecks.university.devMin).toBe(7);
     expect(result.buildingChecks.university.requiresTech).toBe('universities');

@@ -8,7 +8,7 @@ const { beginBookmark, restoreBookmark } = require('../support/game/bookmark-acc
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 
 dependsOnRuntime(__filename, [
-  'data/technology.js', 'data/technology_maritime.js', 'data/map_data.js',
+  'data/technology.js', 'data/technology_early_refinements.js', 'data/technology_maritime.js', 'data/map_data.js',
   'data/buildings_maritime.js', 'data/economy.js', 'data/economy_maritime.js',
   'data/markets.js', 'data/bookmarks.js', 'data/eras.js', 'data/geographies.js',
   'js/technology.js', 'js/economy.js', 'js/market.js', 'js/actions.js',
@@ -85,7 +85,7 @@ test('maritime replacements preserve numeric contracts and move only their actua
     };
   });
   expect(r.effective).toEqual(r.original);
-  expect(r.errors).toEqual([]); expect(r.buildings).toEqual([]); expect(r.count).toBe(187);
+  expect(r.errors).toEqual([]); expect(r.buildings).toEqual([]); expect(r.count).toBe(189);
   const sources = ['UNGER','PRYOR'];
   expect(r.rows).toEqual([
     ['clinker_shipbuilding',20,['mortise_tenon_shipbuilding'],[300,850],[500,850],{trade:0.005,seaTransport:1000},[],sources],
