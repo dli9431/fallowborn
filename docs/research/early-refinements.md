@@ -8,6 +8,8 @@ Felt evidence and interpretation
 
 HERODOTUS_IV_73_75 identifies Herodotus, Histories IV.73-75, George Rawlinson translation, the account of felt coverings. The passage is evidence of ancient material use. It supplies neither a production census nor a medieval national diffusion chronology. Its ethnographic account is not a rule for generated people. Source: https://classics.mit.edu/Herodotus/history.4.iv.html
 
+RUDENKO_PAZYRYK_FELTS identifies Sergei I. Rudenko, Frozen Tombs of Siberia: The Pazyryk Burials of Iron Age Horsemen, translated by M. W. Thompson (University of California Press, 1970), its account of the felt wall hangings, saddle covers and appliqué figures recovered from the frozen Pazyryk barrows. The finds are physical evidence of skilled ancient felting in the Altai. Like the Herodotus passage, they supply no production census or medieval diffusion chronology; together the two sources bound the early evidence envelope only.
+
 The research record's -500 to 600 evidence envelope is a rounded modeling range rather than an invention date. Regional transmission is reconstructed; every numerical adoption pair and the cost saving are simulation choices. Feltmaking has no prerequisite, costs 20 and adds -0.005 to the existing enterprise setup cost modifier. That saving combines additively with other technology savings before the existing 0.55 cost-factor floor. Basic craft, shelter and enterprise setup remain possible without the refinement. Its technology-impact decision is soft.
 
 Bookhand evidence and interpretation

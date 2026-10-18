@@ -6,7 +6,7 @@
       "req": [],
       "history": {"attested": [-500, 600], "adoption": {"default": [-100, 750]}},
       "desc": "A fictional household craft refinement offers a smaller setup saving without a spinning prerequisite.",
-      "confidence": "medium", "sources": ["MOD"],
+      "confidence": "modded", "sources": ["MOD"],
       "unlocks": [], "capabilities": [], "fx": {"costs": {"enterprise": -0.003}}
     },
     "bookhand_standardization": {
@@ -14,7 +14,7 @@
       "req": ["scriptoria", "classical_grammar", "translation_schools"],
       "history": {"attested": [650, 850], "adoption": {"default": [950, 1250], "latin": [900, 1150]}},
       "desc": "A fictional scholarly network requires translation practice for a larger education refinement.",
-      "confidence": "medium", "sources": ["MOD"],
+      "confidence": "modded", "sources": ["MOD"],
       "unlocks": [], "capabilities": [], "fx": {"education": 0.009}
     }
   }

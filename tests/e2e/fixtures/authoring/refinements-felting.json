@@ -6,7 +6,7 @@
       "req": ["spindle_whorl"],
       "history": {"attested": [-500, 600], "adoption": {"default": [650, 1000], "latin": [700, 1050]}},
       "desc": "A fictional craft organization reduces setup costs after ordinary spinning knowledge.",
-      "confidence": "medium", "sources": ["MOD"],
+      "confidence": "modded", "sources": ["MOD"],
       "unlocks": [], "capabilities": [], "fx": {"costs": {"enterprise": -0.012}}
     },
     "bookhand_standardization": {
@@ -14,7 +14,7 @@
       "req": ["scriptoria"],
       "history": {"attested": [650, 850], "adoption": {"default": [800, 1100]}},
       "desc": "A fictional workshop favors copying practice over a formal grammar prerequisite.",
-      "confidence": "medium", "sources": ["MOD"],
+      "confidence": "modded", "sources": ["MOD"],
       "unlocks": [], "capabilities": [], "fx": {"education": 0.003}
     }
   }

@@ -83,7 +83,7 @@ test('two complete refinements add only their declared effects, graph and simula
   expect(r.capsSame && r.grantsSame && r.assetsSame).toBe(true); expect(r.errors).toEqual([]);
   const felt = r.definitions.feltmaking, book = r.definitions.bookhand_standardization;
   expect(felt).toMatchObject({domain:'crafts',cost:20,req:[],unlocks:[],capabilities:[],
-    history:{attested:[-500,600]},fx:{costs:{enterprise:-0.005}},sources:['HERODOTUS_IV_73_75']});
+    history:{attested:[-500,600]},fx:{costs:{enterprise:-0.005}},sources:['HERODOTUS_IV_73_75','RUDENKO_PAZYRYK_FELTS']});
   expect(book).toMatchObject({domain:'learning',cost:50,req:['scriptoria','classical_grammar'],
     unlocks:[],capabilities:[],history:{attested:[650,850]},fx:{education:0.005},
     sources:['HMML_ST_GALL_116','CAMBRIDGE_MOORE_BEDE','MET_BOOKHANDS']});

@@ -10,7 +10,7 @@ FBDATA.tech_early_refinements = {
       baltic_finnic:[-100,1000],caucasian:[-300,700],northeast_african:[200,1000]
     }},
     desc:'Refined felting practices modestly reduce enterprise setup costs. Ordinary crafts, shelter and enterprise setup remain available without this refinement.',
-    confidence:'medium', sources:['HERODOTUS_IV_73_75'],
+    confidence:'medium', sources:['HERODOTUS_IV_73_75','RUDENKO_PAZYRYK_FELTS'],
     unlocks:[], capabilities:[], fx:{costs:{enterprise:-0.005}}
   },
   bookhand_standardization:{
