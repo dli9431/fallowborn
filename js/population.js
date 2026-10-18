@@ -87,7 +87,7 @@ window.FB = window.FB || {};
     for (var i = 0; i < built.length; i++) {
       var b = built[i];
       if (!b || b.ruined || b.institutionBinding && !FB.buildingInstitutionOperating(state, pid, b)) continue;
-      var def = FBDATA.buildings && FBDATA.buildings[b.id];
+      var def = FB.buildingOperations ? FB.buildingOperations.effects(state, pid, b) : FBDATA.buildings && FBDATA.buildings[b.id];
       if (def && def[key]) bonus += Number(def[key]) || 0;
     }
     return bonus;

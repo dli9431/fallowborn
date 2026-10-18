@@ -303,6 +303,10 @@ Spring 1204 district extraction
 
 The literal bookmarkTerrain1204 table in data/bookmark_1204_terrain.js exposes independently dated province and realm names, settlement layout labels, constituency member names and scenario/family-preset display fields to extract_terrain_1204. The composer need not execute during extraction. bookmarkCultures1204Terrain supplies the culture name through the existing culture owner. Generated person names and district/revision/mandate ids remain identity data. Runtime labels retain their ordinary province.1204, realm.1204, settlement.1204, constituencyMember and scenario owners. Integration regeneration remains separately authorized; new English falls back normally.
 
+Water operation presentation
+
+buildingOperationProfiles and buildingOperationAssignments contain only structural references and numeric terms. They introduce no display fields or extraction namespace. Ordinary building name/desc owners and JSON English fallback remain canonical. Water-service actions, finite water/work/upkeep reviews, idle-state explanations and stale-term feedback use literal FB.T with numeric/money placeholders in js/building_operations.js and js/ui_modals.js. Saved bindings and receipts contain no rendered prose. No generated catalogue is changed during implementation.
+
 Physical geography additions
 
 A data/geography_*.js composer may declare its new scenery seeds in a literal local PROVINCE_ADDITIONS array. extract_geography_additions reads each seed's id and name without executing the file, producing province.<id>.name.<branch> and the normal exact-source alias used by FB.L. Copying a label into the geography names table keeps the same source owner. Coordinates, terrain, geography ids and dated habitation remain separate. Catalogue regeneration is an independently authorized integration step.

@@ -504,6 +504,10 @@ history. The settlement_founding technology review remains none, expanded to cov
 ordinary county-ruler founding; administrative capacity retains its soft role.
 
 
+Water-conditioned operation
+
+Optional newly constructed waterOperation assets derive their one ongoing existing-field benefit from a funded, conserved use receipt. Empty storage, unfunded work, changed authority, ruin and expired terms grant none. Store-only service preserves actual water without a scalar. One demand at an actual site cannot multiply the same service across conveyance, storage and competing facilities. The shared building index and all fiscal, demographic, piety, research and settlement presentations read the same projection. Upkeep is paid once within the finite service charge; unbound buildings keep their exact normal effects and seasonal upkeep. Repairs retain the original asset without producing water or replaying payment. water_operational_service has technology impact none; optional facility technology gates remain separate. The complete ordinary JSON authoring and strict optional receipt contract is in docs/designs/building-operations.md.
+
 Building Works cards use bold names with regular-weight supporting text at the
 shared label size. Price, county availability and next settlement/requirements
 occupy separate lines; unavailable rows use the same upright typography, not

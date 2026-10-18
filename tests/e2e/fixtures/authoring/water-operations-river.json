@@ -1,0 +1,385 @@
+{
+  "name": "Water operations river",
+  "siteResourceProfiles": {
+    "river_flow": {
+      "name": "River intake",
+      "desc": "A bounded seven-day water allocation.",
+      "kind": "flow",
+      "unit": "water",
+      "capacity": 12,
+      "periodDays": 7
+    },
+    "river_store": {
+      "name": "Quay cistern",
+      "kind": "storage",
+      "unit": "water",
+      "capacity": 5
+    },
+    "river_launch": {
+      "name": "Launching space",
+      "kind": "access",
+      "unit": "launching",
+      "capacity": 2,
+      "periodDays": 1
+    }
+  },
+  "geographies": {
+    "resource_river_land": {
+      "bounds": {
+        "lonMin": 0,
+        "lonMax": 6,
+        "latMin": 0,
+        "latMax": 5
+      },
+      "land": [
+        [
+          0.5,
+          0.5,
+          5.5,
+          0.5,
+          5.5,
+          4.5,
+          0.5,
+          4.5
+        ]
+      ],
+      "gridWidth": 240,
+      "seas": [],
+      "rivers": [],
+      "defaultLayout": "resource_river_layout",
+      "provinces": [
+        {
+          "id": "resource_quay",
+          "x": 1.5,
+          "y": 2,
+          "terrain": "farmland"
+        },
+        {
+          "id": "resource_bank",
+          "x": 3.1,
+          "y": 2,
+          "terrain": "farmland"
+        },
+        {
+          "id": "resource_rocks",
+          "x": 4.7,
+          "y": 2,
+          "terrain": "hills"
+        }
+      ],
+      "sites": {
+        "resource_intake": {
+          "x": 1.5,
+          "y": 2
+        },
+        "resource_cistern": {
+          "x": 3.1,
+          "y": 2
+        },
+        "resource_slip": {
+          "x": 1.7,
+          "y": 2
+        }
+      }
+    }
+  },
+  "settlementLayouts": {
+    "resource_river_layout": {
+      "resource_quay": [
+        {
+          "site": "resource_intake",
+          "name": "Intake Town",
+          "kind": "town"
+        },
+        {
+          "site": "resource_slip",
+          "name": "Slip Village",
+          "kind": "village"
+        }
+      ],
+      "resource_bank": [
+        {
+          "site": "resource_cistern",
+          "name": "Bank Village",
+          "kind": "village"
+        }
+      ]
+    }
+  },
+  "startScenarios": [
+    {
+      "id": "resource_river_ruler",
+      "name": "The river holder",
+      "desc": "An existing fictional ruler.",
+      "intro": "Review the river's finite capacity.",
+      "tier": 5,
+      "profession": "noble",
+      "gold": 12,
+      "prestige": 0,
+      "piety": 0,
+      "bookmarkIds": [
+        "resource_river"
+      ],
+      "eras": [
+        "early_medieval"
+      ],
+      "alwaysUnlocked": true,
+      "rulerRealmId": "resource_river_court",
+      "governmentForm": "regnum",
+      "fixedProvinceId": "resource_quay",
+      "characterName": "Ivo Reed",
+      "sex": "m",
+      "startCulture": "frankish",
+      "startReligion": "catholic",
+      "onboarding": "ruler",
+      "familyPresets": {
+        "standard": {
+          "name": "Existing court",
+          "diff": "Existing court household"
+        }
+      }
+    },
+    {
+      "id": "resource_river_household",
+      "name": "River household",
+      "desc": "A fictional household.",
+      "intro": "Your household lives beside the river.",
+      "tier": 1,
+      "profession": "farmer",
+      "gold": 12,
+      "prestige": 0,
+      "piety": 0,
+      "bookmarkIds": [
+        "resource_river"
+      ],
+      "eras": [
+        "early_medieval"
+      ],
+      "alwaysUnlocked": true,
+      "startAge": 24,
+      "familyPresets": {
+        "standard": {
+          "name": "Established household",
+          "diff": "age 24"
+        }
+      }
+    }
+  ],
+  "bookmarks": {
+    "resource_river": {
+      "id": "resource_river",
+      "name": "River allocation",
+      "desc": "A fictional river resource world.",
+      "date": {
+        "year": 900,
+        "season": 0,
+        "day": 1
+      },
+      "era": "early_medieval",
+      "geography": "resource_river_land",
+      "religiousHeads": {},
+      "localInstitutions": {},
+      "stories": [],
+      "starts": [
+        "resource_river_ruler",
+        "resource_river_household"
+      ],
+      "scripted": [],
+      "straits": [],
+      "crossingClasses": {},
+      "provinces": [
+        {
+          "id": "resource_quay",
+          "name": "Quay",
+          "realm": "resource_river_court",
+          "culture": "frankish",
+          "religion": "catholic",
+          "dev": 5
+        },
+        {
+          "id": "resource_bank",
+          "name": "Bank",
+          "realm": "resource_river_court",
+          "culture": "frankish",
+          "religion": "catholic",
+          "dev": 3
+        },
+        {
+          "id": "resource_rocks",
+          "name": "Rocky scenery",
+          "wasteland": true
+        }
+      ],
+      "realms": [
+        {
+          "id": "resource_river_court",
+          "name": "River court",
+          "capital": "resource_quay",
+          "color": "#458c96",
+          "aggression": 0,
+          "rank": 2,
+          "government": "regnum",
+          "ruler": {
+            "name": "Ivo Reed",
+            "culture": "frankish",
+            "born": 868,
+            "mar": 6,
+            "trait": "patient"
+          }
+        }
+      ],
+      "duchies": {},
+      "kingdoms": {},
+      "empires": {},
+      "revision": "supplied",
+      "revisions": {
+        "baseline": {},
+        "supplied": {
+          "siteResourceAssignments": [
+            {
+              "id": "river_intake",
+              "profileId": "river_flow",
+              "countyId": "resource_quay",
+              "siteId": "resource_intake",
+              "suitability": {
+                "source": true,
+                "gradient": true
+              },
+              "rights": {
+                "kind": "holder"
+              }
+            },
+            {
+              "id": "river_cistern",
+              "profileId": "river_store",
+              "countyId": "resource_bank",
+              "siteId": "resource_cistern",
+              "connectedSourceId": "river_intake",
+              "suitability": {
+                "catchment": false
+              },
+              "rights": {
+                "kind": "holder"
+              }
+            },
+            {
+              "id": "river_slip",
+              "profileId": "river_launch",
+              "countyId": "resource_quay",
+              "siteId": "resource_slip",
+              "suitability": {
+                "launching": true
+              },
+              "rights": {
+                "kind": "holder"
+              }
+            }
+          ],
+          "buildingOperationAssignments": [
+            {
+              "id": "water_fill",
+              "profileId": "water_fill",
+              "buildingId": "water_fill_plant",
+              "countyId": "resource_bank",
+              "siteId": "resource_cistern",
+              "sourceId": "river_intake",
+              "stores": [
+                "river_cistern"
+              ],
+              "demandId": "water_storage"
+            },
+            {
+              "id": "water_service",
+              "profileId": "water_service",
+              "buildingId": "water_service_plant",
+              "countyId": "resource_bank",
+              "siteId": "resource_cistern",
+              "sourceId": "river_intake",
+              "stores": [
+                "river_cistern"
+              ],
+              "demandId": "water_neighborhood"
+            },
+            {
+              "id": "water_rival",
+              "profileId": "water_rival",
+              "buildingId": "water_rival_plant",
+              "countyId": "resource_bank",
+              "siteId": "resource_cistern",
+              "sourceId": "river_intake",
+              "stores": [
+                "river_cistern"
+              ],
+              "demandId": "water_neighborhood"
+            }
+          ]
+        }
+      },
+      "openingInfrastructure": {
+        "version": 1,
+        "placements": []
+      }
+    }
+  },
+  "buildingOperationProfiles": {
+    "water_fill": {
+      "mode": "store",
+      "amount": 2,
+      "periodDays": 7,
+      "workCost": 1,
+      "effect": null
+    },
+    "water_service": {
+      "mode": "use",
+      "amount": 2,
+      "periodDays": 7,
+      "workCost": 2,
+      "effect": "populationCapacity"
+    },
+    "water_rival": {
+      "mode": "use",
+      "amount": 2,
+      "periodDays": 7,
+      "workCost": 3,
+      "effect": "populationCapacity"
+    }
+  },
+  "buildings": {
+    "water_fill_plant": {
+      "name": "Water filling works",
+      "desc": "Paid transfer into an actual store, without a service benefit.",
+      "icon": "~",
+      "role": "civic",
+      "cost": 5,
+      "upkeep": 1,
+      "maxCounty": 1,
+      "settlementDraw": false,
+      "operationProfile": "water_fill"
+    },
+    "water_service_plant": {
+      "name": "Water service works",
+      "desc": "Capacity exists only while a real water allocation serves demand.",
+      "icon": "~",
+      "role": "civic",
+      "cost": 6,
+      "upkeep": 2,
+      "maxCounty": 1,
+      "populationCapacity": 0.03,
+      "settlementDraw": false,
+      "operationProfile": "water_service",
+      "aiBuildOrder": 50
+    },
+    "water_rival_plant": {
+      "name": "Alternative water works",
+      "desc": "Competes for the same finite demand and water.",
+      "icon": "~",
+      "role": "civic",
+      "cost": 7,
+      "upkeep": 1,
+      "maxCounty": 1,
+      "populationCapacity": 0.02,
+      "settlementDraw": false,
+      "operationProfile": "water_rival"
+    }
+  }
+}

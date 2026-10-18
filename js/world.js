@@ -36,7 +36,7 @@ window.FB = window.FB || {};
     'duchies','kingdoms','empires','straits','crossingClasses','localInstitutions',
     'settlementLayout','climate','religiousHeads','starts','stories','storyRegions','scripted',
     'openingRevisions','openingLegacyRevision','startLocations','openingInfrastructure','siteResourceAssignments',
-    'buildingInstitutionAssignments'];
+    'buildingInstitutionAssignments','buildingOperationAssignments'];
   function resolveBookmarkRevision(base, revision) {
     if (!base) return null;
     var selected = revision === undefined ? base.revision || 'baseline' : revision;
@@ -519,6 +519,15 @@ window.FB = window.FB || {};
         ? resolveBookmarkRevision(definition) : definition));
     } catch (error) {
       return {sources:[],errors:['siteResourceAssignments: ' + error.message]};
+    }
+  };
+
+  FB.compileBuildingOperations = function (definition) {
+    try {
+      return FB.buildingOperations.compilePrepared(preparedDefinition(definition.revisions
+        ? resolveBookmarkRevision(definition) : definition));
+    } catch (error) {
+      return {assignments:[],errors:['buildingOperationAssignments: ' + error.message]};
     }
   };
 
@@ -1584,6 +1593,7 @@ window.FB = window.FB || {};
     catch (error) { return [error.message]; }
     openingInfrastructurePlan(definition).errors.forEach(fault);
     if (FB.siteResources) FB.siteResources.compilePrepared(definition).errors.forEach(fault);
+    if (FB.buildingOperations) FB.buildingOperations.compilePrepared(definition).errors.forEach(fault);
     if (FB.localInstitutionDefinitionFaults) {
       var localErrors = FB.localInstitutionDefinitionFaults(definition);
       for (var le = 0; le < localErrors.length; le++) fault(localErrors[le]);
@@ -8523,7 +8533,7 @@ window.FB = window.FB || {};
         }
 
         if (chosen) {
-          if (chosen.def.institutionProfile) {
+          if (chosen.def.institutionProfile || chosen.def.operationProfile) {
             if (!reserves || !FB.buildRealm(state, rid, chosen.pid, chosen.s, chosen.id,
                 reserves[rid] + (chosen.def.upkeep || 0) * reserveSeasons)) continue;
             reserves[rid] += (chosen.def.upkeep || 0) * reserveSeasons;
@@ -8953,6 +8963,7 @@ window.FB = window.FB || {};
       if (timing) { timing.leave(phase); phase = timing.enter('World annual phase: AI buildings'); }
       const annualBudget = {};
       FB.aiBuildingsYear(state, annualBudget);
+      if (FB.buildingOperations.runAI(state)) annualBudget.snapshot = null;
       if (FB.treasurySurplusYear) FB.treasurySurplusYear(state, annualBudget.snapshot);
       return annualContext;
     } finally { if (timing) timing.leave(phase); }
@@ -8996,7 +9007,7 @@ window.FB = window.FB || {};
           const a = FB.settlementFiscalProjection(state, site.provinceId, site.settlement, context).amounts;
           for (const built of FB.builtIn(state, site.provinceId)) {
             if (built.s !== site.settlement || built.ruined || built.institutionBinding && !FB.buildingInstitutionOperating(state, site.provinceId, built)) continue;
-            const def = FBDATA.buildings[built.id];
+            const def = FB.buildingOperations.effects(state, site.provinceId, built);
             if (def && def[key]) add(unit, 'building', def[key] * a.countyPenalty *
               a.settlementPenalty * (1 - a.serviceRate), { buildingId:built.id, count:1 });
           }
@@ -9010,7 +9021,7 @@ window.FB = window.FB || {};
         count = {};
         for (const pid of FB.demesne(state)) {
           for (const built of FB.builtIn(state, pid)) {
-            const def = FBDATA.buildings[built.id];
+            const def = FB.buildingOperations.effects(state, pid, built);
             if (!built.ruined && def && def[key] && (!built.institutionBinding || FB.buildingInstitutionOperating(state, pid, built))) {
               count[built.id] = (count[built.id] || 0) + 1;
             }
