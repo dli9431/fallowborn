@@ -54,7 +54,7 @@ async function openDates(page,info) {
 test('1241 composes all physical counties in ledger order with unique courts and valid references',async function ({page},info) {
   await openGame(page,info);
   const result = await page.evaluate(function (order) {
-    const b = FB.bookmark('1241'), ids = [], counties = {}, courts = {}, faults = [];
+    const b = FB.bookmark('1241'), ids = [], courtIds = [], counties = {}, courts = {}, faults = [];
     const layout = FBDATA.settlementLayouts[b.settlementLayout];
     b.provinces.forEach(function (p) { counties[p.id] = p; });
     b.realms.forEach(function (r) { courts[r.id] = r; });
@@ -66,6 +66,7 @@ test('1241 composes all physical counties in ledger order with unique courts and
           faults.push('shared county '+p.id);
       });
       block.realms.forEach(function (r) {
+        courtIds.push(r.id);
         if (courts[r.id] === r || courts[r.id].ruler === r.ruler) faults.push('shared court '+r.id);
       });
       const staged = block.settlementLayouts || block.layouts;
@@ -88,7 +89,8 @@ test('1241 composes all physical counties in ledger order with unique courts and
     return {faults:faults,validation:FB.validateBookmark(b),religions:FB.validateReligionData(null),
       ids:b.provinces.map(function (p) { return p.id; }),expected:ids,
       physical:FB.geography(b.geography).provinces.map(function (p) { return p.id; }),
-      counts:[b.provinces.length,Object.keys(counties).length,b.realms.length,Object.keys(courts).length,inhabited.length],
+      counts:[b.provinces.length,Object.keys(counties).length,inhabited.length],
+      courtIds:b.realms.map(function (r) { return r.id; }),expectedCourtIds:courtIds,
       metadata:[b.name,b.date,b.era,b.geography,b.revision,b.openingRevision],
       starts:Object.keys(b.startLocations).every(function (id) {
         const scenario = FBDATA.startScenarios.find(function (row) { return row.id === id; });
@@ -111,7 +113,9 @@ test('1241 composes all physical counties in ledger order with unique courts and
   expect(result.religions).toEqual([]);
   expect(result.ids).toEqual(result.expected);
   expect(result.ids.slice().sort()).toEqual(result.physical.sort());
-  expect(result.counts).toEqual([527,527,103,103,491]);
+  expect(result.counts).toEqual([527,527,491]);
+  expect(result.courtIds).toEqual(result.expectedCourtIds);
+  expect(new Set(result.courtIds).size).toBe(result.courtIds.length);
   expect(result.metadata).toEqual(['The Mongol Invasion',{year:1241,season:0,day:1},
     'high_medieval','europe_regional_2','baseline','baseline']);
   expect(result.starts).toBe(true);

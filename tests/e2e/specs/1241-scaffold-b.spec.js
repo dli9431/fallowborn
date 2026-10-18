@@ -3,6 +3,7 @@ const path = require('path');
 const {test,expect} = require('../support/fixture');
 const {dependsOnRuntime} = require('../support/runtime-dependencies');
 const {openGame} = require('../support/game/navigation');
+const {beginBookmark} = require('../support/game/bookmark-acceptance');
 
 dependsOnRuntime(__filename,[
   'index.html','data/bookmark_1241.js','data/bookmark_1241_scaffold_b.js','data/bookmark_1204.js',
@@ -10,7 +11,8 @@ dependsOnRuntime(__filename,[
   'data/map_data.js','data/cultures.js','data/eras.js','data/geographies.js',
   'data/geography_expansion.js','data/settlements.js','data/settlements_real.js',
   'data/political_institutions.js','data/civic_profiles.js','data/ecclesiastical_profiles.js',
-  'js/model.js'
+  'js/model.js','js/world.js','js/governments.js','js/main.js','js/bookmark_setup.js',
+  'data/government_rollout.js'
 ]);
 
 const coverage = {
@@ -77,7 +79,7 @@ test('1241 quadrant b has complete disjoint county blocks and valid references',
     });
     return {faults:faults,count:Object.keys(provinces).length,courts:Object.keys(realms).length};
   },coverage);
-  expect(result).toEqual({faults:[],count:132,courts:23});
+  expect(result).toEqual({faults:[],count:132,courts:30});
 });
 
 test('1241 quadrant b retains the explicit 1204 inhabited source without shared objects',async function ({page},info) {
@@ -115,7 +117,10 @@ test('1241 redating removes obsolete incumbents and separates conquest from resi
     return {realms:realms,provinces:provinces};
   },Object.keys(coverage));
   const r = data.realms, p = data.provinces;
-  const named = {castile_leon_1241:['Ferdinand III',1201],aragon_1241:['James I',1208],papacy_1241:['Gregory IX',1170]};
+  const named = {castile_leon_1241:['Ferdinand III',1201],aragon_1241:['James I',1208],
+    papacy_1241:['Gregory IX',1170],scotland_1241:['Alexander II',1198],
+    ulster_1241:['Hugh de Lacy',1176],navarre_1241:['Theobald I',1201],
+    granada_1241:['Muhammad I',1195],brunswick_1241:['Otto I (the Child)',1204]};
   Object.keys(r).forEach(function (id) {
     if (named[id]) {
       expect([r[id].ruler.name,r[id].ruler.born]).toEqual(named[id]);
@@ -136,14 +141,16 @@ test('1241 redating removes obsolete incumbents and separates conquest from resi
   expect(r.venice_1241.government).toBe('territorial');
   expect(r.venice_1241.civicProfileId).toBeUndefined();
   expect(r.papacy_1241.ecclesiastical).toEqual({profileId:'papal_temporal_1204',officeId:'catholic',institutionId:null});
-  ['leon','burgos','caceres','cordoba'].forEach(function (id) { expect(p[id].realm).toBe('castile_leon_1241'); });
+  ['leon','burgos','caceres','cordoba','badajoz','merida','ecija'].forEach(function (id) {
+    expect(p[id].realm).toBe('castile_leon_1241');
+  });
   expect(p.valencia.realm).toBe('aragon_1241');
   expect(p.cordoba.religion).toBe('sunni');
   expect(p.valencia.religion).toBe('sunni');
   expect(r.castile_leon_1241.religion).toBe('catholic');
   expect(r.mallorca_local_1241.liege).toBe('aragon_1241');
   expect(p.mallorca.religion).toBe('sunni');
-  ['spoleto','ancona','palermo','messina','siracusa','mecklenburg','lubeck'].forEach(function (id) {
+  ['spoleto','ancona','palermo','messina','siracusa','mecklenburg','capua','salerno'].forEach(function (id) {
     expect(p[id].realm).toBe('hre_1241');
   });
   expect(p.palermo.communities.some(function (c) { return c.religion === 'sunni'; })).toBe(true);
@@ -151,6 +158,88 @@ test('1241 redating removes obsolete incumbents and separates conquest from resi
   expect(p.volodymyr.realm).toBe('volhynia_local_1241');
   expect(p.dublin.realm).toBe('england_1241');
   expect(p.braunschweig.realm).toBe('brunswick_1241');
+  expect(r.brunswick_1241.name).toBe('Duchy of Brunswick-Lüneburg');
+  expect(r.brunswick_1241.liege).toBe('hre_1241');
+  expect(r.navarre_1241.ruler.culture).toBe('frankish');
+  expect(p.pamplona.culture).toBe('basque');
+  expect(r.ulster_1241.liege).toBe('england_1241');
+  ['badajoz','merida','ecija'].forEach(function (id) {
+    expect([p[id].culture,p[id].religion]).toEqual(['andalusi','sunni']);
+  });
+});
+
+test('1241 local city possession distinguishes hierarchy, resident identities and held boundaries',async function ({page},info) {
+  await openGame(page,info);
+  const data = await page.evaluate(function (keys) {
+    const realms = {}, provinces = {};
+    keys.forEach(function (key) {
+      const block = FBDATA.bookmarkRegions1241[key];
+      block.realms.forEach(function (r) { realms[r.id] = r; });
+      block.provinces.forEach(function (p) { provinces[p.id] = p; });
+    });
+    const b = FB.bookmark('1241');
+    return {realms:realms,provinces:provinces,world:b,validation:FB.validateBookmark(b)};
+  },Object.keys(coverage));
+  const r = data.realms, p = data.provinces;
+  const cities = {lubeck:'lubeck_1241',milano:'milan_commune_1241',brescia:'brescia_commune_1241',
+    bologna:'bologna_commune_1241',genoa:'genoa_commune_1241',pisa:'pisa_commune_1241',
+    firenze:'florence_commune_1241'};
+  Object.keys(cities).forEach(function (county) {
+    const id = cities[county], court = r[id];
+    expect(p[county].realm).toBe(id);
+    expect(court.capital).toBe(county);
+    expect(court.government).toBe('territorial');
+    expect(court.rank).toBe(1);
+    expect(court.religion).toBe('catholic');
+    expect(court.ruler.culture).toBe(county === 'lubeck' ? 'german' : 'italian');
+    expect(court.ruler.generated).toBe(true);
+    expect(court.ruler.name).toBeUndefined();
+    expect(court.liege).toBe(county === 'lubeck' ? 'hre_1241' : undefined);
+    expect(court.civicProfileId).toBeUndefined();
+    expect(data.world.realms.filter(function (row) { return row.id === id; })).toEqual([court]);
+    expect(data.world.provinces.find(function (row) { return row.id === county; })).toEqual(p[county]);
+  });
+  expect([p.lubeck.culture,p.lubeck.religion]).toEqual(['slavic','catholic']);
+  const retained = {hamburg:'saxony_1241',hannover:'saxony_1241',mecklenburg:'hre_1241',
+    ravenna:'hre_1241',benevento:'papacy_1241',sevilla:'sevilla_local_1241',
+    murcia:'murcia_local_1241',denia:'murcia_local_1241',silves:'sevilla_local_1241',
+    iona:'isles_1241',man:'isles_1241',lewis:'isles_1241',tir_eoghain:'tyrone_1241',
+    kiev:'kyiv_local_1241',pereyaslavl:'kyiv_local_1241',chernigov:'chernihiv_local_1241',
+    kursk:'chernihiv_local_1241',turov:'turov_1241',volodymyr:'volhynia_local_1241',lutsk:'volhynia_local_1241'};
+  Object.keys(retained).forEach(function (id) { expect(p[id].realm).toBe(retained[id]); });
+  ['isles_1241','connacht_1241','munster_1241','tyrone_1241','portugal_1241',
+    'mallorca_local_1241','saxony_1241','venice_1241','sardinia_local_1241',
+    'kyiv_local_1241','chernihiv_local_1241','turov_1241','volhynia_local_1241'].forEach(function (id) {
+    expect(r[id].ruler.generated).toBe(true);
+    expect(r[id].ruler.name).toBeUndefined();
+  });
+  expect(data.world.opening).toEqual({actors:{},appointments:{},estates:[],claims:[],migrations:[]});
+  expect(data.world.scripted).toEqual([]);
+  expect(data.validation).toEqual([]);
+});
+
+test('a fresh 1241 campaign gives the corrected counties their actual separate holders',async function ({page},info) {
+  await beginBookmark(page,info,'1241','farmer');
+  const result = await page.evaluate(function () {
+    const s = FB.state, cities = ['lubeck','milano','brescia','bologna','genoa','pisa','firenze'];
+    const local = cities.map(function (id) {
+      const holder = s.holder[id], realm = s.realms[holder];
+      return [id,holder,s.owner[id],realm.liege || null];
+    });
+    return {local:local,conquests:['badajoz','merida','ecija','capua','salerno','benevento'].map(function (id) {
+      return s.owner[id];
+    }),invariants:FBTEST.checkInvariants()};
+  });
+  expect(result).toEqual({local:[
+    ['lubeck','lubeck_1241','hre_1241','hre_1241'],
+    ['milano','milan_commune_1241','milan_commune_1241',null],
+    ['brescia','brescia_commune_1241','brescia_commune_1241',null],
+    ['bologna','bologna_commune_1241','bologna_commune_1241',null],
+    ['genoa','genoa_commune_1241','genoa_commune_1241',null],
+    ['pisa','pisa_commune_1241','pisa_commune_1241',null],
+    ['firenze','florence_commune_1241','florence_commune_1241',null]
+  ],conquests:['castile_leon_1241','castile_leon_1241','castile_leon_1241',
+    'hre_1241','hre_1241','papacy_1241'],invariants:[]});
 });
 
 test('loading the 1241 blocks preserves registered worlds, sibling blocks and campaign state',async function ({page},info) {
