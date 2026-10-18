@@ -221,7 +221,9 @@
   /* Begin once, with an ordinary existing or newly authored host. There
      can be only one moving court per polity and per host. */
   FB.federateBeginMigration = function (s, spec) {
-    if (!spec || !live(s, spec.realmId) || !live(s, spec.patronRealmId) ||
+    var independent=spec && spec.sponsorship!==undefined;
+    if (!spec || !live(s, spec.realmId) || (independent ?
+        !FB.mobile || !FB.mobile.independentMigrationAllowed(s,spec) : !live(s, spec.patronRealmId)) ||
         spec.realmId === spec.patronRealmId || !mobile(s, spec.realmId) ||
         FB.realmTerritory(s, spec.realmId).length && !FB.governments.forRealm(s, spec.realmId).use.territory.profile(s, spec.realmId, {}).allowsMixed ||
         !FB.world.byId[spec.origin] || !s.owner[spec.origin] ||
@@ -257,6 +259,7 @@
       origin:army.at, at:army.at, target:spec.target, settlementForm:spec.settlementForm,
       status:'encamped', choice:null, startTurn:s.turn, endTurn:spec.endTurn,
       courtIds:courtIds, contractId:null, warId:null, session:null };
+    if (independent) row.sponsorship=copy(spec.sponsorship);
     if (!Array.isArray(a.migrations)) a.migrations = [];
     a.migrations.push(row); army.migrationId = row.id;
     s.realms[row.realmId].nonTerritorial = true;
@@ -268,7 +271,7 @@
      host. Force creates an ordinary objective war and never awards land. */
   FB.federateRequest = function (s, id, choice, templateId, recognitionId) {
     var row = migration(s, id), army = row && host(s, row.hostId);
-    if (!row || !ongoing(row) || !army || army.men <= 0 || !mobile(s, row.realmId) ||
+    if (!row || row.sponsorship!==undefined || !ongoing(row) || !army || army.men <= 0 || !mobile(s, row.realmId) ||
         army.realm !== row.realmId || row.endTurn <= s.turn ||
         !live(s, row.patronRealmId) || ['land','service','force'].indexOf(choice) < 0 ||
         row.choice || FB.isRealmAtWar(s, row.realmId)) return false;
@@ -311,7 +314,7 @@
 
   Q.federateSettlementQuote = function (s, id) {
     var row = migration(s, id), army = row && host(s, row.hostId);
-    if (!row || !ongoing(row) || row.endTurn <= s.turn || !army || army.men <= 0 ||
+    if (!row || row.sponsorship!==undefined || !ongoing(row) || row.endTurn <= s.turn || !army || army.men <= 0 ||
         !mobile(s, row.realmId) || FB.governments.problems(row.settlementForm).length ||
         FB.governments.resolve(row.settlementForm).use.territory.profile(s, row.realmId, {}).movingCourt ||
         !live(s, row.realmId) || army.realm !== row.realmId || army.at !== row.target ||

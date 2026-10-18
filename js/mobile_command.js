@@ -17,6 +17,10 @@
   function issuer(s,d) {
     var ref=d && d.superior, c;
     if (!ref) return null;
+    /* A bounded external warrant is an authority identity, never an on-map
+       character. No local actor can impersonate it to appoint or recall. */
+    if (ref.kind==='external_authority') return s.turn<ref.endTurn ?
+      {externalAuthorityId:ref.id,generation:ref.generation} : null;
     if (ref.kind==='opening_actor') c=FB.bookmarkActor(s,ref.actorId);
     else if (s.realms[ref.realmId] && s.realms[ref.realmId].alive) c=FB.realmRulerCharacterSnapshot(s,ref.realmId);
     return live(s,c) && s.chars[c.id] ? {characterId:c.id,generation:ref.kind==='realm_ruler' ? FB.realmRulerGeneration(s,ref.realmId) : null} : null;
@@ -24,7 +28,7 @@
   M.commandSnapshot = function (s,rid) {
     var r=M.row(s,rid), d=definition(s,rid);
     if (!r || !r.command || !d) return null;
-    return {id:d.id,realmId:rid,superior:issuer(s,d),commission:copy(r.command),operations:d.operations.slice(),
+    return {id:d.id,realmId:rid,superior:issuer(s,d),authority:copy(d.superior),commission:copy(r.command),operations:d.operations.slice(),
       effective:M.commandValid(s,rid)};
   };
   M.commandValid = function (s,rid) {
@@ -66,7 +70,7 @@
       terms:{candidateId:request.candidateId || null},cost:0,signature:null};
     if (!keys(request,['realmId','commandId','action','candidateId','actor']) || !r || !r.command || !d ||
         request.commandId!==d.id || !M.active(s,rid) || r.status!=='active' || !s.realms[rid].alive ||
-        !keys(actor,['kind','id']) || actor.kind!=='character' || !d.superior) return q;
+        !keys(actor,['kind','id']) || actor.kind!=='character' || !d.superior || d.superior.kind==='external_authority') return q;
     var current=issuer(s,d);
     if (!current || current.characterId!==actor.id ||
         request.action!=='appoint' && request.action!=='recall' ||
@@ -136,6 +140,11 @@
       if (!keys(ref,['kind','actorId']) || !bookmark || !bookmark.opening || !own(bookmark.opening.actors,ref.actorId) ||
           bookmark.opening.actors[ref.actorId].ref ||
           t.opening.principals.some(function (b) {return b.person.actorId===ref.actorId;})) fail();
+    } else if (ref.kind==='external_authority') {
+      if (!keys(ref,['kind','id','name','generation','endTurn']) || typeof ref.id!=='string' ||
+          !/^[a-z][a-z0-9_]{0,95}$/.test(ref.id) || typeof ref.name!=='string' || !ref.name.trim() || ref.name.length>160 ||
+          !Number.isSafeInteger(ref.generation) || ref.generation<1 || ref.generation>1000000 ||
+          !Number.isSafeInteger(ref.endTurn) || ref.endTurn<1 || ref.endTurn>1440) fail();
     } else if (ref.kind!=='realm_ruler' || !keys(ref,['kind','realmId']) || !own(realms,ref.realmId) || ref.realmId===d.id ||
         !!realms[ref.realmId].mobile) fail();
     return errors;
@@ -167,6 +176,11 @@
           c.status==='vacant' && r.leaderId!==null ||
           r.status==='active' && !form.use.succession.commandLeadership) fail();
       if (spec.superior) {
+        if (spec.superior.kind==='external_authority') {
+          if (!keys(c.issuer,['externalAuthorityId','generation']) || c.issuer.externalAuthorityId!==spec.superior.id ||
+              c.issuer.generation!==spec.superior.generation) fail();
+          return;
+        }
         if (!keys(c.issuer,['characterId','generation']) || !own(s.chars,c.issuer.characterId)) fail();
         if (spec.superior.kind==='opening_actor') {
           var original=FB.bookmarkActor(s,spec.superior.actorId);

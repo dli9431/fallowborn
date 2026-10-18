@@ -351,8 +351,11 @@
     if (authority.migrations !== undefined) {
       var movingRealms = {}, movingHosts = {};
       rows(authority, 'migrations', seen, function (value, where) {
-        if (typeof value.realmId !== 'string' || typeof value.patronRealmId !== 'string' ||
-            !own(state.realms, value.realmId) || !own(state.realms, value.patronRealmId) ||
+        var independent=value.sponsorship!==undefined;
+        if (independent && !FB.mobile || FB.mobile && !FB.mobile.migrationSponsorshipValid(state,value)) invalid(where + '.sponsorship');
+        if (typeof value.realmId !== 'string' || (independent ? value.patronRealmId!==null :
+            typeof value.patronRealmId !== 'string' || !own(state.realms, value.patronRealmId)) ||
+            !own(state.realms, value.realmId) ||
             value.realmId === value.patronRealmId ||
             typeof value.hostId !== 'string' || !value.hostId ||
             !['encamped','service','marching','arrived','settled','failed'].includes(value.status) ||
