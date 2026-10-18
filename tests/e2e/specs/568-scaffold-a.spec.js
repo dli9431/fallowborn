@@ -10,12 +10,14 @@ const {dependsOnRuntime} = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename,[
   'index.html','data/bookmark_568.js','data/starts_568.js',
   'data/bookmark_568_scaffold_a.js','data/bookmark_568_identities.js',
+  'data/bookmark_568_scaffold_b.js','data/bookmark_568_scaffold_c.js','data/bookmark_568_scaffold_d.js',
   'data/bookmark_493.js','data/bookmark_493_world.js','data/bookmark_476_wider.js',
   'data/bookmark_476_wider_identities.js','data/counties.js','data/geographies.js','data/geography_expansion.js',
   'data/cultures.js','data/traits.js','data/climate.js',
   'data/eras.js','data/settlements.js','data/settlements_real.js',
   'data/political_institutions.js','data/aristocratic_courts.js',
-  'js/model.js','js/world.js','js/bookmark_setup.js',
+  'js/model.js','js/world.js','js/bookmark_setup.js','js/main.js','js/starts.js',
+  'js/population.js','js/ui_modals.js',
   'js/government_administration.js','js/government_aristocracy.js','js/crazygames.js'
 ]);
 
@@ -197,6 +199,69 @@ test('568 quadrant a redates courts without transplanting dead rulers, kin or hi
   expect(result).toEqual({named:[['sasanian_568','Khosrow I',513,'zoroastrian']],faults:[],italy:true,
     lieges:['east_568','sasanian_568','austrasia_568'],eastIran:Array(6).fill('sasanian_568'),
     suevicCourt:'nicene',westBritain:['western_britons_568','powys_568','south_wales_568','dumnonia_568'],historicalKin:[]});
+});
+
+test('568 Hira includes Arab Christians without changing its principal community or traditional court', async function ({page},testInfo) {
+  await openGame(page,testInfo);
+  expect(await page.evaluate(function () {
+    const block = FBDATA.bookmarkRegions568.iran_caucasus, b = FB.bookmark('568');
+    const staged = block.provinces.find(function (p) { return p.id === 'kufa'; });
+    const county = b.provinces.find(function (p) { return p.id === 'kufa'; });
+    const court = b.realms.find(function (r) { return r.id === 'lakhmid_568'; });
+    const before = JSON.stringify(FBDATA), rng = FB.getRngState(), uid = FB.getUidCounter();
+    const errors = FB.validateBookmark(b);
+    return {errors:errors,communities:FB.provinceCommunities(county),
+      shares:county.communities.reduce(function (sum,c) { return sum + c.populationShare0; },0),
+      staged:JSON.stringify(staged.communities) === JSON.stringify(county.communities),
+      portrait:[county.culture,county.religion,county.realm,county.dev],
+      court:[court.capital,court.ruler.culture,court.religion,court.liege,court.ruler.generated],
+      layout:FBDATA.settlementLayouts['568'].kufa,
+      assignable:FB.faithHistoricalAvailable('east_syriac',b,'community'),
+      pure:before === JSON.stringify(FBDATA) && rng === FB.getRngState() && uid === FB.getUidCounter()};
+  })).toEqual({errors:[],communities:[
+    {culture:'syriac',religion:'east_syriac',populationShare0:6000},
+    {culture:'arabian_476',religion:'arabian_traditional_476',populationShare0:2000},
+    {culture:'arabian_476',religion:'east_syriac',populationShare0:2000}],shares:10000,staged:true,
+    portrait:['syriac','east_syriac','lakhmid_568',3],
+    court:['kufa','arabian_476','arabian_traditional_476','sasanian_568',true],
+    layout:[{site:'kufa_493',name:'Hira district',kind:'town'}],assignable:true,pure:true});
+});
+
+test('568 Hira offers its new resident choice to an ordinary household and conserves opening population', async function ({page},testInfo) {
+  await openGame(page,testInfo);
+  const fullStart = page.locator('#btn-choose-beginning');
+  if (await fullStart.isVisible()) await fullStart.click();
+  else await page.getByRole('button',{name:'New Game',exact:true}).click();
+  await page.locator('#btn-bm-seed').click();
+  await page.locator('#ng-seed').fill('HIRA568-568-craftsman_568-kufa-m-Review-standard-0-arabian_476.east_syriac');
+  await page.locator('#ng-seed').press('Enter');
+  await expect(page.locator('#chargen:not(.hidden)')).toBeVisible();
+  const choices = page.locator('input[name=cg-community]');
+  await expect(choices).toHaveCount(3);
+  await expect(choices.nth(2)).toBeChecked();
+  await page.getByRole('button',{name:'Begin Your Story',exact:true}).click();
+  await page.getByRole('button',{name:'Begin',exact:true}).click();
+  const result = await page.evaluate(function () {
+    FB.game.setPaused(true);
+    const s = FB.state, me = s.chars[s.player.charId], county = s.population.counties.kufa;
+    const communities = FB.countyCommunities(s,'kufa');
+    return {bookmark:s.start.id,home:s.player.provinceId,identity:[me.culture,me.religion],
+      owner:s.owner.kufa,principal:[FB.world.byId.kufa.culture,FB.world.byId.kufa.religion],
+      pairs:communities.map(function (c) { return c.culture + '/' + c.religion; }),
+      count:county.count,total:communities.reduce(function (sum,c) { return sum + c.count; },0),
+      counts:communities.map(function (c) { return c.count; }),
+      changes:[county.natural,county.migration,county.losses]};
+  });
+  expect(result).toMatchObject({bookmark:'568',home:'kufa',identity:['arabian_476','east_syriac'],
+    owner:'lakhmid_568',principal:['syriac','east_syriac'],
+    pairs:['syriac/east_syriac','arabian_476/arabian_traditional_476','arabian_476/east_syriac'],
+    changes:[0,0,0]});
+  expect(result.count).toBeGreaterThan(0);
+  expect(result.total).toBe(result.count);
+  for (let i = 0; i < result.counts.length; i++) {
+    expect(result.counts[i]).toBeGreaterThan(0);
+    expect(Math.abs(result.counts[i] - result.count * [0.6,0.2,0.2][i])).toBeLessThanOrEqual(1);
+  }
 });
 
 test('568 Sasanian court has valid date-owned provincial profiles and adult opening actors', async function ({page},testInfo) {
