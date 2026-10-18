@@ -1041,7 +1041,7 @@ def extract_production_supplements(inv: Inventory, data: Path | None = None) -> 
     for registry, namespace in (("productionGoods", "productionGood"),
                                 ("productionRecipes", "productionRecipe")):
         base = data / "production.js"
-        seen = set(node_object(find_assignment(base, "FBDATA", registry)) or {})
+        seen = set(node_object(find_assignment(base, "FBDATA", registry)) or {}) if base.exists() else set()
         for path in sorted(data.glob("production_*.js")):
             tokens = lex_js(path.read_text(encoding="utf-8"))
             for i in range(len(tokens) - 4):
