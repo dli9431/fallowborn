@@ -51,6 +51,29 @@ FBDATA.bookmarkRevisionContent_1096_britain_south = {
     {id:'deheubarth_1096',name:'Deheubarth',color:'#b6654e',capital:'carmarthen',government:'territorial',rank:2,aggression:1,religion:'catholic',ruler:{generated:true,sex:'m',culture:'brezhon',born:1060,mar:8,trait:'patient'}},
     {id:'glamorgan_1096',name:'Glamorgan frontier',color:'#a85d4f',capital:'cardiff',government:'territorial',rank:2,aggression:1,religion:'catholic',ruler:{generated:true,sex:'m',culture:'norman',born:1060,mar:8,trait:'patient'}}
   ],
+  duchies:{
+    wessex:{"name":"Wessex","kingdom":"england"},
+    devon:{"name":"Devon","kingdom":"england"},
+    kent:{"name":"Kent","kingdom":"england"},
+    sussex:{"name":"Sussex","kingdom":"england"},
+    essex:{"name":"Essex","kingdom":"england"},
+    mercia:{"name":"Mercia","kingdom":"england"},
+    hwicce:{"name":"Hwicce","kingdom":"england"},
+    chester:{"name":"Chester","kingdom":"england"},
+    northampton:{"name":"Northampton","kingdom":"england"},
+    east_anglia:{"name":"East Anglia","kingdom":"england"},
+    lindsey:{"name":"Lindsey","kingdom":"england"},
+    gwynedd:{"name":"Gwynedd","kingdom":"wales"},
+    deheubarth:{"name":"Deheubarth","kingdom":"wales"},
+    glamorgan:{"name":"Glamorgan","kingdom":"wales"}
+  },
+  kingdoms:{
+    england:{"name":"England","empire":"britannia"},
+    wales:{"name":"Wales","empire":"britannia"}
+  },
+  empires:{
+    britannia:{"name":"Britannia"}
+  },
   layouts:{
     winchester:[
       {site:'winchester',name:'Winchester',kind:'city'},
@@ -390,6 +413,39 @@ FBDATA.bookmarkRevisionContent_1096_nordic_baltic = {
     {id:'suomi_1096',name:'Suomi',color:'#5f9f7f',capital:'turku',government:'territorial',rank:2,aggression:1,religion:'baltic_pagan',ruler:{generated:true,sex:'m',culture:'finnic',born:1060,mar:8,trait:'patient'}},
     {id:'karelia_1096',name:'Karelia',color:'#4f8f7f',capital:'kexholm',government:'territorial',rank:2,aggression:1,religion:'baltic_pagan',ruler:{generated:true,sex:'m',culture:'finnic',born:1060,mar:8,trait:'patient'}}
   ],
+  duchies:{
+    agder:{"name":"Agder","kingdom":"norway"},
+    vestland:{"name":"Vestland","kingdom":"norway"},
+    oppland:{"name":"Oppland","kingdom":"norway"},
+    trondelag:{"name":"Trøndelag","kingdom":"norway"},
+    svealand:{"name":"Svealand","kingdom":"sweden"},
+    gotaland:{"name":"Götaland","kingdom":"sweden"},
+    smaland:{"name":"Småland","kingdom":"sweden"},
+    gotland:{"name":"Gotland","kingdom":"sweden"},
+    norrland:{"name":"Norrland","kingdom":"sweden"},
+    jylland:{"name":"Jylland","kingdom":"denmark"},
+    sjaelland:{"name":"Sjælland","kingdom":"denmark"},
+    scania:{"name":"Skåne","kingdom":"denmark"},
+    prussia:{"name":"Prussia","kingdom":"lithuania"},
+    samogitia:{"name":"Samogitia","kingdom":"lithuania"},
+    lithuania:{"name":"Lithuania","kingdom":"lithuania"},
+    latvia:{"name":"Latvia","kingdom":"lithuania"},
+    estonia:{"name":"Estonia","kingdom":"lithuania"},
+    finland:{"name":"Finland","kingdom":"finland"},
+    savo:{"name":"Savo","kingdom":"finland"},
+    karelia:{"name":"Karelia","kingdom":"finland"}
+  },
+  kingdoms:{
+    norway:{"name":"Norway","empire":"scandinavia"},
+    sweden:{"name":"Sweden","empire":"scandinavia"},
+    denmark:{"name":"Denmark","empire":"scandinavia"},
+    lithuania:{"name":"Lithuania","empire":"russia"},
+    finland:{"name":"Finland","empire":"russia"}
+  },
+  empires:{
+    scandinavia:{"name":"Scandinavia"},
+    russia:{"name":"Russia"}
+  },
   layouts:{
     agder:[
       {site:'agder_head',name:'Agder',kind:'village',fill:true},
@@ -704,6 +760,34 @@ FBDATA.bookmarkRevisionContent_1096_central_danube = {
     {id:'pomeranian_courts_1096',name:'Pomeranian districts',color:'#b85f7f',capital:'gdansk',government:'territorial',rank:2,aggression:1,religion:'slavic_pagan',ruler:{generated:true,sex:'m',culture:'slavic',born:1060,mar:8,trait:'patient'}},
     {id:'obotrite_1096',name:'Obotrite court',color:'#7f4f6f',capital:'lubeck',government:'territorial',rank:2,aggression:1,religion:'catholic',ruler:{generated:true,sex:'m',culture:'slavic',born:1060,mar:8,trait:'patient'}}
   ],
+  duchies:{
+    moravia:{"name":"Moravia","kingdom":"moravia"},
+    slovakia:{"name":"Slovakia","kingdom":"moravia"},
+    bohemia:{"name":"Bohemia","kingdom":"bohemia"},
+    poland:{"name":"Poland","kingdom":"poland"},
+    mazovia:{"name":"Mazovia","kingdom":"poland"},
+    krakow:{"name":"Kraków","kingdom":"poland"},
+    silesia:{"name":"Silesia","kingdom":"poland"},
+    pomerania:{"name":"Pomerania","kingdom":"poland"},
+    wendland:{"name":"Wendland","kingdom":"poland"},
+    transdanubia:{"name":"Transdanubia","kingdom":"pannonia"},
+    syrmia:{"name":"Syrmia","kingdom":"pannonia"},
+    transylvania:{"name":"Transylvania","kingdom":"pannonia"},
+    moesia:{"name":"Moesia","kingdom":"bulgaria"},
+    slavonia:{"name":"Slavonia","kingdom":"croatia"}
+  },
+  kingdoms:{
+    moravia:{"name":"Moravia","empire":"carpathia"},
+    bohemia:{"name":"Bohemia","empire":"carpathia"},
+    poland:{"name":"Poland","empire":"carpathia"},
+    pannonia:{"name":"Hungary","empire":"carpathia"},
+    bulgaria:{"name":"Bulgaria","empire":"byzantium"},
+    croatia:{"name":"Croatia","empire":"byzantium"}
+  },
+  empires:{
+    carpathia:{"name":"Carpathia"},
+    byzantium:{"name":"Byzantium"}
+  },
   layouts:{
     veligrad:[
       {site:'veligrad',name:'Veligrad',kind:'village'},
@@ -999,6 +1083,32 @@ FBDATA.bookmarkRevisionContent_1096_rus_steppe = {
     {id:'cuman_courts_1096',name:'Cuman steppe courts',color:'#a09f4f',capital:'sarkel',government:'territorial',rank:2,aggression:1,religion:'tengri',ruler:{generated:true,sex:'m',culture:'turkic',born:1060,mar:8,trait:'patient'}},
     {id:'volga_bulgaria_1096',name:'Volga Bulgaria',color:'#8f7f2f',capital:'bolghar',government:'territorial',rank:2,aggression:1,religion:'sunni',ruler:{generated:true,sex:'m',culture:'turkic',born:1060,mar:8,trait:'patient'}}
   ],
+  duchies:{
+    novgorod:{"name":"Novgorod","kingdom":"novgorod"},
+    rostov:{"name":"Rostov","kingdom":"novgorod"},
+    beloozero:{"name":"Beloozero","kingdom":"novgorod"},
+    smolensk:{"name":"Smolensk","kingdom":"novgorod"},
+    kiev:{"name":"Kiev","kingdom":"rus"},
+    chernigov:{"name":"Chernigov","kingdom":"rus"},
+    polotsk:{"name":"Polotsk","kingdom":"rus"},
+    turov:{"name":"Turov","kingdom":"rus"},
+    volhynia:{"name":"Volhynia","kingdom":"rus"},
+    etelkoz:{"name":"Etelköz","kingdom":"rus"},
+    itel:{"name":"Itil","kingdom":"khazaria"},
+    sarkel:{"name":"Sarkel","kingdom":"khazaria"},
+    tmutarakan:{"name":"Tmutarakan","kingdom":"khazaria"},
+    cherson:{"name":"Cherson","kingdom":"khazaria"},
+    bulgar:{"name":"Bolghar","kingdom":"volga"}
+  },
+  kingdoms:{
+    novgorod:{"name":"Novgorod","empire":"russia"},
+    rus:{"name":"Kievan Rus","empire":"russia"},
+    khazaria:{"name":"Khazaria","empire":"russia"},
+    volga:{"name":"Volga","empire":"russia"}
+  },
+  empires:{
+    russia:{"name":"Russia"}
+  },
   layouts:{
     novgorod:[
       {site:'novgorod',name:'Novgorod',kind:'city'},
@@ -1229,6 +1339,17 @@ FBDATA.bookmarkRevisionContent_1096_jazira = {
     {id:'harran_1096',name:'Harran court',color:'#7d9a68',capital:'harran',government:'territorial',rank:2,aggression:1,religion:'sunni',ruler:{generated:true,sex:'m',culture:'arabic',born:1060,mar:8,trait:'patient'}},
     {id:'raqqa_1096',name:'Raqqa court',color:'#749153',capital:'raqqa',government:'territorial',rank:2,aggression:1,religion:'sunni',ruler:{generated:true,sex:'m',culture:'arabic',born:1060,mar:8,trait:'patient'}}
   ],
+  duchies:{
+    mosul:{"name":"Mosul","kingdom":"jazira"},
+    diyarbakir:{"name":"Diyarbakır","kingdom":"jazira"},
+    edessa:{"name":"Edessa","kingdom":"jazira"}
+  },
+  kingdoms:{
+    jazira:{"name":"Jazira","empire":"arabia"}
+  },
+  empires:{
+    arabia:{"name":"Arabia"}
+  },
   layouts:{
     mosul:[
       {site:'mosul',name:'Mosul',kind:'city'},
