@@ -331,3 +331,7 @@ Literal FBDATA.productionGoods and FBDATA.productionRecipes in data/production.j
 Named camp and survivor presentation
 
 js/household_party_camp.js uses complete literal FB.T messages for family-place requests, current host consent, deadlines, affected/excluded people, private road costs and new survivor recovery. Imported household_party title and intro retain their existing effective-English fallback. Proper names, stable actor/migration/generation references, capacity and route facts stay locale-neutral. Personal-admission status, county location and permanent residence remain separate facts. No rendered prose is saved and no new extraction root or generated catalogue is needed.
+
+Construction profile display owners
+
+Literal FBDATA.buildingProfiles in data/building_profiles.js and literal FBDATA.buildingProfiles_<suffix> in data/building_profiles_*.js extract name and desc as buildingProfile.<id>.name.default and buildingProfile.<id>.desc.default. Extraction parses static tables without executing composition code. Runtime selectors, reviews and reverse technology consumers use the same buildingProfile owner through dataText; imported JSON uses normal English fallback. Saved markers contain only stable ids, versions and fingerprints. tools/test_i18n_building_profiles.py covers an independent root and supplement. Generated catalogues remain unchanged until separately requested integration.

@@ -110,8 +110,8 @@ window.FB = window.FB || {};
 
   /* New construction only. Read the target's declared resident identity and
      the payer's sovereign knowledge without normalizing or creating state. */
-  FB.buildingApplicabilityStatus = function (state, pid, id, payer) {
-    var def = FBDATA.buildings && FBDATA.buildings[id];
+  FB.buildingApplicabilityStatus = function (state, pid, id, payer, definition) {
+    var def = definition || FBDATA.buildings && FBDATA.buildings[id];
     function blocked(code, reason) { return { ready:false, code:code, reason:reason }; }
     if (!def) return blocked('unavailable', FB.T('This building is unavailable.'));
     if (def.applicability === undefined) return { ready:true, code:null, reason:'' };
@@ -493,6 +493,12 @@ window.FB = window.FB || {};
     var fort = FB.fortAt(state, pid);
     var ruins = FB.fortAtSettlement(state, pid, result.settlement, true);
     var repairing = options.repair === true;
+    var priorProfile = (fort || ruins) && (fort || ruins).buildingProfile;
+    var profileId = options.profileId === undefined && priorProfile ? priorProfile.id : options.profileId;
+    if (priorProfile && profileId !== priorProfile.id) { result.reason = 'profile'; return result; }
+    if (!repairing && profileId != null && !FB.buildingProfiles.status(state, pid, result.settlement,
+        FB.fortificationBuildingId(), profileId, realmId).ready) { result.reason = 'profile'; return result; }
+    if (profileId != null) result.profileId = profileId;
     if (repairing && (!ruins || !ruins.ruined || fort)) {
       result.reason = fort ? 'other_settlement' : 'ruins'; return result;
     }
@@ -563,6 +569,7 @@ window.FB = window.FB || {};
       fort = { s:settlement | 0, id:FB.fortificationBuildingId(), level:0 };
       state.buildings[pid].push(fort);
     }
+    if (!fort.buildingProfile && status.profileId) FB.buildingProfiles.attach(fort, status.profileId);
     fort.targetLevel = status.targetLevel;
     fort.completeTurn = status.completeTurn;
     if (options.repair) { fort.level = 0; fort.repairing = true; }

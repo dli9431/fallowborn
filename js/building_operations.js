@@ -53,7 +53,7 @@
       var route = [a.sourceId].concat(a.stores).map(function (key) { return sources.sources.find(function (v) { return v.id === key; }); });
       var last = route[route.length - 1], asset = JSON.stringify([a.countyId,a.siteId,a.buildingId]);
       var demandSite = JSON.stringify([a.countyId,a.siteId,p && p.effect]);
-      if (!p || !d || d.operationProfile !== a.profileId || !pr || slot === undefined || slot < 0 || occupied[asset] ||
+      if (!p || !d || !(d.operationProfile === a.profileId || FB.buildingProfiles.ids(a.buildingId).some(function (id) { return FB.buildingProfiles.definition(a.buildingId,id).operationProfile === a.profileId; })) || !pr || slot === undefined || slot < 0 || occupied[asset] ||
           route.some(function (v,i) { return !v || v.profile.unit !== 'water' || i > 0 && (v.profile.kind !== 'storage' || v.connectedSourceId !== route[i-1].id); }) ||
           !last || last.countyId !== a.countyId || last.siteId !== a.siteId ||
           p.mode === 'store' && !a.stores.length || route[0] && route[0].profile.kind === 'access' ||
@@ -82,8 +82,8 @@
     }));
     return cache.definition;
   }
-  function assignment(s,pid,slot,buildingId) {
-    return plan(s).assignments.find(function (a) { return a.countyId === pid && a.slot === slot && a.buildingId === buildingId; });
+  function assignment(s,pid,slot,buildingId,operationProfile) {
+    return plan(s).assignments.find(function (a) { return a.countyId === pid && a.slot === slot && a.buildingId === buildingId && (!operationProfile || a.profileId === operationProfile); });
   }
   function record(s,pid,slot,buildingId) {
     return (s.buildings && s.buildings[pid] || []).find(function (r) { return r && r.s === slot && r.id === buildingId; });
@@ -116,7 +116,7 @@
   }
   /* Only this projection supplies ongoing values for an opted-in record. */
   O.effects = function (s,pid,r) {
-    var d = FBDATA.buildings[r.id] || {};
+    var d = FB.buildingProfiles.assetDefinition(r) || {};
     if (!r.waterOperation) return d;
     var out = Object.assign({},d), p = profile(r), on = active(s,pid,r);
     effects.forEach(function (key) { out[key] = on && p.effect === key ? d[key] || 0 : 0; });
@@ -127,7 +127,7 @@
     return rows.map(function (r) { return r && r.waterOperation ? JSON.stringify([r.waterOperation,receipt(s,r),active(s,pid,r)]) : null; }).join(',');
   };
   O.bind = function (s,pid,r) {
-    var d = FBDATA.buildings[r.id], a = d && d.operationProfile && assignment(s,pid,r.s,r.id);
+    var d = FB.buildingProfiles.assetDefinition(r), a = d && d.operationProfile && assignment(s,pid,r.s,r.id,d.operationProfile);
     if (a) r.waterOperation = {v:1,id:FB.uid(),profileId:a.profileId,assignmentId:a.id,revision:0};
   };
   function publicPayer(s,a) { return a.kind === 'realm' && (a.id !== 'player' || FB.electiveCrown(s,a.id)); }
@@ -194,7 +194,7 @@
     // Paid local service has a finite quantity and term. It awards no wages or household workday.
     q.reason = 'work';
     if (!((s.population && s.population.counties[request.countyId] || {}).count > 0)) return q;
-    var d = FBDATA.buildings[r.id], cost = p.workCost + (d.upkeep || 0) * (until - s.turn) / 90;
+    var d = FB.buildingProfiles.assetDefinition(r), cost = p.workCost + (d.upkeep || 0) * (until - s.turn) / 90;
     var balance = funds(s,request.actor), floor = reserveFloor(s,request.actor);
     q.reason = 'funds';
     if (!money(cost,2000000) || !Number.isFinite(balance) || !Number.isFinite(floor) || balance < cost + floor) return q;
@@ -221,21 +221,22 @@
     next.receipts[r.waterOperation.id] = {assignmentId:a.id,assetId:r.waterOperation.id,revision:next.revision,
       actor:copy(request.actor),authority:q.authority,turn:s.turn,untilTurn:q.untilTurn,period:q.period,
       amount:q.amount,paid:q.cost,sources:q.sources,demandId:a.demandId,resourceRevision:staged.resources.revision};
+    if (r.buildingProfile) next.receipts[r.waterOperation.id].buildingProfile = copy(r.buildingProfile);
     s.siteResources = staged.resources; s.buildingOperations = next; r.waterOperation.revision = next.revision;
     FB.invalidateBuildingIndex(s,request.countyId);
     return true;
   };
-  O.constructionReady = function (s,pid,slot,buildingId,who) {
-    var d = FBDATA.buildings[buildingId];
+  O.constructionReady = function (s,pid,slot,buildingId,who,profileId) {
+    var d = FB.buildingProfiles.definition(buildingId,profileId);
     if (!d || !d.operationProfile) return true;
-    var a = assignment(s,pid,slot,buildingId);
+    var a = assignment(s,pid,slot,buildingId,d.operationProfile);
     if (!a || plan(s).errors.length || !identity(s,who,pid,slot) || !stage(s,a,who)) return false;
     if (s.buildingOperations && Object.keys(s.buildingOperations.receipts).length >= 2048) return false;
     var prospective = a.profile.workCost + (d.upkeep || 0) * a.profile.periodDays / 90;
     var floor = reserveFloor(s,who);
     var realmId = who.kind === 'realm' && who.id !== 'player' ? who.id :
       who.kind === 'character' && who.id !== s.player.charId ? FB.settlementCountyHolder(s,pid) : undefined;
-    return Number.isFinite(floor) && funds(s,who) >= FB.buildCost(s,pid,buildingId,realmId) + prospective + floor;
+    return Number.isFinite(floor) && funds(s,who) >= FB.buildCost(s,pid,buildingId,realmId,profileId) + prospective + floor;
   };
   O.runAI = function (s) {
     var count = 0;
@@ -264,7 +265,7 @@
         if (!r || !own(r,'waterOperation')) return;
         var b = r.waterOperation, a = assignment(s,pid,r.s,r.id);
         if (!keys(b,['v','id','profileId','assignmentId','revision']) || b.v !== 1 || !id(b.id) ||
-            assets[b.id] || !a || a.id !== b.assignmentId || a.profileId !== b.profileId || !integer(b.revision,0,Number.MAX_SAFE_INTEGER)) fail();
+            assets[b.id] || !a || !FB.buildingProfiles.assetDefinition(r) || FB.buildingProfiles.assetDefinition(r).operationProfile !== b.profileId || a.id !== b.assignmentId || a.profileId !== b.profileId || !integer(b.revision,0,Number.MAX_SAFE_INTEGER)) fail();
         assets[b.id] = {record:r,assignment:a};
         if (b.revision && (!root || !root.receipts || !root.receipts[b.id] || root.receipts[b.id].revision !== b.revision)) fail();
       });
@@ -277,12 +278,20 @@
     var revisions = {}, demands = {}, consumed = {};
     Object.keys(root.receipts).forEach(function (key) {
       var v = root.receipts[key], a = v && p.assignments.find(function (x) { return x.id === v.assignmentId; });
-      if (!keys(v,['assignmentId','assetId','revision','actor','authority','turn','untilTurn','period','amount','paid','sources','demandId','resourceRevision']) ||
+      var receiptFields = ['assignmentId','assetId','revision','actor','authority','turn','untilTurn','period','amount','paid','sources','demandId','resourceRevision'];
+      var receiptDef = a && FBDATA.buildings[a.buildingId];
+      if (own(v,'buildingProfile')) {
+        receiptFields.push('buildingProfile');
+        if (!a || !equal(v.buildingProfile,FB.buildingProfiles.stamp(a.buildingId,v.buildingProfile && v.buildingProfile.id))) fail();
+        receiptDef = FB.buildingProfiles.definition(a.buildingId,v.buildingProfile.id);
+        if (!receiptDef || receiptDef.operationProfile !== a.profileId || assets[key] && !equal(assets[key].record.buildingProfile,v.buildingProfile)) fail();
+      } else if (assets[key] && assets[key].record.buildingProfile) fail();
+      if (!keys(v,receiptFields) ||
           !a || !id(key) || v.assetId !== key || !integer(v.revision,1,root.revision) || revisions[v.revision] || !actorValid(v.actor) ||
           !integer(v.turn,0,s.turn) || !integer(v.untilTurn,v.turn+1,v.turn+90) ||
           !integer(v.period,0,Math.floor(s.turn/a.profile.periodDays)) || v.period !== Math.floor(v.turn/a.profile.periodDays) ||
           v.untilTurn > (v.period+1)*a.profile.periodDays || v.amount !== a.profile.amount || !money(v.paid,2000000) ||
-          v.paid !== a.profile.workCost + (FBDATA.buildings[a.buildingId].upkeep || 0) * (v.untilTurn-v.turn) / 90 ||
+          v.paid !== a.profile.workCost + (receiptDef.upkeep || 0) * (v.untilTurn-v.turn) / 90 ||
           v.demandId !== a.demandId || !integer(v.resourceRevision,1,s.siteResources.revision) ||
           !keys(v.authority,['characterId','generation','holder','owner']) || !own(s.chars,v.authority.characterId) ||
           (v.actor.kind === 'character' ? v.actor.id !== v.authority.characterId || v.authority.generation !== null :

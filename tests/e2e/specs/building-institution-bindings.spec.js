@@ -9,6 +9,7 @@ const examples = {
   house:require('../fixtures/authoring/building-institutions-house.json')
 };
 dependsOnRuntime(__filename, [
+  'data/building_profiles.js','js/building_profiles.js',
   'index.html','data/building_institutions.js','data/technology.js','data/map_data.js',
   'data/religious_institutions.js','data/religious_activities.js','data/political_institutions.js',
   'js/building_institutions.js','js/fortifications.js','js/actions.js','js/world.js',

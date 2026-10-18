@@ -672,3 +672,7 @@ religious_institution_household_paths, religious_institution_ai and religious_in
 Finite production gates
 
 conserved_production_batches is none: conserved stock accounting and ordinary paid work require no discovery. Optional productionRecipes declare requiresTech and an exact existing hard techImpactReviews feature with the same required ids and a meaningful visible fallback, while ordinary recipes use a none feature. Missing knowledge prevents a new optional recipe commitment and remains visible in the recipe card and reverse technology consumers. Funded pending batches retain their original gates; knowledge loss creates no replacement, output or new stock. No national research or passive building effect is awarded by production. The standalone iron example's optional tool recipe has its own imported hard review for existing bloomery_iron, with ordinary preparation/purchased goods remaining available.
+
+Construction profile discovery
+
+building_profile_selection has technology impact none for typed authoring and selection. Profiles with additional machinery technologies require a separate exact hard or soft review, retain base construction gates and show the missing technology while the ordinary alternative stays available. The technology sheet discovers each real buildingProfile consumer using its profile name and owning base building, without a synthetic building id or research reward. Existing assets and funded projects keep their saved identity; construction eligibility does not reassign it. See docs/designs/building-profiles.md.

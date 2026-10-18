@@ -35,3 +35,7 @@ building_institution_binding is none. Identity, property permission and foundati
 Examples and limits
 
 The complete building-institutions-see.json and building-institutions-house.json ordinary imports use different geographies, foundations, incumbent requirements, costs and finance rules. The see uses its existing canonical bishop and a seat footprint. The headless house needs an explicit paid property endowment and real donated plots before patron-funded physical works can be raised. Neither initializes a historical facility. These examples are development assets outside shipped allowlists. Basic institutional binding does not create an endowment, authorize independent property construction, appoint a replacement, convert anyone, create a mint, distribute relief or add a new passive benefit channel.
+
+Selected construction definitions
+
+A building profile may select an existing institutionProfile while retaining the base physical asset and role. Construction and saved-binding validation use that selected definition; original incumbent, property, builder and payer identities stay with this ordinary owner. The same foundation occupancy excludes base and profiled alternatives, including ruins. Profile selection grants no office, endowment or account transfer. The typed construction contract is in docs/designs/building-profiles.md.

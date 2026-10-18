@@ -7,6 +7,7 @@ const { dependsOnRuntime } = require('../support/runtime-dependencies');
 const examples = require('../fixtures/authoring/building-applicability.json');
 
 dependsOnRuntime(__filename, [
+  'data/building_profiles.js','js/building_profiles.js',
   'data/map_data.js', 'data/technology.js', 'data/eras.js', 'data/geographies.js',
   'data/geography_expansion.js', 'data/counties.js', 'data/cultures.js',
   'js/fortifications.js', 'js/actions.js', 'js/lordships.js', 'js/technology.js',

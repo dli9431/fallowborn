@@ -10514,13 +10514,13 @@ window.FB = window.FB || {};
   /* copies of the same building beyond the first in the same county cost
      cost × buildingRepeatCostGrowth^(copies standing) — the price climbs
      instead of the bonus shrinking */
-  FB.buildCost = function (state, pid, id, realmId) {
+  FB.buildCost = function (state, pid, id, realmId, profileId) {
     return buildingCost(state, pid, id, realmId,
-      FB.buildingCountIn(state, pid, id, true), 1);
+      FB.buildingCountIn(state, pid, id, true), 1, profileId);
   };
 
-  function buildingCost(state, pid, id, realmId, copies, multiplier) {
-    const def = FBDATA.buildings[id];
+  function buildingCost(state, pid, id, realmId, copies, multiplier, profileId) {
+    const def = FB.buildingProfiles.definition(id, profileId);
     if (!def || def.fort) return 0;
     let c = def.cost * multiplier * Math.pow(FBDATA.balance.buildingRepeatCostGrowth || 1.5, copies) *
       Math.max(0, FB.techCostFactor(state, 'build', realmId) -
@@ -10532,8 +10532,8 @@ window.FB = window.FB || {};
       def.marketBasket, pid, 'up') : Math.round(c);
   }
 
-  FB.canBuildAt = function (state, pid, idx, id, context) {
-    const def = FBDATA.buildings[id];
+  FB.canBuildAt = function (state, pid, idx, id, context, profileId) {
+    const def = FB.buildingProfiles.definition(id, profileId);
     const pr = FB.world.byId[pid];
     context = context && context.state === state && context.pid === pid &&
       context.revision === FB.militaryInputRevision && context.index === buildingIndexFor(state, pid)
@@ -10542,8 +10542,9 @@ window.FB = window.FB || {};
         Math.floor(idx) !== idx || !FB.settlementConstructionAuthority(state, pid, idx).direct ||
         idx < 0 || idx >= context.visibleCount) return false;
     if (!FB.buildingApplicabilityStatus(state, pid, id).ready) return false;
-    if (!FB.buildingInstitutionStatus(state, pid, idx, id).allowed) return false;
-    if (!FB.buildingOperations.constructionReady(state, pid, idx, id, FB.settlementActor(state))) return false;
+    if (profileId != null && !FB.buildingProfiles.status(state, pid, idx, id, profileId).ready) return false;
+    if (!FB.buildingInstitutionStatus(state, pid, idx, id, undefined, null, def).allowed) return false;
+    if (!FB.buildingOperations.constructionReady(state, pid, idx, id, FB.settlementActor(state), profileId)) return false;
     if (def.requiresTech && !FB.techRequirementMet(state, def.requiresTech)) return false;
     if (context.index.occupied[(idx | 0) + ':' + id]) return false;
     if (def.devMin && (state.dev[pid] || 1) < def.devMin) return false;
@@ -10557,16 +10558,17 @@ window.FB = window.FB || {};
     return true;
   };
 
-  FB.aiCanBuildAt = function (state, rid, pid, idx, id) {
-    const def = FBDATA.buildings[id];
+  FB.aiCanBuildAt = function (state, rid, pid, idx, id, profileId) {
+    const def = FB.buildingProfiles.definition(id, profileId);
     const pr = FB.world && FB.world.byId ? FB.world.byId[pid] : null;
     if (!def || def.fort || !pr || pr.wasteland) return false;
     const sts = FB.settlementsOf ? FB.settlementsOf(state, pid) : [];
     if (!sts[idx] || !FB.settlementConstructionAuthority(state, pid, idx, rid).direct) return false;
     const actor = FB.settlementActor(state, rid);
     if (!FB.buildingApplicabilityStatus(state, pid, id, actor).ready) return false;
-    if (!FB.buildingInstitutionStatus(state, pid, idx, id, rid).allowed) return false;
-    if (!FB.buildingOperations.constructionReady(state, pid, idx, id, actor)) return false;
+    if (profileId != null && !FB.buildingProfiles.status(state, pid, idx, id, profileId, rid).ready) return false;
+    if (!FB.buildingInstitutionStatus(state, pid, idx, id, rid, null, def).allowed) return false;
+    if (!FB.buildingOperations.constructionReady(state, pid, idx, id, actor, profileId)) return false;
     const techRealm = actor.kind === 'realm' ? actor.id : FB.settlementCountyHolder(state, pid);
     if (def.requiresTech && FB.techRequirementMet &&
         !FB.techRequirementMet(state, def.requiresTech, techRealm)) return false;
@@ -10592,14 +10594,15 @@ window.FB = window.FB || {};
     return true;
   };
 
-  FB.buildBarony = function (state, cid, pid, idx, id) {
-    const actor = { kind:'character', id:cid }, def = FBDATA.buildings[id];
-    if (cid === state.player.charId || !def || !FB.aiCanBuildAt(state, actor, pid, idx, id)) return false;
-    const cost = FB.buildCost(state, pid, id, FB.settlementCountyHolder(state, pid));
-    const institutional = FB.buildingInstitutionStatus(state, pid, idx, id, actor);
+  FB.buildBarony = function (state, cid, pid, idx, id, profileId) {
+    const actor = { kind:'character', id:cid }, def = FB.buildingProfiles.definition(id, profileId);
+    if (cid === state.player.charId || !def || !FB.aiCanBuildAt(state, actor, pid, idx, id, profileId)) return false;
+    const cost = FB.buildCost(state, pid, id, FB.settlementCountyHolder(state, pid), profileId);
+    const institutional = FB.buildingInstitutionStatus(state, pid, idx, id, actor, null, def);
     if (!institutional.allowed) return false;
     if (!FB.spendBaronyConstruction(state, cid, cost, def.upkeep || 0)) return false;
     const record = { s:idx, id:id };
+    FB.buildingProfiles.attach(record, profileId);
     if (institutional.binding) record.institutionBinding = institutional.binding;
     FB.buildingOperations.bind(state, pid, record);
     builtInForWrite(state, pid).push(record);
@@ -10609,18 +10612,19 @@ window.FB = window.FB || {};
     return true;
   };
 
-  FB.buildRealm = function (state, rid, pid, idx, id, reserve) {
-    const def = FBDATA.buildings[id];
-    if (rid === 'player' || !state.treasuryAccounting || !def || !FB.aiCanBuildAt(state, rid, pid, idx, id)) return false;
-    const institutional = FB.buildingInstitutionStatus(state, pid, idx, id, rid);
+  FB.buildRealm = function (state, rid, pid, idx, id, reserve, profileId) {
+    const def = FB.buildingProfiles.definition(id, profileId);
+    if (rid === 'player' || !state.treasuryAccounting || !def || !FB.aiCanBuildAt(state, rid, pid, idx, id, profileId)) return false;
+    const institutional = FB.buildingInstitutionStatus(state, pid, idx, id, rid, null, def);
     if (!institutional.allowed) return false;
-    const cost = FB.buildCost(state, pid, id, rid);
+    const cost = FB.buildCost(state, pid, id, rid, profileId);
     const reserves = FB.treasuryConstructionReserves(state);
     if (!reserves || reserves[rid] === undefined) return false;
     const floor = reserves[rid] + (def.upkeep || 0) * (FBDATA.balance.realmReserveSeasons || 2);
     reserve = reserve === undefined ? floor : Math.max(floor, reserve);
     if (!FB.treasurySpendOptional(state, rid, cost, reserve)) return false;
     const entry = { s:idx, id:id };
+    FB.buildingProfiles.attach(entry, profileId);
     if (institutional.binding) entry.institutionBinding = institutional.binding;
     FB.buildingOperations.bind(state, pid, entry);
     builtInForWrite(state, pid).push(entry);
@@ -10687,17 +10691,18 @@ window.FB = window.FB || {};
     return false;
   };
 
-  FB.build = function (state, pid, idx, id) {
-    const def = FBDATA.buildings[id];
-    if (!def || !FB.canBuildAt(state, pid, idx, id)) return false;
-    const cost = FB.buildCost(state, pid, id);
-    const institutional = FB.buildingInstitutionStatus(state, pid, idx, id);
+  FB.build = function (state, pid, idx, id, profileId) {
+    const def = FB.buildingProfiles.definition(id, profileId);
+    if (!def || !FB.canBuildAt(state, pid, idx, id, null, profileId)) return false;
+    const cost = FB.buildCost(state, pid, id, undefined, profileId);
+    const institutional = FB.buildingInstitutionStatus(state, pid, idx, id, undefined, null, def);
     if (!institutional.allowed) return false;
     if (state.player.gold < cost) return false;
     const done = builtInForWrite(state, pid);
     state.player.gold -= cost;
     delete state.player.flags.mason_visit; // the mason's discount is spent
     const record = { s: idx, id: id };
+    FB.buildingProfiles.attach(record, profileId);
     if (institutional.binding) record.institutionBinding = institutional.binding;
     FB.buildingOperations.bind(state, pid, record);
     done.push(record);
