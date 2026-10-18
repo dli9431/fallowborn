@@ -1,5 +1,9 @@
 Civic treaty counterparties
 
+Personal expedition admission
+
+Technology impact personal_expedition_admission is none. Unpaid personal consent and association require no discovery. Camp presence, host agency, finite capacity and ordinary travel and unit gates remain necessary. An admitted combatant occupies an existing counted demographic position, without adding a soldier or claiming that an aggregate loss killed that named person. Civilian capacity counts named guests separately from demographic pools. No family movement, command, membership, vow, wages or equipment follows from admission.
+
 Acceptance of a mobile agreement is a reviewed transaction. A civic counterparty supplies its executive and constituency decision through FB.civicGovernment.decision, with the agreement's terms and its own payment burden. An access or tribute receipt is not a payment by the receiving city; protection charges the city its agreed price. The returned decision is part of the review, so changed incumbents, eligibility, ballots or diplomatic skill invalidate confirmation. Refusal leaves payments and the agreement untouched.
 
 Mobile confederation

@@ -1,3 +1,9 @@
+Personal expedition participation
+
+js/story_expedition_participation.js registers the expedition_participation personal track. One actual protagonist requests a finite unpaid place from a current living commander. Both host policy and actual consent are reviewed; the AI uses the same accept or decline transaction. The track creates neither demographic people nor an army, command, wage or religious vow. Civilian guests follow the camp. Combatants bind one existing compatible counted host position, whose loss ends the binding without asserting that the named person died.
+
+Changed command suspends consent and requires a personal confirmation plus a new host acceptance within the original deadline. Leave, refusal, expiry, death and carrier interruption retain truthful location and separate obligations. The ordinary travel record supplies temporary carriage and the separately priced return road, preserving household residence and blocking remote home work or settlement through admission. The shared story review retains its existing Back, Escape, Close and focus behavior. Technology impact personal_expedition_admission is none, with all existing unit and road gates retained. Public fields, import examples and transaction APIs are documented in docs/MODDING.md.
+
 Composed world-story lists
 
 Novgorod household in 1241

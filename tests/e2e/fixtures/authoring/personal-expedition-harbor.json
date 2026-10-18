@@ -1,0 +1,612 @@
+{
+  "name": "Personal expedition: harbor",
+  "cultures": {
+    "harbor_folk": {
+      "name": "Reedfolk",
+      "tradition": "other",
+      "dyn": "plain",
+      "male": [
+        "Orin",
+        "Sen",
+        "Lio"
+      ],
+      "female": [
+        "Mira",
+        "Iria",
+        "Nell"
+      ],
+      "family": [
+        "Reed",
+        "Vale",
+        "Lark"
+      ]
+    }
+  },
+  "cultureDoctrineDefaults": {
+    "harbor_folk": {
+      "learning": "latin"
+    }
+  },
+  "religions": {
+    "harbor_belief": {
+      "name": "The Lantern Covenant",
+      "parent": "catholic",
+      "availability": {},
+      "properties": {
+        "head": null,
+        "legalTradition": "customary"
+      }
+    }
+  },
+  "geographies": {
+    "harbor_lands": {
+      "bounds": {
+        "lonMin": 0,
+        "lonMax": 6,
+        "latMin": 0,
+        "latMax": 5
+      },
+      "land": [
+        [
+          0.5,
+          0.5,
+          5.5,
+          0.5,
+          5.5,
+          4.5,
+          0.5,
+          4.5
+        ]
+      ],
+      "gridWidth": 240,
+      "provinces": [
+        {
+          "id": "harbor_quay",
+          "x": 1.5,
+          "y": 2.5,
+          "terrain": "farmland"
+        },
+        {
+          "id": "harbor_gardens",
+          "x": 3.1,
+          "y": 2.5,
+          "terrain": "farmland"
+        },
+        {
+          "id": "harbor_ridge",
+          "x": 4.7,
+          "y": 2.5,
+          "terrain": "farmland"
+        }
+      ],
+      "seas": [],
+      "rivers": [],
+      "sites": {
+        "harbor_meeting_hall": {
+          "x": 1.5,
+          "y": 2.5
+        }
+      },
+      "defaultLayout": null
+    }
+  },
+  "civicProfiles": {
+    "harbor_rotation": {
+      "name": "Quarterly harbor council",
+      "constituency": "harbor_households",
+      "eligibility": {
+        "sex": "any",
+        "membership": false
+      },
+      "executive": "majority",
+      "interim": "council",
+      "offices": [
+        {
+          "id": "quay_magistrate",
+          "name": "Quay magistrate",
+          "termDays": 90,
+          "salary": 0.5
+        },
+        {
+          "id": "gate_magistrate",
+          "name": "Gate magistrate",
+          "termDays": 180,
+          "salary": 0.5
+        }
+      ],
+      "consent": {
+        "war": 0.8,
+        "treaty": 0.6,
+        "extraordinary_tax": 0.8,
+        "pledge": 0.8,
+        "grant": 1,
+        "conversion": 1
+      }
+    }
+  },
+  "constituencyProfiles": {
+    "harbor_households": {
+      "eligibility": {
+        "minAge": 18,
+        "minServiceYears": 0,
+        "skills": {},
+        "free": true
+      },
+      "selection": {
+        "threshold": 0.6,
+        "tie": "id",
+        "termDays": 90,
+        "nominationCost": 1
+      },
+      "recall": {
+        "threshold": 0.6,
+        "reasons": [
+          "neglect",
+          "overreach",
+          "ineligible"
+        ]
+      },
+      "obligations": {
+        "revenueRate": 0.7,
+        "levyRate": 0.5,
+        "maxDues": 12,
+        "maxLevy": 8000,
+        "reserve": 6
+      },
+      "reserved": [
+        "war",
+        "treaty",
+        "grant",
+        "extraordinary_tax",
+        "pledge",
+        "conversion"
+      ],
+      "powers": [
+        "ban",
+        "peace",
+        "revenue"
+      ],
+      "members": [
+        {
+          "id": "quayside_homes",
+          "name": "Quayside homes",
+          "weight": 3,
+          "basis": "custom",
+          "continuity": "institution",
+          "support": 70
+        },
+        {
+          "id": "caravan_homes",
+          "name": "Caravan homes",
+          "weight": 2,
+          "basis": "service",
+          "continuity": "institution",
+          "support": 65
+        }
+      ]
+    }
+  },
+  "governmentForms": {
+    "harbor_council": {
+      "holders": "civic_holders",
+      "succession": "civic_magistracies",
+      "territory": "civic_territory",
+      "consent": "civic_consent",
+      "levy": "civic_service",
+      "revenue": "civic_receipts",
+      "council": "civic_council",
+      "diplomacy": "civic_diplomacy",
+      "ai": "civic_decisions",
+      "ladder": "civic_careers",
+      "civicProfileId": "harbor_rotation",
+      "officeCatalogue": [],
+      "systems": {
+        "disable": [
+          "roman_offices",
+          "public_offices",
+          "feudal_service",
+          "scutage",
+          "estates",
+          "royal_council",
+          "crown_bloc",
+          "manorial_tenure",
+          "colonate"
+        ]
+      }
+    }
+  },
+  "storyInstances": {
+    "harbor_offices": {
+      "id": "harbor_offices",
+      "type": "government_contest",
+      "name": "The quay election",
+      "desc": "Seek the vacant gate office, serve a term, and return to your household.",
+      "realmId": "harbor_commune"
+    },
+    "harbor_candidacy": {
+      "id": "harbor_candidacy",
+      "type": "civic_candidacy",
+      "requires": [
+        "harbor_offices"
+      ],
+      "requirements": {
+        "realms": [
+          "harbor_commune"
+        ],
+        "provinces": [
+          "harbor_quay"
+        ]
+      },
+      "realmId": "harbor_commune",
+      "officeId": "quay_magistrate",
+      "name": "A place on the quay",
+      "desc": "Choose public service or keep your household outside the office.",
+      "choices": {
+        "stand": {
+          "id": "harbor_stand",
+          "label": "Stand for office",
+          "detail": "Pay the declared nomination fee and seek the public mandate."
+        },
+        "decline": {
+          "id": "harbor_decline",
+          "label": "Remain a private household",
+          "detail": "End this invitation without paying a nomination fee or receiving public rights."
+        }
+      }
+    },
+    "harbor_participation": {
+      "id": "harbor_participation",
+      "type": "expedition_participation",
+      "title": "A place with the following",
+      "intro": "Ask the present commander for individual unpaid admission. Your family remains at home.",
+      "host": {
+        "kind": "realm_ruler",
+        "realmId": "harbor_following"
+      },
+      "termDays": 30,
+      "capacity": 4,
+      "acceptance": "volunteers",
+      "roles": [
+        {
+          "id": "guest",
+          "kind": "civilian"
+        }
+      ]
+    }
+  },
+  "startScenarios": [
+    {
+      "id": "harbor_household",
+      "name": "Quayside household",
+      "desc": "A free household on the quay.",
+      "intro": "Your household begins beside the harbor council.",
+      "tier": 1,
+      "profession": "farmer",
+      "gold": 40,
+      "prestige": 5,
+      "piety": 0,
+      "startCulture": "harbor_folk",
+      "startReligion": "harbor_belief",
+      "bookmarkIds": [
+        "harbor_world"
+      ],
+      "eras": [
+        "early_medieval"
+      ],
+      "fixedProvinceId": "harbor_quay",
+      "tracks": [
+        "harbor_participation"
+      ],
+      "alwaysUnlocked": true,
+      "startAge": 24,
+      "familyPresets": {
+        "standard": {
+          "name": "Free household",
+          "diff": "age 24"
+        }
+      },
+      "trackLocations": {
+        "harbor_participation": [
+          "harbor_quay"
+        ]
+      }
+    }
+  ],
+  "bookmarks": {
+    "harbor_world": {
+      "id": "harbor_world",
+      "name": "Lark Harbor",
+      "desc": "A fictional three-county authoring world.",
+      "date": {
+        "year": 900,
+        "season": 0,
+        "day": 1
+      },
+      "era": "early_medieval",
+      "geography": "harbor_lands",
+      "settlementLayout": null,
+      "religiousHeads": {},
+      "stories": [
+        "harbor_offices"
+      ],
+      "provinces": [
+        {
+          "id": "harbor_quay",
+          "name": "Lark Quay",
+          "realm": "harbor_commune",
+          "culture": "harbor_folk",
+          "religion": "harbor_belief",
+          "dev": 6,
+          "duchy": "harbor_district",
+          "population0": 12000,
+          "communities": [
+            {
+              "culture": "harbor_folk",
+              "religion": "harbor_belief",
+              "populationShare0": 10000
+            }
+          ],
+          "settlements": [
+            {
+              "site": "harbor_meeting_hall",
+              "name": "Quay Hall",
+              "kind": "town"
+            }
+          ]
+        },
+        {
+          "id": "harbor_gardens",
+          "name": "Reed Gardens",
+          "realm": "harbor_commune",
+          "culture": "harbor_folk",
+          "religion": "harbor_belief",
+          "dev": 3,
+          "duchy": "harbor_district",
+          "population0": 12000,
+          "communities": [
+            {
+              "culture": "harbor_folk",
+              "religion": "harbor_belief",
+              "populationShare0": 10000
+            }
+          ]
+        },
+        {
+          "id": "harbor_ridge",
+          "name": "High Lantern",
+          "realm": "harbor_upland",
+          "culture": "harbor_folk",
+          "religion": "harbor_belief",
+          "dev": 3,
+          "duchy": "harbor_district",
+          "population0": 12000,
+          "communities": [
+            {
+              "culture": "harbor_folk",
+              "religion": "harbor_belief",
+              "populationShare0": 10000
+            }
+          ]
+        }
+      ],
+      "realms": [
+        {
+          "id": "harbor_commune",
+          "name": "Lark Harbor",
+          "capital": "harbor_quay",
+          "color": "#458c96",
+          "aggression": 0,
+          "rank": 2,
+          "government": "harbor_council",
+          "religion": "harbor_belief",
+          "culture": "harbor_folk",
+          "ruler": {
+            "name": "Mira Reed",
+            "culture": "harbor_folk",
+            "born": 868,
+            "mar": 6,
+            "trait": "patient",
+            "sex": "f"
+          },
+          "constituency": "harbor_households"
+        },
+        {
+          "id": "harbor_upland",
+          "name": "Lantern Ward",
+          "capital": "harbor_ridge",
+          "color": "#aa7944",
+          "aggression": 0,
+          "rank": 2,
+          "government": "regnum",
+          "religion": "harbor_belief",
+          "culture": "harbor_folk",
+          "ruler": {
+            "name": "Orin Vale",
+            "culture": "harbor_folk",
+            "born": 868,
+            "mar": 6,
+            "trait": "patient",
+            "sex": "f"
+          }
+        },
+        {
+          "id": "harbor_following",
+          "name": "Reed Following",
+          "capital": "harbor_quay",
+          "color": "#99743d",
+          "aggression": 0,
+          "rank": 2,
+          "government": "hosted_following",
+          "religion": "harbor_belief",
+          "culture": "harbor_folk",
+          "nonTerritorial": true,
+          "ruler": {
+            "name": "Lena Reed",
+            "sex": "f",
+            "born": 857,
+            "culture": "harbor_folk",
+            "mar": 6,
+            "trait": "patient"
+          },
+          "mobile": {
+            "profileId": "harbor_compact",
+            "patronRealmId": "harbor_commune",
+            "origin": "harbor_quay",
+            "target": "harbor_quay",
+            "food": 3200,
+            "fighters": 160,
+            "treasury": 70,
+            "opening": {
+              "principals": [
+                {
+                  "memberId": "quay_people",
+                  "person": {
+                    "kind": "opening_actor",
+                    "actorId": "harbor_companion"
+                  }
+                },
+                {
+                  "memberId": "reed_people",
+                  "person": {
+                    "kind": "opening_actor",
+                    "actorId": "harbor_leader"
+                  }
+                }
+              ],
+              "leaderMemberId": "reed_people",
+              "muster": [
+                {
+                  "memberId": "quay_people",
+                  "unitId": "arch",
+                  "count": 40
+                },
+                {
+                  "memberId": "reed_people",
+                  "unitId": "cav",
+                  "count": 120
+                }
+              ]
+            },
+            "command": {
+              "id": "harbor_mandate",
+              "superior": null,
+              "operations": [
+                "recruit",
+                "demuster",
+                "move",
+                "march",
+                "offer",
+                "accept",
+                "work",
+                "trade",
+                "pledge",
+                "leave"
+              ]
+            }
+          }
+        }
+      ],
+      "duchies": {
+        "harbor_district": {
+          "name": "Lantern Coast",
+          "kingdom": "harbor_country"
+        }
+      },
+      "kingdoms": {
+        "harbor_country": {
+          "name": "Reed Country",
+          "empire": "harbor_horizon"
+        }
+      },
+      "empires": {
+        "harbor_horizon": {
+          "name": "The Wide Horizon"
+        }
+      },
+      "scripted": [],
+      "straits": [],
+      "crossingClasses": {},
+      "localInstitutions": {
+        "harbor_household_bench": {
+          "city": "Lark Quay",
+          "kind": "council",
+          "provinceId": "harbor_quay",
+          "site": "harbor_meeting_hall",
+          "culture": "harbor_folk",
+          "religion": "harbor_belief",
+          "historicalName": "Iria Vale"
+        }
+      },
+      "starts": [
+        "harbor_household"
+      ],
+      "hidden": false,
+      "opening": {
+        "actors": {
+          "harbor_companion": {
+            "name": "Ivo Quay",
+            "sex": "m",
+            "born": 874,
+            "culture": "harbor_folk",
+            "religion": "harbor_belief",
+            "station": 1,
+            "role": "commander",
+            "home": "harbor_quay",
+            "skills": {
+              "mar": 6
+            }
+          },
+          "harbor_leader": {
+            "name": "Lena Reed",
+            "sex": "f",
+            "born": 857,
+            "culture": "harbor_folk",
+            "religion": "harbor_belief",
+            "station": 1,
+            "role": "commander",
+            "home": "harbor_quay",
+            "skills": {
+              "mar": 6
+            }
+          }
+        },
+        "appointments": {},
+        "estates": [],
+        "claims": [],
+        "migrations": []
+      }
+    }
+  },
+  "mobileProfiles": {
+    "harbor_compact": {
+      "minAge": 18,
+      "threshold": 0.6,
+      "maxMembers": 8,
+      "maxAgreements": 8,
+      "recruitShare": 0.25,
+      "recruitCost": 0.02,
+      "foodPerPerson": 0.01,
+      "pasturePerPerson": 1.8,
+      "accessDays": 360,
+      "accessPrice": 4,
+      "starvationShare": 0.001,
+      "defeatShare": 0.02,
+      "settlementForm": "regnum",
+      "regions": [],
+      "members": [
+        {
+          "id": "quay_people",
+          "weight": 2,
+          "pledge": 0.1,
+          "population": 600
+        },
+        {
+          "id": "reed_people",
+          "weight": 3,
+          "pledge": 0.25,
+          "population": 800
+        }
+      ]
+    }
+  }
+}

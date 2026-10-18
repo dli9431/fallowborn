@@ -153,7 +153,7 @@ window.FB = window.FB || {};
     /* Old saves may be waiting on the former immediate return-or-settle
        decision. Its event id now introduces the mandatory stay, while these
        additive fields let destination time begin without a save migration. */
-    if (t && t.phase === 'arrived' && t.completed) {
+    if (t && !t.participationId && t.phase === 'arrived' && t.completed) {
       if (t.stayStartTurn === undefined) t.stayStartTurn = state.turn;
       if (t.workEvents === undefined) t.workEvents = 0;
       if (t.stayStarted === undefined) t.stayStarted = true;
@@ -221,7 +221,56 @@ window.FB = window.FB || {};
 
   FB.travelLocation = function (state) {
     const t = FB.travelEnsure(state);
+    const carried = t && t.participationId && t.phase === 'arrived' && FB.expeditionParticipants && FB.expeditionParticipants.location(state);
+    if (carried) return FB.world.byId[carried] || null;
     return FB.world.byId[t ? t.currentId : state.player.provinceId] || null;
+  };
+
+  /* The story owns admission. The ordinary personal travel owner retains the
+     protagonist's temporary position and the separately funded return road. */
+  FB.travelAttachTemporaryCarrier = function (state, id, pid) {
+    const legDays = FB.travelLegDaysSnapshot(state);
+    state.player.travel = {purpose:FB.travelDefault('relationship'), participationId:id,
+      homeId:state.player.provinceId, destinationId:pid, destinationRealm:null, currentId:pid,
+      phase:'arrived', remainingRoute:[], outboundRoute:[], visited:[pid], legDaysLeft:0,
+      legDays:legDays, startTurn:state.turn, cost:0, overhead:0,
+      encounters:{culture:0,road:0}, seenCultures:{}, seenEvents:{}, completed:true};
+  };
+  FB.travelUpdateTemporaryCarrier = function (state,pid) {
+    const t=state.player.travel;
+    if (!t || !t.participationId || t.phase !== 'arrived') return;
+    t.currentId=pid; t.destinationId=pid; t.visited=[pid];
+  };
+  FB.travelTemporaryReturnQuote = function (state) {
+    const t=state.player.travel, P=FB.expeditionParticipants;
+    if (!t || !t.participationId || t.phase !== 'arrived') return null;
+    const rec=state.stories && state.stories[t.participationId];
+    const from=P && P.location(state), home=state.player.provinceId;
+    const route=from && FB.travelRoute(from,home), actor=me(state);
+    const shadow=Object.assign({},state,{player:Object.assign({},state.player,{provinceId:from})});
+    const cost=route && route.length ? FB.travelCostSnapshot(FB.travelDefault('relationship'),route,shadow) : 0;
+    const legDays=FB.travelLegDaysSnapshot(state);
+    const def=purpose(t.purpose);
+    return {allowed:!!(rec && ['pending','active','suspended'].indexOf(rec.status) < 0 &&
+      actor && !actor.dead && !state.player.dead && FB.station.isFreeUnlanded(state.player,state) &&
+      def && purposeTierAllowed(state,def) && FB.contentPeriodEnabled(state,def) && FB.systemContentEnabled(state,def) &&
+      !actor.captive && !actor.prisonerOf && !actor.imprisoned && !actor.exiled &&
+      !(FB.justiceCustodyOf && FB.justiceCustodyOf(state,actor.id)) &&
+      !(state.player.flags && state.player.flags.in_prison) && !FB.atWarPersonally(state) &&
+      route && route.length && state.player.gold >= cost && !(FB.justiceExileBlocks && route.some(function (pid) {
+        return FB.justiceExileBlocks(state,state.player.charId,pid);
+      }))), id:t.participationId, from:from, home:home, route:route, cost:cost, legDays:legDays,
+      days:route ? FB.travelRouteUnits(from,route)*legDays : 0, turn:state.turn, funds:state.player.gold};
+  };
+  FB.travelTemporaryReturnApply = function (state, reviewed) {
+    const q=FB.travelTemporaryReturnQuote(state);
+    if (!q || !q.allowed || JSON.stringify(q) !== JSON.stringify(reviewed)) return false;
+    state.player.gold-=q.cost;
+    const t=state.player.travel;
+    t.currentId=q.from; t.phase='return'; t.remainingRoute=q.route.slice();
+    t.legDays=q.legDays; t.legDaysLeft=q.legDays*FB.landRouteUnits(q.from,q.route[0]);
+    t.cost=q.cost; t.overhead=q.cost;
+    return true;
   };
 
   /* Settled-only least-time route. Equal-cost ties retain adjacency order,
@@ -1628,6 +1677,7 @@ window.FB = window.FB || {};
         FB.resolveReturnTradeVenture) {
       FB.resolveReturnTradeVenture(state, t);
     }
+    if (t.participationId && FB.expeditionParticipants) FB.expeditionParticipants.arrivedHome(state);
     p.travel = null;
     if (FB.localFolkArrive) FB.localFolkArrive(state, p.provinceId);
     FB.news(state, FB.msg('news.travel.returned',
@@ -1727,6 +1777,17 @@ window.FB = window.FB || {};
     const p = state.player;
     const t = FB.travelEnsure(state);
     if (!t) return;
+    if (t.participationId && (p.dead || !me(state) || me(state).dead || me(state).captive || me(state).prisonerOf ||
+        me(state).imprisoned || me(state).exiled || p.flags && p.flags.in_prison ||
+        FB.justiceCustodyOf && FB.justiceCustodyOf(state,p.charId))) {
+      FB.travelCancel(state,null,true);
+      return;
+    }
+    if (t.participationId && t.phase === 'arrived') {
+      const pid=FB.expeditionParticipants && FB.expeditionParticipants.location(state);
+      if (pid) FB.travelUpdateTemporaryCarrier(state,pid);
+      return;
+    }
     if (!targetStillValid(state, t)) {
       endInvalidTargetVisit(state, t);
       return;
@@ -1767,6 +1828,7 @@ window.FB = window.FB || {};
   FB.travelReturnEligible = function (state) {
     const t = FB.travelEnsure(state);
     if (!t) return FB.T('No journey is in progress.');
+    if (t.participationId) return FB.T('Review departure and the separately priced return road in the expedition story.');
     if (t.phase === 'return') return FB.T('Already returning home.');
     if (FB.travelPurposeKind(t.purpose) === 'tournament') return true;
     if (t.phase !== 'arrived') return true;
@@ -1790,6 +1852,7 @@ window.FB = window.FB || {};
   FB.travelSettlementEligible = function (state) {
     const p = state.player;
     const t = FB.travelEnsure(state);
+    if (t && t.participationId) return FB.T('Personal expedition admission supplies no household settlement right.');
     if (t && FB.travelPurposeKind(t.purpose) === 'tournament') return FB.T('A games journey preserves the household home.');
     if (!t || t.phase !== 'arrived') return FB.T('Reach the destination first.');
     if (!FB.station.isFreeUnlanded(p, state)) {
@@ -2212,6 +2275,12 @@ window.FB = window.FB || {};
     }
     clearQueued(state);
     const t = p.travel;
+    if (t.participationId && FB.expeditionParticipants && !p.dead && traveler && !traveler.dead) {
+      FB.expeditionParticipants.checkpoint(state,t.currentId,false);
+      t.phase='arrived'; t.remainingRoute=[]; t.legDaysLeft=0;
+      FB.travelUpdateTemporaryCarrier(state,t.currentId);
+      return true;
+    }
     if (t.returnVenture && t.returnVenture.status === 'active') {
       t.returnVenture.status = 'cancelled';
       t.returnVenture.cancelledTurn = state.turn;
@@ -2257,6 +2326,7 @@ window.FB = window.FB || {};
 
   FB.travelCapstoneDone = function (state) {
     const t = FB.travelEnsure(state);
+    if (t && t.participationId) return;
     if (!t || t.phase !== 'arrived') return;
     recordCompletion(state);
     if (t.religiousActivity && FB.religiousActivityJourneyDone) FB.religiousActivityJourneyDone(state, t);

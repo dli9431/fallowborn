@@ -101,7 +101,9 @@
   }
   function location(s, actor) {
     var c = actor && actor.kind === 'character' && s.chars[actor.id];
-    return c && (s.player && s.player.charId === c.id ? s.player.travel ? s.player.travel.currentId : s.player.provinceId : c.homeProvinceId);
+    return c && (s.player && s.player.charId === c.id ?
+      s.player.travel && s.player.travel.participationId && FB.expeditionParticipants && FB.expeditionParticipants.location(s) ||
+      (s.player.travel ? s.player.travel.currentId : s.player.provinceId) : c.homeProvinceId);
   }
   M.total = function (s, rid) {
     var r = M.row(s, rid);

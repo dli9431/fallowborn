@@ -114,6 +114,7 @@
         });
       }
     }
+    if (FB.expeditionParticipants) FB.expeditionParticipants.validateCarriers(state);
     if (state.stories === undefined) return true;
     if (!plain(state.stories)) field('state.stories');
     // Check the entire registry graph before calling validators that read peers.
