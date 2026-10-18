@@ -63,12 +63,13 @@
       var alias = JSON.stringify([site.x,site.y,p.unit]);
       if (own(physical,alias)) fault(a.id + ': duplicate physical capacity or conflicting rights.');
       physical[alias] = true;
-      if (!keys(flags,['source','catchment','gradient','groundwater','launching','grazing']) ||
+      if (!keys(flags,['source','catchment','gradient','groundwater','river','launching','grazing']) ||
           Object.keys(flags).some(function (key) { return typeof flags[key] !== 'boolean'; }) ||
           p.kind === 'flow' && !flags.source || p.kind === 'storage' && flags.source ||
           p.unit === 'launching' && !flags.launching || p.unit === 'grazing' && !flags.grazing ||
           p.unit === 'water' && (flags.launching || flags.grazing) ||
-          p.kind === 'access' && (flags.source || flags.catchment || flags.gradient || flags.groundwater) ||
+          p.kind === 'access' && (flags.source || flags.catchment || flags.gradient || flags.groundwater || flags.river) ||
+          flags.river && (p.kind !== 'flow' || p.unit !== 'water' || !flags.source) ||
           flags.groundwater && (p.kind !== 'flow' || p.unit !== 'water' || !flags.source) ||
           p.unit === 'launching' && flags.grazing || p.unit === 'grazing' && flags.launching)
         fault(a.id + ': unsupported or missing physical suitability.');

@@ -34,8 +34,8 @@
       var r = p && p.sourceRequirements;
       if (r !== undefined && (!keys(r,['originKind','originSuitability','minStores']) ||
           ['flow','storage'].indexOf(r.originKind) < 0 || !integer(r.minStores,0,8) ||
-          !Array.isArray(r.originSuitability) || r.originSuitability.length > 4 ||
-          r.originSuitability.some(function (k,i) { return ['source','catchment','gradient','groundwater'].indexOf(k) < 0 || r.originSuitability.indexOf(k) !== i; })))
+          !Array.isArray(r.originSuitability) || r.originSuitability.length > 5 ||
+          r.originSuitability.some(function (k,i) { return ['source','catchment','gradient','groundwater','river'].indexOf(k) < 0 || r.originSuitability.indexOf(k) !== i; })))
         out.push('buildingOperationProfiles.' + key + ': invalid physical source requirements.');
     });
     Object.keys(c.buildings || {}).forEach(function (key) {
@@ -228,6 +228,7 @@
     if (ledger !== undefined && (!keys(ledger,['version','records']) || ledger.version !== 1 ||
         !Array.isArray(ledger.records) || !ledger.records.length || ledger.records.length > 512)) fail();
     var revisions = {}, last = {}, priorId = 0, priorRevision = 0;
+    var sites = ledger ? FB.compileProduction(FB.campaignBookmark(s)).sites : [];
     (ledger && ledger.records || []).forEach(function (v) {
       var a = v && assignments.find(function (a) { return a.id === v.assignmentId; });
       if (!keys(v,['id','assignmentId','assetId','operationRevision','actor','characterId','generation','turn','untilTurn','inputs']) ||
@@ -238,7 +239,7 @@
           !integer(v.turn,0,s.turn) || !integer(v.untilTurn,v.turn+1,(Math.floor(v.turn/a.profile.periodDays)+1)*a.profile.periodDays) ||
           last[v.assetId] && (last[v.assetId].turn >= v.turn || last[v.assetId].untilTurn > v.turn) ||
           !Array.isArray(v.inputs) || !v.inputs.length || v.inputs.length > 512) fail();
-      var totals = {}, seen = {}, sites = FB.compileProduction(FB.campaignBookmark(s)).sites;
+      var totals = {}, seen = {};
       v.inputs.forEach(function (x) {
         var lot = x && r.lots.find(function (l) { return l.id === x.lotId; });
         var asset = lot && r.assets.find(function (b) { return b.id === lot.assetId; });

@@ -56,3 +56,21 @@ test('dry routes, missing fuel, authority and treasury failures preserve every o
   });
   expect(r).toEqual({failed:[true,true,true],stale:false,pure:true,pending:true});
 });
+
+test('declared river-origin service rejects catchment substitution and malformed river resources purely',async function({page},info){
+  const example=JSON.parse(JSON.stringify(require('../fixtures/authoring/water-operation-inputs-river.json')));
+  await bootInputs(page,info,'river','water-operation-inputs');
+  const r=await page.evaluate(function(example){
+    const b=example.bookmarks.resource_river.revisions.supplied;
+    example.buildingOperationProfiles.fueled_service.sourceRequirements={originKind:'flow',originSuitability:['source','river','gradient'],minStores:1};
+    b.siteResourceAssignments[0].suitability.river=true;
+    const before=JSON.stringify([FBDATA,FB.state,localStorage]),uid=FB.getUidCounter(),rng=FB.getRngState();
+    const accepted=FB.mods.validate(example);
+    const rejected=[function(m){m.bookmarks.resource_river.revisions.supplied.siteResourceAssignments[0].suitability.river=false;},
+      function(m){m.bookmarks.resource_river.revisions.supplied.siteResourceAssignments[1].suitability.river=true;},
+      function(m){m.buildingOperationProfiles.fueled_service.sourceRequirements.originSuitability=['river','river'];}
+    ].map(function(change){const m=JSON.parse(JSON.stringify(example));change(m);return FB.mods.validate(m).length>0;});
+    return {accepted:accepted,rejected:rejected,pure:before===JSON.stringify([FBDATA,FB.state,localStorage])&&uid===FB.getUidCounter()&&rng===FB.getRngState()};
+  },example);
+  expect(r).toEqual({accepted:[],rejected:[true,true,true],pure:true});
+});
