@@ -30,6 +30,10 @@ Authority office names and descriptions use authorityOffice.<id>.<field>.default
 
 Supplemental technology and building presentation
 
+Additive production display maps
+
+Files named data/production_<suffix>.js may declare literal FBDATA.productionGoods_<suffix> and FBDATA.productionRecipes_<suffix> maps, then compose individual new ids into the ordinary registries. Static extraction reads these maps without executing composers and retains productionGood and productionRecipe name/desc/fallback owners and exact-English aliases. Duplicate ids, including a base-table id, nonliteral maps and nonliteral display fields reject. These are additive source maps, not new mod roots or correction owners. Runtime JSON still uses productionGoods and productionRecipes. Feature authoring does not regenerate catalogues.
+
 data/technology_transmission.js uses the same complete literal correction convention for paper_making. Its unchanged name and description retain tech.paper_making display owners and exact-English aliases; the regional schedule is untranslated metadata. Paper Scholarship and Royal Capitularies retain their existing learning and civic/military source owners.
 
 Files named data/technology_<suffix>.js may declare literal FBDATA.tech_<suffix> maps for additions and FBDATA.techCorrections_<suffix> maps for complete replacements. Files named data/buildings_<suffix>.js use FBDATA.buildings_<suffix> and FBDATA.buildingCorrections_<suffix>. Table suffixes may differ from the filename, and one file may declare several maps. The static extractor resolves all definitions before registering text, without executing a composer. These tables organize source only; they introduce no runtime registry, JSON mod root or public add helper.
