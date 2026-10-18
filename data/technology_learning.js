@@ -30,8 +30,8 @@ FBDATA.techCorrections_learning = {
     name:'Paper Scholarship', icon:'📄', domain:'learning', cost:50,
     req:['paper_making','scriptoria'],
     history:{attested:[750,1050],adoption:{
-      default:[830,1080],latin:[850,1100],byzantine:[830,1080],islamic:[760,1010],
-      persianate:[770,1020],slavic:[865,1115],nordic:[870,1120],steppe:[860,1110],
+      default:[830,1080],latin:[850,1100],byzantine:[830,1080],islamic:[800,1000],
+      persianate:[800,1000],slavic:[865,1115],nordic:[870,1120],steppe:[860,1110],
       baltic_finnic:[885,1135],caucasian:[855,1105],northeast_african:[865,1115]
     }},
     desc:'Abundant paper makes correspondence and drafts cheaper, extending manuscript scholarship without founding a library or academy.',

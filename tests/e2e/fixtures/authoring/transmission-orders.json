@@ -1,0 +1,17 @@
+{
+  "name": "Independent orders and records transmission",
+  "tech": {
+    "capitularies": {
+      "name": "Royal Capitularies", "icon": "C", "domain": "governance", "cost": 50, "req": ["written_law", "diplomatic_correspondence"],
+      "history": {"attested": [650, 900], "adoption": {"default": [850, 1050], "latin": [720, 880]}},
+      "desc": "A fictional royal-order schedule that grants knowledge without an office.",
+      "confidence": "modded", "sources": ["MOD"], "unlocks": ["rule:capitularies"], "capabilities": [], "fx": {"levy": 0.01}
+    },
+    "paper_making": {
+      "name": "Papermaking", "icon": "P", "domain": "crafts", "cost": 50, "req": [],
+      "history": {"attested": [650, 950], "adoption": {"default": [850, 1050], "persianate": [800, 900], "islamic": [750, 1000]}},
+      "desc": "A fictional schedule where earlier emergence also selects the later completion window.",
+      "confidence": "modded", "sources": ["MOD"], "unlocks": ["rule:paper_supply"], "capabilities": [], "fx": {"research": 0.1}
+    }
+  }
+}

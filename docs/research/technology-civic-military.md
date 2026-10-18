@@ -2,7 +2,7 @@ Commercial, administrative and castle catalogue corrections
 
 Scope
 
-data/technology_civic_military.js replaces twelve complete technology records after the base catalogue. Only annual_fairs and siege_engineering change prerequisites. Their explicit costs, attestation envelopes, inherited ten-tradition adoption pairs, effects, unlocks and capability grants remain unchanged. The other ten replacements narrow descriptions. The dates remain simulation defaults, not newly established regional adoption evidence. No physical works, office, equipment, local protection agreement or historical inventory is created by this correction.
+data/technology_civic_military.js replaces twelve complete technology records after the base catalogue. Only annual_fairs and siege_engineering change prerequisites. Their explicit costs, attestation envelopes, effects, unlocks and capability grants remain unchanged. All adoption pairs retain their inherited values except the Latin capitularies pair, now 700/800 as documented in docs/research/knowledge-transmission.md. The other ten replacements narrow descriptions. The dates remain simulation defaults, not newly established regional adoption evidence. No physical works, office, equipment, local protection agreement or historical inventory is created by this correction.
 
 Fairs
 

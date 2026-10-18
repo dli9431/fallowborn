@@ -14,6 +14,7 @@ dependsOnRuntime(__filename, [
   'data/technology_civic_military.js', 'data/buildings_civic_military.js',
   'data/technology_maritime.js', 'data/buildings_maritime.js', 'data/economy_maritime.js',
   'data/technology_wind.js', 'data/buildings_wind.js', 'data/economy.js',
+  'data/technology_transmission.js',
   'data/bookmarks.js', 'data/bookmark_867_expansion.js', 'data/bookmark_1066_inhabited.js',
   'data/geographies.js', 'data/geography_expansion.js', 'data/cultures.js', 'data/eras.js',
   'data/settlements.js', 'data/settlements_real.js', 'data/starts.js',
@@ -84,7 +85,7 @@ test('all supplements compose once with stable effects, grants, budgets and rele
   await openGame(page, info);
   const r = await page.evaluate(function () {
     const base = window.__compositionBase;
-    const techMaps = ['foundations','learning','civic_military','maritime','wind'];
+    const techMaps = ['foundations','learning','civic_military','maritime','wind','transmission'];
     const buildingMaps = ['learning_care','civic_military','maritime','wind'];
     function owners(prefix, maps, table) {
       const seen = {}, duplicates = [], stale = [], counts = [];
@@ -140,17 +141,19 @@ test('all supplements compose once with stable effects, grants, budgets and rele
       })
     };
   });
-  expect(r.techOwners).toEqual({ duplicates:[], stale:[], counts:[9,6,12,8,1] });
+  expect(r.techOwners).toEqual({ duplicates:[], stale:[], counts:[9,6,12,8,1,1] });
   expect(r.buildingOwners).toEqual({ duplicates:[], stale:[], counts:[3,3,1,1] });
   expect(r.counts).toEqual([189,20]); expect(r.techIds).toEqual(r.baseIds);
   expect(r.addedBuildings).toEqual(['hospice']);
-  expect(r.scalarChanges).toEqual([]); expect(r.buildingChanges).toEqual([]);
+  expect(r.scalarChanges.sort()).toEqual(['capitularies','paper_making','paper_scholarship']);
+  expect(r.buildingChanges).toEqual([]);
   expect(r.caps).toEqual(r.baseCaps); expect(r.grants).toEqual(r.baseGrants);
   expect(r.fortLevels).toEqual(r.baseFortLevels);
   expect(r.unexpected).toEqual([]); expect(r.errors).toEqual([]); expect(r.inferredWorlds).toEqual([]);
   const supplements = ['data/technology_early_refinements.js','data/technology_foundations.js','data/technology_learning.js',
     'data/buildings_learning_care.js','data/technology_civic_military.js','data/buildings_civic_military.js',
-    'data/technology_maritime.js','data/buildings_maritime.js','data/technology_wind.js','data/buildings_wind.js'];
+    'data/technology_maritime.js','data/buildings_maritime.js','data/technology_wind.js','data/buildings_wind.js',
+    'data/technology_transmission.js'];
   for (const source of supplements) {
     expect(r.sources.filter(function (s) { return s === source; })).toHaveLength(1);
     expect(r.sources.indexOf(source)).toBeGreaterThan(r.sources.indexOf('data/technology.js'));
@@ -178,7 +181,15 @@ for (const bookmark of ['867','1066']) for (const revision of ['baseline',null])
         return out;
       }
       const corrected = seeded(); let prior;
-      try { FBDATA.tech = JSON.parse(JSON.stringify(window.__compositionBase.tech)); prior = seeded(); }
+      try {
+        FBDATA.tech = JSON.parse(JSON.stringify(window.__compositionBase.tech));
+        // Compare prerequisite composition under the same transmission policy.
+        // The full pre-policy delta is covered by early-knowledge-transmission.spec.js.
+        ['paper_making','paper_scholarship','capitularies'].forEach(function (id) {
+          FBDATA.tech[id].history.adoption = JSON.parse(JSON.stringify(currentTable[id].history.adoption));
+        });
+        prior = seeded();
+      }
       finally { FBDATA.tech = currentTable; FB.invalidateTechBonuses(); }
       const rec = FB.realmTechRecord(s);
       // Deliberately dated saved knowledge and a partial project are campaign

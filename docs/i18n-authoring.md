@@ -26,6 +26,8 @@ Authority office names and descriptions use authorityOffice.<id>.<field>.default
 
 Supplemental technology and building presentation
 
+data/technology_transmission.js uses the same complete literal correction convention for paper_making. Its unchanged name and description retain tech.paper_making display owners and exact-English aliases; the regional schedule is untranslated metadata. Paper Scholarship and Royal Capitularies retain their existing learning and civic/military source owners.
+
 Files named data/technology_<suffix>.js may declare literal FBDATA.tech_<suffix> maps for additions and FBDATA.techCorrections_<suffix> maps for complete replacements. Files named data/buildings_<suffix>.js use FBDATA.buildings_<suffix> and FBDATA.buildingCorrections_<suffix>. Table suffixes may differ from the filename, and one file may declare several maps. The static extractor resolves all definitions before registering text, without executing a composer. These tables organize source only; they introduce no runtime registry, JSON mod root or public add helper.
 
 Each supplemental row supplies literal name and desc fields, either strings or maps of literal faith branches. Complete corrections own the final fields, including every branch that should remain; omitted branches disappear rather than inheriting stale English. Existing tech.<id>.<field>.<branch> and building.<id>.<field>.<branch> owners remain stable. Compatible variants keep their keys, and exact-English aliases and source locations come from the final definition. Unchanged base definitions retain their existing owners and sources. Numeric, history, prerequisite and effect fields are not translated.
