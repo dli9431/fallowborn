@@ -186,11 +186,11 @@ test('ordinary JSON validation rejects unsupported, unlicensed, overvalued and w
   },examples.shore);
   expect(r).toEqual({valid:[],rejected:Array(7).fill(true),pure:true});
 });
-test('unopted released worlds retain absent invoice state and no supplied facility or material declarations',async function({page},info){
+test('unopted released worlds retain no assigned facility or material declarations',async function({page},info){
   await openGame(page,info);
-  const r=await page.evaluate(function(){return {profiles:Object.keys(FBDATA.maritimeWorkProfiles),worlds:['867','1066'].map(function(id){
+  const r=await page.evaluate(function(){return {worlds:['867','1066'].map(function(id){
     const bm=FB.bookmark(id),p=FB.compileProduction(bm);return {assignments:bm.maritimeWorkAssignments || [],compiled:p.maritime || [],errors:p.errors};})};});
-  expect(r).toEqual({profiles:[],worlds:[{assignments:[],compiled:[],errors:[]},{assignments:[],compiled:[],errors:[]}]});
+  expect(r).toEqual({worlds:[{assignments:[],compiled:[],errors:[]},{assignments:[],compiled:[],errors:[]}]});
 });
 for(const width of [390,1280])test(width+'px invoice review retains keyboard focus and settlement position through Back, Escape and confirmation',async function({page},info){
   await page.setViewportSize({width:width,height:844});await boot(page,info,'river');await work(page);

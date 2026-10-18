@@ -235,7 +235,8 @@
         return !left;
       });
       if (!supplied || !P.aiQuote(t,a.id,'reserve',{recipeId:key,disposition:'store'}).allowed) return false;
-      return P.outletReady(t,a.id,recipe.outputs);
+      return d.maritimeWorkProfileId ? !!FB.maritimeWork &&
+        FB.maritimeWork.constructionReady(t,a.id,who,key,d.maritimeWorkProfileId) : P.outletReady(t,a.id,recipe.outputs);
     });
   };
   P.outletReady = function (s,siteId,outputs) {

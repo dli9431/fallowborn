@@ -24,6 +24,16 @@
           !int(p.quantity,1,10000) || !int(p.unitValue,1,10000) || !num(p.invoiceShare,0.001,0.1) || !int(p.termDays,1,90))
         errors.push('maritimeWorkProfiles.'+key+': requires one typed paid boat-work output, finite value and at most ten percent of an ordinary invoice.');
     });
+    Object.keys(d.buildings || {}).forEach(function(key){
+      var b=d.buildings[key], profile=b && b.maritimeWorkProfileId;
+      if(profile===undefined)return;
+      var p=table[profile], recipe=p && d.productionRecipes[p.recipeId];
+      if(!id(profile) || !own(table,profile) || !p || !Array.isArray(b.productionRecipeIds) ||
+          b.productionRecipeIds.indexOf(p.recipeId)<0 || b.fort || b.operationProfile || b.institutionProfile || b.seasonProfile ||
+          !recipe || recipe.requiresSale || !Array.isArray(recipe.outputs) || recipe.outputs.length!==1 || !recipe.outputs[0] ||
+          recipe.outputs[0].quantity<p.quantity)
+        errors.push('Building '+key+': requires a supported paid maritime profile and its production recipe.');
+    });
     return errors;
   };
   M.compilePrepared = function(bm,sites) {
@@ -76,6 +86,32 @@
     var blocked=e ? status.code!=='ready' && status.code!=='funds' : status.blockers.length>0;
     return {enterprise:e,status:status,blocked:blocked,cost:status.cost || 0,level:e ? FB.enterpriseUpgradeLevel(e)+1 : 0};
   }
+  // The construction owner stages the empty asset, acquisition and reserves first.
+  // This projection checks the useful private invoice instead of inventing a sale buyer.
+  M.constructionReady = function(s,siteId,who,recipeId,profileId) {
+    var p=plan(s),a=p.assignments.find(function(x){return x.productionSiteId===siteId && x.profileId===profileId;});
+    var profile=FBDATA.maritimeWorkProfiles[profileId],recipe=FBDATA.productionRecipes[recipeId];
+    if(p.errors.length || !a || !profile || profile.recipeId!==recipeId || !recipe || !sameHousehold(s,who))return false;
+    var site=p.sites.find(function(x){return x.id===siteId;}),identity=person(s,who);
+    if(!identity || identity.characterId!==s.player.charId || !eq(P.authority(s,site,who),identity) ||
+        !FB.buildingSeasons.ready(s,'productionSiteId',siteId,who))return false;
+    var row=P.snapshot(s,a.countyId,a.siteId).find(function(x){return x.site.id===siteId;});
+    if(!row || !row.asset || !eq(row.asset.owner,who) ||
+        !FB.siteResources.quote(s,{operation:'reserve',sourceId:a.launchSourceId,actor:who,amount:1}).allowed)return false;
+    var uid=FB.getUidCounter(),rng=FB.getRngState();
+    try {
+      var t=copy(s),targets=[null].concat((t.player.enterprises || []).filter(function(e){
+        return e.type===profile.enterpriseType && e.provinceId===a.countyId && e.settlement===a.slot;
+      }).map(function(e){return e.uid;}));
+      return targets.some(function(id){
+        var selected=target(t,a,profile,id);
+        if(!selected || selected.blocked)return false;
+        var credit=Math.floor(Math.min(selected.cost*profile.invoiceShare,
+          profile.quantity*Math.min(profile.unitValue,recipe.workPrice/recipe.outputs[0].quantity)));
+        return credit>0 && t.player.gold>=recipe.workPrice+selected.cost-credit;
+      });
+    } finally {FB.setUidCounter(uid);FB.setRngState(rng);}
+  };
   M.reservations = function(s) {
     var held={};
     if (root(s)) root(s).invoices.forEach(function(x){if(x.status==='pending')x.inputs.forEach(function(i){held[i.lotId]=(held[i.lotId] || 0)+i.quantity;});});

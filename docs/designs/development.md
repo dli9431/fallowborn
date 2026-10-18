@@ -1,3 +1,7 @@
+Boathouse work catalogue
+
+data/buildings_boathouses.js adds the modest boathouse with cost 25, upkeep 1, devMin 0, county limit 1, shipyard role, coastal siting and AI priority 32. Construction uses inclusive 650-1300 Nordic learning-tradition applicability and no building technology gate. Required productionRecipeIds and maritimeWorkProfileId declarations demand an empty assigned site, real finite input acquisition, paid work, licensed launching and a fundable ordinary enterprise invoice before new construction. One canonical empty production enrollment creates no stock or enterprise; supplied inherited assets keep their separate opening provenance. Existing enterprise technology gates remain binding for an eligible invoice. It grants no passive scalar. Actual useful work requires the existing production and maritime assignments, finite owned timber/cordage, paid action days and current lawful co-located launching capacity. The existing household enterprise invoice owner consumes that paid contribution once, at most ten percent of the unchanged ordinary invoice, and charges the remainder with normal staffing and technology. No source, historical asset, goods or enterprise is installed. building_boathouse has technology impact none for basic shelter; optional enterprise stages keep their existing reviews. See docs/research/boathouses.md and docs/designs/maritime-work.md for exact values, ordinary examples, evidence limits and receipt continuity.
+
 # Development & buildings
 
 Physical resource declarations
@@ -10,7 +14,7 @@ Optional institutionProfile building declarations and bookmark buildingInstituti
 
 Composed construction catalogue
 
-The effective catalogue has 20 buildings: the nineteen retained ids plus hospice. Eight complete replacements preserve every existing numeric field, role and AI priority while updating the declared presentation, prerequisite or applicability. Construction scope and group capacity share the normal authority and paid transaction; inherited works and repairs retain their separate contracts. Annual AI keeps the full priority table, finite purchase budget and existing reserves, including each proposed building's upkeep. The combined JSON example and regression spec in docs/research/technology-and-buildings.md cover these boundaries together without installing historical inventories or creating institutional rights.
+The effective catalogue has 30 buildings: the nineteen retained ids, hospice and ten optional facilities with their own physical consumers. Eight complete replacements preserve every existing numeric field, role and AI priority while updating the declared presentation, prerequisite or applicability. Construction scope and group capacity share the normal authority and paid transaction; inherited works and repairs retain their separate contracts. Annual AI keeps the full priority table, finite purchase budget and existing reserves, including each proposed building's upkeep. The combined JSON example and regression spec in docs/research/technology-and-buildings.md cover these boundaries together without installing historical inventories or creating institutional rights.
 
 Post-mill construction
 
@@ -541,7 +545,7 @@ Explicit inherited profile policy and placements use the same base asset, limits
 
 Maintained boat-work facilities
 
-An explicitly declared standing production facility can support a co-located licensed maritime-work assignment without a new building effect or historical inventory. Its completed owned paid output contributes only to an actual household enterprise invoice through the canonical enterprise owner. The facility itself supplies no income, fleet, military capacity or enterprise. At most ten percent of the live invoice is substituted, with ordinary technology, staffing, remaining payment and current launching rights retained. There is no bundled boathouse content or installation in this shared capability. See docs/designs/maritime-work.md for the none technology review and exact consumer.
+An explicitly declared standing production facility can support a co-located licensed maritime-work assignment without a new building effect or historical inventory. Its completed owned paid output contributes only to an actual household enterprise invoice through the canonical enterprise owner. The facility itself supplies no income, fleet, military capacity or enterprise. At most ten percent of the live invoice is substituted, with ordinary technology, staffing, remaining payment and current launching rights retained. The bundled boathouse uses this consumer but supplies no historical installation. See docs/designs/maritime-work.md for the none technology review and exact consumer.
 
 Fort material identity
 
