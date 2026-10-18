@@ -1,0 +1,23 @@
+{
+  "name": "Independent coastal slips and fishery",
+  "buildings": {
+    "review_coastal_slips": {
+      "name": "Coastal Slips", "desc": "A paid local outfitting facility.",
+      "role": "shipyard", "cost": 95, "upkeep": 1, "coastal": true,
+      "devMin": 2, "maxCounty": 1, "requiresTech": "harbor_works",
+      "retinue": 8, "tax": 2
+    }
+  },
+  "enterprises": {
+    "review_coastal_fishery": {
+      "name": "Coastal Fishery", "desc": "A locally staffed fishing business.",
+      "cost": 35, "profession": "farmer", "yield": 2, "laborPay": 1.25,
+      "coastal": true, "requiresTech": "coastal_piloting",
+      "upgrades": [{
+        "name": "Decked Work Boat", "desc": "Two workers support modest local capacity.",
+        "cost": 80, "staff": 2, "requiresTech": "harbor_works",
+        "fx": {"populationCapacity": 0.01, "levy": 6}
+      }]
+    }
+  }
+}

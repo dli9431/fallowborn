@@ -1,0 +1,23 @@
+{
+  "name": "Independent northern cargo and boat works",
+  "buildings": {
+    "review_clinker_sheds": {
+      "name": "Clinker Boat Sheds", "desc": "A paid specialized hull workshop.",
+      "role": "shipyard", "cost": 57, "upkeep": 2, "coastal": true,
+      "devMin": 3, "maxCounty": 1, "requiresTech": "clinker_shipbuilding",
+      "retinue": 5, "tax": 1
+    }
+  },
+  "enterprises": {
+    "review_northern_boats": {
+      "name": "Northern Working Boats", "desc": "A different paid coastal business.",
+      "cost": 62, "profession": "farmer", "yield": 3, "laborPay": 2,
+      "coastal": true, "requiresTech": "steering_oars",
+      "upgrades": [{
+        "name": "Cargo Boat Partnership", "desc": "Three workers support a larger local business.",
+        "cost": 120, "staff": 3, "requiresTech": "knarrs", "dev": 1,
+        "fx": {"populationCapacity": 0.03, "levy": 9}
+      }]
+    }
+  }
+}

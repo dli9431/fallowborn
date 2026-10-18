@@ -3243,6 +3243,8 @@ balance is authored event content rather than an additional schema requirement f
 `FBDATA.enterprises` (in `data/economy.js`, mod key `enterprises`) defines repeatable
 productive property:
 
+The bundled Fishing Boat keeps fishing_boat_business and its ordered saved upgrade levels. Its source-level requirements supplement, data/economy_maritime.js, selects coastal_piloting for purchase, harbor_works for the decked upgrade and naval_levies for the flotilla. It composes requirements only; unchanged display fields remain in data/economy.js. Ordinary JSON uses complete enterprises records with these same fields and validators, without a supplemental mod root or any-of requirement language. The independent maritime-mediterranean.json and maritime-nordic.json examples under tests/e2e/fixtures/authoring configure different paid facilities and staffed businesses through the normal building and enterprise consumers. Existing property remains owned and effective when its current purchase requirement is missing; future purchases and upgrades recheck their exact live requirement.
+
 ```json
 { "enterprises": { "brew_house": {
   "name": "Brew House", "icon": "🍺", "cost": 70,

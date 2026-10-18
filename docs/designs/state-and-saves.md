@@ -1465,6 +1465,8 @@ Manual reassignment and explicit unassignment clear affected locks as well. Staf
 previews and their signatures are transient derived values and are never serialized, so
 the assistant remains an additive save-format-3 feature.
 
+Maritime catalogue corrections retain arsenal building records and fishing_boat_business instances, ordered upgrade levels, worker assignments and devAppliedLevel receipts. Owned boats and completed capacity keep working without the current purchase or upgrade technology. Matching restore resumes those saved facts without reseeding knowledge, rebuilding a yard, granting another development award or converting property; ordinary exact mod fingerprints still reject changed imported definitions. No new saved field or save version is introduced.
+
 Paid enterprise-worker contracts are additive compact records in
 `player.enterpriseLabor` as `{charId,enterpriseUid,pay,startedTurn,unpaid}`. Missing arrays
 mean no contracts. Normalization discards dead, duplicate, or orphaned contracts and
