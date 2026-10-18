@@ -78,6 +78,8 @@
   }
   function atLocality(s, location) {
     if (!localityValid({ provinceId:location.provinceId, siteId:location.siteId }, FB.campaignBookmark(s))) return false;
+    var refuge=FB.householdRefuges && FB.householdRefuges.presence(s,s.player.charId);
+    if (refuge) return refuge.provinceId === location.provinceId && refuge.siteId === location.siteId;
     var p = s.player, info = FB.world.sitesByProv && FB.world.sitesByProv[location.provinceId];
     var site = info && integer(p.homeSettlement) && info.list[p.homeSettlement];
     return living(s) && !p.travel && !p.war && !(FB.atWarPersonally && FB.atWarPersonally(s)) && !(p.flags && p.flags.in_prison) &&
