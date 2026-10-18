@@ -1,0 +1,333 @@
+{
+  "cultures": {
+    "harbor_folk": {
+      "name": "Reedfolk",
+      "tradition": "other",
+      "dyn": "plain",
+      "male": [
+        "Orin",
+        "Sen",
+        "Lio"
+      ],
+      "female": [
+        "Mira",
+        "Iria",
+        "Nell"
+      ],
+      "family": [
+        "Reed",
+        "Vale",
+        "Lark"
+      ]
+    }
+  },
+  "cultureDoctrineDefaults": {
+    "harbor_folk": {
+      "learning": "latin"
+    }
+  },
+  "geographies": {
+    "harbor_lands": {
+      "bounds": {
+        "lonMin": 0,
+        "lonMax": 6,
+        "latMin": 0,
+        "latMax": 5
+      },
+      "land": [
+        [
+          0.5,
+          0.5,
+          5.5,
+          0.5,
+          5.5,
+          4.5,
+          0.5,
+          4.5
+        ]
+      ],
+      "gridWidth": 240,
+      "provinces": [
+        {
+          "id": "harbor_quay",
+          "x": 1.5,
+          "y": 2.5,
+          "terrain": "farmland"
+        },
+        {
+          "id": "harbor_gardens",
+          "x": 3.1,
+          "y": 2.5,
+          "terrain": "farmland"
+        },
+        {
+          "id": "harbor_ridge",
+          "x": 4.7,
+          "y": 2.5,
+          "terrain": "farmland"
+        }
+      ],
+      "seas": [],
+      "rivers": [],
+      "sites": {
+        "harbor_meeting_hall": {
+          "x": 1.5,
+          "y": 2.5
+        }
+      },
+      "defaultLayout": null
+    }
+  },
+  "name": "Lantern opening call",
+  "religions": {
+    "harbor_belief": {
+      "name": "Lantern fellowship",
+      "parent": "sunni",
+      "availability": {},
+      "properties": {
+        "head": {
+          "officeId": "harbor_head",
+          "realm": "harbor_commune",
+          "title": "Keeper",
+          "holderSex": "f",
+          "holderKind": "realm",
+          "succession": "caliphal_claim",
+          "recovery": "claim",
+          "sameFaithWar": "ordinary",
+          "greatHolyWar": {
+            "name": "Expedition",
+            "minDate": {
+              "year": 900,
+              "season": 0,
+              "day": 1
+            },
+            "firstTarget": "harbor_country",
+            "firstByYear": 900,
+            "yearlyChance": 1,
+            "sacredTargets": [
+              {
+                "kingdom": "harbor_country",
+                "counties": [
+                  "harbor_ridge"
+                ]
+              }
+            ]
+          }
+        }
+      }
+    },
+    "harbor_other": {
+      "name": "Hill fellowship",
+      "parent": "catholic",
+      "availability": {},
+      "properties": {
+        "head": null
+      }
+    }
+  },
+  "storyInstances": {
+    "harbor_opening_call": {
+      "id": "harbor_opening_call",
+      "type": "holy_war",
+      "name": "The lantern appeal",
+      "desc": "The current keeper may prepare one campaign through the ordinary religious rules.",
+      "systemId": "great_holy_wars",
+      "religion": "harbor_belief",
+      "target": {
+        "kingdomId": "harbor_country"
+      },
+      "firstDate": {
+        "year": 900,
+        "season": 0,
+        "day": 1
+      },
+      "lastDate": {
+        "year": 900,
+        "season": 0,
+        "day": 3
+      },
+      "openingCall": {
+        "schema": 1
+      }
+    }
+  },
+  "startScenarios": [
+    {
+      "id": "harbor_household",
+      "name": "Quayside household",
+      "desc": "A free household on the quay.",
+      "intro": "Your household begins beside the harbor council.",
+      "tier": 1,
+      "profession": "farmer",
+      "gold": 40,
+      "prestige": 5,
+      "piety": 0,
+      "startCulture": "harbor_folk",
+      "startReligion": "harbor_belief",
+      "bookmarkIds": [
+        "harbor_world"
+      ],
+      "eras": [
+        "early_medieval"
+      ],
+      "fixedProvinceId": "harbor_quay",
+      "alwaysUnlocked": true,
+      "startAge": 24,
+      "familyPresets": {
+        "standard": {
+          "name": "Free household",
+          "diff": "age 24"
+        }
+      }
+    }
+  ],
+  "bookmarks": {
+    "harbor_world": {
+      "id": "harbor_world",
+      "name": "Lark Harbor",
+      "desc": "A fictional three-county authoring world.",
+      "date": {
+        "year": 900,
+        "season": 0,
+        "day": 1
+      },
+      "era": "early_medieval",
+      "geography": "harbor_lands",
+      "settlementLayout": null,
+      "religiousHeads": {
+        "harbor_head": "harbor_commune"
+      },
+      "stories": [
+        "harbor_opening_call"
+      ],
+      "provinces": [
+        {
+          "id": "harbor_quay",
+          "name": "Lark Quay",
+          "realm": "harbor_commune",
+          "culture": "harbor_folk",
+          "religion": "harbor_belief",
+          "dev": 6,
+          "duchy": "harbor_district",
+          "population0": 12000,
+          "communities": [
+            {
+              "culture": "harbor_folk",
+              "religion": "harbor_belief",
+              "populationShare0": 10000
+            }
+          ],
+          "settlements": [
+            {
+              "site": "harbor_meeting_hall",
+              "name": "Quay Hall",
+              "kind": "town"
+            }
+          ]
+        },
+        {
+          "id": "harbor_gardens",
+          "name": "Reed Gardens",
+          "realm": "harbor_commune",
+          "culture": "harbor_folk",
+          "religion": "harbor_belief",
+          "dev": 3,
+          "duchy": "harbor_district",
+          "population0": 12000,
+          "communities": [
+            {
+              "culture": "harbor_folk",
+              "religion": "harbor_belief",
+              "populationShare0": 10000
+            }
+          ]
+        },
+        {
+          "id": "harbor_ridge",
+          "name": "High Lantern",
+          "realm": "harbor_upland",
+          "culture": "harbor_folk",
+          "religion": "harbor_other",
+          "dev": 3,
+          "duchy": "harbor_district",
+          "population0": 12000,
+          "communities": [
+            {
+              "culture": "harbor_folk",
+              "religion": "harbor_other",
+              "populationShare0": 10000
+            }
+          ]
+        }
+      ],
+      "realms": [
+        {
+          "id": "harbor_commune",
+          "name": "Lark Harbor",
+          "capital": "harbor_quay",
+          "color": "#458c96",
+          "aggression": 0,
+          "rank": 3,
+          "government": "regnum",
+          "religion": "harbor_belief",
+          "culture": "harbor_folk",
+          "ruler": {
+            "name": "Mira Reed",
+            "culture": "harbor_folk",
+            "born": 868,
+            "mar": 6,
+            "trait": "patient",
+            "sex": "f"
+          }
+        },
+        {
+          "id": "harbor_upland",
+          "name": "Lantern Ward",
+          "capital": "harbor_ridge",
+          "color": "#aa7944",
+          "aggression": 0,
+          "rank": 3,
+          "government": "regnum",
+          "religion": "harbor_other",
+          "culture": "harbor_folk",
+          "ruler": {
+            "name": "Orin Vale",
+            "culture": "harbor_folk",
+            "born": 868,
+            "mar": 6,
+            "trait": "patient",
+            "sex": "f"
+          }
+        }
+      ],
+      "duchies": {
+        "harbor_district": {
+          "name": "Lantern Coast",
+          "kingdom": "harbor_country"
+        }
+      },
+      "kingdoms": {
+        "harbor_country": {
+          "name": "Reed Country",
+          "empire": "harbor_horizon"
+        }
+      },
+      "empires": {
+        "harbor_horizon": {
+          "name": "The Wide Horizon"
+        }
+      },
+      "scripted": [],
+      "straits": [],
+      "crossingClasses": {},
+      "starts": [
+        "harbor_household"
+      ],
+      "hidden": false,
+      "systems": {
+        "great_holy_wars": true,
+        "papacy": false
+      }
+    }
+  }
+}

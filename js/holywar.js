@@ -2982,6 +2982,7 @@ window.FB = window.FB || {};
     if (!FB.systemAvailable(state, 'great_holy_wars') ||
         state && state.greatHolyWar && !enabledCampaign(state)) return null;
     FB.ensureGreatHolyWar(state);
+    if (FB.prepareOpeningHolyWarCalls) FB.prepareOpeningHolyWarCalls(state);
     trackSacredLosses(state);
     if (state.greatHolyWar) return;
     var ids = FB.religionIds(state, false).filter(function (religionId) {
@@ -2990,6 +2991,7 @@ window.FB = window.FB || {};
     }).sort();
     for (var i = 0; i < ids.length; i++) {
       var religionId = ids[i], conf = config(state, religionId);
+      if (FB.openingHolyWarCallPending && FB.openingHolyWarCallPending(state, religionId)) continue;
       if (!conf || !dateReached(state, conf.minDate)) continue;
       var history = ensureHistory(state);
       history.unlockChecked[religionId] = true;
@@ -3168,6 +3170,7 @@ window.FB = window.FB || {};
     if (!FB.systemAvailable(state, 'great_holy_wars') ||
         state && state.greatHolyWar && !enabledCampaign(state)) return null;
     FB.ensureGreatHolyWar(state);
+    if (FB.prepareOpeningHolyWarCalls) FB.prepareOpeningHolyWarCalls(state);
     var sacredControlChanged = trackSacredLosses(state);
     var campaign = enabledCampaign(state);
     if (!campaign) {
@@ -3184,6 +3187,10 @@ window.FB = window.FB || {};
       var unlockIds = [];
       for (var candidateIndex = 0; candidateIndex < allReligionIds.length; candidateIndex++) {
         var candidateId = allReligionIds[candidateIndex];
+        if (FB.openingHolyWarCallPending && FB.openingHolyWarCallPending(state, candidateId)) {
+          idleCheckNextTurn = Math.min(idleCheckNextTurn, state.turn + 1);
+          continue;
+        }
         if (history.unlockChecked[candidateId]) continue;
         var candidateConf = config(state, candidateId);
         if (!candidateConf) continue;
@@ -3229,6 +3236,7 @@ window.FB = window.FB || {};
         }
       }
       for (var religionId in history.headState) {
+        if (FB.openingHolyWarCallPending && FB.openingHolyWarCallPending(state, religionId)) continue;
         var conf = config(state, religionId), hs = history.headState[religionId];
         if (!conf || history.firstLaunched[religionId] || !hs ||
             !isFinite(hs.restoredTurn)) continue;

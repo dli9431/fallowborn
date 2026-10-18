@@ -203,6 +203,12 @@ holy_war declares a religion, target kingdom and firstDate/lastDate. Optional hi
 
 Technology impact: negotiated_historical_partition and dated_holy_war_calls use none. Possession and current political or religious consent are their constraints; ordinary conquest, unpartitioned rule and religious decisions remain available without research. Existing troop and equipment technology gates remain authoritative.
 
+Opted-in opening calls
+
+The holy_war factory also accepts openingCall schema 1 through the ordinary JSON path. Fresh attachment captures the current head's realm, person and generation and evaluates the finite existing date window before automatic religious dispatch. Eligible AI heads use the canonical call; player heads keep the shared reviewed call/refusal flow. Missing or changed authority, ineligible targets, conflicting campaigns and expiry close the opening truthfully. An already committed matching call is bound once by its canonical identity. An early or player-pending preparation reserves only that faith's automatic opening opportunity, with no global campaign reservation or new military authority.
+
+The optional saved preparation has pending/called/declined/unavailable dispositions and references the existing outer campaign fields. Restore validates it without evaluating, calling, inventing a win or attaching a missing story. Existing dated stories without openingCall keep their behavior. The dated_holy_war_calls none technology decision includes this adapter because institutional eligibility supplies its constraints; ordinary unit and army technology rules remain authoritative. The independent harbor and upland JSON examples differ in current head, hostile target and immediate versus delayed window. This capability creates no personal vows, mobile participation or extra campaign ledger.
+
 Bilateral tribute and civilian evacuation
 
 js/story_agreements.js registers tribute_cession and civilian_migration factories before the data stories attach. Campaign data registration resolves declared dependencies before registering a dependent story. Both types use the shared card, quote, review, apply, day and save validation lifecycle; UI reads remain detached from mutations. Opening households are initialized by bookmark_setup before story init, with host-scoped appointments deferred until the owning initializer creates its hosts.
