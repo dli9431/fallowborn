@@ -5,7 +5,7 @@ const {openGame}=require('../support/game/navigation');
 const {beginBookmark}=require('../support/game/bookmark-acceptance');
 const {dependsOnRuntime}=require('../support/runtime-dependencies');
 const examples={fiber:require('../fixtures/authoring/production-fiber.json'),iron:require('../fixtures/authoring/production-iron.json')};
-dependsOnRuntime(__filename,['data/relay_services.js','js/relay_services.js',
+dependsOnRuntime(__filename,['data/buildings_seasonal_pasture.js','data/production_seasonal_pasture.js','data/relay_services.js','js/relay_services.js',
   'data/building_profiles.js','js/building_profiles.js','data/production_economy.js','js/production_economy.js','index.html','data/production.js','data/technology.js','js/production.js','js/site_resources.js',
   'js/world.js','js/title_ids.js','js/mods.js','js/main.js','js/save.js','js/save_v4.js','js/lordships.js','js/treasury.js',
   'js/politics.js','js/economy.js','js/model.js','js/technology.js','js/ui_modals.js','js/ui_misc.js','js/starts.js']);
@@ -254,5 +254,5 @@ test('a mismatched live water claim cannot substitute for the reserved recipe in
 test('bundled released worlds have no production assignment or inferred material inventory',async function({page},info){
   await openGame(page,info);
   expect(await page.evaluate(function(){return {goods:Object.keys(FBDATA.productionGoods),recipes:Object.keys(FBDATA.productionRecipes),
-    plans:['867','1066'].map(function(id){return FB.compileProduction(FB.bookmark(id));})};})).toEqual({goods:[],recipes:[],plans:[{sites:[],errors:[]},{sites:[],errors:[]}]});
+    plans:['867','1066'].map(function(id){return FB.compileProduction(FB.bookmark(id));})};})).toEqual({goods:['parent_farm_allocation','pasture_provisions'],recipes:['prepare_pasture_allocation'],plans:[{sites:[],errors:[]},{sites:[],errors:[]}]});
 });

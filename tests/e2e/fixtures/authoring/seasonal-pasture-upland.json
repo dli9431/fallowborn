@@ -1,0 +1,389 @@
+{
+  "name": "Fictional upland parent farm allocation",
+  "geographies": {
+    "pasture_upland_land": {
+      "bounds": {
+        "lonMin": 0,
+        "lonMax": 6,
+        "latMin": 0,
+        "latMax": 5
+      },
+      "land": [
+        [
+          0.5,
+          0.5,
+          5.5,
+          0.5,
+          5.5,
+          4.5,
+          0.5,
+          4.5
+        ]
+      ],
+      "gridWidth": 240,
+      "seas": [],
+      "rivers": [],
+      "defaultLayout": null,
+      "provinces": [
+        {
+          "id": "pasture_hill",
+          "x": 1.5,
+          "y": 1.5,
+          "terrain": "hills"
+        },
+        {
+          "id": "hill_buyer",
+          "x": 3.1,
+          "y": 1.5,
+          "terrain": "hills"
+        }
+      ],
+      "sites": {
+        "hillstead": {
+          "x": 1.5,
+          "y": 1.5
+        },
+        "valley_store": {
+          "x": 3.1,
+          "y": 1.5
+        }
+      }
+    }
+  },
+  "siteResourceProfiles": {
+    "pasture_places": {
+      "name": "Finite grazing places",
+      "kind": "access",
+      "unit": "grazing",
+      "capacity": 1,
+      "periodDays": 30
+    }
+  },
+  "enterprises": {
+    "upland_parent_farm": {
+      "name": "Existing hill farm",
+      "icon": "*",
+      "cost": 20,
+      "profession": "farmer",
+      "yield": 4,
+      "laborPay": 1,
+      "terrains": [
+        "hills"
+      ],
+      "desc": "A fictional operating farm. No livestock count or people are awarded by seasonal processing."
+    }
+  },
+  "enterpriseMechanics": {
+    "upland_parent_farm": {
+      "output": {
+        "provisions": 1
+      },
+      "typedProduction": {
+        "parent_farm_allocation": {
+          "marketGoodId": "provisions",
+          "marketUnits": 12
+        }
+      }
+    }
+  },
+  "productionExchangeProfiles": {
+    "sell_pasture_output": {
+      "goodId": "pasture_provisions",
+      "marketGoodId": "provisions",
+      "basePrice": 8,
+      "mode": "market",
+      "quantityLimit": 1,
+      "budget": 12
+    }
+  },
+  "startScenarios": [
+    {
+      "id": "pasture_upland_ruler",
+      "name": "Farm holder",
+      "desc": "A fictional farm holder.",
+      "intro": "Review the existing farm and grazing rights.",
+      "tier": 5,
+      "profession": "noble",
+      "gold": 200,
+      "prestige": 0,
+      "piety": 0,
+      "bookmarkIds": [
+        "pasture_upland"
+      ],
+      "eras": [
+        "early_medieval"
+      ],
+      "alwaysUnlocked": true,
+      "rulerRealmId": "hill_court",
+      "governmentForm": "regnum",
+      "fixedProvinceId": "pasture_hill",
+      "characterName": "Ivo Reed",
+      "sex": "m",
+      "startCulture": "frankish",
+      "startReligion": "catholic",
+      "onboarding": "ruler",
+      "familyPresets": {
+        "standard": {
+          "name": "Established household",
+          "diff": "age 24"
+        }
+      }
+    }
+  ],
+  "bookmarks": {
+    "pasture_upland": {
+      "id": "pasture_upland",
+      "name": "Fictional cool upland",
+      "desc": "Independent simulation accounts, not historical infrastructure.",
+      "date": {
+        "year": 950,
+        "season": 2,
+        "day": 1
+      },
+      "era": "early_medieval",
+      "geography": "pasture_upland_land",
+      "settlementLayout": null,
+      "religiousHeads": {},
+      "localInstitutions": {},
+      "stories": [],
+      "starts": [
+        "pasture_upland_ruler"
+      ],
+      "scripted": [],
+      "straits": [],
+      "crossingClasses": {},
+      "provinces": [
+        {
+          "id": "pasture_hill",
+          "name": "Farm county",
+          "realm": "hill_court",
+          "culture": "frankish",
+          "religion": "catholic",
+          "dev": 5,
+          "settlements": [
+            {
+              "site": "hillstead",
+              "name": "Parent farm",
+              "kind": "village"
+            }
+          ]
+        },
+        {
+          "id": "hill_buyer",
+          "name": "Buyer county",
+          "realm": "valley_court",
+          "culture": "frankish",
+          "religion": "catholic",
+          "dev": 3,
+          "settlements": [
+            {
+              "site": "valley_store",
+              "name": "Buyer store",
+              "kind": "village"
+            }
+          ]
+        }
+      ],
+      "realms": [
+        {
+          "id": "hill_court",
+          "name": "Farm court",
+          "capital": "pasture_hill",
+          "color": "#aa7944",
+          "aggression": 0,
+          "rank": 2,
+          "government": "regnum",
+          "ruler": {
+            "name": "Ivo Reed",
+            "culture": "frankish",
+            "born": 918,
+            "mar": 6,
+            "trait": "patient"
+          }
+        },
+        {
+          "id": "valley_court",
+          "name": "Buyer court",
+          "capital": "hill_buyer",
+          "color": "#779955",
+          "aggression": 0,
+          "rank": 1,
+          "government": "regnum",
+          "ruler": {
+            "name": "Odo Vale",
+            "culture": "frankish",
+            "born": 920,
+            "mar": 5,
+            "trait": "patient"
+          }
+        }
+      ],
+      "duchies": {},
+      "kingdoms": {},
+      "empires": {},
+      "climate": {
+        "zone": "arid",
+        "provinces": {}
+      },
+      "siteResourceAssignments": [
+        {
+          "id": "farm_grazing",
+          "profileId": "pasture_places",
+          "countyId": "pasture_hill",
+          "siteId": "hillstead",
+          "suitability": {
+            "grazing": true
+          },
+          "rights": {
+            "kind": "holder"
+          }
+        }
+      ],
+      "openingInfrastructure": {
+        "version": 1,
+        "placements": [
+          {
+            "countyId": "pasture_hill",
+            "siteId": "hillstead",
+            "buildingId": "shieling",
+            "condition": "standing"
+          },
+          {
+            "countyId": "hill_buyer",
+            "siteId": "valley_store",
+            "buildingId": "granary",
+            "condition": "standing"
+          }
+        ]
+      },
+      "productionSites": [
+        {
+          "id": "farm_outpost",
+          "countyId": "pasture_hill",
+          "siteId": "hillstead",
+          "buildingId": "shieling",
+          "recipeIds": [
+            "prepare_pasture_allocation"
+          ],
+          "openingLots": []
+        },
+        {
+          "id": "buyer_store",
+          "countyId": "hill_buyer",
+          "siteId": "valley_store",
+          "buildingId": "granary",
+          "recipeIds": [
+            "prepare_pasture_allocation"
+          ],
+          "openingLots": []
+        }
+      ],
+      "productionProducerAssignments": [
+        {
+          "id": "parent_share",
+          "profileId": "upland_parent_allocation",
+          "siteId": "farm_outpost"
+        }
+      ],
+      "productionExchangeAssignments": [
+        {
+          "id": "pasture_sale",
+          "profileId": "sell_pasture_output",
+          "fromSiteId": "farm_outpost",
+          "toSiteId": "buyer_store"
+        }
+      ],
+      "buildingSeasonAssignments": [
+        {
+          "id": "pasture_term",
+          "profileId": "upland_cool_window",
+          "operationId": null,
+          "productionSiteId": "farm_outpost",
+          "resources": [
+            {
+              "sourceId": "farm_grazing",
+              "amount": 1
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "buildings": {
+    "shieling": {
+      "name": "Cool pasture outpost",
+      "desc": "A distinct imported geographic and local-season policy.",
+      "icon": "*",
+      "role": "industry",
+      "cost": 22,
+      "upkeep": 1,
+      "devMin": 0,
+      "maxCounty": 1,
+      "aiBuildOrder": 34,
+      "settlementDraw": false,
+      "dev": 0,
+      "pop": 0,
+      "prestige": 0,
+      "applicability": {
+        "yearMin": 900,
+        "yearMax": 1200,
+        "countyIds": [
+          "pasture_hill"
+        ]
+      }
+    }
+  },
+  "productionProducerProfiles": {
+    "upland_parent_allocation": {
+      "enterpriseType": "upland_parent_farm",
+      "goodId": "parent_farm_allocation",
+      "marketGoodId": "provisions",
+      "marketUnits": 12,
+      "share": 0.5,
+      "maxQuantity": 1
+    }
+  },
+  "buildingSeasonProfiles": {
+    "upland_cool_window": {
+      "seasonKinds": [
+        "cool_season"
+      ],
+      "periodDays": 30,
+      "maxDays": 12,
+      "care": true,
+      "stockLives": [
+        {
+          "goodId": "parent_farm_allocation",
+          "days": 6
+        },
+        {
+          "goodId": "pasture_provisions",
+          "days": 8
+        }
+      ],
+      "benefit": null
+    }
+  },
+  "productionRecipes": {
+    "prepare_pasture_allocation": {
+      "name": "Prepare cool-season allocation",
+      "desc": "One existing allocated unit with two paid workdays.",
+      "inputs": [
+        {
+          "goodId": "parent_farm_allocation",
+          "quantity": 1
+        }
+      ],
+      "outputs": [
+        {
+          "goodId": "pasture_provisions",
+          "quantity": 1
+        }
+      ],
+      "workDays": 2,
+      "workPrice": 3,
+      "requiresTech": [],
+      "impactReviewId": "seasonal_parent_farm"
+    }
+  }
+}
