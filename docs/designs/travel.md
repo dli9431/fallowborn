@@ -377,3 +377,7 @@ Arrival at the declared destination emits travel_arrival through the shared even
 Authoring contracts
 
 Travel purpose identity is independent of its algorithm. travelRules declares the shared journey kind, encounter purpose and arrival event, while travelDefaults selects automatic trade, social and scheduled-games entry points. New purpose ids keep their own saved history and use the existing cost, route, patron, settlement and stale-journey checks. The complete field contract is in docs/MODDING.md.
+
+Named companions on ordinary journeys
+
+An opted-in household party can start an ordinary sites-mode journey for exact separately consenting people. The travel record carries householdPartyId and keeps the only route and movement clock. Named companions project that journey through FB.characterLocation while their permanent FB.characterResidence stays unchanged. Actual county crossings update bounded interruption checkpoints. Cancellation preserves reached position using partyInterrupted rather than implying arrival or a return home. The story review owns group return confirmation; direct solo return controls cannot bypass it. A normal destination stay retains its prepaid return fare and saved speed, while an interrupted recovery route prices current provisions and transport separately. Selective settlement uses the existing eligibility gate and changes only the accompanying people, retaining excluded permanent residences. See docs/designs/household-parties.md for consent, care, partial failures and optional save records.

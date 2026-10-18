@@ -104,3 +104,7 @@ The household_party story type supports ordinary JSON declarations for bounded n
 Home authority and conserved command funding
 
 The expedition-authority-harbor.json and expedition-authority-dune.json files are complete independent ordinary JSON imports. Their home courts differ in capital versus territory presence and whether existing civil appointments can delegate; the commands differ in their private-contribution policy and per-transfer limit. governmentForms.homeAuthority, authorityOffices.homePowers and mobile.funding share detached definition validation and the live canonical player/AI consumers. These policies supply no new people, offices, income or historical evidence. The public schema and explicit-account limits are documented in docs/MODDING.md.
+
+Named ordinary journeys
+
+household_party.journey selects an existing ordinary sites-mode destination through typed JSON. household-journey-harbor.json and household-journey-upland.json are independent complete imports with different fares, destinations and adult versus parent-care behavior. Reviewed group departure, personal withdrawal, explicit renewed consent, funded recovery and selective eligible settlement use the ordinary movement and residence owners. Version-1 plans remain valid; optional version-2 movement and explicit character residences are strictly validated without restore dispatch. Camps and refuge remain separate contracts. Exact fields and operations are in docs/MODDING.md.

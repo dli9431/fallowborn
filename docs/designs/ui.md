@@ -3956,3 +3956,7 @@ The existing mobile command sheet adds retained selectors for the source column,
 Command funding reviews
 
 The shared mobile sheet exposes separate Contribute private funds and Grant public funds cards only under the command's declared funding policy. It shows the selected paying account, command recipient and exact contribution before confirmation; a missing public account remains an explicit funding blocker. The private household purse is identified separately from public treasuries. Amount/source controls, list scroll, disclosures and originating focus survive Back, Escape and the outcome Continue route through the existing modal history. A changed account or mandate rejects confirmation without a transfer.
+
+Named journey decisions
+
+The existing household story sheet shows each traveller's actual county alongside individual consent. Departure, separation, renewed consent, return and settlement use the shared review and confirmation flow with exact affected names, exclusions and private cost. A prepaid return displays zero additional cost; interruption recovery displays its new route cost. Settlement remains disabled until ordinary residence and work requirements are met. Back, Escape and Close retain the same story, list scroll and originating Deeds focus. Camp admission is not offered by this ordinary-journey adapter.

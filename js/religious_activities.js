@@ -43,9 +43,11 @@
       (!d.openings.length || d.openings.some(function (o) { return o.id === s.start.id && o.revision === (s.start.revision || 'baseline'); }));
   }
   function at(s, cid) {
+    if (FB.householdParties && FB.householdParties.journeys && FB.householdParties.journeys.location(s,cid)) return FB.characterLocation(s,s.chars[cid]);
     return cid === s.player.charId ? (s.player.travel ? s.player.travel.currentId : s.player.provinceId) : FB.characterResidence(s, s.chars[cid]);
   }
   function available(s, c) {
+    if (c && FB.householdParties && FB.householdParties.journeys && FB.householdParties.journeys.location(s,c.id)) return false;
     return c && !c.dead && !c.captive && !c.exiled && (c.health === undefined || c.health > 0) && FB.ageOf(c, s.date.year) >= 16 &&
       !(FB.intrigueCaptivityOf && FB.intrigueCaptivityOf(s, c.id)) &&
       !(FB.justiceCustodyOf && FB.justiceCustodyOf(s, c.id)) &&

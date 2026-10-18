@@ -2105,6 +2105,7 @@ window.FB = window.FB || {};
     const out = [], seen = {};
     function add(c) {
       if (!c || c.dead || seen[c.id]) return;
+      if (FB.householdParties && FB.householdParties.journeys && FB.householdParties.journeys.away(state,c.id)) return;
       seen[c.id] = 1;
       out.push(c);
     }
@@ -2366,6 +2367,7 @@ window.FB = window.FB || {};
 
   FB.educationStudentEligible = function (state, c) {
     if (!c || c.dead) return false;
+    if (FB.householdParties && FB.householdParties.journeys && FB.householdParties.journeys.away(state,c.id)) return false;
     const age = FB.ageOf(c, state.date.year);
     if (age < 6 || age >= 16) return false;
     if (c.id === state.player.charId) return true;
@@ -5396,6 +5398,7 @@ window.FB = window.FB || {};
     const me = playerChar(state);
     for (const c of FB.householdMembers(state)) {
       if (c.id === me.id || assigned[c.id]) continue; // the player's own work is their daily focus
+      if (FB.householdParties && FB.householdParties.journeys && FB.householdParties.journeys.away(state,c.id)) continue;
       const age = FB.ageOf(c, state.date.year);
       const career = FB.careerOf(state, c);
       const def = career && FBDATA.careers[career.profession];
@@ -5458,6 +5461,7 @@ window.FB = window.FB || {};
     let mutualCare = 0;
     for (const c of FB.householdMembers(state)) {
       if (!c || c.dead || FB.ageOf(c, state.date.year) < 16 ||
+          (FB.householdParties && FB.householdParties.journeys && FB.householdParties.journeys.away(state,c.id)) ||
           FB.characterResidence(state, c) !== state.player.provinceId ||
           (c.id === state.player.charId && state.player.travel)) continue;
       mutualCare = Math.max(mutualCare, Number(FB.doctrineValue(

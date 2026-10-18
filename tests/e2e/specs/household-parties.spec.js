@@ -5,8 +5,9 @@ const {openGame}=require('../support/game/navigation');
 const {beginBookmark}=require('../support/game/bookmark-acceptance');
 const {dependsOnRuntime}=require('../support/runtime-dependencies');
 const examples={harbor:require('../fixtures/authoring/household-party-harbor.json'),upland:require('../fixtures/authoring/household-party-upland.json')};
+const journeys={harbor:require('../fixtures/authoring/household-journey-harbor.json'),upland:require('../fixtures/authoring/household-journey-upland.json')};
 dependsOnRuntime(__filename,['index.html','data/technology.js','data/starts.js','data/mobile_confederations.js','data/travel.js','js/story_household_party.js','js/stories.js',
-  'js/story_household.js','js/story_expedition_participation.js','js/mobile_confederations.js','js/mobile_command.js',
+  'js/story_household.js','js/household_party_travel.js','js/story_expedition_participation.js','js/mobile_confederations.js','js/mobile_command.js',
   'js/mods.js','js/world.js','js/starts.js','js/bookmark_setup.js','js/economy.js','js/model.js','js/items.js',
   'js/agency.js','js/justice.js','js/intrigue.js','js/travel.js','js/save.js','js/save_v4.js','js/ui_misc.js','js/main.js']);
 
@@ -20,6 +21,267 @@ async function start(page,info,label,modified) {
   await page.waitForFunction(function (prefix) { return window.FB && FB.game && FB.game.bootReady && FBDATA.bookmarks[prefix+'_world']; },prefix);
   await beginBookmark(page,info,prefix+'_world',prefix+'_household');
 }
+
+async function prepareJourney(page,info,label) {
+  await start(page,info,label,journeys[label]);
+  return page.evaluate(function(label) {
+    const s=FB.state,P=FB.householdParties,id=label+'_party',actor=s.player.charId,spouse=FB.spousesOf(s,s.chars[actor])[0];
+    function act(action,who,person,care){return P.commit(s,P.review(s,id,action,who,person,care));}
+    if(!act('invite',actor,actor)||!act('accept',actor,actor)||!act('invite',actor,spouse.id))throw new Error('Association setup failed');
+    FB.stories.get(id).day(s,s.stories[id]);
+    if(label==='upland') {
+      const child=FB.householdMembers(s).filter(function(c){return FB.ageOf(c,s.date.year)<16;})[0];
+      if(!child || !act('invite',actor,child.id,actor)||!act('accept',actor,child.id,actor))throw new Error('Care consent setup failed');
+    }
+    return {actor:actor,spouse:spouse.id};
+  },label);
+}
+
+// Tick only actual ordinary route legs; no simulated years or invented arrival.
+async function arriveJourney(page) {
+  await page.evaluate(function() {
+    const s=FB.state;
+    for(let i=0;i<16 && s.player.travel && s.player.travel.phase!=='arrived';i++) {
+      s.turn++;s.player.travel.legDaysLeft=1;FB.travelTick(s);
+    }
+    if(!s.player.travel || s.player.travel.phase!=='arrived')throw new Error('Bounded journey did not arrive');
+    FB.travelCapstoneDone(s);
+    FB.stories.get(s.player.travel.householdPartyId).day(s,s.stories[s.player.travel.householdPartyId]);
+  });
+}
+
+for(const label of ['harbor','upland']) {
+  test(label+' imports an optional journey and carries only separately consenting named people on the real road',async function({page},info) {
+    await prepareJourney(page,info,label);
+    const result=await page.evaluate(function(label) {
+      const s=FB.state,P=FB.householdParties,id=label+'_party',t=s.stories[id],actor=s.player.charId;
+      const before=JSON.stringify(s),rng=FB.getRngState(),uid=FB.getUidCounter(),q=P.review(s,id,'depart_journey',actor);
+      const pure=before===JSON.stringify(s)&&rng===FB.getRngState()&&uid===FB.getUidCounter(),gold=s.player.gold;
+      const people=JSON.stringify([s.population,s.armies,s.owner,s.holder,Object.keys(s.chars)]);
+      const first=P.commit(s,q),again=!P.commit(s,q),paid=gold-s.player.gold===q.cost;
+      const exact=t.version===2&&t.journey.members.length===2&&t.journey.members.every(function(m){return q.people.includes(m.personId);});
+      const absent=FB.householdMembers(s).filter(function(c){return !q.people.includes(c.id);}).every(function(c){
+        return !P.journeys.location(s,c.id)&&FB.characterResidence(s,c)===s.player.provinceId;
+      });
+      const canonical=t.journey.members.every(function(m){return FB.characterLocation(s,s.chars[m.personId])===s.player.travel.currentId;});
+      return {pure:pure,allowed:q.allowed,first:first,again:again,paid:paid,exact:exact,absent:absent,canonical:canonical,
+        noHomeLabor:q.people.every(function(id){return !FB.householdWorkers(s).some(function(c){return c.id===id;});}),
+        conserved:people===JSON.stringify([s.population,s.armies,s.owner,s.holder,Object.keys(s.chars)]),
+        none:FBDATA.techImpactReviews.features.household_party_journeys.mode};
+    },label);
+    expect(result).toEqual({pure:true,allowed:true,first:true,again:true,paid:true,exact:true,absent:true,canonical:true,noHomeLabor:true,conserved:true,none:'none'});
+    await arriveJourney(page);
+    expect(await page.evaluate(function(){const s=FB.state,t=s.stories[s.player.travel.householdPartyId];return t.journey.members.every(function(m){
+      return FB.characterLocation(s,s.chars[m.personId])===s.player.travel.destinationId && FB.characterResidence(s,s.chars[m.personId])===t.journey.homeId;
+    });})).toBe(true);
+  });
+}
+
+test('journey candidates reject bad kinds, unknown references and extra fields without publication',async function({page},info) {
+  await openGame(page,info);
+  const result=await page.evaluate(function(source) {
+    return [function(d){d.kind='camp';},function(d){d.travelSiteId='missing';},function(d){d.extra=true;},
+      function(d,input){input.travelSites[0].provinceId='missing';},function(d,input){input.travelPurposes.harbor_family_visit.mode='capitals';},
+      function(d,input){input.travelRules.harbor_family_visit.kind='service';}].map(function(change){
+      const input=JSON.parse(JSON.stringify(source));change(input.storyInstances.harbor_party.journey,input);
+      const before=JSON.stringify([FB.state,FBDATA,input]),rng=FB.getRngState(),uid=FB.getUidCounter();
+      return FB.mods.validate(input).length>0&&before===JSON.stringify([FB.state,FBDATA,input])&&rng===FB.getRngState()&&uid===FB.getUidCounter();
+    });
+  },journeys.harbor);
+  expect(result).toEqual(Array(6).fill(true));
+});
+
+test('stale funds, custody, remote residence and independent commitments prevent atomic group departure',async function({page},info) {
+  await prepareJourney(page,info,'harbor');
+  const result=await page.evaluate(function(){
+    const base=FB.state,P=FB.householdParties,id='harbor_party',actor=base.player.charId,spouse=FB.spousesOf(base,base.chars[actor])[0].id;
+    return [function(s){s.player.gold=0;},function(s){s.chars[spouse].captive=true;},
+      function(s){s.chars[spouse].homeProvinceId='harbor_gardens';},function(s){s.chars[spouse].travel={currentId:'harbor_gardens'};}].map(function(change){
+      const s=JSON.parse(JSON.stringify(base)),q=P.review(s,id,'depart_journey',actor);change(s);
+      const before=JSON.stringify(s),rng=FB.getRngState(),uid=FB.getUidCounter();
+      return !P.commit(s,q)&&!P.review(s,id,'depart_journey',actor).allowed&&before===JSON.stringify(s)&&rng===FB.getRngState()&&uid===FB.getUidCounter();
+    });
+  });
+  expect(result).toEqual(Array(4).fill(true));
+});
+
+test('cancellation retains the reached county and recovery pays once for actual survivors',async function({page},info) {
+  await prepareJourney(page,info,'upland');
+  const result=await page.evaluate(function(){
+    const s=FB.state,P=FB.householdParties,id='upland_party',actor=s.player.charId;
+    P.commit(s,P.review(s,id,'depart_journey',actor));s.turn++;s.player.travel.legDaysLeft=1;FB.travelTick(s);
+    const reached=s.player.travel.currentId,home=s.player.provinceId,people=JSON.stringify([s.population,s.armies,s.owner,s.holder]);
+    FB.travelCancel(s,null,true);
+    const truthful=reached!==home&&FB.travelLocation(s).id===reached&&s.stories[id].journey.members.every(function(m){return P.journeys.location(s,m.personId)===reached;});
+    const noSettlement=FB.travelSettlementEligible(s)!==true;
+    const q=P.review(s,id,'party_return',actor),gold=s.player.gold,first=P.commit(s,q),paid=gold-s.player.gold===q.cost&&q.cost>0,again=!P.commit(s,q);
+    for(let i=0;i<16 && s.player.travel;i++){s.turn++;s.player.travel.legDaysLeft=1;FB.travelTick(s);}
+    return {truthful:truthful,noSettlement:noSettlement,first:first,paid:paid,again:again,home:!s.player.travel&&s.stories[id].journey.members.every(function(m){return m.status==='returned'&&FB.characterLocation(s,s.chars[m.personId])===home;}),
+      conserved:people===JSON.stringify([s.population,s.armies,s.owner,s.holder])};
+  });
+  expect(result).toEqual({truthful:true,noSettlement:true,first:true,paid:true,again:true,home:true,conserved:true});
+});
+
+test('ordinary funded return retains its stay gate and original travel speed without paying a second fare',async function({page},info) {
+  await prepareJourney(page,info,'harbor');
+  await page.evaluate(function(){const s=FB.state,P=FB.householdParties;P.commit(s,P.review(s,'harbor_party','depart_journey',s.player.charId));});
+  await arriveJourney(page);
+  const result=await page.evaluate(function(){
+    const s=FB.state,P=FB.householdParties,actor=s.player.charId;
+    const early=!P.review(s,'harbor_party','party_return',actor).allowed,days=s.player.travel.legDays;
+    s.turn+=FBDATA.balance.travelMinStayDays;s.player.householdStandards={};
+    const q=P.review(s,'harbor_party','party_return',actor),gold=s.player.gold;
+    return {early:early,prepaid:q.road.prepaid,cost:q.cost,speed:q.road.legDays===days,applied:P.commit(s,q),unpaid:s.player.gold===gold};
+  });
+  expect(result).toEqual({early:true,prepaid:true,cost:0,speed:true,applied:true,unpaid:true});
+});
+
+test('an interrupted checkpoint restores without arrival, payment or relocation and requires its exact carrier',async function({page},info) {
+  await prepareJourney(page,info,'upland');
+  const result=await page.evaluate(function(){
+    const s=FB.state,P=FB.householdParties,id='upland_party';P.commit(s,P.review(s,id,'depart_journey',s.player.charId));
+    s.turn++;s.player.travel.legDaysLeft=1;FB.travelTick(s);FB.travelCancel(s,null,true);
+    const source=JSON.parse(FB.save.serialize()),facts=JSON.stringify([s.stories[id],s.player.travel,s.player.provinceId,s.player.gold]);
+    FB.save.restore(source);
+    const restored=facts===JSON.stringify([FB.state.stories[id],FB.state.player.travel,FB.state.player.provinceId,FB.state.player.gold]);
+    const invalid=JSON.parse(JSON.stringify(source));delete invalid.state.player.travel.householdPartyId;
+    const before=JSON.stringify(FB.state);let failed=false;try{FB.save.restore(invalid);}catch(error){failed=true;}
+    return {restored:restored,blocked:failed&&before===JSON.stringify(FB.state),
+      noWork:FB.state.player.travel.partyInterrupted===true&&FB.travelSettlementEligible(FB.state)!==true};
+  });
+  expect(result).toEqual({restored:true,blocked:true,noWork:true});
+});
+
+test('adult withdrawal preserves location and cannot be overridden by a household return decision',async function({page},info) {
+  await prepareJourney(page,info,'harbor');
+  const result=await page.evaluate(function(){
+    const s=FB.state,P=FB.householdParties,id='harbor_party',actor=s.player.charId,spouse=FB.spousesOf(s,s.chars[actor])[0].id;
+    P.commit(s,P.review(s,id,'depart_journey',actor));s.turn++;s.player.travel.legDaysLeft=1;FB.travelTick(s);
+    const reached=s.player.travel.currentId,split=P.commit(s,P.review(s,id,'separate_person',spouse,spouse));
+    FB.travelCancel(s,null,true);
+    const q=P.review(s,id,'party_return',actor),excluded=!q.people.includes(spouse)&&q.excluded.includes(spouse);
+    const noImpersonation=!P.commit(s,P.review(s,id,'rejoin_person',actor,spouse));
+    const returned=P.commit(s,q);
+    for(let i=0;i<16&&s.player.travel;i++){s.turn++;s.player.travel.legDaysLeft=1;FB.travelTick(s);}
+    return {split:split,excluded:excluded,noImpersonation:noImpersonation,returned:returned,remains:P.journeys.location(s,spouse)===reached,
+      home:FB.travelLocation(s).id===s.player.provinceId};
+  });
+  expect(result).toEqual({split:true,excluded:true,noImpersonation:true,returned:true,remains:true,home:true});
+});
+
+test('parent withdrawal includes the dependent and dependent custody interrupts that care group once',async function({page},info) {
+  await prepareJourney(page,info,'upland');
+  const result=await page.evaluate(function(){
+    const base=FB.state,P=FB.householdParties,id='upland_party',actor=base.player.charId;
+    P.commit(base,P.review(base,id,'depart_journey',actor));
+    const child=base.stories[id].journey.members.filter(function(m){return m.caregiverId;})[0].personId;
+    const split=JSON.parse(JSON.stringify(base)),q=P.review(split,id,'separate_person',actor,actor);
+    const together=q.people.includes(child)&&P.commit(split,q)&&split.stories[id].journey.members.every(function(m){return m.status==='withdrawn';});
+    const held=JSON.parse(JSON.stringify(base));held.chars[child].captive=true;
+    FB.stories.get(id).day(held,held.stories[id]);const once=JSON.stringify(held.stories[id]);FB.stories.get(id).day(held,held.stories[id]);
+    return {together:together,interrupted:held.stories[id].journey.status==='interrupted',separated:held.stories[id].journey.members.every(function(m){return m.status==='separated';}),
+      once:once===JSON.stringify(held.stories[id]),noMove:held.player.travel.currentId===held.player.provinceId};
+  });
+  expect(result).toEqual({together:true,interrupted:true,separated:true,once:true,noMove:true});
+});
+
+test('eligible settlement moves the present parent and child and preserves excluded spouse residence and all property',async function({page},info) {
+  await prepareJourney(page,info,'upland');
+  await page.evaluate(function(){const s=FB.state,P=FB.householdParties;P.commit(s,P.review(s,'upland_party','depart_journey',s.player.charId));});
+  await arriveJourney(page);
+  const result=await page.evaluate(function(){
+    const s=FB.state,P=FB.householdParties,id='upland_party',actor=s.player.charId,spouse=FB.spousesOf(s,s.chars[actor])[0],home=s.player.provinceId;
+    const dest=s.player.travel.destinationId,early=!P.review(s,id,'party_settle',actor).allowed;
+    s.turn+=FBDATA.balance.travelSettleOfferDays;s.player.travel.workEvents=FBDATA.balance.travelSettleWorkEvents;
+    const property=JSON.stringify([s.player.holdings||null,s.player.enterprises||null,s.population,s.owner,s.holder]);
+    const q=P.review(s,id,'party_settle',actor),done=P.commit(s,q);
+    const answer={early:early,done:done,home:s.player.provinceId===dest,noTravel:!s.player.travel,spouse:FB.characterResidence(s,spouse)===home,
+      movers:s.stories[id].journey.members.every(function(m){return m.status==='settled'&&FB.characterResidence(s,s.chars[m.personId])===dest;}),
+      property:property===JSON.stringify([s.player.holdings||null,s.player.enterprises||null,s.population,s.owner,s.holder]),again:!P.commit(s,q),
+      excluded:q.excluded.includes(spouse.id)};
+    const source=JSON.parse(FB.save.serialize());FB.save.restore(source);
+    answer.restored=FB.state.player.provinceId===dest&&FB.characterResidence(FB.state,FB.state.chars[spouse.id])===home;
+    return answer;
+  });
+  expect(result).toEqual({early:true,done:true,home:true,noTravel:true,spouse:true,movers:true,property:true,again:true,excluded:true,restored:true});
+});
+
+test('matching saves preserve journey facts and forged or erased carriers fail before state adoption',async function({page},info) {
+  await prepareJourney(page,info,'harbor');
+  const result=await page.evaluate(function(){
+    const s=FB.state,P=FB.householdParties,id='harbor_party';P.commit(s,P.review(s,id,'depart_journey',s.player.charId));
+    function facts(s){return JSON.stringify([s.stories[id],s.player.travel,s.player.gold,s.stories[id].journey.members.map(function(m){
+      const c=s.chars[m.personId];return [c.id,c.homeProvinceId||null,c.householdResidenceId||null,P.journeys.location(s,c.id)];
+    })]);}
+    const source=JSON.parse(FB.save.serialize()),beforeRestore=facts(s);
+    FB.save.restore(source);
+    const restored=beforeRestore===facts(FB.state);
+    const changes=[function(d){d.state.stories[id].journey.schema=2;},function(d){d.state.stories[id].journey.extra=true;},
+      function(d){d.state.stories[id].journey.members[0].lastPlace='missing';},function(d){d.state.stories[id].journey.members[0].lastTurn=999999;},
+      function(d){d.state.stories[id].journey.members.push(d.state.stories[id].journey.members[0]);},
+      function(d){d.state.stories[id].journey.carrier.startTurn++;},function(d){delete d.state.player.travel;},
+      function(d){delete d.state.player.travel.householdPartyId;},function(d){d.state.player.travel.currentId='missing';},
+      function(d){d.state.player.travel.extra=true;},function(d){d.state.player.travel.partyInterrupted=false;},
+      function(d){d.state.stories[id].journey.members[1].caregiverId=d.state.player.charId;},
+      function(d){d.state.chars[d.state.player.charId].householdResidenceId='missing';}];
+    const rejected=changes.map(function(change){const d=JSON.parse(JSON.stringify(source));change(d);
+      const before=JSON.stringify(FB.state),candidate=JSON.stringify(d),rng=FB.getRngState(),uid=FB.getUidCounter();let failed=false;
+      try{FB.save.restore(d);}catch(error){failed=true;}
+      return failed&&before===JSON.stringify(FB.state)&&candidate===JSON.stringify(d)&&rng===FB.getRngState()&&uid===FB.getUidCounter();});
+    return {restored:restored,rejected:rejected};
+  });
+  expect(result).toEqual({restored:true,rejected:Array(13).fill(true)});
+});
+
+test('death, custody, adulthood and succession preserve the actual surviving subset without adopting an heir carrier',async function({page},info) {
+  await prepareJourney(page,info,'upland');
+  const result=await page.evaluate(function(){
+    const base=FB.state,P=FB.householdParties,id='upland_party',actor=base.player.charId;
+    P.commit(base,P.review(base,id,'depart_journey',actor));
+    const child=base.stories[id].journey.members.filter(function(m){return m.caregiverId;})[0].personId;
+    return ['death','custody','adulthood','succession'].map(function(kind){
+      const s=JSON.parse(JSON.stringify(base)),home=s.player.provinceId,assets=JSON.stringify([s.population,s.armies,s.owner,s.holder]);
+      if(kind==='death'){s.chars[actor].dead=true;s.player.dead=true;}
+      if(kind==='custody')s.chars[actor].captive=true;
+      if(kind==='adulthood')s.chars[child].born=s.date.year-16;
+      if(kind==='succession'){s.player.charId=child;s.player.travel=null;}
+      FB.stories.get(id).day(s,s.stories[id]);
+      const subset=kind==='adulthood' ? s.stories[id].journey.members.filter(function(m){return m.personId===child;})[0].status==='separated' :
+        s.stories[id].journey.members.every(function(m){return m.status!=='following';});
+      return {subset:subset,home:s.stories[id].journey.members.every(function(m){return m.lastPlace===home;}),
+        conserved:assets===JSON.stringify([s.population,s.armies,s.owner,s.holder]),original:s.stories[id].actorId===actor};
+    });
+  });
+  expect(result).toEqual(Array(4).fill({subset:true,home:true,conserved:true,original:true}));
+});
+
+test('journey departure reviews show names and price and Escape restores the same uncommitted choice',async function({page},info) {
+  await prepareJourney(page,info,'harbor');
+  await page.evaluate(function(){FB.ui.showStorySheet('harbor_party');});
+  const depart=page.locator('[data-story-choice]').filter({hasText:'Travel with consenting relatives'});
+  const key=await depart.getAttribute('data-story-choice');
+  const gold=await page.evaluate(function(){return FB.state.player.gold;});
+  await depart.click();
+  await expect(page.locator('#gm-body')).toContainText('Private cost:');
+  await expect(page.locator('#gm-body')).toContainText('Excluded from this decision:');
+  await page.keyboard.press('Escape');
+  await expect(depart).toBeVisible();
+  expect(await page.evaluate(function(){return {gold:FB.state.player.gold,travel:FB.state.player.travel,focus:document.activeElement.getAttribute('data-story-choice')};}))
+    .toEqual({gold:gold,travel:null,focus:key});
+});
+
+test('the same ordinary imported journey seed preserves consent, fare, carrier identity and RNG',async function({page},info) {
+  await start(page,info,'harbor',journeys.harbor);
+  async function depart(){return page.evaluate(function(){
+    const s=FB.state,P=FB.householdParties,id='harbor_party',actor=s.player.charId,spouse=FB.spousesOf(s,s.chars[actor])[0].id;
+    P.commit(s,P.review(s,id,'invite',actor,actor));P.commit(s,P.review(s,id,'accept',actor,actor));
+    P.commit(s,P.review(s,id,'invite',actor,spouse));FB.stories.get(id).day(s,s.stories[id]);
+    P.commit(s,P.review(s,id,'depart_journey',actor));
+    return JSON.stringify([s.stories[id],s.player.travel,s.player.gold,FB.getRngState(),FB.getUidCounter()]);
+  });}
+  const first=await depart();await beginBookmark(page,info,'harbor_world','harbor_household');
+  expect(await depart()).toBe(first);
+});
 
 for (const label of ['harbor','upland']) {
   test(label+' imports a distinct named association with separate consent and no movement or resources',async function ({page},info) {
