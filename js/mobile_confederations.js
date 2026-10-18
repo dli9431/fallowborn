@@ -542,26 +542,83 @@
   M.review = function (s, request) { return S.reviewSource(s, 'coalition_leadership', request); };
   M.commit = function (s, reviewed) { return S.commitSource(s, reviewed); };
 
+  /* Authored openings resolve after bookmark actors exist. Planning never
+     materializes a person, spends a UID or repairs a live technology record. */
+  M.openingPlan = function (s, d) {
+    var t=d.mobile, p=t && FBDATA.mobileProfiles[t.profileId], o=t && t.opening;
+    var plan={allowed:false,bindings:[],units:{},muster:[]}, used=Object.create(null);
+    if (!p || !o || !s.realms[d.id] || !s.realms[d.id].alive || !M.active(s,d.id)) return plan;
+    var bm=FB.campaignBookmark(s), realms={};
+    (bm.realms || []).forEach(function (r) {realms[r.id]=r;});
+    if (M.definitionFaults(d,G.forRealm(s,d.id).id,bm.provinces,realms,null,bm).length ||
+        !s.realms[t.patronRealmId] || !s.realms[t.patronRealmId].alive ||
+        !s.owner[t.origin] || !s.owner[t.target] || FB.realmTerritory(s,d.id).length ||
+        (s.armies || []).some(function (a) {return a.id==='following_'+d.id;}) ||
+        (s.authority.migrations || []).some(function (m) {return m.realmId===d.id && m.status!=='settled' && m.status!=='failed';})) return plan;
+    var occupied={};
+    Object.keys(s.authority.governments).forEach(function (rid) {
+      var row=M.row(s,rid);
+      if (row && row.status==='active') row.members.forEach(function (m) {occupied[m.principal.id]=true;});
+    });
+    for (var binding of o.principals) {
+      var ref=binding.person, c=FB.bookmarkActor(s,ref.actorId);
+      var memberDef=p.members.filter(function (m) {return m.id===binding.memberId;})[0];
+      if (!availablePerson(s,c) || s.date.year-c.born<p.minAge || location(s,{kind:'character',id:c.id})!==t.origin ||
+          used[c.id] || occupied[c.id] ||
+          ref.kind==='realm_ruler' && (FB.realmRulerGeneration(s,d.id)!==ref.generation ||
+            c.name!==s.realms[d.id].ruler.name || c.born!==s.realms[d.id].ruler.born ||
+            c.sex!==s.realms[d.id].ruler.sex || c.culture!==s.realms[d.id].ruler.culture || c.religion!==d.religion) ||
+          FB.isReigningRealmRuler(s,c) && FB.realmIdForRulerCharacter(s,c)!==d.id) return plan;
+      used[c.id]=true;
+      plan.bindings.push({memberId:memberDef.id,characterId:c.id,person:copy(ref)});
+    }
+    var leader=plan.bindings.filter(function (b) {return b.memberId===o.leaderMemberId;})[0];
+    var gates=Object.assign({},s,{realmTech:copy(s.realmTech || {}),realmTechMigration:2,realms:Object.assign({},s.realms)});
+    gates.realms[d.id]=Object.assign({},s.realms[d.id],{ruler:Object.assign({},s.realms[d.id].ruler,
+      {culture:s.chars[leader.characterId].culture})});
+    for (var row of o.muster) {
+      if (!FB.unitClassUnlocked(gates,row.unitId,d.id)) return plan;
+      plan.units[row.unitId]=(plan.units[row.unitId] || 0)+row.count;
+      plan.muster.push(copy(row));
+    }
+    plan.allowed=true;
+    return plan;
+  };
   M.initialize = function (s, defs) {
+    var plans={}, people={};
+    defs.forEach(function (d) {
+      if (!d.mobile || d.mobile.opening===undefined || M.row(s,d.id)) return;
+      var plan=M.openingPlan(s,d);
+      if (!plan.allowed || plan.bindings.some(function (b) {return people[b.characterId];}))
+        throw new Error('Invalid authored mobile opening');
+      plan.bindings.forEach(function (b) {people[b.characterId]=true;});
+      plans[d.id]=plan;
+    });
     defs.forEach(function (d) {
       if (!d.mobile || M.row(s, d.id)) return;
       var p = FBDATA.mobileProfiles[d.mobile.profileId], g = s.authority.governments[d.id] ||
         (s.authority.governments[d.id]={formId:G.forRealm(s,d.id).id,sinceTurn:s.turn});
       if (!p || !M.active(s, d.id)) throw new Error('Invalid mobile opening');
-      var r = g.mobile = {schema:1,profileId:d.mobile.profileId,migrationId:null,status:'active',serial:0,revision:0,
+      var plan=plans[d.id];
+      var r = g.mobile = {schema:plan ? 2 : 1,profileId:d.mobile.profileId,migrationId:null,status:'active',serial:0,revision:0,
         leaderId:null,selection:null,decision:null,food:d.mobile.food,lastDay:s.turn,worked:{},agreements:[],
         accounting:{initial:0,arrivals:0,dead:0,settled:0,dispersed:0},members:[]};
+      if (plan) r.openingBindings=copy(plan.bindings);
       p.members.forEach(function (a) {
-        var c = FB.makeCharacter(s, {sex:'m',culture:d.culture,religion:d.religion,born:s.date.year - 30,
+        var bound=plan && plan.bindings.filter(function (b) {return b.memberId===a.id;})[0];
+        var c = bound ? s.chars[bound.characterId] : FB.makeCharacter(s, {sex:'m',culture:d.culture,religion:d.religion,born:s.date.year - 30,
           quality:1,station:1,traitsN:1});
-        c.homeProvinceId = d.mobile.origin;
+        if (!bound) c.homeProvinceId = d.mobile.origin;
         r.members.push({id:a.id,principal:{kind:'character',id:c.id},scope:{kind:'realm',id:d.id},basis:'following',
           continuity:'member',weight:a.weight,pledge:a.pledge,allegiance:true,
           civilians:[{culture:d.culture,religion:d.religion,count:a.population}],reserve:[]});
         r.accounting.initial += a.population;
       });
-      install(s, d.id, r.members[0].principal.id);
-      var units={};units[FB.unitRoleClass('levy_infantry')]=d.mobile.fighters;
+      var leader=plan ? r.members.filter(function (m) {return m.id===d.mobile.opening.leaderMemberId;})[0] : r.members[0];
+      var incumbent=plan && plan.bindings.filter(function (b) {return b.memberId===leader.id && b.person.kind==='realm_ruler';})[0];
+      if (incumbent) {r.leaderId=incumbent.characterId;G.invalidate();FB.invalidateRealmCache();}
+      else install(s, d.id, leader.principal.id);
+      var units=plan ? copy(plan.units) : {};if (!plan) units[FB.unitRoleClass('levy_infantry')]=d.mobile.fighters;
       var migration = FB.federateBeginMigration(s, {realmId:d.id,patronRealmId:d.mobile.patronRealmId,
         origin:d.mobile.origin,target:d.mobile.target,hostId:'following_' + d.id,
         settlementForm:p.settlementForm,endTurn:s.turn + 10000000,men:d.mobile.fighters,units:units});
@@ -571,13 +628,25 @@
       var capacity=army.men*p.foodPerPerson*30;
       army.mobileFood=Math.min(r.food,capacity);r.food-=army.mobileFood;
       army.supply=capacity ? army.mobileFood/capacity*100 : 0;
-      var cohorts = take(r.members[0].civilians, d.mobile.fighters);
-      cohorts.forEach(function (c) { army.mobileRoster.push(Object.assign({memberId:r.members[0].id}, c)); });
+      var muster=plan ? plan.muster : [{memberId:r.members[0].id,count:d.mobile.fighters}];
+      muster.forEach(function (part) {
+        var m=member(s,d.id,part.memberId), cohorts=take(m.civilians,part.count);
+        cohorts.forEach(function (c) {
+          var prior=army.mobileRoster.filter(function (v) {return v.memberId===m.id && v.culture===c.culture && v.religion===c.religion;})[0];
+          if (prior) prior.count+=c.count;
+          else army.mobileRoster.push(Object.assign({memberId:m.id},c));
+        });
+      });
       M.migration(s, d.id).courtIds = r.members.map(function (a) { return a.principal.id; });
       FB.treasuryCredit(s, d.id, d.mobile.treasury);
     });
   };
-  FB.mobileInitialize = M.initialize;
+  FB.mobileInitialize = function (s,defs) {
+    M.initialize(s,defs.filter(function (d) {return !d.mobile || d.mobile.opening===undefined;}));
+  };
+  FB.mobileInitializeAuthored = function (s,defs) {
+    M.initialize(s,defs.filter(function (d) {return d.mobile && d.mobile.opening!==undefined;}));
+  };
   function enact(s, rid, action, terms, actor) {
     var review = M.review(s, {realmId:rid,action:action,terms:terms || {},actor:actor || {kind:'realm',id:rid}});
     return review && review.review.allowed && M.commit(s, review);
@@ -901,18 +970,68 @@
     });
     return errors;
   };
-  M.definitionFaults = function (d,formId,provinces,realms,profiles) {
+  M.definitionFaults = function (d,formId,provinces,realms,profiles,bookmark) {
     profiles = profiles || FBDATA.mobileProfiles;
     var mobile = G.resolve(formId).use.succession.mobileLeadership;
     if (!mobile) return d.mobile === undefined ? [] : [FB.T('A mobile opening requires a mobile leadership strategy.')];
     var t = d.mobile, p = t && profiles[t.profileId], byId = {};
     provinces.forEach(function (pr) {byId[pr.id]=pr;});
-    if (!keys(t,['profileId','patronRealmId','origin','target','food','fighters','treasury']) || !p ||
+    if (!keys(t,['profileId','patronRealmId','origin','target','food','fighters','treasury','opening']) || !p ||
         !realms[t.patronRealmId] || t.patronRealmId === d.id || !d.nonTerritorial ||
         !byId[t.origin] || byId[t.origin].wasteland || !byId[t.target] || byId[t.target].wasteland ||
         !FBDATA.cultures[d.culture] || !FBDATA.religions[d.religion] || !boundedNumber(t.food,1000000000) ||
-        !boundedNumber(t.treasury,1000000) || !whole(t.fighters) || !t.fighters || t.fighters > p.members[0].population ||
-        t.fighters > Math.floor(p.members[0].population*p.members[0].pledge)) return [FB.T('Invalid mobile following declaration.')];
+        !boundedNumber(t.treasury,1000000) || !whole(t.fighters) || !t.fighters ||
+        t.opening===undefined && (t.fighters > p.members[0].population ||
+        t.fighters > Math.floor(p.members[0].population*p.members[0].pledge))) return [FB.T('Invalid mobile following declaration.')];
+    if (t.opening!==undefined) {
+      var o=t.opening, members=Object.create(null), people=Object.create(null), actors=Object.create(null),
+        recruited=Object.create(null), total=0, pairs=Object.create(null), invalid=false;
+      p.members.forEach(function (m) {members[m.id]=m;});
+      if (!keys(o,['principals','leaderMemberId','muster']) || !members[o.leaderMemberId] ||
+          !Array.isArray(o.principals) || !o.principals.length || o.principals.length>p.members.length ||
+          !Array.isArray(o.muster) || !o.muster.length || o.muster.length>64 || !bookmark)
+        return [FB.T('Invalid authored mobile opening.')];
+      o.principals.forEach(function (b) {
+        if (!keys(b,['memberId','person']) || !members[b.memberId] || people[b.memberId]) {invalid=true;return;}
+        people[b.memberId]=true;
+        var ref=b.person, actorDef, identity;
+        if (!plain(ref)) {invalid=true;return;}
+        if (typeof ref.actorId!=='string' || actors[ref.actorId]) {invalid=true;return;}
+        actors[ref.actorId]=true;
+        actorDef=bookmark.opening && bookmark.opening.actors && bookmark.opening.actors[ref.actorId];
+        if (!actorDef || actorDef.ref) {invalid=true;return;}
+        identity=actorDef;
+        if (ref.kind==='opening_actor') {
+          if (!keys(ref,['kind','actorId'])) {invalid=true;return;}
+        } else if (ref.kind==='realm_ruler') {
+          var ruler=d.ruler;
+          if (!keys(ref,['kind','actorId','realmId','generation']) || ref.realmId!==d.id || !ruler ||
+              ref.generation!==(ruler.generation!==undefined ? ruler.generation : 1) ||
+              !actorDef.name || actorDef.name!==ruler.name || actorDef.born!==ruler.born || actorDef.sex!==ruler.sex ||
+              actorDef.culture!==(ruler.culture || d.culture) || actorDef.religion!==d.religion) {invalid=true;return;}
+        } else {invalid=true;return;}
+        if (!identity || !Number.isInteger(identity.born) || bookmark.date.year-identity.born<p.minAge ||
+            actorDef && !actorDef.ref && actorDef.home!==t.origin) invalid=true;
+      });
+      (bookmark.realms || []).forEach(function (other) {
+        var otherOpening=other.mobile && other.mobile.opening;
+        if (other.id!==d.id && otherOpening && Array.isArray(otherOpening.principals) &&
+            otherOpening.principals.some(function (b) {return b && b.person && actors[b.person.actorId];})) invalid=true;
+      });
+      if (!people[o.leaderMemberId]) invalid=true;
+      o.muster.forEach(function (row) {
+        if (!keys(row,['memberId','unitId','count']) || !members[row.memberId] ||
+            !Object.prototype.hasOwnProperty.call(FBDATA.unitClasses,row.unitId) || FBDATA.unitClasses[row.unitId].hired ||
+            !whole(row.count) || !row.count) {invalid=true;return;}
+        var pair=row.memberId+'|'+row.unitId;
+        if (pairs[pair]) invalid=true;pairs[pair]=true;
+        recruited[row.memberId]=(recruited[row.memberId] || 0)+row.count;total+=row.count;
+      });
+      Object.keys(recruited).forEach(function (id) {
+        if (recruited[id]>Math.floor(members[id].population*members[id].pledge)) invalid=true;
+      });
+      if (invalid || total!==t.fighters) return [FB.T('Invalid authored mobile opening.')];
+    }
     return [];
   };
   var validateGovernments = G.validate;
@@ -938,7 +1057,7 @@
       if (!r) {if(strategy && strategy.mobileLeadership) fault(rid,'missing');return;}
       var p = M.profile(s,rid), moving = M.migration(s,rid), ids = {}, principals = {};
       if (!keys(r,['schema','profileId','migrationId','status','serial','revision','leaderId','selection','decision','food','lastDay','lastAI',
-          'worked','agreements','accounting','members','defeatKey']) || r.schema !== 1 || !p || !moving || moving.realmId !== rid ||
+          'worked','agreements','accounting','members','defeatKey','openingBindings']) || [1,2].indexOf(r.schema)<0 || !p || !moving || moving.realmId !== rid ||
           !['active','settled','dispersed'].includes(r.status) || !whole(r.serial) || !whole(r.revision) || !whole(r.lastDay) || r.lastDay > s.turn ||
           r.lastAI !== undefined && (!whole(r.lastAI) || r.lastAI>Math.floor(s.turn/90)) || !boundedNumber(r.food,1000000000000) ||
           !keys(r.accounting,['initial','arrivals','dead','settled','dispersed']) || Object.keys(r.accounting).length !== 5 ||
@@ -946,6 +1065,20 @@
           !Array.isArray(r.members) || r.members.length > p.maxMembers || !Array.isArray(r.agreements) || r.agreements.length > p.maxAgreements ||
           !plain(r.worked) || Object.keys(r.worked).length > 64 || Object.keys(r.worked).some(function (cid) {return !s.chars[cid] || r.worked[cid] !== s.turn;}) ||
           r.defeatKey !== undefined && (typeof r.defeatKey !== 'string' || r.defeatKey.length > 512)) fault(rid);
+      var declaration=(FB.campaignBookmark(s).realms || []).filter(function (d) {return d.id===rid;})[0];
+      var opening=declaration && declaration.mobile && declaration.mobile.opening;
+      if (r.schema===1 && (r.openingBindings!==undefined || opening) || r.schema===2 &&
+          (!opening || !Array.isArray(r.openingBindings) || r.openingBindings.length!==opening.principals.length)) fault(rid,'openingBindings');
+      if (r.schema===2) {
+        var boundIds={};
+        r.openingBindings.forEach(function (b,i) {
+          var expected=opening.principals[i], ref=b && b.person, c=b && s.chars[b.characterId];
+          if (!keys(b,['memberId','characterId','person']) || b.memberId!==expected.memberId || !c || boundIds[c.id] ||
+              !ref || JSON.stringify(ref)!==JSON.stringify(expected.person)) fault(rid,'openingBindings');
+          if (!FB.bookmarkActor(s,ref.actorId) || FB.bookmarkActor(s,ref.actorId).id!==c.id) fault(rid,'openingBindings');
+          boundIds[c.id]=true;
+        });
+      }
       if (r.status === 'active' && (!strategy || !strategy.mobileLeadership || s.realms[rid].alive === false || moving.status === 'settled' || moving.status === 'failed') ||
           r.status === 'settled' && (strategy.mobileLeadership || moving.status !== 'settled' || M.total(s,rid) !== 0) ||
           r.status === 'dispersed' && (s.realms[rid].alive !== false || M.total(s,rid) !== 0)) fault(rid,'status');
