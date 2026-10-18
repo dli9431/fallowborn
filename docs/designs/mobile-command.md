@@ -1,3 +1,7 @@
+Column supply scope
+
+A command with columns may use the optional profile supplyPolicy without acquiring another account or authority. The trade permission governs each halted column purchase and camp transfer. An effective overall commander or that exact living column commander can review those supplies; only the overall commander may recruit replacements. Current local access, finite market stock, real public funds and cashReserve remain binding, including after issuer expiry or custody. The shared column supply transactions create no private rank, funds, remote access or replacement mandate. Their technology decisions remain none under mobile_provisioning and mobile_column_reorganization, with ordinary military and transport gates retained. See docs/designs/mobile-columns.md.
+
 Mobile command and personal continuity
 
 An optional bounded column set extends command scope to distinct existing member principals and canonical hosts while retaining the same overall mandate, camp and account. Pure ownership and authority projections feed the shared reviewed column operations. See docs/designs/mobile-columns.md for schema, conservation, normal military gates, explicit commander assignment, movement, reunion and none technology decisions. Declarations without columns retain the single-host behavior below.

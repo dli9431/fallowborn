@@ -46,7 +46,7 @@
     if (errors.length || set===undefined) return errors;
     function fail() {return errors.concat(FB.T('Invalid mobile column declaration.'));}
     var p=(profiles || FBDATA.mobileProfiles)[t.profileId];
-    if (!t.command || !t.opening || p.supplyPolicy!==undefined || !keys(set,['schema','entries']) || set.schema!==1 ||
+    if (!t.command || !t.opening || !keys(set,['schema','entries']) || set.schema!==1 ||
         !Array.isArray(set.entries) || set.entries.length<2 || set.entries.length>4) return fail();
     var ids=Object.create(null), commanders=Object.create(null), allocations=Object.create(null), food=0, bad=false;
     t.opening.muster.forEach(function (v) {allocations[v.memberId+'|'+v.unitId]=v.count;});
@@ -66,7 +66,7 @@
         if (pairs[pair] || !own(allocations,pair) || v.count>allocations[pair]) {bad=true;return;}
         pairs[pair]=true;allocations[pair]-=v.count;men+=v.count;
       });
-      if (men<(FBDATA.balance.armyMinMen || 40) || c.food>men*p.foodPerPerson*30) bad=true;
+      if (men<(FBDATA.balance.armyMinMen || 40) || c.food>men*p.foodPerPerson*(p.supplyPolicy ? p.supplyPolicy.carryDays : 30)) bad=true;
       food+=c.food;
     });
     var allHosts=Object.create(null);
@@ -101,7 +101,7 @@
     });
     initialize(s,defs);
     fresh.forEach(function (d) {
-      var r=M.row(s,d.id), original=M.host(s,d.id), p=M.profile(s,d.id);
+      var r=M.row(s,d.id), original=M.host(s,d.id);
       /* The existing initializer already withdrew the complete muster once.
          Repartition it; never recruit, seed another cohort or credit stock. */
       r.food+=original.mobileFood;
@@ -116,7 +116,7 @@
           else roster.push({memberId:v.memberId,culture:d.culture,religion:d.religion,count:v.count});
         });
         army.size=army.men;army.mobileRoster=roster;FB.hostUnits(army);
-        army.supply=army.mobileFood/(army.men*p.foodPerPerson*30)*100;
+        army.supply=army.mobileFood/M.hostSupplySnapshot(s,army).capacity*100;
         r.food-=c.food;
         if (index) s.armies.push(army);
         var binding=r.openingBindings.filter(function (b) {return b.memberId===c.commanderMemberId;})[0];
@@ -243,29 +243,112 @@
     return r && r.columns && r.columns.entries.map(function (c) {return armyFor(s,c);})
       .filter(function (a) {return a && a.mobileCourt;})[0] || null;
   };
-  function signature(s,rid) {
+  /* Each projection reads the actual canonical inventories. No remote draw,
+     new supply account or saved replenishment cursor belongs to a policy. */
+  function marketRequest(s,rid,at,need) {
+    var stock=FB.marketProvisionSnapshot(s,at),policy=M.profile(s,rid).supplyPolicy;
+    var price=stock && stock.price,spendable=Math.max(0,FB.treasuryAvailable(s,rid)-policy.cashReserve);
+    var valid=stock && Number.isFinite(price) && price>0 && M.provisioningAccess(s,rid,at);
+    var unitPrice=s.owner[at]===rid ? 0 : price*0.1125;
+    return valid ? Math.max(0,Math.min(Math.floor(Math.max(0,need)),Math.floor(stock.stock),
+      unitPrice>0 ? Math.floor(spendable/unitPrice) : Number.MAX_SAFE_INTEGER)) : 0;
+  }
+  M.columnSupplyPlan = function (s,rid) {
+    var r=M.row(s,rid),p=M.profile(s,rid),moving=M.migration(s,rid),policy=p && p.supplyPolicy;
+    if (!r || !r.columns || !moving || !policy) return null;
+    var campDaily=r.members.reduce(function (n,m) {return n+sum(m.civilians)+sum(m.reserve);},0)*p.foodPerPerson;
+    var entries=r.columns.entries.map(function (c) {
+      var a=armyFor(s,c),facts=a && M.hostSupplySnapshot(s,a),local=!!a && a.at===moving.at;
+      var target=facts ? facts.target : 0,need=a ? Math.max(0,target-a.mobileFood) : 0;
+      var load=local && halted(a) ? Math.min(Math.max(0,r.food-campDaily),need) : 0;
+      return {columnId:c.id,countyId:a ? a.at : moving.at,local:local,daily:facts ? facts.daily : 0,
+        target:target,capacity:facts ? facts.capacity : 0,
+        trade:{columnId:c.id,count:a && !local && halted(a) ? marketRequest(s,rid,a.at,need) : 0,provisioning:true},
+        load:{columnId:c.id,count:load,provisioning:true},
+        unload:{columnId:c.id,count:local && halted(a) ? a.mobileFood : 0,provisioning:true}};
+    });
+    var fieldDaily=entries.reduce(function (n,e) {return n+e.daily;},0);
+    var campTarget=campDaily*policy.targetDays+entries.reduce(function (n,e) {
+      var a=armyFor(s,column(s,rid,e.columnId));
+      return n+(e.local && halted(a) ? Math.max(0,e.target-a.mobileFood) : 0);
+    },0);
+    var result={campDaily:campDaily,fieldDaily:fieldDaily,fieldLocal:entries.some(function (e) {return e.local;}),
+      campTarget:campTarget,fieldTarget:entries.reduce(function (n,e) {return n+e.target;},0),
+      fieldCapacity:entries.reduce(function (n,e) {return n+e.capacity;},0),targetDays:policy.targetDays,
+      carryDays:policy.carryDays,cashReserve:policy.cashReserve,entries:entries,replacement:null,
+      purchase:{countyId:moving.at,count:marketRequest(s,rid,moving.at,Math.ceil(Math.max(0,campTarget-r.food))),direction:'buy',provisioning:true}};
+    var replacement=policy.replacement,field=(s.armies || []).filter(function (a) {return a.realm===rid && a.mobileFollowing;});
+    var totalMen=field.reduce(function (n,a) {return n+a.men;},0);
+    var localDaily=entries.reduce(function (n,e) {return n+(e.local ? e.daily : 0);},0);
+    if (!replacement || committed(s,rid) || r.food<campDaily+localDaily) return result;
+    var pools=r.members.reduce(function (n,m) {
+      if (!live(s,s.chars[m.principal.id]) || !m.allegiance) return n;
+      var deployed=field.reduce(function (v,a) {return v+a.mobileRoster.filter(function (v2) {return v2.memberId===m.id;})
+        .reduce(function (v2,c) {return v2+c.count;},0);},0),available=sum(m.reserve)+sum(m.civilians);
+      return n+Math.min(available,Math.max(0,Math.floor((available+deployed)*m.pledge)-deployed));
+    },0);
+    var count=Math.min(Math.max(0,replacement.targetMen-totalMen),replacement.maxPerReview,pools,
+      p.recruitCost>0 ? Math.floor(Math.max(0,FB.treasuryAvailable(s,rid)-policy.cashReserve)/p.recruitCost) : Number.MAX_SAFE_INTEGER);
+    if (count<=0) return result;
+    r.columns.entries.some(function (c) {
+      var a=armyFor(s,c);
+      if (a && (!halted(a) || a.at!==moving.at) || !a && count<(FBDATA.balance.armyMinMen || 40)) return false;
+      return replacement.unitIds.some(function (unitId) {
+        var terms={columnId:c.id,unitId:unitId,count:count};
+        if (!quote(s,{realmId:rid,action:'recruit',terms:terms,actor:{kind:'character',id:r.leaderId}}).allowed) return false;
+        terms.provisioning=true;result.replacement=terms;return true;
+      });
+    });
+    return result;
+  };
+  M.columnSupplyReview = function (s,rid,columnId,action,actor) {
+    var plan=M.columnSupplyPlan(s,rid),entry=plan && plan.entries.filter(function (e) {return e.columnId===columnId;})[0];
+    var terms=action==='recruit' ? plan && plan.replacement : entry && entry[action],r=M.row(s,rid);
+    if (!terms || terms.columnId!==columnId) terms={columnId:columnId,count:0,provisioning:true};
+    return M.reviewColumns(s,{realmId:rid,action:action,terms:terms,
+      actor:actor || {kind:'character',id:r && r.leaderId}});
+  };
+  M.columnSupplyDay = function (s,rid) {
+    var r=M.row(s,rid);
+    r.columns.entries.forEach(function (c) {
+      var a=armyFor(s,c);if (!a) return;
+      M.commit(s,M.columnSupplyReview(s,rid,c.id,a.at===M.migration(s,rid).at ? 'load' : 'trade'));
+    });
+    /* One command-wide batch, even when several slots need recovery. */
+    if (M.profile(s,rid).supplyPolicy.replacement) M.commit(s,M.supplyReview(s,rid,'recruit'));
+  };
+  function signature(s,rid,provisioning) {
     var r=M.row(s,rid);
     return JSON.stringify([s.turn,s.date,r,M.migration(s,rid),s.armies,
       r.members.map(function (m) {return s.chars[m.principal.id];}),M.commandSnapshot(s,rid),
       s.owner,s.holder,s.wars,s.authority.contracts,s.authority.appointments,
-      FB.treasuryAvailable(s,rid),M.profile(s,rid),definition(s,rid)]);
+      FB.treasuryAvailable(s,rid),M.profile(s,rid),definition(s,rid),
+      provisioning ? r.columns.entries.map(function (c) {var a=armyFor(s,c);return a && FB.marketProvisionSnapshot(s,a.at);}) : null]);
   }
   function quote(s,request) {
     var rid=request.realmId,r=M.row(s,rid),t=request.terms,action=request.action,actor=request.actor;
     var q={allowed:false,reason:'column_operation',realmId:rid,action:action,terms:copy(t || {}),cost:0,signature:null};
     var fields={march:['columnId','countyId'],move:['columnId','countyId'],stop:['columnId'],
       split:['columnId','otherColumnId','unitId','count'],merge:['columnId','otherColumnId'],
-      recruit:['columnId','unitId','count'],demuster:['columnId'],assign:['columnId','candidateId'],war:['columnId','causes']};
+      recruit:['columnId','unitId','count'],demuster:['columnId'],assign:['columnId','candidateId'],war:['columnId','causes'],
+      trade:['columnId','count','provisioning'],load:['columnId','count','provisioning'],unload:['columnId','count','provisioning']};
+    var allowedFields=own(fields,action) ? fields[action].slice() : null;
+    if (action==='recruit' && t && t.provisioning===true) allowedFields.push('provisioning');
     if (!keys(request,['realmId','action','terms','actor']) || !r || !r.columns || r.status!=='active' ||
-        !fields[action] || !keys(t,fields[action]) || !keys(actor,['kind','id']) || actor.kind!=='character') return q;
+        !allowedFields || !keys(t,allowedFields) || !keys(actor,['kind','id']) || actor.kind!=='character') return q;
     var c=column(s,rid,t.columnId),a=armyFor(s,c),other=column(s,rid,t.otherColumnId),b=armyFor(s,other);
     var leader=M.leader(s,rid),overall=!!leader && leader.id===actor.id,p=M.profile(s,rid),moving=M.migration(s,rid);
-    var permission=action==='assign' || action==='stop' ? 'march' : action==='merge' ? 'demuster' : action==='split' ? 'recruit' : action;
+    var permission=action==='load' || action==='unload' ? 'trade' : action==='assign' || action==='stop' ? 'march' : action==='merge' ? 'demuster' : action==='split' ? 'recruit' : action;
     function no(reason) {q.reason=reason;return q;}
     if (!c || !moving || moving.endTurn<=s.turn || !M.commandPermits(s,rid,permission) ||
-        (['march','stop'].indexOf(action)>=0 ? !M.columnAuthority(s,rid,c.id,actor) : !overall)) return no('command');
+        (['march','stop','trade','load','unload'].indexOf(action)>=0 ? !M.columnAuthority(s,rid,c.id,actor) : !overall)) return no('command');
     if (action!=='assign' && !commander(s,rid,c.commanderId)) return no('principal');
-    q.signature=signature(s,rid);
+    if (t.provisioning) {
+      var supply=M.columnSupplyPlan(s,rid),entry=supply && supply.entries.filter(function (e) {return e.columnId===c.id;})[0];
+      var expected=action==='recruit' ? supply && supply.replacement : entry && entry[action];
+      if (!expected || !expected.count || !keys(t,Object.keys(expected)) || Object.keys(expected).some(function (k) {return t[k]!==expected[k];})) return no('provisioning');
+    }
+    q.signature=signature(s,rid,!!t.provisioning);
     if (action==='assign') {
       if (!commander(s,rid,t.candidateId) || t.candidateId===c.commanderId) return no('principal');
     } else if (action==='march' || action==='move') {
@@ -291,6 +374,15 @@
       if (merged.length>64) return no('capacity');
     } else if (action==='demuster') {
       if (!a || !halted(a) || a.at!==moving.at || committed(s,rid) || FB.isRealmAtWar(s,rid)) return no('commitment');
+    } else if (action==='trade' || action==='load' || action==='unload') {
+      if (!p.supplyPolicy || t.provisioning!==true || !a || !halted(a) || !Number.isFinite(t.count) || t.count<=0) return no('provisioning');
+      q.terms.countyId=a.at;
+      if (action==='trade') {
+        var stock=FB.marketProvisionSnapshot(s,a.at);
+        if (!whole(t.count) || !M.provisioningAccess(s,rid,a.at) || !stock || t.count>stock.stock || !Number.isFinite(stock.price) || stock.price<=0) return no('access');
+        q.cost=s.owner[a.at]===rid ? 0 : t.count*stock.price*0.1125;
+        if (q.cost>Math.max(0,FB.treasuryAvailable(s,rid)-p.supplyPolicy.cashReserve)) return no('funds');
+      } else if (a.at!==moving.at || action==='load' && t.count>r.food || action==='unload' && t.count>a.mobileFood) return no('food');
     } else if (action==='recruit') {
       if (a && (!halted(a) || a.at!==moving.at) || !a && c.status!=='retired' ||
           !a && (s.authority.migrations || []).some(function (m) {return m.id!==moving.id && m.hostId===c.hostId;}) ||
@@ -325,7 +417,7 @@
     q.allowed=true;q.reason=null;return q;
   }
   function refresh(s,a) {
-    FB.hostUnits(a);a.supply=FB.clamp(a.mobileFood/Math.max(0.01,a.men*M.profile(s,a.realm).foodPerPerson*30)*100,0,100);
+    FB.hostUnits(a);a.supply=FB.clamp(a.mobileFood/Math.max(0.01,M.hostSupplySnapshot(s,a).capacity)*100,0,100);
   }
   function emptyHost(s,rid,c,at) {
     return {id:c.hostId,realm:rid,at:at,from:at,men:0,size:0,units:{},supply:0,path:[],goal:null,moveLeft:0,
@@ -356,6 +448,12 @@
         add(a.mobileRoster,b.mobileRoster,true);a.men+=b.men;a.size+=b.size;a.mobileFood+=b.mobileFood;
         if (b.mobileCourt) a.mobileCourt=true;
         b.mobileRoster=[];b.mobileFood=0;b.men=0;b.units={};FB.disbandArmy(s,b);refresh(s,a);
+      } else if (q.action==='trade') {
+        if (q.cost && !FB.treasuryTransfer(s,rid,s.owner[a.at],q.cost)) return false;
+        FB.marketWithdrawProvisions(s,a.at,t.count);a.mobileFood+=t.count;refresh(s,a);
+      } else if (q.action==='load' || q.action==='unload') {
+        var amount=q.action==='load' ? t.count : -t.count;
+        r.food-=amount;a.mobileFood+=amount;refresh(s,a);
       } else if (q.action==='demuster') FB.disbandArmy(s,a);
       else if (q.action==='recruit') {
         if (!FB.treasurySpend(s,rid,q.cost)) return false;

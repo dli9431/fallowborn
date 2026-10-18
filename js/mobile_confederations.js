@@ -123,6 +123,10 @@
     var capacity=hostCapacity(army,p);
     return p.supplyPolicy ? Math.min(capacity,hostRation(s,army,p)*p.supplyPolicy.targetDays) : capacity;
   }
+  M.hostSupplySnapshot = function (s,army) {
+    var p=army && M.profile(s,army.realm);
+    return p ? {daily:hostRation(s,army,p),capacity:hostCapacity(army,p),target:hostLoadTarget(s,army,p)} : null;
+  };
   function recruitmentPools(s,rid) {
     var r=M.row(s,rid), living=M.members(s,rid);
     return r.members.map(function (a) {
@@ -136,6 +140,7 @@
   M.supplySnapshot = function (s,rid) {
     var r=M.row(s,rid), p=M.profile(s,rid), moving=M.migration(s,rid), policy=p && p.supplyPolicy;
     if (!r || !moving || !policy) return null;
+    if (r.columns) return M.columnSupplyPlan(s,rid);
     var army=M.host(s,rid), local=!!army && army.at===moving.at;
     var campDaily=(civilians(r)+reserve(r))*p.foodPerPerson, fieldDaily=hostRation(s,army,p);
     var fieldCapacity=army ? hostCapacity(army,p) : 0;
@@ -165,6 +170,9 @@
   M.supplyReview = function (s,rid,action,actor) {
     if (action!=='trade' && action!=='recruit') return null;
     var snapshot=M.supplySnapshot(s,rid), terms=snapshot && (action==='trade' ? snapshot.purchase : snapshot.replacement);
+    var row=M.row(s,rid);
+    if (row && row.columns && action==='recruit') return M.columnSupplyReview(s,rid,
+      terms ? terms.columnId : row.columns.entries[0].id,action,actor);
     return M.review(s,{realmId:rid,action:action,terms:terms || {provisioning:true},actor:actor || {kind:'realm',id:rid}});
   };
   function deployed(s, rid, mid) {
@@ -233,6 +241,7 @@
     return {contractId:id,signature:JSON.stringify(c)};
   };
   function safe(s, rid, pid) { return s.owner[pid] === rid && s.holder[pid] === rid || !!activeAccess(s, rid, pid); }
+  M.provisioningAccess = function (s,rid,pid) {return safe(s,rid,pid);};
   function committed(s, rid, exception) {
     return (s.authority.contracts || []).some(function (c) { return c.id !== exception && c.federateRealmId === rid && Q.contract(s, c.id).effective; }) ||
       M.row(s, rid).agreements.some(function (a) { return a.kind !== 'access' && a.status === 'active' && a.endTurn > s.turn; });
@@ -931,7 +940,8 @@
       var leader=M.leader(s,rid);
       if (p.supplyPolicy && leader && leader.id!==s.player.charId) {
         M.commit(s,M.supplyReview(s,rid,'trade'));
-        M.commit(s,M.supplyReview(s,rid,'recruit'));
+        if (r.columns) M.columnSupplyDay(s,rid);
+        else M.commit(s,M.supplyReview(s,rid,'recruit'));
       }
       var need = (civilians(r) + reserve(r)) * p.foodPerPerson;
       if (r.food < need) {

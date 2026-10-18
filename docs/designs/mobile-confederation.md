@@ -1,3 +1,7 @@
+Column supply policies
+
+Optional supplyPolicy composes with a bounded command column set through the same canonical camp, host, treasury, market and pledged-pool owners. supplySnapshot includes every column and counts only halted colocated deficits in camp procurement. Remote columns may procure at an actually accessible local market; camp food never reaches them remotely. The shared column adapter reviews conserved camp transfers and one command-wide class-aware replacement target. Automatic daily dispatch remains bounded by lastDay. Ordinary single-host policies retain their original behavior. See docs/designs/mobile-columns.md for exact scope, none technology decisions and the independent ordinary import examples.
+
 Civic treaty counterparties
 
 Personal expedition admission

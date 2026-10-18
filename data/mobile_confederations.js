@@ -43,7 +43,7 @@
   FBDATA.techImpactReviews.features.mobile_seasonal_access.rationale =
     'Seasonal access depends on living consent, finite local capacity and conserved payments. A lawful subordinate holder may grant local access while its superior retains sovereignty; foreign occupation grants no such authority. Existing travel technology still applies.';
   FBDATA.techImpactReviews.features.mobile_provisioning.rationale =
-    'Baseline provisioning includes optional stock-aware ration targets and affordable replacement recruitment. Actual camp and field inventories, finite pasture, market stock, pledged people and public cash reserves remain binding; normal unit, equipment and transport technology still applies.';
+    'Baseline provisioning includes optional stock-aware ration targets for the camp and each column, affordable local market purchases and colocated stock transfers. Actual inventories, finite pasture, current access and public cash reserves remain binding; normal equipment and transport technology still applies.';
   FBDATA.techImpactReviews.features.mobile_opening_identity = {mode:'none',
     rationale:'Binding an existing living opening person creates no new office or military technology. Custody, age, location and incumbent generation remain authoritative.'};
   FBDATA.techImpactReviews.features.mobile_opening_composition = {mode:'none',
@@ -65,7 +65,7 @@
   FBDATA.techImpactReviews.features.mobile_column_orders = {mode:'none',
     rationale:'Separate field orders and one camp escort express current command scope over existing hosts. Ordinary route, transport, access and war requirements remain binding.'};
   FBDATA.techImpactReviews.features.mobile_column_reorganization = {mode:'none',
-    rationale:'Reassigning an existing member commander and dividing or reuniting existing fighters creates no people or equipment. Current mandates, locality, member pledges and normal unit qualifications govern recovery.'};
+    rationale:'Reassigning existing commanders and reorganizing conserved fighters creates no people or equipment. Optional recovery selects an eligible class and a camp-local column within one command-wide replacement target, living member pledges and available public funds; normal unit qualifications remain binding.'};
   FBDATA.techImpactReviews.features.mobile_column_settlement = {mode:'none',
     rationale:'Civilian settlement and final reunion use ordinary conserved population and lawful land transactions. Final settlement requires every surviving field host to return and demuster; no technology can substitute for their arrival.'};
   FBDATA.techImpactReviews.features.home_decision_presence = {mode:'none',

@@ -1,3 +1,7 @@
+Column-aware supply composition
+
+The existing optional mobileProfiles supplyPolicy also composes with mobile.columns. The same typed schema varies camp and per-column ration coverage, carrying limits, cash reserve and one command-wide replacement target. mobile-column-supply-harbor.json and mobile-column-supply-dune.json are independent ordinary imports with contrasting retained/external authority, scales, unit preferences and recovery budgets. Shared pure projections and reviewed player/AI transactions read actual market, camp and host stocks, local rights, living pledged pools and public accounts. Matching restore preserves depleted resources without procurement or recovery. New executable mod roots, supply ledgers and saved cursors are not added. See docs/MODDING.md and docs/designs/mobile-columns.md.
+
 Data authoring contract
 
 A JSON mod defines content by stable id and composes registered mechanics. A trusted engine module implements algorithms, pure definition validators and canonical transactions. JSON cannot provide executable code, arbitrary function calls, expressions, unrestricted state paths or direct saved-state writes.
