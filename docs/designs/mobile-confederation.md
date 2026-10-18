@@ -8,6 +8,8 @@ Acceptance of a mobile agreement is a reviewed transaction. A civic counterparty
 
 Mobile confederation
 
+Optional bounded command columns partition an authored opening's existing force and food into canonical hosts while retaining one civilian camp and account. The complete contract, strict optional saves, read-only commander scopes and currently unavailable one-host shortcuts are in docs/designs/mobile-columns.md. Existing single-host defaults retain their original schemas and behavior.
+
 Adaptive provisioning
 
 An optional mobile profile supplyPolicy configures bounded ration targets, host carrying days, a public cash reserve and replacement recruitment. Technology impact remains none under mobile_provisioning: these policies select affordable existing transactions and grant no equipment or transport exemption. Profiles without the policy retain their existing behavior.

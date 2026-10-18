@@ -10,6 +10,7 @@
       candidate:FB.T('An eligible living member principal and an open leadership review are required.'),
       withheld:FB.T('Members must approve these exact terms before the leader can act.'),
       command:FB.T('A current command mandate and permission for this operation are required.'),
+      column_operation:FB.T('This action is unavailable for a following with separate columns.'),
       commitment:FB.T('Finish current service, movement or military commitments first.'),
       following:FB.T('The pledged following cannot supply this many fighters.'),
       technology:FB.T('The chosen unit requires its normal equipment, culture and technology qualifications.'),
@@ -49,17 +50,25 @@
     var s = FB.state, r = M.row(s,rid), migration = M.migration(s,rid), profile = M.profile(s,rid);
     if (!r || !migration || !profile) return;
     view = view || {}; var actions = [], actor = {kind:'character',id:s.player.charId}, leader = M.leader(s,rid);
-    var host = M.host(s,rid), ownMember = M.members(s,rid).filter(function (m) {return m.principal.id === actor.id;})[0];
+    var host = M.host(s,rid), columns=M.columnSnapshot && M.columnSnapshot(s,rid);
+    var ownMember = M.members(s,rid).filter(function (m) {return m.principal.id === actor.id;})[0];
     var parts = '', people = '', facts = '';
     if (leader) people += SH.reviewPersonHtml(leader,r.command ? FB.T('Commander') : FB.T('Coalition leader'),'mobile-leader');
     facts += SH.reviewPeopleHtml(people) + kv(FB.T('Court and civilian camp'),county(migration.at)) +
-      kv(FB.T('Field host'),host ? FB.T('{men} fighters at {place}',{men:host.men,place:county(host.at)}) : FB.T('No deployed host; the court survives')) +
+      (columns ? '' : kv(FB.T('Field host'),host ? FB.T('{men} fighters at {place}',{men:host.men,place:county(host.at)}) : FB.T('No deployed host; the court survives'))) +
       kv(FB.T('Civilian following'),r.members.reduce(function (n,m) {return n + m.civilians.reduce(function (v,c) {return v+c.count;},0);},0)) +
       kv(FB.T('Resting fighters'),r.members.reduce(function (n,m) {return n + m.reserve.reduce(function (v,c) {return v+c.count;},0);},0)) +
-      kv(FB.T('Food stock'),Math.floor(r.food)) + kv(r.command ? FB.T('Public treasury') : FB.T('Coalition treasury'),FB.money(FB.treasuryAvailable(s,rid),s)) +
-      kv(FB.T('Carried host food'),host ? Math.floor(host.mobileFood || 0) : 0) +
+      kv(columns ? FB.T('Camp food stock') : FB.T('Food stock'),Math.floor(r.food)) + kv(r.command ? FB.T('Public treasury') : FB.T('Coalition treasury'),FB.money(FB.treasuryAvailable(s,rid),s)) +
+      (columns ? '' : kv(FB.T('Carried host food'),host ? Math.floor(host.mobileFood || 0) : 0)) +
       kv(FB.T('Local inhabitants'),s.population.counties[migration.at].count) +
       kv(FB.T('County sovereignty'),s.realms[s.owner[migration.at]].name);
+    if (columns) columns.entries.forEach(function (c,index) {
+      var commander=s.chars[c.commanderId];
+      facts+=kv(FB.T('Column {number}',{number:index+1}),c.host ?
+        FB.T('{men} fighters at {place}; commander {name}; carried food {food}; {status}',
+          {men:c.host.men,place:county(c.host.at),name:commander ? commander.name : FB.T('Unavailable member'),
+            food:Math.floor(c.host.mobileFood),status:c.effective ? FB.T('Active') : FB.T('Suspended')}) : FB.T('Retired'));
+    });
     if (!r.command) facts += kv(FB.T('Leadership and settlement threshold'),FB.T('{percent}% of living member weight',{percent:Math.round(profile.threshold*100)}));
     else {
       var command=M.commandSnapshot(s,rid), superior=command.superior && s.chars[command.superior.characterId];

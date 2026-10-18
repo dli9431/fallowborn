@@ -4551,6 +4551,7 @@ window.FB = window.FB || {};
         if (detachDown !== undefined &&
             state.turn - detachDown < detachmentRearm) continue;
         const primary = hosts[0];
+        if (primary.mobileFollowing) continue;
         if (primary.broken !== undefined) continue; // a routed host does not divide
         const target = Math.round(primary.men * detachmentFrac);
         if (target < minMen || primary.men - target < minMen) continue;

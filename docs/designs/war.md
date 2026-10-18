@@ -2190,4 +2190,6 @@ public_service removes automatic hereditary-vassal levy contributions and applie
 
 Mobile following hosts
 
+Command openings may opt into the bounded column ownership contract in docs/designs/mobile-columns.md. It partitions the existing opening muster and provisions into two to four ordinary hosts, retains one civilian camp and exposes distinct commander scopes. The single-host default remains compatible. Column-specific movement and reorganization require their own transactions; this ownership layer blocks the existing one-host shortcuts. Normal supply and combat owners remain authoritative.
+
 Mobile hosts partition ordinary men with a demographic mobileRoster. Recruitment draws actual following pools; applyHostLosses updates that roster and its owning conservation account using the caller state. Disband returns only survivors. The canonical migration retains the court after a host defeat. mobileCourt distinguishes a reviewed movement of the civilian court from a field march; mobileFood is real carried stock, replenished from the camp and consumed once per day using ordinary supply-use modifiers. Demuster returns remaining stock, military losses lose their proportional stock, and recovery starts with no free supplies. Ordinary combat, campaigns, objectives, conquest and crossing technology still apply. See docs/designs/mobile-confederation.md.

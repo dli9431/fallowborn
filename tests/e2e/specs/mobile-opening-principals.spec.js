@@ -9,7 +9,7 @@ const examples = {
   dune:require('../fixtures/authoring/mobile-opening-dune.json')
 };
 dependsOnRuntime(__filename, ['index.html','data/mobile_confederations.js','data/units.js','data/eras.js',
-  'data/technology.js','data/starts.js','js/mobile_confederations.js','js/mobile_command.js','js/bookmark_setup.js','js/world.js',
+  'data/technology.js','data/starts.js','js/mobile_confederations.js','js/mobile_command.js','js/mobile_columns.js','js/bookmark_setup.js','js/world.js',
   'js/governments.js','js/government_selection.js','js/government_support.js','js/government_civic.js',
   'js/federates.js','js/armies.js','js/technology.js','js/population.js','js/treasury.js','js/authority.js',
   'js/model.js','js/stories.js','js/starts.js','js/main.js','js/mods.js','js/save.js','js/save_v4.js']);

@@ -8,7 +8,7 @@ const examples={harbor:require('../fixtures/authoring/expedition-supply-harbor.j
   upland:require('../fixtures/authoring/expedition-supply-upland.json')};
 
 dependsOnRuntime(__filename,['index.html','data/mobile_confederations.js','data/units.js','data/technology.js',
-  'js/mobile_confederations.js','js/mobile_command.js','js/government_selection.js','js/governments.js',
+  'js/mobile_confederations.js','js/mobile_command.js','js/mobile_columns.js','js/government_selection.js','js/governments.js',
   'js/authority.js','js/population.js','js/market.js','js/treasury.js','js/logistics.js','js/armies.js',
   'js/world.js','js/bookmark_setup.js','js/starts.js','js/mods.js','js/save.js','js/save_v4.js',
   'js/ui_mobile.js','js/ui_misc.js','js/main.js','js/technology.js','js/model.js','js/federates.js']);

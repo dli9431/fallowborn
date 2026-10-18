@@ -1,5 +1,7 @@
 Mobile command and personal continuity
 
+An optional bounded column set extends command scope to distinct existing member principals and canonical hosts while retaining the same overall mandate, camp and account. This opening contract exposes pure ownership and authority projections; column-specific operations are separate. See docs/designs/mobile-columns.md for schema, conservation, normal military gates, none technology decision and blocked one-host shortcuts. Declarations without columns retain the single-host behavior below.
+
 Fresh command starts
 
 A named command start resolves its identity from the declared opening leader member's direct actor. Pure start validation shares this projection with the fixed identity display, requires the actual camp origin as the birthplace and preserves the scenario's private station independently of the institution's rank. A ruler presentation in the mobile realm declaration cannot substitute for a different bound person. Deferred actors and unnamed generated principals do not supply a named command start.

@@ -7,7 +7,7 @@ const examples={harbor:require('../fixtures/authoring/expedition-command-harbor.
   dune:require('../fixtures/authoring/expedition-command-dune.json')};
 
 dependsOnRuntime(__filename,['index.html','data/mobile_confederations.js','data/units.js','data/eras.js',
-  'js/main.js','js/starts.js','js/world.js','js/bookmark_setup.js','js/mobile_confederations.js','js/mobile_command.js',
+  'js/main.js','js/starts.js','js/world.js','js/bookmark_setup.js','js/mobile_confederations.js','js/mobile_command.js','js/mobile_columns.js',
   'js/mods.js','js/model.js','js/station.js','js/governments.js','js/government_selection.js',
   'js/government_continuity.js','js/government_support.js','js/authority.js','js/federates.js',
   'js/population.js','js/market.js','js/treasury.js','js/armies.js','js/fortifications.js',

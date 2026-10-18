@@ -8,7 +8,7 @@ const examples={harbor:require('../fixtures/authoring/personal-expedition-harbor
   upland:require('../fixtures/authoring/personal-expedition-upland.json')};
 dependsOnRuntime(__filename,['index.html','data/mobile_confederations.js','data/travel.js','data/technology.js',
   'js/story_expedition_participation.js','js/stories.js','js/story_household.js','js/story_household_observer.js',
-  'js/travel.js','js/mobile_confederations.js','js/mobile_command.js','js/federates.js','js/armies.js',
+  'js/travel.js','js/mobile_confederations.js','js/mobile_command.js','js/mobile_columns.js','js/federates.js','js/armies.js',
   'js/mods.js','js/world.js','js/starts.js','js/bookmark_setup.js','js/station.js','js/governments.js',
   'js/treasury.js','js/model.js','js/authority.js','js/save.js','js/save_v4.js','js/ui_misc.js','js/main.js']);
 
