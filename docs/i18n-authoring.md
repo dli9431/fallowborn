@@ -351,3 +351,7 @@ Literal FBDATA.siegeSupportProfiles in data/siege_support.js uses siegeSupportPr
 Maintained maritime work presentation
 
 Literal FBDATA.maritimeWorkProfiles in data/maritime_work.js uses maritimeWorkProfile.<id>.name.default and maritimeWorkProfile.<id>.desc.default owners with exact-source aliases and ordinary imported-English fallback. Static extraction reads display prose only and never runs production or invoice transactions. The shared settlement review renders these fields through FB.dataText; invoice, contribution, quantity, private payer, expiry, blockers and confirmation consequences use literal FB.T phrases with named placeholders. Saved receipts contain structural ids and numbers only. No generated catalog command is needed for feature authoring.
+
+Fort material display
+
+fortProfiles entries deliberately contain structural material ids and numeric level requirement maps only. Their key refers to an existing buildingProfile, whose literal name and desc use the normal buildingProfile structured owner and buildingProfiles_<suffix> static supplement extraction. Material labels belong in that display prose, never in engine id dispatch. The existing profile selector, fort Details and reverse technology sheet render through those owners; all new blockers use FB.T. No generated catalogue change is required on the feature branch.

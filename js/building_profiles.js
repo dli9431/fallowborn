@@ -70,7 +70,12 @@
   };
   P.stamp = function (buildingId, profileId) {
     if (profileId === undefined || profileId === null) return null;
-    return {v:1,id:profileId,definition:FB.mods.fingerprint({profile:FBDATA.buildingProfiles[profileId],base:FBDATA.buildings[buildingId]})};
+    var definition = {profile:FBDATA.buildingProfiles[profileId],base:FBDATA.buildings[buildingId]};
+    if (FB.fortProfiles && FB.fortProfiles.get(profileId)) {
+      definition.fortProfile = FBDATA.fortProfiles[profileId];
+      definition.levels = FBDATA.forts.levels;
+    }
+    return {v:1,id:profileId,definition:FB.mods.fingerprint(definition)};
   };
   P.attach = function (r, profileId) {
     var value = P.stamp(r.id,profileId);
@@ -83,6 +88,7 @@
   P.inheritedFault = function (bm, placement, pr) {
     var p = FBDATA.buildingProfiles[placement.profileId], d = P.definition(placement.buildingId,placement.profileId);
     if (!ident(placement.profileId) || !p || !d || p.inheritance !== 'retain') return 'profile does not permit inherited inventory.';
+    if (FB.fortProfiles && FB.fortProfiles.inheritedFault(placement)) return FB.fortProfiles.inheritedFault(placement);
     if (d.coastal && !pr.coastal || d.terrains && d.terrains.indexOf(pr.terrain) < 0)
       return 'inherited profile has incompatible physical terrain or coast.';
     if (p.siteResourceProfile && !FB.siteResources.compilePrepared(bm).sources.some(function (a) {
@@ -219,6 +225,13 @@
     var d = P.definition(r.buildingId,r.profileId);
     var realmForPrice = r.actor.kind === 'realm' ? r.actor.id : r.actor.id === s.player.charId ? undefined : FB.settlementCountyHolder(s,r.countyId);
     q.cost = d && !d.fort ? FB.buildCost(s,r.countyId,r.buildingId,realmForPrice,r.profileId) : 0;
+    if (d && d.fort && FB.fortProfiles.get(r.profileId) && r.actor.kind === 'character' && r.actor.id === s.player.charId) {
+      var existing = FB.fortAt(s,r.countyId);
+      var target = own(r,'targetLevel') ? r.targetLevel : (existing ? existing.level + 1 : 1);
+      var material = FB.fortProfiles.quote(s,{countyId:r.countyId,settlement:r.settlement,profileId:r.profileId,
+        targetLevel:target,realmId:'player',repair:false});
+      return Object.assign(q,material,{request:copy(r),materialRequest:material.request});
+    }
     var status = P.status(s,r.countyId,r.settlement,r.buildingId,r.profileId,r.actor);
     if (!d || !status.ready) { q.reason = status.reason; return q; }
     if (own(r,'targetLevel') && (!d.fort || !Number.isSafeInteger(r.targetLevel) || r.targetLevel < 1 || r.targetLevel > 4)) return q;
@@ -251,6 +264,11 @@
     if (d.fort) {
       // Public AI fort work retains the separate annual work-budget owner.
       if (!player) return false;
+      if (reviewed.materialRequest) {
+        var material = Object.assign({},reviewed,{request:reviewed.materialRequest});
+        delete material.materialRequest;
+        return FB.fortProfiles.commit(s,material);
+      }
       return !!FB.startFortProject(s,r.countyId,r.settlement,r.targetLevel,{profileId:r.profileId});
     }
     return player ? FB.build(s,r.countyId,r.settlement,r.buildingId,r.profileId) : r.actor.kind === 'realm' ?

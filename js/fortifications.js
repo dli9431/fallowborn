@@ -398,7 +398,7 @@ window.FB = window.FB || {};
       } else {
         if (record.targetLevel !== target) changed = true;
         record.targetLevel = target;
-        record.completeTurn = Math.max(Number(state.turn) || 0,
+        if (!record.fortProfileProject) record.completeTurn = Math.max(Number(state.turn) || 0,
           Math.floor(Number(record.completeTurn)));
       }
     }
@@ -496,9 +496,17 @@ window.FB = window.FB || {};
     var priorProfile = (fort || ruins) && (fort || ruins).buildingProfile;
     var profileId = options.profileId === undefined && priorProfile ? priorProfile.id : options.profileId;
     if (priorProfile && profileId !== priorProfile.id) { result.reason = 'profile'; return result; }
-    if (!repairing && profileId != null && !FB.buildingProfiles.status(state, pid, result.settlement,
-        FB.fortificationBuildingId(), profileId, realmId).ready) { result.reason = 'profile'; return result; }
+    if (!repairing && profileId != null && !(FB.fortProfiles && FB.fortProfiles.get(profileId))) {
+      result.profileStatus = FB.buildingProfiles.status(state,pid,result.settlement,FB.fortificationBuildingId(),profileId,realmId);
+      if (!result.profileStatus.ready) { result.reason = 'profile'; return result; }
+    }
     if (profileId != null) result.profileId = profileId;
+    var materialProfile = FB.fortProfiles && FB.fortProfiles.get(profileId);
+    var occupied = (state.buildings[pid] || []).filter(function (r) { return r && FB.isFortificationBuilding(r.id); });
+    if (materialProfile || occupied.some(function (r) { return r.buildingProfile && FB.fortProfiles.get(r.buildingProfile.id); })) {
+      if (occupied.length > 1 || occupied.length && occupied[0].s !== result.settlement) { result.reason = 'other_settlement'; return result; }
+      if (occupied.length && !priorProfile) { result.reason = 'profile'; return result; }
+    }
     if (repairing && (!ruins || !ruins.ruined || fort)) {
       result.reason = fort ? 'other_settlement' : 'ruins'; return result;
     }
@@ -535,9 +543,18 @@ window.FB = window.FB || {};
         { materials:0.80, transport:0.15, wares:0.05 }, pid, 'up') : baseCost;
     result.seasons = def.seasons;
     result.completeTurn = (Number(state.turn) || 0) + def.seasons * 90;
-    for (var i = 0; i < def.requiresTech.length; i++) {
-      if (!repairing && (!FB.hasTech || !FB.hasTech(state, def.requiresTech[i], realmId))) {
-        result.missingTech.push(def.requiresTech[i]);
+    var requirements = def.requiresTech;
+    if (materialProfile) {
+      result.profileStatus = FB.fortProfiles.status(state,pid,result.settlement,profileId,result.targetLevel,realmId,repairing);
+      requirements = result.profileStatus.requirements || [];
+      if (!result.profileStatus.ready) {
+        result.missingTech = result.profileStatus.missingTech;
+        result.reason = result.missingTech.length ? 'technology' : 'profile'; return result;
+      }
+    }
+    for (var i = 0; i < requirements.length; i++) {
+      if (!repairing && (!FB.hasTech || !FB.hasTech(state, requirements[i], realmId))) {
+        result.missingTech.push(requirements[i]);
       }
     }
     if (result.missingTech.length) { result.reason = 'technology'; return result; }
@@ -561,6 +578,11 @@ window.FB = window.FB || {};
     var status = projectStatus(state, pid, settlement, targetLevel, options);
     if (!status.ok) return false;
     var realmId = options.realm || 'player';
+    if (FB.fortProfiles && FB.fortProfiles.get(status.profileId) &&
+        !FB.fortProfiles.authorized(state,pid,settlement | 0,status.targetLevel,realmId,options.repair === true)) {
+      return FB.fortProfiles.commit(state,FB.fortProfiles.quote(state,{countyId:pid,settlement:settlement | 0,
+        profileId:status.profileId,targetLevel:status.targetLevel,realmId:realmId,repair:options.repair === true}));
+    }
     var fort = options.repair ? FB.fortAtSettlement(state, pid, settlement, true) : FB.fortAt(state, pid);
     var newRecord = !fort;
     if (realmId === 'player') state.player.gold -= status.cost;
@@ -572,7 +594,11 @@ window.FB = window.FB || {};
     if (!fort.buildingProfile && status.profileId) FB.buildingProfiles.attach(fort, status.profileId);
     fort.targetLevel = status.targetLevel;
     fort.completeTurn = status.completeTurn;
-    if (options.repair) { fort.level = 0; fort.repairing = true; }
+    if (options.repair) {
+      if (FB.fortProfiles && FB.fortProfiles.get(status.profileId)) fort.ruinedLevel = status.targetLevel;
+      fort.level = 0; fort.repairing = true;
+    }
+    if (FB.fortProfiles) FB.fortProfiles.attachProject(state,fort,realmId,options.repair,status.cost);
     delete fort.ruined;
     syncIndexedRecord(state, pid, fort, newRecord, true);
     if (FB.reconcileSettlementCommunities) {
@@ -613,6 +639,7 @@ window.FB = window.FB || {};
     delete fort.targetLevel;
     delete fort.completeTurn;
     delete fort.maintenanceGraceUntil;
+    delete fort.fortProfileProject;
     delete fort.repairing;
     syncIndexedRecord(state, pid, fort);
     if (FB.reconcileSettlementCommunities) {
@@ -638,6 +665,7 @@ window.FB = window.FB || {};
       delete fort.targetLevel;
       delete fort.completeTurn;
       delete fort.maintenanceGraceUntil;
+      delete fort.fortProfileProject;
       delete fort.repairing;
       delete fort.ruinedLevel;
       if (FB.invalidateBuildingIndex) {
@@ -1000,6 +1028,7 @@ window.FB = window.FB || {};
      stable-priority project per living AI holder at most. */
   FB.fortAIYear = function (state) {
     var held = {}, directDevelopment = {}, contested = {};
+    var materialEnabled = FB.fortProfiles && Object.keys(FBDATA.fortProfiles).length > 0;
     var ids = Object.keys(state.realms || {}).sort();
     var year = Number(state.date && state.date.year) || 0;
     for (var i = 0; i < ids.length; i++) held[ids[i]] = [];
@@ -1050,12 +1079,16 @@ window.FB = window.FB || {};
       var counties = held[rid] || [];
       for (var j = 0; j < counties.length; j++) {
         pid = counties[j];
-        var target = nextAiTier(state, rid, pid);
-        if (!target || contested[pid]) continue;
+        if (contested[pid]) continue;
+        var materialQuote = materialEnabled && FB.fortProfiles.aiQuote(state,rid,pid);
+        var retained = materialEnabled && FB.fortAt(state,pid,true);
+        var materialIdentity = retained && retained.buildingProfile && FB.fortProfiles.get(retained.buildingProfile.id);
+        var target = materialQuote ? materialQuote.targetLevel : materialIdentity ? 0 : nextAiTier(state, rid, pid);
+        if (!target) continue;
         var def = levelDef(target);
         if ((Number(r.fortWorks) || 0) < def.work) continue;
         var candidate = {
-          pid:pid, target:target, work:def.work,
+          pid:pid, target:target, work:def.work, materialQuote:materialQuote,
           priority:pid === r.capital ? 0 : (foreignFrontier(state, pid, rid) ? 1 : 2),
           development:Number(state.dev[pid]) || 0
         };
@@ -1069,6 +1102,10 @@ window.FB = window.FB || {};
       if (!chosen) continue;
       var existing = FB.fortAt(state, chosen.pid);
       var settlement = existing ? existing.s : 0;
+      if (chosen.materialQuote) {
+        FB.fortProfiles.commit(state,chosen.materialQuote);
+        continue;
+      }
       if (FB.startFortProject(state, chosen.pid, settlement, chosen.target,
           { realm:rid, ai:true, contestedChecked:true })) {
         r.fortWorks -= chosen.work;

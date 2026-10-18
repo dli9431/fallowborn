@@ -6,7 +6,8 @@ const {beginBookmark,restoreBookmark} = require('../support/game/bookmark-accept
 const {dependsOnRuntime} = require('../support/runtime-dependencies');
 const examples = {river:require('../fixtures/authoring/building-profiles-river.json'),
   hill:require('../fixtures/authoring/building-profiles-hill.json')};
-dependsOnRuntime(__filename,['index.html','data/building_profiles.js','data/building_institutions.js',
+dependsOnRuntime(__filename,[
+  'data/fort_profiles.js', 'js/fort_profiles.js','index.html','data/building_profiles.js','data/building_institutions.js',
   'data/building_operations.js','data/site_resources.js','data/technology.js','data/map_data.js',
   'js/building_profiles.js','js/building_institutions.js','js/building_operations.js','js/site_resources.js',
   'js/fortifications.js','js/actions.js','js/world.js','js/mods.js','js/save.js','js/save_v4.js',

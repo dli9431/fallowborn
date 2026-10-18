@@ -8902,8 +8902,8 @@ window.FB = window.FB || {};
       kv('Profile',esc(dt(s,'buildingProfile',selected.profileId,p,'name'))) +
       kv('Description',esc(dt(s,'buildingProfile',selected.profileId,p,'desc'))) +
       kv('Construction price',esc(FB.T('{money:cost}',{cost:q.cost || 0}))) +
-      kv('Maintenance',esc(assetSeasonalMoneyCost(d.fort ? FB.fortLevelDef((q.context && q.context.fort.targetLevel) || 1).upkeep : d.upkeep))) +
-      kv('Technology',esc((d.requiresTech || []).map(function (id) { return dt(s,'tech',id,FBDATA.tech[id],'name'); }).join(', ') || FB.T('None'))) +
+      kv('Maintenance',esc(assetSeasonalMoneyCost(d.fort ? FB.fortLevelDef(q.targetLevel || (q.context && q.context.fort && q.context.fort.targetLevel) || 1).upkeep : d.upkeep))) +
+      kv('Technology',esc((q.requirements || d.requiresTech || []).map(function (id) { return dt(s,'tech',id,FBDATA.tech[id],'name'); }).join(', ') || FB.T('None'))) +
       kv('Effects',esc(d.fort ? FB.T('Canonical fort tier, construction duration and work requirements apply.') : buildingEffects(d,buildingId).join(' / ') || FB.T('None')))) +
       '<p class="hint">' + esc(FB.T('One physical asset. Shared site and county limits include default buildings and ruins.')) + '</p>' +
       reviewActionsHtml(reviewActionCardHtml({id:'gm-profile-review',label:FB.T('Review construction'),disabled:!q.allowed,note:q.reason || FB.T('Pay the quoted price once from your household account.')})) +
@@ -9641,6 +9641,7 @@ window.FB = window.FB || {};
 
   function fortProjectReason(s, status, def) {
     if (!status) return '';
+    if (status.profileStatus && !status.profileStatus.ready) return status.profileStatus.reason;
     if (status.reason === 'home_authority') return FB.homeAuthority.reason();
     if (status.reason === 'technology') return FB.T('Requires {technology}.', {
       technology:fortRequirementNames(s, def)
@@ -9723,6 +9724,10 @@ window.FB = window.FB || {};
           attrition:siege.attrition
         })) + '</div>';
     }
+    if (fort.buildingProfile && FB.fortProfiles.get(fort.buildingProfile.id)) {
+      detailsHtml += kv('Construction profile',esc(dt(s,'buildingProfile',fort.buildingProfile.id,
+        FBDATA.buildingProfiles[fort.buildingProfile.id],'name')));
+    }
     const currentLevel = Number(fort.level) || 0;
     if (!fort.targetLevel && currentLevel < 4) {
       const next = FB.fortLevelDef(currentLevel + 1);
@@ -9733,7 +9738,8 @@ window.FB = window.FB || {};
       })) + '</b><span class="adesc">' + esc(FB.T(
         '{money:cost} upfront · {seasons} seasons · {upkeep} upkeep · {garrison} garrison · requires {technology}', {
           cost:status ? status.cost : next.cost, seasons:next.seasons, upkeep:next.upkeep,
-          garrison:next.garrison, technology:fortRequirementNames(s, next)
+          garrison:next.garrison, technology:status && status.profileStatus ?
+            (status.profileStatus.requirements || []).map(function(id){return technologyName(s,id);}).join(', ') || FB.T('None') : fortRequirementNames(s, next)
         })) + '</span></div>';
       if (own && status && status.ok) {
         h += '<button class="actionbtn fort-project-action" data-fort-start="' +
@@ -9767,6 +9773,8 @@ window.FB = window.FB || {};
   UI.showFortProject = function (pid, idx, targetLevel) {
     const s = FB.state;
     const status = FB.fortProjectStatus(s, pid, idx, targetLevel);
+    const materialQuote = status.profileId && FB.fortProfiles.get(status.profileId) ? FB.fortProfiles.quote(s,{
+      countyId:pid,settlement:idx,profileId:status.profileId,targetLevel:targetLevel,realmId:'player',repair:false}) : null;
     const def = FB.fortLevelDef(targetLevel);
     if (!status.ok || !def) return UI.showSettlement(pid, idx);
     const finish = fortDateText(s, status.completeTurn);
@@ -9789,7 +9797,7 @@ window.FB = window.FB || {};
       historyView:true, historyBackRender:returnToSettlement
     });
     $('fort-project-confirm').addEventListener('click', function () {
-      if (FB.startFortProject(FB.state, pid, idx, targetLevel)) UI.refresh();
+      if (FB.state === s && (materialQuote ? FB.fortProfiles.commit(s,materialQuote) : FB.startFortProject(s,pid,idx,targetLevel))) UI.refresh();
       modalHistoryBack(returnToSettlement);
     });
     $('fort-project-back').addEventListener('click', function () {
@@ -24820,7 +24828,11 @@ window.FB = window.FB || {};
     for (const profileId in (FBDATA.buildingProfiles || {})) {
       const profile = FBDATA.buildingProfiles[profileId];
       const effective = FB.buildingProfiles.definition(profile.buildingId,profileId);
-      if (techRequiresId(effective.requiresTech,id)) add('buildingProfile:' + profileId,
+      const material = FB.fortProfiles.get(profileId);
+      const materialRequirement = material && Object.keys(material.levels).some(function (level) {
+        return material.levels[level].indexOf(id) >= 0;
+      });
+      if (techRequiresId(effective.requiresTech,id) || materialRequirement) add('buildingProfile:' + profileId,
         FB.T('Construction profile: {profile} ({building})',{
           profile:dt(s,'buildingProfile',profileId,profile,'name'),
           building:dt(s,'building',profile.buildingId,FBDATA.buildings[profile.buildingId],'name')
