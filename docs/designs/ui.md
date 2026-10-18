@@ -42,6 +42,8 @@ Full-width shared action cards open a separate review before appointment, reaffi
 
 # UI: keyboard & mobile
 
+Settlement-local household decisions use the existing story confirmation sheet. Costless record reviews name the required physical residence, and the blocker names that settlement when the protagonist is elsewhere. A county position or a journey arrival cannot make an exact-site choice available. Observer aliases and personal responses use their shared canonical receipt, preserving personal priority and the existing Back, Escape, Close, scroll and originating-card focus behavior.
+
 Story reviews return to the current Deeds card after Close, Escape or outcome Continue, including when a refresh replaced its DOM node while the sheet was open. Deeds preserves the card's semantic focus key through subsequent refreshes, and sidebody retains the originating scroll position.
 
 City and church dealings

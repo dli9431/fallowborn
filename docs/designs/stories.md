@@ -254,6 +254,14 @@ js/story_track.js provides political_track with service_negotiation, civic_manda
 
 Future save evolution
 
+Settlement-local household occurrences
+
+Local receipts append a canonical physical site id to the retained seven-element county receipt. Local personal tracks and observers use version 2; county-only declarations retain version 1. An opted-in declaration cannot downgrade its saved version. Matching restore validates recorded facts without delivering notices or changing locations.
+
+The trusted local-source interface exposes declared householdLocalities and pure householdEvents. Its initial adapter observes committed costless household decisions with a typed localEvent, rather than inferring site incidents from county wars or calendar windows. Future source owners must supply their own committed facts through this interface. Current exact-site reach uses the protagonist's actual home settlement, outside travel, personal war and captivity. County-level journeys do not prove arrival at a physical site. Unknown, ambiguous, uninhabited or absent physical layouts fail validation. No physical alias registry is supported; only canonical physical ids are accepted.
+
+Technology impact is none for household_locality_receipts. Recording and observing local facts is baseline agency. Ordinary movement, authority, resource and protection owners retain their eligibility.
+
 Keep each released instance id stable and store only typed progress, cast references, turn stamps, reviewed plans and transaction ids. New story formats should carry a small explicit record schema version. Use the type migration hook on the detached save copy only when a released format changes; migrate facts, validate the target and never replay initialization, grants or payments. Changing prose or refactoring a factory does not need a migration. Adding a version field to an existing frozen record requires the ordinary scoped contract review.
 Government contests
 
