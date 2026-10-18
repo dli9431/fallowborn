@@ -3,6 +3,7 @@ const path = require('path');
 const {test,expect} = require('../support/fixture');
 const {dependsOnRuntime} = require('../support/runtime-dependencies');
 const {openGame} = require('../support/game/navigation');
+const {beginBookmark,restoreBookmark} = require('../support/game/bookmark-acceptance');
 
 dependsOnRuntime(__filename,[
   'index.html','data/bookmark_1241.js','data/bookmark_1241_scaffold_a.js','data/bookmark_1241_scaffold_b.js',
@@ -10,7 +11,8 @@ dependsOnRuntime(__filename,[
   'data/bookmarks.js','data/counties.js','data/map_data.js','data/cultures.js','data/traits.js',
   'data/eras.js','data/geographies.js','data/geography_expansion.js',
   'data/settlements.js','data/settlements_real.js','data/political_institutions.js',
-  'js/model.js','js/util.js','js/world.js'
+  'js/model.js','js/util.js','js/world.js','js/population.js','js/main.js',
+  'js/bookmark_setup.js','js/save.js','js/save_v4.js','data/government_rollout.js'
 ]);
 
 const coverage = {
@@ -102,7 +104,7 @@ test('1241 quadrant c owns exactly its county partition and resolves its shared 
     return {faults:faults,count:Object.keys(provinces).length,courts:Object.keys(courts).length,
       outside:Object.keys(outside).sort(),scenery:scenery.sort()};
   },coverage);
-  expect(result).toEqual({faults:[],count:132,courts:32,outside:['hungary_1241','venice_1241'],
+  expect(result).toEqual({faults:[],count:132,courts:38,outside:['hungary_1241','venice_1241'],
     scenery:['torne_district','w_lapland','w_syrian']});
 });
 
@@ -117,7 +119,14 @@ test('1241 quadrant c preserves the retained inhabited source and independent or
       block.provinces.forEach(function (p) {
         const prior = old[p.id];
         ['name','x','y','terrain','duchy','culture','religion','dev','communities','wasteland','maxRadiusKm','names'].forEach(function (field) {
-          if (JSON.stringify(p[field]) !== JSON.stringify(prior[field])) faults.push(p.id+':'+field);
+          // Turku's independently reviewed Christian presence is the only
+          // resident correction; every other retained source field agrees.
+          if (p.id === 'turku' && field === 'communities') {
+            if (JSON.stringify(p[field]) !== JSON.stringify([
+              {culture:'finnic',religion:'baltic_pagan',populationShare0:8500},
+              {culture:'finnic',religion:'catholic',populationShare0:1500}
+            ])) faults.push(p.id+':'+field);
+          } else if (JSON.stringify(p[field]) !== JSON.stringify(prior[field])) faults.push(p.id+':'+field);
         });
         if (p === prior || (p.communities && (p.communities === prior.communities || p.communities[0] === prior.communities[0]))) faults.push(p.id+':shared county');
         if (p.wasteland) return;
@@ -147,7 +156,13 @@ test('1241 courts replace obsolete rulers while preserving the distinction betwe
   },Object.keys(coverage));
   const r = data.realms, p = data.provinces;
   const named = {hre_1241:['Frederick II',1194],norway_1241:['Hakon IV Hakonsson',1204],
-    latin_1241:['Baldwin II',1217],nicaea_1241:['John III Vatatzes',1193]};
+    latin_1241:['Baldwin II',1217],nicaea_1241:['John III Vatatzes',1193],
+    bavaria_1241:['Otto II',1206],austria_styria_1241:['Frederick II of Austria',1210],
+    carinthia_1241:['Bernhard of Sponheim',1179],sweden_1241:['Erik Eriksson',1216],
+    denmark_1241:['Valdemar II',1170],bulgaria_1241:['Ivan Asen II',1190],
+    rum_1241:['Kaykhusraw II',1221],cyprus_1241:['Henry I of Lusignan',1217],
+    karak_1241:['al-Nasir Dawud',1206]};
+  expect(Object.keys(r).filter(function (id) { return r[id].ruler.name; }).sort()).toEqual(Object.keys(named).sort());
   Object.keys(r).forEach(function (id) {
     if (named[id]) {
       expect([r[id].ruler.name,r[id].ruler.born]).toEqual(named[id]);
@@ -179,13 +194,109 @@ test('1241 courts replace obsolete rulers while preserving the distinction betwe
   expect(r.riga_1241.religion).toBe('catholic');
   expect(p.riga.religion).toBe('baltic_pagan');
   ['sinope','attaleia','amida'].forEach(function (id) { expect(p[id].realm).toBe('rum_1241'); });
-  ['damascus','homs','hama','jerusalem'].forEach(function (id) { expect(p[id].realm).toBe('damascus_1241'); });
-  ['edessa','harran','raqqa','palmyra_district','amman'].forEach(function (id) { expect(p[id].realm).toBe('jazira_local_1241'); });
+  ['damascus','jerusalem'].forEach(function (id) { expect(p[id].realm).toBe('damascus_1241'); });
+  ['edessa','harran','raqqa','palmyra_district'].forEach(function (id) { expect(p[id].realm).toBe('jazira_local_1241'); });
   expect(p.acre.realm).toBe('acre_court_1241');
   expect(p.fustat.realm).toBe('egypt_1241');
   expect(p.fustat.communities.some(function (c) { return c.culture === 'coptic' && c.religion === 'eastern'; })).toBe(true);
   expect(r.siwa_households_1241.ruler.culture).toBe('berber');
   expect(data.operations).toEqual([]);
+});
+
+test('1241 corrected local courts preserve imperial scope, residents and unresolved authorities',async function ({page},info) {
+  await openGame(page,info);
+  const data = await page.evaluate(function (keys) {
+    const realms = {}, provinces = {};
+    keys.forEach(function (key) {
+      FBDATA.bookmarkRegions1241[key].realms.forEach(function (r) { realms[r.id] = r; });
+      FBDATA.bookmarkRegions1241[key].provinces.forEach(function (p) { provinces[p.id] = p; });
+    });
+    return {realms:realms,provinces:provinces,validation:FB.validateBookmark(FB.bookmark('1241'))};
+  },Object.keys(coverage));
+  const r = data.realms, p = data.provinces;
+  ['wien','linz','graz'].forEach(function (id) { expect(p[id].realm).toBe('austria_styria_1241'); });
+  expect(p.klagenfurt.realm).toBe('carinthia_1241');
+  ['austria_styria_1241','carinthia_1241'].forEach(function (id) {
+    expect(r[id]).toMatchObject({rank:2,religion:'catholic',liege:'hre_1241'});
+  });
+  expect(r.austria_styria_1241.capital).toBe('wien');
+  expect(r.carinthia_1241.capital).toBe('klagenfurt');
+  expect(p.tallinn.realm).toBe('denmark_1241');
+  expect(p.tartu.realm).toBe('tartu_1241');
+  expect(r.tartu_1241).toMatchObject({capital:'tartu',rank:1,religion:'catholic',techTraditions:['latin'],
+    ruler:{culture:'german',generated:true,born:1206}});
+  ['tallinn','tartu'].forEach(function (id) {
+    expect(p[id].communities).toEqual([{culture:'finnic',religion:'baltic_pagan',populationShare0:10000}]);
+  });
+  expect(p.turku.realm).toBe('finland_local_1241');
+  ['adrianople','serres'].forEach(function (id) {
+    expect(p[id]).toMatchObject({realm:'bulgaria_1241',culture:'greek',religion:'orthodox'});
+  });
+  expect(r.cilicia_1241.capital).toBe('adana');
+  expect(r.cilicia_1241.ruler.generated).toBe(true);
+  ['homs','hama','amman'].forEach(function (id,index) {
+    const court = ['homs_1241','hama_1241','karak_1241'][index];
+    expect(p[id].realm).toBe(court);
+    expect(r[court]).toMatchObject({capital:id,rank:2,religion:'sunni',ruler:{culture:'arabic'}});
+    expect(r[court].liege).toBeUndefined();
+  });
+  expect(r.homs_1241.ruler.generated).toBe(true);
+  expect(r.hama_1241.ruler.generated).toBe(true);
+  ['homs','amman'].forEach(function (id) { expect(p[id].religion).toBe('shia'); });
+  expect(p.jersika.realm).toBe('livonian_local_1241');
+  expect(r.bulgaria_1241.capital).toBe('pliska');
+  expect(p.larissa.realm).toBe('thessalonica_1241');
+  ['bosnia_1241','serbia_1241','trebizond_1241','egypt_1241','acre_court_1241'].forEach(function (id) {
+    expect(r[id].ruler.generated).toBe(true);
+  });
+  expect(data.validation).toEqual([]);
+});
+
+test('1241 corrected holders, named people and Turku communities survive creation and restore',async function ({page},info) {
+  await beginBookmark(page,info,'1241','farmer');
+  function snapshot() {
+    const s = FB.state, ids = ['austria_styria_1241','carinthia_1241','tartu_1241','homs_1241','hama_1241','karak_1241'];
+    const communities = FB.countyCommunities(s,'turku');
+    return {
+      owners:['wien','linz','graz','klagenfurt','tallinn','tartu','adrianople','serres','homs','hama','amman']
+        .map(function (id) { return [id,s.holder[id],s.owner[id]]; }),
+      courts:ids.map(function (id) {
+        const r = s.realms[id], person = FB.realmRulerCharacterSnapshot(s,id);
+        return [id,r.capital,r.religion,person && person.id];
+      }),
+      names:['bavaria_1241','austria_styria_1241','carinthia_1241','sweden_1241','denmark_1241',
+        'bulgaria_1241','rum_1241','cyprus_1241','karak_1241'].map(function (id) { return [id,s.realms[id].ruler.name]; }),
+      pairs:communities.map(function (c) { return [c.culture,c.religion]; }),
+      partitioned:communities.reduce(function (sum,c) { return sum+c.count; },0) === FB.countyPopulation(s,'turku'),
+      catholicShare:FB.countyReligionShare(s,'turku','catholic'),
+      errors:FBTEST.checkInvariants(),saveValid:FB.save.v4.validatePlatform(s)
+    };
+  }
+  const before = await page.evaluate(snapshot);
+  expect(before.owners).toEqual([
+    ['wien','austria_styria_1241','hre_1241'],['linz','austria_styria_1241','hre_1241'],
+    ['graz','austria_styria_1241','hre_1241'],['klagenfurt','carinthia_1241','hre_1241'],
+    ['tallinn','denmark_1241','denmark_1241'],['tartu','tartu_1241','tartu_1241'],
+    ['adrianople','bulgaria_1241','bulgaria_1241'],['serres','bulgaria_1241','bulgaria_1241'],
+    ['homs','homs_1241','homs_1241'],['hama','hama_1241','hama_1241'],['amman','karak_1241','karak_1241']
+  ]);
+  expect(before.courts.map(function (row) { return row.slice(0,3); })).toEqual([
+    ['austria_styria_1241','wien','catholic'],['carinthia_1241','klagenfurt','catholic'],
+    ['tartu_1241','tartu','catholic'],['homs_1241','homs','sunni'],['hama_1241','hama','sunni'],
+    ['karak_1241','amman','sunni']
+  ]);
+  expect(before.courts.every(function (row) { return typeof row[3] === 'string' && !!row[3]; })).toBe(true);
+  expect(new Set(before.courts.map(function (row) { return row[3]; })).size).toBe(6);
+  expect(before.names.map(function (row) { return row[1]; })).toEqual(['Otto II','Frederick II of Austria',
+    'Bernhard of Sponheim','Erik Eriksson','Valdemar II','Ivan Asen II','Kaykhusraw II','Henry I of Lusignan','al-Nasir Dawud']);
+  expect(before.pairs).toEqual([['finnic','baltic_pagan'],['finnic','catholic']]);
+  expect(before.partitioned).toBe(true);
+  expect(before.catholicShare).toBeCloseTo(0.15,3);
+  expect(before.errors).toEqual([]);
+  expect(before.saveValid).toBe(true);
+  const saved = await page.evaluate(function () { return FB.save.serialize(); });
+  await restoreBookmark(page,saved);
+  expect(await page.evaluate(snapshot)).toEqual(before);
 });
 
 test('1241 bounded districts retain source sites, climate and the northern habitation hold',async function ({page},info) {

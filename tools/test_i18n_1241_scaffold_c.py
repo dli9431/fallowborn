@@ -16,6 +16,12 @@ class Spring1241QuadrantCLabels(unittest.TestCase):
             ('realm.1241.rum_1241.name.default', 'Sultanate of Rum'),
             ('realm.1241.jazira_local_1241.name.default', 'Jaziran local court'),
             ('realm.1241.egypt_1241.name.default', 'Egyptian Ayyubid sultanate'),
+            ('realm.1241.austria_styria_1241.name.default', 'Duchies of Austria and Styria'),
+            ('realm.1241.carinthia_1241.name.default', 'Duchy of Carinthia'),
+            ('realm.1241.tartu_1241.name.default', 'Tartu local episcopal jurisdiction'),
+            ('realm.1241.homs_1241.name.default', 'Homs Ayyubid court'),
+            ('realm.1241.hama_1241.name.default', 'Hama Ayyubid court'),
+            ('realm.1241.karak_1241.name.default', 'Karak Ayyubid court'),
             ('province.1241.palmyra_district.name.default', 'Tadmur'),
             ('province.1241.torne_district.name.default', 'Northern Gulf river communities'),
             ('settlement.1241.siwa_oasis_inhabited_1204.name.default', 'Shali'),
@@ -25,7 +31,10 @@ class Spring1241QuadrantCLabels(unittest.TestCase):
             self.assertEqual(inventory.entries[key]['text'], text)
             self.assertIn('bookmark_1241_scaffold_c.js', inventory.meta[key]['location'])
             self.assertIn(i18n_catalog.source_key(text), inventory.entries)
-        for name in ('Frederick II', 'Hakon IV Hakonsson', 'Baldwin II', 'John III Vatatzes'):
+        for name in ('Frederick II', 'Hakon IV Hakonsson', 'Baldwin II', 'John III Vatatzes',
+                     'Otto II', 'Frederick II of Austria', 'Bernhard of Sponheim',
+                     'Erik Eriksson', 'Valdemar II', 'Ivan Asen II', 'Kaykhusraw II',
+                     'Henry I of Lusignan', 'al-Nasir Dawud'):
             self.assertNotIn(i18n_catalog.source_key(name), inventory.entries)
 
 

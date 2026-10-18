@@ -122,7 +122,7 @@ test('1241 composes all physical counties in ledger order with unique courts and
   expect(result.headBindings).toEqual({catholic:'papacy_1241',sunni:'abbasid_1241'});
   expect(result.climates).toEqual(['continental','arid','arid']);
   expect(result.owners).toEqual(['france_1241','silesia_1241','hre_1241','nicaea_1241',
-    'egypt_1241','rum_1241','rasulid_yemen_1241']);
+    'almohad_1241','rum_1241','rasulid_yemen_1241']);
   expect(result.absent).toBe(true);
   expect(result.identities).toBe(true);
   expect(result.stories).toEqual([]);
