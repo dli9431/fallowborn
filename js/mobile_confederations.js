@@ -1162,7 +1162,7 @@
     if (!mobile) return d.mobile === undefined ? [] : [FB.T('A mobile opening requires a mobile territory strategy.')];
     var t = d.mobile, p = t && profiles[t.profileId], byId = {};
     provinces.forEach(function (pr) {byId[pr.id]=pr;});
-    if (!keys(t,['profileId','patronRealmId','origin','target','food','fighters','treasury','opening','command','sponsorship','hostedAccess','columns']) || !p ||
+    if (!keys(t,['profileId','patronRealmId','origin','target','food','fighters','treasury','opening','command','sponsorship','hostedAccess','columns','funding']) || !p ||
         (t.sponsorship!==undefined ? !M.independent(t) || !t.command || !t.opening :
           !Object.prototype.hasOwnProperty.call(realms,t.patronRealmId) || t.patronRealmId === d.id) || !d.nonTerritorial ||
         !byId[t.origin] || byId[t.origin].wasteland || !byId[t.target] || byId[t.target].wasteland ||
@@ -1219,6 +1219,8 @@
       });
       if (invalid || total!==t.fighters) return [FB.T('Invalid authored mobile opening.')];
     }
+    if (t.funding !== undefined && (!t.command || !FB.homeAuthority || !FB.homeAuthority.fundingPolicyValid(t.funding)))
+      return [FB.T('Invalid command funding policy.')];
     if (t.hostedAccess !== undefined) {
       var a = t.hostedAccess;
       var actorDef = a && bookmark && bookmark.opening && bookmark.opening.actors &&

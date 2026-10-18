@@ -77,6 +77,9 @@
   /* Optional platform fields (state-and-saves.md, Save v4 platform schema).
      Absent fields stay valid; present ids must resolve. */
   P.validatePlatform = function (state) {
+    if (state.treasuryAccounting && own(state.treasuryAccounting, 'fundingRevision') &&
+        (!Number.isSafeInteger(state.treasuryAccounting.fundingRevision) || state.treasuryAccounting.fundingRevision < 0))
+      field('treasuryAccounting.fundingRevision');
     // A leftover legacy record must fail even when there are no stories.
     if (state.situation476 !== undefined) field('state.situation476');
     if (state.start !== undefined && !plain(state.start)) field('state.start');

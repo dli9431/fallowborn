@@ -15,7 +15,7 @@ dependsOnRuntime(__filename, [
   'js/government_collective.js', 'js/government_assembly.js', 'data/assembly_polities.js',
   'data/civic_profiles.js', 'js/government_civic.js', 'js/civic_transactions.js', 'js/civic_strategies.js', 'js/civic_conversion.js', 'js/civic_validation.js',
   'js/government_continuity.js', 'js/government_recognition.js', 'js/government_administration.js', 'js/world.js', 'js/actions.js', 'js/council.js',
-  'js/authority.js', 'js/armies.js', 'js/lordships.js', 'js/treasury.js', 'js/fiscal.js',
+  'js/home_authority.js', 'js/authority.js', 'js/armies.js', 'js/lordships.js', 'js/treasury.js', 'js/fiscal.js',
   'js/economy.js', 'js/wars.js', 'js/federates.js', 'js/politics.js', 'js/mods.js',
   'js/technology.js', 'js/papacy.js', 'data/papacy.js',
   'js/station.js', 'js/save.js', 'js/save_v4.js'

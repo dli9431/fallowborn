@@ -453,3 +453,7 @@ A mobile.command mandate authorizes only its exact following realm's declared op
 Finite external warrants and independent sponsors
 
 An external command issuer can be represented as a generation-tagged finite warrant, without a local character or realm. Its external identity is scoped to the declared command and authorizes only existing permitted operations until its absolute expiry. No local actor can impersonate that issuer to appoint or renew it. Independent sponsorship is a separate typed migration policy; neither this policy nor the warrant grants passage, land, tax rights, outside consent or funds. Existing local authority, service, ownership and treasury transactions remain canonical. docs/designs/mobile-command.md records the exact bounded schemas and interruption/restore behavior.
+
+Home office presence
+
+Opted-in homeAuthority forms use FB.homeAuthority.quote for new levies, appointments, discretionary grants, war and spending. Each homePowers entry is an exact supported operation on an existing effective civil appointment. Local presence, issuer generation, scope, term, recall and custody remain live facts; host command supplies no civil delegation. Appointment and grant reviews retain this evidence for stale rejection. Existing accepted service awards retain their exact contract-owned consent, recipient and site; they cannot authorize a new discretionary grant. The full design and independent none technology decisions are in docs/designs/home-authority.md.

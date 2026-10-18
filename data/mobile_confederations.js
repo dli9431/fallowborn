@@ -68,6 +68,14 @@
     rationale:'Reassigning an existing member commander and dividing or reuniting existing fighters creates no people or equipment. Current mandates, locality, member pledges and normal unit qualifications govern recovery.'};
   FBDATA.techImpactReviews.features.mobile_column_settlement = {mode:'none',
     rationale:'Civilian settlement and final reunion use ordinary conserved population and lawful land transactions. Final settlement requires every surviving field host to return and demuster; no technology can substitute for their arrival.'};
+  FBDATA.techImpactReviews.features.home_decision_presence = {mode:'none',
+    rationale:'Local public decisions depend on actual presence and a living incumbent, without a credible discovery prerequisite. Existing commitments and ordinary private actions remain available.'};
+  FBDATA.techImpactReviews.features.home_decision_delegation = {mode:'none',
+    rationale:'Exact delegation depends on an existing effective civil appointment, its scope, term and current issuer generation. Military command alone supplies no civil authority.'};
+  FBDATA.techImpactReviews.features.expedition_public_funding = {mode:'none',
+    rationale:'A public grant transfers available money between distinct existing public accounts under current lawful authority. It creates no income, credit or technological exception.'};
+  FBDATA.techImpactReviews.features.expedition_private_contributions = {mode:'none',
+    rationale:'A consenting household may contribute its actual private money to a distinct command account. No discovery gates this baseline voluntary transfer.'};
   /* The fresh 476 opening inhabits Cherson and adds the Pontic following.
      Priscus attests displaced followings and Roman diplomacy, not a precise
      476 boundary or an identifiable incumbent at this simulated camp. */

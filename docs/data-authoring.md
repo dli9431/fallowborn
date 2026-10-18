@@ -100,3 +100,7 @@ local_threat composes a typed original actor, inhabited physical locality, finit
 Named association authoring
 
 The household_party story type supports ordinary JSON declarations for bounded named household plans. Capacity, dependent eligibility, invitation deadlines and nonplayer adult reply policy vary through data, while exact saved people, actual parents, current availability and separate consent remain engine invariants. The harbor and upland household-party imports configure different complete fictional worlds and actual reply behavior through the normal Mods file picker. Neither declares a carrier or changes residence. Public operations, strict optional records and unsupported effects are documented in docs/MODDING.md and docs/designs/household-parties.md.
+
+Home authority and conserved command funding
+
+The expedition-authority-harbor.json and expedition-authority-dune.json files are complete independent ordinary JSON imports. Their home courts differ in capital versus territory presence and whether existing civil appointments can delegate; the commands differ in their private-contribution policy and per-transfer limit. governmentForms.homeAuthority, authorityOffices.homePowers and mobile.funding share detached definition validation and the live canonical player/AI consumers. These policies supply no new people, offices, income or historical evidence. The public schema and explicit-account limits are documented in docs/MODDING.md.

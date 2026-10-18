@@ -3952,3 +3952,7 @@ The existing story sheet shows exact household invitation names, reply states an
 Reviewed column controls
 
 The existing mobile command sheet adds retained selectors for the source column, other declared slot, ordinary unit class and existing member commander. Shared action cards expose field march, one camp escort, halt, explicit assignment, split, merge, demuster, recruitment and an ordinary campaign review. Details and confirmation identify the selected columns, actual county, class, person, count and exact public cost. Unavailable actions retain their current authority, resource, locality or commitment blocker. All controls reuse the shared modal history, Details, keyboard focus, scroll, Back, Escape and confirmation patterns at narrow and wide widths. A field order leaves the camp behind; the camp escort description states that only actual arrivals carry civilians.
+
+Command funding reviews
+
+The shared mobile sheet exposes separate Contribute private funds and Grant public funds cards only under the command's declared funding policy. It shows the selected paying account, command recipient and exact contribution before confirmation; a missing public account remains an explicit funding blocker. The private household purse is identified separately from public treasuries. Amount/source controls, list scroll, disclosures and originating focus survive Back, Escape and the outcome Continue route through the existing modal history. A changed account or mandate rejects confirmation without a transfer.

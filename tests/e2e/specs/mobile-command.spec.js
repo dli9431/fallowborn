@@ -10,7 +10,7 @@ dependsOnRuntime(__filename,['index.html','data/mobile_confederations.js','data/
   'data/technology.js','js/mobile_confederations.js','js/mobile_command.js','js/mobile_columns.js','js/ui_mobile.js',
   'js/governments.js','js/government_selection.js','js/government_support.js','js/government_continuity.js',
   'js/bookmark_setup.js','js/world.js','js/starts.js','js/station.js','js/mods.js','js/model.js',
-  'js/treasury.js','js/population.js','js/armies.js','js/federates.js','js/authority.js','js/wars.js',
+  'js/treasury.js','js/population.js','js/armies.js','js/federates.js','js/home_authority.js', 'js/authority.js','js/wars.js',
   'js/technology.js','js/main.js','js/save.js','js/save_v4.js','js/ui_misc.js']);
 
 async function start(page,info,prefix,modified) {
