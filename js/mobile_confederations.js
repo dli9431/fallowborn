@@ -740,7 +740,57 @@
     plan.allowed=true;
     return plan;
   };
+  /* Shared physical constructor. Callers preflight and own every source and payment. */
+  M.formFollowing = function (s,d,plan,pools,food) {
+    var p = FBDATA.mobileProfiles[d.mobile.profileId], g = s.authority.governments[d.id] ||
+      (s.authority.governments[d.id]={formId:G.forRealm(s,d.id).id,sinceTurn:s.turn});
+    if (!p || !M.active(s, d.id)) throw new Error('Invalid mobile opening');
+    var r = g.mobile = {schema:plan ? 2 : 1,profileId:d.mobile.profileId,migrationId:null,status:'active',serial:0,revision:0,
+      leaderId:null,selection:null,decision:null,food:food,lastDay:s.turn,worked:{},agreements:[],
+      accounting:{initial:0,arrivals:0,dead:0,settled:0,dispersed:0},members:[]};
+    if (plan) r.openingBindings=copy(plan.bindings);
+    p.members.forEach(function (a) {
+      var bound=plan && plan.bindings.filter(function (b) {return b.memberId===a.id;})[0];
+      var c = bound ? s.chars[bound.characterId] : FB.makeCharacter(s, {sex:'m',culture:d.culture,religion:d.religion,born:s.date.year - 30,
+        quality:1,station:1,traitsN:1});
+      if (!bound) c.homeProvinceId = d.mobile.origin;
+      r.members.push({id:a.id,principal:{kind:'character',id:c.id},scope:{kind:'realm',id:d.id},basis:'following',
+        continuity:'member',weight:a.weight,pledge:a.pledge,allegiance:true,
+        civilians:pools ? copy(pools[a.id]) : [{culture:d.culture,religion:d.religion,count:a.population}],reserve:[]});
+      if (pools) r.accounting.arrivals += a.population;
+      else r.accounting.initial += a.population;
+    });
+    var leader=plan ? r.members.filter(function (m) {return m.id===d.mobile.opening.leaderMemberId;})[0] : r.members[0];
+    var incumbent=plan && plan.bindings.filter(function (b) {return b.memberId===leader.id && b.person.kind==='realm_ruler';})[0];
+    if (incumbent && incumbent.person.realmId===d.id) {r.leaderId=incumbent.characterId;G.invalidate();FB.invalidateRealmCache();}
+    else install(s, d.id, leader.principal.id);
+    if (d.mobile.command) M.initializeCommand(s,d);
+    var units=plan ? copy(plan.units) : {};if (!plan) units[FB.unitRoleClass('levy_infantry')]=d.mobile.fighters;
+    var migrationSpec = {realmId:d.id,patronRealmId:d.mobile.patronRealmId,
+      origin:d.mobile.origin,target:d.mobile.target,hostId:'following_' + d.id,
+      settlementForm:p.settlementForm,endTurn:s.turn + 10000000,men:d.mobile.fighters,units:units};
+    if (d.mobile.sponsorship!==undefined) migrationSpec.sponsorship=copy(d.mobile.sponsorship);
+    var migration = FB.federateBeginMigration(s, migrationSpec);
+    if (!migration) throw new Error('Invalid mobile migration');
+    r.migrationId = migration.id;
+    var army = M.host(s, d.id); army.mobileFollowing = true; army.mobileCourt = false; army.mobileRoster = [];
+    var capacity=hostCapacity(army,p);
+    army.mobileFood=Math.min(r.food,hostLoadTarget(s,army,p));r.food-=army.mobileFood;
+    army.supply=capacity ? army.mobileFood/capacity*100 : 0;
+    var muster=plan ? plan.muster : [{memberId:r.members[0].id,count:d.mobile.fighters}];
+    muster.forEach(function (part) {
+      var m=member(s,d.id,part.memberId), cohorts=take(m.civilians,part.count);
+      cohorts.forEach(function (c) {
+        var prior=army.mobileRoster.filter(function (v) {return v.memberId===m.id && v.culture===c.culture && v.religion===c.religion;})[0];
+        if (prior) prior.count+=c.count;
+        else army.mobileRoster.push(Object.assign({memberId:m.id},c));
+      });
+    });
+    M.migration(s, d.id).courtIds = r.members.map(function (a) { return a.principal.id; });
+    return M.row(s,d.id);
+  };
   M.initialize = function (s, defs) {
+    defs=defs.filter(function (d) {return !d.mobile || d.mobile.preparationId===undefined;});
     var plans={}, people={}, hosted = M.hostedAccessPlan(s,defs);
     if (!hosted.allowed) throw new Error(FB.T('Invalid hosted opening access.'));
     defs.forEach(function (d) {
@@ -757,51 +807,7 @@
     });
     defs.forEach(function (d) {
       if (!d.mobile || M.row(s, d.id)) return;
-      var p = FBDATA.mobileProfiles[d.mobile.profileId], g = s.authority.governments[d.id] ||
-        (s.authority.governments[d.id]={formId:G.forRealm(s,d.id).id,sinceTurn:s.turn});
-      if (!p || !M.active(s, d.id)) throw new Error('Invalid mobile opening');
-      var plan=plans[d.id];
-      var r = g.mobile = {schema:plan ? 2 : 1,profileId:d.mobile.profileId,migrationId:null,status:'active',serial:0,revision:0,
-        leaderId:null,selection:null,decision:null,food:d.mobile.food,lastDay:s.turn,worked:{},agreements:[],
-        accounting:{initial:0,arrivals:0,dead:0,settled:0,dispersed:0},members:[]};
-      if (plan) r.openingBindings=copy(plan.bindings);
-      p.members.forEach(function (a) {
-        var bound=plan && plan.bindings.filter(function (b) {return b.memberId===a.id;})[0];
-        var c = bound ? s.chars[bound.characterId] : FB.makeCharacter(s, {sex:'m',culture:d.culture,religion:d.religion,born:s.date.year - 30,
-          quality:1,station:1,traitsN:1});
-        if (!bound) c.homeProvinceId = d.mobile.origin;
-        r.members.push({id:a.id,principal:{kind:'character',id:c.id},scope:{kind:'realm',id:d.id},basis:'following',
-          continuity:'member',weight:a.weight,pledge:a.pledge,allegiance:true,
-          civilians:[{culture:d.culture,religion:d.religion,count:a.population}],reserve:[]});
-        r.accounting.initial += a.population;
-      });
-      var leader=plan ? r.members.filter(function (m) {return m.id===d.mobile.opening.leaderMemberId;})[0] : r.members[0];
-      var incumbent=plan && plan.bindings.filter(function (b) {return b.memberId===leader.id && b.person.kind==='realm_ruler';})[0];
-      if (incumbent && incumbent.person.realmId===d.id) {r.leaderId=incumbent.characterId;G.invalidate();FB.invalidateRealmCache();}
-      else install(s, d.id, leader.principal.id);
-      if (d.mobile.command) M.initializeCommand(s,d);
-      var units=plan ? copy(plan.units) : {};if (!plan) units[FB.unitRoleClass('levy_infantry')]=d.mobile.fighters;
-      var migrationSpec = {realmId:d.id,patronRealmId:d.mobile.patronRealmId,
-        origin:d.mobile.origin,target:d.mobile.target,hostId:'following_' + d.id,
-        settlementForm:p.settlementForm,endTurn:s.turn + 10000000,men:d.mobile.fighters,units:units};
-      if (d.mobile.sponsorship!==undefined) migrationSpec.sponsorship=copy(d.mobile.sponsorship);
-      var migration = FB.federateBeginMigration(s, migrationSpec);
-      if (!migration) throw new Error('Invalid mobile migration');
-      r.migrationId = migration.id;
-      var army = M.host(s, d.id); army.mobileFollowing = true; army.mobileCourt = false; army.mobileRoster = [];
-      var capacity=hostCapacity(army,p);
-      army.mobileFood=Math.min(r.food,hostLoadTarget(s,army,p));r.food-=army.mobileFood;
-      army.supply=capacity ? army.mobileFood/capacity*100 : 0;
-      var muster=plan ? plan.muster : [{memberId:r.members[0].id,count:d.mobile.fighters}];
-      muster.forEach(function (part) {
-        var m=member(s,d.id,part.memberId), cohorts=take(m.civilians,part.count);
-        cohorts.forEach(function (c) {
-          var prior=army.mobileRoster.filter(function (v) {return v.memberId===m.id && v.culture===c.culture && v.religion===c.religion;})[0];
-          if (prior) prior.count+=c.count;
-          else army.mobileRoster.push(Object.assign({memberId:m.id},c));
-        });
-      });
-      M.migration(s, d.id).courtIds = r.members.map(function (a) { return a.principal.id; });
+      var r=M.formFollowing(s,d,plans[d.id],null,d.mobile.food);
       FB.treasuryCredit(s, d.id, d.mobile.treasury);
       var grant = hosted.grants[d.id];
       if (grant) {
@@ -1183,7 +1189,7 @@
     if (!mobile) return d.mobile === undefined ? [] : [FB.T('A mobile opening requires a mobile territory strategy.')];
     var t = d.mobile, p = t && profiles[t.profileId], byId = {};
     provinces.forEach(function (pr) {byId[pr.id]=pr;});
-    if (!keys(t,['profileId','patronRealmId','origin','target','food','fighters','treasury','opening','command','sponsorship','hostedAccess','columns','funding','expeditionProgram']) || !p ||
+    if (!keys(t,['profileId','patronRealmId','origin','target','food','fighters','treasury','opening','command','sponsorship','hostedAccess','columns','funding','expeditionProgram','preparationId']) || !p ||
         (t.sponsorship!==undefined ? !M.independent(t) || !t.command || !t.opening :
           !Object.prototype.hasOwnProperty.call(realms,t.patronRealmId) || t.patronRealmId === d.id) || !d.nonTerritorial ||
         !byId[t.origin] || byId[t.origin].wasteland || !byId[t.target] || byId[t.target].wasteland ||
@@ -1283,7 +1289,7 @@
     }
     Object.keys(root).forEach(function (rid) {
       var r = M.row(s,rid), strategy = FBDATA.governmentForms[root[rid].formId] && G.resolve(root[rid].formId).use.territory;
-      if (!r) {if(strategy && strategy.mobileFollowing) fault(rid,'missing');return;}
+      if (!r) {if(strategy && strategy.mobileFollowing && !(FB.expeditionPreparation && FB.expeditionPreparation.unformed(s,rid))) fault(rid,'missing');return;}
       var p = M.profile(s,rid), moving = M.migration(s,rid), ids = {}, principals = {};
       if (moving && !M.migrationSponsorshipValid(s,moving)) fault(rid,'sponsorship');
       if (!keys(r,['schema','profileId','migrationId','status','serial','revision','leaderId','selection','decision','food','lastDay','lastAI',

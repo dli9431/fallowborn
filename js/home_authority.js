@@ -194,7 +194,8 @@
         !Number.isFinite(input.amount) || input.amount <= 0 || !keys(input.source,['kind','realmId','characterId'])) return q;
     var rid = input.recipientRealmId, p = H.fundingPolicy(s,rid), source = input.source, c = s.chars[input.characterId];
     var target = FB.treasuryPublicAccountSnapshot(s,rid), row = M.row(s,rid);
-    if (!p || !H.fundingPolicyValid(p) || input.amount > p.maximum || !target || !row || !row.command || !M.commandValid(s,rid) || !live(s,c)) return q;
+    var preparation=FB.expeditionPreparation && FB.expeditionPreparation.fundingSnapshot(s,rid);
+    if (!p || !H.fundingPolicyValid(p) || input.amount > p.maximum || !target || (!preparation && (!row || !row.command || !M.commandValid(s,rid))) || !live(s,c)) return q;
     var from;
     if (source.kind === 'public' && keys(source,['kind','realmId']) && p.publicGrants && source.realmId !== rid) {
       from = FB.treasuryPublicAccountSnapshot(s,source.realmId);
@@ -218,7 +219,7 @@
     if (revision !== undefined && (!Number.isSafeInteger(revision) || revision < 0 || revision === Number.MAX_SAFE_INTEGER)) return q;
     q.amount = input.amount; q.cost = input.amount; q.recipientRealmId = rid;
     q.terms = {fundingKind:q.payer,payerRealmId:source.realmId || null,recipientRealmId:rid,amount:input.amount};
-    q.signature = JSON.stringify([s.turn,revision || 0,p,source,from,target,c.id,live(s,c),q.homeDecision,M.commandSnapshot(s,rid)]);
+    q.signature = JSON.stringify([s.turn,revision || 0,p,source,from,target,c.id,live(s,c),q.homeDecision,M.commandSnapshot(s,rid),preparation || null]);
     q.allowed = true; q.reason = null; return q;
   };
   H.fund = function (s,reviewed) {

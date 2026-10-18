@@ -369,3 +369,7 @@ Literal siteResourceProfiles_<suffix> in the same buildings supplements extract 
 Fish preservation display owners
 
 The literal buildings_fish_drying map retains building.fish_drying_station name and description owners. Additive productionGoods_fish_drying and productionRecipes_fish_drying maps in production_fish_drying.js use the productionGood and productionRecipe namespaces through the additive production extractor. Season and producer policies contain only references and numbers. Ordinary JSON display text keeps English fallback. Existing shared reviews use FB.T; no rendered prose enters lots, batches or seasonal receipts. Generated catalogues remain unchanged on the feature branch.
+
+Expedition preparation text
+
+The expedition_preparation factory routes every shared status, choice, blocker, portrait label and public training/provision cost phrase through literal FB.T strings with named placeholders. Imported title/intro fields use effective English fallback through the normal story renderer. Source/actor ids, schema enums, fingerprints, reserves and formation receipts remain locale-neutral; no rendered prose is saved. No bundled instance or new structured extraction namespace is introduced. A future bundled declaration must use a supported literal presentation source before shipping; catalog generation remains separately authorized.

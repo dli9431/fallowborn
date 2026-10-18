@@ -111,6 +111,7 @@
       });
     }
   }
+  M.commandIssuer = function (s,rid) {return issuer(s,definition(s,rid));};
   M.commandSnapshot = function (s,rid) {
     var r=M.row(s,rid), d=definition(s,rid);
     if (!r || !r.command || !d) return null;
@@ -281,12 +282,17 @@
   M.validate = function (s) {
     validate(s);
     (FB.campaignBookmark(s).realms || []).forEach(function (d) {
-      if (d.mobile && d.mobile.command && d.mobile.command.landedCommandLink && !M.landedLink(s,d.id))
+      if (d.mobile && d.mobile.command && d.mobile.command.landedCommandLink && !M.landedLink(s,d.id) &&
+          !(FB.expeditionPreparation && FB.expeditionPreparation.unformed(s,d.id)))
         throw new Error(FB.T('Missing saved landed command link.'));
     });
     Object.keys(s.authority && s.authority.governments || {}).forEach(function (rid) {
       var r=M.row(s,rid), spec=definition(s,rid);
       var link=M.landedLink(s,rid), declared=spec && spec.landedCommandLink;
+      if (!r && FB.expeditionPreparation && FB.expeditionPreparation.unformed(s,rid)) {
+        if (link!==null) throw new Error(FB.T('Invalid saved landed command link.'));
+        return;
+      }
       function badLink() {throw new Error(FB.T('Invalid saved landed command link.'));}
       if (!declared) {if (link!==null || own(s.authority.governments[rid],'landedCommandLink')) badLink();}
       else {
@@ -304,7 +310,8 @@
             !Number.isSafeInteger(link.revision) || link.revision<0 || link.revision>=Number.MAX_SAFE_INTEGER ||
             !Number.isSafeInteger(link.changedTurn) || link.changedTurn<0 || link.changedTurn>s.turn ||
             [null,'death','custody','office','term','member','mandate','closed'].indexOf(link.reason)<0 ||
-            link.revision===0 && (link.reason!==null || link.changedTurn!==0)) badLink();
+            link.revision===0 && (link.reason!==null || link.changedTurn!==(initial.mobile.preparationId &&
+              FB.expeditionPreparation ? FB.expeditionPreparation.formedTurn(s,rid) : 0))) badLink();
       }
       if (!r) return;
       function fail() {throw new Error(FB.T('Invalid saved mobile command.'));}
