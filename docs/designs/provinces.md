@@ -2,7 +2,7 @@
 
 Spring 568 regional staging
 
-data/bookmark_568_scaffold_a.js stages 126 inhabited counties and two scenery cells on the existing europe_regional_2 anchors. Its five literal regions contain date-owned politics, district labels, ordered layouts and climate assignments. The central and eastern Iranian oases use the earlier inhabited corridor presentation with development 1; Dasht-e Kavir and Dasht-e Lut remain scenery. Loading the file changes no active bookmark, settlement layout, physical site, radius, route or saved geography. Complete world composition publishes the staging tables separately. This is content using existing habitation and government capabilities, with no new technology-impact entry. Evidence and first-pass limits are in docs/research/568-bookmark.md.
+data/bookmark_568_scaffold_a.js stages 126 inhabited counties and two scenery cells on the existing europe_regional_2 anchors. Its five literal regions contain date-owned politics, district labels, ordered layouts and climate assignments. The central and eastern Iranian oases use the earlier inhabited corridor presentation with development 1; Dasht-e Kavir and Dasht-e Lut remain scenery. Hira includes an Arabian Christian resident choice through the existing weighted-community contract; the corrected mix retains its principal identity, total population and generated court. Loading the file changes no active bookmark, settlement layout, physical site, radius, route or saved geography. Complete world composition publishes the staging tables separately. This is content using existing habitation and government capabilities, with no new technology-impact entry. Evidence and first-pass limits are in docs/research/568-bookmark.md.
 
 Period presentation
 
