@@ -38,4 +38,6 @@ The complete building-institutions-see.json and building-institutions-house.json
 
 Selected construction definitions
 
+The occupied-role check also applies when the proposed alternative has no institutionProfile. An ordinary temple or cathedral cannot be built over a bound worship foundation, including a ruin or an asset whose original permission has lapsed. The gate reads the existing selected definition and preserves occupancy across holder changes; unrelated roles and separate sites remain available. Existing unbound assets are not enrolled or suspended.
+
 A building profile may select an existing institutionProfile while retaining the base physical asset and role. Construction and saved-binding validation use that selected definition; original incumbent, property, builder and payer identities stay with this ordinary owner. The same foundation occupancy excludes base and profiled alternatives, including ruins. Profile selection grants no office, endowment or account transfer. The typed construction contract is in docs/designs/building-profiles.md.

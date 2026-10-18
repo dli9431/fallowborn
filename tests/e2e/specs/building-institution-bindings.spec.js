@@ -65,6 +65,27 @@ test('the see import binds the actual office and pays construction and maintenan
   expect(r.paid).toBe(r.price); expect(r.payer).toEqual({ kind:'character', id:r.player });
 });
 
+test('a bound foundation also excludes ordinary unbound worship after ruin and loss of permission', async function ({ page }, info) {
+  await start(page, info, 'see');
+  const r = await page.evaluate(function () {
+    const s = FB.state, pid = bindingCounty;
+    const built = FB.build(s, pid, 0, 'binding_work');
+    const row = s.buildings[pid].find(function (v) { return v.id === 'binding_work'; });
+    const before = JSON.stringify(s), rng = FB.getRngState(), uid = FB.getUidCounter();
+    const blocked = ['temple','cathedral'].every(function (id) {
+      return !FB.buildingInstitutionStatus(s, pid, 0, id).allowed;
+    });
+    const separate = FB.buildingInstitutionStatus(s, pid, 1, 'temple').allowed;
+    const pure = before === JSON.stringify(s) && rng === FB.getRngState() && uid === FB.getUidCounter();
+    row.ruined = true;
+    s.holder[pid] = 'inventory_estuary_court';
+    FB.invalidateSettlementLordships(s); FB.invalidateBuildingIndex(s, pid);
+    const retained = !FB.buildingInstitutionStatus(s, pid, 0, 'temple').allowed;
+    return { built:built, blocked:blocked, separate:separate, pure:pure, retained:retained };
+  });
+  expect(r).toEqual({ built:true, blocked:true, separate:true, pure:true, retained:true });
+});
+
 test('the house import needs a real paid endowment and never spends its restricted property account', async function ({ page }, info) {
   await start(page, info, 'house');
   const r = await page.evaluate(function () {

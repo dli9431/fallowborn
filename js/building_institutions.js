@@ -109,6 +109,13 @@ window.FB = window.FB || {};
     a = actor(s, a);
     if (!keys(a, ['kind','id']) || ['character','realm'].indexOf(a.kind) < 0 || typeof a.id !== 'string')
       return { allowed:false, reason:FB.T('A lawful builder and payer are required.'), binding:null };
+    // An ordinary alternative cannot reuse an already occupied bound footprint.
+    if (!existing && (s.buildings && s.buildings[pid] || []).some(function (r) {
+      if (!r || r.s !== idx) return false;
+      var d = FB.buildingProfiles.assetDefinition(r), p = d && profiles(FBDATA)[d.institutionProfile];
+      return !!p && (r.institutionBinding || r.buildingProfile && r.buildingProfile.inherited) &&
+        p.exclusiveRoles.indexOf(FB.buildingRole(id)) >= 0;
+    })) return {allowed:false,reason:FB.T('This physical foundation is already occupied, including ruins.'),binding:null};
     if (existing && !existing.institutionBinding && !(existing.buildingProfile && FB.buildingProfiles.assetDefinition(existing).institutionProfile))
       return { allowed:true, reason:'', binding:null };
     var q = current(s, pid, idx, id, a, definition || existing && FB.buildingProfiles.assetDefinition(existing)), b = q.binding;
