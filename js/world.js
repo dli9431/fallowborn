@@ -35,7 +35,7 @@ window.FB = window.FB || {};
   var REVISION_FIELDS = ['geography','opening','openingRevision','provinces','realms',
     'duchies','kingdoms','empires','straits','crossingClasses','localInstitutions',
     'settlementLayout','climate','religiousHeads','starts','stories','storyRegions','scripted',
-    'openingRevisions','openingLegacyRevision','startLocations'];
+    'openingRevisions','openingLegacyRevision','startLocations','openingInfrastructure'];
   function resolveBookmarkRevision(base, revision) {
     if (!base) return null;
     var selected = revision === undefined ? base.revision || 'baseline' : revision;
@@ -511,6 +511,124 @@ window.FB = window.FB || {};
     var geography = FB.geography(FB.bookmarkGeography(definition));
     return geography ? resolveGeography(normalized, definition, geography) : normalized;
   }
+
+  /* Inherited inventory is compiled from the effective world's ordered sites,
+     never the active map, generated names, construction gates or a campaign.
+     Publication and fresh-game application have separate owners. */
+  function openingInfrastructurePlan(definition) {
+    var out = { explicit:false, placements:[], errors:[] };
+    var declaration = definition.openingInfrastructure;
+    if (declaration === undefined) return out;
+    out.explicit = true;
+    function fault(detail) { out.errors.push('openingInfrastructure: ' + detail); }
+    if (!plainRecord(declaration) || declaration.version !== 1 ||
+        Object.keys(declaration).some(function (key) { return key !== 'version' && key !== 'placements'; }) ||
+        !Array.isArray(declaration.placements) || declaration.placements.length > 2048) {
+      fault('requires version 1 and a placements list of at most 2048 records, with no other fields.');
+      return out;
+    }
+    if (!Array.isArray(definition.provinces) || !Array.isArray(definition.realms)) {
+      fault('requires resolved province and realm lists.'); return out;
+    }
+    var buildingErrors = FB.validateBuildingData(FBDATA.buildings, true);
+    if (buildingErrors.length) { buildingErrors.forEach(fault); return out; }
+    if (!declaration.placements.length) return out;
+    var provinces = Object.create(null), realms = Object.create(null), holders = Object.create(null);
+    var siteOwners = Object.create(null), duplicates = Object.create(null);
+    var countyCounts = Object.create(null), holderCounts = Object.create(null), groupCounts = Object.create(null);
+    var fortCount = Object.create(null), buildings = FBDATA.buildings || {};
+    var geography = FB.geography(FB.bookmarkGeography(definition));
+    var sites = geography && geographySites(geography) || {};
+    (definition.provinces || []).forEach(function (pr) {
+      if (!pr) return;
+      provinces[pr.id] = pr;
+      (Array.isArray(pr.settlements) ? pr.settlements : []).forEach(function (entry) {
+        if (entry && typeof entry.site === 'string')
+          siteOwners[entry.site] = (siteOwners[entry.site] || 0) + 1;
+      });
+    });
+    (definition.realms || []).forEach(function (realm) { if (realm) realms[realm.id] = realm; });
+    // Only strategies with a pure opening projection can supply scoped limits.
+    var platform = FB.resolveBookmarkPlatform(definition);
+    if (platform.faults.length) { platform.faults.forEach(fault); return out; }
+    Object.keys(realms).forEach(function (rid) {
+      var form = FB.governments.resolve(platform.governments[rid]);
+      var strategy = form && form.use.holders;
+      if (strategy && typeof strategy.openingHolders === 'function')
+        Object.assign(holders, strategy.openingHolders(definition, rid));
+    });
+    declaration.placements.forEach(function (placement, index) {
+      var path = 'placement ' + index + ' ';
+      if (!plainRecord(placement) ||
+          Object.keys(placement).some(function (key) {
+            return ['countyId','siteId','buildingId','condition','level'].indexOf(key) < 0;
+          }) || ['countyId','siteId','buildingId'].some(function (key) {
+            return typeof placement[key] !== 'string' || !placement[key];
+          }) || ['standing','ruined'].indexOf(placement.condition) < 0) {
+        fault(path + 'requires countyId, siteId, buildingId and standing or ruined condition; only a fort may also name level.');
+        return;
+      }
+      var pr = provinces[placement.countyId];
+      var building = ownKey(buildings, placement.buildingId) && buildings[placement.buildingId];
+      if (!pr || pr.wasteland) { fault(path + 'must name an inhabited county.'); return; }
+      if (!building) { fault(path + 'has an unknown buildingId.'); return; }
+      var entries = Array.isArray(pr.settlements) ? pr.settlements : [];
+      var slot = entries.findIndex(function (entry) { return entry && entry.site === placement.siteId; });
+      var authored = entries.filter(function (entry) { return entry && !entry.fill; }).length;
+      var established = Math.min(SETTLEMENT_MAX_SLOTS,
+        Math.max(authored, 2 + (strHash(pr.id) % 2) + villageBonus(pr.dev || 1)));
+      if (!ownKey(sites, placement.siteId) || slot < 0 || slot >= established ||
+          siteOwners[placement.siteId] !== 1) {
+        fault(path + 'must name a unique established stable site in that county’s resolved layout.');
+        return;
+      }
+      var holder = holders[pr.id];
+      if (!realms[pr.realm] || typeof holder !== 'string' || !holder) {
+        fault(path + 'has no supported opening county-holder projection.'); return;
+      }
+      var physical = JSON.stringify([pr.id, placement.siteId, placement.buildingId]);
+      if (duplicates[physical]) { fault(path + 'repeats a site/building pair.'); return; }
+      duplicates[physical] = true;
+      var fort = FB.isFortificationBuilding(placement.buildingId);
+      if (fort) {
+        var levels = FBDATA.forts && FBDATA.forts.levels || {};
+        if (!Number.isInteger(placement.level) || placement.level < 1 || placement.level > 4 ||
+            !ownKey(levels, placement.level)) fault(path + 'requires a canonical fort level from 1 to 4.');
+        fortCount[pr.id] = (fortCount[pr.id] || 0) + 1;
+        if (fortCount[pr.id] > 1) fault(path + 'exceeds the single fortification per county.');
+      } else if (placement.level !== undefined) fault(path + 'level is only supported for the canonical fortification.');
+      var countyKey = JSON.stringify([pr.id, placement.buildingId]);
+      var holderKey = JSON.stringify([holder, placement.buildingId]);
+      countyCounts[countyKey] = (countyCounts[countyKey] || 0) + 1;
+      holderCounts[holderKey] = (holderCounts[holderKey] || 0) + 1;
+      if (building.maxCounty && countyCounts[countyKey] > building.maxCounty)
+        fault(path + 'exceeds building maxCounty.');
+      if (building.maxDemesne && holderCounts[holderKey] > building.maxDemesne)
+        fault(path + 'exceeds building maxDemesne for opening holder ' + holder + '.');
+      if (building.constructionGroup) {
+        var group = building.constructionGroup, groupKey = JSON.stringify([pr.id, group.id]);
+        groupCounts[groupKey] = (groupCounts[groupKey] || 0) + 1;
+        if (groupCounts[groupKey] > group.maxCounty) fault(path + 'exceeds constructionGroup maxCounty.');
+      }
+      var compiled = { countyId:pr.id, siteId:placement.siteId, buildingId:placement.buildingId,
+        condition:placement.condition, s:slot, holderId:holder };
+      if (fort) compiled.level = placement.level;
+      out.placements.push(compiled);
+    });
+    // Consumers cannot accidentally apply the valid prefix of a faulty inventory.
+    if (out.errors.length) out.placements = [];
+    return out;
+  }
+  FB.compileOpeningInfrastructure = function (definition) {
+    try {
+      if (!plainRecord(definition)) throw new Error('Missing bookmark definition.');
+      return openingInfrastructurePlan(preparedDefinition(definition.revisions
+        ? resolveBookmarkRevision(definition) : definition));
+    } catch (error) {
+      return { explicit:!!definition && definition.openingInfrastructure !== undefined,
+        placements:[], errors:['openingInfrastructure: ' + error.message] };
+    }
+  };
 
   /* ================= ERAS AND GOVERNMENT FORMS =================
      A bookmark declares its era (FBDATA.eras) and each realm its government
@@ -1381,6 +1499,7 @@ window.FB = window.FB || {};
     }
     try { definition = preparedDefinition(definition); }
     catch (error) { return [error.message]; }
+    openingInfrastructurePlan(definition).errors.forEach(fault);
     if (FB.localInstitutionDefinitionFaults) {
       var localErrors = FB.localInstitutionDefinitionFaults(definition);
       for (var le = 0; le < localErrors.length; le++) fault(localErrors[le]);
@@ -3142,9 +3261,31 @@ window.FB = window.FB || {};
      feudal_vassals generates dukes and counts beneath the ruler; direct
      leaves every county in the realm's own hand. */
   FB.governments.register('holders', 'feudal_vassals', {
+    openingHolders:function (definition, rid) {
+      var out = Object.create(null), byDuchy = Object.create(null);
+      var realm = definition.realms.find(function (row) { return row && row.id === rid; });
+      var capital = definition.provinces.find(function (pr) { return pr && pr.id === realm.capital; });
+      definition.provinces.forEach(function (pr) {
+        if (!pr || pr.wasteland || pr.realm !== rid) return;
+        if (!pr.duchy || capital && pr.duchy === capital.duchy) out[pr.id] = rid;
+        else (byDuchy[pr.duchy] || (byDuchy[pr.duchy] = [])).push(pr);
+      });
+      Object.keys(byDuchy).forEach(function (did) {
+        var counties = byDuchy[did].slice().sort(function (a, b) { return b.dev - a.dev; });
+        counties.forEach(function (pr, index) {
+          out[pr.id] = counties.length >= 2 && index === 0 ? 'd_' + did : 'c_' + pr.id;
+        });
+      });
+      return out;
+    },
     assign:function (state, rid) { buildVassals(state, rid); }
   });
   FB.governments.register('holders', 'direct', {
+    openingHolders:function (definition, rid) {
+      var out = Object.create(null);
+      definition.provinces.forEach(function (pr) { if (pr && !pr.wasteland && pr.realm === rid) out[pr.id] = rid; });
+      return out;
+    },
     assign:function (state, rid) {
       for (const pr of FB.world.provs) {
         if (!pr.wasteland && pr.realm0 === rid) state.holder[pr.id] = rid;
