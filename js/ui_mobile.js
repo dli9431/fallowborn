@@ -14,6 +14,7 @@
       following:FB.T('The pledged following cannot supply this many fighters.'),
       technology:FB.T('The chosen unit requires its normal equipment, culture and technology qualifications.'),
       funds:FB.T('The paying treasury lacks the exact cost.'), access:FB.T('Every peaceful route county requires current access.'),
+      provisioning:FB.T('The current ration target, cash reserve, stock or eligible fighters leave no affordable replenishment.'),
       capacity:FB.T('The site lacks unallocated capacity, or the commitment limit has been reached.'),
       partner:FB.T('The living outside court must accept an unchanged offer.'),
       population:FB.T('The transfer exceeds available people or would deplete the local population floor.'),
@@ -72,6 +73,11 @@
     }
     if (migration.sponsorship) facts += kv(FB.T('Expedition sponsor'),FB.T('Independent')) +
       '<p>'+esc(FB.T('The origin is a place, not a sponsor. Local access, paid service and land require their own lawful agreements.'))+'</p>';
+    var supply=M.supplySnapshot(s,rid);
+    if (supply) facts += kv(FB.T('Ration target'),FB.T('{days} days',{days:supply.targetDays})) +
+      kv(FB.T('Camp food target'),Math.ceil(supply.campTarget)) +
+      kv(FB.T('Host carrying limit'),FB.T('{days} days',{days:supply.carryDays})) +
+      kv(FB.T('Public cash reserve'),FB.money(supply.cashReserve,s));
     function add(label,action,terms,details) {
       var transition=action==='appoint' || action==='recall';
       if (r.command && !transition && command.operations.indexOf(action)<0) return;
@@ -139,6 +145,12 @@
     add(FB.T('Move court and following'),'move',{countyId:destination},FB.T('The ordinary host carries the court. Every peaceful route county needs an access agreement; pasture use grants no land.'));
     add(FB.T('Order the field host'),'march',{countyId:destination},FB.T('The civilian court stays at camp. The host carries its remaining supply and must return to the camp for food.'));
     add(FB.T('Buy food'),'trade',{countyId:migration.at,count:count,direction:'buy'},FB.T('The coalition pays the county treasury and removes real food stock from the local market.'));
+    if (supply) {
+      add(FB.T('Replenish supplies'),'trade',supply.purchase,
+        FB.T('Buy only the current ration shortfall available locally and affordable above the public cash reserve. A remote host keeps its own food.'));
+      if (profile.supplyPolicy.replacement) add(FB.T('Replace pledged fighters'),'recruit',supply.replacement || {provisioning:true},
+        FB.T('Replace the configured shortfall from eligible pledged people, within the training budget and public cash reserve. Current rations, ordinary unit qualifications and actual camp presence remain required.'));
+    }
     add(FB.T('Sell food'),'trade',{countyId:migration.at,count:count,direction:'sell'},FB.T('The county treasury pays for food delivered from the coalition’s actual stock.'));
     var terms = {kind:'access',partnerId:s.owner[destination],countyIds:[destination],capacity:count,allowRecruit:true,price:price,duration:days};
     add(FB.T('Propose seasonal access to members'),'propose',{operation:'agreement',proposal:terms},FB.T('Members review capacity, payment, recruitment rights and duration. The outside owner must then accept the exact offer.'));

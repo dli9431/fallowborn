@@ -2134,7 +2134,7 @@ window.FBMODS = window.FBMODS || [];
       let problems;
       try {
         FBDATA.governmentForms=combinedTable(forms,mod.governmentForms,'governmentForms');
-        problems=FB.mobile.validateProfiles(profiles);
+        problems=FB.mobile.validateProfiles(profiles,combinedTable(FBDATA.unitClasses,mod.unitClasses,'unitClasses'));
       } finally {FBDATA.governmentForms=forms;}
       if (problems.length) fail('mobileProfiles', problems[0]);
     }
