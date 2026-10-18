@@ -98,6 +98,7 @@
       r.command.revision++;r.revision++;
       var army=M.host(s,rid);
       if (army) {army.path=[];army.goal=null;army.moveLeft=0;}
+      if (M.columnStopAll) M.columnStopAll(s,rid);
       return true;
     }
   });
@@ -172,7 +173,7 @@
           ['active','vacant','recalled'].indexOf(c.status)<0 || !Number.isSafeInteger(c.revision) || c.revision<0 || c.revision>r.revision ||
           !Number.isSafeInteger(c.leaderGeneration) || c.leaderGeneration<1 ||
           c.leaderGeneration>FB.realmRulerGeneration(s,rid) || r.selection!==null || r.decision!==null ||
-          c.status==='active' && (!r.leaderId || c.leaderGeneration!==FB.realmRulerGeneration(s,rid)) ||
+          c.status==='active' && (!r.leaderId || r.status==='active' && c.leaderGeneration!==FB.realmRulerGeneration(s,rid)) ||
           c.status==='vacant' && r.leaderId!==null ||
           r.status==='active' && !form.use.succession.commandLeadership) fail();
       if (spec.superior) {

@@ -24,8 +24,14 @@
     return messages[id] || FB.T('Review the current terms again.');
   }
   function county(pid) { return FB.world.byId[pid] && FB.world.byId[pid].name || pid; }
-  function termsHtml(s,t) {
+  function termsHtml(s,t,rid) {
     var text = '';
+    var row=rid && M.row(s,rid),entries=row && row.columns && row.columns.entries;
+    function columnName(id) {var i=entries ? entries.map(function (c) {return c.id;}).indexOf(id) : -1;return FB.T('Column {number}',{number:i+1});}
+    if (t.columnId) text+=kv(FB.T('Field command'),columnName(t.columnId));
+    if (t.otherColumnId) text+=kv(FB.T('Other column'),columnName(t.otherColumnId));
+    if (t.unitId && FBDATA.unitClasses[t.unitId]) text+=kv(FB.T('Unit class'),FB.dataText(s,null,'unitClass',t.unitId,FBDATA.unitClasses[t.unitId],'name',{}));
+    if (t.causes) text+=kv(FB.T('Campaign objective'),t.causes.map(function (c) {return county(c.target);}).join(', '));
     if (t.count !== undefined) text += kv(FB.T('People or food units'),t.count);
     if (t.countyId) text += kv(FB.T('County'),county(t.countyId));
     if (t.countyIds) text += kv(FB.T('Access corridor'),t.countyIds.map(county).join(', '));
@@ -45,6 +51,10 @@
         kv(FB.T('Duration'),FB.T('{days} days',{days:Math.max(0,contract.endTurn-s.turn)}));
     }
     return text;
+  }
+  function routeHtml(s,q) {
+    return q.path && q.stop!==undefined ? kv(FB.T('Reviewed route'),q.path.length ? q.path.map(county).join(', ') : FB.T('Remain at the current location'))+
+      kv(FB.T('Route ends at'),county(q.stop))+kv(FB.T('Travel time'),FB.T('{days} days',{days:q.days})) : '';
   }
   UI.showMobileConfederation = function (rid,view) {
     var s = FB.state, r = M.row(s,rid), migration = M.migration(s,rid), profile = M.profile(s,rid);
@@ -87,7 +97,7 @@
       kv(FB.T('Camp food target'),Math.ceil(supply.campTarget)) +
       kv(FB.T('Host carrying limit'),FB.T('{days} days',{days:supply.carryDays})) +
       kv(FB.T('Public cash reserve'),FB.money(supply.cashReserve,s));
-    function add(label,action,terms,details) {
+    function add(label,action,terms,details,columnReview) {
       var transition=action==='appoint' || action==='recall';
       if (r.command && !transition && command.operations.indexOf(action)<0) return;
       if (r.command && ['offer','war','peace','land','contract','settle','service'].indexOf(action)>=0) {
@@ -98,11 +108,11 @@
       }
       var request={realmId:rid,commandId:r.command && r.command.id,action:action,actor:actor};
       if (terms && terms.candidateId) request.candidateId=terms.candidateId;
-      var review = transition ? M.reviewCommand(s,request) : M.review(s,{realmId:rid,action:action,terms:terms || {},actor:actor}), q = review.review, i = actions.length;
+      var review = transition ? M.reviewCommand(s,request) : (columnReview ? M.reviewColumns : M.review)(s,{realmId:rid,action:action,terms:terms || {},actor:actor}), q = review.review, i = actions.length;
       actions.push({label:label,review:review});
       parts += SH.reviewActionCardHtml({id:'mobile-action-'+i,label:label,disabled:!q.allowed,warn:!q.allowed,
         note:q.allowed ? FB.T('Immediate cost: {money:cost}. Review before committing.',{cost:q.cost || 0}) : reason(q.reason),
-        details:'<p>'+esc(details)+'</p>'+termsHtml(s,q.terms),data:{mobileReview:i}});
+        details:'<p>'+esc(details)+'</p>'+termsHtml(s,q.terms,rid)+routeHtml(s,q),data:{mobileReview:i}});
     }
     function number(id,fallback) { return view[id] !== undefined ? view[id] : fallback; }
     var count = Number(number('mobile-count',50)), destination = number('mobile-county',migration.at);
@@ -114,6 +124,30 @@
       '<label>'+esc(FB.T('People or food units'))+'<input id="mobile-count" type="number" min="1" max="1000000" step="1" value="'+esc(count)+'"></label>'+
       '<label>'+esc(FB.T('Agreement price'))+'<input id="mobile-price" type="number" min="0" step="1" value="'+esc(price)+'"></label>'+
       '<label>'+esc(FB.T('Agreement duration in days'))+'<input id="mobile-days" type="number" min="1" max="1440" step="1" value="'+esc(days)+'"></label>';
+    if (columns) {
+      var chosen=number('mobile-column',columns.entries[0].id),other=number('mobile-other-column',columns.entries[1].id);
+      var unit=number('mobile-unit',FB.unitRoleClass('levy_infantry')),candidate=number('mobile-commander',r.leaderId);
+      function columnOptions(selected) {return columns.entries.map(function (c,i) {return '<option value="'+esc(c.id)+'"'+
+        (c.id===selected ? ' selected' : '')+'>'+esc(FB.T('Column {number}',{number:i+1}))+'</option>';}).join('');}
+      controls+='<label>'+esc(FB.T('Field command'))+'<select id="mobile-column">'+columnOptions(chosen)+'</select></label>'+
+        '<label>'+esc(FB.T('Other column'))+'<select id="mobile-other-column">'+columnOptions(other)+'</select></label>'+
+        '<label>'+esc(FB.T('Unit class'))+'<select id="mobile-unit">'+Object.keys(FBDATA.unitClasses).filter(function (id) {
+          return !FBDATA.unitClasses[id].hired;
+        }).map(function (id) {return '<option value="'+esc(id)+'"'+(id===unit ? ' selected' : '')+'>'+esc(FB.dataText(s,null,'unitClass',id,FBDATA.unitClasses[id],'name',{}))+'</option>';}).join('')+'</select></label>'+
+        '<label>'+esc(FB.T('Member commander'))+'<select id="mobile-commander">'+r.openingBindings.map(function (b) {
+          var person=s.chars[b.characterId];return '<option value="'+esc(person.id)+'"'+(person.id===candidate ? ' selected' : '')+'>'+esc(person.name)+'</option>';
+        }).join('')+'</select></label>';
+      add(FB.T('Order selected column'),'march',{columnId:chosen,countyId:destination},FB.T('Only this field host follows the ordinary route. Other columns and the civilian camp keep their actual positions.'),true);
+      add(FB.T('Move camp with selected column'),'move',{columnId:chosen,countyId:destination},FB.T('The overall commander selects one escort already at camp. The camp follows actual arrivals; every peaceful route county needs access.'),true);
+      add(FB.T('Halt selected column'),'stop',{columnId:chosen},FB.T('Halt this host and leave the camp at its last committed location.'),true);
+      add(FB.T('Assign selected commander'),'assign',{columnId:chosen,candidateId:candidate},FB.T('The overall commander assigns an existing eligible member to this column. Its current order stops. This grants no authority over other columns.'),true);
+      add(FB.T('Divide into retired column'),'split',{columnId:chosen,otherColumnId:other,unitId:unit,count:count},FB.T('Move this many existing fighters of the selected class, their demographic roster and proportional carried food into the other retired slot. Both hosts must retain the normal minimum.'),true);
+      add(FB.T('Reunite into selected column'),'merge',{columnId:chosen,otherColumnId:other},FB.T('Both hosts must be halted at the same place with the same war commitment. Their exact units, people and food join the selected column; the other slot retires.'),true);
+      add(FB.T('Demuster selected column'),'demuster',{columnId:chosen},FB.T('After actual camp reunion and completion of military service, surviving fighters enter their member resting pools and carried food returns to camp.'),true);
+      add(FB.T('Recruit for selected column'),'recruit',{columnId:chosen,unitId:unit,count:count},FB.T('Train the selected class from currently pledged people at camp, paying the public treasury cost. Normal equipment and technology gates apply. A remote host cannot receive replacements.'),true);
+      var objective={type:'aggression',enemy:FB.warTargetDefender(s,rid,destination),target:destination};
+      add(FB.T('Review selected column campaign'),'war',{columnId:chosen,causes:[objective]},FB.T('The overall commander reviews an ordinary connected war objective from this host. Other hosts keep their existing campaigns. A separate field order is required to march.'),true);
+    }
     var membership = r.members.map(function (m) {
       var c = s.chars[m.principal.id];
       var values={weight:m.weight,percent:Math.round(m.pledge*100),status:m.allegiance ? FB.T('Allegiant') : FB.T('Withheld')};
@@ -200,7 +234,7 @@
     function position() {
       var list = SH.$('mobile-list'), body=SH.$('gm-body'), v = {scroll:list ? list.scrollTop : 0,bodyScroll:body.scrollTop,details:[],focus:document.activeElement && document.activeElement.id};
       if (list) list.querySelectorAll('.settcard-info[aria-expanded="true"]').forEach(function (d) {v.details.push(d.getAttribute('aria-controls'));});
-      ['mobile-count','mobile-county','mobile-price','mobile-days'].forEach(function (id) {if(SH.$(id)) v[id]=SH.$(id).value;});
+      ['mobile-count','mobile-county','mobile-price','mobile-days','mobile-column','mobile-other-column','mobile-unit','mobile-commander'].forEach(function (id) {if(SH.$(id)) v[id]=SH.$(id).value;});
       return v;
     }
     UI.openModal(r.command ? FB.T('Mobile command') : FB.T('Mobile coalition'),'<div id="mobile-list" data-modal-scroll>'+
@@ -211,15 +245,15 @@
     (view.details || []).forEach(function (id) {var node=list.querySelector('[aria-controls="'+id+'"]');if(node) node.click();});
     list.scrollTop = view.scroll || 0; SH.$('gm-body').scrollTop=view.bodyScroll || 0;
     if(view.focus && SH.$(view.focus)) SH.$(view.focus).focus({preventScroll:true});
-    ['mobile-count','mobile-county','mobile-price','mobile-days'].forEach(function (id) {
-      SH.$(id).onchange=function () {var v=position();v.replace=true;UI.showMobileConfederation(rid,v);};
+    ['mobile-count','mobile-county','mobile-price','mobile-days','mobile-column','mobile-other-column','mobile-unit','mobile-commander'].forEach(function (id) {
+      if (SH.$(id)) SH.$(id).onchange=function () {var v=position();v.replace=true;UI.showMobileConfederation(rid,v);};
     });
     if(SH.$('mobile-leader')) SH.$('mobile-leader').onclick=function () {UI.showCharModal(leader.id);};
     list.querySelectorAll('[data-mobile-review]').forEach(function (button) {
       button.onclick=function () {
         var entry=actions[Number(button.getAttribute('data-mobile-review'))], pos=position(), q=entry.review.review;
         function back() {var v=copyView(pos);v.replace=true;UI.showMobileConfederation(rid,v);}
-        UI.openModal(entry.label,SH.reviewFactsCard(FB.T('Exact terms'),termsHtml(s,q.terms)+
+        UI.openModal(entry.label,SH.reviewFactsCard(FB.T('Exact terms'),termsHtml(s,q.terms,rid)+routeHtml(s,q)+
           kv(FB.T('Immediate cost'),FB.money(q.cost || 0,s)))+SH.reviewActionsHtml(SH.reviewActionCardHtml({
             id:'mobile-confirm',label:FB.T('Confirm decision'),note:FB.T('Current people, principals, position, ownership, stock and funds are checked again.'),
             details:'<p>'+esc(FB.T('A stale review spends nothing and transfers no people.'))+'</p>'})),

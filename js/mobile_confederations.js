@@ -196,7 +196,8 @@
   M.householdSnapshot = function (s, rid) {
     var r = M.row(s, rid), m = M.migration(s, rid), p = M.profile(s, rid);
     if (!r || !m || !p) return null;
-    var market = FB.marketProvisionSnapshot(s, m.at), access = activeAccess(s, rid, m.at), host = M.host(s, rid);
+    var market = FB.marketProvisionSnapshot(s, m.at), access = activeAccess(s, rid, m.at);
+    var host = r.columns && M.columnCampHost ? M.columnCampHost(s,rid) : M.host(s,rid);
     var supply=p.supplyPolicy && M.supplySnapshot(s,rid);
     return { realmId:rid, active:!!(s.realms[rid] && s.realms[rid].alive && M.active(s, rid) && r.status === 'active'),
       provinceId:m.at, moving:!!(host && host.mobileCourt && (host.moveLeft > 0 || (host.path || []).length)), food:r.food,
@@ -314,8 +315,12 @@
     var q = { allowed:false, reason:'inactive', realmId:rid, action:action, terms:t, cost:0, signature:null };
     if (!r || !p || !M.active(s, rid) || r.status !== 'active') return q;
     if (!validTerms(action,t)) {q.reason='operation';return q;}
-    if (r.columns && ['recruit','demuster','move','march','leave','replace_member','settle','war','service','land','contract'].indexOf(action)>=0) {
+    if (r.columns && ['recruit','demuster','move','march','leave','replace_member','war','service','land','contract'].indexOf(action)>=0) {
       q.reason='column_operation';return q;
+    }
+    if (r.columns && action==='settle' && ((t.final && r.columns.entries.some(function (c) {return c.status==='active';})) ||
+        (s.armies || []).some(function (a) {return a.realm===rid && a.mobileCourt && (a.moveLeft>0 || (a.path || []).length); }))) {
+      q.reason='commitment';return q;
     }
     if (r.command && !M.commandPermits(s,rid,action)) {q.reason='command';return q;}
     if (t.provisioning) {
@@ -603,6 +608,7 @@
       if (!FB.authorityConsentContract(s,t.contractId,rid)) return false;
       r.decision=null;
     } else if (q.action === 'settle') {
+      var settlingLeader=t.final ? M.leader(s,rid) : null;
       /* Claim review is resolved before a people transfer. The shared county
          owner transaction remains the only sovereignty mutation. */
       if (!moving.session || moving.session.assets[0].id !== t.countyId) {
@@ -634,7 +640,7 @@
         if (army) { army.mobileRoster = []; army.mobileFood=0; army.men = 0; army.units = {}; army.mobileFollowing = false; FB.disbandArmy(s, army); }
         r.status = 'settled'; moving.status = 'settled'; moving.settledTurn = s.turn;
         moving.target = t.countyId;
-        var leader = M.leader(s, rid);
+        var leader = settlingLeader;
         FB.authoritySetGovernment(s, rid, moving.settlementForm, { mobileCommit:true });
         s.realms[rid].nonTerritorial = false; s.realms[rid].capital = t.countyId;
         if (leader) FB.assignRealmRulerCharacter(s, rid, leader.id, {replaceAuthored:true});
@@ -994,7 +1000,8 @@
   FB.registerOrdinaryWar = function (s,rid,war) {
     var attacker = war && war.defending ? war.enemy : rid;
     if (M.active(s,attacker)) {
-      if (M.row(s,attacker) && M.row(s,attacker).columns) return null;
+      if (M.row(s,attacker) && M.row(s,attacker).columns &&
+          !(M.columnWarAllowed && M.columnWarAllowed(s,attacker,war))) return null;
       var causes = war.objectives || [war.casus];
       if (!decision(s,attacker,'war',{causes:causes})) return null;
     }

@@ -416,7 +416,8 @@
   FB.federateDay = function (s) {
     for (var row of rows(s)) {
       if (!ongoing(row)) continue;
-      var army = host(s, row.hostId);
+      var army = FB.mobile && FB.mobile.columnCampHost && FB.mobile.row(s,row.realmId) && FB.mobile.row(s,row.realmId).columns
+        ? FB.mobile.columnCampHost(s,row.realmId) : host(s, row.hostId);
       if (!army && FB.mobile && FB.mobile.active(s, row.realmId) && FB.mobile.row(s, row.realmId)) continue;
       if (!live(s, row.realmId) || !army || army.men <= 0 || army.realm !== row.realmId ||
           !mobile(s, row.realmId) || row.endTurn <= s.turn) {

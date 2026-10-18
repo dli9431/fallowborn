@@ -62,6 +62,12 @@
     rationale:'Individual unpaid admission depends on current host consent, actual presence and finite named-person or existing combat-position capacity. It grants no troops, equipment, vow or family carriage. Ordinary road and military technology remain authoritative.'};
   FBDATA.techImpactReviews.features.mobile_column_ownership = {mode:'none',
     rationale:'A bounded column set partitions existing opening fighters and provisions under scoped commanders. Normal unit eligibility, conserved people, finite stores and current command authority remain binding; the single-host fallback remains available.'};
+  FBDATA.techImpactReviews.features.mobile_column_orders = {mode:'none',
+    rationale:'Separate field orders and one camp escort express current command scope over existing hosts. Ordinary route, transport, access and war requirements remain binding.'};
+  FBDATA.techImpactReviews.features.mobile_column_reorganization = {mode:'none',
+    rationale:'Reassigning an existing member commander and dividing or reuniting existing fighters creates no people or equipment. Current mandates, locality, member pledges and normal unit qualifications govern recovery.'};
+  FBDATA.techImpactReviews.features.mobile_column_settlement = {mode:'none',
+    rationale:'Civilian settlement and final reunion use ordinary conserved population and lawful land transactions. Final settlement requires every surviving field host to return and demuster; no technology can substitute for their arrival.'};
   /* The fresh 476 opening inhabits Cherson and adds the Pontic following.
      Priscus attests displaced followings and Roman diplomacy, not a precise
      476 boundary or an identifiable incumbent at this simulated camp. */

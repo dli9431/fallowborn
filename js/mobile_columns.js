@@ -132,21 +132,24 @@
       function fail() {throw new Error(FB.T('Invalid saved mobile columns.'));}
       if (spec===undefined) {if (r.columns!==undefined) fail();return;}
       var set=r.columns, moving=M.migration(s,rid);
-      if (r.schema!==3 || !moving || !keys(set,['schema','entries']) || set.schema!==1 ||
+      if (r.schema!==3 || !moving || !keys(set,['schema','entries']) || [1,2].indexOf(set.schema)<0 ||
           !Array.isArray(set.entries) || set.entries.length!==spec.entries.length || set.entries.length>4 ||
           !Array.isArray(r.openingBindings)) fail();
       var hosts=Object.create(null);
       set.entries.forEach(function (c,i) {
         var expected=spec.entries[i], binding=r.openingBindings.filter(function (b) {return b && b.memberId===expected.commanderMemberId;})[0];
         if (!keys(c,['id','hostId','commanderId','status']) || c.id!==expected.id || c.hostId!==hostId(rid,expected.id,i) ||
-            !binding || c.commanderId!==binding.characterId || !s.chars[c.commanderId] ||
+            !binding || !s.chars[c.commanderId] ||
+            (set.schema===1 ? c.commanderId!==binding.characterId : !r.openingBindings.some(function (b) {
+              return b.characterId===c.commanderId && r.members.some(function (m) {return m.principal.id===c.commanderId;});
+            })) ||
             ['active','retired'].indexOf(c.status)<0 || hosts[c.hostId]) fail();
         hosts[c.hostId]=true;
         var matches=(s.armies || []).filter(function (a) {return a.id===c.hostId;});
         if (matches.length!==(c.status==='active' ? 1 : 0) || r.status!=='active' && c.status==='active') fail();
         if (c.status==='active') {
           var a=matches[0], p=M.profile(s,rid);
-          if (!p || a.realm!==rid || !a.mobileFollowing || a.migrationId!==moving.id || a.mobileCourt!==false ||
+          if (!p || a.realm!==rid || !a.mobileFollowing || a.migrationId!==moving.id || typeof a.mobileCourt!=='boolean' ||
               !whole(a.men) || a.men<=0 || !Number.isFinite(a.mobileFood) || a.mobileFood<0 ||
               a.mobileFood>a.men*p.foodPerPerson*30 || !s.owner[a.at] ||
               (s.authority.migrations || []).some(function (m) {return m.id!==moving.id && m.hostId===a.id;})) fail();
@@ -154,6 +157,7 @@
         }
       });
       if (moving.hostId!==set.entries[0].hostId ||
+          (s.armies || []).filter(function (a) {return a.realm===rid && a.mobileFollowing && a.mobileCourt;}).length>1 ||
           (s.armies || []).some(function (a) {return a.realm===rid && a.mobileFollowing && !hosts[a.id];})) fail();
     });
     return validate(s);
@@ -166,6 +170,10 @@
   };
   FB.playerControlsHost = function (s,army) {
     return army && M.row(s,army.realm) && M.row(s,army.realm).columns ? false : controls(s,army);
+  };
+  var mergeHosts=FB.mergeHosts;
+  FB.mergeHosts=function (s,a,b) {
+    return a && a.mobileFollowing || b && b.mobileFollowing ? null : mergeHosts(s,a,b);
   };
   var standing=FB.federateHostStanding, travelling=FB.federateHostTravelling;
   FB.federateHostStanding = function (s,army) {
@@ -180,9 +188,13 @@
   var disband=FB.mobileHostDisband;
   FB.mobileHostDisband = function (s,army) {
     var r=M.row(s,army.realm);
-    if (r && r.columns && army.mobileFollowing) r.columns.entries.forEach(function (c) {
-      if (c.hostId===army.id) c.status='retired';
-    });
+    if (r && r.columns && army.mobileFollowing) {
+      r.columns.entries.forEach(function (c) {if (c.hostId===army.id) c.status='retired';});
+      if (army.at!==M.migration(s,army.realm).at) {
+        r.accounting.dispersed+=army.men;
+        army.mobileRoster=[];army.units={};army.men=0;army.mobileFood=0;
+      }
+    }
     return disband(s,army);
   };
   var markDead=FB.markRealmDead;
@@ -191,4 +203,194 @@
     if (r && r.columns && r.status==='dispersed') r.columns.entries.forEach(function (c) {c.status='retired';});
     return result;
   };
+
+  function column(s,rid,id) {
+    var r=M.row(s,rid);
+    return r && r.columns && r.columns.entries.filter(function (c) {return c.id===id;})[0];
+  }
+  function armyFor(s,c) {return c && (s.armies || []).filter(function (a) {return a.id===c.hostId;})[0] || null;}
+  function halted(a) {return !!a && !a.moveLeft && !(a.path || []).length && a.broken===undefined;}
+  function stop(a) {a.path=[];a.goal=null;a.moveLeft=0;}
+  M.columnStopAll=function (s,rid) {
+    var r=M.row(s,rid);if (!r || !r.columns) return;
+    r.columns.entries.forEach(function (c) {var a=armyFor(s,c);if (a) stop(a);});
+  };
+  function sum(pool) {return pool.reduce(function (n,c) {return n+c.count;},0);}
+  function add(pool,cohorts,roster) {
+    cohorts.forEach(function (c) {
+      var old=pool.filter(function (v) {return v.culture===c.culture && v.religion===c.religion && (!roster || v.memberId===c.memberId);})[0];
+      if (old) old.count+=c.count;
+      else {var row={culture:c.culture,religion:c.religion,count:c.count};if (roster) row.memberId=c.memberId;pool.push(row);}
+    });
+  }
+  function take(pool,count) {
+    var out=[],left=count;
+    pool.forEach(function (c) {var n=Math.min(left,c.count);if (n) {var v=copy(c);v.count=n;out.push(v);c.count-=n;left-=n;}});
+    for (var i=pool.length-1;i>=0;i--) if (!pool[i].count) pool.splice(i,1);
+    return out;
+  }
+  function commander(s,rid,cid) {
+    var r=M.row(s,rid),p=M.profile(s,rid),c=s.chars[cid];
+    return live(s,c) && s.date.year-c.born>=p.minAge && r.openingBindings.some(function (b) {return b.characterId===cid;}) &&
+      r.members.some(function (m) {return m.principal.id===cid && m.allegiance;});
+  }
+  function committed(s,rid) {
+    return M.row(s,rid).agreements.some(function (a) {return a.kind!=='access' && a.status==='active' && a.endTurn>s.turn;}) ||
+      (s.authority.contracts || []).some(function (c) {return c.federateRealmId===rid && FB.political.contract(s,c.id).effective;});
+  }
+  M.columnCampHost = function (s,rid) {
+    var r=M.row(s,rid);
+    return r && r.columns && r.columns.entries.map(function (c) {return armyFor(s,c);})
+      .filter(function (a) {return a && a.mobileCourt;})[0] || null;
+  };
+  function signature(s,rid) {
+    var r=M.row(s,rid);
+    return JSON.stringify([s.turn,s.date,r,M.migration(s,rid),s.armies,
+      r.members.map(function (m) {return s.chars[m.principal.id];}),M.commandSnapshot(s,rid),
+      s.owner,s.holder,s.wars,s.authority.contracts,s.authority.appointments,
+      FB.treasuryAvailable(s,rid),M.profile(s,rid),definition(s,rid)]);
+  }
+  function quote(s,request) {
+    var rid=request.realmId,r=M.row(s,rid),t=request.terms,action=request.action,actor=request.actor;
+    var q={allowed:false,reason:'column_operation',realmId:rid,action:action,terms:copy(t || {}),cost:0,signature:null};
+    var fields={march:['columnId','countyId'],move:['columnId','countyId'],stop:['columnId'],
+      split:['columnId','otherColumnId','unitId','count'],merge:['columnId','otherColumnId'],
+      recruit:['columnId','unitId','count'],demuster:['columnId'],assign:['columnId','candidateId'],war:['columnId','causes']};
+    if (!keys(request,['realmId','action','terms','actor']) || !r || !r.columns || r.status!=='active' ||
+        !fields[action] || !keys(t,fields[action]) || !keys(actor,['kind','id']) || actor.kind!=='character') return q;
+    var c=column(s,rid,t.columnId),a=armyFor(s,c),other=column(s,rid,t.otherColumnId),b=armyFor(s,other);
+    var leader=M.leader(s,rid),overall=!!leader && leader.id===actor.id,p=M.profile(s,rid),moving=M.migration(s,rid);
+    var permission=action==='assign' || action==='stop' ? 'march' : action==='merge' ? 'demuster' : action==='split' ? 'recruit' : action;
+    function no(reason) {q.reason=reason;return q;}
+    if (!c || !moving || moving.endTurn<=s.turn || !M.commandPermits(s,rid,permission) ||
+        (['march','stop'].indexOf(action)>=0 ? !M.columnAuthority(s,rid,c.id,actor) : !overall)) return no('command');
+    if (action!=='assign' && !commander(s,rid,c.commanderId)) return no('principal');
+    q.signature=signature(s,rid);
+    if (action==='assign') {
+      if (!commander(s,rid,t.candidateId) || t.candidateId===c.commanderId) return no('principal');
+    } else if (action==='march' || action==='move') {
+      if (!a || c.status!=='active' || !s.owner[t.countyId] || a.broken!==undefined) return no('commitment');
+      var escort=M.columnCampHost(s,rid);
+      if (action==='move' && (a.at!==moving.at || escort && escort!==a && !halted(escort))) return no('commitment');
+      var plan=FB.armyOrderPlan(s,a,t.countyId);
+      if (!plan || !plan.ok || !plan.path || plan.path.some(function (pid) {return !M.passage(s,rid,pid,action==='move');})) return no('access');
+      q.path=plan.path.slice();q.stop=plan.stop;q.days=plan.totalDays || 0;
+    } else if (action==='stop') {
+      if (!a || halted(a)) return no('commitment');
+    } else if (action==='split') {
+      if (!a || !halted(a) || !other || other===c || other.status!=='retired' || b || !commander(s,rid,other.commanderId) ||
+          (s.authority.migrations || []).some(function (m) {return m.id!==moving.id && m.hostId===other.hostId;}) ||
+          !whole(t.count) || t.count<(FBDATA.balance.armyMinMen || 40) || a.men-t.count<(FBDATA.balance.armyMinMen || 40) ||
+          typeof t.unitId!=='string' || !own(FBDATA.unitClasses,t.unitId) || (a.units[t.unitId] || 0)<t.count ||
+          committed(s,rid) || !M.commandPermits(s,rid,'demuster')) return no('commitment');
+      q.food=a.mobileFood*t.count/a.men;
+    } else if (action==='merge') {
+      if (!a || !b || other===c || !halted(a) || !halted(b) || a.at!==b.at || a.warId!==b.warId ||
+          a.mobileProvisionTurn!==b.mobileProvisionTurn || committed(s,rid)) return no('commitment');
+      var merged=copy(a.mobileRoster);add(merged,b.mobileRoster,true);
+      if (merged.length>64) return no('capacity');
+    } else if (action==='demuster') {
+      if (!a || !halted(a) || a.at!==moving.at || committed(s,rid) || FB.isRealmAtWar(s,rid)) return no('commitment');
+    } else if (action==='recruit') {
+      if (a && (!halted(a) || a.at!==moving.at) || !a && c.status!=='retired' ||
+          !a && (s.authority.migrations || []).some(function (m) {return m.id!==moving.id && m.hostId===c.hostId;}) ||
+          !whole(t.count) || !t.count || t.count>100000000 || !a && t.count<(FBDATA.balance.armyMinMen || 40) ||
+          M.columnCampHost(s,rid) && !halted(M.columnCampHost(s,rid))) return no('commitment');
+      if (typeof t.unitId!=='string' || !own(FBDATA.unitClasses,t.unitId) || FBDATA.unitClasses[t.unitId].hired || !FB.unitClassUnlocked(s,t.unitId,rid)) return no('technology');
+      var left=t.count;q.plan=[];
+      r.members.forEach(function (m) {
+        if (!live(s,s.chars[m.principal.id]) || !m.allegiance) return;
+        var field=(s.armies || []).filter(function (v) {return v.realm===rid && v.mobileFollowing;})
+          .reduce(function (n,v) {return n+v.mobileRoster.filter(function (v2) {return v2.memberId===m.id;})
+            .reduce(function (n2,v2) {return n2+v2.count;},0);},0);
+        var available=sum(m.reserve)+sum(m.civilians),n=Math.min(left,available,Math.max(0,Math.floor((available+field)*m.pledge)-field));
+        if (n) q.plan.push({memberId:m.id,count:n});left-=n;
+      });
+      if (left) return no('following');
+      var roster=copy(a ? a.mobileRoster : []);
+      q.plan.forEach(function (part) {
+        var m=r.members.filter(function (v) {return v.id===part.memberId;})[0],rest=copy(m.reserve),civ=copy(m.civilians);
+        var cohorts=take(rest,part.count);cohorts=cohorts.concat(take(civ,part.count-sum(cohorts)));
+        add(roster,cohorts.map(function (v) {return Object.assign({memberId:m.id},v);}),true);
+      });
+      if (roster.length>64) return no('capacity');
+      q.cost=t.count*p.recruitCost;if (FB.treasuryAvailable(s,rid)<q.cost) return no('funds');
+    } else if (action==='war') {
+      if (!a || !halted(a) || a.mobileCourt || a.warId && FB.ordinaryWarById(s,a.warId) || committed(s,rid) ||
+          !Array.isArray(t.causes) || t.causes.length!==1 || !keys(t.causes[0],['type','enemy','target']) ||
+          t.causes[0].type!=='aggression' || typeof t.causes[0].enemy!=='string' || typeof t.causes[0].target!=='string') return no('commitment');
+      q.declaration=FB.warDeclarationPreview(s,rid,t.causes,{frontier:[a.at]});
+      if (!q.declaration.valid || q.declaration.unlawful) return no('award');
+    }
+    q.allowed=true;q.reason=null;return q;
+  }
+  function refresh(s,a) {
+    FB.hostUnits(a);a.supply=FB.clamp(a.mobileFood/Math.max(0.01,a.men*M.profile(s,a.realm).foodPerPerson*30)*100,0,100);
+  }
+  function emptyHost(s,rid,c,at) {
+    return {id:c.hostId,realm:rid,at:at,from:at,men:0,size:0,units:{},supply:0,path:[],goal:null,moveLeft:0,
+      warId:null,migrationId:M.migration(s,rid).id,mobileFollowing:true,mobileCourt:false,mobileFood:0,mobileRoster:[]};
+  }
+  var warPermit=null;
+  M.columnWarAllowed=function (s,rid,war) {return !!warPermit && warPermit.state===s && warPermit.realmId===rid && warPermit.war===war;};
+  FB.governmentSelection.registerSource('mobile_columns',{
+    quote:quote,
+    apply:function (s,request,reviewed) {
+      var q=quote(s,request);if (!q.allowed || JSON.stringify(q)!==JSON.stringify(reviewed)) return false;
+      var rid=request.realmId,r=M.row(s,rid),t=q.terms,c=column(s,rid,t.columnId),a=armyFor(s,c);
+      var other=column(s,rid,t.otherColumnId),b=armyFor(s,other),moving=M.migration(s,rid);
+      if (q.action==='assign') {c.commanderId=t.candidateId;r.columns.schema=2;if (a) stop(a);}
+      else if (q.action==='march' || q.action==='move') {
+        var oldMode=a.mobileCourt;a.mobileCourt=q.action==='move';
+        if (!order(s,a,t.countyId)) {a.mobileCourt=oldMode;return false;}
+        if (a.mobileCourt) r.columns.entries.forEach(function (v) {var host=armyFor(s,v);if (host && host!==a) host.mobileCourt=false;});
+      } else if (q.action==='stop') {stop(a);a.mobileCourt=false;}
+      else if (q.action==='split') {
+        b=emptyHost(s,rid,other,a.at);b.warId=a.warId;b.men=t.count;b.size=t.count;b.units[t.unitId]=t.count;
+        if (a.mobileProvisionTurn!==undefined) b.mobileProvisionTurn=a.mobileProvisionTurn;
+        b.mobileRoster=take(a.mobileRoster,t.count);b.mobileFood=q.food;
+        a.units[t.unitId]-=t.count;a.men-=t.count;a.size=Math.max(a.men,a.size-t.count);a.mobileFood-=q.food;
+        other.status='active';s.armies.push(b);refresh(s,a);refresh(s,b);
+      } else if (q.action==='merge') {
+        Object.keys(b.units).forEach(function (id) {a.units[id]=(a.units[id] || 0)+b.units[id];});
+        add(a.mobileRoster,b.mobileRoster,true);a.men+=b.men;a.size+=b.size;a.mobileFood+=b.mobileFood;
+        if (b.mobileCourt) a.mobileCourt=true;
+        b.mobileRoster=[];b.mobileFood=0;b.men=0;b.units={};FB.disbandArmy(s,b);refresh(s,a);
+      } else if (q.action==='demuster') FB.disbandArmy(s,a);
+      else if (q.action==='recruit') {
+        if (!FB.treasurySpend(s,rid,q.cost)) return false;
+        if (!a) {a=emptyHost(s,rid,c,moving.at);c.status='active';s.armies.push(a);}
+        q.plan.forEach(function (part) {
+          var m=r.members.filter(function (v) {return v.id===part.memberId;})[0],cohorts=take(m.reserve,part.count);
+          cohorts=cohorts.concat(take(m.civilians,part.count-sum(cohorts)));
+          add(a.mobileRoster,cohorts.map(function (v) {return Object.assign({memberId:m.id},v);}),true);
+        });
+        a.men+=t.count;a.size=Math.max(a.size,a.men);a.units[t.unitId]=(a.units[t.unitId] || 0)+t.count;refresh(s,a);
+      } else if (q.action==='war') {
+        var cause=t.causes[0],war={enemy:cause.enemy,target:cause.target,casus:copy(cause),objectives:copy(t.causes),legacy:false},created;
+        warPermit={state:s,realmId:rid,war:war};
+        try {created=FB.registerOrdinaryWar(s,rid,war);} finally {warPermit=null;}
+        if (!created) return false;a.warId=created.id;
+      }
+      r.revision++;FB.governments.invalidate();if (FB.ui && FB.ui.mapDirty) FB.ui.mapDirty();return true;
+    }
+  });
+  M.reviewColumns=function (s,request) {return FB.governmentSelection.reviewSource(s,'mobile_columns',request);};
+  /* Reconcile every column before ordinary movement; a cached route never
+     outlives its exact commander, overall mandate or current passage. */
+  var day=M.day;
+  M.day=function (s) {
+    Object.keys(s.authority && s.authority.governments || {}).forEach(function (rid) {
+      var r=M.row(s,rid),moving=r && M.migration(s,rid);
+      if (!r || !r.columns || r.status!=='active') return;
+      r.columns.entries.forEach(function (c) {
+        var a=armyFor(s,c);if (!a) return;
+        if (!commander(s,rid,c.commanderId) || !moving || moving.endTurn<=s.turn ||
+            !M.commandPermits(s,rid,a.mobileCourt ? 'move' : 'march') ||
+            (a.path || []).some(function (pid) {return !M.passage(s,rid,pid,a.mobileCourt);})) stop(a);
+      });
+    });
+    return day(s);
+  };
+  FB.mobileDay=M.day;
 })();
