@@ -36,6 +36,10 @@
   });
   FBDATA.techImpactReviews.features.mobile_seasonal_access.rationale =
     'Seasonal access depends on living consent, finite local capacity and conserved payments. A lawful subordinate holder may grant local access while its superior retains sovereignty; foreign occupation grants no such authority. Existing travel technology still applies.';
+  FBDATA.techImpactReviews.features.mobile_opening_identity = {mode:'none',
+    rationale:'Binding an existing living opening person creates no new office or military technology. Custody, age, location and incumbent generation remain authoritative.'};
+  FBDATA.techImpactReviews.features.mobile_opening_composition = {mode:'none',
+    rationale:'An opening muster withdraws existing member people under their recruitment shares. Every authored unit retains its normal era, culture and technology eligibility.'};
   /* The fresh 476 opening inhabits Cherson and adds the Pontic following.
      Priscus attests displaced followings and Roman diplomacy, not a precise
      476 boundary or an identifiable incumbent at this simulated camp. */

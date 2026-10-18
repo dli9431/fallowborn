@@ -268,6 +268,7 @@
   FB.stories.start = function (s, options) {
     if (!s.stories && !s.bookmarkSetup) FB.seedSettlementCommunities(s);
     initialize(s);
+    if (FB.mobileInitializeAuthored) FB.mobileInitializeAuthored(s, FBDATA.realms);
     var result = start(s, options);
     // Every bookmark can declare offices. World-story initialization has now
     // created any deferred hosts; an earlier story-owned appointment is kept.
