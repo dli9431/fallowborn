@@ -1,5 +1,5 @@
-/* Spring 1096 first-pass regional declarations, quadrant c.
-   Literal 1066 physical/community/layout inputs, redated at court level.
+/* Spring 1096 regional declarations, quadrant c.
+   Retained physical/layout inputs with dated court and resident corrections.
    Identity and jurisdiction limits: docs/research/1096-bookmark.md.
    These payloads stay inert until the complete bookmark is composed. */
 window.FBDATA = window.FBDATA || {};
@@ -382,7 +382,7 @@ FBDATA.bookmarkRevisionContent_1096_nordic_baltic = {
   ],
   realms:[
     {id:'norway_1096',name:'Kingdom of Norway',color:'#668fc4',capital:'trondheim',government:'territorial',rank:3,aggression:1,religion:'catholic',ruler:{name:'Magnus III',sex:'m',culture:'norse',born:1073,mar:8,trait:'patient'}},
-    {id:'denmark_1096',name:'Kingdom of Denmark',color:'#c03f5f',capital:'roskilde',government:'territorial',rank:3,aggression:1,religion:'catholic',ruler:{name:'Erik I Ejegod',sex:'m',culture:'norse',born:1055,mar:8,trait:'patient'}},
+    {id:'denmark_1096',name:'Kingdom of Denmark',color:'#c03f5f',capital:'roskilde',government:'territorial',rank:3,aggression:1,religion:'catholic',ruler:{name:'Erik I Ejegod',sex:'m',culture:'norse',born:1056,mar:8,trait:'patient'}},
     {id:'sweden_1096',name:'Kingdom of Sweden',color:'#e8d84f',capital:'uppsala',government:'territorial',rank:3,aggression:1,religion:'catholic',ruler:{generated:true,sex:'m',culture:'norse',born:1060,mar:8,trait:'patient'}},
     {id:'prussian_courts_1096',name:'Old Prussian districts',color:'#6f6f4f',capital:'sambia',government:'territorial',rank:2,aggression:1,religion:'baltic_pagan',ruler:{generated:true,sex:'m',culture:'baltic',born:1060,mar:8,trait:'patient'}},
     {id:'lithuanian_courts_1096',name:'Lithuanian districts',color:'#8f7f3f',capital:'vilnius',government:'territorial',rank:2,aggression:1,religion:'baltic_pagan',ruler:{generated:true,sex:'m',culture:'baltic',born:1060,mar:8,trait:'patient'}},
@@ -682,9 +682,9 @@ FBDATA.bookmarkRevisionContent_1096_central_danube = {
     {id:'krakow',name:'Kraków',x:19.94,y:50.06,terrain:'farmland',duchy:'krakow',realm:'poland_1096',culture:'slavic',religion:'catholic',dev:3},
     {id:'wroclaw',name:'Wrocław',x:17.04,y:51.11,terrain:'forest',duchy:'silesia',realm:'poland_1096',culture:'slavic',religion:'catholic',dev:3},
     {id:'gdansk',name:'Gdańsk',x:18.65,y:54.35,terrain:'forest',duchy:'pomerania',realm:'pomeranian_courts_1096',culture:'slavic',religion:'catholic',dev:3},
-    {id:'szczecin',name:'Szczecin',x:14.55,y:53.43,terrain:'forest',duchy:'pomerania',realm:'pomeranian_courts_1096',culture:'slavic',religion:'catholic',dev:3},
-    {id:'mecklenburg',name:'Mecklenburg',x:11.46,y:53.63,terrain:'forest',duchy:'wendland',realm:'obotrite_1096',culture:'slavic',religion:'catholic',dev:3},
-    {id:'lubeck',name:'Liubice',x:10.69,y:53.87,terrain:'forest',duchy:'wendland',realm:'obotrite_1096',culture:'slavic',religion:'catholic',dev:3},
+    {id:'szczecin',name:'Szczecin',x:14.55,y:53.43,terrain:'forest',duchy:'pomerania',realm:'pomeranian_courts_1096',culture:'slavic',religion:'slavic_pagan',dev:3,communities:[{culture:'slavic',religion:'slavic_pagan',populationShare0:9000},{culture:'slavic',religion:'catholic',populationShare0:1000}]},
+    {id:'mecklenburg',name:'Mecklenburg',x:11.46,y:53.63,terrain:'forest',duchy:'wendland',realm:'obotrite_1096',culture:'slavic',religion:'slavic_pagan',dev:3,communities:[{culture:'slavic',religion:'slavic_pagan',populationShare0:9000},{culture:'slavic',religion:'catholic',populationShare0:1000}]},
+    {id:'lubeck',name:'Liubice',x:10.69,y:53.87,terrain:'forest',duchy:'wendland',realm:'obotrite_1096',culture:'slavic',religion:'slavic_pagan',dev:3,communities:[{culture:'slavic',religion:'slavic_pagan',populationShare0:9000},{culture:'slavic',religion:'catholic',populationShare0:1000}]},
     {id:'szekesfehervar',name:'Székesfehérvár',x:18.41,y:47.19,terrain:'farmland',duchy:'transdanubia',realm:'hungary_1096',culture:'magyar',religion:'catholic',dev:3,communities:[{culture:'magyar',religion:'catholic',populationShare0:7500},{culture:'slavic',religion:'catholic',populationShare0:2500}]},
     {id:'moson',name:'Moson',x:17.27,y:47.88,terrain:'farmland',duchy:'transdanubia',realm:'hungary_1096',culture:'magyar',religion:'catholic',dev:2,communities:[{culture:'magyar',religion:'catholic',populationShare0:7500},{culture:'slavic',religion:'catholic',populationShare0:2500}]},
     {id:'sirmium',name:'Sirmium',x:19.57,y:44.98,terrain:'farmland',duchy:'syrmia',realm:'hungary_1096',culture:'slavic',religion:'catholic',dev:3,communities:[{culture:'slavic',religion:'catholic',populationShare0:7000},{culture:'magyar',religion:'catholic',populationShare0:3000}]},
@@ -702,7 +702,7 @@ FBDATA.bookmarkRevisionContent_1096_central_danube = {
     {id:'poland_1096',name:'Polish ducal court',color:'#d87f9f',capital:'plock',government:'territorial',rank:2,aggression:1,religion:'catholic',ruler:{generated:true,sex:'m',culture:'slavic',born:1060,mar:8,trait:'patient'}},
     {id:'hungary_1096',name:'Kingdom of Hungary',color:'#d05f3f',capital:'szekesfehervar',government:'territorial',rank:3,aggression:1,religion:'catholic',ruler:{generated:true,sex:'m',culture:'magyar',born:1060,mar:8,trait:'patient'}},
     {id:'pomeranian_courts_1096',name:'Pomeranian districts',color:'#b85f7f',capital:'gdansk',government:'territorial',rank:2,aggression:1,religion:'slavic_pagan',ruler:{generated:true,sex:'m',culture:'slavic',born:1060,mar:8,trait:'patient'}},
-    {id:'obotrite_1096',name:'Obotrite court',color:'#7f4f6f',capital:'mecklenburg',government:'territorial',rank:2,aggression:1,religion:'catholic',ruler:{generated:true,sex:'m',culture:'slavic',born:1060,mar:8,trait:'patient'}}
+    {id:'obotrite_1096',name:'Obotrite court',color:'#7f4f6f',capital:'lubeck',government:'territorial',rank:2,aggression:1,religion:'catholic',ruler:{generated:true,sex:'m',culture:'slavic',born:1060,mar:8,trait:'patient'}}
   ],
   layouts:{
     veligrad:[
@@ -959,18 +959,18 @@ FBDATA.bookmarkRevisionContent_1096_rus_steppe = {
     {id:'rostov',name:'Rostov',x:39.42,y:57.19,terrain:'forest',duchy:'rostov',realm:'novgorod_1096',culture:'rus',religion:'orthodox',dev:3},
     {id:'suzdal',name:'Suzdal',x:40.45,y:56.42,terrain:'forest',duchy:'rostov',realm:'novgorod_1096',culture:'rus',religion:'orthodox',dev:3},
     {id:'beloozero',name:'Beloozero',x:37.78,y:60.03,terrain:'forest',duchy:'beloozero',realm:'novgorod_1096',culture:'rus',religion:'orthodox',dev:2,communities:[{culture:'rus',religion:'orthodox',populationShare0:8000},{culture:'finnic',religion:'baltic_pagan',paired:true,populationShare0:2000}]},
-    {id:'smolensk',name:'Smolensk',x:32.05,y:54.78,terrain:'forest',duchy:'smolensk',realm:'novgorod_1096',culture:'rus',religion:'orthodox',dev:3},
+    {id:'smolensk',name:'Smolensk',x:32.05,y:54.78,terrain:'forest',duchy:'smolensk',realm:'smolensk_1096',culture:'rus',religion:'orthodox',dev:3},
     {id:'kiev',name:'Kiev',x:30.52,y:50.45,terrain:'farmland',duchy:'kiev',realm:'kiev_1096',culture:'rus',religion:'orthodox',dev:6},
     {id:'pereyaslavl',name:'Pereyaslavl',x:31.47,y:50.07,terrain:'farmland',duchy:'kiev',realm:'pereyaslavl_1096',culture:'rus',religion:'orthodox',dev:3},
     {id:'chernigov',name:'Chernigov',x:31.28,y:51.5,terrain:'forest',duchy:'chernigov',realm:'chernigov_1096',culture:'rus',religion:'orthodox',dev:3},
-    {id:'kursk',name:'Kursk',x:36.19,y:51.73,terrain:'forest',duchy:'chernigov',realm:'chernigov_1096',culture:'rus',religion:'orthodox',dev:2},
+    {id:'kursk',name:'Kursk',x:36.19,y:51.73,terrain:'forest',duchy:'chernigov',realm:'pereyaslavl_1096',culture:'rus',religion:'orthodox',dev:2},
     {id:'polotsk',name:'Polotsk',x:28.79,y:55.49,terrain:'forest',duchy:'polotsk',realm:'polotsk_1096',culture:'rus',religion:'orthodox',dev:3},
     {id:'vitebsk',name:'Vitebsk',x:30.2,y:55.19,terrain:'forest',duchy:'polotsk',realm:'polotsk_1096',culture:'rus',religion:'orthodox',dev:2},
     {id:'turov',name:'Turov',x:27.7,y:52.07,terrain:'forest',duchy:'turov',realm:'turov_volhynia_1096',culture:'rus',religion:'orthodox',dev:2},
-    {id:'minsk',name:'Minsk',x:27.56,y:53.9,terrain:'forest',duchy:'turov',realm:'turov_volhynia_1096',culture:'rus',religion:'orthodox',dev:2},
-    {id:'volodymyr',name:'Volodymyr',x:24.32,y:50.85,terrain:'farmland',duchy:'volhynia',realm:'turov_volhynia_1096',culture:'rus',religion:'orthodox',dev:3},
-    {id:'lutsk',name:'Lutsk',x:25.32,y:50.75,terrain:'forest',duchy:'volhynia',realm:'turov_volhynia_1096',culture:'rus',religion:'orthodox',dev:2},
-    {id:'etelkoz',name:'Etelköz',x:29.5,y:47.6,terrain:'steppe',duchy:'etelkoz',realm:'cuman_courts_1096',culture:'magyar',religion:'catholic',dev:2},
+    {id:'minsk',name:'Minsk',x:27.56,y:53.9,terrain:'forest',duchy:'turov',realm:'polotsk_1096',culture:'rus',religion:'orthodox',dev:2},
+    {id:'volodymyr',name:'Volodymyr',x:24.32,y:50.85,terrain:'farmland',duchy:'volhynia',realm:'volhynia_1096',culture:'rus',religion:'orthodox',dev:3},
+    {id:'lutsk',name:'Lutsk',x:25.32,y:50.75,terrain:'forest',duchy:'volhynia',realm:'volhynia_1096',culture:'rus',religion:'orthodox',dev:2},
+    {id:'etelkoz',name:'Etelköz',x:29.5,y:47.6,terrain:'steppe',duchy:'etelkoz',realm:'cuman_courts_1096',culture:'turkic',religion:'tengri',dev:2},
     {id:'atil',name:'Atil',x:47.0,y:46.7,terrain:'steppe',duchy:'itel',realm:'cuman_courts_1096',culture:'turkic',religion:'tengri',dev:5,communities:[{culture:'turkic',religion:'tengri',populationShare0:6000},{culture:'khazar',religion:'tengri',populationShare0:2500},{culture:'khazar',religion:'jewish',paired:true,populationShare0:1500}]},
     {id:'sarkel',name:'Sarkel',x:42.1,y:48.3,terrain:'steppe',duchy:'sarkel',realm:'cuman_courts_1096',culture:'turkic',religion:'tengri',dev:3},
     {id:'tmutarakan',name:'Tmutarakan',x:37.2,y:45.3,terrain:'steppe',duchy:'tmutarakan',realm:'cuman_courts_1096',culture:'turkic',religion:'tengri',dev:3},
@@ -990,10 +990,12 @@ FBDATA.bookmarkRevisionContent_1096_rus_steppe = {
   realms:[
     {id:'kiev_1096',name:'Kiev',color:'#c05f1f',capital:'kiev',government:'territorial',rank:3,aggression:1,religion:'orthodox',ruler:{name:'Sviatopolk II',sex:'m',culture:'rus',born:1050,mar:8,trait:'patient'}},
     {id:'novgorod_1096',name:'Novgorod',color:'#d06f2f',capital:'novgorod',government:'territorial',rank:2,aggression:1,religion:'orthodox',ruler:{generated:true,sex:'m',culture:'rus',born:1060,mar:8,trait:'patient'}},
+    {id:'smolensk_1096',name:'Smolensk',color:'#bd7844',capital:'smolensk',government:'territorial',rank:2,aggression:1,religion:'orthodox',ruler:{generated:true,sex:'m',culture:'rus',born:1060,mar:8,trait:'patient'}},
     {id:'chernigov_1096',name:'Chernigov',color:'#b07f3f',capital:'chernigov',government:'territorial',rank:2,aggression:1,religion:'orthodox',ruler:{generated:true,sex:'m',culture:'rus',born:1060,mar:8,trait:'patient'}},
     {id:'pereyaslavl_1096',name:'Pereyaslavl',color:'#ad7650',capital:'pereyaslavl',government:'territorial',rank:2,aggression:1,religion:'orthodox',ruler:{generated:true,sex:'m',culture:'rus',born:1060,mar:8,trait:'patient'}},
     {id:'polotsk_1096',name:'Polotsk',color:'#a06f4f',capital:'polotsk',government:'territorial',rank:2,aggression:1,religion:'orthodox',ruler:{generated:true,sex:'m',culture:'rus',born:1060,mar:8,trait:'patient'}},
-    {id:'turov_volhynia_1096',name:'Turov and Volhynia',color:'#907f5f',capital:'turov',government:'territorial',rank:2,aggression:1,religion:'orthodox',ruler:{generated:true,sex:'m',culture:'rus',born:1060,mar:8,trait:'patient'}},
+    {id:'turov_volhynia_1096',name:'Turov',color:'#907f5f',capital:'turov',government:'territorial',rank:2,aggression:1,religion:'orthodox',ruler:{generated:true,sex:'m',culture:'rus',born:1060,mar:8,trait:'patient'}},
+    {id:'volhynia_1096',name:'Volhynia',color:'#9a8c62',capital:'volodymyr',government:'territorial',rank:2,aggression:1,religion:'orthodox',ruler:{generated:true,sex:'m',culture:'rus',born:1060,mar:8,trait:'patient'}},
     {id:'cuman_courts_1096',name:'Cuman steppe courts',color:'#a09f4f',capital:'sarkel',government:'territorial',rank:2,aggression:1,religion:'tengri',ruler:{generated:true,sex:'m',culture:'turkic',born:1060,mar:8,trait:'patient'}},
     {id:'volga_bulgaria_1096',name:'Volga Bulgaria',color:'#8f7f2f',capital:'bolghar',government:'territorial',rank:2,aggression:1,religion:'sunni',ruler:{generated:true,sex:'m',culture:'turkic',born:1060,mar:8,trait:'patient'}}
   ],
@@ -1222,7 +1224,7 @@ FBDATA.bookmarkRevisionContent_1096_jazira = {
      Edessa's court faith does not replace its resident communities. */
   realms:[
     {id:'mosul_1096',name:'Mosul court',color:'#599d61',capital:'mosul',government:'territorial',rank:2,aggression:1,religion:'sunni',ruler:{generated:true,sex:'m',culture:'arabic',born:1060,mar:8,trait:'patient'}},
-    {id:'amida_1096',name:'Amida court',color:'#6b8c58',capital:'amida',government:'territorial',rank:2,aggression:1,religion:'sunni',ruler:{generated:true,sex:'m',culture:'arabic',born:1060,mar:8,trait:'patient'}},
+    {id:'amida_1096',name:'Amida court',color:'#6b8c58',capital:'amida',government:'territorial',rank:2,aggression:1,religion:'sunni',ruler:{generated:true,sex:'m',culture:'turkic',born:1060,mar:8,trait:'patient'}},
     {id:'edessa_1096',name:'Edessa court',color:'#b18a65',capital:'edessa',government:'territorial',rank:2,aggression:1,religion:'orthodox',ruler:{generated:true,sex:'m',culture:'armenian',born:1060,mar:8,trait:'patient'}},
     {id:'harran_1096',name:'Harran court',color:'#7d9a68',capital:'harran',government:'territorial',rank:2,aggression:1,religion:'sunni',ruler:{generated:true,sex:'m',culture:'arabic',born:1060,mar:8,trait:'patient'}},
     {id:'raqqa_1096',name:'Raqqa court',color:'#749153',capital:'raqqa',government:'territorial',rank:2,aggression:1,religion:'sunni',ruler:{generated:true,sex:'m',culture:'arabic',born:1060,mar:8,trait:'patient'}}
