@@ -4419,6 +4419,10 @@ window.FB = window.FB || {};
       if (FB.campaignDaily) FB.campaignDaily(state);
       if (FB.assignCampaignHosts) FB.assignCampaignHosts(state);
       FB.armiesEnsure(state);
+      if (FB.siegeSupport) {
+        FB.siegeSupport.tick(state);
+        FB.siegeSupport.runAI(state, state.armies);
+      }
       const p = state.player;
       if (p.militaryCommand && !FB.activeMilitaryCommand(state)) {
         FB.endMilitaryCommand(state);
@@ -4875,6 +4879,7 @@ window.FB = window.FB || {};
         }
       }
 
+      if (FB.siegeSupport) FB.siegeSupport.tick(state);
       if (timing) { timing.leave(phase); phase = timing.enter('Army phase: sieges and rebellions'); }
       /* Arrival establishes a siege before the next random event slot or
          seasonal pulse. Queue its one-per-war story only after today's battles

@@ -1,0 +1,401 @@
+{
+  "name": "Finite light siege equipment",
+  "siteResourceProfiles": {
+    "river_flow": {
+      "name": "River intake",
+      "desc": "A bounded seven-day water allocation.",
+      "kind": "flow",
+      "unit": "water",
+      "capacity": 12,
+      "periodDays": 7
+    },
+    "river_store": {
+      "name": "Quay cistern",
+      "kind": "storage",
+      "unit": "water",
+      "capacity": 5
+    },
+    "river_launch": {
+      "name": "Launching space",
+      "kind": "access",
+      "unit": "launching",
+      "capacity": 2,
+      "periodDays": 1
+    }
+  },
+  "geographies": {
+    "siege_support_light_land": {
+      "bounds": {
+        "lonMin": 0,
+        "lonMax": 6,
+        "latMin": 0,
+        "latMax": 5
+      },
+      "land": [
+        [
+          0.5,
+          0.5,
+          5.5,
+          0.5,
+          5.5,
+          4.5,
+          0.5,
+          4.5
+        ]
+      ],
+      "gridWidth": 240,
+      "seas": [],
+      "rivers": [],
+      "defaultLayout": "siege_support_light_layout",
+      "provinces": [
+        {
+          "id": "resource_quay",
+          "x": 1.5,
+          "y": 2,
+          "terrain": "farmland"
+        },
+        {
+          "id": "resource_bank",
+          "x": 3.1,
+          "y": 2,
+          "terrain": "farmland"
+        },
+        {
+          "id": "resource_rocks",
+          "x": 4.7,
+          "y": 2,
+          "terrain": "hills"
+        }
+      ],
+      "sites": {
+        "resource_intake": {
+          "x": 1.5,
+          "y": 2
+        },
+        "resource_cistern": {
+          "x": 3.1,
+          "y": 2
+        },
+        "resource_slip": {
+          "x": 1.7,
+          "y": 2
+        }
+      }
+    }
+  },
+  "settlementLayouts": {
+    "siege_support_light_layout": {
+      "resource_quay": [
+        {
+          "site": "resource_intake",
+          "name": "Intake Town",
+          "kind": "town"
+        },
+        {
+          "site": "resource_slip",
+          "name": "Slip Village",
+          "kind": "village"
+        }
+      ],
+      "resource_bank": [
+        {
+          "site": "resource_cistern",
+          "name": "Bank Village",
+          "kind": "village"
+        }
+      ]
+    }
+  },
+  "startScenarios": [
+    {
+      "id": "siege_support_light_ruler",
+      "name": "The river holder",
+      "desc": "An existing fictional ruler.",
+      "intro": "Review the river's finite capacity.",
+      "tier": 5,
+      "profession": "noble",
+      "gold": 12,
+      "prestige": 0,
+      "piety": 0,
+      "bookmarkIds": [
+        "siege_support_light"
+      ],
+      "eras": [
+        "early_medieval"
+      ],
+      "alwaysUnlocked": true,
+      "rulerRealmId": "siege_support_light_court",
+      "governmentForm": "regnum",
+      "fixedProvinceId": "resource_quay",
+      "characterName": "Ivo Reed",
+      "sex": "m",
+      "startCulture": "frankish",
+      "startReligion": "catholic",
+      "onboarding": "ruler",
+      "familyPresets": {
+        "standard": {
+          "name": "Existing court",
+          "diff": "Existing court household"
+        }
+      }
+    },
+    {
+      "id": "siege_support_light_household",
+      "name": "River household",
+      "desc": "A fictional household.",
+      "intro": "Your household lives beside the river.",
+      "tier": 1,
+      "profession": "farmer",
+      "gold": 12,
+      "prestige": 0,
+      "piety": 0,
+      "bookmarkIds": [
+        "siege_support_light"
+      ],
+      "eras": [
+        "early_medieval"
+      ],
+      "alwaysUnlocked": true,
+      "startAge": 24,
+      "familyPresets": {
+        "standard": {
+          "name": "Established household",
+          "diff": "age 24"
+        }
+      }
+    }
+  ],
+  "bookmarks": {
+    "siege_support_light": {
+      "id": "siege_support_light",
+      "name": "River allocation",
+      "desc": "A fictional river resource world.",
+      "date": {
+        "year": 900,
+        "season": 0,
+        "day": 1
+      },
+      "era": "early_medieval",
+      "geography": "siege_support_light_land",
+      "religiousHeads": {},
+      "localInstitutions": {},
+      "stories": [],
+      "starts": [
+        "siege_support_light_ruler",
+        "siege_support_light_household"
+      ],
+      "scripted": [],
+      "straits": [],
+      "crossingClasses": {},
+      "provinces": [
+        {
+          "id": "resource_quay",
+          "name": "Quay",
+          "realm": "siege_support_light_court",
+          "culture": "frankish",
+          "religion": "catholic",
+          "dev": 5
+        },
+        {
+          "id": "resource_bank",
+          "name": "Bank",
+          "realm": "siege_support_bank_court",
+          "culture": "frankish",
+          "religion": "catholic",
+          "dev": 3
+        },
+        {
+          "id": "resource_rocks",
+          "name": "Rocky scenery",
+          "wasteland": true
+        }
+      ],
+      "realms": [
+        {
+          "id": "siege_support_light_court",
+          "name": "River court",
+          "capital": "resource_quay",
+          "color": "#458c96",
+          "aggression": 0,
+          "rank": 2,
+          "government": "regnum",
+          "ruler": {
+            "name": "Ivo Reed",
+            "culture": "frankish",
+            "born": 868,
+            "mar": 6,
+            "trait": "patient"
+          }
+        },
+        {
+          "id": "siege_support_bank_court",
+          "name": "Bank court",
+          "capital": "resource_bank",
+          "color": "#8b6542",
+          "aggression": 0,
+          "rank": 2,
+          "government": "regnum",
+          "ruler": {
+            "name": "Mara Brook",
+            "culture": "frankish",
+            "born": 864,
+            "mar": 4,
+            "trait": "patient"
+          }
+        }
+      ],
+      "duchies": {},
+      "kingdoms": {},
+      "empires": {},
+      "revision": "supplied",
+      "revisions": {
+        "baseline": {},
+        "supplied": {
+          "siteResourceAssignments": [
+            {
+              "id": "river_intake",
+              "profileId": "river_flow",
+              "countyId": "resource_quay",
+              "siteId": "resource_intake",
+              "suitability": {
+                "source": true,
+                "gradient": true
+              },
+              "rights": {
+                "kind": "holder"
+              }
+            },
+            {
+              "id": "river_cistern",
+              "profileId": "river_store",
+              "countyId": "resource_bank",
+              "siteId": "resource_cistern",
+              "connectedSourceId": "river_intake",
+              "suitability": {
+                "catchment": false
+              },
+              "rights": {
+                "kind": "holder"
+              }
+            },
+            {
+              "id": "river_slip",
+              "profileId": "river_launch",
+              "countyId": "resource_quay",
+              "siteId": "resource_slip",
+              "suitability": {
+                "launching": true
+              },
+              "rights": {
+                "kind": "holder"
+              }
+            }
+          ],
+          "openingInfrastructure": {
+            "version": 1,
+            "placements": [
+              {
+                "countyId": "resource_quay",
+                "siteId": "resource_intake",
+                "buildingId": "fiber_works",
+                "condition": "standing"
+              }
+            ]
+          },
+          "productionSites": [
+            {
+              "id": "fiber_plant",
+              "countyId": "resource_quay",
+              "siteId": "resource_intake",
+              "buildingId": "fiber_works",
+              "recipeIds": [
+                "assemble_light"
+              ],
+              "sourceId": "river_intake",
+              "openingLots": [
+                {
+                  "goodId": "cordage",
+                  "quantity": 6
+                }
+              ]
+            }
+          ]
+        },
+        "dry": {
+          "siteResourceAssignments": [],
+          "productionSites": [],
+          "openingInfrastructure": {
+            "version": 1,
+            "placements": []
+          }
+        }
+      }
+    }
+  },
+  "buildings": {
+    "fiber_works": {
+      "name": "Fiber works",
+      "desc": "A finite paid batch facility with no passive income or population effect.",
+      "role": "industry",
+      "cost": 30,
+      "upkeep": 1,
+      "maxCounty": 1
+    }
+  },
+  "productionGoods": {
+    "cordage": {
+      "name": "Cordage",
+      "unit": "material_units",
+      "mass": 1
+    },
+    "light_frame": {
+      "name": "Light siege frame",
+      "unit": "equipment_units",
+      "mass": 1
+    }
+  },
+  "productionRecipes": {
+    "assemble_light": {
+      "name": "Prepare light equipment",
+      "inputs": [
+        {
+          "goodId": "cordage",
+          "quantity": 2
+        }
+      ],
+      "outputs": [
+        {
+          "goodId": "light_frame",
+          "quantity": 2
+        }
+      ],
+      "workDays": 1,
+      "workPrice": 2,
+      "requiresTech": [],
+      "impactReviewId": "conserved_production_batches",
+      "water": 1
+    }
+  },
+  "siegeSupportProfiles": {
+    "light_equipment": {
+      "name": "Light siege frames",
+      "desc": "Paid cordage frames for limited local siege work.",
+      "recipeId": "assemble_light",
+      "goodId": "light_frame",
+      "quantityPerPulse": 1,
+      "pulses": 2,
+      "progress": 0.25,
+      "termDays": 180,
+      "requiresTech": [],
+      "impactReviewId": "finite_light_equipment"
+    }
+  },
+  "techImpactReviews": {
+    "features": {
+      "finite_light_equipment": {
+        "mode": "none",
+        "rationale": "Basic paid equipment uses ordinary work."
+      }
+    }
+  }
+}

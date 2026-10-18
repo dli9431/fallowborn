@@ -343,3 +343,7 @@ Production exchange/producer profiles and assignments contain only structural fi
 Temporary shelter presentation
 
 Literal FBDATA.householdRefuges_<suffix> tables in data/story_*.js expose title and intro under householdRefuge.<id> owners and exact-English aliases through static extraction. The extractor does not execute source or translate provider/party/site identities. Ordinary JSON imports use the same FB.T title/intro fallback; generated choices and reviews use literal FB.T chrome and locale-neutral saved facts. tools/test_i18n_household_refuges.py covers two independent source filenames without executable registration. No generated catalogue update is part of authoring.
+
+Siege equipment presentation
+
+Literal FBDATA.siegeSupportProfiles in data/siege_support.js uses siegeSupportProfile.<id>.name.default and siegeSupportProfile.<id>.desc.default owners and ordinary exact-source aliases. Static extraction reads these labels without executing declarations. Imported labels retain English fallback. UI names/descriptions use the normal source lookup and complete dynamic costs, quantities, blockers and terms use FB.T placeholders. Stable profile, recipe, good, host, war, person and receipt identities remain locale-neutral; saved support contains no rendered text. No generated catalogues are needed for authoring.

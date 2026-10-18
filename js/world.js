@@ -5420,6 +5420,7 @@ window.FB = window.FB || {};
     if (FB.mobile && FB.mobile.referencesCharacter(state, c && c.id)) return true;
     if (!state || !c || !state.player) return false;
     if (FB.productionEconomy && FB.productionEconomy.referencesCharacter(state,c.id)) return true;
+    if (FB.siegeSupport && FB.siegeSupport.referencesCharacter(state,c.id)) return true;
     if (FB.buildingSeasons && FB.buildingSeasons.referencesCharacter(state,c.id)) return true;
     if (FB.publicAdministrationReferencesCharacter && FB.publicAdministrationReferencesCharacter(state,c.id)) return true;
     if (FB.federateReferencesCharacter && FB.federateReferencesCharacter(state, c.id)) return true;

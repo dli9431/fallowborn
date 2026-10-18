@@ -1,0 +1,394 @@
+{
+  "name": "Finite heavy siege equipment",
+  "authorityOffices": {
+    "resource_keeper": {
+      "name": "Resource keeper",
+      "desc": "An exact scoped allocation permission.",
+      "powers": [
+        "revenue"
+      ],
+      "scopes": [
+        "county",
+        "realm"
+      ],
+      "succession": "reaffirm",
+      "recognitionSources": []
+    }
+  },
+  "siteResourceProfiles": {
+    "upland_catchment": {
+      "name": "Rain catchment",
+      "kind": "flow",
+      "unit": "water",
+      "capacity": 3,
+      "periodDays": 30
+    },
+    "upland_tank": {
+      "name": "Hill tank",
+      "kind": "storage",
+      "unit": "water",
+      "capacity": 8
+    },
+    "upland_pasture": {
+      "name": "Summer grazing places",
+      "kind": "access",
+      "unit": "grazing",
+      "capacity": 4,
+      "periodDays": 90
+    }
+  },
+  "geographies": {
+    "siege_support_heavy_land": {
+      "bounds": {
+        "lonMin": 0,
+        "lonMax": 6,
+        "latMin": 0,
+        "latMax": 5
+      },
+      "land": [
+        [
+          0.5,
+          0.5,
+          5.5,
+          0.5,
+          5.5,
+          4.5,
+          0.5,
+          4.5
+        ]
+      ],
+      "gridWidth": 240,
+      "seas": [],
+      "rivers": [],
+      "defaultLayout": null,
+      "provinces": [
+        {
+          "id": "resource_hill",
+          "x": 1.5,
+          "y": 1.5,
+          "terrain": "hills"
+        },
+        {
+          "id": "resource_fold",
+          "x": 3.1,
+          "y": 1.5,
+          "terrain": "hills"
+        }
+      ],
+      "sites": {
+        "resource_roof": {
+          "x": 1.5,
+          "y": 1.5
+        },
+        "resource_tank": {
+          "x": 1.7,
+          "y": 1.5
+        },
+        "resource_grazing": {
+          "x": 3.1,
+          "y": 1.5
+        }
+      }
+    }
+  },
+  "startScenarios": [
+    {
+      "id": "siege_support_heavy_household",
+      "name": "Hill household",
+      "desc": "A fictional household.",
+      "intro": "Your household lives in the hills.",
+      "tier": 1,
+      "profession": "farmer",
+      "gold": 12,
+      "prestige": 0,
+      "piety": 0,
+      "bookmarkIds": [
+        "siege_support_heavy"
+      ],
+      "eras": [
+        "early_medieval"
+      ],
+      "alwaysUnlocked": true,
+      "startAge": 24,
+      "familyPresets": {
+        "standard": {
+          "name": "Established household",
+          "diff": "age 24"
+        }
+      }
+    },
+    {
+      "id": "siege_support_heavy_ruler",
+      "name": "The hill holder",
+      "desc": "An existing fictional ruler.",
+      "intro": "Review finite ore and fuel.",
+      "tier": 5,
+      "profession": "noble",
+      "gold": 20,
+      "prestige": 0,
+      "piety": 0,
+      "bookmarkIds": [
+        "siege_support_heavy"
+      ],
+      "eras": [
+        "early_medieval"
+      ],
+      "alwaysUnlocked": true,
+      "familyPresets": {
+        "standard": {
+          "name": "Established household",
+          "diff": "age 24"
+        }
+      },
+      "rulerRealmId": "resource_hill_court",
+      "governmentForm": "regnum",
+      "fixedProvinceId": "resource_hill",
+      "characterName": "Arno Stone",
+      "sex": "m",
+      "startCulture": "frankish",
+      "startReligion": "catholic",
+      "onboarding": "ruler"
+    }
+  ],
+  "bookmarks": {
+    "siege_support_heavy": {
+      "id": "siege_support_heavy",
+      "name": "Upland allocation",
+      "desc": "An independent fictional catchment example.",
+      "date": {
+        "year": 950,
+        "season": 0,
+        "day": 1
+      },
+      "era": "early_medieval",
+      "geography": "siege_support_heavy_land",
+      "settlementLayout": null,
+      "religiousHeads": {},
+      "localInstitutions": {},
+      "stories": [],
+      "starts": [
+        "siege_support_heavy_household",
+        "siege_support_heavy_ruler"
+      ],
+      "scripted": [],
+      "straits": [],
+      "crossingClasses": {},
+      "provinces": [
+        {
+          "id": "resource_hill",
+          "name": "Hill",
+          "realm": "resource_hill_court",
+          "culture": "frankish",
+          "religion": "catholic",
+          "dev": 5,
+          "settlements": [
+            {
+              "site": "resource_roof",
+              "name": "Roof Town",
+              "kind": "town"
+            },
+            {
+              "site": "resource_tank",
+              "name": "Tank Village",
+              "kind": "village"
+            }
+          ]
+        },
+        {
+          "id": "resource_fold",
+          "name": "Fold",
+          "realm": "resource_fold_court",
+          "culture": "frankish",
+          "religion": "catholic",
+          "dev": 3,
+          "settlements": [
+            {
+              "site": "resource_grazing",
+              "name": "Fold Village",
+              "kind": "village"
+            }
+          ]
+        }
+      ],
+      "realms": [
+        {
+          "id": "resource_hill_court",
+          "name": "Hill court",
+          "capital": "resource_hill",
+          "color": "#aa7944",
+          "aggression": 0,
+          "rank": 2,
+          "government": "regnum",
+          "ruler": {
+            "name": "Arno Stone",
+            "culture": "frankish",
+            "born": 918,
+            "mar": 6,
+            "trait": "patient"
+          }
+        },
+        {
+          "id": "resource_fold_court",
+          "name": "Fold court",
+          "capital": "resource_fold",
+          "color": "#779955",
+          "aggression": 0,
+          "rank": 1,
+          "government": "regnum",
+          "ruler": {
+            "name": "Odo Vale",
+            "culture": "frankish",
+            "born": 920,
+            "mar": 5,
+            "trait": "patient"
+          }
+        }
+      ],
+      "duchies": {},
+      "kingdoms": {},
+      "empires": {},
+      "siteResourceAssignments": [
+        {
+          "id": "upland_roof",
+          "profileId": "upland_catchment",
+          "countyId": "resource_hill",
+          "siteId": "resource_roof",
+          "suitability": {
+            "source": true,
+            "catchment": true
+          },
+          "rights": {
+            "kind": "holder"
+          }
+        },
+        {
+          "id": "upland_tank",
+          "profileId": "upland_tank",
+          "countyId": "resource_hill",
+          "siteId": "resource_tank",
+          "connectedSourceId": "upland_roof",
+          "suitability": {
+            "catchment": true
+          },
+          "rights": {
+            "kind": "holder"
+          }
+        },
+        {
+          "id": "upland_fold",
+          "profileId": "upland_pasture",
+          "countyId": "resource_fold",
+          "siteId": "resource_grazing",
+          "suitability": {
+            "grazing": true
+          },
+          "rights": {
+            "kind": "permission",
+            "institutionId": "resource_fold_court",
+            "officeId": "resource_keeper"
+          }
+        }
+      ],
+      "openingInfrastructure": {
+        "version": 1,
+        "placements": [
+          {
+            "countyId": "resource_hill",
+            "siteId": "resource_roof",
+            "buildingId": "iron_works",
+            "condition": "standing"
+          }
+        ]
+      },
+      "productionSites": [
+        {
+          "id": "iron_plant",
+          "countyId": "resource_hill",
+          "siteId": "resource_roof",
+          "buildingId": "iron_works",
+          "recipeIds": [
+            "assemble_heavy"
+          ],
+          "openingLots": [
+            {
+              "goodId": "dressed_timber",
+              "quantity": 12
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "buildings": {
+    "iron_works": {
+      "name": "Iron works",
+      "desc": "A finite paid batch facility with no passive income or population effect.",
+      "role": "industry",
+      "cost": 30,
+      "upkeep": 1,
+      "maxCounty": 1
+    }
+  },
+  "productionGoods": {
+    "dressed_timber": {
+      "name": "Dressed timber",
+      "unit": "material_units",
+      "mass": 1
+    },
+    "heavy_frame": {
+      "name": "Heavy siege frame",
+      "unit": "equipment_units",
+      "mass": 1
+    }
+  },
+  "productionRecipes": {
+    "assemble_heavy": {
+      "name": "Prepare heavy equipment",
+      "inputs": [
+        {
+          "goodId": "dressed_timber",
+          "quantity": 6
+        }
+      ],
+      "outputs": [
+        {
+          "goodId": "heavy_frame",
+          "quantity": 6
+        }
+      ],
+      "workDays": 2,
+      "workPrice": 4,
+      "requiresTech": [],
+      "impactReviewId": "conserved_production_batches"
+    }
+  },
+  "siegeSupportProfiles": {
+    "heavy_equipment": {
+      "name": "Heavy siege frames",
+      "desc": "Paid timber frames for a stronger finite contribution.",
+      "recipeId": "assemble_heavy",
+      "goodId": "heavy_frame",
+      "quantityPerPulse": 3,
+      "pulses": 2,
+      "progress": 0.75,
+      "termDays": 270,
+      "requiresTech": [
+        "siege_engineering"
+      ],
+      "impactReviewId": "finite_heavy_equipment",
+      "fallback": "Ordinary sieges without this equipment remain available."
+    }
+  },
+  "techImpactReviews": {
+    "features": {
+      "finite_heavy_equipment": {
+        "mode": "hard",
+        "rationale": "Optional engineered equipment uses siege engineering; ordinary besieging remains possible.",
+        "tech": [
+          "siege_engineering"
+        ],
+        "fallback": "Ordinary sieges without this equipment remain available."
+      }
+    }
+  }
+}

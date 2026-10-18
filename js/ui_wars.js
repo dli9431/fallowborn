@@ -234,6 +234,7 @@
       });
       if (FB.greatHolyWarCamp(s, 'player')) hostHtml += '<option value="holy"' + (a.warId === 'holy' ? ' selected' : '') + '>' + esc(FB.T('Holy war')) + '</option>';
       hostHtml += '</select></label>';
+      if (a.warId===id && Object.keys(FBDATA.siegeSupportProfiles).length) hostHtml += button('siege-equipment-host-'+i, FB.T('Siege equipment'));
     });
     if (!hosts.length) hostHtml += fact(FB.T('Field hosts'), FB.T('No host is currently raised.'));
     hostHtml += fact(FB.T('Total upkeep'), FB.T('{money:cost} per season', { cost:FB.playerHostUpkeepParts(s).total }));
@@ -257,9 +258,63 @@
         if (host) FB.assignHostCampaign(s, host.id, el.value);
       });
     });
+    hosts.forEach(function(a,i){bind('siege-equipment-host-'+i,function(){UI.showSiegeSupport(id,a.id);});});
     bindCampaignPeace(s, id);
     bind('campaign-back', back);
     bind('campaign-muster-plan', function () { UI.showMusterPlan(); });
+  };
+  UI.showSiegeSupport = function (warId,hostId,view) {
+    view=view || {scroll:0};
+    const s=FB.state, w=FB.ordinaryWarById(s,warId),a=(s.armies || []).find(function(x){return x.id===hostId && x.realm==='player';});
+    if(!w || !a)return;
+    const sources=FB.production.snapshot(s,a.at), choices=[];
+    let h='<div class="war-sheet" data-siege-equipment><p>'+esc(FB.T('Equipment must be made through paid local work before loading. Loaded stock stays with this host and one siege; unused charges are lost when its command or siege ends.'))+'</p>';
+    const records=FB.siegeSupport.snapshot(s,a.id);
+    records.forEach(function(r){h+=fact(FB.siegeSupport.name(r.profileId),FB.T('{remaining} charges · {days} days remaining',{
+      remaining:r.remaining,days:Math.max(0,r.endTurn-s.turn)}));});
+    Object.keys(FBDATA.siegeSupportProfiles).sort().forEach(function(key){
+      const p=FBDATA.siegeSupportProfiles[key];
+      const local=sources.filter(function(x){return x.site.recipeIds.indexOf(p.recipeId)>=0;});
+      const sites=local.length?local:[{site:{id:null}}];
+      w.objectives.forEach(function(o){sites.forEach(function(source){
+        const q=FB.siegeSupport.quote(s,{profileId:key,siteId:source.site.id,hostId:a.id,warId:warId,countyId:o.target});
+        const n=choices.length;choices.push(q);
+        h+=SH.reviewActionCardHtml({id:'siege-equipment-'+n,detailsId:'siege-equipment-details-'+n,
+          label:FB.T('{equipment} for {county}',{equipment:FB.siegeSupport.name(key),county:objectiveName(o)}),
+          disabled:!q.allowed,warn:!q.allowed,note:FB.siegeSupport.reason(q),
+          details:'<p>'+esc(FB.T(p.desc))+'</p><p>'+esc(FB.T('{pulses} charges · +{progress} progress per active pulse · {days} days. Previously paid processing: {money:cost} per completed batch.',{
+            pulses:p.pulses,progress:p.progress,days:p.termDays,cost:FBDATA.productionRecipes[p.recipeId].workPrice}))+'</p>'});
+      });});
+    });
+    h+='<div class="gm-footer">'+button('siege-equipment-back',FB.T('Back'))+'</div></div>';
+    SH.openModal(FB.T('Siege equipment'),h,{historyView:true,modalClass:'war-sheet-modal'});
+    (view.expanded || []).forEach(function(key){
+      const detail=document.getElementById(key),toggle=document.querySelector('[aria-controls="'+key+'"]');
+      if(detail && toggle){detail.classList.remove('hidden');toggle.setAttribute('aria-expanded','true');}
+    });
+    document.getElementById('gm-body').scrollTop=view.scroll;
+    bind('siege-equipment-back',back);
+    choices.forEach(function(q,n){bind('siege-equipment-'+n,function(){
+      if(!q.allowed)return;
+      view.scroll=document.getElementById('gm-body').scrollTop;
+      view.expanded=Array.prototype.map.call(document.querySelectorAll('[data-siege-equipment] .settcard-info[aria-expanded="true"]'),function(el){return el.getAttribute('aria-controls');});
+      function restore() {
+        UI.showSiegeSupport(warId,hostId,view);
+        const origin=document.getElementById('siege-equipment-'+n);
+        if(origin)(origin.disabled?origin.closest('.review-action-card'):origin).focus({preventScroll:true});
+        document.getElementById('gm-body').scrollTop=view.scroll;
+      }
+      const p=FBDATA.siegeSupportProfiles[q.request.profileId];
+      let body='<p>'+esc(FB.siegeSupport.reason(q))+'</p><p>'+esc(FB.T('Consumes {quantity} owned units from completed paid batches. Loading costs no additional gold. No refund or automatic replenishment.',{
+        quantity:p.quantityPerPulse*p.pulses}))+'</p><div class="gm-footer">'+button('siege-equipment-cancel',FB.T('Back'))+button('siege-equipment-confirm',FB.T('Load equipment'))+'</div>';
+      SH.openModal(FB.T('Load equipment'),body,{historyView:true,historyBack:true,historyBackRender:restore});
+      bind('siege-equipment-cancel',back);
+      bind('siege-equipment-confirm',function(){
+        const loaded=FB.siegeSupport.commit(s,q);
+        SH.modalHistoryBack(restore);
+        UI.toast(loaded?FB.T('Equipment loaded.'):FB.T('The equipment terms changed. Review the current stock and command.'));
+      });
+    });});
   };
   UI.showMusterPlan = function () {
     const s = FB.state, initial = FB.playerMusterSelectionQuote(s);
