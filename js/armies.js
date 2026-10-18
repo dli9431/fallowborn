@@ -2969,6 +2969,7 @@ window.FB = window.FB || {};
         // the leg completes: the host steps into the next province
         army.from = army.at;
         army.at = army.path.shift();
+        if (FB.relayServices) FB.relayServices.arrive(state, army, army.from, army.at);
         if (FB.fortBlocksArmy && FB.fortBlocksArmy(state, army.at, army)) {
           /* Arrival is the moment the obstacle pins the host. A route saved
              before construction, conquest, or occupation cannot carry it

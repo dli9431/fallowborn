@@ -24,7 +24,8 @@
       return ['productionGoods/productionRecipes require bounded tables.'];
     Object.keys(goods).forEach(function (key) {
       var g = goods[key];
-      if (!id(key) || !keys(g,['name','desc','unit','mass']) || !text(g.name) || g.desc !== undefined && !text(g.desc) ||
+      if (!id(key) || !keys(g,['name','desc','unit','mass','provisionUnits']) || !text(g.name) || g.desc !== undefined && !text(g.desc) ||
+          g.provisionUnits !== undefined && !(typeof g.provisionUnits==='number' && Number.isFinite(g.provisionUnits) && g.provisionUnits>=0.001 && g.provisionUnits<=1000) ||
           !id(g.unit) || !int(g.mass,1,1000)) faults.push('productionGoods.' + key + ': invalid unit or conservative mass.');
     });
     Object.keys(recipes).forEach(function (key) {
@@ -50,6 +51,7 @@
     var errors = P.catalogFaults(FBDATA), rows = bm && bm.productionSites, out = {sites:[],errors:errors};
     if (rows === undefined || errors.length) {
       if (FB.productionEconomy) errors.push.apply(errors,FB.productionEconomy.compilePrepared(bm,[]).errors);
+      if (FB.relayServices) errors.push.apply(errors,FB.relayServices.compilePrepared(bm,[]).errors);
       return out;
     }
     function fault(v) { errors.push('productionSites: ' + v); }
@@ -85,6 +87,7 @@
     });
     if (out.sites.reduce(function (n,a) { return n+a.openingLots.length; },0) > LIMIT) fault('opening lots exceed the global bound.');
     if (FB.productionEconomy) errors.push.apply(errors,FB.productionEconomy.compilePrepared(bm,out.sites).errors);
+    if (FB.relayServices) errors.push.apply(errors,FB.relayServices.compilePrepared(bm,out.sites).errors);
     if (errors.length) out.sites = [];
     return out;
   };
@@ -186,6 +189,7 @@
     });
     s.production = r;
     if (FB.productionEconomy) FB.productionEconomy.initialize(s);
+    if (FB.relayServices) FB.relayServices.initialize(s);
   };
   function reservationTotals(r) {
     var held={};
@@ -369,9 +373,9 @@
     Object.keys(s.buildings || {}).forEach(function (pid) {
       (s.buildings[pid] || []).forEach(function (b) { if (b.productionAsset !== undefined) stamps.push({pid:pid,b:b}); });
     });
-    if (r === undefined) { if (stamps.length) fail();return true; }
+    if (r === undefined) { var bm=FB.campaignBookmark(s);if (stamps.length || bm && (bm.relayServiceAssignments || []).length) fail();return true; }
     var p = plan(s), originalAssets = FB.compileOpeningInfrastructure(FB.campaignBookmark(s)), siteTable = {}, assets = {}, lots = {}, batches = {}, seen = {}, work = {}, claims = {}, used = {}, openings = {};
-    if (p.errors.length || !keys(r,['version','definition','revision','nextId','assets','lots','batches','economy']) || r.version !== 1 ||
+    if (p.errors.length || !keys(r,['version','definition','revision','nextId','assets','lots','batches','economy','relay']) || r.version !== 1 ||
         r.definition !== definition(p) || !int(r.revision,0,MAX) || !int(r.nextId,1,MAX) ||
         !Array.isArray(r.assets) || r.assets.length > 128 || !Array.isArray(r.lots) || r.lots.length > LIMIT ||
         !Array.isArray(r.batches) || r.batches.length > LIMIT) fail();
@@ -467,6 +471,9 @@
     var economic = FB.productionEconomy ? FB.productionEconomy.validate(s) : {ids:[],used:{},revision:0};
     economic.ids.forEach(unique);
     Object.keys(economic.used).forEach(function(key){ if (!lots[key]) fail(); used[key]+=economic.used[key]; });
+    var relay = FB.relayServices ? FB.relayServices.validate(s) : {ids:[],used:{},revision:0};
+    relay.ids.forEach(unique);
+    Object.keys(relay.used).forEach(function(key){ if (!lots[key]) fail(); used[key]+=relay.used[key]; });
     var held=reservationTotals(r);
     r.lots.forEach(function (lot) {
       if (lot.origin.kind === 'batch') {
@@ -486,7 +493,7 @@
     });
     var pending={};
     r.batches.forEach(function(b){if(b.status==='reserved'){if(pending[b.assetId])fail();pending[b.assetId]=true;}});
-    if (Object.keys(seen).length !== r.nextId-1 || r.revision !== r.batches.reduce(function(n,b){return n+1+b.workTurns.length+(b.status==='reserved'?0:1);},0)+economic.revision) fail();
+    if (Object.keys(seen).length !== r.nextId-1 || r.revision !== r.batches.reduce(function(n,b){return n+1+b.workTurns.length+(b.status==='reserved'?0:1);},0)+economic.revision+relay.revision) fail();
     return true;
   };
 })();

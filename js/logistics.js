@@ -87,6 +87,42 @@
     return mouths / Math.max(1, B('armyProvisionMenPerUnit', 30)) / 90 /
       Math.max(0.01, B('supplyDrainBase', 1.2));
   }
+  /* Typed physical provisions enter the ordinary carried-food owner. No market
+     stock is created here; the caller must commit its exact finite input. */
+  FB.armyProvisionLoadQuote = function (state, hostId, units) {
+    const army=(state.armies || []).find(function(a){return a.id===hostId;});
+    const q={allowed:false,hostId:hostId,realmId:army && army.realm,kind:'ordinary',units:units,
+      before:0,after:0,capacity:100,perPoint:0};
+    if(!army || !(army.men>0) || army.rebellionId || !Number.isFinite(units) || units<=0) return q;
+    if(army.mobileFollowing) {
+      const facts=FB.mobile.hostSupplySnapshot(state,army),row=FB.mobile.row(state,army.realm);
+      if(!facts || !row || row.status!=='active' ||
+        (row.command ? !FB.mobile.commandValid(state,army.realm) : !FB.mobile.active(state,army.realm) || !FB.mobile.leader(state,army.realm)) ||
+        (row.columns ? !FB.mobile.columnSnapshot(state,army.realm).entries.some(function(c){return c.hostId===army.id && c.effective;}) : FB.mobile.host(state,army.realm)!==army))return q;
+      q.kind='mobile';q.before=army.mobileFood;q.capacity=facts.capacity;q.perPoint=1;
+    } else {q.before=army.supply;q.perPoint=unitsPerPoint(army);}
+    if(!Number.isFinite(q.before) || q.before<0 || !(q.perPoint>0))return q;
+    q.after=q.before+units/q.perPoint;
+    q.allowed=Number.isFinite(q.after) && q.after<=q.capacity;return q;
+  };
+  FB.armyProvisionLoad = function (state, review) {
+    if(!review || !review.allowed)return false;
+    const q=FB.armyProvisionLoadQuote(state,review.hostId,review.units);
+    if(!q.allowed || JSON.stringify(q)!==JSON.stringify(review))return false;
+    const army=state.armies.find(function(a){return a.id===q.hostId;});
+    if(q.kind==='mobile') {army.mobileFood=q.after;army.supply=FB.clamp(q.after/q.capacity*100,0,100);}
+    else army.supply=q.after;
+    return true;
+  };
+  FB.armyProvisionLoadRecordValid = function (q,hostId,realmId,units) {
+    const fields=['allowed','hostId','realmId','kind','units','before','after','capacity','perPoint'];
+    return !!q && typeof q==='object' && !Array.isArray(q) && Object.keys(q).length===fields.length &&
+      Object.keys(q).every(function(k){return fields.indexOf(k)>=0;}) && q.allowed===true && q.hostId===hostId &&
+      q.realmId===realmId && q.units===units && ['ordinary','mobile'].indexOf(q.kind)>=0 &&
+      Number.isFinite(q.before) && q.before>=0 && Number.isFinite(q.capacity) && q.capacity>0 && q.capacity<=1000000000000 &&
+      Number.isFinite(q.perPoint) && q.perPoint>0 && q.perPoint<=1000000 && q.after===q.before+units/q.perPoint &&
+      q.after<=q.capacity && (q.kind==='ordinary'?q.capacity===100:q.perPoint===1);
+  };
   FB.armyProvisionUse = function (state, army, pid, supplyTech) {
     const pr = FB.world.byId[pid || army.at] || {};
     const terrain = FBDATA.balance.supplyDrainTerrain || {};

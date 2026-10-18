@@ -2397,3 +2397,7 @@ household_refuge world stories may own a strict version-1 finite provider ledger
 Seasonal building provenance
 
 The optional state.buildingSeasons version 1 stores only bounded original operating-term markers and stock debit receipts, with no stock balance or population. Water and production owners retain their existing records. Strict detached validation checks structural fingerprints, historical local-kind and date bounds, exact original asset/actor/generation/source/lot identities, seasonal coverage of committed work, once-only ends/loss/allocation and conserved material/source use. Absence preserves legacy semantics. Matching restore never runs the daily boundary, closes work, renews capacity, credits stock or pays. Public field shapes and limits are in docs/MODDING.md and docs/designs/building-seasons.md.
+
+Relay provenance
+
+Optional production.relay version 1 shares production's existing ids, revision and stock conservation. It retains exact original consent parties/generations, finite terms, real army arrivals and once-only input, payment and carrying receipts. Validation rejects duplicate/missing references, altered units/prices, erased opted-in owners and unreconciled stock before adoption. Host loss, source demolition or principal death preserves immutable history without authorizing new withdrawals. Restore records no movement, permission, payment or resupply. See docs/designs/relay-provisions.md for bounds and full schema.

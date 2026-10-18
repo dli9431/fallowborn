@@ -1,0 +1,37 @@
+Finite relay provisions
+
+js/relay_services.js composes existing physical production lots, actual army movement, current supplier consent and the ordinary carried-food owner. data/relay_services.js ships an empty relayServiceProfiles table. No bundled world receives a relay, historical station, inventory, speed, remount, message, troop or transport benefit. The finite_relay_provisions technology-impact decision is none: a basic local provisions agreement adds no new transport or administrative capability. Ordinary military, route, crossing and equipment requirements remain in force. Organized postal services are not implemented by this adapter.
+
+Authoring
+
+An effective bookmark or revision declares whole-field relayServiceAssignments. A service selects one existing productionSites asset, an inhabited approach county, one existing recipient realm and land or water arrival. Water links must match a declared strait; actual map adjacency and current crossing/access conditions are checked again at movement and collection. The stop's physical site is the production source. Army movement remains county-granular; this does not establish a person's presence inside a particular settlement.
+
+A production good must explicitly declare provisionUnits before it can supply a host. A relay profile's marketUnits must match that exact conversion. A generic market basket, cash, technology, source capacity or a building alone never creates that good. The road and coast ordinary JSON imports contrast an owned land stop and a separately paid coastal supplier, with different finite stock, duration, quantity and ration conversion. Their opening materials are explicitly fictional simulation quantities, supplied through existing standing opening infrastructure. Existing untyped goods cannot supply a relay.
+
+Consent and actual movement
+
+The source's current lawful original owner explicitly consents for one currently existing recipient host. The record preserves both actual living principals and their realm generations, the exact host, finite maximum quantity and a term of at most ninety turns. Consent consumes no materials, changes no passage right and makes no payment. There is no automatic assent, renewal or gift by a public supplier. Revoke is a separate reviewed supplier operation. One service/host pair gets one finite agreement, even after refusal by revocation or expiry.
+
+Only a committed ordinary march from the declared approach into the stop records an arrival. A county position, order, proposed route, date or restored checkpoint never initializes one. Arrival recording is opt-in and bounded. It records the real host, original recipient principal and turn under the same production id owner. Live collection needs an unused arrival at or after consent, actual stationary presence at that stop, the same approach and current lawful edge. A moving host, hostile presence, blocked fort, disputed source or changed principal cannot collect. Ordinary command and player overrides retain their existing owners. No program or service orders a march.
+
+Collection
+
+FB.relayServices.quote and aiQuote share pure current checks. Commit recomputes the complete review, stages stock, payment and loading, validates the resulting ledgers, then publishes only its owned fields. A stale, repeated, over-capacity, empty, expired, unconsented, wrong-location or unfunded confirmation changes nothing. A successful pickup consumes one unused arrival and up to the agreement's remaining quantity. Every material unit comes from existing unreserved, unexpired production lots at the same standing original asset. Pending manufacturing reservations, seasonal allocation and other buyers compete for that exact stock. Collection creates no new lot or treasury.
+
+Owned collection requires the same exact original source and recipient account identity. Market collection charges the current local provisions price times the declared positive base price per typed unit, rounded up, and credits that actual supplier. The current payer retains ordinary public reserves; an existing public account never falls back to private money. FB.armyProvisionLoadQuote/Load converts the finite provisions into existing ordinary supply points using the normal mouth/unit ratio, or actual mobileFood using the existing mobile carrying capacity. It creates no parallel carried inventory. The existing supply drain consumes what was loaded. Host objects, people, positions, other armies and property remain under their canonical owners.
+
+Personal travel boundary
+
+Ordinary personal journeys pay a road-cost invoice upfront and expose no carried-food account. They are not silently credited or refunded by this service, and a traveller's county does not establish an army arrival. This adapter's supported journey is an actual field-host journey. Adding personal food carriage or changing prepaid journey invoices requires its own canonical travel consumer and data contract. No unsupported claim of personal provisioning, message delivery or family carriage is made.
+
+Saved state
+
+The optional production.relay version 1 contains exactly definition, arrivals, consents and receipts in addition to version. It shares production.nextId and revision, never global uids or a second stock owner. Arrival, consent, revocation and collection each account for their exact local id and revision. Each pickup names its exact earlier consent, unused arrival, source asset, inputs, immutable loading projection, current unit price and original payer/payee. Input debits participate in the existing complete per-lot conservation equation. Units, original identity, chronological order, expiry, cumulative agreement quantity, duplication and all reference fields are validated before adoption. Historical principals remain retained through court compaction.
+
+An opted-in missing relay or production owner fails closed. Old unconfigured campaigns retain absent state. Restore does not record arrival, issue consent, load food, renew terms, repair removed assets or charge accounts. History remains valid after a host disappears, an original principal dies or the source is demolished, but those facts cannot authorize a new pickup. Structural definition fingerprints and the existing whole-mod fingerprint preserve exact imported meanings. Public profile display comes from the referenced ordinary productionGood; there is no new display namespace or generated catalogue.
+
+Bounds and presentation
+
+There are at most 128 profiles and assignments, 512 combined arrival/consent/collection rows, one agreement per service/host, 10000 typed units per agreement and ninety turns per term. Revocation contributes one additional accounted id per consent. Full journals stop new commitments and arrival recording without blocking movement. Compiled declaration plans are cached by effective bookmark, revision and active mod signature. Device/performance acceptance remains owner-controlled.
+
+The existing settlement production sheet shows the declared approach, material, recipient host, quantity/term, current price and first blocker. Supplier authorization and revocation have separate reviewed controls; the recipient confirms collection against its actual account. Shared action cards, keyboard controls, mobile widths, Back, Escape, scroll and focus restoration remain on the ordinary production modal path. AI callers use the same consent and collection APIs; this service does not autonomously spend or grant another actor's resources.

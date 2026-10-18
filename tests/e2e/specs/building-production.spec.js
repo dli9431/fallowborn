@@ -5,7 +5,7 @@ const {openGame}=require('../support/game/navigation');
 const {beginBookmark}=require('../support/game/bookmark-acceptance');
 const {dependsOnRuntime}=require('../support/runtime-dependencies');
 const examples={fiber:require('../fixtures/authoring/production-fiber.json'),iron:require('../fixtures/authoring/production-iron.json')};
-dependsOnRuntime(__filename,[
+dependsOnRuntime(__filename,['data/relay_services.js','js/relay_services.js',
   'data/building_profiles.js','js/building_profiles.js','data/production_economy.js','js/production_economy.js','index.html','data/production.js','data/technology.js','js/production.js','js/site_resources.js',
   'js/world.js','js/title_ids.js','js/mods.js','js/main.js','js/save.js','js/save_v4.js','js/lordships.js','js/treasury.js',
   'js/politics.js','js/economy.js','js/model.js','js/technology.js','js/ui_modals.js','js/ui_misc.js','js/starts.js']);

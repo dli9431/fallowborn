@@ -4014,3 +4014,7 @@ The shared story sheet presents exact consenting entrants and caregivers, separa
 Seasonal operation reviews
 
 Actual assigned settlement assets expose Review seasonal operation through the shared Governance fact/action cards. The sheet shows local and permitted seasons, original finite end, care, available actual stock and declared lifetime. Open and Allocate each have a separate confirmation stating resource consumption, stock cost and the absence of automatic output or free work. Existing paid water and production reviews show the seasonal blocker. Back, Escape and confirmation return retain scroll, disclosures and originating focus, including settlement return. Full-width native controls use the existing keyboard and phone patterns; all new chrome uses literal FB.T and existing building/good localization owners.
+
+Relay provisions reviews
+
+The settlement production sheet lists each declared approach, actual recipient host, provision material, maximum quantity and finite term. Separate supplier authorization, revocation and recipient collection cards show the current blocker. A confirmation names supplier, recipient, exact payment accounts, immediate price, quantity, actual provisions loaded and last eligible turn. Consent grants no food or passage. Stale confirmation spends nothing. Existing production modal history retains keyboard/mobile controls, list scroll, Back, Escape and originating focus. Goods use their ordinary structured-data names; dynamic chrome uses literal FB.T.
