@@ -12,13 +12,16 @@ dependsOnRuntime(__filename,[
   'js/building_profiles.js','js/building_seasons.js','js/building_operations.js',
   'js/world.js','js/actions.js','js/economy.js','js/technology.js','js/lordships.js',
   'js/settlement.js','js/treasury.js','js/mods.js','js/main.js','js/starts.js',
-  'js/model.js','js/messages.js','js/save.js','js/save_v4.js'
+  'js/model.js','js/messages.js','js/save.js','js/save_v4.js','js/ui_modals.js','js/ui_misc.js','css/style.css'
 ]);
 
-async function boot(page,info,kind) {
+async function boot(page,info,kind,options) {
+  options=options || {};
   await openGame(page,info);
   await page.evaluate(function(){FB.ui.showMods();});
-  await page.locator('#modfile').setInputFiles(path.resolve(__dirname,'../fixtures/authoring/boathouse-work-'+kind+'.json'));
+  if(options.revision){const m=JSON.parse(JSON.stringify(examples[kind]));m.bookmarks['boathouse_'+kind].revision=options.revision;
+    await page.locator('#modfile').setInputFiles({name:'boathouse-work-'+kind+'.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(m))});
+  }else await page.locator('#modfile').setInputFiles(path.resolve(__dirname,'../fixtures/authoring/boathouse-work-'+kind+'.json'));
   await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}),page.locator('#mod-apply').click()]);
   await page.waitForFunction(function(){return window.FB && FB.game && FB.game.bootReady;});
   const full=page.locator('#btn-choose-beginning');
@@ -60,6 +63,7 @@ test('the bundled boathouse composes exact approved values and leaves ordinary e
     const scripts=Array.from(document.scripts).map(function(x){return x.getAttribute('src');});
     const fields=['tax','dev','pop','research','piety','prestige','levy','retinue','archers','defense','siege','populationCapacity','populationFamineProtection','populationCrisisProtection','migrationAttraction'];
     return {values:[d.cost,d.upkeep,d.devMin,d.maxCounty,d.coastal,d.role,d.aiBuildOrder],scope:d.applicability,
+      binding:[d.productionRecipeIds,d.maritimeWorkProfileId,d.settlementDraw],
       requirement:d.requiresTech || null,passive:fields.map(function(k){return d[k] || 0;}),review:FBDATA.techImpactReviews.features.building_boathouse.mode,
       profile:[p.enterpriseType,p.recipeId,p.goodId,p.quantity,p.unitValue,p.invoiceShare,p.termDays],
       enterprise:[e.cost,e.requiresTech,e.upgrades.map(function(u){return [u.cost,u.staff,u.requiresTech,u.dev || 0,u.fx];})],
@@ -68,6 +72,7 @@ test('the bundled boathouse composes exact approved values and leaves ordinary e
       ordered:scripts.indexOf('data/buildings_boathouses.js')>scripts.indexOf('data/maritime_work.js') && scripts.indexOf('data/buildings_boathouses.js')<scripts.indexOf('js/main.js')};
   });
   expect(r).toEqual({values:[25,1,0,1,true,'shipyard',32],scope:{yearMin:650,yearMax:1300,traditions:['nordic']},
+    binding:[['prepare_boathouse_work'],'boathouse_work',false],
     requirement:null,passive:Array(15).fill(0),review:'none',
     profile:['fishing_boat_business','prepare_boathouse_work','boathouse_work',1,6,0.1,7],
     enterprise:[40,'coastal_piloting',[[140,2,'harbor_works',0,{populationCapacity:0.02,levy:15}],[420,3,'naval_levies',1,{populationCapacity:0.04,levy:25}]]],
@@ -150,20 +155,96 @@ for(const kind of ['shore','river']) {
 }
 
 test('new construction respects inclusive Nordic scope, coastal siting, price and county occupancy',async function({page},info){
-  await boot(page,info,'shore');
+  await boot(page,info,'shore',{revision:'new_works'});
   const r=await page.evaluate(function(){
     const s=FB.state,pid='resource_quay',id='boathouse';
-    s.buildings[pid]=[];FB.invalidateBuildingIndex(s,pid);
     const rows=[649,650,1300,1301].map(function(y){s.date.year=y;return FB.buildingApplicabilityStatus(s,pid,id).ready;});
     s.date.year=900;s.realms.player.techTraditions=['latin'];const wrong=FB.canBuildAt(s,pid,0,id);
     s.realms.player.techTraditions=['nordic'];const pr=FB.world.byId[pid],coastal=pr.coastal;
     pr.coastal=false;const inland=FB.canBuildAt(s,pid,0,id);pr.coastal=coastal;
     const cash=s.player.gold,dev=s.dev[pid],price=FB.buildCost(s,pid,id),ok=FB.build(s,pid,0,id),again=FB.build(s,pid,1,id);
     return {rows:rows,wrong:wrong,inland:inland,coastal:coastal,ok:ok,again:again,paid:cash-s.player.gold,price:price,
-      dev:s.dev[pid]-dev,count:s.buildings[pid].length};
+      dev:s.dev[pid]-dev,count:s.buildings[pid].filter(function(b){return b.id===id;}).length};
   });
   expect(r).toMatchObject({rows:[false,true,true,false],wrong:false,inland:false,coastal:true,ok:true,again:false,dev:0,count:1});
   expect(r.paid).toBe(r.price);
+});
+
+for(const kind of ['shore','river']) {
+  test(kind+' actual boathouse constructs empty, receives finite inputs and pays an ordinary invoice once',async function({page},info){
+    await boot(page,info,kind,{revision:'new_works'});
+    const built=await page.evaluate(function(){
+      const s=FB.state,P=FB.production,pid='resource_quay',actor=FB.settlementHolder(s,pid,0);
+      const before=JSON.stringify(s),rng=FB.getRngState(),uid=FB.getUidCounter();
+      const direct=FB.canBuildAt(s,pid,0,'boathouse'),ai=FB.aiCanBuildAt(s,actor.id,pid,0,'boathouse');
+      const pure=before===JSON.stringify(s)&&rng===FB.getRngState()&&uid===FB.getUidCounter();
+      const cash=s.player.gold,cost=FB.buildCost(s,pid,'boathouse'),revision=s.production.revision,next=s.production.nextId;
+      const ok=FB.build(s,pid,0,'boathouse'),again=FB.build(s,pid,0,'boathouse');
+      const row=P.snapshot(s).find(function(x){return x.site.id==='boat_plant';});
+      const record=s.buildings[pid].find(function(x){return x.id==='boathouse';}),enrolled=JSON.stringify(s.production);
+      const rebind=P.bindConstruction(s,pid,record);FB.buildingOperations.bind(s,pid,record);
+      const once=rebind===false&&enrolled===JSON.stringify(s.production)&&s.production.revision===revision+1&&s.production.nextId===next+1;
+      const noFree=!P.aiQuote(s,'boat_plant','reserve',{recipeId:'prepare_boathouse_work',disposition:'store'}).allowed;
+      return {direct:direct,ai:ai,pure:pure,ok:ok,again:again,paid:cash-s.player.gold,cost:cost,once:once,noFree:noFree,
+        empty:row.lots.length===0,constructed:row.asset.constructed,opened:row.asset.openedTurn,turn:s.turn};
+    });
+    expect(built).toMatchObject({direct:true,ai:true,pure:true,ok:true,again:false,once:true,noFree:true,empty:true,constructed:true});
+    expect(built.paid).toBe(built.cost);expect(built.opened).toBe(built.turn);
+    const delivered=await page.evaluate(function(){
+      const s=FB.state,P=FB.production,E=FB.productionEconomy,recipe=FBDATA.productionRecipes.prepare_boathouse_work;
+      const source=P.snapshot(s).find(function(x){return x.site.id==='boat_supplier';}),cash=s.player.gold;
+      const before=source.lots.reduce(function(n,l){return n+l.remaining;},0);
+      recipe.inputs.forEach(function(input){const route=input.goodId==='boathouse_timber'?'timber_delivery':'cordage_delivery';
+        if(!E.commit(s,E.aiQuote(s,route,input.quantity,'transfer')))throw new Error('Expected actual owned material delivery.');});
+      const remaining=P.snapshot(s).find(function(x){return x.site.id==='boat_supplier';}).lots.reduce(function(n,l){return n+l.remaining;},0);
+      return {spent:before-remaining,received:P.snapshot(s).find(function(x){return x.site.id==='boat_plant';}).lots.reduce(function(n,l){return n+l.remaining;},0),
+        input:recipe.inputs.reduce(function(n,l){return n+l.quantity;},0),paid:s.player.gold!==cash};
+    });
+    expect(delivered.spent).toBe(delivered.input);expect(delivered.received).toBe(delivered.input);expect(delivered.paid).toBe(false);
+    await work(page);
+    const r=await page.evaluate(function(){
+      const s=FB.state,M=FB.maritimeWork,P=FB.production,id=M.commit(s,M.aiQuote(s,'licensed_work','prepare',{enterpriseUid:null}));
+      function facts(t){return JSON.stringify([t.production,t.buildings,t.siteResources,t.player.gold,t.player.enterprises]);}
+      const pending=facts(s);FB.save.restore(JSON.parse(FB.save.serialize()));const pendingSame=pending===facts(FB.state);
+      const t=FB.state,q=M.aiQuote(t,'licensed_work','complete',{invoiceId:id}),cash=t.player.gold;
+      const military=JSON.stringify([t.armies,t.wars,t.player.retinue,t.player.levy]),ok=M.commit(t,q),repeat=M.commit(t,q);
+      const paid=cash-t.player.gold,e=t.player.enterprises[0];FB.assignEnterprise(t,e.uid,null);
+      const idle=FB.enterpriseYield(t,e),staff=FB.enterpriseStaffRequired(e);P.validate(t);
+      const forged=[function(a){a.constructed=false;},function(a){a.openedTurn=t.turn+1;},function(a){delete a.constructed;}].map(function(change){
+        const copy=JSON.parse(JSON.stringify(t)),asset=copy.production.assets.find(function(a){return a.constructed;});change(asset);
+        const before=JSON.stringify(copy);let bad=false;try{FB.save.v4.validatePlatform(copy);}catch(error){bad=true;}
+        return bad&&before===JSON.stringify(copy);
+      });
+      const complete=facts(t);FB.save.restore(JSON.parse(FB.save.serialize()));P.initialize(FB.state);
+      return {pendingSame:pendingSame,ok:ok,repeat:repeat,paid:paid,due:q.due,credit:q.credit,base:q.baseCost,idle:idle,staff:staff,forged:forged,
+        same:complete===facts(FB.state),noFleet:military===JSON.stringify([FB.state.armies,FB.state.wars,FB.state.player.retinue,FB.state.player.levy])};
+    });
+    expect(r).toMatchObject({pendingSame:true,ok:true,repeat:false,idle:0,staff:1,forged:[true,true,true],same:true,noFleet:true});
+    expect(r.paid).toBe(r.due);expect(r.credit).toBeGreaterThan(0);expect(r.credit).toBeLessThanOrEqual(Math.floor(r.base*0.1));
+  });
+}
+
+test('coastal scenery and inherited removed sites cannot bypass the mandatory maritime construction assignment',async function({page},info){
+  await boot(page,info,'shore');
+  const r=await page.evaluate(function(){
+    const s=FB.state,pid='resource_quay',cash=s.player.gold;
+    s.buildings[pid]=[];FB.invalidateBuildingIndex(s,pid);const before=JSON.stringify(s);
+    const removed=FB.build(s,pid,0,'boathouse'),unassigned=FB.build(s,pid,1,'boathouse');
+    return {removed:removed,unassigned:unassigned,pure:before===JSON.stringify(s),cash:cash===s.player.gold};
+  });
+  expect(r).toEqual({removed:false,unassigned:false,pure:true,cash:true});
+});
+
+for(const width of [390,1280])test(width+'px unavailable boathouse construction explains its actual invoice outlet',async function({page},info){
+  await page.setViewportSize({width:width,height:844});await boot(page,info,'shore',{revision:'new_works'});
+  await page.evaluate(function(){
+    FB.state.buildings.resource_quay.find(function(b){return b.id==='boat_supply_store';}).ruined=true;
+    FB.ui.closeModal();FB.ui.showBuildings('resource_quay');
+  });
+  await expect(page.locator('[data-bquick="boathouse"]')).toBeDisabled();
+  await expect(page.locator('#gm-body')).toContainText('lawful launching capacity');
+  await expect(page.locator('#gm-body')).toContainText('remaining enterprise invoice');
+  expect(await page.locator('#gm-body').evaluate(function(el){return el.scrollWidth>el.clientWidth+1;})).toBe(false);
 });
 
 test('lawful launching, living ownership, real materials and remaining private cash all remain binding',async function({page},info){

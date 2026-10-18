@@ -5,6 +5,7 @@ FBDATA.buildings_boathouses = {
   boathouse:{
     role:'shipyard', aiBuildOrder:32, name:'Boathouse', icon:'🛶',
     cost:25, upkeep:1, devMin:0, maxCounty:1, coastal:true,
+    settlementDraw:false, productionRecipeIds:['prepare_boathouse_work'], maritimeWorkProfileId:'boathouse_work',
     applicability:{yearMin:650,yearMax:1300,traditions:['nordic']},
     desc:'A modest maintained boat shelter and workspace. At an assigned lawful launching site, actual paid timber and cordage work can meet at most 10% of a fishing enterprise invoice. Remaining payment, staffing and enterprise knowledge still apply.'
   }
