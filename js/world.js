@@ -1455,6 +1455,7 @@ window.FB = window.FB || {};
         else if (!ruler || ruler.name !== start.characterName || ruler.sex !== start.sex ||
             ruler.culture !== start.startCulture || FB.startRulerFaith(definition, startingRealm) !== start.startReligion ||
             platform.governments[start.rulerRealmId] !== start.governmentForm ||
+            !FB.startCommandActorId(definition, startingRealm, start.governmentForm) &&
             FB.realmRank.tier({ rank:startingRealm.rank, formId:start.governmentForm, era:platform.era }, {}) !== start.tier)
           fault(owner, 'existing ruler identity, government and rank must match realm ' + start.rulerRealmId + '.');
       }

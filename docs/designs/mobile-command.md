@@ -1,5 +1,15 @@
 Mobile command and personal continuity
 
+Fresh command starts
+
+A named command start resolves its identity from the declared opening leader member's direct actor. Pure start validation shares this projection with the fixed identity display, requires the actual camp origin as the birthplace and preserves the scenario's private station independently of the institution's rank. A ruler presentation in the mobile realm declaration cannot substitute for a different bound person. Deferred actors and unnamed generated principals do not supply a named command start.
+
+Fresh boot seeds the existing bookmark opening before selecting this protagonist, preserving authored parent links and settlement community partitions. It does not materialize a royal consort, generate court children or request a mobile leader before its record exists. After normal population, market and public treasury setup, the ordinary story boundary initializes the following and adopts the same actor with the existing stable public realm id and separate private purse. An explicit openingInfrastructure inventory is installed before those resource owners initialize; a command's public identity does not need territorial remapping. Subsequent track attachment and repeated initialization retain the same people, generation, host, food and funds.
+
+Restore uses the existing bookmarkSetup, mobile schema 3 and start validation; it never calls the fresh protagonist preparation. This ordering fix adds no saved field, version or authority. The existing mobile_opening_identity, mobile_command_continuity and mobile_command_scope technology decisions remain none. It introduces no new technology eligibility and retains the ordinary unit gates.
+
+The expedition-command-harbor.json and expedition-command-dune.json ordinary imports include distinct retained and commissioned named starts, a second-member direct leader versus a same-realm incumbent, different private purses, mixed musters and explicit parent links. expedition-command-starts.spec.js exercises actual new-game entry, matching restore, repeated attachment, exact seed replay, an empty explicit inventory, selected-principal identity and detached malformed declarations. The generic home-office and cross-realm landed command contracts remain separate from this start path.
+
 Mobility is selected by the territory strategy's mobileFollowing marker. Coalition elections are selected separately by coalition_leadership succession. The hosted_following and expedition_command forms retain the same population, migration, camp, host and finite stock owners while selecting retained_principal or superior_commission succession, command_consent and command_receipts. No date, people, culture or historical identity selects these policies.
 
 The retained policy keeps its declared opening leader without a replacement constitution. Death leaves a vacancy. There is no automatic child, majority election, generated replacement or commission by a host-country ruler. This narrow policy does not claim to reconstruct a historical following's political customs.
