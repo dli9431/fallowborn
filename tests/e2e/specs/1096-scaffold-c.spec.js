@@ -4,12 +4,16 @@ const path = require('path');
 const {test,expect} = require('../support/fixture');
 const {dependsOnRuntime} = require('../support/runtime-dependencies');
 const {openGame} = require('../support/game/navigation');
+const {beginBookmark,restoreBookmark} = require('../support/game/bookmark-acceptance');
 
 dependsOnRuntime(__filename,[
-  'index.html','data/bookmark_1096_scaffold_c.js','data/bookmarks.js','data/counties.js',
+  'index.html','data/bookmark_1096.js','data/identities_1096.js',
+  'data/bookmark_1096_scaffold_a.js','data/bookmark_1096_scaffold_b.js',
+  'data/bookmark_1096_scaffold_c.js','data/bookmark_1096_scaffold_d.js','data/bookmarks.js','data/counties.js',
   'data/bookmark_1066_inhabited.js','data/geographies.js','data/geography_expansion.js',
   'data/settlements.js','data/settlements_real.js','data/cultures.js','data/traits.js',
-  'data/eras.js','data/government_rollout.js','js/model.js','js/world.js'
+  'data/eras.js','data/government_rollout.js','js/model.js','js/world.js',
+  'js/population.js','js/main.js','js/save.js','js/save_v4.js'
 ]);
 
 const packets = {
@@ -61,18 +65,26 @@ test('1096 quadrant c stages exactly its counties and keeps all source declarati
     'onega_district','sarysu_corridor','w_lapland','w_steppe_e','w_ural','w_taiga','w_north'].sort());
 });
 
-test('1096 quadrant c keeps the source communities, physical seeds and ordered settlement layouts', async function ({page}, testInfo) {
+test('1096 quadrant c preserves physical inputs and uncorrected residents with ordered settlement layouts', async function ({page}, testInfo) {
   await loadScaffold(page,testInfo);
   const result = await page.evaluate(function (keys) {
     var source = FB.bookmark('1066','inhabited_v2'), byId = {}, faults = [];
+    var traditional = {religion:'slavic_pagan',communities:[
+      {culture:'slavic',religion:'slavic_pagan',populationShare0:9000},
+      {culture:'slavic',religion:'catholic',populationShare0:1000}
+    ]};
+    var corrections = {szczecin:traditional,mecklenburg:traditional,lubeck:traditional,
+      etelkoz:{culture:'turkic',religion:'tengri'}};
     source.provinces.forEach(function (p) { byId[p.id] = p; });
     keys.forEach(function (key) {
       var block = FBDATA.bookmarkRegions1096[key];
       block.provinces.forEach(function (p) {
         var old = byId[p.id];
         if (!old) { faults.push(p.id + ': missing source'); return; }
-        ['name','x','y','terrain','duchy','dev','culture','religion','communities','wasteland','maxRadiusKm'].forEach(function (field) {
-          if (JSON.stringify(p[field]) !== JSON.stringify(old[field])) faults.push(p.id + ': changed ' + field);
+        var correction = corrections[p.id] || {};
+        ['name','x','y','terrain','duchy','dev','population0','culture','religion','communities','wasteland','maxRadiusKm'].forEach(function (field) {
+          var expected = Object.prototype.hasOwnProperty.call(correction,field) ? correction[field] : old[field];
+          if (JSON.stringify(p[field]) !== JSON.stringify(expected)) faults.push(p.id + ': unexpected ' + field);
         });
         if (p === old || p.communities && p.communities === old.communities) faults.push(p.id + ': shared source object');
         var layout = block.layouts[p.id];
@@ -151,7 +163,7 @@ test('1096 quadrant c resolves its local references and declares only the three 
     });
     return {faults:faults,courts:Object.keys(realms).length,external:Object.keys(external).sort()};
   },Object.keys(packets));
-  expect(result).toEqual({faults:[],courts:30,external:['byzantium_1096','croatia_1096','hre_1096']});
+  expect(result).toEqual({faults:[],courts:32,external:['byzantium_1096','croatia_1096','hre_1096']});
 });
 
 test('1096 quadrant c redates court identities and separates contested source jurisdictions', async function ({page}, testInfo) {
@@ -169,27 +181,121 @@ test('1096 quadrant c redates court identities and separates contested source ju
     });
     var owners = {};
     ['veligrad','olomouc','brno','nitra','bratislava','etelkoz','zagreb','sisak','pliska','silistra','vidin','cherson',
+      'smolensk','volodymyr','lutsk','minsk','kursk','turov','rostov','suzdal','beloozero',
       'mosul','amida','edessa','harran','raqqa'].forEach(function (id) { owners[id] = provinces[id].realm; });
     return {named:named.sort(),generated:generated,owners:owners,
       englandResidents:provinces.london.culture,edessaResidents:provinces.edessa.communities,
       edessaCourt:[realms.edessa_1096.ruler.culture,realms.edessa_1096.religion],
-      rusLieges:['kiev_1096','novgorod_1096','chernigov_1096','pereyaslavl_1096','polotsk_1096','turov_volhynia_1096']
+      rusLieges:['kiev_1096','novgorod_1096','smolensk_1096','chernigov_1096','pereyaslavl_1096','polotsk_1096','turov_volhynia_1096','volhynia_1096']
         .filter(function (id) { return !!realms[id].liege; })};
   },Object.keys(packets));
   expect(result.named).toEqual([
-    ['denmark_1096','Erik I Ejegod',1055,'norse','catholic'],
+    ['denmark_1096','Erik I Ejegod',1056,'norse','catholic'],
     ['england_1096','William II Rufus',1060,'norman','catholic'],
     ['kiev_1096','Sviatopolk II',1050,'rus','orthodox'],
     ['norway_1096','Magnus III',1073,'norse','catholic']
   ]);
-  expect(result.generated).toBe(26);
+  expect(result.generated).toBe(28);
   expect(result.owners).toEqual({veligrad:'bohemia_1096',olomouc:'bohemia_1096',brno:'bohemia_1096',
     nitra:'hungary_1096',bratislava:'hungary_1096',etelkoz:'cuman_courts_1096',zagreb:'croatia_1096',sisak:'croatia_1096',
     pliska:'byzantium_1096',silistra:'byzantium_1096',vidin:'byzantium_1096',cherson:'byzantium_1096',
+    smolensk:'smolensk_1096',volodymyr:'volhynia_1096',lutsk:'volhynia_1096',minsk:'polotsk_1096',
+    kursk:'pereyaslavl_1096',turov:'turov_volhynia_1096',rostov:'novgorod_1096',suzdal:'novgorod_1096',beloozero:'novgorod_1096',
     mosul:'mosul_1096',amida:'amida_1096',edessa:'edessa_1096',harran:'harran_1096',raqqa:'raqqa_1096'});
   expect(result.englandResidents).toBe('english');
   expect(result.edessaResidents).toEqual([{culture:'arabic',religion:'sunni',populationShare0:7000},
     {culture:'syriac',religion:'eastern',paired:true,populationShare0:3000}]);
   expect(result.edessaCourt).toEqual(['armenian','orthodox']);
   expect(result.rusLieges).toEqual([]);
+});
+
+test('1096 corrected courts and residents reach the composed world while held profiles stay provisional', async function ({page}, testInfo) {
+  await openGame(page,testInfo);
+  const result = await page.evaluate(function () {
+    var b = FB.bookmark('1096'), provinces = {}, realms = {};
+    b.provinces.forEach(function (p) { provinces[p.id] = p; });
+    b.realms.forEach(function (r) { realms[r.id] = r; });
+    return {
+      baltic:['szczecin','mecklenburg','lubeck'].map(function (id) {
+        return [provinces[id].religion,provinces[id].communities];
+      }),
+      obotrite:[realms.obotrite_1096.capital,realms.obotrite_1096.religion,realms.obotrite_1096.ruler.generated],
+      etelkoz:[provinces.etelkoz.culture,provinces.etelkoz.religion],
+      rus:['smolensk_1096','volhynia_1096','turov_volhynia_1096'].map(function (id) {
+        var r = realms[id];
+        return [r.id,r.name,r.capital,r.government,r.rank,r.religion,r.ruler.generated,r.ruler.culture,r.ruler.born];
+      }),
+      amida:[realms.amida_1096.ruler.culture,realms.amida_1096.ruler.generated,provinces.amida.communities],
+      erik:realms.denmark_1096.ruler.born,
+      held:[realms.sweden_1096.capital,realms.sweden_1096.ruler.generated,
+        provinces.gwynedd.realm,provinces.powys.realm,provinces.gdansk.religion],
+      validated:FB.validateBookmark(b)
+    };
+  });
+  expect(result.baltic).toEqual(['szczecin','mecklenburg','lubeck'].map(function () {
+    return ['slavic_pagan',[{culture:'slavic',religion:'slavic_pagan',populationShare0:9000},
+      {culture:'slavic',religion:'catholic',populationShare0:1000}]];
+  }));
+  expect(result.obotrite).toEqual(['lubeck','catholic',true]);
+  expect(result.etelkoz).toEqual(['turkic','tengri']);
+  expect(result.rus).toEqual([
+    ['smolensk_1096','Smolensk','smolensk','territorial',2,'orthodox',true,'rus',1060],
+    ['volhynia_1096','Volhynia','volodymyr','territorial',2,'orthodox',true,'rus',1060],
+    ['turov_volhynia_1096','Turov','turov','territorial',2,'orthodox',true,'rus',1060]
+  ]);
+  expect(result.amida).toEqual(['turkic',true,[{culture:'arabic',religion:'sunni',populationShare0:7000},
+    {culture:'syriac',religion:'eastern',paired:true,populationShare0:3000}]]);
+  expect(result.erik).toBe(1056);
+  expect(result.held).toEqual(['uppsala',true,'gwynedd_powys_1096','gwynedd_powys_1096','catholic']);
+  expect(result.validated).toEqual([]);
+});
+
+test('1096 corrected owners, court identities and mixed residents survive fresh creation and restore', async function ({page}, testInfo) {
+  await beginBookmark(page,testInfo,'1096','farmer');
+  function snapshot() {
+    var s = FB.state;
+    return {
+      owners:['smolensk','volodymyr','lutsk','minsk','kursk','turov'].map(function (id) {
+        return [id,s.owner[id],FB.topRealm(s,s.holder[id])];
+      }),
+      courts:['smolensk_1096','volhynia_1096','turov_volhynia_1096','obotrite_1096','amida_1096'].map(function (id) {
+        var r = s.realms[id], ruler = FB.realmRulerCharacterSnapshot(s,id);
+        return [id,r.capital,r.religion,ruler && ruler.culture,ruler && ruler.id];
+      }),
+      residents:['szczecin','mecklenburg','lubeck','etelkoz','amida'].map(function (id) {
+        var communities = FB.countyCommunities(s,id);
+        return {id:id,pairs:communities.map(function (c) { return [c.culture,c.religion]; }),
+          partitioned:communities.reduce(function (sum,c) { return sum + c.count; },0) === FB.countyPopulation(s,id),
+          catholicShare:FB.countyReligionShare(s,id,'catholic')};
+      }),
+      errors:FBTEST.checkInvariants(),saveErrors:FB.save.v4.validatePlatform(s)
+    };
+  }
+  const before = await page.evaluate(snapshot);
+  expect(before.owners).toEqual([
+    ['smolensk','smolensk_1096','smolensk_1096'],['volodymyr','volhynia_1096','volhynia_1096'],
+    ['lutsk','volhynia_1096','volhynia_1096'],['minsk','polotsk_1096','polotsk_1096'],
+    ['kursk','pereyaslavl_1096','pereyaslavl_1096'],['turov','turov_volhynia_1096','turov_volhynia_1096']
+  ]);
+  expect(before.courts.map(function (r) { return r.slice(0,4); })).toEqual([
+    ['smolensk_1096','smolensk','orthodox','rus'],['volhynia_1096','volodymyr','orthodox','rus'],
+    ['turov_volhynia_1096','turov','orthodox','rus'],['obotrite_1096','lubeck','catholic','slavic'],
+    ['amida_1096','amida','sunni','turkic']
+  ]);
+  expect(before.courts.every(function (r) { return typeof r[4] === 'string' && !!r[4]; })).toBe(true);
+  expect(new Set(before.courts.map(function (r) { return r[4]; })).size).toBe(5);
+  before.residents.forEach(function (r,index) {
+    expect(r.partitioned).toBe(true);
+    if (index < 3) {
+      expect(r.pairs).toEqual([['slavic','slavic_pagan'],['slavic','catholic']]);
+      expect(r.catholicShare).toBeCloseTo(0.1,3);
+    }
+  });
+  expect(before.residents[3].pairs).toEqual([['turkic','tengri']]);
+  expect(before.residents[4].pairs).toEqual([['arabic','sunni'],['syriac','eastern']]);
+  expect(before.errors).toEqual([]);
+  expect(before.saveErrors).toEqual([]);
+  const save = await page.evaluate(function () { return FB.save.serialize(); });
+  await restoreBookmark(page,save);
+  expect(await page.evaluate(snapshot)).toEqual(before);
 });

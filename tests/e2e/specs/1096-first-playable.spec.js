@@ -75,7 +75,7 @@ test('1096 composes every physical county and court once with valid detached ref
   expect(result.religions).toEqual([]);
   expect(result.ids).toEqual(result.expected);
   expect(result.ids.slice().sort()).toEqual(result.physical.sort());
-  expect([result.count,result.uniqueCount,result.courts,result.uniqueCourts,result.inhabited]).toEqual([527,527,110,110,488]);
+  expect([result.count,result.uniqueCount,result.courts,result.uniqueCourts,result.inhabited]).toEqual([527,527,112,112,488]);
   expect([result.date,result.era,result.geography,result.revision,result.identities]).toEqual([
     {year:1096,season:0,day:1},'high_medieval','europe_regional_2','baseline',true
   ]);
