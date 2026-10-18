@@ -4034,3 +4034,7 @@ The shared Deeds story sheet names the original commander and local provider wit
 Expedition intent reviews
 
 The shared story card/sheet exposes finite preparation/active/paused/closed intent, original commander, actual canonical step status/cursor and current public operation cost. Preparing choices reuse the existing local provider, consent, grant, contribution and formation details. Step, wait/refuse/stop and pause/resume reviews disclose their actual scope and independent vows/service. Current authority, resources, passage, windows and the remaining daily action stay visible through the shared blocker flow. Back, Escape, Close, Continue, scroll and originating focus remain on the existing story route at phone and desktop sizes. No new controls or styling system is introduced.
+
+Water-service input review
+
+The existing Water service confirmation includes every declared material quantity and localized production good name alongside exact water, work/upkeep payment and funded end day. The first blocker names unavailable local owned stock. It uses the same confirmation, keyboard controls, stale-review handling, Back, Escape, disclosure and originating-focus restoration. An unheated alternative remains visible through the ordinary construction profile picker when its own assignment is eligible. No new modal route or saved prose is introduced.

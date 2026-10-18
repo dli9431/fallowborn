@@ -9,6 +9,7 @@ const released = require('../fixtures/released-catalogue.json');
 const example = require('../fixtures/authoring/technology-buildings-composition.json');
 
 dependsOnRuntime(__filename, [
+  'data/technology_baths_headworks.js', 'data/buildings_baths_headworks.js',
   'data/technology_masonry_circuits.js', 'data/technology_waterworks.js', 'data/buildings_waterworks.js',
   'index.html', 'data/map_data.js', 'data/technology.js', 'data/technology_early_refinements.js', 'data/technology_foundations.js',
   'data/technology_learning.js', 'data/buildings_learning_care.js',
@@ -117,7 +118,7 @@ test('all supplements compose once with stable effects, grants, budgets and rele
       'vertical_axis_windmill','pastoral_waterworks','tuna_trapping','cotton_cultivation',
       'sugar_processing','manuscript_scholarship','galley_yard_practice','horizontal_watermill',
       'bog_iron','seasonal_pasture_management','motte_and_bailey'];
-    const heldBuildings = ['public_bath','paper_workshop',
+    const heldBuildings = ['paper_workshop',
       'bloomery_smithy','horizontal_mill','boathouse','shieling','fairground',
       'relay_station','pasture_well_network','felt_yard','timber_streetworks','tonnara',
       'cotton_preparation_yard','sugar_workshop','mint_workshop','funduq','notarial_office',
@@ -144,9 +145,9 @@ test('all supplements compose once with stable effects, grants, budgets and rele
   });
   expect(r.techOwners).toEqual({ duplicates:[], stale:[], counts:[9,6,12,8,1,1] });
   expect(r.buildingOwners).toEqual({ duplicates:[], stale:[], counts:[3,3,1,1] });
-  expect(r.counts).toEqual([193,25]);
-  expect(r.techIds).toEqual(r.baseIds.concat(['aqueduct_maintenance','qanat_construction','cistern_engineering','masonry_circuits']).sort());
-  expect(r.addedBuildings).toEqual(['hospice','aqueduct','qanat_waterworks','urban_cisterns','fish_drying_station','monastic_house']);
+  expect(r.counts).toEqual([195,27]);
+  expect(r.techIds).toEqual(r.baseIds.concat(['aqueduct_maintenance','qanat_construction','cistern_engineering','masonry_circuits','hypocaust_heating','diversion_dams']).sort());
+  expect(r.addedBuildings.slice().sort()).toEqual(['hospice','fish_drying_station','aqueduct','qanat_waterworks','urban_cisterns','monastic_house','public_bath','diversion_headworks'].sort());
   expect(r.scalarChanges.sort()).toEqual(['capitularies','paper_making','paper_scholarship']);
   expect(r.buildingChanges).toEqual([]);
   expect(r.caps).toEqual(r.baseCaps); expect(r.grants).toEqual(r.baseGrants);

@@ -397,7 +397,7 @@
     });
     if (r === undefined) { var bm=FB.campaignBookmark(s);if (stamps.length || bm && (bm.relayServiceAssignments || []).length) fail();return true; }
     var p = plan(s), originalAssets = FB.compileOpeningInfrastructure(FB.campaignBookmark(s)), siteTable = {}, assets = {}, lots = {}, batches = {}, seen = {}, work = {}, claims = {}, used = {}, openings = {};
-    if (p.errors.length || !keys(r,['version','definition','revision','nextId','assets','lots','batches','economy','maritime','relay']) || r.version !== 1 ||
+    if (p.errors.length || !keys(r,['version','definition','revision','nextId','assets','lots','batches','economy','maritime','relay','waterInputs']) || r.version !== 1 ||
         r.definition !== definition(p) || !int(r.revision,0,MAX) || !int(r.nextId,1,MAX) ||
         !Array.isArray(r.assets) || r.assets.length > 128 || !Array.isArray(r.lots) || r.lots.length > LIMIT ||
         !Array.isArray(r.batches) || r.batches.length > LIMIT) fail();
@@ -502,6 +502,9 @@
     var relay = FB.relayServices ? FB.relayServices.validate(s) : {ids:[],used:{},revision:0};
     relay.ids.forEach(unique);
     Object.keys(relay.used).forEach(function(key){ if (!lots[key]) fail(); used[key]+=relay.used[key]; });
+    var waterInputs = FB.buildingOperations.validateInputs(s);
+    waterInputs.ids.forEach(unique);
+    Object.keys(waterInputs.used).forEach(function(key){if(!lots[key])fail();used[key]+=waterInputs.used[key];});
     var held=reservationTotals(r);
     r.lots.forEach(function (lot) {
       if (lot.origin.kind === 'batch') {
@@ -521,7 +524,7 @@
     });
     var pending={};
     r.batches.forEach(function(b){if(b.status==='reserved'){if(pending[b.assetId])fail();pending[b.assetId]=true;}});
-    if (Object.keys(seen).length !== r.nextId-1 || r.revision !== r.batches.reduce(function(n,b){return n+1+b.workTurns.length+(b.status==='reserved'?0:1);},0)+economic.revision+maritime.revision+relay.revision+r.assets.filter(function(a){return a.constructed;}).length) fail();
+    if (Object.keys(seen).length !== r.nextId-1 || r.revision !== r.batches.reduce(function(n,b){return n+1+b.workTurns.length+(b.status==='reserved'?0:1);},0)+economic.revision+maritime.revision+relay.revision+waterInputs.revision+r.assets.filter(function(a){return a.constructed;}).length) fail();
     return true;
   };
 })();
