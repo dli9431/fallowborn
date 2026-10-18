@@ -1,6 +1,6 @@
 Mobile command and personal continuity
 
-An optional bounded column set extends command scope to distinct existing member principals and canonical hosts while retaining the same overall mandate, camp and account. This opening contract exposes pure ownership and authority projections; column-specific operations are separate. See docs/designs/mobile-columns.md for schema, conservation, normal military gates, none technology decision and blocked one-host shortcuts. Declarations without columns retain the single-host behavior below.
+An optional bounded column set extends command scope to distinct existing member principals and canonical hosts while retaining the same overall mandate, camp and account. Pure ownership and authority projections feed the shared reviewed column operations. See docs/designs/mobile-columns.md for schema, conservation, normal military gates, explicit commander assignment, movement, reunion and none technology decisions. Declarations without columns retain the single-host behavior below.
 
 Fresh command starts
 

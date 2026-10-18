@@ -4,7 +4,7 @@ The shared story sheet exposes individual role requests, host consent state, fin
 
 Mobile column ownership presentation
 
-The shared mobile-command sheet shows each opted-in numbered column's actual commander, field position, fighters, carried food and current authority alongside the separate camp and its stock. Retired hosts remain identified as retired. One-host actions retain their visible disabled review with the column-specific blocker. The existing controls, modal history, Details, scroll and focus behavior remain shared. No column order or reorganization action is offered by this ownership contract.
+The shared mobile-command sheet shows each opted-in numbered column's actual commander, field position, fighters, carried food and current authority alongside the separate camp and its stock. Retired hosts remain identified as retired. One-host actions retain their visible disabled review with the column-specific blocker. The existing controls, modal history, Details, scroll and focus behavior remain shared. Column decisions use the shared reviewed controls described under Reviewed column controls.
 
 Construction applicability presentation
 
@@ -3944,3 +3944,6 @@ The shared mobile sheet explicitly labels an independent expedition and explains
 Local incident reviews
 
 Local incident cards use the existing shared Deeds story sheet, actor portrait link and confirmation flow. The card names its actual site, phase and committed occurrence count. Each offered choice shows its data-owned label and detail, and confirmation states that it costs no money or action days, grants no reward and resolves no harmful outcome. Unavailable choices keep the original-actor, exact-site, authority, date and separate-day blocker reviewable. Only the actual player actor receives choices; resident activity is observed as facts. Existing Back, Cancel, Escape, scroll and originating-card focus behavior remains shared.
+Reviewed column controls
+
+The existing mobile command sheet adds retained selectors for the source column, other declared slot, ordinary unit class and existing member commander. Shared action cards expose field march, one camp escort, halt, explicit assignment, split, merge, demuster, recruitment and an ordinary campaign review. Details and confirmation identify the selected columns, actual county, class, person, count and exact public cost. Unavailable actions retain their current authority, resource, locality or commitment blocker. All controls reuse the shared modal history, Details, keyboard focus, scroll, Back, Escape and confirmation patterns at narrow and wide widths. A field order leaves the camp behind; the camp escort description states that only actual arrivals carry civilians.

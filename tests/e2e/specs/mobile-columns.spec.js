@@ -157,7 +157,7 @@ test('legacy one-host shortcuts cannot partially settle, reorganize or move a co
       ['leave',{memberId:r.members[1].id,countyId:'dune_well'}]];
     const rejected=requests.every(function ([action,terms]) {
       const q=M.review(s,{realmId:rid,action:action,terms:terms,actor:{kind:'realm',id:rid}});
-      return !q.review.allowed && q.review.reason==='column_operation' && !M.commit(s,q);
+      return !q.review.allowed && q.review.reason===(action==='settle' ? 'commitment' : 'column_operation') && !M.commit(s,q);
     });
     const hosts=s.armies.filter(function (a) {return M.columnHostOwned(s,rid,a);});
     return {rejected:rejected,orders:hosts.every(function (a) {return !FB.orderArmy(s,a,'dune_pass') && !FB.splitHost(s,a);}),
@@ -173,7 +173,7 @@ test('saved column validation rejects broken identities and sums without repairi
   await start(page,info,'dune');
   const result=await page.evaluate(function () {
     const M=FB.mobile,rid='dune_coalition';
-    const changes=[function (s,r) {delete r.columns;},function (s,r) {r.columns.schema=2;},
+    const changes=[function (s,r) {delete r.columns;},function (s,r) {r.columns.schema=3;},
       function (s,r) {r.schema=2;},function (s,r) {r.columns.extra=true;},
       function (s,r) {r.columns.entries.pop();},function (s,r) {r.columns.entries.push(r.columns.entries[0]);},
       function (s,r) {r.columns.entries[1].hostId=r.columns.entries[0].hostId;},
@@ -182,7 +182,7 @@ test('saved column validation rejects broken identities and sums without repairi
       function (s,r,a) {s.armies.push(JSON.parse(JSON.stringify(a)));},
       function (s,r,a) {a.men++;},function (s,r,a) {a.units.arch++;},
       function (s,r,a) {a.mobileRoster[0].count++;},function (s,r,a) {a.mobileFood=100000;},
-      function (s,r,a) {a.mobileCourt=true;},function (s,r,a) {a.migrationId='missing';},
+      function (s,r) {s.armies.filter(function (a) {return a.realm===rid;}).forEach(function (a) {a.mobileCourt=true;});},function (s,r,a) {a.migrationId='missing';},
       function (s,r,a) {a.realm='dune_gate';},function (s,r,a) {a.units.unknown=0;},
       function (s,r,a) {s.armies=s.armies.filter(function (v) {return v.id!==a.id;});},
       function (s,r) {r.accounting.initial++;}];
