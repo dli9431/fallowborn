@@ -3921,3 +3921,7 @@ Optional opening goals use the shared story card and sheet in both Deeds layouts
 Mobile command reviews
 
 The shared mobile sheet names the commander, effective or suspended mandate, available appointing superior, separate public treasury, civilian camp and field host. Command forms omit coalition voting weights, majority thresholds, proposals and assent actions. Only declared operations are listed; current authority and canonical blockers remain visible. A living superior may review commissioning a member or recalling the mandate. These reviews disclose zero cost, stopped orders, retained people/resources and no private rank or property award. Existing modal history preserves inputs, scroll, disclosures and originating focus through review Back, Escape, stale confirmation and Continue. Suspended commands retain their supplies, people and expenses.
+
+Independent and external command presentation
+
+The shared mobile sheet explicitly labels an independent expedition and explains that its physical origin supplies no sponsor, access or land. An external warrant displays its actual proper authority label and remaining days, then Expired at its boundary. Appointment/recall cards are absent for an external warrant because no local actor owns that decision. Existing operation cards retain the exact shared quote, costs, blockers and modal return behavior. The facts describe a finite political warrant, with no invented portrait, home, public purse or promise of continued outside support.

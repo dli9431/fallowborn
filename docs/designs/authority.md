@@ -449,3 +449,7 @@ Source mandate roles now govern religious mediation, church communion, temporal 
 Scoped following command
 
 A mobile.command mandate authorizes only its exact following realm's declared operations and existing host. Its actual superior is a direct opening actor or another nonmobile realm's current materialized ruler. Appoint and recall use the shared governmentSelection review boundary and revalidate the living issuer and generation. This authority supplies no territorial appointment, local Consent, county revenue, ownership, private rank or property. Real outside access, service, land and campaign owners retain their existing checks. Detailed contract: docs/designs/mobile-command.md.
+
+Finite external warrants and independent sponsors
+
+An external command issuer can be represented as a generation-tagged finite warrant, without a local character or realm. Its external identity is scoped to the declared command and authorizes only existing permitted operations until its absolute expiry. No local actor can impersonate that issuer to appoint or renew it. Independent sponsorship is a separate typed migration policy; neither this policy nor the warrant grants passage, land, tax rights, outside consent or funds. Existing local authority, service, ownership and treasury transactions remain canonical. docs/designs/mobile-command.md records the exact bounded schemas and interruption/restore behavior.

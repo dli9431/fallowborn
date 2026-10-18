@@ -50,6 +50,10 @@
     rationale:'A retained personal mandate or a living superior commissioning an eligible member is a political relationship. Death, custody, recall and issuer succession suspend authority without changing private station or bypassing ordinary military technology.'};
   FBDATA.techImpactReviews.features.mobile_command_scope = {mode:'none',
     rationale:'Explicit public operation permissions depend on a valid commission and canonical resources, local rights and outside consent. The commission provides no county revenue or technological exception.'};
+  FBDATA.techImpactReviews.features.mobile_independent_sponsorship = {mode:'none',
+    rationale:'An explicit independent following has no patron entitlement. Actual access, resources and separately consenting counterparts remain necessary, with ordinary unit and travel technology retained.'};
+  FBDATA.techImpactReviews.features.mobile_external_commission = {mode:'none',
+    rationale:'A finite generation-bound external warrant records political authority without creating a local person, income, land or passage rights. Expiry and ordinary command eligibility govern its scope, not an invented discovery.'};
   /* The fresh 476 opening inhabits Cherson and adds the Pontic following.
      Priscus attests displaced followings and Roman diplomacy, not a precise
      476 boundary or an identifiable incumbent at this simulated camp. */

@@ -50,6 +50,30 @@
     var r = M.row(s, rid);
     return r && (s.authority.migrations || []).filter(function (m) { return m.id === r.migrationId; })[0] || null;
   };
+  /* Independence belongs to this declared following, never a missing patron
+     on an ordinary service migration. The saved marker has no resource owner. */
+  M.independent = function (t) {
+    return !!t && keys(t.sponsorship,['schema','kind']) && t.sponsorship.schema===1 &&
+      t.sponsorship.kind==='independent' && t.patronRealmId===null;
+  };
+  function openingDefinition(s,rid) {
+    return (FB.campaignBookmark(s).realms || []).filter(function (d) {return d.id===rid;})[0];
+  }
+  M.independentMigrationAllowed = function (s,spec) {
+    var d=spec && openingDefinition(s,spec.realmId), t=d && d.mobile;
+    var p=t && FBDATA.mobileProfiles[t.profileId], r=d && M.row(s,d.id);
+    return !!p && !!r && r.migrationId===null && M.independent(t) && !!t.command && !!t.opening && M.commandValid(s,d.id) &&
+      M.independent(spec) && spec.origin===t.origin && spec.target===t.target &&
+      spec.hostId==='following_'+d.id && spec.settlementForm===p.settlementForm;
+  };
+  M.migrationSponsorshipValid = function (s,moving) {
+    var d=openingDefinition(s,moving.realmId), independent=M.independent(d && d.mobile);
+    if (!independent) return moving.sponsorship===undefined;
+    var p=FBDATA.mobileProfiles[d.mobile.profileId];
+    return !!p && M.independent(moving) && moving.origin===d.mobile.origin && moving.hostId==='following_'+moving.realmId &&
+      moving.settlementForm===p.settlementForm && moving.contractId===null && moving.choice===null && moving.warId===null &&
+      (!moving.session || JSON.stringify(moving.session.seats)===JSON.stringify([moving.realmId]));
+  };
   M.host = function (s, rid) {
     var m = M.migration(s, rid);
     return m && (s.armies || []).filter(function (a) { return a.id === m.hostId; })[0] || null;
@@ -300,7 +324,7 @@
       if (!FB.marketProvisionSnapshot(s,t.countyId)) return no('food');
       q.foodTransfer = M.total(s,rid) ? r.food*sum(pool)/M.total(s,rid) : r.members.length===1 ? r.food : 0;
     } else if (action === 'land') {
-      if (!leader || !army || !army.men || moving.choice || army.at!==moving.at || army.moveLeft>0 || t.countyId!==moving.at ||
+      if (!leader || !army || !army.men || moving.sponsorship || moving.choice || army.at!==moving.at || army.moveLeft>0 || t.countyId!==moving.at ||
           s.owner[t.countyId]!==moving.patronRealmId || s.holder[t.countyId]!==moving.patronRealmId ||
           committed(s,rid) || FB.isRealmAtWar(s,rid) || !decision(s,rid,'land',t)) return no('award');
     } else if (action === 'contract') {
@@ -477,7 +501,7 @@
       /* Claim review is resolved before a people transfer. The shared county
          owner transaction remains the only sovereignty mutation. */
       if (!moving.session || moving.session.assets[0].id !== t.countyId) {
-        var session = FB.settlement.create({kind:'federate_migration', seats:[moving.patronRealmId, rid],
+        var session = FB.settlement.create({kind:'federate_migration', seats:moving.sponsorship ? [rid] : [moving.patronRealmId, rid],
           assets:[{id:t.countyId, kind:'county', land:true}], claims:[{asset:t.countyId, claimant:rid,
             beneficiary:{kind:'realm', id:rid}, basis:{contribution:1,vow:1,occupation:1,right:1,support:1,office:1}}]});
         while (session.status === 'open') if (!FB.settlement.act(s, session, 'acquiesce')) return false;
@@ -558,7 +582,7 @@
     var bm=FB.campaignBookmark(s), realms={};
     (bm.realms || []).forEach(function (r) {realms[r.id]=r;});
     if (M.definitionFaults(d,G.forRealm(s,d.id).id,bm.provinces,realms,null,bm).length ||
-        !s.realms[t.patronRealmId] || !s.realms[t.patronRealmId].alive ||
+        !M.independent(t) && (!s.realms[t.patronRealmId] || !s.realms[t.patronRealmId].alive) ||
         !s.owner[t.origin] || !s.owner[t.target] || FB.realmTerritory(s,d.id).length ||
         (s.armies || []).some(function (a) {return a.id==='following_'+d.id;}) ||
         (s.authority.migrations || []).some(function (m) {return m.realmId===d.id && m.status!=='settled' && m.status!=='failed';})) return plan;
@@ -631,9 +655,11 @@
       else install(s, d.id, leader.principal.id);
       if (d.mobile.command) M.initializeCommand(s,d);
       var units=plan ? copy(plan.units) : {};if (!plan) units[FB.unitRoleClass('levy_infantry')]=d.mobile.fighters;
-      var migration = FB.federateBeginMigration(s, {realmId:d.id,patronRealmId:d.mobile.patronRealmId,
+      var migrationSpec = {realmId:d.id,patronRealmId:d.mobile.patronRealmId,
         origin:d.mobile.origin,target:d.mobile.target,hostId:'following_' + d.id,
-        settlementForm:p.settlementForm,endTurn:s.turn + 10000000,men:d.mobile.fighters,units:units});
+        settlementForm:p.settlementForm,endTurn:s.turn + 10000000,men:d.mobile.fighters,units:units};
+      if (d.mobile.sponsorship!==undefined) migrationSpec.sponsorship=copy(d.mobile.sponsorship);
+      var migration = FB.federateBeginMigration(s, migrationSpec);
       if (!migration) throw new Error('Invalid mobile migration');
       r.migrationId = migration.id;
       var army = M.host(s, d.id); army.mobileFollowing = true; army.mobileCourt = false; army.mobileRoster = [];
@@ -993,8 +1019,9 @@
     if (!mobile) return d.mobile === undefined ? [] : [FB.T('A mobile opening requires a mobile territory strategy.')];
     var t = d.mobile, p = t && profiles[t.profileId], byId = {};
     provinces.forEach(function (pr) {byId[pr.id]=pr;});
-    if (!keys(t,['profileId','patronRealmId','origin','target','food','fighters','treasury','opening','command']) || !p ||
-        !realms[t.patronRealmId] || t.patronRealmId === d.id || !d.nonTerritorial ||
+    if (!keys(t,['profileId','patronRealmId','origin','target','food','fighters','treasury','opening','command','sponsorship']) || !p ||
+        (t.sponsorship!==undefined ? !M.independent(t) || !t.command || !t.opening :
+          !Object.prototype.hasOwnProperty.call(realms,t.patronRealmId) || t.patronRealmId === d.id) || !d.nonTerritorial ||
         !byId[t.origin] || byId[t.origin].wasteland || !byId[t.target] || byId[t.target].wasteland ||
         !FBDATA.cultures[d.culture] || !FBDATA.religions[d.religion] || !boundedNumber(t.food,1000000000) ||
         !boundedNumber(t.treasury,1000000) || !whole(t.fighters) || !t.fighters ||
@@ -1073,6 +1100,7 @@
       var r = M.row(s,rid), strategy = FBDATA.governmentForms[root[rid].formId] && G.resolve(root[rid].formId).use.territory;
       if (!r) {if(strategy && strategy.mobileFollowing) fault(rid,'missing');return;}
       var p = M.profile(s,rid), moving = M.migration(s,rid), ids = {}, principals = {};
+      if (moving && !M.migrationSponsorshipValid(s,moving)) fault(rid,'sponsorship');
       if (!keys(r,['schema','profileId','migrationId','status','serial','revision','leaderId','selection','decision','food','lastDay','lastAI',
           'worked','agreements','accounting','members','defeatKey','openingBindings','command']) || [1,2,3].indexOf(r.schema)<0 || !p || !moving || moving.realmId !== rid ||
           !['active','settled','dispersed'].includes(r.status) || !whole(r.serial) || !whole(r.revision) || !whole(r.lastDay) || r.lastDay > s.turn ||

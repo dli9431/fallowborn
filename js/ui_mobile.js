@@ -62,10 +62,16 @@
     if (!r.command) facts += kv(FB.T('Leadership and settlement threshold'),FB.T('{percent}% of living member weight',{percent:Math.round(profile.threshold*100)}));
     else {
       var command=M.commandSnapshot(s,rid), superior=command.superior && s.chars[command.superior.characterId];
+      var external=command.authority && command.authority.kind==='external_authority';
       facts += kv(FB.T('Command mandate'),command.effective ? FB.T('Active') : FB.T('Suspended')) +
-        kv(FB.T('Appointing superior'),superior ? superior.name : FB.T('No current appointing superior')) +
+        kv(FB.T('Appointing superior'),external ? command.authority.name : superior ? superior.name : FB.T('No current appointing superior')) +
         '<p>'+esc(FB.T('Public command grants no private rank, land or county income. Death, custody, recall or a changed issuer requires a fresh mandate. A retained following has no automatic replacement rule.'))+'</p>';
+      if (external) facts += kv(FB.T('External commission'),command.superior ?
+        FB.T('{days} days remaining',{days:Math.max(0,command.authority.endTurn-s.turn)}) : FB.T('Expired')) +
+        '<p>'+esc(FB.T('This outside authority has no local person or treasury. Local actors cannot appoint a successor or renew its commission.'))+'</p>';
     }
+    if (migration.sponsorship) facts += kv(FB.T('Expedition sponsor'),FB.T('Independent')) +
+      '<p>'+esc(FB.T('The origin is a place, not a sponsor. Local access, paid service and land require their own lawful agreements.'))+'</p>';
     function add(label,action,terms,details) {
       var transition=action==='appoint' || action==='recall';
       if (r.command && !transition && command.operations.indexOf(action)<0) return;
@@ -99,7 +105,7 @@
       return kv(c ? c.name : FB.T('Unavailable member'),r.command ? FB.T('Pledge {percent}%; {status}',values) :
         FB.T('Weight {weight}; pledge {percent}%; {status}',values));
     }).join('');
-    if (r.command && command.superior) {
+    if (r.command && command.superior && !external) {
       r.members.forEach(function (m) {
         var person=s.chars[m.principal.id];
         add(FB.T('Commission {name}',{name:person.name}),'appoint',{candidateId:person.id},
