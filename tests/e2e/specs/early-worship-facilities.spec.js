@@ -134,6 +134,25 @@ for (const label of ['river','upland']) test(label + ' monastic premises require
   expect(r.reason).toContain('endowed'); expect(r.paid).toBe(r.quote);
 });
 
+test('unbound monastic property stays dormant through endowment and restore until explicit permission',async function ({page},info) {
+  await start(page,info,'river');
+  const r=await page.evaluate(function () {
+    let s=FB.state;const at=worship.house;
+    s.buildings[at[0]]=[{s:at[1],id:'monastic_house',devGranted:0}];FB.invalidateBuildingIndex(s,at[0]);
+    const idle=FB.buildingBonusAt(s,at[0],at[1],'piety')===0&&FB.buildingBonusAt(s,at[0],at[1],'upkeep')===0;
+    const occupied=!FB.buildingInstitutionStatus(s,at[0],at[1],'temple').allowed;
+    endowWorshipHouse();const endowedIdle=FB.buildingBonusAt(s,at[0],at[1],'piety')===0;
+    const before=JSON.stringify(s.buildings),gold=s.player.gold;
+    FB.save.restore(JSON.parse(FB.save.serialize()));s=FB.state;
+    const retained=before===JSON.stringify(s.buildings)&&FB.buildingBonusAt(s,at[0],at[1],'piety')===0;
+    const q=FB.buildingInstitutionQuote(s,at[0],at[1],'monastic_house',undefined,'reaffirm');
+    const approved=FB.buildingInstitutionApply(s,q),repeat=FB.buildingInstitutionApply(s,q);
+    return {idle:idle,occupied:occupied,endowedIdle:endowedIdle,retained:retained,approved:approved,repeat:repeat,
+      noCharge:gold===s.player.gold,piety:FB.buildingBonusAt(s,at[0],at[1],'piety'),upkeep:FB.buildingBonusAt(s,at[0],at[1],'upkeep')};
+  });
+  expect(r).toEqual({idle:true,occupied:true,endowedIdle:true,retained:true,approved:true,repeat:false,noCharge:true,piety:1,upkeep:1});
+});
+
 test('a congregation is required independently of payer faith and national learning tradition',async function ({page},info) {
   await start(page,info,'river');
   const r=await page.evaluate(function () {

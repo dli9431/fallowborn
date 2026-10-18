@@ -36,9 +36,9 @@ FBDATA.buildingProfiles_early_worship = {
 (function () {
   'use strict';
   var policies = {
-    monastic_property:{kinds:['monastery'],property:'abbey',permission:'property_patron',incumbent:'none',exclusiveRoles:['worship']},
-    episcopal_foundation:{kinds:['see','patriarchate'],property:'seat',permission:'holder',incumbent:'required',exclusiveRoles:['worship']},
-    congregational_foundation:{kinds:['congregation'],property:'seat',permission:'holder',incumbent:'none',exclusiveRoles:['worship']}
+    monastic_property:{kinds:['monastery'],property:'abbey',permission:'property_patron',incumbent:'none',exclusiveRoles:['worship'],requiresBinding:true},
+    episcopal_foundation:{kinds:['see','patriarchate'],property:'seat',permission:'holder',incumbent:'required',exclusiveRoles:['worship'],requiresBinding:true},
+    congregational_foundation:{kinds:['congregation'],property:'seat',permission:'holder',incumbent:'none',exclusiveRoles:['worship'],requiresBinding:true}
   };
   Object.keys(policies).forEach(function (id) {
     if (Object.prototype.hasOwnProperty.call(FBDATA.buildingInstitutionProfiles,id)) throw new Error('Duplicate worship foundation policy: ' + id);
