@@ -1,10 +1,10 @@
 # Medieval technology catalogue, 476–1300
 
-This is the research ledger for the live technology graph in `data/technology.js`. It is
-a selective gameplay catalogue, not a claim that medieval technologies—or the candidate
-backlog below—are literally exhaustive. Technologies are practices and institutions as
-well as artifacts; their dates describe attestation and regional adoption, not a single
-moment of invention.
+This is the base research ledger for the technology graph in data/technology.js. Supplemental corrections compose the effective catalogue after that file. It is a selective gameplay catalogue rather than an exhaustive list of technologies or candidates. Technologies include practices, institutions and artifacts; their dates describe attestation and regional adoption, rather than a single moment of invention.
+
+Agricultural and machinery corrections
+
+data/technology_foundations.js supersedes nine base rows below. Seed Selection and Stored Hay have evidence ranges [1,900]; Water-Powered Stone Sawing has [200,1100]. Water-Power Gearing is displayed as Water Power, Powered Mills as Expanded Powered Milling, and Legume Rotation as Organized Legume Rotation. Heavy Plough, Improved Husbandry and Selective Stockbreeding clarify optional improvements in their descriptions. All nine preserve the base rows' costs, graphs, effects and regional adoption matrices. The tables retain the original base-source values; docs/research/technology-foundations.md records the effective corrections, limitations and full COLUMELLA and RITTI_GREWE_KESSENER source references.
 
 ## How to read the tables
 

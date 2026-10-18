@@ -4131,6 +4131,9 @@ non-empty `fallback`, and none entries must not name technologies. The core base
   while flat `retinue` and `archers` add to the default class of the `household` and
   `missile` roles.
 - `name`/`desc` accept text tokens and religion-variant objects.
+
+Supplemental source files may declare complete FBDATA.techCorrections_<suffix> maps and replace individual existing FBDATA.tech entries after data/technology.js. data/technology_foundations.js uses that convention for nine agricultural and machinery records; it loads before bookmark declarations. These source maps add no JSON root: imported technology replacements still use tech and the same ordinary detached validation and consumers. Supply explicit cost and the complete history.adoption map when correcting evidence dates, so an earlier attestation does not accidentally lower a base cost or regenerate regional adoption. Culture research-selection restrictions do not filter historical seeding. Saved completed ids and progress are not reseeded on restore.
+
 - Events grant national progress with the `research` effect and gate on effective
   completed ids with `techs`/`notTechs`. Buildings may carry a `research` per-season key
   (see the library); contributions become reserve if no project is active.

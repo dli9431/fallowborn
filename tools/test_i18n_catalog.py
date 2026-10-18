@@ -470,7 +470,7 @@ class SupplementalCatalogueExtractionTests(unittest.TestCase):
         inventory = i18n_catalog.Inventory()
         i18n_catalog.extract_structured(inventory)
         for key, text, source in (
-            ('tech.seed_selection.name.default', 'Seed Selection', 'data/technology.js'),
+            ('tech.crop_rotation.name.default', 'Two-Course Rotation', 'data/technology.js'),
             ('tech.scriptoria.name.muslim', 'Paper Workshops', 'data/technology.js'),
             ('building.library.name.default', 'Library', 'data/map_data.js'),
             ('building.library.name.muslim', 'House of Wisdom', 'data/map_data.js'),
@@ -479,6 +479,34 @@ class SupplementalCatalogueExtractionTests(unittest.TestCase):
             self.assertEqual(inventory.entries[key], {'text': text})
             self.assertEqual(inventory.meta[key]['location'], source)
             self.assertIn(i18n_catalog.source_key(text), inventory.entries)
+
+    def test_foundation_corrections_keep_owners_and_use_final_source_text(self):
+        inventory = i18n_catalog.Inventory()
+        i18n_catalog.extract_structured(inventory)
+        expected = {
+            'seed_selection': 'Seed Selection',
+            'haymaking': 'Stored Hay',
+            'stone_sawing': 'Water-Powered Stone Sawing',
+            'water_power': 'Water Power',
+            'powered_mills': 'Expanded Powered Milling',
+            'legume_rotation': 'Organized Legume Rotation',
+            'heavy_plough': 'Heavy Plough',
+            'improved_husbandry': 'Improved Husbandry',
+            'selective_stockbreeding': 'Selective Stockbreeding',
+        }
+        declarations = dict(i18n_catalog.catalogue_literal_maps(
+            i18n_catalog.DATA / 'technology_foundations.js', 'tech'))
+        definitions = declarations['techCorrections_foundations'].value
+        self.assertEqual(set(definitions), set(expected))
+        for item_id, name in expected.items():
+            with self.subTest(item_id=item_id):
+                self.assertEqual(inventory.entries['tech.' + item_id + '.name.default'], {'text': name})
+                for field in ('name', 'desc'):
+                    text = definitions[item_id].value[field].value
+                    key = 'tech.' + item_id + '.' + field + '.default'
+                    self.assertEqual(inventory.entries[key], {'text': text})
+                    self.assertEqual(inventory.meta[key]['location'], 'data/technology_foundations.js')
+                    self.assertIn(i18n_catalog.source_key(text), inventory.entries)
 
 
 class StructuredDataExtractionTests(unittest.TestCase):
