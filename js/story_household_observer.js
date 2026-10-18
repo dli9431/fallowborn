@@ -29,23 +29,33 @@
     treaty_settlement:['agreed','pressure','declined','expired','interrupted','diverted'],
     holy_war:['called','won','failed','declined','diverted']
   };
-  function validate(def, context) {
+  function validate(def, context, bookmark) {
     function need(ok, field) { if (!ok) throw new Error('Invalid household observer: ' + field + '.'); }
-    need(keys(def, ['id','type','title','intro','sourceStoryId','provinceIds','expiryTurns','beats',
+    need(keys(def, ['id','type','title','intro','sourceStoryId','provinceIds','expiryTurns','beats','localities',
       'requires','requirements','registrationBefore','registrationAfter']), 'fields');
     var source = context.get(def.sourceStoryId), d = source && source.declaration;
-    need(d && own(EVENTS, d.type) && (def.requires || []).indexOf(def.sourceStoryId) >= 0, 'source');
+    var local = own(def, 'localities');
+    need(d && (local ? typeof source.householdEvents === 'function' && Array.isArray(source.householdLocalities) :
+      own(EVENTS, d.type)) && (def.requires || []).indexOf(def.sourceStoryId) >= 0, 'source');
     need(text(def.title, 240) && text(def.intro, 4000) && integer(def.expiryTurns) &&
       def.expiryTurns >= 1 && def.expiryTurns <= 360, 'presentation or expiry');
     need(Array.isArray(def.provinceIds) && def.provinceIds.length > 0 && def.provinceIds.length <= 32 &&
       def.provinceIds.every(function (pid, i) { return slug(pid) && def.provinceIds.indexOf(pid) === i; }), 'places');
     need(plain(def.requirements) && Array.isArray(def.requirements.provinces) &&
       def.provinceIds.every(function (pid) { return def.requirements.provinces.indexOf(pid) >= 0; }), 'place requirements');
+    if (local) need(Array.isArray(def.localities) && def.localities.length > 0 && def.localities.length <= 32 &&
+      def.localities.every(function (location, index) {
+        return FB.householdStories.localityValid(location, bookmark) && def.provinceIds.indexOf(location.provinceId) >= 0 &&
+          def.localities.findIndex(function (other) { return other.provinceId === location.provinceId && other.siteId === location.siteId; }) === index &&
+          source.householdLocalities.some(function (e) { return e.provinceId === location.provinceId && e.siteId === location.siteId; });
+      }) && def.provinceIds.every(function (pid) { return def.localities.some(function (e) { return e.provinceId === pid; }); }), 'localities');
     need(Array.isArray(def.beats) && def.beats.length > 0 && def.beats.length <= 32, 'beats');
     var seen = Object.create(null), triggers = Object.create(null);
     def.beats.forEach(function (b) {
       need(keys(b, ['id','trigger','reach','name','text','choices']) && slug(b.id) && !seen[b.id] &&
-        EVENTS[d.type].indexOf(b.trigger) >= 0 && !triggers[b.trigger], 'beat');
+        (local ? source.householdLocalities.some(function (e) { return e.milestone === b.trigger &&
+          def.localities.some(function (location) { return location.provinceId === e.provinceId && location.siteId === e.siteId; }); }) :
+          EVENTS[d.type].indexOf(b.trigger) >= 0) && !triggers[b.trigger], 'beat');
       seen[b.id] = true; triggers[b.trigger] = true;
       need(['local','previous','service','none'].indexOf(b.reach) >= 0 &&
         text(b.name, 240) && text(b.text, 4000) && Array.isArray(b.choices) && b.choices.length > 0 && b.choices.length <= 4, 'beat terms');
@@ -57,11 +67,18 @@
         ids[c.id] = true;
       });
       need(b.reach !== 'service' || d.type === 'court_settlement', 'service entitlement');
+      need(!local || ['local','previous','none'].indexOf(b.reach) >= 0, 'local reach');
     });
   }
 
   function factory(def, context) {
     var source = context.get(def.sourceStoryId).declaration;
+    var local = own(def, 'localities'), version = local ? 2 : 1;
+    function scope(e) { return own(e, 'siteId') ? JSON.stringify([e.provinceId,e.siteId]) : e.provinceId; }
+    function cursor(b, e) { return local ? JSON.stringify([b.id,e.provinceId,e.siteId]) : b.id; }
+    function declared(e) {
+      return def.localities.some(function (location) { return location.provinceId === e.provinceId && location.siteId === e.siteId; });
+    }
     function row(s) { return FB.stories.record(s, def.sourceStoryId); }
     function host(s, id) { return (s.armies || []).filter(function (a) { return a.id === id && a.men > 0; })[0]; }
     function service(s) { return source.parameters && FB.stories.record(s, source.parameters.serviceTrackId); }
@@ -77,6 +94,9 @@
     function events(s) {
       var r = row(s), out = [], p = source.parameters || {};
       if (!r) return out;
+      if (local) return FB.householdStories.localEvents(s, def.sourceStoryId).filter(declared).map(function (e) {
+        return { code:e.milestone, turn:e.turn, token:JSON.stringify([e.milestone,e]), places:[e.provinceId], event:e };
+      });
       function add(code, turn, token, places) {
         if (!integer(turn) || turn > s.turn) return;
         out.push({ code:code, turn:turn, token:JSON.stringify([code, token]), places:places || def.provinceIds.slice() });
@@ -202,6 +222,7 @@
         realm && realm.alive ? FB.realmRulerGeneration(s, rid) : null];
     }
     function occurrence(s, t, e, pid) {
+      if (local) return Object.assign({}, e.event);
       var c = t.controls[pid];
       if (source.type === 'campaign' && e.code === 'won' && c && c.turn !== null && c.after === sovereign(s, pid) &&
           s.owner[pid] === FB.startRealmId(s, source.actor.realmId) &&
@@ -211,7 +232,7 @@
     }
     function closure(s, t, item, status) {
       // A personal scene owns its receipt even when the observer is expiring.
-      if (!FB.householdStories.receipt(s, item.key) && !FB.householdStories.owner(s, item.key))
+      if (!FB.householdStories.receipt(s, item.key) && !FB.householdStories.owner(s, item.key, local))
         t.householdReceipts[item.key] = { owner:def.id, status:status, turn:s.turn };
       var ids = Object.keys(t.householdReceipts);
       while (ids.length > 64) delete t.householdReceipts[ids.shift()];
@@ -219,44 +240,50 @@
     function available(s, t, item) {
       var b = beat(item.beatId);
       return living(s) && s.player.provinceId === item.provinceId && present(s) === item.provinceId &&
+        (!local || FB.householdStories.atLocality(s, item.event)) &&
         s.turn <= item.expiresTurn && JSON.stringify(currentControl(s, item.provinceId)) === JSON.stringify(item.control) &&
         events(s).some(function (e) { return e.code === b.trigger && e.token === item.sourceToken &&
-          (b.reach === 'previous' || e.places.indexOf(item.provinceId) >= 0); }) &&
+          (local ? scope(e.event) === scope(item.event) : b.reach === 'previous' || e.places.indexOf(item.provinceId) >= 0); }) &&
         !FB.householdStories.receipt(s, item.key) && !FB.householdStories.owner(s, item.key);
     }
     function poll(s, t) {
       if (!row(s)) return;
-      Object.keys(t.controls).forEach(function (pid) {
-        var after = sovereign(s, pid), old = t.controls[pid];
-        if (old.after !== after) t.controls[pid] = { before:old.after, after:after, turn:s.turn };
+      Object.keys(t.controls).forEach(function (id) {
+        var pid = local ? JSON.parse(id)[0] : id, after = sovereign(s, pid), old = t.controls[id];
+        if (old.after !== after) t.controls[id] = { before:old.after, after:after, turn:s.turn };
       });
       if (t.actorId !== s.player.charId) { t.actorId = s.player.charId; t.revision++; }
       t.pending = t.pending.filter(function (item) {
         if (available(s, t, item) || s.turn <= item.expiresTurn &&
-            s.player.provinceId === item.provinceId && present(s) === item.provinceId && FB.householdStories.owner(s, item.key)) return true;
+            s.player.provinceId === item.provinceId && present(s) === item.provinceId &&
+            (!local || FB.householdStories.atLocality(s, item.event)) && FB.householdStories.owner(s, item.key)) return true;
         closure(s, t, item, 'expired'); t.revision++; return false;
       });
       events(s).forEach(function (e) {
         var b = def.beats.filter(function (v) { return v.trigger === e.code; })[0];
         if (!b) return;
-        var old = t.cursors[b.id], token = signature(e);
+        var address = cursor(b, local ? e.event : {}), old = t.cursors[address], token = signature(e);
         if (old && (old.token === token || e.turn < old.turn)) return;
-        t.cursors[b.id] = { token:token, turn:e.turn };
+        // Local facts can be delivered only at the exact site within their
+        // occurrence window. A remote poll consumes no local entitlement.
+        if (local && b.reach !== 'none' && (!FB.householdStories.atLocality(s, e.event) || s.turn > e.turn + def.expiryTurns)) return;
+        t.cursors[address] = { token:token, turn:e.turn };
         if (!living(s) || b.reach === 'none') return;
         var pid = s.player.provinceId;
         if (present(s) !== pid || !FB.world.byId[pid]) return;
-        if (b.reach === 'previous' ? t.reached.indexOf(pid) < 0 : e.places.indexOf(pid) < 0) return;
+        var location = local ? scope(e.event) : pid;
+        if (b.reach === 'previous' ? t.reached.indexOf(location) < 0 : e.places.indexOf(pid) < 0) return;
         if (b.reach === 'service' && (!service(s) || !service(s).contractId)) return;
         var event = occurrence(s, t, e, pid), key = FB.householdStories.receiptKey(t.householdId, event);
         if (FB.householdStories.receipt(s, key) || t.pending.some(function (item) { return item.key === key; })) return;
-        if (t.reached.indexOf(pid) < 0) { t.reached.push(pid); if (t.reached.length > 32) t.reached.shift(); }
+        if (t.reached.indexOf(location) < 0) { t.reached.push(location); if (t.reached.length > 32) t.reached.shift(); }
         // A later result supersedes unaccepted notices from this source.
-        if (['won','failed','diverted','interrupted','contest_won','contest_failed','diverged',
+        if (!local && ['won','failed','diverted','interrupted','contest_won','contest_failed','diverged',
           'founded','granted','agreed','executed','declined','expired'].indexOf(e.code) >= 0) {
           t.pending.forEach(function (item) { closure(s, t, item, 'expired'); }); t.pending = [];
         }
         var item = { beatId:b.id, key:key, provinceId:pid, event:event, sourceToken:e.token, offeredTurn:s.turn,
-          expiresTurn:s.turn + def.expiryTurns, control:currentControl(s, pid) };
+          expiresTurn:(local ? event.turn : s.turn) + def.expiryTurns, control:currentControl(s, pid) };
         t.pending.push(item); t.revision++;
         while (t.pending.length > 8) closure(s, t, t.pending.shift(), 'expired');
       });
@@ -272,36 +299,60 @@
         facts:facts, stamp:JSON.stringify(facts) };
     }
     function fresh(s) {
-      var t = { version:1, householdId:FB.householdStories.householdId(s), actorId:s.player.charId,
+      var t = { version:version, householdId:FB.householdStories.householdId(s), actorId:s.player.charId,
         revision:0, attachedTurn:s.turn, cursors:{}, controls:{}, reached:[], pending:[], history:[], householdReceipts:{} };
-      def.provinceIds.forEach(function (pid) { t.controls[pid] = { before:null, after:sovereign(s, pid), turn:null }; });
+      (local ? def.localities : def.provinceIds.map(function (pid) { return { provinceId:pid }; })).forEach(function (location) {
+        t.controls[scope(location)] = { before:null, after:sovereign(s, location.provinceId), turn:null };
+      });
       events(s).forEach(function (e) {
         var b = def.beats.filter(function (v) { return v.trigger === e.code; })[0];
-        if (b && e.code !== 'opening') t.cursors[b.id] = { token:signature(e), turn:e.turn };
+        if (b && (local || e.code !== 'opening')) t.cursors[cursor(b, local ? e.event : {})] = { token:signature(e), turn:e.turn };
       });
       poll(s, t);
       return t;
     }
     function validateRecord(t, s) {
       function need(ok) { if (!ok) throw new Error('Invalid household observer record: ' + def.id + '.'); }
-      function stamp(v) { return integer(v) && (!s || v <= s.turn); }
+      function stamp(v) { return integer(v) && (!local || Number.isSafeInteger(v)) && (!s || v <= s.turn); }
       function person(v) { return text(v, 200); }
       need(keys(t, ['version','householdId','actorId','revision','attachedTurn','cursors','controls','reached','pending','history','householdReceipts']) &&
-        t.version === 1 && person(t.householdId) && person(t.actorId) && integer(t.revision) && stamp(t.attachedTurn) &&
+        t.version === version && person(t.householdId) && person(t.actorId) && integer(t.revision) && stamp(t.attachedTurn) &&
         plain(t.cursors) && plain(t.controls) && plain(t.householdReceipts) && Array.isArray(t.reached) &&
         t.reached.length <= 32 && Array.isArray(t.pending) && t.pending.length <= 8 && Array.isArray(t.history) && t.history.length <= 16);
-      t.reached.forEach(function (pid, i) { need(slug(pid) && t.reached.indexOf(pid) === i && (!s || own(s.owner, pid))); });
+      if (local) need(Object.keys(t.cursors).length <= def.localities.length * def.beats.length && Number.isSafeInteger(t.revision) &&
+        (!s || own(s.chars, t.householdId) && own(s.chars, t.actorId)));
+      function locationId(id) {
+        if (!local) return slug(id) && (!s || own(s.owner, id));
+        var parts; try { parts = JSON.parse(id); } catch (err) { return false; }
+        return Array.isArray(parts) && parts.length === 2 && JSON.stringify(parts) === id &&
+          declared({ provinceId:parts[0], siteId:parts[1] });
+      }
+      t.reached.forEach(function (id, i) { need(locationId(id) && t.reached.indexOf(id) === i); });
       Object.keys(t.cursors).forEach(function (id) {
-        var c = t.cursors[id]; need(beat(id) && keys(c, ['token','turn']) && stamp(c.turn) && text(c.token, 8000));
+        var parts; if (local) { try { parts = JSON.parse(id); } catch (err) { need(false); }
+          need(Array.isArray(parts) && parts.length === 3 && JSON.stringify(parts) === id && locationId(JSON.stringify(parts.slice(1)))); }
+        var b = beat(local ? parts[0] : id), c = t.cursors[id];
+        need(b && keys(c, ['token','turn']) && stamp(c.turn) && text(c.token, 8000));
         var value; try { value = JSON.parse(c.token); } catch (err) { need(false); }
-        need(Array.isArray(value) && value.length === 2 && value[0] === beat(id).trigger && JSON.stringify(value) === c.token);
+        need(Array.isArray(value) && value.length === 2 && value[0] === b.trigger && JSON.stringify(value) === c.token);
+        if (local) { event(value[1]); need(value[1].turn === c.turn && scope(value[1]) === JSON.stringify(parts.slice(1))); }
       });
-      need(Object.keys(t.controls).length === def.provinceIds.length);
-      Object.keys(t.controls).forEach(function (pid) {
-        var c = t.controls[pid]; need(def.provinceIds.indexOf(pid) >= 0 && keys(c, ['before','after','turn']) &&
+      need(Object.keys(t.controls).length === (local ? def.localities.length : def.provinceIds.length));
+      Object.keys(t.controls).forEach(function (id) {
+        var c = t.controls[id]; need((local ? locationId(id) : def.provinceIds.indexOf(id) >= 0) && keys(c, ['before','after','turn']) &&
           (c.before === null || slug(c.before)) && (c.after === null || slug(c.after)) && (c.turn === null || stamp(c.turn)));
       });
       function event(e) {
+        if (local) {
+          need(keys(e, ['source','milestone','provinceId','siteId','turn','before','after']) && declared(e) && stamp(e.turn) &&
+            FB.householdStories.localSource(context, def.sourceStoryId, e.milestone, e) && e.source === def.sourceStoryId &&
+            def.beats.some(function (b) { return b.trigger === e.milestone; }) && e.before === null && e.after === null &&
+            FB.householdStories.localityValid({ provinceId:e.provinceId, siteId:e.siteId }, s && FB.campaignBookmark(s)));
+          if (s) need(FB.householdStories.localEvents(s, def.sourceStoryId).some(function (actual) {
+            return FB.householdStories.receiptKey(t.householdId, actual) === FB.householdStories.receiptKey(t.householdId, e);
+          }));
+          return;
+        }
         need(keys(e, ['source','milestone','provinceId','turn','before','after']) && slug(e.provinceId) && stamp(e.turn) &&
           (e.source === def.sourceStoryId && def.beats.some(function (b) { return b.trigger === e.milestone; }) && e.before === null && e.after === null ||
           source.type === 'campaign' && e.source === 'control' && e.milestone === 'rule_changed' &&
@@ -312,11 +363,13 @@
         need(keys(item, ['beatId','key','provinceId','event','sourceToken','offeredTurn','expiresTurn','control']) && beat(item.beatId) &&
           text(item.sourceToken, 8000) &&
           stamp(item.offeredTurn) && item.offeredTurn >= t.attachedTurn && integer(item.expiresTurn) &&
-          item.expiresTurn === item.offeredTurn + def.expiryTurns && item.provinceId === item.event.provinceId &&
+          item.expiresTurn === (local ? item.event.turn : item.offeredTurn) + def.expiryTurns && item.provinceId === item.event.provinceId &&
           Array.isArray(item.control) && item.control.length === 4 && item.control.slice(0,3).every(function (id) { return id === null || slug(id); }) &&
           (item.control[3] === null || integer(item.control[3])));
+        if (local) need(Number.isSafeInteger(item.expiresTurn) && (item.control[3] === null || Number.isSafeInteger(item.control[3])));
         var token; try { token = JSON.parse(item.sourceToken); } catch (err) { need(false); }
         need(Array.isArray(token) && token.length === 2 && token[0] === beat(item.beatId).trigger && JSON.stringify(token) === item.sourceToken);
+        if (local) need(JSON.stringify(token[1]) === JSON.stringify(item.event) && item.event.milestone === beat(item.beatId).trigger);
         event(item.event); need(item.event.turn <= item.offeredTurn &&
           (!s || own(s.owner, item.provinceId)) &&
           item.key === FB.householdStories.receiptKey(t.householdId, item.event) && !pendingKeys[item.key] &&
@@ -325,13 +378,16 @@
       t.history.forEach(function (h) {
         var b = beat(h.beatId); need(keys(h, ['beatId','choiceId','actorId','turn']) && b &&
           b.choices.some(function (c) { return c.id === h.choiceId; }) && person(h.actorId) && stamp(h.turn));
+        if (local && s) need(own(s.chars, h.actorId));
       });
       need(Object.keys(t.householdReceipts).length <= 64);
       Object.keys(t.householdReceipts).forEach(function (key) {
         var parts, r = t.householdReceipts[key];
         try { parts = JSON.parse(key); } catch (err) { need(false); }
-        need(Array.isArray(parts) && parts.length === 7 && parts[0] === t.householdId && JSON.stringify(parts) === key);
-        event({ source:parts[1], milestone:parts[2], provinceId:parts[3], turn:parts[4], before:parts[5], after:parts[6] });
+        need(Array.isArray(parts) && parts.length === (local ? 8 : 7) && parts[0] === t.householdId && JSON.stringify(parts) === key);
+        var occurrence = { source:parts[1], milestone:parts[2], provinceId:parts[3], turn:parts[4], before:parts[5], after:parts[6] };
+        if (local) occurrence.siteId = parts[7];
+        event(occurrence);
         need(keys(r, ['owner','status','turn']) && r.owner === def.id && ['resolved','expired'].indexOf(r.status) >= 0 && stamp(r.turn) && r.turn >= parts[4]);
       });
     }

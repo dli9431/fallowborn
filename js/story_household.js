@@ -36,8 +36,69 @@
      A control event uses the actual transition's turn and old/new sovereigns.
      Campaign victory aliases must use that same control event, not a new key. */
   function receiptKey(householdId, event) {
-    return JSON.stringify([householdId, event.source, event.milestone,
-      event.provinceId, event.turn, event.before, event.after]);
+    var parts = [householdId, event.source, event.milestone,
+      event.provinceId, event.turn, event.before, event.after];
+    if (own(event, 'siteId')) parts.push(event.siteId);
+    return JSON.stringify(parts);
+  }
+  /* Resolve declared physical identities against the effective, detached world.
+     Neither generated slot names nor travel-purpose ids are physical aliases. */
+  var localityCache = null;
+  function localityValid(location, bookmark) {
+    if (!keys(location, ['provinceId','siteId']) || !slug(location.provinceId) || !slug(location.siteId) ||
+        location.provinceId.length > 200 || location.siteId.length > 200) return false;
+    if (!bookmark) return true;
+    var provinces = bookmark.provinces || [], geographyId = FB.bookmarkGeography(bookmark);
+    // Effective declarations are immutable. Cache by their arrays/catalogues,
+    // not the transient wrapper returned for a retained bookmark revision.
+    if (!localityCache || localityCache.provinces !== provinces || localityCache.geographyId !== geographyId ||
+        localityCache.geographies !== FBDATA.geographies || localityCache.layouts !== FBDATA.settlementLayouts ||
+        localityCache.sites !== FBDATA.settlementSites || localityCache.layout !== bookmark.settlementLayout || localityCache.id !== bookmark.id) {
+      var geography = FB.geography(geographyId), physical = geography && geography.sites || FBDATA.settlementSites || {};
+      var layouts = FBDATA.settlementLayouts || {}, layoutId = bookmark.settlementLayout !== undefined ? bookmark.settlementLayout :
+        own(layouts, bookmark.id) ? bookmark.id : geography && geography.defaultLayout;
+      var layout = layouts[layoutId], seeds = Object.create(null), counts = Object.create(null), resolved = Object.create(null);
+      (geography && geography.provinces || []).forEach(function (p) { seeds[p.id] = p; });
+      provinces.forEach(function (p) {
+        var entries = p.settlements, seed = seeds[p.id];
+        if (entries === undefined && !p._legacySettlementPresentation && layout && seed &&
+            (p.x === undefined || p.x === seed.x) && (p.y === undefined || p.y === seed.y)) entries = layout[p.id];
+        (Array.isArray(entries) ? entries : []).forEach(function (entry) {
+          if (!entry || !own(physical, entry.site)) return;
+          counts[entry.site] = (counts[entry.site] || 0) + 1;
+          if (!p.wasteland && !entry.fill) resolved[entry.site] = p.id;
+        });
+      });
+      localityCache = { provinces:provinces, geographyId:geographyId, geographies:FBDATA.geographies,
+        layouts:FBDATA.settlementLayouts, sites:FBDATA.settlementSites, layout:bookmark.settlementLayout, id:bookmark.id,
+        counts:counts, resolved:resolved };
+    }
+    return localityCache.counts[location.siteId] === 1 && localityCache.resolved[location.siteId] === location.provinceId;
+  }
+  function atLocality(s, location) {
+    if (!localityValid({ provinceId:location.provinceId, siteId:location.siteId }, FB.campaignBookmark(s))) return false;
+    var p = s.player, info = FB.world.sitesByProv && FB.world.sitesByProv[location.provinceId];
+    var site = info && integer(p.homeSettlement) && info.list[p.homeSettlement];
+    return living(s) && !p.travel && !p.war && !(FB.atWarPersonally && FB.atWarPersonally(s)) && !(p.flags && p.flags.in_prison) &&
+      !(FB.intrigueCaptivityOf && FB.intrigueCaptivityOf(s, p.charId)) &&
+      p.provinceId === location.provinceId && !!site && site.authored && site.site === location.siteId && FB.siteVisible(s, site);
+  }
+  function localSource(context, sourceId, milestone, location) {
+    var source = context.get(sourceId);
+    return !!source && sourceId.length <= 200 && slug(milestone) && milestone.length <= 200 &&
+      typeof source.householdEvents === 'function' && (source.householdLocalities || []).some(function (e) {
+      return e.milestone === milestone && e.provinceId === location.provinceId && e.siteId === location.siteId;
+    });
+  }
+  function localEvents(s, sourceId) {
+    var source = FB.stories.get(sourceId), t = FB.stories.record(s, sourceId);
+    if (!source || !t || typeof source.householdEvents !== 'function') return [];
+    return source.householdEvents(s, t).filter(function (e) {
+      return keys(e, ['source','milestone','provinceId','siteId','turn','before','after']) && e.source === sourceId &&
+        Number.isSafeInteger(e.turn) && e.turn >= 0 && e.turn <= s.turn && e.before === null && e.after === null &&
+        localSource(FB.stories, sourceId, e.milestone, e) &&
+        localityValid({ provinceId:e.provinceId, siteId:e.siteId }, FB.campaignBookmark(s));
+    });
   }
   function receipt(s, key) {
     var ids = Object.keys(s.stories || {});
@@ -48,6 +109,7 @@
     return null;
   }
   FB.householdStories = { householdId:household, receiptKey:receiptKey, receipt:receipt,
+    localityValid:localityValid, atLocality:atLocality, localSource:localSource, localEvents:localEvents,
     commitDay:function (s, action) {
       var story = FB.stories.get(action.storyId), t = FB.stories.record(s, action.storyId);
       return !!(story && t && story.declaration && story.declaration.type === 'household_track' &&
@@ -60,20 +122,20 @@
         if (t && story.householdFocusPaid) story.householdFocusPaid(s, t, focusId, amount);
       });
     },
-    owner:function (s, key) {
+    owner:function (s, key, reserveLocal) {
       var list = FB.stories.list();
       for (var i = 0; i < list.length; i++) {
         var rec = FB.stories.record(s, list[i].id);
-        if (rec && list[i].householdIncident && list[i].householdIncident(s, rec, key)) return list[i].id;
+        if (rec && list[i].householdIncident && list[i].householdIncident(s, rec, key, reserveLocal)) return list[i].id;
       }
       return null;
     }
   };
 
-  function validate(def, context) {
+  function validate(def, context, bookmark) {
     function need(ok, field) { if (!ok) throw new Error('Invalid household track: ' + field + '.'); }
     need(keys(def, ['id','type','title','intro','homeProvinceId','continuity','interruptedStage','initialStage',
-      'stages','jobs','requires','requirements','registrationBefore','registrationAfter']), 'fields');
+      'stages','jobs','requires','requirements','registrationBefore','registrationAfter','attachment']), 'fields');
     need(typeof def.title === 'string' && def.title.length > 0 && def.title.length <= 240 &&
       typeof def.intro === 'string' && def.intro.length <= 4000, 'presentation');
     need(slug(def.homeProvinceId) && ['household','protagonist'].indexOf(def.continuity) >= 0, 'home or continuity');
@@ -174,7 +236,7 @@
     }
     Object.keys(def.stages).forEach(function (id) {
       var stage = def.stages[id];
-      need(slug(id) && keys(stage, ['name','text','terminal','choices','transitions','incident','afterIncident','afterWork']), 'stage fields');
+      need(slug(id) && keys(stage, ['name','text','terminal','choices','transitions','incident','afterIncident','afterWork','localEvent']), 'stage fields');
       need(typeof stage.name === 'string' && stage.name.length > 0 && stage.name.length <= 240 &&
         typeof stage.text === 'string' && stage.text.length <= 4000, 'stage presentation');
       need(stage.terminal === undefined || stage.terminal === true, 'terminal');
@@ -184,12 +246,29 @@
       need(stage.afterWork === undefined || !stage.terminal && keys(stage.afterWork, ['focusId','provinceId','next']) &&
         focus(stage.afterWork.focusId) && slug(stage.afterWork.provinceId) && own(def.stages, stage.afterWork.next) && stage.afterWork.next !== id, 'work route');
       need(stage.terminal || stage.choices.length + stage.transitions.length > 0 || stage.afterWork, 'unfinished dead end');
+      if (own(stage, 'localEvent')) {
+        var local = stage.localEvent;
+        need(keys(local, ['milestone','provinceId','siteId']) && def.id.length <= 200 && slug(local.milestone) && local.milestone.length <= 200 &&
+          localityValid({ provinceId:local.provinceId, siteId:local.siteId }, bookmark) &&
+          (def.requirements && def.requirements.provinces || []).indexOf(local.provinceId) >= 0, 'local event');
+        need(!stage.terminal && !stage.incident && !stage.afterWork && stage.choices.length > 0 &&
+          stage.choices.every(function (c) { return c.operation && c.operation.kind === 'record_decision'; }), 'local decision');
+        need(!Object.keys(def.stages).some(function (other) {
+          var e = other !== id && def.stages[other].localEvent;
+          return e && e.milestone === local.milestone && e.provinceId === local.provinceId && e.siteId === local.siteId;
+        }), 'duplicate local event');
+      }
       if (stage.incident) {
         need(!stage.terminal && own(def.stages, stage.afterIncident) && stage.afterIncident !== id, 'incident closure route');
         var inc = stage.incident;
-        need(keys(inc, ['source','provinceId','storyId','milestone']) && slug(inc.provinceId), 'incident');
-        if (inc.source === 'control') need(!inc.storyId && inc.milestone === 'rule_changed', 'control incident');
-        else { need(inc.source === 'story' && ['started','won','failed','diverted','interrupted'].indexOf(inc.milestone) >= 0, 'story incident'); dependency(inc.storyId); }
+        need(keys(inc, ['source','provinceId','storyId','milestone','siteId']) && slug(inc.provinceId), 'incident');
+        if (own(inc, 'siteId')) need(localityValid({ provinceId:inc.provinceId, siteId:inc.siteId }, bookmark) &&
+          (def.requirements && def.requirements.provinces || []).indexOf(inc.provinceId) >= 0, 'incident locality');
+        if (inc.source === 'local_story') {
+          dependency(inc.storyId);
+          need(own(inc, 'siteId') && localSource(context, inc.storyId, inc.milestone, inc), 'local source');
+        } else if (inc.source === 'control') need(!inc.storyId && inc.milestone === 'rule_changed', 'control incident');
+        else { need(inc.source === 'story' && !own(inc, 'siteId') && ['started','won','failed','diverted','interrupted'].indexOf(inc.milestone) >= 0, 'story incident'); dependency(inc.storyId); }
       } else need(stage.afterIncident === undefined, 'orphan incident route');
       var seen = Object.create(null);
       stage.choices.forEach(function (choice) {
@@ -204,6 +283,9 @@
         predicate(route.when, 0);
       });
     });
+    if (own(def, 'attachment')) need(def.attachment === 'world' && !def.jobs &&
+      Object.keys(def.stages).some(function (id) { return !!def.stages[id].localEvent; }) &&
+      Object.keys(def.stages).every(function (id) { return def.stages[id].terminal || !!def.stages[id].localEvent; }), 'local world attachment');
     var reached = Object.create(null), pending = [def.initialStage];
     while (pending.length) {
       var id = pending.shift(); if (reached[id]) continue; reached[id] = true;
@@ -222,9 +304,9 @@
     });
     need(Object.keys(def.stages).every(function (id) { return finishes[id]; }), 'no terminal route');
     Object.keys(def.stages).forEach(function (origin) {
-      if (!def.stages[origin].incident) return;
+      if (!def.stages[origin].incident && !def.stages[origin].localEvent) return;
       var visited = Object.create(null), todo = def.stages[origin].choices.concat(def.stages[origin].transitions).map(function (r) { return r.next; });
-      todo.push(def.stages[origin].afterIncident);
+      if (def.stages[origin].afterIncident) todo.push(def.stages[origin].afterIncident);
       while (todo.length) {
         var id = todo.pop(); need(id !== origin, 'incident cycle');
         if (visited[id]) continue; visited[id] = true;
@@ -238,6 +320,12 @@
 
   function factory(def) {
     var controls = Object.create(null), places = Object.create(null), mobileRealms = Object.create(null);
+    var localities = Object.keys(def.stages).filter(function (id) { return def.stages[id].localEvent; }).map(function (id) {
+      return def.stages[id].localEvent;
+    });
+    var localVersion = localities.length || Object.keys(def.stages).some(function (id) {
+      return def.stages[id].incident && own(def.stages[id].incident, 'siteId');
+    }) ? 2 : 1;
     function scan(v) {
       if (!v || typeof v !== 'object') return;
       if (v.source === 'control') controls[v.provinceId] = true;
@@ -346,6 +434,9 @@
     }
     function event(s, t, inc) {
       if (!inc) return null;
+      if (inc.source === 'local_story') return localEvents(s, inc.storyId).filter(function (e) {
+        return e.milestone === inc.milestone && e.provinceId === inc.provinceId && e.siteId === inc.siteId;
+      })[0] || null;
       if (inc.source === 'control') {
         var o = t.controls[inc.provinceId];
         var current = sovereign(s, inc.provinceId);
@@ -353,7 +444,9 @@
         // same transition without consuming or mutating the saved baseline.
         if (o && o.after !== current) o = { before:o.after, after:current, turn:s.turn };
         if (!o || o.turn === null) return null;
-        return { source:inc.source, milestone:inc.milestone, provinceId:inc.provinceId, turn:o.turn, before:o.before, after:o.after };
+        var result = { source:inc.source, milestone:inc.milestone, provinceId:inc.provinceId, turn:o.turn, before:o.before, after:o.after };
+        if (own(inc, 'siteId')) result.siteId = inc.siteId;
+        return result;
       }
       var row = FB.stories.record(s, inc.storyId);
       if (!row || (inc.milestone === 'started' ? row.startedTurn === null : row.result !== inc.milestone)) return null;
@@ -446,7 +539,9 @@
         identity:[s.chars[s.player.charId].culture,s.chars[s.player.charId].religion],
         family:FB.householdMembers(s).map(function (c) { return [c.id,!!c.dead,c.religion,c.culture]; }),
         stageReady:!stage.transitions.some(function (r) { return test(s, r.when, t); }),
-        local:!stage.incident || s.player.provinceId === stage.incident.provinceId && present(s) === stage.incident.provinceId,
+        local:(!stage.localEvent || atLocality(s, stage.localEvent)) && (!stage.incident ||
+          (own(stage.incident, 'siteId') ? atLocality(s, stage.incident) :
+            s.player.provinceId === stage.incident.provinceId && present(s) === stage.incident.provinceId)),
         when:!!choice && test(s, choice.when, t), spent:!!choice && choice.operation.kind === 'household_expense' && own(t.decisions, t.phase),
         incident:key, closed:closed || null, terms:op.terms,
         graph:def };
@@ -454,9 +549,17 @@
         return FB.mobile.householdSnapshot(s, FB.startRealmId(s, rid));
       });
       if (choice && choice.operation.kind === 'convert_faith') facts.modifier = FBDATA.modifiers && FBDATA.modifiers['zealot_unrest'];
+      var location = stage.localEvent || stage.incident && own(stage.incident, 'siteId') && stage.incident;
+      var requiredSite = location && localityName(location);
       return { id:id, allowed:!!choice && facts.alive && !facts.spent && facts.stageReady && facts.local && facts.when && op.allowed &&
-        (!stage.incident || !!key && !closed), reason:op.reason || FB.T('The local situation has changed. Review the household again.'),
+        (!stage.incident || !!key && !closed), reason:requiredSite && !facts.local ?
+          FB.T('This decision requires residence at {site}.', { site:requiredSite }) : op.reason || FB.T('The local situation has changed. Review the household again.'),
         facts:facts, stamp:JSON.stringify(facts) };
+    }
+    function localityName(location) {
+      var info = FB.world.sitesByProv && FB.world.sitesByProv[location.provinceId];
+      var site = info && info.list.filter(function (entry) { return entry.site === location.siteId; })[0];
+      return site ? site.name : null;
     }
     function apply(s, t, id, reviewed, committingDay) {
       var q = quote(s, t, id);
@@ -503,14 +606,23 @@
       if (op.kind === 'return_home' && !(s.player.travel.phase === 'arrived' ? FB.travelReturn(s) : FB.travelTurnBack(s))) return false;
       close(s, t, stage, 'resolved');
       t.decisions[t.phase] = { choiceId:id, turn:s.turn, actorId:s.player.charId };
+      if (stage.localEvent) t.decisions[t.phase].locality = { provinceId:stage.localEvent.provinceId, siteId:stage.localEvent.siteId };
       move(s, t, choice.next); return true;
     }
-    return { id:def.id, kind:'track', requires:def.requires,
+    return { id:def.id, kind:def.attachment || 'track', requires:def.requires,
+      householdLocalities:localities,
+      householdEvents:function (s, t) {
+        return Object.keys(def.stages).filter(function (id) { return def.stages[id].localEvent && own(t.decisions, id); }).map(function (id) {
+          var e = def.stages[id].localEvent, d = t.decisions[id];
+          return { source:def.id, milestone:e.milestone, provinceId:d.locality.provinceId, siteId:d.locality.siteId,
+            turn:d.turn, before:null, after:null };
+        });
+      },
       appliesTo:function (s) { return living(s) && s.player.provinceId === def.homeProvinceId; },
       init:function (s) {
         var rows = {};
         Object.keys(controls).forEach(function (id) { rows[id] = { before:null, after:sovereign(s, id), turn:null }; });
-        var rec = { version:1, householdId:household(s), actorId:s.player.charId, phase:def.initialStage,
+        var rec = { version:localVersion, householdId:household(s), actorId:s.player.charId, phase:def.initialStage,
           revision:0, stageTurn:s.turn, decisions:{}, controls:rows, householdReceipts:{} };
         if (def.jobs) {
           rec.jobs = {}; rec.jobPatrons = {};
@@ -526,15 +638,17 @@
         var stage = def.stages[t.phase], work = stage.afterWork, key = incident(s, t, stage);
         if (!work || !living(s) || def.continuity === 'protagonist' && t.actorId !== s.player.charId ||
           s.player.travel || work.focusId !== focusId || s.player.provinceId !== work.provinceId ||
-          stage.incident && (!key || receipt(s, key) || s.player.provinceId !== stage.incident.provinceId || present(s) !== stage.incident.provinceId) ||
+          stage.incident && (!key || receipt(s, key) || (own(stage.incident, 'siteId') ? !atLocality(s, stage.incident) :
+            s.player.provinceId !== stage.incident.provinceId || present(s) !== stage.incident.provinceId)) ||
           stage.transitions.some(function (r) { return test(s, r.when, t); })) return;
         close(s, t, stage, 'resolved'); move(s, t, work.next);
       },
-      householdIncident:function (s, t, key) {
+      householdIncident:function (s, t, key, reserveLocal) {
         if (def.stages[t.phase].terminal || !living(s) || receipt(s, key)) return false;
         return Object.keys(def.stages).some(function (id) {
           var inc = def.stages[id].incident;
-          return inc && s.player.provinceId === inc.provinceId && present(s) === inc.provinceId && incident(s, t, def.stages[id]) === key;
+          return inc && (own(inc, 'siteId') ? reserveLocal || atLocality(s, inc) :
+            s.player.provinceId === inc.provinceId && present(s) === inc.provinceId) && incident(s, t, def.stages[id]) === key;
         });
       },
       status:function (s, t) {
@@ -558,6 +672,10 @@
       quote:quote, apply:apply, blocker:function (s, t, reason) { return reason; },
       review:function (s, t, id, q) {
         var choice = def.stages[t.phase].choices.filter(function (c) { return c.id === id; })[0], op = choice.operation, terms = q.facts.terms;
+        var location = def.stages[t.phase].localEvent || def.stages[t.phase].incident;
+        if (location && own(location, 'siteId') && op.kind === 'record_decision') return [
+          FB.T('Required residence: {site}.', { site:localityName(location) || FB.T('Unavailable settlement') }),
+          FB.T('Record this decision without a payment, grant or change of identity.')];
         if (op.kind === 'spend_day') return [FB.T('Spend one action day. Daily Focus income is replaced for that day.')];
         if (op.kind === 'start_job' || op.kind === 'work_job' || op.kind === 'settle_job') {
           var j = def.jobs[op.jobId], row = t.jobs && t.jobs[op.jobId];
@@ -597,10 +715,12 @@
       },
       validate:function (t, s) {
         function need(ok) { if (!ok) throw new Error('Invalid household story record: ' + def.id + '.'); }
-        need(keys(t, ['version','householdId','actorId','phase','revision','stageTurn','decisions','controls','householdReceipts','jobs','jobPatrons']) && t.version === 1 &&
+        need(keys(t, ['version','householdId','actorId','phase','revision','stageTurn','decisions','controls','householdReceipts','jobs','jobPatrons']) && t.version === localVersion &&
           typeof t.householdId === 'string' && t.householdId.length > 0 && typeof t.actorId === 'string' && t.actorId.length > 0 &&
           own(def.stages, t.phase) && integer(t.revision) && integer(t.stageTurn) && plain(t.decisions) && plain(t.controls) && plain(t.householdReceipts));
         need(!s || t.stageTurn <= s.turn);
+        if (localVersion === 2) need(Number.isSafeInteger(t.revision) && Number.isSafeInteger(t.stageTurn) &&
+          t.householdId.length <= 200 && t.actorId.length <= 200 && (!s || own(s.chars, t.householdId) && own(s.chars, t.actorId)));
         need(own(t, 'jobs') === own(t, 'jobPatrons'));
         if (own(t, 'jobs')) {
           need(!!def.jobs && plain(t.jobs) && plain(t.jobPatrons) && Object.keys(t.jobs).length <= 8 &&
@@ -637,9 +757,13 @@
         need(Object.keys(t.decisions).length <= 64 && Object.keys(t.householdReceipts).length <= 64);
         Object.keys(t.decisions).forEach(function (id) {
           var d = t.decisions[id];
-          need(own(def.stages, id) && keys(d, ['choiceId','turn','actorId']) && integer(d.turn) && typeof d.actorId === 'string' &&
+          need(own(def.stages, id) && keys(d, ['choiceId','turn','actorId','locality']) && integer(d.turn) && typeof d.actorId === 'string' &&
             def.stages[id].choices.some(function (c) { return c.id === d.choiceId; }));
+          var local = def.stages[id].localEvent;
+          need(local ? keys(d.locality, ['provinceId','siteId']) && d.locality.provinceId === local.provinceId &&
+            d.locality.siteId === local.siteId && localityValid(d.locality, s && FB.campaignBookmark(s)) : !own(d, 'locality'));
           need(!s || d.turn <= s.turn);
+          if (localVersion === 2) need(Number.isSafeInteger(d.turn) && d.actorId.length > 0 && d.actorId.length <= 200 && (!s || own(s.chars, d.actorId)));
         });
         need(Object.keys(t.controls).length === Object.keys(controls).length);
         Object.keys(t.controls).forEach(function (id) {
@@ -647,19 +771,27 @@
           need(controls[id] && keys(c, ['before','after','turn']) && (c.before === null || typeof c.before === 'string') &&
             (c.after === null || typeof c.after === 'string') && (c.turn === null || integer(c.turn)));
           need(!s || c.turn === null || c.turn <= s.turn);
+          if (localVersion === 2) need(c.turn === null || Number.isSafeInteger(c.turn));
         });
         Object.keys(t.householdReceipts).forEach(function (key) {
           var r = t.householdReceipts[key], parts;
           try { parts = JSON.parse(key); } catch (e) { need(false); }
-          need(Array.isArray(parts) && parts.length === 7 && parts[0] === t.householdId &&
+          need(Array.isArray(parts) && (parts.length === 7 || localVersion === 2 && parts.length === 8) && parts[0] === t.householdId &&
             typeof parts[1] === 'string' && typeof parts[2] === 'string' && typeof parts[3] === 'string' && integer(parts[4]) &&
             (parts[5] === null || typeof parts[5] === 'string') && (parts[6] === null || typeof parts[6] === 'string') &&
             keys(r, ['owner','status','turn']) && r.owner === def.id && ['resolved','expired'].indexOf(r.status) >= 0 && integer(r.turn));
           need(key === JSON.stringify(parts) && (!s || r.turn <= s.turn && parts[4] <= r.turn));
+          if (localVersion === 2) need(Number.isSafeInteger(parts[4]) && Number.isSafeInteger(r.turn));
           need(Object.keys(def.stages).some(function (id) {
             var inc = def.stages[id].incident;
             return inc && parts[1] === (inc.source === 'control' ? inc.source : inc.storyId) &&
-              parts[2] === inc.milestone && parts[3] === inc.provinceId;
+              parts[2] === inc.milestone && parts[3] === inc.provinceId &&
+              (own(inc, 'siteId') ? parts.length === 8 && parts[7] === inc.siteId &&
+                localityValid({ provinceId:parts[3], siteId:parts[7] }, s && FB.campaignBookmark(s)) : parts.length === 7) &&
+              (inc.source === 'control' || parts[5] === null && parts[6] === null) &&
+              (inc.source !== 'local_story' || !s || localEvents(s, inc.storyId).some(function (e) {
+                return receiptKey(t.householdId, e) === key;
+              }));
           }));
         });
       }
