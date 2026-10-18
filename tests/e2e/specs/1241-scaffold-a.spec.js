@@ -4,13 +4,17 @@ const path = require('path');
 const {test,expect} = require('../support/fixture');
 const {dependsOnRuntime} = require('../support/runtime-dependencies');
 const {openGame} = require('../support/game/navigation');
+const {beginBookmark} = require('../support/game/bookmark-acceptance');
 
 dependsOnRuntime(__filename,[
   'index.html','data/bookmark_1241.js','data/bookmark_1241_scaffold_a.js','data/bookmark_1204.js',
+  'data/bookmark_1241_scaffold_b.js','data/bookmark_1241_scaffold_c.js','data/bookmark_1241_scaffold_d.js',
   'data/bookmark_1204_terrain.js','data/bookmarks.js','data/counties.js',
   'data/map_data.js','data/geographies.js','data/geography_expansion.js',
   'data/settlements.js','data/settlements_real.js','data/cultures.js',
-  'data/traits.js','data/eras.js','data/political_institutions.js','js/model.js','js/world.js'
+  'data/traits.js','data/eras.js','data/political_institutions.js','js/model.js','js/world.js',
+  'data/starts_1241.js','data/story_households_1241.js','js/main.js','js/starts.js',
+  'js/bookmark_setup.js','js/stories.js','js/save.js','js/save_v4.js'
 ]);
 
 const packets = {
@@ -184,17 +188,94 @@ test('1241 quadrant a replaces obsolete incumbents and keeps campaign and househ
       }).map(function (r) { return r.ruler.name; }).sort()};
   },Object.keys(packets));
   expect(result.named).toEqual([
+    ['brittany_1241','John I',1217,'brezhon','catholic'],
     ['england_1241','Henry III',1207,'norman','catholic'],
     ['france_1241','Louis IX',1214,'frankish','catholic'],
-    ['hungary_1241','Bela IV',1206,'magyar','catholic']
+    ['hungary_1241','Bela IV',1206,'magyar','catholic'],
+    ['toulouse_1241','Raymond VII',1197,'occitan','catholic'],
+    ['vladimir_1241','Yaroslav Vsevolodovich',1191,'rus','orthodox']
   ]);
-  expect(result.generated).toEqual(['brittany_1241','deheubarth_1241','gwynedd_1241',
-    'novgorod_1241','polotsk_1241','smolensk_1241','steppe_local_1241','toulouse_1241',
-    'vladimir_1241','volga_local_1241']);
+  expect(result.generated).toEqual(['deheubarth_1241','gwynedd_1241',
+    'novgorod_1241','polotsk_1241','smolensk_1241','steppe_local_1241','volga_local_1241']);
   expect(result.operations).toEqual([]);
   expect(result.normandy).toEqual(Array(4).fill('france_1241'));
   expect(result.sourceNormandy).toEqual(Array(4).fill('england_1204'));
   expect(result.obsolete).toEqual([]);
-  expect(result.rusBirths).toEqual([1206,1206]);
+  expect(result.rusBirths).toEqual([1191,1206]);
   expect(result.sourceNames).toEqual(['Emeric','John','Philip II Augustus']);
+});
+
+test('1241 southern French corrections reach the composed world without extending nearby claims', async function ({page}, testInfo) {
+  await openGame(page,testInfo);
+  const owners = {
+    poitiers:'france_1241',angouleme:'france_1241',limoges:'france_1241',perigueux:'france_1241',
+    agen:'toulouse_1241',carcassonne:'france_1241',beziers:'france_1241',macon:'france_1241',besancon:'hre_1241',
+    bordeaux:'england_1241',bayonne:'england_1241',auch:'england_1241',
+    albi:'toulouse_1241',narbonne:'toulouse_1241',clermont:'toulouse_1241',le_puy:'toulouse_1241',
+    cahors:'toulouse_1241',rodez:'toulouse_1241',vienne:'hre_1241',arles:'hre_1241',chambery:'hre_1241'
+  };
+  expect(await page.evaluate(function (expected) {
+    const b = FB.bookmark('1241'), block = FBDATA.bookmarkRegions1241.france_south_alps;
+    const source = FB.bookmark('1204','inhabited_v2'), data = JSON.stringify(FBDATA);
+    const state = JSON.stringify(FB.state), rng = FB.getRngState(), uid = FB.getUidCounter();
+    const faults = [];
+    Object.keys(expected).forEach(function (id) {
+      const staged = block.provinces.find(function (p) { return p.id === id; });
+      const live = b.provinces.find(function (p) { return p.id === id; });
+      const old = source.provinces.find(function (p) { return p.id === id; });
+      if (staged.realm !== expected[id] || live.realm !== expected[id]) faults.push(id+': owner');
+      if (live === staged || live.communities === staged.communities) faults.push(id+': shared object');
+      if (JSON.stringify(live.communities) !== JSON.stringify(old.communities) ||
+          live.culture !== old.culture || live.religion !== old.religion || live.dev !== old.dev)
+        faults.push(id+': changed residents or development');
+    });
+    const bad = JSON.parse(JSON.stringify(b));
+    bad.provinces.find(function (p) { return p.id === 'besancon'; }).realm = 'missing_court';
+    const valid = FB.validateBookmark(b), rejected = FB.validateBookmark(bad).length > 0;
+    return {faults:faults,valid:valid,rejected:rejected,
+      pure:data === JSON.stringify(FBDATA) && state === JSON.stringify(FB.state) &&
+        rng === FB.getRngState() && uid === FB.getUidCounter()};
+  },owners)).toEqual({faults:[],valid:[],rejected:true,pure:true});
+});
+
+test('1241 corrected background rulers and county affiliations initialize once and survive matching restore', async function ({page}, testInfo) {
+  await beginBookmark(page,testInfo,'1241','hungarian_village_household_1241');
+  const result = await page.evaluate(function () {
+    const ids = ['brittany_1241','toulouse_1241','vladimir_1241'];
+    function facts() {
+      const s = FB.state;
+      return {
+        rulers:ids.map(function (id) {
+          const r = s.realms[id];
+          return [id,r.ruler.name,r.ruler.born,FB.realmRulerGeneration(s,id)];
+        }),
+        owners:['poitiers','angouleme','limoges','perigueux','agen','carcassonne','beziers','macon','besancon']
+          .map(function (id) { return [id,s.provinces[id].realm,s.provinces[id].holder]; }),
+        courts:ids.map(function (id) {
+          return {ruler:FB.realmRulerCharacterSnapshot(s,id),succession:s.realms[id].succession};
+        }),
+        personIds:Object.keys(s.chars).sort(),stories:s.stories,setup:s.bookmarkSetup,
+        rng:FB.getRngState() >>> 0,uid:FB.getUidCounter()
+      };
+    }
+    const before = JSON.parse(JSON.stringify(facts())), saved = JSON.parse(FB.save.serialize());
+    const expectedOwners = ['france_1241','france_1241','france_1241','france_1241','toulouse_1241',
+      'france_1241','france_1241','france_1241','hre_1241'];
+    const initialOwners = before.owners.every(function (row,index) { return row[1] === expectedOwners[index]; });
+    const initialRulers = before.rulers.map(function (row) { return row.slice(0,3); });
+    FB.save.restore(saved);
+    const after = JSON.parse(JSON.stringify(facts()));
+    FB.save.restore(JSON.parse(FB.save.serialize()));
+    return {initialRulers:initialRulers,initialOwners:initialOwners,before:before,after:after,repeated:facts(),
+      noNamedStart:!FBDATA.startScenarios.some(function (row) {
+        return ids.indexOf(row.rulerRealmId) >= 0;
+      })};
+  });
+  expect(result.initialRulers).toEqual([['brittany_1241','John I',1217],['toulouse_1241','Raymond VII',1197],
+    ['vladimir_1241','Yaroslav Vsevolodovich',1191]]);
+  expect(result.initialOwners).toBe(true);
+  expect(result.before.courts.every(function (court) { return !!court.ruler; })).toBe(true);
+  expect(result.after).toEqual(result.before);
+  expect(result.repeated).toEqual(result.before);
+  expect(result.noNamedStart).toBe(true);
 });

@@ -61,7 +61,7 @@ FBDATA.bookmarkRegions1241.rus_north = {
     {"id":"w_taiga","name":"Taiga","x":47.0,"y":60.0,"terrain":"forest","wasteland":true}
   ],
   realms:[
-    {"id":"vladimir_1241","name":"Vladimir principality","color":"#6f9f8f","capital":"suzdal","rank":3,"religion":"orthodox","techTraditions":["slavic","byzantine"],"aggression":0,"government":"territorial","ruler":{"sex":"m","culture":"rus","born":1206,"mar":8,"trait":"patient","generated":true}},
+    {"id":"vladimir_1241","name":"Vladimir principality","color":"#6f9f8f","capital":"suzdal","rank":3,"religion":"orthodox","techTraditions":["slavic","byzantine"],"aggression":0,"government":"territorial","ruler":{"sex":"m","culture":"rus","born":1191,"mar":8,"trait":"patient","name":"Yaroslav Vsevolodovich"}},
     {"id":"novgorod_1241","name":"Novgorod","color":"#a04fb0","capital":"novgorod","rank":2,"religion":"orthodox","techTraditions":["slavic","byzantine"],"aggression":0,"government":"territorial","ruler":{"sex":"m","culture":"rus","born":1206,"mar":8,"trait":"patient","generated":true}},
     {"id":"smolensk_1241","name":"Smolensk principality","color":"#af5f2f","capital":"smolensk","rank":2,"religion":"orthodox","techTraditions":["slavic","byzantine"],"aggression":0,"government":"territorial","ruler":{"sex":"m","culture":"rus","born":1206,"mar":8,"trait":"patient","generated":true}},
     {"id":"polotsk_1241","name":"Polotsk principality","color":"#2f8f8f","capital":"polotsk","rank":2,"religion":"orthodox","techTraditions":["slavic","byzantine"],"aggression":0,"government":"territorial","ruler":{"sex":"m","culture":"rus","born":1206,"mar":8,"trait":"patient","generated":true}}
@@ -305,7 +305,7 @@ FBDATA.bookmarkRegions1241.france_north_low_countries = {
   ],
   realms:[
     {"id":"france_1241","name":"Kingdom of France","color":"#4f7fd0","capital":"paris","rank":3,"religion":"catholic","techTraditions":["latin"],"aggression":0,"government":"territorial","ruler":{"sex":"m","culture":"frankish","born":1214,"mar":8,"trait":"patient","name":"Louis IX"}},
-    {"id":"brittany_1241","name":"Duchy of Brittany","color":"#a8a8b8","capital":"rennes","rank":2,"religion":"catholic","techTraditions":["latin"],"aggression":0,"government":"territorial","ruler":{"sex":"m","culture":"brezhon","born":1206,"mar":8,"trait":"patient","generated":true},"liege":"france_1241"}
+    {"id":"brittany_1241","name":"Duchy of Brittany","color":"#a8a8b8","capital":"rennes","rank":2,"religion":"catholic","techTraditions":["latin"],"aggression":0,"government":"territorial","ruler":{"sex":"m","culture":"brezhon","born":1217,"mar":8,"trait":"patient","name":"John I"},"liege":"france_1241"}
   ],
   duchies:{
     "ile":{"name":"Île-de-France","kingdom":"west_francia"},
@@ -373,11 +373,11 @@ FBDATA.bookmarkRegions1241.france_north_low_countries = {
 FBDATA.bookmarkRegions1241.france_south_alps = {
   provinces:[
     {"id":"bordeaux","name":"Bordeaux","x":-0.58,"y":44.84,"terrain":"farmland","duchy":"aquitaine","culture":"frankish","religion":"catholic","dev":7,"realm":"england_1241","communities":[{"culture":"frankish","religion":"catholic","populationShare0":10000}]},
-    {"id":"agen","name":"Agen","x":0.62,"y":44.2,"terrain":"farmland","duchy":"aquitaine","culture":"frankish","religion":"catholic","dev":4,"realm":"england_1241","communities":[{"culture":"frankish","religion":"catholic","populationShare0":10000}]},
-    {"id":"perigueux","name":"Périgueux","x":0.72,"y":45.19,"terrain":"farmland","duchy":"aquitaine","culture":"frankish","religion":"catholic","dev":4,"realm":"england_1241","communities":[{"culture":"frankish","religion":"catholic","populationShare0":10000}]},
-    {"id":"poitiers","name":"Poitiers","x":0.34,"y":46.58,"terrain":"farmland","duchy":"poitou","culture":"frankish","religion":"catholic","dev":5,"realm":"england_1241","communities":[{"culture":"frankish","religion":"catholic","populationShare0":10000}]},
-    {"id":"angouleme","name":"Angoulême","x":0.16,"y":45.65,"terrain":"farmland","duchy":"poitou","culture":"frankish","religion":"catholic","dev":4,"realm":"england_1241","communities":[{"culture":"frankish","religion":"catholic","populationShare0":10000}]},
-    {"id":"limoges","name":"Limoges","x":1.26,"y":45.83,"terrain":"farmland","duchy":"poitou","culture":"frankish","religion":"catholic","dev":4,"realm":"england_1241","communities":[{"culture":"frankish","religion":"catholic","populationShare0":10000}]},
+    {"id":"agen","name":"Agen","x":0.62,"y":44.2,"terrain":"farmland","duchy":"aquitaine","culture":"frankish","religion":"catholic","dev":4,"realm":"toulouse_1241","communities":[{"culture":"frankish","religion":"catholic","populationShare0":10000}]},
+    {"id":"perigueux","name":"Périgueux","x":0.72,"y":45.19,"terrain":"farmland","duchy":"aquitaine","culture":"frankish","religion":"catholic","dev":4,"realm":"france_1241","communities":[{"culture":"frankish","religion":"catholic","populationShare0":10000}]},
+    {"id":"poitiers","name":"Poitiers","x":0.34,"y":46.58,"terrain":"farmland","duchy":"poitou","culture":"frankish","religion":"catholic","dev":5,"realm":"france_1241","communities":[{"culture":"frankish","religion":"catholic","populationShare0":10000}]},
+    {"id":"angouleme","name":"Angoulême","x":0.16,"y":45.65,"terrain":"farmland","duchy":"poitou","culture":"frankish","religion":"catholic","dev":4,"realm":"france_1241","communities":[{"culture":"frankish","religion":"catholic","populationShare0":10000}]},
+    {"id":"limoges","name":"Limoges","x":1.26,"y":45.83,"terrain":"farmland","duchy":"poitou","culture":"frankish","religion":"catholic","dev":4,"realm":"france_1241","communities":[{"culture":"frankish","religion":"catholic","populationShare0":10000}]},
     {"id":"toulouse","name":"Toulouse","x":1.44,"y":43.6,"terrain":"farmland","duchy":"toulouse","culture":"occitan","religion":"catholic","dev":7,"realm":"toulouse_1241","communities":[{"culture":"occitan","religion":"catholic","populationShare0":10000}]},
     {"id":"albi","name":"Albi","x":2.15,"y":43.93,"terrain":"farmland","duchy":"toulouse","culture":"occitan","religion":"catholic","dev":4,"realm":"toulouse_1241","communities":[{"culture":"occitan","religion":"catholic","populationShare0":10000}]},
     {"id":"cahors","name":"Cahors","x":1.44,"y":44.45,"terrain":"hills","duchy":"toulouse","culture":"occitan","religion":"catholic","dev":4,"realm":"toulouse_1241","communities":[{"culture":"occitan","religion":"catholic","populationShare0":10000}]},
@@ -387,13 +387,13 @@ FBDATA.bookmarkRegions1241.france_south_alps = {
     {"id":"bayonne","name":"Bayonne","x":-1.47,"y":43.49,"terrain":"hills","duchy":"gascogne","culture":"frankish","religion":"catholic","dev":4,"communities":[{"culture":"frankish","religion":"catholic","populationShare0":7500},{"culture":"basque","religion":"catholic","populationShare0":2500}],"realm":"england_1241"},
     {"id":"auch","name":"Auch","x":0.58,"y":43.65,"terrain":"farmland","duchy":"gascogne","culture":"frankish","religion":"catholic","dev":4,"realm":"england_1241","communities":[{"culture":"frankish","religion":"catholic","populationShare0":10000}]},
     {"id":"narbonne","name":"Narbonne","x":3.0,"y":43.18,"terrain":"farmland","duchy":"narbonne","culture":"occitan","religion":"catholic","dev":5,"realm":"toulouse_1241","communities":[{"culture":"occitan","religion":"catholic","populationShare0":10000}]},
-    {"id":"beziers","name":"Béziers","x":3.22,"y":43.34,"terrain":"farmland","duchy":"narbonne","culture":"occitan","religion":"catholic","dev":4,"realm":"toulouse_1241","communities":[{"culture":"occitan","religion":"catholic","populationShare0":10000}]},
-    {"id":"carcassonne","name":"Carcassonne","x":2.35,"y":43.21,"terrain":"hills","duchy":"narbonne","culture":"occitan","religion":"catholic","dev":4,"realm":"toulouse_1241","communities":[{"culture":"occitan","religion":"catholic","populationShare0":10000}]},
+    {"id":"beziers","name":"Béziers","x":3.22,"y":43.34,"terrain":"farmland","duchy":"narbonne","culture":"occitan","religion":"catholic","dev":4,"realm":"france_1241","communities":[{"culture":"occitan","religion":"catholic","populationShare0":10000}]},
+    {"id":"carcassonne","name":"Carcassonne","x":2.35,"y":43.21,"terrain":"hills","duchy":"narbonne","culture":"occitan","religion":"catholic","dev":4,"realm":"france_1241","communities":[{"culture":"occitan","religion":"catholic","populationShare0":10000}]},
     {"id":"dijon","name":"Dijon","x":5.04,"y":47.32,"terrain":"farmland","duchy":"burgundy","culture":"frankish","religion":"catholic","dev":5,"realm":"france_1241","communities":[{"culture":"frankish","religion":"catholic","populationShare0":10000}]},
-    {"id":"besancon","name":"Besançon","x":6.02,"y":47.24,"terrain":"farmland","duchy":"burgundy","culture":"frankish","religion":"catholic","dev":4,"realm":"france_1241","communities":[{"culture":"frankish","religion":"catholic","populationShare0":10000}]},
+    {"id":"besancon","name":"Besançon","x":6.02,"y":47.24,"terrain":"farmland","duchy":"burgundy","culture":"frankish","religion":"catholic","dev":4,"realm":"hre_1241","communities":[{"culture":"frankish","religion":"catholic","populationShare0":10000}]},
     {"id":"auxerre","name":"Auxerre","x":3.57,"y":47.8,"terrain":"farmland","duchy":"burgundy","culture":"frankish","religion":"catholic","dev":5,"realm":"france_1241","communities":[{"culture":"frankish","religion":"catholic","populationShare0":10000}]},
     {"id":"lyon","name":"Lyon","x":4.83,"y":45.76,"terrain":"farmland","duchy":"lyonnais","culture":"frankish","religion":"catholic","dev":6,"realm":"hre_1241","communities":[{"culture":"frankish","religion":"catholic","populationShare0":10000}]},
-    {"id":"macon","name":"Mâcon","x":4.83,"y":46.31,"terrain":"farmland","duchy":"lyonnais","culture":"frankish","religion":"catholic","dev":4,"realm":"hre_1241","communities":[{"culture":"frankish","religion":"catholic","populationShare0":10000}]},
+    {"id":"macon","name":"Mâcon","x":4.83,"y":46.31,"terrain":"farmland","duchy":"lyonnais","culture":"frankish","religion":"catholic","dev":4,"realm":"france_1241","communities":[{"culture":"frankish","religion":"catholic","populationShare0":10000}]},
     {"id":"vienne","name":"Vienne","x":4.87,"y":45.52,"terrain":"farmland","duchy":"lyonnais","culture":"frankish","religion":"catholic","dev":5,"realm":"hre_1241","communities":[{"culture":"frankish","religion":"catholic","populationShare0":10000}]},
     {"id":"arles","name":"Arles","x":4.63,"y":43.68,"terrain":"farmland","duchy":"provence","culture":"occitan","religion":"catholic","dev":5,"realm":"hre_1241","communities":[{"culture":"occitan","religion":"catholic","populationShare0":10000}]},
     {"id":"marseille","name":"Marseille","x":5.37,"y":43.3,"terrain":"farmland","duchy":"provence","culture":"occitan","religion":"catholic","dev":6,"realm":"hre_1241","communities":[{"culture":"occitan","religion":"catholic","populationShare0":10000}]},
@@ -404,7 +404,7 @@ FBDATA.bookmarkRegions1241.france_south_alps = {
     {"id":"grenoble","name":"Grenoble","x":5.72,"y":45.19,"terrain":"mountains","duchy":"savoy","culture":"frankish","religion":"catholic","dev":4,"realm":"hre_1241","communities":[{"culture":"frankish","religion":"catholic","populationShare0":10000}]}
   ],
   realms:[
-    {"id":"toulouse_1241","name":"County of Toulouse","color":"#9b7544","capital":"toulouse","rank":2,"religion":"catholic","techTraditions":["latin"],"aggression":0,"government":"territorial","ruler":{"sex":"m","culture":"occitan","born":1206,"mar":8,"trait":"patient","generated":true},"liege":"france_1241"}
+    {"id":"toulouse_1241","name":"County of Toulouse","color":"#9b7544","capital":"toulouse","rank":2,"religion":"catholic","techTraditions":["latin"],"aggression":0,"government":"territorial","ruler":{"sex":"m","culture":"occitan","born":1197,"mar":8,"trait":"patient","name":"Raymond VII"},"liege":"france_1241"}
   ],
   duchies:{
     "aquitaine":{"name":"Aquitaine","kingdom":"aquitaine"},

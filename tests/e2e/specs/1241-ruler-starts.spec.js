@@ -47,7 +47,7 @@ test('1241 background courts do not register Bela or Yaroslav openings or agenda
     },openings)).toEqual([
       {id:'bela_1241',courts:1,name:'Bela IV',generated:false,
         authoredHousehold:false,starts:[],agenda:false},
-      {id:'yaroslav_1241',courts:1,name:null,generated:true,
+      {id:'yaroslav_1241',courts:1,name:'Yaroslav Vsevolodovich',generated:false,
         authoredHousehold:false,starts:[],agenda:false}
     ]);
   });
