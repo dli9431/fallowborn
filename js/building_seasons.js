@@ -301,7 +301,7 @@
       var elapsed=s.turn-t.turn,day=((s.date.day-1-elapsed)%90+90)%90+1;
       var calendar=Math.floor((s.date.season*90+s.date.day-1-elapsed)/90);
       if (t.untilTurn>t.turn+91-day || a.profile.seasonKinds.indexOf(FB.seasonKindAt(a.countyId,calendar,FB.campaignBookmark(s)))<0 ||
-          (a.operationId!==null ? !id(t.assetId) : !s.production || !s.production.assets.some(function(x){return x.id===t.assetId && x.siteId===a.productionSiteId && eq(x.owner,t.actor);}))) fail();
+          (a.operationId!==null ? !id(t.assetId) : !s.production || !s.production.assets.some(function(x){return x.id===t.assetId && x.siteId===a.productionSiteId && x.openedTurn<=t.turn && eq(x.owner,t.actor);}))) fail();
       t.resources.forEach(function(v,j){
         var source=v && resources.sources.find(function(x){return x.id===v.sourceId;}),saved=source && s.siteResources && s.siteResources.sources[v.sourceId];
         if(!keys(v,['sourceId','period','claimId','amount']) || !source || !saved || v.sourceId!==a.resources[j].sourceId || v.amount!==a.resources[j].amount ||

@@ -32,13 +32,14 @@ test('canonical funded construction enrolls empty seasonal production and matchi
     P.validate(s);S.validate(s);
     const saved=JSON.stringify([s.production,s.buildingSeasons,s.buildings]);FB.save.restore(JSON.parse(FB.save.serialize()));P.initialize(FB.state);
     const bad=[function(t){t.production.assets.find(function(x){return x.constructed;}).openedTurn=t.turn+1;},
-      function(t){delete t.production.assets.find(function(x){return x.constructed;}).constructed;},function(t){t.production.revision--;}].map(function(change){
-        const t=JSON.parse(JSON.stringify(FB.state));change(t);try{P.validate(t);return false;}catch(error){return true;}
+      function(t){delete t.production.assets.find(function(x){return x.constructed;}).constructed;},function(t){t.production.revision--;},
+      function(t){t.buildingSeasons.terms[0].turn=0;}].map(function(change){
+        const t=JSON.parse(JSON.stringify(FB.state));change(t);try{P.validate(t);S.validate(t);return false;}catch(error){return true;}
       });
     return {built:built,again:again,opened:opened,empty:s.production.lots.length===before,constructed:asset.constructed,turn:asset.openedTurn,
       restore:saved===JSON.stringify([FB.state.production,FB.state.buildingSeasons,FB.state.buildings]),bad:bad};
   });
-  expect(r).toEqual({built:true,again:false,opened:true,empty:true,constructed:true,turn:1,restore:true,bad:[true,true,true]});
+  expect(r).toEqual({built:true,again:false,opened:true,empty:true,constructed:true,turn:1,restore:true,bad:[true,true,true,true]});
 });
 test('unbound required seasonal assets are idle and warm local construction is refused',async function({page},info){
   await boot(page,info);
