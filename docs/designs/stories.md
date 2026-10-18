@@ -325,3 +325,8 @@ AI uses the same transactions with a declared hold, withdrawal or current-local-
 An incident is not a combat or harm resolution engine. It has no damage, casualty, conversion, property, economic, coercion or protective-capacity effect. A recorded attempt remains pressure only. Source-result references are null until a separately reviewed canonical consumer is supported. A future shelter owner can inspect the exact committed local source while retaining its own consent, capacity, people and authority checks. No historical content opts in here.
 
 Technology impact local_threat_incidents is none. Recording baseline agency and site-bound facts has no credible discovery prerequisite; all underlying travel, custody, public-authority and combat gates retain their ordinary owners.
+
+
+Named household association
+
+js/story_household_party.js registers household_party after the individual expedition participation owner. Its finite named roster exposes invitations, separate adult replies, exact parent-care consent, withdrawal and closure on the common story sheet. Nonplayer replies use the same reviewed transactions under the declared policy. Association supplies no movement, camp place, population or resources. Strict version-1 saves retain the original protagonist and bounded decisions, with parent validation for missing attachments and competing reservations. Technology impact household_party_consent is none, with custody and travel rules retained. Public fields and transaction APIs are in docs/MODDING.md; the design and ordinary independent imports are described in docs/designs/household-parties.md.

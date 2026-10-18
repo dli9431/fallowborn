@@ -115,7 +115,10 @@
       }
     }
     if (FB.expeditionParticipants) FB.expeditionParticipants.validateCarriers(state);
-    if (state.stories === undefined) return true;
+    if (state.stories === undefined) {
+      if (FB.householdParties) FB.householdParties.validateAssociations(state);
+      return true;
+    }
     if (!plain(state.stories)) field('state.stories');
     // Check the entire registry graph before calling validators that read peers.
     for (var id in state.stories) if (own(state.stories, id)) {
@@ -132,6 +135,7 @@
       var story = FB.stories.get(id);
       if (typeof story.validate === 'function') story.validate(state.stories[id], state);
     }
+    if (FB.householdParties) FB.householdParties.validateAssociations(state);
     return true;
   };
 

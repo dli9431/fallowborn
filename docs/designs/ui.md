@@ -3944,3 +3944,8 @@ The shared mobile sheet explicitly labels an independent expedition and explains
 Local incident reviews
 
 Local incident cards use the existing shared Deeds story sheet, actor portrait link and confirmation flow. The card names its actual site, phase and committed occurrence count. Each offered choice shows its data-owned label and detail, and confirmation states that it costs no money or action days, grants no reward and resolves no harmful outcome. Unavailable choices keep the original-actor, exact-site, authority, date and separate-day blocker reviewable. Only the actual player actor receives choices; resident activity is observed as facts. Existing Back, Cancel, Escape, scroll and originating-card focus behavior remains shared.
+
+
+Named household plans
+
+The existing story sheet shows exact household invitation names, reply states and caregiver links. Adult replies and parent-care consent remain separate from asking for participation. Every review states that the plan costs no money or action days and grants no travel or admission. A caregiver removal names every affected dependent before confirmation. The common story modal history retains Back, Escape, Close, scroll and originating-choice focus; no additional picker or navigation layer is introduced.
