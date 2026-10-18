@@ -10168,6 +10168,60 @@ window.FB = window.FB || {};
     return true;
   };
 
+  UI.showMaritimeWork = function(pid,idx,back,view,replace) {
+    view=view || {scroll:0};
+    const s=FB.state,M=FB.maritimeWork,site=FB.settlementsOf(s,pid)[idx],actions=[];
+    if(!site)return;
+    const holder=FB.settlementHolder(s,pid,idx),actor=holder && holder.kind==='realm' && holder.id==='player' ? holder : {kind:'character',id:s.player.charId};
+    let h='<p class="hint">'+esc(FB.T('Completed owned boat work can replace at most 10% of a current enterprise invoice. Reserving work charges nothing. Completion consumes those materials and pays the remainder once. Cancel to release materials; processing costs remain paid.'))+'</p>';
+    function action(label,request) {
+      const q=M.quote(s,request),n=actions.length;actions.push(q);
+      return reviewActionCardHtml({id:'maritime-action-'+n,label:label,data:{maritimeReview:n},disabled:!q.allowed,warn:!q.allowed,note:M.reason(q)});
+    }
+    M.snapshot(s,pid,site.site).forEach(function(a){
+      const p=FBDATA.maritimeWorkProfiles[a.profileId],recipe=FBDATA.productionRecipes[p.recipeId];
+      h+='<div class="governance-card review-fact-card"><div class="panelh">'+esc(dt(s,'maritimeWorkProfile',a.profileId,p,'name'))+'</div>'+
+        (p.desc?'<p>'+esc(dt(s,'maritimeWorkProfile',a.profileId,p,'desc'))+'</p>':'')+
+        kv('Required work',esc(dt(s,'productionRecipe',p.recipeId,recipe,'name')))+
+        kv('Materials consumed',esc(FB.T('{quantity} {good}',{quantity:p.quantity,good:dt(s,'productionGood',p.goodId,FBDATA.productionGoods[p.goodId],'name')})))+
+        kv('Maximum contribution',esc(FB.T('{percent}% of the live invoice; no more than the consumed share of actual paid work.',{percent:p.invoiceShare*100})));
+      const invoices=s.production && s.production.maritime ? s.production.maritime.invoices.filter(function(x){return x.assignmentId===a.id && x.status==='pending';}) : [];
+      if(invoices.length)invoices.forEach(function(x){
+        h+=kv('Original invoice',esc(FB.money(x.baseCost)))+kv('Owned contribution',esc(FB.money(x.credit)))+
+          kv('Remaining payment',esc(FB.money(x.baseCost-x.credit)))+kv('Term remaining',esc(FB.T('{days} days',{days:Math.max(0,x.expiresTurn-s.turn)})))+
+          reviewActionsHtml(action(FB.T('Complete paid enterprise invoice'),{operation:'complete',assignmentId:a.id,actor:actor,invoiceId:x.id})+
+          action(FB.T('Cancel reserved invoice'),{operation:'cancel',assignmentId:a.id,actor:actor,invoiceId:x.id}));
+      });
+      else {
+        h+=reviewActionsHtml(action(FB.T('Review construction contribution'),{operation:'prepare',assignmentId:a.id,actor:actor,enterpriseUid:null}));
+        (s.player.enterprises || []).filter(function(e){return e.type===p.enterpriseType && e.provinceId===pid && e.settlement===idx;}).forEach(function(e){
+          h+=reviewActionsHtml(action(FB.T('Review next-stage contribution'),{operation:'prepare',assignmentId:a.id,actor:actor,enterpriseUid:e.uid}));
+        });
+      }
+      h+='</div>';
+    });
+    h+='<div class="gm-footer"><button class="btn" id="gm-cancel">'+esc(FB.T('Back'))+'</button></div>';
+    function list(replace){UI.showMaritimeWork(pid,idx,back,view,replace);}
+    openModal(FB.T('Maintained boat work'),h,{replaceView:!!replace,historyView:true,historyBack:true,historyBackRender:back});
+    $('gm-body').scrollTop=view.scroll;
+    $('gm-body').querySelectorAll('[data-maritime-review]').forEach(function(button){button.onclick=function(){
+      view.scroll=$('gm-body').scrollTop;
+      const q=actions[Number(button.dataset.maritimeReview)],origin=button.id;
+      function restore(){list();$('gm-body').scrollTop=view.scroll;if($(origin))$(origin).focus({preventScroll:true});else if($('gm-cancel'))$('gm-cancel').focus({preventScroll:true});}
+      let info='<div class="governance-card review-fact-card">'+kv('Ordinary invoice',esc(FB.money(q.baseCost || q.invoice && q.invoice.baseCost || 0)))+
+        kv('Owned contribution',esc(FB.money(q.credit || q.invoice && q.invoice.credit || 0)))+
+        kv('Remaining payment',esc(FB.money(q.due || 0)))+kv('Payer',esc(FB.T('Original private account')))+
+        '<p>'+esc(M.reason(q))+'</p><p>'+esc(q.request.operation==='prepare'?FB.T('This reserves materials only. Pay and acquire the enterprise in a separate confirmation.'):q.request.operation==='cancel'?
+          FB.T('Release the reserved materials. No processing payment is refunded.'):FB.T('Consume the reserved materials and pay the remaining ordinary invoice now. Existing staffing requirements still apply.'))+'</p></div>'+
+        '<div class="gm-footer"><button class="btn" id="gm-cancel">'+esc(FB.T('Back'))+'</button><button class="btn primary" id="maritime-confirm">'+esc(FB.T('Confirm'))+'</button></div>';
+      openModal(FB.T('Review boat-work invoice'),info,{historyView:true,historyBack:true,historyBackRender:restore});
+      $('maritime-confirm').disabled=!q.allowed;
+      $('maritime-confirm').onclick=function(){if(!M.commit(FB.state,q))UI.toast(FB.T('Terms changed. Review the current invoice.'));restore();UI.refresh();};
+      $('gm-cancel').onclick=restore;
+    };});
+    $('gm-cancel').onclick=back;
+  };
+
   UI.showProduction = function (pid,idx,back,view,replace) {
     view = view || {dispositions:{},scroll:0};
     const s=FB.state,P=FB.production,site=FB.settlementsOf(s,pid)[idx],actions=[];
@@ -10473,6 +10527,7 @@ window.FB = window.FB || {};
     if (FB.siteResources.snapshot(s,pid,st.site).length) h += '<button type="button" class="actionbtn" id="settlement-resources">' + esc(FB.T('Review site resources')) + '</button>';
     if ((s.buildings[pid] || []).some(function (r) { return r.s === idx && r.waterOperation; })) h += '<button type="button" class="actionbtn" id="settlement-water">' + esc(FB.T('Review water service')) + '</button>';
     if (FB.production.snapshot(s,pid,st.site).length) h += '<button type="button" class="actionbtn" id="settlement-production">' + esc(FB.T('Review production batches')) + '</button>';
+    if (FB.maritimeWork.snapshot(s,pid,st.site).length) h += '<button type="button" class="actionbtn" id="settlement-maritime">' + esc(FB.T('Review maintained boat work')) + '</button>';
     if (FB.buildingSeasons.snapshot(s,pid,idx).length) h += '<button type="button" class="actionbtn" id="settlement-seasons">' + esc(FB.T('Review seasonal operation')) + '</button>';
     const countyRuler = holdId === 'player' ? s.chars[s.player.charId] : FB.realmRulerCharacterSnapshot(s, holdId);
     h += '<div class="gm-body-text">' + kv('Count', esc(countyRuler ? FB.fullName(countyRuler) :
@@ -10726,6 +10781,16 @@ window.FB = window.FB || {};
           $('gm-body').querySelectorAll('[aria-controls]').forEach(function(b){if(b.getAttribute('aria-controls')===id)b.setAttribute('aria-expanded','true');});});
         if($('settlement-production'))$('settlement-production').focus({preventScroll:true});
         $('gm-body').scrollTop=scroll;
+      });
+    };
+    if ($('settlement-maritime')) $('settlement-maritime').onclick = function () {
+      const scroll=$('gm-body').scrollTop;
+      const expanded=Array.prototype.map.call($('gm-body').querySelectorAll('.settcard-details:not(.hidden)'),function(el){return el.id;});
+      UI.showMaritimeWork(pid,idx,function(){
+        UI.showSettlement(pid,idx,options);
+        expanded.forEach(function(id){const el=$(id);if(el)el.classList.remove('hidden');
+          $('gm-body').querySelectorAll('[aria-controls]').forEach(function(b){if(b.getAttribute('aria-controls')===id)b.setAttribute('aria-expanded','true');});});
+        if($('settlement-maritime'))$('settlement-maritime').focus({preventScroll:true});$('gm-body').scrollTop=scroll;
       });
     };
     if ($('settlement-resources')) $('settlement-resources').onclick = function () {

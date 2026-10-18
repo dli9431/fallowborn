@@ -3681,10 +3681,15 @@ window.FB = window.FB || {};
       missingTech:[] };
   };
 
-  FB.upgradeEnterprise = function (state, uid) {
+  FB.upgradeEnterprise = function (state, uid, opts) {
     let enterprise = null;
     for (const item of FB.enterpriseList(state)) if (item.uid === uid) enterprise = item;
-    const status = enterprise && FB.enterpriseUpgradeStatus(state, enterprise);
+    let status = enterprise && FB.enterpriseUpgradeStatus(state, enterprise);
+    if (opts && opts.maritimeInvoiceId !== undefined) {
+      const credit=enterprise && FB.maritimeWork.invoiceCredit(state,opts.maritimeInvoiceId,uid,enterprise.type,enterprise.provinceId,enterprise.settlement);
+      if (credit===false || !status || status.code!=='ready' && status.code!=='funds') return false;
+      status=Object.assign({},status,{cost:status.cost-credit,ready:state.player.gold>=status.cost-credit});
+    }
     if (!enterprise || !status || !status.ready) return false;
     state.player.gold -= status.cost;
     enterprise.level = FB.enterpriseUpgradeLevel(enterprise) + 1;
@@ -4281,10 +4286,16 @@ window.FB = window.FB || {};
       auctionLot && auctionLot.kind === 'enterprise' &&
       auctionLot.type === type && auctionLot.provinceId === provinceId &&
       auctionLot.settlement === settlement);
+    let invoicePrice=opts.price;
+    if(opts.maritimeInvoiceId!==undefined) {
+      const credit=FB.maritimeWork.invoiceCredit(state,opts.maritimeInvoiceId,null,type,provinceId,settlement);
+      if(credit===false)return false;
+      invoicePrice=FB.enterpriseCost(state,type,provinceId)-credit;
+    }
     const status = FB.enterprisePurchaseStatus(state, type, provinceId,
       settlement, {
         ignoreTech:grandfatheredAuction,
-        price:opts.price
+        price:invoicePrice
       });
     const price = status.cost;
     if (!status.ready) return false;
@@ -6245,7 +6256,8 @@ window.FB = window.FB || {};
           rates(row, goods, 100, path); continue;
         }
         if (!own(FBDATA.enterprises, id) || !object(row)) { errors.push(path + ' needs an enterprise and a record.'); continue; }
-        for (const key of Object.keys(row)) if (['output','outputBySpecialization','distribution','monopoly','tradeFinance','typedProduction'].indexOf(key) < 0) errors.push(path + '.' + key + ' is unsupported.');
+        for (const key of Object.keys(row)) if (['output','outputBySpecialization','distribution','monopoly','tradeFinance','typedProduction','maritimeWork'].indexOf(key) < 0) errors.push(path + '.' + key + ' is unsupported.');
+        if (row.maritimeWork !== undefined && typeof row.maritimeWork !== 'boolean') errors.push(path + '.maritimeWork must be boolean.');
         if (row.output !== undefined) rates(row.output, goods, 1, path + '.output', true);
         if (row.distribution !== undefined) rates(row.distribution, routes, 1, path + '.distribution');
         if (row.tradeFinance !== undefined && typeof row.tradeFinance !== 'boolean') errors.push(path + '.tradeFinance must be boolean.');

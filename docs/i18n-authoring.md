@@ -347,3 +347,7 @@ Literal FBDATA.householdRefuges_<suffix> tables in data/story_*.js expose title 
 Siege equipment presentation
 
 Literal FBDATA.siegeSupportProfiles in data/siege_support.js uses siegeSupportProfile.<id>.name.default and siegeSupportProfile.<id>.desc.default owners and ordinary exact-source aliases. Static extraction reads these labels without executing declarations. Imported labels retain English fallback. UI names/descriptions use the normal source lookup and complete dynamic costs, quantities, blockers and terms use FB.T placeholders. Stable profile, recipe, good, host, war, person and receipt identities remain locale-neutral; saved support contains no rendered text. No generated catalogues are needed for authoring.
+
+Maintained maritime work presentation
+
+Literal FBDATA.maritimeWorkProfiles in data/maritime_work.js uses maritimeWorkProfile.<id>.name.default and maritimeWorkProfile.<id>.desc.default owners with exact-source aliases and ordinary imported-English fallback. Static extraction reads display prose only and never runs production or invoice transactions. The shared settlement review renders these fields through FB.dataText; invoice, contribution, quantity, private payer, expiry, blockers and confirmation consequences use literal FB.T phrases with named placeholders. Saved receipts contain structural ids and numbers only. No generated catalog command is needed for feature authoring.

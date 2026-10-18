@@ -99,6 +99,7 @@ STRUCTURED_DATA = {
     "productionGoods": "productionGood",
     "productionRecipes": "productionRecipe",
     "siegeSupportProfiles": "siegeSupportProfile",
+    "maritimeWorkProfiles": "maritimeWorkProfile",
     "storyCampaigns": "storyCampaign",
     "storyFoundations": "storyFoundation",
 }
@@ -1262,6 +1263,8 @@ def extract_structured(inv: Inventory) -> None:
             path = DATA / "production.js"
         elif data_name == "siegeSupportProfiles":
             path = DATA / "siege_support.js"
+        elif data_name == "maritimeWorkProfiles":
+            path = DATA / "maritime_work.js"
         elif data_name == "siteResourceProfiles":
             path = DATA / "site_resources.js"
         elif data_name == "storyCampaigns":

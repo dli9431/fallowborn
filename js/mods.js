@@ -288,7 +288,7 @@ window.FBMODS = window.FBMODS || [];
     traits:true, traitMechanics:true,
     ailments:true, modifiers:true, buildings:true, forts:true, siteResourceProfiles:true,
     buildingInstitutionProfiles:true, buildingOperationProfiles:true, buildingProfiles:true, productionGoods:true, productionRecipes:true, productionExchangeProfiles:true, productionProducerProfiles:true, siegeSupportProfiles:true,
-    buildingSeasonProfiles:true,
+    buildingSeasonProfiles:true, maritimeWorkProfiles:true,
     techDomains:true, techTraditions:true, tech:true, techCaps:true,
     capabilities:true,
     techImpactReviews:true, unitClasses:true, holdings:true, careers:true,
@@ -2109,7 +2109,7 @@ window.FBMODS = window.FBMODS || [];
     if (!plainObject(mod)) throw new Error('Mod data must be an object.');
     if (own(mod,'siteResourceProfiles') && !plainObject(mod.siteResourceProfiles))
       fail('siteResourceProfiles','must be an object keyed by id.');
-    ['productionGoods','productionRecipes','productionExchangeProfiles','productionProducerProfiles'].forEach(function (key) {
+    ['productionGoods','productionRecipes','productionExchangeProfiles','productionProducerProfiles','maritimeWorkProfiles'].forEach(function (key) {
       if (own(mod,key) && !plainObject(mod[key])) fail(key,'must be an object keyed by id.');
     });
     if (own(mod,'buildingProfiles') && !plainObject(mod.buildingProfiles)) fail('buildingProfiles','must be an object keyed by id.');
@@ -2121,7 +2121,7 @@ window.FBMODS = window.FBMODS || [];
     if (own(mod,'siegeSupportProfiles') && !plainObject(mod.siegeSupportProfiles)) fail('siegeSupportProfiles','must be an object keyed by id.');
     var siegeErrors = FB.siegeSupport.catalogFaults(FBDATA);
     if (siegeErrors.length) fail('siegeSupportProfiles',siegeErrors.join(' '));
-    var productionErrors = FB.production.catalogFaults(FBDATA).concat(FB.productionEconomy.catalogFaults(FBDATA));
+    var productionErrors = FB.production.catalogFaults(FBDATA).concat(FB.productionEconomy.catalogFaults(FBDATA),FB.maritimeWork.catalogFaults(FBDATA));
     if (productionErrors.length) fail('production',productionErrors.join(' '));
     var resourceErrors = FB.siteResources.profileFaults(FBDATA.siteResourceProfiles);
     if (resourceErrors.length) fail('siteResourceProfiles',resourceErrors.join(' '));
@@ -2842,6 +2842,7 @@ window.FBMODS = window.FBMODS || [];
     if (mod.productionRecipes) mergeTable(FBDATA.productionRecipes, mod.productionRecipes);
     if (mod.productionExchangeProfiles) mergeTable(FBDATA.productionExchangeProfiles, mod.productionExchangeProfiles);
     if (mod.productionProducerProfiles) mergeTable(FBDATA.productionProducerProfiles, mod.productionProducerProfiles);
+    if (mod.maritimeWorkProfiles) mergeTable(FBDATA.maritimeWorkProfiles, mod.maritimeWorkProfiles);
     if (mod.siteResourceProfiles) mergeTable(FBDATA.siteResourceProfiles, mod.siteResourceProfiles);
     if (mod.buildingOperationProfiles) mergeTable(FBDATA.buildingOperationProfiles, mod.buildingOperationProfiles);
     if (mod.geographies) mergeTable(FBDATA.geographies, mod.geographies);
