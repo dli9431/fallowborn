@@ -1,0 +1,185 @@
+{
+  "name": "River Courts",
+  "geographies": {
+    "river_control_lands": {
+      "bounds": {
+        "lonMin": 0,
+        "lonMax": 6,
+        "latMin": 0,
+        "latMax": 5
+      },
+      "land": [
+        [
+          0.5,
+          0.5,
+          5.5,
+          0.5,
+          5.5,
+          4.5,
+          0.5,
+          4.5
+        ]
+      ],
+      "gridWidth": 240,
+      "provinces": [
+        {
+          "id": "river_ford",
+          "x": 1.5,
+          "y": 2.5,
+          "terrain": "farmland"
+        },
+        {
+          "id": "river_fields",
+          "x": 3.1,
+          "y": 2.5,
+          "terrain": "farmland"
+        },
+        {
+          "id": "river_ridge",
+          "x": 4.7,
+          "y": 2.5,
+          "terrain": "farmland"
+        }
+      ],
+      "seas": [],
+      "rivers": [],
+      "sites": {},
+      "defaultLayout": null
+    }
+  },
+  "bookmarks": {
+    "river_control_world": {
+      "id": "river_control_world",
+      "name": "River Courts",
+      "desc": "A fictional control and jurisdiction example.",
+      "date": {
+        "year": 1100,
+        "season": 0,
+        "day": 1
+      },
+      "era": "high_medieval",
+      "geography": "river_control_lands",
+      "settlementLayout": null,
+      "religiousHeads": {},
+      "provinces": [
+        {
+          "id": "river_ford",
+          "name": "Ford",
+          "realm": "river_local",
+          "culture": "german",
+          "religion": "catholic",
+          "dev": 5,
+          "population0": 12000,
+          "communities": [
+            {
+              "culture": "german",
+              "religion": "catholic",
+              "populationShare0": 10000
+            }
+          ]
+        },
+        {
+          "id": "river_fields",
+          "name": "Fields",
+          "realm": "river_local",
+          "culture": "german",
+          "religion": "catholic",
+          "dev": 3,
+          "population0": 12000,
+          "communities": [
+            {
+              "culture": "german",
+              "religion": "catholic",
+              "populationShare0": 10000
+            }
+          ]
+        },
+        {
+          "id": "river_ridge",
+          "name": "Ridge",
+          "realm": "river_neighbor",
+          "culture": "german",
+          "religion": "catholic",
+          "dev": 3,
+          "population0": 12000,
+          "communities": [
+            {
+              "culture": "german",
+              "religion": "catholic",
+              "populationShare0": 10000
+            }
+          ]
+        }
+      ],
+      "realms": [
+        {
+          "id": "river_local",
+          "name": "Local Court",
+          "capital": "river_ford",
+          "color": "#458c96",
+          "aggression": 0,
+          "rank": 2,
+          "government": "regnum",
+          "culture": "german",
+          "religion": "catholic",
+          "ruler": {
+            "name": "Alda",
+            "culture": "german",
+            "born": 1065,
+            "mar": 6,
+            "trait": "patient",
+            "sex": "f"
+          }
+        },
+        {
+          "id": "river_neighbor",
+          "name": "Ridge Court",
+          "capital": "river_ridge",
+          "color": "#aa7944",
+          "aggression": 0,
+          "rank": 2,
+          "government": "regnum",
+          "culture": "german",
+          "religion": "catholic",
+          "ruler": {
+            "name": "Neri",
+            "culture": "german",
+            "born": 1065,
+            "mar": 6,
+            "trait": "patient",
+            "sex": "f"
+          }
+        },
+        {
+          "id": "river_outside",
+          "name": "Outside Court",
+          "capital": "river_ford",
+          "color": "#845588",
+          "aggression": 0,
+          "rank": 2,
+          "government": "regnum",
+          "culture": "turkic",
+          "religion": "sunni",
+          "ruler": {
+            "name": "Sarin",
+            "culture": "turkic",
+            "born": 1065,
+            "mar": 6,
+            "trait": "patient",
+            "sex": "f"
+          },
+          "nonTerritorial": true
+        }
+      ],
+      "duchies": {},
+      "kingdoms": {},
+      "empires": {},
+      "scripted": [],
+      "straits": [],
+      "crossingClasses": {},
+      "localInstitutions": {},
+      "stories": [],
+      "hidden": false
+    }
+  }
+}

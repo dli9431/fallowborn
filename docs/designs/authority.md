@@ -1,5 +1,9 @@
 Roman offices and imperial claims
 
+Occupation and claimant boundaries
+
+docs/designs/occupation-and-claims.md records the existing separation between territorial holders, campaign occupation, scoped customary rights, recognition and conserved public renders. The complete river-control.json and upland-control.json authoring examples exercise a nonpossessing outside actor and an explicitly granted Peace jurisdiction without a second county tax stream. Neither diplomatic standing nor a military controller supplies an opening fiscal institution.
+
 Spring 1066 district commissions
 
 The 1066 habitation revision does not install a new county office or replace Seljuk or Makurian government. Their existing authority and systems remain in force across the entire court. Occupation and a superior political relationship alone do not establish an appointment catalogue, fiscal constitution or hereditary estate. Dated Seljuk and Nubian provincial policies require independent government research before assignment. The outside lower-Syr demand remains a claim rather than an active revenue contract.

@@ -1,0 +1,193 @@
+{
+  "name": "Upland Courts",
+  "geographies": {
+    "upland_control_lands": {
+      "bounds": {
+        "lonMin": 0,
+        "lonMax": 6,
+        "latMin": 0,
+        "latMax": 5
+      },
+      "land": [
+        [
+          0.5,
+          0.5,
+          5.5,
+          0.5,
+          5.5,
+          4.5,
+          0.5,
+          4.5
+        ]
+      ],
+      "gridWidth": 240,
+      "provinces": [
+        {
+          "id": "upland_ford",
+          "x": 1.5,
+          "y": 2.5,
+          "terrain": "farmland"
+        },
+        {
+          "id": "upland_fields",
+          "x": 3.1,
+          "y": 2.5,
+          "terrain": "farmland"
+        },
+        {
+          "id": "upland_ridge",
+          "x": 4.7,
+          "y": 2.5,
+          "terrain": "farmland"
+        }
+      ],
+      "seas": [],
+      "rivers": [],
+      "sites": {},
+      "defaultLayout": null
+    }
+  },
+  "bookmarks": {
+    "upland_control_world": {
+      "id": "upland_control_world",
+      "name": "Upland Courts",
+      "desc": "A fictional control and jurisdiction example.",
+      "date": {
+        "year": 1100,
+        "season": 0,
+        "day": 1
+      },
+      "era": "high_medieval",
+      "geography": "upland_control_lands",
+      "settlementLayout": null,
+      "religiousHeads": {},
+      "provinces": [
+        {
+          "id": "upland_ford",
+          "name": "Ford",
+          "realm": "upland_local",
+          "culture": "greek",
+          "religion": "orthodox",
+          "dev": 5,
+          "population0": 12000,
+          "communities": [
+            {
+              "culture": "greek",
+              "religion": "orthodox",
+              "populationShare0": 10000
+            }
+          ],
+          "customaryRights": [
+            {
+              "power": "peace",
+              "basis": "judgment",
+              "realmId": "upland_outside",
+              "basisRef": "fictional_upland_jurisdiction"
+            }
+          ]
+        },
+        {
+          "id": "upland_fields",
+          "name": "Fields",
+          "realm": "upland_local",
+          "culture": "greek",
+          "religion": "orthodox",
+          "dev": 3,
+          "population0": 12000,
+          "communities": [
+            {
+              "culture": "greek",
+              "religion": "orthodox",
+              "populationShare0": 10000
+            }
+          ]
+        },
+        {
+          "id": "upland_ridge",
+          "name": "Ridge",
+          "realm": "upland_neighbor",
+          "culture": "greek",
+          "religion": "orthodox",
+          "dev": 3,
+          "population0": 12000,
+          "communities": [
+            {
+              "culture": "greek",
+              "religion": "orthodox",
+              "populationShare0": 10000
+            }
+          ]
+        }
+      ],
+      "realms": [
+        {
+          "id": "upland_local",
+          "name": "Local Court",
+          "capital": "upland_ford",
+          "color": "#458c96",
+          "aggression": 0,
+          "rank": 2,
+          "government": "regnum",
+          "culture": "greek",
+          "religion": "orthodox",
+          "ruler": {
+            "name": "Alda",
+            "culture": "greek",
+            "born": 1065,
+            "mar": 6,
+            "trait": "patient",
+            "sex": "f"
+          }
+        },
+        {
+          "id": "upland_neighbor",
+          "name": "Ridge Court",
+          "capital": "upland_ridge",
+          "color": "#aa7944",
+          "aggression": 0,
+          "rank": 2,
+          "government": "regnum",
+          "culture": "greek",
+          "religion": "orthodox",
+          "ruler": {
+            "name": "Neri",
+            "culture": "greek",
+            "born": 1065,
+            "mar": 6,
+            "trait": "patient",
+            "sex": "f"
+          }
+        },
+        {
+          "id": "upland_outside",
+          "name": "Outside Court",
+          "capital": "upland_ford",
+          "color": "#845588",
+          "aggression": 0,
+          "rank": 2,
+          "government": "regnum",
+          "culture": "turkic",
+          "religion": "sunni",
+          "ruler": {
+            "name": "Sarin",
+            "culture": "turkic",
+            "born": 1065,
+            "mar": 6,
+            "trait": "patient",
+            "sex": "f"
+          },
+          "nonTerritorial": true
+        }
+      ],
+      "duchies": {},
+      "kingdoms": {},
+      "empires": {},
+      "scripted": [],
+      "straits": [],
+      "crossingClasses": {},
+      "localInstitutions": {},
+      "stories": [],
+      "hidden": false
+    }
+  }
+}
