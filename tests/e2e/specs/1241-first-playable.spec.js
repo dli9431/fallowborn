@@ -14,12 +14,15 @@ dependsOnRuntime(__filename,[
   'data/bookmarks.js','data/bookmark_1204.js','data/bookmark_1204_terrain.js',
   'data/map_data.js','data/counties.js','data/geographies.js','data/geography_expansion.js',
   'data/cultures.js','data/eras.js','data/starts.js','data/settlements.js',
+  'data/starts_1241.js','data/story_households_1241.js',
+  'data/starts_kyiv_refugees_1241.js','data/story_kyiv_refugees_1241.js',
   'data/starts_novgorod_1241.js','data/story_novgorod_1241.js',
+  'data/story_instances.js',
   'js/stories.js','js/story_household.js','js/story_opening_goals.js',
   'data/settlements_real.js','data/government_rollout.js','data/ecclesiastical_profiles.js',
   'data/climate.js','js/world.js','js/model.js','js/starts.js','js/main.js','js/util.js',
   'js/bookmark_setup.js','js/ecclesiastical_strategies.js','js/ecclesiastical_validation.js',
-  'js/save.js','js/save_v4.js'
+  'js/save.js','js/save_v4.js','js/ui_misc.js','js/i18n.js'
 ]);
 
 const regionOrder = [
@@ -31,6 +34,22 @@ const regionOrder = [
   'levant_jazira','egypt','arabia','maghreb','africa_horn_sahel',
   'iraq_iran_west','iran_south_khorasan','transoxiana_khwarazm','afghan_indus'
 ];
+
+const households = [
+  {id:'hungarian_village_household_1241',county:'szekesfehervar',family:'standard',
+    track:'hungarian_village_track_1241',opening:'opening_hungarian_village_1241'},
+  {id:'novgorod_household_1241',county:'novgorod',family:'standard',
+    track:'novgorod_household_track_1241',opening:'opening_novgorod_1241'},
+  {id:'kyiv_refugee_household_1241',county:'volodymyr',family:'established',
+    track:'kyiv_refugee_track_1241',opening:'opening_kyiv_refugees_1241'}
+];
+
+async function openDates(page,info) {
+  await openGame(page,info);
+  const full = page.locator('#btn-choose-beginning');
+  if (await full.isVisible()) await full.click();
+  else await page.getByRole('button',{name:'New Game',exact:true}).click();
+}
 
 test('1241 composes all physical counties in ledger order with unique courts and valid references',async function ({page},info) {
   await openGame(page,info);
@@ -130,8 +149,68 @@ test('1241 preserves released worlds and rejects malformed detached definitions 
   expect(result).toEqual({rejected:[true,true,true,true,true],pure:true});
 });
 
-test('1241 stays hidden through picker, start code, direct creation and Observe',async function ({page},info) {
+test('1241 is offered with all three household stories while named openings remain unavailable',async function ({page},info) {
+  await openDates(page,info);
+  expect(await page.evaluate(function () {
+    return {hidden:FB.bookmark('1241').hidden === true,available:FB.bookmarkAvailable('1241'),
+      listed:FB.bookmarks().some(function (b) { return b.id === '1241'; })};
+  })).toEqual({hidden:false,available:true,listed:true});
+  const date = page.locator('#bookmarklist [data-bookmark="1241"]');
+  await expect(date).toContainText('The Mongol Invasion');
+  await date.click();
+  for (const row of households) {
+    const card = page.locator('#scenariolist [data-scenario="'+row.id+'"]');
+    await expect(card).toBeVisible();
+    await expect(card).not.toHaveAttribute('aria-disabled','true');
+    await expect(card).toContainText('Story start:');
+  }
+  for (const id of ['bela_1241','yaroslav_1241','koten_1241','henry_pious_1241',
+    'alexander_1241','frederick_1241','danylo_1241'])
+    await expect(page.locator('#scenariolist [data-scenario="'+id+'"]')).toHaveCount(0);
+  await expect(page.locator('#scenariolist [data-scenario="farmer"]')).toHaveAttribute('aria-disabled','true');
+  await expect(page.locator('#scenariolist').getByRole('button',{name:/Observe/})).toBeVisible();
+  await page.locator('#btn-ng-back').click();
+  await expect(date).toBeFocused();
+});
+
+for (const row of households) {
+  test(row.id+' starts through the ordinary picker on a fresh profile',async function ({page},info) {
+    await openDates(page,info);
+    await page.locator('#bookmarklist [data-bookmark="1241"]').click();
+    await page.locator('#scenariolist [data-scenario="'+row.id+'"]').click();
+    await expect(page.locator('#pickprov:not(.hidden)')).toBeVisible();
+    expect(await page.evaluate(function () {
+      return {bookmark:FB.game.pending.bookmarkId,county:FB.game.pending.provinceId};
+    })).toEqual({bookmark:'1241',county:row.county});
+    await expect(page.locator('#btn-pick-random')).toHaveText('Continue');
+    await page.locator('#btn-pick-random').click();
+    await expect(page.locator('#chargen:not(.hidden)')).toBeVisible();
+    await page.locator('#btn-cg-start').click();
+    await page.getByRole('button',{name:'Begin',exact:true}).click();
+    expect(await page.evaluate(function (row) {
+      const s = FB.state;
+      return {bookmark:s.start.id,county:s.player.provinceId,scenario:s.telemetry.scenario,
+        actor:s.stories[row.track].actorId === s.player.charId,
+        goals:!!s.stories[row.opening]};
+    },row)).toMatchObject({bookmark:'1241',county:row.county,scenario:row.id,actor:true,goals:true});
+  });
+
+  test(row.id+' start code reaches creation on a fresh profile',async function ({page},info) {
+    await openDates(page,info);
+    await page.locator('#btn-bm-seed').click();
+    await page.locator('#ng-seed').fill('REVIEW1241-1241-'+row.id+'-'+row.county+'-m-Review-'+row.family);
+    await page.locator('#ng-seed').press('Enter');
+    await expect(page.locator('#chargen:not(.hidden)')).toBeVisible();
+    expect(await page.evaluate(function () {
+      return {bookmark:FB.game.pending.bookmarkId,county:FB.game.pending.provinceId,
+        scenario:FB.game.pending.scenario.id,state:FB.state};
+    })).toEqual({bookmark:'1241',county:row.county,scenario:row.id,state:null});
+  });
+}
+
+test('withdrawing 1241 blocks picker, start code, direct creation and Observe',async function ({page},info) {
   await openGame(page,info);
+  await page.evaluate(function () { FBDATA.bookmarks['1241'].hidden = true; });
   expect(await page.evaluate(function () {
     return {hidden:FB.bookmark('1241').hidden,available:FB.bookmarkAvailable('1241'),
       listed:FB.bookmarks().some(function (b) { return b.id === '1241'; }),

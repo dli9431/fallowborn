@@ -38,7 +38,7 @@ test('the fictional farm has a complete place-bound story and ordinary farmer pr
     const b = FB.bookmark('1241'), sc = FBDATA.startScenarios.find(function (r) { return r.id === 'hungarian_village_household_1241'; });
     const data = JSON.stringify(FBDATA), rng = FB.getRngState(), uid = FB.getUidCounter();
     const errors = FB.validateBookmark(b), p = b.provinces.find(function (r) { return r.id === 'szekesfehervar'; });
-    return {errors:errors,hidden:b.hidden,bookmarks:sc.bookmarkIds,
+    return {errors:errors,hidden:b.hidden === true,bookmarks:sc.bookmarkIds,
       local:FB.startProvinceAllowed(sc,b,'szekesfehervar'),away:FB.startProvinceAllowed(sc,b,'bratislava'),
       tracks:FB.startTracks(sc,'szekesfehervar'),awayTracks:FB.startTracks(sc,'bratislava'),
       storyline:FB.startStoryTracks(sc,'szekesfehervar'),family:Object.keys(sc.familyPresets),
@@ -46,7 +46,7 @@ test('the fictional farm has a complete place-bound story and ordinary farmer pr
       community:p.communities.some(function (c) { return c.culture === sc.startCulture && c.religion === sc.startReligion; }),
       noOffice:!sc.rulerRealmId,noInventedIncident:!FBDATA.storyInstances.hungarian_village_track_1241.requires,
       pure:data === JSON.stringify(FBDATA) && rng === FB.getRngState() && uid === FB.getUidCounter()};
-  })).toEqual({errors:[],hidden:true,bookmarks:['1241'],local:true,away:false,
+  })).toEqual({errors:[],hidden:false,bookmarks:['1241'],local:true,away:false,
     tracks:[ID,'opening_hungarian_village_1241'],awayTracks:[],storyline:[ID],family:['standard'],
     stock:[1,'farmer',20,5,0,1],community:true,noOffice:true,noInventedIncident:true,pure:true});
   await beginBookmark(page,info,'1241',SCENARIO);

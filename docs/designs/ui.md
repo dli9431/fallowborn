@@ -1508,7 +1508,7 @@ recognition is recorded as `earned_starting_stations` with `mode:'none'` in
 `FBDATA.techImpactReviews`: it exists outside the simulated world, so no historical
 technology credibly gates or improves it.
 
-The 476 branch offers 476, 711, 800, 867, 1066 and 1204 in chronological order through the ordinary starting-date picker. The merged 711, 800 and 1204 data registers before title boot, so selecting a date, using its start code and loading its save after a reload need no console setup. Quick Start keeps its existing authored lives. The independent 493 definition is registered as a hidden review candidate; new-campaign entry points reject it while matching saved review campaigns remain loadable. Historical review gaps remain in the individual bookmark documents.
+The 476 branch offers 476, 568, 711, 800, 867, 1066, 1204 and 1241 in chronological order through the ordinary starting-date picker. Their data registers before title boot, so selecting a date, using its start code and loading its save after a reload need no console setup. The 1241 beginning list offers its Hungarian farming, Novgorod artisan and Kyiv refugee households as always-open Story starts through the shared fixed-county and settlement picker. Named historical openings remain unavailable. Quick Start keeps its existing authored lives. The independent 493 definition is registered as a hidden review candidate; new-campaign entry points reject it while matching saved review campaigns remain loadable. Historical review gaps remain in the individual bookmark documents.
 
 Bookmark
 cards use the same responsive grid and native-button keyboard behavior as scenario

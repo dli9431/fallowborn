@@ -30,7 +30,7 @@ async function choose(page,choice) {
   },choice);
 }
 
-test('the hidden date has a complete fictional Novgorod household without adopting Alexander',async function ({page},info) {
+test('the selectable date has a complete fictional Novgorod household without adopting Alexander',async function ({page},info) {
   await openGame(page,info);
   expect(await page.evaluate(function () {
     const b = FB.bookmark('1241'), sc = FBDATA.startScenarios.find(function (s) { return s.id === 'novgorod_household_1241'; });
@@ -39,7 +39,7 @@ test('the hidden date has a complete fictional Novgorod household without adopti
     const court = b.realms.find(function (r) { return r.id === 'novgorod_1241'; });
     const errors = FB.validateBookmark(b);
     const home = FBDATA.settlementLayouts[b.settlementLayout].novgorod[0];
-    return {errors:errors,hidden:b.hidden,available:FB.bookmarkAvailable('1241'),dates:sc.bookmarkIds,
+    return {errors:errors,hidden:b.hidden === true,available:FB.bookmarkAvailable('1241'),dates:sc.bookmarkIds,
       local:FB.startProvinceAllowed(sc,b,'novgorod'),away:FB.startProvinceAllowed(sc,b,'ladoga'),
       tracks:FB.startTracks(sc,'novgorod'),storyline:FB.startStoryTracks(sc,'novgorod'),
       family:Object.keys(sc.familyPresets),resources:[sc.tier,sc.profession,sc.gold,sc.prestige,sc.piety],
@@ -49,7 +49,7 @@ test('the hidden date has a complete fictional Novgorod household without adopti
       noAlexander:!FBDATA.startScenarios.some(function (s) { return s.id === 'alexander_1241'; }) && !FBDATA.storyInstances.novgorod_agenda_1241,
       noSource:!FBDATA.storyInstances.novgorod_household_track_1241.requires,
       pure:data === JSON.stringify(FBDATA) && rng === FB.getRngState() && uid === FB.getUidCounter()};
-  })).toEqual({errors:[],hidden:true,available:false,dates:['1241'],local:true,away:false,
+  })).toEqual({errors:[],hidden:false,available:true,dates:['1241'],local:true,away:false,
     tracks:[ID,OPENING],storyline:[ID],family:['standard'],resources:[1,'craftsman',15,5,0],
     ordinary:true,community:true,home:['novgorod','Novgorod','city'],courtGenerated:true,noAlexander:true,noSource:true,pure:true});
   await beginBookmark(page,info,'1241','novgorod_household_1241');

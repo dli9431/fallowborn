@@ -35,13 +35,13 @@ async function roadReview(page,info) {
   }
 }
 
-test('the hidden date declares a complete resident household without changing older starts', async function ({page},info) {
+test('the selectable date declares a complete resident household without changing older starts', async function ({page},info) {
   await openGame(page,info);
   expect(await page.evaluate(function () {
     const sc = FBDATA.startScenarios.find(function (r) { return r.id === 'kyiv_refugee_household_1241'; });
     const b = FB.bookmark('1241'), before = JSON.stringify(FBDATA), rng = FB.getRngState(), uid = FB.getUidCounter();
     const errors = FB.validateBookmark(b), county = b.provinces.find(function (p) { return p.id === 'volodymyr'; });
-    return {hidden:b.hidden,offered:FB.bookmarkAvailable('1241'),errors:errors,bookmarks:sc.bookmarkIds,
+    return {hidden:b.hidden === true,offered:FB.bookmarkAvailable('1241'),errors:errors,bookmarks:sc.bookmarkIds,
       local:FB.startProvinceAllowed(sc,b,'volodymyr'),away:FB.startProvinceAllowed(sc,b,'lutsk'),
       older:Object.prototype.hasOwnProperty.call(FB.bookmark('1204').startLocations || {},sc.id),
       tracks:FB.startTracks(sc,'volodymyr'),awayTracks:FB.startTracks(sc,'lutsk'),story:FB.startStoryTracks(sc,'volodymyr'),
@@ -49,7 +49,7 @@ test('the hidden date declares a complete resident household without changing ol
       resident:county.communities.some(function (c) { return c.culture === 'rus' && c.religion === 'orthodox'; }),
       site:FBDATA.settlementLayouts[b.settlementLayout].volodymyr[0].site,
       pure:before === JSON.stringify(FBDATA) && rng === FB.getRngState() && uid === FB.getUidCounter()};
-  })).toEqual({hidden:true,offered:false,errors:[],bookmarks:['1241'],local:true,away:false,older:false,
+  })).toEqual({hidden:false,offered:true,errors:[],bookmarks:['1241'],local:true,away:false,older:false,
     tracks:[ID,'opening_kyiv_refugees_1241'],awayTracks:[],story:[ID],resources:[1,'craftsman',15,5,0],
     noGrant:true,resident:true,site:'volodymyr',pure:true});
   // beginBookmark follows the ordinary start-code and character-creation UI.
