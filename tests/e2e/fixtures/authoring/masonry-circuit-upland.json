@@ -1,0 +1,304 @@
+{
+  "name": "Fictional later timber circuit upland",
+  "geographies": {
+    "inventory_uplands_land": {
+      "bounds": {
+        "lonMin": 0,
+        "lonMax": 6,
+        "latMin": 0,
+        "latMax": 5
+      },
+      "land": [
+        [
+          0.5,
+          0.5,
+          5.5,
+          0.5,
+          5.5,
+          4.5,
+          0.5,
+          4.5
+        ]
+      ],
+      "gridWidth": 240,
+      "seas": [],
+      "rivers": [],
+      "defaultLayout": null,
+      "provinces": [
+        {
+          "id": "inventory_vale",
+          "x": 1.5,
+          "y": 1.5,
+          "terrain": "hills"
+        },
+        {
+          "id": "inventory_well",
+          "x": 3.1,
+          "y": 1.5,
+          "terrain": "hills"
+        },
+        {
+          "id": "inventory_pass",
+          "x": 4.7,
+          "y": 1.5,
+          "terrain": "hills"
+        },
+        {
+          "id": "inventory_plateau",
+          "x": 3.1,
+          "y": 3.5,
+          "terrain": "hills"
+        }
+      ],
+      "sites": {
+        "inventory_vale_hall": {
+          "x": 1.5,
+          "y": 1.5
+        },
+        "inventory_well_house": {
+          "x": 3.1,
+          "y": 1.5
+        },
+        "inventory_pass_gate": {
+          "x": 4.7,
+          "y": 1.5
+        },
+        "inventory_plateau_hall": {
+          "x": 3.1,
+          "y": 3.5
+        }
+      }
+    }
+  },
+  "startScenarios": [
+    {
+      "id": "inventory_uplands_household",
+      "name": "Upland household",
+      "desc": "A fictional household.",
+      "intro": "Your family lives in the uplands.",
+      "tier": 1,
+      "profession": "farmer",
+      "gold": 12,
+      "prestige": 0,
+      "piety": 0,
+      "bookmarkIds": [
+        "inventory_uplands"
+      ],
+      "eras": [
+        "early_medieval"
+      ],
+      "alwaysUnlocked": true,
+      "startAge": 24,
+      "familyPresets": {
+        "standard": {
+          "name": "Established household",
+          "diff": "age 24"
+        }
+      }
+    }
+  ],
+  "bookmarks": {
+    "inventory_uplands": {
+      "id": "inventory_uplands",
+      "name": "The Uplands",
+      "desc": "An independent fictional inventory example.",
+      "date": {
+        "year": 800,
+        "season": 0,
+        "day": 1
+      },
+      "era": "early_medieval",
+      "geography": "inventory_uplands_land",
+      "settlementLayout": null,
+      "religiousHeads": {},
+      "localInstitutions": {},
+      "stories": [],
+      "starts": [
+        "inventory_uplands_household"
+      ],
+      "scripted": [],
+      "straits": [],
+      "crossingClasses": {},
+      "provinces": [
+        {
+          "id": "inventory_vale",
+          "name": "Vale",
+          "realm": "inventory_upland_court",
+          "culture": "frankish",
+          "religion": "catholic",
+          "dev": 4,
+          "duchy": "inventory_home",
+          "settlements": [
+            {
+              "site": "inventory_vale_hall",
+              "name": "Vale Hall",
+              "kind": "town"
+            }
+          ]
+        },
+        {
+          "id": "inventory_well",
+          "name": "Well",
+          "realm": "inventory_upland_court",
+          "culture": "frankish",
+          "religion": "catholic",
+          "dev": 3,
+          "duchy": "inventory_marches",
+          "settlements": [
+            {
+              "site": "inventory_well_house",
+              "name": "Well House",
+              "kind": "village"
+            }
+          ]
+        },
+        {
+          "id": "inventory_pass",
+          "name": "Pass",
+          "realm": "inventory_upland_court",
+          "culture": "frankish",
+          "religion": "catholic",
+          "dev": 2,
+          "duchy": "inventory_marches",
+          "settlements": [
+            {
+              "site": "inventory_pass_gate",
+              "name": "Pass Gate",
+              "kind": "village"
+            }
+          ]
+        },
+        {
+          "id": "inventory_plateau",
+          "name": "Plateau",
+          "realm": "inventory_upland_court",
+          "culture": "frankish",
+          "religion": "catholic",
+          "dev": 2,
+          "duchy": "inventory_outer",
+          "settlements": [
+            {
+              "site": "inventory_plateau_hall",
+              "name": "Plateau Hall",
+              "kind": "village"
+            }
+          ]
+        }
+      ],
+      "realms": [
+        {
+          "id": "inventory_upland_court",
+          "name": "Upland court",
+          "capital": "inventory_vale",
+          "color": "#aa7944",
+          "aggression": 0,
+          "rank": 3,
+          "government": "territorial",
+          "ruler": {
+            "name": "Arno Stone",
+            "culture": "frankish",
+            "born": 768,
+            "mar": 6,
+            "trait": "patient"
+          }
+        }
+      ],
+      "duchies": {
+        "inventory_home": {
+          "name": "Home district",
+          "kingdom": "inventory_country"
+        },
+        "inventory_marches": {
+          "name": "Marches",
+          "kingdom": "inventory_country"
+        },
+        "inventory_outer": {
+          "name": "Outer district",
+          "kingdom": "inventory_country"
+        }
+      },
+      "kingdoms": {
+        "inventory_country": {
+          "name": "Upland country",
+          "empire": "inventory_horizon"
+        }
+      },
+      "empires": {
+        "inventory_horizon": {
+          "name": "Upland horizon"
+        }
+      },
+      "openingInfrastructure": {
+        "version": 1,
+        "placements": [
+          {
+            "countyId": "inventory_well",
+            "siteId": "inventory_well_house",
+            "buildingId": "walls",
+            "condition": "ruined",
+            "level": 2,
+            "profileId": "upland_timber_circuit"
+          },
+          {
+            "countyId": "inventory_plateau",
+            "siteId": "inventory_plateau_hall",
+            "buildingId": "walls",
+            "condition": "standing",
+            "level": 1,
+            "profileId": "upland_timber_circuit"
+          }
+        ]
+      }
+    }
+  },
+  "buildingProfiles": {
+    "upland_timber_circuit": {
+      "buildingId": "walls",
+      "name": "Upland Timber Circuit",
+      "desc": "An independent fictional timber configuration with level-specific masonry knowledge at level two.",
+      "replace": {},
+      "requiresTech": [
+        "fortified_camps"
+      ],
+      "techImpactReview": "upland_circuit_construction",
+      "applicability": {
+        "yearMin": 750,
+        "yearMax": 850,
+        "eras": [
+          "early_medieval"
+        ],
+        "countyIds": [
+          "inventory_vale",
+          "inventory_well",
+          "inventory_plateau"
+        ]
+      },
+      "inheritance": "retain"
+    }
+  },
+  "fortProfiles": {
+    "upland_timber_circuit": {
+      "material": "timber",
+      "levels": {
+        "1": [],
+        "2": [
+          "lime_mortar"
+        ]
+      },
+      "techImpactReview": "upland_circuit_construction"
+    }
+  },
+  "techImpactReviews": {
+    "features": {
+      "upland_circuit_construction": {
+        "mode": "hard",
+        "tech": [
+          "fortified_camps",
+          "lime_mortar"
+        ],
+        "fallback": "Ordinary forts and inherited repairs remain available.",
+        "rationale": "Optional new upland work uses its declared level-specific knowledge without changing the canonical fort values."
+      }
+    }
+  }
+}
