@@ -82,4 +82,11 @@ FBDATA.bookmarkCandidates['1096'] = {
     opening:opening, openingRevision:'baseline', openingLegacyRevision:'baseline'
   });
   FBDATA.bookmarks['1096'] = bookmark;
+  Object.keys(FBDATA.bookmarkFaithAvailability1096).forEach(function (id) {
+    var faith = FBDATA.religions[id], availability = copy(faith.availability);
+    FBDATA.bookmarkFaithAvailability1096[id].bookmarkIds.forEach(function (bookmarkId) {
+      if (availability.bookmarkIds.indexOf(bookmarkId) < 0) availability.bookmarkIds.push(bookmarkId);
+    });
+    FBDATA.religions[id] = Object.assign({}, faith, {availability:availability});
+  });
 })();

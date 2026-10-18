@@ -1,4 +1,4 @@
-/* Local-faith presentation for the spring 1096 opening. The complete bookmark
+/* Faith declarations for the spring 1096 opening. The complete bookmark
    composer publishes detached copies into the ordinary religions catalogue.
    Loading this source alone changes no effective faith or existing world.
    Settings preserve the earlier local abstractions, not a reconstructed legal
@@ -27,4 +27,11 @@ FBDATA.bookmarkReligions1096 = {
       landed:'Ruler',partnership:'Trade partnership'},
       roles:{priestM:'Ritual keeper',priestF:'Ritual keeper'}}
   }
+};
+
+/* Extend potential institution authoring only. Existing Jewish households keep
+   their primary identity; no congregation, affiliation or office is seeded.
+   The composer preserves the profile's doctrine and every other selector. */
+FBDATA.bookmarkFaithAvailability1096 = {
+  rabbanite:{ bookmarkIds:['1096'] }
 };
