@@ -108,6 +108,7 @@
     if(!keys(request,['operation','routeId','actor','quantity']) || ['buy','sell','transfer'].indexOf(request.operation)<0 ||
       !identity(s,request.actor) || !int(request.quantity,1,10000))return q;
     P.validate(s);
+    FB.buildingSeasons.validate(s);
     var p=plan(s),route=p.routes.find(function(a){return a.id===request.routeId;});
     if(p.errors.length || !route)return q;
     var profile=FBDATA.productionExchangeProfiles[route.profileId],from=site(s,route.fromSiteId),to=site(s,route.toSiteId);
@@ -254,7 +255,7 @@
         var n=0,inputs={};
         x.inputs.forEach(function(i){var input=lot(i.lotId);
           if(!keys(i,['lotId','quantity']) || !input || input.id>=x.id || inputs[i.lotId] || input.assetId!==source.id ||
-            input.goodId!==profile.goodId || !int(i.quantity,1,input.quantity))fail();
+            input.goodId!==profile.goodId || !int(i.quantity,1,input.quantity) || x.turn>=FB.buildingSeasons.lotExpiry(s,input))fail();
           inputs[i.lotId]=true;n+=i.quantity;out.used[i.lotId]=(out.used[i.lotId] || 0)+i.quantity;
         });
         if(n!==x.quantity)fail();

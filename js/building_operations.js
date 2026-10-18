@@ -117,14 +117,19 @@
   /* Only this projection supplies ongoing values for an opted-in record. */
   O.effects = function (s,pid,r) {
     var d = FB.buildingProfiles.assetDefinition(r) || {};
-    if (!r.waterOperation) return d;
+    if (!r.waterOperation) return FB.buildingSeasons.effects(s,pid,r,d);
     var out = Object.assign({},d), p = profile(r), on = active(s,pid,r);
     effects.forEach(function (key) { out[key] = on && p.effect === key ? d[key] || 0 : 0; });
     out.upkeep = 0; // The reviewed operation prepaid its exact finite term.
-    return out;
+    return FB.buildingSeasons.effects(s,pid,r,out);
   };
   O.countyKey = function (s,pid,rows) {
-    return rows.map(function (r) { return r && r.waterOperation ? JSON.stringify([r.waterOperation,receipt(s,r),active(s,pid,r)]) : null; }).join(',');
+    var seasonal = FB.buildingSeasons.hasCounty(s,pid);
+    return rows.map(function (r) {
+      if (!r || !r.waterOperation && !seasonal) return null;
+      var current = O.effects(s,pid,r);
+      return JSON.stringify([r.waterOperation || null,receipt(s,r) || null,effects.map(function(k){return current[k] || 0;})]);
+    }).join(',');
   };
   O.bind = function (s,pid,r) {
     var d = FB.buildingProfiles.assetDefinition(r), a = d && d.operationProfile && assignment(s,pid,r.s,r.id,d.operationProfile);
@@ -171,9 +176,12 @@
     var a = assignment(s,request.countyId,request.settlement,request.buildingId), r = record(s,request.countyId,request.settlement,request.buildingId);
     if (!a || !r || r.ruined || !r.waterOperation || plan(s).errors.length) return q;
     O.validate(s);
+    FB.buildingSeasons.validate(s);
     var who = identity(s,request.actor,request.countyId,request.settlement), old = receipt(s,r), p = a.profile;
     q.reason = 'authority';
     if (!who || r.institutionBinding && !FB.buildingInstitutionOperating(s,request.countyId,r)) return q;
+    q.reason = 'season';
+    if (!FB.buildingSeasons.ready(s,'operationId',a.id,request.actor)) return q;
     q.reason = 'period';
     var period = Math.floor(s.turn / p.periodDays);
     if (old && old.period >= period) return q;
@@ -186,7 +194,7 @@
     q.reason = 'water';
     var staged = stage(s,a,request.actor);
     if (!staged) return q;
-    var until = (period + 1) * p.periodDays, rows = R.snapshot(s);
+    var until = Math.min((period + 1) * p.periodDays,FB.buildingSeasons.until(s,'operationId',a.id)), rows = R.snapshot(s);
     staged.sources.forEach(function (v) {
       var row = rows.find(function (r) { return r.id === v.id; });
       if (row.periodDays) until = Math.min(until,(v.period + 1) * row.periodDays);
@@ -230,6 +238,7 @@
     var d = FB.buildingProfiles.definition(buildingId,profileId);
     if (!d || !d.operationProfile) return true;
     var a = assignment(s,pid,slot,buildingId,d.operationProfile);
+    if (a && !FB.buildingSeasons.prospective(s,a.id)) return false;
     if (!a || plan(s).errors.length || !identity(s,who,pid,slot) || !stage(s,a,who)) return false;
     if (s.buildingOperations && Object.keys(s.buildingOperations.receipts).length >= 2048) return false;
     var prospective = a.profile.workCost + (d.upkeep || 0) * a.profile.periodDays / 90;
@@ -238,10 +247,11 @@
       who.kind === 'character' && who.id !== s.player.charId ? FB.settlementCountyHolder(s,pid) : undefined;
     return Number.isFinite(floor) && funds(s,who) >= FB.buildCost(s,pid,buildingId,realmId,profileId) + prospective + floor;
   };
-  O.runAI = function (s) {
+  O.runAI = function (s,seasonalOnly) {
     var count = 0;
     plan(s).assignments.forEach(function (a) {
       if (count >= 32) return;
+      if (seasonalOnly && !FB.buildingSeasons.hasOperation(s,a.id)) return;
       var holder = FB.settlementHolder(s,a.countyId,a.slot);
       if (!holder || holder.id === 'player' || holder.kind === 'character' && holder.id === s.player.charId) return;
       if (O.commit(s,O.quote(s,{countyId:a.countyId,settlement:a.slot,buildingId:a.buildingId,actor:holder}))) count++;
@@ -251,6 +261,7 @@
   O.reason = function (q) {
     if (q.allowed && q.mode === 'store') return FB.T('Store {amount} actual water units and pay {money:cost} for work and upkeep through day {day}. Storage grants no operating benefit.',{amount:q.amount,cost:q.cost,day:q.untilTurn});
     if (q.allowed) return FB.T('Use {amount} water units and pay {money:cost} for work and upkeep through day {day}. One service benefit is available only for this funded term.',{amount:q.amount,cost:q.cost,day:q.untilTurn});
+    if (q.reason === 'season') return FB.T('Review the local seasonal operating term before funding this service.');
     if (q.reason === 'water') return FB.T('The lawful connected route needs enough unreserved water and storage room.');
     if (q.reason === 'funds') return FB.T('Work and upkeep must be funded while retaining existing reserves.');
     if (q.reason === 'period') return FB.T('This service or its shared demand was already funded for the current period.');

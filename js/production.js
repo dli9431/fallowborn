@@ -197,7 +197,7 @@
     return p.sites.filter(function (a) { return (!countyId || a.countyId === countyId) && (!siteId || a.siteId === siteId); }).map(function (a) {
       var asset = r && enrolled(s,a,r);
       return {site:copy(a),asset:asset ? copy(asset) : null,lots:asset ? r.lots.filter(function (x) { return x.assetId === asset.id; }).map(function (x) {
-        return Object.assign(copy(x),{available:x.remaining-(held[x.id] || 0)});
+        return Object.assign(copy(x),{available:Math.max(0,FB.buildingSeasons.lotAvailable(s,x)-(held[x.id] || 0))});
       }) : [],batches:r ? r.batches.filter(function (b) { return b.siteId === a.id; }).map(copy) : []};
     });
   };
@@ -208,9 +208,10 @@
     var p = plan(s), a = p.sites.find(function (x) { return x.id === request.siteId; });
     if (p.errors.length || !a) return q;
     P.validate(s);
+    FB.buildingSeasons.validate(s);
     var r = s.production, held=reservationTotals(r), batch = r && r.batches.find(function (x) { return x.id === request.batchId; });
     var who = original(s,request.actor), auth = authority(s,a,request.actor), asset = r && enrolled(s,a,r);
-    q.reason = 'authority';
+    q.reason = auth && !FB.buildingSeasons.ready(s,'productionSiteId',a.id,request.actor) ? 'season' : 'authority';
     if (batch && batch.payer) q.payer=copy(batch.payer);
     if (request.operation === 'cancel') {
       if (request.recipeId !== undefined || request.disposition !== undefined) return q;
@@ -218,7 +219,7 @@
         who && who.characterId === batch.workerId && who.generation === batch.generation && alive(s,who.characterId);
       if (batch && batch.waterClaimId !== null) q.water = FB.siteResources.quote(s,{operation:'release',
         sourceId:a.sourceId,actor:request.actor,reservationId:batch.waterClaimId});
-    } else if (auth) {
+    } else if (auth && FB.buildingSeasons.ready(s,'productionSiteId',a.id,request.actor)) {
       var recipe = FBDATA.productionRecipes[request.operation === 'reserve' ? request.recipeId : batch && batch.recipeId];
       if (!recipe || a.recipeIds.indexOf(request.operation === 'reserve' ? request.recipeId : batch.recipeId) < 0) return q;
       var techRealm = FB.techRealmId(s,request.actor.kind === 'realm' ? request.actor.id : s.holder[a.countyId]);
@@ -231,7 +232,7 @@
         recipe.inputs.forEach(function (input) {
           var left = input.quantity;
           (r && r.lots || []).filter(function (lot) { return asset && lot.assetId === asset.id && eq(lot.owner,request.actor) && lot.goodId === input.goodId; }).forEach(function (lot) {
-            var n = Math.min(left,lot.remaining-(held[lot.id] || 0));
+            var n = Math.min(left,FB.buildingSeasons.lotAvailable(s,lot)-(held[lot.id] || 0));
             if (n > 0) { q.inputs.push({lotId:lot.id,quantity:n});left -= n; }
           });
           if (left) q.short = true;
@@ -254,6 +255,7 @@
         if (q.allowed && request.operation === 'finish') q.allowed = batch.workTurns.length === recipe.workDays &&
           FB.characterLocation(s,s.chars[batch.workerId])===a.countyId &&
           (batch.workerId!==s.player.charId || !s.player.travel && s.player.provinceId===a.countyId);
+        if (q.allowed && batch.inputs.some(function(x){var lot=r.lots.find(function(l){return l.id===x.lotId;});return FB.buildingSeasons.lotAvailable(s,lot)<x.quantity;})) q.allowed=false;
         if (batch && batch.waterClaimId !== null) {
           q.water = FB.siteResources.quote(s,{operation:'consume',sourceId:a.sourceId,actor:request.actor,reservationId:batch.waterClaimId});
           var sourceRow=FB.siteResources.snapshot(s,a.countyId,a.siteId).find(function(row){return row.id===a.sourceId;});
@@ -322,6 +324,17 @@
     }
     return result;
   }
+  // Trusted boundary cancellation retains paid work and property; expired inputs produce no output.
+  P.expireSeasonalBatch = function(s,batchId) {
+    var b=s.production && s.production.batches.find(function(x){return x.id===batchId;});
+    if (!b || b.status!=='reserved' || !b.inputs.some(function(x){var l=s.production.lots.find(function(y){return y.id===x.lotId;});return FB.buildingSeasons.lotAvailable(s,l)===0 && l.remaining>0;})) return false;
+    var a=plan(s).sites.find(function(x){return x.id===b.siteId;});
+    if (b.waterClaimId!==null) {
+      var q=FB.siteResources.quote(s,{operation:'release',sourceId:a.sourceId,actor:b.actor,reservationId:b.waterClaimId});
+      if(q.allowed) FB.siteResources.commit(s,q);
+    }
+    b.status='cancelled';b.closedTurn=s.turn;s.production.revision++;return true;
+  };
   P.aiQuote = function (s,siteId,operation,terms) {
     var a=plan(s).sites.find(function(x){return x.id===siteId;});
     return P.quote(s,Object.assign({},terms || {},{siteId:siteId,operation:operation,actor:a && FB.settlementHolder(s,a.countyId,a.slot)}));
@@ -340,6 +353,7 @@
     return P.commit(s,q);
   };
   P.reason = function (q) {
+    if (q.reason === 'season') return FB.T('Review the local seasonal operating term before reserving or working this batch.');
     if (q.allowed) return FB.T('Current terms are available. Processing costs are non-refundable; only completed paid work can produce the declared output.');
     if (q.reason === 'tech') return FB.T('Missing technology: {tech}.',{tech:(q.missingTech || []).map(function (key) { return FB.dataText(FB.state,FB.state.player.charId,'tech',key,FBDATA.tech[key],'name',{}); }).join(', ')});
     if (q.reason === 'inputs') return FB.T('The actual asset needs enough owned, unreserved input lots and lawful water.');
@@ -434,6 +448,7 @@
         if (!keys(x,['lotId','quantity']) || !lot || lot.id!==x.lotId || inputIds[x.lotId] || lot.id >= b.id || lot.assetId !== b.assetId ||
             !eq(lot.owner,b.actor) || !int(x.quantity,1,lot.quantity)) fail();
         inputIds[x.lotId]=true;
+        if (b.status === 'committed' && b.closedTurn >= FB.buildingSeasons.lotExpiry(s,lot)) fail();
         amounts[lot.goodId]=(amounts[lot.goodId] || 0)+x.quantity;
         if (b.status === 'committed') used[lot.id]+=x.quantity;
       });
@@ -458,7 +473,7 @@
         var b=batches[lot.origin.batchId];
         if (!b || b.status !== 'committed' || b.outputs.indexOf(lot.id) < 0) fail();
       }
-      if (lot.quantity-lot.remaining !== used[lot.id] || (held[lot.id] || 0)>lot.remaining) fail();
+      if (lot.quantity-lot.remaining !== used[lot.id]+FB.buildingSeasons.debited(s,lot.id) || (held[lot.id] || 0)>lot.remaining) fail();
     });
     var delivered={};
     r.batches.forEach(function(b){

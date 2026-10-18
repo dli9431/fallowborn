@@ -288,6 +288,7 @@ window.FBMODS = window.FBMODS || [];
     traits:true, traitMechanics:true,
     ailments:true, modifiers:true, buildings:true, forts:true, siteResourceProfiles:true,
     buildingInstitutionProfiles:true, buildingOperationProfiles:true, buildingProfiles:true, productionGoods:true, productionRecipes:true, productionExchangeProfiles:true, productionProducerProfiles:true,
+    buildingSeasonProfiles:true,
     techDomains:true, techTraditions:true, tech:true, techCaps:true,
     capabilities:true,
     techImpactReviews:true, unitClasses:true, holdings:true, careers:true,
@@ -2114,6 +2115,9 @@ window.FBMODS = window.FBMODS || [];
     if (own(mod,'buildingProfiles') && !plainObject(mod.buildingProfiles)) fail('buildingProfiles','must be an object keyed by id.');
     var profileErrors = FB.buildingProfiles.catalogFaults(FBDATA);
     if (profileErrors.length) fail('buildingProfiles',profileErrors.join(' '));
+    if (own(mod,'buildingSeasonProfiles') && !plainObject(mod.buildingSeasonProfiles)) fail('buildingSeasonProfiles','must be an object keyed by id.');
+    var seasonErrors = FB.buildingSeasons.catalogFaults(FBDATA);
+    if (seasonErrors.length) fail('buildingSeasonProfiles',seasonErrors.join(' '));
     var productionErrors = FB.production.catalogFaults(FBDATA).concat(FB.productionEconomy.catalogFaults(FBDATA));
     if (productionErrors.length) fail('production',productionErrors.join(' '));
     var resourceErrors = FB.siteResources.profileFaults(FBDATA.siteResourceProfiles);
@@ -2829,6 +2833,7 @@ window.FBMODS = window.FBMODS || [];
     if (mod.eras) mergeTable(FBDATA.eras, mod.eras);
     if (mod.wardrobes) mergeTable(FBDATA.wardrobes, mod.wardrobes);
     if (mod.settlementLayouts) mergeTable(FBDATA.settlementLayouts, mod.settlementLayouts);
+    if (mod.buildingSeasonProfiles) mergeTable(FBDATA.buildingSeasonProfiles, mod.buildingSeasonProfiles);
     if (mod.productionGoods) mergeTable(FBDATA.productionGoods, mod.productionGoods);
     if (mod.productionRecipes) mergeTable(FBDATA.productionRecipes, mod.productionRecipes);
     if (mod.productionExchangeProfiles) mergeTable(FBDATA.productionExchangeProfiles, mod.productionExchangeProfiles);

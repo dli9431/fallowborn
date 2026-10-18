@@ -36,7 +36,7 @@ window.FB = window.FB || {};
     'duchies','kingdoms','empires','straits','crossingClasses','localInstitutions',
     'settlementLayout','climate','religiousHeads','starts','stories','storyRegions','scripted',
     'openingRevisions','openingLegacyRevision','startLocations','openingInfrastructure','siteResourceAssignments',
-    'buildingInstitutionAssignments','buildingOperationAssignments','productionSites','productionExchangeAssignments','productionProducerAssignments'];
+    'buildingInstitutionAssignments','buildingOperationAssignments','productionSites','productionExchangeAssignments','productionProducerAssignments','buildingSeasonAssignments'];
   function resolveBookmarkRevision(base, revision) {
     if (!base) return null;
     var selected = revision === undefined ? base.revision || 'baseline' : revision;
@@ -512,6 +512,13 @@ window.FB = window.FB || {};
     var geography = FB.geography(FB.bookmarkGeography(definition));
     return geography ? resolveGeography(normalized, definition, geography) : normalized;
   }
+
+  FB.compileBuildingSeasons = function (definition) {
+    try {
+      return FB.buildingSeasons.compilePrepared(preparedDefinition(definition.revisions
+        ? resolveBookmarkRevision(definition) : definition));
+    } catch (error) { return {assignments:[],errors:['buildingSeasonAssignments: ' + error.message]}; }
+  };
 
   FB.compileProduction = function (definition) {
     try {
@@ -1602,6 +1609,7 @@ window.FB = window.FB || {};
     if (FB.siteResources) FB.siteResources.compilePrepared(definition).errors.forEach(fault);
     if (FB.buildingOperations) FB.buildingOperations.compilePrepared(definition).errors.forEach(fault);
     if (FB.production) FB.production.compilePrepared(definition).errors.forEach(fault);
+    if (FB.buildingSeasons) FB.buildingSeasons.compilePrepared(definition).errors.forEach(fault);
     if (FB.localInstitutionDefinitionFaults) {
       var localErrors = FB.localInstitutionDefinitionFaults(definition);
       for (var le = 0; le < localErrors.length; le++) fault(localErrors[le]);
@@ -5405,6 +5413,7 @@ window.FB = window.FB || {};
     if (FB.mobile && FB.mobile.referencesCharacter(state, c && c.id)) return true;
     if (!state || !c || !state.player) return false;
     if (FB.productionEconomy && FB.productionEconomy.referencesCharacter(state,c.id)) return true;
+    if (FB.buildingSeasons && FB.buildingSeasons.referencesCharacter(state,c.id)) return true;
     if (FB.publicAdministrationReferencesCharacter && FB.publicAdministrationReferencesCharacter(state,c.id)) return true;
     if (FB.federateReferencesCharacter && FB.federateReferencesCharacter(state, c.id)) return true;
     if (FB.settlementLordshipReferencesCharacter &&
@@ -8973,6 +8982,7 @@ window.FB = window.FB || {};
       if (timing) { timing.leave(phase); phase = timing.enter('World annual phase: AI buildings'); }
       const annualBudget = {};
       FB.aiBuildingsYear(state, annualBudget);
+      if (FB.buildingSeasons.runAI(state)) annualBudget.snapshot = null;
       if (FB.buildingOperations.runAI(state)) annualBudget.snapshot = null;
       if (FB.treasurySurplusYear) FB.treasurySurplusYear(state, annualBudget.snapshot);
       return annualContext;

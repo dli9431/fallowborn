@@ -10267,7 +10267,7 @@ window.FB = window.FB || {};
       ? FB.buildingInstitutionCountyKey(state, pid, raw) : '';
     /* Array replacement and direct append/pop are common in compatibility
        code and test setup, so detect both without walking the records again. */
-    const operationKey = raw && raw.some(function (r) { return r && r.waterOperation; })
+    const operationKey = raw && (raw.some(function (r) { return r && r.waterOperation; }) || FB.buildingSeasons.hasCounty(state,pid))
       ? FB.buildingOperations.countyKey(state, pid, raw) : '';
     if (previous && previous.raw === raw && previous.institutionKey === institutionKey && previous.operationKey === operationKey &&
         previous.length === (raw ? raw.length : 0)) return previous;
