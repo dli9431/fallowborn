@@ -2658,6 +2658,7 @@ window.FB = window.FB || {};
     }
     const abbey = FB.abbeyResidenceHouse && FB.abbeyResidenceHouse(state, c.id);
     if (abbey) return abbey.provinceId;
+    if (c.householdResidenceId && FB.world && FB.world.byId[c.householdResidenceId]) return c.householdResidenceId;
     if (c.id === state.player.charId ||
         (FB.isHouseholdCharacter && FB.isHouseholdCharacter(state, c.id))) {
       return state.player.provinceId;
@@ -2694,6 +2695,17 @@ window.FB = window.FB || {};
   /* Compatibility name retained for cards and mods that asked where a
      character was based before residence became mechanically authoritative. */
   FB.homeOf = function (state, c) {
+    return FB.characterResidence(state, c);
+  };
+
+  FB.characterLocation = function (state, c) {
+    if (!c) return null;
+    const named = FB.householdParties && FB.householdParties.journeys;
+    const carried = named && named.location(state, c.id);
+    if (carried) return carried;
+    if (c.id === state.player.charId && state.player.travel) {
+      const place = FB.travelLocation(state); return place && place.id;
+    }
     return FB.characterResidence(state, c);
   };
 

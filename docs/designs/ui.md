@@ -3960,3 +3960,7 @@ The shared mobile sheet exposes separate Contribute private funds and Grant publ
 Landed command facts
 
 The existing mobile command sheet shows an opted-in command's home office and remaining personal term alongside its public treasury and actual mandate status. Its localized explanation states that the command cannot pass to an heir or another member and that home decisions require presence or exact civil delegation. It adds no new navigation or review operation. Existing Back, dismissal, scroll and focus behavior and current disabled-operation reviews remain shared. The original officeholder and finite term are projected from canonical declarations and records, never saved display prose.
+
+Named journey decisions
+
+The existing household story sheet shows each traveller's actual county alongside individual consent. Departure, separation, renewed consent, return and settlement use the shared review and confirmation flow with exact affected names, exclusions and private cost. A prepaid return displays zero additional cost; interruption recovery displays its new route cost. Settlement remains disabled until ordinary residence and work requirements are met. Back, Escape and Close retain the same story, list scroll and originating Deeds focus. Camp admission is not offered by this ordinary-journey adapter.

@@ -153,7 +153,7 @@ window.FB = window.FB || {};
     /* Old saves may be waiting on the former immediate return-or-settle
        decision. Its event id now introduces the mandatory stay, while these
        additive fields let destination time begin without a save migration. */
-    if (t && !t.participationId && t.phase === 'arrived' && t.completed) {
+    if (t && !t.participationId && !t.partyInterrupted && t.phase === 'arrived' && t.completed) {
       if (t.stayStartTurn === undefined) t.stayStartTurn = state.turn;
       if (t.workEvents === undefined) t.workEvents = 0;
       if (t.stayStarted === undefined) t.stayStarted = true;
@@ -221,6 +221,9 @@ window.FB = window.FB || {};
 
   FB.travelLocation = function (state) {
     const t = FB.travelEnsure(state);
+    const named = FB.householdParties && FB.householdParties.journeys;
+    const partyPlace = named && named.location(state,state.player.charId);
+    if (partyPlace) return FB.world.byId[partyPlace] || null;
     const carried = t && t.participationId && t.phase === 'arrived' && FB.expeditionParticipants && FB.expeditionParticipants.location(state);
     if (carried) return FB.world.byId[carried] || null;
     return FB.world.byId[t ? t.currentId : state.player.provinceId] || null;
@@ -271,6 +274,14 @@ window.FB = window.FB || {};
     t.legDays=q.legDays; t.legDaysLeft=q.legDays*FB.landRouteUnits(q.from,q.route[0]);
     t.cost=q.cost; t.overhead=q.cost;
     return true;
+  };
+
+  FB.travelPartyReturnStart = function (state,id,from,home,route,legDays,purposeId,cost) {
+    clearQueued(state);
+    state.player.travel={purpose:purposeId,householdPartyId:id,homeId:home,destinationId:home,destinationRealm:null,
+      currentId:from,phase:'return',remainingRoute:route.slice(),outboundRoute:[],visited:[from],
+      legDaysLeft:route.length ? legDays*FB.landRouteUnits(from,route[0]) : 0,legDays:legDays,
+      startTurn:state.turn,cost:cost,overhead:cost,encounters:{culture:0,road:0},seenCultures:{},seenEvents:{},completed:true};
   };
 
   /* Settled-only least-time route. Equal-cost ties retain adjacency order,
@@ -975,6 +986,9 @@ window.FB = window.FB || {};
       (typeof purposeId === 'string' ? purpose(purposeId) : purposeId);
     if (!(options && options.readOnly)) FB.travelEnsure(state);
     if (p.travel) return FB.T('Already on the road.');
+    if (FB.householdParties && FB.householdParties.journeys && FB.householdParties.journeys.location(state,p.charId)) {
+      return FB.T('This person still has a recorded journey location. Resolve that journey before starting another road.');
+    }
     if (!c || FB.ageOf(c, state.date.year) < 16) {
       return FB.T('Only an adult can take to the road.');
     }
@@ -1615,6 +1629,7 @@ window.FB = window.FB || {};
     const t = state.player.travel;
     if (!t) return;
     t.phase = 'arrived';
+    if (t.householdPartyId && FB.householdParties) FB.householdParties.journeys.checkpoint(state,state.stories[t.householdPartyId]);
     if (FB.learnMaternalCustoms) FB.learnMaternalCustoms(state);
     t.legDaysLeft = 0;
     if (FB.localFolkArrive) FB.localFolkArrive(state, t.destinationId);
@@ -1671,6 +1686,7 @@ window.FB = window.FB || {};
     const p = state.player;
     const t = p.travel;
     if (!t) return;
+    if (t.householdPartyId && FB.householdParties) FB.householdParties.journeys.returned(state,t);
     clearQueued(state);
     settleContractOnReturn(state, t);
     if (t.returnVenture && t.returnVenture.status === 'active' &&
@@ -1777,6 +1793,11 @@ window.FB = window.FB || {};
     const p = state.player;
     const t = FB.travelEnsure(state);
     if (!t) return;
+    if (t.householdPartyId && FB.householdParties) {
+      const party = state.stories[t.householdPartyId];
+      if (party) FB.householdParties.journeys.tick(state,party);
+      if (t.partyInterrupted) return;
+    }
     if (t.participationId && (p.dead || !me(state) || me(state).dead || me(state).captive || me(state).prisonerOf ||
         me(state).imprisoned || me(state).exiled || p.flags && p.flags.in_prison ||
         FB.justiceCustodyOf && FB.justiceCustodyOf(state,p.charId))) {
@@ -1814,6 +1835,7 @@ window.FB = window.FB || {};
     t.legDaysLeft--;
     if (t.legDaysLeft > 0) return;
     t.currentId = t.remainingRoute.shift();
+    if (t.householdPartyId && FB.householdParties) FB.householdParties.journeys.checkpoint(state,state.stories[t.householdPartyId]);
     if (t.phase === 'outbound') t.visited.push(t.currentId);
     t.legDaysLeft = FB.travelNextLegDays(t);
     arriveCounty(state);
@@ -1825,9 +1847,11 @@ window.FB = window.FB || {};
     return stayDays(state, FB.travelEnsure(state));
   };
 
-  FB.travelReturnEligible = function (state) {
+  FB.travelReturnEligible = function (state, options) {
     const t = FB.travelEnsure(state);
     if (!t) return FB.T('No journey is in progress.');
+    if (t.householdPartyId && !(options && options.partyReview)) return FB.T('Review the named travellers and return terms in the household story.');
+    if (t.householdPartyId && t.partyInterrupted) return true;
     if (t.participationId) return FB.T('Review departure and the separately priced return road in the expedition story.');
     if (t.phase === 'return') return FB.T('Already returning home.');
     if (FB.travelPurposeKind(t.purpose) === 'tournament') return true;
@@ -1849,9 +1873,11 @@ window.FB = window.FB || {};
     });
   };
 
-  FB.travelSettlementEligible = function (state) {
+  FB.travelSettlementEligible = function (state, options) {
     const p = state.player;
     const t = FB.travelEnsure(state);
+    if (t && t.householdPartyId && !(options && options.partyReview)) return FB.T('Review the exact people settling in the household story.');
+    if (t && t.partyInterrupted) return FB.T('An interrupted journey supplies no destination residence or local work.');
     if (t && t.participationId) return FB.T('Personal expedition admission supplies no household settlement right.');
     if (t && FB.travelPurposeKind(t.purpose) === 'tournament') return FB.T('A games journey preserves the household home.');
     if (!t || t.phase !== 'arrived') return FB.T('Reach the destination first.');
@@ -1967,6 +1993,17 @@ window.FB = window.FB || {};
 
   function relocateHousehold(state, destination, t, message) {
     const p = state.player;
+    const party = t.householdPartyId && FB.householdParties && FB.householdParties.journeys;
+    const movers = party && party.settlementPeople(state,t);
+    if (movers) {
+      const residents = FB.householdMembers(state).slice();
+      for (const c of residents) {
+        const home = FB.characterResidence(state,c);
+        c.householdResidenceId = movers.indexOf(c.id) >= 0 ? destination : home;
+        c.homeProvinceId = c.householdResidenceId;
+      }
+      party.settled(state,t);
+    }
     const rival = FB.getRole ? FB.getRole(state, 'rival', false) : null;
     if (rival) rival.homeProvinceId = t.homeId;
     clearQueued(state);
@@ -2093,6 +2130,7 @@ window.FB = window.FB || {};
 
   FB.travelTurnBack = function (state) {
     const t = FB.travelEnsure(state);
+    if (t && t.householdPartyId) return false;
     if (t && FB.travelPurposeKind(t.purpose) === 'tournament' && FB.tournaments) return FB.tournaments.returnHome(state, false);
     if (!t || FB.travelReturnEligible(state) !== true) return false;
     clearQueued(state);
@@ -2116,6 +2154,7 @@ window.FB = window.FB || {};
 
   FB.travelReturn = function (state) {
     const t = FB.travelEnsure(state);
+    if (t && t.householdPartyId) return false;
     if (t && FB.travelPurposeKind(t.purpose) === 'tournament' && FB.tournaments) return FB.tournaments.returnHome(state, false);
     if (!t || t.phase !== 'arrived' || FB.travelReturnEligible(state) !== true) return false;
     clearQueued(state);
@@ -2127,11 +2166,13 @@ window.FB = window.FB || {};
     return true;
   };
 
-  FB.travelSettle = function (state) {
+  FB.travelSettle = function (state, options) {
     const p = state.player;
     const t = FB.travelEnsure(state);
-    if (!t || t.phase !== 'arrived' || FB.travelSettlementEligible(state) !== true) return false;
+    if (!t || t.phase !== 'arrived' || FB.travelSettlementEligible(state, options) !== true) return false;
     const destination = t.destinationId;
+    if (t.householdPartyId) return relocateHousehold(state, destination, t, FB.msg('news.travel.named_settled',
+      '🧭 Named travellers settle in {destination}.', {destination:FB.world.byId[destination].name}));
     return relocateHousehold(state, destination, t, FB.msg('news.travel.settled',
       '🧭 The household settles in {destination}.', {
         destination:FB.world.byId[destination].name
@@ -2275,6 +2316,8 @@ window.FB = window.FB || {};
     }
     clearQueued(state);
     const t = p.travel;
+    if (t.householdPartyId && FB.householdParties && FB.householdParties.journeys.cancel(state,t) &&
+        !p.dead && traveler && !traveler.dead) return true;
     if (t.participationId && FB.expeditionParticipants && !p.dead && traveler && !traveler.dead) {
       FB.expeditionParticipants.checkpoint(state,t.currentId,false);
       t.phase='arrived'; t.remainingRoute=[]; t.legDaysLeft=0;
@@ -2326,7 +2369,7 @@ window.FB = window.FB || {};
 
   FB.travelCapstoneDone = function (state) {
     const t = FB.travelEnsure(state);
-    if (t && t.participationId) return;
+    if (t && (t.participationId || t.partyInterrupted)) return;
     if (!t || t.phase !== 'arrived') return;
     recordCompletion(state);
     if (t.religiousActivity && FB.religiousActivityJourneyDone) FB.religiousActivityJourneyDone(state, t);

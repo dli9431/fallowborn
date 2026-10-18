@@ -1,5 +1,5 @@
-/* Named association and consent only. Existing owners retain location,
-   residence, custody, journeys, property and demographic people. */
+/* Named association and consent. Optional journey adapters use the ordinary
+   travel owner; property, custody and demographic people retain their owners. */
 (function () {
   'use strict';
   var P = FB.householdParties = {}, TYPE = 'household_party';
@@ -32,6 +32,7 @@
   }
   function homeAvailable(s,id) {
     var c=s.chars[id], p=s.player;
+    if (P.journeys && P.journeys.location(s,id)) return false;
     if (!free(s,c) || !FB.householdMembers(s).some(function (v) { return v.id === id; }) ||
         c.homeProvinceId && c.homeProvinceId !== p.provinceId || FB.characterResidence(s,c) !== p.provinceId) return false;
     if (id === p.charId && (p.dead || p.travel || p.war || FB.atWarPersonally(s) || p.flags && p.flags.in_prison)) return false;
@@ -87,18 +88,20 @@
     var m=q && FB.stories.get(q.id);
     return !!(m && m.declaration && m.declaration.type === TYPE && m.partyCommit(s,s.stories && s.stories[q.id],q));
   };
-  function check(def) {
+  function check(def,context,bm) {
     function need(ok,field) { if (!ok) throw new Error('Invalid household party declaration: '+field+'.'); }
     need(keys(def,['id','type','title','intro','requires','registrationBefore','registrationAfter',
-      'maxMembers','allowDependents','invitationDays','adultPolicy']), 'fields');
+      'maxMembers','allowDependents','invitationDays','adultPolicy','journey']), 'fields');
     need(display(def.title) && display(def.intro), 'display');
     need(whole(def.maxMembers) && def.maxMembers >= 1 && def.maxMembers <= 16 &&
       whole(def.invitationDays) && def.invitationDays >= 1 && def.invitationDays <= 90, 'bounds');
     need(typeof def.allowDependents === 'boolean' && ['volunteers','refuse'].indexOf(def.adultPolicy) >= 0, 'consent policy');
+    if (def.journey !== undefined) P.journeys.check(def,context,bm);
   }
   function factory(def) {
     function review(s,t,action,actorId,personId,caregiverId) {
       if (!t) return null;
+      if (P.journeys && P.journeys.actions.indexOf(action) >= 0) return P.journeys.review(s,def,t,action,actorId,personId);
       personId=personId || null; caregiverId=caregiverId || null;
       var c=s.chars[personId], m=member(t,personId), owner=actorId === t.actorId && actorId === s.player.charId;
       var open=t.status === 'forming' && t.actorId === s.player.charId && free(s,s.chars[t.actorId]) && !s.player.dead;
@@ -132,6 +135,7 @@
     }
     function decide(s,m,status,actorId) { m.status=status; m.decidedTurn=s.turn; m.consentActorId=actorId; }
     function commit(s,t,q) {
+      if (P.journeys && q && P.journeys.actions.indexOf(q.action) >= 0) return P.journeys.commit(s,def,t,q);
       var fresh=q && review(s,t,q.action,q.actorId,q.personId,q.caregiverId);
       if (!fresh || !fresh.allowed || !same(q,fresh)) return false;
       if (q.action === 'invite') {
@@ -149,6 +153,7 @@
       t.revision++; return true;
     }
     function day(s,t) {
+      if (P.journeys && t.version === 2) { P.journeys.tick(s,t); return; }
       if (t.status !== 'forming') return;
       if (t.actorId !== s.player.charId || s.player.dead || !free(s,s.chars[t.actorId])) {
         t.status='closed'; t.closedTurn=s.turn; t.closeReason=t.actorId !== s.player.charId ? 'succession' : 'actor'; t.revision++; return;
@@ -174,10 +179,10 @@
     var memberFields=['personId','kind','caregiverId','status','invitedTurn','endTurn','decidedTurn','consentActorId'];
     function validate(t,s) {
       function need(ok) { if (!ok) throw new Error(FB.T('Invalid v4 save field at {path}.',{path:'state.stories.'+def.id})); }
-      need(exact(t,fields) && t.version === 1 && t.partyId === def.id && ref(t.actorId) && t.householdId === t.actorId && whole(t.revision) &&
+      need(exact(t,t.version === 2 ? fields.concat(['journey']) : fields) && (t.version === 1 || t.version === 2 && !!def.journey) && t.partyId === def.id && ref(t.actorId) && t.householdId === t.actorId && whole(t.revision) &&
         whole(t.openedTurn) && ['forming','closed'].indexOf(t.status) >= 0);
       need(t.status === 'forming' ? t.closedTurn === null && t.closeReason === null : whole(t.closedTurn) && t.closedTurn >= t.openedTurn &&
-        ['finished','actor','succession'].indexOf(t.closeReason) >= 0);
+        (['finished','actor','succession'].indexOf(t.closeReason) >= 0 || t.version === 2 && t.closeReason === 'departed'));
       need(Array.isArray(t.members) && t.members.length <= def.maxMembers);
       t.members.forEach(function (m,i) {
         need(exact(m,memberFields) && ref(m.personId) && t.members.every(function (v,j) { return i === j || v.personId !== m.personId; }) &&
@@ -202,6 +207,7 @@
           }
         }
       });
+      if (t.version === 2) P.journeys.validate(t,s,def);
       if (s) need(t.actorId === s.player.houseFounderId && t.openedTurn <= s.turn && (t.closedTurn === null || t.closedTurn <= s.turn) &&
         (t.status === 'closed' || has(s.chars,t.actorId) && s.chars[t.actorId].id === t.actorId));
     }
@@ -209,8 +215,8 @@
     function label(status) { return {invited:FB.T('Awaiting consent'),accepted:FB.T('Consented'),refused:FB.T('Declined'),
       withdrawn:FB.T('Withdrawn'),expired:FB.T('Invitation expired')}[status]; }
     function menu(s,t) {
-      if (t.status !== 'forming' || t.actorId !== s.player.charId) return [];
-      var out=[];
+      var out=P.journeys ? P.journeys.menu(s,def,t) : [];
+      if (t.status !== 'forming' || t.actorId !== s.player.charId) return out;
       function add(action,id,care,text) {
         out.push({id:JSON.stringify([action,id || null,care || null]),label:text,detail:FB.T('Review named consent. This costs no money and moves nobody.'),
           action:action,personId:id || null,caregiverId:care || null});
@@ -237,7 +243,7 @@
       title:function () { return FB.T(def.title); },intro:function () { return FB.T(def.intro); },
       status:function (s,t) { return {phase:t.status,name:FB.T(def.title),lines:[
         t.status === 'forming' ? FB.T('A named household plan is open. Each adult decides separately.') : FB.T('This household plan is closed.'),
-        FB.T('Association alone supplies no journey, camp admission or change of residence.')].concat(t.members.map(function (m) {
+        FB.T('Association alone supplies no journey, camp admission or change of residence.')].concat(P.journeys ? P.journeys.lines(s,t) : []).concat(t.members.map(function (m) {
           return FB.T('{name}: {status}.',{name:name(s,m.personId),status:label(m.status)});
         }))}; },
       people:function (s,t) { return t.members.map(function (m) { return {characterId:m.personId,label:label(m.status),
@@ -247,8 +253,9 @@
         return review(s,t,c ? c.action : '',s.player.charId,c && c.personId,c && c.caregiverId); },
       apply:function (s,t,id,q) { var c=menu(s,t).filter(function (v) { return v.id === id; })[0];
         return !!(c && q && q.actorId === s.player.charId && c.action === q.action && c.personId === q.personId && c.caregiverId === q.caregiverId && commit(s,t,q)); },
-      blocker:function () { return FB.T('Use a free, present household member with no conflicting journey, camp, command or party commitment. A dependent needs an accepted living parent who agrees to provide care.'); },
-      review:function (s,t,id,q) { return [FB.T('This costs no money, action days or population and grants no travel or admission.'),
+      blocker:function () { return FB.T('Use free, present people with current consent and parent care. Journey decisions also require an available ordinary route, sufficient private funds and the normal return or settlement eligibility.'); },
+      review:function (s,t,id,q) { if (q.journeyReview) return P.journeys.describe(s,t,q);
+        return [FB.T('This costs no money, action days or population and grants no travel or admission.'),
         q.affected.length ? FB.T('This review removes: {names}.',{names:q.affected.map(function (pid) { return name(s,pid); }).join(', ')}) :
           FB.T('A separate invitation expires after {days} days unless accepted.',{days:def.invitationDays})]; },
       day:day,season:day,year:day,validate:validate};
@@ -264,6 +271,7 @@
     rows(s).forEach(function (r) { if (r.t.status === 'forming') r.t.members.forEach(function (m) {
       if (reserves(m)) { need(!reserved[m.personId]); reserved[m.personId]=r.id; }
     }); });
+    if (P.journeys) P.journeys.validateState(s,reserved);
     return true;
   };
   FB.stories.registerType(TYPE,factory,'js/story_household_party.js',check);
