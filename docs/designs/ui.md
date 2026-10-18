@@ -3929,3 +3929,8 @@ The shared mobile sheet names the commander, effective or suspended mandate, ava
 Independent and external command presentation
 
 The shared mobile sheet explicitly labels an independent expedition and explains that its physical origin supplies no sponsor, access or land. An external warrant displays its actual proper authority label and remaining days, then Expired at its boundary. Appointment/recall cards are absent for an external warrant because no local actor owns that decision. Existing operation cards retain the exact shared quote, costs, blockers and modal return behavior. The facts describe a finite political warrant, with no invented portrait, home, public purse or promise of continued outside support.
+
+
+Local incident reviews
+
+Local incident cards use the existing shared Deeds story sheet, actor portrait link and confirmation flow. The card names its actual site, phase and committed occurrence count. Each offered choice shows its data-owned label and detail, and confirmation states that it costs no money or action days, grants no reward and resolves no harmful outcome. Unavailable choices keep the original-actor, exact-site, authority, date and separate-day blocker reviewable. Only the actual player actor receives choices; resident activity is observed as facts. Existing Back, Cancel, Escape, scroll and originating-card focus behavior remains shared.

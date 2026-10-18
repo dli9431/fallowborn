@@ -83,3 +83,8 @@ The hosted_following and expedition_command forms compose retained or superior-a
 Independent expedition authoring
 
 mobile-expedition-harbor.json and mobile-expedition-dune.json are complete ordinary imports with different command continuity, principals, forces and operation policies. Explicit schema-1 independent sponsorship uses null patron, with no implied resources or access. The dune example uses a finite external council warrant without a fabricated resident person. Both compose the existing mobile/opening/command owners, pure detached validation, exact quote/apply boundary and strict matching restore. Sponsored examples retain their mandatory real patron. The supported external authority is a finite warrant, not an authorable off-map succession or automatic political event system. Exact schema and limits: docs/MODDING.md and docs/designs/mobile-command.md.
+
+
+Finite local incidents
+
+local_threat composes a typed original actor, inhabited physical locality, finite calendar opportunity, optional original controlling authority, bounded operation sequence and explicit AI intent policy through storyInstances. The river and hill local-threat JSON examples import through the normal Mods picker and differ in actual actor/presence/authority, duration and behavior. Protagonist and persistent-resident facts come from their existing owners, not a source-id presence flag. The canonical transaction records at most three immutable acts and exposes them to the existing household-locality observer adapter. Unknown effects, carriers, fields and missing opted-in saved records fail closed. No harmful outcome, protection, movement, people, money or rewards are authorable through this owner; those require separately reviewed canonical consumers.

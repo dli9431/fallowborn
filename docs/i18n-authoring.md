@@ -306,3 +306,8 @@ A data/geography_*.js composer may declare its new scenery seeds in a literal lo
 Composed technology and building owners
 
 tools/test_i18n_technology_buildings.py checks all 36 technology corrections, eight building corrections and the hospice addition together. Each final name/description variant retains its tech.<id> or building.<id> owner and owning supplemental source path. Source aliases follow final English; removed Library variants stay removed. data/economy_maritime.js changes fishing requirements only, so its unchanged enterprise display owner remains data/economy.js. The ordinary JSON composition example uses imported English fallback and adds no runtime catalogue file. The combined source inventory is documented in docs/research/technology-and-buildings.md.
+
+
+Local incident display ownership
+
+Native local incident tables use literal FBDATA.localThreats_<suffix> declarations in data/story_*.js. Static extraction discovers those tables independently of the filename and gives title/intro and each choice label/detail localThreat.<instance> and localThreat.<instance>.choice.<choice> owners, with ordinary exact-English aliases used by the shared story renderer. Character ids, actor kinds, localities, operations and lifecycle data remain untranslated identity/protocol. Shared status and review chrome uses literal FB.T calls. Runtime JSON imports use their ordinary English fallback. No native incident content or generated catalog is added by the shared type.
