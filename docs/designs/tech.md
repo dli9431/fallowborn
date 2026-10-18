@@ -1,5 +1,11 @@
 # National technology
 
+Manuscript learning and care
+
+data/technology_learning.js preserves six ids, costs, adoption matrices and effects while separating manuscript learning from paper. Scriptoria unlocks Library; Paper Scholarship remains an independent efficiency refinement. Universities requires scholarly_networks and scriptoria, Advanced Legal Studies requires scholarly_networks and written_law, and Scholastic Method requires scholarly_networks and translation_schools. Translation Networks asserts no single academy. Canon law retains legal_studies/scriptoria requirements. Fresh historical seeding closes the effective graph and honors omissions; restore retains completed knowledge without reseeding or retroactive prerequisite awards. No technology, research slot or capability grant is added.
+
+Technology impact manuscript_library_access is soft with scriptoria: an optional paid physical library supplies capacity while ordinary learning and copying remain available. charitable_guesthouse is none: authority, funding, upkeep and shared county capacity govern modest hospitality. building_hospital keeps its soft hospitals interaction with ordinary care and a modest guesthouse as baseline; care_foundation uses the existing construction_group_limits conservation rule. building_cathedral retains hard ribbed_vaulting for optional monumental vaulting, with temple and ordinary worship as fallbacks. No building grants an institutional office or qualification. Evidence and retained numerical values are in docs/research/learning-and-care.md.
+
 Religious catalogue eligibility
 
 faith_catalogue_availability has technology impact none. Dated religious identity and eligibility for community, household, ruler and institutional consumers are social authoring conditions, independent of discovery. Existing communities and projects retain their identities when their authoring window ends. The declaration adds no research unlock, institutional capacity, population transfer or advancement reward; see docs/designs/religions.md.
@@ -45,7 +51,7 @@ research gate on baseline ownership or recovery from overextension.
 
 Physical library/university research is included once in sovereign seasonal research,
 including delegated sites. It is no longer also credited in the player's seasonal
-building loop. Existing building prerequisites remain unchanged.
+building loop. Library construction uses scriptoria rather than paper scholarship; each physical asset still contributes research only once.
 
 
 Hereditary ownership and county authority remain baseline political relationships

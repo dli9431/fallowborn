@@ -1,0 +1,23 @@
+{
+  "name": "Independent manuscript and care facilities",
+  "buildings": {
+    "review_manuscript_room": {
+      "name": "Manuscript Room", "icon": "M", "role": "scholarship",
+      "cost": 30, "upkeep": 1, "devMin": 2, "research": 0.5,
+      "requiresTech": "manuscript_codex",
+      "desc": "A modest manuscript collection using codices."
+    },
+    "review_paper_collection": {
+      "name": "Paper Collection", "icon": "P", "role": "scholarship",
+      "cost": 95, "upkeep": 2, "devMin": 4, "research": 1.5,
+      "requiresTech": "paper_scholarship",
+      "desc": "A larger, paper-dependent collection with a separate price and capacity."
+    },
+    "review_two_place_guesthouse": {
+      "name": "Small Guest Lodge", "icon": "G", "role": "care",
+      "cost": 25, "upkeep": 1, "devMin": 2, "populationCrisisProtection": 0.02,
+      "constructionGroup": {"id": "review_guest_lodges", "maxCounty": 2},
+      "desc": "A separately configured guest lodge allowing two physical places per county."
+    }
+  }
+}
