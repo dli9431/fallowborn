@@ -154,7 +154,7 @@
     return p.sources.filter(function (a) { return (!countyId || a.countyId === countyId) && (!siteId || a.siteId === siteId); }).map(function (a) {
       var row = project(s,a), auth = actor && authority(s,a,actor);
       return {id:a.id,profileId:a.profileId,countyId:a.countyId,siteId:a.siteId,kind:a.profile.kind,unit:a.profile.unit,
-        capacity:a.profile.capacity,period:row.period,periodDays:a.profile.periodDays || null,
+        capacity:a.profile.capacity,period:row.period,periodDays:a.profile.periodDays || null,suitability:copy(a.suitability),
         stock:row.stock,consumed:row.consumed,reserved:reserved(row),available:available(a,row),
         reservations:copy(row.reservations),connectedSourceId:a.connectedSourceId || null,allowed:!!auth && auth.allowed};
     });

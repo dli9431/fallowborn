@@ -8483,9 +8483,14 @@ window.FB = window.FB || {};
     const buildingPriority = Object.keys(buildingTable).filter(function (id) {
       const order = buildingTable[id] && buildingTable[id].aiBuildOrder;
       return typeof order === 'number' && isFinite(order);
-    }).sort(function (a, b) {
-      return buildingTable[a].aiBuildOrder - buildingTable[b].aiBuildOrder ||
-        (a < b ? -1 : a > b ? 1 : 0);
+    }).map(function (id) { return {id:id,order:buildingTable[id].aiBuildOrder,profileId:null}; });
+    Object.keys(FBDATA.buildingProfiles).forEach(function (profileId) {
+      const p = FBDATA.buildingProfiles[profileId];
+      if (p.replace.aiBuildOrder !== undefined) buildingPriority.push({id:p.buildingId,order:p.replace.aiBuildOrder,profileId:profileId});
+    });
+    buildingPriority.sort(function (a,b) {
+      return a.order-b.order || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0) ||
+        (String(a.profileId) < String(b.profileId) ? -1 : String(a.profileId) > String(b.profileId) ? 1 : 0);
     });
 
     const realmIds = Object.keys(state.realms);
@@ -8545,10 +8550,13 @@ window.FB = window.FB || {};
 
         let chosen = null;
         for (let bi = 0; bi < buildingPriority.length; bi++) {
-          const bid = buildingPriority[bi];
+          const priority = buildingPriority[bi], bid = priority.id;
           if (FB.buildingProfiles.ids(bid).length) {
             for (let slot=0; slot<settlements.length; slot++) {
-              const options = FB.buildingProfiles.aiChoices(state,{kind:'realm',id:rid},pid,slot,bid);
+              const options = FB.buildingProfiles.aiChoices(state,{kind:'realm',id:rid},pid,slot,bid).filter(function (q) {
+                return priority.profileId ? q.profileId === priority.profileId : !q.profileId ||
+                  FBDATA.buildingProfiles[q.profileId].replace.aiBuildOrder === undefined;
+              });
               const option = options.find(function (q) {
                 return q.cost + reserves[rid] + (q.def.upkeep || 0) * reserveSeasons <= FB.treasuryAvailable(state,rid);
               });

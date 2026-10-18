@@ -1,6 +1,6 @@
 Construction profiles
 
-buildingProfiles author optional construction variants of an existing physical building. The base building id, role, settlement slot, county and demesne limits, shared construction group, geographic flags and repeat-price count remain canonical. A profile replaces only named supported numeric fields; omitted fields inherit the base value. Numbers are never added to their base counterparts. Bundled profiles are initially empty. Existing unprofiled assets keep their exact defaults and receive no profile on boot or restore.
+buildingProfiles author optional construction variants of an existing physical building. The base building id, role, settlement slot, county and demesne limits, shared construction group, geographic flags and repeat-price count remain canonical. A profile replaces only named supported numeric fields; omitted fields inherit the base value. Numbers are never added to their base counterparts. Bundled profiles declare optional alternatives without initializing property. Existing unprofiled assets keep their exact defaults and receive no profile on boot or restore.
 
 Authoring
 
@@ -48,3 +48,9 @@ building_profile_inheritance is none: retaining an existing physical asset is pr
 Fort material extension
 
 Optional fortProfiles entries share their canonical fort buildingProfile key, display and inheritance policy, adding only material identity and supported level requirements. Selected material construction uses the ordinary gold or annual work-budget owner, not a treasury building purchase. Material fingerprints additionally include the fort profile and canonical level table, while all existing nonmaterial fingerprints remain unchanged. Pending fortProfileProject provenance and level-specific reverse technology consumers are described in docs/designs/fort-profiles.md. No default building replacement values or historical inventory change.
+
+Alternative machinery contracts
+
+A nonfort profile may explicitly declare requiresTechMode:replace with a nonempty reviewed machinery gate. That gate replaces the base construction technology list for this alternative only; omission retains the original additive behavior. Base scope, physical occupancy, costs and unprofiled assets remain canonical. This allows a simpler mechanism without requiring discovery of the more elaborate base machine. Optional siteResourceSuitability is a unique nonempty list of source, catchment, gradient, launching or grazing flags required on the exact declared resource at the actual site. Opening inventory checks the same flags. Current operation checks them without reapplying new-construction technology or dates. Missing compatibility suspends all ongoing values without deleting or converting property. No resource or flag is inferred from terrain.
+
+replace.aiBuildOrder optionally assigns a finite nonnegative priority to the alternative in the public annual building pass. The default candidate retains its base priority and default-only order; a separately prioritized profile is considered only at its own position. Private choice and automation retain their existing bounded selection and canonical funding. Priority is not counted as a benefit in utility scoring.

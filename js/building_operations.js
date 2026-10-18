@@ -14,6 +14,7 @@
   function money(v,max) { return typeof v === 'number' && Number.isFinite(v) && v >= 0 && v <= (max || 1000000); }
   function actorValid(a) { return keys(a,['kind','id']) && ['realm','character'].indexOf(a.kind) >= 0 && typeof a.id === 'string'; }
   function profile(r) { return r && r.waterOperation && FBDATA.buildingOperationProfiles[r.waterOperation.profileId]; }
+  function effectKeys(p) { return p && p.mode === 'use' ? [].concat(p.effect) : []; }
   O.catalogFaults = function (c) {
     var out = [], table = c.buildingOperationProfiles;
     if (!object(table) || Object.keys(table).length > 128) return ['buildingOperationProfiles must be a table of at most 128 policies.'];
@@ -23,7 +24,8 @@
           Object.keys(p).some(function (k) { return ['mode','amount','periodDays','workCost','effect','sourceRequirements'].indexOf(k) < 0; }) ||
           ['store','use'].indexOf(p.mode) < 0 || !integer(p.amount,1,1000000) ||
           !integer(p.periodDays,1,90) || !money(p.workCost) || p.workCost <= 0 ||
-          (p.mode === 'store' ? p.effect !== null : effects.indexOf(p.effect) < 0))
+          (p.mode === 'store' ? p.effect !== null : !effectKeys(p).length || effectKeys(p).length > effects.length ||
+            effectKeys(p).some(function (k,i,a) { return effects.indexOf(k) < 0 || a.indexOf(k) !== i; })))
         out.push('buildingOperationProfiles.' + key + ': invalid water service terms.');
       var r = p && p.sourceRequirements;
       if (r !== undefined && (!keys(r,['originKind','originSuitability','minStores']) ||
@@ -36,9 +38,9 @@
       var d = c.buildings[key], p = d && table[d.operationProfile];
       if (!d || d.operationProfile === undefined) return;
       if (!id(d.operationProfile) || !p || d.fort || d.dev || d.pop || d.prestige || d.levy || d.retinue || d.archers ||
-          d.defense || d.siege || d.communityFaithPressure || d.settlementDraw || d.upkeep !== undefined && !money(d.upkeep) ||
-          effects.some(function (k) { return d[k] !== undefined && (!money(d[k]) || (d[k] !== 0 && k !== p.effect)); }) ||
-          p.mode === 'use' && !(d[p.effect] > 0)) out.push('Building ' + key + ': invalid operationProfile or unsupported effect.');
+          d.defense || d.siege || d.communityFaithPressure || d.upkeep !== undefined && !money(d.upkeep) ||
+          effects.some(function (k) { return d[k] !== undefined && (!money(d[k]) || (d[k] !== 0 && effectKeys(p).indexOf(k) < 0)); }) ||
+          p.mode === 'use' && effectKeys(p).some(function (k) { return !(d[k] > 0); })) out.push('Building ' + key + ': invalid operationProfile or unsupported effect.');
     });
     return out;
   };
@@ -59,7 +61,8 @@
       var slot = pr && (pr.settlements || []).findIndex(function (v) { return v.site === a.siteId; });
       var route = [a.sourceId].concat(a.stores).map(function (key) { return sources.sources.find(function (v) { return v.id === key; }); });
       var last = route[route.length - 1], asset = JSON.stringify([a.countyId,a.siteId,a.buildingId]);
-      var demandSite = JSON.stringify([a.countyId,a.siteId,p && p.effect]);
+      var demandSite = JSON.stringify([a.countyId,a.siteId,p && (Array.isArray(p.effect) ? p.effect.slice().sort() : p.effect)]);
+      var demandKeys = effectKeys(p).map(function (k) { return JSON.stringify([a.countyId,a.siteId,k]); });
       var requirements = p && p.sourceRequirements, origin = route[0];
       var suitable = !requirements || origin && origin.profile.kind === requirements.originKind &&
         a.stores.length >= requirements.minStores && requirements.originSuitability.every(function (k) { return origin.suitability[k] === true; });
@@ -67,9 +70,9 @@
           route.some(function (v,i) { return !v || v.profile.unit !== 'water' || i > 0 && (v.profile.kind !== 'storage' || v.connectedSourceId !== route[i-1].id); }) ||
           !last || last.countyId !== a.countyId || last.siteId !== a.siteId ||
           p.mode === 'store' && !a.stores.length || route[0] && route[0].profile.kind === 'access' ||
-          p.mode === 'use' && (demands[a.demandId] && demands[a.demandId] !== demandSite || demandSites[demandSite] && demandSites[demandSite] !== a.demandId)) { fault(); return; }
+          p.mode === 'use' && (demands[a.demandId] && demands[a.demandId] !== demandSite || demandKeys.some(function (k) { return demandSites[k] && demandSites[k] !== a.demandId; }))) { fault(); return; }
       occupied[asset] = true;
-      if (p.mode === 'use') { demands[a.demandId] = demandSite; demandSites[demandSite] = a.demandId; }
+      if (p.mode === 'use') { demands[a.demandId] = demandSite; demandKeys.forEach(function (k) { demandSites[k] = a.demandId; }); }
       out.assignments.push(Object.assign(copy(a),{slot:slot,profile:copy(p)}));
     });
     if (out.errors.length) out.assignments = [];
@@ -88,7 +91,7 @@
     if (cache.definition) return cache.definition;
     cache.definition = FB.mods.fingerprint(p.assignments.map(function (a) {
       var d = FBDATA.buildings[a.buildingId], v = copy(a); delete v.slot;
-      v.effectValue = a.profile.effect ? d[a.profile.effect] : 0; v.upkeep = d.upkeep || 0; return v;
+      v.effectValue = Array.isArray(a.profile.effect) ? effectKeys(a.profile).map(function (k) { return d[k] || 0; }) : a.profile.effect ? d[a.profile.effect] : 0; v.upkeep = d.upkeep || 0; return v;
     }));
     return cache.definition;
   }
@@ -135,7 +138,7 @@
     }
     if (!r.waterOperation) return FB.buildingSeasons.effects(s,pid,r,d);
     var out = Object.assign({},d), p = profile(r), on = active(s,pid,r);
-    effects.forEach(function (key) { out[key] = on && p.effect === key ? d[key] || 0 : 0; });
+    effects.forEach(function (key) { out[key] = on && effectKeys(p).indexOf(key) >= 0 ? d[key] || 0 : 0; });
     out.upkeep = 0; // The reviewed operation prepaid its exact finite term.
     return FB.buildingSeasons.effects(s,pid,r,out);
   };
@@ -277,7 +280,7 @@
   };
   O.reason = function (q) {
     if (q.allowed && q.mode === 'store') return FB.T('Store {amount} actual water units and pay {money:cost} for work and upkeep through day {day}. Storage grants no operating benefit.',{amount:q.amount,cost:q.cost,day:q.untilTurn});
-    if (q.allowed) return FB.T('Use {amount} water units and pay {money:cost} for work and upkeep through day {day}. One service benefit is available only for this funded term.',{amount:q.amount,cost:q.cost,day:q.untilTurn});
+    if (q.allowed) return FB.T('Use {amount} water units and pay {money:cost} for work and upkeep through day {day}. The declared service benefits are available only for this funded term.',{amount:q.amount,cost:q.cost,day:q.untilTurn});
     if (q.reason === 'season') return FB.T('Review the local seasonal operating term before funding this service.');
     if (q.reason === 'water') return FB.T('The lawful connected route needs enough unreserved water and storage room.');
     if (q.reason === 'funds') return FB.T('Work and upkeep must be funded while retaining existing reserves.');

@@ -2,7 +2,7 @@
 (function () {
   'use strict';
   var P = FB.buildingProfiles = {};
-  var scalars = ['cost','upkeep','devMin','tax','dev','pop','prestige','piety','research',
+  var scalars = ['aiBuildOrder','cost','upkeep','devMin','tax','dev','pop','prestige','piety','research',
     'levy','retinue','archers','defense','siege','populationCapacity',
     'populationFamineProtection','populationCrisisProtection','migrationAttraction','communityFaithPressure'];
   function own(o,k) { return Object.prototype.hasOwnProperty.call(o || {},k); }
@@ -23,7 +23,7 @@
     if (!d || !p || p.buildingId !== buildingId) return null;
     var out = Object.assign({},d,p.replace);
     ['operationProfile','institutionProfile'].forEach(function (k) { if (own(p,k)) out[k] = p[k]; });
-    var base = d.requiresTech ? [].concat(d.requiresTech) : [];
+    var base = p.requiresTechMode === 'replace' ? [] : d.requiresTech ? [].concat(d.requiresTech) : [];
     out.requiresTech = base.concat(p.requiresTech || []).filter(function (v,i,a) { return a.indexOf(v) === i; });
     // Display stays in the profile namespace; the base building is never mutated.
     out.name = p.name; out.desc = p.desc;
@@ -37,13 +37,19 @@
       var p = table[id], d = p && c.buildings && c.buildings[p.buildingId];
       function fault(text) { out.push('buildingProfiles.' + id + ': ' + text); }
       if (!ident(id) || !keys(p,['buildingId','name','desc','replace','requiresTech','applicability',
-          'siteResourceProfile','operationProfile','institutionProfile','techImpactReview','inheritance']) || !ident(p.buildingId) || !d ||
+          'siteResourceProfile','siteResourceSuitability','operationProfile','institutionProfile','techImpactReview','inheritance','requiresTechMode']) || !ident(p.buildingId) || !d ||
           typeof p.name !== 'string' || !p.name.trim() || p.name.length > 120 ||
           typeof p.desc !== 'string' || !p.desc.trim() || p.desc.length > 1000 || !keys(p.replace,scalars) ||
           Object.keys(p.replace).some(function (k) { return typeof p.replace[k] !== 'number' || !Number.isFinite(p.replace[k]) || p.replace[k] < 0 || p.replace[k] > 1000000; }) ||
           !Array.isArray(p.requiresTech) || p.requiresTech.length > 16 || p.requiresTech.some(function (v,i) {
             return !ident(v) || !own(c.tech,v) || p.requiresTech.indexOf(v) !== i;
           })) { fault('invalid base, display, replacement values or technology references.'); return; }
+      if (own(p,'requiresTechMode') && (p.requiresTechMode !== 'replace' || d.fort || !p.requiresTech.length))
+        fault('requiresTechMode replace requires reviewed nonfort machinery.');
+      if (own(p,'siteResourceSuitability') && (!p.siteResourceProfile || !Array.isArray(p.siteResourceSuitability) ||
+          !p.siteResourceSuitability.length || p.siteResourceSuitability.length > 5 || p.siteResourceSuitability.some(function (k,i,a) {
+            return ['source','catchment','gradient','launching','grazing'].indexOf(k) < 0 || a.indexOf(k) !== i;
+          }))) fault('siteResourceSuitability requires unique physical source flags.');
       if (d.fort && (Object.keys(p.replace).length || p.operationProfile || p.institutionProfile)) {
         fault('strategic forts retain canonical level values and cannot use ordinary operation or institution bindings.'); return;
       }
@@ -92,7 +98,7 @@
     if (d.coastal && !pr.coastal || d.terrains && d.terrains.indexOf(pr.terrain) < 0)
       return 'inherited profile has incompatible physical terrain or coast.';
     if (p.siteResourceProfile && !FB.siteResources.compilePrepared(bm).sources.some(function (a) {
-      return a.countyId === pr.id && a.siteId === placement.siteId && a.profileId === p.siteResourceProfile;
+      return a.countyId === pr.id && a.siteId === placement.siteId && a.profileId === p.siteResourceProfile && (p.siteResourceSuitability || []).every(function (k) { return a.suitability[k] === true; });
     })) return 'inherited profile requires its declared physical source, including when empty.';
     if (d.operationProfile && !(bm.buildingOperationAssignments || []).some(function (a) {
       return a.countyId === pr.id && a.siteId === placement.siteId && a.buildingId === placement.buildingId && a.profileId === d.operationProfile;
@@ -137,11 +143,19 @@
     });
     return out;
   };
+  P.siteReady = function (s,pid,slot,p) {
+    if (!p.siteResourceSuitability) return true;
+    var site = FB.settlementsOf(s,pid)[slot];
+    return !!site && FB.siteResources.snapshot(s,pid,site.site).some(function (a) {
+      return a.profileId === p.siteResourceProfile &&
+        p.siteResourceSuitability.every(function (k) { return a.suitability[k] === true; });
+    });
+  };
   P.operationReady = function (s,pid,r) {
     var d = P.assetDefinition(r);
     if (!r.buildingProfile) return !!d && !r.ruined && (!r.institutionBinding || FB.buildingInstitutionOperating(s,pid,r));
     return !!d && !r.ruined && (!d.institutionProfile || !!r.institutionBinding && FB.buildingInstitutionOperating(s,pid,r)) &&
-      (!d.operationProfile || !!r.waterOperation);
+      (!d.operationProfile || !!r.waterOperation) && P.siteReady(s,pid,r.s,FBDATA.buildingProfiles[r.buildingProfile.id]);
   };
   P.effectRows = function (s,key,recruitmentRealm) {
     var rows = {}, out = [];
@@ -164,7 +178,7 @@
       if (!d || d.fort || !FB.aiCanBuildAt(s,actor,pid,slot,buildingId,profileId)) return null;
       var realm = actor.kind === 'realm' ? actor.id : FB.settlementCountyHolder(s,pid);
       var cost = FB.buildCost(s,pid,buildingId,realm,profileId);
-      var benefit = scalars.filter(function (k) { return ['cost','upkeep','devMin'].indexOf(k) < 0; })
+      var benefit = scalars.filter(function (k) { return ['aiBuildOrder','cost','upkeep','devMin'].indexOf(k) < 0; })
         .reduce(function (n,k) { return n + (d[k] || 0); },0);
       return benefit > 0 ? {id:buildingId,profileId:profileId,def:d,cost:cost,
         score:benefit / Math.max(1,cost + (d.upkeep || 0) * (FBDATA.balance.realmReserveSeasons || 2))} : null;
@@ -206,6 +220,7 @@
     for (var i=0; i<d.requiresTech.length; i++) if (!FB.techRequirementMet(s,d.requiresTech[i],realm))
       return blocked(FB.T('Requires {technology}.',{technology:FB.dataText(s,s.player.charId,'tech',d.requiresTech[i],FBDATA.tech[d.requiresTech[i]],'name',{})}));
     if (p.siteResourceProfile) {
+      if (!P.siteReady(s,pid,slot,p)) return blocked(FB.T('The declared physical mechanism is incompatible with this site.'));
       var site = FB.settlementsOf(s,pid)[slot];
       if (!site || !site.site || !FB.siteResources.snapshot(s,pid,site.site,a).some(function (r) {
         return r.profileId === p.siteResourceProfile && r.allowed && r.available > 0;
