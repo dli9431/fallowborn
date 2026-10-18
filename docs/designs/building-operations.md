@@ -47,3 +47,7 @@ Seasonal AI is dispatched on the first actual campaign day, declared period boun
 Inherited profile water assets
 
 Inherited profile placements retain the exact water assignment as a deterministic asset identity with revision zero. Initialization creates no service, allocation or source balance. An institution-conditioned asset awaiting current permission rejects water funding until the ordinary explicit permission review succeeds. Current effects, exact service upkeep and repairs use the selected replacement definition. Income and military explanations sum actual current amounts rather than multiplying base definitions by counts. Profiled water receipts store the original three-field definition stamp even when the physical asset also has inherited placement provenance; both retained and removed-asset receipts validate without replay.
+
+Physical source requirements
+
+An optional sourceRequirements object on an operation policy binds originKind (flow or storage), originSuitability (unique required true source, catchment, gradient or groundwater flags) and minStores (0-8). Detached route compilation rejects a mismatching real source or insufficient connected storage before construction, service or AI can quote. This structural extension creates no capacity or bonus and needs no technology gate. Omitted requirements preserve existing policies. The resource declaration, rights and full route remain canonical; a groundwater flag is evidence supplied by a world author, never inferred from terrain.
