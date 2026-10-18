@@ -668,3 +668,7 @@ Office binding, vacancy administration, local canonical appointment, explicit in
 Religious institution adapters
 
 religious_institution_household_paths, religious_institution_ai and religious_institution_constitutional_binding record technology impact none. Role qualification, household promises, canonical incumbents, declared consent and actual payer budgets determine their availability. Membership grants no discovery, economic multiplier or military capability; existing career requirements still apply. See docs/designs/religious-institutions.md.
+
+Finite production gates
+
+conserved_production_batches is none: conserved stock accounting and ordinary paid work require no discovery. Optional productionRecipes declare requiresTech and an exact existing hard techImpactReviews feature with the same required ids and a meaningful visible fallback, while ordinary recipes use a none feature. Missing knowledge prevents a new optional recipe commitment and remains visible in the recipe card and reverse technology consumers. Funded pending batches retain their original gates; knowledge loss creates no replacement, output or new stock. No national research or passive building effect is awarded by production. The standalone iron example's optional tool recipe has its own imported hard review for existing bloomery_iron, with ordinary preparation/purchased goods remaining available.

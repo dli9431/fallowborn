@@ -1,0 +1,422 @@
+{
+  "name": "Finite iron batch workshop",
+  "authorityOffices": {
+    "resource_keeper": {
+      "name": "Resource keeper",
+      "desc": "An exact scoped allocation permission.",
+      "powers": [
+        "revenue"
+      ],
+      "scopes": [
+        "county",
+        "realm"
+      ],
+      "succession": "reaffirm",
+      "recognitionSources": []
+    }
+  },
+  "siteResourceProfiles": {
+    "upland_catchment": {
+      "name": "Rain catchment",
+      "kind": "flow",
+      "unit": "water",
+      "capacity": 3,
+      "periodDays": 30
+    },
+    "upland_tank": {
+      "name": "Hill tank",
+      "kind": "storage",
+      "unit": "water",
+      "capacity": 8
+    },
+    "upland_pasture": {
+      "name": "Summer grazing places",
+      "kind": "access",
+      "unit": "grazing",
+      "capacity": 4,
+      "periodDays": 90
+    }
+  },
+  "geographies": {
+    "production_iron_land": {
+      "bounds": {
+        "lonMin": 0,
+        "lonMax": 6,
+        "latMin": 0,
+        "latMax": 5
+      },
+      "land": [
+        [
+          0.5,
+          0.5,
+          5.5,
+          0.5,
+          5.5,
+          4.5,
+          0.5,
+          4.5
+        ]
+      ],
+      "gridWidth": 240,
+      "seas": [],
+      "rivers": [],
+      "defaultLayout": null,
+      "provinces": [
+        {
+          "id": "resource_hill",
+          "x": 1.5,
+          "y": 1.5,
+          "terrain": "hills"
+        },
+        {
+          "id": "resource_fold",
+          "x": 3.1,
+          "y": 1.5,
+          "terrain": "hills"
+        }
+      ],
+      "sites": {
+        "resource_roof": {
+          "x": 1.5,
+          "y": 1.5
+        },
+        "resource_tank": {
+          "x": 1.7,
+          "y": 1.5
+        },
+        "resource_grazing": {
+          "x": 3.1,
+          "y": 1.5
+        }
+      }
+    }
+  },
+  "startScenarios": [
+    {
+      "id": "production_iron_household",
+      "name": "Hill household",
+      "desc": "A fictional household.",
+      "intro": "Your household lives in the hills.",
+      "tier": 1,
+      "profession": "farmer",
+      "gold": 12,
+      "prestige": 0,
+      "piety": 0,
+      "bookmarkIds": [
+        "production_iron"
+      ],
+      "eras": [
+        "early_medieval"
+      ],
+      "alwaysUnlocked": true,
+      "startAge": 24,
+      "familyPresets": {
+        "standard": {
+          "name": "Established household",
+          "diff": "age 24"
+        }
+      }
+    },
+    {
+      "id": "production_iron_ruler",
+      "name": "The hill holder",
+      "desc": "An existing fictional ruler.",
+      "intro": "Review finite ore and fuel.",
+      "tier": 5,
+      "profession": "noble",
+      "gold": 20,
+      "prestige": 0,
+      "piety": 0,
+      "bookmarkIds": [
+        "production_iron"
+      ],
+      "eras": [
+        "early_medieval"
+      ],
+      "alwaysUnlocked": true,
+      "familyPresets": {
+        "standard": {
+          "name": "Established household",
+          "diff": "age 24"
+        }
+      },
+      "rulerRealmId": "resource_hill_court",
+      "governmentForm": "regnum",
+      "fixedProvinceId": "resource_hill",
+      "characterName": "Arno Stone",
+      "sex": "m",
+      "startCulture": "frankish",
+      "startReligion": "catholic",
+      "onboarding": "ruler"
+    }
+  ],
+  "bookmarks": {
+    "production_iron": {
+      "id": "production_iron",
+      "name": "Upland allocation",
+      "desc": "An independent fictional catchment example.",
+      "date": {
+        "year": 950,
+        "season": 0,
+        "day": 1
+      },
+      "era": "early_medieval",
+      "geography": "production_iron_land",
+      "settlementLayout": null,
+      "religiousHeads": {},
+      "localInstitutions": {},
+      "stories": [],
+      "starts": [
+        "production_iron_household",
+        "production_iron_ruler"
+      ],
+      "scripted": [],
+      "straits": [],
+      "crossingClasses": {},
+      "provinces": [
+        {
+          "id": "resource_hill",
+          "name": "Hill",
+          "realm": "resource_hill_court",
+          "culture": "frankish",
+          "religion": "catholic",
+          "dev": 5,
+          "settlements": [
+            {
+              "site": "resource_roof",
+              "name": "Roof Town",
+              "kind": "town"
+            },
+            {
+              "site": "resource_tank",
+              "name": "Tank Village",
+              "kind": "village"
+            }
+          ]
+        },
+        {
+          "id": "resource_fold",
+          "name": "Fold",
+          "realm": "resource_fold_court",
+          "culture": "frankish",
+          "religion": "catholic",
+          "dev": 3,
+          "settlements": [
+            {
+              "site": "resource_grazing",
+              "name": "Fold Village",
+              "kind": "village"
+            }
+          ]
+        }
+      ],
+      "realms": [
+        {
+          "id": "resource_hill_court",
+          "name": "Hill court",
+          "capital": "resource_hill",
+          "color": "#aa7944",
+          "aggression": 0,
+          "rank": 2,
+          "government": "regnum",
+          "ruler": {
+            "name": "Arno Stone",
+            "culture": "frankish",
+            "born": 918,
+            "mar": 6,
+            "trait": "patient"
+          }
+        },
+        {
+          "id": "resource_fold_court",
+          "name": "Fold court",
+          "capital": "resource_fold",
+          "color": "#779955",
+          "aggression": 0,
+          "rank": 1,
+          "government": "regnum",
+          "ruler": {
+            "name": "Odo Vale",
+            "culture": "frankish",
+            "born": 920,
+            "mar": 5,
+            "trait": "patient"
+          }
+        }
+      ],
+      "duchies": {},
+      "kingdoms": {},
+      "empires": {},
+      "siteResourceAssignments": [
+        {
+          "id": "upland_roof",
+          "profileId": "upland_catchment",
+          "countyId": "resource_hill",
+          "siteId": "resource_roof",
+          "suitability": {
+            "source": true,
+            "catchment": true
+          },
+          "rights": {
+            "kind": "holder"
+          }
+        },
+        {
+          "id": "upland_tank",
+          "profileId": "upland_tank",
+          "countyId": "resource_hill",
+          "siteId": "resource_tank",
+          "connectedSourceId": "upland_roof",
+          "suitability": {
+            "catchment": true
+          },
+          "rights": {
+            "kind": "holder"
+          }
+        },
+        {
+          "id": "upland_fold",
+          "profileId": "upland_pasture",
+          "countyId": "resource_fold",
+          "siteId": "resource_grazing",
+          "suitability": {
+            "grazing": true
+          },
+          "rights": {
+            "kind": "permission",
+            "institutionId": "resource_fold_court",
+            "officeId": "resource_keeper"
+          }
+        }
+      ],
+      "openingInfrastructure": {
+        "version": 1,
+        "placements": [
+          {
+            "countyId": "resource_hill",
+            "siteId": "resource_roof",
+            "buildingId": "iron_works",
+            "condition": "standing"
+          }
+        ]
+      },
+      "productionSites": [
+        {
+          "id": "iron_plant",
+          "countyId": "resource_hill",
+          "siteId": "resource_roof",
+          "buildingId": "iron_works",
+          "recipeIds": [
+            "smelt_ore",
+            "forge_tools"
+          ],
+          "openingLots": [
+            {
+              "goodId": "iron_ore_lot",
+              "quantity": 4
+            },
+            {
+              "goodId": "charcoal_lot",
+              "quantity": 4
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "buildings": {
+    "iron_works": {
+      "name": "Iron works",
+      "desc": "A finite paid batch facility with no passive income or population effect.",
+      "role": "industry",
+      "cost": 30,
+      "upkeep": 1,
+      "maxCounty": 1
+    }
+  },
+  "productionGoods": {
+    "iron_ore_lot": {
+      "name": "Iron ore",
+      "unit": "ore_units",
+      "mass": 1
+    },
+    "charcoal_lot": {
+      "name": "Charcoal",
+      "unit": "fuel_units",
+      "mass": 1
+    },
+    "iron_bloom_lot": {
+      "name": "Iron bloom",
+      "unit": "iron_units",
+      "mass": 1
+    },
+    "hand_tool_lot": {
+      "name": "Hand tools",
+      "unit": "tool_units",
+      "mass": 1
+    }
+  },
+  "productionRecipes": {
+    "smelt_ore": {
+      "name": "Smelt a bloom",
+      "inputs": [
+        {
+          "goodId": "iron_ore_lot",
+          "quantity": 2
+        },
+        {
+          "goodId": "charcoal_lot",
+          "quantity": 1
+        }
+      ],
+      "outputs": [
+        {
+          "goodId": "iron_bloom_lot",
+          "quantity": 1
+        }
+      ],
+      "workDays": 1,
+      "workPrice": 2,
+      "requiresTech": [],
+      "impactReviewId": "conserved_production_batches"
+    },
+    "forge_tools": {
+      "name": "Forge tools",
+      "inputs": [
+        {
+          "goodId": "iron_bloom_lot",
+          "quantity": 1
+        },
+        {
+          "goodId": "charcoal_lot",
+          "quantity": 1
+        }
+      ],
+      "outputs": [
+        {
+          "goodId": "hand_tool_lot",
+          "quantity": 1
+        }
+      ],
+      "workDays": 2,
+      "workPrice": 4,
+      "requiresTech": [
+        "bloomery_iron"
+      ],
+      "impactReviewId": "fictional_forged_tools",
+      "fallback": "Ordinary hand preparation and purchased finished goods remain available."
+    }
+  },
+  "techImpactReviews": {
+    "features": {
+      "fictional_forged_tools": {
+        "mode": "hard",
+        "rationale": "Optional specialist preparation retains ordinary household manufacture.",
+        "fallback": "Ordinary hand preparation and purchased finished goods remain available.",
+        "tech": [
+          "bloomery_iron"
+        ]
+      }
+    }
+  }
+}

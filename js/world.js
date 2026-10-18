@@ -36,7 +36,7 @@ window.FB = window.FB || {};
     'duchies','kingdoms','empires','straits','crossingClasses','localInstitutions',
     'settlementLayout','climate','religiousHeads','starts','stories','storyRegions','scripted',
     'openingRevisions','openingLegacyRevision','startLocations','openingInfrastructure','siteResourceAssignments',
-    'buildingInstitutionAssignments'];
+    'buildingInstitutionAssignments','productionSites'];
   function resolveBookmarkRevision(base, revision) {
     if (!base) return null;
     var selected = revision === undefined ? base.revision || 'baseline' : revision;
@@ -512,6 +512,13 @@ window.FB = window.FB || {};
     var geography = FB.geography(FB.bookmarkGeography(definition));
     return geography ? resolveGeography(normalized, definition, geography) : normalized;
   }
+
+  FB.compileProduction = function (definition) {
+    try {
+      return FB.production.compilePrepared(preparedDefinition(definition.revisions
+        ? resolveBookmarkRevision(definition) : definition));
+    } catch (error) { return {sites:[],errors:['productionSites: ' + error.message]}; }
+  };
 
   FB.compileSiteResources = function (definition) {
     try {
@@ -1584,6 +1591,7 @@ window.FB = window.FB || {};
     catch (error) { return [error.message]; }
     openingInfrastructurePlan(definition).errors.forEach(fault);
     if (FB.siteResources) FB.siteResources.compilePrepared(definition).errors.forEach(fault);
+    if (FB.production) FB.production.compilePrepared(definition).errors.forEach(fault);
     if (FB.localInstitutionDefinitionFaults) {
       var localErrors = FB.localInstitutionDefinitionFaults(definition);
       for (var le = 0; le < localErrors.length; le++) fault(localErrors[le]);
