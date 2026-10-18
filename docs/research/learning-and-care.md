@@ -2,7 +2,7 @@ Manuscript learning and modest care
 
 Implemented catalogue
 
-data/technology_learning.js replaces six existing records: scriptoria, translation_schools, paper_scholarship, universities, legal_studies and scholastic_method. Stable ids, explicit costs, attestation windows, all regional adoption pairs, scalar effects and the university parallel_research grant remain unchanged. These windows are inherited simulation envelopes rather than newly verified adoption dates. Papermaking, scholarly_networks and canon_law_collections retain their definitions.
+data/technology_learning.js replaces six existing records: scriptoria, translation_schools, paper_scholarship, universities, legal_studies and scholastic_method. Stable ids, explicit costs, attestation windows, scalar effects and the university parallel_research grant remain unchanged. The Islamic and Persianate Paper Scholarship adoption pairs are both 800/1000; docs/research/knowledge-transmission.md documents these changes and the separate Papermaking correction. Other windows retain their inherited simulation envelopes rather than newly verified adoption dates. scholarly_networks and canon_law_collections retain their definitions.
 
 Scriptoria includes Organized Copying as its Muslim display and unlocks Library. Paper Scholarship retains its separate research efficiency effect without that building unlock. Universities requires scholarly_networks and scriptoria; Advanced Legal Studies requires scholarly_networks and written_law; Scholastic Method requires scholarly_networks and translation_schools. These optional refinements do not introduce ordinary learning, translation, argument or law. Translation Networks asserts no single universal academy.
 

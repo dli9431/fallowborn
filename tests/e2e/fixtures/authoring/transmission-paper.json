@@ -1,0 +1,17 @@
+{
+  "name": "Independent paper transmission",
+  "tech": {
+    "paper_making": {
+      "name": "Papermaking", "icon": "P", "domain": "crafts", "cost": 50, "req": [],
+      "history": {"attested": [650, 950], "adoption": {"default": [900, 1100], "persianate": [680, 820], "islamic": [780, 980]}},
+      "desc": "A fictional paper transmission schedule with distinct regional windows.",
+      "confidence": "modded", "sources": ["MOD"], "unlocks": ["rule:paper_supply"], "capabilities": [], "fx": {"research": 0.1}
+    },
+    "paper_scholarship": {
+      "name": "Paper Scholarship", "icon": "S", "domain": "learning", "cost": 50, "req": ["paper_making", "scriptoria"],
+      "history": {"attested": [750, 1050], "adoption": {"default": [1000, 1200], "persianate": [850, 1030], "islamic": [850, 1010]}},
+      "desc": "A fictional scholarship schedule independent of the copying prerequisite.",
+      "confidence": "modded", "sources": ["MOD"], "unlocks": [], "capabilities": [], "fx": {"research": 0.25}
+    }
+  }
+}

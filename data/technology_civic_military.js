@@ -103,7 +103,7 @@ FBDATA.techCorrections_civic_military = {
     name:'Royal Capitularies', icon:'📜', domain:'governance', cost:50,
     req:['written_law','diplomatic_correspondence'],
     history:{ attested:[650,900], adoption:{
-      default:[760,920], latin:[710,870], byzantine:[760,920], islamic:[760,920],
+      default:[760,920], latin:[700,800], byzantine:[760,920], islamic:[760,920],
       persianate:[770,930], slavic:[795,955], nordic:[800,960], steppe:[790,950],
       baltic_finnic:[815,975], caucasian:[785,945], northeast_african:[795,955]
     } },

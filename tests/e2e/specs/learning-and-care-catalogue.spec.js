@@ -44,7 +44,7 @@ async function prepareLord(page, imported) {
   });
 }
 
-test('catalogue corrections retain costs, adoption, effects and stable knowledge identities', async function ({ page }) {
+test('catalogue corrections retain costs and effects with explicit paper transmission windows', async function ({ page }) {
   const r = await page.evaluate(function (expected) {
     const retained = {};
     Object.keys(expected).forEach(function (id) {
@@ -66,7 +66,10 @@ test('catalogue corrections retain costs, adoption, effects and stable knowledge
         return FBDATA.techImpactReviews.features[id];
       }) };
   }, baseline.tech);
-  expect(r.retained).toEqual(baseline.tech);
+  const expected = JSON.parse(JSON.stringify(baseline.tech));
+  expected.paper_scholarship.history.adoption.islamic = [800,1000];
+  expected.paper_scholarship.history.adoption.persianate = [800,1000];
+  expect(r.retained).toEqual(expected);
   expect(r.errors).toEqual([]); expect(r.buildings).toEqual([]);
   expect(r.techCount).toBe(187); expect(r.buildingCount).toBe(20);
   expect(r.scriptoria).toEqual(['rule:scriptoria','building:library']);

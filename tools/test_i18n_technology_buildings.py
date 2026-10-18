@@ -13,6 +13,7 @@ class ComposedCatalogueExtractionTests(unittest.TestCase):
             ('tech', 'technology_civic_military.js', 'techCorrections_civic_military', 12),
             ('tech', 'technology_maritime.js', 'techCorrections_maritime', 8),
             ('tech', 'technology_wind.js', 'techCorrections_wind', 1),
+            ('tech', 'technology_transmission.js', 'techCorrections_transmission', 1),
             ('building', 'buildings_learning_care.js', 'buildingCorrections_learning_care', 3),
             ('building', 'buildings_learning_care.js', 'buildings_learning_care', 1),
             ('building', 'buildings_civic_military.js', 'buildingCorrections_civic_military', 3),
@@ -37,11 +38,12 @@ class ComposedCatalogueExtractionTests(unittest.TestCase):
                         self.assertEqual(inventory.entries[key], {'text': value.value}, key)
                         self.assertEqual(inventory.meta[key]['location'], 'data/' + filename, key)
                         self.assertIn(i18n_catalog.source_key(value.value), inventory.entries)
-        self.assertEqual(len(seen), 45)
+        self.assertEqual(len(seen), 46)
         for key, text in (
             ('tech.water_power.name.default', 'Water Power'),
             ('tech.translation_schools.name.default', 'Translation Networks'),
             ('tech.windmill.name.default', 'Wind-Powered Milling'),
+            ('tech.paper_making.name.default', 'Papermaking'),
             ('building.library.name.default', 'Library'),
             ('building.hospice.name.default', 'Charitable Guesthouse'),
             ('building.arsenal.name.default', 'Naval Outfitting Yard'),
