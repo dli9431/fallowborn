@@ -111,14 +111,14 @@ test('1241 composes all physical counties in ledger order with unique courts and
   expect(result.religions).toEqual([]);
   expect(result.ids).toEqual(result.expected);
   expect(result.ids.slice().sort()).toEqual(result.physical.sort());
-  expect(result.counts).toEqual([527,527,103,103,491]);
+  expect(result.counts).toEqual([527,527,106,106,491]);
   expect(result.metadata).toEqual(['The Mongol Invasion',{year:1241,season:0,day:1},
     'high_medieval','europe_regional_2','baseline','baseline']);
   expect(result.starts).toBe(true);
   expect(result.headBindings).toEqual({catholic:'papacy_1241',sunni:'abbasid_1241'});
   expect(result.climates).toEqual(['continental','arid','arid']);
   expect(result.owners).toEqual(['france_1241','silesia_1241','hre_1241','nicaea_1241',
-    'egypt_1241','rum_1241','rasulid_yemen_1241']);
+    'almohad_1241','rum_1241','rasulid_yemen_1241']);
   expect(result.absent).toBe(true);
   expect(result.identities).toBe(true);
   expect(result.stories).toEqual([]);

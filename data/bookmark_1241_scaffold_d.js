@@ -1,7 +1,7 @@
-/* Spring 1241 first-pass regional declarations. Physical counties,
-   communities and ordered settlement slots retain independent copies
-   of the 1204 inhabited-world inputs. No source people or operations
-   are carried forward. See docs/research/1241-bookmark.md for holds.
+/* Spring 1241 regional declarations. Physical counties and ordered
+   settlement slots retain independent 1204 inputs. Dated courts and
+   the explicit resident corrections are described with their limits
+   in docs/research/1241-bookmark.md. No operations are carried forward.
    Loading stages these blocks only; it registers no partial world. */
 window.FBDATA = window.FBDATA || {};
 FBDATA.bookmarkRegions1241 = FBDATA.bookmarkRegions1241 || {};
@@ -19,15 +19,16 @@ FBDATA.bookmarkRegions1241.bohemia_poland = {
     {"id":"plock","name":"Płock","x":19.71,"y":52.55,"terrain":"forest","duchy":"mazovia","culture":"slavic","religion":"catholic","dev":3,"realm":"mazovia_local_1241","communities":[{"culture":"slavic","religion":"catholic","populationShare0":10000}]},
     {"id":"krakow","name":"Kraków","x":19.94,"y":50.06,"terrain":"farmland","duchy":"krakow","culture":"slavic","religion":"catholic","dev":4,"realm":"silesia_1241","communities":[{"culture":"slavic","religion":"catholic","populationShare0":10000}]},
     {"id":"wroclaw","name":"Wrocław","x":17.04,"y":51.11,"terrain":"forest","duchy":"silesia","culture":"slavic","religion":"catholic","dev":4,"realm":"silesia_1241","communities":[{"culture":"slavic","religion":"catholic","populationShare0":10000}]},
-    {"id":"gdansk","name":"Gdańsk","x":18.65,"y":54.35,"terrain":"forest","duchy":"pomerania","culture":"slavic","religion":"catholic","dev":4,"realm":"mazovia_local_1241","communities":[{"culture":"slavic","religion":"catholic","populationShare0":10000}]},
+    {"id":"gdansk","name":"Gdańsk","x":18.65,"y":54.35,"terrain":"forest","duchy":"pomerania","culture":"slavic","religion":"catholic","dev":4,"realm":"pomerelia_local_1241","communities":[{"culture":"slavic","religion":"catholic","populationShare0":10000}]},
     {"id":"szczecin","name":"Szczecin","x":14.55,"y":53.43,"terrain":"forest","duchy":"pomerania","culture":"slavic","religion":"catholic","dev":4,"realm":"pomerania_1241","communities":[{"culture":"slavic","religion":"catholic","populationShare0":10000}]}
   ],
   realms:[
-    {"id":"bohemia_1241","name":"Kingdom of Bohemia","color":"#c98f4a","capital":"praha","aggression":0,"rank":3,"government":"territorial","religion":"catholic","ruler":{"generated":true,"sex":"m","culture":"slavic","born":1206,"mar":8,"trait":"patient"},"techTraditions":["latin","slavic"],"liege":"hre_1241"},
+    {"id":"bohemia_1241","name":"Kingdom of Bohemia","color":"#c98f4a","capital":"praha","aggression":0,"rank":3,"government":"territorial","religion":"catholic","ruler":{"name":"Wenceslas I","sex":"m","culture":"slavic","born":1205,"mar":8,"trait":"patient"},"techTraditions":["latin","slavic"],"liege":"hre_1241"},
     {"id":"silesia_1241","name":"Silesian ducal court","color":"#2f8f8f","capital":"wroclaw","aggression":0,"rank":2,"government":"territorial","religion":"catholic","ruler":{"generated":true,"sex":"m","culture":"slavic","born":1206,"mar":8,"trait":"patient"},"techTraditions":["slavic","latin"]},
     {"id":"greater_poland_1241","name":"Greater Polish local court","color":"#8d9358","capital":"poznan","aggression":0,"rank":2,"government":"territorial","religion":"catholic","ruler":{"generated":true,"sex":"m","culture":"slavic","born":1206,"mar":8,"trait":"patient"},"techTraditions":["slavic","latin"]},
     {"id":"pomerania_1241","name":"Pomeranian local court","color":"#b87945","capital":"szczecin","aggression":0,"rank":2,"government":"territorial","religion":"catholic","ruler":{"generated":true,"sex":"m","culture":"slavic","born":1206,"mar":8,"trait":"patient"},"techTraditions":["slavic","latin"]},
-    {"id":"mazovia_local_1241","name":"Mazovian local court","color":"#af5f2f","capital":"plock","aggression":0,"rank":2,"government":"territorial","religion":"catholic","ruler":{"generated":true,"sex":"m","culture":"slavic","born":1206,"mar":8,"trait":"patient"},"techTraditions":["slavic","latin"]}
+    {"id":"mazovia_local_1241","name":"Mazovian local court","color":"#af5f2f","capital":"plock","aggression":0,"rank":2,"government":"territorial","religion":"catholic","ruler":{"generated":true,"sex":"m","culture":"slavic","born":1206,"mar":8,"trait":"patient"},"techTraditions":["slavic","latin"]},
+    {"id":"pomerelia_local_1241","name":"Gdańsk/Pomerelian ducal court","color":"#517e9f","capital":"gdansk","aggression":0,"rank":2,"government":"territorial","religion":"catholic","ruler":{"generated":true,"sex":"m","culture":"slavic","born":1206,"mar":8,"trait":"patient"},"techTraditions":["slavic","latin"]}
   ],
   duchies:{"moravia":{"name":"Moravia","kingdom":"moravia"},"bohemia":{"name":"Bohemia","kingdom":"bohemia"},"poland":{"name":"Poland","kingdom":"poland"},"mazovia":{"name":"Mazovia","kingdom":"poland"},"krakow":{"name":"Kraków","kingdom":"poland"},"silesia":{"name":"Silesia","kingdom":"poland"},"pomerania":{"name":"Pomerania","kingdom":"poland"}},
   kingdoms:{"moravia":{"name":"Moravia","empire":"carpathia"},"bohemia":{"name":"Bohemia","empire":"carpathia"},"poland":{"name":"Poland","empire":"carpathia"}},
@@ -63,7 +64,7 @@ FBDATA.bookmarkRegions1241.caucasus_caspian = {
     {"id":"derbent","name":"Derbent","x":48.15,"y":42.05,"terrain":"mountains","duchy":"samandar","culture":"arabic","religion":"sunni","dev":5,"realm":"derbent_local_1241","communities":[{"culture":"arabic","religion":"sunni","populationShare0":8000},{"culture":"turkic","religion":"sunni","populationShare0":2000}]}
   ],
   realms:[
-    {"id":"georgia_1241","name":"Georgian court","color":"#2f8f8f","capital":"tbilisi","aggression":0,"rank":3,"government":"territorial","religion":"orthodox","ruler":{"generated":true,"sex":"m","culture":"georgian","born":1206,"mar":8,"trait":"patient"},"techTraditions":["caucasian","byzantine"]},
+    {"id":"georgia_1241","name":"Georgian court","color":"#2f8f8f","capital":"kutaisi","aggression":0,"rank":3,"government":"territorial","religion":"orthodox","ruler":{"name":"Rusudan","sex":"f","culture":"georgian","born":1194,"mar":8,"trait":"patient"},"techTraditions":["caucasian","byzantine"]},
     {"id":"alan_local_1241","name":"Alan local communities","color":"#c98f4a","capital":"magas","aggression":0,"rank":2,"government":"territorial","religion":"orthodox","ruler":{"generated":true,"sex":"m","culture":"turkic","born":1206,"mar":8,"trait":"patient"},"techTraditions":["steppe","byzantine"]},
     {"id":"derbent_local_1241","name":"Derbent local court","color":"#a04fb0","capital":"derbent","aggression":0,"rank":2,"government":"territorial","religion":"sunni","ruler":{"generated":true,"sex":"m","culture":"arabic","born":1206,"mar":8,"trait":"patient"},"techTraditions":["islamic"]},
     {"id":"caspian_local_1241","name":"Caspian local administration","color":"#6f9f8f","capital":"samandar","aggression":0,"rank":2,"government":"territorial","religion":"sunni","ruler":{"generated":true,"sex":"m","culture":"turkic","born":1206,"mar":8,"trait":"patient"},"techTraditions":["steppe"]}
@@ -89,7 +90,7 @@ FBDATA.bookmarkRegions1241.arabia = {
   provinces:[
     {"id":"mecca","name":"Mecca","x":39.83,"y":21.42,"terrain":"desert","duchy":"hejaz","culture":"arabic","religion":"shia","dev":7,"realm":"mecca_1241","communities":[{"culture":"arabic","religion":"shia","populationShare0":10000}]},
     {"id":"medina","name":"Medina","x":39.61,"y":24.47,"terrain":"desert","duchy":"hejaz","culture":"arabic","religion":"shia","dev":6,"realm":"mecca_1241","communities":[{"culture":"arabic","religion":"shia","populationShare0":10000}]},
-    {"id":"yamama","name":"Yamama","x":46.77,"y":24.65,"terrain":"desert","duchy":"najd","culture":"persian","religion":"sunni","dev":4,"realm":"arabia_interior_1241","communities":[{"culture":"persian","religion":"sunni","populationShare0":10000}]},
+    {"id":"yamama","name":"Yamama","x":46.77,"y":24.65,"terrain":"desert","duchy":"najd","culture":"arabic","religion":"sunni","dev":4,"realm":"arabia_interior_1241","communities":[{"culture":"arabic","religion":"sunni","populationShare0":10000}]},
     {"id":"qatif","name":"Qatif","x":50.02,"y":26.56,"terrain":"farmland","duchy":"bahrain","culture":"persian","religion":"sunni","dev":4,"realm":"bahrain_local_1241","communities":[{"culture":"persian","religion":"sunni","populationShare0":10000}]},
     {"id":"sanaa","name":"Sanaa","x":44.21,"y":15.35,"terrain":"mountains","duchy":"sanaa","culture":"arabic","religion":"sunni","dev":6,"realm":"rasulid_yemen_1241","communities":[{"culture":"arabic","religion":"sunni","populationShare0":10000}]},
     {"id":"aden","name":"Aden","x":44.7,"y":13.45,"terrain":"farmland","duchy":"aden","culture":"arabic","religion":"sunni","dev":5,"realm":"rasulid_yemen_1241","communities":[{"culture":"arabic","religion":"sunni","populationShare0":10000}]},
@@ -135,7 +136,7 @@ FBDATA.bookmarkRegions1241.maghreb = {
     {"id":"barqa","name":"Barqa","x":20.07,"y":32.12,"terrain":"desert","duchy":"barqa","culture":"arabic","religion":"shia","dev":4,"realm":"egypt_1241","communities":[{"culture":"arabic","religion":"shia","populationShare0":10000}]},
     {"id":"fes","name":"Fes","x":-5.0,"y":34.03,"terrain":"farmland","duchy":"fes","culture":"berber","religion":"sunni","dev":7,"realm":"almohad_1241","communities":[{"culture":"berber","religion":"sunni","populationShare0":10000}]},
     {"id":"tangier","name":"Tangier","x":-5.8,"y":35.85,"terrain":"hills","duchy":"fes","culture":"berber","religion":"sunni","dev":5,"realm":"almohad_1241","communities":[{"culture":"berber","religion":"sunni","populationShare0":10000}]},
-    {"id":"tlemcen","name":"Tlemcen","x":-1.31,"y":34.88,"terrain":"hills","duchy":"tlemcen","culture":"berber","religion":"sunni","dev":5,"realm":"almohad_1241","communities":[{"culture":"berber","religion":"sunni","populationShare0":10000}]},
+    {"id":"tlemcen","name":"Tlemcen","x":-1.31,"y":34.88,"terrain":"hills","duchy":"tlemcen","culture":"berber","religion":"sunni","dev":5,"realm":"zayyanid_1241","communities":[{"culture":"berber","religion":"sunni","populationShare0":10000}]},
     {"id":"tahert","name":"Tahert","x":1.34,"y":35.37,"terrain":"hills","duchy":"tahert","culture":"berber","religion":"sunni","dev":5,"realm":"almohad_1241","communities":[{"culture":"berber","religion":"sunni","populationShare0":10000}]},
     {"id":"algiers","name":"Algiers","x":3.06,"y":36.77,"terrain":"hills","duchy":"algiers","culture":"berber","religion":"sunni","dev":4,"realm":"almohad_1241","communities":[{"culture":"berber","religion":"sunni","populationShare0":10000}]},
     {"id":"constantine","name":"Constantine","x":6.61,"y":36.36,"terrain":"mountains","duchy":"algiers","culture":"berber","religion":"sunni","dev":5,"realm":"hafsid_1241","communities":[{"culture":"berber","religion":"sunni","populationShare0":10000}]},
@@ -152,8 +153,9 @@ FBDATA.bookmarkRegions1241.maghreb = {
     {"id":"w_sahara_e","name":"Libyan Desert","x":20.0,"y":24.0,"terrain":"desert","wasteland":true}
   ],
   realms:[
-    {"id":"almohad_1241","name":"Almohad Moroccan court","color":"#6f9f8f","capital":"aghmat","aggression":0,"rank":3,"government":"territorial","religion":"sunni","ruler":{"generated":true,"sex":"m","culture":"berber","born":1206,"mar":8,"trait":"patient"},"techTraditions":["islamic"]},
-    {"id":"hafsid_1241","name":"Hafsid Ifriqiya","color":"#b38c46","capital":"tunis","aggression":0,"rank":3,"government":"territorial","religion":"sunni","ruler":{"generated":true,"sex":"m","culture":"berber","born":1206,"mar":8,"trait":"patient"},"techTraditions":["islamic"]}
+    {"id":"almohad_1241","name":"Almohad Moroccan court","color":"#6f9f8f","capital":"aghmat","aggression":0,"rank":3,"government":"territorial","religion":"sunni","ruler":{"name":"Abd al-Wahid II al-Rashid","sex":"m","culture":"berber","born":1218,"mar":8,"trait":"patient"},"techTraditions":["islamic"]},
+    {"id":"hafsid_1241","name":"Hafsid Ifriqiya","color":"#b38c46","capital":"tunis","aggression":0,"rank":3,"government":"territorial","religion":"sunni","ruler":{"generated":true,"sex":"m","culture":"berber","born":1206,"mar":8,"trait":"patient"},"techTraditions":["islamic"]},
+    {"id":"zayyanid_1241","name":"Zayyanid Tlemcen","color":"#b87945","capital":"tlemcen","aggression":0,"rank":2,"government":"territorial","religion":"sunni","ruler":{"generated":true,"sex":"m","culture":"berber","born":1206,"mar":8,"trait":"patient"},"techTraditions":["islamic"],"liege":"almohad_1241"}
   ],
   duchies:{"tunis":{"name":"Tunis","kingdom":"ifriqiya"},"tripoli":{"name":"Tripoli","kingdom":"ifriqiya"},"barqa":{"name":"Barqa","kingdom":"ifriqiya"},"fes":{"name":"Fes","kingdom":"maghreb"},"tlemcen":{"name":"Tlemcen","kingdom":"maghreb"},"tahert":{"name":"Tahert","kingdom":"maghreb"},"algiers":{"name":"Algiers","kingdom":"maghreb"},"oran":{"name":"Oran","kingdom":"maghreb"},"morocco":{"name":"Morocco","kingdom":"maghreb"},"sous":{"name":"Sous","kingdom":"maghreb"},"sijilmasa":{"name":"Sijilmasa","kingdom":"maghreb"}},
   kingdoms:{"ifriqiya":{"name":"Ifriqiya","empire":"arabia"},"maghreb":{"name":"Maghreb","empire":"arabia"}},
@@ -181,7 +183,7 @@ FBDATA.bookmarkRegions1241.maghreb = {
 FBDATA.bookmarkRegions1241.africa_horn_sahel = {
   provinces:[
     {"id":"dongola","name":"Dongola","x":30.48,"y":19.17,"terrain":"desert","duchy":"makuria","culture":"nubian","religion":"eastern","dev":5,"realm":"makuria_1241","communities":[{"culture":"nubian","religion":"eastern","populationShare0":10000}]},
-    {"id":"soba","name":"Soba","x":32.66,"y":15.5,"terrain":"desert","duchy":"alodia","culture":"nubian","religion":"eastern","dev":4,"realm":"makuria_1241","communities":[{"culture":"nubian","religion":"eastern","populationShare0":10000}]},
+    {"id":"soba","name":"Soba","x":32.66,"y":15.5,"terrain":"desert","duchy":"alodia","culture":"nubian","religion":"eastern","dev":4,"realm":"alodia_1241","communities":[{"culture":"nubian","religion":"eastern","populationShare0":10000}]},
     {"id":"axum","name":"Axum","x":38.72,"y":14.13,"terrain":"mountains","duchy":"axum","culture":"abyssinian","religion":"eastern","dev":5,"realm":"zagwe_1241","communities":[{"culture":"abyssinian","religion":"eastern","populationShare0":10000}]},
     {"id":"lalibela","name":"Lalibela","x":39.04,"y":13.6,"terrain":"mountains","duchy":"amhara","culture":"abyssinian","religion":"eastern","dev":4,"realm":"zagwe_1241","communities":[{"culture":"abyssinian","religion":"eastern","populationShare0":10000}]},
     {"id":"zeila","name":"Zeila","x":43.7,"y":13.1,"terrain":"desert","duchy":"aden","culture":"arabic","religion":"sunni","dev":4,"realm":"rasulid_yemen_1241","communities":[{"culture":"arabic","religion":"sunni","populationShare0":10000}]},
@@ -195,7 +197,8 @@ FBDATA.bookmarkRegions1241.africa_horn_sahel = {
     {"id":"w_nubia","name":"Nubian Desert","x":33.0,"y":18.0,"terrain":"desert","wasteland":true}
   ],
   realms:[
-    {"id":"makuria_1241","name":"Makurian and Alodian court cover","color":"#6f9f8f","capital":"dongola","aggression":0,"rank":3,"government":"territorial","religion":"eastern","ruler":{"generated":true,"sex":"m","culture":"nubian","born":1206,"mar":8,"trait":"patient"},"techTraditions":["northeast_african","byzantine"]},
+    {"id":"makuria_1241","name":"Makuria","color":"#6f9f8f","capital":"dongola","aggression":0,"rank":3,"government":"territorial","religion":"eastern","ruler":{"generated":true,"sex":"m","culture":"nubian","born":1206,"mar":8,"trait":"patient"},"techTraditions":["northeast_african","byzantine"]},
+    {"id":"alodia_1241","name":"Alodian court","color":"#788996","capital":"soba","aggression":0,"rank":2,"government":"territorial","religion":"eastern","ruler":{"generated":true,"sex":"m","culture":"nubian","born":1206,"mar":8,"trait":"patient"},"techTraditions":["northeast_african","byzantine"]},
     {"id":"zagwe_1241","name":"Zagwe court","color":"#af5f2f","capital":"lalibela","aggression":0,"rank":3,"government":"territorial","religion":"eastern","ruler":{"generated":true,"sex":"m","culture":"abyssinian","born":1206,"mar":8,"trait":"patient"},"techTraditions":["northeast_african","caucasian"]},
     {"id":"jenne_households_1241","name":"Jenne-jeno households","color":"#997253","capital":"jenne_district","aggression":0,"rank":1,"government":"territorial","religion":"sahel_local_practice_1241","ruler":{"generated":true,"sex":"m","culture":"sahelian_476","born":1206,"mar":8,"trait":"patient"}},
     {"id":"gao_court_1241","name":"Gao court","color":"#ad8b56","capital":"gao_district","aggression":0,"rank":3,"government":"territorial","religion":"sunni","ruler":{"generated":true,"sex":"m","culture":"sahelian_476","born":1206,"mar":8,"trait":"patient"},"techTraditions":["islamic"]},
@@ -228,7 +231,7 @@ FBDATA.bookmarkRegions1241.iraq_iran_west = {
     {"id":"qazvin","name":"Qazvin","x":50.0,"y":36.27,"terrain":"farmland","duchy":"rayy","culture":"persian","religion":"sunni","dev":5,"realm":"iran_west_local_1241","communities":[{"culture":"persian","religion":"sunni","populationShare0":10000}]},
     {"id":"hamadan","name":"Hamadan","x":48.51,"y":34.8,"terrain":"mountains","duchy":"hamadan","culture":"persian","religion":"sunni","dev":6,"realm":"azerbaijan_local_1241","communities":[{"culture":"persian","religion":"sunni","populationShare0":8000},{"culture":"turkic","religion":"sunni","populationShare0":2000}]},
     {"id":"isfahan","name":"Isfahan","x":51.68,"y":32.65,"terrain":"farmland","duchy":"isfahan","culture":"persian","religion":"sunni","dev":8,"realm":"iran_west_local_1241","communities":[{"culture":"persian","religion":"sunni","populationShare0":8000},{"culture":"turkic","religion":"sunni","populationShare0":2000}]},
-    {"id":"qom","name":"Qom","x":50.88,"y":34.64,"terrain":"farmland","duchy":"isfahan","culture":"persian","religion":"sunni","dev":5,"realm":"iran_west_local_1241","communities":[{"culture":"persian","religion":"sunni","populationShare0":10000}]},
+    {"id":"qom","name":"Qom","x":50.88,"y":34.64,"terrain":"farmland","duchy":"isfahan","culture":"persian","religion":"shia","dev":5,"realm":"iran_west_local_1241","communities":[{"culture":"persian","religion":"shia","populationShare0":8000},{"culture":"persian","religion":"sunni","populationShare0":2000}]},
     {"id":"tabriz","name":"Tabriz","x":46.29,"y":38.08,"terrain":"mountains","duchy":"azerbaijan","culture":"persian","religion":"sunni","dev":6,"realm":"azerbaijan_local_1241","communities":[{"culture":"persian","religion":"sunni","populationShare0":10000}]},
     {"id":"ardabil","name":"Ardabil","x":48.3,"y":38.25,"terrain":"mountains","duchy":"azerbaijan","culture":"persian","religion":"sunni","dev":4,"realm":"azerbaijan_local_1241","communities":[{"culture":"persian","religion":"sunni","populationShare0":10000}]},
     {"id":"amol","name":"Amol","x":52.35,"y":36.47,"terrain":"forest","duchy":"tabaristan","culture":"persian","religion":"sunni","dev":5,"realm":"iran_west_local_1241","communities":[{"culture":"persian","religion":"sunni","populationShare0":10000}]},
@@ -238,7 +241,7 @@ FBDATA.bookmarkRegions1241.iraq_iran_west = {
     {"id":"w_kavir","name":"Dasht-e Kavir","x":54.5,"y":34.0,"terrain":"desert","wasteland":true}
   ],
   realms:[
-    {"id":"abbasid_1241","name":"Abbasid caliphal court","color":"#9b7544","capital":"baghdad","aggression":0,"rank":4,"government":"territorial","religion":"sunni","ruler":{"generated":true,"sex":"m","culture":"arabic","born":1206,"mar":8,"trait":"patient"},"techTraditions":["islamic","persianate"]},
+    {"id":"abbasid_1241","name":"Abbasid caliphal court","color":"#9b7544","capital":"baghdad","aggression":0,"rank":4,"government":"territorial","religion":"sunni","ruler":{"name":"al-Mustansir Billah","sex":"m","culture":"arabic","born":1192,"mar":8,"trait":"patient"},"techTraditions":["islamic","persianate"]},
     {"id":"azerbaijan_local_1241","name":"Azerbaijani local administration","color":"#a04fb0","capital":"tabriz","aggression":0,"rank":2,"government":"territorial","religion":"sunni","ruler":{"generated":true,"sex":"m","culture":"persian","born":1206,"mar":8,"trait":"patient"},"techTraditions":["persianate","islamic"]},
     {"id":"iran_west_local_1241","name":"Western Iranian local administration","color":"#788996","capital":"rayy","aggression":0,"rank":2,"government":"territorial","religion":"sunni","ruler":{"generated":true,"sex":"m","culture":"persian","born":1206,"mar":8,"trait":"patient"},"techTraditions":["persianate","islamic","steppe"]}
   ],
@@ -282,7 +285,7 @@ FBDATA.bookmarkRegions1241.iran_south_khorasan = {
   realms:[
     {"id":"salghurid_1241","name":"Salghurid Fars","color":"#6f9f8f","capital":"shiraz","aggression":0,"rank":2,"government":"territorial","religion":"sunni","ruler":{"generated":true,"sex":"m","culture":"turkic","born":1206,"mar":8,"trait":"patient"},"techTraditions":["persianate","islamic"]},
     {"id":"khorasan_local_1241","name":"Khorasan local administration","color":"#af5f2f","capital":"nishapur","aggression":0,"rank":2,"government":"territorial","religion":"sunni","ruler":{"generated":true,"sex":"m","culture":"persian","born":1206,"mar":8,"trait":"patient"},"techTraditions":["persianate","islamic"]},
-    {"id":"kerman_local_1241","name":"Kirman local court","color":"#929768","capital":"kerman","aggression":0,"rank":2,"government":"territorial","religion":"sunni","ruler":{"generated":true,"sex":"m","culture":"persian","born":1206,"mar":8,"trait":"patient"},"techTraditions":["persianate","islamic","steppe"]}
+    {"id":"kerman_local_1241","name":"Qutlugh-Khanid Kirman","color":"#929768","capital":"kerman","aggression":0,"rank":2,"government":"territorial","religion":"sunni","ruler":{"generated":true,"sex":"m","culture":"persian","born":1206,"mar":8,"trait":"patient"},"techTraditions":["persianate","islamic","steppe"]}
   ],
   duchies:{"fars":{"name":"Fars","kingdom":"fars"},"kerman":{"name":"Kerman","kingdom":"fars"},"merv":{"name":"Merv","kingdom":"khorasan"},"nishapur":{"name":"Nishapur","kingdom":"khorasan"},"herat":{"name":"Herat","kingdom":"khorasan"}},
   kingdoms:{"fars":{"name":"Fars","empire":"persia"},"khorasan":{"name":"Khorasan","empire":"persia"}},
@@ -362,7 +365,7 @@ FBDATA.bookmarkRegions1241.afghan_indus = {
   realms:[
     {"id":"afghan_local_1241","name":"Afghan local administration","color":"#af5f2f","capital":"ghazni","aggression":0,"rank":2,"government":"territorial","religion":"sunni","ruler":{"generated":true,"sex":"m","culture":"persian","born":1206,"mar":8,"trait":"patient"},"techTraditions":["persianate","islamic"]},
     {"id":"bamiyan_local_1241","name":"Bamiyan local administration","color":"#997e58","capital":"bamiyan","aggression":0,"rank":2,"government":"territorial","religion":"sunni","ruler":{"generated":true,"sex":"m","culture":"persian","born":1206,"mar":8,"trait":"patient"},"techTraditions":["persianate","islamic"]},
-    {"id":"sistan_1241","name":"Sistan local court","color":"#2f8f8f","capital":"zaranj","aggression":0,"rank":2,"government":"territorial","religion":"sunni","ruler":{"generated":true,"sex":"m","culture":"persian","born":1206,"mar":8,"trait":"patient"},"techTraditions":["persianate","islamic"]},
+    {"id":"sistan_1241","name":"Mihrabanid Sistan","color":"#2f8f8f","capital":"zaranj","aggression":0,"rank":2,"government":"territorial","religion":"sunni","ruler":{"generated":true,"sex":"m","culture":"persian","born":1206,"mar":8,"trait":"patient"},"techTraditions":["persianate","islamic"]},
     {"id":"makran_1241","name":"Makran local court","color":"#b87945","capital":"tiz","aggression":0,"rank":2,"government":"territorial","religion":"sunni","ruler":{"generated":true,"sex":"m","culture":"arabic","born":1206,"mar":8,"trait":"patient"},"techTraditions":["islamic"]},
     {"id":"sindh_1241","name":"Sindh local court","color":"#6f9348","capital":"mansura","aggression":0,"rank":2,"government":"territorial","religion":"sunni","ruler":{"generated":true,"sex":"m","culture":"persian","born":1206,"mar":8,"trait":"patient"},"techTraditions":["persianate","islamic"]}
   ],
