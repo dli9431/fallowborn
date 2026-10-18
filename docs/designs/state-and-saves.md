@@ -12,6 +12,10 @@ Only fresh player and observer boot may initialize the inventory, after politica
 
 Fresh campaign defaults and replay
 
+Hosted opening access
+
+Optional mobile.hostedAccess declarations add openingAccess:{schema:1,id,startTurn:0,generations:[following,partner]} inside the existing mobile record. The canonical agreement remains in agreements, with its ordinary active/ended lifecycle, finite term and no new payment. The marker persists after expiry prunes the agreement. Strict validation rejects absent, extra, future or altered provenance, changed declared terms and a missing unexpired agreement. No old declaration receives this marker, and existing mobile schemas and the v4 envelope retain their meanings. Matching restore validates facts without performing opening initialization, purchasing admission, renewing consent, harvesting pasture, moving the camp or adding an agenda. The ordinary daily boundary ends access invalidated by living authority or current capacity. An adopted host court retains its agreements through canonical realm-counterparty remapping.
+
 Optional household story records
 
 Finite work contract review, 2026-10-16. The optional household_track version:1 record may additionally contain jobs and jobPatrons together. jobPatrons binds each declared offer to its opening ruler character id or null. jobs contains at most eight one-time records with payerId, workerId, openedTurn, expiresTurn, daysWorked, paid, refunded, escrow, status, resolution and nullable closedTurn. The owning validator checks declared identities, bounded working days, nonfuture transaction stamps, exact expiry terms, completion/resolution consistency and paid plus refunded plus escrow equal to the original fee. These optional fields do not change existing field meanings or the v4 envelope. Old records without either field remain absent and cannot silently acquire an opening patron on restore. Missing tracks remain missing. Pending, disputed, resolved, interrupted and malformed imported-work records have focused regression coverage. Restore never funds, works, pays or refunds; the next ordinary lifecycle boundary owns interruption and pending refunds.

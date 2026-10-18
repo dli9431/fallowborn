@@ -54,6 +54,8 @@
     rationale:'An explicit independent following has no patron entitlement. Actual access, resources and separately consenting counterparts remain necessary, with ordinary unit and travel technology retained.'};
   FBDATA.techImpactReviews.features.mobile_external_commission = {mode:'none',
     rationale:'A finite generation-bound external warrant records political authority without creating a local person, income, land or passage rights. Expiry and ordinary command eligibility govern its scope, not an invented discovery.'};
+  FBDATA.techImpactReviews.features.mobile_hosted_opening = {mode:'none',
+    rationale:'An already accepted opening concession records a political relationship under living parties, direct local possession and finite capacity. It grants no equipment, transport, personal safety or technological exception.'};
   /* The fresh 476 opening inhabits Cherson and adds the Pontic following.
      Priscus attests displaced followings and Roman diplomacy, not a precise
      476 boundary or an identifiable incumbent at this simulated camp. */

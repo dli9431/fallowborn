@@ -132,6 +132,7 @@
       return a.kind === 'access' && a.status === 'active' && a.endTurn > s.turn &&
         a.countyIds.indexOf(pid) >= 0 && s.realms[a.partnerId] && s.realms[a.partnerId].alive &&
         accessControl(s, a.partnerId, pid) &&
+        (!r.openingAccess || r.openingAccess.id !== a.id || hostedAccessCurrent(s, rid, a)) &&
         !FB.armiesHostile(s, { realm:rid }, { realm:a.partnerId });
     })[0];
   }
@@ -197,6 +198,44 @@
     });
     return n;
   }
+  function hostedAccessId(d) { return 'opening_access_' + d.id + '_' + d.mobile.hostedAccess.id; }
+  function hostedAccessCurrent(s, rid, a) {
+    var partner = a.partnerId === 'player' ? s.chars[s.player.charId] : FB.realmRulerCharacterSnapshot(s, a.partnerId);
+    return !!M.leader(s, rid) && availablePerson(s, partner) &&
+      FB.realmRulerGeneration(s, rid) === a.generations[0] &&
+      FB.realmRulerGeneration(s, a.partnerId) === a.generations[1] &&
+      !FB.armiesHostile(s, { realm:rid }, { realm:a.partnerId }) && a.countyIds.every(function (pid) {
+        return accessControl(s, a.partnerId, pid) && a.capacity + allocated(s, pid, a.id) <= capacity(s, pid);
+      });
+  }
+  /* Opening consent is a declaration of an existing relationship, not a new
+     offer or a replay of its former purchase. Preflight the whole batch. */
+  M.hostedAccessPlan = function (s, defs) {
+    var result = { allowed:true, grants:Object.create(null) }, reserved = Object.create(null);
+    defs.forEach(function (d) {
+      var t = d.mobile, a = t && t.hostedAccess;
+      if (a === undefined || M.row(s, d.id)) return;
+      var bm = FB.campaignBookmark(s), realms = Object.create(null);
+      (bm.realms || []).forEach(function (r) { realms[r.id] = r; });
+      if (s.turn !== 0 || M.definitionFaults(d, G.forRealm(s,d.id).id, bm.provinces, realms, null, bm).length) {
+        result.allowed = false; return;
+      }
+      var partnerId = FB.startRealmId(s,a.partnerRealmId), person = FB.bookmarkActor(s,a.partnerActorId);
+      var current = partnerId === 'player' ? s.chars[s.player.charId] : FB.realmRulerCharacterSnapshot(s,partnerId);
+      if (!s.realms[partnerId] || !s.realms[partnerId].alive || !availablePerson(s,person) || !current || person.id !== current.id ||
+          FB.armiesHostile(s, {realm:d.id}, {realm:partnerId}) ||
+          a.countyIds.some(function (pid) {
+            return !accessControl(s,partnerId,pid) ||
+              a.capacity + allocated(s,pid) + (reserved[pid] || 0) > capacity(s,pid);
+          })) { result.allowed = false; return; }
+      a.countyIds.forEach(function (pid) { reserved[pid] = (reserved[pid] || 0) + a.capacity; });
+      result.grants[d.id] = { id:hostedAccessId(d), kind:'access', partnerId:partnerId,
+        countyIds:a.countyIds.slice(), capacity:a.capacity, allowRecruit:a.allowRecruit, price:0, duration:a.duration,
+        status:'active', startTurn:0, endTurn:a.duration, harvestPeriod:-1,
+        generations:[0, FB.realmRulerGeneration(s,partnerId)] };
+    });
+    return result;
+  };
   function stamp(s, rid, t, actor) {
     var r = M.row(s, rid), ids = r.members.map(function (m) { return m.principal.id; }).concat(t.candidateId || [], actor && actor.id || []);
     var chars = ids.map(function (id) { return s.chars[id] || null; });
@@ -616,7 +655,8 @@
     return plan;
   };
   M.initialize = function (s, defs) {
-    var plans={}, people={};
+    var plans={}, people={}, hosted = M.hostedAccessPlan(s,defs);
+    if (!hosted.allowed) throw new Error(FB.T('Invalid hosted opening access.'));
     defs.forEach(function (d) {
       if (!d.mobile || M.row(s,d.id)) return;
       if (d.mobile.opening===undefined) {
@@ -677,6 +717,12 @@
       });
       M.migration(s, d.id).courtIds = r.members.map(function (a) { return a.principal.id; });
       FB.treasuryCredit(s, d.id, d.mobile.treasury);
+      var grant = hosted.grants[d.id];
+      if (grant) {
+        grant.generations[0] = FB.realmRulerGeneration(s,d.id);
+        r.agreements.push(grant);
+        r.openingAccess = {schema:1, id:grant.id, startTurn:0, generations:grant.generations.slice()};
+      }
     });
   };
   FB.mobileInitialize = function (s,defs) {
@@ -793,6 +839,11 @@
       var r = M.row(s,rid), p = M.profile(s,rid);
       if (!r || !p || r.status !== 'active' || !M.active(s,rid) || r.lastDay === s.turn) return;
       r.lastDay = s.turn; r.worked = {};
+      r.agreements.forEach(function (a) {
+        if (r.openingAccess && r.openingAccess.id === a.id && a.status === 'active' && !hostedAccessCurrent(s,rid,a)) {
+          a.status = 'ended'; r.revision++;
+        }
+      });
       r.agreements=r.agreements.filter(function (a) {return a.endTurn>s.turn;});
       if (!r.command && !M.leader(s,rid) && !r.selection) { r.leaderId = null; r.selection = {votes:{}}; r.decision = null; r.revision++; }
       var m = M.migration(s,rid), period = Math.floor(s.turn / 90), a = m && activeAccess(s,rid,m.at);
@@ -1019,7 +1070,7 @@
     if (!mobile) return d.mobile === undefined ? [] : [FB.T('A mobile opening requires a mobile territory strategy.')];
     var t = d.mobile, p = t && profiles[t.profileId], byId = {};
     provinces.forEach(function (pr) {byId[pr.id]=pr;});
-    if (!keys(t,['profileId','patronRealmId','origin','target','food','fighters','treasury','opening','command','sponsorship']) || !p ||
+    if (!keys(t,['profileId','patronRealmId','origin','target','food','fighters','treasury','opening','command','sponsorship','hostedAccess']) || !p ||
         (t.sponsorship!==undefined ? !M.independent(t) || !t.command || !t.opening :
           !Object.prototype.hasOwnProperty.call(realms,t.patronRealmId) || t.patronRealmId === d.id) || !d.nonTerritorial ||
         !byId[t.origin] || byId[t.origin].wasteland || !byId[t.target] || byId[t.target].wasteland ||
@@ -1076,6 +1127,20 @@
       });
       if (invalid || total!==t.fighters) return [FB.T('Invalid authored mobile opening.')];
     }
+    if (t.hostedAccess !== undefined) {
+      var a = t.hostedAccess;
+      var actorDef = a && bookmark && bookmark.opening && bookmark.opening.actors &&
+        Object.prototype.hasOwnProperty.call(bookmark.opening.actors,a.partnerActorId) && bookmark.opening.actors[a.partnerActorId];
+      if (!t.opening || !t.command || !keys(a,['id','partnerRealmId','partnerActorId','countyIds','capacity','allowRecruit','duration']) ||
+          typeof a.id !== 'string' || !/^[a-z][a-z0-9_]{0,47}$/.test(a.id) || hostedAccessId(d).length > 160 ||
+          !Object.prototype.hasOwnProperty.call(realms,a.partnerRealmId) || a.partnerRealmId === d.id || realms[a.partnerRealmId].mobile ||
+          !actorDef || !actorDef.ref || actorDef.ref.kind !== 'realm_ruler' || actorDef.ref.realmId !== a.partnerRealmId ||
+          !Array.isArray(a.countyIds) || !a.countyIds.length || a.countyIds.length > 16 || a.countyIds.indexOf(t.origin) < 0 ||
+          a.countyIds.some(function (pid,i) { return !Object.prototype.hasOwnProperty.call(byId,pid) || byId[pid].wasteland || a.countyIds.indexOf(pid) !== i; }) ||
+          !whole(a.capacity) || a.capacity < p.members.reduce(function (n,m) {return n+m.population;},0) || a.capacity > 100000000 ||
+          typeof a.allowRecruit !== 'boolean' || !whole(a.duration) || !a.duration || a.duration > 1440)
+        return [FB.T('Invalid hosted opening access.')];
+    }
     return [];
   };
   var validateGovernments = G.validate;
@@ -1102,7 +1167,7 @@
       var p = M.profile(s,rid), moving = M.migration(s,rid), ids = {}, principals = {};
       if (moving && !M.migrationSponsorshipValid(s,moving)) fault(rid,'sponsorship');
       if (!keys(r,['schema','profileId','migrationId','status','serial','revision','leaderId','selection','decision','food','lastDay','lastAI',
-          'worked','agreements','accounting','members','defeatKey','openingBindings','command']) || [1,2,3].indexOf(r.schema)<0 || !p || !moving || moving.realmId !== rid ||
+          'worked','agreements','accounting','members','defeatKey','openingBindings','command','openingAccess']) || [1,2,3].indexOf(r.schema)<0 || !p || !moving || moving.realmId !== rid ||
           !['active','settled','dispersed'].includes(r.status) || !whole(r.serial) || !whole(r.revision) || !whole(r.lastDay) || r.lastDay > s.turn ||
           r.lastAI !== undefined && (!whole(r.lastAI) || r.lastAI>Math.floor(s.turn/90)) || !boundedNumber(r.food,1000000000000) ||
           !keys(r.accounting,['initial','arrivals','dead','settled','dispersed']) || Object.keys(r.accounting).length !== 5 ||
@@ -1157,6 +1222,21 @@
             a.kind !== 'access' && !whole(a.levy)) fault(rid,'agreements');
         allIds[key]=true;
       });
+      var hosted = declaration && declaration.mobile && declaration.mobile.hostedAccess, marker = r.openingAccess;
+      if (!hosted) { if (marker !== undefined) fault(rid,'openingAccess'); }
+      else {
+        if (!keys(marker,['schema','id','startTurn','generations']) || Object.keys(marker).length !== 4 || marker.schema !== 1 ||
+            marker.id !== hostedAccessId(declaration) || marker.startTurn !== 0 || !Array.isArray(marker.generations) ||
+            marker.generations.length !== 2 || marker.generations.some(function (n,i) {
+              return !whole(n) || !n || n > FB.realmRulerGeneration(s,i ? FB.startRealmId(s,hosted.partnerRealmId) : rid);
+            })) fault(rid,'openingAccess');
+        var grant = r.agreements.filter(function (a) {return a.id === marker.id;})[0];
+        if (!grant && s.turn < hosted.duration && r.status === 'active' || grant &&
+            (grant.kind !== 'access' || grant.partnerId !== FB.startRealmId(s,hosted.partnerRealmId) || grant.price !== 0 || grant.levy !== undefined ||
+              grant.duration !== hosted.duration || grant.capacity !== hosted.capacity || grant.allowRecruit !== hosted.allowRecruit ||
+              grant.startTurn !== 0 || grant.status === 'offered' || JSON.stringify(grant.countyIds) !== JSON.stringify(hosted.countyIds) ||
+              JSON.stringify(grant.generations) !== JSON.stringify(marker.generations))) fault(rid,'openingAccess');
+      }
       (s.armies || []).filter(function (a) {return a.realm===rid && a.mobileFollowing;}).forEach(function (a) {
         pool(rid,a.mobileRoster,true);
         if (a.id !== moving.hostId || a.migrationId !== moving.id || sum(a.mobileRoster) !== a.men || a.mobileRoster.some(function (c) {return !ids[c.memberId];}) ||

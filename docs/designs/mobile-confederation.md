@@ -61,6 +61,14 @@ Technology impact is none independently for membership, leadership, recruitment 
 
 Composed command policies
 
+Already hosted openings
+
+Optional mobile.hostedAccess records one previously accepted, finite access concession for an authored opening. It names the actual outside holder, inhabited counties including the existing camp origin, capacity for the complete following, recruitment permission and remaining duration. It initializes only at turn zero after pure batch preflight. The current living parties, lawful direct possession and combined local capacity must permit the declaration. It neither moves people nor transfers ownership, food or money. Past admission payments are not replayed, and the saved concession has no payment due. Later offers and renewals use ordinary bilateral consent and the actual public payer.
+
+The canonical agreements array owns the concession. A versioned optional openingAccess marker records its stable identity, original turn and party generations even after expiry removes the agreement. It prevents missing or altered opening records from being repaired during restore. Changed generations, unavailable parties, hostility, loss of direct possession or insufficient capacity suspend opening access immediately. The daily boundary ends an invalid opening concession without a fine, forced departure or casualty. It cannot revive automatically when control returns. Existing negotiated agreements retain their existing rules.
+
+Technology impact is none for mobile_hosted_opening: this is political access constrained by living authority and available capacity. It supplies no discovery, equipment, custody release or guarantee of personal safety. The ordinary ruler_agenda priority and finish choices already support costless reviews by a retained mobile leader. They preserve the original person and generation and execute no access renewal, move or protection operation. Outside rulers can still accept actual later offers through agenda_mobile_offer and its canonical consent and payment review.
+
 Mobility is now read from coalition_court's mobileFollowing territory marker. Coalition leadership retains its existing weighted succession and consent. The independently selected retained_principal and superior_commission strategies reuse the same population, camp, treasury and host through explicit command declarations, with no member election or invented hereditary successor. command_consent revalidates public operation scope while the outside court and ordinary owners retain their checks. command_receipts grants no local or general realm income. The new schemas, private-station separation, ordinary JSON examples and none technology decisions are documented in docs/designs/mobile-command.md. Legacy generated openings and schema-1/schema-2 records keep their behavior.
 
 Independent command followings
