@@ -41,3 +41,7 @@ Seasonal detached compilation checks the base and its declared replacement alter
 Required seasonal facilities
 
 A building may name seasonProfile to require one exact seasonal policy. Unassigned assets project zero ongoing benefits, and new player, baron and realm construction needs an actual matching production assignment, the permitted local kind and room in the existing production owner. The canonical paid construction transaction enrolls an empty asset. It creates no opening goods, work or allocated benefit. Missing or mismatched policy references reject detached imports. Omitted seasonProfile retains legacy behavior. This refines the existing none seasonal technology decision.
+
+Fish preservation policy
+
+fish_drying_cool permits the explicitly configured cool_season kind, with seven-day periods and terms. A fresh fish lot lasts four days from its actual diverted receipt; a dried lot lasts thirty days from actual batch completion. One locally allocated dried unit supplies the station's existing 0.03 famine protection for at most seven days and never beyond the active term. A suitable weather declaration is a simulation abstraction, not a temperature or humidity measurement. Warm or wet windows require a different local kind and cannot open this policy. The independent fish-drying-cool.json and fish-drying-wet.json ordinary imports contrast climate mappings, geography, dates, people, output shares and finite buyers. They infer no historical catches or export volumes.

@@ -359,3 +359,7 @@ fortProfiles entries deliberately contain structural material ids and numeric le
 Engineered water display ownership
 
 data/technology_waterworks.js declares tech_waterworks and data/buildings_waterworks.js declares buildings_waterworks. Their three new tech and three building rows retain the ordinary tech.<id>.name/desc.default and building.<id>.name/desc.default owners and final-English aliases. Operation policies contain only structural ids and numeric terms, with no new display owner. Existing technology requirements and Water service reviews expose current missing knowledge, input and payment through the shared localized UI. No rendered status is saved and no generated catalogue changes accompany these declarations.
+
+Fish preservation display owners
+
+The literal buildings_fish_drying map retains building.fish_drying_station name and description owners. Additive productionGoods_fish_drying and productionRecipes_fish_drying maps in production_fish_drying.js use the productionGood and productionRecipe namespaces through the additive production extractor. Season and producer policies contain only references and numbers. Ordinary JSON display text keeps English fallback. Existing shared reviews use FB.T; no rendered prose enters lots, batches or seasonal receipts. Generated catalogues remain unchanged on the feature branch.

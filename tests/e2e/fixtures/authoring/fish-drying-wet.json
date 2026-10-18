@@ -1,0 +1,388 @@
+{
+  "name": "Fictional wet fish preservation",
+  "climateZones": {
+    "rain_drying_coast": {
+      "name": "Declared wet coastal weather",
+      "seasons": [
+        "summer",
+        "autumn",
+        "warm_wet",
+        "cool_season"
+      ]
+    }
+  },
+  "geographies": {
+    "fish_wet_land": {
+      "bounds": {
+        "lonMin": 0,
+        "lonMax": 6,
+        "latMin": 0,
+        "latMax": 5
+      },
+      "land": [
+        [
+          0.5,
+          0.5,
+          5.5,
+          0.5,
+          5.5,
+          4.5,
+          0.5,
+          4.5
+        ]
+      ],
+      "gridWidth": 240,
+      "seas": [],
+      "rivers": [],
+      "defaultLayout": null,
+      "provinces": [
+        {
+          "id": "rain_harbor",
+          "x": 1.7,
+          "y": 3.1,
+          "terrain": "farmland"
+        },
+        {
+          "id": "rain_headland",
+          "x": 4.1,
+          "y": 1.4,
+          "terrain": "hills"
+        }
+      ],
+      "sites": {
+        "rain_racks": {
+          "x": 1.7,
+          "y": 3.1
+        },
+        "rain_store": {
+          "x": 4.1,
+          "y": 1.4
+        }
+      }
+    }
+  },
+  "startScenarios": [
+    {
+      "id": "fish_wet_ruler",
+      "name": "Coastal holder",
+      "desc": "Fictional conserved preservation review.",
+      "intro": "Review actual stock and local weather.",
+      "tier": 5,
+      "profession": "noble",
+      "gold": 100,
+      "prestige": 0,
+      "piety": 0,
+      "bookmarkIds": [
+        "fish_wet"
+      ],
+      "eras": [
+        "early_medieval"
+      ],
+      "alwaysUnlocked": true,
+      "familyPresets": {
+        "standard": {
+          "name": "Established household",
+          "diff": "age 24"
+        }
+      },
+      "rulerRealmId": "fish_wet_court",
+      "governmentForm": "regnum",
+      "fixedProvinceId": "rain_harbor",
+      "characterName": "Edda Rain",
+      "sex": "f",
+      "startCulture": "norse",
+      "startReligion": "catholic",
+      "onboarding": "ruler"
+    },
+    {
+      "id": "fish_wet_household",
+      "name": "Coastal household",
+      "desc": "Fictional conserved preservation review.",
+      "intro": "Review actual stock and local weather.",
+      "tier": 1,
+      "profession": "farmer",
+      "gold": 100,
+      "prestige": 0,
+      "piety": 0,
+      "bookmarkIds": [
+        "fish_wet"
+      ],
+      "eras": [
+        "early_medieval"
+      ],
+      "alwaysUnlocked": true,
+      "familyPresets": {
+        "standard": {
+          "name": "Established household",
+          "diff": "age 24"
+        }
+      },
+      "startAge": 24
+    }
+  ],
+  "bookmarks": {
+    "fish_wet": {
+      "id": "fish_wet",
+      "name": "Fictional wet coast",
+      "desc": "Simulation units and explicit facilities, without a historical inventory claim.",
+      "date": {
+        "year": 920,
+        "season": 2,
+        "day": 1
+      },
+      "era": "early_medieval",
+      "geography": "fish_wet_land",
+      "settlementLayout": null,
+      "climate": {
+        "zone": "rain_drying_coast",
+        "provinces": {}
+      },
+      "religiousHeads": {},
+      "localInstitutions": {},
+      "stories": [],
+      "starts": [
+        "fish_wet_ruler",
+        "fish_wet_household"
+      ],
+      "scripted": [],
+      "straits": [],
+      "crossingClasses": {},
+      "provinces": [
+        {
+          "id": "rain_harbor",
+          "name": "Drying quay",
+          "realm": "fish_wet_court",
+          "culture": "norse",
+          "religion": "catholic",
+          "dev": 5,
+          "settlements": [
+            {
+              "site": "rain_racks",
+              "name": "Drying quay",
+              "kind": "town"
+            }
+          ]
+        },
+        {
+          "id": "rain_headland",
+          "name": "Buyer shore",
+          "realm": "fish_wet_buyer",
+          "culture": "norse",
+          "religion": "catholic",
+          "dev": 5,
+          "settlements": [
+            {
+              "site": "rain_store",
+              "name": "Buyer shore",
+              "kind": "town"
+            }
+          ]
+        }
+      ],
+      "realms": [
+        {
+          "id": "fish_wet_court",
+          "name": "Drying quay court",
+          "capital": "rain_harbor",
+          "color": "#458c96",
+          "aggression": 0,
+          "rank": 2,
+          "government": "regnum",
+          "ruler": {
+            "name": "Edda Rain",
+            "culture": "norse",
+            "born": 887,
+            "mar": 6,
+            "trait": "patient"
+          }
+        },
+        {
+          "id": "fish_wet_buyer",
+          "name": "Buyer shore court",
+          "capital": "rain_headland",
+          "color": "#779955",
+          "aggression": 0,
+          "rank": 2,
+          "government": "regnum",
+          "ruler": {
+            "name": "Kari Fell",
+            "culture": "norse",
+            "born": 884,
+            "mar": 6,
+            "trait": "patient"
+          }
+        }
+      ],
+      "duchies": {},
+      "kingdoms": {},
+      "empires": {},
+      "openingInfrastructure": {
+        "version": 1,
+        "placements": [
+          {
+            "countyId": "rain_harbor",
+            "siteId": "rain_racks",
+            "buildingId": "fish_drying_station",
+            "condition": "standing"
+          },
+          {
+            "countyId": "rain_headland",
+            "siteId": "rain_store",
+            "buildingId": "preserved_store",
+            "condition": "standing"
+          }
+        ]
+      },
+      "productionSites": [
+        {
+          "id": "drying_plant",
+          "countyId": "rain_harbor",
+          "siteId": "rain_racks",
+          "buildingId": "fish_drying_station",
+          "recipeIds": [
+            "dry_fish"
+          ],
+          "openingLots": [
+            {
+              "goodId": "generic_food",
+              "quantity": 10
+            }
+          ]
+        },
+        {
+          "id": "provisions_buyer",
+          "countyId": "rain_headland",
+          "siteId": "rain_store",
+          "buildingId": "preserved_store",
+          "recipeIds": [
+            "dry_fish"
+          ],
+          "openingLots": []
+        }
+      ],
+      "productionProducerAssignments": [
+        {
+          "id": "actual_catch",
+          "profileId": "wet_fish_share",
+          "siteId": "drying_plant"
+        }
+      ],
+      "productionExchangeAssignments": [
+        {
+          "id": "provisions_sale",
+          "profileId": "dry_sale",
+          "fromSiteId": "drying_plant",
+          "toSiteId": "provisions_buyer"
+        }
+      ],
+      "buildingSeasonAssignments": [
+        {
+          "id": "drying_window",
+          "profileId": "fish_drying_cool",
+          "operationId": null,
+          "productionSiteId": "drying_plant",
+          "resources": []
+        },
+        {
+          "id": "buyer_window",
+          "profileId": "buyer_preserved",
+          "operationId": null,
+          "productionSiteId": "provisions_buyer",
+          "resources": []
+        }
+      ]
+    }
+  },
+  "productionGoods": {
+    "generic_food": {
+      "name": "Generic food",
+      "unit": "food_units",
+      "mass": 1
+    }
+  },
+  "productionExchangeProfiles": {
+    "dry_sale": {
+      "goodId": "dried_provisions",
+      "marketGoodId": "provisions",
+      "basePrice": 2,
+      "mode": "market",
+      "quantityLimit": 1,
+      "budget": 5
+    }
+  },
+  "buildings": {
+    "preserved_store": {
+      "name": "Preserved stores",
+      "desc": "Finite received provisions only.",
+      "role": "food_store",
+      "cost": 20,
+      "upkeep": 1,
+      "maxCounty": 1,
+      "populationFamineProtection": 0.03,
+      "seasonProfile": "buyer_preserved"
+    }
+  },
+  "buildingSeasonProfiles": {
+    "buyer_preserved": {
+      "seasonKinds": [
+        "cool_season"
+      ],
+      "periodDays": 5,
+      "maxDays": 3,
+      "care": false,
+      "stockLives": [
+        {
+          "goodId": "dried_provisions",
+          "days": 8
+        }
+      ],
+      "benefit": {
+        "goodId": "dried_provisions",
+        "quantity": 1,
+        "effect": "populationFamineProtection",
+        "days": 3
+      }
+    }
+  },
+  "enterprises": {
+    "wet_fishery": {
+      "name": "Working coastal fishery",
+      "icon": "*",
+      "cost": 25,
+      "profession": "farmer",
+      "yield": 8,
+      "laborPay": 1,
+      "coastal": true,
+      "desc": "An independently declared staffed fish producer."
+    }
+  },
+  "enterpriseMechanics": {
+    "wet_fishery": {
+      "output": {
+        "provisions": 1
+      },
+      "typedProduction": {
+        "fresh_fish": {
+          "marketGoodId": "provisions",
+          "marketUnits": 12
+        }
+      }
+    }
+  },
+  "productionProducerProfiles": {
+    "wet_fish_share": {
+      "enterpriseType": "wet_fishery",
+      "goodId": "fresh_fish",
+      "marketGoodId": "provisions",
+      "marketUnits": 12,
+      "share": 0.25,
+      "maxQuantity": 1
+    }
+  },
+  "seasonKinds": {
+    "warm_wet": {
+      "name": "Warm wet season",
+      "hardship": true
+    }
+  }
+}
