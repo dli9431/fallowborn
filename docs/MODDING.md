@@ -4111,6 +4111,8 @@ non-empty `fallback`, and none entries must not name technologies. The core base
 - Optional `cultures` / `notCultures` arrays select mutually exclusive definitions when
   a project begins. Once completed, the selected id remains valid after cultural
   succession. These restrictions remain primarily for old mods.
+
+Culture selection restrictions govern ordinary research, independently of historical starting knowledge and prerequisite closure. Fresh complete/expose/omit declarations continue to use the effective graph. In the shipped catalogue, annual_fairs requires urban_markets and siege_engineering requires geometry; these corrections retain explicit costs, inherited adoption windows and effects. They do not award a specific engine, enact a protected fair, grant an office or reseed an existing campaign. See docs/research/technology-civic-military.md for scope and sources. Supplemental source tables organize built-in replacements only; ordinary imports still use tech and buildings.
 - Scalar `fx` keys summed by `FB.techBonus` are `tax`/`levy` (fractional multipliers),
   `battle` (added battle power), `devCap` (development ceiling), `health` (lower ruler
   mortality), `research` (national points each season), `domain` (domain capacity),

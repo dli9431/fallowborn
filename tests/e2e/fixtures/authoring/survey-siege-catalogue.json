@@ -1,0 +1,14 @@
+{
+  "name": "Survey siege catalogue example",
+  "tech": {
+    "siege_engineering": {
+      "name": "Surveyed Siege Approaches",
+      "icon": "📐", "domain": "warfare", "cost": 47,
+      "req": ["geometry", "road_surveys"],
+      "history": {"attested": [400, 700], "adoption": {"default": [550, 850]}},
+      "desc": "This fictional catalogue requires surveyed approaches as well as geometry.",
+      "confidence": "medium", "sources": ["MOD"],
+      "unlocks": ["rule:siege_engineers"], "capabilities": [], "fx": {"siege": 0.013}
+    }
+  }
+}

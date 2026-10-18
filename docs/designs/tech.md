@@ -1,5 +1,11 @@
 # National technology
 
+Commercial and siege catalogue corrections
+
+data/technology_civic_military.js supplies complete literal replacements after the base catalogue. annual_fairs requires urban_markets, without a mandatory merchant-guild prerequisite. siege_engineering requires geometry, without completing torsion_artillery merely to express generic engineering competence. Costs, history windows, inherited adoption pairs, effects, unlocks and grants remain unchanged. The castle, relay, capitulary, assay and care descriptions distinguish organized refinements from first inventions, operating institutions and public rights. The source discussion and limits are in docs/research/technology-civic-military.md.
+
+Fresh campaigns apply the current graph through the ordinary historical policy and complete/expose/omit closure. Omission of a genuine prerequisite still blocks its descendants. cultures/notCultures restrict project selection, independently of historical seeding and prerequisite completion. Existing completed knowledge, partial projects and property retain their saved identities, with no reseeding for this catalogue correction. No independently gateable capability or new grant is introduced, so the graph and description cleanup adds no technology-impact ledger entry. The separate equipment, fort, construction and political authority gates remain in force.
+
 Religious catalogue eligibility
 
 faith_catalogue_availability has technology impact none. Dated religious identity and eligibility for community, household, ruler and institutional consumers are social authoring conditions, independent of discovery. Existing communities and projects retain their identities when their authoring window ends. The declaration adds no research unlock, institutional capacity, population transfer or advancement reward; see docs/designs/religions.md.

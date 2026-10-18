@@ -1,5 +1,9 @@
 # Development & buildings
 
+Guild, range and furnace presentation
+
+data/buildings_civic_military.js supplies complete replacements for guildhall, archery_butts and foundry after the base building and technology tables. Chartered Guildhall (Italian Guild Hall) represents chartered guild facilities, with no commune or public office created. Archery Butts describes specialized military training under crossbows rather than a universal Sunday obligation. Foundry and Forge Works describes advanced furnace capacity under blast_furnace, distinct from ordinary smithing and older casting. All numeric fields, gates, roles, limits and AI priorities remain unchanged. The existing hard building reviews still apply; these presentation corrections add no independently gateable capability. Existing standing/ruined records, repair and normal paid construction retain their ordinary behavior. Source context is in docs/research/technology-civic-military.md.
+
 Construction applicability
 
 Optional building applicability limits new construction by inclusive live-year bounds, stamped campaign era, physical county, declared primary resident culture and the payer's sovereign technology traditions. Different dimensions combine; alternatives within a list match individually. The pure buildingApplicabilityStatus projection supplies the same first localized blocker to player construction, automation, realm AI, private barons, fort funding and the Building Works picker. Ordinary authority, price, development, siting, technology and occupancy still apply, and confirmation recomputes live eligibility before spending.
