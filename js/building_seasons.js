@@ -27,6 +27,11 @@
             !seen[p.benefit.goodId] || !int(p.benefit.quantity,1,10000) || fields.indexOf(p.benefit.effect)<0 || !int(p.benefit.days,1,90)))
         errors.push('buildingSeasonProfiles.'+key+': invalid season, bounded term, lifetime or existing-field benefit.');
     });
+    Object.keys(c.buildings || {}).forEach(function(key){
+      var d=c.buildings[key];
+      if (d.seasonProfile!==undefined && (!id(d.seasonProfile) || !own(table,d.seasonProfile)))
+        errors.push('Building seasonal profile must reference an existing policy.');
+    });
     return errors;
   };
   S.compilePrepared = function(bm) {
@@ -44,7 +49,8 @@
       seen[a.id]=true;
       var p=FBDATA.buildingSeasonProfiles[a.profileId],consumer=a.operationId===null ? production.sites.find(function(x){return x.id===a.productionSiteId;}) : water.assignments.find(function(x){return x.id===a.operationId;});
       var physical=consumer && JSON.stringify([consumer.countyId,consumer.siteId,consumer.buildingId]),rs={};
-      if (!p || !consumer || assets[physical]) {fail();return;}
+      if (!p || !consumer || assets[physical] || FBDATA.buildings[consumer.buildingId].seasonProfile &&
+          FBDATA.buildings[consumer.buildingId].seasonProfile!==a.profileId) {fail();return;}
       assets[physical]=true;
       var definitions=[FBDATA.buildings[consumer.buildingId]].concat(FB.buildingProfiles.ids(consumer.buildingId).map(function(id){
         return FB.buildingProfiles.definition(consumer.buildingId,id);
@@ -115,6 +121,12 @@
   function assignment(s,key,value) {return plan(s).assignments.find(function(a){return a[key]===value;});}
   S.hasCounty=function(s,pid) {return plan(s).assignments.some(function(a){return a.countyId===pid;});};
   S.hasOperation=function(s,operationId) {return !!assignment(s,'operationId',operationId);};
+  S.constructionReady=function(s,pid,slot,buildingId,who,d) {
+    if (!d || !d.seasonProfile) return true;
+    var a=plan(s).assignments.find(function(x){return x.countyId===pid && x.slot===slot && x.buildingId===buildingId && x.profileId===d.seasonProfile;});
+    return !!a && !plan(s).errors.length && a.profile.seasonKinds.indexOf(FB.localSeason(s,pid))>=0 &&
+      a.productionSiteId!==null && FB.production.constructionReady(s,a.productionSiteId,who);
+  };
   S.ready=function(s,key,value,who) {
     var a=assignment(s,key,value);if (!a) return true;
     var t=term(s,a);return live(s,a,t) && eq(t.actor,who);
@@ -203,7 +215,8 @@
   S.effects=function(s,pid,b,base) {
     var a=plan(s).assignments.find(function(x){return x.countyId===pid && x.slot===b.s && x.buildingId===b.id &&
       (x.operationId===null || b.waterOperation && b.waterOperation.assignmentId===x.operationId);});
-    if (!a) return base;
+    if (!a && !base.seasonProfile) return base;
+    if (!a) {var idle=Object.assign({},base);fields.forEach(function(k){idle[k]=0;});return idle;}
     var out=Object.assign({},base),t=term(s,a),on=live(s,a,t),benefit=a.profile.benefit;
     if (benefit) on=on && !!(s.buildingSeasons.debits.find(function(d){return d.kind==='allocated' && d.termId===t.id && d.untilTurn>s.turn;}));
     fields.forEach(function(k){if (!on || benefit && benefit.effect!==k) out[k]=0;});

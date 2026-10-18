@@ -150,6 +150,7 @@
   O.bind = function (s,pid,r) {
     var d = FB.buildingProfiles.assetDefinition(r), a = d && d.operationProfile && assignment(s,pid,r.s,r.id,d.operationProfile);
     if (a) r.waterOperation = {v:1,id:FB.uid(),profileId:a.profileId,assignmentId:a.id,revision:0};
+    FB.production.bindConstruction(s,pid,r);
   };
   function publicPayer(s,a) { return a.kind === 'realm' && (a.id !== 'player' || FB.electiveCrown(s,a.id)); }
   function funds(s,a) {
@@ -253,6 +254,7 @@
   };
   O.constructionReady = function (s,pid,slot,buildingId,who,profileId) {
     var d = FB.buildingProfiles.definition(buildingId,profileId);
+    if (!FB.buildingSeasons.constructionReady(s,pid,slot,buildingId,who,d)) return false;
     if (!d || !d.operationProfile) return true;
     var a = assignment(s,pid,slot,buildingId,d.operationProfile);
     if (a && !FB.buildingSeasons.prospective(s,a.id)) return false;

@@ -202,6 +202,20 @@
     if (r) r.batches.forEach(function(b){if(b.status==='reserved')b.inputs.forEach(function(x){held[x.lotId]=(held[x.lotId] || 0)+x.quantity;});});
     return held;
   }
+  // Construction enrolls an empty asset only; opening inventories remain once-only.
+  P.constructionReady = function(s,siteId,who) {
+    var p=plan(s),a=p.sites.find(function(x){return x.id===siteId;}),r=s.production;
+    return !!a && !p.errors.length && !!r && r.definition===definition(p) && r.assets.length<128 && r.nextId<MAX &&
+      !!original(s,who) && !!money(s,who) && eq(FB.settlementHolder(s,a.countyId,a.slot),who);
+  };
+  P.bindConstruction = function(s,pid,b) {
+    var p=plan(s),a=p.sites.find(function(x){return x.countyId===pid && x.slot===b.s && x.buildingId===b.id;}),r=s.production;
+    if (!a || b.productionAsset || !r) return;
+    var who=FB.settlementHolder(s,pid,b.s);
+    if (!P.constructionReady(s,a.id,who)) return;
+    var asset={id:freshId(r),siteId:a.id,owner:copy(who),openedTurn:s.turn,constructed:true};
+    r.assets.push(asset);b.productionAsset={version:1,id:asset.id};r.revision++;
+  };
   P.snapshot = function (s,countyId,siteId) {
     var p = plan(s), r = s.production, held=reservationTotals(r);
     return p.sites.filter(function (a) { return (!countyId || a.countyId === countyId) && (!siteId || a.siteId === siteId); }).map(function (a) {
@@ -391,10 +405,11 @@
     }
     function unique(key) { if (!int(key,1,r.nextId-1) || seen[key]) fail();seen[key]=true; }
     r.assets.forEach(function (a) {
-      if (!keys(a,['id','siteId','owner','openedTurn']) || !siteTable[a.siteId] || !identity(a.owner) || a.openedTurn !== 0 || openings[a.siteId]) fail();
+      if (!keys(a,['id','siteId','owner','openedTurn','constructed']) || !siteTable[a.siteId] || !identity(a.owner) ||
+          (a.constructed===undefined ? a.openedTurn!==0 || openings[a.siteId] : a.constructed!==true || !int(a.openedTurn,0,s.turn))) fail();
       var d=siteTable[a.siteId],opening=originalAssets.placements.find(function(x){return x.countyId===d.countyId && x.siteId===d.siteId && x.buildingId===d.buildingId && x.condition==='standing';});
-      if (!opening || !eq(a.owner,{kind:'realm',id:FB.startRealmId(s,opening.holderId)})) fail();
-      unique(a.id);assets[a.id]=a;openings[a.siteId]=a;
+      if (a.constructed===undefined && (!opening || !eq(a.owner,{kind:'realm',id:FB.startRealmId(s,opening.holderId)}))) fail();
+      unique(a.id);assets[a.id]=a;if (a.constructed===undefined) openings[a.siteId]=a;
     });
     var stampIds = {};
     stamps.forEach(function (x) {
@@ -411,7 +426,7 @@
       unique(lot.id);lots[lot.id]=lot;used[lot.id]=0;
       if (lot.origin.kind === 'opening') {
         var a=siteTable[asset.siteId],index=lot.origin.index,initial=a.openingLots[index];
-        if (!keys(lot.origin,['kind','index']) || !int(index,0,7) || !initial || initial.goodId !== lot.goodId || initial.quantity !== lot.quantity ||
+        if (asset.constructed || !keys(lot.origin,['kind','index']) || !int(index,0,7) || !initial || initial.goodId !== lot.goodId || initial.quantity !== lot.quantity ||
             own(openings,asset.siteId + ':' + index)) fail();
         openings[asset.siteId + ':' + index]=lot.id;
       } else if (lot.origin.kind === 'exchange' || lot.origin.kind === 'producer') {
@@ -429,7 +444,7 @@
           !(eq(b.payer,b.actor) || b.actor.kind === 'realm' && b.actor.id === 'player' && b.payer.kind === 'character' && b.payer.id === b.workerId) ||
           (b.actor.kind === 'character' ? b.actor.id !== b.workerId || b.generation !== null : !int(b.generation,0,FB.realmRulerGeneration(s,b.actor.id))) ||
           ['reserved','committed','cancelled'].indexOf(b.status) < 0 || ['store','use'].indexOf(b.disposition) < 0 || b.paid !== recipe.workPrice ||
-          !int(b.openedTurn,0,s.turn) || (b.status === 'reserved' ? b.closedTurn !== null : !int(b.closedTurn,b.openedTurn,s.turn)) ||
+          !int(b.openedTurn,asset.openedTurn,s.turn) || (b.status === 'reserved' ? b.closedTurn !== null : !int(b.closedTurn,b.openedTurn,s.turn)) ||
           !Array.isArray(b.workTurns) || b.workTurns.length > recipe.workDays || !Array.isArray(b.inputs) || !b.inputs.length || b.inputs.length > LIMIT ||
           !Array.isArray(b.outputs) || b.outputs.length !== (b.status === 'committed' ? recipe.outputs.length : 0) ||
           b.status === 'committed' && b.workTurns.length !== recipe.workDays || asset.id >= b.id) fail();
@@ -503,7 +518,7 @@
     });
     var pending={};
     r.batches.forEach(function(b){if(b.status==='reserved'){if(pending[b.assetId])fail();pending[b.assetId]=true;}});
-    if (Object.keys(seen).length !== r.nextId-1 || r.revision !== r.batches.reduce(function(n,b){return n+1+b.workTurns.length+(b.status==='reserved'?0:1);},0)+economic.revision+maritime.revision+relay.revision) fail();
+    if (Object.keys(seen).length !== r.nextId-1 || r.revision !== r.batches.reduce(function(n,b){return n+1+b.workTurns.length+(b.status==='reserved'?0:1);},0)+economic.revision+maritime.revision+relay.revision+r.assets.filter(function(a){return a.constructed;}).length) fail();
     return true;
   };
 })();
