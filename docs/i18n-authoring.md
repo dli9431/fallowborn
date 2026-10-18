@@ -351,3 +351,9 @@ Literal FBDATA.siegeSupportProfiles in data/siege_support.js uses siegeSupportPr
 Maintained maritime work presentation
 
 Literal FBDATA.maritimeWorkProfiles in data/maritime_work.js uses maritimeWorkProfile.<id>.name.default and maritimeWorkProfile.<id>.desc.default owners with exact-source aliases and ordinary imported-English fallback. Static extraction reads display prose only and never runs production or invoice transactions. The shared settlement review renders these fields through FB.dataText; invoice, contribution, quantity, private payer, expiry, blockers and confirmation consequences use literal FB.T phrases with named placeholders. Saved receipts contain structural ids and numbers only. No generated catalog command is needed for feature authoring.
+
+Mixed building and profile supplements
+
+Literal buildingProfiles_<suffix> tables are also extracted from data/buildings_*.js so a facility catalogue can own variants without an extra loader file. They use the existing buildingProfile name/desc owners and static extraction, including files which also hold ordinary building declarations. Runtime JSON retains English fallback. No catalogue regeneration is needed during feature work.
+
+Literal siteResourceProfiles_<suffix> in the same buildings supplements extract name/desc under siteResourceProfile owners. This keeps physical source labels localizable without adding an extra runtime file.
