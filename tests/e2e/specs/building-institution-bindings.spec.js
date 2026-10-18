@@ -69,6 +69,18 @@ test('an opted-in inherited unbound facility stays dormant through restore until
   expect(r).toEqual({idle:true,occupied:true,retained:true,reviewed:true,repeat:false,noCharge:true,tax:2,upkeep:2});
 });
 
+test('an unbound required facility exposes the existing phone permission review and retains focus', async function ({ page }, info) {
+  await start(page,info,'see',false,true);await page.setViewportSize({width:390,height:844});
+  await page.evaluate(function(){FB.ui.showBuildings(bindingCounty);});
+  const button=page.locator('[data-institution-building="binding_work"]');
+  await expect(page.locator('#gm-body')).toContainText('No current institutional permission.');
+  await button.focus();await button.press('Enter');
+  await expect(page.locator('#gm-binding-apply')).toBeEnabled();
+  await expect(page.locator('#gm-body')).toContainText('No payment');
+  await page.keyboard.press('Escape');await expect(button).toBeFocused();
+  await button.click();await page.locator('#gm-cancel').click();await expect(button).toBeFocused();
+});
+
 test('the see import binds the actual office and pays construction and maintenance once', async function ({ page }, info) {
   await start(page, info, 'see');
   const r = await page.evaluate(function () {

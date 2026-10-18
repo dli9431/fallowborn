@@ -44,4 +44,6 @@ A building profile may select an existing institutionProfile while retaining the
 
 Required binding policy
 
+An unbound required facility exposes the existing Review permission control and dormant explanation in Building Works. It uses the same exact current foundation/payer quote and preserves the existing phone, keyboard, Back, Escape and originating-focus behavior.
+
 A policy may explicitly opt into requiresBinding:true. Its existing unbound assets then remain physical but supply no ongoing benefit or upkeep until an authorized current builder explicitly reaffirms their actual compatible foundation. The same dormant footprint excludes alternative worship construction. This is a costless permission transaction on the original asset, not construction, endowment or enrollment on restore. Newly constructed assets still bind before payment and operation. Omission preserves all legacy unbound semantics, including ordinary temple and cathedral assets. The inherited ordinary see import exercises dormant matching restore, occupancy and once-only explicit review through the same canonical transaction.
