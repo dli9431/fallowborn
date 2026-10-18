@@ -698,3 +698,7 @@ horizontal_milling is hard on water_power for the optional horizontal_mill profi
 Baseline fish preservation
 
 baseline_fish_drying is none. Actual fish, suitable local weather, paid work and finite local reservation govern the optional Fish Drying Station. No stockfish discovery or new research effect is added; ordinary household fishing and preservation remain available. The existing commercial fishing enterprise retains its separate soft review and all paid staffing and upgrade gates. The typed diversion adapter allocates actual output and suppresses the matching market and ordinary-income share once.
+
+Early worship technology decisions
+
+building_monastic_house is none: lawful funded premises at an already endowed functioning house need no discovery. building_episcopal_complex and building_congregational_mosque are separate hard lime_mortar decisions for optional masonry temple profiles. Ordinary worship and modest institutional premises remain available, with no new office, belief, membership or research reward. Exact missing mortar remains visible through the existing profile and reverse technology consumers. Existing property and paid repairs retain the original profile without new-construction knowledge or date checks. See docs/designs/development.md for exact replacement values, scope, institution and payer requirements.

@@ -1,0 +1,392 @@
+{
+  "name": "Early worship facilities: river",
+  "geographies": {
+    "inventory_estuary_land": {
+      "bounds": {
+        "lonMin": 0,
+        "lonMax": 6,
+        "latMin": 0,
+        "latMax": 5
+      },
+      "land": [
+        [
+          0.5,
+          0.5,
+          5.5,
+          0.5,
+          5.5,
+          4.5,
+          0.5,
+          4.5
+        ]
+      ],
+      "gridWidth": 240,
+      "seas": [],
+      "rivers": [],
+      "defaultLayout": "inventory_estuary_layout",
+      "provinces": [
+        {
+          "id": "inventory_quay",
+          "x": 1.5,
+          "y": 2,
+          "terrain": "farmland"
+        },
+        {
+          "id": "inventory_marsh",
+          "x": 3.1,
+          "y": 2,
+          "terrain": "farmland"
+        },
+        {
+          "id": "inventory_ridge",
+          "x": 4.7,
+          "y": 2,
+          "terrain": "hills"
+        },
+        {
+          "id": "inventory_scenery",
+          "x": 3.1,
+          "y": 4,
+          "terrain": "hills"
+        }
+      ],
+      "sites": {
+        "inventory_quay_hall": {
+          "x": 1.4,
+          "y": 2
+        },
+        "inventory_quay_store": {
+          "x": 1.7,
+          "y": 2
+        },
+        "inventory_marsh_town": {
+          "x": 3.1,
+          "y": 2
+        },
+        "inventory_ridge_tower": {
+          "x": 4.7,
+          "y": 2
+        }
+      }
+    }
+  },
+  "settlementLayouts": {
+    "inventory_estuary_layout": {
+      "inventory_quay": [
+        {
+          "site": "inventory_quay_hall",
+          "name": "Quay Hall",
+          "kind": "town"
+        },
+        {
+          "site": "inventory_quay_store",
+          "name": "Quay Stores",
+          "kind": "village"
+        }
+      ],
+      "inventory_marsh": [
+        {
+          "site": "inventory_marsh_town",
+          "name": "Marsh Town",
+          "kind": "village"
+        }
+      ],
+      "inventory_ridge": [
+        {
+          "site": "inventory_ridge_tower",
+          "name": "Ridge Tower",
+          "kind": "village"
+        }
+      ]
+    }
+  },
+  "startScenarios": [
+    {
+      "id": "inventory_estuary_household",
+      "name": "Estuary household",
+      "desc": "A fictional household.",
+      "intro": "Your family lives beside the estuary.",
+      "tier": 1,
+      "profession": "farmer",
+      "gold": 12,
+      "prestige": 0,
+      "piety": 0,
+      "bookmarkIds": [
+        "inventory_estuary"
+      ],
+      "eras": [
+        "early_medieval"
+      ],
+      "alwaysUnlocked": true,
+      "startAge": 24,
+      "familyPresets": {
+        "standard": {
+          "name": "Established household",
+          "diff": "age 24"
+        }
+      }
+    }
+  ],
+  "bookmarks": {
+    "inventory_estuary": {
+      "id": "inventory_estuary",
+      "name": "The Estuary",
+      "desc": "A fictional inventory example.",
+      "date": {
+        "year": 900,
+        "season": 0,
+        "day": 1
+      },
+      "era": "early_medieval",
+      "geography": "inventory_estuary_land",
+      "religiousHeads": {},
+      "localInstitutions": {
+        "binding_institution": {
+          "city": "Lantern See",
+          "kind": "see",
+          "provinceId": "inventory_quay",
+          "site": "inventory_quay_hall",
+          "religion": "catholic",
+          "culture": "frankish",
+          "officeId": "binding_bishop",
+          "officeSystem": null,
+          "historicalName": "Hale"
+        },
+        "worship_congregation": {
+          "city": "Quay Congregation",
+          "kind": "congregation",
+          "provinceId": "inventory_quay",
+          "site": "inventory_quay_store",
+          "religion": "sunni",
+          "culture": "arabic",
+          "profileId": "worship_congregation_service",
+          "vacant": true,
+          "jurisdictionIds": [
+            "inventory_quay"
+          ]
+        },
+        "worship_monastery": {
+          "city": "Marsh House",
+          "kind": "monastery",
+          "provinceId": "inventory_marsh",
+          "site": "inventory_marsh_town",
+          "religion": "catholic",
+          "culture": "frankish",
+          "profileId": "binding_school",
+          "vacant": true,
+          "jurisdictionIds": [
+            "inventory_marsh"
+          ],
+          "abbeyId": "binding_property"
+        }
+      },
+      "stories": [],
+      "starts": [
+        "inventory_estuary_household"
+      ],
+      "scripted": [],
+      "straits": [],
+      "crossingClasses": {},
+      "provinces": [
+        {
+          "id": "inventory_quay",
+          "name": "Quay",
+          "realm": "inventory_estuary_court",
+          "culture": "frankish",
+          "religion": "catholic",
+          "dev": 5
+        },
+        {
+          "id": "inventory_marsh",
+          "name": "Marsh",
+          "realm": "inventory_estuary_court",
+          "culture": "frankish",
+          "religion": "catholic",
+          "dev": 4
+        },
+        {
+          "id": "inventory_ridge",
+          "name": "Ridge",
+          "realm": "inventory_ridge_court",
+          "culture": "frankish",
+          "religion": "catholic",
+          "dev": 2
+        },
+        {
+          "id": "inventory_scenery",
+          "name": "Uninhabited upland",
+          "wasteland": true
+        }
+      ],
+      "realms": [
+        {
+          "id": "inventory_estuary_court",
+          "name": "Estuary court",
+          "capital": "inventory_quay",
+          "color": "#458c96",
+          "aggression": 0,
+          "rank": 2,
+          "government": "regnum",
+          "ruler": {
+            "name": "Ivo Reed",
+            "culture": "frankish",
+            "born": 868,
+            "mar": 6,
+            "trait": "patient"
+          },
+          "techSeed": {
+            "complete": [
+              "ringworks"
+            ]
+          }
+        },
+        {
+          "id": "inventory_ridge_court",
+          "name": "Ridge court",
+          "capital": "inventory_ridge",
+          "color": "#aa7944",
+          "aggression": 0,
+          "rank": 1,
+          "government": "regnum",
+          "liege": "inventory_estuary_court",
+          "ruler": {
+            "name": "Odo Vale",
+            "culture": "frankish",
+            "born": 870,
+            "mar": 5,
+            "trait": "patient"
+          }
+        }
+      ],
+      "duchies": {},
+      "kingdoms": {},
+      "empires": {},
+      "openingInfrastructure": {
+        "version": 1,
+        "placements": []
+      },
+      "buildingInstitutionAssignments": [
+        {
+          "profileId": "episcopal_foundation",
+          "institutionId": "binding_institution"
+        },
+        {
+          "profileId": "congregational_foundation",
+          "institutionId": "worship_congregation"
+        },
+        {
+          "profileId": "monastic_property",
+          "institutionId": "worship_monastery"
+        }
+      ]
+    }
+  },
+  "religiousInstitutionProfiles": {
+    "binding_school": {
+      "name": "Marsh House",
+      "faithIds": [
+        "catholic"
+      ],
+      "period": {
+        "yearMin": 1,
+        "yearMax": null
+      },
+      "system": null,
+      "roles": {
+        "helper": {
+          "name": "Helper",
+          "minAge": 16,
+          "sexes": [],
+          "unmarried": false,
+          "professions": [],
+          "skills": {},
+          "affiliationId": null
+        }
+      },
+      "selection": null,
+      "recognition": {
+        "roles": [],
+        "sources": [],
+        "quorum": 1,
+        "requiresLeader": false,
+        "protectedWorship": false
+      },
+      "actions": [
+        "admit",
+        "withdraw"
+      ],
+      "fees": {},
+      "affiliationIds": []
+    },
+    "worship_congregation_service": {
+      "name": "Congregation service",
+      "faithIds": [
+        "sunni"
+      ],
+      "period": {
+        "yearMin": 1,
+        "yearMax": null
+      },
+      "system": null,
+      "roles": {
+        "helper": {
+          "name": "Helper",
+          "minAge": 16,
+          "sexes": [],
+          "unmarried": false,
+          "professions": [],
+          "skills": {},
+          "affiliationId": null
+        }
+      },
+      "selection": null,
+      "recognition": {
+        "roles": [],
+        "sources": [],
+        "quorum": 1,
+        "requiresLeader": false,
+        "protectedWorship": false
+      },
+      "actions": [
+        "admit",
+        "withdraw"
+      ],
+      "fees": {},
+      "affiliationIds": []
+    }
+  },
+  "religiousPatronage": {
+    "binding_foundation": {
+      "name": "Endow Stone House",
+      "period": {
+        "yearMin": 1,
+        "yearMax": null
+      },
+      "openings": [],
+      "faithIds": [
+        "catholic"
+      ],
+      "affiliationIds": [],
+      "roleIds": [],
+      "institutionId": "worship_monastery",
+      "payer": "household",
+      "reserve": 5,
+      "foundation": {
+        "startup": 4,
+        "capital": 10,
+        "treasury": 6,
+        "landRequired": true
+      },
+      "funds": {
+        "learning": {
+          "name": "Learning",
+          "capacity": 2,
+          "unitCost": 3
+        }
+      },
+      "outreach": [
+        "voluntary"
+      ]
+    }
+  }
+}
