@@ -52,6 +52,8 @@
     rationale:'Local purchases, personal paid service and partial settlement use existing market, treasury and population transactions. Actual access, private presence, owned land and command permissions remain binding; no transport or recruitment capability is added.'};
   FBDATA.techImpactReviews.features.mobile_opening_composition = {mode:'none',
     rationale:'An opening muster withdraws existing member people under their recruitment shares. Every authored unit retains its normal era, culture and technology eligibility.'};
+  FBDATA.techImpactReviews.features.mobile_opening_reserves = {mode:'none',
+    rationale:'An optional opening partition keeps existing unequipped people at the single civilian camp. It creates no people or host and does not waive later recruitment shares, equipment, payment or unit technology.'};
   FBDATA.techImpactReviews.features.mobile_command_continuity = {mode:'none',
     rationale:'A retained personal mandate or a living superior commissioning an eligible member is a political relationship. An office-conditioned landed command binds the same person to an existing home crown and finite nontransferable mandate. Death, custody, office loss, expiry, recall and issuer succession suspend authority without changing private station or bypassing ordinary military technology.'};
   FBDATA.techImpactReviews.features.mobile_command_scope = {mode:'none',
