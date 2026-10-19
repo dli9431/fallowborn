@@ -1,0 +1,3128 @@
+{
+  "name": "Expanded catalogue upland composition",
+  "authorityOffices": {
+    "upland_water_resource_keeper": {
+      "name": "Resource keeper",
+      "desc": "An exact scoped allocation permission.",
+      "powers": [
+        "revenue"
+      ],
+      "scopes": [
+        "county",
+        "realm"
+      ],
+      "succession": "reaffirm",
+      "recognitionSources": []
+    },
+    "upland_mill_resource_keeper": {
+      "name": "Resource keeper",
+      "desc": "An exact scoped allocation permission.",
+      "powers": [
+        "revenue"
+      ],
+      "scopes": [
+        "county",
+        "realm"
+      ],
+      "succession": "reaffirm",
+      "recognitionSources": []
+    },
+    "upland_siege_resource_keeper": {
+      "name": "Resource keeper",
+      "desc": "An exact scoped allocation permission.",
+      "powers": [
+        "revenue"
+      ],
+      "scopes": [
+        "county",
+        "realm"
+      ],
+      "succession": "reaffirm",
+      "recognitionSources": []
+    },
+    "upland_relay_resource_keeper": {
+      "name": "Resource keeper",
+      "desc": "An exact scoped allocation permission.",
+      "powers": [
+        "revenue"
+      ],
+      "scopes": [
+        "county",
+        "realm"
+      ],
+      "succession": "reaffirm",
+      "recognitionSources": []
+    }
+  },
+  "siteResourceProfiles": {
+    "upland_water_upland_catchment": {
+      "name": "Rain catchment",
+      "kind": "flow",
+      "unit": "water",
+      "capacity": 3,
+      "periodDays": 30
+    },
+    "upland_water_upland_tank": {
+      "name": "Hill tank",
+      "kind": "storage",
+      "unit": "water",
+      "capacity": 8
+    },
+    "upland_water_upland_pasture": {
+      "name": "Summer grazing places",
+      "kind": "access",
+      "unit": "grazing",
+      "capacity": 4,
+      "periodDays": 90
+    },
+    "upland_mill_upland_catchment": {
+      "name": "Rain catchment",
+      "kind": "flow",
+      "unit": "water",
+      "capacity": 3,
+      "periodDays": 30
+    },
+    "upland_mill_upland_tank": {
+      "name": "Hill tank",
+      "kind": "storage",
+      "unit": "water",
+      "capacity": 8
+    },
+    "upland_boat_work_launch": {
+      "name": "Licensed shore slip",
+      "kind": "access",
+      "unit": "launching",
+      "capacity": 1,
+      "periodDays": 1
+    },
+    "upland_pasture_pasture_places": {
+      "name": "Finite grazing places",
+      "kind": "access",
+      "unit": "grazing",
+      "capacity": 1,
+      "periodDays": 30
+    },
+    "upland_siege_upland_catchment": {
+      "name": "Rain catchment",
+      "kind": "flow",
+      "unit": "water",
+      "capacity": 3,
+      "periodDays": 30
+    },
+    "upland_siege_upland_tank": {
+      "name": "Hill tank",
+      "kind": "storage",
+      "unit": "water",
+      "capacity": 8
+    },
+    "upland_siege_upland_pasture": {
+      "name": "Summer grazing places",
+      "kind": "access",
+      "unit": "grazing",
+      "capacity": 4,
+      "periodDays": 90
+    },
+    "upland_relay_upland_catchment": {
+      "name": "Rain catchment",
+      "kind": "flow",
+      "unit": "water",
+      "capacity": 3,
+      "periodDays": 30
+    },
+    "upland_relay_upland_tank": {
+      "name": "Hill tank",
+      "kind": "storage",
+      "unit": "water",
+      "capacity": 8
+    },
+    "upland_relay_upland_pasture": {
+      "name": "Summer grazing places",
+      "kind": "access",
+      "unit": "grazing",
+      "capacity": 4,
+      "periodDays": 90
+    }
+  },
+  "religiousInstitutionProfiles": {
+    "upland_worship_binding_school": {
+      "name": "Stone House",
+      "faithIds": [
+        "catholic"
+      ],
+      "period": {
+        "yearMin": 1,
+        "yearMax": null
+      },
+      "system": null,
+      "roles": {
+        "helper": {
+          "name": "Helper",
+          "minAge": 16,
+          "sexes": [],
+          "unmarried": false,
+          "professions": [],
+          "skills": {},
+          "affiliationId": null
+        }
+      },
+      "selection": null,
+      "recognition": {
+        "roles": [],
+        "sources": [],
+        "quorum": 1,
+        "requiresLeader": false,
+        "protectedWorship": false
+      },
+      "actions": [
+        "admit",
+        "withdraw"
+      ],
+      "fees": {},
+      "affiliationIds": []
+    },
+    "upland_worship_worship_congregation_service": {
+      "name": "Congregation service",
+      "faithIds": [
+        "sunni"
+      ],
+      "period": {
+        "yearMin": 1,
+        "yearMax": null
+      },
+      "system": null,
+      "roles": {
+        "helper": {
+          "name": "Helper",
+          "minAge": 16,
+          "sexes": [],
+          "unmarried": false,
+          "professions": [],
+          "skills": {},
+          "affiliationId": null
+        }
+      },
+      "selection": null,
+      "recognition": {
+        "roles": [],
+        "sources": [],
+        "quorum": 1,
+        "requiresLeader": false,
+        "protectedWorship": false
+      },
+      "actions": [
+        "admit",
+        "withdraw"
+      ],
+      "fees": {},
+      "affiliationIds": []
+    }
+  },
+  "religiousPatronage": {
+    "upland_worship_binding_foundation": {
+      "name": "Endow Stone House",
+      "period": {
+        "yearMin": 1,
+        "yearMax": null
+      },
+      "openings": [],
+      "faithIds": [
+        "catholic"
+      ],
+      "affiliationIds": [],
+      "roleIds": [],
+      "institutionId": "upland_worship_binding_institution",
+      "payer": "household",
+      "reserve": 5,
+      "foundation": {
+        "startup": 4,
+        "capital": 10,
+        "treasury": 6,
+        "landRequired": true
+      },
+      "funds": {
+        "learning": {
+          "name": "Learning",
+          "capacity": 2,
+          "unitCost": 3
+        }
+      },
+      "outreach": [
+        "voluntary"
+      ]
+    }
+  },
+  "buildingProfiles": {
+    "upland_mill_catchment_mill": {
+      "buildingId": "mill",
+      "name": "Catchment-fed horizontal wheel",
+      "desc": "Stored rainwater discharges through a declared gradient, with different work and construction prices.",
+      "replace": {
+        "cost": 42,
+        "upkeep": 0,
+        "devMin": 2,
+        "tax": 0.8,
+        "populationCapacity": 0.02,
+        "dev": 0,
+        "pop": 0,
+        "prestige": 0,
+        "aiBuildOrder": 20
+      },
+      "requiresTech": [
+        "water_power"
+      ],
+      "requiresTechMode": "replace",
+      "techImpactReview": "horizontal_milling",
+      "applicability": {
+        "yearMin": 900,
+        "yearMax": 1000
+      },
+      "siteResourceProfile": "upland_mill_upland_tank",
+      "siteResourceSuitability": [
+        "catchment",
+        "gradient"
+      ],
+      "operationProfile": "upland_mill_catchment_mill_service",
+      "inheritance": "retain"
+    },
+    "upland_fort_upland_timber_circuit": {
+      "buildingId": "walls",
+      "name": "Upland Timber Circuit",
+      "desc": "An independent fictional timber configuration with level-specific masonry knowledge at level two.",
+      "replace": {},
+      "requiresTech": [
+        "fortified_camps"
+      ],
+      "techImpactReview": "upland_fort_upland_circuit_construction",
+      "applicability": {
+        "yearMin": 750,
+        "yearMax": 850,
+        "eras": [
+          "early_medieval"
+        ],
+        "countyIds": [
+          "upland_fort_inventory_vale",
+          "upland_fort_inventory_well",
+          "upland_fort_inventory_plateau"
+        ]
+      },
+      "inheritance": "retain"
+    },
+    "upland_water_inherited_urban_cisterns": {
+      "buildingId": "urban_cisterns",
+      "name": "Inherited urban cisterns",
+      "desc": "A fictional inherited work with the same technology and numeric defaults. Current benefit requires its own paid finite service.",
+      "replace": {},
+      "requiresTech": [
+        "cistern_engineering"
+      ],
+      "techImpactReview": "engineered_cistern",
+      "operationProfile": "cistern_service",
+      "inheritance": "retain"
+    }
+  },
+  "buildingOperationProfiles": {
+    "upland_mill_catchment_mill_service": {
+      "mode": "use",
+      "amount": 2,
+      "periodDays": 30,
+      "workCost": 3,
+      "effect": [
+        "tax",
+        "populationCapacity"
+      ]
+    },
+    "upland_mill_catchment_fill": {
+      "mode": "store",
+      "amount": 2,
+      "periodDays": 30,
+      "workCost": 1,
+      "effect": null
+    }
+  },
+  "buildings": {
+    "upland_mill_catchment_fill_works": {
+      "name": "Catchment filling works",
+      "desc": "Paid transfer of actual water into the mill tank, without a passive return.",
+      "icon": "~",
+      "role": "civic",
+      "cost": 5,
+      "upkeep": 0,
+      "maxCounty": 1,
+      "operationProfile": "upland_mill_catchment_fill"
+    },
+    "upland_industry_industry_depot": {
+      "name": "Material depot",
+      "desc": "Explicit fictional finite storage and counterparty; no passive return.",
+      "role": "industry",
+      "cost": 25,
+      "upkeep": 1,
+      "maxCounty": 2
+    },
+    "upland_boat_boat_supply_store": {
+      "name": "Boat material store",
+      "desc": "A finite owned fictional material depot.",
+      "role": "industry",
+      "cost": 12,
+      "upkeep": 0,
+      "maxCounty": 1
+    },
+    "upland_fish_preserved_store": {
+      "name": "Preserved stores",
+      "desc": "Finite received provisions only.",
+      "role": "food_store",
+      "cost": 20,
+      "upkeep": 1,
+      "maxCounty": 1,
+      "populationFamineProtection": 0.03,
+      "seasonProfile": "upland_fish_buyer_preserved"
+    },
+    "shieling": {
+      "name": "Cool pasture outpost",
+      "desc": "A distinct imported geographic and local-season policy.",
+      "icon": "*",
+      "role": "industry",
+      "cost": 22,
+      "upkeep": 1,
+      "devMin": 0,
+      "maxCounty": 1,
+      "aiBuildOrder": 34,
+      "settlementDraw": false,
+      "dev": 0,
+      "pop": 0,
+      "prestige": 0,
+      "applicability": {
+        "yearMin": 900,
+        "yearMax": 1200,
+        "countyIds": [
+          "upland_pasture_pasture_hill"
+        ]
+      },
+      "seasonProfile": "upland_pasture_upland_cool_window"
+    },
+    "upland_pasture_parent_allocation_depot": {
+      "name": "Existing parent farm store",
+      "desc": "Fictional existing storage for actual allocated farm output.",
+      "icon": "*",
+      "role": "industry",
+      "cost": 5,
+      "upkeep": 0,
+      "devMin": 0,
+      "maxCounty": 1,
+      "aiBuildOrder": 99,
+      "settlementDraw": false
+    },
+    "upland_siege_iron_works": {
+      "name": "Iron works",
+      "desc": "A finite paid batch facility with no passive income or population effect.",
+      "role": "industry",
+      "cost": 30,
+      "upkeep": 1,
+      "maxCounty": 1
+    },
+    "upland_relay_iron_works": {
+      "name": "Iron works",
+      "desc": "A finite paid batch facility with no passive income or population effect.",
+      "role": "industry",
+      "cost": 30,
+      "upkeep": 1,
+      "maxCounty": 1
+    }
+  },
+  "productionExchangeProfiles": {
+    "upland_boat_timber_delivery": {
+      "goodId": "boathouse_timber",
+      "marketGoodId": "materials",
+      "basePrice": 1,
+      "mode": "owned",
+      "quantityLimit": 8,
+      "budget": 100
+    },
+    "upland_boat_cordage_delivery": {
+      "goodId": "boathouse_cordage",
+      "marketGoodId": "materials",
+      "basePrice": 1,
+      "mode": "owned",
+      "quantityLimit": 8,
+      "budget": 100
+    },
+    "upland_fish_dry_sale": {
+      "goodId": "dried_provisions",
+      "marketGoodId": "provisions",
+      "basePrice": 2,
+      "mode": "market",
+      "quantityLimit": 1,
+      "budget": 5
+    },
+    "upland_pasture_sell_pasture_output": {
+      "goodId": "pasture_provisions",
+      "marketGoodId": "provisions",
+      "basePrice": 8,
+      "mode": "market",
+      "quantityLimit": 1,
+      "budget": 12
+    },
+    "upland_pasture_parent_delivery": {
+      "goodId": "parent_farm_allocation",
+      "marketGoodId": "provisions",
+      "basePrice": 1,
+      "mode": "owned",
+      "quantityLimit": 1,
+      "budget": 1
+    },
+    "upland_relay_buy_ore": {
+      "goodId": "upland_relay_iron_ore_lot",
+      "marketGoodId": "materials",
+      "basePrice": 5,
+      "mode": "market",
+      "quantityLimit": 2,
+      "budget": 30
+    },
+    "upland_relay_buy_fuel": {
+      "goodId": "upland_relay_charcoal_lot",
+      "marketGoodId": "materials",
+      "basePrice": 2,
+      "mode": "market",
+      "quantityLimit": 8,
+      "budget": 4
+    },
+    "upland_relay_sell_bloom": {
+      "goodId": "upland_relay_iron_bloom_lot",
+      "marketGoodId": "materials",
+      "basePrice": 8,
+      "mode": "market",
+      "quantityLimit": 1,
+      "budget": 20
+    }
+  },
+  "climateZones": {
+    "upland_fish_rain_drying_coast": {
+      "name": "Declared wet coastal weather",
+      "seasons": [
+        "summer",
+        "autumn",
+        "upland_fish_warm_wet",
+        "cool_season"
+      ]
+    }
+  },
+  "productionGoods": {
+    "upland_fish_generic_food": {
+      "name": "Generic food",
+      "unit": "food_units",
+      "mass": 1
+    },
+    "upland_siege_dressed_timber": {
+      "name": "Dressed timber",
+      "unit": "material_units",
+      "mass": 1
+    },
+    "upland_siege_heavy_frame": {
+      "name": "Heavy siege frame",
+      "unit": "equipment_units",
+      "mass": 1
+    },
+    "upland_relay_iron_ore_lot": {
+      "name": "Iron ore",
+      "unit": "ore_units",
+      "mass": 1
+    },
+    "upland_relay_charcoal_lot": {
+      "name": "Charcoal",
+      "unit": "fuel_units",
+      "mass": 1
+    },
+    "upland_relay_iron_bloom_lot": {
+      "name": "Iron bloom",
+      "unit": "iron_units",
+      "mass": 1
+    },
+    "upland_relay_hand_tool_lot": {
+      "name": "Hand tools",
+      "unit": "tool_units",
+      "mass": 1
+    },
+    "upland_relay_relay_rations": {
+      "name": "Sealed coastal provisions",
+      "unit": "ration_lots",
+      "mass": 1,
+      "provisionUnits": 0.2
+    }
+  },
+  "buildingSeasonProfiles": {
+    "upland_fish_buyer_preserved": {
+      "seasonKinds": [
+        "cool_season"
+      ],
+      "periodDays": 5,
+      "maxDays": 3,
+      "care": false,
+      "stockLives": [
+        {
+          "goodId": "dried_provisions",
+          "days": 8
+        }
+      ],
+      "benefit": {
+        "goodId": "dried_provisions",
+        "quantity": 1,
+        "effect": "populationFamineProtection",
+        "days": 3
+      }
+    },
+    "upland_pasture_upland_cool_window": {
+      "seasonKinds": [
+        "cool_season"
+      ],
+      "periodDays": 30,
+      "maxDays": 12,
+      "care": true,
+      "stockLives": [
+        {
+          "goodId": "parent_farm_allocation",
+          "days": 6
+        },
+        {
+          "goodId": "pasture_provisions",
+          "days": 8
+        }
+      ],
+      "benefit": null,
+      "constructionInputs": true
+    },
+    "upland_pasture_parent_stock_life": {
+      "seasonKinds": [
+        "cool_season"
+      ],
+      "periodDays": 90,
+      "maxDays": 90,
+      "care": false,
+      "stockLives": [
+        {
+          "goodId": "parent_farm_allocation",
+          "days": 6
+        }
+      ],
+      "benefit": null
+    }
+  },
+  "enterprises": {
+    "upland_fish_wet_fishery": {
+      "name": "Working coastal fishery",
+      "icon": "*",
+      "cost": 25,
+      "profession": "farmer",
+      "yield": 8,
+      "laborPay": 1,
+      "coastal": true,
+      "desc": "An independently declared staffed fish producer."
+    },
+    "upland_pasture_upland_parent_farm": {
+      "name": "Existing hill farm",
+      "icon": "*",
+      "cost": 20,
+      "profession": "farmer",
+      "yield": 4,
+      "laborPay": 1,
+      "terrains": [
+        "hills"
+      ],
+      "desc": "A fictional operating farm. No livestock count or people are awarded by seasonal processing."
+    },
+    "upland_relay_inland_mine": {
+      "name": "Working ore pit",
+      "icon": "*",
+      "cost": 20,
+      "profession": "farmer",
+      "yield": 6,
+      "desc": "An explicit fictional staffed producer; quantities are simulation units."
+    }
+  },
+  "enterpriseMechanics": {
+    "upland_fish_wet_fishery": {
+      "output": {
+        "provisions": 1
+      },
+      "typedProduction": {
+        "fresh_fish": {
+          "marketGoodId": "provisions",
+          "marketUnits": 12
+        }
+      }
+    },
+    "upland_pasture_upland_parent_farm": {
+      "output": {
+        "provisions": 1
+      },
+      "typedProduction": {
+        "parent_farm_allocation": {
+          "marketGoodId": "provisions",
+          "marketUnits": 12
+        }
+      }
+    },
+    "upland_relay_inland_mine": {
+      "output": {
+        "materials": 1
+      },
+      "typedProduction": {
+        "upland_relay_iron_ore_lot": {
+          "marketGoodId": "materials",
+          "marketUnits": 24
+        }
+      }
+    }
+  },
+  "productionProducerProfiles": {
+    "upland_fish_wet_fish_share": {
+      "enterpriseType": "upland_fish_wet_fishery",
+      "goodId": "fresh_fish",
+      "marketGoodId": "provisions",
+      "marketUnits": 12,
+      "share": 0.25,
+      "maxQuantity": 1
+    },
+    "upland_pasture_upland_parent_allocation": {
+      "enterpriseType": "upland_pasture_upland_parent_farm",
+      "goodId": "parent_farm_allocation",
+      "marketGoodId": "provisions",
+      "marketUnits": 12,
+      "share": 0.5,
+      "maxQuantity": 1
+    },
+    "upland_relay_local_output": {
+      "enterpriseType": "upland_relay_inland_mine",
+      "goodId": "upland_relay_iron_ore_lot",
+      "marketGoodId": "materials",
+      "marketUnits": 24,
+      "share": 0.5,
+      "maxQuantity": 2
+    }
+  },
+  "seasonKinds": {
+    "upland_fish_warm_wet": {
+      "name": "Warm wet season",
+      "hardship": true
+    }
+  },
+  "productionRecipes": {
+    "upland_pasture_prepare_pasture_allocation": {
+      "name": "Prepare cool-season allocation",
+      "desc": "One existing allocated unit with two paid workdays.",
+      "inputs": [
+        {
+          "goodId": "parent_farm_allocation",
+          "quantity": 1
+        }
+      ],
+      "outputs": [
+        {
+          "goodId": "pasture_provisions",
+          "quantity": 1
+        }
+      ],
+      "workDays": 2,
+      "workPrice": 3,
+      "requiresTech": [],
+      "impactReviewId": "seasonal_parent_farm"
+    },
+    "upland_siege_assemble_heavy": {
+      "name": "Prepare heavy equipment",
+      "inputs": [
+        {
+          "goodId": "upland_siege_dressed_timber",
+          "quantity": 6
+        }
+      ],
+      "outputs": [
+        {
+          "goodId": "upland_siege_heavy_frame",
+          "quantity": 6
+        }
+      ],
+      "workDays": 2,
+      "workPrice": 4,
+      "requiresTech": [],
+      "impactReviewId": "conserved_production_batches"
+    },
+    "upland_relay_smelt_ore": {
+      "name": "Smelt a bloom",
+      "inputs": [
+        {
+          "goodId": "upland_relay_iron_ore_lot",
+          "quantity": 2
+        },
+        {
+          "goodId": "upland_relay_charcoal_lot",
+          "quantity": 1
+        }
+      ],
+      "outputs": [
+        {
+          "goodId": "upland_relay_iron_bloom_lot",
+          "quantity": 1
+        }
+      ],
+      "workDays": 1,
+      "workPrice": 2,
+      "requiresTech": [],
+      "impactReviewId": "conserved_production_batches"
+    },
+    "upland_relay_forge_tools": {
+      "name": "Forge tools",
+      "inputs": [
+        {
+          "goodId": "upland_relay_iron_bloom_lot",
+          "quantity": 1
+        },
+        {
+          "goodId": "upland_relay_charcoal_lot",
+          "quantity": 1
+        }
+      ],
+      "outputs": [
+        {
+          "goodId": "upland_relay_hand_tool_lot",
+          "quantity": 1
+        }
+      ],
+      "workDays": 2,
+      "workPrice": 4,
+      "requiresTech": [
+        "bloomery_iron"
+      ],
+      "impactReviewId": "upland_relay_fictional_forged_tools",
+      "fallback": "Ordinary hand preparation and purchased finished goods remain available."
+    }
+  },
+  "fortProfiles": {
+    "upland_fort_upland_timber_circuit": {
+      "material": "timber",
+      "levels": {
+        "1": [],
+        "2": [
+          "lime_mortar"
+        ]
+      },
+      "techImpactReview": "upland_fort_upland_circuit_construction"
+    }
+  },
+  "techImpactReviews": {
+    "features": {
+      "upland_fort_upland_circuit_construction": {
+        "mode": "hard",
+        "tech": [
+          "fortified_camps",
+          "lime_mortar"
+        ],
+        "fallback": "Ordinary forts and inherited repairs remain available.",
+        "rationale": "Optional new upland work uses its declared level-specific knowledge without changing the canonical fort values."
+      },
+      "upland_siege_finite_heavy_equipment": {
+        "mode": "hard",
+        "rationale": "Optional engineered equipment uses siege engineering; ordinary besieging remains possible.",
+        "tech": [
+          "siege_engineering"
+        ],
+        "fallback": "Ordinary sieges without this equipment remain available."
+      },
+      "upland_relay_fictional_forged_tools": {
+        "mode": "hard",
+        "rationale": "Optional specialist preparation retains ordinary household manufacture.",
+        "fallback": "Ordinary hand preparation and purchased finished goods remain available.",
+        "tech": [
+          "bloomery_iron"
+        ]
+      }
+    }
+  },
+  "siegeSupportProfiles": {
+    "upland_siege_heavy_equipment": {
+      "name": "Heavy siege frames",
+      "desc": "Paid timber frames for a stronger finite contribution.",
+      "recipeId": "upland_siege_assemble_heavy",
+      "goodId": "upland_siege_heavy_frame",
+      "quantityPerPulse": 3,
+      "pulses": 2,
+      "progress": 0.75,
+      "termDays": 270,
+      "requiresTech": [
+        "siege_engineering"
+      ],
+      "impactReviewId": "upland_siege_finite_heavy_equipment",
+      "fallback": "Ordinary sieges without this equipment remain available."
+    }
+  },
+  "relayServiceProfiles": {
+    "upland_relay_local_provisions": {
+      "goodId": "upland_relay_relay_rations",
+      "marketUnits": 0.2,
+      "mode": "market",
+      "basePrice": 3,
+      "maxQuantity": 2,
+      "duration": 5
+    }
+  },
+  "geographies": {
+    "expanded_upland_land": {
+      "bounds": {
+        "lonMin": 0,
+        "lonMax": 30,
+        "latMin": 0,
+        "latMax": 15
+      },
+      "land": [
+        [
+          0.65833,
+          0.8,
+          5.24167,
+          0.8,
+          5.24167,
+          5.6,
+          0.65833,
+          5.6
+        ],
+        [
+          6.65833,
+          0.8,
+          11.24167,
+          0.8,
+          11.24167,
+          5.6,
+          6.65833,
+          5.6
+        ],
+        [
+          12.65833,
+          0.8,
+          17.24167,
+          0.8,
+          17.24167,
+          5.6,
+          12.65833,
+          5.6
+        ],
+        [
+          18.65833,
+          0.8,
+          23.24167,
+          0.8,
+          23.24167,
+          5.6,
+          18.65833,
+          5.6
+        ],
+        [
+          24.65833,
+          0.8,
+          29.24167,
+          0.8,
+          29.24167,
+          5.6,
+          24.65833,
+          5.6
+        ],
+        [
+          0.65833,
+          7.8,
+          5.24167,
+          7.8,
+          5.24167,
+          12.6,
+          0.65833,
+          12.6
+        ],
+        [
+          6.65833,
+          7.8,
+          11.24167,
+          7.8,
+          11.24167,
+          12.6,
+          6.65833,
+          12.6
+        ],
+        [
+          12.65833,
+          7.8,
+          17.24167,
+          7.8,
+          17.24167,
+          12.6,
+          12.65833,
+          12.6
+        ],
+        [
+          18.65833,
+          7.8,
+          23.24167,
+          7.8,
+          23.24167,
+          12.6,
+          18.65833,
+          12.6
+        ],
+        [
+          24.65833,
+          7.8,
+          29.24167,
+          7.8,
+          29.24167,
+          12.6,
+          24.65833,
+          12.6
+        ]
+      ],
+      "gridWidth": 480,
+      "seas": [],
+      "rivers": [],
+      "defaultLayout": "expanded_upland_layout",
+      "provinces": [
+        {
+          "id": "upland_water_resource_hill",
+          "x": 1.575,
+          "y": 2.0,
+          "terrain": "hills"
+        },
+        {
+          "id": "upland_water_resource_fold",
+          "x": 3.04167,
+          "y": 2.0,
+          "terrain": "hills"
+        },
+        {
+          "id": "upland_worship_inventory_vale",
+          "x": 7.575,
+          "y": 2.0,
+          "terrain": "hills"
+        },
+        {
+          "id": "upland_worship_inventory_well",
+          "x": 9.04167,
+          "y": 2.0,
+          "terrain": "hills"
+        },
+        {
+          "id": "upland_worship_inventory_pass",
+          "x": 10.50833,
+          "y": 2.0,
+          "terrain": "hills"
+        },
+        {
+          "id": "upland_worship_inventory_plateau",
+          "x": 9.04167,
+          "y": 4.4,
+          "terrain": "hills"
+        },
+        {
+          "id": "upland_mill_resource_hill",
+          "x": 13.575,
+          "y": 2.0,
+          "terrain": "hills"
+        },
+        {
+          "id": "upland_mill_resource_fold",
+          "x": 15.04167,
+          "y": 2.0,
+          "terrain": "hills"
+        },
+        {
+          "id": "upland_industry_resource_hill",
+          "x": 19.575,
+          "y": 2.0,
+          "terrain": "hills"
+        },
+        {
+          "id": "upland_industry_resource_fold",
+          "x": 21.04167,
+          "y": 2.0,
+          "terrain": "hills"
+        },
+        {
+          "id": "upland_boat_resource_quay",
+          "x": 25.575,
+          "y": 2.6,
+          "terrain": "farmland"
+        },
+        {
+          "id": "upland_boat_resource_bank",
+          "x": 27.04167,
+          "y": 2.6,
+          "terrain": "farmland"
+        },
+        {
+          "id": "upland_boat_resource_rocks",
+          "x": 28.50833,
+          "y": 2.6,
+          "terrain": "hills"
+        },
+        {
+          "id": "upland_fish_rain_harbor",
+          "x": 1.75833,
+          "y": 10.92,
+          "terrain": "farmland"
+        },
+        {
+          "id": "upland_fish_rain_headland",
+          "x": 3.95833,
+          "y": 8.88,
+          "terrain": "hills"
+        },
+        {
+          "id": "upland_pasture_pasture_hill",
+          "x": 7.575,
+          "y": 9.0,
+          "terrain": "hills"
+        },
+        {
+          "id": "upland_pasture_hill_buyer",
+          "x": 9.04167,
+          "y": 9.0,
+          "terrain": "hills"
+        },
+        {
+          "id": "upland_fort_inventory_vale",
+          "x": 13.575,
+          "y": 9.0,
+          "terrain": "hills"
+        },
+        {
+          "id": "upland_fort_inventory_well",
+          "x": 15.04167,
+          "y": 9.0,
+          "terrain": "hills"
+        },
+        {
+          "id": "upland_fort_inventory_pass",
+          "x": 16.50833,
+          "y": 9.0,
+          "terrain": "hills"
+        },
+        {
+          "id": "upland_fort_inventory_plateau",
+          "x": 15.04167,
+          "y": 11.4,
+          "terrain": "hills"
+        },
+        {
+          "id": "upland_siege_resource_hill",
+          "x": 19.575,
+          "y": 9.0,
+          "terrain": "hills"
+        },
+        {
+          "id": "upland_siege_resource_fold",
+          "x": 21.04167,
+          "y": 9.0,
+          "terrain": "hills"
+        },
+        {
+          "id": "upland_relay_resource_hill",
+          "x": 25.575,
+          "y": 9.0,
+          "terrain": "hills"
+        },
+        {
+          "id": "upland_relay_resource_fold",
+          "x": 27.04167,
+          "y": 9.0,
+          "terrain": "hills"
+        }
+      ],
+      "sites": {
+        "upland_water_resource_roof": {
+          "x": 1.575,
+          "y": 2.0
+        },
+        "upland_water_resource_tank": {
+          "x": 1.75833,
+          "y": 2.0
+        },
+        "upland_water_resource_grazing": {
+          "x": 3.04167,
+          "y": 2.0
+        },
+        "upland_worship_inventory_vale_hall": {
+          "x": 7.575,
+          "y": 2.0
+        },
+        "upland_worship_inventory_well_house": {
+          "x": 9.04167,
+          "y": 2.0
+        },
+        "upland_worship_inventory_pass_gate": {
+          "x": 10.50833,
+          "y": 2.0
+        },
+        "upland_worship_inventory_plateau_hall": {
+          "x": 9.04167,
+          "y": 4.4
+        },
+        "upland_mill_resource_roof": {
+          "x": 13.575,
+          "y": 2.0
+        },
+        "upland_mill_resource_tank": {
+          "x": 13.75833,
+          "y": 2.0
+        },
+        "upland_mill_resource_grazing": {
+          "x": 15.04167,
+          "y": 2.0
+        },
+        "upland_industry_resource_roof": {
+          "x": 19.575,
+          "y": 2.0
+        },
+        "upland_industry_resource_tank": {
+          "x": 19.75833,
+          "y": 2.0
+        },
+        "upland_industry_resource_grazing": {
+          "x": 21.04167,
+          "y": 2.0
+        },
+        "upland_boat_resource_intake": {
+          "x": 25.575,
+          "y": 2.6
+        },
+        "upland_boat_resource_cistern": {
+          "x": 27.04167,
+          "y": 2.6
+        },
+        "upland_boat_resource_slip": {
+          "x": 25.75833,
+          "y": 2.6
+        },
+        "upland_fish_rain_racks": {
+          "x": 1.75833,
+          "y": 10.92
+        },
+        "upland_fish_rain_store": {
+          "x": 3.95833,
+          "y": 8.88
+        },
+        "upland_pasture_hillstead": {
+          "x": 7.575,
+          "y": 9.0
+        },
+        "upland_pasture_valley_store": {
+          "x": 9.04167,
+          "y": 9.0
+        },
+        "upland_fort_inventory_vale_hall": {
+          "x": 13.575,
+          "y": 9.0
+        },
+        "upland_fort_inventory_well_house": {
+          "x": 15.04167,
+          "y": 9.0
+        },
+        "upland_fort_inventory_pass_gate": {
+          "x": 16.50833,
+          "y": 9.0
+        },
+        "upland_fort_inventory_plateau_hall": {
+          "x": 15.04167,
+          "y": 11.4
+        },
+        "upland_siege_resource_roof": {
+          "x": 19.575,
+          "y": 9.0
+        },
+        "upland_siege_resource_tank": {
+          "x": 19.75833,
+          "y": 9.0
+        },
+        "upland_siege_resource_grazing": {
+          "x": 21.04167,
+          "y": 9.0
+        },
+        "upland_relay_resource_roof": {
+          "x": 25.575,
+          "y": 9.0
+        },
+        "upland_relay_resource_tank": {
+          "x": 25.75833,
+          "y": 9.0
+        },
+        "upland_relay_resource_grazing": {
+          "x": 27.04167,
+          "y": 9.0
+        }
+      }
+    }
+  },
+  "settlementLayouts": {
+    "expanded_upland_layout": {
+      "upland_boat_resource_quay": [
+        {
+          "site": "upland_boat_resource_intake",
+          "name": "Intake Town",
+          "kind": "town"
+        },
+        {
+          "site": "upland_boat_resource_slip",
+          "name": "Slip Village",
+          "kind": "village"
+        }
+      ],
+      "upland_boat_resource_bank": [
+        {
+          "site": "upland_boat_resource_cistern",
+          "name": "Bank Village",
+          "kind": "village"
+        }
+      ]
+    }
+  },
+  "startScenarios": [
+    {
+      "id": "upland_water_resource_upland_household",
+      "name": "Hill household",
+      "desc": "A fictional household.",
+      "intro": "Your household lives in the hills.",
+      "tier": 1,
+      "profession": "farmer",
+      "gold": 12,
+      "prestige": 0,
+      "piety": 0,
+      "bookmarkIds": [
+        "expanded_upland"
+      ],
+      "eras": [
+        "early_medieval"
+      ],
+      "alwaysUnlocked": true,
+      "startAge": 24,
+      "familyPresets": {
+        "standard": {
+          "name": "Established household",
+          "diff": "age 24"
+        }
+      },
+      "fixedProvinceId": "upland_water_resource_fold"
+    },
+    {
+      "id": "upland_worship_inventory_uplands_household",
+      "name": "Upland household",
+      "desc": "A fictional household.",
+      "intro": "Your family lives in the uplands.",
+      "tier": 1,
+      "profession": "farmer",
+      "gold": 12,
+      "prestige": 0,
+      "piety": 0,
+      "bookmarkIds": [
+        "expanded_upland"
+      ],
+      "eras": [
+        "early_medieval"
+      ],
+      "alwaysUnlocked": true,
+      "startAge": 24,
+      "familyPresets": {
+        "standard": {
+          "name": "Established household",
+          "diff": "age 24"
+        }
+      }
+    },
+    {
+      "id": "upland_mill_resource_upland_household",
+      "name": "Hill household",
+      "desc": "A fictional household.",
+      "intro": "Your household lives in the hills.",
+      "tier": 1,
+      "profession": "farmer",
+      "gold": 12,
+      "prestige": 0,
+      "piety": 0,
+      "bookmarkIds": [
+        "expanded_upland"
+      ],
+      "eras": [
+        "early_medieval"
+      ],
+      "alwaysUnlocked": true,
+      "startAge": 24,
+      "familyPresets": {
+        "standard": {
+          "name": "Established household",
+          "diff": "age 24"
+        }
+      }
+    },
+    {
+      "id": "upland_industry_early_industry_metal_household",
+      "name": "Hill household",
+      "desc": "A fictional household.",
+      "intro": "Review actual finite plant inputs and output buyers.",
+      "tier": 1,
+      "profession": "farmer",
+      "gold": 500,
+      "prestige": 0,
+      "piety": 0,
+      "bookmarkIds": [
+        "expanded_upland"
+      ],
+      "eras": [
+        "early_medieval"
+      ],
+      "alwaysUnlocked": true,
+      "startAge": 24,
+      "familyPresets": {
+        "standard": {
+          "name": "Established household",
+          "diff": "age 24"
+        }
+      }
+    },
+    {
+      "id": "upland_industry_early_industry_metal_ruler",
+      "name": "The hill holder",
+      "desc": "An existing fictional ruler.",
+      "intro": "Review actual finite plant inputs and output buyers.",
+      "tier": 5,
+      "profession": "noble",
+      "gold": 500,
+      "prestige": 0,
+      "piety": 0,
+      "bookmarkIds": [
+        "expanded_upland"
+      ],
+      "eras": [
+        "early_medieval"
+      ],
+      "alwaysUnlocked": true,
+      "familyPresets": {
+        "standard": {
+          "name": "Established household",
+          "diff": "age 24"
+        }
+      },
+      "rulerRealmId": "upland_industry_resource_hill_court",
+      "governmentForm": "regnum",
+      "fixedProvinceId": "upland_industry_resource_hill",
+      "characterName": "Arno Stone",
+      "sex": "m",
+      "startCulture": "frankish",
+      "startReligion": "catholic",
+      "onboarding": "ruler"
+    },
+    {
+      "id": "upland_boat_boathouse_shore_ruler",
+      "name": "The boat-work holder",
+      "desc": "A fictional existing holder of a paid boat-work site.",
+      "intro": "Review finite owned materials and the ordinary enterprise invoice.",
+      "tier": 5,
+      "profession": "noble",
+      "gold": 500,
+      "prestige": 0,
+      "piety": 0,
+      "bookmarkIds": [
+        "expanded_upland"
+      ],
+      "eras": [
+        "early_medieval"
+      ],
+      "alwaysUnlocked": true,
+      "rulerRealmId": "upland_boat_boathouse_shore_court",
+      "governmentForm": "regnum",
+      "fixedProvinceId": "upland_boat_resource_quay",
+      "characterName": "Ivo Reed",
+      "sex": "m",
+      "startCulture": "norse",
+      "startReligion": "catholic",
+      "onboarding": "ruler",
+      "familyPresets": {
+        "standard": {
+          "name": "Existing court",
+          "diff": "Existing court household"
+        }
+      }
+    },
+    {
+      "id": "upland_fish_fish_wet_ruler",
+      "name": "Coastal holder",
+      "desc": "Fictional conserved preservation review.",
+      "intro": "Review actual stock and local weather.",
+      "tier": 5,
+      "profession": "noble",
+      "gold": 100,
+      "prestige": 0,
+      "piety": 0,
+      "bookmarkIds": [
+        "expanded_upland"
+      ],
+      "eras": [
+        "early_medieval"
+      ],
+      "alwaysUnlocked": true,
+      "familyPresets": {
+        "standard": {
+          "name": "Established household",
+          "diff": "age 24"
+        }
+      },
+      "rulerRealmId": "upland_fish_fish_wet_court",
+      "governmentForm": "regnum",
+      "fixedProvinceId": "upland_fish_rain_harbor",
+      "characterName": "Edda Rain",
+      "sex": "f",
+      "startCulture": "norse",
+      "startReligion": "catholic",
+      "onboarding": "ruler"
+    },
+    {
+      "id": "upland_fish_fish_wet_household",
+      "name": "Coastal household",
+      "desc": "Fictional conserved preservation review.",
+      "intro": "Review actual stock and local weather.",
+      "tier": 1,
+      "profession": "farmer",
+      "gold": 100,
+      "prestige": 0,
+      "piety": 0,
+      "bookmarkIds": [
+        "expanded_upland"
+      ],
+      "eras": [
+        "early_medieval"
+      ],
+      "alwaysUnlocked": true,
+      "familyPresets": {
+        "standard": {
+          "name": "Established household",
+          "diff": "age 24"
+        }
+      },
+      "startAge": 24
+    },
+    {
+      "id": "upland_pasture_pasture_upland_ruler",
+      "name": "Farm holder",
+      "desc": "A fictional farm holder.",
+      "intro": "Review the existing farm and grazing rights.",
+      "tier": 5,
+      "profession": "noble",
+      "gold": 200,
+      "prestige": 0,
+      "piety": 0,
+      "bookmarkIds": [
+        "expanded_upland"
+      ],
+      "eras": [
+        "early_medieval"
+      ],
+      "alwaysUnlocked": true,
+      "rulerRealmId": "upland_pasture_hill_court",
+      "governmentForm": "regnum",
+      "fixedProvinceId": "upland_pasture_pasture_hill",
+      "characterName": "Ivo Reed",
+      "sex": "m",
+      "startCulture": "frankish",
+      "startReligion": "catholic",
+      "onboarding": "ruler",
+      "familyPresets": {
+        "standard": {
+          "name": "Established household",
+          "diff": "age 24"
+        }
+      }
+    },
+    {
+      "id": "upland_fort_inventory_uplands_household",
+      "name": "Upland household",
+      "desc": "A fictional household.",
+      "intro": "Your family lives in the uplands.",
+      "tier": 1,
+      "profession": "farmer",
+      "gold": 12,
+      "prestige": 0,
+      "piety": 0,
+      "bookmarkIds": [
+        "expanded_upland"
+      ],
+      "eras": [
+        "early_medieval"
+      ],
+      "alwaysUnlocked": true,
+      "startAge": 24,
+      "familyPresets": {
+        "standard": {
+          "name": "Established household",
+          "diff": "age 24"
+        }
+      }
+    },
+    {
+      "id": "upland_siege_siege_support_heavy_household",
+      "name": "Hill household",
+      "desc": "A fictional household.",
+      "intro": "Your household lives in the hills.",
+      "tier": 1,
+      "profession": "farmer",
+      "gold": 12,
+      "prestige": 0,
+      "piety": 0,
+      "bookmarkIds": [
+        "expanded_upland"
+      ],
+      "eras": [
+        "early_medieval"
+      ],
+      "alwaysUnlocked": true,
+      "startAge": 24,
+      "familyPresets": {
+        "standard": {
+          "name": "Established household",
+          "diff": "age 24"
+        }
+      }
+    },
+    {
+      "id": "upland_siege_siege_support_heavy_ruler",
+      "name": "The hill holder",
+      "desc": "An existing fictional ruler.",
+      "intro": "Review finite ore and fuel.",
+      "tier": 5,
+      "profession": "noble",
+      "gold": 20,
+      "prestige": 0,
+      "piety": 0,
+      "bookmarkIds": [
+        "expanded_upland"
+      ],
+      "eras": [
+        "early_medieval"
+      ],
+      "alwaysUnlocked": true,
+      "familyPresets": {
+        "standard": {
+          "name": "Established household",
+          "diff": "age 24"
+        }
+      },
+      "rulerRealmId": "upland_siege_resource_hill_court",
+      "governmentForm": "regnum",
+      "fixedProvinceId": "upland_siege_resource_hill",
+      "characterName": "Arno Stone",
+      "sex": "m",
+      "startCulture": "frankish",
+      "startReligion": "catholic",
+      "onboarding": "ruler"
+    },
+    {
+      "id": "upland_relay_relay_services_coast_household",
+      "name": "Hill household",
+      "desc": "A fictional household.",
+      "intro": "Your household lives in the hills.",
+      "tier": 1,
+      "profession": "farmer",
+      "gold": 12,
+      "prestige": 0,
+      "piety": 0,
+      "bookmarkIds": [
+        "expanded_upland"
+      ],
+      "eras": [
+        "early_medieval"
+      ],
+      "alwaysUnlocked": true,
+      "startAge": 24,
+      "familyPresets": {
+        "standard": {
+          "name": "Established household",
+          "diff": "age 24"
+        }
+      }
+    },
+    {
+      "id": "upland_relay_relay_services_coast_ruler",
+      "name": "The hill holder",
+      "desc": "An existing fictional ruler.",
+      "intro": "Review finite ore and fuel.",
+      "tier": 5,
+      "profession": "noble",
+      "gold": 20,
+      "prestige": 0,
+      "piety": 0,
+      "bookmarkIds": [
+        "expanded_upland"
+      ],
+      "eras": [
+        "early_medieval"
+      ],
+      "alwaysUnlocked": true,
+      "familyPresets": {
+        "standard": {
+          "name": "Established household",
+          "diff": "age 24"
+        }
+      },
+      "rulerRealmId": "upland_relay_resource_hill_court",
+      "governmentForm": "regnum",
+      "fixedProvinceId": "upland_relay_resource_hill",
+      "characterName": "Arno Stone",
+      "sex": "m",
+      "startCulture": "frankish",
+      "startReligion": "catholic",
+      "onboarding": "ruler"
+    }
+  ],
+  "bookmarks": {
+    "expanded_upland": {
+      "id": "expanded_upland",
+      "name": "Fictional upland composition",
+      "desc": "Independent fictional districts compose finite works, existing institutions, paid production, seasonal goods and canonical military and maritime consumers. No historical inventory is asserted.",
+      "date": {
+        "year": 950,
+        "season": 0,
+        "day": 1
+      },
+      "era": "early_medieval",
+      "geography": "expanded_upland_land",
+      "settlementLayout": "expanded_upland_layout",
+      "religiousHeads": {},
+      "localInstitutions": {
+        "upland_worship_binding_institution": {
+          "city": "Stone House",
+          "kind": "monastery",
+          "provinceId": "upland_worship_inventory_vale",
+          "site": "upland_worship_inventory_vale_hall",
+          "religion": "catholic",
+          "culture": "frankish",
+          "profileId": "upland_worship_binding_school",
+          "vacant": true,
+          "jurisdictionIds": [
+            "upland_worship_inventory_vale"
+          ],
+          "abbeyId": "binding_property"
+        },
+        "upland_worship_worship_congregation": {
+          "city": "Well Congregation",
+          "kind": "congregation",
+          "provinceId": "upland_worship_inventory_well",
+          "site": "upland_worship_inventory_well_house",
+          "religion": "sunni",
+          "culture": "arabic",
+          "profileId": "upland_worship_worship_congregation_service",
+          "vacant": true,
+          "jurisdictionIds": [
+            "upland_worship_inventory_well"
+          ]
+        },
+        "upland_worship_worship_see": {
+          "city": "Pass See",
+          "kind": "see",
+          "provinceId": "upland_worship_inventory_pass",
+          "site": "upland_worship_inventory_pass_gate",
+          "religion": "catholic",
+          "culture": "frankish",
+          "officeId": "worship_bishop",
+          "officeSystem": null,
+          "historicalName": "Leto"
+        }
+      },
+      "stories": [],
+      "starts": [
+        "upland_water_resource_upland_household",
+        "upland_worship_inventory_uplands_household",
+        "upland_mill_resource_upland_household",
+        "upland_industry_early_industry_metal_household",
+        "upland_industry_early_industry_metal_ruler",
+        "upland_boat_boathouse_shore_ruler",
+        "upland_fish_fish_wet_ruler",
+        "upland_fish_fish_wet_household",
+        "upland_pasture_pasture_upland_ruler",
+        "upland_fort_inventory_uplands_household",
+        "upland_siege_siege_support_heavy_household",
+        "upland_siege_siege_support_heavy_ruler",
+        "upland_relay_relay_services_coast_household",
+        "upland_relay_relay_services_coast_ruler"
+      ],
+      "scripted": [],
+      "straits": [
+        [
+          "upland_relay_resource_hill",
+          "upland_relay_resource_fold"
+        ]
+      ],
+      "crossingClasses": {
+        "upland_relay_resource_fold|upland_relay_resource_hill": "coastal"
+      },
+      "provinces": [
+        {
+          "id": "upland_water_resource_hill",
+          "name": "Hill",
+          "realm": "upland_water_resource_hill_court",
+          "culture": "frankish",
+          "religion": "catholic",
+          "dev": 8,
+          "settlements": [
+            {
+              "site": "upland_water_resource_roof",
+              "name": "Roof Town",
+              "kind": "town"
+            },
+            {
+              "site": "upland_water_resource_tank",
+              "name": "Tank Village",
+              "kind": "village"
+            }
+          ]
+        },
+        {
+          "id": "upland_water_resource_fold",
+          "name": "Fold",
+          "realm": "upland_water_resource_fold_court",
+          "culture": "frankish",
+          "religion": "catholic",
+          "dev": 8,
+          "settlements": [
+            {
+              "site": "upland_water_resource_grazing",
+              "name": "Fold Village",
+              "kind": "village"
+            }
+          ]
+        },
+        {
+          "id": "upland_worship_inventory_vale",
+          "name": "Vale",
+          "realm": "upland_worship_inventory_upland_court",
+          "culture": "frankish",
+          "religion": "catholic",
+          "dev": 5,
+          "duchy": "inventory_home",
+          "settlements": [
+            {
+              "site": "upland_worship_inventory_vale_hall",
+              "name": "Vale Hall",
+              "kind": "town"
+            }
+          ]
+        },
+        {
+          "id": "upland_worship_inventory_well",
+          "name": "Well",
+          "realm": "upland_worship_inventory_upland_court",
+          "culture": "frankish",
+          "religion": "catholic",
+          "dev": 5,
+          "duchy": "inventory_marches",
+          "settlements": [
+            {
+              "site": "upland_worship_inventory_well_house",
+              "name": "Well House",
+              "kind": "village"
+            }
+          ]
+        },
+        {
+          "id": "upland_worship_inventory_pass",
+          "name": "Pass",
+          "realm": "upland_worship_inventory_upland_court",
+          "culture": "frankish",
+          "religion": "catholic",
+          "dev": 5,
+          "duchy": "inventory_marches",
+          "settlements": [
+            {
+              "site": "upland_worship_inventory_pass_gate",
+              "name": "Pass Gate",
+              "kind": "village"
+            }
+          ]
+        },
+        {
+          "id": "upland_worship_inventory_plateau",
+          "name": "Plateau",
+          "realm": "upland_worship_inventory_upland_court",
+          "culture": "frankish",
+          "religion": "catholic",
+          "dev": 5,
+          "duchy": "inventory_outer",
+          "settlements": [
+            {
+              "site": "upland_worship_inventory_plateau_hall",
+              "name": "Plateau Hall",
+              "kind": "village"
+            }
+          ]
+        },
+        {
+          "id": "upland_mill_resource_hill",
+          "name": "Hill",
+          "realm": "upland_mill_resource_hill_court",
+          "culture": "frankish",
+          "religion": "catholic",
+          "dev": 5,
+          "settlements": [
+            {
+              "site": "upland_mill_resource_roof",
+              "name": "Roof Town",
+              "kind": "town"
+            },
+            {
+              "site": "upland_mill_resource_tank",
+              "name": "Tank Village",
+              "kind": "village"
+            }
+          ]
+        },
+        {
+          "id": "upland_mill_resource_fold",
+          "name": "Fold",
+          "realm": "upland_mill_resource_fold_court",
+          "culture": "frankish",
+          "religion": "catholic",
+          "dev": 3,
+          "settlements": [
+            {
+              "site": "upland_mill_resource_grazing",
+              "name": "Fold Village",
+              "kind": "village"
+            }
+          ]
+        },
+        {
+          "id": "upland_industry_resource_hill",
+          "name": "Hill",
+          "realm": "upland_industry_resource_hill_court",
+          "culture": "frankish",
+          "religion": "catholic",
+          "dev": 5,
+          "settlements": [
+            {
+              "site": "upland_industry_resource_roof",
+              "name": "Roof Town",
+              "kind": "town"
+            },
+            {
+              "site": "upland_industry_resource_tank",
+              "name": "Tank Village",
+              "kind": "village"
+            }
+          ]
+        },
+        {
+          "id": "upland_industry_resource_fold",
+          "name": "Fold",
+          "realm": "upland_industry_resource_fold_court",
+          "culture": "frankish",
+          "religion": "catholic",
+          "dev": 3,
+          "settlements": [
+            {
+              "site": "upland_industry_resource_grazing",
+              "name": "Fold Village",
+              "kind": "village"
+            }
+          ]
+        },
+        {
+          "id": "upland_boat_resource_quay",
+          "name": "Quay",
+          "realm": "upland_boat_boathouse_shore_court",
+          "culture": "norse",
+          "religion": "catholic",
+          "dev": 5
+        },
+        {
+          "id": "upland_boat_resource_bank",
+          "name": "Bank",
+          "realm": "upland_boat_boathouse_shore_court",
+          "culture": "norse",
+          "religion": "catholic",
+          "dev": 3
+        },
+        {
+          "id": "upland_boat_resource_rocks",
+          "name": "Rocky scenery",
+          "wasteland": true
+        },
+        {
+          "id": "upland_fish_rain_harbor",
+          "name": "Drying quay",
+          "realm": "upland_fish_fish_wet_court",
+          "culture": "norse",
+          "religion": "catholic",
+          "dev": 5,
+          "settlements": [
+            {
+              "site": "upland_fish_rain_racks",
+              "name": "Drying quay",
+              "kind": "town"
+            }
+          ]
+        },
+        {
+          "id": "upland_fish_rain_headland",
+          "name": "Buyer shore",
+          "realm": "upland_fish_fish_wet_buyer",
+          "culture": "norse",
+          "religion": "catholic",
+          "dev": 5,
+          "settlements": [
+            {
+              "site": "upland_fish_rain_store",
+              "name": "Buyer shore",
+              "kind": "town"
+            }
+          ]
+        },
+        {
+          "id": "upland_pasture_pasture_hill",
+          "name": "Farm county",
+          "realm": "upland_pasture_hill_court",
+          "culture": "frankish",
+          "religion": "catholic",
+          "dev": 5,
+          "settlements": [
+            {
+              "site": "upland_pasture_hillstead",
+              "name": "Parent farm",
+              "kind": "village"
+            }
+          ]
+        },
+        {
+          "id": "upland_pasture_hill_buyer",
+          "name": "Buyer county",
+          "realm": "upland_pasture_valley_court",
+          "culture": "frankish",
+          "religion": "catholic",
+          "dev": 3,
+          "settlements": [
+            {
+              "site": "upland_pasture_valley_store",
+              "name": "Buyer store",
+              "kind": "village"
+            }
+          ]
+        },
+        {
+          "id": "upland_fort_inventory_vale",
+          "name": "Vale",
+          "realm": "upland_fort_inventory_upland_court",
+          "culture": "frankish",
+          "religion": "catholic",
+          "dev": 4,
+          "duchy": "inventory_home",
+          "settlements": [
+            {
+              "site": "upland_fort_inventory_vale_hall",
+              "name": "Vale Hall",
+              "kind": "town"
+            }
+          ]
+        },
+        {
+          "id": "upland_fort_inventory_well",
+          "name": "Well",
+          "realm": "upland_fort_inventory_upland_court",
+          "culture": "frankish",
+          "religion": "catholic",
+          "dev": 3,
+          "duchy": "inventory_marches",
+          "settlements": [
+            {
+              "site": "upland_fort_inventory_well_house",
+              "name": "Well House",
+              "kind": "village"
+            }
+          ]
+        },
+        {
+          "id": "upland_fort_inventory_pass",
+          "name": "Pass",
+          "realm": "upland_fort_inventory_upland_court",
+          "culture": "frankish",
+          "religion": "catholic",
+          "dev": 2,
+          "duchy": "inventory_marches",
+          "settlements": [
+            {
+              "site": "upland_fort_inventory_pass_gate",
+              "name": "Pass Gate",
+              "kind": "village"
+            }
+          ]
+        },
+        {
+          "id": "upland_fort_inventory_plateau",
+          "name": "Plateau",
+          "realm": "upland_fort_inventory_upland_court",
+          "culture": "frankish",
+          "religion": "catholic",
+          "dev": 2,
+          "duchy": "inventory_outer",
+          "settlements": [
+            {
+              "site": "upland_fort_inventory_plateau_hall",
+              "name": "Plateau Hall",
+              "kind": "village"
+            }
+          ]
+        },
+        {
+          "id": "upland_siege_resource_hill",
+          "name": "Hill",
+          "realm": "upland_siege_resource_hill_court",
+          "culture": "frankish",
+          "religion": "catholic",
+          "dev": 5,
+          "settlements": [
+            {
+              "site": "upland_siege_resource_roof",
+              "name": "Roof Town",
+              "kind": "town"
+            },
+            {
+              "site": "upland_siege_resource_tank",
+              "name": "Tank Village",
+              "kind": "village"
+            }
+          ]
+        },
+        {
+          "id": "upland_siege_resource_fold",
+          "name": "Fold",
+          "realm": "upland_siege_resource_fold_court",
+          "culture": "frankish",
+          "religion": "catholic",
+          "dev": 3,
+          "settlements": [
+            {
+              "site": "upland_siege_resource_grazing",
+              "name": "Fold Village",
+              "kind": "village"
+            }
+          ]
+        },
+        {
+          "id": "upland_relay_resource_hill",
+          "name": "Hill",
+          "realm": "upland_relay_resource_hill_court",
+          "culture": "frankish",
+          "religion": "catholic",
+          "dev": 5,
+          "settlements": [
+            {
+              "site": "upland_relay_resource_roof",
+              "name": "Roof Town",
+              "kind": "town"
+            },
+            {
+              "site": "upland_relay_resource_tank",
+              "name": "Tank Village",
+              "kind": "village"
+            }
+          ]
+        },
+        {
+          "id": "upland_relay_resource_fold",
+          "name": "Fold",
+          "realm": "upland_relay_resource_fold_court",
+          "culture": "frankish",
+          "religion": "catholic",
+          "dev": 3,
+          "settlements": [
+            {
+              "site": "upland_relay_resource_grazing",
+              "name": "Fold Village",
+              "kind": "village"
+            }
+          ]
+        }
+      ],
+      "realms": [
+        {
+          "id": "upland_water_resource_hill_court",
+          "name": "Hill court",
+          "capital": "upland_water_resource_hill",
+          "color": "#aa7944",
+          "aggression": 0,
+          "rank": 1,
+          "government": "regnum",
+          "ruler": {
+            "name": "Arno Stone",
+            "culture": "frankish",
+            "born": 918,
+            "mar": 6,
+            "trait": "patient"
+          },
+          "techTraditions": [
+            "latin"
+          ],
+          "techSeed": {
+            "complete": [
+              "cistern_engineering"
+            ]
+          },
+          "liege": "upland_water_resource_fold_court"
+        },
+        {
+          "id": "upland_water_resource_fold_court",
+          "name": "Fold court",
+          "capital": "upland_water_resource_fold",
+          "color": "#779955",
+          "aggression": 0,
+          "rank": 2,
+          "government": "regnum",
+          "ruler": {
+            "name": "Odo Vale",
+            "culture": "frankish",
+            "born": 918,
+            "mar": 5,
+            "trait": "patient"
+          },
+          "techTraditions": [
+            "latin"
+          ],
+          "techSeed": {
+            "complete": [
+              "cistern_engineering"
+            ]
+          }
+        },
+        {
+          "id": "upland_worship_inventory_upland_court",
+          "name": "Upland court",
+          "capital": "upland_worship_inventory_vale",
+          "color": "#aa7944",
+          "aggression": 0,
+          "rank": 3,
+          "government": "territorial",
+          "ruler": {
+            "name": "Arno Stone",
+            "culture": "frankish",
+            "born": 918,
+            "mar": 6,
+            "trait": "patient"
+          }
+        },
+        {
+          "id": "upland_mill_resource_hill_court",
+          "name": "Hill court",
+          "capital": "upland_mill_resource_hill",
+          "color": "#aa7944",
+          "aggression": 0,
+          "rank": 2,
+          "government": "regnum",
+          "ruler": {
+            "name": "Arno Stone",
+            "culture": "frankish",
+            "born": 918,
+            "mar": 6,
+            "trait": "patient"
+          },
+          "techSeed": {
+            "omit": [
+              "water_power",
+              "undershot_watermill"
+            ]
+          }
+        },
+        {
+          "id": "upland_mill_resource_fold_court",
+          "name": "Fold court",
+          "capital": "upland_mill_resource_fold",
+          "color": "#779955",
+          "aggression": 0,
+          "rank": 1,
+          "government": "regnum",
+          "ruler": {
+            "name": "Odo Vale",
+            "culture": "frankish",
+            "born": 918,
+            "mar": 5,
+            "trait": "patient"
+          },
+          "techSeed": {
+            "omit": [
+              "water_power",
+              "undershot_watermill"
+            ]
+          }
+        },
+        {
+          "id": "upland_industry_resource_hill_court",
+          "name": "Hill court",
+          "capital": "upland_industry_resource_hill",
+          "color": "#aa7944",
+          "aggression": 0,
+          "rank": 2,
+          "government": "regnum",
+          "ruler": {
+            "name": "Arno Stone",
+            "culture": "frankish",
+            "born": 918,
+            "mar": 6,
+            "trait": "patient"
+          }
+        },
+        {
+          "id": "upland_industry_resource_fold_court",
+          "name": "Fold court",
+          "capital": "upland_industry_resource_fold",
+          "color": "#779955",
+          "aggression": 0,
+          "rank": 1,
+          "government": "regnum",
+          "ruler": {
+            "name": "Odo Vale",
+            "culture": "frankish",
+            "born": 918,
+            "mar": 5,
+            "trait": "patient"
+          }
+        },
+        {
+          "id": "upland_boat_boathouse_shore_court",
+          "name": "Shore court",
+          "capital": "upland_boat_resource_quay",
+          "color": "#458c96",
+          "aggression": 0,
+          "rank": 2,
+          "government": "regnum",
+          "ruler": {
+            "name": "Ivo Reed",
+            "culture": "norse",
+            "born": 918,
+            "mar": 6,
+            "trait": "patient"
+          },
+          "techTraditions": [
+            "nordic"
+          ]
+        },
+        {
+          "id": "upland_fish_fish_wet_court",
+          "name": "Drying quay court",
+          "capital": "upland_fish_rain_harbor",
+          "color": "#458c96",
+          "aggression": 0,
+          "rank": 2,
+          "government": "regnum",
+          "ruler": {
+            "name": "Edda Rain",
+            "culture": "norse",
+            "born": 918,
+            "mar": 6,
+            "trait": "patient"
+          }
+        },
+        {
+          "id": "upland_fish_fish_wet_buyer",
+          "name": "Buyer shore court",
+          "capital": "upland_fish_rain_headland",
+          "color": "#779955",
+          "aggression": 0,
+          "rank": 2,
+          "government": "regnum",
+          "ruler": {
+            "name": "Kari Fell",
+            "culture": "norse",
+            "born": 918,
+            "mar": 6,
+            "trait": "patient"
+          }
+        },
+        {
+          "id": "upland_pasture_hill_court",
+          "name": "Farm court",
+          "capital": "upland_pasture_pasture_hill",
+          "color": "#aa7944",
+          "aggression": 0,
+          "rank": 2,
+          "government": "regnum",
+          "ruler": {
+            "name": "Ivo Reed",
+            "culture": "frankish",
+            "born": 918,
+            "mar": 6,
+            "trait": "patient"
+          }
+        },
+        {
+          "id": "upland_pasture_valley_court",
+          "name": "Buyer court",
+          "capital": "upland_pasture_hill_buyer",
+          "color": "#779955",
+          "aggression": 0,
+          "rank": 1,
+          "government": "regnum",
+          "ruler": {
+            "name": "Odo Vale",
+            "culture": "frankish",
+            "born": 918,
+            "mar": 5,
+            "trait": "patient"
+          }
+        },
+        {
+          "id": "upland_fort_inventory_upland_court",
+          "name": "Upland court",
+          "capital": "upland_fort_inventory_vale",
+          "color": "#aa7944",
+          "aggression": 0,
+          "rank": 3,
+          "government": "territorial",
+          "ruler": {
+            "name": "Arno Stone",
+            "culture": "frankish",
+            "born": 918,
+            "mar": 6,
+            "trait": "patient"
+          }
+        },
+        {
+          "id": "upland_siege_resource_hill_court",
+          "name": "Hill court",
+          "capital": "upland_siege_resource_hill",
+          "color": "#aa7944",
+          "aggression": 0,
+          "rank": 2,
+          "government": "regnum",
+          "ruler": {
+            "name": "Arno Stone",
+            "culture": "frankish",
+            "born": 918,
+            "mar": 6,
+            "trait": "patient"
+          }
+        },
+        {
+          "id": "upland_siege_resource_fold_court",
+          "name": "Fold court",
+          "capital": "upland_siege_resource_fold",
+          "color": "#779955",
+          "aggression": 0,
+          "rank": 1,
+          "government": "regnum",
+          "ruler": {
+            "name": "Odo Vale",
+            "culture": "frankish",
+            "born": 918,
+            "mar": 5,
+            "trait": "patient"
+          }
+        },
+        {
+          "id": "upland_relay_resource_hill_court",
+          "name": "Hill court",
+          "capital": "upland_relay_resource_hill",
+          "color": "#aa7944",
+          "aggression": 0,
+          "rank": 2,
+          "government": "regnum",
+          "ruler": {
+            "name": "Arno Stone",
+            "culture": "frankish",
+            "born": 918,
+            "mar": 6,
+            "trait": "patient"
+          }
+        },
+        {
+          "id": "upland_relay_resource_fold_court",
+          "name": "Fold court",
+          "capital": "upland_relay_resource_fold",
+          "color": "#779955",
+          "aggression": 0,
+          "rank": 1,
+          "government": "regnum",
+          "ruler": {
+            "name": "Odo Vale",
+            "culture": "frankish",
+            "born": 918,
+            "mar": 5,
+            "trait": "patient"
+          }
+        }
+      ],
+      "duchies": {
+        "inventory_home": {
+          "name": "Home district",
+          "kingdom": "inventory_country"
+        },
+        "inventory_marches": {
+          "name": "Marches",
+          "kingdom": "inventory_country"
+        },
+        "inventory_outer": {
+          "name": "Outer district",
+          "kingdom": "inventory_country"
+        }
+      },
+      "kingdoms": {
+        "inventory_country": {
+          "name": "Upland country",
+          "empire": "inventory_horizon"
+        }
+      },
+      "empires": {
+        "inventory_horizon": {
+          "name": "Upland horizon"
+        }
+      },
+      "openingInfrastructure": {
+        "version": 1,
+        "placements": [
+          {
+            "countyId": "upland_water_resource_hill",
+            "siteId": "upland_water_resource_tank",
+            "buildingId": "urban_cisterns",
+            "condition": "standing",
+            "profileId": "upland_water_inherited_urban_cisterns"
+          },
+          {
+            "countyId": "upland_mill_resource_hill",
+            "siteId": "upland_mill_resource_tank",
+            "buildingId": "mill",
+            "profileId": "upland_mill_catchment_mill",
+            "condition": "standing"
+          },
+          {
+            "countyId": "upland_industry_resource_hill",
+            "siteId": "upland_industry_resource_roof",
+            "buildingId": "bloomery_smithy",
+            "condition": "standing"
+          },
+          {
+            "countyId": "upland_industry_resource_fold",
+            "siteId": "upland_industry_resource_grazing",
+            "buildingId": "upland_industry_industry_depot",
+            "condition": "standing"
+          },
+          {
+            "countyId": "upland_boat_resource_quay",
+            "siteId": "upland_boat_resource_intake",
+            "buildingId": "boathouse",
+            "condition": "standing"
+          },
+          {
+            "countyId": "upland_fish_rain_harbor",
+            "siteId": "upland_fish_rain_racks",
+            "buildingId": "fish_drying_station",
+            "condition": "standing"
+          },
+          {
+            "countyId": "upland_fish_rain_headland",
+            "siteId": "upland_fish_rain_store",
+            "buildingId": "upland_fish_preserved_store",
+            "condition": "standing"
+          },
+          {
+            "countyId": "upland_pasture_pasture_hill",
+            "siteId": "upland_pasture_hillstead",
+            "buildingId": "shieling",
+            "condition": "standing"
+          },
+          {
+            "countyId": "upland_pasture_hill_buyer",
+            "siteId": "upland_pasture_valley_store",
+            "buildingId": "granary",
+            "condition": "standing"
+          },
+          {
+            "countyId": "upland_pasture_pasture_hill",
+            "siteId": "upland_pasture_hillstead",
+            "buildingId": "upland_pasture_parent_allocation_depot",
+            "condition": "standing"
+          },
+          {
+            "countyId": "upland_fort_inventory_well",
+            "siteId": "upland_fort_inventory_well_house",
+            "buildingId": "walls",
+            "condition": "ruined",
+            "level": 2,
+            "profileId": "upland_fort_upland_timber_circuit"
+          },
+          {
+            "countyId": "upland_fort_inventory_plateau",
+            "siteId": "upland_fort_inventory_plateau_hall",
+            "buildingId": "walls",
+            "condition": "standing",
+            "level": 1,
+            "profileId": "upland_fort_upland_timber_circuit"
+          },
+          {
+            "countyId": "upland_siege_resource_hill",
+            "siteId": "upland_siege_resource_roof",
+            "buildingId": "upland_siege_iron_works",
+            "condition": "standing"
+          },
+          {
+            "countyId": "upland_relay_resource_hill",
+            "siteId": "upland_relay_resource_roof",
+            "buildingId": "upland_relay_iron_works",
+            "condition": "standing"
+          },
+          {
+            "countyId": "upland_relay_resource_fold",
+            "siteId": "upland_relay_resource_grazing",
+            "buildingId": "upland_relay_iron_works",
+            "condition": "standing"
+          }
+        ]
+      },
+      "climate": {
+        "zone": "northern_temperate",
+        "provinces": {
+          "upland_water_resource_hill": "northern_temperate",
+          "upland_water_resource_fold": "northern_temperate",
+          "upland_worship_inventory_vale": "northern_temperate",
+          "upland_worship_inventory_well": "northern_temperate",
+          "upland_worship_inventory_pass": "northern_temperate",
+          "upland_worship_inventory_plateau": "northern_temperate",
+          "upland_mill_resource_hill": "northern_temperate",
+          "upland_mill_resource_fold": "northern_temperate",
+          "upland_industry_resource_hill": "northern_temperate",
+          "upland_industry_resource_fold": "northern_temperate",
+          "upland_boat_resource_quay": "northern_temperate",
+          "upland_boat_resource_bank": "northern_temperate",
+          "upland_boat_resource_rocks": "northern_temperate",
+          "upland_fish_rain_harbor": "upland_fish_rain_drying_coast",
+          "upland_fish_rain_headland": "upland_fish_rain_drying_coast",
+          "upland_pasture_pasture_hill": "arid",
+          "upland_pasture_hill_buyer": "arid",
+          "upland_fort_inventory_vale": "northern_temperate",
+          "upland_fort_inventory_well": "northern_temperate",
+          "upland_fort_inventory_pass": "northern_temperate",
+          "upland_fort_inventory_plateau": "northern_temperate",
+          "upland_siege_resource_hill": "northern_temperate",
+          "upland_siege_resource_fold": "northern_temperate",
+          "upland_relay_resource_hill": "northern_temperate",
+          "upland_relay_resource_fold": "northern_temperate"
+        }
+      },
+      "siteResourceAssignments": [
+        {
+          "id": "upland_water_upland_roof",
+          "profileId": "upland_water_upland_catchment",
+          "countyId": "upland_water_resource_hill",
+          "siteId": "upland_water_resource_roof",
+          "suitability": {
+            "source": true,
+            "catchment": true
+          },
+          "rights": {
+            "kind": "holder"
+          }
+        },
+        {
+          "id": "upland_water_upland_tank",
+          "profileId": "upland_water_upland_tank",
+          "countyId": "upland_water_resource_hill",
+          "siteId": "upland_water_resource_tank",
+          "connectedSourceId": "upland_water_upland_roof",
+          "suitability": {
+            "catchment": true
+          },
+          "rights": {
+            "kind": "holder"
+          }
+        },
+        {
+          "id": "upland_water_upland_fold",
+          "profileId": "upland_water_upland_pasture",
+          "countyId": "upland_water_resource_fold",
+          "siteId": "upland_water_resource_grazing",
+          "suitability": {
+            "grazing": true
+          },
+          "rights": {
+            "kind": "permission",
+            "institutionId": "upland_water_resource_fold_court",
+            "officeId": "upland_water_resource_keeper"
+          }
+        },
+        {
+          "id": "upland_mill_upland_roof",
+          "profileId": "upland_mill_upland_catchment",
+          "countyId": "upland_mill_resource_hill",
+          "siteId": "upland_mill_resource_roof",
+          "suitability": {
+            "source": true,
+            "catchment": true
+          },
+          "rights": {
+            "kind": "holder"
+          }
+        },
+        {
+          "id": "upland_mill_upland_tank",
+          "profileId": "upland_mill_upland_tank",
+          "countyId": "upland_mill_resource_hill",
+          "siteId": "upland_mill_resource_tank",
+          "connectedSourceId": "upland_mill_upland_roof",
+          "suitability": {
+            "catchment": true,
+            "gradient": true
+          },
+          "rights": {
+            "kind": "permission",
+            "institutionId": "upland_mill_resource_hill_court",
+            "officeId": "upland_mill_resource_keeper"
+          }
+        },
+        {
+          "id": "upland_boat_work_slip",
+          "profileId": "upland_boat_work_launch",
+          "countyId": "upland_boat_resource_quay",
+          "siteId": "upland_boat_resource_intake",
+          "suitability": {
+            "launching": true
+          },
+          "rights": {
+            "kind": "holder"
+          }
+        },
+        {
+          "id": "upland_pasture_farm_grazing",
+          "profileId": "upland_pasture_pasture_places",
+          "countyId": "upland_pasture_pasture_hill",
+          "siteId": "upland_pasture_hillstead",
+          "suitability": {
+            "grazing": true
+          },
+          "rights": {
+            "kind": "holder"
+          }
+        },
+        {
+          "id": "upland_siege_upland_roof",
+          "profileId": "upland_siege_upland_catchment",
+          "countyId": "upland_siege_resource_hill",
+          "siteId": "upland_siege_resource_roof",
+          "suitability": {
+            "source": true,
+            "catchment": true
+          },
+          "rights": {
+            "kind": "holder"
+          }
+        },
+        {
+          "id": "upland_siege_upland_tank",
+          "profileId": "upland_siege_upland_tank",
+          "countyId": "upland_siege_resource_hill",
+          "siteId": "upland_siege_resource_tank",
+          "connectedSourceId": "upland_siege_upland_roof",
+          "suitability": {
+            "catchment": true
+          },
+          "rights": {
+            "kind": "holder"
+          }
+        },
+        {
+          "id": "upland_siege_upland_fold",
+          "profileId": "upland_siege_upland_pasture",
+          "countyId": "upland_siege_resource_fold",
+          "siteId": "upland_siege_resource_grazing",
+          "suitability": {
+            "grazing": true
+          },
+          "rights": {
+            "kind": "permission",
+            "institutionId": "upland_siege_resource_fold_court",
+            "officeId": "upland_siege_resource_keeper"
+          }
+        },
+        {
+          "id": "upland_relay_upland_roof",
+          "profileId": "upland_relay_upland_catchment",
+          "countyId": "upland_relay_resource_hill",
+          "siteId": "upland_relay_resource_roof",
+          "suitability": {
+            "source": true,
+            "catchment": true
+          },
+          "rights": {
+            "kind": "holder"
+          }
+        },
+        {
+          "id": "upland_relay_upland_tank",
+          "profileId": "upland_relay_upland_tank",
+          "countyId": "upland_relay_resource_hill",
+          "siteId": "upland_relay_resource_tank",
+          "connectedSourceId": "upland_relay_upland_roof",
+          "suitability": {
+            "catchment": true
+          },
+          "rights": {
+            "kind": "holder"
+          }
+        },
+        {
+          "id": "upland_relay_upland_fold",
+          "profileId": "upland_relay_upland_pasture",
+          "countyId": "upland_relay_resource_fold",
+          "siteId": "upland_relay_resource_grazing",
+          "suitability": {
+            "grazing": true
+          },
+          "rights": {
+            "kind": "permission",
+            "institutionId": "upland_relay_resource_fold_court",
+            "officeId": "upland_relay_resource_keeper"
+          }
+        }
+      ],
+      "buildingOperationAssignments": [
+        {
+          "id": "upland_water_rain_cistern_service",
+          "profileId": "cistern_service",
+          "buildingId": "urban_cisterns",
+          "countyId": "upland_water_resource_hill",
+          "siteId": "upland_water_resource_tank",
+          "sourceId": "upland_water_upland_roof",
+          "stores": [
+            "upland_water_upland_tank"
+          ],
+          "demandId": "hill_stored_service"
+        },
+        {
+          "id": "upland_mill_catchment_grinding",
+          "profileId": "upland_mill_catchment_mill_service",
+          "buildingId": "mill",
+          "countyId": "upland_mill_resource_hill",
+          "siteId": "upland_mill_resource_tank",
+          "sourceId": "upland_mill_upland_tank",
+          "stores": [],
+          "demandId": "catchment_grain_demand"
+        },
+        {
+          "id": "upland_mill_catchment_filling",
+          "profileId": "upland_mill_catchment_fill",
+          "buildingId": "upland_mill_catchment_fill_works",
+          "countyId": "upland_mill_resource_hill",
+          "siteId": "upland_mill_resource_tank",
+          "sourceId": "upland_mill_upland_roof",
+          "stores": [
+            "upland_mill_upland_tank"
+          ],
+          "demandId": "catchment_storage"
+        }
+      ],
+      "buildingInstitutionAssignments": [
+        {
+          "profileId": "monastic_property",
+          "institutionId": "upland_worship_binding_institution"
+        },
+        {
+          "profileId": "congregational_foundation",
+          "institutionId": "upland_worship_worship_congregation"
+        },
+        {
+          "profileId": "episcopal_foundation",
+          "institutionId": "upland_worship_worship_see"
+        }
+      ],
+      "productionSites": [
+        {
+          "id": "upland_industry_metal_plant",
+          "countyId": "upland_industry_resource_hill",
+          "siteId": "upland_industry_resource_roof",
+          "buildingId": "bloomery_smithy",
+          "recipeIds": [
+            "bloomery_smelting",
+            "smithy_forging"
+          ],
+          "openingLots": []
+        },
+        {
+          "id": "upland_industry_metal_supplier",
+          "countyId": "upland_industry_resource_fold",
+          "siteId": "upland_industry_resource_grazing",
+          "buildingId": "upland_industry_industry_depot",
+          "recipeIds": [
+            "bloomery_smelting",
+            "smithy_forging"
+          ],
+          "openingLots": [
+            {
+              "goodId": "bloomery_ore",
+              "quantity": 4
+            },
+            {
+              "goodId": "workshop_fuel",
+              "quantity": 6
+            },
+            {
+              "goodId": "bloomery_iron_lot",
+              "quantity": 2
+            }
+          ]
+        },
+        {
+          "id": "upland_boat_boat_plant",
+          "countyId": "upland_boat_resource_quay",
+          "siteId": "upland_boat_resource_intake",
+          "buildingId": "boathouse",
+          "recipeIds": [
+            "prepare_boathouse_work"
+          ],
+          "openingLots": [
+            {
+              "goodId": "boathouse_timber",
+              "quantity": 8
+            },
+            {
+              "goodId": "boathouse_cordage",
+              "quantity": 6
+            }
+          ]
+        },
+        {
+          "id": "upland_fish_drying_plant",
+          "countyId": "upland_fish_rain_harbor",
+          "siteId": "upland_fish_rain_racks",
+          "buildingId": "fish_drying_station",
+          "recipeIds": [
+            "dry_fish"
+          ],
+          "openingLots": [
+            {
+              "goodId": "upland_fish_generic_food",
+              "quantity": 10
+            }
+          ]
+        },
+        {
+          "id": "upland_fish_provisions_buyer",
+          "countyId": "upland_fish_rain_headland",
+          "siteId": "upland_fish_rain_store",
+          "buildingId": "upland_fish_preserved_store",
+          "recipeIds": [
+            "dry_fish"
+          ],
+          "openingLots": []
+        },
+        {
+          "id": "upland_pasture_farm_outpost",
+          "countyId": "upland_pasture_pasture_hill",
+          "siteId": "upland_pasture_hillstead",
+          "buildingId": "shieling",
+          "recipeIds": [
+            "upland_pasture_prepare_pasture_allocation"
+          ],
+          "openingLots": []
+        },
+        {
+          "id": "upland_pasture_buyer_store",
+          "countyId": "upland_pasture_hill_buyer",
+          "siteId": "upland_pasture_valley_store",
+          "buildingId": "granary",
+          "recipeIds": [
+            "upland_pasture_prepare_pasture_allocation"
+          ],
+          "openingLots": []
+        },
+        {
+          "id": "upland_pasture_parent_store",
+          "countyId": "upland_pasture_pasture_hill",
+          "siteId": "upland_pasture_hillstead",
+          "buildingId": "upland_pasture_parent_allocation_depot",
+          "recipeIds": [
+            "upland_pasture_prepare_pasture_allocation"
+          ],
+          "openingLots": []
+        },
+        {
+          "id": "upland_siege_iron_plant",
+          "countyId": "upland_siege_resource_hill",
+          "siteId": "upland_siege_resource_roof",
+          "buildingId": "upland_siege_iron_works",
+          "recipeIds": [
+            "upland_siege_assemble_heavy"
+          ],
+          "openingLots": [
+            {
+              "goodId": "upland_siege_dressed_timber",
+              "quantity": 12
+            }
+          ]
+        },
+        {
+          "id": "upland_relay_iron_plant",
+          "countyId": "upland_relay_resource_hill",
+          "siteId": "upland_relay_resource_roof",
+          "buildingId": "upland_relay_iron_works",
+          "recipeIds": [
+            "upland_relay_smelt_ore",
+            "upland_relay_forge_tools"
+          ],
+          "openingLots": []
+        },
+        {
+          "id": "upland_relay_iron_supplier",
+          "countyId": "upland_relay_resource_fold",
+          "siteId": "upland_relay_resource_grazing",
+          "buildingId": "upland_relay_iron_works",
+          "recipeIds": [
+            "upland_relay_smelt_ore",
+            "upland_relay_forge_tools"
+          ],
+          "openingLots": [
+            {
+              "goodId": "upland_relay_iron_ore_lot",
+              "quantity": 4
+            },
+            {
+              "goodId": "upland_relay_charcoal_lot",
+              "quantity": 4
+            },
+            {
+              "goodId": "upland_relay_relay_rations",
+              "quantity": 3
+            }
+          ]
+        }
+      ],
+      "productionExchangeAssignments": [
+        {
+          "id": "upland_industry_ore_purchase",
+          "profileId": "bloomery_ore_purchase",
+          "fromSiteId": "upland_industry_metal_supplier",
+          "toSiteId": "upland_industry_metal_plant"
+        },
+        {
+          "id": "upland_industry_fuel_purchase",
+          "profileId": "workshop_fuel_purchase",
+          "fromSiteId": "upland_industry_metal_supplier",
+          "toSiteId": "upland_industry_metal_plant"
+        },
+        {
+          "id": "upland_industry_iron_purchase",
+          "profileId": "smithy_iron_purchase",
+          "fromSiteId": "upland_industry_metal_supplier",
+          "toSiteId": "upland_industry_metal_plant"
+        },
+        {
+          "id": "upland_industry_iron_sale",
+          "profileId": "bloomery_iron_sale",
+          "fromSiteId": "upland_industry_metal_plant",
+          "toSiteId": "upland_industry_metal_supplier"
+        },
+        {
+          "id": "upland_industry_tool_sale",
+          "profileId": "smithy_tool_sale",
+          "fromSiteId": "upland_industry_metal_plant",
+          "toSiteId": "upland_industry_metal_supplier"
+        },
+        {
+          "id": "upland_fish_provisions_sale",
+          "profileId": "upland_fish_dry_sale",
+          "fromSiteId": "upland_fish_drying_plant",
+          "toSiteId": "upland_fish_provisions_buyer"
+        },
+        {
+          "id": "upland_pasture_pasture_sale",
+          "profileId": "upland_pasture_sell_pasture_output",
+          "fromSiteId": "upland_pasture_farm_outpost",
+          "toSiteId": "upland_pasture_buyer_store"
+        },
+        {
+          "id": "upland_pasture_parent_delivery",
+          "profileId": "upland_pasture_parent_delivery",
+          "fromSiteId": "upland_pasture_parent_store",
+          "toSiteId": "upland_pasture_farm_outpost"
+        },
+        {
+          "id": "upland_relay_ore_market",
+          "profileId": "upland_relay_buy_ore",
+          "fromSiteId": "upland_relay_iron_supplier",
+          "toSiteId": "upland_relay_iron_plant"
+        },
+        {
+          "id": "upland_relay_fuel_market",
+          "profileId": "upland_relay_buy_fuel",
+          "fromSiteId": "upland_relay_iron_supplier",
+          "toSiteId": "upland_relay_iron_plant"
+        },
+        {
+          "id": "upland_relay_bloom_market",
+          "profileId": "upland_relay_sell_bloom",
+          "fromSiteId": "upland_relay_iron_plant",
+          "toSiteId": "upland_relay_iron_supplier"
+        }
+      ],
+      "productionProducerAssignments": [
+        {
+          "id": "upland_fish_actual_catch",
+          "profileId": "upland_fish_wet_fish_share",
+          "siteId": "upland_fish_drying_plant"
+        },
+        {
+          "id": "upland_pasture_parent_share",
+          "profileId": "upland_pasture_upland_parent_allocation",
+          "siteId": "upland_pasture_parent_store"
+        },
+        {
+          "id": "upland_relay_local_share",
+          "profileId": "upland_relay_local_output",
+          "siteId": "upland_relay_iron_plant"
+        }
+      ],
+      "maritimeWorkAssignments": [
+        {
+          "id": "upland_boat_licensed_work",
+          "profileId": "boathouse_work",
+          "productionSiteId": "upland_boat_boat_plant",
+          "launchSourceId": "upland_boat_work_slip"
+        }
+      ],
+      "buildingSeasonAssignments": [
+        {
+          "id": "upland_fish_drying_window",
+          "profileId": "fish_drying_cool",
+          "operationId": null,
+          "productionSiteId": "upland_fish_drying_plant",
+          "resources": []
+        },
+        {
+          "id": "upland_fish_buyer_window",
+          "profileId": "upland_fish_buyer_preserved",
+          "operationId": null,
+          "productionSiteId": "upland_fish_provisions_buyer",
+          "resources": []
+        },
+        {
+          "id": "upland_pasture_pasture_term",
+          "profileId": "upland_pasture_upland_cool_window",
+          "operationId": null,
+          "productionSiteId": "upland_pasture_farm_outpost",
+          "resources": [
+            {
+              "sourceId": "upland_pasture_farm_grazing",
+              "amount": 1
+            }
+          ]
+        },
+        {
+          "id": "upland_pasture_parent_stock_term",
+          "profileId": "upland_pasture_parent_stock_life",
+          "operationId": null,
+          "productionSiteId": "upland_pasture_parent_store",
+          "resources": []
+        }
+      ],
+      "relayServiceAssignments": [
+        {
+          "id": "upland_relay_arrival_provisions",
+          "profileId": "upland_relay_local_provisions",
+          "sourceSiteId": "upland_relay_iron_supplier",
+          "fromCountyId": "upland_relay_resource_hill",
+          "recipientRealmId": "upland_relay_resource_hill_court",
+          "routeMode": "water"
+        }
+      ]
+    }
+  }
+}

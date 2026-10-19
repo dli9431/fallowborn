@@ -1,0 +1,3113 @@
+{
+  "name": "Expanded catalogue river composition",
+  "siteResourceProfiles": {
+    "river_water_river_flow": {
+      "name": "River intake",
+      "desc": "A bounded seven-day water allocation.",
+      "kind": "flow",
+      "unit": "water",
+      "capacity": 12,
+      "periodDays": 7
+    },
+    "river_water_river_store": {
+      "name": "Quay cistern",
+      "kind": "storage",
+      "unit": "water",
+      "capacity": 5
+    },
+    "river_water_river_launch": {
+      "name": "Launching space",
+      "kind": "access",
+      "unit": "launching",
+      "capacity": 2,
+      "periodDays": 1
+    },
+    "river_industry_river_flow": {
+      "name": "River intake",
+      "desc": "A bounded seven-day water allocation.",
+      "kind": "flow",
+      "unit": "water",
+      "capacity": 12,
+      "periodDays": 7
+    },
+    "river_industry_river_store": {
+      "name": "Quay cistern",
+      "kind": "storage",
+      "unit": "water",
+      "capacity": 5
+    },
+    "river_industry_river_launch": {
+      "name": "Launching space",
+      "kind": "access",
+      "unit": "launching",
+      "capacity": 2,
+      "periodDays": 1
+    },
+    "river_boat_work_launch": {
+      "name": "Licensed river landing",
+      "kind": "access",
+      "unit": "launching",
+      "capacity": 2,
+      "periodDays": 7
+    },
+    "river_pasture_pasture_places": {
+      "name": "Finite grazing places",
+      "kind": "access",
+      "unit": "grazing",
+      "capacity": 2,
+      "periodDays": 90
+    },
+    "river_siege_river_flow": {
+      "name": "River intake",
+      "desc": "A bounded seven-day water allocation.",
+      "kind": "flow",
+      "unit": "water",
+      "capacity": 12,
+      "periodDays": 7
+    },
+    "river_siege_river_store": {
+      "name": "Quay cistern",
+      "kind": "storage",
+      "unit": "water",
+      "capacity": 5
+    },
+    "river_siege_river_launch": {
+      "name": "Launching space",
+      "kind": "access",
+      "unit": "launching",
+      "capacity": 2,
+      "periodDays": 1
+    },
+    "river_relay_river_flow": {
+      "name": "River intake",
+      "desc": "A bounded seven-day water allocation.",
+      "kind": "flow",
+      "unit": "water",
+      "capacity": 12,
+      "periodDays": 7
+    },
+    "river_relay_river_store": {
+      "name": "Quay cistern",
+      "kind": "storage",
+      "unit": "water",
+      "capacity": 5
+    },
+    "river_relay_river_launch": {
+      "name": "Launching space",
+      "kind": "access",
+      "unit": "launching",
+      "capacity": 2,
+      "periodDays": 1
+    }
+  },
+  "religiousInstitutionProfiles": {
+    "river_worship_binding_school": {
+      "name": "Marsh House",
+      "faithIds": [
+        "catholic"
+      ],
+      "period": {
+        "yearMin": 1,
+        "yearMax": null
+      },
+      "system": null,
+      "roles": {
+        "helper": {
+          "name": "Helper",
+          "minAge": 16,
+          "sexes": [],
+          "unmarried": false,
+          "professions": [],
+          "skills": {},
+          "affiliationId": null
+        }
+      },
+      "selection": null,
+      "recognition": {
+        "roles": [],
+        "sources": [],
+        "quorum": 1,
+        "requiresLeader": false,
+        "protectedWorship": false
+      },
+      "actions": [
+        "admit",
+        "withdraw"
+      ],
+      "fees": {},
+      "affiliationIds": []
+    },
+    "river_worship_worship_congregation_service": {
+      "name": "Congregation service",
+      "faithIds": [
+        "sunni"
+      ],
+      "period": {
+        "yearMin": 1,
+        "yearMax": null
+      },
+      "system": null,
+      "roles": {
+        "helper": {
+          "name": "Helper",
+          "minAge": 16,
+          "sexes": [],
+          "unmarried": false,
+          "professions": [],
+          "skills": {},
+          "affiliationId": null
+        }
+      },
+      "selection": null,
+      "recognition": {
+        "roles": [],
+        "sources": [],
+        "quorum": 1,
+        "requiresLeader": false,
+        "protectedWorship": false
+      },
+      "actions": [
+        "admit",
+        "withdraw"
+      ],
+      "fees": {},
+      "affiliationIds": []
+    }
+  },
+  "religiousPatronage": {
+    "river_worship_binding_foundation": {
+      "name": "Endow Stone House",
+      "period": {
+        "yearMin": 1,
+        "yearMax": null
+      },
+      "openings": [],
+      "faithIds": [
+        "catholic"
+      ],
+      "affiliationIds": [],
+      "roleIds": [],
+      "institutionId": "river_worship_worship_monastery",
+      "payer": "household",
+      "reserve": 5,
+      "foundation": {
+        "startup": 4,
+        "capital": 10,
+        "treasury": 6,
+        "landRequired": true
+      },
+      "funds": {
+        "learning": {
+          "name": "Learning",
+          "capacity": 2,
+          "unitCost": 3
+        }
+      },
+      "outreach": [
+        "voluntary"
+      ]
+    }
+  },
+  "buildings": {
+    "river_industry_industry_depot": {
+      "name": "Material depot",
+      "desc": "Explicit fictional finite storage and counterparty; no passive return.",
+      "role": "industry",
+      "cost": 25,
+      "upkeep": 1,
+      "maxCounty": 2
+    },
+    "boathouse": {
+      "role": "shipyard",
+      "aiBuildOrder": 32,
+      "name": "Boathouse",
+      "icon": "ðŸ›¶",
+      "cost": 25,
+      "upkeep": 1,
+      "devMin": 0,
+      "maxCounty": 1,
+      "coastal": true,
+      "settlementDraw": false,
+      "productionRecipeIds": [
+        "river_boat_prepare_boathouse_work"
+      ],
+      "maritimeWorkProfileId": "river_boat_river_boathouse_work",
+      "applicability": {
+        "yearMin": 650,
+        "yearMax": 1300,
+        "traditions": [
+          "nordic"
+        ]
+      },
+      "desc": "A modest maintained boat shelter and workspace. At an assigned lawful launching site, actual paid timber and cordage work can meet at most 10% of a fishing enterprise invoice. Remaining payment, staffing and enterprise knowledge still apply."
+    },
+    "river_boat_boat_supply_store": {
+      "name": "Boat material store",
+      "desc": "A finite owned fictional material depot.",
+      "role": "industry",
+      "cost": 12,
+      "upkeep": 0,
+      "maxCounty": 1
+    },
+    "river_fish_preserved_store": {
+      "name": "Preserved stores",
+      "desc": "Finite received provisions only.",
+      "role": "food_store",
+      "cost": 20,
+      "upkeep": 1,
+      "maxCounty": 1,
+      "populationFamineProtection": 0.03,
+      "seasonProfile": "river_fish_buyer_preserved"
+    },
+    "river_pasture_parent_allocation_depot": {
+      "name": "Existing parent farm store",
+      "desc": "Fictional existing storage for actual allocated farm output.",
+      "icon": "*",
+      "role": "industry",
+      "cost": 5,
+      "upkeep": 0,
+      "devMin": 0,
+      "maxCounty": 1,
+      "aiBuildOrder": 99,
+      "settlementDraw": false
+    },
+    "river_siege_fiber_works": {
+      "name": "Fiber works",
+      "desc": "A finite paid batch facility with no passive income or population effect.",
+      "role": "industry",
+      "cost": 30,
+      "upkeep": 1,
+      "maxCounty": 1
+    },
+    "river_relay_fiber_works": {
+      "name": "Fiber works",
+      "desc": "A finite paid batch facility with no passive income or population effect.",
+      "role": "industry",
+      "cost": 30,
+      "upkeep": 1,
+      "maxCounty": 3
+    }
+  },
+  "enterprises": {
+    "river_industry_rag_collection": {
+      "name": "Rag collection",
+      "icon": "*",
+      "cost": 20,
+      "profession": "farmer",
+      "yield": 6,
+      "desc": "Fictional staffed recovery of finite typed fiber output."
+    },
+    "river_boat_river_fishing_business": {
+      "name": "River fishing business",
+      "icon": "B",
+      "cost": 60,
+      "profession": "farmer",
+      "yield": 2,
+      "laborPay": 1,
+      "requiresTech": "knarrs",
+      "upgrades": [
+        {
+          "name": "Decked river boat",
+          "cost": 180,
+          "staff": 2,
+          "requiresTech": "sternpost_rudder",
+          "desc": "Paid river enterprise with normal staffing.",
+          "fx": {
+            "populationCapacity": 0.01
+          }
+        }
+      ],
+      "desc": "A fictional river enterprise with ordinary paid staffing."
+    },
+    "river_pasture_field_strip": {
+      "name": "Existing parent farm",
+      "icon": "*",
+      "cost": 20,
+      "profession": "farmer",
+      "yield": 6,
+      "laborPay": 1,
+      "terrains": [
+        "hills"
+      ],
+      "desc": "A fictional operating farm. No livestock count or people are awarded by seasonal processing."
+    },
+    "river_relay_harbor_fishery": {
+      "name": "Working fishery",
+      "icon": "*",
+      "cost": 20,
+      "profession": "farmer",
+      "yield": 6,
+      "desc": "An explicit fictional staffed producer; quantities are simulation units."
+    }
+  },
+  "enterpriseMechanics": {
+    "river_industry_rag_collection": {
+      "output": {
+        "materials": 1
+      },
+      "typedProduction": {
+        "workshop_fiber": {
+          "marketGoodId": "materials",
+          "marketUnits": 24
+        }
+      }
+    },
+    "river_boat_river_fishing_business": {
+      "output": {
+        "provisions": 1
+      },
+      "maritimeWork": true
+    },
+    "river_pasture_field_strip": {
+      "output": {
+        "provisions": 1
+      },
+      "typedProduction": {
+        "parent_farm_allocation": {
+          "marketGoodId": "provisions",
+          "marketUnits": 12
+        }
+      }
+    },
+    "river_relay_harbor_fishery": {
+      "output": {
+        "provisions": 1
+      },
+      "typedProduction": {
+        "river_relay_fresh_fish": {
+          "marketGoodId": "provisions",
+          "marketUnits": 12
+        }
+      }
+    }
+  },
+  "productionProducerProfiles": {
+    "river_industry_rag_salvage_share": {
+      "enterpriseType": "river_industry_rag_collection",
+      "goodId": "workshop_fiber",
+      "marketGoodId": "materials",
+      "marketUnits": 24,
+      "share": 0.5,
+      "maxQuantity": 2
+    },
+    "river_relay_local_output": {
+      "enterpriseType": "river_relay_harbor_fishery",
+      "goodId": "river_relay_fresh_fish",
+      "marketGoodId": "provisions",
+      "marketUnits": 12,
+      "share": 0.5,
+      "maxQuantity": 2
+    }
+  },
+  "productionRecipes": {
+    "river_boat_prepare_boathouse_work": {
+      "name": "Prepare river boat work",
+      "desc": "Two paid action days and finite timber and cordage for a river invoice.",
+      "inputs": [
+        {
+          "goodId": "boathouse_timber",
+          "quantity": 1
+        },
+        {
+          "goodId": "boathouse_cordage",
+          "quantity": 2
+        }
+      ],
+      "outputs": [
+        {
+          "goodId": "boathouse_work",
+          "quantity": 1
+        }
+      ],
+      "workDays": 2,
+      "workPrice": 4,
+      "requiresTech": [],
+      "impactReviewId": "conserved_production_batches"
+    },
+    "river_siege_assemble_light": {
+      "name": "Prepare light equipment",
+      "inputs": [
+        {
+          "goodId": "river_siege_cordage",
+          "quantity": 2
+        }
+      ],
+      "outputs": [
+        {
+          "goodId": "river_siege_light_frame",
+          "quantity": 2
+        }
+      ],
+      "workDays": 1,
+      "workPrice": 2,
+      "requiresTech": [],
+      "impactReviewId": "conserved_production_batches",
+      "water": 1
+    },
+    "river_relay_dry_fish": {
+      "name": "Dry a fish lot",
+      "inputs": [
+        {
+          "goodId": "river_relay_fresh_fish",
+          "quantity": 2
+        }
+      ],
+      "outputs": [
+        {
+          "goodId": "river_relay_dried_food",
+          "quantity": 1
+        }
+      ],
+      "workDays": 1,
+      "workPrice": 2,
+      "requiresTech": [],
+      "impactReviewId": "conserved_production_batches"
+    },
+    "river_relay_ration_meal": {
+      "name": "Prepare a ration meal",
+      "inputs": [
+        {
+          "goodId": "river_relay_relay_rations",
+          "quantity": 2
+        }
+      ],
+      "outputs": [
+        {
+          "goodId": "river_relay_dried_food",
+          "quantity": 1
+        }
+      ],
+      "workDays": 1,
+      "workPrice": 1,
+      "requiresTech": [],
+      "impactReviewId": "conserved_production_batches"
+    }
+  },
+  "maritimeWorkProfiles": {
+    "river_boat_river_boathouse_work": {
+      "name": "Maintained river boathouse work",
+      "desc": "A finite contribution to a paid river enterprise invoice.",
+      "enterpriseType": "river_boat_river_fishing_business",
+      "recipeId": "river_boat_prepare_boathouse_work",
+      "goodId": "boathouse_work",
+      "quantity": 1,
+      "unitValue": 3,
+      "invoiceShare": 0.05,
+      "termDays": 14
+    }
+  },
+  "productionExchangeProfiles": {
+    "river_boat_timber_delivery": {
+      "goodId": "boathouse_timber",
+      "marketGoodId": "materials",
+      "basePrice": 1,
+      "mode": "owned",
+      "quantityLimit": 8,
+      "budget": 100
+    },
+    "river_boat_cordage_delivery": {
+      "goodId": "boathouse_cordage",
+      "marketGoodId": "materials",
+      "basePrice": 1,
+      "mode": "owned",
+      "quantityLimit": 8,
+      "budget": 100
+    },
+    "river_fish_dry_sale": {
+      "goodId": "dried_provisions",
+      "marketGoodId": "provisions",
+      "basePrice": 3,
+      "mode": "market",
+      "quantityLimit": 2,
+      "budget": 12
+    },
+    "river_pasture_sell_pasture_output": {
+      "goodId": "pasture_provisions",
+      "marketGoodId": "provisions",
+      "basePrice": 6,
+      "mode": "market",
+      "quantityLimit": 1,
+      "budget": 20
+    },
+    "river_pasture_parent_delivery": {
+      "goodId": "parent_farm_allocation",
+      "marketGoodId": "provisions",
+      "basePrice": 1,
+      "mode": "owned",
+      "quantityLimit": 1,
+      "budget": 1
+    },
+    "river_relay_owned_fish": {
+      "goodId": "river_relay_fresh_fish",
+      "marketGoodId": "provisions",
+      "basePrice": 2,
+      "mode": "owned",
+      "quantityLimit": 6,
+      "budget": 20
+    },
+    "river_relay_sell_fish": {
+      "goodId": "river_relay_fresh_fish",
+      "marketGoodId": "provisions",
+      "basePrice": 2,
+      "mode": "market",
+      "quantityLimit": 4,
+      "budget": 20
+    },
+    "river_relay_sell_dried": {
+      "goodId": "river_relay_dried_food",
+      "marketGoodId": "provisions",
+      "basePrice": 3,
+      "mode": "market",
+      "quantityLimit": 2,
+      "budget": 20
+    }
+  },
+  "climateZones": {
+    "river_fish_cool_drying_coast": {
+      "name": "Declared cool coastal weather",
+      "seasons": [
+        "cool_season",
+        "summer",
+        "autumn",
+        "winter"
+      ]
+    }
+  },
+  "productionGoods": {
+    "river_fish_generic_food": {
+      "name": "Generic food",
+      "unit": "food_units",
+      "mass": 1
+    },
+    "river_siege_cordage": {
+      "name": "Cordage",
+      "unit": "material_units",
+      "mass": 1
+    },
+    "river_siege_light_frame": {
+      "name": "Light siege frame",
+      "unit": "equipment_units",
+      "mass": 1
+    },
+    "river_relay_fresh_fish": {
+      "name": "Fresh fish",
+      "unit": "fish_units",
+      "mass": 1
+    },
+    "river_relay_dried_food": {
+      "name": "Dried provisions",
+      "unit": "provisions_units",
+      "mass": 1
+    },
+    "river_relay_generic_food": {
+      "name": "Generic provisions",
+      "unit": "food_units",
+      "mass": 1
+    },
+    "river_relay_relay_rations": {
+      "name": "Packed road rations",
+      "unit": "ration_lots",
+      "mass": 1,
+      "provisionUnits": 0.05
+    }
+  },
+  "buildingSeasonProfiles": {
+    "river_fish_buyer_preserved": {
+      "seasonKinds": [
+        "cool_season"
+      ],
+      "periodDays": 5,
+      "maxDays": 3,
+      "care": false,
+      "stockLives": [
+        {
+          "goodId": "dried_provisions",
+          "days": 12
+        }
+      ],
+      "benefit": {
+        "goodId": "dried_provisions",
+        "quantity": 1,
+        "effect": "populationFamineProtection",
+        "days": 3
+      }
+    },
+    "river_pasture_parent_stock_life": {
+      "seasonKinds": [
+        "summer"
+      ],
+      "periodDays": 90,
+      "maxDays": 90,
+      "care": false,
+      "stockLives": [
+        {
+          "goodId": "parent_farm_allocation",
+          "days": 10
+        }
+      ],
+      "benefit": null
+    }
+  },
+  "siegeSupportProfiles": {
+    "river_siege_light_equipment": {
+      "name": "Light siege frames",
+      "desc": "Paid cordage frames for limited local siege work.",
+      "recipeId": "river_siege_assemble_light",
+      "goodId": "river_siege_light_frame",
+      "quantityPerPulse": 1,
+      "pulses": 2,
+      "progress": 0.25,
+      "termDays": 180,
+      "requiresTech": [],
+      "impactReviewId": "river_siege_finite_light_equipment"
+    }
+  },
+  "techImpactReviews": {
+    "features": {
+      "river_siege_finite_light_equipment": {
+        "mode": "none",
+        "rationale": "Basic paid equipment uses ordinary work."
+      }
+    }
+  },
+  "relayServiceProfiles": {
+    "river_relay_local_provisions": {
+      "goodId": "river_relay_relay_rations",
+      "marketUnits": 0.05,
+      "mode": "owned",
+      "basePrice": 2,
+      "maxQuantity": 4,
+      "duration": 12
+    }
+  },
+  "geographies": {
+    "expanded_river_land": {
+      "bounds": {
+        "lonMin": 0,
+        "lonMax": 30,
+        "latMin": 0,
+        "latMax": 15
+      },
+      "land": [
+        [
+          0.65833,
+          0.8,
+          5.24167,
+          0.8,
+          5.24167,
+          5.6,
+          0.65833,
+          5.6
+        ],
+        [
+          6.65833,
+          0.8,
+          11.24167,
+          0.8,
+          11.24167,
+          5.6,
+          6.65833,
+          5.6
+        ],
+        [
+          12.65833,
+          0.8,
+          17.24167,
+          0.8,
+          17.24167,
+          5.6,
+          12.65833,
+          5.6
+        ],
+        [
+          18.65833,
+          0.8,
+          23.24167,
+          0.8,
+          23.24167,
+          5.6,
+          18.65833,
+          5.6
+        ],
+        [
+          24.65833,
+          0.8,
+          29.24167,
+          0.8,
+          29.24167,
+          5.6,
+          24.65833,
+          5.6
+        ],
+        [
+          0.65833,
+          7.8,
+          5.24167,
+          7.8,
+          5.24167,
+          12.6,
+          0.65833,
+          12.6
+        ],
+        [
+          6.65833,
+          7.8,
+          11.24167,
+          7.8,
+          11.24167,
+          12.6,
+          6.65833,
+          12.6
+        ],
+        [
+          12.65833,
+          7.8,
+          17.24167,
+          7.8,
+          17.24167,
+          12.6,
+          12.65833,
+          12.6
+        ],
+        [
+          18.65833,
+          7.8,
+          23.24167,
+          7.8,
+          23.24167,
+          12.6,
+          18.65833,
+          12.6
+        ],
+        [
+          24.65833,
+          7.8,
+          29.24167,
+          7.8,
+          29.24167,
+          12.6,
+          24.65833,
+          12.6
+        ]
+      ],
+      "gridWidth": 480,
+      "seas": [],
+      "rivers": [],
+      "defaultLayout": "expanded_river_layout",
+      "provinces": [
+        {
+          "id": "river_water_resource_quay",
+          "x": 1.575,
+          "y": 2.6,
+          "terrain": "farmland"
+        },
+        {
+          "id": "river_water_resource_bank",
+          "x": 3.04167,
+          "y": 2.6,
+          "terrain": "farmland"
+        },
+        {
+          "id": "river_water_resource_rocks",
+          "x": 4.50833,
+          "y": 2.6,
+          "terrain": "hills"
+        },
+        {
+          "id": "river_worship_inventory_quay",
+          "x": 7.575,
+          "y": 2.6,
+          "terrain": "farmland"
+        },
+        {
+          "id": "river_worship_inventory_marsh",
+          "x": 9.04167,
+          "y": 2.6,
+          "terrain": "farmland"
+        },
+        {
+          "id": "river_worship_inventory_ridge",
+          "x": 10.50833,
+          "y": 2.6,
+          "terrain": "hills"
+        },
+        {
+          "id": "river_worship_inventory_scenery",
+          "x": 9.04167,
+          "y": 5.0,
+          "terrain": "hills"
+        },
+        {
+          "id": "river_mill_resource_quay",
+          "x": 13.575,
+          "y": 2.6,
+          "terrain": "farmland"
+        },
+        {
+          "id": "river_mill_resource_bank",
+          "x": 15.04167,
+          "y": 2.6,
+          "terrain": "farmland"
+        },
+        {
+          "id": "river_mill_resource_rocks",
+          "x": 16.50833,
+          "y": 2.6,
+          "terrain": "hills"
+        },
+        {
+          "id": "river_industry_baghdad",
+          "x": 19.575,
+          "y": 2.6,
+          "terrain": "farmland"
+        },
+        {
+          "id": "river_industry_resource_bank",
+          "x": 21.04167,
+          "y": 2.6,
+          "terrain": "farmland"
+        },
+        {
+          "id": "river_industry_resource_rocks",
+          "x": 22.50833,
+          "y": 2.6,
+          "terrain": "hills"
+        },
+        {
+          "id": "river_boat_resource_quay",
+          "x": 25.575,
+          "y": 2.6,
+          "terrain": "farmland"
+        },
+        {
+          "id": "river_boat_resource_bank",
+          "x": 27.04167,
+          "y": 2.6,
+          "terrain": "farmland"
+        },
+        {
+          "id": "river_boat_resource_rocks",
+          "x": 28.50833,
+          "y": 2.6,
+          "terrain": "hills"
+        },
+        {
+          "id": "river_fish_fjord_quay",
+          "x": 1.39167,
+          "y": 8.64,
+          "terrain": "hills"
+        },
+        {
+          "id": "river_fish_fjord_bank",
+          "x": 3.59167,
+          "y": 10.44,
+          "terrain": "hills"
+        },
+        {
+          "id": "river_pasture_faroes",
+          "x": 7.575,
+          "y": 9.0,
+          "terrain": "hills"
+        },
+        {
+          "id": "river_pasture_pasture_buyer",
+          "x": 9.04167,
+          "y": 9.0,
+          "terrain": "hills"
+        },
+        {
+          "id": "river_fort_inventory_quay",
+          "x": 13.575,
+          "y": 9.6,
+          "terrain": "farmland"
+        },
+        {
+          "id": "river_fort_inventory_marsh",
+          "x": 15.04167,
+          "y": 9.6,
+          "terrain": "farmland"
+        },
+        {
+          "id": "river_fort_inventory_ridge",
+          "x": 16.50833,
+          "y": 9.6,
+          "terrain": "hills"
+        },
+        {
+          "id": "river_fort_inventory_scenery",
+          "x": 15.04167,
+          "y": 12.0,
+          "terrain": "hills"
+        },
+        {
+          "id": "river_siege_resource_quay",
+          "x": 19.575,
+          "y": 9.6,
+          "terrain": "farmland"
+        },
+        {
+          "id": "river_siege_resource_bank",
+          "x": 21.04167,
+          "y": 9.6,
+          "terrain": "farmland"
+        },
+        {
+          "id": "river_siege_resource_rocks",
+          "x": 22.50833,
+          "y": 9.6,
+          "terrain": "hills"
+        },
+        {
+          "id": "river_relay_resource_quay",
+          "x": 25.575,
+          "y": 9.6,
+          "terrain": "farmland"
+        },
+        {
+          "id": "river_relay_resource_bank",
+          "x": 27.04167,
+          "y": 9.6,
+          "terrain": "farmland"
+        },
+        {
+          "id": "river_relay_resource_rocks",
+          "x": 28.50833,
+          "y": 9.6,
+          "terrain": "hills"
+        }
+      ],
+      "sites": {
+        "river_water_resource_intake": {
+          "x": 1.575,
+          "y": 2.6
+        },
+        "river_water_resource_cistern": {
+          "x": 3.04167,
+          "y": 2.6
+        },
+        "river_water_resource_slip": {
+          "x": 1.75833,
+          "y": 2.6
+        },
+        "river_worship_inventory_quay_hall": {
+          "x": 7.48333,
+          "y": 2.6
+        },
+        "river_worship_inventory_quay_store": {
+          "x": 7.75833,
+          "y": 2.6
+        },
+        "river_worship_inventory_marsh_town": {
+          "x": 9.04167,
+          "y": 2.6
+        },
+        "river_worship_inventory_ridge_tower": {
+          "x": 10.50833,
+          "y": 2.6
+        },
+        "river_mill_resource_intake": {
+          "x": 13.575,
+          "y": 2.6
+        },
+        "river_mill_resource_cistern": {
+          "x": 15.04167,
+          "y": 2.6
+        },
+        "river_mill_resource_slip": {
+          "x": 13.75833,
+          "y": 2.6
+        },
+        "river_industry_resource_intake": {
+          "x": 19.575,
+          "y": 2.6
+        },
+        "river_industry_resource_cistern": {
+          "x": 21.04167,
+          "y": 2.6
+        },
+        "river_industry_resource_slip": {
+          "x": 19.75833,
+          "y": 2.6
+        },
+        "river_boat_resource_intake": {
+          "x": 25.575,
+          "y": 2.6
+        },
+        "river_boat_resource_cistern": {
+          "x": 27.04167,
+          "y": 2.6
+        },
+        "river_boat_resource_slip": {
+          "x": 25.75833,
+          "y": 2.6
+        },
+        "river_fish_fjord_racks": {
+          "x": 1.39167,
+          "y": 8.64
+        },
+        "river_fish_fjord_store": {
+          "x": 3.59167,
+          "y": 10.44
+        },
+        "river_pasture_farmstead": {
+          "x": 7.575,
+          "y": 9.0
+        },
+        "river_pasture_quay_store": {
+          "x": 9.04167,
+          "y": 9.0
+        },
+        "river_fort_inventory_quay_hall": {
+          "x": 13.48333,
+          "y": 9.6
+        },
+        "river_fort_inventory_quay_store": {
+          "x": 13.75833,
+          "y": 9.6
+        },
+        "river_fort_inventory_marsh_town": {
+          "x": 15.04167,
+          "y": 9.6
+        },
+        "river_fort_inventory_ridge_tower": {
+          "x": 16.50833,
+          "y": 9.6
+        },
+        "river_siege_resource_intake": {
+          "x": 19.575,
+          "y": 9.6
+        },
+        "river_siege_resource_cistern": {
+          "x": 21.04167,
+          "y": 9.6
+        },
+        "river_siege_resource_slip": {
+          "x": 19.75833,
+          "y": 9.6
+        },
+        "river_relay_resource_intake": {
+          "x": 25.575,
+          "y": 9.6
+        },
+        "river_relay_resource_cistern": {
+          "x": 27.04167,
+          "y": 9.6
+        },
+        "river_relay_resource_slip": {
+          "x": 25.75833,
+          "y": 9.6
+        }
+      }
+    }
+  },
+  "settlementLayouts": {
+    "expanded_river_layout": {
+      "river_water_resource_quay": [
+        {
+          "site": "river_water_resource_intake",
+          "name": "Intake Town",
+          "kind": "town"
+        },
+        {
+          "site": "river_water_resource_slip",
+          "name": "Slip Village",
+          "kind": "village"
+        }
+      ],
+      "river_water_resource_bank": [
+        {
+          "site": "river_water_resource_cistern",
+          "name": "Bank Village",
+          "kind": "village"
+        }
+      ],
+      "river_worship_inventory_quay": [
+        {
+          "site": "river_worship_inventory_quay_hall",
+          "name": "Quay Hall",
+          "kind": "town"
+        },
+        {
+          "site": "river_worship_inventory_quay_store",
+          "name": "Quay Stores",
+          "kind": "village"
+        }
+      ],
+      "river_worship_inventory_marsh": [
+        {
+          "site": "river_worship_inventory_marsh_town",
+          "name": "Marsh Town",
+          "kind": "village"
+        }
+      ],
+      "river_worship_inventory_ridge": [
+        {
+          "site": "river_worship_inventory_ridge_tower",
+          "name": "Ridge Tower",
+          "kind": "village"
+        }
+      ],
+      "river_mill_resource_quay": [
+        {
+          "site": "river_mill_resource_intake",
+          "name": "Intake Town",
+          "kind": "town"
+        },
+        {
+          "site": "river_mill_resource_slip",
+          "name": "Slip Village",
+          "kind": "village"
+        }
+      ],
+      "river_mill_resource_bank": [
+        {
+          "site": "river_mill_resource_cistern",
+          "name": "Bank Village",
+          "kind": "village"
+        }
+      ],
+      "river_industry_baghdad": [
+        {
+          "site": "river_industry_resource_intake",
+          "name": "Intake Town",
+          "kind": "town"
+        },
+        {
+          "site": "river_industry_resource_slip",
+          "name": "Slip Village",
+          "kind": "village"
+        }
+      ],
+      "river_industry_resource_bank": [
+        {
+          "site": "river_industry_resource_cistern",
+          "name": "Bank Village",
+          "kind": "village"
+        }
+      ],
+      "river_boat_resource_quay": [
+        {
+          "site": "river_boat_resource_intake",
+          "name": "Intake Town",
+          "kind": "town"
+        },
+        {
+          "site": "river_boat_resource_slip",
+          "name": "Slip Village",
+          "kind": "village"
+        }
+      ],
+      "river_boat_resource_bank": [
+        {
+          "site": "river_boat_resource_cistern",
+          "name": "Bank Village",
+          "kind": "village"
+        }
+      ],
+      "river_fort_inventory_quay": [
+        {
+          "site": "river_fort_inventory_quay_hall",
+          "name": "Quay Hall",
+          "kind": "town"
+        },
+        {
+          "site": "river_fort_inventory_quay_store",
+          "name": "Quay Stores",
+          "kind": "village"
+        }
+      ],
+      "river_fort_inventory_marsh": [
+        {
+          "site": "river_fort_inventory_marsh_town",
+          "name": "Marsh Town",
+          "kind": "village"
+        }
+      ],
+      "river_fort_inventory_ridge": [
+        {
+          "site": "river_fort_inventory_ridge_tower",
+          "name": "Ridge Tower",
+          "kind": "village"
+        }
+      ],
+      "river_siege_resource_quay": [
+        {
+          "site": "river_siege_resource_intake",
+          "name": "Intake Town",
+          "kind": "town"
+        },
+        {
+          "site": "river_siege_resource_slip",
+          "name": "Slip Village",
+          "kind": "village"
+        }
+      ],
+      "river_siege_resource_bank": [
+        {
+          "site": "river_siege_resource_cistern",
+          "name": "Bank Village",
+          "kind": "village"
+        }
+      ],
+      "river_relay_resource_quay": [
+        {
+          "site": "river_relay_resource_intake",
+          "name": "Intake Town",
+          "kind": "town"
+        },
+        {
+          "site": "river_relay_resource_slip",
+          "name": "Slip Village",
+          "kind": "village"
+        }
+      ],
+      "river_relay_resource_bank": [
+        {
+          "site": "river_relay_resource_cistern",
+          "name": "Bank Village",
+          "kind": "village"
+        }
+      ]
+    }
+  },
+  "startScenarios": [
+    {
+      "id": "river_water_resource_river_ruler",
+      "name": "The river holder",
+      "desc": "An existing fictional ruler.",
+      "intro": "Review the river's finite capacity.",
+      "tier": 5,
+      "profession": "noble",
+      "gold": 12,
+      "prestige": 0,
+      "piety": 0,
+      "bookmarkIds": [
+        "expanded_river"
+      ],
+      "eras": [
+        "early_medieval"
+      ],
+      "alwaysUnlocked": true,
+      "rulerRealmId": "river_water_resource_river_court",
+      "governmentForm": "regnum",
+      "fixedProvinceId": "river_water_resource_quay",
+      "characterName": "Ivo Reed",
+      "sex": "m",
+      "startCulture": "frankish",
+      "startReligion": "catholic",
+      "onboarding": "ruler",
+      "familyPresets": {
+        "standard": {
+          "name": "Existing court",
+          "diff": "Existing court household"
+        }
+      }
+    },
+    {
+      "id": "river_water_resource_river_household",
+      "name": "River household",
+      "desc": "A fictional household.",
+      "intro": "Your household lives beside the river.",
+      "tier": 1,
+      "profession": "farmer",
+      "gold": 12,
+      "prestige": 0,
+      "piety": 0,
+      "bookmarkIds": [
+        "expanded_river"
+      ],
+      "eras": [
+        "early_medieval"
+      ],
+      "alwaysUnlocked": true,
+      "startAge": 24,
+      "familyPresets": {
+        "standard": {
+          "name": "Established household",
+          "diff": "age 24"
+        }
+      }
+    },
+    {
+      "id": "river_worship_inventory_estuary_household",
+      "name": "Estuary household",
+      "desc": "A fictional household.",
+      "intro": "Your family lives beside the estuary.",
+      "tier": 1,
+      "profession": "farmer",
+      "gold": 12,
+      "prestige": 0,
+      "piety": 0,
+      "bookmarkIds": [
+        "expanded_river"
+      ],
+      "eras": [
+        "early_medieval"
+      ],
+      "alwaysUnlocked": true,
+      "startAge": 24,
+      "familyPresets": {
+        "standard": {
+          "name": "Established household",
+          "diff": "age 24"
+        }
+      }
+    },
+    {
+      "id": "river_mill_resource_river_ruler",
+      "name": "The river holder",
+      "desc": "An existing fictional ruler.",
+      "intro": "Review the river's finite capacity.",
+      "tier": 5,
+      "profession": "noble",
+      "gold": 12,
+      "prestige": 0,
+      "piety": 0,
+      "bookmarkIds": [
+        "expanded_river"
+      ],
+      "eras": [
+        "early_medieval"
+      ],
+      "alwaysUnlocked": true,
+      "rulerRealmId": "river_mill_resource_river_court",
+      "governmentForm": "regnum",
+      "fixedProvinceId": "river_mill_resource_quay",
+      "characterName": "Ivo Reed",
+      "sex": "m",
+      "startCulture": "frankish",
+      "startReligion": "catholic",
+      "onboarding": "ruler",
+      "familyPresets": {
+        "standard": {
+          "name": "Existing court",
+          "diff": "Existing court household"
+        }
+      }
+    },
+    {
+      "id": "river_mill_resource_river_household",
+      "name": "River household",
+      "desc": "A fictional household.",
+      "intro": "Your household lives beside the river.",
+      "tier": 1,
+      "profession": "farmer",
+      "gold": 12,
+      "prestige": 0,
+      "piety": 0,
+      "bookmarkIds": [
+        "expanded_river"
+      ],
+      "eras": [
+        "early_medieval"
+      ],
+      "alwaysUnlocked": true,
+      "startAge": 24,
+      "familyPresets": {
+        "standard": {
+          "name": "Established household",
+          "diff": "age 24"
+        }
+      }
+    },
+    {
+      "id": "river_industry_early_industry_paper_ruler",
+      "name": "The river holder",
+      "desc": "An existing fictional ruler.",
+      "intro": "Review actual finite plant inputs and output buyers.",
+      "tier": 5,
+      "profession": "noble",
+      "gold": 500,
+      "prestige": 0,
+      "piety": 0,
+      "bookmarkIds": [
+        "expanded_river"
+      ],
+      "eras": [
+        "early_medieval"
+      ],
+      "alwaysUnlocked": true,
+      "rulerRealmId": "river_industry_early_industry_paper_court",
+      "governmentForm": "regnum",
+      "fixedProvinceId": "river_industry_baghdad",
+      "characterName": "Ivo Reed",
+      "sex": "m",
+      "startCulture": "frankish",
+      "startReligion": "catholic",
+      "onboarding": "ruler",
+      "familyPresets": {
+        "standard": {
+          "name": "Existing court",
+          "diff": "Existing court household"
+        }
+      }
+    },
+    {
+      "id": "river_industry_early_industry_paper_household",
+      "name": "River household",
+      "desc": "A fictional household.",
+      "intro": "Review actual finite plant inputs and output buyers.",
+      "tier": 1,
+      "profession": "farmer",
+      "gold": 500,
+      "prestige": 0,
+      "piety": 0,
+      "bookmarkIds": [
+        "expanded_river"
+      ],
+      "eras": [
+        "early_medieval"
+      ],
+      "alwaysUnlocked": true,
+      "startAge": 24,
+      "familyPresets": {
+        "standard": {
+          "name": "Established household",
+          "diff": "age 24"
+        }
+      }
+    },
+    {
+      "id": "river_boat_boathouse_river_ruler",
+      "name": "The boat-work holder",
+      "desc": "A fictional existing holder of a paid boat-work site.",
+      "intro": "Review finite owned materials and the ordinary enterprise invoice.",
+      "tier": 5,
+      "profession": "noble",
+      "gold": 500,
+      "prestige": 0,
+      "piety": 0,
+      "bookmarkIds": [
+        "expanded_river"
+      ],
+      "eras": [
+        "early_medieval"
+      ],
+      "alwaysUnlocked": true,
+      "rulerRealmId": "river_boat_boathouse_river_court",
+      "governmentForm": "regnum",
+      "fixedProvinceId": "river_boat_resource_quay",
+      "characterName": "Ivo Reed",
+      "sex": "m",
+      "startCulture": "norse",
+      "startReligion": "catholic",
+      "onboarding": "ruler",
+      "familyPresets": {
+        "standard": {
+          "name": "Existing court",
+          "diff": "Existing court household"
+        }
+      }
+    },
+    {
+      "id": "river_fish_fish_cool_ruler",
+      "name": "Coastal holder",
+      "desc": "Fictional conserved preservation review.",
+      "intro": "Review actual stock and local weather.",
+      "tier": 5,
+      "profession": "noble",
+      "gold": 100,
+      "prestige": 0,
+      "piety": 0,
+      "bookmarkIds": [
+        "expanded_river"
+      ],
+      "eras": [
+        "early_medieval"
+      ],
+      "alwaysUnlocked": true,
+      "familyPresets": {
+        "standard": {
+          "name": "Established household",
+          "diff": "age 24"
+        }
+      },
+      "rulerRealmId": "river_fish_fish_cool_court",
+      "governmentForm": "regnum",
+      "fixedProvinceId": "river_fish_fjord_quay",
+      "characterName": "Ivar Holm",
+      "sex": "m",
+      "startCulture": "norse",
+      "startReligion": "catholic",
+      "onboarding": "ruler"
+    },
+    {
+      "id": "river_fish_fish_cool_household",
+      "name": "Coastal household",
+      "desc": "Fictional conserved preservation review.",
+      "intro": "Review actual stock and local weather.",
+      "tier": 1,
+      "profession": "farmer",
+      "gold": 100,
+      "prestige": 0,
+      "piety": 0,
+      "bookmarkIds": [
+        "expanded_river"
+      ],
+      "eras": [
+        "early_medieval"
+      ],
+      "alwaysUnlocked": true,
+      "familyPresets": {
+        "standard": {
+          "name": "Established household",
+          "diff": "age 24"
+        }
+      },
+      "startAge": 24
+    },
+    {
+      "id": "river_pasture_pasture_faroes_ruler",
+      "name": "Farm holder",
+      "desc": "A fictional farm holder.",
+      "intro": "Review the existing farm and grazing rights.",
+      "tier": 5,
+      "profession": "noble",
+      "gold": 200,
+      "prestige": 0,
+      "piety": 0,
+      "bookmarkIds": [
+        "expanded_river"
+      ],
+      "eras": [
+        "early_medieval"
+      ],
+      "alwaysUnlocked": true,
+      "rulerRealmId": "river_pasture_farm_court",
+      "governmentForm": "regnum",
+      "fixedProvinceId": "river_pasture_faroes",
+      "characterName": "Arno Stone",
+      "sex": "m",
+      "startCulture": "frankish",
+      "startReligion": "catholic",
+      "onboarding": "ruler",
+      "familyPresets": {
+        "standard": {
+          "name": "Established household",
+          "diff": "age 24"
+        }
+      }
+    },
+    {
+      "id": "river_fort_inventory_estuary_household",
+      "name": "Estuary household",
+      "desc": "A fictional household.",
+      "intro": "Your family lives beside the estuary.",
+      "tier": 1,
+      "profession": "farmer",
+      "gold": 12,
+      "prestige": 0,
+      "piety": 0,
+      "bookmarkIds": [
+        "expanded_river"
+      ],
+      "eras": [
+        "early_medieval"
+      ],
+      "alwaysUnlocked": true,
+      "startAge": 24,
+      "familyPresets": {
+        "standard": {
+          "name": "Established household",
+          "diff": "age 24"
+        }
+      }
+    },
+    {
+      "id": "river_fort_inventory_estuary_ruler",
+      "name": "The estuary ruler",
+      "desc": "Rule the fictional estuary court.",
+      "intro": "You lead the existing estuary court.",
+      "tier": 5,
+      "profession": "noble",
+      "gold": 12,
+      "prestige": 0,
+      "piety": 0,
+      "bookmarkIds": [
+        "expanded_river"
+      ],
+      "eras": [
+        "early_medieval"
+      ],
+      "alwaysUnlocked": true,
+      "rulerRealmId": "river_fort_inventory_estuary_court",
+      "governmentForm": "regnum",
+      "fixedProvinceId": "river_fort_inventory_quay",
+      "characterName": "Ivo Reed",
+      "sex": "m",
+      "startCulture": "frankish",
+      "startReligion": "catholic",
+      "onboarding": "ruler",
+      "familyPresets": {
+        "standard": {
+          "name": "Existing court",
+          "diff": "Existing court household"
+        }
+      }
+    },
+    {
+      "id": "river_siege_siege_support_light_ruler",
+      "name": "The river holder",
+      "desc": "An existing fictional ruler.",
+      "intro": "Review the river's finite capacity.",
+      "tier": 5,
+      "profession": "noble",
+      "gold": 12,
+      "prestige": 0,
+      "piety": 0,
+      "bookmarkIds": [
+        "expanded_river"
+      ],
+      "eras": [
+        "early_medieval"
+      ],
+      "alwaysUnlocked": true,
+      "rulerRealmId": "river_siege_siege_support_light_court",
+      "governmentForm": "regnum",
+      "fixedProvinceId": "river_siege_resource_quay",
+      "characterName": "Ivo Reed",
+      "sex": "m",
+      "startCulture": "frankish",
+      "startReligion": "catholic",
+      "onboarding": "ruler",
+      "familyPresets": {
+        "standard": {
+          "name": "Existing court",
+          "diff": "Existing court household"
+        }
+      }
+    },
+    {
+      "id": "river_siege_siege_support_light_household",
+      "name": "River household",
+      "desc": "A fictional household.",
+      "intro": "Your household lives beside the river.",
+      "tier": 1,
+      "profession": "farmer",
+      "gold": 12,
+      "prestige": 0,
+      "piety": 0,
+      "bookmarkIds": [
+        "expanded_river"
+      ],
+      "eras": [
+        "early_medieval"
+      ],
+      "alwaysUnlocked": true,
+      "startAge": 24,
+      "familyPresets": {
+        "standard": {
+          "name": "Established household",
+          "diff": "age 24"
+        }
+      }
+    },
+    {
+      "id": "river_relay_relay_services_road_ruler",
+      "name": "The river holder",
+      "desc": "An existing fictional ruler.",
+      "intro": "Review the river's finite capacity.",
+      "tier": 5,
+      "profession": "noble",
+      "gold": 12,
+      "prestige": 0,
+      "piety": 0,
+      "bookmarkIds": [
+        "expanded_river"
+      ],
+      "eras": [
+        "early_medieval"
+      ],
+      "alwaysUnlocked": true,
+      "rulerRealmId": "river_relay_relay_services_road_court",
+      "governmentForm": "regnum",
+      "fixedProvinceId": "river_relay_resource_quay",
+      "characterName": "Ivo Reed",
+      "sex": "m",
+      "startCulture": "frankish",
+      "startReligion": "catholic",
+      "onboarding": "ruler",
+      "familyPresets": {
+        "standard": {
+          "name": "Existing court",
+          "diff": "Existing court household"
+        }
+      }
+    },
+    {
+      "id": "river_relay_relay_services_road_household",
+      "name": "River household",
+      "desc": "A fictional household.",
+      "intro": "Your household lives beside the river.",
+      "tier": 1,
+      "profession": "farmer",
+      "gold": 12,
+      "prestige": 0,
+      "piety": 0,
+      "bookmarkIds": [
+        "expanded_river"
+      ],
+      "eras": [
+        "early_medieval"
+      ],
+      "alwaysUnlocked": true,
+      "startAge": 24,
+      "familyPresets": {
+        "standard": {
+          "name": "Established household",
+          "diff": "age 24"
+        }
+      }
+    }
+  ],
+  "bookmarks": {
+    "expanded_river": {
+      "id": "expanded_river",
+      "name": "Fictional river composition",
+      "desc": "Independent fictional districts compose finite works, existing institutions, paid production, seasonal goods and canonical military and maritime consumers. No historical inventory is asserted.",
+      "date": {
+        "year": 950,
+        "season": 0,
+        "day": 1
+      },
+      "era": "early_medieval",
+      "geography": "expanded_river_land",
+      "settlementLayout": "expanded_river_layout",
+      "religiousHeads": {},
+      "localInstitutions": {
+        "river_worship_binding_institution": {
+          "city": "Lantern See",
+          "kind": "see",
+          "provinceId": "river_worship_inventory_quay",
+          "site": "river_worship_inventory_quay_hall",
+          "religion": "catholic",
+          "culture": "frankish",
+          "officeId": "binding_bishop",
+          "officeSystem": null,
+          "historicalName": "Hale"
+        },
+        "river_worship_worship_congregation": {
+          "city": "Quay Congregation",
+          "kind": "congregation",
+          "provinceId": "river_worship_inventory_quay",
+          "site": "river_worship_inventory_quay_store",
+          "religion": "sunni",
+          "culture": "arabic",
+          "profileId": "river_worship_worship_congregation_service",
+          "vacant": true,
+          "jurisdictionIds": [
+            "river_worship_inventory_quay"
+          ]
+        },
+        "river_worship_worship_monastery": {
+          "city": "Marsh House",
+          "kind": "monastery",
+          "provinceId": "river_worship_inventory_marsh",
+          "site": "river_worship_inventory_marsh_town",
+          "religion": "catholic",
+          "culture": "frankish",
+          "profileId": "river_worship_binding_school",
+          "vacant": true,
+          "jurisdictionIds": [
+            "river_worship_inventory_marsh"
+          ],
+          "abbeyId": "binding_property"
+        }
+      },
+      "stories": [],
+      "starts": [
+        "river_water_resource_river_ruler",
+        "river_water_resource_river_household",
+        "river_worship_inventory_estuary_household",
+        "river_mill_resource_river_ruler",
+        "river_mill_resource_river_household",
+        "river_industry_early_industry_paper_ruler",
+        "river_industry_early_industry_paper_household",
+        "river_boat_boathouse_river_ruler",
+        "river_fish_fish_cool_ruler",
+        "river_fish_fish_cool_household",
+        "river_pasture_pasture_faroes_ruler",
+        "river_fort_inventory_estuary_household",
+        "river_fort_inventory_estuary_ruler",
+        "river_siege_siege_support_light_ruler",
+        "river_siege_siege_support_light_household",
+        "river_relay_relay_services_road_ruler",
+        "river_relay_relay_services_road_household"
+      ],
+      "scripted": [],
+      "straits": [],
+      "crossingClasses": {},
+      "provinces": [
+        {
+          "id": "river_water_resource_quay",
+          "name": "Quay",
+          "realm": "river_water_resource_river_court",
+          "culture": "frankish",
+          "religion": "catholic",
+          "dev": 8
+        },
+        {
+          "id": "river_water_resource_bank",
+          "name": "Bank",
+          "realm": "river_water_resource_river_court",
+          "culture": "frankish",
+          "religion": "catholic",
+          "dev": 8
+        },
+        {
+          "id": "river_water_resource_rocks",
+          "name": "Rocky scenery",
+          "wasteland": true
+        },
+        {
+          "id": "river_worship_inventory_quay",
+          "name": "Quay",
+          "realm": "river_worship_inventory_estuary_court",
+          "culture": "frankish",
+          "religion": "catholic",
+          "dev": 5
+        },
+        {
+          "id": "river_worship_inventory_marsh",
+          "name": "Marsh",
+          "realm": "river_worship_inventory_estuary_court",
+          "culture": "frankish",
+          "religion": "catholic",
+          "dev": 4
+        },
+        {
+          "id": "river_worship_inventory_ridge",
+          "name": "Ridge",
+          "realm": "river_worship_inventory_ridge_court",
+          "culture": "frankish",
+          "religion": "catholic",
+          "dev": 2
+        },
+        {
+          "id": "river_worship_inventory_scenery",
+          "name": "Uninhabited upland",
+          "wasteland": true
+        },
+        {
+          "id": "river_mill_resource_quay",
+          "name": "Quay",
+          "realm": "river_mill_resource_river_court",
+          "culture": "frankish",
+          "religion": "catholic",
+          "dev": 5
+        },
+        {
+          "id": "river_mill_resource_bank",
+          "name": "Bank",
+          "realm": "river_mill_resource_river_court",
+          "culture": "frankish",
+          "religion": "catholic",
+          "dev": 3
+        },
+        {
+          "id": "river_mill_resource_rocks",
+          "name": "Rocky scenery",
+          "wasteland": true
+        },
+        {
+          "id": "river_industry_baghdad",
+          "name": "Fictional Baghdad-scope county",
+          "realm": "river_industry_early_industry_paper_court",
+          "culture": "frankish",
+          "religion": "catholic",
+          "dev": 5
+        },
+        {
+          "id": "river_industry_resource_bank",
+          "name": "Bank",
+          "realm": "river_industry_supplier_bank_court",
+          "culture": "frankish",
+          "religion": "catholic",
+          "dev": 3
+        },
+        {
+          "id": "river_industry_resource_rocks",
+          "name": "Rocky scenery",
+          "wasteland": true
+        },
+        {
+          "id": "river_boat_resource_quay",
+          "name": "Quay",
+          "realm": "river_boat_boathouse_river_court",
+          "culture": "norse",
+          "religion": "catholic",
+          "dev": 5
+        },
+        {
+          "id": "river_boat_resource_bank",
+          "name": "Bank",
+          "realm": "river_boat_boathouse_river_court",
+          "culture": "norse",
+          "religion": "catholic",
+          "dev": 3
+        },
+        {
+          "id": "river_boat_resource_rocks",
+          "name": "Rocky scenery",
+          "wasteland": true
+        },
+        {
+          "id": "river_fish_fjord_quay",
+          "name": "Drying quay",
+          "realm": "river_fish_fish_cool_court",
+          "culture": "norse",
+          "religion": "catholic",
+          "dev": 5,
+          "settlements": [
+            {
+              "site": "river_fish_fjord_racks",
+              "name": "Drying quay",
+              "kind": "town"
+            }
+          ]
+        },
+        {
+          "id": "river_fish_fjord_bank",
+          "name": "Buyer shore",
+          "realm": "river_fish_fish_cool_buyer",
+          "culture": "norse",
+          "religion": "catholic",
+          "dev": 5,
+          "settlements": [
+            {
+              "site": "river_fish_fjord_store",
+              "name": "Buyer shore",
+              "kind": "town"
+            }
+          ]
+        },
+        {
+          "id": "river_pasture_faroes",
+          "name": "Farm county",
+          "realm": "river_pasture_farm_court",
+          "culture": "frankish",
+          "religion": "catholic",
+          "dev": 5,
+          "settlements": [
+            {
+              "site": "river_pasture_farmstead",
+              "name": "Parent farm",
+              "kind": "village"
+            }
+          ]
+        },
+        {
+          "id": "river_pasture_pasture_buyer",
+          "name": "Buyer county",
+          "realm": "river_pasture_buyer_court",
+          "culture": "frankish",
+          "religion": "catholic",
+          "dev": 3,
+          "settlements": [
+            {
+              "site": "river_pasture_quay_store",
+              "name": "Buyer store",
+              "kind": "village"
+            }
+          ]
+        },
+        {
+          "id": "river_fort_inventory_quay",
+          "name": "Quay",
+          "realm": "river_fort_inventory_estuary_court",
+          "culture": "frankish",
+          "religion": "catholic",
+          "dev": 3
+        },
+        {
+          "id": "river_fort_inventory_marsh",
+          "name": "Marsh",
+          "realm": "river_fort_inventory_estuary_court",
+          "culture": "frankish",
+          "religion": "catholic",
+          "dev": 2
+        },
+        {
+          "id": "river_fort_inventory_ridge",
+          "name": "Ridge",
+          "realm": "river_fort_inventory_ridge_court",
+          "culture": "frankish",
+          "religion": "catholic",
+          "dev": 2
+        },
+        {
+          "id": "river_fort_inventory_scenery",
+          "name": "Uninhabited upland",
+          "wasteland": true
+        },
+        {
+          "id": "river_siege_resource_quay",
+          "name": "Quay",
+          "realm": "river_siege_siege_support_light_court",
+          "culture": "frankish",
+          "religion": "catholic",
+          "dev": 5
+        },
+        {
+          "id": "river_siege_resource_bank",
+          "name": "Bank",
+          "realm": "river_siege_siege_support_bank_court",
+          "culture": "frankish",
+          "religion": "catholic",
+          "dev": 3
+        },
+        {
+          "id": "river_siege_resource_rocks",
+          "name": "Rocky scenery",
+          "wasteland": true
+        },
+        {
+          "id": "river_relay_resource_quay",
+          "name": "Quay",
+          "realm": "river_relay_relay_services_road_court",
+          "culture": "frankish",
+          "religion": "catholic",
+          "dev": 5
+        },
+        {
+          "id": "river_relay_resource_bank",
+          "name": "Bank",
+          "realm": "river_relay_supplier_bank_court",
+          "culture": "frankish",
+          "religion": "catholic",
+          "dev": 3
+        },
+        {
+          "id": "river_relay_resource_rocks",
+          "name": "Rocky scenery",
+          "wasteland": true
+        }
+      ],
+      "realms": [
+        {
+          "id": "river_water_resource_river_court",
+          "name": "River court",
+          "capital": "river_water_resource_quay",
+          "color": "#458c96",
+          "aggression": 0,
+          "rank": 2,
+          "government": "regnum",
+          "ruler": {
+            "name": "Ivo Reed",
+            "culture": "frankish",
+            "born": 918,
+            "mar": 6,
+            "trait": "patient"
+          },
+          "techTraditions": [
+            "latin",
+            "persianate"
+          ],
+          "techSeed": {
+            "complete": [
+              "aqueduct_maintenance",
+              "qanat_construction",
+              "cistern_engineering"
+            ]
+          }
+        },
+        {
+          "id": "river_worship_inventory_estuary_court",
+          "name": "Estuary court",
+          "capital": "river_worship_inventory_quay",
+          "color": "#458c96",
+          "aggression": 0,
+          "rank": 2,
+          "government": "regnum",
+          "ruler": {
+            "name": "Ivo Reed",
+            "culture": "frankish",
+            "born": 918,
+            "mar": 6,
+            "trait": "patient"
+          },
+          "techSeed": {
+            "complete": [
+              "ringworks"
+            ]
+          }
+        },
+        {
+          "id": "river_worship_inventory_ridge_court",
+          "name": "Ridge court",
+          "capital": "river_worship_inventory_ridge",
+          "color": "#aa7944",
+          "aggression": 0,
+          "rank": 1,
+          "government": "regnum",
+          "liege": "river_worship_inventory_estuary_court",
+          "ruler": {
+            "name": "Odo Vale",
+            "culture": "frankish",
+            "born": 918,
+            "mar": 5,
+            "trait": "patient"
+          }
+        },
+        {
+          "id": "river_mill_resource_river_court",
+          "name": "River court",
+          "capital": "river_mill_resource_quay",
+          "color": "#458c96",
+          "aggression": 0,
+          "rank": 2,
+          "government": "regnum",
+          "ruler": {
+            "name": "Ivo Reed",
+            "culture": "frankish",
+            "born": 918,
+            "mar": 6,
+            "trait": "patient"
+          },
+          "techSeed": {
+            "omit": [
+              "water_power",
+              "undershot_watermill"
+            ]
+          }
+        },
+        {
+          "id": "river_industry_early_industry_paper_court",
+          "name": "River court",
+          "capital": "river_industry_baghdad",
+          "color": "#458c96",
+          "aggression": 0,
+          "rank": 2,
+          "government": "regnum",
+          "ruler": {
+            "name": "Ivo Reed",
+            "culture": "frankish",
+            "born": 918,
+            "mar": 6,
+            "trait": "patient"
+          },
+          "techTraditions": [
+            "persianate"
+          ]
+        },
+        {
+          "id": "river_industry_supplier_bank_court",
+          "name": "Bank buyer",
+          "capital": "river_industry_resource_bank",
+          "color": "#8c7565",
+          "aggression": 0,
+          "rank": 2,
+          "government": "regnum",
+          "ruler": {
+            "name": "Lena Bank",
+            "culture": "frankish",
+            "born": 918,
+            "mar": 5,
+            "trait": "patient"
+          }
+        },
+        {
+          "id": "river_boat_boathouse_river_court",
+          "name": "River court",
+          "capital": "river_boat_resource_quay",
+          "color": "#458c96",
+          "aggression": 0,
+          "rank": 2,
+          "government": "regnum",
+          "ruler": {
+            "name": "Ivo Reed",
+            "culture": "norse",
+            "born": 918,
+            "mar": 6,
+            "trait": "patient"
+          },
+          "techTraditions": [
+            "nordic"
+          ]
+        },
+        {
+          "id": "river_fish_fish_cool_court",
+          "name": "Drying quay court",
+          "capital": "river_fish_fjord_quay",
+          "color": "#458c96",
+          "aggression": 0,
+          "rank": 2,
+          "government": "regnum",
+          "ruler": {
+            "name": "Ivar Holm",
+            "culture": "norse",
+            "born": 918,
+            "mar": 6,
+            "trait": "patient"
+          }
+        },
+        {
+          "id": "river_fish_fish_cool_buyer",
+          "name": "Buyer shore court",
+          "capital": "river_fish_fjord_bank",
+          "color": "#779955",
+          "aggression": 0,
+          "rank": 2,
+          "government": "regnum",
+          "ruler": {
+            "name": "Freya Vale",
+            "culture": "norse",
+            "born": 918,
+            "mar": 6,
+            "trait": "patient"
+          }
+        },
+        {
+          "id": "river_pasture_farm_court",
+          "name": "Farm court",
+          "capital": "river_pasture_faroes",
+          "color": "#aa7944",
+          "aggression": 0,
+          "rank": 2,
+          "government": "regnum",
+          "ruler": {
+            "name": "Arno Stone",
+            "culture": "frankish",
+            "born": 918,
+            "mar": 6,
+            "trait": "patient"
+          }
+        },
+        {
+          "id": "river_pasture_buyer_court",
+          "name": "Buyer court",
+          "capital": "river_pasture_pasture_buyer",
+          "color": "#779955",
+          "aggression": 0,
+          "rank": 1,
+          "government": "regnum",
+          "ruler": {
+            "name": "Odo Vale",
+            "culture": "frankish",
+            "born": 918,
+            "mar": 5,
+            "trait": "patient"
+          }
+        },
+        {
+          "id": "river_fort_inventory_estuary_court",
+          "name": "Estuary court",
+          "capital": "river_fort_inventory_quay",
+          "color": "#458c96",
+          "aggression": 0,
+          "rank": 2,
+          "government": "regnum",
+          "ruler": {
+            "name": "Ivo Reed",
+            "culture": "frankish",
+            "born": 918,
+            "mar": 6,
+            "trait": "patient"
+          }
+        },
+        {
+          "id": "river_fort_inventory_ridge_court",
+          "name": "Ridge court",
+          "capital": "river_fort_inventory_ridge",
+          "color": "#aa7944",
+          "aggression": 0,
+          "rank": 1,
+          "government": "regnum",
+          "liege": "river_fort_inventory_estuary_court",
+          "ruler": {
+            "name": "Odo Vale",
+            "culture": "frankish",
+            "born": 918,
+            "mar": 5,
+            "trait": "patient"
+          }
+        },
+        {
+          "id": "river_siege_siege_support_light_court",
+          "name": "River court",
+          "capital": "river_siege_resource_quay",
+          "color": "#458c96",
+          "aggression": 0,
+          "rank": 2,
+          "government": "regnum",
+          "ruler": {
+            "name": "Ivo Reed",
+            "culture": "frankish",
+            "born": 918,
+            "mar": 6,
+            "trait": "patient"
+          }
+        },
+        {
+          "id": "river_siege_siege_support_bank_court",
+          "name": "Bank court",
+          "capital": "river_siege_resource_bank",
+          "color": "#8b6542",
+          "aggression": 0,
+          "rank": 2,
+          "government": "regnum",
+          "ruler": {
+            "name": "Mara Brook",
+            "culture": "frankish",
+            "born": 918,
+            "mar": 4,
+            "trait": "patient"
+          }
+        },
+        {
+          "id": "river_relay_relay_services_road_court",
+          "name": "River court",
+          "capital": "river_relay_resource_quay",
+          "color": "#458c96",
+          "aggression": 0,
+          "rank": 2,
+          "government": "regnum",
+          "ruler": {
+            "name": "Ivo Reed",
+            "culture": "frankish",
+            "born": 918,
+            "mar": 6,
+            "trait": "patient"
+          }
+        },
+        {
+          "id": "river_relay_supplier_bank_court",
+          "name": "Bank buyer",
+          "capital": "river_relay_resource_bank",
+          "color": "#8c7565",
+          "aggression": 0,
+          "rank": 2,
+          "government": "regnum",
+          "ruler": {
+            "name": "Lena Bank",
+            "culture": "frankish",
+            "born": 918,
+            "mar": 5,
+            "trait": "patient"
+          }
+        }
+      ],
+      "duchies": {},
+      "kingdoms": {},
+      "empires": {},
+      "openingInfrastructure": {
+        "version": 1,
+        "placements": [
+          {
+            "countyId": "river_water_resource_bank",
+            "siteId": "river_water_resource_cistern",
+            "buildingId": "aqueduct",
+            "condition": "standing",
+            "profileId": "river_water_inherited_aqueduct"
+          },
+          {
+            "countyId": "river_water_resource_bank",
+            "siteId": "river_water_resource_cistern",
+            "buildingId": "qanat_waterworks",
+            "condition": "standing",
+            "profileId": "river_water_inherited_qanat_waterworks"
+          },
+          {
+            "countyId": "river_water_resource_bank",
+            "siteId": "river_water_resource_cistern",
+            "buildingId": "urban_cisterns",
+            "condition": "standing",
+            "profileId": "river_water_inherited_urban_cisterns"
+          },
+          {
+            "countyId": "river_mill_resource_quay",
+            "siteId": "river_mill_resource_intake",
+            "buildingId": "mill",
+            "profileId": "horizontal_mill",
+            "condition": "standing"
+          },
+          {
+            "countyId": "river_industry_baghdad",
+            "siteId": "river_industry_resource_intake",
+            "buildingId": "paper_workshop",
+            "condition": "standing"
+          },
+          {
+            "countyId": "river_industry_baghdad",
+            "siteId": "river_industry_resource_slip",
+            "buildingId": "river_industry_industry_depot",
+            "condition": "standing"
+          },
+          {
+            "countyId": "river_industry_resource_bank",
+            "siteId": "river_industry_resource_cistern",
+            "buildingId": "river_industry_industry_depot",
+            "condition": "standing"
+          },
+          {
+            "countyId": "river_boat_resource_quay",
+            "siteId": "river_boat_resource_intake",
+            "buildingId": "boathouse",
+            "condition": "standing"
+          },
+          {
+            "countyId": "river_fish_fjord_quay",
+            "siteId": "river_fish_fjord_racks",
+            "buildingId": "fish_drying_station",
+            "condition": "standing"
+          },
+          {
+            "countyId": "river_fish_fjord_bank",
+            "siteId": "river_fish_fjord_store",
+            "buildingId": "river_fish_preserved_store",
+            "condition": "standing"
+          },
+          {
+            "countyId": "river_pasture_faroes",
+            "siteId": "river_pasture_farmstead",
+            "buildingId": "shieling",
+            "condition": "standing"
+          },
+          {
+            "countyId": "river_pasture_pasture_buyer",
+            "siteId": "river_pasture_quay_store",
+            "buildingId": "granary",
+            "condition": "standing"
+          },
+          {
+            "countyId": "river_pasture_faroes",
+            "siteId": "river_pasture_farmstead",
+            "buildingId": "river_pasture_parent_allocation_depot",
+            "condition": "standing"
+          },
+          {
+            "countyId": "river_fort_inventory_ridge",
+            "siteId": "river_fort_inventory_ridge_tower",
+            "buildingId": "walls",
+            "condition": "ruined",
+            "level": 2,
+            "profileId": "urban_circuit"
+          },
+          {
+            "countyId": "river_siege_resource_quay",
+            "siteId": "river_siege_resource_intake",
+            "buildingId": "river_siege_fiber_works",
+            "condition": "standing"
+          },
+          {
+            "countyId": "river_relay_resource_quay",
+            "siteId": "river_relay_resource_intake",
+            "buildingId": "river_relay_fiber_works",
+            "condition": "standing"
+          },
+          {
+            "countyId": "river_relay_resource_quay",
+            "siteId": "river_relay_resource_slip",
+            "buildingId": "river_relay_fiber_works",
+            "condition": "standing"
+          },
+          {
+            "countyId": "river_relay_resource_bank",
+            "siteId": "river_relay_resource_cistern",
+            "buildingId": "river_relay_fiber_works",
+            "condition": "standing"
+          }
+        ]
+      },
+      "climate": {
+        "zone": "northern_temperate",
+        "provinces": {
+          "river_water_resource_quay": "northern_temperate",
+          "river_water_resource_bank": "northern_temperate",
+          "river_water_resource_rocks": "northern_temperate",
+          "river_worship_inventory_quay": "northern_temperate",
+          "river_worship_inventory_marsh": "northern_temperate",
+          "river_worship_inventory_ridge": "northern_temperate",
+          "river_worship_inventory_scenery": "northern_temperate",
+          "river_mill_resource_quay": "northern_temperate",
+          "river_mill_resource_bank": "northern_temperate",
+          "river_mill_resource_rocks": "northern_temperate",
+          "river_industry_baghdad": "northern_temperate",
+          "river_industry_resource_bank": "northern_temperate",
+          "river_industry_resource_rocks": "northern_temperate",
+          "river_boat_resource_quay": "northern_temperate",
+          "river_boat_resource_bank": "northern_temperate",
+          "river_boat_resource_rocks": "northern_temperate",
+          "river_fish_fjord_quay": "river_fish_cool_drying_coast",
+          "river_fish_fjord_bank": "river_fish_cool_drying_coast",
+          "river_pasture_faroes": "northern_temperate",
+          "river_pasture_pasture_buyer": "northern_temperate",
+          "river_fort_inventory_quay": "northern_temperate",
+          "river_fort_inventory_marsh": "northern_temperate",
+          "river_fort_inventory_ridge": "northern_temperate",
+          "river_fort_inventory_scenery": "northern_temperate",
+          "river_siege_resource_quay": "northern_temperate",
+          "river_siege_resource_bank": "northern_temperate",
+          "river_siege_resource_rocks": "northern_temperate",
+          "river_relay_resource_quay": "northern_temperate",
+          "river_relay_resource_bank": "northern_temperate",
+          "river_relay_resource_rocks": "northern_temperate"
+        }
+      },
+      "siteResourceAssignments": [
+        {
+          "id": "river_water_river_intake",
+          "profileId": "river_water_river_flow",
+          "countyId": "river_water_resource_quay",
+          "siteId": "river_water_resource_intake",
+          "suitability": {
+            "source": true,
+            "gradient": true,
+            "groundwater": true
+          },
+          "rights": {
+            "kind": "holder"
+          }
+        },
+        {
+          "id": "river_water_river_cistern",
+          "profileId": "river_water_river_store",
+          "countyId": "river_water_resource_bank",
+          "siteId": "river_water_resource_cistern",
+          "connectedSourceId": "river_water_river_intake",
+          "suitability": {
+            "catchment": false
+          },
+          "rights": {
+            "kind": "holder"
+          }
+        },
+        {
+          "id": "river_water_river_slip",
+          "profileId": "river_water_river_launch",
+          "countyId": "river_water_resource_quay",
+          "siteId": "river_water_resource_slip",
+          "suitability": {
+            "launching": true
+          },
+          "rights": {
+            "kind": "holder"
+          }
+        },
+        {
+          "id": "river_mill_mill_intake",
+          "profileId": "horizontal_mill_head",
+          "countyId": "river_mill_resource_quay",
+          "siteId": "river_mill_resource_intake",
+          "suitability": {
+            "source": true,
+            "gradient": true
+          },
+          "rights": {
+            "kind": "holder"
+          }
+        },
+        {
+          "id": "river_industry_river_intake",
+          "profileId": "river_industry_river_flow",
+          "countyId": "river_industry_baghdad",
+          "siteId": "river_industry_resource_intake",
+          "suitability": {
+            "source": true,
+            "gradient": true
+          },
+          "rights": {
+            "kind": "holder"
+          }
+        },
+        {
+          "id": "river_boat_work_slip",
+          "profileId": "river_boat_work_launch",
+          "countyId": "river_boat_resource_quay",
+          "siteId": "river_boat_resource_intake",
+          "suitability": {
+            "launching": true
+          },
+          "rights": {
+            "kind": "holder"
+          }
+        },
+        {
+          "id": "river_pasture_farm_grazing",
+          "profileId": "river_pasture_pasture_places",
+          "countyId": "river_pasture_faroes",
+          "siteId": "river_pasture_farmstead",
+          "suitability": {
+            "grazing": true
+          },
+          "rights": {
+            "kind": "holder"
+          }
+        },
+        {
+          "id": "river_siege_river_intake",
+          "profileId": "river_siege_river_flow",
+          "countyId": "river_siege_resource_quay",
+          "siteId": "river_siege_resource_intake",
+          "suitability": {
+            "source": true,
+            "gradient": true
+          },
+          "rights": {
+            "kind": "holder"
+          }
+        },
+        {
+          "id": "river_siege_river_cistern",
+          "profileId": "river_siege_river_store",
+          "countyId": "river_siege_resource_bank",
+          "siteId": "river_siege_resource_cistern",
+          "connectedSourceId": "river_siege_river_intake",
+          "suitability": {
+            "catchment": false
+          },
+          "rights": {
+            "kind": "holder"
+          }
+        },
+        {
+          "id": "river_siege_river_slip",
+          "profileId": "river_siege_river_launch",
+          "countyId": "river_siege_resource_quay",
+          "siteId": "river_siege_resource_slip",
+          "suitability": {
+            "launching": true
+          },
+          "rights": {
+            "kind": "holder"
+          }
+        },
+        {
+          "id": "river_relay_river_intake",
+          "profileId": "river_relay_river_flow",
+          "countyId": "river_relay_resource_quay",
+          "siteId": "river_relay_resource_intake",
+          "suitability": {
+            "source": true,
+            "gradient": true
+          },
+          "rights": {
+            "kind": "holder"
+          }
+        },
+        {
+          "id": "river_relay_river_cistern",
+          "profileId": "river_relay_river_store",
+          "countyId": "river_relay_resource_bank",
+          "siteId": "river_relay_resource_cistern",
+          "connectedSourceId": "river_relay_river_intake",
+          "suitability": {
+            "catchment": false
+          },
+          "rights": {
+            "kind": "holder"
+          }
+        },
+        {
+          "id": "river_relay_river_slip",
+          "profileId": "river_relay_river_launch",
+          "countyId": "river_relay_resource_quay",
+          "siteId": "river_relay_resource_slip",
+          "suitability": {
+            "launching": true
+          },
+          "rights": {
+            "kind": "holder"
+          }
+        }
+      ],
+      "buildingOperationAssignments": [
+        {
+          "id": "river_water_works_aqueduct",
+          "profileId": "aqueduct_delivery",
+          "buildingId": "aqueduct",
+          "countyId": "river_water_resource_bank",
+          "siteId": "river_water_resource_cistern",
+          "sourceId": "river_water_river_intake",
+          "stores": [
+            "river_water_river_cistern"
+          ],
+          "demandId": "bank_capacity"
+        },
+        {
+          "id": "river_water_works_qanat_waterworks",
+          "profileId": "qanat_delivery",
+          "buildingId": "qanat_waterworks",
+          "countyId": "river_water_resource_bank",
+          "siteId": "river_water_resource_cistern",
+          "sourceId": "river_water_river_intake",
+          "stores": [
+            "river_water_river_cistern"
+          ],
+          "demandId": "bank_capacity"
+        },
+        {
+          "id": "river_water_works_urban_cisterns",
+          "profileId": "cistern_service",
+          "buildingId": "urban_cisterns",
+          "countyId": "river_water_resource_bank",
+          "siteId": "river_water_resource_cistern",
+          "sourceId": "river_water_river_intake",
+          "stores": [
+            "river_water_river_cistern"
+          ],
+          "demandId": "bank_stored_service"
+        },
+        {
+          "id": "river_mill_mill_grinding",
+          "profileId": "horizontal_mill_service",
+          "buildingId": "mill",
+          "countyId": "river_mill_resource_quay",
+          "siteId": "river_mill_resource_intake",
+          "sourceId": "river_mill_mill_intake",
+          "stores": [],
+          "demandId": "mill_grain_demand"
+        }
+      ],
+      "buildingInstitutionAssignments": [
+        {
+          "profileId": "episcopal_foundation",
+          "institutionId": "river_worship_binding_institution"
+        },
+        {
+          "profileId": "congregational_foundation",
+          "institutionId": "river_worship_worship_congregation"
+        },
+        {
+          "profileId": "monastic_property",
+          "institutionId": "river_worship_worship_monastery"
+        }
+      ],
+      "productionSites": [
+        {
+          "id": "river_industry_paper_plant",
+          "countyId": "river_industry_baghdad",
+          "siteId": "river_industry_resource_intake",
+          "buildingId": "paper_workshop",
+          "recipeIds": [
+            "workshop_papermaking"
+          ],
+          "sourceId": "river_industry_river_intake",
+          "openingLots": []
+        },
+        {
+          "id": "river_industry_fiber_source",
+          "countyId": "river_industry_baghdad",
+          "siteId": "river_industry_resource_slip",
+          "buildingId": "river_industry_industry_depot",
+          "recipeIds": [
+            "smithy_forging"
+          ],
+          "openingLots": [
+            {
+              "goodId": "workshop_fiber",
+              "quantity": 6
+            }
+          ]
+        },
+        {
+          "id": "river_industry_paper_buyer",
+          "countyId": "river_industry_resource_bank",
+          "siteId": "river_industry_resource_cistern",
+          "buildingId": "river_industry_industry_depot",
+          "recipeIds": [
+            "smithy_forging"
+          ],
+          "openingLots": []
+        },
+        {
+          "id": "river_boat_boat_plant",
+          "countyId": "river_boat_resource_quay",
+          "siteId": "river_boat_resource_intake",
+          "buildingId": "boathouse",
+          "recipeIds": [
+            "river_boat_prepare_boathouse_work"
+          ],
+          "openingLots": [
+            {
+              "goodId": "boathouse_timber",
+              "quantity": 8
+            },
+            {
+              "goodId": "boathouse_cordage",
+              "quantity": 6
+            }
+          ]
+        },
+        {
+          "id": "river_fish_drying_plant",
+          "countyId": "river_fish_fjord_quay",
+          "siteId": "river_fish_fjord_racks",
+          "buildingId": "fish_drying_station",
+          "recipeIds": [
+            "dry_fish"
+          ],
+          "openingLots": [
+            {
+              "goodId": "river_fish_generic_food",
+              "quantity": 10
+            }
+          ]
+        },
+        {
+          "id": "river_fish_provisions_buyer",
+          "countyId": "river_fish_fjord_bank",
+          "siteId": "river_fish_fjord_store",
+          "buildingId": "river_fish_preserved_store",
+          "recipeIds": [
+            "dry_fish"
+          ],
+          "openingLots": []
+        },
+        {
+          "id": "river_pasture_farm_outpost",
+          "countyId": "river_pasture_faroes",
+          "siteId": "river_pasture_farmstead",
+          "buildingId": "shieling",
+          "recipeIds": [
+            "prepare_pasture_allocation"
+          ],
+          "openingLots": []
+        },
+        {
+          "id": "river_pasture_buyer_store",
+          "countyId": "river_pasture_pasture_buyer",
+          "siteId": "river_pasture_quay_store",
+          "buildingId": "granary",
+          "recipeIds": [
+            "prepare_pasture_allocation"
+          ],
+          "openingLots": []
+        },
+        {
+          "id": "river_pasture_parent_store",
+          "countyId": "river_pasture_faroes",
+          "siteId": "river_pasture_farmstead",
+          "buildingId": "river_pasture_parent_allocation_depot",
+          "recipeIds": [
+            "prepare_pasture_allocation"
+          ],
+          "openingLots": []
+        },
+        {
+          "id": "river_siege_fiber_plant",
+          "countyId": "river_siege_resource_quay",
+          "siteId": "river_siege_resource_intake",
+          "buildingId": "river_siege_fiber_works",
+          "recipeIds": [
+            "river_siege_assemble_light"
+          ],
+          "sourceId": "river_siege_river_intake",
+          "openingLots": [
+            {
+              "goodId": "river_siege_cordage",
+              "quantity": 6
+            }
+          ]
+        },
+        {
+          "id": "river_relay_fish_source",
+          "countyId": "river_relay_resource_quay",
+          "siteId": "river_relay_resource_intake",
+          "buildingId": "river_relay_fiber_works",
+          "recipeIds": [
+            "river_relay_dry_fish",
+            "river_relay_ration_meal"
+          ],
+          "openingLots": [
+            {
+              "goodId": "river_relay_fresh_fish",
+              "quantity": 6
+            },
+            {
+              "goodId": "river_relay_generic_food",
+              "quantity": 10
+            },
+            {
+              "goodId": "river_relay_relay_rations",
+              "quantity": 4
+            }
+          ]
+        },
+        {
+          "id": "river_relay_fish_plant",
+          "countyId": "river_relay_resource_quay",
+          "siteId": "river_relay_resource_slip",
+          "buildingId": "river_relay_fiber_works",
+          "recipeIds": [
+            "river_relay_dry_fish"
+          ],
+          "openingLots": []
+        },
+        {
+          "id": "river_relay_fish_buyer",
+          "countyId": "river_relay_resource_bank",
+          "siteId": "river_relay_resource_cistern",
+          "buildingId": "river_relay_fiber_works",
+          "recipeIds": [
+            "river_relay_dry_fish"
+          ],
+          "openingLots": []
+        }
+      ],
+      "productionExchangeAssignments": [
+        {
+          "id": "river_industry_fiber_delivery",
+          "profileId": "paper_fiber_delivery",
+          "fromSiteId": "river_industry_fiber_source",
+          "toSiteId": "river_industry_paper_plant"
+        },
+        {
+          "id": "river_industry_paper_sale",
+          "profileId": "workshop_paper_sale",
+          "fromSiteId": "river_industry_paper_plant",
+          "toSiteId": "river_industry_paper_buyer"
+        },
+        {
+          "id": "river_fish_provisions_sale",
+          "profileId": "river_fish_dry_sale",
+          "fromSiteId": "river_fish_drying_plant",
+          "toSiteId": "river_fish_provisions_buyer"
+        },
+        {
+          "id": "river_pasture_pasture_sale",
+          "profileId": "river_pasture_sell_pasture_output",
+          "fromSiteId": "river_pasture_farm_outpost",
+          "toSiteId": "river_pasture_buyer_store"
+        },
+        {
+          "id": "river_pasture_parent_delivery",
+          "profileId": "river_pasture_parent_delivery",
+          "fromSiteId": "river_pasture_parent_store",
+          "toSiteId": "river_pasture_farm_outpost"
+        },
+        {
+          "id": "river_relay_owned_delivery",
+          "profileId": "river_relay_owned_fish",
+          "fromSiteId": "river_relay_fish_source",
+          "toSiteId": "river_relay_fish_plant"
+        },
+        {
+          "id": "river_relay_fish_market",
+          "profileId": "river_relay_sell_fish",
+          "fromSiteId": "river_relay_fish_source",
+          "toSiteId": "river_relay_fish_buyer"
+        },
+        {
+          "id": "river_relay_dry_market",
+          "profileId": "river_relay_sell_dried",
+          "fromSiteId": "river_relay_fish_plant",
+          "toSiteId": "river_relay_fish_buyer"
+        }
+      ],
+      "productionProducerAssignments": [
+        {
+          "id": "river_industry_rag_share",
+          "profileId": "river_industry_rag_salvage_share",
+          "siteId": "river_industry_fiber_source"
+        },
+        {
+          "id": "river_fish_actual_catch",
+          "profileId": "fish_drying_catch",
+          "siteId": "river_fish_drying_plant"
+        },
+        {
+          "id": "river_pasture_parent_share",
+          "profileId": "shieling_parent_allocation",
+          "siteId": "river_pasture_parent_store"
+        },
+        {
+          "id": "river_relay_local_share",
+          "profileId": "river_relay_local_output",
+          "siteId": "river_relay_fish_source"
+        }
+      ],
+      "maritimeWorkAssignments": [
+        {
+          "id": "river_boat_licensed_work",
+          "profileId": "river_boat_river_boathouse_work",
+          "productionSiteId": "river_boat_boat_plant",
+          "launchSourceId": "river_boat_work_slip"
+        }
+      ],
+      "buildingSeasonAssignments": [
+        {
+          "id": "river_fish_drying_window",
+          "profileId": "fish_drying_cool",
+          "operationId": null,
+          "productionSiteId": "river_fish_drying_plant",
+          "resources": []
+        },
+        {
+          "id": "river_fish_buyer_window",
+          "profileId": "river_fish_buyer_preserved",
+          "operationId": null,
+          "productionSiteId": "river_fish_provisions_buyer",
+          "resources": []
+        },
+        {
+          "id": "river_pasture_pasture_term",
+          "profileId": "shieling_summer",
+          "operationId": null,
+          "productionSiteId": "river_pasture_farm_outpost",
+          "resources": [
+            {
+              "sourceId": "river_pasture_farm_grazing",
+              "amount": 1
+            }
+          ]
+        },
+        {
+          "id": "river_pasture_parent_stock_term",
+          "profileId": "river_pasture_parent_stock_life",
+          "operationId": null,
+          "productionSiteId": "river_pasture_parent_store",
+          "resources": []
+        }
+      ],
+      "relayServiceAssignments": [
+        {
+          "id": "river_relay_arrival_provisions",
+          "profileId": "river_relay_local_provisions",
+          "sourceSiteId": "river_relay_fish_source",
+          "fromCountyId": "river_relay_resource_bank",
+          "recipientRealmId": "river_relay_relay_services_road_court",
+          "routeMode": "land"
+        }
+      ]
+    }
+  },
+  "buildingProfiles": {
+    "river_water_inherited_aqueduct": {
+      "buildingId": "aqueduct",
+      "name": "Inherited aqueduct",
+      "desc": "A fictional inherited work with the same technology and numeric defaults. Current benefit requires its own paid finite service.",
+      "replace": {},
+      "requiresTech": [
+        "aqueduct_maintenance"
+      ],
+      "techImpactReview": "engineered_aqueduct",
+      "operationProfile": "aqueduct_delivery",
+      "inheritance": "retain"
+    },
+    "river_water_inherited_qanat_waterworks": {
+      "buildingId": "qanat_waterworks",
+      "name": "Inherited qanat waterworks",
+      "desc": "A fictional inherited work with the same technology and numeric defaults. Current benefit requires its own paid finite service.",
+      "replace": {},
+      "requiresTech": [
+        "qanat_construction"
+      ],
+      "techImpactReview": "engineered_qanat",
+      "operationProfile": "qanat_delivery",
+      "inheritance": "retain"
+    },
+    "river_water_inherited_urban_cisterns": {
+      "buildingId": "urban_cisterns",
+      "name": "Inherited urban cisterns",
+      "desc": "A fictional inherited work with the same technology and numeric defaults. Current benefit requires its own paid finite service.",
+      "replace": {},
+      "requiresTech": [
+        "cistern_engineering"
+      ],
+      "techImpactReview": "engineered_cistern",
+      "operationProfile": "cistern_service",
+      "inheritance": "retain"
+    }
+  }
+}
