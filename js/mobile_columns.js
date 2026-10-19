@@ -1,5 +1,5 @@
 /* Optional bounded opening partitions. Armies own deployed people, units,
-   position and food; the column set owns only identity and command scope. */
+   position and food; the column set owns identity, opening provenance and command scope. */
 (function () {
   'use strict';
   var M=FB.mobile;
@@ -8,6 +8,36 @@
   function keys(v,list) {return !!v && typeof v==='object' && !Array.isArray(v) &&
     Object.keys(v).length===list.length && Object.keys(v).every(function (k) {return list.indexOf(k)>=0;});}
   function whole(n) {return Number.isSafeInteger(n) && n>=0;}
+  function openingLocationValid(v,bookmark) {
+    if (!v || !keys(v,own(v,'siteId') ? ['countyId','siteId'] : ['countyId'])) return false;
+    var county=(bookmark.provinces || []).filter(function (p) {return p.id===v.countyId;})[0];
+    return !!county && !county.wasteland && (!own(v,'siteId') ||
+      FB.householdStories.localityValid({provinceId:v.countyId,siteId:v.siteId},bookmark));
+  }
+  /* Connectivity is a fresh-position preflight, never a completed journey.
+     The camp origin retains its legacy entry rules. Every remote county on
+     the connected footprint needs actual access or existing hostility. */
+  function openingLocationsAllowed(s,d) {
+    var t=d.mobile, explicit=t.columns.entries.filter(function (c) {return own(c,'openingLocation');});
+    if (!explicit.length) return true;
+    var hosted=M.hostedAccessPlan(s,[d]);
+    if (!hosted.allowed) return false;
+    var grant=hosted.grants[d.id], seen=Object.create(null), queue=[t.origin], world=FB.world;
+    seen[t.origin]=true;
+    for (var i=0;i<queue.length;i++) {
+      Object.keys(world.adj[queue[i]] || {}).forEach(function (pid) {
+        if (seen[pid] || !world.byId[pid] || world.byId[pid].wasteland || !s.owner[pid]) return;
+        if (s.owner[pid]!==d.id && !(grant && grant.countyIds.indexOf(pid)>=0) &&
+            !FB.armiesHostile(s,{realm:d.id},{realm:s.owner[pid]})) return;
+        seen[pid]=true;queue.push(pid);
+      });
+    }
+    return explicit.every(function (c) {
+      var location=c.openingLocation, info=world.sitesByProv[location.countyId];
+      return !!seen[location.countyId] && (!own(location,'siteId') || !!info &&
+        info.list.some(function (site) {return site.site===location.siteId;}));
+    });
+  }
   function definition(s,rid) {
     var d=(FB.campaignBookmark(s).realms || []).filter(function (v) {return v.id===rid;})[0];
     return d && d.mobile && d.mobile.columns;
@@ -51,7 +81,8 @@
     var ids=Object.create(null), commanders=Object.create(null), allocations=Object.create(null), food=0, bad=false;
     t.opening.muster.forEach(function (v) {allocations[v.memberId+'|'+v.unitId]=v.count;});
     set.entries.forEach(function (c,index) {
-      if (!keys(c,['id','commanderMemberId','muster','food']) || typeof c.id!=='string' ||
+      if (!keys(c,['id','commanderMemberId','muster','food'].concat(own(c,'openingLocation') ? ['openingLocation'] : [])) ||
+          own(c,'openingLocation') && !openingLocationValid(c.openingLocation,bookmark) || typeof c.id!=='string' ||
           !/^[a-z][a-z0-9_]{0,47}$/.test(c.id) || ids[c.id] || hostId(d.id,c.id,index).length>160 ||
           typeof c.commanderMemberId!=='string' || commanders[c.commanderMemberId] ||
           !t.opening.principals.some(function (b) {return b.memberId===c.commanderMemberId;}) ||
@@ -87,7 +118,7 @@
       var id=hostId(d.id,c.id,i);
       return (s.armies || []).some(function (a) {return a.id===id;}) ||
         (s.authority.migrations || []).some(function (m) {return m.hostId===id;});
-    })) plan.allowed=false;
+    }) || !openingLocationsAllowed(s,d)) plan.allowed=false;
     return plan;
   };
   var initialize=M.initialize;
@@ -109,6 +140,8 @@
       d.mobile.columns.entries.forEach(function (c,index) {
         var army=index ? copy(original) : original, roster=[];
         army.id=hostId(d.id,c.id,index);army.units={};army.men=0;army.mobileFood=c.food;
+        army.at=c.openingLocation ? c.openingLocation.countyId : d.mobile.origin;
+        army.from=army.at;
         c.muster.forEach(function (v) {
           army.units[v.unitId]=(army.units[v.unitId] || 0)+v.count;army.men+=v.count;
           var prior=roster.filter(function (v2) {return v2.memberId===v.memberId;})[0];
@@ -120,7 +153,9 @@
         r.food-=c.food;
         if (index) s.armies.push(army);
         var binding=r.openingBindings.filter(function (b) {return b.memberId===c.commanderMemberId;})[0];
-        r.columns.entries.push({id:c.id,hostId:army.id,commanderId:binding.characterId,status:'active'});
+        var entry={id:c.id,hostId:army.id,commanderId:binding.characterId,status:'active'};
+        if (own(c,'openingLocation')) entry.openingLocation=copy(c.openingLocation);
+        r.columns.entries.push(entry);
       });
     });
   };
@@ -138,7 +173,13 @@
       var hosts=Object.create(null);
       set.entries.forEach(function (c,i) {
         var expected=spec.entries[i], binding=r.openingBindings.filter(function (b) {return b && b.memberId===expected.commanderMemberId;})[0];
-        if (!keys(c,['id','hostId','commanderId','status']) || c.id!==expected.id || c.hostId!==hostId(rid,expected.id,i) ||
+        var located=own(expected,'openingLocation');
+        if (!keys(c,['id','hostId','commanderId','status'].concat(located ? ['openingLocation'] : [])) ||
+            located && (!openingLocationValid(c.openingLocation,FB.campaignBookmark(s)) ||
+              c.openingLocation.countyId!==expected.openingLocation.countyId ||
+              own(c.openingLocation,'siteId')!==own(expected.openingLocation,'siteId') ||
+              c.openingLocation.siteId!==expected.openingLocation.siteId) ||
+            c.id!==expected.id || c.hostId!==hostId(rid,expected.id,i) ||
             !binding || !s.chars[c.commanderId] ||
             (set.schema===1 ? c.commanderId!==binding.characterId : !r.openingBindings.some(function (b) {
               return b.characterId===c.commanderId && r.members.some(function (m) {return m.principal.id===c.commanderId;});
