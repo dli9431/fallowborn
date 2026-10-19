@@ -11,6 +11,9 @@ window.FB = window.FB || {};
   S.envelopeIssue = function (data) {
     if (!data || typeof data !== 'object' || Array.isArray(data) ||
         data.v !== 3 && data.v !== S.FORMAT.v) return 'v';
+    const attachments = data.state && data.state.start && data.state.start.storyAttachments;
+    if (attachments !== undefined ? data.storyAttachmentSchema !== 1 : data.storyAttachmentSchema !== undefined)
+      return 'storyAttachmentSchema';
     if (data.platformSchema === 2 && (!data.state || !data.state.start ||
         typeof data.state.start.revision !== 'string')) return 'platformSchema';
     if (data.platformSchema !== 2 && data.state && data.state.start &&
@@ -703,7 +706,8 @@ window.FB = window.FB || {};
       }
     }
     try {
-      const header = JSON.stringify(Object.assign({}, S.FORMAT, {
+      const header = JSON.stringify(Object.assign({}, S.FORMAT,
+        s.start && s.start.storyAttachments !== undefined ? {storyAttachmentSchema:1} : {}, {
         rng:FB.getRngState(), uid:FB.getUidCounter(), mods:FB.mods.sig() }));
       const metaData = {
         name:FB.fullName(s.chars[s.player.charId]), titleData:FB.titleSnapshot(s),

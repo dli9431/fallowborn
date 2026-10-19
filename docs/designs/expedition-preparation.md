@@ -41,3 +41,6 @@ The independent mobile-preparation-harbor.json import reserves external member c
 Finite story consumer
 
 An attached expedition_program composition may reference this preparation and the same command's existing program. Its allowPreparationAI projection suppresses automatic decisions under hold/refuse policy and shares one attempted daily action across consent, funding, formation and later steps. The parent still owns original consent, payment, exact reserves, actual formation and interruption/expiry. Successful formation publishes one original formation reference to the composition; neither restoration nor the composition replays it. Independent preparations retain their existing behavior. See expedition-story-programs.md.
+Retained attachment boundary
+
+The required-parent check uses the campaign's original world attachment provenance. A preparation added to an existing bookmark after campaign creation stays absent in that campaign. Fresh opted-in campaigns must retain its record, and an actual saved preparation still undergoes every identity, source and formation-receipt check. Legacy campaigns lacking provenance use their saved attachment evidence. No parent check creates a missing preparation, public account, reserves or host. The exact optional snapshot and envelope pairing are documented in state-and-saves.md.

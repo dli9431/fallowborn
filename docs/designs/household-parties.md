@@ -53,3 +53,6 @@ Version-3 camp records retain association fields and add a schema-2 journey with
 Temporary shelter composition
 
 A household_refuge declaration can name an existing party without granting carriage or reusing association consent as shelter consent. Each adult or actual dependent caregiver decides again for the exact request. The existing named-party county carrier supplies actual arrival, separation, interruption and priced return; refuge entry is a separate local site transaction after arrival. It changes no permanent residence, roster, demographic population, custody or property. Ended protective terms leave admitted people physically present until an actual ordinary movement. See docs/designs/household-refuge.md for provider consent, shared places and public funding.
+Original attachment continuity
+
+Required association records come from the original campaign attachment snapshot rather than today's start catalogue. A later party track does not attach on restore, and a successor cannot inherit missing consent by changing the current start definition. Fresh opted-in campaigns retain the original record even after closure. Legacy absence stays absent while saved dependency, reservation and carrier references remain strictly validated. See state-and-saves.md for the optional provenance and envelope contract.

@@ -362,7 +362,7 @@
     platform(s);
     (FB.campaignBookmark(s).realms || []).forEach(function (d) {
       var id=d.mobile && d.mobile.preparationId;
-      if (id!==undefined) {
+      if (id!==undefined && FB.stories.originalAttachments(s,'world').indexOf(id)>=0) {
         var e=entry(s,id);
         if (!e || e.def.realmId!==d.id) throw new Error(FB.T('Missing saved expedition preparation.'));
         FB.stories.get(id).validate(e.t,s);

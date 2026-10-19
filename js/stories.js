@@ -304,6 +304,32 @@
     attached:function (s) {
       return attachedList(s).map(function (story) { return story.id; });
     },
+    /* Legacy campaigns have only their saved records as opt-in evidence.
+       Current catalogue additions must never become restore requirements. */
+    originalAttachments:function (s, kind) {
+      var original = s.start && s.start.storyAttachments;
+      return original ? (kind === 'world' ? original.world : original.tracks).slice() :
+        attachedList(s).filter(function (story) { return story.kind === kind; }).map(function (story) { return story.id; });
+    },
+    validateAttachments:function (s) {
+      var original = s.start && s.start.storyAttachments;
+      if (original === undefined) return true;
+      function need(ok) { if (!ok) throw new Error(FB.T('Invalid v4 save field at {path}.',
+        {path:'state.start.storyAttachments'})); }
+      need(plain(original) && Object.keys(original).length === 3 && original.schema === 1 &&
+        Object.keys(original).every(function (key) { return ['schema','world','tracks'].indexOf(key) >= 0; }));
+      var seen = Object.create(null);
+      ['world','track'].forEach(function (kind) {
+        var ids = kind === 'world' ? original.world : original.tracks;
+        need(Array.isArray(ids) && ids.length <= 512);
+        ids.forEach(function (id) {
+          need(typeof id === 'string' && id.length > 0 && id.length <= 200 && !seen[id] &&
+            own(byId,id) && byId[id].kind === kind && !!record(s,id));
+          seen[id] = true;
+        });
+      });
+      return true;
+    },
     /* Campaign creation. World stories listed by the bookmark attach first in
        registration order, then the scenario's tracks. A story attaches only
        when every required story is attached, appliesTo agrees and init
@@ -324,6 +350,13 @@
         if (!s.stories) s.stories = {};
         s.stories[story.id] = created;
         added.push(story.id);
+      }
+      // Only the final fresh creation call seals the original successful set.
+      // Earlier world-only creation calls and all restore paths leave it alone.
+      if (options && options.sealAttachments && s.turn === 0 && s.start && !own(s.start,'storyAttachments')) {
+        s.start.storyAttachments = {schema:1,
+          world:attachedList(s).filter(function (story) { return story.kind === 'world'; }).map(function (story) { return story.id; }),
+          tracks:attachedList(s).filter(function (story) { return story.kind === 'track'; }).map(function (story) { return story.id; })};
       }
       return added;
     },

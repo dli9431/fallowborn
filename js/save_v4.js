@@ -83,6 +83,7 @@
     // A leftover legacy record must fail even when there are no stories.
     if (state.situation476 !== undefined) field('state.situation476');
     if (state.start !== undefined && !plain(state.start)) field('state.start');
+    if (FB.stories) FB.stories.validateAttachments(state);
     if (FB.validateOpeningInfrastructureState) FB.validateOpeningInfrastructureState(state);
     if (FB.buildingProfiles) FB.buildingProfiles.validate(state);
     if (FB.fortProfiles) FB.fortProfiles.validate(state);

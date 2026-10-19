@@ -85,8 +85,7 @@
   };
   P.validateCarriers = function (s) {
     function need(ok) { if (!ok) throw new Error(FB.T('Invalid v4 save field at {path}.',{path:'state.player.travel.participationId'})); }
-    var scenario=s.start && (FBDATA.startScenarios || []).filter(function (r) { return r.id === s.start.scenarioId; })[0];
-    (scenario ? FB.startTracks(scenario,s.start.provinceId || scenario.fixedProvinceId || s.player.provinceId) : []).forEach(function (id) {
+    FB.stories.originalAttachments(s,'track').forEach(function (id) {
       var module=FB.stories.get(id);
       if (module && module.declaration && module.declaration.type === TYPE) need(!!s.stories && !!s.stories[id]);
     });
