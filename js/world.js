@@ -5058,7 +5058,12 @@ window.FB = window.FB || {};
 
   function applyRoyalMemberProfile(state, member, c) {
     if (member.generated) c.generated = true;
-    if (member.homeProvinceId) c.homeProvinceId = member.homeProvinceId;
+    if (member.homeProvinceId) {
+      c.homeProvinceId = member.homeProvinceId;
+      /* Authored residence survives marriage and adoption into the managed
+         household. Later canonical settlement may replace this saved home. */
+      c.householdResidenceId = member.homeProvinceId;
+    }
     if (member.mar !== undefined) {
       const bonus = realmMartial(state, c) - (Number(c.skills.mar) || 0);
       c.skills.mar = Math.max(0, member.mar - bonus);
