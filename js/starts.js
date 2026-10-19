@@ -1,7 +1,167 @@
-/* Existing-ruler starts adopt ordinary player state once, before track init.
+/* Existing-person and ruler starts adopt player state once, before track init.
    Authored historical references resolve through the saved start identity. */
 (function () {
   'use strict';
+  function own(o, key) { return !!o && Object.prototype.hasOwnProperty.call(o, key); }
+  function plain(o) { return !!o && typeof o === 'object' && !Array.isArray(o); }
+  /* Pure, revision-scoped selection. Never materialize while offering a life
+     or checking a detached import. Court identity is independent of office. */
+  FB.existingPersonStartProfile = function (scenario, bookmark, stories) {
+    var binding = scenario && scenario.existingPerson;
+    if (!plain(binding) || Object.keys(binding).sort().join(',') !== 'householdMemberIds,memberId,realmId' ||
+        typeof binding.realmId !== 'string' || typeof binding.memberId !== 'string' ||
+        scenario.rulerRealmId !== undefined || scenario.governmentForm !== undefined || scenario.onboarding !== undefined ||
+        !Array.isArray(scenario.bookmarkIds) || !bookmark || scenario.bookmarkIds.indexOf(bookmark.id) < 0 ||
+        !scenario.familyPresets || Object.keys(scenario.familyPresets).join(',') !== 'standard' ||
+        !Number.isInteger(scenario.tier) || scenario.tier < 1 || scenario.tier > 2 ||
+        !FB.startStoryTracks(scenario, scenario.fixedProvinceId, stories).length) return null;
+    var realm = (bookmark.realms || []).find(function (r) { return r && r.id === binding.realmId; });
+    var court = realm && realm.royalCourt, members = court && court.members;
+    if (!Array.isArray(members) || members.length > 24 || members.some(function (m) { return !plain(m); }) || !realm.ruler) return null;
+    var person = members.find(function (m) { return m.id === binding.memberId; });
+    var year = bookmark.date && bookmark.date.year;
+    if (!person || typeof person.name !== 'string' || !person.name || person.id === 'ruler' || person.generated || person.alive === false || person.died !== undefined ||
+        person.name !== scenario.characterName || person.sex !== scenario.sex ||
+        person.culture !== scenario.startCulture || person.religion !== scenario.startReligion ||
+        !Number.isInteger(person.born) || year - person.born !== scenario.startAge ||
+        scenario.startAge < 16 || scenario.startAge > 80 ||
+        !person.homeProvinceId || person.homeProvinceId !== scenario.fixedProvinceId ||
+        !(bookmark.provinces || []).some(function (p) { return p && p.id === person.homeProvinceId && !p.wasteland; })) return null;
+    var ids = binding.householdMemberIds;
+    if (!Array.isArray(ids) || !ids.length || ids.length > 24 || ids.indexOf(person.id) < 0) return null;
+    function close(m) {
+      return m.id === person.id || person.fatherId === m.id || person.motherId === m.id ||
+        person.spouseId === m.id || m.spouseId === person.id ||
+        m.fatherId === person.id || m.motherId === person.id ||
+        (person.siblingIds || []).indexOf(m.id) >= 0 ||
+        person.fatherId && m.fatherId === person.fatherId || person.motherId && m.motherId === person.motherId;
+    }
+    if (ids.some(function (id, i) {
+      var m = members.find(function (row) { return row.id === id; });
+      return typeof id !== 'string' || ids.indexOf(id) !== i || !m || m.generated || m.alive === false ||
+        m.died !== undefined || m.homeProvinceId !== person.homeProvinceId || !close(m);
+    })) return null;
+    // Ordinary spouses and dependent children already belong to a household.
+    // Require the declaration to acknowledge every co-resident such person.
+    if (members.some(function (m) {
+      return m.alive !== false && (m.homeProvinceId || realm.capital) === person.homeProvinceId &&
+        (person.spouseId === m.id || m.spouseId === person.id ||
+         (m.fatherId === person.id || m.motherId === person.id) && !m.spouseId) && ids.indexOf(m.id) < 0;
+    })) return null;
+    var root = { id:'ruler', name:realm.ruler.name, sex:realm.ruler.sex || 'm', born:realm.ruler.born,
+      fatherId:court.rulerFatherId, motherId:court.rulerMotherId, spouseId:court.spouseId, siblingIds:court.rulerSiblingIds || [] };
+    var relatives = ids.slice(), byId = Object.create(null);
+    byId.ruler = root;
+    members.forEach(function (m) { byId[m.id] = m; });
+    function add(id) { if (id && byId[id] && relatives.indexOf(id) < 0) relatives.push(id); }
+    [person.fatherId, person.motherId, person.spouseId].concat(person.siblingIds || []).forEach(add);
+    [root].concat(members).forEach(function (m) {
+      if (m.spouseId === person.id || m.fatherId === person.id || m.motherId === person.id ||
+          person.fatherId && m.fatherId === person.fatherId || person.motherId && m.motherId === person.motherId) add(m.id);
+    });
+    // Preserve known ancestors of this bounded family, including tombstones.
+    for (var i = 0; i < relatives.length; i++) {
+      var relative = byId[relatives[i]];
+      add(relative.fatherId); add(relative.motherId);
+    }
+    if (relatives.some(function (id) { return byId[id].generated; })) return null;
+    return { realm:realm, person:person, household:ids.map(function (id) { return byId[id]; }),
+      family:relatives.sort().map(function (id) { return byId[id]; }) };
+  };
+  function selectedCharId(realmId, localId) {
+    return FB.courtCharacterId('royal_' + realmId + '_authored_' + localId);
+  }
+  FB.startingHouseholdMember = function (s, cid) {
+    var b = s && s.start && s.start.existingPerson;
+    if (!b || !Array.isArray(b.household)) return false;
+    var row = b.household.find(function (row) { return row.charId === cid; });
+    if (!row) return false;
+    var sc = FBDATA.startScenarios.find(function (sc) { return sc.id === s.start.scenarioId; });
+    var bookmark = FB.campaignBookmark(s);
+    var realm = bookmark && (bookmark.realms || []).find(function (r) { return r.id === b.realmId; });
+    var original = sc && realm && realm.royalCourt && realm.royalCourt.members.find(function (m) { return m.id === row.memberId; });
+    var c = s.chars[cid];
+    // A later marriage leaves the original extended household under ordinary rules.
+    var spouseId = original && original.spouseId ? selectedCharId(b.realmId, original.spouseId) : null;
+    return !!(original && c && (!c.spouseId || c.spouseId === spouseId));
+  };
+  FB.startSelectionReferencesCharacter = function (s, cid) {
+    var b = s && s.start && s.start.existingPerson;
+    return !!(b && b.familyIds.indexOf(cid) >= 0);
+  };
+  FB.adoptStartingPerson = function (s, scenario) {
+    if (!s || !s.start || s.turn !== 0 || s.stories !== undefined || !s.player || s.player.charId ||
+        s.start.existingPerson !== undefined) return null;
+    var profile = FB.existingPersonStartProfile(scenario, FB.campaignBookmark(s));
+    if (!profile) return null;
+    var rid = profile.realm.id, person = profile.person;
+    var member = FB.authoredRoyalMemberSnapshot(s, rid, person.id);
+    if (!member || member.alive === false) return null;
+    var existing = member.charId && s.chars[member.charId];
+    if (existing && (existing.dead || FB.realmIdForRulerCharacter(s, existing) ||
+        existing.name !== person.name || existing.born !== person.born ||
+        existing.sex !== person.sex || existing.culture !== person.culture || existing.religion !== person.religion ||
+        FB.characterResidence(s, existing) !== person.homeProvinceId)) return null;
+    // Preflight the complete binding before the first materialization.
+    if (profile.family.some(function (row) {
+      var m = FB.authoredRoyalMemberSnapshot(s, rid, row.id);
+      var cid = selectedCharId(rid, row.id), c = s.chars[cid];
+      return !m || m.charId && m.charId !== cid || c && (!c.royalLine ||
+        c.royalLine.realmId !== rid || c.royalLine.memberId !== m.id);
+    })) return null;
+    profile.family.forEach(function (row) {
+      var m = FB.authoredRoyalMemberSnapshot(s, rid, row.id);
+      FB.materializeRoyalMember(s, rid, m.id, { genealogy:true });
+    });
+    // Relink after all required ancestors and children exist.
+    profile.family.forEach(function (row) {
+      var m = FB.authoredRoyalMemberSnapshot(s, rid, row.id);
+      FB.materializeRoyalMember(s, rid, m.id, { genealogy:true });
+    });
+    var me = s.chars[selectedCharId(rid, person.id)];
+    if (!me || me.dead || FB.realmIdForRulerCharacter(s, me) || me.name !== person.name ||
+        me.born !== person.born || FB.characterResidence(s, me) !== person.homeProvinceId) return null;
+    var household = profile.household.map(function (row) {
+      return { memberId:row.id, charId:selectedCharId(rid, row.id) };
+    });
+    var family = profile.family.map(function (row) { return selectedCharId(rid, row.id); }).sort();
+    s.start.scenarioId = scenario.id;
+    s.start.existingPerson = { version:1, realmId:rid, memberId:person.id,
+      charId:me.id, household:household, familyIds:family.sort() };
+    s.player.inheritedHouseholdIds = household.filter(function (row) { return row.charId !== me.id; })
+      .map(function (row) { return row.charId; });
+    if (me.spouseId) s.roles.spouse = me.spouseId;
+    if (me.spouseId || me.childrenIds.length) s.player.flags.tut_family_established = 1;
+    me.role = null;
+    return me;
+  };
+  FB.validateStartingPerson = function (s) {
+    if (!s.start || !own(s.start, 'existingPerson')) return;
+    function bad() { throw new Error(FB.T('Invalid v4 save field at {path}.', { path:'state.start.existingPerson' })); }
+    var b = s.start.existingPerson;
+    if (!plain(b) || Object.keys(b).sort().join(',') !== 'charId,familyIds,household,memberId,realmId,version' || b.version !== 1) bad();
+    var sc = FBDATA.startScenarios.find(function (row) { return row.id === s.start.scenarioId; });
+    var profile = FB.existingPersonStartProfile(sc, FB.campaignBookmark(s));
+    if (!profile || s.start.rulerRealmId !== undefined || b.realmId !== profile.realm.id ||
+        b.memberId !== profile.person.id || b.charId !== selectedCharId(b.realmId, b.memberId) ||
+        !s.chars[b.charId] || s.chars[b.charId].born !== profile.person.born ||
+        !Array.isArray(b.household) || b.household.length !== profile.household.length ||
+        !Array.isArray(b.familyIds) || b.familyIds.length !== profile.family.length || b.familyIds.indexOf(b.charId) < 0) bad();
+    b.household.forEach(function (row, i) {
+      var expected = profile.household[i];
+      if (!plain(row) || Object.keys(row).sort().join(',') !== 'charId,memberId' || row.memberId !== expected.id ||
+          row.charId !== selectedCharId(b.realmId, row.memberId) || !s.chars[row.charId] ||
+          b.familyIds.indexOf(row.charId) < 0) bad();
+    });
+    var expectedIds = profile.family.map(function (m) { return selectedCharId(b.realmId, m.id); }).sort();
+    if (JSON.stringify(b.familyIds) !== JSON.stringify(expectedIds)) bad();
+    profile.family.forEach(function (m) {
+      var c = s.chars[selectedCharId(b.realmId, m.id)];
+      if (!c || c.id !== selectedCharId(b.realmId, m.id) || c.born !== m.born || c.sex !== m.sex ||
+          m.fatherId && c.fatherId !== selectedCharId(b.realmId, m.fatherId) ||
+          m.motherId && c.motherId !== selectedCharId(b.realmId, m.motherId)) bad();
+    });
+  };
   // Existing delegates are resolved from their constituency declaration.
   // This is a pure identity read; generated names remain campaign facts.
   FB.startCommandActorId = function (bookmark, realm, formId) {

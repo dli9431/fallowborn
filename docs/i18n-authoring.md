@@ -1,3 +1,7 @@
+Existing-person start presentation
+
+The existingPerson selector and saved identity/provenance fields are untranslated metadata. Scenario name, desc, intro and the sole standard family summary retain the ordinary scenario display owners and imported exact-English fallback. Personal names remain proper names. The fixed-identity summary reuses existing translated identity labels; the constructor and save validation route their error messages through FB.T. No new presentation registry or generated catalogue is required.
+
 Frederick opening presentation
 
 data/starts_frederick_1241.js uses the ordinary scenario source table. The literal agenda remains in data/story_ruler_agendas.js under the existing rulerAgenda owners; data/story_frederick_1241.js supplies a literal openingProfiles_frederick_1241 table with the existing goal/contact owners. The camp's literal label in data/bookmark_1241_frederick.js uses bookmarkRevisionContent extraction and exact-English aliases. papal_temporal_1241 uses the existing ecclesiastical profile display owner. Personal names, site ids and working birth years stay locale-neutral. Source authoring changes no generated catalogue.

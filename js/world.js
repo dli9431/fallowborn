@@ -1486,9 +1486,11 @@ window.FB = window.FB || {};
       if (startingProvince && !(Array.isArray(locations) && !locations.length) &&
           !FB.startProvinceAllowed(start, definition, startingProvince.id))
         fault(owner, 'fixed birthplace is unavailable under this bookmark\u2019s start rules.');
-      if (startingProvince && !start.rulerRealmId && !(Array.isArray(startingProvince.communities) ? startingProvince.communities : [startingProvince]).some(function (community) {
+      if (startingProvince && !start.rulerRealmId && !start.existingPerson && !(Array.isArray(startingProvince.communities) ? startingProvince.communities : [startingProvince]).some(function (community) {
             return community && community.culture === start.startCulture && community.religion === start.startReligion;
           })) fault(owner, 'fixed culture and faith are absent from province ' + start.fixedProvinceId + '.');
+      if (start.existingPerson !== undefined && !FB.existingPersonStartProfile(start, definition, stories))
+        fault(owner, 'existing household person, home, identity and storyline must match this revision.');
       if (start.rulerRealmId) {
         var startingRealm = realms[start.rulerRealmId], ruler = FB.startRulerProfile(definition, startingRealm, start.governmentForm);
         if (!startingRealm) fault(owner, 'unknown ruler realm ' + start.rulerRealmId + '.');
@@ -5023,10 +5025,10 @@ window.FB = window.FB || {};
     const r = state.realms[rid];
     const s = FB.ensureRealmSuccession(state, rid);
     const m = s && s.members[memberId];
-    if (!r || !m || m.alive === false) return null;
+    if (!r || !m || m.alive === false && !(opts && opts.genealogy)) return null;
     if (m.branchRef && FB.materializeRoyalBranch)
       return FB.materializeRoyalBranch(state, rid, memberId, opts);
-    if (m.charId && state.chars[m.charId] && !state.chars[m.charId].dead) {
+    if (m.charId && state.chars[m.charId] && (!state.chars[m.charId].dead || opts && opts.genealogy)) {
       return linkMaterializedRoyalFamily(state, s, m, state.chars[m.charId], opts);
     }
     const recovered = recoverCourtCharacter(state, rid, m);
@@ -5050,6 +5052,7 @@ window.FB = window.FB || {};
       });
     });
     c.health = 8;
+    if (m.alive === false) { c.dead = true; c.died = m.died; }
     applyRoyalMemberProfile(state, m, c);
     c.royalLine = { realmId: rid, memberId: memberId };
     m.charId = c.id;
@@ -5424,6 +5427,7 @@ window.FB = window.FB || {};
      again does count, and a missed reference class is the likeliest bug here,
      so the check errs toward keeping the record. */
   FB.courtRecordRetained = function (state, c, kinById, familyLinks) {
+    if (FB.startSelectionReferencesCharacter && FB.startSelectionReferencesCharacter(state, c && c.id)) return true;
     if (FB.governments.support && FB.governments.support.referencesCharacter(state, c && c.id)) return true;
     if (FB.mobile && FB.mobile.referencesCharacter(state, c && c.id)) return true;
     if (!state || !c || !state.player) return false;

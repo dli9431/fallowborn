@@ -2118,6 +2118,7 @@ FB.CHANGELOG = [
       return FB.startProvinceAllowed(scenario, offeredBookmark, p.id);
     })) return false;
     if (offeredBookmark && offeredBookmark.starts && offeredBookmark.starts.indexOf(scenario.id) < 0) return false;
+    if (scenario.existingPerson && !FB.existingPersonStartProfile(scenario, offeredBookmark)) return false;
     if (scenario.rulerRealmId) {
       const bookmark = FB.bookmark(bookmarkId);
       const realm = bookmark && (bookmark.realms || []).filter(function (row) {
@@ -2300,14 +2301,14 @@ FB.CHANGELOG = [
         if (!/^\d+$/.test(parts[7])) return { error: bad };
         settlementIdx = parseInt(parts[7], 10);
       }
-      let cultureId = scen.rulerRealmId ? scen.startCulture : prov.culture;
-      let religionId = scen.rulerRealmId ? scen.startReligion : prov.religion;
+      let cultureId = (scen.rulerRealmId || scen.existingPerson) ? scen.startCulture : prov.culture;
+      let religionId = (scen.rulerRealmId || scen.existingPerson) ? scen.startReligion : prov.religion;
       if (!legacy && parts.length === 9) {
         const identity = parts[8].toLowerCase().split('.');
         if (identity.length !== 2 || !identity[0] || !identity[1]) return { error: bad };
         /* A ruler start keeps its court identity, which need not be a resident
            community; seedCode spells it whenever it differs from the county's. */
-        const courtIdentity = scen.rulerRealmId &&
+        const courtIdentity = (scen.rulerRealmId || scen.existingPerson) &&
           identity[0] === scen.startCulture && identity[1] === scen.startReligion;
         if (!courtIdentity && !Array.isArray(prov.communities)) return { error: bad };
         const authored = courtIdentity ? { culture:identity[0], religion:identity[1] } :
@@ -2319,7 +2320,7 @@ FB.CHANGELOG = [
         cultureId = authored.culture;
         religionId = authored.religion;
       }
-      if (scen.rulerRealmId && (cultureId !== scen.startCulture || religionId !== scen.startReligion || settlementIdx !== 0)) return { error:bad };
+      if ((scen.rulerRealmId || scen.existingPerson) && (cultureId !== scen.startCulture || religionId !== scen.startReligion || settlementIdx !== 0)) return { error:bad };
       return {
         seed:seed, bookmarkId:bookmarkId, scenario:scen,
         provinceId:prov.id, sex:sex, name:scen.characterName || name, familyPreset:familyPreset,
@@ -3010,7 +3011,7 @@ FB.CHANGELOG = [
               scenario:scenario,
               provinceId:null
             };
-            if (existingRulerStart(scenario)) {
+            if (existingRulerStart(scenario) || scenario.existingPerson) {
               G.pending.provinceId = scenario.fixedProvinceId;
               G.pending.culture = scenario.startCulture;
               G.pending.religion = scenario.startReligion;
@@ -3262,7 +3263,7 @@ FB.CHANGELOG = [
     }
     /* a sex-locked scenario (Man-at-Arms is male-only) pins the matching radio
        and disables the other; any other scenario leaves both free */
-    const fixedIdentity = G.pending.scenario && G.pending.scenario.rulerRealmId;
+    const fixedIdentity = G.pending.scenario && (G.pending.scenario.rulerRealmId || G.pending.scenario.existingPerson);
     const scenSex = G.pending.scenario && G.pending.scenario.sex;
     $('cg-name').readOnly = !!fixedIdentity;
     $('cg-reroll').disabled = !!fixedIdentity;
@@ -3479,7 +3480,9 @@ FB.CHANGELOG = [
     G.observe = false;
     document.body.classList.remove('observing');
     const sc = G.pending && G.pending.scenario;
-    if (!scenarioUnlocked(sc) || !FB.startProvinceAllowed(sc, FB.activeBookmark, G.pending.provinceId)) {
+    if (!scenarioUnlocked(sc) || !FB.startProvinceAllowed(sc, FB.activeBookmark, G.pending.provinceId) ||
+        sc.existingPerson && (!FB.existingPersonStartProfile(sc, FB.activeBookmark) ||
+          (G.pending.settlementIdx || 0) !== 0)) {
       showScenarios();
       return false;
     }
@@ -3499,7 +3502,7 @@ FB.CHANGELOG = [
     const provId = G.pending.provinceId;
     const pr = FB.world.byId[provId];
     const settIdx = clampSettlementIdx(provId, G.pending.settlementIdx);
-    const community = sc.rulerRealmId ? { culture:sc.startCulture, religion:sc.startReligion } : selectedCommunity();
+    const community = (sc.rulerRealmId || sc.existingPerson) ? { culture:sc.startCulture, religion:sc.startReligion } : selectedCommunity();
     const cultureId = community.culture;
     const religionId = community.religion;
     const sex = sc.sex || document.querySelector('input[name=cg-sex]:checked').value;
@@ -3596,13 +3599,15 @@ FB.CHANGELOG = [
 
     const commandStart = !!sc.rulerRealmId &&
       !!FB.governments.forRealm(state, sc.rulerRealmId).use.succession.commandLeadership;
-    const me = commandStart ? FB.prepareStartingCommandActor(state, sc) :
+    const me = sc.existingPerson ? FB.adoptStartingPerson(state, sc) :
+      commandStart ? FB.prepareStartingCommandActor(state, sc) :
       sc.rulerRealmId ? FB.ensureRealmCourt(state, sc.rulerRealmId) : FB.makeCharacter(state, {
       name: name, sex: sex, culture: cultureId, religion: religionId,
       born: start.year - (sc.startAge || preset.age || FBDATA.balance.startAge),
       quality: FB.station.isGentle(sc, state) ? 2 : 0, traitsN: 2,
       station:FB.station.socialClass(sc, state), unfree:FB.station.isSerf(sc, state)
     });
+    if (sc.existingPerson && !me) throw new Error(FB.T('Starting household has no matching authored person.'));
     if (commandStart && !me) throw new Error(FB.T('Starting command has no authored principal.'));
     if (sc.rulerRealmId && !commandStart) {
       FB.materializeRealmConsort(state, sc.rulerRealmId);
@@ -3611,7 +3616,7 @@ FB.CHANGELOG = [
           FB.materializeRoyalChild(state, sc.rulerRealmId, member.id);
       }
     }
-    if (!sc.rulerRealmId) me.health = 8;
+    if (!sc.rulerRealmId && !sc.existingPerson) me.health = 8;
     /* Match ordinary start-code choices too, so replay preserves the face
        without introducing a second code format or touching the seeded stream. */
     for (const definition of (FBDATA.quickStarts || [])) {
@@ -3626,7 +3631,7 @@ FB.CHANGELOG = [
         break;
       }
     }
-    if (!sc.rulerRealmId) me.dyn = FB.dynastyName(cultureId, me.name, pr.name, me.sex, state);
+    if (!sc.rulerRealmId && !sc.existingPerson) me.dyn = FB.dynastyName(cultureId, me.name, pr.name, me.sex, state);
     for (const skill in (startEffects.skills || {})) {
       if (Object.prototype.hasOwnProperty.call(startEffects.skills, skill)) {
         me.skills[skill] = Math.max(0, me.skills[skill] + startEffects.skills[skill]);
@@ -3644,7 +3649,7 @@ FB.CHANGELOG = [
        the historical item draws; a named pool adds one deliberate seeded pick. */
     grantStartingItems(state, me, startEffects);
 
-    if (!sc.rulerRealmId) {
+    if (!sc.rulerRealmId && !sc.existingPerson) {
       // parents, the first rung of the kin tree
       const dad = FB.makeCharacter(state, {
         sex: 'm', culture: cultureId, religion: religionId,
