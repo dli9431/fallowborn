@@ -186,7 +186,7 @@ for (const bookmark of ['867','1066']) for (const revision of ['baseline',null])
       }
       const corrected = seeded(); let prior;
       try {
-        FBDATA.tech = JSON.parse(JSON.stringify(Object.assign({},window.__compositionBase.tech,FBDATA.tech_waterworks,FBDATA.tech_masonry_circuits)));
+        FBDATA.tech = JSON.parse(JSON.stringify(Object.assign({},window.__compositionBase.tech,FBDATA.tech_waterworks,FBDATA.tech_masonry_circuits,FBDATA.tech_baths_headworks)));
         // Compare prerequisite composition under the same transmission policy.
         // The full pre-policy delta is covered by early-knowledge-transmission.spec.js.
         ['paper_making','paper_scholarship','capitularies'].forEach(function (id) {
