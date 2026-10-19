@@ -8,7 +8,7 @@ const {beginBookmark,restoreBookmark,facts} = require('../support/game/bookmark-
 const {releasedCatalogue} = require('../support/released-catalogue');
 
 dependsOnRuntime(__filename,[
-  'data/story_ruler_agendas_1241.js',
+  'data/story_ruler_agendas_1241.js','data/bookmark_1241_operations.js',
   'data/bookmark_1241_alexander.js','data/starts_alexander_1241.js','data/story_alexander_1241.js',
   'index.html','data/bookmark_1241.js','data/identities_1241.js',
   'data/bookmark_1241_frederick.js','data/starts_frederick_1241.js',
