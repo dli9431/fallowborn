@@ -61,7 +61,7 @@
   FBDATA.techImpactReviews.features.personal_expedition_admission = {mode:'none',
     rationale:'Individual unpaid admission depends on current host consent, actual presence and finite named-person or existing combat-position capacity. It grants no troops, equipment, vow or family carriage. Ordinary road and military technology remain authoritative.'};
   FBDATA.techImpactReviews.features.mobile_column_ownership = {mode:'none',
-    rationale:'A bounded column set partitions existing opening fighters and provisions under scoped commanders. Normal unit eligibility, conserved people, finite stores and current command authority remain binding; the single-host fallback remains available.'};
+    rationale:'A bounded column set partitions existing opening fighters and provisions under scoped commanders. Optional opening locations require real county/site membership and connected physical access or existing war; they create no completed journey. Normal unit eligibility, conserved people, finite stores and current command authority remain binding; the single-host fallback remains available.'};
   FBDATA.techImpactReviews.features.mobile_column_orders = {mode:'none',
     rationale:'Separate field orders and one camp escort express current command scope over existing hosts. Ordinary route, transport, access and war requirements remain binding.'};
   FBDATA.techImpactReviews.features.mobile_column_reorganization = {mode:'none',
