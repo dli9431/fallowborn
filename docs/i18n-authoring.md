@@ -52,7 +52,7 @@ Household presentation tables in data/story_*.js are discovered by their literal
 
 Separate ruler agenda sources
 
-Files named data/story_*.js may declare literal FBDATA.rulerAgendas_<suffix> maps and compose them into storyInstances; the suffix can differ from the filename. Static extraction retains rulerAgenda.<id> owners and exact-source aliases for title, intro, stage name/text and choice label/detail, matching the central rulerAgendas table. Extraction never executes the composer. Proper names, ids, dates and operation keys remain untranslated. No generated catalogue change is required for feature authoring.
+Files named data/story_*.js may declare literal FBDATA.rulerAgendas_<suffix> maps and compose them into storyInstances; the suffix can differ from the filename. Static extraction retains rulerAgenda.<id> owners and exact-source aliases for title, intro, stage name/text and choice label/detail, matching the central rulerAgendas table. Extraction never executes the composer. Proper names, ids, dates and operation keys remain untranslated. These tables organize content and add no runtime mod root. No generated catalogue change is required for feature authoring.
 
 Local institutional presentation
 
