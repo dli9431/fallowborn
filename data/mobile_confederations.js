@@ -98,6 +98,8 @@
     rationale:'Once-only formation requires the original living command, actual public funds, paid training and real local provisions. Existing unit eligibility remains binding.'};
   FBDATA.techImpactReviews.features.expedition_story_composition = {mode:'none',
     rationale:'Finite intent observes existing preparation, command and canonical progress. No credible research prerequisite belongs to waiting or declining; all underlying formation, equipment, movement and access gates remain authoritative.'};
+  FBDATA.techImpactReviews.features.retained_start_attachments = {mode:'none',
+    rationale:'Preserving a campaign\u2019s original story commitments is a persistence rule. No discovery gates compatibility, and all original consent, authority, funding and movement requirements remain binding.'};
   /* The fresh 476 opening inhabits Cherson and adds the Pontic following.
      Priscus attests displaced followings and Roman diplomacy, not a precise
      476 boundary or an identifiable incumbent at this simulated camp. */

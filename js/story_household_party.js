@@ -264,8 +264,7 @@
   }
   P.validateAssociations = function (s) {
     function need(ok) { if (!ok) throw new Error(FB.T('Invalid v4 save field at {path}.',{path:'state.stories.household_party'})); }
-    var scenario=s.start && (FBDATA.startScenarios || []).filter(function (v) { return v.id === s.start.scenarioId; })[0];
-    (scenario ? FB.startTracks(scenario,s.start.provinceId || scenario.fixedProvinceId || s.player.provinceId) : []).forEach(function (id) {
+    FB.stories.originalAttachments(s,'track').forEach(function (id) {
       var m=FB.stories.get(id); if (m && m.declaration && m.declaration.type === TYPE) need(!!s.stories && !!s.stories[id]);
     });
     var reserved=Object.create(null);

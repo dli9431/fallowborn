@@ -3798,7 +3798,7 @@ FB.CHANGELOG = [
       if (!FB.adoptStartingRealm(state, sc))
         throw new Error('Starting ruler could not adopt the authored realm.');
     }
-    if (FB.stories) FB.stories.start(state, { tracks:FB.startTracks(sc, provId) });
+    if (FB.stories) FB.stories.start(state, { tracks:FB.startTracks(sc, provId), sealAttachments:true });
     state.seasonMark.gold = state.player.gold;
     // A new campaign is fresh: fresh-only institutions join its opening roster.
     if (FB.ensureLocalInstitutions) FB.ensureLocalInstitutions(state, null, { fresh:true });
@@ -3987,7 +3987,7 @@ FB.CHANGELOG = [
 
     if (bookmark.openingInfrastructure !== undefined) FB.scriptedTick(state);
     // A watcher has no scenario, so only the bookmark's world stories attach.
-    if (FB.stories) FB.stories.start(state, {});
+    if (FB.stories) FB.stories.start(state, { sealAttachments:true });
     if (FB.ensureLocalInstitutions) FB.ensureLocalInstitutions(state, null, { fresh:true });
     if (FB.tournaments) FB.tournaments.ensure(state);
     if (FB.production) FB.production.initialize(state);
