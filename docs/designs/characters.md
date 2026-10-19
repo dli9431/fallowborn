@@ -1,3 +1,7 @@
+Authored court residence
+
+An authored royal member's homeProvinceId initializes the existing householdResidenceId when that person is materialized. This keeps a separately resident consort or child at the declared home when the ruler is adopted as the protagonist. Omitted residence keeps the ordinary household default. Canonical household settlement can later replace the saved residence; materializing an already existing person does not reset it. This repairs the existing residence contract and adds no technology gate or saved field.
+
 Colonate status and careers
 
 The colonus opening's estate possessor is a generated independent contact with a saved residence and no county jurisdiction. While the head remains bound under colonate, direct clerical, monastic and military career entry and station-raising religious advancement cannot bypass the estate release review. Consented military release enters the existing soldier career, retaining its ordinary training prerequisite; consented ordination enters the existing priest career through a living same-faith local bishop. Neither grants a public command or church office. Paid release leaves the tenant career available as ordinary work. Late antique band zero uses the freedom route; higher bands retain their existing standing routes. These are legal-status conditions covered by the none colonate technology reviews in holdings.md.

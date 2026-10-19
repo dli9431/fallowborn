@@ -2,6 +2,11 @@
 (function () {
   'use strict';
   FBDATA.ecclesiasticalProfiles = {
+    papal_temporal_1241:{ name:'Papal temporal government (1241)', source:'papal_election',
+      chapter:false, layRecognition:false, appointmentCost:0, recognitionCost:0,
+      reserve:10, revenueRate:1, levyRate:1,
+      interim:['revenue','peace','defence','levy'], reserved:['grant','extraordinary_tax','pledge'],
+      powers:['ban','peace','revenue'] },
     papal_temporal_1204:{ name:'Papal temporal government (1204)', source:'papal_election',
       chapter:false, layRecognition:false, appointmentCost:0, recognitionCost:0,
       reserve:10, revenueRate:1, levyRate:1,

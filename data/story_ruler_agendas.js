@@ -1,6 +1,60 @@
 /* Personal reviews follow living courts and their existing transactions.
    Dates below pace decisions; they impose no historical outcome. */
 FBDATA.rulerAgendas = {
+  frederick_agenda_1241:{ id:'frederick_agenda_1241', type:'ruler_agenda', subjectRealmId:'hre_1241',
+    title:'Frederick II: campaign and crowns',
+    intro:'Choose priorities for the court and its actual resources. These reviews record intentions; ordinary government, travel and diplomacy decide what can be done.',
+    stages:[
+      { id:'fi_court', name:'The court outside Faenza', year:1241, season:0,
+        text:'You began near Faenza, with your family living apart. Review the present household and your actual location before choosing the court’s next priority.',
+        choices:[
+          { id:'fi_household', label:'Review the family and court', detail:'Record a priority. Nobody moves and no adviser or retinue is created.', operation:'agenda_priority' },
+          { id:'fi_keep_court', label:'Retain the present arrangements', detail:'Continue with the family and court as they are.', operation:'agenda_priority' }
+        ] },
+      { id:'fi_accounts', name:'What the campaign can afford', year:1241, season:0,
+        text:'Review the available public resources and existing obligations. An extended campaign needs actual funding; the agenda issues no money or credit.',
+        choices:[
+          { id:'fi_affordable', label:'Prioritize affordable preparations', detail:'Recruitment, provisions and borrowing retain their ordinary costs and requirements.', operation:'agenda_priority' },
+          { id:'fi_keep_accounts', label:'Keep the present commitments', detail:'Record this priority without collecting revenue or spending funds.', operation:'agenda_priority' }
+        ] },
+      { id:'fi_rights', name:'Italian opponents and local rights', year:1241, season:0,
+        text:'The Italian opening contains independent local courts. Inspect current possession and relations before choosing defense or negotiation.',
+        choices:[
+          { id:'fi_defence', label:'Prioritize defense', detail:'Record intent without raising an army or declaring war.', operation:'agenda_priority' },
+          { id:'fi_negotiation', label:'Consider ordinary negotiation', detail:'Any agreement needs the ordinary authority, funds and consent.', operation:'agenda_priority' },
+          { id:'fi_keep_rights', label:'Retain the present policy', detail:'Make no new territorial or diplomatic commitment.', operation:'agenda_priority' }
+        ] },
+      { id:'fi_papacy', name:'The existing papal dispute', year:1241, season:0,
+        text:'The opening follows the renewed excommunication of 1239. Review the current papal court and your present obligations; earlier disagreement supplies no automatic outcome now.',
+        choices:[
+          { id:'fi_communication', label:'Review available communication', detail:'Record a priority without promising access, absolution or a reply.', operation:'agenda_priority' },
+          { id:'fi_keep_obligations', label:'Concentrate on present obligations', detail:'Keep ordinary religion, property and relations unchanged by this review.', operation:'agenda_priority' }
+        ] },
+      { id:'fi_announcement', name:'A council was announced', year:1241, season:0,
+        text:'Before this opening, Gregory announced a council intended for Rome. Consider that announcement alongside the current situation. This review reports no meeting or verdict.',
+        choices:[
+          { id:'fi_council', label:'Consider the earlier announcement', detail:'Record a priority without sending a delegation, intercepting a fleet or resolving the council.', operation:'agenda_priority' },
+          { id:'fi_keep_council', label:'Continue without a new commitment', detail:'No attendance, cancellation or judgment follows.', operation:'agenda_priority' }
+        ] },
+      { id:'fi_crowns', name:'Claims and resources across the crowns', year:1241, season:1,
+        text:'Review the lands and obligations actually retained. The imperial and Sicilian holdings share one game resource account; a claim gives no additional revenue or universal obedience.',
+        choices:[
+          { id:'fi_local_obligations', label:'Review local obligations', detail:'Record intent without another budget, levy or journey.', operation:'agenda_priority' },
+          { id:'fi_conserve', label:'Conserve available resources', detail:'Record a priority without changing the existing account.', operation:'agenda_priority' }
+        ] },
+      { id:'fi_reconsider', name:'Reconsider the campaign', year:1241, season:1,
+        text:'Inspect your actual location, current wars and surviving courts. Decide whether defense, diplomacy or ordinary travel deserves attention under present conditions.',
+        choices:[
+          { id:'fi_reassess', label:'Reassess the available choices', detail:'No conquest, capture, death, peace or journey is asserted or completed.', operation:'agenda_priority' },
+          { id:'fi_keep_campaign', label:'Keep the present priorities', detail:'Leave ordinary operations to their existing controls.', operation:'agenda_priority' }
+        ] },
+      { id:'fi_continue', name:'Continue governing', year:1241, season:2,
+        text:'This finite review can end while ordinary obligations continue. Your actual family, office, relationships and conflicts determine the next course.',
+        choices:[
+          { id:'fi_finish', label:'Conclude the opening review', detail:'End this personal agenda without a reward or political settlement.', operation:'agenda_finish' },
+          { id:'fi_keep_governing', label:'Continue with the present priorities', detail:'Complete the review without ending a war or a religious dispute.', operation:'agenda_priority' }
+        ] }
+    ] },
   peroz_agenda_476:{ id:'peroz_agenda_476', type:'ruler_agenda', subjectRealmId:'sasanian_476',
     title:'Peroz: court and frontier', intro:'Balance provincial terms, appointed service and royal recognition. Eastern policy follows the actual frontier; this program promises no victory or succession.',
     stages:[
