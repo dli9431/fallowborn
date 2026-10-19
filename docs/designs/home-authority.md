@@ -1,5 +1,15 @@
 Home decisions and expedition funding
 
+Dated policy composition
+
+An effective bookmark revision may declare homeAuthorityPolicies, a nonempty map of at most 64 existing government form ids to exact schema-1 homeAuthority policies (presence capital or territory, delegation boolean). Each entry replaces only that form's home-decision policy in that campaign revision. Omission uses the existing global form policy exactly; null and unknown fields are invalid. Government ids, strategies, scenario matching, direct holders, lieges and ordinary office eligibility retain their existing owners. A composition grants no office, deputy, money, command or formation consent.
+
+The pure homeAuthority.resolvePolicy(bookmark, formId) resolver selects the revision entry or the existing form default. Live policy(state, realmId) selects the current actual form, including the adopted player alias, and passes the campaign's retained revision to that same resolver. Landed command and preparation detached validators use it with their candidate bookmark. All player/AI decision, grant and contribution gates continue through the canonical home-authority owner.
+
+Fresh normal and observe creation retain state.homeAuthorityPolicies with exactly schema:1 and policies, a detached copy of the full revision map. Matching restore requires the exact original map when opted in and rejects a marker for an unopted revision, without inferring policies, creating deputies or initializing commands. Older revisions without a map keep an absent marker. Current forms may change, incumbents may die and commands may end; provenance describes original policy composition and does not require the original live office to survive.
+
+Technology decision dated_home_authority_policy is none. Dated local presence and existing civil delegation are political rules with no credible discovery dependency. Existing resource, consent, unit, office and movement gates remain authoritative.
+
 An expedition_preparation may opt into a home_authority provider to resolve its original levy authorizer at an exact origin county through this existing quote. A local sovereign may act from its lawful home position; an explicitly selected county deputy must hold the exact effective civil levy delegation there. Preparation retains the original person, appointment and issuer generation, and never creates or substitutes an office. Public grant permission stays independent: levy alone cannot spend a treasury. See expedition-preparation.md for fresh binding, historical save provenance and later interruption.
 
 An optional local_household contribution policy on preparation exposes a capped voluntary private transfer for the actual adult free local protagonist. fundingQuote/fund still own the purse debit, separate public credit, maximum and global fundingRevision. No gift is automated, refunded on closure or interpreted as consent, public power, admission or carriage. The independently reviewed none technology decisions for local formation authority and household formation contributions preserve the underlying resource and unit gates.

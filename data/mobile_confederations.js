@@ -90,6 +90,8 @@
     rationale:'Observing the current religious campaign objective and issuing a scoped order to its existing vowed host depends on the actual campaign, original participant and command. Existing movement, access, equipment and war gates remain binding; manual orders remain available without a program.'};
   FBDATA.techImpactReviews.features.home_decision_presence = {mode:'none',
     rationale:'Local public decisions depend on actual presence and a living incumbent, without a credible discovery prerequisite. Existing commitments and ordinary private actions remain available.'};
+  FBDATA.techImpactReviews.features.dated_home_authority_policy = {mode:'none',
+    rationale:'Revision-scoped local presence and existing civil delegation are political rules, without a credible discovery prerequisite. Actual offices, consent, resources, equipment and movement retain their existing gates.'};
   FBDATA.techImpactReviews.features.home_decision_delegation = {mode:'none',
     rationale:'Exact delegation depends on an existing effective civil appointment, its scope, term and current issuer generation. Military command alone supplies no civil authority.'};
   FBDATA.techImpactReviews.features.expedition_public_funding = {mode:'none',

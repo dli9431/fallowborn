@@ -50,7 +50,7 @@
         !set.entries.length || set.entries.length>4 || !t.columns || !t.command || !t.opening ||
         t.command.operations.indexOf('war')<0 || t.preparationId!==undefined || t.guardedParty!==undefined ||
         t.civilianCamps!==undefined || t.command.landedCommandLink!==undefined ||
-        FBDATA.governmentForms[formId].homeAuthority || !actors) return false;
+        FB.homeAuthority.resolvePolicy(bookmark,formId) || !actors) return false;
     var ids=Object.create(null), opponents=Object.create(null), columns=Object.create(null);
     return set.entries.every(function (e) {
       var ref=e && e.opponent, enemy=ref && own(realms,ref.realmId) && realms[ref.realmId];

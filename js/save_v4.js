@@ -77,6 +77,7 @@
   /* Optional platform fields (state-and-saves.md, Save v4 platform schema).
      Absent fields stay valid; present ids must resolve. */
   P.validatePlatform = function (state) {
+    if (FB.homeAuthority) FB.homeAuthority.validate(state);
     if (state.treasuryAccounting && own(state.treasuryAccounting, 'fundingRevision') &&
         (!Number.isSafeInteger(state.treasuryAccounting.fundingRevision) || state.treasuryAccounting.fundingRevision < 0))
       field('treasuryAccounting.fundingRevision');
