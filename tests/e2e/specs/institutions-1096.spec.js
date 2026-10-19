@@ -24,6 +24,13 @@ const groups = ['cologne_jewish_congregation_1096','mainz_jewish_congregation_10
 const ids = groups.concat('durham_see_1096');
 
 async function begin(page,info,county,crazygames) {
+  // This specification owns the retained lay-group and vacancy declaration.
+  // The fresh Mainz shelter revision has its own coverage.
+  await page.addInitScript(function() {
+    document.addEventListener('DOMContentLoaded',function() {
+      FBDATA.bookmarks['1096'].revision='baseline';
+    },{once:true});
+  });
   await startHistoricalGame(page,info,{bookmark:'1096',
     code:'LOCALGROUPS-1096-farmer-'+(county || 'mainz')+'-f-Leah-established-0-ashkenazi.jewish'},!!crazygames);
 }
@@ -42,7 +49,7 @@ function snapshot() {
 test('the complete 1096 table has separate local groups and an evidenced vacant office',async function ({page},info) {
   await openGame(page,info);
   expect(await page.evaluate(function (input) {
-    const b = FB.bookmark('1096'), definitions = b.localInstitutions;
+    const b = FB.bookmark('1096','baseline'), definitions = b.localInstitutions;
     return {ids:Object.keys(definitions),world:FB.validateBookmark(b),
       catalog:FB.religiousInstitutionCatalogFaults(FBDATA),
       detached:input.ids.every(function (id) {

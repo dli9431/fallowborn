@@ -37,7 +37,7 @@ const regionOrder = [
 test('1096 composes every physical county and court once with valid detached references',async function ({page},info) {
   await openGame(page,info);
   const result = await page.evaluate(function (order) {
-    const b = FB.bookmark('1096'), geography = FB.geography(b.geography);
+    const b = FB.bookmark('1096','baseline'), geography = FB.geography(b.geography);
     const ids = b.provinces.map(function (p) { return p.id; });
     const realmIds = b.realms.map(function (r) { return r.id; });
     const expected = [], faults = [], counties = {}, realms = {};

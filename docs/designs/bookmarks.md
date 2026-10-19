@@ -301,3 +301,7 @@ Godfrey at Bouillon within verdun and Raymond at toulouse use existing-ruler ado
 Eastern ruler households in 1096
 
 The 1096 Balkan source declares Alexios's existing named spouse and six opening children before world construction. The Anatolian source declares the single Kilij Arslan I with a working birth and an explicit spouse-free empty household. Existing-ruler starts in data/starts_eastern_rulers_1096.js adopt these actual courts at Constantinople and Nicaea. No generated person is renamed after creation, and restore consumes saved people without adding the updated opening family. The capital anchors and county ownership remain unchanged. The administration profile and Nicaea/Nicomedia county compression are disclosed in docs/research/1096-bookmark.md. The starts add no government strategy, technology gate, saved schema or historical outcome.
+
+Mainz fresh-world revision
+
+data/bookmark_1096_mainz.js follows the 1096 world-story composition and precedes the start declarations. It publishes mainz_household_v1 as the fresh default, copying the current source revision and changing only the Mainz civil-permission abstraction, local see, two authored local sites, shelter world list and new start location. The original revisions remain selectable for matching saved campaigns; their empty Mainz startLocations entry excludes the new scenario. Preserve the composer after other dated court changes when integrating them, so its fresh snapshot includes those declarations. There is no new engine, geography base or save envelope.

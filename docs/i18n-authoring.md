@@ -407,3 +407,7 @@ Literal FBDATA.productionGoods_<suffix> and FBDATA.productionRecipes_<suffix> ma
 Eastern ruler presentation
 
 The literal startScenarios_eastern_rulers_1096 array in data/starts_eastern_rulers_1096.js uses ordinary scenario display and family-preset owners. data/story_eastern_rulers_1096.js declares rulerAgendas_eastern_rulers_1096 and openingProfiles_eastern_rulers_1096 for rulerAgenda and openingProfile owners and exact-source aliases. Supplemental agenda extraction uses the shared rulerAgendas_ story-table discovery alongside the legacy table; it must be integrated before generating a catalogue containing these texts. Runtime presentation remains the shared translated story surface with normal English fallback. Personal names, family birth years, identifiers and saved decisions are locale-neutral.
+
+Mainz household display owners
+
+The native starts_mainz_1096 scenario supplement, householdTracks_rhineland_1096 graph and party titles, householdRefuges_rhineland_1096 shelter and openingProfiles_rhineland_1096 goals use existing static extraction and exact-source aliases. The literal bookmarkRevisionContent_1096_mainz table owns its dated settlement label through the existing revision-content extractor. Named people and structural references remain identities. tools/test_i18n_mainz_household.py covers these sources without requiring generated catalogue changes.
