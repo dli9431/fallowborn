@@ -1,3 +1,7 @@
+Canossan opening reviews
+
+data/story_tuscany_1096.js composes an ordinary ruler_agenda and opening_profile for the existing Matilda start. Eight seasonal reviews record priorities only. Each stage retains a costless continuation, the shared sheet supports stopping, and ordinary government, war and diplomacy own every actual commitment. Three optional goals observe semantic decisions without rewards; two target contacts retain the original imperial and papal people without granting access. The normal original-incumbent, generation and jurisdiction checks interrupt the program. Restore preserves saved decisions without reconstructing a court or attaching absent personal tracks. This historical configuration adds no new capability or technology gate.
+
 Expedition assurance and restitution reviews
 
 js/story_expedition_agreements.js registers the optional world type expedition_undertaking before factory sealing. Differentiated limited_assurance and restoration_review declarations support only the explicit records_only fallback. Personal life/honor enforcement and restitution under an unproved receiving authority have no compatible canonical transaction. They remain attributed context with bilateral costless acknowledgment or refusal, not an enforceable obligation. Restitution reviews show exact bounded counties and actual current controllers/holders without mistaking possession for lawful capture or transfer consent. Supported access, market, service, peace and cession owners retain their separate meanings.

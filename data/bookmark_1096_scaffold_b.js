@@ -163,7 +163,7 @@ FBDATA.bookmarkRevisionContent_1096_italy_north = {
     {id:'lucca', name:'Lucca', x:10.5, y:43.84, terrain:'hills', duchy:'tuscany', realm:'canossa_1096', culture:'italian', religion:'catholic', dev:5}
   ],
   realms:[
-    {id:'canossa_1096', name:'Canossa lands', color:'#8daa62', capital:'modena', aggression:0, rank:2, religion:'catholic', government:'territorial', ruler:{sex:'f', culture:'italian', born:1046, mar:8, trait:'patient', name:'Matilda of Canossa'}},
+    {id:'canossa_1096', name:'Canossa lands', color:'#8daa62', capital:'modena', aggression:0, rank:2, religion:'catholic', government:'territorial', ruler:{sex:'f', culture:'italian', born:1046, mar:8, trait:'patient', name:'Matilda of Canossa'}, royalCourt:{dynasty:'Canossa', spouseId:null, members:[]}},
     {id:'venice_1096', name:'Venice', color:'#2f8f8f', capital:'venezia', aggression:0, rank:2, religion:'catholic', government:'territorial', ruler:{sex:'m', culture:'italian', born:1060, mar:8, trait:'patient', generated:true}, techTraditions:['latin', 'byzantine']}
   ],
   duchies:{

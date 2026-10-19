@@ -16,6 +16,7 @@ dependsOnRuntime(__filename,[
   'data/counties.js','data/geographies.js','data/geography_expansion.js',
   'data/cultures.js','data/eras.js','data/starts.js','data/settlements.js',
   'data/starts_pilgrim_1096.js','data/story_pilgrim_1096.js',
+  'data/starts_tuscany_1096.js','data/story_tuscany_1096.js',
   'js/stories.js','js/story_household.js','js/story_opening_goals.js',
   'data/settlements_real.js','data/government_rollout.js','data/ecclesiastical_profiles.js',
   'js/world.js','js/model.js','js/starts.js','js/main.js','js/save.js','js/save_v4.js',
@@ -112,7 +113,7 @@ test('1096 preserves released definitions and rejects malformed worlds without m
   expect(result).toEqual({rejected:[true,true,true,true],pure:true});
 });
 
-test('1096 is offered with its pilgrim household and ordinary roles while held starts remain absent',async function ({page},info) {
+test('1096 offers its declared story starts and ordinary roles',async function ({page},info) {
   await openGame(page,info);
   expect(await page.evaluate(function () {
     return {hidden:FB.bookmark('1096').hidden === true,available:FB.bookmarkAvailable('1096'),
@@ -125,16 +126,16 @@ test('1096 is offered with its pilgrim household and ordinary roles while held s
   await page.locator('#bookmarklist [data-bookmark="1096"]').press('Enter');
   await expect(page.locator('#ng-heading')).toHaveText('Choose Your Beginning in 1096 AD');
   expect(await page.evaluate(function () { return FB.activeBookmarkId; })).toBe('1096');
-  for (const id of ['serf','farmer','apprentice','pilgrim_household_1096'])
+  for (const id of ['serf','farmer','apprentice','pilgrim_household_1096','matilda_1096'])
     await expect(page.locator('#scenariolist [data-scenario="' + id + '"]')).toBeVisible();
   const pilgrim = page.locator('#scenariolist [data-scenario="pilgrim_household_1096"]');
   await expect(pilgrim).not.toHaveAttribute('aria-disabled','true');
-  await expect(page.locator('#scenariolist [data-scenario$="_1096"]')).toHaveCount(1);
+  await expect(page.locator('#scenariolist [data-scenario="matilda_1096"]')).toBeVisible();
   expect(await page.evaluate(function () {
     return FBDATA.startScenarios.filter(function (sc) {
       return sc.bookmarkIds && sc.bookmarkIds.indexOf('1096') >= 0 && !sc.hidden;
     }).map(function (sc) { return sc.id; });
-  })).toEqual(['pilgrim_household_1096']);
+  })).toEqual(expect.arrayContaining(['pilgrim_household_1096','matilda_1096']));
   await pilgrim.press('Enter');
   await expect(page.locator('#pickprov:not(.hidden)')).toBeVisible();
   expect(await page.evaluate(function () {
