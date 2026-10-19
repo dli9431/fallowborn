@@ -14,12 +14,51 @@
     !(c.id === s.player.charId && s.player.flags && s.player.flags.in_prison); }
   function ruler(s,rid) { return rid === 'player' ? s.chars[s.player.charId] : FB.realmRulerCharacterSnapshot(s,rid); }
   H.policy = function (s,rid) {
-    var form = G.forRealm(s,rid), def = form && FBDATA.governmentForms[form.id];
-    return def && def.homeAuthority || null;
+    var form = G.forRealm(s,rid);
+    return form ? H.resolvePolicy(FB.campaignBookmark(s),form.id) : null;
   };
   H.policyValid = function (p) {
     return keys(p,['schema','presence','delegation']) && p.schema === 1 &&
       ['capital','territory'].indexOf(p.presence) >= 0 && typeof p.delegation === 'boolean';
+  };
+  /* The candidate bookmark and current form are explicit inputs. Never read
+     the active world when validating an imported or retained revision. */
+  H.resolvePolicy = function (bookmark,formId) {
+    var policies = bookmark && bookmark.homeAuthorityPolicies, forms = FBDATA.governmentForms;
+    var def=own(forms,formId) && forms[formId];
+    if (!def) return null;
+    if (own(policies,formId)) return policies[formId];
+    return def.homeAuthority || null;
+  };
+  H.definitionFaults = function (bookmark) {
+    var policies = bookmark ? bookmark.homeAuthorityPolicies : undefined;
+    if (policies === undefined) return [];
+    if (!keys(policies,Object.keys(FBDATA.governmentForms)) || !Object.keys(policies).length ||
+        Object.keys(policies).length > 64 || Object.keys(policies).some(function (id) {
+          return !H.policyValid(policies[id]);
+        })) return [FB.T('Invalid dated home authority policies.')];
+    return [];
+  };
+  function policyTerms(policies) {
+    return policies === undefined ? null : Object.keys(policies).sort().map(function (id) {
+      var p=policies[id];return [id,p.schema,p.presence,p.delegation];
+    });
+  }
+  H.initialize = function (s) {
+    var bm=FB.campaignBookmark(s);
+    if (H.definitionFaults(bm).length) throw new Error(FB.T('Invalid dated home authority policies.'));
+    if (bm && bm.homeAuthorityPolicies !== undefined && s.homeAuthorityPolicies === undefined)
+      s.homeAuthorityPolicies={schema:1,policies:copy(bm.homeAuthorityPolicies)};
+    H.validate(s);
+  };
+  H.validate = function (s) {
+    var bm=FB.campaignBookmark(s), policies=bm ? bm.homeAuthorityPolicies : undefined, saved=s.homeAuthorityPolicies;
+    if (H.definitionFaults(bm).length || (policies === undefined ? saved !== undefined :
+        !keys(saved,['schema','policies']) || Object.keys(saved).length !== 2 || saved.schema !== 1 ||
+        H.definitionFaults({homeAuthorityPolicies:saved.policies}).length || saved.policies === undefined ||
+        JSON.stringify(policyTerms(saved.policies)) !== JSON.stringify(policyTerms(policies))))
+      throw new Error(FB.T('Invalid dated home authority policy provenance.'));
+    return true;
   };
   H.powersValid = function (d) {
     return d.homePowers === undefined || Array.isArray(d.homePowers) && d.homePowers.length > 0 &&

@@ -95,13 +95,13 @@
     var origin=(bm.provinces || []).filter(function (r) {return r.id===t.origin && !r.wasteland;})[0];
     need(!!origin && origin.realm===owner.id, 'provider locality');
     if (def.provider.kind==='home_authority') {
-      var era=FBDATA.eras[bm.era], form=FBDATA.governmentForms[owner.government || era && era.defaultGovernment];
-      need(!!form && FB.homeAuthority.policyValid(form.homeAuthority), 'home authority policy');
+      var era=FBDATA.eras[bm.era], policy=FB.homeAuthority.resolvePolicy(bm,owner.government || era && era.defaultGovernment);
+      need(FB.homeAuthority.policyValid(policy), 'home authority policy');
       if (def.provider.actorId!==undefined) {
         need(!!(bm.opening && bm.opening.actors && bm.opening.actors[def.provider.actorId]), 'provider actor');
         var selectedActor=bm.opening.actors[def.provider.actorId];
         need(selectedActor.ref && selectedActor.ref.kind==='realm_ruler' && selectedActor.ref.realmId===owner.id ||
-          form.homeAuthority.delegation && Object.keys(bm.opening.appointments || {}).some(function (id) {
+          policy.delegation && Object.keys(bm.opening.appointments || {}).some(function (id) {
           var a=bm.opening.appointments[id], office=FBDATA.authorityOffices[a.officeId];
           return a.actorId===def.provider.actorId && a.realmId===owner.id && office &&
             (office.homePowers || []).indexOf('levy')>=0 &&

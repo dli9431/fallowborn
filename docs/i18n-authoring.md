@@ -1,3 +1,7 @@
+Dated home-authority policy presentation
+
+homeAuthorityPolicies contains only form ids, schema numbers, presence enum values and a delegation boolean. It introduces no display table or saved prose. Existing literal FB.T home-decision reasons, preparation sheets, funding reviews and scenario summary strings remain the presentation owners for both global and dated policies. Imported names and descriptions keep their existing English fallback. No generated catalogue or extraction change accompanies policy composition.
+
 Existing-person start presentation
 
 The existingPerson selector and saved identity/provenance fields are untranslated metadata. Scenario name, desc, intro and the sole standard family summary retain the ordinary scenario display owners and imported exact-English fallback. Personal names remain proper names. The fixed-identity summary reuses existing translated identity labels; the constructor and save validation route their error messages through FB.T. No new presentation registry or generated catalogue is required.

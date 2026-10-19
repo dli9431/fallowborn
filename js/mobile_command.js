@@ -47,12 +47,12 @@
     var ref=b && b.person, home=spec && own(realms,spec.homeRealmId) && realms[spec.homeRealmId];
     var actor=ref && bookmark && bookmark.opening && bookmark.opening.actors &&
       own(bookmark.opening.actors,ref.actorId) && bookmark.opening.actors[ref.actorId];
-    var form=home && FBDATA.governmentForms[home.government];
+    var policy=home && FB.homeAuthority && FB.homeAuthority.resolvePolicy(bookmark,home.government);
     return !!(keys(spec,['schema','actorId','homeRealmId','homeGeneration','endTurn']) && Object.keys(spec).length===5 &&
       spec.schema===1 && typeof spec.homeRealmId==='string' && Number.isSafeInteger(spec.homeGeneration) && spec.homeGeneration>=1 &&
       Number.isSafeInteger(spec.endTurn) && spec.endTurn>=1 && spec.endTurn<=1440 && home && home.id!==d.id &&
-      home.id===spec.homeRealmId && !home.mobile && home.ruler && home.capital===d.mobile.origin && form && form.homeAuthority &&
-      FB.homeAuthority && FB.homeAuthority.policyValid(form.homeAuthority) &&
+      home.id===spec.homeRealmId && !home.mobile && home.ruler && home.capital===d.mobile.origin &&
+      FB.homeAuthority && FB.homeAuthority.policyValid(policy) &&
       keys(ref,['kind','actorId','realmId','generation']) && Object.keys(ref).length===4 && ref.kind==='realm_ruler' &&
       ref.actorId===spec.actorId && ref.realmId===home.id && ref.generation===spec.homeGeneration &&
       spec.homeGeneration===(home.ruler.generation===undefined ? 1 : home.ruler.generation) &&
