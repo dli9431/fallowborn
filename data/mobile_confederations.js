@@ -66,6 +66,8 @@
     rationale:'Protective guard and reviewed release depend on living people and lawful local authority, not research.'};
   FBDATA.techImpactReviews.features.mobile_separate_personal_party = {mode:'none',
     rationale:'Original personal identities and actual local presence need no discovery; ordinary travel gates remain binding.'};
+  FBDATA.techImpactReviews.features.guarded_principal_start = {mode:'none',
+    rationale:'Selecting an existing original guarded person and attaching a personal record requires no discovery. Guard, private resources, actual travel and effective public command keep their ordinary eligibility.'};
   FBDATA.techImpactReviews.features.mobile_hosted_opening = {mode:'none',
     rationale:'An already accepted opening concession records a political relationship under living parties, direct local possession and finite capacity. It grants no equipment, transport, personal safety or technological exception.'};
   FBDATA.techImpactReviews.features.personal_expedition_admission = {mode:'none',

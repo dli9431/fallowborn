@@ -240,6 +240,13 @@
     initialize(s);
     return actor(s, id);
   };
+  FB.prepareStartingPrincipalActor = function (s, scenario) {
+    if (!s || s.turn !== 0 || !s.player || s.player.charId !== null || s.stories !== undefined ||
+        !FB.originalPrincipalStartProfile(scenario, FB.campaignBookmark(s))) return null;
+    if (!s.bookmarkSetup) FB.seedSettlementCommunities(s);
+    initialize(s);
+    return actor(s, scenario.originalPrincipal.actorId);
+  };
   /* Explicit infrastructure adopts a home crown before resource setup.
      Seed its actor references now, leaving authored followings until the
      normal funded story boundary. */
