@@ -190,6 +190,38 @@ test('a dead opening heir is skipped and the no-male frontier includes women and
     expect(result).toEqual({ skipped:true, female:true, minorFallback:true, ineligible:true, adult:true });
   });
 
+test('empty authored adult courts recover an unrelated successor without inventing children',
+  async function ({ page }, testInfo) {
+    await start(page, testInfo);
+    expect(await page.evaluate(function () {
+      const s = FB.state, rows = [];
+      ['m','f'].forEach(function (sex) {
+        const rid = 'empty_authored_' + sex;
+        const r = s.realms[rid] = { id:rid, name:'Empty authored court', capital:'tunis',
+          rank:3, religion:'homoian', alive:true,
+          ruler:{ name:'Unaccompanied ruler', sex:sex, culture:'vandal', born:430, age:46, mar:8, generation:1 } };
+        FB.initializeRoyalCourts(s,[{id:rid,royalCourt:{spouseId:null,members:[]}}]);
+        const family = r.succession, root = family.members[family.rulerMemberId], heir = family.members[family.heirId];
+        const ruler = FB.realmRulerCharacterSnapshot(s,rid);
+        const uid = FB.getUidCounter(), rng = FB.getRngState(), identity = family.heirId;
+        FB.refreshRealmSuccession(s,rid);
+        rows.push({id:rid,ruler:ruler.id,heir:identity,
+          childless:root.childIds.length === 0 && ruler.childrenIds.length === 0,
+          unwed:!ruler.spouseId && !FB.realmConsortMember(s,rid),
+          unrelated:!!heir && !heir.parentId && !heir.fatherId && !heir.motherId,
+          once:identity === family.heirId && uid === FB.getUidCounter() && rng === FB.getRngState()});
+      });
+      FB.save.restore(JSON.parse(FB.save.serialize()));
+      return rows.map(function (row) {
+        const r = FB.state.realms[row.id], me = FB.state.chars[row.ruler];
+        return {childless:row.childless,unwed:row.unwed,unrelated:row.unrelated,once:row.once,
+          retained:r.succession.heirId === row.heir && me.childrenIds.length === 0};
+      });
+    })).toEqual([0,1].map(function () {
+      return {childless:true,unwed:true,unrelated:true,once:true,retained:true};
+    }));
+  });
+
 test('generated relatives, two parents and a declared living spouse use the ordinary materializers',
   async function ({ page }, testInfo) {
     await start(page, testInfo);

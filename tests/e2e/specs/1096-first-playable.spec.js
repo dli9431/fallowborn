@@ -19,6 +19,7 @@ dependsOnRuntime(__filename,[
   'data/starts_antioch_1096.js','data/story_antioch_1096.js',
   'data/starts_western_rulers_1096.js','data/story_western_rulers_1096.js',
   'data/starts_eastern_rulers_1096.js','data/story_eastern_rulers_1096.js',
+  'data/starts_tuscany_1096.js','data/story_tuscany_1096.js',
   'js/stories.js','js/story_household.js','js/story_opening_goals.js',
   'data/settlements_real.js','data/government_rollout.js','data/ecclesiastical_profiles.js',
   'js/world.js','js/model.js','js/starts.js','js/main.js','js/save.js','js/save_v4.js',
@@ -129,7 +130,7 @@ test('1096 offers its pilgrim household, authored ruler starts and ordinary role
   await expect(page.locator('#ng-heading')).toHaveText('Choose Your Beginning in 1096 AD');
   expect(await page.evaluate(function () { return FB.activeBookmarkId; })).toBe('1096');
   for (const id of ['serf','farmer','apprentice','pilgrim_household_1096','godfrey_1096','raymond_1096',
-    'alexios_1096','kilij_arslan_1096'])
+    'alexios_1096','kilij_arslan_1096','matilda_1096'])
     await expect(page.locator('#scenariolist [data-scenario="' + id + '"]')).toBeVisible();
   const pilgrim = page.locator('#scenariolist [data-scenario="pilgrim_household_1096"]');
   await expect(pilgrim).not.toHaveAttribute('aria-disabled','true');
@@ -139,7 +140,7 @@ test('1096 offers its pilgrim household, authored ruler starts and ordinary role
       return sc.bookmarkIds && sc.bookmarkIds.indexOf('1096') >= 0 && !sc.hidden;
     }).map(function (sc) { return sc.id; });
   })).toEqual(expect.arrayContaining(['pilgrim_household_1096','yaghi_siyan_1096','godfrey_1096','raymond_1096',
-    'alexios_1096','kilij_arslan_1096']));
+    'alexios_1096','kilij_arslan_1096','matilda_1096']));
   await pilgrim.press('Enter');
   await expect(page.locator('#pickprov:not(.hidden)')).toBeVisible();
   expect(await page.evaluate(function () {
