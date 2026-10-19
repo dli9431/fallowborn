@@ -14,6 +14,8 @@ Regional administrationProfiles and aristocraticProfiles maps may stage date-own
 
 Household story presentation
 
+Additional ruler agendas may use literal FBDATA.rulerAgendas_<suffix> tables in data/story_<suffix>.js. The static extractor reads title, intro, stage name/text and choice label/detail under the existing rulerAgenda owners and exact-source aliases, alongside the original rulerAgendas table. Composition publishes instances through the ordinary story registry. These tables organize content and add no runtime mod root.
+
 Household presentation sources may also use data/story_<suffix>.js with literal FBDATA.householdTracks_<suffix> and FBDATA.openingProfiles_<suffix> tables. data/story_novgorod_1241.js uses this convention. The static extractor preserves the same householdStory and openingProfile display owners and exact-source aliases as story_households_<suffix>.js, without executing the source. Scenario text remains in data/starts_novgorod_1241.js under the ordinary scenario owners. No generated catalogues are changed by feature authoring.
 
 Site resource profile names and descriptions live in literal FBDATA.siteResourceProfiles in data/site_resources.js. Static extraction uses siteResourceProfile.<id>.name.default and siteResourceProfile.<id>.desc.default with normal exact-source aliases; the shared settlement review uses the ordinary structured-data renderer and imported English fallback. Capacity units, permission/capacity blockers and confirmation consequences use complete FB.T phrases. Source/profile/site ids, periods, reservations and structural fingerprints remain locale-neutral. No generated catalog command is required for feature authoring.
