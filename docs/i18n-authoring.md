@@ -50,6 +50,8 @@ Household presentation tables in data/story_*.js are discovered by their literal
 
 # i18n authoring guide
 
+Literal FBDATA.rulerAgendas_<suffix> tables in data/story_*.js use the same rulerAgenda.<id> title, intro, stage name/text and choice label/detail owners as the base FBDATA.rulerAgendas table. The suffix can differ from the filename. Static discovery never executes composers; proper names, operation ids and dates remain untranslated. Source authoring retains English fallback without regenerating catalogues.
+
 Local institutional presentation
 
 Institution ids, sites, demands, consent rights, stages, actor references and ballots remain locale-neutral. Physical city and historical person names are proper names. FB.localInstitutionName supplies literal FB.T patterns for each kind, and the Deeds registry owns the section labels. UI term, demand and stage labels use literal FB.T phrases. New county modifier names and descriptions use the existing modifier extraction route; durable outcomes use news.institution.bargain descriptors. No catalogue regeneration is needed on the feature branch.
