@@ -24,7 +24,15 @@ FBDATA.bookmarkRegions1241.bohemia_poland = {
   ],
   realms:[
     {"id":"bohemia_1241","name":"Kingdom of Bohemia","color":"#c98f4a","capital":"praha","aggression":0,"rank":3,"government":"territorial","religion":"catholic","ruler":{"name":"Wenceslas I","sex":"m","culture":"slavic","born":1205,"mar":8,"trait":"patient"},"techTraditions":["latin","slavic"],"liege":"hre_1241"},
-    {"id":"silesia_1241","name":"Silesian ducal court","color":"#2f8f8f","capital":"wroclaw","aggression":0,"rank":2,"government":"territorial","religion":"catholic","ruler":{"generated":true,"sex":"m","culture":"slavic","born":1206,"mar":8,"trait":"patient"},"techTraditions":["slavic","latin"]},
+    {"id":"silesia_1241","name":"Silesian ducal court","color":"#2f8f8f","capital":"wroclaw","aggression":0,"rank":2,"government":"territorial","religion":"catholic","ruler":{"name":"Henry II the Pious","sex":"m","culture":"slavic","born":1200,"mar":8,"trait":"patient"},"techTraditions":["slavic","latin"],"royalCourt":{"dynasty":"Piast","spouseId":"anna","members":[
+      {"id":"anna","name":"Anna of Bohemia","sex":"f","born":1204,"culture":"slavic","religion":"catholic","spouseId":"ruler","homeProvinceId":"wroclaw"},
+      {"id":"boleslaw","name":"Boleslaw","sex":"m","born":1223,"culture":"slavic","religion":"catholic","fatherId":"ruler","motherId":"anna","spouseId":null,"homeProvinceId":"wroclaw"},
+      {"id":"mieszko","name":"Mieszko","sex":"m","born":1225,"culture":"slavic","religion":"catholic","fatherId":"ruler","motherId":"anna","spouseId":null,"homeProvinceId":"wroclaw"},
+      {"id":"henry","name":"Henry III","sex":"m","born":1229,"culture":"slavic","religion":"catholic","fatherId":"ruler","motherId":"anna","spouseId":null,"homeProvinceId":"wroclaw"},
+      {"id":"conrad","name":"Conrad","sex":"m","born":1230,"culture":"slavic","religion":"catholic","fatherId":"ruler","motherId":"anna","spouseId":null,"homeProvinceId":"wroclaw"},
+      {"id":"wladyslaw","name":"Wladyslaw","sex":"m","born":1236,"culture":"slavic","religion":"catholic","fatherId":"ruler","motherId":"anna","spouseId":null,"homeProvinceId":"wroclaw"},
+      {"id":"elisabeth","name":"Elisabeth","sex":"f","born":1228,"culture":"slavic","religion":"catholic","fatherId":"ruler","motherId":"anna","spouseId":null,"homeProvinceId":"wroclaw"}
+    ]}},
     {"id":"greater_poland_1241","name":"Greater Polish local court","color":"#8d9358","capital":"poznan","aggression":0,"rank":2,"government":"territorial","religion":"catholic","ruler":{"generated":true,"sex":"m","culture":"slavic","born":1206,"mar":8,"trait":"patient"},"techTraditions":["slavic","latin"]},
     {"id":"pomerania_1241","name":"Pomeranian local court","color":"#b87945","capital":"szczecin","aggression":0,"rank":2,"government":"territorial","religion":"catholic","ruler":{"generated":true,"sex":"m","culture":"slavic","born":1206,"mar":8,"trait":"patient"},"techTraditions":["slavic","latin"]},
     {"id":"mazovia_local_1241","name":"Mazovian local court","color":"#af5f2f","capital":"plock","aggression":0,"rank":2,"government":"territorial","religion":"catholic","ruler":{"generated":true,"sex":"m","culture":"slavic","born":1206,"mar":8,"trait":"patient"},"techTraditions":["slavic","latin"]},

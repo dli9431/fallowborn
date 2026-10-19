@@ -168,6 +168,7 @@ test('1241 quadrant d binds corrected rulers and keeps uncertain people and juri
   },Object.keys(coverage));
   const r = data.courts, p = data.rows;
   const named = {
+    silesia_1241:['Henry II the Pious',1200,'m'],
     bohemia_1241:['Wenceslas I',1205,'m'],georgia_1241:['Rusudan',1194,'f'],
     almohad_1241:['Abd al-Wahid II al-Rashid',1218,'m'],
     abbasid_1241:['al-Mustansir Billah',1192,'m']
@@ -183,6 +184,7 @@ test('1241 quadrant d binds corrected rulers and keeps uncertain people and juri
       expect(r[id].ruler.born).toBe(1206);
     }
     ['royalCourt','mobile','nonTerritorial','civicRights','institutions','recognition'].forEach(function (field) {
+      if (id === 'silesia_1241' && field === 'royalCourt') return;
       expect(r[id][field]).toBeUndefined();
     });
     if (id !== 'bohemia_1241' && id !== 'zayyanid_1241') expect(r[id].liege).toBeUndefined();
@@ -199,7 +201,7 @@ test('1241 quadrant d binds corrected rulers and keeps uncertain people and juri
   expect(r.makuria_1241.name).toBe('Makuria');
   expect(r.kerman_local_1241.name).toBe('Qutlugh-Khanid Kirman');
   expect(r.sistan_1241.name).toBe('Mihrabanid Sistan');
-  expect(Object.keys(r).filter(function (id) { return r[id].ruler.generated; })).toHaveLength(34);
+  expect(Object.keys(r).filter(function (id) { return r[id].ruler.generated; })).toHaveLength(33);
   ['khwarazm_1241','ghurid_1241','karakhanid_1241','qara_khitai_1241',
     'qipchaq_following_1241','mongol_western_command_1241','koten_following_1241'].forEach(function (id) {
     expect(r[id]).toBeUndefined();
