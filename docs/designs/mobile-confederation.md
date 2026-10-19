@@ -110,3 +110,7 @@ Optional mobile.preparationId defers only its realm's fresh initialization. Its 
 Original guarded parties
 
 A declared guardedParty is separate from member demographic pools and migration carriage. Its original leader remains the same person with an ineffective command, and its named existing companions never acquire member votes. The constructor preflights all identities and locality before changing state. Hosting access and civilian consumption continue under their existing finite owners while command is suspended. No guard timer grants command or relocates anyone. The shared release and actual personal-location contract, ordinary-custody precedence and none technology decisions are in docs/designs/mobile-guard.md.
+
+Dispersed civilians
+
+An explicit mobile.civilianCamps declaration replaces the single camp pools and stock with bounded actual local partitions while retaining the original public treasury, military hosts and named people. Local daily consumption, pasture, reviewed purchases/work and owned-county partial settlement cannot use migration.at for remote camps. Whole-following shortcuts return an explicit blocker. Legacy declarations retain their original behavior. The complete schema, technology decisions, forced host-loss behavior and strict optional save provenance are in docs/designs/dispersed-camps.md.

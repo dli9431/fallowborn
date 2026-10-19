@@ -46,6 +46,10 @@
     'Baseline provisioning includes optional stock-aware ration targets for the camp and each column, affordable local market purchases and colocated stock transfers. Actual inventories, finite pasture, current access and public cash reserves remain binding; normal equipment and transport technology still applies.';
   FBDATA.techImpactReviews.features.mobile_opening_identity = {mode:'none',
     rationale:'Binding an existing living opening person creates no new office or military technology. Custody, age, location and incumbent generation remain authoritative.'};
+  FBDATA.techImpactReviews.features.mobile_civilian_camps = {mode:'none',
+    rationale:'Partitioning existing civilians, resting fighters and finite food by actual locality needs no discovery. Hosting consent, exact population conservation and separate military locations remain binding.'};
+  FBDATA.techImpactReviews.features.mobile_camp_transactions = {mode:'none',
+    rationale:'Local purchases, personal paid service and partial settlement use existing market, treasury and population transactions. Actual access, private presence, owned land and command permissions remain binding; no transport or recruitment capability is added.'};
   FBDATA.techImpactReviews.features.mobile_opening_composition = {mode:'none',
     rationale:'An opening muster withdraws existing member people under their recruitment shares. Every authored unit retains its normal era, culture and technology eligibility.'};
   FBDATA.techImpactReviews.features.mobile_command_continuity = {mode:'none',

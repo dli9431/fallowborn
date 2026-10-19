@@ -231,7 +231,7 @@
     var r=M.row(s,army.realm);
     if (r && r.columns && army.mobileFollowing) {
       r.columns.entries.forEach(function (c) {if (c.hostId===army.id) c.status='retired';});
-      if (army.at!==M.migration(s,army.realm).at) {
+      if (!r.camps && army.at!==M.migration(s,army.realm).at) {
         r.accounting.dispersed+=army.men;
         army.mobileRoster=[];army.units={};army.men=0;army.mobileFood=0;
       }
@@ -377,6 +377,7 @@
     if (action==='recruit' && t && t.provisioning===true) allowedFields.push('provisioning');
     if (!keys(request,['realmId','action','terms','actor']) || !r || !r.columns || r.status!=='active' ||
         !allowedFields || !keys(t,allowedFields) || !keys(actor,['kind','id']) || actor.kind!=='character') return q;
+    if (r.camps && ['move','recruit','demuster','load','unload','trade'].indexOf(action)>=0) {q.reason='camp_operation';return q;}
     var c=column(s,rid,t.columnId),a=armyFor(s,c),other=column(s,rid,t.otherColumnId),b=armyFor(s,other);
     var leader=M.leader(s,rid),overall=!!leader && leader.id===actor.id,p=M.profile(s,rid),moving=M.migration(s,rid);
     var permission=action==='load' || action==='unload' ? 'trade' : action==='assign' || action==='stop' ? 'march' : action==='merge' ? 'demuster' : action==='split' ? 'recruit' : action;

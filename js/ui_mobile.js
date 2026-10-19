@@ -11,6 +11,7 @@
       withheld:FB.T('Members must approve these exact terms before the leader can act.'),
       command:FB.T('A current command mandate and permission for this operation are required.'),
       column_operation:FB.T('This action is unavailable for a following with separate columns.'),
+      camp_operation:FB.T('Select a civilian camp for local work, supplies or settlement. Movement, reunion and recruitment of dispersed people are unavailable.'),
       commitment:FB.T('Finish current service, movement or military commitments first.'),
       following:FB.T('The pledged following cannot supply this many fighters.'),
       technology:FB.T('The chosen unit requires its normal equipment, culture and technology qualifications.'),
@@ -31,6 +32,8 @@
     var row=rid && M.row(s,rid),entries=row && row.columns && row.columns.entries;
     function columnName(id) {var i=entries ? entries.map(function (c) {return c.id;}).indexOf(id) : -1;return FB.T('Column {number}',{number:i+1});}
     if (t.columnId) text+=kv(FB.T('Field command'),columnName(t.columnId));
+    if (t.campId && row && row.camps) text+=kv(FB.T('Civilian camp'),FB.T('Camp {number}',{
+      number:row.camps.entries.map(function (c) {return c.id;}).indexOf(t.campId)+1}));
     if (t.otherColumnId) text+=kv(FB.T('Other column'),columnName(t.otherColumnId));
     if (t.unitId && FBDATA.unitClasses[t.unitId]) text+=kv(FB.T('Unit class'),FB.dataText(s,null,'unitClass',t.unitId,FBDATA.unitClasses[t.unitId],'name',{}));
     if (t.causes) text+=kv(FB.T('Campaign objective'),t.causes.map(function (c) {return county(c.target);}).join(', '));
@@ -68,17 +71,24 @@
     if (!r || !migration || !profile) return;
     view = view || {}; var actions = [], actor = {kind:'character',id:s.player.charId}, leader = M.leader(s,rid);
     var host = M.host(s,rid), columns=M.columnSnapshot && M.columnSnapshot(s,rid);
+    var camps=M.campSnapshot(s,rid);
     var ownMember = M.members(s,rid).filter(function (m) {return m.principal.id === actor.id;})[0];
     var parts = '', people = '', facts = '';
     if (leader) people += SH.reviewPersonHtml(leader,r.command ? FB.T('Commander') : FB.T('Coalition leader'),'mobile-leader');
-    facts += SH.reviewPeopleHtml(people) + kv(FB.T('Court and civilian camp'),county(migration.at)) +
+    facts += SH.reviewPeopleHtml(people) + kv(camps ? FB.T('Command contact') : FB.T('Court and civilian camp'),county(migration.at)) +
       (columns ? '' : kv(FB.T('Field host'),host ? FB.T('{men} fighters at {place}',{men:host.men,place:county(host.at)}) : FB.T('No deployed host; the court survives'))) +
-      kv(FB.T('Civilian following'),r.members.reduce(function (n,m) {return n + m.civilians.reduce(function (v,c) {return v+c.count;},0);},0)) +
-      kv(FB.T('Resting fighters'),r.members.reduce(function (n,m) {return n + m.reserve.reduce(function (v,c) {return v+c.count;},0);},0)) +
-      kv(columns ? FB.T('Camp food stock') : FB.T('Food stock'),Math.floor(r.food)) + kv(r.command ? FB.T('Public treasury') : FB.T('Coalition treasury'),FB.money(FB.treasuryAvailable(s,rid),s)) +
+      kv(FB.T('Civilian following'),camps ? camps.reduce(function (n,c) {return n+c.civilians;},0) : r.members.reduce(function (n,m) {return n + m.civilians.reduce(function (v,c) {return v+c.count;},0);},0)) +
+      kv(FB.T('Resting fighters'),camps ? camps.reduce(function (n,c) {return n+c.reserve;},0) : r.members.reduce(function (n,m) {return n + m.reserve.reduce(function (v,c) {return v+c.count;},0);},0)) +
+      kv(columns ? FB.T('Camp food stock') : FB.T('Food stock'),Math.floor(camps ? camps.reduce(function (n,c) {return n+c.food;},0) : r.food)) + kv(r.command ? FB.T('Public treasury') : FB.T('Coalition treasury'),FB.money(FB.treasuryAvailable(s,rid),s)) +
       (columns ? '' : kv(FB.T('Carried host food'),host ? Math.floor(host.mobileFood || 0) : 0)) +
       kv(FB.T('Local inhabitants'),s.population.counties[migration.at].count) +
       kv(FB.T('County sovereignty'),s.realms[s.owner[migration.at]].name);
+    if (camps) camps.forEach(function (c,index) {
+      var info=FB.world.sitesByProv[c.countyId],site=info && info.list.filter(function (v) {return v.site===c.siteId;})[0];
+      facts+=kv(FB.T('Camp {number}',{number:index+1}),county(c.countyId)+(site ? ', '+site.name : ''))+
+        kv(FB.T('Civilians and resting fighters'),c.civilians+c.reserve)+kv(FB.T('Local food stock'),Math.floor(c.food))+
+        kv(FB.T('Daily rations'),c.daily.toFixed(2))+kv(FB.T('Hosting access'),c.access ? FB.T('Active') : FB.T('Unavailable'));
+    });
     if (columns) columns.entries.forEach(function (c,index) {
       var commander=s.chars[c.commanderId];
       facts+=kv(FB.T('Column {number}',{number:index+1}),c.host ?
@@ -114,11 +124,11 @@
       facts+=kv(FB.T('Column {number} food target',{number:index+1}),Math.ceil(entry.target))+
         kv(FB.T('Column {number} daily rations',{number:index+1}),entry.daily.toFixed(2));
     });
-    function add(label,action,terms,details,columnReview) {
+    function add(label,action,terms,details,columnReview,campReview) {
       var transition=action==='appoint' || action==='recall';
       var permission=action==='load' || action==='unload' ? 'trade' : action;
       if (r.command && !transition && command.operations.indexOf(permission)<0) return;
-      if (r.command && ['offer','war','peace','land','contract','settle','service'].indexOf(action)>=0) {
+      if (r.command && !campReview && ['offer','war','peace','land','contract','settle','service'].indexOf(action)>=0) {
         label=action==='offer' ? terms.kind==='access' ? FB.T('Offer seasonal access') : terms.kind==='tribute' ? FB.T('Offer tribute') : FB.T('Offer protection service') :
           {war:FB.T('Review campaign'),peace:FB.T('Conclude white peace'),land:FB.T('Request land terms'),
             contract:FB.T('Accept service terms'),settle:FB.T('Review civilian settlement'),service:FB.T('Fulfil protection service')}[action];
@@ -126,7 +136,7 @@
       }
       var request={realmId:rid,commandId:r.command && r.command.id,action:action,actor:actor};
       if (terms && terms.candidateId) request.candidateId=terms.candidateId;
-      var review = transition ? M.reviewCommand(s,request) : (columnReview ? M.reviewColumns : M.review)(s,{realmId:rid,action:action,terms:terms || {},actor:actor}), q = review.review, i = actions.length;
+      var review = transition ? M.reviewCommand(s,request) : (campReview ? M.reviewCamp : columnReview ? M.reviewColumns : M.review)(s,{realmId:rid,action:action,terms:terms || {},actor:actor}), q = review.review, i = actions.length;
       actions.push({label:label,review:review});
       parts += SH.reviewActionCardHtml({id:'mobile-action-'+i,label:label,disabled:!q.allowed,warn:!q.allowed,
         note:q.allowed ? FB.T('Immediate cost: {money:cost}. Review before committing.',{cost:q.cost || 0}) : reason(q.reason),
@@ -178,6 +188,16 @@
       '<label>'+esc(FB.T('People or food units'))+'<input id="mobile-count" type="number" min="1" max="1000000" step="1" value="'+esc(count)+'"></label>'+
       '<label>'+esc(FB.T('Agreement price'))+'<input id="mobile-price" type="number" min="0" step="1" value="'+esc(price)+'"></label>'+
       '<label>'+esc(FB.T('Agreement duration in days'))+'<input id="mobile-days" type="number" min="1" max="1440" step="1" value="'+esc(days)+'"></label>';
+    if (camps) {
+      var selectedCamp=number('mobile-camp',camps[0].id);
+      controls+='<label>'+esc(FB.T('Civilian camp'))+'<select id="mobile-camp">'+camps.map(function (c,i) {
+        return '<option value="'+esc(c.id)+'"'+(c.id===selectedCamp ? ' selected' : '')+'>'+esc(FB.T('Camp {number}: {place}',{number:i+1,place:county(c.countyId)}))+'</option>';
+      }).join('')+'</select></label>';
+      add(FB.T('Buy selected camp supplies'),'trade',{campId:selectedCamp,count:count,direction:'buy'},FB.T('Buy only at this camp’s actual local market. The public treasury pays the current owner; other camps and field hosts receive no stock.'),false,true);
+      add(FB.T('Sell selected camp supplies'),'trade',{campId:selectedCamp,count:count,direction:'sell'},FB.T('Sell only this camp’s actual stock to its local market. Proceeds enter the one public treasury.'),false,true);
+      add(FB.T('Work at selected camp'),'work',{campId:selectedCamp},FB.T('An adult physically present in this county earns 0.2 from the public treasury and consumes one local food unit. Exact-site work requires a separate presence contract.'),false,true);
+      add(FB.T('Settle selected camp civilians'),'settle',{campId:selectedCamp,count:count},FB.T('Settle only these actual civilians in their current owned county. Their proportional local food enters its market. Other camps and military hosts remain where they are. Exact-site settlement is unavailable.'),false,true);
+    }
     if (columns) {
       var chosen=number('mobile-column',columns.entries[0].id),other=number('mobile-other-column',columns.entries[1].id);
       var unit=number('mobile-unit',FB.unitRoleClass('levy_infantry')),candidate=number('mobile-commander',r.leaderId);
@@ -318,7 +338,7 @@
     function position() {
       var list = SH.$('mobile-list'), body=SH.$('gm-body'), v = {scroll:list ? list.scrollTop : 0,bodyScroll:body.scrollTop,details:[],focus:document.activeElement && document.activeElement.id};
       if (list) list.querySelectorAll('.settcard-info[aria-expanded="true"]').forEach(function (d) {v.details.push(d.getAttribute('aria-controls'));});
-      ['mobile-count','mobile-county','mobile-price','mobile-days','mobile-column','mobile-other-column','mobile-unit','mobile-commander','mobile-funding','mobile-public-source'].forEach(function (id) {if(SH.$(id)) v[id]=SH.$(id).value;});
+      ['mobile-count','mobile-county','mobile-price','mobile-days','mobile-column','mobile-other-column','mobile-unit','mobile-commander','mobile-funding','mobile-public-source','mobile-camp'].forEach(function (id) {if(SH.$(id)) v[id]=SH.$(id).value;});
       return v;
     }
     UI.openModal(r.command ? FB.T('Mobile command') : FB.T('Mobile coalition'),'<div id="mobile-list" data-modal-scroll>'+
@@ -329,7 +349,7 @@
     (view.details || []).forEach(function (id) {var node=list.querySelector('[aria-controls="'+id+'"]');if(node) node.click();});
     list.scrollTop = view.scroll || 0; SH.$('gm-body').scrollTop=view.bodyScroll || 0;
     if(view.focus && SH.$(view.focus)) SH.$(view.focus).focus({preventScroll:true});
-    ['mobile-count','mobile-county','mobile-price','mobile-days','mobile-column','mobile-other-column','mobile-unit','mobile-commander','mobile-funding','mobile-public-source'].forEach(function (id) {
+    ['mobile-count','mobile-county','mobile-price','mobile-days','mobile-column','mobile-other-column','mobile-unit','mobile-commander','mobile-funding','mobile-public-source','mobile-camp'].forEach(function (id) {
       if (SH.$(id)) SH.$(id).onchange=function () {var v=position();v.replace=true;UI.showMobileConfederation(rid,v);};
     });
     if(SH.$('mobile-leader')) SH.$('mobile-leader').onclick=function () {UI.showCharModal(leader.id);};

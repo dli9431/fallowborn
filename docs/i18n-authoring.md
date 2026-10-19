@@ -419,3 +419,7 @@ The native starts_mainz_1096 scenario supplement, householdTracks_rhineland_1096
 Protective party review chrome
 
 js/mobile_guard.js and js/ui_mobile.js use literal FB.T messages for protective guard, expiry, unresolved authority and zero-cost release. The shared sheet renders original personal names and effective county labels as parameters. Stable actors, ids, declarations, locality, clocks and saved dispositions contain no rendered text. This generic capability adds no bundled historical display table or catalogue-generation step.
+
+Dispersed camp presentation
+
+Runtime camp labels, local stock/ration facts, blockers and reviews use literal FB.T calls in js/mobile_camps.js and js/ui_mobile.js. Camps use numbered labels; actual county/site labels retain their existing owners. Stable camp/member ids, location provenance and accounting contain no rendered prose. Independent ordinary JSON examples retain the normal imported English fallback. No new extraction namespace, saved display string or generated catalogue is added.
