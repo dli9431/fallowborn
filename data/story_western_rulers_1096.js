@@ -59,6 +59,36 @@ FBDATA.rulerAgendas_western_1096 = {
         text:'Close the opening at the real location with the household and holdings that actually remain. No Tripoli possession, forced home succession or return journey follows from this conclusion.',
         choices:[{ id:'raymond_continue', label:'Continue present affairs', detail:'Complete the reviews without a reward, relocation or settlement of a live war.', operation:'agenda_priority' },
           { id:'raymond_finish', label:'Conclude the opening program', detail:'Close only this personal program.', operation:'agenda_finish' }] }
+    ] },
+  bohemond_agenda_1096:{ id:'bohemond_agenda_1096', type:'ruler_agenda', subjectRealmId:'bohemond_lordships_1096',
+    title:'Bohemond: home lordships and new plans', intro:'Review present rights, resources and the possibility of a journey. Each priority leaves actual government, travel and military commitments to their ordinary reviews.',
+    stages:[
+      { id:'bohemond_home', name:'The Apulian lordships', year:1096, season:0,
+        text:'Taranto is the chosen home anchor for your present lordships. Review the holdings actually governed by this court. The county map compresses local rights and supplies no authority over all Apulia.',
+        choices:[{ id:'bohemond_review_home', label:'Review current home obligations', detail:'Record a priority without changing possessions, local rights or superior claims.', operation:'agenda_priority' }] },
+      { id:'bohemond_resources', name:'Resources and household', year:1096, season:0,
+        text:'Review the current treasury and ordinary obligations. This opening supplies no spouse, children or historical deputy. A possible journey needs its own resources and cannot draw money through this review.',
+        choices:[{ id:'bohemond_keep_resources', label:'Keep present resources in view', detail:'Spend and collect nothing; leave household and appointments unchanged.', operation:'agenda_priority' }] },
+      { id:'bohemond_undertaking', name:'News of the undertaking', year:1096, season:0,
+        text:'The appeal preached before this spring is part of the political setting. You may consider it while continuing home government. Reading this context is neither a vow nor admission to a following.',
+        choices:[{ id:'bohemond_review_news', label:'Consider the appeal alongside home duties', detail:'Record interest without a religious commitment, recruitment or command.', operation:'agenda_priority' }] },
+      { id:'bohemond_plans', name:'Remain or consider a journey', year:1096, season:1,
+        text:'Staying with present affairs is a complete choice. If you consider a personal journey, inspect its actual route, price and access through ordinary travel.',
+        choices:[{ id:'bohemond_stay', label:'Continue home government', detail:'Continue these reviews without leaving home.', operation:'agenda_priority' },
+          { id:'bohemond_consider_road', label:'Consider personal travel separately', detail:'Record intent only. The ordinary travel review owns any departure and its cost.', operation:'agenda_priority' }] },
+      { id:'bohemond_position', name:'The actual road or home', year:1096, season:2,
+        text:'Review where you actually are and any journey already underway. This autumn date guarantees no port, crossing or arrival. Household residence and local office retain their ordinary rules.',
+        choices:[{ id:'bohemond_keep_position', label:'Review the current position', detail:'Move nobody and create no route, following or supply account.', operation:'agenda_priority' }] },
+      { id:'bohemond_obligations', name:'Continuing local obligations', year:1096, season:3,
+        text:'Current holdings, living officers and effective authority determine home government. Plans may change; a journey neither appoints a deputy nor automatically surrenders the lordships.',
+        choices:[{ id:'bohemond_keep_obligations', label:'Retain ordinary administration', detail:'Leave appointments, lawful resources and actual possessions with their existing owners.', operation:'agenda_priority' }] },
+      { id:'bohemond_relations', name:'Approaches to other courts', year:1097, season:0,
+        text:'Review living foreign courts through ordinary diplomacy when access permits. A personal priority accepts no imperial oath and grants no military office or eastern possession.',
+        choices:[{ id:'bohemond_keep_relations', label:'Leave terms to actual negotiations', detail:'Create no audience, oath, passage agreement, alliance or claim.', operation:'agenda_priority' }] },
+      { id:'bohemond_continuation', name:'Present rule and future choices', year:1097, season:1,
+        text:'Conclude at the actual position with the holdings and obligations that remain. Ordinary home government, journeys and wars continue independently. This conclusion awards no Antioch possession or future title.',
+        choices:[{ id:'bohemond_continue', label:'Continue with present affairs', detail:'Complete the reviews without rewards, relocation or settlement of another obligation.', operation:'agenda_priority' },
+          { id:'bohemond_finish', label:'Conclude the opening program', detail:'Close only this personal program.', operation:'agenda_finish' }] }
     ] }
 };
 
@@ -84,6 +114,17 @@ FBDATA.openingProfiles_western_1096 = {
     ],
     contacts:[
       { id:'french_ruler', label:'The opening French ruler', text:'This directory link supplies no audience, friendship or change of obligations.', linkKind:'target', required:true, person:{ source:'realm_ruler', realmId:'france_1096' } }
+    ] },
+  opening_bohemond_1096:{ id:'opening_bohemond_1096', type:'opening_profile', title:'Bohemond’s Opening Goals',
+    intro:'Optional reviews observe home priorities and present resources without rewards.', scenarioIds:['bohemond_1096'], provinceIds:['taranto'],
+    officeRealmId:'bohemond_lordships_1096', requires:['bohemond_agenda_1096'],
+    goals:[
+      { id:'home_review', name:'Review the home lordships', text:'Record the priority for current home obligations.', office:true, criterion:{ kind:'story_choice', storyId:'bohemond_agenda_1096', choiceIds:['bohemond_review_home'] } },
+      { id:'resources_review', name:'Review resources and household', text:'Consider current funds and household obligations without creating an expense.', office:true, criterion:{ kind:'story_choice', storyId:'bohemond_agenda_1096', choiceIds:['bohemond_keep_resources'] } },
+      { id:'continuation', name:'Conclude with present affairs', text:'Complete the final review at the actual position, with no required journey or conquest.', office:true, criterion:{ kind:'story_choice', storyId:'bohemond_agenda_1096', choiceIds:['bohemond_continue','bohemond_finish'] } }
+    ],
+    contacts:[
+      { id:'papal_ruler', label:'The opening papal ruler', text:'This reference grants no audience, friendship, vow or expedition mandate.', linkKind:'target', required:true, person:{ source:'realm_ruler', realmId:'papacy_1096' } }
     ] }
 };
 Object.assign(FBDATA.storyInstances, FBDATA.rulerAgendas_western_1096, FBDATA.openingProfiles_western_1096);

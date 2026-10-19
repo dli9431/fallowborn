@@ -129,7 +129,7 @@ test('1096 offers its pilgrim household, authored ruler starts and ordinary role
   await page.locator('#bookmarklist [data-bookmark="1096"]').press('Enter');
   await expect(page.locator('#ng-heading')).toHaveText('Choose Your Beginning in 1096 AD');
   expect(await page.evaluate(function () { return FB.activeBookmarkId; })).toBe('1096');
-  for (const id of ['serf','farmer','apprentice','pilgrim_household_1096','godfrey_1096','raymond_1096',
+  for (const id of ['serf','farmer','apprentice','pilgrim_household_1096','godfrey_1096','raymond_1096','bohemond_1096',
     'alexios_1096','kilij_arslan_1096','matilda_1096'])
     await expect(page.locator('#scenariolist [data-scenario="' + id + '"]')).toBeVisible();
   const pilgrim = page.locator('#scenariolist [data-scenario="pilgrim_household_1096"]');
@@ -139,7 +139,7 @@ test('1096 offers its pilgrim household, authored ruler starts and ordinary role
     return FBDATA.startScenarios.filter(function (sc) {
       return sc.bookmarkIds && sc.bookmarkIds.indexOf('1096') >= 0 && !sc.hidden;
     }).map(function (sc) { return sc.id; });
-  })).toEqual(expect.arrayContaining(['pilgrim_household_1096','yaghi_siyan_1096','godfrey_1096','raymond_1096',
+  })).toEqual(expect.arrayContaining(['pilgrim_household_1096','yaghi_siyan_1096','godfrey_1096','raymond_1096','bohemond_1096',
     'alexios_1096','kilij_arslan_1096','matilda_1096']));
   await pilgrim.press('Enter');
   await expect(page.locator('#pickprov:not(.hidden)')).toBeVisible();

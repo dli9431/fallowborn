@@ -60,6 +60,8 @@ Separate ruler agenda sources
 
 Files named data/story_*.js may declare literal FBDATA.rulerAgendas_<suffix> maps and compose them into storyInstances; the suffix can differ from the filename. Static extraction retains rulerAgenda.<id> owners and exact-source aliases for title, intro, stage name/text and choice label/detail, matching the central rulerAgendas table. Extraction never executes the composer. Proper names, ids, dates and operation keys remain untranslated. These tables organize content and add no runtime mod root. A file may pair one with the existing openingProfiles_<suffix> convention, as data/story_western_rulers_1096.js does; starting labels retain their ordinary start scenario owners. No generated catalogue change is required for feature authoring.
 
+Bohemond’s scenario, family-preset and opening text remain in startScenarios_western_rulers_1096. His stages and goal/contact text extend the same literal western agenda and opening-profile tables, using the existing scenario, rulerAgenda and openingProfile display owners. The proper name, working year, physical ids and saved choices remain locale-neutral.
+
 Local institutional presentation
 
 Institution ids, sites, demands, consent rights, stages, actor references and ballots remain locale-neutral. Physical city and historical person names are proper names. FB.localInstitutionName supplies literal FB.T patterns for each kind, and the Deeds registry owns the section labels. UI term, demand and stage labels use literal FB.T phrases. New county modifier names and descriptions use the existing modifier extraction route; durable outcomes use news.institution.bargain descriptors. No catalogue regeneration is needed on the feature branch.
