@@ -151,6 +151,23 @@
         revision:0,reason:null,changedTurn:s.turn};
     }
   };
+  /* Detached authority inspection before physical formation. This never installs
+     a leader, allocates a person or changes the live realm generation. */
+  M.openingCommandProjection = function (s,d,plan) {
+    var projected=copy(s), binding=plan.bindings.filter(function (b) {
+      return b.memberId===d.mobile.opening.leaderMemberId;
+    })[0], cid=binding.characterId, c=projected.chars[cid];
+    var retained=binding.person.kind==='realm_ruler' && binding.person.realmId===d.id;
+    projected.realms[d.id].ruler=Object.assign({},projected.realms[d.id].ruler,
+      {name:c.name,sex:c.sex,born:c.born,culture:c.culture,religion:c.religion,
+        generation:FB.realmRulerGeneration(s,d.id)+(retained ? 0 : 1)});
+    projected.authority.governments[d.id].mobile={schema:3,status:'active',profileId:d.mobile.profileId,
+      migrationId:null,leaderId:cid,agreements:[],members:plan.bindings.map(function (b) {
+        return {id:b.memberId,principal:{kind:'character',id:b.characterId},allegiance:true};
+      })};
+    M.initializeCommand(projected,d);
+    return projected;
+  };
   function candidate(s,rid,cid) {
     var r=M.row(s,rid), p=M.profile(s,rid), c=s.chars[cid];
     var line=c && c.royalLine, court=line && s.realms[line.realmId], tree=court && court.succession;

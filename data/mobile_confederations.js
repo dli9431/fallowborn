@@ -74,6 +74,8 @@
     rationale:'A bounded column set partitions existing opening fighters and provisions under scoped commanders. Optional opening locations require real county/site membership and connected physical access or existing war; they create no completed journey. Normal unit eligibility, conserved people, finite stores and current command authority remain binding; the single-host fallback remains available.'};
   FBDATA.techImpactReviews.features.mobile_column_orders = {mode:'none',
     rationale:'Separate field orders and one camp escort express current command scope over existing hosts. Ordinary route, transport, access and war requirements remain binding.'};
+  FBDATA.techImpactReviews.features.mobile_opening_campaigns = {mode:'none',
+    rationale:'An existing opening conflict binds eligible original parties and conserved columns to ordinary campaigns. It grants no discovery, force, passage, payment or outcome; normal unit, authority and subsequent route rules remain binding.'};
   FBDATA.techImpactReviews.features.mobile_column_reorganization = {mode:'none',
     rationale:'Reassigning existing commanders and reorganizing conserved fighters creates no people or equipment. Optional recovery selects an eligible class and a camp-local column within one command-wide replacement target, living member pledges and available public funds; normal unit qualifications remain binding.'};
   FBDATA.techImpactReviews.features.mobile_column_settlement = {mode:'none',
