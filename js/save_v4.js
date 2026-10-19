@@ -96,6 +96,7 @@
     validateRoyalCourts(state);
     if (FB.validateStartingRealm) FB.validateStartingRealm(state);
     if (FB.validateStartingPerson) FB.validateStartingPerson(state);
+    if (FB.validateStartingPrincipal) FB.validateStartingPrincipal(state);
     if (FB.validateColonateTenure) FB.validateColonateTenure(state);
     if (FB.validateLocalInstitutionState) FB.validateLocalInstitutionState(state);
     if (FB.validateReligiousInstitutionState) FB.validateReligiousInstitutionState(state);

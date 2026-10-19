@@ -1486,11 +1486,13 @@ window.FB = window.FB || {};
       if (startingProvince && !(Array.isArray(locations) && !locations.length) &&
           !FB.startProvinceAllowed(start, definition, startingProvince.id))
         fault(owner, 'fixed birthplace is unavailable under this bookmark\u2019s start rules.');
-      if (startingProvince && !start.rulerRealmId && !start.existingPerson && !(Array.isArray(startingProvince.communities) ? startingProvince.communities : [startingProvince]).some(function (community) {
+      if (startingProvince && !start.rulerRealmId && !start.existingPerson && !start.originalPrincipal && !(Array.isArray(startingProvince.communities) ? startingProvince.communities : [startingProvince]).some(function (community) {
             return community && community.culture === start.startCulture && community.religion === start.startReligion;
           })) fault(owner, 'fixed culture and faith are absent from province ' + start.fixedProvinceId + '.');
       if (start.existingPerson !== undefined && !FB.existingPersonStartProfile(start, definition, stories))
         fault(owner, 'existing household person, home, identity and storyline must match this revision.');
+      if (start.originalPrincipal !== undefined && !FB.originalPrincipalStartProfile(start, definition, stories))
+        fault(owner, 'original guarded principal, home, identity and storyline must match this revision.');
       if (start.rulerRealmId) {
         var startingRealm = realms[start.rulerRealmId], ruler = FB.startRulerProfile(definition, startingRealm, start.governmentForm);
         if (!startingRealm) fault(owner, 'unknown ruler realm ' + start.rulerRealmId + '.');

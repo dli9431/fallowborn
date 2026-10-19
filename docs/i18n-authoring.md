@@ -435,3 +435,7 @@ Runtime camp labels, local stock/ration facts, blockers and reviews use literal 
 Alexander opening display owners
 
 data/starts_alexander_1241.js uses the literal startScenarios_alexander_1241 array for scenario.alexander_1241 fields. data/story_alexander_1241.js uses householdTracks_alexander_1241 and openingProfiles_alexander_1241 for the existing householdStory and openingProfile owners. data/bookmark_1241_alexander.js declares its town label in bookmarkRevisionContent_alexander_1241.layouts, using the ordinary dated layout extractor. The travel purpose and arrival event retain the standard travelPurpose and event owners. Keep literal display text and exact ids; no engine prose, saved rendered text or generated catalog changes are needed.
+
+Guarded principal beginning text
+
+originalPrincipal, actor ids, guard ids, location and saved party provenance remain locale-neutral metadata. Scenario and household-track labels retain their ordinary data owners and effective imported-English fallback. The fixed-identity summary adds one literal FB.T explanation of protective guard, unavailable command/travel and host-reviewed release. Validation errors reuse the ordinary localized start/save error phrases. No rendered prose is saved, no new display registry is introduced and no generated catalogue changes accompany the capability.
