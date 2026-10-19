@@ -246,7 +246,17 @@ Syria and Palestine
 
 Aleppo, Damascus, Homs, Antioch and Jerusalem have separate courts. Hama and Manbij share the Aleppo bloc; Amman shares the provisional Jerusalem bloc. Acre references fatimid_1096 as a coastal-control approximation, without giving Egypt Jerusalem. No Syrian Tripoli sovereign owns the whole Homs county, and the Libyan Tripoli county remains a separate place. Antioch and Jerusalem use the existing territorial government as a bounded effective-control abstraction, without an authored governorship mandate or permanent Seljuk allegiance.
 
-Generated-ruler holds: aleppo_1096, damascus_1096, homs_local_1096, antioch_1096 and jerusalem_1096. Their generic campaign principals do not impersonate Ridwan, Duqaq, Yaghi-Siyan, Sokman or Ilghazi. Births, sole opening incumbency, households, city/citadel boundaries, subordinate offices, recognition and local institutions remain unresolved. Court Sunni classification does not replace the source residents. Future crusader rule and the later Egyptian recovery of Jerusalem are absent.
+Generated-ruler holds: aleppo_1096, damascus_1096, homs_local_1096 and jerusalem_1096. Their generic campaign principals do not impersonate Ridwan, Duqaq, Sokman or Ilghazi. Births, sole opening incumbency, households, city/citadel boundaries, subordinate offices, recognition and local institutions remain unresolved. Court Sunni classification does not replace the source residents. Future crusader rule and the later Egyptian recovery of Jerusalem are absent.
+
+Yaghi-Siyan at Antioch
+
+The existing antioch_1096 court now has one named Yaghi-Siyan and his son Shams al-Dawla, and offers an existing-ruler start. Ebru Altan, Yagisiyan, TDV Islam Ansiklopedisi (2013), identifies the pre-1096 governor and the son in its later citadel narrative. The reported family link is used without importing the later siege or giving the son an opening command. https://islamansiklopedisi.org.tr/yagisiyan
+
+Working births 1040 for Yaghi-Siyan and 1070 for Shams al-Dawla are disclosed simulation conventions, not established historical years. Both begin resident in the Antioch county as an opening household abstraction, without a claim to an exact palace or day-one itinerary. No wife is supplied. Chichek Hatun is omitted while the Aleppo court has no canonical Ridwan person to whom her reported marriage could bind.
+
+Turkic and Sunni are broad court presentation choices. The local governorship is represented by the existing territorial government over the Antioch county, with no declared liege; nominal Seljuk ties, changing Aleppo/Damascus service and exact fiscal rights are outside that abstraction. Its retained rank 2 and corresponding player tier 5 are gameplay ranks, not an attested ducal title. Ordinary dynastic succession, territorial resources and diplomatic powers follow that chosen government. This neither creates a governorship appointment mechanic nor establishes sovereignty over the larger historical region. Existing residents, institutional declarations, county boundaries and site layout are retained.
+
+The optional program offers eight governing reviews through Winter 1097, with costless priorities, early conclusion and the shared set-aside control. It creates no historical invasion, expulsion, betrayal, relief, death or replacement ruler. Its optional goals pay no rewards. The existing opening Seljuk ruler is a political directory target, with no attested personal acquaintance, audience, friendship or allegiance inferred; the son remains in the ordinary family interface. Matching saves retain the same people and decisions, while old saves receive no new household or personal track.
 
 Egypt and Arabia
 
