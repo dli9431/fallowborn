@@ -34,6 +34,21 @@ class RulerAgendaSourceTests(unittest.TestCase):
                 self.assertIn(filename, inventory.meta[owner + '.title']['location'])
                 self.assertIn(i18n_catalog.source_key(story + ' program'), inventory.entries)
 
+    def test_antioch_start_reviews_and_goals_have_display_owners(self):
+        inventory = i18n_catalog.Inventory()
+        i18n_catalog.extract_structured(inventory)
+        i18n_catalog.extract_ruler_agendas(inventory)
+        i18n_catalog.extract_opening_goals(inventory)
+        expected = {
+            'scenario.yaghi_siyan_1096.name.default': 'Yaghi-Siyan at Antioch',
+            'rulerAgenda.antioch_agenda_1096.title': 'Antioch: governing a changing frontier',
+            'rulerAgenda.antioch_agenda_1096.stage.as08_continuation.choice.as08_finish.label': 'Finish the opening program',
+            'openingProfile.opening_antioch_1096.goal.antioch_upkeep.name': 'Review city upkeep',
+        }
+        for key, text in expected.items():
+            self.assertEqual(inventory.entries[key]['text'], text)
+            self.assertIn(i18n_catalog.source_key(text), inventory.entries)
+
 
 if __name__ == '__main__':
     unittest.main()
