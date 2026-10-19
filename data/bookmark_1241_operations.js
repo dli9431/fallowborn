@@ -106,6 +106,11 @@
      A curated site records provenance, not sub-county travel simulation. */
   FBDATA.settlementSites.cuman_west_camp_1241={x:18.55,y:47.20};
   FBDATA.settlementSites.cuman_east_camp_1241={x:18.85,y:47.17};
+  /* Seven inherited slots plus two camps exceed the ordinary eight-slot cap.
+     Omit the last modern fill presentation before adding either camp. */
+  layouts.szekesfehervar=layouts.szekesfehervar.filter(function (entry) {
+    return entry.site!=='geo_erd_3053281';
+  });
   layouts.szekesfehervar.push({site:'cuman_west_camp_1241',name:'Western Cuman camp',kind:'village'},
     {site:'cuman_east_camp_1241',name:'Eastern Cuman camp',kind:'village'});
   realms.push({id:'koten_following_1241',name:'Koten’s following',capital:'szekesfehervar',
