@@ -395,3 +395,7 @@ The literal tech_baths_headworks and buildings_baths_headworks supplements use e
 Production supplements
 
 Literal FBDATA.productionGoods_<suffix> and FBDATA.productionRecipes_<suffix> maps in data/production_*.js use the existing productionGood and productionRecipe name/desc/fallback owners. Static extraction reads the maps without executing their composition. Units, quantities, prices and references remain untranslated; new English uses normal authored fallback. Compose each unique addition into its ordinary root before runtime validation. Catalogue generation remains a separate owner request.
+
+Separate ruler agenda tables
+
+Literal FBDATA.rulerAgendas_<suffix> tables in data/story_*.js use the same rulerAgenda.<id> title, intro, stage and choice owners as the legacy FBDATA.rulerAgendas table in data/story_ruler_agendas.js. Discovery reads the source without executing it and preserves exact-source aliases used by the shared ruler agenda surface. The western 1096 file uses this convention and the existing openingProfiles_<suffix> convention; starting labels retain their ordinary start scenario owners. No generated catalogue is required for English fallback.
