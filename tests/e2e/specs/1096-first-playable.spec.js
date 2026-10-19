@@ -8,7 +8,7 @@ const {beginBookmark,restoreBookmark,facts} = require('../support/game/bookmark-
 const {releasedCatalogue} = require('../support/released-catalogue');
 
 dependsOnRuntime(__filename,[
-  'index.html','data/bookmark_1096.js','data/identities_1096.js',
+  'index.html','data/bookmark_1096.js','data/identities_1096.js','data/institutions_1096.js','js/bookmark_setup.js',
   'data/bookmark_1096_campaigns.js','data/story_household_effects_1096.js','data/story_world_1096.js',
   'data/bookmark_1096_scaffold_a.js','data/bookmark_1096_scaffold_b.js',
   'data/bookmark_1096_scaffold_c.js','data/bookmark_1096_scaffold_d.js',
@@ -58,6 +58,7 @@ test('1096 composes every physical county and court once with valid detached ref
       });
     });
     return {faults:faults,validation:FB.validateBookmark(b),religions:FB.validateReligionData(null),
+      openingCatalogue:[Object.keys(b.openingRevisions||{}),JSON.stringify((b.openingRevisions||{})[b.openingRevision])===JSON.stringify(b.opening),b.openingLegacyRevision],
       ids:ids,expected:expected,physical:geography.provinces.map(function (p) { return p.id; }),
       count:ids.length,uniqueCount:new Set(ids).size,courts:realmIds.length,uniqueCourts:new Set(realmIds).size,
       inhabited:b.provinces.filter(function (p) { return !p.wasteland; }).length,
@@ -73,6 +74,7 @@ test('1096 composes every physical county and court once with valid detached ref
   },regionOrder);
   expect(result.faults).toEqual([]);
   expect(result.validation).toEqual([]);
+  expect(result.openingCatalogue).toEqual([['baseline'],true,'baseline']);
   expect(result.religions).toEqual([]);
   expect(result.ids).toEqual(result.expected);
   expect(result.ids.slice().sort()).toEqual(result.physical.sort());

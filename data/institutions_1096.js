@@ -25,7 +25,7 @@ FBDATA.bookmarkInstitutions1096 = {
   },
   durham_see_1096:{
     city:'Durham',kind:'see',provinceId:'durham',site:'durham_head',
-    culture:'anglo_saxon',religion:'catholic',officeId:'durham_bishop',
+    culture:'english',religion:'catholic',officeId:'durham_bishop',
     officeSystem:null,jurisdictionIds:['durham'],vacant:true,freshOnly:true
   }
 };

@@ -84,5 +84,6 @@ FBDATA.bookmarkCandidates['1241'] = {
     if (!FBDATA.settlementSites[id]) FBDATA.settlementSites[id] = sites[id];
   });
   FBDATA.settlementLayouts['1241'] = layouts;
+  b.openingRevisions = {baseline:b.opening};
   FBDATA.bookmarks['1241'] = b;
 })();

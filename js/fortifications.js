@@ -236,7 +236,8 @@ window.FB = window.FB || {};
       errors.push('Exactly one building must have the fortification role; found ' +
         (forts.length ? forts.join(', ') : 'none') + '.');
     }
-    if (FB.buildingOperations) errors = errors.concat(FB.buildingOperations.catalogFaults({buildings:table,buildingOperationProfiles:FBDATA.buildingOperationProfiles}));
+    if (FB.buildingOperations) errors = errors.concat(FB.buildingOperations.catalogFaults({buildings:table,
+      buildingOperationProfiles:FBDATA.buildingOperationProfiles,productionGoods:FBDATA.productionGoods}));
     if (FB.buildingInstitutionCatalogFaults) errors = errors.concat(FB.buildingInstitutionCatalogFaults({
       buildings:table, buildingInstitutionProfiles:FBDATA.buildingInstitutionProfiles
     }));

@@ -131,7 +131,8 @@ window.FBDATA = window.FBDATA || {};
     startLocations:{}, stories:stories, scripted:[],
     provinces:provinces, realms:realms, duchies:duchies, kingdoms:kingdoms, empires:empires,
     climate:climate, straits:copy(base.straits), crossingClasses:copy(base.crossingClasses),
-    opening:opening, openingRevision:'baseline', openingLegacyRevision:'baseline'
+    opening:opening, openingRevision:'baseline', openingRevisions:{baseline:opening},
+    openingLegacyRevision:'baseline'
   };
   Object.assign(FBDATA.religions,faiths);
   Object.assign(FBDATA.settlementSites,sites);

@@ -69,7 +69,7 @@ test('the complete 1096 table has separate local groups and an evidenced vacant 
       ['mainz','mainz_head','jewish','jewish_local_congregation_later',true,true],
       ['worms','worms_head','jewish','jewish_local_congregation_later',true,true],
       ['worms','geo_speyer_2830582','jewish','jewish_local_congregation_later',true,true]],
-    office:{city:'Durham',kind:'see',provinceId:'durham',site:'durham_head',culture:'anglo_saxon',
+    office:{city:'Durham',kind:'see',provinceId:'durham',site:'durham_head',culture:'english',
       religion:'catholic',officeId:'durham_bishop',officeSystem:null,jurisdictionIds:['durham'],vacant:true,freshOnly:true},
     heads:{catholic:'papacy_1096',sunni:'abbasid_1096'},noStaff:true,noLegacyFallback:true,prior:true});
   expect((await page.evaluate(releasedCatalogue,released.selection)).hashes).toEqual(released.hashes);

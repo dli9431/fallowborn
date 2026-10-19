@@ -87,6 +87,7 @@ test('1241 composes all physical counties in ledger order with unique courts and
     });
     const inhabited = b.provinces.filter(function (p) { return !p.wasteland; }).map(function (p) { return p.id; });
     return {faults:faults,validation:FB.validateBookmark(b),religions:FB.validateReligionData(null),
+      openingCatalogue:[Object.keys(b.openingRevisions||{}),JSON.stringify((b.openingRevisions||{})[b.openingRevision])===JSON.stringify(b.opening),b.openingLegacyRevision],
       ids:b.provinces.map(function (p) { return p.id; }),expected:ids,
       physical:FB.geography(b.geography).provinces.map(function (p) { return p.id; }),
       counts:[b.provinces.length,Object.keys(counties).length,inhabited.length],
@@ -110,6 +111,7 @@ test('1241 composes all physical counties in ledger order with unique courts and
   },regionOrder);
   expect(result.faults).toEqual([]);
   expect(result.validation).toEqual([]);
+  expect(result.openingCatalogue).toEqual([['baseline'],true,'baseline']);
   expect(result.religions).toEqual([]);
   expect(result.ids).toEqual(result.expected);
   expect(result.ids.slice().sort()).toEqual(result.physical.sort());

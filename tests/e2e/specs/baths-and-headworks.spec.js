@@ -8,7 +8,7 @@ const ids=['hypocaust_heating','diversion_dams'];
 const traditions=['default','latin','byzantine','islamic','persianate','slavic','nordic','steppe','baltic_finnic','caucasian','northeast_african'];
 dependsOnRuntime(__filename,['index.html','data/technology.js','data/technology_baths_headworks.js','data/buildings_baths_headworks.js',
   'data/production.js','data/building_operations.js','data/building_profiles.js','data/buildings_waterworks.js','data/technology_waterworks.js',
-  'data/bookmarks.js','data/cultures.js','data/eras.js','js/building_operations.js','js/building_profiles.js','js/production.js',
+  'data/bookmarks.js','data/bookmark_711.js','data/cultures.js','data/eras.js','js/fortifications.js','js/building_operations.js','js/building_profiles.js','js/production.js',
   'js/production_economy.js','js/building_seasons.js','js/site_resources.js','js/actions.js','js/world.js','js/lordships.js',
   'js/treasury.js','js/population.js','js/mods.js','js/technology.js','js/save.js','js/save_v4.js','js/ui_modals.js']);
 async function start(page,info,kind,revision){
@@ -102,6 +102,14 @@ for(const kind of ['river','upland']){
     expect(r).toMatchObject({built:true,bath:true,aqueduct:kind==='river',paid:true,second:false,bathed:true,waterBefore:2,waterAfter:4,downstream:true,capacity:0.02,attraction:0.5,valid:true});
   });
 }
+test('bundled building validation resolves heated bath fuel so bundled bookmarks stay available',async function({page},info){
+  await openGame(page,info);
+  const r=await page.evaluate(function(){
+    return {inputs:FBDATA.buildingOperationProfiles.hypocaust_bath_service.inputs,buildings:FB.validateBuildingData(FBDATA.buildings,true),
+      bookmarks:['711','867','1066'].map(function(id){return FB.validateBookmark(FB.bookmark(id)).filter(function(e){return e.indexOf('hypocaust_bath_service')>=0;});})};
+  });
+  expect(r).toEqual({inputs:[{goodId:'heating_fuel',quantity:1}],buildings:[],bookmarks:[[],[],[]]});
+});
 test('missing heating knowledge or fuel leaves unheated investment available and paid reserved fuel cannot be reused',async function({page},info){
   await start(page,info,'river');await prepareInputs(page,1);
   const r=await page.evaluate(function(){
