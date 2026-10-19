@@ -41,7 +41,7 @@ const regionOrder = [
 test('the corrected world has complete date-owned hierarchy, layouts, identities and offices',async function ({page},info) {
   await openGame(page,info);
   const result = await page.evaluate(function (order) {
-    const b = FB.bookmark('1096'), layout = FBDATA.settlementLayouts['1096'];
+    const b = FB.bookmark('1096','baseline'), layout = FBDATA.settlementLayouts['1096'];
     const expected = [], faults = [], titles = {duchies:{},kingdoms:{},empires:{}};
     order.forEach(function (key) {
       const block = FBDATA.bookmarkRegions1096[key];

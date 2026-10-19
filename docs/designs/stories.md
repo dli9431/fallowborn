@@ -372,3 +372,7 @@ expedition_preparation registers a world story whose one optional version-1 reco
 Finite expedition composition
 
 js/story_expedition_program.js registers expedition_program after expedition_preparation. Its required parent and canonical mobile program own formation and progress; the composition retains original references and a finite preparing/active/paused/closed lifecycle only. Shared reviews and direct player/AI owner calls share one attempted daily action, exact stale rejection and truthful no-departure/expiry outcomes. Missing opted-in saves fail closed without attachment or replay. See expedition-story-programs.md for the complete declaration and saved record.
+
+Mainz household in 1096
+
+data/starts_mainz_1096.js and data/story_households_rhineland_1096.js add a fictional Jewish craft household with ordinary paid work, costless family and context decisions, optional goals and a separate named-party card. The shared temporary-refuge card owns actual requests, individual shelter consent, civil authorization, Ruthard's offer, exact local entry and ending. The personal graph neither asserts protection nor cancels it. Attributed May history and a conditional sovereign-at-war review produce no local threat, incident receipt, wage, casualty or forced departure. Expiry, declining and continuing ordinary life remain complete paths. Existing household decisions, work, party consent and temporary-refuge technology decisions of none apply; no new capability or schema is introduced.

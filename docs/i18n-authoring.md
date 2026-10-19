@@ -395,3 +395,7 @@ The literal tech_baths_headworks and buildings_baths_headworks supplements use e
 Production supplements
 
 Literal FBDATA.productionGoods_<suffix> and FBDATA.productionRecipes_<suffix> maps in data/production_*.js use the existing productionGood and productionRecipe name/desc/fallback owners. Static extraction reads the maps without executing their composition. Units, quantities, prices and references remain untranslated; new English uses normal authored fallback. Compose each unique addition into its ordinary root before runtime validation. Catalogue generation remains a separate owner request.
+
+Mainz household display owners
+
+The native starts_mainz_1096 scenario supplement, householdTracks_rhineland_1096 graph and party titles, householdRefuges_rhineland_1096 shelter and openingProfiles_rhineland_1096 goals use existing static extraction and exact-source aliases. The literal bookmarkRevisionContent_1096_mainz table owns its dated settlement label through the existing revision-content extractor. Named people and structural references remain identities. tools/test_i18n_mainz_household.py covers these sources without requiring generated catalogue changes.
