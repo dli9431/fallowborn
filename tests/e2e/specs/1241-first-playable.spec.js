@@ -9,6 +9,8 @@ const {releasedCatalogue} = require('../support/released-catalogue');
 
 dependsOnRuntime(__filename,[
   'index.html','data/bookmark_1241.js','data/identities_1241.js',
+  'data/bookmark_1241_frederick.js','data/starts_frederick_1241.js',
+  'data/story_frederick_1241.js','data/story_ruler_agendas.js',
   'data/bookmark_1241_scaffold_a.js','data/bookmark_1241_scaffold_b.js',
   'data/bookmark_1241_scaffold_c.js','data/bookmark_1241_scaffold_d.js',
   'data/bookmarks.js','data/bookmark_1204.js','data/bookmark_1204_terrain.js',
@@ -54,7 +56,7 @@ async function openDates(page,info) {
 test('1241 composes all physical counties in ledger order with unique courts and valid references',async function ({page},info) {
   await openGame(page,info);
   const result = await page.evaluate(function (order) {
-    const b = FB.bookmark('1241'), ids = [], courtIds = [], counties = {}, courts = {}, faults = [];
+    const b = FB.bookmark('1241','baseline'), ids = [], courtIds = [], counties = {}, courts = {}, faults = [];
     const layout = FBDATA.settlementLayouts[b.settlementLayout];
     b.provinces.forEach(function (p) { counties[p.id] = p; });
     b.realms.forEach(function (r) { courts[r.id] = r; });
@@ -95,7 +97,7 @@ test('1241 composes all physical counties in ledger order with unique courts and
       metadata:[b.name,b.date,b.era,b.geography,b.revision,b.openingRevision],
       starts:Object.keys(b.startLocations).every(function (id) {
         const scenario = FBDATA.startScenarios.find(function (row) { return row.id === id; });
-        const places = scenario && scenario.fixedProvinceId ? [scenario.fixedProvinceId] : inhabited;
+        const places = id === 'frederick_1241' ? [] : scenario && scenario.fixedProvinceId ? [scenario.fixedProvinceId] : inhabited;
         return JSON.stringify(b.startLocations[id]) === JSON.stringify(places);
       }),
       headBindings:b.religiousHeads,climates:['torne_district','palmyra_district','siwa_oasis'].map(function (id) {
@@ -171,8 +173,9 @@ test('1241 is offered with all three household stories while named openings rema
     await expect(card).toContainText('Story start:');
   }
   for (const id of ['bela_1241','yaroslav_1241','koten_1241','henry_pious_1241',
-    'alexander_1241','frederick_1241','danylo_1241'])
+    'alexander_1241','danylo_1241'])
     await expect(page.locator('#scenariolist [data-scenario="'+id+'"]')).toHaveCount(0);
+  await expect(page.locator('#scenariolist [data-scenario="frederick_1241"]')).toBeVisible();
   await expect(page.locator('#scenariolist [data-scenario="farmer"]')).toHaveAttribute('aria-disabled','true');
   await expect(page.locator('#scenariolist').getByRole('button',{name:/Observe/})).toBeVisible();
   await page.locator('#btn-ng-back').click();

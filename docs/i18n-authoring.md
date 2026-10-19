@@ -1,3 +1,7 @@
+Frederick opening presentation
+
+data/starts_frederick_1241.js uses the ordinary scenario source table. The literal agenda remains in data/story_ruler_agendas.js under the existing rulerAgenda owners; data/story_frederick_1241.js supplies a literal openingProfiles_frederick_1241 table with the existing goal/contact owners. The camp's literal label in data/bookmark_1241_frederick.js uses bookmarkRevisionContent extraction and exact-English aliases. papal_temporal_1241 uses the existing ecclesiastical profile display owner. Personal names, site ids and working birth years stay locale-neutral. Source authoring changes no generated catalogue.
+
 Expedition records-review text
 
 expedition_undertaking name and desc use the existing storyCampaign dataText owner and normal imported-English fallback. Runtime chrome in js/story_expedition_agreements.js uses literal FB.T calls with named placeholders for original parties, finite turns and current county/controller/holder labels. Proper personal names and stable ids remain untranslated. No rendered prose is stored in the optional record. No bundled source instance or new extraction namespace is added; a later bundled source must use a supported literal storyCampaign display table. Generated catalogues remain an integration step requiring explicit authorization.
