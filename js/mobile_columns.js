@@ -17,9 +17,9 @@
   /* Connectivity is a fresh-position preflight, never a completed journey.
      The camp origin retains its legacy entry rules. Every remote county on
      the connected footprint needs actual access or existing hostility. */
-  function openingLocationsAllowed(s,d) {
+  function openingLocationsAllowed(s,d,opponents) {
     var t=d.mobile, explicit=t.columns.entries.filter(function (c) {return own(c,'openingLocation');});
-    if (!explicit.length) return true;
+    if (!explicit.length && !opponents) return true;
     var hosted=M.hostedAccessPlan(s,[d]);
     if (!hosted.allowed) return false;
     var grant=hosted.grants[d.id], seen=Object.create(null), queue=[t.origin], world=FB.world;
@@ -28,7 +28,7 @@
       Object.keys(world.adj[queue[i]] || {}).forEach(function (pid) {
         if (seen[pid] || !world.byId[pid] || world.byId[pid].wasteland || !s.owner[pid]) return;
         if (s.owner[pid]!==d.id && !(grant && grant.countyIds.indexOf(pid)>=0) &&
-            !FB.armiesHostile(s,{realm:d.id},{realm:s.owner[pid]})) return;
+            !(opponents && own(opponents,s.owner[pid])) && !FB.armiesHostile(s,{realm:d.id},{realm:s.owner[pid]})) return;
         seen[pid]=true;queue.push(pid);
       });
     }
@@ -43,6 +43,71 @@
     return d && d.mobile && d.mobile.columns;
   }
   function hostId(rid,id,index) {return index ? 'column_'+rid+'_'+id : 'following_'+rid;}
+  function openingWarId(rid,id) {return 'opening_war_'+rid+'_'+id;}
+  function campaignDefinitionValid(d,realms,bookmark,formId) {
+    var t=d.mobile, set=t.openingCampaigns, actors=bookmark.opening && bookmark.opening.actors;
+    if (!keys(set,['schema','entries']) || set.schema!==1 || !Array.isArray(set.entries) ||
+        !set.entries.length || set.entries.length>4 || !t.columns || !t.command || !t.opening ||
+        t.command.operations.indexOf('war')<0 || t.preparationId!==undefined || t.guardedParty!==undefined ||
+        t.civilianCamps!==undefined || t.command.landedCommandLink!==undefined ||
+        FBDATA.governmentForms[formId].homeAuthority || !actors) return false;
+    var ids=Object.create(null), opponents=Object.create(null), columns=Object.create(null);
+    return set.entries.every(function (e) {
+      var ref=e && e.opponent, enemy=ref && own(realms,ref.realmId) && realms[ref.realmId];
+      var actor=ref && own(actors,ref.actorId) && actors[ref.actorId];
+      var target=e && bookmark.provinces.filter(function (p) {return p.id===e.target;})[0];
+      if (!keys(e,['id','opponent','target','columnIds']) || typeof e.id!=='string' ||
+          !/^[a-z][a-z0-9_]{0,47}$/.test(e.id) || ids[e.id] || openingWarId(d.id,e.id).length>160 ||
+          !keys(ref,['kind','realmId','actorId','generation']) || ref.kind!=='realm_ruler' ||
+          !enemy || enemy.id===d.id || enemy.mobile || enemy.nonTerritorial || enemy.liege || !enemy.ruler ||
+          ref.generation!==(enemy.ruler.generation===undefined ? 1 : enemy.ruler.generation) ||
+          !Number.isSafeInteger(ref.generation) || ref.generation<1 || ref.generation>1000000 || opponents[ref.realmId] ||
+          ref.realmId===t.patronRealmId || t.hostedAccess && ref.realmId===t.hostedAccess.partnerRealmId ||
+          t.command.superior && t.command.superior.kind==='realm_ruler' && ref.realmId===t.command.superior.realmId ||
+          !keys(actor,['ref']) || !keys(actor.ref,['kind','realmId']) || actor.ref.kind!=='realm_ruler' ||
+          actor.ref.realmId!==ref.realmId || !target || target.wasteland || target.realm!==ref.realmId ||
+          !Array.isArray(e.columnIds) || !e.columnIds.length || e.columnIds.length>t.columns.entries.length) return false;
+      ids[e.id]=true;opponents[ref.realmId]=true;
+      return e.columnIds.every(function (id) {
+        if (typeof id!=='string' || columns[id] || !t.columns.entries.some(function (c) {return c.id===id;})) return false;
+        columns[id]=true;return true;
+      });
+    });
+  }
+  function campaignPlan(s,d,plan) {
+    var t=d.mobile, declared=(FB.campaignBookmark(s).realms || []).filter(function (r) {return r.id===d.id;})[0];
+    if (s.turn!==0 || !declared || JSON.stringify(t)!==JSON.stringify(declared.mobile)) return null;
+    var projected=M.openingCommandProjection(s,d,plan), opponents=Object.create(null), entries=[];
+    if (!M.commandPermits(projected,d.id,'war')) return null;
+    for (var e of t.openingCampaigns.entries) {
+      var ref=e.opponent, enemy=FB.startRealmId(s,ref.realmId), c=FB.bookmarkActor(s,ref.actorId);
+      var ruler=enemy==='player' ? s.chars[s.player.charId] : FB.realmRulerCharacterSnapshot(s,enemy);
+      var id=openingWarId(d.id,e.id);
+      if (!live(s,c) || !ruler || ruler.id!==c.id || !s.realms[enemy] || !s.realms[enemy].alive ||
+          FB.realmRulerGeneration(s,enemy)!==ref.generation || own(s.wars || {},id) ||
+          FB.ordinaryWarBetween(s,d.id,enemy)) return null;
+      opponents[enemy]=true;
+      var assigned=e.columnIds.map(function (cid) {
+        var index=t.columns.entries.findIndex(function (v) {return v.id===cid;}), column=t.columns.entries[index];
+        var binding=plan.bindings.filter(function (b) {return b.memberId===column.commanderMemberId;})[0];
+        return {columnId:cid,hostId:hostId(d.id,cid,index),commanderId:binding.characterId};
+      });
+      if (assigned.some(function (v) {return !live(s,s.chars[v.commanderId]);})) return null;
+      var positions=e.columnIds.map(function (cid) {
+        var column=t.columns.entries.filter(function (v) {return v.id===cid;})[0];
+        return column.openingLocation ? column.openingLocation.countyId : t.origin;
+      });
+      /* Existing conflict may already have a column at the objective. The
+         ordinary preview still checks defender, consent, law, truce and pact. */
+      var cause={type:'aggression',enemy:enemy,target:e.target};
+      var preview=FB.warDeclarationPreview(projected,d.id,[cause],{frontier:positions,existingConflict:true});
+      if (!preview.valid || preview.unlawful) return null;
+      entries.push({id:e.id,warId:id,opponent:{declaredRealmId:ref.realmId,characterId:c.id,generation:ref.generation},
+        target:e.target,columns:assigned});
+    }
+    if (!openingLocationsAllowed(s,d,opponents)) return null;
+    return {schema:1,commandId:t.command.id,leaderId:M.row(projected,d.id).leaderId,entries:entries};
+  }
   function live(s,c) {return !!c && !c.dead && !c.prisonerOf && !c.captive && !c.imprisoned && !c.exiled &&
     !(FB.justiceCustodyOf && FB.justiceCustodyOf(s,c.id)) && !(FB.characterGuarded && FB.characterGuarded(s,c.id));}
   M.columnHostOwned = function (s,rid,army) {
@@ -50,6 +115,14 @@
     return !!(army && set && Array.isArray(set.entries) && set.entries.some(function (c) {
       return c && c.status==='active' && c.hostId===army.id && army.realm===rid;
     }));
+  };
+  /* Ordinary fallback assignment must not enlist an unassigned column into
+     another opening conflict. Later campaigns and defender muster retain the
+     ordinary owner; an already valid explicit assignment is never replaced. */
+  M.columnCampaignCandidates = function (s,army,wars) {
+    var r=M.row(s,army.realm), marker=r && r.openingCampaigns;
+    if (!marker || !M.columnHostOwned(s,army.realm,army)) return wars;
+    return wars.filter(function (w) {return !marker.entries.some(function (e) {return e.warId===w.id;});});
   };
   M.columnSnapshot = function (s,rid) {
     var r=M.row(s,rid), moving=M.migration(s,rid);
@@ -73,8 +146,9 @@
   var faults=M.definitionFaults;
   M.definitionFaults = function (d,formId,provinces,realms,profiles,bookmark) {
     var errors=faults(d,formId,provinces,realms,profiles,bookmark), t=d.mobile, set=t && t.columns;
-    if (errors.length || set===undefined) return errors;
+    if (errors.length) return errors;
     function fail() {return errors.concat(FB.T('Invalid mobile column declaration.'));}
+    if (set===undefined) return t && t.openingCampaigns!==undefined ? fail() : errors;
     var p=(profiles || FBDATA.mobileProfiles)[t.profileId];
     if (!t.command || !t.opening || !keys(set,['schema','entries']) || set.schema!==1 ||
         !Array.isArray(set.entries) || set.entries.length<2 || set.entries.length>4) return fail();
@@ -108,7 +182,20 @@
       }) : other.mobile ? ['following_'+other.id] : [];
       names.forEach(function (id) {if (id && allHosts[id]) bad=true;if (id) allHosts[id]=true;});
     });
-    return bad || food>t.food || Object.keys(allocations).some(function (k) {return allocations[k]!==0;}) ? fail() : errors;
+    if (bad || food>t.food || Object.keys(allocations).some(function (k) {return allocations[k]!==0;})) return fail();
+    if (t.openingCampaigns!==undefined && !campaignDefinitionValid(d,realms,bookmark,formId)) return fail();
+    var warIds=Object.create(null);
+    (bookmark.realms || []).forEach(function (other) {
+      var campaigns=other.mobile && other.mobile.openingCampaigns;
+      if (!campaigns || !Array.isArray(campaigns.entries)) return;
+      campaigns.entries.forEach(function (e) {
+        if (!e || typeof e.id!=='string') return;
+        var id=openingWarId(other.id,e.id);
+        if (warIds[id]) bad=true;
+        warIds[id]=true;
+      });
+    });
+    return bad ? fail() : errors;
   };
   var openingPlan=M.openingPlan;
   M.openingPlan = function (s,d) {
@@ -118,17 +205,24 @@
       var id=hostId(d.id,c.id,i);
       return (s.armies || []).some(function (a) {return a.id===id;}) ||
         (s.authority.migrations || []).some(function (m) {return m.hostId===id;});
-    }) || !openingLocationsAllowed(s,d)) plan.allowed=false;
+    })) plan.allowed=false;
+    if (plan.allowed && d.mobile.openingCampaigns!==undefined) {
+      plan.campaigns=campaignPlan(s,d,plan);
+      if (!plan.campaigns) plan.allowed=false;
+    } else if (plan.allowed && !openingLocationsAllowed(s,d)) plan.allowed=false;
     return plan;
   };
   var initialize=M.initialize;
   M.initialize = function (s,defs) {
     var fresh=defs.filter(function (d) {return d.mobile && d.mobile.columns!==undefined && !M.row(s,d.id);});
+    var campaigns=Object.create(null);
     fresh.forEach(function (d) {
       var declared=(FB.campaignBookmark(s).realms || []).filter(function (v) {return v.id===d.id;})[0];
+      var plan=declared && M.openingPlan(s,d);
       if (!declared || d.culture!==declared.culture || d.religion!==declared.religion ||
-          JSON.stringify(d.mobile)!==JSON.stringify(declared.mobile) || !M.openingPlan(s,d).allowed)
+          JSON.stringify(d.mobile)!==JSON.stringify(declared.mobile) || !plan.allowed)
         throw new Error(FB.T('Invalid mobile column declaration.'));
+      if (plan.campaigns) campaigns[d.id]=plan.campaigns;
     });
     initialize(s,defs);
     fresh.forEach(function (d) {
@@ -158,6 +252,25 @@
         r.columns.entries.push(entry);
       });
     });
+    /* Every definition, party, host and location in the batch has passed
+       preflight before the first allocation. This is the same private permit
+       used by subsequent reviewed column declarations. */
+    fresh.forEach(function (d) {
+      var provenance=campaigns[d.id];
+      if (!provenance) return;
+      provenance.entries.forEach(function (e) {
+        var enemy=FB.startRealmId(s,e.opponent.declaredRealmId),cause={type:'aggression',enemy:enemy,target:e.target};
+        var war={id:e.warId,enemy:enemy,target:e.target,casus:copy(cause),objectives:[cause],legacy:false};
+        warPermit={state:s,realmId:d.id,war:war};
+        try {
+          if (!FB.registerOrdinaryWar(s,d.id,war)) throw new Error(FB.T('Invalid opening campaign.'));
+        } finally {warPermit=null;}
+        e.columns.forEach(function (c) {
+          (s.armies || []).filter(function (a) {return a.id===c.hostId;})[0].warId=e.warId;
+        });
+      });
+      M.row(s,d.id).openingCampaigns=copy(provenance);
+    });
   };
   var validate=M.validate;
   M.validate = function (s) {
@@ -165,6 +278,40 @@
       var r=M.row(s,rid), spec=definition(s,rid);
       if (!r) return;
       function fail() {throw new Error(FB.T('Invalid saved mobile columns.'));}
+      var declaration=(FB.campaignBookmark(s).realms || []).filter(function (d) {return d.id===rid;})[0];
+      var campaigns=declaration && declaration.mobile.openingCampaigns, marker=r.openingCampaigns;
+      if (campaigns===undefined) {if (marker!==undefined) fail();}
+      else {
+        var leader=r.openingBindings && r.openingBindings.filter(function (b) {
+          return b.memberId===declaration.mobile.opening.leaderMemberId;
+        })[0];
+        if (!leader || !keys(marker,['schema','commandId','leaderId','entries']) || marker.schema!==1 ||
+            marker.commandId!==declaration.mobile.command.id || marker.leaderId!==leader.characterId ||
+            !Array.isArray(marker.entries) || marker.entries.length!==campaigns.entries.length) fail();
+        marker.entries.forEach(function (e,i) {
+          var expected=campaigns.entries[i], ref=expected.opponent, person=FB.bookmarkActor(s,ref.actorId);
+          var enemy=FB.startRealmId(s,ref.realmId);
+          if (!keys(e,['id','warId','opponent','target','columns']) || e.id!==expected.id ||
+              e.warId!==openingWarId(rid,expected.id) || e.target!==expected.target ||
+              !keys(e.opponent,['declaredRealmId','characterId','generation']) || !person ||
+              e.opponent.declaredRealmId!==ref.realmId || e.opponent.characterId!==person.id ||
+              e.opponent.generation!==ref.generation || !Array.isArray(e.columns) ||
+              e.columns.length!==expected.columnIds.length) fail();
+          e.columns.forEach(function (c,j) {
+            var cid=expected.columnIds[j], index=spec.entries.findIndex(function (v) {return v.id===cid;});
+            var binding=r.openingBindings.filter(function (b) {return b.memberId===spec.entries[index].commanderMemberId;})[0];
+            if (!keys(c,['columnId','hostId','commanderId']) || c.columnId!==cid || c.hostId!==hostId(rid,cid,index) ||
+                !binding || c.commanderId!==binding.characterId) fail();
+          });
+          /* Ended history may have been pruned by the ordinary war owner.
+             Present history must still identify this original conflict. */
+          var w=s.wars && s.wars[e.warId];
+          if (w && (w.id!==e.warId || w.startedTurn!==0 || w.legacy!==false ||
+              !Array.isArray(w.objectives) || w.objectives.length!==1 ||
+              w.objectives[0].type!=='aggression' || w.objectives[0].enemy!==enemy ||
+              w.objectives[0].target!==e.target)) fail();
+        });
+      }
       if (spec===undefined) {if (r.columns!==undefined) fail();return;}
       var set=r.columns, moving=M.migration(s,rid);
       if (r.schema!==3 || !moving || !keys(set,['schema','entries']) || [1,2].indexOf(set.schema)<0 ||

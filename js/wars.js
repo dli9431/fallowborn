@@ -282,7 +282,8 @@
       const w = FB.ordinaryWarById(state, a.warId);
       if (w && endpoint(w, a.realm)) return;
       if (a.warId === 'holy' && FB.greatHolyWarCamp(state, a.realm)) return;
-      const list = FB.realmWars(state, a.realm);
+      let list = FB.realmWars(state, a.realm);
+      if (FB.mobile && FB.mobile.columnCampaignCandidates) list = FB.mobile.columnCampaignCandidates(state, a, list);
       a.warId = list.length ? list[0].id : FB.greatHolyWarCamp(state, a.realm) ? 'holy' : null;
     });
   };
@@ -761,7 +762,12 @@
         })) return fail(FB.T('You no longer hold that territorial right.'));
       }
       selected[cause.target] = 1;
-      if (frontier.some(function (pid) { return !!(FB.world.adj[pid] || {})[cause.target]; })) starts.push(cause.target);
+      if (frontier.some(function (pid) {
+        /* A snapshot conflict may already have its existing host at the
+           objective. This pure inspection mode grants no declaration permit. */
+        return !!(FB.world.adj[pid] || {})[cause.target] ||
+          inspection && inspection.existingConflict === true && pid === cause.target;
+      })) starts.push(cause.target);
     }
     if (!special) {
       const visited = {}, queue = starts.length ? [starts[0]] : [];
