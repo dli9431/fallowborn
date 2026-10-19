@@ -2278,7 +2278,7 @@ FB.CHANGELOG = [
       const sex = parts[sexPart].toLowerCase();
       const name = parts[namePart].replace(/_/g, ' ').trim();
       if (!seed || !scen || !prov || !FB.startProvinceAllowed(scen, bookmark, prov.id) || (sex !== 'm' && sex !== 'f') ||
-        !name || name.length > 20 ||
+          !name || (!scen.characterName && name.length > 20) ||
           scen.characterName && name !== startCodeName(scen.characterName).replace(/_/g, ' ')) return { error: bad };
       if (scen.sex && sex !== scen.sex) {
         return { error: 'That start code pairs a scenario and a sex that don’t go together.' };
