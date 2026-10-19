@@ -9,6 +9,7 @@ const {releasedCatalogue} = require('../support/released-catalogue');
 
 dependsOnRuntime(__filename,[
   'data/story_ruler_agendas_1241.js',
+  'data/bookmark_1241_alexander.js','data/starts_alexander_1241.js','data/story_alexander_1241.js',
   'index.html','data/bookmark_1241.js','data/identities_1241.js',
   'data/bookmark_1241_frederick.js','data/starts_frederick_1241.js',
   'data/story_frederick_1241.js','data/story_ruler_agendas.js',
@@ -173,9 +174,9 @@ test('1241 offers its households and implemented courts while other named openin
     await expect(card).not.toHaveAttribute('aria-disabled','true');
     await expect(card).toContainText('Story start:');
   }
-  for (const id of ['koten_1241','alexander_1241','danylo_1241'])
+  for (const id of ['koten_1241','danylo_1241'])
     await expect(page.locator('#scenariolist [data-scenario="'+id+'"]')).toHaveCount(0);
-  for (const id of ['bela_1241','yaroslav_1241','frederick_1241','henry_pious_1241'])
+  for (const id of ['bela_1241','yaroslav_1241','frederick_1241','henry_pious_1241','alexander_1241'])
     await expect(page.locator('#scenariolist [data-scenario="'+id+'"]')).toBeVisible();
   await expect(page.locator('#scenariolist [data-scenario="farmer"]')).toHaveAttribute('aria-disabled','true');
   await expect(page.locator('#scenariolist').getByRole('button',{name:/Observe/})).toBeVisible();
