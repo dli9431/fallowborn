@@ -42,5 +42,7 @@ FBDATA.bookmarkRevisionContent_frederick_1241 = {
   FBDATA.settlementLayouts[layoutId]=layouts;
   locations.frederick_1241=['ravenna'];
   b.revisions[d.revision]={realms:realms,startLocations:locations,settlementLayout:layoutId};
+  /* Keep an earlier fresh revision's explicit start list for its named starts. */
+  if (source.starts) b.revisions[d.revision].starts=copy(source.starts);
   b.revision=d.revision;
 })();

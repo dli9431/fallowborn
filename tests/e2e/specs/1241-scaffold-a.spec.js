@@ -7,6 +7,7 @@ const {openGame} = require('../support/game/navigation');
 const {beginBookmark} = require('../support/game/bookmark-acceptance');
 
 dependsOnRuntime(__filename,[
+  'data/starts_1241.js','data/story_ruler_agendas_1241.js',
   'index.html','data/bookmark_1241.js','data/bookmark_1241_scaffold_a.js','data/bookmark_1204.js',
   'data/bookmark_1241_scaffold_b.js','data/bookmark_1241_scaffold_c.js','data/bookmark_1241_scaffold_d.js',
   'data/bookmark_1204_terrain.js','data/bookmarks.js','data/counties.js',
@@ -268,7 +269,7 @@ test('1241 corrected background rulers and county affiliations initialize once a
     FB.save.restore(JSON.parse(FB.save.serialize()));
     return {initialRulers:initialRulers,initialOwners:initialOwners,before:before,after:after,repeated:facts(),
       noNamedStart:!FBDATA.startScenarios.some(function (row) {
-        return ids.indexOf(row.rulerRealmId) >= 0;
+        return ['brittany_1241','toulouse_1241'].indexOf(row.rulerRealmId) >= 0;
       })};
   });
   expect(result.initialRulers).toEqual([['brittany_1241','John I',1217],['toulouse_1241','Raymond VII',1197],

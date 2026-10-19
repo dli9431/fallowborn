@@ -7,7 +7,7 @@ const harbor = require('../fixtures/authoring/harbor-mod.json');
 dependsOnRuntime(__filename, ['index.html', 'js/main.js', 'js/starts.js', 'js/mods.js', 'js/world.js',
   'js/model.js', 'js/save.js', 'js/ui_misc.js', 'js/ui_modals.js', 'data/starts.js', 'data/eras.js']);
 
-for (const name of ['Orin Vale-Sen','Orin-Vale-Sen','Orin Vale']) {
+for (const name of ['Orin Vale-Sen','Orin-Vale-Sen','Orin Vale','Aurelian Constantinus Vale']) {
   test('an imported ruler named ' + name + ' reopens its generated code with its exact identity', async function ({ page }, info) {
     const mod = JSON.parse(JSON.stringify(harbor)), world = mod.bookmarks.harbor_world;
     world.realms.find(function (r) { return r.id === 'harbor_upland'; }).ruler.name = name;
