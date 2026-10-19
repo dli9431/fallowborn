@@ -8,6 +8,8 @@ The optional mobile.expeditionProgram holy_objective adapter composes one formed
 
 Expedition undertaking authoring boundary
 
+Optional waitForFormation references exactly one attached preparationId and commandId, with requires and registrationAfter binding the original preparation. preparation-review-harbor.json and preparation-review-upland.json are complete ordinary imports with external versus local sources, volunteers versus closed formation consent and different preparation and review windows. They use the same detached validator, original-person binding, daily formation observation, player/AI review and strict optional version-2 save contract. Existing immediate-command imports retain version 1. Waiting and restore grant no host, funds, consent or acknowledgment. See docs/MODDING.md for the exact field sets and terminal dispositions.
+
 The ordinary storyInstances root accepts expedition_undertaking world declarations with explicit records_only mode. Independent expedition-terms-harbor.json and expedition-terms-upland.json imports configure different parties/command authorities, immediate versus delayed windows and personal versus two-county claim reviews. Detached compilation validates exact fields and effective references before publication. Both use the same pure player/AI review and once-only commit, shared UI and strict optional saved record. This surface records costless bilateral acknowledgment of attributed context; it provides no enforceable safety, payment, automatic restoration or claim-granting algorithm. Existing finite access and local purchases use the canonical mobile transactions independently. Unsupported enforcement fields fail validation. See docs/MODDING.md for bounds and public APIs.
 
 Column-aware supply composition

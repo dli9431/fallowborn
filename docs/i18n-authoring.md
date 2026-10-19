@@ -8,6 +8,8 @@ data/starts_frederick_1241.js uses the ordinary scenario source table. The liter
 
 Expedition records-review text
 
+Preparation-aware review status and closure explanations use literal FB.T calls in js/story_expedition_agreements.js. The waitForFormation reference and saved preparation/formation provenance remain untranslated metadata. Imported review name/desc retain the same storyCampaign owners and ordinary English fallback. No rendered status is saved and no extraction namespace or generated catalogue change is required.
+
 expedition_undertaking name and desc use the existing storyCampaign dataText owner and normal imported-English fallback. Runtime chrome in js/story_expedition_agreements.js uses literal FB.T calls with named placeholders for original parties, finite turns and current county/controller/holder labels. Proper personal names and stable ids remain untranslated. No rendered prose is stored in the optional record. No bundled source instance or new extraction namespace is added; a later bundled source must use a supported literal storyCampaign display table. Generated catalogues remain an integration step requiring explicit authorization.
 
 Office and legitimacy presentation
