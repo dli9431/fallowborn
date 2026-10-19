@@ -6,6 +6,7 @@
   // This is a pure identity read; generated names remain campaign facts.
   FB.startCommandActorId = function (bookmark, realm, formId) {
     if (!bookmark || !realm || FB.governments.problems(formId).length ||
+        realm.mobile && realm.mobile.guardedParty!==undefined ||
         !FB.governments.resolve(formId).use.succession.commandLeadership) return null;
     var opening = realm.mobile && realm.mobile.command && realm.mobile.opening;
     var binding = opening && Array.isArray(opening.principals) && opening.principals.filter(function (row) {

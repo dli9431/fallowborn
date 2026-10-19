@@ -27,7 +27,7 @@
     return !!c && !c.dead && !c.captive && !c.prisonerOf && !c.imprisoned && !c.exiled &&
       (c.health === undefined || c.health > 0) && !c.travel && !c.religiousActivity &&
       !(FB.intrigueCaptivityOf && FB.intrigueCaptivityOf(s,c.id)) &&
-      !(FB.justiceCustodyOf && FB.justiceCustodyOf(s,c.id)) &&
+      !(FB.justiceCustodyOf && FB.justiceCustodyOf(s,c.id)) && !(FB.characterGuarded && FB.characterGuarded(s,c.id)) &&
       !(s.justice && s.justice.exiles && s.justice.exiles[c.id] && s.justice.exiles[c.id].endTurn > s.turn);
   }
   function homeAvailable(s,id) {

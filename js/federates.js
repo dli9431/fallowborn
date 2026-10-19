@@ -188,7 +188,8 @@
   function court(s, row, army) {
     if (army.mobileFollowing && !army.mobileCourt) return;
     var ruler = FB.realmRulerCharacterSnapshot(s, row.realmId);
-    if (ruler && row.courtIds.indexOf(ruler.id) < 0) row.courtIds.push(ruler.id);
+    if (ruler && !(FB.mobile && FB.mobile.separatePartyMember && FB.mobile.separatePartyMember(s,row.realmId,ruler.id)) &&
+        row.courtIds.indexOf(ruler.id) < 0) row.courtIds.push(ruler.id);
     for (var cid of row.courtIds) {
       var c = s.chars[cid];
       if (c && !c.dead) c.homeProvinceId = army.at;
@@ -244,7 +245,8 @@
         }) || Object.keys(spec.units).reduce(function (n, id) { return n + spec.units[id]; }, 0) !== spec.men))
       return null;
     FB.ensureRealmCourt(s, spec.realmId);
-    var ruler = FB.realmRulerCharacterSnapshot(s, spec.realmId);
+    var ruler = FB.realmRulerCharacterSnapshot(s, spec.realmId) ||
+      FB.mobile && FB.mobile.guardBirthLeader && FB.mobile.guardBirthLeader(s,spec.realmId);
     if (!ruler) return null;
     if (!army) {
       army = { id:spec.hostId, realm:spec.realmId, at:spec.origin, from:spec.origin,
@@ -254,7 +256,8 @@
       s.armies.push(army);
     }
     var courtIds = [ruler.id].concat(ruler.spouseId || [], ruler.childrenIds || []);
-    courtIds = courtIds.filter(function (id, i) { return s.chars[id] && courtIds.indexOf(id) === i; });
+    courtIds = courtIds.filter(function (id, i) { return s.chars[id] && courtIds.indexOf(id) === i &&
+      !(FB.mobile && FB.mobile.separatePartyMember && FB.mobile.separatePartyMember(s,spec.realmId,id)); });
     var id = FB.authorityNextId(s, 'migration-'), a = s.authority;
     var row = { id:id,
       realmId:spec.realmId, patronRealmId:spec.patronRealmId, hostId:army.id,

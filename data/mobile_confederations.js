@@ -56,6 +56,10 @@
     rationale:'An explicit independent following has no patron entitlement. Actual access, resources and separately consenting counterparts remain necessary, with ordinary unit and travel technology retained.'};
   FBDATA.techImpactReviews.features.mobile_external_commission = {mode:'none',
     rationale:'A finite generation-bound external warrant records political authority without creating a local person, income, land or passage rights. Expiry and ordinary command eligibility govern its scope, not an invented discovery.'};
+  FBDATA.techImpactReviews.features.mobile_protective_guard = {mode:'none',
+    rationale:'Protective guard and reviewed release depend on living people and lawful local authority, not research.'};
+  FBDATA.techImpactReviews.features.mobile_separate_personal_party = {mode:'none',
+    rationale:'Original personal identities and actual local presence need no discovery; ordinary travel gates remain binding.'};
   FBDATA.techImpactReviews.features.mobile_hosted_opening = {mode:'none',
     rationale:'An already accepted opening concession records a political relationship under living parties, direct local possession and finite capacity. It grants no equipment, transport, personal safety or technological exception.'};
   FBDATA.techImpactReviews.features.personal_expedition_admission = {mode:'none',

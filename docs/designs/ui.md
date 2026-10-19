@@ -4044,3 +4044,7 @@ Maritime production construction uses the existing Building Works unavailable-ca
 Seasonal construction requirements
 
 Building Works uses the shared seasonal construction projection for unavailable required-season cards. The existing price, disabled construction control and Details explain the declared site, local season, lawful water or grazing, care/work, actual deliverable inputs and construction/processing funds. Input delivery, opening the term and paid production remain separate ordinary reviews. Existing layout, keyboard controls, disclosures and retained modal navigation are unchanged.
+
+Protective release reviews
+
+The shared mobile command sheet shows the original personal party, each actual county, guard locality, original hosting ruler, remaining term and current protective disposition. Review protective release uses ordinary fact/action cards, a visible zero cost and the first current authority blocker. Both the disclosure and confirmation state that release moves nobody and command still requires actual camp presence. Confirmation rechecks exact current people, position and lawful control through the common selection source. Back, Escape, Continue, disclosures, list/body scroll and originating focus retain the existing mobile navigation. Expired and interrupted guards remain visibly unresolved; the UI promises no automatic safety, departure or command.

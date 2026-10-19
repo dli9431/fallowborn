@@ -1513,3 +1513,7 @@ Household service appointments expose typed promotion, training and trait teachi
 Ruler aim response policies now include ordered motion/family weights, marriage and petition bonuses, intrigue aggression/restraint, and conversion motivations/scores. Both household proposal paths and the ruler agency consumer read these parameters. The seven saved aim identities, bounded annual scheduling and canonical consent/resource checks remain structural engine contracts.
 
 Holy-war ruler preferences, court loyalty, conversion resistance and rivalry formation now read the corresponding traitMechanics channels. Single-trait ruler summaries and multi-trait characters share the reader; signed channels retain their sum and unsigned alternatives their maximum. No historical trait identity selects those behaviors.
+
+Separate original personal parties
+
+A following's optional guardedParty retains original direct opening actors without creating kin or a second household roster. Guarded personal location precedes the mobile court capital; after reviewed release, existing residence and actual personal journeys own each person's position. Ordinary custody/exile remains independent and can supersede the protective location. The original people and provider remain referenced for matching restore, including after death. A moving civilian camp never carries the personal party. See docs/designs/mobile-guard.md for the shared restriction and finite authority contract.
