@@ -27,10 +27,29 @@
     (c.health===undefined || c.health>0) && !(FB.justiceCustodyOf && FB.justiceCustodyOf(s,c.id)) &&
     !(FB.intrigueCaptivityOf && FB.intrigueCaptivityOf(s,c.id)) &&
     !(c.id===s.player.charId && s.player.flags && s.player.flags.in_prison);}
-  function provider(s,def) {
+  function provider(s,def,bound) {
     var rid=FB.startRealmId(s,def.provider.realmId), c=s.realms[rid] && s.realms[rid].alive &&
       (rid==='player' ? s.chars[s.player.charId] : FB.realmRulerCharacterSnapshot(s,rid));
+    if (def.provider.kind==='home_authority') {
+      var d=declaration(s,def.realmId), request={provinceId:d.mobile.origin},
+        selected=def.provider.actorId && FB.bookmarkActor(s,def.provider.actorId);
+      if (bound || def.provider.actorId) request.characterId=bound ? bound.characterId : selected && selected.id || '';
+      if (bound && bound.appointmentId!==null) request.appointmentId=bound.appointmentId;
+      var q=FB.homeAuthority.quote(s,rid,'levy',request);
+      return {realmId:rid,characterId:q.allowed && q.characterId || null,generation:FB.realmRulerGeneration(s,rid),
+        appointmentId:q.allowed && q.appointmentId || null};
+    }
     return {realmId:rid,characterId:c && c.id || null,generation:FB.realmRulerGeneration(s,rid)};
+  }
+  function providerRequest(e) {
+    var request={characterId:e.t.provider.characterId,provinceId:e.d.mobile.origin};
+    if (e.def.provider.kind==='home_authority' && e.t.provider.appointmentId!==null) request.appointmentId=e.t.provider.appointmentId;
+    return request;
+  }
+  function householdDonor(s,e,actorId) {
+    var c=s.chars[actorId];
+    return !!e.def.householdContribution && actorId===s.player.charId && live(s,c) && FB.ageOf(c,s.date.year)>=16 &&
+      !s.player.travel && s.player.provinceId===e.d.mobile.origin && FB.homeAuthority.location(s,c)===e.d.mobile.origin;
   }
   function bindings(s,d) {
     return d.mobile.opening.principals.map(function (b) {
@@ -42,10 +61,15 @@
   function check(def,context,bm) {
     function need(ok,field) {if (!ok) throw new Error('Invalid expedition preparation: '+field+'.');}
     need(keys(def,['id','type','title','intro','requires','registrationBefore','registrationAfter','realmId','termDays',
-      'source','provisions','provider','acceptance','ai']), 'fields');
+      'source','provisions','provider','acceptance','ai','householdContribution']), 'fields');
     need(display(def.title) && display(def.intro) && slug(def.realmId) && whole(def.termDays,1440) && def.termDays>0, 'identity or bounds');
-    need(exact(def.provider,['kind','realmId']) && def.provider.kind==='realm_ruler' && slug(def.provider.realmId) &&
+    need((exact(def.provider,['kind','realmId']) && def.provider.kind==='realm_ruler' ||
+      keys(def.provider,['kind','realmId','actorId']) && def.provider.kind==='home_authority' &&
+        (def.provider.actorId===undefined || slug(def.provider.actorId))) && slug(def.provider.realmId) &&
       def.provider.realmId!==def.realmId, 'provider');
+    if (def.householdContribution!==undefined) need(exact(def.householdContribution,['kind','maximum']) &&
+      def.householdContribution.kind==='local_household' && number(def.householdContribution.maximum,1000000) &&
+      def.householdContribution.maximum>0, 'household contribution');
     need(['volunteers','closed'].indexOf(def.acceptance)>=0 && ['hold','form','refuse'].indexOf(def.ai)>=0, 'policies');
     need(exact(def.provisions,['food','maxUnitPrice']) && whole(def.provisions.food,1000000000) && def.provisions.food>0 &&
       number(def.provisions.maxUnitPrice,1000) && def.provisions.maxUnitPrice>0, 'provisions');
@@ -70,6 +94,23 @@
     need((bm.stories || []).indexOf(def.id)>=0 && !(def.requires || []).length, 'fresh attachment');
     var origin=(bm.provinces || []).filter(function (r) {return r.id===t.origin && !r.wasteland;})[0];
     need(!!origin && origin.realm===owner.id, 'provider locality');
+    if (def.provider.kind==='home_authority') {
+      var era=FBDATA.eras[bm.era], form=FBDATA.governmentForms[owner.government || era && era.defaultGovernment];
+      need(!!form && FB.homeAuthority.policyValid(form.homeAuthority), 'home authority policy');
+      if (def.provider.actorId!==undefined) {
+        need(!!(bm.opening && bm.opening.actors && bm.opening.actors[def.provider.actorId]), 'provider actor');
+        var selectedActor=bm.opening.actors[def.provider.actorId];
+        need(selectedActor.ref && selectedActor.ref.kind==='realm_ruler' && selectedActor.ref.realmId===owner.id ||
+          form.homeAuthority.delegation && Object.keys(bm.opening.appointments || {}).some(function (id) {
+          var a=bm.opening.appointments[id], office=FBDATA.authorityOffices[a.officeId];
+          return a.actorId===def.provider.actorId && a.realmId===owner.id && office &&
+            (office.homePowers || []).indexOf('levy')>=0 &&
+            (a.scope.kind==='realm' && a.scope.id===owner.id || a.scope.kind==='county' && a.scope.id===t.origin);
+        }), 'declared civil provider');
+      }
+    }
+    if (def.householdContribution!==undefined) need(t.funding.privateContributions &&
+      def.householdContribution.maximum<=t.funding.maximum, 'private contribution policy');
     if (source.kind==='local') need(source.provinceId===t.origin, 'local origin');
     else {
       need(source.cohorts.every(function (c) {return p.members.some(function (m) {return m.id===c.memberId;});}), 'member reference');
@@ -97,13 +138,13 @@
     return b && b.characterId;
   }
   function current(s,e) {
-    var d=e.d, t=e.t, at=d.mobile.origin, owner=provider(s,e.def), plan=M.openingPlan(s,d);
-    var civil=e.def.source.kind==='local' ? FB.homeAuthority.quote(s,owner.realmId,'levy',
-      {characterId:owner.characterId,provinceId:at}) : null;
+    var d=e.d, t=e.t, at=d.mobile.origin, scoped=e.def.provider.kind==='home_authority',
+      owner=provider(s,e.def,scoped ? t.provider : null), plan=M.openingPlan(s,d);
+    var civil=scoped || e.def.source.kind==='local' ? FB.homeAuthority.quote(s,owner.realmId,'levy',providerRequest(e)) : null;
     var valid=!!(t.status==='preparing' && s.turn<t.endTurn && !M.row(s,d.id) &&
       definitionKey(e.def,d)===t.definitionKey && FB.realmRulerGeneration(s,d.id)===t.realmGeneration &&
       same(owner,t.provider) && owner.characterId && live(s,s.chars[owner.characterId]) &&
-      FB.homeAuthority.location(s,s.chars[owner.characterId])===at && s.owner[at]===owner.realmId && s.holder[at]===owner.realmId &&
+      (scoped || FB.homeAuthority.location(s,s.chars[owner.characterId])===at) && s.owner[at]===owner.realmId && s.holder[at]===owner.realmId &&
       !FB.armiesHostile(s,{realm:d.id},{realm:owner.realmId}) &&
       same(M.commandIssuer(s,d.id),t.issuer) && plan.allowed && same(plan.bindings,t.bindings) &&
       t.bindings.every(function (b) {return live(s,s.chars[b.characterId]) && FB.homeAuthority.location(s,s.chars[b.characterId])===at &&
@@ -156,6 +197,8 @@
       people:t.bindings.map(function (b) {return copy(s.chars[b.characterId] || null);}),
       providerPerson:copy(s.chars[t.provider.characterId] || null),realm:copy(s.realms[d.id]),market:market,money:money,
       owner:s.owner[d.mobile.origin],holder:s.holder[d.mobile.origin],fundingRevision:s.treasuryAccounting && s.treasuryAccounting.fundingRevision || 0};
+    if (action==='contribute' && e.def.householdContribution) q.facts.household={actor:copy(actor || null),
+      characterId:s.player.charId,provinceId:s.player.provinceId,travel:copy(s.player.travel || null)};
     if (t.status!=='preparing' || !live(s,actor)) return q;
     if (action==='stop' || action==='refuse') {q.allowed=isLeader || isProvider;q.reason=q.allowed ? null : 'actor';return q;}
     if (action==='wait') {q.allowed=isLeader;q.reason=q.allowed ? null : 'actor';return q;}
@@ -168,11 +211,22 @@
     if (market) q.foodCost=e.def.provisions.food*market.price*0.1125;
     q.cost=q.trainingCost+q.foodCost;
     if (action==='contribute' || action==='grant') {
-      if (!money || !market || (action==='contribute' ? !isLeader || actorId!==s.player.charId : !isProvider)) return q;
+      if (action==='contribute' && e.def.householdContribution && !householdDonor(s,e,actorId)) {q.reason='household';return q;}
+      if (!money || !market || (action==='contribute' ? actorId!==s.player.charId ||
+          !(isLeader || householdDonor(s,e,actorId)) : !isProvider)) return q;
       var amount=Math.max(0,q.cost-money.available);
-      q.funding=FB.homeAuthority.fundingQuote(s,{source:action==='grant' ? {kind:'public',realmId:t.provider.realmId} :
-        {kind:'private',characterId:actorId},recipientRealmId:d.id,amount:amount,characterId:actorId});
-      q.allowed=q.funding.allowed;q.reason=q.allowed ? null : 'funds';q.cost=amount;return q;
+      if (action==='contribute' && e.def.householdContribution) {
+        amount=Math.min(amount,e.def.householdContribution.maximum);
+      }
+      var input={source:action==='grant' ? {kind:'public',realmId:t.provider.realmId} :
+        {kind:'private',characterId:actorId},recipientRealmId:d.id,amount:amount,characterId:actorId};
+      if (action==='grant' && e.def.provider.kind==='home_authority') {
+        input.provinceId=d.mobile.origin;
+        if (t.provider.appointmentId!==null) input.appointmentId=t.provider.appointmentId;
+      }
+      q.funding=FB.homeAuthority.fundingQuote(s,input);
+      q.allowed=q.funding.allowed;q.reason=q.allowed ? null :
+        action==='contribute' && e.def.householdContribution ? 'private_funds' : 'funds';q.cost=amount;return q;
     }
     if (!isLeader || t.authorizedTurn===null) {q.reason='consent';return q;}
     var people=p.members.reduce(function (n,m) {return n+m.population;},0), pool;
@@ -242,9 +296,13 @@
         (t.reason!=='expired' || t.endedTurn>=t.endTurn) &&
         (t.status==='preparing' || t.revision>0) && (t.authorizedTurn===null || t.revision>0));
       need(Array.isArray(t.bindings) && t.bindings.length>0 && t.bindings.length<=24 &&
-        exact(t.provider,['realmId','characterId','generation']) && slug(t.provider.realmId) &&
+        exact(t.provider,def.provider.kind==='home_authority' ? ['realmId','characterId','generation','appointmentId'] :
+          ['realmId','characterId','generation']) && slug(t.provider.realmId) &&
         (t.provider.characterId===null || typeof t.provider.characterId==='string' && t.provider.characterId.length<=200) &&
         whole(t.provider.generation) && t.provider.generation>0);
+      if (def.provider.kind==='home_authority') need((t.provider.appointmentId===null ||
+        typeof t.provider.appointmentId==='string' && t.provider.appointmentId.length>0 && t.provider.appointmentId.length<=200) &&
+        t.provider.characterId!==null && t.provider.characterId.length>0);
       [t.reserves,t.consumed,t.released].forEach(function (rows) {
         need(Array.isArray(rows) && rows.length<=64);
         var seen={};rows.forEach(function (c) {
@@ -268,8 +326,23 @@
         t.realmGeneration===((d.ruler && d.ruler.generation) || 1) && t.realmGeneration<=FB.realmRulerGeneration(s,def.realmId) && t.provider.realmId===FB.startRealmId(s,def.provider.realmId) &&
         t.provider.generation<=FB.realmRulerGeneration(s,t.provider.realmId) &&
         (t.provider.characterId===null || !!s.chars[t.provider.characterId]) &&
-        (t.provider.generation!==FB.realmRulerGeneration(s,t.provider.realmId) || !presentProvider.characterId || same(t.provider,presentProvider)) &&
+        (def.provider.kind==='home_authority' || t.provider.generation!==FB.realmRulerGeneration(s,t.provider.realmId) ||
+          !presentProvider.characterId || same(t.provider,presentProvider)) &&
         (t.authorizedTurn===null || t.authorizedTurn<=s.turn) && (t.endedTurn===null || t.endedTurn<=s.turn));
+      if (def.provider.kind==='home_authority') {
+        var originalProvider=declaration(s,def.provider.realmId),
+          a=t.provider.appointmentId && (s.authority.appointments || []).filter(function (a) {return a.id===t.provider.appointmentId;})[0],
+          incumbent=t.provider.realmId==='player' ? s.chars[s.player.charId] : FB.realmRulerCharacterSnapshot(s,t.provider.realmId);
+        need(!!originalProvider && t.provider.generation===((originalProvider.ruler && originalProvider.ruler.generation) || 1));
+        if (def.provider.actorId && t.provider.characterId!==null) need(t.provider.characterId===(FB.bookmarkActor(s,def.provider.actorId) || {}).id);
+        if (t.provider.appointmentId!==null) need(!!a && a.institutionId===t.provider.realmId &&
+          a.holder.kind==='character' && a.holder.id===t.provider.characterId && a.appointerGeneration>=t.provider.generation &&
+          a.startTurn===0 && FBDATA.authorityOffices[a.officeId] &&
+          (FBDATA.authorityOffices[a.officeId].homePowers || []).indexOf('levy')>=0 &&
+          (a.scope.kind==='county' && a.scope.id===d.mobile.origin || a.scope.kind==='realm' && a.scope.id===t.provider.realmId));
+        else if (t.provider.characterId!==null && t.provider.generation===FB.realmRulerGeneration(s,t.provider.realmId))
+          need(!!incumbent && incumbent.id===t.provider.characterId);
+      }
       var superior=d.mobile.command.superior, issuer=t.issuer;
       if (!superior) need(issuer===null);
       else if (superior.kind==='external_authority') need(exact(issuer,['externalAuthorityId','generation']) && issuer.externalAuthorityId===superior.id && issuer.generation===superior.generation);
@@ -316,9 +389,14 @@
     return {id:def.id,kind:'world',requires:def.requires,init:function (s) {
       if (s.turn!==0) return;
       var d=declaration(s,def.realmId);
+      if (def.provider.kind==='home_authority') FB.bookmarkSetupAppointments(s,
+        {realmId:FB.startRealmId(s,def.provider.realmId),provinceId:d.mobile.origin});
+      var originalProvider=provider(s,def);
+      if (def.provider.kind==='home_authority' && !originalProvider.characterId)
+        throw new Error(FB.T('The expedition preparation has no eligible original local authority.'));
       return {version:1,definitionKey:definitionKey(def,d),status:'preparing',reason:null,revision:0,openedTurn:0,
         endTurn:def.termDays,endedTurn:null,bindings:bindings(s,d),realmGeneration:FB.realmRulerGeneration(s,def.realmId),
-        issuer:M.commandIssuer(s,def.realmId),provider:provider(s,def),authorizedTurn:null,
+        issuer:M.commandIssuer(s,def.realmId),provider:originalProvider,authorizedTurn:null,
         reserves:def.source.kind==='external' ? copy(def.source.cohorts) : [],consumed:[],released:[],formed:null};
     },validate:validate,day:day,
     title:function () {return FB.T(def.title);},intro:function () {return FB.T(def.intro);},
@@ -342,8 +420,11 @@
         detail:FB.T('Consent covers this finite source and local purchase only. No payment or host is created by consent.')});
       if (actor===t.provider.characterId) out.push({id:'grant',label:FB.T('Grant public formation funds'),
         detail:FB.T('Transfer the current shortfall from your separate public account under ordinary civil grant authority. This grants no formation consent.')});
-      if (actor===principal(e)) out=out.concat([{id:'form',label:FB.T('Form the expedition'),detail:FB.T('Withdraw the exact people, pay training and buy provisions from the public command account.')},
-        {id:'contribute',label:FB.T('Contribute private formation funds'),detail:FB.T('Transfer the current shortfall from your private purse into the command account. There is no automatic refund.')},
+      if (actor===principal(e)) out.push({id:'form',label:FB.T('Form the expedition'),detail:FB.T('Withdraw the exact people, pay training and buy provisions from the public command account.')});
+      if (actor===principal(e) || householdDonor(s,e,actor)) out.push({id:'contribute',label:FB.T('Contribute private formation funds'),
+        detail:e.def.householdContribution ? FB.T('Give up to {maximum} from your local household purse toward the current shortfall. This gives no command, consent or refund.',
+          {maximum:e.def.householdContribution.maximum}) : FB.T('Transfer the current shortfall from your private purse into the command account. There is no automatic refund.')});
+      if (actor===principal(e)) out=out.concat([
         {id:'wait',label:FB.T('Wait'),detail:FB.T('Keep the preparation pending without payment or departure.')},
         {id:'stop',label:FB.T('Stop preparation'),detail:FB.T('Release unformed reserves off-map. Local residents stay home; contributed money stays in its public account.')}]);
       if (actor===principal(e) || actor===t.provider.characterId) out.push({id:'refuse',label:FB.T('Decline formation'),
@@ -351,8 +432,12 @@
       return out;
     },quote:function (s,t,id) {return P.review(s,def.id,id,s.player.charId);},
     apply:function (s,t,id,q) {return !!q && q.id===def.id && q.action===id && q.actorId===s.player.charId && P.commit(s,q);},
-    blocker:function () {return FB.T('Formation needs the original living commander and local provider, separate current consent, available people, public funds, market food and normal unit eligibility.');},
-    review:function (s,t,id,q) {return [FB.T('Public training cost: {training}. Public provision cost: {food}. Total: {cost}.',
+    blocker:function (s,t,reason) {
+      if (reason==='private_funds') return FB.T('This voluntary gift needs the quoted amount in your private purse and a remaining shortfall within the command funding limit.');
+      if (reason==='household') return FB.T('Only a living free adult household at the origin, without a journey, can make this private contribution.');
+      return FB.T('Formation needs the original living commander and local provider, separate current consent, available people, public funds, market food and normal unit eligibility.');},
+    review:function (s,t,id,q) {return [id==='contribute' ? FB.T('Private contribution: {amount}. Training need: {training}. Provision need: {food}. This gift grants no formation consent or refund.',
+      {amount:q.cost,training:q.trainingCost,food:q.foodCost}) : FB.T('Public training cost: {training}. Public provision cost: {food}. Total: {cost}.',
       {training:q.trainingCost,food:q.foodCost,cost:q.cost}),
       FB.T('Only this following forms. No vow, road, safe passage, land, private money or family travel is granted.')];}};
   }
