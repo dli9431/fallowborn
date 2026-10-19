@@ -4,6 +4,10 @@ A fixed existingPerson beginning remains under Story starts, using its complete 
 
 Expedition records-review presentation
 
+Local formation contributions
+
+The existing preparation story sheet offers Contribute private formation funds to an opted-in local household as well as its original commander. The action Details disclose the per-review cap, actual shortfall, private payer, lack of command/consent and retained gift on closure. Confirmation shows the exact private amount separately from training and provision needs before applying a fresh canonical quote. Public grants remain separately labelled and need independent grant authority. Original provider and commander person rows, visible blockers, Back, Escape, Close, list scroll and originating-card focus use the existing shared story flow; no new modal or navigation state is introduced.
+
 Personal assurance and restitution records use the shared Deeds story card and reviewed story sheet. Both the card and confirmation identify the original named parties, finite review window, no payer and records-only effect. The restitution review adds the exact counties with current controllers and holders, explicitly explaining that control proves no lawful capture or transfer mandate. Acknowledgment creates no enforceable obligation, homage, common command, payment, passage or land grant. Declining closes only this review without penalty; separate contracts remain in force. Original parties, current authority, command and scope are rechecked at confirmation. Back, Escape, Close, scroll and originating-card focus retain the shared story navigation; no new modal flow is introduced.
 
 Column supply reviews

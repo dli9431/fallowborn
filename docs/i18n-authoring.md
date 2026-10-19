@@ -60,6 +60,8 @@ Household presentation tables in data/story_*.js are discovered by their literal
 
 # i18n authoring guide
 
+Local formation contribution chrome uses literal FB.T phrases with maximum, amount, training and food placeholders. Imported preparation titles and introductions keep ordinary effective English fallback. Provider kinds, original actor/appointment references, contribution policy, exact amounts and saved provenance stay locale-neutral. The shared story sheet owns review and navigation; no rendered prose is persisted and no generated catalogue change accompanies this capability.
+
 Separate ruler agenda sources
 
 Files named data/story_*.js may declare literal FBDATA.rulerAgendas_<suffix> maps and compose them into storyInstances; the suffix can differ from the filename. Static extraction retains rulerAgenda.<id> owners and exact-source aliases for title, intro, stage name/text and choice label/detail, matching the central rulerAgendas table. Extraction never executes the composer. Proper names, ids, dates and operation keys remain untranslated. These tables organize content and add no runtime mod root. A file may pair one with the existing openingProfiles_<suffix> convention, as data/story_western_rulers_1096.js does; starting labels retain their ordinary start scenario owners. No generated catalogue change is required for feature authoring.

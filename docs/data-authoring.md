@@ -80,6 +80,8 @@ Runtime storyInstances uses registered world-story and political-track types. ev
 
 Examples and distribution
 
+local-formation-harbor.json and local-formation-upland.json are standalone ordinary JSON imports of expedition_preparation with home_authority providers and local_household contribution policies. They vary lawful incumbent presence versus a real county deputy with levy only, external versus withdrawn resident cohorts, contribution caps, deadlines and acceptance. Existing home-authority and funding consumers own permission and exact transfers; preparation owns the original binding and once-only formation. No executable import registration, historical roster or new mod root is introduced. Detached invalid-policy, stale-authority, exact funding, finite market, strict optional restore and shared sheet coverage lives in local-formation-authority.spec.js. Development fixtures remain outside shipped packages; both normal distribution and CrazyGames use the same generic consumers, with CrazyGames retaining its existing custom-import restriction.
+
 The standalone harbor-mod.json and dune-mod.json files in tests/e2e/fixtures/authoring are normal JSON imports. They require no script tag, custom factory or test-only registration. They remain development authoring assets outside runtime and shipping allowlists. The ordinary editions support custom imports. CrazyGames keeps its existing restriction against custom mods and its silent English-only distribution behavior.
 
 Lifecycle and tournament authoring

@@ -96,6 +96,10 @@
     rationale:'Reserving finite external cohorts or withdrawing actual local residents is conserved population accounting. Baseline participation has no credible discovery prerequisite.'};
   FBDATA.techImpactReviews.features.expedition_later_formation = {mode:'none',
     rationale:'Once-only formation requires the original living command, actual public funds, paid training and real local provisions. Existing unit eligibility remains binding.'};
+  FBDATA.techImpactReviews.features.expedition_local_formation_authority = {mode:'none',
+    rationale:'The original incumbent or exact existing civil deputy may authorize a finite formation under actual home authority and local jurisdiction. Political consent has no credible discovery prerequisite; command, resource and unit eligibility remain binding.'};
+  FBDATA.techImpactReviews.features.expedition_household_formation_contribution = {mode:'none',
+    rationale:'An explicitly consenting local household may give bounded actual private money toward formation. No discovery gates this ordinary voluntary gift; public grants, local consent, recruitment and command remain separate.'};
   FBDATA.techImpactReviews.features.expedition_story_composition = {mode:'none',
     rationale:'Finite intent observes existing preparation, command and canonical progress. No credible research prerequisite belongs to waiting or declining; all underlying formation, equipment, movement and access gates remain authoritative.'};
   /* The fresh 476 opening inhabits Cherson and adds the Pontic following.

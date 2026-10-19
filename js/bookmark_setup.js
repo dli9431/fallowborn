@@ -253,13 +253,23 @@
     if (!s.bookmarkSetup) FB.seedSettlementCommunities(s);
     initialize(s);return true;
   };
-  FB.bookmarkSetupAppointments = function (s) {
+  FB.bookmarkSetupAppointments = function (s, homeAuthority) {
     var d = definition(s), store = s.bookmarkSetup;
     if (!d || !store) return;
     resolveActorReferences(s, d);
     Object.keys(d.appointments).forEach(function (id) {
       if (own(store.appointments, id)) return;
       var a = d.appointments[id], c = actor(s, a.actorId), proof = null;
+      /* A preparation binds civil authority before story initialization ends.
+         Host offices still wait for their canonical host as before. */
+      if (homeAuthority) {
+        a = FB.startRealmDefinition(s, a);
+        var office = FBDATA.authorityOffices[a.officeId];
+        if (a.realmId !== homeAuthority.realmId || !office ||
+            (office.homePowers || []).indexOf('levy') < 0 ||
+            !(a.scope.kind === 'realm' && a.scope.id === a.realmId ||
+              a.scope.kind === 'county' && a.scope.id === homeAuthority.provinceId)) return;
+      }
       if (!c) return;
       if (a.recognitionSource) proof = FB.authorityRecognize(s, { source:a.recognitionSource,
         issuer:{ kind:'county', id:a.scope.id }, subject:{ kind:'character', id:c.id }, scope:a.scope });
