@@ -4,7 +4,7 @@ Selectable opening
 
 The Mongol Invasion is selectable through the ordinary starting-date picker. Three always-open Story starts offer fictional households: A Farm in the Royal Heartland in Székesfehérvár county, Novgorod artisan household in Novgorod, and Household from Kyiv already living in western Volodymyr. Each has a complete personal story and optional goals, uses the existing resident community and family rules, and can be selected through setup or its start code. Ordinary map-chosen roles retain their station requirements, and Observe uses the same complete world.
 
-The world remains a first-pass reconstruction with the regional limits below. Bela, Yaroslav, Koten, Henry the Pious, Alexander, Frederick II and Danylo have no playable named starts in this version. The household stories use actual work and personal decisions; no active Mongol expedition or hosted Cuman following is initialized. Selection adds no capability, technology gate or save field. Matching saves remain resumable if the date is later hidden. Historical and device acceptance remain separate from this implemented opening.
+The world remains a first-pass reconstruction with the regional limits below. Bela IV and Yaroslav have existing-ruler starts in the fresh royal_households_v2 revision. The other named starts remain outside this opening. The household stories use actual work and personal decisions; no active Mongol expedition or hosted Cuman following is initialized. Selection adds no capability, technology gate or save field. Matching saves remain resumable if the date is later hidden. Historical and device acceptance remain separate from this implemented opening.
 
 Novgorod artisan household
 
@@ -30,9 +30,9 @@ index.html loads the composer immediately after data/bookmark_1241_scaffold_d.js
 
 Named ruler openings
 
-Bela and Yaroslav have no playable starting scenarios in this version. Hungary has the Bela IV background profile and Vladimir has Yaroslav Vsevolodovich, with the birth convention described below. Neither court supplies an accepted historical family or personal opening location. No personal ruler agenda, goals or contact profile is registered for either start. Their household, location and authority declarations must be supported before these named openings can be offered.
+Bela IV at Obuda and Yaroslav at Vladimir adopt their actual courts, named family graphs, holdings and treasury. Each has an eight-stage personal ruler agenda, optional goals and existing-person contacts. docs/research/1241-ruler-openings.md records the sourced relationships and disclosed simulation choices, including approximate supporting births, county authority and court placement. The retained baseline keeps its original households, settlement slots and exclusion of these starts; fresh campaigns select royal_households_v2. Other named-person and operational declarations retain their separate limits.
 
-tests/e2e/specs/1241-ruler-starts.spec.js covers the distinction between background courts and playable people, omission from setup and start codes when the date is locally exposed for review, and direct lookup rejection without changing campaign state, RNG, uid or data definitions. It does not establish historical adoption or a playable agenda.
+tests/e2e/specs/1241-ruler-starts.spec.js covers cards and shared codes, exact existing-ruler adoption, historical-family uniqueness, reciprocal kinship, distinct homes, physical court sites, current and retained world validation, contacts, costless deferred agendas, stale/repeated decisions, protagonist interruption and matching restore. tools/test_i18n_1241_rulers.py covers the new display owners.
 
 Household from Kyiv
 

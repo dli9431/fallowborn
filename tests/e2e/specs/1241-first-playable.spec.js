@@ -8,6 +8,7 @@ const {beginBookmark,restoreBookmark,facts} = require('../support/game/bookmark-
 const {releasedCatalogue} = require('../support/released-catalogue');
 
 dependsOnRuntime(__filename,[
+  'data/story_ruler_agendas_1241.js',
   'index.html','data/bookmark_1241.js','data/identities_1241.js',
   'data/bookmark_1241_scaffold_a.js','data/bookmark_1241_scaffold_b.js',
   'data/bookmark_1241_scaffold_c.js','data/bookmark_1241_scaffold_d.js',
@@ -54,7 +55,7 @@ async function openDates(page,info) {
 test('1241 composes all physical counties in ledger order with unique courts and valid references',async function ({page},info) {
   await openGame(page,info);
   const result = await page.evaluate(function (order) {
-    const b = FB.bookmark('1241'), ids = [], courtIds = [], counties = {}, courts = {}, faults = [];
+    const b = FB.bookmark('1241','baseline'), ids = [], courtIds = [], counties = {}, courts = {}, faults = [];
     const layout = FBDATA.settlementLayouts[b.settlementLayout];
     b.provinces.forEach(function (p) { counties[p.id] = p; });
     b.realms.forEach(function (r) { courts[r.id] = r; });
@@ -155,7 +156,7 @@ test('1241 preserves released worlds and rejects malformed detached definitions 
   expect(result).toEqual({rejected:[true,true,true,true,true],pure:true});
 });
 
-test('1241 is offered with all three household stories while named openings remain unavailable',async function ({page},info) {
+test('1241 offers its households and implemented courts while other named openings remain unavailable',async function ({page},info) {
   await openDates(page,info);
   expect(await page.evaluate(function () {
     return {hidden:FB.bookmark('1241').hidden === true,available:FB.bookmarkAvailable('1241'),
@@ -170,7 +171,9 @@ test('1241 is offered with all three household stories while named openings rema
     await expect(card).not.toHaveAttribute('aria-disabled','true');
     await expect(card).toContainText('Story start:');
   }
-  for (const id of ['bela_1241','yaroslav_1241','koten_1241','henry_pious_1241',
+  for (const id of ['bela_1241','yaroslav_1241'])
+    await expect(page.locator('#scenariolist [data-scenario="'+id+'"]')).toBeVisible();
+  for (const id of ['koten_1241','henry_pious_1241',
     'alexander_1241','frederick_1241','danylo_1241'])
     await expect(page.locator('#scenariolist [data-scenario="'+id+'"]')).toHaveCount(0);
   await expect(page.locator('#scenariolist [data-scenario="farmer"]')).toHaveAttribute('aria-disabled','true');
