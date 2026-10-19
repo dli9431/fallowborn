@@ -147,7 +147,11 @@ test('court redating retains local residents and leaves unresolved incumbents ge
       expect(r[id].ruler.born).toBeGreaterThanOrEqual(1041);
       expect(r[id].ruler.born).toBeLessThanOrEqual(1076);
     }
-    expect(r[id].royalCourt).toBeUndefined();
+    if (id === 'byzantium_1096') {
+      expect(r[id].royalCourt.spouseId).toBe('irene');
+      expect(r[id].royalCourt.members.map(function (m) { return m.id; })).toEqual(
+        ['irene','anna','maria','john','eudokia','andronikos','isaac']);
+    } else expect(r[id].royalCourt).toBeUndefined();
   });
   expect(result.papacy).toEqual([{id:'papacy_1096',name:'Urban II',born:1035,capital:'roma',religion:'catholic'}]);
   expect(r.canossa_1096.ruler.sex).toBe('f');

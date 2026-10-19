@@ -403,3 +403,7 @@ The literal tech_baths_headworks and buildings_baths_headworks supplements use e
 Production supplements
 
 Literal FBDATA.productionGoods_<suffix> and FBDATA.productionRecipes_<suffix> maps in data/production_*.js use the existing productionGood and productionRecipe name/desc/fallback owners. Static extraction reads the maps without executing their composition. Units, quantities, prices and references remain untranslated; new English uses normal authored fallback. Compose each unique addition into its ordinary root before runtime validation. Catalogue generation remains a separate owner request.
+
+Eastern ruler presentation
+
+The literal startScenarios_eastern_rulers_1096 array in data/starts_eastern_rulers_1096.js uses ordinary scenario display and family-preset owners. data/story_eastern_rulers_1096.js declares rulerAgendas_eastern_rulers_1096 and openingProfiles_eastern_rulers_1096 for rulerAgenda and openingProfile owners and exact-source aliases. Supplemental agenda extraction uses the shared rulerAgendas_ story-table discovery alongside the legacy table; it must be integrated before generating a catalogue containing these texts. Runtime presentation remains the shared translated story surface with normal English fallback. Personal names, family birth years, identifiers and saved decisions are locale-neutral.

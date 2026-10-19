@@ -35,7 +35,7 @@ FBDATA.bookmarkRegions1096.anatolia_caucasus = {
     {"id":"derbent","name":"Derbent","x":48.15,"y":42.05,"terrain":"mountains","duchy":"samandar","realm":"caspian_local_1096","culture":"turkic","religion":"tengri","dev":4,"communities":[{"culture":"turkic","religion":"tengri","populationShare0":10000}]}
   ],
   realms:[
-    {"id":"rum_1096","name":"Sultanate of Rum","capital":"nicaea","color":"#af8d4b","rank":3,"aggression":0,"government":"territorial","religion":"sunni","ruler":{"sex":"m","culture":"turkic","born":1061,"mar":8,"trait":"patient","generated":true}},
+    {"id":"rum_1096","name":"Sultanate of Rum","capital":"nicaea","color":"#af8d4b","rank":3,"aggression":0,"government":"territorial","religion":"sunni","ruler":{"sex":"m","culture":"turkic","born":1079,"mar":8,"trait":"patient","name":"Kilij Arslan I"},"royalCourt":{"spouseId":null,"members":[]}},
     {"id":"danishmendid_1096","name":"Danishmendid court","capital":"sebasteia","color":"#a49362","rank":2,"aggression":0,"government":"territorial","religion":"sunni","ruler":{"sex":"m","culture":"turkic","born":1061,"mar":8,"trait":"patient","generated":true}},
     {"id":"smyrna_local_1096","name":"Smyrna court","capital":"smyrna","color":"#81996b","rank":2,"aggression":0,"government":"territorial","religion":"sunni","ruler":{"sex":"m","culture":"turkic","born":1061,"mar":8,"trait":"patient","generated":true}},
     {"id":"cilician_courts_1096","name":"Cilician courts","capital":"tarsos","color":"#b98b5c","rank":2,"aggression":0,"government":"territorial","religion":"eastern","ruler":{"sex":"m","culture":"armenian","born":1061,"mar":8,"trait":"patient","generated":true}},
