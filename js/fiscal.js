@@ -10,6 +10,13 @@
   FB.msg('news.fiscal.easing', 'Fiscal resentment eases as recovery continues.');
   FB.msg('news.fiscal.pressure', 'The unresolved fiscal crisis deepens popular resentment and political distrust.');
 
+  function purse(state) {
+    return FB.treasuryPreserved(state,'player') ? state.realms.player.treasury : state.player;
+  }
+  function budget(state,economy,ignoreAssignments) {
+    return FB.treasuryPreserved(state,'player') ? FB.treasuryDynasticBudget(state) :
+      FB.playerCivilianBudget(state,economy,ignoreAssignments);
+  }
   function rules() { return FBDATA.balance.fiscalCrisis; }
   function count(key) {
     const timing = FB.game && FB.game._fastForwardTiming;
@@ -18,7 +25,7 @@
   function record(state) { return state && state.fiscalCrisis; }
   function ensure(state) {
     if (!state.fiscalCrisis) state.fiscalCrisis = {
-      basis:Math.max(rules().minimumIncome, FB.playerCivilianBudget(state, null, true).receipts), stage:0, since:null, lowSince:null,
+      basis:Math.max(rules().minimumIncome, budget(state,null,true).receipts), stage:0, since:null, lowSince:null,
       active:false, recovering:false, lastSeason:Math.floor(state.turn / 90), nextChange:null,
       settlement:null, nextSettlement:0
     };
@@ -52,7 +59,7 @@
     return r && FB.station.mayHoldCouncil(state.player, state) ? -r.stage * rules().authorityStep : 0;
   };
   FB.fiscalCrisisQuote = function (state) {
-    const r = record(state), b = rules(), debt = Math.max(0, -state.player.gold);
+    const r = record(state), b = rules(), debt = Math.max(0, -purse(state).gold);
     const basis = r ? r.basis : b.minimumIncome;
     return { debt:debt, basis:basis, stage:r ? r.stage : 0,
       active:!!(r && r.active), recovering:!!(r && r.recovering),
@@ -69,7 +76,7 @@
     let r = record(state);
     if (!FB.station.isLanded(state.player, state)) {
       if (r && (r.active || r.settlement && !r.settlement.closed)) {
-        state.player.gold = Math.max(0, state.player.gold);
+        if (!(state.start && state.start.publicTreasury)) purse(state).gold = Math.max(0, purse(state).gold);
         if (r.settlement) { r.settlement.remaining = 0; r.settlement.closed = true; }
         r.active = false; r.stage = 0; r.since = null; r.recovering = false;
         changed();
@@ -78,7 +85,7 @@
       return;
     }
     r = r || ensure(state);
-    const b = rules(), debt = Math.max(0, -state.player.gold);
+    const b = rules(), debt = Math.max(0, -purse(state).gold);
     if (!r.active) {
       if (debt > r.basis * b.entrySeasons) {
         if (r.since === null) {
@@ -109,13 +116,13 @@
     // One shared civilian budget, never a presentation breakdown or world scan.
     if (!r.active && r.since === null || r.settlement && !r.settlement.closed) {
       count('seasonal budget projections');
-      const budget = FB.playerCivilianBudget(state, economy);
-      if (!r.active && r.since === null) r.basis = Math.max(b.minimumIncome, budget.receipts);
+      const funds = budget(state,economy);
+      if (!r.active && r.since === null) r.basis = Math.max(b.minimumIncome, funds.receipts);
       const s = r.settlement;
       if (s && !s.closed) {
-        const payment = state.turn > s.endTurn ? 0 : Math.min(s.remaining, Math.max(0, budget.surplus) * b.assignmentShare,
-          Math.max(0, state.player.gold));
-        state.player.gold -= payment; s.remaining -= payment; s.lastPayment = payment;
+        const payment = state.turn > s.endTurn ? 0 : Math.min(s.remaining, Math.max(0, funds.surplus) * b.assignmentShare,
+          Math.max(0, purse(state).gold));
+        purse(state).gold -= payment; s.remaining -= payment; s.lastPayment = payment;
         if (state.turn >= s.endTurn) {
           s.remaining = 0; s.closed = true;
           news(state, 'news.fiscal.settled');
@@ -156,7 +163,7 @@
       acceptedTurn:state.turn, recoveryLimit:r.basis * rules().recoverySeasons,
       lastPayment:0, closed:false };
     r.nextSettlement = q.nextSettlement;
-    state.player.gold = 0;
+    purse(state).gold = 0;
     if (FB.station.mayHoldCouncil(state.player, state) && FB.grantPrivilege) FB.grantPrivilege(state, 'office_confirmation', {
       sourceType:'charter', sourceId:'fiscal_settlement', grantorType:'realm', grantorId:'player'
     });
@@ -222,7 +229,7 @@
     const reserves = FB.treasuryConstructionReserves(state);
     if (price <= 0 || FB.treasuryAvailable(state, rid) - (reserves[rid] || 0) < price) return null;
     const contract = FB.feudalContractOf(state, rid), charter = FB.feudalCharterDef(contract.charterId);
-    return { pid:pid, rid:rid, buyer:JSON.stringify(state.realms[rid].ruler), price:price, gold:state.player.gold,
+    return { pid:pid, rid:rid, buyer:JSON.stringify(state.realms[rid].ruler), price:price, gold:purse(state).gold,
       normalTax:base, normalDues:base * charter.taxShare,
       projection:FB.landGrantFiscalProjection(state, [pid], contract.charterId),
       levyShare:charter.levyShare, charter:contract.charterId, turn:state.turn };
@@ -261,7 +268,7 @@
     if (!rid || !state.realms[rid] || !state.realms[rid].alive) return FB.T('This ruler no longer holds the {term:fief}.');
     let refund = 0;
     for (const pid of FB.realmHeldCounties(state, rid)) refund += FB.fiscalRevocationRefund(state, pid);
-    return refund > Math.max(0, state.player.gold)
+    return refund > Math.max(0, purse(state).gold)
       ? FB.T('Revocation requires refunding {money:amount} for purchased land.', { amount:refund }) : null;
   };
   FB.fiscalEventRestriction = function (state, option, ctx) {

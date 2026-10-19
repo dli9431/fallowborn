@@ -1666,6 +1666,7 @@ window.FB = window.FB || {};
     var platform = FB.resolveBookmarkPlatform(definition);
     for (var pf = 0; pf < platform.faults.length; pf++) fault(platform.faults[pf]);
     if (FB.homeAuthority) FB.homeAuthority.definitionFaults(definition).forEach(fault);
+    if (FB.treasuryDefinitionFaults) FB.treasuryDefinitionFaults(definition).forEach(fault);
     FB.bookmarkRequirementFaults(definition, platform, stories).forEach(fault);
     FB.validateClimateData().forEach(fault);
     FB.validateBuildingData(FBDATA.buildings, true).forEach(fault);
@@ -11225,7 +11226,7 @@ window.FB = window.FB || {};
     if (FB.remapWarRealm) FB.remapWarRealm(state, rid, 'player');
     if (FB.historicalAmbitionRealmInherited) FB.historicalAmbitionRealmInherited(state, rid, 'player');
     if (FB.treasuryRetireRealm) FB.treasuryRetireRealm(state, rid, 'player', {
-      publicAccession:!!(FB.electiveCrown && FB.electiveCrown(state, rid))
+      publicAccession:!!(FB.treasuryPreserved(state,rid) || FB.electiveCrown && FB.electiveCrown(state, rid))
     });
     FB.markRealmDead(state, rid);
     /* The realm's temporal inheritance is separate from any religious office:

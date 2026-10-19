@@ -5,6 +5,85 @@
   function positive(value) { return Math.max(0, numeric(value)); }
   function season(state) { return Math.floor(state.turn / 90); }
   const retries = new WeakMap();
+  function own(o,k) { return !!o && Object.prototype.hasOwnProperty.call(o,k); }
+  function exact(o,list) { return !!o && typeof o === 'object' && !Array.isArray(o) &&
+    Object.keys(o).length === list.length && list.every(function (k) { return own(o,k); }); }
+  function preservation(state) { return state.start && state.start.publicTreasury; }
+  FB.treasuryDefinitionFaults = function (bookmark) {
+    const platform = bookmark && FB.resolveBookmarkPlatform(bookmark);
+    return (bookmark && bookmark.realms || []).filter(function (r) {
+      if (r.publicTreasury === undefined) return false;
+      const formId = platform && platform.governments[r.id], form =
+        !FB.governments.problems(formId).length && FB.governments.resolve(formId);
+      return !exact(r.publicTreasury,['schema']) || r.publicTreasury.schema !== 1 || !form ||
+        r.mobile || r.nonTerritorial || r.rebelFaction || !FB.realmRank.isTerritorial({rank:r.rank,formId:formId,era:platform.era}, {}) ||
+        form.use.succession.publicCrown || form.use.succession.institutionalProperty ||
+        form.use.succession.delegatedLeadership || form.use.succession.commandLeadership;
+    }).map(function () { return FB.T('Invalid adopted public treasury declaration.'); });
+  };
+  FB.treasuryPreservesStart = function (state, originalId) {
+    const bm = FB.campaignBookmark(state), def = (bm && bm.realms || []).find(function (r) { return r.id === originalId; });
+    return !!(def && def.publicTreasury !== undefined && !FB.treasuryDefinitionFaults(bm).length);
+  };
+  function preservedOwner(state,rid) {
+    const p = preservation(state);
+    return !!(p && p.retirement === null && p.realmId === rid);
+  }
+  FB.treasuryPreserved = preservedOwner;
+  FB.treasurySeparated = function (state,rid) {
+    return preservedOwner(state,rid) || !!(FB.electiveCrown && FB.electiveCrown(state,rid));
+  };
+  FB.treasuryValidatePreservation = function (state) {
+    const p = preservation(state), start = state.start, bm = FB.campaignBookmark(state);
+    const expected = !!(start && start.rulerRealmId && FB.treasuryPreservesStart(state,start.rulerRealmId));
+    function invalid() { throw new Error(FB.T('Invalid adopted public treasury provenance.')); }
+    if (FB.treasuryDefinitionFaults(bm).length || !expected && p !== undefined) invalid();
+    if (!expected) {
+      if (Object.keys(state.realms || {}).some(function (rid) {
+        return own(state.realms[rid].treasury,'publicOwnerId');
+      })) invalid();
+      return true;
+    }
+    if (!exact(p,['schema','originalRealmId','realmId','retirement']) || p.schema !== 1 ||
+        p.originalRealmId !== start.rulerRealmId ||
+        [p.originalRealmId,'player'].indexOf(p.realmId) < 0) invalid();
+    if (p.retirement !== null && (!exact(p.retirement,['turn','recipientId']) ||
+        !Number.isSafeInteger(p.retirement.turn) || p.retirement.turn < 0 || p.retirement.turn > state.turn ||
+        p.retirement.recipientId !== null && (typeof p.retirement.recipientId !== 'string' ||
+          !state.realms[p.retirement.recipientId]) || p.retirement.recipientId === p.realmId)) invalid();
+    const realm = state.realms && state.realms[p.realmId], row = realm && realm.treasury;
+    const holders = Object.keys(state.realms || {}).filter(function (rid) {
+      return state.realms[rid].treasury && state.realms[rid].treasury.publicOwnerId === p.originalRealmId;
+    });
+    if (holders.length > 1 || holders.length && holders[0] !== p.realmId) invalid();
+    if (Object.keys(state.realms || {}).some(function (rid) {
+      const t = state.realms[rid].treasury;
+      return own(t,'publicOwnerId') && t.publicOwnerId !== p.originalRealmId;
+    })) invalid();
+    if (p.retirement !== null) {
+      if (row && row.publicOwnerId === p.originalRealmId && (!row.retired || row.gold !== 0 || row.militaryAccrued !== 0 ||
+          !exact(row.retirement,['recipient','gold','accrued']) || row.retirement.recipient !== p.retirement.recipientId ||
+          !Number.isFinite(row.retirement.gold) || !Number.isFinite(row.retirement.accrued) || row.retirement.accrued < 0)) invalid();
+      return true;
+    }
+    if (!realm || !realm.alive || !row || holders.length !== 1 || row.version !== 1 ||
+        row.publicOwnerId !== p.originalRealmId || row.retired !== false || own(row,'retirement') ||
+        !Number.isFinite(row.gold) || Math.abs(row.gold) > Number.MAX_SAFE_INTEGER ||
+        !Number.isFinite(row.militaryAccrued) || row.militaryAccrued < 0 || row.militaryAccrued > Number.MAX_SAFE_INTEGER ||
+        !Number.isSafeInteger(row.lastSettledSeason) || row.lastSettledSeason < 0 || row.lastSettledSeason > season(state) ||
+        !Number.isSafeInteger(row.lastRevaluedYear) || row.lastRevaluedYear > state.date.year ||
+        !Number.isFinite(row.distributionNextTurn) || row.distributionNextTurn < 0 ||
+        !state.treasuryAccounting || state.treasuryAccounting.version !== 1 || state.treasuryAccounting.mode !== 'active') invalid();
+    if (['necessary','reserveTarget','recoverUntil','shortfallSeasons'].some(function (k) {
+      return own(row,k) && (!Number.isFinite(row[k]) || row[k] < 0);
+    }) || row.lastSummary !== null && (!row.lastSummary || typeof row.lastSummary !== 'object' ||
+      Array.isArray(row.lastSummary) || !Number.isSafeInteger(row.lastSummary.period) ||
+      row.lastSummary.period < 0 || row.lastSummary.period > season(state) ||
+      ['opening','income','duesIn','duesOut','upkeep','administration','court','government','military','closing'].some(function (k) {
+        return !Number.isFinite(row.lastSummary[k]);
+      }))) invalid();
+    return true;
+  };
   function active(state, rid) {
     return state.treasuryAccounting && state.treasuryAccounting.mode === 'active' && account(state, rid);
   }
@@ -22,8 +101,12 @@
   }
   function account(state, rid) {
     const realm = state.realms && state.realms[rid];
+    if (preservedOwner(state,rid) && (!realm || !realm.treasury ||
+        realm.treasury.publicOwnerId !== preservation(state).originalRealmId ||
+        !Number.isFinite(realm.treasury.gold) || !Number.isFinite(realm.treasury.militaryAccrued) ||
+        realm.treasury.militaryAccrued < 0)) return null;
     return (eligible(realm, rid, state) || rid === 'player' && realm && realm.alive &&
-      FB.electiveCrown && FB.electiveCrown(state, rid)) && realm.treasury && realm.treasury.version === 1
+      FB.treasurySeparated(state, rid)) && realm.treasury && realm.treasury.version === 1
       && !realm.treasury.retired ? realm.treasury : null;
   }
   function empty(state, gold) {
@@ -55,7 +138,7 @@
     return out;
   }
   FB.treasuryAvailable = function (state, rid) {
-    if (rid === 'player' && !(FB.electiveCrown && FB.electiveCrown(state, rid))) return Math.max(0, numeric(state.player.gold));
+    if (rid === 'player' && !FB.treasurySeparated(state, rid)) return Math.max(0, numeric(state.player.gold));
     const row = account(state, rid);
     return row ? Math.max(0, numeric(row.gold) - positive(row.militaryAccrued)) : 0;
   };
@@ -82,22 +165,55 @@
     account(state, recipient).gold += amount;
     return true;
   };
+  // A personal payment is explicitly distinct from the recipient realm.
+  FB.treasuryPayPrivate = function (state,payer,amount) {
+    if (!Number.isFinite(amount) || amount < 0 || !Number.isFinite(state.player.gold) ||
+        state.player.gold + amount > Number.MAX_SAFE_INTEGER) return false;
+    if (payer === 'player' && !FB.treasurySeparated(state,payer)) return true;
+    if (!FB.treasuryPublicAccountSnapshot(state,payer) || !FB.treasurySpend(state,payer,amount)) return false;
+    state.player.gold += amount;
+    return true;
+  };
+  FB.treasuryPlayerWorksFunds = function (state) {
+    if (!preservedOwner(state,'player')) return state.player.gold;
+    const reserves = FB.treasuryConstructionReserves(state,FB.treasurySnapshot(state,{openingPlayer:true}));
+    return reserves && Number.isFinite(reserves.player) ? Math.max(0,FB.treasuryAvailable(state,'player') - reserves.player) : 0;
+  };
+  FB.treasuryPlayerWorksSpend = function (state,amount) {
+    const funds = FB.treasuryPlayerWorksFunds(state);
+    if (!Number.isFinite(amount) || amount < 0 || amount > funds) return false;
+    if (preservedOwner(state,'player')) return FB.treasurySpendOptional(state,'player',amount,
+      Math.max(0,FB.treasuryAvailable(state,'player') - funds));
+    state.player.gold -= amount;
+    return true;
+  };
+  FB.treasuryDynasticBudget = function (state) {
+    const tax = FB.playerTaxParts(state), receipts = FB.playerTax(state,tax);
+    return {receipts:Math.max(0,receipts),surplus:receipts - FB.buildingBonus(state,'upkeep') -
+      (FB.fortUpkeep ? FB.fortUpkeep(state) : 0) - (FB.modifierUpkeep ? FB.modifierUpkeep(state,'gold') : 0) -
+      FB.playerGovernmentCosts(state,tax).total - FB.publicOfficeBudget(state,'player')};
+  };
   // null denotes an existing non-realm source/sink or prepaid courier escrow.
   // Callers own once-only lifecycle guards; no growing transaction log is kept.
-  FB.treasuryTransfer = function (state, payer, recipient, amount, compulsory) {
+  FB.treasuryTransfer = function (state, payer, recipient, amount, compulsory, personal) {
     if (typeof amount !== 'number' || !isFinite(amount) || amount < 0 || (payer && payer === recipient)) return false;
     const enabled = state.treasuryAccounting && state.treasuryAccounting.mode === 'active';
-    const from = payer === 'player' ? account(state, payer) || state.player : enabled && account(state, payer);
-    const to = recipient === 'player' ? account(state, recipient) || state.player : enabled && account(state, recipient);
+    const privatePlayer = personal === true && preservedOwner(state,'player');
+    const from = payer === 'player' ? privatePlayer ? state.player : account(state, payer) || (!FB.treasurySeparated(state,payer) && state.player) : enabled && account(state, payer);
+    const to = recipient === 'player' ? privatePlayer ? state.player : account(state, recipient) || (!FB.treasurySeparated(state,recipient) && state.player) : enabled && account(state, recipient);
+    if (payer === 'player' && !from || recipient === 'player' && !to) return false;
     if (enabled && ((payer && payer !== 'player' && !from) ||
         (recipient && recipient !== 'player' && !to))) return false;
-    const available = payer === 'player' ? FB.treasuryAvailable(state, payer) :
+    const available = payer === 'player' ? privatePlayer ? Math.max(0,numeric(state.player.gold)) : FB.treasuryAvailable(state, payer) :
       from ? FB.treasuryAvailable(state, payer) : Infinity;
     if (!compulsory && amount > available) return false;
     if (from) from.gold -= amount;
     if (to) to.gold += amount;
     count('counterparty transfers');
     return true;
+  };
+  FB.treasuryTransferPersonal = function (state,payer,recipient,amount,compulsory) {
+    return FB.treasuryTransfer(state,payer,recipient,amount,compulsory,true);
   };
   FB.treasuryCounterparty = function (state, rid) {
     return rid === 'player' || active(state, rid) ? rid : null;
@@ -150,7 +266,7 @@
       positive(fiscal.income + (fiscal.duesIn || 0)) * FBDATA.balance.realmReserveRevenueFloor);
   }
   function distributionAccount(state, rid) {
-    return rid === 'player' ? account(state, rid) || state.player : active(state, rid);
+    return rid === 'player' ? account(state, rid) || (!FB.treasurySeparated(state,rid) && state.player) : active(state, rid);
   }
   FB.publicDistributionQuote = function (state, rid, fiscal) {
     const payer = distributionAccount(state, rid);
@@ -282,6 +398,9 @@
 
   FB.treasuryInitialize = function (state, options) {
     return measured('account repair', function () {
+      if (state.treasuryAccounting && state.treasuryAccounting.mode === 'active' &&
+          (preservation(state) || state.start && FB.treasuryPreservesStart(state,state.start.rulerRealmId)))
+        FB.treasuryValidatePreservation(state);
       const initial = !state.treasuryAccounting || typeof state.treasuryAccounting !== 'object' ||
         Array.isArray(state.treasuryAccounting);
       // Explicit fresh worlds adopt before installing their inventory. Project
@@ -305,6 +424,8 @@
       for (const rid of Object.keys(snapshot.rows)) {
         const realm = state.realms[rid], fiscal = snapshot.rows[rid];
         const saved = realm.treasury;
+        if (preservation(state) && preservation(state).realmId === rid && preservation(state).retirement !== null &&
+            (!saved || saved.publicOwnerId === preservation(state).originalRealmId)) continue;
         if (saved && saved.version === 1) {
           saved.gold = numeric(saved.gold);
           saved.militaryAccrued = positive(saved.militaryAccrued);
@@ -320,6 +441,7 @@
         const gold = initial && !deferredFormation(state,rid) ? Math.max(floors[Math.min(4, realm.rank)] || 0,
           Math.max(0, net) * (seasons === undefined ? 2 : positive(seasons))) : 0;
         realm.treasury = empty(state, gold);
+        if (preservedOwner(state,rid)) realm.treasury.publicOwnerId = preservation(state).originalRealmId;
         count('accounts initialized');
       }
       if (state.treasuryAccounting.mode !== 'active') {
@@ -332,6 +454,7 @@
           const opening = Math.max(floors[Math.min(4, realm.rank)] || 0,
             Math.max(0, net) * (periods === undefined ? 2 : positive(periods)));
           realm.treasury = empty(state, deferredFormation(state,rid) ? 0 : Math.max(opening, positive(purses[rid] && purses[rid].gold)));
+          if (preservedOwner(state,rid)) realm.treasury.publicOwnerId = preservation(state).originalRealmId;
         }
         state.treasuryAccounting.mode = 'active';
         state.treasuryAccounting.pendingPlayer = 0;
@@ -350,7 +473,7 @@
       retries.delete(state);
       if (state.armyLogistics) delete state.armyLogistics.purses;
       if (openingPlayer && state.realms.player && state.realms.player.treasury &&
-          !(FB.electiveCrown && FB.electiveCrown(state, 'player'))) {
+          !FB.treasurySeparated(state, 'player')) {
         state.player.gold = state.realms.player.treasury.gold;
         delete state.realms.player.treasury;
       }
@@ -508,6 +631,8 @@
       } else state.treasuryAccounting.playerMilitaryLast = 0;
       for (const rid of Object.keys(snapshot.rows)) {
         const fiscal = snapshot.rows[rid], realm = state.realms[rid];
+        if (preservation(state) && preservation(state).realmId === rid && preservation(state).retirement !== null &&
+            (!realm.treasury || realm.treasury.publicOwnerId === preservation(state).originalRealmId)) continue;
         if (!realm.treasury) realm.treasury = empty(state, 0);
         const row = account(state, rid);
         if (!row || row.lastSettledSeason >= period) continue;
@@ -530,6 +655,28 @@
       FB.settlementLordshipSeason(state, period);
       return true;
     });
+  };
+
+  // The existing player fiscal calculation has exactly one public settlement.
+  FB.treasuryDynasticSeason = function (state,amount,taxParts) {
+    if (!preservedOwner(state,'player')) return false;
+    if (!Number.isFinite(amount)) throw new Error(FB.T('Invalid adopted public treasury provenance.'));
+    const row = account(state,'player'), period = season(state);
+    if (!row) throw new Error(FB.T('Invalid adopted public treasury provenance.'));
+    if (row.lastSettledSeason >= period) return true;
+    const opening = row.gold, military = positive(row.militaryAccrued);
+    row.gold += amount - military;
+    row.militaryAccrued = 0;
+    row.lastSettledSeason = period;
+    const income = taxParts ? FB.playerTax(state,taxParts) : 0, government = FB.playerGovernmentCosts(state,taxParts);
+    const upkeep = income - amount - government.total, duesOut = taxParts ?
+      positive(-taxParts.countyLiege) + positive(taxParts.settlementDues) : 0;
+    row.lastSummary = {period:period,opening:opening,income:income + duesOut - (taxParts ? taxParts.dues : 0),
+      duesIn:taxParts ? taxParts.dues : 0,duesOut:duesOut,upkeep:upkeep,
+      administration:government.administration,court:government.court,government:government.total,
+      net:amount,military:military,closing:row.gold};
+    row.necessary = positive(upkeep) + duesOut + government.total + FB.publicOfficeBudget(state,'player');
+    return true;
   };
 
   // Called from the existing supply pass; payer totals commit after every host.
@@ -612,6 +759,8 @@
   }
   FB.treasuryCommitMilitary = function (state, batch) {
     if (!batch || state.treasuryAccounting.lastMilitaryTurn === state.turn) return;
+    if (own(batch.costs,'player') && preservedOwner(state,'player') && !account(state,'player'))
+      throw new Error(FB.T('Invalid adopted public treasury provenance.'));
     measured('military accrual', function () {
       for (const rid of Object.keys(batch.costs)) {
         if (rid === 'player') {
@@ -688,12 +837,15 @@
     const from = account(state, rid);
     if (!from) return;
     if (recipient === 'player' && options && options.publicAccession &&
-        FB.electiveCrown && FB.electiveCrown(state, rid)) {
+        (preservedOwner(state,rid) ? !account(state,recipient) : FB.electiveCrown && FB.electiveCrown(state, rid))) {
       state.realms.player.treasury = from;
       delete state.realms[rid].treasury;
+      if (preservedOwner(state,rid)) preservation(state).realmId = 'player';
       return;
     }
     const to = account(state, recipient);
+    if (recipient === 'player' && preservedOwner(state,recipient) && !to)
+      throw new Error(FB.T('Invalid adopted public treasury provenance.'));
     if (to) { to.gold += from.gold; to.militaryAccrued += from.militaryAccrued; }
     else if (recipient === 'player') {
       if (state.treasuryAccounting.mode === 'active') state.player.gold += from.gold - from.militaryAccrued;
@@ -701,5 +853,6 @@
     }
     from.retirement = { recipient:recipient || null, gold:from.gold, accrued:from.militaryAccrued };
     from.gold = 0; from.militaryAccrued = 0; from.retired = true;
+    if (preservedOwner(state,rid)) preservation(state).retirement = {turn:state.turn,recipientId:recipient || null};
   };
 }());

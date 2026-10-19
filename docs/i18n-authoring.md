@@ -1,3 +1,7 @@
+Adopted public treasuries
+
+The optional ordinary dynastic public-account setting contains only typed accounting metadata and original realm ids, with no translated or saved prose. Its declaration/save diagnostics and the shared Coin and Credit explanation use literal FB.T sources. Existing public treasury labels and money formatting remain shared. Imported display fields keep the ordinary mod fallback and exact fingerprints. No catalogue regeneration is required on a feature branch; missing translations fall back to English until an owner-requested integration update.
+
 Dated home-authority policy presentation
 
 homeAuthorityPolicies contains only form ids, schema numbers, presence enum values and a delegation boolean. It introduces no display table or saved prose. Existing literal FB.T home-decision reasons, preparation sheets, funding reviews and scenario summary strings remain the presentation owners for both global and dated policies. Imported names and descriptions keep their existing English fallback. No generated catalogue or extraction change accompanies policy composition.

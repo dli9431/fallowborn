@@ -1,3 +1,7 @@
+Adopted dynastic public funds
+
+An ordinary dynastic ruler may retain a distinct public account through the effective realm.publicTreasury option. treasuryPublicAccountSnapshot exposes its real canonical account under the adopted player alias without reading private gold. Existing fundingQuote/fund reviews retain exact living civil authority, current balances, military reserves, finite limits and fundingRevision; a separate voluntary private contribution still selects the household source explicitly. This option gives no levy consent, deputy, command or subordinate jurisdiction. See docs/designs/adopted-public-treasury.md.
+
 Home decisions and expedition funding
 
 Dated policy composition

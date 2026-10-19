@@ -1678,7 +1678,7 @@ window.FB = window.FB || {};
   FB.intrigueRansomCaptive = function (state, captorId) {
     var record = FB.intrigueCaptiveOf(state, captorId || state.player.charId);
     if (!record || record.captorId !== state.player.charId) return false;
-    if (!FB.treasuryTransfer(state, FB.treasuryCharacterRealm(state, record.captiveId),
+    if (!FB.treasuryTransferPersonal(state, FB.treasuryCharacterRealm(state, record.captiveId),
         'player', record.demand.amount, true)) return false;
     releaseCaptiveRecord(state, record, FB.msg('news.intrigue.ransom_received',
       '⛓ A captive is released after ransom is paid.', {}));
@@ -1742,7 +1742,7 @@ window.FB = window.FB || {};
         FB.stationOf(target), 0), 0, 4));
       var amount = Math.max(0, finite(ransomTable[targetStation], 0));
       if (actorId === state.player.charId) {
-        if (!FB.treasuryTransfer(state, FB.treasuryCharacterRealm(state, target.id), 'player', amount, true)) return false;
+        if (!FB.treasuryTransferPersonal(state, FB.treasuryCharacterRealm(state, target.id), 'player', amount, true)) return false;
       }
       else character(state, actorId).wealth = Math.max(0,
         finite(character(state, actorId).wealth, 0) + amount);
@@ -2312,7 +2312,7 @@ window.FB = window.FB || {};
   FB.fns.intrigue_captive_ransom_pay = function (state, ctx) {
     var record = playerRansom(state, ctx);
     if (!record || state.player.gold < record.demand.amount) return false;
-    if (!FB.treasuryTransfer(state, 'player', FB.treasuryCharacterRealm(state, record.captorId),
+    if (!FB.treasuryTransferPersonal(state, 'player', FB.treasuryCharacterRealm(state, record.captorId),
         record.demand.amount)) return false;
     releaseCaptiveRecord(state, record, FB.msg('news.intrigue.ransom_paid',
       '⛓ The ransom is paid and the captive returns home.', {}));
@@ -2324,7 +2324,7 @@ window.FB = window.FB || {};
     if (!record || record.source === 'judicial' || !record.demand || state.player.gold < record.demand.amount) {
       return false;
     }
-    if (!FB.treasuryTransfer(state, 'player', FB.treasuryCharacterRealm(state, record.captorId),
+    if (!FB.treasuryTransferPersonal(state, 'player', FB.treasuryCharacterRealm(state, record.captorId),
         record.demand.amount)) return false;
     releaseCaptiveRecord(state, record, FB.msg('news.intrigue.ransom_paid',
       '⛓ The ransom is paid and the captive returns home.', {}));

@@ -8442,7 +8442,7 @@ window.FB = window.FB || {};
     if (payer && !FB.treasuryTransfer(state, null, payer, wage + value, false)) return false;
     // Compensation is funded by this work even when the patron has military
     // arrears reserved against its treasury; do not credit failed retries.
-    if (!FB.treasuryTransfer(state, payer, 'player', wage, true)) return false;
+    if (!FB.treasuryTransferPersonal(state, payer, 'player', wage, true)) return false;
     r.lastWorkedTurn = state.turn;
     r.workedDays++;
     r.experience[r.roleId] = (r.experience[r.roleId] || 0) + 1;

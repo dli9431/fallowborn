@@ -162,7 +162,7 @@
     if (a) r.waterOperation = {v:1,id:FB.uid(),profileId:a.profileId,assignmentId:a.id,revision:0};
     FB.production.bindConstruction(s,pid,r);
   };
-  function publicPayer(s,a) { return a.kind === 'realm' && (a.id !== 'player' || FB.electiveCrown(s,a.id)); }
+  function publicPayer(s,a) { return a.kind === 'realm' && (a.id !== 'player' || FB.treasurySeparated(s,a.id)); }
   function funds(s,a) {
     return a.kind === 'realm' ? FB.treasuryAvailable(s,a.id) :
       a.id === s.player.charId ? s.player.gold : FB.baronyAccount(s,a.id).gold;

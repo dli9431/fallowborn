@@ -1,3 +1,7 @@
+Preserved provider accounts
+
+Optional realm.publicTreasury:{schema:1} retains a starting ordinary dynastic provider's real public treasury under the adopted player alias. The existing formation review still requires that account and ordinary exact provider authority. A public grant debits it, a private gift debits household gold, and actual provision payment credits the provider's public account. The staged formation publishes realms, already owning every public debit and credit, without changing player.gold. No opening money, consent, private fallback, subordinate jurisdiction or second account is supplied. See docs/designs/adopted-public-treasury.md.
+
 Expedition preparation and later formation
 
 Dated home policies

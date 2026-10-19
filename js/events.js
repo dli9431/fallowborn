@@ -11556,7 +11556,7 @@ window.FB = window.FB || {};
         const realm = rid && state.realms[rid];
         if (!realm || !realm.alive) return false;
         const counterparty = FB.treasuryCounterparty(state, rid);
-        if (!FB.treasuryTransfer(state, g < 0 ? 'player' : counterparty,
+        if (!FB.treasuryTransferPersonal(state, g < 0 ? 'player' : counterparty,
             g < 0 ? counterparty : 'player', Math.abs(g), g >= 0)) return false;
         if (ctx) ctx.treasuryGoldPaid = true;
       } else p.gold += g;

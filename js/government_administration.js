@@ -136,7 +136,7 @@
   FB.publicOfficerIncome = function (s, cid) {
     var total = 0, context = {};
     rows(s).forEach(function (row) {
-      if (row.publicTerms && row.holder.id === cid && row.institutionId !== 'player')
+      if (row.publicTerms && row.holder.id === cid && (row.institutionId !== 'player' || FB.treasuryPreserved(s,'player')))
         total += FB.publicOfficeAssessment(s,row,context).amount;
     });
     return total;
@@ -237,7 +237,8 @@
         typeof value === 'number' && value >= 0.5 && value <= 1 && !row.publicTerms.arrears :
       action === 'audit' ? patron && current === 'active' :
       action === 'repay' ? holder && live && FB.treasuryCounterparty(s,row.institutionId) && row.publicTerms.arrears > 0 &&
-        (FB.treasuryCharacterRealm(s,c.id) ? FB.treasuryAvailable(s,FB.treasuryCharacterRealm(s,c.id)) : Number(c.gold) || 0) >= row.publicTerms.arrears : false;
+        (c.id === s.player.charId && FB.treasuryPreserved(s,'player') ? s.player.gold :
+          FB.treasuryCharacterRealm(s,c.id) ? FB.treasuryAvailable(s,FB.treasuryCharacterRealm(s,c.id)) : Number(c.gold) || 0) >= row.publicTerms.arrears : false;
     // A perpetual family assignment continues through its own probate review.
     // Dismissing a personal governor cannot revoke surviving customary rights.
     if (FB.aristocracy && FB.aristocracy.assignment(s,row) && ['remove','confirm'].indexOf(action) >= 0) allowed = false;
@@ -263,7 +264,9 @@
       if (t.arrears > 0) { row.status = 'contested'; row.changedTurn = s.turn; }
     } else if (q.action === 'repay') {
       var c = s.chars[row.holder.id], payer = FB.treasuryCharacterRealm(s,c.id);
-      if (payer) {
+      if (c.id === s.player.charId && FB.treasuryPreserved(s,'player')) {
+        if (!FB.treasuryFundingTransfer(s,{kind:'private',characterId:c.id},row.institutionId,t.arrears)) return false;
+      } else if (payer) {
         if (!FB.treasuryTransfer(s,payer,row.institutionId,t.arrears)) return false;
       } else {
         c.gold -= t.arrears;
@@ -278,7 +281,8 @@
     if (!amount) return true;
     var cid = row.holder.id, rid = row.institutionId;
     if (!FB.treasuryCounterparty(s,rid)) return false;
-    if (cid === s.player.charId) return rid !== 'player' && FB.treasuryTransfer(s,rid,'player',amount);
+    if (cid === s.player.charId) return FB.treasuryPreserved(s,'player')
+      ? FB.treasuryPayPrivate(s,rid,amount) : rid !== 'player' && FB.treasuryTransfer(s,rid,'player',amount);
     var officerRealm = FB.realmIdForRulerCharacter(s,cid);
     if (officerRealm === rid) return true; // Internal court allowance, retained in its one purse.
     if (officerRealm && FB.treasuryCounterparty(s,officerRealm)) return FB.treasuryTransfer(s,rid,officerRealm,amount);

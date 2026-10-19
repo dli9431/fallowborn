@@ -1,3 +1,7 @@
+Separate adopted dynastic cash
+
+For an opted-in ordinary dynastic ruler, Coin and Credit shows the actual available public treasury separately from the household purse and explains which costs each pays. Existing realm cards reuse the canonical public account snapshot. Household income and private credit forecasts omit public landed receipts, government and military expenses and public fiscal assignments. Building and fort affordability uses the actual public works funds after reserves; existing home-authority gates remain. The option introduces no new navigation or executable presentation callback. Ordinary unified and elective/delegated presentations retain their existing behavior.
+
 Existing-person household presentation
 
 A fixed existingPerson beginning remains under Story starts, using its complete personal storyline rather than historical-ruler onboarding. The card opens the existing fixed-identity summary directly at the declared county's first home slot. Name, sex, culture and faith remain summary facts, and exactly one standard family card describes the existing named family. Generated-family choices and the settlement picker cannot change this person's identity. Ordinary starts, ruler cards and their Back/view-state behavior retain their existing flows. Start codes and direct creation enforce the same identity, household and fixed-home eligibility.
