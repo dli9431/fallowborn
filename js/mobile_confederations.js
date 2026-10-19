@@ -107,7 +107,7 @@
   }
   M.total = function (s, rid) {
     var r = M.row(s, rid);
-    return r ? r.members.reduce(function (n, m) { return n + sum(m.civilians) + sum(m.reserve); }, 0) +
+    return r ? (r.camps ? M.campPopulation(s,rid) : r.members.reduce(function (n, m) { return n + sum(m.civilians) + sum(m.reserve); }, 0)) +
       (s.armies || []).filter(function (a) { return a.realm === rid && a.mobileFollowing; }).reduce(function (n, a) { return n + a.men; }, 0) : 0;
   };
   function civilians(r) { return r.members.reduce(function (n, m) { return n + sum(m.civilians); }, 0); }
@@ -242,6 +242,7 @@
   };
   function safe(s, rid, pid) { return s.owner[pid] === rid && s.holder[pid] === rid || !!activeAccess(s, rid, pid); }
   M.provisioningAccess = function (s,rid,pid) {return safe(s,rid,pid);};
+  M.accessAt = function (s,rid,pid) {var a=activeAccess(s,rid,pid);return a ? copy(a) : null;};
   function committed(s, rid, exception) {
     return (s.authority.contracts || []).some(function (c) { return c.id !== exception && c.federateRealmId === rid && Q.contract(s, c.id).effective; }) ||
       M.row(s, rid).agreements.some(function (a) { return a.kind !== 'access' && a.status === 'active' && a.endTurn > s.turn; });
@@ -324,6 +325,9 @@
     var q = { allowed:false, reason:'inactive', realmId:rid, action:action, terms:t, cost:0, signature:null };
     if (!r || !p || !M.active(s, rid) || r.status !== 'active') return q;
     if (!validTerms(action,t)) {q.reason='operation';return q;}
+    if (r.camps && ['recruit','demuster','move','join','leave','settle','work','trade','land','contract','replace_member'].indexOf(action)>=0) {
+      q.reason='camp_operation';return q;
+    }
     if (r.columns && ['recruit','demuster','move','march','leave','replace_member','war','service','land','contract'].indexOf(action)>=0) {
       q.reason='column_operation';return q;
     }
@@ -531,6 +535,7 @@
     s.armies.push(a); return a;
   }
   function returnHost(s, army) {
+    if (M.row(s,army.realm).camps) {M.campReturnHost(s,army);return;}
     M.row(s,army.realm).food += army.mobileFood || 0; army.mobileFood=0;
     (army.mobileRoster || []).forEach(function (c) {
       var m = member(s, army.realm, c.memberId);
@@ -919,7 +924,7 @@
     if (!r || !M.active(s,row.realmId) || r.status !== 'active') return false;
     if (row.contractId) FB.authorityContractTransition(s,row.contractId,'breach',row.realmId);
     var key = row.id;
-    if (r.defeatKey !== key) {
+    if (!r.camps && r.defeatKey !== key) {
       var loss = Math.floor(civilians(r) * M.profile(s,row.realmId).defeatShare), left = loss;
       r.members.forEach(function (m) { var n = Math.min(left,sum(m.civilians)); take(m.civilians,n); left -= n; });
       r.accounting.dead += loss; r.defeatKey = key; r.revision++;
@@ -939,6 +944,7 @@
       });
       r.agreements=r.agreements.filter(function (a) {return a.endTurn>s.turn;});
       if (!r.command && !M.leader(s,rid) && !r.selection) { r.leaderId = null; r.selection = {votes:{}}; r.decision = null; r.revision++; }
+      if (r.camps) {M.campDay(s,rid);return;}
       var m = M.migration(s,rid), period = Math.floor(s.turn / 90), a = m && activeAccess(s,rid,m.at);
       if (a && a.harvestPeriod !== period) {
         if (!s.mobilePastures || s.mobilePastures.period!==period) s.mobilePastures={schema:1,period:period,used:{}};
@@ -989,7 +995,7 @@
     if(army.mobileProvisionTurn===s.turn) return 0;
     army.mobileProvisionTurn=s.turn;
     var capacity=hostLoadTarget(s,army,p), court=M.migration(s,army.realm);
-    if(court && court.at===army.at) {
+    if(!r.camps && court && court.at===army.at) {
       var refill=Math.min(r.food,Math.max(0,capacity-(army.mobileFood || 0)));
       r.food-=refill;army.mobileFood=(army.mobileFood || 0)+refill;
     }
@@ -1056,6 +1062,7 @@
     var r = M.row(s,rid), moving = r && M.migration(s,rid);
     if (r && r.status === 'active') {
       r.accounting.dispersed += M.total(s,rid);
+      if (r.camps) M.campDisperse(s,rid);
       r.members.forEach(function (m) {m.civilians=[];m.reserve=[];});
       (s.armies || []).filter(function (a) {return a.realm === rid && a.mobileFollowing;}).forEach(function (a) {
         a.mobileRoster=[];a.men=0;a.units={};a.mobileFollowing=false;FB.disbandArmy(s,a);
@@ -1189,7 +1196,7 @@
     if (!mobile) return d.mobile === undefined ? [] : [FB.T('A mobile opening requires a mobile territory strategy.')];
     var t = d.mobile, p = t && profiles[t.profileId], byId = {};
     provinces.forEach(function (pr) {byId[pr.id]=pr;});
-    if (!keys(t,['profileId','patronRealmId','origin','target','food','fighters','treasury','opening','command','sponsorship','hostedAccess','columns','funding','expeditionProgram','preparationId']) || !p ||
+    if (!keys(t,['profileId','patronRealmId','origin','target','food','fighters','treasury','opening','command','sponsorship','hostedAccess','columns','funding','expeditionProgram','preparationId','civilianCamps']) || !p ||
         (t.sponsorship!==undefined ? !M.independent(t) || !t.command || !t.opening :
           !Object.prototype.hasOwnProperty.call(realms,t.patronRealmId) || t.patronRealmId === d.id) || !d.nonTerritorial ||
         !byId[t.origin] || byId[t.origin].wasteland || !byId[t.target] || byId[t.target].wasteland ||
@@ -1293,7 +1300,7 @@
       var p = M.profile(s,rid), moving = M.migration(s,rid), ids = {}, principals = {};
       if (moving && !M.migrationSponsorshipValid(s,moving)) fault(rid,'sponsorship');
       if (!keys(r,['schema','profileId','migrationId','status','serial','revision','leaderId','selection','decision','food','lastDay','lastAI',
-          'worked','agreements','accounting','members','defeatKey','openingBindings','command','openingAccess','columns','expeditionProgram']) || [1,2,3].indexOf(r.schema)<0 || !p || !moving || moving.realmId !== rid ||
+          'worked','agreements','accounting','members','defeatKey','openingBindings','command','openingAccess','columns','expeditionProgram','camps']) || [1,2,3].indexOf(r.schema)<0 || !p || !moving || moving.realmId !== rid ||
           !['active','settled','dispersed'].includes(r.status) || !whole(r.serial) || !whole(r.revision) || !whole(r.lastDay) || r.lastDay > s.turn ||
           r.lastAI !== undefined && (!whole(r.lastAI) || r.lastAI>Math.floor(s.turn/90)) || !boundedNumber(r.food,1000000000000) ||
           !keys(r.accounting,['initial','arrivals','dead','settled','dispersed']) || Object.keys(r.accounting).length !== 5 ||

@@ -4044,3 +4044,7 @@ Maritime production construction uses the existing Building Works unavailable-ca
 Seasonal construction requirements
 
 Building Works uses the shared seasonal construction projection for unavailable required-season cards. The existing price, disabled construction control and Details explain the declared site, local season, lawful water or grazing, care/work, actual deliverable inputs and construction/processing funds. Input delivery, opening the term and paid production remain separate ordinary reviews. Existing layout, keyboard controls, disclosures and retained modal navigation are unchanged.
+
+Dispersed camp reviews
+
+The existing mobile command sheet lists every actual camp separately with location, civilian/reserve counts, finite food, daily rations and current access beside the military columns and single treasury. A retained Civilian camp selector targets local supply purchases/sales, personal paid service and partial civilian settlement. Each shared action card and confirmation names the selected camp, actual county, quantity, immediate public cost and first blocker. Old whole-following controls remain visibly unavailable with an explanation. Back, Escape, Close, scroll, Details, originating focus and selector/input values use the existing retained modal flow. Exact-site work/settlement is explicitly unavailable pending actual site-presence support. No new shared visual style or navigation route is introduced.
