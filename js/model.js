@@ -2643,6 +2643,8 @@ window.FB = window.FB || {};
      an explicit homeProvinceId keeps relocated contacts such as rivals behind. */
   FB.characterResidence = function (state, c) {
     if (!state || !state.player || !c) return null;
+    const separate = FB.guardedPartyResidence && FB.guardedPartyResidence(state,c.id);
+    if (separate) return separate;
     const exile = state.justice && state.justice.exiles && state.justice.exiles[c.id];
     if (exile && exile.endTurn > state.turn && exile.destination &&
         c.id !== state.player.charId) return exile.destination;

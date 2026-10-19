@@ -44,7 +44,7 @@
   }
   function hostId(rid,id,index) {return index ? 'column_'+rid+'_'+id : 'following_'+rid;}
   function live(s,c) {return !!c && !c.dead && !c.prisonerOf && !c.captive && !c.imprisoned && !c.exiled &&
-    !(FB.justiceCustodyOf && FB.justiceCustodyOf(s,c.id));}
+    !(FB.justiceCustodyOf && FB.justiceCustodyOf(s,c.id)) && !(FB.characterGuarded && FB.characterGuarded(s,c.id));}
   M.columnHostOwned = function (s,rid,army) {
     var r=M.row(s,rid), set=r && r.columns;
     return !!(army && set && Array.isArray(set.entries) && set.entries.some(function (c) {

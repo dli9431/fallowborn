@@ -9,7 +9,7 @@
   function keys(v,list) {return !!v && typeof v==='object' && !Array.isArray(v) &&
     Object.keys(v).every(function (k) {return list.indexOf(k)>=0;});}
   function live(s,c) {return !!c && !c.dead && !c.prisonerOf && !c.captive && !c.imprisoned && !c.exiled &&
-    !(FB.justiceCustodyOf && FB.justiceCustodyOf(s,c.id));}
+    !(FB.justiceCustodyOf && FB.justiceCustodyOf(s,c.id)) && !(FB.characterGuarded && FB.characterGuarded(s,c.id));}
   function definition(s,rid) {
     var d=(FB.campaignBookmark(s).realms || []).filter(function (d) {return d.id===rid;})[0];
     return d && d.mobile && d.mobile.command || null;
@@ -161,7 +161,7 @@
     } else if (line && line.realmId!==rid && court && court.alive && tree && tree.rulerMemberId===line.memberId) return false;
     var current=issuer(s,definition(s,rid));
     if (current && current.characterId===cid) return false;
-    return live(s,c) && s.date.year-c.born>=p.minAge && r.members.some(function (m) {
+    return live(s,c) && (!M.guardCommandReach || M.guardCommandReach(s,rid,cid)) && s.date.year-c.born>=p.minAge && r.members.some(function (m) {
       return m.principal.id===cid && m.allegiance;
     });
   }

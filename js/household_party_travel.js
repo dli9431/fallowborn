@@ -17,7 +17,8 @@
   function live(s,id) {
     var c=s.chars[id]; return !!c && !c.dead && (c.health===undefined || c.health>0) && !c.captive && !c.prisonerOf &&
       !c.imprisoned && !c.exiled && !c.travel && !c.religiousActivity &&
-      !(FB.intrigueCaptivityOf && FB.intrigueCaptivityOf(s,id)) && !(FB.justiceCustodyOf && FB.justiceCustodyOf(s,id));
+      !(FB.intrigueCaptivityOf && FB.intrigueCaptivityOf(s,id)) && !(FB.justiceCustodyOf && FB.justiceCustodyOf(s,id)) &&
+      !(FB.characterGuarded && FB.characterGuarded(s,id));
   }
   function conflict(s,id) {
     return Object.keys(s.authority && s.authority.governments || {}).some(function(rid){

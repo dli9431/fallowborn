@@ -8,7 +8,7 @@
   function whole(n) { return Number.isSafeInteger(n) && n >= 0; }
   function availablePerson(s,c) {
     return !!c && !c.dead && !c.prisonerOf && !c.captive && !c.imprisoned && !c.exiled &&
-      !(FB.justiceCustodyOf && FB.justiceCustodyOf(s,c.id));
+      !(FB.justiceCustodyOf && FB.justiceCustodyOf(s,c.id)) && !(FB.characterGuarded && FB.characterGuarded(s,c.id));
   }
   function sum(pool) { return (pool || []).reduce(function (n, c) { return n + c.count; }, 0); }
   function add(pool, cohorts) {
@@ -62,7 +62,8 @@
   M.independentMigrationAllowed = function (s,spec) {
     var d=spec && openingDefinition(s,spec.realmId), t=d && d.mobile;
     var p=t && FBDATA.mobileProfiles[t.profileId], r=d && M.row(s,d.id);
-    return !!p && !!r && r.migrationId===null && M.independent(t) && !!t.command && !!t.opening && M.commandValid(s,d.id) &&
+    return !!p && !!r && r.migrationId===null && M.independent(t) && !!t.command && !!t.opening &&
+      (M.commandValid(s,d.id) || M.guardBirthAllowed && M.guardBirthAllowed(s,d)) &&
       M.independent(spec) && spec.origin===t.origin && spec.target===t.target &&
       spec.hostId==='following_'+d.id && spec.settlementForm===p.settlementForm;
   };
@@ -270,7 +271,7 @@
   function hostedAccessId(d) { return 'opening_access_' + d.id + '_' + d.mobile.hostedAccess.id; }
   function hostedAccessCurrent(s, rid, a) {
     var partner = a.partnerId === 'player' ? s.chars[s.player.charId] : FB.realmRulerCharacterSnapshot(s, a.partnerId);
-    return !!M.leader(s, rid) && availablePerson(s, partner) &&
+    return !!(M.leader(s, rid) || M.guardHostedLeader && M.guardHostedLeader(s,rid)) && availablePerson(s, partner) &&
       FB.realmRulerGeneration(s, rid) === a.generations[0] &&
       FB.realmRulerGeneration(s, a.partnerId) === a.generations[1] &&
       !FB.armiesHostile(s, { realm:rid }, { realm:a.partnerId }) && a.countyIds.every(function (pid) {
@@ -519,7 +520,7 @@
       mar:FB.skillSnapshot(s,c,'mar'),trait:c.traits && c.traits[0] || null,
       personality:'cautious', generation:FB.realmRulerGeneration(s, rid) + 1 };
     var migration = M.migration(s, rid);
-    if (migration && migration.courtIds.indexOf(cid) < 0) migration.courtIds.push(cid);
+    if (migration && !(M.separatePartyMember && M.separatePartyMember(s,rid,cid)) && migration.courtIds.indexOf(cid) < 0) migration.courtIds.push(cid);
     G.invalidate(); FB.invalidateRealmCache();
   }
   M.installLeader = install;
@@ -719,7 +720,8 @@
       var memberDef=p.members.filter(function (m) {return m.id===binding.memberId;})[0];
       var landed=M.landedOpeningMatches && M.landedOpeningMatches(s,d,binding,c);
       if (!availablePerson(s,c) || s.date.year-c.born<p.minAge ||
-          location(s,{kind:'character',id:c.id})!==t.origin && !landed ||
+          location(s,{kind:'character',id:c.id})!==t.origin && !landed &&
+            !(M.guardedOpeningBinding && M.guardedOpeningBinding(d,binding)) ||
           used[c.id] || occupied[c.id] ||
           ref.kind==='realm_ruler' && !landed && (FB.realmRulerGeneration(s,d.id)!==ref.generation ||
             c.name!==s.realms[d.id].ruler.name || c.born!==s.realms[d.id].ruler.born ||
@@ -749,6 +751,7 @@
       leaderId:null,selection:null,decision:null,food:food,lastDay:s.turn,worked:{},agreements:[],
       accounting:{initial:0,arrivals:0,dead:0,settled:0,dispersed:0},members:[]};
     if (plan) r.openingBindings=copy(plan.bindings);
+    if (M.initializeGuard) M.initializeGuard(s,d,plan);
     p.members.forEach(function (a) {
       var bound=plan && plan.bindings.filter(function (b) {return b.memberId===a.id;})[0];
       var c = bound ? s.chars[bound.characterId] : FB.makeCharacter(s, {sex:'m',culture:d.culture,religion:d.religion,born:s.date.year - 30,
@@ -786,7 +789,9 @@
         else army.mobileRoster.push(Object.assign({memberId:m.id},c));
       });
     });
-    M.migration(s, d.id).courtIds = r.members.map(function (a) { return a.principal.id; });
+    M.migration(s, d.id).courtIds = r.members.map(function (a) { return a.principal.id; }).filter(function (cid) {
+      return !(M.separatePartyMember && M.separatePartyMember(s,d.id,cid));
+    });
     return M.row(s,d.id);
   };
   M.initialize = function (s, defs) {
@@ -1189,7 +1194,7 @@
     if (!mobile) return d.mobile === undefined ? [] : [FB.T('A mobile opening requires a mobile territory strategy.')];
     var t = d.mobile, p = t && profiles[t.profileId], byId = {};
     provinces.forEach(function (pr) {byId[pr.id]=pr;});
-    if (!keys(t,['profileId','patronRealmId','origin','target','food','fighters','treasury','opening','command','sponsorship','hostedAccess','columns','funding','expeditionProgram','preparationId']) || !p ||
+    if (!keys(t,['profileId','patronRealmId','origin','target','food','fighters','treasury','opening','command','sponsorship','hostedAccess','columns','funding','expeditionProgram','preparationId','guardedParty']) || !p ||
         (t.sponsorship!==undefined ? !M.independent(t) || !t.command || !t.opening :
           !Object.prototype.hasOwnProperty.call(realms,t.patronRealmId) || t.patronRealmId === d.id) || !d.nonTerritorial ||
         !byId[t.origin] || byId[t.origin].wasteland || !byId[t.target] || byId[t.target].wasteland ||
@@ -1230,7 +1235,7 @@
               actorDef.culture!==(ruler.culture || d.culture) || actorDef.religion!==d.religion) {invalid=true;return;}
         } else {invalid=true;return;}
         if (!identity || !Number.isInteger(identity.born) || bookmark.date.year-identity.born<p.minAge ||
-            actorDef && !actorDef.ref && actorDef.home!==t.origin) invalid=true;
+            actorDef && !actorDef.ref && actorDef.home!==t.origin && !(M.guardedOpeningBinding && M.guardedOpeningBinding(d,b))) invalid=true;
       });
       (bookmark.realms || []).forEach(function (other) {
         var otherOpening=other.mobile && other.mobile.opening;
@@ -1293,7 +1298,7 @@
       var p = M.profile(s,rid), moving = M.migration(s,rid), ids = {}, principals = {};
       if (moving && !M.migrationSponsorshipValid(s,moving)) fault(rid,'sponsorship');
       if (!keys(r,['schema','profileId','migrationId','status','serial','revision','leaderId','selection','decision','food','lastDay','lastAI',
-          'worked','agreements','accounting','members','defeatKey','openingBindings','command','openingAccess','columns','expeditionProgram']) || [1,2,3].indexOf(r.schema)<0 || !p || !moving || moving.realmId !== rid ||
+          'worked','agreements','accounting','members','defeatKey','openingBindings','command','openingAccess','columns','expeditionProgram','guardedParty']) || [1,2,3].indexOf(r.schema)<0 || !p || !moving || moving.realmId !== rid ||
           !['active','settled','dispersed'].includes(r.status) || !whole(r.serial) || !whole(r.revision) || !whole(r.lastDay) || r.lastDay > s.turn ||
           r.lastAI !== undefined && (!whole(r.lastAI) || r.lastAI>Math.floor(s.turn/90)) || !boundedNumber(r.food,1000000000000) ||
           !keys(r.accounting,['initial','arrivals','dead','settled','dispersed']) || Object.keys(r.accounting).length !== 5 ||
@@ -1324,7 +1329,8 @@
             !s.chars[m.principal.id] || principals[m.principal.id] || !keys(m.scope,['kind','id']) || m.scope.kind !== 'realm' || m.scope.id !== rid ||
             m.basis !== 'following' || m.continuity !== 'member' || !whole(m.weight) || !m.weight || m.weight > 100 ||
             !boundedNumber(m.pledge,p.recruitShare) || typeof m.allegiance !== 'boolean') fault(rid,'members');
-        if(r.status==='active' && moving.courtIds.indexOf(m.principal.id)<0) fault(rid,'court');
+        if(r.status==='active' && moving.courtIds.indexOf(m.principal.id)<0 &&
+            !(M.separatePartyMember && M.separatePartyMember(s,rid,m.principal.id))) fault(rid,'court');
         ids[m.id]=true; principals[m.principal.id]=true; pool(rid,m.civilians,false); pool(rid,m.reserve,false);
       });
       if (r.leaderId !== null && (!principals[r.leaderId] || !s.chars[r.leaderId])) fault(rid,'leader');

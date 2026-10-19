@@ -20,7 +20,8 @@
       partner:FB.T('The living outside court must accept an unchanged offer.'),
       population:FB.T('The transfer exceeds available people or would deplete the local population floor.'),
       award:FB.T('Settlement requires owned land or an ordinary consented land award.'), food:FB.T('The seller lacks the requested food stock.'),
-      funding:FB.T('Funding requires consent, a permitted source, distinct available accounts and an active command.')
+      funding:FB.T('Funding requires consent, a permitted source, distinct available accounts and an active command.'),
+      guard:FB.T('Release requires the original available hosting ruler, unchanged lawful local authority and presence with the original party.')
     };
     return messages[id] || FB.T('Review the current terms again.');
   }
@@ -45,6 +46,8 @@
     if (t.price !== undefined) text += kv(FB.T('Payment on acceptance'),FB.money(t.price,s));
     if (t.final !== undefined) text += kv(FB.T('Settlement'),t.final ? FB.T('Entire following and territorial government') : FB.T('Partial civilian settlement; mobile court continues'));
     if (t.candidateId) text += kv(FB.T('Candidate'),s.chars[t.candidateId].name);
+    if (t.partyIds) text += kv(FB.T('Original personal party'),t.partyIds.map(function (id) {return s.chars[id].name;}).join(', ')) +
+      '<p>'+esc(FB.T('Release costs nothing and ends only this protective restriction. Nobody moves. Command still requires actual presence at the civilian camp; ordinary custody, travel costs and access remain binding.'))+'</p>';
     if (t.allowRecruit !== undefined) text += kv(FB.T('Local voluntary recruitment'),t.allowRecruit ? FB.T('Allowed by this offer') : FB.T('Excluded'));
     if (t.contractId) {
       var contract=FB.political.contract(s,t.contractId);
@@ -128,6 +131,25 @@
       parts += SH.reviewActionCardHtml({id:'mobile-action-'+i,label:label,disabled:!q.allowed,warn:!q.allowed,
         note:q.allowed ? FB.T('Immediate cost: {money:cost}. Review before committing.',{cost:q.cost || 0}) : reason(q.reason),
         details:'<p>'+esc(details)+'</p>'+termsHtml(s,q.terms,rid)+routeHtml(s,q),data:{mobileReview:i}});
+    }
+    var guard=M.guardSnapshot && M.guardSnapshot(s,rid);
+    if (guard) {
+      var guardLabels={guarded:FB.T('Under protective guard'),expired:FB.T('Term expired; release unresolved'),
+        interrupted:FB.T('Authority interrupted; release unresolved'),released:FB.T('Released')};
+      facts+=kv(FB.T('Original personal party'),guard.characterIds.map(function (id) {return s.chars[id].name;}).join(', '))+
+        kv(FB.T('Actual party positions'),guard.characterIds.map(function (id) {
+          return FB.T('{name} at {place}',{name:s.chars[id].name,place:county(FB.characterLocation(s,s.chars[id]))});
+        }).join('; '))+
+        kv(FB.T('Guard locality'),county(guard.location.countyId))+
+        kv(FB.T('Hosting ruler'),s.chars[guard.authority.characterId].name)+
+        kv(FB.T('Protective guard'),guardLabels[guard.status])+
+        kv(FB.T('Guard term'),FB.T('{days} days remaining',{days:Math.max(0,guard.endTurn-s.turn)}));
+      var guardReview=M.reviewGuard(s,{realmId:rid,action:'release',actor:actor}), guardIndex=actions.length;
+      actions.push({label:FB.T('Review protective release'),review:guardReview});
+      parts+=SH.reviewActionCardHtml({id:'mobile-action-'+guardIndex,label:FB.T('Review protective release'),
+        disabled:!guardReview.review.allowed,warn:!guardReview.review.allowed,
+        note:guardReview.review.allowed ? FB.T('Immediate cost: {money:cost}. Review before committing.',{cost:0}) : reason('guard'),
+        details:termsHtml(s,guardReview.review.terms,rid),data:{mobileReview:guardIndex}});
     }
     function number(id,fallback) { return view[id] !== undefined ? view[id] : fallback; }
     if (s.greatHolyWar && r.command && FB.mobileGreatHolyWarReview) {

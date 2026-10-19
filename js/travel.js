@@ -258,7 +258,7 @@ window.FB = window.FB || {};
       actor && !actor.dead && !state.player.dead && FB.station.isFreeUnlanded(state.player,state) &&
       def && purposeTierAllowed(state,def) && FB.contentPeriodEnabled(state,def) && FB.systemContentEnabled(state,def) &&
       !actor.captive && !actor.prisonerOf && !actor.imprisoned && !actor.exiled &&
-      !(FB.justiceCustodyOf && FB.justiceCustodyOf(state,actor.id)) &&
+      !(FB.justiceCustodyOf && FB.justiceCustodyOf(state,actor.id)) && !(FB.characterGuarded && FB.characterGuarded(state,actor.id)) &&
       !(state.player.flags && state.player.flags.in_prison) && !FB.atWarPersonally(state) &&
       route && route.length && state.player.gold >= cost && !(FB.justiceExileBlocks && route.some(function (pid) {
         return FB.justiceExileBlocks(state,state.player.charId,pid);
@@ -288,7 +288,7 @@ window.FB = window.FB || {};
         FB.contentPeriodEnabled(state,def) && FB.systemContentEnabled(state,def) &&
         !actor.captive && !actor.prisonerOf && !actor.imprisoned && !actor.exiled && !actor.travel && !actor.religiousActivity &&
         !(FB.intrigueCaptivityOf && FB.intrigueCaptivityOf(state,actor.id)) &&
-        !(FB.justiceCustodyOf && FB.justiceCustodyOf(state,actor.id)) && !(state.player.flags && state.player.flags.in_prison) &&
+        !(FB.justiceCustodyOf && FB.justiceCustodyOf(state,actor.id)) && !(FB.characterGuarded && FB.characterGuarded(state,actor.id)) && !(state.player.flags && state.player.flags.in_prison) &&
         !FB.atWarPersonally(state) && !!route && state.player.gold>=cost &&
         !route.some(function(pid){return FB.justiceExileBlocks && FB.justiceExileBlocks(state,actor.id,pid);}))};
   };
@@ -999,6 +999,7 @@ window.FB = window.FB || {};
   FB.travelEligible = function (state, purposeId, options) {
     const p = state.player;
     const c = me(state);
+    if (FB.characterGuarded && FB.characterGuarded(state,p.charId)) return FB.T('The hosting authority must review this protective guard before departure.');
     const def = purposeId === undefined ? null :
       (typeof purposeId === 'string' ? purpose(purposeId) : purposeId);
     if (!(options && options.readOnly)) FB.travelEnsure(state);

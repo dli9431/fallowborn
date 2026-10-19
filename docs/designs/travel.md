@@ -1,3 +1,7 @@
+Protective guard departure
+
+An original member of an opted-in guarded following party cannot depart through ordinary personal travel, temporary return, recovery roads or named household journeys while the protective restriction remains unresolved. The shared FB.characterGuarded projection blocks previews and commits without repairing state. Host-reviewed release creates no journey and clears no ordinary custody. Each released person uses existing residence, personal route, price and access rules; being named in the original party never moves another person with them. Command also requires actual arrival at the civilian camp. The independently none guard and identity technology decisions are specified in docs/designs/mobile-guard.md; ordinary travel research and station gates remain.
+
 Personal expedition carriage
 
 An admitted expedition protagonist uses the ordinary temporary travel record with a typed participationId. Civilian position projects from the real migration; a combatant follows its existing counted host position. No independent route advances alongside either carrier. The permanent household home and family remain unchanged. A carried stay offers no destination work event, capstone, settlement entitlement or automatic relationship benefit.

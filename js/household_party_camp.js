@@ -15,6 +15,7 @@
   function free(s,id){var c=s.chars[id];return !!c && !c.dead && !c.captive && !c.prisonerOf && !c.imprisoned &&
     !c.exiled && (c.health===undefined || c.health>0) && !c.travel && !c.religiousActivity &&
     !(FB.intrigueCaptivityOf && FB.intrigueCaptivityOf(s,id)) && !(FB.justiceCustodyOf && FB.justiceCustodyOf(s,id)) &&
+    !(FB.characterGuarded && FB.characterGuarded(s,id)) &&
     !(s.justice && s.justice.exiles && s.justice.exiles[id] && s.justice.exiles[id].endTurn>s.turn);}
   function principal(s,id){return Object.keys(s.authority && s.authority.governments || {}).some(function(rid){
     var r=FB.mobile.row(s,rid);return r && r.status==='active' && r.members.some(function(m){return m.principal.id===id;});
