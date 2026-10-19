@@ -2613,10 +2613,16 @@ def extract_local_threats(inv: Inventory) -> None:
 
 
 def extract_ruler_agendas(inv: Inventory) -> None:
-    source = DATA / "story_ruler_agendas.js"
+    sources = [(DATA / "story_ruler_agendas.js", "rulerAgendas")]
+    sources.extend(story_table_sources("rulerAgendas_"))
+    for source, table in sources:
+        extract_ruler_agenda_source(inv, source, table)
+
+
+def extract_ruler_agenda_source(inv: Inventory, source: Path, table: str) -> None:
     if not source.exists():
         return
-    declarations = node_object(find_assignment(source, "FBDATA", "rulerAgendas")) or {}
+    declarations = node_object(find_assignment(source, "FBDATA", table)) or {}
     rel = source.relative_to(ROOT).as_posix()
     for story_id, story_node in declarations.items():
         story = node_object(story_node) or {}

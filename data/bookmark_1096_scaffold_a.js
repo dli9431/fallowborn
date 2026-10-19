@@ -257,7 +257,14 @@ FBDATA.bookmarkRegions1096.iberia_south = {
     {"id":"urgell","name":"Urgell","x":1.45,"y":42.36,"terrain":"mountains","duchy":"barcelona","realm":"barcelona_1096","culture":"iberian","religion":"catholic","dev":2,"communities":[{"culture":"iberian","religion":"catholic","populationShare0":10000}]}
   ],
   realms:[
-    {"id":"valencia_1096","name":"Lordship of Valencia","color":"#c49962","capital":"valencia","aggression":1,"rank":1,"government":"territorial","religion":"catholic","ruler":{"sex":"m","culture":"iberian","born":1061,"mar":8,"trait":"patient","generated":true}},
+    {"id":"valencia_1096","name":"Lordship of Valencia","color":"#c49962","capital":"valencia","aggression":1,"rank":1,"government":"territorial","religion":"catholic",
+      "ruler":{"name":"Rodrigo Diaz","sex":"m","culture":"iberian","born":1048,"mar":8,"trait":"patient"},
+      "royalCourt":{"dynasty":"Diaz","spouseId":"jimena_diaz","members":[
+        {"id":"jimena_diaz","name":"Jimena Diaz","sex":"f","born":1046,"culture":"iberian","religion":"catholic","spouseId":"ruler","homeProvinceId":"valencia"},
+        {"id":"diego_rodriguez","name":"Diego Rodriguez","sex":"m","born":1075,"culture":"iberian","religion":"catholic","fatherId":"ruler","motherId":"jimena_diaz","spouseId":null,"homeProvinceId":"valencia"},
+        {"id":"cristina_rodriguez","name":"Cristina Rodriguez","sex":"f","born":1076,"culture":"iberian","religion":"catholic","fatherId":"ruler","motherId":"jimena_diaz","spouseId":null,"homeProvinceId":"valencia"},
+        {"id":"maria_rodriguez","name":"Maria Rodriguez","sex":"f","born":1077,"culture":"iberian","religion":"catholic","fatherId":"ruler","motherId":"jimena_diaz","spouseId":null,"homeProvinceId":"valencia"}
+      ]}},
     {"id":"zaragoza_1096","name":"Taifa of Zaragoza","color":"#8fae4f","capital":"zaragoza","aggression":1,"rank":2,"government":"territorial","religion":"sunni","ruler":{"sex":"m","culture":"andalusi","born":1061,"mar":8,"trait":"patient","generated":true}},
     {"id":"balearic_1096","name":"Balearic taifa","color":"#829f66","capital":"mallorca","aggression":1,"rank":1,"government":"territorial","religion":"sunni","ruler":{"sex":"m","culture":"andalusi","born":1061,"mar":8,"trait":"patient","generated":true}},
     {"id":"barcelona_1096","name":"County of Barcelona","color":"#d04f4f","capital":"barcelona","aggression":1,"rank":1,"government":"territorial","religion":"catholic","ruler":{"sex":"m","culture":"iberian","born":1061,"mar":8,"trait":"patient","generated":true}}

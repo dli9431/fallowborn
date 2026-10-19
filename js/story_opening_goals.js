@@ -142,6 +142,14 @@
     if (p.source === 'royal_member') {
       var rid = FB.startRealmId(s, p.realmId), member = FB.authoredRoyalMemberSnapshot(s, rid, p.memberId);
       var c = member && member.alive !== false && FB.materializeRoyalMember(s, rid, member.id);
+      /* Territorial adoption hands the fully materialized family to ordinary
+         player kin and removes the compact AI succession owner. Reuse those
+         existing identities only for its original authored protagonist. */
+      if (!member && rid === 'player' && s.start && s.start.rulerRealmId === p.realmId &&
+          s.player.charId === FB.courtCharacterId('royal_' + p.realmId + '_authored_ruler')) {
+        var adopted = s.chars[FB.courtCharacterId('royal_' + p.realmId + '_authored_' + p.memberId)];
+        if (adopted && !adopted.dead) c = adopted;
+      }
       return c && c.id || member && member.charId || null;
     }
     var ref = Object.assign({}, p, { kind:p.source }); delete ref.source;
