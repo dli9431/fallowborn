@@ -6,6 +6,7 @@ const {restoreBookmark}=require('../support/game/bookmark-acceptance');
 const {dependsOnRuntime}=require('../support/runtime-dependencies');
 
 dependsOnRuntime(__filename,[
+  'data/bookmark_1241_core_starts.js','data/bookmark_1241_operations.js','data/story_koten_1241.js',
   'index.html','data/starts_alexander_1241.js','data/story_alexander_1241.js','data/bookmark_1241_alexander.js',
   'data/story_ruler_agendas_1241.js','data/bookmark_1241_frederick.js','data/bookmark_1241.js',
   'data/bookmark_1241_scaffold_a.js','data/bookmark_1241_scaffold_b.js',
@@ -56,14 +57,16 @@ test('only the fresh revision offers Alexander and preserves all earlier familie
     const layouts=FBDATA.settlementLayouts;
     return {revision:fresh.revision,valid:FB.validateBookmark(fresh),prior:prior,
       identity:[p.person.id,p.person.born,p.person.homeProvinceId],household:p.household.map(function (m) {return m.id;}),
-      unchanged:JSON.stringify(old.realms)===JSON.stringify(fresh.realms),
+      unchanged:JSON.stringify(old.realms)===JSON.stringify(fresh.realms.filter(function (r) {
+        return old.realms.some(function (previous) {return previous.id===r.id;});
+      })),
       ravenna:JSON.stringify(layouts[old.settlementLayout].ravenna)===JSON.stringify(layouts[fresh.settlementLayout].ravenna),
       oldDetached:layouts[old.settlementLayout]!==layouts[fresh.settlementLayout],
       oldSlots:JSON.stringify(layouts[old.settlementLayout].rostov)===JSON.stringify(layouts[fresh.settlementLayout].rostov.slice(1)),
       locations:[FB.startProvinceAllowed(sc,fresh,'rostov'),FB.startProvinceAllowed(sc,fresh,'pereyaslavl'),FB.startProvinceAllowed(sc,fresh,'novgorod')],
       pure:before===JSON.stringify([FBDATA,FB.getRngState(),FB.getUidCounter()])};
   });
-  expect(result).toEqual({revision:'alexander_v2',valid:[],prior:['baseline','royal_households_v2','frederick_v2'].map(function (id) {
+  expect(result).toEqual({revision:'core_starts_v2',valid:[],prior:['baseline','royal_households_v2','frederick_v2'].map(function (id) {
     return {id:id,excluded:true,offered:false,head:'rostov_head',valid:[]};
   }),identity:['alexander',1221,'rostov'],household:['alexander','feodosia','alexander_wife'],unchanged:true,
     ravenna:true,oldDetached:true,oldSlots:true,locations:[true,false,false],pure:true});
