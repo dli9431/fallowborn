@@ -4,6 +4,8 @@ A fixed existingPerson beginning remains under Story starts, using its complete 
 
 Expedition records-review presentation
 
+A preparation-aware records card displays Awaiting expedition formation and explains that the review creates neither a host nor acknowledgment. No decision choices appear while waiting. Normal daily dispatch observes actual formation before the existing pending review choices become available. Preparation refusal, expiry, stop and interruption are named separately in the card's explanation. The same source sheet retains original named parties, finite review window, no payer and records-only effect on desktop and mobile. Formation remains on the preparation's source card, with no agenda forwarding or new navigation flow.
+
 Personal assurance and restitution records use the shared Deeds story card and reviewed story sheet. Both the card and confirmation identify the original named parties, finite review window, no payer and records-only effect. The restitution review adds the exact counties with current controllers and holders, explicitly explaining that control proves no lawful capture or transfer mandate. Acknowledgment creates no enforceable obligation, homage, common command, payment, passage or land grant. Declining closes only this review without penalty; separate contracts remain in force. Original parties, current authority, command and scope are rechecked at confirmation. Back, Escape, Close, scroll and originating-card focus retain the shared story navigation; no new modal flow is introduced.
 
 Column supply reviews
