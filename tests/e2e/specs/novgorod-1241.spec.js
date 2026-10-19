@@ -5,6 +5,7 @@ const {beginBookmark,restoreBookmark} = require('../support/game/bookmark-accept
 const {dependsOnRuntime} = require('../support/runtime-dependencies');
 
 dependsOnRuntime(__filename,[
+  'data/bookmark_1241_alexander.js','data/starts_alexander_1241.js','data/story_alexander_1241.js',
   'index.html','data/starts_novgorod_1241.js','data/story_novgorod_1241.js',
   'data/bookmark_1241.js','data/identities_1241.js',
   'data/bookmark_1241_scaffold_a.js','data/bookmark_1241_scaffold_b.js',
@@ -46,12 +47,12 @@ test('the selectable date has a complete fictional Novgorod household without ad
       ordinary:!sc.startEffects && !sc.rulerRealmId && !sc.characterName,
       community:p.communities.some(function (c) { return c.culture === sc.startCulture && c.religion === sc.startReligion; }),
       home:[home.site,home.name,home.kind],courtGenerated:court.ruler.generated === true,
-      noAlexander:!FBDATA.startScenarios.some(function (s) { return s.id === 'alexander_1241'; }) && !FBDATA.storyInstances.novgorod_agenda_1241,
+      separateAlexander:FBDATA.startScenarios.find(function (s) { return s.id === 'alexander_1241'; }).fixedProvinceId === 'rostov' && !sc.existingPerson && !FBDATA.storyInstances.novgorod_agenda_1241,
       noSource:!FBDATA.storyInstances.novgorod_household_track_1241.requires,
       pure:data === JSON.stringify(FBDATA) && rng === FB.getRngState() && uid === FB.getUidCounter()};
   })).toEqual({errors:[],hidden:false,available:true,dates:['1241'],local:true,away:false,
     tracks:[ID,OPENING],storyline:[ID],family:['standard'],resources:[1,'craftsman',15,5,0],
-    ordinary:true,community:true,home:['novgorod','Novgorod','city'],courtGenerated:true,noAlexander:true,noSource:true,pure:true});
+    ordinary:true,community:true,home:['novgorod','Novgorod','city'],courtGenerated:true,separateAlexander:true,noSource:true,pure:true});
   await beginBookmark(page,info,'1241','novgorod_household_1241');
   expect(await page.evaluate(function () {
     const s = FB.state, t = s.stories.novgorod_household_track_1241, c = s.chars[s.player.charId];

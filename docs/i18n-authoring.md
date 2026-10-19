@@ -427,3 +427,7 @@ js/mobile_guard.js and js/ui_mobile.js use literal FB.T messages for protective 
 Dispersed camp presentation
 
 Runtime camp labels, local stock/ration facts, blockers and reviews use literal FB.T calls in js/mobile_camps.js and js/ui_mobile.js. Camps use numbered labels; actual county/site labels retain their existing owners. Stable camp/member ids, location provenance and accounting contain no rendered prose. Independent ordinary JSON examples retain the normal imported English fallback. No new extraction namespace, saved display string or generated catalogue is added.
+
+Alexander opening display owners
+
+data/starts_alexander_1241.js uses the literal startScenarios_alexander_1241 array for scenario.alexander_1241 fields. data/story_alexander_1241.js uses householdTracks_alexander_1241 and openingProfiles_alexander_1241 for the existing householdStory and openingProfile owners. data/bookmark_1241_alexander.js declares its town label in bookmarkRevisionContent_alexander_1241.layouts, using the ordinary dated layout extractor. The travel purpose and arrival event retain the standard travelPurpose and event owners. Keep literal display text and exact ids; no engine prose, saved rendered text or generated catalog changes are needed.

@@ -2,6 +2,9 @@
 window.FBDATA = window.FBDATA || {};
 
 FBDATA.travelPurposes = {
+  alexander_visit_1241:{ name:'Visit Novgorod', icon:'🧭',
+    desc:'Make a personal visit. Your household remains at home, and the city’s public offices remain with their present holders.',
+    cost:5, minTier:1, maxTier:2, mode:'sites', repeatable:true, eras:['high_medieval'], yearMin:1241, yearMax:1241 },
   hungarian_visit_1241:{ name:'Visit another Hungarian county', icon:'🧭',
     desc:'Go ahead alone to look for local opportunities. Your household and property remain at home during the visit.',
     cost:5, minTier:1, maxTier:2, mode:'sites', repeatable:true, eras:['high_medieval'], yearMin:1241, yearMax:1241 },
@@ -95,6 +98,7 @@ FBDATA.travelPurposes = {
 /* A site may restrict a purpose to exact religions or broad religion groups.
    Province ids are stable save/mod ids from data/counties.js. */
 FBDATA.travelSites = [
+  { id:'alexander_novgorod_1241', purpose:'alexander_visit_1241', provinceId:'novgorod' },
   { id:'hungarian_bratislava_1241', purpose:'hungarian_visit_1241', provinceId:'bratislava' },
   { id:'volodymyr_lutsk_1241', purpose:'volhynian_visit_1241', provinceId:'lutsk' },
   { id:'ravenna_bononia_568', purpose:'ravenna_visit_568', provinceId:'bologna' },
@@ -177,6 +181,7 @@ FBDATA.balance.frontierSettlementPlots = 1;
 
 /* Mechanical roles and event references are independent of authored purpose ids. */
 FBDATA.travelRules = {
+  alexander_visit_1241:{ kind:'expedition', encounters:'expedition', arrivalEvent:'alexander_visit_arrival_1241' },
   hungarian_visit_1241:{ kind:'expedition', encounters:'expedition', arrivalEvent:'hungarian_visit_arrival_1241' },
   volhynian_visit_1241:{ kind:'expedition', encounters:'volhynian_visit_1241', arrivalEvent:'volhynian_visit_arrival_1241' },
   ravenna_visit_568:{ kind:'expedition', encounters:'ravenna_visit_568', arrivalEvent:'ravenna_bononia_arrival_568' },

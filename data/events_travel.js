@@ -8,6 +8,12 @@ FBDATA.events = FBDATA.events || [];
   FBDATA.eventPacks.travel = { eras:['late_antique','early_medieval','high_medieval'] };
 
 FBDATA.events.push(
+{ id:'alexander_visit_arrival_1241', title:'A Personal Arrival in Novgorod',
+  trigger:{ never:true }, travel:{ kind:'capstone', purpose:'alexander_visit_1241' },
+  text:'You reached Novgorod as a visitor. Your relatives retain their permanent home. The city’s existing offices, resources and command remain with their current holders.',
+  options:[{ label:'Begin the visit.', desc:'Continue without an appointment, payment, troops or household move.',
+    effects:{ custom:'travel_capstone_done' } }]
+},
 { id:'hungarian_visit_arrival_1241', title:'A Visitor in Bratislava',
   trigger:{ never:true }, travel:{ kind:'capstone', purpose:'hungarian_visit_1241' },
   text:'You have reached Bratislava. Your relatives and property remain at their permanent home. Local work, residence and any later household settlement follow their ordinary terms.',

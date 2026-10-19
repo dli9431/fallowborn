@@ -156,8 +156,8 @@ FBDATA.openingProfiles_rulers_1241 = {
     return (!sc.bookmarkIds || sc.bookmarkIds.indexOf('1241') >= 0) &&
       (!sc.eras || sc.eras.indexOf(b.era) >= 0);
   }).map(function (sc) { return sc.id; });
-  b.revisions.baseline.starts = starts.filter(function (id) { return id !== 'bela_1241' && id !== 'yaroslav_1241'; });
-  b.revisions.royal_households_v2 = { realms:realms, settlementLayout:'1241_royal_households_v2', starts:starts };
+  b.revisions.baseline.starts = starts.filter(function (id) { return id !== 'bela_1241' && id !== 'yaroslav_1241' && id !== 'alexander_1241'; });
+  b.revisions.royal_households_v2 = { realms:realms, settlementLayout:'1241_royal_households_v2', starts:starts.filter(function (id) { return id !== 'alexander_1241'; }) };
   b.revision = 'royal_households_v2';
   Object.assign(FBDATA.storyInstances,FBDATA.rulerAgendas_1241,FBDATA.openingProfiles_rulers_1241);
 })();

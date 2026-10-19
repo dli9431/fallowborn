@@ -5,6 +5,7 @@ const {startParityGame}=require('../support/game/parity');
 const {dependsOnRuntime}=require('../support/runtime-dependencies');
 
 dependsOnRuntime(__filename,[
+  'data/bookmark_1241_alexander.js','data/starts_alexander_1241.js','data/story_alexander_1241.js',
   'index.html','data/bookmark_1241.js','data/bookmark_1241_frederick.js',
   'data/bookmark_1241_scaffold_a.js','data/bookmark_1241_scaffold_b.js',
   'data/bookmark_1241_scaffold_c.js','data/bookmark_1241_scaffold_d.js',
@@ -40,7 +41,7 @@ test('fresh Frederick world keeps the retained baseline and one imperial person'
         FB.startProvinceAllowed(scenario,fresh,'frankfurt')],
       track:FB.startStoryTracks(scenario,'ravenna')};
   });
-  expect(result).toEqual({revision:'frederick_v2',valid:[],oldValid:[],unique:['hre_1241'],cap:'frankfurt',born:1194,
+  expect(result).toEqual({revision:'alexander_v2',valid:[],oldValid:[],unique:['hre_1241'],cap:'frankfurt',born:1194,
     family:[['isabella',1214,'capua'],['conrad',1228,'frankfurt'],['henry',1238,'capua'],['margaret',1237,'capua']],
     oldFamily:false,oldFirst:'ravenna_head',first:'faenza_camp_1241',separate:true,
     pope:['Gregory IX','papal_temporal_1241'],eligibility:[true,false,false],track:['frederick_agenda_1241']});
