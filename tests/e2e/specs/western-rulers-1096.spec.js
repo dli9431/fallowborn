@@ -6,7 +6,7 @@ const { dependsOnRuntime } = require('../support/runtime-dependencies');
 
 dependsOnRuntime(__filename, [
   'index.html','data/starts_western_rulers_1096.js','data/story_western_rulers_1096.js',
-  'data/bookmark_1096_scaffold_a.js','data/bookmark_1096.js','data/starts.js',
+  'data/bookmark_1096_scaffold_a.js','data/bookmark_1096_scaffold_b.js','data/bookmark_1096.js','data/starts.js',
   'data/government_rollout.js','data/story_instances.js','data/communal_revisions.js',
   'js/main.js','js/world.js','js/starts.js','js/model.js','js/stories.js',
   'js/story_ruler_agenda.js','js/story_opening_goals.js','js/save.js','js/save_v4.js'
@@ -18,14 +18,17 @@ const openings = [
     kin:['Ida of Lorraine','Eustace III','Baldwin'], contact:'imperial_ruler', other:'hre_1096', site:'geo_bouillon_2801283' },
   { scenario:'raymond_1096', agenda:'raymond_agenda_1096', profile:'opening_raymond_1096',
     realm:'toulouse_1096', county:'toulouse', name:'Raymond IV', born:1042,
-    kin:['Elvira of Castile','Bertrand'], contact:'french_ruler', other:'france_1096', site:'toulouse_head' }
+    kin:['Elvira of Castile','Bertrand'], contact:'french_ruler', other:'france_1096', site:'toulouse_head' },
+  { scenario:'bohemond_1096', agenda:'bohemond_agenda_1096', profile:'opening_bohemond_1096',
+    realm:'bohemond_lordships_1096', county:'taranto', name:'Bohemond', born:1054,
+    kin:[], contact:'papal_ruler', other:'papacy_1096', site:'taranto_head' }
 ];
 
 async function start(page, info, row) {
   await startParityGame(page, info, { bookmark:'1096', scenario:row.scenario, declaredOpening:true });
 }
 
-test('both western rulers use ordinary birthplace, Story and start-code gates', async function ({ page }, info) {
+test('western rulers use ordinary birthplace, Story and start-code gates', async function ({ page }, info) {
   await openGame(page, info);
   const button = page.locator('#btn-choose-beginning');
   if (await button.isVisible()) await button.click();
@@ -61,7 +64,8 @@ for (const row of openings) {
       const b = FB.bookmark('1096'), definition = b.realms.find(function (d) { return d.id === r.realm; });
       const expected = b.provinces.filter(function (c) { return c.realm === r.realm; }).map(function (c) { return c.id; }).sort();
       const home = FB.world.byId[p.provinceId].settlements[p.homeSettlement];
-      const familyOK = r.scenario === 'godfrey_1096'
+      const familyOK = r.scenario === 'bohemond_1096' ? !me.spouseId && me.childrenIds.length === 0
+        : r.scenario === 'godfrey_1096'
         ? !me.spouseId && me.childrenIds.length === 0 && me.motherId === kin[0][0].id &&
           kin[1][0].motherId === me.motherId && kin[2][0].motherId === me.motherId
         : me.spouseId === kin[0][0].id && kin[0][0].spouseId === me.id &&
@@ -70,12 +74,12 @@ for (const row of openings) {
         home:p.provinceId, site:home.site, adopted:!s.realms[r.realm] && !!s.realms.player,
         ruler:FB.realmRulerCharacterSnapshot(s,'player').id === me.id,
         holdings:p.provs.slice().sort(), expected:expected, liege:p.liege,
-        expectedLiege:definition.liege, kin:kin.map(function (list) { return list.length; }), familyOK:familyOK,
+        expectedLiege:definition.liege || null, kin:kin.map(function (list) { return list.length; }), familyOK:familyOK,
         localStories:openingsIgnored(), goals:Object.keys(profile.goals).length,
         contact:profile.contacts[r.contact] === other.id, freeFriend:!!((s.friends || {})[other.id]),
         journey:p.travel || null, homeUnchanged:s.owner.liege === 'hre_1096' };
       function openingsIgnored() {
-        return ['godfrey_agenda_1096','raymond_agenda_1096'].filter(function (id) { return !!s.stories[id]; });
+        return ['godfrey_agenda_1096','raymond_agenda_1096','bohemond_agenda_1096'].filter(function (id) { return !!s.stories[id]; });
       }
     }, row);
     expect(result).toMatchObject({ name:row.name, born:row.born, count:1, home:row.county, site:row.site,
@@ -167,10 +171,53 @@ test('foreign household members remain at their declared homes and no later infa
   })).toEqual(['Bertrand']);
 });
 
-test('an ordinary 1096 household attaches neither western ruler program nor profile', async function ({ page }, info) {
+test('an ordinary 1096 household attaches no western ruler program or profile', async function ({ page }, info) {
   await startParityGame(page, info, { bookmark:'1096', scenario:'pilgrim_household_1096', declaredOpening:true });
   expect(await page.evaluate(function () {
-    return ['godfrey_agenda_1096','raymond_agenda_1096','opening_godfrey_1096','opening_raymond_1096']
+    return ['godfrey_agenda_1096','raymond_agenda_1096','bohemond_agenda_1096',
+      'opening_godfrey_1096','opening_raymond_1096','opening_bohemond_1096']
       .filter(function (id) { return !!FB.state.stories[id]; });
   })).toEqual([]);
+});
+
+test('Bohemond can consider the road and finish without creating a journey, command or eastern possession', async function ({ page }, info) {
+  await start(page, info, openings[2]);
+  expect(await page.evaluate(function () {
+    const s = FB.state, id = 'bohemond_agenda_1096', d = FB.stories.get(id).declaration;
+    const before = JSON.stringify([s.owner,s.holder,s.player.provs,s.player.provinceId,s.player.gold,
+      s.player.travel,s.armies,s.authority.contracts,Object.keys(s.chars)]);
+    const chosen = d.stages.map(function (stage, i) {
+      s.date = {year:stage.year,season:stage.season,day:1}; s.turn++;
+      const c = i === 3 ? 'bohemond_consider_road' : i === 7 ? 'bohemond_finish' : stage.choices[0].id;
+      const quote = FB.stories.quote(s,id,c), ok = FB.stories.apply(s,id,c,quote);
+      return [c,ok,FB.stories.apply(s,id,c,quote)];
+    });
+    return { choices:chosen, status:s.stories[id].status, holdings:s.player.provs.slice().sort(),
+      unchanged:before === JSON.stringify([s.owner,s.holder,s.player.provs,s.player.provinceId,s.player.gold,
+        s.player.travel,s.armies,s.authority.contracts,Object.keys(s.chars)]) };
+  })).toEqual({ choices:[
+    ['bohemond_review_home',true,false],['bohemond_keep_resources',true,false],['bohemond_review_news',true,false],
+    ['bohemond_consider_road',true,false],['bohemond_keep_position',true,false],['bohemond_keep_obligations',true,false],
+    ['bohemond_keep_relations',true,false],['bohemond_finish',true,false]
+  ], status:'agenda_complete', holdings:['bari','brindisi','taranto'], unchanged:true });
+});
+
+test('Bohemond loses pending reviews with his office and retains the original papal contact', async function ({ page }, info) {
+  await start(page, info, openings[2]);
+  expect(await page.evaluate(function () {
+    const s = FB.state, id = 'bohemond_agenda_1096', t = s.stories[id], p = s.stories.opening_bohemond_1096;
+    const choice = 'bohemond_review_home', quote = FB.stories.quote(s,id,choice), gold = s.player.gold;
+    const contact = p.contacts.papal_ruler, rng = FB.getRngState();
+    s.chars[contact].dead = true;
+    FB.stories.get('opening_bohemond_1096').day(s,p);
+    const fixed = p.contacts.papal_ruler === contact && rng === FB.getRngState();
+    s.player.provs.forEach(function (pid) { s.owner[pid] = 'apulia_1096'; s.holder[pid] = 'apulia_1096'; });
+    s.player.provs = [];
+    FB.invalidateRealmCache();
+    FB.stories.get(id).day(s,t);
+    FB.stories.get('opening_bohemond_1096').day(s,p);
+    return { applied:FB.stories.apply(s,id,choice,quote), status:t.status, decisions:t.decisions.length,
+      unchanged:s.player.gold === gold, fixed:fixed,
+      archived:Object.keys(p.goals).every(function (key) { return p.goals[key].status === 'archived'; }) };
+  })).toEqual({ applied:false, status:'agenda_interrupted', decisions:0, unchanged:true, fixed:true, archived:true });
 });
