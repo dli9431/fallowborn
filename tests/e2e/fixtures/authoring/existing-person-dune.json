@@ -1,0 +1,435 @@
+{
+  "cultures": {
+    "dune_folk": {
+      "name": "Glassroad clans",
+      "tradition": "other",
+      "dyn": "plain",
+      "male": [
+        "Kavi",
+        "Daro",
+        "Aran"
+      ],
+      "female": [
+        "Tamar",
+        "Sela",
+        "Nari"
+      ],
+      "family": [
+        "Selen",
+        "Vara",
+        "Ash"
+      ]
+    }
+  },
+  "cultureDoctrineDefaults": {
+    "dune_folk": {
+      "learning": "steppe"
+    }
+  },
+  "religions": {
+    "dune_belief": {
+      "name": "The Open Sky",
+      "parent": "tengri",
+      "availability": {},
+      "properties": {
+        "head": null,
+        "legalTradition": "customary"
+      }
+    }
+  },
+  "geographies": {
+    "dune_lands": {
+      "bounds": {
+        "lonMin": 0,
+        "lonMax": 6,
+        "latMin": 0,
+        "latMax": 5
+      },
+      "land": [
+        [
+          0.5,
+          0.5,
+          5.5,
+          0.5,
+          5.5,
+          4.5,
+          0.5,
+          4.5
+        ]
+      ],
+      "gridWidth": 240,
+      "provinces": [
+        {
+          "id": "dune_well",
+          "x": 1.5,
+          "y": 1.5,
+          "terrain": "steppe"
+        },
+        {
+          "id": "dune_flats",
+          "x": 3.1,
+          "y": 2.1,
+          "terrain": "steppe"
+        },
+        {
+          "id": "dune_pass",
+          "x": 4.7,
+          "y": 2.7,
+          "terrain": "steppe"
+        }
+      ],
+      "seas": [],
+      "rivers": [],
+      "sites": {
+        "dune_meeting_hall": {
+          "x": 1.5,
+          "y": 1.5
+        }
+      },
+      "defaultLayout": null
+    }
+  },
+  "name": "Existing family household: dune",
+  "storyInstances": {
+    "dune_existing_track": {
+      "id": "dune_existing_track",
+      "type": "household_track",
+      "title": "A family at home",
+      "intro": "Choose ordinary household life.",
+      "homeProvinceId": "dune_flats",
+      "continuity": "household",
+      "initialStage": "review",
+      "stages": {
+        "review": {
+          "name": "Review the household",
+          "text": "Consider your own household.",
+          "choices": [
+            {
+              "id": "stay",
+              "label": "Remain at home",
+              "detail": "Keep your own household without a reward.",
+              "operation": {
+                "kind": "record_decision"
+              },
+              "next": "done"
+            }
+          ],
+          "transitions": []
+        },
+        "done": {
+          "name": "Review complete",
+          "text": "Your ordinary life continues.",
+          "terminal": true,
+          "choices": [],
+          "transitions": []
+        }
+      }
+    }
+  },
+  "startScenarios": [
+    {
+      "id": "dune_existing_household",
+      "name": "An existing household",
+      "desc": "One existing person and their named family.",
+      "intro": "Your household keeps its own home.",
+      "bookmarkIds": [
+        "dune_world"
+      ],
+      "fixedProvinceId": "dune_flats",
+      "alwaysUnlocked": true,
+      "characterName": "Lena Ash",
+      "sex": "f",
+      "startCulture": "dune_folk",
+      "startReligion": "dune_belief",
+      "startAge": 30,
+      "tier": 1,
+      "profession": "farmer",
+      "gold": 29,
+      "prestige": 7,
+      "piety": 3,
+      "familyPresets": {
+        "standard": {
+          "name": "Existing named family",
+          "desc": "Keep the original family and its separate homes."
+        }
+      },
+      "tracks": [
+        "dune_existing_track"
+      ],
+      "existingPerson": {
+        "realmId": "dune_house",
+        "memberId": "chosen",
+        "householdMemberIds": [
+          "chosen",
+          "mother",
+          "partner",
+          "child"
+        ]
+      }
+    },
+    {
+      "id": "dune_ordinary_household",
+      "name": "Ordinary household",
+      "desc": "One existing person and their named family.",
+      "intro": "Your household keeps its own home.",
+      "bookmarkIds": [
+        "dune_world"
+      ],
+      "fixedProvinceId": "dune_flats",
+      "alwaysUnlocked": true,
+      "startCulture": "dune_folk",
+      "startReligion": "dune_belief",
+      "startAge": 24,
+      "tier": 1,
+      "profession": "farmer",
+      "gold": 29,
+      "prestige": 7,
+      "piety": 3,
+      "familyPresets": {
+        "standard": {
+          "name": "Existing named family",
+          "desc": "Keep the original family and its separate homes."
+        }
+      },
+      "tracks": [
+        "dune_existing_track"
+      ]
+    },
+    {
+      "id": "dune_existing_ruler",
+      "name": "Existing monarch",
+      "desc": "Adopt the existing court.",
+      "intro": "The existing court awaits.",
+      "bookmarkIds": [
+        "dune_world"
+      ],
+      "fixedProvinceId": "dune_well",
+      "alwaysUnlocked": true,
+      "characterName": "Maren Ash",
+      "sex": "m",
+      "startCulture": "dune_folk",
+      "startReligion": "dune_belief",
+      "tier": 5,
+      "profession": "noble",
+      "gold": 3,
+      "prestige": 0,
+      "piety": 0,
+      "familyPresets": {
+        "standard": {}
+      },
+      "rulerRealmId": "dune_house",
+      "governmentForm": "regnum",
+      "onboarding": "ruler"
+    }
+  ],
+  "bookmarks": {
+    "dune_world": {
+      "id": "dune_world",
+      "name": "The Glass Road",
+      "desc": "A fictional three-county authoring world.",
+      "date": {
+        "year": 900,
+        "season": 3,
+        "day": 87
+      },
+      "era": "early_medieval",
+      "geography": "dune_lands",
+      "settlementLayout": null,
+      "religiousHeads": {},
+      "stories": [],
+      "provinces": [
+        {
+          "id": "dune_well",
+          "name": "Amber Well",
+          "realm": "dune_house",
+          "culture": "dune_folk",
+          "religion": "dune_belief",
+          "dev": 6,
+          "duchy": "dune_district",
+          "population0": 12000,
+          "communities": [
+            {
+              "culture": "dune_folk",
+              "religion": "dune_belief",
+              "populationShare0": 10000
+            }
+          ],
+          "settlements": [
+            {
+              "site": "dune_meeting_hall",
+              "name": "Well Court",
+              "kind": "town"
+            }
+          ]
+        },
+        {
+          "id": "dune_flats",
+          "name": "Glass Flats",
+          "realm": "dune_house",
+          "culture": "dune_folk",
+          "religion": "dune_belief",
+          "dev": 3,
+          "duchy": "dune_district",
+          "population0": 12000,
+          "communities": [
+            {
+              "culture": "dune_folk",
+              "religion": "dune_belief",
+              "populationShare0": 10000
+            }
+          ]
+        },
+        {
+          "id": "dune_pass",
+          "name": "Red Gate",
+          "realm": "dune_house",
+          "culture": "dune_folk",
+          "religion": "dune_belief",
+          "dev": 3,
+          "duchy": "dune_district",
+          "population0": 12000,
+          "communities": [
+            {
+              "culture": "dune_folk",
+              "religion": "dune_belief",
+              "populationShare0": 10000
+            }
+          ]
+        }
+      ],
+      "realms": [
+        {
+          "id": "dune_house",
+          "name": "The Ash House",
+          "capital": "dune_well",
+          "color": "#aa7944",
+          "aggression": 0,
+          "rank": 2,
+          "government": "regnum",
+          "religion": "dune_belief",
+          "culture": "dune_folk",
+          "ruler": {
+            "name": "Maren Ash",
+            "culture": "dune_folk",
+            "born": 860,
+            "sex": "m",
+            "mar": 6,
+            "trait": "patient"
+          },
+          "royalCourt": {
+            "dynasty": "Ash",
+            "spouseId": null,
+            "members": [
+              {
+                "id": "father",
+                "name": "Daran Ash",
+                "sex": "m",
+                "born": 840,
+                "culture": "dune_folk",
+                "religion": "dune_belief",
+                "homeProvinceId": "dune_pass",
+                "alive": false,
+                "died": 895
+              },
+              {
+                "id": "mother",
+                "name": "Nari Ash",
+                "sex": "f",
+                "born": 845,
+                "culture": "dune_folk",
+                "religion": "dune_belief",
+                "homeProvinceId": "dune_flats"
+              },
+              {
+                "id": "chosen",
+                "name": "Lena Ash",
+                "sex": "f",
+                "born": 870,
+                "culture": "dune_folk",
+                "religion": "dune_belief",
+                "homeProvinceId": "dune_flats",
+                "fatherId": "father",
+                "motherId": "mother",
+                "spouseId": "partner"
+              },
+              {
+                "id": "partner",
+                "name": "Kavi Ash",
+                "sex": "m",
+                "born": 868,
+                "culture": "dune_folk",
+                "religion": "dune_belief",
+                "homeProvinceId": "dune_flats",
+                "spouseId": "chosen"
+              },
+              {
+                "id": "child",
+                "name": "Tavi Ash",
+                "sex": "m",
+                "born": 891,
+                "culture": "dune_folk",
+                "religion": "dune_belief",
+                "homeProvinceId": "dune_flats",
+                "fatherId": "partner",
+                "motherId": "chosen"
+              },
+              {
+                "id": "sibling",
+                "name": "Sela Ash",
+                "sex": "m",
+                "born": 874,
+                "culture": "dune_folk",
+                "religion": "dune_belief",
+                "homeProvinceId": "dune_pass",
+                "fatherId": "father",
+                "motherId": "mother"
+              },
+              {
+                "id": "other",
+                "name": "Vela Ash",
+                "sex": "m",
+                "born": 880,
+                "culture": "dune_folk",
+                "religion": "dune_belief",
+                "homeProvinceId": "dune_well"
+              }
+            ],
+            "rulerFatherId": "father",
+            "founderId": "father"
+          }
+        }
+      ],
+      "duchies": {
+        "dune_district": {
+          "name": "The Glass Road",
+          "kingdom": "dune_country"
+        }
+      },
+      "kingdoms": {
+        "dune_country": {
+          "name": "Amber Country",
+          "empire": "dune_horizon"
+        }
+      },
+      "empires": {
+        "dune_horizon": {
+          "name": "The Wide Horizon"
+        }
+      },
+      "scripted": [],
+      "straits": [],
+      "crossingClasses": {},
+      "localInstitutions": {},
+      "starts": [
+        "dune_existing_household",
+        "dune_ordinary_household",
+        "dune_existing_ruler"
+      ],
+      "hidden": false,
+      "openingInfrastructure": {
+        "version": 1,
+        "placements": []
+      }
+    }
+  }
+}

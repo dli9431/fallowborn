@@ -1,3 +1,7 @@
+Existing-person household presentation
+
+A fixed existingPerson beginning remains under Story starts, using its complete personal storyline rather than historical-ruler onboarding. The card opens the existing fixed-identity summary directly at the declared county's first home slot. Name, sex, culture and faith remain summary facts, and exactly one standard family card describes the existing named family. Generated-family choices and the settlement picker cannot change this person's identity. Ordinary starts, ruler cards and their Back/view-state behavior retain their existing flows. Start codes and direct creation enforce the same identity, household and fixed-home eligibility.
+
 Expedition records-review presentation
 
 Personal assurance and restitution records use the shared Deeds story card and reviewed story sheet. Both the card and confirmation identify the original named parties, finite review window, no payer and records-only effect. The restitution review adds the exact counties with current controllers and holders, explicitly explaining that control proves no lawful capture or transfer mandate. Acknowledgment creates no enforceable obligation, homage, common command, payment, passage or land grant. Declining closes only this review without penalty; separate contracts remain in force. Original parties, current authority, command and scope are rechecked at confirmation. Back, Escape, Close, scroll and originating-card focus retain the shared story navigation; no new modal flow is introduced.

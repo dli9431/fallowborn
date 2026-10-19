@@ -1,0 +1,435 @@
+{
+  "cultures": {
+    "harbor_folk": {
+      "name": "Reedfolk",
+      "tradition": "other",
+      "dyn": "plain",
+      "male": [
+        "Orin",
+        "Sen",
+        "Lio"
+      ],
+      "female": [
+        "Mira",
+        "Iria",
+        "Nell"
+      ],
+      "family": [
+        "Reed",
+        "Vale",
+        "Lark"
+      ]
+    }
+  },
+  "cultureDoctrineDefaults": {
+    "harbor_folk": {
+      "learning": "latin"
+    }
+  },
+  "religions": {
+    "harbor_belief": {
+      "name": "The Lantern Covenant",
+      "parent": "catholic",
+      "availability": {},
+      "properties": {
+        "head": null,
+        "legalTradition": "customary"
+      }
+    }
+  },
+  "geographies": {
+    "harbor_lands": {
+      "bounds": {
+        "lonMin": 0,
+        "lonMax": 6,
+        "latMin": 0,
+        "latMax": 5
+      },
+      "land": [
+        [
+          0.5,
+          0.5,
+          5.5,
+          0.5,
+          5.5,
+          4.5,
+          0.5,
+          4.5
+        ]
+      ],
+      "gridWidth": 240,
+      "provinces": [
+        {
+          "id": "harbor_quay",
+          "x": 1.5,
+          "y": 2.5,
+          "terrain": "farmland"
+        },
+        {
+          "id": "harbor_gardens",
+          "x": 3.1,
+          "y": 2.5,
+          "terrain": "farmland"
+        },
+        {
+          "id": "harbor_ridge",
+          "x": 4.7,
+          "y": 2.5,
+          "terrain": "farmland"
+        }
+      ],
+      "seas": [],
+      "rivers": [],
+      "sites": {
+        "harbor_meeting_hall": {
+          "x": 1.5,
+          "y": 2.5
+        }
+      },
+      "defaultLayout": null
+    }
+  },
+  "name": "Existing family household: harbor",
+  "storyInstances": {
+    "harbor_existing_track": {
+      "id": "harbor_existing_track",
+      "type": "household_track",
+      "title": "A family at home",
+      "intro": "Choose ordinary household life.",
+      "homeProvinceId": "harbor_gardens",
+      "continuity": "household",
+      "initialStage": "review",
+      "stages": {
+        "review": {
+          "name": "Review the household",
+          "text": "Consider your own household.",
+          "choices": [
+            {
+              "id": "stay",
+              "label": "Remain at home",
+              "detail": "Keep your own household without a reward.",
+              "operation": {
+                "kind": "record_decision"
+              },
+              "next": "done"
+            }
+          ],
+          "transitions": []
+        },
+        "done": {
+          "name": "Review complete",
+          "text": "Your ordinary life continues.",
+          "terminal": true,
+          "choices": [],
+          "transitions": []
+        }
+      }
+    }
+  },
+  "startScenarios": [
+    {
+      "id": "harbor_existing_household",
+      "name": "An existing household",
+      "desc": "One existing person and their named family.",
+      "intro": "Your household keeps its own home.",
+      "bookmarkIds": [
+        "harbor_world"
+      ],
+      "fixedProvinceId": "harbor_gardens",
+      "alwaysUnlocked": true,
+      "characterName": "Saren Reed",
+      "sex": "m",
+      "startCulture": "harbor_folk",
+      "startReligion": "harbor_belief",
+      "startAge": 24,
+      "tier": 2,
+      "profession": "noble",
+      "gold": 13,
+      "prestige": 7,
+      "piety": 3,
+      "familyPresets": {
+        "standard": {
+          "name": "Existing named family",
+          "desc": "Keep the original family and its separate homes."
+        }
+      },
+      "tracks": [
+        "harbor_existing_track"
+      ],
+      "existingPerson": {
+        "realmId": "harbor_house",
+        "memberId": "chosen",
+        "householdMemberIds": [
+          "chosen",
+          "mother",
+          "partner",
+          "child"
+        ]
+      }
+    },
+    {
+      "id": "harbor_ordinary_household",
+      "name": "Ordinary household",
+      "desc": "One existing person and their named family.",
+      "intro": "Your household keeps its own home.",
+      "bookmarkIds": [
+        "harbor_world"
+      ],
+      "fixedProvinceId": "harbor_gardens",
+      "alwaysUnlocked": true,
+      "startCulture": "harbor_folk",
+      "startReligion": "harbor_belief",
+      "startAge": 24,
+      "tier": 1,
+      "profession": "farmer",
+      "gold": 13,
+      "prestige": 7,
+      "piety": 3,
+      "familyPresets": {
+        "standard": {
+          "name": "Existing named family",
+          "desc": "Keep the original family and its separate homes."
+        }
+      },
+      "tracks": [
+        "harbor_existing_track"
+      ]
+    },
+    {
+      "id": "harbor_existing_ruler",
+      "name": "Existing monarch",
+      "desc": "Adopt the existing court.",
+      "intro": "The existing court awaits.",
+      "bookmarkIds": [
+        "harbor_world"
+      ],
+      "fixedProvinceId": "harbor_quay",
+      "alwaysUnlocked": true,
+      "characterName": "Aren Reed",
+      "sex": "m",
+      "startCulture": "harbor_folk",
+      "startReligion": "harbor_belief",
+      "tier": 5,
+      "profession": "noble",
+      "gold": 3,
+      "prestige": 0,
+      "piety": 0,
+      "familyPresets": {
+        "standard": {}
+      },
+      "rulerRealmId": "harbor_house",
+      "governmentForm": "regnum",
+      "onboarding": "ruler"
+    }
+  ],
+  "bookmarks": {
+    "harbor_world": {
+      "id": "harbor_world",
+      "name": "Lark Harbor",
+      "desc": "A fictional three-county authoring world.",
+      "date": {
+        "year": 900,
+        "season": 0,
+        "day": 1
+      },
+      "era": "early_medieval",
+      "geography": "harbor_lands",
+      "settlementLayout": null,
+      "religiousHeads": {},
+      "stories": [],
+      "provinces": [
+        {
+          "id": "harbor_quay",
+          "name": "Lark Quay",
+          "realm": "harbor_house",
+          "culture": "harbor_folk",
+          "religion": "harbor_belief",
+          "dev": 6,
+          "duchy": "harbor_district",
+          "population0": 12000,
+          "communities": [
+            {
+              "culture": "harbor_folk",
+              "religion": "harbor_belief",
+              "populationShare0": 10000
+            }
+          ],
+          "settlements": [
+            {
+              "site": "harbor_meeting_hall",
+              "name": "Quay Hall",
+              "kind": "town"
+            }
+          ]
+        },
+        {
+          "id": "harbor_gardens",
+          "name": "Reed Gardens",
+          "realm": "harbor_house",
+          "culture": "harbor_folk",
+          "religion": "harbor_belief",
+          "dev": 3,
+          "duchy": "harbor_district",
+          "population0": 12000,
+          "communities": [
+            {
+              "culture": "harbor_folk",
+              "religion": "harbor_belief",
+              "populationShare0": 10000
+            }
+          ]
+        },
+        {
+          "id": "harbor_ridge",
+          "name": "High Lantern",
+          "realm": "harbor_house",
+          "culture": "harbor_folk",
+          "religion": "harbor_belief",
+          "dev": 3,
+          "duchy": "harbor_district",
+          "population0": 12000,
+          "communities": [
+            {
+              "culture": "harbor_folk",
+              "religion": "harbor_belief",
+              "populationShare0": 10000
+            }
+          ]
+        }
+      ],
+      "realms": [
+        {
+          "id": "harbor_house",
+          "name": "The Reed House",
+          "capital": "harbor_quay",
+          "color": "#aa7944",
+          "aggression": 0,
+          "rank": 2,
+          "government": "regnum",
+          "religion": "harbor_belief",
+          "culture": "harbor_folk",
+          "ruler": {
+            "name": "Aren Reed",
+            "culture": "harbor_folk",
+            "born": 860,
+            "sex": "m",
+            "mar": 6,
+            "trait": "patient"
+          },
+          "royalCourt": {
+            "dynasty": "Reed",
+            "spouseId": null,
+            "members": [
+              {
+                "id": "father",
+                "name": "Rovan Reed",
+                "sex": "m",
+                "born": 840,
+                "culture": "harbor_folk",
+                "religion": "harbor_belief",
+                "homeProvinceId": "harbor_ridge",
+                "alive": false,
+                "died": 895
+              },
+              {
+                "id": "mother",
+                "name": "Mira Reed",
+                "sex": "f",
+                "born": 845,
+                "culture": "harbor_folk",
+                "religion": "harbor_belief",
+                "homeProvinceId": "harbor_gardens"
+              },
+              {
+                "id": "chosen",
+                "name": "Saren Reed",
+                "sex": "m",
+                "born": 876,
+                "culture": "harbor_folk",
+                "religion": "harbor_belief",
+                "homeProvinceId": "harbor_gardens",
+                "fatherId": "father",
+                "motherId": "mother",
+                "spouseId": "partner"
+              },
+              {
+                "id": "partner",
+                "name": "Iria Reed",
+                "sex": "f",
+                "born": 877,
+                "culture": "harbor_folk",
+                "religion": "harbor_belief",
+                "homeProvinceId": "harbor_gardens",
+                "spouseId": "chosen"
+              },
+              {
+                "id": "child",
+                "name": "Nell Reed",
+                "sex": "f",
+                "born": 896,
+                "culture": "harbor_folk",
+                "religion": "harbor_belief",
+                "homeProvinceId": "harbor_gardens",
+                "fatherId": "chosen",
+                "motherId": "partner"
+              },
+              {
+                "id": "sibling",
+                "name": "Orin Reed",
+                "sex": "m",
+                "born": 874,
+                "culture": "harbor_folk",
+                "religion": "harbor_belief",
+                "homeProvinceId": "harbor_ridge",
+                "fatherId": "father",
+                "motherId": "mother"
+              },
+              {
+                "id": "other",
+                "name": "Tarin Reed",
+                "sex": "m",
+                "born": 880,
+                "culture": "harbor_folk",
+                "religion": "harbor_belief",
+                "homeProvinceId": "harbor_quay"
+              }
+            ],
+            "rulerFatherId": "father",
+            "founderId": "father"
+          }
+        }
+      ],
+      "duchies": {
+        "harbor_district": {
+          "name": "Lantern Coast",
+          "kingdom": "harbor_country"
+        }
+      },
+      "kingdoms": {
+        "harbor_country": {
+          "name": "Reed Country",
+          "empire": "harbor_horizon"
+        }
+      },
+      "empires": {
+        "harbor_horizon": {
+          "name": "The Wide Horizon"
+        }
+      },
+      "scripted": [],
+      "straits": [],
+      "crossingClasses": {},
+      "localInstitutions": {},
+      "starts": [
+        "harbor_existing_household",
+        "harbor_ordinary_household",
+        "harbor_existing_ruler"
+      ],
+      "hidden": false,
+      "openingInfrastructure": {
+        "version": 1,
+        "placements": []
+      }
+    }
+  }
+}

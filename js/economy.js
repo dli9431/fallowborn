@@ -1562,6 +1562,7 @@ window.FB = window.FB || {};
         FB.professionHasRole(c.career.profession, ['cloister', 'clergy']))) return false;
     if (!keepTemporaryAbsence && FB.abbeyResidentHouse &&
         FB.abbeyResidentHouse(state, c.id)) return false;
+    if (FB.startingHouseholdMember && FB.startingHouseholdMember(state, c.id)) return true;
     const spouse = c.spouseId && state.chars[c.spouseId];
     if (spouse && !spouse.dead) return false;
     const reverse = familyLinks && familyLinks.spouses;
