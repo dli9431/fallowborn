@@ -715,6 +715,9 @@
         !s.owner[t.origin] || !s.owner[t.target] || FB.realmTerritory(s,d.id).length ||
         (s.armies || []).some(function (a) {return a.id==='following_'+d.id;}) ||
         (s.authority.migrations || []).some(function (m) {return m.realmId===d.id && m.status!=='settled' && m.status!=='failed';})) return plan;
+    var declared=realms[d.id], original=declared && declared.mobile && declared.mobile.opening;
+    if ((o.reserves!==undefined || original && original.reserves!==undefined) &&
+        (s.turn!==0 || !declared || JSON.stringify(d.mobile)!==JSON.stringify(declared.mobile))) return plan;
     var occupied={};
     Object.keys(s.authority.governments).forEach(function (rid) {
       var row=M.row(s,rid);
@@ -743,6 +746,9 @@
       if (!FB.unitClassUnlocked(gates,row.unitId,d.id)) return plan;
       plan.units[row.unitId]=(plan.units[row.unitId] || 0)+row.count;
       plan.muster.push(copy(row));
+    }
+    if (o.reserves!==undefined) {
+      plan.reserves=copy(o.reserves);
     }
     plan.allowed=true;
     return plan;
@@ -794,12 +800,27 @@
         else army.mobileRoster.push(Object.assign({memberId:m.id},c));
       });
     });
+    if (plan && plan.reserves!==undefined) {
+      /* Resting people retain their exact source cohorts. No equipment,
+         recruitment payment, second camp or additional host is supplied. */
+      plan.reserves.forEach(function (part) {
+        var m=member(s,d.id,part.memberId);
+        add(m.reserve,take(m.civilians,part.count));
+      });
+      r.openingReserves={schema:1,allocations:copy(plan.reserves)};
+    }
     M.migration(s, d.id).courtIds = r.members.map(function (a) { return a.principal.id; }).filter(function (cid) {
       return !(M.separatePartyMember && M.separatePartyMember(s,d.id,cid));
     });
     return M.row(s,d.id);
   };
   M.initialize = function (s, defs) {
+    defs.forEach(function (d) {
+      var t=d.mobile;
+      if (t && t.opening && t.opening.reserves!==undefined &&
+          (t.preparationId!==undefined || t.civilianCamps!==undefined))
+        throw new Error(FB.T('Invalid opening reserve partition.'));
+    });
     defs=defs.filter(function (d) {return !d.mobile || d.mobile.preparationId===undefined;});
     var plans={}, people={}, hosted = M.hostedAccessPlan(s,defs);
     if (!hosted.allowed) throw new Error(FB.T('Invalid hosted opening access.'));
@@ -1213,7 +1234,7 @@
       var o=t.opening, members=Object.create(null), people=Object.create(null), actors=Object.create(null),
         recruited=Object.create(null), total=0, pairs=Object.create(null), invalid=false;
       p.members.forEach(function (m) {members[m.id]=m;});
-      if (!keys(o,['principals','leaderMemberId','muster']) || !members[o.leaderMemberId] ||
+      if (!keys(o,['principals','leaderMemberId','muster','reserves']) || !members[o.leaderMemberId] ||
           !Array.isArray(o.principals) || !o.principals.length || o.principals.length>p.members.length ||
           !Array.isArray(o.muster) || !o.muster.length || o.muster.length>64 || !bookmark)
         return [FB.T('Invalid authored mobile opening.')];
@@ -1262,6 +1283,17 @@
         if (recruited[id]>Math.floor(members[id].population*members[id].pledge)) invalid=true;
       });
       if (invalid || total!==t.fighters) return [FB.T('Invalid authored mobile opening.')];
+      if (o.reserves!==undefined) {
+        var reserved=Object.create(null);
+        if (t.preparationId!==undefined || t.civilianCamps!==undefined || !Array.isArray(o.reserves) ||
+            !o.reserves.length || o.reserves.length>p.members.length || o.reserves.some(function (row) {
+              if (!keys(row,['memberId','count']) || typeof row.memberId!=='string' || !members[row.memberId] ||
+                  reserved[row.memberId] || !whole(row.count) ||
+                  row.count>members[row.memberId].population-(recruited[row.memberId] || 0)) return true;
+              reserved[row.memberId]=true;
+              return false;
+            })) return [FB.T('Invalid opening reserve partition.')];
+      }
     }
     if (t.funding !== undefined && (!t.command || !FB.homeAuthority || !FB.homeAuthority.fundingPolicyValid(t.funding)))
       return [FB.T('Invalid command funding policy.')];
@@ -1305,7 +1337,7 @@
       var p = M.profile(s,rid), moving = M.migration(s,rid), ids = {}, principals = {};
       if (moving && !M.migrationSponsorshipValid(s,moving)) fault(rid,'sponsorship');
       if (!keys(r,['schema','profileId','migrationId','status','serial','revision','leaderId','selection','decision','food','lastDay','lastAI',
-          'worked','agreements','accounting','members','defeatKey','openingBindings','command','openingAccess','columns','expeditionProgram','guardedParty','camps']) || [1,2,3].indexOf(r.schema)<0 || !p || !moving || moving.realmId !== rid ||
+          'worked','agreements','accounting','members','defeatKey','openingBindings','openingReserves','command','openingAccess','columns','expeditionProgram','guardedParty','camps']) || [1,2,3].indexOf(r.schema)<0 || !p || !moving || moving.realmId !== rid ||
           !['active','settled','dispersed'].includes(r.status) || !whole(r.serial) || !whole(r.revision) || !whole(r.lastDay) || r.lastDay > s.turn ||
           r.lastAI !== undefined && (!whole(r.lastAI) || r.lastAI>Math.floor(s.turn/90)) || !boundedNumber(r.food,1000000000000) ||
           !keys(r.accounting,['initial','arrivals','dead','settled','dispersed']) || Object.keys(r.accounting).length !== 5 ||
@@ -1327,6 +1359,14 @@
           boundIds[c.id]=true;
         });
       }
+      var reserves=opening && opening.reserves, reserveMarker=r.openingReserves;
+      if (reserves===undefined) {if (reserveMarker!==undefined) fault(rid,'openingReserves');}
+      else if (!keys(reserveMarker,['schema','allocations']) || reserveMarker.schema!==1 ||
+          !Array.isArray(reserveMarker.allocations) || reserveMarker.allocations.length!==reserves.length ||
+          reserveMarker.allocations.some(function (part,i) {
+            return !keys(part,['memberId','count']) || part.memberId!==reserves[i].memberId ||
+              !whole(part.count) || part.count!==reserves[i].count;
+          })) fault(rid,'openingReserves');
       if (r.status === 'active' && (!strategy || !strategy.mobileFollowing || s.realms[rid].alive === false || moving.status === 'settled' || moving.status === 'failed') ||
           r.status === 'settled' && (strategy.mobileFollowing || moving.status !== 'settled' || M.total(s,rid) !== 0) ||
           r.status === 'dispersed' && (s.realms[rid].alive !== false || M.total(s,rid) !== 0)) fault(rid,'status');
