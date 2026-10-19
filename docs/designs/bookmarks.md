@@ -268,6 +268,8 @@ data/bookmark_1096_scaffold_d.js now separates the Sunni Egyptian resident templ
 
 Spring 1096 western regional staging
 
+The Valencian court now supplies Rodrigo Diaz, Jimena and three named children to both ordinary world initialization and the existing-ruler beginning. Working ages, shared residency and the whole-county compression are explicit simulation choices recorded in docs/research/valencia-1096.md. The single urban start adopts the existing court without changing resident communities, physical sites or neighboring owners. Separate agenda and opening-profile sources attach optional personal reviews and fixed family contacts; matching saves retain their actual state.
+
 data/bookmark_1096_scaffold_a.js supplies five literal blocks under FBDATA.bookmarkRegions1096: west_north, west_south, iberia_north, iberia_south and maghreb. Loading stages 132 physical county declarations, title chains, 20 dated territorial courts and independent settlement layouts. It registers no bookmark or live opening transaction. Its only outside court references are hre_1096 and fatimid_1096; complete composition must resolve those once. Existing worlds, active layouts and campaign state remain untouched. The research note docs/research/1096-bookmark.md records the copied first-pass resident/layout assumptions, generated identity holds and capital proxies. This content stages ordinary bookmark fields and introduces no gameplay capability, saved schema or technology gate.
 
 Spring 1241 regional staging
