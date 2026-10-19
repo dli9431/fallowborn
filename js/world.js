@@ -6065,12 +6065,11 @@ window.FB = window.FB || {};
     const ancestor = ruler && ruler.parentId && s.members[ruler.parentId];
     let parent = rulerAge >= 16 ? ruler :
       (ancestor && state.date.year - ancestor.born >= 16 ? ancestor : null);
-    /* The compact-house fallback is not a birth. Never manufacture children
-       or siblings inside the player's known family to keep a throne occupied.
-       A parentless court successor preserves the existing recovery mechanism;
-       recorded births still take priority through registerRoyalBirth. */
-    if (royalHasPlayerFamily(state, ruler) || royalHasPlayerFamily(state, parent) ||
-        (s.authoredCourt && rulerAge < 12)) {
+    /* The compact-house fallback is not a birth. Authored family graphs and
+       the player's known family must never gain invented parent/child links
+       to keep a throne occupied. A parentless court successor preserves the
+       existing recovery mechanism; recorded births retain their own owner. */
+    if (s.authoredCourt || royalHasPlayerFamily(state, ruler) || royalHasPlayerFamily(state, parent)) {
       parent = null;
     }
     let ageMin = parent ? state.date.year - royalLastBirthYear(state, parent) : 0;

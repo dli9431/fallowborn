@@ -1,5 +1,7 @@
 Authored royal courts and succession
 
+An explicitly authored family graph cannot acquire invented children through vacant-line repair. With an empty eligible frontier, the existing fallback creates a fictional parentless court successor, leaving the ruler's declared children and spouse links intact. Later recorded births still join the ordinary genealogy and succession frontier. This corrects fallback family links without adding a policy, saved field, technology gate or historical heir.
+
 Spring 568 first-pass courts
 
 The Italy, Iran/Caucasus, central European, northern Iberian and western British blocks in data/bookmark_568_scaffold_a.js stage 22 courts. Khosrow I is the single named incumbent; uncertain local incumbents are generated campaign principals, born 533 as a working age choice, without copied ancestors or spouses. Local courts use regnum as a limited first-pass continuity model. The Sasanian court retains aristocratic_monarchy through date-owned administration and recognition profiles with three anonymous provincial interests, one anonymous governor and an empty declared royal family. Numeric terms and weights are simulation choices. Complete composition publishes each block's administrationProfiles and aristocraticProfiles into the existing catalogues before validation. No new strategy, state record or independently gateable capability is added. Existing recognition, appointment, consent and succession consumers keep their current technology rules.
