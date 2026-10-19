@@ -410,7 +410,15 @@ FBDATA.bookmarkRevisionContent_1096_balkans = {
     {id:'zadar', name:'Zadar', x:15.23, y:44.12, terrain:'hills', duchy:'croatia', realm:'croatia_1096', culture:'slavic', religion:'catholic', dev:4, communities:[{culture:'slavic', religion:'catholic', populationShare0:6500}, {culture:'italian', religion:'catholic', populationShare0:3500}]}
   ],
   realms:[
-    {id:'byzantium_1096', name:'Byzantine Empire', color:'#a04fb0', capital:'constantinople', aggression:0, rank:4, religion:'orthodox', government:'administrative_monarchy', ruler:{sex:'m', culture:'greek', born:1057, mar:8, trait:'patient', name:'Alexios I Komnenos'}, administrationProfileId:'byzantine_1066', techTraditions:['byzantine']},
+    {id:'byzantium_1096', name:'Byzantine Empire', color:'#a04fb0', capital:'constantinople', aggression:0, rank:4, religion:'orthodox', government:'administrative_monarchy', ruler:{sex:'m', culture:'greek', born:1057, mar:8, trait:'patient', name:'Alexios I Komnenos'}, royalCourt:{dynasty:'Komnenos', spouseId:'irene', members:[
+      {id:'irene', name:'Irene Doukaina', sex:'f', born:1066, culture:'greek', religion:'orthodox', spouseId:'ruler', homeProvinceId:'constantinople'},
+      {id:'anna', name:'Anna Komnene', sex:'f', born:1083, culture:'greek', religion:'orthodox', fatherId:'ruler', motherId:'irene', homeProvinceId:'constantinople'},
+      {id:'maria', name:'Maria Komnene', sex:'f', born:1085, culture:'greek', religion:'orthodox', fatherId:'ruler', motherId:'irene', homeProvinceId:'constantinople'},
+      {id:'john', name:'John Komnenos', sex:'m', born:1087, culture:'greek', religion:'orthodox', fatherId:'ruler', motherId:'irene', homeProvinceId:'constantinople'},
+      {id:'eudokia', name:'Eudokia Komnene', sex:'f', born:1094, culture:'greek', religion:'orthodox', fatherId:'ruler', motherId:'irene', homeProvinceId:'constantinople'},
+      {id:'andronikos', name:'Andronikos Komnenos', sex:'m', born:1091, culture:'greek', religion:'orthodox', fatherId:'ruler', motherId:'irene', homeProvinceId:'constantinople'},
+      {id:'isaac', name:'Isaac Komnenos', sex:'m', born:1093, culture:'greek', religion:'orthodox', fatherId:'ruler', motherId:'irene', homeProvinceId:'constantinople'}
+    ]}, administrationProfileId:'byzantine_1066', techTraditions:['byzantine']},
     {id:'duklja_rascia_1096', name:'Duklja and Rascia', color:'#7f6fbf', capital:'kotor', aggression:0, rank:2, religion:'orthodox', government:'territorial', ruler:{sex:'m', culture:'slavic', born:1060, mar:8, trait:'patient', generated:true}},
     {id:'croatia_1096', name:'Croatian court', color:'#4f9fbf', capital:'knin', aggression:0, rank:3, religion:'catholic', government:'territorial', ruler:{sex:'m', culture:'slavic', born:1060, mar:8, trait:'patient', generated:true}}
   ],

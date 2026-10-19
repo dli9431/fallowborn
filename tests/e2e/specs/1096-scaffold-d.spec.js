@@ -173,8 +173,8 @@ test('1096 eastern courts retain real birth years and explicit generated-ruler h
           return [id,courts[id].religion];
         })};
     },Object.keys(packets));
-    expect(result).toEqual({faults:[],generated:35,
-      named:[['seljuk_1096','Berkyaruk',1081],['abbasid_1096','al-Mustazhir',1078],
+    expect(result).toEqual({faults:[],generated:34,
+      named:[['rum_1096','Kilij Arslan I',1079],['seljuk_1096','Berkyaruk',1081],['abbasid_1096','al-Mustazhir',1078],
         ['ghaznavid_1096','Ibrahim ibn Masud',1033]],
       ownership:[['nicaea','rum_1096'],['ikonion','rum_1096'],['smyrna','smyrna_local_1096'],
         ['tarsos','cilician_courts_1096'],['kutaisi','georgia_1096'],['derbent','caspian_local_1096'],
