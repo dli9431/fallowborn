@@ -2531,6 +2531,19 @@ def story_table_sources(prefix: str):
                 yield source, table
 
 
+def extract_expedition_stories(inv: Inventory) -> None:
+    """Extract inert expedition presentation without executing declarations."""
+    for source, table in story_table_sources("storyExpeditions_"):
+        declarations = node_object(find_assignment(source, "FBDATA", table)) or {}
+        rel = source.relative_to(ROOT).as_posix()
+        for story_id, story_node in declarations.items():
+            story = node_object(story_node) or {}
+            for field in ("title", "intro", "name", "desc"):
+                for _, record, line in branch_records(story.get(field)):
+                    inv.add(f"expeditionStory.{story_id}.{field}", record, f"{rel}:{line}",
+                            "Expedition story presentation.", TOKEN_RE.findall(record["text"]))
+
+
 def extract_household_stories(inv: Inventory) -> None:
     for source, table in story_table_sources("householdTracks_"):
         declarations = node_object(find_assignment(source, "FBDATA", table)) or {}
@@ -2740,6 +2753,7 @@ def build_inventory() -> Inventory:
     extract_structured(inv)
     extract_story_courts(inv)
     extract_household_stories(inv)
+    extract_expedition_stories(inv)
     extract_household_observers(inv)
     extract_ruler_agendas(inv)
     extract_local_threats(inv)
