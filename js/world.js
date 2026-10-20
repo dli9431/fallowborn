@@ -35,7 +35,7 @@ window.FB = window.FB || {};
   var REVISION_FIELDS = ['geography','opening','openingRevision','provinces','realms',
     'duchies','kingdoms','empires','straits','crossingClasses','localInstitutions',
     'settlementLayout','climate','religiousHeads','starts','stories','storyRegions','scripted','homeAuthorityPolicies',
-    'openingRevisions','openingLegacyRevision','startLocations','openingInfrastructure','siteResourceAssignments',
+    'openingRevisions','openingLegacyRevision','startLocations','startTrackOverrides','openingInfrastructure','siteResourceAssignments',
     'buildingInstitutionAssignments','buildingOperationAssignments','productionSites','productionExchangeAssignments','productionProducerAssignments','buildingSeasonAssignments','maritimeWorkAssignments','relayServiceAssignments'];
   function resolveBookmarkRevision(base, revision) {
     if (!base) return null;
@@ -1465,6 +1465,8 @@ window.FB = window.FB || {};
         });
       });
     }
+    var trackOverrideErrors = FB.startTrackOverrideFaults(definition, FBDATA.startScenarios || [], stories);
+    if (trackOverrideErrors.length) return errors.concat(trackOverrideErrors);
     Object.keys(starts).forEach(function (id) {
       var start = starts[id], owner = 'start ' + id;
       if (start.bookmarkIds !== undefined) list(start.bookmarkIds, owner + '.bookmarkIds', function (bm) {
@@ -1515,14 +1517,15 @@ window.FB = window.FB || {};
           fault(owner, 'existing ruler identity, government and rank must match realm ' + start.rulerRealmId + '.');
       }
       if (!ownKey(FBDATA.careers, start.profession)) fault(owner, 'unknown career ' + start.profession + '.');
-      if (start.tracks !== undefined) list(start.tracks, owner + '.tracks', function (track) {
-        story(track, 'track', worldStories.concat(start.tracks), owner);
+      var selectedTracks = FB.startTrackSet(start, definition);
+      if (selectedTracks.tracks !== undefined) list(selectedTracks.tracks, owner + '.tracks', function (track) {
+        story(track, 'track', worldStories.concat(selectedTracks.tracks), owner);
       });
       if (start.fixedProvinceId && !start.rulerRealmId &&
-          !FB.startStoryTracks(start, start.fixedProvinceId, stories).length)
+          !FB.startStoryTracks(start, start.fixedProvinceId, stories, definition).length)
         fault(owner, 'a fixed-place household needs a player track at its fixed birthplace.');
-      if (plainRecord(start.trackLocations)) Object.keys(start.trackLocations).forEach(function (track) {
-        var places = start.trackLocations[track];
+      if (plainRecord(selectedTracks.trackLocations)) Object.keys(selectedTracks.trackLocations).forEach(function (track) {
+        var places = selectedTracks.trackLocations[track];
         (Array.isArray(places) ? places : []).forEach(function (pid) {
           // An explicit empty birthplace list disables the entire start,
           // including its tracks, but cannot hide an invalid county reference.
@@ -1531,7 +1534,7 @@ window.FB = window.FB || {};
             fault(owner, 'track ' + track + ' location ' + pid + ' is not an available beginning.');
         });
       });
-      requirements(start.requirements, owner, start.startReligion, start.governmentForm, worldStories.concat(start.tracks || []));
+      requirements(start.requirements, owner, start.startReligion, start.governmentForm, worldStories.concat(selectedTracks.tracks || []));
     });
     if (era) cultures[era.defaultCulture] = true;
     Object.keys(cultures).forEach(function (id) {

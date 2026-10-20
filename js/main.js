@@ -2110,7 +2110,7 @@ FB.CHANGELOG = [
      list and an optional eras list, matched against the bookmark's era. */
   function scenarioOffered(scenario, bookmarkId) {
     if (!scenario || scenario.hidden && !FBDATA.reviewOpenStarts) return false;
-    if (fixedPlaceStart(scenario) && !FB.startStoryTracks(scenario, scenario.fixedProvinceId).length) return false;
+    if (fixedPlaceStart(scenario) && !FB.startStoryTracks(scenario, scenario.fixedProvinceId, null, FB.bookmark(bookmarkId)).length) return false;
     if (!FB.bookmarkAvailable(bookmarkId)) return false;
     if (scenario.bookmarkIds && scenario.bookmarkIds.indexOf(bookmarkId) < 0) return false;
     const offeredBookmark = FB.bookmark(bookmarkId);
@@ -2918,12 +2918,13 @@ FB.CHANGELOG = [
     return !!(sc && sc.fixedProvinceId && !sc.rulerRealmId);
   }
   function storyPlaceIds(sc) {
-    if (fixedPlaceStart(sc)) return FB.startStoryTracks(sc, sc.fixedProvinceId).length ? [sc.fixedProvinceId] : [];
+    const bookmark = FB.activeBookmark, selected = FB.startTrackSet(sc, bookmark);
+    if (fixedPlaceStart(sc)) return FB.startStoryTracks(sc, sc.fixedProvinceId, null, bookmark).length ? [sc.fixedProvinceId] : [];
     const ids = [];
-    (sc && sc.tracks || []).forEach(function (track) {
-      const places = sc.trackLocations && sc.trackLocations[track];
+    (selected.tracks || []).forEach(function (track) {
+      const places = selected.trackLocations && selected.trackLocations[track];
       (Array.isArray(places) ? places : []).forEach(function (id) {
-        if (FB.startStoryTracks(sc, id).indexOf(track) < 0) return;
+        if (FB.startStoryTracks(sc, id, null, bookmark).indexOf(track) < 0) return;
         if (ids.indexOf(id) < 0) ids.push(id);
       });
     });
@@ -3501,7 +3502,7 @@ FB.CHANGELOG = [
     FB.seedRng(FB.hashSeed(seedStr));
     const bookmark = FB.activeBookmark;
     const start = {
-      id:bookmark.id, year:bookmark.date.year,
+      id:bookmark.id, scenarioId:sc.id, year:bookmark.date.year,
       season:bookmark.date.season, day:bookmark.date.day
     };
     const provId = G.pending.provinceId;
@@ -3809,7 +3810,7 @@ FB.CHANGELOG = [
       if (!FB.adoptStartingRealm(state, sc))
         throw new Error('Starting ruler could not adopt the authored realm.');
     }
-    if (FB.stories) FB.stories.start(state, { tracks:FB.startTracks(sc, provId), sealAttachments:true });
+    if (FB.stories) FB.stories.start(state, { tracks:FB.startTracks(sc, provId, FB.campaignBookmark(state)), sealAttachments:true });
     state.seasonMark.gold = state.player.gold;
     // A new campaign is fresh: fresh-only institutions join its opening roster.
     if (FB.ensureLocalInstitutions) FB.ensureLocalInstitutions(state, null, { fresh:true });

@@ -15,7 +15,7 @@
         !bookmark || !Array.isArray(scenario.bookmarkIds) || scenario.bookmarkIds.indexOf(bookmark.id) < 0 ||
         !scenario.familyPresets || Object.keys(scenario.familyPresets).join(',') !== 'standard' ||
         !Number.isInteger(scenario.tier) || scenario.tier < 1 || scenario.tier > 2 ||
-        !FB.startStoryTracks(scenario, scenario.fixedProvinceId, stories).length) return null;
+        !FB.startStoryTracks(scenario, scenario.fixedProvinceId, stories, bookmark).length) return null;
     var realm = (bookmark.realms || []).find(function (r) { return r && r.id === b.realmId; });
     var mobile = realm && realm.mobile, guard = mobile && mobile.guardedParty;
     var opening = mobile && mobile.opening, actors = bookmark.opening && bookmark.opening.actors;
@@ -102,7 +102,7 @@
         !Array.isArray(scenario.bookmarkIds) || !bookmark || scenario.bookmarkIds.indexOf(bookmark.id) < 0 ||
         !scenario.familyPresets || Object.keys(scenario.familyPresets).join(',') !== 'standard' ||
         !Number.isInteger(scenario.tier) || scenario.tier < 1 || scenario.tier > 2 ||
-        !FB.startStoryTracks(scenario, scenario.fixedProvinceId, stories).length) return null;
+        !FB.startStoryTracks(scenario, scenario.fixedProvinceId, stories, bookmark).length) return null;
     var realm = (bookmark.realms || []).find(function (r) { return r && r.id === binding.realmId; });
     var court = realm && realm.royalCourt, members = court && court.members;
     if (!Array.isArray(members) || members.length > 24 || members.some(function (m) { return !plain(m); }) || !realm.ruler) return null;
@@ -314,8 +314,9 @@
       if (realms.indexOf(p.realm) >= 0) places[p.id] = true;
     });
     (rule.counties || []).forEach(function (id) { places[id] = true; });
-    if (rule.storyCounties === true) Object.keys(scenario.trackLocations || {}).forEach(function (track) {
-      (scenario.trackLocations[track] || []).forEach(function (id) { places[id] = true; });
+    var trackPlaces = FB.startTrackSet(scenario, bookmark).trackLocations || {};
+    if (rule.storyCounties === true) Object.keys(trackPlaces).forEach(function (track) {
+      (trackPlaces[track] || []).forEach(function (id) { places[id] = true; });
     });
     return places;
   };
@@ -342,17 +343,66 @@
   };
   /* A track may name the counties where its story takes place. The same
      beginning elsewhere is an ordinary household without that track. */
-  FB.startTracks = function (scenario, provinceId) {
-    var places = scenario && scenario.trackLocations || {};
-    return (scenario && Array.isArray(scenario.tracks) ? scenario.tracks : []).filter(function (id) {
+  FB.startTrackSet = function (scenario, bookmark) {
+    var policy = bookmark && bookmark.startTrackOverrides;
+    var row = policy && plain(policy.entries) && scenario && own(policy.entries, scenario.id) && policy.entries[scenario.id];
+    return row || scenario || {};
+  };
+  /* Pure structural validation; world validation below owns effective places,
+     story dependencies and all ordinary start eligibility. */
+  FB.startTrackOverrideFaults = function (bookmark, scenarios, stories) {
+    var policy = bookmark && bookmark.startTrackOverrides, errors = [];
+    if (policy === undefined) return errors;
+    function fault(text) { errors.push('startTrackOverrides: ' + text); }
+    function keys(value, allowed) {
+      return plain(value) && Object.keys(value).every(function (key) { return allowed.indexOf(key) >= 0; });
+    }
+    function ids(value, min) {
+      return Array.isArray(value) && value.length >= min && value.length <= 512 && value.every(function (id, i) {
+        return typeof id === 'string' && id.length > 0 && id.length <= 200 && value.indexOf(id) === i;
+      });
+    }
+    if (!keys(policy, ['schema','entries']) || policy.schema !== 1 || !plain(policy.entries) ||
+        !Object.keys(policy.entries).length || Object.keys(policy.entries).length > 128) {
+      fault('needs schema 1 and 1-128 scenario entries.'); return errors;
+    }
+    Object.keys(policy.entries).forEach(function (id) {
+      var row = policy.entries[id], scenario = scenarios.find(function (sc) { return sc.id === id; });
+      if (!scenario || scenario.bookmarkIds && scenario.bookmarkIds.indexOf(bookmark.id) < 0 ||
+          scenario.eras && scenario.eras.indexOf(FB.bookmarkEra(bookmark)) < 0 ||
+          scenario.fixedProvinceId && !(bookmark.provinces || []).some(function (p) {
+            return p && p.id === scenario.fixedProvinceId && !p.wasteland;
+          }) || scenario.rulerRealmId && !(bookmark.realms || []).some(function (r) {
+            return r && r.id === scenario.rulerRealmId;
+          }) ||
+          Array.isArray(bookmark.starts) && bookmark.starts.indexOf(id) < 0) fault('unknown or excluded scenario ' + id + '.');
+      if (!keys(row, ['tracks','trackLocations']) || !ids(row.tracks, 0)) {
+        fault(id + ' needs a complete unique player-track list.'); return;
+      }
+      row.tracks.forEach(function (track) {
+        var story = (stories || FB.stories).get(track);
+        if (!story || story.kind !== 'track') fault(id + ' has unknown player track ' + track + '.');
+      });
+      if (row.trackLocations !== undefined && (!plain(row.trackLocations) ||
+          Object.keys(row.trackLocations).length > 512)) { fault(id + ' has an invalid birthplace map.'); return; }
+      Object.keys(row.trackLocations || {}).forEach(function (track) {
+        if (row.tracks.indexOf(track) < 0 || !ids(row.trackLocations[track], 1))
+          fault(id + ' has invalid places for selected track ' + track + '.');
+      });
+    });
+    return errors;
+  };
+  FB.startTracks = function (scenario, provinceId, bookmark) {
+    var selected = FB.startTrackSet(scenario, bookmark), places = selected.trackLocations || {};
+    return (Array.isArray(selected.tracks) ? selected.tracks : []).filter(function (id) {
       return !Object.prototype.hasOwnProperty.call(places, id) ||
         Array.isArray(places[id]) && places[id].indexOf(provinceId) >= 0;
     });
   };
   /* Optional companion tracks still attach, but cannot supply a storyline.
      Import validation uses its detached candidate registry. */
-  FB.startStoryTracks = function (scenario, provinceId, stories) {
-    return FB.startTracks(scenario, provinceId).filter(function (id) {
+  FB.startStoryTracks = function (scenario, provinceId, stories, bookmark) {
+    return FB.startTracks(scenario, provinceId, bookmark).filter(function (id) {
       return (stories || FB.stories).isStoryline(id);
     });
   };
@@ -505,9 +555,11 @@
     var scenario = FBDATA.startScenarios.filter(function (row) {
       return row.id === s.start.scenarioId;
     })[0];
+    var original = s.start.storyAttachments;
+    var requiredTracks = original ? original.tracks : scenario && scenario.tracks || [];
     if (!scenario || scenario.rulerRealmId !== s.start.rulerRealmId ||
         !scenario.bookmarkIds || scenario.bookmarkIds.indexOf(s.start.id) < 0 ||
-        s.start.onboarding !== scenario.onboarding || (scenario.tracks || []).some(function (id) {
+        s.start.onboarding !== scenario.onboarding || requiredTracks.some(function (id) {
           return !s.stories || !s.stories[id];
         }))
       throw new Error(FB.T('Invalid v4 save field at {path}.', { path:'state.start.rulerRealmId' }));
