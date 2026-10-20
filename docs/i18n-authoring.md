@@ -462,3 +462,6 @@ startTrackOverrides contains stable scenario, story and county ids only. It intr
 Preparation ration target presentation
 
 Current target-day, total provision, camp/field quantity and carriage blocker phrases use literal FB.T calls with named numeric placeholders in js/story_expedition_preparation.js. Imported title and intro retain their effective English fallback. targetDays, unit ids, ration inputs, schema, account facts and original purchase receipts are untranslated data; no rendered text is saved. Shared story navigation and existing monetary formatting remain authoritative. No extraction namespace or generated catalogue change is needed.
+Expedition presentation tables
+
+Literal FBDATA.storyExpeditions_<suffix> tables in data/story_*.js expose title, intro, name and desc through static extraction. The expeditionStory owner retains each source field and exact-English alias, supporting both the shared FB.T sheets and records-review dataText fallback. References, commands, provisions and other operational fields are not display text. Extraction never executes the data file. Independent source coverage is in tools/test_i18n_expedition_tables.py.
