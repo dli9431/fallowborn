@@ -121,7 +121,9 @@
     ['realmId','patronRealmId','federateRealmId','institutionId','liege','realm','owner','holderId','beneficiaryRealmId','payerRealmId'].forEach(function (key) {
       if (value[key] === from) value[key] = to;
     });
-    Object.keys(value).forEach(function (key) { remap(value[key], from, to); });
+    Object.keys(value).forEach(function (key) {
+      if (key !== 'openingJurisdiction' && !(value.openingJurisdiction && key === 'bindings')) remap(value[key], from, to);
+    });
   }
   var absorb = FB.absorbRealm;
   FB.absorbRealm = function (s, rid, c) {

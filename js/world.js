@@ -3391,7 +3391,7 @@ window.FB = window.FB || {};
      feudal_vassals generates dukes and counts beneath the ruler; direct
      leaves every county in the realm's own hand. */
   FB.governments.register('holders', 'feudal_vassals', {
-    openingHolders:function (definition, rid) {
+    openingHolders:function (definition, rid, generated) {
       var out = Object.create(null), byDuchy = Object.create(null);
       var realm = definition.realms.find(function (row) { return row && row.id === rid; });
       var capital = definition.provinces.find(function (pr) { return pr && pr.id === realm.capital; });
@@ -3404,6 +3404,8 @@ window.FB = window.FB || {};
         var counties = byDuchy[did].slice().sort(function (a, b) { return b.dev - a.dev; });
         counties.forEach(function (pr, index) {
           out[pr.id] = counties.length >= 2 && index === 0 ? 'd_' + did : 'c_' + pr.id;
+          if (generated) generated[out[pr.id]]={id:out[pr.id],capital:pr.id,
+            liege:counties.length >= 2 && index > 0 ? 'd_' + did : rid};
         });
       });
       return out;
@@ -4101,6 +4103,12 @@ window.FB = window.FB || {};
     return 'royal_' + realm.id + '_' + String(key || 'member')
       .replace(/[^A-Za-z0-9_-]/g, '_');
   }
+  /* Pure original identity, including generated opening holders. This never
+     materializes a current incumbent or substitutes a successor. */
+  FB.openingRulerCharacterId = function (definition) {
+    var generation=definition.ruler && definition.ruler.generation || 1;
+    return courtCharId(courtMemberId(definition,definition.royalCourt ? 'authored_ruler' : 'g'+generation+'_ruler'));
+  };
 
   /* Creation only. Restore consumes saved compact records, never this data. */
   FB.initializeRoyalCourts = function (state, definitions) {
@@ -5435,6 +5443,7 @@ window.FB = window.FB || {};
     if (FB.startSelectionReferencesCharacter && FB.startSelectionReferencesCharacter(state, c && c.id)) return true;
     if (FB.governments.support && FB.governments.support.referencesCharacter(state, c && c.id)) return true;
     if (FB.mobile && FB.mobile.referencesCharacter(state, c && c.id)) return true;
+    if (FB.expeditionPreparation && FB.expeditionPreparation.referencesCharacter(state, c && c.id)) return true;
     if (!state || !c || !state.player) return false;
     if (FB.productionEconomy && FB.productionEconomy.referencesCharacter(state,c.id)) return true;
     if (FB.siegeSupport && FB.siegeSupport.referencesCharacter(state,c.id)) return true;
