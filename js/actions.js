@@ -7019,17 +7019,18 @@ window.FB = window.FB || {};
      labels from incomeBreakdown. */
   FB.playerCivilianBudget = function (state, economy, ignoreAssignments, options) {
     const p = state.player;
-    const publicCrown = FB.electiveCrown && FB.electiveCrown(state, 'player');
+    const publicCrown = FB.treasurySeparated(state, 'player');
+    const preserved = FB.treasuryPreserved(state, 'player');
     let receipts = 0;
     let total = -FB.householdUpkeep(state) - (publicCrown ? 0 : FB.playerGovernmentCosts(state).total);
-    if (FB.publicOfficeBudget) total -= FB.publicOfficeBudget(state, 'player');
+    if (FB.publicOfficeBudget && !preserved) total -= FB.publicOfficeBudget(state, 'player');
     if (FB.publicOfficerIncome) {
       const salary = FB.publicOfficerIncome(state, p.charId);
       total += salary; receipts += salary;
     }
     if (FB.householdStandardsUpkeep) total -= FB.householdStandardsUpkeep(state);
     if (FB.modifierUpkeep && !publicCrown) total -= FB.modifierUpkeep(state, 'gold');
-    if (FB.station.isLanded(p, state)) {
+    if (FB.station.isLanded(p, state) && !preserved) {
       if (publicCrown) {
         const fiscal = FB.settlementActorFiscal(state, { kind:'character', id:p.charId });
         const tax = fiscal.tax + fiscal.tolls + fiscal.national +
@@ -7062,10 +7063,10 @@ window.FB = window.FB || {};
   FB.reliableGoldIncome = function (state, ignoreAssignments, economy) {
     const budget = FB.playerCivilianBudget(state, economy, ignoreAssignments);
     let total = budget.surplus;
-    if (FB.playerHostUpkeepParts && !(FB.electiveCrown && FB.electiveCrown(state, 'player')))
+    if (FB.playerHostUpkeepParts && !FB.treasurySeparated(state, 'player'))
       total -= FB.playerHostUpkeepParts(state).total;
-    if (FB.playerProvisionEstimate) total -= FB.playerProvisionEstimate(state);
-    if (!ignoreAssignments && FB.fiscalAssignedIncome) total -= FB.fiscalAssignedIncome(state, budget.surplus);
+    if (FB.playerProvisionEstimate && !FB.treasuryPreserved(state, 'player')) total -= FB.playerProvisionEstimate(state);
+    if (!ignoreAssignments && FB.fiscalAssignedIncome && !FB.treasuryPreserved(state,'player')) total -= FB.fiscalAssignedIncome(state, budget.surplus);
     return total;
   };
 
@@ -7076,7 +7077,8 @@ window.FB = window.FB || {};
      above; a change there wants a change here. */
   FB.incomeBreakdown = function (state) {
     const p = state.player;
-    const publicCrown = FB.electiveCrown && FB.electiveCrown(state, 'player');
+    const publicCrown = FB.treasurySeparated(state, 'player');
+    const preserved = FB.treasuryPreserved(state, 'player');
     if (FB.enterpriseList) FB.enterpriseList(state); // normalize legacy business holdings first
     const lines = { gold: [], prestige: [], piety: [] };
     let goldGroup = 'income';
@@ -7156,7 +7158,7 @@ window.FB = window.FB || {};
       }
       addBuildings('piety', 'piety'); // chapels and temples pay in piety, not coin
     }
-    if (FB.station.isLanded(p, state) && publicCrown) {
+    if (FB.station.isLanded(p, state) && publicCrown && !preserved) {
       const fiscal = FB.settlementActorFiscal(state, { kind:'character', id:p.charId });
       add('gold', FB.T('Private settlement receipts'), fiscal.tax + fiscal.tolls + fiscal.national);
       add('gold', FB.T('Episcopal temporalities'), FB.bishopricIncome ? FB.bishopricIncome(state) : 0);
@@ -7166,6 +7168,7 @@ window.FB = window.FB || {};
       add('gold', FB.T('Private settlement upkeep'), -fiscal.upkeep);
       addBuildings('piety', 'piety');
     }
+    if (FB.station.isLanded(p,state) && preserved) addBuildings('piety','piety');
 
     goldGroup = 'income';
     /* household property and carried treasures, line by line */
@@ -7227,7 +7230,7 @@ window.FB = window.FB || {};
     const government = publicCrown ? { administration:0, court:0 } : FB.playerGovernmentCosts(state);
     add('gold', FB.T('Government administration'), -government.administration);
     add('gold', FB.T('Official court expenses'), -government.court);
-    if (FB.publicOfficeBudget) add('gold', FB.T('Public office commitments'), -FB.publicOfficeBudget(state,'player'));
+    if (FB.publicOfficeBudget && !preserved) add('gold', FB.T('Public office commitments'), -FB.publicOfficeBudget(state,'player'));
     goldGroup = 'household';
     const upkeep = FB.householdUpkeepParts(state);
     add('gold', FB.T('Household upkeep'), -upkeep.base);
@@ -7301,7 +7304,7 @@ window.FB = window.FB || {};
         add('gold', FB.T('Campaign supply modifiers'), -hostUpkeep.campaignModifier);
       }
     }
-    if (publicCrown && FB.playerProvisionEstimate)
+    if (publicCrown && !preserved && FB.playerProvisionEstimate)
       add('gold', FB.T('Army provisions (estimated consumption)'), -FB.playerProvisionEstimate(state));
     goldGroup = 'household';
     if (FB.retainerRecords) {
@@ -7336,7 +7339,7 @@ window.FB = window.FB || {};
     if (FB.financeAssignedIncomeCost) {
       add('gold', FB.T('Revenue assigned to lenders'), -FB.financeAssignedIncomeCost(state));
     }
-    if (FB.fiscalSettlementActive && FB.fiscalSettlementActive(state)) {
+    if (FB.fiscalSettlementActive && FB.fiscalSettlementActive(state) && !preserved) {
       const surplus = lines.gold.reduce(function (sum, line) { return sum + (line.group === 'army' ? 0 : line.amount); }, 0);
       add('gold', FB.T('Financial settlement assignment'), -FB.fiscalAssignedIncome(state, surplus));
     }
@@ -8054,7 +8057,7 @@ window.FB = window.FB || {};
         effect:boost
       });
     }
-    if (!FB.treasuryTransfer(state, 'player', FB.treasuryCounterparty(state, rid), cost)) return false;
+    if (!FB.treasuryTransferPersonal(state, 'player', FB.treasuryCounterparty(state, rid), cost)) return false;
     const standing = FB.adjustStanding(state, { kind:'realm', id:rid },
       boost, 'gift:cash');
     if (FB.noteRulerGift) FB.noteRulerGift(state, rid);
@@ -8743,7 +8746,7 @@ window.FB = window.FB || {};
     let pick = null;
     for (const c of FB.buyCountyCandidates(state)) if (c.pid === pid) pick = c;
     if (!pick || p.gold < pick.price) return false;
-    if (!FB.treasuryTransfer(state, 'player', FB.treasuryCounterparty(state, pick.holder), pick.price)) return false;
+    if (!FB.treasuryTransferPersonal(state, 'player', FB.treasuryCounterparty(state, pick.holder), pick.price)) return false;
     const pr = FB.world.byId[pid];
     const old = pick.holder;
     p.provs.push(pid);
@@ -10691,9 +10694,8 @@ window.FB = window.FB || {};
     const cost = FB.buildCost(state, pid, id, undefined, profileId);
     const institutional = FB.buildingInstitutionStatus(state, pid, idx, id, undefined, null, def);
     if (!institutional.allowed) return false;
-    if (state.player.gold < cost) return false;
+    if (!FB.treasuryPlayerWorksSpend(state,cost)) return false;
     const done = builtInForWrite(state, pid);
-    state.player.gold -= cost;
     delete state.player.flags.mason_visit; // the mason's discount is spent
     const record = { s: idx, id: id };
     FB.buildingProfiles.attach(record, profileId);
@@ -10763,7 +10765,7 @@ window.FB = window.FB || {};
     } else if ((def.maxCounty && FB.buildingCountIn(state, pid, id, false) >= def.maxCounty) ||
         (def.maxDemesne && buildingContextDemesneCount(state, context, id) >= def.maxDemesne)) {
       out.reason = FB.T('The standing-building limit has already been reached.');
-    } else if (!isFinite(out.cost) || !isFinite(Number(state.player.gold)) || state.player.gold < out.cost) {
+    } else if (!isFinite(out.cost) || !isFinite(FB.treasuryPlayerWorksFunds(state)) || FB.treasuryPlayerWorksFunds(state) < out.cost) {
       out.reason = FB.T('Requires {money:cost}.', { cost:out.cost });
     } else {
       out.ready = true;
@@ -10780,7 +10782,7 @@ window.FB = window.FB || {};
       return entry.s === idx && entry.id === id && entry.ruined;
     })[0];
     if (!record) return false;
-    state.player.gold -= status.cost;
+    if (!FB.treasuryPlayerWorksSpend(state,status.cost)) return false;
     delete state.player.flags.mason_visit;
     delete record.ruined;
     const removed = Number(record.devRemoved);

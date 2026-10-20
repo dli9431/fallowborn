@@ -3358,7 +3358,7 @@ window.FB = window.FB || {};
         def.officeId ? { kind:'religious-office', id:def.officeId } : church(def)
           ? person(f.representativeId) : county(def), fresh.subject, county(def));
       if (passed && !rec) return false;
-      if (passed && fresh.cost && !FB.treasuryTransfer(s, fresh.subject.kind === 'character' ? 'player' : fresh.subject.id, null, fresh.cost)) return false;
+      if (passed && fresh.cost && !FB.treasuryTransfer(s, fresh.subject.kind === 'character' ? 'player' : fresh.subject.id, null, fresh.cost, false, fresh.subject.kind === 'character')) return false;
       p.stage = passed ? 'ratified' : 'refused';
       p.recognitionId = rec && rec.id || null;
       p.retryTurn = s.turn + 90;

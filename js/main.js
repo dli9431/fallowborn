@@ -4373,7 +4373,8 @@ FB.CHANGELOG = [
          wages meet the table and leaves any unfunded share as hardship rather
          than silently discarding which obligation went unpaid. */
       const publicNet = income - buildingUpkeep - modifierUpkeep - FB.playerGovernmentCosts(s, taxParts).total;
-      if (!(FB.electivePublicSeason && FB.electivePublicSeason(s, publicNet, taxParts))) p.gold += publicNet;
+      if (!FB.treasuryDynasticSeason(s, publicNet, taxParts) &&
+          !(FB.electivePublicSeason && FB.electivePublicSeason(s, publicNet, taxParts))) p.gold += publicNet;
       if (FB.openingGoals) FB.openingGoals.fiscal(s, 'player', income);
       p.gold += FB.holdingBonus(s, 'gold') + FB.landYield(s) + FB.itemBonus(s, 'gold') +
         (FB.positionBonus ? FB.positionBonus(s, 'gold') : 0);

@@ -1,3 +1,9 @@
+Preserved ordinary dynastic accounts
+
+A realm's optional publicTreasury:{schema:1} preserves its original treasury through starting ruler adoption while scenario.gold remains private. It changes no government, legal property or liege. Both ordinary boot and explicit-inventory boot conserve one public reserve. The existing player fiscal calculation settles the landed domain into that account once; NPC seasonal settlement does not also settle player. Existing unpaid pre-adoption military accrual is paid once, while subsequent daily host costs and actual provision purchases debit public funds directly. Market ruler dues credit public cash. Household enterprises and their attributed producer adjustments remain private.
+
+Public grants, actual provision-provider receipts, distributions, revaluation, public construction/repairs and fiscal crises use this same account. Private contributions, work payments, personal fees, household necessities and inheritance remain separate. Private credit forecasts exclude public landed receipts, public military costs and public fiscal assignments. Ordinary treasury transfers denote realm endpoints; treasuryTransferPersonal explicitly selects the household endpoint for the opted-in protagonist, and treasuryPayPrivate moves an actual institutional payment into that household. Omitted options preserve the existing unified and elective/delegated behavior. Exact schema, aliases, terminal retirement and strict save rules are in docs/designs/adopted-public-treasury.md.
+
 # Coin & Credit
 
 Fresh inherited works and opening reserves

@@ -559,7 +559,7 @@ window.FB = window.FB || {};
       }
     }
     if (result.missingTech.length) { result.reason = 'technology'; return result; }
-    if (realmId === 'player' && Number(state.player.gold) < result.cost) {
+    if (realmId === 'player' && FB.treasuryPlayerWorksFunds(state) < result.cost) {
       result.reason = 'gold';
       return result;
     }
@@ -586,7 +586,7 @@ window.FB = window.FB || {};
     }
     var fort = options.repair ? FB.fortAtSettlement(state, pid, settlement, true) : FB.fortAt(state, pid);
     var newRecord = !fort;
-    if (realmId === 'player') state.player.gold -= status.cost;
+    if (realmId === 'player' && !FB.treasuryPlayerWorksSpend(state,status.cost)) return false;
     if (!fort) {
       state.buildings[pid] = state.buildings[pid] || [];
       fort = { s:settlement | 0, id:FB.fortificationBuildingId(), level:0 };

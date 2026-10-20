@@ -420,7 +420,8 @@
       head:a.def.officeId && s.religiousHeads && s.religiousHeads[a.def.officeId] || null,
       vacancy:a.def.officeId && s.religiousHeadVacancies && s.religiousHeadVacancies[a.def.officeId] || null,
       property:property(s, a), authority:s.authority || null, payer:payer,
-      funds:payer ? FB.treasuryAvailable(s, payer) : null, treasuryMode:s.treasuryAccounting && s.treasuryAccounting.mode || null,
+      funds:payer ? actor.kind === 'character' && actor.id === s.player.charId && FB.treasuryPreserved(s,payer)
+        ? s.player.gold : FB.treasuryAvailable(s, payer) : null, treasuryMode:s.treasuryAccounting && s.treasuryAccounting.mode || null,
       payerAccount:payer && s.realms[payer] && s.realms[payer].treasury || null,
       justice:s.justice || null, captivity:s.intrigue && s.intrigue.captives || null,
       communities:a.def.jurisdictionIds.map(function (pid) { return FB.political.communityGovernance(s, pid); }),
@@ -493,7 +494,8 @@
       if (action !== 'dispute' && !FB.religiousInstitutionIssuerValid(s, institutionId, t.source)) block('rights');
     } else block('unsupported');
     var cost = a.profile.fees[action] || 0, payer = actor.kind === 'realm' ? actor.id : c && FB.treasuryCharacterRealm(s, c.id);
-    if (cost && (!payer || FB.treasuryAvailable(s, payer) < cost || payer !== 'player' &&
+    var funds = c && c.id === s.player.charId && FB.treasuryPreserved(s,payer) ? s.player.gold : FB.treasuryAvailable(s,payer);
+    if (cost && (!payer || funds < cost || payer !== 'player' &&
         (!s.treasuryAccounting || s.treasuryAccounting.mode !== 'active'))) block('funds');
     return { institutionId:institutionId, actor:copy(actor), action:action, terms:t, allowed:!reason, reason:reason,
       cost:cost, payer:payer || null, vacancy:!!a.def.officeId && !leader(s, a),
@@ -563,7 +565,7 @@
       delete a.row.assents[decisionKey('dispute', t.subject)];
       authorityChanged = true;
     }
-    if (q.cost && !FB.treasuryTransfer(s, q.payer, null, q.cost)) return false;
+    if (q.cost && !FB.treasuryTransfer(s, q.payer, null, q.cost, false, q.actor.kind === 'character')) return false;
     s.localInstitutions[q.institutionId] = a.row;
     if (c && c.religiousAffiliations !== undefined) s.chars[cid].religiousAffiliations = c.religiousAffiliations;
     if (a.def.officeId) {

@@ -249,7 +249,8 @@
         if (o.lastSalaryPeriod >= period) return;
         var c = V.incumbent(s,rid,o.id), def = V.profile(s,rid).offices.filter(function (d) { return d.id === o.id; })[0];
         var amount = c ? Math.min(def.salary,Math.max(0,FB.treasuryAvailable(s,rid) - cp.obligations.reserve)) : 0;
-        if (amount && FB.treasuryTransfer(s,rid,c.id === s.player.charId ? 'player' : null,amount)) {
+        if (amount && (c.id === s.player.charId && FB.treasuryPreserved(s,'player')
+            ? FB.treasuryPayPrivate(s,rid,amount) : FB.treasuryTransfer(s,rid,c.id === s.player.charId ? 'player' : null,amount))) {
           if (c.id !== s.player.charId) c.gold = (Number(c.gold) || 0) + amount;
         }
         o.lastSalaryPeriod = period;

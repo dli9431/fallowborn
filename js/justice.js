@@ -196,7 +196,7 @@
     if (amount === 0) return true;
     var from = FB.treasuryCharacterRealm(s, fromId), to = FB.treasuryCharacterRealm(s, toId);
     if (from && from === to) return false;
-    if (!FB.treasuryTransfer(s, from, to, amount)) return false;
+    if (!FB.treasuryTransferPersonal(s, from, to, amount)) return false;
     if (!from) person(s, fromId).wealth = available(s, fromId) - amount;
     if (!to) person(s, toId).wealth = available(s, toId) + amount;
     return true;

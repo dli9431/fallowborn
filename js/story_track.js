@@ -418,7 +418,8 @@
       var period = Math.floor(s.turn / 90);
       if (period <= t.lastAllocatedPeriod || row.paidThroughPeriod !== period ||
           period > Math.floor(row.startTurn / 90) + p.paymentPeriods) return;
-      if (FB.treasuryTransfer(s, R(s, p.serviceRealmId), 'player', p.householdShare)) {
+      if (FB.treasuryPreserved(s,'player') ? FB.treasuryPayPrivate(s,R(s,p.serviceRealmId),p.householdShare) :
+          FB.treasuryTransfer(s, R(s, p.serviceRealmId), 'player', p.householdShare)) {
         t.lastAllocatedPeriod = period;
         news(s, def.news.message20.key, def.news.message20.text,
           { amount:p.householdShare });

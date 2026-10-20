@@ -31,6 +31,7 @@
       Math.max(0, FB.realmStrength(state, rid)) * B('armyProvisionAIBudgetStrength', 2);
   }
   function purseView(state, rid) {
+    if (rid === 'player' && FB.treasuryPreserved(state,rid)) return {gold:FB.treasuryAvailable(state,rid)};
     if (rid === 'player') return { gold:number(state.player.gold) };
     if (state.treasuryAccounting && state.treasuryAccounting.mode === 'active') {
       return { gold:FB.treasuryAvailable(state, rid) };
@@ -45,7 +46,8 @@
       season:season, allowance:allowance };
   }
   function pay(state, rid, amount) {
-    if (rid === 'player') state.player.gold = Math.max(0, state.player.gold - amount);
+    if (rid === 'player' && FB.treasuryPreserved(state,rid)) FB.treasurySpend(state,rid,amount);
+    else if (rid === 'player') state.player.gold = Math.max(0, state.player.gold - amount);
     else if (state.treasuryAccounting && state.treasuryAccounting.mode === 'active') FB.treasurySpend(state, rid, amount);
     else {
       const purse = Object.assign({}, purseView(state, rid));
@@ -55,7 +57,8 @@
   }
   function credit(state, rid, amount) {
     if (!rid || amount <= 0) return;
-    if (rid === 'player') state.player.gold += amount;
+    if (rid === 'player' && FB.treasuryPreserved(state,rid)) FB.treasuryCredit(state,rid,amount);
+    else if (rid === 'player') state.player.gold += amount;
     else if (state.treasuryAccounting && state.treasuryAccounting.mode === 'active') FB.treasuryCredit(state, rid, amount);
     else if (state.realms[rid] && state.realms[rid].alive) {
       const purse = Object.assign({}, purseView(state, rid));

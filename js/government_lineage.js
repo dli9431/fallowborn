@@ -147,6 +147,9 @@
     /* Household money remains personal. A new public account starts empty;
        principals can acclaim without a paid round of negotiations. */
     s.realms[rid] = r; r.id = rid; delete s.realms.player;
+    var publicTreasury = s.start && s.start.publicTreasury;
+    if (publicTreasury && publicTreasury.realmId === 'player' && publicTreasury.retirement === null)
+      publicTreasury.realmId = rid;
     s.authority.governments[rid] = row; delete s.authority.governments.player;
     Object.keys(s.owner).forEach(function (pid) {
       if (s.owner[pid] === 'player') s.owner[pid] = rid;
@@ -158,7 +161,7 @@
     if (s.realmTech && s.realmTech.player) { s.realmTech[rid] = s.realmTech.player; delete s.realmTech.player; }
     if (FB.treasuryCreateRealm) FB.treasuryCreateRealm(s, rid, null, 0);
     if (r.treasury && s.treasuryAccounting) {
-      if (!(FB.electiveCrown && FB.electiveCrown(s, rid))) r.treasury.militaryAccrued += s.treasuryAccounting.playerMilitary || 0;
+      if (!FB.treasurySeparated(s,rid)) r.treasury.militaryAccrued += s.treasuryAccounting.playerMilitary || 0;
       s.treasuryAccounting.playerMilitary = 0;
     }
     ['armyDown','armyDownSurvival','armyDetachmentDown','armyCohorts'].forEach(function (key) {

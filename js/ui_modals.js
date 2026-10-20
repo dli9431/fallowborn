@@ -8972,6 +8972,7 @@ window.FB = window.FB || {};
 
   UI.showBuildings = function (pid, idx, keep) {
     const s = FB.state;
+    const worksFunds = FB.treasuryPlayerWorksFunds(s);
     const provs = FB.buildingCounties(s);
     if (!provs.length || (pid && provs.indexOf(pid) < 0)) {
       UI.toast(FB.T('You must directly hold a settlement to manage its buildings.'));
@@ -9044,7 +9045,7 @@ window.FB = window.FB || {};
         const cost = FB.buildCost(s, pid, id);
         const name = dt(s, 'building', id, d, 'name');
         const effects = buildingEffects(d, id).join(' · ');
-        const short = s.player.gold < cost;
+        const short = worksFunds < cost;
         const costInfo = assetMoneyCost(cost, !short);
         const costText = typeof costInfo === 'object' ? costInfo.text : costInfo;
         const repeat = copies
@@ -9157,7 +9158,7 @@ window.FB = window.FB || {};
     h += buildingProfileRows(s) + institutionalBuildingRows(s, pid) + '<div class="gm-list">';
     let cardSeq = 0;
     for (const b of FB.buildable(s, pid, idx, buildingContext)) {
-      const short = s.player.gold < b.cost;
+      const short = worksFunds < b.cost;
       const copies = FB.buildingCountIn(s, pid, b.id, true);
       const repeat = copies
         ? FB.T('Repeat copy {number}: its price has risen to {money:cost}.',
@@ -18232,6 +18233,10 @@ window.FB = window.FB || {};
     let h = '';
 
     h += fiscalStatusHtml(s);
+    if (FB.treasuryPreserved(s,'player')) {
+      h += panelh('Public treasury') + '<div class="settcard">' + realmTreasuryHtml(s,'player') +
+        '<p class="hint">' + esc(FB.T('Public receipts and government expenses use this account. Your household purse pays personal costs.')) + '</p></div>';
+    }
     if (FB.station.isLanded(s.player, s)) {
       const fiscal = FB.fiscalCrisisQuote(s);
       h += '<div class="gm-list"><button class="actionbtn" id="finance-sell-land">' + esc(FB.T('Sell Land')) + '</button>';

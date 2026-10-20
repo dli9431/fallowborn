@@ -163,7 +163,7 @@
     if (!q || !q.allowed || !equal(q,reviewed)) return false;
     var r = V.row(s,q.realmId), o = seat(s,q.realmId,q.officeId), t = q.terms;
     if (q.action === 'nominate') {
-      if (q.cost && (t.candidateId === s.player.charId ? !FB.treasuryTransfer(s,'player',null,q.cost) : !FB.treasurySpend(s,q.realmId,q.cost))) return false;
+      if (q.cost && (t.candidateId === s.player.charId ? !FB.treasuryTransferPersonal(s,'player',null,q.cost) : !FB.treasurySpend(s,q.realmId,q.cost))) return false;
       o.vacancy.nominations.push(t.candidateId);
     } else if (q.action === 'support') o.vacancy.votes[t.memberId] = t.candidateId;
     else if (q.action === 'select' || q.action === 'recognize') {

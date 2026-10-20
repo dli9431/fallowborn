@@ -76,7 +76,7 @@
     var def = FB.fortLevelDef(r.targetLevel), realm = s.realms[r.realmId];
     q.cost = status.cost; q.work = def.work; q.targetLevel = status.targetLevel; q.completeTurn = status.completeTurn;
     q.requirements = F.requirements(r.profileId,r.targetLevel);
-    q.funds = r.realmId === 'player' ? s.player.gold : realm && Number(realm.fortWorks) || 0;
+    q.funds = r.realmId === 'player' ? FB.treasuryPlayerWorksFunds(s) : realm && Number(realm.fortWorks) || 0;
     q.allowed = status.ok && Number.isFinite(q.funds) && (r.realmId === 'player' || !!realm && realm.alive &&
       q.funds >= q.work && realm.fortProjectYear !== s.date.year);
     q.reason = q.allowed ? '' : status.profileStatus && status.profileStatus.reason ||
