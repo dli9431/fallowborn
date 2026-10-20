@@ -27,8 +27,13 @@
     (c.health===undefined || c.health>0) && !(FB.justiceCustodyOf && FB.justiceCustodyOf(s,c.id)) &&
     !(FB.intrigueCaptivityOf && FB.intrigueCaptivityOf(s,c.id)) &&
     !(c.id===s.player.charId && s.player.flags && s.player.flags.in_prison);}
+  function jurisdictionRealmId(s,id) {
+    var publicAccount=s.start && s.start.publicTreasury;
+    return publicAccount && publicAccount.originalRealmId===id ? publicAccount.realmId : FB.startRealmId(s,id);
+  }
   function provider(s,def,bound) {
-    var rid=FB.startRealmId(s,def.provider.realmId), c=s.realms[rid] && s.realms[rid].alive &&
+    var rid=def.provider.jurisdiction ? jurisdictionRealmId(s,def.provider.realmId) : FB.startRealmId(s,def.provider.realmId),
+      c=s.realms[rid] && s.realms[rid].alive &&
       (rid==='player' ? s.chars[s.player.charId] : FB.realmRulerCharacterSnapshot(s,rid));
     if (def.provider.kind==='home_authority') {
       var d=declaration(s,def.realmId), request={provinceId:d.mobile.origin},
@@ -58,15 +63,103 @@
     });
   }
   function definitionKey(def,d) {return JSON.stringify([def,d.mobile,FBDATA.mobileProfiles[d.mobile.profileId]]);}
+  function openingJurisdiction(bm,def) {
+    var spec=def.provider.jurisdiction, realms=Object.create(null), holders=Object.create(null), generated=Object.create(null),
+      platform=FB.resolveBookmarkPlatform(bm), rows=[], seen=Object.create(null), rid=def.provider.realmId;
+    if (!spec || platform.faults.length) return null;
+    (bm.realms || []).forEach(function (d) {realms[d.id]=d;});
+    Object.keys(realms).forEach(function (id) {
+      var form=FB.governments.resolve(platform.governments[id]), strategy=form && form.use.holders;
+      if (strategy && typeof strategy.openingHolders==='function')
+        Object.assign(holders,strategy.openingHolders(bm,id,generated));
+    });
+    Object.keys(generated).forEach(function (id) {
+      if (!realms[id]) realms[id]=Object.assign({government:FBDATA.eras[platform.era].defaultGovernment},generated[id]);
+    });
+    var command=realms[def.realmId], origin=command && command.mobile.origin;
+    if (!origin || holders[origin]!==rid) return null;
+    while (rid) {
+      var d=realms[rid], formId=d && (d.government || FBDATA.eras[platform.era].defaultGovernment),
+        form=formId && FB.governments.resolve(formId);
+      if (!d || d.mobile || d.nonTerritorial || seen[rid] || rows.length>=20) return null;
+      if (!form || form.use.succession.publicCrown || form.use.succession.institutionalProperty ||
+          form.use.succession.delegatedLeadership || form.use.succession.commandLeadership) return null;
+      seen[rid]=true;
+      rows.push({realmId:rid,characterId:FB.openingRulerCharacterId(d),generation:d.ruler && d.ruler.generation || 1,
+        liegeId:d.liege || null,capital:d.capital});
+      rid=d.liege;
+    }
+    if (rows.length<2 || rows[rows.length-1].realmId!==spec.sovereignRealmId) return null;
+    return {schema:1,origin:origin,realms:rows,provider:realms[def.provider.realmId]};
+  }
+  function jurisdictionRecord(projected,s,def,original) {
+    var appointment=null, bm=FB.campaignBookmark(s), setup=s.bookmarkSetup, revision=setup && setup.revision,
+      declarations=revision!==undefined ? bm.openingRevisions && bm.openingRevisions[revision] :
+        setup && bm.openingLegacyRevision ? bm.openingRevisions[bm.openingLegacyRevision] : bm.opening,
+      saved=setup && setup.appointments || {};
+    if (original.appointmentId!==null) {
+      Object.keys(declarations && declarations.appointments || {}).some(function (id) {
+        var a=declarations.appointments[id];
+        if (!saved[id] || saved[id].id!==original.appointmentId) return false;
+        appointment={id:original.appointmentId,officeId:a.officeId,scope:copy(a.scope),
+          endTurn:a.endTurn===undefined ? null : a.endTurn};
+        if (appointment.scope.kind==='realm') appointment.scope.id=def.provider.realmId;
+        return true;
+      });
+      if (!appointment) return null;
+    }
+    return {schema:1,origin:projected.origin,realms:copy(projected.realms),appointment:appointment};
+  }
+  function jurisdictionCurrent(s,e) {
+    var j=e.t.openingJurisdiction;
+    if (!j) return null;
+    return {blocked:FB.recruitmentCountyBlocked(s,e.t.provider.realmId,j.origin) ||
+      FB.recruitmentCountyBlocked(s,jurisdictionRealmId(s,j.realms[j.realms.length-1].realmId),j.origin),
+      realms:j.realms.map(function (original) {
+      var rid=jurisdictionRealmId(s,original.realmId), r=s.realms[rid],
+        c=r && (rid==='player' ? s.chars[s.player.charId] : FB.realmRulerCharacterSnapshot(s,rid));
+      return {realmId:original.realmId,characterId:c && c.id || null,generation:FB.realmRulerGeneration(s,rid),
+        liegeId:r && r.liege || null,capital:r && r.capital || null,alive:!!(r && r.alive && c && !c.dead),
+        person:copy(c || null),custody:c && FB.justiceCustodyOf ? copy(FB.justiceCustodyOf(s,c.id) || null) : null};
+    }),appointment:e.t.provider.appointmentId===null ? null : copy((s.authority.appointments || []).filter(function (a) {
+      return a.id===e.t.provider.appointmentId;
+    })[0] || null)};
+  }
+  function jurisdictionValid(s,e,facts) {
+    var j=e.t.openingJurisdiction, last=j.realms[j.realms.length-1];
+    return !facts.blocked && s.holder[j.origin]===jurisdictionRealmId(s,e.def.provider.realmId) &&
+      s.owner[j.origin]===jurisdictionRealmId(s,last.realmId) && facts.realms.every(function (now,i) {
+        var original=j.realms[i];
+        return now.alive && now.characterId===original.characterId && now.generation===original.generation &&
+          now.liegeId===(original.liegeId ? jurisdictionRealmId(s,original.liegeId) : null) && now.capital===original.capital;
+      }) && FB.topRealm(s,e.t.provider.realmId)===jurisdictionRealmId(s,last.realmId) &&
+      (j.appointment===null ? facts.appointment===null : !!facts.appointment &&
+        facts.appointment.id===j.appointment.id && facts.appointment.officeId===j.appointment.officeId &&
+        facts.appointment.endTurn===j.appointment.endTurn && same(facts.appointment.scope,
+          {kind:j.appointment.scope.kind,id:j.appointment.scope.kind==='realm' ?
+            jurisdictionRealmId(s,j.appointment.scope.id) : j.appointment.scope.id}));
+  }
+  P.referencesCharacter=function (s,id) {
+    return !!id && Object.keys(s && s.stories || {}).some(function (key) {
+      var story=FB.stories.get(key), t=s.stories[key];
+      return !!(story && story.declaration && story.declaration.type===TYPE && t.openingJurisdiction &&
+        (t.provider.characterId===id || t.issuer && t.issuer.characterId===id ||
+        t.bindings.some(function (b) {return b.characterId===id;}) ||
+        t.openingJurisdiction.realms.some(function (r) {return r.characterId===id;})));
+    });
+  };
   function check(def,context,bm) {
     function need(ok,field) {if (!ok) throw new Error('Invalid expedition preparation: '+field+'.');}
     need(keys(def,['id','type','title','intro','requires','registrationBefore','registrationAfter','realmId','termDays',
       'source','provisions','provider','acceptance','ai','householdContribution']), 'fields');
     need(display(def.title) && display(def.intro) && slug(def.realmId) && whole(def.termDays,1440) && def.termDays>0, 'identity or bounds');
     need((exact(def.provider,['kind','realmId']) && def.provider.kind==='realm_ruler' ||
-      keys(def.provider,['kind','realmId','actorId']) && def.provider.kind==='home_authority' &&
+      keys(def.provider,['kind','realmId','actorId','jurisdiction']) && def.provider.kind==='home_authority' &&
         (def.provider.actorId===undefined || slug(def.provider.actorId))) && slug(def.provider.realmId) &&
       def.provider.realmId!==def.realmId, 'provider');
+    if (def.provider.jurisdiction!==undefined) need(def.provider.kind==='home_authority' &&
+      exact(def.provider.jurisdiction,['kind','sovereignRealmId']) && def.provider.jurisdiction.kind==='direct_holder' &&
+      slug(def.provider.jurisdiction.sovereignRealmId) && def.provider.jurisdiction.sovereignRealmId!==def.provider.realmId, 'jurisdiction');
     if (def.householdContribution!==undefined) need(exact(def.householdContribution,['kind','maximum']) &&
       def.householdContribution.kind==='local_household' && number(def.householdContribution.maximum,1000000) &&
       def.householdContribution.maximum>0, 'household contribution');
@@ -86,14 +179,17 @@
       });
     } else need(source.kind==='local' && exact(source,['kind','provinceId']) && slug(source.provinceId), 'local withdrawal');
     if (!bm) return;
-    var d=(bm.realms || []).filter(function (r) {return r.id===def.realmId;})[0], t=d && d.mobile,
-      p=t && FBDATA.mobileProfiles[t.profileId], owner=(bm.realms || []).filter(function (r) {return r.id===def.provider.realmId;})[0];
+    var projected=def.provider.jurisdiction && openingJurisdiction(bm,def),
+      d=(bm.realms || []).filter(function (r) {return r.id===def.realmId;})[0], t=d && d.mobile,
+      p=t && FBDATA.mobileProfiles[t.profileId], owner=projected ? projected.provider :
+        (bm.realms || []).filter(function (r) {return r.id===def.provider.realmId;})[0];
+    if (def.provider.jurisdiction) need(!!projected, 'opening direct-holder jurisdiction');
     need(!!p && t.preparationId===def.id && t.command && t.opening && t.food===0 && t.treasury===0 &&
       t.columns===undefined && t.hostedAccess===undefined && t.funding && FB.homeAuthority.fundingPolicyValid(t.funding) && p.members.length<=24 &&
       t.opening.principals.length===p.members.length && !!owner && !owner.mobile, 'deferred command');
     need((bm.stories || []).indexOf(def.id)>=0 && !(def.requires || []).length, 'fresh attachment');
     var origin=(bm.provinces || []).filter(function (r) {return r.id===t.origin && !r.wasteland;})[0];
-    need(!!origin && origin.realm===owner.id, 'provider locality');
+    need(!!origin && (projected || origin.realm===owner.id), 'provider locality');
     if (def.provider.kind==='home_authority') {
       var era=FBDATA.eras[bm.era], policy=FB.homeAuthority.resolvePolicy(bm,owner.government || era && era.defaultGovernment);
       need(FB.homeAuthority.policyValid(policy), 'home authority policy');
@@ -140,11 +236,13 @@
   function current(s,e) {
     var d=e.d, t=e.t, at=d.mobile.origin, scoped=e.def.provider.kind==='home_authority',
       owner=provider(s,e.def,scoped ? t.provider : null), plan=M.openingPlan(s,d);
-    var civil=scoped || e.def.source.kind==='local' ? FB.homeAuthority.quote(s,owner.realmId,'levy',providerRequest(e)) : null;
+    var civil=scoped || e.def.source.kind==='local' ? FB.homeAuthority.quote(s,owner.realmId,'levy',providerRequest(e)) : null,
+      jurisdiction=t.openingJurisdiction ? jurisdictionCurrent(s,e) : null;
     var valid=!!(t.status==='preparing' && s.turn<t.endTurn && !M.row(s,d.id) &&
       definitionKey(e.def,d)===t.definitionKey && FB.realmRulerGeneration(s,d.id)===t.realmGeneration &&
       same(owner,t.provider) && owner.characterId && live(s,s.chars[owner.characterId]) &&
-      (scoped || FB.homeAuthority.location(s,s.chars[owner.characterId])===at) && s.owner[at]===owner.realmId && s.holder[at]===owner.realmId &&
+      (scoped || FB.homeAuthority.location(s,s.chars[owner.characterId])===at) &&
+      (jurisdiction ? jurisdictionValid(s,e,jurisdiction) : s.owner[at]===owner.realmId && s.holder[at]===owner.realmId) &&
       !FB.armiesHostile(s,{realm:d.id},{realm:owner.realmId}) &&
       same(M.commandIssuer(s,d.id),t.issuer) && plan.allowed && same(plan.bindings,t.bindings) &&
       t.bindings.every(function (b) {return live(s,s.chars[b.characterId]) && FB.homeAuthority.location(s,s.chars[b.characterId])===at &&
@@ -163,11 +261,16 @@
       if (other.t.bindings.some(function (b) {return t.bindings.some(function (a) {return a.characterId===b.characterId;});})) valid=false;
       return !valid;
     });
-    return {valid:valid,plan:plan,provider:owner,civil:civil};
+    var result={valid:valid,plan:plan,provider:owner,civil:civil};
+    if (jurisdiction) result.openingJurisdiction=jurisdiction;
+    return result;
   }
   P.fundingSnapshot=function (s,rid) {
-    var e=forRealm(s,rid);
-    return e && current(s,e).valid ? {id:e.def.id,record:copy(e.t),issuer:M.commandIssuer(s,rid)} : null;
+    var e=forRealm(s,rid), facts=e && current(s,e);
+    if (!facts || !facts.valid) return null;
+    var result={id:e.def.id,record:copy(e.t),issuer:M.commandIssuer(s,rid)};
+    if (e.t.openingJurisdiction) result.openingJurisdiction=facts.openingJurisdiction;
+    return result;
   };
   function pools(e,cohorts) {
     var out={}, source=copy(cohorts), p=FBDATA.mobileProfiles[e.d.mobile.profileId];
@@ -286,8 +389,25 @@
   function factory(def) {
     function validate(t,s) {
       function need(ok) {if (!ok) throw new Error(FB.T('Invalid v4 save field at {path}.',{path:'state.stories.'+def.id}));}
-      need(exact(t,['version','definitionKey','status','reason','revision','openedTurn','endTurn','endedTurn','bindings',
-        'realmGeneration','issuer','provider','authorizedTurn','reserves','consumed','released','formed']));
+      var fields=['version','definitionKey','status','reason','revision','openedTurn','endTurn','endedTurn','bindings',
+        'realmGeneration','issuer','provider','authorizedTurn','reserves','consumed','released','formed'];
+      if (def.provider.jurisdiction) fields.push('openingJurisdiction');
+      need(exact(t,fields));
+      if (def.provider.jurisdiction) need(exact(t.openingJurisdiction,['schema','origin','realms','appointment']) && t.openingJurisdiction.schema===1 &&
+        slug(t.openingJurisdiction.origin) && Array.isArray(t.openingJurisdiction.realms) && t.openingJurisdiction.realms.length>=2 &&
+        t.openingJurisdiction.realms.length<=20 && t.openingJurisdiction.realms.every(function (r) {
+          return exact(r,['realmId','characterId','generation','liegeId','capital']) && slug(r.realmId) &&
+            typeof r.characterId==='string' && r.characterId.length>0 && r.characterId.length<=200 &&
+            whole(r.generation) && r.generation>0 && (r.liegeId===null || slug(r.liegeId)) && slug(r.capital);
+        }));
+      if (def.provider.jurisdiction) {
+        var originalAppointment=t.openingJurisdiction.appointment;
+        need(originalAppointment===null || exact(originalAppointment,['id','officeId','scope','endTurn']) &&
+          typeof originalAppointment.id==='string' && originalAppointment.id.length>0 && originalAppointment.id.length<=200 &&
+          slug(originalAppointment.officeId) && exact(originalAppointment.scope,['kind','id']) &&
+          ['realm','county'].indexOf(originalAppointment.scope.kind)>=0 && slug(originalAppointment.scope.id) &&
+          (originalAppointment.endTurn===null || whole(originalAppointment.endTurn) && originalAppointment.endTurn>0));
+      }
       need(t.version===1 && typeof t.definitionKey==='string' && ['preparing','formed','closed'].indexOf(t.status)>=0 &&
         whole(t.revision,1000000) && t.openedTurn===0 && t.endTurn===def.termDays && whole(t.realmGeneration) && t.realmGeneration>0 &&
         (t.authorizedTurn===null || whole(t.authorizedTurn) && t.authorizedTurn<t.endTurn) &&
@@ -323,17 +443,24 @@
       need(!!d && (bm.stories || []).indexOf(def.id)>=0 && t.definitionKey===definitionKey(def,d) && same(t.bindings,bindings(s,d)) &&
         t.bindings.every(function (b) {return exact(b,['memberId','characterId','person']) &&
           (b.characterId===null || !!s.chars[b.characterId]);}) &&
-        t.realmGeneration===((d.ruler && d.ruler.generation) || 1) && t.realmGeneration<=FB.realmRulerGeneration(s,def.realmId) && t.provider.realmId===FB.startRealmId(s,def.provider.realmId) &&
+        t.realmGeneration===((d.ruler && d.ruler.generation) || 1) && t.realmGeneration<=FB.realmRulerGeneration(s,def.realmId) &&
+        t.provider.realmId===(def.provider.jurisdiction ? jurisdictionRealmId(s,def.provider.realmId) : FB.startRealmId(s,def.provider.realmId)) &&
         t.provider.generation<=FB.realmRulerGeneration(s,t.provider.realmId) &&
         (t.provider.characterId===null || !!s.chars[t.provider.characterId]) &&
         (def.provider.kind==='home_authority' || t.provider.generation!==FB.realmRulerGeneration(s,t.provider.realmId) ||
           !presentProvider.characterId || same(t.provider,presentProvider)) &&
         (t.authorizedTurn===null || t.authorizedTurn<=s.turn) && (t.endedTurn===null || t.endedTurn<=s.turn));
       if (def.provider.kind==='home_authority') {
-        var originalProvider=declaration(s,def.provider.realmId),
+        var originalProjection=def.provider.jurisdiction && openingJurisdiction(bm,def),
+          originalProvider=originalProjection ? originalProjection.provider : declaration(s,def.provider.realmId),
           a=t.provider.appointmentId && (s.authority.appointments || []).filter(function (a) {return a.id===t.provider.appointmentId;})[0],
           incumbent=t.provider.realmId==='player' ? s.chars[s.player.charId] : FB.realmRulerCharacterSnapshot(s,t.provider.realmId);
         need(!!originalProvider && t.provider.generation===((originalProvider.ruler && originalProvider.ruler.generation) || 1));
+        if (def.provider.jurisdiction) {
+          need(!!originalProjection && same(t.openingJurisdiction,jurisdictionRecord(originalProjection,s,def,t.provider)) &&
+            t.openingJurisdiction.realms.every(function (r) {return !!s.chars[r.characterId];}) &&
+            (t.provider.appointmentId!==null || t.provider.characterId===t.openingJurisdiction.realms[0].characterId));
+        }
         if (def.provider.actorId && t.provider.characterId!==null) need(t.provider.characterId===(FB.bookmarkActor(s,def.provider.actorId) || {}).id);
         if (t.provider.appointmentId!==null) need(!!a && a.institutionId===t.provider.realmId &&
           a.holder.kind==='character' && a.holder.id===t.provider.characterId && a.appointerGeneration>=t.provider.generation &&
@@ -390,14 +517,24 @@
       if (s.turn!==0) return;
       var d=declaration(s,def.realmId);
       if (def.provider.kind==='home_authority') FB.bookmarkSetupAppointments(s,
-        {realmId:FB.startRealmId(s,def.provider.realmId),provinceId:d.mobile.origin});
+        {realmId:def.provider.jurisdiction ? jurisdictionRealmId(s,def.provider.realmId) : FB.startRealmId(s,def.provider.realmId),provinceId:d.mobile.origin});
       var originalProvider=provider(s,def);
       if (def.provider.kind==='home_authority' && !originalProvider.characterId)
         throw new Error(FB.T('The expedition preparation has no eligible original local authority.'));
-      return {version:1,definitionKey:definitionKey(def,d),status:'preparing',reason:null,revision:0,openedTurn:0,
+      var record={version:1,definitionKey:definitionKey(def,d),status:'preparing',reason:null,revision:0,openedTurn:0,
         endTurn:def.termDays,endedTurn:null,bindings:bindings(s,d),realmGeneration:FB.realmRulerGeneration(s,def.realmId),
         issuer:M.commandIssuer(s,def.realmId),provider:originalProvider,authorizedTurn:null,
         reserves:def.source.kind==='external' ? copy(def.source.cohorts) : [],consumed:[],released:[],formed:null};
+      if (def.provider.jurisdiction) {
+        var projected=openingJurisdiction(FB.campaignBookmark(s),def);
+        if (!projected) throw new Error(FB.T('The expedition preparation has no valid original direct-holder jurisdiction.'));
+        record.openingJurisdiction=jurisdictionRecord(projected,s,def,originalProvider);
+        if (!record.openingJurisdiction || record.openingJurisdiction.realms.some(function (r) {
+          var rid=jurisdictionRealmId(s,r.realmId), c=rid==='player' ? s.chars[s.player.charId] : FB.realmRulerCharacterSnapshot(s,rid);
+          return !c || c.id!==r.characterId || FB.realmRulerGeneration(s,rid)!==r.generation;
+        })) throw new Error(FB.T('The expedition preparation has no valid original direct-holder jurisdiction.'));
+      }
+      return record;
     },validate:validate,day:day,
     title:function () {return FB.T(def.title);},intro:function () {return FB.T(def.intro);},
     status:function (s,t) {
@@ -408,10 +545,15 @@
       t.status==='formed' ? FB.T('The original expedition formed once. Its actual host, camp, people and provisions now belong to the mobile command.') :
         FB.T('No host exists until formation pays training and buys real local provisions. Local recruitment withdraws actual residents only at formation.'),
       t.status==='closed' ? reason[t.reason] : t.authorizedTurn===null ? FB.T('Local provider consent is pending.') : FB.T('The original local provider has consented.'),
-      FB.T('Public command funds: {money}. Formation food: {food}.',{money:FB.treasuryAvailable(s,def.realmId),food:def.provisions.food})]};},
+      FB.T('Public command funds: {money}. Formation food: {food}.',{money:FB.treasuryAvailable(s,def.realmId),food:def.provisions.food})].concat(
+        t.openingJurisdiction ? [FB.T('The direct holder authorizes local formation under the original sovereign. Consent and public funds remain separate; no sovereignty or passage is granted.')] : [])};},
     people:function (s,t) {var e=entry(s,def.id);return [
       {characterId:principal(e),label:FB.T('Original commander'),detail:FB.T('Formation retains this person and the original mandate.'),reason:''},
-      {characterId:t.provider.characterId,label:FB.T('Original local provider'),detail:FB.T('Local consent and current direct control are required separately.'),reason:''}];},
+      {characterId:t.provider.characterId,label:FB.T('Original local provider'),detail:FB.T('Local consent and current direct control are required separately.'),reason:''}].concat(
+        t.openingJurisdiction ? t.openingJurisdiction.realms.slice(1).map(function (r) {
+          return {characterId:r.characterId,label:FB.T('Original superior'),
+            detail:FB.T('The original relationship must still hold. This person does not consent for the local provider.'),reason:''};
+        }) : []);},
     choices:function (s,t) {
       if (t.status!=='preparing') return [];
       var e=entry(s,def.id), actor=s.player.charId, out=[];
@@ -433,6 +575,7 @@
     },quote:function (s,t,id) {return P.review(s,def.id,id,s.player.charId);},
     apply:function (s,t,id,q) {return !!q && q.id===def.id && q.action===id && q.actorId===s.player.charId && P.commit(s,q);},
     blocker:function (s,t,reason) {
+      if (reason==='authority' && t.openingJurisdiction) return FB.T('Formation needs the original direct holder and sovereign relationship, living local authority or the exact civil deputy, and unchanged control of the origin.');
       if (reason==='private_funds') return FB.T('This voluntary gift needs the quoted amount in your private purse and a remaining shortfall within the command funding limit.');
       if (reason==='household') return FB.T('Only a living free adult household at the origin, without a journey, can make this private contribution.');
       return FB.T('Formation needs the original living commander and local provider, separate current consent, available people, public funds, market food and normal unit eligibility.');},

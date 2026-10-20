@@ -377,7 +377,10 @@
     });
     // Opening provenance retains declaration ids. Live institutions, carrier
     // references and accounts below still use the ordinary player alias.
-    Object.keys(value).forEach(function (key) { if (key !== 'openingBindings') references(value[key], from); });
+    Object.keys(value).forEach(function (key) {
+      if (key !== 'openingBindings' && key !== 'openingJurisdiction' &&
+          !(value.openingJurisdiction && key === 'bindings')) references(value[key], from);
+    });
     ['ownerIds','remnantRealmIds','revoltRealmIds','branchRealmIds'].forEach(function (key) {
       if (Array.isArray(value[key])) value[key] = value[key].map(function (id) { return id === from ? 'player' : id; });
     });

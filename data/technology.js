@@ -112,6 +112,7 @@ window.FBDATA = window.FBDATA || {};
     baselineVersion:'1.127.1',
     features:{
       adopted_dynastic_public_treasury:{ mode:'none', rationale:'Preserving an existing public account through ordinary ruler adoption is accounting and identity continuity. Household money stays private; government, military, market and construction gates retain their existing requirements.' },
+      expedition_subordinate_formation_authority:{ mode:'none', rationale:'Exact direct-holder authority under an existing sovereign is political jurisdiction. Consent, command, funding, unit and finite resource gates remain authoritative.' },
       existing_person_household_selection:{ mode:'none', rationale:'Selecting one existing person and preserving their genealogy requires no discovery. Ordinary careers, property, public authority, succession and travel retain their own eligibility.' },
       building_institution_binding:{ mode:'none', rationale:'Binding physical works to an existing lawful foundation, incumbent and consenting payer is an authority and occupancy rule rather than a discovery. No institution, property, person or public subsidy is created; optional building technologies remain independent.' },
       local_threat_incidents:{ mode:'none', rationale:'Local intent and incident accounting require living actors, exact physical presence and current scoped authority, not a discovery. Recorded attempts grant no combat result, injury, conversion, property, people or money.' },
