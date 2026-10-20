@@ -35,7 +35,7 @@ FBDATA.rulerAgendas_1241 = {
           { id:'bela_defer_defense', label:'Defer a new commitment', detail:'Keep current forces and obligations.', operation:'agenda_priority' }
         ] },
       { id:'bela_hosted_people', name:'People under royal protection', year:1241, season:0,
-        text:'Historical accounts describe already hosted Cumans and a guarded personal party near the court. This opening agenda supplies context only; it initializes no following, custody or access contract.', choices:[
+        text:'Historical accounts describe already hosted Cumans and a guarded personal party near the court. Consult the current following, guard and access records for their actual situation. This personal priority changes none of those arrangements.', choices:[
           { id:'bela_review_protection', label:'Consider lawful protection', detail:'Record a priority only. Actual protection and access require their own living parties, authority and resources.', operation:'agenda_priority' },
           { id:'bela_keep_protection', label:'Leave present arrangements unchanged', detail:'Create no agreement, accusation, expulsion or private reward.', operation:'agenda_priority' }
         ] },
@@ -153,7 +153,7 @@ FBDATA.openingProfiles_rulers_1241 = {
   FBDATA.settlementLayouts['1241_royal_households_v2'] = layout;
   /* Retained campaigns keep their original people and settlement indexes. */
   var starts = FBDATA.startScenarios.filter(function (sc) {
-    return (!sc.bookmarkIds || sc.bookmarkIds.indexOf('1241') >= 0) &&
+    return sc.id !== 'koten_1241' && (!sc.bookmarkIds || sc.bookmarkIds.indexOf('1241') >= 0) &&
       (!sc.eras || sc.eras.indexOf(b.era) >= 0);
   }).map(function (sc) { return sc.id; });
   b.revisions.baseline.starts = starts.filter(function (id) { return id !== 'bela_1241' && id !== 'yaroslav_1241' && id !== 'alexander_1241'; });

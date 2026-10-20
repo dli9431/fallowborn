@@ -447,3 +447,7 @@ data/starts_alexander_1241.js uses the literal startScenarios_alexander_1241 arr
 Guarded principal beginning text
 
 originalPrincipal, actor ids, guard ids, location and saved party provenance remain locale-neutral metadata. Scenario and household-track labels retain their ordinary data owners and effective imported-English fallback. The fixed-identity summary adds one literal FB.T explanation of protective guard, unavailable command/travel and host-reviewed release. Validation errors reuse the ordinary localized start/save error phrases. No rendered prose is saved, no new display registry is introduced and no generated catalogue changes accompany the capability.
+
+Spring 1241 personal content
+
+Koten's scenario and sole family summary extend the literal startScenarios_1241 table and ordinary scenario owners. data/story_koten_1241.js uses the existing householdTracks_koten_1241 discovery convention, preserving householdStory.koten_safety_1241 owners for its literal title, introduction, stages and choices. The Hungarian hosted-people branch extends householdTracks_1241. data/bookmark_1241_core_starts.js supplies its fictional farmstead label through bookmarkRevisionContent_core_starts_1241.layouts, with the settlement.1241.core_starts_v2 owner and normal exact-source alias. Proper names, actor ids, stage ids and saved decisions remain untranslated facts. No new extractor or generated catalogue is required.

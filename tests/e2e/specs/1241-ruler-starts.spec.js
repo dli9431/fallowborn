@@ -5,6 +5,7 @@ const {useReleasedStartRules} = require('../support/game/released-starts');
 const {dependsOnRuntime} = require('../support/runtime-dependencies');
 
 dependsOnRuntime(__filename,[
+  'data/bookmark_1241_core_starts.js','data/story_koten_1241.js',
   'data/bookmark_1241_alexander.js','data/starts_alexander_1241.js','data/story_alexander_1241.js',
   'data/bookmark_1241_operations.js','index.html','data/bookmark_1241.js','data/bookmark_1241_scaffold_a.js',
   'data/bookmark_1241_scaffold_b.js','data/bookmark_1241_scaffold_c.js','data/bookmark_1241_scaffold_d.js',
@@ -72,7 +73,7 @@ test('the current and retained 1241 revisions validate with separate households 
           excluded:old.starts.indexOf(row.id) < 0,head:FBDATA.settlementLayouts[fresh.settlementLayout][row.county][0].site,
           detached:previous !== current && previous.ruler !== current.ruler};
       }),pure:bytes === JSON.stringify(FBDATA) && rng === FB.getRngState() && uid === FB.getUidCounter()};
-  },openings)).toEqual({revision:'operations_v2',oldLayout:'1241',faults:[[],[],[],[],[]],pure:true,facts:[
+  },openings)).toEqual({revision:'core_starts_v2',oldLayout:'1241',faults:[[],[],[],[],[],[]],pure:true,facts:[
     {oldCourt:false,newCourt:true,excluded:true,head:'geo_obuda_3054643',detached:true},
     {oldCourt:false,newCourt:true,excluded:true,head:'geo_vladimir_473247',detached:true}
   ]});

@@ -5,6 +5,8 @@ const {beginBookmark,restoreBookmark} = require('../support/game/bookmark-accept
 const {dependsOnRuntime} = require('../support/runtime-dependencies');
 
 dependsOnRuntime(__filename,[
+  'data/bookmark_1241_core_starts.js','data/bookmark_1241_operations.js','data/story_ruler_agendas_1241.js',
+  'data/bookmark_1241_alexander.js','data/bookmark_1241_frederick.js','data/story_koten_1241.js',
   'index.html','data/starts_1241.js','data/story_households_1241.js',
   'data/bookmark_1241.js','data/bookmark_1241_scaffold_a.js',
   'data/bookmark_1241_scaffold_b.js','data/bookmark_1241_scaffold_c.js',
@@ -29,7 +31,11 @@ async function choose(page,choice) {
 
 async function departure(page,info) {
   await beginBookmark(page,info,'1241',SCENARIO);
-  for (const c of ['seek_work','defer_work','inspect_road']) expect(await choose(page,c)).toBe(true);
+  for (const c of ['seek_work','defer_work']) expect(await choose(page,c)).toBe(true);
+  await page.evaluate(function () {
+    const s=FB.state,id='hungarian_village_track_1241'; FB.stories.get(id).day(s,s.stories[id]);
+  });
+  expect(await choose(page,'review_journey')).toBe(true);
 }
 
 test('the fictional farm has a complete place-bound story and ordinary farmer property', async function ({page},info) {
@@ -71,7 +77,9 @@ test('the complete stay path asserts no attack, pays no reward and survives rest
     const id = 'hungarian_village_track_1241', funds = [s.player.gold,s.player.prestige,s.player.piety];
     const owners = JSON.stringify(s.owner), people = Object.keys(s.chars).length, plots = JSON.stringify(FB.landPlots(s));
     function pick(c) { return FB.stories.apply(s,id,c,FB.stories.quote(s,id,c)); }
-    const choices = ['take_stock','keep_money','defer_work','stay'].map(pick);
+    const choices = ['take_stock','keep_money','defer_work'].map(pick);
+    FB.stories.get(id).day(s,s.stories[id]);
+    choices.push(pick('stay_during_war'));
     const record = JSON.stringify(s.stories);
     FB.save.restore(JSON.parse(FB.save.serialize())); s = FB.state;
     return {choices:choices,phase:s.stories[id].phase,home:s.player.provinceId,travel:s.player.travel || null,
@@ -124,6 +132,10 @@ test('goals distinguish savings and selected work from actual farm earnings', as
 
 test('war reviews observe the home sovereign and peace without inventing a local battle', async function ({page},info) {
   await beginBookmark(page,info,'1241',SCENARIO);
+  await page.evaluate(function () {
+    const s=FB.state;
+    FB.realmWars(s,'hungary_1241').slice().forEach(function (w) { FB.settleOrdinaryWar(s,w.id,'white_peace'); });
+  });
   await choose(page,'seek_work'); await choose(page,'defer_work');
   expect(await page.evaluate(function () {
     const s = FB.state, id = 'hungarian_village_track_1241', story = FB.stories.get(id), t = s.stories[id];
@@ -234,6 +246,9 @@ test('death and succession archive the personal opening and hidden restore creat
     s.player.charId = FB.householdMembers(s).find(function (c) { return c.id !== s.player.charId && !c.dead; }).id;
     FB.stories.get(id).day(s,s.stories[id]); FB.stories.get(goals).day(s,s.stories[goals]);
     if (s.stories[id].phase !== 'interrupted' || s.stories[goals].goals.farm_income.status !== 'archived') throw new Error('Succession inherited personal opening');
+    // A legacy campaign without an attachment manifest may lack optional tracks.
+    // Manifest-bearing current saves must instead reject erased original records.
+    delete saved.state.start.storyAttachments;
     delete saved.state.stories[id]; delete saved.state.stories[goals];
     FBDATA.bookmarks['1241'].hidden = true; return JSON.stringify(saved);
   });

@@ -35,12 +35,19 @@ FBDATA.householdTracks_1241 = {
         choices:[
           { id:'stay', label:'Keep the household here', detail:'Continue local life with your current property and resources.', operation:{ kind:'record_decision' }, next:'stayed' },
           { id:'inspect_road', label:'Consider the road to Bratislava', detail:'Review a personal visit while your relatives remain at home.', operation:{ kind:'record_decision' }, next:'departure' },
+          { id:'consider_hosted_people', label:'Consider reports about hosted people', detail:'Review context without claiming a local encounter or changing anyone’s public rights.', operation:{ kind:'record_decision' }, next:'hosted_people' },
           { id:'return_to_work', label:'Return to the fields', detail:'Review ordinary farm work again.', operation:{ kind:'record_decision' }, next:'work' }
+        ], transitions:[] },
+      hosted_people:{ name:'Other households and public arrangements', text:'Reports about hosted Cuman households concern people with their own livelihoods and obligations. Hosting, protection and any change of access belong to the actual public authorities and agreements. This private review establishes no meeting, local violence, collective accusation or reward.',
+        choices:[
+          { id:'keep_local_life', label:'Continue ordinary local life', detail:'Keep your livelihood and property without intervening in public arrangements.', operation:{ kind:'record_decision' }, next:'stayed' },
+          { id:'review_own_plans', label:'Return to your own plans', detail:'Review the household’s choices without changing access, protection or custody.', operation:{ kind:'record_decision' }, next:'outlook' }
         ], transitions:[] },
       war_review:{ name:'The crown is at war', text:'The court governing your home county is at war. That fact alone says nothing about a local attack or the safety of a road. Review your own plans with the information available.',
         choices:[
           { id:'stay_during_war', label:'Continue life at home', detail:'Keep the household here without a promise of protection.', operation:{ kind:'record_decision' }, next:'stayed' },
           { id:'review_journey', label:'Review a personal journey', detail:'Consider the current route and its ordinary risks.', operation:{ kind:'record_decision' }, next:'departure' },
+          { id:'consider_hosted_people', label:'Consider reports about hosted people', detail:'Review context without claiming a local encounter or changing anyone’s public rights.', operation:{ kind:'record_decision' }, next:'hosted_people' },
           { id:'wait_for_news', label:'Reconsider after the fighting ends', detail:'Leave the plan open while ordinary life continues.', operation:{ kind:'record_decision' }, next:'waiting' }
         ], transitions:[] },
       waiting:{ name:'Life during the war', text:'Your household continues ordinary life. There is no confirmed local incident in this personal record.',
@@ -92,7 +99,7 @@ FBDATA.openingProfiles_1241 = {
   var local = { all:[{ kind:'home', provinceId:'szekesfehervar' }, { kind:'present', provinceId:'szekesfehervar' }] };
   var war = { kind:'at_war', provinceId:'szekesfehervar' };
   function route(when, next) { return { when:when, next:next }; }
-  ['household','stores','work','working','earned','outlook','war_review','waiting','obligations','departure'].forEach(function (id) {
+  ['household','stores','work','working','earned','outlook','hosted_people','war_review','waiting','obligations','departure'].forEach(function (id) {
     def.stages[id].transitions = [route({ not:local }, 'remote')];
   });
   def.stages.outlook.transitions.push(route(war, 'war_review'));

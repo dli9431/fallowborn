@@ -6,6 +6,7 @@ const {beginBookmark}=require('../support/game/bookmark-acceptance');
 const {dependsOnRuntime}=require('../support/runtime-dependencies');
 
 dependsOnRuntime(__filename,['index.html','data/bookmark_1241_operations.js','data/bookmark_1241.js',
+  'data/bookmark_1241_core_starts.js','data/story_koten_1241.js',
   'data/bookmark_1241_scaffold_a.js','data/bookmark_1241_scaffold_b.js','data/bookmark_1241_scaffold_c.js',
   'data/bookmark_1241_scaffold_d.js','data/bookmark_1241_frederick.js','data/bookmark_1241_alexander.js',
   'data/story_ruler_agendas_1241.js','data/starts_1241.js','data/mobile_confederations.js','data/cultures.js',
@@ -51,10 +52,10 @@ test('the fresh world validates every retained revision without changing their o
     return {faults:FB.validateBookmark(fresh),revision:fresh.revision,opening:fresh.openingRevision,
       detached:fresh.openingRevisions!==previous.openingRevisions && fresh.realms!==previous.realms,
       earlierRealms:JSON.stringify(fresh.realms.slice(0,-2))===JSON.stringify(previous.realms),
-      starts:JSON.stringify(fresh.starts)===JSON.stringify(previous.starts),
+      starts:JSON.stringify(fresh.starts.filter(function (id) {return id!=='koten_1241';}))===JSON.stringify(previous.starts),
       retained:older,pure:bytes===JSON.stringify(FBDATA) && rng===FB.getRngState() && uid===FB.getUidCounter()};
   },retained);
-  expect(facts).toMatchObject({faults:[],revision:'operations_v2',opening:'operations_v2',
+  expect(facts).toMatchObject({faults:[],revision:'core_starts_v2',opening:'operations_v2',
     detached:true,earlierRealms:true,starts:true,pure:true});
   expect(facts.retained).toEqual(retained.map(function () {
     return {faults:[],mobile:false,opening:['baseline'],actors:0,sameProvinces:true};
@@ -102,7 +103,7 @@ test('the dated combined opening conserves both populations, exact forces, food 
           return v.site===c.siteId && FB.provinceAtGrid(v.x,v.y).id===c.countyId;
         });})},repeat:repeat,valid:M.validate(s)};
   },{command:command,following:following});
-  expect(result).toEqual({revision:'operations_v2',opening:'operations_v2',total:8000,civilians:4800,reserves:800,
+  expect(result).toEqual({revision:'core_starts_v2',opening:'operations_v2',total:8000,civilians:4800,reserves:800,
     positions:['volodymyr','krakow','cluj','gyula'],men:[1200,600,400,200],units:[[900,300],[450,150],[300,100],[150,50]],
     food:[360,180,120,60],campFood:6480,cash:552,commission:{externalAuthorityId:'ogodei_superior_1241',generation:1},
     principals:['Batu','Subutai','Baidar','Qadan','Shiban'],originals:true,lawful:true,noTerritory:true,
