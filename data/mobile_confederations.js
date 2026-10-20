@@ -112,6 +112,8 @@
     rationale:'Finite intent observes existing preparation, command and canonical progress. No credible research prerequisite belongs to waiting or declining; all underlying formation, equipment, movement and access gates remain authoritative.'};
   FBDATA.techImpactReviews.features.retained_start_attachments = {mode:'none',
     rationale:'Preserving a campaign\u2019s original story commitments is a persistence rule. No discovery gates compatibility, and all original consent, authority, funding and movement requirements remain binding.'};
+  FBDATA.techImpactReviews.features.revision_start_tracks = {mode:'none',
+    rationale:'Selecting the original personal story commitments for an effective world requires no discovery. Existing source authority, consent, resources and movement gates remain binding.'};
   /* The fresh 476 opening inhabits Cherson and adds the Pontic following.
      Priscus attests displaced followings and Roman diplomacy, not a precise
      476 boundary or an identifiable incumbent at this simulated camp. */

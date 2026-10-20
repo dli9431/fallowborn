@@ -866,9 +866,13 @@ window.FBMODS = window.FBMODS || [];
       }
       validateIdList(scenario.tracks, path + '.tracks', tracks, true);
     }
-    if (scenario.fixedProvinceId && !scenario.rulerRealmId &&
-        !FB.startStoryTracks(scenario, scenario.fixedProvinceId, stories).length) {
-      fail(path + '.tracks', 'a fixed-place household needs a player track at its fixed birthplace.');
+    if (scenario.fixedProvinceId && !scenario.rulerRealmId) {
+      (scenario.bookmarkIds || []).forEach(function (id) {
+        offeringBookmarks(id, scenario).forEach(function (bookmark) {
+          if (!FB.startStoryTracks(scenario, scenario.fixedProvinceId, stories, bookmark).length)
+            fail(path + '.tracks', 'a fixed-place household needs a player track at its fixed birthplace.');
+        });
+      });
     }
     if (own(scenario, 'trackLocations')) {
       const places = scenario.trackLocations;
@@ -891,6 +895,8 @@ window.FBMODS = window.FBMODS || [];
           for (const bookmarkId of (Array.isArray(scenario.bookmarkIds) ? scenario.bookmarkIds : [])) {
             if (!own(rules.bookmarks, bookmarkId)) continue;
             const bookmark = freshBookmark(bookmarkId);
+            // Effective replacement maps are checked per revision by world validation.
+            if (FB.startTrackSet(scenario, bookmark) !== scenario) continue;
             const locations = bookmark && bookmark.startLocations && bookmark.startLocations[scenario.id];
             for (const provinceId of list) {
               const province = bookmark && Array.isArray(bookmark.provinces) &&

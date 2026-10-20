@@ -4077,3 +4077,7 @@ Koten under Guard is an always-open Story start with the original fixed identity
 Subordinate formation review
 
 The existing preparation card and shared review sheet explain that the direct holder authorizes local formation under the original sovereign, with consent separate from public funds. Original superior portrait rows retain the actual named people and explain their relationship without implying local consent. A current-authority blocker names direct holding, sovereign relationship and the exact living local authority or civil deputy. Existing cost, gift, consent and formation choices and shared Back, Escape, Close, focus and scroll behavior remain. No new navigation, sovereign spending option or private/public balance mirror is introduced.
+
+Revision-scoped start tracks
+
+Story grouping and birthplace preselection read the same effective startTrackOverrides entry as start-code and direct creation eligibility. A fixed household must still have a storyline at its actual home. Existing scenario cards, family choices, character summary, Back/Escape, focus and scroll behavior remain shared. No new navigation, metadata labels, declaration ids or subtitle text is introduced; current story sheets remain responsible for their own decisions and costs.

@@ -454,3 +454,7 @@ Koten's scenario and sole family summary extend the literal startScenarios_1241 
 Subordinate formation presentation
 
 Direct-holder jurisdiction explanations, original-superior portrait labels and authority blockers use literal FB.T sources in js/story_expedition_preparation.js. Imported title/intro retain the existing effective English fallback. Realm/actor ids, original chain, appointment scope, generations, consent clocks and amounts remain locale-neutral; no rendered prose enters saves. Existing story navigation and shared monetary presentation remain authoritative. This capability changes no generated catalogue.
+
+Revision-scoped start tracks
+
+startTrackOverrides contains stable scenario, story and county ids only. It introduces no localizable display field or saved rendered text. Picker cards and story sheets retain their existing scenario/story display owners, literal UI translations and imported English fallback. No catalogue command or generated translation change is needed for the resolver itself.
