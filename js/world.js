@@ -1345,7 +1345,8 @@ window.FB = window.FB || {};
       }
       requirements(def.requirements, 'story ' + id, null, null, attached);
       if (def.declaration) {
-        stories.definitionFaults(def.declaration, definition, attached).forEach(function (error) {
+        var declarationErrors = stories.definitionFaults(def.declaration, definition, attached);
+        declarationErrors.forEach(function (error) {
           errors.push(error);
         });
         requirements(def.declaration.requirements, 'story ' + id, null, null, attached);
@@ -1364,6 +1365,14 @@ window.FB = window.FB || {};
           (prerequisite && prerequisite.requires || []).forEach(futureRealms);
         }
         (def.requires || []).forEach(futureRealms);
+        // Only a trusted type product can prove one otherwise missing realm
+        // reference at its exact declaration path. Never expand storyRealms:
+        // the proof grants no references to other fields or dependent stories.
+        function provenReference(where, value) {
+          if (declarationErrors.length || !def.validatesBookmarkReference) return false;
+          try { return def.validatesBookmarkReference(definition, where, value) === true; }
+          catch (error) { return false; }
+        }
         // Typed fields of reusable story declarations, excluding the realm
         // a partition/foundation creates in the future.
         function walk(row, path) {
@@ -1384,7 +1393,9 @@ window.FB = window.FB || {};
             if (['court_settlement','ruler_restoration','contested_office','political_track'].indexOf(def.declaration.type) >= 0 &&
                 (key === 'source' || /Source$/.test(key))) table = FBDATA.legitimacySources;
             if (key === 'churchId' || key === 'civicId') table = definition.localInstitutions !== undefined ? definition.localInstitutions : FBDATA.localInstitutions;
-            if (table && typeof value === 'string' && !ownKey(table, value)) fault('story ' + id, where + ' references unknown id ' + value + '.');
+            if (table && typeof value === 'string' && !ownKey(table, value) &&
+                !(table === storyRealms && provenReference(where, value)))
+              fault('story ' + id, where + ' references unknown id ' + value + '.');
             if ((key === 'culture' || /CultureId$/.test(key) || key === 'cultureId') && typeof value === 'string') identity({ culture:value }, 'story ' + id);
             if ((key === 'religion' || /FaithId$/.test(key) || key === 'faithId') && typeof value === 'string')
               identity({ religion:value }, 'story ' + id, 'story', path.indexOf('opening.') === 0 ? undefined :

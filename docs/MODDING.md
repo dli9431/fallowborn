@@ -6847,3 +6847,9 @@ Every consent, grant, contribution and formation review rechecks current direct 
 Military control review
 
 Subordinate preparation composes the canonical recruitmentCountyBlocked query for both the actual direct holder and original sovereign. Ordinary-war occupation, great-holy-war occupation, hostile force control and rebellion restrictions therefore block local formation independently of unchanged legal owner/holder rows. This is a pure availability read; it does not initialize a war, transfer ownership or grant access. Canonical occupation facts are included in the current review and funding eligibility.
+
+Generated preparation provider reference boundary
+
+The exact generated count or duke provider supported by expedition_preparation jurisdiction is accepted by complete bookmark validation and ordinary Mods imports through the same pure openingJurisdiction proof used by the type-local validator. Acceptance applies only to that declaration's provider.realmId and exact effective revision. It does not declare a new realm, make a generated id generally referenceable, or permit it in requirements or other story fields. All original holder, county, sovereign chain and government constraints still apply. Existing explicit providers and retained unopted revisions keep their ordinary validation.
+
+The trusted factory hook validatesBookmarkReference(effectiveBookmark, declarationPath, value) is not an authorable JSON key. It can prove only an otherwise missing scalar realm reference after successful type validation. Only true accepts, and errors fail closed. This repair changes no saved fields, source or funding transactions, initialization, restoration or technology eligibility.

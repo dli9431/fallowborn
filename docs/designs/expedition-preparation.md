@@ -84,3 +84,9 @@ The required-parent check uses the campaign's original world attachment provenan
 Military control review
 
 Subordinate preparation composes the canonical recruitmentCountyBlocked query for both the actual direct holder and original sovereign. Ordinary-war occupation, great-holy-war occupation, hostile force control and rebellion restrictions therefore block local formation independently of unchanged legal owner/holder rows. This is a pure availability read; it does not initialize a war, transfer ownership or grant access. Canonical occupation facts are included in the current review and funding eligibility.
+
+Generated provider catalogue validation
+
+The whole-bookmark declaration walker accepts a generated provider only at provider.realmId after the preparation declaration passes all type-local checks. Its trusted validatesBookmarkReference hook reuses openingJurisdiction against that exact effective revision, proving the actual origin holder and original sovereign chain. It never adds a realm to the declaration reference table. Other fields, requirements and dependent or unrelated stories still require their ordinary explicit references. Unknown, wrong-county, wrong-holder, wrong-sovereign and incompatible bindings fail before publication. Omission retains the existing strict checks.
+
+This is a validation repair of expedition_subordinate_formation_authority, whose technology decision remains none. It changes no gameplay eligibility, authority, funding, source, initialization or saved field and needs no new technology ledger entry. subordinate-formation-authority.spec.js covers both independent ordinary JSON imports and a generated-duke variation through actual Mods file loading, complete FB.validateBookmark results, pure candidate acceptance/rejection, retained revisions, canonical paid formation and matching restore.

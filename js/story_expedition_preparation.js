@@ -536,6 +536,12 @@
       }
       return record;
     },validate:validate,day:day,
+    validatesBookmarkReference:function (bm,path,value) {
+      // Reuse the same detached holder/sovereign proof as check(). This is
+      // deliberately one scalar path, not a new realm in the story catalogue.
+      return path==='provider.realmId' && value===def.provider.realmId &&
+        def.provider.kind==='home_authority' && !!def.provider.jurisdiction && !!openingJurisdiction(bm,def);
+    },
     title:function () {return FB.T(def.title);},intro:function () {return FB.T(def.intro);},
     status:function (s,t) {
       var reason={refused:FB.T('Declined'),stopped:FB.T('Stopped'),expired:FB.T('Expired'),interrupted:FB.T('Interrupted')};

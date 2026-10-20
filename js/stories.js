@@ -12,7 +12,8 @@
   var KINDS = { world:true, track:true };
   var HOOKS = ['appliesTo', 'init', 'day', 'season', 'year', 'title', 'intro',
     'status', 'choices', 'quote', 'blocker', 'review', 'apply',
-    'validate', 'migrate', 'restore', 'foundRevolt', 'appliesToBookmark', 'observe', 'people'];
+    'validate', 'migrate', 'restore', 'foundRevolt', 'appliesToBookmark', 'observe', 'people',
+    'validatesBookmarkReference'];
   function own(o, key) {
     return !!o && Object.prototype.hasOwnProperty.call(o, key);
   }
