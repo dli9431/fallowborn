@@ -15,6 +15,16 @@ dependsOnRuntime(__filename,['index.html','data/technology.js','data/eras.js','d
   'js/fortifications.js','js/logistics.js','js/federates.js',
   'js/travel.js','js/justice.js','js/intrigue.js','js/events.js','js/save.js','js/save_v4.js']);
 
+function generatedDuke() {
+  const mod=JSON.parse(JSON.stringify(examples.harbor)),bm=mod.bookmarks.harbor_world;
+  // A second outer county makes the richer meadow the generated duke's seat.
+  bm.provinces.push(Object.assign({},bm.provinces.find(function(p){return p.id==='harbor_meadow';}),
+    {id:'harbor_fen',name:'Reed Fen',dev:3,x:3.1,y:3.7}));
+  mod.geographies.harbor_lands.provinces.push({id:'harbor_fen',x:3.1,y:3.7,terrain:'farmland'});
+  mod.storyInstances.harbor_preparation.provider.realmId='d_harbor_outer';
+  return mod;
+}
+
 async function begin(page,info,prefix,modified,household) {
   await openGame(page,info);
   await page.evaluate(function(){FB.ui.showMods();});
@@ -245,6 +255,114 @@ test('candidate jurisdiction bindings reject detached mismatches without generat
     return {rejected:rejected,pure:before===JSON.stringify([FB.state,FBDATA]) && rng===FB.getRngState() && uid===FB.getUidCounter()};
   },examples);
   expect(result).toEqual({rejected:[Array(9).fill(true),Array(9).fill(true)],pure:true});
+});
+
+test('whole-catalogue validation accepts both independent JSON worlds and generated duke without publication',async function({page},info){
+  await openGame(page,info);
+  const result=await page.evaluate(function(inputs){
+    const before=JSON.stringify([FB.state,FBDATA]),rng=FB.getRngState(),uid=FB.getUidCounter(),
+      registry=FB.stories.list().map(function(story){return story.id;}).join('|');
+    const errors=inputs.map(function(mod){const original=JSON.stringify(mod),faults=FB.mods.validate(mod);
+      return {faults:faults,unchanged:original===JSON.stringify(mod)};});
+    return {errors:errors,pure:before===JSON.stringify([FB.state,FBDATA]) && rng===FB.getRngState() &&
+      uid===FB.getUidCounter() && registry===FB.stories.list().map(function(story){return story.id;}).join('|')};
+  },[examples.harbor,examples.dune,generatedDuke()]);
+  expect(result).toEqual({errors:Array(3).fill({faults:[],unchanged:true}),pure:true});
+});
+
+test('whole-catalogue generated bindings reject forged holders counties sovereigns forms and executable-hook data',async function({page},info){
+  await openGame(page,info);
+  const result=await page.evaluate(function(example){
+    const before=JSON.stringify([FB.state,FBDATA]),rng=FB.getRngState(),uid=FB.getUidCounter(),
+      changes=[function(p,b){p.provider.realmId='c_not_a_county';},
+        function(p,b){p.provider.realmId='c_harbor_fen';},
+        function(p,b){p.provider.jurisdiction.sovereignRealmId='harbor_commune';},
+        function(p,b){b.realms.find(function(r){return r.mobile;}).mobile.origin='harbor_ridge';},
+        function(p,b){b.realms.find(function(r){return r.id==='harbor_upland';}).government='harbor_formation_court';},
+        function(p,b){p.validatesBookmarkReference=true;}];
+    const rejected=changes.map(function(change){const mod=JSON.parse(JSON.stringify(example));
+      change(mod.storyInstances.harbor_preparation,mod.bookmarks.harbor_world);
+      const original=JSON.stringify(mod);return FB.mods.validate(mod).length>0 && original===JSON.stringify(mod);});
+    return {rejected:rejected,pure:before===JSON.stringify([FB.state,FBDATA]) &&
+      rng===FB.getRngState() && uid===FB.getUidCounter()};
+  },generatedDuke());
+  expect(result).toEqual({rejected:Array(6).fill(true),pure:true});
+});
+
+for(const variant of ['count','duke','named']) {
+  test(variant+' actual Mods import passes full bookmark validation in every revision',async function({page},info){
+    const prefix=variant==='named'?'dune':'harbor';
+    await begin(page,info,prefix,variant==='duke'?generatedDuke():undefined);
+    const result=await page.evaluate(function(prefix){
+      const before=JSON.stringify([FB.state,FBDATA]),rng=FB.getRngState(),uid=FB.getUidCounter(),
+        bm=FBDATA.bookmarks[prefix+'_world'];
+      const all=FB.validateBookmark(bm),revisions=FB.bookmarkRevisions(bm.id).map(function(revision){
+        return {errors:FB.validateBookmark(revision,true),attached:revision.stories.indexOf(prefix+'_preparation')>=0};
+      });
+      return {all:all,revisions:revisions,provider:subordinateCase.record(FB.state).openingJurisdiction.realms[0].realmId,
+        pure:before===JSON.stringify([FB.state,FBDATA]) && rng===FB.getRngState() && uid===FB.getUidCounter()};
+    },prefix);
+    expect(result).toEqual({all:[],revisions:variant==='named'?[{errors:[],attached:false},{errors:[],attached:true}]:[{errors:[],attached:true}],
+      provider:variant==='named'?'dune_gate':variant==='duke'?'d_harbor_outer':'c_harbor_meadow',pure:true});
+  });
+}
+
+test('generated duke forms once through canonical funding and preserves the exact matching save',async function({page},info){
+  await begin(page,info,'harbor',generatedDuke());
+  const result=await page.evaluate(function(){
+    const C=subordinateCase,s=FB.state,t=C.record(s),P=FB.expeditionPreparation,
+      funded=C.localGift(s),authorized=C.authorize(s),
+      stock=FB.marketProvisionSnapshot(s,C.origin).stock,money=FB.treasuryAvailable(s,C.rid),
+      seller=FB.treasuryPublicAccountSnapshot(s,t.provider.realmId).gold,q=P.review(s,C.id,'form',C.leader(s)),
+      formed=P.commit(s,q),repeat=P.commit(s,q);
+    const snapshot=function(){const s=FB.state;return JSON.stringify([C.record(s),s.realms,s.armies,s.market,s.population,s.player.gold]);};
+    const original=snapshot(),save=JSON.parse(FB.save.serialize());FB.save.restore(save);
+    return {funded:funded,authorized:authorized,formed:formed,repeat:repeat,
+      food:stock-FB.marketProvisionSnapshot(FB.state,C.origin).stock===t.formed.food,
+      debit:Math.abs(money-FB.treasuryAvailable(FB.state,C.rid)-q.cost)<1e-8,
+      credit:Math.abs(FB.treasuryPublicAccountSnapshot(FB.state,t.provider.realmId).gold-seller-q.foodCost)<1e-8,
+      same:original===snapshot(),single:FB.state.armies.filter(function(a){return a.realm===C.rid;}).length===1};
+  });
+  expect(result).toEqual({funded:true,authorized:true,formed:true,repeat:false,food:true,debit:true,credit:true,same:true,single:true});
+});
+
+test('generated-provider proof cannot escape its exact field or effective revision',async function({page},info){
+  await begin(page,info,'harbor');
+  const result=await page.evaluate(function(){
+    const before=JSON.stringify([FB.state,FBDATA]),rng=FB.getRngState(),uid=FB.getUidCounter(),
+      base=FBDATA.bookmarks.harbor_world;
+    // The first change invalidates the proof only in a retained revision.
+    const wrongRevision=JSON.parse(JSON.stringify(base));wrongRevision.revision='current';
+    const provinces=JSON.parse(JSON.stringify(base.provinces));
+    provinces.find(function(p){return p.id==='harbor_meadow';}).duchy='harbor_district';
+    wrongRevision.revisions={baseline:{provinces:provinces},current:{provinces:base.provinces}};
+    const retained=FB.validateBookmark(wrongRevision),
+      wrongReference=JSON.parse(JSON.stringify(FBDATA.storyInstances));
+    wrongReference.harbor_offices.realmId='c_harbor_meadow';
+    const context=FB.stories.compile(wrongReference),unrelated=FB.validateBookmark(base,false,context);
+    const required=JSON.parse(JSON.stringify(FBDATA.storyInstances));
+    required.harbor_candidacy.requirements.realms.push('c_harbor_meadow');
+    const requirements=FB.validateBookmark(base,false,FB.stories.compile(required));
+    return {retained:retained.some(function(e){return e.indexOf('opening direct-holder jurisdiction')>=0;}),
+      unrelated:unrelated.some(function(e){return e.indexOf('story harbor_offices: realmId references unknown id c_harbor_meadow')>=0;}),
+      requirements:requirements.some(function(e){return e.indexOf('unknown realms requirement c_harbor_meadow')>=0;}),
+      pure:before===JSON.stringify([FB.state,FBDATA]) && rng===FB.getRngState() && uid===FB.getUidCounter()};
+  });
+  expect(result).toEqual({retained:true,unrelated:true,requirements:true,pure:true});
+});
+
+test('otherwise valid-looking generated references fail actual file import without changing storage or live catalogues',async function({page},info){
+  await openGame(page,info);
+  const mod=generatedDuke();mod.storyInstances.harbor_preparation.provider.realmId='c_harbor_fen';
+  await page.evaluate(function(){window.beforeBadProvider={state:JSON.stringify([FB.state,FBDATA]),
+    storage:JSON.stringify(localStorage),rng:FB.getRngState(),uid:FB.getUidCounter()};FB.ui.showMods();});
+  await page.locator('#modfile').setInputFiles({name:'wrong-holder.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(mod))});
+  await page.locator('#mod-apply').click();
+  await expect(page.getByText(/Mod requirements failed:/)).toBeVisible();
+  const result=await page.evaluate(function(){const before=window.beforeBadProvider;
+    return before.state===JSON.stringify([FB.state,FBDATA]) && before.storage===JSON.stringify(localStorage) &&
+      before.rng===FB.getRngState() && before.uid===FB.getUidCounter() && !FBDATA.bookmarks.harbor_world;});
+  expect(result).toBe(true);
 });
 
 test('unopted retained ruler world restores without jurisdiction preparation public-account conversion or a host',async function({page},info){
