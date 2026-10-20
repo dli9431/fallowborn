@@ -164,7 +164,8 @@
       def.householdContribution.kind==='local_household' && number(def.householdContribution.maximum,1000000) &&
       def.householdContribution.maximum>0, 'household contribution');
     need(['volunteers','closed'].indexOf(def.acceptance)>=0 && ['hold','form','refuse'].indexOf(def.ai)>=0, 'policies');
-    need(exact(def.provisions,['food','maxUnitPrice']) && whole(def.provisions.food,1000000000) && def.provisions.food>0 &&
+    need((exact(def.provisions,['food','maxUnitPrice']) && whole(def.provisions.food,1000000000) && def.provisions.food>0 ||
+      exact(def.provisions,['targetDays','maxUnitPrice']) && whole(def.provisions.targetDays,14) && def.provisions.targetDays>0) &&
       number(def.provisions.maxUnitPrice,1000) && def.provisions.maxUnitPrice>0, 'provisions');
     var source=def.source;
     need(keys(source,['kind','cohorts','provinceId']), 'source');
@@ -270,6 +271,10 @@
     if (!facts || !facts.valid) return null;
     var result={id:e.def.id,record:copy(e.t),issuer:M.commandIssuer(s,rid)};
     if (e.t.openingJurisdiction) result.openingJurisdiction=facts.openingJurisdiction;
+    if (e.def.provisions.targetDays!==undefined) {
+      result.provisions=provisionQuote(s,e);
+      if (!result.provisions.allowed) return null;
+    }
     return result;
   };
   function pools(e,cohorts) {
@@ -289,13 +294,28 @@
   function flatten(pools) {
     var out=[];Object.keys(pools).forEach(function (id) {pools[id].forEach(function (c) {out.push(Object.assign({memberId:id},c));});});return out;
   }
+  function provisionQuote(s,e) {
+    var terms=e.def.provisions, market=FB.marketProvisionSnapshot(s,e.d.mobile.origin),
+      q={allowed:false,food:terms.food || 0,fieldFood:null,target:null,market:market};
+    if (terms.targetDays!==undefined) {
+      var ration=M.preformationRations(s,e.d), amount=M.rationTarget(e.d.mobile.profileId,ration,terms.targetDays);
+      if (!amount) return q;
+      q.food=amount.food;q.fieldFood=amount.fieldFood;
+      q.target={schema:1,targetDays:terms.targetDays,ration:ration,campFood:amount.campFood,
+        fieldFood:amount.fieldFood,unitPrice:market ? market.price*0.1125 : 0};
+    }
+    q.allowed=!!market && market.stock>=q.food && market.price*0.1125<=terms.maxUnitPrice;
+    return q;
+  }
   P.review=function (s,id,action,actorId) {
     var e=entry(s,id), q={id:id,action:action,actorId:actorId,allowed:false,reason:'preparation',cost:0,
       trainingCost:0,foodCost:0,transfer:null,cohorts:[],funding:null,facts:null};
     if (!e || !e.d || ['form','wait','refuse','stop','authorize','revoke','contribute','grant'].indexOf(action)<0) return q;
     var t=e.t, d=e.d, f=current(s,e), p=FBDATA.mobileProfiles[d.mobile.profileId], leader=principal(e),
       actor=s.chars[actorId], isLeader=actorId===leader, isProvider=actorId===t.provider.characterId;
-    var market=FB.marketProvisionSnapshot(s,d.mobile.origin), money=FB.treasuryPublicAccountSnapshot(s,d.id);
+    var market=FB.marketProvisionSnapshot(s,d.mobile.origin), money=FB.treasuryPublicAccountSnapshot(s,d.id),
+      provisions=provisionQuote(s,e);
+    q.food=provisions.food;q.provisions=provisions;
     q.facts={definition:t.definitionKey,record:copy(t),turn:s.turn,date:copy(s.date),current:f,
       people:t.bindings.map(function (b) {return copy(s.chars[b.characterId] || null);}),
       providerPerson:copy(s.chars[t.provider.characterId] || null),realm:copy(s.realms[d.id]),market:market,money:money,
@@ -311,8 +331,9 @@
       q.reason=q.allowed ? null : 'consent';return q;
     }
     q.trainingCost=d.mobile.fighters*p.recruitCost;
-    if (market) q.foodCost=e.def.provisions.food*market.price*0.1125;
+    if (market) q.foodCost=provisions.target ? provisions.food*provisions.target.unitPrice : provisions.food*market.price*0.1125;
     q.cost=q.trainingCost+q.foodCost;
+    if (e.def.provisions.targetDays!==undefined && !provisions.allowed) {q.reason='provisions';return q;}
     if (action==='contribute' || action==='grant') {
       if (action==='contribute' && e.def.householdContribution && !householdDonor(s,e,actorId)) {q.reason='household';return q;}
       if (!money || !market || (action==='contribute' ? actorId!==s.player.charId ||
@@ -340,7 +361,7 @@
     } else pool=pools(e,t.reserves);
     q.cohorts=flatten(pool);
     if (q.cohorts.length>64) {q.reason='capacity';return q;}
-    if (!market || market.stock<e.def.provisions.food || market.price*0.1125>e.def.provisions.maxUnitPrice) {q.reason='provisions';return q;}
+    if (!provisions.allowed) {q.reason='provisions';return q;}
     if (!money || money.available<q.cost || !FB.treasuryPublicAccountSnapshot(s,t.provider.realmId)) {q.reason='funds';return q;}
     q.allowed=true;q.reason=null;return q;
   };
@@ -370,14 +391,15 @@
       if (q.transfer && !FB.populationPoolApply(staged,withdrawn,q.transfer)) return false;
       if (!FB.treasurySpend(staged,d.id,q.trainingCost) ||
           !FB.treasuryTransfer(staged,d.id,se.t.provider.realmId,q.foodCost) ||
-          !FB.marketWithdrawProvisions(staged,d.mobile.origin,se.def.provisions.food)) return false;
-      var r=M.formFollowing(staged,d,q.facts.current.plan,pool,se.def.provisions.food),
+          !FB.marketWithdrawProvisions(staged,d.mobile.origin,q.food)) return false;
+      var r=M.formFollowing(staged,d,q.facts.current.plan,pool,q.food,q.provisions.target ? q.provisions.fieldFood : undefined),
         migration=M.migration(staged,d.id), host=M.host(staged,d.id);
       if (!r || !migration || !host || !M.commandValid(staged,d.id)) return false;
       if (FB.expeditionPrograms) FB.expeditionPrograms.initialize(staged,d);
       se.t.status='formed';se.t.endedTurn=s.turn;se.t.revision++;se.t.reserves=[];se.t.consumed=copy(q.cohorts);
       se.t.formed={realmId:d.id,migrationId:migration.id,hostId:host.id,turn:s.turn,leaderId:r.leaderId,
-        generation:r.command.leaderGeneration,trainingCost:q.trainingCost,food:se.def.provisions.food,foodCost:q.foodCost};
+        generation:r.command.leaderGeneration,trainingCost:q.trainingCost,food:q.food,foodCost:q.foodCost};
+      if (q.provisions.target) se.t.formed.provisionTarget=copy(q.provisions.target);
       M.validate(staged);
       FB.stories.get(q.id).validate(se.t,staged);
     } catch (error) {return false;}
@@ -486,12 +508,25 @@
       }
       var f=t.formed, p=FBDATA.mobileProfiles[d.mobile.profileId], initial=d.ruler && d.ruler.generation || 1,
         incumbent=d.mobile.opening.principals.some(function (b) {return b.memberId===d.mobile.opening.leaderMemberId && b.person.kind==='realm_ruler' && b.person.realmId===d.id;});
-      need(exact(f,['realmId','migrationId','hostId','turn','leaderId','generation','trainingCost','food','foodCost']) && r &&
+      var formedFields=['realmId','migrationId','hostId','turn','leaderId','generation','trainingCost','food','foodCost'],
+        target=def.provisions.targetDays!==undefined, bought=null;
+      if (target) {
+        formedFields.push('provisionTarget');
+        var receipt=f && f.provisionTarget, roster={}, campPeople=p.members.reduce(function (n,m) {return n+m.population;},0)-d.mobile.fighters;
+        d.mobile.opening.muster.forEach(function (row) {roster[row.unitId]=(roster[row.unitId] || 0)+row.count;});
+        need(exact(receipt,['schema','targetDays','ration','campFood','fieldFood','unitPrice']) && receipt.schema===1 &&
+          receipt.targetDays===def.provisions.targetDays && receipt.ration && receipt.ration.campPeople===campPeople &&
+          same(receipt.ration.units,roster) && number(receipt.unitPrice,def.provisions.maxUnitPrice) && receipt.unitPrice>0);
+        bought=M.rationTarget(d.mobile.profileId,receipt.ration,receipt.targetDays);
+        need(!!bought && receipt.campFood===bought.campFood && receipt.fieldFood===bought.fieldFood &&
+          f.food===bought.food && f.foodCost===bought.food*receipt.unitPrice);
+      }
+      need(exact(f,formedFields) && r &&
         f.realmId===def.realmId && f.migrationId===r.migrationId && f.hostId==='following_'+def.realmId &&
         whole(f.turn) && f.turn<t.endTurn && f.turn===t.endedTurn && f.generation===initial+(incumbent ? 0 : 1) &&
         f.generation<=FB.realmRulerGeneration(s,def.realmId) && f.leaderId===principal(e) &&
-        f.food===def.provisions.food && f.trainingCost===d.mobile.fighters*p.recruitCost &&
-        number(f.foodCost,def.provisions.food*def.provisions.maxUnitPrice) && f.foodCost>0 && t.revision>=2 && t.authorizedTurn!==null && t.authorizedTurn<=f.turn &&
+        (target ? f.food===bought.food : f.food===def.provisions.food) && f.trainingCost===d.mobile.fighters*p.recruitCost &&
+        number(f.foodCost,f.food*def.provisions.maxUnitPrice) && f.foodCost>0 && t.revision>=2 && t.authorizedTurn!==null && t.authorizedTurn<=f.turn &&
         same(r.openingBindings,t.bindings));
       if (def.source.kind==='external') need(same(t.consumed,flatten(pools(e,def.source.cohorts))));
       p.members.forEach(function (m) {need(total(t.consumed.filter(function (c) {return c.memberId===m.id;}))===m.population);});
@@ -545,7 +580,10 @@
       t.status==='formed' ? FB.T('The original expedition formed once. Its actual host, camp, people and provisions now belong to the mobile command.') :
         FB.T('No host exists until formation pays training and buys real local provisions. Local recruitment withdraws actual residents only at formation.'),
       t.status==='closed' ? reason[t.reason] : t.authorizedTurn===null ? FB.T('Local provider consent is pending.') : FB.T('The original local provider has consented.'),
-      FB.T('Public command funds: {money}. Formation food: {food}.',{money:FB.treasuryAvailable(s,def.realmId),food:def.provisions.food})].concat(
+      FB.T('Public command funds: {money}. Formation food: {food}.',{money:FB.treasuryAvailable(s,def.realmId),
+        food:t.formed ? t.formed.food : provisionQuote(s,entry(s,def.id)).food})].concat(
+        def.provisions.targetDays!==undefined ? [FB.T('Purchase target: {days} days of current camp and field rations, within field carrying capacity. Later conditions can change consumption.',
+          {days:def.provisions.targetDays})] : [],
         t.openingJurisdiction ? [FB.T('The direct holder authorizes local formation under the original sovereign. Consent and public funds remain separate; no sovereignty or passage is granted.')] : [])};},
     people:function (s,t) {var e=entry(s,def.id);return [
       {characterId:principal(e),label:FB.T('Original commander'),detail:FB.T('Formation retains this person and the original mandate.'),reason:''},
@@ -575,6 +613,7 @@
     },quote:function (s,t,id) {return P.review(s,def.id,id,s.player.charId);},
     apply:function (s,t,id,q) {return !!q && q.id===def.id && q.action===id && q.actorId===s.player.charId && P.commit(s,q);},
     blocker:function (s,t,reason) {
+      if (reason==='provisions' && def.provisions.targetDays!==undefined) return FB.T('The current ration target must fit field carrying capacity and available local food at the declared maximum price.');
       if (reason==='authority' && t.openingJurisdiction) return FB.T('Formation needs the original direct holder and sovereign relationship, living local authority or the exact civil deputy, and unchanged control of the origin.');
       if (reason==='private_funds') return FB.T('This voluntary gift needs the quoted amount in your private purse and a remaining shortfall within the command funding limit.');
       if (reason==='household') return FB.T('Only a living free adult household at the origin, without a journey, can make this private contribution.');
@@ -582,7 +621,10 @@
     review:function (s,t,id,q) {return [id==='contribute' ? FB.T('Private contribution: {amount}. Training need: {training}. Provision need: {food}. This gift grants no formation consent or refund.',
       {amount:q.cost,training:q.trainingCost,food:q.foodCost}) : FB.T('Public training cost: {training}. Public provision cost: {food}. Total: {cost}.',
       {training:q.trainingCost,food:q.foodCost,cost:q.cost}),
-      FB.T('Only this following forms. No vow, road, safe passage, land, private money or family travel is granted.')];}};
+      FB.T('Formation buys {food} provisions from finite local stock.',{food:q.food || 0})].concat(
+        q.provisions && q.provisions.target ? [FB.T('Camp provisions: {camp}. Field provisions: {field}. Target: {days} days.',
+          {camp:q.provisions.target.campFood,field:q.provisions.target.fieldFood,days:q.provisions.target.targetDays})] : [],
+        [FB.T('Only this following forms. No vow, road, safe passage, land, private money or family travel is granted.')]);}};
   }
   FB.stories.registerType(TYPE,factory,'js/story_expedition_preparation.js',check);
   var platform=FB.save.v4.validatePlatform;

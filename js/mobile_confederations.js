@@ -113,9 +113,11 @@
   };
   function civilians(r) { return r.members.reduce(function (n, m) { return n + sum(m.civilians); }, 0); }
   function reserve(r) { return r.members.reduce(function (n, m) { return n + sum(m.reserve); }, 0); }
+  function campRation(people,p) {return people*p.foodPerPerson;}
+  function fieldRation(people,p,use,base) {return campRation(people,p)*Math.max(0.1,use/base);}
   function hostRation(s,army,p) {
-    return army ? army.men*p.foodPerPerson*Math.max(0.1,
-      FB.armyProvisionUse(s,army)/Math.max(0.1,FBDATA.balance.supplyDrainBase || 1.2)) : 0;
+    return army ? fieldRation(army.men,p,FB.armyProvisionUse(s,army),
+      Math.max(0.1,FBDATA.balance.supplyDrainBase || 1.2)) : 0;
   }
   function hostCapacity(army,p) {
     return army.men*p.foodPerPerson*(p.supplyPolicy ? p.supplyPolicy.carryDays : 30);
@@ -127,6 +129,40 @@
   M.hostSupplySnapshot = function (s,army) {
     var p=army && M.profile(s,army.realm);
     return p ? {daily:hostRation(s,army,p),capacity:hostCapacity(army,p),target:hostLoadTarget(s,army,p)} : null;
+  };
+  /* A read-only ration descriptor, not a speculative registered host. The
+     logistics owner reads only realm, location and campaign from this input. */
+  M.preformationRations = function (s,d) {
+    var t=d && d.mobile, p=t && FBDATA.mobileProfiles[t.profileId];
+    if (!p || !t.opening || !Array.isArray(t.opening.muster)) return null;
+    var units={}, people=p.members.reduce(function (n,m) {return n+m.population;},0);
+    t.opening.muster.forEach(function (row) {units[row.unitId]=(units[row.unitId] || 0)+row.count;});
+    var field=Object.keys(units).reduce(function (n,id) {return n+units[id];},0);
+    if (field!==t.fighters || people<field) return null;
+    var projected=Object.assign({},s,{realmTech:copy(s.realmTech || {}),player:Object.assign({},s.player)});
+    return {campPeople:people-field,units:units,
+      provisionUse:FB.armyProvisionUse(projected,{realm:d.id,at:t.origin,warId:null}),
+      drainBase:Math.max(0.1,FBDATA.balance.supplyDrainBase || 1.2),
+      carryDays:p.supplyPolicy ? p.supplyPolicy.carryDays : 30};
+  };
+  /* Also validates historical arithmetic, without reading today's campaign. */
+  M.rationTarget = function (profileId,ration,days) {
+    var p=FBDATA.mobileProfiles[profileId];
+    if (!p || !keys(ration,['campPeople','units','provisionUse','drainBase','carryDays']) ||
+        Object.keys(ration).length!==5 || !whole(ration.campPeople) || ration.campPeople>1000000000 ||
+        !ration.units || typeof ration.units!=='object' || Array.isArray(ration.units) ||
+        !Object.keys(ration.units).length || Object.keys(ration.units).length>64 ||
+        !Object.keys(ration.units).every(function (id) {return FBDATA.unitClasses[id] && !FBDATA.unitClasses[id].hired &&
+          whole(ration.units[id]) && ration.units[id]>0 && ration.units[id]<=1000000000;}) ||
+        !boundedNumber(ration.provisionUse,1000000) || !boundedNumber(ration.drainBase,1000000) || ration.drainBase<0.1 ||
+        ration.carryDays!==(p.supplyPolicy ? p.supplyPolicy.carryDays : 30) || !whole(days) || days<1 || days>14) return null;
+    var fieldPeople=Object.keys(ration.units).reduce(function (n,id) {return n+ration.units[id];},0),
+      campDaily=campRation(ration.campPeople,p),
+      fieldDaily=fieldRation(fieldPeople,p,ration.provisionUse,ration.drainBase),
+      capacity=hostCapacity({men:fieldPeople},p),
+      campFood=Math.ceil(campDaily*days), fieldFood=Math.ceil(fieldDaily*days), food=campFood+fieldFood;
+    if (!whole(food) || !food || food>1000000000 || fieldFood>capacity) return null;
+    return {campDaily:campDaily,fieldDaily:fieldDaily,fieldCapacity:capacity,campFood:campFood,fieldFood:fieldFood,food:food};
   };
   function recruitmentPools(s,rid) {
     var r=M.row(s,rid), living=M.members(s,rid);
@@ -143,7 +179,7 @@
     if (!r || !moving || !policy) return null;
     if (r.columns) return M.columnSupplyPlan(s,rid);
     var army=M.host(s,rid), local=!!army && army.at===moving.at;
-    var campDaily=(civilians(r)+reserve(r))*p.foodPerPerson, fieldDaily=hostRation(s,army,p);
+    var campDaily=campRation(civilians(r)+reserve(r),p), fieldDaily=hostRation(s,army,p);
     var fieldCapacity=army ? hostCapacity(army,p) : 0;
     var fieldTarget=army ? hostLoadTarget(s,army,p) : 0;
     var target=campDaily*policy.targetDays+(local ? Math.max(0,fieldTarget-(army.mobileFood || 0)) : 0);
@@ -754,7 +790,7 @@
     return plan;
   };
   /* Shared physical constructor. Callers preflight and own every source and payment. */
-  M.formFollowing = function (s,d,plan,pools,food) {
+  M.formFollowing = function (s,d,plan,pools,food,fieldFood) {
     var p = FBDATA.mobileProfiles[d.mobile.profileId], g = s.authority.governments[d.id] ||
       (s.authority.governments[d.id]={formId:G.forRealm(s,d.id).id,sinceTurn:s.turn});
     if (!p || !M.active(s, d.id)) throw new Error('Invalid mobile opening');
@@ -789,7 +825,9 @@
     r.migrationId = migration.id;
     var army = M.host(s, d.id); army.mobileFollowing = true; army.mobileCourt = false; army.mobileRoster = [];
     var capacity=hostCapacity(army,p);
-    army.mobileFood=Math.min(r.food,hostLoadTarget(s,army,p));r.food-=army.mobileFood;
+    if (fieldFood!==undefined && (!whole(fieldFood) || fieldFood>food || fieldFood>capacity))
+      throw new Error('Invalid field provision allocation');
+    army.mobileFood=fieldFood===undefined ? Math.min(r.food,hostLoadTarget(s,army,p)) : fieldFood;r.food-=army.mobileFood;
     army.supply=capacity ? army.mobileFood/capacity*100 : 0;
     var muster=plan ? plan.muster : [{memberId:r.members[0].id,count:d.mobile.fighters}];
     muster.forEach(function (part) {
@@ -986,7 +1024,7 @@
         if (r.columns) M.columnSupplyDay(s,rid);
         else M.commit(s,M.supplyReview(s,rid,'recruit'));
       }
-      var need = (civilians(r) + reserve(r)) * p.foodPerPerson;
+      var need = campRation(civilians(r) + reserve(r),p);
       if (r.food < need) {
         var left = Math.min(civilians(r)+reserve(r), Math.ceil((need - r.food) / p.foodPerPerson * p.starvationShare)), lost = left;
         r.members.forEach(function (member) {

@@ -4077,3 +4077,7 @@ Koten under Guard is an always-open Story start with the original fixed identity
 Subordinate formation review
 
 The existing preparation card and shared review sheet explain that the direct holder authorizes local formation under the original sovereign, with consent separate from public funds. Original superior portrait rows retain the actual named people and explain their relationship without implying local consent. A current-authority blocker names direct holding, sovereign relationship and the exact living local authority or civil deputy. Existing cost, gift, consent and formation choices and shared Back, Escape, Close, focus and scroll behavior remain. No new navigation, sovereign spending option or private/public balance mirror is introduced.
+
+Preparation ration purchase review
+
+The existing story sheet identifies a target of 1-14 current ration days and its dependence on current conditions and ordinary carriage. Funding and formation reviews show total provisions, camp and field quantities, exact public training/provision costs and the separate private gift amount where applicable. Unavailable stock, price or carriage produces a blocker before funding. Formed status displays the historical bought quantity. The existing Back, Escape, focus and scroll restoration paths remain authoritative; no new screen, subtitle, delivery guarantee or separate account is introduced.

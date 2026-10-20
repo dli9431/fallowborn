@@ -454,3 +454,7 @@ Koten's scenario and sole family summary extend the literal startScenarios_1241 
 Subordinate formation presentation
 
 Direct-holder jurisdiction explanations, original-superior portrait labels and authority blockers use literal FB.T sources in js/story_expedition_preparation.js. Imported title/intro retain the existing effective English fallback. Realm/actor ids, original chain, appointment scope, generations, consent clocks and amounts remain locale-neutral; no rendered prose enters saves. Existing story navigation and shared monetary presentation remain authoritative. This capability changes no generated catalogue.
+
+Preparation ration target presentation
+
+Current target-day, total provision, camp/field quantity and carriage blocker phrases use literal FB.T calls with named numeric placeholders in js/story_expedition_preparation.js. Imported title and intro retain their effective English fallback. targetDays, unit ids, ration inputs, schema, account facts and original purchase receipts are untranslated data; no rendered text is saved. Shared story navigation and existing monetary formatting remain authoritative. No extraction namespace or generated catalogue change is needed.
