@@ -262,6 +262,45 @@ index.html loads data/bookmark_1066_inhabited.js after the shared wider declarat
 
 2.0 script distribution
 
-index.html loads every data script (89) and every engine script except js/ui_modals.js (107 of 108); ui_modals.js stays reachable through the inert hidden asset pointer, so deployment stamping and offline precache still include it. AGENTS.md lists the engine order exactly as index.html loads it. play.fallowborn.com copies the css, data, docs, js, mods, music and static folders whole and derives its versioned precache from index.html, language catalogs, sprite URLs and intro themes, so a new script needs only its index.html tag. The itch staging copies css, js, data, mods, docs and static whole from the working tree into a fresh staging folder, so removed files never linger, and refuses to stage while any untracked or ignored file sits in those folders or at the shipped root files. Track a new script before staging either target.
+index.html declares the ordered local data and engine inputs. js/ui_modals.js stays reachable through the inert hidden asset pointer, so deployment stamping and offline precache include the deferred modal script. Use the current index.html as the source of truth for script inventory and order. play.fallowborn.com copies the css, data, docs, js, mods, music and static folders whole and derives its versioned precache from index.html, language catalogs, sprite URLs and intro themes, so a new script needs only its index.html tag. The itch staging copies css, js, data, mods, docs and static whole from the working tree into a fresh staging folder, so removed files never linger, and refuses to stage while any untracked or ignored file sits in those folders or at the shipped root files. Track a new script before staging either target.
 
 tools/settlement_import.py fills only the shared base layouts declared in data/settlements.js (867, 1066 and 476). It refuses a date whose settlements are authored in its own data/bookmark_<id>*.js files (711, 800, 1204, 493) rather than filling it from the 867 fallback. tools/i18n_catalog.py reads the 1204 period kingdom names from FBDATA.bookmarkContent['1204'].kingdomNames and the transformation option names of forms declared outside data/political_institutions.js. tools/music_catalog.py validates selector syntax only and needs no date list.
+
+Spring 1241 assets
+
+The complete 1241 source set uses the existing data-directory shipping boundary. These date-owned classic scripts occur once each in index.html, in this relative order (shared and other date inputs occur between some entries):
+
+data/identities_1241.js
+data/bookmark_1241_scaffold_a.js
+data/bookmark_1241_scaffold_b.js
+data/bookmark_1241_scaffold_c.js
+data/bookmark_1241_scaffold_d.js
+data/bookmark_1241.js
+data/starts_1241.js
+data/starts_frederick_1241.js
+data/starts_kyiv_refugees_1241.js
+data/story_frederick_1241.js
+data/story_households_1241.js
+data/story_koten_1241.js
+data/story_kyiv_refugees_1241.js
+data/starts_novgorod_1241.js
+data/story_novgorod_1241.js
+data/starts_alexander_1241.js
+data/story_alexander_1241.js
+data/starts_silesia_1241.js
+data/story_silesia_1241.js
+data/story_ruler_agendas_1241.js
+data/bookmark_1241_frederick.js
+data/bookmark_1241_alexander.js
+data/bookmark_1241_operations.js
+data/bookmark_1241_core_starts.js
+
+The identity and regional declarations follow data/bookmark_1204_terrain.js. data/bookmark_1241.js composes them before data/communal_revisions.js and the government rollouts. The start declarations precede data/story_ruler_agendas_1241.js, which captures explicit offered-start lists for the baseline and royal_households_v2 revisions. A later start must reconcile every applicable revision's starts and startLocations; merely appending a scenario does not offer it. Koten is excluded from the earlier lists and added only by the core-starts composer.
+
+The dated story scripts append their instances after data/story_instances.js creates the shared catalogue. data/story_koten_1241.js follows data/story_households_1241.js. The final composer chain is data/story_ruler_agendas_1241.js, data/bookmark_1241_frederick.js, data/bookmark_1241_alexander.js, data/bookmark_1241_operations.js, then data/bookmark_1241_core_starts.js. Each successor consumes the prior effective world; reordering changes the copied people, layouts, offered starts or opening provenance. The fresh world is core_starts_v2 with operations_v2 as its opening setup identity. Earlier revisions remain available to matching saves.
+
+The shared engine order is js/mobile_confederations.js, js/mobile_command.js, js/mobile_columns.js, js/mobile_guard.js, js/mobile_camps.js, then js/expedition_programs.js. The story registry loads before its household, observer, ruler-agenda and opening-profile factories. js/main.js loads last, seals type registration, loads the bundled instances, applies stored mods through detached validation and seals the effective registry before world construction. Historical declarations stay in data; no date-specific engine or external asset is required.
+
+The normal itch staging includes these tracked scripts through the unchanged data/js folder allowlist. Its untracked-file guard must remain in place. The hosted Dockerfile copies the same folders and derives each script's versioned offline entry from the unstamped index.html, including scripts for retained revisions. Its worker installs only after the complete listed bundle is cached. Keep committed URLs query-free for file://; staged itch URLs use FB.VERSION and hosted URLs use the deployment fingerprint. An itch or file:// page does not register the play-origin worker. Runtime and offline acceptance require owner checks of the actual staged artifact.
+
+The 1241 content uses the normal distribution flags, storage, language and music behavior. CrazyGames packaging and acceptance for this date are separate from this standard-distribution reference. Public historical evidence, reconstruction limits, current starts and retained revision semantics are recorded in docs/research/1241-bookmark.md and docs/designs/bookmarks.md. Visibility and release acceptance remain separate from asset inclusion.
