@@ -458,3 +458,7 @@ Direct-holder jurisdiction explanations, original-superior portrait labels and a
 Revision-scoped start tracks
 
 startTrackOverrides contains stable scenario, story and county ids only. It introduces no localizable display field or saved rendered text. Picker cards and story sheets retain their existing scenario/story display owners, literal UI translations and imported English fallback. No catalogue command or generated translation change is needed for the resolver itself.
+
+Preparation ration target presentation
+
+Current target-day, total provision, camp/field quantity and carriage blocker phrases use literal FB.T calls with named numeric placeholders in js/story_expedition_preparation.js. Imported title and intro retain their effective English fallback. targetDays, unit ids, ration inputs, schema, account facts and original purchase receipts are untranslated data; no rendered text is saved. Shared story navigation and existing monetary formatting remain authoritative. No extraction namespace or generated catalogue change is needed.

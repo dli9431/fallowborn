@@ -4081,3 +4081,7 @@ The existing preparation card and shared review sheet explain that the direct ho
 Revision-scoped start tracks
 
 Story grouping and birthplace preselection read the same effective startTrackOverrides entry as start-code and direct creation eligibility. A fixed household must still have a storyline at its actual home. Existing scenario cards, family choices, character summary, Back/Escape, focus and scroll behavior remain shared. No new navigation, metadata labels, declaration ids or subtitle text is introduced; current story sheets remain responsible for their own decisions and costs.
+
+Preparation ration purchase review
+
+The existing story sheet identifies a target of 1-14 current ration days and its dependence on current conditions and ordinary carriage. Funding and formation reviews show total provisions, camp and field quantities, exact public training/provision costs and the separate private gift amount where applicable. Unavailable stock, price or carriage produces a blocker before funding. Formed status displays the historical bought quantity. The existing Back, Escape, focus and scroll restoration paths remain authoritative; no new screen, subtitle, delivery guarantee or separate account is introduced.
