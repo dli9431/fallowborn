@@ -1,0 +1,32 @@
+[
+  {
+    "id":"large",
+    "fighters":240,
+    "civilians":360,
+    "fieldOrigin":"cologne",
+    "campOrigin":"cologne",
+    "waypoints":["regensburg","wien","sirmium","serdica","philippopolis","adrianople","constantinople"],
+    "price":2,
+    "capacity":600,
+    "duration":1080,
+    "horizon":1440,
+    "treasury":180,
+    "rationDays":14,
+    "policies":{"territorial":{"schema":1,"response":"accept"},"administrative_monarchy":{"schema":1,"response":"accept"}}
+  },
+  {
+    "id":"small",
+    "fighters":160,
+    "civilians":160,
+    "fieldOrigin":"cologne",
+    "campOrigin":"cologne",
+    "waypoints":["regensburg","wien","sirmium","serdica","philippopolis","adrianople","constantinople"],
+    "price":3,
+    "capacity":320,
+    "duration":720,
+    "horizon":1440,
+    "treasury":120,
+    "rationDays":14,
+    "policies":{"territorial":{"schema":1,"response":"accept"},"administrative_monarchy":{"schema":1,"response":"accept"}}
+  }
+]
