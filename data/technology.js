@@ -111,6 +111,7 @@ window.FBDATA = window.FBDATA || {};
   FBDATA.techImpactReviews = {
     baselineVersion:'1.127.1',
     features:{
+      expedition_local_passage_policy:{ mode:'none', rationale:'Outside willingness to review local passage is political policy, not a discovery. Actual government consent, original authority, finite capacity and payment remain binding; equipment, supply and physical movement retain their independent gates.' },
       adopted_dynastic_public_treasury:{ mode:'none', rationale:'Preserving an existing public account through ordinary ruler adoption is accounting and identity continuity. Household money stays private; government, military, market and construction gates retain their existing requirements.' },
       expedition_subordinate_formation_authority:{ mode:'none', rationale:'Exact direct-holder authority under an existing sovereign is political jurisdiction. Consent, command, funding, unit and finite resource gates remain authoritative.' },
       expedition_preparation_ration_target:{ mode:'none', rationale:'A finite purchase target uses existing people and current camp and field consumption. Supply technology still changes field use; ordinary unit, authority, funding, stock and carriage gates remain.' },

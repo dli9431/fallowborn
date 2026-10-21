@@ -78,6 +78,7 @@
      Absent fields stay valid; present ids must resolve. */
   P.validatePlatform = function (state) {
     if (FB.homeAuthority) FB.homeAuthority.validate(state);
+    if (FB.expeditionPrograms) FB.expeditionPrograms.validatePassagePolicies(state);
     if (FB.treasuryValidatePreservation) FB.treasuryValidatePreservation(state);
     if (state.treasuryAccounting && own(state.treasuryAccounting, 'fundingRevision') &&
         (!Number.isSafeInteger(state.treasuryAccounting.fundingRevision) || state.treasuryAccounting.fundingRevision < 0))

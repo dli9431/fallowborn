@@ -34,7 +34,7 @@ window.FB = window.FB || {};
      Missing saved stamps select baseline, never the latest fresh campaign. */
   var REVISION_FIELDS = ['geography','opening','openingRevision','provinces','realms',
     'duchies','kingdoms','empires','straits','crossingClasses','localInstitutions',
-    'settlementLayout','climate','religiousHeads','starts','stories','storyRegions','scripted','homeAuthorityPolicies',
+    'settlementLayout','climate','religiousHeads','starts','stories','storyRegions','scripted','homeAuthorityPolicies','localPassagePolicies',
     'openingRevisions','openingLegacyRevision','startLocations','startTrackOverrides','openingInfrastructure','siteResourceAssignments',
     'buildingInstitutionAssignments','buildingOperationAssignments','productionSites','productionExchangeAssignments','productionProducerAssignments','buildingSeasonAssignments','maritimeWorkAssignments','relayServiceAssignments'];
   function resolveBookmarkRevision(base, revision) {
@@ -1680,6 +1680,7 @@ window.FB = window.FB || {};
     var platform = FB.resolveBookmarkPlatform(definition);
     for (var pf = 0; pf < platform.faults.length; pf++) fault(platform.faults[pf]);
     if (FB.homeAuthority) FB.homeAuthority.definitionFaults(definition).forEach(fault);
+    if (FB.expeditionPrograms) FB.expeditionPrograms.passagePolicyFaults(definition).forEach(fault);
     if (FB.treasuryDefinitionFaults) FB.treasuryDefinitionFaults(definition).forEach(fault);
     FB.bookmarkRequirementFaults(definition, platform, stories).forEach(fault);
     FB.validateClimateData().forEach(fault);
@@ -3309,6 +3310,7 @@ window.FB = window.FB || {};
     FB.restoreWastelandSettlements(state);
     const defaultForm = stampCampaign(state);
     if (FB.homeAuthority) FB.homeAuthority.initialize(state);
+    if (FB.expeditionPrograms) FB.expeditionPrograms.initializePassagePolicies(state);
     const forms = {};
     // authored realms (kings, emperors, independent dukes, authored vassals)
     for (const r of FBDATA.realms) {
