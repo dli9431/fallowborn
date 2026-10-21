@@ -263,6 +263,7 @@
           var a=e.d.mobile.expeditionProgram.steps[i],status={pending:FB.T('Pending'),complete:FB.T('Completed'),cancelled:FB.T('Cancelled'),expired:FB.T('Expired')};
           lines.push(FB.T('Step {number}: {status}. Observed waypoints: {count}.',{number:i+1,status:status[step.status],count:step.cursor}));
           if (a.adapter==='holy_objective') lines.push(FB.T('The current religious objective requires separate voluntary admission and the actual field host.'));
+          if (a.adapter==='local_access') lines.push(FB.T('Local passage requires separate outside consent and payment. Refused or expired requests are not renewed.'));
         });
         return {phase:v.status,name:FB.T(def.title),lines:lines};
       },people:function (s,t) {return [{characterId:t.actorId,label:FB.T('Original commander'),
@@ -300,13 +301,26 @@
         return reasons[reason] || FB.T('Review the original command, consent, current resources, opportunity window and this day’s remaining program action.');
       },
       review:function (s,t,id,q) {
+        var e=entry(s,def.id),r=M.row(s,def.realmId);
         if (q.operation && q.operation.kind==='preparation') return FB.stories.get(def.preparationId).review(s,
           s.stories[def.preparationId],id,q.operation.review);
         var operation=q.operation && q.operation.kind==='step' && q.operation.review.operation,
           cost=operation ? operation.review.cost || 0 : 0;
-        return [FB.T('Current public operation cost: {cost}.',{cost:cost}),
+        var lines=[FB.T('Current public operation cost: {cost}.',{cost:cost}),
           FB.T('One current program action may be attempted per day. Review changes no resources.'),
           FB.T('The underlying operation retains its actual public costs and access requirements. Vows, service and the civilian camp remain independent.')];
+        var step=q.stepId && e.d.mobile.expeditionProgram.steps.filter(function (a) {return a.id===q.stepId;})[0];
+        if (step && step.adapter==='local_access') {
+          lines.push(FB.T('Requested counties: {places}. Payment per accepted request: {cost}. Capacity: {capacity}. Term: {days} days.',{
+            places:step.terms.countyIds.map(function (pid) {return FB.world.byId[pid].name;}).join(', '),
+            cost:step.terms.price,capacity:step.terms.capacity,days:step.terms.duration}));
+          (r && r.agreements || []).filter(function (a) {return a.accessOrigin && a.programStepId===step.id;}).forEach(function (a) {
+            lines.push(FB.T('Original outside ruler: {name}. Current permission: {status}.',{
+              name:s.chars[a.accessOrigin.chain[0].personId].name,status:M.provisioningAccess(s,e.def.realmId,a.countyIds[0]) ?
+                FB.T('Active') : a.status==='offered' ? FB.T('Awaiting outside consent') : FB.T('Ended')}));
+          });
+        }
+        return lines;
       }};
   }
   FB.stories.registerType(TYPE,factory,'js/story_expedition_program.js',check);

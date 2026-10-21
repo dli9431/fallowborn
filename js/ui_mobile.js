@@ -126,7 +126,7 @@
     });
     function add(label,action,terms,details,columnReview,campReview) {
       var transition=action==='appoint' || action==='recall';
-      var permission=action==='load' || action==='unload' ? 'trade' : action;
+      var permission=action==='load' || action==='unload' ? 'trade' : action==='decline' ? 'accept' : action;
       if (r.command && !transition && command.operations.indexOf(permission)<0) return;
       if (r.command && !campReview && ['offer','war','peace','land','contract','settle','service'].indexOf(action)>=0) {
         label=action==='offer' ? terms.kind==='access' ? FB.T('Offer seasonal access') : terms.kind==='tribute' ? FB.T('Offer tribute') : FB.T('Offer protection service') :
@@ -311,6 +311,8 @@
     r.agreements.forEach(function (a) {
       membership += SH.reviewFactsCard(FB.T('Outside agreement'),termsHtml(s,a)+kv(FB.T('Status'),a.status==='active' ? FB.T('Active') : a.status==='offered' ? FB.T('Awaiting outside consent') : FB.T('Ended')));
       if (a.status==='offered') add(FB.T('Accept as the outside court'),'accept',{agreementId:a.id},FB.T('Only the actual outside ruler can accept. Current ownership, capacity, rulers and funds are checked again.'));
+      if (a.status==='offered' && a.accessOrigin) add(FB.T('Decline as the outside court'),'decline',{agreementId:a.id},
+        FB.T('Only the original outside ruler can decline this request. No payment or passage is granted, and the program will not ask a replacement ruler.'));
       if(a.kind==='protection' && a.status==='active') FB.realmWars(s,a.partnerId).forEach(function (war) {
         add(FB.T('Fulfil protection service'),'service',{agreementId:a.id,warId:war.id},FB.T('The existing host joins an ordinary defensive campaign. No troops are created or drawn from the protected county.'));
       });

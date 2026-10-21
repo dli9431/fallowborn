@@ -465,3 +465,7 @@ Current target-day, total provision, camp/field quantity and carriage blocker ph
 Expedition presentation tables
 
 Literal FBDATA.storyExpeditions_<suffix> tables in data/story_*.js expose title, intro, name and desc through static extraction. The expeditionStory owner retains each source field and exact-English alias, supporting both the shared FB.T sheets and records-review dataText fallback. References, commands, provisions and other operational fields are not display text. Extraction never executes the data file. Independent source coverage is in tools/test_i18n_expedition_tables.py.
+
+Finite local access presentation
+
+The local_access adapter and accessOrigin receipts store only protocol ids, original people, generations and numeric terms. The existing mobile and expedition story sheets use literal FB.T phrases for separate outside refusal, requested county scope, per-request cost, finite capacity/term and original outside ruler status. Actual county and person names are arguments; decision prose is never persisted. Imported program titles/introductions retain ordinary English fallback. No generated catalogue command accompanies the feature.
