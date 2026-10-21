@@ -86,6 +86,8 @@
     rationale:'Bounded intent and pure reviews depend on actual command, living consent and existing resources. Canonical route, equipment, supply and war technology requirements remain binding; ordinary manual operations remain available.'};
   FBDATA.techImpactReviews.features.expedition_program_dispatch = {mode:'none',
     rationale:'Executing finite intent depends on the current mandate, consent, actual hosts and conserved public resources. Every canonical movement, supply, equipment and war gate remains binding; manual operations need no program.'};
+  FBDATA.techImpactReviews.features.expedition_local_access = {mode:'none',
+    rationale:'Requesting finite local passage and separately answering it depend on original living authority, current direct control, consent and actual payment. No discovery substitutes for permission; ordinary manual negotiations and all movement and supply gates remain available.'};
   FBDATA.techImpactReviews.features.expedition_program_control = {mode:'none',
     rationale:'Pausing, cancelling and selecting an eligible declared alternative depend on living command authority. Political intent has no credible discovery prerequisite and grants no route, money, outside acceptance or outcome.'};
   FBDATA.techImpactReviews.features.expedition_live_religious_objective = {mode:'none',
