@@ -24,6 +24,46 @@
   function declaration(s,rid) {
     return (FB.campaignBookmark(s).realms || []).filter(function (d) {return d.id===rid;})[0] || null;
   }
+  E.passagePolicyFaults=function (bookmark) {
+    var policies=bookmark && bookmark.localPassagePolicies;
+    if (policies===undefined) return [];
+    if (!policies || typeof policies!=='object' || Array.isArray(policies) ||
+        !Object.keys(policies).length || Object.keys(policies).length>64 || Object.keys(policies).some(function (fid) {
+          var p=policies[fid];
+          return !own(FBDATA.governmentForms,fid) || !keys(p,['schema','response']) || p.schema!==1 ||
+            ['accept','decline'].indexOf(p.response)<0;
+        })) return [FB.T('Invalid local passage policies.')];
+    return [];
+  };
+  E.resolvePassagePolicy=function (bookmark,formId) {
+    var policies=bookmark && bookmark.localPassagePolicies;
+    return own(policies,formId) ? policies[formId].response : null;
+  };
+  function policyTerms(policies) {
+    return policies===undefined ? null : Object.keys(policies).sort().map(function (fid) {
+      return [fid,policies[fid].schema,policies[fid].response];
+    });
+  }
+  E.validatePassagePolicies=function (s) {
+    var bm=FB.campaignBookmark(s),policies=bm && bm.localPassagePolicies,saved=s.localPassagePolicies;
+    if (E.passagePolicyFaults(bm).length || (policies===undefined ? saved!==undefined :
+        !keys(saved,['schema','policies']) || saved.schema!==1 || saved.policies===undefined ||
+        E.passagePolicyFaults({localPassagePolicies:saved.policies}).length ||
+        JSON.stringify(policyTerms(policies))!==JSON.stringify(policyTerms(saved.policies))))
+      throw new Error(FB.T('Invalid saved local passage policy provenance.'));
+    return true;
+  };
+  E.initializePassagePolicies=function (s) {
+    var bm=FB.campaignBookmark(s);
+    if (E.passagePolicyFaults(bm).length) throw new Error(FB.T('Invalid local passage policies.'));
+    if (bm && bm.localPassagePolicies!==undefined && s.localPassagePolicies===undefined)
+      s.localPassagePolicies={schema:1,policies:copy(bm.localPassagePolicies)};
+    E.validatePassagePolicies(s);
+  };
+  function passagePolicy(s,rid) {
+    var form=FB.governments.forRealm(s,rid);
+    return form ? {formId:form.id,response:E.resolvePassagePolicy(FB.campaignBookmark(s),form.id)} : null;
+  }
   function specification(s,rid) {var d=declaration(s,rid);return d && d.mobile && d.mobile.expeditionProgram;}
   function canonical(c,action,terms) {
     var request={realmId:c.rid,action:action,terms:terms,actor:c.actor};
@@ -118,14 +158,22 @@
           a.countyIds.indexOf(terms.countyIds[0])>=0;})) return null;
     var chain=authority(s,terms.countyIds[0]);
     if (!chain || chain[0].courtId!==terms.partnerId || terms.partnerId===rid) return null;
-    return {schema:1,programId:specification(s,rid).id,stepId:step.id,offeredTurn:s.turn,commanderId:leader.id,
+    var origin={schema:1,programId:specification(s,rid).id,stepId:step.id,offeredTurn:s.turn,commanderId:leader.id,
       commandGeneration:r.command.leaderGeneration,chain:chain};
+    if (FB.campaignBookmark(s).localPassagePolicies!==undefined) {
+      origin.schema=2;origin.passagePolicy=passagePolicy(s,terms.partnerId);
+      if (!origin.passagePolicy) return null;
+    }
+    return origin;
   };
   E.accessCurrent=function (s,rid,a) {
     if (!a.accessOrigin) return true;
-    var o=a.accessOrigin,r=M.row(s,rid),leader=M.leader(s,rid),chain=authority(s,a.countyIds[0]);
+    var o=a.accessOrigin,r=M.row(s,rid),leader=M.leader(s,rid),chain=authority(s,a.countyIds[0]),
+      opted=FB.campaignBookmark(s).localPassagePolicies!==undefined,policy=opted && passagePolicy(s,a.partnerId);
     return !!(r && leader && leader.id===o.commanderId && alive(s,leader) && M.commandValid(s,rid) &&
-      r.command.leaderGeneration===o.commandGeneration && chain && JSON.stringify(chain)===JSON.stringify(o.chain));
+      r.command.leaderGeneration===o.commandGeneration && chain && JSON.stringify(chain)===JSON.stringify(o.chain) &&
+      (o.schema===1 ? !opted : o.schema===2 && policy && o.passagePolicy &&
+        policy.formId===o.passagePolicy.formId && policy.response===o.passagePolicy.response));
   };
   register('local_access',function (t,c) {
     return !c.mobile.columns && !c.mobile.civilianCamps &&
@@ -147,7 +195,8 @@
         if (a.status!=='offered') return {observation:'unavailable',operation:null};
         var partner=c.s.chars[a.accessOrigin.chain[0].personId],form=FB.governments.forRealm(c.s,a.partnerId);
         if (!partner || partner.id===c.s.player.charId || !form) return {observation:'outside_consent',operation:null};
-        var action=form.use.ai.canNegotiate(c.s,a.partnerId,{}) ? 'accept' : 'decline';
+        var response=E.resolvePassagePolicy(FB.campaignBookmark(c.s),form.id);
+        var action=response===null ? (form.use.ai.canNegotiate(c.s,a.partnerId,{}) ? 'accept' : 'decline') : response;
         return {observation:'outside_consent',operation:M.review(c.s,{realmId:c.rid,action:action,
           actor:{kind:'realm',id:a.partnerId},terms:{agreementId:a.id}})};
       }
@@ -287,8 +336,14 @@
     return r.agreements.every(function (a) {
       if (a.accessOrigin===undefined && a.programStepId===undefined) return true;
       var o=a.accessOrigin,step=accessStep(s,rid,a.programStepId),pid=a.countyIds && a.countyIds[0];
-      if (!step || !p || !keys(o,['schema','programId','stepId','offeredTurn','commanderId','commandGeneration','chain']) ||
-          o.schema!==1 || o.programId!==p.id || o.stepId!==step.id || a.kind!=='access' || a.levy!==0 ||
+      var opted=FB.campaignBookmark(s).localPassagePolicies!==undefined;
+      if (!step || !p || !keys(o,opted ?
+          ['schema','programId','stepId','offeredTurn','commanderId','commandGeneration','chain','passagePolicy'] :
+          ['schema','programId','stepId','offeredTurn','commanderId','commandGeneration','chain']) ||
+          o.schema!==(opted ? 2 : 1) || opted && (!keys(o.passagePolicy,['formId','response']) ||
+            !own(FBDATA.governmentForms,o.passagePolicy.formId) ||
+            o.passagePolicy.response!==E.resolvePassagePolicy(FB.campaignBookmark(s),o.passagePolicy.formId)) ||
+          o.programId!==p.id || o.stepId!==step.id || a.kind!=='access' || a.levy!==0 ||
           a.countyIds.length!==1 || step.terms.countyIds.indexOf(pid)<0 || used[pid] ||
           ['capacity','allowRecruit','price','duration'].some(function (k) {return a[k]!==step.terms[k];}) ||
           !integer(o.offeredTurn,1439) || o.offeredTurn>s.turn || o.offeredTurn<step.window.startTurn ||
@@ -308,6 +363,7 @@
     });
   }
   M.validate=function (s) {
+    E.validatePassagePolicies(s);
     validate(s);
     var bm=FB.campaignBookmark(s);
     Object.keys(s.authority && s.authority.governments || {}).forEach(function (rid) {

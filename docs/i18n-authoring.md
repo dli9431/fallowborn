@@ -475,3 +475,7 @@ The local_access adapter and accessOrigin receipts store only protocol ids, orig
 Local following selection chrome
 
 Local followings, Following unavailable, camp-location notes and target labels use literal FB.T phrases in js/ui_mobile.js. Following names remain the existing declared realm names; ids, selected targets, accounts and current review stamps are locale-neutral. The shared cards retain keyboard focus, native input labels and compact Details disclosure. No rendered text is saved, no new display table is introduced and no catalogue regeneration is required for this navigation fix.
+
+Outside passage policy provenance
+
+localPassagePolicies and accessOrigin.passagePolicy store only protocol ids, numeric schema and accept/decline/null response tokens. Invalid local passage policies and invalid saved policy provenance use literal FB.T strings in js/expedition_programs.js. Existing source-sheet consent, payment, scope and status phrases remain with their current UI owners; no rendered prose enters a save and no new display catalogue or regeneration is required.
