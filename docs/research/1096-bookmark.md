@@ -1,5 +1,9 @@
 Spring 1096 bookmark
 
+Fresh western formation revision
+
+The baseline descriptions below retain their original scope. New campaigns additionally compose western_expeditions_v1 with optional unformed western commands, separately funded preparation, finite local staging roads and Raymond's distinct records review. Earlier worlds and saved campaigns retain their own people, accounts and attachments. The implemented simulation terms, historical attribution and unsupported onward crossings are documented in docs/research/western-expeditions-1096.md.
+
 Matilda of Canossa
 
 matilda_1096 adopts the one existing female ruler of canossa_1096, born 1046 (game age 50). The integer birth is a simulation choice within the scholarly 1045-1046 interval. The realm's five counties, modena, firenze, pisa, siena and lucca, are an accepted county-scale abstraction of her march and estates. They do not establish exclusive ownership of every church or urban holding. The territorial form and rank-2 government supply ordinary duke-station play, without an imposed imperial liege or a new legal investiture.

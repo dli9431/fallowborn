@@ -7,6 +7,7 @@ const {dependsOnRuntime}=require('../support/runtime-dependencies');
 
 dependsOnRuntime(__filename,[
   'index.html','data/expeditions_1096.js','data/bookmark_1096.js',
+  'data/bookmark_1096_western_expeditions.js','data/story_western_rulers_1096.js',
   'data/bookmark_1096_scaffold_a.js','data/bookmark_1096_scaffold_b.js',
   'data/bookmark_1096_scaffold_c.js','data/bookmark_1096_scaffold_d.js',
   'data/identities_1096.js','data/institutions_1096.js','data/mobile_confederations.js',
@@ -20,37 +21,35 @@ dependsOnRuntime(__filename,[
   'js/save.js','js/save_v4.js','js/main.js'
 ]);
 
-test('the accepted historical batch adds no phantom expedition, duplicate commander or admission',async function ({page},info) {
+test('western formations begin as finite preparations without a host or duplicate home ruler',async function ({page},info) {
   await beginBookmark(page,info,'1096','pilgrim_household_1096');
   const facts=await page.evaluate(function () {
-    const s=FB.state,b=FB.campaignBookmark(s),types=['expedition_preparation','expedition_program','expedition_participation'];
-    return {batch:FBDATA.storyExpeditions1096,valid:FB.validateBookmark(b),
-      commands:b.realms.filter(function (d) {return !!d.mobile;}).map(function (d) {return d.id;}),
-      attached:(b.stories || []).filter(function (id) {return types.indexOf(FBDATA.storyInstances[id].type)>=0;}),
-      openingActors:Object.keys(b.opening.actors),openingMigrations:b.opening.migrations,
-      records:Object.keys(s.stories).filter(function (id) {
-        return FBDATA.storyInstances[id] && types.indexOf(FBDATA.storyInstances[id].type)>=0;
-      }),armies:s.armies.filter(function (a) {
-        return /(?:peter|walter|godfrey|raymond|bohemond|emicho|folcmar|gottschalk)/.test(a.realm);
-      }).length,home:s.player.provinceId};
+    const s=FB.state,b=FB.campaignBookmark(s),prefixes=['godfrey','raymond','bohemond'];
+    return {valid:FB.validateBookmark(b),rows:prefixes.map(function (prefix) {
+      const rid=prefix+'_host_1096',id=prefix+'_preparation_1096',t=s.stories[id],actor=t.bindings[0].characterId,
+        home=prefix==='godfrey' ? 'lower_lotharingia_1096' : prefix==='raymond' ? 'toulouse_1096' : 'bohemond_lordships_1096';
+      return {declared:b.realms.some(function (d) {return d.id===rid;}),status:t.status,
+        program:s.stories[prefix+'_program_1096'].status,
+        one:actor===FB.realmRulerCharacterSnapshot(s,home).id,
+        empty:!FB.mobile.row(s,rid) && !FB.mobile.host(s,rid) && FB.treasuryAvailable(s,rid)===0,
+        army:s.armies.some(function (a) {return a.realm===rid;})};
+    }),home:s.player.provinceId};
   });
-  expect(facts).toEqual({batch:{},valid:[],commands:[],attached:[],openingActors:[],openingMigrations:[],
-    records:[],armies:0,home:'cologne'});
+  expect(facts).toEqual({valid:[],rows:Array(3).fill({declared:true,status:'preparing',program:'preparing',one:true,empty:true,army:false}),home:'cologne'});
 });
 
-test('later review dates cannot form or dispatch held northern, sea or Asian crossings',async function ({page},info) {
+test('later dates alone cannot fund western formations or dispatch a road or sea crossing',async function ({page},info) {
   await beginBookmark(page,info,'1096','pilgrim_household_1096');
   const results=await page.evaluate(function () {
     const base=FB.state,rng=FB.getRngState(),uid=FB.getUidCounter();
-    // These are rejected candidate addresses, never declarations or historical route evidence.
-    const ids=['peter_following_1096','walter_following_1096','godfrey_host_1096',
-      'raymond_host_1096','bohemond_host_1096','folcmar_group_1096','gottschalk_group_1096','emicho_group_1096'];
+    const ids=['godfrey','raymond','bohemond'];
     return [42,75,210,359,360].map(function (turn) {
       const s=JSON.parse(JSON.stringify(base));s.date=FB.dateAtTurn(s,turn);s.turn=turn;
       const before=JSON.stringify(s);
       const rejected=ids.every(function (id) {
-        const formation=FB.expeditionPreparation.review(s,id+'_preparation','form',s.player.charId);
-        const route=FB.expeditionPrograms.review(s,id,'crossing');
+        const actor=s.stories[id+'_preparation_1096'].bindings[0].characterId,
+          formation=FB.expeditionPreparation.review(s,id+'_preparation_1096','form',actor),
+          route=FB.expeditionPrograms.review(s,id+'_host_1096','first_leg');
         return !formation.allowed && !FB.expeditionPreparation.commit(s,formation) &&
           !route.allowed && !FB.expeditionPrograms.commit(s,route);
       });
@@ -61,7 +60,7 @@ test('later review dates cannot form or dispatch held northern, sea or Asian cro
   expect(results).toEqual(Array(5).fill(true));
 });
 
-test('matching historical restore retains people, accounts and absent formation at a later boundary',async function ({page},info) {
+test('matching historical restore retains people, accounts and unformed sources at a later boundary',async function ({page},info) {
   await beginBookmark(page,info,'1096','pilgrim_household_1096');
   const result=await page.evaluate(function () {
     const s=FB.state;s.date=FB.dateAtTurn(s,210);s.turn=210;
@@ -79,7 +78,7 @@ test('matching historical restore retains people, accounts and absent formation 
 });
 
 // Complete fictional imports prove the shared owners remain usable with this loaded batch.
-// They do not clear any historical person, formation-source, road, port or riverbank hold.
+// They establish the generic owners independently of the dated declarations.
 async function imported(page,info,label) {
   await openGame(page,info);
   await page.evaluate(function () {FB.ui.showMods();});

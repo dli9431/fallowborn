@@ -78,6 +78,8 @@ Files named data/story_*.js may declare literal FBDATA.rulerAgendas_<suffix> map
 
 Bohemond’s scenario, family-preset and opening text remain in startScenarios_western_rulers_1096. His stages and goal/contact text extend the same literal western agenda and opening-profile tables, using the existing scenario, rulerAgenda and openingProfile display owners. The proper name, working year, physical ids and saved choices remain locale-neutral.
 
+The same source declares literal storyExpeditions_western_1096 for the three optional formation/road pairs and Raymond's distinct records review. Their title/intro and name/desc use expeditionStory owners and exact-source aliases. data/bookmark_1096_western_expeditions.js keeps following names in the literal bookmarkRevisionContent_1096_western table for revision-owned realm labels. Profile quantities, original actor references, account options, route terms and saved identities remain locale-neutral. Source composition introduces no new extractor or generated catalogue.
+
 Local institutional presentation
 
 Institution ids, sites, demands, consent rights, stages, actor references and ballots remain locale-neutral. Physical city and historical person names are proper names. FB.localInstitutionName supplies literal FB.T patterns for each kind, and the Deeds registry owns the section labels. UI term, demand and stage labels use literal FB.T phrases. New county modifier names and descriptions use the existing modifier extraction route; durable outcomes use news.institution.bargain descriptors. No catalogue regeneration is needed on the feature branch.

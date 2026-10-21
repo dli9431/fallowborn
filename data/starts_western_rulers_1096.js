@@ -12,7 +12,7 @@ FBDATA.startScenarios_western_rulers_1096 = [
     tracks:['godfrey_agenda_1096','opening_godfrey_1096'],
     trackLocations:{ godfrey_agenda_1096:['verdun'], opening_godfrey_1096:['verdun'] },
     onboarding:'ruler',
-    intro:'You are Godfrey of Bouillon. Your ducal office and Bouillon property are represented by the Verdun holding; the title does not give you Liège or its church property. Review your home government in Deeds. You may remain at home or use ordinary personal travel. Planning a journey creates no expedition command, vow or sale of Bouillon.' },
+    intro:'You are Godfrey of Bouillon. Your ducal office and Bouillon property are represented by the Verdun holding; the title does not give you Liège or its church property. Review home government and personal priorities in Deeds. When the separate formation and road cards are present, inspect their current costs and consent. Public grants and private gifts remain separate. Staying or ordinary personal travel remains available; planning creates no command, vow or sale of Bouillon.' },
   { id:'raymond_1096', bookmarkIds:['1096'], alwaysUnlocked:true,
     rulerRealmId:'toulouse_1096', governmentForm:'territorial', fixedProvinceId:'toulouse',
     characterName:'Raymond IV', sex:'m', startCulture:'occitan', startReligion:'catholic',
@@ -23,7 +23,7 @@ FBDATA.startScenarios_western_rulers_1096 = [
     tracks:['raymond_agenda_1096','opening_raymond_1096'],
     trackLocations:{ raymond_agenda_1096:['toulouse'], opening_raymond_1096:['toulouse'] },
     onboarding:'ruler',
-    intro:'You are Raymond of Toulouse. Toulouse is your chosen home anchor, with the current holdings represented at county scale. Elvira and Bertrand are distinct people, and Bertrand has no automatic deputy mandate. Review government and household priorities in Deeds. Ordinary travel, diplomacy and war keep their actual costs and restrictions; this opening grants no future Syrian territory.' },
+    intro:'You are Raymond of Toulouse. Toulouse is your chosen home anchor, with the current holdings represented at county scale. Elvira and Bertrand are distinct people, and Bertrand has no automatic deputy mandate. Review government and household priorities in Deeds. Separate formation, road and limited-assurance cards, when present, own their actual decisions. A record of an assurance grants no safety, passage or homage. Ordinary travel, diplomacy and war retain their costs; no future Syrian territory is supplied.' },
   { id:'bohemond_1096', bookmarkIds:['1096'], alwaysUnlocked:true,
     rulerRealmId:'bohemond_lordships_1096', governmentForm:'territorial', fixedProvinceId:'taranto',
     characterName:'Bohemond', sex:'m', startCulture:'norman', startReligion:'catholic',
@@ -34,7 +34,7 @@ FBDATA.startScenarios_western_rulers_1096 = [
     tracks:['bohemond_agenda_1096','opening_bohemond_1096'],
     trackLocations:{ bohemond_agenda_1096:['taranto'], opening_bohemond_1096:['taranto'] },
     onboarding:'ruler',
-    intro:'You are Bohemond, holding the existing Apulian lordships represented at county scale. Taranto is your chosen home anchor. Review current government in Deeds, remain at home or consider ordinary personal travel. Your local office grants neither the whole duchy of Apulia nor a formal Taranto principality. Any journey keeps its actual costs and restrictions.' }
+    intro:'You are Bohemond, holding the existing Apulian lordships represented at county scale. Taranto is your chosen home anchor. Review current government and personal priorities in Deeds, remain at home or consider ordinary travel. Separate formation and road cards, when present, require real authorization, funding and supplies. Your local office grants neither the whole duchy of Apulia nor a formal Taranto principality. A coastal staging road supplies no ship, crossing, supreme command or Antioch possession.' }
 ];
 Array.prototype.push.apply(FBDATA.startScenarios, FBDATA.startScenarios_western_rulers_1096);
 FBDATA.bookmarks['1096'].startLocations.godfrey_1096 = ['verdun'];
