@@ -4085,3 +4085,8 @@ Story grouping and birthplace preselection read the same effective startTrackOve
 Preparation ration purchase review
 
 The existing story sheet identifies a target of 1-14 current ration days and its dependence on current conditions and ordinary carriage. Funding and formation reviews show total provisions, camp and field quantities, exact public training/provision costs and the separate private gift amount where applicable. Unavailable stock, price or carriage produces a blocker before funding. Formed status displays the historical bought quantity. The existing Back, Escape, focus and scroll restoration paths remain authoritative; no new screen, subtitle, delivery guarantee or separate account is introduced.
+
+
+Selecting local followings
+
+The Mobile coalition deed opens a named Local followings list when more than one following is eligible. One eligible following still opens its source sheet directly. The list uses the existing local-camp or member-principal rule and shared action cards; each source sheet and confirmation names its exact following. Funding retains separate private and public payers, and outside acceptance remains the actual ruler’s independent decision. A stale list row or confirmation cannot substitute another target, transfer money or acquire remote access. Back, Escape, browser Back, outcome Continue and Close preserve the selected following, controls, Details, originating focus and list scroll. Refreshed modal parents recover their own Back renderer and browser layer identity, allowing a second Back to reach the retained selector instead of replaying the confirmation’s return route.

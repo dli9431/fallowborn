@@ -4240,7 +4240,7 @@ window.FB = window.FB || {};
       s.player.liege || s.holder && s.holder[s.player.provinceId]); } },
   { id:'mobile_coalition', opensChoices:true, noConsume:true,
     show:function (s) { return !!(FB.mobile && FB.mobile.localRealm(s)); },
-    run:function (s) { if (FB.ui && FB.ui.showMobileConfederation) FB.ui.showMobileConfederation(FB.mobile.localRealm(s)); } },
+    run:function (s) { if (FB.ui && FB.ui.showMobileFollowings) FB.ui.showMobileFollowings(); } },
   { id:'ecclesiastical_government', opensChoices:true, noConsume:true,
     show:function (s) { var E = FB.ecclesiasticalGovernment,rid = s.player.liege || s.holder[s.player.provinceId];
       return !!(E && (E.localRealm(s) || E.conversionBindings && E.conversionBindings(s,rid).length)); },

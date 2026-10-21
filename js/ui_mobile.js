@@ -66,16 +66,48 @@
     return q.path && q.stop!==undefined ? kv(FB.T('Reviewed route'),q.path.length ? q.path.map(county).join(', ') : FB.T('Remain at the current location'))+
       kv(FB.T('Route ends at'),county(q.stop))+kv(FB.T('Travel time'),FB.T('{days} days',{days:q.days})) : '';
   }
+  function currentFollowing(s,rid,row,migration,at) {
+    return s === FB.state && M.localRealms(s).indexOf(rid) >= 0 &&
+      M.row(s,rid) === row && M.migration(s,rid) === migration && migration.at === at;
+  }
+  function unavailable(view) {
+    UI.openModal(FB.T('Following unavailable'),SH.reviewFactsCard('',
+      '<p>'+esc(FB.T('This following has moved, ended or changed. Choose it again from the current local followings before reviewing a decision.'))+'</p>'),
+      {modalClass:'fullsheet-modal',historyView:true,replaceView:!!(view && view.replace)});
+  }
+  UI.showMobileFollowings = function () {
+    var s=FB.state, ids=M.localRealms(s);
+    if (ids.length === 1) { UI.showMobileConfederation(ids[0]); return; }
+    var cards=ids.map(function (rid,index) {
+      var migration=M.migration(s,rid);
+      return SH.reviewActionCardHtml({id:'mobile-following-'+index,label:s.realms[rid].name,
+        note:FB.T('Camp at {place}',{place:county(migration.at)}),
+        details:'<p>'+esc(FB.T('Review this following’s people, agreements and available funding. Each decision requires its own confirmation.'))+'</p>',
+        data:{mobileFollowing:rid}});
+    }).join('');
+    UI.openModal(FB.T('Local followings'),'<div id="mobile-followings" data-modal-scroll>'+
+      (cards ? SH.reviewActionsHtml(cards) : '<p>'+esc(FB.T('No following is currently available here.'))+'</p>')+'</div>',
+      {modalClass:'fullsheet-modal',historyView:true});
+    SH.$('mobile-followings').querySelectorAll('[data-mobile-following]').forEach(function (button) {
+      var rid=button.getAttribute('data-mobile-following'), row=M.row(s,rid), migration=M.migration(s,rid), at=migration.at;
+      button.onclick=function () {
+        button.focus({preventScroll:true});
+        if (!currentFollowing(s,rid,row,migration,at)) { unavailable(); return; }
+        UI.showMobileConfederation(rid);
+      };
+    });
+  };
   UI.showMobileConfederation = function (rid,view) {
     var s = FB.state, r = M.row(s,rid), migration = M.migration(s,rid), profile = M.profile(s,rid);
-    if (!r || !migration || !profile) return;
+    if (!r || !migration || !profile || M.localRealms(s).indexOf(rid) < 0) { unavailable(view); return; }
+    var reviewedAt=migration.at;
     view = view || {}; var actions = [], actor = {kind:'character',id:s.player.charId}, leader = M.leader(s,rid);
     var host = M.host(s,rid), columns=M.columnSnapshot && M.columnSnapshot(s,rid);
     var camps=M.campSnapshot(s,rid);
     var ownMember = M.members(s,rid).filter(function (m) {return m.principal.id === actor.id;})[0];
     var parts = '', people = '', facts = '';
     if (leader) people += SH.reviewPersonHtml(leader,r.command ? FB.T('Commander') : FB.T('Coalition leader'),'mobile-leader');
-    facts += SH.reviewPeopleHtml(people) + kv(camps ? FB.T('Command contact') : FB.T('Court and civilian camp'),county(migration.at)) +
+    facts += kv(FB.T('Following'),s.realms[rid].name) + SH.reviewPeopleHtml(people) + kv(camps ? FB.T('Command contact') : FB.T('Court and civilian camp'),county(migration.at)) +
       (columns ? '' : kv(FB.T('Field host'),host ? FB.T('{men} fighters at {place}',{men:host.men,place:county(host.at)}) : FB.T('No deployed host; the court survives'))) +
       kv(FB.T('Civilian following'),camps ? camps.reduce(function (n,c) {return n+c.civilians;},0) : r.members.reduce(function (n,m) {return n + m.civilians.reduce(function (v,c) {return v+c.count;},0);},0)) +
       kv(FB.T('Resting fighters'),camps ? camps.reduce(function (n,c) {return n+c.reserve;},0) : r.members.reduce(function (n,m) {return n + m.reserve.reduce(function (v,c) {return v+c.count;},0);},0)) +
@@ -357,15 +389,17 @@
       button.onclick=function () {
         var entry=actions[Number(button.getAttribute('data-mobile-review'))], pos=position(), q=entry.review.review;
         function back() {var v=copyView(pos);v.replace=true;UI.showMobileConfederation(rid,v);}
+        if (!currentFollowing(s,rid,r,migration,reviewedAt)) { unavailable(); return; }
+        button.focus({preventScroll:true}); pos.focus=button.id;
         UI.openModal(entry.label,SH.reviewFactsCard(FB.T('Exact terms'),(entry.holy ?
           '<p>'+esc(FB.T('This binds the current commander and existing field host to the current religious campaign, requesting honor for four seasons of service. The civilian camp remains separate. No troops, supplies, land or personal vow are created. Withdrawal preserves casualties and earlier service.'))+'</p>' :
           termsHtml(s,q.terms,rid)+routeHtml(s,q))+
-          kv(FB.T('Immediate cost'),FB.money(q.cost || 0,s)))+SH.reviewActionsHtml(SH.reviewActionCardHtml({
+          kv(FB.T('Following'),s.realms[rid].name)+kv(FB.T('Immediate cost'),FB.money(q.cost || 0,s)))+SH.reviewActionsHtml(SH.reviewActionCardHtml({
             id:'mobile-confirm',label:FB.T('Confirm decision'),note:FB.T('Current people, principals, position, ownership, stock and funds are checked again.'),
             details:'<p>'+esc(FB.T('A stale review spends nothing and transfers no people.'))+'</p>'})),
           {modalClass:'fullsheet-modal',historyView:true,historyBack:true,historyBackRender:back});
         SH.$('mobile-confirm').onclick=function () {
-          var success=s===FB.state && (entry.holy ? FB.commitMobileGreatHolyWar(s,q) :
+          var success=currentFollowing(s,rid,r,migration,reviewedAt) && (entry.holy ? FB.commitMobileGreatHolyWar(s,q) :
             entry.funding ? FB.homeAuthority.fund(s,q) : M.commit(s,entry.review));
           UI.openModal(success ? FB.T('Decision recorded') : FB.T('Terms changed'),
             SH.reviewFactsCard('', '<p>'+esc(success ? FB.T('The decision is recorded.') : FB.T('Review the current terms again.'))+'</p>')+

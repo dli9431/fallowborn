@@ -102,3 +102,8 @@ A command declaring mobile.preparationId has no operative host or mobile commiss
 Protective guard and separate original party
 
 Optional mobile.guardedParty keeps the original leader and declared existing companions at a separate actual locality while suspending effective command. The following retains its one population, military and public-resource owner. Finite guard, lawful hosting authority, shared reviewed release, interrupted/expired states, ordinary custody precedence, actual post-release command reach and strict optional restore are specified in docs/designs/mobile-guard.md. The ordinary effective-command start is unavailable while this opening policy is declared. mobile_protective_guard and mobile_separate_personal_party have independent none technology decisions; existing travel and unit gates remain.
+
+
+Selecting a command for existing funding and consent
+
+The ordinary Mobile coalition deed reaches every currently local or principal-linked following. Multiple eligible followings appear as named choices before their existing command sheets; a single following opens directly. The selected sheet and confirmation identify the following separately from the paying account. Private contributions, lawful public grants and actual outside-ruler acceptance continue through their unchanged current quotes and canonical commits. Selection gives no command or outside consent. A moved, ended, missing or replaced target requires a fresh selection; declaration order cannot retarget a review. This presentation fix introduces no technology dependency, authoring option or saved state.

@@ -3978,6 +3978,19 @@ window.FB = window.FB || {};
     }, 0);
   }
 
+  function renderModalParent(previous, render) {
+    render();
+    if (!genericNavSnapshot) return;
+    // A refreshed parent inherits its own return path and layer identity,
+    // rather than the confirmation being replaced by the renderer.
+    genericNavSnapshot.previousView = previous.previousView;
+    genericNavSnapshot.historyBackRender = previous.historyBackRender;
+    genericNavSnapshot.historyBack = previous.historyBack;
+    genericNavSnapshot.token = previous.token;
+    const back = $('gm-body').querySelector('[data-modal-nav="back"]');
+    if (back) back.disabled = !(previous.previousView || previous.historyBackRender || previous.historyBack);
+  }
+
   function modalHistoryBack(fallback) {
     const layer = mobileNavLayers[mobileNavDepth];
     if (mobileNavReady && !mobileNavPendingBack && layer &&
@@ -3992,8 +4005,7 @@ window.FB = window.FB || {};
         const applying = mobileNavApplying;
         mobileNavApplying = true;
         try {
-          render();
-          if (genericNavSnapshot) genericNavSnapshot.previousView = previous.previousView;
+          renderModalParent(previous, render);
         } finally { mobileNavApplying = applying; }
       } else restoreModalView(previous);
       return;
@@ -4306,7 +4318,7 @@ window.FB = window.FB || {};
       mobileNavPush('modal-view',
         function () {
           captureModalView(currentView);
-          if (historyBackRender) historyBackRender();
+          if (historyBackRender) renderModalParent(previousView, historyBackRender);
           else restoreModalView(previousView);
         },
         function () {

@@ -465,3 +465,8 @@ Current target-day, total provision, camp/field quantity and carriage blocker ph
 Expedition presentation tables
 
 Literal FBDATA.storyExpeditions_<suffix> tables in data/story_*.js expose title, intro, name and desc through static extraction. The expeditionStory owner retains each source field and exact-English alias, supporting both the shared FB.T sheets and records-review dataText fallback. References, commands, provisions and other operational fields are not display text. Extraction never executes the data file. Independent source coverage is in tools/test_i18n_expedition_tables.py.
+
+
+Local following selection chrome
+
+Local followings, Following unavailable, camp-location notes and target labels use literal FB.T phrases in js/ui_mobile.js. Following names remain the existing declared realm names; ids, selected targets, accounts and current review stamps are locale-neutral. The shared cards retain keyboard focus, native input labels and compact Details disclosure. No rendered text is saved, no new display table is introduced and no catalogue regeneration is required for this navigation fix.
