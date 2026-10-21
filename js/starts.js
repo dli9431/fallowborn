@@ -419,7 +419,7 @@
     'ownerId','holderId','controllerId','applicantRealmId','targetOwnerId','owner',
     'issuerRealmId','payerRealmId','beneficiaryRealmId','nomineeRealmId','scopeRealmId',
     'liege','realm','fromRid','toRid','a','b'];
-  function references(value, from) {
+  function references(value, from, preparation) {
     if (!value || typeof value !== 'object') return;
     if ((value.kind === 'realm' || value.type === 'realm') && value.id === from) value.id = 'player';
     realmFields.forEach(function (key) {
@@ -429,7 +429,7 @@
     // references and accounts below still use the ordinary player alias.
     Object.keys(value).forEach(function (key) {
       if (key !== 'openingBindings' && key !== 'openingJurisdiction' &&
-          !(value.openingJurisdiction && key === 'bindings')) references(value[key], from);
+          !(preparation && key === 'bindings')) references(value[key], from);
     });
     ['ownerIds','remnantRealmIds','revoltRealmIds','branchRealmIds'].forEach(function (key) {
       if (Array.isArray(value[key])) value[key] = value[key].map(function (id) { return id === from ? 'player' : id; });
@@ -520,7 +520,11 @@
     });
     references(s.alliances, id); references(s.localInstitutions, id);
     references(s.settlementLordships, id);
-    references(s.stories, id);
+    Object.keys(s.stories || {}).forEach(function (storyId) {
+      var story = FB.stories.get(storyId);
+      references(s.stories[storyId], id, story && story.declaration &&
+        story.declaration.type === 'expedition_preparation');
+    });
     references(s.bookmarkSetup, id);
     references(s.governmentSupport, id);
     rekey(s.authority && s.authority.governments, id);

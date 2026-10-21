@@ -27,12 +27,13 @@
     (c.health===undefined || c.health>0) && !(FB.justiceCustodyOf && FB.justiceCustodyOf(s,c.id)) &&
     !(FB.intrigueCaptivityOf && FB.intrigueCaptivityOf(s,c.id)) &&
     !(c.id===s.player.charId && s.player.flags && s.player.flags.in_prison);}
-  function jurisdictionRealmId(s,id) {
+  // Original people and declaration refs stay fixed; only the public owner aliases.
+  function liveRealmId(s,id) {
     var publicAccount=s.start && s.start.publicTreasury;
     return publicAccount && publicAccount.originalRealmId===id ? publicAccount.realmId : FB.startRealmId(s,id);
   }
   function provider(s,def,bound) {
-    var rid=def.provider.jurisdiction ? jurisdictionRealmId(s,def.provider.realmId) : FB.startRealmId(s,def.provider.realmId),
+    var rid=liveRealmId(s,def.provider.realmId),
       c=s.realms[rid] && s.realms[rid].alive &&
       (rid==='player' ? s.chars[s.player.charId] : FB.realmRulerCharacterSnapshot(s,rid));
     if (def.provider.kind==='home_authority') {
@@ -114,9 +115,9 @@
     var j=e.t.openingJurisdiction;
     if (!j) return null;
     return {blocked:FB.recruitmentCountyBlocked(s,e.t.provider.realmId,j.origin) ||
-      FB.recruitmentCountyBlocked(s,jurisdictionRealmId(s,j.realms[j.realms.length-1].realmId),j.origin),
+      FB.recruitmentCountyBlocked(s,liveRealmId(s,j.realms[j.realms.length-1].realmId),j.origin),
       realms:j.realms.map(function (original) {
-      var rid=jurisdictionRealmId(s,original.realmId), r=s.realms[rid],
+      var rid=liveRealmId(s,original.realmId), r=s.realms[rid],
         c=r && (rid==='player' ? s.chars[s.player.charId] : FB.realmRulerCharacterSnapshot(s,rid));
       return {realmId:original.realmId,characterId:c && c.id || null,generation:FB.realmRulerGeneration(s,rid),
         liegeId:r && r.liege || null,capital:r && r.capital || null,alive:!!(r && r.alive && c && !c.dead),
@@ -127,25 +128,25 @@
   }
   function jurisdictionValid(s,e,facts) {
     var j=e.t.openingJurisdiction, last=j.realms[j.realms.length-1];
-    return !facts.blocked && s.holder[j.origin]===jurisdictionRealmId(s,e.def.provider.realmId) &&
-      s.owner[j.origin]===jurisdictionRealmId(s,last.realmId) && facts.realms.every(function (now,i) {
+    return !facts.blocked && s.holder[j.origin]===liveRealmId(s,e.def.provider.realmId) &&
+      s.owner[j.origin]===liveRealmId(s,last.realmId) && facts.realms.every(function (now,i) {
         var original=j.realms[i];
         return now.alive && now.characterId===original.characterId && now.generation===original.generation &&
-          now.liegeId===(original.liegeId ? jurisdictionRealmId(s,original.liegeId) : null) && now.capital===original.capital;
-      }) && FB.topRealm(s,e.t.provider.realmId)===jurisdictionRealmId(s,last.realmId) &&
+          now.liegeId===(original.liegeId ? liveRealmId(s,original.liegeId) : null) && now.capital===original.capital;
+      }) && FB.topRealm(s,e.t.provider.realmId)===liveRealmId(s,last.realmId) &&
       (j.appointment===null ? facts.appointment===null : !!facts.appointment &&
         facts.appointment.id===j.appointment.id && facts.appointment.officeId===j.appointment.officeId &&
         facts.appointment.endTurn===j.appointment.endTurn && same(facts.appointment.scope,
           {kind:j.appointment.scope.kind,id:j.appointment.scope.kind==='realm' ?
-            jurisdictionRealmId(s,j.appointment.scope.id) : j.appointment.scope.id}));
+            liveRealmId(s,j.appointment.scope.id) : j.appointment.scope.id}));
   }
   P.referencesCharacter=function (s,id) {
     return !!id && Object.keys(s && s.stories || {}).some(function (key) {
       var story=FB.stories.get(key), t=s.stories[key];
-      return !!(story && story.declaration && story.declaration.type===TYPE && t.openingJurisdiction &&
+      return !!(story && story.declaration && story.declaration.type===TYPE &&
         (t.provider.characterId===id || t.issuer && t.issuer.characterId===id ||
         t.bindings.some(function (b) {return b.characterId===id;}) ||
-        t.openingJurisdiction.realms.some(function (r) {return r.characterId===id;})));
+        t.openingJurisdiction && t.openingJurisdiction.realms.some(function (r) {return r.characterId===id;})));
     });
   };
   function check(def,context,bm) {
@@ -466,7 +467,7 @@
         t.bindings.every(function (b) {return exact(b,['memberId','characterId','person']) &&
           (b.characterId===null || !!s.chars[b.characterId]);}) &&
         t.realmGeneration===((d.ruler && d.ruler.generation) || 1) && t.realmGeneration<=FB.realmRulerGeneration(s,def.realmId) &&
-        t.provider.realmId===(def.provider.jurisdiction ? jurisdictionRealmId(s,def.provider.realmId) : FB.startRealmId(s,def.provider.realmId)) &&
+        t.provider.realmId===liveRealmId(s,def.provider.realmId) &&
         t.provider.generation<=FB.realmRulerGeneration(s,t.provider.realmId) &&
         (t.provider.characterId===null || !!s.chars[t.provider.characterId]) &&
         (def.provider.kind==='home_authority' || t.provider.generation!==FB.realmRulerGeneration(s,t.provider.realmId) ||
@@ -552,7 +553,7 @@
       if (s.turn!==0) return;
       var d=declaration(s,def.realmId);
       if (def.provider.kind==='home_authority') FB.bookmarkSetupAppointments(s,
-        {realmId:def.provider.jurisdiction ? jurisdictionRealmId(s,def.provider.realmId) : FB.startRealmId(s,def.provider.realmId),provinceId:d.mobile.origin});
+        {realmId:liveRealmId(s,def.provider.realmId),provinceId:d.mobile.origin});
       var originalProvider=provider(s,def);
       if (def.provider.kind==='home_authority' && !originalProvider.characterId)
         throw new Error(FB.T('The expedition preparation has no eligible original local authority.'));
@@ -565,7 +566,7 @@
         if (!projected) throw new Error(FB.T('The expedition preparation has no valid original direct-holder jurisdiction.'));
         record.openingJurisdiction=jurisdictionRecord(projected,s,def,originalProvider);
         if (!record.openingJurisdiction || record.openingJurisdiction.realms.some(function (r) {
-          var rid=jurisdictionRealmId(s,r.realmId), c=rid==='player' ? s.chars[s.player.charId] : FB.realmRulerCharacterSnapshot(s,rid);
+          var rid=liveRealmId(s,r.realmId), c=rid==='player' ? s.chars[s.player.charId] : FB.realmRulerCharacterSnapshot(s,rid);
           return !c || c.id!==r.characterId || FB.realmRulerGeneration(s,rid)!==r.generation;
         })) throw new Error(FB.T('The expedition preparation has no valid original direct-holder jurisdiction.'));
       }

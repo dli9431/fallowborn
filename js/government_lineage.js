@@ -115,14 +115,22 @@
   };
   /* Realm identity follows the political institution; compact kin identities
      survive a protagonist adopting and later leaving its public leadership. */
-  function remap(value, from, to) {
+  function remap(value, from, to, preparation) {
     if (!value || typeof value !== 'object') return;
     if ((value.kind === 'realm' || value.type === 'realm') && value.id === from) value.id = to;
     ['realmId','patronRealmId','federateRealmId','institutionId','liege','realm','owner','holderId','beneficiaryRealmId','payerRealmId'].forEach(function (key) {
       if (value[key] === from) value[key] = to;
     });
     Object.keys(value).forEach(function (key) {
-      if (key !== 'openingJurisdiction' && !(value.openingJurisdiction && key === 'bindings')) remap(value[key], from, to);
+      if (key !== 'openingBindings' && key !== 'openingJurisdiction' &&
+          !(preparation && key === 'bindings')) remap(value[key], from, to);
+    });
+  }
+  function remapStories(s, from, to) {
+    Object.keys(s.stories || {}).forEach(function (id) {
+      var story = FB.stories.get(id);
+      remap(s.stories[id], from, to, story && story.declaration &&
+        story.declaration.type === 'expedition_preparation');
     });
   }
   var absorb = FB.absorbRealm;
@@ -136,7 +144,8 @@
     s.authority.governments.player = row;
     delete s.authority.governments[rid];
     delete s.realms[rid].succession;
-    [s.authority, s.chars, s.settlementLordships, s.localInstitutions, s.stories].forEach(function (table) { remap(table, rid, 'player'); });
+    [s.authority, s.chars, s.settlementLordships, s.localInstitutions].forEach(function (table) { remap(table, rid, 'player'); });
+    remapStories(s, rid, 'player');
     FB.rebuildRulerIndex(s); G.invalidate();
     if (FB.invalidateSettlementLordships) FB.invalidateSettlementLordships(s);
     return true;
@@ -158,7 +167,8 @@
       if (s.holder[pid] === 'player') s.holder[pid] = rid;
     });
     Object.keys(s.realms).forEach(function (id) { if (s.realms[id].liege === 'player') s.realms[id].liege = rid; });
-    [s.authority, s.chars, s.settlementLordships, s.localInstitutions, s.armies, s.stories].forEach(function (table) { remap(table, 'player', rid); });
+    [s.authority, s.chars, s.settlementLordships, s.localInstitutions, s.armies].forEach(function (table) { remap(table, 'player', rid); });
+    remapStories(s, 'player', rid);
     if (FB.remapWarRealm) FB.remapWarRealm(s, 'player', rid);
     if (s.realmTech && s.realmTech.player) { s.realmTech[rid] = s.realmTech.player; delete s.realmTech.player; }
     if (FB.treasuryCreateRealm) FB.treasuryCreateRealm(s, rid, null, 0);
