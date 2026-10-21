@@ -469,3 +469,7 @@ Literal FBDATA.storyExpeditions_<suffix> tables in data/story_*.js expose title,
 Finite local access presentation
 
 The local_access adapter and accessOrigin receipts store only protocol ids, original people, generations and numeric terms. The existing mobile and expedition story sheets use literal FB.T phrases for separate outside refusal, requested county scope, per-request cost, finite capacity/term and original outside ruler status. Actual county and person names are arguments; decision prose is never persisted. Imported program titles/introductions retain ordinary English fallback. No generated catalogue command accompanies the feature.
+
+Local following selection chrome
+
+Local followings, Following unavailable, camp-location notes and target labels use literal FB.T phrases in js/ui_mobile.js. Following names remain the existing declared realm names; ids, selected targets, accounts and current review stamps are locale-neutral. The shared cards retain keyboard focus, native input labels and compact Details disclosure. No rendered text is saved, no new display table is introduced and no catalogue regeneration is required for this navigation fix.

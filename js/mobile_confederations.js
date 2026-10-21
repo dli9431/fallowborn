@@ -1225,11 +1225,14 @@
       return approvalAI(s,rid,'contract',terms) && enact(s,rid,'contract',terms);
     },proposeMigration:function (s,rid) {return M.ai(s,rid);},offices:function () {return false;}
   }));
-  M.localRealm = function (s) {
+  M.localRealms = function (s) {
     return Object.keys(s.authority && s.authority.governments || {}).filter(function (rid) {
       var m = M.active(s,rid) && M.migration(s,rid);
       return m && (m.at === s.player.provinceId || M.members(s,rid).some(function (a) {return a.principal.id === s.player.charId;}));
-    })[0] || null;
+    });
+  };
+  M.localRealm = function (s) {
+    return M.localRealms(s)[0] || null;
   };
   M.referencesCharacter = function (s,cid) {
     return Object.keys(s.authority && s.authority.governments || {}).some(function (rid) {
