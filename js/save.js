@@ -415,6 +415,13 @@ window.FB = window.FB || {};
     return state;
   }
 
+  // Semantic validators that resolve current people need the same explicit
+  // codec fields as live readers. Expand a detached copy without adopting it
+  // or running any load repair, story initialization, RNG or identity hook.
+  S.expandedSnapshot = function (state) {
+    return inflateState(JSON.parse(JSON.stringify(state)));
+  };
+
   /* ---------- storage compression ----------
      A serialized life is ~1.5 MB of JSON; localStorage quotas are ~5 MB on
      WebKit and ~10 MB elsewhere, and the quota is shared by the autosave and

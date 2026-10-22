@@ -461,6 +461,11 @@
         if (t.status==='closed') need(t.reserves.length===0 && same(t.released,def.source.cohorts));
       } else need(t.reserves.length===0 && t.released.length===0);
       if (!s) return;
+      // The raw optional record above remains strict. Only the codec's core
+      // identity defaults are expanded for the live relationship readers.
+      if (Object.keys(s.chars).some(function (id) {return s.chars[id] && s.chars[id].id===undefined;}) ||
+          Object.keys(s.realms).some(function (id) {return s.realms[id] && s.realms[id].alive===undefined;}))
+        s=FB.save.expandedSnapshot(s);
       var e={def:def,t:t,d:declaration(s,def.realmId)}, d=e.d, r=M.row(s,def.realmId), bm=FB.campaignBookmark(s),
         presentProvider=provider(s,def);
       need(!!d && (bm.stories || []).indexOf(def.id)>=0 && t.definitionKey===definitionKey(def,d) && same(t.bindings,bindings(s,d)) &&

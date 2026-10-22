@@ -1749,6 +1749,12 @@ window.FBMODS = window.FBMODS || [];
       const province = combinedProvinces[i];
       if (province && province.id) provinces[province.id] = province;
     }
+    const bookmarks = combinedTable(FBDATA.bookmarks, mod.bookmarks, 'bookmarks');
+    Object.keys(bookmarks).forEach(function (id) {
+      FB.bookmarkRevisions(id, bookmarks[id]).forEach(function (bm) {
+        (bm.provinces || []).forEach(function (p) {provinces[p.id]=p;});
+      });
+    });
     return {
       cultures:combinedTable(FBDATA.cultures, mod.cultures, 'cultures'),
       religions:combinedTable(FBDATA.religions, mod.religions, 'religions'),

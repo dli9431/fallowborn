@@ -1,4 +1,4 @@
-Community-share triggers use kind culture or faith. The wider 476 Antioch relief event uses faith for its Miaphysite share. Event lookup validates the complete bundled catalogue before indexing any id, so period-inactive declarations must also satisfy this schema at an ordinary medieval boot.
+Community-share triggers use kind culture or faith. The wider 476 Antioch relief event uses faith for its Miaphysite share. Event lookup validates the complete bundled catalogue before indexing any id, so period-inactive declarations must also satisfy this schema at an ordinary medieval boot. County references resolve against all registered bookmark revisions as well as the active province table. A small imported map does not invalidate unrelated historical events. Catalogue and random-pool construction each build this reference set once; live county selectors still use the actual event location.
 
 # Events are data
 

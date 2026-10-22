@@ -1270,6 +1270,13 @@ window.FB = window.FB || {};
       const province = FBDATA.provinces[i];
       if (province && province.id) provinces[province.id] = province;
     }
+    // The event catalogue spans worlds. Activation replaces FBDATA.provinces
+    // with one map, but inactive events still retain their authored counties.
+    Object.keys(FBDATA.bookmarks || {}).forEach(function (id) {
+      FB.bookmarkRevisions(id).forEach(function (bm) {
+        (bm.provinces || []).forEach(function (p) {provinces[p.id]=p;});
+      });
+    });
     return {
       cultures:FBDATA.cultures || {},
       religions:FBDATA.religions || {},
@@ -5881,11 +5888,12 @@ window.FB = window.FB || {};
     const periodEvents = FB.eventYearPool(state);
     if (!randomEventPools) {
       randomEventPools = { ordinary:[], wartime:[], childhood:[], wartimeChildhood:[] };
+      const communityRefs = communityEventReferences();
       for (const ev of periodEvents) {
         validateEventSerfFreedomEffects(ev);
         FB.validateEventParticipants(ev);
         FB.validateEducationEvent(ev);
-        FB.validateCommunityEvent(ev);
+        FB.validateCommunityEvent(ev, communityRefs);
         if (!ev.trigger || ev.trigger.never) continue;
         randomEventPools.ordinary.push(ev);
         if (ev.wartime) randomEventPools.wartime.push(ev);
@@ -6031,11 +6039,12 @@ window.FB = window.FB || {};
   FB.eventById = function (id) {
     if (!eventIndex) {
       eventIndex = {};
+      const communityRefs = communityEventReferences();
       for (const ev of FBDATA.events) {
         validateEventSerfFreedomEffects(ev);
         FB.validateEventParticipants(ev);
         FB.validateEducationEvent(ev);
-        FB.validateCommunityEvent(ev);
+        FB.validateCommunityEvent(ev, communityRefs);
         eventIndex[ev.id] = ev;
       }
     }

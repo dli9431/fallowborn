@@ -351,8 +351,9 @@
         }
         if (!keys(c.issuer,['characterId','generation']) || !own(s.chars,c.issuer.characterId)) fail();
         if (spec.superior.kind==='opening_actor') {
-          var original=FB.bookmarkActor(s,spec.superior.actorId);
-          if (!original || c.issuer.characterId!==original.id || c.issuer.generation!==null) fail();
+          var original=s.bookmarkSetup && s.bookmarkSetup.actors[spec.superior.actorId];
+          if (!original || !s.chars[original] || s.chars[original].id!==undefined && s.chars[original].id!==original ||
+              c.issuer.characterId!==original || c.issuer.generation!==null) fail();
         } else {
           var generation=FB.realmRulerGeneration(s,spec.superior.realmId);
           if (!Number.isSafeInteger(c.issuer.generation) || c.issuer.generation<1 || c.issuer.generation>generation) fail();
