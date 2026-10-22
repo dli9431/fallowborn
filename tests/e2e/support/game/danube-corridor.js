@@ -128,7 +128,7 @@ function installCorridorCase(c) {
     });
   });};
   C.negotiate=function (s,automatic) {
-    const E=FB.expeditionPrograms,steps=C.permissionSteps(s),trace=[];
+    const E=FB.expeditionPrograms,M=FB.mobile,steps=C.permissionSteps(s),trace=[];
     // At most 16 offers, 16 independent responses and one completion per
     // step. This is transaction dispatch only, never daily world simulation.
     for (let n=0;n<35;n++) {
