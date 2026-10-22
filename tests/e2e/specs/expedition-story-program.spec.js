@@ -59,6 +59,29 @@ async function begin(page,info,label,modified) {
   },label);
 }
 
+test('deferred corridor formation shares story action budgets and retains the hold policy for outside responses',async function ({page},info) {
+  const mod=JSON.parse(JSON.stringify(examples.upland)),d=mod.bookmarks.dune_world.realms.find(function (r) {return r.mobile;}),
+    p=d.mobile.expeditionProgram,req=p.steps[0].requirements;
+  d.mobile.command.operations.push('offer','accept');
+  p.steps=[{id:'permission',after:[],window:{startTurn:0,endTurn:45},columnId:null,adapter:'corridor_access',
+    terms:{countyIds:['dune_pass','dune_well','dune_flats'],capacity:1,allowRecruit:false,price:0,duration:30},requirements:req},
+    {id:'approach',after:['permission'],window:{startTurn:0,endTurn:45},columnId:null,adapter:'route',
+      terms:{mode:'field',waypoints:['dune_pass']},requirements:req}];
+  mod.storyInstances.upland_story_program.ai='hold';
+  await begin(page,info,'upland',mod);
+  const result=await page.evaluate(function () {
+    const C=programCase,M=FB.mobile,E=FB.expeditionPrograms,s=FB.state,formed=C.ready(s);C.next(s);
+    E.day(s);const held=M.agreements(s,C.rid).length===0,offer=E.commit(s,E.review(s,C.rid,'permission')),
+      a=M.agreements(s,C.rid)[0],request={realmId:C.rid,action:'accept',actor:{kind:'realm',id:a.partnerId},terms:{agreementId:a.id}};
+    const sameDay=!M.review(s,request).review.allowed;C.next(s);E.day(s);
+    const responseHeld=a.status==='offered',response=M.commit(s,M.review(s,request)),
+      budget=C.record(s).lastActionTurn===s.turn && !E.review(s,C.rid,'permission').allowed;
+    return {formed:formed,held:held,offer:offer,sameDay:sameDay,responseHeld:responseHeld,response:response,budget:budget,
+      schema:M.row(s,C.rid).expeditionProgram.schema,valid:M.validate(s)};
+  });
+  expect(result).toEqual({formed:true,held:true,offer:true,sameDay:true,responseHeld:true,response:true,budget:true,schema:5,valid:true});
+});
+
 for (const label of ['harbor','upland']) {
   test(label+' ordinary import attaches finite original references and no competing owner',async function ({page},info) {
     await begin(page,info,label);

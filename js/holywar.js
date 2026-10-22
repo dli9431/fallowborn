@@ -811,7 +811,7 @@ window.FB = window.FB || {};
         ['failed','settled'].indexOf(moving.status) >= 0 ||
         requireHost && (!host || host.men <= 0 || !host.mobileFollowing || host.realm !== rid ||
           host.warId && host.warId !== 'holy' || host.moveLeft > 0 || (host.path || []).length) ||
-        row.agreements.some(function (a) {return a.kind === 'protection' && a.status === 'active' && a.endTurn > state.turn;}) ||
+        M.agreements(state,rid).some(function (a) {return a.kind === 'protection' && a.status === 'active' && a.endTurn > state.turn;}) ||
         (state.authority.contracts || []).some(function (c) {return c.federateRealmId === rid &&
           FB.political.contract(state, c.id).effective;}) ||
         FB.realmInOrdinaryWar(state, rid)) return null;

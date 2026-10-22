@@ -29,6 +29,10 @@
   function county(pid) { return FB.world.byId[pid] && FB.world.byId[pid].name || pid; }
   function termsHtml(s,t,rid) {
     var text = '';
+    if (rid && t.agreementId) {
+      var agreement=M.agreement(s,rid,t.agreementId);
+      if (agreement) return termsHtml(s,agreement,rid);
+    }
     var row=rid && M.row(s,rid),entries=row && row.columns && row.columns.entries;
     function columnName(id) {var i=entries ? entries.map(function (c) {return c.id;}).indexOf(id) : -1;return FB.T('Column {number}',{number:i+1});}
     if (t.columnId) text+=kv(FB.T('Field command'),columnName(t.columnId));
@@ -44,6 +48,7 @@
     if (t.countyId) text += kv(FB.T('County'),county(t.countyId));
     if (t.countyIds) text += kv(FB.T('Access corridor'),t.countyIds.map(county).join(', '));
     if (t.partnerId) text += kv(FB.T('Outside court'),s.realms[t.partnerId].name);
+    if (t.accessOrigin) text += kv(FB.T('Original outside ruler'),s.chars[t.accessOrigin.chain[0].personId].name);
     if (t.capacity !== undefined) text += kv(FB.T('Seasonal capacity'),t.capacity);
     if (t.duration) text += kv(FB.T('Duration'),FB.T('{days} days',{days:t.duration}));
     if (t.price !== undefined) text += kv(FB.T('Payment on acceptance'),FB.money(t.price,s));
@@ -340,8 +345,8 @@
     add(FB.T('Offer approved tribute'),'offer',tribute,FB.T('Both living courts must accept the exact bounded commitment.'));
     add(FB.T('Propose protection service'),'propose',{operation:'agreement',proposal:protection},FB.T('The outside treasury pays once for the stated troop commitment. The same fighters cannot be pledged beyond the host’s actual strength.'));
     add(FB.T('Offer approved protection'),'offer',protection,FB.T('Members and the outside court must consent. Ordinary campaigns, actual fighters and finite supplies govern service.'));
-    r.agreements.forEach(function (a) {
-      membership += SH.reviewFactsCard(FB.T('Outside agreement'),termsHtml(s,a)+kv(FB.T('Status'),a.status==='active' ? FB.T('Active') : a.status==='offered' ? FB.T('Awaiting outside consent') : FB.T('Ended')));
+    M.agreements(s,rid).forEach(function (a) {
+      membership += SH.reviewFactsCard(FB.T('Outside agreement'),termsHtml(s,a,rid)+kv(FB.T('Status'),a.status==='active' ? FB.T('Active') : a.status==='offered' ? FB.T('Awaiting outside consent') : FB.T('Ended')));
       if (a.status==='offered') add(FB.T('Accept as the outside court'),'accept',{agreementId:a.id},FB.T('Only the actual outside ruler can accept. Current ownership, capacity, rulers and funds are checked again.'));
       if (a.status==='offered' && a.accessOrigin) add(FB.T('Decline as the outside court'),'decline',{agreementId:a.id},
         FB.T('Only the original outside ruler can decline this request. No payment or passage is granted, and the program will not ask a replacement ruler.'));

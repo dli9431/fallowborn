@@ -39,7 +39,7 @@
     var r=M.row(s,rid);
     return FB.isRealmAtWar(s,rid) || (s.authority.contracts || []).some(function (c) {
       return c.federateRealmId===rid && FB.political.contract(s,c.id).effective;
-    }) || r.agreements.some(function (a) {return a.kind!=='access' && a.status==='active' && a.endTurn>s.turn;});
+    }) || M.agreements(s,rid).some(function (a) {return a.kind!=='access' && a.status==='active' && a.endTurn>s.turn;});
   }
   M.campPopulation = function (s,rid) {return M.row(s,rid).camps.entries.reduce(function (n,c) {return n+count(c);},0);};
   M.campSnapshot = function (s,rid) {

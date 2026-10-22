@@ -4097,3 +4097,7 @@ The Mobile coalition deed opens a named Local followings list when more than one
 Outside passage willingness
 
 The optional localPassagePolicies declaration changes only the NPC's choice of canonical outside response. Existing source sheets retain pending/active/ended status, county scope, finite price/capacity/term and original outside ruler. A declared willingness is not acceptance or a guaranteed road. Actual outside players retain both reviewed choices and the existing confirmation, Back, Escape, focus and scroll behavior, independently of the NPC response policy. No new screen, navigation route or automatic player confirmation is added.
+
+Grouped corridor decisions
+
+The existing mobile source sheet enumerates each county receipt and its original outside ruler, finite payment, capacity, duration and pending/active/ended status. Storage envelopes never appear as consenting courts or blanket permission. Accept and Decline confirmations resolve the exact canonical receipt id and display its complete county terms and original outside person. Existing program story reviews disclose the requested counties and separate per-county costs. One current response consumes the shared daily action budget. Actual outside players retain deliberate decisions and the existing keyboard, phone, Back, Escape, Close, disclosure, list-position and focus behavior. No additional navigation flow is introduced.

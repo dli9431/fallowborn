@@ -16,7 +16,7 @@ function buildCorridorMod(input) {
   // Never trim an over-bound set to make validation pass. The bootstrap import
   // has only local Cologne terms and is never permission for onward movement.
   const permissions=[];
-  for (let i=0;i<counties.length;i+=16) permissions.push(step('permission_'+permissions.length,'local_access',{
+  for (let i=0;i<counties.length;i+=16) permissions.push(step('permission_'+permissions.length,c.composition ? 'corridor_access' : 'local_access',{
     countyIds:counties.slice(i,i+16),capacity:c.capacity,allowRecruit:false,price:c.price,duration:c.duration}));
   const after=permissions.map(function (s) {return s.id;});
   const program={schema:1,id:rid+'_route',commandId:rid+'_command',steps:permissions.concat([
@@ -60,7 +60,7 @@ function installCorridorCase(c) {
   C.row=function (s) {return FB.mobile.row(s,C.rid);};
   C.atTurn=function (s,turn) {const date=FB.dateAtTurn(s,turn);s.turn=turn;s.date=date;};
   C.next=function (s) {C.atTurn(s,s.turn+1);};
-  C.permissionSteps=function (s) {return C.definition(s).mobile.expeditionProgram.steps.filter(function (a) {return a.adapter==='local_access';});};
+  C.permissionSteps=function (s) {return C.definition(s).mobile.expeditionProgram.steps.filter(function (a) {return a.adapter==='local_access' || a.adapter==='corridor_access';});};
   C.control=function (s,action) {return FB.expeditionPrograms.reviewControl(s,{realmId:C.rid,action:action,stepId:null,
     actor:{kind:'character',id:C.row(s).leaderId}});};
   C.chain=function (s,pid) {
@@ -100,7 +100,7 @@ function installCorridorCase(c) {
       const allocations=[];
       Object.keys(s.authority.governments).forEach(function (rid) {
         const row=M.row(s,rid);
-        if (row) row.agreements.forEach(function (a) {
+        if (row) M.agreements(s,rid).forEach(function (a) {
           if (a.kind==='access' && a.status==='active' && a.endTurn>s.turn && a.countyIds.indexOf(pid)>=0)
             allocations.push({realmId:rid,agreementId:a.id,capacity:a.capacity,endTurn:a.endTurn});
         });
@@ -113,8 +113,8 @@ function installCorridorCase(c) {
         currentProvisioning:M.provisioningAccess(s,C.rid,pid),currentField:M.passage(s,C.rid,pid,false),
         currentCamp:M.passage(s,C.rid,pid,true)};
     });
-    const occupied=C.row(s).agreements.map(function (a) {return {id:a.id,status:a.status,original:!!a.accessOrigin,
-      countyIds:a.countyIds.slice(),endTurn:a.endTurn,price:a.price,capacity:a.capacity};});
+    const occupied=C.row(s).agreements.map(function (a) {return {id:a.id,status:a.status || null,original:!!a.accessOrigin,
+      countyIds:(a.countyIds || []).slice(),endTurn:a.endTurn,price:a.price,capacity:a.capacity};});
     // Count potential original receipts for the whole declared corridor even
     // when a temporary ordinary agreement currently happens to grant access.
     return {configuration:copy(c),origins:{field:a.at,camp:moving.at},legs:legs,counties:counties,countyIds:ids,
@@ -138,7 +138,7 @@ function installCorridorCase(c) {
       if (!q.allowed) return {complete:false,reason:q.reason,trace:trace};
       const request=q.operation && q.operation.request,balances={};
       if (request && request.action==='accept') {
-        const a=C.row(s).agreements.find(function (a) {return a.id===request.terms.agreementId;});
+        const a=M.agreements(s,C.rid).find(function (a) {return a.id===request.terms.agreementId;});
         balances.before=FB.treasuryAvailable(s,C.rid);balances.outside=FB.treasuryAvailable(s,a.partnerId);balances.price=a.price;
         balances.partner=a.partnerId;
       }
@@ -156,7 +156,7 @@ function installCorridorCase(c) {
   C.restore=function () {
     const facts=function () {
       const s=FB.state,row=C.row(s),ids=[row.leaderId];
-      row.agreements.forEach(function (a) {if (a.accessOrigin) a.accessOrigin.chain.forEach(function (p) {
+      FB.mobile.agreements(s,C.rid).forEach(function (a) {if (a.accessOrigin) a.accessOrigin.chain.forEach(function (p) {
         if (ids.indexOf(p.personId)<0) ids.push(p.personId);
       });});
       const originals=ids.map(function (id) {const p=s.chars[id];return p && {id:p.id,name:p.name,born:p.born,

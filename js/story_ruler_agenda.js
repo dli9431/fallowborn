@@ -101,8 +101,7 @@
           return r && r.generation === t.generation && !!r.candidateId;
         });
       } else if (c.recordKind === 'agenda_mobile_agreement') {
-        var mobile = FB.mobile.row(s, FB.startRealmId(s, c.otherRealmId));
-        rows = (mobile && mobile.agreements || []).filter(function (a) {
+        rows = FB.mobile.agreements(s, FB.startRealmId(s, c.otherRealmId)).filter(function (a) {
           return a.status === 'active' && a.partnerId === rid && a.endTurn > s.turn && a.startTurn >= t.openedTurn;
         });
       } else if (c.recordKind === 'agenda_collective_decision') {
@@ -129,8 +128,8 @@
         { kind:'realm', id:realm(s) }, realm(s), c.interestId, 'negotiate', { revenue:c.revenue, levy:c.levy });
       if (c.operation === 'agenda_dues') return C.duesQuote(s, realm(s), { amount:c.amount, duration:c.duration });
       if (c.operation === 'agenda_mobile_offer') {
-        var mobileId = FB.startRealmId(s, c.otherRealmId), mobile = FB.mobile.row(s, mobileId);
-        var offer = (mobile && mobile.agreements || []).filter(function (a) { return a.status === 'offered' && a.partnerId === realm(s); })
+        var mobileId = FB.startRealmId(s, c.otherRealmId);
+        var offer = FB.mobile.agreements(s, mobileId).filter(function (a) { return a.status === 'offered' && a.partnerId === realm(s); })
           .sort(function (a, b) { return a.id < b.id ? -1 : a.id > b.id ? 1 : 0; })[0];
         var review = offer && FB.mobile.review(s, { realmId:mobileId, action:'accept', actor:{ kind:'realm', id:realm(s) }, terms:{ agreementId:offer.id } });
         return review ? { allowed:review.review.allowed, reviewed:review, offer:copy(offer) } : null;

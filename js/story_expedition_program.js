@@ -118,6 +118,12 @@
       try {return preparationCommit(s,q);} finally {formingId=previous;}
     });
   };
+  W.allowCorridorResponse=function (s,rid) {
+    var e=forRealm(s,rid);return !e || available(s,e) && view(s,e).status==='active' && originals(s,e);
+  };
+  W.recordCorridorResponse=function (s,rid) {
+    var e=forRealm(s,rid);if (e) attempt(s,e,function () {return true;});
+  };
   E.review=function (s,rid,stepId,actor) {
     var q=stepReview(s,rid,stepId,actor),e=forRealm(s,rid);
     if (e) {
@@ -310,11 +316,11 @@
           FB.T('One current program action may be attempted per day. Review changes no resources.'),
           FB.T('The underlying operation retains its actual public costs and access requirements. Vows, service and the civilian camp remain independent.')];
         var step=q.stepId && e.d.mobile.expeditionProgram.steps.filter(function (a) {return a.id===q.stepId;})[0];
-        if (step && step.adapter==='local_access') {
+        if (step && (step.adapter==='local_access' || step.adapter==='corridor_access')) {
           lines.push(FB.T('Requested counties: {places}. Payment per accepted request: {cost}. Capacity: {capacity}. Term: {days} days.',{
             places:step.terms.countyIds.map(function (pid) {return FB.world.byId[pid].name;}).join(', '),
             cost:step.terms.price,capacity:step.terms.capacity,days:step.terms.duration}));
-          (r && r.agreements || []).filter(function (a) {return a.accessOrigin && a.programStepId===step.id;}).forEach(function (a) {
+          M.agreements(s,e.def.realmId).filter(function (a) {return a.accessOrigin && a.programStepId===step.id;}).forEach(function (a) {
             lines.push(FB.T('Original outside ruler: {name}. Current permission: {status}.',{
               name:s.chars[a.accessOrigin.chain[0].personId].name,status:M.provisioningAccess(s,e.def.realmId,a.countyIds[0]) ?
                 FB.T('Active') : a.status==='offered' ? FB.T('Awaiting outside consent') : FB.T('Ended')}));
