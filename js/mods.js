@@ -762,7 +762,8 @@ window.FBMODS = window.FBMODS || [];
           Object.keys(scenario.familyPresets).join(',') !== 'standard')
         fail(path + '.rulerRealmId', 'needs a fixed bookmark, named identity, government, ruler onboarding and standard court family.');
       if (!delegated || own(scenario, 'characterName')) requiredText(scenario.characterName, path + '.characterName');
-      if (scenario.characterName && scenario.characterName.length > 20 || !FBDATA.governmentForms[scenario.governmentForm])
+      // Start codes carry an authored ruler's exact name, so only bound its length.
+      if (scenario.characterName && scenario.characterName.length > 40 || !FBDATA.governmentForms[scenario.governmentForm])
         fail(path + '.characterName', 'needs a start-code name and a known government.');
       for (const bookmark of [].concat.apply([], scenario.bookmarkIds.map(function (bookmarkId) {
         return offeringBookmarks(bookmarkId, scenario);
