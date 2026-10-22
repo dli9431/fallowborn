@@ -95,7 +95,9 @@
     if (!actor) return null;
     if (actor.kind === 'realm') return s.realms[actor.id] && s.realms[actor.id].alive ? actor.id : null;
     var c = actor.kind === 'character' && s.chars[actor.id];
-    return availablePerson(s,c) ? FB.realmIdForRulerCharacter(s, c.id) : null;
+    if (!availablePerson(s,c)) return null;
+    if (c.id===s.player.charId && FB.station.rulesRealm(s.player,s) && s.realms.player && s.realms.player.alive) return 'player';
+    return FB.realmIdForRulerCharacter(s,c.id);
   }
   function actorMember(s, rid, actor) {
     return actor && actor.kind === 'character' && M.members(s, rid).filter(function (m) { return m.principal.id === actor.id; })[0] || null;

@@ -136,6 +136,10 @@
     while (rid) {
       var realm=s.realms[rid],person=rid==='player' ? s.chars[s.player.charId] : FB.realmRulerCharacterSnapshot(s,rid);
       if (seen[rid] || chain.length>=16 || !realm || !realm.alive || !alive(s,person)) return null;
+      var selection=FB.governmentSelection.state(s,rid),vacancy=selection && selection.vacancy;
+      // A living abdicator can remain the genealogy root while the actual
+      // political office is vacant. That root cannot renew its old permission.
+      if (vacancy && vacancy.status!=='resolved' && vacancy.generation===FB.realmRulerGeneration(s,rid)) return null;
       seen[rid]=true;chain.push({courtId:rid,personId:person.id,generation:FB.realmRulerGeneration(s,rid)});
       rid=realm.liege;
     }

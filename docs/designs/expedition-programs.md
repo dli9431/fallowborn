@@ -1,5 +1,7 @@
 Expedition program declarations and reviews
 
+Original access chains require an occupied political office at every level. A managed succession vacancy at the current generation invalidates passage immediately, even while its living former ruler remains the compact genealogy root awaiting accession. Adoption continues to remap only live court aliases. An explicit player-character response resolves that actual player court, while an unrelated household character remains unauthorized. Receipt history, original identities and strict matching restore remain unchanged.
+
 Finite local access
 
 local_access is an opt-in single-host adapter with exactly countyIds, capacity, allowRecruit, price and duration. It selects each inhabited county's actual direct holder, including generated subordinate offices, in declaration order. The bounded county list requests permission, rather than defining or bypassing the actual army route. Every actual route county still passes canonical movement preflight. At most sixteen distinct counties may be requested across a program; columns and holy_objective cannot be combined with this adapter. The independently gateable expedition_local_access technology decision is none: political consent has no credible discovery prerequisite and canonical movement, resources and manual alternatives retain their existing gates.

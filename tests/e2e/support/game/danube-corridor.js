@@ -56,6 +56,15 @@ function buildCorridorMod(input) {
 function installCorridorCase(c) {
   const copy=function (v) {return JSON.parse(JSON.stringify(v));};
   const C=window.corridorCase={configuration:c,rid:'route_review_'+c.id};
+  // Wire decoding may reinsert omitted object keys; array order and all
+  // actual values remain part of the checkpoint comparison.
+  C.bytes=function (value) {return JSON.stringify(value,function (key,row) {
+    if (!row || typeof row!=='object' || Array.isArray(row)) return row;
+    return Object.keys(row).sort().reduce(function (out,k) {out[k]=row[k];return out;},{});
+  });};
+  C.accounts=function (s) {
+    const x=FB.save.expandedSnapshot(s);return C.bytes([C.row(x),x.treasury,x.realms,x.wars]);
+  };
   C.definition=function (s) {return FB.campaignBookmark(s).realms.find(function (d) {return d.id===C.rid;});};
   C.row=function (s) {return FB.mobile.row(s,C.rid);};
   C.atTurn=function (s,turn) {const date=FB.dateAtTurn(s,turn);s.turn=turn;s.date=date;};
@@ -155,14 +164,14 @@ function installCorridorCase(c) {
   };
   C.restore=function () {
     const facts=function () {
-      const s=FB.state,row=C.row(s),ids=[row.leaderId];
+      const s=FB.save.expandedSnapshot(FB.state),row=C.row(s),ids=[row.leaderId];
       FB.mobile.agreements(s,C.rid).forEach(function (a) {if (a.accessOrigin) a.accessOrigin.chain.forEach(function (p) {
         if (ids.indexOf(p.personId)<0) ids.push(p.personId);
       });});
       const originals=ids.map(function (id) {const p=s.chars[id];return p && {id:p.id,name:p.name,born:p.born,
         dead:!!p.dead,captive:!!p.captive,prisonerOf:p.prisonerOf || null,homeProvinceId:p.homeProvinceId};});
-      return JSON.stringify([row,s.armies,s.owner,s.holder,s.realms,s.treasury,s.market,s.population,
-        s.localPassagePolicies,s.stories,s.bookmarkSetup,originals]);
+      return C.bytes([row,s.armies,s.owner,s.holder,s.realms,s.treasury,s.market,s.population,
+        s.localPassagePolicies,s.stories,s.bookmarkSetup,originals,s.wars]);
     };
     const before=facts(),rng=FB.getRngState()>>>0,uid=FB.getUidCounter();
     for (let i=0;i<2;i++) FB.save.restore(JSON.parse(FB.save.serialize()));
