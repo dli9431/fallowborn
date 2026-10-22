@@ -215,7 +215,7 @@ for (const configuration of cases) {
         function (s,a) {s.owner[a.countyIds[0]]=C.rid;},
         function (s,a) {s.realms[a.partnerId].liege=C.rid;},
         function (s,a) {s.chars[a.accessOrigin.chain[0].personId].dead=true;},
-        function (s,a) {s.realms[a.partnerId].succession.rulerGeneration++;},
+        function (s,a) {s.realms[a.partnerId].ruler.generation=FB.realmRulerGeneration(s,a.partnerId)+1;},
         function (s,a) {s.population.counties[a.countyIds[0]].count=1;},
         function (s) {FB.treasurySpend(s,C.rid,FB.treasuryAvailable(s,C.rid));},
         function (s) {M.host(s,C.rid).holdManual=1;},function (s) {C.next(s);}];

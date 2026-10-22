@@ -132,14 +132,27 @@ for (const revision of retained) {
       const material=function (s) {return {start:JSON.stringify(s.start),setup:JSON.stringify(s.bookmarkSetup),
         authority:JSON.stringify(Object.assign({},s.authority,{schema:undefined})),armies:JSON.stringify(s.armies),
         chars:JSON.stringify(s.chars),realms:JSON.stringify(s.realms)};};
-      const s=FB.state,before=material(s);
+      const s=FB.state,before=material(s),copies={chars:JSON.parse(JSON.stringify(s.chars)),realms:JSON.parse(JSON.stringify(s.realms))};
+      // Name the first changed records and fields, including order-only changes.
+      const changed=function (was,now) {
+        return Object.keys(Object.assign({},was,now)).filter(function (id) {
+          return JSON.stringify(was[id])!==JSON.stringify(now[id]);
+        }).slice(0,5).map(function (id) {
+          const a=was[id] || {},b=now[id] || {};
+          const fields=Object.keys(Object.assign({},a,b)).filter(function (k) {return JSON.stringify(a[k])!==JSON.stringify(b[k]);});
+          return id+(was[id] ? '' : ' added')+(now[id] ? '' : ' removed')+': '+(fields.length ? fields.map(function (k) {
+            return k+' '+String(JSON.stringify(a[k])).slice(0,80)+' -> '+String(JSON.stringify(b[k])).slice(0,80);
+          }).join('; ') : 'key order '+Object.keys(a).join(',').slice(0,160)+' -> '+Object.keys(b).join(',').slice(0,160));
+        });
+      };
       const saved=JSON.parse(FB.save.serialize());FBDATA.bookmarks['1241'].revision='operations_v2';
       FB.save.restore(saved);
       const restored=FB.state,after=material(restored),same={};
       Object.keys(before).forEach(function (key) {same[key]=before[key]===after[key];});
       return {absent:!restored.realms[ids.command] && !restored.realms[ids.following],same:same,
+        changed:{chars:changed(copies.chars,restored.chars),realms:changed(copies.realms,restored.realms)},
         warnings:FB.save.lastRestoreWarnings.map(function (w) {return w.stage+': '+String(w.error && w.error.message || w.error);})};
-    },{command:command,following:following})).toEqual({absent:true,warnings:[],
+    },{command:command,following:following})).toEqual({absent:true,warnings:[],changed:{chars:[],realms:[]},
       same:{start:true,setup:true,authority:true,armies:true,chars:true,realms:true}});
   });
 }
@@ -216,7 +229,17 @@ test('matching divergent operations retain losses, depleted stores, peace and ca
       Object.assign({},state.authority,{schema:undefined}),state.armies,
       state.wars,state.chars,state.realms,state.player,state.treasuryAccounting]);};
     M.validate(s);const before=material(s),rng=FB.getRngState(),uid=FB.getUidCounter();
-    FB.save.restore(JSON.parse(FB.save.serialize()));
+    // Report which half of the round trip rejects, with both guard records.
+    let stage='serialize',saved=null;
+    try {saved=JSON.parse(FB.save.serialize());stage='restore';FB.save.restore(saved);}
+    catch (error) {
+      const host=k.guardedParty.declaration.hostActorId,copy=saved && (saved.state || saved),row=copy && M.row(copy,ids.following);
+      return {stage:stage,error:String(error && error.message || error),liveGuard:JSON.stringify(k.guardedParty),
+        savedGuard:row && JSON.stringify(row.guardedParty),
+        rowRevision:[k.revision,row && row.revision],rowStatus:[k.status,row && row.status],
+        host:[FB.bookmarkActor(s,host) && FB.bookmarkActor(s,host).id,copy && FB.bookmarkActor(copy,host) && FB.bookmarkActor(copy,host).id],
+        guardedChars:k.guardedParty.characterIds.map(function (id) {return [id,!!s.chars[id],!!(copy && copy.chars[id])];})};
+    }
     const restored=FB.state,same=before===material(restored);
     M.initialize(restored,FB.campaignBookmark(restored).realms);E.day(restored);
     return same && before===material(restored) && FB.realmWars(restored,ids.command).length===0 &&
