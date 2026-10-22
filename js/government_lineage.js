@@ -146,6 +146,7 @@
     delete s.realms[rid].succession;
     [s.authority, s.chars, s.settlementLordships, s.localInstitutions].forEach(function (table) { remap(table, rid, 'player'); });
     remapStories(s, rid, 'player');
+    if (FB.mobile) FB.mobile.remapAgreementPartners(s,rid,'player');
     FB.rebuildRulerIndex(s); G.invalidate();
     if (FB.invalidateSettlementLordships) FB.invalidateSettlementLordships(s);
     return true;
@@ -169,6 +170,7 @@
     Object.keys(s.realms).forEach(function (id) { if (s.realms[id].liege === 'player') s.realms[id].liege = rid; });
     [s.authority, s.chars, s.settlementLordships, s.localInstitutions, s.armies].forEach(function (table) { remap(table, 'player', rid); });
     remapStories(s, 'player', rid);
+    if (FB.mobile) FB.mobile.remapAgreementPartners(s,'player',rid);
     if (FB.remapWarRealm) FB.remapWarRealm(s, 'player', rid);
     if (s.realmTech && s.realmTech.player) { s.realmTech[rid] = s.realmTech.player; delete s.realmTech.player; }
     if (FB.treasuryCreateRealm) FB.treasuryCreateRealm(s, rid, null, 0);

@@ -479,3 +479,7 @@ Local followings, Following unavailable, camp-location notes and target labels u
 Outside passage policy provenance
 
 localPassagePolicies and accessOrigin.passagePolicy store only protocol ids, numeric schema and accept/decline/null response tokens. Invalid local passage policies and invalid saved policy provenance use literal FB.T strings in js/expedition_programs.js. Existing source-sheet consent, payment, scope and status phrases remain with their current UI owners; no rendered prose enters a save and no new display catalogue or regeneration is required.
+
+Corridor receipt presentation
+
+Corridor decisions reuse the existing literal FB.T county, payment, capacity, duration and original-outside-ruler labels. The strict saved-corridor rejection routes through FB.T as well. Original actor names remain identity data; neither rendered labels nor translated prose are stored in envelope, binding or receipt state. Individual receipts use the shared source/confirmation UI and ordinary English fallback. No generated catalogue is edited by this capability.

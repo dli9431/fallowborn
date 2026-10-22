@@ -512,12 +512,7 @@
     references(s.authority, id); references(s.armies, id);
     // Agreement counterparties are realm ids; preserve them when the host
     // court is adopted without rewriting unrelated partner fields.
-    Object.keys(s.authority && s.authority.governments || {}).forEach(function (rid) {
-      var mobile = s.authority.governments[rid].mobile;
-      (mobile && mobile.agreements || []).forEach(function (agreement) {
-        if (agreement.partnerId === id) agreement.partnerId = 'player';
-      });
-    });
+    if (FB.mobile) FB.mobile.remapAgreementPartners(s,id,'player');
     references(s.alliances, id); references(s.localInstitutions, id);
     references(s.settlementLordships, id);
     Object.keys(s.stories || {}).forEach(function (storyId) {

@@ -423,7 +423,7 @@
       r.members.some(function (m) {return m.principal.id===cid && m.allegiance;});
   }
   function committed(s,rid) {
-    return M.row(s,rid).agreements.some(function (a) {return a.kind!=='access' && a.status==='active' && a.endTurn>s.turn;}) ||
+    return M.agreements(s,rid).some(function (a) {return a.kind!=='access' && a.status==='active' && a.endTurn>s.turn;}) ||
       (s.authority.contracts || []).some(function (c) {return c.federateRealmId===rid && FB.political.contract(s,c.id).effective;});
   }
   M.columnCampHost = function (s,rid) {

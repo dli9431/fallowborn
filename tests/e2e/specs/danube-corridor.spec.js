@@ -19,7 +19,7 @@ dependsOnRuntime(__filename,[
   'js/mobile_confederations.js','js/mobile_command.js','js/mobile_columns.js','js/mobile_camps.js',
   'js/expedition_programs.js','js/story_expedition_program.js','js/story_expedition_preparation.js',
   'js/home_authority.js','js/armies.js','js/fortifications.js','js/wars.js','js/federates.js','js/mods.js',
-  'js/save.js','js/save_v4.js'
+  'js/save.js','js/save_v4.js','js/holywar.js','js/story_ruler_agenda.js','js/ui_mobile.js'
 ]);
 
 async function importAndBegin(page,info,configuration,countyIds) {
@@ -59,7 +59,8 @@ async function start(page,info,configuration) {
 
 async function completeImport(page,info,configuration) {
   const inventory=await start(page,info,configuration);
-  const mod=await page.evaluate(buildCorridorMod,{configuration:configuration,countyIds:inventory.countyIds});
+  const composition=Object.assign({},configuration,{composition:true});
+  const mod=await page.evaluate(buildCorridorMod,{configuration:composition,countyIds:inventory.countyIds});
   await info.attach('complete-route-import-'+configuration.id,{body:Buffer.from(JSON.stringify(mod,null,2)),contentType:'application/json'});
   // Collect both modes and every leg before any assertion about feasibility.
   // The attachment remains available even if the existing representation fails.
@@ -76,13 +77,12 @@ async function completeImport(page,info,configuration) {
     'Every actual county must have unallocated capacity for the whole following').toEqual([]);
   expect(inventory.waypointOccurrences).toBeLessThanOrEqual(32);
   expect(inventory.steps).toBeLessThanOrEqual(16);
-  // These are acceptance assertions, never skip conditions or truncation rules.
-  // An executed bound failure needs review of this complete attachment before
-  // any new storage representation can be chosen.
+  // Each fixed envelope holds sixteen independent original decisions.
+  // The legacy county and top-level agreement caps remain unchanged.
   expect(inventory.requiredRecords,'Complete original county negotiation count exceeds the existing sixteen-county program').toBeLessThanOrEqual(16);
-  expect(inventory.requiredRecords,'Complete original receipts exceed all available retained agreement slots').toBeLessThanOrEqual(inventory.availableRecords);
+  expect(Math.ceil(inventory.requiredRecords/16),'Complete fixed envelopes exceed available retained agreement slots').toBeLessThanOrEqual(inventory.availableRecords);
   expect(inventory.totalPrice).toBeLessThanOrEqual(configuration.treasury);
-  await importAndBegin(page,info,configuration,inventory.countyIds);
+  await importAndBegin(page,info,composition,inventory.countyIds);
   const actual=await page.evaluate(function () {return corridorCase.inventory(FB.state);});
   expect(actual.countyIds).toEqual(inventory.countyIds);
   expect(actual.legs).toEqual(inventory.legs);
@@ -90,6 +90,101 @@ async function completeImport(page,info,configuration) {
 }
 
 for (const configuration of cases) {
+  test(configuration.id+' corridor rejects the entire unaffordable, stale or over-capacity batch before its first offer',async function ({page},info) {
+    const inventory=await completeImport(page,info,configuration);
+    const result=await page.evaluate(function (inventory) {
+      const C=corridorCase,M=FB.mobile,E=FB.expeditionPrograms,base=C.copy(FB.state);
+      const last=inventory.countyIds[inventory.countyIds.length-1];
+      const rejected=[function (s) {s.population.counties[last].count=1;},
+        function (s) {s.realms[s.holder[last]].ruler.generation++;},
+        function (s) {FB.treasurySpend(s,C.rid,FB.treasuryAvailable(s,C.rid)-inventory.totalPrice+1);},
+        function (s) {M.host(s,C.rid).manual=true;}].map(function (change) {
+        const s=C.copy(base),old=E.review(s,C.rid,'permission_0');change(s);
+        const before=JSON.stringify([s,FBDATA]),rng=FB.getRngState(),uid=FB.getUidCounter(),q=E.review(s,C.rid,'permission_0');
+        return old.allowed && !q.allowed && !E.commit(s,old) && !E.commit(s,q) &&
+          before===JSON.stringify([s,FBDATA]) && rng===FB.getRngState() && uid===FB.getUidCounter() && !C.row(s).agreements.length;
+      });
+      const occupied=C.copy(base),row=C.row(occupied),actor={kind:'character',id:row.leaderId};
+      let ordinary=true;
+      for (let i=0;i<12;i++) {
+        ordinary=ordinary && M.commit(occupied,M.review(occupied,{realmId:C.rid,action:'offer',actor:actor,
+          terms:{kind:'access',partnerId:occupied.holder.cologne,countyIds:['cologne'],capacity:1,allowRecruit:false,price:1,duration:1440,levy:0}}));
+      }
+      const before=JSON.stringify(occupied),batch=E.corridorReview(occupied,C.rid);
+      return {rejected:rejected,ordinary:ordinary,slots:row.agreements.length===12 && !batch.allowed &&
+        before===JSON.stringify(occupied) && row.expeditionProgram.corridor===undefined};
+    },inventory);
+    expect(result).toEqual({rejected:Array(4).fill(true),ordinary:true,slots:true});
+    const missing=inventory.countyIds.filter(function (pid) {return pid!=='frankfurt';});
+    await importAndBegin(page,info,Object.assign({},configuration,{composition:true}),missing);
+    expect(await page.evaluate(function () {
+      const s=FB.state,C=corridorCase,E=FB.expeditionPrograms,before=JSON.stringify(s),q=E.review(s,C.rid,'permission_0');
+      return !q.allowed && !E.commit(s,q) && before===JSON.stringify(s) && !C.row(s).agreements.length;
+    })).toBe(true);
+  });
+
+  test(configuration.id+' corridor retains fixed child slots and strict partial refused history',async function ({page},info) {
+    const inventory=await completeImport(page,info,configuration);
+    const result=await page.evaluate(function (inventory) {
+      const C=corridorCase,M=FB.mobile,E=FB.expeditionPrograms,s=FB.state;
+      const first=E.review(s,C.rid,'permission_0'),offer=E.commit(s,first),row=C.row(s),a=M.agreements(s,C.rid)[0];
+      const fixed=row.agreements.length===Math.ceil(inventory.requiredRecords/16) && row.agreements[0].receipts.length===16 &&
+        row.agreements[0].receipts.slice(1).every(function (v) {return v===null;}) && !M.provisioningAccess(s,C.rid,'cologne');
+      const changes=[function (r) {r.agreements[0].receipts.pop();},function (r) {r.agreements[0].receipts.reverse();},
+        function (r) {r.agreements[0].receipts[1]=C.copy(r.agreements[0].receipts[0]);},
+        function (r) {r.expeditionProgram.corridor.entries.reverse();},function (r) {r.expeditionProgram.corridor.routes[0].legs[0].path=['regensburg'];},
+        function (r) {delete r.expeditionProgram.corridor;},function (r) {r.agreements[0].status='active';},
+        function (r) {r.agreements[0].receipts[0].id='foreign_receipt';}];
+      const malformed=changes.map(function (change) {
+        const candidate=C.copy(s);change(C.row(candidate));const before=JSON.stringify(candidate);let denied=false;
+        try {M.validate(candidate);} catch (error) {denied=true;}return denied && before===JSON.stringify(candidate);
+      });
+      C.next(s);
+      const before=JSON.stringify(s),refuse=M.review(s,{realmId:C.rid,action:'decline',
+        actor:{kind:'character',id:a.accessOrigin.chain[0].personId},terms:{agreementId:a.id}}),pure=before===JSON.stringify(s),
+        money=FB.treasuryAvailable(s,C.rid),declined=M.commit(s,refuse),history=JSON.stringify(row.agreements);
+      C.next(s);E.day(s);const noRefill=history===JSON.stringify(row.agreements) && a.status==='ended' &&
+        FB.treasuryAvailable(s,C.rid)===money && !E.review(s,C.rid,'permission_0').allowed;
+      return {offer:offer,fixed:fixed,malformed:malformed,declined:declined,noRefill:noRefill,pure:pure};
+    },inventory);
+    expect(result).toEqual({offer:true,fixed:true,malformed:Array(8).fill(true),declined:true,noRefill:true,pure:true});
+  });
+
+  test(configuration.id+' corridor allocates all envelopes once and rejects mixed or oversized declarations',async function ({page},info) {
+    const inventory=await start(page,info,configuration);
+    const ids=await page.evaluate(function (inventory) {
+      const s=FB.state,C=corridorCase,ids=inventory.countyIds.slice();
+      FB.campaignBookmark(s).provinces.forEach(function (p) {
+        if (ids.length>=65 || p.wasteland || ids.indexOf(p.id)>=0 || !s.population.counties[p.id] ||
+            Math.floor(s.population.counties[p.id].count*0.15)<C.configuration.capacity) return;
+        const chain=C.chain(s,p.id),policy=chain && FB.expeditionPrograms.resolvePassagePolicy(FB.campaignBookmark(s),chain[0].formId);
+        if (chain && chain.every(function (v) {return v.alive;}) && policy==='accept') ids.push(p.id);
+      });return ids;
+    },inventory);
+    expect(ids).toHaveLength(65);
+    const composition=Object.assign({},configuration,{composition:true,treasury:1000});
+    const oversized=await page.evaluate(buildCorridorMod,{configuration:composition,countyIds:ids});
+    const mixed=JSON.parse(JSON.stringify(oversized));
+    const revision=mixed.bookmarks['1096'].revisions.route_review_v1;
+    const program=revision.realms.find(function (d) {return d.id==='route_review_'+configuration.id;}).mobile.expeditionProgram;
+    program.steps=program.steps.filter(function (step) {return step.id!=='permission_4';});
+    program.steps.forEach(function (step) {step.after=step.after.filter(function (id) {return id!=='permission_4';});});
+    program.steps[0].adapter='local_access';
+    for (const candidate of [oversized,mixed]) expect(await page.evaluate(function (mod) {
+      const before=JSON.stringify([mod,FBDATA,FB.state]),errors=FB.mods.validate(mod);
+      return errors.length>0 && before===JSON.stringify([mod,FBDATA,FB.state]);
+    },candidate)).toBe(true);
+    await importAndBegin(page,info,composition,ids.slice(0,33));
+    expect(await page.evaluate(function () {
+      const C=corridorCase,M=FB.mobile,E=FB.expeditionPrograms,s=FB.state,q=E.review(s,C.rid,'permission_0'),done=E.commit(s,q),r=C.row(s);
+      const sizes=r.agreements.map(function (a) {return a.receipts.length;}),ids=r.agreements.map(function (a) {return a.id;});
+      const partial=C.restore(),current=C.row(FB.state),before=JSON.stringify(current.agreements);
+      C.next(FB.state);const stop=M.commit(FB.state,C.control(FB.state,'cancel')),cancelled=C.restore();
+      return {done:done,sizes:sizes,partial:partial,stop:stop,cancelled:cancelled,
+        unchanged:before===JSON.stringify(C.row(FB.state).agreements) && ids.join('|')===C.row(FB.state).agreements.map(function (a) {return a.id;}).join('|')};
+    })).toEqual({done:true,sizes:[16,16,1],partial:true,stop:true,cancelled:true,unchanged:true});
+  });
+
   test(configuration.id+' complete actual corridor obtains original receipts, finite payments and strict retained saves',async function ({page},info) {
     const inventory=await completeImport(page,info,configuration);
     const result=await page.evaluate(function (inventory) {
@@ -100,7 +195,7 @@ for (const configuration of cases) {
       const q=E.review(FB.state,C.rid,'permission_0'),offered=E.commit(FB.state,q),offeredRestore=C.restore();C.next(FB.state);
       const response=E.review(FB.state,C.rid,'permission_0'),accepted=E.commit(FB.state,response),
         repeated=!E.commit(FB.state,response),acceptedRestore=C.restore();C.next(FB.state);
-      const negotiated=C.negotiate(FB.state,true),s=FB.state,agreements=C.row(s).agreements,
+      const replay=C.copy(FB.state),negotiated=C.negotiate(FB.state,true),replayed=C.negotiate(replay,true),s=FB.state,agreements=M.agreements(s,C.rid),
         credits={},cost=agreements.reduce(function (n,a) {credits[a.partnerId]=(credits[a.partnerId] || 0)+a.price;return n+a.price;},0);
       const original=agreements.every(function (a) {
         const county=inventory.counties.find(function (v) {return v.countyId===a.countyIds[0];});
@@ -125,23 +220,23 @@ for (const configuration of cases) {
       const missing=C.copy(FB.state),leg=inventory.legs[0],interior=leg.plan.path.find(function (pid) {
         return C.configuration.waypoints.indexOf(pid)<0;
       });
-      const omittedRow=C.row(missing),omitted=omittedRow.agreements.find(function (a) {return a.countyIds[0]===interior;});
+      const omittedRow=C.row(missing),omitted=M.agreements(missing,C.rid).find(function (a) {return a.countyIds[0]===interior;});
       if (!omitted) throw new Error('The complete first leg must expose an intervening county for omission coverage');
-      omittedRow.agreements=omittedRow.agreements.filter(function (a) {return a.id!==omitted.id;});
+      omitted.status='ended';
       omittedRow.expeditionProgram.steps[0].agreementIds=omittedRow.expeditionProgram.steps[0].agreementIds.filter(function (id) {return id!==omitted.id;});
       const missingBytes=JSON.stringify(missing),missingReview=E.review(missing,C.rid,'field_route'),
         omission=!C.covered(missing,inventory) && !missingReview.allowed && !E.commit(missing,missingReview) && missingBytes===JSON.stringify(missing);
-      const broken=[function (r) {r.agreements.splice(0,1);},function (r) {r.agreements[0].accessOrigin.chain[0].personId='missing';},
-        function (r) {r.agreements[0].accessOrigin.passagePolicy.response='decline';},
-        function (r) {r.agreements[0].price++;},function (r) {r.expeditionProgram.schema=3;},
+      const broken=[function (r) {r.agreements.splice(0,1);},function (r) {r.agreements[0].receipts[0].accessOrigin.chain[0].personId='missing';},
+        function (r) {r.agreements[0].receipts[0].accessOrigin.passagePolicy.response='decline';},
+        function (r) {r.agreements[0].receipts[0].price++;},function (r) {r.expeditionProgram.schema=3;},
         function (r) {r.expeditionProgram.steps[0].agreementIds=[];},function (r) {r.agreements.push(C.copy(r.agreements[0]));}]
         .map(function (change) {const candidate=C.copy(FB.state);change(C.row(candidate));const before=JSON.stringify(candidate);
           let denied=false;try {M.validate(candidate);} catch (error) {denied=true;}return denied && before===JSON.stringify(candidate);});
       const cancelled=M.commit(FB.state,C.control(FB.state,'cancel')),cancelledRestore=C.restore();
-      const row=C.row(FB.state),origins=JSON.stringify(row.agreements.map(function (a) {return a.accessOrigin;}));
-      C.atTurn(FB.state,Math.max.apply(null,row.agreements.map(function (a) {return a.endTurn;})));FB.mobileDay(FB.state);
-      const ended=C.row(FB.state).agreements,endedRestore=C.restore();
-      const compaction=C.row(FB.state).agreements.every(function (a) {return a.accessOrigin.chain.every(function (p) {
+      const row=C.row(FB.state),origins=JSON.stringify(M.agreements(FB.state,C.rid).map(function (a) {return a.accessOrigin;}));
+      C.atTurn(FB.state,Math.max.apply(null,M.agreements(FB.state,C.rid).map(function (a) {return a.endTurn;})));FB.mobileDay(FB.state);
+      const ended=M.agreements(FB.state,C.rid),endedRestore=C.restore();
+      const compaction=M.agreements(FB.state,C.rid).every(function (a) {return a.accessOrigin.chain.every(function (p) {
         return FB.courtRecordRetained(FB.state,FB.state.chars[p.personId],{},{});
       });});
       return {pending:pending,offered:offered,offeredRestore:offeredRestore,accepted:accepted,repeated:repeated,
@@ -151,6 +246,7 @@ for (const configuration of cases) {
         trace:negotiated.trace.filter(function (v) {return v.action==='accept';}).every(function (v) {
           return Math.abs(v.balances.debit-v.balances.price)<1e-8 && Math.abs(v.balances.credit-v.balances.price)<1e-8;}),
         conserved:initial===JSON.stringify([s.owner,s.holder,s.population]) && people===M.total(s,C.rid),retained:retained,
+        replay:replayed.complete && JSON.stringify([C.row(replay),replay.treasury,replay.realms])===JSON.stringify([C.row(s),s.treasury,s.realms]),
         supply:finiteSupply,controls:paused && pauseDenies && pauseRepeats && resumed,omission:omission,broken:broken,
         cancelled:cancelled,cancelledRestore:cancelledRestore,ended:ended.length===inventory.requiredRecords &&
           ended.every(function (a) {return a.status==='ended' && !M.provisioningAccess(FB.state,C.rid,a.countyIds[0]);}),
@@ -158,7 +254,7 @@ for (const configuration of cases) {
     },inventory);
     expect(result).toEqual({pending:true,offered:true,offeredRestore:true,accepted:true,repeated:true,acceptedRestore:true,
       complete:true,receipts:inventory.requiredRecords,original:true,covered:true,payment:true,credits:true,trace:true,
-      conserved:true,retained:true,supply:true,controls:true,omission:true,broken:Array(7).fill(true),cancelled:true,cancelledRestore:true,
+      conserved:true,retained:true,replay:true,supply:true,controls:true,omission:true,broken:Array(7).fill(true),cancelled:true,cancelledRestore:true,
       ended:true,origins:true,compaction:true,endedRestore:true});
   });
 
@@ -176,13 +272,14 @@ for (const configuration of cases) {
           stepId=leg.mode+'_route',checkpoint=row.expeditionProgram.steps.find(function (v) {return v.id===stepId;});
         a.at=leg.origin;a.path=[];a.goal=null;a.moveLeft=0;a.from=null;a.mobileCourt=mode;
         moving.at=mode ? leg.origin : C.configuration.campOrigin;checkpoint.cursor=leg.index;
+        row.expeditionProgram.steps.find(function (v) {return v.id===(mode ? 'field_route' : 'camp_route');}).status='cancelled';
         const plan=FB.armyOrderPlan(s,a,leg.target),whole=C.complete(plan,leg.origin,leg.target) &&
           [leg.origin].concat(plan.path).every(function (pid) {return M.passage(s,C.rid,pid,mode) && M.provisioningAccess(s,C.rid,pid);});
         const q=E.review(s,C.rid,stepId),issued=E.commit(s,q);
         FB.state=s;const inFlight=C.restore();const live=FB.state,host=M.host(live,C.rid),camp=M.migration(live,C.rid);
         const manual=C.copy(live),ma=M.host(manual,C.rid);ma.manual=true;ma.goal=leg.origin;ma.path=[];ma.moveLeft=0;
         E.reconcile(manual);const manualPreserved=ma.manual && ma.goal===leg.origin && C.row(manual).expeditionProgram.execution.paused;
-        const stale=C.copy(live),first=plan.path[0],receipt=C.row(stale).agreements.find(function (a) {return a.countyIds[0]===first;});
+        const stale=C.copy(live),first=plan.path[0],receipt=M.agreements(stale,C.rid).find(function (a) {return a.countyIds[0]===first;});
         stale.chars[receipt.accessOrigin.chain[0].personId].captive=true;E.reconcile(stale);
         const stopped=M.host(stale,C.rid).path.length===0;
         // A dated near-arrival fixture, not simulated travel through the
