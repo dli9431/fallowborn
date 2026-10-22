@@ -333,7 +333,9 @@
       if (!r) return;
       function fail() {throw new Error(FB.T('Invalid saved mobile command.'));}
       if (!spec) {if (r.command!==undefined || r.schema===3) fail();return;}
-      var c=r.command, form=G.forRealm(s,rid);
+      // Compact saves omit alive:true until inflation. Validate the saved
+      // form itself without treating that codec omission as a dead realm.
+      var c=r.command, form=G.resolve(s.authority.governments[rid].formId);
       if (r.schema!==3 || !keys(c,['id','status','revision','issuer','leaderGeneration']) || c.id!==spec.id ||
           ['active','vacant','recalled'].indexOf(c.status)<0 || !Number.isSafeInteger(c.revision) || c.revision<0 || c.revision>r.revision ||
           !Number.isSafeInteger(c.leaderGeneration) || c.leaderGeneration<1 ||

@@ -96,7 +96,7 @@ for (const configuration of cases) {
       const C=corridorCase,M=FB.mobile,E=FB.expeditionPrograms,base=C.copy(FB.state);
       const last=inventory.countyIds[inventory.countyIds.length-1];
       const rejected=[function (s) {s.population.counties[last].count=1;},
-        function (s) {s.realms[s.holder[last]].ruler.generation++;},
+        function (s) {s.chars[C.chain(s,last)[0].personId].dead=true;},
         function (s) {FB.treasurySpend(s,C.rid,FB.treasuryAvailable(s,C.rid)-inventory.totalPrice+1);},
         function (s) {M.host(s,C.rid).manual=true;}].map(function (change) {
         const s=C.copy(base),old=E.review(s,C.rid,'permission_0');change(s);
@@ -111,10 +111,19 @@ for (const configuration of cases) {
           terms:{kind:'access',partnerId:occupied.holder.cologne,countyIds:['cologne'],capacity:1,allowRecruit:false,price:1,duration:1440,levy:0}}));
       }
       const before=JSON.stringify(occupied),batch=E.corridorReview(occupied,C.rid);
+      // A fresh quote may bind the current generation before allocation,
+      // but no stale quote may commit and allocated originals never retarget.
+      const changed=C.copy(base),old=E.review(changed,C.rid,'permission_0'),holder=changed.holder[last];
+      changed.realms[holder].ruler.generation=FB.realmRulerGeneration(changed,holder)+1;
+      const changedBytes=JSON.stringify(changed),stale=!E.commit(changed,old) && changedBytes===JSON.stringify(changed);
+      const bound=C.copy(base),offered=E.commit(bound,E.review(bound,C.rid,'permission_0'));C.next(bound);
+      bound.realms[holder].ruler.generation=FB.realmRulerGeneration(bound,holder)+1;
+      const boundBytes=JSON.stringify(bound),q=E.review(bound,C.rid,'permission_0');
       return {rejected:rejected,ordinary:ordinary,slots:row.agreements.length===12 && !batch.allowed &&
-        before===JSON.stringify(occupied) && row.expeditionProgram.corridor===undefined};
+        before===JSON.stringify(occupied) && row.expeditionProgram.schema===5 && row.expeditionProgram.corridor===null,
+        generation:stale && offered && !q.allowed && !E.commit(bound,q) && boundBytes===JSON.stringify(bound)};
     },inventory);
-    expect(result).toEqual({rejected:Array(4).fill(true),ordinary:true,slots:true});
+    expect(result).toEqual({rejected:Array(4).fill(true),ordinary:true,slots:true,generation:true});
     const missing=inventory.countyIds.filter(function (pid) {return pid!=='frankfurt';});
     await importAndBegin(page,info,Object.assign({},configuration,{composition:true}),missing);
     expect(await page.evaluate(function () {
@@ -189,6 +198,9 @@ for (const configuration of cases) {
     const inventory=await completeImport(page,info,configuration);
     const result=await page.evaluate(function (inventory) {
       const C=corridorCase,M=FB.mobile,E=FB.expeditionPrograms;
+      const compact=JSON.parse(FB.save.serialize()),compactBytes=JSON.stringify(compact);
+      const compactCommand=compact.state.realms[C.rid].alive===undefined && M.validate(compact.state) &&
+        compactBytes===JSON.stringify(compact);
       const pending=C.restore(),money=FB.treasuryAvailable(FB.state,C.rid);
       const initial=JSON.stringify([FB.state.owner,FB.state.holder,FB.state.population]),people=M.total(FB.state,C.rid),balances={};
       Object.keys(FB.state.realms).forEach(function (rid) {balances[rid]=FB.treasuryAvailable(FB.state,rid);});
@@ -239,7 +251,7 @@ for (const configuration of cases) {
       const compaction=M.agreements(FB.state,C.rid).every(function (a) {return a.accessOrigin.chain.every(function (p) {
         return FB.courtRecordRetained(FB.state,FB.state.chars[p.personId],{},{});
       });});
-      return {pending:pending,offered:offered,offeredRestore:offeredRestore,accepted:accepted,repeated:repeated,
+      return {compactCommand:compactCommand,pending:pending,offered:offered,offeredRestore:offeredRestore,accepted:accepted,repeated:repeated,
         acceptedRestore:acceptedRestore,complete:negotiated.complete,receipts:agreements.length,original:original,covered:covered,
         payment:Math.abs(money-FB.treasuryAvailable(FB.state,C.rid)-cost)<1e-8,
         credits:Object.keys(credits).every(function (rid) {return Math.abs(FB.treasuryAvailable(FB.state,rid)-balances[rid]-credits[rid])<1e-8;}),
@@ -252,7 +264,7 @@ for (const configuration of cases) {
           ended.every(function (a) {return a.status==='ended' && !M.provisioningAccess(FB.state,C.rid,a.countyIds[0]);}),
         origins:origins===JSON.stringify(ended.map(function (a) {return a.accessOrigin;})),compaction:compaction,endedRestore:endedRestore};
     },inventory);
-    expect(result).toEqual({pending:true,offered:true,offeredRestore:true,accepted:true,repeated:true,acceptedRestore:true,
+    expect(result).toEqual({compactCommand:true,pending:true,offered:true,offeredRestore:true,accepted:true,repeated:true,acceptedRestore:true,
       complete:true,receipts:inventory.requiredRecords,original:true,covered:true,payment:true,credits:true,trace:true,
       conserved:true,retained:true,replay:true,supply:true,controls:true,omission:true,broken:Array(7).fill(true),cancelled:true,cancelledRestore:true,
       ended:true,origins:true,compaction:true,endedRestore:true});
