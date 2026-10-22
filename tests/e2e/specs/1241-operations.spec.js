@@ -62,6 +62,18 @@ test('the fresh world validates every retained revision without changing their o
   }));
 });
 
+test('the shipped 1241 mobile profiles validate and leave mobileProfiles imports open',async function ({page},info) {
+  await openGame(page,info);
+  const facts=await page.evaluate(function () {
+    const copy=function (v) {return JSON.parse(JSON.stringify(v));};
+    return {schema:FBDATA.mobileProfiles.western_command_1241.supplyPolicy.schema,
+      profiles:FB.mobile.validateProfiles(),governments:FB.governments.validate(),
+      mod:FB.mods.validate({name:'1241 profile import proof',
+        mobileProfiles:{import_proof_1241:copy(FBDATA.mobileProfiles.western_command_1241)}})};
+  });
+  expect(facts).toEqual({schema:1,profiles:[],governments:[],mod:[]});
+});
+
 test('the dated combined opening conserves both populations, exact forces, food and accounts at real distinct places',async function ({page},info) {
   await start(page,info);
   const result=await page.evaluate(function (ids) {

@@ -18,7 +18,7 @@
     recruitShare:0.4,recruitCost:0.02,foodPerPerson:0.01,pasturePerPerson:1.8,
     accessDays:90,accessPrice:4,starvationShare:0.001,defeatShare:0.02,
     settlementForm:'regnum',regions:['volodymyr','krakow','cluj','gyula'],
-    supplyPolicy:{targetDays:30,carryDays:30,cashReserve:48,
+    supplyPolicy:{schema:1,targetDays:30,carryDays:30,cashReserve:48,
       replacement:{targetMen:2400,maxPerReview:80,unitIds:['horsearcher','cav']}},
     members:[
       {id:'batu_people',weight:4,pledge:0.3,population:4000},
