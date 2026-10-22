@@ -128,15 +128,19 @@ for (const revision of retained) {
   test(revision+' matching saves keep absent operations after the fresh catalogue advances',async function ({page},info) {
     await start(page,info,revision);
     expect(await page.evaluate(function (ids) {
-      const material=function (s) {return JSON.stringify([s.start,s.bookmarkSetup,
-        Object.assign({},s.authority,{schema:undefined}),s.armies,s.chars,s.realms]);};
+      // Compare each part separately so a mismatch names what changed.
+      const material=function (s) {return {start:JSON.stringify(s.start),setup:JSON.stringify(s.bookmarkSetup),
+        authority:JSON.stringify(Object.assign({},s.authority,{schema:undefined})),armies:JSON.stringify(s.armies),
+        chars:JSON.stringify(s.chars),realms:JSON.stringify(s.realms)};};
       const s=FB.state,before=material(s);
       const saved=JSON.parse(FB.save.serialize());FBDATA.bookmarks['1241'].revision='operations_v2';
       FB.save.restore(saved);
-      const restored=FB.state;
-      return !restored.realms[ids.command] && !restored.realms[ids.following] &&
-        before===material(restored);
-    },{command:command,following:following})).toBe(true);
+      const restored=FB.state,after=material(restored),same={};
+      Object.keys(before).forEach(function (key) {same[key]=before[key]===after[key];});
+      return {absent:!restored.realms[ids.command] && !restored.realms[ids.following],same:same,
+        warnings:FB.save.lastRestoreWarnings.map(function (w) {return w.stage+': '+String(w.error && w.error.message || w.error);})};
+    },{command:command,following:following})).toEqual({absent:true,warnings:[],
+      same:{start:true,setup:true,authority:true,armies:true,chars:true,realms:true}});
   });
 }
 
@@ -292,8 +296,11 @@ test('forged combined save provenance rejects without replacing the active campa
 for (const prefix of ['harbor','dune']) {
   test(prefix+' imports a complete independent guarded-party and dispersed-camps configuration through Mods',async function ({page},info) {
     await openGame(page,info);
+    const file=path.resolve(__dirname,'../fixtures/authoring/guarded-camps-'+prefix+'.json');
+    // Validate first so a rejected import reports its reason instead of a navigation timeout.
+    expect(await page.evaluate(function (mod) {return FB.mods.validate(mod);},require(file))).toEqual([]);
     await page.evaluate(function () {FB.ui.showMods();});
-    await page.locator('#modfile').setInputFiles(path.resolve(__dirname,'../fixtures/authoring/guarded-camps-'+prefix+'.json'));
+    await page.locator('#modfile').setInputFiles(file);
     await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}),page.locator('#mod-apply').click()]);
     await page.waitForFunction(function (p) {return window.FB && FB.game && FB.game.bootReady && FBDATA.bookmarks[p+'_world'];},prefix);
     await beginBookmark(page,info,prefix+'_world',prefix+'_household');

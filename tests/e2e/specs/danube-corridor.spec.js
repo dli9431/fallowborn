@@ -41,7 +41,9 @@ async function importAndBegin(page,info,configuration,countyIds) {
     return {men:M.host(s,C.rid).men,people:M.total(s,C.rid),camp:M.migration(s,C.rid).at,
       field:M.host(s,C.rid).at,agreements:C.row(s).agreements.length,
       cologne:M.provisioningAccess(s,C.rid,'cologne'),valid:M.validate(s),
-      treasury:FB.treasuryAvailable(s,C.rid),profileLimit:M.profile(s,C.rid).maxAgreements};
+      // The declared credit is added to the ordinary rank opening account.
+      treasury:FB.treasuryAvailable(s,C.rid)-((FBDATA.balance.aiTreasuryOpeningFloor || [0,10,20,30,40])[Math.min(4,s.realms[C.rid].rank)] || 0),
+      profileLimit:M.profile(s,C.rid).maxAgreements};
   })).toEqual({men:configuration.fighters,people:configuration.fighters+configuration.civilians,camp:'cologne',field:'cologne',
     agreements:0,cologne:false,valid:true,treasury:configuration.treasury,profileLimit:12});
   return mod;
