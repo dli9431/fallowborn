@@ -25,6 +25,14 @@
     if (value.endTurn !== null && (!Number.isInteger(value.endTurn) ||
         value.endTurn < value.startTurn)) invalid(where + '.endTurn');
   }
+  /* A following whose every principal is held in its separate guarded
+     party travels with an empty court; the guard record owns those people. */
+  function guardedCourt(state, rid) {
+    var M = FB.mobile, r = M && M.separatePartyMember && M.row(state, rid);
+    return !!r && r.members.length > 0 && r.members.every(function (m) {
+      return M.separatePartyMember(state, rid, m.principal.id);
+    });
+  }
   function rows(authority, key, seen, check) {
     if (!Array.isArray(authority[key])) invalid('authority.' + key);
     authority[key].forEach(function (value, index) {
@@ -387,7 +395,7 @@
             value.endTurn <= value.startTurn ||
             !known('government', value.settlementForm) ||
             FB.governments.resolve(value.settlementForm).use.territory.profile(null, null, {}).movingCourt ||
-            !Array.isArray(value.courtIds) || !value.courtIds.length ||
+            !Array.isArray(value.courtIds) || !value.courtIds.length && !guardedCourt(state, value.realmId) ||
             value.courtIds.some(function (id, index) {
               return typeof id !== 'string' || !id || value.courtIds.indexOf(id) !== index;
             }) || [value.origin, value.at, value.target].some(function (id) {
