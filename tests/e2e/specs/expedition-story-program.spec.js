@@ -11,17 +11,22 @@ dependsOnRuntime(__filename,['index.html','data/mobile_confederations.js','data/
   'js/mobile_confederations.js','js/mobile_command.js','js/mobile_columns.js','js/government_selection.js',
   'js/governments.js','js/authority.js','js/home_authority.js','js/treasury.js','js/population.js','js/market.js',
   'js/armies.js','js/federates.js','js/logistics.js','js/holywar.js','js/religion.js','js/wars.js',
-  'js/world.js','js/mods.js','js/bookmark_setup.js','js/starts.js','js/model.js','js/station.js','js/util.js',
+  'js/world.js','js/mods.js','js/title_ids.js','js/bookmark_setup.js','js/starts.js','js/model.js','js/station.js','js/util.js',
   'js/save.js','js/save_v4.js','js/ui_misc.js','js/ui_panels.js','js/ui_mobile.js','js/main.js']);
 
 async function begin(page,info,label,modified) {
   await openGame(page,info);
+  expect(await page.evaluate(function (mod) {return FB.mods.validate(mod);},modified || examples[label]),
+    label+' ordinary import validation').toEqual([]);
   await page.evaluate(function () {FB.ui.showMods();});
   await page.locator('#modfile').setInputFiles(modified ? {name:'expedition-story-'+label+'.json',mimeType:'application/json',
     buffer:Buffer.from(JSON.stringify(modified))} : path.resolve(__dirname,'../fixtures/authoring/expedition-story-'+label+'.json'));
   await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}),page.locator('#mod-apply').click()]);
   const prefix=label==='harbor' ? 'harbor' : 'dune';
-  await page.waitForFunction(function (prefix) {return window.FB && FB.game && FB.game.bootReady && FBDATA.bookmarks[prefix+'_world'];},prefix);
+  await page.waitForFunction(function () {return window.FB && FB.game && FB.game.bootReady;});
+  expect(await page.evaluate(function (prefix) {
+    FB.mods.assertReady();return !!FBDATA.bookmarks[prefix+'_world'];
+  },prefix),'ordinary imported bookmark survives activation').toBe(true);
   await beginBookmark(page,info,prefix+'_world',prefix+'_household');
   await page.evaluate(function (label) {
     const prefix=label==='harbor' ? 'harbor' : 'dune';
@@ -152,6 +157,23 @@ for (const label of ['harbor','upland']) {
   });
 }
 
+test('same-file bookmark faith targets normalize and reject unknown titles before storage without mutation',async function ({page},info) {
+  await openGame(page,info);
+  const result=await page.evaluate(function (examples) {
+    const before=JSON.stringify([FB.state,FBDATA,examples]),rng=FB.getRngState(),uid=FB.getUidCounter();
+    const cases=Object.keys(examples).map(function (label) {
+      const mod=examples[label],prefix=label==='harbor' ? 'harbor' : 'dune',faith=prefix+'_belief',target=prefix+'_country',
+        normalized=FB.titleIds.normalizeMod(mod),config=normalized.religions[faith].properties.head.greatHolyWar,
+        unknown=JSON.parse(JSON.stringify(mod));
+      unknown.religions[faith].properties.head.greatHolyWar.firstTarget='missing_expedition_kingdom';
+      return {valid:FB.mods.validate(mod),target:config.firstTarget===target && config.sacredTargets[0].kingdom===target,
+        local:!Object.prototype.hasOwnProperty.call(FBDATA.kingdoms,target),rejected:FB.mods.validate(unknown).length>0};
+    });
+    return {cases:cases,pure:before===JSON.stringify([FB.state,FBDATA,examples]) && rng===FB.getRngState() && uid===FB.getUidCounter()};
+  },examples);
+  expect(result).toEqual({cases:[{valid:[],target:true,local:true,rejected:true},{valid:[],target:true,local:true,rejected:true}],pure:true});
+});
+
 test('detached JSON rejects unsupported composition, foreign references and excessive waypoint totals without mutation',async function ({page},info) {
   await openGame(page,info);
   const result=await page.evaluate(function (source) {
@@ -166,10 +188,10 @@ test('detached JSON rejects unsupported composition, foreign references and exce
     const rejected=changes.map(function (change) {const m=JSON.parse(JSON.stringify(source)),d=m.bookmarks.harbor_world.realms.find(function (r) {return r.mobile;});
       change(m,d,m.storyInstances.harbor_story_program);const input=JSON.stringify(m);return FB.mods.validate(m).length>0 && input===JSON.stringify(m);});
     const plain=JSON.parse(JSON.stringify(source));delete plain.storyInstances.harbor_story_program;plain.bookmarks.harbor_world.stories.pop();
-    return {rejected:rejected,optional:FB.mods.validate(plain).length===0,pure:before===JSON.stringify([FB.state,FBDATA]) &&
+    return {rejected:rejected,optional:FB.mods.validate(plain),pure:before===JSON.stringify([FB.state,FBDATA]) &&
       rng===FB.getRngState() && uid===FB.getUidCounter()};
   },examples.harbor);
-  expect(result).toEqual({rejected:Array(12).fill(true),optional:true,pure:true});
+  expect(result).toEqual({rejected:Array(12).fill(true),optional:[],pure:true});
 });
 
 test('exact stale formation quotes reject changed original people, authority, consent, stock and money',async function ({page},info) {
