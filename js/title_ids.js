@@ -221,7 +221,22 @@ window.FB = window.FB || {};
     if (own(mod, 'items')) out.items = itemArtifactTitles(mod.items, tables);
     if (own(mod, 'religions')) {
       out.religions = titleFields(mod.religions, tables, 'mod.religions');
-      holyWarConfig(out.religions, tables);
+      // Faith targets may live in another effective bookmark, including a
+      // whole world supplied by this mod. Keep those titles out of the
+      // active world's hierarchy and honor same-id bookmark replacement.
+      var faithTables = { kingdoms:Object.assign({}, tables.kingdoms) };
+      var bookmarks = Object.assign({}, FBDATA.bookmarks);
+      if (Array.isArray(out.bookmarks)) out.bookmarks.forEach(function (bm) { bookmarks[bm.id] = bm; });
+      else Object.assign(bookmarks, out.bookmarks);
+      Object.keys(bookmarks).forEach(function (id) {
+        FB.bookmarkRevisions(id, bookmarks[id]).forEach(function (bm) {
+          Object.keys(bm.kingdoms || {}).forEach(function (key) {
+            var canonical = slug('kingdom', key);
+            if (canonical) faithTables.kingdoms[canonical] = bm.kingdoms[key];
+          });
+        });
+      });
+      holyWarConfig(out.religions, faithTables);
     }
     if (own(mod, 'historicalAmbitions')) {
       out.historicalAmbitions = copy(mod.historicalAmbitions);

@@ -38,6 +38,8 @@ Before applying each mod, FB.mods.validate and FB.mods.apply compose detached ef
 
 A start's explicit tracks:[] declares no player story tracks and is valid for data-only campaigns. Non-array values, duplicate ids, unknown tracks and world-story ids remain invalid. Optional empty lists do not disable validation of the surrounding scenario or bookmark.
 
+Global faith war targets resolve against the complete effective bookmark hierarchy, including worlds supplied in the same JSON mod. These references do not copy a bookmark's titles into the active world's hierarchy. Same-id bookmark replacements remove the previous world's targets from this lookup. Detached validation performs the same title normalization as activation, so missing targets reject before storage or reload.
+
 The existing top-level
 `provinces`/`realms`/hierarchy/straits/crossingClasses/scripted fields remain the public
 867 merge API. `straits` keep their two-id pair format; `crossingClasses` merges by its

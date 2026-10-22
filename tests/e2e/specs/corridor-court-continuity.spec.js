@@ -4,15 +4,17 @@ const {test,expect}=require('../support/fixture');
 const {openGame}=require('../support/game/navigation');
 const {beginBookmark}=require('../support/game/bookmark-acceptance');
 const {dependsOnRuntime}=require('../support/runtime-dependencies');
+const source=require('../fixtures/authoring/corridor-court-continuity.json');
 dependsOnRuntime(__filename,['index.html','data/mobile_confederations.js','data/political_institutions.js',
   'js/mobile_confederations.js','js/expedition_programs.js','js/mobile_command.js','js/mobile_columns.js',
   'js/story_expedition_program.js','js/story_expedition_preparation.js','js/government_selection.js',
   'js/government_lineage.js','js/governments.js','js/starts.js','js/bookmark_setup.js','js/world.js',
   'js/model.js','js/authority.js','js/treasury.js','js/stories.js','js/population.js','js/armies.js',
-  'js/market.js','js/federates.js','js/home_authority.js','js/mods.js','js/main.js','js/save.js','js/save_v4.js']);
+  'js/market.js','js/federates.js','js/home_authority.js','js/mods.js','js/title_ids.js','js/main.js','js/save.js','js/save_v4.js']);
 
 for (const decision of ['accept','decline']) test('corridor '+decision+' preserves original people through actual court adoption and release',async function ({page},info) {
   await openGame(page,info);
+  expect(await page.evaluate(function (mod) {return FB.mods.validate(mod);},source),'court continuity import validation').toEqual([]);
   await page.evaluate(function () {FB.ui.showMods();});
   await page.locator('#modfile').setInputFiles(path.resolve(__dirname,'../fixtures/authoring/corridor-court-continuity.json'));
   await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}),page.locator('#mod-apply').click()]);

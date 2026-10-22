@@ -2483,6 +2483,8 @@ window.FBMODS = window.FBMODS || [];
         if (errors.length) fail('requirements', errors.join(' '));
       }
       if (!own(staged.bookmarks, staged.defaultBookmark)) fail('defaultBookmark', 'must name a registered bookmark.');
+      // Match activation's title-reference gate before storing or reloading.
+      FB.titleIds.normalizeMod(mod);
       if (prepared.actions) {
         staged.focuses = prepared.actions.focuses; staged.deeds = prepared.actions.deeds;
         staged.deedSections = prepared.actions.sections;
