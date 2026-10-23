@@ -484,6 +484,8 @@ Bookmark-id lint. bookmark-id-lint.spec.js reads js/*.js as text with comments r
 
 Content-id ratchet. content-id-ratchet.spec.js loads the page and collects ids from FBDATA record tables. Every remaining exact quoted engine reference requires an explicit reason and per-file count ceiling in tests/e2e/fixtures/engine-ids/content-id-allowlist.json, including reviewed schema-token collisions. New files and counts above their ceiling fail. Tuning/generated/display namespaces keep explicit ignored-table reasons. The closed content-id-counts.json baseline has total zero and no residual ids; unallowlisted references fail. The automatic baseline-update route has been removed. Review new deliberate hooks individually and lower obsolete ceilings when removing uses; do not create an unreviewed residual allowance.
 
+Reviewed structural collisions include retained baseline revisions, paid-exchange receipt and inventory kinds, household carrier/recovery fields, expedition carrier-loss reasons and the mobile-column split action. Their exact file counts remain separate from the content records sharing those spellings. Saved-policy and birthplace-selector field reviews cover only their schema consumers. DOM and primitive-type checks retain exact counts, and protocolFiles names only registered reusable type files; ordinary bookmark and building modules keep their bounded uses without a reusable-type designation.
+
 ## Profiling a reported save
 
 `save-season-profile.spec.js` is an opt-in Chromium diagnostic. It imports the
