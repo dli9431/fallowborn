@@ -2,6 +2,8 @@ Compact validation snapshots
 
 FB.save.expandedSnapshot(state) expands only the existing wire-codec omissions on a detached copy for semantic validators that require explicit character and realm identities. It performs no load repair or state adoption and does not supply optional subsystem records. Preparation first checks its raw exact record, then uses this snapshot for original-person and current-authority queries. Undertaking validation likewise retains its strict raw record while resolving same-generation parties on the expanded core snapshot; a compact missing id or alive flag cannot substitute for a changed party. Direct mobile binding and opening-issuer checks use their canonical saved indexes without expansion.
 
+Platform validation supplies omitted physical-building settlement indices as zero in a shallow detached view before checking profiles, operations, forts and institutional bindings. Explicit null, string, fractional and negative indices remain invalid. The raw input, live state, RNG and identity counters remain unchanged. This uses the existing codec default and adds no save field or schema version.
+
 Adopted dynastic treasury provenance
 
 Optional state.start.publicTreasury has exactly schema:1, originalRealmId, realmId and retirement. The original id must be the selected ruler realm in the effective saved revision and that declaration must opt in with publicTreasury:{schema:1}. Current realmId is player or the original realm after a supported court release. An active record has retirement:null and requires exactly one live canonical version-1 treasury with publicOwnerId matching originalRealmId, finite signed cash, nonnegative military accrual and valid fiscal clocks. Retirement is exactly turn and recipientId, records the canonical terminal transfer and requires any retained original account to remain retired and zero. A removed terminal realm supplies no new account.
@@ -961,6 +963,7 @@ materialized children and rulers point back through `char.royalLine`. Materializ
 founding ruler may add the current `rulerMemberId` and reparent existing root children
 without changing their member ids or order. A materialized current ruler also carries
 `realmStanding`, the last synchronized Standing marker.
+The save codec omits a royal member's null charId, and load infers the matching ro_ character only for an omitted field. A member whose matching character still exists keeps an explicit null on the wire. Dynastic restore passes preserve that detached link through the ruler, consort and child materializers; ordinary live materialization keeps its existing recovery behavior.
 `state.alliances` holds canonical, generation-stamped defensive realm pairs.
 `player.royalCompact` identifies the current protagonist's one royal marriage compact,
 and `player.fabricatedClaim` holds the single `{pid, madeTurn,source?}` county claim.
@@ -1979,6 +1982,8 @@ retain that stamp and the bounded current/last seasonal totals, so reload cannot
 field expenses. AI accrued bills and signed balances remain untouched.
 AI `lastSummary` adds administration, court and total government costs; `necessary`
 includes government expenses and `reserveTarget` holds the latest reserve projection.
+Seasonal settlement and the annual surplus pass own both targets. Restore keeps saved
+values and fills only an account that lacks one; activating the ledger computes all of them.
 Each payer (player or AI treasury) may retain numeric `distributionNextTurn` and one
 `lastDistribution:{turn,amount,counties}` receipt. They survive succession and repair;
 county effects use the existing modifier records. No new save format, historical

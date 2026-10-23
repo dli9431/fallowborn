@@ -244,7 +244,13 @@ window.FB = window.FB || {};
       }
       if (key === 'role' && value === null) return undefined;
       if (key === 'parentId' && value === null) return undefined;
-      if (key === 'charId' && value === null) return undefined;
+      // An omitted charId is inferred from a matching royal character on load.
+      // Keep an explicit null whenever such a character still exists.
+      if (key === 'charId' && value === null) {
+        const c = FB.state && FB.state.chars &&
+          FB.state.chars['ro_' + holder.id.slice('royal_'.length)];
+        if (!(c && c.royalLine && c.royalLine.memberId === holder.id)) return undefined;
+      }
       if (key === 'charId' && value ===
           'ro_' + holder.id.slice('royal_'.length)) {
         const c = FB.state && FB.state.chars && FB.state.chars[value];
@@ -375,6 +381,7 @@ window.FB = window.FB || {};
         succession.heirId = succession.order && succession.order.length
           ? succession.order[0] : null;
       }
+      const omittedCharIds = {};
       for (const id in members) {
         const member = members[id];
         if (!member) continue;
@@ -382,7 +389,10 @@ window.FB = window.FB || {};
         if (!own(member, 'alive')) member.alive = !own(member, 'died');
         if (!own(member, 'role')) member.role = null;
         if (!own(member, 'parentId')) member.parentId = null;
-        if (!own(member, 'charId')) member.charId = null;
+        if (!own(member, 'charId')) {
+          member.charId = null;
+          omittedCharIds[id] = true;
+        }
         if (!Array.isArray(member.childIds)) member.childIds = [];
       }
       for (const id in members) {
@@ -394,7 +404,7 @@ window.FB = window.FB || {};
           const parent = parentId && members[parentId];
           if (parent && parent.childIds.indexOf(id) < 0) parent.childIds.push(id);
         }
-        if (!member || member.charId || id.indexOf('royal_') !== 0) continue;
+        if (!member || !omittedCharIds[id] || id.indexOf('royal_') !== 0) continue;
         const charId = 'ro_' + id.slice('royal_'.length);
         const c = chars[charId];
         if (c && c.royalLine && c.royalLine.realmId === rid &&

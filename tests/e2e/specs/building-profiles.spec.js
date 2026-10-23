@@ -16,6 +16,9 @@ dependsOnRuntime(__filename,[
 
 async function start(page,info,label,npc) {
   await openGame(page,info);
+  // A rejected import neither reloads nor shows its title-screen toast, so
+  // name the requirement failure before waiting for the reload.
+  expect(await page.evaluate(function (mod) { return FB.mods.validate(mod); },examples[label])).toEqual([]);
   await page.evaluate(function () { FB.ui.showMods(); });
   await page.locator('#modfile').setInputFiles(path.resolve(__dirname,'../fixtures/authoring/building-profiles-' + label + '.json'));
   await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}),page.locator('#mod-apply').click()]);
@@ -203,10 +206,24 @@ for (const label of ['river','hill']) test(label + ' matching restore retains se
     const id=label==='river'?'river_serviced':'hill_learned';
     if(!FB.buildingProfiles.commit(s,FB.buildingProfiles.quote(s,profileRequest(id))))throw new Error('Profile setup failed');
     if(!FB.build(s,pid,1,'profile_work'))throw new Error('Default setup failed');
-    return {save:FB.save.serialize(),buildings:JSON.stringify(s.buildings),gold:s.player.gold,dev:s.dev[pid],water:JSON.stringify(s.siteResources||null)};
+    const save=FB.save.serialize(),wire=JSON.parse(save),bytes=JSON.stringify(wire),live=JSON.stringify(s),
+      rng=FB.getRngState(),uid=FB.getUidCounter();
+    const compact=!Object.prototype.hasOwnProperty.call(wire.state.buildings[pid][0],'s');
+    const valid=FB.save.v4.validatePlatform(wire.state);
+    const malformed=[null,-1,'0',0.5].map(function (slot) {
+      const input=JSON.parse(save);input.state.buildings[pid][0].s=slot;
+      const before=JSON.stringify(input);
+      try {FB.save.v4.validatePlatform(input.state);return false;}
+      catch (error) {return before===JSON.stringify(input);}
+    });
+    return {save:save,buildings:JSON.parse(JSON.stringify(s.buildings)),gold:s.player.gold,dev:s.dev[pid],water:JSON.stringify(s.siteResources||null),
+      validation:{compact:compact,valid:valid,malformed:malformed,pure:bytes===JSON.stringify(wire) && live===JSON.stringify(s) &&
+        rng===FB.getRngState() && uid===FB.getUidCounter()}};
   },label);
+  expect(before.validation).toEqual({compact:true,valid:true,malformed:[true,true,true,true],pure:true});
+  delete before.validation;
   await restoreBookmark(page,before.save);
-  const after=await page.evaluate(function(){const s=FB.state;return {buildings:JSON.stringify(s.buildings),gold:s.player.gold,dev:s.dev[profileCounty],water:JSON.stringify(s.siteResources||null)};});
+  const after=await page.evaluate(function(){const s=FB.state;return {buildings:JSON.parse(JSON.stringify(s.buildings)),gold:s.player.gold,dev:s.dev[profileCounty],water:JSON.stringify(s.siteResources||null)};});
   delete before.save;expect(after).toEqual(before);
 });
 

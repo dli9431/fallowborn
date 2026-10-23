@@ -85,6 +85,19 @@
   /* Optional platform fields (state-and-saves.md, Save v4 platform schema).
      Absent fields stay valid; present ids must resolve. */
   P.validatePlatform = function (state) {
+    // The wire codec omits settlement zero on physical building records.
+    // All building validators must see that default, without expanding other
+    // saved identities or mutating the caller's compact input.
+    var buildings = null;
+    Object.keys(state.buildings || {}).forEach(function (pid) {
+      var rows = state.buildings[pid];
+      if (!Array.isArray(rows) || !rows.some(function (r) { return plain(r) && !own(r, 's'); })) return;
+      if (!buildings) buildings = Object.assign({}, state.buildings);
+      buildings[pid] = rows.map(function (r) {
+        return plain(r) && !own(r, 's') ? Object.assign({}, r, {s:0}) : r;
+      });
+    });
+    if (buildings) state = Object.assign({}, state, {buildings:buildings});
     if (FB.homeAuthority) FB.homeAuthority.validate(state);
     if (FB.expeditionPrograms) FB.expeditionPrograms.validatePassagePolicies(state);
     if (FB.treasuryValidatePreservation) FB.treasuryValidatePreservation(state);

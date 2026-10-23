@@ -4213,6 +4213,15 @@ window.FB = window.FB || {};
     return c;
   }
 
+  function restoringDetachedCourtCharacter(state, rid, member, opts) {
+    // Codec inflation already reconnects omitted links. A remaining null
+    // beside the original character is saved detachment, not missing data.
+    if (!opts || !opts.restore || member.charId !== null) return false;
+    const c = state.chars[courtCharId(member.id)];
+    return !!(c && c.royalLine && c.royalLine.realmId === rid &&
+      c.royalLine.memberId === member.id);
+  }
+
   /* Eager courts are built inside FB.initPolitics, before the protagonist
      exists, so the old fallback through the player's own faith is not
      reachable there. */
@@ -4733,7 +4742,7 @@ window.FB = window.FB || {};
           heirCharId: null
         };
       } else if (papalTerritorialIds[rid]) {
-        if (seedInitialPapalRuler(state, rid, { bulk:true })) made = true;
+        if (seedInitialPapalRuler(state, rid, { bulk:true, restore:opts.restore })) made = true;
       } else {
         if (!opts.yearly && repairGeneratedRoyalHeirs(state, r)) made = true;
         /* New games and restores retain the full defensive refresh. During an
@@ -4744,7 +4753,7 @@ window.FB = window.FB || {};
         if (!opts.yearly || !successionReadyForYear(state, r)) {
           FB.ensureRealmSuccession(state, rid);
         }
-        if (ensureCourtMaterialized(state, rid, { bulk:true })) made = true;
+        if (ensureCourtMaterialized(state, rid, { bulk:true, restore:opts.restore })) made = true;
       }
     }
     /* One patronym pass for the whole eager sweep. Running it per record
@@ -5055,6 +5064,7 @@ window.FB = window.FB || {};
     const s = FB.ensureRealmSuccession(state, rid);
     const m = s && s.members[memberId];
     if (!r || !m || m.alive === false && !(opts && opts.genealogy)) return null;
+    if (restoringDetachedCourtCharacter(state, rid, m, opts)) return null;
     if (m.branchRef && FB.materializeRoyalBranch)
       return FB.materializeRoyalBranch(state, rid, memberId, opts);
     if (m.charId && state.chars[m.charId] && (!state.chars[m.charId].dead || opts && opts.genealogy)) {
@@ -5113,6 +5123,7 @@ window.FB = window.FB || {};
       ? FB.ensureRealmSuccession(state, rid) : null;
     const m = s && FB.realmConsortMember(state, rid);
     if (!m || m.alive === false) return null;
+    if (restoringDetachedCourtCharacter(state, rid, m, opts)) return null;
     let c = m.charId && state.chars[m.charId];
     const ruler = FB.realmRulerCharacterSnapshot(state, rid);
     /* Repair an invalid old consort before materializing a brand-new record
@@ -5383,6 +5394,7 @@ window.FB = window.FB || {};
     if (!r || !r.alive || !r.ruler || rid === 'player') return null;
     const m = ensureRealmRulerMember(state, rid);
     if (!m) return null;
+    if (restoringDetachedCourtCharacter(state, rid, m, opts)) return null;
     let c = m.charId && state.chars[m.charId];
     if (c && !c.dead) {
       indexRuler(c.id, rid);

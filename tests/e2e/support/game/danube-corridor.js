@@ -152,8 +152,12 @@ function installCorridorCase(c) {
         balances.partner=a.partnerId;
       }
       if (automatic) E.day(s);else if (!E.commit(s,q)) return {complete:false,reason:'commit',trace:trace};
-      E.day(s);const after=JSON.stringify(s);E.day(s);
-      if (after!==JSON.stringify(s)) throw new Error('More than one dispatch on the same day');
+      // A repeated same-day dispatch would write the program row, a payment,
+      // a court record or an undertaking story. Compare those records rather
+      // than serializing the whole world twice per step.
+      const dispatched=function () {return JSON.stringify([C.row(s),s.treasury,s.realms,s.stories]);};
+      E.day(s);const after=dispatched();E.day(s);
+      if (after!==dispatched()) throw new Error('More than one dispatch on the same day');
       if (balances.partner) {
         balances.debit=balances.before-FB.treasuryAvailable(s,C.rid);
         balances.credit=FB.treasuryAvailable(s,balances.partner)-balances.outside;
@@ -162,7 +166,7 @@ function installCorridorCase(c) {
     }
     return {complete:false,reason:'bounded dispatch exhausted',trace:trace};
   };
-  C.restore=function () {
+  C.restore=function (repetitions) {
     const facts=function () {
       const s=FB.save.expandedSnapshot(FB.state),row=C.row(s),ids=[row.leaderId];
       FB.mobile.agreements(s,C.rid).forEach(function (a) {if (a.accessOrigin) a.accessOrigin.chain.forEach(function (p) {
@@ -170,12 +174,38 @@ function installCorridorCase(c) {
       });});
       const originals=ids.map(function (id) {const p=s.chars[id];return p && {id:p.id,name:p.name,born:p.born,
         dead:!!p.dead,captive:!!p.captive,prisonerOf:p.prisonerOf || null,homeProvinceId:p.homeProvinceId};});
-      return C.bytes([row,s.armies,s.owner,s.holder,s.realms,s.treasury,s.market,s.population,
-        s.localPassagePolicies,s.stories,s.bookmarkSetup,originals,s.wars]);
+      return C.bytes({row:row,armies:s.armies,owner:s.owner,holder:s.holder,realms:s.realms,treasury:s.treasury,market:s.market,
+        population:s.population,localPassagePolicies:s.localPassagePolicies,stories:s.stories,bookmarkSetup:s.bookmarkSetup,
+        originals:originals,wars:s.wars});
     };
     const before=facts(),rng=FB.getRngState()>>>0,uid=FB.getUidCounter();
-    for (let i=0;i<2;i++) FB.save.restore(JSON.parse(FB.save.serialize()));
-    return before===facts() && rng===(FB.getRngState()>>>0) && uid===FB.getUidCounter() && FB.mobile.validate(FB.state);
+    for (let i=0;i<(repetitions || 1);i++) FB.save.restore(JSON.parse(FB.save.serialize()));
+    const changed=C.diff(before,facts());
+    if (changed!==true) return changed;
+    if (rng!==(FB.getRngState()>>>0)) return 'rng';
+    if (uid!==FB.getUidCounter()) return 'uid';
+    return FB.mobile.validate(FB.state) || 'validate';
+  };
+  // A matching checkpoint is true. Otherwise report the first differing
+  // canonical path and both values, so a failed restore names its owner.
+  C.diff=function (before,after) {
+    if (before===after) return true;
+    const show=function (v) {
+      const text=JSON.stringify(v);return text===undefined ? 'undefined' : text.length>200 ? text.slice(0,200)+'...' : text;
+    };
+    const walk=function (a,b,path) {
+      if (JSON.stringify(a)===JSON.stringify(b)) return null;
+      if (!a || !b || typeof a!=='object' || typeof b!=='object' || Array.isArray(a)!==Array.isArray(b))
+        return path+': '+show(a)+' -> '+show(b);
+      if (Array.isArray(a) && a.length!==b.length) return path+'.length: '+a.length+' -> '+b.length;
+      const keys=Object.keys(a).concat(Object.keys(b).filter(function (k) {return !Object.prototype.hasOwnProperty.call(a,k);}));
+      for (const k of keys) {
+        const found=walk(a[k],b[k],path+(Array.isArray(a) ? '['+k+']' : '.'+k));
+        if (found) return found;
+      }
+      return path+': key order';
+    };
+    return walk(JSON.parse(before),JSON.parse(after),'checkpoint');
   };
   C.copy=copy;
 }

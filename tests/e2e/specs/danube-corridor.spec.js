@@ -5,6 +5,7 @@ const {beginBookmarkFromTitle}=require('../support/game/bookmark-acceptance');
 const {dependsOnRuntime}=require('../support/runtime-dependencies');
 const {buildCorridorMod,installCorridorCase}=require('../support/game/danube-corridor');
 const cases=require('../fixtures/authoring/danube-corridor-cases.json');
+const counties=require('../fixtures/authoring/danube-corridor-counties.json');
 
 dependsOnRuntime(__filename,[
   'index.html','data/bookmark_1096.js','data/bookmark_1096_scaffold_a.js','data/bookmark_1096_scaffold_b.js',
@@ -49,19 +50,28 @@ async function importAndBegin(page,info,configuration,countyIds) {
   return mod;
 }
 
-async function start(page,info,configuration) {
+async function start(page,info,configuration,countyIds) {
+  // Build persisted JSON after the real scripts load, before main's boot
+  // listener applies stored mods. Each test keeps its own browser context.
+  // Dedicated import coverage still uses the ordinary Mods file picker.
+  await page.addInitScript({content:'document.addEventListener("DOMContentLoaded",function () {'+
+    'const mod=('+buildCorridorMod.toString()+')('+JSON.stringify({configuration:configuration,countyIds:countyIds})+');'+
+    'localStorage.setItem("fb_mods",JSON.stringify([JSON.stringify(mod)]));},{once:true});'});
   await openGame(page,info);
-  await importAndBegin(page,info,configuration);
+  await page.evaluate(function () {FB.mods.assertReady();});
+  await beginBookmarkFromTitle(page,'1096','pilgrim_household_1096');
+  await page.evaluate(installCorridorCase,configuration);
   const inventory=await page.evaluate(function () {return corridorCase.inventory(FB.state);});
   await info.attach('complete-prospective-corridor-'+configuration.id,{body:Buffer.from(JSON.stringify(inventory,null,2)),contentType:'application/json'});
+  // A changed real raster must fail here, rather than silently dropping a
+  // county from the declared permissions to fit this fixture.
+  expect(inventory.countyIds).toEqual(counties.route);
   return inventory;
 }
 
 async function completeImport(page,info,configuration) {
-  const inventory=await start(page,info,configuration);
   const composition=Object.assign({},configuration,{composition:true});
-  const mod=await page.evaluate(buildCorridorMod,{configuration:composition,countyIds:inventory.countyIds});
-  await info.attach('complete-route-import-'+configuration.id,{body:Buffer.from(JSON.stringify(mod,null,2)),contentType:'application/json'});
+  const inventory=await start(page,info,composition,counties.route);
   // Collect both modes and every leg before any assertion about feasibility.
   // The attachment remains available even if the existing representation fails.
   expect(inventory.pure).toBe(true);
@@ -82,14 +92,16 @@ async function completeImport(page,info,configuration) {
   expect(inventory.requiredRecords,'Complete original county negotiation count exceeds the existing sixteen-county program').toBeLessThanOrEqual(16);
   expect(Math.ceil(inventory.requiredRecords/16),'Complete fixed envelopes exceed available retained agreement slots').toBeLessThanOrEqual(inventory.availableRecords);
   expect(inventory.totalPrice).toBeLessThanOrEqual(configuration.treasury);
-  await importAndBegin(page,info,composition,inventory.countyIds);
-  const actual=await page.evaluate(function () {return corridorCase.inventory(FB.state);});
-  expect(actual.countyIds).toEqual(inventory.countyIds);
-  expect(actual.legs).toEqual(inventory.legs);
-  return actual;
+  return inventory;
 }
 
 for (const configuration of cases) {
+  test(configuration.id+' ordinary JSON import retains the complete real corridor',async function ({page},info) {
+    await openGame(page,info);
+    await importAndBegin(page,info,Object.assign({},configuration,{composition:true}),counties.route);
+    expect(await page.evaluate(function () {return corridorCase.inventory(FB.state).countyIds;})).toEqual(counties.route);
+  });
+
   test(configuration.id+' corridor rejects the entire unaffordable, stale or over-capacity batch before its first offer',async function ({page},info) {
     const inventory=await completeImport(page,info,configuration);
     const result=await page.evaluate(function (inventory) {
@@ -127,10 +139,8 @@ for (const configuration of cases) {
   });
 
   test(configuration.id+' corridor rejects a declaration missing a required route county before offering',async function ({page},info) {
-    const inventory=await start(page,info,configuration);
-    const missing=inventory.countyIds.filter(function (pid) {return pid!=='frankfurt';});
-    expect(missing.length).toBe(inventory.countyIds.length-1);
-    await importAndBegin(page,info,Object.assign({},configuration,{composition:true}),missing);
+    const missing=counties.route.filter(function (pid) {return pid!=='frankfurt';});
+    await start(page,info,Object.assign({},configuration,{composition:true}),missing);
     expect(await page.evaluate(function () {
       const s=FB.state,C=corridorCase,E=FB.expeditionPrograms,before=JSON.stringify(s),q=E.review(s,C.rid,'permission_0');
       return !q.allowed && !E.commit(s,q) && before===JSON.stringify(s) && !C.row(s).agreements.length;
@@ -164,19 +174,10 @@ for (const configuration of cases) {
     expect(result).toEqual({offer:true,fixed:true,malformed:Array(8).fill(true),declined:true,noRefill:true,pure:true});
   });
 
-  test(configuration.id+' corridor allocates all envelopes once and rejects mixed or oversized declarations',async function ({page},info) {
-    const inventory=await start(page,info,configuration);
-    const ids=await page.evaluate(function (inventory) {
-      const s=FB.state,C=corridorCase,ids=inventory.countyIds.slice();
-      FB.campaignBookmark(s).provinces.forEach(function (p) {
-        if (ids.length>=65 || p.wasteland || ids.indexOf(p.id)>=0 || !s.population.counties[p.id] ||
-            Math.floor(s.population.counties[p.id].count*0.15)<C.configuration.capacity) return;
-        const chain=C.chain(s,p.id),policy=chain && FB.expeditionPrograms.resolvePassagePolicy(FB.campaignBookmark(s),chain[0].formId);
-        if (chain && chain.every(function (v) {return v.alive;}) && policy==='accept') ids.push(p.id);
-      });return ids;
-    },inventory);
-    expect(ids).toHaveLength(65);
+  test(configuration.id+' corridor rejects mixed or oversized declarations without changing live state',async function ({page},info) {
+    const ids=counties.route.concat(counties.additional);
     const composition=Object.assign({},configuration,{composition:true,treasury:1000});
+    await start(page,info,composition,ids.slice(0,33));
     const oversized=await page.evaluate(buildCorridorMod,{configuration:composition,countyIds:ids});
     const mixed=JSON.parse(JSON.stringify(oversized));
     const revision=mixed.bookmarks['1096'].revisions.route_review_v1;
@@ -188,7 +189,20 @@ for (const configuration of cases) {
       const before=JSON.stringify([mod,FBDATA,FB.state]),errors=FB.mods.validate(mod);
       return errors.length>0 && before===JSON.stringify([mod,FBDATA,FB.state]);
     },candidate)).toBe(true);
-    await importAndBegin(page,info,composition,ids.slice(0,33));
+  });
+
+  test(configuration.id+' corridor allocates all envelopes once and retains partial cancellation',async function ({page},info) {
+    const ids=counties.route.concat(counties.additional).slice(0,33);
+    await start(page,info,Object.assign({},configuration,{composition:true,treasury:1000}),ids);
+    expect(await page.evaluate(function (ids) {
+      const C=corridorCase,s=FB.state;
+      return ids.every(function (pid) {
+        const chain=C.chain(s,pid);
+        return chain && chain.every(function (p) {return p.alive;}) &&
+          Math.floor(s.population.counties[pid].count*0.15)>=C.configuration.capacity &&
+          FB.expeditionPrograms.resolvePassagePolicy(FB.campaignBookmark(s),chain[0].formId)==='accept';
+      });
+    },ids)).toBe(true);
     expect(await page.evaluate(function () {
       const C=corridorCase,M=FB.mobile,E=FB.expeditionPrograms,s=FB.state,q=E.review(s,C.rid,'permission_0'),done=E.commit(s,q),r=C.row(s);
       const sizes=r.agreements.map(function (a) {return a.receipts.length;}),ids=r.agreements.map(function (a) {return a.id;});
@@ -199,9 +213,9 @@ for (const configuration of cases) {
     })).toEqual({done:true,sizes:[16,16,1],partial:true,stop:true,cancelled:true,unchanged:true});
   });
 
-  test(configuration.id+' complete actual corridor obtains original receipts, finite payments and strict retained saves',async function ({page},info) {
-    const inventory=await completeImport(page,info,configuration);
-    const result=await page.evaluate(function (inventory) {
+  test(configuration.id+' compact, pending, offered and accepted corridor saves restore repeatedly',async function ({page},info) {
+    await completeImport(page,info,configuration);
+    const result=await page.evaluate(function () {
       const C=corridorCase,M=FB.mobile,E=FB.expeditionPrograms;
       const compact=JSON.parse(FB.save.serialize()),compactBytes=JSON.stringify(compact);
       const compactCommand=compact.state.realms[C.rid].alive===undefined && M.validate(compact.state) &&
@@ -221,12 +235,29 @@ for (const configuration of cases) {
             catch (error) {return before===JSON.stringify(candidate);}
           });
         }) && compactBytes===JSON.stringify(compact) && rng===FB.getRngState() && uid===FB.getUidCounter();
-      const pending=C.restore(),money=FB.treasuryAvailable(FB.state,C.rid);
-      const initial=JSON.stringify([FB.state.owner,FB.state.holder,FB.state.population]),people=M.total(FB.state,C.rid),balances={};
-      Object.keys(FB.state.realms).forEach(function (rid) {balances[rid]=FB.treasuryAvailable(FB.state,rid);});
-      const q=E.review(FB.state,C.rid,'permission_0'),offered=E.commit(FB.state,q),offeredRestore=C.restore();C.next(FB.state);
+      const pending=C.restore(2);
+      const q=E.review(FB.state,C.rid,'permission_0'),offered=E.commit(FB.state,q),offeredRestore=C.restore(2);C.next(FB.state);
       const response=E.review(FB.state,C.rid,'permission_0'),accepted=E.commit(FB.state,response),
-        repeated=!E.commit(FB.state,response),acceptedRestore=C.restore();C.next(FB.state);
+        repeated=!E.commit(FB.state,response),acceptedRestore=C.restore(2);
+      return {compactCommand:compactCommand,compactAgreements:compactAgreements,pending:pending,offered:offered,
+        offeredRestore:offeredRestore,accepted:accepted,repeated:repeated,acceptedRestore:acceptedRestore};
+    });
+    expect(result).toEqual({compactCommand:true,compactAgreements:true,pending:true,offered:true,
+      offeredRestore:true,accepted:true,repeated:true,acceptedRestore:true});
+  });
+
+  test(configuration.id+' complete actual corridor obtains original receipts and replays finite payments',async function ({page},info) {
+    const inventory=await completeImport(page,info,configuration);
+    const result=await page.evaluate(function (inventory) {
+      const C=corridorCase,M=FB.mobile,E=FB.expeditionPrograms,money=FB.treasuryAvailable(FB.state,C.rid),balances={};
+      const initial=JSON.stringify([FB.state.owner,FB.state.holder,FB.state.population]),people=M.total(FB.state,C.rid);
+      Object.keys(FB.state.realms).forEach(function (rid) {balances[rid]=FB.treasuryAvailable(FB.state,rid);});
+      // Allocate the original identities before forking the replay. Both
+      // continuations must refer to these receipts, not mint different ids.
+      for (let i=0;i<2;i++) {
+        if (!E.commit(FB.state,E.review(FB.state,C.rid,'permission_0'))) throw new Error('Initial corridor decision failed');
+        C.next(FB.state);
+      }
       const replay=C.copy(FB.state),negotiated=C.negotiate(FB.state,true),replayed=C.negotiate(replay,true),s=FB.state,agreements=M.agreements(s,C.rid),
         credits={},cost=agreements.reduce(function (n,a) {credits[a.partnerId]=(credits[a.partnerId] || 0)+a.price;return n+a.price;},0);
       const original=agreements.every(function (a) {
@@ -239,6 +270,23 @@ for (const configuration of cases) {
           a.accessOrigin.passagePolicy.response===county.policy;
       });
       const covered=C.covered(s,inventory),retained=C.restore();
+      return {complete:negotiated.complete,receipts:agreements.length,original:original,covered:covered,
+        payment:Math.abs(money-FB.treasuryAvailable(FB.state,C.rid)-cost)<1e-8,
+        credits:Object.keys(credits).every(function (rid) {return Math.abs(FB.treasuryAvailable(FB.state,rid)-balances[rid]-credits[rid])<1e-8;}),
+        trace:negotiated.trace.filter(function (v) {return v.action==='accept';}).every(function (v) {
+          return Math.abs(v.balances.debit-v.balances.price)<1e-8 && Math.abs(v.balances.credit-v.balances.price)<1e-8;}),
+        conserved:initial===JSON.stringify([s.owner,s.holder,s.population]) && people===M.total(s,C.rid),retained:retained,
+        replay:replayed.complete && C.accounts(replay)===C.accounts(s)};
+    },inventory);
+    expect(result).toEqual({complete:true,receipts:inventory.requiredRecords,original:true,covered:true,
+      payment:true,credits:true,trace:true,conserved:true,retained:true,replay:true});
+  });
+
+  test(configuration.id+' negotiated corridor retains supply, controls, cancellation and expired originals',async function ({page},info) {
+    const inventory=await completeImport(page,info,configuration);
+    expect(await page.evaluate(function () {return corridorCase.negotiate(FB.state,false).complete;})).toBe(true);
+    const result=await page.evaluate(function (inventory) {
+      const C=corridorCase,M=FB.mobile,E=FB.expeditionPrograms;
       const supply=C.copy(FB.state);C.row(supply).food=0;
       const purchase=E.review(supply,C.rid,'provisions'),cash=FB.treasuryAvailable(supply,C.rid),
         stock=FB.marketProvisionSnapshot(supply,'cologne').stock;
@@ -262,36 +310,39 @@ for (const configuration of cases) {
         function (r) {r.agreements[0].receipts[0].accessOrigin.passagePolicy.response='decline';},
         function (r) {r.agreements[0].receipts[0].price++;},function (r) {r.expeditionProgram.schema=3;},
         function (r) {r.expeditionProgram.steps[0].agreementIds=[];},function (r) {r.agreements.push(C.copy(r.agreements[0]));}]
-        .map(function (change) {const candidate=C.copy(FB.state);change(C.row(candidate));const before=JSON.stringify(candidate);
-          let denied=false;try {M.validate(candidate);} catch (error) {denied=true;}return denied && before===JSON.stringify(candidate);});
+        .map(function (change) {
+          // Each corruption edits only the program row, so give the candidate
+          // its own row and share the unchanged remainder of the live world.
+          const live=FB.state,liveRow=JSON.stringify(C.row(live)),governments=Object.assign({},live.authority.governments);
+          governments[C.rid]=Object.assign({},governments[C.rid],{mobile:C.copy(C.row(live))});
+          const candidate=Object.assign({},live,{authority:Object.assign({},live.authority,{governments:governments})});
+          change(C.row(candidate));const before=JSON.stringify(C.row(candidate));
+          let denied=false;try {M.validate(candidate);} catch (error) {denied=true;}
+          return denied && before===JSON.stringify(C.row(candidate)) && liveRow===JSON.stringify(C.row(live));});
       const cancelled=M.commit(FB.state,C.control(FB.state,'cancel')),cancelledRestore=C.restore();
       const row=C.row(FB.state),origins=JSON.stringify(M.agreements(FB.state,C.rid).map(function (a) {return a.accessOrigin;}));
-      C.atTurn(FB.state,Math.max.apply(null,M.agreements(FB.state,C.rid).map(function (a) {return a.endTurn;})));FB.mobileDay(FB.state);
+      const year=FB.state.date.year;
+      C.atTurn(FB.state,Math.max.apply(null,M.agreements(FB.state,C.rid).map(function (a) {return a.endTurn;})));
+      // The direct jump skips the year boundary's court pass, where a court
+      // whose minor ruler comes of age materializes its consort.
+      if (FB.state.date.year!==year) FB.ensureDynasticState(FB.state,{yearly:true});
+      FB.mobileDay(FB.state);
       const ended=M.agreements(FB.state,C.rid),endedRestore=C.restore();
       const compaction=M.agreements(FB.state,C.rid).every(function (a) {return a.accessOrigin.chain.every(function (p) {
         return FB.courtRecordRetained(FB.state,FB.state.chars[p.personId],{},{});
       });});
-      return {compactCommand:compactCommand,compactAgreements:compactAgreements,pending:pending,offered:offered,offeredRestore:offeredRestore,accepted:accepted,repeated:repeated,
-        acceptedRestore:acceptedRestore,complete:negotiated.complete,receipts:agreements.length,original:original,covered:covered,
-        payment:Math.abs(money-FB.treasuryAvailable(FB.state,C.rid)-cost)<1e-8,
-        credits:Object.keys(credits).every(function (rid) {return Math.abs(FB.treasuryAvailable(FB.state,rid)-balances[rid]-credits[rid])<1e-8;}),
-        trace:negotiated.trace.filter(function (v) {return v.action==='accept';}).every(function (v) {
-          return Math.abs(v.balances.debit-v.balances.price)<1e-8 && Math.abs(v.balances.credit-v.balances.price)<1e-8;}),
-        conserved:initial===JSON.stringify([s.owner,s.holder,s.population]) && people===M.total(s,C.rid),retained:retained,
-        replay:replayed.complete && C.accounts(replay)===C.accounts(s),
-        supply:finiteSupply,controls:paused && pauseDenies && pauseRepeats && resumed,omission:omission,broken:broken,
+      return {supply:finiteSupply,controls:paused && pauseDenies && pauseRepeats && resumed,omission:omission,broken:broken,
         cancelled:cancelled,cancelledRestore:cancelledRestore,ended:ended.length===inventory.requiredRecords &&
           ended.every(function (a) {return a.status==='ended' && !M.provisioningAccess(FB.state,C.rid,a.countyIds[0]);}),
         origins:origins===JSON.stringify(ended.map(function (a) {return a.accessOrigin;})),compaction:compaction,endedRestore:endedRestore};
     },inventory);
-    expect(result).toEqual({compactCommand:true,compactAgreements:true,pending:true,offered:true,offeredRestore:true,accepted:true,repeated:true,acceptedRestore:true,
-      complete:true,receipts:inventory.requiredRecords,original:true,covered:true,payment:true,credits:true,trace:true,
-      conserved:true,retained:true,replay:true,supply:true,controls:true,omission:true,broken:Array(7).fill(true),cancelled:true,cancelledRestore:true,
+    expect(result).toEqual({supply:true,controls:true,omission:true,broken:Array(7).fill(true),cancelled:true,cancelledRestore:true,
       ended:true,origins:true,compaction:true,endedRestore:true});
   });
 
-  test(configuration.id+' every intended camp and field leg checks all permissions and actual bounded arrival',async function ({page},info) {
+  for (const mode of ['camp','field']) test(configuration.id+' every intended '+mode+' leg checks all permissions and actual bounded arrival',async function ({page},info) {
     const inventory=await completeImport(page,info,configuration);
+    inventory.legs=inventory.legs.filter(function (leg) {return leg.mode===mode;});
     const negotiated=await page.evaluate(function () {return corridorCase.negotiate(FB.state,false);});
     expect(negotiated.complete).toBe(true);
     // Each case stages a prospective later boundary independently. It checks
@@ -308,12 +359,19 @@ for (const configuration of cases) {
         const plan=FB.armyOrderPlan(s,a,leg.target),whole=C.complete(plan,leg.origin,leg.target) &&
           [leg.origin].concat(plan.path).every(function (pid) {return M.passage(s,C.rid,pid,mode) && M.provisioningAccess(s,C.rid,pid);});
         const q=E.review(s,C.rid,stepId),issued=E.commit(s,q);
-        FB.state=s;const inFlight=C.restore();const live=FB.state,host=M.host(live,C.rid),camp=M.migration(live,C.rid);
-        const manual=C.copy(live),ma=M.host(manual,C.rid);ma.manual=true;ma.goal=leg.origin;ma.path=[];ma.moveLeft=0;
-        E.reconcile(manual);const manualPreserved=ma.manual && ma.goal===leg.origin && C.row(manual).expeditionProgram.execution.paused;
-        const stale=C.copy(live),first=plan.path[0],receipt=M.agreements(stale,C.rid).find(function (a) {return a.countyIds[0]===first;});
-        stale.chars[receipt.accessOrigin.chain[0].personId].captive=true;E.reconcile(stale);
-        const stopped=M.host(stale,C.rid).path.length===0;
+        // Whole-world restore and reconcile lifecycle checks do not depend on
+        // the leg, so the first leg of each mode carries them. Every leg still
+        // checks its permissions, issued order, arrival and cursor.
+        const lifecycle=leg.index===0;
+        FB.state=s;const inFlight=lifecycle ? C.restore() : true;const live=FB.state,host=M.host(live,C.rid),camp=M.migration(live,C.rid);
+        let manualPreserved=true,stopped=true;
+        if (lifecycle) {
+          const manual=C.copy(live),ma=M.host(manual,C.rid);ma.manual=true;ma.goal=leg.origin;ma.path=[];ma.moveLeft=0;
+          E.reconcile(manual);manualPreserved=ma.manual && ma.goal===leg.origin && C.row(manual).expeditionProgram.execution.paused;
+          const stale=C.copy(live),first=plan.path[0],receipt=M.agreements(stale,C.rid).find(function (a) {return a.countyIds[0]===first;});
+          stale.chars[receipt.accessOrigin.chain[0].personId].captive=true;E.reconcile(stale);
+          stopped=M.host(stale,C.rid).path.length===0;
+        }
         // A dated near-arrival fixture, not simulated travel through the
         // preceding counties. Only the final edge advances through armyTick.
         const previous=plan.path.length>1 ? plan.path[plan.path.length-2] : leg.origin;
@@ -324,7 +382,7 @@ for (const configuration of cases) {
         const arrived=host.at===leg.target && (mode ? camp.at===leg.target : camp.at===C.configuration.campOrigin);
         const cursor=C.row(live).expeditionProgram.steps.find(function (v) {return v.id===stepId;}).cursor;
         out.push({mode:leg.mode,target:leg.target,whole:whole,issued:issued,inFlight:inFlight,manual:manualPreserved,stopped:stopped,
-          arrived:arrived,completed:completed,cursor:cursor===leg.index+1,restored:C.restore()});
+          arrived:arrived,completed:completed,cursor:cursor===leg.index+1,restored:lifecycle ? C.restore() : true});
       });return out;
     },inventory);
     expect(results).toEqual(inventory.legs.map(function (leg) {return {mode:leg.mode,target:leg.target,whole:true,issued:true,

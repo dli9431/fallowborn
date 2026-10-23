@@ -489,6 +489,9 @@ marriage links on records that already exist, or ensures the religious-office ma
 (`FB.papacyTerritorialRealm` is a snapshot read for this reason). Those repairs belong
 to load and to the yearly `FB.ensureDynasticState` pass, so under the default policy
 opening a sheet writes nothing at all - rendering never repairs a save.
+
+Restore carries its context through eager ruler, consort and child materialization. If a member explicitly has charId null while the original matching royal character still exists, the materializer preserves that detachment. Codec inflation reconnects omitted links before this pass; ordinary live materialization still recovers an orphan through its existing path.
+
 The record count stays bound by the map rather than by campaign length: see the compaction rule in
 [characters.md](characters.md). Eager loading and the realm UI both take their bounded
 six-member set from `FB.realmFamilySnapshot`; the mutating `FB.realmFamily` ensure path

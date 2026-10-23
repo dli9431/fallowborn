@@ -22,7 +22,7 @@ dependsOnRuntime(__filename, ['data/relay_services.js','js/relay_services.js',
   'data/geographies.js', 'js/religion.js', 'js/royal_settlements.js',
   'data/bookmark_493.js', 'data/bookmark_493_history.js', 'data/bookmark_711.js',
   'data/bookmark_800.js', 'data/bookmark_800_history.js',
-  'data/bookmark_1204.js', 'data/bookmark_1204_campaigns.js'
+  'data/bookmark_1204.js', 'data/bookmark_1204_campaigns.js', 'js/treasury.js'
 ]);
 const { test, expect } = require('../support/fixture');
 const { startBaseline476 } = require('../support/game/476-wider');
@@ -225,11 +225,12 @@ test('invalid v4 input preserves live state, RNG, identity counters and stored s
     expect(errors[15].message).toContain('state.situation476');
     expect(errors[16].message).toContain('Unknown government form missing_default');
     expect(errors[17].message).toContain('state.stories.federate_track_476.phase');
-    expect(errors[18].message).toContain('requires story western_court_476');
+    expect(errors[18].message).toContain('state.start.storyAttachments');
     expect(errors[19].message).toContain('state.stories.western_court_476');
     expect(errors[20].message).toContain('rng');
     expect(errors[21].message).toContain('uid');
-    expect(errors[22].message).toContain('platformSchema');
+    // A non-record start cannot carry the attachment list its envelope stamps.
+    expect(errors[22].message).toContain('Unsupported save schema at storyAttachmentSchema: 1');
     expect(errors[23].message).toContain('state.situation476');
     expect(errors[24].message).toContain('Unsupported save schema at platformSchema: 3');
   });
@@ -400,6 +401,10 @@ test('prototype v4 without a platform stamp migrates the old situation exactly o
       const input = JSON.parse(JSON.stringify(source));
       delete input.platformSchema;
       delete input.state.start.revision;
+      // This predates the sealed attachment list, its envelope stamp and
+      // optional opening goals.
+      delete input.state.start.storyAttachments;
+      delete input.storyAttachmentSchema;
       delete input.state.authority.schema;
       input.state.situation476 = Object.assign({}, input.state.stories.western_court_476,
         input.state.stories.federate_track_476);
@@ -408,6 +413,8 @@ test('prototype v4 without a platform stamp migrates the old situation exactly o
       delete input.state.stories.western_court_476;
       delete input.state.stories.federate_track_476;
       delete input.state.stories.opening_federate_476;
+      const expectedStories = JSON.parse(JSON.stringify(source.state.stories));
+      delete expectedStories.opening_federate_476;
       const bytes = JSON.stringify(input), live = FB.state;
       const rng = FB.getRngState(), uid = FB.getUidCounter();
       const once = FB.save.v4.migrate(input), twice = FB.save.v4.migrate(once);
@@ -419,12 +426,13 @@ test('prototype v4 without a platform stamp migrates the old situation exactly o
         header:[once.v, once.titleIds, once.authoritySchema, once.platformSchema],
         immutable:bytes === JSON.stringify(input), pure:pure,
         idempotent:JSON.stringify(once) === JSON.stringify(twice),
-        records:{ all:once.state.stories, originalAll:source.state.stories,
+        records:{ all:once.state.stories, originalAll:expectedStories,
           world:once.state.stories.western_court_476,
           originalWorld:source.state.stories.western_court_476,
           track:once.state.stories.federate_track_476,
           originalTrack:source.state.stories.federate_track_476 },
         removed:!Object.prototype.hasOwnProperty.call(once.state, 'situation476'),
+        attachmentsAbsent:!Object.prototype.hasOwnProperty.call(once.state.start, 'storyAttachments'),
         repeatedRestore:first === FB.save.serialize(),
         alias:Object.prototype.hasOwnProperty.call(FB.save, 'prototypeV4') };
     });
@@ -433,7 +441,7 @@ test('prototype v4 without a platform stamp migrates the old situation exactly o
     expect(result.records.track).toEqual(result.records.originalTrack);
     delete result.records;
     expect(result).toEqual({ supported:true, header:[4,1,4,2], immutable:true, pure:true,
-      idempotent:true, removed:true, repeatedRestore:true, alias:false });
+      idempotent:true, removed:true, attachmentsAbsent:true, repeatedRestore:true, alias:false });
   });
 
 test('invalid live story records cannot replace a stored campaign',
@@ -710,4 +718,54 @@ test('476 campaign after two annual steps round trips stories and payments withi
       utf16Bytes:result.bytes, jsonUtf16Bytes:result.jsonBytes, quota:result.limit }),
       contentType:'application/json' });
     expectStorageRoundTrip(result);
+  });
+
+test('restore keeps saved treasury targets and an explicit unlinked royal member',
+  async function ({ page }, testInfo) {
+    await start(page, testInfo, '867');
+    const result = await page.evaluate(function () {
+      const s = FB.state, own = function (o, k) { return Object.prototype.hasOwnProperty.call(o, k); };
+      let realmId = null, memberId = null;
+      Object.keys(s.realms).some(function (rid) {
+        const members = s.realms[rid].succession && s.realms[rid].succession.members || {};
+        return Object.keys(members).some(function (id) {
+          const cid = 'ro_' + id.slice('royal_'.length), c = s.chars[cid];
+          if (id.indexOf('royal_') !== 0 || id === s.realms[rid].succession.rulerMemberId ||
+              members[id].charId !== cid || !c || !c.royalLine ||
+              c.royalLine.memberId !== id || c.royalLine.realmId !== rid) return false;
+          realmId = rid; memberId = id; return true;
+        });
+      });
+      const accounts = Object.keys(s.realms).filter(function (rid) {
+        const t = s.realms[rid].treasury;
+        return rid !== 'player' && t && t.version === 1 && !t.retired && own(t, 'reserveTarget');
+      });
+      if (!memberId || accounts.length < 2 || s.treasuryAccounting.mode !== 'active')
+        return { staged:false, member:!!memberId, accounts:accounts.length };
+      // A detached royal link and stored targets that differ from a fresh projection.
+      s.realms[realmId].succession.members[memberId].charId = null;
+      s.realms[accounts[0]].treasury.reserveTarget = 12.345;
+      s.realms[accounts[0]].treasury.necessary = 6.789;
+      delete s.realms[accounts[1]].treasury.reserveTarget;
+      const linked = Object.keys(s.realms[realmId].succession.members).filter(function (id) {
+        const m = s.realms[realmId].succession.members[id];
+        return id !== memberId && id.indexOf('royal_') === 0 && m.charId === 'ro_' + id.slice('royal_'.length);
+      })[0];
+      const saved = JSON.parse(FB.save.serialize());
+      const wire = saved.state.realms[realmId].succession.members;
+      const rng = FB.getRngState() >>> 0, uid = FB.getUidCounter();
+      FB.save.restore(saved);
+      const firstUnlinked = FB.state.realms[realmId].succession.members[memberId].charId === null;
+      FB.save.restore(JSON.parse(FB.save.serialize()));
+      const x = FB.state, row = x.realms[accounts[0]].treasury, filled = x.realms[accounts[1]].treasury;
+      return { staged:true, explicitNull:own(wire[memberId], 'charId') && wire[memberId].charId === null,
+        compact:!linked || !own(wire[linked], 'charId'),
+        unlinked:firstUnlinked && x.realms[realmId].succession.members[memberId].charId === null,
+        identity:rng === (FB.getRngState() >>> 0) && uid === FB.getUidCounter(),
+        relinked:!linked || x.realms[realmId].succession.members[linked].charId === 'ro_' + linked.slice('royal_'.length),
+        kept:row.reserveTarget === 12.345 && row.necessary === 6.789,
+        filled:Number.isFinite(filled.reserveTarget) && filled.reserveTarget >= 0 };
+    });
+    expect(result).toEqual({ staged:true, explicitNull:true, compact:true, unlinked:true, identity:true, relinked:true,
+      kept:true, filled:true });
   });

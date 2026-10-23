@@ -230,6 +230,7 @@
           "government": "regnum",
           "ruler": {
             "name": "Ivo Reed",
+            "sex": "m",
             "culture": "frankish",
             "born": 868,
             "mar": 6,
@@ -252,6 +253,7 @@
           "liege": "inventory_estuary_court",
           "ruler": {
             "name": "Odo Vale",
+            "sex": "m",
             "culture": "frankish",
             "born": 870,
             "mar": 5,

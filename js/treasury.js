@@ -444,7 +444,8 @@
         if (preservedOwner(state,rid)) realm.treasury.publicOwnerId = preservation(state).originalRealmId;
         count('accounts initialized');
       }
-      if (state.treasuryAccounting.mode !== 'active') {
+      const activating = state.treasuryAccounting.mode !== 'active';
+      if (activating) {
         const purses = state.armyLogistics && state.armyLogistics.purses || {};
         const floors = FBDATA.balance.aiTreasuryOpeningFloor || [0, 10, 20, 30, 40];
         const periods = FBDATA.balance.aiTreasuryOpeningSeasons;
@@ -461,14 +462,17 @@
         state.treasuryAccounting.lastMilitaryTurn = state.turn;
         state.treasuryAccounting.lastSettledSeason = season(state);
       }
+      // Seasonal settlement and the annual surplus pass own these saved
+      // targets. A restore keeps them and only fills accounts that lack one.
       for (const rid of Object.keys(snapshot.rows)) {
         const row = account(state, rid), fiscal = snapshot.rows[rid];
-        if (row) row.necessary = necessary(fiscal);
+        if (row && (activating || !own(row, 'necessary'))) row.necessary = necessary(fiscal);
       }
       const reserves = FB.treasuryConstructionReserves(state, snapshot);
       for (const rid of Object.keys(snapshot.rows)) {
         const row = account(state, rid);
-        if (row) row.reserveTarget = reserves ? reserves[rid] : civilianReserve(snapshot.rows[rid]);
+        if (row && (activating || !own(row, 'reserveTarget')))
+          row.reserveTarget = reserves ? reserves[rid] : civilianReserve(snapshot.rows[rid]);
       }
       retries.delete(state);
       if (state.armyLogistics) delete state.armyLogistics.purses;
