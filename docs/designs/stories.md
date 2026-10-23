@@ -10,6 +10,8 @@ Expedition assurance and restitution reviews
 
 Preparation-aware records reviews
 
+Undertaking save validation checks its raw exact story record first, then resolves current parties and office generations against a detached expansion of the core wire-codec defaults. Omitted character ids and realm alive flags are not missing original identities. Altered same-generation party ids still reject, including the outside ruler, and validation changes neither the source save nor RNG/uid. No optional record, ruler, decision or preparation is initialized by expansion.
+
 Optional waitForFormation binds one original expedition preparation and command. The source card remains waiting until normal daily dispatch observes its canonical formation receipt and effective original command. Review queries and restore are pure and never form, acknowledge or advance it. Original commander, source ruler, generations, preparation definition and issuer remain retained. Refusal, preparation expiry or interruption, party loss, command loss and the independent finite review deadline have distinct terminal reasons; none reopens. Immediate-command declarations retain their version-1 meaning. See docs/MODDING.md for exact declarations and version-2 records. Formation and acknowledgment stay on their own canonical source cards; no ruler-agenda forwarding adapter is added.
 
 Technology impact expedition_records_reviews remains none for this expansion: waiting for baseline political formation is part of the same costless review capability and has no credible discovery prerequisite. Existing formation, unit, resource and travel gates remain authoritative.

@@ -12,6 +12,8 @@ Acceptance of a mobile agreement is a reviewed transaction. A civic counterparty
 
 Mobile confederation
 
+Character-held outside responses recognize the current protagonist's live player court when the station resolver confirms territorial rule. The inherited royal-line lookup deliberately excludes player and cannot resolve that alias by itself. Other household members acquire no court authority. A current managed-office vacancy invalidates an original corridor authority chain even if its living abdicator still occupies the genealogy root; ordinary daily reconciliation ends the affected receipt without replacing its original people.
+
 Optional bounded command columns partition an authored opening's existing force and food into canonical hosts while retaining one civilian camp and account. The complete contract, strict optional saves, current commander scopes, reviewed movement/reorganization and final reunion rules are in docs/designs/mobile-columns.md. Existing single-host defaults retain their original schemas and behavior.
 
 Adaptive provisioning

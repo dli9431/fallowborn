@@ -1,6 +1,6 @@
 Compact validation snapshots
 
-FB.save.expandedSnapshot(state) expands only the existing wire-codec omissions on a detached copy for semantic validators that require explicit character and realm identities. It performs no load repair or state adoption and does not supply optional subsystem records. Preparation first checks its raw exact record, then uses this snapshot for original-person and current-authority queries. Direct mobile binding and opening-issuer checks use their canonical saved indexes without expansion.
+FB.save.expandedSnapshot(state) expands only the existing wire-codec omissions on a detached copy for semantic validators that require explicit character and realm identities. It performs no load repair or state adoption and does not supply optional subsystem records. Preparation first checks its raw exact record, then uses this snapshot for original-person and current-authority queries. Undertaking validation likewise retains its strict raw record while resolving same-generation parties on the expanded core snapshot; a compact missing id or alive flag cannot substitute for a changed party. Direct mobile binding and opening-issuer checks use their canonical saved indexes without expansion.
 
 Adopted dynastic treasury provenance
 

@@ -228,7 +228,14 @@
             prep.status === 'closed' && prep.reason === suffix && r.endedTurn >= prep.endedTurn));
         }
       }
-      var p=parties(s), g=generations(s);
+      // Validate the original record without filling any optional story data.
+      // Current-office readers require the codec's omitted character ids and
+      // realm alive flags, expanded on a detached snapshot only.
+      var current=s;
+      if (Object.keys(s.chars).some(function (id) {return s.chars[id] && s.chars[id].id===undefined;}) ||
+          Object.keys(s.realms).some(function (id) {return s.realms[id] && s.realms[id].alive===undefined;}))
+        current=FB.save.expandedSnapshot(s);
+      var p=parties(current),g=generations(current);
       r.partyIds.forEach(function (id,i) {
         need(r.generations[i] <= g[i]);
         // A same-generation live office has one identity. Changed or dead
