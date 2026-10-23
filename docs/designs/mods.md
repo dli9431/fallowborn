@@ -40,6 +40,8 @@ A start's explicit tracks:[] declares no player story tracks and is valid for da
 
 Global faith war targets resolve against the complete effective bookmark hierarchy, including worlds supplied in the same JSON mod. These references do not copy a bookmark's titles into the active world's hierarchy. Same-id bookmark replacements remove the previous world's targets from this lookup. Detached validation performs the same title normalization as activation, so missing targets reject before storage or reload.
 
+Community event county references also resolve against the complete candidate bookmark revisions, including counties supplied by the same JSON import. Runtime catalogue validation retains all registered worlds after activation selects a smaller map. Unknown and duplicate county selectors still reject before storage, without changing the candidate, live catalogues, state, RNG or UID.
+
 The existing top-level
 `provinces`/`realms`/hierarchy/straits/crossingClasses/scripted fields remain the public
 867 merge API. `straits` keep their two-id pair format; `crossingClasses` merges by its

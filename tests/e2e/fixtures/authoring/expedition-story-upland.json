@@ -375,7 +375,7 @@
         {
           "id": "dune_flats",
           "name": "Glass Flats",
-          "realm": "dune_oasis",
+          "realm": "dune_gate",
           "culture": "dune_folk",
           "religion": "dune_belief",
           "dev": 3,

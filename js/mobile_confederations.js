@@ -1443,10 +1443,13 @@
         var boundIds={};
         r.openingBindings.forEach(function (b,i) {
           var expected=opening.principals[i], ref=b && b.person, c=b && s.chars[b.characterId];
-          if (!keys(b,['memberId','characterId','person']) || b.memberId!==expected.memberId || !c || boundIds[c.id] ||
+          if (!keys(b,['memberId','characterId','person']) || b.memberId!==expected.memberId || !c ||
+              c.id!==undefined && c.id!==b.characterId || boundIds[b.characterId] ||
               !ref || JSON.stringify(ref)!==JSON.stringify(expected.person)) fault(rid,'openingBindings');
-          if (!FB.bookmarkActor(s,ref.actorId) || FB.bookmarkActor(s,ref.actorId).id!==c.id) fault(rid,'openingBindings');
-          boundIds[c.id]=true;
+          // Character ids are omitted on the wire; the actor index and binding
+          // retain the canonical ids before the codec expands characters.
+          if (!s.bookmarkSetup || s.bookmarkSetup.actors[ref.actorId]!==b.characterId) fault(rid,'openingBindings');
+          boundIds[b.characterId]=true;
         });
       }
       var reserves=opening && opening.reserves, reserveMarker=r.openingReserves;

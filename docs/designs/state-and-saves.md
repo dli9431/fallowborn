@@ -1,3 +1,7 @@
+Compact validation snapshots
+
+FB.save.expandedSnapshot(state) expands only the existing wire-codec omissions on a detached copy for semantic validators that require explicit character and realm identities. It performs no load repair or state adoption and does not supply optional subsystem records. Preparation first checks its raw exact record, then uses this snapshot for original-person and current-authority queries. Direct mobile binding and opening-issuer checks use their canonical saved indexes without expansion.
+
 Adopted dynastic treasury provenance
 
 Optional state.start.publicTreasury has exactly schema:1, originalRealmId, realmId and retirement. The original id must be the selected ruler realm in the effective saved revision and that declaration must opt in with publicTreasury:{schema:1}. Current realmId is player or the original realm after a supported court release. An active record has retirement:null and requires exactly one live canonical version-1 treasury with publicOwnerId matching originalRealmId, finite signed cash, nonnegative military accrual and valid fiscal clocks. Retirement is exactly turn and recipientId, records the canonical terminal transfer and requires any retained original account to remain retired and zero. A removed terminal realm supplies no new account.

@@ -6,6 +6,12 @@ const { captureWorldSnapshot } = require('./parity');
 
 async function beginBookmark(page, testInfo, id, scenarioId) {
   await openGame(page, testInfo);
+  await beginBookmarkFromTitle(page, id, scenarioId);
+}
+
+// For a caller that already waited for the ordinary Mods reload to finish.
+// Reuse that title instead of booting the whole catalogue a second time.
+async function beginBookmarkFromTitle(page, id, scenarioId) {
   const setup = await page.evaluate(function (input) {
     const id = input.id;
     const bm = FB.bookmark(id);
@@ -117,4 +123,4 @@ async function facts(page) {
   }) };
 }
 
-module.exports = { beginBookmark, advanceBookmark, restoreBookmark, facts };
+module.exports = { beginBookmark, beginBookmarkFromTitle, advanceBookmark, restoreBookmark, facts };

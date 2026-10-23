@@ -1,5 +1,7 @@
 Preparation-aware expedition stories
 
+Independent acceptance worlds retain ordinary passage checks. The upland fixture places its intermediate flats under the opposing territorial court, so its vowed field route crosses actual hostile land. Changing that controller to the neutral patron blocks the current review without consuming an attempted action; restoring hostile control permits a fresh canonical order. A patron alone never grants passage. Checkpoint comparisons expand only wire-codec defaults on detached state and sort object keys, preserving every resource value, array position and the canonical war ledger.
+
 Spring 1096 declaration boundary
 
 data/expeditions_1096.js loads after the complete bookmark and publishes an empty storyExpeditions1096 source batch into the existing storyInstances catalogue. There are no accepted historical preparation or program declarations, mobile commands, formation reserves, funding grants or expedition routes in this opening. Ordinary household play remains available. A calendar boundary and an existing named court cannot supply an expedition's missing operational facts. The empty source adds no gameplay capability, technology decision or saved record; the existing preparation, program and movement contracts retain their own technology and resource gates.
@@ -11,6 +13,8 @@ The expedition_program world-story type composes one attached expedition_prepara
 Declaration
 
 The exact fields are id, type, title, intro, requires, preparationId, realmId, commandId, programId, termDays and ai. Stable references are lowercase slugs up to 200 characters, subject to stricter canonical command/program limits. Display strings contain 1-4000 characters. requires is exactly [preparationId], resolved against the detached candidate registry to an expedition_preparation for the same realm. The parent and child must both attach to the effective bookmark. The command and program ids must match that realm's mobile declarations. Only one composition per realm is supported. Columns are unsupported here and remain available under the independent canonical column-program contract.
+
+As with other reusable story declarations, a composition may remain registered without attachment to a bookmark. That creates no saved composition record or automation. An attached composition requires its preparation parent to remain attached; the detached authoring regression distinguishes these two cases.
 
 termDays is an exclusive absolute campaign deadline from 1 to 1440, exactly the maximum canonical step-window end; the preparation deadline cannot exceed it. This preserves the existing 16-step and 16-waypoint-per-route limits while additionally bounding all declared route waypoints to 32 in total. There is no second waypoint definition. Windows, dependencies, supply policies, access offers and current holy_objective terms use their existing typed declarations. ai is hold, advance or refuse. Hold suppresses automatic preparation consent/formation and mobile dispatch. Advance permits the parent's own separate acceptance/formation policy and the existing mobile daily dispatcher. Refuse closes the original commander's intent on its next eligible live boundary. Policy never acts for a player commander or player local provider, grants money or independently enrolls a vow.
 
