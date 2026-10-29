@@ -24,11 +24,10 @@
   function heirs(s, rid) {
     var family = FB.royalSettlementFamily(s, rid);
     if (!family) return [];
-    var order = rid === 'player' && family.order ? family.order : Object.keys(family.members);
+    var order = family.order || Object.keys(family.members);
     return order.map(function (key) { return family.members[key]; })
       .filter(function (m) { return m.alive !== false && m.sex === 'm' &&
-        (m.fatherId || m.parentId) === family.rulerMemberId && (!m.charId || live(s, m.charId)); })
-      .sort(function (a, b) { return a.born - b.born || (a.id < b.id ? -1 : 1); });
+        (m.fatherId || m.parentId) === family.rulerMemberId && (!m.charId || live(s, m.charId)); });
   }
   function counties(s, rid, region) {
     return FB.stories.resolve(s, region.selector).filter(function (pid) { return s.owner[pid] === rid; }).sort();
