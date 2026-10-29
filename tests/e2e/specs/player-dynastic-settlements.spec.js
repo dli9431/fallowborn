@@ -120,6 +120,10 @@ test('adopted beneficiary uses ordinary sons for later designation and rejects d
     const source = s.realms.carolingian_800.succession;
     const charles = Object.values(source.members).find(function (m) { return m.localId === 'charles'; });
     FB.killChar(s, s.chars[charles.charId]);
+    const louis = Object.values(source.members).find(function (m) {
+      return m.branchRef && m.branchRef.realmId === 'player' && m.charId === cast.louis;
+    });
+    FB.designateRoyalHeir(s, 'carolingian_800', louis.id);
     s.date.year = 807;
     FB.stories.apply(s, 'divisio_800', 'approve', FB.stories.quote(s, 'divisio_800', 'approve'));
     const chance = FB.chance;
@@ -168,6 +172,7 @@ test('adopted regional beneficiary must consent and can inherit the original cro
       return m.branchRef && m.branchRef.realmId === 'player' && m.charId === cast.louis;
     });
     FB.killChar(s, s.chars[charles.charId]);
+    FB.designateRoyalHeir(s, 'carolingian_800', linked.id);
     s.date.year = 807;
     const story = FB.stories.get('divisio_800'), q = FB.stories.quote(s, 'divisio_800', 'approve');
     const before = JSON.stringify({ owner:s.owner, holder:s.holder, liege:s.player.liege });
