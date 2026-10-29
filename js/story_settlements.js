@@ -22,15 +22,27 @@
     s.truces[key] = Math.max(s.truces[key] || 0, s.turn + days);
   }
   function heirs(s, rid) {
-    var family = s.realms[rid] && s.realms[rid].succession;
+    var family = FB.royalSettlementFamily(s, rid);
     if (!family) return [];
-    return Object.keys(family.members).map(function (key) { return family.members[key]; })
+    var order = rid === 'player' && family.order ? family.order : Object.keys(family.members);
+    return order.map(function (key) { return family.members[key]; })
       .filter(function (m) { return m.alive !== false && m.sex === 'm' &&
         (m.fatherId || m.parentId) === family.rulerMemberId && (!m.charId || live(s, m.charId)); })
       .sort(function (a, b) { return a.born - b.born || (a.id < b.id ? -1 : 1); });
   }
   function counties(s, rid, region) {
     return FB.stories.resolve(s, region.selector).filter(function (pid) { return s.owner[pid] === rid; }).sort();
+  }
+  function peaceAllowed(s, war) {
+    if (!war || war.status !== 'active') return false;
+    return [war.attacker, war.defender].every(function (rid) {
+      var form = s.realms[rid] && FB.governments.forRealm(s, rid), support = FB.governments.support;
+      if (form && form.use.succession.civicLeadership) return false;
+      if (support && support.isDelegated(s, rid) &&
+          !support.authorization(s, rid, 'treaty', { warId:war.id, kind:'white_peace' })) return false;
+      var church = FB.ecclesiasticalGovernment;
+      return !church || !church.active(s, rid) || church.decision(s, rid, 'treaty').allowed;
+    });
   }
   function expected(s, rec, def) {
     return def.actor.castField ? rec.cast[def.actor.castField] : FB.stories.resolve(s, def.actor.character);
@@ -85,7 +97,8 @@
   }
   function terms(s, rec, def) {
     var rid = def.actor.realmId, crown = s.realms[rid], king = ruler(s, rid);
-    if (!crown || !crown.alive || crown.liege || !king || s.owner[def.actor.capital] !== rid) return { terminal:'diverted' };
+    if (!crown || !crown.alive || crown.liege || !king || !live(s, king.id) ||
+        s.owner[def.actor.capital] !== rid) return { terminal:'diverted' };
     if (rec.phase !== 'pending' || s.date.year < def.firstYear || s.date.year > def.lastYear) return { allowed:false };
     var wanted = expected(s, rec, def);
     if ((def.actor.character || def.actor.castField) && king.id !== wanted) return { terminal:'interrupted' };
@@ -93,7 +106,7 @@
       var children = heirs(s, rid);
       var shares = def.shares.filter(function (share) {
         var c = ruler(s, share.realmId), realm = s.realms[share.realmId];
-        return c && realm && realm.succession && realm.liege === rid && c.id === rec.cast[share.castField];
+        return c && realm && FB.royalSettlementFamily(s, share.realmId) && realm.liege === rid && c.id === rec.cast[share.castField];
       }).map(function (share) { return { realmId:share.realmId, charId:ruler(s, share.realmId).id,
         generation:FB.realmRulerGeneration(s, share.realmId) }; });
       return { allowed:children.length >= 2 && shares.length > 0 && !FB.isRealmAtWar(s, rid),
@@ -101,19 +114,25 @@
           primaryId:children.length ? children[0].id : null, shares:shares } };
     }
     if (def.type === 'designated_succession') {
-      var sons = heirs(s, rid), family = crown.succession;
+      var sons = heirs(s, rid), family = FB.royalSettlementFamily(s, rid);
       var grants = sons.slice(1, def.regions.length + 1).map(function (m, i) {
         var region = def.regions[i];
         return { memberId:m.id, region:region.id, counties:counties(s, rid, region) };
       });
-      var valid = sons.length >= 2 && grants.every(function (grant, i) {
+      var occupiedGrant = {}, affectedGrant = {}, valid = sons.length >= 2 && grants.every(function (grant, i) {
         var region = def.regions[i].grant, member = family.members[grant.memberId];
         var person = member.charId && s.chars[member.charId];
-        return grant.counties.indexOf(region.capital) >= 0 && !s.realms[region.id] &&
+        var quote = FB.royalRegionQuote(s, rid, grant.counties);
+        if (quote) quote.branches.forEach(function (id) { affectedGrant[id] = true; });
+        return grant.counties.length && grant.counties.every(function (pid) {
+          if (occupiedGrant[pid]) return false;
+          occupiedGrant[pid] = true; return true;
+        }) && grant.counties.indexOf(region.capital) >= 0 && !s.realms[region.id] &&
           (!person || person.id !== s.player.charId && !FB.isReigningRealmRuler(s, person)) &&
-          FB.royalRegionQuote(s, rid, grant.counties);
+          !!quote;
       });
       return { allowed:!!valid && !FB.isRealmAtWar(s, rid),
+        affectedRealmIds:Object.keys(affectedGrant).sort(),
         plan:{ rulerId:king.id, generation:FB.realmRulerGeneration(s, rid),
           primaryId:sons.length ? sons[0].id : null, shares:grants } };
     }
@@ -139,7 +158,10 @@
     }
     var settlement = FB.stories.resolve(s, def.planRef);
     if (!settlement || king.id === settlement.rulerId) return { allowed:false };
-    var primary = crown.succession && crown.succession.members[settlement.primaryId];
+    var family = FB.royalSettlementFamily(s, rid);
+    if ((!family || !family.members[settlement.primaryId]) && def.originalActorRealmId)
+      family = s.realms[def.originalActorRealmId].succession;
+    var primary = family && family.members[settlement.primaryId];
     if (!primary || primary.charId !== king.id) return { terminal:'interrupted' };
     var juniors = settlement.shares.filter(function (share) {
       var c = ruler(s, share.realmId), realm = s.realms[share.realmId];
@@ -150,7 +172,8 @@
     var wars = FB.ordinaryWars(s).filter(function (war) {
       return parties.indexOf(war.attacker) >= 0 || parties.indexOf(war.defender) >= 0;
     });
-    if (wars.some(function (war) { return parties.indexOf(war.attacker) < 0 || parties.indexOf(war.defender) < 0; }) ||
+    if (wars.some(function (war) { return parties.indexOf(war.attacker) < 0 || parties.indexOf(war.defender) < 0 ||
+          !peaceAllowed(s, war); }) ||
         parties.some(function (party) { return FB.greatHolyWarCamp && FB.greatHolyWarCamp(s, party); })) return { allowed:false };
     var partitions = juniors.slice(0, def.regions.length).map(function (share, i) {
       var region = def.regions[i], selected = counties(s, rid, region), owned = FB.realmTerritory(s, share.realmId);
@@ -159,17 +182,24 @@
       return { realmId:share.realmId, charId:share.charId, generation:FB.realmRulerGeneration(s, share.realmId),
         region:region.id, counties:selected };
     });
-    var occupied = {}, validPartition = partitions.every(function (part) {
+    var occupied = {}, affectedPartition = {}, validPartition = partitions.every(function (part) {
+      var regionQuote = FB.royalRegionQuote(s, rid, part.counties, parties);
+      if (regionQuote) regionQuote.branches.forEach(function (id) { affectedPartition[id] = true; });
       return part.counties.every(function (pid) {
         if (occupied[pid]) return false; occupied[pid] = true; return true;
-      }) && !!FB.royalRegionQuote(s, rid, part.counties, parties);
+      }) && !!regionQuote &&
+        (s.realms[part.realmId].liege !== rid ||
+          !!FB.royalReleaseQuote(s, rid, part.realmId, part.counties, parties));
     });
-    return { allowed:validPartition, plan:{ rulerId:king.id, generation:FB.realmRulerGeneration(s, rid),
+    return { allowed:validPartition, affectedRealmIds:Object.keys(affectedPartition).sort(),
+      plan:{ rulerId:king.id, generation:FB.realmRulerGeneration(s, rid),
       primaryId:primary.id, shares:partitions, warIds:wars.map(function (war) { return war.id; }) } };
   }
   function parties(s, rec, def, check) {
-    return [def.actor.realmId].concat(def.source ? [def.source.realmId] :
-      def.type === 'treaty_settlement' && check.plan ? check.plan.shares.map(function (share) { return share.realmId; }) : []);
+    var ids = [def.actor.realmId].concat(def.source ? [def.source.realmId] :
+      (def.type === 'treaty_settlement' || def.type === 'succession_partition') && check.plan ?
+        check.plan.shares.map(function (share) { return share.realmId; }) : []);
+    return ids.concat(check.affectedRealmIds || []).filter(function (id, i, all) { return all.indexOf(id) === i; });
   }
   function controlled(s, rid) {
     var c = ruler(s, rid);
@@ -192,8 +222,12 @@
       if (!FB.designateRoyalHeir(s, rid, plan.primaryId)) return false;
       rec.plan = plan; rec.phase = 'planned'; rec.turn = s.turn;
     } else if (def.type === 'designated_succession') {
+      if (plan.shares.some(function (grant) {
+        var region = def.regions.filter(function (row) { return row.id === grant.region; })[0];
+        return !region || s.realms[region.grant.id] || !FB.royalRegionQuote(s, rid, grant.counties);
+      })) return false;
       for (var grant of plan.shares) {
-        var person = FB.materializeRoyalMember(s, rid, grant.memberId);
+        var person = FB.royalSettlementPerson(s, rid, grant.memberId);
         if (!person || FB.isReigningRealmRuler(s, person)) return false;
         grant.charId = person.id;
       }
@@ -203,7 +237,7 @@
         var realm = FB.makeVassalRealm(s, { id:region.id, capital:region.capital, rank:region.rank,
           liege:rid, titleKind:region.titleKind, titleId:region.titleId });
         FB.assignRealmRulerCharacter(s, realm.id, share.charId);
-        FB.grantRoyalRegion(s, rid, realm.id, share.counties);
+        if (!FB.grantRoyalRegion(s, rid, realm.id, share.counties)) return false;
         share.realmId = realm.id; share.generation = FB.realmRulerGeneration(s, realm.id); delete share.counties;
       }
       rec.plan = plan; finish(s, rec, 'agreed');
@@ -229,13 +263,21 @@
       for (var pid of FB.stories.resolve(s, def.region)) if (s.owner[pid] === rid) FB.transferProvince(s, pid, def.source.realmId);
       rec.plan = { recognitionId:proof.id }; truce(s, rid, def.source.realmId, def.truceDays); finish(s, rec, 'agreed');
     } else {
-      for (var warId of plan.warIds) FB.settleOrdinaryWar(s, warId, 'white_peace');
+      var participants = [rid].concat(plan.shares.map(function (part) { return part.realmId; }));
+      if (plan.shares.some(function (part) {
+        return !FB.royalRegionQuote(s, rid, part.counties, participants) ||
+          s.realms[part.realmId].liege === rid &&
+          !FB.royalReleaseQuote(s, rid, part.realmId, part.counties, participants);
+      })) return false;
+      if (plan.warIds.some(function (warId) { return !peaceAllowed(s, FB.ordinaryWarById(s, warId)); })) return false;
+      for (var warId of plan.warIds) if (!FB.settleOrdinaryWar(s, warId, 'white_peace')) return false;
       for (var part of plan.shares) {
         if (!FB.grantRoyalRegion(s, rid, part.realmId, part.counties)) return false;
         var title = def.regions.filter(function (row) { return row.id === part.region; })[0].titleId;
         FB.setRealmTitle(s, s.realms[part.realmId], 'kingdom', title);
       }
-      for (var part of plan.shares) FB.releaseRoyalRegion(s, rid, part.realmId);
+      for (var part of plan.shares) if (s.realms[part.realmId].liege === rid &&
+          !FB.releaseRoyalRegion(s, rid, part.realmId)) return false;
       for (var i = 0; i < plan.shares.length; i++) {
         truce(s, rid, plan.shares[i].realmId, def.truceDays);
         for (var j = i + 1; j < plan.shares.length; j++) truce(s, plan.shares[i].realmId, plan.shares[j].realmId, def.truceDays);
@@ -247,19 +289,29 @@
   function day(s, rec, def) {
     var rid = def.actor.realmId, king = ruler(s, rid);
     if (rec.phase === 'planned') {
-      if (king && king.id === rec.plan.rulerId) {
-        var family = s.realms[rid].succession, primary = family.members[rec.plan.primaryId];
+      if (king && !live(s, king.id)) return;
+      if (king && live(s, king.id) && king.id === rec.plan.rulerId) {
+        var family = FB.royalSettlementFamily(s, rid), primary = family && family.members[rec.plan.primaryId];
         if (!primary || primary.alive === false || primary.charId && !live(s, primary.charId)) {
           var surviving = heirs(s, rid);
           if (surviving.length && FB.designateRoyalHeir(s, rid, surviving[0].id)) rec.plan.primaryId = surviving[0].id;
         }
       } else {
         if (!king || !s.realms[rid].alive || s.owner[def.actor.capital] !== rid) { finish(s, rec, 'diverted'); return; }
+        var successorFamily = FB.royalSettlementFamily(s, rid);
+        if ((!successorFamily || !successorFamily.members[rec.plan.primaryId]) && def.originalActorRealmId)
+          successorFamily = s.realms[def.originalActorRealmId].succession;
+        var successor = successorFamily && successorFamily.members[rec.plan.primaryId];
+        if (!successor || successor.charId !== king.id) { finish(s, rec, 'interrupted'); return; }
         if (FB.isRealmAtWar(s, rid)) return;
-        for (var share of rec.plan.shares) {
+        var releasable = rec.plan.shares.filter(function (share) {
           var current = ruler(s, share.realmId);
-          if (current && current.id === share.charId && share.charId !== king.id) FB.releaseRoyalRegion(s, rid, share.realmId);
-        }
+          return current && current.id === share.charId && share.charId !== king.id &&
+            s.realms[share.realmId].liege === rid;
+        });
+        if (!releasable.length) { finish(s, rec, 'interrupted'); return; }
+        if (releasable.some(function (share) { return !FB.royalReleaseQuote(s, rid, share.realmId); })) return;
+        for (var share of releasable) if (!FB.releaseRoyalRegion(s, rid, share.realmId)) return;
         finish(s, rec, 'executed'); notice(s, def, 'executed');
       }
     }
@@ -274,17 +326,19 @@
     if (!def.pressure || !rec.pressure) return;
     var plan = FB.stories.resolve(s, def.planRef), rid = def.actor.realmId, king = ruler(s, rid), p = rec.pressure;
     if (!plan || !king || king.id === plan.rulerId || p.season === tick || p.warId || rec.result === 'agreed') return;
-    p.season = tick;
     var juniors = plan.shares.filter(function (share) {
       var c = ruler(s, share.realmId);
       return c && c.id === share.charId && s.realms[share.realmId].liege === rid;
     });
     if (!juniors.length) return;
+    var candidate = juniors.filter(function (share) { return !controlled(s, share.realmId); })[0];
+    if (!candidate) return;
+    p.season = tick;
     p.amount = Math.min(def.pressure.threshold, p.amount + 1);
     if (p.amount < def.pressure.threshold || FB.isRealmAtWar(s, rid) || !FB.chance(def.pressure.chance)) return;
-    var rebel = juniors[0].realmId;
+    var rebel = candidate.realmId;
     if (FB.truceExpiry(s, rid, rebel) || !FB.releaseRoyalRegion(s, rid, rebel)) return;
-    var war = FB.registerOrdinaryWar(s, rid, { enemy:rebel, legacy:false,
+    var war = FB.registerOrdinaryWar(s, rid, { enemy:rebel, defending:rid === 'player', legacy:false,
       casus:{ type:'independence', rebel:rebel, formerLiege:rid, rebelCharId:ruler(s, rebel).id } });
     if (!war) {
       s.realms[rebel].liege = rid;
@@ -325,14 +379,39 @@
     var plan = rec.plan;
     if (!id(plan.rulerId) || !integer(plan.generation) || !id(plan.primaryId) || !Array.isArray(plan.shares) ||
         !plan.shares.length || plan.shares.length > (def.shares || def.regions).length) bad('plan');
+    var actorRealm = s.realms[def.actor.realmId], actorFamily = actorRealm && actorRealm.succession;
+    var priorRealm = def.originalActorRealmId && s.realms[def.originalActorRealmId];
+    var priorFamily = priorRealm && priorRealm.succession;
+    function memberKnown(memberId) {
+      if (actorFamily && actorFamily.members && actorFamily.members[memberId] ||
+          priorFamily && priorFamily.members && priorFamily.members[memberId]) return true;
+      if (memberId.indexOf('royal_player_person_') !== 0 || !actorFamily || !actorFamily.settlementGenealogy) return false;
+      var charId = memberId.slice('royal_player_person_'.length);
+      if (!s.chars[charId]) return false;
+      var seen = {}, queue = Object.keys(actorFamily.members).map(function (key) {
+        return actorFamily.members[key].charId;
+      }).filter(function (id) { return !!s.chars[id]; });
+      for (var i = 0; i < queue.length; i++) {
+        var current = queue[i];
+        if (seen[current]) continue;
+        seen[current] = true;
+        if (current === charId) return true;
+        FB.childrenOf(s, s.chars[current]).forEach(function (child) {
+          if (!seen[child.id]) queue.push(child.id);
+        });
+      }
+      return false;
+    }
+    if (!memberKnown(plan.primaryId)) bad('primaryId');
     if (def.type === 'treaty_settlement' && (!Array.isArray(plan.warIds) ||
         plan.warIds.some(function (warId, i) { return !id(warId) || plan.warIds.indexOf(warId) !== i; }))) bad('warIds');
     var seen = {};
     for (var share of plan.shares) {
-      if (!plain(share) || !id(share.realmId) || !s.realms[share.realmId] || seen[share.realmId] || !id(share.charId) || !integer(share.generation)) bad('share');
+      if (!plain(share) || !id(share.realmId) || !s.realms[share.realmId] || seen[share.realmId] ||
+          !id(share.charId) || !integer(share.generation)) bad('share');
       seen[share.realmId] = true;
       if (def.regions && !def.regions.some(function (region) { return region.id === share.region; })) bad('region');
-      if (def.type === 'designated_succession' && !id(share.memberId)) bad('memberId');
+      if (def.type === 'designated_succession' && (!id(share.memberId) || !memberKnown(share.memberId))) bad('memberId');
       if (def.type === 'treaty_settlement' && (!Array.isArray(share.counties) || !share.counties.length || share.counties.some(function (pid, i) {
         return share.counties.indexOf(pid) !== i || !(FB.campaignBookmark(s).provinces || []).some(function (p) { return p.id === pid && !p.wasteland; });
       }))) bad('counties');
@@ -340,7 +419,15 @@
   }
   function factory(def) {
     definition(def);
-    function effective(s) { return FB.stories.definition(s, def); }
+    function effective(s) {
+      var d = FB.stories.definition(s, def), old = s.realms[d.actor.realmId];
+      if (old && !old.alive && old.settlementSuccessorId === 'player' &&
+          s.realms.player && s.realms.player.alive) {
+        d.originalActorRealmId = d.actor.realmId;
+        d.actor.realmId = 'player';
+      }
+      return d;
+    }
     function labels(rec) {
       var states = { pending:FB.T('Awaiting conditions'), planned:FB.T('Awaiting succession'),
         agreed:FB.T('Agreement concluded'), executed:FB.T('Inheritance shares executed'), declined:FB.T('Declined'),
@@ -397,7 +484,7 @@
         if (choice === 'approve' && d.truceDays) lines.push(FB.T('Peace term: {days} days.', { days:d.truceDays }));
         var plan = reviewed && reviewed.facts && reviewed.facts.check.plan;
         if (choice === 'approve' && plan) {
-          var family = s.realms[d.actor.realmId].succession, heir = family.members[plan.primaryId];
+          var family = FB.royalSettlementFamily(s, d.actor.realmId), heir = family.members[plan.primaryId];
           lines.push(FB.T('Senior heir: {person}.', { person:heir.name }));
           plan.shares.forEach(function (share) {
             if (d.type === 'succession_partition') lines.push(FB.T('{realm} becomes independent after succession if its present ruler survives.',

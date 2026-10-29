@@ -4,7 +4,73 @@
   'use strict';
   var linkedCourts = new WeakMap();
   function clone(row) { return JSON.parse(JSON.stringify(row)); }
-  function branchId(rid, source, id) { return 'royal_' + rid + '_branch_' + source + '_' + id; }
+  function origin(s, source) {
+    return source === 'player' && s.start && s.start.rulerRealmId || source;
+  }
+  function branchId(rid, source, id, s) { return 'royal_' + origin(s, rid) + '_branch_' + origin(s, source) + '_' + id; }
+  /* The player court is a saved genealogy, not a second succession engine.
+     Current people and the ordinary heir review supply its living projection. */
+  FB.royalSettlementFamily = function (s, rid) {
+    var family = s.realms[rid] && s.realms[rid].succession;
+    if (!family || !family.members) return null;
+    if (rid !== 'player' || !family.settlementGenealogy) return family;
+    var view = { members:{}, rulerMemberId:family.rulerMemberId, order:[] };
+    Object.keys(family.members).forEach(function (id) {
+      var row = family.members[id], c = row.charId && s.chars[row.charId];
+      var current = clone(row);
+      current.alive = row.alive !== false && (!row.charId || !!(c && !c.dead));
+      current.name = c ? c.name : row.name;
+      current.born = c ? c.born : row.born;
+      view.members[id] = current;
+    });
+    var king = s.chars[s.player.charId];
+    if (!king) return view;
+    function memberFor(c) {
+      var matches = Object.keys(view.members).filter(function (key) { return view.members[key].charId === c.id; });
+      var id = matches.filter(function (key) { return !view.members[key].branchRef; })[0] || matches[0];
+      if (id) return view.members[id];
+      id = 'royal_player_person_' + c.id;
+      return view.members[id] = { id:id, charId:c.id, name:c.name, sex:c.sex,
+        born:c.born, alive:!c.dead, fatherId:null, parentId:null, childIds:[] };
+    }
+    view.rulerMemberId = memberFor(king).id;
+    var children = FB.childrenOf ? FB.childrenOf(s, king) : (king.childrenIds || []).map(function (id) { return s.chars[id]; });
+    children.forEach(function (c) {
+      if (!c || c.dead || c.retired) return;
+      var row = memberFor(c);
+      if (!row.parentId && !row.fatherId) row.parentId = view.rulerMemberId;
+      view.order.push(row.id);
+    });
+    view.order.sort(function (a, b) { return view.members[a].born - view.members[b].born || (a < b ? -1 : 1); });
+    if (s.player.namedHeirId) view.order.sort(function (a, b) {
+      return (view.members[b].charId === s.player.namedHeirId ? 1 : 0) -
+        (view.members[a].charId === s.player.namedHeirId ? 1 : 0);
+    });
+    return view;
+  };
+  FB.royalSettlementPerson = function (s, rid, memberId) {
+    if (rid !== 'player') return FB.materializeRoyalMember(s, rid, memberId);
+    var family = FB.royalSettlementFamily(s, rid), member = family && family.members[memberId];
+    return member && member.charId && s.chars[member.charId] || null;
+  };
+  FB.adoptRoyalSettlementCourt = function (s, formerId) {
+    var family = s.realms.player && s.realms.player.succession;
+    if (!family || !family.settlementGenealogy) return;
+    Object.keys(s.realms).forEach(function (rid) {
+      var other = s.realms[rid] && s.realms[rid].succession;
+      if (!other || !other.members) return;
+      Object.keys(other.members).forEach(function (id) {
+        var ref = other.members[id].branchRef;
+        if (ref && ref.realmId === formerId) ref.realmId = 'player';
+      });
+    });
+    var links = linkedCourts.get(s) || {};
+    if (links[formerId]) { links.player = links[formerId]; delete links[formerId]; }
+    Object.keys(links).forEach(function (source) {
+      if (links[source][formerId]) { links[source].player = true; delete links[source][formerId]; }
+    });
+    linkedCourts.set(s, links);
+  };
   function copyBranch(s, rid, source, parentId) {
     var links = linkedCourts.get(s);
     if (!links) { links = {}; linkedCourts.set(s, links); }
@@ -15,7 +81,7 @@
       return other.members[id].reignGeneration === 1 ||
         other.members[id].localId === 'ruler';
     })[0] || other.rulerMemberId;
-    function mapped(id) { return id ? branchId(rid, source, id) : null; }
+    function mapped(id) { return id ? branchId(rid, source, id, s) : null; }
     for (var id in other.members) {
       var original = other.members[id], row = clone(original), bid = mapped(id);
       delete row.localId;
@@ -78,6 +144,7 @@
     var source = ref && s.realms[ref.realmId];
     var original = source && source.succession && source.succession.members[ref.memberId];
     if (!source || !source.alive || !original || original.branchRef) return null;
+    if (ref.realmId === 'player') return original.charId && s.chars[original.charId] || null;
     // A compact borrowed member is filled by its own court's seeded stream.
     var person = original.role === 'consort'
       ? FB.materializeRealmConsort(s, ref.realmId, opts)
@@ -95,8 +162,8 @@
     for (var rid in candidates) {
       var family = s.realms[rid] && s.realms[rid].succession;
       if (!family || !family.members) continue;
-      var aid = al.realmId === rid ? al.memberId : branchId(rid, al.realmId, al.memberId);
-      var bid = bl.realmId === rid ? bl.memberId : branchId(rid, bl.realmId, bl.memberId);
+      var aid = al.realmId === rid ? al.memberId : branchId(rid, al.realmId, al.memberId, s);
+      var bid = bl.realmId === rid ? bl.memberId : branchId(rid, bl.realmId, bl.memberId, s);
       if (family.members[aid] && family.members[bid]) return { family:family,
         a:{ royalLine:{ realmId:rid, memberId:aid } }, b:{ royalLine:{ realmId:rid, memberId:bid } } };
     }
@@ -132,8 +199,14 @@
     return true;
   };
   FB.designateRoyalHeir = function (s, rid, memberId) {
-    var family = FB.refreshRealmSuccession(s, rid);
+    var family = rid === 'player' ? FB.royalSettlementFamily(s, rid) : FB.refreshRealmSuccession(s, rid);
     if (!family || family.order.indexOf(memberId) < 0) return false;
+    if (rid === 'player' && s.realms.player.succession.settlementGenealogy) {
+      var person = family.members[memberId] && s.chars[family.members[memberId].charId];
+      if (!person || person.dead || !FB.heirsOf(s).some(function (c) { return c.id === person.id; })) return false;
+      s.player.namedHeirId = person.id;
+      return true;
+    }
     family.designatedHeirId = memberId;
     FB.refreshRealmSuccession(s, rid);
     return true;
@@ -148,7 +221,7 @@
      duchy or another sovereign's county cannot be silently confiscated. */
   FB.royalRegionQuote = function (s, rid, counties, peaceParties) {
     var realm = s.realms[rid], selected = {}, branches = {};
-    if (!realm || !realm.alive || realm.liege || rid === 'player' ||
+    if (!realm || !realm.alive || realm.liege ||
         !Array.isArray(counties) || !counties.length) return null;
     if (FB.isRealmAtWar(s, rid) && (!Array.isArray(peaceParties) ||
         FB.greatHolyWarCamp && FB.greatHolyWarCamp(s, rid) ||
@@ -166,7 +239,7 @@
       while (s.realms[holder] && s.realms[holder].liege !== rid && !seen[holder]) {
         seen[holder] = true; holder = s.realms[holder].liege;
       }
-      if (!holder || !s.realms[holder] || s.realms[holder].liege !== rid || holder === 'player') return null;
+      if (!holder || !s.realms[holder] || s.realms[holder].liege !== rid) return null;
       branches[holder] = true;
     }
     for (var branch in branches)
@@ -176,22 +249,40 @@
   FB.grantRoyalRegion = function (s, rid, recipient, counties) {
     var quote = FB.royalRegionQuote(s, rid, counties), target = s.realms[recipient];
     if (!quote || !target || !target.alive || recipient === rid ||
+        recipient === 'player' && s.player.liege !== rid ||
         target.liege && target.liege !== rid || FB.isRealmAtWar(s, recipient)) return false;
     for (var branch of quote.branches) if (branch !== recipient) s.realms[branch].liege = recipient;
-    for (var pid of counties) if (s.holder[pid] === rid) s.holder[pid] = recipient;
+    for (var pid of counties) if (s.holder[pid] === rid) {
+      s.holder[pid] = recipient;
+      if (rid === 'player') s.player.provs = (s.player.provs || []).filter(function (id) { return id !== pid; });
+      if (recipient === 'player' && s.player.provs.indexOf(pid) < 0) s.player.provs.push(pid);
+    }
     if (!target.liege) for (var pid of counties) s.owner[pid] = recipient;
     FB.invalidateRealmCache();
     return true;
   };
-  FB.releaseRoyalRegion = function (s, rid, recipient) {
+  FB.royalReleaseQuote = function (s, rid, recipient, projected, peaceParties) {
     var target = s.realms[recipient];
-    if (!target || !target.alive || target.liege !== rid || rid === 'player' ||
-        recipient === 'player' || FB.isRealmAtWar(s, rid) || FB.isRealmAtWar(s, recipient)) return false;
-    var counties = FB.realmTerritory(s, recipient);
-    if (!counties.length || counties.some(function (pid) { return s.owner[pid] !== rid; })) return false;
-    target.liege = null;
+    if (!target || !target.alive || target.liege !== rid ||
+        recipient === 'player' && s.player.liege !== rid ||
+        [rid,recipient].some(function (party) {
+          return FB.isRealmAtWar(s, party) && (!Array.isArray(peaceParties) ||
+            FB.realmWars(s, party).some(function (war) {
+              return peaceParties.indexOf(war.attacker) < 0 || peaceParties.indexOf(war.defender) < 0;
+            }));
+        })) return null;
+    var counties = projected || FB.realmTerritory(s, recipient);
+    if (!counties.length || counties.some(function (pid) { return s.owner[pid] !== rid; })) return null;
+    return { counties:counties.slice() };
+  };
+  FB.releaseRoyalRegion = function (s, rid, recipient) {
+    var quote = FB.royalReleaseQuote(s, rid, recipient);
+    if (!quote) return false;
+    s.realms[recipient].liege = null;
+    var counties = quote.counties;
     for (var pid of counties) s.owner[pid] = recipient;
     FB.invalidateRealmCache();
+    if (recipient === 'player' && FB.changePlayerLiege) FB.changePlayerLiege(s, null, 'realm:royal_release');
     if (FB.mergeRealmTech) FB.mergeRealmTech(s, recipient, rid);
     return true;
   };
