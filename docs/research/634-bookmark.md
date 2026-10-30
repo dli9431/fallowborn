@@ -1,8 +1,16 @@
-Autumn 634 staged declarations
+Autumn 634 opening
 
 Scope
 
-The current implementation stages identity data and all four regional world sources. The 33 blocks contain 527 distinct physical anchors and 121 court declarations. Loading these inputs registers no 634 world, active court, community, start, religious office or historical relative. No existing date is modified. A later complete world composition owns script loading, publication and the physical distribution of communities.
+The hidden autumn 634 bookmark, The Early Conquests, composes all four date-owned regional sources. Its 33 blocks cover 527 physical anchors, with 506 inhabited county or district presentations, 21 scenery cells and 121 unique courts. The opening is year 634, season 2, day 1 on europe_regional_2, using revision baseline and settlement layout 634_opening. The seasonal date is a game convention after Umar's accession, not an exact calendar conversion. The date is unavailable in the ordinary picker, codes and Observe until separately exposed.
+
+Composition
+
+data/bookmark_634.js copies b01 through b29 in their numbered order, followed by scenery_a through scenery_d. County, court, title, layout, local climate and government records are detached from their source blocks. Duplicate declarations, missing physical anchors, unresolved courts and invalid capital ownership reject composition before live publication. Each block containing a court's capital supplies that court once; all other blocks reference it. Both climate and climates source spellings are consumed. The twenty-two physical sea crossings retain the earlier opening's explicit endpoints and classes, without a new campaign route or shortened land journey.
+
+The composer publishes the three dated faith records, unions fifteen source-faith bookmark selectors without removing their other restrictions, and publishes b24's medinan_selection_pf_634 form before engine compilation. Earlier worlds retain their identities and permissions. The 634 opening has explicit empty localInstitutions and religiousHeads maps, no world stories or scripted history, and empty actor, appointment, estate, claim and migration ledgers. Episcopal and civic institutions, papacy, excommunication, abbeys, feudal service, scutage, manorial tenure, crown blocs, tournaments and great holy wars are disabled. This reduced institutional model prevents older named officeholders from entering the opening; it does not claim that the historical offices or communities were absent.
+
+data/starts_634_ordinary.js supplies two ordinary map-chosen roles, farmer_634 and craftsman_634, across the inhabited counties through the existing resident-community rules. Their free household, generated family, initial money and optional farming plot use ordinary role defaults as simulation choices. These roles create no named historical person, fixed story household, religious entitlement or public mandate. Named ruler and fixed household beginnings have separate declarations. Matching campaigns use their recorded baseline and opening identity on restore, preserving actual people, ownership and spent resources without repeating setup. The composition adds no new gameplay capability, technology requirement or save field.
 
 Identity decisions
 
@@ -42,7 +50,7 @@ Standard-reference background for the narrow court redating is Dagobert I (biogr
 
 Quadrant b: Rhine and Alpine districts, Italy, Britain and Ireland
 
-data/bookmark_634_scaffold_b.js supplies eight inactive declaration blocks: b08 through b14 and scenery_b. The inhabited blocks contain eighteen counties each. Together with six scenery cells they cover 132 physical ids. They are composition inputs for the autumn 634 opening, not a registered or selectable world. Loading the file does not publish courts, people, layouts, faiths, institutions or government forms into another bookmark.
+data/bookmark_634_scaffold_b.js supplies eight declaration blocks: b08 through b14 and scenery_b. The inhabited blocks contain eighteen counties each. Together with six scenery cells they cover 132 physical ids. They are composition inputs for the autumn 634 opening; only the complete composer registers the hidden world. Loading the regional file alone publishes no courts, people, layouts, faiths, institutions or government forms into another bookmark.
 
 This first pass borrows the physical county partition, settlement slots, development values, community mixtures and climate assignments of the spring 568 regional world. Those quantities are simulation settings. They do not establish seventh-century population totals, religious majorities, unchanged ethnic identities or exact political boundaries. Existing physical sites retain their ids, coordinates and slot order. A late settlement name attached to a physical anchor does not assert that its later city already existed.
 

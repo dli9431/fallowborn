@@ -9,7 +9,7 @@ const {mockCrazyGames} = require('../support/crazygames');
 const {dependsOnRuntime} = require('../support/runtime-dependencies');
 
 dependsOnRuntime(__filename,[
-  'index.html','data/bookmark_634_scaffold_d.js','data/bookmark_634_identities.js',
+  'index.html','data/bookmark_634_scaffold_d.js','data/bookmark_634_identities.js','data/bookmark_634.js',
   'data/bookmark_568_scaffold_a.js','data/bookmark_568_scaffold_b.js',
   'data/bookmark_568_scaffold_c.js','data/bookmark_568_scaffold_d.js',
   'data/bookmark_568_identities.js','data/bookmark_476_wider_identities.js',
@@ -208,9 +208,10 @@ for (const crazy of [false,true]) {
         return keys.map(function (key) { return JSON.stringify(FBDATA.bookmarkRegions634[key]); });
       },keys)).toEqual(blocks);
       expect(await page.evaluate(function () {
-        return {unregistered:!FBDATA.bookmarks['634'],formInactive:!FBDATA.governmentForms.medinan_selection_pf_634,
-          faithInactive:!FB.faithExists('early_islam_634',null)};
-      })).toEqual({unregistered:true,formInactive:true,faithInactive:true});
+        return {hidden:FBDATA.bookmarks['634'].hidden,
+          formPublished:!!FBDATA.governmentForms.medinan_selection_pf_634,
+          faithPublished:FB.faithExists('early_islam_634',null)};
+      })).toEqual({hidden:true,formPublished:true,faithPublished:true});
     });
 }
 
