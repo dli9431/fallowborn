@@ -73,6 +73,14 @@ https://www.mgh-bibliothek.de/dokumente/a/a144302.pdf
 
 https://en.wikipedia.org/wiki/Treaty_of_Verdun
 
+Carolingian ruler openings
+
+The Annales regni Francorum entries for 800-801 place Charlemagne at the Christmas coronation in Rome and there over winter; Einhard, Life of Charlemagne, chapter 28, also describes the ceremony. Starting the existing ruler in roma is the attested location rendered through one county. Aachen remains the public capital, and Rome remains papal property. The single capital and the private opening purse are game abstractions. The annals record Liutgard's death in 800; the existing empty spouse slot remains. Neither account proves that every surviving child shared one Roman lodging, so the sparse seeded roster is retained without additional named kin. Sources: https://la.wikisource.org/wiki/Annales_regni_Francorum#801 and https://sourcebooks.web.fordham.edu/basis/einhard.asp .
+
+Louis is the existing Aquitanian ruler under Charlemagne. His subordinate crown and birth year are retained game data, consistent with the account of his 781 appointment in the Henry Project's Louis the Pious entry: https://fasg.org/projects/henryproject/data/louis000.htm . Bordeaux is the existing capital and an explicitly approximate opening residence, not an attested Christmas 800 itinerary. The existing Lothair and younger Pippin remain campaign people; the generated consort is not relabeled Ermengarde. Charlemagne's absent daughters, the elder Pippin, a complete itinerary and an implementation-ready named spouse chronology remain held. No later death, succession, territorial partition or Barcelona outcome is scheduled by either opening.
+
+Both five-stage ruler agendas record simulation priorities at or after their dates. The ordinary reviewed story decisions and current family, jurisdiction, funding and consent govern any actual inheritance or diplomacy. These starts add no technology grant or separately gateable capability; the existing none decisions for ruler_agendas and royal_succession_settlements apply. tests/e2e/specs/800-carolingian-starts.spec.js covers picker and code adoption, live dynasty composition, Rome and Bordeaux residence, retained authority, priority reviews, interruption and matching saves.
+
 Campaign access
 
 Open this worktree's index.html, then use New Game and the normal starting-date picker or an 800 start code. Ordinary data loading references the authored definition from FBDATA.bookmarks and keeps it available after a reload for save restoration. Regression journeys use that ordinary boot without registering the date themselves. Existing saved courts and story attachment remain authoritative on restore; no old save gains new historical people or a newly initialized settlement story.
