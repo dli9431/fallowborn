@@ -914,6 +914,17 @@ def extract_bookmark_revision_content(inv: Inventory) -> None:
                     identity = node_string(slot.get("site"))
                     if identity:
                         label("settlement", scope + "." + identity, slot.get("name"))
+            for form_id, form_node in (node_object(content.get("governmentForms")) or {}).items():
+                form = node_object(form_node) or {}
+                profile = node_object(form.get("selectionProfile")) or {}
+                for member_node in node_array(profile.get("members")) or []:
+                    member = node_object(member_node) or {}
+                    member_id = node_string(member.get("id"))
+                    if member_id:
+                        for _, record, line in branch_records(member.get("name")):
+                            inv.add(f"governmentSelection.{form_id}.member.{member_id}.name.default",
+                                    record, f"{rel}:{line}", "Government selection presentation.",
+                                    TOKEN_RE.findall(record["text"]))
 
 
 def extract_revision_content(inv: Inventory) -> None:
