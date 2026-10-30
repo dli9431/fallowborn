@@ -1,0 +1,198 @@
+{
+  "name": "Fictional dated identity review",
+  "geographies": {
+    "e2e_identity_lands": {
+      "bounds": {
+        "lonMin": 0,
+        "lonMax": 9,
+        "latMin": 0,
+        "latMax": 5
+      },
+      "land": [
+        [
+          0.5,
+          0.5,
+          8.5,
+          0.5,
+          8.5,
+          4.5,
+          0.5,
+          4.5
+        ]
+      ],
+      "gridWidth": 240,
+      "provinces": [
+        {
+          "id": "e2e_identity_river",
+          "x": 1.5,
+          "y": 2.5,
+          "terrain": "farmland"
+        },
+        {
+          "id": "e2e_identity_hill",
+          "x": 4.5,
+          "y": 2.5,
+          "terrain": "farmland"
+        },
+        {
+          "id": "e2e_identity_field",
+          "x": 7.5,
+          "y": 2.5,
+          "terrain": "farmland"
+        }
+      ],
+      "seas": [],
+      "rivers": [],
+      "sites": {},
+      "defaultLayout": null
+    }
+  },
+  "bookmarks": {
+    "634": {
+      "id": "634",
+      "name": "Fictional identity review",
+      "hidden": true,
+      "date": {
+        "year": 634,
+        "season": 2,
+        "day": 1
+      },
+      "era": "late_antique",
+      "geography": "e2e_identity_lands",
+      "settlementLayout": null,
+      "religiousHeads": {},
+      "localInstitutions": {},
+      "stories": [],
+      "starts": [],
+      "provinces": [
+        {
+          "id": "e2e_identity_river",
+          "name": "River fields",
+          "realm": "e2e_identity_river_court",
+          "culture": "arabic",
+          "religion": "early_islam_634",
+          "dev": 3,
+          "duchy": "e2e_identity_district",
+          "population0": 12000,
+          "communities": [
+            {
+              "culture": "arabic",
+              "religion": "early_islam_634",
+              "populationShare0": 10000
+            }
+          ]
+        },
+        {
+          "id": "e2e_identity_hill",
+          "name": "Hill fields",
+          "realm": "e2e_identity_hill_court",
+          "culture": "persian",
+          "religion": "zoroastrian_sasanian_634",
+          "dev": 3,
+          "duchy": "e2e_identity_district",
+          "population0": 12000,
+          "communities": [
+            {
+              "culture": "persian",
+              "religion": "zoroastrian_sasanian_634",
+              "populationShare0": 10000
+            }
+          ]
+        },
+        {
+          "id": "e2e_identity_field",
+          "name": "Southern fields",
+          "realm": "e2e_identity_field_court",
+          "culture": "syriac",
+          "religion": "west_syriac_lay_634",
+          "dev": 3,
+          "duchy": "e2e_identity_district",
+          "population0": 12000,
+          "communities": [
+            {
+              "culture": "syriac",
+              "religion": "west_syriac_lay_634",
+              "populationShare0": 10000
+            }
+          ]
+        }
+      ],
+      "realms": [
+        {
+          "id": "e2e_identity_river_court",
+          "name": "River court",
+          "capital": "e2e_identity_river",
+          "color": "#ae8851",
+          "government": "territorial",
+          "rank": 1,
+          "aggression": 0,
+          "religion": "early_islam_634",
+          "ruler": {
+            "generated": true,
+            "sex": "m",
+            "culture": "arabic",
+            "born": 604,
+            "mar": 4,
+            "trait": "patient"
+          }
+        },
+        {
+          "id": "e2e_identity_hill_court",
+          "name": "Hill court",
+          "capital": "e2e_identity_hill",
+          "color": "#81916b",
+          "government": "territorial",
+          "rank": 1,
+          "aggression": 0,
+          "religion": "zoroastrian_sasanian_634",
+          "ruler": {
+            "generated": true,
+            "sex": "m",
+            "culture": "persian",
+            "born": 604,
+            "mar": 4,
+            "trait": "patient"
+          }
+        },
+        {
+          "id": "e2e_identity_field_court",
+          "name": "Southern court",
+          "capital": "e2e_identity_field",
+          "color": "#7181ab",
+          "government": "territorial",
+          "rank": 1,
+          "aggression": 0,
+          "religion": "west_syriac_lay_634",
+          "ruler": {
+            "generated": true,
+            "sex": "m",
+            "culture": "syriac",
+            "born": 604,
+            "mar": 4,
+            "trait": "patient"
+          }
+        }
+      ],
+      "duchies": {
+        "e2e_identity_district": {
+          "name": "Review district",
+          "kingdom": "e2e_identity_country"
+        }
+      },
+      "kingdoms": {
+        "e2e_identity_country": {
+          "name": "Review country",
+          "empire": "e2e_identity_horizon"
+        }
+      },
+      "empires": {
+        "e2e_identity_horizon": {
+          "name": "Review horizon"
+        }
+      },
+      "scripted": [],
+      "straits": [],
+      "crossingClasses": {}
+    }
+  }
+}

@@ -10,8 +10,11 @@ window.FB = window.FB || {};
   G.bootReady = false;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-FB.VERSION = '1.194.0';
+FB.VERSION = '1.194.1';
 FB.CHANGELOG = [
+  { v: '1.194.1', date: '2026-10-30', changes: [
+    'Faith definitions for the 634 opening are prepared; existing beginnings retain their faith rules.'
+  ] },
   { v: '1.194.0', date: '2026-10-30', changes: [
     '568 offers Justin II and Khosrow I as rulers while retaining the Frankish courts and their families.'
   ] },

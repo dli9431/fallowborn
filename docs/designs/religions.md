@@ -1,5 +1,15 @@
 # Religions and faith fracture
 
+Staged autumn 634 identities
+
+data/bookmark_634_identities.js contains three inert literal faith records. early_islam_634 descends directly from muslim, zoroastrian_sasanian_634 from zoroastrian and west_syriac_lay_634 from miaphysite. Each has its own 634 bookmark selector and explicit community, character, ruler, institution, start, story, conversion and project consumers. There is no closing year: a matching campaign may retain the profile beyond its opening. The file neither registers a world nor publishes these records into the effective religions catalogue.
+
+All three explicitly remove the religious head, holy-war tradition, raiding tradition and religious profession paths. Early Islam also removes the inherited tournament tradition. Its Muslim legal dispatch, four-to-one spouse capacities and disabled optional divorce are bounded compatibility choices, without a later school or separate caliphal office. The Sasanian profile uses sasanian_custom_476 as an explicit simplified dispatcher, monogamous family capacity, neutral lay role words and no sibling rite. This is not a reconstructed seventh-century civil code or priestly qualification. The West Syriac adapter uses customary law, monogamous capacity, same/in_fold marriage eligibility and disabled optional divorce. It describes a lay community rather than a new denomination, local canon law or Alexandrian jurisdiction.
+
+Fifteen source-faith selectors separately stage additive 634 eligibility. Publication must copy their availability records and union bookmarkIds while retaining all year, era, consumer and earlier-bookmark restrictions. Neither the older zoroastrian_sasanian_476 window nor mesopotamian_traditional is extended. Earlier worlds, saved identities, cultures, institutions and primary community shares remain untouched. The complete world composer owns later publication after registering the date. Ordinary JSON imports use existing religions and bookmarks roots, including same-import date references; these staging table names introduce no JSON schema.
+
+Technology impact: this content configures existing identity, family and eligibility behavior and adds no independently gateable capability. No new technology review or bonus is needed. tests/e2e/specs/634-identities.spec.js covers inert loading in both distributions, detached malformed-import rejection, real file import, inherited properties, date and consumer eligibility and retained-date selector parity.
+
 Buddhist lay learning and support
 
 Free household practice and study are available to existing buddhist_476 households in 476 wider_v2 and 493 world_v2 and buddhist_711 households in 711 terrain_v2_governments_v2. Practice takes one day and gives one piety; study takes two days and gives one intelligence point. Both are once-per-person simulation benefits, require no gold or land, and preserve ordinary work, marriage and primary faith. This adds household choices without accepting every retained county share or replacing a held identity.
