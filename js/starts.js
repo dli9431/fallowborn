@@ -492,14 +492,25 @@
     }
     if (!publicCrown && !preserved) delete realm.treasury;
     realm.id = 'player'; s.realms.player = realm; delete s.realms[id];
-    /* Compact AI succession becomes the ordinary, fully materialized player
-       family. Never leave a second succession engine aging that household. */
+    /* Keep the opening genealogy as a settlement identity record. The player
+       household owns every living person and its ordinary succession; the
+       compact court is no longer advanced or aged by the world tick. */
     var retainedSelection = (government.rules.selectionProfile || government.rules.aristocraticProfileId) && realm.succession;
-    if (!retainedSelection) delete realm.succession;
+    var settlementCourt = Object.keys(s.stories || {}).some(function (storyId) {
+      var story = FB.stories.get(storyId), d = story && story.declaration;
+      return d && ['succession_partition','designated_succession','treaty_settlement'].indexOf(d.type) >= 0 &&
+        (d.actor.realmId === id || d.shares && d.shares.some(function (share) { return share.realmId === id; }));
+    });
+    var keptSettlementCourt = !retainedSelection && settlementCourt && realm.succession && realm.succession.members;
+    if (keptSettlementCourt) {
+      realm.succession.playerDynasty = true;
+      realm.succession.settlementGenealogy = true;
+      if (FB.adoptRoyalSettlementCourt) FB.adoptRoyalSettlementCourt(s, id);
+    } else if (!retainedSelection) delete realm.succession;
     Object.keys(s.chars).forEach(function (cid) {
       var c = s.chars[cid];
-      if (!retainedSelection && c.royalLine && c.royalLine.realmId === id) delete c.royalLine;
       if (c.realmStanding) rekey(c.realmStanding, id);
+      if (!retainedSelection && !keptSettlementCourt && c.royalLine && c.royalLine.realmId === id) delete c.royalLine;
     });
     Object.keys(s.owner).forEach(function (pid) {
       if (s.owner[pid] === id) s.owner[pid] = 'player';

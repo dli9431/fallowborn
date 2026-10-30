@@ -1,0 +1,62 @@
+{
+  "name": "Beneficiary settlement terms",
+  "storyInstances": {
+    "divisio_800": {
+      "id": "divisio_800",
+      "type": "succession_partition",
+      "name": "Family settlement review",
+      "desc": "Living children and current regional courts determine a reviewed plan.",
+      "firstYear": 807,
+      "lastYear": 813,
+      "chance": 0.2,
+      "truceDays": 0,
+      "actor": {
+        "realmId": "carolingian_800",
+        "capital": "aachen",
+        "castField": "charlemagne"
+      },
+      "branchRealmIds": [
+        "italy",
+        "aquitaine"
+      ],
+      "cast": {
+        "charlemagne": {
+          "kind": "realm_ruler",
+          "realmId": "carolingian_800"
+        },
+        "louis": {
+          "kind": "realm_ruler",
+          "realmId": "aquitaine"
+        },
+        "pippin": {
+          "kind": "realm_ruler",
+          "realmId": "italy"
+        },
+        "harun": {
+          "kind": "realm_ruler",
+          "realmId": "abbasid"
+        }
+      },
+      "shares": [
+        {
+          "realmId": "aquitaine",
+          "castField": "louis"
+        },
+        {
+          "realmId": "italy",
+          "castField": "pippin"
+        }
+      ],
+      "news": {
+        "agreed": {
+          "key": "news.test.dynastic.agreed",
+          "text": "The living courts record a settlement plan."
+        },
+        "executed": {
+          "key": "news.test.dynastic.executed",
+          "text": "The surviving regional shares follow the succession."
+        }
+      }
+    }
+  }
+}

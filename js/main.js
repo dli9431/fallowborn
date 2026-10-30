@@ -10,8 +10,11 @@ window.FB = window.FB || {};
   G.bootReady = false;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-FB.VERSION = '1.189.8';
+FB.VERSION = '1.190.0';
 FB.CHANGELOG = [
+  { v: '1.190.0', date: '2026-10-30', changes: [
+    'Player rulers can manage dynastic settlements using their living family, succession and regional authority.'
+  ] },
   { v: '1.189.8', date: '2026-10-16', changes: [
     'Preparation for side-by-side test builds. Your saves, settings and mods are unchanged.'
   ] },

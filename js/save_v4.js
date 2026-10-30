@@ -183,15 +183,23 @@
   function validateRoyalCourts(state) {
     Object.keys(state.realms || {}).forEach(function (rid) {
       var realm = state.realms[rid], s = realm && realm.succession;
-      if (!s || s.authoredCourt === undefined && s.policyId === undefined) return;
+      if (realm && realm.settlementSuccessorId !== undefined &&
+          (realm.settlementSuccessorId !== 'player' || realm.alive ||
+            !state.realms.player))
+        field('state.realms.' + rid + '.settlementSuccessorId');
       var path = 'state.realms.' + rid + '.succession';
+      if (s && s.settlementGenealogy !== undefined && (s.settlementGenealogy !== true || rid !== 'player' ||
+          s.authoredCourt !== true || !state.start || !state.start.rulerRealmId ||
+          !state.realms.player || state.start.rulerRealmId === 'player')) field(path + '.settlementGenealogy');
+      if (!s || s.authoredCourt === undefined && s.policyId === undefined) return;
       var government = state.authority && state.authority.governments && state.authority.governments[rid];
       var civic = government && government.civic && government.civic.originFormId !== null &&
         FB.civicGovernment && FB.civicGovernment.active(state,rid);
       var ecclesiastical = government && government.ecclesiastical && government.ecclesiastical.originFormId !== null &&
         FB.ecclesiasticalGovernment && FB.ecclesiasticalGovernment.active(state,rid);
-      var authoredRealmId = government && government.selection ? government.selection.originRealmId :
-        government && government.aristocracy ? government.aristocracy.originRealmId : rid;
+      var authoredRealmId = rid === 'player' && s.settlementGenealogy && state.start && state.start.rulerRealmId ||
+        (government && government.selection ? government.selection.originRealmId :
+          government && government.aristocracy ? government.aristocracy.originRealmId : rid);
       if (s.authoredCourt !== undefined && s.authoredCourt !== true ||
           !plain(s.members) || !Array.isArray(s.order) || !own(s.members, s.rulerMemberId) ||
           !Number.isInteger(s.rulerGeneration) || s.rulerGeneration < 1 ||
@@ -279,7 +287,9 @@
           if (!plain(ref) || ref.realmId === rid || !original || original.branchRef ||
               !own(s.members, ref.parentId) ||
               ![rid, authoredRealmId].concat(government && (government.selection || government.aristocracy) ? ['player'] : []).some(function (identity) {
-                return id === 'royal_' + identity + '_branch_' + ref.realmId + '_' + ref.memberId;
+                var sourceId = ref.realmId === 'player' && source.succession && source.succession.settlementGenealogy ?
+                  state.start.rulerRealmId : ref.realmId;
+                return id === 'royal_' + identity + '_branch_' + sourceId + '_' + ref.memberId;
               }) ||
               m.charId && m.charId !== (original.charId || FB.courtCharacterId(ref.memberId))) field(where + '.branchRef');
         }

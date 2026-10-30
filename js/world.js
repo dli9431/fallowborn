@@ -4530,6 +4530,11 @@ window.FB = window.FB || {};
     const r = state.realms[rid];
     if (!r || !r.alive) return null;
     const s = r.succession;
+    if (rid === 'player' && s && s.settlementGenealogy && s.members) {
+      if (FB.syncRoyalBranches) FB.syncRoyalBranches(state, rid);
+      s.heirId = s.order && s.order.length ? s.order[0] : null;
+      return s;
+    }
     if (!s || !s.members) return FB.ensureRealmSuccession(state, rid);
     if (s.papalElective) return s;
     if (FB.syncRoyalBranches) FB.syncRoyalBranches(state, rid);
@@ -4604,7 +4609,8 @@ window.FB = window.FB || {};
     if (rid === 'player') {
       const form = FB.governments.forRealm(state, rid);
       var retainedRoyalCourt = FB.aristocracy && FB.aristocracy.state(state,rid);
-      return form && (form.use.succession.selectionManaged || retainedRoyalCourt) && r.succession && r.succession.members ? r.succession : null;
+      return form && (form.use.succession.selectionManaged || retainedRoyalCourt ||
+        r.succession && r.succession.settlementGenealogy) && r.succession && r.succession.members ? r.succession : null;
     }
     if (r.succession && r.succession.papalElective) return r.succession;
     if (!r.ruler) {
@@ -6014,7 +6020,7 @@ window.FB = window.FB || {};
     if (m) {
       m.alive = false;
       delete s.openingPreferredId;
-      if (s.rulerMemberId === m.id && r.alive) {
+      if (s.rulerMemberId === m.id && r.alive && !s.settlementGenealogy) {
         advanceRealmAfterRulerDeath(state, r.id);
         advanced[r.id] = 1;
       } else if (r.alive) {
@@ -11229,6 +11235,14 @@ window.FB = window.FB || {};
   FB.absorbRealm = function (state, rid, rulerChar) {
     const inherited = state.realms[rid];
     if (!inherited || !inherited.alive || rid === 'player') return false;
+    var inheritedMember = inherited.succession && inherited.succession.members &&
+      inherited.succession.members[inherited.succession.rulerMemberId];
+    if (rulerChar && rulerChar.id === state.player.charId && inheritedMember &&
+        inheritedMember.charId === rulerChar.id && Object.keys(state.stories || {}).some(function (id) {
+          var story = FB.stories && FB.stories.get(id), def = story && story.declaration;
+          return def && def.actor && def.actor.realmId === rid &&
+            ['succession_partition','designated_succession','treaty_settlement'].indexOf(def.type) >= 0;
+        })) inherited.settlementSuccessorId = 'player';
     const inheritedName = FB.realmNameParam(state, inherited);
     const p = state.player;
     const sovereignTitle = !inherited.liege;
