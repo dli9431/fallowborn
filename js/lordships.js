@@ -754,7 +754,8 @@ window.FB = window.FB || {};
 
   /* Detached terms shared by petitions, military rewards and voluntary grants. */
   FB.settlementGrantSites = function (state, pid, rid) {
-    if (FB.settlementCountyHolder(state, pid) !== rid) return [];
+    const countyHolder = FB.settlementCountyHolder(state, pid);
+    if (!countyHolder || (countyHolder !== rid && rid !== 'player')) return [];
     const out = [];
     for (let slot = 1; slot < FB.settlementVisibleCount(state, pid); slot++) {
       const holder = FB.settlementHolder(state, pid, slot);
@@ -763,6 +764,14 @@ window.FB = window.FB || {};
       }
     }
     return out;
+  };
+  FB.playerSettlementGrantSites = function (state) {
+    return FB.directSettlements(state).filter(function (site) {
+      return site.settlement > 0 && FB.settlementGrantSites(state,
+        site.provinceId, 'player').some(function (available) {
+          return available.settlement === site.settlement;
+        });
+    });
   };
   FB.baronyPetitionSite = function (state) {
     const pid = state.player.provinceId, rid = FB.settlementCountyHolder(state, pid);

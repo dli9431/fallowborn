@@ -21,8 +21,9 @@ research prerequisite; it requires an unused development-unlocked slot, construc
 funding, time and investiture resources. Soft settlement-administration capacity
 and individual building gates continue to govern the resulting holding.
 
-Phase 4 extends the existing `settlement_lordship` **none** review to concrete
-petitions, voluntary grants and military land rewards. These are ordinary
+Phase 4 extends the existing settlement_lordship none review to concrete
+petitions, voluntary grants of personally held baronies even under another count,
+and military land rewards. These are ordinary
 political rights. Autonomous delegation and baron development apply the same
 rights, administrative capacity and existing per-building technology gates;
 there is no new research prerequisite for granting land or routine development.
