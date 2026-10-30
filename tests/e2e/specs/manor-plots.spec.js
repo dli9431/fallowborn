@@ -26,6 +26,31 @@ test.beforeEach(async function ({ page }, testInfo) {
   await startDeterministicGame(page);
 });
 
+test('five consolidated plots earn seven gold per season', async function ({ page }) {
+  const income = await page.evaluate(function () {
+    const s = FB.state, p = s.player;
+    p.landPlotMigration = 1;
+    p.landPlots = [];
+    const solo = FB.landGroupYield(1);
+    for (let i = 0; i < 5; i++) {
+      p.landPlots.push({provinceId:p.provinceId, settlement:0});
+    }
+    const group = FB.landBreakdown(s)[0];
+    p.tier = 1;
+    FB.ui.showLandMarket();
+    return {
+      solo:solo, separate:solo * 5, grouped:group.amount,
+      multiplier:group.multiplier, seasonal:FB.landYield(s),
+      displayed:FB.money(7)
+    };
+  });
+  expect(income).toMatchObject({
+    solo:1, separate:5, grouped:7, multiplier:1.4, seasonal:7
+  });
+  await expect(page.locator('[data-land-settlement="0"]'))
+    .toContainText(income.displayed + '/season');
+});
+
 test('every free rank can review plots while broke and buy with the ordinary terms',
   async function ({ page }) {
     const result = await page.evaluate(function () {

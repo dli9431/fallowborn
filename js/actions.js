@@ -3745,7 +3745,7 @@ window.FB = window.FB || {};
       }
     } },
 
-  { id: 'bring_council_motion', opensChoices:true,
+  { id: 'bring_council_motion', opensChoices:true, readinessAlert:true,
     noConsume:true,
     desc: function (s) {
       const status = FB.localCouncilMotionStatus(s);
@@ -9127,7 +9127,7 @@ window.FB = window.FB || {};
   };
 
   FB.landGroupYield = function (count) {
-    const base = FBDATA.balance.landPlotYield || 0.6;
+    const base = FBDATA.balance.landPlotYield || 1;
     const together = FBDATA.balance.landConsolidationBonus || 0.10;
     return base * count * (1 + Math.max(0, count - 1) * together);
   };
@@ -12302,8 +12302,10 @@ window.FB = window.FB || {};
   FB.recurringDeeds = function (state, automaticOnly) {
     return (FB.instants || []).filter(function (action) {
       const days = Number(actionCooldownDays(state, action));
+      const recurring = isFinite(days) && days > 0;
       return !action.compatibilityAlias && !action.declarative &&
-        isFinite(days) && days > 0 && (!automaticOnly ||
+        (recurring || !automaticOnly && action.readinessAlert === true) &&
+        (!automaticOnly ||
           (action.automatableRecurring === true && !action.opensChoices &&
             !action.noConsume && !action.deferCooldown));
     });

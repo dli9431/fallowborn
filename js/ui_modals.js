@@ -26322,7 +26322,8 @@ window.FB = window.FB || {};
   const LIFE_ENTRY_CATEGORIES = {
     rank:'rank', accession:'rank', loss:'rank', foundation:'rank', appointment:'rank',
     conquest:'war', battle:'war', defeat:'war', command:'war', command_defeat:'war',
-    captivity:'war', exile:'war', death:'family', retirement:'family'
+    captivity:'war', exile:'war', death:'family', death_cause:'family',
+    retirement:'family'
   };
   function lifeEntryCategory(entry) {
     const key = entry.msg && entry.msg.key || '';

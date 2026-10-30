@@ -1178,7 +1178,7 @@ window.FB = window.FB || {};
         state.collapsed = !state.collapsed;
         if (sectionId === 'filters' && FB.game && FB.game.uiPrefs) {
           FB.game.uiPrefs.workFiltersCollapsed = state.collapsed;
-          try { localStorage.setItem('fb_ui', JSON.stringify(FB.game.uiPrefs)); } catch (e) {}
+          try { localStorage.setItem(FB.storageKey('fb_ui'), JSON.stringify(FB.game.uiPrefs)); } catch (e) {}
         }
         applyLargeListView(root);
       });

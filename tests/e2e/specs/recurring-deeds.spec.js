@@ -292,6 +292,60 @@ test('readiness tracking consumes no RNG and resets at campaign and protagonist 
     expect(result).toEqual({ marked:1, unchanged:true, successor:0, loaded:0 });
   });
 
+test('local council motion pauses when its next session opens without automating the vote',
+  async function ({ page }) {
+    const result = await page.evaluate(function () {
+      const s = FB.state, p = s.player;
+      p.tier = 1;
+      p.profession = 'merchant';
+      FB.fns.local_council_elected(s);
+      p.localCouncil.nextMotionTurn = s.turn + 1;
+      FB.game.uiPrefs.highlightReadyDeeds = true;
+      FB.ui.refresh();
+      FB.ui.showTab('network');
+      FB.ui.refreshRecurringDeedAlerts();
+
+      const listed = FB.recurringDeeds(s).some(function (action) {
+        return action.id === 'bring_council_motion';
+      });
+      const automatic = FB.recurringDeeds(s, true).some(function (action) {
+        return action.id === 'bring_council_motion';
+      });
+      FB.game.setPaused(false, { liveTick:true });
+      s.turn++;
+      FB.ui.refreshRecurringDeedAlerts();
+      const button = document.querySelector('[data-action-id="bring_council_motion"]');
+      const first = {
+        paused:FB.game.paused,
+        visible:!!button && button.offsetParent !== null,
+        highlighted:!!button && button.closest('.deed-entry').classList.contains('deed-ready'),
+        ready:FB.localCouncilMotionStatus(s).ready,
+        unvoted:p.localCouncil.nextMotionTurn === s.turn
+      };
+
+      FB.game.setPaused(false, { liveTick:true });
+      FB.ui.refreshRecurringDeedAlerts();
+      const resumed = !FB.game.paused;
+      const proposed = !!FB.proposeLocalCouncilMotion(s, 'fair_measures');
+      FB.ui.refreshRecurringDeedAlerts();
+      const cleared = !document.querySelector('[data-action-id="bring_council_motion"]')
+        .closest('.deed-entry').classList.contains('deed-ready');
+      s.turn = p.localCouncil.nextMotionTurn;
+      FB.ui.refreshRecurringDeedAlerts();
+      return {
+        listed:listed, automatic:automatic, first:first, resumed:resumed,
+        proposed:proposed, cleared:cleared,
+        pausedAgain:FB.game.paused,
+        readyAgain:FB.localCouncilMotionStatus(s).ready
+      };
+    });
+    expect(result).toEqual({
+      listed:true, automatic:false,
+      first:{ paused:true, visible:true, highlighted:true, ready:true, unvoted:true },
+      resumed:true, proposed:true, cleared:true, pausedAgain:true, readyAgain:true
+    });
+  });
+
 [
   { name:'desktop thematic', width:1505, height:900, grouped:false, group:'life' },
   { name:'mobile action type', width:390, height:844, grouped:true, group:'deeds' }

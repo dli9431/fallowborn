@@ -1341,7 +1341,7 @@ FBDATA.balance = {
   startYear: 867, startSeason: 0, startAge: 16,
   freedomCost: 250, freedomSpouseFactor: 0.50,
   freedomDescendantFactor: 0.25, freedomRelativeFactor: 0.50,
-  landPlotCost: 120, landPlotYield: 0.6,
+  landPlotCost: 120, landPlotYield: 1,
   serfAdvocacyStanding:40, serfAdvocacyBonus:10,
   serfNeighborConsequenceDays:90,
   serfTenureTransitionCooldown:360, serfCommutedDutyGold:3,

@@ -19,6 +19,69 @@ test.describe('character life archives', function () {
     await page.evaluate(function () { FB.game.setPaused(true); });
   });
 
+  test('a child lost at the annual boundary receives a saved historical cause', async function ({ page }) {
+    const result = await page.evaluate(function () {
+      const s = FB.state, me = s.chars[s.player.charId];
+      const child = FB.makeCharacter(s, {
+        name:'Young heir', sex:'m', born:s.date.year - 2,
+        culture:me.culture, religion:me.religion, dyn:me.dyn,
+        traitsN:0, fatherId:me.sex === 'm' ? me.id : null,
+        motherId:me.sex === 'f' ? me.id : null
+      });
+      me.childrenIds.push(child.id);
+      FB.touchFamily();
+      s.date.season = 3; s.date.day = 90;
+      s.eventQueue = []; s.slotDays = [];
+      const chance = FB.chance, traitAgg = FB.traitAgg;
+      try {
+        FB.traitAgg = function (c) {
+          const agg = traitAgg.apply(this, arguments);
+          if (c && c.id === child.id) agg.health = -1;
+          return agg;
+        };
+        FB.chance = function (probability) {
+          return probability === 0.6 && !child.dead;
+        };
+        FB.game.passDay({ deferUi:true });
+      } finally {
+        FB.chance = chance; FB.traitAgg = traitAgg;
+      }
+      const death = s.log.filter(function (entry) {
+        return entry.msg && entry.msg.key === 'news.life.child_died_cause' &&
+          entry.msg.params.name === child.name;
+      })[0];
+      const cause = child.deathCause;
+      const expected = ['fever', 'flux', 'chest', 'accident'];
+      const history = FB.lifeHistory(s, child.id);
+      const lifeEntry = history && history.entries.filter(function (entry) {
+        return entry.msg.key === 'news.biography.death_cause';
+      })[0];
+      const notice = death && FB.newsText(death, s, me.id);
+      const biography = lifeEntry && FB.renderMessage(lifeEntry.msg, { state:s, viewer:me.id });
+      const payload = JSON.parse(FB.save.serialize());
+      FB.save.restore(payload);
+      const restored = FB.state.chars[child.id];
+      const restoredHistory = FB.lifeHistory(FB.state, child.id);
+      return {
+        dead:child.dead, cause:cause, expected:expected.indexOf(cause) >= 0,
+        noticeCause:death && death.msg.params.cause,
+        notice:notice, biography:biography,
+        savedCause:restored.deathCause,
+        savedLifeCause:restoredHistory.entries.filter(function (entry) {
+          return entry.msg.key === 'news.biography.death_cause';
+        })[0].msg.params.cause
+      };
+    });
+    expect(result.dead).toBe(true);
+    expect(result.expected).toBe(true);
+    expect(result.noticeCause).toBe(result.cause);
+    expect(result.notice).toContain('Young heir');
+    expect(result.notice).toMatch(/fever|flux|chest sickness|accident/);
+    expect(result.biography).toMatch(/fever|flux|chest sickness|accident/);
+    expect(result.savedCause).toBe(result.cause);
+    expect(result.savedLifeCause).toBe(result.cause);
+  });
+
   test('branching generations share one family budget and preserve played and chosen lives', async function ({ page }) {
     const result = await page.evaluate(function () {
       const s = FB.state, founder = s.chars[s.player.charId];

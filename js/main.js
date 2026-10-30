@@ -10,8 +10,26 @@ window.FB = window.FB || {};
   G.bootReady = false;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-FB.VERSION = '1.189.7';
+FB.VERSION = '1.189.13';
 FB.CHANGELOG = [
+  { v: '1.189.13', date: '2026-10-30', changes: [
+    'Intrigue accomplices, council Deeds, childhood death histories, and consolidated plot income now follow their updated rules.'
+  ] },
+  { v: '1.189.12', date: '2026-10-30', changes: [
+    'Family land plots earn more seasonal gold, with larger holdings benefiting from consolidation.'
+  ] },
+  { v: '1.189.11', date: '2026-10-30', changes: [
+    'Childhood deaths now record a historical cause in the Chronicle and family life history.'
+  ] },
+  { v: '1.189.10', date: '2026-10-30', changes: [
+    'Ready deed alerts pause time when a local council motion can be brought again.'
+  ] },
+  { v: '1.189.9', date: '2026-10-30', changes: [
+    'Intrigue accomplice offers exclude reigning rulers and require personal hostility to recruit close family for assassination.'
+  ] },
+  { v: '1.189.8', date: '2026-10-16', changes: [
+    'Preparation for side-by-side test builds. Your saves, settings and mods are unchanged.'
+  ] },
   { v: '1.189.7', date: '2026-10-09', changes: [
     'Player-family rulers no longer gain invented children on accession. Court family portraits show existing spouses and their recorded parent relationships.'
   ] },
@@ -2392,7 +2410,7 @@ FB.CHANGELOG = [
   /* the title screen must say which world it will spawn: with mods active
      (bundled or stored), new lives and the map behind the menu are modded ones */
   function refreshTitle() {
-    $('title-version').textContent = 'v' + FB.VERSION;
+    $('title-version').textContent = 'v' + FB.VERSION + (FB.buildLabel ? ' · ' + FB.buildLabel : '');
     const saved = FB.save.read('auto');
     $('btn-continue').classList.toggle('hidden', !saved);
     const preview = $('continue-preview');
@@ -4216,7 +4234,7 @@ FB.CHANGELOG = [
   let storedTipsLayer = false;
   let storedOnboardingLayer = false;
   try {
-    const storedUiPrefs = JSON.parse(localStorage.getItem('fb_ui') || 'null');
+    const storedUiPrefs = JSON.parse(localStorage.getItem(FB.storageKey('fb_ui')) || 'null');
     if (storedUiPrefs && typeof storedUiPrefs === 'object') {
       if (typeof storedUiPrefs.speedIdx === 'number' &&
           isFinite(storedUiPrefs.speedIdx) &&
@@ -4320,7 +4338,7 @@ FB.CHANGELOG = [
      fresh player) never starts the lessons. Once decided either way the
      stored tipsSeen/tipsGrandfathered keys keep this from re-deciding. */
   G.saveUiPrefs = function () {
-    try { localStorage.setItem('fb_ui', JSON.stringify(G.uiPrefs)); } catch (e) { /* private mode */ }
+    try { localStorage.setItem(FB.storageKey('fb_ui'), JSON.stringify(G.uiPrefs)); } catch (e) { /* private mode */ }
   };
   function initializeReturningPlayerOnboarding() {
     // IndexedDB slots must be loaded before deciding whether this is an upgrade.
@@ -4764,7 +4782,7 @@ FB.CHANGELOG = [
   /* NOTE: the settings once shared a key with the AUTOSAVE SLOT (save.js)
      and each overwrote the other; they now live under their own key. */
   try {
-    const storedAuto = JSON.parse(localStorage.getItem('fb_automation') || 'null');
+    const storedAuto = JSON.parse(localStorage.getItem(FB.storageKey('fb_automation')) || 'null');
     if (storedAuto && typeof storedAuto === 'object') {
       for (const ak in G.auto) if (storedAuto[ak] !== undefined) G.auto[ak] = storedAuto[ak];
       // pre-1.25 the master switch `on` governed everyday events — now `minor`
@@ -4786,7 +4804,7 @@ FB.CHANGELOG = [
   G.auto.forceSupplies = G.auto.forceSupplies === true;
   G.auto.supplyTarget = FB.clamp(isFinite(Number(G.auto.supplyTarget)) ? Number(G.auto.supplyTarget) : 75, 25, 100);
   G.saveAuto = function () {
-    try { localStorage.setItem('fb_automation', JSON.stringify(G.auto)); } catch (e) { /* private mode */ }
+    try { localStorage.setItem(FB.storageKey('fb_automation'), JSON.stringify(G.auto)); } catch (e) { /* private mode */ }
   };
 
   function pauseForBackground() {
@@ -4865,6 +4883,27 @@ FB.CHANGELOG = [
       FB.ui.refresh(options.liveTick ? { liveTick:true } : undefined);
     }
   };
+
+  /* A childhood mortality roll gets an in-world account. Derive the ordinary
+     cause from the child and year without consuming the campaign RNG; a death
+     notice must not change who lives through the rest of the annual sweep. */
+  const childDeathNews = FB.msg('news.life.child_died_cause', {
+    forms: { select:'value', param:'cause', cases: {
+      fever:'🕯 Your child {name} died of fever, aged {age}.',
+      flux:'🕯 Your child {name} died of the flux, aged {age}.',
+      chest:'🕯 Your child {name} died of a chest sickness, aged {age}.',
+      accident:'🕯 Your child {name} died after an accident, aged {age}.',
+      pestilence:'🕯 Your child {name} died of pestilence, aged {age}.',
+      hunger:'🕯 Your child {name} died after a season of hunger, aged {age}.',
+      other:'🕯 Your child {name} died, aged {age}.'
+    } }
+  }, {});
+  function childDeathCause(s, c, residentHere, hardshipHere) {
+    if (s.player.flags.plague_here && residentHere) return 'pestilence';
+    if (hardshipHere) return 'hunger';
+    return ['fever', 'flux', 'chest', 'accident'][
+      FB.hashSeed(c.id + ':' + s.date.year) % 4];
+  }
 
   /* ---------- yearly aging, mortality, coming of age ---------- */
   function yearlyLife(s, annualContext) {
@@ -5023,10 +5062,11 @@ FB.CHANGELOG = [
       if (medicalProtection && householdCharacter) {
         cq -= medicalProtection;
       }
-      if (marketMortality && householdCharacter &&
-          (residentHere !== undefined ? residentHere :
-            (!FB.characterResidence ||
-              FB.characterResidence(s, c) === p.provinceId))) {
+      const hardshipHere = marketMortality && householdCharacter &&
+        (residentHere !== undefined ? residentHere :
+          (!FB.characterResidence ||
+            FB.characterResidence(s, c) === p.provinceId));
+      if (hardshipHere) {
         cq += marketMortality;
       }
       if (FB.chance(FB.clamp(cq, 0.002, 0.6))) {
@@ -5046,7 +5086,10 @@ FB.CHANGELOG = [
            consults, and a spouse checked afterwards reads as a stranger. */
         const compactRoyal = !!(c.royalLine && FB.courtRecordRetained &&
           !FB.courtRecordRetained(s, c, kinRel, familyLinks));
-        FB.killChar(s, c, { familyLinks:familyLinks });
+        const deathCause = wasChild && a < 16
+          ? childDeathCause(s, c, residentHere, hardshipHere)
+          : null;
+        FB.killChar(s, c, { familyLinks:familyLinks, deathCause:deathCause });
         if (compactRoyal && FB.compactRoyalRecordOnDeath) {
           FB.compactRoyalRecordOnDeath(s, c, {
             retentionChecked:true,
@@ -5059,8 +5102,10 @@ FB.CHANGELOG = [
           FB.spouseDied(s, c); // a grand house owes its widow(er) a reckoning
           FB.promoteSpouse(s); // under polygamy, the next wife steps up
         }
-        else if (wasChild) FB.news(s, FB.msg('news.life.child_died',
-          '🕯 Your child {name} has died, aged {age}.', { name: c.name, age: a }));
+        else if (wasChild) FB.news(s, deathCause
+          ? FB.message(childDeathNews.key, { cause:deathCause, name:c.name, age:a })
+          : FB.msg('news.life.child_died',
+            '🕯 Your child {name} has died, aged {age}.', { name:c.name, age:a }));
         else if (wasCourted) FB.news(s, FB.msg('news.life.courted_died',
           '🕯 {name}, whom you courted, has died before any wedding.', { name: c.name }));
         else if (pledgedChild) {
