@@ -9127,7 +9127,7 @@ window.FB = window.FB || {};
   };
 
   FB.landGroupYield = function (count) {
-    const base = FBDATA.balance.landPlotYield || 0.6;
+    const base = FBDATA.balance.landPlotYield || 1;
     const together = FBDATA.balance.landConsolidationBonus || 0.10;
     return base * count * (1 + Math.max(0, count - 1) * together);
   };

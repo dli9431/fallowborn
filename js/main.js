@@ -10,8 +10,11 @@ window.FB = window.FB || {};
   G.bootReady = false;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-FB.VERSION = '1.189.11';
+FB.VERSION = '1.189.12';
 FB.CHANGELOG = [
+  { v: '1.189.12', date: '2026-10-30', changes: [
+    'Family land plots earn more seasonal gold, with larger holdings benefiting from consolidation.'
+  ] },
   { v: '1.189.11', date: '2026-10-30', changes: [
     'Childhood deaths now record a historical cause in the Chronicle and family life history.'
   ] },
