@@ -10,8 +10,11 @@ window.FB = window.FB || {};
   G.bootReady = false;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-FB.VERSION = '1.189.8';
+FB.VERSION = '1.189.9';
 FB.CHANGELOG = [
+  { v: '1.189.9', date: '2026-10-30', changes: [
+    'Intrigue accomplice offers exclude reigning rulers and require personal hostility to recruit close family for assassination.'
+  ] },
   { v: '1.189.8', date: '2026-10-16', changes: [
     'Preparation for side-by-side test builds. Your saves, settings and mods are unchanged.'
   ] },
