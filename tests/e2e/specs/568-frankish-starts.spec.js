@@ -6,7 +6,8 @@ const {dependsOnRuntime} = require('../support/runtime-dependencies');
 
 dependsOnRuntime(__filename,[
   'index.html','data/starts.js','data/starts_568.js','data/starts_568_ravenna.js',
-  'data/starts_rulers_568.js','data/story_ruler_agendas_568.js','data/story_instances.js',
+  'data/starts_rulers_568.js','data/story_ruler_agendas_568.js','data/starts_rulers_568_east.js',
+  'data/story_ruler_agendas_568_east.js','data/story_instances.js',
   'data/bookmark_568.js','data/bookmark_568_scaffold_a.js','data/bookmark_568_scaffold_b.js',
   'data/bookmark_568_scaffold_c.js','data/bookmark_568_scaffold_d.js','data/bookmark_568_identities.js',
   'data/eras.js','data/political_institutions.js','data/cultures.js','data/government_rollout.js',
@@ -65,9 +66,9 @@ test('fresh and retained 568 revisions have distinct courts and start eligibilit
       retainedLayout:old.settlementLayout === fresh.settlementLayout,
       faults:FB.bookmarkRevisions('568').map(function (b) { return FB.validateBookmark(b); }),
       pure:before === JSON.stringify(FBDATA) && rng === FB.getRngState() && uid === FB.getUidCounter()};
-  },rulers)).toEqual({revision:'frankish_courts_v2',opening:'migration_v1',oldEmpty:true,newSpouse:true,
+  },rulers)).toEqual({revision:'eastern_courts_v3',opening:'migration_v1',oldEmpty:true,newSpouse:true,
     siblingCourts:true,starts:rulers.map(function (row) { return [true,true,true,row.site]; }),
-    retainedLayout:true,faults:[[],[],[]],pure:true});
+    retainedLayout:true,faults:[[],[],[],[]],pure:true});
 });
 
 for (const row of rulers) {
@@ -88,7 +89,7 @@ for (const row of rulers) {
           spouse:row.id === 'sigebert_568' ? Object.values(s.chars).filter(function (c) { return c.name === 'Brunhild' && !c.dead && c.spouseId === me.id && me.spouseId === c.id; }).length : 0,
           restored:restored};
       },row)).toEqual({name:row.name,born:row.born,tier:6,rank:3,home:row.county,site:row.site,
-        form:'regnum',sourceGone:true,single:1,agenda:true,revision:'frankish_courts_v2',
+        form:'regnum',sourceGone:true,single:1,agenda:true,revision:'eastern_courts_v3',
         spouse:row.id === 'sigebert_568'?1:0,restored:true});
     });
   }

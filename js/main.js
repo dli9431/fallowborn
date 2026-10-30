@@ -10,8 +10,11 @@ window.FB = window.FB || {};
   G.bootReady = false;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-FB.VERSION = '1.193.0';
+FB.VERSION = '1.194.0';
 FB.CHANGELOG = [
+  { v: '1.194.0', date: '2026-10-30', changes: [
+    '568 offers Justin II and Khosrow I as rulers while retaining the Frankish courts and their families.'
+  ] },
   { v: '1.193.0', date: '2026-10-30', changes: [
     '800 offers Charlemagne and Louis as rulers with personal court priorities to review.'
   ] },
