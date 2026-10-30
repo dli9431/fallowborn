@@ -8807,14 +8807,17 @@ window.FB = window.FB || {};
 
   function settlementGrantSummary(s, q, giving) {
     const site = FB.settlementsOf(s, q.provinceId)[q.settlement];
-    const grantor = q.grantorId && s.chars[q.grantorId];
+    const countId = FB.settlementCountyHolder(s, q.provinceId);
+    const count = countId === 'player' ? s.chars[s.player.charId] :
+      FB.realmRulerCharacterSnapshot(s, countId);
     let h = '<div class="gm-body-text" data-settlement-grant-summary>' +
       kv('Settlement', esc(site.name)) +
-      kv('Count', esc(grantor ? FB.fullName(grantor) : s.realms[q.realmId].name));
+      kv('Count', esc(count ? FB.fullName(count) : s.realms[countId].name));
     if (giving) {
       h += kv('Direct income given up / season', esc(FB.T('{money:amount}', { amount:q.lostRevenue }))) +
         kv('Upkeep transferred / season', esc(FB.T('{money:amount}', { amount:q.upkeep }))) +
-        kv('Dues from this settlement / season', esc(FB.T('{money:amount}', { amount:q.dues }))) +
+        kv(countId === 'player' ? 'Dues from this settlement / season' : 'Dues to count / season',
+          esc(FB.T('{money:amount}', { amount:q.dues }))) +
         kv('Direct settlements', esc(FB.T('{before} to {after} / {limit}', {
           before:q.directBefore, after:q.directAfter, limit:q.limit
         }))) + '<p>' + esc(FB.T('The baron and their heirs control local construction. Private property and the county fort stay with their current owners.')) + '</p>';
@@ -8957,10 +8960,7 @@ window.FB = window.FB || {};
     let h = '<p class="hint">' + esc(FB.T('Choose a settlement for {name}. Review the transfer before granting.', {
       name:FB.fullName(s.chars[cid])
     })) + '</p>' + settlementGrantListHeader() + '<div class="gm-list">';
-    const sites = [];
-    for (const pid of FB.realmHeldCounties(s, 'player')) {
-      for (const site of FB.settlementGrantSites(s, pid, 'player')) sites.push(site);
-    }
+    const sites = FB.playerSettlementGrantSites(s);
     const fiscalContext = {};
     sites.forEach(function (site, i) {
       const reserved = FB.settlementGrantReserved(s, site.provinceId, site.settlement);
@@ -9049,7 +9049,9 @@ window.FB = window.FB || {};
     const countyRuler = holdId === 'player' ? s.chars[s.player.charId] : FB.realmRulerCharacterSnapshot(s, holdId);
     h += '<div class="gm-body-text">' + kv('Count', esc(countyRuler ? FB.fullName(countyRuler) :
       (s.realms[holdId] ? s.realms[holdId].name : FB.T('None')))) + '</div>';
-    if (managesCounty && managesSettlement && idx > 0) {
+    if (managesSettlement && idx > 0 && FB.settlementGrantSites(s, pid, 'player').some(function (site) {
+      return site.settlement === idx;
+    })) {
       h += '<button type="button" class="actionbtn" id="settlement-grant">' + esc(FB.T('Grant settlement')) + '</button>';
     }
     const delegated = FB.settlementLordship(s, pid, idx);
@@ -12812,10 +12814,7 @@ window.FB = window.FB || {};
     }
     h += '</div>' + settlementGrantListHeader() +
       '<div class="gm-list" data-grant-land-settlements>';
-    const sites = [];
-    for (const pid of FB.realmHeldCounties(s, 'player')) {
-      for (const site of FB.settlementGrantSites(s, pid, 'player')) sites.push(site);
-    }
+    const sites = FB.playerSettlementGrantSites(s);
     const fiscalContext = {};
     for (const site of sites) {
       const reserved = FB.settlementGrantReserved(s, site.provinceId, site.settlement);
@@ -24201,7 +24200,7 @@ window.FB = window.FB || {};
     const familyManumission = FB.familyManumissionStatus
       ? FB.familyManumissionStatus(s, c.id) : null;
     const settlementRecipient = FB.settlementGrantRecipient(s, c.id, 'player');
-    if (FB.realmHeldCounties(s, 'player').length && c.id !== s.player.charId &&
+    if (FB.playerSettlementGrantSites(s).length && c.id !== s.player.charId &&
         (settlementRecipient || FB.kinOf(s).byId[c.id])) {
       addInteractionAction(model, {
         id:'management.settlement.grant', group:'management',

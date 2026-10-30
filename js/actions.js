@@ -4295,9 +4295,7 @@ window.FB = window.FB || {};
     show: function (s) {
       if (!s.realms.player || !s.realms.player.alive) return false;
       return (s.player.provs && s.player.provs.length >= 2) ||
-        FB.realmHeldCounties(s, 'player').some(function (pid) {
-          return FB.settlementGrantSites(s, pid, 'player').length > 0;
-        });
+        FB.playerSettlementGrantSites(s).length > 0;
     },
     run: function (s, options) {
       if (FB.ui && FB.ui.showGrantLand) {

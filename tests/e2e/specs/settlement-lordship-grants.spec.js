@@ -138,6 +138,57 @@ for (const width of [390, 1280]) {
   });
 }
 
+test('a personally held barony under another count can be granted without transferring the county', async function ({ page }) {
+  const setup = await page.evaluate(function () {
+    const s = FB.state, p = s.player, home = p.provinceId, foreign = 'cologne';
+    const me = s.chars[p.charId], countyHolder = s.holder[foreign], countyOwner = s.owner[foreign];
+    p.tier = 4; p.provs = [home]; p.liege = null;
+    s.owner[home] = 'player'; s.holder[home] = 'player';
+    FB.foundPlayerRealm(s); FB.invalidateSettlementLordships(s, home);
+    const other = FB.makeCharacter(s, { name:'Home Baron', station:2,
+      born:s.date.year - 30, culture:me.culture, religion:me.religion, traits:[] });
+    for (let slot = 1; slot < FB.settlementVisibleCount(s, home); slot++) {
+      FB.assignSettlementLordship(s, home, slot, other.id);
+    }
+    s.dev[foreign] = 8; FB.rememberSettlementSites(s, foreign);
+    FB.assignSettlementLordship(s, foreign, 1, p.charId);
+    const recipient = FB.makeCharacter(s, { name:'Foreign Barony Recipient', station:2,
+      born:s.date.year - 30, culture:me.culture, religion:me.religion, traits:[] });
+    recipient.homeProvinceId = home;
+    return { home:home, foreign:foreign, countyHolder:countyHolder, countyOwner:countyOwner,
+      recipientId:recipient.id, name:FB.settlementsOf(s, foreign)[1].name,
+      countName:FB.fullName(FB.realmRulerCharacterSnapshot(s, countyHolder)),
+      ready:FB.instantStatus(s, 'grant_land').can,
+      sites:FB.playerSettlementGrantSites(s) };
+  });
+  expect(setup.ready).toBe(true);
+  expect(setup.sites).toEqual([{ provinceId:setup.foreign, settlement:1 }]);
+  await page.evaluate(function () { FB.ui.showGrantLand(); });
+  await expect(page.locator('[data-grant-land-site="' + setup.foreign + '"][data-grant-land-slot="1"]')).toBeVisible();
+  await page.evaluate(function (setup) {
+    FB.ui.closeModal(); FB.ui.showSettlement(setup.foreign, 1);
+  }, setup);
+  await expect(page.locator('#settlement-grant')).toBeVisible();
+  await page.evaluate(function (id) {
+    FB.ui.closeModal(); FB.ui.showCharacterSettlementGrant(id);
+  }, setup.recipientId);
+  const site = page.locator('[data-character-grant-site]').filter({ hasText:setup.name });
+  await expect(site).toBeVisible();
+  await site.click();
+  await expect(page.locator('[data-settlement-grant-summary]')).toContainText(setup.countName);
+  await expect(page.locator('[data-settlement-grant-summary]')).toContainText('Dues to count / season');
+  await page.locator('#grant-confirm').click();
+  expect(await page.evaluate(function (setup) {
+    const s = FB.state;
+    return { holder:FB.settlementHolder(s, setup.foreign, 1),
+      countyHolder:s.holder[setup.foreign], countyOwner:s.owner[setup.foreign],
+      direct:FB.directSettlements(s).some(function (site) {
+        return site.provinceId === setup.foreign && site.settlement === 1;
+      }) };
+  }, setup)).toEqual({ holder:{ kind:'character', id:setup.recipientId },
+    countyHolder:setup.countyHolder, countyOwner:setup.countyOwner, direct:false });
+});
+
 for (const width of [390, 1280]) {
   test('county settlement names and holders wrap within the panel at width ' + width, async function ({ page }) {
     await page.setViewportSize({ width:width, height:844 });

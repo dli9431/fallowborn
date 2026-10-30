@@ -10,8 +10,11 @@ window.FB = window.FB || {};
   G.bootReady = false;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-FB.VERSION = '1.189.12';
+FB.VERSION = '1.189.14';
 FB.CHANGELOG = [
+  { v: '1.189.14', date: '2026-10-30', changes: [
+    'Personally held baronies under other counts can be granted from Grant Land, settlement sheets and character sheets.'
+  ] },
   { v: '1.189.12', date: '2026-10-30', changes: [
     'Family land plots earn more seasonal gold, with larger holdings benefiting from consolidation.'
   ] },
